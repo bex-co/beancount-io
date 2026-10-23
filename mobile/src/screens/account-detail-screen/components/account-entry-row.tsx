@@ -1,4 +1,5 @@
 import { isolateLtr } from "@/common/bidi";
+import { journalChangeTone } from "@/screens/account-detail-screen/selectors/select-change-tone";
 import {
   StyleSheet,
   Text,
@@ -158,9 +159,15 @@ export function AccountEntryRow({
   // Open / Balance / Pad / … rows read as plain transactions otherwise: the
   // title falls back to the directive's own account name.
   const typeLabelKey = directiveTypeLabelKey(row.directiveType);
-  const effect = row.change * netWorthSign;
+  // A split's units read neutral, not as a gain (w21/713). The neutral is
+  // text, so it is the secondary-text stone, not the placeholder grey.
+  const tone = journalChangeTone(row.change, netWorthSign, units?.cost);
   const changeColor =
-    effect > 0 ? theme.success : effect < 0 ? theme.error : theme.black60;
+    tone === "up"
+      ? theme.success
+      : tone === "down"
+        ? theme.error
+        : theme.black80;
 
   const title = row.title || t("transaction");
   const costText =

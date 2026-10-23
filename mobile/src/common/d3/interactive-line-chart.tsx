@@ -138,6 +138,12 @@ type InteractiveLineChartProps = {
    * as the ledger holds it.
    */
   netWorthSign?: 1 | -1;
+  /**
+   * A count of units rather than money: more shares is no gain, so the line
+   * and the change read in the neutral colour and the change has no percent.
+   * A 10-for-1 split read "+90 QANVDA (+900.00%)" in green (w21/713).
+   */
+  neutral?: boolean;
 };
 
 const CHART_HEIGHT = 190;
@@ -369,6 +375,8 @@ type ScrubHeaderProps = {
   formatValue?: (value: number, includePlus?: boolean) => string;
   /** Trend color for the change row, resolved by the chart so the line and the figure can never disagree. */
   color: string;
+  /** No percent for the change: see the chart's `neutral`. */
+  neutral?: boolean;
   scrub: SharedValue<number>;
 };
 
@@ -399,6 +407,7 @@ function ScrubHeader({
   currency,
   formatValue,
   color,
+  neutral = false,
   scrub,
 }: ScrubHeaderProps): JSX.Element {
   const styles = useThemeStyle(getStyles);
@@ -454,7 +463,7 @@ function ScrubHeader({
   const baseline = windowBaseline ?? numbers[0] ?? 0;
   const change = shownValue - baseline;
   // The amount always reads; the percentage only when it means something.
-  const changePct = changePercent(baseline, shownValue);
+  const changePct = neutral ? null : changePercent(baseline, shownValue);
   const shownPct = changePct === null ? null : formatChangePercent(changePct);
   const { amount: changeAmount, flat: changeFlat } = describeChange(
     change,
@@ -520,6 +529,7 @@ function InteractiveLineChart({
   placeholder,
   onHeaderLayout,
   netWorthSign = 1,
+  neutral = false,
 }: InteractiveLineChartProps): JSX.Element {
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
@@ -675,8 +685,11 @@ function InteractiveLineChart({
     baseline,
     netWorthSign,
   );
-  const lineColor =
-    (scrubFavorable ?? restingFavorable) ? theme.success : theme.error;
+  const lineColor = neutral
+    ? theme.black80
+    : (scrubFavorable ?? restingFavorable)
+      ? theme.success
+      : theme.error;
 
   // Read off the plotted y positions rather than the values behind them: the
   // cursor worklets already hold `pointYs`, so asking it here costs no second
@@ -860,6 +873,7 @@ function InteractiveLineChart({
             currency={currency}
             formatValue={formatValue}
             color={lineColor}
+            neutral={neutral}
             scrub={scrub}
           />
         </View>

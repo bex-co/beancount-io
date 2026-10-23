@@ -47,7 +47,7 @@ function load(): (props: Record<string, unknown>) => Node {
       fontSizes: {},
       fontWeights: {},
       useTheme: () => ({
-        colorTheme: { success: "success", error: "error", black60: "neutral" },
+        colorTheme: { success: "success", error: "error", black80: "neutral" },
       }),
     },
     "@/components/amount-text": { AmountText: "AmountText" },
@@ -74,6 +74,8 @@ function load(): (props: Record<string, unknown>) => Node {
     "@/common/rtl": { LEADING_TEXT_ALIGN: "left" },
     "@/common/bidi": { isolateLtr: (text: string) => text },
     "@/common/theme/dynamic-type": dynamicType,
+    // Import-free: the real one.
+    "@/screens/account-detail-screen/selectors/select-change-tone": require("../../selectors/select-change-tone"),
   };
   vm.runInNewContext(source, {
     exports,
@@ -273,5 +275,28 @@ describe("AccountEntryRow change color", () => {
   it("leaves a zero change neutral either way", () => {
     expect(colorOf(0)).toBe("neutral");
     expect(colorOf(0, -1)).toBe("neutral");
+  });
+
+  // w21/713: a 10-for-1 split's +90 shares read as a green gain.
+  it("leaves units that moved at no cost neutral, and a buy favorable", () => {
+    const unitsColor = (change: number, cost: number) => {
+      const tree = AccountEntryRow({
+        row: {
+          ...transfer,
+          flag: "*",
+          change,
+          units: { currency: "QANVDA", scale: 0, cost },
+        },
+        currency: "USD",
+      });
+      const [amount] = findAll(
+        tree,
+        (node) =>
+          node.type === "AmountText" && textOf(node) === `${change} QANVDA`,
+      );
+      return flat(amount.props.style).color;
+    };
+    expect(unitsColor(90, 0)).toBe("neutral");
+    expect(unitsColor(10, 1000)).toBe("success");
   });
 });

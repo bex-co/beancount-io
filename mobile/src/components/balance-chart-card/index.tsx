@@ -53,6 +53,8 @@ type BalanceChartCardProps = {
   onRetry?: () => void;
   /** Which way a change moves net worth; see `InteractiveLineChartD3`. */
   netWorthSign?: 1 | -1;
+  /** A figure in units: no trend colour, no percent; see `InteractiveLineChartD3`. */
+  neutral?: boolean;
 };
 
 /**
@@ -70,6 +72,7 @@ export function BalanceChartCard({
   error,
   onRetry,
   netWorthSign,
+  neutral,
 }: BalanceChartCardProps): JSX.Element {
   const { t } = useTranslations();
   const [range, setRange] = useState<TimeRange>("6M");
@@ -113,6 +116,7 @@ export function BalanceChartCard({
           formatValue={formatValue}
           height={CHART_HEIGHT}
           netWorthSign={netWorthSign}
+          neutral={neutral}
         />
       </FadeInView>
       <TimeRangePills

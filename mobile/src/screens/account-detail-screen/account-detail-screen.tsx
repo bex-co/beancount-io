@@ -505,6 +505,8 @@ const AccountDetailScreenImpl = ({
             error={chartFailed}
             onRetry={retryChart}
             netWorthSign={netWorthSign}
+            // Units held, not money: a split is no 900% gain (w21/713).
+            neutral={unitsCurrency !== undefined}
           />
         </View>
         <Text style={styles.sectionTitle} accessibilityRole="header">
