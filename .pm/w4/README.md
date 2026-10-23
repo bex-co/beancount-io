@@ -8,7 +8,6 @@
 
 - [1021 — Keep native stepping exact in the Receipt and Budget amount fields](./1021.md) — minor follow-up of 1017's audit; the other two `type="number"` amount fields still step through a double; source-only.
 
-- [1020 — Keep configured account roots in Overview cash flows](./1020.md) — minor; valid declared roles and renamed roots yield No Data Available beside correct 100/25 USD movement; both widths, exact producer and default-root controls, no writes.
 
 
 
