@@ -509,6 +509,7 @@ def _balance(
 
     from bea_engine import managed_load
     from bea_engine.ledger.models import Amount, BalanceDirective, PadDirective
+    from bea_engine.ledger.reader import authored_entries
     from bea_engine.query import format_error
 
     date = _date(request)
@@ -541,7 +542,9 @@ def _balance(
         raise write.preexisting_refusal(errors, ledger_errors)
     # A pad can make validation succeed even when the assertion is a
     # duplicate or conflicts. Decide before either write path (w5/659).
-    match = _balance_match(before, date, account, number, currency, tolerance)
+    # Judged by what the files declare, not the plugin's view of them (w5/993).
+    authored = authored_entries(snapshot, Balance)
+    match = _balance_match(authored, date, account, number, currency, tolerance)
     if match is not None:
         snapshot.verify()
         source = {"filename": match.meta.get("filename"), "lineno": match.meta.get("lineno")}
@@ -564,7 +567,7 @@ def _balance(
             "target": str(target),
             **({"ledger_errors": ledger_errors} if pad_from is None else {}),
         }
-    conflict = _balance_conflict(before, date, account, number, currency, tolerance)
+    conflict = _balance_conflict(authored, date, account, number, currency, tolerance)
     if conflict is not None and not request.get("force"):
         raise _conflict_refusal(conflict, account, date, number, currency, tolerance)
     if pad_from is None and not request.get("force"):
@@ -610,7 +613,8 @@ def _balance(
         # The plain path refuses a second, different assertion for the day
         # before writing. Here the write failed on it instead, with advice to
         # date the pad after that very day and to rerun this command (w5/487).
-        conflict = _balance_conflict(loaded, date, account, number, currency, tolerance)
+        authored = authored_entries(snapshot, Balance)
+        conflict = _balance_conflict(authored, date, account, number, currency, tolerance)
         if conflict is not None and not request.get("force"):
             raise _conflict_refusal(conflict, account, date, number, currency, tolerance) from None
         # The only failure worth a retry is a pad Beancount reports unused;
@@ -634,7 +638,7 @@ def _balance(
                 "Complete that pair (add its balance without --pad-from) or remove the pad, then retry.",
                 details=staged,
             ) from exc
-        match = _balance_match(loaded, date, account, number, currency, tolerance)
+        match = _balance_match(authored, date, account, number, currency, tolerance)
         if match is not None:
             source = {"filename": match.meta.get("filename"), "lineno": match.meta.get("lineno")}
             stands = _already_matches(write.book_units(loaded, account, currency, date), number, currency, tolerance)
@@ -1043,7 +1047,7 @@ def _price(
 
     from bea_engine import managed_load
     from bea_engine.ledger.models import WRITE_INPUT, PriceDirective
-    from bea_engine.ledger.reader import authored_prices
+    from bea_engine.ledger.reader import authored_entries
     from bea_engine.managed_price_cache import managed_source_for_path
     from bea_engine.query import format_error
 
@@ -1077,7 +1081,7 @@ def _price(
             managed_sources.add(managed_source)
     # What the files declare, not the loaded view: a filtered quote still
     # counts and an inverted one is not the quote its file spells (w5/992).
-    for entry in authored_prices(snapshot):
+    for entry in authored_entries(snapshot, Price):
         entry_pair = (entry.currency, entry.amount.currency)
         if entry.date == directive.date and entry_pair in shadowed_pairs:
             (local_prices if entry_pair == pair else reciprocal_prices).append(entry)

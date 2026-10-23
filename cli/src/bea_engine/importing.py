@@ -1738,10 +1738,12 @@ def _written_quotes(snapshot: Any) -> dict[tuple[Any, str, str], list[Any]]:
     such as `implicit_prices` generates, or one from the managed quote cache,
     is no quote the ledger records.
     """
-    from bea_engine.ledger.reader import authored_prices
+    from beancount.core.data import Price
+
+    from bea_engine.ledger.reader import authored_entries
 
     quotes: dict[tuple[Any, str, str], list[Any]] = {}
-    for entry in authored_prices(snapshot):
+    for entry in authored_entries(snapshot, Price):
         quotes.setdefault((entry.date, entry.currency, entry.amount.currency), []).append(entry)
     return quotes
 
