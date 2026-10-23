@@ -634,4 +634,40 @@ describe("detectRecurrence primary currency", () => {
     const verdict = detectRecurrence(series, "2026-09-01");
     expect(verdict?.primaryCurrency).toBe("USD");
   });
+
+  // w21/797: rent paid in yen for six months, then in dollars after a move,
+  // still read "¥120,000".
+  it("is the currency the latest charges are paid in after a switch", () => {
+    const series = [
+      ...pointsOn(
+        [
+          "2026-01-01",
+          "2026-02-01",
+          "2026-03-01",
+          "2026-04-01",
+          "2026-05-01",
+          "2026-06-01",
+        ],
+        120000,
+        "JPY",
+      ),
+      ...pointsOn(
+        ["2026-07-01", "2026-08-01", "2026-09-01", "2026-10-01"],
+        2000,
+        "USD",
+      ),
+    ];
+    const verdict = detectRecurrence(series, "2026-10-23");
+    expect(verdict?.primaryCurrency).toBe("USD");
+    expect(verdict?.typicalAmountByCurrency.USD).toBe(2000);
+  });
+
+  it("keeps the usual currency when one recent charge was abroad", () => {
+    const series = [
+      ...monthlySeries("2026-01-05", 8, 10.99),
+      { date: "2026-09-10", currency: "JPY", amount: 980 },
+    ];
+    const verdict = detectRecurrence(series, "2026-09-20");
+    expect(verdict?.primaryCurrency).toBe("USD");
+  });
 });

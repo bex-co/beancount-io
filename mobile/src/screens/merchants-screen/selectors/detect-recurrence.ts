@@ -574,6 +574,7 @@ export function detectRecurrence(
 
   // In date order, so the latest charges can be told from the old ones.
   const amountsByCurrency = new Map<string, number[]>();
+  const chargeCurrencies: string[] = [];
   let latestCurrency = "";
   for (const day of eventDays) {
     for (const point of byDay.get(day)!) {
@@ -582,6 +583,7 @@ export function detectRecurrence(
         continue;
       }
       latestCurrency = currency;
+      chargeCurrencies.push(currency);
       const list = amountsByCurrency.get(currency);
       if (list) {
         list.push(point.amount);
@@ -595,14 +597,25 @@ export function detectRecurrence(
     return null;
   }
 
+  // The currency the latest charges agree on is the one the bill is paid in
+  // now: counted over the window, rent paid in yen until a move read
+  // "¥120,000" months after it was $2,000 (w21/797). One charge abroad among
+  // them is no move, and the most charges decide (w21/615).
+  const recentCurrencies = chargeCurrencies.slice(-RECENT_CHARGES);
+  const settledCurrency =
+    recentCurrencies.length === RECENT_CHARGES &&
+    recentCurrencies.every((currency) => currency === recentCurrencies[0])
+      ? recentCurrencies[0]!
+      : null;
   const typicalAmountByCurrency: Record<string, number> = {};
   let isApproximate = false;
-  let primaryCurrency = latestCurrency;
+  let primaryCurrency = settledCurrency ?? latestCurrency;
   let primaryCount = 0;
   for (const [currency, amounts] of amountsByCurrency) {
     if (
-      amounts.length > primaryCount ||
-      (amounts.length === primaryCount && currency === latestCurrency)
+      settledCurrency === null &&
+      (amounts.length > primaryCount ||
+        (amounts.length === primaryCount && currency === latestCurrency))
     ) {
       primaryCurrency = currency;
       primaryCount = amounts.length;
