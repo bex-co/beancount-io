@@ -340,6 +340,17 @@ _SINGLE_FILE_OPS = frozenset({"lex", "parse"})
 _MANAGED_INCLUDE_RE = re.compile(r'^\s*include\s*"https?://', re.MULTILINE | re.IGNORECASE)
 
 
+def _has_compatibility_name(root: Path) -> bool:
+    """Whether a folder under `root` has a name that NFKC would rewrite and NFC would not."""
+    try:
+        for _directory, subdirectories, _names in os.walk(expand_path(root, "doctor directory")):
+            if any(unicodedata.normalize("NFKC", name) != name for name in subdirectories):
+                return True
+    except OSError:
+        return False
+    return False
+
+
 def _needs_compat(op: str, args: list[str]) -> bool:
     """Whether stock `bean-doctor` would misread what this operation reads.
 
@@ -365,6 +376,11 @@ def _needs_compat(op: str, args: list[str]) -> bool:
     # linked root file read the includes beside its target. The helper loads
     # the path as named, as `check` and `list` do (w5/568).
     if op not in _SINGLE_FILE_OPS and os.path.realpath(root) != os.path.abspath(root):
+        return True
+    # Upstream's folder walk rewrites a compatibility character (a ligature, a
+    # full-width letter) in NFKC, so the folder of a declared account read as an
+    # undeclared one; the helper walks in NFC like the ledger (w5/984).
+    if op == "directories" and any(_has_compatibility_name(Path(operand)) for operand in positionals[1:]):
         return True
     try:
         members = [root] if op in _SINGLE_FILE_OPS else output.ledger_closure(root)

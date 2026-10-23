@@ -55,6 +55,35 @@ def install() -> None:
     beancount_parser.parse_file = parse_file
     _install_lexer()
     _install_source_locations()
+    _install_account_walk()
+
+
+def _install_account_walk() -> None:
+    """Name a document folder's account in NFC, the form the ledger's accounts are read in (w5/984).
+
+    Upstream's `account.walk` normalizes to NFKC, which rewrites `Of\ufb01ce`
+    (a ligature) as `Office`: the folder of a declared account was then a name
+    no account carries, its receipts were skipped by automatic discovery, and
+    `doctor directories` reported the folder as undeclared. The loader reads
+    ledger text as NFC (`_canonical_bytes`), so the walk does too.
+    """
+    from beancount.core import account
+
+    original = account.walk
+    if getattr(original, "__bea_nfc_walk__", False):
+        return
+
+    def walk(root_directory: str, followlinks: bool = True) -> Any:
+        for root, dirs, files in os.walk(root_directory, followlinks=followlinks):
+            dirs.sort()
+            files.sort()
+            relroot = root[len(root_directory) + 1 :]
+            name = unicodedata.normalize("NFC", relroot.replace(os.sep, account.sep))
+            if account.is_valid(name):
+                yield root, name, dirs, files
+
+    walk.__bea_nfc_walk__ = True  # type: ignore[attr-defined]
+    account.walk = walk
 
 
 def _install_lexer() -> None:
