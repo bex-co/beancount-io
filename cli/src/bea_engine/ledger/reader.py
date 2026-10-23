@@ -187,8 +187,13 @@ def _spelled_entries(filename: str) -> dict[int, Any]:
     return {entry.meta["lineno"]: entry for entry in entries}
 
 
-def _declares(entry: Any) -> bool | None:
-    """Whether this entry is spelled at its location; None if no declaration can be read."""
+def _declares(entry: Any, *, strict: bool = False) -> bool | None:
+    """Whether this entry is spelled at its location; None if no declaration can be read.
+
+    `strict` is for a location two entries claim: a plugin's copy of a
+    transaction keeps the source's header, so the flag and the amounts the
+    line states must agree too, or both copies passed as written (w5/937).
+    """
     meta = entry.meta or {}
     lineno = meta.get("lineno")
     if not isinstance(lineno, int):
@@ -206,9 +211,36 @@ def _declares(entry: Any) -> bool | None:
                 unicodedata.normalize("NFC", item.narration or ""),
             )
 
-        return header(entry) == header(spelled)
+        if header(entry) != header(spelled):
+            return False
+        return not strict or (entry.flag == spelled.flag and _amounts_declared(entry, spelled))
     ignored = {"meta", "postings", "diff_amount", "tolerance", "booking"}
     return all(getattr(entry, name) == getattr(spelled, name) for name in entry._fields if name not in ignored)
+
+
+def _amounts_declared(entry: Any, spelled: Any) -> bool:
+    """Whether the amounts the source line states are the entry's own.
+
+    Booking and interpolation fill in what the line leaves out and may split a
+    reduction, so only a statement the line makes can disagree: postings are
+    compared one for one when the counts match, and a number the line omits
+    agrees with anything.
+    """
+    from beancount.core.number import MISSING
+
+    if len(entry.postings) != len(spelled.postings):
+        return True
+    for booked, stated in zip(entry.postings, spelled.postings, strict=True):
+        if booked.account != stated.account:
+            return False
+        units = stated.units
+        if units is None or units is MISSING:
+            continue
+        if units.number is not MISSING and units.number != booked.units.number:
+            return False
+        if units.currency is not MISSING and units.currency and units.currency != booked.units.currency:
+            return False
+    return True
 
 
 def entry_generated(
@@ -263,9 +295,10 @@ def entry_generated(
     elif not token.startswith(directive_type):
         return True
     # Two entries at one location: only the one the line spells is written.
+    contested = (str(filename), lineno) in shared
     if require_declaration:
-        return _declares(entry) is not True
-    return (str(filename), lineno) in shared and _declares(entry) is False
+        return _declares(entry, strict=contested) is not True
+    return contested and _declares(entry, strict=True) is False
 
 
 def _in_date_range(
