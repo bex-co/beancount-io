@@ -271,7 +271,8 @@ def _annotations_declared(booked: Any, stated: Any) -> bool:
             return False
         per, total = spec.number_per, spec.number_total
         if per is not MISSING and (per is not None or total is not None):
-            units = abs(stated.units.number) if stated.units is not MISSING and stated.units is not None else None
+            # The booked quantity: the line may leave its own to booking.
+            units = abs(booked.units.number) if booked.units is not None else None
             if isinstance(units, Decimal) and units:
                 expected = (per or Decimal(0)) + (total or Decimal(0)) / units
                 if abs(expected - cost.number) > _NUMBER_SLACK:

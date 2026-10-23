@@ -95,3 +95,42 @@ def test_the_written_transaction_stays_on_disk(tmp_path: Path, stock: str) -> No
 
     assert len(_list(tmp_path)) == 1
     assert len(_list(tmp_path, "--on-disk")) == 1
+
+
+INFERRED_PLUGIN = """from beancount.core.data import Transaction
+__plugins__ = ('copy_row',)
+def copy_row(entries, options, mode):
+    out = []
+    for e in entries:
+        out.append(e)
+        if isinstance(e, Transaction) and e.narration == 'Purchase':
+            clone = e._replace(meta=e.meta.copy(), narration=e.narration if mode == 'changed-cost' else 'Derived purchase')
+            if mode == 'changed-cost':
+                clone = clone._replace(postings=[
+                    p._replace(units=p.units._replace(number=p.units.number / 2),
+                               cost=p.cost._replace(number=p.cost.number * 2)) if p.account == 'Assets:Stock' else p
+                    for p in e.postings])
+            out.append(clone)
+    return out, []
+"""
+
+
+@pytest.mark.parametrize(
+    ("mode", "cost"),
+    [("inferred-copy", "{100 USD}"), ("changed-cost", "{100 USD}"), ("inferred-copy", "{100 # 100 USD}")],
+)
+def test_an_inferred_quantity_does_not_break_the_comparison(tmp_path: Path, mode: str, cost: str) -> None:
+    """The line leaves the quantity to booking; the check still reads the known cost (w5/1011)."""
+    (tmp_path / "qa_copy.py").write_text(INFERRED_PLUGIN)
+    cash = "-300.00" if "#" in cost else "-200.00"
+    (tmp_path / "main.bean").write_text(
+        f'option "insert_pythonpath" "TRUE"\nplugin "qa_copy" "{mode}"\n'
+        "2024-01-01 open Assets:Stock HOOL\n2024-01-01 open Assets:Cash USD\n2024-01-01 open Equity:Opening USD\n"
+        '2024-01-01 * "Opening"\n  Assets:Cash 1000.00 USD\n  Equity:Opening -1000.00 USD\n'
+        f'2024-02-01 * "Purchase"\n  Assets:Stock HOOL {cost}\n  Assets:Cash {cash} USD\n'
+    )
+    result = _bea(tmp_path, "list", "transaction", "--search", "Purchase", "--on-disk")
+
+    assert result.returncode == 0, result.stdout
+    rows = json.loads(result.stdout)["data"]
+    assert [row["narration"] for row in rows] == ["Purchase"]
