@@ -31,6 +31,7 @@ import { useSession } from "@/common/hooks/use-session";
 import { ColorTheme } from "@/types/theme-props";
 import {
   GetLedgerEntryContextDocument,
+  GetLedgerJournalDocument,
   useGetLedgerEntryContextQuery,
   useUpdateLedgerEntrySourceSliceMutation,
 } from "@/generated-graphql/graphql";
@@ -68,6 +69,12 @@ import { i18n } from "@/translations";
 import { useIsHere } from "@/common/hooks/use-is-here";
 import { useRouteParams } from "@/common/hooks/use-route-params";
 import * as Clipboard from "expo-clipboard";
+import {
+  entryLocation,
+  relocatedEntryId,
+  sameDayTransactionIds,
+  type EntryLocation,
+} from "./relocate-entry";
 
 const SKELETON_WIDTHS = [220, 160, 280, 120, 200, 260, 140];
 
@@ -179,6 +186,9 @@ export const EditTransactionScreen = (): JSX.Element => {
   // draft typed during a save can still be saved from this screen.
   const shaRef = useRef("");
   const entryHashRef = useRef(entryHash ?? "");
+  // Where the entry was last read, to find it again once a change elsewhere
+  // retired its ID (w21/823).
+  const locationRef = useRef<EntryLocation | null>(null);
   const documentEpochRef = useRef(0);
   const revisionTrackerRef = useRef(createRevisionTracker());
   // The editor's text, kept so iOS killing its web view does not lose the draft
@@ -202,11 +212,60 @@ export const EditTransactionScreen = (): JSX.Element => {
     documentEpochRef.current = epoch;
     resetRevisionTracker(revisionTrackerRef.current);
     shaRef.current = context.sha256sum;
+    locationRef.current = entryLocation(context.entry);
     recoveryRef.current.loaded(context.slice);
     setDocumentSpec({ value: context.slice, epoch });
     setHasUnsavedChanges(false);
     setInitialized(true);
   }, [data, initialized, shownSha]);
+
+  // The changed entry, found at the file and line it was read from: its
+  // day's transactions are read, and the one still there is it (w21/823).
+  const relocateEntry = useCallback(async () => {
+    const at = locationRef.current;
+    if (!at || !ledgerId) return null;
+    try {
+      const journal = await client.query({
+        query: GetLedgerJournalDocument,
+        variables: {
+          ledgerId,
+          query: { time: at.date, directiveTypes: ["Transaction"], limit: 50 },
+        },
+        fetchPolicy: "network-only",
+      });
+      const read = await Promise.all(
+        sameDayTransactionIds(
+          (journal.data?.getLedgerJournal?.data ?? []) as unknown[],
+          at.date,
+        ).map(async (candidate) => {
+          try {
+            const result = await client.query({
+              query: GetLedgerEntryContextDocument,
+              variables: { entryHash: candidate, ledgerId },
+              fetchPolicy: "network-only",
+            });
+            return {
+              entryHash: candidate,
+              context: result.data?.getLedgerEntryContext ?? null,
+            };
+          } catch {
+            return { entryHash: candidate, context: null };
+          }
+        }),
+      );
+      const found = relocatedEntryId(
+        read.map(({ entryHash: id, context }) => ({
+          entryHash: id,
+          location: entryLocation(context?.entry),
+        })),
+        at,
+      );
+      const context = read.find((c) => c.entryHash === found)?.context;
+      return found && context ? { entryHash: found, context } : null;
+    } catch {
+      return null;
+    }
+  }, [client, ledgerId]);
 
   // After a stale-checksum rejection the draft can never be saved as it is:
   // re-read the entry (under its current identity) and reseed the editor, the
@@ -227,6 +286,14 @@ export const EditTransactionScreen = (): JSX.Element => {
       if (!isEntryGone(error)) return;
     }
     if (!context) {
+      // Changed elsewhere: its ID is gone, but it may still be where it was.
+      const moved = await relocateEntry();
+      if (moved) {
+        entryHashRef.current = moved.entryHash;
+        context = moved.context;
+      }
+    }
+    if (!context) {
       setHasUnsavedChanges(false);
       setEntryGone(true);
       void invalidateLedgerData(client, "entries");
@@ -236,12 +303,13 @@ export const EditTransactionScreen = (): JSX.Element => {
     documentEpochRef.current = epoch;
     resetRevisionTracker(revisionTrackerRef.current);
     shaRef.current = context.sha256sum;
+    locationRef.current = entryLocation(context.entry);
     recoveryRef.current.loaded(context.slice);
     setDocumentSpec({ value: context.slice, epoch });
     setHasUnsavedChanges(false);
     setSaveError(null);
     setInsertSpec(null);
-  }, [ledgerId, refetchContext, client]);
+  }, [ledgerId, refetchContext, client, relocateEntry]);
 
   // The conflict alert's way to keep the user's text (w21/817), as the Files
   // editor's (w21/273): copy it, then load the current version to paste it
