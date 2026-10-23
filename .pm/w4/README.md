@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- [1008 — Honor a return to the current view during pending navigation](./1008.md) — minor residual of142; four genuine held-read cases ignore a newer original-view choice in Holdings/Income; third-choice/recovery controls pass, sources exact, no writes.
+
 - [1007 — Keep nonzero tiny Holdings average costs visible](./1007.md) — minor residual of W0/009; valid producer average0.00000000150 becomes0 in both-width tables/CSVs; threshold/true-zero controls pass, formatter exact, no writes.
 
 - [1006 — Restore report-view focus when the selector hides](./1006.md) — minor; three fresh open-selector resizes lose focus to BODY/top Skip link; visible-selector/Escape controls pass, both shared sources exact, no writes.
