@@ -28,6 +28,10 @@
 - [801](./801.md) — A ledger renamed on the web appears twice in the drawer; per-ledger state stays under the old id
 - [802](./802.md) — With the ledger list failed or loading, the drawer shows only the current ledger, with no retry
 - [803](./803.md) — One transient server error turns off profile photos until restart
+- [804](./804.md) — A BTC budget reads green "On target" while showing 17% over (w21/290 regression)
+- [805](./805.md) — A KWD budget is prorated to cents, so on-target spending reads "Above target"
+- [806](./806.md) — Budgets on one account in two currencies cancel each other's status
+- [807](./807.md) — VoiceOver's budget chart summary counts spending from before the budget existed
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window
 - [065](./blocked/065.md) — One early-year entry (e.g. 0050) makes the balance sheet 23,718 monthly points (3 MB) and the app stalls — **blocked:** needs an approach decision (per-pill fetch vs server downsample) and a simulator profile of the stall
 - [180](./blocked/180.md) — Budget actuals use raw prefix match (`Transport` counts `Transportation`), unlike Reports — **blocked:** needs an owner decision between component matching on the server (a Fava break) and a per-account breakdown for the client
