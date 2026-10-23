@@ -197,6 +197,23 @@ def _in_working_directory(file: Path) -> bool:
         return False
 
 
+def _folds_case(directory: Path) -> bool:
+    """Whether names in this existing directory differ only by case and still name one file.
+
+    On a case-insensitive volume `main.BEAN` is `main.bean`, so creating it
+    takes the default name beside an existing `main.beancount`; where case
+    counts it is just another file (w5/945). Probed on a name that exists.
+    """
+    try:
+        for entry in directory.iterdir():
+            swapped = entry.name.swapcase()
+            if swapped != entry.name:
+                return (directory / swapped).exists()
+    except OSError:
+        pass
+    return False
+
+
 def init(
     directory: Annotated[Path, typer.Argument(help="New ledger directory, or a .bean/.beancount file")] = Path("."),
     currency: Annotated[
@@ -257,7 +274,8 @@ def init(
         if file.exists() or file.is_symlink():
             raise ConflictError(f"Already exists: {file}. Choose a new path; init never overwrites a ledger.")
         # Refuse shadowing a sibling default root ledger (cwd discovery prefers main.bean).
-        if file.name in {name.name for name in DEFAULT_ENTRY_FILE_FALLBACKS}:
+        default_names = {name.name for name in DEFAULT_ENTRY_FILE_FALLBACKS}
+        if file.name in default_names or (file.name.casefold() in default_names and _folds_case(file.parent)):
             for sibling_name in DEFAULT_ENTRY_FILE_FALLBACKS:
                 sibling = file.with_name(sibling_name.name)
                 if sibling == file:
