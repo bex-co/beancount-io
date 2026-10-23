@@ -58,3 +58,7 @@
 - [849](./849.md) — New Transaction's Done is drawn dimmed on an invalid draft but VoiceOver doesn't say "dimmed"
 - [850](./850.md) — The valuation caption's hint promises price dates for holdings with no price
 - [851](./851.md) — A Latest Updates row with no action is announced as "dimmed"
+- [852](./852.md) — Since w21/823, Reload can adopt a different transaction after the edited one is deleted elsewhere
+- [853](./853.md) — Since w21/799, a 1st/16th or 15th/30th bill reads "Every 2 weeks" with the wrong next date
+- [854](./854.md) — Since w21/804, a "1 BTC" budget reads "Above target" while under its prorated budget
+- [855](./855.md) — Pasting " 20" into a negative row turns it unreadable (left open by w21/791)
