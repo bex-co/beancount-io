@@ -31,6 +31,8 @@ const COL = {
   amount: "amount",
   currency: "currency",
   account: "account",
+  costNumber: "cost_number",
+  costCurrency: "cost_currency",
 } as const;
 
 /**
@@ -49,9 +51,10 @@ export function buildPayeeSeriesBql(
 ): string {
   // Debited legs too, for a payee that is only ever a transfer (a card
   // payment, an ATM withdrawal); `mapPayeeSeries` uses them only for such a
-  // payee (w21/173).
+  // payee (w21/173). Their cost, for one bought at cost (w21/711).
   return (
-    "SELECT date as txn_date, payee, number as amount, currency, account " +
+    "SELECT date as txn_date, payee, number as amount, currency, account, " +
+    "cost_number, cost_currency " +
     "WHERE payee != '' " +
     `AND (${moneyRootsBqlFilter(roots)} OR number > 0) ` +
     `AND date >= ${cutoffDate}`
@@ -137,6 +140,8 @@ export function mapPayeeSeries(
   }
   // Absent from older statements: every row is then a money leg.
   const accountIdx = columnIndex(table.types, COL.account);
+  const costNumberIdx = columnIndex(table.types, COL.costNumber);
+  const costCurrencyIdx = columnIndex(table.types, COL.costCurrency);
 
   /** payee → `${date}\0${currency}` → summed amount, Expenses/Income legs */
   const sums = new Map<string, Map<string, number>>();
@@ -155,15 +160,28 @@ export function mapPayeeSeries(
       continue;
     }
     const account = accountIdx < 0 ? null : asString(row[accountIdx]);
-    const target =
-      account === null || isMoneyLeg(account, roots) ? sums : transfers;
+    const moneyLeg = account === null || isMoneyLeg(account, roots);
+    const target = moneyLeg ? sums : transfers;
     let forPayee = target.get(payee);
     if (!forPayee) {
       forPayee = new Map();
       target.set(payee, forPayee);
     }
-    const key = `${date}\0${currency}`;
-    forPayee.set(key, (forPayee.get(key) ?? 0) + amount);
+    // A transfer into a holding bought at cost (a monthly $500 into VTI) is
+    // the money paid, not the shares: 1.5625 VTI read as "~1.5625 VTI"
+    // (w21/711).
+    const costNumber =
+      moneyLeg || costNumberIdx < 0 ? null : asNumber(row[costNumberIdx]);
+    const costCurrency =
+      costNumber === null || costCurrencyIdx < 0
+        ? null
+        : asString(row[costCurrencyIdx]);
+    const [value, unit] =
+      costNumber !== null && costCurrency
+        ? [amount * costNumber, costCurrency]
+        : [amount, currency];
+    const key = `${date}\0${unit}`;
+    forPayee.set(key, (forPayee.get(key) ?? 0) + value);
   }
 
   // A payee whose events are mostly transfers reads its debited legs instead:

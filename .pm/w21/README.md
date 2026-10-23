@@ -19,7 +19,6 @@
 - [718](./718.md) — Home's Latest Updates ledger rows ("Committed to …") are English in every language
 - [712](./712.md) — A reinvested $60 dividend shows as "+$0.48" (the cash residue) or "+0.5 VTI" instead of the income earned
 - [713](./713.md) — After a stock split, account detail's chart reads "+90 QANVDA (+900.00%)" in green (w21/571 gap)
-- [711](./711.md) — A fixed $500 monthly investment shows in Merchants as "Monthly · ~1.5625 VTI"
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window
 - [065](./blocked/065.md) — One early-year entry (e.g. 0050) makes the balance sheet 23,718 monthly points (3 MB) and the app stalls — **blocked:** needs an approach decision (per-pill fetch vs server downsample) and a simulator profile of the stall
 - [180](./blocked/180.md) — Budget actuals use raw prefix match (`Transport` counts `Transportation`), unlike Reports — **blocked:** needs an owner decision between component matching on the server (a Fava break) and a per-account breakdown for the client

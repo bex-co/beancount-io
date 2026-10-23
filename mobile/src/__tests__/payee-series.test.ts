@@ -206,8 +206,68 @@ describe("a payee that is only ever a transfer", () => {
 
   it("asks for debited legs alongside the money legs", () => {
     const bql = buildPayeeSeriesBql("2023-07-20");
-    expect(bql.includes(", account WHERE")).toBe(true);
+    expect(bql.includes(", account, cost_number, cost_currency WHERE")).toBe(
+      true,
+    );
     expect(bql.includes(" OR number > 0)")).toBe(true);
+  });
+});
+
+// w21/711: a fixed $500 a month into VTI read "Monthly · ~1.5625 VTI": the
+// transfer series kept the shares bought, not the money paid. The rows are the
+// engine's for the note's six buys.
+describe("a payee that buys a holding at cost each month", () => {
+  const WITH_COST = [
+    ...TYPES,
+    { name: "account", dtype: "str" },
+    { name: "cost_number", dtype: "Decimal" },
+    { name: "cost_currency", dtype: "str" },
+  ];
+  const buys = ["05", "06", "07", "08", "09", "10"].map((month, i) => [
+    `2026-${month}-05`,
+    "Vanguard",
+    i % 2 ? "1.5625" : "1.6",
+    "VTI",
+    "Assets:Vanguard:VTI",
+    i % 2 ? "320.00" : "312.50",
+    "USD",
+  ]);
+
+  it("reads the money paid, steady, in its cost currency", () => {
+    const series = mapPayeeSeries(table(buys, WITH_COST)).get("Vanguard")!;
+    expect(series.map((point) => [point.currency, point.amount])).toEqual(
+      buys.map(() => ["USD", 500]),
+    );
+    const verdict = detectRecurrence(series, "2026-10-21");
+    expect(verdict?.cadence).toBe("monthly");
+    expect(verdict?.typicalAmountByCurrency).toEqual({ USD: 500 });
+    expect(verdict?.isApproximate).toBe(false);
+  });
+
+  it("leaves a cash transfer and an Expenses leg as they were", () => {
+    const series = mapPayeeSeries(
+      table(
+        [
+          ["2026-10-01", "ATM", "100.00", "USD", "Assets:Cash", null, null],
+          [
+            "2026-10-02",
+            "Shop",
+            "5.00",
+            "VTI",
+            "Expenses:Gifts",
+            "9.00",
+            "USD",
+          ],
+        ],
+        WITH_COST,
+      ),
+    );
+    expect(series.get("ATM")).toEqual([
+      { date: "2026-10-01", currency: "USD", amount: 100 },
+    ]);
+    expect(series.get("Shop")).toEqual([
+      { date: "2026-10-02", currency: "VTI", amount: 5 },
+    ]);
   });
 });
 
