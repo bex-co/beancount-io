@@ -12,6 +12,8 @@
 
 ## Inbox
 
+- [745](./745.md) — A transaction you wrote with flag R/T/U/M/P opens read-only as if plugin-generated, and one flagged S or C is missing from Transactions
+- [746](./746.md) — Transactions rows mark only "!", so forecast (#) entries look booked and can fill the whole first screen
 - [741](./741.md) — Budget directives appear in account detail as a blank "Custom · Custom" row with $0.00, in English
 - [742](./742.md) — Account detail's "1 not in total" can't be opened, so the excluded amount appears nowhere on that screen
 - [743](./743.md) — A Persian or Arabic account path shows its segments child-before-parent on Accounts and in the detail header
