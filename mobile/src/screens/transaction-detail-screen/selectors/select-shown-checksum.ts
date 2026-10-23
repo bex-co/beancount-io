@@ -36,3 +36,23 @@ export function isOtherSlice(
 ): boolean {
   return Boolean(shown) && read !== undefined && shown !== read;
 }
+
+/**
+ * The checksum an Edit's save last returned. The detail screen adopts a later
+ * read as its own only when it matches this (w21/692): a flag set when Edit was
+ * tapped stayed on after Cancel and adopted the twin's slice silently.
+ */
+let lastSaved: string | undefined;
+
+export function rememberSavedChecksum(sha256sum: string): void {
+  lastSaved = sha256sum;
+}
+
+export function forgetSavedChecksum(): void {
+  lastSaved = undefined;
+}
+
+/** Whether a read is the slice that save wrote. */
+export function isSavedChecksum(read: string | undefined): boolean {
+  return read !== undefined && read === lastSaved;
+}

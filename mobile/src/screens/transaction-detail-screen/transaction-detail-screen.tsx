@@ -69,6 +69,8 @@ import {
 } from "./selectors/select-own-entry";
 import { selectSourceSlice } from "./selectors/select-source-slice";
 import {
+  forgetSavedChecksum,
+  isSavedChecksum,
   isShownEntryReplaced,
   nextShownChecksum,
 } from "./selectors/select-shown-checksum";
@@ -405,15 +407,16 @@ const TransactionDetailImpl = ({
   // entry's ID can come to answer with the other twin's slice (w21/672).
   const readSha = data?.getLedgerEntryContext?.sha256sum;
   const [pinnedSha, setPinnedSha] = useState<string | undefined>();
-  // Set by this screen's own Edit, whose save legitimately changes the slice.
-  const adoptNextSha = useRef(false);
+  // An Edit's own save legitimately changes the slice: a read that is the
+  // slice that save returned is adopted. Anything else is not, so an Edit that
+  // was cancelled leaves the guard on (w21/692).
   useEffect(() => {
     const next = nextShownChecksum(pinnedSha, readSha, {
       loading,
-      adoptNext: adoptNextSha.current,
+      adoptNext: isSavedChecksum(readSha),
     });
     if (next !== pinnedSha) {
-      adoptNextSha.current = false;
+      if (isSavedChecksum(readSha)) forgetSavedChecksum();
       setPinnedSha(next);
     }
   }, [pinnedSha, readSha, loading]);
@@ -445,7 +448,6 @@ const TransactionDetailImpl = ({
 
   const handleEdit = useCallback(() => {
     if (!canWrite || !sha256sum) return;
-    adoptNextSha.current = true;
     openEditTransaction(router, {
       entryHash,
       ledgerId,

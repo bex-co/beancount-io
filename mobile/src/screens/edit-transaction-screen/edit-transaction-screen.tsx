@@ -58,7 +58,10 @@ import {
 import { applySavedIdentity, resolveSaveExit } from "./save-exit";
 import { saveToastMessage, selectOutcomeFailure } from "./save-failure";
 import { isEntryGone } from "@/screens/transaction-detail-screen/selectors/select-entry-gone";
-import { isOtherSlice } from "@/screens/transaction-detail-screen/selectors/select-shown-checksum";
+import {
+  isOtherSlice,
+  rememberSavedChecksum,
+} from "@/screens/transaction-detail-screen/selectors/select-shown-checksum";
 import { selectedTransactionVar } from "@/screens/transaction-detail-screen/open-transaction-detail";
 import { RouteLedgerUnavailable } from "@/components/route-ledger-unavailable";
 import { i18n } from "@/translations";
@@ -347,6 +350,8 @@ export const EditTransactionScreen = (): JSX.Element => {
             );
             shaRef.current = next.sha256sum;
             entryHashRef.current = next.entryHash;
+            // The detail screen behind adopts this slice as its own, and no other.
+            rememberSavedChecksum(next.sha256sum);
             return result;
           },
           loadingMessage: t("saving"),

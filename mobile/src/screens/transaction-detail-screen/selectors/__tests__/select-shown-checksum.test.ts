@@ -1,5 +1,8 @@
 import {
+  forgetSavedChecksum,
   isOtherSlice,
+  isSavedChecksum,
+  rememberSavedChecksum,
   isShownEntryReplaced,
   nextShownChecksum,
 } from "../select-shown-checksum";
@@ -45,5 +48,43 @@ describe("the editor opened from a detail screen", () => {
   it("compares nothing when no checksum came with the route", () => {
     expect(isOtherSlice(undefined, "sha-B")).toBe(false);
     expect(isOtherSlice("", "sha-B")).toBe(false);
+  });
+});
+
+// w21/692: Edit then Cancel wrote nothing, but a flag left on by tapping Edit
+// adopted the twin's slice on the next read.
+describe("adopting the slice an Edit saved", () => {
+  afterEach(() => {
+    forgetSavedChecksum();
+  });
+
+  it("adopts a read that is the saved slice", () => {
+    rememberSavedChecksum("sha-A2");
+    expect(isSavedChecksum("sha-A2")).toBe(true);
+    expect(
+      nextShownChecksum("sha-A", "sha-A2", {
+        loading: false,
+        adoptNext: isSavedChecksum("sha-A2"),
+      }),
+    ).toBe("sha-A2");
+  });
+
+  it("keeps the guard on after a cancelled Edit, when the twin's slice answers", () => {
+    // Nothing was saved, so nothing is remembered.
+    expect(isSavedChecksum("sha-B")).toBe(false);
+    const pinned = nextShownChecksum("sha-A", "sha-B", {
+      loading: false,
+      adoptNext: isSavedChecksum("sha-B"),
+    });
+    expect(pinned).toBe("sha-A");
+    expect(isShownEntryReplaced(pinned, "sha-B", false)).toBe(true);
+  });
+
+  it("does not take another slice for the saved one, nor an unread value", () => {
+    rememberSavedChecksum("sha-A2");
+    expect(isSavedChecksum("sha-B")).toBe(false);
+    expect(isSavedChecksum(undefined)).toBe(false);
+    forgetSavedChecksum();
+    expect(isSavedChecksum("sha-A2")).toBe(false);
   });
 });

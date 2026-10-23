@@ -12,7 +12,6 @@
 
 ## Inbox
 
-- [692](./692.md) — w21/672 is undone by Edit ▸ Cancel: the twin guard stays off, and a later Delete removes the surviving twin
 - [693](./693.md) — Edit Transaction's Reload after a conflict opens the other twin's text, so the next Save overwrites it
 - [694](./694.md) — Since w21/672, Delete after a metadata-only change elsewhere dead-ends on "changed or removed" (w21/250 regression)
 - [695](./695.md) — A CRLF main.bean still gets a bare-LF line when an add creates a routed year file and its include (w21/673 gap)
