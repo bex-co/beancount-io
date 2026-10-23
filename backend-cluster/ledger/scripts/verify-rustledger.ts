@@ -1807,6 +1807,39 @@ async function main(): Promise<void> {
       ),
     `built-in plugins' errors land on bean-check's lines (got ${JSON.stringify(placedErrors)})`,
   );
+  // w21/754: unique_prices counted implicit_prices' prices whatever the order,
+  // so a buy beside a written price was refused under pedantic.
+  for (const [first, second, refused] of [
+    ["pedantic", "implicit_prices", false],
+    ["unique_prices", "implicit_prices", false],
+    ["implicit_prices", "unique_prices", true],
+  ] as const) {
+    const ordered = (
+      await parseLedgerFiles(
+        {
+          "main.beancount": [
+            `plugin "beancount.plugins.${first}"`,
+            `plugin "beancount.plugins.${second}"`,
+            "2024-01-01 commodity USD",
+            "2024-01-01 commodity QAVTI",
+            "2024-01-01 open Assets:Broker QAVTI",
+            "2024-01-01 open Assets:Cash USD",
+            "2026-10-20 price QAVTI 101.00 USD",
+            '2026-10-20 * "Buy"',
+            "  Assets:Broker  1 QAVTI {100.00 USD}",
+            "  Assets:Cash  -100.00 USD",
+          ].join("\n"),
+        },
+        "main.beancount",
+        { today: "2099-01-01" },
+      )
+    ).errors.map((e) => `${e.line} ${e.message}`);
+    assert(
+      JSON.stringify(ordered) ===
+        JSON.stringify(refused ? ["7 Disagreeing price entries"] : []),
+      `${first} then ${second} matches bean-check (got ${JSON.stringify(ordered)})`,
+    );
+  }
   // w21/733: a posting flag was read as the sale's account.
   const flagged = (
     await parseLedgerFiles(

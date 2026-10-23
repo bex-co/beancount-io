@@ -151,3 +151,36 @@ describe("reconcileUniquePriceErrors", () => {
     expect(check([other], [], "")).toEqual([[null, null, "Unknown account"]]);
   });
 });
+
+// w21/754: Beancount's unique_prices sees implicit_prices' prices only when
+// that plugin runs first; pedantic carries none of its own.
+describe("reconcileUniquePriceErrors and plugin order", () => {
+  const body = [
+    "2026-10-20 price VTI 101.00 USD",
+    '2026-10-20 * "Buy"',
+    "  Assets:Broker  1 VTI {100.00 USD}",
+    "  Assets:Cash  -100.00 USD",
+  ];
+  // The stream holds the written price and the buy's implicit one.
+  const stream = [price("2026-10-20", "101.00"), price("2026-10-20", "100.00")];
+  const run = (...plugins: string[]) =>
+    check(
+      [],
+      stream,
+      [
+        ...plugins.map((name) => `plugin "beancount.plugins.${name}"`),
+        ...body,
+      ].join("\n"),
+    );
+
+  it("ignores the buy's price when the check runs before implicit_prices", () => {
+    expect(run("unique_prices", "implicit_prices")).toEqual([]);
+    expect(run("pedantic", "implicit_prices")).toEqual([]);
+  });
+
+  it("refuses the disagreement when implicit_prices runs first", () => {
+    expect(run("implicit_prices", "unique_prices")).toEqual([
+      ["main.bean", 3, "Disagreeing price entries"],
+    ]);
+  });
+});
