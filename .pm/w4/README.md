@@ -62,7 +62,6 @@
 
 - [979 — Keep an Entry Context draft through a cache refresh](./979.md) — minor; w4/m49 simplify altitude review, 2026-10-22; a cache refetch swaps a dirty entry editor for its loading view, so a write landing after the reader left can drop a newer draft; code-read, not yet reproduced.
 
-- [978 — Keep Budget variance tolerance below visible differences](./978.md) — minor; modeled read fixtures against deployed dashboard,2026-10-22; exact ±1 USD deltas become On target/zero at a large target, both-width +1 and boundary controls confirmed; regression of130, no writes.
 
 
 
