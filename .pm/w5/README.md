@@ -46,7 +46,7 @@
 
 - [1004 — Preserve a real booked sale with a partly inferred cash total](./1004.md) — reopened major CLI regression after 9d82b99cc; on-disk loses the sale and import writes another 500 USD despite explicit duplicate skip, reproduced twice 2026-10-23.
 
-- [1010 — Retain authored native-ID owners when weighted inference remains unresolved](./1010.md) — major CLI regression after completed 1005; filtered cost/price trades lose their B1 owner, allowing duplicate cash outflows and full broker acquisitions, reproduced 2026-10-23.
+- [1010 — Recover an inferred native-ID owner with its native booked weight](./1010.md) — reopened remaining minor CLI acceptance after 71ab12792; total/compound cost recovery rounds Cash differently and rejects an unchanged native-equivalent statement, reproduced twice 2026-10-23.
 
 
 
