@@ -1,0 +1,50 @@
+{
+  "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+  "notGrouped": "bottom",
+  "groupings": [
+    {
+      "title": "Beancount.io suite",
+      "description": "Install the complete ledger workflow suite together. Claude Code and Codex also offer one versioned beancount-io plugin.",
+      "skills": [
+        "beancount-accruals",
+        "beancount-add",
+        "beancount-ask",
+        "beancount-close",
+        "beancount-import",
+        "beancount-importer-author",
+        "beancount-init",
+        "beancount-migrate",
+        "beancount-options",
+        "beancount-property",
+        "beancount-reconcile",
+        "beancount-roll-forward",
+        "beancount-trade"
+      ]
+    },
+    {
+      "title": "Repository development",
+      "description": "Contributor workflows for this monorepo. Excluded from normal customer installs; these are not part of the ledger suite.",
+      "skills": [
+        "loopx",
+        "mermaid",
+        "mobile-release",
+        "pm",
+        "pm-brainstorm",
+        "qa-find-bugs-cli",
+        "qa-find-bugs-dashboard",
+        "qa-find-bugs-mcp",
+        "qa-find-bugs-mobile",
+        "routine-abstraction-improver",
+        "routine-abstraction-police",
+        "routine-dead-code-removal",
+        "routine-dup-unifier",
+        "routine-flaky-test-fixer",
+        "routine-logic-bugfixer",
+        "routine-logic-simplifier",
+        "routine-shipped-feature-inliner",
+        "routine-useless-test-pruner",
+        "ship"
+      ]
+    }
+  ]
+}

@@ -7,7 +7,7 @@
 | Milestone | Adoption outcome | Current state |
 | --- | --- | --- |
 | [m6](done/m6/README.md) | Install the submitted local-ledger skills from ClawHub without a repository checkout. | Done: historical standalone release verified 13 versions, OpenClaw119/119files, 12supported Hermes installs112/112files, default search and retained first queries. m6.5 subsequently retires those listings for the one suite entry. |
-| [m6.5](./blocked/m6.5/README.md) | Install and update the ledger workflows through one Beancount.io suite. | Public `@puncsky/beancount-io` 0.4.0; native search/install/update, 13 skills/53 files and migration pass. All thirteen standalone listings retired. Nine tasks done; Hermes admission and final closeout remain blocked. |
+| [m6.5](./blocked/m6.5/README.md) | Install and update the ledger workflows through one Beancount.io suite. | Public `@puncsky/beancount-io` 0.4.0 and all thirteen standalone listings retired. Nine of twelve tasks done; other-channel grouping/whole-suite refresh implemented, third-party index read-backs and Hermes admission remain. |
 | [m7](done/m7/README.md) | Connect OpenClaw and Hermes to the existing hosted Beancount.io MCP endpoint. | Done; separate from local ClawHub skill distribution. |
 | [m8](blocked/m8/README.md) | Publish or claim the hosted connector on Smithery and Glama. | Shared packet done; supported Smithery intake and existing Glama claim/private-QA/full-day health remain. |
 | [m9](blocked/m9/README.md) | Make the hosted connector discoverable in Docker, Cursor, Cline and GitHub/VS Code galleries. | Cursor community/native QA complete and grant retained; separate client grants, official agreement/operator nomination and platform reviews remain. |
@@ -28,6 +28,11 @@ The owner's follow-through retires all thirteen old standalone listings through
 owner soft-delete. Their online install/update commands are withdrawn; historical
 evidence and existing local copies remain. Post-retirement suite update/discovery
 still passes for all thirteen workflows and 53 authored files.
+
+The subsequent other-channel request adds t012: Claude Code/Codex already expose
+one suite; skills.sh gets explicit customer/development grouping and a canonical
+whole-suite source install. skills.rest accepts an automatic index refresh;
+third-party public index read-backs remain alongside the Hermes admission gate.
 
 The04:17UTC primary release/source refresh retains WASM0.24.0 (58versions,
 September6publication, identical artifact integrity). Rustledger main advances
@@ -89,7 +94,7 @@ Prioritize the major correctness findings (PRINT/FROM/JOURNAL, authored location
 
 ## Milestones
 
-- [ ] **m6.5** — [Distribute the Beancount.io customer skills as one suite](./blocked/m6.5/README.md) (11 tasks; 9 done; A3/A2/A1) ← explicit owner request 2026-10-22. **Blocked:** Hermes portable metadata/init-policy admission and final closeout only. Suite 0.4.0 is public; all thirteen standalone listings retired; native registry search, install, update, 13 skills/53 files, migration and tests pass.
+- [ ] **m6.5** — [Distribute the Beancount.io customer skills as one suite](./blocked/m6.5/README.md) (12 tasks; 9 done; A3/A2/A1) ← explicit owner request 2026-10-22, extended to other channels 2026-10-23 UTC. **Blocked:** Hermes admission, third-party index read-backs and final closeout. Owned grouping/whole-suite install refresh and CI checks implemented; suite 0.4.0 public and all thirteen standalone ClawHub listings retired.
 
 - [ ] **m9** — [Reach developer marketplaces and galleries](blocked/m9/README.md) (10 tasks; A3/A1) ← approved local roadmap, synchronized under `$loopx w6` on 2026-10-21 UTC; **blocked:** payloads prepared; cursor.directory entry in New/native OAuth/query/preview complete; native dedicated-QA journeys, final publisher agreement/operator request and external reviews remain
 - [ ] **m10** — [List the connector in independent web directories](blocked/m10/README.md) (8 tasks; A3/A1) ← approved local roadmap, synchronized under `$loopx w6` on 2026-10-21 UTC; **blocked:** MCPServers.org and MCPMarket free submissions accepted into queues; LobeHub sign-in agreement approval pending

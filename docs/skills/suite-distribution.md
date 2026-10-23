@@ -225,6 +225,49 @@ full-suite admission remains blocked as described above; retirement does not
 establish a replacement Hermes install path. Routine releases and current
 installation guidance now point only to the suite.
 
+## Other distribution channels — 2026-10-23 UTC
+
+The owner requested the same consolidation audit beyond ClawHub. Separate
+workflow folders remain inside the product; owned publication and current
+installation guidance target the complete suite.
+
+| Channel | Observed state | Action and verification |
+| --- | --- | --- |
+| Claude Code plugin | One `beancount-io` marketplace entry at 0.4.0, declaring all thirteen workflows. | Already a suite; retain the shared version and inventory gate. |
+| Codex plugin | One `beancount-io` entry at the same 0.4.0 version and canonical source tree. | Already a suite; no separate per-skill publication found in the repository's release configuration. |
+| Git/link installer | One checkout supplies the complete source inventory to both clients. | Retain it for local source edits; current guidance prefers the plugin for one versioned managed install. |
+| `npx skills` / skills.sh | The repository page still lists 29 rows: ten customer workflows and nineteen contributor tools. The CLI's normal discovery excludes internal skills, but the historical public rows remain. | Add root `skills.sh.json`: one complete customer group first, with contributor workflows explicitly separate. CI rejects missing customer skills or audience mixing. Install and repeated whole-suite refresh from the explicit customer `skills/` URL pass for exactly thirteen workflows on both agents, with telemetry disabled in QA. |
+| `gh skill` | A Git-repository install route; no separate Beancount.io per-skill publishing job or release inventory was found. | Preserve the earlier whole-suite commands and pin behavior. Document the preview-command prerequisite: the default local 2.74.0 lacks `gh skill`; this audit does not claim a new native rehearsal of the earlier 2.96.0 controls. |
+| skills.rest | Its company page advertises 27 indexed skills, including internal `ship`/`loopx`; the customer ask page still uses the removed `skills/.claude/skills/` path and a generated `beancount-ask-bex-co` selector. | Submit one canonical customer-root refresh through its automatic indexing form, with grouping/internal-exclusion corrections and no contact details. The form confirms acceptance and a scanner window of up to 24 hours. Public cleanup is still pending; no repeated submission or claim of completed indexing. |
+| SkillsMP | Live search already groups this project by repository, but previews still point at old `skills/.claude/skills/` paths and older descriptions. | Record the stale index separately from owned releases. Its public documentation describes GitHub discovery without a guaranteed refresh schedule; an owner-edit/delete endpoint was not established in this audit. No unsupported mutation or unsolicited outreach is used. |
+
+The [skills.sh customization contract](https://www.skills.sh/docs/customize)
+supports grouping, not hiding or deleting old per-skill catalog entries. Its
+configuration is fetched after a normal telemetry-enabled installation and then
+cached; committing the file alone does not establish that the public page has
+updated. The [Packs contract](https://www.skills.sh/docs/packs) additionally
+offers unlisted collections. The audit reached its owner builder, but GitHub
+connection did not persist and archive upload required additional local-file
+access. No Pack was published. Creating another distribution channel is not
+required to update the existing repository collection, so this follow-through
+uses the owned grouping and whole-suite source rather than expanding file
+access or advertising an unverified Pack link.
+
+Skills CLI **1.5.23** installs and repeats the explicit customer-root command for
+both Claude Code and Codex with **13/13** customer directories and a matching
+thirteen-entry lock. A separate project `skills update -p -y` did not complete
+within 240 seconds; its source performs repeated per-skill reinstall work. The
+bounded check is retained rather than called a successful update. The install
+guide uses the completed whole-suite refresh route. These checks make no model
+calls, change no global agent profile and generate no synthetic install telemetry.
+
+The [skills.rest indexing form](https://skills.rest/contribute) confirms only the
+request. Its [current ask listing](https://skills.rest/skill/beancount-ask-bex-co)
+and [company page](https://skills.rest/company/bex-co) remain the read-back
+controls. [SkillsMP's discovery contract](https://skillsmp.com/agent-skills#how-can-my-skill-be-discovered)
+does not promise an update schedule. Third-party stale pages are not reported as
+fixed merely because the source repository and its install instructions changed.
+
 ## Primary contracts
 
 - [ClawHub publishing](https://github.com/openclaw/clawhub/blob/main/docs/publishing.md)

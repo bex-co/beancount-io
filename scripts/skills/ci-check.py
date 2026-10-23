@@ -645,6 +645,25 @@ def check_plugin_manifests() -> None:
     print(f"OK plugin manifests (suite version {entry['version']})")
 
 
+def check_catalog_groups() -> None:
+    """Keep the customer suite together and contributor tools out of its group."""
+    try:
+        config = json.loads((REPO_ROOT / "skills.sh.json").read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError) as error:
+        fail(f"skills.sh.json: missing or invalid catalog configuration ({error})")
+    if not isinstance(config, dict) or config.get("notGrouped") != "bottom":
+        fail("skills.sh.json: curated suite must precede ungrouped skills")
+    groups = config.get("groupings")
+    expected = [("Beancount.io suite", SKILLS_DIR), ("Repository development", DEV_SKILLS_DIR)]
+    if not isinstance(groups, list) or len(groups) != len(expected):
+        fail("skills.sh.json: expected one customer suite group and one contributor group")
+    for group, (title, directory) in zip(groups, expected):
+        inventory = sorted(path.parent.name for path in directory.glob("*/SKILL.md"))
+        if not isinstance(group, dict) or group.get("title") != title or group.get("skills") != inventory:
+            fail(f"skills.sh.json: {title} must contain exactly its canonical skills ({inventory})")
+    print("OK skills.sh groups (one customer suite; separate repository development)")
+
+
 def main() -> None:
     check_symlinks()
     check_layout()
@@ -658,6 +677,7 @@ def main() -> None:
     check_bea_first()
     check_no_redundant_installs()
     check_plugin_manifests()
+    check_catalog_groups()
     print("All skills CI checks passed.")
 
 

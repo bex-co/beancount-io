@@ -26,6 +26,8 @@ The suite shares [command recipes](beancount-init/references/bea-cli.md) that se
 
 ## Install
 
+For one versioned suite, use the [Beancount.io plugin for Claude Code/Codex](../docs/skills/installation.md#plugin-both-clients) or the [OpenClaw suite package](../docs/skills/installation.md#one-suite-release). The thirteen source folders are the workflows inside that suite. Git-copy channels install them together from the explicit customer directory; third-party per-skill pages do not define separate Beancount.io releases.
+
 For a Git checkout, install the whole suite: migration and month-end close depend on sibling workflows, and each skill's `references/` and fixtures belong with its `SKILL.md`. One Git checkout serves Claude Code (`~/.claude/skills`) and Codex (`~/.agents/skills`):
 
 ```sh

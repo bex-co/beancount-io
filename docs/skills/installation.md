@@ -71,19 +71,21 @@ Next: get a first answer from a sample ledger with the [first-query walkthrough]
 
 ## Install from a standard channel instead
 
-The checkout-and-link install above is one way in. The standard skill channels also carry the suite, because it lives at the conventional `skills/<name>/SKILL.md` layout. A channel install **copies** the thirteen skills into the agent's directory instead of linking a checkout, so there is no `verify` script afterwards: confirm with the client skill listing in step 3 and the [first-query walkthrough](first-query.md). Install the whole suite every time — the skills hand off to siblings and share one command contract. Each channel below was checked against the tool's current help (2026-10-19); the exact forms matter, for the reasons given.
+For one versioned install and update, use the [Beancount.io plugin](#plugin-both-clients) on Claude Code/Codex or the [suite package](#one-suite-release) on OpenClaw. The Git channels below also install the whole suite, but copy individual workflow directories rather than installing a versioned plugin. Confirm all thirteen skills with the client listing in step 3 and the [first-query walkthrough](first-query.md). Skills hand off to siblings and share one command contract, so install them together. These channels read this repository; their per-skill catalog pages are not separate releases maintained by Beancount.io.
 
 ### `npx skills` (skills.sh)
 
 ```sh
 # every ledger on this machine (drop -g inside one ledger workspace)
-npx skills add bex-co/beancount-io -g -a claude-code codex -y
-npx skills update -g -y   # later updates
+npx skills add https://github.com/bex-co/beancount-io/tree/main/skills -g -a claude-code codex -y
+# repeat the same command to refresh the complete suite
 ```
 
-Do **not** add `--skill '*'` or `--all`: explicit all-skill selection also included this repository's internal development skills in the 1.5.18 rehearsal (2026-10-19). The no-flag form above selects the customer `beancount-*` suite. To remove: `npx skills remove -g` and select the installed `beancount-*` names (or pass them as arguments).
+The explicit `skills/` source selects the customer suite. Skills CLI 1.5.23 installs and refreshes exactly thirteen customer workflows for both clients at project scope (2026-10-23 UTC); the global form adds only `-g`. A separate `skills update -p -y` run did not finish within its 240-second check window, so the exercised whole-suite refresh above repeats the install command. The [channel audit](suite-distribution.md#other-distribution-channels--2026-10-23-utc) retains that limit. Do **not** add `--skill '*'` or `--all` when installing from the repository root: explicit all-skill selection included internal development skills in the earlier 1.5.18 rehearsal. To remove: `npx skills remove -g` and select the installed `beancount-*` names (or pass them as arguments).
 
 ### `gh skill`
+
+This compatibility route requires a GitHub CLI build with the preview `gh skill` commands (the original rehearsal used 2.96.0). Older builds such as 2.74.0 do not expose them. Check `gh skill install --help` first; the plugin route above is available independently.
 
 ```sh
 gh skill install bex-co/beancount-io --all --pin main --agent claude-code --scope user
@@ -121,8 +123,8 @@ Hermes supports direct GitHub skill paths, but a single raw folder can omit the 
 
 ### Choosing a method
 
-- **Link installer (steps 1–3):** one checkout shared by both agents, updated by one `git pull`, with `verify` and conflict detection. Best default, and the only method that keeps local skill edits in Git.
-- **Plugin:** the client's own managed install — marketplace discovery, namespaced skills, versioned updates. Best when you do not want to keep a checkout and do not edit skills.
+- **Plugin:** one versioned Beancount.io suite managed by the client, with namespaced skills and one update. Default when you do not edit skill sources.
+- **Link installer (steps 1–3):** one checkout shared by both agents, updated by one `git pull`, with `verify` and conflict detection. Use it to keep local skill edits in Git.
 - **A channel (`npx`/`gh`):** one command, no checkout to keep. You trade `verify` and the single update point for per-agent copies that each channel updates its own way.
 
 Keep **one method per client**. A client holding the suite twice (say, linked into `~/.claude/skills` and installed as the plugin) lists both copies with the same descriptions; which one answers a given request is the client's choice, not something either installer controls. `verify` prints a note (not a failure) when it can tell the plugin also provides the suite. Moving from a linked install to the plugin: `uninstall` the links (see [Remove](#remove), keep the checkout only if you want it), then install the plugin.

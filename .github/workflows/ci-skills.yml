@@ -11,6 +11,7 @@ on:
       - ".claude/skills"
       - ".claude-plugin/**"
       - "plugin.json"
+      - "skills.sh.json"
       - ".agents/plugins/**"
       - ".github/workflows/ci-skills.yml"
   pull_request:
@@ -23,6 +24,7 @@ on:
       - ".claude/skills"
       - ".claude-plugin/**"
       - "plugin.json"
+      - "skills.sh.json"
       - ".agents/plugins/**"
       - ".github/workflows/ci-skills.yml"
 

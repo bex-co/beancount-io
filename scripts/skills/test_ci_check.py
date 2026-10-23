@@ -280,6 +280,62 @@ class TestPluginManifests(unittest.TestCase):
         self.assertIn("is not semver", self.check())
 
 
+class TestCatalogGroups(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.customer = self.root / "skills"
+        self.development = self.root / ".agents/skills"
+        for base, name in [(self.customer, "beancount-ask"), (self.development, "ship")]:
+            skill = base / name / "SKILL.md"
+            skill.parent.mkdir(parents=True)
+            skill.write_text("x")
+        self.config = {
+            "notGrouped": "bottom",
+            "groupings": [
+                {"title": "Beancount.io suite", "skills": ["beancount-ask"]},
+                {"title": "Repository development", "skills": ["ship"]},
+            ],
+        }
+        patch = mock.patch.multiple(
+            ci_check, REPO_ROOT=self.root, SKILLS_DIR=self.customer, DEV_SKILLS_DIR=self.development
+        )
+        patch.start()
+        self.addCleanup(patch.stop)
+
+    def check(self):
+        (self.root / "skills.sh.json").write_text(json.dumps(self.config))
+        error = io.StringIO()
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(error):
+            try:
+                ci_check.check_catalog_groups()
+            except SystemExit:
+                pass
+        return error.getvalue()
+
+    def test_separate_complete_audiences_pass(self):
+        self.assertEqual(self.check(), "")
+
+    def test_new_customer_skill_cannot_silently_miss_the_suite_group(self):
+        skill = self.customer / "beancount-close/SKILL.md"
+        skill.parent.mkdir()
+        skill.write_text("x")
+        self.assertIn("Beancount.io suite must contain exactly", self.check())
+
+    def test_contributor_skill_cannot_enter_the_customer_suite(self):
+        self.config["groupings"][0]["skills"].append("ship")
+        self.assertIn("Beancount.io suite must contain exactly", self.check())
+
+    def test_contributor_inventory_cannot_go_stale(self):
+        self.config["groupings"][1]["skills"] = []
+        self.assertIn("Repository development must contain exactly", self.check())
+
+    def test_ungrouped_skills_cannot_displace_the_suite(self):
+        self.config["notGrouped"] = "top"
+        self.assertIn("curated suite must precede", self.check())
+
+
 class TestRoutingSet(unittest.TestCase):
     def setUp(self):
         scratch = SCRIPTS_DIR / "tmp"

@@ -142,7 +142,7 @@ Your ledger stays the same plain-text file across all of them — hosted or loca
 | [`dashboard/`](./dashboard) | Active web client: ledgers, journal, reports, Monaco editor, imports, collaboration, AI assistant (React 19 + TanStack Start + Apollo) |
 | [`mobile/`](./mobile) | Active iOS & Android client (Expo + React Native + Apollo) |
 | [`cli/`](./cli) | Active `bea` CLI and Python tooling ([releases](https://github.com/bex-co/beancount-io/releases?q=bea)) |
-| [`skills/`](./skills) | Active agent ledger skills (thirteen `beancount-*` workflows; also installable as the `beancount-io` plugin) |
+| [`skills/`](./skills) | One Beancount.io ledger suite with thirteen `beancount-*` workflows; install the versioned `beancount-io` plugin or the complete source collection. |
 | [`backend-cluster/`](./backend-cluster) | Active backend: GraphQL/REST gateway, ledger service, IDL, and agent sandbox |
 
 The dashboard and mobile app are clients for the Beancount.io API served by `backend-cluster/` — hosted, or self-run. Skills have two audiences: Beancount users get [`skills/`](./skills/README.md); repository contributors get [`.agents/skills/`](./.agents/skills) (see [`.agents/AGENTS.md`](./.agents/AGENTS.md)). The root `.claude/skills` links to `.agents/skills` so Claude Code and Codex share the internal workflows.
