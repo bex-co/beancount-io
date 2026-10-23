@@ -11,6 +11,7 @@ import {
   accountHierarchy,
   buildPriceMap,
   clampDirectives,
+  balanceSheetCap,
   closeCurrentEarnings,
   deriveReportAccounts,
   filterDirectivesAsync,
@@ -215,6 +216,7 @@ export class LedgerFinanceService implements ILedgerFinanceService {
       operatingCurrency,
       roots,
       clamp,
+      unrealizedAccount,
     } = await this.loadReportDirectives(ledgerId, userId, {
       account,
       filter,
@@ -225,7 +227,17 @@ export class LedgerFinanceService implements ILedgerFinanceService {
       rawDirectives,
       operatingCurrency,
     );
-    const equityDirectives = closeCurrentEarnings(directives, clamp);
+    // Conversions and unrealized gains, as Fava's `Tree.cap` adds them, on
+    // the clamped stream and the whole one alike (w21/710).
+    const equityDirectives = closeCurrentEarnings(
+      balanceSheetCap(
+        directives,
+        clamp,
+        `${roots.equity}:${unrealizedAccount}`,
+        window?.end,
+      ),
+      clamp,
+    );
     const key = (interval ?? "month") as IntervalKey;
     const cumulative = (prefixes: string[]) =>
       accountBalanceSeries(directives, key, prefixes, target, priceMap, window);
@@ -356,10 +368,15 @@ export class LedgerFinanceService implements ILedgerFinanceService {
     // The ledger's Fava `fiscal-year-end` (default `12-31`) drives `fyXXXX`/
     // fiscal-quarter `time` parsing; thread it as `MM-DD` so a custom fiscal year
     // maps to the right accounting period instead of the calendar year.
-    const fiscalYearEnd = formatFiscalYearEnd(
-      parseFavaOptions(snapshot.directives).fiscal_year_end,
-    );
-    return { ...snapshot, reportAccounts, fiscalYearEnd };
+    const favaOptions = parseFavaOptions(snapshot.directives);
+    const fiscalYearEnd = formatFiscalYearEnd(favaOptions.fiscal_year_end);
+    return {
+      ...snapshot,
+      reportAccounts,
+      fiscalYearEnd,
+      // Fava's `unrealized` option: the Equity child unrealized gains go to.
+      unrealizedAccount: favaOptions.unrealized,
+    };
   }
 
   /**
@@ -387,12 +404,19 @@ export class LedgerFinanceService implements ILedgerFinanceService {
     operatingCurrency: string;
     roots: ReportAccounts["roots"];
     clamp: ReportAccounts["clamp"];
+    /** Fava's `unrealized` option: the Equity child unrealized gains go to. */
+    unrealizedAccount: string;
     window?: IntervalWindow;
     /** Price date for tree balances; latest prices when absent. */
     valuationDate?: string;
   }> {
-    const { directives, options, reportAccounts, fiscalYearEnd } =
-      await this.loadSnapshot(ledgerId, userId);
+    const {
+      directives,
+      options,
+      reportAccounts,
+      fiscalYearEnd,
+      unrealizedAccount,
+    } = await this.loadSnapshot(ledgerId, userId);
     const { roots, clamp } = reportAccounts;
     // Fava's `at_value`/default valuation converts to the ledger's operating
     // currency; use the first declared one (bean-example: "USD"), defaulting to
@@ -421,6 +445,7 @@ export class LedgerFinanceService implements ILedgerFinanceService {
           operatingCurrency,
           roots,
           clamp,
+          unrealizedAccount,
         };
       }
       const range = parseDateRange(selectors.time, fiscalYearEnd);
@@ -442,6 +467,7 @@ export class LedgerFinanceService implements ILedgerFinanceService {
         operatingCurrency,
         roots,
         clamp,
+        unrealizedAccount,
         window,
         valuationDate: windowEndInclusive(window),
       };

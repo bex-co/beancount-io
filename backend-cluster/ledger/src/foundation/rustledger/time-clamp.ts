@@ -738,6 +738,71 @@ function previousDay(date: string): string {
   return `${pad(dt.getUTCFullYear(), 4)}-${pad(dt.getUTCMonth() + 1, 2)}-${pad(dt.getUTCDate(), 2)}`;
 }
 
+/** `date + 1 day`, as an ISO `YYYY-MM-DD` string (UTC, no TZ drift). */
+function nextDay(date: string): string {
+  const [y, m, d] = date.split("-").map((p) => Number.parseInt(p, 10));
+  const dt = utcDate(y, m - 1, d + 1);
+  const pad = (n: number, w: number): string => String(n).padStart(w, "0");
+  return `${pad(dt.getUTCFullYear(), 4)}-${pad(dt.getUTCMonth() + 1, 2)}-${pad(dt.getUTCDate(), 2)}`;
+}
+
+// ── Tree.cap (public) ────────────────────────────────────────────────────────
+
+/**
+ * Fava's `Tree.cap` for the balance sheet, as entries the equity stream takes:
+ * the residual at cost goes to `Conversions:Current` (`summarize.conversions`
+ * over everything before `end`, nothing left to do after a clamp), then the
+ * negated remaining inventory to `unrealizedAccount`, which is zero at cost and
+ * the unrealized gain at value. Without them a multi-currency balance sheet did
+ * not net to zero unless a time filter clamped it, and no path showed a gain
+ * at value (w21/710).
+ *
+ * `end` is exclusive: the clamp's window end, or the day after the last entry.
+ */
+export function balanceSheetCap(
+  directives: DirectiveJson[],
+  accounts: ClampAccountOptions,
+  unrealizedAccount: string,
+  end?: string,
+): DirectiveJson[] {
+  const last = directives.at(-1);
+  if (last === undefined) return directives;
+  const until = end ?? nextDay(last.date);
+  const converted = conversions(
+    directives,
+    accounts.accountCurrentConversions,
+    accounts.conversionCurrency,
+    until,
+  );
+  const total = new Inventory();
+  for (const inventory of balanceByAccount(converted, until).values()) {
+    for (const position of inventory.getPositions()) {
+      total.addPosition(position.number, position.currency, position.cost);
+    }
+  }
+  if (total.isEmpty()) return converted;
+  const unrealized: SyntheticTransaction = {
+    type: "transaction",
+    date: previousDay(until),
+    flag: FLAG_CONVERSIONS,
+    narration: "Unrealized gains",
+    tags: [],
+    links: [],
+    postings: total.getPositions().map((position) =>
+      buildPosting(
+        unrealizedAccount,
+        {
+          number: formatScaled(negateScaled(position.number)),
+          currency: position.currency,
+        },
+        position.cost,
+      ),
+    ),
+  };
+  const index = indexOnOrAfter(converted, until);
+  return [...converted.slice(0, index), unrealized, ...converted.slice(index)];
+}
+
 // ── clamp (public) ───────────────────────────────────────────────────────────
 
 /**
