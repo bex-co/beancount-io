@@ -114,3 +114,32 @@ def test_an_id_written_with_both_a_raw_label_and_the_former_arithmetic_still_mat
     assert result.returncode == 0, result.stdout  # type: ignore[attr-defined]
     assert json.loads(result.stdout)["data"]["written"] == 0  # type: ignore[attr-defined]
     assert ledger.read_bytes() == before
+
+
+def test_an_id_written_with_an_empty_label_and_the_former_arithmetic_still_matches(tmp_path: Path) -> None:
+    """The empty label printed nothing and the compound used the old arithmetic in the same id (w5/1009)."""
+    labelled = _purchase(-3, 10).replace("2024-02-01}", '2024-02-01, ""}')
+    written = labelled.replace('"Purchase"\n', '"Purchase"\n  import-id: "csv:sha256:472ea82927020541"\n')
+    ledger = _books(tmp_path, written, labelled)
+    before = ledger.read_bytes()
+
+    result = _import(tmp_path, "--apply")
+
+    assert result.returncode == 0, result.stdout  # type: ignore[attr-defined]
+    assert json.loads(result.stdout)["data"]["written"] == 0  # type: ignore[attr-defined]
+    assert ledger.read_bytes() == before
+
+
+def test_a_different_label_beside_the_empty_compound_id_is_still_new(tmp_path: Path) -> None:
+    written = (
+        _purchase(-3, 10)
+        .replace("2024-02-01}", '2024-02-01, ""}')
+        .replace('"Purchase"\n', '"Purchase"\n  import-id: "csv:sha256:472ea82927020541"\n')
+    )
+    ledger = _books(tmp_path, written, _purchase(-3, 10).replace("2024-02-01}", '2024-02-01, "Other"}'))
+    before = ledger.read_bytes()
+
+    result = _import(tmp_path, "--apply")
+
+    assert result.returncode == 0, result.stdout  # type: ignore[attr-defined]
+    assert ledger.read_bytes() != before
