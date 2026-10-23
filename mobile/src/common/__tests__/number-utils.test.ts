@@ -342,3 +342,26 @@ describe("compact amounts in the app's language", () => {
     expect(formatShortMoneyWithCurrency(1500, "USD", "xx")).toBe("$1.5K");
   });
 });
+
+// w21/883: in Persian a negative tick of 1,000 or more drew its minus on the
+// far side, so a deficit read as a positive amount.
+describe("formatShortMoneyWithCurrency in Persian", () => {
+  it("isolates the signed number from the right-to-left suffix word", () => {
+    expect(formatShortMoneyWithCurrency(-2000, "USD", "fa")).toBe(
+      "\u2066-$2\u2069 هزار",
+    );
+    expect(
+      formatShortMoneyWithCurrency(-1500, "EUR", "fa").startsWith(
+        "\u2066-€1.5\u2069 ",
+      ),
+    ).toBe(true);
+  });
+
+  it("leaves a positive tick, a small one and other languages alone", () => {
+    expect(formatShortMoneyWithCurrency(-500, "USD", "fa")).toBe("-$500");
+    expect(formatShortMoneyWithCurrency(-2000, "USD", "en")).toBe("-$2K");
+    expect(formatShortMoneyWithCurrency(2000, "USD", "fa")).toBe(
+      "\u2066$2\u2069 هزار",
+    );
+  });
+});

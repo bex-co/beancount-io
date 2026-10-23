@@ -42,7 +42,6 @@
 - [871](./blocked/871.md) — Mobile never attaches the scanned receipt image to the saved transaction (dashboard does) — **blocked:** needs an owner decision on how a scanned receipt is saved with its document (two-posting insertReceiptTransaction only, extend it, or write the document in the addEntries commit)
 - [857](./blocked/857.md) — The ledger runs amortize_over/forecast on the server's UTC date, not the user's — **blocked:** needs an owner-approved optional client date/time-zone input on every plugin-running read across REST, GraphQL and MCP, with the cache-key policy
 - [879](./blocked/879.md) — The receipt parse contract carries no currency, so a foreign receipt is always booked in the ledger's currency (split from w21/870) — **blocked:** needs an owner-approved `ReceiptParseResult` currency contract (parity, model prompt, both receipt forms) and an AI-quota evaluation
-- [883](./883.md) — In Persian, a negative compact chart tick draws its minus on the far side
 - [884](./884.md) — In Persian, chart labels mix Persian and Latin digits
 - [885](./885.md) — In Persian, an Accounts sentence mixes a Latin count with a Persian-digit date
 - [886](./886.md) — Tapping Home's partly hidden Liabilities tab never scrolls it into view

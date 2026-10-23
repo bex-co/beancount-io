@@ -408,8 +408,26 @@ export const formatShortMoneyWithCurrency = (
   const amount = shortNumber(Math.abs(value), locale);
   const symbol = getCurrencySymbol(currency);
   // Where the language writes the currency after the number (w21/177).
-  if (symbol && compactStyle(locale).currencyAfter) {
-    return `${sign}${amount} ${symbol}`;
-  }
-  return annotateCurrency(sign, amount, currency);
+  const text =
+    symbol && compactStyle(locale).currencyAfter
+      ? `${sign}${amount} ${symbol}`
+      : annotateCurrency(sign, amount, currency);
+  return isolateLeadingNumber(text);
+};
+
+/**
+ * A short amount whose suffix word is right-to-left ("-$2 هزار") starts its
+ * signed number as the left-to-right run it is: nothing isolated it, so the
+ * suffix made the label right-to-left and the minus drew on the far side, a
+ * deficit tick reading as a positive amount (w21/883). Text with no such
+ * letter is returned as it was.
+ */
+const isolateLeadingNumber = (text: string): string => {
+  // A symbol of Arabic script is already in its own isolate.
+  if (text.includes("\u2067")) return text;
+  const rtl = text.search(/[\u0590-\u08ff]/u);
+  if (rtl <= 0) return text;
+  const lead = text.slice(0, rtl).trimEnd();
+  if (lead === "") return text;
+  return `\u2066${lead}\u2069 ${text.slice(rtl)}`;
 };
