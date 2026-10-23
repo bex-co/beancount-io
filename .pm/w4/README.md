@@ -58,7 +58,6 @@
 
 - [982 — Let Receipt Record accept exact decimals](./982.md) — minor residual of W1/028; both-width native12.345KWD corrections are blocked by fixed-cent step before transport; exact12.34 controls pass, no hosted writes.
 
-- [981 — Escape receipt text in the Beancount preview](./981.md) — minor; modeled parse/review at both widths,2026-10-22; actual Beancount parser rejects quoted merchant preview and changes raw backslashes; exact structured inputs preblocked, plain controls pass.
 
 
 
