@@ -117,7 +117,7 @@ export const sk: Translations = {
   merchantsScheduled: "Naplánované na {{date}}",
   merchantsRecurringToggle: "Opakujúce sa",
   merchantsRecurringToggleHelper:
-    "Pripnite tohto obchodníka do Opakujúce sa. Manuálna voľba má prednosť pred detekciou a ostáva na tomto zariadení.",
+    "Či sa tento obchodník považuje za opakujúci sa. Manuálna voľba má prednosť pred detekciou a ostáva na tomto zariadení.",
   merchantDetailDateRange: "{{first}} – {{last}}",
   merchantDetailLoadError: "Nepodarilo sa načítať obchodníka",
   merchantDetailRetry: "Skúsiť znova",

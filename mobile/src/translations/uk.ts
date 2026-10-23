@@ -117,7 +117,7 @@ export const uk: Translations = {
   merchantsScheduled: "Заплановано на {{date}}",
   merchantsRecurringToggle: "Регулярний",
   merchantsRecurringToggleHelper:
-    "Закріпити цього контрагента в «Регулярні». Ручний вибір важливіший за автовизначення й зберігається на цьому пристрої.",
+    "Чи вважати цього контрагента регулярним. Ручний вибір важливіший за автовизначення й зберігається на цьому пристрої.",
   merchantDetailDateRange: "{{first}} – {{last}}",
   merchantDetailLoadError: "Не вдалося завантажити контрагента",
   merchantDetailRetry: "Спробувати знову",

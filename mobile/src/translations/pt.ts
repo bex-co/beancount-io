@@ -116,7 +116,7 @@ export const pt: Translations = {
   merchantsScheduled: "Agendado para {{date}}",
   merchantsRecurringToggle: "Recorrente",
   merchantsRecurringToggleHelper:
-    "Fixe este comerciante em Recorrente. A escolha manual prevalece sobre a detecção e fica neste dispositivo.",
+    "Se este comerciante é tratado como recorrente. A escolha manual prevalece sobre a detecção e fica neste dispositivo.",
   merchantDetailDateRange: "{{first}} – {{last}}",
   merchantDetailLoadError: "Falha ao carregar o comerciante",
   merchantDetailRetry: "Tentar de novo",

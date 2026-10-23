@@ -100,7 +100,7 @@ export const zh: Translations = {
   merchantsScheduled: "已安排于 {{date}}",
   merchantsRecurringToggle: "定期",
   merchantsRecurringToggleHelper:
-    "将此商户固定在「定期」分组。手动选择优先于自动检测，且只保存在本设备。",
+    "是否将此商户视为定期。手动选择优先于自动检测，且只保存在本设备。",
   merchantDetailDateRange: "{{first}} – {{last}}",
   merchantDetailLoadError: "加载商户失败",
   merchantDetailRetry: "重试",

@@ -113,7 +113,7 @@ export const bg: Translations = {
   merchantsScheduled: "Планирано за {{date}}",
   merchantsRecurringToggle: "Повтарящ се",
   merchantsRecurringToggleHelper:
-    "Закачи този търговец в Повтарящи се. Ръчният избор надделява над откриването и остава на това устройство.",
+    "Дали този търговец се счита за повтарящ се. Ръчният избор надделява над откриването и остава на това устройство.",
   merchantDetailDateRange: "{{first}} – {{last}}",
   merchantDetailLoadError: "Неуспешно зареждане на търговеца",
   merchantDetailRetry: "Опитай отново",

@@ -112,7 +112,7 @@ export const fa: Translations = {
   merchantsScheduled: "زمان‌بندی‌شده برای {{date}}",
   merchantsRecurringToggle: "دوره‌ای",
   merchantsRecurringToggleHelper:
-    "این فروشنده را در بخش دوره‌ای ثابت کنید. انتخاب دستی بر تشخیص خودکار اولویت دارد و فقط روی این دستگاه می‌ماند.",
+    "اینکه این فروشنده دوره‌ای در نظر گرفته شود یا نه. انتخاب دستی بر تشخیص خودکار اولویت دارد و فقط روی این دستگاه می‌ماند.",
   merchantDetailDateRange: "{{first}} – {{last}}",
   merchantDetailLoadError: "بارگذاری فروشنده ناموفق بود",
   merchantDetailRetry: "تلاش دوباره",

@@ -114,7 +114,7 @@ export const de: Translations = {
   merchantsScheduled: "Geplant für {{date}}",
   merchantsRecurringToggle: "Wiederkehrend",
   merchantsRecurringToggleHelper:
-    "Diesen Händler unter Wiederkehrend anheften. Manuelle Wahl schlägt die Erkennung und bleibt auf diesem Gerät.",
+    "Ob dieser Händler als wiederkehrend gilt. Manuelle Wahl schlägt die Erkennung und bleibt auf diesem Gerät.",
   merchantDetailDateRange: "{{first}} – {{last}}",
   merchantDetailLoadError: "Händler konnte nicht geladen werden",
   merchantDetailRetry: "Erneut versuchen",

@@ -116,7 +116,7 @@ export const ca: Translations = {
   merchantsScheduled: "Programat per al {{date}}",
   merchantsRecurringToggle: "Recurrent",
   merchantsRecurringToggleHelper:
-    "Fixa aquest comerç a Recurrent. L’elecció manual preval sobre la detecció i es guarda en aquest dispositiu.",
+    "Si aquest comerç es tracta com a recurrent. L’elecció manual preval sobre la detecció i es guarda en aquest dispositiu.",
   merchantDetailDateRange: "{{first}} – {{last}}",
   merchantDetailLoadError: "No s'ha pogut carregar el comerç",
   merchantDetailRetry: "Torna-ho a provar",

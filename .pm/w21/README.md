@@ -12,7 +12,6 @@
 
 ## Inbox
 
-- [830](./830.md) — The Recurring switch's helper text is stale in all 12 locales ("Pin this merchant…")
 - [831](./831.md) — Slovak "clear account" filter button reads "Delete account"
 - [832](./832.md) — New File refuses a ".git/" path with the wrong reason ("without \, .. or empty folder names")
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window

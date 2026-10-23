@@ -115,7 +115,7 @@ export const es: Translations = {
   merchantsScheduled: "Programado para el {{date}}",
   merchantsRecurringToggle: "Recurrente",
   merchantsRecurringToggleHelper:
-    "Fija este comercio en Recurrente. La elección manual prevalece sobre la detección y se guarda en este dispositivo.",
+    "Si este comercio se trata como recurrente. La elección manual prevalece sobre la detección y se guarda en este dispositivo.",
   merchantDetailDateRange: "{{first}} – {{last}}",
   merchantDetailLoadError: "Error al cargar el comercio",
   merchantDetailRetry: "Reintentar",

@@ -113,7 +113,7 @@ export const nl: Translations = {
   merchantsScheduled: "Gepland op {{date}}",
   merchantsRecurringToggle: "Terugkerend",
   merchantsRecurringToggleHelper:
-    "Zet deze handelaar vast onder Terugkerend. Handmatige keuze wint van detectie en blijft op dit apparaat.",
+    "Of deze handelaar als terugkerend geldt. Handmatige keuze wint van detectie en blijft op dit apparaat.",
   merchantDetailDateRange: "{{first}} – {{last}}",
   merchantDetailLoadError: "Handelaar laden mislukt",
   merchantDetailRetry: "Opnieuw proberen",

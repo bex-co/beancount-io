@@ -116,7 +116,7 @@ export const fr: Translations = {
   merchantsScheduled: "Prévu le {{date}}",
   merchantsRecurringToggle: "Récurrent",
   merchantsRecurringToggleHelper:
-    "Épingler ce commerçant dans Récurrent. Un choix manuel prime sur la détection et reste sur cet appareil.",
+    "Si ce commerçant est traité comme récurrent. Un choix manuel prime sur la détection et reste sur cet appareil.",
   merchantDetailDateRange: "{{first}} – {{last}}",
   merchantDetailLoadError: "Échec du chargement du commerçant",
   merchantDetailRetry: "Réessayer",
