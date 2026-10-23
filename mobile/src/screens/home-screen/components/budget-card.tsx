@@ -1,3 +1,4 @@
+import { isolateAccountPath } from "@/common/bidi";
 import { useMemo } from "react";
 import { BudgetSkeleton } from "./home-skeletons";
 import { selectCardLoadState } from "@/common/apollo/card-load-state";
@@ -174,7 +175,7 @@ export function BudgetCard({
           style={styles.account}
           numberOfLines={1}
         >
-          {row.shortAccount}
+          {isolateAccountPath(row.shortAccount)}
         </Text>
         <AmountText style={[styles.amounts, stacked && styles.amountsStacked]}>
           {`${formatSignedMoneyWithCurrency(row.actual, row.currency, false, row.scale)} / ${formatMoneyWithCurrency(row.budget, row.currency, row.scale)}`}

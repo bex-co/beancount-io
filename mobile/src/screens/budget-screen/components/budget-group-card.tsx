@@ -1,3 +1,4 @@
+import { isolateAccountPath } from "@/common/bidi";
 import { formatLedgerDate } from "@/common/date-format";
 import {
   StyleSheet,
@@ -283,7 +284,7 @@ export function BudgetGroupCard({
             // Stacked, the leaf is what tells two budgets apart.
             ellipsizeMode={stacked ? "head" : "middle"}
           >
-            {group.account}
+            {isolateAccountPath(group.account)}
           </Text>
           {onUpdate && !budgetHasEnded(endsOn, today) && (
             <TouchableOpacity

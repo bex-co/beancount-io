@@ -1,3 +1,4 @@
+import { isolateAccountPath } from "@/common/bidi";
 import {
   StyleSheet,
   Text,
@@ -182,7 +183,7 @@ export function PostingRow({
         ) : null}
         <View style={styles.accountLine}>
           <Text style={styles.account} numberOfLines={1} ellipsizeMode="middle">
-            {posting.account}
+            {isolateAccountPath(posting.account)}
           </Text>
           {posting.pending ? (
             <View style={styles.badge}>

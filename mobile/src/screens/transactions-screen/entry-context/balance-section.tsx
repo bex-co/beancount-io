@@ -1,3 +1,4 @@
+import { isolateAccountPath } from "@/common/bidi";
 import React from "react";
 import { Text, View, StyleSheet, useWindowDimensions } from "react-native";
 import { useThemeStyle } from "@/common/hooks";
@@ -107,7 +108,7 @@ export const BalanceSection: React.FC<BalanceSectionProps> = ({
             numberOfLines={1}
             ellipsizeMode="middle"
           >
-            {balance.account}
+            {isolateAccountPath(balance.account)}
           </Text>
           <View
             style={[

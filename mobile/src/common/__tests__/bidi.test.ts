@@ -105,6 +105,46 @@ describe("isolateAccountPath", () => {
     );
   });
 
+  // w21/766: Money flow, Entry Context balances and both budget cards still
+  // drew the raw path, child before parent.
+  it("is what every other surface showing a path draws", () => {
+    const read = (...parts: string[]) =>
+      fs.readFileSync(path.join(__dirname, "..", "..", ...parts), "utf8");
+    for (const [file, drawn] of [
+      [
+        [
+          "screens",
+          "transaction-detail-screen",
+          "components",
+          "posting-row.tsx",
+        ],
+        "{isolateAccountPath(posting.account)}",
+      ],
+      [
+        [
+          "screens",
+          "transactions-screen",
+          "entry-context",
+          "balance-section.tsx",
+        ],
+        "{isolateAccountPath(balance.account)}",
+      ],
+      [
+        ["screens", "budget-screen", "components", "budget-group-card.tsx"],
+        "{isolateAccountPath(group.account)}",
+      ],
+      [
+        ["screens", "home-screen", "components", "budget-card.tsx"],
+        "{isolateAccountPath(row.shortAccount)}",
+      ],
+    ] as const) {
+      expect([file.at(-1), read(...file).includes(drawn)]).toEqual([
+        file.at(-1),
+        true,
+      ]);
+    }
+  });
+
   it("is what Accounts, the detail header and the picker draw", () => {
     const read = (...parts: string[]) =>
       fs.readFileSync(path.join(__dirname, "..", "..", ...parts), "utf8");
