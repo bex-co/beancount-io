@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useId, useMemo } from "react";
 import { ClientOnly } from "@tanstack/react-router";
 import { DollarSign, Layers } from "lucide-react";
 import { DocLink } from "@/common/components/doc-link";
@@ -120,6 +120,7 @@ export function CashFlowContent({
   exportReady = true,
 }: CashFlowContentProps) {
   const { t, i18n } = useTranslations();
+  const chartTitleId = useId();
   const activityTitles: Record<CashFlowActivity, string> = {
     operating: t("page.cashFlow.operating"),
     investing: t("page.cashFlow.investing"),
@@ -258,7 +259,10 @@ export function CashFlowContent({
           </div>
           <TabsContent value="netCashFlow" className="mt-0 space-y-3">
             <div>
-              <h2 className="text-xl font-semibold flex items-center gap-2">
+              <h2
+                id={`${chartTitleId}-netCashFlow`}
+                className="text-xl font-semibold flex items-center gap-2"
+              >
                 <DollarSign className="h-5 w-5" />
                 {t("page.cashFlow.netCashFlow")}
               </h2>
@@ -269,6 +273,7 @@ export function CashFlowContent({
               </p>
             </div>
             <NetCashFlowChart
+              labelledBy={`${chartTitleId}-netCashFlow`}
               data={statement.intervals}
               interval={timeInterval}
               primarySeries={primaryCurrency}
@@ -276,7 +281,10 @@ export function CashFlowContent({
           </TabsContent>
           <TabsContent value="byActivity" className="mt-0 space-y-3">
             <div>
-              <h2 className="text-xl font-semibold flex items-center gap-2">
+              <h2
+                id={`${chartTitleId}-byActivity`}
+                className="text-xl font-semibold flex items-center gap-2"
+              >
                 <Layers className="h-5 w-5" />
                 {t("page.cashFlow.byActivity")}
               </h2>
@@ -287,6 +295,7 @@ export function CashFlowContent({
               </p>
             </div>
             <ActivityBreakdownChart
+              labelledBy={`${chartTitleId}-byActivity`}
               data={statement.intervals}
               interval={timeInterval}
               primarySeries={primaryCurrency}

@@ -15,11 +15,15 @@ interface ChartPeriodPoint {
   balance: Record<string, unknown>;
 }
 
-/** Already-computed plotted values; account segments share their unit column. */
+/**
+ * Already-computed plotted values; account segments share their unit column.
+ * A model that keeps exact decimals passes them as strings, so the table is
+ * not limited to what the chart's doubles can hold.
+ */
 export interface ChartPeriodSeries {
   unit: string;
   account?: string;
-  values: number[];
+  values: Array<number | string>;
 }
 
 type ChartPeriodTableProps = {

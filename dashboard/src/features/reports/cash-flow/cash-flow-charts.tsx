@@ -18,12 +18,18 @@ import {
 } from "../income-statement/date-balance-chart/utils";
 import { useTranslations } from "@/common/hooks/use-translations";
 import type { ChartInterval } from "@/common/types/chart";
+import {
+  ChartPeriodTable,
+  type ChartPeriodSeries,
+} from "../components/chart-period-table";
 import { CASH_FLOW_ACTIVITIES, type CashFlowIntervalPoint } from "./lib/model";
 
 interface CashFlowChartProps {
   data: CashFlowIntervalPoint[];
   interval?: ChartInterval;
   primarySeries?: string;
+  /** The chart's heading; names its keyboard- and reader-readable period data. */
+  labelledBy?: string;
 }
 
 /**
@@ -45,11 +51,15 @@ export function NetCashFlowChart({
   data,
   interval,
   primarySeries = "USD",
+  labelledBy,
 }: CashFlowChartProps) {
   const formatNum = useFormatNumber();
-  const chartOption = useMemo((): EChartsOption => {
+  const { chartOption, periodSeries } = useMemo((): {
+    chartOption: EChartsOption;
+    periodSeries: ChartPeriodSeries[];
+  } => {
     if (!data || data.length === 0) {
-      return createEmptyChartOption();
+      return { chartOption: createEmptyChartOption(), periodSeries: [] };
     }
 
     const currencies = new Set<string>();
@@ -110,22 +120,29 @@ export function NetCashFlowChart({
     const { xAxis, yAxis } = createCommonAxisConfig(dates, interval);
 
     return {
-      tooltip,
-      legend: {
-        data: currencyList,
-        bottom: 0,
-        type: "scroll",
-        pageButtonItemGap: 5,
-        selected: legendSelected,
+      // The model's exact decimals, with the chart's plotted zero (w4/996).
+      periodSeries: currencyList.map((currency) => ({
+        unit: currency,
+        values: data.map((point) => point.net[currency] ?? "0"),
+      })),
+      chartOption: {
+        tooltip,
+        legend: {
+          data: currencyList,
+          bottom: 0,
+          type: "scroll",
+          pageButtonItemGap: 5,
+          selected: legendSelected,
+        },
+        grid: createCommonGridConfig(),
+        xAxis,
+        yAxis,
+        series: seriesData,
+        color: getChartColors(),
+        animation: true,
+        animationDuration: 1000,
+        animationEasing: "cubicOut",
       },
-      grid: createCommonGridConfig(),
-      xAxis,
-      yAxis,
-      series: seriesData,
-      color: getChartColors(),
-      animation: true,
-      animationDuration: 1000,
-      animationEasing: "cubicOut",
     };
   }, [data, interval, primarySeries, formatNum]);
 
@@ -136,6 +153,13 @@ export function NetCashFlowChart({
         style={{ height: "250px", width: "100%" }}
         className="w-full"
       />
+      {labelledBy && (
+        <ChartPeriodTable
+          data={data}
+          series={periodSeries}
+          labelledBy={labelledBy}
+        />
+      )}
     </div>
   );
 }
@@ -149,12 +173,16 @@ export function ActivityBreakdownChart({
   data,
   interval,
   primarySeries = "USD",
+  labelledBy,
 }: CashFlowChartProps) {
   const formatNum = useFormatNumber();
   const { t } = useTranslations();
-  const chartOption = useMemo((): EChartsOption => {
+  const { chartOption, periodSeries } = useMemo((): {
+    chartOption: EChartsOption;
+    periodSeries: ChartPeriodSeries[];
+  } => {
     if (!data || data.length === 0) {
-      return createEmptyChartOption();
+      return { chartOption: createEmptyChartOption(), periodSeries: [] };
     }
 
     const activityLabels = [
@@ -247,27 +275,40 @@ export function ActivityBreakdownChart({
     const { xAxis, yAxis } = createCommonAxisConfig(dates, interval);
 
     return {
-      tooltip,
-      legend: {
-        data: currencyList,
-        bottom: 0,
-        type: "scroll",
-        pageButtonItemGap: 5,
-        selected: Object.fromEntries(
-          currencyList.map((currency) => [
-            currency,
-            currency === primarySeries,
-          ]),
-        ),
+      // One labelled segment per activity in each currency's column, with
+      // the model's exact decimals and the chart's plotted zero (w4/996).
+      periodSeries: currencyList.flatMap((currency) =>
+        CASH_FLOW_ACTIVITIES.map((activity, activityIndex) => ({
+          unit: currency,
+          account: activityLabels[activityIndex],
+          values: data.map(
+            (point) => point.activities[activity][currency] ?? "0",
+          ),
+        })),
+      ),
+      chartOption: {
+        tooltip,
+        legend: {
+          data: currencyList,
+          bottom: 0,
+          type: "scroll",
+          pageButtonItemGap: 5,
+          selected: Object.fromEntries(
+            currencyList.map((currency) => [
+              currency,
+              currency === primarySeries,
+            ]),
+          ),
+        },
+        grid: createCommonGridConfig(),
+        xAxis,
+        yAxis,
+        series: seriesData,
+        color: getChartColors(),
+        animation: true,
+        animationDuration: 1000,
+        animationEasing: "cubicOut",
       },
-      grid: createCommonGridConfig(),
-      xAxis,
-      yAxis,
-      series: seriesData,
-      color: getChartColors(),
-      animation: true,
-      animationDuration: 1000,
-      animationEasing: "cubicOut",
     };
   }, [data, interval, primarySeries, formatNum, t]);
 
@@ -278,6 +319,13 @@ export function ActivityBreakdownChart({
         style={{ height: "250px", width: "100%" }}
         className="w-full"
       />
+      {labelledBy && (
+        <ChartPeriodTable
+          data={data}
+          series={periodSeries}
+          labelledBy={labelledBy}
+        />
+      )}
     </div>
   );
 }
