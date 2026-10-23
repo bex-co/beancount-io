@@ -1,5 +1,5 @@
 import type { DirectiveJson, FileMap } from "@rustledger/wasm";
-import { splitIntoBlocks } from "./source-slice";
+import { loadedFiles, splitIntoBlocks } from "./source-slice";
 
 /** Beancount's `SORT_ORDER`; every other directive sorts as a transaction. */
 const DIRECTIVE_SORT_ORDER: Partial<Record<DirectiveJson["type"], number>> = {
@@ -31,13 +31,26 @@ function headerType(keyword: string): string {
 }
 
 /**
- * Line numbers of the dated directives in `files`, per `date|type`, in
- * ascending order. Line numbers alone, as Beancount's `entry_sortkey` uses.
+ * Line numbers of the dated directives in `files`, per `date|type`. With an
+ * entry point, only the files it loads, in the order the engine emits them (the
+ * entry point, then its includes depth first), each file's lines ascending; a
+ * line then goes to the directive that came from that file. Pooled and sorted
+ * across files, a main-file entry took an included file's line number, and a
+ * stray `.bean` file nothing includes threw the counts off (w21/843, w21/844).
+ * Without one, every file pooled and sorted, as before. Line numbers alone, as
+ * Beancount's `entry_sortkey` uses.
  */
-function sourceLines(files: FileMap): Map<string, number[]> {
+function sourceLines(
+  files: FileMap,
+  entryPoint: string | undefined,
+): Map<string, number[]> {
   const lines = new Map<string, number[]>();
-  for (const source of Object.values(files)) {
-    for (const block of splitIntoBlocks(source)) {
+  const names =
+    entryPoint === undefined
+      ? Object.keys(files)
+      : loadedFiles(files, entryPoint);
+  for (const name of names) {
+    for (const block of splitIntoBlocks(files[name]!)) {
       if (!block.isDated) continue;
       const match = DATED_HEADER.exec(block.text);
       if (!match) continue;
@@ -47,7 +60,9 @@ function sourceLines(files: FileMap): Map<string, number[]> {
       else lines.set(key, [block.startLine + 1]);
     }
   }
-  lines.forEach((bucket) => bucket.sort((left, right) => left - right));
+  if (entryPoint === undefined) {
+    lines.forEach((bucket) => bucket.sort((left, right) => left - right));
+  }
   return lines;
 }
 
@@ -71,8 +86,9 @@ function sourceLines(files: FileMap): Map<string, number[]> {
 export function restoreEntrySortOrder(
   directives: DirectiveJson[],
   files: FileMap,
+  entryPoint?: string,
 ): DirectiveJson[] {
-  const lines = sourceLines(files);
+  const lines = sourceLines(files, entryPoint);
   const counts = new Map<string, number>();
   directives.forEach((directive) => {
     const key = `${directive.date}|${directive.type}`;

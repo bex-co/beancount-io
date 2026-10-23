@@ -40,7 +40,6 @@
 - [678](./blocked/678.md) — A sale whose lot doesn't match is still counted in every balance, so the books don't balance — **blocked:** needs an owner decision on whether an entry that failed booking is dropped from reports and the journal (as Beancount does) or kept listed with a flag and excluded from balances
 - [693](./blocked/693.md) — Edit Transaction's Reload after a conflict opens the other twin's text, so the next Save overwrites it — **blocked:** its acceptance contradicts itself (a twin moved onto the ID and a metadata-only change look the same after a conflict); needs an owner decision between always refusing Reload on a changed slice and keeping it
 - [694](./blocked/694.md) — Since w21/672, Delete after a metadata-only change elsewhere dead-ends on "changed or removed" (w21/250 regression) — **blocked:** its two acceptance cases cannot both hold (a metadata-only change and a twin swap look the same); same owner decision as w21/693
-- [843](./843.md) — Same-day entries from different include files are ordered wrongly, so running balances are wrong
 - [844](./844.md) — A non-included .bean file in the repo brings back w21/134's "+100 → 500"
 - [845](./845.md) — Entry Context's balance before for a parent-account assertion leaves out its subaccounts
 - [846](./846.md) — sellgains never flags a price that disagrees with proceeds (bean-check does)

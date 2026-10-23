@@ -193,3 +193,65 @@ describe("restoreEntrySortOrder", () => {
     ]);
   });
 });
+
+// w21/843, w21/844: a main-file entry took an included file's line number, and a
+// stray .bean file nothing includes threw the counts off.
+describe("restoreEntrySortOrder across files", () => {
+  const txn = (narration: string): DirectiveJson => ({
+    type: "transaction",
+    date: "2024-01-05",
+    flag: "*",
+    narration,
+    tags: [],
+    links: [],
+    postings: [],
+  });
+  const mainLate = txn("main-late-line");
+  const incEarly = txn("inc-early-line");
+  const MAIN = [
+    'include "b.bean"',
+    "",
+    "2024-01-01 open Assets:Cash",
+    "",
+    "",
+    "",
+    "",
+    "",
+    '2024-01-05 * "main-late-line"',
+    "  Assets:Cash  10 USD",
+    "",
+  ].join("\n");
+  const B = [
+    '2024-01-05 * "inc-early-line"',
+    "  Assets:Cash  -3 USD",
+    "",
+    '2024-01-05 note Assets:Cash "n"',
+  ].join("\n");
+  // The engine walks the entry point's entries, then the include's.
+  const ENGINE = [mainLate, incEarly];
+
+  it("orders same-day entries of different files by line number, as Beancount does", () => {
+    const sorted = restoreEntrySortOrder(
+      ENGINE,
+      { "main.bean": MAIN, "b.bean": B },
+      "main.bean",
+    );
+    expect(sorted.map((d) => (d as { narration: string }).narration)).toEqual([
+      "inc-early-line",
+      "main-late-line",
+    ]);
+  });
+
+  it("ignores a .bean file the entry point does not load", () => {
+    const stray = '2024-01-05 * "old copy"\n  Assets:Cash  1 USD\n';
+    const sorted = restoreEntrySortOrder(
+      ENGINE,
+      { "main.bean": MAIN, "b.bean": B, "old/backup.bean": stray },
+      "main.bean",
+    );
+    expect(sorted.map((d) => (d as { narration: string }).narration)).toEqual([
+      "inc-early-line",
+      "main-late-line",
+    ]);
+  });
+});

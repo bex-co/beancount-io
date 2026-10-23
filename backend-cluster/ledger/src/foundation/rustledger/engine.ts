@@ -653,6 +653,7 @@ async function parseLedgerFilesUncached(
   let directives = restoreEntrySortOrder(
     raw.directives,
     stripResult?.strippedFiles ?? scoped,
+    entryPoint,
   );
   let errors = located;
   let paddingTransactions = raw.paddingTransactions;
