@@ -62,3 +62,5 @@
 - [853](./853.md) — Since w21/799, a 1st/16th or 15th/30th bill reads "Every 2 weeks" with the wrong next date
 - [854](./854.md) — Since w21/804, a "1 BTC" budget reads "Above target" while under its prorated budget
 - [855](./855.md) — Pasting " 20" into a negative row turns it unreadable (left open by w21/791)
+- [856](./856.md) — Ask AI is never told today's date, and an undated receipt is saved under the server's UTC date
+- [857](./857.md) — The ledger runs amortize_over/forecast on the server's UTC date, not the user's
