@@ -50,6 +50,44 @@ function comparableCurrency(
 }
 
 /**
+ * An exchange between your own accounts booked through Equity conversion legs
+ * (the trading-account pattern): only balance-sheet and Equity legs, in two
+ * currencies or more, each netting to zero, with money leaving in one currency
+ * and arriving in another. It moved money and spent none, yet read "−$100.00"
+ * under the Equity icon (w21/818). An opening balance in two currencies, all
+ * of it arriving, is not one.
+ */
+export function isEquityConversion(
+  postings: readonly PostingLite[],
+  roots: RootNames = {},
+): boolean {
+  let equity = false;
+  const net = new Map<string, number>();
+  const held = new Map<string, number>();
+  for (const posting of postings) {
+    const { amount, currency } = posting;
+    if (typeof amount !== "number" || !Number.isFinite(amount) || !currency) {
+      return false;
+    }
+    const root = getAccountRoot(posting.account, roots);
+    if (root === "equity") equity = true;
+    else if (root === "assets" || root === "liabilities") {
+      held.set(currency, (held.get(currency) ?? 0) + amount);
+    } else return false;
+    net.set(currency, (net.get(currency) ?? 0) + amount);
+  }
+  const settled = [...net.values()].every((sum) => Math.abs(sum) < 1e-9);
+  const moved = [...held.values()];
+  return (
+    equity &&
+    net.size >= 2 &&
+    settled &&
+    moved.some((sum) => sum < 0) &&
+    moved.some((sum) => sum > 0)
+  );
+}
+
+/**
  * Pick the single account whose icon best represents a transaction.
  *
  * A transaction has many postings, so we choose the one that explains its
@@ -73,6 +111,8 @@ export function pickPrimaryAccount(
   roots: RootNames = {},
   operatingCurrency?: string,
 ): string | typeof TRANSFER | null {
+  // A currency exchange through Equity conversion legs is a transfer.
+  if (isEquityConversion(postings, roots)) return TRANSFER;
   const categoryLegs = postings.filter((p) => {
     const root = getAccountRoot(p.account, roots);
     return root != null && CATEGORY_ROOTS.has(root);

@@ -376,6 +376,46 @@ describe("selectTransactionAmount", () => {
     });
   });
 
+  // w21/818: an exchange booked through Equity conversion legs read "−$100.00"
+  // as spending (and green income in a EUR ledger).
+  describe("a currency exchange through Equity conversions", () => {
+    const fx = () =>
+      makeTransaction({
+        postings: [
+          makePosting("Assets:QaUSD", "-100.00"),
+          makePosting("Equity:Conversions", "100.00"),
+          makePosting("Assets:QaEUR", "92.00", "EUR"),
+          makePosting("Equity:Conversions", "-92.00", "EUR"),
+        ],
+      });
+
+    it("reads neutral, sized by the operating currency's leg", () => {
+      expect(selectTransactionAmount(fx(), "USD")).toEqual({
+        text: "$100.00",
+        value: 0,
+        currency: "USD",
+      });
+      const eur = selectTransactionAmount(fx(), "EUR");
+      expect(eur && "value" in eur ? [eur.value, eur.currency] : null).toEqual([
+        0,
+        "EUR",
+      ]);
+    });
+
+    it("leaves an opening balance in two currencies as it was", () => {
+      const opening = makeTransaction({
+        postings: [
+          makePosting("Assets:QaUSD", "100.00"),
+          makePosting("Equity:Opening", "-100.00"),
+          makePosting("Assets:QaEUR", "50.00", "EUR"),
+          makePosting("Equity:Opening", "-50.00", "EUR"),
+        ],
+      });
+      const amount = selectTransactionAmount(opening, "USD");
+      expect(amount && "value" in amount ? amount.value : null).not.toBe(0);
+    });
+  });
+
   // w21/570: a fee or rounding line made the whole USD side read as spent.
   describe("a currency exchange with a fee or rounding line", () => {
     const exchange = (...extra: ReturnType<typeof makePosting>[]) =>

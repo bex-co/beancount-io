@@ -1,4 +1,9 @@
-import { matchCategory, pickPrimaryAccount, TRANSFER } from "../index";
+import {
+  isEquityConversion,
+  matchCategory,
+  pickPrimaryAccount,
+  TRANSFER,
+} from "../index";
 
 describe("tx-category", () => {
   describe("pickPrimaryAccount", () => {
@@ -127,5 +132,47 @@ describe("tx-category", () => {
       expect(matchCategory("Expenses:Caregiver")).toBe(null);
       expect(matchCategory("Expenses:Misc")).toBe(null);
     });
+  });
+});
+
+// w21/818: an exchange through Equity conversion legs drew the Equity icon.
+describe("a currency exchange through Equity conversions", () => {
+  const fx = [
+    { account: "Assets:QaUSD", amount: -100, currency: "USD" },
+    { account: "Equity:Conversions", amount: 100, currency: "USD" },
+    { account: "Assets:QaEUR", amount: 92, currency: "EUR" },
+    { account: "Equity:Conversions", amount: -92, currency: "EUR" },
+  ];
+
+  it("is a transfer", () => {
+    expect(isEquityConversion(fx)).toBe(true);
+    expect(pickPrimaryAccount(fx, {}, "USD")).toBe(TRANSFER);
+  });
+
+  it("is not an opening balance, a one-currency entry or a spend", () => {
+    expect(
+      isEquityConversion([
+        { account: "Assets:QaUSD", amount: 100, currency: "USD" },
+        { account: "Equity:Opening", amount: -100, currency: "USD" },
+        { account: "Assets:QaEUR", amount: 50, currency: "EUR" },
+        { account: "Equity:Opening", amount: -50, currency: "EUR" },
+      ]),
+    ).toBe(false);
+    expect(
+      isEquityConversion([
+        { account: "Assets:QaUSD", amount: -100, currency: "USD" },
+        { account: "Equity:Conversions", amount: 100, currency: "USD" },
+      ]),
+    ).toBe(false);
+    expect(
+      isEquityConversion([
+        ...fx,
+        { account: "Expenses:Fees", amount: 1, currency: "USD" },
+      ]),
+    ).toBe(false);
+    // Amounts unknown: nothing to judge.
+    expect(isEquityConversion(fx.map(({ account }) => ({ account })))).toBe(
+      false,
+    );
   });
 });

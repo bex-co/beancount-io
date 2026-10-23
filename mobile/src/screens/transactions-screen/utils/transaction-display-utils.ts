@@ -6,6 +6,7 @@ import {
   labelRowAmount,
 } from "../../../common/currency-util";
 import { amountScale } from "../../../common/number-utils";
+import { isEquityConversion } from "../../../common/tx-category";
 import {
   JournalDirectiveType,
   JournalPosting,
@@ -347,9 +348,22 @@ export const selectTransactionAmount = (
           const fee = feeAmount(feeLines, operatingCurrency);
           if (fee) return fee;
         }
+        // Through Equity conversion legs rather than `@` (w21/818).
+        const equityExchange =
+          !isTrade &&
+          !postings.some((p) => p.price) &&
+          isEquityConversion(
+            postings.map((p) => ({
+              account: p.account,
+              amount: parseFloat(p.units.number),
+              currency: p.units.currency,
+            })),
+            roots,
+          );
         if (
           !isTrade &&
           (exchangeWithFee ||
+            equityExchange ||
             postings.every((p) => isBalanceSheet(p.account, roots)))
         ) {
           const [currency, bucket] =
