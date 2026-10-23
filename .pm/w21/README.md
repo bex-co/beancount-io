@@ -69,3 +69,5 @@
 - [912](./912.md) — Full-width and half-width Japanese text doesn't match in search
 - [913](./913.md) — "Load more" skips a row after a deletion elsewhere, and repeats one after a reorder
 - [914](./914.md) — CLF, UYW and UYI postings show different decimals from the headline
+- [915](./915.md) — Symlinks in a ledger repo open as "too large to open on your phone"
+- [916](./916.md) — Self-hosted Settings offers Invite Friends with a beancount.io link carrying the local user id
