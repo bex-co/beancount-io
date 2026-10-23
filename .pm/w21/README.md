@@ -25,6 +25,10 @@
 - [788](./788.md) — VoiceOver reads a Reports category as "N% of total" when N is its share of gross spending
 - [789](./789.md) — Home's Spending card says "No spending yet" on a ledger with months of spending
 - [790](./790.md) — VoiceOver reads an income budget row on Home as "111% used"
+- [791](./791.md) — New Transaction pasting "-20" into a negative row makes it "--20" and refuses Done
+- [792](./792.md) — New Transaction refuses an amount starting with a decimal comma (",5")
+- [793](./793.md) — New Transaction shows a green "✓ $0.00" and no format error when an earlier row lacks an account
+- [794](./794.md) — In a zero-decimal ledger, "0.500" is read as 500 (w21/697 regression)
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window
 - [065](./blocked/065.md) — One early-year entry (e.g. 0050) makes the balance sheet 23,718 monthly points (3 MB) and the app stalls — **blocked:** needs an approach decision (per-pill fetch vs server downsample) and a simulator profile of the stall
 - [180](./blocked/180.md) — Budget actuals use raw prefix match (`Transport` counts `Transportation`), unlike Reports — **blocked:** needs an owner decision between component matching on the server (a Fava break) and a per-account breakdown for the client
