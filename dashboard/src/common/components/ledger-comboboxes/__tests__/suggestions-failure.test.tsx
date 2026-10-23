@@ -102,8 +102,11 @@ describe.each(cases)(
       fireEvent.click(screen.getByRole("button", { name: "Try Again" }));
       expect(screen.getByRole("combobox", { name })).toBe(field);
       await screen.findByRole("button", { name: "Try Again" });
+      // The retry stays focusable while it runs; it marks itself busy.
       await waitFor(() =>
-        expect(screen.getByRole("button", { name: "Try Again" })).toBeEnabled(),
+        expect(
+          screen.getByRole("button", { name: "Try Again" }),
+        ).not.toHaveAttribute("aria-busy", "true"),
       );
       expect(field).toHaveValue("typed by hand");
 
