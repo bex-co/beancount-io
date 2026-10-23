@@ -69,3 +69,7 @@
 - [860](./860.md) — Notifications says "Ledger is healthy" after a failed refresh; Merchants keeps cached rows; no stale banner
 - [861](./861.md) — New Transaction and its account picker treat a failed metadata read as an empty ledger
 - [862](./862.md) — Budget's first-load failure has no Retry and hides the range pills
+- [863](./863.md) — Entry Context's balance rows drop the account name when it holds a lot (default text size)
+- [864](./864.md) — Entry Context's location label draws a Persian/Arabic file path wrongly (gap in w21/824)
+- [865](./865.md) — Entry Context's Source Code draws Persian/Arabic lines in the wrong order (gap in w21/780)
+- [866](./866.md) — Entry Context's Source Code splits a line at a lone carriage return (gap in w21/827)
