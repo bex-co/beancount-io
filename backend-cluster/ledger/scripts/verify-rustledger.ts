@@ -1341,6 +1341,41 @@ async function main(): Promise<void> {
       otherCurrency.errors[0].message.includes("got 40.00 EUR"),
     `a pad that filled USD leaves a later EUR balance to its own check (got ${otherCurrency.errors.map((e) => `${e.code}@${e.line}`)})`,
   );
+  // w21/720: the first pad filled USD and the second was unused; blanking the
+  // first for the re-check dropped its padding, and the 04-02 failure the
+  // second hid was dropped with what that caused. bean-check: E2003, then
+  // "expected 100 USD != accumulated 70 USD".
+  const twoPads = await parseLedgerFiles(
+    {
+      "main.beancount": [
+        "2024-01-01 open Assets:Wallet",
+        "2024-01-01 open Equity:Opening",
+        "2024-01-01 open Expenses:Food",
+        '2024-01-01 * "EUR in"',
+        "  Assets:Wallet  50 EUR",
+        "  Equity:Opening",
+        "2024-01-02 pad Assets:Wallet Equity:Opening",
+        "2024-01-03 balance Assets:Wallet 100 USD",
+        "2024-01-04 balance Assets:Wallet 50 EUR",
+        "2024-03-01 pad Assets:Wallet Equity:Opening",
+        "2024-03-02 balance Assets:Wallet 100 USD",
+        '2024-04-01 * "Groceries"',
+        "  Assets:Wallet  -30 USD",
+        "  Expenses:Food  30 USD",
+        "2024-04-02 balance Assets:Wallet 100 USD",
+      ].join("\n"),
+    },
+    "main.beancount",
+    { today: "2099-01-01" },
+  );
+  assert(
+    JSON.stringify(twoPads.errors.map((e) => [e.code, e.line])) ===
+      JSON.stringify([
+        ["E2003", 10],
+        ["E2001", 15],
+      ]) && twoPads.errors[1].message.includes("got 70 USD"),
+    `a failure an unused pad hid is found beside a pad that filled its currency (got ${twoPads.errors.map((e) => `${e.code}@${e.line}`)})`,
+  );
   // w21/706: rustledger reported "Multiple pad directives" on the pad after an
   // unused one; bean-check reports only the unused pad.
   const padAfterUnused = await parseLedgerFiles(

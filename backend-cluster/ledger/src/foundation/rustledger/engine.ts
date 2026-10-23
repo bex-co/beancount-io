@@ -740,10 +740,17 @@ async function parseLedgerFilesUncached(
       // Checked again as the first pass was: the blanked source has no
       // amortize_over or forecast copies, so every balance on an account a
       // plugin moved failed against the untransformed postings (w21/704).
-      (blanked, unused) =>
+      (blanked, removed, standIns) =>
         validatedTransformed
           ? transformedValidationErrors(
-              transformed.filter((directive) => !unused.includes(directive)),
+              [
+                ...transformed.filter(
+                  (directive) => !removed.includes(directive),
+                ),
+                ...standIns,
+              ].sort((a, b) =>
+                a.date < b.date ? -1 : a.date > b.date ? 1 : 0,
+              ),
               files[entryPoint],
             ).then((found) => found ?? [])
           : withLedger(blanked, entryPoint, (ledger) => ledger.getErrors()),

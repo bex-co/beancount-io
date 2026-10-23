@@ -14,7 +14,6 @@
 
 - [723](./723.md) — An account opened with a future date vanishes from Accounts, and Open Account then says it is "already open"
 - [724](./724.md) — Merchant detail keeps the payee spellings it was opened with, so a recasing edit drops the entry from the detail
-- [720](./720.md) — w21/705's fix now hides a later failing balance when a second pad on the same account and currency is unused
 - [721](./721.md) — The new AVERAGE error has no file or line when a same-day transaction shares the sale's narration (w21/708 gap)
 - [722](./722.md) — The AVERAGE check reads the first `booking_method` option, though the last value wins (w21/708 regression)
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window

@@ -202,12 +202,11 @@ describe("errorsHiddenByUnusedPads", () => {
       message,
     });
     const eur = at(5, "Balance failed for Assets:Cash: expected 50.00 EUR");
-    // Only the blanking caused these: the pad's USD padding is gone.
     const usd = at(3, "Balance failed for Assets:Cash: expected 100.00 USD");
-    const sourceUsd = at(6, "Balance failed for Equity:Open");
 
-    it("re-checks its account's other currency, without reporting it unused", async () => {
-      const seen: string[] = [];
+    it("re-checks its account's other currency with its own padding in place", async () => {
+      const seen: { lines: string[]; removed: unknown; standIns: unknown }[] =
+        [];
       const errors = await added(
         [
           pad,
@@ -218,14 +217,68 @@ describe("errorsHiddenByUnusedPads", () => {
         [usdPadding],
         { "main.bean": source },
         [],
-        async (files, unused) => {
-          seen.push(files["main.bean"].split("\n")[1]);
-          expect(unused).toEqual([pad]);
-          return [usd, eur, sourceUsd];
+        async (files, removed, standIns) => {
+          seen.push({
+            lines: files["main.bean"].split("\n"),
+            removed,
+            standIns,
+          });
+          return [eur];
         },
       );
+      // Not reported unused: it was used, for USD.
       expect(errors).toEqual([eur]);
-      expect(seen).toEqual([""]);
+      expect(seen[0].removed).toEqual([pad]);
+      expect(seen[0].standIns).toEqual([usdPadding]);
+      // The pad's line is blank, every line keeps its number, and the padding
+      // it added stands after them.
+      const { lines } = seen[0];
+      expect(lines[1]).toBe("");
+      expect(lines[4]).toContain("2026-02-04 balance");
+      expect(lines.slice(7).join("\n")).toMatch(
+        /^2026-02-01 \* "\(Padding\)"\n\s+Assets:Cash\s+100\.00 USD\n\s+Equity:Open\s+-100\.00 USD/,
+      );
+    });
+
+    // w21/720: the second pad was unused and hid the 04-02 failure; blanking
+    // the first, used one dropped its USD padding, and the filter for what that
+    // caused dropped the hidden failure too.
+    it("reports a failure an unused pad hid in the currency another pad filled", async () => {
+      const twoPads = `2024-01-01 open Assets:Cash
+2024-01-02 pad Assets:Cash Equity:Open
+2024-01-03 balance Assets:Cash  100 USD
+2024-01-04 balance Assets:Cash  50 EUR
+2024-03-01 pad Assets:Cash Equity:Open
+2024-03-02 balance Assets:Cash  100 USD
+2024-04-02 balance Assets:Cash  100 USD
+`;
+      const first: DirectiveJson = { ...pad, date: "2024-01-02" };
+      const second: DirectiveJson = { ...pad, date: "2024-03-01" };
+      const later = at(
+        7,
+        "Balance failed for Assets:Cash: expected 100 USD, got 70 USD",
+      );
+      const errors = await added(
+        [
+          first,
+          balance("2024-01-03", "Assets:Cash", "100", "USD"),
+          balance("2024-01-04", "Assets:Cash", "50", "EUR"),
+          second,
+          balance("2024-03-02", "Assets:Cash", "100", "USD"),
+          balance("2024-04-02", "Assets:Cash", "100", "USD"),
+        ],
+        [{ ...usdPadding, date: "2024-01-02" }],
+        { "main.bean": twoPads },
+        [],
+        async (_files, removed) => {
+          expect(removed).toEqual([second, first]);
+          return [later];
+        },
+      );
+      expect(errors.map((e) => [e.code, e.line])).toEqual([
+        ["E2003", 5],
+        ["E2001", 7],
+      ]);
     });
 
     it("is not re-checked when the account asserts only what it filled", async () => {
