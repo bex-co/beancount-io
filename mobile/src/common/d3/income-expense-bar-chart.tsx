@@ -110,6 +110,7 @@ function IncomeExpenseBarChart({
   const columnLabels = withYearMarks(
     months.map((month) => t(month.slice(5, 7))),
     months,
+    locale,
   );
   const yScale = scaleLinear()
     .domain(barChartValueDomain([...income, ...expense, ...net]))

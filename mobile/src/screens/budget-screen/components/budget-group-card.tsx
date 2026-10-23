@@ -255,7 +255,7 @@ export function BudgetGroupCard({
   const chartSeries = {
     // A year where it changes, so a 12-month window's two Octobers differ
     // (w21/497); the spoken summary names its own years.
-    labels: withYearMarks(periodLabels, periodDates),
+    labels: withYearMarks(periodLabels, periodDates, locale),
     actuals: series.map((point) => point.actual),
     budgets: series.map((point) => point.budget),
     favorables,

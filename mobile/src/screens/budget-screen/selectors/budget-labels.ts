@@ -4,7 +4,10 @@
  * unit-testable.
  */
 import { utcDate } from "../../../common/calendar-date";
-import { formatLedgerMonthDay } from "../../../common/date-format";
+import {
+  formatLedgerMonthDay,
+  localizeDigits,
+} from "../../../common/date-format";
 import { getFormatDate } from "../../../common/format-util";
 import {
   formatSignedMoneyWithCurrency,
@@ -55,7 +58,7 @@ export function periodAxisLabel(
 ): string {
   const normalized = interval.toLowerCase();
   if (normalized === "yearly") {
-    return date.slice(0, 4);
+    return localizeDigits(date.slice(0, 4), locale);
   }
   if (normalized === "daily") {
     return formatLedgerMonthDay(date, locale);

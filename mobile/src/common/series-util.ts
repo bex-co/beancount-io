@@ -1,3 +1,4 @@
+import { localizeDigits } from "./date-format";
 import { resolveCurrencyBalance } from "./balance-util";
 
 /** A charted point: an ISO date and its numeric value in the active currency. */
@@ -350,9 +351,12 @@ export function seriesToChartArray(
 export function selectedPeriodLabel(
   monthLabel: string,
   period: string | undefined,
+  locale = "en",
 ): string {
   const year = period?.slice(0, 4);
-  return year && /^\d{4}$/.test(year) ? `${monthLabel} ${year}` : monthLabel;
+  return year && /^\d{4}$/.test(year)
+    ? `${monthLabel} ${localizeDigits(year, locale)}`
+    : monthLabel;
 }
 
 /**

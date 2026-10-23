@@ -400,7 +400,7 @@ function ScrubHeader({
   scrub,
 }: ScrubHeaderProps): JSX.Element {
   const styles = useThemeStyle(getStyles);
-  const { t } = useTranslations();
+  const { t, locale } = useTranslations();
   // A change that rounds to nothing is neither good nor bad (w21/237).
   const neutralColor = useTheme().colorTheme.black80;
 
@@ -468,7 +468,11 @@ function ScrubHeader({
   // "period start → this month" rather than as a replacement identity.
   const scrubLabel =
     scrubbing && labels[shownIndex] !== undefined
-      ? selectedPeriodLabel(t(labels[shownIndex]), periods?.[shownIndex])
+      ? selectedPeriodLabel(
+          t(labels[shownIndex]),
+          periods?.[shownIndex],
+          locale,
+        )
       : null;
 
   return (

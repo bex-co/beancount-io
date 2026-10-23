@@ -195,3 +195,23 @@ export function formatMoment(
     return "";
   }
 }
+
+/**
+ * Latin digits in `text` written in the language's own, as the dates beside
+ * them are: Persian shows "۱۲/۲۸ 25" and "· اوت 2026" next to "۳۱ اوت ۲۰۲۶"
+ * when a year or a count is sliced from a ledger string and appended raw
+ * (w21/884, w21/885). The English-style digit languages are returned as they
+ * were.
+ */
+export function localizeDigits(text: string, locale: string): string {
+  try {
+    const sample = new Intl.NumberFormat(locale, { useGrouping: false }).format(
+      7,
+    );
+    if (sample === "7") return text;
+    const format = new Intl.NumberFormat(locale, { useGrouping: false });
+    return text.replace(/\d/g, (digit) => format.format(Number(digit)));
+  } catch {
+    return text;
+  }
+}

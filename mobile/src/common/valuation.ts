@@ -30,7 +30,7 @@ import {
   type Translate,
   type ValueBasis,
 } from "./balance-display";
-import { formatLedgerDateShort } from "./date-format";
+import { formatLedgerDateShort, localizeDigits } from "./date-format";
 import { formatSignedMoneyWithCurrency } from "./number-utils";
 import { utcTime } from "./calendar-date";
 import { isolateLtr } from "./bidi";
@@ -415,11 +415,15 @@ function priceAttention(
   const parts: string[] = [];
   const stale = stalePrices(valuation);
   if (stale.length > 0) {
+    // The count in the language's digits too, as the date beside it (w21/885).
     parts.push(
-      t("pricesNotUpdatedSince", {
-        count: stale.length,
-        date: formatLedgerDateShort(stale[0].priceDate, locale),
-      }),
+      localizeDigits(
+        t("pricesNotUpdatedSince", {
+          count: stale.length,
+          date: formatLedgerDateShort(stale[0].priceDate, locale),
+        }),
+        locale,
+      ),
     );
   }
   if (valuation.atCostNoPrice.length > 0) {

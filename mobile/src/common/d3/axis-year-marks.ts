@@ -1,3 +1,5 @@
+import { localizeDigits } from "../date-format";
+
 /**
  * Month labels with a short year where the year changes: "OCT 25 … DEC JAN 26
  * … OCT". A bar chart that spans more than a year labels its columns by month
@@ -10,6 +12,7 @@
 export function withYearMarks(
   labels: readonly string[],
   dates: readonly string[],
+  locale = "en",
 ): string[] {
   const years = dates.map((date) => date.slice(0, 4));
   if (new Set(years).size < 2) return [...labels];
@@ -18,7 +21,7 @@ export function withYearMarks(
     const year = years[index];
     if (year === undefined || !/^\d{4}$/.test(year)) return label;
     return index === 0 || year !== years[index - 1]
-      ? `${label} ${year.slice(2)}`
+      ? `${label} ${localizeDigits(year.slice(2), locale)}`
       : label;
   });
 }
