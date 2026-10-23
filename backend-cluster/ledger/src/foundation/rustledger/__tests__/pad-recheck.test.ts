@@ -107,4 +107,31 @@ describe("errorsHiddenByUnusedPads", () => {
     );
     expect(errors.map((e) => e.code)).toEqual(["E2003"]);
   });
+
+  // w21/676: padding within the balance's `~` tolerance is dropped (w21/135), so
+  // the pad is unused, and the next balance reads the unpadded 98.00.
+  it("reports the failure after a padding dropped as within tolerance", async () => {
+    const source = `2026-01-01 open Assets:Cash
+2026-01-31 pad Assets:Cash Equity:Open
+2026-02-01 balance Assets:Cash  100.00 ~ 5.00 USD
+2026-03-01 balance Assets:Cash  100.00 USD
+`;
+    const later = {
+      ...failed,
+      message:
+        "Balance failed for Assets:Cash: expected 100.00 USD, got 98.00 USD",
+      line: 4,
+    };
+    const errors = await errorsHiddenByUnusedPads(
+      [{ ...pad, date: "2026-01-31" }],
+      [],
+      { "main.bean": source },
+      [],
+      async () => [later],
+    );
+    expect(errors.map((e) => [e.code, e.line, e.message])).toEqual([
+      ["E2003", 2, "Unused Pad entry"],
+      ["E2001", 4, later.message],
+    ]);
+  });
 });
