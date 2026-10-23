@@ -46,7 +46,6 @@
 
 - [991 — Return focus to visible report filters after the header changes layout](./991.md) — minor residual of W3/m20; live QA,2026-10-22; Close/Escape target a hidden opener after resize or sidebar collapse; visible-opener controls pass, zero hosted writes.
 
-- [990 — Keep newer filter drafts when earlier changes finish](./990.md) — minor; live QA,2026-10-22; new Time text is replaced by the previous navigation at both widths; Account repeats at390; genuine reads held unchanged, zero hosted writes.
 
 
 
