@@ -515,6 +515,9 @@ def answer(
         raise ConflictError("The export changed during extraction; nothing was written. Retry.")
     source_hash = hashlib.sha256(source_bytes).hexdigest()
     other_entries = _authored_directive_keys(snapshot)
+    from bea_engine.ledger.reader import authored_entries
+
+    recorded_balances = authored_entries(snapshot, Balance)
     quotes = _written_quotes(snapshot)
     price_conflicts = False
     rows: list[dict[str, Any]] = []
@@ -782,6 +785,23 @@ def answer(
             directive_key = _directive_key(entry, target.parent)
             if directive_key in other_entries:
                 status, reason = "duplicate", "Identical directive already exists."
+            elif isinstance(entry, Balance):
+                # A different assertion for the same day, account and currency is
+                # the conflict `add balance` refuses, judged against what the
+                # files declare and the rows already accepted, whatever a plugin
+                # shows of them (w5/1008).
+                clash = _balance_conflict(recorded_balances, entry.date, entry.account, entry.amount.currency)
+                if clash is not None:
+                    status, conflicts = "conflict", True
+                    match = clash
+                    reason = (
+                        f"{entry.account} already has a {entry.date} balance of "
+                        f"{_plain_amount(clash.amount)} at {_quote_origin(clash, batch_rows)}; "
+                        f"refusing {_plain_amount(entry.amount)}."
+                    )
+                else:
+                    recorded_balances.append(entry)
+                    batch_rows[id(entry)] = index + 1
             other_entries.add(directive_key)
         include = status == "new" or (status == "possible_duplicate" and duplicates == "include")
         unblocked = (status, reason)
@@ -1777,6 +1797,18 @@ def _written_quotes(snapshot: Any) -> dict[tuple[Any, str, str], list[Any]]:
     for entry in authored_entries(snapshot, Price):
         quotes.setdefault((entry.date, entry.currency, entry.amount.currency), []).append(entry)
     return quotes
+
+
+def _balance_conflict(recorded: Sequence[Any], date: datetime.date, account: str, currency: str) -> Any | None:
+    """A recorded assertion for the same day, account and currency (the caller has ruled out an identical one)."""
+    return next(
+        (
+            other
+            for other in recorded
+            if other.date == date and other.account == account and other.amount.currency == currency
+        ),
+        None,
+    )
 
 
 def _quote_origin(quote: Any, batch_rows: dict[int, int]) -> str:
