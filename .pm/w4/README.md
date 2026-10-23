@@ -36,7 +36,6 @@
 
 - [1002 — Validate amount currency symbols before import](./1002.md) — minor residual of M44; current local native UI misses later symbols and five established associations at both widths; matching/refusal controls pass, all preparations preblocked; production lag excluded.
 
-- [1001 — Keep exact report quantities in LineChart text values](./1001.md) — minor residual of W3/494; large source quantities round and24-decimal Account tooltips show zero at both widths; exact raw tables/18-decimal controls pass, no hosted writes.
 
 
 
