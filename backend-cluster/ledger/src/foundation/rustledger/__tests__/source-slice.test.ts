@@ -1080,3 +1080,52 @@ describe("an edit with whitespace or a comment around the entry", () => {
     ).toBe(sliceSha256(reread!.text));
   });
 });
+
+// w21/845: a balance assertion checks the account and every subaccount.
+describe("entryBalances for an assertion on a parent account", () => {
+  const deposit: DirectiveJson = {
+    type: "transaction",
+    date: "2024-01-05",
+    flag: "*",
+    narration: "deposit",
+    tags: [],
+    links: [],
+    postings: [
+      {
+        account: "Assets:Bank:Checking",
+        units: { number: "100", currency: "USD" },
+      },
+      {
+        account: "Equity:Opening",
+        units: { number: "-100", currency: "USD" },
+      },
+    ],
+  };
+  const assertion: DirectiveJson = {
+    type: "balance",
+    date: "2024-01-10",
+    account: "Assets:Bank",
+    amount: { number: "100", currency: "USD" },
+  };
+
+  it("sums the subaccounts into the balance before", () => {
+    const balances = entryBalances([deposit, assertion], hashEntry(assertion));
+    expect(balances?.before["Assets:Bank"]).toEqual(["100 USD"]);
+    expect(balances?.after).toBeNull();
+  });
+
+  it("does not take a sibling account that only shares a name prefix", () => {
+    const sibling: DirectiveJson = {
+      ...deposit,
+      postings: [
+        {
+          account: "Assets:Banking",
+          units: { number: "7", currency: "USD" },
+        },
+        deposit.type === "transaction" ? deposit.postings[1] : ({} as never),
+      ],
+    };
+    const balances = entryBalances([sibling, assertion], hashEntry(assertion));
+    expect(balances?.before["Assets:Bank"]).toEqual([]);
+  });
+});

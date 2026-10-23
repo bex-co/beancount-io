@@ -1077,6 +1077,18 @@ export function entryBalances(
     const prior = directives[i];
     if (prior.type !== "transaction") continue;
     prior.postings.forEach((posting) => {
+      if (target.type === "balance") {
+        // An assertion checks the account and every subaccount (w21/845).
+        inventories.forEach((inv, account) => {
+          if (
+            posting.account === account ||
+            posting.account.startsWith(`${account}:`)
+          ) {
+            inv.addPosting(posting);
+          }
+        });
+        return;
+      }
       const inv = inventories.get(posting.account);
       if (inv) inv.addPosting(posting);
     });
