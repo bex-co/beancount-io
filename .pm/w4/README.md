@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1041** — Keep failed first-page social retries mounted and focused (40–55m, dashboard, A2/A3) ← dashboard QA; residual of106 ([note](./1041.md))
+
 - **1040** — Keep focus on the What's new disclosure when its layout changes (40–55m, dashboard, A2) ← dashboard QA ([note](./1040.md))
 
 - **1039** — Keep exact Budget amounts and variance on mobile (45–60m, mobile, A2/A3) ← m55 simplify review; source-only mobile counterpart of m55 ([note](./1039.md))
