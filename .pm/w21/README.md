@@ -42,10 +42,10 @@
 - [693](./blocked/693.md) — Edit Transaction's Reload after a conflict opens the other twin's text, so the next Save overwrites it — **blocked:** its acceptance contradicts itself (a twin moved onto the ID and a metadata-only change look the same after a conflict); needs an owner decision between always refusing Reload on a changed slice and keeping it
 - [694](./blocked/694.md) — Since w21/672, Delete after a metadata-only change elsewhere dead-ends on "changed or removed" (w21/250 regression) — **blocked:** its two acceptance cases cannot both hold (a metadata-only change and a twin swap look the same); same owner decision as w21/693
 - [857](./857.md) — The ledger runs amortize_over/forecast on the server's UTC date, not the user's
-- [871](./871.md) — Mobile never attaches the scanned receipt image to the saved transaction (dashboard does)
 - [872](./872.md) — A guard inside Scan Receipt's full-screen modal has no way back
 - [873](./873.md) — Scan Receipt's shutter swallows capture failures
 - [875](./875.md) — On a ledger with no plugins, a padding entry opens to "changed or removed"
 - [876](./876.md) — Add Budget can't budget the whole Expenses/Income root
 - [877](./877.md) — Budget dates ignore the account's open and close dates
 - [878](./878.md) — With ledger settings failed, Update Budget saves an income target as positive
+- [871](./blocked/871.md) — Mobile never attaches the scanned receipt image to the saved transaction (dashboard does) — **blocked:** needs an owner decision on how a scanned receipt is saved with its document (two-posting insertReceiptTransaction only, extend it, or write the document in the addEntries commit)
