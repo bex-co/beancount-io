@@ -1,5 +1,6 @@
 import { ReactNode, useCallback, useRef, useState } from "react";
 import {
+  I18nManager,
   NativeSyntheticEvent,
   ScrollView,
   StyleSheet,
@@ -14,6 +15,7 @@ import PagerView from "react-native-pager-view";
 import { useHorizontalSwipeOwnerGesture } from "@/common/horizontal-swipe-owner";
 import { fontSizes, fontWeights, useTheme } from "@/common/theme";
 import {
+  tabRevealScrollX,
   tabStripHasMoreAfter,
   trailingNeedsOwnRow,
 } from "./tab-strip-overflow";
@@ -170,6 +172,9 @@ export function SegmentedPages({
   const [rowWidth, setRowWidth] = useState(0);
   const [trailingWidth, setTrailingWidth] = useState(0);
   const [tabWidths, setTabWidths] = useState<Record<number, number>>({});
+  // Where each tab sits in the strip, to bring a tapped one into view.
+  const tabX = useRef<Record<number, number>>({});
+  const tabsRef = useRef<ScrollView>(null);
   const stacked =
     trailing != null &&
     trailingNeedsOwnRow({
@@ -197,8 +202,19 @@ export function SegmentedPages({
       if (index === activeIndex) return;
       setActiveIndex(index);
       pagerRef.current?.setPage(index);
+      // A tab cut off at the strip's edge is brought whole into view; the
+      // strip's coordinates are mirrored in RTL, which is left to the system.
+      if (!I18nManager.isRTL) {
+        const x = tabRevealScrollX({
+          tabX: tabX.current[index] ?? 0,
+          tabWidth: tabWidths[index] ?? 0,
+          viewportWidth: strip.viewportWidth,
+          offset: strip.offset,
+        });
+        if (x !== null) tabsRef.current?.scrollTo({ x, animated: true });
+      }
     },
-    [activeIndex],
+    [activeIndex, strip.offset, strip.viewportWidth, tabWidths],
   );
 
   return (
@@ -212,6 +228,7 @@ export function SegmentedPages({
         <View style={[styles.tabsWrap, stacked && styles.tabsWrapStacked]}>
           <GestureDetector gesture={swipeOwner}>
             <ScrollView
+              ref={tabsRef}
               horizontal
               showsHorizontalScrollIndicator={false}
               style={styles.tabsScroll}
@@ -246,6 +263,7 @@ export function SegmentedPages({
                     onPress={() => handleTabPress(index)}
                     onLayout={(event) => {
                       const width = event.nativeEvent.layout.width;
+                      tabX.current[index] = event.nativeEvent.layout.x;
                       setTabWidths((previous) =>
                         previous[index] === width
                           ? previous
@@ -267,7 +285,7 @@ export function SegmentedPages({
               })}
             </ScrollView>
           </GestureDetector>
-          {tabStripHasMoreAfter(strip) ? (
+          {tabStripHasMoreAfter({ ...strip, rtl: I18nManager.isRTL }) ? (
             <View style={styles.tabsFade} pointerEvents="none">
               {FADE_STEPS.map((opacity) => (
                 <View

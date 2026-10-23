@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import {
+  tabRevealScrollX,
   tabStripHasMoreAfter,
   trailingNeedsOwnRow,
 } from "../tab-strip-overflow";
@@ -53,7 +54,11 @@ describe("SegmentedPages tab strip", () => {
       path.join(__dirname, "..", "index.tsx"),
       "utf8",
     );
-    expect(source.includes("{tabStripHasMoreAfter(strip) ? (")).toBe(true);
+    expect(
+      source.includes(
+        "{tabStripHasMoreAfter({ ...strip, rtl: I18nManager.isRTL }) ? (",
+      ),
+    ).toBe(true);
     expect(source.includes("scrollEnabled={false}")).toBe(true);
   });
 });
@@ -132,5 +137,79 @@ describe("trailingNeedsOwnRow", () => {
         widestTabWidth: 300,
       }),
     ).toBe(false);
+  });
+});
+
+// w21/887: an RTL strip reports its offset from the other end.
+describe("tabStripHasMoreAfter in a right-to-left strip", () => {
+  const strip = { contentWidth: 300, viewportWidth: 276 };
+
+  it("shows the fade while a tab is hidden, at the start", () => {
+    // The offset is largest at the visual start.
+    expect(tabStripHasMoreAfter({ ...strip, offset: 24, rtl: true })).toBe(
+      true,
+    );
+  });
+
+  it("drops the fade once scrolled to the end", () => {
+    expect(tabStripHasMoreAfter({ ...strip, offset: 0, rtl: true })).toBe(
+      false,
+    );
+  });
+
+  it("shows none for a strip that fits", () => {
+    expect(
+      tabStripHasMoreAfter({
+        contentWidth: 200,
+        viewportWidth: 276,
+        offset: 0,
+        rtl: true,
+      }),
+    ).toBe(false);
+  });
+});
+
+// w21/886: the tapped Liabilities pill stayed cut off under the fade.
+describe("tabRevealScrollX", () => {
+  const strip = { viewportWidth: 276, offset: 0 };
+
+  it("scrolls a tab cut off at the trailing edge whole into view", () => {
+    // Liabilities: starts at 190, 110 wide, in a 276 viewport.
+    expect(tabRevealScrollX({ ...strip, tabX: 190, tabWidth: 110 })).toBe(36);
+  });
+
+  it("leaves a tab already whole in the viewport", () => {
+    expect(tabRevealScrollX({ ...strip, tabX: 0, tabWidth: 90 })).toBe(null);
+    expect(tabRevealScrollX({ ...strip, tabX: 100, tabWidth: 120 })).toBe(null);
+  });
+
+  it("brings a tab cut off at the leading edge back", () => {
+    expect(
+      tabRevealScrollX({
+        viewportWidth: 276,
+        offset: 60,
+        tabX: 20,
+        tabWidth: 90,
+      }),
+    ).toBe(8);
+    expect(
+      tabRevealScrollX({
+        viewportWidth: 276,
+        offset: 60,
+        tabX: 4,
+        tabWidth: 90,
+      }),
+    ).toBe(0);
+  });
+
+  it("does nothing before the strip is measured", () => {
+    expect(
+      tabRevealScrollX({
+        viewportWidth: 0,
+        offset: 0,
+        tabX: 190,
+        tabWidth: 110,
+      }),
+    ).toBe(null);
   });
 });

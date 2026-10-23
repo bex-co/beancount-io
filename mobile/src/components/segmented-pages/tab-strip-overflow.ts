@@ -9,12 +9,48 @@ export function tabStripHasMoreAfter({
   contentWidth,
   viewportWidth,
   offset,
+  rtl = false,
 }: {
   contentWidth: number;
   viewportWidth: number;
   offset: number;
+  /**
+   * An RTL ScrollView on iOS reports `contentOffset.x` as the distance still to
+   * scroll toward the trailing (left) edge: largest at the visual start, 0 at
+   * the end. Read from the start, as an LTR strip's is, the fade was false while
+   * a tab was hidden and true once all showed (w21/887).
+   */
+  rtl?: boolean;
 }): boolean {
-  return viewportWidth > 0 && contentWidth - viewportWidth - offset > 1;
+  if (viewportWidth <= 0) return false;
+  return rtl
+    ? contentWidth > viewportWidth && offset > 1
+    : contentWidth - viewportWidth - offset > 1;
+}
+
+/**
+ * Where to scroll the tab strip so the tapped tab shows whole, or `null` when
+ * it already does. A tab cut off at the trailing edge stayed cut off after it
+ * was selected ("Liabilitie" under the fade) (w21/886). `gutter` leaves a little
+ * of the strip beyond it.
+ */
+export function tabRevealScrollX({
+  tabX,
+  tabWidth,
+  viewportWidth,
+  offset,
+  gutter = 12,
+}: {
+  tabX: number;
+  tabWidth: number;
+  viewportWidth: number;
+  offset: number;
+  gutter?: number;
+}): number | null {
+  if (viewportWidth <= 0 || tabWidth <= 0) return null;
+  if (tabX >= offset && tabX + tabWidth <= offset + viewportWidth) return null;
+  if (tabX < offset) return Math.max(0, tabX - gutter);
+  return tabX + tabWidth - viewportWidth + gutter;
 }
 
 /**
