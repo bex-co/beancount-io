@@ -3,16 +3,6 @@ import type { PriceMap } from "./price-map";
 import { LotInventory, parseConversion } from "./lot-inventory";
 import { utcDate } from "./utc-date";
 
-/**
- * beancount `FLAG_UNREALIZED` (`fava/beans/flags.py`). Fava's cumulative
- * `account_balance` and `net_worth` chart series exclude transactions carrying
- * this flag — the `unrealized` plugin books unrealized gains as `U`-flagged
- * transactions that must NOT count toward realized balances or net worth
- * (`fava/modules/chart.py`: `entry.flag != FLAG_UNREALIZED`). Note the
- * per-interval flow series (`interval_totals`) deliberately does NOT filter it.
- */
-const FLAG_UNREALIZED = "U";
-
 export interface DateBalance {
   date: string;
   balance: Record<string, string>;
@@ -367,8 +357,11 @@ export function intervalTotals(
  * synthetic opening-balance entries (dated `begin - 1`, produced by the clamp)
  * are folded into the balance before the first in-window interval end.
  *
- * `U`-flagged (`FLAG_UNREALIZED`) transactions are excluded — matching Fava's
- * `account_balance`/`net_worth`, which value only realized activity.
+ * Every transaction counts, `U`-flagged ones included: Fava leaves them out of
+ * its balance series so the `unrealized` plugin is not counted twice under
+ * market valuation, but the Accounts tab's tree counts them, and Home's
+ * Liabilities read $0.00 over an Accounts root of -250 (w21/888; the CLI's
+ * series stopped filtering them in w5/083).
  */
 export function accountBalanceSeries(
   directives: DirectiveJson[],
@@ -383,7 +376,7 @@ export function accountBalanceSeries(
   const txns = directives
     .filter(
       (d): d is Extract<DirectiveJson, { type: "transaction" }> =>
-        d.type === "transaction" && d.flag !== FLAG_UNREALIZED,
+        d.type === "transaction",
     )
     .sort((a, b) => a.date.localeCompare(b.date));
   const inventory = new LotInventory();

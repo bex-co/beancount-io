@@ -164,9 +164,8 @@ describe("accountBalanceSeries (cumulative stock)", () => {
     ]);
   });
 
-  // Fava's account_balance/net_worth exclude FLAG_UNREALIZED ("U") transactions
-  // (the `unrealized` plugin books unrealized gains this way). The reviewer's
-  // repro: a ledger whose only transaction is U-flagged must value to zero.
+  // w21/888: a U-flagged transaction counts in the series, as it does in the
+  // Accounts tab's tree (Fava leaves it out for its `unrealized` plugin).
   const unrealizedOnly: DirectiveJson[] = [
     {
       type: "transaction",
@@ -188,7 +187,7 @@ describe("accountBalanceSeries (cumulative stock)", () => {
     },
   ];
 
-  it("excludes U-flagged transactions from the cumulative balance (returns empty, not 10 USD)", () => {
+  it("counts a U-flagged transaction in the cumulative balance", () => {
     const rows = accountBalanceSeries(
       unrealizedOnly,
       "month",
@@ -196,12 +195,10 @@ describe("accountBalanceSeries (cumulative stock)", () => {
       "USD",
       usdMap,
     );
-    // Only a U-flagged txn exists -> the Assets balance is zero at every point,
-    // and a zero balance is emitted as an empty record (no USD key).
-    expect(rows.every((r) => Object.keys(r.balance).length === 0)).toBe(true);
+    expect(rows.at(-1)?.balance).toEqual({ USD: "10" });
   });
 
-  it("still counts a realized txn while excluding a same-interval U-flagged one", () => {
+  it("adds a same-interval U-flagged transaction to the realized ones", () => {
     const mixed: DirectiveJson[] = [...unrealizedOnly, ...LEDGER];
     const rows = accountBalanceSeries(
       mixed,
@@ -210,10 +207,9 @@ describe("accountBalanceSeries (cumulative stock)", () => {
       "USD",
       usdMap,
     );
-    // The +10 from the U txn is dropped; only the realized 1000/3000 remain.
     expect(rows).toEqual([
-      { date: "2024-01-31", balance: { USD: "1000" } },
-      { date: "2024-02-29", balance: { USD: "3000" } },
+      { date: "2024-01-31", balance: { USD: "1010" } },
+      { date: "2024-02-29", balance: { USD: "3010" } },
     ]);
   });
 });
