@@ -30,6 +30,7 @@ import {
 } from "@/common/components/ui/dialog";
 import { Button } from "@/common/components/ui/button";
 import { Input } from "@/common/components/ui/input";
+import { ExactAmountInput } from "@/common/components/exact-amount-input";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
 import {
   Form,
@@ -324,12 +325,7 @@ export function AddBudgetDialog({
                     <FormItem className="flex-1">
                       <FormLabel>{t("page.budget.budgetAmount")}</FormLabel>
                       <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="500"
-                          step="any"
-                          {...field}
-                        />
+                        <ExactAmountInput placeholder="500" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

@@ -108,3 +108,29 @@ describe("ReceiptReviewForm amount precision", () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 });
+
+/** The amount's arrow keys step exactly and stop at zero (w4/1021). */
+describe("Receipt amount stepping", () => {
+  it("records an exactly stepped amount and does not step below zero", async () => {
+    const { onSubmit } = renderReview();
+    const input = screen.getByRole("spinbutton", {
+      name: "Amount",
+    }) as HTMLInputElement;
+    const user = userEvent.setup();
+
+    fireEvent.change(input, { target: { value: "0.5" } });
+    input.focus();
+    await user.keyboard("{ArrowDown}");
+    expect(input.value).toBe("0");
+
+    fireEvent.change(input, { target: { value: "9007199254740993.01" } });
+    input.focus();
+    await user.keyboard("{ArrowUp}");
+    expect(input.value).toBe("9007199254740994.01");
+    await user.click(
+      screen.getByRole("button", { name: "Record Transaction" }),
+    );
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0]![0].amount).toBe("9007199254740994.01");
+  });
+});

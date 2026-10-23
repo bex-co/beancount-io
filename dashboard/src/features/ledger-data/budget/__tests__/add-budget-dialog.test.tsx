@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useMutation, useQuery } from "@apollo/client/react";
 import { AddBudgetDialog } from "../add-budget-dialog";
@@ -323,5 +323,19 @@ describe("AddBudgetDialog", () => {
     const variables = mockAddBudget.mock.calls[0]?.[0]?.variables;
     const number = variables?.entries?.[0]?.budget?.amount?.number;
     expect(number).toBe("0.001");
+  });
+});
+
+/** The budget amount's arrow keys step exactly (w4/1021). */
+describe("Add Budget amount stepping", () => {
+  it("steps a large amount by exactly one", async () => {
+    render(<AddBudgetDialog {...defaultProps} />);
+    const input = screen.getByRole("spinbutton", {
+      name: /amount/i,
+    }) as HTMLInputElement;
+    fireEvent.change(input, { target: { value: "12345678901234567890.12" } });
+    input.focus();
+    await userEvent.setup().keyboard("{ArrowUp}");
+    expect(input.value).toBe("12345678901234567891.12");
   });
 });

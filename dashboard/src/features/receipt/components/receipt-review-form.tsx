@@ -11,6 +11,7 @@ import {
   FormMessage,
 } from "@/common/components/ui/form";
 import { Input } from "@/common/components/ui/input";
+import { ExactAmountInput } from "@/common/components/exact-amount-input";
 import { Button } from "@/common/components/ui/button";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
 import {
@@ -217,10 +218,9 @@ export function ReceiptReviewForm({
                         <FormControl>
                           {/* Any precision the exact-decimal schema accepts,
                               like Balance's amount: a fixed cent step made the
-                              browser refuse 12.345 before it (w4/982). */}
-                          <Input
-                            type="number"
-                            step="any"
+                              browser refuse 12.345 before it (w4/982). Its
+                              arrow keys step exactly (w4/1021). */}
+                          <ExactAmountInput
                             min="0"
                             placeholder="0.00"
                             {...field}
