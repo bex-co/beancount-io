@@ -26,6 +26,11 @@
 - [792](./792.md) — New Transaction refuses an amount starting with a decimal comma (",5")
 - [793](./793.md) — New Transaction shows a green "✓ $0.00" and no format error when an earlier row lacks an account
 - [794](./794.md) — In a zero-decimal ledger, "0.500" is read as 500 (w21/697 regression)
+- [795](./795.md) — Merchant detail shows a pre-entered row as booked, with no "Upcoming" line
+- [796](./796.md) — Merchant detail's total and count include pre-entered entries ("$6,000.00" when $4,500 paid)
+- [797](./797.md) — Merchants' Recurring row keeps the old currency after a payee switches ("¥120,000" for $2,000 rent)
+- [798](./798.md) — Merchants shows a steady $10.99 bill as "~$10.99" because another currency's charges vary
+- [799](./799.md) — A biweekly series with one late payment reads "Twice a month"
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window
 - [065](./blocked/065.md) — One early-year entry (e.g. 0050) makes the balance sheet 23,718 monthly points (3 MB) and the app stalls — **blocked:** needs an approach decision (per-pill fetch vs server downsample) and a simulator profile of the stall
 - [180](./blocked/180.md) — Budget actuals use raw prefix match (`Transport` counts `Transportation`), unlike Reports — **blocked:** needs an owner decision between component matching on the server (a Fava break) and a per-account breakdown for the client
