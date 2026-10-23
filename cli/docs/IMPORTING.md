@@ -75,6 +75,8 @@ reference:
 
 `--csv` takes `field=Column` pairs separated by commas; double-quote a column
 name that holds a comma itself, as in `--csv 'date=Date,payee=Payee,amount="Amount (USD, net)"'`.
+Inside the quotes two double quotes in a row are one literal quote, as in CSV, so a header
+`Memo "` is written `narration="Memo """`.
 `date` is required, as is at least one of
 `payee` and `narration` — a single bank description column belongs in
 `narration`, which keeps the payee field free for the merchant that

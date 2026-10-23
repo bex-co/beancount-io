@@ -75,7 +75,6 @@
 
 - [968 — Discover export helpers before plugin processing suppresses their import](./968.md) — minor CLI follow-up to 880; a cached idempotent plugin produces a successful snapshot missing its helper, reproduced 2026-10-22.
 
-- [967 — Preserve literal quotes in CSV column mappings](./967.md) — trivial CLI mapping gap; valid quoted headers cannot be named losslessly, reproduced 2026-10-22.
 
 
 The 27 findings from the MCP QA auth sweep against the hosted endpoint (023–054, less the five under [Dropped](#dropped)) were fixed in `backend-cluster/backend-v2` and closed on 2026-10-02 and 2026-10-03; each note under [`done/`](./done/) records what shipped and in which commit. None has been re-observed against the hosted endpoint yet — the fixes reach it with the next backend deploy.

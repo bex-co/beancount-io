@@ -541,13 +541,22 @@ def split_spec(spec: str) -> list[str]:
     A bank header such as `Amount (USD, net)` holds a comma, and splitting on
     every one left no way to name it: `amount="Amount (USD, net)"` failed as
     `Bad --csv mapping ' net)"'` (w5/428). The quotes stay in the part, for
-    `spec_value` to take off.
+    `spec_value` to take off. Inside a quoted stretch two quotes in a row are one literal quote,
+    as in CSV: a header `Memo "` is written with the whole value quoted and the
+    quote doubled (w5/967).
     """
     parts: list[str] = []
     current: list[str] = []
     quoted = False
-    for character in spec:
+    characters = iter(enumerate(spec))
+    for position, character in characters:
         if character == '"':
+            if quoted and spec[position + 1 : position + 2] == '"':
+                # A doubled quote inside a quoted stretch is a literal quote,
+                # CSV's own convention, for a header such as `Memo "` (w5/967).
+                current.append(character)
+                current.append(next(characters)[1])
+                continue
             quoted = not quoted
         elif character == "," and not quoted:
             parts.append("".join(current))
@@ -564,7 +573,7 @@ def spec_value(column: str) -> str:
     """A `--csv` value without the double quotes that let it hold a comma."""
     column = column.strip()
     if len(column) >= 2 and column[0] == column[-1] == '"':
-        return column[1:-1].strip()
+        return column[1:-1].replace('""', '"').strip()
     return column
 
 
