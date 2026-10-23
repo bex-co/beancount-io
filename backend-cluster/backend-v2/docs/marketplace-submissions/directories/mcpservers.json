@@ -35,6 +35,20 @@
       "result": "Only unrelated StdioA/beancount-mcp; no canonical hosted match in this complete displayed query result",
       "action": "Retain original Free $0 submission; no resubmission",
       "limit": "Public search does not expose moderator queue, rejection or connection state"
+    },
+    {
+      "observedAtUTC": "2026-10-23T20:59:34Z",
+      "url": "https://mcpservers.org/search?query=beancount",
+      "result": "Bounded native HTTP search request returns 403; web extraction unavailable",
+      "limit": "No current public listing or private moderation conclusion from this unavailable read"
+    },
+    {
+      "observedAtUTC": "2026-10-23T21:35:21Z",
+      "url": "https://mcpservers.org/search?query=beancount",
+      "displayedStatus": "Showing 1-1 of 1 servers",
+      "result": "Only unrelated StdioA/beancount-mcp; no canonical Beancount.io hosted connector in the complete displayed query",
+      "action": "Retain accepted Free $0 submission; no duplicate submission",
+      "limit": "Native browser follow-through resolves the earlier public-read limitation, not private moderation state, directory-wide absence or native accounting verification"
     }
   ]
 }
