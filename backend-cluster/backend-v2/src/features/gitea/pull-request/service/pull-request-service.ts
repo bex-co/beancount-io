@@ -2,6 +2,7 @@ import {
   assertPortableRepoPath,
   assertSafeRepoPath,
 } from "@/features/ledger/utils/safe-repo-path";
+import { assertNoPortableTwin } from "@/features/ledger/utils/portable-twin";
 import { logger } from "@/shared/logger";
 import {
   BadUserInputError,
@@ -376,8 +377,37 @@ export class PullRequestService implements IPullRequestService {
 
         // Update or create file
         const content = Buffer.from(change.content).toString("base64");
-        // A new file's name has to be portable; the branch is deleted if not.
-        if (!fileSha) assertPortableRepoPath(change.path);
+        // A new file's name has to be portable, and not be one the branch
+        // has already on macOS and Windows (w23/068), a file this request
+        // created included; the branch is deleted if not.
+        if (!fileSha) {
+          assertPortableRepoPath(change.path);
+          await assertNoPortableTwin(change.path, async (dir) => {
+            const listing = await step<{ data: unknown }>(
+              `listing ${dir ?? "/"}`,
+              () =>
+                dir === undefined
+                  ? client.repos.repoGetContentsList(
+                      owner,
+                      repo,
+                      { ref: headBranch },
+                      { format: "json" },
+                    )
+                  : client.repos.repoGetContents(
+                      owner,
+                      repo,
+                      dir,
+                      { ref: headBranch },
+                      { format: "json" },
+                    ),
+            );
+            return Array.isArray(listing.data)
+              ? (listing.data as ContentsResponse[]).flatMap((entry) =>
+                  entry.path ? [{ path: entry.path }] : [],
+                )
+              : [];
+          });
+        }
 
         await step(`writing ${change.path}`, () =>
           fileSha

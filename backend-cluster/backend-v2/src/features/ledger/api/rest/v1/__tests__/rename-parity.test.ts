@@ -371,6 +371,57 @@ describe.each(["rest", "gql", "mcp"])("rename via %s", (surface) => {
       await f.close();
     }
   });
+  // A clone on macOS or Windows keeps one of two paths that differ only by
+  // letter case, a folder's included (w23/068).
+  it.each([
+    ["OCCUPIED.bean", "occupied.bean"],
+    ["Txns/old.bean", "txns"],
+  ])(
+    "refuses target %s, a twin of %s on case-insensitive checkouts",
+    async (target, twin) => {
+      const f = await fixture(identity, {
+        "old.bean": "; Café\n",
+        "occupied.bean": "; existing\n",
+        "txns/2026.bean": "; txns\n",
+      });
+      try {
+        const outcome = await f.call(surface, "old.bean", target);
+        expect(outcome.success).toBe(false);
+        if (surface === "rest") {
+          expect(outcome.result).toMatchObject({
+            ok: false,
+            error: {
+              code: "CONFLICT",
+              message: expect.stringContaining(`as ${twin}`),
+            },
+          });
+        }
+        expect(f.change).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
+  it.each([
+    ["old.bean", "Old.bean"],
+    ["txns/only.bean", "Txns/only.bean"],
+  ])(
+    "renames %s to %s, which only the moved file shares a name with",
+    async (oldPath, newPath) => {
+      const f = await fixture(identity, {
+        [oldPath]: "; Café\n",
+        "occupied.bean": "; existing\n",
+      });
+      try {
+        expect((await f.call(surface, oldPath, newPath)).success).toBe(true);
+        expect([...f.files.keys()].sort()).toEqual(
+          [newPath, "occupied.bean"].sort(),
+        );
+      } finally {
+        await f.close();
+      }
+    },
+  );
   it("defaults the commit message to Rename a → b", async () => {
     const f = await fixture();
     try {

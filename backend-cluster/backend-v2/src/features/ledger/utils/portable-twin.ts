@@ -61,6 +61,25 @@ export async function assertNoPortableTwin(
   }
 }
 
+/**
+ * The `list` for {@link assertNoPortableTwin} over a tree already walked:
+ * `files` is every file it keeps, so a folder is there while a file under it
+ * is.
+ */
+export function listingOf(
+  files: readonly string[],
+): (dir: string | undefined) => Promise<DirectoryEntry[]> {
+  return async (dir) => {
+    const prefix = dir === undefined ? "" : `${dir}/`;
+    const children = new Set<string>();
+    for (const file of files) {
+      if (!file.startsWith(prefix)) continue;
+      children.add(prefix + file.slice(prefix.length).split("/")[0]);
+    }
+    return [...children].map((path) => ({ path }));
+  };
+}
+
 /** Refuses a batch that creates two paths with one portable key. */
 export function assertNoTwinsAmong(paths: readonly string[]): void {
   const seen = new Map<string, string>();

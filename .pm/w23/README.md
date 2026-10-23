@@ -19,7 +19,6 @@
 - [071](./071.md) — a structured `budget` for an account the ledger doesn't have (not opened, no opened children) is accepted and never applies
 - [070](./070.md) — REST answers a rejected bearer token (MCP audience, expired, malformed) with "send `Authorization: Bearer <token>`"
 - [069](./069.md) — admin actions (collaborators, rename, delete) on a ledger the caller can read answer "Ledger not found"; 063 fixed leave only
-- [068](./068.md) — file writes accept a path differing from an existing one only by case (`MAIN.bean` beside `main.bean`), which collides on macOS/Windows checkouts
 - [065](./blocked/065.md) — a ledger-pinned credential keeps the old name after a rename — **blocked:** owner picks repository-ID pins, canonical-name pins, or an accurate refusal (credential trust boundary)
 - [059](./blocked/059.md) — every product-created ledger ships `auto_accounts`, so a misspelt account is silently opened — **blocked:** owner picks drop-plugin (which also limits AI categorization to existing accounts) vs report-new-accounts
 - [022](./blocked/022.md) — report rustledger BQL gaps upstream (`cost(sum(position))`, `neg`/`filter_currency`, `meta('lineno')`, `AT value`, `BALANCES FROM`) — **blocked:** filing in an external tracker needs the user's approval

@@ -78,7 +78,24 @@ async function fixture(caller = identity, appConfig = config) {
   const authorize = jest.spyOn(authorization, "authorizeOrThrow");
   const user = { ledger_username: "alice", ledger_password: "fixture-only" };
   const models = { user: { getById: async () => user } };
+  // A folder's entries on a branch, as Gitea lists them.
+  const listing = (ref: string, dir?: string) => {
+    const prefix = dir === undefined ? "" : `${dir}/`;
+    const entries = new Map<string, { path: string; type: string }>();
+    for (const file of branches.get(ref)?.keys() ?? []) {
+      if (!file.startsWith(prefix)) continue;
+      const [name, ...below] = file.slice(prefix.length).split("/");
+      const path = prefix + name;
+      entries.set(path, { path, type: below.length > 0 ? "dir" : "file" });
+    }
+    return [...entries.values()];
+  };
   const repos = {
+    repoGetContentsList: jest.fn(
+      async (_o: string, _n: string, { ref }: { ref: string }) => ({
+        data: listing(ref),
+      }),
+    ),
     repoGetBranch: jest.fn(async (_o: string, _n: string, branch: string) => {
       if (!branches.has(branch)) throw new Error("Base branch missing");
       return { data: { name: branch } };
@@ -110,8 +127,11 @@ async function fixture(caller = identity, appConfig = config) {
         path: string,
         { ref }: { ref: string },
       ) => {
-        if (!branches.get(ref)?.has(path)) throw { status: 404 };
-        return { data: { sha: "sha-original" } };
+        if (branches.get(ref)?.has(path))
+          return { data: { sha: "sha-original" } };
+        const folder = listing(ref, path);
+        if (folder.length === 0) throw { status: 404 };
+        return { data: folder };
       },
     ),
     repoUpdateFile: jest.fn(
@@ -611,6 +631,58 @@ describe("PR creation, inspection, and review through real adapters/workflow/ser
       await f.close();
     }
   });
+  // A clone on macOS or Windows keeps one of two paths that differ only by
+  // letter case (w23/068): one the branch has, or one this request creates.
+  it.each([
+    [
+      [{ path: "MAIN.bean", content: "x" }],
+      "MAIN.bean already exists as main.bean",
+    ],
+    [
+      [
+        { path: "notes.bean", content: "x" },
+        { path: "Notes.bean", content: "y" },
+      ],
+      "Notes.bean already exists as notes.bean",
+    ],
+    [
+      [{ path: "Main.bean/x.bean", content: "x" }],
+      "already exists as main.bean",
+    ],
+  ])(
+    "refuses creating %j, a case twin, on every surface and deletes its branch",
+    async (twinChanges, message) => {
+      const f = await fixture();
+      const input = { title: "Patch", ...validCreate, changes: twinChanges };
+      try {
+        const rest = await f.call("rest", "create", input);
+        expect(rest).toMatchObject({
+          failed: true,
+          data: {
+            error: {
+              code: "CONFLICT",
+              message: expect.stringContaining(message),
+            },
+          },
+        });
+        const mcp = await f.client.callTool(
+          perOperation({ operation: "create", ledger: "alice/main", ...input }),
+        );
+        expect(mcp.isError).toBe(true);
+        expect(mcp.structuredContent).toMatchObject({
+          error: {
+            code: "CONFLICT",
+            message: expect.stringContaining(message),
+          },
+        });
+        expect((await f.call("gql", "create", input)).failed).toBe(true);
+        expect(f.repos.repoCreatePullRequest).not.toHaveBeenCalled();
+        expect([...f.branches.keys()]).toEqual(["main", "feature/base"]);
+      } finally {
+        await f.close();
+      }
+    },
+  );
   it("answers reading an unknown pull request as NOT_FOUND on every surface", async () => {
     const f = await fixture();
     // What the generated client throws for a number Gitea does not know.

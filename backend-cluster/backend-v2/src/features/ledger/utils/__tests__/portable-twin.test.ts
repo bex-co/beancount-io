@@ -2,6 +2,7 @@ import { ConflictError, NotFoundError } from "@/shared/errors";
 import {
   assertNoPortableTwin,
   assertNoTwinsAmong,
+  listingOf,
   portablePathKey,
 } from "../portable-twin";
 
@@ -53,6 +54,31 @@ describe("assertNoPortableTwin", () => {
     expect(await refusal("archive/2023.bean")).toBe(null);
     expect(await refusal("sub/2025.bean")).toBe(null);
     expect(await refusal("main.bean")).toBe(null);
+  });
+});
+
+describe("listingOf", () => {
+  const files = ["main.bean", "txns/2026.bean", "txns/q1/jan.bean"];
+  it("lists a walked tree's files and the folders that hold them", async () => {
+    const list = listingOf(files);
+    expect(await list(undefined)).toEqual([
+      { path: "main.bean" },
+      { path: "txns" },
+    ]);
+    expect(await list("txns")).toEqual([
+      { path: "txns/2026.bean" },
+      { path: "txns/q1" },
+    ]);
+    expect(await list("other")).toEqual([]);
+  });
+  // w23/068: a rename lists the tree without the file it moves.
+  it("finds a twin folder while a kept file is under it", async () => {
+    await expect(
+      assertNoPortableTwin("Txns/new.bean", listingOf(files)),
+    ).rejects.toThrow(ConflictError);
+    await expect(
+      assertNoPortableTwin("Txns/2026.bean", listingOf(["main.bean"])),
+    ).resolves.toBeUndefined();
   });
 });
 

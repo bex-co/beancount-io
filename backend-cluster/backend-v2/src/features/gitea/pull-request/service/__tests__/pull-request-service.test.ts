@@ -24,6 +24,7 @@ type MockGiteaClient = {
     repoCreateBranch: jest.Mock;
     repoDeleteBranch: jest.Mock;
     repoGetContents: jest.Mock;
+    repoGetContentsList: jest.Mock;
     repoUpdateFile: jest.Mock;
     repoCreateFile: jest.Mock;
     repoCompareDiff: jest.Mock;
@@ -70,6 +71,7 @@ describe("PullRequestService", () => {
         repoCreateBranch: jest.fn(),
         repoDeleteBranch: jest.fn().mockResolvedValue({ data: null }),
         repoGetContents: jest.fn(),
+        repoGetContentsList: jest.fn().mockResolvedValue({ data: [] }),
         repoUpdateFile: jest.fn(),
         repoCreateFile: jest.fn(),
         repoCompareDiff: jest.fn(),

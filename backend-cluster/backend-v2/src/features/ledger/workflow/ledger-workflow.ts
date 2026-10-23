@@ -1,4 +1,7 @@
-import { assertNoPortableTwin } from "@/features/ledger/utils/portable-twin";
+import {
+  assertNoPortableTwin,
+  listingOf,
+} from "@/features/ledger/utils/portable-twin";
 import { enhanceLegacyJournal } from "@/features/ledger/utils/legacy-journal";
 import type {
   LegacyJournalQuery,
@@ -1082,6 +1085,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     // tree rather than trusting the entry-point-reachable set: an orphan file
     // nobody includes today breaks the day someone includes it.
     const beanFiles: string[] = [];
+    const keptFiles: string[] = [];
     const pendingDirs: (string | undefined)[] = [undefined];
     while (pendingDirs.length > 0) {
       const dir = pendingDirs.pop();
@@ -1094,14 +1098,18 @@ export class LedgerWorkflow implements ILedgerWorkflow {
           operationNotAllowedFromCause("list ledger files for rename", cause),
       );
       for (const entry of entries ?? []) {
-        if (entry.type === "dir") pendingDirs.push(entry.path);
-        else if (
-          entry.type === "file" &&
-          /\.(bean|beancount)$/.test(entry.path)
-        )
+        if (entry.type === "dir") {
+          pendingDirs.push(entry.path);
+          continue;
+        }
+        if (entry.path !== input.oldPath) keptFiles.push(entry.path);
+        if (entry.type === "file" && /\.(bean|beancount)$/.test(entry.path))
           beanFiles.push(entry.path);
       }
     }
+    // Nor be one a kept file's on macOS and Windows (w23/068). The file
+    // renamed is gone, so changing only its own letter case is not a twin.
+    await assertNoPortableTwin(input.newPath, listingOf(keptFiles));
     // An include names a file relative to the file that declares it, so it
     // is matched on what it resolves to, not on its text (w23/029).
     const namesOldPath = (includingPath: string, line: string) => {
