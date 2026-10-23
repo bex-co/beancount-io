@@ -19,7 +19,7 @@ import runpy
 import shlex
 import sys
 import unicodedata
-from collections.abc import Callable, Collection, Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from contextvars import ContextVar
 from dataclasses import dataclass, replace
 from decimal import Context, Decimal
@@ -548,6 +548,9 @@ def answer(
             pairs = _assign_counterparts(counterparts, transfer_ids, entries, account, keys)
         return pairs.get(id(found))
 
+    def reserved_for(row: int) -> Callable[[Any], bool]:
+        return lambda found: paired(found) == row
+
     stage_opens = reports_unused_accounts(options)
     # Blocked rows with what they were before the block, for the second look below.
     held: list[tuple[dict[str, Any], Any, str, str | None]] = []
@@ -697,7 +700,9 @@ def answer(
                             reason = (
                                 f"{_twin_reason(entry, twin, batch_rows.get(id(twin)), keys=keys)} Its ID {reference}"
                             )
-            elif (other_side := _transfer_side(ids, transfer_ids, entry, account, fingerprint)) is not None:
+            elif (
+                other_side := _transfer_side(ids, transfer_ids, entry, account, fingerprint, owns=reserved_for(index))
+            ) is not None:
                 (_, _, matched_value), match = other_side
                 status, reason = (
                     "possible_duplicate",
@@ -1902,7 +1907,7 @@ def _transfer_side(
     entry: Any,
     account: str,
     fingerprint: tuple[Any, ...],
-    taken: Collection[int] = (),
+    owns: Callable[[Any], bool] | None = None,
 ) -> tuple[tuple[str, str, str], Any] | None:
     """A transfer whose other side may be this row: its issuer's id, the same amount here, days apart at most.
 
@@ -1913,12 +1918,13 @@ def _transfer_side(
     Every transfer under an id is kept, nearest first: a reference reused by
     one issuer, or two issuers' transfers, used to leave only the last one
     written, and a receiving row dated near an earlier transfer found nothing
-    (w5/975). `taken` names transfers (by `id()`) another row already pairs with.
+    (w5/975). `owns` is the batch's reservation: a transfer is offered only to the row the
+    whole statement pairs it with, so a gift sharing its reference is not it (w5/976).
     """
     for key in ids:
         for found in sorted(transfer_ids.get(key, []), key=lambda other: abs((other.date - entry.date).days)):
             if (
-                id(found) not in taken
+                (owns is None or owns(found))
                 and abs((found.date - entry.date).days) <= _TRANSFER_DAYS
                 and _transfer_legs_agree(fingerprint[3], _fingerprint(found, account)[3])
             ):
@@ -2026,12 +2032,25 @@ def _assign_counterparts(
                 continue
     assigned: dict[int, int] = {}
     taken: set[int] = set()
+    # Rows sharing a transfer's reference compete for it: the row that posts
+    # to the transfer's own source account is its other side, then the nearer
+    # date, then the earlier row. Handing it to whichever row came first gave
+    # a gift that reused the reference the transfer, and skipped the gift
+    # (w5/976).
+    shared: list[tuple[int, int, int, Any]] = []
     for index, printed in prints.items():
-        side = _transfer_side(
-            _identities(rows[index], account, keys), transfer_ids, rows[index], account, printed, assigned.keys()
-        )
-        if side is not None:
-            assigned[id(side[1])] = index
+        ids = _identities(rows[index], account, keys)
+        for key in ids:
+            for found in transfer_ids.get(key, []):
+                if abs((found.date - rows[index].date).days) <= _TRANSFER_DAYS and _transfer_legs_agree(
+                    printed[3], _fingerprint(found, account)[3]
+                ):
+                    source = found.postings[0].account
+                    posts_back = any(posting.account == source for posting in rows[index].postings)
+                    shared.append((0 if posts_back else 1, abs((found.date - rows[index].date).days), index, found))
+    for _back, _days, index, found in sorted(shared, key=lambda item: item[:3]):
+        if index not in taken and id(found) not in assigned:
+            assigned[id(found)] = index
             taken.add(index)
     candidates: list[tuple[int, int, int, Any]] = []
     transfers = {id(found): found for found_list in counterparts.values() for found in found_list}

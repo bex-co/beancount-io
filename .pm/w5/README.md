@@ -61,7 +61,6 @@
 
 - [977 — Recognize unchanged multi-fill imports above twelve booked lots](./977.md) — major CLI follow-up to 896; two open-cost fills over 13 lots falsely conflict on reimport and a hand-entered twin is booked twice, reproduced 2026-10-22.
 
-- [976 — Honor shared-ID transfer reservations before skipping rows](./976.md) — major CLI follow-up to 882; one transfer is offered twice under a reused shared reference and skip drops a real gift, reproduced 2026-10-22.
 
 
 
