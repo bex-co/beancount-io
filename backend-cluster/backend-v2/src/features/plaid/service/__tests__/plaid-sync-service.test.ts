@@ -720,6 +720,58 @@ describe("PlaidSyncService", () => {
       });
     });
 
+    // w5/942: the write's own result says which entries it made.
+    it("reports the hashes the ledger gave the entries, and the default file", async () => {
+      mockPlaidTransactionModel.getByTransactionIds.mockResolvedValue(
+        mockTransactions,
+      );
+      mockPlaidAccountModel.getById.mockResolvedValue(mockAccount);
+      mockPlaidItemModel.getById.mockResolvedValue(mockItem);
+      mockFavaApiClient.entries.addBulkEntries.mockResolvedValue({
+        data: {
+          success: true,
+          data: { entry_hashes: ["abc123"], included_files: [] },
+        },
+      });
+
+      const result = await service.submitTransactionsToLedger(
+        systemIdentity(userId),
+        ledgerOwner,
+        ledgerName,
+        txInputs,
+      );
+
+      expect(result.entryHashes).toEqual(["abc123"]);
+      expect(result.targetFile).toBe("main.bean");
+    });
+
+    it("reports the file it was asked to write", async () => {
+      mockPlaidTransactionModel.getByTransactionIds.mockResolvedValue(
+        mockTransactions,
+      );
+      mockPlaidAccountModel.getById.mockResolvedValue(mockAccount);
+      mockPlaidItemModel.getById.mockResolvedValue(mockItem);
+      mockFavaApiClient.ledgers.getLedgerFile.mockResolvedValue({
+        data: { success: true, data: { content: "" } },
+      });
+      mockFavaApiClient.entries.addBulkEntries.mockResolvedValue({
+        data: {
+          success: true,
+          data: { entry_hashes: ["h"], included_files: [] },
+        },
+      });
+
+      const result = await service.submitTransactionsToLedger(
+        systemIdentity(userId),
+        ledgerOwner,
+        ledgerName,
+        txInputs,
+        "bank/2024.bean",
+      );
+
+      expect(result.targetFile).toBe("bank/2024.bean");
+    });
+
     it("should throw when no transactions provided", async () => {
       await expect(
         service.submitTransactionsToLedger(

@@ -302,6 +302,78 @@ describe("bank import on MCP", () => {
     });
   });
 
+  // w5/942: the write reports where it landed and what it wrote, as every
+  // other write tool does, so an agent need not query to find the entries.
+  describe("importStagedBankTransactions reports its write", () => {
+    const submit = {
+      transactions: [
+        { transaction_id: "tx_1", target_account: "Expenses:Food" },
+      ],
+    };
+
+    it("names the default file and one hash per entry", async () => {
+      const services = fakeServices();
+      services.plaidSync.submitTransactionsToLedger.mockResolvedValue({
+        success: true,
+        addedCount: 1,
+        entryHashes: ["hash-1"],
+        targetFile: "main.bean",
+      });
+
+      const result = await call(services, "importStagedBankTransactions", {
+        ...submit,
+      });
+
+      const out = (
+        result.structuredContent as { result: Record<string, unknown> }
+      ).result;
+      expect(out.wrote).toEqual([{ path: "main.bean" }]);
+      expect(out.entryHashes).toEqual(["hash-1"]);
+      expect(out).not.toHaveProperty("targetFile");
+    });
+
+    it("names the file it was asked to write", async () => {
+      const services = fakeServices();
+      services.plaidSync.submitTransactionsToLedger.mockResolvedValue({
+        success: true,
+        addedCount: 1,
+        entryHashes: ["hash-1"],
+        targetFile: "bank/2024.bean",
+      });
+
+      const result = await call(services, "importStagedBankTransactions", {
+        ...submit,
+        filename: "bank/2024.bean",
+      });
+
+      const out = (
+        result.structuredContent as { result: Record<string, unknown> }
+      ).result;
+      expect(out.wrote).toEqual([{ path: "bank/2024.bean" }]);
+    });
+
+    it("writes nothing to report on a dry run", async () => {
+      const services = fakeServices();
+      services.plaidSync.submitTransactionsToLedger.mockResolvedValue({
+        success: true,
+        addedCount: 0,
+        dryRun: true,
+        wouldAddCount: 1,
+      });
+
+      const result = await call(services, "importStagedBankTransactions", {
+        ...submit,
+        dry_run: true,
+      });
+
+      const out = (
+        result.structuredContent as { result: Record<string, unknown> }
+      ).result;
+      expect(out.wrote).toEqual([]);
+      expect(out.entryHashes).toEqual([]);
+    });
+  });
+
   it("names a missing argument instead of letting the service guess", async () => {
     const services = fakeServices();
     const result = await call(services, "unlinkBankConnection", {});

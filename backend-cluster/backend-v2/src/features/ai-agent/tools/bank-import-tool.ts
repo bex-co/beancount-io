@@ -272,20 +272,23 @@ async function submitTransactions(
       validation: toWriteValidation(errorsBefore, errorsBefore),
     };
   }
-  const { written: submitted, validation } = await withPostWriteValidation(
+  const { written, validation } = await withPostWriteValidation(
     services,
     identity,
     ledgerId,
     submit,
   );
+  // The file and hashes the write reports, so an agent need not query to find
+  // the entries it just added (w5/942).
+  const { entryHashes, targetFile, ...submitted } = written;
   return {
     ...submitted,
     summary: summarizeWrite(
       `Submitted ${transactions.length} bank transaction(s)${filename ? ` to ${filename}` : ""}`,
       validation,
     ),
-    wrote: filename ? [{ path: filename }] : [],
-    entryHashes: [],
+    wrote: targetFile ? [{ path: targetFile }] : [],
+    entryHashes: entryHashes ?? [],
     validation,
   };
 }

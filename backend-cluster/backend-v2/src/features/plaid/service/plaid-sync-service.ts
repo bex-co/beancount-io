@@ -61,7 +61,18 @@ export type PlaidSubmitResult = {
   dryRun?: true;
   wouldAddCount?: number;
   preview?: unknown[];
+  /** The entry hash each committed entry now carries, in request order. */
+  entryHashes?: string[];
+  /** The file the entries landed in: the one asked for, else the write's default. */
+  targetFile?: string;
 };
+
+/**
+ * Where the ledger's bulk write puts entries when no file is named. The bulk
+ * response reports hashes but not the file, so this is the endpoint's
+ * documented default (w5/942).
+ */
+const DEFAULT_BULK_TARGET = "main.bean";
 
 /** What a delete did, or would do. */
 export type PlaidDeleteResult = {
@@ -784,7 +795,7 @@ export class PlaidSyncService implements IPlaidSyncService {
       };
     }
 
-    await unwrapFavaResponse(
+    const written = await unwrapFavaResponse(
       favaApiClient.entries.addBulkEntries(ledgerOwner, ledgerName, {
         entries: beancountTransactions.map((item) => ({
           type: "transaction",
@@ -797,6 +808,9 @@ export class PlaidSyncService implements IPlaidSyncService {
       (cause) =>
         operationNotAllowedFromCause("add transactions to ledger", cause),
     );
+    // A ledger service older than w23/060 answers `null`.
+    const entryHashes =
+      (written as { entry_hashes?: string[] } | null)?.entry_hashes ?? [];
 
     const ledgerEntryHash = crypto
       .createHash("sha256")
@@ -826,6 +840,8 @@ export class PlaidSyncService implements IPlaidSyncService {
       success: true,
       addedCount: beancountTransactions.length,
       message: `Added ${beancountTransactions.length} transactions to ledger`,
+      entryHashes,
+      targetFile: filename ?? DEFAULT_BULK_TARGET,
     };
   }
 
