@@ -80,3 +80,45 @@ def test_the_added_posting_copy_is_generated_and_a_correction_conflicts(tmp_path
     (tmp_path / "correction.statement").write_text(ORIGINAL)
     repeat = _bea(tmp_path, "import", "correction.statement", "--config", "importer.py", "--apply")
     assert json.loads(repeat.stdout)["data"]["written"] == 0
+
+
+INFERRED_PLUGIN = """from decimal import Decimal
+from beancount.core.data import Transaction
+__plugins__ = ('derive',)
+def derive(entries, options, mode):
+    out = []
+    for entry in entries:
+        out.append(entry)
+        if isinstance(entry, Transaction) and entry.narration == 'Source row':
+            posts = []
+            for p in entry.postings:
+                if p.account == 'Assets:Cash':
+                    factor = Decimal('2') if p.units.currency == 'USD' else Decimal('0.5')
+                    posts.append(p._replace(units=p.units._replace(number=p.units.number * factor)))
+                else:
+                    half = p._replace(units=p.units._replace(number=p.units.number / Decimal('2')))
+                    posts.extend([half, half])
+            out.append(entry._replace(meta=entry.meta.copy(), postings=posts))
+    return out, []
+"""
+
+
+@pytest.mark.parametrize("omitted", [True, False], ids=["eur-left-to-booking", "eur-stated"])
+def test_an_open_currency_does_not_hide_a_stated_one_in_the_same_account(tmp_path: Path, omitted: bool) -> None:
+    (tmp_path / "qa_derive.py").write_text(INFERRED_PLUGIN)
+    cash_eur = "  Assets:Cash EUR\n" if omitted else "  Assets:Cash -20.00 EUR\n"
+    source = (
+        '2024-02-01 * "Source row"\n  bank_id: "source-10"\n  Assets:Cash -10.00 USD @ 1.00 EUR\n'
+        + cash_eur
+        + "  Expenses:Food 30.00 EUR\n"
+    )
+    (tmp_path / "main.bean").write_text(
+        'option "operating_currency" "USD"\noption "insert_pythonpath" "TRUE"\nplugin "qa_derive" "extra"\n'
+        "2024-01-01 open Assets:Cash USD,EUR\n2024-01-01 open Expenses:Food EUR\n" + source
+    )
+
+    on_disk = _bea(tmp_path, "list", "transaction", "--on-disk", "--sort", "newest", "--limit", "1")
+
+    rows = json.loads(on_disk.stdout)["data"]
+    assert len(rows) == 1
+    assert len(rows[0]["postings"]) == 3

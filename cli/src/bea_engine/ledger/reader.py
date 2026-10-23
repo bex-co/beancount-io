@@ -253,27 +253,31 @@ def _totals_declared(entry: Any, spelled: Any) -> bool:
 
     stated: dict[tuple[str, str], Any] = {}
     open_accounts: set[str] = set()
+    open_pairs: set[tuple[str, str]] = set()
     for posting in spelled.postings:
         units = posting.units
-        if (
-            units is None
-            or units is MISSING
-            or units.number is MISSING
-            or not units.currency
-            or units.currency is MISSING
-        ):
+        if units is None or units is MISSING or not units.currency or units.currency is MISSING:
             open_accounts.add(posting.account)
             continue
         key = (posting.account, units.currency)
+        if units.number is MISSING:
+            open_pairs.add(key)
+            continue
         stated[key] = stated.get(key, 0) + units.number
     held: dict[tuple[str, str], Any] = {}
     for posting in entry.postings:
         if posting.units is not None and posting.units.number is not None:
             key = (posting.account, posting.units.currency)
             held[key] = held.get(key, 0) + posting.units.number
+
+    def open_(key: tuple[str, str]) -> bool:
+        return key[0] in open_accounts or key in open_pairs
+
     # A key the line never states, in an account whose amounts it does state, is
-    # a posting somebody added: the line cannot have declared it (w5/1004).
-    extra = any(key not in stated and key[0] not in open_accounts and total for key, total in held.items())
+    # a posting somebody added: the line cannot have declared it (w5/1004). An
+    # omitted number leaves only its own currency open, so a stated amount in
+    # the same account is still compared (w5/1004 inferred currency).
+    extra = any(key not in stated and not open_(key) and total for key, total in held.items())
     return not extra and all(held.get(key) == total for key, total in stated.items() if key[0] not in open_accounts)
 
 
