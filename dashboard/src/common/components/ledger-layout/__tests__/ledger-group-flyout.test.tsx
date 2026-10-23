@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { act, render, screen, fireEvent } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { FileSpreadsheet } from "lucide-react";
 import { LedgerGroupFlyout } from "../ledger-group-flyout";
 import { SidebarProvider } from "@/common/components/ui/sidebar";
@@ -95,6 +96,34 @@ describe("LedgerGroupFlyout", () => {
     expect(await screen.findByText("Income statement")).toBeInTheDocument();
     expect(screen.getByText("Balance sheet")).toBeInTheDocument();
   });
+
+  it.each([
+    ["Reports", "keyboard"],
+    ["Berichte", "keyboard"],
+    ["Erweitert", "mouse hover"],
+  ])(
+    "names the %s flyout dialog by its group, opened by %s (w4/1012)",
+    async (label, via) => {
+      const user = userEvent.setup();
+      renderFlyout({ label });
+      const trigger = screen.getByRole("button", { name: label });
+      if (via === "keyboard") {
+        trigger.focus();
+        await user.keyboard("{Enter}");
+      } else {
+        await user.hover(trigger);
+      }
+
+      const dialog = await screen.findByRole("dialog", { name: label });
+      expect(dialog).toContainElement(
+        screen.getByRole("link", { name: "Income statement" }),
+      );
+      // Escape still closes it, handing focus back to the icon that had it.
+      await user.keyboard("{Escape}");
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      if (via === "keyboard") expect(trigger).toHaveFocus();
+    },
+  );
 
   it("opens the flyout when a mouse hovers the icon", async () => {
     const { container } = renderFlyout();

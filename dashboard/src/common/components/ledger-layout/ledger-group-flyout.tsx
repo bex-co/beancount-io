@@ -2,6 +2,7 @@ import {
   type ElementType,
   type PointerEvent,
   useEffect,
+  useId,
   useRef,
   useState,
 } from "react";
@@ -53,6 +54,7 @@ export function LedgerGroupFlyout({
   onNavigate,
 }: LedgerGroupFlyoutProps) {
   const [open, setOpen] = useState(false);
+  const titleId = useId();
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const cancelClose = () => {
@@ -106,7 +108,10 @@ export function LedgerGroupFlyout({
             <span>{label}</span>
           </SidebarMenuButton>
         </PopoverTrigger>
+        {/* The flyout is a dialog; its visible group title names it, as the
+            group label names the rail icon (w4/1012). */}
         <PopoverContent
+          aria-labelledby={titleId}
           side="right"
           align="start"
           sideOffset={8}
@@ -114,7 +119,10 @@ export function LedgerGroupFlyout({
           onPointerLeave={handlePointerLeave}
           className="w-56 p-1"
         >
-          <div className="px-2 py-1.5 text-xs font-medium text-sidebar-foreground/70">
+          <div
+            id={titleId}
+            className="px-2 py-1.5 text-xs font-medium text-sidebar-foreground/70"
+          >
             {label}
           </div>
           <ul className="flex flex-col gap-0.5">
