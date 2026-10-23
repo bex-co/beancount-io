@@ -396,6 +396,8 @@ export const fr: Translations = {
   openAccountEmptyComponent: "Les éléments du nom ne peuvent pas être vides.",
   openAccountNamePreview: "Sera créé sous le nom {{account}}",
   openAccountAlreadyOpen: "{{account}} est déjà ouvert dans ce grand livre.",
+  openAccountClosesLater:
+    "{{account}} est déjà ouvert dans ce grand livre et sera clôturé le {{date}}.",
   openAccountOpensLater:
     "{{account}} figure déjà dans ce grand livre et s'ouvre le {{date}}.",
   openAccountClosed:

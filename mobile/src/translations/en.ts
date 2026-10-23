@@ -379,6 +379,8 @@ export const en = {
   openAccountEmptyComponent: "Account components cannot be empty.",
   openAccountNamePreview: "Will be created as {{account}}",
   openAccountAlreadyOpen: "{{account}} is already open in this ledger.",
+  openAccountClosesLater:
+    "{{account}} is already open in this ledger and closes on {{date}}.",
   openAccountOpensLater:
     "{{account}} is already in this ledger, opening on {{date}}.",
   openAccountClosed:

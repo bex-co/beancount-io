@@ -397,6 +397,8 @@ export const ru: Translations = {
   openAccountEmptyComponent: "Части названия счёта не могут быть пустыми.",
   openAccountNamePreview: "Будет создан как {{account}}",
   openAccountAlreadyOpen: "Счёт {{account}} уже открыт в этой книге.",
+  openAccountClosesLater:
+    "Счёт {{account}} уже открыт в этой книге и закроется {{date}}.",
   openAccountOpensLater:
     "{{account}} уже есть в этой книге и открывается {{date}}.",
   openAccountClosed: "{{account}} закрыт {{date}}, открыть его снова нельзя.",

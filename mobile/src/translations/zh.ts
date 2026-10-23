@@ -348,6 +348,7 @@ export const zh: Translations = {
   openAccountEmptyComponent: "各级账户名称不能为空。",
   openAccountNamePreview: "将创建为 {{account}}",
   openAccountAlreadyOpen: "{{account}} 已在此账本中开设。",
+  openAccountClosesLater: "{{account}} 已在此账本中开设，将于 {{date}} 关闭。",
   openAccountOpensLater: "{{account}} 已在此账本中，将于 {{date}} 开设。",
   openAccountClosed: "{{account}} 已于 {{date}} 关闭，无法重新开启。",
   openAccountUppercaseComponent: "每级账户名称都必须以大写字母或数字开头。",

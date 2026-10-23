@@ -383,6 +383,8 @@ export const fa: Translations = {
   openAccountEmptyComponent: "بخش‌های نام حساب نمی‌توانند خالی باشند.",
   openAccountNamePreview: "با نام {{account}} ایجاد می‌شود",
   openAccountAlreadyOpen: "{{account}} از قبل در این دفتر باز شده است.",
+  openAccountClosesLater:
+    "{{account}} از قبل در این دفتر باز شده است و در {{date}} بسته می‌شود.",
   openAccountOpensLater:
     "{{account}} از قبل در این دفتر است و در {{date}} باز می‌شود.",
   openAccountClosed: "{{account}} در {{date}} بسته شد و دوباره باز نمی‌شود.",

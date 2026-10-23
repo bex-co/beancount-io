@@ -322,19 +322,28 @@ export function typedCurrencyCode(input: string): string | null {
  * What the name field says of an account the ledger already has: closed (it
  * can't be reopened, w21/122), opening after `today`, or open. One opened for
  * next month is not listed on Accounts yet (w21/614), so "already open" was
- * its only trace and read as a contradiction (w21/723).
+ * its only trace and read as a contradiction (w21/723). One closing after
+ * today is still open, and Accounts lists it so: "was closed on December 31"
+ * was false (w21/809).
  */
 export function existingAccountNotice(
   closedAt: string | undefined,
   openedOn: string | undefined,
   today: string,
 ): {
-  key: "openAccountClosed" | "openAccountOpensLater" | "openAccountAlreadyOpen";
+  key:
+    | "openAccountClosed"
+    | "openAccountClosesLater"
+    | "openAccountOpensLater"
+    | "openAccountAlreadyOpen";
   date?: string;
 } {
-  if (closedAt) return { key: "openAccountClosed", date: closedAt };
+  if (closedAt && closedAt <= today) {
+    return { key: "openAccountClosed", date: closedAt };
+  }
   if (openedOn && openedOn > today) {
     return { key: "openAccountOpensLater", date: openedOn };
   }
+  if (closedAt) return { key: "openAccountClosesLater", date: closedAt };
   return { key: "openAccountAlreadyOpen" };
 }

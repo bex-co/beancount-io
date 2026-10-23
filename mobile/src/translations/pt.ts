@@ -395,6 +395,8 @@ export const pt: Translations = {
     "As partes do nome da conta não podem ficar vazias.",
   openAccountNamePreview: "Será criada como {{account}}",
   openAccountAlreadyOpen: "{{account}} já está aberta neste livro.",
+  openAccountClosesLater:
+    "{{account}} já está aberta neste livro e será encerrada em {{date}}.",
   openAccountOpensLater: "{{account}} já está neste livro e abre em {{date}}.",
   openAccountClosed:
     "{{account}} foi encerrada em {{date}} e não pode ser reaberta.",

@@ -386,6 +386,8 @@ export const nl: Translations = {
   openAccountEmptyComponent: "Naamdelen mogen niet leeg zijn.",
   openAccountNamePreview: "Wordt aangemaakt als {{account}}",
   openAccountAlreadyOpen: "{{account}} is al geopend in dit grootboek.",
+  openAccountClosesLater:
+    "{{account}} is al geopend in dit grootboek en wordt gesloten op {{date}}.",
   openAccountOpensLater:
     "{{account}} staat al in dit grootboek en opent op {{date}}.",
   openAccountClosed:

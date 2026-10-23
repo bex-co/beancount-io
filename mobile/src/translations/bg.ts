@@ -388,6 +388,8 @@ export const bg: Translations = {
     "Частите от името на сметката не може да са празни.",
   openAccountNamePreview: "Ще бъде създадена като {{account}}",
   openAccountAlreadyOpen: "{{account}} вече е отворена в тази книга.",
+  openAccountClosesLater:
+    "{{account}} вече е отворена в тази книга и се закрива на {{date}}.",
   openAccountOpensLater:
     "{{account}} вече е в тази книга и се открива на {{date}}.",
   openAccountClosed:

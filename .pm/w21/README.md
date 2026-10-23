@@ -12,7 +12,6 @@
 
 ## Inbox
 
-- [809](./809.md) — Open Account says a still-open account "was closed … and can't be reopened" for a future close date
 - [810](./810.md) — Open Account's Back skips the discard prompt after changing only type, currency or date
 - [811](./811.md) — VoiceOver never reads commit detail's "N additions, N deletions" label
 - [812](./812.md) — The Merchants list still counts pre-entered entries ("4 transactions") while the detail says 3

@@ -33,6 +33,42 @@ describe("existingAccountNotice", () => {
   });
 });
 
+// w21/809: an account closing on December 31 read "was closed on December
+// 31, 2026 and can't be reopened" in October, while Accounts listed it open.
+describe("existingAccountNotice for a close after today", () => {
+  it("says the account is open and when it closes", () => {
+    expect(
+      existingAccountNotice("2026-12-31", "2026-01-02", "2026-10-23"),
+    ).toEqual({ key: "openAccountClosesLater", date: "2026-12-31" });
+  });
+
+  it("says closed from the close date on", () => {
+    expect(
+      existingAccountNotice("2026-10-23", "2026-01-02", "2026-10-23"),
+    ).toEqual({ key: "openAccountClosed", date: "2026-10-23" });
+    // Opening later still says so first.
+    expect(
+      existingAccountNotice("2027-03-01", "2026-11-02", "2026-10-23"),
+    ).toEqual({ key: "openAccountOpensLater", date: "2026-11-02" });
+  });
+
+  it("names the close date in every language", () => {
+    const {
+      translationLocales,
+    } = require("../../../translations/__tests__/locale-parity");
+    for (const locale of translationLocales() as string[]) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const catalog = require(`../../../translations/${locale}`)[locale];
+      const text = String(catalog.openAccountClosesLater ?? "");
+      expect([
+        locale,
+        text.includes("{{account}}"),
+        text.includes("{{date}}"),
+      ]).toEqual([locale, true, true]);
+    }
+  });
+});
+
 // w21/734: the duplicate check matched a decomposed "Café" as NFC, but its
 // dates were looked up with the typed spelling, so the notice said only
 // "already open".
