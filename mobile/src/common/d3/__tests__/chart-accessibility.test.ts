@@ -66,6 +66,41 @@ describe("the chart's accessibility text", () => {
   });
 });
 
+// w21/783: a 10-for-1 split's units chart is neutral and its change row reads
+// "+90 QANVDA", but VoiceOver said "+90 QANVDA (+900.00%)".
+describe("a neutral chart's accessibility text", () => {
+  const units = (value: number, includePlus = false) =>
+    `${value < 0 ? "-" : includePlus ? "+" : ""}${Math.abs(value)} QANVDA`;
+  const split: ChartAccessibilitySeries = {
+    ...series,
+    labels: ["Jan", "Feb"],
+    periods: ["2026-01", "2026-02"],
+    numbers: [10, 100],
+    baseline: 10,
+    format: units,
+  };
+
+  it("says the change without a percent, as the change row does", () => {
+    expect(chartPointText({ ...split, neutral: true }, 1)).toBe(
+      "Feb 2026, 100 QANVDA, +90 QANVDA since start",
+    );
+    expect(chartPointText(split, 1)).toBe(
+      "Feb 2026, 100 QANVDA, +90 QANVDA (+900.00%) since start",
+    );
+  });
+
+  it("is told the chart is neutral", () => {
+    const chart = fs.readFileSync(
+      path.join(__dirname, "..", "interactive-line-chart.tsx"),
+      "utf8",
+    );
+    const start = chart.indexOf("const a11ySeries = useMemo(");
+    const a11y = chart.slice(start, chart.indexOf("],", start));
+    expect(start === -1).toBe(false);
+    expect(a11y.includes("neutral,")).toBe(true);
+  });
+});
+
 describe("stepping through the months", () => {
   it("starts from the latest point and stays inside the series", () => {
     expect(stepChartIndex(null, -1, 12)).toBe(10);

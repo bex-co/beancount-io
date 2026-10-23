@@ -22,6 +22,11 @@ export type ChartAccessibilitySeries = {
   numbers: number[];
   /** The balance the change row measures from. */
   baseline: number;
+  /**
+   * No percent for the change, as the change row reads it on a chart the
+   * caller marks neutral: a split's units were read as a 900% gain (w21/783).
+   */
+  neutral?: boolean;
   format: (value: number, includePlus?: boolean) => string;
   translate: (key: string, params?: Record<string, unknown>) => string;
 };
@@ -61,9 +66,9 @@ export function chartPointText(
   series: ChartAccessibilitySeries,
   index: number,
 ): string {
-  const { numbers, baseline, format, translate } = series;
+  const { numbers, baseline, format, translate, neutral } = series;
   const value = numbers[index] ?? 0;
-  const pct = changePercent(baseline, value);
+  const pct = neutral ? null : changePercent(baseline, value);
   const shownPct = pct === null ? null : formatChangePercent(pct);
   // As the change row reads it: a change that rounds to nothing is "$0.00",
   // not "+$0.00" (w21/416, w21/543).

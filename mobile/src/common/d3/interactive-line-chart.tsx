@@ -765,10 +765,11 @@ function InteractiveLineChart({
       periods,
       numbers,
       baseline,
+      neutral,
       format: a11yFormat,
       translate: t,
     }),
-    [labels, periods, numbers, baseline, a11yFormat, t],
+    [labels, periods, numbers, baseline, neutral, a11yFormat, t],
   );
   const onAccessibilityAction = useCallback(
     (event: { nativeEvent: { actionName: string } }) => {
