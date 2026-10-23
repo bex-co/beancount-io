@@ -444,6 +444,7 @@ export const uk: Translations = {
   cleared: "Проведені",
   pending: "Очікують",
   entryUpcoming: "Майбутнє",
+  entryForecast: "Прогноз",
   other: "Інші",
   budget: "Бюджет",
   metadata: "Метадані",

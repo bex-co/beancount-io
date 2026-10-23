@@ -431,6 +431,7 @@ export const fa: Translations = {
   cleared: "تأییدشده",
   pending: "در انتظار",
   entryUpcoming: "آینده",
+  entryForecast: "پیش‌بینی",
   other: "سایر",
   budget: "بودجه",
   metadata: "فراداده",

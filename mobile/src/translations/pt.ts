@@ -448,6 +448,7 @@ export const pt: Translations = {
   cleared: "Conciliada",
   pending: "Pendente",
   entryUpcoming: "Futuro",
+  entryForecast: "Previsão",
   other: "Outras",
   budget: "Orçamento",
   metadata: "Metadados",

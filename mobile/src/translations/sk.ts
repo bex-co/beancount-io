@@ -448,6 +448,7 @@ export const sk: Translations = {
   cleared: "Potvrdené",
   pending: "Čakajúce",
   entryUpcoming: "Nadchádzajúce",
+  entryForecast: "Prognóza",
   other: "Ostatné",
   budget: "Rozpočet",
   metadata: "Metaúdaje",

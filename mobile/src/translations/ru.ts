@@ -445,6 +445,7 @@ export const ru: Translations = {
   cleared: "Проведено",
   pending: "В ожидании",
   entryUpcoming: "Предстоит",
+  entryForecast: "Прогноз",
   other: "Прочее",
   budget: "Бюджет",
   metadata: "Метаданные",

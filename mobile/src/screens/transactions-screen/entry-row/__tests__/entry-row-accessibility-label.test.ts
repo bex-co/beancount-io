@@ -9,20 +9,18 @@ describe("entryRowAccessibilityLabel", () => {
         name: "Q2 2026 Expenses",
         secondary: null,
         amountStr: "$26,560,000,000.00",
-        isPending: false,
-        pendingLabel: "Pending",
+        flagLabel: null,
       }),
     ).toBe("Q2 2026 Expenses, $26,560,000,000.00");
   });
 
-  it("includes pending state when flagged", () => {
+  it("includes the flag badge's word, pending or forecast", () => {
     expect(
       entryRowAccessibilityLabel({
         name: "Coffee",
         secondary: null,
         amountStr: "-$7.25",
-        isPending: true,
-        pendingLabel: "Offen",
+        flagLabel: "Offen",
       }),
     ).toBe("Coffee, -$7.25, Offen");
   });
@@ -34,8 +32,7 @@ describe("entryRowAccessibilityLabel", () => {
         name: "Grocer",
         secondary,
         amountStr: "-$12.00",
-        isPending: false,
-        pendingLabel: "Pending",
+        flagLabel: null,
       });
     expect(label("Weekly shop")).toBe("Grocer, Weekly shop, -$12.00");
     expect(label("Weekly shop") === label("Party snacks")).toBe(false);
@@ -47,8 +44,7 @@ describe("entryRowAccessibilityLabel", () => {
         name: "Open Assets:Cash",
         secondary: null,
         amountStr: null,
-        isPending: false,
-        pendingLabel: "Pending",
+        flagLabel: null,
       }),
     ).toBe("Open Assets:Cash");
   });
@@ -69,7 +65,10 @@ describe("EntryRow accessibility wiring", () => {
 
   it("passes the narration line and the translated Pending", () => {
     expect(source.includes("          secondary,\n")).toBe(true);
-    expect(source.includes('pendingLabel: t("pending"),')).toBe(true);
+    expect(source.includes("          flagLabel,\n")).toBe(true);
+    expect(source.includes('badge?.kind === "pending" ? t("pending")')).toBe(
+      true,
+    );
   });
 
   it("hides decorative account-type icons from the row announcement", () => {

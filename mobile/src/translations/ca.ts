@@ -450,6 +450,7 @@ export const ca: Translations = {
   cleared: "Conciliada",
   pending: "Pendent",
   entryUpcoming: "Properament",
+  entryForecast: "Previsió",
   other: "Altres",
   budget: "Pressupost",
   metadata: "Metadades",

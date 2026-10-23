@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { entryRowDateLine } from "../entry-row-date";
+import { entryRowDateLine, entryRowUpcomingLine } from "../entry-row-date";
 
 // w21/261: Home's and Reports' recent-entry cards drew rows with no date, so a
 // pre-entered future payment looked as if it had already happened.
@@ -64,7 +64,29 @@ describe("entryRowDateLine", () => {
     }
     // The date line is the label's second part, so VoiceOver reads it.
     const row = read("transactions-screen", "entry-row", "index.tsx");
-    expect(row.includes("secondary,amountStr,isPending")).toBe(true);
+    expect(row.includes("secondary,amountStr,flagLabel")).toBe(true);
     expect(row.includes("entryRowDateLine({")).toBe(true);
+  });
+});
+
+// w21/746: a forecast filled the Transactions tab with projected entries, none
+// marked. Its rows have date headers, so only "Upcoming" is added.
+describe("entryRowUpcomingLine", () => {
+  const line = (date: string, secondary: string | null = "Weekly") =>
+    entryRowUpcomingLine({
+      date,
+      today: "2026-10-23",
+      upcomingLabel: "Upcoming",
+      secondary,
+    });
+
+  it("marks an entry dated after today, before its narration", () => {
+    expect(line("2026-12-29")).toBe("Upcoming · Weekly");
+    expect(line("2026-12-29", null)).toBe("Upcoming");
+  });
+
+  it("leaves today's and past entries as they read", () => {
+    expect(line("2026-10-23")).toBe("Weekly");
+    expect(line("2026-10-01", null)).toBe(null);
   });
 });

@@ -40,7 +40,7 @@ describe("the pending badge", () => {
     ).toBe(true);
     expect(
       read("transactions-screen", "entry-row", "index.tsx").includes(
-        'pendingLabel: t("pending")',
+        't("pending")',
       ),
     ).toBe(true);
   });

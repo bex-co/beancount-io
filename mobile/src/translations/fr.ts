@@ -450,6 +450,7 @@ export const fr: Translations = {
   cleared: "Pointée",
   pending: "En attente",
   entryUpcoming: "À venir",
+  entryForecast: "Prévision",
   other: "Autres",
   budget: "Budget",
   metadata: "Métadonnées",

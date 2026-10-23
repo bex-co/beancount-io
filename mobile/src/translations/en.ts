@@ -432,6 +432,7 @@ export const en = {
   cleared: "Cleared",
   pending: "Pending",
   entryUpcoming: "Upcoming",
+  entryForecast: "Forecast",
   other: "Other",
   budget: "Budget",
   metadata: "Metadata",

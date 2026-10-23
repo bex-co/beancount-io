@@ -34,7 +34,8 @@ import { getEntryPostings } from "../utils/entry-utils";
 import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 import { selectEntryRowAmount } from "./format-entry-row-amount";
 import { entryRowSecondaryText, entryRowTitle } from "./entry-row-secondary";
-import { entryRowDateLine } from "./entry-row-date";
+import { entryRowDateLine, entryRowUpcomingLine } from "./entry-row-date";
+import { entryFlagBadge } from "./entry-row-flag";
 import { entryRowAccessibilityLabel } from "./entry-row-accessibility-label";
 
 const getStyles = (theme: ColorTheme) =>
@@ -92,6 +93,19 @@ const getStyles = (theme: ColorTheme) =>
       fontSize: fontSizes.xs,
       fontWeight: fontWeights.medium,
       color: theme.onWarning,
+    },
+    // A forecast, a pad or another flag: noted, not a warning; account
+    // detail's type chip.
+    neutralBadge: {
+      paddingHorizontal: 5,
+      paddingVertical: 1,
+      borderRadius: 4,
+      backgroundColor: theme.black10,
+    },
+    neutralBadgeText: {
+      fontSize: fontSizes.xs,
+      fontWeight: fontWeights.medium,
+      color: theme.black80,
     },
     typeLabel: {
       fontSize: fontSizes.xs,
@@ -159,12 +173,18 @@ interface EntryRowProps {
    * that list recent entries have no date headers; w21/261).
    */
   dateToday?: string;
+  /**
+   * Mark an entry dated after this day "Upcoming", on a list whose date
+   * headers already name the day (Transactions; w21/746).
+   */
+  upcomingAfter?: string;
 }
 
 export const EntryRow: React.FC<EntryRowProps> = ({
   entry,
   onPress,
   dateToday,
+  upcomingAfter,
 }) => {
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
@@ -185,16 +205,34 @@ export const EntryRow: React.FC<EntryRowProps> = ({
     ? entryRowSecondaryText(entry)
     : null;
   const secondary =
-    dateToday === undefined
-      ? narration
-      : entryRowDateLine({
+    dateToday !== undefined
+      ? entryRowDateLine({
           date: entry.date,
           today: dateToday,
           locale,
           upcomingLabel: t("entryUpcoming"),
           secondary: narration,
-        });
-  const isPending = isJournalTransaction(entry) && entry.flag === "!";
+        })
+      : upcomingAfter !== undefined
+        ? entryRowUpcomingLine({
+            date: entry.date,
+            today: upcomingAfter,
+            upcomingLabel: t("entryUpcoming"),
+            secondary: narration,
+          })
+        : narration;
+  const badge = isJournalTransaction(entry) ? entryFlagBadge(entry.flag) : null;
+  const badgeText =
+    badge === null
+      ? null
+      : badge.kind === "pending"
+        ? "!"
+        : badge.kind === "forecast"
+          ? t("entryForecast")
+          : badge.kind === "padding"
+            ? t("pad")
+            : badge.flag;
+  const flagLabel = badge?.kind === "pending" ? t("pending") : badgeText;
   // Brand text for the logo: payee/narration only (not the directive_type
   // fallback), so non-transactions match on their account instead.
   const brandText = isJournalTransaction(entry)
@@ -221,9 +259,14 @@ export const EntryRow: React.FC<EntryRowProps> = ({
             </Text>
           ) : null}
         </View>
-        {isPending && (
+        {badge?.kind === "pending" && (
           <View style={styles.badge}>
             <Text style={styles.badgeText}>!</Text>
+          </View>
+        )}
+        {badge && badge.kind !== "pending" && (
+          <View style={styles.neutralBadge}>
+            <Text style={styles.neutralBadgeText}>{badgeText}</Text>
           </View>
         )}
       </View>
@@ -272,8 +315,7 @@ export const EntryRow: React.FC<EntryRowProps> = ({
           name,
           secondary,
           amountStr,
-          isPending,
-          pendingLabel: t("pending"),
+          flagLabel,
         })}
       >
         {content}

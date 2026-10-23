@@ -307,7 +307,11 @@ const TransactionList = () => {
   );
 
   const renderItem = ({ item }: { item: JournalDirectiveType }) => (
-    <EntryRow entry={item} onPress={() => handleEntryPress(item)} />
+    <EntryRow
+      entry={item}
+      onPress={() => handleEntryPress(item)}
+      upcomingAfter={today}
+    />
   );
 
   const isInitialLoading = loading && !transactions.length;

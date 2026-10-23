@@ -391,6 +391,7 @@ export const zh: Translations = {
   cleared: "已确认",
   pending: "待确认",
   entryUpcoming: "即将到来",
+  entryForecast: "预测",
   other: "其他",
   budget: "预算",
   metadata: "元数据",

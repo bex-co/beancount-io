@@ -440,6 +440,7 @@ export const nl: Translations = {
   cleared: "Bevestigd",
   pending: "In afwachting",
   entryUpcoming: "Aankomend",
+  entryForecast: "Prognose",
   other: "Overige",
   budget: "Budget",
   metadata: "Metadata",
