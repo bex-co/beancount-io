@@ -1883,6 +1883,14 @@ def export_portable(
     # into the books, so identity is compared, not spelling.
     attachments = _export_attachments(loaded, snapshot, destinations, target, home)
     attachments.update(_export_plugin_modules(loaded, snapshot, target))
+    # One file in two roles (an include that is also a document, or that sits
+    # inside a copied plugin package) is one planned copy, and the ledger's own
+    # carries the rewritten includes; planned twice it collided with itself
+    # (w5/971).
+    ledger_sources = {dest: path for path, dest in destinations.items()}
+    for dest in [dest for dest in attachments if dest in ledger_sources]:
+        if _same_source(attachments[dest], ledger_sources[dest]):
+            del attachments[dest]
     planned = [*destinations.values(), *feed_files.values(), *attachments]
     # Distinct spellings may still be one destination: a pre-existing symlink
     # inside the snapshot, hard links, or case/Unicode variants. --force must
@@ -2368,6 +2376,14 @@ def _sibling_imports(homes: list[Path], loaded: LoadedLedger, snapshot: LedgerSn
                     tops.add(top)
                 break
     return tops
+
+
+def _same_source(left: Path, right: Path) -> bool:
+    """Whether two paths are one file."""
+    try:
+        return os.path.samefile(left, right)
+    except OSError:
+        return False
 
 
 def _written_entries(snapshot: LedgerSnapshot) -> list[Any] | None:

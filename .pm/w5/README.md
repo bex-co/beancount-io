@@ -68,7 +68,6 @@
 
 - [972 — Strip the BOM before indexing written import identities](./972.md) — major CLI follow-up to 881; an unchanged CSV transaction is written twice when its first source line carries a BOM, reproduced 2026-10-22.
 
-- [971 — Coalesce one source file shared by portable-export roles](./971.md) — minor CLI false collision; one included file also reached as a document or package resource prevents export, reproduced 2026-10-22.
 
 
 
