@@ -12,6 +12,7 @@
 
 ## Inbox
 
+- [691](./691.md) — Editing or deleting an entry in a non-UTF-8 ledger file rewrites its undecodable bytes as U+FFFD (edit-path sibling of w21/679)
 - [690](./690.md) — Transaction detail never shows the brand logo that its list row shows (Amazon, Whole Foods…)
 - [687](./687.md) — Create Ledger presets open every account restricted to the operating currency, so Portfolio refuses its own first share purchase
 - [688](./688.md) — File editor: Enter after a one-line directive indents the next line, so the next directive is a syntax error (w21/338 regression)
