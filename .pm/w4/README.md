@@ -10,7 +10,6 @@
 
 - [1019 — Keep signed market values in Holdings gain percentages](./1019.md) — major; all four groupings/CSVs show +100% for a valid −300% loss under modeled reads; exact producer, independent arithmetic and zero/positive controls reproduced, no writes.
 
-- [1018 — Keep negative chart axis ticks readable in Persian](./1018.md) — minor sibling of 1005; local fa Changes Over Time canvas y-axis reads `300.0-`…`2.1k-` at both widths; tables fixed in 1005, English unchanged, source-only observation.
 
 
 
