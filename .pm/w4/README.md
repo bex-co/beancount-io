@@ -107,6 +107,8 @@
 
 ## Milestones
 
+- [ ] **m52** — [Preserve exact Net Worth amounts and monthly changes](./m52/README.md) (6 tasks) ← dashboard QA,2026-10-22; minor; valid producer-backed totals and±1 USD collapse after Number conversion; five native contexts and safe controls, no writes.
+
 - [ ] **m51** — [Preserve selected chart units when regrouping periods](./m51/README.md) (6 tasks) ← dashboard QA,2026-10-22; minor; enabled BTC resets on uncached and cached interval changes;1,408 API values exact, no writes.
 
 - [x] **m50** — [Retry failed statement, Account Journal and commodity reads](./done/m50/README.md) (6 tasks) ← dashboard QA,2026-10-21/22; minor, promoted from328 with a sixth equivalent observer; current variables and read-only recovery preserved.
