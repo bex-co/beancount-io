@@ -221,6 +221,44 @@ describe("selectPostingRows", () => {
   });
 });
 
+// w21/699: a USD posting read "$" in a CAD ledger whose headline "$" is CAD.
+describe("a USD entry in a ledger whose own currency is another dollar", () => {
+  const store = txn([
+    posting("Expenses:Shopping", "42.50"),
+    posting("Assets:Bank", "-42.50"),
+  ]);
+
+  it("labels the hero and each posting by code", () => {
+    expect(selectHeroAmountWithLabel(store, MIXED, "CAD").text).toBe(
+      "-42.50 USD",
+    );
+    expect(selectPostingRows(store, "CAD").map((row) => row.amount)).toEqual([
+      "+42.50 USD",
+      "-42.50 USD",
+    ]);
+  });
+
+  it("labels a per-unit price by code too", () => {
+    const [row] = selectPostingRows(
+      txn([
+        {
+          account: "Assets:Bank:CAD",
+          units: { number: "135.00", currency: "CAD" },
+          price: { number: "0.74", currency: "USD" },
+        },
+      ]),
+      "CAD",
+    );
+    expect(row.amount).toBe("+135.00 CAD");
+    expect(row.price).toBe("0.74 USD");
+  });
+
+  it("keeps the $ in a USD ledger", () => {
+    expect(selectPostingRows(store, "USD")[0].amount).toBe("+$42.50");
+    expect(selectHeroAmountWithLabel(store, MIXED, "USD").text).toBe("-$42.50");
+  });
+});
+
 // w21/668: the narration repeated under a title that already was the narration.
 describe("selectTransactionSubtitle", () => {
   it("shows the narration under a different payee", () => {

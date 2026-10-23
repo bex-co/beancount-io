@@ -30,6 +30,25 @@ export const getCurrencySymbol = (currency: string) =>
   );
 
 /**
+ * A figure labelled as transaction rows and their detail label it: USD as
+ * "$42.50", any other currency by its code, "42.50 CAD". In a ledger whose own
+ * currency is another dollar (CAD, AUD, NZD, …), Home and Accounts already
+ * show that one as "$", so USD reads "42.50 USD" there: the same "$" meant two
+ * currencies one card apart (w21/699).
+ */
+export const labelRowAmount = (
+  body: string,
+  currency: string,
+  operatingCurrency?: string,
+): string =>
+  currency === "USD" &&
+  (operatingCurrency === undefined ||
+    operatingCurrency === "USD" ||
+    getCurrencySymbol(operatingCurrency) !== "$")
+    ? `$${body}`
+    : `${body} ${currency}`;
+
+/**
  * The currency a ledger's headline figures read in: its first operating
  * currency, else the first commodity it holds that is a known currency (a stock
  * ticker is not one), else the first commodity at all, and USD only for a ledger

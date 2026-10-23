@@ -685,7 +685,7 @@ const TransactionDetailImpl = ({
     operatingCurrency,
     roots,
   );
-  const postingRows = selectPostingRows(entry);
+  const postingRows = selectPostingRows(entry, operatingCurrency);
   const title = selectTransactionTitle(entry) || t("transaction");
   const subtitle = selectTransactionSubtitle(entry);
   const isPending = entry.flag === "!";

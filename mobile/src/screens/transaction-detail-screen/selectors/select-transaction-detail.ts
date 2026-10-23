@@ -4,6 +4,7 @@ import { isolateLtr } from "../../../common/bidi";
 import {
   currencyMinorUnits,
   getCurrencySymbol,
+  labelRowAmount,
 } from "../../../common/currency-util";
 import type { JournalTransaction } from "../../transactions-screen/types";
 import {
@@ -101,6 +102,7 @@ function formatPostingUnits(
   number: string,
   currency: string,
   heldAtCost = false,
+  operatingCurrency?: string,
 ): {
   amount: string;
   sign: -1 | 0 | 1;
@@ -128,7 +130,7 @@ function formatPostingUnits(
   const groupedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   const body =
     displayFrac.length > 0 ? `${groupedInt}.${displayFrac}` : groupedInt;
-  const magnitude = currency === "USD" ? `$${body}` : `${body} ${currency}`;
+  const magnitude = labelRowAmount(body, currency, operatingCurrency);
 
   if (isZero) {
     return { amount: magnitude, sign: 0 };
@@ -213,14 +215,19 @@ function roundDerivedPerUnit(number: string): string | null {
 }
 
 /** A per-unit cost or price at its recorded scale, without a sign. */
-const formatPerUnit = (amount: {
-  number: string;
-  currency: string;
-}): string => {
+const formatPerUnit = (
+  amount: {
+    number: string;
+    currency: string;
+  },
+  operatingCurrency?: string,
+): string => {
   const derived = roundDerivedPerUnit(amount.number.trim());
   const shown = formatPostingUnits(
     derived ?? amount.number,
     amount.currency,
+    false,
+    operatingCurrency,
   ).amount.replace(/^[+-]/, "");
   return derived === null ? shown : `≈${shown}`;
 };
@@ -239,12 +246,14 @@ const lotOf = (cost: {
 
 export function selectPostingRows(
   txn: JournalTransaction,
+  operatingCurrency?: string,
 ): PostingDisplayRow[] {
   return (txn.postings ?? []).map((p) => {
     const { amount, sign } = formatPostingUnits(
       p.units.number,
       p.units.currency,
       Boolean(p.cost?.number && p.cost.currency),
+      operatingCurrency,
     );
     return {
       account: p.account,
@@ -253,10 +262,10 @@ export function selectPostingRows(
       // A trade's cost basis and sale price explain its gain; the row used
       // to show only the units (w21/059).
       ...(p.cost?.number && p.cost.currency
-        ? { cost: formatPerUnit(p.cost), ...lotOf(p.cost) }
+        ? { cost: formatPerUnit(p.cost, operatingCurrency), ...lotOf(p.cost) }
         : {}),
       ...(p.price?.number && p.price.currency
-        ? { price: formatPerUnit(p.price) }
+        ? { price: formatPerUnit(p.price, operatingCurrency) }
         : {}),
       ...(p.flag === "!" ? { pending: true as const } : {}),
       ...(userMetadataLines(p.meta).length > 0

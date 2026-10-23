@@ -3,6 +3,7 @@ import { getAccountRoot, type RootNames } from "../../../common/account-root";
 import {
   currencyMinorUnits,
   isFiatCurrency,
+  labelRowAmount,
 } from "../../../common/currency-util";
 import { amountScale } from "../../../common/number-utils";
 import {
@@ -32,12 +33,15 @@ const MAX_FRACTION_DIGITS = 20;
  * @param scale - Fraction digits the source recorded (see `amountScale`). Acts
  *   as the maximum, so a crypto reward of 0.004 ETH survives instead of
  *   rounding to 0.00.
+ * @param operatingCurrency - The ledger's first `operating_currency`, which
+ *   decides whether USD may read as "$" (`labelRowAmount`).
  */
 export const formatAmount = (
   value: number,
   currency: string,
   scale = MIN_FRACTION_DIGITS,
   heldAtCost = false,
+  operatingCurrency?: string,
 ): string => {
   // The display floor is the currency's minor unit: "1,500 JPY" as account
   // detail shows it, not "1,500.00 JPY" (w21/070). Only for a national
@@ -56,7 +60,7 @@ export const formatAmount = (
     minimumFractionDigits,
     maximumFractionDigits,
   });
-  return currency === "USD" ? `$${formatted}` : `${formatted} ${currency}`;
+  return labelRowAmount(formatted, currency, operatingCurrency);
 };
 
 /** A transaction's headline amount: one currency, never a cross-currency sum. */
@@ -104,7 +108,10 @@ const isFeeLine = (account: string, roots: RootNames): boolean => {
  * side (spent is negative), or null when they are in several currencies or
  * cancel out, where the exchange stays neutral.
  */
-const feeAmount = (lines: JournalPosting[]): TransactionAmount | null => {
+const feeAmount = (
+  lines: JournalPosting[],
+  operatingCurrency?: string,
+): TransactionAmount | null => {
   const currencies = new Set(lines.map((p) => p.units.currency));
   if (currencies.size !== 1) return null;
   const currency = lines[0]!.units.currency;
@@ -118,7 +125,11 @@ const feeAmount = (lines: JournalPosting[]): TransactionAmount | null => {
   }
   const value = -total;
   if (Math.abs(value) < 0.5 * 10 ** -scale) return null;
-  return { text: formatAmount(value, currency, scale), value, currency };
+  return {
+    text: formatAmount(value, currency, scale, false, operatingCurrency),
+    value,
+    currency,
+  };
 };
 
 /**
@@ -131,6 +142,7 @@ const feeAmount = (lines: JournalPosting[]): TransactionAmount | null => {
 const corporateActionAmount = (
   postings: JournalPosting[],
   roots: RootNames,
+  operatingCurrency?: string,
 ): TransactionAmount | null => {
   if (
     postings.length < 2 ||
@@ -165,6 +177,7 @@ const corporateActionAmount = (
       currency,
       amountScale(largest.units.number),
       true,
+      operatingCurrency,
     ),
     value: 0,
     currency,
@@ -216,7 +229,11 @@ export const selectTransactionAmount = (
   const postings = txn.postings ?? [];
   if (!postings.length) return null;
 
-  const corporateAction = corporateActionAmount(postings, roots);
+  const corporateAction = corporateActionAmount(
+    postings,
+    roots,
+    operatingCurrency,
+  );
   if (corporateAction) return corporateAction;
 
   const cashPostings = postings.filter((p) => isBalanceSheet(p.account, roots));
@@ -284,7 +301,7 @@ export const selectTransactionAmount = (
               isBalanceSheet(p.account, roots) || isFeeLine(p.account, roots),
           );
         if (exchangeWithFee) {
-          const fee = feeAmount(feeLines);
+          const fee = feeAmount(feeLines, operatingCurrency);
           if (fee) return fee;
         }
         if (
@@ -305,6 +322,7 @@ export const selectTransactionAmount = (
               currency,
               bucket.scale,
               heldAtCost.has(currency),
+              operatingCurrency,
             ),
             value: 0,
             currency,
@@ -349,13 +367,20 @@ export const selectTransactionAmount = (
             currency,
             scale,
             heldAtCost.has(currency),
+            operatingCurrency,
           ),
           value: 0,
           currency,
         };
       }
       return {
-        text: formatAmount(value, currency, scale, heldAtCost.has(currency)),
+        text: formatAmount(
+          value,
+          currency,
+          scale,
+          heldAtCost.has(currency),
+          operatingCurrency,
+        ),
         value,
         currency,
       };
@@ -386,6 +411,7 @@ export const selectTransactionAmount = (
       currency,
       amountScale(max.units.number),
       heldAtCost.has(currency),
+      operatingCurrency,
     ),
     value: 0,
     currency,

@@ -115,6 +115,40 @@ describe("formatAmount", () => {
 // amountScale
 // ---------------------------------------------------------------------------
 
+// w21/699: in a CAD ledger Home read "$957.50" in CAD while a USD row read
+// "-$42.50" one card below; the same "$" meant two currencies.
+describe("a USD amount in a ledger whose own currency is another dollar", () => {
+  it("reads by its code, so the ledger's dollar keeps the $", () => {
+    for (const ledger of ["CAD", "AUD", "NZD", "MXN", "SGD", "HKD"]) {
+      expect(formatAmount(42.5, "USD", 2, false, ledger)).toBe("42.50 USD");
+    }
+    expect(formatAmount(42.5, "CAD", 2, false, "CAD")).toBe("42.50 CAD");
+  });
+
+  it("keeps the $ where it cannot be another dollar", () => {
+    expect(formatAmount(42.5, "USD", 2, false, "USD")).toBe("$42.50");
+    expect(formatAmount(42.5, "USD", 2, false, "EUR")).toBe("$42.50");
+    expect(formatAmount(42.5, "USD", 2, false, "JPY")).toBe("$42.50");
+    expect(formatAmount(42.5, "USD")).toBe("$42.50");
+  });
+
+  it("is the rule the transaction row's amount uses", () => {
+    const store = makeTransaction({
+      postings: [
+        makePosting("Expenses:Shopping", "42.50"),
+        makePosting("Assets:Bank", "-42.50"),
+      ],
+    });
+    const row = (ledger?: string) => {
+      const amount = selectTransactionAmount(store, ledger);
+      return amount && !isMixedPostingsAmount(amount) ? amount.text : null;
+    };
+    expect(row("CAD")).toBe("42.50 USD");
+    expect(row("USD")).toBe("$42.50");
+    expect(row()).toBe("$42.50");
+  });
+});
+
 describe("amountScale", () => {
   it("counts the recorded fraction digits", () => {
     expect(amountScale("0.004")).toBe(3);
