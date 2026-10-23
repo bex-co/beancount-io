@@ -194,6 +194,8 @@ type CategoryBreakdownProps = {
   note?: string | null;
   /** What an empty section says, e.g. "No expenses in this period". */
   emptyMessage: string;
+  /** What a row's spoken share is of: the section's spending or earnings. */
+  shareOf: "spending" | "earnings";
 };
 
 /**
@@ -211,6 +213,7 @@ export function CategoryBreakdown({
   tone,
   note,
   emptyMessage,
+  shareOf,
 }: CategoryBreakdownProps): JSX.Element {
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
@@ -373,7 +376,12 @@ export function CategoryBreakdown({
             accessibilityRole="button"
             accessibilityLabel={node.name}
             accessibilityValue={{
-              text: breakdownRowAccessibilityValue(amountText, printed, t),
+              text: breakdownRowAccessibilityValue(
+                amountText,
+                printed,
+                t,
+                shareOf,
+              ),
             }}
             {...disclosureAccessibility(isExpanded, t)}
           >

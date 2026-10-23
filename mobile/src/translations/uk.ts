@@ -825,7 +825,8 @@ export const uk: Translations = {
     "Введіть суму. Кнопка знака переключає між плюсом і мінусом.",
   expandAccount: "Розгорнути {{account}}",
   collapseAccount: "Згорнути {{account}}",
-  breakdownRowShare: "{{amount}}, {{percent}}% від підсумку",
+  breakdownRowShareSpending: "{{amount}}, {{percent}}% від витрат",
+  breakdownRowShareEarnings: "{{amount}}, {{percent}}% від доходів",
   budgetChartSummary: {
     one: "Бюджет і факт за {{span}}. Факт {{actual}} із {{budget}} за {{count}} період, {{missed}}.",
     few: "Бюджет і факт за {{span}}. Факт {{actual}} із {{budget}} за {{count}} періоди, {{missed}}.",

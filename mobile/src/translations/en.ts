@@ -853,7 +853,8 @@ export const en = {
     "Enter the amount. Use the sign button to switch between positive and negative.",
   expandAccount: "Expand {{account}}",
   collapseAccount: "Collapse {{account}}",
-  breakdownRowShare: "{{amount}}, {{percent}}% of total",
+  breakdownRowShareSpending: "{{amount}}, {{percent}}% of spending",
+  breakdownRowShareEarnings: "{{amount}}, {{percent}}% of earnings",
   budgetChartSummary: {
     one: "Budget versus actual for {{span}}. Actual {{actual}} of {{budget}} budgeted across {{count}} period, {{missed}}.",
     other:

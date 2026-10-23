@@ -824,7 +824,8 @@ export const pt: Translations = {
     "Informe o valor. Use o botão de sinal para alternar entre positivo e negativo.",
   expandAccount: "Expandir {{account}}",
   collapseAccount: "Recolher {{account}}",
-  breakdownRowShare: "{{amount}}, {{percent}}% do total",
+  breakdownRowShareSpending: "{{amount}}, {{percent}}% das despesas",
+  breakdownRowShareEarnings: "{{amount}}, {{percent}}% da renda",
   budgetChartSummary: {
     one: "Orçado versus realizado em {{span}}. Realizado {{actual}} de {{budget}} orçado em {{count}} período, {{missed}}.",
     many: "Orçado versus realizado em {{span}}. Realizado {{actual}} de {{budget}} orçado em {{count}} períodos, {{missed}}.",

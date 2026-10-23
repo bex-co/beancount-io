@@ -808,7 +808,8 @@ export const bg: Translations = {
     "Въведете сумата. Използвайте бутона за знак, за да смените между положителна и отрицателна.",
   expandAccount: "Разгъни {{account}}",
   collapseAccount: "Сгъни {{account}}",
-  breakdownRowShare: "{{amount}}, {{percent}}% от общото",
+  breakdownRowShareSpending: "{{amount}}, {{percent}}% от разходите",
+  breakdownRowShareEarnings: "{{amount}}, {{percent}}% от доходите",
   budgetChartSummary: {
     one: "Бюджет спрямо действителни за {{span}}. Действителни {{actual}} от бюджет {{budget}} за {{count}} период, {{missed}}.",
     other:

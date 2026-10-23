@@ -735,7 +735,8 @@ export const zh: Translations = {
   postingAmountHint: "输入金额。使用正负号按钮在正数和负数之间切换。",
   expandAccount: "展开 {{account}}",
   collapseAccount: "收起 {{account}}",
-  breakdownRowShare: "{{amount}}，占总额 {{percent}}%",
+  breakdownRowShareSpending: "{{amount}}，占开支 {{percent}}%",
+  breakdownRowShareEarnings: "{{amount}}，占收入 {{percent}}%",
   budgetChartSummary: {
     other:
       "{{span}} 的预算与实际对比。{{count}} 个周期内实际 {{actual}}，预算 {{budget}}，其中 {{missed}}。",

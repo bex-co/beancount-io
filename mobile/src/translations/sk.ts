@@ -832,7 +832,8 @@ export const sk: Translations = {
     "Zadajte sumu. Tlačidlom znamienka prepnete medzi plusom a mínusom.",
   expandAccount: "Rozbaliť {{account}}",
   collapseAccount: "Zbaliť {{account}}",
-  breakdownRowShare: "{{amount}}, {{percent}} % z celku",
+  breakdownRowShareSpending: "{{amount}}, {{percent}} % z výdavkov",
+  breakdownRowShareEarnings: "{{amount}}, {{percent}} % z príjmov",
   budgetChartSummary: {
     one: "Rozpočet verzus skutočnosť za {{span}}. Skutočnosť {{actual}} z rozpočtu {{budget}} za {{count}} obdobie, {{missed}}.",
     few: "Rozpočet verzus skutočnosť za {{span}}. Skutočnosť {{actual}} z rozpočtu {{budget}} za {{count}} obdobia, {{missed}}.",

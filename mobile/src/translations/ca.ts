@@ -829,7 +829,8 @@ export const ca: Translations = {
     "Introdueix l'import. Fes servir el botó de signe per canviar entre positiu i negatiu.",
   expandAccount: "Desplega {{account}}",
   collapseAccount: "Plega {{account}}",
-  breakdownRowShare: "{{amount}}, {{percent}}% del total",
+  breakdownRowShareSpending: "{{amount}}, {{percent}}% de les despeses",
+  breakdownRowShareEarnings: "{{amount}}, {{percent}}% dels ingressos",
   budgetChartSummary: {
     one: "Pressupost i real de {{span}}. Real {{actual}} d'un pressupost de {{budget}} en {{count}} període, {{missed}}.",
     many: "Pressupost i real de {{span}}. Real {{actual}} d'un pressupost de {{budget}} en {{count}} períodes, {{missed}}.",

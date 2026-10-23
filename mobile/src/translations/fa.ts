@@ -797,7 +797,8 @@ export const fa: Translations = {
     "مبلغ را وارد کنید. برای تغییر بین مثبت و منفی از دکمه علامت استفاده کنید.",
   expandAccount: "باز کردن {{account}}",
   collapseAccount: "بستن {{account}}",
-  breakdownRowShare: "{{amount}}، {{percent}}٪ از کل",
+  breakdownRowShareSpending: "{{amount}}، {{percent}}٪ از هزینه‌ها",
+  breakdownRowShareEarnings: "{{amount}}، {{percent}}٪ از درآمد",
   budgetChartSummary: {
     one: "بودجه در برابر واقعی برای {{span}}. واقعی {{actual}} از بودجه {{budget}} در {{count}} دوره، {{missed}}.",
     other:

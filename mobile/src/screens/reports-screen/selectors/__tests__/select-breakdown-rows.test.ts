@@ -101,16 +101,16 @@ const t = (key: string, params?: Record<string, unknown>) =>
 describe("breakdownRowAccessibilityValue", () => {
   it("pairs the amount with the row's share for a top-level category", () => {
     expect(breakdownRowAccessibilityValue("$1,234.00", 42.6, t)).toBe(
-      "$1,234.00, 43% of total",
+      "$1,234.00, 43% of spending",
     );
   });
 
   it("rounds the share exactly as the visible % label does", () => {
     expect(breakdownRowAccessibilityValue("$1.00", 0.4, t)).toBe(
-      "$1.00, 0% of total",
+      "$1.00, 0% of spending",
     );
     expect(breakdownRowAccessibilityValue("$1.00", 99.5, t)).toBe(
-      "$1.00, 100% of total",
+      "$1.00, 100% of spending",
     );
   });
 
@@ -251,7 +251,43 @@ describe("roundedShares", () => {
     expect(card.includes("constshares=roundedShares(items);")).toBe(true);
     expect(card.includes('{printed===null?"":`${printed}%`}')).toBe(true);
     expect(
-      card.includes("breakdownRowAccessibilityValue(amountText,printed,t)"),
+      card.includes(
+        "breakdownRowAccessibilityValue(amountText,printed,t,shareOf,)",
+      ),
+    ).toBe(true);
+  });
+});
+
+// w21/788: the share is of the positive rows, but "of total" was spoken
+// beside a net-refunded headline: Food read "67% of total" under $100.
+describe("a row's spoken share", () => {
+  it("names spending or earnings, the base it is of", () => {
+    const items = [node("Food", 400), node("Shop", 200), node("Tv", -500)];
+    const food = roundedShares(items).get("Expenses:Food")!;
+    expect(food).toBe(67);
+    expect(shareBase(items)).toBe(600);
+    expect(breakdownRowAccessibilityValue("$400.00", food, t)).toBe(
+      "$400.00, 67% of spending",
+    );
+    expect(breakdownRowAccessibilityValue("$3,000.00", 75, t, "earnings")).toBe(
+      "$3,000.00, 75% of earnings",
+    );
+  });
+
+  it("is said per section on the Reports screen", () => {
+    const screen = require("fs")
+      .readFileSync(
+        require("path").join(__dirname, "../../reports-screen.tsx"),
+        "utf8",
+      )
+      .replace(/\s+/g, "");
+    expect(
+      screen.includes(
+        'emptyMessage={t("reportsNoExpenses")}shareOf="spending"',
+      ),
+    ).toBe(true);
+    expect(
+      screen.includes('emptyMessage={t("reportsNoIncome")}shareOf="earnings"'),
     ).toBe(true);
   });
 });

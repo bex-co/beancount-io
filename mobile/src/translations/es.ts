@@ -827,7 +827,8 @@ export const es: Translations = {
     "Introduce el importe. Usa el botón de signo para cambiar entre positivo y negativo.",
   expandAccount: "Expandir {{account}}",
   collapseAccount: "Contraer {{account}}",
-  breakdownRowShare: "{{amount}}, {{percent}}% del total",
+  breakdownRowShareSpending: "{{amount}}, {{percent}}% de los gastos",
+  breakdownRowShareEarnings: "{{amount}}, {{percent}}% de los ingresos",
   budgetChartSummary: {
     one: "Presupuesto frente a real de {{span}}. Real {{actual}} de {{budget}} presupuestado en {{count}} periodo, {{missed}}.",
     many: "Presupuesto frente a real de {{span}}. Real {{actual}} de {{budget}} presupuestado en {{count}} periodos, {{missed}}.",

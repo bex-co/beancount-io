@@ -109,17 +109,27 @@ export function breakdownShare(value: number, total: number): number | null {
  * `percent` is `null` for a sub-account row, which draws no bar and therefore
  * has no share to speak. Pure (`t` injected, `amountText` pre-formatted) so the
  * wording is unit-testable.
+ *
+ * The share is of the section's positive rows (`shareBase`), so it says
+ * spending or earnings: "of total" read 67% beside a net-refunded headline of
+ * $100 (w21/788).
  */
 export function breakdownRowAccessibilityValue(
   amountText: string,
   percent: number | null,
   t: (key: string, params?: Record<string, unknown>) => string,
+  shareOf: "spending" | "earnings" = "spending",
 ): string {
   if (percent === null) return amountText;
-  return t("breakdownRowShare", {
-    amount: amountText,
-    // Rounded to match the visible % label exactly — two different numbers for
-    // one bar is worse than none.
-    percent: Math.round(percent),
-  });
+  return t(
+    shareOf === "spending"
+      ? "breakdownRowShareSpending"
+      : "breakdownRowShareEarnings",
+    {
+      amount: amountText,
+      // Rounded to match the visible % label exactly — two different numbers
+      // for one bar is worse than none.
+      percent: Math.round(percent),
+    },
+  );
 }

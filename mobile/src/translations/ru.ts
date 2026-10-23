@@ -826,7 +826,8 @@ export const ru: Translations = {
     "Введите сумму. Кнопка знака переключает между плюсом и минусом.",
   expandAccount: "Развернуть {{account}}",
   collapseAccount: "Свернуть {{account}}",
-  breakdownRowShare: "{{amount}}, {{percent}}% от итога",
+  breakdownRowShareSpending: "{{amount}}, {{percent}}% расходов",
+  breakdownRowShareEarnings: "{{amount}}, {{percent}}% доходов",
   budgetChartSummary: {
     one: "Бюджет и факт за {{span}}. Факт {{actual}} из {{budget}} за {{count}} период, {{missed}}.",
     few: "Бюджет и факт за {{span}}. Факт {{actual}} из {{budget}} за {{count}} периода, {{missed}}.",

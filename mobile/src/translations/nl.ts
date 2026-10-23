@@ -813,7 +813,8 @@ export const nl: Translations = {
     "Voer het bedrag in. Gebruik de tekenknop om tussen positief en negatief te wisselen.",
   expandAccount: "{{account}} uitklappen",
   collapseAccount: "{{account}} inklappen",
-  breakdownRowShare: "{{amount}}, {{percent}}% van het totaal",
+  breakdownRowShareSpending: "{{amount}}, {{percent}}% van de uitgaven",
+  breakdownRowShareEarnings: "{{amount}}, {{percent}}% van de inkomsten",
   budgetChartSummary: {
     one: "Budget versus werkelijk voor {{span}}. Werkelijk {{actual}} van {{budget}} begroot over {{count}} periode, {{missed}}.",
     other:

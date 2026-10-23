@@ -348,6 +348,7 @@ const ReportsScreenImpl = (): JSX.Element => {
                     tone={(theme) => theme.error}
                     note={notInTotalNote(expense.notInTotal, t)}
                     emptyMessage={t("reportsNoExpenses")}
+                    shareOf="spending"
                   />
                 </DashboardCard>
               </FadeInView>
@@ -372,6 +373,7 @@ const ReportsScreenImpl = (): JSX.Element => {
                     tone={(theme) => theme.success}
                     note={notInTotalNote(income.notInTotal, t)}
                     emptyMessage={t("reportsNoIncome")}
+                    shareOf="earnings"
                   />
                 </DashboardCard>
               </FadeInView>

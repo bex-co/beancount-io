@@ -828,7 +828,8 @@ export const de: Translations = {
     "Betrag eingeben. Mit der Vorzeichentaste zwischen positiv und negativ wechseln.",
   expandAccount: "{{account}} ausklappen",
   collapseAccount: "{{account}} einklappen",
-  breakdownRowShare: "{{amount}}, {{percent}} % des Gesamtbetrags",
+  breakdownRowShareSpending: "{{amount}}, {{percent}} % der Ausgaben",
+  breakdownRowShareEarnings: "{{amount}}, {{percent}} % der Einnahmen",
   budgetChartSummary: {
     one: "Budget gegen Ist für {{span}}. Ist {{actual}} von geplanten {{budget}} über {{count}} Periode, {{missed}}.",
     other:

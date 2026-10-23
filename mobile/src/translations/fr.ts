@@ -829,7 +829,8 @@ export const fr: Translations = {
     "Saisissez le montant. Utilisez le bouton de signe pour passer du positif au négatif.",
   expandAccount: "Développer {{account}}",
   collapseAccount: "Replier {{account}}",
-  breakdownRowShare: "{{amount}}, {{percent}} % du total",
+  breakdownRowShareSpending: "{{amount}}, {{percent}} % des dépenses",
+  breakdownRowShareEarnings: "{{amount}}, {{percent}} % des revenus",
   budgetChartSummary: {
     one: "Budget et réel pour {{span}}. Réel {{actual}} sur {{budget}} budgété sur {{count}} période, {{missed}}.",
     many: "Budget et réel pour {{span}}. Réel {{actual}} sur {{budget}} budgété sur {{count}} périodes, {{missed}}.",
