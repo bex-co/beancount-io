@@ -40,6 +40,7 @@ import {
 import { reconcileDocumentErrors } from "./document-validation";
 import { averageBookingErrors } from "./average-booking";
 import { openAutoAccounts } from "./auto-accounts";
+import { reportPreOpenUses } from "./pre-open-uses";
 import { orderMetaAsWritten } from "./meta-order";
 import {
   discoverDocuments,
@@ -796,6 +797,8 @@ async function parseLedgerFilesUncached(
   ));
   // Beancount's close_tree drops a close whose account it does not see opened.
   errors = withoutDroppedCloseErrors(errors, files, entryPoint);
+  // Read after the close reconcilers above, which match "never opened" text.
+  errors = reportPreOpenUses(errors, directives, files);
   errors = locateBookErrors(errors, files, entryPoint);
   errors = reportUrlIncludes(errors, files, entryPoint);
   errors = locateIncludeAndPluginErrors(errors, files, entryPoint);

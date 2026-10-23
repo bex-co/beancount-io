@@ -1904,6 +1904,29 @@ async function main(): Promise<void> {
       ]),
     `a fava plugin keeps the late child's located error (got ${JSON.stringify(lateChildFava)})`,
   );
+  // w23/067: an interpolated posting and a balance before the open read
+  // "never opened", where the engine dates a posting with an amount.
+  const preOpen = await closeTree([
+    "2020-01-01 open Assets:Live",
+    "2020-01-01 open Equity:Init",
+    '2019-01-01 * "early"',
+    "  Assets:Live  1 USD",
+    "  Equity:Init",
+    "2019-06-01 balance Assets:Live 1 USD",
+    '2020-02-01 * "unknown"',
+    "  Assets:Nope  1 USD",
+    "  Equity:Init",
+  ]);
+  assert(
+    JSON.stringify([...preOpen].sort()) ===
+      JSON.stringify([
+        "E1001@3 Account Assets:Live used on 2019-01-01 but not opened until 2020-01-01",
+        "E1001@3 Account Equity:Init used on 2019-01-01 but not opened until 2020-01-01",
+        "E1001@6 Account Assets:Live used on 2019-06-01 but not opened until 2020-01-01",
+        "E1001@7 Account Assets:Nope was never opened",
+      ]),
+    `a use before the open names the open date (got ${JSON.stringify(preOpen)})`,
+  );
   // And close_tree's place in the plugin order holds on that stream too.
   const orderedFava = await closeTree([
     'plugin "beancount.plugins.close_tree"',
