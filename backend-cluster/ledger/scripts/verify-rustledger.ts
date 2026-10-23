@@ -1689,6 +1689,38 @@ async function main(): Promise<void> {
     autoParent.length === 0,
     `auto_accounts opens an account named only by its close (got ${JSON.stringify(autoParent)})`,
   );
+  // w21/753: a child opened after its parent's close stays active, as
+  // Beancount's date-ordered check leaves it, with bean-check's one error for
+  // the close close_tree dated before the open.
+  const lateChild2 = await closeTree([
+    'plugin "beancount.plugins.close_tree"',
+    "2024-01-01 open Assets:Broker",
+    "2024-01-01 open Assets:Cash",
+    "2024-04-01 close Assets:Broker",
+    "2025-01-01 open Assets:Broker:Roth",
+    '2025-02-01 * "Contribution"',
+    "  Assets:Broker:Roth  100.00 USD",
+    "  Assets:Cash  -100.00 USD",
+  ]);
+  assert(
+    JSON.stringify(lateChild2) ===
+      JSON.stringify([
+        "E1001@4 Unopened account Assets:Broker:Roth is being closed",
+      ]),
+    `a child opened after its parent's close takes postings (got ${JSON.stringify(lateChild2)})`,
+  );
+  // The posting adds no error of its own, so a save of it is not refused.
+  const beforePosting = await closeTree([
+    'plugin "beancount.plugins.close_tree"',
+    "2024-01-01 open Assets:Broker",
+    "2024-01-01 open Assets:Cash",
+    "2024-04-01 close Assets:Broker",
+    "2025-01-01 open Assets:Broker:Roth",
+  ]);
+  assert(
+    JSON.stringify(beforePosting) === JSON.stringify(lateChild2),
+    `the posting to the late child adds no error (got ${JSON.stringify(beforePosting)} then ${JSON.stringify(lateChild2)})`,
+  );
   // w21/739: nounused and check_commodity came back as warnings, which the
   // server drops, and the engine's pedantic ran no nounused.
   for (const plugin of ["nounused", "check_commodity", "pedantic"]) {

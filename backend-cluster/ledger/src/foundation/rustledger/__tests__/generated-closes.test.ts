@@ -71,6 +71,38 @@ describe("inactiveAfterGeneratedCloses", () => {
     );
   });
 
+  // w21/753: close_tree also closes a child opened after its parent's close;
+  // Beancount's date-ordered check leaves the child open and raises one error
+  // for the close instead.
+  it("leaves a child opened after its parent's close active", () => {
+    const opened = (account: string, date: string): DirectiveJson => ({
+      type: "open",
+      date,
+      account,
+      currencies: [],
+    });
+    expect(
+      check([
+        opened("Assets:Broker", "2024-01-01"),
+        close("Assets:Broker"),
+        opened("Assets:Broker:VTI", "2024-01-01"),
+        close("Assets:Broker:VTI"),
+        opened("Assets:Broker:Roth", "2025-01-01"),
+        close("Assets:Broker:Roth"),
+        transaction("2025-02-01", ["Assets:Broker:Roth", "Assets:Cash"]),
+        transaction("2024-05-01", ["Assets:Broker:VTI", "Assets:Cash"]),
+      ]),
+    ).toEqual([
+      // bean-check 3.2.3's words; on the parent's close, line 2.
+      ["E1001", 2, "Unopened account Assets:Broker:Roth is being closed"],
+      [
+        "E1003",
+        6,
+        "Posting to inactive account Assets:Broker:VTI on 2024-05-01 (closed on 2024-04-01)",
+      ],
+    ]);
+  });
+
   it("leaves a written close to the engine, which checks it already", () => {
     expect(
       check([
