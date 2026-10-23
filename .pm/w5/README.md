@@ -41,7 +41,6 @@
 - [1000 — Match authored notes, events and customs during imports](./1000.md) — minor CLI duplicate index uses the plugin view; filtered/transformed directives append repeatedly or falsely skip unwritten changes, reproduced 2026-10-23.
 - [999 — Canonicalize acquisition labels for import comparison and hashes](./999.md) — major CLI residual after completed 981; equivalent NFC/NFD cost labels still conflict or duplicate purchases after the empty-label fix, reproduced 2026-10-23.
 - [998 — Recognize manually reordered lots in multi-fill import matching](./998.md) — major CLI residual after completed 977; cost-sorted manual lot postings make a real sale import twice above twelve lots, reproduced 2026-10-23.
-- [988 — Recognize compact option and plugin declarations when choosing a root](./988.md) — major CLI wrong-context balance write/refusal; native compact settings are missed, reproduced 2026-10-22.
 - [989 — Find account-providing roots for flagged postings](./989.md) — minor CLI false refusal; native posting flags hide unopened accounts from plugin-root discovery, reproduced 2026-10-22.
 - [990 — Keep adjacent ticker text out of the account tree](./990.md) — minor CLI rendering defect; a bare ticker consumes the next account candidate during tree-column selection, reproduced 2026-10-22.
 - [991 — Compare source amounts when a plugin changes posting count](./991.md) — major CLI follow-up to completed 937; a calculated split copy passes as written and falsely skips a changed bank amount, reproduced 2026-10-22.

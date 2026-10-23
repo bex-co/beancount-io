@@ -2054,9 +2054,10 @@ _DATE = _BOM + rb"\d{4}[-/]\d+[-/]\d+"
 #: An account opened outside the file's own closure: a per-year file reads
 #: the accounts its root opens.
 _OPEN_LINE = re.compile(_DATE + rb"[ \t]*open[ \t]", re.MULTILINE)
-#: Option and plugin names, to tell a repeated setting from a new definition.
-_OPTION_NAME = re.compile(_BOM + rb'option[ \t]+"([a-z_]+)"', re.MULTILINE)
-_PLUGIN_NAME = re.compile(_BOM + rb'plugin[ \t]+(?:"([^"]+)"|([A-Za-z_][\w.]*))', re.MULTILINE)
+#: Option and plugin names, to tell a repeated setting from a new definition. The string may
+#: touch its keyword (`option"operating_currency""USD"`), as the lexer allows (w5/988).
+_OPTION_NAME = re.compile(_BOM + rb'option[ \t]*"([a-z_]+)"', re.MULTILINE)
+_PLUGIN_NAME = re.compile(_BOM + rb'plugin(?:[ \t]*"([^"]+)"|[ \t]+([A-Za-z_][\w.]*))', re.MULTILINE)
 #: Options that never define what a file reads.
 _REPEATED_OK = {b"title", b"render_commas"}
 #: A dated line: a transaction or directive, the entries an overlay adds. A flag may touch
