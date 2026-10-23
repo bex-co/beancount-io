@@ -36,7 +36,7 @@
 
 ## Inbox
 
-- [1011 — Compare explicit lot and price facts for calculated copies](./1011.md) — minor CLI provenance gap; on-disk listing retains changed labels, acquisition dates and prices despite unchanged source, reproduced twice 2026-10-23.
+- [1011 — Compare explicit lot and price facts for calculated copies](./1011.md) — minor CLI provenance gap; on-disk listing retains changed labels, dates, costs and prices despite unchanged source, reproduced twice 2026-10-23.
 
 - [1009 — Compose the old empty-label and compound-cost import ID](./1009.md) — reopened minor CLI lookup branch; unchanged historical acquisitions require review despite matching native lots, reproduced twice 2026-10-23.
 
