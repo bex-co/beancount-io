@@ -329,7 +329,7 @@ def _totals_declared(entry: Any, spelled: Any) -> bool:
     extra = any(key not in stated and not open_(key) and total for key, total in held.items())
     return (
         not extra
-        and all(held.get(key) == total for key, total in stated.items() if key[0] not in open_accounts)
+        and all(held.get(key) == total for key, total in stated.items() if not open_(key))
         and _annotations_held(entry, spelled)
     )
 

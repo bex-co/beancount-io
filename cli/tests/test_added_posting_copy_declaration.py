@@ -122,3 +122,28 @@ def test_an_open_currency_does_not_hide_a_stated_one_in_the_same_account(tmp_pat
     rows = json.loads(on_disk.stdout)["data"]
     assert len(rows) == 1
     assert len(rows[0]["postings"]) == 3
+
+
+def test_a_stated_and_an_inferred_amount_in_one_currency_is_still_written(tmp_path: Path) -> None:
+    """Cash states 150 USD and leaves the rest to booking; the lot split changes the posting count (w5/1004)."""
+    (tmp_path / "qa_copy.py").write_text(
+        "from beancount.core.data import Transaction\n__plugins__ = ('copy',)\n"
+        "def copy(entries, options):\n    out = []\n    for e in entries:\n        out.append(e)\n"
+        "        if isinstance(e, Transaction) and e.narration == 'Sell':\n"
+        "            out.append(e._replace(meta=e.meta.copy(), narration='Derived'))\n    return out, []\n"
+    )
+    (tmp_path / "main.bean").write_text(
+        'option "operating_currency" "USD"\noption "insert_pythonpath" "TRUE"\nplugin "qa_copy"\n'
+        '2024-01-01 open Assets:Stock HOOL "FIFO"\n2024-01-01 open Assets:Cash USD\n'
+        "2024-01-01 open Equity:Opening USD\n2024-01-01 open Income:Gains USD\n"
+        '2024-01-02 * "Buy"\n  Assets:Stock 1 HOOL {100 USD, 2024-01-02}\n  Equity:Opening -100 USD\n'
+        '2024-01-03 * "Buy"\n  Assets:Stock 1 HOOL {100 USD, 2024-01-03}\n  Equity:Opening -100 USD\n'
+        '2024-02-01 * "Sell"\n  bank_id: "S1"\n  Assets:Stock -2 HOOL {} @ 200 USD\n'
+        "  Assets:Cash 150 USD\n  Assets:Cash USD\n  Income:Gains -100 USD\n"
+    )
+
+    on_disk = _bea(tmp_path, "list", "transaction", "--on-disk", "--limit", "100")
+
+    narrations = [row["narration"] for row in json.loads(on_disk.stdout)["data"]]
+    assert narrations.count("Sell") == 1
+    assert "Derived" not in narrations
