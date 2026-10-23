@@ -244,7 +244,56 @@ def _amounts_declared(entry: Any, spelled: Any) -> bool:
             return False
         if units.currency is not MISSING and units.currency and units.currency != booked.units.currency:
             return False
+        if not _annotations_declared(booked, stated):
+            return False
     return True
+
+
+def _annotations_declared(booked: Any, stated: Any) -> bool:
+    """Whether the cost, price and flag the line states are the booked posting's own (w5/1011).
+
+    Only what is written is compared: an open selector (`{}`, `{USD}`), an
+    omitted price and an unflagged posting agree with anything. A total cost
+    or price is normalized per unit as booking does.
+    """
+    from beancount.core.number import MISSING
+
+    if stated.flag is not None and stated.flag != booked.flag:
+        return False
+    spec, cost = stated.cost, booked.cost
+    if spec is not None:
+        if cost is None:
+            return False
+        per, total = spec.number_per, spec.number_total
+        if per is not MISSING and (per is not None or total is not None):
+            units = abs(stated.units.number) if stated.units is not MISSING and stated.units is not None else None
+            if isinstance(units, Decimal) and units:
+                expected = (per or Decimal(0)) + (total or Decimal(0)) / units
+                if abs(expected - cost.number) > _NUMBER_SLACK:
+                    return False
+        if isinstance(spec.currency, str) and spec.currency and spec.currency != cost.currency:
+            return False
+        if spec.date is not None and spec.date != cost.date:
+            return False
+        if spec.label is not None and unicodedata.normalize("NFC", spec.label) != unicodedata.normalize(
+            "NFC", cost.label or ""
+        ):
+            return False
+    price = stated.price
+    if price is not None and isinstance(price.number, Decimal) and isinstance(price.currency, str) and price.currency:
+        booked_price = booked.price
+        if booked_price is None or booked_price.currency != price.currency:
+            return False
+        if abs(booked_price.number - price.number) > _NUMBER_SLACK:
+            return False
+    return True
+
+
+_NUMBER_SLACK = Decimal("0.000001")
+
+
+def _annotation_compatible(booked: Any, stated: Any) -> bool:
+    return booked.account == stated.account and _annotations_declared(booked, stated)
 
 
 def _totals_declared(entry: Any, spelled: Any) -> bool:
@@ -278,7 +327,35 @@ def _totals_declared(entry: Any, spelled: Any) -> bool:
     # omitted number leaves only its own currency open, so a stated amount in
     # the same account is still compared (w5/1004 inferred currency).
     extra = any(key not in stated and not open_(key) and total for key, total in held.items())
-    return not extra and all(held.get(key) == total for key, total in stated.items() if key[0] not in open_accounts)
+    return (
+        not extra
+        and all(held.get(key) == total for key, total in stated.items() if key[0] not in open_accounts)
+        and _annotations_held(entry, spelled)
+    )
+
+
+def _annotations_held(entry: Any, spelled: Any) -> bool:
+    """Every posting the entry holds agrees with one the line states in the same account and currency.
+
+    Booking may split a reduction across lots and a plugin may re-divide a
+    posting, so postings are matched by account and currency, not by position (w5/1011).
+    """
+    from beancount.core.number import MISSING
+
+    for posting in entry.postings:
+        if posting.units is None or posting.units.number is None:
+            continue
+        candidates = [
+            other
+            for other in spelled.postings
+            if other.account == posting.account
+            and other.units is not None
+            and other.units is not MISSING
+            and getattr(other.units, "currency", None) in (posting.units.currency, None, MISSING, "")
+        ]
+        if candidates and not any(_annotation_compatible(posting, other) for other in candidates):
+            return False
+    return True
 
 
 def authored_entries(snapshot: Any, kind: type) -> list[Any]:
