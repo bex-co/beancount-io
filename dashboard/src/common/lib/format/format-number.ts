@@ -44,6 +44,9 @@ export const formatNumber = (
   );
 };
 
+/** The most fraction digits Intl formats (ECMA-402 2023); a double gets 20. */
+const MAX_STRING_FRACTION_DIGITS = 100;
+
 let isoCurrencies: Set<string> | null = null;
 const minorDigitsCache = new Map<string, number | undefined>();
 const numberFormats = new Map<string, Intl.NumberFormat>();
@@ -112,7 +115,7 @@ export const fractionDigitsOf = (
   const separator = text.indexOf(".");
   if (separator === -1) return 0;
   const fraction = text.slice(separator + 1).replace(/[^0-9].*$/, "");
-  return Math.min(fraction.length, 20);
+  return Math.min(fraction.length, MAX_STRING_FRACTION_DIGITS);
 };
 
 /**
@@ -129,19 +132,31 @@ export const formatQuantity = (
   renderCommas: boolean,
   locale: string,
 ): string => {
-  const digits = Math.min(Math.max(Math.trunc(fractionDigits) || 0, 0), 20);
+  // A double holds about 17 significant digits, so more places would print
+  // binary noise; a decimal string is exact to its last place, which a tiny
+  // quantity (0.000…001, 24 places) needs to stay nonzero (w4/1001).
+  const limit = typeof value === "string" ? MAX_STRING_FRACTION_DIGITS : 20;
+  const digits = Math.min(Math.max(Math.trunc(fractionDigits) || 0, 0), limit);
+  if (typeof value === "string") {
+    try {
+      // Ungrouped output uses "." with no grouping, as String/toFixed below
+      // do; either way it rounds the decimal, not a double.
+      return renderCommas
+        ? numberFormat(locale, { maximumFractionDigits: digits }).format(value)
+        : numberFormat("en", {
+            maximumFractionDigits: digits,
+            useGrouping: false,
+          }).format(value);
+    } catch {
+      // An engine before ECMA-402 2023 refuses more than 20 places; the
+      // decimal itself is still the exact quantity.
+      return value;
+    }
+  }
   if (renderCommas) {
     return numberFormat(locale, { maximumFractionDigits: digits }).format(
       value,
     );
-  }
-  if (typeof value === "string") {
-    // Ungrouped output uses "." with no grouping, as String/toFixed below do;
-    // it rounds the decimal, not a double.
-    return numberFormat("en", {
-      maximumFractionDigits: digits,
-      useGrouping: false,
-    }).format(value);
   }
   if (Number.isInteger(value)) {
     return String(value);

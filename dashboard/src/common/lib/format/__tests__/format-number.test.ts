@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formatNumber } from "../format-number";
+import { formatNumber, fractionDigitsOf } from "../format-number";
 
 describe("formatNumber", () => {
   it("uses the supplied locale for thousands separators", () => {
@@ -142,5 +142,21 @@ describe("formatNumber with an exact decimal string (w4/m52)", () => {
       formatNumber(4559.8, true, "en", "USD"),
     );
     expect(formatNumber("-0.001", true, "en", "USD")).toBe("0.00");
+  });
+});
+
+describe("formatNumber with more than 20 source places (w4/1001)", () => {
+  it("keeps a tiny decimal string nonzero, digit for digit", () => {
+    const tiny = "0.000000000000000000000001";
+    expect(formatNumber(tiny, true, "en", "NEAR", fractionDigitsOf(tiny))).toBe(
+      tiny,
+    );
+    expect(
+      formatNumber(tiny, false, "en", "NEAR", fractionDigitsOf(tiny)),
+    ).toBe(tiny);
+  });
+
+  it("still caps a double at 20 places", () => {
+    expect(formatNumber(1e-24, true, "en", "NEAR", 24)).toBe("0");
   });
 });

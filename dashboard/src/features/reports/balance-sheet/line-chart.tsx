@@ -1,6 +1,10 @@
 import { useMemo, useState } from "react";
 import { ReactECharts } from "@/common/components/react-echarts";
 import { useFormatNumber } from "@/common/hooks/use-format-number";
+import {
+  negateDecimalNumber,
+  parseDecimalNumber,
+} from "@/common/lib/beancount/decimal-number";
 import { fractionDigitsOf } from "@/common/lib/format/format-number";
 import { defaultSplitLine } from "@/common/components/react-echarts/utils";
 import type {
@@ -98,23 +102,31 @@ export function LineChart({
     // Prepare x-axis data (dates)
     const dates = data.map((item) => item.date);
 
-    // The plotted points are numbers, so the tooltip can no longer see how
-    // much precision the ledger actually sent. Remember it per point.
-    const sourceDigits = new Map<string, number>();
+    // The plotted points are doubles, which cannot hold every ledger quantity
+    // (9007199254740993.125 becomes …994; a 24-place fraction rounds away).
+    // The table and tooltip read the ledger's own decimal instead, inverted
+    // exactly when the chart inverts, with the plotted zero for a gap
+    // (w4/1001).
+    const exactOf = (item: DateAndBalance, commodity: string) => {
+      const exact =
+        parseDecimalNumber(String(item.balance[commodity] ?? "0")) ?? "0";
+      return inverted ? negateDecimalNumber(exact) : exact;
+    };
+    const sourceText = new Map<string, string>();
     data.forEach((item) => {
-      Object.entries(item.balance).forEach(([commodity, raw]) => {
-        sourceDigits.set(
+      commodities.forEach((commodity) => {
+        sourceText.set(
           `${item.date}\u0000${commodity}`,
-          fractionDigitsOf(raw as string),
+          exactOf(item, commodity),
         );
       });
     });
 
     return {
       commodities,
-      periodSeries: series.map((item) => ({
-        unit: item.name,
-        values: item.data.map((point) => point[1]),
+      periodSeries: commodities.map((commodity) => ({
+        unit: commodity,
+        values: data.map((item) => exactOf(item, commodity)),
       })),
       chartOption: {
         tooltip: {
@@ -138,14 +150,12 @@ export function LineChart({
                   Array.isArray(param.value) &&
                   param.value[1] !== 0
                 ) {
-                  const value = param.value[1] as number;
-                  const digits =
-                    sourceDigits.get(
-                      `${param.name}\u0000${param.seriesName}`,
-                    ) ?? 0;
+                  const exact =
+                    sourceText.get(`${param.name}\u0000${param.seriesName}`) ??
+                    (param.value[1] as number);
                   tooltip += `<div style="margin: 4px 0;">
                   <span style="display: inline-block; width: 10px; height: 10px; background-color: ${param.color || "#000"}; margin-right: 8px; border-radius: 50%;"></span>
-                  ${param.seriesName || "Unknown"}: ${formatNum(value, param.seriesName, digits)}
+                  ${param.seriesName || "Unknown"}: ${formatNum(exact, param.seriesName, fractionDigitsOf(exact))}
                 </div>`;
                 }
               });
