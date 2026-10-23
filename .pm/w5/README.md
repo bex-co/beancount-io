@@ -45,7 +45,6 @@
 - [1003 — Compare compound costs using native booking arithmetic](./1003.md) — major CLI comparison error; a fully specified three-share compound-cost purchase imports twice because division before cancellation differs from native booking, reproduced 2026-10-23.
 - [999 — Canonicalize acquisition labels for import comparison and hashes](./999.md) — major CLI residual after completed 981; equivalent NFC/NFD cost labels still conflict or duplicate purchases after the empty-label fix, reproduced 2026-10-23.
 - [998 — Recognize manually reordered lots in multi-fill import matching](./998.md) — major CLI residual after completed 977; cost-sorted manual lot postings make a real sale import twice above twelve lots, reproduced 2026-10-23.
-- [997 — Preserve exact inferred cents in doctor trees](./997.md) — minor CLI scoped-precision follow-up; inferred 10.50 USD salary displays as 10 in doctor trees while its footer/query remain correct, reproduced 2026-10-23.
 
 
 

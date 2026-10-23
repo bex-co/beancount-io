@@ -243,6 +243,12 @@ def _context_of(entries: Any, options_map: Any, conversion: Any = None, price_ma
                 continue
             if (posting.meta or {}).get(interpolate.AUTOMATIC_META):
                 inferred.add(posting.units.currency)
+                if not _is_division_artifact(posting.units.number):
+                    # An amount the scope determines exactly (2 x 5.25 = 10.50)
+                    # is shown whole, even where every typed amount is a whole
+                    # number (w5/997).
+                    context.update(posting.units.number, posting.units.currency)
+                    seen = True
                 continue
             context.update(posting.units.number, posting.units.currency)
             seen = True
