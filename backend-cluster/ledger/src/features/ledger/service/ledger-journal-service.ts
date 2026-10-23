@@ -232,28 +232,36 @@ function makeReplaceTransform(
   };
 }
 
-// Transaction flags that plaintextJournal excludes (padding/summarize/transfer/
-// conversion/unrealized/etc.) — matches journal.py generate_beancount_content.
-const PLAINTEXT_EXCLUDED_FLAGS = new Set(["P", "S", "T", "C", "U", "R", "M"]);
+const FLAG_PADDING = "P";
 const FLAG_SUMMARIZE = "S";
 
 /**
- * The directives a plaintext journal export writes, in stream order: source
- * transactions, balance assertions, and the pad directives those assertions
- * may depend on (the loader regenerates each pad's `P` transaction, so the
- * synthetic one stays out). With a `time` window the clamp's `S` opening
+ * The directives a plaintext journal export writes, in stream order: the
+ * ledger's transactions, balance assertions, and the pad directives those
+ * assertions may depend on (the loader regenerates each pad's `P` transaction,
+ * so the synthetic one stays out). With a `time` window the clamp's `S` opening
  * summaries are kept too: they carry every pre-window balance and cost lot,
- * without which in-window assertions and lot reductions cannot hold on load.
+ * without which in-window assertions and lot reductions cannot hold on load;
+ * its other entries (conversions) are left out.
+ *
+ * `ledger` holds the snapshot's own directives, so the clamp's are those not
+ * in it. Synthetic entries were told by their flag (journal.py's P, S, T, C,
+ * U, R, M), which left out every transaction written with one of those flags
+ * since the API accepts them (w21/652, w21/745).
  */
 export function plaintextExportDirectives(
   directives: DirectiveJson[],
-  opts: { windowed: boolean },
+  opts: { windowed: boolean; ledger: ReadonlySet<DirectiveJson> },
 ): DirectiveJson[] {
   return directives.filter((directive) => {
     if (directive.type === "balance" || directive.type === "pad") return true;
     if (directive.type !== "transaction") return false;
-    if (opts.windowed && directive.flag === FLAG_SUMMARIZE) return true;
-    return !PLAINTEXT_EXCLUDED_FLAGS.has(directive.flag);
+    if (!opts.ledger.has(directive)) {
+      return opts.windowed && directive.flag === FLAG_SUMMARIZE;
+    }
+    return !(
+      directive.flag === FLAG_PADDING && isGeneratedDirective(directive)
+    );
   });
 }
 
@@ -694,12 +702,18 @@ export class LedgerJournalService implements ILedgerJournalService {
       clamp: snapshot.reportAccounts.clamp,
     });
 
-    // Drop synthetic conversion ("C") and summarize ("S") transactions, reverse
-    // (newest first), then serialize — mirrors journal.py get_journal.
+    // Drop the time clamp's conversion ("C") and summarize ("S") transactions,
+    // reverse (newest first), then serialize — mirrors journal.py get_journal.
+    // Only the clamp's own: they are absent from the ledger's id map, where an
+    // entry written with flag S or C is not, and it was missing (w21/745).
     let items: JournalItem[] = filtered
       .filter(
         (d) =>
-          !(d.type === "transaction" && (d.flag === "C" || d.flag === "S")),
+          !(
+            d.type === "transaction" &&
+            (d.flag === "C" || d.flag === "S") &&
+            !entryIds.has(d)
+          ),
       )
       .reverse()
       .map((d) =>
@@ -824,6 +838,7 @@ export class LedgerJournalService implements ILedgerJournalService {
 
     const exported = plaintextExportDirectives(filtered, {
       windowed: Boolean(query?.time),
+      ledger: new Set(snapshot.directives),
     });
     // Every page keeps the option header, so each one loads on its own; the
     // whole ledger in one read was a context blowup for agents (w23/044).

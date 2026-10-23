@@ -31,6 +31,10 @@ describe("a transaction detail opened without a stashed entry", () => {
     expect(
       source.indexOf("if(entryGone){") < source.indexOf("if(!entry){"),
     ).toBe(true);
-    expect(source.includes("constentryGone=isEntryGone(error);")).toBe(true);
+    expect(
+      source.includes(
+        "gone:entryGone}=selectEntrySource({entry,sourced,notFound:isEntryGone(error),});",
+      ),
+    ).toBe(true);
   });
 });

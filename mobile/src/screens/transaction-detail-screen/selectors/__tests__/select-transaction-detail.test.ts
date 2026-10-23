@@ -2,11 +2,12 @@ import fs from "fs";
 import { isolateLtr } from "../../../../common/bidi";
 import path from "path";
 import {
-  hasEditableSource,
+  mayBeGenerated,
   postingBasisText,
   selectHeroAmount as selectHeroAmountWithLabel,
   selectPostingRows,
   userMetadataLines,
+  selectEntrySource,
   selectTransactionMenuActions,
   selectTransactionSubtitle,
   selectTransactionTitle,
@@ -324,26 +325,62 @@ describe("selectTransactionTitle", () => {
   });
 });
 
-describe("hasEditableSource", () => {
-  it("allows ordinary cleared, pending, and custom-flagged transactions", () => {
-    expect(hasEditableSource(txn([], { flag: "*" }))).toBe(true);
-    expect(hasEditableSource(txn([], { flag: "!" }))).toBe(true);
-    expect(hasEditableSource(txn([], { flag: "?" }))).toBe(true);
+describe("mayBeGenerated", () => {
+  it("does not suspect ordinary cleared, pending, and custom-flagged transactions", () => {
+    expect(mayBeGenerated(txn([], { flag: "*" }))).toBe(false);
+    expect(mayBeGenerated(txn([], { flag: "!" }))).toBe(false);
+    expect(mayBeGenerated(txn([], { flag: "?" }))).toBe(false);
   });
 
-  it("rejects Beancount-generated transaction flags", () => {
+  it("suspects the flags Beancount reserves for generated transactions", () => {
     for (const flag of ["P", "S", "T", "C", "U", "R", "M"]) {
-      expect(hasEditableSource(txn([], { flag }))).toBe(false);
+      expect(mayBeGenerated(txn([], { flag }))).toBe(true);
     }
   });
 });
 
+// w21/745: since the API accepts any capital-letter flag (w21/652), an entry
+// written with flag R opened read-only, with no Edit, menu or source.
+describe("selectEntrySource", () => {
+  const refund = txn([], { flag: "R" });
+
+  it("holds a reserved-flag entry read-only until its source is found", () => {
+    expect(
+      selectEntrySource({ entry: refund, sourced: false, notFound: false }),
+    ).toEqual({ isGenerated: true, gone: false });
+    expect(
+      selectEntrySource({ entry: refund, sourced: true, notFound: false }),
+    ).toEqual({ isGenerated: false, gone: false });
+  });
+
+  it("keeps an entry with no source generated, not gone (w21/444)", () => {
+    const padding = txn([], { flag: "P" });
+    expect(
+      selectEntrySource({ entry: padding, sourced: false, notFound: true }),
+    ).toEqual({ isGenerated: true, gone: false });
+  });
+
+  it("reads a not-found after the source was found as removed", () => {
+    expect(
+      selectEntrySource({ entry: refund, sourced: true, notFound: true }),
+    ).toEqual({ isGenerated: false, gone: true });
+    expect(
+      selectEntrySource({
+        entry: txn([], { flag: "*" }),
+        sourced: false,
+        notFound: true,
+      }),
+    ).toEqual({ isGenerated: false, gone: true });
+  });
+});
+
 describe("selectTransactionMenuActions", () => {
-  // The screen derives `isGenerated` as `!hasEditableSource(entry)`, so the
-  // predicate above is what feeds this.
+  // The screen derives `isGenerated` with `selectEntrySource`; before the
+  // context read finds a source, a reserved flag is what feeds this.
   const actionsFor = (entry: JournalTransaction, showWriteActions: boolean) =>
     selectTransactionMenuActions({
-      isGenerated: !hasEditableSource(entry),
+      isGenerated: selectEntrySource({ entry, sourced: false, notFound: false })
+        .isGenerated,
       showWriteActions,
     });
 

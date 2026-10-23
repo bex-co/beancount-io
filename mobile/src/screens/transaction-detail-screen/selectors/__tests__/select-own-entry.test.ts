@@ -43,10 +43,17 @@ describe("the detail screen", () => {
     )
     .replace(/\s+/g, "");
 
-  it("loads no context for a held generated entry", () => {
+  // w21/745: a held entry's context is read too (one written with flag R has
+  // a source), and a NOT_FOUND for one never found is no deletion.
+  it("shows a held entry, and reads its not-found as generated, not gone", () => {
     expect(
       source.includes(
-        "constownEntry=selectOwnEntry(stashedEntry,nextHeld,entryHash);constshouldLoadContext=!ownEntry||hasEditableSource(ownEntry);",
+        "useTransactionContext({entryHash,ledgerId},!entryHash);",
+      ),
+    ).toBe(true);
+    expect(
+      source.includes(
+        "const{isGenerated,gone:entryGone}=selectEntrySource({entry,sourced,notFound:isEntryGone(error),});",
       ),
     ).toBe(true);
     expect(source.includes("if(ownEntry){returnownEntry;}")).toBe(true);

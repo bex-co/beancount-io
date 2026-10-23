@@ -267,6 +267,7 @@ function mergePaddingTransactions(
 
   const unmatched = [...pending.values()].flat().concat(unkeyed);
   if (unmatched.length === 0) return merged;
+  unmatched.forEach(markGeneratedDirective);
 
   // Defensive fallback for a future rustledger wire-shape change: retain every
   // generated posting and restore Beancount's entry_sortkey chronology.
@@ -820,9 +821,13 @@ async function parseLedgerFilesUncached(
     applyTs || sourceDetails !== undefined
       ? captureDirectiveSourceIds(directives)
       : undefined;
+  // Whenever anything was generated, padding included: a written `P`, `S` or
+  // `R` transaction is told from a synthetic one by this mark, not its flag
+  // (w21/745), so it has to survive the worker for every ledger.
+  const generatedMarks = captureGeneratedDirectives(directives);
   const capturedGenerated =
-    capturedSourceIds !== undefined
-      ? captureGeneratedDirectives(directives)
+    capturedSourceIds !== undefined || generatedMarks.includes(true)
+      ? generatedMarks
       : undefined;
   const capturedLocations =
     capturedSourceIds !== undefined

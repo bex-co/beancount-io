@@ -32,7 +32,12 @@ describe("Transaction detail for a removed entry", () => {
   );
 
   it("replaces the body, clearing the link actions, and refreshes the lists", () => {
-    expect(source.includes("const entryGone = isEntryGone(error);")).toBe(true);
+    // A reserved-flag entry whose source was never found is not removed
+    // (w21/745); see `selectEntrySource`.
+    expect(source.includes("gone: entryGone } = selectEntrySource({")).toBe(
+      true,
+    );
+    expect(source.includes("notFound: isEntryGone(error),")).toBe(true);
     expect(
       source.includes(
         'if (entryGone) void invalidateLedgerData(client, "entries");',
@@ -107,7 +112,7 @@ describe("rechecking when the revision moves after focus", () => {
     ).toBe(true);
     expect(
       screen.includes(
-        "ledgerChangedSinceCheck,refetchContext,ledgerRevision,]",
+        "[entryHash,ledgerChangedSinceCheck,refetchContext,ledgerRevision]",
       ),
     ).toBe(true);
   });

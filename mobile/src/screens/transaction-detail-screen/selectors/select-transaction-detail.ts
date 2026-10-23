@@ -17,19 +17,37 @@ import { formatEntryRowAmount } from "../../transactions-screen/entry-row/format
 // plugins. They are not standalone source directives, so asking the source
 // context API to edit or delete one either fails or resolves to the directive
 // that generated it (for example, a `pad` directive instead of its `P`
-// transaction).
-const GENERATED_TRANSACTION_FLAGS = new Set([
-  "P",
-  "S",
-  "T",
-  "C",
-  "U",
-  "R",
-  "M",
-]);
+// transaction). The API accepts any capital letter as a flag (w21/652), so a
+// user may write an entry with one too.
+const RESERVED_TRANSACTION_FLAGS = new Set(["P", "S", "T", "C", "U", "R", "M"]);
 
-export function hasEditableSource(txn: JournalTransaction): boolean {
-  return !GENERATED_TRANSACTION_FLAGS.has(txn.flag);
+/**
+ * Whether an entry may be one a report or plugin made, with no source text to
+ * edit, delete or link to: its flag is one Beancount reserves for them. Its
+ * context read decides (see `selectEntrySource`).
+ */
+export function mayBeGenerated(txn: JournalTransaction): boolean {
+  return RESERVED_TRANSACTION_FLAGS.has(txn.flag);
+}
+
+/**
+ * What the entry context read says of the entry shown. One whose flag marks
+ * it as possibly generated is read-only until the read finds its source: an
+ * R-flagged entry the user wrote opened read-only, as if a plugin had made it
+ * (w21/745). A read that never finds one leaves it generated (a padding entry
+ * has no source of its own), and its "not found" is no deletion (w21/444).
+ * Once found, a later "not found" is one: the entry was removed elsewhere.
+ */
+export function selectEntrySource(input: {
+  entry: JournalTransaction | null;
+  /** The context read has resolved on this screen. */
+  sourced: boolean;
+  /** The context read answered NOT_FOUND. */
+  notFound: boolean;
+}): { isGenerated: boolean; gone: boolean } {
+  const isGenerated =
+    input.entry !== null && mayBeGenerated(input.entry) && !input.sourced;
+  return { isGenerated, gone: input.notFound && !isGenerated };
 }
 
 /** Headline amount for the detail screen, signed exactly as the list row is:
@@ -320,7 +338,7 @@ export type TransactionMenuAction =
 /**
  * Which overflow-menu actions a transaction offers, in display order.
  *
- * A generated entry (see `hasEditableSource`) has no source directive, so an
+ * A generated entry (see `selectEntrySource`) has no source directive, so an
  * entry permalink opens "No entry context data available" rather than the
  * transaction — offering Share/Copy there hands the user a broken link. Write
  * actions keep their own gate (`shouldShowTransactionWriteActions`), which

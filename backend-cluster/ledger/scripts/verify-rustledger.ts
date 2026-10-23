@@ -686,6 +686,67 @@ async function verifyDocumentDiscovery(): Promise<void> {
   );
 }
 
+/**
+ * w21/745: an entry written with flag S was missing from the journal, and R
+ * or S ones from the export: both told synthetic entries by their flag.
+ */
+async function verifyWrittenReservedFlags(): Promise<void> {
+  const journal = new LedgerJournalService(
+    singleFileRepoFactory(
+      [
+        "2026-01-01 open Assets:Cash USD",
+        "2026-01-01 open Expenses:Misc USD",
+        "2026-01-01 open Equity:Opening USD",
+        "2026-10-01 pad Assets:Cash Equity:Opening",
+        "2026-10-02 balance Assets:Cash 100 USD",
+        '2026-10-20 R "Refund flag R"',
+        "  Expenses:Misc  -7.00 USD",
+        "  Assets:Cash",
+        '2026-10-20 S "Settled flag S"',
+        "  Expenses:Misc  9.00 USD",
+        "  Assets:Cash",
+        "",
+      ].join("\n"),
+    ) as never,
+    {} as never,
+  );
+  const params = { ledgerId: "synthetic/flags", userId: undefined };
+  const listed = (await journal.getJournal(params)).data.map(
+    (item) => `${item.flag} ${item.narration}`,
+  );
+  assert(
+    listed.includes("S Settled flag S") && listed.includes("R Refund flag R"),
+    `the journal lists entries written with flags S and R (got ${JSON.stringify(listed)})`,
+  );
+  const windowed = (
+    await journal.getJournal({ ...params, query: { time: "2026-10-15 - 2026-11-01" } })
+  ).data.map((item) => `${item.flag} ${item.narration}`);
+  assert(
+    windowed.includes("S Settled flag S") &&
+      !windowed.some((row) => row.includes("Summarization")),
+    `a time window still hides the clamp's own summaries (got ${JSON.stringify(windowed)})`,
+  );
+  const { content } = await journal.plaintextJournal(params);
+  assert(
+    content.includes('2026-10-20 R "Refund flag R"') &&
+      content.includes('2026-10-20 S "Settled flag S"') &&
+      content.includes("2026-10-01 pad Assets:Cash Equity:Opening") &&
+      !content.includes("Padding inserted"),
+    `the export writes the R and S entries and the pad, not its padding:\n${content}`,
+  );
+  const reloaded = await parseLedgerFiles(
+    { "main.beancount": content },
+    "main.beancount",
+  );
+  assert(
+    reloaded.valid,
+    `the export reloads without errors (got ${JSON.stringify(reloaded.errors.map((e) => e.message))})`,
+  );
+  console.log(
+    "✓ entries written with reserved flags are listed and exported (w21/745)",
+  );
+}
+
 async function verifyMultilineSources(): Promise<void> {
   const notes = [
     'qa "quoted" C:\\qa\\receipts\nsecond line\nthird line',
@@ -2117,6 +2178,7 @@ async function main(): Promise<void> {
   await verifyMultilineSources();
   await verifyDocumentSourcePaths();
   await verifyDocumentDiscovery();
+  await verifyWrittenReservedFlags();
 
   // w23/011: an undecodable source the entry point does not reach changes
   // nothing; one it includes is reported by path, and the rest still parses.

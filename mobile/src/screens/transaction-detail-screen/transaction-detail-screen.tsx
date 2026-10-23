@@ -54,7 +54,7 @@ import {
 import { bindRouteLedger } from "@/common/route-ledger";
 import { RouteLedgerUnavailable } from "@/components/route-ledger-unavailable";
 import {
-  hasEditableSource,
+  selectEntrySource,
   selectHeroAmount,
   selectPostingRows,
   selectTransactionMenuActions,
@@ -376,7 +376,6 @@ const TransactionDetailImpl = ({
   const nextHeld = holdGeneratedEntry(heldGenerated, stashedEntry);
   if (nextHeld !== heldGenerated) setHeldGenerated(nextHeld);
   const ownEntry = selectOwnEntry(stashedEntry, nextHeld, entryHash);
-  const shouldLoadContext = !ownEntry || hasEditableSource(ownEntry);
 
   // Also serves as the fallback entry source when the stash is cold (deep
   // link or remount) — the context payload carries the full entry JSON.
@@ -386,10 +385,11 @@ const TransactionDetailImpl = ({
     error,
     refetch: refetchContext,
     generatedFrom,
-  } = useTransactionContext(
-    { entryHash, ledgerId },
-    !entryHash || !shouldLoadContext,
-  );
+  } = useTransactionContext({ entryHash, ledgerId }, !entryHash);
+  // Read for a possibly generated entry too: only the read tells one written
+  // with flag R from one a plugin made (w21/745).
+  const [sourced, setSourced] = useState(false);
+  if (!sourced && data?.getLedgerEntryContext) setSourced(true);
   // A write made from a screen above this one (a delete, an editor fix) leaves
   // this entry's context cached as it was. Recheck on return, and only when
   // the ledger was written meanwhile; a NOT_FOUND then shows the gone state
@@ -423,19 +423,13 @@ const TransactionDetailImpl = ({
   const entryReplaced = isShownEntryReplaced(pinnedSha, readSha, loading);
   useFocusEffect(
     useCallback(() => {
-      if (!entryHash || !shouldLoadContext) return;
+      if (!entryHash) return;
       if (ledgerChangedSinceCheck()) {
         void refetchContext().catch(() => undefined);
       }
       // `ledgerRevision` only re-runs this; the check reads the var itself.
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [
-      entryHash,
-      shouldLoadContext,
-      ledgerChangedSinceCheck,
-      refetchContext,
-      ledgerRevision,
-    ]),
+    }, [entryHash, ledgerChangedSinceCheck, refetchContext, ledgerRevision]),
   );
 
   const [deleteMutation] = useDeleteLedgerEntrySourceSliceMutation();
@@ -560,7 +554,11 @@ const TransactionDetailImpl = ({
 
   // Changed or removed elsewhere since the list loaded: refresh the lists
   // behind this screen so the stale row is gone when the user goes back.
-  const entryGone = isEntryGone(error);
+  const { isGenerated, gone: entryGone } = selectEntrySource({
+    entry,
+    sourced,
+    notFound: isEntryGone(error),
+  });
   useEffect(() => {
     if (entryGone) void invalidateLedgerData(client, "entries");
   }, [entryGone, client]);
@@ -584,10 +582,9 @@ const TransactionDetailImpl = ({
     [router, originAccount, ledgerId, guest],
   );
 
-  // A generated entry (flag `P`, `S`, …) is synthesized by a report or plugin,
-  // so it has no entry context to link to: the permalink would land on "No
-  // entry context data available".
-  const isGenerated = entry !== null && !hasEditableSource(entry);
+  // A generated entry (flag `P`, `S`, … and no source found) is synthesized by
+  // a report or plugin, so it has no entry context to link to: the permalink
+  // would land on "No entry context data available".
 
   const entryLinkUrl =
     entryHash && !isGenerated && ledgerId

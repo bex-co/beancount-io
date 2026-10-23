@@ -27,7 +27,6 @@
 - [747](./747.md) — Cash flow draws the synthetic "Savings"/"Other"/"Refunds" nodes beside real categories with the same name
 - [748](./748.md) — In Chinese, Cash flow's income and expense nodes for one group read the same: w21/540's split misses full-width parentheses
 - [749](./749.md) — Cash flow clips the left-column income label at the card's edge (")a20261020")
-- [745](./745.md) — A transaction you wrote with flag R/T/U/M/P opens read-only as if plugin-generated, and one flagged S or C is missing from Transactions
 - [746](./746.md) — Transactions rows mark only "!", so forecast (#) entries look booked and can fill the whole first screen
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window
 - [065](./blocked/065.md) — One early-year entry (e.g. 0050) makes the balance sheet 23,718 monthly points (3 MB) and the app stalls — **blocked:** needs an approach decision (per-pill fetch vs server downsample) and a simulator profile of the stall
