@@ -1507,9 +1507,14 @@ def _lot_stated(
         # An explicit empty label stays "": it is a lot of its own beside one
         # with no label, and folding both to None gave two purchases one id
         # (w5/981).
-        label if isinstance(label := getattr(cost, "label", None), str) else None,
+        _comparable_label(label) if isinstance(label := getattr(cost, "label", None), str) else None,
         cost.date if isinstance(getattr(cost, "date", None), datetime.date) else None,
     )
+
+
+def _comparable_label(label: str) -> str:
+    """A cost label as the loader reads it (NFC), unless an older id's raw spelling is being rebuilt (w5/999)."""
+    return label if _RAW_LABELS.get() else unicodedata.normalize("NFC", label)
 
 
 def _lot(posting: Any) -> _Lot | None:
@@ -2809,6 +2814,8 @@ def _exact_amount(number: Decimal, currency: str) -> str:
 _NEGATIVE_ZERO: ContextVar[bool] = ContextVar("negative_zero", default=False)
 #: Spells an explicit empty cost label as no label, as the ids written before it counted were (w5/981).
 _EMPTY_LABEL_HIDDEN: ContextVar[bool] = ContextVar("empty_label_hidden", default=False)
+#: Spells a cost label as the importer typed it, as the ids written before labels compared canonically were (w5/999).
+_RAW_LABELS: ContextVar[bool] = ContextVar("raw_labels", default=False)
 
 
 def _exactly_normalized(number: Decimal) -> Decimal:
@@ -3042,6 +3049,19 @@ def _hash_import_ids(
         finally:
             _EMPTY_LABEL_HIDDEN.reset(token)
 
+    def spelled_with_raw_labels() -> str:
+        # Ids written before labels compared as the loader reads them hashed
+        # the label as typed; a decomposed `Café` must still find that id (w5/999).
+        token = _RAW_LABELS.set(True)
+        try:
+            rebuilt = sorted(
+                (p.units.number, p.units.currency, _lot_text(p) + ("" if p.account == account else f" [{p.account}]"))
+                for p in _source_postings(entry, account)
+            )
+            return "+".join(_exact_amount(number, currency) + lot for number, currency, lot in rebuilt)
+        finally:
+            _RAW_LABELS.reset(token)
+
     per_legs = sorted(
         (p.units.number, p.units.currency, _lot_text(p, per_only=True, historic=True))
         for p in _source_postings(entry, account)
@@ -3070,6 +3090,7 @@ def _hash_import_ids(
     blind = "+".join(_exact_amount(number, currency) + lot for number, currency, lot in blind_legs)
     negative_zero = spelled_with_negative_zero()
     unlabelled = spelled_without_empty_labels()
+    raw_labelled = spelled_with_raw_labels()
 
     single_base = _hash_base(date, exact, description, nfc_account)
     seen[single_base] = seen.get(single_base, 0) + 1
@@ -3115,6 +3136,11 @@ def _hash_import_ids(
         negative_counter = f"negzero\0{negative_base}"
         seen[negative_counter] = seen.get(negative_counter, 0) + 1
         older.append(_digest_import_id(negative_base, seen[negative_counter]))
+    if raw_labelled != exact:
+        raw_base = _hash_base(date, raw_labelled, description, nfc_account)
+        raw_counter = f"rawlabel\0{raw_base}"
+        seen[raw_counter] = seen.get(raw_counter, 0) + 1
+        older.append(_digest_import_id(raw_base, seen[raw_counter]))
     if unlabelled != exact:
         unlabelled_base = _hash_base(date, unlabelled, description, nfc_account)
         unlabelled_counter = f"unlabelled\0{unlabelled_base}"
@@ -3170,6 +3196,11 @@ def _hash_import_ids(
             negative_paired_counter = f"paired-negzero\0{negative_paired}"
             seen[negative_paired_counter] = seen.get(negative_paired_counter, 0) + 1
             older.append(_digest_import_id(negative_paired, seen[negative_paired_counter]))
+        if raw_labelled != exact:
+            raw_paired = _hash_base(date, raw_labelled, f"{payee}|{description}", nfc_account)
+            raw_paired_counter = f"paired-rawlabel\0{raw_paired}"
+            seen[raw_paired_counter] = seen.get(raw_paired_counter, 0) + 1
+            older.append(_digest_import_id(raw_paired, seen[raw_paired_counter]))
         if unlabelled != exact:
             unlabelled_paired = _hash_base(date, unlabelled, f"{payee}|{description}", nfc_account)
             unlabelled_paired_counter = f"paired-unlabelled\0{unlabelled_paired}"

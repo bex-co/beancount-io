@@ -45,7 +45,6 @@
 - [1004 — Compare every stated account and currency fact for calculated copies](./1004.md) — major CLI residual after completed 991; extra keys or a different inferred currency hide stated facts and falsely skip native-ID corrections, reproduced 2026-10-23.
 
 - [1003 — Compare compound costs using native booking arithmetic](./1003.md) — major CLI comparison error; a fully specified three-share compound-cost purchase imports twice because division before cancellation differs from native booking, reproduced 2026-10-23.
-- [999 — Canonicalize acquisition labels for import comparison and hashes](./999.md) — major CLI residual after completed 981; equivalent NFC/NFD cost labels still conflict or duplicate purchases after the empty-label fix, reproduced 2026-10-23.
 
 
 
