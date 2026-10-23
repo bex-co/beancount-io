@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation } from "@apollo/client/react";
 import { Button } from "@/common/components/ui/button";
-import { Input } from "@/common/components/ui/input";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
 import {
   Form,
@@ -34,6 +33,7 @@ import {
 import { useLedger } from "@/common/hooks/use-ledger";
 import { track } from "@/common/analytics";
 import { AccountAvailabilityNotice } from "./account-availability-notice";
+import { ExactAmountInput } from "./exact-amount-input";
 import { useAccountAvailability } from "./use-account-availability";
 import { usePendingSubmit } from "@/common/hooks/use-pending-submit";
 
@@ -215,9 +215,7 @@ export function BalanceForm({
                     {t("journal.amountLabel")}
                   </FormLabel>
                   <FormControl>
-                    <Input
-                      type="number"
-                      step="any"
+                    <ExactAmountInput
                       placeholder={t("journal.amountPlaceholder")}
                       {...field}
                     />
