@@ -98,7 +98,6 @@
 
 
 - [265 — Keep financial text and private paths out of GA4 automatic events](./blocked/265.md) — major; dashboard QA, 2026-10-20; stream-editor completion dependency. — **blocked:** checklist shipped in `181e7a996`; needs a GA4 Editor to turn off Site search / history page views
-- [289 — Preserve long amount digits in portrait statement print output](./289.md) — minor; dashboard QA, 2026-10-20.
 
 ## Milestones
 
