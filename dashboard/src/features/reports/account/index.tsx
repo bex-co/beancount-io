@@ -408,9 +408,10 @@ export default function AccountPage() {
     ledgerId,
     primaryCurrency,
   );
-  // The units chosen in the balance chart's legend, held above the pending
-  // state that unmounts the chart while a new period reads (w4/m51).
+  // The units chosen in each chart's legend, held above the pending state
+  // that unmounts the charts while a new period reads (w4/m51, w4/1025).
   const [balanceUnits, setBalanceUnits] = useState<LegendSelection>();
+  const [changeUnits, setChangeUnits] = useState<LegendSelection>();
 
   const {
     data,
@@ -593,6 +594,8 @@ export default function AccountPage() {
                     data={settledReport.intervalTotalsData}
                     interval={timeInterval}
                     primarySeries={primaryCurrency}
+                    legendSelection={changeUnits}
+                    onLegendSelectionChange={setChangeUnits}
                   />
                   <ChartPeriodTable
                     data={settledReport.intervalTotalsData}

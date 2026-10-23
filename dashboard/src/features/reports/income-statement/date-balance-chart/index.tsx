@@ -13,26 +13,20 @@ export function DateBalanceChart({
   chartMode = "single",
   inverted,
   labelledBy,
+  legendSelection,
+  onLegendSelectionChange,
 }: DateBalanceChartProps) {
-  if (chartMode === "stacked") {
-    return (
-      <StackDateBalanceChart
-        data={data}
-        interval={interval}
-        primarySeries={primarySeries}
-        inverted={inverted}
-        labelledBy={labelledBy}
-      />
-    );
-  }
-
+  const Chart =
+    chartMode === "stacked" ? StackDateBalanceChart : SingleDateBalanceChart;
   return (
-    <SingleDateBalanceChart
+    <Chart
       data={data}
       interval={interval}
       primarySeries={primarySeries}
       inverted={inverted}
       labelledBy={labelledBy}
+      legendSelection={legendSelection}
+      onLegendSelectionChange={onLegendSelectionChange}
     />
   );
 }

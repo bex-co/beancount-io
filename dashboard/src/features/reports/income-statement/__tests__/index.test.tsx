@@ -135,6 +135,45 @@ describe("LedgerIncomeStatementPage chart selection lifetime", () => {
     expect(captureProps.mock.calls.at(-1)![0].selectedTab).toBe("income");
   });
 
+  it("keeps each chart's units across an uncached read (w4/1025)", () => {
+    settled();
+    const { rerender } = render(<LedgerIncomeStatementPage />);
+    expect(captureProps.mock.calls.at(-1)![0].unitSelections).toEqual({});
+
+    // The reader shows vacation hours alone in the Income chart.
+    act(() =>
+      captureProps.mock.calls
+        .at(-1)![0]
+        .onUnitSelectionChange("income", { USD: false, VACHR: true }),
+    );
+    rerender(<LedgerIncomeStatementPage />);
+
+    // Quarterly's read is pending, so the content (and its charts) unmount.
+    pending();
+    rerender(<LedgerIncomeStatementPage />);
+    expect(
+      screen.queryByText("income-statement-content"),
+    ).not.toBeInTheDocument();
+
+    settled();
+    rerender(<LedgerIncomeStatementPage />);
+    expect(captureProps.mock.calls.at(-1)![0].unitSelections).toEqual({
+      income: { USD: false, VACHR: true },
+    });
+
+    // Another chart keeps its own choice beside it.
+    act(() =>
+      captureProps.mock.calls
+        .at(-1)![0]
+        .onUnitSelectionChange("expenses", { USD: true, VACHR: true }),
+    );
+    rerender(<LedgerIncomeStatementPage />);
+    expect(captureProps.mock.calls.at(-1)![0].unitSelections).toEqual({
+      income: { USD: false, VACHR: true },
+      expenses: { USD: true, VACHR: true },
+    });
+  });
+
   it("keeps the bar mode when a shared scope change remounts the page (w4/998)", () => {
     settled();
     const first = render(<LedgerIncomeStatementPage />);

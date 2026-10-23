@@ -10,7 +10,7 @@ import type {
 } from "echarts";
 import { getChartColors } from "@/common/lib/chart/color";
 import { formatDateAxis } from "@/common/lib/chart/chart";
-import { legendSelectionFor } from "../../lib/legend-selection";
+import { useLegendSelection } from "../../lib/legend-selection";
 import {
   ChartPeriodTable,
   type ChartPeriodSeries,
@@ -34,14 +34,21 @@ export function StackDateBalanceChart({
   primarySeries = "USD",
   inverted,
   labelledBy,
+  legendSelection,
+  onLegendSelectionChange,
 }: BaseChartProps) {
   const formatNum = useFormatNumber();
-  const { chartOption, periodSeries } = useMemo((): {
+  const built = useMemo((): {
     chartOption: EChartsOption;
     periodSeries: ChartPeriodSeries[];
+    units: string[];
   } => {
     if (!data || data.length === 0) {
-      return { chartOption: createEmptyChartOption(), periodSeries: [] };
+      return {
+        chartOption: createEmptyChartOption(),
+        periodSeries: [],
+        units: [],
+      };
     }
 
     // Extract all unique currencies and accounts from accountBalances
@@ -169,6 +176,7 @@ export function StackDateBalanceChart({
     const { xAxis, yAxis } = createCommonAxisConfig(dates, interval);
 
     return {
+      units: currencyList,
       periodSeries,
       chartOption: {
         tooltip,
@@ -177,9 +185,6 @@ export function StackDateBalanceChart({
           bottom: 0,
           type: "scroll",
           pageButtonItemGap: 5,
-          // The operating unit, else the first unit the chart has: a scope
-          // without the operating unit must not start all hidden (w4/997).
-          selected: legendSelectionFor(currencyList, primarySeries),
         },
         grid: createCommonGridConfig(),
         xAxis,
@@ -192,6 +197,14 @@ export function StackDateBalanceChart({
       },
     };
   }, [data, interval, primarySeries, inverted, formatNum]);
+  // The reader's units, else the primary unit, else the first unit the chart
+  // has: a scope without the primary unit must not start all hidden (w4/997).
+  const { chartOption, onLegendSelectChanged } = useLegendSelection(
+    built.chartOption,
+    built.units,
+    primarySeries,
+    { legendSelection, onLegendSelectionChange },
+  );
 
   return (
     <div className="w-full">
@@ -199,11 +212,12 @@ export function StackDateBalanceChart({
         option={chartOption}
         style={{ height: "250px", width: "100%" }}
         className="w-full"
+        onLegendSelectChanged={onLegendSelectChanged}
       />
       {labelledBy && (
         <ChartPeriodTable
           data={data}
-          series={periodSeries}
+          series={built.periodSeries}
           labelledBy={labelledBy}
         />
       )}

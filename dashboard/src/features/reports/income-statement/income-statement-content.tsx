@@ -32,6 +32,7 @@ import {
   type ReportingEntitySource,
 } from "../export/model";
 import type { FiscalYearEnd } from "../export/reporting-period";
+import type { LegendSelection } from "../lib/legend-selection";
 
 interface IncomeStatementContentProps {
   incomeStatementData: GetLedgerIncomeStatementQuery["getLedgerIncomeStatement"];
@@ -60,6 +61,12 @@ interface IncomeStatementContentProps {
   /** Page-owned for the same reason as selectedTab. */
   chartMode: ChartMode;
   onChartModeChange: (value: ChartMode) => void;
+  /**
+   * The units chosen in each chart's legend, by view. Page-owned for the
+   * same reason as selectedTab: a regrouped period keeps them (w4/1025).
+   */
+  unitSelections: Partial<Record<string, LegendSelection>>;
+  onUnitSelectionChange: (view: string, selected: LegendSelection) => void;
   onTimeIntervalChange: (value: ChartInterval) => void;
   filters: LedgerSearchParams;
   fiscalYearEnd: FiscalYearEnd;
@@ -87,6 +94,8 @@ export function IncomeStatementContent({
   onSelectedTabChange,
   chartMode,
   onChartModeChange,
+  unitSelections,
+  onUnitSelectionChange,
   onTimeIntervalChange,
   filters,
   fiscalYearEnd,
@@ -94,6 +103,11 @@ export function IncomeStatementContent({
 }: IncomeStatementContentProps) {
   const { t } = useTranslations();
   const chartTitleId = useId();
+  const unitsOf = (view: string) => ({
+    legendSelection: unitSelections[view],
+    onLegendSelectionChange: (selected: LegendSelection) =>
+      onUnitSelectionChange(view, selected),
+  });
   const tabOptions = [
     { label: t("common.netProfit"), value: "netProfit" },
     { label: t("common.income"), value: "income" },
@@ -271,6 +285,7 @@ export function IncomeStatementContent({
               interval={timeInterval}
               primarySeries={primaryCurrency}
               inverted={invertIncomeLiabilitiesEquity}
+              {...unitsOf("netProfit")}
             />
           </TabsContent>
           <TabsContent value="income" className="mt-0 space-y-3">
@@ -295,6 +310,7 @@ export function IncomeStatementContent({
               primarySeries={primaryCurrency}
               chartMode={chartMode}
               inverted={invertIncomeLiabilitiesEquity}
+              {...unitsOf("income")}
             />
           </TabsContent>
           <TabsContent value="expenses" className="mt-0 space-y-3">
@@ -318,6 +334,7 @@ export function IncomeStatementContent({
               interval={timeInterval}
               primarySeries={primaryCurrency}
               chartMode={chartMode}
+              {...unitsOf("expenses")}
             />
           </TabsContent>
           <TabsContent value="incomeBreakdown" className="mt-0">

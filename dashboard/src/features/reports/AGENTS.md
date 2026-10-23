@@ -186,10 +186,11 @@ the content. Pass it down as `selectedTab`/`onSelectedTabChange`, alongside
 the selected chart instead of resetting which chart the reader is looking at.
 The units a reader turns on in a chart legend are the same kind of view state:
 `useLegendSelection` (`lib/legend-selection.ts`) keeps them across the chart's
-own data updates (`LineChart`, both Cash Flow charts), and a page whose pending
-branch unmounts it holds them through `legendSelection` and
-`onLegendSelectionChange` (Balance Sheet and Cash Flow per view, Account
-Balance). `legendSelectionFor` reconciles a kept choice with the units a new
+own data updates (`LineChart` and the Cash Flow and Income Statement bar
+charts), and a page whose pending branch unmounts it holds them through
+`legendSelection` and `onLegendSelectionChange` (Balance Sheet, Income
+Statement and Cash Flow per view; Account Balance and Changes Over Time).
+`legendSelectionFor` reconciles a kept choice with the units a new
 read has. Memoize the option the hook is given on the chart's inputs — the
 translated strings, never `t`, which is new on every render.
 

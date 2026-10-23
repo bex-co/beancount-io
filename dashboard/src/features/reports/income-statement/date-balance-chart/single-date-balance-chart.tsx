@@ -18,7 +18,7 @@ import {
   createEmptyChartOption,
 } from "./utils";
 import { formatDateAxis } from "@/common/lib/chart/chart";
-import { legendSelectionFor } from "../../lib/legend-selection";
+import { useLegendSelection } from "../../lib/legend-selection";
 import {
   ChartPeriodTable,
   type ChartPeriodSeries,
@@ -33,14 +33,21 @@ export function SingleDateBalanceChart({
   primarySeries = "USD",
   inverted,
   labelledBy,
+  legendSelection,
+  onLegendSelectionChange,
 }: BaseChartProps) {
   const formatNum = useFormatNumber();
-  const { chartOption, periodSeries } = useMemo((): {
+  const built = useMemo((): {
     chartOption: EChartsOption;
     periodSeries: ChartPeriodSeries[];
+    units: string[];
   } => {
     if (!data || data.length === 0) {
-      return { chartOption: createEmptyChartOption(), periodSeries: [] };
+      return {
+        chartOption: createEmptyChartOption(),
+        periodSeries: [],
+        units: [],
+      };
     }
 
     // Extract all unique commodities from the data
@@ -125,11 +132,10 @@ export function SingleDateBalanceChart({
       }) as TooltipComponentFormatterCallback<TooltipComponentFormatterCallbackParams>,
     };
 
-    const legendSelected = legendSelectionFor(commodityList, primarySeries);
-
     const { xAxis, yAxis } = createCommonAxisConfig(dates, interval);
 
     return {
+      units: commodityList,
       periodSeries: seriesData.map((item) => ({
         unit: item.name,
         values: item.data,
@@ -141,7 +147,6 @@ export function SingleDateBalanceChart({
           bottom: 0,
           type: "scroll",
           pageButtonItemGap: 5,
-          selected: legendSelected,
         },
         grid: createCommonGridConfig(),
         xAxis,
@@ -154,6 +159,14 @@ export function SingleDateBalanceChart({
       },
     };
   }, [data, interval, primarySeries, inverted, formatNum]);
+  // The reader's units, else the primary unit, else the first unit the chart
+  // has: a scope without the primary unit must not start all hidden (w4/997).
+  const { chartOption, onLegendSelectChanged } = useLegendSelection(
+    built.chartOption,
+    built.units,
+    primarySeries,
+    { legendSelection, onLegendSelectionChange },
+  );
 
   return (
     <div className="w-full">
@@ -161,11 +174,12 @@ export function SingleDateBalanceChart({
         option={chartOption}
         style={{ height: "250px", width: "100%" }}
         className="w-full"
+        onLegendSelectChanged={onLegendSelectChanged}
       />
       {labelledBy && (
         <ChartPeriodTable
           data={data}
-          series={periodSeries}
+          series={built.periodSeries}
           labelledBy={labelledBy}
         />
       )}

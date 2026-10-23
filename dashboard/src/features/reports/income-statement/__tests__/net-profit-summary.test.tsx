@@ -77,8 +77,13 @@ vi.mock("../../balance-sheet/line-chart", () => ({ LineChart: () => null }));
 vi.mock("../../balance-sheet/hierarchy-visualization-card", () => ({
   HierarchyVisualizationCard: () => null,
 }));
+// The charts only report the props they were given.
+const { chartProps } = vi.hoisted(() => ({ chartProps: vi.fn() }));
 vi.mock("../date-balance-chart", () => ({
-  DateBalanceChart: () => null,
+  DateBalanceChart: (props: unknown) => {
+    chartProps(props);
+    return null;
+  },
 }));
 vi.mock("../chart-mode-select", () => ({
   ChartModeSelect: () => null,
@@ -107,6 +112,8 @@ const sharedProps = {
   onSelectedTabChange: () => {},
   chartMode: "stacked" as const,
   onChartModeChange: () => {},
+  unitSelections: {},
+  onUnitSelectionChange: () => {},
   primaryCurrency: "USD",
   reportingEntityName: "Example",
   reportingEntitySource: "ledger_title" as const,
@@ -165,5 +172,49 @@ describe("Income Statement Net Profit summary", () => {
     );
 
     expect(screen.getByText("-600")).toBeInTheDocument();
+  });
+});
+
+describe("Income Statement chart units (w4/1025)", () => {
+  it("gives each chart its own units and reports its changes", () => {
+    chartProps.mockClear();
+    const onUnitSelectionChange = vi.fn();
+    const unitSelections = {
+      netProfit: { USD: true, VACHR: false },
+      income: { USD: false, VACHR: true },
+      expenses: { USD: true, VACHR: true },
+    };
+    const data = {
+      incomeHierarchyData: node("Income", "-1000"),
+      expensesHierarchyData: node("Expenses", "400"),
+      incomeData: [],
+      expensesData: [],
+      netProfitData: [],
+    } as unknown as GetLedgerIncomeStatementQuery["getLedgerIncomeStatement"];
+    render(
+      <IncomeStatementContent
+        {...sharedProps}
+        incomeStatementData={data}
+        unitSelections={unitSelections}
+        onUnitSelectionChange={onUnitSelectionChange}
+      />,
+    );
+
+    // Each chart is labelled by its view's heading.
+    const byView = new Map(
+      chartProps.mock.calls.map(([props]) => [
+        String(props.labelledBy).split("-").at(-1),
+        props,
+      ]),
+    );
+    for (const [view, selected] of Object.entries(unitSelections)) {
+      const props = byView.get(view);
+      expect(props.legendSelection).toEqual(selected);
+      props.onLegendSelectionChange({ USD: false, VACHR: false });
+      expect(onUnitSelectionChange).toHaveBeenLastCalledWith(view, {
+        USD: false,
+        VACHR: false,
+      });
+    }
   });
 });

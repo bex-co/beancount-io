@@ -2,6 +2,7 @@ import type { EChartsOption } from "echarts";
 import type { ChartInterval } from "@/common/types/chart";
 import { formatDateAxis, formatYAxisNumber } from "@/common/lib/chart/chart";
 import { defaultSplitLine } from "@/common/components/react-echarts/utils";
+import type { LegendSelectionProps } from "../../lib/legend-selection";
 
 export interface DateAndBalance {
   date: string;
@@ -9,7 +10,7 @@ export interface DateAndBalance {
   accountBalances?: Record<string, unknown>;
 }
 
-export interface DateBalanceChartProps {
+export interface DateBalanceChartProps extends LegendSelectionProps {
   data: DateAndBalance[];
   interval?: ChartInterval;
   primarySeries?: string;
@@ -18,7 +19,7 @@ export interface DateBalanceChartProps {
   labelledBy?: string;
 }
 
-export interface BaseChartProps {
+export interface BaseChartProps extends LegendSelectionProps {
   data: DateAndBalance[];
   interval?: ChartInterval;
   primarySeries?: string;

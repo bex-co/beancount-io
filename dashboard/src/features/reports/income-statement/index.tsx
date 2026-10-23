@@ -26,6 +26,7 @@ import { useReportConversion } from "@/features/reports/components/use-report-co
 import { selectSettledReportData } from "@/features/reports/lib/select-settled-report-data";
 import { useUrlView } from "@/common/hooks/use-url-view";
 import { useQueryRetry } from "@/common/hooks/use-query-retry";
+import type { LegendSelection } from "../lib/legend-selection";
 import {
   CHART_MODES,
   DEFAULT_CHART_MODE,
@@ -75,6 +76,11 @@ export default function LedgerIncomeStatementPage() {
     DEFAULT_CHART_MODE,
     "mode",
   );
+  // The units chosen in each chart's legend, owned here for the same reason:
+  // regrouping the period unmounts the charts while it reads (w4/1025).
+  const [unitSelections, setUnitSelections] = useState<
+    Partial<Record<string, LegendSelection>>
+  >({});
 
   const {
     data,
@@ -149,6 +155,10 @@ export default function LedgerIncomeStatementPage() {
       onSelectedTabChange={setSelectedTab}
       chartMode={chartMode}
       onChartModeChange={setChartMode}
+      unitSelections={unitSelections}
+      onUnitSelectionChange={(view, selected) =>
+        setUnitSelections((previous) => ({ ...previous, [view]: selected }))
+      }
       timeInterval={timeInterval}
       onTimeIntervalChange={setTimeInterval}
       invertIncomeLiabilitiesEquity={invertIncomeLiabilitiesEquity}

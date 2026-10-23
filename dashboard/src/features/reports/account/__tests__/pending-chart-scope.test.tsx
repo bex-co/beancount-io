@@ -9,9 +9,10 @@ import AccountPage from "../index";
  * the selectors and the journal below keep their own state.
  */
 
-const { chartProps, reportState } = vi.hoisted(() => ({
+const { chartProps, reportState, search } = vi.hoisted(() => ({
   chartProps: vi.fn(),
   reportState: { current: {} as Record<string, unknown> },
+  search: { current: {} as Record<string, unknown> },
 }));
 
 // The page runs two reads. Only the report's state is under test; the journal
@@ -52,7 +53,7 @@ vi.mock("@tanstack/react-router", () => ({
     ledgerName: "books",
     accountName: "Assets:US:BofA:Checking",
   }),
-  useSearch: () => ({}),
+  useSearch: () => search.current,
   useNavigate: () => vi.fn(),
 }));
 
@@ -72,14 +73,14 @@ vi.mock("@/common/hooks/use-ledger-search-params", () => ({
 
 vi.mock("@/features/reports/balance-sheet/line-chart", () => ({
   LineChart: (props: Record<string, unknown>) => {
-    chartProps(props);
+    chartProps({ chart: "balance", ...props });
     return <div data-testid="line-chart" />;
   },
 }));
 
 vi.mock("@/features/reports/income-statement/date-balance-chart", () => ({
   DateBalanceChart: (props: Record<string, unknown>) => {
-    chartProps(props);
+    chartProps({ chart: "changes", ...props });
     return <div data-testid="date-balance-chart" />;
   },
 }));
@@ -169,12 +170,15 @@ describe("AccountPage chart pending scope", () => {
     render(<AccountPage />);
     expect(screen.queryByTestId("journal-table")).not.toBeInTheDocument();
   });
+  /** The latest props the named chart was rendered with. */
+  const chartOf = (chart: "balance" | "changes") =>
+    chartProps.mock.calls
+      .map(([props]) => props as Record<string, unknown>)
+      .filter((props) => props.chart === chart)
+      .at(-1)!;
+
   it("keeps the balance chart's unit choice across a pending read (w4/m51)", () => {
-    const balanceChart = () =>
-      chartProps.mock.calls
-        .map(([props]) => props as Record<string, unknown>)
-        .filter((props) => "onLegendSelectionChange" in props)
-        .at(-1)!;
+    const balanceChart = () => chartOf("balance");
     mockQuery({ data: atCost });
     const { rerender } = render(<AccountPage />);
     const chosen = { USD: false, SOL: true };
@@ -190,5 +194,31 @@ describe("AccountPage chart pending scope", () => {
     mockQuery({ data: units });
     rerender(<AccountPage />);
     expect(balanceChart().legendSelection).toEqual(chosen);
+  });
+
+  it("keeps the changes chart's unit choice across a pending read (w4/1025)", () => {
+    search.current = { view: "changesOverTime" };
+    try {
+      mockQuery({ data: atCost });
+      const { rerender } = render(<AccountPage />);
+      const chosen = { USD: false, SOL: true };
+      act(() =>
+        (chartOf("changes").onLegendSelectionChange as (s: object) => void)(
+          chosen,
+        ),
+      );
+
+      mockQuery({ previousData: atCost, loading: true });
+      rerender(<AccountPage />);
+      expect(
+        screen.queryByTestId("date-balance-chart"),
+      ).not.toBeInTheDocument();
+
+      mockQuery({ data: units });
+      rerender(<AccountPage />);
+      expect(chartOf("changes").legendSelection).toEqual(chosen);
+    } finally {
+      search.current = {};
+    }
   });
 });
