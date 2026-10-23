@@ -1,3 +1,7 @@
+import {
+  LEDGER_ERROR_QUERIES,
+  refetchNamedQueries,
+} from "@/common/apollo/refresh-named-queries";
 import { isolatePath } from "@/common/bidi";
 import { routeText } from "@/common/route-text";
 import { isConflictFailure } from "@/common/ledger-conflict";
@@ -463,14 +467,17 @@ export function LedgerFileBrowserScreen(): JSX.Element {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await refetch();
+      await Promise.all([
+        refetch(),
+        refetchNamedQueries(client, LEDGER_ERROR_QUERIES),
+      ]);
     } catch {
       // A read: the generic load failure, not the transport's text (w21/117).
       toast.showToast({ message: t("ledgerLoadError"), type: "error" });
     } finally {
       setRefreshing(false);
     }
-  }, [currentPath, refetch, t, toast]);
+  }, [client, currentPath, refetch, t, toast]);
 
   // Create is disabled with the reason under the field, never silently.
   const validateNewFilename = useCallback(

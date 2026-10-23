@@ -1,3 +1,9 @@
+import { useApolloClient } from "@apollo/client";
+import {
+  ACCOUNT_CLOSE_DATE_QUERIES,
+  LEDGER_ERROR_QUERIES,
+  refetchNamedQueries,
+} from "@/common/apollo/refresh-named-queries";
 import {
   selectCardLoadState,
   selectReadContextState,
@@ -145,6 +151,7 @@ const AccountsScreenImpl = (): JSX.Element => {
     router.push("/open-account");
   }, [router]);
 
+  const client = useApolloClient();
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = async () => {
     setRefreshing(true);
@@ -154,6 +161,11 @@ const AccountsScreenImpl = (): JSX.Element => {
         accountsRefetch(),
         unitsRefetch(),
         pricesRefetch(),
+        // The bell's errors and the close dates the tree is filtered by (w21/839).
+        refetchNamedQueries(client, [
+          ...LEDGER_ERROR_QUERIES,
+          ...ACCOUNT_CLOSE_DATE_QUERIES,
+        ]),
       ]);
     } catch {
       // Query errors render in the screen or the guest access boundary.

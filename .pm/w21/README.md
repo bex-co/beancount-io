@@ -39,7 +39,6 @@
 - [678](./blocked/678.md) — A sale whose lot doesn't match is still counted in every balance, so the books don't balance — **blocked:** needs an owner decision on whether an entry that failed booking is dropped from reports and the journal (as Beancount does) or kept listed with a flag and excluded from balances
 - [693](./blocked/693.md) — Edit Transaction's Reload after a conflict opens the other twin's text, so the next Save overwrites it — **blocked:** its acceptance contradicts itself (a twin moved onto the ID and a metadata-only change look the same after a conflict); needs an owner decision between always refusing Reload on a changed slice and keeping it
 - [694](./blocked/694.md) — Since w21/672, Delete after a metadata-only change elsewhere dead-ends on "changed or removed" (w21/250 regression) — **blocked:** its two acceptance cases cannot both hold (a metadata-only change and a twin swap look the same); same owner decision as w21/693
-- [839](./839.md) — Pull-to-refresh on Accounts/Transactions/Reports/Files skips ledger errors (bell) and Accounts' close dates
 - [840](./840.md) — Share/Copy link on a plugin copy opens the dashboard's editable entry page, where Delete removes the series
 - [841](./841.md) — A padding entry says "A plugin generated this entry" and its pad source opens as "Transaction" with "Edit Transaction"
 - [842](./842.md) — After an edit, the detail header keeps the old entry's pencil and ⋯ while it reloads

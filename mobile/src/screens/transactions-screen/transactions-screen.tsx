@@ -1,3 +1,8 @@
+import { useApolloClient } from "@apollo/client";
+import {
+  LEDGER_ERROR_QUERIES,
+  refetchNamedQueries,
+} from "@/common/apollo/refresh-named-queries";
 import { useGuest } from "@/common/guest/guest-context";
 import { parseFormatDate } from "@/common/format-util";
 import { useToday } from "@/common/hooks/use-today";
@@ -271,9 +276,12 @@ const TransactionList = () => {
     ],
   );
 
+  const client = useApolloClient();
   const onRefresh = async () => {
     try {
       setIsRefreshing(true);
+      // The bell's errors follow the pull without holding up the list (w21/839).
+      void refetchNamedQueries(client, LEDGER_ERROR_QUERIES);
       await refetch();
       // The list is back at its first page: the next page failed on the old one
       // and is asked for again by scrolling (w21/465).

@@ -1,3 +1,8 @@
+import { useApolloClient } from "@apollo/client";
+import {
+  LEDGER_ERROR_QUERIES,
+  refetchNamedQueries,
+} from "@/common/apollo/refresh-named-queries";
 import {
   selectCardLoadState,
   selectReadContextState,
@@ -142,6 +147,7 @@ const ReportsScreenImpl = (): JSX.Element => {
     today,
   );
 
+  const client = useApolloClient();
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
@@ -155,6 +161,7 @@ const ReportsScreenImpl = (): JSX.Element => {
         ledgerMetaRefetch(),
         scheduledRefetch(),
         scheduled ? toTodayRefetch() : undefined,
+        refetchNamedQueries(client, LEDGER_ERROR_QUERIES),
       ]);
     } catch {
       // Query errors render in the screen or the guest access boundary.
@@ -167,6 +174,7 @@ const ReportsScreenImpl = (): JSX.Element => {
     scheduledRefetch,
     scheduled,
     toTodayRefetch,
+    client,
   ]);
 
   const rangeOptions = TIME_RANGES.map((key) => ({

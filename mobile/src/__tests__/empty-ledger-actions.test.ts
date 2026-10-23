@@ -180,6 +180,7 @@ function load(relative: string): any {
       if (id === "@apollo/client")
         return {
           useReactiveVar: (read: any) => read(),
+          useApolloClient: () => ({ refetchQueries: async () => undefined }),
           NetworkStatus: { fetchMore: 3 },
         };
       if (id === "@/generated-graphql/graphql")
