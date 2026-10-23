@@ -8,6 +8,7 @@ import {
   budgetActualsState,
   currentPeriodKnown,
   currentPeriodRange,
+  periodsBetween,
   periodsThrough,
   prepareBudgetHistory,
   type BudgetGroup,
@@ -119,9 +120,25 @@ export function useBudgetActuals({
           endsOn,
         ) * direction,
     });
-    const points = items.map((item) =>
-      point(item.date, resolveCurrencyBalance(item.balance, currency)),
-    );
+    // All time lists only periods with postings, and the current period's row
+    // follows them from further on: the empty periods between come back as
+    // zeros (w21/010, w21/670).
+    const points: BudgetSeriesPoint[] = [];
+    items.forEach((item, index) => {
+      const previous = items[index - 1];
+      if (time === undefined && previous) {
+        for (const date of periodsBetween(
+          previous.date,
+          group.interval,
+          item.date,
+        )) {
+          points.push(point(date, 0));
+        }
+      }
+      points.push(
+        point(item.date, resolveCurrencyBalance(item.balance, currency)),
+      );
+    });
     // A windowed range ends today on the server. All time ends at the last
     // posting, so carry it on through today with the periods nothing was
     // spent in, as YTD and 1Y show them (w21/010).

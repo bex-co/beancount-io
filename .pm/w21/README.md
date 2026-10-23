@@ -30,7 +30,6 @@
 - [674](./674.md) — Since w21/641, Home's net worth leaves out next month's entries while the Accounts tab includes them
 - [672](./672.md) — Deleting one of two same-day twin entries shifts the other onto its ID, so a stale screen's Delete silently removes the survivor
 - [673](./673.md) — New Transaction appends LF lines to a CRLF ledger file (add-path sibling of w21/252 and w21/062)
-- [670](./670.md) — Budget ALL skips every period between the account's last posting and today (w21/010 regression via w21/332)
 - [671](./671.md) — Reports ALL drops an entry pre-entered for later this month but keeps next month's (w21/523 × w21/166)
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window
 - [065](./blocked/065.md) — One early-year entry (e.g. 0050) makes the balance sheet 23,718 monthly points (3 MB) and the app stalls — **blocked:** needs an approach decision (per-pill fetch vs server downsample) and a simulator profile of the stall

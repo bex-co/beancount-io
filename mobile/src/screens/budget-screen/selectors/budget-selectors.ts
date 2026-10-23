@@ -317,6 +317,19 @@ export function allTimeThroughToday<T extends { date: string }>(
 }
 
 /**
+ * The period-end dates strictly between `from`'s period and `to`'s: the empty
+ * periods a series jumps over when the current period's row follows an old
+ * posting (w21/670).
+ */
+export function periodsBetween(
+  from: string,
+  interval: string,
+  to: string,
+): string[] {
+  return periodsThrough(from, interval, to).filter((end) => end < to);
+}
+
+/**
  * The period-end dates after `lastDate`'s period, through the period that
  * contains `today`. An all-time totals query returns only periods with
  * postings, so a budget active since the last one lost its recent, unspent

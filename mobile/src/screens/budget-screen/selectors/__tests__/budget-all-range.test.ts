@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import {
   budgetForInterval,
+  periodsBetween,
   periodsThrough,
   prepareBudgetHistory,
   allTimeThroughToday,
@@ -60,6 +61,36 @@ describe("periodsThrough", () => {
 
   it("never loops on a malformed date", () => {
     expect(periodsThrough("not-a-date", "monthly", TODAY)).toEqual([]);
+  });
+});
+
+// w21/670: the current period's row follows the last posting, and the empty
+// periods between them were never filled.
+describe("periodsBetween", () => {
+  it("fills the months between the last posting and the current row", () => {
+    // Either a period-end date or today dates the current row.
+    expect(periodsBetween("2026-08-31", "monthly", "2026-10-22")).toEqual([
+      "2026-09-30",
+    ]);
+    expect(periodsBetween("2026-08-31", "monthly", "2026-10-31")).toEqual([
+      "2026-09-30",
+    ]);
+  });
+
+  it("fills days and weeks of a daily or weekly budget", () => {
+    expect(periodsBetween("2026-10-19", "daily", "2026-10-22")).toEqual([
+      "2026-10-20",
+      "2026-10-21",
+    ]);
+    expect(periodsBetween("2026-10-04", "weekly", "2026-10-22")).toEqual([
+      "2026-10-11",
+      "2026-10-18",
+    ]);
+  });
+
+  it("adds nothing between neighbouring periods", () => {
+    expect(periodsBetween("2026-09-30", "monthly", "2026-10-31")).toEqual([]);
+    expect(periodsBetween("2026-10-05", "monthly", "2026-10-22")).toEqual([]);
   });
 });
 
