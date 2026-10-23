@@ -18,7 +18,19 @@ import {
   sankeyLabelLines,
   truncateSankeyLabel,
 } from "../sankey-data";
+import { bg } from "../../../../translations/bg";
+import { ca } from "../../../../translations/ca";
+import { de } from "../../../../translations/de";
 import { en } from "../../../../translations/en";
+import { es } from "../../../../translations/es";
+import { fa } from "../../../../translations/fa";
+import { fr } from "../../../../translations/fr";
+import { nl } from "../../../../translations/nl";
+import { pt } from "../../../../translations/pt";
+import { ru } from "../../../../translations/ru";
+import { sk } from "../../../../translations/sk";
+import { uk } from "../../../../translations/uk";
+import { zh } from "../../../../translations/zh";
 
 function node(
   account: string,
@@ -616,6 +628,35 @@ describe("a category named like a node the chart adds", () => {
       "Salary",
       "Rent",
       "Savings",
+    ]);
+  });
+});
+
+// w21/748: zh writes "{{name}}（收入）", full-width and with no space, so the
+// label went unsplit and both nodes read "Qa2026102…".
+describe("sankeyLabelLines in every language", () => {
+  const locales = { bg, ca, de, en, es, fa, fr, nl, pt, ru, sk, uk, zh };
+
+  it("gives each side its own suffix line under the shared name", () => {
+    for (const [locale, words] of Object.entries(locales)) {
+      const lines = (template: string) =>
+        sankeyLabelLines(template.replace("{{name}}", "Qa20261020Interest"));
+      const income = lines(words.sankeyIncomeNodeLabel);
+      const expenses = lines(words.sankeyExpensesNodeLabel);
+      expect([locale, income.length, expenses.length]).toEqual([locale, 2, 2]);
+      expect([locale, income[0]]).toEqual([locale, "Qa2026102…"]);
+      expect([locale, income[1] === expenses[1]]).toEqual([locale, false]);
+    }
+  });
+
+  it("splits zh's full-width suffix as it reads", () => {
+    expect(sankeyLabelLines("Qa20261020Interest（收入）")).toEqual([
+      "Qa2026102…",
+      "（收入）",
+    ]);
+    expect(sankeyLabelLines("Qa20261020Interest（支出）")).toEqual([
+      "Qa2026102…",
+      "（支出）",
     ]);
   });
 });

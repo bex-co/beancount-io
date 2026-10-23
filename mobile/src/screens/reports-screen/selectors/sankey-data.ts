@@ -205,13 +205,15 @@ export function truncateSankeyLabel(
  * one on the other side reads "Interest (income)" / "Interest (expenses)": cut
  * to one line the suffix went first and both read "Interest …" (w21/540). The
  * name and the parenthesized suffix get a line each, each cut to fit; a label
- * without a suffix is one line.
+ * without a suffix is one line. Chinese writes the suffix in full-width
+ * parentheses with no space, "Interest（收入）", which went unsplit and lost
+ * it again (w21/748).
  */
 export function sankeyLabelLines(
   label: string,
   maxChars: number = SANKEY_LABEL_MAX_CHARS,
 ): string[] {
-  const split = /^(.*\S)\s+(\([^()]*\))$/u.exec(label);
+  const split = /^(.*\S)\s*(\([^()]*\)|（[^（）]*）)$/u.exec(label);
   if (!split) return [truncateSankeyLabel(label, maxChars)];
   return [
     truncateSankeyLabel(split[1], maxChars),
