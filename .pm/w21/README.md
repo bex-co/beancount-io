@@ -12,7 +12,6 @@
 
 ## Inbox
 
-- [794](./794.md) — In a zero-decimal ledger, "0.500" is read as 500 (w21/697 regression)
 - [795](./795.md) — Merchant detail shows a pre-entered row as booked, with no "Upcoming" line
 - [796](./796.md) — Merchant detail's total and count include pre-entered entries ("$6,000.00" when $4,500 paid)
 - [797](./797.md) — Merchants' Recurring row keeps the old currency after a payee switches ("¥120,000" for $2,000 rent)

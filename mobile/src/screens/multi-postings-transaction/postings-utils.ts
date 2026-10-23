@@ -109,7 +109,10 @@ export function parseExactAmount(input: string, minorUnits = 2): string | null {
   }
 
   let normalized = trimmed;
-  if (minorUnits === 0 && /^-?\d{1,3}[.,]\d{3}$/.test(normalized)) {
+  // One group of thousands in a currency with no decimals: "1.500" yen is
+  // 1500. Never after a lone zero, which no thousands group follows: "0.500"
+  // read as 500, a thousand times what was typed (w21/794).
+  if (minorUnits === 0 && /^-?[1-9]\d{0,2}[.,]\d{3}$/.test(normalized)) {
     normalized = normalized.replace(/[.,]/, "");
   }
   // A point as the grouping mark, where a comma decimal follows or there are

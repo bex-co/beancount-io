@@ -125,6 +125,18 @@ test("parseExactAmount reads a lone group of three as thousands in a zero-decima
   expect(parseExactAmount("1,500", 3)).toBe("1.500");
 });
 
+// w21/794: after a lone zero no group of thousands can follow, but "0.500"
+// yen read as 500, a thousand times what was typed.
+test("parseExactAmount keeps a zero-decimal currency's 0.500 below one", () => {
+  expect(parseExactAmount("0.500", 0)).toBe("0.500");
+  expect(parseExactAmount("0,750", 0)).toBe("0.750");
+  expect(parseExactAmount("-0.500", 0)).toBe("-0.500");
+  expect(parseExactAmount("00.500", 0)).toBe("0.500");
+  // A group after a non-zero lead is still thousands.
+  expect(parseExactAmount("1.500", 0)).toBe("1500");
+  expect(parseExactAmount("9,999", 0)).toBe("9999");
+});
+
 test("a JPY row typed 1,500 balances its auto leg at -1500", () => {
   const postings = createInitialPostings("Assets:Bank", "Expenses:Food", 0);
   const updated = updatePostingAmount(postings, 0, "1,500", 0);
