@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- [1018 — Keep negative chart axis ticks readable in Persian](./1018.md) — minor sibling of 1005; local fa Changes Over Time canvas y-axis reads `300.0-`…`2.1k-` at both widths; tables fixed in 1005, English unchanged, source-only observation.
+
 - [1017 — Keep native amount stepping from rounding exact drafts](./1017.md) — major residual ofW1/028; both-width ArrowUp reduces valid large amount and prepares changed balanced postings; manual/ordinary controls and independent parsers pass, all writes blocked.
 
 - [1016 — Keep Events filter choices distinct and named](./1016.md) — minor residual of271; both-width valid modeled types yield unnamed whitespace controls or duplicate global/empty labels; exact row filtering passes, no writes.
