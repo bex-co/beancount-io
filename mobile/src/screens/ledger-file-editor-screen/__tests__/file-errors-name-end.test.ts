@@ -37,3 +37,19 @@ describe("filterFileErrors, for an error that names its file in the message", ()
     expect(kept("parse errors in main.bean", "sub/main.bean")).toBe(false);
   });
 });
+
+// w21/773: a name in quotes kept its opening quote and never matched, so the
+// file's banner never listed an unlocated "Duplicate filename parsed" error.
+describe("filterFileErrors, for a quoted file name", () => {
+  it("matches the name inside the quotes", () => {
+    expect(
+      kept('Duplicate filename parsed: "sub.beancount"', "sub.beancount"),
+    ).toBe(true);
+    expect(kept("include 'books/2024.bean' failed", "books/2024.bean")).toBe(
+      true,
+    );
+    expect(
+      kept('Duplicate filename parsed: "sub.beancount"', "main.beancount"),
+    ).toBe(false);
+  });
+});

@@ -1,5 +1,8 @@
 import type { BeancountError } from "@rustledger/wasm";
-import { reportUrlIncludes } from "../url-include-errors";
+import {
+  locateIncludeAndPluginErrors,
+  reportUrlIncludes,
+} from "../url-include-errors";
 
 /**
  * Engine-shaped errors, captured live from `@rustledger/wasm` 0.21.0: a URL
@@ -201,5 +204,72 @@ describe("reportUrlIncludes", () => {
     expect(error.message).toBe(
       `include "https://beancount.io/prices/BTC-USD": ${notAllowed("managed price includes are disabled on this server")}`,
     );
+  });
+});
+
+// w21/773: a glob matching nothing, a file included twice and a Python plugin
+// came with no file or line, so their rows could not be opened.
+describe("locateIncludeAndPluginErrors", () => {
+  const engine = (message: string, code = "LOAD"): BeancountError => ({
+    ...readFailure("x"),
+    code,
+    message,
+  });
+  const place = (error: BeancountError) => [error.file, error.line];
+
+  it("puts an unmatched glob on its include", () => {
+    const [error] = locateIncludeAndPluginErrors(
+      [engine('include pattern "qa20261020/*.bean" does not match any files')],
+      { "main.bean": 'include "qa20261020/*.bean"\n' },
+      "main.bean",
+    );
+    expect(place(error!)).toEqual(["main.bean", 1]);
+  });
+
+  it("puts a file included twice on its second include", () => {
+    const [error] = locateIncludeAndPluginErrors(
+      [engine('Duplicate filename parsed: "sub.bean"')],
+      {
+        "main.bean":
+          '2020-01-01 open Assets:Cash\ninclude "sub.bean"\ninclude "sub.bean"\n',
+        "sub.bean": "",
+      },
+      "main.bean",
+    );
+    expect(place(error!)).toEqual(["main.bean", 3]);
+  });
+
+  it("puts a Python plugin on its plugin line in the entry point", () => {
+    const [error] = locateIncludeAndPluginErrors(
+      [
+        engine(
+          'Python plugin "my_plugins.custom" requires the python-plugins feature',
+          "E8005",
+        ),
+      ],
+      {
+        "main.bean":
+          '2020-01-01 open Assets:Cash\nplugin "my_plugins.custom"\n',
+      },
+      "main.bean",
+    );
+    expect(place(error!)).toEqual(["main.bean", 2]);
+  });
+
+  it("leaves a located error, and one it cannot place, as it is", () => {
+    const located = {
+      ...engine('Duplicate filename parsed: "a.bean"'),
+      file: "x.bean",
+      line: 4,
+    };
+    const unplaced = engine(
+      'include pattern "nowhere/*.bean" does not match any files',
+    );
+    const out = locateIncludeAndPluginErrors(
+      [located, unplaced],
+      { "main.bean": "" },
+      "main.bean",
+    );
+    expect(out).toEqual([located, unplaced]);
   });
 });

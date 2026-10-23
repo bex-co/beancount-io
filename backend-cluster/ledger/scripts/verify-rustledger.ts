@@ -1963,6 +1963,35 @@ async function main(): Promise<void> {
       JSON.stringify(["main.beancount:1", "sub.beancount:2"]),
     `each include of a missing file gets its own error (got ${JSON.stringify(missingTwice)})`,
   );
+  // w21/773: other include and plugin errors had no file or line.
+  for (const [name, files, expected] of [
+    [
+      "an unmatched glob",
+      { "main.beancount": 'include "qa20261020/*.bean"\n' },
+      "main.beancount:1",
+    ],
+    [
+      "a file included twice",
+      {
+        "main.beancount": 'include "sub.beancount"\ninclude "sub.beancount"\n',
+        "sub.beancount": "2020-01-01 open Assets:Cash\n",
+      },
+      "main.beancount:2",
+    ],
+    [
+      "a Python plugin",
+      { "main.beancount": 'plugin "my_plugins.custom"\n' },
+      "main.beancount:1",
+    ],
+  ] as const) {
+    const placed = (
+      await parseLedgerFiles(files, "main.beancount", { today: "2099-01-01" })
+    ).errors.map((e) => `${e.file}:${e.line}`);
+    assert(
+      placed.includes(expected),
+      `${name} is placed at ${expected} (got ${JSON.stringify(placed)})`,
+    );
+  }
   // w21/733: a posting flag was read as the sale's account.
   const flagged = (
     await parseLedgerFiles(

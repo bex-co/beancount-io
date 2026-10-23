@@ -7,6 +7,7 @@ import {
   resolveIncludeTarget,
 } from "./file-map-loader";
 import { loadedFiles } from "./source-slice";
+import { PLUGIN_LINE_RE, decodeStringLiteral } from "./plugins/collect-plugins";
 
 const ENGINE_READ_FAILURE = "failed to read file ";
 
@@ -89,5 +90,84 @@ export function reportUrlIncludes(
       }
     }
     return error;
+  });
+}
+
+const GLOB_UNMATCHED = /^include pattern "(.*)" does not match any files$/u;
+const DUPLICATE_INCLUDE = /^Duplicate filename parsed: "(.*)"$/u;
+const PYTHON_PLUGIN =
+  /^Python plugin "(.*)" requires the python-plugins feature$/u;
+
+/**
+ * Put the engine's other include and plugin errors on the line they are
+ * about. A glob matching nothing, a file included twice and a Python plugin
+ * the engine cannot run came with no file or line, so their Notifications row
+ * could not be opened and the file's editor banner never listed them
+ * (w21/773). An unmatched pattern goes to its `include`, a duplicate to the
+ * second `include` of its file, read only in the files the entry point loads;
+ * a plugin to its `plugin` line in the entry point, the one file Beancount
+ * reads plugins from.
+ */
+export function locateIncludeAndPluginErrors(
+  errors: BeancountError[],
+  files: Readonly<Record<string, string>>,
+  entryPoint: string,
+): BeancountError[] {
+  const located = (error: BeancountError) =>
+    error.file !== null && error.file !== undefined;
+  if (
+    !errors.some(
+      (error) =>
+        !located(error) &&
+        (GLOB_UNMATCHED.test(error.message) ||
+          DUPLICATE_INCLUDE.test(error.message) ||
+          PYTHON_PLUGIN.test(error.message)),
+    )
+  ) {
+    return errors;
+  }
+  const includes = loadedFiles(files, entryPoint).flatMap((file) =>
+    extractIncludeDeclarations(files[file]!).map((include) => ({
+      file,
+      line: include.line,
+      target: include.target,
+      resolved: resolveIncludeTarget(file, include.target),
+    })),
+  );
+  const pluginLines = new Map<string, number>();
+  (files[entryPoint] ?? "").split(/\r\n|\r|\n/u).forEach((text, index) => {
+    const name = PLUGIN_LINE_RE.exec(text)?.[1];
+    if (name !== undefined) {
+      const plugin = decodeStringLiteral(name);
+      if (!pluginLines.has(plugin)) pluginLines.set(plugin, index + 1);
+    }
+  });
+  const at = (place: { file: string; line: number } | undefined) =>
+    place === undefined ? null : place;
+
+  return errors.map((error) => {
+    if (located(error)) return error;
+    let place: { file: string; line: number } | null = null;
+    const glob = GLOB_UNMATCHED.exec(error.message);
+    const duplicate = DUPLICATE_INCLUDE.exec(error.message);
+    const plugin = PYTHON_PLUGIN.exec(error.message);
+    if (glob) {
+      place = at(
+        includes.find(
+          (include) =>
+            include.target === glob[1] || include.resolved === glob[1],
+        ),
+      );
+    } else if (duplicate) {
+      place = at(
+        includes.filter((include) => include.resolved === duplicate[1])[1],
+      );
+    } else if (plugin) {
+      const line = pluginLines.get(plugin[1]!);
+      place = line === undefined ? null : { file: entryPoint, line };
+    }
+    return place === null
+      ? error
+      : { ...error, file: place.file, line: place.line, column: 1 };
   });
 }
