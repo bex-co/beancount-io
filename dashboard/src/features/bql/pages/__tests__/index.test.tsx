@@ -366,6 +366,50 @@ describe("LedgerQueryPage", () => {
     });
   });
 
+  it("runs the editor's model from the button when React has not caught up (w4/1004)", async () => {
+    renderPage();
+    await waitFor(() => {
+      expect(monacoHarness.commandHandler).not.toBeNull();
+    });
+    const editor = screen.getByTestId("bql-editor");
+    const button = screen.getByRole("button", { name: "bql.executeQuery" });
+
+    mockSuccessfulQuery("select 'n-1' as label limit 1", [["n-1"]]);
+    fireEvent.change(editor, {
+      target: { value: "select 'n-1' as label limit 1" },
+    });
+    fireEvent.click(button);
+    await waitFor(() => {
+      expect(mockExecuteQuery).toHaveBeenCalledTimes(1);
+    });
+
+    // A paste reaches Monaco's model; its change event has not re-rendered
+    // the page before Enter activates the button.
+    mockSuccessfulQuery("select 'n-2' as label limit 1", [["n-2"]]);
+    monacoHarness.editorValue = "  select 'n-2' as label limit 1 ";
+    fireEvent.click(button);
+
+    await waitFor(() => {
+      expect(mockExecuteQuery).toHaveBeenCalledTimes(2);
+    });
+    expect(mockExecuteQuery).toHaveBeenLastCalledWith({
+      variables: {
+        ledgerId: "open_ledger/example",
+        query: "select 'n-2' as label limit 1",
+      },
+    });
+    expect(mockNavigate).toHaveBeenLastCalledWith({
+      to: ".",
+      search: { query: "select 'n-2' as label limit 1" },
+      replace: true,
+    });
+    // History and the editor follow the text that ran.
+    expect(
+      await screen.findByTestId("result-rows-select 'n-2' as label limit 1"),
+    ).toHaveTextContent("n-2");
+    expect(editor).toHaveValue("  select 'n-2' as label limit 1 ");
+  });
+
   it("treats empty editor text as a no-op for shortcut and button", async () => {
     renderPage();
 

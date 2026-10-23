@@ -219,8 +219,17 @@ export default function LedgerQueryPage() {
     }
   }, [urlQuery, ledgerId]);
 
+  const editorRef = useRef<monacoType.editor.IStandaloneCodeEditor | null>(
+    null,
+  );
+
+  // Monaco's model can be ahead of `queryText`: a paste and an immediate
+  // Enter on this button land before React re-renders with the change. Run
+  // what the editor holds, as the shortcut does (w4/1004).
   const handleSubmit = () => {
-    submitQuery(queryText);
+    const text = editorRef.current?.getValue() ?? queryText;
+    setQueryText(text);
+    submitQuery(text);
   };
 
   // Returned, so a card's retry stays busy until its read settles.
@@ -231,9 +240,6 @@ export default function LedgerQueryPage() {
   // card that takes its place, else the one before it, else the editor
   // (w4/988). Only a deletion arms this; running a query reorders history
   // without moving focus (w4/253).
-  const editorRef = useRef<monacoType.editor.IStandaloneCodeEditor | null>(
-    null,
-  );
   const historyListRef = useRef<HTMLDivElement>(null);
   const focusAfterDelete = useRef<number | null>(null);
   useLayoutEffect(() => {
