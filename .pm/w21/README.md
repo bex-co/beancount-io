@@ -46,3 +46,7 @@
 - [889](./889.md) — A price dated after the last entry moves Reports' anchor onto an empty month
 - [890](./890.md) — Every January, Reports' YTD shows an empty report under "Showing through December …"
 - [891](./891.md) — Reports' range chips reveal the selected chip only on first paint
+- [892](./892.md) — Account detail's day header totals only the first page's rows (−$80 for a −$100 day)
+- [893](./893.md) — An account first funded this month shows "Not enough data to chart yet"
+- [894](./894.md) — In a foreign-currency-only account, every row reads "Balance: $0.00"
+- [895](./895.md) — Account detail's range chips filter only the chart, not the list below
