@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1043** — Retry a failed initial Version History read in place (45–60m, dashboard, A2) ← dashboard QA; residual of m50 ([note](./1043.md))
+
 - **1042** — Describe the zero-inclusive import amount filter accurately (25–40m, dashboard, A2) ← dashboard QA ([note](./1042.md))
 
 - **1041** — Keep failed first-page social retries mounted and focused (40–55m, dashboard, A2/A3) ← dashboard QA; residual of106 ([note](./1041.md))
