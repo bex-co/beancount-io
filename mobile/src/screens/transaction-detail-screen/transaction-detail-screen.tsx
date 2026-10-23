@@ -27,6 +27,7 @@ import {
 } from "@/common/theme";
 import { AmountText } from "@/components/amount-text";
 import { AccountTypeIcon } from "@/components/account-type-icon";
+import { entryRowTitle } from "@/screens/transactions-screen/entry-row/entry-row-secondary";
 import { LoadingTile } from "@/components/loading-tile";
 import { MenuButton, type MenuButtonItem } from "@/components/menu-button";
 import { useThemeStyle, useToast } from "@/common/hooks";
@@ -780,7 +781,10 @@ const TransactionDetailImpl = ({
             accessible={false}
             importantForAccessibility="no-hide-descendants"
           >
-            <AccountTypeIcon postings={iconPostings} />
+            <AccountTypeIcon
+              postings={iconPostings}
+              payee={entryRowTitle(entry)}
+            />
           </View>
           <Text style={styles.heroTitle}>{title}</Text>
           <AmountText

@@ -30,8 +30,34 @@ describe("the transaction detail's decorative icons", () => {
   it("hides the hero icon's whole subtree", () => {
     expect(
       compact.includes(
-        'style={styles.heroIcon}accessible={false}importantForAccessibility="no-hide-descendants"><AccountTypeIconpostings={iconPostings}/>',
+        'style={styles.heroIcon}accessible={false}importantForAccessibility="no-hide-descendants"><AccountTypeIconpostings={iconPostings}payee={entryRowTitle(entry)}/>',
       ),
     ).toBe(true);
+  });
+});
+
+// w21/690: the list row passed the payee to its icon, so a known brand showed
+// its logo there and the category glyph once the entry was opened.
+describe("the transaction detail's hero icon", () => {
+  it("gets the same brand text as the list row's", () => {
+    expect(
+      compact.includes(
+        "<AccountTypeIconpostings={iconPostings}payee={entryRowTitle(entry)}/>",
+      ),
+    ).toBe(true);
+    const row = fs
+      .readFileSync(
+        path.join(
+          __dirname,
+          "..",
+          "..",
+          "transactions-screen",
+          "entry-row",
+          "index.tsx",
+        ),
+        "utf8",
+      )
+      .replace(/\s+/g, "");
+    expect(row.includes("?entryRowTitle(entry):undefined")).toBe(true);
   });
 });
