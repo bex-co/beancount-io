@@ -17,6 +17,24 @@ export const AVERAGE_COST_COLUMN = "average_cost";
 /** Fraction digits kept for `average_cost`: enough for crypto unit prices. */
 const AVERAGE_COST_MAX_FRACTION_DIGITS = 8;
 
+/** Significant digits a sub-unit average keeps once eight places show fewer. */
+const AVERAGE_COST_MIN_SIGNIFICANT_DIGITS = 4;
+
+/**
+ * Eight places, or more for an average so small that eight would show fewer
+ * than four significant digits: a 0.00000000150 USD average is 0.0000000015,
+ * not 0 (w4/1007).
+ */
+function averageCostFractionDigits(value: string): number {
+  const leadingZeros = /^[+-]?0*\.(0*)[1-9]/.exec(value.trim())?.[1].length;
+  return leadingZeros === undefined
+    ? AVERAGE_COST_MAX_FRACTION_DIGITS
+    : Math.max(
+        AVERAGE_COST_MAX_FRACTION_DIGITS,
+        leadingZeros + AVERAGE_COST_MIN_SIGNIFICANT_DIGITS,
+      );
+}
+
 /**
  * Round a plain decimal string half-up to at most `maxFraction` digits,
  * exactly (no binary floating point), and drop trailing zeros. Text that is
@@ -124,7 +142,7 @@ export function formatHoldingsCell(
     return formatPercentageCell(value);
   }
   if (columnName === AVERAGE_COST_COLUMN && typeof value === "string") {
-    return roundDecimalString(value, AVERAGE_COST_MAX_FRACTION_DIGITS);
+    return roundDecimalString(value, averageCostFractionDigits(value));
   }
   return formatDecimalCell(value);
 }

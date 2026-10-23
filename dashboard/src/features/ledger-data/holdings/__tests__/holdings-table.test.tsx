@@ -383,6 +383,64 @@ describe("DatasetTable", () => {
     });
   });
 
+  it("shows and exports a tiny nonzero average cost (w4/1007)", async () => {
+    const user = userEvent.setup();
+    const { downloadCSV } = await import("@/common/lib/utils/csv-export");
+    vi.mocked(useQuery).mockReturnValue({
+      data: {
+        queryShell: {
+          resultType: "table",
+          table: {
+            types: [
+              { name: "units" },
+              { name: "average_cost" },
+              { name: "price" },
+            ],
+            // 3 USD over 2,000,000,000 QANANO; a 1e-8 threshold; a free lot.
+            rows: [
+              ["2000000000", "0.00000000150", "0.000000003"],
+              ["1000000000", "0.00000001", "0.000000012"],
+              ["2", "0", "1"],
+            ],
+          },
+          text: null,
+        },
+      },
+      loading: false,
+      error: undefined,
+    });
+
+    render(
+      <DatasetTable
+        query={mockQuery}
+        ledgerId={mockLedgerId}
+        ariaLabel="Holdings"
+      />,
+    );
+
+    const cells = screen
+      .getAllByRole("row")
+      .slice(1)
+      .map((row) =>
+        Array.from(row.querySelectorAll("td"), (cell) =>
+          cell.textContent?.trim(),
+        ),
+      );
+    expect(cells).toEqual([
+      ["2000000000", "0.0000000015", "0.000000003"],
+      ["1000000000", "0.00000001", "0.000000012"],
+      ["2", "0", "1"],
+    ]);
+
+    await user.click(screen.getByRole("button", { name: /export .*csv/i }));
+    const csv = String(vi.mocked(downloadCSV).mock.calls.at(-1)![0]);
+    expect(csv.split("\n").slice(1)).toEqual([
+      '"2000000000","0.0000000015","0.000000003"',
+      '"1000000000","0.00000001","0.000000012"',
+      '"2","0","1"',
+    ]);
+  });
+
   describe("account row activation", () => {
     it("should navigate with click, Enter, and Space from a focusable row", async () => {
       const user = userEvent.setup();

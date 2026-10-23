@@ -10,6 +10,7 @@ import {
   unitsFirstRowsFilter,
   UNREALIZED_PROFIT_PCT_COLUMN,
   formatHoldingsCell,
+  roundDecimalString,
 } from "../utils";
 
 describe("Holdings Utils", () => {
@@ -537,7 +538,42 @@ describe("average_cost precision (w0/009)", () => {
       "122.20734375",
     );
     expect(formatHoldingsCell("0.999999995", "average_cost")).toBe("1");
-    expect(formatHoldingsCell("-0.000000004", "average_cost")).toBe("0");
+    // A residue that rounds away is zero, never "-0".
+    expect(roundDecimalString("-0.000000004", 8)).toBe("0");
+  });
+
+  it("keeps a nonzero average below eight places nonzero (w4/1007)", () => {
+    // The actual producer's 3 USD over 2,000,000,000 QANANO.
+    expect(formatHoldingsCell("0.00000000150", "average_cost")).toBe(
+      "0.0000000015",
+    );
+    // A repeating tiny quotient keeps four significant digits, half up.
+    expect(
+      formatHoldingsCell("0.000000001333333333333333333333", "average_cost"),
+    ).toBe("0.000000001333");
+    expect(
+      formatHoldingsCell("0.0000000016666666666666666666667", "average_cost"),
+    ).toBe("0.000000001667");
+    expect(formatHoldingsCell("-0.000000004", "average_cost")).toBe(
+      "-0.000000004",
+    );
+    expect(
+      tableToCSV(["average_cost"], [["0.00000000150"]]).split("\n")[1],
+    ).toBe('"0.0000000015"');
+  });
+
+  it("keeps the eight-place threshold, genuine zero and ordinary crypto prices", () => {
+    expect(formatHoldingsCell("0.00000001", "average_cost")).toBe("0.00000001");
+    expect(formatHoldingsCell("0", "average_cost")).toBe("0");
+    expect(formatHoldingsCell("0.000000000", "average_cost")).toBe("0");
+    // Four significant digits already fit in eight places.
+    expect(
+      formatHoldingsCell("0.0000123456789012345678901234", "average_cost"),
+    ).toBe("0.00001235");
+    // Below 1e-5 eight places would show three; the floor shows four.
+    expect(
+      formatHoldingsCell("0.0000012345678901234567890123", "average_cost"),
+    ).toBe("0.000001235");
   });
 
   it("leaves units, values and prices lossless", () => {
