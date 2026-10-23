@@ -57,7 +57,6 @@
 
 - [979 — Keep opposite-direction source legs distinct in native import matching](./979.md) — major CLI follow-up to 603/896; a sell-two/buy-one pair is falsely accepted as an exact one-share sale, hiding a native-ID source change, reproduced 2026-10-22.
 
-- [978 — Match a cost-selected FIFO sale to its split booked twin](./978.md) — major CLI follow-up to 603; an ordinary stated-cost sale spanning two equal-cost lots is imported twice, reproduced 2026-10-22.
 
 
 

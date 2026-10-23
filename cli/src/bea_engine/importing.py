@@ -1649,7 +1649,11 @@ def _booked_for(text: str, lot: _Lot | None, owner: str, left: list[_Leg]) -> It
     for index, (other, found, holder) in enumerate(left):
         if other == text and holder == owner and _lots_agree(lot, found):
             yield {index}
-    if lot is None or lot[0] is not None:
+    # A stated per-unit cost spans lots too, those that book at that same cost:
+    # six shares at `{100 USD}` sold FIFO across two 100 USD purchases are two
+    # booked legs, and requiring an open per-unit number left the manual sale
+    # unmatched, so its import was written a second time (w5/978).
+    if lot is None:
         return
     number, currency, price = _units_of(text)
     compatible = [
