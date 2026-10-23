@@ -1,5 +1,6 @@
 import type { LedgerSetupPreset } from "@/generated-graphql/types";
 import { toAsciiNumerals } from "../../common/ascii-numerals";
+import { currencyMinorUnits } from "../../common/currency-util";
 import { utcDate } from "../../common/calendar-date";
 import { getFormatDate } from "../../common/format-util";
 import { parseExactAmount } from "../multi-postings-transaction/postings-utils";
@@ -171,10 +172,16 @@ export function defaultHistoryStart(now: Date = new Date()): string {
  * The opening balance as the setup sends it, or null when it is not an
  * amount; "" for an empty field. A decimal comma is accepted, as in New
  * Transaction: the decimal pad offers only "," in most of the app's locales,
- * so `1234,56` used to read as an invalid amount (w21/051).
+ * so `1234,56` used to read as an invalid amount (w21/051). In a currency with
+ * no minor unit, `150,000` is thousands, not 150.000 (w21/697).
  */
-export function openingAmountValue(input: string): string | null {
-  return input.trim() ? parseExactAmount(input) : "";
+export function openingAmountValue(
+  input: string,
+  currency = "",
+): string | null {
+  return input.trim()
+    ? parseExactAmount(input, currencyMinorUnits(currency.trim().toUpperCase()))
+    : "";
 }
 
 /**

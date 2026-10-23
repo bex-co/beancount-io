@@ -402,7 +402,7 @@ export function CreateLedgerScreen(): JSX.Element {
     const opening = openingSelection(
       preset.accounts,
       values.openingAccount,
-      openingAmountValue(values.openingAmount) ?? "",
+      openingAmountValue(values.openingAmount, values.currency) ?? "",
     );
     return {
       preset: preset.id,
@@ -448,11 +448,12 @@ export function CreateLedgerScreen(): JSX.Element {
   const slugPreview = ledgerSlugPreview(nameValue ?? "");
   const privateValue = watch("private");
   const openingAmountInput = watch("openingAmount");
+  const currencyValue = watch("currency");
   const reviewOpening = preset
     ? openingSelection(
         preset.accounts,
         openingAccountValue,
-        openingAmountValue(openingAmountInput) ?? "",
+        openingAmountValue(openingAmountInput, currencyValue) ?? "",
       )
     : null;
   const busy = loading || isSubmitting;

@@ -39,6 +39,16 @@ describe("buildBudgetEntry", () => {
     expect(entry.budget?.amount.number).toBe("-5000");
   });
 
+  // w21/697: Add Budget turned "30,000" JPY into 30.000.
+  it("reads a lone group of three as thousands in a zero-decimal currency", () => {
+    const jpy = (number: string, currency = "JPY") =>
+      buildBudgetEntry({ ...base, number, currency }).budget?.amount.number;
+    expect(jpy("30,000")).toBe("30000");
+    expect(jpy("30.000")).toBe("30000");
+    expect(jpy("30,000", " jpy ")).toBe("30000");
+    expect(jpy("30,000", "USD")).toBe("30.000");
+  });
+
   it("passes decimals through verbatim rather than coercing to a number", () => {
     const entry = buildBudgetEntry({ ...base, number: "1234.50" });
 

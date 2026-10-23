@@ -53,6 +53,13 @@ describe("openingAmountValue", () => {
     expect(openingAmountValue("-25")).toBe("-25");
   });
 
+  // w21/697: a JPY opening balance typed "150,000" opened at 150.000.
+  it("reads a lone group of three as thousands in a zero-decimal currency", () => {
+    expect(openingAmountValue("150,000", "JPY")).toBe("150000");
+    expect(openingAmountValue("150.000", "krw")).toBe("150000");
+    expect(openingAmountValue("150,000", "EUR")).toBe("150.000");
+  });
+
   it("leaves an empty field empty and refuses anything else", () => {
     expect(openingAmountValue("  ")).toBe("");
     expect(openingAmountValue("12,3,4")).toBe(null);

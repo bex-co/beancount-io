@@ -12,7 +12,6 @@
 
 ## Inbox
 
-- [697](./697.md) — In a JPY ledger, a pasted "1,500" becomes 1.500 JPY: a three-digit comma group is read as decimals even for a zero-decimal currency
 - [698](./698.md) — Arabic-script currency symbols (KWD, BHD, OMR…) flip money right-to-left, so a liability reads as positive
 - [699](./699.md) — In a CAD (or AUD, NZD…) ledger, "$" means CAD on Home but USD in transaction rows and detail
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window

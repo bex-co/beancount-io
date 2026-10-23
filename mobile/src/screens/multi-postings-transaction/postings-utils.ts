@@ -37,7 +37,9 @@ type Scaled = { coeff: bigint; scale: number };
  * comma: with a `.` after the groups (`1,234.56`) or two groups or more
  * (`1,234,567`) (w21/031), and the other way round (`1.234,56`, `1.234.567`)
  * or by a space (`1 234,56`) as most languages write it (w21/463). `1,250`
- * stays the decimal comma 1.250. A leading
+ * stays the decimal comma 1.250, except in a currency with no minor unit
+ * (`minorUnits` 0: JPY, KRW, VND), where a lone group of three after either
+ * mark can only be thousands: `1,500` and `1.500` are 1500 (w21/697). A leading
  * `.` reads as `0.` (`.5` → `0.5`). Rejects partial forms (`1.`, `-`, `.`)
  * and any other junk — never silently takes a
  * numeric prefix the way parseFloat does.
@@ -60,7 +62,7 @@ export function splitAmountSign(input: string): {
   return { negative, absolute: negative ? typed.slice(1) : typed };
 }
 
-export function parseExactAmount(input: string): string | null {
+export function parseExactAmount(input: string, minorUnits = 2): string | null {
   let trimmed = toAsciiNumerals(input)
     // Direction marks a right-to-left locale's formatting puts around a sign,
     // and the typographic minus it uses (w21/463).
@@ -81,6 +83,9 @@ export function parseExactAmount(input: string): string | null {
   }
 
   let normalized = trimmed;
+  if (minorUnits === 0 && /^-?\d{1,3}[.,]\d{3}$/.test(normalized)) {
+    normalized = normalized.replace(/[.,]/, "");
+  }
   // A point as the grouping mark, where a comma decimal follows or there are
   // two groups or more: "1.234,56" (German, Spanish, …) and "1.234.567". A bare
   // "1.234" stays the decimal 1.234 (w21/031).
@@ -261,7 +266,7 @@ export function createPrefilledPostings(
   amountInput: string,
   minorUnits = 2,
 ): Posting[] {
-  const parsed = parseExactAmount(amountInput);
+  const parsed = parseExactAmount(amountInput, minorUnits);
   // A total that is zero or unreadable seeds nothing: an empty field shows the
   // placeholder and the first digit starts the value, where a seeded "0.00"
   // was typed onto (w21/321).
@@ -369,7 +374,7 @@ export function updatePostingAmount(
   // Stored without the spaces a pasted amount carries: the row reads the sign
   // off the text itself (w21/232).
   const text = input.trim();
-  const amount = parseExactAmount(text);
+  const amount = parseExactAmount(text, minorUnits);
   const isLast = index === postings.length - 1;
   const updated = postings.map((p, i) =>
     i === index

@@ -1,4 +1,5 @@
 import { getFormatDate } from "../../common/format-util";
+import { currencyMinorUnits } from "../../common/currency-util";
 import { parseExactAmount } from "../multi-postings-transaction/postings-utils";
 import type {
   AddEntryInput,
@@ -41,8 +42,8 @@ export type BudgetEntryInput = {
  * `1e3` used to commit an unparsable `custom "budget"` line (w0/038): those
  * stay refused, as does a lone sign or a trailing point.
  */
-function parseBudgetAmount(text: string): string | null {
-  return parseExactAmount(text.trim().replace(/^\+/u, ""));
+function parseBudgetAmount(text: string, minorUnits?: number): string | null {
+  return parseExactAmount(text.trim().replace(/^\+/u, ""), minorUnits);
 }
 
 /** Whether typed text is an amount the ledger can parse. */
@@ -83,7 +84,9 @@ export function buildBudgetEntry({
   incomeRoot,
 }: BudgetEntryInput): AddEntryInput {
   const trimmedAccount = account.trim();
-  const amount = parseBudgetAmount(number) ?? number.trim();
+  const code = currency.trim().toUpperCase();
+  const amount =
+    parseBudgetAmount(number, currencyMinorUnits(code)) ?? number.trim();
   return {
     type: "BUDGET" as LedgerEntryType,
     budget: {
@@ -96,7 +99,7 @@ export function buildBudgetEntry({
           : isIncomeAccount(trimmedAccount, incomeRoot)
             ? asIncomeTarget(amount)
             : asSpendingCap(amount),
-        currency: currency.trim().toUpperCase(),
+        currency: code,
       },
     },
   };

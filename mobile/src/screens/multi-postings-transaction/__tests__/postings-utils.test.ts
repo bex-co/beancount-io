@@ -107,6 +107,45 @@ test("parseExactAmount normalises the marks and groupings those formats use", ()
   expect(parseExactAmount("1.23,456")).toBe(null);
 });
 
+// w21/697: a currency with no minor unit has no decimals for a lone group of
+// three to be, so "1,500" JPY was saved as 1.500 JPY.
+test("parseExactAmount reads a lone group of three as thousands in a zero-decimal currency", () => {
+  expect(parseExactAmount("1,500", 0)).toBe("1500");
+  expect(parseExactAmount("1.500", 0)).toBe("1500");
+  expect(parseExactAmount("-30,000", 0)).toBe("-30000");
+  expect(parseExactAmount("‎−1.500", 0)).toBe("-1500");
+  // Groupings the general rules already read, and plain or short decimals.
+  expect(parseExactAmount("1,500,000", 0)).toBe("1500000");
+  expect(parseExactAmount("1.500.000", 0)).toBe("1500000");
+  expect(parseExactAmount("1500", 0)).toBe("1500");
+  expect(parseExactAmount("1,5", 0)).toBe("1.5");
+  expect(parseExactAmount("1234,567", 0)).toBe("1234.567");
+  // Two and three decimal currencies keep the w21/031 decimal comma.
+  expect(parseExactAmount("1,500", 2)).toBe("1.500");
+  expect(parseExactAmount("1,500", 3)).toBe("1.500");
+});
+
+test("a JPY row typed 1,500 balances its auto leg at -1500", () => {
+  const postings = createInitialPostings("Assets:Bank", "Expenses:Food", 0);
+  const updated = updatePostingAmount(postings, 0, "1,500", 0);
+  expect(updated[0].amount).toBe("1500");
+  expect(updated[1].amount).toBe("-1500");
+  expect(updated[1].amountInput).toBe("-1500");
+  // The same text in USD stays the decimal comma.
+  expect(updatePostingAmount(postings, 0, "1,500")[0].amount).toBe("1.500");
+});
+
+test("a JPY receipt total of 1.500 prefills 1500", () => {
+  const [paid, auto] = createPrefilledPostings(
+    "Assets:Bank",
+    "Expenses:Food",
+    "1.500",
+    0,
+  );
+  expect(paid.amount).toBe("-1500");
+  expect(auto.amount).toBe("1500");
+});
+
 // An unparsed amount added nothing, so the remainder read as a green balanced
 // zero while Done stayed disabled without a reason (w21/031).
 test("an unparsed amount is flagged, not counted as balanced", () => {
