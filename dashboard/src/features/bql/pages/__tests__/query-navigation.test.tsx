@@ -415,6 +415,83 @@ describe("BQL query navigation through LedgerLayout", () => {
     ]);
   });
 
+  it("keeps a draft typed while an earlier submission's navigation finishes (w4/989)", async () => {
+    const app = await mountQueryPage();
+    await app.resolve(LEDGER_A, QUERY_A, 303);
+    const editor = screen.getByRole("textbox", { name: "BQL editor" });
+    const execute = screen.getByRole("button", { name: "Execute Query" });
+
+    fireEvent.change(editor, { target: { value: QUERY_B } });
+    const releaseNavigation = app.holdNextNavigation();
+    fireEvent.click(execute);
+    await waitFor(() => expect(app.router.state.isLoading).toBe(true));
+    await app.resolve(LEDGER_A, QUERY_B, 404);
+    await waitFor(() =>
+      expect(
+        queryCard(QUERY_B).getByRole("cell", { name: "404" }),
+      ).toBeVisible(),
+    );
+
+    // The next query, typed before B's own navigation has finished.
+    const QUERY_C = "SELECT 505 AS draft LIMIT 1";
+    fireEvent.change(editor, { target: { value: QUERY_C } });
+    await act(async () => releaseNavigation());
+    await waitFor(() => expect(app.router.state.isLoading).toBe(false));
+    expect(app.router.state.location.search).toMatchObject({ query: QUERY_B });
+    expect(editor).toHaveValue(QUERY_C);
+    expect(app.requests).toEqual([
+      operationKey(LEDGER_A, QUERY_A),
+      operationKey(LEDGER_A, QUERY_B),
+    ]);
+
+    // The next explicit action runs that exact draft, once.
+    fireEvent.click(execute);
+    await waitFor(() =>
+      expect(app.router.state.location.search).toMatchObject({
+        query: QUERY_C,
+      }),
+    );
+    expect(editor).toHaveValue(QUERY_C);
+    expect(app.requests).toEqual([
+      operationKey(LEDGER_A, QUERY_A),
+      operationKey(LEDGER_A, QUERY_B),
+      operationKey(LEDGER_A, QUERY_C),
+    ]);
+  });
+
+  it("still tidies its own submitted text and restores a query the URL brings in", async () => {
+    const app = await mountQueryPage();
+    await app.resolve(LEDGER_A, QUERY_A, 303);
+    const editor = screen.getByRole("textbox", { name: "BQL editor" });
+
+    // The submitted query, padded: its own URL settles it trimmed.
+    fireEvent.change(editor, { target: { value: `  ${QUERY_B}\n` } });
+    fireEvent.click(screen.getByRole("button", { name: "Execute Query" }));
+    await waitFor(() =>
+      expect(app.router.state.location.search).toMatchObject({
+        query: QUERY_B,
+      }),
+    );
+    await waitFor(() => expect(editor).toHaveValue(QUERY_B));
+
+    // A query the page did not submit (a bookmark, Back) replaces the
+    // editor and runs.
+    const QUERY_E = "SELECT 606 AS external LIMIT 1";
+    await act(async () =>
+      app.router.navigate({
+        to: "/ledger/$ledgerOwner/$ledgerName/query",
+        params: { ledgerOwner: "open_ledger", ledgerName: "example" },
+        search: { query: QUERY_E },
+      }),
+    );
+    await waitFor(() => expect(editor).toHaveValue(QUERY_E));
+    expect(app.requests).toEqual([
+      operationKey(LEDGER_A, QUERY_A),
+      operationKey(LEDGER_A, QUERY_B),
+      operationKey(LEDGER_A, QUERY_E),
+    ]);
+  });
+
   it("ignores a previous ledger's delayed result after switching ledgers", async () => {
     const app = await mountQueryPage();
     const previousEditor = screen.getByRole("textbox", { name: "BQL editor" });

@@ -206,12 +206,15 @@ export default function LedgerQueryPage() {
   useEffect(() => {
     if (urlQuery && urlQuery.trim()) {
       const q = urlQuery.trim();
-      setQueryText(q);
-      // Skip if this query was already executed by submitQuery
+      // This page's own submission reaching the URL: it already ran, and the
+      // editor may hold a newer draft typed while the navigation finished.
+      // Tidy only the submitted text itself (w4/989).
       if (executedQueriesRef.current.has(q)) {
         executedQueriesRef.current.delete(q);
+        setQueryText((current) => (current.trim() === q ? q : current));
         return;
       }
+      setQueryText(q);
       void executeRef.current(q);
     }
   }, [urlQuery, ledgerId]);
