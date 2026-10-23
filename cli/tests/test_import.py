@@ -1576,7 +1576,7 @@ class TestStickyRecall:
             "--rules",
             str(rules),
             "--default-account",
-            "Expenses:Misc",
+            "Expenses:Groceries",
             "--date-format",
             "%Y-%m-%d",
         )
@@ -1590,7 +1590,7 @@ class TestStickyRecall:
         assert "--csv date=Date" in result.stderr
         assert "--date-format %Y-%m-%d" in result.stderr
         assert "rules.toml" in result.stderr
-        assert "--default-account Expenses:Misc" in result.stderr
+        assert "--default-account Expenses:Groceries" in result.stderr
 
     def test_remembered_json_exposes_settings(self, book: Path, isolated_config: Path) -> None:
         rules = rules_file(book, '[[rule]]\nmatch = "Coffee"\naccount = "Expenses:Food"\n')
@@ -1606,7 +1606,7 @@ class TestStickyRecall:
             "--rules",
             str(rules),
             "--default-account",
-            "Expenses:Misc",
+            "Expenses:Groceries",
         )
         assert seed.exit_code == 0, seed.output
         assert json.loads(seed.stdout)["data"]["remembered"] is None
@@ -1615,7 +1615,7 @@ class TestStickyRecall:
         data = json.loads(repeat.stdout)["data"]
         assert data["config_source"] == "remembered --csv"
         assert data["remembered"]["rules"] == str(rules)
-        assert data["remembered"]["default_account"] == "Expenses:Misc"
+        assert data["remembered"]["default_account"] == "Expenses:Groceries"
         assert "date=Date" in data["remembered"]["mapping"]
 
     def test_remembered_sign_is_not_reused(self, book: Path, isolated_config: Path) -> None:
@@ -1748,7 +1748,7 @@ class TestStickyRecall:
             "--rules",
             str(rules),
             "--default-account",
-            "Expenses:Misc",
+            "Expenses:Groceries",
         )
         assert seed.exit_code == 0, seed.output
         refresh = run_csv(book, source, "--csv", self.MAPPING, "--account", "Assets:Checking")
@@ -1767,7 +1767,7 @@ class TestStickyRecall:
             "--rules",
             str(rules),
             "--default-account",
-            "Expenses:Misc",
+            "Expenses:Groceries",
         )
         assert reseed.exit_code == 0, reseed.output
         human = runner.invoke(
@@ -1777,7 +1777,7 @@ class TestStickyRecall:
         assert human.exit_code == 0, human.output
         assert "Discarded remembered" in human.stderr
         assert "--rules" in human.stderr
-        assert "--default-account Expenses:Misc" in human.stderr
+        assert "--default-account Expenses:Groceries" in human.stderr
 
     def test_csv_refresh_keeping_flags_announces_nothing(self, book: Path, isolated_config: Path) -> None:
         rules = rules_file(book, '[[rule]]\nmatch = "Coffee"\naccount = "Expenses:Food"\n')
@@ -1793,7 +1793,7 @@ class TestStickyRecall:
             "--rules",
             str(rules),
             "--default-account",
-            "Expenses:Misc",
+            "Expenses:Groceries",
         )
         assert seed.exit_code == 0, seed.output
         refresh = run_csv(
@@ -1806,7 +1806,7 @@ class TestStickyRecall:
             "--rules",
             str(rules),
             "--default-account",
-            "Expenses:Misc",
+            "Expenses:Groceries",
         )
         assert refresh.exit_code == 0, refresh.output
         assert "Discarded remembered" not in refresh.stderr

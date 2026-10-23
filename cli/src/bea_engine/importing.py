@@ -260,6 +260,9 @@ def answer(
     skipped_blank = 0
     skipped_pending = 0
     csv_id_mapped = False
+    # The accounts the run names itself (`--account`, an explicit
+    # `--default-account`), which the frontend would remember as settings.
+    named_settings: list[str] = []
     if csv_mode:
         if csv_account is None or csv_mapping is None:
             raise UsageError("--csv needs --account ACCOUNT, naming the account the export belongs to.")
@@ -276,6 +279,8 @@ def answer(
         else:
             default_account = _valid_account(default_account, "--default-account", roots)
             fallback = f"--default-account {default_account}"
+            named_settings.append(default_account)
+        named_settings.append(csv_account)
         # A counter posting to the source account cancels the bank movement:
         # `-100 USD` and `+100 USD` on Assets:Checking, written with exit 0
         # and gone from its balance (w5/468).
@@ -950,6 +955,10 @@ def answer(
         # this import — duplicates included, whose new text would carry them
         # too — so the frontend never remembers a mistyped `--account` or
         # `--default-account` as a source of this header (w5/452).
+        # Settings the run names count too, used or not: a pending-only export
+        # or a default every rule overrides posts to neither, and its typo was
+        # remembered beside the right account (w5/958). A ledger that
+        # auto-opens accounts opens them on first use, so none is unopened.
         "unopened_accounts": sorted(
             {
                 posting.account
@@ -958,6 +967,11 @@ def answer(
                 for posting in entry.postings
                 if posting.account not in opened_after
             }
+            | (
+                set()
+                if any("auto_accounts" in str(name) for name, _ in options.get("plugin") or ())
+                else {name for name in named_settings if name not in opened_after}
+            )
         ),
         "validation_errors": validation_errors,
         "validation_warnings": validation_warnings,
