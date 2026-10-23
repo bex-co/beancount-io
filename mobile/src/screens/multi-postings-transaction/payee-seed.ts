@@ -66,8 +66,11 @@ export function seedPostingsFromPayee(
   const fromOpen = isOpen(from);
   const toOpen = isOpen(to);
   if (!fromOpen && !toOpen) return null;
-  return [
+  const seeded = [
     { ...current[0]!, account: fromOpen ? from : current[0]!.account },
     { ...current[1]!, account: toOpen ? to : current[1]!.account },
   ];
+  // A closed side keeps the form's account, which may be the other side's fill:
+  // the same self-transfer the guard above refuses (w21/834).
+  return seeded[0]!.account === seeded[1]!.account ? null : seeded;
 }

@@ -114,6 +114,43 @@ describe("seedPostingsFromPayee: closed usual accounts", () => {
     ).toEqual(["Assets:Bank:Checking", "Expenses:Food:Groceries"]);
   });
 
+  // w21/834: the closed side keeps the form's account, which equalled the fill.
+  it("never ends with the same account on both sides after a closed fallback", () => {
+    const initial = createInitialPostings(
+      "Assets:Bank:Checking",
+      "Expenses:Clothing",
+    );
+    const usual = {
+      from: { autoFill: "Expenses:Clothing" },
+      to: { autoFill: "Liabilities:OldVisa" },
+    };
+    expect(
+      seedPostingsFromPayee(
+        initial,
+        initial,
+        usual,
+        (account) => account !== "Liabilities:OldVisa",
+      ),
+    ).toBe(null);
+    // The same, after another payee filled the form.
+    const filled = createInitialPostings(
+      "Assets:Bank:Checking",
+      "Liabilities:Visa",
+    );
+    expect(
+      seedPostingsFromPayee(
+        filled,
+        initial,
+        {
+          from: { autoFill: "Liabilities:Visa" },
+          to: { autoFill: "Expenses:OldHobby" },
+        },
+        (account) => account !== "Expenses:OldHobby",
+        ["Assets:Bank:Checking", "Liabilities:Visa"],
+      ),
+    ).toBe(null);
+  });
+
   it("changes nothing when both usual accounts are closed", () => {
     const initial = opened();
     expect(
