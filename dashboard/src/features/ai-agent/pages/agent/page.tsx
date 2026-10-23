@@ -38,6 +38,14 @@ import {
 import { useAgentSession } from "../../hooks/use-agent-session";
 import { ChevronDown, LockKeyhole } from "lucide-react";
 
+function browserTimeZone(): string | undefined {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export interface AgentPageImplProps {
   /**
    * Backend endpoint suffix appended to config.apiUrl. Defaults to "agent"
@@ -89,11 +97,14 @@ export function AgentPageImpl({
         api: `${config.apiUrl}${chatApi}`,
         credentials: "include",
         headers: () => ({ "Accept-Language": i18nRef.current.language }),
-        body: {
+        // The browser's zone, read per request, so the agent knows today's date
+        // where the user is (w21/856).
+        body: () => ({
           ledgerId: `${ledgerOwner}/${ledgerName}`,
           sessionId,
+          timeZone: browserTimeZone(),
           ...bodyExtra,
-        },
+        }),
         fetch: async (url, options) => {
           const response = await fetch(url as string, options as RequestInit);
           if (response.status === 401) {
