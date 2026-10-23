@@ -28,7 +28,6 @@ import {
   transformToSankeyData,
   fitSankeyLabel,
   sankeyLabelLines,
-  truncateSankeyLabel,
   sankeyColorForRole,
   cashFlowChartSummary,
 } from "../selectors/sankey-data";
@@ -38,7 +37,12 @@ const SANKEY_HEIGHT = 280;
 
 const NODE_WIDTH = 16;
 const NODE_PADDING = 10;
-const LABEL_COL = 72;
+/**
+ * Room for a beside-node label line: wide enough for every language's
+ * "(income)" / "(expenses)" suffix whole, German's "(Einnahmen)" the widest
+ * at 71 pt (w21/768).
+ */
+const LABEL_COL = 78;
 const PLOT_PAD = 8;
 const LABEL_GAP = 4;
 /** Two lines of beside-node label (w21/540). */
@@ -371,14 +375,13 @@ function CashFlowSankeyPlot({
           // The name and its "(income)" / "(expenses)" suffix on a line each
           // when the node is tall enough, so two groups of one name differ
           // (w21/540); a short node keeps one cut line.
-          const lines = sankeyLabelLines(node.label);
+          // Cut by width alone: ten characters cut "(Einnahmen)" (w21/768).
+          const lines = sankeyLabelLines(node.label, Infinity);
           const twoLines =
             lines.length === 2 && box.y1 - box.y0 >= LABEL_TWO_LINE_HEIGHT;
           // Cut to the label column too, which a node's label runs into
           // from the card's edge (w21/749).
-          const shown = (
-            twoLines ? lines : [truncateSankeyLabel(node.label)]
-          ).map((text) =>
+          const shown = (twoLines ? lines : [node.label]).map((text) =>
             fitSankeyLabel(text, LABEL_COL - LABEL_GAP, fontSizes.xs),
           );
           return shown.map((text, index) => (

@@ -1,4 +1,5 @@
 import type { AccountNode } from "../../../components/account-list/select-account-list";
+import { GLYPH_ADVANCE_EM } from "./sankey-glyph-widths";
 import { leafName } from "../../../common/account-util";
 import { getCurrencySymbol } from "../../../common/currency-util";
 import { topNWithOther } from "./select-breakdown-rows";
@@ -201,20 +202,22 @@ export function truncateSankeyLabel(
 }
 
 /**
- * An upper bound on a character's advance in the system font, in ems, from
- * CoreText's widths at 12 pt: narrow letters and stops, the widest (M, W, m,
- * w, %, @), digits, other capitals and lowercase, other ASCII, and anything
- * else (Cyrillic Ж is 1.02 em, CJK 0.99 em).
+ * Room for kerning and for Android's Roboto, which the advances were not
+ * measured in.
+ */
+const GLYPH_MARGIN = 1.03;
+const IDEOGRAPH =
+  /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u;
+
+/**
+ * A character's advance in the system font, in ems, with room to spare: its
+ * measured advance, a full em for an ideograph, and for any other character
+ * the widest advance measured (Œ, ض).
  */
 function advanceEm(char: string): number {
-  if (char === "…") return 0.82;
-  if (/[fijlrtI()[\].,:;'|! /]/u.test(char)) return 0.39;
-  if (/[MWmw%@]/u.test(char)) return 0.98;
-  if (/\d/u.test(char)) return 0.65;
-  if (/[A-Z]/u.test(char)) return 0.78;
-  if (/[a-z]/u.test(char)) return 0.62;
-  if (/[\x20-\x7e]/u.test(char)) return 0.72;
-  return 1.05;
+  const measured = GLYPH_ADVANCE_EM.get(char);
+  if (measured !== undefined) return measured * GLYPH_MARGIN;
+  return IDEOGRAPH.test(char) ? GLYPH_MARGIN : 1.15;
 }
 
 /** A label's width at `fontSize`, never less than the system font draws it. */
@@ -229,6 +232,7 @@ export function sankeyLabelWidth(text: string, fontSize: number): number {
  * `label` cut with "…" until it fits `maxWidth`. Ten characters were allowed
  * whatever their width, and a left-column label is right-aligned to its node:
  * "Qa20261020" ran past the card's left edge and read ")a20261020" (w21/749).
+ * Estimated per script it cut "(expenses)" with room to spare (w21/768).
  */
 export function fitSankeyLabel(
   label: string,

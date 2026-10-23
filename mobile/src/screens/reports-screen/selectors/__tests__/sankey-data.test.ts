@@ -677,6 +677,9 @@ describe("fitSankeyLabel", () => {
     ["Savings", 44.1],
     ["(expenses)", 62.6],
     ["(Einnahme…", 69.3],
+    ["(Einnahmen)", 71.3],
+    ["(inkomsten)", 67.2],
+    ["(приходи)", 58.9],
     ["Investments", 68.5],
     ["Жилье", 39.6],
     ["工资收入", 47.7],
@@ -690,13 +693,34 @@ describe("fitSankeyLabel", () => {
   });
 
   it("cuts a label the column cannot hold, and leaves one it can", () => {
-    // The label column (72) less its gap to the node (4).
-    expect(fitSankeyLabel("Qa20261020", 68, 12)).toBe("Qa20261…");
-    expect(fitSankeyLabel("(Einnahme…", 68, 12)).toBe("(Einnah…");
-    expect(fitSankeyLabel("Savings", 68, 12)).toBe("Savings");
-    expect(fitSankeyLabel("Groceries", 68, 12)).toBe("Groceries");
-    // Conservative: the widest letters give up one more than they must.
-    expect(fitSankeyLabel("WWWWWWWWWW", 68, 12)).toBe("WWWW…");
+    // The label column (78) less its gap to the node (4). Each cut is the
+    // longest CoreText draws within it: "Qa2026102…" is 75.4 pt.
+    expect(fitSankeyLabel("Qa20261020", 74, 12)).toBe("Qa202610…");
+    expect(fitSankeyLabel("Transportation", 74, 12)).toBe("Transporta…");
+    expect(fitSankeyLabel("WWWWWWWWWW", 74, 12)).toBe("WWWWW…");
+    expect(fitSankeyLabel("Savings", 74, 12)).toBe("Savings");
+    expect(fitSankeyLabel("Groceries", 74, 12)).toBe("Groceries");
+  });
+
+  // w21/768: bounded per script, "(expenses)" (62.6 pt) read wider than its
+  // column and lost its last letters; ten characters cut "(Einnahmen)".
+  it("keeps every language's side suffix whole", () => {
+    const locales = { bg, ca, de, en, es, fa, fr, nl, pt, ru, sk, uk, zh };
+    for (const [locale, words] of Object.entries(locales)) {
+      for (const template of [
+        words.sankeyIncomeNodeLabel,
+        words.sankeyExpensesNodeLabel,
+      ]) {
+        const [, suffix] = sankeyLabelLines(
+          template.replace("{{name}}", "Savings"),
+          Infinity,
+        );
+        expect([locale, fitSankeyLabel(suffix!, 74, 12)]).toEqual([
+          locale,
+          suffix,
+        ]);
+      }
+    }
   });
 
   it("is what the chart draws each label line through", () => {
