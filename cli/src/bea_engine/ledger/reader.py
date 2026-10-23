@@ -192,8 +192,8 @@ def _declares(entry: Any, *, strict: bool = False) -> bool | None:
     """Whether this entry is spelled at its location; None if no declaration can be read.
 
     `strict` is for a location two entries claim: a plugin's copy of a
-    transaction keeps the source's header, so the flag and the amounts the
-    line states must agree too, or both copies passed as written (w5/937).
+    transaction keeps the source's header, so the flag, the tags, the links and the
+    amounts the line states must agree too, or both copies passed as written (w5/937).
     """
     meta = entry.meta or {}
     lineno = meta.get("lineno")
@@ -214,7 +214,12 @@ def _declares(entry: Any, *, strict: bool = False) -> bool | None:
 
         if header(entry) != header(spelled):
             return False
-        return not strict or (entry.flag == spelled.flag and _amounts_declared(entry, spelled))
+        return not strict or (
+            entry.flag == spelled.flag
+            and (entry.tags or frozenset()) == (spelled.tags or frozenset())
+            and (entry.links or frozenset()) == (spelled.links or frozenset())
+            and _amounts_declared(entry, spelled)
+        )
     ignored = {"meta", "postings", "diff_amount", "tolerance", "booking"}
     return all(getattr(entry, name) == getattr(spelled, name) for name in entry._fields if name not in ignored)
 
