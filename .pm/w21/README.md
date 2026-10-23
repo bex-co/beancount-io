@@ -12,7 +12,6 @@
 
 ## Inbox
 
-- [781](./781.md) — Account detail shows forecast and future-dated entries as booked (no Forecast badge, no Upcoming line)
 - [782](./782.md) — Account detail rounds an 18-decimal holding through a float, unlike the Accounts row
 - [783](./783.md) — VoiceOver reads a split's units chart as "+900.00%" though the visible row is neutral
 - [784](./784.md) — A sub-cent account change shows a red "−$0.00" row under a "$0.00" day header

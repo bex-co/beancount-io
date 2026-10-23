@@ -448,10 +448,20 @@ const AccountDetailScreenImpl = ({
           currency={currency}
           onPress={onPress}
           netWorthSign={netWorthSign}
+          today={today}
         />
       );
     },
-    [currency, itemsByKey, router, ledgerId, account, guest, netWorthSign],
+    [
+      currency,
+      itemsByKey,
+      router,
+      ledgerId,
+      account,
+      guest,
+      netWorthSign,
+      today,
+    ],
   );
 
   const renderSectionHeader = useCallback(

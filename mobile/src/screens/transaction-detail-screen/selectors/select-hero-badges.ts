@@ -1,4 +1,7 @@
-import { entryFlagBadge } from "../../transactions-screen/entry-row/entry-row-flag";
+import {
+  entryFlagBadge,
+  entryFlagBadgeText,
+} from "../../transactions-screen/entry-row/entry-row-flag";
 
 export type HeroBadge = {
   key: "flag" | "upcoming";
@@ -23,14 +26,7 @@ export function selectHeroBadges(
   if (flag !== null) {
     badges.push({
       key: "flag",
-      text:
-        flag.kind === "pending"
-          ? labels.pending
-          : flag.kind === "forecast"
-            ? labels.forecast
-            : flag.kind === "padding"
-              ? labels.pad
-              : flag.flag,
+      text: entryFlagBadgeText(flag, labels),
       tone: flag.kind === "pending" ? "warning" : "neutral",
     });
   }

@@ -29,3 +29,20 @@ export function entryFlagBadge(
       return { kind: "other", flag };
   }
 }
+
+/** What a flag badge says in words: Pending, Forecast, Pad, or the flag. */
+export function entryFlagBadgeText(
+  badge: EntryFlagBadge,
+  labels: { pending: string; forecast: string; pad: string },
+): string {
+  switch (badge.kind) {
+    case "pending":
+      return labels.pending;
+    case "forecast":
+      return labels.forecast;
+    case "padding":
+      return labels.pad;
+    default:
+      return badge.flag;
+  }
+}

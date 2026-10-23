@@ -27,6 +27,11 @@ import {
   formatOtherChanges,
 } from "@/screens/account-detail-screen/selectors/select-account-journal";
 import { LEADING_TEXT_ALIGN } from "@/common/rtl";
+import {
+  entryFlagBadge,
+  entryFlagBadgeText,
+} from "@/screens/transactions-screen/entry-row/entry-row-flag";
+import { entryRowUpcomingLine } from "@/screens/transactions-screen/entry-row/entry-row-date";
 import { prefersStackedLayout } from "@/common/theme/dynamic-type";
 
 const getStyles = (theme: ColorTheme) =>
@@ -120,6 +125,8 @@ type AccountEntryRowProps = {
    * color follows this, so salary reads favorable and spending does not.
    */
   netWorthSign?: 1 | -1;
+  /** Today as a ledger date: a row dated after it reads Upcoming. */
+  today?: string;
 };
 
 export function AccountEntryRow({
@@ -127,6 +134,7 @@ export function AccountEntryRow({
   currency,
   onPress,
   netWorthSign = 1,
+  today,
 }: AccountEntryRowProps): JSX.Element {
   const styles = useThemeStyle(getStyles);
   const { fontScale } = useWindowDimensions();
@@ -134,7 +142,18 @@ export function AccountEntryRow({
   const theme = useTheme().colorTheme;
   const { t } = useTranslations();
 
-  const isPending = row.flag === "!";
+  // Pending warns; a forecast, a pad or another flag is noted, and a row
+  // dated after today reads Upcoming, as on Transactions. Only "!" was
+  // marked, so a planned grocery run read as money spent (w21/781).
+  const badge = entryFlagBadge(row.flag);
+  const flagLabel =
+    badge === null
+      ? null
+      : entryFlagBadgeText(badge, {
+          pending: t("pending"),
+          forecast: t("entryForecast"),
+          pad: t("pad"),
+        });
   // A commodity account's rows read in its units, with what each change cost.
   const { units } = row;
   // Moved only other currencies: show them, not a zero, and say they are
@@ -182,12 +201,21 @@ export function AccountEntryRow({
   // symbols (w21/095).
   const balanceLine = `${t("balance")}: ${isolateLtr(balanceText)}`;
   const detail = row.detail;
-  const detailText =
+  const directiveDetail =
     detail === undefined
       ? null
       : detail.kind === "balance"
         ? `${t("balance")} ${isolateLtr(detail.amount)}`
         : detail.text;
+  const detailText =
+    today === undefined
+      ? directiveDetail
+      : entryRowUpcomingLine({
+          date: row.date,
+          today,
+          upcomingLabel: t("entryUpcoming"),
+          secondary: directiveDetail,
+        });
   const offByText =
     detail?.kind === "balance" && detail.offBy
       ? t("balanceOffBy", { amount: isolateLtr(detail.offBy) })
@@ -210,9 +238,14 @@ export function AccountEntryRow({
               <Text style={styles.typeBadgeText}>{t(typeLabelKey)}</Text>
             </View>
           )}
-          {isPending && (
+          {badge?.kind === "pending" && (
             <View style={styles.badge}>
               <Text style={styles.badgeText}>!</Text>
+            </View>
+          )}
+          {badge && badge.kind !== "pending" && (
+            <View style={styles.typeBadge}>
+              <Text style={styles.typeBadgeText}>{flagLabel}</Text>
             </View>
           )}
         </View>
@@ -271,7 +304,7 @@ export function AccountEntryRow({
     notInTotalText,
     costText,
     balanceLine,
-    isPending ? t("pending") : null,
+    flagLabel,
   ]
     .filter((part): part is string => Boolean(part))
     .join(", ");

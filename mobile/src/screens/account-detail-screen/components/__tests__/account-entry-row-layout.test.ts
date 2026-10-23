@@ -76,6 +76,8 @@ function load(): (props: Record<string, unknown>) => Node {
     "@/common/theme/dynamic-type": dynamicType,
     // Import-free: the real one.
     "@/screens/account-detail-screen/selectors/select-change-tone": require("../../selectors/select-change-tone"),
+    "@/screens/transactions-screen/entry-row/entry-row-flag": require("../../../transactions-screen/entry-row/entry-row-flag"),
+    "@/screens/transactions-screen/entry-row/entry-row-date": require("../../../transactions-screen/entry-row/entry-row-date"),
   };
   vm.runInNewContext(source, {
     exports,
@@ -298,5 +300,61 @@ describe("AccountEntryRow change color", () => {
     };
     expect(unitsColor(90, 0)).toBe("neutral");
     expect(unitsColor(10, 1000)).toBe("success");
+  });
+});
+
+// w21/781: only "!" was marked, so a planned grocery run at the top of the
+// journal read as money already spent.
+describe("AccountEntryRow for a planned entry", () => {
+  const forecast = {
+    ...transfer,
+    title: "Qa20261020 Groceries",
+    flag: "#",
+    date: "2026-10-30",
+    change: -60,
+    balance: 440,
+  };
+  const texts = (tree: Node) =>
+    findAll(tree, (node) => node.type === "Text").map(textOf);
+
+  it("shows Forecast and Upcoming, and says both", () => {
+    const row = AccountEntryRow({
+      row: forecast,
+      currency: "USD",
+      onPress() {},
+      today: "2026-10-23",
+    });
+    expect(texts(row).includes("entryForecast")).toBe(true);
+    expect(texts(row).includes("entryUpcoming")).toBe(true);
+    expect(row.props.accessibilityLabel).toBe(
+      "Qa20261020 Groceries, entryUpcoming, $-60, balance: $440, entryForecast",
+    );
+  });
+
+  it("leaves a booked past row as it was", () => {
+    const booked = { ...forecast, flag: "*", date: "2026-10-06" };
+    const row = AccountEntryRow({
+      row: booked,
+      currency: "USD",
+      onPress() {},
+      today: "2026-10-23",
+    });
+    expect(texts(row)).toEqual(["Qa20261020 Groceries"]);
+    expect(row.props.accessibilityLabel).toBe(
+      "Qa20261020 Groceries, $-60, balance: $440",
+    );
+  });
+
+  it("keeps a balance row's own detail after Upcoming", () => {
+    const row = AccountEntryRow({
+      row: {
+        ...balanceDirective,
+        date: "2026-11-01",
+        detail: { kind: "note", text: "Statement" },
+      },
+      currency: "USD",
+      today: "2026-10-23",
+    });
+    expect(texts(row).includes("entryUpcoming · Statement")).toBe(true);
   });
 });
