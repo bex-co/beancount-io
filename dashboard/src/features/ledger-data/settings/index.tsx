@@ -103,7 +103,7 @@ export default function LedgerSettingsPage() {
   const ledgerId = createLedgerId(ledgerOwner, ledgerName);
   const { t } = useTranslations();
 
-  const { data, loading, error } = useQuery<
+  const { data, loading, error, refetch } = useQuery<
     GetLedgerQuery,
     GetLedgerQueryVariables
   >(GetLedgerDocument, {
@@ -117,6 +117,7 @@ export default function LedgerSettingsPage() {
     <QueryView
       loading={loading}
       error={error}
+      onRetry={refetch}
       data={ledger}
       loadingSlot={<SettingsSkeleton />}
       emptySlot={

@@ -433,7 +433,7 @@ export default function LedgerAccountsPage() {
   // (filters persist across navigation) does not apply here, so say so.
   const timeFilter = useContext(LedgerSearchParamsContext)?.searchParams.time;
 
-  const { data, loading, error } = useQuery(
+  const { data, loading, error, refetch } = useQuery(
     GetLedgerAccountDirectivesDocument,
     {
       variables: { ledgerId },
@@ -576,6 +576,7 @@ export default function LedgerAccountsPage() {
         <QueryView
           loading={loading}
           error={error}
+          onRetry={refetch}
           data={accounts}
           loadingSlot={
             <Table aria-label={t("page.accounts.accounts")}>

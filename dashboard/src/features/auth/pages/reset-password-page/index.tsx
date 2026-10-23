@@ -25,6 +25,7 @@ import {
   type ResetPasswordMutation,
   type ResetPasswordMutationVariables,
 } from "@/graphql/definitions";
+import { useQueryRetry } from "@/common/hooks/use-query-retry";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { PageSEO } from "@/common/components/seo/page-seo";
@@ -70,34 +71,15 @@ export default function ResetPasswordPage() {
     loading: isValidating,
     error: validationError,
     refetch: refetchValidation,
-    networkStatus,
   } = useQuery<ValidateEmailTokenQuery, ValidateEmailTokenQueryVariables>(
     ValidateEmailTokenDocument,
     {
       variables: { token: token || "" },
       skip: !token,
-      notifyOnNetworkStatusChange: true,
     },
   );
-
-  // `networkStatus === 4` is Apollo's `refetch`; a local flag covers the gap
-  // between the click and Apollo reporting the in-flight request.
-  const [isRetrying, setIsRetrying] = useState(false);
-  const isRetryInFlight = isRetrying || networkStatus === 4;
-
-  const handleRetryValidation = () => {
-    if (isRetryInFlight) return;
-    const pending = refetchValidation?.();
-    if (!pending) return;
-    setIsRetrying(true);
-    void pending
-      .catch(() => {
-        // The query's own `error` already drives the UI.
-      })
-      .finally(() => {
-        setIsRetrying(false);
-      });
-  };
+  // A retried check keeps its unavailable card, busy, until it settles.
+  const validationRetry = useQueryRetry(validationError, refetchValidation);
 
   // Mutation to reset password
   const [resetPassword, { loading: isResetting }] = useMutation<
@@ -148,37 +130,10 @@ export default function ResetPasswordPage() {
     }
   };
 
-  // Show skeleton while validating token
-  if (isValidating) {
-    return (
-      <>
-        <PageSEO
-          titleKey="seo.resetPassword.title"
-          descriptionKey="seo.resetPassword.description"
-          noIndex
-        />
-        <main className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
-          <div className="w-full max-w-md">
-            <Card>
-              <CardHeader className="space-y-1">
-                <Skeleton className="h-8 w-64 mx-auto" />
-                <Skeleton className="h-4 w-80 mx-auto" />
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-              </CardContent>
-            </Card>
-          </div>
-        </main>
-      </>
-    );
-  }
-
   // Validation could not be performed (transport/server failure). The link may
-  // well still be valid, so offer a retry instead of declaring it expired.
-  if (token && validationError) {
+  // well still be valid, so offer a retry instead of declaring it expired. The
+  // card stays through the retry, ahead of the validating skeleton.
+  if (token && validationRetry.failure) {
     return (
       <>
         <PageSEO
@@ -200,13 +155,14 @@ export default function ResetPasswordPage() {
               <CardContent>
                 <Alert variant="destructive">
                   <AlertDescription>
-                    {formatError(validationError)}
+                    {formatError(validationRetry.failure)}
                   </AlertDescription>
                 </Alert>
                 <Button
                   type="button"
-                  onClick={handleRetryValidation}
-                  disabled={isRetryInFlight}
+                  onClick={validationRetry.retry}
+                  disabled={validationRetry.retrying}
+                  loading={validationRetry.retrying}
                   className="mt-4 w-full"
                   size="lg"
                 >
@@ -220,6 +176,34 @@ export default function ResetPasswordPage() {
                     {t("auth.backToSignIn")}
                   </Link>
                 </div>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+      </>
+    );
+  }
+
+  // Show skeleton while validating token
+  if (isValidating) {
+    return (
+      <>
+        <PageSEO
+          titleKey="seo.resetPassword.title"
+          descriptionKey="seo.resetPassword.description"
+          noIndex
+        />
+        <main className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
+          <div className="w-full max-w-md">
+            <Card>
+              <CardHeader className="space-y-1">
+                <Skeleton className="h-8 w-64 mx-auto" />
+                <Skeleton className="h-4 w-80 mx-auto" />
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
               </CardContent>
             </Card>
           </div>

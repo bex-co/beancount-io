@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useQuery } from "@apollo/client/react";
 import { Button } from "@/common/components/ui/button";
 import { User, Palette, CreditCard, Clock, AlertCircle } from "lucide-react";
@@ -18,6 +17,7 @@ import { UserProfileSection } from "./user-profile-section";
 import { AppearanceSection } from "./appearance-section";
 import { BillingSummaryLink } from "./billing-summary-link";
 import { SessionSection } from "./session-section";
+import { useQueryRetry } from "@/common/hooks/use-query-retry";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { getErrorMessageKey } from "@/common/lib/errors/error-message";
 import { useReactNativeContext } from "@/common/providers/react-native-bridge-provider/react-native-bridge-context";
@@ -189,14 +189,7 @@ export default function GeneralSettingsPage() {
     },
   );
   const { isReactNative } = useReactNativeContext();
-  const [retrying, setRetrying] = useState(false);
-  const retry = () => {
-    if (retrying) return;
-    setRetrying(true);
-    void refetch()
-      .catch(() => undefined)
-      .finally(() => setRetrying(false));
-  };
+  const { failure, retrying, retry } = useQueryRetry(error, refetch);
 
   return (
     <>
@@ -207,9 +200,9 @@ export default function GeneralSettingsPage() {
       />
       <div className="space-y-6">
         <h1 className="text-2xl font-semibold">{t("userSettings.general")}</h1>
-        {error || (retrying && !data) ? (
+        {failure ? (
           <GeneralSettingsError
-            error={error}
+            error={failure}
             retrying={retrying}
             onRetry={retry}
           />

@@ -88,9 +88,11 @@ export function useBudgetEntries(ledgerId: string) {
       : null,
     loading: !error && (first.loading || (!!firstPage && !complete)),
     error,
+    // A first-page retry returns its read, so the error view stays, busy,
+    // until it settles (w4/983).
     retry: () => {
-      if (first.error) void first.refetch();
-      else setAttempt((current) => current + 1);
+      if (first.error) return first.refetch();
+      setAttempt((current) => current + 1);
     },
   };
 }

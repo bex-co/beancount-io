@@ -13,6 +13,7 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { useUserLimits } from "@/common/hooks/use-user-limits";
 import { useAiCfoUsage } from "@/common/hooks/use-ai-cfo-usage";
+import { useQueryRetry } from "@/common/hooks/use-query-retry";
 import { useCreateSubscriptionSession } from "@/features/user-settings/hooks/use-create-subscription-session";
 import { useSubscriptionStatus } from "@/features/user-settings/hooks/use-subscription-status";
 import { useSubscriptionPortal } from "@/features/user-settings/hooks/use-subscription-portal";
@@ -132,19 +133,10 @@ export function SubscriptionSection({
   } = useAiCfoUsage();
   // Usage is unknown only while no read has succeeded: a failed refresh
   // keeps the counts an earlier read returned (w4/312).
-  const [retryingAiCfoUsage, setRetryingAiCfoUsage] = useState(false);
+  const aiCfoRetry = useQueryRetry(aiCfoError, refetchAiCfoUsage);
   const aiUsageUnavailable =
-    !aiCfoUsage && (aiCfoError || retryingAiCfoUsage)
-      ? {
-          retrying: retryingAiCfoUsage,
-          onRetry: () => {
-            if (retryingAiCfoUsage) return;
-            setRetryingAiCfoUsage(true);
-            void refetchAiCfoUsage()
-              .catch(() => undefined)
-              .finally(() => setRetryingAiCfoUsage(false));
-          },
-        }
+    !aiCfoUsage && aiCfoRetry.failure
+      ? { retrying: aiCfoRetry.retrying, onRetry: aiCfoRetry.retry }
       : null;
   const { quotas: tierQuotas, isLoading: quotasLoading } = useAllTierQuotas();
 

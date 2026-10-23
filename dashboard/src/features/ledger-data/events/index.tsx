@@ -53,7 +53,7 @@ export default function LedgerEventsPage() {
   // Get ledger searchParams from topbar
   const ledgerFilters = useLedgerSearchParams();
 
-  const { data, loading, error } = useQuery(GetLedgerEventsDocument, {
+  const { data, loading, error, refetch } = useQuery(GetLedgerEventsDocument, {
     variables: {
       ledgerId: ledgerId,
       time: ledgerFilters.searchParams.time,
@@ -134,6 +134,7 @@ export default function LedgerEventsPage() {
       <QueryView
         loading={loading}
         error={error}
+        onRetry={refetch}
         data={events}
         loadingSlot={
           <div className="space-y-3">

@@ -29,7 +29,7 @@ export default function LedgerErrorsPage() {
   const ledgerId = createLedgerId(ledgerOwner, ledgerName);
   const { ledgerName: ledgerDisplayName } = useLedger();
   const fileNavigate = useFileNavigate();
-  const { data, loading, error } = useQuery(GetLedgerErrorsDocument, {
+  const { data, loading, error, refetch } = useQuery(GetLedgerErrorsDocument, {
     variables: {
       ledgerId: ledgerId,
     },
@@ -56,6 +56,7 @@ export default function LedgerErrorsPage() {
       <QueryView
         loading={loading}
         error={error}
+        onRetry={refetch}
         data={rows}
         loadingSlot={
           <div className="space-y-4">

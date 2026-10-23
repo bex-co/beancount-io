@@ -37,9 +37,9 @@ export function UsageOverview({
     : Math.min((ledgersUsed / ledgersMax) * 100, 100);
   const isLedgerAtLimit = !isLedgersUnlimited && ledgersUsed >= ledgersMax;
 
-  // The busy retry is disabled, and the browser drops its focus. Once the
-  // read settles, hand focus back: to the retry after another failure, else
-  // to the usage that replaced it.
+  // The busy retry is disabled, and the browser drops its focus. Another
+  // failure hands it back to the retry (`useQueryRetry`); a success replaces
+  // the retry, so hand focus to the usage that replaced it.
   const aiTokens = useRef<HTMLDivElement>(null);
   const retryButton = useRef<HTMLButtonElement>(null);
   const retryHadFocus = useRef(false);
@@ -48,7 +48,7 @@ export function UsageOverview({
     if (retrying || !retryHadFocus.current) return;
     retryHadFocus.current = false;
     if (document.activeElement !== document.body) return;
-    (retryButton.current ?? aiTokens.current)?.focus();
+    aiTokens.current?.focus();
   }, [retrying]);
 
   return (

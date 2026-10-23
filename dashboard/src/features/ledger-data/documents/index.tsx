@@ -115,11 +115,14 @@ export default function LedgerDocumentsPage() {
   const { ledgerName: ledgerDisplayName } = useLedger();
   const fileNavigate = useFileNavigate();
 
-  const { data, loading, error } = useQuery(GetLedgerDocumentsDocument, {
-    variables: {
-      ledgerId: ledgerId,
+  const { data, loading, error, refetch } = useQuery(
+    GetLedgerDocumentsDocument,
+    {
+      variables: {
+        ledgerId: ledgerId,
+      },
     },
-  });
+  );
 
   const documents = data?.getLedgerDocuments || [];
 
@@ -135,6 +138,7 @@ export default function LedgerDocumentsPage() {
       <QueryView
         loading={loading}
         error={error}
+        onRetry={refetch}
         data={documents}
         loadingSlot={
           <div className="rounded-md border">

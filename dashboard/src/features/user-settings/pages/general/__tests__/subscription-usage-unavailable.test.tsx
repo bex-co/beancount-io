@@ -94,6 +94,18 @@ const renderBilling = (client: ApolloClient) =>
 
 const UNAVAILABLE = "Usage is unavailable right now.";
 
+/**
+ * A browser drops focus from the control it disables; jsdom keeps it there
+ * (and `blur()` is a no-op on a disabled element), so lose it the way a
+ * removed element does.
+ */
+function dropFocus() {
+  const away = document.createElement("button");
+  document.body.appendChild(away);
+  away.focus();
+  away.remove();
+}
+
 /** The AI Tokens block of the usage overview. */
 const aiTokens = () =>
   within(screen.getByText("AI Tokens").closest(".space-y-2") as HTMLElement);
@@ -127,8 +139,8 @@ describe("Billing AI usage read failure", () => {
     expect(screen.getByText(UNAVAILABLE)).toBeInTheDocument();
     expect(screen.getByTestId("current-plan-banner")).toBeInTheDocument();
     expect(aiTokens().queryByText(/tokens used this month/)).toBeNull();
-    // A browser drops focus from the disabled control; jsdom does not.
-    retry.blur();
+    dropFocus();
+    expect(document.body).toHaveFocus();
 
     // A repeated failure offers the retry again, focused for the next Enter.
     billing.release("fail");
@@ -139,7 +151,7 @@ describe("Billing AI usage read failure", () => {
 
     await user.keyboard("{Enter}");
     await waitFor(() => expect(billing.usageReads()).toBe(3));
-    retry.blur();
+    dropFocus();
     billing.release({ aiCfoTokensUsed: 1234, aiCfoTokensMax: 50000 });
 
     expect(
