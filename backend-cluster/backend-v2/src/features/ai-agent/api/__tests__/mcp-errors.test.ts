@@ -178,6 +178,24 @@ describe("envelopeFromThrown", () => {
     expect(domain).toMatchObject({ metadata: { newLedgerErrors: named } });
   });
 
+  // w23/074: the ledger service's body refusal surfaced as SERVICE_UNAVAILABLE
+  // "a dependency is down, retry", and the caller retried forever.
+  it("tells a change too large for the ledger service to split, not to retry", () => {
+    const domain = favaApiErrorToDomainError(
+      new FavaApiError("Payload Too Large", 413, {
+        success: false,
+        error: "request body exceeds the ledger service's limit",
+      }),
+      "check projected ledger",
+    );
+    expect(domain).toBeInstanceOf(BadUserInputError);
+    expect(envelopeFromThrown(domain)).toMatchObject({
+      code: "BAD_USER_INPUT",
+      message:
+        "the change is too large to validate in one request; split it into smaller batches",
+    });
+  });
+
   it("carries retryAfter for a rate-limit refusal", () => {
     const envelope = envelopeFromThrown(new RateLimitedError(42));
     expect(envelope.code).toBe("RATE_LIMITED");

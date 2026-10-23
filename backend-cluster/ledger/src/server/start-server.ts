@@ -20,6 +20,16 @@ import { setMetricsHandler } from "@/api/metrics";
 import { restErrorMiddleware } from "@/server/error-middleware";
 import { getRustledgerWorkerPool } from "@/foundation/rustledger";
 import { requestContextMiddleware } from "@/server/request-context-middleware";
+import { MAX_PROJECTED_BYTES } from "@/features/ledger/service/ledger-data-service";
+
+/**
+ * The largest body backend-v2 sends: the files a check projects, at most
+ * MAX_PROJECTED_BYTES decoded, as base64 (4/3 as long) in JSON, with 1 MiB
+ * for the envelope. 2 MiB refused a batch backend-v2's own 2 MiB request cap
+ * admits, once its files were re-encoded (w23/074).
+ */
+export const JSON_BODY_LIMIT_BYTES =
+  Math.ceil((MAX_PROJECTED_BYTES * 4) / 3) + 1024 * 1024;
 
 export function buildApp(): Koa {
   const app = new Koa();
@@ -28,8 +38,7 @@ export function buildApp(): Koa {
   // Outermost, so the error middleware's own logging carries the request ID.
   app.use(requestContextMiddleware());
   app.use(restErrorMiddleware());
-  // Allow a normally encoded 1 MiB file plus its base64/JSON envelope.
-  app.use(bodyParser({ jsonLimit: "2mb" }));
+  app.use(bodyParser({ jsonLimit: String(JSON_BODY_LIMIT_BYTES) }));
 
   setHealthzHandler(router);
   setLedgersHandler(router);

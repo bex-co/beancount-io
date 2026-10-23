@@ -1,7 +1,7 @@
 import http from "node:http";
 import { config } from "@/config";
 import { clearMemoizedGiteaClients } from "@/features/gitea/service/gitea-client-factory";
-import { buildApp } from "@/server/start-server";
+import { buildApp, JSON_BODY_LIMIT_BYTES } from "@/server/start-server";
 
 const MIB = 1024 * 1024;
 const FILE_PATH = "receipts/at-limit.bin";
@@ -9,6 +9,12 @@ const TOKEN = "token synthetic-file-test-token";
 const PYTHON_PARSER_ERROR = {
   success: false,
   error: "Internal server error",
+  code: null,
+  details: null,
+};
+const BODY_TOO_LARGE = {
+  success: false,
+  error: "request body exceeds the ledger service's limit",
   code: null,
   details: null,
 };
@@ -162,16 +168,60 @@ describe("ledger application's file JSON request allowance", () => {
     },
   );
 
-  it("refuses JSON larger than 2 MiB before reaching Gitea with the existing Python error envelope", async () => {
-    const response = await send(
-      "POST",
+  // A fresh connection each, chunked: a pooled keep-alive socket the server
+  // closed resets a POST under load, and a refusal that arrives mid-upload
+  // stays readable.
+  const postRaw = (path: string, body: string) =>
+    new Promise<{ status?: number; body: string }>((resolve, reject) => {
+      const request = http.request(
+        `${ledgerUrl}${path}`,
+        {
+          method: "POST",
+          agent: false,
+          headers: {
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            authorization: TOKEN,
+          },
+          signal: AbortSignal.timeout(10_000),
+        },
+        (res) => {
+          const chunks: Buffer[] = [];
+          res.on("data", (chunk: Buffer) => chunks.push(chunk));
+          res.on("error", reject);
+          res.on("end", () =>
+            resolve({
+              status: res.statusCode,
+              body: Buffer.concat(chunks).toString("utf8"),
+            }),
+          );
+        },
+      );
+      request.on("error", reject);
+      request.end(body);
+    });
+
+  // w23/074: two 0.9 MB files, inside backend-v2's 2 MiB request cap, are
+  // ~2.4 MB as base64 and were refused here as a 500 "Internal server error",
+  // which backend-v2 reported as "dependency down, retry".
+  it("parses a body past the old 2 MiB limit, as backend-v2 forwards one", async () => {
+    const file = Buffer.alloc(900_000, 0x3b).toString("base64");
+    const body = JSON.stringify({ files: [file, file] });
+    expect(Buffer.byteLength(body)).toBeGreaterThan(2 * MIB);
+    // No route, so a parsed body is a 404; a refused one would be a 413.
+    expect((await postRaw("/no-such-route", body)).status).toBe(404);
+  });
+
+  it("refuses a body past its limit as 413, not a 500, before reaching Gitea", async () => {
+    const response = await postRaw(
+      "/ledgers/synthetic/upload/files",
       JSON.stringify({
         path: FILE_PATH,
-        content: "A".repeat(2 * MIB + 1),
+        content: "A".repeat(JSON_BODY_LIMIT_BYTES + 1),
       }),
     );
-    expect(response.status).toBe(500);
-    expect(await response.json()).toEqual(PYTHON_PARSER_ERROR);
+    expect(response.status).toBe(413);
+    expect(JSON.parse(response.body)).toEqual(BODY_TOO_LARGE);
     expect(writes).toEqual([]);
   });
 
@@ -209,8 +259,8 @@ describe("ledger application's file JSON request allowance", () => {
     const oversized = await send("POST", `${body}x`, {
       contentType: "application/x-www-form-urlencoded",
     });
-    expect(oversized.status).toBe(500);
-    expect(await oversized.json()).toEqual(PYTHON_PARSER_ERROR);
+    expect(oversized.status).toBe(413);
+    expect(await oversized.json()).toEqual(BODY_TOO_LARGE);
     expect(writes).toHaveLength(1);
   });
 

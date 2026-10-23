@@ -30,12 +30,18 @@ There is no database and no user table: auth is Basic/token credentials
 forwarded verbatim to Gitea, which is the sole source of truth for identity
 and repository access.
 
-Internal JSON requests have a bounded **2 MiB** body allowance, including the
-base64 content and request envelope. This accommodates a normally encoded
-1 MiB file; it is a transport limit, separate from the gateway's decoded-file
-policy. It does not impose a decoded upload cap on generated or merged ledger
-contents. URL-encoded forms retain the parser's default **56 KiB** limit, and
-multipart routes keep their existing route-specific handling.
+Internal JSON requests have a bounded body allowance of about **7.4 MiB**
+(`JSON_BODY_LIMIT_BYTES` in `src/server/start-server.ts`). It covers the
+largest body backend-v2 sends: a projected check of at most 5,000,000 decoded
+bytes (`MAX_PROJECTED_BYTES`), as base64 inside JSON, with 1 MiB for the
+envelope. The old 2 MiB allowance refused batches the gateway's own 2 MiB
+request cap admits once their files were re-encoded (w23/074). It is a
+transport limit, separate from the gateway's decoded-file policy. It does not
+impose a decoded upload cap on generated or merged ledger contents. A body past
+it, JSON or form, is refused with **413**, which backend-v2 reports as
+`BAD_USER_INPUT` "split it into smaller batches", not as an outage.
+URL-encoded forms retain the parser's default **56 KiB** limit, and multipart
+routes keep their existing route-specific handling.
 
 ## Report coverage
 

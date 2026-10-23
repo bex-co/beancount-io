@@ -81,7 +81,7 @@ export type ProjectedFileOverlay = {
 
 /** Bounds for a projected check: parsing is CPU-heavy, dry runs are many. */
 const MAX_PROJECTED_FILES = 50;
-const MAX_PROJECTED_BYTES = 5_000_000;
+export const MAX_PROJECTED_BYTES = 5_000_000;
 type FilterParams = { account?: string; filter?: string; time?: string };
 type ConversionParams = FilterParams & {
   conversion?: string;

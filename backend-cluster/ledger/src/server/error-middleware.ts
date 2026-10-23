@@ -100,7 +100,23 @@ export function toErrorResponse(err: unknown): {
     }
     return { status: err.status, body: errorResponse(giteaErrorMessage(err)) };
   }
+  // The body parser's refusal of a body past its limit. As a 500 it read as
+  // "dependency down, retry" to a caller that only had to split (w23/074).
+  if (isBodyTooLarge(err)) {
+    return {
+      status: 413,
+      body: errorResponse("request body exceeds the ledger service's limit"),
+    };
+  }
   return { status: 500, body: errorResponse("Internal server error") };
+}
+
+function isBodyTooLarge(err: unknown): boolean {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    (err as { type?: unknown }).type === "entity.too.large"
+  );
 }
 
 export function restErrorMiddleware() {

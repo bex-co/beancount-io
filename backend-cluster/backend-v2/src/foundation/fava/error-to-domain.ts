@@ -167,6 +167,13 @@ export function favaApiErrorToDomainError(
       return notFoundFromUpstream(error.body?.error || "");
     case 409:
       return new ConflictError("Ledger resource", message);
+    // The ledger service refused the body: a batch inside this API's own caps
+    // can outgrow it re-encoded. As a 5xx it read as "dependency down, retry"
+    // to a caller that only had to split it (w23/074).
+    case 413:
+      return new BadUserInputError(
+        "the change is too large to validate in one request; split it into smaller batches",
+      );
     case 429:
       return new RateLimitedError();
     case 502:
