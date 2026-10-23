@@ -59,7 +59,6 @@
 
 - [978 — Match a cost-selected FIFO sale to its split booked twin](./978.md) — major CLI follow-up to 603; an ordinary stated-cost sale spanning two equal-cost lots is imported twice, reproduced 2026-10-22.
 
-- [977 — Recognize unchanged multi-fill imports above twelve booked lots](./977.md) — major CLI follow-up to 896; two open-cost fills over 13 lots falsely conflict on reimport and a hand-entered twin is booked twice, reproduced 2026-10-22.
 
 
 

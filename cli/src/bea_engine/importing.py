@@ -1662,14 +1662,27 @@ def _booked_for(text: str, lot: _Lot | None, owner: str, left: list[_Leg]) -> It
     ]
     # A sale booked across lots takes them in order, so these are the larger
     # candidate sets first; a long run of lots keeps the all-or-nothing reading.
-    sizes = range(len(compatible), 1, -1) if len(compatible) <= _SPLIT_SEARCH_LEGS else [len(compatible)]
-    for size in sizes:
+    if len(compatible) > _SPLIT_SEARCH_LEGS:
+        # Too many lots to try every subset, but booking takes them in order:
+        # the lots one fill spans are a run of the compatible legs. Trying only
+        # the whole set made a sale split into two fills conflict with its own
+        # first import once it spanned thirteen lots (w5/977).
+        for start in range(len(compatible)):
+            running = Decimal(0)
+            for end in range(start, len(compatible)):
+                running += _units_of(left[compatible[end]][0])[0]
+                if abs(running) > abs(number):
+                    break
+                if running == number and end > start:
+                    yield set(compatible[start : end + 1])
+        return
+    for size in range(len(compatible), 1, -1):
         for subset in combinations(compatible, size):
             if sum(_units_of(left[index][0])[0] for index in subset) == number:
                 yield set(subset)
 
 
-#: How many compatible booked legs are searched for subsets before only the whole set is tried.
+#: How many compatible booked legs are searched for every subset; beyond it only runs of consecutive lots are tried.
 _SPLIT_SEARCH_LEGS = 12
 
 
