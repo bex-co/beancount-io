@@ -1,5 +1,6 @@
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { LedgerLayoutError } from "../ledger-layout-error";
 
@@ -64,6 +65,63 @@ describe("LedgerLayoutError", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Please sign in to continue.")).toBeInTheDocument();
     expect(screen.queryByText(/session has expired/i)).not.toBeInTheDocument();
+  });
+
+  describe("a rate-limited ledger read (w4/1009)", () => {
+    const RATE_LIMITED = "Too many requests. Please try again later.";
+
+    it.each([
+      [
+        "a RATE_LIMITED GraphQL refusal",
+        new CombinedGraphQLErrors({
+          errors: [
+            { message: RATE_LIMITED, extensions: { code: "RATE_LIMITED" } },
+          ],
+        }),
+      ],
+      // What reaches the route error after SSR: only the message survives.
+      ["the SSR-deserialized refusal", new Error(RATE_LIMITED)],
+    ])("says why and to wait, for %s", async (_name, error) => {
+      const user = userEvent.setup();
+      const onRetry = vi.fn();
+      render(
+        <LedgerLayoutError
+          error={error}
+          onBackToDashboard={vi.fn()}
+          onRetry={onRetry}
+        />,
+      );
+
+      expect(
+        screen.getByRole("heading", { name: "Failed to Load Ledger" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          "Too many requests. Please wait a moment and try again.",
+        ),
+      ).toBeVisible();
+      expect(
+        screen.queryByText(/unexpected error occurred/i),
+      ).not.toBeInTheDocument();
+      // Retry and the diagnostics stay.
+      await user.click(screen.getByRole("button", { name: /try again/i }));
+      expect(onRetry).toHaveBeenCalledTimes(1);
+      expect(screen.getByText("Error Details")).toBeInTheDocument();
+    });
+
+    it("keeps the generic guidance for an error it cannot name", () => {
+      render(
+        <LedgerLayoutError
+          error={new Error("Unexpected token < in JSON")}
+          onBackToDashboard={vi.fn()}
+          onRetry={vi.fn()}
+        />,
+      );
+      expect(
+        screen.getByText(/unexpected error occurred/i),
+      ).toBeInTheDocument();
+      expect(screen.queryByText(/wait a moment/i)).not.toBeInTheDocument();
+    });
   });
 
   it("puts the failure content in the page's single main landmark", () => {

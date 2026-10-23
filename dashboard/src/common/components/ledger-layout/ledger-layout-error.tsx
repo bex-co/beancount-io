@@ -7,10 +7,11 @@ import {
   AlertTriangle,
   LayoutDashboard,
   LogIn,
+  Clock,
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { EXACT_PAGE_LINK } from "@/common/lib/navigation/active-options";
-import { CombinedGraphQLErrors } from "@apollo/client/errors";
+import { CombinedGraphQLErrors, ServerError } from "@apollo/client/errors";
 import { Button } from "@/common/components/ui/button.tsx";
 import { useTranslations } from "@/common/hooks/use-translations.ts";
 import { ErrorDetails } from "@/common/components/error-details";
@@ -20,6 +21,7 @@ type ErrorVariant =
   | "network"
   | "server"
   | "unauthenticated"
+  | "rate-limited"
   | "unknown";
 
 function classifyError(error?: Error | null): ErrorVariant {
@@ -34,10 +36,15 @@ function classifyError(error?: Error | null): ErrorVariant {
       if (code === "FORBIDDEN") return "not-found";
       if (code === "INTERNAL_SERVER_ERROR") return "server";
       if (code === "UNAUTHENTICATED") return "unauthenticated";
+      if (code === "RATE_LIMITED") return "rate-limited";
     }
   }
+  if (ServerError.is(error) && error.statusCode === 429) return "rate-limited";
 
   const msg = error.message.toLowerCase();
+  // A loader refusal reaches the page through SSR as a plain Error that keeps
+  // only the backend's RateLimitedError message (w4/1009).
+  if (msg.includes("too many requests")) return "rate-limited";
   if (
     msg.includes("network") ||
     msg.includes("fetch") ||
@@ -91,6 +98,17 @@ const VARIANT_CONFIG = {
     glowClass: "bg-amber-500/10",
     titleKey: "auth.signIn",
     descriptionKey: "common.errors.unauthenticated",
+  },
+  // The reason and what to do about it, in the shared localized words.
+  "rate-limited": {
+    badge: "429",
+    Icon: Clock,
+    iconColor: "text-amber-500",
+    badgeClass:
+      "bg-amber-500/10 text-amber-600 dark:text-amber-400 ring-amber-500/20",
+    glowClass: "bg-amber-500/10",
+    titleKey: "common.failedToLoadLedger",
+    descriptionKey: "common.errors.rateLimited",
   },
   unknown: {
     badge: "Error",
