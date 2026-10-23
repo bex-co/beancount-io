@@ -30,7 +30,6 @@
 - [669](./669.md) — Reports' Recent Transactions fetches the newest 200 entries with no end date, so pre-entered entries empty every range
 - [670](./670.md) — Budget ALL skips every period between the account's last posting and today (w21/010 regression via w21/332)
 - [671](./671.md) — Reports ALL drops an entry pre-entered for later this month but keeps next month's (w21/523 × w21/166)
-- [667](./667.md) — Account detail still shows a blank row for an entry whose payee is only spaces (w21/568 incomplete)
 - [668](./668.md) — Transaction detail repeats the narration under the title when the payee is only spaces or equals the narration
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window
 - [065](./blocked/065.md) — One early-year entry (e.g. 0050) makes the balance sheet 23,718 monthly points (3 MB) and the app stalls — **blocked:** needs an approach decision (per-pill fetch vs server downsample) and a simulator profile of the stall

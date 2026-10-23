@@ -306,8 +306,13 @@ function entryDetail(
   }
 }
 
+/** The payee, else the narration, trimmed: a payee of spaces names nothing (w21/568, w21/667). */
+function payeeOrNarration(entry: AccountJournalItem["entry"]): string {
+  return asString(entry.payee).trim() || asString(entry.narration).trim();
+}
+
 function entryTitle(entry: AccountJournalItem["entry"]): string {
-  const named = asString(entry.payee) || asString(entry.narration);
+  const named = payeeOrNarration(entry);
   // A bare transaction has no name of its own. Its directive type is the
   // English word "Transaction", which the row's translated fallback never got
   // to replace (w21/241): leave the title empty for it.
@@ -457,10 +462,7 @@ export function selectAccountJournalRows(
       title: entryTitle(item.entry),
       date: asString(item.entry.date),
       flag: asString(item.entry.flag) || undefined,
-      payee:
-        asString(item.entry.payee) ||
-        asString(item.entry.narration) ||
-        undefined,
+      payee: payeeOrNarration(item.entry) || undefined,
       postings: entryPostings(item.entry),
       directiveType: asString(item.entry.directive_type) || undefined,
       detail: entryDetail(item.entry),

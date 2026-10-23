@@ -1019,6 +1019,23 @@ describe("the title of a bare transaction", () => {
     );
   });
 
+  // w21/667: a payee of spaces is truthy, so the row was titled with a space.
+  it("takes the narration when the payee is only spaces", () => {
+    const [row] = selectAccountJournalRows("USD", [
+      item({
+        date: "2026-10-15",
+        directive_type: "Transaction",
+        payee: " ",
+        narration: " qa Coffee ",
+      }),
+    ]);
+    expect(row.title).toBe("qa Coffee");
+    expect(row.payee).toBe("qa Coffee");
+    expect(
+      titleOf({ directive_type: "Transaction", payee: " ", narration: " " }),
+    ).toBe("");
+  });
+
   it("keeps naming other directives by their account or type", () => {
     expect(titleOf({ directive_type: "Open", account: "Assets:Cash" })).toBe(
       "Assets:Cash",
