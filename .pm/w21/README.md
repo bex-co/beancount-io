@@ -74,3 +74,8 @@
 - [866](./866.md) — Entry Context's Source Code splits a line at a lone carriage return (gap in w21/827)
 - [867](./867.md) — Guests can't load Entry Context: GetLedgerTransactionContext isn't in the guest allowlist (w21/635 class)
 - [868](./868.md) — A signed-in reader is told to "Set a spending target" on Home and Budget, which they can't do
+- [869](./869.md) — Scan Receipt offers a Try Again that can never work for permanent server refusals
+- [870](./870.md) — Scan Receipt's reveal shows a rounded total while the form saves the exact value
+- [871](./871.md) — Mobile never attaches the scanned receipt image to the saved transaction (dashboard does)
+- [872](./872.md) — A guard inside Scan Receipt's full-screen modal has no way back
+- [873](./873.md) — Scan Receipt's shutter swallows capture failures
