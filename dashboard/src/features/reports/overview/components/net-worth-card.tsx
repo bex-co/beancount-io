@@ -108,7 +108,11 @@ function NetWorthValuationNote({
   const formatNumber = useFormatNumber();
   // Units keep every digit the ledger recorded: rounding 0.00012 BTC to 0
   // would name a holding the reader cannot see.
-  const { holdings, staleSince, costBasis, unrealized } = valuation;
+  const { holdings, staleSince } = valuation;
+  // The exact decimals where the valuation has them: a +1 gain on a 2^53
+  // basis is 0 as doubles, and would hide this line (w4/1015).
+  const costBasis = valuation.costBasisExact ?? valuation.costBasis;
+  const unrealized = valuation.unrealizedExact ?? valuation.unrealized;
   const staleCount = holdings.filter((holding) => holding.stale).length;
   const atCostCount = holdings.filter((h) => h.basis === "cost").length;
   const notInTotalCount = holdings.filter(
@@ -118,7 +122,7 @@ function NetWorthValuationNote({
   const showCostBasis =
     costBasis !== null &&
     unrealized !== null &&
-    Math.round(unrealized * 100) !== 0;
+    Math.round(Number(unrealized) * 100) !== 0;
 
   const parts = [t("page.overview.valuedAtMarket")];
   if (staleSince !== null) {
@@ -178,9 +182,9 @@ function NetWorthValuationNote({
                   <p className="font-medium">{holding.currency}</p>
                   <p className="text-xs text-muted-foreground tabular-nums">
                     {formatNumber(
-                      holding.units,
+                      holding.unitsExact ?? holding.units,
                       holding.currency,
-                      fractionDigitsOf(String(holding.units)),
+                      fractionDigitsOf(holding.unitsExact ?? holding.units),
                     )}{" "}
                     {holding.currency}
                   </p>
@@ -229,11 +233,11 @@ function NetWorthValuationNote({
       {showCostBasis && (
         <p className="tabular-nums">
           {t("page.overview.costBasis", {
-            amount: `${formatNumber(costBasis, currency)} ${currency}`,
+            amount: `${formatNumber(costBasis, currency, fractionDigitsOf(costBasis))} ${currency}`,
           })}
           {" · "}
           {t("page.overview.unrealized", {
-            amount: `${unrealized > 0 ? "+" : ""}${formatNumber(unrealized, currency)} ${currency}`,
+            amount: `${Number(unrealized) > 0 ? "+" : ""}${formatNumber(unrealized, currency, fractionDigitsOf(unrealized))} ${currency}`,
           })}
         </p>
       )}
@@ -319,10 +323,7 @@ export function NetWorthCard({
     return {
       animationDuration: 500,
       color: getChartColors(),
-      tooltip: {
-        trigger: "axis",
-        valueFormatter: (value) => formatNumber(Number(value)),
-      },
+      tooltip: { trigger: "axis" },
       grid: {
         left: 8,
         right: 8,
@@ -357,12 +358,12 @@ export function NetWorthCard({
         scale: true,
       },
       series: displayedCurrencies.map((currency) => {
-        const data = visibleData.map(
-          (point) =>
-            getBalanceAmounts(point.balance).find(
-              (amount) => amount.currency === currency,
-            )?.value ?? null,
+        const amounts = visibleData.map((point) =>
+          getBalanceAmounts(point.balance).find(
+            (amount) => amount.currency === currency,
+          ),
         );
+        const data = amounts.map((amount) => amount?.value ?? null);
         const singlePoint = isSinglePointSeries(data);
         return {
           name: currency,
@@ -374,6 +375,14 @@ export function NetWorthCard({
           lineStyle: { width: 2 },
           areaStyle: { opacity: 0.12 },
           data,
+          // The point's own decimal in its unit, not the plotted double
+          // (w4/1015).
+          tooltip: {
+            valueFormatter: (value: unknown, dataIndex: number) => {
+              const text = amounts[dataIndex]?.exact ?? Number(value);
+              return formatNumber(text, currency, fractionDigitsOf(text));
+            },
+          },
         };
       }),
     };
@@ -435,7 +444,11 @@ export function NetWorthCard({
               )}
               <span className="tabular-nums">
                 {isPositiveDecimalNumber(change) ? "+" : ""}
-                {formatNumber(change, latestComparable.currency)}{" "}
+                {formatNumber(
+                  change,
+                  latestComparable.currency,
+                  fractionDigitsOf(change),
+                )}{" "}
                 {latestComparable.currency}
               </span>
               <span className="text-muted-foreground">

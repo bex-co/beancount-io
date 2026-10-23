@@ -238,12 +238,13 @@ describe("NetWorthCard chart series", () => {
       />,
     );
 
-    const tooltip = lastOption().tooltip as {
-      trigger: string;
-      valueFormatter: (value: number) => string;
-    };
+    const tooltip = lastOption().tooltip as { trigger: string };
     expect(tooltip.trigger).toBe("axis");
-    expect(tooltip.valueFormatter(150)).toBe("150");
+    // Each series formats its own point's decimal (w4/1015).
+    const [usd] = lineSeries(lastOption()) as Array<{
+      tooltip: { valueFormatter: (value: number, index: number) => string };
+    }>;
+    expect(usd!.tooltip.valueFormatter(150, 1)).toBe("150");
   });
 });
 

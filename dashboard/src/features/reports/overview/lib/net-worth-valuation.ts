@@ -1,3 +1,8 @@
+import {
+  negateDecimalNumber,
+  parseDecimalNumber,
+  sumDecimalNumbers,
+} from "@/common/lib/beancount/decimal-number";
 import { toFiniteAmount } from "./unit-amounts";
 
 /**
@@ -32,6 +37,8 @@ export type ManagedSource = {
 export type HeldCommodity = {
   currency: string;
   units: number;
+  /** The units as the ledger recorded them, which a double can round. */
+  unitsExact?: string;
   /**
    * `market` — valued at a price, `cost` — held at cost with no price,
    * `notInTotal` — no cost and no price, so left out of the figure.
@@ -54,7 +61,17 @@ export type NetWorthValuation = {
   costBasis: number | null;
   /** Market − cost, when both exist. */
   unrealized: number | null;
+  /** The same two figures as exact decimals, for display (w4/1015). */
+  costBasisExact?: string | null;
+  unrealizedExact?: string | null;
 };
+
+/** A balance amount as the ledger's decimal, or null. */
+function exactOf(value: unknown): string | null {
+  return value === null || value === undefined
+    ? null
+    : parseDecimalNumber(String(value));
+}
 
 /** Floor for a ledger-authored price's threshold, and the cadence of a sparse one. */
 export const MIN_STALE_DAYS = 7;
@@ -252,9 +269,11 @@ export function describeNetWorthValuation({
         managedFreshness: managedSource?.freshness ?? null,
         priceDates: dates,
       });
+    const unitsExact = exactOf(units?.[commodity]);
     holdings.push({
       currency: commodity,
       units: held,
+      ...(unitsExact !== null && { unitsExact }),
       basis: !hasCost
         ? nonZero(market, commodity) === null
           ? "market"
@@ -275,6 +294,8 @@ export function describeNetWorthValuation({
     .sort();
   const marketValue = toFiniteAmount(market?.[currency]);
   const costBasis = toFiniteAmount(cost?.[currency]);
+  const marketExact = exactOf(market?.[currency]);
+  const costBasisExact = exactOf(cost?.[currency]);
   return {
     holdings,
     staleSince: staleDates[0] ?? null,
@@ -283,5 +304,10 @@ export function describeNetWorthValuation({
       marketValue === null || costBasis === null
         ? null
         : marketValue - costBasis,
+    costBasisExact,
+    unrealizedExact:
+      marketExact === null || costBasisExact === null
+        ? null
+        : sumDecimalNumbers([marketExact, negateDecimalNumber(costBasisExact)]),
   };
 }
