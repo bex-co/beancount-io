@@ -111,7 +111,7 @@
 
 ## Milestones
 
-- [ ] **m52** — [Preserve exact Net Worth amounts and monthly changes](./m52/README.md) (6 tasks) ← dashboard QA,2026-10-22; minor; valid producer-backed totals and±1 USD collapse after Number conversion; five native contexts and safe controls, no writes.
+- [x] **m52** — [Preserve exact Net Worth amounts and monthly changes](./done/m52/README.md) (6 tasks) ← dashboard QA,2026-10-22; minor; valid producer-backed totals and±1 USD collapse after Number conversion; five native contexts and safe controls, no writes.
 
 - [x] **m51** — [Preserve selected chart units when regrouping periods](./done/m51/README.md) (6 tasks) ← dashboard QA,2026-10-22; minor; enabled BTC resets on uncached and cached interval changes;1,408 API values exact, no writes.
 
