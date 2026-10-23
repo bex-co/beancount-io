@@ -1,6 +1,9 @@
+import fs from "fs";
+import path from "path";
 import {
   assertEntryTokens,
   assertNoControlCharacters,
+  assertNoNewControlCharacters,
   assertSingleEntryText,
   isSingleDirective,
 } from "@/features/ledger/utils/entry-tokens";
@@ -248,5 +251,59 @@ describe("assertSingleEntryText and control characters", () => {
         "newContent",
       ),
     ).toThrow("newContent contains the control character U+0000");
+  });
+});
+
+// w21/816: an entry imported with an ESC could never be edited: its own slice
+// came back refused for a character the editor cannot show.
+describe("a control character the entry already had", () => {
+  const esc = "\u001b";
+  const old = `2026-10-20 * "CARD 1234${esc}[0m"\n  Expenses:Food  4.00 USD\n  Assets:Cash`;
+  const edited = `${old.split("\n")[0]}\n  note: "lunch"\n${old.split("\n").slice(1).join("\n")}`;
+
+  it("is kept through a metadata-only edit", () => {
+    expect(() =>
+      assertNoNewControlCharacters(edited, "newContent", old),
+    ).not.toThrow();
+    expect(() =>
+      assertSingleEntryText(edited, "newContent", { controls: false }),
+    ).not.toThrow();
+  });
+
+  it("does not let in a new one", () => {
+    expect(() =>
+      assertNoNewControlCharacters(`${edited}\u0000`, "newContent", old),
+    ).toThrow("newContent contains the control character U+0000");
+    expect(() => assertNoNewControlCharacters(edited, "newContent")).toThrow(
+      "newContent contains the control character U+001B",
+    );
+    expect(() => assertSingleEntryText(edited, "newContent")).toThrow("U+001B");
+  });
+
+  it("is checked against the entry the update replaces", () => {
+    const service = fs
+      .readFileSync(
+        path.join(
+          __dirname,
+          "..",
+          "..",
+          "service",
+          "ledger-journal-service.ts",
+        ),
+        "utf8",
+      )
+      .replace(/\s+/g, "");
+    const update = service.slice(service.indexOf("asyncupdateSourceSlice("));
+    const early = update.indexOf(
+      'assertSingleEntryText(newContent,"newContent",{controls:false});',
+    );
+    const later = update.indexOf(
+      'assertNoNewControlCharacters(newContent,"newContent",found.slice);',
+    );
+    expect([early === -1, later === -1, early < later]).toEqual([
+      false,
+      false,
+      true,
+    ]);
   });
 });

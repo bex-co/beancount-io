@@ -236,18 +236,43 @@ export function isSingleDirective(text: string): boolean {
 const CONFIGURATION_KEYWORDS = new Set(["option", "plugin", "include"]);
 
 /**
- * Refuse replacement text for one entry unless it is exactly one dated
- * directive with its indented lines; comments may surround it. Spliced in
- * as-is, an `option` line or a second entry was committed and reported as
- * an update of the entry it replaced (w23/036).
+ * Refuse a control character in `text` unless `kept` holds it too. An entry
+ * imported with one (an ESC from a CSV) could never be edited: its own slice,
+ * sent back with a metadata change, was refused for a character the user can
+ * neither see nor remove there (w21/816). A new one is still refused.
  */
-export function assertSingleEntryText(text: string, field: string): void {
-  if (CONTROL_CHARACTER.test(text)) {
+export function assertNoNewControlCharacters(
+  text: string,
+  field: string,
+  kept = "",
+): void {
+  const keptControls = new Set(
+    [...kept].filter((char) => CONTROL_CHARACTER.test(char)),
+  );
+  const added = [...text].find(
+    (char) => CONTROL_CHARACTER.test(char) && !keptControls.has(char),
+  );
+  if (added !== undefined) {
     throw new BadUserInputError(
-      `${field} contains the control character ${describeControl(text)}, which the ledger cannot store as text`,
+      `${field} contains the control character ${describeControl(added)}, which the ledger cannot store as text`,
       field,
     );
   }
+}
+
+/**
+ * Refuse replacement text for one entry unless it is exactly one dated
+ * directive with its indented lines; comments may surround it. Spliced in
+ * as-is, an `option` line or a second entry was committed and reported as
+ * an update of the entry it replaced (w23/036). With `controls: false` the
+ * caller checks control characters itself, against the entry it replaces.
+ */
+export function assertSingleEntryText(
+  text: string,
+  field: string,
+  { controls = true }: { controls?: boolean } = {},
+): void {
+  if (controls) assertNoNewControlCharacters(text, field);
   const directives = topLevelLines(text).filter(
     (line) => !line.startsWith(";"),
   );

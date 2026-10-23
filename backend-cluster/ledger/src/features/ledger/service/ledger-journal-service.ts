@@ -6,7 +6,10 @@ import {
   OperationNotAllowedError,
   type LedgerWriteAction,
 } from "@/shared/errors";
-import { assertSingleEntryText } from "@/features/ledger/utils/entry-tokens";
+import {
+  assertNoNewControlCharacters,
+  assertSingleEntryText,
+} from "@/features/ledger/utils/entry-tokens";
 import type {
   DirectiveType,
   TransactionSubtype,
@@ -1061,7 +1064,9 @@ export class LedgerJournalService implements ILedgerJournalService {
   }): Promise<UpdateSliceResult> {
     const { ledgerId, userId, entryHash, sha256sum, newContent, allowInvalid } =
       params;
-    assertSingleEntryText(newContent, "newContent");
+    // Control characters are checked against the entry being replaced, once
+    // it is found (w21/816).
+    assertSingleEntryText(newContent, "newContent", { controls: false });
     const loaded = await this.loadFileMap(ledgerId, userId);
     const { files, entryPoint, repoPaths, managedPricePaths } = loaded;
     const sourceEntryHash = await this.resolveSourceEntryId(
@@ -1078,6 +1083,7 @@ export class LedgerJournalService implements ILedgerJournalService {
       sourceEntryHash,
       sha256sum,
     );
+    assertNoNewControlCharacters(newContent, "newContent", found.slice);
     const applied: { current?: AppliedReplace } = {};
     const transforms = new Map([
       [
