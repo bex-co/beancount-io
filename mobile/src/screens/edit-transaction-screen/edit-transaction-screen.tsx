@@ -67,6 +67,7 @@ import { RouteLedgerUnavailable } from "@/components/route-ledger-unavailable";
 import { i18n } from "@/translations";
 import { useIsHere } from "@/common/hooks/use-is-here";
 import { useRouteParams } from "@/common/hooks/use-route-params";
+import * as Clipboard from "expo-clipboard";
 
 const SKELETON_WIDTHS = [220, 160, 280, 120, 200, 260, 140];
 
@@ -242,6 +243,25 @@ export const EditTransactionScreen = (): JSX.Element => {
     setInsertSpec(null);
   }, [ledgerId, refetchContext, client]);
 
+  // The conflict alert's way to keep the user's text (w21/817), as the Files
+  // editor's (w21/273): copy it, then load the current version to paste it
+  // into and save. "Keep Editing" alone can never save, and "Reload" drops it.
+  const copyThenReload = useCallback(
+    async (content: string) => {
+      // The text now in the editor, which may be newer than the save's.
+      const current = recoveryRef.current.latest() || content;
+      try {
+        await Clipboard.setStringAsync(current);
+      } catch {
+        // Reloading now would drop text that was not kept.
+        Alert.alert(t("ledgerEditorCopyFailed"));
+        return;
+      }
+      await handleReload();
+    },
+    [handleReload, t],
+  );
+
   // ── Save ────────────────────────────────────────────────────────────────────
 
   // Everything ledger-derived is refreshed by `invalidateLedgerData` below.
@@ -392,6 +412,10 @@ export const EditTransactionScreen = (): JSX.Element => {
             Alert.alert("", t("editConflict"), [
               { text: t("ledgerEditorKeepEditing"), style: "cancel" },
               {
+                text: t("ledgerEditorCopyReload"),
+                onPress: () => void copyThenReload(content),
+              },
+              {
                 text: t("ledgerEditorReload"),
                 style: "destructive",
                 onPress: () => void handleReload(),
@@ -476,6 +500,7 @@ export const EditTransactionScreen = (): JSX.Element => {
     [
       isHere,
       handleReload,
+      copyThenReload,
       canWrite,
       client,
       confirmWrite,

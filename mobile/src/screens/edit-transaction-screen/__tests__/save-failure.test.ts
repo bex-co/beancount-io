@@ -124,6 +124,31 @@ describe("Edit Transaction save-failure wiring", () => {
     expect(source.includes('setSaveError(t("editConflict"))')).toBe(true);
     expect(source.includes("onPress: () => void handleReload()")).toBe(true);
   });
+
+  // w21/817: Keep Editing could never save and Reload dropped the draft.
+  it("offers to copy the draft before reloading, as the Files editor does", () => {
+    const flat = source.replace(/\s+/g, "");
+    const alert = flat.slice(
+      flat.indexOf('Alert.alert("",t("editConflict"),['),
+    );
+    expect(
+      alert.startsWith(
+        'Alert.alert("",t("editConflict"),[{text:t("ledgerEditorKeepEditing"),style:"cancel"},{text:t("ledgerEditorCopyReload"),onPress:()=>voidcopyThenReload(content),},',
+      ),
+    ).toBe(true);
+    const copy = flat.slice(flat.indexOf("constcopyThenReload=useCallback("));
+    expect(
+      copy.includes(
+        "constcurrent=recoveryRef.current.latest()||content;try{awaitClipboard.setStringAsync(current);}catch{",
+      ),
+    ).toBe(true);
+    // Reloading only once the text is kept.
+    expect(
+      copy.includes(
+        'Alert.alert(t("ledgerEditorCopyFailed"));return;}awaithandleReload();',
+      ),
+    ).toBe(true);
+  });
 });
 
 describe("Edit Transaction reload of an entry that is gone", () => {
