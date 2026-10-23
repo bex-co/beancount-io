@@ -17,7 +17,6 @@
 - [694](./694.md) — Since w21/672, Delete after a metadata-only change elsewhere dead-ends on "changed or removed" (w21/250 regression)
 - [695](./695.md) — A CRLF main.bean still gets a bare-LF line when an add creates a routed year file and its include (w21/673 gap)
 - [696](./696.md) — Reports' Recent Transactions says "No transactions yet" when the only income or expense is next month's
-- [691](./691.md) — Editing or deleting an entry in a non-UTF-8 ledger file rewrites its undecodable bytes as U+FFFD (edit-path sibling of w21/679)
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window
 - [065](./blocked/065.md) — One early-year entry (e.g. 0050) makes the balance sheet 23,718 monthly points (3 MB) and the app stalls — **blocked:** needs an approach decision (per-pill fetch vs server downsample) and a simulator profile of the stall
 - [180](./blocked/180.md) — Budget actuals use raw prefix match (`Transport` counts `Transportation`), unlike Reports — **blocked:** needs an owner decision between component matching on the server (a Fava break) and a per-account breakdown for the client

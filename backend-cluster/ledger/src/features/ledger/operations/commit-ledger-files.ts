@@ -1,11 +1,14 @@
-import { ConflictError, DomainError } from "@/shared/errors";
+import { BadUserInputError, ConflictError, DomainError } from "@/shared/errors";
 import { toSafeRepoUrlPath } from "@/shared/safe-repo-path";
 import { logger } from "@/shared/logger";
 import {
   isGiteaNotFound,
   isGiteaWriteConflict,
 } from "@/features/gitea/utils/gitea-error";
-import { readGiteaFileText } from "@/features/gitea/utils/gitea-file-content";
+import {
+  readGiteaFileText,
+  UndecodableTextError,
+} from "@/features/gitea/utils/gitea-file-content";
 import { giteaWriteErrorFromCause } from "@/features/ledger/utils/operation-not-allowed-from-cause";
 import type { GiteaCommitClient } from "@/foundation/clients/load-cached-ledger-file-map";
 import {
@@ -110,13 +113,24 @@ async function readFileOrNull(
     );
     const sha = res.data.sha;
     if (!sha) return null;
+    // Strictly: a lenient read turned each undecodable byte into U+FFFD and
+    // the commit wrote that back (w21/691).
     const text = await readGiteaFileText(
       client.repos,
       owner,
       repo,
       toSafeRepoUrlPath(path),
       res.data,
-    );
+      undefined,
+      { rejectInvalidUtf8: true },
+    ).catch((error: unknown) => {
+      if (error instanceof UndecodableTextError) {
+        throw new BadUserInputError(
+          `${path} is not valid UTF-8 text, so changing it would replace the bytes that cannot be decoded; re-save it as UTF-8 first`,
+        );
+      }
+      throw error;
+    });
     // The ledger load decodes with `TextDecoder`, which drops a leading BOM,
     // while this read kept it. On the file's first line it hid the entry's date
     // from the block splitter, so an entry opened from the load could never be

@@ -10,13 +10,13 @@ const BOM = "﻿";
 const ENTRY =
   '2024-03-05 * "Shop" "Groceries"\n  Expenses:Food  10 USD\n  Assets:Bank\n';
 
-function clientFor(remote: string) {
+function clientFor(remote: string | Buffer) {
   const sent: string[] = [];
   const client = {
     repos: {
       repoGetContents: jest.fn(async () => ({
         data: {
-          content: Buffer.from(remote, "utf-8").toString("base64"),
+          content: Buffer.from(remote).toString("base64"),
           encoding: "base64",
           sha: "blob-1",
         },
@@ -83,5 +83,26 @@ describe("a file that starts with a byte-order mark", () => {
     await commit(client, (content) => (content ?? "") + "; end\n");
     expect(sent[0]!.startsWith(BOM)).toBe(false);
     expect(sent[0]!.endsWith("; end\n")).toBe(true);
+  });
+});
+
+// w21/691: a lenient read wrote each undecodable byte back as U+FFFD.
+describe("a file that is not valid UTF-8", () => {
+  it("is refused by name, and nothing is committed", async () => {
+    const { client, sent } = clientFor(
+      Buffer.from("; Caf\xe9 latin-1\n" + ENTRY, "latin1"),
+    );
+    await expect(
+      commit(client, (content) => (content ?? "").replace("Groceries", "Food")),
+    ).rejects.toThrow("2024.bean is not valid UTF-8 text");
+    expect(sent).toEqual([]);
+  });
+
+  it("still edits a valid multibyte file", async () => {
+    const { client, sent } = clientFor("; café 咖啡\n" + ENTRY);
+    await commit(client, (content) =>
+      (content ?? "").replace("Groceries", "Food"),
+    );
+    expect(sent[0]!.startsWith("; café 咖啡")).toBe(true);
   });
 });

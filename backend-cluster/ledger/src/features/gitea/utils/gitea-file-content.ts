@@ -27,6 +27,12 @@ export interface GiteaTextReadLimits {
   maxBytes?: number;
   /** Reject invalid UTF-8 and NUL-bearing binary content. */
   requireUtf8?: boolean;
+  /**
+   * Reject invalid UTF-8 only, and keep a leading byte-order mark in the text,
+   * for a reader that writes the file back and must not alter its bytes
+   * (w21/691).
+   */
+  rejectInvalidUtf8?: boolean;
 }
 
 function assertWithinByteLimit(size: number, maxBytes?: number): void {
@@ -48,6 +54,15 @@ export class UndecodableTextError extends BadUserInputError {}
 
 function decodeText(buffer: Buffer, limits: GiteaTextReadLimits): string {
   assertWithinByteLimit(buffer.byteLength, limits.maxBytes);
+  if (limits.rejectInvalidUtf8 === true) {
+    try {
+      return new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(
+        buffer,
+      );
+    } catch {
+      throw new UndecodableTextError("Ledger files must be valid UTF-8 text");
+    }
+  }
   if (limits.requireUtf8 !== true) return buffer.toString("utf-8");
   let text: string;
   try {
