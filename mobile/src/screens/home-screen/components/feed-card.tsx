@@ -114,8 +114,9 @@ function FeedRow({
 
   return (
     <Pressable
+      // No `disabled`: it adds the not-enabled trait, so a row with nothing to
+      // open read "dimmed" (w21/851); no handler is enough.
       onPress={action ? handlePress : undefined}
-      disabled={!action}
       accessibilityRole={action ? "button" : undefined}
       style={[styles.row, isFirst && styles.firstRow]}
     >

@@ -90,7 +90,9 @@ describe("the feed row", () => {
     );
     expect(card.includes("feedRowAction(link, getServerUrl())")).toBe(true);
     expect(card.includes('navigation: "push"')).toBe(true);
-    expect(card.includes("disabled={!action}")).toBe(true);
+    expect(card.includes("onPress={action ? handlePress : undefined}")).toBe(
+      true,
+    );
   });
 });
 
@@ -386,5 +388,20 @@ describe("feedRowTitle", () => {
       "utf8",
     );
     expect(card.includes("{feedRowTitle(title, source, t)}")).toBe(true);
+  });
+});
+
+// w21/851: an informational Latest Updates row was announced as "dimmed".
+describe("a feed row with no action", () => {
+  const card = fs
+    .readFileSync(path.join(__dirname, "..", "feed-card.tsx"), "utf8")
+    .replace(/\s+/g, "");
+
+  it("is not disabled, and has no press handler", () => {
+    expect(card.includes("onPress={action?handlePress:undefined}")).toBe(true);
+    expect(card.includes("disabled={!action}")).toBe(false);
+    expect(card.includes('accessibilityRole={action?"button":undefined}')).toBe(
+      true,
+    );
   });
 });
