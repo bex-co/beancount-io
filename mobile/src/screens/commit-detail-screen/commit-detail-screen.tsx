@@ -298,18 +298,21 @@ function CommitDetailScreenImpl({
               <View style={styles.divider} />
 
               {/* Stats */}
-              <View
-                style={styles.section}
-                accessibilityLabel={`${t("commitDetailAdditions", {
-                  count: commit.stats.additions,
-                })}, ${t("commitDetailDeletions", {
-                  count: commit.stats.deletions,
-                })}`}
-              >
+              <View style={styles.section}>
                 <Text style={styles.sectionLabel} accessibilityRole="header">
                   {t("commitDetailStats")}
                 </Text>
-                <View style={styles.statsRow}>
+                {/* One element, so VoiceOver reads its words, not "+12" and
+                    "−3": the label sat on a view that was none (w21/811). */}
+                <View
+                  style={styles.statsRow}
+                  accessible
+                  accessibilityLabel={`${t("commitDetailAdditions", {
+                    count: commit.stats.additions,
+                  })}, ${t("commitDetailDeletions", {
+                    count: commit.stats.deletions,
+                  })}`}
+                >
                   <Text style={styles.additions}>
                     +{commit.stats.additions}
                   </Text>
