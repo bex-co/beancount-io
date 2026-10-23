@@ -2066,7 +2066,12 @@ _ENTRY_LINE = re.compile(_DATE + rb"(?:[ \t]+\S|[A-Za-z*!&#?%])", re.MULTILINE)
 #: Accounts the closure opens, and accounts its entries post to. A name may
 #: start with and contain non-ASCII letters (`Áctivos:Cash`).
 _OPEN_ACCOUNT = re.compile(_DATE + rb"[ \t]*open[ \t]+(\S+)", re.MULTILINE)
-_POSTED_ACCOUNT = re.compile(rb"^[ \t]+([A-Z\x80-\xff][A-Za-z0-9_\x80-\xff-]*(?::[^:\s]+)+)(?=[ \t]|$)", re.MULTILINE)
+_POSTED_ACCOUNT = re.compile(
+    # A posting flag may precede the account: a symbol (`*`, `!`, `&`, `#`, `?`, `%`), glued or spaced, or a
+    # capital letter (`P`) and a space (w5/989).
+    rb"^[ \t]+(?:[*!&#?%][ \t]*|[A-Z][ \t]+)?([A-Z\x80-\xff][A-Za-z0-9_\x80-\xff-]*(?::[^:\s]+)+)(?=[ \t]|$)",
+    re.MULTILINE,
+)
 _DIRECTIVE_ACCOUNT = re.compile(_DATE + rb"[ \t]*(?:balance|note|document|close)[ \t]+(\S+)", re.MULTILINE)
 _PAD_ACCOUNTS = re.compile(_DATE + rb"[ \t]*pad[ \t]+(\S+)[ \t]+(\S+)", re.MULTILINE)
 
