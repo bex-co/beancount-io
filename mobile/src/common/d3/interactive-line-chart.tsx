@@ -54,6 +54,7 @@ import {
   describeChange,
   formatChangePercent,
 } from "./change-percent";
+import { computeDomain, type Domain } from "./line-chart-domain";
 import {
   CHART_STEP_REST_MS,
   chartPointText,
@@ -158,19 +159,6 @@ const PAD_BOTTOM = 16;
  * keeping the work — and the string payload copied to the UI thread — bounded.
  */
 const MORPH_FRAMES = 24;
-
-type Domain = readonly [number, number];
-
-/**
- * Padded y-domain for a series. The padding stops a flat-ish curve from
- * hugging the top and bottom edges of the plot.
- */
-function computeDomain(values: number[]): Domain {
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const pad = (max - min) * 0.1 || Math.abs(max) * 0.1 || 1;
-  return [min - pad, max + pad];
-}
 
 type ChartGeometry = {
   chartWidth: number;
