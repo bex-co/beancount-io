@@ -2100,7 +2100,49 @@ def _booking_order(
         except protocol.LedgerError:
             continue
         return candidate
-    return ordered
+    # None of the three books: a mix of independent trades, where one needs
+    # moving and another must stay (a long sale before its purchase beside a
+    # short opened then covered). Build the order row by row against the ledger
+    # (w5/980).
+    built = _built_booking_order(valid, file=file, allow_errors=allow_errors, into=into)
+    return built if built is not None else ordered
+
+
+def _built_booking_order(
+    valid: list[tuple[int, Any]], *, file: Path, allow_errors: bool, into: Path | None
+) -> list[tuple[int, Any]] | None:
+    """An order found by placing each date's rows one at a time where the ledger accepts them, else None.
+
+    Within a date, the first remaining row (in input order) that books after
+    the rows already placed goes next, so a row waits only for what it needs.
+    Earlier dates are placed first. Only reached when no whole-batch order
+    tried above validates, and costs a validation per placement.
+    """
+    from collections import defaultdict
+
+    by_date: dict[Any, list[tuple[int, Any]]] = defaultdict(list)
+    for item in valid:
+        by_date[item[1].date].append(item)
+
+    def books(rows: list[tuple[int, Any]]) -> bool:
+        try:
+            write.validate_append(
+                file, [writer.format_transaction(d) for _, d in rows], allow_errors=allow_errors, into=into
+            )
+        except protocol.LedgerError:
+            return False
+        return True
+
+    placed: list[tuple[int, Any]] = []
+    for date in sorted(by_date):
+        remaining = list(by_date[date])
+        while remaining:
+            chosen = next((row for row in remaining if books([*placed, row])), None)
+            if chosen is None:
+                return None
+            placed.append(chosen)
+            remaining.remove(chosen)
+    return placed
 
 
 def _same_day_purchases_first(
