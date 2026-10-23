@@ -513,6 +513,10 @@ input schema is in [`bank-import-tool.ts`](../src/features/ai-agent/tools/bank-i
 relative to its asset directory. The service resolves the ledger, enforces the
 credential pin and file-read permission, and signs the URL. REST exposes this
 at `GET /api-gateway/v1/asset-download-url` with the same query arguments.
+An ID the caller cannot use is refused the same way whether a ledger has it or
+not, and the refusal never names the ledger the ID resolved to: `UNAUTHENTICATED`
+for an anonymous caller, `FORBIDDEN` for a credential without `ledger.read` or
+one pinned to another ledger, and `NOT_FOUND` "Ledger not found" otherwise.
 
 `beancount://{owner}/{name}/archive-download-url` returns the existing HTTP URL
 for `main.zip`, on the server's public origin. It is a REST endpoint: fetch it

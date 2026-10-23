@@ -6,7 +6,8 @@ import http from "node:http";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { buildSchema } from "type-graphql";
-import { graphql } from "graphql";
+import { graphql, type GraphQLError } from "graphql";
+import { formatError } from "@/server/graphql/format-error";
 import { LedgerAssetService } from "@/features/ledger/service/ledger-asset-service";
 import { LedgerAssetQueryResolver } from "@/features/ledger/api/resolvers/ledger-asset-resolver";
 import { AuthorizationService } from "@/server/api/authorization";
@@ -74,9 +75,15 @@ async function fixture(identity: Identity = readOnlyToken) {
   } as AppConfig;
   const check = jest.fn().mockResolvedValue(true);
   const authorization = new AuthorizationService({ check }, jest.fn());
-  const lookup = jest.fn(async () => ({
-    data: { success: true, data: { id: 42, full_name: "alice/main" } },
-  }));
+  const lookup = jest.fn(
+    async (
+      _id?: unknown,
+    ): Promise<{
+      data: { success: boolean; data?: { id: number; full_name: string } };
+    }> => ({
+      data: { success: true, data: { id: 42, full_name: "alice/main" } },
+    }),
+  );
   const factory = {
     getAdminClient: () => ({
       admin: { getLedgerByRepoId: lookup },
@@ -314,6 +321,50 @@ describe("download URL discovery and authorized HTTP consumption", () => {
       await f.close();
     }
   });
+  it.each([
+    ["an account-wide", readOnlyToken, 404],
+    ["a pinned", pinnedReadToken, 403],
+    ["a scope-less", { ...readOnlyToken, scopes: new Set<string>() }, 403],
+  ] as const)(
+    "answers a missing repository ID exactly as another user's ledger for %s credential (w23/066)",
+    async (_credential, identity, status) => {
+      const f = await fixture(identity);
+      try {
+        f.check.mockResolvedValue(false);
+        f.lookup.mockImplementation(async (id) =>
+          id === 7
+            ? { data: { success: true, data: { id: 7, full_name: "bob/tax" } } }
+            : { data: { success: false } },
+        );
+        const refusal = async (id: number) => {
+          const query = `ledgerRepoId=${id}&filename=x.png`;
+          const rest = await fetch(
+            `${f.restBase}/api-gateway/v1/asset-download-url?${query}`,
+          );
+          return {
+            status: rest.status,
+            rest: await rest.json(),
+            mcp: await f
+              .read(`beancount://assets/download-url?${query}`)
+              .catch((e: Error & { data?: unknown }) => [e.message, e.data]),
+            gql: await f
+              .gql(
+                "getLedgerAssetDownloadUrl",
+                `ledgerRepoId:${id},filename:"x.png"`,
+              )
+              .catch((e: GraphQLError) => formatError(e.toJSON(), e)),
+          };
+        };
+        const foreign = await refusal(7);
+        expect(foreign.status).toBe(status);
+        expect(await refusal(999999999)).toEqual(foreign);
+        expect(JSON.stringify(foreign)).not.toMatch(/bob|999999999/);
+        expect(f.generateDownloadUrl).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
   it("refuses revoked relationships and outages before signing new URLs", async () => {
     const f = await fixture();
     try {
