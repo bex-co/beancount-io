@@ -129,6 +129,21 @@ export function selectPointFavorability(
   });
 }
 
+/**
+ * Which charted periods had a budget: not those that ended before the first
+ * directive, drawn greyed and unjudged. Their spending is no actual against a
+ * target, yet the spoken summary counted it: "Actual $2.4K of $222.6
+ * budgeted" (w21/807).
+ */
+export function selectBudgetedPeriods(
+  series: BudgetSeriesPoint[],
+  budgetHistory: readonly { date: string }[] = [],
+  today?: string,
+): boolean[] {
+  const firstBudget = firstBudgetDate(budgetHistory);
+  return series.map((point) => !beforeFirstBudget(point, firstBudget, today));
+}
+
 export function selectBudgetCardStats(
   group: BudgetGroup,
   series: BudgetSeriesPoint[],

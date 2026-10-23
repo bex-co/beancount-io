@@ -257,12 +257,29 @@ export function budgetChartSummary(
     dates?: string[];
     /** `-1` for an income target, where missing it means falling short. */
     direction?: 1 | -1;
+    /**
+     * Which periods had a budget (`selectBudgetedPeriods`). Only those are
+     * summed and counted: spending from before the budget existed read as
+     * actual against it (w21/807). All of them when none had one yet.
+     */
+    budgeted?: boolean[];
   },
   t: (key: string, params?: Record<string, unknown>) => string,
   locale = "en",
 ): string | undefined {
-  const { labels, actuals, budgets, favorables, currency, dates, direction } =
-    series;
+  const kept = series.labels
+    .map((_, index) => index)
+    .filter((index) => series.budgeted?.[index] !== false);
+  const pick = <T>(values: T[] | undefined) =>
+    values === undefined || kept.length === 0
+      ? values
+      : kept.map((index) => values[index]!);
+  const labels = pick(series.labels)!;
+  const actuals = pick(series.actuals)!;
+  const budgets = pick(series.budgets)!;
+  const favorables = pick(series.favorables)!;
+  const dates = pick(series.dates);
+  const { currency, direction } = series;
   if (labels.length === 0) return undefined;
 
   const money = (values: number[]) =>

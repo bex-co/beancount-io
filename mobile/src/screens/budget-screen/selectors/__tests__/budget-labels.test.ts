@@ -251,3 +251,74 @@ describe("budgetPanelWindow", () => {
     expect(hook.includes("budgetPanelWindow(today)")).toBe(true);
   });
 });
+
+// w21/807: a budget dated Oct 21 read "Actual $2.4K of $222.6 budgeted across
+// 10 periods": January to September were spent before the budget existed.
+describe("budgetChartSummary before the budget existed", () => {
+  const { selectBudgetedPeriods } = require("../select-budget-card-stats");
+  const months = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10"];
+  const series = months.map((month) => ({
+    date: `2026-${month}-${month === "10" ? "31" : "28"}`,
+    actual: month === "10" ? 100 : 250,
+    budget: month === "10" ? 222.6 : 0,
+  }));
+  const budgeted: boolean[] = selectBudgetedPeriods(
+    series,
+    [{ date: "2026-10-21" }],
+    "2026-10-23",
+  );
+
+  it("sums and counts only the periods with a budget", () => {
+    expect(budgeted.filter(Boolean).length).toBe(1);
+    expect(
+      budgetChartSummary(
+        {
+          labels: months.map((m) => `M${m}`),
+          actuals: series.map((point) => point.actual),
+          budgets: series.map((point) => point.budget),
+          favorables: budgeted.map((has) => (has ? true : null)),
+          currency: "USD",
+          budgeted,
+        },
+        t,
+      ),
+    ).toBe(
+      "Budget versus actual for M10. Actual $100 of $222.6 budgeted across 1 period, 0 over target.",
+    );
+  });
+
+  it("keeps every period when none had a budget yet", () => {
+    const summary = budgetChartSummary(
+      {
+        labels: ["JAN", "FEB"],
+        actuals: [10, 20],
+        budgets: [0, 0],
+        favorables: [null, null],
+        currency: "USD",
+        budgeted: [false, false],
+      },
+      t,
+    );
+    expect(summary?.includes("across 2 periods")).toBe(true);
+  });
+
+  it("is what the card speaks", () => {
+    const card = require("fs")
+      .readFileSync(
+        require("path").join(
+          __dirname,
+          "..",
+          "..",
+          "components",
+          "budget-group-card.tsx",
+        ),
+        "utf8",
+      )
+      .replace(/\s+/g, "");
+    expect(
+      card.includes(
+        "budgeted:selectBudgetedPeriods(series,group.budgetHistory,today,),",
+      ),
+    ).toBe(true);
+  });
+});

@@ -40,6 +40,7 @@ import {
 } from "@/screens/budget-screen/selectors/budget-selectors";
 import {
   selectBudgetCardStats,
+  selectBudgetedPeriods,
   selectPointFavorability,
 } from "@/screens/budget-screen/selectors/select-budget-card-stats";
 import {
@@ -400,6 +401,11 @@ export function BudgetGroupCard({
                   labels: periodLabels,
                   dates: periodDates,
                   direction,
+                  budgeted: selectBudgetedPeriods(
+                    series,
+                    group.budgetHistory,
+                    today,
+                  ),
                 },
                 t,
                 locale,

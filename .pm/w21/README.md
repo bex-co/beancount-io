@@ -12,7 +12,6 @@
 
 ## Inbox
 
-- [807](./807.md) — VoiceOver's budget chart summary counts spending from before the budget existed
 - [808](./808.md) — In a KWD ledger, the Accounts tree loses a parent's own sub-cent balance and folds it into a child
 - [809](./809.md) — Open Account says a still-open account "was closed … and can't be reopened" for a future close date
 - [810](./810.md) — Open Account's Back skips the discard prompt after changing only type, currency or date
