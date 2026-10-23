@@ -39,8 +39,27 @@ function triggeringBalance(
   return undefined;
 }
 
+/** rustledger's "Unused Pad entry", for a pad written at `file:line`. */
+export function unusedPadError(
+  file: string | null,
+  line: number | null,
+): BeancountError {
+  return {
+    message: "Unused Pad entry",
+    code: "E2003",
+    phase: "validate",
+    hint: null,
+    file,
+    line,
+    column: line === null ? null : 1,
+    end_line: null,
+    end_column: null,
+    severity: "error",
+  };
+}
+
 /** Where a pad is written: `[file, 1-based line]`, matched by its header. */
-function padLocation(
+export function padLocation(
   pad: Pad,
   files: FileMap,
   claimed: Set<string>,
@@ -129,18 +148,7 @@ export function dropPaddingWithinTolerance(
       files,
       claimed,
     );
-    errors.push({
-      message: "Unused Pad entry",
-      code: "E2003",
-      phase: "validate",
-      hint: null,
-      file,
-      line,
-      column: line === null ? null : 1,
-      end_line: null,
-      end_column: null,
-      severity: "error",
-    });
+    errors.push(unusedPadError(file, line));
   });
   return { paddingTransactions: kept, errors };
 }

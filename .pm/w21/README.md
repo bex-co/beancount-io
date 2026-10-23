@@ -24,7 +24,6 @@
 - [680](./680.md) — A NUL character in the payee or narration is committed, and then none of the file's entries load
 - [681](./681.md) — Any add or edit touching an account whose `~`-tolerance balance already fails is refused (gap in w21/618)
 - [682](./682.md) — An entry added after an unclosed quote is reported as saved, but the ledger never reads it
-- [675](./675.md) — A pad that isn't needed at its first balance silently hides a later failing balance: no error, no Off-by, bell at 0
 - [676](./676.md) — w21/135 follow-up: padding dropped for being within tolerance still counts when the next balance is checked
 - [677](./677.md) — A failing balance gets no "Off by" when another assertion on the account has the same amount
 - [678](./678.md) — A sale whose lot doesn't match is still counted in every balance, so the books don't balance

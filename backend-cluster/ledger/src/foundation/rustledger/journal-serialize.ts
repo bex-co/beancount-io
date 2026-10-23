@@ -260,9 +260,13 @@ export function failedBalanceDiffs(
     code?: string | null;
     file?: string | null;
     line?: number | null;
+    date?: string;
   }[],
 ): Map<DirectiveJson, JournalAmountPublic> {
-  const failures = new Map<string, { diff: JournalAmountPublic }[]>();
+  const failures = new Map<
+    string,
+    { diff: JournalAmountPublic; date?: string }[]
+  >();
   for (const error of errors) {
     const message = error.message.trim();
     let account: string;
@@ -285,7 +289,10 @@ export function failedBalanceDiffs(
     if (gotCurrency !== currency) continue;
     const key = assertionKey(account, expected, currency, tolerance);
     const list = failures.get(key) ?? [];
-    list.push({ diff: { number: subtractDecimal(got, expected), currency } });
+    list.push({
+      diff: { number: subtractDecimal(got, expected), currency },
+      date: error.date,
+    });
     failures.set(key, list);
   }
   const diffs = new Map<DirectiveJson, JournalAmountPublic>();
@@ -307,6 +314,17 @@ export function failedBalanceDiffs(
   }
   for (const [key, list] of failures) {
     const candidates = assertions.get(key) ?? [];
+    // Failures that name their assertion's date pair with it, however many
+    // other assertions share the amount (w21/677).
+    if (list.every((failure) => failure.date !== undefined)) {
+      for (const failure of list) {
+        const match = candidates.filter(
+          (directive) => directive.date === failure.date,
+        );
+        if (match.length === 1) diffs.set(match[0], failure.diff);
+      }
+      continue;
+    }
     if (candidates.length !== list.length) continue;
     const dated = [...candidates].sort((a, b) =>
       a.date < b.date ? -1 : a.date > b.date ? 1 : 0,

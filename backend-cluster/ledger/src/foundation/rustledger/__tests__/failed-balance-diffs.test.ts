@@ -148,6 +148,50 @@ describe("failedBalanceDiffs", () => {
 // w21/533: an assertion with its own `~ tolerance` fails with E2002, which the
 // join ignored, so it looked like a passing one. The message is the engine's
 // own for the note's fixture.
+// w21/677: three "0.00" assertions on a card, one failing; w21/675: the same
+// amount asserted before and after a spend; w21/676: 98.00 against 100.00.
+describe("failedBalanceDiffs names the assertion by the date on its line", () => {
+  it("gives only the failing one of three same-amount assertions its difference", () => {
+    const feb = balance("2026-02-01", "Liabilities:Card", "0.00");
+    const mar = balance("2026-03-01", "Liabilities:Card", "0.00");
+    const apr = balance("2026-04-01", "Liabilities:Card", "0.00");
+    const diffs = failedBalanceDiffs(
+      [feb, mar, apr],
+      [
+        {
+          ...failed("Liabilities:Card", "0.00", "-5.00", 9),
+          date: "2026-03-01",
+        },
+      ],
+    );
+    expect(diffs.get(mar)).toEqual({ number: "-5.00", currency: "USD" });
+    expect(diffs.has(feb)).toBe(false);
+    expect(diffs.has(apr)).toBe(false);
+  });
+
+  it("reads a later failure of an amount an earlier assertion already passed", () => {
+    const early = balance("2026-02-02", "Assets:Cash", "100.00");
+    const late = balance("2026-02-04", "Assets:Cash", "100.00");
+    const diffs = failedBalanceDiffs(
+      [early, late],
+      [{ ...failed("Assets:Cash", "100.00", "90.00", 12), date: "2026-02-04" }],
+    );
+    expect(diffs.get(late)).toEqual({ number: "-10.00", currency: "USD" });
+    expect(diffs.has(early)).toBe(false);
+  });
+
+  it("falls back to the old pairing for an error without a date", () => {
+    const first = balance("2026-09-01", "Assets:Cash", "50.00");
+    const second = balance("2026-10-01", "Assets:Cash", "50.00");
+    expect(
+      failedBalanceDiffs(
+        [first, second],
+        [failed("Assets:Cash", "50.00", "40", 8)],
+      ).size,
+    ).toBe(0);
+  });
+});
+
 describe("failedBalanceDiffs for an explicit tolerance", () => {
   const exceeded = (line: number) => ({
     message:

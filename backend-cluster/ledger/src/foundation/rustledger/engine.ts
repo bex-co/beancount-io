@@ -10,6 +10,8 @@ import type {
 import { locateParseErrors } from "./parse-errors";
 import { restoreEntrySortOrder } from "./entry-sort-order";
 import { dropPaddingWithinTolerance } from "./pad-tolerance";
+import { errorsHiddenByUnusedPads } from "./pad-recheck";
+import { withBalanceErrorDates } from "./balance-error-dates";
 import { loadRustledger } from "./loader";
 import { queryResultToRecords, type QueryRecordsResult } from "./mappers";
 import { buildSnapshotCacheKey, CoalescingLruCache } from "./snapshot-cache";
@@ -721,10 +723,26 @@ async function parseLedgerFilesUncached(
     stripResult?.strippedFiles ?? scoped,
   );
   errors = [...errors, ...padding.errors];
+  if (!isRawPluginProcessing(files, entryPoint)) {
+    const scopedFiles = stripResult?.strippedFiles ?? scoped;
+    errors = [
+      ...errors,
+      ...(await errorsHiddenByUnusedPads(
+        directives,
+        padding.paddingTransactions,
+        scopedFiles,
+        errors,
+        (blanked) =>
+          withLedger(blanked, entryPoint, (ledger) => ledger.getErrors()),
+      )),
+    ];
+  }
   directives = mergePaddingTransactions(
     directives,
     padding.paddingTransactions,
   );
+
+  errors = withBalanceErrorDates(errors, stripResult?.strippedFiles ?? scoped);
 
   const capturedSourceIds =
     applyTs || sourceDetails !== undefined
