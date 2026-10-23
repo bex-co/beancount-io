@@ -10,14 +10,31 @@ import {
 // Copy & Reload landed on "changed or removed" with the draft on the
 // clipboard and nowhere to paste it.
 describe("finding a changed entry again", () => {
-  const at = { filename: "main.bean", lineno: 12, date: "2026-10-20" };
-  const context = (lineno: number, filename = "main.bean") => ({
+  const cafe = {
+    payee: "Cafe",
+    narration: "latte",
+    postings: [{ account: "Expenses:Food" }, { account: "Assets:Cash" }],
+  };
+  const context = (
+    lineno: number,
+    filename = "main.bean",
+    entry: Record<string, unknown> = cafe,
+  ) => ({
     date: "2026-10-20",
     meta: { filename, lineno },
+    ...entry,
   });
+  const at = entryLocation(context(12))!;
 
-  it("reads where a context says its entry is written", () => {
-    expect(entryLocation(context(12))).toEqual(at);
+  it("reads where a context says its entry is written, and what it is", () => {
+    expect(at).toEqual({
+      filename: "main.bean",
+      lineno: 12,
+      date: "2026-10-20",
+      payee: "Cafe",
+      narration: "latte",
+      accounts: ["Assets:Cash", "Expenses:Food"],
+    });
     expect(entryLocation({ date: "2026-10-20" })).toBe(null);
     expect(entryLocation(null)).toBe(null);
   });
@@ -87,6 +104,71 @@ describe("finding a changed entry again", () => {
         at,
       ),
     ).toBe(null);
+  });
+
+  // w21/852: A was deleted elsewhere and B, the next entry of the day, moved up
+  // into A's line.
+  it("does not adopt a different entry that moved into the old line", () => {
+    const rent = {
+      payee: "Landlord",
+      narration: "rent",
+      postings: [{ account: "Expenses:Rent" }, { account: "Assets:Bank" }],
+    };
+    expect(
+      relocatedEntryId(
+        [
+          {
+            entryHash: "rent",
+            location: entryLocation(context(12, "main.bean", rent)),
+          },
+        ],
+        at,
+      ),
+    ).toBe(null);
+  });
+
+  it("still adopts the entry after an edit of its amount, narration or accounts", () => {
+    // Amounts are not part of what recognises it.
+    expect(
+      relocatedEntryId(
+        [{ entryHash: "edited", location: entryLocation(context(12)) }],
+        at,
+      ),
+    ).toBe("edited");
+    // A new narration, the same accounts.
+    expect(
+      relocatedEntryId(
+        [
+          {
+            entryHash: "renamed",
+            location: entryLocation(
+              context(12, "main.bean", { ...cafe, narration: "flat white" }),
+            ),
+          },
+        ],
+        at,
+      ),
+    ).toBe("renamed");
+    // New accounts, the same payee and narration.
+    expect(
+      relocatedEntryId(
+        [
+          {
+            entryHash: "recategorised",
+            location: entryLocation(
+              context(12, "main.bean", {
+                ...cafe,
+                postings: [
+                  { account: "Expenses:Coffee" },
+                  { account: "Assets:Cash" },
+                ],
+              }),
+            ),
+          },
+        ],
+        at,
+      ),
+    ).toBe("recategorised");
   });
 
   it("is how Reload, and Copy & Reload, find it", () => {

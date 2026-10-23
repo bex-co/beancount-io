@@ -9,18 +9,45 @@
  */
 
 /** Where a context read says its entry is written, and its date. */
-export type EntryLocation = { filename: string; lineno: number; date: string };
+export type EntryLocation = {
+  filename: string;
+  lineno: number;
+  date: string;
+  /** What the entry is, to tell it from the next one that moves into its place (w21/852). */
+  payee: string;
+  narration: string;
+  accounts: string[];
+};
 
 /** The location a context read reports for its entry, when it has one. */
 export function entryLocation(entry: unknown): EntryLocation | null {
   if (typeof entry !== "object" || entry === null) return null;
-  const { meta, date } = entry as { meta?: unknown; date?: unknown };
+  const { meta, date, payee, narration, postings } = entry as {
+    meta?: unknown;
+    date?: unknown;
+    payee?: unknown;
+    narration?: unknown;
+    postings?: unknown;
+  };
   if (typeof meta !== "object" || meta === null) return null;
   const { filename, lineno } = meta as { filename?: unknown; lineno?: unknown };
+  const accounts = Array.isArray(postings)
+    ? postings
+        .map((posting) => (posting as { account?: unknown })?.account)
+        .filter((account): account is string => typeof account === "string")
+        .sort()
+    : [];
   return typeof filename === "string" &&
     typeof lineno === "number" &&
     typeof date === "string"
-    ? { filename, lineno, date: date.slice(0, 10) }
+    ? {
+        filename,
+        lineno,
+        date: date.slice(0, 10),
+        payee: typeof payee === "string" ? payee.trim() : "",
+        narration: typeof narration === "string" ? narration.trim() : "",
+        accounts,
+      }
     : null;
 }
 
@@ -48,7 +75,24 @@ export function sameDayTransactionIds(
     .slice(0, limit);
 }
 
-/** The one candidate at `at`'s file and line, or null for none or several. */
+/**
+ * Whether `candidate` is still recognisably the entry `at` was read from: the
+ * same payee and narration, or the same posting accounts. An amount change
+ * keeps both; the next entry of the day moving up into a deleted one's place
+ * keeps neither (w21/852).
+ */
+function recognisable(candidate: EntryLocation, at: EntryLocation): boolean {
+  const named =
+    (candidate.payee !== "" || candidate.narration !== "") &&
+    candidate.payee === at.payee &&
+    candidate.narration === at.narration;
+  const sameAccounts =
+    candidate.accounts.length > 0 &&
+    candidate.accounts.join("\u0000") === at.accounts.join("\u0000");
+  return named || sameAccounts;
+}
+
+/** The one candidate at `at`'s file and line that is still that entry, or null for none or several. */
 export function relocatedEntryId(
   candidates: readonly {
     entryHash: string;
@@ -60,7 +104,8 @@ export function relocatedEntryId(
     ({ location }) =>
       location !== null &&
       location.filename === at.filename &&
-      location.lineno === at.lineno,
+      location.lineno === at.lineno &&
+      recognisable(location, at),
   );
   return here.length === 1 ? here[0]!.entryHash : null;
 }
