@@ -565,3 +565,76 @@ describe("NetWorthCard valuation status (w4/m27)", () => {
     ).not.toBeInTheDocument();
   });
 });
+
+/** A month's change subtracts amounts in one currency only (w4/993). */
+describe("NetWorthCard monthly change", () => {
+  const renderCard = (data: DataSeries) =>
+    render(
+      <NetWorthCard
+        ledgerOwner="owner"
+        ledgerName="book"
+        valuation={null}
+        data={data}
+        primaryCurrency="USD"
+      />,
+    );
+  const change = () =>
+    screen.queryByText("page.overview.fromPreviousMonth")?.parentElement
+      ?.textContent ?? null;
+
+  it("shows no change when last month held only another currency", async () => {
+    renderCard([
+      { date: "2016-01-31", balance: { USD: "1000" } },
+      { date: "2016-02-29", balance: { JPY: "100000" } },
+    ]);
+    expect(change()).toBeNull();
+    expect(screen.queryByText(/99000/)).toBeNull();
+    // The balances themselves still show, each in its own currency.
+    expect(screen.getByText("100000 JPY")).toBeInTheDocument();
+    await userEvent.click(
+      screen.getByRole("button", { name: "page.overview.tableView" }),
+    );
+    const [, february, january] = within(
+      screen.getByRole("table", { name: "page.overview.netWorthByMonth" }),
+    ).getAllByRole("row");
+    expect(february).toHaveTextContent("100000");
+    expect(february).toHaveTextContent("JPY");
+    expect(january).toHaveTextContent("1000");
+    expect(january).toHaveTextContent("USD");
+  });
+
+  it.each<[string, DataSeries, string]>([
+    [
+      "the same non-primary currency",
+      [
+        { date: "2016-01-31", balance: { JPY: "90000" } },
+        { date: "2016-02-29", balance: { JPY: "100000" } },
+      ],
+      "+10000 JPY",
+    ],
+    [
+      "the primary currency",
+      [
+        { date: "2016-01-31", balance: { USD: "1000" } },
+        { date: "2016-02-29", balance: { USD: "1200" } },
+      ],
+      "+200 USD",
+    ],
+    [
+      "the latest currency within a mixed previous month",
+      [
+        { date: "2016-01-31", balance: { USD: "1000", JPY: "90000" } },
+        { date: "2016-02-29", balance: { JPY: "100000" } },
+      ],
+      "+10000 JPY",
+    ],
+  ])("compares %s", (_name, data, expected) => {
+    renderCard(data);
+    expect(change()).toContain(expected);
+  });
+
+  it("shows no change without a previous month", () => {
+    renderCard([{ date: "2016-02-29", balance: { JPY: "100000" } }]);
+    expect(change()).toBeNull();
+  });
+});

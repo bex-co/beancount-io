@@ -286,12 +286,15 @@ export function NetWorthCard({
     primaryCurrency,
   );
   const latestComparable = getComparableAmount(latestAmounts, primaryCurrency);
-  const previousComparable = previous
-    ? getComparableAmount(
-        getBalanceAmounts(previous.balance),
-        latestComparable?.currency ?? primaryCurrency,
-      )
-    : null;
+  // The change subtracts last month's amount in the same currency. A month
+  // that held only another currency has nothing to compare: subtracting it
+  // would report unlike units as a gain (w4/993).
+  const previousComparable =
+    previous && latestComparable
+      ? (getBalanceAmounts(previous.balance).find(
+          (amount) => amount.currency === latestComparable.currency,
+        ) ?? null)
+      : null;
   const change =
     latestComparable && previousComparable
       ? latestComparable.value - previousComparable.value
