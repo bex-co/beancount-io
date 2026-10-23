@@ -49,7 +49,6 @@ import { useLedger } from "@/common/hooks/use-ledger";
 import {
   applyAutoBalanceToPostings,
   computeAutoBalance,
-  findUnbalancedResiduals,
   findUnresolvedEligibleAmount,
   isEligiblePosting,
   postingCurrency,
@@ -238,21 +237,10 @@ export function TransactionForm({
         return;
       }
 
-      // The ledger refuses these as UNBALANCED; say so before sending.
-      const residuals = findUnbalancedResiduals(
-        balancedPostings,
-        primaryCurrency,
-      );
-      if (residuals.length > 0) {
-        setError(
-          t("journal.postingsUnbalanced", {
-            residual: residuals
-              .map(({ amount, currency }) => `${amount} ${currency}`)
-              .join(", "),
-          }),
-        );
-        return;
-      }
+      // Whether postings balance is the ledger's to decide: its tolerance can
+      // be configured (`inferred_tolerance_default`) and is not known here, so
+      // −10.00 / 9.99 USD may be valid. An UNBALANCED refusal comes back from
+      // the write below, naming its residual, with the draft kept (w4/1026).
 
       // Create postings array - skip empty accounts
       const ledgerPostings: LedgerPostingInput[] = balancedPostings

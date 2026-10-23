@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   applyAutoBalanceToPostings,
   computeAutoBalance,
-  findUnbalancedResiduals,
   findUnresolvedEligibleAmount,
 } from "../transaction-auto-balance";
 
@@ -128,109 +127,5 @@ describe("applyAutoBalanceToPostings", () => {
         { account: "B", amount: "-12", currency: "MUSD" },
       ]),
     ).toBe(0);
-  });
-});
-
-describe("findUnbalancedResiduals", () => {
-  const posting = (account: string, amount: string, currency = "USD") => ({
-    account,
-    amount,
-    currency,
-  });
-
-  it("names the residual of postings that do not sum to zero", () => {
-    expect(
-      findUnbalancedResiduals(
-        [posting("Expenses:Food", "10"), posting("Assets:Cash", "-9")],
-        "USD",
-      ),
-    ).toEqual([{ amount: "1", currency: "USD" }]);
-  });
-
-  it("accepts postings that balance, decimals summed exactly", () => {
-    expect(
-      findUnbalancedResiduals(
-        [
-          posting("Expenses:A", "0.1"),
-          posting("Expenses:B", "0.2"),
-          posting("Assets:Cash", "-0.3"),
-        ],
-        "USD",
-      ),
-    ).toEqual([]);
-  });
-
-  it("accepts an inferred amount once it is applied", () => {
-    const postings = [
-      posting("Expenses:Food", "10"),
-      posting("Assets:Cash", ""),
-    ];
-    const { balances } = computeAutoBalance(postings, "USD");
-
-    expect(
-      findUnbalancedResiduals(
-        applyAutoBalanceToPostings(postings, balances),
-        "USD",
-      ),
-    ).toEqual([]);
-  });
-
-  it("checks each currency on its own", () => {
-    expect(
-      findUnbalancedResiduals(
-        [
-          posting("Expenses:Food", "10", "USD"),
-          posting("Assets:Cash", "-10", "USD"),
-          posting("Expenses:Travel", "5", "EUR"),
-          posting("Assets:Wallet", "-4.50", "EUR"),
-        ],
-        "USD",
-      ),
-    ).toEqual([{ amount: "0.50", currency: "EUR" }]);
-  });
-
-  it("groups a blank currency under the primary currency", () => {
-    expect(
-      findUnbalancedResiduals(
-        [posting("Expenses:Food", "10", ""), posting("Assets:Cash", "-10")],
-        "USD",
-      ),
-    ).toEqual([]);
-  });
-
-  it.each([
-    // Half the last place of the least precise amount: 0.005.
-    ["10.00", "-9.996", false],
-    ["10.00", "-9.995", false],
-    ["10.00", "-9.994", true],
-    ["10.00", "-9.99", true],
-    // The least precise decimal wins: 10.00 tolerates 0.005 beside -9.999.
-    ["10.00", "-9.999", false],
-    // Only the decimal amount infers a tolerance, 0.00005 here.
-    ["10", "-9.9999", true],
-    ["10", "-10.0", false],
-    // Integers infer none.
-    ["10", "-10", false],
-    ["1000000", "-999999", true],
-  ])("%s with %s is unbalanced: %s", (first, second, unbalanced) => {
-    const residuals = findUnbalancedResiduals(
-      [posting("Expenses:Food", first), posting("Assets:Cash", second)],
-      "USD",
-    );
-    expect(residuals.length > 0).toBe(unbalanced);
-  });
-
-  it("ignores unused rows and leaves unparseable amounts to the resolver", () => {
-    expect(
-      findUnbalancedResiduals(
-        [
-          posting("Expenses:Food", "10"),
-          posting("Assets:Cash", "-10"),
-          posting("", "7"),
-          posting("Expenses:Other", "abc"),
-        ],
-        "USD",
-      ),
-    ).toEqual([]);
   });
 });

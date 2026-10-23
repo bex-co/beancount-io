@@ -70,7 +70,13 @@ const submit = () =>
 const sentPostings = (mutate: ReturnType<typeof vi.fn>) =>
   mutate.mock.calls[0]?.[0]?.variables?.entries?.[0]?.transaction?.postings;
 
-describe("New Entry refuses unbalanced transactions (w3/499)", () => {
+/**
+ * Whether postings balance is the ledger's call: a ledger can configure its
+ * tolerance (`option "inferred_tolerance_default" "USD:0.01"`), which New
+ * Entry cannot see, so it sends the entry and reports the ledger's UNBALANCED
+ * refusal with its residual (w3/499, w4/1026).
+ */
+describe("New Entry leaves balancing to the ledger", () => {
   let addTransaction: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
@@ -83,21 +89,22 @@ describe("New Entry refuses unbalanced transactions (w3/499)", () => {
     ] as unknown as ReturnType<typeof useMutation>);
   });
 
-  it("names the residual and sends nothing for 10 / -9 USD", async () => {
+  it("sends -10.00 / 9.99 USD unchanged for a ledger tolerance to accept", async () => {
     render(<TransactionForm ledgerId="owner/ledger" />);
     fillPostings([
-      ["Expenses:Food", "10", "USD"],
-      ["Assets:Cash", "-9", "USD"],
+      ["Assets:Bank:Checking", "-10.00", "USD"],
+      ["Expenses:Food:Coffee", "9.99", "USD"],
     ]);
 
     await submit();
 
+    await waitFor(() => expect(addTransaction).toHaveBeenCalledTimes(1));
     expect(
-      await screen.findByText(
-        "Postings don't balance: 1 USD left over. Adjust an amount, or clear one to balance it automatically.",
+      sentPostings(addTransaction).map(
+        (p: { units: { number: string } }) => p.units.number,
       ),
-    ).toBeInTheDocument();
-    expect(addTransaction).not.toHaveBeenCalled();
+    ).toEqual(["-10.00", "9.99"]);
+    expect(screen.queryByText(/^Postings don't balance/)).toBeNull();
   });
 
   it("submits 10 / -10 USD as typed", async () => {
@@ -130,24 +137,7 @@ describe("New Entry refuses unbalanced transactions (w3/499)", () => {
     expect(sentPostings(addTransaction)[1].units.number).toBe("-10");
   });
 
-  it("checks each currency, naming only the one that is off", async () => {
-    render(<TransactionForm ledgerId="owner/ledger" />);
-    fillPostings([
-      ["Expenses:Food", "10", "USD"],
-      ["Assets:Cash", "-10", "USD"],
-      ["Expenses:Travel", "5", "EUR"],
-      ["Assets:Wallet", "-4", "EUR"],
-    ]);
-
-    await submit();
-
-    expect(
-      await screen.findByText(/^Postings don't balance: 1 EUR left over\./),
-    ).toBeInTheDocument();
-    expect(addTransaction).not.toHaveBeenCalled();
-  });
-
-  it("shows the server's residual when the ledger refuses the entry", async () => {
+  it("names the ledger's residual and keeps the draft when it refuses 10 / -9 USD", async () => {
     addTransaction.mockRejectedValue(
       new CombinedGraphQLErrors({
         errors: [
@@ -161,14 +151,23 @@ describe("New Entry refuses unbalanced transactions (w3/499)", () => {
     render(<TransactionForm ledgerId="owner/ledger" />);
     fillPostings([
       ["Expenses:Food", "10", "USD"],
-      ["Assets:Cash", "-10", "USD"],
+      ["Assets:Cash", "-9", "USD"],
     ]);
 
     await submit();
 
     expect(
-      await screen.findByText(/^Postings don't balance: 1 USD left over\./),
+      await screen.findByText(
+        "Postings don't balance: 1 USD left over. Adjust an amount, or clear one to balance it automatically.",
+      ),
     ).toBeInTheDocument();
+    expect(addTransaction).toHaveBeenCalledTimes(1);
+    // The refused draft stays as typed, ready to correct.
+    expect(
+      screen
+        .getAllByRole("spinbutton")
+        .map((input) => (input as HTMLInputElement).value),
+    ).toEqual(expect.arrayContaining(["10", "-9"]));
   });
 });
 
