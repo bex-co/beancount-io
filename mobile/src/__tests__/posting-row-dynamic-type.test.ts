@@ -32,9 +32,11 @@ describe("PostingRow at enlarged text sizes", () => {
   });
 
   it("keeps the middle ellipsis that shows an account's root and leaf", () => {
-    expect(SOURCE.includes('numberOfLines={1} ellipsizeMode="middle"')).toBe(
-      true,
-    );
+    expect(
+      SOURCE.replace(/\s+/g, " ").includes(
+        'numberOfLines={1} ellipsizeMode="middle"',
+      ),
+    ).toBe(true);
   });
 
   it("never truncates the amount", () => {

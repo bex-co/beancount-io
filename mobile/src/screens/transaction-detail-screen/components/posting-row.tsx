@@ -31,12 +31,14 @@ import {
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
     row: {
-      flexDirection: "row",
-      alignItems: "center",
       paddingHorizontal: 16,
       paddingVertical: 13,
-      gap: 12,
       backgroundColor: theme.controlFill,
+    },
+    line: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
     },
     // Accessibility text sizes (see `prefersStackedLayout`): the account keeps
     // the row's full width and the amount moves to its own line, instead of an
@@ -105,15 +107,23 @@ const getStyles = (theme: ColorTheme) =>
     amountColumn: {
       flexShrink: 0,
       alignItems: "flex-end",
-      // The basis line wraps here instead of squeezing the account name to
+      // A long amount wraps here instead of squeezing the account name to
       // an ellipsis (w21/160).
       maxWidth: "60%",
     },
+    // Its own line under the amount, the row's width less the chevron's (16)
+    // and its gap (12): in the amount column a sale's "cost … · date · price
+    // …" took 60% of the row and left the account "Asset…guard" (w21/779).
     basis: {
       fontSize: fontSizes.xs,
       color: theme.black80,
-      marginTop: 2,
+      marginTop: 4,
+      paddingEnd: 28,
       textAlign: "right",
+    },
+    basisStacked: {
+      paddingEnd: 0,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     stackedAmountLine: {
       flexDirection: "row",
@@ -148,7 +158,6 @@ export function PostingRow({
       <AmountText mono="medium" style={styles.amount}>
         {posting.amount}
       </AmountText>
-      {basis ? <Text style={styles.basis}>{basis}</Text> : null}
     </View>
   );
   const chevron = (
@@ -161,55 +170,62 @@ export function PostingRow({
 
   return (
     <TouchableOpacity
-      style={[
-        styles.row,
-        stacked && styles.rowStacked,
-        showDivider && styles.rowDivider,
-      ]}
+      style={[styles.row, showDivider && styles.rowDivider]}
       onPress={onPress}
       activeOpacity={0.7}
       accessibilityRole="button"
       accessibilityLabel={`${directionLabel ? `${directionLabel}: ` : ""}${posting.account}, ${posting.amount}${basis ? `, ${basis}` : ""}${posting.pending ? `, ${t("pending")}` : ""}${posting.meta ? `, ${posting.meta.join(", ")}` : ""}`}
     >
-      <View
-        style={[styles.accountColumn, stacked && styles.accountColumnStacked]}
-      >
-        {directionLabel ? (
-          // One line at every size: a short uppercase label must never break
-          // inside the word ("FRO" / "M").
-          <Text style={styles.direction} numberOfLines={1}>
-            {directionLabel}
-          </Text>
-        ) : null}
-        <View style={styles.accountLine}>
-          <Text style={styles.account} numberOfLines={1} ellipsizeMode="middle">
-            {isolateAccountPath(posting.account)}
-          </Text>
-          {posting.pending ? (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>!</Text>
-            </View>
+      <View style={[styles.line, stacked && styles.rowStacked]}>
+        <View
+          style={[styles.accountColumn, stacked && styles.accountColumnStacked]}
+        >
+          {directionLabel ? (
+            // One line at every size: a short uppercase label must never break
+            // inside the word ("FRO" / "M").
+            <Text style={styles.direction} numberOfLines={1}>
+              {directionLabel}
+            </Text>
           ) : null}
+          <View style={styles.accountLine}>
+            <Text
+              style={styles.account}
+              numberOfLines={1}
+              ellipsizeMode="middle"
+            >
+              {isolateAccountPath(posting.account)}
+            </Text>
+            {posting.pending ? (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>!</Text>
+              </View>
+            ) : null}
+          </View>
+          {posting.meta?.map((line) => (
+            // Whole and selectable: a posting's `receipt: "https://…"` of 120
+            // characters ended in "…" and could not be copied (w21/604).
+            <Text style={styles.metaLine} key={line} selectable>
+              {line}
+            </Text>
+          ))}
         </View>
-        {posting.meta?.map((line) => (
-          // Whole and selectable: a posting's `receipt: "https://…"` of 120
-          // characters ended in "…" and could not be copied (w21/604).
-          <Text style={styles.metaLine} key={line} selectable>
-            {line}
-          </Text>
-        ))}
+        {stacked ? (
+          <View style={styles.stackedAmountLine}>
+            {amount}
+            {chevron}
+          </View>
+        ) : (
+          <>
+            {amount}
+            {chevron}
+          </>
+        )}
       </View>
-      {stacked ? (
-        <View style={styles.stackedAmountLine}>
-          {amount}
-          {chevron}
-        </View>
-      ) : (
-        <>
-          {amount}
-          {chevron}
-        </>
-      )}
+      {basis ? (
+        <Text style={[styles.basis, stacked && styles.basisStacked]}>
+          {basis}
+        </Text>
+      ) : null}
     </TouchableOpacity>
   );
 }
