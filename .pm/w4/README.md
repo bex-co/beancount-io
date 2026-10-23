@@ -28,7 +28,6 @@
 
 - [1006 — Restore report-view focus when the selector hides](./1006.md) — minor; three fresh open-selector resizes lose focus to BODY/top Skip link; visible-selector/Escape controls pass, both shared sources exact, no writes.
 
-- [1005 — Preserve amount order in Persian Account period tables](./1005.md) — minor residual of W3/479; genuine both-view/both-width tables show unit/number/minus under RTL;96exact API records and English/Journal controls pass, source exact, no writes.
 
 
 
