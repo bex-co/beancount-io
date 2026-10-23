@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useRef, useState } from "react";
 import { useLocation, Link } from "@tanstack/react-router";
 import {
   BookOpen,
@@ -70,6 +70,24 @@ export function LayoutHeader({
   const returnPath = useSafeReturnPath();
   const { searchParams } = useContext(LedgerSearchParamsContext);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const filtersOpenerRef = useRef<HTMLButtonElement>(null);
+  const inlineFiltersRef = useRef<HTMLDivElement>(null);
+  // The header can change layout while the filter sheet is open (a wider
+  // window, the sidebar collapsing): its Filters button hides and the inline
+  // fields show. Closing returns to whichever of the two is shown (w4/991).
+  const returnFromFilters = (event: Event) => {
+    const shown = (element: Element | null | undefined) =>
+      !!element && element.getClientRects().length > 0;
+    if (shown(filtersOpenerRef.current)) return;
+    // Its first field (Time), not the Clear all that leads the row.
+    const inlineFilters = inlineFiltersRef.current;
+    const inline =
+      inlineFilters?.querySelector<HTMLElement>("input") ??
+      inlineFilters?.querySelector<HTMLElement>("button");
+    if (!shown(inline)) return;
+    event.preventDefault();
+    inline!.focus();
+  };
 
   // On desktop the sidebar now collapses to an icon rail (not fully off), so
   // keep the toggle always visible to make collapsing discoverable. On mobile
@@ -94,12 +112,16 @@ export function LayoutHeader({
         <div className="flex items-center gap-2">
           {shouldShowFilters && (
             <>
-              <div className="hidden @min-[52rem]/ledger-header:block">
+              <div
+                ref={inlineFiltersRef}
+                className="hidden @min-[52rem]/ledger-header:block"
+              >
                 <LedgerSearchControls ledgerId={ledgerId} layout="inline" />
               </div>
               <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
                 <SheetTrigger asChild>
                   <Button
+                    ref={filtersOpenerRef}
                     variant="outline"
                     size="sm"
                     className="@min-[52rem]/ledger-header:hidden"
@@ -122,6 +144,7 @@ export function LayoutHeader({
                 <SheetContent
                   side="bottom"
                   className="max-h-[85vh] gap-0 overflow-y-auto"
+                  onCloseAutoFocus={returnFromFilters}
                 >
                   <SheetHeader className="text-left">
                     <SheetTitle>

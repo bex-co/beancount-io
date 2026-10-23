@@ -490,3 +490,80 @@ describe("LayoutHeader Help Center language (w4/330)", () => {
     );
   });
 });
+
+/**
+ * jsdom lays nothing out, so `getClientRects()` is empty for every element.
+ * Report the controls a header layout hides as unrendered, everything else as
+ * rendered, the way a browser does for `display: none` and its subtree.
+ */
+function layoutHides(hidden: () => Element[]) {
+  vi.spyOn(Element.prototype, "getClientRects").mockImplementation(function (
+    this: Element,
+  ) {
+    const rendered = !hidden().some((element) => element.contains(this));
+    return (rendered
+      ? [new DOMRect(0, 0, 10, 10)]
+      : []) as unknown as DOMRectList;
+  });
+}
+
+describe("LayoutHeader filter sheet close focus (w4/991)", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  async function openSheet() {
+    const app = await setup("en");
+    const t = (key: string) => app.localization.i18n.t(key);
+    const opener = screen.getByRole("button", {
+      name: t("component.searchControls.filters"),
+    });
+    const inline = opener.parentElement!.firstElementChild as HTMLElement;
+    opener.focus();
+    await app.user.keyboard("{Enter}");
+    const sheet = await screen.findByRole("dialog", {
+      name: t("component.searchControls.filtersTitle"),
+    });
+    return { ...app, t, opener, inline, sheet };
+  }
+
+  it("returns to Filters while the narrow header shows it", async () => {
+    const header = await openSheet();
+    layoutHides(() => [header.inline]);
+
+    await header.user.keyboard("{Escape}");
+    await waitFor(() => expect(header.sheet).not.toBeInTheDocument());
+    expect(header.opener).toHaveFocus();
+  });
+
+  it.each([
+    ["Close", "close"],
+    ["Escape", "escape"],
+  ])(
+    "lands on the inline filters after the header widened, closing with %s",
+    async (_name, how) => {
+      const header = await openSheet();
+      const applied = header.router.state.location.search;
+      // The window widens while the sheet is open: the opener hides and the
+      // inline fields show.
+      layoutHides(() => [header.opener]);
+
+      if (how === "close") {
+        within(header.sheet).getByRole("button", { name: /close/i }).focus();
+        await header.user.keyboard("{Enter}");
+      } else {
+        await header.user.keyboard("{Escape}");
+      }
+      // The sheet goes; focusing the Time field opens its own suggestions.
+      await waitFor(() => expect(header.sheet).not.toBeInTheDocument());
+
+      const time = within(header.inline).getByDisplayValue("2026");
+      expect(time).toHaveFocus();
+      // Tab continues among the inline filters, not from the page top.
+      await header.user.tab();
+      expect(header.inline.contains(document.activeElement)).toBe(true);
+      // Nothing about the applied filters changed.
+      expect(header.router.state.location.search).toEqual(applied);
+    },
+  );
+});
