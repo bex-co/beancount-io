@@ -59,3 +59,31 @@ describe("the detail screen", () => {
     expect(source.includes("if(ownEntry){returnownEntry;}")).toBe(true);
   });
 });
+
+// w21/767: an R-flagged entry is held like a padding entry, and a metadata edit
+// keeps its hash, so the held pre-edit copy kept winning over the fresh read.
+describe("a held entry whose source was found", () => {
+  const refund = entry("refund-1", "R");
+
+  it("yields to the context read once it found the source", () => {
+    const held = holdGeneratedEntry(null, refund);
+    expect(selectOwnEntry(null, held, "refund-1")).toBe(refund);
+    expect(selectOwnEntry(null, held, "refund-1", true)).toBe(null);
+    // A fresh stash still wins.
+    expect(selectOwnEntry(refund, held, "refund-1", true)).toBe(refund);
+  });
+
+  it("is what the screen asks, after the read", () => {
+    const screen = fs
+      .readFileSync(
+        path.join(__dirname, "..", "..", "transaction-detail-screen.tsx"),
+        "utf8",
+      )
+      .replace(/\s+/g, "");
+    expect(
+      screen.includes(
+        "constownEntry=selectOwnEntry(stashedEntry,nextHeld,entryHash,sourced);",
+      ),
+    ).toBe(true);
+  });
+});

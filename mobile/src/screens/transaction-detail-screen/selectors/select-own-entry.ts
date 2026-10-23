@@ -18,12 +18,21 @@ export function holdGeneratedEntry(
   return stashed !== null && mayBeGenerated(stashed) ? stashed : held;
 }
 
-/** The entry this route shows without a context read: its stash, else the generated entry it held. */
+/**
+ * The entry this route shows without a context read: its stash, else the
+ * generated entry it held. Once the read has found the entry's source, it is
+ * no generated entry and the read is the fresher copy: a metadata edit keeps
+ * the hash, so the held copy of an R-flagged entry repainted it as it was
+ * before the save (w21/767).
+ */
 export function selectOwnEntry(
   stashed: JournalTransaction | null,
   held: JournalTransaction | null,
   entryHash: string,
+  sourced = false,
 ): JournalTransaction | null {
   if (stashed !== null) return stashed;
-  return held !== null && held.entry_hash === entryHash ? held : null;
+  return !sourced && held !== null && held.entry_hash === entryHash
+    ? held
+    : null;
 }

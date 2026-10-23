@@ -375,7 +375,6 @@ const TransactionDetailImpl = ({
   );
   const nextHeld = holdGeneratedEntry(heldGenerated, stashedEntry);
   if (nextHeld !== heldGenerated) setHeldGenerated(nextHeld);
-  const ownEntry = selectOwnEntry(stashedEntry, nextHeld, entryHash);
 
   // Also serves as the fallback entry source when the stash is cold (deep
   // link or remount) — the context payload carries the full entry JSON.
@@ -390,6 +389,7 @@ const TransactionDetailImpl = ({
   // with flag R from one a plugin made (w21/745).
   const [sourced, setSourced] = useState(false);
   if (!sourced && data?.getLedgerEntryContext) setSourced(true);
+  const ownEntry = selectOwnEntry(stashedEntry, nextHeld, entryHash, sourced);
   // A write made from a screen above this one (a delete, an editor fix) leaves
   // this entry's context cached as it was. Recheck on return, and only when
   // the ledger was written meanwhile; a NOT_FOUND then shows the gone state
