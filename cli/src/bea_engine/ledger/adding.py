@@ -395,8 +395,11 @@ def _stranded_lots(entries: list[Any], account: str, date: datetime.date) -> lis
         spelled = ""
         if key is not None:
             parts = [f"{_plain(key[0])} {key[1]}", key[2].isoformat()]
-            if key[3]:
-                parts.append(f'"{key[3]}"')
+            # An empty label is a lot of its own and a quote or backslash needs
+            # escaping, or the advice names a different lot than the one held
+            # (w5/982).
+            if key[3] is not None:
+                parts.append(f'"{writer.escape_string(key[3])}"')
             spelled = f" {{{', '.join(parts)}}}"
         stranded.append(f"{_plain(number)} {currency}{spelled}")
     return stranded

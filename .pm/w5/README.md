@@ -52,7 +52,6 @@
 - [985 — Keep transaction details parseable when redirected](./985.md) — minor CLI follow-up to completed 834; bare source-location headings make the full details stream fail native parsing, reproduced 2026-10-22.
 - [984 — Preserve account names when discovering documents](./984.md) — minor CLI inherited directory-walker NFKC mismatch; valid ligature/full-width account folders lose automatic receipts and doctor reports undeclared ASCII names, reproduced 2026-10-22.
 - [983 — Preserve cover selectors from actual short-lot inventory](./983.md) — major CLI follow-up to completed 925; short-lot context loses or misapplies inventory across staged rows, Cost positions, dates and commodities, changing lot selection and repeat imports, reproduced 2026-10-22.
-- [982 — Preserve labels in stranded-lot close advice](./982.md) — minor CLI follow-up to 909/913; omitted or unescaped labels make the copied recovery fail or leave wrong lots open, reproduced 2026-10-22.
 
 
 
