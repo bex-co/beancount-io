@@ -455,3 +455,77 @@ describe("Events dates in a zone that skipped a day (w4/285)", () => {
     },
   );
 });
+
+/**
+ * Valid authored types that read as blank, or exactly like the filter's own
+ * choices, left unnamed or identical menu items and triggers (w4/1016).
+ */
+describe("Events type filter with blank and look-alike types", () => {
+  const event = (type: string, description: string) => ({
+    __typename: "Event" as const,
+    date: "2026-10-23",
+    type,
+    description,
+  });
+  const lookalikes: GetLedgerEventsQuery["getLedgerEvents"] = [
+    event(" ", "qa one space"),
+    event("\t", "qa tab"),
+    event("", "qa empty"),
+    event("All Types", "qa literal all types"),
+    event("(no type)", "qa literal no type"),
+    event("qa-control", "qa ordinary"),
+  ];
+
+  const rowsShown = () =>
+    within(screen.getByRole("table", { name: "Events" }))
+      .getAllByRole("row")
+      .slice(1)
+      .map((row) => within(row).getAllByRole("cell")[2]!.textContent?.trim());
+
+  it("names every choice distinctly and filters each to its own row", async () => {
+    const { requests, user } = await setup("en", "");
+    await resolve(requests[0], lookalikes);
+    await screen.findByRole("table", { name: "Events" });
+
+    const trigger = () =>
+      screen.getByRole("button", {
+        name: /^All Types$|^"|\(no type\)|qa-control/,
+      });
+    await user.click(trigger());
+    const names = (await screen.findAllByRole("menuitem")).map((item) =>
+      item.textContent?.trim(),
+    );
+    expect(names).toEqual([
+      "All Types",
+      "(no type)",
+      '"\\t"',
+      '"\\u0020"',
+      '"(no type)"',
+      '"All Types"',
+      "qa-control",
+    ]);
+    expect(new Set(names).size).toBe(names.length);
+    await user.keyboard("{Escape}");
+
+    for (const [item, row] of [
+      ['"\\u0020"', "qa one space"],
+      ['"\\t"', "qa tab"],
+      ["(no type)", "qa empty"],
+      ['"All Types"', "qa literal all types"],
+      ['"(no type)"', "qa literal no type"],
+      ["qa-control", "qa ordinary"],
+    ]) {
+      await user.click(trigger());
+      await user.click(await screen.findByRole("menuitem", { name: item }));
+      await waitFor(() => expect(rowsShown()).toEqual([row]));
+      // The selected trigger is named by that same distinct label.
+      expect(screen.getByRole("button", { name: item })).toBeInTheDocument();
+    }
+
+    await user.click(trigger());
+    await user.click(
+      await screen.findByRole("menuitem", { name: "All Types" }),
+    );
+    await waitFor(() => expect(rowsShown()).toHaveLength(6));
+  });
+});

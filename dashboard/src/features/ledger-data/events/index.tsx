@@ -31,6 +31,7 @@ import { EmptyState } from "@/common/components/empty-state";
 import { QueryView } from "@/common/components/query-view";
 import { useLedger } from "@/common/hooks/use-ledger";
 import { Skeleton } from "@/common/components/ui/skeleton";
+import { eventTypeLabel } from "./event-type-label";
 
 /**
  * Events page component
@@ -114,7 +115,12 @@ export default function LedgerEventsPage() {
     });
   }, [events, selectedEventType, searchTerm]);
 
-  const typeLabel = (type: string) => type || t("page.events.emptyType");
+  const typeLabel = (type: string) =>
+    eventTypeLabel(
+      type,
+      t("page.accounts.allTypes"),
+      t("page.events.emptyType"),
+    );
 
   const hasLedgerFilters = Boolean(
     ledgerFilters.searchParams.time ||
