@@ -29,6 +29,7 @@ from __future__ import annotations
 import ast
 import difflib
 import json
+import numbers
 import os
 import re
 import shlex
@@ -189,26 +190,54 @@ def connect(file: Path) -> Any:
     return connection
 
 
+class _Column:
+    """The kinds of value one ORDER BY column holds, gathered before any comparison.
+
+    `list.sort` builds every key before it compares any two, so by the time the
+    first comparison runs the column is known whole.
+    """
+
+    __slots__ = ("kinds",)
+
+    def __init__(self) -> None:
+        self.kinds: set[Any] = set()
+
+    def add(self, value: Any) -> None:
+        # Ints and Decimals compare natively; anything else is its own kind.
+        self.kinds.add(numbers.Number if isinstance(value, numbers.Number) else type(value))
+
+    @property
+    def mixed(self) -> bool:
+        return len(self.kinds) > 1
+
+
 class _Orderable:
-    """A sort key that compares natively, and across types by `str()`.
+    """A sort key that compares natively in a uniform column, and by `str()` in a mixed one.
 
     Metadata mixes types (`ref: "A-12"` beside `ref: 5`), and `ORDER BY` on
     it raised a bare TypeError once same-type rows stopped proving the
-    column uniform (w5/760). Same-type pairs keep their native order; only a
-    pair Python cannot compare falls back to its text, which is the
-    `ORDER BY str(...)` control's order.
+    column uniform (w5/760). Comparing each pair by whatever it could manage
+    gave `2 < 10 < "11" < 2`, a cycle, so the answer depended on source
+    order and a mixed Amount raised AttributeError. One rule per column
+    instead: when its values are of different kinds, all are ordered by their
+    text, the `ORDER BY str(...)` control's order; a uniform column keeps its
+    native order, so numbers stay 2, 10, 11 (w5/965).
     """
 
-    __slots__ = ("value",)
+    __slots__ = ("column", "value")
 
-    def __init__(self, value: Any) -> None:
+    def __init__(self, value: Any, column: _Column) -> None:
         self.value = value
+        self.column = column
+
+    def _comparable(self) -> Any:
+        return str(self.value) if self.column.mixed else self.value
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, _Orderable):
             return NotImplemented
         try:
-            return bool(self.value == other.value)
+            return bool(self._comparable() == other._comparable())
         except TypeError:
             return str(self.value) == str(other.value)
 
@@ -216,7 +245,7 @@ class _Orderable:
         if not isinstance(other, _Orderable):
             return NotImplemented
         try:
-            return bool(self.value < other.value)
+            return bool(self._comparable() < other._comparable())
         except TypeError:
             return str(self.value) < str(other.value)
 
@@ -236,14 +265,20 @@ def _null_safe_ordering() -> None:
     if getattr(query_execute.nullitemgetter, "_bea_null_safe", False):
         return
 
-    def present(value: Any) -> tuple[bool, Any]:
-        return (False, 0) if value is None else (True, _Orderable(value))
+    def present(value: Any, column: _Column) -> tuple[bool, Any]:
+        if value is None:
+            return (False, 0)
+        column.add(value)
+        return (True, _Orderable(value, column))
 
     def nullitemgetter(item: int, *items: int) -> Callable[[Any], Any]:
+        # One `_Column` per sorted column and per sort, shared by its keys.
         if items:
             indexes = (item, *items)
-            return lambda row: tuple(present(row[index]) for index in indexes)
-        return lambda row: present(row[item])
+            columns = {index: _Column() for index in indexes}
+            return lambda row: tuple(present(row[index], columns[index]) for index in indexes)
+        column = _Column()
+        return lambda row: present(row[item], column)
 
     nullitemgetter._bea_null_safe = True  # type: ignore[attr-defined]
     query_execute.nullitemgetter = nullitemgetter

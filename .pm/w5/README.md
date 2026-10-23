@@ -78,7 +78,6 @@
 - [967 — Preserve literal quotes in CSV column mappings](./967.md) — trivial CLI mapping gap; valid quoted headers cannot be named losslessly, reproduced 2026-10-22.
 
 - [966 — Keep leap day in February's current fiscal year](./966.md) — minor CLI period-selection finding; clock-controlled Feb29 reports select the next fiscal year, reproduced 2026-10-22.
-- [965 — Give mixed-type query ordering a consistent comparison rule](./965.md) — minor CLI follow-up to 760; source permutations change ORDER BY and LIMIT results, reproduced 2026-10-21.
 
 The 27 findings from the MCP QA auth sweep against the hosted endpoint (023–054, less the five under [Dropped](#dropped)) were fixed in `backend-cluster/backend-v2` and closed on 2026-10-02 and 2026-10-03; each note under [`done/`](./done/) records what shipped and in which commit. None has been re-observed against the hosted endpoint yet — the fixes reach it with the next backend deploy.
 
