@@ -1,4 +1,6 @@
 import {
+  type AccountRoots,
+  type RootType,
   categorizeAccount,
   extractAccountAtDepth,
   isExcludedAccount,
@@ -39,12 +41,41 @@ export type SankeyData = {
   units: string[];
 };
 
+/**
+ * The ledger's root names, read off each tree's own root account: a ledger
+ * that renames its roots (`Revenus`, `Charges`) keeps them as types rather
+ * than seeing every account dropped as an unknown root (w4/1020).
+ */
+export function hierarchyRoots(trees: {
+  income?: SerializableTreeNode | null;
+  expenses?: SerializableTreeNode | null;
+  assets?: SerializableTreeNode | null;
+  liabilities?: SerializableTreeNode | null;
+}): AccountRoots {
+  const roots = new Map<string, RootType>();
+  const typed: Array<[RootType, SerializableTreeNode | null | undefined]> = [
+    ["Income", trees.income],
+    ["Expenses", trees.expenses],
+    ["Assets", trees.assets],
+    ["Liabilities", trees.liabilities],
+  ];
+  for (const [type, tree] of typed) {
+    const name = (tree as HierarchyNode | null | undefined)?.account;
+    if (name && !name.includes(":")) roots.set(name, type);
+  }
+  return roots;
+}
+
 /** True when this account carries no cash-flow activity of its own. */
-function isSkipped(account: string, accountMeta?: AccountMetaMap): boolean {
+function isSkipped(
+  account: string,
+  accountMeta?: AccountMetaMap,
+  roots?: AccountRoots,
+): boolean {
   const meta = accountMeta?.get(account);
   return (
-    categorizeAccount(account, meta) === "exclude" ||
-    isExcludedAccount(account, meta)
+    categorizeAccount(account, meta, roots) === "exclude" ||
+    isExcludedAccount(account, meta, roots)
   );
 }
 
@@ -61,6 +92,7 @@ export function aggregateHierarchyBalance(
   node: HierarchyNode,
   inverse = false,
   accountMeta?: AccountMetaMap,
+  rootTypes?: AccountRoots,
 ): UnitAmounts {
   const totals: UnitAmounts = new Map();
 
@@ -68,7 +100,7 @@ export function aggregateHierarchyBalance(
     readBalance(current.balance, inverse, totals);
     for (const child of current.children ?? []) {
       if (!child?.account) continue;
-      if (isSkipped(child.account, accountMeta)) continue;
+      if (isSkipped(child.account, accountMeta, rootTypes)) continue;
       collect(child);
     }
   }
@@ -85,6 +117,7 @@ function extractNodesAtDepth(
   targetDepth: number,
   inverse = false,
   accountMeta?: AccountMetaMap,
+  rootTypes?: AccountRoots,
 ): Map<string, UnitAmounts> {
   const nodeMap = new Map<string, UnitAmounts>();
 
@@ -108,7 +141,7 @@ function extractNodesAtDepth(
     const accountAtDepth = extractAccountAtDepth(node.account, targetDepth);
 
     // Skip excluded accounts
-    if (isSkipped(node.account, accountMeta)) {
+    if (isSkipped(node.account, accountMeta, rootTypes)) {
       return;
     }
 
@@ -118,7 +151,12 @@ function extractNodesAtDepth(
       node.children.length === 0
     ) {
       // Reached target depth or leaf node
-      const balance = aggregateHierarchyBalance(node, inverse, accountMeta);
+      const balance = aggregateHierarchyBalance(
+        node,
+        inverse,
+        accountMeta,
+        rootTypes,
+      );
       if (balance.size === 0) return;
 
       addToGroup(nodeMap, accountAtDepth, balance);
@@ -189,6 +227,12 @@ export function transformToSankeyData(options: TransformOptions): SankeyData {
     depth = 2,
     accountMeta,
   } = options;
+  const rootTypes = hierarchyRoots({
+    income: incomeHierarchyData,
+    expenses: expensesHierarchyData,
+    assets: assetsHierarchyData,
+    liabilities: liabilitiesHierarchyData,
+  });
 
   const nodes: SankeyNode[] = [];
   const links: SankeyLink[] = [];
@@ -199,29 +243,36 @@ export function transformToSankeyData(options: TransformOptions): SankeyData {
     depth,
     true,
     accountMeta,
+    rootTypes,
   ); // Inverse for income
   const expenseAmounts = extractNodesAtDepth(
     expensesHierarchyData,
     depth,
     false,
     accountMeta,
+    rootTypes,
   );
 
   // Filter assets to only include investing (exclude cash-equivalent)
   const assetAmounts = new Map<string, UnitAmounts>();
-  extractNodesAtDepth(assetsHierarchyData, depth, false, accountMeta).forEach(
-    (amounts, key) => {
-      if (!isExcludedAccount(key, accountMeta?.get(key))) {
-        assetAmounts.set(key, amounts);
-      }
-    },
-  );
+  extractNodesAtDepth(
+    assetsHierarchyData,
+    depth,
+    false,
+    accountMeta,
+    rootTypes,
+  ).forEach((amounts, key) => {
+    if (!isExcludedAccount(key, accountMeta?.get(key), rootTypes)) {
+      assetAmounts.set(key, amounts);
+    }
+  });
 
   const liabilityAmounts = extractNodesAtDepth(
     liabilitiesHierarchyData,
     depth,
     false,
     accountMeta,
+    rootTypes,
   );
 
   const groups = [

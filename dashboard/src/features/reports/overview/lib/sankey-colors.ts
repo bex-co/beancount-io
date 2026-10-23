@@ -1,4 +1,4 @@
-import { categorizeAccount } from "./account-categorizer";
+import { type AccountRoots, categorizeAccount } from "./account-categorizer";
 
 export interface SankeyColorScheme {
   income: string;
@@ -50,6 +50,7 @@ export function getSankeyNodeColor(
   nodeName: string,
   isDark: boolean,
   meta?: Record<string, unknown> | null,
+  roots?: AccountRoots,
 ): string {
   const colors = getSankeyColorScheme(isDark);
 
@@ -58,7 +59,7 @@ export function getSankeyNodeColor(
   if (nodeName === "Savings") return colors.savings;
 
   // Categorize by account type
-  const category = categorizeAccount(nodeName, meta);
+  const category = categorizeAccount(nodeName, meta, roots);
 
   switch (category) {
     case "source":

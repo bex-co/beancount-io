@@ -153,7 +153,9 @@ must not reach the investing bucket because its parent did.
 The Sankey categorizer resolves accounts through the shared
 `cash-flow/lib/role-resolver.ts` (a declared `cash-flow-role` wins for
 non-`Income`/`Equity` roots; `Income` stays the source side and `Equity`
-stays excluded). Account `open`-directive metadata is the `meta` field of
+stays excluded). A ledger's own root names (`option "name_income"
+"Revenus"`) are read off each hierarchy tree's root account and categorized
+as their type, so renamed roots draw the same flows as the English ones. Account `open`-directive metadata is the `meta` field of
 `getLedgerAccountDirectives`: the cash-flow page reads it from its own query,
 while the overview fetches a `{ account meta }` projection separately
 (`GetLedgerAccountMeta` through `overview/hooks/use-account-meta.ts`) so a

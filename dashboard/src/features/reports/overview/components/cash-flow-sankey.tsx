@@ -3,7 +3,10 @@ import { ReactECharts } from "@/common/components/react-echarts";
 import { useIsDarkTheme } from "@/common/hooks/use-theme";
 import { useFormatNumber } from "@/common/hooks/use-format-number";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { transformToSankeyData } from "../lib/sankey-data-transformer";
+import {
+  hierarchyRoots,
+  transformToSankeyData,
+} from "../lib/sankey-data-transformer";
 import { getSankeyNodeColor } from "../lib/sankey-colors";
 import { ChartUnitScope } from "./chart-unit-scope";
 import type { AccountMetaMap } from "@/features/reports/cash-flow/lib/model";
@@ -75,6 +78,12 @@ export default function CashFlowSankey({
 
   // Apply colors to nodes
   const nodesWithColors = useMemo(() => {
+    const roots = hierarchyRoots({
+      income: incomeHierarchyData,
+      expenses: expensesHierarchyData,
+      assets: assetsHierarchyData,
+      liabilities: liabilitiesHierarchyData,
+    });
     return sankeyData.nodes.map((node) => ({
       ...node,
       itemStyle: {
@@ -82,10 +91,19 @@ export default function CashFlowSankey({
           node.name,
           isDark,
           accountMeta?.get(node.name),
+          roots,
         ),
       },
     }));
-  }, [sankeyData.nodes, isDark, accountMeta]);
+  }, [
+    sankeyData.nodes,
+    isDark,
+    accountMeta,
+    incomeHierarchyData,
+    expensesHierarchyData,
+    assetsHierarchyData,
+    liabilitiesHierarchyData,
+  ]);
 
   if (accountMetaPending) {
     return (
