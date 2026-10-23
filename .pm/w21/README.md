@@ -12,6 +12,9 @@
 
 ## Inbox
 
+- [669](./669.md) — Reports' Recent Transactions fetches the newest 200 entries with no end date, so pre-entered entries empty every range
+- [670](./670.md) — Budget ALL skips every period between the account's last posting and today (w21/010 regression via w21/332)
+- [671](./671.md) — Reports ALL drops an entry pre-entered for later this month but keeps next month's (w21/523 × w21/166)
 - [666](./666.md) — A pasted "−12.50" (typographic minus) is saved as negative but shows a green "+", and the sign toggle breaks it (w21/463 brings back w21/232)
 - [667](./667.md) — Account detail still shows a blank row for an entry whose payee is only spaces (w21/568 incomplete)
 - [668](./668.md) — Transaction detail repeats the narration under the title when the payee is only spaces or equals the narration
