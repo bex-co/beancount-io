@@ -259,7 +259,10 @@ type AccountJournalDetail =
   | { kind: "narration"; text: string }
   | {
       kind: "balance";
-      /** The asserted amount, as recorded ("49.75 USD"). */
+      /**
+       * The asserted amount, as recorded, with its explicit tolerance ("49.75
+       * USD", "49.75 ~ 0.05 USD").
+       */
       amount: string;
       /** How far the account was off, when the assertion failed. */
       offBy: string | null;
@@ -271,6 +274,21 @@ function amountText(raw: unknown): string | null {
   const amount = raw as RawAmount | null | undefined;
   if (amount?.number == null || !amount.currency) return null;
   return `${amount.number} ${amount.currency}`;
+}
+
+/**
+ * An assertion's amount as Beancount writes it, its `~` tolerance included:
+ * left out, an assertion that passed 0.03 off read as a silent mismatch
+ * (w21/744).
+ */
+function assertedText(raw: unknown, tolerance: unknown): string | null {
+  const amount = raw as RawAmount | null | undefined;
+  if (amount?.number == null || !amount.currency) return null;
+  const within =
+    typeof tolerance === "string" || typeof tolerance === "number"
+      ? ` ~ ${tolerance}`
+      : "";
+  return `${amount.number}${within} ${amount.currency}`;
 }
 
 function entryDetail(
@@ -296,7 +314,7 @@ function entryDetail(
       return text ? { kind: "narration", text } : undefined;
     }
     case "Balance": {
-      const amount = amountText(raw.amount);
+      const amount = assertedText(raw.amount, raw.tolerance);
       return amount
         ? { kind: "balance", amount, offBy: amountText(raw.diff_amount) }
         : undefined;

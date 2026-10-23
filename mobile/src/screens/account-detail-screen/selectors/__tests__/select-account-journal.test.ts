@@ -723,6 +723,27 @@ describe("selectAccountJournalRows: what a directive says", () => {
     ).toEqual({ kind: "balance", amount: "50.00 USD", offBy: "-0.25 USD" });
   });
 
+  // w21/744: an assertion that passed within its `~ 0.05` read as a silent
+  // 0.03 mismatch against the 49.72 balance beneath it.
+  it("writes an assertion's explicit tolerance, as Beancount does", () => {
+    expect(
+      directive({
+        directive_type: "Balance",
+        amount: { number: "49.75", currency: "USD" },
+        tolerance: "0.05",
+        diff_amount: null,
+      }),
+    ).toEqual({ kind: "balance", amount: "49.75 ~ 0.05 USD", offBy: null });
+    expect(
+      directive({
+        directive_type: "Balance",
+        amount: { number: "49.75", currency: "USD" },
+        tolerance: null,
+        diff_amount: null,
+      }),
+    ).toEqual({ kind: "balance", amount: "49.75 USD", offBy: null });
+  });
+
   // w21/212: two "QA REPEAT" rows differed only by amount here, while
   // Transactions told them apart by their narrations.
   it("shows a transaction's narration under its payee, as Transactions does", () => {
