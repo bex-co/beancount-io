@@ -50,7 +50,6 @@
 
 - [987 — Explain failed file-download generation](./987.md) — minor; modeled browser API failure over a real public file,2026-10-22; both widths leave Download open without feedback or a file; restored retries match actual API bytes, no writes.
 
-- [986 — Default newly opened forms to the opening day](./986.md) — minor; Date-only browser fixtures with real reads,2026-10-22; Budget/Open Account first open keeps yesterday at both widths; same-day, explicit-date and close/reopen controls pass, no writes.
 
 
 
