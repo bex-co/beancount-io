@@ -67,3 +67,4 @@
 - [871](./871.md) — Mobile never attaches the scanned receipt image to the saved transaction (dashboard does)
 - [872](./872.md) — A guard inside Scan Receipt's full-screen modal has no way back
 - [873](./873.md) — Scan Receipt's shutter swallows capture failures
+- [875](./875.md) — On a ledger with no plugins, a padding entry opens to "changed or removed"
