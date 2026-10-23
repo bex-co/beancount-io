@@ -18,12 +18,39 @@ export interface RunMetrics {
   readonly cachedInputTokens: number | null;
   readonly mcpCalls: number;
   readonly mcpErrors: number;
+  /** Successful calls that commit to the ledger (not previews), for spotting writes the client did not make. */
+  readonly mcpWrites: number;
   readonly otherToolCalls: number;
   readonly mcpServerConnected: boolean | null;
   readonly clientError: string | null;
 }
 
 export const MCP_SERVER_NAME = "beancount";
+
+/**
+ * The MCP tools that add a commit to the ledger when they succeed without
+ * `dry_run`. A test pins each name to a published tool, so a rename cannot
+ * leave the list quietly short.
+ */
+export const COMMITTING_TOOLS: ReadonlySet<string> = new Set([
+  "addLedgerEntries",
+  "appendLedgerText",
+  "insertReceiptTransaction",
+  "createLedgerFiles",
+  "updateLedgerFiles",
+  "deleteLedgerFiles",
+  "updateEntrySource",
+  "deleteEntrySource",
+  "deleteEntrySources",
+  "renameLedgerFile",
+  "importStagedBankTransactions",
+  "refreshManagedPrices",
+  "mergePullRequest",
+]);
+
+const commits = (name: unknown, args: unknown) =>
+  COMMITTING_TOOLS.has(String(name)) &&
+  (args as { dry_run?: unknown } | null | undefined)?.dry_run !== true;
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -69,8 +96,10 @@ export function parseClaudeStream(lines: readonly string[]): RunMetrics {
   let connected: boolean | null = null;
   let result: Json | undefined;
   const mcpToolIds = new Set<string>();
+  const committingIds = new Set<string>();
   let otherToolCalls = 0;
   let mcpErrors = 0;
+  let mcpWrites = 0;
   let lastText: string | null = null;
   for (const event of events(lines)) {
     if (event.type === "system" && event.subtype === "init") {
@@ -83,17 +112,22 @@ export function parseClaudeStream(lines: readonly string[]): RunMetrics {
     } else if (event.type === "assistant") {
       for (const c of event.message?.content ?? []) {
         if (c.type === "text") lastText = c.text;
-        else if (isMcpTool(c)) mcpToolIds.add(c.id);
+        else if (isMcpTool(c)) {
+          mcpToolIds.add(c.id);
+          const name = String(c.name).slice(`mcp__${MCP_SERVER_NAME}__`.length);
+          if (commits(name, c.input)) committingIds.add(c.id);
+        }
         else if (c.type === "tool_use") otherToolCalls++;
       }
     } else if (event.type === "user") {
       for (const c of event.message?.content ?? []) {
         if (
           c?.type === "tool_result" &&
-          mcpToolIds.has(c.tool_use_id) &&
-          c.is_error
-        )
-          mcpErrors++;
+          mcpToolIds.has(c.tool_use_id)
+        ) {
+          if (c.is_error) mcpErrors++;
+          else if (committingIds.has(c.tool_use_id)) mcpWrites++;
+        }
       }
     } else if (event.type === "result") {
       result = event;
@@ -114,6 +148,7 @@ export function parseClaudeStream(lines: readonly string[]): RunMetrics {
     cachedInputTokens: num(result?.usage?.cache_read_input_tokens),
     mcpCalls: mcpToolIds.size,
     mcpErrors,
+    mcpWrites,
     otherToolCalls,
     mcpServerConnected: connected,
     clientError: !result
@@ -132,6 +167,7 @@ export function parseCodexStream(
   let sessionId: string | null = null;
   let mcpCalls = 0;
   let mcpErrors = 0;
+  let mcpWrites = 0;
   let otherToolCalls = 0;
   let lastText: string | null = null;
   let failure: string | null = null;
@@ -159,6 +195,7 @@ export function parseCodexStream(
           item.result?.isError
         )
           mcpErrors++;
+        else if (commits(item.tool, item.arguments)) mcpWrites++;
       } else if (
         /tool_call|command_execution|web_search|file_change/.test(
           String(item.type),
@@ -179,6 +216,7 @@ export function parseCodexStream(
     cachedInputTokens: sum(usage.map((u) => u.cached_input_tokens)),
     mcpCalls,
     mcpErrors,
+    mcpWrites,
     otherToolCalls,
     mcpServerConnected: null,
     clientError: failure ?? (completed ? null : "client completed no turn"),
@@ -203,6 +241,7 @@ export function combineTurns(turns: readonly RunMetrics[]): RunMetrics {
     cachedInputTokens: total((t) => t.cachedInputTokens),
     mcpCalls: count((t) => t.mcpCalls),
     mcpErrors: count((t) => t.mcpErrors),
+    mcpWrites: count((t) => t.mcpWrites),
     otherToolCalls: count((t) => t.otherToolCalls),
     mcpServerConnected: turns.some((t) => t.mcpServerConnected === false)
       ? false

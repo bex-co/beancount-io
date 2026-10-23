@@ -74,6 +74,22 @@ export type LedgerState =
 
 export type Outcome = "pass" | "fail" | "incomplete" | "error";
 
+/**
+ * Commits that landed on the ledger during an attempt which no write call of
+ * the client accounts for. `before` and `after` are commit ids newest first.
+ * When either list is unreadable, or the attempt's start is no longer in the
+ * page read, nothing is claimed: an unknown is not a foreign write.
+ */
+export function unexplainedCommits(
+  before: readonly string[] | null,
+  after: readonly string[] | null,
+  clientWrites: number,
+): number {
+  if (!before?.length || !after?.length) return 0;
+  const landed = after.indexOf(before[0]);
+  return landed < 0 ? 0 : Math.max(0, landed - clientWrites);
+}
+
 const NUMBER = /\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?/g;
 
 const cents = (raw: string): number =>

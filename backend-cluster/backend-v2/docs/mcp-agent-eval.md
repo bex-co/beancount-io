@@ -35,13 +35,13 @@ An attempt **passes** only when all of these hold:
 - The ledger read back afterwards is exactly as permitted. For a read-only journey that means byte-for-byte unchanged. For a writing journey it means exactly the authorized transaction and directives were added, nothing else was edited, there are no extra files, and there are no validation errors.
 - For a journey with a confirmation, the ledger was still untouched just before the harness sent the confirmation.
 
-A confident "done" with a wrong total **fails**. A client that is missing, times out, exceeds the call limit, never connects, or produces no answer is **incomplete**. When the harness cannot reset or read the ledger, the attempt is an **error**. An unreadable ledger is never treated as unchanged.
+A confident "done" with a wrong total **fails**. A client that is missing, times out, exceeds the call limit, never connects, or produces no answer is **incomplete**. When the harness cannot reset or read the ledger, the attempt is an **error**. So is an attempt during which the ledger gained a commit that none of the client's successful write calls accounts for ("ledger written outside this attempt"): something else wrote to the ledger, and the result says nothing about the client. An unreadable ledger is never treated as unchanged.
 
 ## One-time setup
 
 1. **Use a dedicated QA account on Beancount.io,** not a personal one. Minting API keys requires a paid plan.
-2. **Create a private ledger named `mcp-agent-eval`** (or `mcp-agent-eval-<suffix>`) on that account.
-3. **Mint an API key with `ledger.read` and `ledger.write`,** restricted to `<owner>/mcp-agent-eval` and with a short expiry, as described in [Personal API key](./mcp.md#personal-api-key).
+2. **Create a private ledger named `mcp-agent-eval-<suffix>`** (for example `mcp-agent-eval-w4`) on that account. Do not use the unsuffixed `mcp-agent-eval`: the [QA contract](../../../.agents/skills/qa-shared/contract.md) designates it as QA's disposable ledger, and every eval attempt resets the ledger it runs on, so a shared one loses QA's snapshots and fails attempts to QA's writes (w5/961).
+3. **Mint an API key with `ledger.read` and `ledger.write`,** restricted to `<owner>/mcp-agent-eval-<suffix>` and with a short expiry, as described in [Personal API key](./mcp.md#personal-api-key).
 4. **Install Claude Code and Codex and sign in to both.**
 5. **For `prompt-reconcile-read-only-credential`, mint a second key** with only `ledger.read`, restricted to the same ledger.
 
@@ -54,7 +54,7 @@ Run against the hosted endpoint. Do not build or start a second deployment only 
 ```zsh
 cd backend-cluster/backend-v2
 read -rs "BEANCOUNT_MCP_TOKEN?API key: " && export BEANCOUNT_MCP_TOKEN
-export BEANCOUNT_MCP_LEDGER=<owner>/mcp-agent-eval
+export BEANCOUNT_MCP_LEDGER=<owner>/mcp-agent-eval-<suffix>
 read -rs "BEANCOUNT_MCP_READONLY_TOKEN?Read-only API key: " && export BEANCOUNT_MCP_READONLY_TOKEN   # only for the read-only journey
 yarn mcp:agent-eval --attempts 3                                    # every journey, both clients
 yarn mcp:agent-eval --client codex --journey cash-food-purchase     # one pair while iterating

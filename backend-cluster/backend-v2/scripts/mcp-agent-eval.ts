@@ -52,6 +52,7 @@ import {
   redact,
   scoreAnswer,
   scoreState,
+  unexplainedCommits,
   unsafeTargetReason,
 } from "./mcp-agent-eval/score";
 import {
@@ -369,6 +370,30 @@ const listFiles = async (client: Client) =>
       {},
     )
   ).map((e) => (e.type === "file" ? e.path : `${e.path}/`));
+
+/** Commit ids on the eval ledger, newest first; null when they cannot be read. */
+async function readCommitIds(
+  client: Client,
+  target: string,
+): Promise<string[] | null> {
+  try {
+    const [owner, name] = target.split("/");
+    const read = await client.readResource({
+      uri: `beancount://${owner}/${name}/commits?limit=50`,
+    });
+    const text = (read.contents[0] as { text?: unknown } | undefined)?.text;
+    const parsed: unknown = typeof text === "string" ? JSON.parse(text) : null;
+    return Array.isArray(parsed)
+      ? parsed.flatMap((c) =>
+          typeof (c as { sha?: unknown })?.sha === "string"
+            ? [(c as { sha: string }).sha]
+            : [],
+        )
+      : null;
+  } catch {
+    return null;
+  }
+}
 
 async function readState(
   client: Client,
@@ -710,6 +735,10 @@ async function runAttempt(
     return bail("error", `fixture reset failed: ${message(error)}`);
   }
 
+  // The ledger is shared with whatever else writes to it, so note where its
+  // history stood once the fixture was restored (w5/961).
+  const commitsBefore = await readCommitIds(ctx.harness, ctx.target);
+
   const workdir = mkdtempSync(path.join(tmpdir(), "mcp-agent-eval-"));
   try {
     const run = await runTurns(
@@ -734,6 +763,11 @@ async function runAttempt(
       ...scoreState(journey, ctx.fixture, ctx.suite.ledgerFile, state),
     ];
     const failed = assertions.filter((a) => !a.ok).map((a) => a.detail);
+    const foreign = unexplainedCommits(
+      commitsBefore,
+      await readCommitIds(ctx.harness, ctx.target),
+      metrics.mcpWrites,
+    );
     const last = run.runs[run.runs.length - 1];
     // A stopped client may still have a write in flight, so only a run that
     // ended on its own leaves a state the next reset can trust.
@@ -741,8 +775,12 @@ async function runAttempt(
       last !== undefined && !last.timedOut && !last.cancelled && !last.limitReason;
     return {
       result: result({
-        outcome: classify(run.incomplete, assertions),
-        reason: run.incomplete ?? (failed.length ? failed.join("; ") : null),
+        // A commit nobody in this attempt made is not the client's failure.
+        outcome: foreign > 0 ? "error" : classify(run.incomplete, assertions),
+        reason:
+          foreign > 0
+            ? `ledger written outside this attempt: ${foreign} commit(s) that no write call of the client accounts for`
+            : (run.incomplete ?? (failed.length ? failed.join("; ") : null)),
         userTurns: run.turns.length,
         wallMs: run.runs.reduce((ms, r) => ms + r.elapsedMs, 0),
         exitCode: last?.exitCode ?? null,

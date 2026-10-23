@@ -82,7 +82,6 @@
 - [964 — Report tool-description drift, not only prompt drift](./964.md) — minor backend-v2 eval-harness finding from the w5/m5 Codex measurement ([w4/960](../w4/done/960.md)); observed 2026-10-21.
 - [963 — Limit Codex eval sessions to the eval server, as Claude Code's are](./963.md) — minor backend-v2 eval-harness finding from the w5/m5 Codex measurement; observed 2026-10-21.
 - [962 — Accept "rejected … lacks `ledger.write`" as a read-only refusal](./962.md) — trivial backend-v2 eval scoring finding from the w5/m5 Codex measurement; observed 2026-10-21.
-- [961 — Keep QA writes and agent-eval resets off each other's ledger](./961.md) — minor eval/QA-contract finding from the w5/m5 Codex measurement; which ledger QA uses is the user's call; observed 2026-10-21.
 
 The 27 findings from the MCP QA auth sweep against the hosted endpoint (023–054, less the five under [Dropped](#dropped)) were fixed in `backend-cluster/backend-v2` and closed on 2026-10-02 and 2026-10-03; each note under [`done/`](./done/) records what shipped and in which commit. None has been re-observed against the hosted endpoint yet — the fixes reach it with the next backend deploy.
 

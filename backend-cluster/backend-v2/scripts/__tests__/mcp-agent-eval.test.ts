@@ -1,3 +1,7 @@
+jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
+jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
+
+import "reflect-metadata";
 import {
   chmodSync,
   mkdirSync,
@@ -9,6 +13,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { MCP_PROMPTS } from "@/features/ai-agent/api/mcp-prompts";
+import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
 import {
   type AttemptResult,
   clientCommand,
@@ -29,9 +34,11 @@ import {
   redact,
   scoreAnswer,
   scoreState,
+  unexplainedCommits,
   unsafeTargetReason,
 } from "../mcp-agent-eval/score";
 import {
+  COMMITTING_TOOLS,
   combineTurns,
   mcpCallsInLine,
   parseClaudeStream,
@@ -880,6 +887,7 @@ describe("client transcripts", () => {
       cachedInputTokens: 100,
       mcpCalls: 2,
       mcpErrors: 1,
+      mcpWrites: 0,
       otherToolCalls: 1,
       mcpServerConnected: true,
       clientError: null,
@@ -993,6 +1001,7 @@ describe("client transcripts", () => {
       cachedInputTokens: null,
       mcpCalls: 0,
       mcpErrors: 0,
+      mcpWrites: 0,
       otherToolCalls: 0,
       mcpServerConnected: null,
       clientError: null,
@@ -1167,5 +1176,79 @@ describe("summarize", () => {
         meanOutputTokens: 2,
       },
     ]);
+  });
+});
+
+// w5/961: a commit nobody in the attempt made is not the client's failure.
+describe("writes outside an attempt", () => {
+  const jsonlLines = (...events: object[]) => events.map((e) => JSON.stringify(e));
+
+  it("counts only successful, committing, non-preview calls", () => {
+    const use = (id: string, name: string, input: object) => ({
+      type: "assistant",
+      message: {
+        content: [{ type: "tool_use", id, name: `mcp__beancount__${name}`, input }],
+      },
+    });
+    const result = (id: string, isError: boolean) => ({
+      type: "user",
+      message: {
+        content: [{ type: "tool_result", tool_use_id: id, is_error: isError }],
+      },
+    });
+    const lines = jsonlLines(
+      use("a", "updateLedgerFiles", { files: [] }),
+      result("a", false),
+      use("b", "updateLedgerFiles", { dry_run: true }),
+      result("b", false),
+      use("c", "createLedgerFiles", {}),
+      result("c", true),
+      use("d", "runBqlQuery", {}),
+      result("d", false),
+      { type: "result", subtype: "success", result: "done" },
+    );
+
+    expect(parseClaudeStream(lines).mcpWrites).toBe(1);
+  });
+
+  it("reads the same from a Codex session", () => {
+    const call = (tool: string, args: object, status = "completed") => ({
+      type: "item.completed",
+      item: { type: "mcp_tool_call", server: "beancount", tool, arguments: args, status },
+    });
+    const lines = jsonlLines(
+      { type: "thread.started", thread_id: "t" },
+      call("addLedgerEntries", {}),
+      call("addLedgerEntries", { dry_run: true }),
+      call("deleteLedgerFiles", {}, "failed"),
+      call("runBqlQuery", {}),
+      { type: "turn.completed", usage: {} },
+    );
+
+    expect(parseCodexStream(lines, null).mcpWrites).toBe(1);
+  });
+
+  it("names a real tool for every committing tool", () => {
+    const published = new Set(MCP_TOOLS.map((tool) => tool.name));
+    const writes = new Set(
+      MCP_TOOLS.filter((tool) => tool.annotations.readOnlyHint !== true).map(
+        (tool) => tool.name,
+      ),
+    );
+
+    for (const name of COMMITTING_TOOLS) {
+      expect(published.has(name)).toBe(true);
+      expect(writes.has(name)).toBe(true);
+    }
+  });
+
+  it("reports commits no write call accounts for, and claims nothing it cannot read", () => {
+    expect(unexplainedCommits(["a", "b"], ["x", "y", "a", "b"], 2)).toBe(0);
+    expect(unexplainedCommits(["a", "b"], ["x", "y", "z", "a", "b"], 2)).toBe(1);
+    expect(unexplainedCommits(["a"], ["x", "a"], 0)).toBe(1);
+    expect(unexplainedCommits(["a"], ["a"], 0)).toBe(0);
+    expect(unexplainedCommits(null, ["x"], 0)).toBe(0);
+    expect(unexplainedCommits(["a"], null, 0)).toBe(0);
+    expect(unexplainedCommits(["a"], ["x", "y"], 0)).toBe(0);
   });
 });
