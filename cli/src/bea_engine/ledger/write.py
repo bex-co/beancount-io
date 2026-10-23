@@ -2046,23 +2046,27 @@ def defining_root(file: Path, first: Path | None = None) -> Path | None:
     return root
 
 
+#: What the loader reads at the start of a line: a file's UTF-8 BOM, and a date
+#: of any digit count (`2024-1-1`), which may touch its directive (`2024-01-01open`).
+#: Matching only `\d{2}` and a space hid a root's opens from the leaf (w5/934).
+_BOM = rb"^(?:\xef\xbb\xbf)?"
+_DATE = _BOM + rb"\d{4}[-/]\d+[-/]\d+"
 #: An account opened outside the file's own closure: a per-year file reads
 #: the accounts its root opens.
-_OPEN_LINE = re.compile(rb"^\d{4}[-/]\d{2}[-/]\d{2}[ \t]+open[ \t]", re.MULTILINE)
+_OPEN_LINE = re.compile(_DATE + rb"[ \t]*open[ \t]", re.MULTILINE)
 #: Option and plugin names, to tell a repeated setting from a new definition.
-_OPTION_NAME = re.compile(rb'^option[ \t]+"([a-z_]+)"', re.MULTILINE)
-_PLUGIN_NAME = re.compile(rb'^plugin[ \t]+(?:"([^"]+)"|([A-Za-z_][\w.]*))', re.MULTILINE)
+_OPTION_NAME = re.compile(_BOM + rb'option[ \t]+"([a-z_]+)"', re.MULTILINE)
+_PLUGIN_NAME = re.compile(_BOM + rb'plugin[ \t]+(?:"([^"]+)"|([A-Za-z_][\w.]*))', re.MULTILINE)
 #: Options that never define what a file reads.
 _REPEATED_OK = {b"title", b"render_commas"}
 #: A dated line: a transaction or directive, the entries an overlay adds.
-_ENTRY_LINE = re.compile(rb"^\d{4}[-/]\d{2}[-/]\d{2}[ \t]+\S", re.MULTILINE)
-#: Accounts the closure opens, and accounts its entries post to.
-_OPEN_ACCOUNT = re.compile(rb"^\d{4}[-/]\d{2}[-/]\d{2}[ \t]+open[ \t]+(\S+)", re.MULTILINE)
-_POSTED_ACCOUNT = re.compile(rb"^[ \t]+([A-Z][A-Za-z0-9_-]*(?::[^:\s]+)+)(?=[ \t]|$)", re.MULTILINE)
-_DIRECTIVE_ACCOUNT = re.compile(
-    rb"^\d{4}[-/]\d{2}[-/]\d{2}[ \t]+(?:balance|note|document|close)[ \t]+(\S+)", re.MULTILINE
-)
-_PAD_ACCOUNTS = re.compile(rb"^\d{4}[-/]\d{2}[-/]\d{2}[ \t]+pad[ \t]+(\S+)[ \t]+(\S+)", re.MULTILINE)
+_ENTRY_LINE = re.compile(_DATE + rb"(?:[ \t]+\S|[A-Za-z])", re.MULTILINE)
+#: Accounts the closure opens, and accounts its entries post to. A name may
+#: start with and contain non-ASCII letters (`Áctivos:Cash`).
+_OPEN_ACCOUNT = re.compile(_DATE + rb"[ \t]*open[ \t]+(\S+)", re.MULTILINE)
+_POSTED_ACCOUNT = re.compile(rb"^[ \t]+([A-Z\x80-\xff][A-Za-z0-9_\x80-\xff-]*(?::[^:\s]+)+)(?=[ \t]|$)", re.MULTILINE)
+_DIRECTIVE_ACCOUNT = re.compile(_DATE + rb"[ \t]*(?:balance|note|document|close)[ \t]+(\S+)", re.MULTILINE)
+_PAD_ACCOUNTS = re.compile(_DATE + rb"[ \t]*pad[ \t]+(\S+)[ \t]+(\S+)", re.MULTILINE)
 
 
 def _posts_unopened(own: dict[Path, bytes]) -> bool:
