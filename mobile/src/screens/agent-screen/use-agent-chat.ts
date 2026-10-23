@@ -1,3 +1,4 @@
+import { deviceTimeZone } from "./device-time-zone";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useReactiveVar } from "@apollo/client";
 import { useChat } from "@ai-sdk/react";
@@ -80,7 +81,9 @@ export function useAgentChat() {
             "Accept-Language": localeRef.current,
           };
         },
-        body: { ledgerId, sessionId },
+        // The device's zone, read per request, so the agent knows today's date
+        // where the user is (w21/856).
+        body: () => ({ ledgerId, sessionId, timeZone: deviceTimeZone() }),
         fetch: expoFetch as unknown as typeof globalThis.fetch,
       }),
     [ledgerId, sessionId],

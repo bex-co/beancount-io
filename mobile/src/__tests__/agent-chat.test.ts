@@ -188,7 +188,11 @@ describe("agent transport", () => {
   });
 
   it("scopes the request to the selected ledger and the chat session", () => {
-    expect(/body:\s*\{\s*ledgerId,\s*sessionId\s*\}/.test(source)).toBeTruthy();
+    expect(
+      /body:\s*\(\)\s*=>\s*\(\{\s*ledgerId,\s*sessionId,\s*timeZone:\s*deviceTimeZone\(\)\s*\}\)/.test(
+        source,
+      ),
+    ).toBeTruthy();
   });
 
   it("mints a new session id for a new chat", () => {
