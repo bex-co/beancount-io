@@ -556,6 +556,7 @@ export const ru: Translations = {
   total: "Итого",
   receiptQuotaExhausted: "Лимит ИИ исчерпан.",
   receiptParseFailed: "Не удалось прочитать чек. Попробуйте ещё раз.",
+  receiptNotAvailable: "Сканирование чеков не настроено на этом сервере.",
   receiptUploadFailed: "Не удалось загрузить. Попробуйте ещё раз.",
   receiptCameraPermission:
     "Чтобы сфотографировать чек, нужен доступ к камере. Включите его в настройках.",

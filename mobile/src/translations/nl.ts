@@ -551,6 +551,7 @@ export const nl: Translations = {
   total: "Totaal",
   receiptQuotaExhausted: "AI-tegoed op.",
   receiptParseFailed: "Kon de bon niet lezen. Probeer het opnieuw.",
+  receiptNotAvailable: "Bonnen scannen is op deze server niet ingesteld.",
   receiptUploadFailed: "Uploaden mislukt. Probeer het opnieuw.",
   receiptCameraPermission:
     "Toegang tot de camera is nodig om je bon te fotograferen. Zet dit aan in Instellingen.",

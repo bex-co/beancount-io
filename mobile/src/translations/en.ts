@@ -568,6 +568,7 @@ export const en = {
   total: "Total",
   receiptQuotaExhausted: "AI quota exhausted.",
   receiptParseFailed: "Could not read receipt. Please try again.",
+  receiptNotAvailable: "Receipt scanning isn't set up on this server.",
   receiptUploadFailed: "Upload failed. Please try again.",
   receiptCameraPermission:
     "Camera access is needed to take a photo of your receipt. Enable it in Settings.",

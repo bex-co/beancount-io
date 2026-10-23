@@ -565,6 +565,8 @@ export const de: Translations = {
   receiptQuotaExhausted: "KI-Kontingent aufgebraucht.",
   receiptParseFailed:
     "Beleg konnte nicht gelesen werden. Bitte erneut versuchen.",
+  receiptNotAvailable:
+    "Das Scannen von Belegen ist auf diesem Server nicht eingerichtet.",
   receiptUploadFailed: "Hochladen fehlgeschlagen. Bitte erneut versuchen.",
   receiptCameraPermission:
     "Für das Foto Ihres Belegs wird Kamerazugriff benötigt. Aktivieren Sie ihn in den Einstellungen.",

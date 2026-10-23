@@ -561,6 +561,8 @@ export const fr: Translations = {
   total: "Total",
   receiptQuotaExhausted: "Quota d'IA épuisé.",
   receiptParseFailed: "Impossible de lire le reçu. Veuillez réessayer.",
+  receiptNotAvailable:
+    "La numérisation des reçus n'est pas configurée sur ce serveur.",
   receiptUploadFailed: "Échec de l'envoi. Veuillez réessayer.",
   receiptCameraPermission:
     "L'accès à l'appareil photo est nécessaire pour photographier votre reçu. Activez-le dans Réglages.",

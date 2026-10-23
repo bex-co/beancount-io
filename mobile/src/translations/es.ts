@@ -561,6 +561,8 @@ export const es: Translations = {
   total: "Total",
   receiptQuotaExhausted: "Has agotado tu cuota de IA.",
   receiptParseFailed: "No se pudo leer el recibo. Inténtalo de nuevo.",
+  receiptNotAvailable:
+    "El escaneo de recibos no está configurado en este servidor.",
   receiptUploadFailed: "Error al subir. Inténtalo de nuevo.",
   receiptCameraPermission:
     "Se necesita acceso a la cámara para fotografiar tu recibo. Actívalo en Ajustes.",

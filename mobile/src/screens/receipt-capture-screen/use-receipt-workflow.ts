@@ -5,7 +5,11 @@ import {
   useGenerateTempAssetUploadUrlMutation,
   useParseReceiptMutation,
 } from "@/generated-graphql/graphql";
-import { receiptDate, parseErrorCode } from "./receipt-utils";
+import {
+  receiptDate,
+  parseErrorCode,
+  isPermanentReceiptRefusal,
+} from "./receipt-utils";
 import { captureError } from "@/common/sentry/capture";
 import {
   abandonAttempt,
@@ -183,11 +187,21 @@ export const useReceiptWorkflow = (): ReceiptWorkflow => {
         });
       } catch (err: unknown) {
         if (!live()) return;
-        const msg = err instanceof Error ? err.message : "upload_failed";
+        // A server that refuses for good (not set up for receipts) says so, and
+        // offers no retry (w21/869).
+        const msg = isPermanentReceiptRefusal(err)
+          ? "not_available"
+          : err instanceof Error
+            ? err.message
+            : "upload_failed";
         // Parse-leg errors are already captured with their phase above; capture
         // anything else (upload-URL mint, S3 PUT, network) here so the real
         // cause is never swallowed — the screen only shows a generic message.
-        if (msg !== "quota_exhausted" && msg !== "parse_failed") {
+        if (
+          msg !== "quota_exhausted" &&
+          msg !== "parse_failed" &&
+          msg !== "not_available"
+        ) {
           captureError(err, { phase: "upload", code: msg });
         }
         setPhase({ kind: "error", message: msg });

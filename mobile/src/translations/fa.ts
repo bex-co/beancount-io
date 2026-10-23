@@ -542,6 +542,7 @@ export const fa: Translations = {
   total: "جمع کل",
   receiptQuotaExhausted: "سهمیهٔ هوش مصنوعی تمام شد.",
   receiptParseFailed: "خواندن رسید ممکن نشد. دوباره تلاش کنید.",
+  receiptNotAvailable: "اسکن رسید روی این سرور راه‌اندازی نشده است.",
   receiptUploadFailed: "بارگذاری ناموفق بود. دوباره تلاش کنید.",
   receiptCameraPermission:
     "برای عکس‌گرفتن از رسید، دسترسی به دوربین لازم است. آن را در تنظیمات فعال کنید.",

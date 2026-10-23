@@ -561,6 +561,8 @@ export const ca: Translations = {
   total: "Total",
   receiptQuotaExhausted: "Has exhaurit la quota d'IA.",
   receiptParseFailed: "No s'ha pogut llegir el rebut. Torna-ho a provar.",
+  receiptNotAvailable:
+    "L'escaneig de rebuts no està configurat en aquest servidor.",
   receiptUploadFailed: "No s'ha pogut pujar. Torna-ho a provar.",
   receiptCameraPermission:
     "Cal accés a la càmera per fotografiar el rebut. Activa'l a la Configuració.",

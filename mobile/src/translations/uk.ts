@@ -555,6 +555,7 @@ export const uk: Translations = {
   total: "Разом",
   receiptQuotaExhausted: "Ліміт ШІ вичерпано.",
   receiptParseFailed: "Не вдалося прочитати чек. Спробуйте ще раз.",
+  receiptNotAvailable: "Сканування чеків не налаштовано на цьому сервері.",
   receiptUploadFailed: "Не вдалося завантажити. Спробуйте ще раз.",
   receiptCameraPermission:
     "Щоб сфотографувати чек, потрібен доступ до камери. Увімкніть його в Налаштуваннях.",

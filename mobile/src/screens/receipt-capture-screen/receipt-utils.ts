@@ -53,8 +53,13 @@ export const receiptAmountText = (amount: number): string => {
  */
 export const receiptErrorKey = (
   code: string,
-): "receiptQuotaExhausted" | "receiptParseFailed" | "receiptUploadFailed" => {
+):
+  | "receiptQuotaExhausted"
+  | "receiptNotAvailable"
+  | "receiptParseFailed"
+  | "receiptUploadFailed" => {
   if (code === "quota_exhausted") return "receiptQuotaExhausted";
+  if (code === "not_available") return "receiptNotAvailable";
   if (code === "parse_failed") return "receiptParseFailed";
   return "receiptUploadFailed";
 };
@@ -64,7 +69,18 @@ export const receiptErrorKey = (
  * a dropped connection or an unreadable parse does not (w21/204).
  */
 export const receiptCanRetry = (code: string): boolean =>
-  code !== "quota_exhausted";
+  code !== "quota_exhausted" && code !== "not_available";
+
+/**
+ * Whether the server refused for good: it is not set up for receipts (no
+ * storage or model keys on a self-hosted install), or this account may not use
+ * it. A refused photo (BAD_USER_INPUT) is not here: another photo can work. Trying the same photo again uploads it again and fails the same way
+ * (w21/869).
+ */
+export const isPermanentReceiptRefusal = (err: unknown): boolean =>
+  graphQLErrorCodes(err).some((code) =>
+    ["CONFIGURATION_ERROR", "FORBIDDEN"].includes(code),
+  );
 
 /**
  * Classify a failure thrown by the parse-leg mutation into an internal code.
@@ -79,9 +95,10 @@ export const receiptCanRetry = (code: string): boolean =>
  */
 export const parseErrorCode = (
   err: unknown,
-): "quota_exhausted" | "parse_failed" => {
+): "quota_exhausted" | "not_available" | "parse_failed" => {
   const codes = graphQLErrorCodes(err);
   if (codes.includes("RESOURCE_LIMIT_REACHED")) return "quota_exhausted";
+  if (isPermanentReceiptRefusal(err)) return "not_available";
   return "parse_failed";
 };
 

@@ -549,6 +549,7 @@ export const bg: Translations = {
   total: "Общо",
   receiptQuotaExhausted: "Квотата за ИИ е изчерпана.",
   receiptParseFailed: "Бележката не можа да бъде разчетена. Опитайте отново.",
+  receiptNotAvailable: "Сканирането на разписки не е настроено на този сървър.",
   receiptUploadFailed: "Качването е неуспешно. Опитайте отново.",
   receiptCameraPermission:
     "За снимка на бележката е необходим достъп до камерата. Разрешете го в Настройки.",

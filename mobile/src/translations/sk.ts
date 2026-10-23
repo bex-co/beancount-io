@@ -559,6 +559,8 @@ export const sk: Translations = {
   total: "Spolu",
   receiptQuotaExhausted: "Kvóta AI je vyčerpaná.",
   receiptParseFailed: "Účtenku sa nepodarilo prečítať. Skúste to znova.",
+  receiptNotAvailable:
+    "Skenovanie pokladničných dokladov nie je na tomto serveri nastavené.",
   receiptUploadFailed: "Nahrávanie zlyhalo. Skúste to znova.",
   receiptCameraPermission:
     "Na odfotenie účtenky je potrebný prístup ku kamere. Povoľte ho v Nastaveniach.",

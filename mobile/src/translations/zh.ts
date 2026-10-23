@@ -495,6 +495,7 @@ export const zh: Translations = {
   total: "合计",
   receiptQuotaExhausted: "AI 额度已用完。",
   receiptParseFailed: "无法识别小票，请重试。",
+  receiptNotAvailable: "此服务器未设置收据扫描。",
   receiptUploadFailed: "上传失败，请重试。",
   receiptCameraPermission: "拍摄小票需要相机权限，请在“设置”中开启。",
   receiptLibraryPermission: "选择小票需要相册权限，请在“设置”中开启。",
