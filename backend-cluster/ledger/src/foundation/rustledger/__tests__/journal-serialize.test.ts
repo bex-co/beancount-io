@@ -447,3 +447,38 @@ describe("matchesJournalDisplayFilters", () => {
     expect(rows[0].entry.directive_type).toBe(DirectiveType.Open);
   });
 });
+
+// w21/778: the journal lists metadata in the order the engine's directive
+// holds it, which `orderMetaAsWritten` makes the source's.
+describe("serializeDirective metadata order", () => {
+  it("keeps the entry's and each posting's key order", () => {
+    const directive: DirectiveJson = {
+      type: "transaction",
+      date: "2026-10-01",
+      flag: "*",
+      payee: "Supplier",
+      narration: "Paper",
+      tags: [],
+      links: [],
+      meta: { invoice: "INV-1", po: "PO-7", due: "2026-11-01", paid: true },
+      postings: [
+        {
+          account: "Expenses:Office",
+          units: { number: "42.00", currency: "USD" },
+          meta: { step1: "a", step2: "b", step3: "c" },
+        },
+        { account: "Assets:Cash" },
+      ],
+    };
+    const item = serializeDirective(directive) as {
+      meta: Record<string, unknown>;
+      postings: { meta: Record<string, unknown> | null }[];
+    };
+    expect(Object.keys(item.meta)).toEqual(["invoice", "po", "due", "paid"]);
+    expect(Object.keys(item.postings[0]!.meta ?? {})).toEqual([
+      "step1",
+      "step2",
+      "step3",
+    ]);
+  });
+});

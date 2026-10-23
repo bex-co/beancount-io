@@ -12,7 +12,6 @@
 
 ## Inbox
 
-- [778](./778.md) — Transaction detail lists metadata in a different, arbitrary order on each load
 - [779](./779.md) — A sale's cost/price line still squeezes Money flow's account name to "Asset…guard"
 - [780](./780.md) — A commit diff draws an RTL account's amount inside the account path
 - [781](./781.md) — Account detail shows forecast and future-dated entries as booked (no Forecast badge, no Upcoming line)

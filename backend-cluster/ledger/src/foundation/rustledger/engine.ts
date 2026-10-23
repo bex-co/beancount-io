@@ -40,6 +40,7 @@ import {
 import { reconcileDocumentErrors } from "./document-validation";
 import { averageBookingErrors } from "./average-booking";
 import { openAutoAccounts } from "./auto-accounts";
+import { orderMetaAsWritten } from "./meta-order";
 import {
   discoverDocuments,
   mergeDiscoveredDocuments,
@@ -844,6 +845,8 @@ async function parseLedgerFilesUncached(
   );
 
   errors = withBalanceErrorDates(errors, stripResult?.strippedFiles ?? scoped);
+  // The engine's meta is a hash map; show it as written (w21/778).
+  orderMetaAsWritten(directives, files, entryPoint);
 
   const capturedSourceIds =
     applyTs || sourceDetails !== undefined

@@ -1824,6 +1824,46 @@ async function main(): Promise<void> {
     droppedParent.length === 0,
     `a close close_tree drops refuses nothing (got ${JSON.stringify(droppedParent)})`,
   );
+  // w21/778: the engine's meta is a hash map; entries list it as written.
+  const metaParsed = await parseLedgerFiles(
+    {
+      "main.beancount": [
+        "2026-01-01 open Assets:Cash",
+        "2026-01-01 open Expenses:Office",
+        '2026-10-01 * "Supplier" "Paper"',
+        '  invoice: "INV-1"',
+        '  po: "PO-7"',
+        "  due: 2026-11-01",
+        "  paid: TRUE",
+        '  note: "hello"',
+        "  Expenses:Office  42.00 USD",
+        '    step1: "a"',
+        '    step2: "b"',
+        '    step3: "c"',
+        "  Assets:Cash",
+      ].join("\n"),
+    },
+    "main.beancount",
+    { today: "2099-01-01" },
+  );
+  const metaEntry = metaParsed.directives.find(
+    (directive) => directive.type === "transaction",
+  );
+  const metaKeys =
+    metaEntry?.type === "transaction"
+      ? [
+          Object.keys(metaEntry.meta ?? {}),
+          Object.keys(metaEntry.postings[0]?.meta ?? {}),
+        ]
+      : null;
+  assert(
+    JSON.stringify(metaKeys) ===
+      JSON.stringify([
+        ["invoice", "po", "due", "paid", "note"],
+        ["step1", "step2", "step3"],
+      ]),
+    `metadata is listed as written (got ${JSON.stringify(metaKeys)})`,
+  );
   // w21/753: a child opened after its parent's close stays active, as
   // Beancount's date-ordered check leaves it, with bean-check's one error for
   // the close close_tree dated before the open.
