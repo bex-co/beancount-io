@@ -17,7 +17,7 @@
 
 ### Current submission priority and coverage
 
-[m9/t011](m9/t011.md), the official Cursor application, is fully prepared and awaits confirmation for the actual final Publisher Terms action. Its community entry and native QA remain complete. Next work on [m9/t012](m9/t012.md), then independent Cline/GitHub/LobeHub submissions and app review checks; do not wait for another platform's approval.
+[m9/t011](m9/t011.md), the official Cursor application, is fully prepared and awaits confirmation for the actual final Publisher Terms action. Its community entry and native QA remain complete. Docker [m9/t012](m9/t012.md) is also prepared at its exact synthetic-ledger consent decision. Next work on [m9/t013](m9/t013.md), then independent GitHub/LobeHub submissions and app review checks; do not wait for another platform's approval.
 
 The [complete 17-target ownership map](m11/README.md#full-inventory-ownership-and-execution-order) covers every row of the [submission tracker](../../backend-cluster/backend-v2/docs/mcp-marketplaces.md#submission-status-tracker). Receipt-stage tasks require actual accepted submissions; publisher/account/client preparation is not a receipt. Original public/native DoDs remain in force. m8/041/042 keep concrete platform, claim/health or fee gates; no blocked item is silently dropped or reported submitted.
 
@@ -108,7 +108,7 @@ Prioritize the major correctness findings (PRINT/FROM/JOURNAL, authored location
 
 - [ ] **m6.5** — [Distribute the Beancount.io customer skills as one suite](./blocked/m6.5/README.md) (12 tasks; 9 done; A3/A2/A1) ← explicit owner request 2026-10-22, extended to other channels 2026-10-23 UTC. **Blocked:** Hermes admission, third-party index read-backs and final closeout. Owned grouping/whole-suite install refresh and CI checks implemented; suite 0.4.0 public and all thirteen standalone ClawHub listings retired.
 
-- [ ] **m9** — [Reach developer marketplaces and galleries](m9/README.md) (14 tasks; 1 done; A3/A1) ← expanded by the 2026-10-23 all-submissions request. **Next:** t012 Docker, then independent Cline/GitHub receipt tasks. t011 is fully prepared and awaits the exact final Publisher Terms confirmation; existing native/publication gates retained.
+- [ ] **m9** — [Reach developer marketplaces and galleries](m9/README.md) (14 tasks; 1 done; A3/A1) ← expanded by the 2026-10-23 all-submissions request. **Next:** t013 Cline, then t014 GitHub nomination. t011 is prepared pending exact Publisher Terms confirmation; t012 is at exact synthetic-ledger Docker consent pending confirmation. Existing native/publication gates remain.
 - [ ] **m10** — [List the connector in independent web directories](m10/README.md) (9 tasks; A3/A1) ← expanded by the 2026-10-23 all-submissions request. **Next:** t009 actual LobeHub submission; two accepted free submissions continue in review.
 
 - [ ] **m8** — [Claim and publish the hosted connector on Smithery and Glama](blocked/m8/README.md) (8 tasks; A3/A1) ← existing local marketplace roadmap, continued under `$loopx w6` on 2026-10-21 UTC; t001 packet shipped; **blocked:** Smithery publisher returns removed-update 403, Glama awaits w2/088 claim and full-day health
