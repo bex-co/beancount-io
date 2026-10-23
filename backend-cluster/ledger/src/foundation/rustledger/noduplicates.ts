@@ -1,6 +1,7 @@
 import type { BeancountError, FileMap } from "@rustledger/wasm";
 import { indexBlocks } from "./block-index";
-import { includeTraversalOrder } from "./source-slice";
+import { beancountPluginRuns } from "./plugins/collect-plugins";
+import { includeTraversalOrder, loadedFiles } from "./source-slice";
 
 /** rustledger's `noduplicates` error, raised for each later copy. */
 const DUPLICATE = /^Duplicate transaction: (\d{4}-\d{2}-\d{2}) "(.*)"$/u;
@@ -61,4 +62,85 @@ export function locateDuplicateErrors(
     const at = copiesOf(duplicate[1]!, duplicate[2]!).shift();
     return at ? { ...error, file: at.file, line: at.line, column: 1 } : error;
   });
+}
+
+/** The directives besides transactions the engine does not compare. */
+const OTHER_DUPLICATES = /^\d{4}-\d{2}-\d{2}\s+(balance|note|event)\s/u;
+const TYPE_NAMES: Record<string, string> = {
+  balance: "Balance",
+  note: "Note",
+  event: "Event",
+};
+
+/**
+ * `noduplicates` flags every directive but a price that repeats an earlier one
+ * (`hash_entries`, metadata aside), on the later copy. The engine compares
+ * transactions only, so a duplicated balance, note or event read as healthy
+ * where bean-check refuses it (w21/847). Entries compare as their source text
+ * does, files in load order; Beancount's own wording prints both entries'
+ * internals, so this names the type and the repeated line.
+ */
+export function duplicateEntryErrors(
+  files: FileMap,
+  entryPoint: string,
+): BeancountError[] {
+  const runs = beancountPluginRuns(files[entryPoint], "noduplicates");
+  if (runs.length === 0) return [];
+  const index = indexBlocks(files);
+  // Beancount compares the sorted entries (date, type rank, line), so the copy
+  // it flags is the later one by that order, whichever file it is in.
+  const found: {
+    file: string;
+    line: number;
+    date: string;
+    rank: number;
+    seq: number;
+    kind: string;
+    text: string;
+  }[] = [];
+  for (const file of loadedFiles(files, entryPoint)) {
+    for (const block of index.blocks(file)) {
+      const match = OTHER_DUPLICATES.exec(block.text);
+      if (match === null) continue;
+      found.push({
+        file,
+        line: block.startLine + 1,
+        date: block.text.slice(0, 10),
+        rank: match[1] === "balance" ? -1 : 0,
+        seq: found.length,
+        kind: match[1]!,
+        text: identity(block.text),
+      });
+    }
+  }
+  found.sort(
+    (a, b) =>
+      (a.date < b.date ? -1 : a.date > b.date ? 1 : 0) ||
+      a.rank - b.rank ||
+      a.line - b.line ||
+      a.seq - b.seq,
+  );
+  const seen = new Set<string>();
+  const errors: BeancountError[] = [];
+  for (const entry of found) {
+    if (!seen.has(entry.text)) {
+      seen.add(entry.text);
+      continue;
+    }
+    runs.forEach(() =>
+      errors.push({
+        message: `Duplicate entry: ${TYPE_NAMES[entry.kind]}: ${entry.text}`,
+        code: "PLUGIN",
+        phase: "plugin",
+        hint: null,
+        file: entry.file,
+        line: entry.line,
+        column: 1,
+        end_line: null,
+        end_column: null,
+        severity: "error",
+      }),
+    );
+  }
+  return errors;
 }
