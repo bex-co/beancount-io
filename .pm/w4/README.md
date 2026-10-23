@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1037** — Offer in-place retry when Journal's primary read fails (35–50m, dashboard, A2) ← dashboard QA; residual of m50 ([note](./1037.md))
+
 - **1036** — Preserve filename checks when the folder lookup fails (45–60m, dashboard, A2) ← dashboard QA; residual of m50 ([note](./1036.md))
 
 - **1035** — Return focus to Create File after choosing Stay (35–45m, dashboard, A2) ← dashboard QA; residual of964 ([note](./1035.md))
