@@ -3,6 +3,7 @@ import {
   parseActivityContent,
   summarizeParsedContent,
 } from "../activity-content-parser";
+import { MAX_SUMMARY_LENGTH, stripHtml } from "../html-utils";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -229,6 +230,37 @@ describe("parseActivityContent", () => {
 // ---------------------------------------------------------------------------
 
 describe("summarizeParsedContent", () => {
+  // w21/731: the summary was cut at 200 characters, so a push of long commit
+  // subjects lost its "+N more commit(s)" line and the app showed no count.
+  it("keeps the remainder line when long subjects would push it past the cut", () => {
+    const content = JSON.stringify({
+      Commits: Array.from({ length: 5 }, (_, i) => ({
+        Sha1: `sha${i}`,
+        Message: `Import Qa20261020 Checking statement 2026-0${i + 1} (42 transactions, 3 transfers)`,
+        AuthorName: "Alice",
+        AuthorEmail: "a@b.com",
+        CommitterName: "Alice",
+        CommitterEmail: "a@b.com",
+        Timestamp: "2024-01-01T00:00:00Z",
+      })),
+      HeadCommit: null,
+      CompareURL: "",
+      Len: 5,
+    });
+    const summary = summarizeParsedContent(
+      parseActivityContent("commit_repo", content),
+    );
+    expect(summary.length).toBeLessThanOrEqual(MAX_SUMMARY_LENGTH);
+    expect(stripHtml(summary, false)).toBe(summary);
+    const lines = summary.split("\n");
+    expect(lines).toHaveLength(4);
+    expect(lines[3]).toBe("+2 more commit(s)");
+    expect(
+      lines[0]!.startsWith("Import Qa20261020 Checking statement 2026-01"),
+    ).toBe(true);
+    expect(lines[0]!.endsWith("…")).toBe(true);
+  });
+
   it("shows first line of each commit message", () => {
     const parsed = parseActivityContent("commit_repo", makePushContent());
     const summary = summarizeParsedContent(parsed);

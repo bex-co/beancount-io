@@ -1,3 +1,5 @@
+import { MAX_SUMMARY_LENGTH } from "./html-utils";
+
 /**
  * Parses the `content` field of a Gitea Activity.
  *
@@ -252,6 +254,29 @@ export function parseActivityContent(
 }
 
 /**
+ * `lines` then `suffix`, each line shortened so the whole fits the summary's
+ * length. Cut at the end instead, a push of long commit subjects lost its
+ * "+N more commit(s)" line, and with it the count the app shows (w21/731).
+ */
+function fitLines(lines: readonly string[], suffix: string): string {
+  const whole = lines.join("\n") + suffix;
+  if (whole.length <= MAX_SUMMARY_LENGTH || lines.length === 0) return whole;
+  const each = Math.max(
+    1,
+    Math.floor(
+      (MAX_SUMMARY_LENGTH - suffix.length - (lines.length - 1)) / lines.length,
+    ),
+  );
+  return (
+    lines
+      .map((line) =>
+        line.length > each ? `${line.slice(0, each - 1)}…` : line,
+      )
+      .join("\n") + suffix
+  );
+}
+
+/**
  * Render a ParsedContent value into a short human-readable summary string.
  * Commit messages are trimmed; only the first few are shown.
  */
@@ -267,7 +292,7 @@ export function summarizeParsedContent(
       const shown = parsed.messages.slice(0, maxCommits);
       const remainder = parsed.count - shown.length;
       const suffix = remainder > 0 ? `\n+${remainder} more` : "";
-      return shown.join("\n") + suffix;
+      return fitLines(shown, suffix);
     }
     case "push": {
       if (parsed.commits.length === 0) {
@@ -277,7 +302,7 @@ export function summarizeParsedContent(
       const lines = shown.map((c) => c.message.split("\n")[0]).filter(Boolean);
       const remainder = parsed.totalCount - shown.length;
       const suffix = remainder > 0 ? `\n+${remainder} more commit(s)` : "";
-      return lines.join("\n") + suffix;
+      return fitLines(lines, suffix);
     }
     case "issue": {
       const prefix = `#${parsed.issueIndex}`;

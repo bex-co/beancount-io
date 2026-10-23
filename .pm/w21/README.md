@@ -18,7 +18,6 @@
 - [738](./738.md) — `option "documents"` discovery never runs, so statements never appear in account detail
 - [739](./739.md) — `nounused` / `check_commodity` errors are hidden as warnings, and `pedantic` skips `nounused`
 - [740](./740.md) — Errors from built-in plugins carry no file or line, so their Notifications rows can't be tapped
-- [731](./731.md) — A push whose commit messages run past 200 characters still hides its commit count (w21/716 variant)
 - [732](./732.md) — In a ledger without operating_currency, a USD merchant's header reads "120.00 USD" while its rows read "−$60.00"
 - [733](./733.md) — The AVERAGE error has no file or line when the sale posting carries a flag (w21/721 variant)
 - [734](./734.md) — Open Account still says a bare "already open" for a future account stored with decomposed accents (w21/723 vs w21/256)

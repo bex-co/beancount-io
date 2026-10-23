@@ -1,3 +1,6 @@
+/** The longest summary a feed item carries before it is cut with "...". */
+export const MAX_SUMMARY_LENGTH = 200;
+
 /**
  * Strip HTML tags from text and limit length
  * @param html HTML string to clean
@@ -18,8 +21,8 @@ export function stripHtml(html: string, aggressive = false): string {
   }
 
   // Limit to 200 characters
-  if (text.length > 200) {
-    return text.substring(0, 200) + "...";
+  if (text.length > MAX_SUMMARY_LENGTH) {
+    return text.substring(0, MAX_SUMMARY_LENGTH) + "...";
   }
 
   return text;
