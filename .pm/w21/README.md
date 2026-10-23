@@ -12,6 +12,12 @@
 
 ## Inbox
 
+- [753](./753.md) — w21/737 regression: a `close_tree` child opened after its parent was closed gets a false error, and saves are refused
+- [754](./754.md) — w21/739 regression: `pedantic` (or `unique_prices` before `implicit_prices`) raises a false "Disagreeing price entries"
+- [755](./755.md) — w21/737 regression: E1003 reported twice when `close_tree` is combined with a fava plugin
+- [756](./756.md) — A `pad` into a child closed by `close_tree` still raises no error (w21/737 variant)
+- [757](./757.md) — `nounused` ignores plugin order, so a child closed by `close_tree` counts as used (w21/739 variant)
+- [758](./758.md) — A discovered statement dated before its account opened raises no error (w21/738 variant)
 - [750](./750.md) — A flat range reads grey "+$0.00 (0.00%)" in the chart header, but the line and fill stay green
 - [751](./751.md) — The chart's y-range scales to the move itself, so −$12 on $2.5M draws a full-height crash
 - [752](./752.md) — The chart's change percentage has no thousands separators: "(−10471.20%)"
