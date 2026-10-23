@@ -2,7 +2,7 @@
 
 **Worker:** worker1 — general-purpose adoption worker; accepts the next highest-impact milestone across packages, topics, and A1/A2/A3 rather than owning a permanent specialty.
 
-## Current work and blocker triage — 2026-10-22 UTC
+## Current work and blocker triage — 2026-10-23 UTC
 
 | Milestone | Adoption outcome | Current state |
 | --- | --- | --- |
@@ -10,8 +10,18 @@
 | [m6.5](./blocked/m6.5/README.md) | Install and update the ledger workflows through one Beancount.io suite. | Public `@puncsky/beancount-io` 0.4.0 and all thirteen standalone listings retired. Nine of twelve tasks done; other-channel grouping/whole-suite refresh implemented, third-party index read-backs and Hermes admission remain. |
 | [m7](done/m7/README.md) | Connect OpenClaw and Hermes to the existing hosted Beancount.io MCP endpoint. | Done; separate from local ClawHub skill distribution. |
 | [m8](blocked/m8/README.md) | Publish or claim the hosted connector on Smithery and Glama. | Shared packet done; supported Smithery intake and existing Glama claim/private-QA/full-day health remain. |
-| [m9](blocked/m9/README.md) | Make the hosted connector discoverable in Docker, Cursor, Cline and GitHub/VS Code galleries. | Cursor community/native QA complete and grant retained; separate client grants, official agreement/operator nomination and platform reviews remain. |
-| [m10](blocked/m10/README.md) | List the hosted connector in MCPServers.org, MCPMarket and LobeHub. | Two free submissions are accepted into review queues; public listing/connection checks and Lobe account/agreement/publication remain. |
+| [m9](m9/README.md) | Complete developer-marketplace submissions, then verify published/native paths. | Reopened: t011 official Cursor receipt first; t012 Docker, t013 Cline and t014 GitHub nomination are independent. Existing review/native criteria remain open. |
+| [m10](m10/README.md) | Finish the independent-directory submissions and publication checks. | Reopened: t009 completes actual LobeHub submission. MCPServers.org and MCPMarket receipts remain pending without resubmission. |
+| [m11](m11/README.md) | Complete existing ChatGPT/Claude reviews and remote-community distribution. | New: two submitted applications get explicit review owners; Awesome Remote MCP Servers gets its own contribution task; all 17 inventory rows are mapped. |
+
+
+### Current submission priority and coverage
+
+Finish [m9/t011](m9/t011.md), the official Cursor application, first. Its already-published community entry and completed native QA are preserved. Continue independent Docker/Cline/GitHub/LobeHub submissions and app review checks without waiting for another platform's approval.
+
+The [complete 17-target ownership map](m11/README.md#full-inventory-ownership-and-execution-order) covers every row of the [submission tracker](../../backend-cluster/backend-v2/docs/mcp-marketplaces.md#submission-status-tracker). Receipt-stage tasks require actual accepted submissions; publisher/account/client preparation is not a receipt. Original public/native DoDs remain in force. m8/041/042 keep concrete platform, claim/health or fee gates; no blocked item is silently dropped or reported submitted.
+
+Milestones m9/m10 return from blocked/ because new independently actionable receipt-stage tasks exist. Their previous access/review conditions are not declared met. ChatGPT and Claude are included by the current owner request, superseding their earlier scope exclusion. Dated execution snapshots below are history, not the current next-action list.
 
 The historical standalone suite0.3.8 closeout is complete. Before retirement,
 all13latest ClawHub versions were1.0.4 under puncsky, matching119authored files. OpenClaw installed all13;
@@ -94,10 +104,12 @@ Prioritize the major correctness findings (PRINT/FROM/JOURNAL, authored location
 
 ## Milestones
 
+- [ ] **m11** — [Complete app-directory and remote-community distribution](m11/README.md) (7 tasks; A3/A1) ← explicit all-inventory submission request 2026-10-23; ChatGPT/Claude applications already submitted, exact management links retained.
+
 - [ ] **m6.5** — [Distribute the Beancount.io customer skills as one suite](./blocked/m6.5/README.md) (12 tasks; 9 done; A3/A2/A1) ← explicit owner request 2026-10-22, extended to other channels 2026-10-23 UTC. **Blocked:** Hermes admission, third-party index read-backs and final closeout. Owned grouping/whole-suite install refresh and CI checks implemented; suite 0.4.0 public and all thirteen standalone ClawHub listings retired.
 
-- [ ] **m9** — [Reach developer marketplaces and galleries](blocked/m9/README.md) (10 tasks; A3/A1) ← approved local roadmap, synchronized under `$loopx w6` on 2026-10-21 UTC; **blocked:** payloads prepared; cursor.directory entry in New/native OAuth/query/preview complete; native dedicated-QA journeys, final publisher agreement/operator request and external reviews remain
-- [ ] **m10** — [List the connector in independent web directories](blocked/m10/README.md) (8 tasks; A3/A1) ← approved local roadmap, synchronized under `$loopx w6` on 2026-10-21 UTC; **blocked:** MCPServers.org and MCPMarket free submissions accepted into queues; LobeHub sign-in agreement approval pending
+- [ ] **m9** — [Reach developer marketplaces and galleries](m9/README.md) (14 tasks; 1 done; A3/A1) ← expanded by the 2026-10-23 all-submissions request. **Next:** t011 official Cursor application, then independent Docker/Cline/GitHub receipt tasks; existing native/publication gates retained.
+- [ ] **m10** — [List the connector in independent web directories](m10/README.md) (9 tasks; A3/A1) ← expanded by the 2026-10-23 all-submissions request. **Next:** t009 actual LobeHub submission; two accepted free submissions continue in review.
 
 - [ ] **m8** — [Claim and publish the hosted connector on Smithery and Glama](blocked/m8/README.md) (8 tasks; A3/A1) ← existing local marketplace roadmap, continued under `$loopx w6` on 2026-10-21 UTC; t001 packet shipped; **blocked:** Smithery publisher returns removed-update 403, Glama awaits w2/088 claim and full-day health
 
