@@ -751,6 +751,49 @@ def _stated_cost_weight(cost: Any, number: Decimal) -> Decimal | None:
     )
 
 
+def with_inferred_prices(postings: list[Any]) -> list[Any]:
+    """The postings with a price that the file leaves to booking (`@ USD`, `@@ USD`) filled in.
+
+    Import hashed and compared the omitted price as no price, so two purchases
+    at different cash prices shared an identity and the second was skipped
+    (w5/995). The price is solved when the other legs are all explicit amounts
+    in its currency and it is the only open price; anything else is left as
+    written. The written text is never changed.
+    """
+    from beancount.core.amount import Amount as BcAmount
+    from beancount.core.number import MISSING
+
+    open_prices = [
+        index
+        for index, posting in enumerate(postings)
+        if posting.price is not None and posting.price.number is MISSING and posting.cost is None
+    ]
+    if len(open_prices) != 1:
+        return postings
+    index = open_prices[0]
+    posting = postings[index]
+    units = posting.units
+    currency = posting.price.currency
+    count = getattr(units, "number", None)
+    if not isinstance(count, Decimal) or not count or not isinstance(currency, str):
+        return postings
+    others = Decimal(0)
+    for other_index, other in enumerate(postings):
+        if other_index == index:
+            continue
+        number = getattr(other.units, "number", None)
+        if not isinstance(number, Decimal) or getattr(other.units, "currency", None) != currency:
+            return postings
+        if other.cost is not None or other.price is not None:
+            return postings
+        others += number
+    solved = abs(others / count)
+    if not solved or others * count > 0 or solved * abs(count) != abs(others):
+        return postings
+    price = BcAmount(solved, currency)
+    return [*postings[:index], posting._replace(price=price), *postings[index + 1 :]]
+
+
 def with_inferred_cost_parts(postings: list[Any], totals: list[Any]) -> list[Any]:
     """The postings with the one cost component the file leaves to booking filled in.
 

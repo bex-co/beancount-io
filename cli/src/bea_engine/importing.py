@@ -46,6 +46,7 @@ from bea_engine.ledger.writer import (
     nfc_entry_accounts,
     normalize_entry_strings,
     with_inferred_cost_parts,
+    with_inferred_prices,
 )
 from bea_engine.paths import expand_path
 from bea_engine.protocol import ConflictError, EngineError, LedgerError, UsageError, capturing
@@ -1475,7 +1476,7 @@ def _source_legs(entry: Any, account: str) -> list[Any]:
 def _source_postings(entry: Any, account: str) -> list[Any]:
     # A cost whose per-unit or total part booking infers is compared at the
     # lot it books, not with the open part taken as zero (w5/950).
-    completed = with_inferred_cost_parts(entry.postings, [None] * len(entry.postings))
+    completed = with_inferred_prices(with_inferred_cost_parts(entry.postings, [None] * len(entry.postings)))
     if completed is not entry.postings:
         entry = entry._replace(postings=completed)
     return [p for p in _source_legs(entry, account) if _has_explicit_units(p)]
