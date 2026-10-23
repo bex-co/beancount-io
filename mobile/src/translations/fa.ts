@@ -474,6 +474,7 @@ export const fa: Translations = {
   spendingChartSummary:
     "هزینه‌ها: ماه گذشته {{lastMonth}}، این ماه {{thisMonth}}.",
   spendingEmpty: "هنوز هزینه‌ای ثبت نشده",
+  spendingEmptyRecent: "این ماه و ماه گذشته هزینه‌ای ثبت نشده",
   thisMonth: "این ماه",
   lastMonth: "ماه گذشته",
   range1M: "1م",

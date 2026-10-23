@@ -15,6 +15,7 @@ import {
   useLedgerReadContextQuery,
 } from "@/generated-graphql/graphql";
 import {
+  everSpent,
   noSpending,
   selectSpendingCompare,
   spendingChartSummary,
@@ -175,6 +176,26 @@ export function SpendingCard({
   );
   const { thisMonth, lastMonth, notInTotal, lastMonthNotInTotal } =
     selectSpendingCompare(months, currency);
+  const empty = noSpending({
+    lastMonth,
+    thisMonth,
+    notInTotal,
+    lastMonthNotInTotal,
+  });
+  // Read only when both months are empty: a ledger that spent before them
+  // is not one with "No spending yet" (w21/789).
+  const allMonths = useGetLedgerIntervalTotalsQuery({
+    variables: {
+      ledgerId: ledgerId!,
+      accountName: expensesRoot,
+      interval: "month",
+      conversion: BALANCE_CONVERSION,
+    },
+    skip: !ledgerId || !contextSettled || !empty,
+    fetchPolicy: "cache-and-network",
+  });
+  const neverSpent =
+    everSpent(allMonths.data?.getLedgerIntervalTotals) === false;
   const [note] = notInTotalNotes(notInTotal, t);
   // Last month's own, so a refund then does not cancel this month's spending.
   const lastNote =
@@ -214,19 +235,14 @@ export function SpendingCard({
         <LoadingTile height={BAR_CHART_HEIGHT} mx={16} />
       ) : (
         <FadeInView>
-          {noSpending({
-            lastMonth,
-            thisMonth,
-            notInTotal,
-            lastMonthNotInTotal,
-          }) ? (
+          {empty ? (
             // Two 2 pt bars over a $0 to $1 axis suggested cents of spending.
             <Text
               key={`empty-${fontScale}`}
               testID="spending-empty"
               style={styles.empty}
             >
-              {t("spendingEmpty")}
+              {t(neverSpent ? "spendingEmpty" : "spendingEmptyRecent")}
             </Text>
           ) : (
             <>

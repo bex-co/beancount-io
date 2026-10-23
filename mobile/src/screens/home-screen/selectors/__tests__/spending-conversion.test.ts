@@ -17,8 +17,9 @@ describe("Home's Spending conversion", () => {
     expect(BALANCE_CONVERSION).toBe("at_cost");
   });
 
-  it("is asked of both the month-long read and the to-today read", () => {
-    expect(card.split("conversion:BALANCE_CONVERSION,").length - 1).toBe(2);
+  // And of the whole-span read that tells an empty ledger apart (w21/789).
+  it("is asked of the month-long, to-today and whole-span reads", () => {
+    expect(card.split("conversion:BALANCE_CONVERSION,").length - 1).toBe(3);
     expect(card.includes('conversion:"units"')).toBe(false);
   });
 });

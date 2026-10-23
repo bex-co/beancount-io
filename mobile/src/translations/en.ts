@@ -500,6 +500,7 @@ export const en = {
   spendingChartSummary:
     "Spending: last month {{lastMonth}}, this month {{thisMonth}}.",
   spendingEmpty: "No spending yet",
+  spendingEmptyRecent: "No spending this month or last month",
   thisMonth: "This month",
   lastMonth: "Last month",
   range1M: "1M",

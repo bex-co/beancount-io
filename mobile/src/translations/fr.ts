@@ -493,6 +493,7 @@ export const fr: Translations = {
   spendingChartSummary:
     "Dépenses : le mois dernier {{lastMonth}}, ce mois-ci {{thisMonth}}.",
   spendingEmpty: "Aucune dépense pour l'instant",
+  spendingEmptyRecent: "Aucune dépense ce mois-ci ni le mois dernier",
   thisMonth: "Ce mois-ci",
   lastMonth: "Mois dernier",
   range1M: "1M",

@@ -324,15 +324,51 @@ describe("the spending card's totals and empty state", () => {
       .replace(/\s+/g, "");
     expect(
       src.includes(
-        "{noSpending({lastMonth,thisMonth,notInTotal,lastMonthNotInTotal,})?(",
+        "constempty=noSpending({lastMonth,thisMonth,notInTotal,lastMonthNotInTotal,});",
       ),
     ).toBe(true);
-    expect(src.includes('t("spendingEmpty")')).toBe(true);
+    expect(src.includes("{empty?(")).toBe(true);
+    // "No spending yet" only once the whole span shows none (w21/789).
+    expect(
+      src.includes('t(neverSpent?"spendingEmpty":"spendingEmptyRecent")'),
+    ).toBe(true);
+    expect(
+      src.includes(
+        "constneverSpent=everSpent(allMonths.data?.getLedgerIntervalTotals)===false;",
+      ),
+    ).toBe(true);
+    expect(src.includes("skip:!ledgerId||!contextSettled||!empty,")).toBe(true);
     expect(src.includes('testID="spending-totals"')).toBe(true);
     expect(
       src.includes(
         '{thisMonth:t("thisMonth"),lastMonth:t("lastMonth")},isolateLtr,',
       ),
     ).toBe(true);
+  });
+});
+
+// w21/789: "No spending yet" on a ledger whose spending stopped in August.
+describe("everSpent", () => {
+  const { everSpent } = require("../select-spending-compare");
+
+  it("finds spending in any month and currency", () => {
+    expect(
+      everSpent([
+        { date: "2026-07-31", balance: {} },
+        { date: "2026-08-31", balance: { USD: "84.20" } },
+        { date: "2026-09-30", balance: {} },
+      ]),
+    ).toBe(true);
+    expect(everSpent([{ date: "2026-08-31", balance: { EUR: 12 } }])).toBe(
+      true,
+    );
+  });
+
+  it("finds none in an empty ledger, and nothing before the read lands", () => {
+    expect(everSpent([])).toBe(false);
+    expect(everSpent([{ date: "2026-10-31", balance: { USD: "0" } }])).toBe(
+      false,
+    );
+    expect(everSpent(undefined)).toBe(null);
   });
 });

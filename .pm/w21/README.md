@@ -12,7 +12,6 @@
 
 ## Inbox
 
-- [789](./789.md) — Home's Spending card says "No spending yet" on a ledger with months of spending
 - [790](./790.md) — VoiceOver reads an income budget row on Home as "111% used"
 - [791](./791.md) — New Transaction pasting "-20" into a negative row makes it "--20" and refuses Done
 - [792](./792.md) — New Transaction refuses an amount starting with a decimal comma (",5")

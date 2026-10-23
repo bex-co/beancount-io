@@ -168,3 +168,23 @@ export function noSpending({
     lastMonthNotInTotal.length === 0
   );
 }
+
+/**
+ * Whether the ledger has spent at all, from its monthly Expenses totals over
+ * its whole span: any month with an amount in any currency. Null until they
+ * are read. "No spending yet" was said of a ledger whose spending stopped in
+ * August whenever this month and last were empty, where "No spending this
+ * month or last month" is what is known (w21/789).
+ */
+export function everSpent(
+  months: readonly { balance?: unknown }[] | undefined,
+): boolean | null {
+  if (months === undefined) return null;
+  return months.some(({ balance }) =>
+    Object.values(
+      typeof balance === "object" && balance !== null
+        ? (balance as Record<string, unknown>)
+        : {},
+    ).some((value) => Number(value) !== 0 && Number.isFinite(Number(value))),
+  );
+}
