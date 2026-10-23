@@ -36,7 +36,7 @@
 
 ## Inbox
 
-- [1007 — Keep balance assertions from changing bulk sale lots](./1007.md) — major CLI residual after completed 1002; invalid intermediate prefixes trigger an eager reorder, with realized profit 0 instead of 100 despite a valid preserving whole batch, reproduced 2026-10-23.
+- [1007 — Preserve valid bulk plans across existing balance assertions](./1007.md) — major CLI residual after completed 1002; invalid intermediate prefixes change a stock lot or falsely refuse a valid offsetting-gains batch, reproduced 2026-10-23.
 
 - [1006 — Use effective unit costs when recognizing total-cost short covers](./1006.md) — major CLI regression after completed 1001; the new predicate ignores a total/compound component, changes the cover label and strands offsetting lots, reproduced 2026-10-23.
 
