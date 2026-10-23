@@ -46,3 +46,6 @@
 - [837](./837.md) — Switching tabs never refreshes an open tab: after an outside change, Home and Transactions stay stale while Accounts is current
 - [838](./838.md) — A return within 30 s of the last refresh is dropped, not deferred
 - [839](./839.md) — Pull-to-refresh on Accounts/Transactions/Reports/Files skips ledger errors (bell) and Accounts' close dates
+- [840](./840.md) — Share/Copy link on a plugin copy opens the dashboard's editable entry page, where Delete removes the series
+- [841](./841.md) — A padding entry says "A plugin generated this entry" and its pad source opens as "Transaction" with "Edit Transaction"
+- [842](./842.md) — After an edit, the detail header keeps the old entry's pencil and ⋯ while it reloads
