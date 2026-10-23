@@ -196,6 +196,10 @@ export const SAME_AS_ENGLISH: Record<
     },
     { reason: "The same abbreviation for automatisch.", keys: ["autoLabel"] },
     { reason: "Blog is the same loanword.", keys: ["feedSourceBlog"] },
+    {
+      reason: "Commit is the loanword nl uses (commitDetailGone).",
+      keys: ["feedPushCommits"],
+    },
   ],
   pt: [
     {

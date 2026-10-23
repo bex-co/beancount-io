@@ -834,6 +834,12 @@ export const ru: Translations = {
   feedSourceLedger: "Книга",
   feedSourceBlog: "Блог",
   feedSourceRelease: "Релиз",
+  feedPushCommits: {
+    one: "{{count}} изменение",
+    few: "{{count}} изменения",
+    many: "{{count}} изменений",
+    other: "{{count}} изменения",
+  },
   profile: "Профиль",
   signedInAs: "Вы вошли как {{name}}, {{email}}",
   openSettings: "Открывает настройки",

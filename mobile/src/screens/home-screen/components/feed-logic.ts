@@ -155,6 +155,29 @@ export function feedRowDetail(
   return { subtitle, byline };
 }
 
+/** The server's last summary line for a push holding more commits than it lists. */
+const MORE_COMMITS = /^\+(\d+) more commit\(s\)$/;
+
+/**
+ * A push's summary lists its newest commits, then "+N more commit(s)" in
+ * English. The row shows two lines, so past two commits that count was cut
+ * off, and it read English in every language (w21/716). This is the push's
+ * newest commit and how many commits it holds in all, for the row to say in
+ * its own words; null for any other summary.
+ */
+export function pushSummary(
+  summary: string,
+): { newest: string; total: number } | null {
+  const lines = summary
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const more = MORE_COMMITS.exec(lines.at(-1) ?? "");
+  const listed = lines.slice(0, -1);
+  if (!more || listed.length === 0) return null;
+  return { newest: listed[0]!, total: listed.length + Number(more[1]) };
+}
+
 /**
  * Whether the Latest Updates card has nothing to show and leaves the screen. An
  * empty feed (the server answers `[]` for any RSS outage) used to be a header

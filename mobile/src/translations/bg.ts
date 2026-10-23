@@ -814,6 +814,10 @@ export const bg: Translations = {
   feedSourceLedger: "Счетоводна книга",
   feedSourceBlog: "Блог",
   feedSourceRelease: "Издание",
+  feedPushCommits: {
+    one: "{{count}} промяна",
+    other: "{{count}} промени",
+  },
   profile: "Профил",
   signedInAs: "Влезли сте като {{name}}, {{email}}",
   openSettings: "Отваря настройките",

@@ -836,6 +836,11 @@ export const fr: Translations = {
   feedSourceLedger: "Livre",
   feedSourceBlog: "Blog",
   feedSourceRelease: "Version",
+  feedPushCommits: {
+    one: "{{count}} commit",
+    many: "{{count}} commits",
+    other: "{{count}} commits",
+  },
   profile: "Profil",
   signedInAs: "Connecté en tant que {{name}}, {{email}}",
   openSettings: "Ouvre les paramètres",

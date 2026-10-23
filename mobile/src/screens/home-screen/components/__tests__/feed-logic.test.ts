@@ -305,3 +305,36 @@ describe("feedRowDate", () => {
     );
   });
 });
+
+// w21/716: a five-commit push read "Import statement 5 / 4 / 3 / +2 more
+// commit(s)" in two visible lines, so its count was cut off, in English.
+describe("pushSummary", () => {
+  const { pushSummary } = require("../feed-logic");
+
+  it("reads how many commits a push holds, and its newest", () => {
+    expect(
+      pushSummary(
+        "Import statement 5\nImport statement 4\nImport statement 3\n+2 more commit(s)",
+      ),
+    ).toEqual({ newest: "Import statement 5", total: 5 });
+  });
+
+  it("leaves a summary that lists every commit, or anything else, alone", () => {
+    expect(pushSummary("Import statement 2\nImport statement 1")).toBe(null);
+    expect(pushSummary("#12: Fix the budget")).toBe(null);
+    expect(pushSummary("Release notes\n+2 more")).toBe(null);
+    expect(pushSummary("+2 more commit(s)")).toBe(null);
+  });
+
+  it("is what the row shows first, in the app's language", () => {
+    const card = fs
+      .readFileSync(path.join(__dirname, "..", "feed-card.tsx"), "utf8")
+      .replace(/\s+/g, "");
+    expect(
+      card.includes(
+        '`${t("feedPushCommits",{count:push.total})}\\n${push.newest}`',
+      ),
+    ).toBe(true);
+    expect(card.includes("{shownSubtitle}")).toBe(true);
+  });
+});

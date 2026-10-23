@@ -840,6 +840,12 @@ export const sk: Translations = {
   feedSourceLedger: "Kniha",
   feedSourceBlog: "Blog",
   feedSourceRelease: "Vydanie",
+  feedPushCommits: {
+    one: "{{count}} commit",
+    few: "{{count}} commity",
+    many: "{{count}} commitu",
+    other: "{{count}} commitov",
+  },
   profile: "Profil",
   signedInAs: "Prihlásený ako {{name}}, {{email}}",
   openSettings: "Otvorí nastavenia",

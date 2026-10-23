@@ -19,6 +19,7 @@ import { FeedSource } from "@/generated-graphql/types";
 import {
   feedQueryVariables,
   feedRowDate,
+  pushSummary,
   feedRowAction,
   feedSourceLabelKey,
   feedCardIsEmpty,
@@ -100,6 +101,12 @@ function FeedRow({
     }
   };
 
+  // The count first, in the app's language: it was the cut-off last line
+  // (w21/716).
+  const push = subtitle ? pushSummary(subtitle) : null;
+  const shownSubtitle = push
+    ? `${t("feedPushCommits", { count: push.total })}\n${push.newest}`
+    : subtitle;
   const sourceLabel = t(feedSourceLabelKey(source));
   const date = feedRowDate(publishedAt, source, locale);
   const metaText = [sourceLabel, date, byline].filter(Boolean).join(" · ");
@@ -120,7 +127,7 @@ function FeedRow({
           style={styles.metaText}
           numberOfLines={2}
         >
-          {subtitle}
+          {shownSubtitle}
         </Text>
       ) : null}
       <View style={styles.meta}>

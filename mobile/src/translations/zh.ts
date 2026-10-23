@@ -741,6 +741,9 @@ export const zh: Translations = {
   feedSourceLedger: "账本",
   feedSourceBlog: "博客",
   feedSourceRelease: "发布",
+  feedPushCommits: {
+    other: "{{count}} 次提交",
+  },
   profile: "个人资料",
   signedInAs: "当前登录：{{name}}，{{email}}",
   openSettings: "打开设置",

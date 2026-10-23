@@ -836,6 +836,11 @@ export const ca: Translations = {
   feedSourceLedger: "Llibre",
   feedSourceBlog: "Blog",
   feedSourceRelease: "Versió",
+  feedPushCommits: {
+    one: "{{count}} canvi",
+    many: "{{count}} canvis",
+    other: "{{count}} canvis",
+  },
   profile: "Perfil",
   signedInAs: "Has iniciat la sessió com a {{name}}, {{email}}",
   openSettings: "Obre la configuració",
