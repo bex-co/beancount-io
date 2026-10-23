@@ -220,6 +220,14 @@ export function inactivePads(
   });
 }
 
+/** An engine error a close of `account` raises: a posting after it, its balance. */
+function raisedByClose(error: BeancountError, account: string): boolean {
+  return (
+    error.message.startsWith(`Posting to inactive account ${account} on `) ||
+    error.message === `Cannot close account ${account} with non-zero balance`
+  );
+}
+
 /**
  * The engine's errors about a written close close_tree drops, its account not
  * opened when the plugin runs: a posting after it, its balance, and the close
@@ -238,14 +246,42 @@ export function withoutDroppedCloseErrors(
     (error) =>
       !dropped.some(
         ([account, at]) =>
-          error.message.startsWith(
-            `Posting to inactive account ${account} on `,
-          ) ||
-          error.message ===
-            `Cannot close account ${account} with non-zero balance` ||
+          raisedByClose(error, account) ||
           (error.message === `Account ${account} was never opened` &&
             error.file === at.file &&
             error.line === at.line),
+      ),
+  );
+}
+
+/**
+ * The engine's errors about the closes its close_tree made, from a stream
+ * validated after the plugins. It closes every child whatever the plugin
+ * order, and reads a child opened after its parent's close as never opened,
+ * with no location; {@link inactiveAfterGeneratedCloses} reports those closes
+ * as Beancount does instead (w21/776).
+ */
+export function withoutGeneratedCloseErrors(
+  errors: readonly BeancountError[],
+  directives: readonly DirectiveJson[],
+  files: FileMap,
+  entryPoint: string,
+): BeancountError[] {
+  const written = closeLocations(files, entryPoint);
+  const generated = new Set(
+    directives.flatMap((directive) =>
+      directive.type === "close" && !written.has(directive.account)
+        ? [directive.account]
+        : [],
+    ),
+  );
+  return errors.filter(
+    (error) =>
+      ![...generated].some(
+        (account) =>
+          raisedByClose(error, account) ||
+          (error.message === `Account ${account} was never opened` &&
+            error.file === null),
       ),
   );
 }

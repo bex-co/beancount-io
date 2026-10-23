@@ -4,6 +4,7 @@ import {
   inactiveAfterGeneratedCloses,
   inactivePads,
   withoutDroppedCloseErrors,
+  withoutGeneratedCloseErrors,
 } from "../generated-closes";
 
 /**
@@ -343,5 +344,72 @@ describe("close_tree before auto_accounts", () => {
     expect(kept([CLOSE_TREE], "2024-01-01 open Assets:Broker")).toHaveLength(
       parentErrors.length,
     );
+  });
+});
+
+// w21/776: a stream revalidated after the fava plugins holds the engine's
+// close_tree closes. Its errors about them were kept in place of these, so a
+// late child's located "being closed" became an unlocated "never opened".
+describe("withoutGeneratedCloseErrors", () => {
+  const revalidated = (
+    message: string,
+    file: string | null,
+    line: number | null,
+  ): BeancountError => ({
+    message,
+    code: "E1003",
+    phase: "validate",
+    hint: null,
+    file,
+    line,
+    column: null,
+    end_line: null,
+    end_column: null,
+    severity: "error",
+  });
+  const files = {
+    "main.bean": [
+      'plugin "beancount.plugins.close_tree"',
+      'plugin "fava.plugins.tag_discovered_documents"',
+      "2024-04-01 close Assets:Broker",
+      "2024-04-01 close Assets:Other:Cash",
+    ].join("\n"),
+  };
+  const errors = [
+    revalidated("Account Assets:Broker:Roth was never opened", null, null),
+    revalidated(
+      "Posting to inactive account Assets:Broker:VTI on 2024-05-01 (closed on 2024-04-01)",
+      "main.bean",
+      8,
+    ),
+    revalidated(
+      "Cannot close account Assets:Broker:VTI with non-zero balance",
+      null,
+      null,
+    ),
+    // A written close, a posting's own never-opened, and another account's.
+    revalidated(
+      "Posting to inactive account Assets:Other:Cash on 2024-05-01 (closed on 2024-04-01)",
+      "main.bean",
+      9,
+    ),
+    revalidated("Account Assets:Broker:Roth was never opened", "main.bean", 9),
+    revalidated("Account Assets:Broker:Roth2 was never opened", null, null),
+  ];
+
+  it("leaves close_tree's closes to inactiveAfterGeneratedCloses", () => {
+    expect(
+      withoutGeneratedCloseErrors(
+        errors,
+        [
+          close("Assets:Broker"),
+          close("Assets:Broker:VTI"),
+          close("Assets:Broker:Roth"),
+          close("Assets:Other:Cash"),
+        ],
+        files,
+        "main.bean",
+      ),
+    ).toEqual(errors.slice(3));
   });
 });

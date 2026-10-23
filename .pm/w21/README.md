@@ -12,7 +12,6 @@
 
 ## Inbox
 
-- [776](./776.md) — With a fava plugin declared, w21/755 also drops w21/753's located "Unopened account … is being closed"
 - [777](./777.md) — Transaction detail drops the Forecast mark and Upcoming label its row shows
 - [778](./778.md) — Transaction detail lists metadata in a different, arbitrary order on each load
 - [779](./779.md) — A sale's cost/price line still squeezes Money flow's account name to "Asset…guard"

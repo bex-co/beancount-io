@@ -1844,6 +1844,38 @@ async function main(): Promise<void> {
       ]),
     `a child opened after its parent's close takes postings (got ${JSON.stringify(lateChild2)})`,
   );
+  // w21/776: with a fava plugin the stream is revalidated, and its unlocated
+  // "never opened" stood in for this located error.
+  const lateChildFava = await closeTree([
+    'plugin "beancount.plugins.close_tree"',
+    'plugin "fava.plugins.tag_discovered_documents"',
+    "2024-01-01 open Assets:Broker",
+    "2024-01-01 open Assets:Cash",
+    "2024-04-01 close Assets:Broker",
+    "2025-01-01 open Assets:Broker:Roth",
+    '2025-02-01 * "Contribution"',
+    "  Assets:Broker:Roth  100.00 USD",
+    "  Assets:Cash  -100.00 USD",
+  ]);
+  assert(
+    JSON.stringify(lateChildFava) ===
+      JSON.stringify([
+        "E1001@5 Unopened account Assets:Broker:Roth is being closed",
+      ]),
+    `a fava plugin keeps the late child's located error (got ${JSON.stringify(lateChildFava)})`,
+  );
+  // And close_tree's place in the plugin order holds on that stream too.
+  const orderedFava = await closeTree([
+    'plugin "beancount.plugins.close_tree"',
+    'plugin "beancount.plugins.auto_accounts"',
+    'plugin "fava.plugins.tag_discovered_documents"',
+    ...buyThenClose,
+    ...lateBuy,
+  ]);
+  assert(
+    orderedFava.length === 0,
+    `close_tree before auto_accounts closes no child with a fava plugin (got ${JSON.stringify(orderedFava)})`,
+  );
   // The posting adds no error of its own, so a save of it is not refused.
   const beforePosting = await closeTree([
     'plugin "beancount.plugins.close_tree"',

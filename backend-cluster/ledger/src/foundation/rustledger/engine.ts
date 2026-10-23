@@ -48,6 +48,7 @@ import {
   inactiveAfterGeneratedCloses,
   inactivePads,
   withoutDroppedCloseErrors,
+  withoutGeneratedCloseErrors,
 } from "./generated-closes";
 import { reconcileCheckCommodityErrors } from "./check-commodity";
 import { coherentCostErrors } from "./coherent-cost";
@@ -771,14 +772,16 @@ async function parseLedgerFilesUncached(
   errors = [...errors, ...coherentCostErrors(directives, files, entryPoint)];
   // The engine validates before its plugins add close_tree's closes, and its
   // auto_accounts opens no account named only by a note or a close (w21/737).
-  // A stream revalidated after the fava plugins saw those closes already, and
-  // each posting was reported twice (w21/755).
-  if (!validatedTransformed) {
-    errors = [
-      ...errors,
-      ...inactiveAfterGeneratedCloses(directives, files, entryPoint),
-    ];
+  // A stream revalidated after the fava plugins saw those closes already, as
+  // the engine makes them: its errors give way to these, or each posting was
+  // reported twice (w21/755) and a late child's close lost its place (w21/776).
+  if (validatedTransformed) {
+    errors = withoutGeneratedCloseErrors(errors, directives, files, entryPoint);
   }
+  errors = [
+    ...errors,
+    ...inactiveAfterGeneratedCloses(directives, files, entryPoint),
+  ];
   // The engine checks only transactions against a close (w21/756).
   errors = [...errors, ...inactivePads(directives, files, entryPoint)];
   ({ directives, errors } = openAutoAccounts(
