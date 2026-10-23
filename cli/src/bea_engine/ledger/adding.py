@@ -2129,6 +2129,21 @@ def _booking_order(
     return ordered
 
 
+#: The advice lines a failed balance assertion adds to its error, which are no errors of their own.
+_BALANCE_ADVICE = ("Balance assertions run at the start", "Review transactions against the existing assertion")
+
+
+def _only_balance_failures(exc: protocol.LedgerError) -> bool:
+    """Whether a refusal is nothing but balance assertions a part of the batch has not yet satisfied.
+
+    A prefix of the rows can sit before an assertion that the whole batch
+    meets, so it must not count as unbookable; the complete order is
+    validated when it is written (w5/1007).
+    """
+    details = getattr(exc, "details", None) or []
+    return bool(details) and all("Balance failed" in line or line.startswith(_BALANCE_ADVICE) for line in details)
+
+
 def _built_booking_order(
     valid: list[tuple[int, Any]], *, file: Path, allow_errors: bool, into: Path | None
 ) -> list[tuple[int, Any]] | None:
@@ -2150,8 +2165,8 @@ def _built_booking_order(
             write.validate_append(
                 file, [writer.format_transaction(d) for _, d in rows], allow_errors=allow_errors, into=into
             )
-        except protocol.LedgerError:
-            return False
+        except protocol.LedgerError as exc:
+            return _only_balance_failures(exc)
         return True
 
     placed: list[tuple[int, Any]] = []
