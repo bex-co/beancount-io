@@ -25,7 +25,6 @@
 - [784](./784.md) — A sub-cent account change shows a red "−$0.00" row under a "$0.00" day header
 - [772](./772.md) — A missing file included from two places is listed twice at the first include's line (w21/189 gap)
 - [773](./773.md) — Include errors other than "file not found" (glob, duplicate, unknown plugin) have no file or line, so they can't be tapped
-- [770](./770.md) — New File accepts a name that differs from an existing file only by case or Unicode form ("Main" beside main.bean)
 - [771](./771.md) — Files can't open an included file with an extension off a fixed list (`prices`, `prices.inc`); the row is dimmed with no reason
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window
 - [065](./blocked/065.md) — One early-year entry (e.g. 0050) makes the balance sheet 23,718 monthly points (3 MB) and the app stalls — **blocked:** needs an approach decision (per-pill fetch vs server downsample) and a simulator profile of the stall

@@ -1,3 +1,7 @@
+import {
+  assertNoPortableTwin,
+  assertNoTwinsAmong,
+} from "@/features/ledger/utils/portable-twin";
 import { parseLedgerId } from "@/shared/str";
 import {
   FavaApiError,
@@ -319,7 +323,47 @@ export class LedgerRepoService
         );
       }
     });
+    await this.assertNewPathsPortable(params);
     await this.commitFileChanges(params);
+  }
+
+  /**
+   * A path a caller creates must not be an existing one's on macOS and
+   * Windows, nor two new ones each other's (w21/770). One the batch deletes is
+   * free. Generated files are named by the ledger's own options, not typed.
+   */
+  private async assertNewPathsPortable(
+    params: FileChangesParams,
+  ): Promise<void> {
+    const { ledgerId, identity, operations } = params;
+    const deleted = new Set(
+      operations
+        .filter((operation) => operation.operation === "delete")
+        .map((operation) => operation.path),
+    );
+    const creates = operations
+      .filter(
+        (operation) =>
+          operation.operation === "create" && !deleted.has(operation.path),
+      )
+      .map((operation) => operation.path);
+    if (creates.length === 0) return;
+    assertNoTwinsAmong(creates);
+    const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
+    const favaApiClient = await this.favaClientFactory.getPublicApiClient(
+      ledgerId,
+      identity.userId,
+    );
+    for (const path of creates) {
+      await assertNoPortableTwin(path, (dir) =>
+        unwrapFavaResponse(
+          favaApiClient.ledgers.getLedgerDirContent(ledgerOwner, ledgerName, {
+            ...(dir === undefined ? {} : { dir_path: dir }),
+          }),
+          "check new file path",
+        ),
+      );
+    }
   }
 
   // Excluded from ILedgerRepoService: only composition injects this capability

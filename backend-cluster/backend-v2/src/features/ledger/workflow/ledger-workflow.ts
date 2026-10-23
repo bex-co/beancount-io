@@ -1,3 +1,4 @@
+import { assertNoPortableTwin } from "@/features/ledger/utils/portable-twin";
 import { enhanceLegacyJournal } from "@/features/ledger/utils/legacy-journal";
 import type {
   LegacyJournalQuery,
@@ -911,6 +912,17 @@ export class LedgerWorkflow implements ILedgerWorkflow {
       userId,
     );
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
+    // Nor be one an existing file's on macOS and Windows (w21/770).
+    await assertNoPortableTwin(input.path, (dir) =>
+      unwrapFavaResponse(
+        favaApiClient.ledgers.getLedgerDirContent(
+          ledgerOwner,
+          ledgerName,
+          filterNullish({ dir_path: dir }),
+        ),
+        "check new file path",
+      ),
+    );
     const data = await unwrapFavaResponse(
       favaApiClient.ledgers.createLedgerFile(
         ledgerOwner,

@@ -129,6 +129,8 @@ async function fixture(initial: Record<string, string> = {}) {
       state.clients++;
       return {
         ledgers: {
+          // The portable-name check lists the folder first (w21/770).
+          getLedgerDirContent: async () => envelope([]),
           createLedgerFile: async (
             _owner: string,
             _name: string,

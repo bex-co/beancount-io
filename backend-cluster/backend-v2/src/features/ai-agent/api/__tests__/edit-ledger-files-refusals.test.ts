@@ -78,7 +78,21 @@ async function fixture() {
     ledgerRepo: new LedgerRepoService(
       {
         getPublicApiClient: async () => ({
-          ledgers: { getLedgerFilesContent, changeLedgerFiles },
+          ledgers: {
+            getLedgerFilesContent,
+            changeLedgerFiles,
+            // The repository root, for the portable-name check (w21/770).
+            getLedgerDirContent: async () => ({
+              data: {
+                success: true,
+                data: [...existing].map((path) => ({
+                  path,
+                  name: path,
+                  type: "file",
+                })),
+              },
+            }),
+          },
           reports: { checkProjectedErrors },
         }),
       } as never,

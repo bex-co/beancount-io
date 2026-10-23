@@ -1,4 +1,4 @@
-import { checkLedgerFileName } from "../utils";
+import { checkLedgerFileName, listingHasFile } from "../utils";
 
 // w21/275: New File refused any name with a dot, though the dialog says .bean
 // is added when the extension is omitted.
@@ -109,5 +109,37 @@ describe("a new-file name ending in a dot", () => {
   it("refuses a refused extension however many dots follow it", () => {
     expect(checkLedgerFileName("qa20261020.txt.").ok).toBe(false);
     expect(checkLedgerFileName("qa20261020.txt..").ok).toBe(false);
+  });
+});
+
+// w21/770: "Main" beside main.bean was offered, as were a decomposed "café"
+// and a name with a zero-width space; macOS and Windows keep one of each pair.
+describe("a new file named like an existing one but for case or form", () => {
+  const existing = [
+    "main.bean",
+    "qa20261020-notes.bean",
+    "qa20261020-caf\u00e9.bean",
+  ];
+
+  it("is refused as existing", () => {
+    for (const typed of [
+      "Main",
+      "QA20261020-Notes",
+      "qa20261020-cafe\u0301",
+      "main\u200b",
+    ]) {
+      expect([typed, checkLedgerFileName(typed, existing).ok]).toEqual([
+        typed,
+        false,
+      ]);
+    }
+    expect(checkLedgerFileName("main", existing).ok).toBe(false);
+    expect(checkLedgerFileName("notes", existing).ok).toBe(true);
+  });
+
+  it("is found in a target folder's listing too", () => {
+    const listing = [{ path: "sub/notes.bean", type: "file" }];
+    expect(listingHasFile(listing, "sub/Notes.bean")).toBe(true);
+    expect(listingHasFile(listing, "sub/other.bean")).toBe(false);
   });
 });

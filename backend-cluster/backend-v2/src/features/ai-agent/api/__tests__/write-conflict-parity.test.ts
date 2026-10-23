@@ -57,6 +57,9 @@ async function fixture(answer: string) {
         getLedgerFilesContent: async () => ({
           data: { success: true, data: [] },
         }),
+        getLedgerDirContent: async () => ({
+          data: { success: true, data: [] },
+        }),
       },
     }),
   };

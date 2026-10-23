@@ -1427,6 +1427,12 @@ describe("LedgerWorkflow", () => {
   });
 
   describe("createLedgerFile", () => {
+    // The portable-name check lists the folder first (w21/770).
+    beforeEach(() => {
+      mockFavaApiClient.ledgers.getLedgerDirContent.mockResolvedValue({
+        data: { success: true, data: [] },
+      });
+    });
     const ledgerId = "testuser/test-ledger";
 
     it("denies before path validation or Fava work", async () => {
@@ -1495,6 +1501,27 @@ describe("LedgerWorkflow", () => {
           platform: "web",
         }),
       ).rejects.toThrow(OperationNotAllowedError);
+    });
+
+    // w21/770: "Main.bean" beside main.bean was created, and a clone on macOS
+    // or Windows keeps only one of the pair.
+    it("refuses a name an existing file's differs from only by case", async () => {
+      mockFavaApiClient.ledgers.getLedgerDirContent.mockResolvedValue({
+        data: {
+          success: true,
+          data: [{ path: "main.bean", name: "main.bean", type: "file" }],
+        },
+      });
+
+      await expect(
+        workflow.createLedgerFile({
+          identity: IDENTITY,
+          ledgerId,
+          input: { path: "Main.bean", content: "" },
+          platform: "web",
+        }),
+      ).rejects.toThrow("Main.bean already exists as main.bean");
+      expect(mockFavaApiClient.ledgers.createLedgerFile).not.toHaveBeenCalled();
     });
   });
 

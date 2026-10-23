@@ -104,10 +104,27 @@ export function checkLedgerFileName(
   }
   const filename = [...segments.slice(0, -1), named].join("/");
   if (breaksPortablePath(filename)) return { ok: false, issue: "portable" };
-  if (existingNames.includes(filename)) {
+  if (
+    existingNames.some(
+      (name) => portableNameKey(name) === portableNameKey(filename),
+    )
+  ) {
     return { ok: false, issue: "exists", filename };
   }
   return { ok: true, filename };
+}
+
+/** Characters that draw nothing: a name holding one looks like one without. */
+const INVISIBLE = /[\u00ad\u200b-\u200d\u2060\ufeff]/gu;
+
+/**
+ * A file name as every checkout sees it, as backend-v2 compares a new path:
+ * one letter case, composed Unicode, no invisible characters. "Main" beside
+ * main.bean was offered, and a clone on macOS or Windows keeps only one of
+ * the pair (w21/770).
+ */
+function portableNameKey(name: string): string {
+  return name.normalize("NFC").replace(INVISIBLE, "").toLowerCase();
 }
 
 /**
@@ -120,10 +137,11 @@ export function listingHasFile(
   entries: readonly { path: string; type: string }[],
   filePath: string,
 ): boolean {
-  const wanted = filePath.replace(/^\/+/, "");
+  const wanted = portableNameKey(filePath.replace(/^\/+/, ""));
   return entries.some(
     (entry) =>
-      entry.type !== "dir" && entry.path.replace(/^\/+/, "") === wanted,
+      entry.type !== "dir" &&
+      portableNameKey(entry.path.replace(/^\/+/, "")) === wanted,
   );
 }
 
