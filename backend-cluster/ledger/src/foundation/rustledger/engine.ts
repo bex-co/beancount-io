@@ -694,7 +694,13 @@ async function parseLedgerFilesUncached(
       syntaxOnly: !needsCompleteSourceIndex,
     });
   }
-  if (applyTs || sourceDetails !== undefined) {
+  // A padding entry takes the ID of the pad it came from, so its detail opens
+  // on a ledger with no plugins too (w21/875).
+  const tracksSourceIds =
+    applyTs ||
+    sourceDetails !== undefined ||
+    raw.paddingTransactions.length > 0;
+  if (tracksSourceIds) {
     seedDirectiveSourceIds(directives, sourceDetails);
   }
   if (sourceDetails !== undefined) {
@@ -855,10 +861,9 @@ async function parseLedgerFilesUncached(
   // The engine's meta is a hash map; show it as written (w21/778).
   orderMetaAsWritten(directives, files, entryPoint);
 
-  const capturedSourceIds =
-    applyTs || sourceDetails !== undefined
-      ? captureDirectiveSourceIds(directives)
-      : undefined;
+  const capturedSourceIds = tracksSourceIds
+    ? captureDirectiveSourceIds(directives)
+    : undefined;
   // Whenever anything was generated, padding included: a written `P`, `S` or
   // `R` transaction is told from a synthetic one by this mark, not its flag
   // (w21/745), so it has to survive the worker for every ledger.
