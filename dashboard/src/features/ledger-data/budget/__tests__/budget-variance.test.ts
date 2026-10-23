@@ -132,3 +132,48 @@ describe("the comparison follows the proration it is given", () => {
     expect(budgetVariance(9500000.01, target)).toBeGreaterThan(0);
   });
 });
+
+/**
+ * At large amounts the round-off allowance reaches whole units; the card's
+ * display precision keeps a visible difference from being flattened (w4/978).
+ */
+describe("large amounts keep a visible difference", () => {
+  // 31 × 2^40 USD a month: its October daily equivalent sums back exactly.
+  const LARGE = [
+    historyEntry("2026-01-01", "monthly", "34084860461056.00 USD"),
+  ];
+
+  it.each([
+    [34084860461057, 1],
+    [34084860461055, -1],
+    [34084860461060, 4],
+  ])("shows %d against the 31 × 2^40 target as %d USD", (actual, expected) => {
+    const target = prorated("2026-10-31", LARGE);
+    expect(target).toBe(34084860461056);
+    expect(budgetVariance(actual, target, 2)).toBe(expected);
+  });
+
+  it("still shows +1 against a smaller 31 × 2^32 target", () => {
+    const small = [
+      historyEntry("2026-01-01", "monthly", "133143986176.00 USD"),
+    ];
+    expect(budgetVariance(133143986177, prorated("2026-10-31", small), 2)).toBe(
+      1,
+    );
+  });
+
+  it("still reads an exactly met 1650 USD as on target at cent precision", () => {
+    for (const end of ["2026-01-31", "2026-02-28", "2028-02-29"]) {
+      expect(budgetVariance(1650, prorated(end, RENT), 2)).toBe(0);
+    }
+  });
+
+  it("keeps a fractional commodity's difference at its own digits", () => {
+    expect(budgetVariance(0.0005, 0.0004, 8)).toBeCloseTo(0.0001, 12);
+  });
+
+  it("absorbs only last-place residue, keeping a real sub-cent difference", () => {
+    expect(budgetVariance(1650.004, 1650, 2)).toBeCloseTo(0.004, 10);
+    expect(budgetVariance(1650 + 1e-12, 1650, 2)).toBe(0);
+  });
+});

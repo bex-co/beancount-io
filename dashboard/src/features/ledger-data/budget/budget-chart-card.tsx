@@ -32,7 +32,10 @@ import {
 import { ReactECharts } from "@/common/components/react-echarts";
 import { LedgerWritePermission } from "@/common/components/ledger-permission/write";
 import { useFormatNumber } from "@/common/hooks/use-format-number";
-import { fractionDigitsOf } from "@/common/lib/format/format-number";
+import {
+  currencyMinorDigits,
+  fractionDigitsOf,
+} from "@/common/lib/format/format-number";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { formatYAxisNumber } from "@/common/lib/chart/chart";
 import { getChartColors } from "@/common/lib/chart/color";
@@ -227,10 +230,14 @@ export function BudgetChartCard({
     error,
   ]);
 
+  // The precision the variance is shown at: an ISO currency's minor units,
+  // else the finest digits the formatter writes for this commodity.
+  const varianceDigits =
+    currencyMinorDigits(displayCurrency) ?? Math.max(quantityDigits, 3);
   const variance = useMemo(() => {
     if (latestActual === null || comparisonBudgetValue === null) return null;
-    return budgetVariance(latestActual, comparisonBudgetValue);
-  }, [latestActual, comparisonBudgetValue]);
+    return budgetVariance(latestActual, comparisonBudgetValue, varianceDigits);
+  }, [latestActual, comparisonBudgetValue, varianceDigits]);
 
   const varianceStatus = useMemo(() => {
     if (variance === null) return null;

@@ -207,3 +207,69 @@ describe("Budget card with two targets on the same date", () => {
     expect(valueAfter("Current budget")).toBe("90.797 USD");
   });
 });
+
+/**
+ * At a 31 × 2^40 USD target the round-off allowance reaches whole dollars;
+ * the card still shows a visible ±1 USD difference (w4/978).
+ */
+describe("Budget card variance at large amounts", () => {
+  const LARGE: BudgetEntry[] = [
+    {
+      date: "2026-01-01",
+      entry_hash: "large",
+      directive_type: "custom",
+      type: "budget",
+      values: [
+        "Expenses:Dining",
+        "monthly",
+        { number: "34084860461056.00", currency: "USD" },
+      ],
+    },
+  ];
+
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 9, 31, 12));
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    cleanup();
+  });
+
+  it.each([
+    ["34084860461057.00", "Above target", "+1 USD"],
+    ["34084860461055.00", "Below target", "-1 USD"],
+    ["34084860461056.00", "On target", "0 USD"],
+  ])("shows actual %s as %s, %s", (actual, badge, difference) => {
+    vi.mocked(apolloClient.useQuery).mockReturnValue({
+      data: {
+        getLedgerIntervalTotals: monthEnds("2026-01", "2026-10").map(
+          (date) => ({
+            date,
+            balance: date === "2026-10-31" ? { USD: actual } : {},
+            accountBalances: {},
+          }),
+        ),
+      },
+      loading: false,
+      error: undefined,
+    } as never);
+    const [group] = groupBudgetEntries(LARGE, "2026-10-31");
+    render(
+      <BudgetChartCard
+        time={undefined}
+        group={group}
+        ledgerId="l1"
+        conversion="AT_COST"
+        primaryCurrency="USD"
+        onDelete={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText(badge)).toBeInTheDocument();
+    expect(
+      screen.getByText("Variance", { selector: "p" }).parentElement
+        ?.nextElementSibling?.textContent,
+    ).toBe(difference);
+  });
+});

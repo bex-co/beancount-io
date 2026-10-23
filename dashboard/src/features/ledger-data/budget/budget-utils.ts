@@ -273,17 +273,25 @@ const MAX_PRORATION_DAYS = 512;
  * "Below target -0" in the next.
  *
  * The tolerance scales with the numbers being compared and allows one ulp for
- * each day summed, so it absorbs that accumulation while staying many orders
- * of magnitude below a fractional unit of any commodity — a difference a
- * reader could act on is never flattened.
+ * each day summed, so it absorbs that accumulation. At large amounts that
+ * scale reaches whole units — 3.875 at a 3.4e13 USD target — so with the
+ * card's `displayDigits` a difference that shows as nonzero at that precision
+ * (half a unit or more) is never flattened to "On target" (w4/978).
  */
-export function budgetVariance(actual: number, budget: number): number {
+export function budgetVariance(
+  actual: number,
+  budget: number,
+  displayDigits?: number,
+): number {
   const difference = actual - budget;
-  const tolerance =
+  const roundOff =
     Math.max(Math.abs(actual), Math.abs(budget), 1) *
     Number.EPSILON *
     MAX_PRORATION_DAYS;
-  return Math.abs(difference) <= tolerance ? 0 : difference;
+  const visible =
+    displayDigits !== undefined &&
+    Math.abs(difference) >= 0.5 * 10 ** -displayDigits;
+  return !visible && Math.abs(difference) <= roundOff ? 0 : difference;
 }
 
 /**
