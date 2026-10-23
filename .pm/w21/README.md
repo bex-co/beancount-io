@@ -38,7 +38,6 @@
 - [663](./663.md) — A merchant's header total still rounds BTC to 2 decimals: "0.00 BTC" (w21/595 incomplete)
 - [664](./664.md) — Home's Recent Transactions says "Nothing up to today" when more than 20 entries are booked for later this month
 - [665](./665.md) — Home's net-worth caption and cost footnote still value next month's holdings (w21/641 incomplete)
-- [660](./660.md) — A plugin copy's "Open the source entry" opens a blank "No entry context data available" (w21/508 follow-up)
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window
 - [065](./blocked/065.md) — One early-year entry (e.g. 0050) makes the balance sheet 23,718 monthly points (3 MB) and the app stalls — **blocked:** needs an approach decision (per-pill fetch vs server downsample) and a simulator profile of the stall
 - [180](./blocked/180.md) — Budget actuals use raw prefix match (`Transport` counts `Transportation`), unlike Reports — **blocked:** needs an owner decision between component matching on the server (a Fava break) and a per-account breakdown for the client

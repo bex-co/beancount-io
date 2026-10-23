@@ -65,6 +65,7 @@ import {
   holdGeneratedEntry,
   selectOwnEntry,
 } from "./selectors/select-own-entry";
+import { selectSourceSlice } from "./selectors/select-source-slice";
 import { isPluginCopy } from "./selectors/select-plugin-copy";
 import { useTransactionContext } from "./use-transaction-context";
 import { shouldShowTransactionWriteActions } from "./selectors/select-transaction-write-actions";
@@ -111,6 +112,13 @@ const getStyles = (theme: ColorTheme) =>
       fontSize: fontSizes.md,
       color: theme.black80,
       textAlign: "center",
+    },
+    sourceSlice: {
+      fontSize: fontSizes.sm,
+      fontFamily: fonts.mono,
+      color: theme.text01,
+      textAlign: "left",
+      writingDirection: "ltr",
     },
     hero: {
       alignItems: "center",
@@ -480,6 +488,11 @@ const TransactionDetailImpl = ({
       : null;
   }, [ownEntry, data]);
 
+  const sourceSlice = selectSourceSlice(
+    data?.getLedgerEntryContext,
+    entry !== null,
+  );
+
   // Errors the ledger reports inside this entry's own lines (w21/030).
   const { errors: ledgerErrors } = useLedgerErrors(ledgerId);
   const contextSource = data?.getLedgerEntryContext;
@@ -596,6 +609,23 @@ const TransactionDetailImpl = ({
             <CardLoadFailure
               onRetry={() => void refetchContext().catch(() => undefined)}
             />
+          ) : sourceSlice ? (
+            // The plugin's source has no parsed entry, only its written text
+            // (w21/660): show that, and let a writer edit it.
+            <View>
+              <Text style={styles.sourceSlice} selectable>
+                {sourceSlice}
+              </Text>
+              {canWrite && sha256sum ? (
+                <Pressable
+                  onPress={handleEdit}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("editTransaction")}
+                >
+                  <Text style={styles.stateText}>{t("editTransaction")}</Text>
+                </Pressable>
+              ) : null}
+            </View>
           ) : (
             <Text style={styles.stateText}>{t("journalNoData")}</Text>
           )}
