@@ -42,7 +42,7 @@
 
 - [1006 — Use effective unit costs when recognizing total-cost short covers](./1006.md) — major CLI regression after completed 1001; the new predicate ignores a total/compound component, changes the cover label and strands offsetting lots, reproduced 2026-10-23.
 
-- [1005 — Handle inferred authored amounts in native-ID repeats and conflicts](./1005.md) — minor CLI raw-source fallback blames explicit incoming amounts for authored inference, including unchanged filtered repeats; reproduced 2026-10-23.
+- [1005 — Handle inferred authored amounts in native-ID repeats and conflicts](./1005.md) — minor CLI raw-source fallback blames explicit incoming amounts for authored inference; unchanged unfiltered repeats also fail after the 996 fix, reproduced 2026-10-23.
 
 - [1004 — Compare every stated account and currency fact for calculated copies](./1004.md) — major CLI residual after completed 991; extra keys or a different inferred currency hide stated facts and falsely skip native-ID corrections, reproduced 2026-10-23.
 
