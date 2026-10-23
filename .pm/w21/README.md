@@ -43,3 +43,6 @@
 - [834](./834.md) — A payee whose usual account is closed can fill the same account into both rows
 - [835](./835.md) — Payee suggestions miss Persian/Arabic letter variants (mobile half of w21/785)
 - [836](./836.md) — The account picker misses Arabic-spelled accounts from Persian typing and offers a look-alike Create
+- [837](./837.md) — Switching tabs never refreshes an open tab: after an outside change, Home and Transactions stay stale while Accounts is current
+- [838](./838.md) — A return within 30 s of the last refresh is dropped, not deferred
+- [839](./839.md) — Pull-to-refresh on Accounts/Transactions/Reports/Files skips ledger errors (bell) and Accounts' close dates
