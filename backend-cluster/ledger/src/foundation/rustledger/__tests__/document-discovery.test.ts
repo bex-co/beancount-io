@@ -145,3 +145,50 @@ describe("mergeDiscoveredDocuments", () => {
     expect(merged[2]).toBe(documents[0]);
   });
 });
+
+// w21/758: discovery ran after validation, so a statement dated before its
+// account opened raised nothing where bean-check reports it.
+describe("a discovered document dated before its account opens", () => {
+  const opened = (date: string) => [open("Assets:Bank:Checking", date)];
+  const statement = ["documents/Assets/Bank/Checking/2024-02-01.statement.pdf"];
+  const source = `option "title" "Books"\n${OPTION}`;
+
+  it("is an inactive reference on the option that found it, naming the file", () => {
+    const { errors, misdated } = discover(
+      statement,
+      opened("2024-03-01"),
+      source,
+    );
+    expect(
+      errors.map((error) => [
+        error.code,
+        error.file,
+        error.line,
+        error.message,
+      ]),
+    ).toEqual([
+      [
+        "E1001",
+        "main.beancount",
+        2,
+        `Invalid reference to inactive account 'Assets:Bank:Checking' (document "${statement[0]}")`,
+      ],
+    ]);
+    expect([...misdated]).toEqual(["Assets:Bank:Checking"]);
+  });
+
+  it("is fine on or after the open, and left to an unopened account's other uses", () => {
+    expect(discover(statement, opened("2024-02-01"), source).errors).toEqual(
+      [],
+    );
+    const unopened = discover(statement, [
+      {
+        type: "note",
+        date: "2024-01-05",
+        account: "Assets:Bank:Checking",
+        comment: "",
+      },
+    ]);
+    expect(unopened.errors).toEqual([]);
+  });
+});

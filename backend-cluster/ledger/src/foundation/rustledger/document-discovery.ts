@@ -43,24 +43,44 @@ const normalize = (path: string) =>
  * line, so it is marked generated: there is no text to edit or delete. A file
  * whose date does not exist raises Beancount's error instead. The documents
  * come back in date order, for {@link mergeDiscoveredDocuments}.
+ *
+ * A document dated before its account opens is an inactive reference, as
+ * Beancount validates it; the engine had validated before discovery, so it
+ * raised nothing (w21/758). Its error names the file and sits on the
+ * `option "documents"` line that found it (bean-check gives that file's line
+ * 0). `misdated` names those accounts: a revalidation after the fava plugins
+ * reports them again, unlocated.
  */
 export function discoverDocuments(
   directives: readonly DirectiveJson[],
   entryPointSource: string | undefined,
   entryPoint: string,
   repoPaths: readonly string[] | undefined,
-): { documents: DirectiveJson[]; errors: BeancountError[] } {
-  const roots = [...(entryPointSource ?? "").matchAll(DOCUMENTS_OPTION)].map(
-    (match) => normalize(posix.join(posix.dirname(entryPoint), match[1]!)),
-  );
+): {
+  documents: DirectiveJson[];
+  errors: BeancountError[];
+  misdated: ReadonlySet<string>;
+} {
+  const source = entryPointSource ?? "";
+  const roots = [...source.matchAll(DOCUMENTS_OPTION)].map((match) => ({
+    root: normalize(posix.join(posix.dirname(entryPoint), match[1]!)),
+    line: source.slice(0, match.index).split("\n").length,
+  }));
+  const misdated = new Set<string>();
   if (roots.length === 0 || repoPaths === undefined) {
-    return { documents: [], errors: [] };
+    return { documents: [], errors: [], misdated };
   }
   const accounts = new Set(directives.flatMap(directiveAccounts));
+  const openedOn = new Map<string, string>();
+  for (const directive of directives) {
+    if (directive.type === "open" && !openedOn.has(directive.account)) {
+      openedOn.set(directive.account, directive.date);
+    }
+  }
   const paths = repoPaths.map(normalize).sort();
   const found: DirectiveJson[] = [];
   const errors: BeancountError[] = [];
-  for (const root of roots) {
+  for (const { root, line } of roots) {
     const prefix = root === "." || root === "" ? "" : `${root}/`;
     for (const path of paths) {
       if (!path.startsWith(prefix)) continue;
@@ -87,10 +107,23 @@ export function discoverDocuments(
       };
       markGeneratedDirective(document);
       found.push(document);
+      // An account never opened is reported for its other uses, or opened
+      // by auto_accounts on its first one.
+      const opened = openedOn.get(account);
+      if (opened !== undefined && document.date < opened) {
+        misdated.add(account);
+        errors.push({
+          ...pluginError(
+            `Invalid reference to inactive account '${account}' (document "${path}")`,
+            { code: "E1001", file: entryPoint, line },
+          ),
+          column: 1,
+        });
+      }
     }
   }
   found.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
-  return { documents: found, errors };
+  return { documents: found, errors, misdated };
 }
 
 /**

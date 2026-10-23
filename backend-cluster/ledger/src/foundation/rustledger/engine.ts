@@ -721,7 +721,16 @@ async function parseLedgerFilesUncached(
           (error) =>
             error.phase !== "validate" || isDocumentValidationError(error),
         ),
-        ...revalidated,
+        // Discovery placed a misdated document's error already (w21/758).
+        ...revalidated.filter(
+          (error) =>
+            error.file !== null ||
+            ![...discovered.misdated].some(
+              (account) =>
+                error.message ===
+                `Invalid reference to unknown account '${account}'`,
+            ),
+        ),
         ...pluginErrors,
       ];
     }

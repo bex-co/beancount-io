@@ -684,6 +684,31 @@ async function verifyDocumentDiscovery(): Promise<void> {
   console.log(
     "✓ option documents discovery reaches the account journal (parsed, cached)",
   );
+  // w21/758: a statement dated before its account opened raised nothing, and
+  // with a fava plugin an unlocated "unknown account".
+  for (const plugin of ["", 'plugin "fava.plugins.tag_discovered_documents"\n']) {
+    const early = await parseLedgerFiles(
+      {
+        "main.beancount": `option "documents" "documents"\n${plugin}2026-03-01 open Assets:Docs\n`,
+      },
+      "main.beancount",
+      {
+        today: "2099-01-01",
+        repoPaths: [
+          "main.beancount",
+          "documents/Assets/Docs/2026-02-01.statement.pdf",
+        ],
+      },
+    );
+    const shown = early.errors.map((e) => `${e.file}:${e.line} ${e.message}`);
+    assert(
+      JSON.stringify(shown) ===
+        JSON.stringify([
+          `main.beancount:1 Invalid reference to inactive account 'Assets:Docs' (document "documents/Assets/Docs/2026-02-01.statement.pdf")`,
+        ]),
+      `a statement before its account's open is refused once, located (got ${JSON.stringify(shown)})`,
+    );
+  }
 }
 
 /**
