@@ -1205,3 +1205,25 @@ describe("an unreadable amount behind another problem", () => {
     expect(postings.some(hasUnparsedAmount)).toBe(true);
   });
 });
+
+// w21/849: the grey Done said nothing of being dimmed to VoiceOver.
+describe("the Done button's disabled state", () => {
+  it("leaves accessibilityState.disabled to say dimmed on an invalid draft", () => {
+    const screen = require("fs")
+      .readFileSync(
+        require("path").join(
+          __dirname,
+          "..",
+          "multi-postings-transaction-screen.tsx",
+        ),
+        "utf8",
+      )
+      .replace(/\s+/g, "");
+    expect(screen.includes("disabled={saving||saved?true:undefined}")).toBe(
+      true,
+    );
+    expect(
+      screen.includes("accessibilityState={{disabled:!canSave||saving,"),
+    ).toBe(true);
+  });
+});

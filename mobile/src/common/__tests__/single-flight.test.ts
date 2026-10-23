@@ -60,7 +60,9 @@ describe("New Transaction's Done", () => {
     expect(source.includes("if (savedOutRef.current || flight.busy())")).toBe(
       true,
     );
-    expect(source.includes("disabled={saving || saved}")).toBe(true);
+    expect(
+      source.includes("disabled={saving || saved ? true : undefined}"),
+    ).toBe(true);
     expect(source.includes("busy: saving")).toBe(true);
   });
 });

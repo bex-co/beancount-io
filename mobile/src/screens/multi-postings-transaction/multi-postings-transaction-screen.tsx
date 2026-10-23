@@ -751,7 +751,10 @@ const MultiPostingsTransactionScreenComponent = () => {
               onPress={handleSave}
               // Still pressable on an invalid draft, which is how the form
               // says what is wrong; never while a save runs or after it.
-              disabled={saving || saved}
+              // `undefined`, not false: Pressable lets a `disabled` prop of any
+              // value overwrite `accessibilityState.disabled`, so false made
+              // VoiceOver never say "dimmed" over the grey Done (w21/849).
+              disabled={saving || saved ? true : undefined}
               hitSlop={10}
               accessibilityRole="button"
               accessibilityLabel={t("done")}
