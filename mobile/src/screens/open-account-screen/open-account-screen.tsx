@@ -56,6 +56,7 @@ import {
   type AccountRootPrefix,
   validateAccountName,
   existingAccountNotice,
+  isOpenAccountDraftDirty,
   ledgerSpelling,
   openAccountSubmitState,
 } from "./account-name";
@@ -283,14 +284,31 @@ export function OpenAccountScreenComponent(): JSX.Element {
   // a discard. A typed name asks before Back drops it, as the other write forms
   // do (w21/631).
   const savedOutRef = useRef(false);
-  useUnsavedChangesGuard(!saved && subPath !== seed.subPath, savedOutRef);
+  // What the form started with: the type, currency and date count as changes
+  // too (w21/810). The currency's start is the default it settles on below.
+  const initialDate = useRef(getFormatDate(date));
+  const defaultCurrency = useRef("");
+  useUnsavedChangesGuard(
+    !saved &&
+      isOpenAccountDraftDirty(
+        { rootPrefix, subPath, currency, date: getFormatDate(date) },
+        {
+          rootPrefix: seed.rootPrefix,
+          subPath: seed.subPath,
+          currency: defaultCurrency.current,
+          date: initialDate.current,
+        },
+      ),
+    savedOutRef,
+  );
 
   // Defaults once the meta has actually arrived: a failed first read used to
   // settle it on "No currency" for good (w21/085).
   const metaLoaded = meta !== undefined;
   useEffect(() => {
     if (!currencyInitialized && metaLoaded) {
-      setCurrency(currencies[0] ?? "");
+      defaultCurrency.current = currencies[0] ?? "";
+      setCurrency(defaultCurrency.current);
       setCurrencyInitialized(true);
     }
   }, [currencies, currencyInitialized, metaLoaded]);

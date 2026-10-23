@@ -347,3 +347,29 @@ export function existingAccountNotice(
   if (closedAt) return { key: "openAccountClosesLater", date: closedAt };
   return { key: "openAccountAlreadyOpen" };
 }
+
+/** What the Open Account form holds that Back would drop. */
+export type OpenAccountDraft = {
+  rootPrefix: string;
+  subPath: string;
+  currency: string;
+  date: string;
+};
+
+/**
+ * Whether Back drops a change: the name, and the type, currency and open date
+ * too. Only the name was compared, so a type switched to Liabilities went
+ * without asking (w21/810). `initial` holds what the form started with, its
+ * currency the default it settled on once the ledger's were read.
+ */
+export function isOpenAccountDraftDirty(
+  current: OpenAccountDraft,
+  initial: OpenAccountDraft,
+): boolean {
+  return (
+    current.subPath !== initial.subPath ||
+    current.rootPrefix !== initial.rootPrefix ||
+    current.currency !== initial.currency ||
+    current.date !== initial.date
+  );
+}
