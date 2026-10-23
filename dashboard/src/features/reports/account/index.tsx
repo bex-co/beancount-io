@@ -41,8 +41,8 @@ import {
   type JournalTableItem,
 } from "@/features/journal/components/journal-table";
 import type { JournalDirectiveType } from "@/common/types/journal";
-import { DirectiveType } from "@/common/types/journal";
 import { JournalFilters } from "@/features/journal/components/journal-filters";
+import { useJournalFilterState } from "@/features/journal/hooks/use-journal-filter-state";
 import { JournalPagination } from "@/features/journal/components/journal-pagination";
 import {
   PageLoadingState,
@@ -88,22 +88,23 @@ export function AccountJournalTable({
   const { t } = useTranslations();
   const { ledgerData } = useLedger();
   const withChildren = getAccountJournalWithChildren(ledgerData);
-  // Filter state
-  const [selectedDirectiveTypes, setSelectedDirectiveTypes] = useState<
-    DirectiveType[]
-  >([DirectiveType.TRANSACTION]);
-  const [selectedTransactionSubtypes, setSelectedTransactionSubtypes] =
-    useState<string[]>([]);
-  const [selectedDocumentSubtypes, setSelectedDocumentSubtypes] = useState<
-    string[]
-  >([]);
-  const [selectedCustomSubtypes, setSelectedCustomSubtypes] = useState<
-    string[]
-  >([]);
-
-  // UI toggle state
-  const [showMetadata, setShowMetadata] = useState(true);
-  const [showPostings, setShowPostings] = useState(false);
+  // Entry-type filters and display toggles, kept for this account the way
+  // the Journal keeps its own: a shared time/account/filter change remounts
+  // this page, and state held here reverted to the defaults (w4/1000).
+  const {
+    selectedDirectiveTypes,
+    setSelectedDirectiveTypes,
+    selectedTransactionSubtypes,
+    setSelectedTransactionSubtypes,
+    selectedDocumentSubtypes,
+    setSelectedDocumentSubtypes,
+    selectedCustomSubtypes,
+    setSelectedCustomSubtypes,
+    showMetadata,
+    setShowMetadata,
+    showPostings,
+    setShowPostings,
+  } = useJournalFilterState(`accountJournal.${ledgerId}.${accountName}`);
 
   // Pagination lives in the route's validated search params so opening a
   // transaction's source — which unmounts this table — plus browser Back
@@ -616,6 +617,8 @@ export default function AccountPage() {
           </CardDescription>
         </CardHeader>
         <AccountJournalTable
+          // Its stored filters are read on mount, per account.
+          key={`${ledgerId}/${accountName}`}
           ledgerId={ledgerId}
           ledgerOwner={ledgerOwner}
           ledgerName={ledgerName}
