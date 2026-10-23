@@ -25,6 +25,7 @@
 - [784](./784.md) — A sub-cent account change shows a red "−$0.00" row under a "$0.00" day header
 - [785](./785.md) — Persian/Arabic search misses the same word in the other script's letters (ی/ي, ک/ك), digits, ZWNJ, hamza
 - [786](./786.md) — A journal app link replaces the filters but keeps the old search text
+- [787](./787.md) — New File's case-clash error names the typed name, not the existing file ("Main.bean" beside main.bean)
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window
 - [065](./blocked/065.md) — One early-year entry (e.g. 0050) makes the balance sheet 23,718 monthly points (3 MB) and the app stalls — **blocked:** needs an approach decision (per-pill fetch vs server downsample) and a simulator profile of the stall
 - [180](./blocked/180.md) — Budget actuals use raw prefix match (`Transport` counts `Transportation`), unlike Reports — **blocked:** needs an owner decision between component matching on the server (a Fava break) and a per-account breakdown for the client
