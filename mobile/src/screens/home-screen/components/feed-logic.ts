@@ -1,6 +1,7 @@
 import { FeedSource } from "../../../generated-graphql/types";
 import { getFormatDate } from "../../../common/format-util";
 import { formatFeedDate, formatMoment } from "../../../common/date-format";
+import { isolateLtr } from "../../../common/bidi";
 import {
   normalizeOrigin,
   resolveAppLink,
@@ -153,6 +154,32 @@ export function feedRowDetail(
     .filter(Boolean);
   const byline = author && !mine.includes(author.toLowerCase()) ? author : null;
   return { subtitle, byline };
+}
+
+/** The server's English titles for ledger activity, and the keys that say them. */
+const LEDGER_TITLES: ReadonlyArray<[RegExp, string]> = [
+  [/^Committed to (.+)$/, "feedCommittedTo"],
+  [/^Created repository (.+)$/, "feedCreatedLedger"],
+];
+
+/**
+ * A row's title in the app's language. The server writes ledger activity in
+ * English ("Committed to mcp-agent-eval"), so a German Home read English rows
+ * (w21/718): a commit or a new ledger is said in the app's words, with the
+ * ledger's name isolated for a right-to-left language; any other title is the
+ * server's.
+ */
+export function feedRowTitle(
+  title: string,
+  source: FeedSource,
+  t: (key: string, params?: Record<string, string>) => string,
+): string {
+  if (source !== FeedSource.LedgerRss) return title;
+  for (const [pattern, key] of LEDGER_TITLES) {
+    const match = pattern.exec(title.trim());
+    if (match) return t(key, { ledger: isolateLtr(match[1]!) });
+  }
+  return title;
 }
 
 /** The server's last summary line for a push holding more commits than it lists. */

@@ -803,6 +803,8 @@ export const fa: Translations = {
   feedSourceLedger: "دفتر",
   feedSourceBlog: "وبلاگ",
   feedSourceRelease: "انتشار",
+  feedCommittedTo: "تغییر در {{ledger}}",
+  feedCreatedLedger: "دفتر {{ledger}} ساخته شد",
   feedPushCommits: {
     one: "{{count}} تغییر",
     other: "{{count}} تغییر",

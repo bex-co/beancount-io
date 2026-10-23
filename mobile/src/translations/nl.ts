@@ -819,6 +819,8 @@ export const nl: Translations = {
   feedSourceLedger: "Grootboek",
   feedSourceBlog: "Blog",
   feedSourceRelease: "Uitgave",
+  feedCommittedTo: "Commit in {{ledger}}",
+  feedCreatedLedger: "Grootboek {{ledger}} aangemaakt",
   feedPushCommits: {
     one: "{{count}} commit",
     other: "{{count}} commits",

@@ -840,6 +840,8 @@ export const sk: Translations = {
   feedSourceLedger: "Kniha",
   feedSourceBlog: "Blog",
   feedSourceRelease: "Vydanie",
+  feedCommittedTo: "Commit do {{ledger}}",
+  feedCreatedLedger: "Vytvorená kniha {{ledger}}",
   feedPushCommits: {
     one: "{{count}} commit",
     few: "{{count}} commity",

@@ -834,6 +834,8 @@ export const es: Translations = {
   feedSourceLedger: "Libro",
   feedSourceBlog: "Blog",
   feedSourceRelease: "Versión",
+  feedCommittedTo: "Cambio en {{ledger}}",
+  feedCreatedLedger: "Libro creado: {{ledger}}",
   feedPushCommits: {
     one: "{{count}} cambio",
     many: "{{count}} cambios",

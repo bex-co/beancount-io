@@ -465,6 +465,8 @@ export const en = {
   feedSourceLedger: "Ledger",
   feedSourceBlog: "Blog",
   feedSourceRelease: "Release",
+  feedCommittedTo: "Committed to {{ledger}}",
+  feedCreatedLedger: "Created repository {{ledger}}",
   feedPushCommits: {
     one: "{{count}} commit",
     other: "{{count}} commits",

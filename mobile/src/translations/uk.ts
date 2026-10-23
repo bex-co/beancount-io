@@ -833,6 +833,8 @@ export const uk: Translations = {
   feedSourceLedger: "Книга",
   feedSourceBlog: "Блог",
   feedSourceRelease: "Реліз",
+  feedCommittedTo: "Зміна в {{ledger}}",
+  feedCreatedLedger: "Створено книгу {{ledger}}",
   feedPushCommits: {
     one: "{{count}} зміна",
     few: "{{count}} зміни",

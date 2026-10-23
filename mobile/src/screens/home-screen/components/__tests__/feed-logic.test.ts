@@ -338,3 +338,53 @@ describe("pushSummary", () => {
     expect(card.includes("{shownSubtitle}")).toBe(true);
   });
 });
+
+// w21/718: in German, a ledger commit row read "Committed to mcp-agent-eval".
+describe("feedRowTitle", () => {
+  const { feedRowTitle } = require("../feed-logic");
+  const { de } = require("../../../../translations/de");
+  const { en } = require("../../../../translations/en");
+  const say =
+    (strings: Record<string, string>) =>
+    (key: string, params?: Record<string, string>) =>
+      strings[key]!.replace("{{ledger}}", params?.ledger ?? "");
+  const iso = (name: string) => `⁦${name}⁩`;
+
+  it("says a commit and a new ledger in the app's language", () => {
+    expect(
+      feedRowTitle(
+        "Committed to mcp-agent-eval",
+        FeedSource.LedgerRss,
+        say(de),
+      ),
+    ).toBe(`Commit in ${iso("mcp-agent-eval")}`);
+    expect(
+      feedRowTitle("Created repository books", FeedSource.LedgerRss, say(de)),
+    ).toBe(`Hauptbuch ${iso("books")} erstellt`);
+    // English reads as the server wrote it.
+    expect(
+      feedRowTitle("Committed to books", FeedSource.LedgerRss, say(en)),
+    ).toBe(`Committed to ${iso("books")}`);
+  });
+
+  it("keeps any other title, and every post's, as the server wrote it", () => {
+    expect(
+      feedRowTitle(
+        "Merged pull request in books",
+        FeedSource.LedgerRss,
+        say(de),
+      ),
+    ).toBe("Merged pull request in books");
+    expect(
+      feedRowTitle("Committed to the blog", FeedSource.Blog, say(de)),
+    ).toBe("Committed to the blog");
+  });
+
+  it("is what the row shows", () => {
+    const card = fs.readFileSync(
+      path.join(__dirname, "..", "feed-card.tsx"),
+      "utf8",
+    );
+    expect(card.includes("{feedRowTitle(title, source, t)}")).toBe(true);
+  });
+});

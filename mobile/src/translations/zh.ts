@@ -741,6 +741,8 @@ export const zh: Translations = {
   feedSourceLedger: "账本",
   feedSourceBlog: "博客",
   feedSourceRelease: "发布",
+  feedCommittedTo: "提交到 {{ledger}}",
+  feedCreatedLedger: "已创建账本 {{ledger}}",
   feedPushCommits: {
     other: "{{count}} 次提交",
   },

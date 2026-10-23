@@ -19,6 +19,7 @@ import { FeedSource } from "@/generated-graphql/types";
 import {
   feedQueryVariables,
   feedRowDate,
+  feedRowTitle,
   pushSummary,
   feedRowAction,
   feedSourceLabelKey,
@@ -119,7 +120,7 @@ function FeedRow({
       style={[styles.row, isFirst && styles.firstRow]}
     >
       <Text key={`title-${fontScale}`} style={styles.title} numberOfLines={2}>
-        {title}
+        {feedRowTitle(title, source, t)}
       </Text>
       {subtitle ? (
         <Text
