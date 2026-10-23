@@ -1431,6 +1431,25 @@ async function main(): Promise<void> {
       averageErrors[0].message.startsWith("AVERAGE method is not supported"),
     `a sale from an AVERAGE position is refused on its line (got ${averageErrors.map((e) => `${e.code}@${e.line} ${e.message}`)})`,
   );
+  // w21/722: the first booking_method option was read; the last one wins.
+  for (const [first, last, refused] of [
+    ["AVERAGE", "FIFO", false],
+    ["FIFO", "AVERAGE", true],
+  ] as const) {
+    const twice = await parseLedgerFiles(
+      {
+        "main.beancount":
+          `option "booking_method" "${first}"\noption "booking_method" "${last}"\n` +
+          averageSource("").replace(' VTI ""', " VTI"),
+      },
+      "main.beancount",
+      { today: "2099-01-01" },
+    );
+    assert(
+      twice.errors.some((e) => e.message.startsWith("AVERAGE")) === refused,
+      `booking_method ${first} then ${last} ${refused ? "refuses" : "books"} the sale`,
+    );
+  }
   // w21/721: located by date and narration, the error lost its file and line
   // when another entry that day shared the narration, or the sale had none.
   for (const [sale, line] of [

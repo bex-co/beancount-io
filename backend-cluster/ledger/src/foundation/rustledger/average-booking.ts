@@ -3,7 +3,7 @@ import { indexBlocks } from "./block-index";
 import { includeTraversalOrder } from "./source-slice";
 
 const AVERAGE = "AVERAGE";
-const OPTION = /^option\s+"booking_method"\s+"([A-Z_]+)"/mu;
+const OPTION = /^option\s+"booking_method"\s+"([A-Z_]+)"/gmu;
 const MESSAGE = "AVERAGE method is not supported";
 /** A posting line's account, number and commodity. */
 const POSTING = /^\s+(\S+)\s+(-?\d[\d,]*(?:\.\d+)?)\s+(\S+)/u;
@@ -72,7 +72,10 @@ export function averageBookingErrors(
   files: FileMap,
   entryPoint: string,
 ): BeancountError[] {
-  const byDefault = OPTION.exec(files[entryPoint] ?? "")?.[1] === AVERAGE;
+  // The last one wins, as the engine says when an option is set twice; the
+  // first was read, so AVERAGE then FIFO raised a false error (w21/722).
+  const byDefault =
+    [...(files[entryPoint] ?? "").matchAll(OPTION)].at(-1)?.[1] === AVERAGE;
   const average = new Set<string>();
   for (const directive of directives) {
     if (directive.type !== "open") continue;

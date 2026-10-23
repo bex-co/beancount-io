@@ -131,6 +131,18 @@ describe("averageBookingErrors", () => {
     ).toEqual([]);
   });
 
+  // w21/722: the first option was read, though the last one wins.
+  it("follows the last booking_method option", () => {
+    const options = (first: string, last: string) =>
+      `option "booking_method" "${first}"\noption "booking_method" "${last}"\n`;
+    expect(
+      check([open("Assets:Broker"), ...buys, sell], options("AVERAGE", "FIFO")),
+    ).toEqual([]);
+    expect(
+      check([open("Assets:Broker"), ...buys, sell], options("FIFO", "AVERAGE")),
+    ).toHaveLength(1);
+  });
+
   it("leaves purchases, other methods and other accounts alone", () => {
     expect(check([open("Assets:Broker", "AVERAGE"), ...buys], "")).toEqual([]);
     expect(check([open("Assets:Broker", "FIFO"), ...buys, sell], "")).toEqual(
