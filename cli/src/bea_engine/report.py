@@ -1075,6 +1075,7 @@ def _display_precision(filtered: Any) -> dict[str, int]:
             digits = min(digits, limit)
         into[currency] = max(digits, into.get(currency, 0))
 
+    typed: dict[tuple[str, int], dict[str, int]] = {}
     for entry in filtered.ledger.all_entries:
         if isinstance(entry, Transaction):
             for posting in entry.postings:
@@ -1082,7 +1083,13 @@ def _display_precision(filtered: Any) -> dict[str, int]:
                     if (posting.meta or {}).get("__automatic__"):
                         pending.append((entry, posting))
                     else:
-                        learn(posting.units.number, posting.units.currency, precision)
+                        # A plugin that divides or rewrites a posting leaves it
+                        # at its source line with digits nobody wrote: capped
+                        # at what that transaction's own postings spell (w5/946).
+                        spelled = _typed_precision(entry, typed)
+                        learn(
+                            posting.units.number, posting.units.currency, precision, spelled.get(posting.units.currency)
+                        )
         elif isinstance(entry, Balance):
             learn(entry.amount.number, entry.amount.currency, precision)
     # Only a fractional inferred amount in a currency without written
@@ -1120,6 +1127,38 @@ def _display_precision(filtered: Any) -> dict[str, int]:
         exponent = example.as_tuple().exponent
         precision[str(currency)] = max(0, -exponent) if isinstance(exponent, int) else 0
     return precision
+
+
+def _typed_precision(entry: Any, cache: dict[tuple[str, int], dict[str, int]]) -> dict[str, int]:
+    """Fractional digits per currency that this entry's source transaction spells in its postings.
+
+    Empty when the entry has no readable source transaction (a plugin's own
+    entry, a file that cannot be read) or spells no amount in a currency, so
+    those postings keep counting as written.
+    """
+    from beancount.core.data import Transaction
+
+    from bea_engine.ledger.reader import _spelled_entries
+
+    meta = entry.meta or {}
+    filename, lineno = meta.get("filename"), meta.get("lineno")
+    if not isinstance(filename, str) or not isinstance(lineno, int) or lineno < 1:
+        return {}
+    key = (filename, lineno)
+    if key not in cache:
+        spelled = _spelled_entries(filename).get(lineno)
+        digits: dict[str, int] = {}
+        if isinstance(spelled, Transaction):
+            for posting in spelled.postings:
+                number = getattr(posting.units, "number", None)
+                currency = getattr(posting.units, "currency", None)
+                if not isinstance(number, Decimal) or not isinstance(currency, str):
+                    continue
+                exponent = number.as_tuple().exponent
+                places = max(0, -exponent) if isinstance(exponent, int) else 0
+                digits[currency] = max(places, digits.get(currency, 0))
+        cache[key] = digits
+    return cache[key]
 
 
 def _written_transaction_precision(
