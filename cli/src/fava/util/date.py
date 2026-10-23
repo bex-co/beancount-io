@@ -361,7 +361,11 @@ def substitute(
         mod = int(mod_) if mod_ else 0
         offset = mod if plusminus_ == "+" else -mod
         if interval == "fiscal_year":
-            after_fye = (today.month, today.day) > (fye.month_of_year, fye.day)
+            # `02-28` is February's last day (`get_fiscal_period` starts the next
+            # year on March 1 in leap years too), so leap day is still in the
+            # year that ends on it (w5/966).
+            end_day = calendar.monthrange(today.year, 2)[1] if (fye.month_of_year, fye.day) == (2, 28) else fye.day
+            after_fye = (today.month, today.day) > (fye.month_of_year, end_day)
             year = today.year + (1 if after_fye else 0) - fye.year_offset
             return f"FY{year + offset:04}"
         if interval == "year":
