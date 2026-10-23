@@ -132,7 +132,7 @@
 
 ## Milestones
 
-- [ ] **m56** — Exclude entirely noncash transactions from Cash Flow activities (7 tasks) ← dashboard QA; residual of m2 ([plan](./m56/README.md))
+- [x] **m56** — Exclude entirely noncash transactions from Cash Flow activities (7 tasks) ← dashboard QA; residual of m2 ([plan](./done/m56/README.md))
 
 - [x] **m55** — [Preserve exact Budget amounts and variance](./done/m55/README.md) (7 tasks) ← dashboard QA,2026-10-23; minor residual of m45; whole-unit target/actual loss causes false On target, six native controls, no writes.
 
