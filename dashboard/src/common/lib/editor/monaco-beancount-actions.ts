@@ -22,10 +22,15 @@ export function alignAmounts(
 
   const lines: string[] = [];
   const totalLines = model.getLineCount();
+  // A narration can span lines; a line that starts inside its quotes is
+  // string content, however much it looks like a posting (w4/1013).
+  let inString = false;
 
   for (let i = 1; i <= totalLines; i++) {
     const line = model.getLineContent(i);
-    const match = ALIGN_RE.exec(line);
+    const startsInString = inString;
+    inString = endsInsideString(line, inString);
+    const match = startsInString ? null : ALIGN_RE.exec(line);
 
     if (match) {
       const [, prefix, number, rest] = match;
@@ -54,6 +59,26 @@ export function alignAmounts(
     },
   ]);
   editor.pushUndoStop();
+}
+
+/**
+ * Whether `line` leaves a string open, given whether it began inside one.
+ * Inside a string `\` escapes the next character and `"` closes it; outside,
+ * `"` opens one and `;` starts a comment that runs to the end of the line.
+ */
+function endsInsideString(line: string, inside: boolean): boolean {
+  for (let i = 0; i < line.length; i += 1) {
+    const char = line[i];
+    if (inside) {
+      if (char === "\\") i += 1;
+      else if (char === '"') inside = false;
+    } else if (char === '"') {
+      inside = true;
+    } else if (char === ";") {
+      break;
+    }
+  }
+  return inside;
 }
 
 /**
