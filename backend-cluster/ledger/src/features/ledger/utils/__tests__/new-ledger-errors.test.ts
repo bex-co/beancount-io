@@ -1,3 +1,4 @@
+import type { BeancountErrorPublic } from "@/foundation/ledger-api-types";
 import { newLedgerErrors, refuseNewLedgerErrors } from "../new-ledger-errors";
 import { NewLedgerErrorsError } from "@/shared/errors";
 
@@ -91,6 +92,45 @@ describe("newLedgerErrors", () => {
 
   it("finds nothing new for a clean write", () => {
     expect(newLedgerErrors([], [])).toEqual([]);
+  });
+});
+
+// w21/681: an assertion with a `~` tolerance that already fails changed its
+// "got" figure with any add above it, so the same error read as a new one.
+describe("an explicit-tolerance balance failure", () => {
+  const exceeds = (got: string, difference: string): BeancountErrorPublic => ({
+    message: `Balance exceeds explicit tolerance for Assets:Tol: expected 100 USD ~ 0.01, got ${got} USD (difference: ${difference})`,
+    severity: "error",
+    source: { filename: "main.bean", lineno: 9 },
+  });
+
+  it("is not new when only the reached figure changed", () => {
+    expect(
+      newLedgerErrors([exceeds("0", "100")], [exceeds("-5.00", "105.00")]),
+    ).toEqual([]);
+  });
+
+  it("still counts a failure on another account or expected amount as new", () => {
+    const other = {
+      ...exceeds("0", "100"),
+      message: exceeds("0", "100").message.replace(
+        "Assets:Tol",
+        "Assets:Other",
+      ),
+    };
+    expect(newLedgerErrors([exceeds("0", "100")], [other])).toEqual([other]);
+    const amount = {
+      ...exceeds("0", "100"),
+      message: exceeds("0", "100").message.replace(
+        "expected 100",
+        "expected 200",
+      ),
+    };
+    expect(newLedgerErrors([exceeds("0", "100")], [amount])).toEqual([amount]);
+  });
+
+  it("counts an assertion that was passing and now fails", () => {
+    expect(newLedgerErrors([], [exceeds("90", "10")])).toHaveLength(1);
   });
 });
 

@@ -14,11 +14,17 @@ import { NewLedgerErrorsError, type LedgerWriteAction } from "@/shared/errors";
  * changes, so correcting an entry while an assertion was off was refused as a
  * new error unless the edit fixed it exactly. The assertion is the same one:
  * matching keeps its account and expected amount and ignores "got" (w21/618).
+ * The explicit-tolerance wording ("Balance exceeds explicit tolerance for A:
+ * expected 100 USD ~ 0.01, got 0 USD (difference: 100)") also quotes the
+ * reached figure and its difference, so it is trimmed the same way (w21/681).
  */
 function withoutEntryTag(message: string): string {
   return message
     .replace(/ \(\d{4}-\d{2}-\d{2}, ".*"\)$/s, "")
-    .replace(/^(Balance failed for [^:]+:.*?expected [^,]*), got .*$/s, "$1");
+    .replace(
+      /^(Balance (?:failed|exceeds explicit tolerance) for [^:]+:.*?expected [^,]*), got .*$/s,
+      "$1",
+    );
 }
 
 /**
