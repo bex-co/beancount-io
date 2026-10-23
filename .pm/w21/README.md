@@ -62,3 +62,6 @@
 - [905](./905.md) — Leaving the picker while Open Account saves lets its callback close the screen now on top
 - [906](./906.md) — An ID-changing Edit flashes "changed or removed" and refetches the ledger twice
 - [907](./907.md) — A stock buy dated after today makes account detail read "0 VOO"
+- [908](./908.md) — Reports' Recent transactions lists entries dated after today that the charts leave out
+- [909](./909.md) — Update Budget on a budget that hasn't started can't be dated before its start
+- [910](./910.md) — Identical budget entries highlight two history rows as current, with duplicate keys
