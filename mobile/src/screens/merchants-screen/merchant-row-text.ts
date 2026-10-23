@@ -85,6 +85,10 @@ export function merchantRowText(
             })}`
           : t("merchantsOverdue");
         trailingOverdue = true;
+      } else if (detection.nextExpected < today) {
+        // Past but within the grace before Overdue: "Next Oct 21" on Oct 23
+        // read a missed payment as upcoming (w21/759).
+        trailingMeta = t("merchantsDueOn", { date: next });
       } else {
         trailingMeta = t("merchantsNextExpected", { date: next });
       }

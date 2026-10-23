@@ -107,6 +107,7 @@ export const bg: Translations = {
   merchantsCadenceUnknown: "Недостатъчна история",
   merchantsCadenceInactive: "Няма скорошни плащания",
   merchantsNextExpected: "Следващо {{date}}",
+  merchantsDueOn: "Дължимо на {{date}}",
   merchantsOverdue: "Просрочено",
   merchantsLastPaid: "Последно платено {{date}}",
   merchantsScheduled: "Планирано за {{date}}",

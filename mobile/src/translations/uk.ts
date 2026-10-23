@@ -111,6 +111,7 @@ export const uk: Translations = {
   merchantsCadenceUnknown: "Замало історії",
   merchantsCadenceInactive: "Немає нещодавніх платежів",
   merchantsNextExpected: "Наступний {{date}}",
+  merchantsDueOn: "Термін: {{date}}",
   merchantsOverdue: "Прострочено",
   merchantsLastPaid: "Останній платіж {{date}}",
   merchantsScheduled: "Заплановано на {{date}}",

@@ -110,6 +110,7 @@ export const ca: Translations = {
   merchantsCadenceUnknown: "Historial insuficient",
   merchantsCadenceInactive: "Sense pagaments recents",
   merchantsNextExpected: "Proper {{date}}",
+  merchantsDueOn: "Venç el {{date}}",
   merchantsOverdue: "Vençut",
   merchantsLastPaid: "Últim pagament {{date}}",
   merchantsScheduled: "Programat per al {{date}}",

@@ -107,6 +107,7 @@ export const nl: Translations = {
   merchantsCadenceUnknown: "Te weinig geschiedenis",
   merchantsCadenceInactive: "Geen recente betalingen",
   merchantsNextExpected: "Volgende {{date}}",
+  merchantsDueOn: "Vervalt op {{date}}",
   merchantsOverdue: "Achterstallig",
   merchantsLastPaid: "Laatst betaald {{date}}",
   merchantsScheduled: "Gepland op {{date}}",

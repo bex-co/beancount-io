@@ -186,3 +186,57 @@ describe("a recurring amount in a ledger whose own dollar is another", () => {
     ).toBe(true);
   });
 });
+
+// w21/759: a missed payment within the grace before Overdue still read
+// "Next Oct 21, 2026" on Oct 23.
+describe("a recurring row whose expected date has passed", () => {
+  const due = (cadence: string, nextExpected: string) =>
+    ({
+      merchant: {
+        payee: "Cleaner",
+        transactionCount: 4,
+        lastDate: "2026-10-07",
+      },
+      resolved: {
+        isRecurring: true,
+        cadence,
+        detection: {
+          cadence,
+          typicalAmountByCurrency: { USD: 45 },
+          primaryCurrency: "USD",
+          isApproximate: false,
+          nextExpected,
+          isOverdue: false,
+          isLapsed: false,
+          lastPaid: "2026-10-07",
+        },
+      },
+      inRecurringSection: true,
+    }) as unknown as MerchantListItem;
+  const meta = (cadence: string, nextExpected: string) =>
+    merchantRowText(due(cadence, nextExpected), t, "en", "2026-10-23")
+      .trailingMeta;
+
+  it("says it was due, for every cadence, until it is Overdue", () => {
+    for (const [cadence, date] of [
+      ["biweekly", "2026-10-21"],
+      ["monthly", "2026-10-15"],
+      ["quarterly", "2026-09-01"],
+      ["yearly", "2026-08-01"],
+    ]) {
+      expect([
+        cadence,
+        meta(cadence, date)?.startsWith("merchantsDueOn("),
+      ]).toEqual([cadence, true]);
+    }
+  });
+
+  it("keeps Next for today and later", () => {
+    expect(
+      meta("biweekly", "2026-10-23")?.startsWith("merchantsNextExpected("),
+    ).toBe(true);
+    expect(
+      meta("monthly", "2026-11-15")?.startsWith("merchantsNextExpected("),
+    ).toBe(true);
+  });
+});

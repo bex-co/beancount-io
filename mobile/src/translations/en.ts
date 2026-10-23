@@ -99,6 +99,7 @@ export const en = {
   merchantsCadenceUnknown: "Not enough history",
   merchantsCadenceInactive: "No recent payments",
   merchantsNextExpected: "Next {{date}}",
+  merchantsDueOn: "Due {{date}}",
   merchantsOverdue: "Overdue",
   merchantsLastPaid: "Last paid {{date}}",
   merchantsScheduled: "Scheduled {{date}}",

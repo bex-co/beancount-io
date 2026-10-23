@@ -94,6 +94,7 @@ export const zh: Translations = {
   merchantsCadenceUnknown: "历史记录不足",
   merchantsCadenceInactive: "近期没有付款",
   merchantsNextExpected: "下次 {{date}}",
+  merchantsDueOn: "{{date}} 到期",
   merchantsOverdue: "已逾期",
   merchantsLastPaid: "上次付款 {{date}}",
   merchantsScheduled: "已安排于 {{date}}",
