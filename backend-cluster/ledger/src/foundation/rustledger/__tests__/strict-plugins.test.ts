@@ -223,3 +223,43 @@ describe("pedantic's other checks", () => {
     ).toEqual([["error", 5, "Disagreeing price entries"]]);
   });
 });
+
+// w21/757: close_tree's closes counted as uses whatever the plugin order, so
+// an idle child it closed read as used under nounused declared first.
+describe("reconcileNounusedErrors and close_tree", () => {
+  const ledger = (first: string, second: string) =>
+    [
+      `plugin "beancount.plugins.${first}"`,
+      `plugin "beancount.plugins.${second}"`,
+      "2024-01-01 open Assets:Broker",
+      "2024-01-01 open Assets:Broker:Idle",
+      "2024-04-01 close Assets:Broker",
+    ].join("\n");
+  // The stream holds close_tree's close of the child.
+  const stream: DirectiveJson[] = [
+    open("Assets:Broker"),
+    open("Assets:Broker:Idle"),
+    transaction([["Assets:Broker", "USD"]]),
+    { type: "close", date: "2024-04-01", account: "Assets:Broker" },
+    { type: "close", date: "2024-04-01", account: "Assets:Broker:Idle" },
+  ];
+  const run = (first: string, second: string) =>
+    shown(
+      reconcileNounusedErrors(
+        [],
+        stream,
+        { "main.bean": ledger(first, second) },
+        "main.bean",
+      ),
+    );
+
+  it("does not count close_tree's close when nounused runs first", () => {
+    expect(run("nounused", "close_tree")).toEqual([
+      ["error", 4, "Unused account 'Assets:Broker:Idle'"],
+    ]);
+  });
+
+  it("counts it when close_tree runs first, as Beancount does", () => {
+    expect(run("close_tree", "nounused")).toEqual([]);
+  });
+});

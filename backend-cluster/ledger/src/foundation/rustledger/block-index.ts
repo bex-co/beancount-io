@@ -36,23 +36,44 @@ export function indexBlocks(files: FileMap) {
 export type BlockIndex = ReturnType<typeof indexBlocks>;
 
 const OPEN = /^\d{4}-\d{2}-\d{2}\s+open\s+(\S+)/u;
+const CLOSE = /^\d{4}-\d{2}-\d{2}\s+close\s+(\S+)/u;
+
+/** Where each account's first directive matching `pattern` is written, in include order. */
+function accountLocations(
+  files: FileMap,
+  entryPoint: string,
+  pattern: RegExp,
+): Map<string, { file: string; line: number }> {
+  const index = indexBlocks(files);
+  const found = new Map<string, { file: string; line: number }>();
+  for (const file of includeTraversalOrder(files, entryPoint)) {
+    for (const block of index.blocks(file)) {
+      const account = pattern.exec(block.text)?.[1];
+      if (account !== undefined && !found.has(account)) {
+        found.set(account, { file, line: block.startLine + 1 });
+      }
+    }
+  }
+  return found;
+}
 
 /** Where each account's first `open` is written, in include order. */
 export function openLocations(
   files: FileMap,
   entryPoint: string,
 ): Map<string, { file: string; line: number }> {
-  const index = indexBlocks(files);
-  const opens = new Map<string, { file: string; line: number }>();
-  for (const file of includeTraversalOrder(files, entryPoint)) {
-    for (const block of index.blocks(file)) {
-      const account = OPEN.exec(block.text)?.[1];
-      if (account !== undefined && !opens.has(account)) {
-        opens.set(account, { file, line: block.startLine + 1 });
-      }
-    }
-  }
-  return opens;
+  return accountLocations(files, entryPoint, OPEN);
+}
+
+/**
+ * Where each account's first `close` is written, in include order: a close
+ * in the stream with none was made by a plugin (close_tree).
+ */
+export function closeLocations(
+  files: FileMap,
+  entryPoint: string,
+): Map<string, { file: string; line: number }> {
+  return accountLocations(files, entryPoint, CLOSE);
 }
 
 /**

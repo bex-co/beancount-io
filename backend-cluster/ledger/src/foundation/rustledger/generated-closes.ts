@@ -1,8 +1,7 @@
 import type { BeancountError, DirectiveJson, FileMap } from "@rustledger/wasm";
-import { entryLocator, indexBlocks } from "./block-index";
+import { closeLocations, entryLocator, indexBlocks } from "./block-index";
 import { includeTraversalOrder } from "./source-slice";
 
-const CLOSE = /^\d{4}-\d{2}-\d{2}\s+close\s+(\S+)/u;
 /** A posting line's account, after its flag if it has one. */
 const POSTING = /^\s+(?:[*!&#?%]\s*|[PSTCURM]\s+)?(\S+)/u;
 
@@ -27,17 +26,7 @@ export function inactiveAfterGeneratedCloses(
   files: FileMap,
   entryPoint: string,
 ): BeancountError[] {
-  const index = indexBlocks(files);
-  const order = includeTraversalOrder(files, entryPoint);
-  const written = new Map<string, { file: string; line: number }>();
-  for (const file of order) {
-    for (const block of index.blocks(file)) {
-      const account = CLOSE.exec(block.text)?.[1];
-      if (account !== undefined && !written.has(account)) {
-        written.set(account, { file, line: block.startLine + 1 });
-      }
-    }
-  }
+  const written = closeLocations(files, entryPoint);
   const openedOn = new Map<string, string>();
   for (const directive of directives) {
     if (directive.type === "open" && !openedOn.has(directive.account)) {

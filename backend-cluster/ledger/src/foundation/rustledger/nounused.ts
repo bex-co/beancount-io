@@ -1,8 +1,16 @@
 import type { BeancountError, DirectiveJson, FileMap } from "@rustledger/wasm";
 import { directiveAccounts } from "./auto-accounts";
-import { openLocations } from "./block-index";
-import { beancountPluginRuns } from "./plugins/collect-plugins";
+import { closeLocations, openLocations } from "./block-index";
+import {
+  beancountPluginRuns,
+  collectLedgerPlugins,
+} from "./plugins/collect-plugins";
 
+const CHECKS = new Set([
+  "beancount.plugins.nounused",
+  "beancount.plugins.pedantic",
+]);
+const CLOSE_TREE = "beancount.plugins.close_tree";
 /** rustledger's own finding, a warning, which the server does not show. */
 const RUSTLEDGER = /^Account '.*' is opened but never used$/u;
 
@@ -22,11 +30,29 @@ export function reconcileNounusedErrors(
 ): BeancountError[] {
   const runs = beancountPluginRuns(files[entryPoint], "nounused");
   if (runs.length === 0) return [...errors];
+  // Plugins run in the order declared: close_tree's closes are uses only
+  // when it runs first; declared after, an idle child it closed read as used
+  // (w21/757).
+  const plugins = collectLedgerPlugins(files[entryPoint]);
+  const checkAt = plugins.findIndex((name) => CHECKS.has(name));
+  const closeTreeAt = plugins.indexOf(CLOSE_TREE);
+  const written =
+    closeTreeAt !== -1 && checkAt < closeTreeAt
+      ? closeLocations(files, entryPoint)
+      : null;
   const opened = new Set<string>();
   const used = new Set<string>();
   for (const directive of directives) {
     if (directive.type === "open") opened.add(directive.account);
-    else for (const account of directiveAccounts(directive)) used.add(account);
+    else if (
+      directive.type === "close" &&
+      written !== null &&
+      !written.has(directive.account)
+    ) {
+      continue;
+    } else {
+      for (const account of directiveAccounts(directive)) used.add(account);
+    }
   }
   const unused = [...opened].filter((account) => !used.has(account));
   const lines = unused.length > 0 ? openLocations(files, entryPoint) : null;

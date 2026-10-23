@@ -1881,6 +1881,40 @@ async function main(): Promise<void> {
       `${first} then ${second} matches bean-check (got ${JSON.stringify(ordered)})`,
     );
   }
+  // w21/757: nounused counted close_tree's closes as uses whatever the order.
+  for (const [first, second, unused] of [
+    ["nounused", "close_tree", true],
+    ["close_tree", "nounused", false],
+  ] as const) {
+    const idle = (
+      await parseLedgerFiles(
+        {
+          "main.beancount": [
+            `plugin "beancount.plugins.${first}"`,
+            `plugin "beancount.plugins.${second}"`,
+            "2024-01-01 open Assets:Broker",
+            "2024-01-01 open Assets:Broker:Idle",
+            "2024-01-01 open Assets:Cash",
+            '2024-01-02 * "Move"',
+            "  Assets:Broker  1 USD",
+            "  Assets:Cash",
+            "2024-04-01 close Assets:Broker",
+          ].join("\n"),
+        },
+        "main.beancount",
+        { today: "2099-01-01" },
+      )
+    ).errors
+      .filter((e) => e.message.startsWith("Unused account"))
+      .map((e) => `${e.line} ${e.message}`);
+    assert(
+      JSON.stringify(idle) ===
+        JSON.stringify(
+          unused ? ["4 Unused account 'Assets:Broker:Idle'"] : [],
+        ),
+      `${first} then ${second} matches bean-check (got ${JSON.stringify(idle)})`,
+    );
+  }
   // w21/733: a posting flag was read as the sale's account.
   const flagged = (
     await parseLedgerFiles(
