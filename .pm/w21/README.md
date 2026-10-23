@@ -12,6 +12,7 @@
 
 ## Inbox
 
+- [879](./879.md) — The receipt parse contract carries no currency, so a foreign receipt is always booked in the ledger's currency (split from w21/870)
 - [874](./874.md) — The dashboard's entry page offers Save and Delete on a plugin copy, and Delete removes the whole series (dashboard half of w21/840)
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window
 - [065](./blocked/065.md) — One early-year entry (e.g. 0050) makes the balance sheet 23,718 monthly points (3 MB) and the app stalls — **blocked:** needs an approach decision (per-pill fetch vs server downsample) and a simulator profile of the stall
@@ -41,7 +42,6 @@
 - [693](./blocked/693.md) — Edit Transaction's Reload after a conflict opens the other twin's text, so the next Save overwrites it — **blocked:** its acceptance contradicts itself (a twin moved onto the ID and a metadata-only change look the same after a conflict); needs an owner decision between always refusing Reload on a changed slice and keeping it
 - [694](./blocked/694.md) — Since w21/672, Delete after a metadata-only change elsewhere dead-ends on "changed or removed" (w21/250 regression) — **blocked:** its two acceptance cases cannot both hold (a metadata-only change and a twin swap look the same); same owner decision as w21/693
 - [857](./857.md) — The ledger runs amortize_over/forecast on the server's UTC date, not the user's
-- [870](./870.md) — Scan Receipt's reveal shows a rounded total while the form saves the exact value
 - [871](./871.md) — Mobile never attaches the scanned receipt image to the saved transaction (dashboard does)
 - [872](./872.md) — A guard inside Scan Receipt's full-screen modal has no way back
 - [873](./873.md) — Scan Receipt's shutter swallows capture failures

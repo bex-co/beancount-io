@@ -193,7 +193,14 @@ export const receiptRevealFields = (
   locale: string,
 ): { payee: string; amount: string; date: string } => ({
   payee: receipt.payee,
-  amount: formatMoneyWithCurrency(Math.abs(receipt.amount), currency),
+  // At the digits the form is given, so the reveal and the saved amount agree:
+  // rounded to the currency's minor unit, 12.5 on a yen ledger read "¥13" and
+  // 4.995 read "$5.00" over a form holding the exact value (w21/870).
+  amount: formatMoneyWithCurrency(
+    Math.abs(receipt.amount),
+    currency,
+    receiptAmountText(receipt.amount).split(".")[1]?.length ?? 0,
+  ),
   date: formatLedgerDate(receipt.date, locale),
 });
 

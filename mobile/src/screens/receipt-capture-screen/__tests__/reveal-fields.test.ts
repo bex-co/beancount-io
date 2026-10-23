@@ -19,6 +19,16 @@ describe("receiptRevealFields", () => {
     ).toBe("¥1,500");
   });
 
+  // w21/870: the reveal rounded to the minor unit over a form holding the exact value.
+  it("shows the digits the form is given", () => {
+    const at = (amount: number, currency: string) =>
+      receiptRevealFields({ ...receipt, amount }, currency, "en").amount;
+    expect(at(12.5, "JPY")).toBe("¥12.50");
+    expect(at(-4.995, "USD")).toBe("$4.995");
+    expect(at(-0.004, "USD")).toBe("$0.004");
+    expect(at(25, "USD")).toBe("$25.00");
+  });
+
   it("keeps the payee as read", () => {
     expect(receiptRevealFields(receipt, "USD", "en").payee).toBe("Edeka");
   });
