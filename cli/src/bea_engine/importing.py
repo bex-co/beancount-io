@@ -530,6 +530,7 @@ def answer(
     hashed = _hash_rows(entries, account, keys, Transaction)
     claimed, owners = _claim_payeeless_ids(hashed, identities, account)
     batch_rows: dict[int, int] = {}
+    reused_here = _reused_references(entries, account, keys)
     first_uses = _first_uses(entries, Transaction)
     # Each transfer another account's import wrote has one other side here, and
     # each row is the other side of at most one transfer (w5/821, w5/882).
@@ -668,7 +669,11 @@ def answer(
                     # moves it days, not weeks, and stays the same row.
                     match = _nearest(dated.get(hits[0][0], [match]), entry, account, fingerprint)
                     days = abs((entry.date - match.date).days)
-                    if days >= _REUSED_REFERENCE_DAYS:
+                    # A reference this statement itself carries on several
+                    # dates is no unique id: the ledger entry on another date
+                    # is that other occurrence, not this row corrected, whatever
+                    # the distance (w5/948).
+                    if days >= _REUSED_REFERENCE_DAYS or (days and any(key in reused_here for key, _, _ in hits)):
                         status = "possible_duplicate"
                         reference = (
                             f"{matched_value} is already in the ledger on {match.date}, {days} days from this row; "
@@ -2580,6 +2585,21 @@ def _where(directive: Any) -> str:
     if row is not None:
         return f"row {row} of this import"
     return f"at {directive.meta.get('filename')}:{directive.meta.get('lineno')}"
+
+
+def _reused_references(entries: list[Any], account: str, keys: list[str]) -> set[tuple[str, str, str]]:
+    """The bank-issued ids that rows of one statement carry on more than one date."""
+    from beancount.core.data import Transaction
+
+    dates: dict[tuple[str, str, str], set[Any]] = {}
+    for raw in entries:
+        entry = normalize_entry_strings(raw)
+        if not isinstance(entry, Transaction) or not _source_legs(entry, account):
+            continue
+        for key in _identities(entry, account, keys):
+            if _is_native_identity(key):
+                dates.setdefault(key, set()).add(entry.date)
+    return {key for key, found in dates.items() if len(found) > 1}
 
 
 def _supplied(value: Any) -> bool:
