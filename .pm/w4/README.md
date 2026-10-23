@@ -42,7 +42,6 @@
 
 - [998 — Keep the Income Statement bar mode when Time changes](./998.md) — minor residual of142/M16; live QA, 2026-10-22; Single Bars resets on successful shared-Time changes in both views/widths; interval retention and existing view bookmarks pass.
 
-- [997 — Select an available unit when stacked charts lack the operating unit](./997.md) — minor; live QA, 2026-10-22; Cash Flow/Expenses stacked views hide real104VACHR with all-false legend at both widths; native toggle, Single Bars and normal USD controls pass.
 
 
 
