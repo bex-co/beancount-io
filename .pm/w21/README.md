@@ -15,6 +15,10 @@
 - [821](./821.md) — VoiceOver's Budget chart summary reads unrounded float sums ("−$0.0000000000000036")
 - [822](./822.md) — Home Spending's two bars sit off-centre (28 pt left, 48 pt right)
 - [823](./823.md) — Copy & Reload after a content change elsewhere lands on "changed or removed", not the current version
+- [824](./824.md) — A Persian/Arabic folder path draws child first in the Files breadcrumb
+- [825](./825.md) — New File accepts a folder that differs from an existing one only by letter case
+- [826](./826.md) — New File allows a path inside ".git/"; raw English refusal on Create
+- [827](./827.md) — A commit diff splits a line at a lone carriage return
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window
 - [065](./blocked/065.md) — One early-year entry (e.g. 0050) makes the balance sheet 23,718 monthly points (3 MB) and the app stalls — **blocked:** needs an approach decision (per-pill fetch vs server downsample) and a simulator profile of the stall
 - [180](./blocked/180.md) — Budget actuals use raw prefix match (`Transport` counts `Transportation`), unlike Reports — **blocked:** needs an owner decision between component matching on the server (a Fava break) and a per-account breakdown for the client
