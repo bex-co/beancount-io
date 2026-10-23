@@ -1,6 +1,9 @@
 import { useMemo } from "react";
 import { useGetLedgerIntervalTotalsQuery } from "@/generated-graphql/graphql";
-import { resolveCurrencyBalance } from "@/common/balance-util";
+import {
+  BALANCE_CONVERSION,
+  resolveCurrencyBalance,
+} from "@/common/balance-util";
 import { notInTotalOf, type Holding } from "@/common/balance-display";
 import { signed } from "@/screens/budget-screen/selectors/signed-holding";
 import { getFormatDate } from "@/common/format-util";
@@ -17,13 +20,6 @@ import {
 } from "@/screens/budget-screen/selectors/budget-selectors";
 import type { BudgetSeriesPoint } from "@/screens/budget-screen/selectors/select-budget-card-stats";
 import { timeWindowStart } from "@/screens/budget-screen/selectors/budget-labels";
-
-/**
- * Budget compares raw account activity, so it asks fava for `units` rather than
- * the `at_cost` valuation the balance charts use — a budget is written in one
- * currency and measured against postings in that same currency.
- */
-const BUDGET_CONVERSION = "units";
 
 /**
  * Shared variables so the budget page and the Home panel land on the same
@@ -44,7 +40,13 @@ export function budgetTotalsVariables({
     ledgerId,
     accountName: group.account,
     interval: group.interval.toLowerCase(),
-    conversion: BUDGET_CONVERSION,
+    // At cost, as Spending and Reports read (w21/572): a budget is written in
+    // one currency and measured against postings in that currency, and an
+    // expense booked at cost (donated shares, 5 VOO {400.00 USD}) is that much
+    // spent. Read in units it was "Actual $0.00 · Not in total: 5 VOO"
+    // (w21/726). A posting with no cost basis keeps its currency and stays
+    // "not in total" (w21/709).
+    conversion: BALANCE_CONVERSION,
     time,
   };
 }
