@@ -639,7 +639,10 @@ export function budgetForInterval(
   const currency = ordered
     .map((entry) => entry.amount?.trim().split(/\s+/)[1])
     .find((code) => code !== undefined && code !== "");
-  const scale = budgetScale(ordered, currency);
+  // The scale the status is judged at, so a commodity budget of "1 BTC"
+  // prorated to 0.741935 is not rounded to 0.74 and judged above 0.7419 spent
+  // (w21/854).
+  const scale = statusScale(ordered, currency);
   const decimals = scale <= 2 ? 2 : scale + 4;
   const factor = 10 ** decimals;
   return Math.round(total * factor) / factor;

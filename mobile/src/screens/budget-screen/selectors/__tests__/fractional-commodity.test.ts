@@ -196,3 +196,36 @@ describe("a three-decimal currency's budget", () => {
     ).toBe(74.19);
   });
 });
+
+// w21/854: "1 BTC" prorated over 23 of 31 days is 0.741935…, not the 0.74 that
+// cents made it, so 0.7419 spent read "Above target".
+describe("a whole-unit commodity budget prorated mid-month", () => {
+  it("keeps the digits the status is judged at", () => {
+    const budget = calculateBudgetForInterval(
+      "2026-10-31",
+      "monthly",
+      btc("1 BTC", "monthly", "2026-01-01"),
+      "2026-10-23",
+    );
+    expect(Math.abs(budget - 23 / 31) < 1e-8).toBe(true);
+    // 0.7419 spent is under 0.741935, so it is not above target.
+    expect(0.7419 <= budget).toBe(true);
+  });
+
+  it("still rounds a fiat budget to its minor unit", () => {
+    const budget = calculateBudgetForInterval(
+      "2026-10-31",
+      "monthly",
+      [
+        {
+          date: "2026-01-01",
+          interval: "monthly",
+          amount: "100 USD",
+          entry_hash: "h",
+        },
+      ],
+      "2026-10-23",
+    );
+    expect(budget).toBe(74.19);
+  });
+});
