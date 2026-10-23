@@ -2078,11 +2078,18 @@ def _under_id(
     agreeing = [
         other for other in dated.get(key, []) if _same_row(key, other, account, fingerprint, lookup_only=lookup_only)
     ]
+    written: list[Any] = []
     if not agreeing and source is not None:
-        agreeing = [
-            other for other in source(key) if _same_row(key, other, account, fingerprint, lookup_only=lookup_only)
-        ]
-    return min(agreeing, key=lambda other: abs((entry.date - other.date).days)) if agreeing else found
+        written = source(key)
+        agreeing = [other for other in written if _same_row(key, other, account, fingerprint, lookup_only=lookup_only)]
+    if agreeing:
+        return min(agreeing, key=lambda other: abs((entry.date - other.date).days))
+    # A plugin may have filtered the written row out of the loaded view. The
+    # file still holds it under this ID, so a changed row is a conflict with
+    # it, as it is with a row the view keeps (w5/973).
+    if found is None and written:
+        return min(written, key=lambda other: abs((entry.date - other.date).days))
+    return found
 
 
 def _written_identities(

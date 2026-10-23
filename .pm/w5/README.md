@@ -65,7 +65,6 @@
 
 - [974 — Keep native IDs when lot matching is incomplete](./974.md) — major CLI follow-up to 881; filtered Cash/Stock sale reimports lose native-ID ownership at the open-lot guard, reproduced 2026-10-22.
 
-- [973 — Preserve native-ID conflicts across filtered and transformed views](./973.md) — major CLI follow-up to 881; corrections can be imported as new behind a filter or falsely skipped against transformed amounts; expanded native-ID source-fact evidence 2026-10-22.
 
 
 
