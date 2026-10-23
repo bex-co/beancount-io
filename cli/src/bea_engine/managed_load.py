@@ -2223,14 +2223,25 @@ def _export_plugin_modules(loaded: LoadedLedger, snapshot: LedgerSnapshot, targe
     plugins = [str(name) for name, _config in loaded.options.get("plugin") or []]
     wanted = {name.split(".", 1)[0] for name in plugins} | _sibling_imports(homes, loaded, snapshot)
     for top in sorted(wanted):
-        holder = next(
-            (directory for directory in homes if (directory / f"{top}.py").is_file() or (directory / top).is_dir()),
-            None,
-        )
-        if holder is None:
+        # As Python's path finder resolves a name: the first directory holding
+        # a module or a regular package wins; a directory without
+        # `__init__.py` is one portion of a namespace package, and every
+        # portion before the end of the path belongs to it (w5/969).
+        holder = None
+        portions: list[Path] = []
+        for directory in homes:
+            if (directory / f"{top}.py").is_file() or (directory / top / "__init__.py").is_file():
+                holder = directory
+                break
+            if (directory / top).is_dir():
+                portions.append(directory)
+        if holder is not None:
+            package = holder / top
+            sources = _package_files(package, top) if package.is_dir() else [holder / f"{top}.py"]
+        elif portions:
+            sources = [path for portion in portions for path in _package_files(portion / top, top)]
+        else:
             continue
-        package = holder / top
-        sources = _package_files(package, top) if package.is_dir() else [holder / f"{top}.py"]
         for source in sources:
             # The copy keeps the spelling the import finds; the resolved file
             # decides containment and what bytes travel.

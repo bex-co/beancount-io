@@ -71,7 +71,6 @@
 
 - [970 — Recognize helpers beneath overlapping ledger Python paths](./970.md) — minor CLI export omission; an enabled ancestor hides an included directory's ordinary helper from snapshots, reproduced 2026-10-22.
 
-- [969 — Export every imported namespace-package portion](./969.md) — minor CLI follow-up to 880; split namespace resources/modules are omitted from successful snapshots, reproduced 2026-10-22.
 
 
 

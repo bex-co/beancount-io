@@ -108,3 +108,62 @@ def test_a_helper_travels_when_the_plugin_skips_entries_it_already_marked(tmp_pa
         assert _bea(tmp_path, "-f", str(books / "main.bean"), "check").returncode == 0
 
     assert _export_and_check(tmp_path, books) == {"main.bean", "myplug.py", "helper.py"}
+
+
+# w5/969: one namespace package spread over two directories that set insert_pythonpath.
+SPLIT_LEDGER = """option "operating_currency" "USD"
+include "a/settings.bean"
+include "b/settings.bean"
+plugin "qa_plugin"
+2024-01-01 open Assets:Cash USD
+"""
+SPLIT_PLUGIN = """import json
+from importlib.resources import files
+__plugins__ = ["read_data"]
+def read_data(entries, options):
+    data = files("qa_bankdata")
+    assert json.loads(data.joinpath("a.json").read_text())["amount"] == 100
+    assert json.loads(data.joinpath("b.json").read_text())["amount"] == 25
+    return entries, []
+"""
+
+
+def _split_books(tmp_path: Path, *, regular_first: bool = False) -> Path:
+    books = tmp_path / "books"
+    for name in ("a", "b"):
+        (books / name / "qa_bankdata").mkdir(parents=True)
+        (books / name / "settings.bean").write_text('option "insert_pythonpath" "TRUE"\n')
+    (books / "main.bean").write_text(SPLIT_LEDGER)
+    (books / "a" / "qa_plugin.py").write_text(SPLIT_PLUGIN)
+    (books / "a" / "qa_bankdata" / "a.json").write_text('{"amount": 100}\n')
+    (books / "b" / "qa_bankdata" / "b.json").write_text('{"amount": 25}\n')
+    if regular_first:
+        (books / "a" / "qa_bankdata" / "__init__.py").write_text("")
+    return books
+
+
+def test_every_portion_of_a_namespace_package_travels(tmp_path: Path) -> None:
+    books = _split_books(tmp_path)
+
+    assert _export_and_check(tmp_path, books) == {
+        "main.bean",
+        "a/settings.bean",
+        "b/settings.bean",
+        "a/qa_plugin.py",
+        "a/qa_bankdata/a.json",
+        "b/qa_bankdata/b.json",
+    }
+
+
+def test_a_regular_package_found_first_keeps_later_directories_out(tmp_path: Path) -> None:
+    books = _split_books(tmp_path, regular_first=True)
+    (books / "a" / "qa_plugin.py").write_text(
+        "__plugins__ = ['run']\ndef run(entries, options):\n    import qa_bankdata\n    return entries, []\n"
+    )
+
+    exported = _bea(tmp_path, "-f", str(books / "main.bean"), "price", "export", "-o", str(tmp_path / "exp"))
+
+    assert exported.returncode == 0, exported.stderr
+    shipped = {str(p.relative_to(tmp_path / "exp")) for p in (tmp_path / "exp").rglob("*") if p.is_file()}
+    assert "a/qa_bankdata/__init__.py" in shipped
+    assert "b/qa_bankdata/b.json" not in shipped
