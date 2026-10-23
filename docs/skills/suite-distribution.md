@@ -236,7 +236,7 @@ installation guidance target the complete suite.
 | Claude Code plugin | One `beancount-io` marketplace entry at 0.4.0, declaring all thirteen workflows. | Already a suite; retain the shared version and inventory gate. |
 | Codex plugin | One `beancount-io` entry at the same 0.4.0 version and canonical source tree. | Already a suite; no separate per-skill publication found in the repository's release configuration. |
 | Git/link installer | One checkout supplies the complete source inventory to both clients. | Retain it for local source edits; current guidance prefers the plugin for one versioned managed install. |
-| `npx skills` / skills.sh | The repository page still lists 29 rows: ten customer workflows and nineteen contributor tools. The CLI's normal discovery excludes internal skills, but the historical public rows remain. | Add root `skills.sh.json`: one complete customer group first, with contributor workflows explicitly separate. CI rejects missing customer skills or audience mixing. Install and repeated whole-suite refresh from the explicit customer `skills/` URL pass for exactly thirteen workflows on both agents, with telemetry disabled in QA. |
+| `npx skills` / skills.sh | Before the update, the repository page mixed 29 rows: ten customer workflows and nineteen contributor tools. At 00:40 UTC, the public page shows all thirteen customer workflows under **Beancount.io suite**, followed by nineteen **Repository development** entries. | Root `skills.sh.json` and its inventory gate are shipped. One documented maintainer install triggers the supported configuration sync; the public read-back verifies both groups and all three previously missing customer entries. Install and repeated whole-suite refresh from the explicit customer `skills/` URL pass for both agents, with telemetry disabled in QA. |
 | `gh skill` | A Git-repository install route; no separate Beancount.io per-skill publishing job or release inventory was found. | Preserve the earlier whole-suite commands and pin behavior. Document the preview-command prerequisite: the default local 2.74.0 lacks `gh skill`; this audit does not claim a new native rehearsal of the earlier 2.96.0 controls. |
 | skills.rest | Its company page advertises 27 indexed skills, including internal `ship`/`loopx`; the customer ask page still uses the removed `skills/.claude/skills/` path and a generated `beancount-ask-bex-co` selector. | Submit one canonical customer-root refresh through its automatic indexing form, with grouping/internal-exclusion corrections and no contact details. The form confirms acceptance and a scanner window of up to 24 hours. Public cleanup is still pending; no repeated submission or claim of completed indexing. |
 | SkillsMP | Live search already groups this project by repository, but previews still point at old `skills/.claude/skills/` paths and older descriptions. | Record the stale index separately from owned releases. Its public documentation describes GitHub discovery without a guaranteed refresh schedule; an owner-edit/delete endpoint was not established in this audit. No unsupported mutation or unsolicited outreach is used. |
@@ -244,8 +244,11 @@ installation guidance target the complete suite.
 The [skills.sh customization contract](https://www.skills.sh/docs/customize)
 supports grouping, not hiding or deleting old per-skill catalog entries. Its
 configuration is fetched after a normal telemetry-enabled installation and then
-cached; committing the file alone does not establish that the public page has
-updated. The [Packs contract](https://www.skills.sh/docs/packs) additionally
+cached. After source commit `56acb1a95`, one native maintainer install completes
+that documented sync; the [public repository page](https://www.skills.sh/bex-co/beancount-io)
+is verified at 00:40 UTC with all thirteen customer entries and a separate
+nineteen-entry contributor group. There are no manual telemetry events or
+replays. The [Packs contract](https://www.skills.sh/docs/packs) additionally
 offers unlisted collections. The audit reached its owner builder, but GitHub
 connection did not persist and archive upload required additional local-file
 access. No Pack was published. Creating another distribution channel is not
@@ -258,8 +261,10 @@ both Claude Code and Codex with **13/13** customer directories and a matching
 thirteen-entry lock. A separate project `skills update -p -y` did not complete
 within 240 seconds; its source performs repeated per-skill reinstall work. The
 bounded check is retained rather than called a successful update. The install
-guide uses the completed whole-suite refresh route. These checks make no model
-calls, change no global agent profile and generate no synthetic install telemetry.
+guide uses the completed whole-suite refresh route. The QA checks make no model
+calls, change no global agent profile and disable telemetry. The separate native
+maintainer configuration sync is the documented directory update, not a repeated
+QA or synthetic event campaign.
 
 The [skills.rest indexing form](https://skills.rest/contribute) confirms only the
 request. Its [current ask listing](https://skills.rest/skill/beancount-ask-bex-co)
