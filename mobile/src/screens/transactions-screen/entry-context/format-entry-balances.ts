@@ -32,3 +32,16 @@ export function formatEntryBalances(balances: unknown): EntryBalanceRow[] {
     },
   );
 }
+
+/**
+ * Whether a balance row stacks its amounts under the account: at large text
+ * sizes, or when an amount carries a lot ("4.0000 QAETF {101.2500 USD,
+ * 2026-10-21}"), which is wide enough to take the whole row and leave the
+ * account no room (w21/863).
+ */
+export function stacksBalanceRow(
+  amounts: readonly string[],
+  largeText: boolean,
+): boolean {
+  return largeText || amounts.some((amount) => amount.includes("{"));
+}

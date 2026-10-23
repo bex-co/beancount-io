@@ -7,7 +7,10 @@ import { prefersStackedLayout } from "@/common/theme/dynamic-type";
 import { AmountText } from "@/components/amount-text";
 import { ColorTheme } from "@/types/theme-props";
 import { LEADING_TEXT_ALIGN } from "@/common/rtl";
-import type { EntryBalanceRow } from "./format-entry-balances";
+import {
+  stacksBalanceRow,
+  type EntryBalanceRow,
+} from "./format-entry-balances";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -94,40 +97,43 @@ export const BalanceSection: React.FC<BalanceSectionProps> = ({
           {title}
         </Text>
       </View>
-      {balances.map((balance, index) => (
-        <View
-          key={index}
-          style={[
-            styles.balanceRow,
-            stacked && styles.balanceRowStacked,
-            index === balances.length - 1 && styles.balanceRowLast,
-          ]}
-        >
-          <Text
-            style={styles.balanceAccount}
-            numberOfLines={1}
-            ellipsizeMode="middle"
-          >
-            {isolateAccountPath(balance.account)}
-          </Text>
+      {balances.map((balance, index) => {
+        const rowStacked = stacksBalanceRow(balance.amounts, stacked);
+        return (
           <View
+            key={index}
             style={[
-              styles.balanceAmounts,
-              stacked && styles.balanceAmountsStacked,
+              styles.balanceRow,
+              rowStacked && styles.balanceRowStacked,
+              index === balances.length - 1 && styles.balanceRowLast,
             ]}
           >
-            {balance.amounts.map((amount, line) => (
-              <AmountText
-                key={line}
-                mono="regular"
-                style={styles.balanceAmount}
-              >
-                {amount}
-              </AmountText>
-            ))}
+            <Text
+              style={styles.balanceAccount}
+              numberOfLines={1}
+              ellipsizeMode="middle"
+            >
+              {isolateAccountPath(balance.account)}
+            </Text>
+            <View
+              style={[
+                styles.balanceAmounts,
+                rowStacked && styles.balanceAmountsStacked,
+              ]}
+            >
+              {balance.amounts.map((amount, line) => (
+                <AmountText
+                  key={line}
+                  mono="regular"
+                  style={styles.balanceAmount}
+                >
+                  {amount}
+                </AmountText>
+              ))}
+            </View>
           </View>
-        </View>
-      ))}
+        );
+      })}
     </View>
   );
 };
