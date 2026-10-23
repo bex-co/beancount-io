@@ -16,7 +16,6 @@
 - [732](./732.md) — In a ledger without operating_currency, a USD merchant's header reads "120.00 USD" while its rows read "−$60.00"
 - [733](./733.md) — The AVERAGE error has no file or line when the sale posting carries a flag (w21/721 variant)
 - [734](./734.md) — Open Account still says a bare "already open" for a future account stored with decomposed accents (w21/723 vs w21/256)
-- [729](./729.md) — Typing an amount before choosing the first payee stops that payee's usual accounts from filling in (w21/411 gap)
 - [730](./730.md) — A merged payee suggestion fills in accounts only from the spelling it shows, so variants don't fill in
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window
 - [065](./blocked/065.md) — One early-year entry (e.g. 0050) makes the balance sheet 23,718 monthly points (3 MB) and the app stalls — **blocked:** needs an approach decision (per-pill fetch vs server downsample) and a simulator profile of the stall

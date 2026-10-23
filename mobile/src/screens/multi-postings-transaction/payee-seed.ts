@@ -6,8 +6,13 @@ export type PayeeHistory = {
   to: { autoFill: string | null };
 };
 
-type DraftPosting = Pick<Posting, "account" | "amountInput">;
+type DraftPosting = Pick<Posting, "account">;
 
+/**
+ * Whether the accounts are still the form's own. As for a second payee
+ * (w21/411), an amount typed first is no account edit: amount-then-payee kept
+ * the default accounts, payee-then-amount got the payee's (w21/729).
+ */
 const untouched = (
   current: readonly Posting[],
   initial: readonly DraftPosting[],
@@ -15,9 +20,7 @@ const untouched = (
   current.length === 2 &&
   initial.length === 2 &&
   current.every(
-    (posting, index) =>
-      posting.account === initial[index]!.account &&
-      posting.amountInput === initial[index]!.amountInput,
+    (posting, index) => posting.account === initial[index]!.account,
   );
 
 /**

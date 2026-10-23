@@ -42,15 +42,23 @@ describe("seedPostingsFromPayee", () => {
     ).toEqual(["Assets:Cash", "Expenses:Transport"]);
   });
 
-  it("leaves accounts or amounts the user already changed", () => {
+  it("leaves accounts the user already changed", () => {
     const initial = opened();
     const picked = updatePostingAccount(initial, 0, "Assets:Cash");
     expect(seedPostingsFromPayee(picked, initial, history("TRADER JOES"))).toBe(
       null,
     );
-    const typed = updatePostingAmount(initial, 0, "-12");
-    expect(seedPostingsFromPayee(typed, initial, history("TRADER JOES"))).toBe(
-      null,
+  });
+
+  // w21/729: typing the amount before choosing the first payee kept the
+  // default accounts, where payee-then-amount filled the payee's.
+  it("fills a first payee's accounts after an amount, keeping the amount", () => {
+    const initial = opened();
+    const typed = updatePostingAmount(initial, 0, "4");
+    const seeded = seedPostingsFromPayee(typed, initial, history("CITY BUS"));
+    expect(accounts(seeded)).toEqual(["Assets:Cash", "Expenses:Transport"]);
+    expect(seeded?.map((p) => p.amountInput)).toEqual(
+      typed.map((p) => p.amountInput),
     );
   });
 
