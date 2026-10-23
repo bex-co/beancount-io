@@ -54,3 +54,7 @@
 - [845](./845.md) — Entry Context's balance before for a parent-account assertion leaves out its subaccounts
 - [846](./846.md) — sellgains never flags a price that disagrees with proceeds (bean-check does)
 - [847](./847.md) — noduplicates only catches duplicate transactions, not balance/note/event
+- [848](./848.md) — Decorative icon glyphs are still VoiceOver stops on several screens; stale-data banner and loading labels never read
+- [849](./849.md) — New Transaction's Done is drawn dimmed on an invalid draft but VoiceOver doesn't say "dimmed"
+- [850](./850.md) — The valuation caption's hint promises price dates for holdings with no price
+- [851](./851.md) — A Latest Updates row with no action is announced as "dimmed"
