@@ -8,6 +8,7 @@ import type { CashFlowRoot as RootType } from "@/features/reports/cash-flow/conf
 import type { AccountMetaMap } from "@/features/reports/cash-flow/lib/model";
 import type { SerializableTreeNode } from "@/graphql/definitions";
 import {
+  isPositiveDecimalNumber,
   negateDecimalNumber,
   sumDecimalNumbers,
 } from "@/common/lib/beancount/decimal-number";
@@ -24,6 +25,14 @@ type HierarchyNode = {
   balance?: Record<string, unknown> | null;
   children?: HierarchyNode[];
 };
+
+/**
+ * The diagram's own nodes, beside the ledger's accounts. Links and colors use
+ * these identities; the chart shows each under its translated label.
+ */
+export const CASH_FLOW_NODE = "Cash Flow";
+export const SAVINGS_NODE = "Savings";
+export const SHORTFALL_NODE = "Shortfall";
 
 export type SankeyNode = {
   name: string;
@@ -311,32 +320,39 @@ export function transformToSankeyData(options: TransformOptions): SankeyData {
     sum(incomeNodes),
     ...outflows.map((group) => negateDecimalNumber(sum(group))),
   ]);
-  const addLink = (source: string, target: string, exact: string) =>
-    links.push({ source, target, value: Number(exact), exact });
-
-  // Add Cash Flow center node
-  nodes.push({ name: "Cash Flow" });
-
-  // Add income nodes and links
-  incomeNodes.forEach((exact, name) => {
-    if (Number(exact) <= 0) return;
-    nodes.push({ name });
-    addLink(name, "Cash Flow", exact);
-  });
-
-  // Add expense, investing and financing nodes and links
-  for (const group of outflows) {
-    group.forEach((exact, name) => {
-      if (Number(exact) <= 0) return;
-      nodes.push({ name });
-      addLink("Cash Flow", name, exact);
+  // A link runs the other way for a negative amount, so an account whose
+  // period total runs against its side — a refunded expense, clawed-back
+  // income, a sold investment, new borrowing — crosses the hub under its own
+  // name rather than being dropped, and everything entering the hub also
+  // leaves it (w4/m54).
+  const addLink = (source: string, target: string, exact: string) => {
+    const reversed = exact.startsWith("-");
+    const amount = reversed ? negateDecimalNumber(exact) : exact;
+    links.push({
+      source: reversed ? target : source,
+      target: reversed ? source : target,
+      value: Number(amount),
+      exact: amount,
     });
-  }
+  };
+  const addFlows = (group: Map<string, string>, inbound: boolean) =>
+    group.forEach((exact, name) => {
+      nodes.push({ name });
+      if (inbound) addLink(name, CASH_FLOW_NODE, exact);
+      else addLink(CASH_FLOW_NODE, name, exact);
+    });
 
-  // Add savings node if there's surplus
-  if (Number(totalSavings) > 0) {
-    nodes.push({ name: "Savings" });
-    addLink("Cash Flow", "Savings", totalSavings);
+  nodes.push({ name: CASH_FLOW_NODE });
+  addFlows(incomeNodes, true);
+  for (const group of outflows) addFlows(group, false);
+
+  // What is left is kept as Savings, or was spent beyond what came in: a
+  // Shortfall source of the exact gap, not an account the data cannot name.
+  const shortfall = totalSavings.startsWith("-");
+  if (shortfall || isPositiveDecimalNumber(totalSavings)) {
+    const name = shortfall ? SHORTFALL_NODE : SAVINGS_NODE;
+    nodes.push({ name });
+    addLink(CASH_FLOW_NODE, name, totalSavings);
   }
 
   return { nodes, links, unit, units };

@@ -73,6 +73,16 @@ const ruOverview: Record<string, TranslationEntry> = {
     description:
       "Pending state shown in the cash flow chart while account metadata (cash-flow-role declarations) is still loading",
   },
+  "page.overview.cashFlowSavings": {
+    message: "Сбережения",
+    description:
+      "Cash flow chart node for what the period's income left after its outflows",
+  },
+  "page.overview.cashFlowShortfall": {
+    message: "Дефицит",
+    description:
+      "Cash flow chart source for what the period spent beyond its inflows, drawn from earlier savings or credit; not a ledger account",
+  },
   "page.overview.chartUnitScope": {
     message: "Суммы показаны в {unit}. Остатки в {others} не включены.",
     description:

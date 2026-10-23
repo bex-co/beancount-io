@@ -1,14 +1,8 @@
 import { type ReactNode } from "react";
-import { cleanup, render, screen, within } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { cleanup } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import {
-  LedgerProviderContext,
-  type LedgerProviderContextType,
-} from "@/common/providers/ledger-provider/context";
-import { createLocalization } from "@/i18n/init";
-import { LocalizationProvider } from "@/i18n/provider";
 import type { SerializableTreeNode } from "@/graphql/definitions";
+import { node, renderInLedger, rows, table } from "./overview-chart-test-utils";
 import { IncomeExpensesChart } from "../income-expenses-chart";
 import { DistributionChart } from "../distribution-chart";
 import CashFlowSankey from "../cash-flow-sankey";
@@ -35,51 +29,11 @@ afterEach(() => {
   captured = undefined;
 });
 
-function node(
-  account: string,
-  balance: Record<string, unknown> = {},
-  children: SerializableTreeNode[] = [],
-): SerializableTreeNode {
-  return {
-    __typename: "SerializableTreeNode",
-    account,
-    balance,
-    balanceChildren: {},
-    cost: null,
-    costChildren: null,
-    hasTxns: true,
-    children,
-  };
-}
-
-async function mount(children: ReactNode, language = "en") {
-  const localization = createLocalization();
-  await localization.changeLanguage(language);
-  const ledger = {
-    ledgerData: { options: { renderCommas: true } },
-  } as unknown as LedgerProviderContextType;
-  render(
-    <LocalizationProvider localization={localization}>
-      <LedgerProviderContext.Provider value={ledger}>
-        {children}
-      </LedgerProviderContext.Provider>
-    </LocalizationProvider>,
-  );
+async function mount(children: ReactNode, language?: string) {
+  await renderInLedger(children, language);
   if (!captured) throw new Error("chart was not rendered");
   return captured;
 }
-
-async function table(name: string, summary: string) {
-  await userEvent
-    .setup()
-    .click(screen.getByText(summary, { selector: "summary" }));
-  return screen.getByRole("table", { name: `${name} ${summary}` });
-}
-const rows = (element: HTMLElement) =>
-  within(element)
-    .getAllByRole("row")
-    .slice(1)
-    .map((row) => Array.from(row.children).map((cell) => cell.textContent));
 
 type Datum = { name: string; value: number; exact: string; account?: string };
 type ItemOption = {

@@ -72,6 +72,16 @@ const koOverview: Record<string, TranslationEntry> = {
     description:
       "Pending state shown in the cash flow chart while account metadata (cash-flow-role declarations) is still loading",
   },
+  "page.overview.cashFlowSavings": {
+    message: "저축",
+    description:
+      "Cash flow chart node for what the period's income left after its outflows",
+  },
+  "page.overview.cashFlowShortfall": {
+    message: "부족액",
+    description:
+      "Cash flow chart source for what the period spent beyond its inflows, drawn from earlier savings or credit; not a ledger account",
+  },
   "page.overview.chartUnitScope": {
     message:
       "금액은 {unit}(으)로 표시됩니다. {others} 잔액은 포함되지 않습니다.",

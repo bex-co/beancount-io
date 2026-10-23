@@ -1,4 +1,9 @@
 import { categorizeAccount } from "./account-categorizer";
+import {
+  CASH_FLOW_NODE,
+  SAVINGS_NODE,
+  SHORTFALL_NODE,
+} from "./sankey-data-transformer";
 import type { AccountRoots } from "@/features/reports/cash-flow/lib/account-roots";
 
 export interface SankeyColorScheme {
@@ -55,9 +60,11 @@ export function getSankeyNodeColor(
 ): string {
   const colors = getSankeyColorScheme(isDark);
 
-  // Special nodes
-  if (nodeName === "Cash Flow") return colors.cashFlow;
-  if (nodeName === "Savings") return colors.savings;
+  // Special nodes. A shortfall is drawn from what was saved before.
+  if (nodeName === CASH_FLOW_NODE) return colors.cashFlow;
+  if (nodeName === SAVINGS_NODE || nodeName === SHORTFALL_NODE) {
+    return colors.savings;
+  }
 
   // Categorize by account type
   const category = categorizeAccount(nodeName, meta, roots);

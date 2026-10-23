@@ -134,8 +134,11 @@ describe("CashFlowSankey", () => {
     const option = JSON.parse(
       screen.getByTestId("echarts-mock").textContent ?? "{}",
     ) as { series: Array<{ links: Array<{ target: string; value: number }> }> };
+    // With no income in the period, the investing outflow is funded by a
+    // Shortfall of the same amount (w4/m54).
     expect(option.series[0].links).toEqual([
       { source: "Cash Flow", target: "Assets:US", value: 1500, exact: "1500" },
+      { source: "Shortfall", target: "Cash Flow", value: 1500, exact: "1500" },
     ]);
   });
 

@@ -73,6 +73,16 @@ const jaOverview: Record<string, TranslationEntry> = {
     description:
       "Pending state shown in the cash flow chart while account metadata (cash-flow-role declarations) is still loading",
   },
+  "page.overview.cashFlowSavings": {
+    message: "貯蓄",
+    description:
+      "Cash flow chart node for what the period's income left after its outflows",
+  },
+  "page.overview.cashFlowShortfall": {
+    message: "不足額",
+    description:
+      "Cash flow chart source for what the period spent beyond its inflows, drawn from earlier savings or credit; not a ledger account",
+  },
   "page.overview.chartUnitScope": {
     message:
       "金額は {unit} で表示されています。{others} の残高は含まれていません。",

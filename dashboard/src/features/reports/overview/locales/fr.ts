@@ -75,6 +75,16 @@ const frOverview: Record<string, TranslationEntry> = {
     description:
       "Pending state shown in the cash flow chart while account metadata (cash-flow-role declarations) is still loading",
   },
+  "page.overview.cashFlowSavings": {
+    message: "Épargne",
+    description:
+      "Cash flow chart node for what the period's income left after its outflows",
+  },
+  "page.overview.cashFlowShortfall": {
+    message: "Déficit",
+    description:
+      "Cash flow chart source for what the period spent beyond its inflows, drawn from earlier savings or credit; not a ledger account",
+  },
   "page.overview.chartUnitScope": {
     message:
       "Les montants sont affichés en {unit}. Les soldes en {others} ne sont pas inclus.",

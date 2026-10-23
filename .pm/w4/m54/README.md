@@ -1,6 +1,6 @@
 # w4 · m54 — Balance Overview Cash Flow refunds and deficits
 
-**Worker:** worker1 **Goal:** readers can account for every side of the Cash Flow hub in the reproduced refund and deficit cases **Status:** todo
+**Worker:** worker1 **Goal:** readers can account for every side of the Cash Flow hub in the reproduced refund and deficit cases **Status:** in progress (all but t007 Closeout done)
 
 Minor dashboard finding. Approximately2h55m across signed expense links, deficit funding and verification; it exceeds the inbox-note threshold. See [FINDINGS](./FINDINGS.md). The separate [m53](../done/m53/README.md) owns exact decimal text/arithmetic, not this missing-flow policy.
 
@@ -8,12 +8,12 @@ Minor dashboard finding. Approximately2h55m across signed expense links, deficit
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| [t001](./t001.md) | Represent refunded expense amounts as incoming flows | 45m | — |
-| [t002](./t002.md) | Explain a deficit with a synthetic shortfall source | 35m | t001 |
-| [t003](./t003.md) | Verify the three producer-backed native controls | 20m | t002 |
-| [t004](./t004.md) | Adoption surface | 15m | t003 |
-| [t005](./t005.md) | Simplify | 15m | t004 |
-| [t006](./t006.md) | Test coverage | 35m | t004, t005 |
+| [t001](./done/t001.md) | Represent refunded expense amounts as incoming flows — **DONE** | 45m | — |
+| [t002](./done/t002.md) | Explain a deficit with a synthetic shortfall source — **DONE** | 35m | t001 |
+| [t003](./done/t003.md) | Verify the three producer-backed native controls — **DONE** | 20m | t002 |
+| [t004](./done/t004.md) | Adoption surface — **DONE** | 15m | t003 |
+| [t005](./done/t005.md) | Simplify — **DONE** | 15m | t004 |
+| [t006](./done/t006.md) | Test coverage — **DONE** | 35m | t004, t005 |
 | [t007](./t007.md) | Closeout | 10m | t006 |
 
 ## Definition of done

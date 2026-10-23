@@ -160,6 +160,18 @@ nothing, while summing only children drops a parent's real money. And every
 descendant resolves its **own** cash-flow role — a `Cash` or `Checking` leaf
 must not reach the investing bucket because its parent did.
 
+Everything entering the Sankey hub also leaves it. An account flows on its own
+side by the sign of its period total, so a refunded expense, clawed-back
+income, a sold investment or new borrowing crosses the hub under its own name
+instead of being dropped (unlike mobile's grouped Refunds/Clawbacks nodes, so
+a reader can still see which account it was). The remainder is `Savings` when
+positive, or a `Shortfall` source of the exact gap when the period spent more
+than came in.
+These synthetic nodes (`CASH_FLOW_NODE`, `SAVINGS_NODE`, `SHORTFALL_NODE`)
+keep stable identities for links and colors. `cash-flow-sankey.tsx` passes
+each as the ECharts node `id` and shows its translated label in the diagram,
+tooltips and Flows (w4/m54).
+
 The Sankey categorizer resolves accounts through the shared
 `cash-flow/lib/role-resolver.ts` (a declared `cash-flow-role` wins for
 non-`Income`/`Equity` roots; `Income` stays the source side and `Equity`

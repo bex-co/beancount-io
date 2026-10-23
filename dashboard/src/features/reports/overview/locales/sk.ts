@@ -73,6 +73,16 @@ const skOverview: Record<string, TranslationEntry> = {
     description:
       "Pending state shown in the cash flow chart while account metadata (cash-flow-role declarations) is still loading",
   },
+  "page.overview.cashFlowSavings": {
+    message: "Úspory",
+    description:
+      "Cash flow chart node for what the period's income left after its outflows",
+  },
+  "page.overview.cashFlowShortfall": {
+    message: "Schodok",
+    description:
+      "Cash flow chart source for what the period spent beyond its inflows, drawn from earlier savings or credit; not a ledger account",
+  },
   "page.overview.chartUnitScope": {
     message: "Sumy sú zobrazené v {unit}. Zostatky v {others} nie sú zahrnuté.",
     description:

@@ -4,6 +4,9 @@ import { useIsDarkTheme } from "@/common/hooks/use-theme";
 import { useFormatNumber } from "@/common/hooks/use-format-number";
 import { useTranslations } from "@/common/hooks/use-translations";
 import {
+  CASH_FLOW_NODE,
+  SAVINGS_NODE,
+  SHORTFALL_NODE,
   type SankeyLink,
   hierarchyRoots,
   transformToSankeyData,
@@ -78,6 +81,21 @@ export default function CashFlowSankey({
     accountMeta,
   ]);
 
+  // The diagram's own nodes read in the reader's language; accounts keep
+  // their names. ECharts keys nodes by `id`, so links still name identities.
+  // Keyed on the strings, since `t` changes identity every render.
+  const hubLabel = t("page.overview.cashFlow");
+  const savingsLabel = t("page.overview.cashFlowSavings");
+  const shortfallLabel = t("page.overview.cashFlowShortfall");
+  const labelOf = useMemo(() => {
+    const labels = new Map([
+      [CASH_FLOW_NODE, hubLabel],
+      [SAVINGS_NODE, savingsLabel],
+      [SHORTFALL_NODE, shortfallLabel],
+    ]);
+    return (name: string) => labels.get(name) ?? name;
+  }, [hubLabel, savingsLabel, shortfallLabel]);
+
   // Apply colors to nodes
   const nodesWithColors = useMemo(() => {
     const roots = hierarchyRoots({
@@ -88,6 +106,8 @@ export default function CashFlowSankey({
     });
     return sankeyData.nodes.map((node) => ({
       ...node,
+      id: node.name,
+      name: labelOf(node.name),
       itemStyle: {
         color: getSankeyNodeColor(
           node.name,
@@ -99,6 +119,7 @@ export default function CashFlowSankey({
     }));
   }, [
     sankeyData.nodes,
+    labelOf,
     isDark,
     accountMeta,
     incomeHierarchyData,
@@ -142,7 +163,7 @@ export default function CashFlowSankey({
           // The link's own decimal, not the plotted double (w4/m53).
           const { source, target, exact } = p.data;
           return `
-            <strong>${source} → ${target}</strong><br/>
+            <strong>${labelOf(source)} → ${labelOf(target)}</strong><br/>
             ${formatNum(exact, undefined, fractionDigitsOf(exact))}${sankeyData.unit ? ` ${sankeyData.unit}` : ""}
           `;
         }
@@ -208,9 +229,9 @@ export default function CashFlowSankey({
             {option.series[0].links.map((link, index) => (
               <TableRow key={`${link.source}-${link.target}-${index}`}>
                 <TableHead scope="row" className="font-normal">
-                  {link.source}
+                  {labelOf(link.source)}
                 </TableHead>
-                <TableCell>{link.target}</TableCell>
+                <TableCell>{labelOf(link.target)}</TableCell>
                 <TableCell className="text-end font-mono text-sm tabular-nums">
                   <Amount>
                     {formatNum(
