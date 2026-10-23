@@ -22,7 +22,6 @@
 
 - [1010 — Keep keyboard position when removing a transaction posting](./1010.md) — minor residual of967; fresh desktop/narrow removals preserve amounts but restart Tab at Transaction; last-row/recovery controls and exact removal source, no writes.
 
-- [1009 — Explain rate-limited ledger loads in the primary error guidance](./1009.md) — minor; genuine refusal is hidden behind generic load text at two widths; native Retry recovers, full current source exact, no writes.
 
 
 
