@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- [1017 — Keep native amount stepping from rounding exact drafts](./1017.md) — major residual ofW1/028; both-width ArrowUp reduces valid large amount and prepares changed balanced postings; manual/ordinary controls and independent parsers pass, all writes blocked.
+
 - [1016 — Name whitespace-only Events filter options](./1016.md) — minor residual of271; both-width modeled valid single-space types produce unnamed menu/selected button; exact filtering and ordinary/global controls pass, no writes.
 
 - [1015 — Keep source digits and exact text in the rest of Overview's amounts](./1015.md) — minor; m52 /simplify follow-up: commodity digits in FormattedAmounts and the change line, plus tooltip/valuation/holdings text still from doubles; source-only.
