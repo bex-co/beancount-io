@@ -1,7 +1,8 @@
 import React from "react";
-import { Text, View, StyleSheet } from "react-native";
+import { Text, View, StyleSheet, useWindowDimensions } from "react-native";
 import { useThemeStyle } from "@/common/hooks";
 import { fonts, fontSizes, fontWeights } from "@/common/theme";
+import { prefersStackedLayout } from "@/common/theme/dynamic-type";
 import { AmountText } from "@/components/amount-text";
 import { ColorTheme } from "@/types/theme-props";
 import { LEADING_TEXT_ALIGN } from "@/common/rtl";
@@ -30,6 +31,16 @@ const getStyles = (theme: ColorTheme) =>
       paddingHorizontal: 12,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: theme.black10,
+    },
+    // At large text sizes the account takes the whole row and the amounts sit
+    // beneath it, trailing, as Money flow's posting row does (w21/684).
+    balanceRowStacked: {
+      flexDirection: "column",
+    },
+    balanceAmountsStacked: {
+      alignSelf: "flex-end",
+      marginStart: 0,
+      marginTop: 4,
     },
     balanceRowLast: {
       borderBottomWidth: 0,
@@ -65,6 +76,8 @@ export const BalanceSection: React.FC<BalanceSectionProps> = ({
   balances,
 }) => {
   const styles = useThemeStyle(getStyles);
+  const { fontScale } = useWindowDimensions();
+  const stacked = prefersStackedLayout(fontScale);
 
   if (balances.length === 0) {
     return null;
@@ -85,6 +98,7 @@ export const BalanceSection: React.FC<BalanceSectionProps> = ({
           key={index}
           style={[
             styles.balanceRow,
+            stacked && styles.balanceRowStacked,
             index === balances.length - 1 && styles.balanceRowLast,
           ]}
         >
@@ -95,7 +109,12 @@ export const BalanceSection: React.FC<BalanceSectionProps> = ({
           >
             {balance.account}
           </Text>
-          <View style={styles.balanceAmounts}>
+          <View
+            style={[
+              styles.balanceAmounts,
+              stacked && styles.balanceAmountsStacked,
+            ]}
+          >
             {balance.amounts.map((amount, line) => (
               <AmountText
                 key={line}

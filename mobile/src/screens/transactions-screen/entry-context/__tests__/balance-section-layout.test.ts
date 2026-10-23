@@ -18,4 +18,19 @@ describe("Entry Context balance rows", () => {
     expect(tag.includes("numberOfLines={1}")).toBe(true);
     expect(tag.includes('ellipsizeMode="middle"')).toBe(true);
   });
+
+  // w21/684: beside the amounts, the account read "Asset…king" at AX2.
+  it("stacks the amounts under the account at large text sizes", () => {
+    const source = fs
+      .readFileSync(path.join(__dirname, "..", "balance-section.tsx"), "utf8")
+      .replace(/\s+/g, "");
+    expect(
+      source.includes("conststacked=prefersStackedLayout(fontScale);"),
+    ).toBe(true);
+    expect(source.includes("stacked&&styles.balanceRowStacked")).toBe(true);
+    expect(source.includes("stacked&&styles.balanceAmountsStacked")).toBe(true);
+    expect(source.includes('balanceRowStacked:{flexDirection:"column"')).toBe(
+      true,
+    );
+  });
 });
