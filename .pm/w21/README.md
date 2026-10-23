@@ -12,6 +12,9 @@
 
 ## Inbox
 
+- [774](./774.md) — w21/749 regression: Cash flow cuts Cyrillic and Persian labels that fit ("Продукты" → "Прод…")
+- [775](./775.md) — With `close_tree` before `auto_accounts`, a valid posting gets a false "inactive account" error and its save is refused
+- [776](./776.md) — With a fava plugin declared, w21/755 also drops w21/753's located "Unopened account … is being closed"
 - [772](./772.md) — A missing file included from two places is listed twice at the first include's line (w21/189 gap)
 - [773](./773.md) — Include errors other than "file not found" (glob, duplicate, unknown plugin) have no file or line, so they can't be tapped
 - [769](./769.md) — New File creates "qa20261020.bean.bean" from "qa20261020.bean." (trailing dot adds the extension twice)
