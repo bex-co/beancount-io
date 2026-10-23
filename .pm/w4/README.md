@@ -10,7 +10,6 @@
 
 - [1017 — Keep native amount stepping from rounding exact drafts](./1017.md) — major residual ofW1/028; both-width ArrowUp reduces valid large amount and prepares changed balanced postings; manual/ordinary controls and independent parsers pass, all writes blocked.
 
-- [1016 — Keep Events filter choices distinct and named](./1016.md) — minor residual of271; both-width valid modeled types yield unnamed whitespace controls or duplicate global/empty labels; exact row filtering passes, no writes.
 
 
 
