@@ -120,14 +120,10 @@ export function OpenAccountDialog({
   // and neither Cancel, Escape nor the close button can dismiss it.
   const { submit, pending } = usePendingSubmit(form, onSubmit);
 
-  const handleDialogOpenChange = (nextOpen: boolean) => {
-    if (!nextOpen && pending) return;
-    onOpenChange(nextOpen);
-  };
-
   return (
-    <Dialog open={open} onOpenChange={handleDialogOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
+        busy={pending}
         className="sm:max-w-[480px]"
         onCloseAutoFocus={(event) => {
           restoreFocusOnDialogClose(event, returnFocusRef?.current);
@@ -189,7 +185,7 @@ export function OpenAccountDialog({
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => handleDialogOpenChange(false)}
+                  onClick={() => onOpenChange(false)}
                 >
                   {t("common.cancel")}
                 </Button>

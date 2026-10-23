@@ -79,11 +79,6 @@ export function NewDirectiveDialog({
     liveSession.current = open ? session : null;
   }, [open, session]);
 
-  const handleOpenChange = (next: boolean) => {
-    if (!next && pending) return;
-    onOpenChange(next);
-  };
-
   // Each form submits with the handler of the render it submitted from, so
   // `session` here is the session that write belongs to.
   const handleSuccess = async () => {
@@ -95,8 +90,9 @@ export function NewDirectiveDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
+        busy={pending}
         className="!max-w-full sm:!max-w-[600px] lg:!max-w-[1000px] top-[2%] sm:top-[10%] translate-y-0 max-h-[96vh] sm:max-h-[85vh] flex flex-col"
         onCloseAutoFocus={(event) => {
           restoreFocusOnDialogClose(event, returnFocusRef?.current);

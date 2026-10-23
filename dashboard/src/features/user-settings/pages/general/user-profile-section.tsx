@@ -178,12 +178,7 @@ export function UserProfileSection({ userData }: UserProfileSectionProps) {
                 : t("userSettings.notSet")}
             </p>
           </div>
-          <Dialog
-            open={isNameDialogOpen}
-            onOpenChange={(open) => {
-              if (open || !nameSave.pending) setIsNameDialogOpen(open);
-            }}
-          >
+          <Dialog open={isNameDialogOpen} onOpenChange={setIsNameDialogOpen}>
             <DialogTrigger asChild>
               <Button
                 variant="outline"
@@ -196,7 +191,7 @@ export function UserProfileSection({ userData }: UserProfileSectionProps) {
                 {t("common.edit")}
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent busy={nameSave.pending}>
               <DialogHeader>
                 <DialogTitle>{t("userSettings.changeName")}</DialogTitle>
                 <DialogDescription>
@@ -276,9 +271,7 @@ export function UserProfileSection({ userData }: UserProfileSectionProps) {
           </div>
           <Dialog
             open={isUsernameDialogOpen}
-            onOpenChange={(open) => {
-              if (open || !usernameSave.pending) setIsUsernameDialogOpen(open);
-            }}
+            onOpenChange={setIsUsernameDialogOpen}
           >
             <DialogTrigger asChild>
               <Button
@@ -293,7 +286,7 @@ export function UserProfileSection({ userData }: UserProfileSectionProps) {
                 {t("common.edit")}
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent busy={usernameSave.pending}>
               <DialogHeader>
                 <DialogTitle>{t("userSettings.changeUsername")}</DialogTitle>
                 <DialogDescription>

@@ -311,8 +311,10 @@ describe("New Entry focus while a write is in flight", () => {
     await submitNoteByKeyboard(user);
 
     expect(notePanel()).toHaveFocus();
+    // The close button is unavailable while the write is pending (w4/977).
+    expect(screen.getByRole("button", { name: "Close" })).toBeDisabled();
     await user.tab({ shift: true });
-    expect(screen.getByRole("button", { name: "Close" })).toHaveFocus();
+    focusIsInDialog();
     await user.tab({ shift: true });
     focusIsInDialog();
     await user.tab();
@@ -338,18 +340,20 @@ describe("New Entry focus while a write is in flight", () => {
     expect(noteText(held[1]!)).toBe("qa A");
   });
 
-  it("leaves a deliberate move to Close where it is", async () => {
+  it("holds the close button until the write settles (w4/977)", async () => {
     const user = userEvent.setup();
     render(<Harness tab="note" />);
     await submitNoteByKeyboard(user);
 
     const close = screen.getByRole("button", { name: "Close" });
+    expect(close).toBeDisabled();
     await user.click(close);
     expect(screen.getByRole("dialog")).toBeInTheDocument();
-    expect(close).toHaveFocus();
+    expect(held).toHaveLength(1);
 
     await failWrite();
-    expect(close).toHaveFocus();
+    expect(close).toBeEnabled();
+    expect(noteContent()).toHaveValue("qa A");
   });
 
   it("does not hand focus back after a success, even before the dialog closes", async () => {

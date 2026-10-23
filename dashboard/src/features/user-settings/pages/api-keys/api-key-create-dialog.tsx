@@ -191,7 +191,6 @@ export function ApiKeyCreateDialog({ children }: ApiKeyCreateDialogProps) {
   };
 
   const handleOpenChange = (nextOpen: boolean) => {
-    if (!nextOpen && loading) return;
     if (!nextOpen) resetDialog();
     setOpen(nextOpen);
   };
@@ -232,7 +231,7 @@ export function ApiKeyCreateDialog({ children }: ApiKeyCreateDialogProps) {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-xl" showCloseButton={!loading}>
+      <DialogContent className="sm:max-w-xl" busy={loading}>
         {plaintext ? (
           <>
             <DialogHeader>

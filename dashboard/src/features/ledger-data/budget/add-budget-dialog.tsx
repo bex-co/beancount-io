@@ -201,13 +201,13 @@ export function AddBudgetDialog({
     <Dialog
       open={open}
       onOpenChange={(v) => {
-        if (!v && pending) return;
         if (!v) resetForm();
         onOpenChange(v);
       }}
     >
       {trigger ? <DialogTrigger asChild>{trigger}</DialogTrigger> : null}
       <DialogContent
+        busy={pending}
         className="sm:max-w-[480px]"
         onCloseAutoFocus={(event) => {
           restoreFocusOnDialogClose(

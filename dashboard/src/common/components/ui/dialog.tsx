@@ -52,10 +52,19 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  busy = false,
   onEscapeKeyDown,
+  onInteractOutside,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean;
+  /**
+   * A write from this dialog is in flight: Escape, a click or focus outside
+   * and the close button all wait for it, so a late completion closes only
+   * the draft it was sent from (w4/977). Its own Cancel locks with its
+   * fields.
+   */
+  busy?: boolean;
 }) {
   const { t } = useTranslation();
 
@@ -73,17 +82,25 @@ function DialogContent({
         // method's Escape only cancels its composition, so it must not close
         // the dialog and reset its draft (w4/292).
         onEscapeKeyDown={(event) => {
-          if (isCompositionKey(event)) {
+          if (isCompositionKey(event) || busy) {
             event.preventDefault();
             return;
           }
           onEscapeKeyDown?.(event);
+        }}
+        onInteractOutside={(event) => {
+          if (busy) {
+            event.preventDefault();
+            return;
+          }
+          onInteractOutside?.(event);
         }}
       >
         {children}
         {showCloseButton && (
           <DialogPrimitive.Close
             data-slot="dialog-close"
+            disabled={busy}
             className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none cursor-pointer [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
           >
             <XIcon />
