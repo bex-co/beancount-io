@@ -1,3 +1,5 @@
+import { lineEndingOf } from "./line-ending";
+
 /**
  * `include` lines for files a write reaches outside the ledger's include
  * closure (w23/062). A `transaction_file "txns/{year}.bean"` rule routes the
@@ -12,12 +14,19 @@ export function addIncludes(content: string, paths: readonly string[]): string {
   const block = paths.map(
     (path) => `include "${path.replace(/[\\"]/g, "\\$&")}"`,
   );
-  const lines = content.split("\n");
+  // In the file's own line ending, so a CRLF entry point does not gain a bare
+  // LF line (w21/695).
+  const eol = lineEndingOf(content);
+  const lines = content
+    .split("\n")
+    .map((line) =>
+      eol === "\r\n" && line.endsWith("\r") ? line.slice(0, -1) : line,
+    );
   const last = lines.findLastIndex((line) => /^\s*include\s/.test(line));
   if (last >= 0) {
     lines.splice(last + 1, 0, ...block);
-    return lines.join("\n");
+    return lines.join(eol);
   }
-  const body = content.replace(/\n+$/, "");
-  return `${body}${body ? "\n" : ""}${block.join("\n")}\n`;
+  const body = content.replace(/(?:\r?\n)+$/, "");
+  return `${body}${body ? eol : ""}${block.join(eol)}${eol}`;
 }

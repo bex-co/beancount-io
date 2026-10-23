@@ -40,3 +40,53 @@ describe("addIncludes", () => {
     expect(addIncludes("x\n", [])).toBe("x\n");
   });
 });
+
+// w21/695: a CRLF entry point gained a bare-LF include line.
+describe("addIncludes in a CRLF file", () => {
+  const crlf = (lines: string[]) => lines.join("\r\n");
+
+  it("keeps every line CRLF when it adds after the last include", () => {
+    const main = crlf([
+      'include "txns/2025.bean"',
+      "",
+      "2020-01-01 open Assets:Cash USD",
+      "",
+    ]);
+    const out = addIncludes(main, ["txns/2026.bean"]);
+    expect(out).toBe(
+      crlf([
+        'include "txns/2025.bean"',
+        'include "txns/2026.bean"',
+        "",
+        "2020-01-01 open Assets:Cash USD",
+        "",
+      ]),
+    );
+    expect(out.replace(/\r\n/g, "")).not.toContain("\n");
+  });
+
+  it("appends in CRLF when the file has no include", () => {
+    const out = addIncludes(crlf(["2020-01-01 open Assets:Cash USD", "", ""]), [
+      "a.bean",
+      "b.bean",
+    ]);
+    expect(out).toBe(
+      crlf([
+        "2020-01-01 open Assets:Cash USD",
+        'include "a.bean"',
+        'include "b.bean"',
+        "",
+      ]),
+    );
+  });
+
+  it("does not leave a dangling carriage return when the include is the last line", () => {
+    const out = addIncludes('include "a.bean"', ["b.bean"]);
+    expect(out).toBe('include "a.bean"\ninclude "b.bean"');
+    const crlfOut = addIncludes(
+      crlf(['include "a.bean"', 'include "z.bean"']),
+      ["b.bean"],
+    );
+    expect(crlfOut.replace(/\r\n/g, "")).not.toMatch(/[\r\n]/);
+  });
+});
