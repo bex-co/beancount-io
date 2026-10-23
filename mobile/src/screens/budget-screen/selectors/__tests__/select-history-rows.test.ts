@@ -81,7 +81,8 @@ describe("selectHistoryRows", () => {
     expect(rows[1].isCurrent).toBeTruthy();
   });
 
-  it("falls back to the earliest entry when every entry is in the future", () => {
+  it("marks none current when every entry is in the future (w21/765)", () => {
+    // The earliest previews the budget, but none is in effect yet.
     const rows = selectHistoryRows(
       group(
         [
@@ -90,11 +91,10 @@ describe("selectHistoryRows", () => {
         ],
         "2026-08-09",
       ),
+      "2026-08-09",
     );
 
-    const current = rows.filter((row) => row.isCurrent);
-    expect(current.length).toBe(1);
-    expect(current[0].date).toBe("2030-01-01");
+    expect(rows.filter((row) => row.isCurrent).length).toBe(0);
   });
 
   it("handles a single-entry budget, the common case", () => {
@@ -104,5 +104,19 @@ describe("selectHistoryRows", () => {
 
     expect(rows.length).toBe(1);
     expect(rows[0].isCurrent).toBeTruthy();
+  });
+});
+
+// w21/765: a budget whose only entry starts next month highlighted that entry
+// as the one in effect, under the card's "Starts Nov 1" badge.
+describe("selectHistoryRows before any entry is in effect", () => {
+  it("marks no row current until the first entry starts", () => {
+    const future = group([["2026-11-01", "monthly", "300 USD"]], "2026-10-23");
+    expect(
+      selectHistoryRows(future, "2026-10-23").map((row) => row.isCurrent),
+    ).toEqual([false]);
+    expect(
+      selectHistoryRows(future, "2026-11-01").map((row) => row.isCurrent),
+    ).toEqual([true]);
   });
 });

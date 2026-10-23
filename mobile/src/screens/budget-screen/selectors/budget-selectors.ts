@@ -720,12 +720,18 @@ export type BudgetHistoryRow = BudgetHistoryEntry & {
  * History for display: newest first, since the most recent change is what
  * someone opening the list is looking for. Which entry is in effect was
  * already resolved by `groupBudgetEntries` — `group.entry_hash` is that entry,
- * so a future-dated entry sorts to the top without being marked live.
+ * so a future-dated entry sorts to the top without being marked live. With
+ * every entry in the future, that is the earliest, which previews the budget
+ * but is not yet in effect: it was highlighted under a "Starts Nov 1" badge
+ * (w21/765).
  */
-export function selectHistoryRows(group: BudgetGroup): BudgetHistoryRow[] {
+export function selectHistoryRows(
+  group: BudgetGroup,
+  today: string = getFormatDate(new Date()),
+): BudgetHistoryRow[] {
   return [...group.budgetHistory].reverse().map((entry) => ({
     ...entry,
-    isCurrent: entry.entry_hash === group.entry_hash,
+    isCurrent: entry.entry_hash === group.entry_hash && entry.date <= today,
   }));
 }
 
