@@ -20,7 +20,6 @@
 - [779](./779.md) — A sale's cost/price line still squeezes Money flow's account name to "Asset…guard"
 - [772](./772.md) — A missing file included from two places is listed twice at the first include's line (w21/189 gap)
 - [773](./773.md) — Include errors other than "file not found" (glob, duplicate, unknown plugin) have no file or line, so they can't be tapped
-- [769](./769.md) — New File creates "qa20261020.bean.bean" from "qa20261020.bean." (trailing dot adds the extension twice)
 - [770](./770.md) — New File accepts a name that differs from an existing file only by case or Unicode form ("Main" beside main.bean)
 - [771](./771.md) — Files can't open an included file with an extension off a fixed list (`prices`, `prices.inc`); the row is dimmed with no reason
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window

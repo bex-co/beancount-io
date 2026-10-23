@@ -87,3 +87,27 @@ describe("sortEntries in natural order", () => {
     ).toEqual(["2026", "books", "a.bean", "b.bean"]);
   });
 });
+
+// w21/769: a trailing dot added the extension a second time, and let a refused
+// extension through.
+describe("a new-file name ending in a dot", () => {
+  it("drops the dot before the extension is judged", () => {
+    expect(checkLedgerFileName("qa20261020.bean.")).toEqual({
+      ok: true,
+      filename: "qa20261020.bean",
+    });
+    expect(checkLedgerFileName("qa20261020.beancount.")).toEqual({
+      ok: true,
+      filename: "qa20261020.beancount",
+    });
+    expect(checkLedgerFileName("notes.")).toEqual({
+      ok: true,
+      filename: "notes.bean",
+    });
+  });
+
+  it("refuses a refused extension however many dots follow it", () => {
+    expect(checkLedgerFileName("qa20261020.txt.").ok).toBe(false);
+    expect(checkLedgerFileName("qa20261020.txt..").ok).toBe(false);
+  });
+});

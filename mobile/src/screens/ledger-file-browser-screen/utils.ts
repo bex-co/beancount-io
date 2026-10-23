@@ -28,14 +28,16 @@ const OTHER_EXTENSIONS = new Set(
  * known non-ledger extension reads as one ("notes.txt", which the check then
  * refuses): a dot inside a name ("2024.q1", "Mr.Smith", "Jan. expenses") is
  * part of it, and the dialog promises `.bean` to a name with no extension
- * (w21/275, w21/429).
+ * (w21/275, w21/429). A trailing dot ends no extension: it is dropped and the
+ * rest judged, or "x.bean." became "x.bean.bean" and "x.txt." was let through
+ * as "x.txt.bean" (w21/769).
  */
 function withBeanExtension(name: string): string {
   const dot = name.lastIndexOf(".");
   if (dot < 0) return `${name}.bean`;
   if (isBeancountFile(name)) return name;
   const suffix = name.slice(dot + 1);
-  if (suffix === "") return `${name}bean`;
+  if (suffix === "") return withBeanExtension(name.slice(0, -1));
   return OTHER_EXTENSIONS.has(suffix.toLowerCase()) ? name : `${name}.bean`;
 }
 
