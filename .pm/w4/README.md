@@ -60,7 +60,6 @@
 
 - [981 — Escape receipt text in the Beancount preview](./981.md) — minor; modeled parse/review at both widths,2026-10-22; actual Beancount parser rejects quoted merchant preview and changes raw backslashes; exact structured inputs preblocked, plain controls pass.
 
-- [980 — Calculate Budget’s rolling range on selection](./980.md) — minor; real public-ledger reads with an owned Date fixture,2026-10-22; a tab opened the previous day sends yesterday’s range and prorated target at both widths; fresh-day/reload controls pass, no writes.
 
 
 
