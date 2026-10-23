@@ -560,7 +560,7 @@ def answer(
                 )
             fingerprint = _fingerprint(entry, account)
             legacy_ids: list[str] = []
-            if entry.meta.get("import-id"):
+            if _supplied(entry.meta.get("import-id")):
                 id_source = "importer"
             else:
                 native = _native_import_id(entry.meta, keys)
@@ -1814,7 +1814,9 @@ def _twin_reason(entry: Any, twin: Any, earlier: int | None, *, keys: list[str])
 def _carries_bank_id(meta: dict[str, Any], keys: list[str]) -> bool:
     """Whether a row's metadata holds an ID a bank issued, not one generated from its content."""
     stored = meta.get("import-id")
-    return _native_import_id(meta, keys) is not None or (bool(stored) and _GENERATED_ID.fullmatch(str(stored)) is None)
+    return _native_import_id(meta, keys) is not None or (
+        _supplied(stored) and _GENERATED_ID.fullmatch(str(stored)) is None
+    )
 
 
 def _is_native_identity(key: tuple[str, str, str]) -> bool:
@@ -2580,10 +2582,15 @@ def _where(directive: Any) -> str:
     return f"at {directive.meta.get('filename')}:{directive.meta.get('lineno')}"
 
 
+def _supplied(value: Any) -> bool:
+    """Whether an importer set this identifier: anything but absent or empty, a numeric zero included (w5/943)."""
+    return value not in (None, "")
+
+
 def _native_import_id(meta: dict[str, Any], keys: list[str]) -> str | None:
     for key in keys:
         value = meta.get(key)
-        if value not in (None, ""):
+        if _supplied(value):
             return f"{_IDENTITY_KINDS.get(key, key)}:{value}"
     return None
 
@@ -2691,7 +2698,7 @@ def _hash_rows(entries: list[Any], account: str, keys: list[str], transaction: t
         entry = normalize_entry_strings(raw)
         if not isinstance(entry, transaction) or not _source_legs(entry, account):
             continue
-        if entry.meta.get("import-id") or _native_import_id(entry.meta, keys) is not None:
+        if _supplied(entry.meta.get("import-id")) or _native_import_id(entry.meta, keys) is not None:
             continue
         if not _needs_framing(raw.narration, raw.payee, entry.narration, entry.payee):
             hashed[index] = _hash_import_ids(entry, account, seen, raw_narration=raw.narration, raw_payee=raw.payee)
