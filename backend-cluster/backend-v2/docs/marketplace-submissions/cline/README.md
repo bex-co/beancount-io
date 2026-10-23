@@ -150,3 +150,33 @@ callback.” The CLI leaves the task entry saved and names “Authorize OAuth”
 its retry action. After the exact grant is approved, start a fresh native
 authorization request and inspect its consent; the expired listener/page is not
 a working callback. No unchanged-scope retry is started while approval is pending.
+
+## Fresh isolated wizard and model-free execution path — 2026-10-23 UTC
+
+The existing official CLI 3.0.73 starts a fresh native MCP add wizard with
+explicit task-local CLINE_DIR, CLINE_DATA_DIR and CLINE_MCP_SETTINGS_PATH,
+plus separate task-local provider/global settings. Its process environment
+excludes model credentials, auto-update is disabled and HOME is unchanged.
+The explicit settings variables matter: the CLI's MCP subcommands return before
+its later generic data-directory/provider runtime initialization.
+
+The real wizard registers dynamically, saves the URL-only task server and
+reaches Cline consent with a local callback. Only the synthetic QA ledger is
+selected. Default scope is identity, offline access, ledger read/write and
+ledger administration. The exact new-access decision is pending, so no token,
+query, preview, stability assertion or issue submission is established.
+
+The installed public @cline/sdk exports InMemoryMcpManager,
+createDefaultMcpServerClientFactory, resolveMcpServerRegistration and the OAuth
+helpers. The manager can connect, listTools and callTool through its real native
+HTTP client with the same task-local settingsPath used by the wizard. This
+supports model-free post-authorization verification without copying provider
+or Codex credentials. CLI and SDK use the same public core OAuth settings
+implementation. Tools enumeration is supported by this manager; resource
+enumeration must not be inferred from it. Actual authorized accounting checks
+remain pending, and prior observations retain their dates and limits.
+
+Primary implementation references: the [CLI's early MCP return](https://github.com/cline/cline/blob/cli-v3.0.73/apps/cli/src/main.ts#L682),
+[explicit settings-path precedence](https://github.com/cline/cline/blob/c718573538d76310f464541617ab665108a6c999/sdk/packages/shared/src/storage/paths.ts#L431),
+[public MCP exports](https://github.com/cline/cline/blob/c718573538d76310f464541617ab665108a6c999/sdk/packages/core/src/index.ts#L320),
+and [native manager](https://github.com/cline/cline/blob/c718573538d76310f464541617ab665108a6c999/sdk/packages/core/src/extensions/mcp/manager.ts#L144).

@@ -34,7 +34,7 @@
 
 ## Full inventory ownership and execution order
 
-The prepared [m9/t011](../m9/t011.md) official Cursor application awaits its exact final Publisher Terms confirmation. Docker [m9/t012](../m9/t012.md) is prepared at its exact synthetic-ledger consent decision. The next independent pick is [m9/t013](../m9/t013.md), Cline. The GitHub nomination, LobeHub and this milestone's tasks also remain independent; table order is priority, not a cross-platform dependency.
+The prepared [m9/t011](../m9/t011.md) official Cursor application awaits its exact final Publisher Terms confirmation. Docker [m9/t012](../m9/t012.md) is prepared at its exact synthetic-ledger consent decision. Cline [m9/t013](../m9/t013.md) is also at its exact synthetic-ledger consent decision. The next independent pick is [m9/t014](../m9/t014.md), the GitHub nomination. LobeHub and this milestone's tasks also remain independent; table order is priority, not a cross-platform dependency.
 
 | Inventory target | Submission / receipt owner | Review, public verification or retained gate |
 | --- | --- | --- |

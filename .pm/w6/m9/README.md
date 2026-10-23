@@ -1,6 +1,6 @@
 # w6 · m9 — Reach developer marketplaces and galleries
 
-**Worker:** worker1 **Goal:** Developers discover and connect the hosted MCP server through the supported Docker, Cursor, Cline, and GitHub/VS Code galleries. **Status:** todo (t011 awaits exact Publisher Terms confirmation; t012 awaits exact synthetic-ledger Docker grant; t013-t014 remain independently actionable)
+**Worker:** worker1 **Goal:** Developers discover and connect the hosted MCP server through the supported Docker, Cursor, Cline, and GitHub/VS Code galleries. **Status:** todo (t011-t013 await their exact prepared terms/access decisions; t014 GitHub nomination remains independently actionable)
 
 **Implementation estimate:** ~4½h, excluding external review queues and the standing closing tasks.
 
@@ -11,7 +11,7 @@
 | [t001](done/t001.md) | Confirm developer-gallery eligibility and existing records — **DONE** | 30m | w6/m8/t001 |
 | [t011](./t011.md) | Submit official Cursor application and retain receipt — **BLOCKED** | 30m | t001 |
 | [t012](./t012.md) | Complete required native checks and submit Docker contribution — **BLOCKED** | 60m | t001 |
-| [t013](./t013.md) | Complete required native checks and send Cline submission | 60m | t001 |
+| [t013](./t013.md) | Complete required native checks and send Cline submission — **BLOCKED** | 60m | t001 |
 | [t014](./t014.md) | Send GitHub curated-gallery nomination and record delivery | 30m | t001 |
 | [t002](t002.md) | Prepare and submit Docker's remote MCP catalog entry — **BLOCKED** | 60m | t001, t012 |
 | [t003](t003.md) | Package the remote connection for Cursor's official and community marketplaces — **BLOCKED** | 60m | t001, t011 |
@@ -104,3 +104,7 @@ The earlier exclusion of Claude/ChatGPT was the 2026-10-20 scope decision. The o
 ## Current Docker receipt gate — 2026-10-23 UTC
 
 - **t012:** current official intake/dedup is checked and the actual native consent page is ready for only the synthetic QA ledger with ledger.read/ledger.write, returning to mcp.docker.com. Browser confirmation for this new recipient's data access is pending. **Unblock:** the QA account holder approves that exact grant; worker completes callback/native accounting checks and sends the required upstream PR. **Owners:** QA account holder, worker, then Docker reviewers. No OAuth grant, native accounting success or submission is claimed. t013/t014 remain independent.
+
+## Current Cline receipt gate — 2026-10-23 UTC
+
+- **t013:** the fresh native wizard, strict task-local settings and current official template/dedup are verified. Real Cline consent is narrowed to the synthetic QA ledger, with native identity/offline/read/write/admin scopes and a local callback. Its exact new-access confirmation is pending. **Unblock:** approve that actual grant, then complete callback and model-free public-SDK native tool checks before truthful issue submission. **Owners:** QA account holder, worker, then Cline reviewers. t014 and later milestones remain independent; no provider credentials or model session are needed for these MCP calls.
