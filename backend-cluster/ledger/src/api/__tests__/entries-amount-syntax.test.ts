@@ -13,6 +13,8 @@ import { restErrorMiddleware } from "@/server/error-middleware";
 const LF_MAIN =
   "2026-01-01 open Assets:Cash USD\n2026-01-01 open Equity:Opening\n";
 let MAIN = LF_MAIN;
+// Raw bytes for main.bean when a test needs a file that is not valid UTF-8.
+let mainBytes: Buffer | null = null;
 const b64 = (text: string) => Buffer.from(text, "utf8").toString("base64");
 const fromB64 = (text: string) => Buffer.from(text, "base64").toString("utf8");
 
@@ -39,6 +41,14 @@ jest.mock("@/server/auth", () => ({
     repos: {
       repoGetContents: async (_owner: string, _repo: string, path: string) => {
         reads.push(path);
+        if (path === "main.bean" && mainBytes) {
+          return {
+            data: {
+              content: mainBytes.toString("base64"),
+              sha: "sha-main.bean",
+            },
+          };
+        }
         const content = path === "main.bean" ? MAIN : mockFiles.get(path);
         if (content === undefined)
           throw Object.assign(new Error("404"), { status: 404 });
@@ -152,6 +162,7 @@ describe("bulk entries refuse amounts that are not decimals (w3/641)", () => {
 
   beforeEach(() => {
     MAIN = LF_MAIN;
+    mainBytes = null;
     baselineErrors = [];
     committed.length = 0;
     reads.length = 0;
@@ -265,6 +276,7 @@ describe("bulk entries keep the file's line ending", () => {
 
   beforeEach(() => {
     MAIN = LF_MAIN;
+    mainBytes = null;
     baselineErrors = [];
     committed.length = 0;
   });
@@ -303,6 +315,25 @@ describe("bulk entries keep the file's line ending", () => {
     const written = fromB64(committed[0]!.files[0]!.content);
     expect(written).toContain("Coffee");
     expect(written.replace(/\r\n/g, "")).not.toContain("\n");
+  });
+
+  // w21/679: a Latin-1 file was decoded leniently and written back with U+FFFD.
+  it("refuses a file that is not valid UTF-8, committing nothing", async () => {
+    mainBytes = Buffer.from("; Caf\xe9 latin-1\n", "latin1");
+    const response = await add();
+    expect(response.status).toBe(400);
+    expect(((await response.json()) as { error: string }).error).toContain(
+      "main.bean is not valid UTF-8",
+    );
+    expect(committed).toEqual([]);
+  });
+
+  it("keeps a leading byte order mark", async () => {
+    mainBytes = Buffer.from(`\ufeff${LF_MAIN}`, "utf8");
+    expect((await add()).status).toBe(200);
+    expect(fromB64(committed[0]!.files[0]!.content).startsWith("\ufeff")).toBe(
+      true,
+    );
   });
 
   it("leaves an LF file LF", async () => {

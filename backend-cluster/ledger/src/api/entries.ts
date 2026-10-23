@@ -37,6 +37,23 @@ import { logger } from "@/shared/logger";
 
 const log = logger.child({ module: "entries-api" });
 
+/**
+ * A file's text, or a refusal when its bytes are not valid UTF-8: decoding
+ * leniently turned each undecodable byte into U+FFFD and wrote that back, and
+ * the "is not UTF-8" error the file showed vanished with it (w21/679).
+ */
+function decodeUtf8Strictly(base64: string, path: string): string {
+  try {
+    return new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(
+      Buffer.from(base64, "base64"),
+    );
+  } catch {
+    throw new BadUserInputError(
+      `${path} is not valid UTF-8 text, so adding to it would replace the bytes that cannot be decoded; re-save it as UTF-8 first`,
+    );
+  }
+}
+
 const newlines = (text: string) => text.split("\n").length - 1;
 
 /**
@@ -197,7 +214,7 @@ export function setEntriesHandler(router: Router): void {
           throw new NotFoundDetailError(`File ${target} not found`);
         }
         return {
-          current: Buffer.from(file.content ?? "", "base64").toString("utf8"),
+          current: decodeUtf8Strictly(file.content ?? "", target),
           sha: file.sha as string,
         };
       };
