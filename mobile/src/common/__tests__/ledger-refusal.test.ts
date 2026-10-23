@@ -206,6 +206,18 @@ describe("ledgerWriteFailureMessage", () => {
     );
   });
 
+  // w21/858: the server's hop to the ledger service timed out, in a 200 reply.
+  it("says an internal or unavailable failure on a write is unconfirmed", () => {
+    for (const code of ["SERVICE_UNAVAILABLE", "INTERNAL_SERVER_ERROR"]) {
+      const failed = Object.assign(new Error("Service unavailable"), {
+        graphQLErrors: [{ message: "x", extensions: { code } }],
+      });
+      expect(ledgerWriteFailureMessage(failed, i18n)).toBe(
+        i18n.t("ledgerWriteUnconfirmed"),
+      );
+    }
+  });
+
   it("names rate limiting, and leaves anything else to the screen", () => {
     const limited = Object.assign(new Error("Too many requests"), {
       graphQLErrors: [

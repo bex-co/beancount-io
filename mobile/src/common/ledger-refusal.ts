@@ -316,6 +316,15 @@ export function ledgerWriteFailureMessage(
       : null;
   }
   if (codes.includes("RATE_LIMITED")) return i18n.t("ledgerWriteRateLimited");
+  // The server's own hop to the ledger service timing out or failing reaches
+  // the app as these codes in a 200 response, and the write may have
+  // committed (w21/858).
+  if (
+    codes.includes("SERVICE_UNAVAILABLE") ||
+    codes.includes("INTERNAL_SERVER_ERROR")
+  ) {
+    return i18n.t("ledgerWriteUnconfirmed");
+  }
   if (responseStatus(error) !== null) return i18n.t("ledgerWriteUnconfirmed");
   if (isTransportFailure(error)) {
     // A request that never left (the token refresh failed first) saved
