@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { MonacoEditor as Editor } from "@/common/components/monaco-editor";
 import type * as monaco from "monaco-editor";
-import type { BeancountError } from "@/graphql/definitions";
 import { useIsDarkTheme } from "@/common/hooks/use-theme";
 import { getFileLanguage } from "../../../shared/lib/utils";
 import { registerBeancountLanguage } from "@/common/lib/editor/monaco-beancount-language-vscode";
@@ -10,6 +9,7 @@ import { isCompositionKey } from "@/common/lib/keyboard/is-composition-key";
 import {
   beancountErrorsToMarkers,
   shouldCancelEditOnEscape,
+  type FileError,
 } from "./text-editor-utils";
 
 export interface ContentEditorProps {
@@ -25,7 +25,7 @@ export interface ContentEditorProps {
     monaco: typeof import("monaco-editor"),
   ) => void;
   onScrollChange?: (lineNumber: number) => void;
-  errors?: BeancountError[];
+  errors?: FileError[];
 }
 
 export const TextEditor = ({

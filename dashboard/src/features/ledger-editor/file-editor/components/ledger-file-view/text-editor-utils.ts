@@ -1,5 +1,8 @@
 import type * as monaco from "monaco-editor";
 import type { BeancountError } from "@/graphql/definitions";
+
+/** The parts of a ledger error the file view reads: where it is and what. */
+export type FileError = Pick<BeancountError, "filename" | "lineno" | "message">;
 export {
   alignAmounts,
   toggleComment,
@@ -11,7 +14,7 @@ export {
  * Transform Beancount errors to Monaco editor markers
  */
 export const beancountErrorsToMarkers = (
-  errors: BeancountError[],
+  errors: FileError[],
   monaco: typeof import("monaco-editor"),
 ): monaco.editor.IMarkerData[] => {
   return errors

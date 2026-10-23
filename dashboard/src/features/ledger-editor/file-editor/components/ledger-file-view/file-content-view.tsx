@@ -1,5 +1,6 @@
+import type { FileError } from "./text-editor-utils";
 import { useMemo } from "react";
-import type { GetLedgerFileQuery, BeancountError } from "@/graphql/definitions";
+import type { GetLedgerFileQuery } from "@/graphql/definitions";
 import {
   ImageFileView,
   PDFFileView,
@@ -25,7 +26,7 @@ export interface FileContentViewProps {
   isSaving: boolean;
   isEditMode?: boolean;
   lineNumber?: number;
-  errors?: BeancountError[];
+  errors?: FileError[];
   onEnterEditMode: () => void;
   onExitEditMode: () => void;
 }

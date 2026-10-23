@@ -108,6 +108,8 @@ export type AddEntryResponse = {
 
 export type AddLedgerEntryResponse = {
   __typename: 'AddLedgerEntryResponse';
+  /** The hash each committed entry now carries, in request order, for getLedgerEntryContext and the source-slice update and delete; empty on a dry run, or when it could not be resolved after the commit */
+  entryHashes: Array<Scalars['String']['output']>;
   message: Maybe<Scalars['String']['output']>;
   success: Scalars['Boolean']['output'];
 };
@@ -141,6 +143,8 @@ export type AppendDirectiveTextResponse = {
   /** Unified diff per touched file; populated on dry runs only */
   diff: Array<DirectiveTextDiff>;
   dryRun: Scalars['Boolean']['output'];
+  /** The hash each committed entry now carries, in request order, for getLedgerEntryContext and the source-slice update and delete; empty on a dry run, or when it could not be resolved after the commit */
+  entryHashes: Array<Scalars['String']['output']>;
   errorsAfter: Scalars['Float']['output'];
   errorsBefore: Scalars['Float']['output'];
   message: Scalars['String']['output'];
@@ -184,9 +188,15 @@ export type BcioOptions = {
 
 export type BeancountError = {
   __typename: 'BeancountError';
+  /** Stable engine error code, e.g. E3001 for a transaction that does not balance. Classify on this, not on the message. The same value REST and MCP return. */
+  code: Maybe<Scalars['String']['output']>;
   filename: Maybe<Scalars['String']['output']>;
+  /** The engine's own remediation hint for this error, when it has one. The same value REST and MCP return. */
+  hint: Maybe<Scalars['String']['output']>;
   lineno: Maybe<Scalars['Float']['output']>;
   message: Scalars['String']['output'];
+  /** `error` for what bean-check fails on; the engine's `warning`s are not returned by getLedgerErrors. */
+  severity: Scalars['String']['output'];
 };
 
 /** Budget recurrence interval */
@@ -295,6 +305,10 @@ export type CommitFileChange = {
   additions: Scalars['Int']['output'];
   deletions: Scalars['Int']['output'];
   filename: Scalars['String']['output'];
+  /** The path before a rename; null unless status is renamed. */
+  previousFilename: Maybe<Scalars['String']['output']>;
+  /** What the commit did to the file: added, removed, modified or renamed. */
+  status: Scalars['String']['output'];
 };
 
 export type CommitListItem = {
@@ -412,6 +426,8 @@ export type DeleteMultiSourceSliceItemInput = {
 };
 
 export type DeleteMultiSourceSlicesInput = {
+  /** Delete the entries even when that would add bean-check errors (VALIDATION_FAILED), instead of refusing */
+  allowInvalid?: InputMaybe<Scalars['Boolean']['input']>;
   entries: Array<DeleteMultiSourceSliceItemInput>;
 };
 
@@ -427,6 +443,8 @@ export type DeletePublicKeyResponse = {
 };
 
 export type DeleteSourceSliceInput = {
+  /** Delete the entry even when that would add bean-check errors (VALIDATION_FAILED), instead of refusing */
+  allowInvalid?: InputMaybe<Scalars['Boolean']['input']>;
   entryHash: Scalars['String']['input'];
   sha256sum: Scalars['String']['input'];
 };
@@ -987,6 +1005,20 @@ export type LedgerSetupPreview = {
   historyStart: Scalars['String']['output'];
   operatingCurrency: Scalars['String']['output'];
   preset: Scalars['String']['output'];
+  /** bean-check's verdict on the files; creation refuses on errors. */
+  validation: LedgerSetupValidation;
+};
+
+export type LedgerSetupValidation = {
+  __typename: 'LedgerSetupValidation';
+  errors: Array<LedgerSetupValidationError>;
+  ok: Scalars['Boolean']['output'];
+};
+
+export type LedgerSetupValidationError = {
+  __typename: 'LedgerSetupValidationError';
+  message: Scalars['String']['output'];
+  source: Maybe<Scalars['String']['output']>;
 };
 
 /** Template used to populate a newly created ledger */
@@ -1765,12 +1797,19 @@ export type PlaidTransactionType = {
 export type PlaintextJournalQueryInput = {
   account?: InputMaybe<Scalars['String']['input']>;
   filter?: InputMaybe<Scalars['String']['input']>;
+  /** Entries per page, 1 to 1000; omitted, every entry. */
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
   time?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type PlaintextJournalResponse = {
   __typename: 'PlaintextJournalResponse';
   content: Scalars['String']['output'];
+  /** Entries the filters select, before offset and limit. */
+  total: Scalars['Int']['output'];
+  /** Whether entries remain after this page. */
+  truncated: Scalars['Boolean']['output'];
 };
 
 export enum PlanChangeEffect {
@@ -1996,7 +2035,7 @@ export type Query = {
   getLedgerEntriesCountPerType: Array<EntriesByType>;
   /** Get context for a specific journal entry */
   getLedgerEntryContext: EntryContext;
-  /** Get all errors from the ledger */
+  /** Get the ledger's errors: what bean-check fails on. The engine's warnings (a one-posting entry, closing an account with a balance) are not listed. */
   getLedgerErrors: Array<BeancountError>;
   /** Export events from a specific ledger with optional filtering */
   getLedgerEvents: Array<Event>;
@@ -2174,7 +2213,7 @@ export type QueryGetLedgerAccountLastEntriesArgs = {
 export type QueryGetLedgerAccountReportArgs = {
   account?: InputMaybe<Scalars['String']['input']>;
   accountName: Scalars['String']['input'];
-  conversion?: Scalars['String']['input'];
+  conversion?: InputMaybe<Scalars['String']['input']>;
   filter?: InputMaybe<Scalars['String']['input']>;
   interval?: Scalars['String']['input'];
   ledgerId: Scalars['String']['input'];
@@ -2206,7 +2245,7 @@ export type QueryGetLedgerAttributesArgs = {
 
 export type QueryGetLedgerBalanceSheetArgs = {
   account?: InputMaybe<Scalars['String']['input']>;
-  conversion?: Scalars['String']['input'];
+  conversion?: InputMaybe<Scalars['String']['input']>;
   filter?: InputMaybe<Scalars['String']['input']>;
   interval?: Scalars['String']['input'];
   ledgerId: Scalars['String']['input'];
@@ -2279,7 +2318,7 @@ export type QueryGetLedgerFileArgs = {
 
 export type QueryGetLedgerIncomeStatementArgs = {
   account?: InputMaybe<Scalars['String']['input']>;
-  conversion?: Scalars['String']['input'];
+  conversion?: InputMaybe<Scalars['String']['input']>;
   filter?: InputMaybe<Scalars['String']['input']>;
   interval?: Scalars['String']['input'];
   ledgerId: Scalars['String']['input'];
@@ -2290,7 +2329,7 @@ export type QueryGetLedgerIncomeStatementArgs = {
 export type QueryGetLedgerIntervalTotalsArgs = {
   account?: InputMaybe<Scalars['String']['input']>;
   accountName: Scalars['String']['input'];
-  conversion?: Scalars['String']['input'];
+  conversion?: InputMaybe<Scalars['String']['input']>;
   filter?: InputMaybe<Scalars['String']['input']>;
   interval?: Scalars['String']['input'];
   ledgerId: Scalars['String']['input'];
@@ -2332,7 +2371,7 @@ export type QueryGetLedgerOptionsArgs = {
 
 export type QueryGetLedgerOverviewArgs = {
   account?: InputMaybe<Scalars['String']['input']>;
-  conversion?: Scalars['String']['input'];
+  conversion?: InputMaybe<Scalars['String']['input']>;
   filter?: InputMaybe<Scalars['String']['input']>;
   interval?: Scalars['String']['input'];
   ledgerId: Scalars['String']['input'];
@@ -2383,7 +2422,7 @@ export type QueryGetLedgerTagsArgs = {
 
 export type QueryGetLedgerTrialBalanceArgs = {
   account?: InputMaybe<Scalars['String']['input']>;
-  conversion?: Scalars['String']['input'];
+  conversion?: InputMaybe<Scalars['String']['input']>;
   filter?: InputMaybe<Scalars['String']['input']>;
   interval?: Scalars['String']['input'];
   ledgerId: Scalars['String']['input'];
@@ -2864,6 +2903,8 @@ export type TrialBalanceData = {
 };
 
 export type UpdateSourceSliceInput = {
+  /** Commit the edit even when it would add bean-check errors (VALIDATION_FAILED), instead of refusing */
+  allowInvalid?: InputMaybe<Scalars['Boolean']['input']>;
   entryHash: Scalars['String']['input'];
   newContent: Scalars['String']['input'];
   sha256sum: Scalars['String']['input'];

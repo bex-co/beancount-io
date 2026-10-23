@@ -1,6 +1,7 @@
+import type { FileError } from "./text-editor-utils";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import type * as monaco from "monaco-editor";
-import type { GetLedgerFileQuery, BeancountError } from "@/graphql/definitions";
+import type { GetLedgerFileQuery } from "@/graphql/definitions";
 import { useLedgerPermission } from "@/common/hooks/use-ledger-permission";
 import { base64Decode } from "@/common/lib/utils/encode";
 import { getFilename } from "../../../shared/lib/utils";
@@ -24,7 +25,7 @@ export interface TextFileViewProps {
   isEditMode?: boolean;
   readOnly?: boolean;
   lineNumber?: number;
-  errors?: BeancountError[];
+  errors?: FileError[];
   onEnterEditMode: () => void;
   onExitEditMode: () => void;
 }
