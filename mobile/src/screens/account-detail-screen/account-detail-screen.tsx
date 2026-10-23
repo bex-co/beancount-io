@@ -35,7 +35,9 @@ import {
   useAccountJournal,
 } from "@/screens/accounts-screen/hooks/use-account-journal";
 import { BALANCE_CONVERSION } from "@/common/balance-util";
-import { balanceNotes } from "@/common/valuation";
+import { balanceNotes, valuationDetails } from "@/common/valuation";
+import { ValuationSheet } from "@/components/valuation-sheet";
+import { useLedgerAccess } from "@/common/hooks/use-ledger-access";
 import { useLedgerPrices } from "@/common/hooks/use-ledger-prices";
 import { useToday } from "@/common/hooks/use-today";
 import { formatUnits } from "@/common/number-utils";
@@ -273,6 +275,15 @@ const AccountDetailScreenImpl = ({
     t("balance"),
     ...balanceNotes(display, currency, t, locale),
   ].join(" · ");
+  // The status line opens the holdings it counts, as Home's does: "1 not in
+  // total" named an amount shown nowhere on this screen (w21/742).
+  const { canWrite } = useLedgerAccess();
+  const [valuationOpen, setValuationOpen] = useState(false);
+  const details = valuationDetails(display.valuation);
+  const openValuation = useMemo(
+    () => (details ? () => setValuationOpen(true) : undefined),
+    [details],
+  );
 
   const [lastJournalPage, setLastJournalPage] = useState<{
     incoming: number;
@@ -507,6 +518,7 @@ const AccountDetailScreenImpl = ({
             netWorthSign={netWorthSign}
             // Units held, not money: a split is no 900% gain (w21/713).
             neutral={unitsCurrency !== undefined}
+            onLabelPress={openValuation}
           />
         </View>
         <Text style={styles.sectionTitle} accessibilityRole="header">
@@ -527,6 +539,7 @@ const AccountDetailScreenImpl = ({
       contextState,
       chartFailed,
       retryChart,
+      openValuation,
       styles.sectionTitle,
       styles.accountPath,
       account,
@@ -589,6 +602,12 @@ const AccountDetailScreenImpl = ({
             </View>
           ) : null
         }
+      />
+      <ValuationSheet
+        valuation={valuationOpen ? details : null}
+        ledgerId={ledgerId}
+        canWrite={canWrite}
+        onClose={() => setValuationOpen(false)}
       />
     </SafeAreaView>
   );

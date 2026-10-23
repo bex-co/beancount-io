@@ -262,3 +262,26 @@ describe("ValuationSheet footer action", () => {
     }
   });
 });
+
+// w21/742: account detail's "1 not in total" now opens the sheet. A cash
+// balance with an EUR leg values nothing; the sheet still lists the EUR.
+describe("ValuationSheet for a balance that only leaves holdings out", () => {
+  it("lists each holding left out of the total", () => {
+    const tree = ValuationSheet({
+      valuation: {
+        priced: [],
+        atCostNoPrice: [],
+        notInTotal: [{ currency: "EUR", number: 500, scale: 2 }],
+      },
+      ledgerId: "open_ledger/example",
+      canWrite: false,
+      onClose() {},
+    });
+    const rows = findAll(tree, (node) => node.props.accessible === true).map(
+      (node) => node.props.accessibilityLabel as string,
+    );
+    expect(rows.length).toBe(1);
+    expect(rows[0].includes("500 EUR")).toBe(true);
+    expect(rows[0].includes("valuationNotInTotalTag")).toBe(true);
+  });
+});

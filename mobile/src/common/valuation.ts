@@ -361,6 +361,22 @@ export function selectValuation({
   };
 }
 
+/**
+ * The valuation a total's status line opens in the detail sheet (w4/m27 rule
+ * 2), or null when the sheet would list nothing: a total that values no
+ * holding and leaves none out.
+ */
+export function valuationDetails(
+  valuation: Valuation | undefined,
+): Valuation | null {
+  if (valuation === undefined) return null;
+  const held =
+    valuation.priced.length +
+    valuation.atCostNoPrice.length +
+    valuation.notInTotal.length;
+  return held > 0 ? valuation : null;
+}
+
 /** The priced holdings whose price is behind, oldest price first. */
 export function stalePrices(valuation: Valuation): PricedHolding[] {
   return valuation.priced

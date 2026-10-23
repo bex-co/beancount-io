@@ -1,6 +1,11 @@
 import { useState } from "react";
+import { StyleSheet, Text } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { FadeInView } from "@/components/crossfade";
+import { PressableScale } from "@/components/pressable-scale";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { fontSizes, fontWeights, useTheme } from "@/common/theme";
+import { directionalIcon } from "@/common/rtl";
 import { InteractiveLineChartD3 } from "@/common/d3/interactive-line-chart";
 import { DashboardCard } from "@/components/dashboard-card";
 import { TimeRangePills } from "@/components/time-range-pills";
@@ -55,7 +60,35 @@ type BalanceChartCardProps = {
   netWorthSign?: 1 | -1;
   /** A figure in units: no trend colour, no percent; see `InteractiveLineChartD3`. */
   neutral?: boolean;
+  /**
+   * Opens what `label` sums up, the holdings behind "1 not in total" (the
+   * valuation sheet, w4/m27 rule 2): the caption is then a button, as Home's
+   * is. Without it the count named holdings shown nowhere on the screen
+   * (w21/742).
+   */
+  onLabelPress?: () => void;
 };
+
+// Home's caption (`AccountChartsCard`): the chart's own header type, its
+// chevron trailing the last line of a wrapped status. It sits above the
+// chart, outside the plot's swipe gesture, which covers the chart's header.
+const styles = StyleSheet.create({
+  caption: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    paddingHorizontal: 16,
+    marginBottom: 2,
+  },
+  captionText: {
+    flexShrink: 1,
+    fontSize: fontSizes.md,
+    fontWeight: fontWeights.medium,
+  },
+  captionChevron: {
+    marginStart: 2,
+    marginBottom: 2,
+  },
+});
 
 /**
  * Monarch-style balance header: a headline value with the change over the
@@ -73,8 +106,10 @@ export function BalanceChartCard({
   onRetry,
   netWorthSign,
   neutral,
+  onLabelPress,
 }: BalanceChartCardProps): JSX.Element {
   const { t } = useTranslations();
+  const theme = useTheme().colorTheme;
   const [range, setRange] = useState<TimeRange>("6M");
 
   if (loading) {
@@ -106,8 +141,28 @@ export function BalanceChartCard({
   return (
     <DashboardCard bleed>
       <FadeInView>
+        {onLabelPress && (
+          <PressableScale
+            style={styles.caption}
+            onPress={onLabelPress}
+            accessibilityRole="button"
+            accessibilityLabel={label}
+            accessibilityHint={t("valuationDetailsHint")}
+          >
+            <Text style={[styles.captionText, { color: theme.black80 }]}>
+              {label}
+            </Text>
+            <Ionicons
+              name={directionalIcon("chevron-forward")}
+              size={14}
+              color={theme.black80}
+              style={styles.captionChevron}
+            />
+          </PressableScale>
+        )}
         <InteractiveLineChartD3
-          label={label}
+          label={onLabelPress ? undefined : label}
+          a11yLabel={label}
           labels={chart.labels}
           periods={chart.periods}
           numbers={chart.numbers}
