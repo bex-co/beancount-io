@@ -735,6 +735,22 @@ def _require_custom_roundtrip(values: list[_ValueType], text: str) -> None:
         )
 
 
+def _stated_cost_weight(cost: Any, number: Decimal) -> Decimal | None:
+    """What a posting of `number` units weighs at a cost with nothing left to infer, else None."""
+    per = getattr(cost, "number_per", None)
+    total = getattr(cost, "number_total", None)
+    if per is None and total is None and isinstance(getattr(cost, "number", None), Decimal):
+        per = cost.number
+    if not isinstance(getattr(cost, "currency", None), str):
+        return None
+    parts = [part for part in (per, total) if part is not None]
+    if not parts or not all(isinstance(part, Decimal) for part in parts):
+        return None
+    return number * (per if per is not None else Decimal(0)) + (
+        total.copy_sign(number) if total is not None else Decimal(0)
+    )
+
+
 def with_inferred_cost_parts(postings: list[Any], totals: list[Any]) -> list[Any]:
     """The postings with the one cost component the file leaves to booking filled in.
 
@@ -769,10 +785,18 @@ def with_inferred_cost_parts(postings: list[Any], totals: list[Any]) -> list[Any
                 continue
             other_units = other.units
             number = getattr(other_units, "number", None)
-            if other_units is MISSING or not isinstance(number, Decimal) or other.cost is not None:
+            if other_units is MISSING or not isinstance(number, Decimal):
                 others = None  # type: ignore[assignment]
                 break
-            if totals[other_index] is not None:
+            if other.cost is not None:
+                # A fully stated cost weighs what it states, in its own currency
+                # (w5/994); a part left to booking is not a known weight.
+                weight = _stated_cost_weight(other.cost, number)
+                if weight is None or other.cost.currency != currency:
+                    others = None  # type: ignore[assignment]
+                    break
+                others += weight
+            elif totals[other_index] is not None:
                 priced = totals[other_index]
                 if priced.currency != currency:
                     others = None  # type: ignore[assignment]
