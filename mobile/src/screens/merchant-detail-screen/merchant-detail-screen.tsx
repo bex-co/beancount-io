@@ -686,7 +686,13 @@ function MerchantDetailBody({
             : `row:${index}`
         }
         renderItem={({ item }) => (
-          <EntryRow entry={item} onPress={() => handleEntryPress(item)} />
+          // A payment pre-entered for later reads Upcoming, as on
+          // Transactions; without it it looked booked (w21/795).
+          <EntryRow
+            entry={item}
+            onPress={() => handleEntryPress(item)}
+            upcomingAfter={today}
+          />
         )}
         renderSectionHeader={({ section }: { section: JournalSection }) => (
           <DateSectionHeader displayDate={section.displayDate} />
