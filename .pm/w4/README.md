@@ -44,7 +44,6 @@
 
 - [997 — Select an available unit when stacked charts lack the operating unit](./997.md) — minor; live QA, 2026-10-22; Cash Flow/Expenses stacked views hide real104VACHR with all-false legend at both widths; native toggle, Single Bars and normal USD controls pass.
 
-- [996 — Give Cash Flow statement charts readable period data](./996.md) — minor; live QA, 2026-10-22; both chart views expose monthly values only on pointer hover at both widths; annual tables/CSV do not replace them, Income Statement keyboard control passes.
 
 
 
