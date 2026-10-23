@@ -235,23 +235,34 @@ def _amounts_declared(entry: Any, spelled: Any) -> bool:
     each currency are compared instead; an account with a posting that omits
     its amount has nothing to compare (w5/991).
     """
-    from beancount.core.number import MISSING
-
     if len(entry.postings) != len(spelled.postings):
         return _totals_declared(entry, spelled)
-    for booked, stated in zip(entry.postings, spelled.postings, strict=True):
-        if booked.account != stated.account:
+    if all(_posting_declared(booked, stated) for booked, stated in zip(entry.postings, spelled.postings, strict=True)):
+        return True
+    # Booking groups postings by currency, so the same facts can come back in
+    # another order; match them one for one regardless of position (w5/1013).
+    unmatched = list(spelled.postings)
+    for booked in entry.postings:
+        match = next((stated for stated in unmatched if _posting_declared(booked, stated)), None)
+        if match is None:
             return False
-        units = stated.units
-        if units is None or units is MISSING:
-            continue
+        unmatched.remove(match)
+    return True
+
+
+def _posting_declared(booked: Any, stated: Any) -> bool:
+    """Whether one booked posting is what one source line states: account, units, cost, price and flag."""
+    from beancount.core.number import MISSING
+
+    if booked.account != stated.account:
+        return False
+    units = stated.units
+    if units is not None and units is not MISSING:
         if units.number is not MISSING and units.number != booked.units.number:
             return False
         if units.currency is not MISSING and units.currency and units.currency != booked.units.currency:
             return False
-        if not _annotations_declared(booked, stated):
-            return False
-    return True
+    return _annotations_declared(booked, stated)
 
 
 def _annotations_declared(booked: Any, stated: Any) -> bool:
