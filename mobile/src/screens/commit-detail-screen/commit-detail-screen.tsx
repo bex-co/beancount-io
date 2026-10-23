@@ -20,6 +20,7 @@ import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import { RouteLedgerUnavailable } from "@/components/route-ledger-unavailable";
 import { bindRouteLedger, firstRouteParam } from "@/common/route-ledger";
 import {
+  diffLineText,
   commitFileRows,
   DIFF_PAGE_LINES,
   nextDiffChunk,
@@ -217,7 +218,7 @@ function DiffLineView({ line }: { line: DiffLine }): JSX.Element {
   return (
     <View style={rowStyle}>
       <Text style={styles.diffText} selectable>
-        {isolateSourceLine(line.content)}
+        {isolateSourceLine(diffLineText(line.content))}
       </Text>
     </View>
   );

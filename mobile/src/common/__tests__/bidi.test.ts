@@ -227,7 +227,10 @@ describe("isolateSourceLine", () => {
       ),
       "utf8",
     );
-    expect(screen.includes("{isolateSourceLine(line.content)}")).toBe(true);
+    // Its lone carriage returns drawn as a symbol first (w21/827).
+    expect(
+      screen.includes("{isolateSourceLine(diffLineText(line.content))}"),
+    ).toBe(true);
   });
 });
 

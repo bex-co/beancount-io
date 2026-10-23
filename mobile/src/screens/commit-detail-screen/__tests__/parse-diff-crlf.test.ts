@@ -35,3 +35,32 @@ describe("parseDiff line endings", () => {
     expect(parseDiff("")).toEqual([{ type: "context", content: "" }]);
   });
 });
+
+// w21/827: a carriage return inside a line reached the row's Text, which iOS
+// lays out as a paragraph break: "+…Order 12" then "34\"" on a row of its own.
+describe("a diff line holding a lone carriage return", () => {
+  const { diffLineText } = require("../diff-utils");
+
+  it("stays one row, the return drawn as a symbol", () => {
+    const lines = parseDiff(
+      '@@ -1 +1 @@\n+2026-10-20 * "Qa20261020 Shop" "Order 12\r34"\n',
+    );
+    expect(lines.map((line) => line.type)).toEqual(["context", "added"]);
+    expect(diffLineText(lines[1]!.content)).toBe(
+      '+2026-10-20 * "Qa20261020 Shop" "Order 12␍34"',
+    );
+    expect(diffLineText("+plain line")).toBe("+plain line");
+  });
+
+  it("is what the row draws", () => {
+    const screen = require("fs")
+      .readFileSync(
+        require("path").join(__dirname, "..", "commit-detail-screen.tsx"),
+        "utf8",
+      )
+      .replace(/\s+/g, "");
+    expect(
+      screen.includes("{isolateSourceLine(diffLineText(line.content))}"),
+    ).toBe(true);
+  });
+});

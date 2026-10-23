@@ -137,3 +137,16 @@ export const DIFF_PAGE_LINES = 500;
 export function nextDiffChunk(shown: number, total: number): number {
   return Math.max(0, Math.min(DIFF_PAGE_LINES, total - shown));
 }
+
+/** The symbol a lone carriage return draws as. */
+const CARRIAGE_RETURN_SYMBOL = "\u240d";
+
+/**
+ * A diff line as its row draws it: a carriage return left inside the line
+ * shown as ␍. iOS lays one out as a paragraph break, so a narration's
+ * "Order 12\r34" split onto a second row with no +/- (w21/827); the
+ * editor keeps it as a character too (w21/815).
+ */
+export function diffLineText(content: string): string {
+  return content.replace(/\r/g, CARRIAGE_RETURN_SYMBOL);
+}
