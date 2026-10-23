@@ -22,6 +22,7 @@ import {
   ChartPeriodTable,
   type ChartPeriodSeries,
 } from "../components/chart-period-table";
+import { legendSelectionFor } from "../lib/legend-selection";
 import { CASH_FLOW_ACTIVITIES, type CashFlowIntervalPoint } from "./lib/model";
 
 interface CashFlowChartProps {
@@ -106,16 +107,7 @@ export function NetCashFlowChart({
       }) as TooltipComponentFormatterCallback<TooltipComponentFormatterCallbackParams>,
     };
 
-    const legendSelected: Record<string, boolean> = (() => {
-      const selected: Record<string, boolean> = {};
-      currencyList.forEach((currency) => {
-        selected[currency] = currency === primarySeries;
-      });
-      if (!selected[primarySeries] && currencyList.length > 0) {
-        selected[currencyList[0]] = true;
-      }
-      return selected;
-    })();
+    const legendSelected = legendSelectionFor(currencyList, primarySeries);
 
     const { xAxis, yAxis } = createCommonAxisConfig(dates, interval);
 
@@ -293,12 +285,9 @@ export function ActivityBreakdownChart({
           bottom: 0,
           type: "scroll",
           pageButtonItemGap: 5,
-          selected: Object.fromEntries(
-            currencyList.map((currency) => [
-              currency,
-              currency === primarySeries,
-            ]),
-          ),
+          // The operating unit, else the first unit the chart has: a scope
+          // without the operating unit must not start all hidden (w4/997).
+          selected: legendSelectionFor(currencyList, primarySeries),
         },
         grid: createCommonGridConfig(),
         xAxis,

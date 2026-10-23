@@ -10,6 +10,7 @@ import type {
 } from "echarts";
 import { getChartColors } from "@/common/lib/chart/color";
 import { formatDateAxis } from "@/common/lib/chart/chart";
+import { legendSelectionFor } from "../../lib/legend-selection";
 import {
   ChartPeriodTable,
   type ChartPeriodSeries,
@@ -176,9 +177,9 @@ export function StackDateBalanceChart({
           bottom: 0,
           type: "scroll",
           pageButtonItemGap: 5,
-          selected: Object.fromEntries(
-            currencyList.map((c) => [c, c === primarySeries]),
-          ),
+          // The operating unit, else the first unit the chart has: a scope
+          // without the operating unit must not start all hidden (w4/997).
+          selected: legendSelectionFor(currencyList, primarySeries),
         },
         grid: createCommonGridConfig(),
         xAxis,

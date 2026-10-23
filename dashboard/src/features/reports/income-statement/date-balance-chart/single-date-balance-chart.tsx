@@ -18,6 +18,7 @@ import {
   createEmptyChartOption,
 } from "./utils";
 import { formatDateAxis } from "@/common/lib/chart/chart";
+import { legendSelectionFor } from "../../lib/legend-selection";
 import {
   ChartPeriodTable,
   type ChartPeriodSeries,
@@ -124,17 +125,7 @@ export function SingleDateBalanceChart({
       }) as TooltipComponentFormatterCallback<TooltipComponentFormatterCallbackParams>,
     };
 
-    const legendSelected: Record<string, boolean> = (() => {
-      const selected: Record<string, boolean> = {};
-      commodityList.forEach((commodity) => {
-        selected[commodity] = commodity === primarySeries;
-      });
-      // if commodity is not USD; select first one
-      if (!selected[primarySeries] && commodityList.length > 0) {
-        selected[commodityList[0]] = true;
-      }
-      return selected;
-    })();
+    const legendSelected = legendSelectionFor(commodityList, primarySeries);
 
     const { xAxis, yAxis } = createCommonAxisConfig(dates, interval);
 

@@ -206,3 +206,44 @@ describe("Cash Flow chart period data", () => {
     expect(screen.queryByText("page.accountReport.periodData")).toBeNull();
   });
 });
+
+/** By Activity shows a unit when the operating unit is absent (w4/997). */
+describe("ActivityBreakdownChart initial unit", () => {
+  const vacation: CashFlowIntervalPoint[] = [
+    {
+      date: "2016-11-30",
+      activities: {
+        operating: { VACHR: "-104" },
+        investing: { VACHR: "104" },
+        financing: {},
+      },
+      net: {},
+    },
+  ];
+  const legend = () =>
+    (captureOption.mock.calls.at(-1)![0] as EChartsOption).legend as {
+      selected: Record<string, boolean>;
+    };
+
+  it("shows the only unit instead of starting blank", () => {
+    render(
+      <ActivityBreakdownChart
+        data={vacation}
+        interval="monthly"
+        primarySeries="USD"
+      />,
+    );
+    expect(legend().selected).toEqual({ VACHR: true });
+  });
+
+  it("keeps the operating unit alone when it is present", () => {
+    render(
+      <ActivityBreakdownChart
+        data={points}
+        interval="monthly"
+        primarySeries="USD"
+      />,
+    );
+    expect(legend().selected).toEqual({ USD: true });
+  });
+});

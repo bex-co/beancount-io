@@ -799,3 +799,62 @@ describe("DateBalanceChart", () => {
     });
   });
 });
+
+/**
+ * A scope without the operating unit still shows a unit in Stacked Bars:
+ * the operating unit, else the first available, as Single Bars does
+ * (w4/997).
+ */
+describe("Stacked bars initial unit", () => {
+  const stacked = (balances: Record<string, Record<string, number>>) => [
+    {
+      date: "2016-11-30",
+      balance: Object.assign({}, ...Object.values(balances)),
+      accountBalances: balances,
+    },
+  ];
+  const selected = () =>
+    JSON.parse(
+      screen.getByTestId("react-echarts").getAttribute("data-option") || "{}",
+    ).legend.selected;
+
+  it("shows the only unit when the operating unit is absent", () => {
+    render(
+      <DateBalanceChart
+        chartMode="stacked"
+        primarySeries="USD"
+        data={stacked({ "Expenses:Vacation": { VACHR: 104 } })}
+      />,
+    );
+    expect(selected()).toEqual({ VACHR: true });
+  });
+
+  it("keeps the operating unit alone when it is present", () => {
+    render(
+      <DateBalanceChart
+        chartMode="stacked"
+        primarySeries="USD"
+        data={stacked({
+          "Expenses:Food": { USD: 40 },
+          "Expenses:Vacation": { VACHR: 104 },
+        })}
+      />,
+    );
+    expect(selected()).toEqual({ USD: true, VACHR: false });
+  });
+
+  it("picks one of several units, not all of them", () => {
+    render(
+      <DateBalanceChart
+        chartMode="stacked"
+        primarySeries="USD"
+        data={stacked({
+          "Expenses:Travel": { EUR: 20 },
+          "Expenses:Vacation": { VACHR: 104 },
+        })}
+      />,
+    );
+    const shown = Object.values(selected()).filter(Boolean);
+    expect(shown).toHaveLength(1);
+  });
+});
