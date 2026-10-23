@@ -613,6 +613,7 @@ export const ca: Translations = {
   ledgerDeleteFile: "Elimina {{name}}",
   ledgerFilesFolderLabel: "{{name}}, carpeta",
   ledgerFilesFileLabel: "{{name}}, fitxer",
+  ledgerFileNotText: "No es pot obrir a l'app",
   ledgerDeleteFileTitle: "Elimina el fitxer del llibre",
   ledgerDeleteFileMessage:
     'Vols eliminar "{{name}}"? L\'acció no es pot desfer.',

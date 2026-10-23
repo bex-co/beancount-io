@@ -600,6 +600,7 @@ export const nl: Translations = {
   ledgerDeleteFile: "{{name}} verwijderen",
   ledgerFilesFolderLabel: "{{name}}, map",
   ledgerFilesFileLabel: "{{name}}, bestand",
+  ledgerFileNotText: "Kan niet in de app worden geopend",
   ledgerDeleteFileTitle: "Grootboekbestand verwijderen",
   ledgerDeleteFileMessage:
     '"{{name}}" verwijderen? Dit kan niet ongedaan worden gemaakt.',

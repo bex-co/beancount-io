@@ -610,6 +610,7 @@ export const uk: Translations = {
   ledgerDeleteFile: "Видалити {{name}}",
   ledgerFilesFolderLabel: "{{name}}, тека",
   ledgerFilesFileLabel: "{{name}}, файл",
+  ledgerFileNotText: "Не можна відкрити в застосунку",
   ledgerDeleteFileTitle: "Видалити файл книги",
   ledgerDeleteFileMessage: 'Видалити "{{name}}"? Скасувати це буде неможливо.',
   ledgerDeleteFileConfirm: "Видалити",

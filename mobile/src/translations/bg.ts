@@ -598,6 +598,7 @@ export const bg: Translations = {
   ledgerDeleteFile: "Изтрий {{name}}",
   ledgerFilesFolderLabel: "{{name}}, папка",
   ledgerFilesFileLabel: "{{name}}, файл",
+  ledgerFileNotText: "Не може да се отвори в приложението",
   ledgerDeleteFileTitle: "Изтриване на файл на книгата",
   ledgerDeleteFileMessage:
     'Да се изтрие ли "{{name}}"? Действието е необратимо.',

@@ -592,6 +592,7 @@ export const fa: Translations = {
   ledgerDeleteFile: "حذف {{name}}",
   ledgerFilesFolderLabel: "{{name}}، پوشه",
   ledgerFilesFileLabel: "{{name}}، فایل",
+  ledgerFileNotText: "در برنامه باز نمی‌شود",
   ledgerDeleteFileTitle: "حذف فایل دفتر کل",
   ledgerDeleteFileMessage: "«{{name}}» حذف شود؟ این کار برگشت‌پذیر نیست.",
   ledgerDeleteFileConfirm: "حذف",

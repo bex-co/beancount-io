@@ -23,6 +23,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { ColorTheme } from "@/types/theme-props";
 import {
+  fontSizes,
   gutter,
   rowMinHeight,
   rowPaddingVertical,
@@ -133,11 +134,19 @@ const getStyles = (theme: ColorTheme) =>
     rowIcon: {
       width: 28,
     },
-    rowLabel: {
+    rowText: {
       flex: 1,
+    },
+    rowLabel: {
       fontSize: 15,
       color: theme.black,
       lineHeight: 20,
+      textAlign: LEADING_TEXT_ALIGN,
+    },
+    rowNote: {
+      fontSize: fontSizes.sm,
+      color: theme.black80,
+      lineHeight: 18,
       textAlign: LEADING_TEXT_ALIGN,
     },
     rowAction: {
@@ -270,13 +279,22 @@ function FileRow({
           { name: entry.name },
         )}
         accessibilityState={{ disabled: !tappable }}
+        accessibilityHint={tappable ? undefined : t("ledgerFileNotText")}
       >
         <View style={styles.rowIcon}>
           <Ionicons name={iconName} size={20} color={iconColor} />
         </View>
-        <Text style={styles.rowLabel} numberOfLines={1}>
-          {entry.name}
-        </Text>
+        <View style={styles.rowText}>
+          <Text style={styles.rowLabel} numberOfLines={1}>
+            {entry.name}
+          </Text>
+          {/* A dimmed row said nothing of why it would not open (w21/771). */}
+          {!tappable && (
+            <Text style={styles.rowNote} numberOfLines={1}>
+              {t("ledgerFileNotText")}
+            </Text>
+          )}
+        </View>
         {tappable && (
           <Ionicons
             name={directionalIcon("chevron-forward")}

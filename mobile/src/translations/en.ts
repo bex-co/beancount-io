@@ -618,6 +618,7 @@ export const en = {
   ledgerDeleteFile: "Delete {{name}}",
   ledgerFilesFolderLabel: "{{name}}, folder",
   ledgerFilesFileLabel: "{{name}}, file",
+  ledgerFileNotText: "Can't be opened in the app",
   ledgerDeleteFileTitle: "Delete Ledger File",
   ledgerDeleteFileMessage: 'Delete "{{name}}"? This cannot be undone.',
   ledgerDeleteFileConfirm: "Delete",

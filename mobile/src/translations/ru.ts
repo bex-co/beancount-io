@@ -611,6 +611,7 @@ export const ru: Translations = {
   ledgerDeleteFile: "Удалить {{name}}",
   ledgerFilesFolderLabel: "{{name}}, папка",
   ledgerFilesFileLabel: "{{name}}, файл",
+  ledgerFileNotText: "Нельзя открыть в приложении",
   ledgerDeleteFileTitle: "Удалить файл книги",
   ledgerDeleteFileMessage: 'Удалить "{{name}}"? Отменить это будет нельзя.',
   ledgerDeleteFileConfirm: "Удалить",

@@ -615,6 +615,7 @@ export const sk: Translations = {
   ledgerDeleteFile: "Odstrániť {{name}}",
   ledgerFilesFolderLabel: "{{name}}, priečinok",
   ledgerFilesFileLabel: "{{name}}, súbor",
+  ledgerFileNotText: "V aplikácii sa nedá otvoriť",
   ledgerDeleteFileTitle: "Odstrániť súbor knihy",
   ledgerDeleteFileMessage:
     'Odstrániť "{{name}}"? Túto akciu nemožno vrátiť späť.',

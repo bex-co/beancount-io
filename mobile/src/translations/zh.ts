@@ -540,6 +540,7 @@ export const zh: Translations = {
   ledgerDeleteFile: "删除 {{name}}",
   ledgerFilesFolderLabel: "{{name}}，文件夹",
   ledgerFilesFileLabel: "{{name}}，文件",
+  ledgerFileNotText: "无法在应用中打开",
   ledgerDeleteFileTitle: "删除账本文件",
   ledgerDeleteFileMessage: "确定删除“{{name}}”吗？此操作无法撤销。",
   ledgerDeleteFileConfirm: "删除",

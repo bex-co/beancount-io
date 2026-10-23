@@ -1,65 +1,21 @@
-const TEXT_EXTENSIONS = new Set([
-  "txt",
-  "text",
-  "md",
-  "markdown",
-  "rst",
-  "csv",
-  "tsv",
-  "ledger",
-  "journal",
-  "qif",
-  "ofx",
-  "qfx",
-  "json",
-  "jsonc",
-  "jsonl",
-  "yaml",
-  "yml",
-  "toml",
-  "ini",
-  "cfg",
-  "conf",
-  "config",
-  "xml",
-  "html",
-  "htm",
-  "css",
-  "scss",
-  "svg",
-  "py",
-  "js",
-  "jsx",
-  "mjs",
-  "cjs",
-  "ts",
-  "tsx",
-  "sh",
-  "bash",
-  "zsh",
-  "sql",
-  "log",
-  "env",
-  "gitignore",
-  "gitattributes",
-  "editorconfig",
-]);
-
-const TEXT_FILENAMES = new Set([
-  "readme",
-  "license",
-  "licence",
-  "changelog",
-  "authors",
-  "notice",
-  "makefile",
-  "dockerfile",
-  ".env.example",
-  ".env.local",
-  ".env.development",
-  ".env.production",
-  ".env.test",
-]);
+/**
+ * Extensions of files the editor cannot open: documents, images, media,
+ * archives, office files, fonts, databases and binaries. Any other file is
+ * text. A ledger may include a file of any name, `include "prices"` or
+ * `prices.inc`, and a fixed list of text extensions left those dimmed and
+ * unopenable (w21/771).
+ */
+const BINARY_EXTENSIONS = new Set(
+  (
+    "pdf png jpg jpeg gif webp heic heif bmp tif tiff ico psd ai sketch " +
+    "mp3 mp4 m4a m4v mov wav aac flac ogg avi mkv webm " +
+    "zip gz tgz bz2 xz 7z rar tar jar " +
+    "xls xlsx xlsm doc docx ppt pptx odt ods odp pages numbers key " +
+    "woff woff2 ttf otf eot " +
+    "db sqlite sqlite3 parquet avro pkl pickle " +
+    "exe dll so dylib bin class wasm o a ds_store"
+  ).split(" "),
+);
 
 export function isBeancountFile(path: string): boolean {
   return /\.(bean|beancount)$/i.test(path);
@@ -67,10 +23,7 @@ export function isBeancountFile(path: string): boolean {
 
 export function isEditableTextFile(path: string): boolean {
   const filename = path.split("/").pop()?.toLowerCase() ?? "";
-  const extension = filename.slice(filename.lastIndexOf(".") + 1);
-  return (
-    isBeancountFile(filename) ||
-    TEXT_FILENAMES.has(filename) ||
-    (filename.includes(".") && TEXT_EXTENSIONS.has(extension))
-  );
+  if (filename === "") return false;
+  const dot = filename.lastIndexOf(".");
+  return !BINARY_EXTENSIONS.has(dot < 0 ? "" : filename.slice(dot + 1));
 }

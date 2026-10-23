@@ -613,6 +613,7 @@ export const es: Translations = {
   ledgerDeleteFile: "Eliminar {{name}}",
   ledgerFilesFolderLabel: "{{name}}, carpeta",
   ledgerFilesFileLabel: "{{name}}, archivo",
+  ledgerFileNotText: "No se puede abrir en la app",
   ledgerDeleteFileTitle: "Eliminar archivo del libro",
   ledgerDeleteFileMessage: '¿Eliminar "{{name}}"? Esto no se puede deshacer.',
   ledgerDeleteFileConfirm: "Eliminar",

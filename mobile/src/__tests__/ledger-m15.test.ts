@@ -87,7 +87,7 @@ test("isEditableTextFile: opens notes, data, configuration, and source files", (
   }
 });
 
-test("isEditableTextFile: excludes binary, unknown, and directory paths", () => {
+test("isEditableTextFile: excludes binary and directory paths", () => {
   for (const filename of [
     "receipt.pdf",
     "receipt.png",
@@ -96,14 +96,26 @@ test("isEditableTextFile: excludes binary, unknown, and directory paths", () => 
     "data.sqlite",
     "spreadsheet.xlsx",
     "notes.txt.zip",
-    "file.unknown",
-    "2024",
-    "txt",
+    ".DS_Store",
     "notes.txt/",
     "",
   ]) {
     if (isEditableTextFile(filename))
       throw new Error(`${filename} should not be editable`);
+  }
+});
+
+// w21/771: a ledger includes files of any name; only listed extensions opened.
+test("isEditableTextFile: opens an include of any other name", () => {
+  for (const filename of [
+    "qa20261020-prices",
+    "qa20261020-prices.inc",
+    "prices.db.bean",
+    "2024",
+    "file.unknown",
+  ]) {
+    if (!isEditableTextFile(filename))
+      throw new Error(`${filename} should be editable`);
   }
 });
 
@@ -427,4 +439,28 @@ test("canDeleteLedgerFile: protects the root main.bean only", () => {
   expect(canDeleteLedgerFile("qa-20261020/main.bean")).toBe(true);
   expect(canDeleteLedgerFile("/qa-20261020/main.bean")).toBe(true);
   expect(canDeleteLedgerFile("accounts.bean")).toBe(true);
+});
+
+test("a Files row that cannot open says why (w21/771)", () => {
+  const screen = require("fs")
+    .readFileSync(
+      require("path").join(
+        __dirname,
+        "..",
+        "screens",
+        "ledger-file-browser-screen",
+        "index.tsx",
+      ),
+      "utf8",
+    )
+    .replace(/\s+/g, "");
+  if (
+    !screen.includes(
+      'accessibilityHint={tappable?undefined:t("ledgerFileNotText")}',
+    ) ||
+    !screen.includes(
+      '{!tappable&&(<Textstyle={styles.rowNote}numberOfLines={1}>{t("ledgerFileNotText")}</Text>)}',
+    )
+  )
+    throw new Error("a dimmed row should say it cannot be opened");
 });

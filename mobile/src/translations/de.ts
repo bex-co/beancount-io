@@ -616,6 +616,7 @@ export const de: Translations = {
   ledgerDeleteFile: "{{name}} löschen",
   ledgerFilesFolderLabel: "{{name}}, Ordner",
   ledgerFilesFileLabel: "{{name}}, Datei",
+  ledgerFileNotText: "Kann in der App nicht geöffnet werden",
   ledgerDeleteFileTitle: "Hauptbuchdatei löschen",
   ledgerDeleteFileMessage:
     '"{{name}}" löschen? Das kann nicht rückgängig gemacht werden.',

@@ -611,6 +611,7 @@ export const pt: Translations = {
   ledgerDeleteFile: "Excluir {{name}}",
   ledgerFilesFolderLabel: "{{name}}, pasta",
   ledgerFilesFileLabel: "{{name}}, arquivo",
+  ledgerFileNotText: "Não pode ser aberto no app",
   ledgerDeleteFileTitle: "Excluir arquivo do livro-razão",
   ledgerDeleteFileMessage: 'Excluir "{{name}}"? Isso não pode ser desfeito.',
   ledgerDeleteFileConfirm: "Excluir",
