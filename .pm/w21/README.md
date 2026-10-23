@@ -64,3 +64,8 @@
 - [855](./855.md) — Pasting " 20" into a negative row turns it unreadable (left open by w21/791)
 - [856](./856.md) — Ask AI is never told today's date, and an undated receipt is saved under the server's UTC date
 - [857](./857.md) — The ledger runs amortize_over/forecast on the server's UTC date, not the user's
+- [858](./858.md) — A save that times out on the server's internal hop says "Failed to save" though it may have committed
+- [859](./859.md) — A ledger with no main.bean is reported "deleted, renamed or unshared" and every tab is blocked
+- [860](./860.md) — Notifications says "Ledger is healthy" after a failed refresh; Merchants keeps cached rows; no stale banner
+- [861](./861.md) — New Transaction and its account picker treat a failed metadata read as an empty ledger
+- [862](./862.md) — Budget's first-load failure has no Retry and hides the range pills
