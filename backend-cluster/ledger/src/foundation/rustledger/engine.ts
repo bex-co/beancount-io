@@ -44,7 +44,7 @@ import {
   discoverDocuments,
   mergeDiscoveredDocuments,
 } from "./document-discovery";
-import { inactiveAfterGeneratedCloses } from "./generated-closes";
+import { inactiveAfterGeneratedCloses, inactivePads } from "./generated-closes";
 import { reconcileCheckCommodityErrors } from "./check-commodity";
 import { coherentCostErrors } from "./coherent-cost";
 import { reconcileLeafOnlyErrors } from "./leafonly";
@@ -763,6 +763,8 @@ async function parseLedgerFilesUncached(
       ...inactiveAfterGeneratedCloses(directives, files, entryPoint),
     ];
   }
+  // The engine checks only transactions against a close (w21/756).
+  errors = [...errors, ...inactivePads(directives, files, entryPoint)];
   ({ directives, errors } = openAutoAccounts(
     directives,
     errors,

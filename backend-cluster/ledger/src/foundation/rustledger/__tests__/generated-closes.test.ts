@@ -1,6 +1,9 @@
 import type { BeancountError, DirectiveJson } from "@rustledger/wasm";
 import { openAutoAccounts } from "../auto-accounts";
-import { inactiveAfterGeneratedCloses } from "../generated-closes";
+import {
+  inactiveAfterGeneratedCloses,
+  inactivePads,
+} from "../generated-closes";
 
 /**
  * w21/737: close_tree's child closes were added after the engine validated,
@@ -170,5 +173,48 @@ describe("openAutoAccounts", () => {
     expect(
       openAutoAccounts(stream, [neverOpened("Assets:Broker")], "").errors,
     ).toEqual([neverOpened("Assets:Broker")]);
+  });
+});
+
+// w21/756: after a close Beancount allows only balances, documents and notes;
+// the engine checked transactions only, so a pad into a closed account passed.
+describe("inactivePads", () => {
+  const pad = (date: string): DirectiveJson => ({
+    type: "pad",
+    date,
+    account: "Assets:Broker:VTI",
+    source_account: "Equity:Opening",
+  });
+  const source = [
+    "2024-04-01 close Assets:Broker",
+    "2024-03-01 pad Assets:Broker:VTI Equity:Opening",
+    "2024-05-01 pad Assets:Broker:VTI Equity:Opening",
+  ].join("\n");
+  const check = (directives: DirectiveJson[]) =>
+    located(inactivePads(directives, { "main.bean": source }, "main.bean"));
+
+  it("refuses a pad after close_tree's close, or a written one, on its line", () => {
+    const opened: DirectiveJson = {
+      type: "open",
+      date: "2024-01-01",
+      account: "Assets:Broker:VTI",
+      currencies: [],
+    };
+    const late = [
+      ["E1003", 3, "Invalid reference to inactive account 'Assets:Broker:VTI'"],
+    ];
+    expect(
+      check([
+        opened,
+        close("Assets:Broker:VTI"),
+        pad("2024-03-01"),
+        pad("2024-05-01"),
+      ]),
+    ).toEqual(late);
+  });
+
+  it("leaves a pad before the close, and an open account, alone", () => {
+    expect(check([pad("2024-05-01")])).toEqual([]);
+    expect(check([close("Assets:Broker:VTI"), pad("2024-03-01")])).toEqual([]);
   });
 });

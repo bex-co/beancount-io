@@ -1697,6 +1697,27 @@ async function main(): Promise<void> {
       ]),
     `close_tree with a fava plugin reports the posting once (got ${JSON.stringify(withFava)})`,
   );
+  // w21/756: a pad after a close (close_tree's or written) raised nothing.
+  for (const closed of [
+    'plugin "beancount.plugins.close_tree"',
+    "2024-04-01 close Assets:Broker:VTI",
+  ]) {
+    const padded = await closeTree([
+      closed,
+      "2024-01-01 open Assets:Broker",
+      "2024-01-01 open Assets:Broker:VTI",
+      "2024-01-01 open Equity:Opening",
+      "2024-04-01 close Assets:Broker",
+      "2024-05-01 pad Assets:Broker:VTI Equity:Opening",
+      "2024-05-02 balance Assets:Broker:VTI 5 USD",
+    ]);
+    assert(
+      padded.includes(
+        "E1003@6 Invalid reference to inactive account 'Assets:Broker:VTI'",
+      ),
+      `a pad into a closed account is refused on its line (got ${JSON.stringify(padded)})`,
+    );
+  }
   const autoParent = await closeTree([
     'plugin "beancount.plugins.auto_accounts"',
     'plugin "beancount.plugins.close_tree"',
