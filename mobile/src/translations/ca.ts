@@ -395,6 +395,8 @@ export const ca: Translations = {
   openAccountEmptyComponent: "Els components del nom no poden ser buits.",
   openAccountNamePreview: "Es crearà com a {{account}}",
   openAccountAlreadyOpen: "{{account}} ja està obert en aquest llibre.",
+  openAccountOpensLater:
+    "{{account}} ja és en aquest llibre i s'obre el {{date}}.",
   openAccountClosed:
     "{{account}} es va tancar el {{date}} i no es pot tornar a obrir.",
   openAccountUppercaseComponent:

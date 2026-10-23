@@ -394,6 +394,8 @@ export const uk: Translations = {
   openAccountEmptyComponent: "Частини назви рахунку не можуть бути порожніми.",
   openAccountNamePreview: "Буде створено як {{account}}",
   openAccountAlreadyOpen: "Рахунок {{account}} уже відкрито в цій книзі.",
+  openAccountOpensLater:
+    "{{account}} уже є в цій книзі й відкривається {{date}}.",
   openAccountClosed:
     "{{account}} закрито {{date}}, відкрити його знову не можна.",
   openAccountUppercaseComponent:

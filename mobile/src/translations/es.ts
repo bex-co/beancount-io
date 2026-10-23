@@ -395,6 +395,8 @@ export const es: Translations = {
     "Los componentes del nombre no pueden estar vacíos.",
   openAccountNamePreview: "Se creará como {{account}}",
   openAccountAlreadyOpen: "{{account}} ya está abierta en este libro.",
+  openAccountOpensLater:
+    "{{account}} ya está en este libro y se abre el {{date}}.",
   openAccountClosed:
     "{{account}} se cerró el {{date}} y no se puede volver a abrir.",
   openAccountUppercaseComponent:

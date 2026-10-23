@@ -398,6 +398,8 @@ export const de: Translations = {
   openAccountNamePreview: "Wird als {{account}} erstellt",
   openAccountAlreadyOpen:
     "{{account}} ist in diesem Hauptbuch bereits eröffnet.",
+  openAccountOpensLater:
+    "{{account}} ist bereits in diesem Hauptbuch und wird am {{date}} eröffnet.",
   openAccountClosed:
     "{{account}} wurde am {{date}} geschlossen und kann nicht wieder eröffnet werden.",
   openAccountUppercaseComponent:

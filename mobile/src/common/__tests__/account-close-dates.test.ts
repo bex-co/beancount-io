@@ -130,7 +130,9 @@ describe("closedAccountNamed", () => {
       "open-account-screen",
       "open-account-screen.tsx",
     );
-    expect(open.includes('? t("openAccountClosed", {')).toBe(true);
+    // The closed wording is chosen by `existingAccountNotice` (w21/723).
+    expect(open.includes("existingAccountNotice(")).toBe(true);
+    expect(open.includes("closeDates.get(account),")).toBe(true);
   });
 });
 

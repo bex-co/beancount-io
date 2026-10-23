@@ -396,6 +396,8 @@ export const sk: Translations = {
   openAccountEmptyComponent: "Časti názvu účtu nemôžu byť prázdne.",
   openAccountNamePreview: "Vytvorí sa ako {{account}}",
   openAccountAlreadyOpen: "Účet {{account}} je v tejto knihe už otvorený.",
+  openAccountOpensLater:
+    "{{account}} už je v tejto knihe a otvára sa {{date}}.",
   openAccountClosed:
     "{{account}} bol zatvorený {{date}} a nedá sa znova otvoriť.",
   openAccountUppercaseComponent:

@@ -55,10 +55,12 @@ import {
   type AccountNameValidationReason,
   type AccountRootPrefix,
   validateAccountName,
+  existingAccountNotice,
   openAccountSubmitState,
 } from "./account-name";
 import { useOpenAccount } from "./use-open-account";
 import { getFormatDate } from "@/common/format-util";
+import { useToday } from "@/common/hooks/use-today";
 import { initialOpenDate } from "./open-date";
 import { LEADING_TEXT_ALIGN, directionalIcon } from "@/common/rtl";
 import { revealAccountVar } from "@/common/vars/reveal-account";
@@ -313,7 +315,14 @@ export function OpenAccountScreenComponent(): JSX.Element {
   });
   const { alreadyOpen } = submitState;
   const closeDates = useAccountCloseDates(ledgerId);
-  const closedAt = alreadyOpen ? closeDates.get(account) : undefined;
+  const today = useToday();
+  const existing = alreadyOpen
+    ? existingAccountNotice(
+        closeDates.get(account),
+        closeDates.openedOn?.get(account),
+        today,
+      )
+    : null;
   const canSubmit = submitState.canSubmit && !saved;
   const rootKey = rootPrefix.toLowerCase() as AccountRoot;
   const rootIcon = getRootIcon(rootKey);
@@ -493,19 +502,15 @@ export function OpenAccountScreenComponent(): JSX.Element {
             {validationMessage ? (
               <InlineError style={styles.error} message={validationMessage} />
             ) : null}
-            {alreadyOpen ? (
+            {existing ? (
               <InlineError
                 style={styles.error}
-                // A closed account can't be reopened; "already open"
-                // contradicted the picker that hid it (w21/122).
-                message={
-                  closedAt
-                    ? t("openAccountClosed", {
-                        account,
-                        date: formatLedgerDate(closedAt, locale),
-                      })
-                    : t("openAccountAlreadyOpen", { account })
-                }
+                message={t(existing.key, {
+                  account,
+                  ...(existing.date
+                    ? { date: formatLedgerDate(existing.date, locale) }
+                    : {}),
+                })}
               />
             ) : null}
             {namePreview ? (
@@ -620,6 +625,9 @@ export function OpenAccountScreenComponent(): JSX.Element {
         isVisible={datePickerVisible}
         mode="date"
         date={date}
+        // Not after today: an account opened later is not listed on Accounts
+        // until it opens (w21/614), so it read as lost (w21/723).
+        maximumDate={new Date()}
         onConfirm={(selectedDate) => {
           setDate(selectedDate);
           setSubmitError(null);

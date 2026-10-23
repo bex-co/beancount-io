@@ -304,3 +304,24 @@ export function typedCurrencyCode(input: string): string | null {
   const code = input.trim().toUpperCase();
   return isCommodityCode(code) ? code : null;
 }
+
+/**
+ * What the name field says of an account the ledger already has: closed (it
+ * can't be reopened, w21/122), opening after `today`, or open. One opened for
+ * next month is not listed on Accounts yet (w21/614), so "already open" was
+ * its only trace and read as a contradiction (w21/723).
+ */
+export function existingAccountNotice(
+  closedAt: string | undefined,
+  openedOn: string | undefined,
+  today: string,
+): {
+  key: "openAccountClosed" | "openAccountOpensLater" | "openAccountAlreadyOpen";
+  date?: string;
+} {
+  if (closedAt) return { key: "openAccountClosed", date: closedAt };
+  if (openedOn && openedOn > today) {
+    return { key: "openAccountOpensLater", date: openedOn };
+  }
+  return { key: "openAccountAlreadyOpen" };
+}
