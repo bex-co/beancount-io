@@ -92,3 +92,19 @@ describe("seriesByMerchant", () => {
     expect(merchantKey(" QaFlix ")).toBe("qaflix");
   });
 });
+
+// w21/835: the history of one merchant written two ways merges.
+describe("merchantKey across Arabic-script spellings", () => {
+  it("reads Arabic yeh and kaf as the Persian letters", () => {
+    expect(merchantKey("Qa كافي شاپ")).toBe(merchantKey("Qa کافی شاپ"));
+  });
+
+  it("reads a zero-width non-joiner as a space, and drops harakat", () => {
+    expect(merchantKey("می\u200cخرم")).toBe(merchantKey("می خرم"));
+    expect(merchantKey("كَافِي")).toBe(merchantKey("کافی"));
+  });
+
+  it("leaves other text as before", () => {
+    expect(merchantKey("  Whole  Foods ")).toBe("whole foods");
+  });
+});

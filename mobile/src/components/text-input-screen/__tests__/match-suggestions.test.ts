@@ -51,3 +51,18 @@ describe("matchSuggestions", () => {
     expect(matchSuggestions(["Tea"], "  ", 5)).toEqual(["Tea"]);
   });
 });
+
+// w21/835: a Persian keyboard's ی and ک against the Arabic ي and ك.
+describe("matchSuggestions across Arabic-script spellings", () => {
+  const arabic = "Qa كافي شاپ";
+
+  it("finds the Arabic spelling from Persian typing", () => {
+    expect(matchSuggestions([arabic], "کافی", 30)).toEqual([arabic]);
+  });
+
+  it("lists the two spellings as one row", () => {
+    expect(matchSuggestions(["Qa کافی شاپ", arabic], "", 30)).toEqual([
+      "Qa کافی شاپ",
+    ]);
+  });
+});

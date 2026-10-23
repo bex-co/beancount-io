@@ -672,3 +672,14 @@ describe("deriveTwoPostingSuggestions across a payee's spellings", () => {
     ]);
   });
 });
+
+// w21/835: the history written with Arabic letters fills the Persian spelling.
+test("deriveTwoPostingSuggestions reads Arabic and Persian spellings of a payee as one", () => {
+  const entry = txn("Qa كافي شاپ", [
+    { account: "Liabilities:Visa", n: -5 },
+    { account: "Expenses:Coffee", n: 5 },
+  ]);
+  const result = deriveTwoPostingSuggestions([entry], "Qa کافی شاپ");
+  expect(result.from.autoFill).toBe("Liabilities:Visa");
+  expect(result.to.autoFill).toBe("Expenses:Coffee");
+});

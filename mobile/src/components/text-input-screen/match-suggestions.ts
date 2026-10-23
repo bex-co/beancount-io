@@ -1,3 +1,4 @@
+import { foldArabicScript } from "../../common/arabic-script-fold";
 import { foldQuotes } from "../../common/merchant-key";
 
 /**
@@ -7,8 +8,7 @@ import { foldQuotes } from "../../common/merchant-key";
  * for a composed "café" in a ledger that stores "Cafe" + U+0301 (w21/257).
  */
 function fold(text: string): string {
-  return foldQuotes(text)
-    .normalize("NFC")
+  return foldArabicScript(foldQuotes(text).normalize("NFC"))
     .toLowerCase()
     .replace(/i\u0307/gu, "i")
     .replace(/\s+/gu, " ");
@@ -32,7 +32,10 @@ export function matchSuggestions(
   for (const suggestion of suggestions) {
     const item = suggestion.trim();
     if (!item) continue;
-    const key = foldQuotes(item.normalize("NFC")).replace(/\s+/gu, " ");
+    const key = foldArabicScript(foldQuotes(item.normalize("NFC"))).replace(
+      /\s+/gu,
+      " ",
+    );
     if (seen.has(key)) continue;
     seen.add(key);
     if (!query || fold(item).includes(query)) {
