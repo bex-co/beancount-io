@@ -73,6 +73,15 @@ export function Combobox({
   // the input afterwards (w4/255), so the next blur — Tab onward — must not
   // commit it a second time; any new typing clears it.
   const committedRef = React.useRef<string | null>(null);
+  // Values sent up and not yet seen back as `value`, oldest first. A parent
+  // may apply one late (a filter waits for its URL navigation), after the
+  // reader has typed on; its echo must not replace the newer draft (w4/990).
+  // Any other value is a deliberate change, such as Clear all or Back.
+  const sentRef = React.useRef<string[]>([]);
+  const send = (next: string) => {
+    sentRef.current.push(next);
+    onValueChange(next);
+  };
   // Unique ID per instance to scope querySelector and avoid cross-instance conflicts
   const instanceId = React.useId().replace(/:/g, "");
   const listboxId = `${instanceId}-listbox`;
@@ -94,7 +103,7 @@ export function Combobox({
   const handleSelect = (selectedValue: string) => {
     committedRef.current = selectedValue;
     setInputValue(selectedValue);
-    onValueChange(selectedValue);
+    send(selectedValue);
     setOpen(false);
     setHighlightedIndex(-1);
   };
@@ -102,7 +111,7 @@ export function Combobox({
   const handleClear = (e: React.MouseEvent) => {
     e.stopPropagation();
     setInputValue("");
-    onValueChange("");
+    send("");
     inputRef.current?.focus();
   };
 
@@ -113,7 +122,7 @@ export function Combobox({
 
     // If allowCustom is true and triggerOn is "change", immediately update the value
     if (allowCustom && triggerOn === "change") {
-      onValueChange(newValue);
+      send(newValue);
     }
 
     // Open dropdown when typing
@@ -132,7 +141,7 @@ export function Combobox({
     if (committed !== null && committed === inputValue) return;
     // If triggerOn is "blur" and allowCustom is true, update the value on blur
     if (allowCustom && triggerOn === "blur") {
-      onValueChange(inputValue);
+      send(inputValue);
     }
   };
 
@@ -159,7 +168,7 @@ export function Combobox({
       } else if (allowCustom) {
         // Use custom value
         committedRef.current = inputValue;
-        onValueChange(inputValue);
+        send(inputValue);
         setOpen(false);
       }
     } else if (e.key === "ArrowDown") {
@@ -185,6 +194,12 @@ export function Combobox({
 
   // Sync input value with prop value when it changes externally
   React.useEffect(() => {
+    const echo = sentRef.current.indexOf(value);
+    if (echo >= 0) {
+      sentRef.current.splice(0, echo + 1);
+      return;
+    }
+    sentRef.current = [];
     setInputValue(value);
   }, [value]);
 
