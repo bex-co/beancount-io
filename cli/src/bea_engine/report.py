@@ -278,7 +278,9 @@ def _income_statement(
             "net_profit": _summary(
                 -profit.balance,
                 conversion,
-                incomplete=_unvalued(income.balance, conversion) or _unvalued(expenses.balance, conversion),
+                # Its own combined balance, as the headline judges: unpriced income
+                # and expense that cancel leave a known profit (w5/940).
+                incomplete=_unvalued(profit.balance, conversion),
             ),
         }
         for income, expenses, profit in zip(data.income_data, data.expenses_data, data.net_profit_data, strict=True)
