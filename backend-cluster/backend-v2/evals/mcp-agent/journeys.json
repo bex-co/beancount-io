@@ -416,6 +416,9 @@
             "denied",
             "forbidden",
             "refused",
+            "rejected",
+            "lacks `ledger.write`",
+            "`ledger.write` scope",
             "unauthorized"
           ]
         }
