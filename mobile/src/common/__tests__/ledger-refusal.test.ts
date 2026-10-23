@@ -462,6 +462,11 @@ describe("ledgerWriteFailureMessage with a single-entry refusal", () => {
         "newContent holds no entry; remove the entry with deleteEntrySource instead",
         "editTransactionEmpty",
       ],
+      // w21/814: an indented date line is not an empty entry.
+      [
+        `newContent's date line is indented; a dated directive starts at column zero: 2026-10-20 * "Qa20261020 Cafe" "Lunch"`,
+        "ledgerEntryDateIndented",
+      ],
       [
         '`option` configures the ledger and is not an entry; change it with updateLedgerFiles: option "title" "x"',
         "ledgerEntryNotAnEntry",

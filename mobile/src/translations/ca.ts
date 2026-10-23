@@ -389,6 +389,8 @@ export const ca: Translations = {
   ledgerInvalidFlag: "{{value}} no es pot fer servir com a marca.",
   ledgerEntryOneAtATime: "Edita una sola entrada alhora.",
   ledgerEntryIndent: "Sagna els apunts sota la línia de la data.",
+  ledgerEntryDateIndented:
+    "La data ha de començar la línia: elimina l'espai que té davant.",
   ledgerEntryNotAnEntry:
     "Les opcions, els connectors i les inclusions no són entrades. Canvia-les a l'editor de fitxers del llibre.",
   openAccountInvalidRoot: "Tria un tipus de compte vàlid.",

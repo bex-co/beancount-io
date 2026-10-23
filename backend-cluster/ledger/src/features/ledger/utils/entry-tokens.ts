@@ -252,6 +252,17 @@ export function assertSingleEntryText(text: string, field: string): void {
     (line) => !line.startsWith(";"),
   );
   if (directives.length === 0) {
+    // A space before the date reads as no entry at all, and the advice to
+    // delete it would remove the transaction (w21/814).
+    const indented = text
+      .split("\n")
+      .find((line) => /^[ \t]+\d{4}-\d{2}-\d{2}\s/.test(line));
+    if (indented !== undefined) {
+      throw new BadUserInputError(
+        `${field}'s date line is indented; a dated directive starts at column zero: ${indented.trim()}`,
+        field,
+      );
+    }
     throw new BadUserInputError(
       `${field} holds no entry; remove the entry with deleteEntrySource instead`,
       field,

@@ -389,6 +389,8 @@ export const fr: Translations = {
   ledgerInvalidFlag: "{{value}} ne peut pas servir de drapeau.",
   ledgerEntryOneAtATime: "Modifiez une seule écriture à la fois.",
   ledgerEntryIndent: "Indentez les lignes de mouvement sous la ligne de date.",
+  ledgerEntryDateIndented:
+    "La date doit commencer la ligne : supprimez l'espace qui la précède.",
   ledgerEntryNotAnEntry:
     "Les options, les plugins et les inclusions ne sont pas des écritures. Modifiez-les dans l'éditeur de fichier du grand livre.",
   openAccountInvalidRoot: "Choisissez un type de compte valide.",

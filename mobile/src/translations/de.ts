@@ -391,6 +391,8 @@ export const de: Translations = {
   ledgerInvalidFlag: "{{value}} kann nicht als Flag verwendet werden.",
   ledgerEntryOneAtATime: "Bearbeiten Sie jeweils nur einen Eintrag.",
   ledgerEntryIndent: "Rücken Sie die Buchungszeilen unter der Datumszeile ein.",
+  ledgerEntryDateIndented:
+    "Das Datum muss am Zeilenanfang stehen: Entfernen Sie das Leerzeichen davor.",
   ledgerEntryNotAnEntry:
     "Optionen, Plugins und Includes sind keine Einträge. Ändern Sie sie im Dateieditor des Buchs.",
   openAccountInvalidRoot: "Wählen Sie einen gültigen Kontotyp.",

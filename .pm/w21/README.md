@@ -12,7 +12,6 @@
 
 ## Inbox
 
-- [814](./814.md) — Edit Transaction calls an indented date line "an empty entry" and points at Delete
 - [815](./815.md) — The code editor turns a lone carriage return into a line break on save
 - [816](./816.md) — An entry containing a control character can never be edited; raw English API text
 - [817](./817.md) — Edit Transaction's conflict alert is a dead end (no Copy & Reload)

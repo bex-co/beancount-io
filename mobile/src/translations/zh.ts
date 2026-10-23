@@ -341,6 +341,7 @@ export const zh: Translations = {
   ledgerInvalidFlag: "{{value}} 不能用作标记。",
   ledgerEntryOneAtATime: "一次只能编辑一条记录。",
   ledgerEntryIndent: "请将分录缩进到日期行下方。",
+  ledgerEntryDateIndented: "日期必须位于行首：请删除它前面的空格。",
   ledgerEntryNotAnEntry:
     "选项、插件和包含指令不是记录。请在账本文件编辑器中修改它们。",
   openAccountInvalidRoot: "请选择有效的账户类型。",

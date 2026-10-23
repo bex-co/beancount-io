@@ -390,6 +390,8 @@ export const ru: Translations = {
   ledgerInvalidFlag: "{{value}} нельзя использовать как флаг.",
   ledgerEntryOneAtATime: "Редактируйте по одной записи за раз.",
   ledgerEntryIndent: "Сделайте отступ у проводок под строкой с датой.",
+  ledgerEntryDateIndented:
+    "Дата должна стоять в начале строки: удалите пробел перед ней.",
   ledgerEntryNotAnEntry:
     "Опции, плагины и включения не являются записями. Меняйте их в редакторе файла книги.",
   openAccountInvalidRoot: "Выберите допустимый тип счёта.",

@@ -390,6 +390,8 @@ export const sk: Translations = {
   ledgerInvalidFlag: "{{value}} nemožno použiť ako príznak.",
   ledgerEntryOneAtATime: "Upravujte naraz iba jeden záznam.",
   ledgerEntryIndent: "Odsaďte účtovania pod riadkom s dátumom.",
+  ledgerEntryDateIndented:
+    "Dátum musí byť na začiatku riadka: odstráňte medzeru pred ním.",
   ledgerEntryNotAnEntry:
     "Možnosti, pluginy a zahrnutia nie sú záznamy. Zmeňte ich v editore súboru knihy.",
   openAccountInvalidRoot: "Vyberte platný typ účtu.",

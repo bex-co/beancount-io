@@ -388,6 +388,8 @@ export const uk: Translations = {
   ledgerInvalidFlag: "{{value}} не можна використати як прапорець.",
   ledgerEntryOneAtATime: "Редагуйте по одному запису за раз.",
   ledgerEntryIndent: "Зробіть відступ у проводок під рядком із датою.",
+  ledgerEntryDateIndented:
+    "Дата має стояти на початку рядка: видаліть пробіл перед нею.",
   ledgerEntryNotAnEntry:
     "Опції, плагіни та включення не є записами. Змінюйте їх у редакторі файлу книги.",
   openAccountInvalidRoot: "Оберіть дійсний тип рахунку.",

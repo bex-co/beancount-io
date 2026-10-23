@@ -372,6 +372,8 @@ export const en = {
   ledgerInvalidFlag: "{{value}} can't be used as a flag.",
   ledgerEntryOneAtATime: "Edit one entry at a time.",
   ledgerEntryIndent: "Indent postings under the date line.",
+  ledgerEntryDateIndented:
+    "The date must start its line: remove the space before it.",
   ledgerEntryNotAnEntry:
     "Options, plugins and includes aren't entries. Change them in the ledger file editor.",
   openAccountInvalidRoot: "Choose a valid account type.",

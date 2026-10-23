@@ -199,6 +199,9 @@ function tokenRefusal(
  * is not one.
  */
 const SINGLE_ENTRY_REFUSALS: [RegExp, string][] = [
+  // An indented date line, which was called an empty entry with advice to
+  // delete it (w21/814).
+  [/^\S+'s date line is indented;/, "ledgerEntryDateIndented"],
   [/^\S+ holds no entry;/, "editTransactionEmpty"],
   [/^\S+ holds \d+ entries;/, "ledgerEntryOneAtATime"],
   [/^\S+ must be one dated directive:/, "ledgerEntryIndent"],

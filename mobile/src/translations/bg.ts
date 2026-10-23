@@ -380,6 +380,8 @@ export const bg: Translations = {
   ledgerInvalidFlag: "{{value}} не може да се използва като флаг.",
   ledgerEntryOneAtATime: "Редактирайте по един запис наведнъж.",
   ledgerEntryIndent: "Отместете постингите навътре под реда с датата.",
+  ledgerEntryDateIndented:
+    "Датата трябва да е в началото на реда: премахнете интервала пред нея.",
   ledgerEntryNotAnEntry:
     "Опциите, плъгините и включванията не са записи. Променяйте ги в редактора на файла на книгата.",
   openAccountInvalidRoot: "Изберете валиден вид сметка.",

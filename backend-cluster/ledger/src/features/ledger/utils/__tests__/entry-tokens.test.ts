@@ -189,7 +189,17 @@ describe("assertSingleEntryText", () => {
     ['plugin "beancount.plugins.auto"', "`plugin` configures the ledger"],
     ["2026-01-01 open A:B\n2026-01-02 open A:C", "newContent holds 2 entries"],
     ["  indented only", "newContent holds no entry"],
-    ['  2026-01-01 * "a"', "newContent holds no entry"],
+    // w21/814: an indented date is named, not called an empty entry.
+    ['  2026-01-01 * "a"', "newContent's date line is indented"],
+    [
+      '\t2026-01-01 * "a"\n\tAssets:Cash  1 USD',
+      "newContent's date line is indented",
+    ],
+    [
+      '    2026-01-01 * "a"\n      Assets:Cash  1 USD\n      Equity:X',
+      "newContent's date line is indented",
+    ],
+    ["; only a comment\n", "newContent holds no entry"],
     ["Assets:Cash 1 USD", "newContent must be one dated directive"],
   ])("refuses %p", (text, message) => {
     expect(() => assertSingleEntryText(text, "newContent")).toThrow(message);
