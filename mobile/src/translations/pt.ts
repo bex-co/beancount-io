@@ -833,6 +833,7 @@ export const pt: Translations = {
   feedSourceLedger: "Livro",
   feedSourceBlog: "Blog",
   feedSourceRelease: "Versão",
+  merchantTotalAtRates: "{{amount}} às taxas registradas",
   feedCommittedTo: "Alteração em {{ledger}}",
   feedCreatedLedger: "Livro {{ledger}} criado",
   feedPushCommits: {

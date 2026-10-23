@@ -15,7 +15,6 @@
 - [728](./728.md) — Clearing a negative amount leaves a hidden "-", so an empty-looking field shows a format error and blocks Done
 - [729](./729.md) — Typing an amount before choosing the first payee stops that payee's usual accounts from filling in (w21/411 gap)
 - [730](./730.md) — A merged payee suggestion fills in accounts only from the spelling it shows, so variants don't fill in
-- [725](./725.md) — A merchant paid by card in a foreign currency shows "€150.00" over rows in dollars (−$110.00, −$55.00)
 - [726](./726.md) — Budget reads an expense booked at cost as "Actual $0.00 · Not in total: 5 VOO" while Spending counts $2,000
 - [727](./727.md) — Spending's "See all" opens Reports 1M on the last active month while Spending says "This month $0.00" (owner call)
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window

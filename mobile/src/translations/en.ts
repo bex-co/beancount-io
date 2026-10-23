@@ -467,6 +467,7 @@ export const en = {
   feedSourceLedger: "Ledger",
   feedSourceBlog: "Blog",
   feedSourceRelease: "Release",
+  merchantTotalAtRates: "{{amount}} at the recorded rates",
   feedCommittedTo: "Committed to {{ledger}}",
   feedCreatedLedger: "Created repository {{ledger}}",
   feedPushCommits: {

@@ -31,6 +31,7 @@ import {
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import { RouteLedgerUnavailable } from "@/components/route-ledger-unavailable";
 import { bindRouteLedger } from "@/common/route-ledger";
+import { isolateLtr } from "@/common/bidi";
 import {
   aggregatePayees,
   PAYEE_ROLLUP_BQL,
@@ -77,9 +78,11 @@ import {
 } from "./selectors/filter-exact-payee";
 import {
   buildMerchantCurrencyTotalsBql,
+  buildMerchantWeightTotalsBql,
   buildMerchantMetaBql,
   composeMerchantStats,
   mapMerchantCurrencyTotals,
+  pricedTotals,
   mapMerchantMeta,
 } from "./selectors/merchant-stats";
 import { useLedgerReadContext } from "@/common/hooks/use-ledger-read-context";
@@ -282,6 +285,14 @@ function MerchantDetailBody({
     () => buildMerchantCurrencyTotalsBql(spellings, { expenses, income }),
     [spellings, expenses, income],
   );
+  const weightsBql = useMemo(
+    () => buildMerchantWeightTotalsBql(spellings, { expenses, income }),
+    [spellings, expenses, income],
+  );
+  const { data: weightsData, refetch: refetchWeights } = useQueryShellQuery({
+    variables: { ledgerId: ledgerId!, query: weightsBql },
+    skip: !ledgerId,
+  });
 
   const {
     data: metaData,
@@ -346,6 +357,14 @@ function MerchantDetailBody({
   const { primaryCurrency } = useLedgerReadContext(ledgerId!);
   const totalLines = formatMerchantTotals(
     stats?.totalsByCurrency ?? [],
+    primaryCurrency,
+  );
+  // What the rows add up to, when legs were priced into another currency.
+  const pricedLines = formatMerchantTotals(
+    pricedTotals(
+      stats?.totalsByCurrency ?? [],
+      mapMerchantCurrencyTotals(weightsData?.queryShell?.table ?? null),
+    ),
     primaryCurrency,
   );
 
@@ -469,11 +488,16 @@ function MerchantDetailBody({
     setIsRefreshing(true);
     pagesFetchedRef.current = 1;
     try {
-      await Promise.all([refetchMeta(), refetchTotals(), refetchJournal()]);
+      await Promise.all([
+        refetchMeta(),
+        refetchTotals(),
+        refetchWeights(),
+        refetchJournal(),
+      ]);
     } finally {
       setIsRefreshing(false);
     }
-  }, [refetchMeta, refetchTotals, refetchJournal]);
+  }, [refetchMeta, refetchTotals, refetchWeights, refetchJournal]);
 
   const onRetry = useCallback(() => {
     void onRefresh();
@@ -547,6 +571,12 @@ function MerchantDetailBody({
           {...HERO_AMOUNT_FIT}
         >
           {totalLines[index]}
+        </AmountText>
+      ))}
+
+      {pricedLines.map((line) => (
+        <AmountText key={line} style={styles.dateRange}>
+          {t("merchantTotalAtRates", { amount: isolateLtr(line) })}
         </AmountText>
       ))}
 

@@ -842,6 +842,7 @@ export const sk: Translations = {
   feedSourceLedger: "Kniha",
   feedSourceBlog: "Blog",
   feedSourceRelease: "Vydanie",
+  merchantTotalAtRates: "{{amount}} pri zapísaných kurzoch",
   feedCommittedTo: "Commit do {{ledger}}",
   feedCreatedLedger: "Vytvorená kniha {{ledger}}",
   feedPushCommits: {

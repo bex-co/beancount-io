@@ -71,6 +71,47 @@ export function buildMerchantCurrencyTotalsBql(
   );
 }
 
+/**
+ * The same legs' totals by weight: each in the currency it was priced in. A
+ * card lunch of 100.00 EUR @ 1.10 USD weighs 110.00 USD, the amount its row
+ * shows, so a merchant paid in euros by a dollar card read "€150.00" over rows
+ * of −$110.00 and −$55.00 (w21/725). Same columns as the totals statement.
+ */
+export function buildMerchantWeightTotalsBql(
+  payees: string | readonly string[],
+  roots?: { expenses?: string; income?: string },
+): string {
+  return (
+    "SELECT currency(weight) as currency, sum(number(weight)) as total " +
+    `WHERE ${anyPayee(payees)} ` +
+    `AND ${moneyRootsBqlFilter(roots)} ` +
+    "GROUP BY currency(weight)"
+  );
+}
+
+/**
+ * The weight totals worth a line of their own: none when they say what the
+ * totals already do (no leg was priced into another currency), else all of
+ * them, by currency.
+ */
+export function pricedTotals(
+  totals: readonly MerchantCurrencyTotal[],
+  weights: readonly MerchantCurrencyTotal[],
+): MerchantCurrencyTotal[] {
+  const same =
+    weights.length === totals.length &&
+    weights.every((weight) =>
+      totals.some(
+        (total) =>
+          total.currency === weight.currency &&
+          Math.abs(total.total - weight.total) < 1e-9,
+      ),
+    );
+  return same
+    ? []
+    : [...weights].sort((a, b) => a.currency.localeCompare(b.currency));
+}
+
 /** Map the meta (count/first/last) table — soft-fail to null. */
 export function mapMerchantMeta(
   table: QueryResultTableLike | null | undefined,
