@@ -2089,26 +2089,40 @@ def _booking_order(
     if file is None:
         return ordered
     # Only a batch whose same-day rows could book another way is tried at all.
-    candidates = [ordered]
-    for alternative in (valid, _same_day_purchases_first(valid, file=file, eager=True)):
-        if all([i for i, _ in alternative] != [i for i, _ in seen] for seen in candidates):
-            candidates.append(alternative)
-    if len(candidates) == 1:
-        return ordered
-    for candidate in candidates:
+    eager = _same_day_purchases_first(valid, file=file, eager=True)
+
+    def books(candidate: list[tuple[int, Any]]) -> bool:
         try:
             write.validate_append(
                 file, [writer.format_transaction(d) for _, d in candidate], allow_errors=allow_errors, into=into
             )
         except protocol.LedgerError:
-            continue
-        return candidate
-    # None of the three books: a mix of independent trades, where one needs
-    # moving and another must stay (a long sale before its purchase beside a
-    # short opened then covered). Build the order row by row against the ledger
-    # (w5/980).
+            return False
+        return True
+
+    def distinct(candidates: list[list[tuple[int, Any]]], alternative: list[tuple[int, Any]]) -> bool:
+        return all([i for i, _ in alternative] != [i for i, _ in seen] for seen in candidates)
+
+    candidates = [ordered]
+    if distinct(candidates, valid):
+        candidates.append(valid)
+    eager_differs = distinct(candidates, eager)
+    if len(candidates) == 1 and not eager_differs:
+        return ordered
+    for candidate in candidates:
+        if books(candidate):
+            return candidate
+    # The eager order books anything with a same-day purchase of its lot first,
+    # which also moves a sale that already books past its purchase and picks a
+    # different LIFO/HIFO lot (w5/1002). So build the order row by row first,
+    # which moves a row only as far as it must (w5/980), and keep the eager one
+    # for a batch that the builder cannot place.
     built = _built_booking_order(valid, file=file, allow_errors=allow_errors, into=into)
-    return built if built is not None else ordered
+    if built is not None:
+        return built
+    if eager_differs and books(eager):
+        return eager
+    return ordered
 
 
 def _built_booking_order(
