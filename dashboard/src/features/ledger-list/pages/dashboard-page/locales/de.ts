@@ -302,6 +302,12 @@ const deDashboardPage: Record<string, TranslationEntry> = {
     message: "Änderungen in allen Büchern, die du sehen kannst",
     description: "Description under the Activity heading on the dashboard home",
   },
+  "page.dashboard.activityRefreshFailed": {
+    message:
+      "Aktivität konnte nicht aktualisiert werden. Angezeigt wird der zuvor geladene Stand.",
+    description:
+      "Notice above the activity cards when refreshing them failed; the cards shown are from an earlier load",
+  },
 };
 
 export default deDashboardPage;

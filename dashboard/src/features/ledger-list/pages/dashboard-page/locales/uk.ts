@@ -299,6 +299,11 @@ const ukDashboardPage: Record<string, TranslationEntry> = {
     message: "Зміни в усіх доступних вам книгах",
     description: "Description under the Activity heading on the dashboard home",
   },
+  "page.dashboard.activityRefreshFailed": {
+    message: "Не вдалося оновити активність. Показано завантажену раніше.",
+    description:
+      "Notice above the activity cards when refreshing them failed; the cards shown are from an earlier load",
+  },
 };
 
 export default ukDashboardPage;

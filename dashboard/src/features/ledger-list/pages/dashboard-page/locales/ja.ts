@@ -294,6 +294,12 @@ const jaDashboardPage: Record<string, TranslationEntry> = {
     message: "閲覧できるすべての帳簿の変更",
     description: "Description under the Activity heading on the dashboard home",
   },
+  "page.dashboard.activityRefreshFailed": {
+    message:
+      "アクティビティを更新できませんでした。以前に読み込んだ内容を表示しています。",
+    description:
+      "Notice above the activity cards when refreshing them failed; the cards shown are from an earlier load",
+  },
 };
 
 export default jaDashboardPage;

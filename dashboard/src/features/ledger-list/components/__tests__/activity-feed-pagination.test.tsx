@@ -141,7 +141,7 @@ async function mountFeed(language: "en" | "de" = "en") {
     name: "GetFeed",
     variables: { offset: 0, limit: 10, source: "LEDGER_RSS", locale: language },
   });
-  return { container, requests, localization };
+  return { container, requests, localization, router };
 }
 
 async function resolvePage(
@@ -342,6 +342,59 @@ describe("Activity feed pagination through Apollo", () => {
     expect(
       screen.getByRole("button", { name: en["page.dashboard.showMore"] }),
     ).toBeEnabled();
+  });
+
+  it("keeps cached cards through a failed refresh on return and retries it in place (w4/984)", async () => {
+    const { requests, router } = await mountFeed();
+    const user = userEvent.setup();
+    await resolvePage(requests[0], 0);
+    await waitFor(() => expectCards(10));
+
+    // Open a card's ledger, then come back: the cached cards show at once
+    // while the cache-and-network refresh is pending.
+    await user.click(screen.getAllByRole("link", { name: "books" })[0]!);
+    await waitFor(() => expect(screen.queryByRole("article")).toBeNull());
+    await act(async () => router.history.back());
+    await waitFor(() => expect(requests).toHaveLength(2));
+    expect(requests[1].variables).toEqual(requests[0].variables);
+    expectCards(10);
+
+    // The refresh fails: the cards stay, with a notice and the read's retry.
+    await act(async () => requests[1].reject());
+    const notice = await screen.findByRole("alert");
+    expect(notice).toHaveTextContent(
+      en["page.dashboard.activityRefreshFailed"],
+    );
+    expect(screen.queryByText(en["page.dashboard.feedError"])).toBeNull();
+    expectCards(10);
+
+    const retry = within(notice).getByRole("button", {
+      name: en["page.dashboard.retry"],
+    });
+    retry.focus();
+    await user.keyboard("{Enter}");
+    await waitFor(() => expect(requests).toHaveLength(3));
+    expect(requests[2].variables).toEqual(requests[0].variables);
+    // Pending, the notice and its busy retry stay and start nothing more.
+    expect(retry).toBeDisabled();
+    expect(notice).toBeInTheDocument();
+    await user.keyboard("{Enter}");
+    expect(requests).toHaveLength(3);
+    // A browser drops focus from the disabled control; jsdom keeps it.
+    const away = document.createElement("button");
+    document.body.appendChild(away);
+    away.focus();
+    away.remove();
+
+    await act(async () => requests[2].reject());
+    await waitFor(() => expect(retry).toHaveFocus());
+    expectCards(10);
+
+    await user.keyboard("{Enter}");
+    await waitFor(() => expect(requests).toHaveLength(4));
+    await resolvePage(requests[3], 0);
+    await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
+    expectCards(10);
   });
 
   it("keeps a successful empty initial feed free of pagination controls", async () => {

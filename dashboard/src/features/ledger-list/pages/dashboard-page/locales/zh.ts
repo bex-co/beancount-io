@@ -291,6 +291,11 @@ const zhDashboardPage: Record<string, TranslationEntry> = {
     message: "你能看到的所有账本的提交",
     description: "Description under the Activity heading on the dashboard home",
   },
+  "page.dashboard.activityRefreshFailed": {
+    message: "无法刷新动态，正在显示之前加载的内容。",
+    description:
+      "Notice above the activity cards when refreshing them failed; the cards shown are from an earlier load",
+  },
 };
 
 export default zhDashboardPage;

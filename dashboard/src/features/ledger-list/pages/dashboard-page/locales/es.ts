@@ -302,6 +302,12 @@ const esDashboardPage: Record<string, TranslationEntry> = {
     message: "Cambios en todos los libros que puedes ver",
     description: "Description under the Activity heading on the dashboard home",
   },
+  "page.dashboard.activityRefreshFailed": {
+    message:
+      "No se pudo actualizar la actividad. Se muestra la que se cargó antes.",
+    description:
+      "Notice above the activity cards when refreshing them failed; the cards shown are from an earlier load",
+  },
 };
 
 export default esDashboardPage;

@@ -294,6 +294,11 @@ const koDashboardPage: Record<string, TranslationEntry> = {
     message: "볼 수 있는 모든 장부의 변경 내역",
     description: "Description under the Activity heading on the dashboard home",
   },
+  "page.dashboard.activityRefreshFailed": {
+    message: "활동을 새로 고치지 못했습니다. 이전에 불러온 내용을 표시합니다.",
+    description:
+      "Notice above the activity cards when refreshing them failed; the cards shown are from an earlier load",
+  },
 };
 
 export default koDashboardPage;

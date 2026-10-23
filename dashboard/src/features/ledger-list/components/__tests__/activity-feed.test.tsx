@@ -73,4 +73,22 @@ describe("ActivityFeed", () => {
       screen.getByText("page.dashboard.activityEmpty"),
     ).toBeInTheDocument();
   });
+  it("says when an empty feed could not be refreshed (w4/984)", () => {
+    useQueryMock.mockReturnValue({
+      data: { getFeed: { items: [], total: 0, hasMore: false } },
+      loading: false,
+      error: new Error("Failed to fetch"),
+      refetch: vi.fn(),
+      fetchMore: vi.fn(),
+    });
+    render(<ActivityFeed />);
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "page.dashboard.activityRefreshFailed",
+    );
+    expect(
+      screen.getByText("page.dashboard.activityEmpty"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("page.dashboard.feedError")).toBeNull();
+  });
 });

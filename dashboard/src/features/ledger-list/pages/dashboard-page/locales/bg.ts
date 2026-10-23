@@ -299,6 +299,11 @@ const bgDashboardPage: Record<string, TranslationEntry> = {
     message: "Промени във всички счетоводни книги, до които имаш достъп",
     description: "Description under the Activity heading on the dashboard home",
   },
+  "page.dashboard.activityRefreshFailed": {
+    message: "Активността не можа да се обнови. Показва се заредената по-рано.",
+    description:
+      "Notice above the activity cards when refreshing them failed; the cards shown are from an earlier load",
+  },
 };
 
 export default bgDashboardPage;

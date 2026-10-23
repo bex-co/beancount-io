@@ -299,6 +299,11 @@ const ruDashboardPage: Record<string, TranslationEntry> = {
     message: "Изменения во всех доступных вам книгах",
     description: "Description under the Activity heading on the dashboard home",
   },
+  "page.dashboard.activityRefreshFailed": {
+    message: "Не удалось обновить активность. Показана загруженная ранее.",
+    description:
+      "Notice above the activity cards when refreshing them failed; the cards shown are from an earlier load",
+  },
 };
 
 export default ruDashboardPage;

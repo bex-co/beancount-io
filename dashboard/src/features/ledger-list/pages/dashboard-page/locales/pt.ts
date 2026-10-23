@@ -301,6 +301,12 @@ const ptDashboardPage: Record<string, TranslationEntry> = {
     message: "Alterações em todos os livros que consegue ver",
     description: "Description under the Activity heading on the dashboard home",
   },
+  "page.dashboard.activityRefreshFailed": {
+    message:
+      "Não foi possível atualizar a atividade. Mostrando a que foi carregada antes.",
+    description:
+      "Notice above the activity cards when refreshing them failed; the cards shown are from an earlier load",
+  },
 };
 
 export default ptDashboardPage;

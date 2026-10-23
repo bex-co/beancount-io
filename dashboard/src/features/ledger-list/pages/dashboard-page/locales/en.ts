@@ -298,6 +298,11 @@ const enDashboardPage: Record<string, TranslationEntry> = {
     message: "Commits across every ledger you can see",
     description: "Description under the Activity heading on the dashboard home",
   },
+  "page.dashboard.activityRefreshFailed": {
+    message: "Couldn't refresh activity. Showing what loaded earlier.",
+    description:
+      "Notice above the activity cards when refreshing them failed; the cards shown are from an earlier load",
+  },
 };
 
 export default enDashboardPage;

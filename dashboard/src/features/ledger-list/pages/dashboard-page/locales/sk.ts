@@ -299,6 +299,12 @@ const skDashboardPage: Record<string, TranslationEntry> = {
     message: "Zmeny vo všetkých knihách, ktoré vidíte",
     description: "Description under the Activity heading on the dashboard home",
   },
+  "page.dashboard.activityRefreshFailed": {
+    message:
+      "Aktivitu sa nepodarilo obnoviť. Zobrazuje sa skôr načítaná aktivita.",
+    description:
+      "Notice above the activity cards when refreshing them failed; the cards shown are from an earlier load",
+  },
 };
 
 export default skDashboardPage;

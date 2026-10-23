@@ -304,6 +304,12 @@ const caDashboardPage: Record<string, TranslationEntry> = {
     message: "Canvis a tots els llibres que pots veure",
     description: "Description under the Activity heading on the dashboard home",
   },
+  "page.dashboard.activityRefreshFailed": {
+    message:
+      "No s'ha pogut actualitzar l'activitat. Es mostra la que s'havia carregat abans.",
+    description:
+      "Notice above the activity cards when refreshing them failed; the cards shown are from an earlier load",
+  },
 };
 
 export default caDashboardPage;

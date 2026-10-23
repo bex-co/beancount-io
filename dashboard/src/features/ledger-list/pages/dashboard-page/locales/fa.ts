@@ -297,6 +297,12 @@ const faDashboardPage: Record<string, TranslationEntry> = {
     message: "تغییرات در همه دفترهایی که می‌بینید",
     description: "Description under the Activity heading on the dashboard home",
   },
+  "page.dashboard.activityRefreshFailed": {
+    message:
+      "فعالیت به‌روز نشد. فعالیتی که پیش‌تر بارگیری شده بود نمایش داده می‌شود.",
+    description:
+      "Notice above the activity cards when refreshing them failed; the cards shown are from an earlier load",
+  },
 };
 
 export default faDashboardPage;

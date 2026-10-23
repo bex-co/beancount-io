@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@apollo/client/react";
 import { AlertCircle, RefreshCw } from "lucide-react";
+import { Alert, AlertDescription } from "@/common/components/ui/alert";
 import { Button } from "@/common/components/ui/button";
 import { ContinuationControl } from "@/common/components/continuation-control";
 import { Skeleton } from "@/common/components/ui/skeleton";
 import { FeedCard } from "./feed-card";
+import { useQueryRetry } from "@/common/hooks/use-query-retry";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { GetFeedDocument, GetFeedQuery } from "@/graphql/definitions";
 
@@ -61,6 +63,7 @@ function ActivityFeedWorkspace() {
       fetchPolicy: "cache-and-network",
     },
   );
+  const { failure, retrying, retry } = useQueryRetry(error, refetch);
 
   const handleShowMore = async () => {
     if (isLoadingMore) return;
@@ -105,6 +108,31 @@ function ActivityFeedWorkspace() {
     }
   };
 
+  // Nothing was loaded, so the failure is all there is to show. A failed
+  // refresh of cards already shown keeps them instead (w4/984).
+  if (failure && !data) {
+    return (
+      <div className="space-y-5">
+        {heading}
+        <div className="rounded-xl border bg-card p-8 text-center shadow-sm">
+          <AlertCircle className="h-8 w-8 text-destructive mx-auto mb-2" />
+          <p className="text-sm mb-2 text-muted-foreground">
+            {t("page.dashboard.feedError")}
+          </p>
+          <Button
+            onClick={retry}
+            loading={retrying}
+            size="sm"
+            variant="outline"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            {t("page.dashboard.retry")}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   // Loading state
   if (loading && !data) {
     return (
@@ -133,25 +161,20 @@ function ActivityFeedWorkspace() {
     );
   }
 
-  // Error state
-  if (error) {
-    return (
-      <div className="space-y-5">
-        {heading}
-        <div className="rounded-xl border bg-card p-8 text-center shadow-sm">
-          <AlertCircle className="h-8 w-8 text-destructive mx-auto mb-2" />
-          <p className="text-sm mb-2 text-muted-foreground">
-            {t("page.dashboard.feedError")}
-          </p>
-          <Button onClick={() => refetch()} size="sm" variant="outline">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            {t("page.dashboard.retry")}
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
+  // What is shown is from an earlier load; say so, with the same read's
+  // retry, rather than replacing it (w4/984).
+  const refreshFailed = failure && (
+    <Alert>
+      <AlertCircle className="text-destructive" />
+      <AlertDescription className="flex flex-wrap items-center gap-2">
+        <span>{t("page.dashboard.activityRefreshFailed")}</span>
+        <Button onClick={retry} loading={retrying} size="sm" variant="outline">
+          <RefreshCw className="h-4 w-4 mr-2" />
+          {t("page.dashboard.retry")}
+        </Button>
+      </AlertDescription>
+    </Alert>
+  );
   const items = data?.getFeed.items || [];
   const hasMore = data?.getFeed.hasMore || false;
 
@@ -160,6 +183,7 @@ function ActivityFeedWorkspace() {
     return (
       <div className="space-y-5">
         {heading}
+        {refreshFailed}
         <div className="rounded-xl border bg-card p-8 text-center shadow-sm">
           <p className="text-sm text-muted-foreground">
             {t("page.dashboard.activityEmpty")}
@@ -173,6 +197,8 @@ function ActivityFeedWorkspace() {
   return (
     <div className="space-y-5">
       {heading}
+
+      {refreshFailed}
 
       {/* Feed items */}
       <div className="space-y-3">

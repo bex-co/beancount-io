@@ -302,6 +302,12 @@ const nlDashboardPage: Record<string, TranslationEntry> = {
     message: "Wijzigingen in alle grootboeken die je kunt zien",
     description: "Description under the Activity heading on the dashboard home",
   },
+  "page.dashboard.activityRefreshFailed": {
+    message:
+      "Activiteit kon niet worden vernieuwd. Eerder geladen activiteit wordt getoond.",
+    description:
+      "Notice above the activity cards when refreshing them failed; the cards shown are from an earlier load",
+  },
 };
 
 export default nlDashboardPage;
