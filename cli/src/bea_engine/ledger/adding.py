@@ -836,6 +836,25 @@ def _balance_tolerance(balance: Any, options: dict[str, Any]) -> Decimal:
     return tolerance
 
 
+def pad_already_used(entries: list[Any], account: str, pad_date: Any, date: Any, currency: str) -> bool:
+    """Whether an assertion on this account has already used the pad dated `pad_date`.
+
+    An assertion after the pad does, and so does one on the new assertion's own
+    day in another currency: it settles against the pad's adjustments just as a
+    later day's would, and counting only the days before `date` called a pad a
+    USD assertion had used still staged for EUR (w5/955). Another assertion in
+    `currency` on `date` is the new one's duplicate or conflict, not a use.
+    """
+    from beancount.core.data import Balance
+
+    return any(
+        isinstance(entry, Balance)
+        and entry.account == account
+        and (pad_date < entry.date < date or (entry.date == date and entry.amount.currency != currency))
+        for entry in entries
+    )
+
+
 def _refuse_used_pad_fill(
     entries: list[Any],
     date: Any,
@@ -863,12 +882,7 @@ def _refuse_used_pad_fill(
     candidate = Balance({}, date, account, BcAmount(number, currency), tolerance, None)
     if abs(number - held) <= _balance_tolerance(candidate, options):
         return
-    between = [
-        entry
-        for entry in entries
-        if isinstance(entry, Balance) and entry.account == account and cover.date < entry.date < date
-    ]
-    if not between:
+    if not pad_already_used(entries, account, cover.date, date, currency):
         return
     pad_at = f"{cover.meta.get('filename')}:{cover.meta.get('lineno')}"
     difference = number - held

@@ -2327,9 +2327,8 @@ def _padded_balance_reason(balance: Any, entries: list[Any], options: Any, *, le
     no assertion on the account between it and this one, completes silently
     as the two-step intends.
     """
-    from beancount.core.data import Balance
 
-    from bea_engine.ledger.adding import _balance_tolerance, _covering_pad, _plain
+    from bea_engine.ledger.adding import _balance_tolerance, _covering_pad, _plain, pad_already_used
 
     account, date = balance.account, balance.date
     number, currency = balance.amount.number, balance.amount.currency
@@ -2339,9 +2338,7 @@ def _padded_balance_reason(balance: Any, entries: list[Any], options: Any, *, le
     held = ledger_write.book_units(entries, account, currency, date)
     if abs(number - held) <= _balance_tolerance(balance, options):
         return None
-    if not any(
-        isinstance(entry, Balance) and entry.account == account and cover.date < entry.date < date for entry in entries
-    ):
+    if not pad_already_used(entries, account, cover.date, date, currency):
         return None
     pad_at = f"{cover.meta.get('filename')}:{cover.meta.get('lineno')}"
     return (

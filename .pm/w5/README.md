@@ -86,7 +86,6 @@
 - [959 — Treat repeated allowed currencies as one during transaction inference](./959.md) — minor CLI existing-ledger/native-import inference finding; USD/EUR and split-file controls reproduced 2026-10-21.
 - [958 — Keep unused unopened accounts out of remembered CSV settings](./958.md) — minor CLI memory-guard follow-up to 452/714; empty, skipped and fully categorized exports reproduced 2026-10-21.
 - [957 — Allow instrument units in the portfolio preset's holdings account](./957.md) — minor CLI first-purchase setup finding; reproduced twice in USD/EUR on 2026-10-21.
-- [955 — Count same-day assertions before treating a pad as staged](./955.md) — major CLI financial-guard gap; add and import silently backdate a EUR adjustment when the pad's existing USD assertion has the new assertion's date, reproduced 2026-10-21.
 - [956 — Preserve valid Unicode spaces in read account filters](./956.md) — minor CLI wrong-account read regression from 626; trailing-space names select 100 USD instead of their 200 USD, while list/balance include both accounts, reproduced 2026-10-21.
 
 The 27 findings from the MCP QA auth sweep against the hosted endpoint (023–054, less the five under [Dropped](#dropped)) were fixed in `backend-cluster/backend-v2` and closed on 2026-10-02 and 2026-10-03; each note under [`done/`](./done/) records what shipped and in which commit. None has been re-observed against the hosted endpoint yet — the fixes reach it with the next backend deploy.
