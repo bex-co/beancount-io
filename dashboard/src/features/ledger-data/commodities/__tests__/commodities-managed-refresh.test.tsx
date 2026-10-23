@@ -69,7 +69,16 @@ function commodities(read: number) {
  * settle independently. `reads` lists the outcome of each commodity read in
  * turn; reads past its end succeed.
  */
-function renderPage({ ack, reads }: { ack: boolean; reads: boolean[] }) {
+function renderPage({
+  ack,
+  reads,
+  held,
+}: {
+  ack: boolean;
+  reads: boolean[];
+  /** When given, the refresh waits for `held.release()` to settle. */
+  held?: { release?: () => void };
+}) {
   const calls = { refreshes: 0, commodityReads: 0 };
   const client = new ApolloClient({
     cache: new InMemoryCache(),
@@ -90,19 +99,25 @@ function renderPage({ ack, reads }: { ack: boolean; reads: boolean[] }) {
           switch (operation.operationName) {
             case "GetLedgerManagedPrices":
               return reply({ getLedgerManagedPrices: [source({})] });
-            case "RefreshLedgerManagedPrices":
+            case "RefreshLedgerManagedPrices": {
               calls.refreshes += 1;
-              if (!ack) return fail();
-              return reply({
-                refreshLedgerManagedPrices: [
-                  source({
-                    freshness: "recent",
-                    observedAt: "2026-10-22T12:00:00.000Z",
-                    nextRefreshAt: "2026-10-22T13:00:00.000Z",
-                    error: null,
-                  }),
-                ],
-              });
+              const settle = () =>
+                ack
+                  ? reply({
+                      refreshLedgerManagedPrices: [
+                        source({
+                          freshness: "recent",
+                          observedAt: "2026-10-22T12:00:00.000Z",
+                          nextRefreshAt: "2026-10-22T13:00:00.000Z",
+                          error: null,
+                        }),
+                      ],
+                    })
+                  : fail();
+              if (held) held.release = settle;
+              else settle();
+              return;
+            }
             case "GetLedgerCommodities":
               if (reads[calls.commodityReads++] === false) return fail();
               return reply({
@@ -197,4 +212,49 @@ describe("Commodities managed-price refresh", () => {
     expect(screen.queryByRole("alert")).toBeNull();
     expect(calls).toEqual({ refreshes: 1, commodityReads: 1 });
   });
+});
+
+/** A keyboard refresh keeps its place on the card, whatever it ends in (w4/992). */
+describe("Refresh prices focus", () => {
+  it.each([
+    [
+      "lands",
+      { ack: true, reads: [true, true] },
+      () => screen.findByText(dataPoints(3)),
+    ],
+    [
+      "fails before acknowledgement",
+      { ack: false, reads: [true] },
+      () =>
+        waitFor(() =>
+          expect(toast.error).toHaveBeenCalledWith("Could not refresh prices"),
+        ),
+    ],
+    [
+      "lands but its chart read fails",
+      { ack: true, reads: [true, false] },
+      () => screen.findByRole("alert"),
+    ],
+  ])(
+    "returns focus to Refresh prices when the refresh %s",
+    async (_name, outcome, settled) => {
+      const held: { release?: () => void } = {};
+      const calls = renderPage({ ...outcome, held });
+      const button = await refreshWithKeyboard();
+      await waitFor(() => expect(button).toBeDisabled());
+      // One refresh at a time: a second Enter while it runs sends nothing.
+      await userEvent.keyboard("{Enter}");
+      // The browser drops focus from the control it disabled; jsdom keeps it.
+      const away = document.createElement("button");
+      document.body.appendChild(away);
+      away.focus();
+      away.remove();
+
+      held.release!();
+      await settled();
+      await waitFor(() => expect(button).toBeEnabled());
+      await waitFor(() => expect(button).toHaveFocus());
+      expect(calls.refreshes).toBe(1);
+    },
+  );
 });

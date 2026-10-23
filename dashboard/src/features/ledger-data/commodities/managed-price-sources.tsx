@@ -110,28 +110,26 @@ export function ManagedPriceSources({
     variables: { ledgerId },
     skip: !ledgerId,
   });
-  const [refresh, { loading: refreshing }] = useMutation(
-    RefreshLedgerManagedPricesDocument,
-    {
-      variables: { ledgerId },
-      // The mutation returns the status records themselves; the records carry
-      // no id, so write them into the status query rather than refetch it.
-      update: (cache, { data: result }) => {
-        if (!result) return;
-        cache.writeQuery({
-          query: GetLedgerManagedPricesDocument,
-          variables: { ledgerId },
-          data: { getLedgerManagedPrices: result.refreshLedgerManagedPrices },
-        });
-      },
+  const [refresh] = useMutation(RefreshLedgerManagedPricesDocument, {
+    variables: { ledgerId },
+    // The mutation returns the status records themselves; the records carry
+    // no id, so write them into the status query rather than refetch it.
+    update: (cache, { data: result }) => {
+      if (!result) return;
+      cache.writeQuery({
+        query: GetLedgerManagedPricesDocument,
+        variables: { ledgerId },
+        data: { getLedgerManagedPrices: result.refreshLedgerManagedPrices },
+      });
     },
-  );
+  });
   // A new revision changes the prices the charts plot, not just the status.
   // Reading them again is a separate step: awaited inside the refresh, a
   // failed read reported the acknowledged refresh as failed (w4/332). The
   // charts keep what they show, and Reload charts repeats only that read.
   const [chartsReloadFailed, setChartsReloadFailed] = useState(false);
   const { run: runReload, pending: reloading } = usePendingAction();
+  const { run: runRefresh, pending: refreshing } = usePendingAction();
   const refreshButton = useRef<HTMLButtonElement>(null);
   const reloadCharts = () =>
     client
@@ -154,15 +152,18 @@ export function ManagedPriceSources({
   const sources = data?.getLedgerManagedPrices ?? [];
   if (sources.length === 0) return null;
 
-  const onRefresh = async () => {
-    try {
-      await refresh();
-    } catch {
-      toast.error(t("page.commodities.refreshPricesFailed"));
-      return;
-    }
-    await reloadCharts();
-  };
+  // One refresh at a time. The button stays on the card, so whatever the
+  // refresh ends in, it gets focus back for the next action (w4/992).
+  const onRefresh = () =>
+    runRefresh(async () => {
+      try {
+        await refresh();
+      } catch {
+        toast.error(t("page.commodities.refreshPricesFailed"));
+        return;
+      }
+      await reloadCharts();
+    });
 
   // Reload charts leaves with its alert; hand focus to the card's action.
   const onReloadCharts = () =>
