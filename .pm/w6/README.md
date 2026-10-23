@@ -21,7 +21,46 @@
 
 The [complete 17-target ownership map](blocked/m11/README.md#full-inventory-ownership-and-execution-order) covers every row of the [submission tracker](../../backend-cluster/backend-v2/docs/mcp-marketplaces.md#submission-status-tracker). Receipt-stage tasks require actual accepted submissions; publisher/account/client preparation is not a receipt. Original public/native DoDs remain in force. m8/041/042 keep concrete platform, claim/health or fee gates; no blocked item is silently dropped or reported submitted.
 
-Milestones m9/m10 return from blocked/ because new independently actionable receipt-stage tasks exist. Their previous access/review conditions are not declared met. ChatGPT and Claude are included by the current owner request, superseding their earlier scope exclusion. Dated execution snapshots below are history, not the current next-action list.
+Earlier in this run, m9/m10 returned from blocked/ for newly materialized receipt-stage work. That work has now been performed or parked at its concrete remaining condition, and both milestones are back under blocked/. ChatGPT and Claude are included by the current owner request, superseding their earlier scope exclusion. Dated execution snapshots below are history, not the current next-action list.
+
+## Full workstream reconciliation — 2026-10-23 UTC
+
+The final scan covers all **68 pending leaves and six blocked milestones**:
+m2, m6.5, m8, m9, m10 and m11. No live milestone directory or open inbox note
+remains. Every pending leaf has its own/milestone unblock condition or unresolved
+explicit dependencies (37 without an unresolved frontmatter dependency, 31 with
+one). This is a blocked outcome, not workstream completion. Completed tasks,
+milestone checkboxes, dependency resolution, packet JSON and local Markdown
+targets are checked; no task is closed on a draft, merely submitted listing or
+unobservable review state.
+
+| Remaining group | Exact condition and owner |
+| --- | --- |
+| Twenty engine findings, including m2 | Rustledger publishes a supported WASM artifact satisfying each recorded contract; worker adopts it and runs the actual native/API controls. Latest remains 0.24.0; eleven source candidates and nine semantic/contract gates remain. No unreleased bytes or repeated unchanged repro. |
+| 039/040 and m6.5/t005 | Hermes publishes compatible policy/discovery/plugin support; worker verifies the unchanged suite without force. Stable v0.22.5 has unchanged relevant files. |
+| m6.5/t012 and closeout | skills.rest processes its accepted refresh and SkillsMP refreshes its Git-derived records or supplies a supported correction path. skills.sh grouping already passes; the promised scanner window has not yet elapsed. |
+| m8 and dependents | Smithery supplies a supported surviving direct-directory intake; publisher confirms Glama's actual free-account agreement, then worker completes the existing-record claim/private synthetic Test Profile under w2/088 and Glama records a healthy full day. |
+| m9 and dependents | Exact final Cursor Publisher Terms and Docker/Cline synthetic-only grants await confirmation. GitHub nomination is sent; curation/publication and actual VS Code gallery/native verification remain separate. |
+| m10 and dependents | LobeHub's actual sign-in agreement awaits confirmation, then normal publisher/GitHub/repository checks and actual publication. MCPServers.org/MCPMarket must publish their original accepted free submissions; complete browser name-query readbacks at 21:35 UTC show no canonical result, without revealing private moderation. |
+| m11 and dependents | Publisher restores original ChatGPT/Claude submitting account/organization access or supplies actual feedback. Remote-list PR #2753 is open, mergeable and green without review comments; publisher resolves its genuine account preference or an upstream waiver, and maintainer reviews/merges. |
+| 041 / 042 | Publisher decides the prepared one-time MCP.so spend, total at most US$39; no payment occurs. PulseMCP reopens its paused supported intake. |
+
+Actual new submissions in this loop: nomination mail sent (`48e0fc715`, t014
+archived), and remote-list PR #2753 (`8b5ba34e1`, latest green review check
+`f7f544b74`). Other shipped outcomes preserve exact prepared decisions and
+observations: Cursor `63e0dbde1`, Docker `33500990d`, Cline `a9495bef7`,
+LobeHub `1ff701408` then `d132cce41`, original-account access
+`14b18275a`/`e887aa580` (superseding browser-only observations
+`6e4db95fb`/`7bbecefbe`), source-only 035 `8e3236fe7`, Glama `ced1aa3c3`,
+MCP.so `abef0cf0e`, and free-queue follow-through
+`f1b855288`/`07fe8a67c`/`05f7ed943`. All are direct main pushes; no repository
+PR, real-ledger write, forced installation or new payment is made.
+
+Private full board text/hash/dependency evidence remains under
+`backend-cluster/backend-v2/tmp/w6-final-actionability-20261023/`; primary
+release/catalog evidence under `scripts/skills/tmp/w6-readonly-audit-20261023T2018/`.
+Prepared task-local native settings and retained grants remain available for
+the exact pending decisions. Every publishable working-tree secret scan passes.
 
 The historical standalone suite0.3.8 closeout is complete. Before retirement,
 all13latest ClawHub versions were1.0.4 under puncsky, matching119authored files. OpenClaw installed all13;
@@ -107,7 +146,7 @@ These are existing blocked findings prepared for an upstream hand-off; no issue,
 | 031 | Use floor-based fixed-stride DATE_BIN arithmetic before the origin. |
 | 032 | Preserve calendar DATE_BIN origin days and month/year boundaries, including short months and leap years; the fixed-day correction alone is insufficient. |
 | 033 | Return an Amount in the requested currency for ONLY's zero inventory total; preserve true-null propagation. |
-| 035 | Add FILTER_CURRENCY's Position overload and preserve the position's complete cost data. |
+| 035 | Historical request now has merged source candidate 330e70e6; await a supported published WASM artifact and verify full Position/cost preservation. Do not file a duplicate implementation request. |
 | 036 | Match Beanquery BOOL truthiness for strings and tag sets while retaining null propagation. |
 | 038 | Preserve integer-only add/subtract/multiply types before type-sensitive operations, with explicit overflow behavior. |
 
