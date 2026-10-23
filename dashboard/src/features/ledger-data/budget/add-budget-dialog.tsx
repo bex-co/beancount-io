@@ -139,9 +139,11 @@ export function AddBudgetDialog({
   // submitted from, so a late success cannot reset or close a later draft
   // (w4/295).
   const opening = useRef(0);
+  // The closed dialog stays mounted, so a reset on closing may date from an
+  // earlier day: opening resets too, and a new draft starts on the day it
+  // opens (w4/986).
   useEffect(() => {
-    if (open) return;
-    opening.current += 1;
+    if (!open) opening.current += 1;
     resetForm();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
