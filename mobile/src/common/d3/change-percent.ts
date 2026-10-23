@@ -54,3 +54,22 @@ export function describeChange(
     ? { amount: format(0), flat: true }
     : { amount, flat: false };
 }
+
+/**
+ * Whether a move from `baseline` to `value` reads flat in the change row, as
+ * the row decides it with `describeChange`. The line and its fill take the
+ * neutral colour then too: a range that rounded to "+$0.00 (0.00%)" read grey
+ * above a green line, or a red one for a near-flat drop (w21/750).
+ */
+export function changeReadsFlat(
+  baseline: number,
+  value: number,
+  format: (value: number, includePlus?: boolean) => string,
+): boolean {
+  const pct = changePercent(baseline, value);
+  return describeChange(
+    value - baseline,
+    pct === null ? null : formatChangePercent(pct),
+    format,
+  ).flat;
+}

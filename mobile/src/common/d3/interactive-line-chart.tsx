@@ -50,6 +50,7 @@ import { ChartErrorBoundary } from "./chart-chrome";
 import { HERO_AMOUNT_FIT } from "@/components/amount-text/hero-amount-fit";
 import {
   changePercent,
+  changeReadsFlat,
   describeChange,
   formatChangePercent,
 } from "./change-percent";
@@ -685,11 +686,26 @@ function InteractiveLineChart({
     baseline,
     netWorthSign,
   );
-  const lineColor = neutral
-    ? theme.black80
-    : (scrubFavorable ?? restingFavorable)
-      ? theme.success
-      : theme.error;
+  // The figures the change row and the screen reader are formatted with.
+  const a11yFormat = useCallback(
+    (value: number, includePlus?: boolean) =>
+      formatValue
+        ? formatValue(value, includePlus)
+        : formatSignedMoneyWithCurrency(value, currency, includePlus),
+    [currency, formatValue],
+  );
+  // At rest the line says what the change row says, flat included (w21/750).
+  const restingFlat = changeReadsFlat(
+    baseline,
+    numbers[count - 1] ?? 0,
+    a11yFormat,
+  );
+  const lineColor =
+    neutral || (scrubFavorable === null && restingFlat)
+      ? theme.black80
+      : (scrubFavorable ?? restingFavorable)
+        ? theme.success
+        : theme.error;
 
   // Read off the plotted y positions rather than the values behind them: the
   // cursor worklets already hold `pointYs`, so asking it here costs no second
@@ -755,13 +771,6 @@ function InteractiveLineChart({
   // back on the latest point a few seconds after the last step.
   const [stepIndex, setStepIndex] = useState<number | null>(null);
   const stepRest = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const a11yFormat = useCallback(
-    (value: number, includePlus?: boolean) =>
-      formatValue
-        ? formatValue(value, includePlus)
-        : formatSignedMoneyWithCurrency(value, currency, includePlus),
-    [currency, formatValue],
-  );
   const a11ySeries = useMemo(
     () => ({
       labels,

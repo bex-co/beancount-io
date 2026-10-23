@@ -145,3 +145,38 @@ describe("describeChange", () => {
     expect(src.includes("{color:changeFlat?neutralColor:color}")).toBe(true);
   });
 });
+
+// w21/750: the change row read a flat range grey while the line and its fill
+// stayed green, or red for w21/237's near-flat drop.
+describe("changeReadsFlat", () => {
+  const { changeReadsFlat } = require("../d3/change-percent");
+  const { formatSignedMoneyWithCurrency } = require("../number-utils");
+  const money = (value: number, includePlus?: boolean) =>
+    formatSignedMoneyWithCurrency(value, "USD", includePlus);
+
+  it("is flat for an unmoved range and one that rounds to nothing", () => {
+    expect(changeReadsFlat(-8000, -8000, money)).toBe(true);
+    expect(changeReadsFlat(2500000, 2499988, money)).toBe(true);
+    expect(changeReadsFlat(0, 0.001, money)).toBe(true);
+  });
+
+  it("keeps a real move coloured", () => {
+    expect(changeReadsFlat(251635, 640480, money)).toBe(false);
+    expect(changeReadsFlat(200, 150, money)).toBe(false);
+  });
+
+  it("is what the chart's line colour follows at rest", () => {
+    const chart = fs
+      .readFileSync(
+        path.join(__dirname, "..", "d3", "interactive-line-chart.tsx"),
+        "utf8",
+      )
+      .replace(/\s+/g, "");
+    expect(
+      chart.includes(
+        "neutral||(scrubFavorable===null&&restingFlat)?theme.black80",
+      ),
+    ).toBe(true);
+    expect(chart.includes("constrestingFlat=changeReadsFlat(")).toBe(true);
+  });
+});
