@@ -90,4 +90,21 @@ The three string-literal probes declare `str` independently of aliases. Ordinary
 
 Searched all board states for dtype inference, numeric strings, aliased types, leading-zero query values and `ledger-shell-mappers`. Completed w3/m37 repairs dashboard rendering of correctly typed Inventory/Amount cells; w6/done/m1 repairs canonical row counts. Neither repairs expression typing. The mapper history still contains this inference in current main; no overlapping repair was found. Null-to-empty-string serialization is explicitly preserved compatibility and is not this finding.
 
-Unverified: complete type behavior for arbitrary expressions beyond these probes, real downstream identifier coercion, the available upstream metadata solution, and a deployed fix. No ledger/account data changed; no product fix implemented.
+Unverified: complete type behavior for arbitrary expressions beyond these probes, downstream identifier coercion beyond the dashboard case documented below, the available upstream metadata solution, and a deployed fix. No ledger/account data changed; no product fix implemented.
+
+## Dashboard confirmation, 2026-10-22
+
+The same existing type-provenance gap has a verified dashboard manifestation. On production `https://beancount.io`, isolated owned anonymous Chromium155.0.8059.85, English/light/UTC, fresh390px and1440px contexts ran these actual read-only queries on `open_ledger/example`:
+
+| Query | Actual GraphQL second-column dtype | Dashboard outcome |
+| --- | --- | --- |
+| `SELECT date, '00123' AS reference LIMIT 3` | `Decimal` | Native390 result adds an automatic chart with values123,123,123. |
+| `SELECT date, '00123' AS narration LIMIT 3` | `str` | Fresh1440 result has the same three text values and no chart. |
+
+Both independent GraphQL reads return HTTP200 without errors and three identical `2015-01-01 / "00123"` rows. Both native tables retain every leading zero. The two real CSV downloads also preserve all six `00123` cells exactly. The new confirmed coercion is the automatic plot's numeric interpretation, not table/CSV data loss. The reference card screenshot was visually inspected and shows the numeric chart above its literal-text table.
+
+Current dashboard `features/bql/lib/chart-utils.ts` deliberately gates automatic plotting on the declared numeric dtype, then converts Decimal cells into plotting numbers; the narration control proves that the correct text type suppresses the chart. This is a downstream consequence of the producer problem already owned by this milestone, rather than another dashboard implementation task. Correct producer metadata should repair this path without an alias allowlist or a client chart workaround.
+
+The inspected **installed** `@rustledger/wasm`0.24.0 declaration still exposes QueryResult columns/rows/errors without expression types. No latest-release lookup, dependency upgrade or reassessment of the upstream unblock condition was performed in this dashboard supplement. The existing blocked state and type-provenance repair boundary remain unchanged; no additional finding group is counted.
+
+Ignored evidence in `dashboard/tmp/qa-20261020/dashboard-loop/`: `bql-numeric-text-dashboard-complete-controls.json` contains both native cases, actual independent API types/rows, CSV checks and readonly chart options; `bql-numeric-text-reference-390.png` is the inspected element screenshot. Both contexts closed; original owned context only remains. Zero hosted writes, mutation attempts, route errors or page exceptions. An initial generic chart reader also matched Monaco canvases; final readback scopes `canvas[data-zr-dom-id]`, without a product-state override or chart dispatchAction. Other downstream identifier coercion and repaired behavior remain unverified. This extends the existing record and creates no duplicate W4 issue.
