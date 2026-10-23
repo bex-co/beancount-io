@@ -215,9 +215,12 @@ export function ReceiptReviewForm({
                       <FormItem>
                         <FormLabel>{t("receipt.review.amount")}</FormLabel>
                         <FormControl>
+                          {/* Any precision the exact-decimal schema accepts,
+                              like Balance's amount: a fixed cent step made the
+                              browser refuse 12.345 before it (w4/982). */}
                           <Input
                             type="number"
-                            step="0.01"
+                            step="any"
                             min="0"
                             placeholder="0.00"
                             {...field}

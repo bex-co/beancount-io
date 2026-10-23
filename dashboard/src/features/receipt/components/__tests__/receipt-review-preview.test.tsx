@@ -76,3 +76,35 @@ describe("ReceiptReviewForm preview strings", () => {
     );
   });
 });
+
+/** The amount field accepts the precision the review's schema does (w4/982). */
+describe("ReceiptReviewForm amount precision", () => {
+  it.each(["12.345", "0.00000001", "12.34", "12.50"])(
+    "lets %s through native validation and records it exactly",
+    async (amount) => {
+      const { onSubmit } = renderReview();
+      const input = screen.getByRole("spinbutton", { name: "Amount" });
+      fireEvent.change(input, { target: { value: amount } });
+      expect((input as HTMLInputElement).validity.stepMismatch).toBe(false);
+      expect((input as HTMLInputElement).validity.valid).toBe(true);
+
+      await userEvent
+        .setup()
+        .click(screen.getByRole("button", { name: "Record Transaction" }));
+      await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+      expect(onSubmit.mock.calls[0]![0].amount).toBe(amount);
+    },
+  );
+
+  it.each(["0", "-1"])("still refuses %s", async (amount) => {
+    const { onSubmit } = renderReview();
+    fireEvent.change(screen.getByRole("spinbutton", { name: "Amount" }), {
+      target: { value: amount },
+    });
+    await userEvent
+      .setup()
+      .click(screen.getByRole("button", { name: "Record Transaction" }));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+});
