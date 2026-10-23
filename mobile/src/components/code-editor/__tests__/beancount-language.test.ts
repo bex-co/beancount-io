@@ -215,7 +215,28 @@ describe("beancountIndent", () => {
 
   it("indents the first posting under a header", () => {
     expect(beancountIndent(HEADER, "", 2)).toBe(2);
-    expect(beancountIndent("2026-10-20 open Assets:Cash", "", 2)).toBe(2);
+    for (const flag of ["*", "!", "P", "txn", "?", "&", "#", "%"]) {
+      expect(beancountIndent(`2026-10-20 ${flag} "Coffee"`, "", 2)).toBe(2);
+    }
+  });
+
+  // w21/688: Enter after a one-line directive indented the next directive.
+  it("starts the line after a one-line directive at column 0", () => {
+    const lines = [
+      "2026-10-01 price BTC 60000.00 USD",
+      "2026-10-20 open Assets:Cash",
+      "2026-10-20 close Assets:Cash",
+      "2026-10-20 balance Assets:Cash 1.00 USD",
+      "2026-10-20 pad Assets:Cash Equity:Opening",
+      '2026-10-20 note Assets:Cash "called the bank"',
+      '2026-10-20 event "location" "Paris"',
+      "2026-10-20 commodity BTC",
+      '2026-10-20 document Assets:Cash "receipt.pdf"',
+      '2026-10-20 custom "budget" Expenses:Food "monthly" 300 USD',
+    ];
+    for (const line of lines) {
+      expect(beancountIndent(line, "", 2)).toBe(0);
+    }
   });
 
   it("keeps postings and metadata at the posting indent", () => {

@@ -144,6 +144,8 @@ function consumeStringBody(
 // ─── Indentation ─────────────────────────────────────────────────────────────
 
 const DATED_LINE = /^\d{4}-\d{2}-\d{2}(?:\s|$)/u;
+/** A transaction header: a date, then a flag (`*`, `!`, `P`, …) or `txn`. */
+const TRANSACTION_HEADER = /^\d{4}-\d{2}-\d{2}\s+(?:txn|[*!&#?%A-Z])(?:\s|$)/u;
 
 /**
  * The indentation the line being started gets after Enter (w21/338). Without a
@@ -153,7 +155,10 @@ const DATED_LINE = /^\d{4}-\d{2}-\d{2}(?:\s|$)/u;
  * a header the first posting started at column 0.
  *
  * - Before text that starts a directive (a date) or after a blank line: 0.
- * - After a dated header or an indented line (a posting, metadata): one unit.
+ * - After a transaction header or an indented line (a posting, metadata): one
+ *   unit. A one-line directive (`price`, `open`, `balance`, …) takes none: the
+ *   next line there is the next directive, and an indented date is a syntax
+ *   error (w21/688).
  * - Otherwise `null`, leaving CodeMirror's default.
  *
  * `previousLine` is the line above the one being indented, or null at the top.
@@ -165,7 +170,8 @@ export function beancountIndent(
 ): number | null {
   if (DATED_LINE.test(textAfter.trimStart())) return 0;
   if (previousLine === null || previousLine.trim() === "") return 0;
-  if (DATED_LINE.test(previousLine)) return unit;
+  if (TRANSACTION_HEADER.test(previousLine)) return unit;
+  if (DATED_LINE.test(previousLine)) return 0;
   if (/^\s/u.test(previousLine)) return unit;
   return null;
 }
