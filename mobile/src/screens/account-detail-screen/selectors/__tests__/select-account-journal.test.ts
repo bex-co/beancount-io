@@ -1097,3 +1097,54 @@ describe("identical twins on a parent account", () => {
     expect(rows[0].key === rows[1].key).toBe(false);
   });
 });
+
+// w21/741: the Budget tab's `custom "budget"` directive names the account, so
+// the journal carries it: a blank "Custom" row of $0.00, in English, under a
+// "$0.00" day, on the account and every parent.
+describe("an account journal's Custom directives", () => {
+  const budget = item(
+    {
+      entry_hash: "budget",
+      date: "2026-10-01",
+      directive_type: "Custom",
+      type: "budget",
+      values: [
+        { type: "account", value: "Expenses:Food" },
+        { type: "string", value: "monthly" },
+      ],
+    },
+    {},
+    { USD: 4133.49 },
+  );
+  const grocery = item(
+    {
+      entry_hash: "grocery",
+      date: "2026-10-01",
+      directive_type: "Transaction",
+      narration: "Groceries",
+      postings: [
+        { account: "Expenses:Food", units: { number: "42", currency: "USD" } },
+      ],
+    },
+    { USD: 42 },
+    { USD: 4133.49 },
+  );
+
+  it("are left out, and so is a day that holds nothing else", () => {
+    const rows = selectAccountJournalRows("USD", [budget, grocery]);
+    expect(rows.map((row) => row.title)).toEqual(["Groceries"]);
+    expect(
+      groupAccountJournalRowsToSections(
+        selectAccountJournalRows("USD", [budget]),
+        "USD",
+      ),
+    ).toEqual([]);
+  });
+
+  it("keep the other rows' keys, which the screen looks entries up by", () => {
+    const keys = accountJournalItemKeys([budget, grocery]);
+    expect(
+      selectAccountJournalRows("USD", [budget, grocery]).map((row) => row.key),
+    ).toEqual([keys[1]]);
+  });
+});

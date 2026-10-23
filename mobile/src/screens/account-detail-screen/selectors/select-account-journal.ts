@@ -456,7 +456,11 @@ export function selectAccountJournalRows(
       ? Infinity
       : Math.max(currencyMinorUnits(currency), recordedScale(items, currency));
   const keys = accountJournalItemKeys(items);
-  return items.map((item, index) => {
+  return items.flatMap((item, index): AccountJournalRow[] => {
+    // A Custom directive naming the account configures it (the Budget tab's
+    // `custom "budget"`) and moves nothing: it read as a blank "Custom" row
+    // of $0.00, in English, under a "$0.00" day (w21/741).
+    if (asString(item.entry.directive_type) === "Custom") return [];
     const row = {
       key: keys[index],
       title: entryTitle(item.entry),
@@ -475,25 +479,34 @@ export function selectAccountJournalRows(
     const otherChanges = others.length > 0 ? { otherChanges: others } : {};
     if (!units) {
       const balance = amountIn(item.balance, currency);
-      return {
+      return [
+        {
+          ...row,
+          ...otherChanges,
+          change: change.number,
+          balance: balance.number,
+          moneyScale: Math.min(Math.max(change.scale, balance.scale), moneyCap),
+        },
+      ];
+    }
+    const balance = amountIn(item.balance, units.currency);
+    return [
+      {
         ...row,
         ...otherChanges,
         change: change.number,
         balance: balance.number,
-        moneyScale: Math.min(Math.max(change.scale, balance.scale), moneyCap),
-      };
-    }
-    const balance = amountIn(item.balance, units.currency);
-    return {
-      ...row,
-      ...otherChanges,
-      change: change.number,
-      balance: balance.number,
-      units: {
-        currency: units.currency,
-        scale: Math.max(change.scale, balance.scale),
-        cost: postingsCost(item.entry, units.account, currency, units.currency),
+        units: {
+          currency: units.currency,
+          scale: Math.max(change.scale, balance.scale),
+          cost: postingsCost(
+            item.entry,
+            units.account,
+            currency,
+            units.currency,
+          ),
+        },
       },
-    };
+    ];
   });
 }
