@@ -38,3 +38,18 @@ operator’s action-time confirmation under the browser-control policy. No box
 was checked, no publisher grant was completed, no GitHub connection was made and
 no plugin was submitted. A local format/preflight check is not server-side
 validation or ownership proof. The supported hosted deployment remains eligible.
+
+## Fresh publisher follow-through — 2026-10-23 UTC
+
+The current actual marketplace search shows four unrelated authors' projects
+and no canonical bex-co hosted connector in its complete displayed result.
+The Publish tab still points to the native publishing flow. Official CLI
+0.0.42 is restored only to ignored task cache; no tracked dependency changes.
+
+The real native login opens the official app.lobehub.com sign-in and market
+OIDC flow. A page-read timeout interrupts browser control; fresh inventory
+shows Chrome running but no connected browser. No agreement or GitHub grant
+is accepted, and no authenticated publisher or submission receipt is verified.
+Restore the existing extension connection, then inspect the actual sign-in,
+agreement and repository-permission steps. Restart the native callback if it
+expires. This temporary access failure is not a platform eligibility rejection.

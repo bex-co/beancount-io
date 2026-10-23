@@ -1,6 +1,6 @@
 # w6 · m10 — List the connector in independent web directories
 
-**Worker:** worker1 **Goal:** People comparing accounting MCP servers find accurate, usable remote listings on the eligible independent directories. **Status:** todo (reopened for independent t009 LobeHub submission; existing moderation and publication checks remain blocked)
+**Worker:** worker1 **Goal:** People comparing accounting MCP servers find accurate, usable remote listings on the eligible independent directories. **Status:** blocked (t009 native login reached sign-in but browser connection is unavailable; existing free-submission review and publication gates remain)
 
 **Implementation estimate:** ~2h, excluding external review queues and the standing closing tasks.
 
@@ -8,7 +8,7 @@
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| [t009](./t009.md) | Complete LobeHub publisher setup and submit remote listing | 45m | w6/m8/t001 |
+| [t009](t009.md) | Complete LobeHub publisher setup and submit remote listing — **BLOCKED** | 45m | w6/m8/t001 |
 | [t001](t001.md) | Submit or correct MCPServers.org's free remote listing — **BLOCKED: submitted** | 30m | w6/m8/t001 |
 | [t002](t002.md) | Submit or correct MCPMarket's free remote listing — **BLOCKED: free repository submission** | 30m | w6/m8/t001 |
 | [t003](t003.md) | Establish LobeHub eligibility and prepare its supported connector listing — **BLOCKED** | 45m | w6/m8/t001, t009 |
@@ -64,4 +64,12 @@ This milestone returns from `blocked/` because newly materialized submission/rec
 
 An actual submission receipt closes only its receipt-stage task. Existing native/publication criteria and final verification remain required for this milestone's DoD. Preserve previous blocker history above; reassess concrete tool/account/access requirements at the actual action, carry prior authorization forward, and block only the affected step when a genuinely unmet condition remains. No task waits for another platform's review merely because it is later in the table.
 
-The earlier exclusion of Claude/ChatGPT was the 2026-10-20 scope decision. The owner's 2026-10-23 all-inventory request now places those separate application follow-ups in [m11](../m11/README.md), without duplicating this milestone's targets.
+The earlier exclusion of Claude/ChatGPT was the 2026-10-20 scope decision. The owner's 2026-10-23 all-inventory request now places those separate application follow-ups in [m11](../../m11/README.md), without duplicating this milestone's targets.
+
+## Blocked — current native login and remaining review, 2026-10-23 UTC
+
+- **t009:** fresh native CLI login reaches the official sign-in flow, but browser page reading fails and fresh inventory has no connected browser while Chrome still runs. **Unblock:** operator restores the extension connection; worker inspects the real sign-in/agreement/GitHub permission step and completes required confirmations and actual publication receipt. **Owners:** operator/publisher, worker, then LobeHub. No account/permission rejection or unsupported deployment is inferred.
+- **t001/t002:** accepted original free submissions remain the baseline; no duplicate is sent. **Unblock:** moderators publish an actual record and worker verifies hosted metadata/connection. **Owners:** respective directory reviewers, then worker.
+- **t003-t008:** retain their explicit native/publication and standing closing acceptance; they depend on the preceding blocked work. **Unblock:** the relevant actual publication/access conditions and dependent checks, not a prepared payload or an unrelated platform review. **Owners:** recorded publisher/platforms, then worker.
+
+Every remaining task is now blocked or transitively deferred, so m10 returns to blocked/. This does not defer independent m11 work.
