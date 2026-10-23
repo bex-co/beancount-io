@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1031** — Use actual lot cost currencies in Net Worth valuation disclosures (45–60m dashboard after dependency, A2/A3) ← dashboard QA; residual of m26 ([note](./blocked/1031.md)) — **blocked:** approved lot-specific valuation read
+
 - **1030** — Keep parent accounts' own balances in Overview cards and distributions (45–60m, dashboard, A2) ← dashboard QA; residual of m21 ([note](./1030.md))
 
 - **1029** — Preserve commodity precision in Money movement averages (45–60m, dashboard, A2) ← dashboard QA; residual of 1015 ([note](./1029.md))
