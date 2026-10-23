@@ -31,6 +31,11 @@ import {
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import { RouteLedgerUnavailable } from "@/components/route-ledger-unavailable";
 import { bindRouteLedger } from "@/common/route-ledger";
+import {
+  aggregatePayees,
+  PAYEE_ROLLUP_BQL,
+} from "@/screens/merchants-screen/selectors/aggregate-payees";
+import { merchantSpellings } from "@/screens/merchant-detail-screen/selectors/merchant-spellings";
 import { ThemedRefreshControl } from "@/components/dashboard-scroll-view";
 import { AccountTypeIcon } from "@/components/account-type-icon";
 import { AmountText } from "@/components/amount-text";
@@ -694,10 +699,25 @@ function MerchantDetailRoute({
   ledger?: string;
 }) {
   const { t } = useTranslations();
-  const binding = bindRouteLedger(ledger, useLedgerGuard());
-  const spellings = useMemo(
+  const selectedLedgerId = useLedgerGuard();
+  const binding = bindRouteLedger(ledger, selectedLedgerId);
+  const opened = useMemo(
     () => [payee, ...otherSpellings],
     [payee, otherSpellings],
+  );
+  // The Merchants list's own rollup, refreshed after a write: an edit that
+  // recased the payee moves the spellings the detail reads by (w21/724).
+  const { data: rollup } = useQueryShellQuery({
+    variables: { ledgerId: selectedLedgerId, query: PAYEE_ROLLUP_BQL },
+    skip: !selectedLedgerId || binding.status === "mismatch",
+  });
+  const spellings = useMemo(
+    () =>
+      merchantSpellings(
+        opened,
+        aggregatePayees(rollup?.queryShell?.table ?? null),
+      ),
+    [opened, rollup?.queryShell?.table],
   );
 
   if (binding.status === "mismatch") {
