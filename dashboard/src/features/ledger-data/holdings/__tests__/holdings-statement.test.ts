@@ -297,3 +297,26 @@ describe("every valuation in a Holdings query carries an explicit date", () => {
     }
   });
 });
+
+/**
+ * The engine computes the gain these templates ask for; a dashboard test
+ * cannot run BQL, so this pins the expression each template sends. Run on
+ * the ledger engine, it gives −300 for a −20 quote on a 10 cost (it gave
+ * +100), −100 and +100 for 0 and 20 quotes, +50/−100 for a short position
+ * quoted at 5/20, and 0 for a zero basis (w4/1019).
+ */
+describe("unrealized_profit_pct is signed", () => {
+  const SIGNED =
+    "safediv(sum(number(value(position, today()))) - sum(number(cost(position))), abs(sum(number(cost(position))))) * 100 as unrealized_profit_pct";
+
+  it.each([
+    ["holdingsStatement", holdingsStatement],
+    ["holdingsStatementByAccount", holdingsStatementByAccount],
+    ["holdingsStatementByCurrency", holdingsStatementByCurrency],
+    ["holdingsStatementByCostCurrency", holdingsStatementByCostCurrency],
+  ])("%s subtracts signed cost from signed market value", (_name, query) => {
+    expect(query).toContain(SIGNED);
+    // Only the denominator takes a magnitude.
+    expect(query.match(/abs\(/g)).toHaveLength(1);
+  });
+});
