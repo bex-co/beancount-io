@@ -12,6 +12,10 @@
 
 ## Inbox
 
+- [741](./741.md) — Budget directives appear in account detail as a blank "Custom · Custom" row with $0.00, in English
+- [742](./742.md) — Account detail's "1 not in total" can't be opened, so the excluded amount appears nowhere on that screen
+- [743](./743.md) — A Persian or Arabic account path shows its segments child-before-parent on Accounts and in the detail header
+- [744](./744.md) — A balance assertion with an explicit `~` tolerance hides the tolerance in account detail
 - [735](./735.md) — `unique_prices` flags identical same-day prices as errors; Beancount only flags prices that disagree
 - [736](./736.md) — `onecommodity` ignores Beancount's opt-outs and reports the same account twice
 - [737](./737.md) — `close_tree`'s generated child closes aren't enforced: postings after the parent's close are accepted
