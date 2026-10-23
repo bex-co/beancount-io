@@ -54,6 +54,16 @@ const REFUNDS_ID = "__refunds__";
 const CLAWBACKS_ID = "__clawbacks__";
 export const OTHER_INCOME_ACCOUNT = "__other_income__";
 export const OTHER_EXPENSES_ACCOUNT = "__other_expenses__";
+/** The nodes the chart adds beside the ledger's own categories. */
+const ADDED_IDS = new Set([
+  CASH_FLOW_ID,
+  OTHER_INCOME_ACCOUNT,
+  OTHER_EXPENSES_ACCOUNT,
+  REFUNDS_ID,
+  CLAWBACKS_ID,
+  SAVINGS_ID,
+  SHORTFALL_ID,
+]);
 
 export type SankeyRole = "source" | "hub" | "operating" | "savings";
 
@@ -547,6 +557,21 @@ export function transformToSankeyData(options: TransformOptions): SankeyData {
       target: CASH_FLOW_ID,
       value: -savings,
     });
+  }
+
+  // A category named like a node the chart adds (Savings, the folded Other,
+  // Refunds) gets its side named, as one named on both sides does: an
+  // `Expenses:Savings` stood beside the surplus's Savings, the two told apart
+  // only by color (w21/747).
+  const added = new Set(
+    nodes.filter((node) => ADDED_IDS.has(node.id)).map((node) => node.label),
+  );
+  const incomeIds = new Set(incomeRows.map((row) => row.account));
+  for (const node of nodes) {
+    if (ADDED_IDS.has(node.id) || !added.has(node.label)) continue;
+    node.label = incomeIds.has(node.id)
+      ? incomeNodeLabel(node.label)
+      : expensesNodeLabel(node.label);
   }
 
   return { nodes, links, totalIncome, totalExpenses };

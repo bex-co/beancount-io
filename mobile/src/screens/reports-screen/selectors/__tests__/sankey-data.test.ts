@@ -549,3 +549,73 @@ describe("a side whose accounts share a sub-account", () => {
     expect(labelsOf.includes("Salary")).toBe(true);
   });
 });
+
+// w21/747: w0/034 compared only income names with expense names, so a
+// category named like a node the chart adds stood beside it under one label.
+describe("a category named like a node the chart adds", () => {
+  const sides = {
+    ...labels,
+    incomeNodeLabel: (name: string) => `${name} (income)`,
+    expensesNodeLabel: (name: string) => `${name} (expenses)`,
+  };
+  const labelsOf = (result: ReturnType<typeof transformToSankeyData>) =>
+    result.nodes.map((n) => n.label);
+
+  it("names the side of an Expenses:Savings beside the surplus", () => {
+    const result = transformToSankeyData({
+      income: [node("Income:Qa:Salary", 3000)],
+      expenses: [
+        node("Expenses:Qa:Savings", 500),
+        node("Expenses:Qa:Rent", 300),
+      ],
+      ...sides,
+    });
+    // One income account is drawn at the flat depth, as its parent.
+    expect(labelsOf(result)).toEqual([
+      "Cash flow",
+      "Qa",
+      "Savings (expenses)",
+      "Rent",
+      "Savings",
+    ]);
+  });
+
+  it("does the same beside the folded Other and the Refunds ribbon", () => {
+    const folded = transformToSankeyData({
+      income: [node("Income:Salary", 5000)],
+      expenses: [
+        node("Expenses:Other", 900),
+        ...["A", "B", "C", "D", "E", "F", "G"].map((name, i) =>
+          node(`Expenses:${name}`, 100 - i),
+        ),
+      ],
+      ...sides,
+    });
+    const other = labelsOf(folded);
+    expect(other.includes("Other (expenses)")).toBe(true);
+    expect(other.filter((label) => label === "Other").length).toBe(1);
+
+    const refunded = transformToSankeyData({
+      income: [node("Income:Refunds", 50), node("Income:Salary", 1000)],
+      expenses: [node("Expenses:Rent", 400), node("Expenses:Travel", -30)],
+      ...sides,
+    });
+    const refunds = labelsOf(refunded);
+    expect(refunds.includes("Refunds (income)")).toBe(true);
+    expect(refunds.filter((label) => label === "Refunds").length).toBe(1);
+  });
+
+  it("leaves a chart whose names collide with nothing as it was", () => {
+    const result = transformToSankeyData({
+      income: [node("Income:Salary", 3000)],
+      expenses: [node("Expenses:Rent", 300)],
+      ...sides,
+    });
+    expect(labelsOf(result)).toEqual([
+      "Cash flow",
+      "Salary",
+      "Rent",
+      "Savings",
+    ]);
+  });
+});
