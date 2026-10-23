@@ -350,6 +350,8 @@ def substitute(
     today = local_today()
     fye = fye or END_OF_YEAR
 
+    # Years keep their four digits (`:04`): `parse_date` requires them, so a
+    # replacement before year 1000 was rejected as unparseable (w5/936).
     # Beancount.io change: each match is replaced where it stands. Upstream
     # replaced every occurrence of the matched text, so the bare `year` in
     # `year - year+1` also rewrote the start of `year+1` into `2026+1`, and
@@ -361,9 +363,9 @@ def substitute(
         if interval == "fiscal_year":
             after_fye = (today.month, today.day) > (fye.month_of_year, fye.day)
             year = today.year + (1 if after_fye else 0) - fye.year_offset
-            return f"FY{year + offset}"
+            return f"FY{year + offset:04}"
         if interval == "year":
-            return str(today.year + offset)
+            return f"{today.year + offset:04}"
         if interval == "fiscal_quarter":
             if not fye.has_quarters():
                 raise FyeHasNoQuartersError
@@ -371,18 +373,19 @@ def substitute(
             after_fye = (target.month) > (fye.month_of_year)
             year = target.year + (1 if after_fye else 0) - fye.year_offset
             quarter = ((target.month - fye.month_of_year - 1) // 3) % 4 + 1
-            return f"FY{year}-Q{quarter}"
+            return f"FY{year:04}-Q{quarter}"
         if interval == "quarter":
             quarter_today = (today.month - 1) // 3 + 1
             year = today.year + (quarter_today + offset - 1) // 4
             quarter = (quarter_today + offset - 1) % 4 + 1
-            return f"{year}-Q{quarter}"
+            return f"{year:04}-Q{quarter}"
         if interval == "month":
             year = today.year + (today.month + offset - 1) // 12
             month = (today.month + offset - 1) % 12 + 1
-            return f"{year}-{month:02}"
+            return f"{year:04}-{month:02}"
         if interval == "week":
-            return (today + timedelta(offset * 7)).strftime("%G-W%V")
+            iso = (today + timedelta(offset * 7)).isocalendar()
+            return f"{iso.year:04}-W{iso.week:02}"
         return (today + timedelta(offset)).isoformat()
 
     return VARIABLE_RE.sub(replace, string)
@@ -448,7 +451,7 @@ def parse_date(
     match = WEEK_RE.match(string)
     if match:
         year, week = map(int, match.group(1, 2))
-        start = datetime.datetime.strptime(f"{year}-W{week}-1", "%G-W%V-%w").replace(tzinfo=datetime.UTC).date()
+        start = datetime.date.fromisocalendar(year, week, 1)
         return start, Week.get_next(start)
 
     match = QUARTER_RE.match(string)
