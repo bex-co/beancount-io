@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1026** — Let configured transaction tolerances reach ledger validation (40–55m, dashboard, A2) ← dashboard QA; residual of W3/499 ([note](./1026.md))
+
 
 
 
