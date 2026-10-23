@@ -20,6 +20,7 @@ import {
 import { openTransactionDetail } from "@/screens/transaction-detail-screen/open-transaction-detail";
 import { TimeRange } from "@/common/series-util";
 import {
+  accountTransactionsWindow,
   hasAnyAccountTransaction,
   resolveListAnchor,
   accountPrefixFilter,
@@ -99,6 +100,8 @@ export function AccountTransactionsCard({
         directiveTypes: [DirectiveType.TRANSACTION],
         // Only this report's accounts count against the window (w21/563).
         account: accountPrefixFilter(accountPrefix),
+        // Not later than the range can reach (w21/669).
+        time: accountTransactionsWindow(timeRange, today),
       },
     },
     fetchPolicy: "cache-and-network",

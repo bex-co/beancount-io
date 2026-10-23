@@ -3,6 +3,7 @@ import {
   JournalDirectiveType,
   JournalTransaction,
 } from "../../transactions-screen/types";
+import { recentTransactionsWindow } from "../../home-screen/selectors/recent-window";
 import {
   flowAnchorMonth,
   rangeStartMonth,
@@ -142,4 +143,17 @@ export function hasAnyAccountTransaction(
   return (
     selectAccountTransactions(entries, accountPrefix, "ALL", null, 1).length > 0
   );
+}
+
+/**
+ * The journal window the card asks for. A range ends by the current month, so
+ * the newest 200 entries must not be later ones: 200 pre-entered entries left
+ * every range but ALL empty (w21/669). The window holds still through the month
+ * for the offline copy's key, as Home's does (w21/513). ALL has no end.
+ */
+export function accountTransactionsWindow(
+  timeRange: TimeRange,
+  today: string,
+): string | undefined {
+  return timeRange === "ALL" ? undefined : recentTransactionsWindow(today);
 }

@@ -1,4 +1,5 @@
 import {
+  accountTransactionsWindow,
   accountPrefixFilter,
   selectAccountTransactions,
 } from "../select-account-transactions";
@@ -352,5 +353,26 @@ describe("accountPrefixFilter", () => {
     expect(card.includes("account:accountPrefixFilter(accountPrefix),")).toBe(
       true,
     );
+  });
+});
+
+// w21/669: the newest 200 entries, with no end date, were all pre-entered ones.
+describe("accountTransactionsWindow", () => {
+  it("ends every range at the month's end, so later entries leave the page", () => {
+    for (const range of ["1M", "3M", "6M", "YTD", "1Y"] as const) {
+      expect(accountTransactionsWindow(range, "2026-10-22")).toBe(
+        "0001-01-01 - 2026-10-31",
+      );
+    }
+  });
+
+  it("holds still through the month, for the offline copy's key", () => {
+    expect(accountTransactionsWindow("6M", "2026-10-01")).toBe(
+      accountTransactionsWindow("6M", "2026-10-31"),
+    );
+  });
+
+  it("leaves ALL without an end", () => {
+    expect(accountTransactionsWindow("ALL", "2026-10-22")).toBe(undefined);
   });
 });
