@@ -16,7 +16,6 @@
 
 - [1014 — Honor native amount validity before transaction submit shortcuts](./1014.md) — major; both-width modifier shortcuts infer 12.50 from native-invalid `1e`/`-` while Create refuses; valid blank/exponent controls pass, all requests blocked before transport.
 
-- [1013 — Preserve multiline string values when aligning amounts](./1013.md) — minor; both-width native Align Amounts changes parsed narration spaces1→33; valid both parsers, real postings/single-line controls intact, matching loop, no writes.
 
 
 
