@@ -593,6 +593,7 @@ export const fa: Translations = {
   ledgerFileNameExtension:
     "از نامی با پسوند ‎.bean یا ‎.beancount استفاده کنید",
   ledgerFileNamePath: "از نامی بدون \\، .. یا نام پوشهٔ خالی استفاده کنید",
+  ledgerFileNameGit: "ساخت فایل در .git ممکن نیست",
   ledgerFileNamePortable:
     'از < > : " | ? *، بخش‌هایی که به نقطه یا فاصله ختم می‌شوند و نام‌هایی مانند con یا nul خودداری کنید',
   ledgerDeleteFile: "حذف {{name}}",

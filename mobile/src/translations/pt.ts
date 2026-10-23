@@ -612,6 +612,7 @@ export const pt: Translations = {
   ledgerFolderNameExists: "Já existe uma pasta chamada {{name}}",
   ledgerFileNameExtension: "Use um nome .bean ou .beancount",
   ledgerFileNamePath: "Use um nome sem \\, .. ou nomes de pasta vazios",
+  ledgerFileNameGit: "Não é possível criar arquivos dentro de .git",
   ledgerFileNamePortable:
     'Evite < > : " | ? *, partes que terminem em ponto ou espaço e nomes como con ou nul',
   ledgerDeleteFile: "Excluir {{name}}",

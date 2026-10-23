@@ -617,6 +617,7 @@ export const de: Translations = {
     "Verwenden Sie einen Namen mit .bean oder .beancount",
   ledgerFileNamePath:
     "Verwenden Sie einen Namen ohne \\, .. oder leere Ordnernamen",
+  ledgerFileNameGit: "Dateien in .git können nicht erstellt werden",
   ledgerFileNamePortable:
     'Nicht erlaubt: < > : " | ? *, Teile, die auf Punkt oder Leerzeichen enden, und Namen wie con oder nul',
   ledgerDeleteFile: "{{name}} löschen",

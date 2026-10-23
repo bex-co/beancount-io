@@ -491,6 +491,8 @@ export function LedgerFileBrowserScreen(): JSX.Element {
           return t("ledgerFolderNameExists", { name: check.existing });
         case "extension":
           return t("ledgerFileNameExtension");
+        case "git":
+          return t("ledgerFileNameGit");
         case "path":
           return t("ledgerFileNamePath");
         case "portable":

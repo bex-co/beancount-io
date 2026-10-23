@@ -539,6 +539,7 @@ export const zh: Translations = {
   ledgerFolderNameExists: "名为 {{name}} 的文件夹已存在",
   ledgerFileNameExtension: "请使用 .bean 或 .beancount 文件名",
   ledgerFileNamePath: "名称中不能包含 \\、.. 或空的文件夹名",
+  ledgerFileNameGit: "无法在 .git 中创建文件",
   ledgerFileNamePortable:
     '不要使用 < > : " | ? *，不要以点或空格结尾，也不要使用 con、nul 等名称',
   ledgerDeleteFile: "删除 {{name}}",

@@ -319,7 +319,7 @@ describe("a new file into a folder spelled another way", () => {
 // w21/826: a path inside .git passed the dialog, and Create closed it for
 // backend-v2's English refusal ("Paths inside .git can't be read or written").
 describe("a new file inside .git", () => {
-  it("is refused as a path, at any depth and in any case", () => {
+  it("is refused for .git, at any depth and in any case", () => {
     for (const input of [
       ".git/qa20261020",
       ".git/notes",
@@ -328,7 +328,7 @@ describe("a new file inside .git", () => {
     ]) {
       expect([input, checkLedgerFileName(input, [])]).toEqual([
         input,
-        { ok: false, issue: "path" },
+        { ok: false, issue: "git" },
       ]);
     }
   });
@@ -337,5 +337,28 @@ describe("a new file inside .git", () => {
     expect(checkLedgerFileName(".gitkeep", []).ok).toBe(true);
     expect(checkLedgerFileName("git/notes", []).ok).toBe(true);
     expect(checkLedgerFileName("my.git.bean", []).ok).toBe(true);
+  });
+});
+
+// w21/832: ".git/…" was refused with the path message, which names
+// backslashes and "..", not .git.
+describe("the .git refusal's message", () => {
+  it("names .git, and the other path issues keep theirs", () => {
+    const screen = fs
+      .readFileSync(path.join(__dirname, "..", "index.tsx"), "utf8")
+      .replace(/\s+/g, "");
+    expect(screen.includes('case"git":returnt("ledgerFileNameGit");')).toBe(
+      true,
+    );
+    const dotted = checkLedgerFileName("a/../b", []);
+    expect(dotted.ok ? null : dotted.issue).toBe("path");
+    for (const locale of translationLocales()) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const catalog = require(`../../../translations/${locale}`)[locale];
+      expect([
+        locale,
+        String(catalog.ledgerFileNameGit).includes(".git"),
+      ]).toEqual([locale, true]);
+    }
   });
 });

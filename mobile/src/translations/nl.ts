@@ -601,6 +601,7 @@ export const nl: Translations = {
   ledgerFolderNameExists: "Er bestaat al een map met de naam {{name}}",
   ledgerFileNameExtension: "Gebruik een naam op .bean of .beancount",
   ledgerFileNamePath: "Gebruik een naam zonder \\, .. of lege mapnamen",
+  ledgerFileNameGit: "Bestanden in .git kunnen niet worden gemaakt",
   ledgerFileNamePortable:
     'Vermijd < > : " | ? *, delen die op een punt of spatie eindigen en namen als con of nul',
   ledgerDeleteFile: "{{name}} verwijderen",

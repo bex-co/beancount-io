@@ -614,6 +614,7 @@ export const ca: Translations = {
   ledgerFolderNameExists: "Ja existeix una carpeta anomenada {{name}}",
   ledgerFileNameExtension: "Fes servir un nom .bean o .beancount",
   ledgerFileNamePath: "Fes servir un nom sense \\, .. ni noms de carpeta buits",
+  ledgerFileNameGit: "No es poden crear fitxers dins de .git",
   ledgerFileNamePortable:
     'Evita < > : " | ? *, parts que acabin en punt o espai i noms com con o nul',
   ledgerDeleteFile: "Elimina {{name}}",

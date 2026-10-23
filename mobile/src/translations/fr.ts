@@ -614,6 +614,7 @@ export const fr: Translations = {
   ledgerFolderNameExists: "Un dossier nommé {{name}} existe déjà",
   ledgerFileNameExtension: "Utilisez un nom en .bean ou .beancount",
   ledgerFileNamePath: "Utilisez un nom sans \\, .. ni nom de dossier vide",
+  ledgerFileNameGit: "Impossible de créer des fichiers dans .git",
   ledgerFileNamePortable:
     'Évitez < > : " | ? *, un élément se terminant par un point ou une espace, et des noms comme con ou nul',
   ledgerDeleteFile: "Supprimer {{name}}",

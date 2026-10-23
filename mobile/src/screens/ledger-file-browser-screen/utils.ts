@@ -7,7 +7,13 @@ export type LedgerFileNameCheck =
   | {
       ok: false;
       issue:
-        "empty" | "path" | "portable" | "extension" | "exists" | "folderExists";
+        | "empty"
+        | "path"
+        | "git"
+        | "portable"
+        | "extension"
+        | "exists"
+        | "folderExists";
       filename?: string;
       /**
        * For "exists", the file there already: "Main" clashes with main.bean,
@@ -98,17 +104,17 @@ export function checkLedgerFileName(
     trimmed.includes("\\") ||
     /[\u0000-\u001f]/.test(trimmed) ||
     segments.some(
-      (segment) =>
-        segment === "" ||
-        segment === "." ||
-        segment === ".." ||
-        // backend-v2's `assertSafeRepoPath` refuses `.git` at any depth and
-        // in any case; passed here, Create closed the dialog for its English
-        // refusal (w21/826).
-        segment.toLowerCase() === ".git",
+      (segment) => segment === "" || segment === "." || segment === "..",
     )
   ) {
     return { ok: false, issue: "path" };
+  }
+  // backend-v2's `assertSafeRepoPath` refuses `.git` at any depth and in any
+  // case; passed here, Create closed the dialog for its English refusal
+  // (w21/826). Its own reason: the path one named backslashes and `..`
+  // (w21/832).
+  if (segments.some((segment) => segment.toLowerCase() === ".git")) {
+    return { ok: false, issue: "git" };
   }
   const last = segments[segments.length - 1]!;
   const named = withBeanExtension(last);
