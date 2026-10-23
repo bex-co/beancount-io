@@ -59,3 +59,6 @@
 - [872](./872.md) — A guard inside Scan Receipt's full-screen modal has no way back
 - [873](./873.md) — Scan Receipt's shutter swallows capture failures
 - [875](./875.md) — On a ledger with no plugins, a padding entry opens to "changed or removed"
+- [876](./876.md) — Add Budget can't budget the whole Expenses/Income root
+- [877](./877.md) — Budget dates ignore the account's open and close dates
+- [878](./878.md) — With ledger settings failed, Update Budget saves an income target as positive
