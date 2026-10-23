@@ -74,6 +74,20 @@ describe("formatChangePercent", () => {
       flat: false,
     });
   });
+
+  // w21/752: "−$15,000.00 (−10471.20%)", the amount grouped and its
+  // percentage not.
+  it("groups a large percentage in thousands, as the amount beside it", () => {
+    expect(formatChangePercent(-10471.2)).toEqual({
+      text: "-10,471.20%",
+      flat: false,
+    });
+    expect(formatChangePercent(300000)).toEqual({
+      text: "+300,000.00%",
+      flat: false,
+    });
+    expect(formatChangePercent(999.994).text).toBe("+999.99%");
+  });
 });
 
 describe("the change row", () => {

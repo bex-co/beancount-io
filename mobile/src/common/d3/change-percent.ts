@@ -1,3 +1,5 @@
+import { groupThousands } from "../number-utils";
+
 /**
  * Percent change from `baseline` to `value`, or null when no percentage means
  * anything: a zero start, or a start and end on opposite sides of zero (net
@@ -22,14 +24,17 @@ export function changePercent(baseline: number, value: number): number | null {
  * change, a move of -$12 on 2,500,000 read "-$12.00 (-0.00%)" in the
  * unfavourable colour, and a sub-cent gain "+$0.00 (-0.00%)" (w21/237).
  * `flat` is true when it rounds to nothing, which reads in the neutral colour.
+ * Grouped in thousands as the amount beside it is: a card from −$143.25 to
+ * −$15,143.25 read "(−10471.20%)" (w21/752).
  */
 export function formatChangePercent(pct: number): {
   text: string;
   flat: boolean;
 } {
   const rounded = Math.round(pct * 100) / 100 + 0;
+  const sign = rounded > 0 ? "+" : rounded < 0 ? "-" : "";
   return {
-    text: `${rounded > 0 ? "+" : ""}${rounded.toFixed(2)}%`,
+    text: `${sign}${groupThousands(rounded, 2)}%`,
     flat: rounded === 0,
   };
 }
