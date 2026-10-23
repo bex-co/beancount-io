@@ -41,6 +41,7 @@ import {
   normalizeSliceReplacement,
   replaceSliceInFile,
   replacementLineEnding,
+  servedReplacementSlice,
   servedSliceText,
   resolveEntryIdAtSource,
   failedBalanceDiffs,
@@ -1122,12 +1123,17 @@ export class LedgerJournalService implements ILedgerJournalService {
       message: "Entry updated successfully",
       entryHash: newEntryHash,
       files: [found.file],
-      // The block as stored, served as a fresh read serves it: the checksum
-      // the entry's next edit presents (w21/252).
+      // The entry's block as a fresh read serves it: the checksum the entry's
+      // next edit presents (w21/252), without a comment stored beside it
+      // (w21/813).
       newSha256sum: sliceSha256(
         applied.current === undefined
           ? newContent
-          : servedSliceText(applied.current.stored),
+          : (servedReplacementSlice(
+              applied.current.content,
+              applied.current.startLine,
+              applied.current.stored.split("\n").length,
+            ) ?? servedSliceText(applied.current.stored)),
       ),
       newEntryHash,
     };

@@ -782,16 +782,43 @@ function blockLineEnding(blockLines: readonly string[]): "\r\n" | "\n" {
 }
 
 /**
- * A replacement entry as it is stored: trailing newlines trimmed (the entry
- * gets exactly one line ending after it) and every line ending the replaced
- * block's own, so an edit in a CRLF file stays CRLF and a trailing newline in
- * the new text cannot leave a blank line (w21/252).
+ * A replacement entry as it is stored: blank and whitespace-only lines trimmed
+ * from both ends (the entry gets exactly one line ending after it) and every
+ * line ending the replaced block's own, so an edit in a CRLF file stays CRLF
+ * and a trailing newline in the new text cannot leave a blank line (w21/252).
+ * Return after the last posting leaves an indent-only line, which was stored
+ * as a stray "  " line between entries (w21/813).
  */
 export function normalizeSliceReplacement(
   newContent: string,
   eol: "\r\n" | "\n",
 ): string {
-  return newContent.replace(/[\r\n]+$/u, "").replace(/\r?\n/gu, eol);
+  return newContent
+    .replace(/^(?:[ \t]*\r?\n)+/u, "")
+    .replace(/(?:\r?\n[ \t]*)+$/u, "")
+    .replace(/\r?\n/gu, eol);
+}
+
+/**
+ * The slice a fresh read serves for the entry a replacement stored at
+ * `startLine` of `fileText`: the dated block among its `lineCount` lines. A
+ * column-0 comment kept beside the entry, or a one-line entry in a CRLF file,
+ * stored text the read does not serve, so the checksum returned for the next
+ * edit matched no read and the entry looked removed (w21/813). Null when no
+ * dated block starts there.
+ */
+export function servedReplacementSlice(
+  fileText: string,
+  startLine: number,
+  lineCount: number,
+): string | null {
+  const block = splitIntoBlocks(fileText).find(
+    (candidate) =>
+      candidate.isDated &&
+      candidate.startLine >= startLine &&
+      candidate.startLine < startLine + lineCount,
+  );
+  return block?.text ?? null;
 }
 
 /**

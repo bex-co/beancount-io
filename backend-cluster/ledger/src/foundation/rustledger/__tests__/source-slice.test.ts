@@ -10,6 +10,7 @@ import {
   normalizeSliceReplacement,
   replaceSliceInFile,
   replacementLineEnding,
+  servedReplacementSlice,
   servedSliceText,
   sliceSha256,
   sourceDetailsFromProbe,
@@ -975,5 +976,107 @@ describe("deleteSliceFromFile — add then delete restores the file", () => {
 
   it("drops a leading separator when the first entry goes", () => {
     expect(deleteBlocks(`${TX1}\n${ORIGINAL}`, [TX1])).toBe(ORIGINAL);
+  });
+});
+
+// w21/813: Return after the last posting left an indent-only line, stored as
+// a stray "  " line, and the checksum returned for the edit matched no read,
+// so the entry looked removed. A column-0 comment beside the entry, and a
+// one-line entry in a CRLF file, did the same.
+describe("an edit with whitespace or a comment around the entry", () => {
+  const lf = [
+    '2026-10-20 * "Qa20261020 Cafe" "Lunch"',
+    "  Expenses:Qa20261020:Food  12.00 USD",
+    "  Assets:Qa20261020:Cash",
+    "",
+    '2026-10-21 * "Next"',
+    "  Assets:Cash",
+    "",
+  ].join("\n");
+  const entry = [
+    '2026-10-20 * "Qa20261020 Cafe" "Lunch"',
+    "  Expenses:Qa20261020:Food  13.00 USD",
+    "  Assets:Qa20261020:Cash",
+  ];
+  /** The new file, and whether the returned checksum is a fresh read's. */
+  const save = (fileText: string, incoming: string) => {
+    const [block] = splitIntoBlocks(fileText);
+    const next = replaceSliceInFile(
+      fileText,
+      block!.startLine,
+      block!.endLine,
+      incoming,
+    );
+    const stored = normalizeSliceReplacement(
+      incoming,
+      replacementLineEnding(fileText, block!.startLine, block!.endLine),
+    );
+    const served =
+      servedReplacementSlice(
+        next,
+        block!.startLine,
+        stored.split("\n").length,
+      ) ?? servedSliceText(stored);
+    const reread = splitIntoBlocks(next).find((candidate) =>
+      candidate.text.startsWith("2026-10-20"),
+    );
+    return {
+      next,
+      matches: sliceSha256(served) === sliceSha256(reread!.text),
+    };
+  };
+
+  it("stores no indent-only or blank line at either end", () => {
+    for (const incoming of [
+      `${entry.join("\n")}\n  `,
+      `${entry.join("\n")}\n  \n  \n`,
+      `\n  \n${entry.join("\n")}`,
+    ]) {
+      const { next, matches } = save(lf, incoming);
+      expect([incoming, /\n[ \t]+\n/u.test(next)]).toEqual([incoming, false]);
+      expect(next.startsWith(entry[0]!)).toBe(true);
+      expect(matches).toBe(true);
+    }
+    // Spaces closing the last posting are its own and stay.
+    expect(normalizeSliceReplacement("a\n  b  \n", "\n")).toBe("a\n  b  ");
+  });
+
+  it("returns the checksum a read serves beside a column-0 comment", () => {
+    for (const incoming of [
+      `; paid in cash\n${entry.join("\n")}`,
+      `${entry.join("\n")}\n; paid in cash`,
+    ]) {
+      expect([incoming, save(lf, incoming).matches]).toEqual([incoming, true]);
+    }
+  });
+
+  it("returns the checksum a read serves for a one-line CRLF entry", () => {
+    const crlf = [
+      "2026-10-20 open Assets:Cash",
+      "",
+      "2026-10-21 open Assets:Bank",
+      "",
+    ].join("\r\n");
+    const [block] = splitIntoBlocks(crlf);
+    const next = replaceSliceInFile(
+      crlf,
+      block!.startLine,
+      block!.endLine,
+      "2026-10-20 open Assets:Cash USD",
+    );
+    const stored = normalizeSliceReplacement(
+      "2026-10-20 open Assets:Cash USD",
+      "\r\n",
+    );
+    const [reread] = splitIntoBlocks(next);
+    expect(
+      sliceSha256(
+        servedReplacementSlice(
+          next,
+          block!.startLine,
+          stored.split("\n").length,
+        ) ?? servedSliceText(stored),
+      ),
+    ).toBe(sliceSha256(reread!.text));
   });
 });
