@@ -30,7 +30,7 @@ describe("buildLedgerFiles (w3/m53/t002)", () => {
     expect(main).toContain('option "operating_currency" "EUR"');
     // Accounts open the day before the boundary so the opening transaction
     // can post then; the assertion stays on the boundary.
-    expect(main).toContain("2026-01-31 open Assets:Cash EUR");
+    expect(main).toMatch(/^2026-01-31 open Assets:Cash$/m);
     // Opening transaction lands the day before the history boundary and the
     // assertion on the boundary itself (fixture personal@1-opening-known).
     expect(main).toContain('2026-01-31 * "Opening balance"');
@@ -148,7 +148,10 @@ describe("buildLedgerFiles (w3/m53/t002)", () => {
     );
     expect(clean).toHaveLength(8);
     for (const fixture of clean) {
-      const preview = previewLedgerSetup(fixture.spec as LedgerSetup, "2026-01-01");
+      const preview = previewLedgerSetup(
+        fixture.spec as LedgerSetup,
+        "2026-01-01",
+      );
       expect(preview.accounts).toEqual(
         [...(fixture.expected.openedAccounts ?? [])].sort(),
       );
@@ -171,7 +174,9 @@ describe("buildLedgerFiles (w3/m53/t002)", () => {
       },
       "2026-01-01",
     );
-    expect(known.files["main.bean"]).toContain('2026-01-31 * "Opening balance"');
+    expect(known.files["main.bean"]).toContain(
+      '2026-01-31 * "Opening balance"',
+    );
     expect(known.files["main.bean"]).toContain(
       "2026-02-01 balance Assets:Cash 100 EUR",
     );
@@ -185,7 +190,11 @@ describe("buildLedgerFiles (w3/m53/t002)", () => {
         operatingCurrency: "USD",
         historyStart: "2026-02-01",
         accounts: [
-          { name: "Liabilities:CreditCard", openingState: "known", amount: "500" },
+          {
+            name: "Liabilities:CreditCard",
+            openingState: "known",
+            amount: "500",
+          },
           { name: "Assets:Cash", openingState: "known", amount: "100" },
         ],
       },
@@ -193,7 +202,9 @@ describe("buildLedgerFiles (w3/m53/t002)", () => {
     ).files["main.bean"];
     expect(main).toContain("  Liabilities:CreditCard -500 USD");
     expect(main).toContain("  Equity:OpeningBalances 500 USD");
-    expect(main).toContain("2026-02-01 balance Liabilities:CreditCard -500 USD");
+    expect(main).toContain(
+      "2026-02-01 balance Liabilities:CreditCard -500 USD",
+    );
     // Assets are unchanged.
     expect(main).toContain("2026-02-01 balance Assets:Cash 100 USD");
   });
@@ -204,12 +215,18 @@ describe("buildLedgerFiles (w3/m53/t002)", () => {
         preset: "personal@1",
         historyStart: "2026-02-01",
         accounts: [
-          { name: "Liabilities:CreditCard", openingState: "known", amount: "-30.50" },
+          {
+            name: "Liabilities:CreditCard",
+            openingState: "known",
+            amount: "-30.50",
+          },
         ],
       },
       "2026-01-01",
     ).files["main.bean"];
-    expect(main).toContain("2026-02-01 balance Liabilities:CreditCard -30.50 USD");
+    expect(main).toContain(
+      "2026-02-01 balance Liabilities:CreditCard -30.50 USD",
+    );
     expect(main).not.toContain("--30.50");
   });
 
@@ -267,7 +284,10 @@ describe("buildLedgerFiles (w3/m53/t002)", () => {
     }
     for (const historyStart of ["0050-02-30", "0000-01-01", "0100-02-29"]) {
       expect(() =>
-        previewLedgerSetup({ preset: "personal@1", historyStart }, "2026-01-01"),
+        previewLedgerSetup(
+          { preset: "personal@1", historyStart },
+          "2026-01-01",
+        ),
       ).toThrow(`Invalid history start "${historyStart}"`);
     }
     // 0004 is a leap year in the proleptic calendar Beancount uses.
@@ -283,7 +303,10 @@ describe("buildLedgerFiles (w3/m53/t002)", () => {
   it("refuses a history start that is not a calendar day", () => {
     for (const historyStart of ["2026-02-30", "2026-04-31", "2025-02-29"]) {
       expect(() =>
-        previewLedgerSetup({ preset: "personal@1", historyStart }, "2026-01-01"),
+        previewLedgerSetup(
+          { preset: "personal@1", historyStart },
+          "2026-01-01",
+        ),
       ).toThrow(`Invalid history start "${historyStart}"`);
     }
     expect(
@@ -309,6 +332,40 @@ describe("buildLedgerFiles (w3/m53/t002)", () => {
 // assertion for an equity "opening" no transaction posted. The engine run
 // over every combination is recorded in the w23/048 resolution; these pin
 // the shape that loads.
+// w21/687: every preset account was opened restricted to the operating
+// currency, so Portfolio refused its own first share purchase and a euro lunch
+// failed bean-check in a dollar ledger.
+describe("accounts are not restricted to the operating currency", () => {
+  it.each(["personal@1", "portfolio@1"] as const)(
+    "opens no %s account with a currency",
+    (preset) => {
+      const { files } = previewLedgerSetup(
+        { preset, operatingCurrency: "USD" },
+        "2026-10-21",
+      );
+      const opens = files["main.bean"]
+        .split("\n")
+        .filter((line) => / open /.test(line));
+      expect(opens.length).toBeGreaterThan(0);
+      for (const line of opens) {
+        expect(line).toMatch(/^\d{4}-\d{2}-\d{2} open \S+$/);
+      }
+    },
+  );
+
+  it("still restricts an account set up with its own currency", () => {
+    const { files } = previewLedgerSetup(
+      {
+        preset: "blank@1",
+        operatingCurrency: "USD",
+        accounts: [{ name: "Assets:Euro", currency: "EUR" }],
+      },
+      "2026-10-21",
+    );
+    expect(files["main.bean"]).toContain("2026-10-21 open Assets:Euro EUR");
+  });
+});
+
 describe("known openings and the opening-balances account", () => {
   const opens = (text: string) =>
     text.split("\n").filter((line) => / open /.test(line));
@@ -317,7 +374,10 @@ describe("known openings and the opening-balances account", () => {
     const questions = preset.optionalQuestions.map((question) => question.id);
     for (let mask = 0; mask < 1 << questions.length; mask += 1) {
       const capabilities = Object.fromEntries(
-        questions.map((id, i) => [id, mask & (1 << i) ? "enabled" : "declined"]),
+        questions.map((id, i) => [
+          id,
+          mask & (1 << i) ? "enabled" : "declined",
+        ]),
       ) as Record<string, "enabled" | "declined">;
       const presetId = preset.id as LedgerSetup["preset"];
       const target = previewLedgerSetup(
@@ -331,7 +391,9 @@ describe("known openings and the opening-balances account", () => {
           {
             preset: presetId,
             capabilities,
-            accounts: [{ name: target, openingState: "known", amount: "1250.00" }],
+            accounts: [
+              { name: target, openingState: "known", amount: "1250.00" },
+            ],
           },
           "2026-10-21",
         );
@@ -387,7 +449,7 @@ describe("known openings and the opening-balances account", () => {
 describe("names and titles written into main.bean", () => {
   it.each([
     "Assets:Bank USD\n2020-01-01 open Assets:Evil",
-    "Assets:Bank\noption \"operating_currency\" \"EUR\"",
+    'Assets:Bank\noption "operating_currency" "EUR"',
     "assets:lower",
     "Foo:Bar",
     "Assets",
@@ -399,16 +461,18 @@ describe("names and titles written into main.bean", () => {
     ).toThrow("is not a Beancount account name");
   });
 
-  it.each(["Assets:Bank-2", "Liabilities:Card:2026", "Assets:Café", "Assets:现金"])(
-    "accepts the account name %j",
-    (name) => {
-      const { files } = previewLedgerSetup(
-        { preset: "blank@1", accounts: [{ name }] },
-        "2026-10-21",
-      );
-      expect(files["main.bean"]).toContain(`2026-10-21 open ${name} USD`);
-    },
-  );
+  it.each([
+    "Assets:Bank-2",
+    "Liabilities:Card:2026",
+    "Assets:Café",
+    "Assets:现金",
+  ])("accepts the account name %j", (name) => {
+    const { files } = previewLedgerSetup(
+      { preset: "blank@1", accounts: [{ name }] },
+      "2026-10-21",
+    );
+    expect(files["main.bean"]).toContain(`2026-10-21 open ${name}\n`);
+  });
 
   it("accepts every account the catalog offers", () => {
     for (const preset of setupCatalog.presets) {

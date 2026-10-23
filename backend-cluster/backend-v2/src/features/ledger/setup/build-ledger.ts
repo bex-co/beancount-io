@@ -274,16 +274,23 @@ export function previewLedgerSetup(
   // it carries no currency constraint once any opening posts to it; opened
   // with the first account's currency, a second currency's opening failed
   // (w23/048).
-  const openLine = (name: string, currency: string) =>
+  // Nor does any other account take a constraint from the operating currency,
+  // which "neither converts amounts nor prohibits other currencies" (ADR021):
+  // Portfolio's holdings refused their own first share purchase, and a euro
+  // lunch in a dollar ledger failed bean-check (w21/687). Only a currency the
+  // account was set up with restricts it.
+  const openLine = (name: string, constraint?: string) =>
     name === OPENING_EQUITY && hasKnownOpening
       ? `${openDate} open ${name}`
-      : `${openDate} open ${name} ${currency}`;
+      : constraint
+        ? `${openDate} open ${name} ${constraint}`
+        : `${openDate} open ${name}`;
   for (const account of accounts) {
     // Already opened as the counter of an earlier known opening: a second
     // `open` made the new ledger fail bean-check (w23/048).
     if (opened.has(account.name)) continue;
     const currency = account.currency ?? operatingCurrency;
-    lines.push(openLine(account.name, currency));
+    lines.push(openLine(account.name, account.currency));
     opened.add(account.name);
     if (account.openingState === "unknown") {
       lines.push(`  ${openingStatusKey}: "unknown"`);
@@ -293,7 +300,7 @@ export function previewLedgerSetup(
     if (account.openingState === "known" && account.amount) {
       const amount = ledgerOpeningAmount(account.name, account.amount);
       if (!opened.has(OPENING_EQUITY)) {
-        lines.push(openLine(OPENING_EQUITY, currency));
+        lines.push(openLine(OPENING_EQUITY));
         opened.add(OPENING_EQUITY);
       }
       const negated = amount.startsWith("-") ? amount.slice(1) : `-${amount}`;
