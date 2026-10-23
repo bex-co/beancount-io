@@ -21,6 +21,25 @@ const SCREEN = fs.readFileSync(
 );
 
 describe("merchant header totals keep their direction", () => {
+  // w21/663: a clamp at half a cent zeroed a BTC total above its own row.
+  it("keeps a commodity total under half a cent", () => {
+    expect(formatMerchantTotal({ currency: "BTC", total: 0.004 })).toBe(
+      "0.004 BTC",
+    );
+    expect(formatMerchantTotal({ currency: "BTC", total: -0.004 })).toBe(
+      "-0.004 BTC",
+    );
+  });
+
+  it("still reads fiat dust as unsigned zero", () => {
+    expect(formatMerchantTotal({ currency: "USD", total: -0.004 })).toBe(
+      "$0.00",
+    );
+    expect(formatMerchantTotal({ currency: "USD", total: 0.003 })).toBe(
+      "$0.00",
+    );
+  });
+
   it("keeps the minus on a negative symbol currency (Stock / Broker)", () => {
     expect(formatMerchantTotal({ currency: "USD", total: -2104.35 })).toBe(
       "-$2,104.35",

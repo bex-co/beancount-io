@@ -23,8 +23,10 @@ export function formatMerchantTotal({
   total,
   currency,
 }: MerchantCurrencyTotal): string {
-  const shown = Math.abs(total) < 0.005 ? 0 : total;
-  return formatSignedMoneyWithCurrency(shown, currency);
+  // No clamp here: the formatter rounds to the currency's own digits and drops
+  // the sign of a total that shows as zero, so USD dust reads $0.00 and 0.004
+  // BTC stays 0.004 BTC (w21/663).
+  return formatSignedMoneyWithCurrency(total, currency);
 }
 
 /**
@@ -50,7 +52,6 @@ export function formatMerchantTotals(
     if (!shared || row.currency === primaryCurrency) {
       return formatMerchantTotal(row);
     }
-    const shown = Math.abs(row.total) < 0.005 ? 0 : row.total;
-    return formatSignedMoneyWithCode(shown, row.currency);
+    return formatSignedMoneyWithCode(row.total, row.currency);
   });
 }
