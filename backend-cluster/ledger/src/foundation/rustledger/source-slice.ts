@@ -542,6 +542,21 @@ export function includeTraversalOrder(
   files: FileMap,
   entryPoint: string,
 ): string[] {
+  const order = loadedFiles(files, entryPoint);
+  const visited = new Set(order);
+  return [
+    ...order,
+    ...Object.keys(files)
+      .filter((file) => !visited.has(file))
+      .sort(),
+  ];
+}
+
+/**
+ * The files the entry point loads, in {@link includeTraversalOrder}'s order,
+ * without the unreached ones it appends.
+ */
+export function loadedFiles(files: FileMap, entryPoint: string): string[] {
   const order: string[] = [];
   const visited = new Set<string>();
   const globBudget = new GlobWorkBudget();
@@ -565,10 +580,6 @@ export function includeTraversalOrder(
     }
   };
   visit(entryPoint);
-  Object.keys(files)
-    .filter((file) => !visited.has(file))
-    .sort()
-    .forEach((file) => order.push(file));
   return order;
 }
 

@@ -780,7 +780,7 @@ async function parseLedgerFilesUncached(
     files[entryPoint],
   ));
   errors = locateBookErrors(errors, files, entryPoint);
-  errors = reportUrlIncludes(errors, files);
+  errors = reportUrlIncludes(errors, files, entryPoint);
   errors = reportUndecodableSources(errors, files, entryPoint);
 
   if (isRawPluginProcessing(files, entryPoint)) {

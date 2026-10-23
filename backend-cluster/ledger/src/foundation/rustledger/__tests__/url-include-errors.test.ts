@@ -38,6 +38,7 @@ describe("reportUrlIncludes", () => {
     const [error] = reportUrlIncludes(
       [readFailure("https:/beancount.io/prices/BTC-USD")],
       files,
+      "main.bean",
       ORIGINS,
     );
 
@@ -58,6 +59,7 @@ describe("reportUrlIncludes", () => {
     const [error] = reportUrlIncludes(
       [readFailure("books/s3:/bucket/prices.bean")],
       files,
+      "main.bean",
       ORIGINS,
     );
 
@@ -78,6 +80,7 @@ describe("reportUrlIncludes", () => {
     const [error] = reportUrlIncludes(
       [readFailure("qa-missing.bean")],
       files,
+      "main.bean",
       ORIGINS,
     );
     expect([error.message, error.file, error.line]).toEqual([
@@ -96,6 +99,7 @@ describe("reportUrlIncludes", () => {
     const [error] = reportUrlIncludes(
       [readFailure("typo.bean")],
       files,
+      "main.bean",
       ORIGINS,
     );
     expect([error.message, error.file, error.line]).toEqual([
@@ -109,7 +113,7 @@ describe("reportUrlIncludes", () => {
     const other = { ...readFailure("x"), code: "E1001", message: "other" };
     const stray = readFailure("not-included.bean");
     const files = { "main.bean": 'include "typo.bean"\n' };
-    const out = reportUrlIncludes([other, stray], files, ORIGINS);
+    const out = reportUrlIncludes([other, stray], files, "main.bean", ORIGINS);
 
     expect(out[0]).toBe(other);
     expect(out[1]).toBe(stray);
@@ -117,9 +121,9 @@ describe("reportUrlIncludes", () => {
 
   it("returns the engine's errors as they are when nothing is included", () => {
     const errors = [readFailure("typo.bean")];
-    expect(reportUrlIncludes(errors, { "main.bean": "" }, ORIGINS)).toBe(
-      errors,
-    );
+    expect(
+      reportUrlIncludes(errors, { "main.bean": "" }, "main.bean", ORIGINS),
+    ).toBe(errors);
   });
 
   it("says why a URL on an allowed origin is still not a managed price source", () => {
@@ -133,12 +137,55 @@ describe("reportUrlIncludes", () => {
         readFailure("https:/beancount.io/catalog"),
       ],
       files,
+      "main.bean",
       ORIGINS,
     );
     expect(out.map((error) => error.message)).toEqual([
       `include "https://beancount.io/prices/BTC-USD?from=2026-01-01": ${notAllowed("a managed price URL must not carry a query string or fragment")}`,
       `include "https://beancount.io/catalog": ${notAllowed("the path must be /prices/<ALIAS> (letters, digits, . _ -)")}`,
     ]);
+  });
+
+  // w21/772: every error for a target went to its first include in the
+  // repository, so a second include was never pointed to, and a file the
+  // ledger does not read could be blamed.
+  it("gives each include of a missing file its own error", () => {
+    const twice = reportUrlIncludes(
+      [readFailure("qa-missing.bean"), readFailure("qa-missing.bean")],
+      { "main.bean": 'include "qa-missing.bean"\ninclude "qa-missing.bean"\n' },
+      "main.bean",
+      ORIGINS,
+    );
+    expect(twice.map((error) => [error.file, error.line])).toEqual([
+      ["main.bean", 1],
+      ["main.bean", 2],
+    ]);
+    const nested = reportUrlIncludes(
+      [readFailure("qa-missing.bean"), readFailure("qa-missing.bean")],
+      {
+        "main.bean": 'include "sub.bean"\ninclude "qa-missing.bean"\n',
+        "sub.bean": '2020-01-01 open Assets:Cash\ninclude "qa-missing.bean"\n',
+      },
+      "main.bean",
+      ORIGINS,
+    );
+    expect(nested.map((error) => [error.file, error.line]).sort()).toEqual([
+      ["main.bean", 2],
+      ["sub.bean", 2],
+    ]);
+  });
+
+  it("never blames a file the ledger does not read", () => {
+    const [error] = reportUrlIncludes(
+      [readFailure("qa-missing.bean")],
+      {
+        "archive/old.bean": 'include "../qa-missing.bean"\n',
+        "main.bean": '2020-01-01 open Assets:Cash\ninclude "qa-missing.bean"\n',
+      },
+      "main.bean",
+      ORIGINS,
+    );
+    expect([error.file, error.line]).toEqual(["main.bean", 2]);
   });
 
   it("reports every URL as disallowed when managed prices are disabled", () => {
@@ -148,6 +195,7 @@ describe("reportUrlIncludes", () => {
     const [error] = reportUrlIncludes(
       [readFailure("https:/beancount.io/prices/BTC-USD")],
       files,
+      "main.bean",
       [],
     );
     expect(error.message).toBe(

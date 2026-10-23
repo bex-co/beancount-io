@@ -1940,6 +1940,29 @@ async function main(): Promise<void> {
       `${first} then ${second} matches bean-check (got ${JSON.stringify(idle)})`,
     );
   }
+  // w21/772: a missing file included twice was listed twice at the first
+  // include, and a file the ledger does not read could take the blame.
+  const missingTwice = (
+    await parseLedgerFiles(
+      {
+        "archive/old.bean": 'include "../qa-missing.bean"\n',
+        "main.beancount":
+          'include "qa-missing.bean"\ninclude "sub.beancount"\n',
+        "sub.beancount":
+          '2020-01-01 open Assets:Cash\ninclude "qa-missing.bean"\n',
+      },
+      "main.beancount",
+      { today: "2099-01-01" },
+    )
+  ).errors
+    .filter((e) => e.message.startsWith("Included file not found"))
+    .map((e) => `${e.file}:${e.line}`)
+    .sort();
+  assert(
+    JSON.stringify(missingTwice) ===
+      JSON.stringify(["main.beancount:1", "sub.beancount:2"]),
+    `each include of a missing file gets its own error (got ${JSON.stringify(missingTwice)})`,
+  );
   // w21/733: a posting flag was read as the sale's account.
   const flagged = (
     await parseLedgerFiles(

@@ -6,6 +6,7 @@ import {
   isUrlIncludeTarget,
   resolveIncludeTarget,
 } from "./file-map-loader";
+import { loadedFiles } from "./source-slice";
 
 const ENGINE_READ_FAILURE = "failed to read file ";
 
@@ -35,38 +36,45 @@ function urlIncludeMessage(target: string, origins: readonly string[]): string {
  * is a managed price source that is currently unavailable or not an allowed
  * source at all. A missing plain path gets the same treatment: located at its
  * `include` line, reading "Included file not found: <as written>" (w21/189).
+ *
+ * Each include of a target gets an error of its own: the k-th the engine
+ * reports for it goes to its k-th `include`, read only in the files the entry
+ * point loads. Every one went to the first include in the repository, so a
+ * second was never pointed to, and a file the ledger does not read could be
+ * blamed (w21/772).
  */
 export function reportUrlIncludes(
   errors: BeancountError[],
   files: Readonly<Record<string, string>>,
+  entryPoint: string,
   origins: readonly string[] = config.managedPrices.origins,
 ): BeancountError[] {
   const urlIncludes = new Map<
     string,
-    { file: string; line: number; target: string; url: boolean }
+    { file: string; line: number; target: string; url: boolean }[]
   >();
-  for (const [file, content] of Object.entries(files)) {
-    for (const { target, line } of extractIncludeDeclarations(content)) {
+  for (const file of loadedFiles(files, entryPoint)) {
+    for (const { target, line } of extractIncludeDeclarations(files[file]!)) {
       // The key the engine reports: the same join-and-normalize it applies.
       const engineKey = resolveIncludeTarget(file, target);
-      if (!urlIncludes.has(engineKey)) {
-        urlIncludes.set(engineKey, {
-          file,
-          line,
-          target,
-          url: isUrlIncludeTarget(target),
-        });
-      }
+      urlIncludes.set(engineKey, [
+        ...(urlIncludes.get(engineKey) ?? []),
+        { file, line, target, url: isUrlIncludeTarget(target) },
+      ]);
     }
   }
   if (urlIncludes.size === 0) return errors;
 
+  const reported = new Map<string, number>();
   return errors.map((error) => {
     if (error.code !== "LOAD" || !error.message.startsWith(ENGINE_READ_FAILURE))
       return error;
     const rest = error.message.slice(ENGINE_READ_FAILURE.length);
-    for (const [engineKey, include] of urlIncludes) {
+    for (const [engineKey, declared] of urlIncludes) {
       if (rest.startsWith(`${engineKey}: `)) {
+        const count = reported.get(engineKey) ?? 0;
+        reported.set(engineKey, count + 1);
+        const include = declared[Math.min(count, declared.length - 1)]!;
         return {
           ...error,
           // A plain path is just a file that is not in the repository: the
