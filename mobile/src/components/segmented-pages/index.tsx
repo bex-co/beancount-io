@@ -22,6 +22,8 @@ import { useThemeStyle } from "@/common/hooks/use-theme-style";
 
 /** Opacity steps of the trailing fade, from the labels out to the edge. */
 const FADE_STEPS = [0.2, 0.45, 0.7, 0.95];
+/** Width of the selected tab's edge. */
+const TAB_BORDER = 1;
 
 interface PageSelectedEvent {
   position: number;
@@ -86,14 +88,22 @@ const getStyles = (theme: ColorTheme) =>
       alignSelf: "flex-end",
       marginBottom: 8,
     },
+    // Every tab carries the border, transparent until selected, so selecting
+    // one moves nothing; the padding gives back its width.
     tab: {
-      paddingHorizontal: 12,
-      paddingVertical: 6,
+      paddingHorizontal: 12 - TAB_BORDER,
+      paddingVertical: 6 - TAB_BORDER,
       borderRadius: 16,
+      borderWidth: TAB_BORDER,
+      borderColor: "transparent",
       marginEnd: 4,
     },
+    // Marked as a selected drawer row is: a `black20` fill sat at 1.08:1 on the
+    // card's `controlFill` in light and 2.07:1 in dark, so the selected tab was
+    // all but invisible. The green edge is 4.70:1 and 6.60:1 (w21/701).
     tabActive: {
-      backgroundColor: theme.black20,
+      backgroundColor: theme.controlSelected,
+      borderColor: theme.primary,
     },
     label: {
       fontSize: fontSizes.lg,

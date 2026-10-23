@@ -17,7 +17,6 @@
 - [706](./706.md) — An unused pad makes the next pad raise a false "Multiple pad directives"; pad and balance error paths are quadratic
 - [707](./707.md) — File editor: since w21/689, text typed during a save is lost when that save conflicts and you choose Overwrite or Recreate
 - [703](./703.md) — Home's net-worth hero draws its rolling digits misaligned for an Arabic-symbol currency (KWD)
-- [701](./701.md) — Home's chart tabs: the selected Net Worth / Assets / Liabilities pill is nearly invisible (1.08:1 light, 2.07:1 dark)
 - [702](./702.md) — Files: main.bean's lock button (1.34:1) and the editor's new path line (1.78:1) are near-white in light mode
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window
 - [065](./blocked/065.md) — One early-year entry (e.g. 0050) makes the balance sheet 23,718 monthly points (3 MB) and the app stalls — **blocked:** needs an approach decision (per-pill fetch vs server downsample) and a simulator profile of the stall
