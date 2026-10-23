@@ -38,6 +38,24 @@
       "result": "No canonical bex-co/Beancount.io hosted connector among these displayed results",
       "action": "Retain original Free Queue repository submission; no resubmission or payment",
       "limit": "This completes the displayed beancount query pagination, not private moderator status, directory-wide absence or connection proof"
+    },
+    {
+      "observedAtUTC": "2026-10-23T20:59:34Z",
+      "url": "https://mcpmarket.com/search?q=beancount",
+      "result": "HTTP 200 initial HTML cards; no canonical endpoint/repository in captured partial results",
+      "limit": "Load More remains; not complete pagination or private moderation status"
+    },
+    {
+      "observedAtUTC": "2026-10-23T21:35:21Z",
+      "url": "https://mcpmarket.com/search?q=beancount",
+      "initialResults": 21,
+      "loadMoreClicks": 1,
+      "finalResults": 21,
+      "terminalText": "End of results",
+      "loadMoreRemaining": false,
+      "result": "No canonical Beancount.io hosted connector among these complete displayed query results",
+      "action": "Retain original Free Queue repository receipt; no repeat or paid submission",
+      "limit": "Displayed name-query results do not expose private moderation state, directory-wide absence or native connection proof"
     }
   ]
 }
