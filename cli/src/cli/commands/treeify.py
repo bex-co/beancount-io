@@ -123,7 +123,11 @@ def _decide_pattern(text: str, delimiter: str | None) -> str:
     """
     try:
         joined = delimiter if delimiter is not None else _DEFAULT_DELIMITER
-        spliced = re.compile(rf"({_ACCOUNT_ANY})(?P<ws>{joined}.|$)")
+        # The character after the delimiter is looked at, not consumed: taken
+        # into the match it was the first letter of the next column's account,
+        # so a ticker such as `NYSE:IBM` beside the account hid it from the
+        # scan and the narration won the column (w5/990).
+        spliced = re.compile(rf"({_ACCOUNT_ANY})(?P<ws>{joined}(?=.)|$)")
     except re.error:
         # Upstream splices the same expression and reports it in its own
         # words; bea only stays out of the way.
@@ -137,7 +141,7 @@ def _decide_pattern(text: str, delimiter: str | None) -> str:
     for left in sorted(beginnings):
         column = beginnings[left]
         rightmost = max(match.end(1) for match in column)
-        following = min(match.end() if match.group("ws") else 10000 for match in column)
+        following = min(match.end() + 1 if match.group("ws") else 10000 for match in column)
         if not rightmost < following:
             continue
         names = [match.group(1) for match in column]
