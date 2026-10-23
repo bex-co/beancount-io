@@ -245,6 +245,11 @@ _SHORT_LOT_LABELS: ContextVar[Callable[[], frozenset[tuple[str, str]]]] = Contex
 )
 
 
+#: The `(account, label)` short lots the entries normalized so far in this write open, for a cover that
+#: follows its opening in the same batch; None outside a write that tracks them (w5/983).
+BATCH_SHORT_LABELS: ContextVar[set[tuple[str, str]] | None] = ContextVar("batch_short_labels", default=None)
+
+
 def held_short_lot_labels(entries: Iterable[Any]) -> frozenset[tuple[str, str]]:
     """The labelled lots the entries leave short: net negative units per account, commodity and label."""
     nets: dict[tuple[str, str, str], Decimal] = {}
@@ -275,9 +280,11 @@ def short_lot_labels(entries: Callable[[], Iterable[Any]]) -> Any:
         return memo[0]
 
     token = _SHORT_LOT_LABELS.set(labels)
+    batch = BATCH_SHORT_LABELS.set(set())
     try:
         yield
     finally:
+        BATCH_SHORT_LABELS.reset(batch)
         _SHORT_LOT_LABELS.reset(token)
 
 
@@ -306,6 +313,12 @@ def normalize_entry_strings(entry: Any) -> Any:
         units: Any = posting.units
         known = units is not None and units is not MISSING and getattr(units, "number", MISSING) is not MISSING
         label = getattr(cost, "label", None)
+        # A short lot this write opens is remembered as it passes, so a cover
+        # later in the same batch is not flattened into another lot's label
+        # (w5/983).
+        batch_short = BATCH_SHORT_LABELS.get()
+        if known and units.number < 0 and isinstance(label, str) and label and batch_short is not None:
+            batch_short.add((posting.account, label))
         # Negative units sell a lot; positive units cover one only when the
         # ledger holds that short lot, which only the ledger can say (w5/925).
         # Asked only for a labelled positive posting: any other write never
@@ -316,7 +329,10 @@ def normalize_entry_strings(entry: Any) -> Any:
                 units.number > 0
                 and isinstance(label, str)
                 and bool(label)
-                and (posting.account, label) in _SHORT_LOT_LABELS.get()()
+                and (
+                    (posting.account, label) in (batch_short or ())
+                    or (posting.account, label) in _SHORT_LOT_LABELS.get()()
+                )
             )
         )
         if not reduction and isinstance(getattr(cost, "label", None), str):

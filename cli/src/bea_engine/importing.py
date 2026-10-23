@@ -40,6 +40,7 @@ from bea_engine.ledger.text import (
 )
 from bea_engine.ledger.writer import (
     _SHORT_LOT_LABELS,
+    BATCH_SHORT_LABELS,
     format_entry,
     held_short_lot_labels,
     nfc_entry_accounts,
@@ -166,9 +167,11 @@ def _with_short_lots[**P, R](function: Callable[P, R]) -> Callable[P, R]:
     def wrapped(*args: P.args, **kwargs: P.kwargs) -> R:
         token = _SHORT_LOT_LABELS.set(lambda: frozenset())
         opened = OPENED_ACCOUNTS.set(frozenset())
+        batch = BATCH_SHORT_LABELS.set(None)
         try:
             return function(*args, **kwargs)
         finally:
+            BATCH_SHORT_LABELS.reset(batch)
             OPENED_ACCOUNTS.reset(opened)
             _SHORT_LOT_LABELS.reset(token)
 
@@ -240,6 +243,7 @@ def answer(
     # an importer returns as well (w5/925).
     short_labels = held_short_lot_labels(existing)
     _SHORT_LOT_LABELS.set(lambda: short_labels)
+    BATCH_SHORT_LABELS.set(set())
     # An account the ledger already opens stays usable by name even where its
     # root is one the main file renamed and an include kept (w5/928).
     OPENED_ACCOUNTS.set(
