@@ -18,7 +18,6 @@
 
 - [1013 — Preserve multiline string values when aligning amounts](./1013.md) — minor; both-width native Align Amounts changes parsed narration spaces1→33; valid both parsers, real postings/single-line controls intact, matching loop, no writes.
 
-- [1012 — Name collapsed sidebar group flyouts](./1012.md) — minor; Reports/Advanced dialogs are unnamed in two fresh icon-rail layouts; Escape and scoped native navigation pass, complete current source exact, no writes.
 
 
 
