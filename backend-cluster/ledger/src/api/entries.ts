@@ -29,6 +29,10 @@ import {
   type ReplacedSourceRange,
 } from "@/foundation/rustledger";
 import { addIncludes } from "@/features/ledger/utils/routed-includes";
+import {
+  lineEndingOf,
+  withLineEnding,
+} from "@/features/ledger/utils/line-ending";
 import { logger } from "@/shared/logger";
 
 const log = logger.child({ module: "entries-api" });
@@ -300,8 +304,11 @@ export function setEntriesHandler(router: Router): void {
         }
         // Python: current + "\n" + format_entries(directives); the engine's
         // entryInputToText is the format_entries block for one entry.
-        let newContents = cached.current + "\n";
-        for (const { index, text } of written) {
+        const eol = lineEndingOf(cached.current);
+        let newContents = cached.current + eol;
+        for (const { index, text: block } of written) {
+          // The file's own line ending, so a CRLF file stays CRLF (w21/673).
+          const text = withLineEnding(block, eol);
           ranges[index] = {
             file: path,
             startLine: newlines(newContents),

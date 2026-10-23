@@ -10,8 +10,9 @@ import { restErrorMiddleware } from "@/server/error-middleware";
 // (unit tests are WASM-free); what is under test is the handler: baseline vs
 // projection, the refusal envelope, allowInvalid, and that a refusal commits
 // nothing.
-const MAIN =
+const LF_MAIN =
   "2026-01-01 open Assets:Cash USD\n2026-01-01 open Equity:Opening\n";
+let MAIN = LF_MAIN;
 const b64 = (text: string) => Buffer.from(text, "utf8").toString("base64");
 const fromB64 = (text: string) => Buffer.from(text, "base64").toString("utf8");
 
@@ -150,6 +151,7 @@ describe("bulk entries refuse amounts that are not decimals (w3/641)", () => {
   afterAll(() => new Promise<void>((resolve) => server.close(() => resolve())));
 
   beforeEach(() => {
+    MAIN = LF_MAIN;
     baselineErrors = [];
     committed.length = 0;
     reads.length = 0;
@@ -240,6 +242,73 @@ describe("bulk entries refuse amounts that are not decimals (w3/641)", () => {
     const written = fromB64(committed[0]!.files[0]!.content);
     expect(written).toMatch(/Assets:Cash +0\.5 USD/);
     expect(written).toMatch(/Equity:Opening +-0\.5 USD/);
+  });
+});
+
+// w21/673: an entry added to a CRLF file was appended with bare LFs.
+describe("bulk entries keep the file's line ending", () => {
+  let server: http.Server;
+  let url: string;
+
+  beforeAll(async () => {
+    const app = new Koa();
+    const router = new Router();
+    setEntriesHandler(router);
+    app.use(restErrorMiddleware());
+    app.use(bodyParser());
+    app.use(router.routes());
+    server = http.createServer(app.callback());
+    url = await listen(server);
+  });
+
+  afterAll(() => new Promise<void>((resolve) => server.close(() => resolve())));
+
+  beforeEach(() => {
+    MAIN = LF_MAIN;
+    baselineErrors = [];
+    committed.length = 0;
+  });
+
+  const add = () =>
+    fetch(`${url}/entries/alice/books/bulk`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        entries: [
+          {
+            type: "transaction",
+            item: {
+              date: "2026-10-22",
+              flag: "*",
+              narration: "Coffee",
+              postings: [
+                {
+                  account: "Assets:Cash",
+                  units: { number: "-3.00", currency: "USD" },
+                },
+                {
+                  account: "Equity:Opening",
+                  units: { number: "3.00", currency: "USD" },
+                },
+              ],
+            },
+          },
+        ],
+      }),
+    });
+
+  it("writes CRLF throughout a CRLF file", async () => {
+    MAIN = LF_MAIN.replace(/\n/g, "\r\n");
+    expect((await add()).status).toBe(200);
+    const written = fromB64(committed[0]!.files[0]!.content);
+    expect(written).toContain("Coffee");
+    expect(written.replace(/\r\n/g, "")).not.toContain("\n");
+  });
+
+  it("leaves an LF file LF", async () => {
+    expect((await add()).status).toBe(200);
+    const written = fromB64(committed[0]!.files[0]!.content);
+    expect(written).not.toContain("\r");
   });
 });
 

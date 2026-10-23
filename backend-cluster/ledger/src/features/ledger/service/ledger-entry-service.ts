@@ -1,4 +1,5 @@
 import { logger } from "@/shared/logger";
+import { appendBlock } from "@/features/ledger/utils/line-ending";
 import {
   parseEntryDate,
   resolveEntryFile,
@@ -255,7 +256,7 @@ export class LedgerEntryService implements ILedgerEntryService {
         ([path, block]) =>
           [
             path,
-            (current: string | null): string => `${current ?? ""}\n${block}`,
+            (current: string | null): string => appendBlock(current ?? "", block),
           ] as const,
       ),
     );
