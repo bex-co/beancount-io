@@ -37,6 +37,7 @@ import { CASH_FLOW_VIEWS, DEFAULT_VIEW } from "./search";
 import { PageHeader } from "@/common/components/page-header";
 import { ConversionSelect } from "@/common/components/conversion-select";
 import { IntervalSelect } from "@/common/components/interval-select";
+import { cashFlowRootVariables, ledgerAccountRoots } from "./lib/account-roots";
 import { useQueryRetry } from "@/common/hooks/use-query-retry";
 
 /**
@@ -88,9 +89,14 @@ export default function LedgerCashFlowPage() {
       filter: ledgerFilters.searchParams.filter,
       time: ledgerFilters.searchParams.time,
       interval: timeInterval,
+      ...cashFlowRootVariables(ledgerData.options),
     },
     fetchPolicy: "cache-first",
   });
+  const roots = useMemo(
+    () => ledgerAccountRoots(ledgerData.options),
+    [ledgerData.options],
+  );
   const { failure, retrying, retry } = useQueryRetry(error, refetch);
 
   const settled = selectSettledReportData(isLoading, data);
@@ -109,9 +115,10 @@ export default function LedgerCashFlowPage() {
             cashFlowData.getLedgerBalanceSheet
               .assetsHierarchyData as SerializableTreeNode,
             accountMeta,
+            roots,
           )
         : [],
-    [cashFlowData, accountMeta],
+    [cashFlowData, accountMeta, roots],
   );
 
   const { statement, reconciliationError } = useMemo(() => {
@@ -130,6 +137,7 @@ export default function LedgerCashFlowPage() {
           closingCashAccounts,
           primaryCurrency,
           accountMeta,
+          roots,
         }),
         reconciliationError: null,
       };
@@ -137,7 +145,7 @@ export default function LedgerCashFlowPage() {
       if (!(error instanceof CashFlowReconciliationError)) throw error;
       return { statement: null, reconciliationError: error };
     }
-  }, [cashFlowData, closingCashAccounts, primaryCurrency, accountMeta]);
+  }, [cashFlowData, closingCashAccounts, primaryCurrency, accountMeta, roots]);
 
   const cashAccountRows = useMemo(
     () =>

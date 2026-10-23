@@ -5,6 +5,7 @@ import {
 } from "@/features/reports/export/model";
 import { CASH_FLOW_ACTIVITY_BY_ROOT, type CashFlowRoot } from "../config";
 import { resolveCashFlowRole, type RoleResolution } from "./role-resolver";
+import { accountAsRootType, type AccountRoots } from "./account-roots";
 import type { SerializableTreeNode } from "@/graphql/definitions";
 
 export type CashFlowActivity = "operating" | "investing" | "financing";
@@ -152,11 +153,14 @@ export function isCashEquivalentAccount(accountName: string): boolean {
  * -200 financing outflow.
  */
 export function classifyCashFlowActivity(
-  accountName: string,
+  name: string,
   meta?: Record<string, unknown> | null,
+  roots?: AccountRoots,
 ): CashFlowActivity | null {
-  if (!accountName) return null;
+  if (!name) return null;
 
+  // A renamed root (Revenus) is read as its type (Income) (w4/1022).
+  const accountName = accountAsRootType(name, roots);
   const prefix = accountName.split(":")[0] as CashFlowRoot;
   const heuristicActivity = CASH_FLOW_ACTIVITY_BY_ROOT[prefix] ?? null;
   if (heuristicActivity === null) return null;
@@ -242,6 +246,7 @@ export function subtractBalanceRecords(
 export function collectCashAccounts(
   assetsHierarchy: SerializableTreeNode,
   accountMeta?: AccountMetaMap,
+  roots?: AccountRoots,
 ): CashAccountSnapshot[] {
   const snapshots: CashAccountSnapshot[] = [];
 
@@ -250,7 +255,7 @@ export function collectCashAccounts(
     inheritedCash: "declared" | "heuristic" | null,
   ): void => {
     const resolution = resolveCashFlowRole(
-      node.account,
+      accountAsRootType(node.account, roots),
       accountMeta?.get(node.account),
     );
     // A declared role decides for this node; otherwise the account is cash
@@ -319,6 +324,8 @@ export function buildCashFlowStatement(input: {
   closingCashAccounts: CashAccountSnapshot[];
   primaryCurrency: string;
   accountMeta?: AccountMetaMap;
+  /** The ledger's root names; English when omitted (w4/1022). */
+  roots?: AccountRoots;
 }): CashFlowStatement {
   // Valuation can change security movements without changing actual cash.
   // Check every interval and unit independently before deriving cash from
@@ -358,9 +365,10 @@ export function buildCashFlowStatement(input: {
       // Same exclusions as classifyCashFlowActivity (a root outside the five
       // beancount roots is heuristic-only excluded; "cash" is never a row),
       // but resolving the role once since the row also records its source.
-      const prefix = account.split(":")[0] as CashFlowRoot;
+      const typed = accountAsRootType(account, input.roots);
+      const prefix = typed.split(":")[0] as CashFlowRoot;
       if ((CASH_FLOW_ACTIVITY_BY_ROOT[prefix] ?? null) === null) return;
-      const { role, source } = resolveCashFlowRole(account, meta);
+      const { role, source } = resolveCashFlowRole(typed, meta);
       if (role === "cash") return;
       const activity = role;
       const change = interval.accountChanges[account];

@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import type { RouterContext } from "@/common/types/router-context";
-import { GetLedgerCashFlowDocument } from "@/graphql/definitions";
+import {
+  GetLedgerCashFlowDocument,
+  GetLedgerDocument,
+} from "@/graphql/definitions";
 import { cashFlowLoader } from "../loader";
 
 const { cookies } = vi.hoisted(() => ({ cookies: new Map<string, string>() }));
@@ -25,13 +28,27 @@ function loaderInput(query: (options: QueryOptions) => Promise<unknown>) {
 }
 
 describe("cashFlowLoader", () => {
+  const cashFlowCall = (query: ReturnType<typeof vi.fn>) =>
+    (query.mock.calls as [QueryOptions][]).find(
+      ([options]) => options.query === GetLedgerCashFlowDocument,
+    )![0];
+
   it("requests the cash flow query with the destination loader deps", async () => {
-    const query = vi.fn(() => Promise.resolve({ data: {} }));
+    const query = vi.fn((_options: QueryOptions) =>
+      Promise.resolve({ data: {} }),
+    );
 
     await cashFlowLoader(loaderInput(query));
 
-    expect(query).toHaveBeenCalledTimes(1);
-    expect(query.mock.calls[0][0]).toEqual({
+    // The ledger read first, for its root names, then the report.
+    expect(query.mock.calls.map(([options]) => options.query)).toEqual([
+      GetLedgerDocument,
+      GetLedgerCashFlowDocument,
+    ]);
+    expect(query.mock.calls[0]![0].variables).toEqual({
+      ledgerId: "open_ledger/example",
+    });
+    expect(cashFlowCall(query)).toEqual({
       query: GetLedgerCashFlowDocument,
       variables: {
         ledgerId: "open_ledger/example",
@@ -40,13 +57,52 @@ describe("cashFlowLoader", () => {
         time: "2025",
         interval: "monthly",
         conversion: "at_cost",
+        incomeRoot: "Income",
+        expensesRoot: "Expenses",
+        assetsRoot: "Assets",
+        liabilitiesRoot: "Liabilities",
+        equityRoot: "Equity",
       },
+    });
+  });
+
+  it("reads the ledger's renamed roots (w4/1022)", async () => {
+    const query = vi.fn((options: QueryOptions) =>
+      Promise.resolve(
+        options.query === GetLedgerDocument
+          ? {
+              data: {
+                getLedger: {
+                  options: {
+                    nameAssets: "Actifs",
+                    nameLiabilities: "Dettes",
+                    nameEquity: "Capital",
+                    nameIncome: "Revenus",
+                    nameExpenses: "Charges",
+                  },
+                },
+              },
+            }
+          : { data: {} },
+      ),
+    );
+
+    await cashFlowLoader(loaderInput(query));
+
+    expect(cashFlowCall(query).variables).toMatchObject({
+      incomeRoot: "Revenus",
+      expensesRoot: "Charges",
+      assetsRoot: "Actifs",
+      liabilitiesRoot: "Dettes",
+      equityRoot: "Capital",
     });
   });
 
   it("prefetches the ledger's stored report conversion", async () => {
     cookies.set("beancount.reportConversion.open_ledger%2Fexample", "units");
-    const query = vi.fn(() => Promise.resolve({ data: {} }));
+    const query = vi.fn((_options: QueryOptions) =>
+      Promise.resolve({ data: {} }),
+    );
 
     try {
       await cashFlowLoader(loaderInput(query));
@@ -54,7 +110,7 @@ describe("cashFlowLoader", () => {
       cookies.clear();
     }
 
-    expect(query.mock.calls[0][0]).toMatchObject({
+    expect(cashFlowCall(query)).toMatchObject({
       variables: { conversion: "units" },
     });
   });

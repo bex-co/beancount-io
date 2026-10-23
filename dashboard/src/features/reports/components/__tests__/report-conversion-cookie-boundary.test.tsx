@@ -17,6 +17,7 @@ import type { RouterContext } from "@/common/types/router-context";
 import {
   GetLedgerBalanceSheetDocument,
   GetLedgerCashFlowDocument,
+  GetLedgerDocument,
   GetLedgerIncomeStatementDocument,
   GetLedgerTrialBalanceDocument,
 } from "@/graphql/definitions";
@@ -156,13 +157,17 @@ async function prefetchReports(header: string, ledgerId = LEDGER) {
     await cashFlowLoader(input);
     await trialBalanceLoader(input);
   });
-  expect(query.mock.calls.map(([options]) => options.query)).toEqual([
+  // Cash Flow also reads the ledger for its root names (w4/1022).
+  const reports = query.mock.calls.filter(
+    ([options]) => options.query !== GetLedgerDocument,
+  );
+  expect(reports.map(([options]) => options.query)).toEqual([
     GetLedgerBalanceSheetDocument,
     GetLedgerIncomeStatementDocument,
     GetLedgerCashFlowDocument,
     GetLedgerTrialBalanceDocument,
   ]);
-  const variables = query.mock.calls.map(([options]) => options.variables);
+  const variables = reports.map(([options]) => options.variables);
   variables.forEach((variables) =>
     expect(variables).toMatchObject({
       ledgerId,

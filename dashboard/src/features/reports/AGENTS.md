@@ -73,6 +73,11 @@ otherwise the heuristics in `cash-flow/config.ts` (account types and names)
 apply. The classification and CCE-set disclosure notices must appear for every
 row still resolved by heuristics; declared rows carry no disclosure. Cash-flow
 rows are already statement-signed by the cash-flow model; never re-invert them.
+A ledger may rename its roots (`option "name_income" "Revenus"`):
+`cash-flow/lib/account-roots.ts` gives the five interval reads the ledger's own
+root names (the producer reads `accountName` as a prefix) and lets the model
+and the overview Sankey read a renamed root as its type. Never hardcode the
+English root names in a query or classifier.
 Apply the same multi-unit management-schedule rules as the other statements.
 
 Interval totals are **direct postings per exact account**, not parent rollups.

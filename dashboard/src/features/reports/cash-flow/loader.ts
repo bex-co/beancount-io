@@ -1,6 +1,10 @@
 import type { RouteLoader } from "@/common/types/route-loader";
 import type { LedgerSearchParams } from "@/common/providers/ledger-search-params-provider/context";
-import { GetLedgerCashFlowDocument } from "@/graphql/definitions";
+import {
+  GetLedgerCashFlowDocument,
+  GetLedgerDocument,
+} from "@/graphql/definitions";
+import { cashFlowRootVariables } from "./lib/account-roots";
 import { cashFlowQueryDefaults } from "./constants";
 import { storedReportConversion } from "@/features/reports/components/use-report-conversion";
 
@@ -16,6 +20,11 @@ export const cashFlowLoader: RouteLoader<
   // The page's own useQuery re-reports the same error through ReportErrorState,
   // which does recover on a search-param change. Matches the sibling report
   // loaders (trial-balance, balance-sheet, income-statement).
+  // The interval reads take the ledger's own root names, as the page does;
+  // the ledger read is the layout's, normally already cached.
+  const ledger = await context.client
+    .query({ query: GetLedgerDocument, variables: { ledgerId } })
+    .catch(() => null);
   await Promise.allSettled([
     context.client.query({
       query: GetLedgerCashFlowDocument,
@@ -26,6 +35,7 @@ export const cashFlowLoader: RouteLoader<
         time: deps.time,
         interval: cashFlowQueryDefaults.interval,
         conversion: storedReportConversion(ledgerId),
+        ...cashFlowRootVariables(ledger?.data?.getLedger?.options),
       },
     }),
   ]);

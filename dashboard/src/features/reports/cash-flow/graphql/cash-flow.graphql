@@ -5,9 +5,17 @@ query GetLedgerCashFlow(
   $time: String
   $filter: String
   $account: String
+  # The ledger's own root names (option "name_income" etc.); the producer
+  # reads accountName as a prefix, so English literals missed renamed roots
+  # (w4/1022).
+  $incomeRoot: String!
+  $expensesRoot: String!
+  $assetsRoot: String!
+  $liabilitiesRoot: String!
+  $equityRoot: String!
 ) {
   incomeIntervals: getLedgerIntervalTotals(
-    accountName: "Income"
+    accountName: $incomeRoot
     ledgerId: $ledgerId
     interval: $interval
     conversion: $conversion
@@ -20,7 +28,7 @@ query GetLedgerCashFlow(
     accountBalances
   }
   expenseIntervals: getLedgerIntervalTotals(
-    accountName: "Expenses"
+    accountName: $expensesRoot
     ledgerId: $ledgerId
     interval: $interval
     conversion: $conversion
@@ -33,7 +41,7 @@ query GetLedgerCashFlow(
     accountBalances
   }
   assetIntervals: getLedgerIntervalTotals(
-    accountName: "Assets"
+    accountName: $assetsRoot
     ledgerId: $ledgerId
     interval: $interval
     conversion: $conversion
@@ -46,7 +54,7 @@ query GetLedgerCashFlow(
     accountBalances
   }
   liabilityIntervals: getLedgerIntervalTotals(
-    accountName: "Liabilities"
+    accountName: $liabilitiesRoot
     ledgerId: $ledgerId
     interval: $interval
     conversion: $conversion
@@ -59,7 +67,7 @@ query GetLedgerCashFlow(
     accountBalances
   }
   equityIntervals: getLedgerIntervalTotals(
-    accountName: "Equity"
+    accountName: $equityRoot
     ledgerId: $ledgerId
     interval: $interval
     conversion: $conversion

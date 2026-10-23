@@ -1,4 +1,8 @@
 import { resolveCashFlowRole } from "@/features/reports/cash-flow/lib/role-resolver";
+import {
+  accountAsRootType,
+  type AccountRoots,
+} from "@/features/reports/cash-flow/lib/account-roots";
 
 export type AccountCategory =
   | "source"
@@ -6,33 +10,6 @@ export type AccountCategory =
   | "investing"
   | "financing"
   | "exclude";
-
-/** A Beancount root type, by its default English name. */
-export type RootType =
-  | "Assets"
-  | "Liabilities"
-  | "Equity"
-  | "Income"
-  | "Expenses";
-
-/**
- * The ledger's own root names (`option "name_income" "Revenus"`) mapped to
- * their types. Without it every root is read by its English name.
- */
-export type AccountRoots = ReadonlyMap<string, RootType>;
-
-/**
- * An account under a renamed root, read under its type's English name
- * (`Revenus:Salary` as `Income:Salary`), so the root vocabulary and the cash
- * heuristics apply to it (w4/1020). Other accounts are unchanged.
- */
-function asRootType(accountName: string, roots?: AccountRoots): string {
-  if (!roots) return accountName;
-  const separator = accountName.indexOf(":");
-  const head = separator === -1 ? accountName : accountName.slice(0, separator);
-  const type = roots.get(head);
-  return type ? type + accountName.slice(head.length) : accountName;
-}
 
 /** Root heuristic for the roots that can carry a cash-flow activity. */
 const ROOT_CATEGORIES: Record<string, AccountCategory> = {
@@ -67,7 +44,7 @@ export function categorizeAccount(
   if (!name) {
     return "exclude";
   }
-  const accountName = asRootType(name, roots);
+  const accountName = accountAsRootType(name, roots);
   const prefix = accountName.split(":")[0];
 
   if (prefix === "Income") {
@@ -109,7 +86,7 @@ export function isExcludedAccount(
     return false;
   }
 
-  const accountName = asRootType(name, roots);
+  const accountName = accountAsRootType(name, roots);
   const prefix = accountName.split(":")[0];
   const effectiveMeta =
     prefix === "Income" || prefix === "Equity" ? null : meta;

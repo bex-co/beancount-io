@@ -1,10 +1,10 @@
 import {
-  type AccountRoots,
-  type RootType,
   categorizeAccount,
   extractAccountAtDepth,
   isExcludedAccount,
 } from "./account-categorizer";
+import type { AccountRoots } from "@/features/reports/cash-flow/lib/account-roots";
+import type { CashFlowRoot as RootType } from "@/features/reports/cash-flow/config";
 import type { AccountMetaMap } from "@/features/reports/cash-flow/lib/model";
 import type { SerializableTreeNode } from "@/graphql/definitions";
 import {

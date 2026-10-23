@@ -1,4 +1,5 @@
-import { type AccountRoots, categorizeAccount } from "./account-categorizer";
+import { categorizeAccount } from "./account-categorizer";
+import type { AccountRoots } from "@/features/reports/cash-flow/lib/account-roots";
 
 export interface SankeyColorScheme {
   income: string;
