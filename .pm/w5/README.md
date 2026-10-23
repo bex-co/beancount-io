@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1009 — Compose the old empty-label and compound-cost import ID](./1009.md) — reopened minor CLI lookup branch; unchanged historical acquisitions require review despite matching native lots, reproduced twice 2026-10-23.
+
 - [1004 — Compare the known currency facts beside an inferred amount](./1004.md) — reopened remaining minor CLI classifier acceptance; extra-key fix verified, inferred EUR still hides a stated USD contradiction, 2026-10-23.
 
 - [1010 — Retain authored native-ID owners when weighted inference remains unresolved](./1010.md) — major CLI regression after completed 1005; filtered cost/price trades lose their B1 owner, allowing duplicate cash outflows and full broker acquisitions, reproduced 2026-10-23.
