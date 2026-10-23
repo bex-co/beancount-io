@@ -296,10 +296,11 @@ function FileRow({
             activeOpacity={0.6}
             onPress={() => Alert.alert(t("ledgerMainFileProtected"))}
           >
+            {/* A button of its own: the hairline grey was 1.34:1 (w21/702). */}
             <Ionicons
               name="lock-closed-outline"
               size={19}
-              color={theme.black40}
+              color={theme.black80}
             />
           </TouchableOpacity>
         ) : (

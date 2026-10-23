@@ -206,7 +206,8 @@ const getStyles = (theme: ColorTheme) =>
       paddingVertical: 4,
       fontFamily: fonts.mono,
       fontSize: 12,
-      color: theme.black60,
+      // Text, not a placeholder: black60 was 1.78:1 in light (w21/702).
+      color: theme.black80,
     },
     savingText: {
       fontSize: 14,

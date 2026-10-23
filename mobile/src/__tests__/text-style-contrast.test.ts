@@ -269,7 +269,7 @@ const SECONDARY_TEXT: Array<[file: string, texts: string[]]> = [
   ["screens/home-screen/components/feed-card.tsx", ["metaText"]],
   [
     "screens/ledger-file-editor-screen/index.tsx",
-    ["errorLocation", "savingText"],
+    ["errorLocation", "savingText", "pathLine"],
   ],
   [
     "screens/multi-postings-transaction/multi-postings-transaction-screen.tsx",
@@ -327,6 +327,29 @@ describe("the Files browser's empty and hint text", () => {
       source.includes('lineHeight:18,textAlign:"center",color:theme.black80,}'),
     ).toBe(true);
   });
+});
+
+// w21/702: main.bean's lock is a button of its own (it opens an alert), drawn
+// in the hairline grey at 1.34:1 on the light page. WCAG 1.4.11 asks 3:1.
+describe("the Files browser's lock button", () => {
+  const source = fs.readFileSync(
+    path.join(__dirname, "../screens/ledger-file-browser-screen/index.tsx"),
+    "utf8",
+  );
+  const token =
+    /name="lock-closed-outline"\s*size=\{\d+\}\s*color=\{theme\.(\w+)\}/.exec(
+      source,
+    )?.[1];
+  for (const themeName of ["light", "dark"] as ThemeName[]) {
+    it(`stands out 3:1 from the page in ${themeName}`, () => {
+      const theme = themes[themeName].colorTheme as unknown as Record<
+        string,
+        string
+      >;
+      expect(typeof token).toBe("string");
+      expect(contrastRatio(theme[token!], theme.white) >= 3).toBe(true);
+    });
+  }
 });
 
 // w21/128: placeholders take the input placeholder token, never the hairline.
