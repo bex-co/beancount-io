@@ -53,6 +53,7 @@ import {
 } from "./generated-closes";
 import { reconcileCheckCommodityErrors } from "./check-commodity";
 import { coherentCostErrors } from "./coherent-cost";
+import { sellGainsErrors } from "./sell-gains";
 import { reconcileLeafOnlyErrors } from "./leafonly";
 import { locateDuplicateErrors } from "./noduplicates";
 import { reconcileNounusedErrors } from "./nounused";
@@ -772,6 +773,7 @@ async function parseLedgerFilesUncached(
   errors = reconcileLeafOnlyErrors(errors, directives, files, entryPoint);
   errors = locateDuplicateErrors(errors, files, entryPoint);
   errors = [...errors, ...coherentCostErrors(directives, files, entryPoint)];
+  errors = [...errors, ...sellGainsErrors(directives, files, entryPoint)];
   // The engine validates before its plugins add close_tree's closes, and its
   // auto_accounts opens no account named only by a note or a close (w21/737).
   // A stream revalidated after the fava plugins saw those closes already, as
