@@ -1,3 +1,4 @@
+import { entryLocationLabel, entrySourceText } from "./source-text";
 import { CardLoadFailure } from "@/components/card-load-failure";
 import React, { useState } from "react";
 import { disclosureAccessibility } from "@/common/accessibility";
@@ -283,7 +284,7 @@ export const EntryContext: React.FC<EntryContextProps> = ({
               numberOfLines={1}
               ellipsizeMode="head"
             >
-              {entryFilename}:{entryLineNumber}
+              {entryLocationLabel(entryFilename, entryLineNumber)}
             </Text>
           ) : null}
           {staleNote}
@@ -319,7 +320,7 @@ export const EntryContext: React.FC<EntryContextProps> = ({
             <View style={styles.sourceContainer}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 <Text style={styles.sourceText} selectable>
-                  {entryContext.slice || ""}
+                  {entrySourceText(entryContext.slice || "")}
                 </Text>
               </ScrollView>
             </View>

@@ -75,7 +75,7 @@ describe("the Entry Context location line", () => {
       .replace(/\s+/g, "");
     expect(
       source.includes(
-        'numberOfLines={1}ellipsizeMode="head">{entryFilename}:{entryLineNumber}',
+        'numberOfLines={1}ellipsizeMode="head">{entryLocationLabel(entryFilename,entryLineNumber)}',
       ),
     ).toBe(true);
   });
