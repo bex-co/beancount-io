@@ -121,18 +121,23 @@ export function trendFavorable(
  * point: that is a closing balance, and an ALL window opens at zero below it.
  * SVG y grows downward, so the plotted y is negated to compare as a value. A
  * stale index clamps to the last point exactly as the cursor does.
+ *
+ * `"flat"` for a point whose change reads flat in the change row
+ * (`flatPoints`): a flat series turned green under a finger while the row read
+ * a grey "+$0.00 (0.00%)" (w21/820), as it did at rest before w21/750.
  */
 export function scrubTrendFavorable(
   scrubIndex: number,
   pointYs: number[],
   openingY: number,
   netWorthSign: 1 | -1,
-): boolean | null {
+  flatPoints: readonly boolean[] = [],
+): boolean | "flat" | null {
   "worklet";
   const index = activeScrubIndex(scrubIndex, pointYs.length);
-  return index === SCRUB_IDLE
-    ? null
-    : trendFavorable(-pointYs[index], -openingY, netWorthSign);
+  if (index === SCRUB_IDLE) return null;
+  if (flatPoints[index]) return "flat";
+  return trendFavorable(-pointYs[index], -openingY, netWorthSign);
 }
 
 /** The value under the cursor, or the latest one at rest. Zero if there is no series. */

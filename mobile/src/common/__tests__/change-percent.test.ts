@@ -188,7 +188,7 @@ describe("changeReadsFlat", () => {
       .replace(/\s+/g, "");
     expect(
       chart.includes(
-        "neutral||(scrubFavorable===null&&restingFlat)?theme.black80",
+        'neutral||(scrubFavorable===null?restingFlat:scrubFavorable==="flat")?theme.black80',
       ),
     ).toBe(true);
     expect(chart.includes("constrestingFlat=changeReadsFlat(")).toBe(true);

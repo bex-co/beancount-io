@@ -81,10 +81,77 @@ test("the chart feeds the scrub the projected opening balance", () => {
   );
   expect(chart.includes("openingY: paths.yFor(baseline)")).toBe(true);
   expect(
-    chart.includes(
-      "scrubTrendFavorable(scrub.value, pointYs, openingY, netWorthSign)",
-    ),
+    chart
+      .replace(/\s+/g, "")
+      .includes(
+        "scrubTrendFavorable(scrub.value,pointYs,openingY,netWorthSign,flatPoints,)",
+      ),
   ).toBe(true);
+});
+
+// w21/820: a flat series turned green under a finger while its change row read
+// a grey "+$0.00 (0.00%)".
+describe("scrubbing a series whose change reads flat", () => {
+  const { changeReadsFlat } = require("../change-percent");
+  const dollars = (value: number, includePlus = false) =>
+    `${value < 0 ? "-" : includePlus ? "+" : ""}$${Math.abs(value).toFixed(2)}`;
+  const flatAt = (values: number[], baseline: number) =>
+    values.map((value) => changeReadsFlat(baseline, value, dollars));
+
+  it("keeps the line neutral at a flat point", () => {
+    const values = [17108.51, 17108.51];
+    const { pointYs, openingY } = project(values, 17108.51);
+    const flat = flatAt(values, 17108.51);
+    expect(flat).toEqual([true, true]);
+    for (const index of [0, 1]) {
+      expect(scrubTrendFavorable(index, pointYs, openingY, 1, flat)).toBe(
+        "flat",
+      );
+    }
+    // A near-flat drop that rounds to "-0.00%" too (w21/237).
+    const drop = [2500000, 2499988];
+    const dropped = project(drop, 2500000);
+    expect(
+      scrubTrendFavorable(
+        1,
+        dropped.pointYs,
+        dropped.openingY,
+        1,
+        flatAt(drop, 2500000),
+      ),
+    ).toBe("flat");
+  });
+
+  it("still colours a real change", () => {
+    const values = [1000, 1250];
+    const { pointYs, openingY } = project(values, 1000);
+    expect(
+      scrubTrendFavorable(1, pointYs, openingY, 1, flatAt(values, 1000)),
+    ).toBe(true);
+    // At rest it is the resting colour's to say.
+    expect(
+      scrubTrendFavorable(SCRUB_IDLE, pointYs, openingY, 1, [true, true]),
+    ).toBe(null);
+  });
+
+  it("is what the line is drawn by", () => {
+    const chart = fs
+      .readFileSync(
+        path.join(__dirname, "..", "interactive-line-chart.tsx"),
+        "utf8",
+      )
+      .replace(/\s+/g, "");
+    expect(
+      chart.includes(
+        'neutral||(scrubFavorable===null?restingFlat:scrubFavorable==="flat")',
+      ),
+    ).toBe(true);
+    expect(
+      chart.includes(
+        "numbers.map((value)=>changeReadsFlat(baseline,value,a11yFormat))",
+      ),
+    ).toBe(true);
+  });
 });
 
 // Income, Expenses and Equity mirror net worth: an Expenses balance rising

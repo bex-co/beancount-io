@@ -77,10 +77,10 @@ describe("account detail's chart of units", () => {
         "constchangePct=neutral?null:changePercent(baseline,shownValue);",
       ),
     ).toBe(true);
-    // A flat range at rest is neutral too (w21/750).
+    // A flat range is neutral too, at rest (w21/750) and scrubbed (w21/820).
     expect(
       chart.includes(
-        "constlineColor=neutral||(scrubFavorable===null&&restingFlat)?theme.black80:",
+        'constlineColor=neutral||(scrubFavorable===null?restingFlat:scrubFavorable==="flat")?theme.black80:',
       ),
     ).toBe(true);
     expect(chart.includes("neutral={neutral}scrub={scrub}")).toBe(true);

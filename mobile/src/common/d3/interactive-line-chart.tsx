@@ -668,7 +668,9 @@ function InteractiveLineChart({
   // What keeps that honest is the gate: this fires when the scrub *crosses the
   // baseline*, not per frame and not per point. Every render it causes is a
   // color change that had to be painted anyway.
-  const [scrubFavorable, setScrubFavorable] = useState<boolean | null>(null);
+  const [scrubFavorable, setScrubFavorable] = useState<boolean | "flat" | null>(
+    null,
+  );
   const restingFavorable = trendFavorable(
     numbers[count - 1] ?? 0,
     baseline,
@@ -688,8 +690,14 @@ function InteractiveLineChart({
     numbers[count - 1] ?? 0,
     a11yFormat,
   );
+  // And under a finger, each point's as its change row reads it (w21/820).
+  const flatPoints = useMemo(
+    () => numbers.map((value) => changeReadsFlat(baseline, value, a11yFormat)),
+    [numbers, baseline, a11yFormat],
+  );
   const lineColor =
-    neutral || (scrubFavorable === null && restingFlat)
+    neutral ||
+    (scrubFavorable === null ? restingFlat : scrubFavorable === "flat")
       ? theme.black80
       : (scrubFavorable ?? restingFavorable)
         ? theme.success
@@ -702,7 +710,14 @@ function InteractiveLineChart({
   // every unrelated re-render of the card. Measured against `openingY`, the
   // same baseline as the change row, not the first plotted close.
   useAnimatedReaction(
-    () => scrubTrendFavorable(scrub.value, pointYs, openingY, netWorthSign),
+    () =>
+      scrubTrendFavorable(
+        scrub.value,
+        pointYs,
+        openingY,
+        netWorthSign,
+        flatPoints,
+      ),
     (favorable, previous) => {
       if (favorable !== previous) {
         scheduleOnRN(setScrubFavorable, favorable);

@@ -12,7 +12,6 @@
 
 ## Inbox
 
-- [820](./820.md) — Scrubbing a flat line chart turns its grey line green or red while the row stays grey
 - [821](./821.md) — VoiceOver's Budget chart summary reads unrounded float sums ("−$0.0000000000000036")
 - [822](./822.md) — Home Spending's two bars sit off-centre (28 pt left, 48 pt right)
 - [823](./823.md) — Copy & Reload after a content change elsewhere lands on "changed or removed", not the current version
