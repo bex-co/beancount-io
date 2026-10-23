@@ -56,7 +56,12 @@ describe("account detail's chart of units", () => {
         "constchangePct=neutral?null:changePercent(baseline,shownValue);",
       ),
     ).toBe(true);
-    expect(chart.includes("constlineColor=neutral?theme.black80:")).toBe(true);
+    // A flat range at rest is neutral too (w21/750).
+    expect(
+      chart.includes(
+        "constlineColor=neutral||(scrubFavorable===null&&restingFlat)?theme.black80:",
+      ),
+    ).toBe(true);
     expect(chart.includes("neutral={neutral}scrub={scrub}")).toBe(true);
   });
 });
