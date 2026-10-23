@@ -202,23 +202,64 @@ function foldDottedI(text: string): string {
   return text.replace(/\u0130/gu, "i").replace(/i\u0307/gu, "i");
 }
 
+/** Arabic letters a Persian keyboard types another way, and alef with hamza or madda. */
+const ARABIC_LETTER_FOLDS: Readonly<Record<string, string>> = {
+  "\u064a": "\u06cc", // yeh → Farsi yeh
+  "\u0649": "\u06cc", // alef maksura → Farsi yeh
+  "\u0643": "\u06a9", // kaf → keheh
+  "\u0629": "\u0647", // teh marbuta → heh
+  "\u0623": "\u0627", // alef with hamza above → alef
+  "\u0625": "\u0627", // alef with hamza below → alef
+  "\u0622": "\u0627", // alef with madda → alef
+};
+const ARABIC_FOLDED_LETTER = /[\u064a\u0649\u0643\u0629\u0623\u0625\u0622]/gu;
+/** Harakat, the superscript alef and the tatweel: written or not, one word. */
+const ARABIC_MARK = /[\u064b-\u065f\u0670\u0640]/gu;
+const ARABIC_DIGIT = /[\u0660-\u0669\u06f0-\u06f9]/gu;
+
+/**
+ * Arabic-script text as one spelling. The iOS Persian keyboard types ی and ک
+ * where Arabic keyboards and many bank exports write ي and ك, digits come in
+ * Persian, Arabic-Indic or ASCII forms, and harakat and the zero-width
+ * non-joiner are written or left out, so "کافی" missed "كافي شاپ" and "۱۰۴۲"
+ * missed "Check 1042" (w21/785). Letters fold to the Persian ones, digits to
+ * ASCII, marks are dropped (the hamza an NFD alef carries among them), and the
+ * non-joiner reads as a space. Applied to the pattern and to the text it
+ * searches; text without these characters is returned as it is.
+ */
+function foldArabicScript(text: string): string {
+  if (!/[\u0600-\u06ff\u200c]/u.test(text)) return text;
+  return text
+    .replace(ARABIC_MARK, "")
+    .replace(ARABIC_FOLDED_LETTER, (letter) => ARABIC_LETTER_FOLDS[letter]!)
+    .replace(ARABIC_DIGIT, (digit) =>
+      String(digit.charCodeAt(0) - (digit >= "\u06f0" ? 0x06f0 : 0x0660)),
+    )
+    .replace(/\u200c/gu, " ");
+}
+
+/** What a search and the text it searches are compared as. */
+function foldForSearch(text: string): string {
+  return foldArabicScript(foldDottedI(text));
+}
+
 function makeMatcher(rawSearch: string): FilterValueMatcher {
   if (rawSearch.length > MAX_FILTER_PATTERN_LENGTH) {
     throw new AdvancedFilterParseError(
       `Filter pattern exceeds ${MAX_FILTER_PATTERN_LENGTH} characters`,
     );
   }
-  const search = foldDottedI(rawSearch);
+  const search = foldForSearch(rawSearch);
   try {
     const regex = compileMatcherRegex(search);
     return (value): boolean =>
-      regex.test(foldDottedI(stringifyFilterValue(value)));
+      regex.test(foldForSearch(stringifyFilterValue(value)));
   } catch {
     // Fava deliberately treats a regex that Python cannot compile as a literal
     // exact match. Keep that behavior after attempting the compatibility
     // translations above.
     return (value): boolean =>
-      foldDottedI(stringifyFilterValue(value)) === search;
+      foldForSearch(stringifyFilterValue(value)) === search;
   }
 }
 

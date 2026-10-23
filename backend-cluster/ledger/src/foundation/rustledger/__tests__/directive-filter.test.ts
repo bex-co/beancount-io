@@ -277,6 +277,49 @@ describe("filterDirectives — AdvancedFilter parity", () => {
     expect(filterDirectives(all, { filter: "STAR" })).toEqual([other]);
   });
 
+  // w21/785: the Persian keyboard types ی and ک where Arabic keyboards and bank
+  // exports write ي and ك; digits, harakat and the non-joiner vary too.
+  it("finds Arabic-script text however its letters, digits and marks are written", () => {
+    const entry = (payee: string, narration = ""): DirectiveJson => ({
+      type: "transaction",
+      date: "2026-10-20",
+      flag: "*",
+      payee,
+      narration,
+      tags: [],
+      links: [],
+      postings: [],
+    });
+    const zwnj = "\u200c";
+    const pairs: [string, string][] = [
+      ["کافی", "كافي شاپ"],
+      ["كافي", "کافی شاپ"],
+      ["۱۰۴۲", "Check 1042"],
+      ["1042", "چک ۱۰۴۲"],
+      ["١٠٤٢", "Check 1042"],
+      [`می${zwnj}خرم`, "می خرم"],
+      ["می\\s+خرم", `می${zwnj}خرم`],
+      ["احمد", "أحمد"],
+      ["أحمد", "احمد"],
+      ["محمد", "مُحَمَّد"],
+      ["مدرسه", "مدرسة"],
+    ];
+    const other = entry("Starbucks");
+    for (const [search, payee] of pairs) {
+      const found = entry(payee);
+      expect([
+        search,
+        payee,
+        filterDirectives([found, other], { filter: `"${search}"` }),
+      ]).toEqual([search, payee, [found]]);
+    }
+    // Latin search is untouched, and a different word still misses.
+    expect(filterDirectives([other], { filter: "STAR" })).toEqual([other]);
+    expect(filterDirectives([entry("كافي شاپ")], { filter: '"قهوه"' })).toEqual(
+      [],
+    );
+  });
+
   it("compares only Amount-shaped metadata values", () => {
     const primitiveMeta = {
       type: "note",
