@@ -42,7 +42,6 @@
 
 - [994 — Keep collapsed BQL history cards closed when another card is deleted](./994.md) — minor residual of 253; live QA, 2026-10-22; deleting the top card reopens an untouched collapsed neighbor at both widths; same nodes/cache and zero extra reads.
 
-- [993 — Compare Net Worth changes within the same currency](./993.md) — minor; live QA,2026-10-22; valid USD1000→JPY100000 series displays +99000JPY at both widths; current-producer and matching-currency controls, zero hosted writes.
 
 
 
