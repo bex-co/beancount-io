@@ -114,6 +114,8 @@
 
 ## Milestones
 
+- [ ] **m54** — [Balance Overview Cash Flow refunds and deficits](./m54/README.md) (7 tasks) ← dashboard QA,2026-10-23; minor; missing25USD inflow/funding in two cases, six native controls, no writes.
+
 - [ ] **m53** — [Keep exact amounts in Overview charts](./m53/README.md) (9 tasks) ← dashboard QA,2026-10-23; minor residual of1015; distribution, Income vs Expenses and Cash Flow text lose fractions/digits, including net/savings; eight native cases, no writes.
 
 - [x] **m52** — [Preserve exact Net Worth amounts and monthly changes](./done/m52/README.md) (6 tasks) ← dashboard QA,2026-10-22; minor; valid producer-backed totals and±1 USD collapse after Number conversion; five native contexts and safe controls, no writes.
