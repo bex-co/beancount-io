@@ -510,6 +510,43 @@ describe("detectRecurrence twice a month", () => {
       expect(detectRecurrence(series, "2024-02-27")?.cadence).toBe("biweekly");
     });
 
+    // w21/853: the day of tolerance below also took these twice-a-month bills,
+    // whose gaps are 15 throughout, for biweekly.
+    it("keeps a twice-a-month bill on two fixed days twice a month", () => {
+      const series: Record<string, string[]> = {
+        "1st and 16th": [
+          "2026-09-01",
+          "2026-09-16",
+          "2026-10-01",
+          "2026-10-16",
+        ],
+        "15th and 30th": [
+          "2026-06-15",
+          "2026-06-30",
+          "2026-07-15",
+          "2026-07-30",
+        ],
+        "end of January and the 15th": [
+          "2026-01-31",
+          "2026-02-15",
+          "2026-02-28",
+          "2026-03-15",
+        ],
+        "1st and 15th over a leap February": [
+          "2024-02-01",
+          "2024-02-15",
+          "2024-03-01",
+          "2024-03-15",
+        ],
+      };
+      for (const [name, dates] of Object.entries(series)) {
+        expect([
+          name,
+          detectRecurrence(pointsOn(dates, 1200), "2026-10-20")?.cadence,
+        ]).toEqual([name, "semimonthly"]);
+      }
+    });
+
     // w21/799: one payment a day late read "Twice a month".
     it("keeps a biweekly series with a payment a day off", () => {
       const daycare = pointsOn(

@@ -40,7 +40,6 @@
 - [678](./blocked/678.md) — A sale whose lot doesn't match is still counted in every balance, so the books don't balance — **blocked:** needs an owner decision on whether an entry that failed booking is dropped from reports and the journal (as Beancount does) or kept listed with a flag and excluded from balances
 - [693](./blocked/693.md) — Edit Transaction's Reload after a conflict opens the other twin's text, so the next Save overwrites it — **blocked:** its acceptance contradicts itself (a twin moved onto the ID and a metadata-only change look the same after a conflict); needs an owner decision between always refusing Reload on a changed slice and keeping it
 - [694](./blocked/694.md) — Since w21/672, Delete after a metadata-only change elsewhere dead-ends on "changed or removed" (w21/250 regression) — **blocked:** its two acceptance cases cannot both hold (a metadata-only change and a twin swap look the same); same owner decision as w21/693
-- [853](./853.md) — Since w21/799, a 1st/16th or 15th/30th bill reads "Every 2 weeks" with the wrong next date
 - [854](./854.md) — Since w21/804, a "1 BTC" budget reads "Above target" while under its prorated budget
 - [855](./855.md) — Pasting " 20" into a negative row turns it unreadable (left open by w21/791)
 - [856](./856.md) — Ask AI is never told today's date, and an undated receipt is saved under the server's UTC date

@@ -560,9 +560,40 @@ export function detectRecurrence(
   // two monthly anchors by chance (w21/530). A day either way still is: one
   // payment a day late read "Twice a month" (w21/799). The 15th to the 1st is
   // 16 or 17 days outside February, so a 1st/15th bill stays semimonthly.
-  const steadyBiweekly =
+  // But a true twice-a-month bill (the 1st and 16th, the 15th and 30th, the 1st
+  // and 15th over a leap February) has gaps of 15, which the day of tolerance
+  // alone took for biweekly (w21/853). A series with a 15 in it is biweekly only
+  // when it does not fit two days of the month the bill keeps.
+  const nearBiweekly =
     gaps.length >= 3 && gaps.every((gap) => Math.abs(gap - 14) <= 1);
-  const semiMonthly = steadyBiweekly ? null : semiMonthlyDays(eventDays);
+  // The day of tolerance cannot tell such a bill from a biweekly one, so a
+  // series with a 15 in it is twice a month only when it fits two days of the
+  // month exactly: every payment on one of them (a short month's end counts
+  // for a 31st: the bill of the last day), and each repeated. One payment a day off, or two payments
+  // sharing a day across February, are what biweekly series look like (w21/799).
+  const exactlyTwoDays = (found: SemiMonthly): boolean => {
+    const used = new Map<number, number>();
+    for (const day of eventDays.map(calendarDay)) {
+      const anchor = [found.first, found.second].find(
+        (candidate) =>
+          day.day === candidate ||
+          (candidate === 31 &&
+            day.day === daysInMonth(day.year, day.month) &&
+            candidate > day.day),
+      );
+      if (anchor === undefined) return false;
+      used.set(anchor, (used.get(anchor) ?? 0) + 1);
+    }
+    return used.size === 2 && [...used.values()].every((count) => count >= 2);
+  };
+  const candidate =
+    nearBiweekly && gaps.includes(15) ? semiMonthlyDays(eventDays) : null;
+  const twiceAMonth =
+    candidate !== null && exactlyTwoDays(candidate) ? candidate : null;
+  const steadyBiweekly = nearBiweekly && twiceAMonth === null;
+  const semiMonthly = steadyBiweekly
+    ? null
+    : (twiceAMonth ?? semiMonthlyDays(eventDays));
   if (!semiMonthly) {
     const dispersion = mad(gaps, medianGap) / medianGap;
     if (dispersion >= MAX_GAP_DISPERSION) {
