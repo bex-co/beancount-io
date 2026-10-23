@@ -1,5 +1,6 @@
 import type { TransactionToCategorize } from "@/features/llm/types";
 import type { PlaidTransaction, BeancountTransaction } from "../types";
+import { plaidImportId } from "./plaid-constants";
 
 /**
  * Maps Plaid transactions to the format expected by the categorization service
@@ -36,6 +37,7 @@ export function buildBeancountTransaction(
     flag: plaidTx.isPending ? "!" : "*", // ! for pending, * for cleared
     payee: plaidTx.merchantName || undefined,
     narration: plaidTx.name,
+    meta: { "import-id": plaidImportId(plaidTx.transactionId) },
     postings: [
       // Source account (bank account) - money going out/in
       {

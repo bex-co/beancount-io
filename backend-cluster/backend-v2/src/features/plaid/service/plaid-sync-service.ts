@@ -32,6 +32,7 @@ import {
   buildBeancountTransaction,
 } from "../utils/plaid-mapper";
 import { reconcileAccounts } from "../utils/reconcile-accounts";
+import { plaidImportId } from "../utils/plaid-constants";
 import type { PlaidAccount } from "../data/plaid-account-model";
 import type { PlaidTransaction } from "../data/plaid-transaction-model";
 
@@ -752,6 +753,16 @@ export class PlaidSyncService implements IPlaidSyncService {
       }
     }
 
+    // The staging flag is not the only record: a re-staged row (after a relink
+    // or a cursor reset) is a new row for a transaction the ledger already
+    // holds. Refused before the preview, so a dry run says what the write would.
+    await this.assertNotAlreadyImported(
+      favaApiClient,
+      ledgerOwner,
+      ledgerName,
+      transactions.map((tx) => tx.transactionId),
+    );
+
     // Everything above is validation and construction — ownership, ledger
     // access, already-synced checks, account mapping, and the target file — so
     // a preview here is the exact set the write would append, not an estimate.
@@ -816,6 +827,54 @@ export class PlaidSyncService implements IPlaidSyncService {
       addedCount: beancountTransactions.length,
       message: `Added ${beancountTransactions.length} transactions to ledger`,
     };
+  }
+
+  /**
+   * Refuse a batch holding a Plaid transaction the ledger already records.
+   *
+   * Asks the ledger which of the batch's `import-id` values it holds. A lookup
+   * that fails is logged and does not block the import: the staging row's
+   * `syncedToLedger` flag stays the primary guard (w5/941).
+   */
+  private async assertNotAlreadyImported(
+    client: Awaited<ReturnType<IFavaClientFactory["getPublicApiClient"]>>,
+    owner: string,
+    repo: string,
+    transactionIds: string[],
+  ): Promise<void> {
+    // Only ids that are safe inside a BQL string literal are looked up.
+    const known = transactionIds.filter((id) => /^[A-Za-z0-9_-]+$/.test(id));
+    if (known.length === 0) {
+      return;
+    }
+    const wanted = new Map(known.map((id) => [plaidImportId(id), id]));
+    const list = [...wanted.keys()].map((id) => `'${id}'`).join(", ");
+    let rows: unknown[][] = [];
+    try {
+      const response = await client.shell.queryShell(owner, repo, {
+        query: `SELECT DISTINCT meta('import-id') WHERE meta('import-id') IN (${list})`,
+      });
+      const result = response.data?.data?.result;
+      if (result && "rows" in result) {
+        rows = result.rows as unknown[][];
+      }
+    } catch (error) {
+      syncLogger.warn("Could not check the ledger for existing import-ids", {
+        ledgerOwner: owner,
+        ledgerName: repo,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return;
+    }
+    for (const [found] of rows) {
+      const transactionId = wanted.get(String(found));
+      if (transactionId !== undefined) {
+        throw new BadUserInputError(
+          `Transaction ${transactionId} is already in the ledger (import-id ${plaidImportId(transactionId)}); ` +
+            "delete the staged row instead of submitting it again",
+        );
+      }
+    }
   }
 
   async deleteTransactions(

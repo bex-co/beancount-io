@@ -44,4 +44,6 @@ Plaid bank linking, account reconciliation, cursor-based transaction sync, webho
 
 The dashboard obtains valid choices through `LedgerDataService.getLedgerSourceFiles`, which returns the main file and transitively included sources. This path intentionally differs from `LedgerEntryService`'s bcio-option routing used by the general importer.
 
+Every hosted bank import writes `import-id: "plaid:<transactionId>"` on its entry (the shared bank-feed convention in `skills/beancount-import/references/dedup.md`), so the ledger itself records what was imported and a CLI import of the same account can exact-match it. `submitTransactionsToLedger` asks the ledger which of the batch's ids it already holds and refuses the batch, preview included, when it finds one; the `syncedToLedger` flag stays the primary guard and a failed lookup does not block the import.
+
 Service tests mock Plaid and external clients. Preserve coverage for cursor pagination, lock contention, webhook signature/event behavior, encrypted-token handling, and target-file validation.

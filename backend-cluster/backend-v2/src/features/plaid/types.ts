@@ -113,6 +113,8 @@ export interface BeancountTransaction {
   flag: string;
   payee?: string;
   narration?: string;
+  /** Directive metadata; hosted imports write `import-id` here. */
+  meta?: Record<string, string>;
   postings: Array<{
     units: { number: string; currency: string };
     account: string;

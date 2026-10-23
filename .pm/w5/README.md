@@ -85,7 +85,6 @@
 - [959 — Treat repeated allowed currencies as one during transaction inference](./959.md) — minor CLI existing-ledger/native-import inference finding; USD/EUR and split-file controls reproduced 2026-10-21.
 - [958 — Keep unused unopened accounts out of remembered CSV settings](./958.md) — minor CLI memory-guard follow-up to 452/714; empty, skipped and fully categorized exports reproduced 2026-10-21.
 - [957 — Allow instrument units in the portfolio preset's holdings account](./957.md) — minor CLI first-purchase setup finding; reproduced twice in USD/EUR on 2026-10-21.
-- [941 — Write an `import-id` on hosted bank imports so the shared dedup contract sees them](./941.md) — minor backend-v2 finding from w5/m5/t004; observed 2026-10-21.
 - [942 — Report the written file and entry hashes from `importStagedBankTransactions`](./942.md) — trivial backend-v2 finding from w5/m5/t004; observed 2026-10-21.
 - [943 — Preserve a numeric zero import-id as a supplied identity](./943.md) — major CLI double-booking gap; zero is replaced with a content hash, so a corrected amount under the same supplied ID writes as a new payment at exit 0, reproduced 2026-10-21.
 - [944 — Normalize native Beancount query input with its loaded text](./944.md) — minor CLI query mismatch; decomposed accented filters omit real expenses and copied stored names refuse after the helper normalizes the source, reproduced 2026-10-21.

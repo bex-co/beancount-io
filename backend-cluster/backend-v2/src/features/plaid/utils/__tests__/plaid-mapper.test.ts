@@ -148,6 +148,19 @@ describe("plaid-mapper", () => {
       expect(result.postings).toHaveLength(2);
     });
 
+    // w5/941: the entry itself records which Plaid transaction it came from.
+    it("writes the shared import-id convention on the entry", () => {
+      const plaidTx = makePlaidTransaction({ transactionId: "plaid-txn-77" });
+
+      const result = buildBeancountTransaction(
+        plaidTx,
+        sourceAccount,
+        targetAccount,
+      );
+
+      expect(result.meta).toEqual({ "import-id": "plaid:plaid-txn-77" });
+    });
+
     it("should set source account posting as negative for an expense", () => {
       const plaidTx = makePlaidTransaction({ amount: "42.50" });
 
