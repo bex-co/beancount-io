@@ -729,6 +729,7 @@ const TransactionDetailImpl = ({
   const menuActions = selectTransactionMenuActions({
     isGenerated,
     showWriteActions,
+    pluginCopy,
   });
   const menuItemFor: Record<TransactionMenuAction, MenuButtonItem> = {
     shareLink: {

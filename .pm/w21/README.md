@@ -12,6 +12,7 @@
 
 ## Inbox
 
+- [874](./874.md) — The dashboard's entry page offers Save and Delete on a plugin copy, and Delete removes the whole series (dashboard half of w21/840)
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window
 - [065](./blocked/065.md) — One early-year entry (e.g. 0050) makes the balance sheet 23,718 monthly points (3 MB) and the app stalls — **blocked:** needs an approach decision (per-pill fetch vs server downsample) and a simulator profile of the stall
 - [180](./blocked/180.md) — Budget actuals use raw prefix match (`Transport` counts `Transportation`), unlike Reports — **blocked:** needs an owner decision between component matching on the server (a Fava break) and a per-account breakdown for the client
@@ -39,7 +40,6 @@
 - [678](./blocked/678.md) — A sale whose lot doesn't match is still counted in every balance, so the books don't balance — **blocked:** needs an owner decision on whether an entry that failed booking is dropped from reports and the journal (as Beancount does) or kept listed with a flag and excluded from balances
 - [693](./blocked/693.md) — Edit Transaction's Reload after a conflict opens the other twin's text, so the next Save overwrites it — **blocked:** its acceptance contradicts itself (a twin moved onto the ID and a metadata-only change look the same after a conflict); needs an owner decision between always refusing Reload on a changed slice and keeping it
 - [694](./blocked/694.md) — Since w21/672, Delete after a metadata-only change elsewhere dead-ends on "changed or removed" (w21/250 regression) — **blocked:** its two acceptance cases cannot both hold (a metadata-only change and a twin swap look the same); same owner decision as w21/693
-- [840](./840.md) — Share/Copy link on a plugin copy opens the dashboard's editable entry page, where Delete removes the series
 - [841](./841.md) — A padding entry says "A plugin generated this entry" and its pad source opens as "Transaction" with "Edit Transaction"
 - [842](./842.md) — After an edit, the detail header keeps the old entry's pencil and ⋯ while it reloads
 - [843](./843.md) — Same-day entries from different include files are ordered wrongly, so running balances are wrong

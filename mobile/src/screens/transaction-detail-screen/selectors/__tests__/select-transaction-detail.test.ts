@@ -384,6 +384,24 @@ describe("selectTransactionMenuActions", () => {
       showWriteActions,
     });
 
+  // w21/840: a plugin copy's link opens the page that deletes its whole series.
+  it("hands out no link for a plugin copy, and keeps delete off it", () => {
+    expect(
+      selectTransactionMenuActions({
+        isGenerated: false,
+        showWriteActions: false,
+        pluginCopy: true,
+      }),
+    ).toEqual([]);
+    expect(
+      selectTransactionMenuActions({
+        isGenerated: false,
+        showWriteActions: false,
+        pluginCopy: false,
+      }),
+    ).toEqual(["shareLink", "copyLink"]);
+  });
+
   it("offers link actions for an editable entry", () => {
     expect(actionsFor(txn([], { flag: "*" }), false)).toEqual([
       "shareLink",

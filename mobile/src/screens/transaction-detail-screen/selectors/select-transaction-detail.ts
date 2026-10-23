@@ -350,12 +350,20 @@ export type TransactionMenuAction =
 export function selectTransactionMenuActions({
   isGenerated,
   showWriteActions,
+  pluginCopy = false,
 }: {
   isGenerated: boolean;
   showWriteActions: boolean;
+  /**
+   * A copy a plugin made of another entry: its link resolves to the copy's own
+   * ID, and the page behind it offers Save and Delete on the source, which
+   * removes the whole series (w21/840). The app hides those actions here, so
+   * it hands out no link to them either.
+   */
+  pluginCopy?: boolean;
 }): TransactionMenuAction[] {
   const actions: TransactionMenuAction[] = [];
-  if (!isGenerated) {
+  if (!isGenerated && !pluginCopy) {
     actions.push("shareLink", "copyLink");
   }
   if (showWriteActions) {
