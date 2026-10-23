@@ -1365,6 +1365,47 @@ async function main(): Promise<void> {
       JSON.stringify([["E2003", 6]]),
     `the pad after an unused one raises no Multiple pad directives (got ${padAfterUnused.errors.map((e) => `${e.code}@${e.line}`)})`,
   );
+  // w21/708: rustledger books a sale from an AVERAGE position at the average
+  // cost; Beancount 3.2 refuses it, as the CLI does.
+  const averageSource = (booking: string) =>
+    [
+      `2024-01-01 open Assets:Broker VTI "${booking}"`,
+      "2024-01-01 open Assets:Cash USD",
+      "2024-01-01 open Income:Gains USD",
+      '2024-01-02 * "Buy"',
+      "  Assets:Broker  10 VTI {100 USD}",
+      "  Assets:Cash  -1000 USD",
+      '2024-02-02 * "Buy"',
+      "  Assets:Broker  10 VTI {200 USD}",
+      "  Assets:Cash  -2000 USD",
+      '2024-06-01 * "Sell"',
+      "  Assets:Broker  -10 VTI {} @ 300 USD",
+      "  Assets:Cash  3000 USD",
+      "  Income:Gains",
+    ].join("\n");
+  const averageErrors = (
+    await parseLedgerFiles(
+      { "main.beancount": averageSource("AVERAGE") },
+      "main.beancount",
+      { today: "2099-01-01" },
+    )
+  ).errors;
+  assert(
+    averageErrors.length === 1 &&
+      averageErrors[0].line === 10 &&
+      averageErrors[0].message.startsWith("AVERAGE method is not supported"),
+    `a sale from an AVERAGE position is refused on its line (got ${averageErrors.map((e) => `${e.code}@${e.line} ${e.message}`)})`,
+  );
+  assert(
+    (
+      await parseLedgerFiles(
+        { "main.beancount": averageSource("FIFO") },
+        "main.beancount",
+        { today: "2099-01-01" },
+      )
+    ).errors.length === 0,
+    "the same sale from a FIFO position books cleanly",
+  );
 
   const firstElidedAmortizeSource = [
     'plugin "fava.plugins.amortize_over"',

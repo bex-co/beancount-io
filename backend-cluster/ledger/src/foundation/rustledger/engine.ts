@@ -38,6 +38,7 @@ import {
   type DirectiveSourceLocation,
 } from "./plugins";
 import { reconcileDocumentErrors } from "./document-validation";
+import { averageBookingErrors } from "./average-booking";
 import { locateBookErrors } from "./book-errors";
 import {
   isRawPluginProcessing,
@@ -712,6 +713,8 @@ async function parseLedgerFilesUncached(
   // inventory (`repoPaths`), then recompute validity from the resulting errors.
   errors = reconcileDocumentErrors(errors, options.repoPaths);
   errors = locateOptionErrors(reconcileOptionErrors(errors), files, entryPoint);
+  // Beancount refuses a sale from an AVERAGE position; rustledger books it.
+  errors = [...errors, ...averageBookingErrors(directives, files[entryPoint])];
   errors = locateBookErrors(errors, files, entryPoint);
   errors = reportUrlIncludes(errors, files);
   errors = reportUndecodableSources(errors, files, entryPoint);
