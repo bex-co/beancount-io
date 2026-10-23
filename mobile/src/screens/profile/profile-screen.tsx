@@ -51,6 +51,7 @@ import {
   type ProfileValues,
 } from "./profile-changes";
 import { useIsHere } from "@/common/hooks/use-is-here";
+import { useUnsavedChangesGuard } from "@/common/hooks/use-unsaved-changes-guard";
 import { InlineError } from "@/components/inline-error";
 
 /** The longest first or last name the form accepts. */
@@ -271,6 +272,15 @@ export function ProfileScreen(): JSX.Element {
   // must not send it, or rename the ledgers a second time (w21/288).
   const savedUsernameRef = useRef<string | null>(null);
 
+  // Back on an edit asks first, as every other edit form does: Profile let a
+  // changed name go without a word (w21/800). The Back after a save is not a
+  // discard.
+  const edited = useWatch({ control }) as ProfileValues;
+  const hasChanges =
+    Object.keys(profileChanges(savedValues, edited)).length > 0;
+  const leavingSavedRef = useRef(false);
+  useUnsavedChangesGuard(hasChanges && !saved, leavingSavedRef);
+
   const onSubmit = handleSubmit(async (values) => {
     const pending = profileChanges(savedValues, values);
     // Username first: it is the write most likely to be refused, and a
@@ -312,6 +322,7 @@ export function ProfileScreen(): JSX.Element {
     // Left during the save: the toast is enough, and `back()` would close
     // whatever the user opened meanwhile (w21/194).
     if (!isHere()) return;
+    leavingSavedRef.current = true;
     if (router.canGoBack()) {
       router.back();
     } else {

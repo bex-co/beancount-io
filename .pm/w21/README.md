@@ -12,7 +12,6 @@
 
 ## Inbox
 
-- [800](./800.md) — Profile throws away edits on Back without asking
 - [801](./801.md) — A ledger renamed on the web appears twice in the drawer; per-ledger state stays under the old id
 - [802](./802.md) — With the ledger list failed or loading, the drawer shows only the current ledger, with no retry
 - [803](./803.md) — One transient server error turns off profile photos until restart
