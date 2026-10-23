@@ -45,3 +45,7 @@
 - [879](./879.md) — The Accounts tab cuts a long folded account name at the end, hiding the account the row opens
 - [880](./880.md) — Opening an account or posting to a parent collapses a branch the user had expanded
 - [881](./881.md) — On a ledger with renamed roots, the Accounts tab's top rows show the English names
+- [882](./882.md) — Chart axes use the app language's money format while the amounts beside them use English (9 languages)
+- [883](./883.md) — In Persian, a negative compact chart tick draws its minus on the far side
+- [884](./884.md) — In Persian, chart labels mix Persian and Latin digits
+- [885](./885.md) — In Persian, an Accounts sentence mixes a Latin count with a Persian-digit date
