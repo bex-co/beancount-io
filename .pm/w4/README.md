@@ -54,7 +54,6 @@
 
 - [984 — Keep cached Activity cards after a failed refresh](./984.md) — minor; real cached dashboard reads with injected offset0 failure,2026-10-22; ten cards become zero at both widths despite retained query data; initial-error/retry controls pass, no writes.
 
-- [983 — Offer Try Again on the remaining QueryView read failures](./983.md) — minor; w4/m50 simplify reviews plus live QA,2026-10-22; Accounts, Documents, Events and Errors lack retry at both widths, with real reload controls; Settings and older retry migrations remain source-derived.
 
 
 
