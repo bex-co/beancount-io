@@ -195,3 +195,65 @@ describe("a selected ledger the server no longer has", () => {
     ).toBe(true);
   });
 });
+
+// w21/802: the out-of-directory current row made a failed or loading list
+// non-empty, so no error, retry or skeleton showed.
+describe("drawerListFooter", () => {
+  const { drawerListFooter } = require("../drawer-ledgers");
+  const current = getDrawerSections([], publicLedger, "");
+
+  it("offers a retry under the current ledger when the list failed", () => {
+    expect(current.length).toBe(1);
+    expect(
+      drawerListFooter({
+        error: true,
+        loading: false,
+        loaded: 0,
+        shown: current.length,
+      }),
+    ).toBe("retry");
+    // As before, under a list that loaded.
+    expect(
+      drawerListFooter({ error: true, loading: false, loaded: 2, shown: 2 }),
+    ).toBe("retry");
+  });
+
+  it("shows the skeleton under it while the list loads", () => {
+    expect(
+      drawerListFooter({
+        error: false,
+        loading: true,
+        loaded: 0,
+        shown: current.length,
+      }),
+    ).toBe("loading");
+  });
+
+  it("adds nothing to a loaded list, or to an empty one, which says it itself", () => {
+    expect(
+      drawerListFooter({ error: false, loading: true, loaded: 2, shown: 2 }),
+    ).toBe(null);
+    expect(
+      drawerListFooter({ error: true, loading: false, loaded: 0, shown: 0 }),
+    ).toBe(null);
+    expect(
+      drawerListFooter({ error: false, loading: true, loaded: 0, shown: 0 }),
+    ).toBe(null);
+  });
+
+  it("is what the drawer's footer draws", () => {
+    const drawer = require("fs")
+      .readFileSync(
+        require("path").join(__dirname, "..", "ledger-drawer.tsx"),
+        "utf8",
+      )
+      .replace(/\s+/g, "");
+    expect(drawer.includes('{listFooter==="retry"?(')).toBe(true);
+    expect(drawer.includes('{listFooter==="loading"?(')).toBe(true);
+    expect(
+      drawer.includes(
+        "loaded:drawerLedgers.length,shown:drawerSections.length,",
+      ),
+    ).toBe(true);
+  });
+});

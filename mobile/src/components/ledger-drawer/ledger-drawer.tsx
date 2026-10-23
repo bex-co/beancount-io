@@ -58,7 +58,11 @@ import { MenuButton } from "@/components/menu-button";
 import { SearchBar } from "@/components/search-bar";
 import { UserAvatar } from "@/components/user-avatar";
 import { useCurrentUser } from "@/common/hooks/use-current-user";
-import { type DrawerLedger, getDrawerSections } from "./drawer-ledgers";
+import {
+  type DrawerLedger,
+  drawerListFooter,
+  getDrawerSections,
+} from "./drawer-ledgers";
 import { InlineError } from "@/components/inline-error";
 
 const skeletonWidths = [140, 112, 160];
@@ -526,6 +530,12 @@ export function LedgerDrawer({
     [drawerLedgers, currentLedger, showFilter, query],
   );
   const filteredEmpty = drawerSections.length === 0 && query.trim() !== "";
+  const listFooter = drawerListFooter({
+    error,
+    loading,
+    loaded: drawerLedgers.length,
+    shown: drawerSections.length,
+  });
 
   // A query belongs to the visit that typed it: reopening the drawer starts
   // from the whole collection rather than yesterday's search.
@@ -1035,7 +1045,20 @@ export function LedgerDrawer({
             }}
             ListFooterComponent={
               <>
-                {error && drawerLedgers.length > 0 ? (
+                {listFooter === "loading" ? (
+                  <View
+                    accessibilityLabel={t("discoveryLoading")}
+                    accessible
+                    accessibilityState={{ busy: true }}
+                  >
+                    {skeletonWidths.map((width) => (
+                      <View key={width} style={styles.skeletonRow}>
+                        <LoadingTile width={width} height={24} />
+                      </View>
+                    ))}
+                  </View>
+                ) : null}
+                {listFooter === "retry" ? (
                   // The message is a caption on the drawer; the filled button
                   // carries its own label in white. Gray text on the green fill
                   // was 1.01:1 (w21/382).

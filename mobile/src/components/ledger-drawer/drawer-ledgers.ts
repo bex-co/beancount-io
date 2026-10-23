@@ -63,6 +63,30 @@ export function getDrawerLedgers(
   return [...ledgers];
 }
 
+/**
+ * What the list's footer adds once rows are shown. The out-of-directory
+ * "Current ledger" row made a failed or loading list non-empty, so its error,
+ * retry and skeleton never showed and the account read as having one ledger
+ * (w21/802). An empty list says these in its own place instead.
+ */
+export function drawerListFooter({
+  error,
+  loading,
+  loaded,
+  shown,
+}: {
+  error: boolean;
+  loading: boolean;
+  /** Ledgers the directory returned. */
+  loaded: number;
+  /** Sections the list draws, the current-ledger one included. */
+  shown: number;
+}): "retry" | "loading" | null {
+  if (error && (loaded > 0 || shown > 0)) return "retry";
+  if (loading && loaded === 0 && shown > 0) return "loading";
+  return null;
+}
+
 /** `open_ledger/minimax` → `open_ledger`. */
 export function getLedgerOwner(fullName: string): string {
   const separator = fullName.indexOf("/");
