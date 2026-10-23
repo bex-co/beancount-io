@@ -408,7 +408,6 @@ export function BudgetGroupCard({
                   ),
                 },
                 t,
-                locale,
               )}
               height={CHART_HEIGHT}
             />

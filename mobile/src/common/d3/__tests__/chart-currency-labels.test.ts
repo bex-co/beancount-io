@@ -19,7 +19,12 @@ describe("chart money labels", () => {
   ]) {
     it(`${file} formats money with its currency code`, () => {
       const source = read(file);
-      expect(source.includes("formatShortMoneyWithCurrency(")).toBe(true);
+      // Short on an axis; in full where a summary is spoken (w21/821).
+      expect(
+        /formatShortMoneyWithCurrency\(|formatSignedMoneyWithCurrency\(/.test(
+          source,
+        ),
+      ).toBe(true);
       expect(source.includes("currencySymbol")).toBe(false);
     });
   }

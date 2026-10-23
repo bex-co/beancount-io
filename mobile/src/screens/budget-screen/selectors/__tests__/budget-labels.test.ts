@@ -78,7 +78,7 @@ describe("budgetChartSummary", () => {
         t,
       ),
     ).toBe(
-      "Budget versus actual for JAN–MAR. Actual $2.2K of $1.5K budgeted across 3 periods, 2 over target.",
+      "Budget versus actual for JAN–MAR. Actual $2,200.00 of $1,500.00 budgeted across 3 periods, 2 over target.",
     );
   });
 
@@ -93,10 +93,10 @@ describe("budgetChartSummary", () => {
       dates: ["2024-11-30", "2025-12-31", "2026-09-30"],
     };
     expect(budgetChartSummary({ ...income, direction: -1 }, t)).toBe(
-      "Budget versus actual for NOV 2024–SEP 2026. Actual $9K of $12K budgeted across 3 periods, 3 below target.",
+      "Budget versus actual for NOV 2024–SEP 2026. Actual $9,000.00 of $12,000.00 budgeted across 3 periods, 3 below target.",
     );
     expect(budgetChartSummary({ ...income, direction: 1 }, t)).toBe(
-      "Budget versus actual for NOV 2024–SEP 2026. Actual $9K of $12K budgeted across 3 periods, 3 over target.",
+      "Budget versus actual for NOV 2024–SEP 2026. Actual $9,000.00 of $12,000.00 budgeted across 3 periods, 3 over target.",
     );
   });
 
@@ -110,7 +110,7 @@ describe("budgetChartSummary", () => {
       dates: ["2026-01-31", "2026-02-28", "2026-03-31"],
     };
     expect(budgetChartSummary(within, t)).toBe(
-      "Budget versus actual for JAN–MAR. Actual $2.2K of $1.5K budgeted across 3 periods, 2 over target.",
+      "Budget versus actual for JAN–MAR. Actual $2,200.00 of $1,500.00 budgeted across 3 periods, 2 over target.",
     );
     // A yearly axis label is its own year.
     expect(
@@ -150,7 +150,7 @@ describe("budgetChartSummary", () => {
         t,
       ),
     ).toBe(
-      "Budget versus actual for JAN. Actual $400 of $500 budgeted across 1 period, 0 over target.",
+      "Budget versus actual for JAN. Actual $400.00 of $500.00 budgeted across 1 period, 0 over target.",
     );
   });
 
@@ -167,7 +167,7 @@ describe("budgetChartSummary", () => {
         t,
       ),
     ).toBe(
-      "Budget versus actual for JAN. Actual 400 MUSD of 500 MUSD budgeted across 1 period, 0 over target.",
+      "Budget versus actual for JAN. Actual 400.00 MUSD of 500.00 MUSD budgeted across 1 period, 0 over target.",
     );
   });
 
@@ -283,7 +283,7 @@ describe("budgetChartSummary before the budget existed", () => {
         t,
       ),
     ).toBe(
-      "Budget versus actual for M10. Actual $100 of $222.6 budgeted across 1 period, 0 over target.",
+      "Budget versus actual for M10. Actual $100.00 of $222.60 budgeted across 1 period, 0 over target.",
     );
   });
 
@@ -320,5 +320,30 @@ describe("budgetChartSummary before the budget existed", () => {
         "budgeted:selectBudgetedPeriods(series,group.budgetHistory,today,),",
       ),
     ).toBe(true);
+  });
+});
+
+// w21/821: summed as floats, a refunded month was spoken "−$0.0000000000000036",
+// and the short axis form read 222.58 as "$222.6".
+describe("budgetChartSummary's totals", () => {
+  const spoken = (actuals: number[], budgets: number[]) =>
+    budgetChartSummary(
+      {
+        labels: actuals.map((_, i) => `M${i}`),
+        actuals,
+        budgets,
+        favorables: actuals.map(() => true),
+        currency: "USD",
+      },
+      t,
+    );
+
+  it("rounds the sums and speaks them in full", () => {
+    expect(spoken([10.1, 20.2, -30.3], [100, 100, 22.58])).toBe(
+      "Budget versus actual for M0–M2. Actual $0.00 of $222.58 budgeted across 3 periods, 0 over target.",
+    );
+    expect(spoken([0.1, 0.2, 0], [1, 1, 1])?.includes("Actual $0.30 of")).toBe(
+      true,
+    );
   });
 });

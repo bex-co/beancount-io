@@ -6,7 +6,10 @@
 import { utcDate } from "../../../common/calendar-date";
 import { formatLedgerMonthDay } from "../../../common/date-format";
 import { getFormatDate } from "../../../common/format-util";
-import { formatShortMoneyWithCurrency } from "../../../common/number-utils";
+import {
+  formatSignedMoneyWithCurrency,
+  roundMoney,
+} from "../../../common/number-utils";
 import { formatTimeFilter } from "../../transactions-screen/filters/select-filter-query";
 import {
   addDaysISO,
@@ -265,7 +268,6 @@ export function budgetChartSummary(
     budgeted?: boolean[];
   },
   t: (key: string, params?: Record<string, unknown>) => string,
-  locale = "en",
 ): string | undefined {
   const kept = series.labels
     .map((_, index) => index)
@@ -282,11 +284,16 @@ export function budgetChartSummary(
   const { currency, direction } = series;
   if (labels.length === 0) return undefined;
 
+  // Rounded and in full: summed as floats, 10.10 + 20.20 − 30.30 was spoken
+  // "−$0.0000000000000036", and the axis's short form read 222.58 as "$222.6"
+  // (w21/821).
   const money = (values: number[]) =>
-    formatShortMoneyWithCurrency(
-      values.reduce((sum, value) => sum + value, 0),
+    formatSignedMoneyWithCurrency(
+      roundMoney(
+        values.reduce((sum, value) => sum + value, 0),
+        currency,
+      ),
       currency,
-      locale,
     );
   const last = labels.length - 1;
   // A year-long axis label is its own year; any other gets the year of its day.
