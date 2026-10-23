@@ -580,3 +580,61 @@ test("deriveTwoPostingSuggestions reads a curly apostrophe as a straight one", (
   expect(curly.to.autoFill).toBe("Expenses:Food:Groceries");
   expect(curly).toEqual(straight);
 });
+
+// w21/730: the suggestion list merges a payee's spellings, but the fill-in
+// matched only the one shown, so a newer double-spaced, decomposed or recased
+// spelling filled in nothing.
+describe("deriveTwoPostingSuggestions across a payee's spellings", () => {
+  const entry = (payee: string, from: string, to: string): JournalEntryLike =>
+    ({
+      type: "Transaction",
+      payee,
+      postings: [
+        { account: from, units: { number: "-10.00", currency: "USD" } },
+        { account: to, units: { number: "10.00", currency: "USD" } },
+      ],
+    }) as unknown as JournalEntryLike;
+  const usual = (entries: JournalEntryLike[], payee: string) => {
+    const { from, to } = deriveTwoPostingSuggestions(entries, payee);
+    return [from.autoFill, to.autoFill];
+  };
+  const card = "Liabilities:Card";
+  const food = "Expenses:Groceries";
+
+  it("fills in from the spellings the merged row stands for", () => {
+    const {
+      matchSuggestions,
+    } = require("../../components/text-input-screen/match-suggestions");
+    const history = [
+      entry("Qa Whole Foods", card, food),
+      entry("Qa Whole Foods", card, food),
+    ];
+    // The newer double-spaced spelling labels the merged row.
+    const [shown] = matchSuggestions(
+      ["Qa Whole  Foods", "Qa Whole Foods"],
+      "whole",
+      5,
+    );
+    expect(shown).toBe("Qa Whole  Foods");
+    expect(usual(history, shown)).toEqual([card, food]);
+    expect(usual([entry("Qa Café", card, food)], "Qa Café")).toEqual([
+      card,
+      food,
+    ]);
+    expect(usual([entry("QA BEAN SHOP", card, food)], "Qa Bean Shop")).toEqual([
+      card,
+      food,
+    ]);
+  });
+
+  it("is unchanged for an exact spelling, and for another payee", () => {
+    expect(usual([entry("Qa Bean Shop", card, food)], "Qa Bean Shop")).toEqual([
+      card,
+      food,
+    ]);
+    expect(usual([entry("Qa Bean Shop", card, food)], "Qa Bean")).toEqual([
+      null,
+      null,
+    ]);
+  });
+});
