@@ -267,7 +267,7 @@ export const de: Translations = {
     other: "{{count}} nicht in der Summe",
   },
   valuationDetailsTitle: "Bestände und Preise",
-  valuationDetailsHint: "Zeigt das Datum des letzten Preises jedes Bestands",
+  valuationDetailsHint: "Zeigt die Bestände hinter dieser Summe",
   valuationNoPrice: "Kein Preis",
   valuationNotUpdated: "Nicht aktualisiert",
   valuationAtCostTag: "Zu Anschaffungskosten",

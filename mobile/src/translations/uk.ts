@@ -269,7 +269,7 @@ export const uk: Translations = {
     other: "{{count}} не в підсумку",
   },
   valuationDetailsTitle: "Активи та ціни",
-  valuationDetailsHint: "Показує дату останньої ціни кожного активу",
+  valuationDetailsHint: "Показує активи, з яких складається ця сума",
   valuationNoPrice: "Немає ціни",
   valuationNotUpdated: "Не оновлювалася",
   valuationAtCostTag: "За собівартістю",

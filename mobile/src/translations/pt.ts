@@ -267,7 +267,7 @@ export const pt: Translations = {
     other: "{{count}} fora do total",
   },
   valuationDetailsTitle: "Ativos e preços",
-  valuationDetailsHint: "Mostra a data do último preço de cada ativo",
+  valuationDetailsHint: "Mostra os ativos por trás deste total",
   valuationNoPrice: "Sem preço",
   valuationNotUpdated: "Não atualizado",
   valuationAtCostTag: "Ao custo",

@@ -271,7 +271,7 @@ export const sk: Translations = {
     other: "{{count}} mimo súčtu",
   },
   valuationDetailsTitle: "Aktíva a ceny",
-  valuationDetailsHint: "Zobrazí dátum poslednej ceny každého aktíva",
+  valuationDetailsHint: "Zobrazí aktíva za týmto súčtom",
   valuationNoPrice: "Bez ceny",
   valuationNotUpdated: "Neaktualizované",
   valuationAtCostTag: "V obstarávacej cene",

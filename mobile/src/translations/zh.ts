@@ -232,7 +232,7 @@ export const zh: Translations = {
     other: "{{count}} 项未计入合计",
   },
   valuationDetailsTitle: "持仓与价格",
-  valuationDetailsHint: "显示每项持仓的最新价格日期",
+  valuationDetailsHint: "显示构成此总额的持仓",
   valuationNoPrice: "无价格",
   valuationNotUpdated: "未更新",
   valuationAtCostTag: "按成本",

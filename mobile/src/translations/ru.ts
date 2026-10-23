@@ -270,7 +270,7 @@ export const ru: Translations = {
     other: "{{count}} не в итоге",
   },
   valuationDetailsTitle: "Активы и цены",
-  valuationDetailsHint: "Показывает дату последней цены каждого актива",
+  valuationDetailsHint: "Показывает активы, из которых состоит эта сумма",
   valuationNoPrice: "Нет цены",
   valuationNotUpdated: "Не обновлялась",
   valuationAtCostTag: "По себестоимости",

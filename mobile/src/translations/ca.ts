@@ -269,7 +269,7 @@ export const ca: Translations = {
     other: "{{count}} fora del total",
   },
   valuationDetailsTitle: "Actius i preus",
-  valuationDetailsHint: "Mostra la data de l'últim preu de cada actiu",
+  valuationDetailsHint: "Mostra els actius que hi ha darrere d'aquest total",
   valuationNoPrice: "Sense preu",
   valuationNotUpdated: "Sense actualitzar",
   valuationAtCostTag: "A cost",

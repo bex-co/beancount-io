@@ -261,7 +261,7 @@ export const nl: Translations = {
     other: "{{count}} niet in totaal",
   },
   valuationDetailsTitle: "Bezittingen en prijzen",
-  valuationDetailsHint: "Toont de datum van de laatste prijs per bezit",
+  valuationDetailsHint: "Toont de bezittingen achter dit totaal",
   valuationNoPrice: "Geen prijs",
   valuationNotUpdated: "Niet bijgewerkt",
   valuationAtCostTag: "Tegen kostprijs",

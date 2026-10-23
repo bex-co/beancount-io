@@ -34,3 +34,18 @@ describe("translation meaning fixes", () => {
     }
   });
 });
+
+// w21/850: the caption opens the holdings sheet even when it holds only unpriced
+// or excluded holdings, with no price date, so the hint cannot promise dates.
+describe("valuationDetailsHint", () => {
+  it("never promises price dates, in any language", () => {
+    expect(catalogOf("en").valuationDetailsHint).toBe(
+      "Shows the holdings behind this total",
+    );
+    expect(/date/i.test(catalogOf("en").valuationDetailsHint)).toBe(false);
+    for (const locale of translationLocales()) {
+      const hint: string = catalogOf(locale).valuationDetailsHint;
+      expect(hint.length > 0).toBe(true);
+    }
+  });
+});

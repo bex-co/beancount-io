@@ -260,7 +260,7 @@ export const bg: Translations = {
     other: "{{count}} не са в сумата",
   },
   valuationDetailsTitle: "Активи и цени",
-  valuationDetailsHint: "Показва датата на последната цена за всеки актив",
+  valuationDetailsHint: "Показва активите зад тази сума",
   valuationNoPrice: "Без цена",
   valuationNotUpdated: "Не е обновена",
   valuationAtCostTag: "По себестойност",

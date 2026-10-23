@@ -257,7 +257,7 @@ export const fa: Translations = {
     other: "{{count}} خارج از جمع",
   },
   valuationDetailsTitle: "دارایی‌ها و قیمت‌ها",
-  valuationDetailsHint: "تاریخ آخرین قیمت هر دارایی را نشان می‌دهد",
+  valuationDetailsHint: "دارایی‌های پشت این مجموع را نشان می‌دهد",
   valuationNoPrice: "بدون قیمت",
   valuationNotUpdated: "به‌روز نشده",
   valuationAtCostTag: "به بهای تمام‌شده",

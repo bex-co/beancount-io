@@ -255,7 +255,7 @@ export const en = {
     other: "{{count}} not in total",
   },
   valuationDetailsTitle: "Holdings and prices",
-  valuationDetailsHint: "Shows each holding's latest price date",
+  valuationDetailsHint: "Shows the holdings behind this total",
   valuationNoPrice: "No price",
   valuationNotUpdated: "Not updated",
   valuationAtCostTag: "At cost",

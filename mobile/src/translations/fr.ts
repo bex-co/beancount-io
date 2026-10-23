@@ -267,7 +267,7 @@ export const fr: Translations = {
     other: "{{count}} hors total",
   },
   valuationDetailsTitle: "Avoirs et prix",
-  valuationDetailsHint: "Affiche la date du dernier prix de chaque avoir",
+  valuationDetailsHint: "Affiche les avoirs derrière ce total",
   valuationNoPrice: "Sans prix",
   valuationNotUpdated: "Non mis à jour",
   valuationAtCostTag: "Au coût",
