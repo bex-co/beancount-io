@@ -45,6 +45,8 @@ import {
   mergeDiscoveredDocuments,
 } from "./document-discovery";
 import { inactiveAfterGeneratedCloses } from "./generated-closes";
+import { reconcileCheckCommodityErrors } from "./check-commodity";
+import { reconcileNounusedErrors } from "./nounused";
 import { reconcileOneCommodityErrors } from "./one-commodity";
 import { reconcileUniquePriceErrors } from "./unique-prices";
 import { locateBookErrors } from "./book-errors";
@@ -739,6 +741,9 @@ async function parseLedgerFilesUncached(
   errors = reconcileUniquePriceErrors(errors, directives, files, entryPoint);
   // Beancount's onecommodity honours its opt-outs; rustledger's does not.
   errors = reconcileOneCommodityErrors(errors, directives, files, entryPoint);
+  // Beancount's nounused and check_commodity report errors, not advice.
+  errors = reconcileNounusedErrors(errors, directives, files, entryPoint);
+  errors = reconcileCheckCommodityErrors(errors, directives, files, entryPoint);
   // The engine validates before its plugins add close_tree's closes, and its
   // auto_accounts opens no account named only by a note or a close (w21/737).
   errors = [

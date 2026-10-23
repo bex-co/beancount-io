@@ -1,9 +1,8 @@
 import type { BeancountError, DirectiveJson, FileMap } from "@rustledger/wasm";
 import { indexBlocks } from "./block-index";
-import { collectLedgerPluginDeclarations } from "./plugins/collect-plugins";
+import { beancountPluginRuns } from "./plugins/collect-plugins";
 import { includeTraversalOrder } from "./source-slice";
 
-const PLUGIN = "beancount.plugins.onecommodity";
 /** rustledger's own check: once per transaction, with none of the opt-outs. */
 const RUSTLEDGER = /^Account '.*' uses multiple currencies: /u;
 /** A posting line's account, after its flag if it has one. */
@@ -145,7 +144,7 @@ function lastPlaces(
 
 /**
  * Beancount's `onecommodity` (`plugin "beancount.plugins.onecommodity"
- * "<pattern>"`) refuses an account holding more than one commodity, once per
+ * "<pattern>"`, or `pedantic`) refuses an account holding more than one commodity, once per
  * account, on its last entry. rustledger's native check honours none of its
  * opt-outs (an open's `onecommodity: FALSE`, an open naming several
  * currencies, the account pattern), says so once per transaction, without a
@@ -160,9 +159,7 @@ export function reconcileOneCommodityErrors(
   files: FileMap,
   entryPoint: string,
 ): BeancountError[] {
-  const configs = collectLedgerPluginDeclarations(files[entryPoint])
-    .filter((plugin) => plugin.name === PLUGIN)
-    .map((plugin) => plugin.config);
+  const configs = beancountPluginRuns(files[entryPoint], "onecommodity");
   if (configs.length === 0) return [...errors];
   let patterns: (RegExp | null)[];
   try {

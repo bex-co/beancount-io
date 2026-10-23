@@ -1,5 +1,6 @@
 import type { BeancountError, DirectiveJson, FileMap } from "@rustledger/wasm";
 import { indexBlocks } from "./block-index";
+import { beancountPluginRuns } from "./plugins/collect-plugins";
 import { includeTraversalOrder } from "./source-slice";
 
 /** rustledger's `unique_prices` error, raised for every same-day repeat. */
@@ -130,7 +131,9 @@ function disagreementLocator(files: FileMap, entryPoint: string) {
  * broken (w21/735). Each such error is judged against the day's prices in the
  * booked stream (`directives`, `implicit_prices`' own included): it is dropped
  * when they agree, and otherwise replaced by Beancount's one error, on the
- * line bean-check gives where the source shows it.
+ * line bean-check gives where the source shows it. Declared by its Beancount
+ * name or through `pedantic`, which rustledger's own `pedantic` leaves out,
+ * every day is judged (w21/739).
  */
 export function reconcileUniquePriceErrors(
   errors: readonly BeancountError[],
@@ -138,20 +141,51 @@ export function reconcileUniquePriceErrors(
   files: FileMap,
   entryPoint: string,
 ): BeancountError[] {
-  if (!errors.some((error) => DUPLICATE.test(error.message))) {
+  const declared =
+    beancountPluginRuns(files[entryPoint], "unique_prices").length > 0;
+  if (!declared && !errors.some((error) => DUPLICATE.test(error.message))) {
     return [...errors];
   }
-  const numbers = new Map<string, Set<string>>();
+  const days = new Map<
+    string,
+    { date: string; base: string; quote: string; numbers: Set<string> }
+  >();
   for (const directive of directives) {
     if (directive.type !== "price") continue;
-    const key = `${directive.date} ${directive.currency}/${directive.amount.currency}`;
-    const seen = numbers.get(key) ?? new Set<string>();
-    seen.add(decimalKey(directive.amount.number));
-    numbers.set(key, seen);
+    const [date, base, quote] = [
+      directive.date,
+      directive.currency,
+      directive.amount.currency,
+    ];
+    const key = `${date} ${base}/${quote}`;
+    const day = days.get(key) ?? { date, base, quote, numbers: new Set() };
+    day.numbers.add(decimalKey(directive.amount.number));
+    days.set(key, day);
   }
   const locate = disagreementLocator(files, entryPoint);
   const judged = new Set<string>();
   const reconciled: BeancountError[] = [];
+  const judge = (key: string) => {
+    const day = days.get(key);
+    if (judged.has(key) || day === undefined) return;
+    judged.add(key);
+    if (day.numbers.size < 2) return;
+    const at = locate(day.date, day.base, day.quote);
+    reconciled.push({
+      message: at
+        ? MESSAGE
+        : `${MESSAGE} (${day.base}/${day.quote} on ${day.date})`,
+      code: "PLUGIN",
+      phase: "plugin",
+      hint: null,
+      file: at?.file ?? null,
+      line: at?.line ?? null,
+      column: at ? 1 : null,
+      end_line: null,
+      end_column: null,
+      severity: "error",
+    });
+  };
   for (const error of errors) {
     const duplicate = DUPLICATE.exec(error.message);
     if (duplicate === null) {
@@ -159,20 +193,8 @@ export function reconcileUniquePriceErrors(
       continue;
     }
     const [, base = "", quote = "", date = ""] = duplicate;
-    const key = `${date} ${base}/${quote}`;
-    if (judged.has(key)) continue;
-    judged.add(key);
-    if ((numbers.get(key)?.size ?? 0) < 2) continue;
-    const at = locate(date, base, quote);
-    reconciled.push({
-      ...error,
-      message: at ? MESSAGE : `${MESSAGE} (${base}/${quote} on ${date})`,
-      file: at?.file ?? null,
-      line: at?.line ?? null,
-      column: at ? 1 : null,
-      end_line: null,
-      end_column: null,
-    });
+    judge(`${date} ${base}/${quote}`);
   }
+  if (declared) for (const key of days.keys()) judge(key);
   return reconciled;
 }

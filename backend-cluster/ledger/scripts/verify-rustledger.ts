@@ -1628,6 +1628,43 @@ async function main(): Promise<void> {
     autoParent.length === 0,
     `auto_accounts opens an account named only by its close (got ${JSON.stringify(autoParent)})`,
   );
+  // w21/739: nounused and check_commodity came back as warnings, which the
+  // server drops, and the engine's pedantic ran no nounused.
+  for (const plugin of ["nounused", "check_commodity", "pedantic"]) {
+    const strict = (
+      await parseLedgerFiles(
+        {
+          "main.beancount": [
+            `plugin "beancount.plugins.${plugin}"`,
+            "2024-01-01 open Assets:Cash USD",
+            "2024-01-01 open Assets:Unused USD",
+            "2024-01-01 open Equity:Opening USD",
+            '2024-01-02 * "Open"',
+            "  Assets:Cash  10 USD",
+            "  Equity:Opening",
+          ].join("\n"),
+        },
+        "main.beancount",
+        { today: "2099-01-01" },
+      )
+    ).errors
+      .map((e) => `${e.severity} ${e.line} ${e.message}`)
+      .sort();
+    const expected = {
+      nounused: ["error 3 Unused account 'Assets:Unused'"],
+      check_commodity: [
+        "error null Missing Commodity directive for 'USD' in 'Assets:Cash'",
+      ],
+      pedantic: [
+        "error 3 Unused account 'Assets:Unused'",
+        "error null Missing Commodity directive for 'USD' in 'Assets:Cash'",
+      ],
+    }[plugin]!;
+    assert(
+      JSON.stringify(strict) === JSON.stringify(expected.sort()),
+      `${plugin} reports what bean-check does (got ${JSON.stringify(strict)})`,
+    );
+  }
   // w21/733: a posting flag was read as the sale's account.
   const flagged = (
     await parseLedgerFiles(
