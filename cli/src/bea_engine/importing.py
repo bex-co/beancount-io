@@ -1684,15 +1684,36 @@ def _booked_for(text: str, lot: _Lot | None, owner: str, left: list[_Leg]) -> It
         # Too many lots to try every subset, but booking takes them in order:
         # the lots one fill spans are a run of the compatible legs. Trying only
         # the whole set made a sale split into two fills conflict with its own
-        # first import once it spanned thirteen lots (w5/977).
-        for start in range(len(compatible)):
-            running = Decimal(0)
-            for end in range(start, len(compatible)):
-                running += _units_of(left[compatible[end]][0])[0]
-                if abs(running) > abs(number):
-                    break
-                if running == number and end > start:
-                    yield set(compatible[start : end + 1])
+        # first import once it spanned thirteen lots (w5/977). A hand-written
+        # sale lists its lots in any order, so a run is also looked for in
+        # acquisition-date and in cost order, the orders booking takes them in
+        # (w5/998).
+        def acquired(index: int) -> datetime.date:
+            booked = left[index][1]
+            return booked[3] if booked is not None and booked[3] is not None else datetime.date.max
+
+        def cost(index: int) -> Decimal:
+            booked = left[index][1]
+            return booked[0] if booked is not None and booked[0] is not None else Decimal(0)
+
+        orders = [
+            compatible,
+            sorted(compatible, key=lambda i: (acquired(i), i)),
+            sorted(compatible, key=lambda i: (cost(i), i)),
+            sorted(compatible, key=lambda i: (-cost(i), i)),
+        ]
+        seen: set[frozenset[int]] = set()
+        for order in orders:
+            for start in range(len(order)):
+                running = Decimal(0)
+                for end in range(start, len(order)):
+                    running += _units_of(left[order[end]][0])[0]
+                    if abs(running) > abs(number):
+                        break
+                    run = frozenset(order[start : end + 1])
+                    if running == number and end > start and run not in seen:
+                        seen.add(run)
+                        yield set(run)
         return
     for size in range(len(compatible), 1, -1):
         for subset in combinations(compatible, size):
