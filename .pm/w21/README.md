@@ -12,6 +12,9 @@
 
 ## Inbox
 
+- [769](./769.md) — New File creates "qa20261020.bean.bean" from "qa20261020.bean." (trailing dot adds the extension twice)
+- [770](./770.md) — New File accepts a name that differs from an existing file only by case or Unicode form ("Main" beside main.bean)
+- [771](./771.md) — Files can't open an included file with an extension off a fixed list (`prices`, `prices.inc`); the row is dimmed with no reason
 - [768](./768.md) — w21/749 regression: Cash flow now cuts the right column's suffix line too, so "Savings (expenses)" reads "Savings (expense…"
 - [766](./766.md) — RTL account paths still draw child-before-parent in Money flow, Entry Context balances and Budget cards (w21/743 gap)
 - [767](./767.md) — After a metadata-only edit, an R-flagged entry keeps showing its pre-edit copy (w21/745 consequence)
