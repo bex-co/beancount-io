@@ -494,12 +494,14 @@ describe.each(["rest", "gql", "mcp"])(
               metadata,
             });
           } else {
+            // MCP carries the same field (w23/077), past its output schema.
             expect(result.full).toMatchObject({
               ok: false,
               error: {
                 code: "VALIDATION_FAILED",
                 message,
                 hint: expect.stringContaining("allowInvalid: true"),
+                newLedgerErrors: BALANCE_FAILED,
               },
             });
           }

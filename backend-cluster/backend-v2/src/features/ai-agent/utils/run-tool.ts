@@ -50,7 +50,13 @@ export async function runToolSafely<T>({
     logger[level](message, { ...context, error: msg });
     const metadata =
       err instanceof DomainError
-        ? (err.metadata as { hint?: unknown; retryAfter?: unknown } | undefined)
+        ? (err.metadata as
+            | {
+                hint?: unknown;
+                retryAfter?: unknown;
+                newLedgerErrors?: unknown;
+              }
+            | undefined)
         : undefined;
     return {
       ok: false,
@@ -60,6 +66,9 @@ export async function runToolSafely<T>({
       ...(typeof metadata?.hint === "string" && { errorHint: metadata.hint }),
       ...(typeof metadata?.retryAfter === "number" && {
         retryAfter: metadata.retryAfter,
+      }),
+      ...(typeof metadata?.newLedgerErrors === "string" && {
+        newLedgerErrors: metadata.newLedgerErrors,
       }),
     };
   }

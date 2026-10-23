@@ -14,9 +14,11 @@ import {
 } from "../mcp-errors";
 import { favaApiErrorToDomainError } from "@/foundation/fava/error-to-domain";
 import { FavaApiError } from "@/foundation/fava/api-client";
+import { runToolSafely } from "@/features/ai-agent/utils/run-tool";
 import {
   BadUserInputError,
   ConfigurationError,
+  NewLedgerErrorsError,
   ConflictError,
   ForbiddenError,
   NotFoundError,
@@ -176,6 +178,8 @@ describe("envelopeFromThrown", () => {
       `Validation failed for entries: adding these entries would introduce 2 new bean-check errors: ${named}`,
     );
     expect(domain).toMatchObject({ metadata: { newLedgerErrors: named } });
+    // MCP carries the field too (w23/077): it named them only in prose.
+    expect(envelopeFromThrown(domain).newLedgerErrors).toBe(named);
   });
 
   // w23/074: the ledger service's body refusal surfaced as SERVICE_UNAVAILABLE
@@ -279,6 +283,31 @@ describe("splitToolFailure", () => {
       result: { success: false, message: "PR is no longer open" },
     });
     expect(envelope.code).toBe("CONFLICT");
+  });
+
+  // w23/077: a refused write's named errors survive runToolSafely into the
+  // envelope, and do not also travel on as a loose field.
+  it("carries a refused write's newLedgerErrors into the envelope", async () => {
+    const named = "A (main.bean:1); B (main.bean:2)";
+    const failure = await runToolSafely({
+      execute: async () => {
+        throw new NewLedgerErrorsError("text", 2, named);
+      },
+      logger: { warn: () => {}, error: () => {} } as never,
+      message: "append",
+    });
+    const { envelope, rest } = splitToolFailure(
+      failure as unknown as Record<string, unknown>,
+    );
+    expect(envelope).toMatchObject({
+      code: "VALIDATION_FAILED",
+      newLedgerErrors: named,
+    });
+    expect(rest).toEqual({});
+    expect(
+      splitToolFailure({ ok: false, error: "x", errorCode: "CONFLICT" })
+        .envelope,
+    ).not.toHaveProperty("newLedgerErrors");
   });
 });
 

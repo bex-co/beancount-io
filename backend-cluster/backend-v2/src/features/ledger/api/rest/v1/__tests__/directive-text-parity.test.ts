@@ -475,6 +475,31 @@ describe("appending Beancount text through the real adapters", () => {
     }
   });
 
+  // w23/077: MCP named the new errors only inside its message, while REST's
+  // error.metadata and GraphQL's extensions carry them as newLedgerErrors.
+  it("names the new errors in newLedgerErrors on MCP, as on REST", async () => {
+    const f = await fixture();
+    f.state.projectedErrors = [
+      { message: "Balance failed for Assets:Cash: expected 5 USD, got 0 USD" },
+    ];
+    try {
+      const rest = await f.call("rest", { text: TXN });
+      const mcp = await f.call("mcp", { text: TXN });
+      const named = "Balance failed for Assets:Cash: expected 5 USD, got 0 USD";
+      expect(rest.ok === false && rest.error).toMatchObject({
+        code: "VALIDATION_FAILED",
+        metadata: { newLedgerErrors: named },
+      });
+      expect(mcp.ok === false && mcp.error).toMatchObject({
+        code: "VALIDATION_FAILED",
+        newLedgerErrors: named,
+      });
+      expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+
   it.each(["rest", "gql", "mcp"] as const)(
     "commits an invalid directive when allowInvalid says so via %s",
     async (surface) => {

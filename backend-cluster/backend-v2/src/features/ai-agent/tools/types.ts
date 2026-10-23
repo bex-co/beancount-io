@@ -56,6 +56,8 @@ const toolErrorSchema = z.object({
   errorHint: z.string().optional(),
   /** Seconds to wait, for a rate-limit refusal. */
   retryAfter: z.number().optional(),
+  /** The errors a refused write would introduce, as REST and GraphQL name them. */
+  newLedgerErrors: z.string().optional(),
 });
 export type ToolError = z.infer<typeof toolErrorSchema>;
 
@@ -70,14 +72,19 @@ export type ToolError = z.infer<typeof toolErrorSchema>;
  * tool's published output schema, so a sentence here is paid ~25 times per
  * `tools/list`; the field names carry their own meaning, and what the codes
  * are and how to react to them is stated once in the server instructions and
- * the MCP guide, where it costs one copy.
+ * the MCP guide, where it costs one copy. For the same reason it admits
+ * fields it does not list: a refusal with more to say carries it, such as
+ * `newLedgerErrors` on a write that would break the ledger (w23/077), and a
+ * field declared here would be paid in all 44 output schemas.
  */
-export const mcpErrorSchema = z.object({
-  code: z.string(),
-  message: z.string(),
-  hint: z.string(),
-  retryAfter: z.number().optional(),
-});
+export const mcpErrorSchema = z
+  .object({
+    code: z.string(),
+    message: z.string(),
+    hint: z.string(),
+    retryAfter: z.number().optional(),
+  })
+  .loose();
 
 /**
  * One bean-check error, reduced to what an agent can act on: the message plus

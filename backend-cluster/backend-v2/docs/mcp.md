@@ -1086,7 +1086,12 @@ every tool:
 ```
 
 Branch on `error.code`; `error.hint` names the next call to make. `retryAfter`
-is present only for `RATE_LIMITED`. Arguments that do not match a tool's
+is present only for `RATE_LIMITED`. A `VALIDATION_FAILED` from a write that
+would break the ledger also carries `error.newLedgerErrors`: each new error as
+`message (file:line)`, joined by `; `. That is the same string REST returns in
+`error.metadata` and GraphQL in its extensions (w23/077). The published error
+schema lists only the fields every refusal has, and admits these others.
+Arguments that do not match a tool's
 published input schema are refused the same way, before any work runs:
 `BAD_USER_INPUT` with a message of the form `path: reason`, where `path` names
 the field (`files.0.start_line` for a nested one). An unknown tool name answers

@@ -27,6 +27,12 @@ export interface McpErrorEnvelope {
   readonly hint: string;
   /** Seconds to wait, present only for `RATE_LIMITED`. */
   readonly retryAfter?: number;
+  /**
+   * The bean-check errors a refused write would introduce, `message
+   * (file:line); …`, as REST `error.metadata` and GraphQL extensions carry
+   * them; present only on that `VALIDATION_FAILED` (w23/077).
+   */
+  readonly newLedgerErrors?: string;
 }
 
 /**
@@ -207,7 +213,7 @@ export function envelopeFromThrown(
 ): McpErrorEnvelope {
   if (error instanceof DomainError) {
     const metadata = error.metadata as
-      | { hint?: unknown; retryAfter?: unknown }
+      | { hint?: unknown; retryAfter?: unknown; newLedgerErrors?: unknown }
       | undefined;
     // The throw site's own hint wins; the category fallback is what a
     // refusal that has nothing more specific to say still carries (w2/013).
@@ -225,6 +231,9 @@ export function envelopeFromThrown(
       hint,
       ...(typeof metadata?.retryAfter === "number" && {
         retryAfter: metadata.retryAfter,
+      }),
+      ...(typeof metadata?.newLedgerErrors === "string" && {
+        newLedgerErrors: metadata.newLedgerErrors,
       }),
     };
   }
@@ -267,9 +276,9 @@ function categoryForMessage(message: string): ErrorCategory {
  * hint alongside the message, and this reads them back.
  *
  * Splitting is one operation rather than two because the carrier fields
- * (`errorCode`, `errorHint`, `retryAfter`) must not also travel on as loose
- * fields — and a caller that had to remember to strip them would eventually
- * forget.
+ * (`errorCode`, `errorHint`, `retryAfter`, `newLedgerErrors`) must not also
+ * travel on as loose fields — and a caller that had to remember to strip them
+ * would eventually forget.
  */
 export function splitToolFailure(
   result: Record<string, unknown>,
@@ -285,6 +294,7 @@ export function splitToolFailure(
     errorCode,
     errorHint,
     retryAfter,
+    newLedgerErrors,
     ...rest
   } = result as {
     ok?: unknown;
@@ -292,6 +302,7 @@ export function splitToolFailure(
     errorCode?: unknown;
     errorHint?: unknown;
     retryAfter?: unknown;
+    newLedgerErrors?: unknown;
   } & Record<string, unknown>;
   const raw = typeof error === "string" ? error : "The tool failed.";
   // A failure with no category of its own came from something other than a
@@ -311,6 +322,7 @@ export function splitToolFailure(
           : (CATEGORY_HINTS[code as ErrorCategory] ??
             CATEGORY_HINTS[ErrorCategory.INTERNAL_SERVER_ERROR]),
       ...(typeof retryAfter === "number" && { retryAfter }),
+      ...(typeof newLedgerErrors === "string" && { newLedgerErrors }),
     },
     rest,
   };

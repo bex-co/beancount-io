@@ -567,12 +567,14 @@ describe.each(["rest", "gql", "mcp"])(
               ?.metadata,
           ).toMatchObject({ field: "entries", newLedgerErrors: named });
         } else {
+          // MCP carries the same field (w23/077), past its output schema.
           expect(result.full).toMatchObject({
             ok: false,
             error: {
               code: "VALIDATION_FAILED",
               message: expect.stringContaining(named),
               hint: expect.stringContaining("allowInvalid: true"),
+              newLedgerErrors: named,
             },
           });
         }
