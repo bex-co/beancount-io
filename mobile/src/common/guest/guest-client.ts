@@ -44,6 +44,9 @@ const PUBLIC_OPERATIONS = new Set([
   "getLedgerFile",
   "getLedgerErrors",
   "GetLedgerEntryContext",
+  // Transaction detail reads its context through this one (w21/508); left out,
+  // a guest never loaded a transaction's Entry Context (w21/867).
+  "GetLedgerTransactionContext",
   "AccountReport",
   "AccountJournal",
   // Public reads the anonymous server answers: the close dates that hide an
@@ -56,7 +59,10 @@ const PUBLIC_OPERATIONS = new Set([
 // The read of one entry: its NOT_FOUND says that entry is gone, which the screen
 // shows itself ("removed"), not that the example is (w21/427). A file read is not
 // here: the ledger answers a missing file with null, never NOT_FOUND (w21/495).
-const ITEM_OPERATIONS = new Set(["GetLedgerEntryContext"]);
+const ITEM_OPERATIONS = new Set([
+  "GetLedgerEntryContext",
+  "GetLedgerTransactionContext",
+]);
 
 function isMissingItem(
   operationName: string,

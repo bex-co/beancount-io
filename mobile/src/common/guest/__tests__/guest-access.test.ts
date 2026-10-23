@@ -144,3 +144,41 @@ describe("guest guards with a previously authenticated cache", () => {
     expect(tree.props.href).toBe("/auth/welcome");
   });
 });
+
+// w21/867: transaction detail's context query was missing from the guest
+// allowlist, so every example transaction showed a stale banner.
+describe("the guest allowlist and transaction detail", () => {
+  const client = require("fs")
+    .readFileSync(
+      require("path").join(__dirname, "..", "guest-client.ts"),
+      "utf8",
+    )
+    .replace(/\s+/g, "");
+  const hook = require("fs")
+    .readFileSync(
+      require("path").join(
+        __dirname,
+        "..",
+        "..",
+        "..",
+        "screens",
+        "transaction-detail-screen",
+        "use-transaction-context.ts",
+      ),
+      "utf8",
+    )
+    .replace(/\s+/g, "");
+
+  it("lets a guest read the context transaction detail asks for", () => {
+    expect(hook.includes("useGetLedgerTransactionContextQuery(")).toBe(true);
+    expect(client.includes('"GetLedgerTransactionContext",')).toBe(true);
+  });
+
+  it("treats a missing entry there as the entry's, not the example's", () => {
+    expect(
+      client.includes(
+        'constITEM_OPERATIONS=newSet(["GetLedgerEntryContext","GetLedgerTransactionContext",]);',
+      ),
+    ).toBe(true);
+  });
+});
