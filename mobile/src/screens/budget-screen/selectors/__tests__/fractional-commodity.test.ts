@@ -2,6 +2,7 @@ import {
   budgetDisplayScale,
   budgetScale,
   calculateBudgetForInterval,
+  statusScale,
   varianceStatus,
   type BudgetGroup,
 } from "../budget-selectors";
@@ -119,5 +120,31 @@ describe("a budget in a zero-decimal currency", () => {
         budgetDisplayScale(btc("1500 USD")),
       ),
     ).toBe("$1,016.13");
+  });
+});
+
+// w21/804: judged at half its written digit (±0.0005 for "0.003 BTC"), the
+// card read a green "On target" beside "Variance +0.0003742 BTC", 17% over,
+// since w21/595 prints every digit a commodity holds.
+describe("a commodity budget's status at the precision it is shown", () => {
+  it("is not On target beside a 17% overrun", () => {
+    const stats = selectBudgetCardStats(group(), [
+      { date: "2026-10-31", actual: 0.0026, budget: 0.0022258 },
+    ]);
+    expect(stats.status).toBe("above");
+    expect(stats.favorable).toBe(false);
+  });
+
+  it("is On target when the figures agree, float noise and all", () => {
+    const stats = selectBudgetCardStats(group(), [
+      { date: "2026-09-30", actual: 0.1 + 0.2 - 0.297, budget: 0.003 },
+    ]);
+    expect(stats.status).toBe("on");
+  });
+
+  it("is judged at eight places for a commodity, and at cents for money", () => {
+    expect(statusScale(btc("0.003 BTC"), "BTC")).toBe(8);
+    expect(statusScale(btc("300 USD"), "USD")).toBe(2);
+    expect(statusScale(btc("0.003 BTC"))).toBe(3);
   });
 });

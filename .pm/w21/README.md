@@ -12,7 +12,6 @@
 
 ## Inbox
 
-- [804](./804.md) — A BTC budget reads green "On target" while showing 17% over (w21/290 regression)
 - [805](./805.md) — A KWD budget is prorated to cents, so on-target spending reads "Above target"
 - [806](./806.md) — Budgets on one account in two currencies cancel each other's status
 - [807](./807.md) — VoiceOver's budget chart summary counts spending from before the budget existed

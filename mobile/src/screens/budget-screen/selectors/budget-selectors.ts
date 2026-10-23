@@ -15,7 +15,10 @@
  * Imports stay relative and React-Native-free so the jest-lite runner can
  * exercise this module directly.
  */
-import { currencyMinorUnits } from "../../../common/currency-util";
+import {
+  currencyMinorUnits,
+  isFiatCurrency,
+} from "../../../common/currency-util";
 import { getFormatDate } from "../../../common/format-util";
 import type {
   JournalAmount,
@@ -24,6 +27,7 @@ import type {
 import { utcTime } from "../../../common/calendar-date";
 import {
   amountScale,
+  COMMODITY_MONEY_DIGITS,
   formatMoneyWithCurrency,
 } from "../../../common/number-utils";
 
@@ -430,6 +434,23 @@ export function budgetScale(
 ): number {
   const floor = currency === undefined ? 2 : currencyMinorUnits(currency);
   return Math.max(floor, budgetDisplayScale(history));
+}
+
+/**
+ * The precision a budget's status is judged at: that of the figures beside
+ * it. A commodity's budget, actual and variance print every digit they hold,
+ * to eight places (w21/595), so judged at half its written digit, ±0.0005 for
+ * "0.003 BTC", the card read a green "On target" beside "Variance +0.0003742
+ * BTC", 17% over (w21/804). Money keeps `budgetScale`.
+ */
+export function statusScale(
+  history: readonly { amount?: string }[] | null | undefined,
+  currency?: string,
+): number {
+  const scale = budgetScale(history, currency);
+  return currency !== undefined && currency !== "" && !isFiatCurrency(currency)
+    ? Math.max(scale, COMMODITY_MONEY_DIGITS)
+    : scale;
 }
 
 /**

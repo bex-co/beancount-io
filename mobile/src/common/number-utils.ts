@@ -310,7 +310,7 @@ export const roundMoney = (value: number, currency: string): number => {
 };
 
 /** Most fraction digits a commodity shown as money keeps (a satoshi). */
-const COMMODITY_MONEY_DIGITS = 8;
+export const COMMODITY_MONEY_DIGITS = 8;
 
 /**
  * The fraction digits a money figure in `currency` is shown with. A national

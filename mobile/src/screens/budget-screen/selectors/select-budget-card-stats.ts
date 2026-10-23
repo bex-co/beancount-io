@@ -5,7 +5,7 @@
  */
 import {
   groupDirection,
-  budgetScale,
+  statusScale,
   isFavorableVariance,
   varianceStatus,
   type BudgetGroup,
@@ -118,7 +118,7 @@ export function selectPointFavorability(
   currency?: string,
 ): (boolean | null)[] {
   const firstBudget = firstBudgetDate(budgetHistory);
-  const scale = budgetScale(budgetHistory, currency);
+  const scale = statusScale(budgetHistory, currency);
   return series.map((point) => {
     if (beforeFirstBudget(point, firstBudget, today)) return null;
     const status = standingStatus(
@@ -170,7 +170,7 @@ export function selectBudgetCardStats(
       ? null
       : varianceStatus(
           variance,
-          budgetScale(group.budgetHistory, group.currency),
+          statusScale(group.budgetHistory, group.currency),
         );
   const status = judged === null ? null : standingStatus(judged, notInTotal);
   const favorable =
