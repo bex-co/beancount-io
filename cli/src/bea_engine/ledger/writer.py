@@ -253,10 +253,17 @@ _SHORT_LOT_LABELS: ContextVar[Callable[[datetime.date | None], frozenset[ShortLo
 BATCH_SHORT_LABELS: ContextVar[set[tuple[str, str]] | None] = ContextVar("batch_short_labels", default=None)
 
 
-def _cost_parts(cost: Any) -> tuple[Decimal | None, str | None, datetime.date | None]:
+def _cost_parts(cost: Any, units: Any = None) -> tuple[Decimal | None, str | None, datetime.date | None]:
+    """A cost's per-unit number, currency and date; a total is spread over the units as booking does (w5/1006)."""
     number = getattr(cost, "number", None)
     if number is None:
         number = getattr(cost, "number_per", None)
+    total = getattr(cost, "number_total", None)
+    count = getattr(units, "number", None)
+    if isinstance(total, Decimal) and isinstance(count, Decimal) and count:
+        number = ((number if isinstance(number, Decimal) else Decimal(0)) * abs(count) + total) / abs(count)
+    elif isinstance(total, Decimal):
+        number = None
     currency = getattr(cost, "currency", None)
     date = getattr(cost, "date", None)
     return (
@@ -286,7 +293,7 @@ def held_short_lots(entries: Iterable[Any]) -> Callable[[datetime.date | None], 
                     label = getattr(posting.cost, "label", None)
                     if not label or posting.units is None or posting.units.number is None:
                         continue
-                    key = (posting.account, posting.units.currency, label, *_cost_parts(posting.cost))
+                    key = (posting.account, posting.units.currency, label, *_cost_parts(posting.cost, posting.units))
                     nets[key] = nets.get(key, Decimal(0)) + posting.units.number
             memo[date] = frozenset(key for key, net in nets.items() if net < 0)
         return memo[date]
@@ -296,7 +303,7 @@ def held_short_lots(entries: Iterable[Any]) -> Callable[[datetime.date | None], 
 
 def _covers_short(posting: Posting, label: str, held: frozenset[ShortLot]) -> bool:
     """Whether the lot this positive posting names, as far as it states it, is one that is short."""
-    number, currency, date = _cost_parts(posting.cost)
+    number, currency, date = _cost_parts(posting.cost, posting.units)
     units = posting.units
     commodity = getattr(units, "currency", None)
     return any(
