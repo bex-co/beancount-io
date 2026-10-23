@@ -5,7 +5,7 @@
  */
 
 import type { Cadence, RecurrenceVerdict } from "./detect-recurrence";
-import { payeeSeriesCutoff } from "./payee-series";
+import { shiftLedgerMonths } from "./payee-series";
 
 export type RecurringOverride = "recurring" | "notRecurring";
 
@@ -19,16 +19,21 @@ export type RecurringOverride = "recurring" | "notRecurring";
  */
 export type ResolvedCadence = Cadence | "irregular" | "unknown" | "inactive";
 
+/** A yearly payee's gap plus a month: a longer silence has ended, whatever the window holds. */
+const RECENT_PAYMENT_MONTHS = 13;
+
 /**
- * Whether a payee's last payment predates the series window, so its absence from
- * the series says nothing about how much history the ledger holds: a gym paid
- * monthly from 2019 to 2023 read "Not enough history" beside "54 transactions".
+ * Whether a payee's last payment is too old to count as recent, so a series
+ * too short to analyse is down to the payee stopping, not to a new ledger: a
+ * gym paid monthly from 2019 to 2023 read "Not enough history" beside "54
+ * transactions", also when its last payments sat just inside the series window
+ * (w21/617, w21/662).
  */
 export function endedBeforeSeriesWindow(
   lastDate: string | null | undefined,
   today: string,
 ): boolean {
-  const cutoff = payeeSeriesCutoff(today);
+  const cutoff = shiftLedgerMonths(today, -RECENT_PAYMENT_MONTHS);
   return Boolean(lastDate) && cutoff !== null && lastDate! < cutoff;
 }
 

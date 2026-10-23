@@ -33,7 +33,6 @@
 - [666](./666.md) — A pasted "−12.50" (typographic minus) is saved as negative but shows a green "+", and the sign toggle breaks it (w21/463 brings back w21/232)
 - [667](./667.md) — Account detail still shows a blank row for an entry whose payee is only spaces (w21/568 incomplete)
 - [668](./668.md) — Transaction detail repeats the narration under the title when the payee is only spaces or equals the narration
-- [662](./662.md) — A merchant marked Recurring still reads "Not enough history" when its last payments fall just inside the window (w21/617 incomplete)
 - [663](./663.md) — A merchant's header total still rounds BTC to 2 decimals: "0.00 BTC" (w21/595 incomplete)
 - [664](./664.md) — Home's Recent Transactions says "Nothing up to today" when more than 20 entries are booked for later this month
 - [665](./665.md) — Home's net-worth caption and cost footnote still value next month's holdings (w21/641 incomplete)

@@ -86,6 +86,12 @@ describe("a marked merchant whose payments predate the series window", () => {
     expect(endedBeforeSeriesWindow("2023-06-01", "2026-10-22")).toBe(true);
     expect(endedBeforeSeriesWindow("2026-08-01", "2026-10-22")).toBe(false);
     expect(endedBeforeSeriesWindow("", "2026-10-22")).toBe(false);
+    // w21/662: the last payments sat just inside the 37-month window.
+    expect(endedBeforeSeriesWindow("2023-10-01", "2026-10-22")).toBe(true);
+    // A new payee's two payments this year, and a yearly one a month late.
+    expect(endedBeforeSeriesWindow("2026-09-01", "2026-10-22")).toBe(false);
+    expect(endedBeforeSeriesWindow("2025-10-01", "2026-10-22")).toBe(false);
+    expect(endedBeforeSeriesWindow("2025-09-01", "2026-10-22")).toBe(true);
     expect(
       resolveRecurringVerdict(null, "recurring", false, true).cadence,
     ).toBe("inactive");
