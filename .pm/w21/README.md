@@ -47,3 +47,6 @@
 - [883](./883.md) — In Persian, a negative compact chart tick draws its minus on the far side
 - [884](./884.md) — In Persian, chart labels mix Persian and Latin digits
 - [885](./885.md) — In Persian, an Accounts sentence mixes a Latin count with a Persian-digit date
+- [886](./886.md) — Tapping Home's partly hidden Liabilities tab never scrolls it into view
+- [887](./887.md) — In RTL, Home's tab-strip fade is inverted once the strip has scrolled
+- [888](./888.md) — Entries flagged U are left out of Home's net worth but counted on Accounts
