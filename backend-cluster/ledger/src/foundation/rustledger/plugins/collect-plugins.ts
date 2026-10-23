@@ -78,7 +78,7 @@ export function decodeStringLiteral(raw: string): string {
 
 /**
  * Match one `plugin "<name>"` or `plugin "<name>" "<config>"` directive per
- * source line and capture the (unescaped) plugin name.
+ * source line and capture the (unescaped) plugin name and config.
  *
  * Mirrors {@link deriveBeancountOptions}'s `OPTION_LINE_RE` structure:
  *   - `^[ \t]*` — leading whitespace tolerated (indented directive still applies).
@@ -91,7 +91,7 @@ export function decodeStringLiteral(raw: string): string {
  * Each string capture stops at the first unescaped `"`.
  */
 export const PLUGIN_LINE_RE =
-  /^[ \t]*plugin[ \t]*"((?:[^"\\]|\\.)*)"(?:[ \t]*"(?:[^"\\]|\\.)*")?[ \t]*(?:;.*)?$/;
+  /^[ \t]*plugin[ \t]*"((?:[^"\\]|\\.)*)"(?:[ \t]*"((?:[^"\\]|\\.)*)")?[ \t]*(?:;.*)?$/;
 
 /**
  * The ordered list of Beancount plugin names declared in the entry-point source,
@@ -107,12 +107,27 @@ export const PLUGIN_LINE_RE =
 export function collectLedgerPlugins(
   entryPointSource: string | undefined,
 ): string[] {
+  return collectLedgerPluginDeclarations(entryPointSource).map(
+    (plugin) => plugin.name,
+  );
+}
+
+/**
+ * {@link collectLedgerPlugins} with each plugin's config string, `null` when
+ * the directive gives none: what Beancount passes the plugin as `config`.
+ */
+export function collectLedgerPluginDeclarations(
+  entryPointSource: string | undefined,
+): { name: string; config: string | null }[] {
   if (!entryPointSource) return [];
-  const plugins: string[] = [];
+  const plugins: { name: string; config: string | null }[] = [];
   entryPointSource.split(/\r\n|\r|\n/u).forEach((line) => {
     const match = PLUGIN_LINE_RE.exec(line);
     if (!match) return;
-    plugins.push(decodeStringLiteral(match[1]));
+    plugins.push({
+      name: decodeStringLiteral(match[1]),
+      config: match[2] === undefined ? null : decodeStringLiteral(match[2]),
+    });
   });
   return plugins;
 }

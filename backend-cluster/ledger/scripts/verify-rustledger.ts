@@ -1496,6 +1496,44 @@ async function main(): Promise<void> {
       JSON.stringify(["main.beancount:7 Disagreeing price entries"]),
     `unique_prices refuses only disagreeing prices, on bean-check's line (got ${JSON.stringify(priceErrors)})`,
   );
+  // w21/736: rustledger's onecommodity honoured none of Beancount's opt-outs
+  // and repeated an account once per transaction, without a location.
+  const oneCommodity = (
+    await parseLedgerFiles(
+      {
+        "main.beancount": [
+          'plugin "beancount.plugins.onecommodity" "Expenses:Travel"',
+          "2024-01-01 open Assets:Cash",
+          "  onecommodity: FALSE",
+          "2024-01-01 open Assets:Multi USD,EUR",
+          "2024-01-01 open Expenses:Travel",
+          "2024-01-01 open Equity:Opening",
+          '2024-01-02 * "Cash"',
+          "  Assets:Cash  10 USD",
+          "  Assets:Cash  10 EUR",
+          "  Assets:Multi  10 USD",
+          "  Assets:Multi  10 EUR",
+          "  Equity:Opening  -20 USD",
+          "  Equity:Opening  -20 EUR",
+          '2024-01-04 * "Trip"',
+          "  Expenses:Travel  10 USD",
+          "  Equity:Opening",
+          '2024-01-05 * "Trip abroad"',
+          "  Expenses:Travel  10 EUR",
+          "  Equity:Opening",
+        ].join("\n"),
+      },
+      "main.beancount",
+      { today: "2099-01-01" },
+    )
+  ).errors.map((e) => `${e.file}:${e.line} ${e.message}`);
+  assert(
+    JSON.stringify(oneCommodity) ===
+      JSON.stringify([
+        "main.beancount:17 More than one currency in account 'Expenses:Travel': USD,EUR",
+      ]),
+    `onecommodity honours its opt-outs and reports an account once (got ${JSON.stringify(oneCommodity)})`,
+  );
   // w21/733: a posting flag was read as the sale's account.
   const flagged = (
     await parseLedgerFiles(
