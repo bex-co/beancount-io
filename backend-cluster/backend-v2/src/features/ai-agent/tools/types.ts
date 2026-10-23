@@ -34,6 +34,11 @@ export interface ToolContext {
   identity: Identity;
   platform?: "web" | "mobile";
   ledgerId: string;
+  /**
+   * The caller's today (`YYYY-MM-DD`) when it told its time zone: the date an
+   * undated receipt is filed under, instead of the server's UTC day (w21/856).
+   */
+  today?: string;
   llmService: ILLMService;
   ledgerReceiptWorkflow: ILedgerReceiptWorkflow;
 }

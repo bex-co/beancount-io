@@ -54,7 +54,10 @@ export type InsertReceiptTransactionOutput = z.infer<
 >;
 
 async function executeInsertReceiptTransaction(
-  ctx: Pick<ToolContext, "ledgerReceiptWorkflow" | "identity" | "ledgerId">,
+  ctx: Pick<
+    ToolContext,
+    "ledgerReceiptWorkflow" | "identity" | "ledgerId" | "today"
+  >,
   input: z.infer<typeof insertReceiptTransactionInputSchema>,
 ): Promise<InsertReceiptTransactionOutput> {
   const { ledgerReceiptWorkflow, identity, ledgerId } = ctx;
@@ -63,7 +66,7 @@ async function executeInsertReceiptTransaction(
   //
   // Default to today when the receipt had no visible date, so we never write a
   // blank/invalid Beancount entry.
-  const date = input.date || new Date().toISOString().slice(0, 10);
+  const date = input.date || ctx.today || new Date().toISOString().slice(0, 10);
   toolLogger.debug("Inserting receipt transaction", {
     date,
     payee: input.payee,

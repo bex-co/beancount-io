@@ -91,8 +91,10 @@ export class SelfHostedAgentHandler implements IAgentHandler {
         ledgerId,
         llmService: this.llmService,
         ledgerReceiptWorkflow: this.ledgerReceiptWorkflow,
+        today: ctx.clock?.today,
       },
       accessMode,
+      ctx.clock,
     );
 
     const result = await agent.stream(modelMessages, {

@@ -2,6 +2,7 @@ import type { UIMessage } from "ai";
 import type { ServerResponse } from "node:http";
 import type { Identity } from "@/server/api/identity";
 import type { ToolServices } from "../../tools/types";
+import type { ClientClock } from "../../utils/client-clock";
 
 export interface AgentHandlerContext {
   messages: UIMessage[];
@@ -14,6 +15,8 @@ export interface AgentHandlerContext {
   services: ToolServices;
   identity: Identity;
   sessionId?: string;
+  /** The caller's time zone and today in it, when it sent a valid zone. */
+  clock?: ClientClock;
   /** Called only after authorization/quota/model setup, immediately before piping. */
   onStreamReady?: () => void;
 }

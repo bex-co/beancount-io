@@ -4,6 +4,7 @@ import { type AppLayers } from "@/foundation/composition";
 import { logger } from "@/shared/logger";
 import { BadUserInputError } from "@/shared/errors";
 import { resolveAuthUser } from "../utils/route-guards";
+import { parseClientClock } from "../utils/client-clock";
 import {
   SelfHostedAgentHandler,
   type IAgentHandler,
@@ -28,6 +29,7 @@ export function setAgentRoute(router: Router, layers: AppLayers): void {
       messages?: unknown;
       ledgerId?: unknown;
       sessionId?: unknown;
+      timeZone?: unknown;
     };
     const messages = body.messages as UIMessage[] | undefined;
     const ledgerId = body.ledgerId as string | undefined;
@@ -65,6 +67,8 @@ export function setAgentRoute(router: Router, layers: AppLayers): void {
         },
         identity,
         sessionId,
+        // The caller's zone, for the date the agent is told (w21/856).
+        clock: parseClientClock(body.timeZone),
         onStreamReady: () => {
           ctx.respond = false;
         },

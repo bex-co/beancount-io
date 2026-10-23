@@ -10,6 +10,7 @@ import { logger } from "@/shared/logger";
 import { createAgentTools, type AgentTools } from "../../tools";
 import type { ToolContext } from "../../tools/types";
 import type { AgentAccessMode } from "../../agent-access";
+import { clockInstructions, type ClientClock } from "../../utils/client-clock";
 
 const agentLogger = logger.child({ module: "beancount-agent" });
 
@@ -78,13 +79,15 @@ export class BeancountAgent {
     model: LanguageModel,
     toolContext: ToolContext,
     accessMode: AgentAccessMode = "write",
+    clock?: ClientClock,
   ) {
     this.agent = new ToolLoopAgent<never, AgentTools>({
       model,
-      instructions:
+      instructions: `${
         accessMode === "write"
           ? AGENT_SYSTEM_PROMPT
-          : READ_ONLY_AGENT_SYSTEM_PROMPT,
+          : READ_ONLY_AGENT_SYSTEM_PROMPT
+      }\n\n${clockInstructions(clock)}`,
       tools: createAgentTools(toolContext, accessMode),
       stopWhen: stepCountIs(10),
       maxRetries: 3,
