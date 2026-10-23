@@ -1,3 +1,4 @@
+import { CardLoadFailure } from "@/components/card-load-failure";
 import { useLedgerAccess } from "@/common/hooks/use-ledger-access";
 import { useCallback, useMemo, useState } from "react";
 import {
@@ -123,6 +124,8 @@ function BudgetScreenImpl(): JSX.Element {
           include: [GetLedgerIntervalTotalsDocument],
         }),
       ]);
+    } catch {
+      // The list shows its own failure with a Retry (w21/862).
     } finally {
       setRefreshing(false);
     }
@@ -245,6 +248,7 @@ function BudgetScreenImpl(): JSX.Element {
               error ? (
                 <View style={styles.stateContainer}>
                   <Text style={styles.stateText}>{t("budgetLoadFailed")}</Text>
+                  <CardLoadFailure onRetry={() => void onRefresh()} />
                 </View>
               ) : (
                 <View style={styles.stateContainer}>
