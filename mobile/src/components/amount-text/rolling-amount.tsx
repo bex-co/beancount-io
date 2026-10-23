@@ -223,7 +223,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexShrink: 0,
   },
+  // One digit's line, never the row's: a run in a fallback font is taller (an
+  // Arabic-script symbol's line box is 34.8 pt to the digits' 33.0 at 28 pt),
+  // and stretched to it the window stepped its column 1.8 pt too far per
+  // digit, so a 5 sat 9 pt high over the top of a 6 (w21/703).
   cell: {
+    alignSelf: "flex-start",
     overflow: "hidden",
   },
   sizer: {

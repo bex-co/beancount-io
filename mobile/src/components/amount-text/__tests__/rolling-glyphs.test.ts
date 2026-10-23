@@ -57,3 +57,32 @@ describe("fitFontScale", () => {
     expect(fitFontScale(300, 0, 0.35)).toBe(1);
   });
 });
+
+// w21/703: Home's KWD hero drew "1,234.5" above "00" with part of a digit under
+// the 5. The Arabic symbol's run is taller than a digit's line, and the digit
+// windows were stretched to it, so each column stepped by the wrong height.
+describe("a figure with an Arabic-script symbol", () => {
+  const rli = (symbol: string) => `⁧${symbol}⁩`;
+
+  it("keeps the sign and symbol one static run before the digits", () => {
+    expect(rollingGlyphs(`-${rli("د.ك")}1,234.500`).slice(0, 3)).toEqual([
+      { key: "s9", text: `-${rli("د.ك")}` },
+      { key: "d8", digit: 1 },
+      { key: "s7", text: "," },
+    ]);
+  });
+
+  it("sizes each digit window to a digit's line, not to the taller run", () => {
+    const source = require("fs")
+      .readFileSync(
+        require("path").join(__dirname, "..", "rolling-amount.tsx"),
+        "utf8",
+      )
+      .replace(/\s+/g, "");
+    // The window the column steps by is the cell's measured height.
+    expect(
+      source.includes("<Viewstyle={styles.cell}onLayout={onLayout}>"),
+    ).toBe(true);
+    expect(source.includes('cell:{alignSelf:"flex-start",')).toBe(true);
+  });
+});
