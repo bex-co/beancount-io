@@ -38,7 +38,7 @@
 
 - [1011 — Compare explicit lot and price facts for calculated copies](./1011.md) — minor CLI provenance gap; on-disk listing retains changed labels, dates, costs and prices despite unchanged source, reproduced twice 2026-10-23.
 
-- [1009 — Compose the old empty-label and compound-cost import ID](./1009.md) — reopened minor CLI lookup branch; unchanged historical acquisitions require review despite matching native lots, reproduced twice 2026-10-23.
+- [1009 — Compose the old empty-label and compound-cost import ID](./1009.md) — reopened minor CLI lookup branch; unchanged historical acquisitions, including paired payees and repeated rows, require review despite matching native lots, reproduced twice 2026-10-23.
 
 - [1004 — Compare the known currency facts beside an inferred amount](./1004.md) — reopened remaining minor CLI classifier acceptance; extra-key fix verified, inferred EUR still hides a stated USD contradiction, 2026-10-23.
 
