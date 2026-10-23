@@ -1,7 +1,53 @@
-import type { BeancountError, DirectiveJson } from "@rustledger/wasm";
+import type { BeancountError, DirectiveJson, FileMap } from "@rustledger/wasm";
+import { indexBlocks } from "./block-index";
+import { includeTraversalOrder } from "./source-slice";
 
 const AVERAGE = "AVERAGE";
 const OPTION = /^option\s+"booking_method"\s+"([A-Z_]+)"/mu;
+const MESSAGE = "AVERAGE method is not supported";
+/** A posting line's account, number and commodity. */
+const POSTING = /^\s+(\S+)\s+(-?\d[\d,]*(?:\.\d+)?)\s+(\S+)/u;
+
+type Units = { number: string; currency: string };
+
+/**
+ * Where each refused sale is written: the first unclaimed dated block, in
+ * include order, holding a posting of those units to that account. Located by
+ * its date and narration afterwards, a sale went without a file or line when
+ * another entry that day shared its narration, or when it had no strings, so
+ * its notification could not be opened (w21/721).
+ */
+function saleLocator(files: FileMap, entryPoint: string) {
+  const index = indexBlocks(files);
+  const order = includeTraversalOrder(files, entryPoint);
+  const claimed = new Set<string>();
+  const holds = (line: string, account: string, units: Units) => {
+    const posting = POSTING.exec(line);
+    return (
+      posting !== null &&
+      posting[1] === account &&
+      posting[3] === units.currency &&
+      Number(posting[2]!.replace(/,/gu, "")) === Number(units.number)
+    );
+  };
+  return (
+    date: string,
+    account: string,
+    units: Units,
+  ): { file: string; line: number } | null => {
+    for (const file of order) {
+      for (const block of index.blocks(file)) {
+        const key = `${file}\u0000${block.startLine}`;
+        if (!block.text.startsWith(date) || claimed.has(key)) continue;
+        const lines = block.text.split("\n").slice(1);
+        if (!lines.some((line) => holds(line, account, units))) continue;
+        claimed.add(key);
+        return { file, line: block.startLine + 1 };
+      }
+    }
+    return null;
+  };
+}
 
 /**
  * Beancount 3 has no AVERAGE booking: a sale from a position booked that way
@@ -12,18 +58,21 @@ const OPTION = /^option\s+"booking_method"\s+"([A-Z_]+)"/mu;
  * reports the error Beancount does, on each transaction that reduces such a
  * position.
  *
- * The errors take the engine's own booking-error form (`BOOK`, no file, the
- * entry's date and narration at the end), which `locateBookErrors` puts on the
- * transaction's line.
+ * Each error is placed on the sale's own first line, with Beancount's words. A
+ * sale whose posting cannot be read off the source (units written as an
+ * expression) takes the engine's own booking-error form instead (`BOOK`, no
+ * file, the entry's date and narration at the end), which `locateBookErrors`
+ * puts on the transaction's line where it can.
  *
- * `directives` is the booked stream in date order; `entryPointSource` holds
+ * `directives` is the booked stream in date order; `files[entryPoint]` holds
  * the ledger's options, `booking_method` among them.
  */
 export function averageBookingErrors(
   directives: readonly DirectiveJson[],
-  entryPointSource: string | undefined,
+  files: FileMap,
+  entryPoint: string,
 ): BeancountError[] {
-  const byDefault = OPTION.exec(entryPointSource ?? "")?.[1] === AVERAGE;
+  const byDefault = OPTION.exec(files[entryPoint] ?? "")?.[1] === AVERAGE;
   const average = new Set<string>();
   for (const directive of directives) {
     if (directive.type !== "open") continue;
@@ -35,10 +84,11 @@ export function averageBookingErrors(
 
   // Units held at cost, per account and commodity, as booked so far.
   const held = new Map<string, number>();
+  const locate = saleLocator(files, entryPoint);
   const errors: BeancountError[] = [];
   for (const directive of directives) {
     if (directive.type !== "transaction") continue;
-    let reduces = false;
+    let sale: { account: string; units: Units } | null = null;
     for (const posting of directive.postings) {
       if (!posting.cost || !average.has(posting.account) || !posting.units) {
         continue;
@@ -46,18 +96,23 @@ export function averageBookingErrors(
       const key = `${posting.account}\u0000${posting.units.currency}`;
       const units = Number(posting.units.number);
       const before = held.get(key) ?? 0;
-      if (before * units < 0) reduces = true;
+      if (before * units < 0) {
+        sale ??= { account: posting.account, units: posting.units };
+      }
       held.set(key, before + units);
     }
-    if (!reduces) continue;
+    if (sale === null) continue;
+    const at = locate(directive.date, sale.account, sale.units);
     errors.push({
-      message: `AVERAGE method is not supported (${directive.date}, ${JSON.stringify(directive.narration ?? "")})`,
+      message: at
+        ? MESSAGE
+        : `${MESSAGE} (${directive.date}, ${JSON.stringify(directive.narration ?? "")})`,
       code: "BOOK",
       phase: "validate",
       hint: null,
-      file: null,
-      line: null,
-      column: null,
+      file: at?.file ?? null,
+      line: at?.line ?? null,
+      column: at ? 1 : null,
       end_line: null,
       end_column: null,
       severity: "error",

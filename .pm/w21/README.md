@@ -17,7 +17,6 @@
 - [727](./727.md) — Spending's "See all" opens Reports 1M on the last active month while Spending says "This month $0.00" (owner call)
 - [723](./723.md) — An account opened with a future date vanishes from Accounts, and Open Account then says it is "already open"
 - [724](./724.md) — Merchant detail keeps the payee spellings it was opened with, so a recasing edit drops the entry from the detail
-- [721](./721.md) — The new AVERAGE error has no file or line when a same-day transaction shares the sale's narration (w21/708 gap)
 - [722](./722.md) — The AVERAGE check reads the first `booking_method` option, though the last value wins (w21/708 regression)
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window
 - [065](./blocked/065.md) — One early-year entry (e.g. 0050) makes the balance sheet 23,718 monthly points (3 MB) and the app stalls — **blocked:** needs an approach decision (per-pill fetch vs server downsample) and a simulator profile of the stall

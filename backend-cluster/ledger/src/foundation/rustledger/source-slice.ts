@@ -538,7 +538,10 @@ export function findEntrySliceBySourceSha(
  * edit/delete silently hits the WRONG file. Files unreachable via includes are
  * appended in sorted order (a deterministic fallback).
  */
-function includeTraversalOrder(files: FileMap, entryPoint: string): string[] {
+export function includeTraversalOrder(
+  files: FileMap,
+  entryPoint: string,
+): string[] {
   const order: string[] = [];
   const visited = new Set<string>();
   const globBudget = new GlobWorkBudget();

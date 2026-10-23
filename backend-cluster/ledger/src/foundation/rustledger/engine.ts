@@ -714,7 +714,7 @@ async function parseLedgerFilesUncached(
   errors = reconcileDocumentErrors(errors, options.repoPaths);
   errors = locateOptionErrors(reconcileOptionErrors(errors), files, entryPoint);
   // Beancount refuses a sale from an AVERAGE position; rustledger books it.
-  errors = [...errors, ...averageBookingErrors(directives, files[entryPoint])];
+  errors = [...errors, ...averageBookingErrors(directives, files, entryPoint)];
   errors = locateBookErrors(errors, files, entryPoint);
   errors = reportUrlIncludes(errors, files);
   errors = reportUndecodableSources(errors, files, entryPoint);

@@ -1431,6 +1431,28 @@ async function main(): Promise<void> {
       averageErrors[0].message.startsWith("AVERAGE method is not supported"),
     `a sale from an AVERAGE position is refused on its line (got ${averageErrors.map((e) => `${e.code}@${e.line} ${e.message}`)})`,
   );
+  // w21/721: located by date and narration, the error lost its file and line
+  // when another entry that day shared the narration, or the sale had none.
+  for (const [sale, line] of [
+    ['2024-06-01 * "Buy"', 10],
+    ["2024-06-01 *", 10],
+  ] as const) {
+    const located = (
+      await parseLedgerFiles(
+        {
+          "main.beancount": averageSource("AVERAGE")
+            .replace('2024-06-01 * "Sell"', sale)
+            .concat('\n2024-06-01 * "Buy"\n  Assets:Cash  0 USD'),
+        },
+        "main.beancount",
+        { today: "2099-01-01" },
+      )
+    ).errors.find((e) => e.message.startsWith("AVERAGE"));
+    assert(
+      located?.file === "main.beancount" && located.line === line,
+      `the AVERAGE error stays on its sale written ${JSON.stringify(sale)} (got ${located?.file}:${located?.line})`,
+    );
+  }
   assert(
     (
       await parseLedgerFiles(
