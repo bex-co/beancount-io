@@ -22,7 +22,6 @@
 - [687](./687.md) — Create Ledger presets open every account restricted to the operating currency, so Portfolio refuses its own first share purchase
 - [688](./688.md) — File editor: Enter after a one-line directive indents the next line, so the next directive is a syntax error (w21/338 regression)
 - [689](./689.md) — File editor: text typed while "Saving…" is up is dropped by a later web-view restart, Overwrite or Recreate
-- [686](./686.md) — A link opened before sign-in is taken twice, and the sign-in finisher restores the guest example or Home over it
 - [678](./678.md) — A sale whose lot doesn't match is still counted in every balance, so the books don't balance
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window
 - [065](./blocked/065.md) — One early-year entry (e.g. 0050) makes the balance sheet 23,718 monthly points (3 MB) and the app stalls — **blocked:** needs an approach decision (per-pill fetch vs server downsample) and a simulator profile of the stall

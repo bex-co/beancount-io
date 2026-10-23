@@ -9,6 +9,8 @@ const GLOBAL_KEY = "__beancountPendingAppLink";
 
 type PendingStore = {
   pending: PendingAppLink | null;
+  /** The link a sign-in in progress will open itself (w21/686). */
+  held: PendingAppLink | null;
 };
 
 /**
@@ -22,7 +24,7 @@ function store(): PendingStore {
     [GLOBAL_KEY]?: PendingStore;
   };
   if (!g[GLOBAL_KEY]) {
-    g[GLOBAL_KEY] = { pending: null };
+    g[GLOBAL_KEY] = { pending: null, held: null };
   }
   return g[GLOBAL_KEY];
 }
@@ -50,7 +52,42 @@ export function takePendingAppLink(): PendingAppLink | null {
 }
 
 export function clearPendingAppLink(): void {
-  store().pending = null;
+  const slot = store();
+  slot.pending = null;
+  slot.held = null;
+}
+
+/**
+ * Take the pending link out of the slot the session effect reads, for the
+ * sign-in finisher to open. Setting the session re-renders the link handler
+ * before the finisher's own requests return: both took the slot, the effect
+ * first, and the finisher then found it empty and restored the guest view or
+ * Home over the opened link (w21/686). One reader: the finisher.
+ */
+export function holdPendingAppLinkForSignIn(): void {
+  const slot = store();
+  if (slot.pending) {
+    slot.held = slot.pending;
+    slot.pending = null;
+  }
+}
+
+/** The link held for the sign-in finisher, consumed once. */
+export function takeHeldAppLink(): PendingAppLink | null {
+  const slot = store();
+  const held = slot.held;
+  slot.held = null;
+  return held;
+}
+
+/**
+ * Give an unused held link back to the pending slot once the sign-in has
+ * finished or failed, unless a newer link arrived meanwhile.
+ */
+export function releaseHeldAppLink(): void {
+  const slot = store();
+  if (slot.held && !slot.pending) slot.pending = slot.held;
+  slot.held = null;
 }
 
 /**

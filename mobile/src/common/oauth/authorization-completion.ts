@@ -1,3 +1,7 @@
+import {
+  holdPendingAppLinkForSignIn,
+  releaseHeldAppLink,
+} from "../app-links/pending-app-link";
 import { persistSession } from "../vars/session";
 import { clearAccountChoiceNeeded } from "./account-choice";
 import { createAuthorizationCompleter } from "./authorization-completer";
@@ -18,8 +22,22 @@ export const completeOAuthAuthorization = createAuthorizationCompleter({
   exchange: createOAuthSessionFromCode,
   // A completed sign-in is the account choice the sign-out asked for.
   persist: async (session, isCurrent) => {
-    await persistSession(session, isCurrent);
-    if (isCurrent()) await clearAccountChoiceNeeded().catch(() => undefined);
+    // Setting the session wakes the link handler's session effect; the link
+    // waiting for sign-in is the finisher's to open, not that effect's.
+    holdPendingAppLinkForSignIn();
+    try {
+      await persistSession(session, isCurrent);
+      if (isCurrent()) await clearAccountChoiceNeeded().catch(() => undefined);
+    } catch (error) {
+      releaseHeldAppLink();
+      throw error;
+    }
   },
-  afterPersist: (_session, pending) => finalizeOAuthSignIn(pending.state),
+  afterPersist: async (_session, pending) => {
+    try {
+      await finalizeOAuthSignIn(pending.state);
+    } finally {
+      releaseHeldAppLink();
+    }
+  },
 });

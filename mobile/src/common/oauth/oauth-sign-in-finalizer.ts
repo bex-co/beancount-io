@@ -6,7 +6,10 @@ import {
   ListLedgersDocument,
 } from "../../generated-graphql/graphql";
 import { initializeSignedInAccount } from "./signed-in-account";
-import { takePendingAppLink } from "../app-links/pending-app-link";
+import {
+  takeHeldAppLink,
+  takePendingAppLink,
+} from "../app-links/pending-app-link";
 import { openAppLinkTarget } from "../app-links/open-app-link";
 import { clearGuestVisit, updateGuestVisit } from "../guest/guest-state";
 import { restoreGuestView } from "../guest/restore-guest-view";
@@ -35,7 +38,7 @@ export async function finalizeOAuthSignIn(state: string): Promise<void> {
     },
     navigateToApp: async () => {
       if (!isCurrentSession()) return;
-      const pending = takePendingAppLink();
+      const pending = takeHeldAppLink() ?? takePendingAppLink();
       if (pending) {
         const account = sessionVar();
         if (account) {
