@@ -229,6 +229,9 @@ export function DatePicker({
             </Button>
           </PopoverTrigger>
           <PopoverContent
+            // The calendar is a dialog of its own; name it as its trigger is
+            // named, since the month grid's name does not label it (w4/1011).
+            aria-label={t("common.selectDate")}
             // Capped at the space Radix measured, so a short window scrolls
             // to every week instead of clipping them (w4/m40).
             className="w-auto max-h-(--radix-popover-content-available-height) overflow-y-auto overscroll-contain p-0"
