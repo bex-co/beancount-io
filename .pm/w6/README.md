@@ -53,10 +53,21 @@ are unchanged; no identical native policy/search repro is repeated.
 
 | Items | Verified state | Action that clears the blocker |
 | --- | --- | --- |
-| [016](blocked/016.md), [017](blocked/017.md), [018](blocked/018.md), [022](blocked/022.md), [023](blocked/023.md), [024](blocked/024.md), [025](blocked/025.md), [029](blocked/029.md), [034](blocked/034.md), [037](blocked/037.md) | Ten retained merged source candidates still lack a suitable published WASM artifact. | Rustledger maintainer publishes a compatible artifact; repository worker adopts it with the owning package manager and verifies each exact native/API case. |
-| [m2](blocked/m2/README.md), [026](blocked/026.md), [027](blocked/027.md), [028](blocked/028.md), [031](blocked/031.md), [032](blocked/032.md), [033](blocked/033.md), [035](blocked/035.md), [036](blocked/036.md), [038](blocked/038.md) | The exact contract/semantic requirements remain unmet; a version increase alone is insufficient. Static table metadata does not clear m2's expression/WASM schema requirement. | Rustledger maintainers implement and publish the required contracts; repository worker adopts and verifies. Any outward upstream request still needs explicit authorization. |
+| [016](blocked/016.md), [017](blocked/017.md), [018](blocked/018.md), [022](blocked/022.md), [023](blocked/023.md), [024](blocked/024.md), [025](blocked/025.md), [029](blocked/029.md), [034](blocked/034.md), [037](blocked/037.md), [035](blocked/035.md) | Eleven retained merged source candidates still lack a suitable published WASM artifact. | Rustledger maintainer publishes a compatible artifact; repository worker adopts it with the owning package manager and verifies each exact native/API case. |
+| [m2](blocked/m2/README.md), [026](blocked/026.md), [027](blocked/027.md), [028](blocked/028.md), [031](blocked/031.md), [032](blocked/032.md), [033](blocked/033.md), [036](blocked/036.md), [038](blocked/038.md) | The exact contract/semantic requirements remain unmet; a version increase alone is insufficient. Static table metadata does not clear m2's expression/WASM schema requirement. | Rustledger maintainers implement and publish the required contracts; repository worker adopts and verifies. Any outward upstream request still needs explicit authorization. |
 | [039](blocked/039.md) | Current init1.0.4 native control is DANGEROUS/18findings with no installed directory; host scanner unchanged. | Hermes maintainers provide a compatible policy/install path; worker rehearses no-force consent/validation/existing-file preservation. |
 | [040](blocked/040.md) | The m6 closeout's fresh default search now finds all13suite names among16results. The previously observed explicit-source failure remains independently tracked and is not retested by this closeout. | Hermes host/index correction or genuinely changed relevant input; worker verifies bounded source-filter controls and an actually returned listing install without force. |
+
+
+**Source/publication follow-through — 2026-10-23T21:01:46Z:** [035](blocked/035.md)
+now has merged Rustledger source candidate [330e70e / #2708](https://github.com/rustledger/rustledger/commit/330e70e6213e87e87ab400bda2d70e5f5dd1c783)
+for FILTER_CURRENCY(Position, currency). The canonical npm metadata still has
+0.24.0 / 58 versions and identical artifact integrity. The current split is
+therefore eleven source candidates waiting for publication and nine remaining
+contract/semantic gates; all twenty still require their exact published/native
+acceptance. The source candidate does not authorize an unreleased fork or a
+repeated unchanged hosted repro. Earlier timestamped source counts below remain
+historical snapshots.
 
 Release evidence: [canonical npm metadata](https://registry.npmjs.org/@rustledger%2fwasm),
 [GitHub latest releasev0.24.0](https://github.com/rustledger/rustledger/releases/tag/v0.24.0),
