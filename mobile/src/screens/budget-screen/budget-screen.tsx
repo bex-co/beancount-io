@@ -38,7 +38,7 @@ import {
   type BudgetTimeSpan,
 } from "@/screens/budget-screen/selectors/budget-labels";
 import {
-  latestBudgetDate,
+  budgetInEffectDate,
   type BudgetGroup,
 } from "@/screens/budget-screen/selectors/budget-selectors";
 
@@ -141,7 +141,7 @@ function BudgetScreenImpl(): JSX.Element {
               // Shown as the Amount placeholder, never prefilled (w21/034).
               currentAmount: group.amount,
               // An Update cannot be dated before it (w21/623).
-              currentDate: latestBudgetDate(group.budgetHistory),
+              currentDate: budgetInEffectDate(group),
             }
           : {},
       });

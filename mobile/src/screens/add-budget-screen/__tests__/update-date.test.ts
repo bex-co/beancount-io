@@ -1,7 +1,8 @@
 import fs from "fs";
 import path from "path";
+import type { BudgetGroup } from "../../budget-screen/selectors/budget-selectors";
 import { updateBudgetDates } from "../update-date";
-import { latestBudgetDate } from "../../budget-screen/selectors/budget-selectors";
+import { budgetInEffectDate } from "../../budget-screen/selectors/budget-selectors";
 
 // w21/623: Update ▸ Date Oct 1 ▸ 300 on a budget whose current entry is dated
 // Oct 21 saved, and changed nothing: the newer entry stayed in force.
@@ -30,16 +31,24 @@ describe("updateBudgetDates", () => {
   });
 });
 
-describe("latestBudgetDate", () => {
-  it("is the newest directive's date, whatever the order", () => {
-    expect(
-      latestBudgetDate([
-        { date: "2026-10-21" },
-        { date: "2026-10-01" },
-        { date: "2026-09-30" },
-      ]),
-    ).toBe("2026-10-21");
-    expect(latestBudgetDate([])).toBe(undefined);
+describe("budgetInEffectDate", () => {
+  const history = [
+    { date: "2026-01-01", entry_hash: "a" },
+    { date: "2027-01-01", entry_hash: "b" },
+  ];
+  const group = (entry_hash: string) =>
+    ({ entry_hash, budgetHistory: history }) as unknown as BudgetGroup;
+
+  // w21/661: next year's budget was the floor, so today's couldn't be fixed.
+  it("is the entry in effect, not a later one already written down", () => {
+    expect(budgetInEffectDate(group("a"))).toBe("2026-01-01");
+  });
+
+  it("is the earliest future entry when none is in effect yet", () => {
+    const only = { entry_hash: "b", budgetHistory: [history[1]] };
+    expect(budgetInEffectDate(only as unknown as BudgetGroup)).toBe(
+      "2027-01-01",
+    );
   });
 });
 
@@ -52,7 +61,7 @@ describe("the Update flow's wiring", () => {
   it("passes the current date in and limits the picker with it", () => {
     expect(
       read("budget-screen", "budget-screen.tsx").includes(
-        "currentDate:latestBudgetDate(group.budgetHistory),",
+        "currentDate:budgetInEffectDate(group),",
       ),
     ).toBe(true);
     expect(

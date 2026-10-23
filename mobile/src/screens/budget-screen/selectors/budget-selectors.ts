@@ -702,13 +702,12 @@ export function selectHistoryRows(group: BudgetGroup): BudgetHistoryRow[] {
   }));
 }
 
-/** The latest date in a budget's history (ISO strings sort by date). */
-export function latestBudgetDate(
-  history: readonly { date: string }[],
-): string | undefined {
-  let latest: string | undefined;
-  for (const { date } of history) {
-    if (latest === undefined || date > latest) latest = date;
-  }
-  return latest;
+/**
+ * The date of the entry in effect, which an Update cannot be dated before
+ * (w21/623). A later entry already written down (next year's budget) is not
+ * the floor: it would leave today's budget uncorrectable (w21/661).
+ */
+export function budgetInEffectDate(group: BudgetGroup): string | undefined {
+  return group.budgetHistory.find((h) => h.entry_hash === group.entry_hash)
+    ?.date;
 }
