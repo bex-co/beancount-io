@@ -225,12 +225,15 @@ def _amounts_declared(entry: Any, spelled: Any) -> bool:
     Booking and interpolation fill in what the line leaves out and may split a
     reduction, so only a statement the line makes can disagree: postings are
     compared one for one when the counts match, and a number the line omits
-    agrees with anything.
+    agrees with anything. When the counts differ (booking split a reduction by
+    lot, or a plugin re-divided a posting) the totals each account states in
+    each currency are compared instead; an account with a posting that omits
+    its amount has nothing to compare (w5/991).
     """
     from beancount.core.number import MISSING
 
     if len(entry.postings) != len(spelled.postings):
-        return True
+        return _totals_declared(entry, spelled)
     for booked, stated in zip(entry.postings, spelled.postings, strict=True):
         if booked.account != stated.account:
             return False
@@ -242,6 +245,33 @@ def _amounts_declared(entry: Any, spelled: Any) -> bool:
         if units.currency is not MISSING and units.currency and units.currency != booked.units.currency:
             return False
     return True
+
+
+def _totals_declared(entry: Any, spelled: Any) -> bool:
+    """Whether every account's stated total per currency is what the entry holds."""
+    from beancount.core.number import MISSING
+
+    stated: dict[tuple[str, str], Any] = {}
+    open_accounts: set[str] = set()
+    for posting in spelled.postings:
+        units = posting.units
+        if (
+            units is None
+            or units is MISSING
+            or units.number is MISSING
+            or not units.currency
+            or units.currency is MISSING
+        ):
+            open_accounts.add(posting.account)
+            continue
+        key = (posting.account, units.currency)
+        stated[key] = stated.get(key, 0) + units.number
+    held: dict[tuple[str, str], Any] = {}
+    for posting in entry.postings:
+        if posting.units is not None and posting.units.number is not None:
+            key = (posting.account, posting.units.currency)
+            held[key] = held.get(key, 0) + posting.units.number
+    return all(held.get(key) == total for key, total in stated.items() if key[0] not in open_accounts)
 
 
 def entry_generated(
