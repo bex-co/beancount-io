@@ -66,6 +66,14 @@ Numeric `1.25 AS account` can conversely be labelled `str`. Consumers should
 not coerce an identifier to a number solely from this inferred label. Scalar
 text and decimal strings retain their values and precision.
 
+NULL cells are returned as an empty string, as the backend-v2 adapter returned
+Fava's before the migration (`toShellCell` in
+`src/features/ledger/service/ledger-shell-mappers.ts`). So a missing payee or
+price, `SELECT NULL` or `1/0` reads `""`, the same as an empty value. Use
+`IS NULL` in the query to tell them apart (`WHERE payee IS NULL`). Emitting
+`null` instead is a contract change on all three surfaces, still undecided
+(w23/075).
+
 REST, GraphQL and MCP share this query producer and its limitations. Reliable
 expression types independent of aliases, including empty or entirely null
 columns, require a supported engine schema. The service does not reconstruct

@@ -1057,9 +1057,12 @@ native expression schema. Numeric-looking or date-looking text and renamed
 projections can be labelled incorrectly; empty or entirely null columns fall
 back to column names. Scalar text and decimal strings preserve their values,
 including leading zeros and precision. Do not convert an identifier to a number
-solely because its inferred `dtype` says `Decimal`. REST JSON, GraphQL
-`queryShell` and `runBqlQueryStructured` share the same producer metadata and
-this [known type limitation](../../ledger/README.md#bql-column-types).
+solely because its inferred `dtype` says `Decimal`. A NULL cell, such as a
+missing payee or price, `SELECT NULL` or `1/0`, is returned as an empty string
+`""`, the same as an empty value. To tell them apart, test in the query: `WHERE
+payee IS NULL` counts the missing ones. REST JSON, GraphQL `queryShell` and
+`runBqlQueryStructured` share the same producer metadata and this
+[known type limitation](../../ledger/README.md#bql-column-types).
 
 ```json
 { "ok": true, "result": "tool-specific payload" }
