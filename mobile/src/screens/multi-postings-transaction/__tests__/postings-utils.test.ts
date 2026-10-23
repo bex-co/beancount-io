@@ -1087,3 +1087,54 @@ describe("splitAmountSign", () => {
     expect(splitAmountSign("")).toEqual({ negative: false, absolute: "" });
   });
 });
+
+// w21/728: clearing a negative amount stored "-", which read as an unparsable
+// amount under a field that looked empty and blocked Done.
+describe("an amount field emptied of its digits", () => {
+  const { signedAmountInput } = require("../postings-utils");
+
+  it("stores nothing, whatever its sign", () => {
+    expect(signedAmountInput("", true)).toBe("");
+    expect(signedAmountInput("  ", true)).toBe("");
+    expect(signedAmountInput("", false)).toBe("");
+    expect(signedAmountInput("30", true)).toBe("-30");
+    expect(signedAmountInput("30", false)).toBe("30");
+  });
+
+  it("reads as a zero amount, as a cleared positive one does", () => {
+    const postings = createInitialPostings("Assets:Bank", "Expenses:Food");
+    const cleared = updatePostingAmount(
+      postings,
+      0,
+      signedAmountInput("", true),
+    );
+    expect(validatePostings(cleared)).toBe("zeroAmount");
+    // What it stored before.
+    expect(validatePostings(updatePostingAmount(postings, 0, "-"))).toBe(
+      "invalidAmount",
+    );
+  });
+
+  it("is what the row stores, keeping the sign for the next digits", () => {
+    const screen = require("fs")
+      .readFileSync(
+        require("path").join(
+          __dirname,
+          "..",
+          "multi-postings-transaction-screen.tsx",
+        ),
+        "utf8",
+      )
+      .replace(/\s+/g, "");
+    expect(
+      screen.includes(
+        "onChangeAmount(signedAmountInput(input,shownNegative));",
+      ),
+    ).toBe(true);
+    expect(
+      screen.includes(
+        'constshownNegative=absValue===""?emptyNegative.current:isNegative;',
+      ),
+    ).toBe(true);
+  });
+});

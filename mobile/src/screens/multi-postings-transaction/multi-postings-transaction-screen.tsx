@@ -80,6 +80,7 @@ import {
   updatePostingAccount,
   updatePostingAmount,
   validatePostings,
+  signedAmountInput,
 } from "./postings-utils";
 import { isTransactionDraftDirty, TransactionDraft } from "./draft-dirty";
 import { inlineSaveError } from "./inline-save-error";
@@ -326,12 +327,19 @@ const PostingRow = ({
     t,
   });
 
+  // The sign chosen while the field is empty: clearing a negative amount
+  // stores nothing, and the next digits are negative again (w21/728).
+  const emptyNegative = useRef(false);
+  const shownNegative = absValue === "" ? emptyNegative.current : isNegative;
+
   const handleAbsValueChange = (input: string) => {
-    onChangeAmount(isNegative ? `-${input}` : input);
+    if (input.trim() === "") emptyNegative.current = shownNegative;
+    onChangeAmount(signedAmountInput(input, shownNegative));
   };
 
   const handleToggleSign = () => {
-    onChangeAmount(isNegative ? absValue : `-${absValue}`);
+    if (absValue === "") emptyNegative.current = !shownNegative;
+    onChangeAmount(signedAmountInput(absValue, !shownNegative));
   };
 
   const renderDeleteAction = () => (

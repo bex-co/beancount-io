@@ -62,6 +62,17 @@ export function splitAmountSign(input: string): {
   return { negative, absolute: negative ? typed.slice(1) : typed };
 }
 
+/**
+ * The text a row stores for its digits and sign. A field emptied of digits
+ * stores nothing: with a minus kept on, it stored "-", read as an unparsable
+ * amount ("Use digits and one decimal point") under a field that looked empty,
+ * and blocked Done (w21/728).
+ */
+export function signedAmountInput(absolute: string, negative: boolean): string {
+  if (absolute.trim() === "") return "";
+  return negative ? `-${absolute}` : absolute;
+}
+
 export function parseExactAmount(input: string, minorUnits = 2): string | null {
   let trimmed = toAsciiNumerals(input)
     // Direction marks a right-to-left locale's formatting puts around a sign,
