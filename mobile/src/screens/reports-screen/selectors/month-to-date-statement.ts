@@ -50,3 +50,16 @@ export function withMonthToDateStatement<S extends Statement>(
     ),
   };
 }
+
+/**
+ * Whether the current month is read to today. ALL counts everything the ledger
+ * holds, later months included, so it keeps the whole month too: reading
+ * October to today while charting a November entry dropped one pre-entered for
+ * October 30 and kept the other (w21/671).
+ */
+export function readsMonthToDate(
+  scheduledThisMonth: boolean,
+  range: string,
+): boolean {
+  return scheduledThisMonth && range !== "ALL";
+}

@@ -36,7 +36,10 @@ import { isShowingStaleDataFromQueries } from "@/common/apollo/stale-data";
 import { useIncomeStatement } from "./hooks/use-income-statement";
 import { useScheduledThisMonth } from "@/screens/home-screen/hooks/use-scheduled-this-month";
 import { monthToDateWindow } from "@/screens/home-screen/selectors/scheduled-this-month";
-import { withMonthToDateStatement } from "./selectors/month-to-date-statement";
+import {
+  readsMonthToDate,
+  withMonthToDateStatement,
+} from "./selectors/month-to-date-statement";
 import {
   emptyFlowLabel,
   notInTotalNote,
@@ -120,11 +123,11 @@ const ReportsScreenImpl = (): JSX.Element => {
     error: toTodayError,
     refetch: toTodayRefetch,
   } = useIncomeStatement(scheduled ? ledgerId : "", monthToDateWindow(today));
-  const toTodayPending =
-    scheduled && toTodayData === undefined && !toTodayError;
+  const toToday = readsMonthToDate(scheduled, timeRange);
+  const toTodayPending = toToday && toTodayData === undefined && !toTodayError;
   const stmt = withMonthToDateStatement(
     incomeData?.getLedgerIncomeStatement,
-    scheduled ? toTodayData?.getLedgerIncomeStatement : undefined,
+    toToday ? toTodayData?.getLedgerIncomeStatement : undefined,
     today,
   );
 

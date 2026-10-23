@@ -1,4 +1,7 @@
-import { withMonthToDateStatement } from "../month-to-date-statement";
+import {
+  readsMonthToDate,
+  withMonthToDateStatement,
+} from "../month-to-date-statement";
 import { selectRangedAccountTree } from "../select-ranged-account-tree";
 
 // w21/523: October's Expenses bar counted a 400.00 bill pre-entered for the
@@ -59,5 +62,23 @@ describe("withMonthToDateStatement", () => {
       today,
     );
     expect(merged?.expensesData.map((p) => p.date)).toEqual(["2026-09-30"]);
+  });
+});
+
+// w21/671: ALL read October to today but charted a pre-entered November entry,
+// so one pre-entered rent counted and the other did not.
+describe("readsMonthToDate", () => {
+  it("reads the month to today for the windowed ranges when entries are scheduled", () => {
+    for (const range of ["1M", "3M", "6M", "YTD", "1Y"]) {
+      expect(readsMonthToDate(true, range)).toBe(true);
+    }
+  });
+
+  it("keeps ALL on the whole month, as it keeps later months", () => {
+    expect(readsMonthToDate(true, "ALL")).toBe(false);
+  });
+
+  it("reads nothing extra when nothing is scheduled", () => {
+    expect(readsMonthToDate(false, "1M")).toBe(false);
   });
 });
