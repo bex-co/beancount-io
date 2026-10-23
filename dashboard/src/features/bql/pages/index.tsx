@@ -1,6 +1,12 @@
 import { PageHeader } from "@/common/components/page-header";
 import { RelatedLinks } from "@/common/components/related-links";
-import { useState, useEffect, useCallback, useRef } from "react";
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useLayoutEffect,
+  useRef,
+} from "react";
 import { QueryShellDocument } from "@/graphql/definitions";
 import {
   type QueryShellQuery,
@@ -218,7 +224,30 @@ export default function LedgerQueryPage() {
     void executeQueryAndCache(query);
   };
 
+  // Deleting a card unmounts the focused Delete button. Hand focus to the
+  // card that takes its place, else the one before it, else the editor
+  // (w4/988). Only a deletion arms this; running a query reorders history
+  // without moving focus (w4/253).
+  const editorRef = useRef<monacoType.editor.IStandaloneCodeEditor | null>(
+    null,
+  );
+  const historyListRef = useRef<HTMLDivElement>(null);
+  const focusAfterDelete = useRef<number | null>(null);
+  useLayoutEffect(() => {
+    const index = focusAfterDelete.current;
+    if (index === null) return;
+    focusAfterDelete.current = null;
+    const active = document.activeElement;
+    if (active && active !== document.body) return;
+    const summaries =
+      historyListRef.current?.querySelectorAll<HTMLElement>("summary") ?? [];
+    const card = summaries[Math.min(index, summaries.length - 1)];
+    if (card) card.focus();
+    else editorRef.current?.focus();
+  }, [history]);
+
   const handleDeleteQuery = (query: string) => {
+    focusAfterDelete.current = history.indexOf(query);
     removeQuery(query);
     // Also remove from results cache
     setResultsCache((prev) => {
@@ -245,6 +274,7 @@ export default function LedgerQueryPage() {
               value={queryText}
               onChange={(value) => setQueryText(value || "")}
               onMount={(editor, monaco: typeof monacoType) => {
+                editorRef.current = editor;
                 // Add keyboard shortcut for executing query
                 editor.addCommand(
                   monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
@@ -299,6 +329,7 @@ export default function LedgerQueryPage() {
                 ].filter(Boolean) as monacoType.IDisposable[];
 
                 editor.onDidDispose(() => {
+                  if (editorRef.current === editor) editorRef.current = null;
                   for (const disposable of monacoDisposablesRef.current) {
                     disposable.dispose();
                   }
@@ -355,7 +386,7 @@ export default function LedgerQueryPage() {
       {history.length > 0 && (
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">{t("bql.queryHistory")}</h3>
-          <div className="space-y-3">
+          <div ref={historyListRef} className="space-y-3">
             {history.map((query, index) => {
               const cached = resultsCache[query];
 
