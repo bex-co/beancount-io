@@ -595,7 +595,7 @@ def _editor_lock(path: Path) -> bool:
 
 
 def _walk(root: Path) -> list[Path]:
-    """Every `.bean` and `.beancount` entry under `root`, in path order.
+    """Every `.bean` and `.beancount` entry under `root`, in path order, whatever its suffix's case (w5/954).
 
     `Path.rglob` swallows the error from a directory it cannot list, which
     made `--check` exit 0 for a subtree it never opened (w5/274). The walk
@@ -612,7 +612,7 @@ def _walk(root: Path) -> list[Path]:
         found.extend(
             Path(directory, name)
             for name in names
-            if name.endswith(suffixes) and not _apple_double(Path(directory, name))
+            if name.casefold().endswith(suffixes) and not _apple_double(Path(directory, name))
         )
     return sorted(found)
 
