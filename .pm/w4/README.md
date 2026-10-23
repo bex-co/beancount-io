@@ -52,7 +52,6 @@
 
 - [986 — Default newly opened forms to the opening day](./986.md) — minor; Date-only browser fixtures with real reads,2026-10-22; Budget/Open Account first open keeps yesterday at both widths; same-day, explicit-date and close/reopen controls pass, no writes.
 
-- [984 — Keep cached Activity cards after a failed refresh](./984.md) — minor; real cached dashboard reads with injected offset0 failure,2026-10-22; ten cards become zero at both widths despite retained query data; initial-error/retry controls pass, no writes.
 
 
 
