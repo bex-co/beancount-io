@@ -351,3 +351,51 @@ describe("categoryRowLabel", () => {
     expect(categoryRowLabel("income", "", "Income")).toBe("Income");
   });
 });
+
+// w21/880: opening an account beside a folded chain gave the branch a new parent
+// row with no saved state, and the branch the user had open collapsed.
+describe("a branch opened below a row that was never toggled", () => {
+  const tree = (): AccountCategory[] => [
+    {
+      key: "assets",
+      account: "Assets",
+      value: 2500,
+      children: [
+        node("Assets:US", 2500, [
+          node("Assets:US:Bank", 2000, [
+            node("Assets:US:Bank:Checking", 1200),
+            node("Assets:US:Bank:Savings", 800),
+          ]),
+          node("Assets:US:Broker", 500),
+        ]),
+        node("Assets:Cash", 0),
+      ],
+    },
+  ];
+  const labels = (overrides: Record<string, boolean>) =>
+    flattenRows(tree(), overrides).map((row) => row.account);
+
+  it("keeps the opened branch visible under its new parent", () => {
+    expect(labels({ "Assets:US:Bank": true })).toEqual([
+      "Assets",
+      "Assets:US",
+      "Assets:US:Bank",
+      "Assets:US:Bank:Checking",
+      "Assets:US:Bank:Savings",
+      "Assets:US:Broker",
+      "Assets:Cash",
+    ]);
+  });
+
+  it("leaves a tree with nothing opened collapsed, as before", () => {
+    expect(labels({})).toEqual(["Assets", "Assets:US", "Assets:Cash"]);
+  });
+
+  it("lets the user collapse that parent anyway", () => {
+    expect(labels({ "Assets:US:Bank": true, "Assets:US": false })).toEqual([
+      "Assets",
+      "Assets:US",
+      "Assets:Cash",
+    ]);
+  });
+});

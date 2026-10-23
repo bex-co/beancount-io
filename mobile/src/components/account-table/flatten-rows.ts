@@ -110,6 +110,15 @@ export function flattenRows(
   const isExpanded = (key: string, fallback: boolean) =>
     overrides[key] ?? fallback;
 
+  // A row the user never toggled opens when a branch below it was opened: a
+  // write that reshapes the tree (a new account beside a folded chain, a posting
+  // to a parent) gives the branch a new parent row under a key with no saved
+  // state, which collapsed what was on screen (w21/880).
+  const hasOpenedBelow = (node: AccountNode): boolean =>
+    node.children.some(
+      (child) => overrides[child.account] === true || hasOpenedBelow(child),
+    );
+
   const pushNodes = (
     nodes: AccountNode[],
     depth: number,
@@ -118,7 +127,11 @@ export function flattenRows(
     for (const node of nodes) {
       const hasChildren = node.children.length > 0;
       const expanded =
-        hasChildren && isExpanded(node.account, depth < DEFAULT_EXPANDED_DEPTH);
+        hasChildren &&
+        isExpanded(
+          node.account,
+          depth < DEFAULT_EXPANDED_DEPTH || hasOpenedBelow(node),
+        );
       rows.push({
         // The own row shares its parent's account, not its key.
         key: node.own ? `${node.account}\0own` : node.account,
@@ -142,7 +155,14 @@ export function flattenRows(
     const hasChildren = category.children.length > 0;
     const expanded =
       hasChildren &&
-      isExpanded(category.key, DEFAULT_EXPANDED.includes(category.key));
+      isExpanded(
+        category.key,
+        DEFAULT_EXPANDED.includes(category.key) ||
+          category.children.some(
+            (child) =>
+              overrides[child.account] === true || hasOpenedBelow(child),
+          ),
+      );
     rows.push({
       // Keyed by category, not by account: this is what the expand/collapse
       // overrides map is keyed on, and no account row can collide with it (they
