@@ -1,5 +1,5 @@
 import { useLedgerAccess } from "@/common/hooks/use-ledger-access";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   FlatList,
   StyleSheet,
@@ -38,6 +38,7 @@ import {
   type BudgetTimeSpan,
 } from "@/screens/budget-screen/selectors/budget-labels";
 import {
+  budgetCurrenciesByAccount,
   budgetInEffectDate,
   type BudgetGroup,
 } from "@/screens/budget-screen/selectors/budget-selectors";
@@ -149,6 +150,12 @@ function BudgetScreenImpl(): JSX.Element {
     [router],
   );
 
+  // An account budgeted in two currencies: each card's spending in the other
+  // is that card's, not "Not in total" here (w21/806).
+  const budgetedByAccount = useMemo(
+    () => budgetCurrenciesByAccount(groups),
+    [groups],
+  );
   const renderItem = useCallback(
     ({ item }: { item: BudgetGroup }) => (
       <BudgetGroupCard
@@ -156,9 +163,10 @@ function BudgetScreenImpl(): JSX.Element {
         ledgerId={ledgerId}
         time={time}
         onUpdate={canWrite ? openAdd : undefined}
+        budgetedCurrencies={budgetedByAccount.get(item.account)}
       />
     ),
-    [canWrite, ledgerId, time, openAdd],
+    [canWrite, ledgerId, time, openAdd, budgetedByAccount],
   );
 
   const isFirstLoad = loading && groups.length === 0;

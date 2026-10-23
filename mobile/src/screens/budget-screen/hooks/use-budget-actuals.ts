@@ -8,6 +8,7 @@ import { notInTotalOf, type Holding } from "@/common/balance-display";
 import { signed } from "@/screens/budget-screen/selectors/signed-holding";
 import { getFormatDate } from "@/common/format-util";
 import {
+  budgetNotInTotal,
   budgetForInterval,
   allTimeThroughToday,
   budgetActualsState,
@@ -64,6 +65,7 @@ export function useBudgetActuals({
   time,
   direction,
   endsOn,
+  budgetedCurrencies,
 }: {
   ledgerId: string;
   group: BudgetGroup;
@@ -72,6 +74,8 @@ export function useBudgetActuals({
   direction: 1 | -1;
   /** The last day the budget applies: the close date of its account. */
   endsOn?: string;
+  /** Currencies the account budgets on cards of their own (w21/806). */
+  budgetedCurrencies?: readonly string[];
 }) {
   // Actuals stop at today, so the budget they are measured against does too.
   const today = getFormatDate(new Date());
@@ -150,7 +154,10 @@ export function useBudgetActuals({
         point(
           item.date,
           resolveCurrencyBalance(item.balance, currency),
-          notInTotalOf(item.balance, currency),
+          budgetNotInTotal(
+            notInTotalOf(item.balance, currency),
+            budgetedCurrencies,
+          ),
         ),
       );
     });
@@ -172,6 +179,7 @@ export function useBudgetActuals({
     group.interval,
     group.budgetHistory,
     endsOn,
+    budgetedCurrencies,
     time,
     today,
   ]);

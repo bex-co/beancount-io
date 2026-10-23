@@ -670,6 +670,34 @@ export function groupDirection(group: BudgetGroup): 1 | -1 {
   return budgetDirection(group.value);
 }
 
+/**
+ * The currencies each account has a budget in. Spending in one of them is
+ * that budget's actual: carried as another card's "Not in total", it withheld
+ * both cards' status, and each listed what the other already counts
+ * (w21/806).
+ */
+export function budgetCurrenciesByAccount(
+  groups: readonly Pick<BudgetGroup, "account" | "currency">[],
+): Map<string, string[]> {
+  const byAccount = new Map<string, string[]>();
+  for (const { account, currency } of groups) {
+    const list = byAccount.get(account) ?? [];
+    if (!list.includes(currency)) list.push(currency);
+    byAccount.set(account, list);
+  }
+  return byAccount;
+}
+
+/** Holdings a budget leaves out, less those its account budgets on its own. */
+export function budgetNotInTotal<T extends { currency: string }>(
+  holdings: readonly T[],
+  budgetedCurrencies: readonly string[] = [],
+): T[] {
+  return holdings.filter(
+    (holding) => !budgetedCurrencies.includes(holding.currency),
+  );
+}
+
 export type VarianceStatus = "above" | "below" | "on";
 
 /**

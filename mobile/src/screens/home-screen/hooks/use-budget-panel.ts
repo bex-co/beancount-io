@@ -13,6 +13,8 @@ import { mapInBatches } from "@/common/map-in-batches";
 import { ledgerRevisionVar } from "@/common/apollo/invalidate-ledger";
 import { budgetTotalsVariables } from "@/screens/budget-screen/hooks/use-budget-actuals";
 import {
+  budgetCurrenciesByAccount,
+  budgetNotInTotal,
   currentIntervalItem,
   currentPeriodRange,
   type BudgetGroup,
@@ -133,6 +135,7 @@ export function useBudgetPanel({
       .then(({ data }) => hasScheduledRows(data?.queryShell?.table))
       .catch(() => false);
 
+    const budgetedByAccount = budgetCurrenciesByAccount(groups);
     scheduledCheck
       .then((scheduled) =>
         mapInBatches(
@@ -188,7 +191,10 @@ export function useBudgetPanel({
                   ? resolveCurrencyBalance(last.balance, group.currency)
                   : null,
                 notInTotal: last
-                  ? notInTotalOf(last.balance, group.currency)
+                  ? budgetNotInTotal(
+                      notInTotalOf(last.balance, group.currency),
+                      budgetedByAccount.get(group.account),
+                    )
                   : [],
               },
               failed: items === null,

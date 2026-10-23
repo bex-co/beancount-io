@@ -156,7 +156,7 @@ describe("a budget on an account that closed", () => {
     expect(
       card.includes("constendsOn=budgetEndsOn(group.account,closeDates);"),
     ).toBe(true);
-    expect(card.includes("direction,endsOn,});")).toBe(true);
+    expect(card.includes("direction,endsOn,budgetedCurrencies,});")).toBe(true);
     const home = read("home-screen/components/budget-card.tsx");
     expect(
       home.includes(

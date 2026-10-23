@@ -298,3 +298,76 @@ describe("a budget in a currency without minor units", () => {
     ).toEqual([true]);
   });
 });
+
+// w21/806: Travel budgets 300 USD and 250 EUR. Each card carried the other's
+// spending as "Not in total", which withheld both statuses.
+describe("an account budgeted in two currencies", () => {
+  const {
+    budgetCurrenciesByAccount,
+    budgetNotInTotal,
+  } = require("../budget-selectors");
+  const { standingStatus } = require("../select-budget-card-stats");
+  const groups = [
+    { account: "Expenses:Travel", currency: "USD" },
+    { account: "Expenses:Travel", currency: "EUR" },
+    { account: "Expenses:Food", currency: "USD" },
+  ];
+  const eur = { currency: "EUR", number: 50, scale: 2 };
+  const usd = { currency: "USD", number: 100, scale: 2 };
+  const gbp = { currency: "GBP", number: 20, scale: 2 };
+
+  it("leaves each card's currency out of the other's Not in total", () => {
+    const byAccount = budgetCurrenciesByAccount(groups);
+    expect(byAccount.get("Expenses:Travel")).toEqual(["USD", "EUR"]);
+    expect(budgetNotInTotal([eur], byAccount.get("Expenses:Travel"))).toEqual(
+      [],
+    );
+    expect(budgetNotInTotal([usd], byAccount.get("Expenses:Travel"))).toEqual(
+      [],
+    );
+    // A currency no card budgets is still left out of the total.
+    expect(
+      budgetNotInTotal([eur, gbp], byAccount.get("Expenses:Travel")),
+    ).toEqual([gbp]);
+    expect(budgetNotInTotal([eur], byAccount.get("Expenses:Food"))).toEqual([
+      eur,
+    ]);
+  });
+
+  it("judges both cards", () => {
+    const byAccount = budgetCurrenciesByAccount(groups);
+    for (const other of [eur, usd]) {
+      expect(
+        standingStatus(
+          "below",
+          budgetNotInTotal([other], byAccount.get("Expenses:Travel")),
+        ),
+      ).toBe("below");
+    }
+  });
+
+  it("is what the cards and Home read", () => {
+    const read = (...parts: string[]) =>
+      require("fs")
+        .readFileSync(
+          require("path").join(__dirname, "..", "..", "..", ...parts),
+          "utf8",
+        )
+        .replace(/\s+/g, "");
+    expect(
+      read("budget-screen", "budget-screen.tsx").includes(
+        "budgetedCurrencies={budgetedByAccount.get(item.account)}",
+      ),
+    ).toBe(true);
+    expect(
+      read("budget-screen", "hooks", "use-budget-actuals.ts").includes(
+        "budgetNotInTotal(notInTotalOf(item.balance,currency),budgetedCurrencies,)",
+      ),
+    ).toBe(true);
+    expect(
+      read("home-screen", "hooks", "use-budget-panel.ts").includes(
+        "budgetNotInTotal(notInTotalOf(last.balance,group.currency),budgetedByAccount.get(group.account),)",
+      ),
+    ).toBe(true);
+  });
+});

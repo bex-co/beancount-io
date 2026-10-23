@@ -184,6 +184,8 @@ type BudgetGroupCardProps = {
   time?: string;
   /** Opens the form pre-filled to add a newer-dated entry for this budget. */
   onUpdate?: (group: BudgetGroup) => void;
+  /** Currencies its account budgets on cards of their own (w21/806). */
+  budgetedCurrencies?: readonly string[];
 };
 
 /**
@@ -195,6 +197,7 @@ export function BudgetGroupCard({
   ledgerId,
   time,
   onUpdate,
+  budgetedCurrencies,
 }: BudgetGroupCardProps): JSX.Element {
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
@@ -219,6 +222,7 @@ export function BudgetGroupCard({
     time,
     direction,
     endsOn,
+    budgetedCurrencies,
   });
 
   // While the current period's read is pending or failed there is nothing to
