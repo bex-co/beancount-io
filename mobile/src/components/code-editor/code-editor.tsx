@@ -41,6 +41,7 @@ import { detectIndentUnit, INSERT_INDENT, wrapSelection } from "./indent-unit";
 import { jumpScrollTop } from "./jump-scroll";
 import { editorFontSize } from "./editor-font";
 import { DRAFT_DEBOUNCE_MS } from "./editor-recovery";
+import { EDITOR_LINE_SEPARATOR, editorText } from "./editor-text";
 import {
   beancountIndent,
   copyBeancountState,
@@ -195,6 +196,8 @@ function buildExtensions(
   draftSink: DraftSink,
 ): Extension[] {
   return [
+    // A lone carriage return is a character, as Beancount reads it (w21/815).
+    EditorState.lineSeparator.of(EDITOR_LINE_SEPARATOR),
     accessCompartment.of([
       EditorState.readOnly.of(readOnly),
       EditorView.editable.of(!readOnly),
@@ -329,7 +332,9 @@ export default function CodeEditor({
   const draftSinkRef = useRef<DraftSink>({ send: undefined, timer: null });
   const documentEpochRef = useRef(documentSpec.epoch);
   const editRevisionRef = useRef(0);
-  const savedDocumentRef = useRef(Text.of(documentSpec.value.split("\n")));
+  const savedDocumentRef = useRef(
+    Text.of(editorText(documentSpec.value).split("\n")),
+  );
   const requestSaveRef = useRef<() => void>(() => undefined);
   const themeCompartmentRef = useRef(new Compartment());
   const accessCompartmentRef = useRef(new Compartment());
@@ -415,7 +420,7 @@ export default function CodeEditor({
     if (!containerRef.current) return;
 
     const state = EditorState.create({
-      doc: documentSpec.value,
+      doc: editorText(documentSpec.value),
       extensions: buildExtensions(
         editorTheme,
         onEditRef,
@@ -456,10 +461,10 @@ export default function CodeEditor({
     documentEpochRef.current = documentSpec.epoch;
     editRevisionRef.current = 0;
 
-    if (documentSpec.value !== view.state.doc.toString()) {
+    if (editorText(documentSpec.value) !== view.state.doc.toString()) {
       view.setState(
         EditorState.create({
-          doc: documentSpec.value,
+          doc: editorText(documentSpec.value),
           extensions: buildExtensions(
             appliedThemeRef.current,
             onEditRef,
@@ -484,7 +489,7 @@ export default function CodeEditor({
       documentSpec.savedValue === undefined ||
       documentSpec.savedValue === documentSpec.value
         ? view.state.doc
-        : Text.of(documentSpec.savedValue.split("\n"));
+        : Text.of(editorText(documentSpec.savedValue).split("\n"));
 
     const target = pendingJumpRef.current;
     if (target && view.state.doc.lines > 1) {

@@ -91,7 +91,10 @@ describe("the editor and screen wiring", () => {
     ).toBe(true);
     expect(editor.includes("draftSink.timer=setTimeout(()=>{")).toBe(true);
     expect(editor.includes("documentSpec.savedValue===undefined||")).toBe(true);
-    expect(editor.includes("Text.of(documentSpec.savedValue.split")).toBe(true);
+    // Split as the editor splits it (w21/815).
+    expect(
+      editor.includes("Text.of(editorText(documentSpec.savedValue).split"),
+    ).toBe(true);
   });
 
   it("the screen re-seeds the draft under a new epoch and resets the tracker", () => {
