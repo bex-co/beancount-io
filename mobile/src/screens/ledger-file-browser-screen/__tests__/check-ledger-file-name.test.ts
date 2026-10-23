@@ -315,3 +315,27 @@ describe("a new file into a folder spelled another way", () => {
     }
   });
 });
+
+// w21/826: a path inside .git passed the dialog, and Create closed it for
+// backend-v2's English refusal ("Paths inside .git can't be read or written").
+describe("a new file inside .git", () => {
+  it("is refused as a path, at any depth and in any case", () => {
+    for (const input of [
+      ".git/qa20261020",
+      ".git/notes",
+      ".GIT/x",
+      "sub/.git/notes",
+    ]) {
+      expect([input, checkLedgerFileName(input, [])]).toEqual([
+        input,
+        { ok: false, issue: "path" },
+      ]);
+    }
+  });
+
+  it("leaves names that only contain git alone", () => {
+    expect(checkLedgerFileName(".gitkeep", []).ok).toBe(true);
+    expect(checkLedgerFileName("git/notes", []).ok).toBe(true);
+    expect(checkLedgerFileName("my.git.bean", []).ok).toBe(true);
+  });
+});

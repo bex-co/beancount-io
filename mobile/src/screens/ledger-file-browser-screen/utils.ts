@@ -98,7 +98,14 @@ export function checkLedgerFileName(
     trimmed.includes("\\") ||
     /[\u0000-\u001f]/.test(trimmed) ||
     segments.some(
-      (segment) => segment === "" || segment === "." || segment === "..",
+      (segment) =>
+        segment === "" ||
+        segment === "." ||
+        segment === ".." ||
+        // backend-v2's `assertSafeRepoPath` refuses `.git` at any depth and
+        // in any case; passed here, Create closed the dialog for its English
+        // refusal (w21/826).
+        segment.toLowerCase() === ".git",
     )
   ) {
     return { ok: false, issue: "path" };

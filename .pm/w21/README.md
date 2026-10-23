@@ -12,7 +12,6 @@
 
 ## Inbox
 
-- [826](./826.md) — New File allows a path inside ".git/"; raw English refusal on Create
 - [827](./827.md) — A commit diff splits a line at a lone carriage return
 - [828](./828.md) — pt-BR shows European words: Last name "Apelido" (nickname), links "ligação" (phone call)
 - [829](./829.md) — ca and pt give Equity and Net Worth the same label
