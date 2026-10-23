@@ -2358,9 +2358,13 @@ def _sibling_imports(homes: list[Path], loaded: LoadedLedger, snapshot: LedgerSn
     for name, module in list(sys.modules.items()):
         top = name.split(".", 1)[0]
         for location in _module_locations(module):
-            relative = _relative_to_any(location, bases)
-            if relative is not None:
-                if relative.parts and relative.parts[0] in (f"{top}.py", top):
+            # Every search directory it sits under, not the first: with the
+            # root and `plugins/` both on the path, `plugins/qa_helper.py` is
+            # `qa_helper.py` under the second and was matched against the
+            # first alone, so the helper was dropped (w5/970).
+            relatives = _relatives(location, bases)
+            if relatives:
+                if any(relative.parts and relative.parts[0] in (f"{top}.py", top) for relative in relatives):
                     tops.add(top)
                 break
     return tops
@@ -2390,6 +2394,21 @@ def _module_locations(module: Any) -> list[str]:
         return [str(path) for path in getattr(module, "__path__", ())]
     except TypeError:
         return []
+
+
+def _relatives(location: str, bases: list[Path]) -> list[Path]:
+    """The location relative to each base it sits under."""
+    try:
+        absolute = Path(location).resolve()
+    except OSError:
+        return []
+    found: list[Path] = []
+    for base in bases:
+        try:
+            found.append(absolute.relative_to(base))
+        except ValueError:
+            continue
+    return found
 
 
 def _relative_to_any(location: str, bases: list[Path]) -> Path | None:

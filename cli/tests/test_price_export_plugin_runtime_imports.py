@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from tests.test_price_export_plugin_siblings import LEDGER, _bea
 
 LAZY_PLUGIN = """import time
@@ -167,3 +169,44 @@ def test_a_regular_package_found_first_keeps_later_directories_out(tmp_path: Pat
     shipped = {str(p.relative_to(tmp_path / "exp")) for p in (tmp_path / "exp").rglob("*") if p.is_file()}
     assert "a/qa_bankdata/__init__.py" in shipped
     assert "b/qa_bankdata/b.json" not in shipped
+
+
+# w5/970: the root and an included `plugins/` both on the module path.
+NESTED_LEDGER = """option "insert_pythonpath" "TRUE"
+option "operating_currency" "USD"
+include "plugins/settings.bean"
+plugin "qa_plugin"
+2024-01-01 open Assets:Cash USD
+"""
+
+
+@pytest.mark.parametrize("package", [False, True], ids=["module", "package"])
+@pytest.mark.parametrize("runtime", [False, True], ids=["module-scope", "runtime"])
+def test_a_helper_beneath_an_overlapping_python_path_travels(tmp_path: Path, package: bool, runtime: bool) -> None:
+    books = tmp_path / "books"
+    leaf = books / "plugins"
+    leaf.mkdir(parents=True)
+    (books / "main.bean").write_text(NESTED_LEDGER)
+    (leaf / "settings.bean").write_text('option "insert_pythonpath" "TRUE"\n')
+    if package:
+        (leaf / "qa_helper").mkdir()
+        (leaf / "qa_helper" / "__init__.py").write_text("VALUE = 100\n")
+        (leaf / "qa_helper" / "settings.json").write_text("{}\n")
+    else:
+        (leaf / "qa_helper.py").write_text("VALUE = 100\n")
+    body = "import qa_helper\n    assert qa_helper.VALUE == 100\n"
+    (leaf / "qa_plugin.py").write_text(
+        "__plugins__ = ['run']\n"
+        + ("" if runtime else "import qa_helper\n")
+        + "def run(entries, options):\n    "
+        + body
+        + "    return entries, []\n"
+    )
+
+    shipped = _export_and_check(tmp_path, books)
+
+    expected = {"main.bean", "plugins/settings.bean", "plugins/qa_plugin.py"}
+    expected |= (
+        {"plugins/qa_helper/__init__.py", "plugins/qa_helper/settings.json"} if package else {"plugins/qa_helper.py"}
+    )
+    assert shipped == expected
