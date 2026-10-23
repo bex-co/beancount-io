@@ -294,7 +294,10 @@ function AddBudgetScreenImpl(): JSX.Element {
       number: amount,
       currency,
       date,
-      incomeRoot: ledgerMeta?.options.name_income,
+      // Settings that failed to load leave the default root, not none: with
+      // none an income target went in as a positive number and the card
+      // switched to spending rules (w21/878).
+      incomeRoot: ledgerMeta?.options.name_income ?? DEFAULT_INCOME_ROOT,
     });
 
     // A save was already running: this press did nothing (w21/193).
@@ -518,6 +521,9 @@ function AddBudgetScreenImpl(): JSX.Element {
     </SafeAreaView>
   );
 }
+
+/** The income root a ledger has unless its settings say otherwise. */
+const DEFAULT_INCOME_ROOT = "Income";
 
 export function AddBudgetScreen(): JSX.Element {
   return (

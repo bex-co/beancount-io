@@ -39,3 +39,37 @@ describe("Add Budget waits for the ledger's options before saving", () => {
     expect(buildBudgetEntry(income).budget?.amount.number).toBe("5000");
   });
 });
+
+// w21/878: settings that failed to load left no income root, and an Update of an
+// income target was written positive.
+describe("a budget saved after the settings read failed", () => {
+  const fs = require("fs");
+  const path = require("path");
+  const {
+    buildBudgetEntry,
+  } = require("../../budget-screen/build-budget-entry");
+
+  it("falls back to the default income root", () => {
+    const form = fs
+      .readFileSync(path.join(__dirname, "..", "add-budget-screen.tsx"), "utf8")
+      .replace(/\s+/g, "");
+    expect(
+      form.includes(
+        "incomeRoot:ledgerMeta?.options.name_income??DEFAULT_INCOME_ROOT,",
+      ),
+    ).toBe(true);
+    expect(form.includes('constDEFAULT_INCOME_ROOT="Income";')).toBe(true);
+  });
+
+  it("writes an income target negative under that root", () => {
+    const entry = buildBudgetEntry({
+      account: "Income:Salary",
+      interval: "monthly",
+      number: "5000",
+      currency: "USD",
+      date: new Date(2026, 9, 23),
+      incomeRoot: "Income",
+    });
+    expect(entry.budget.amount.number).toBe("-5000");
+  });
+});
