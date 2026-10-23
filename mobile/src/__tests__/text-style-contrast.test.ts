@@ -286,7 +286,8 @@ const SECONDARY_TEXT: Array<[file: string, texts: string[]]> = [
     "screens/transactions-screen/transactions-screen.tsx",
     ["errorText", "loadingFooterText"],
   ],
-  ["screens/welcome/server-settings-screen.tsx", ["helper"]],
+  // w21/717: an older server's result reads as a warning, not an error.
+  ["screens/welcome/server-settings-screen.tsx", ["helper", "warning"]],
 ];
 
 describe("secondary text is no longer the placeholder grey", () => {

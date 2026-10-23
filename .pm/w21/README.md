@@ -16,7 +16,6 @@
 - [720](./720.md) — w21/705's fix now hides a later failing balance when a second pad on the same account and currency is unused
 - [721](./721.md) — The new AVERAGE error has no file or line when a same-day transaction shares the sale's narration (w21/708 gap)
 - [722](./722.md) — The AVERAGE check reads the first `booking_method` option, though the last value wins (w21/708 regression)
-- [717](./717.md) — Server settings shows the "older server" result in red, with an advisory saying the server isn't available
 - [718](./718.md) — Home's Latest Updates ledger rows ("Committed to …") are English in every language
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window
 - [065](./blocked/065.md) — One early-year entry (e.g. 0050) makes the balance sheet 23,718 monthly points (3 MB) and the app stalls — **blocked:** needs an approach decision (per-pill fetch vs server downsample) and a simulator profile of the stall

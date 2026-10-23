@@ -29,6 +29,7 @@ import { serverUrlOverrideVar } from "@/common/vars/server-url";
 import { Button } from "@/components/button";
 import { PressableScale } from "@/components/pressable-scale";
 import { createConnectionTestGate } from "./connection-test-gate";
+import { connectionTone } from "./connection-tone";
 import { useStackKeyboardOffset } from "@/common/hooks/use-stack-keyboard-offset";
 import { InlineError } from "@/components/inline-error";
 
@@ -84,6 +85,11 @@ const getStyles = (theme: ColorTheme) =>
     },
     success: {
       color: theme.success,
+      fontSize: 13,
+      lineHeight: 19,
+    },
+    warning: {
+      color: theme.warningText,
       fontSize: 13,
       lineHeight: 19,
     },
@@ -251,8 +257,7 @@ export function ServerSettingsScreen(): JSX.Element {
   }, [saving, testGate]);
 
   const canonical = canonicalAddress(connection);
-  const connectionIsSuccess = connection?.kind === "connected";
-  const connectionIsError = connection !== undefined && !connectionIsSuccess;
+  const tone = connection ? connectionTone(connection) : undefined;
 
   return (
     <SafeAreaView edges={["bottom"]} style={styles.screen}>
@@ -301,7 +306,7 @@ export function ServerSettingsScreen(): JSX.Element {
             )}
             {connection && (
               <InlineError
-                style={connectionIsSuccess ? styles.success : styles.error}
+                style={styles[tone ?? "error"]}
                 message={connectionMessage(connection, t)}
               />
             )}
@@ -319,7 +324,7 @@ export function ServerSettingsScreen(): JSX.Element {
                 </Text>
               </PressableScale>
             )}
-            {connectionIsError && (
+            {tone === "error" && (
               <Text style={styles.helper}>{t("serverConnectionAdvisory")}</Text>
             )}
           </View>
