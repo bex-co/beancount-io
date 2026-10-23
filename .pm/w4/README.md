@@ -10,7 +10,6 @@
 
 - [1020 — Keep configured account roots in Overview cash flows](./1020.md) — minor; valid declared roles and renamed roots yield No Data Available beside correct 100/25 USD movement; both widths, exact producer and default-root controls, no writes.
 
-- [1019 — Keep signed market values in Holdings gain percentages](./1019.md) — major; all four groupings/CSVs show +100% for a valid −300% loss under modeled reads; exact producer, independent arithmetic and zero/positive controls reproduced, no writes.
 
 
 
