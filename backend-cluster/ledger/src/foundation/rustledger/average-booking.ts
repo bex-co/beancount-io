@@ -5,8 +5,13 @@ import { includeTraversalOrder } from "./source-slice";
 const AVERAGE = "AVERAGE";
 const OPTION = /^option\s+"booking_method"\s+"([A-Z_]+)"/gmu;
 const MESSAGE = "AVERAGE method is not supported";
-/** A posting line's account, number and commodity. */
-const POSTING = /^\s+(\S+)\s+(-?\d[\d,]*(?:\.\d+)?)\s+(\S+)/u;
+/**
+ * A posting line's account, number and commodity, after its flag if it has
+ * one: `! Assets:…`, `!Assets:…` or `M Assets:…`. The flag was read as the
+ * account, so a flagged sale lost its file and line (w21/733).
+ */
+const POSTING =
+  /^\s+(?:[*!&#?%]\s*|[PSTCURM]\s+)?(\S+)\s+(-?\d[\d,]*(?:\.\d+)?)\s+(\S+)/u;
 
 type Units = { number: string; currency: string };
 

@@ -102,6 +102,30 @@ describe("averageBookingErrors", () => {
     ).toEqual([["main.bean", 2]]);
   });
 
+  // w21/733: the flag was read as the account.
+  it("finds a flagged sale, whichever way its flag is written", () => {
+    for (const posting of [
+      "  ! Assets:Broker  -10 VTI {} @ 120 USD",
+      "  !Assets:Broker  -10 VTI {} @ 120 USD",
+      "  M Assets:Broker  -10 VTI {} @ 120 USD",
+    ]) {
+      const flagged = [
+        '2024-01-01 open Assets:Broker VTI "AVERAGE"',
+        '2024-06-01 * "Vanguard" "Rebalance"',
+        posting,
+        "  Assets:Cash",
+        "",
+        '2024-06-01 * "Vanguard" "Rebalance"',
+        "  Assets:Cash  0 USD",
+      ].join("\n");
+      expect(
+        check([open("Assets:Broker", "AVERAGE"), ...buys, sell], flagged).map(
+          (e) => [e.file, e.line],
+        ),
+      ).toEqual([["main.bean", 2]]);
+    }
+  });
+
   it("tells two like sales on one day apart by order", () => {
     const twice = [
       '2024-06-01 * "Sell"',

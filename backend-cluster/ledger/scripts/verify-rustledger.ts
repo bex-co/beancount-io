@@ -1472,6 +1472,23 @@ async function main(): Promise<void> {
       `the AVERAGE error stays on its sale written ${JSON.stringify(sale)} (got ${located?.file}:${located?.line})`,
     );
   }
+  // w21/733: a posting flag was read as the sale's account.
+  const flagged = (
+    await parseLedgerFiles(
+      {
+        "main.beancount": averageSource("AVERAGE")
+          .replace('2024-06-01 * "Sell"', '2024-06-01 * "Vanguard" "Rebalance"')
+          .replace("  Assets:Broker  -10", "  ! Assets:Broker  -10")
+          .concat('\n2024-06-01 * "Vanguard" "Rebalance"\n  Assets:Cash  0 USD'),
+      },
+      "main.beancount",
+      { today: "2099-01-01" },
+    )
+  ).errors.find((e) => e.message.startsWith("AVERAGE"));
+  assert(
+    flagged?.file === "main.beancount" && flagged.line === 10,
+    `the AVERAGE error stays on a flagged sale (got ${flagged?.file}:${flagged?.line})`,
+  );
   assert(
     (
       await parseLedgerFiles(
