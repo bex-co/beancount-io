@@ -111,7 +111,83 @@ describe("composeMerchantStats", () => {
       firstDate: "2024-01-01",
       lastDate: "2024-02-01",
       totalsByCurrency: [{ currency: "USD", total: -10 }],
+      scheduledTotalsByCurrency: [],
     });
+  });
+});
+
+// w21/796: "4 transactions · $6,000.00" when three payments, $4,500.00, were
+// on or before today and the fourth was pre-entered for November.
+describe("a merchant with a pre-entered payment", () => {
+  it("reads only what is on or before today, and the rest after it", () => {
+    expect(buildMerchantMetaBql("Landlord", { through: "2026-10-23" })).toBe(
+      'SELECT count(*) as transaction_count, min(date) as first_date, max(date) as last_date FROM #entries WHERE payee = "Landlord" AND date <= 2026-10-23',
+    );
+    expect(
+      buildMerchantMetaBql("Landlord", { after: "2026-10-23" }).endsWith(
+        " AND date > 2026-10-23",
+      ),
+    ).toBe(true);
+    expect(
+      buildMerchantCurrencyTotalsBql("Landlord", undefined, {
+        through: "2026-10-23",
+      }).includes(" AND date <= 2026-10-23 GROUP BY currency"),
+    ).toBe(true);
+    // A day that is not a date filters nothing rather than breaking the read.
+    expect(buildMerchantMetaBql("Landlord", { through: "today" })).toBe(
+      buildMerchantMetaBql("Landlord"),
+    );
+  });
+
+  it("counts and totals what was paid, and keeps the scheduled apart", () => {
+    expect(
+      composeMerchantStats(
+        {
+          transactionCount: 3,
+          firstDate: "2026-08-01",
+          lastDate: "2026-10-01",
+        },
+        [{ currency: "USD", total: 4500 }],
+        {
+          meta: {
+            transactionCount: 1,
+            firstDate: "2026-11-01",
+            lastDate: "2026-11-01",
+          },
+          totals: [{ currency: "USD", total: 1500 }],
+        },
+      ),
+    ).toEqual({
+      transactionCount: 3,
+      firstDate: "2026-08-01",
+      lastDate: "2026-11-01",
+      totalsByCurrency: [{ currency: "USD", total: 4500 }],
+      scheduledTotalsByCurrency: [{ currency: "USD", total: 1500 }],
+    });
+  });
+
+  it("is what the header reads", () => {
+    const screen = require("fs")
+      .readFileSync(
+        require("path").join(
+          __dirname,
+          "..",
+          "screens",
+          "merchant-detail-screen",
+          "merchant-detail-screen.tsx",
+        ),
+        "utf8",
+      )
+      .replace(/\s+/g, "");
+    expect(
+      screen.includes("buildMerchantMetaBql(spellings,{through:today})"),
+    ).toBe(true);
+    expect(
+      screen.includes("buildMerchantMetaBql(spellings,{after:today})"),
+    ).toBe(true);
+    expect(
+      screen.includes('t("merchantScheduledTotal",{amount:isolateLtr(line)})'),
+    ).toBe(true);
   });
 });
 

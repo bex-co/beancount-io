@@ -279,16 +279,53 @@ function MerchantDetailBody({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const pagesFetchedRef = useRef(1);
 
-  const metaBql = useMemo(() => buildMerchantMetaBql(spellings), [spellings]);
+  // What was paid, to today; what is pre-entered after it apart (w21/796).
+  const metaBql = useMemo(
+    () => buildMerchantMetaBql(spellings, { through: today }),
+    [spellings, today],
+  );
+  const scheduledMetaBql = useMemo(
+    () => buildMerchantMetaBql(spellings, { after: today }),
+    [spellings, today],
+  );
   const { expenses, income } = useLedgerRootNames();
   const totalsBql = useMemo(
-    () => buildMerchantCurrencyTotalsBql(spellings, { expenses, income }),
-    [spellings, expenses, income],
+    () =>
+      buildMerchantCurrencyTotalsBql(
+        spellings,
+        { expenses, income },
+        { through: today },
+      ),
+    [spellings, expenses, income, today],
+  );
+  const scheduledTotalsBql = useMemo(
+    () =>
+      buildMerchantCurrencyTotalsBql(
+        spellings,
+        { expenses, income },
+        { after: today },
+      ),
+    [spellings, expenses, income, today],
   );
   const weightsBql = useMemo(
-    () => buildMerchantWeightTotalsBql(spellings, { expenses, income }),
-    [spellings, expenses, income],
+    () =>
+      buildMerchantWeightTotalsBql(
+        spellings,
+        { expenses, income },
+        { through: today },
+      ),
+    [spellings, expenses, income, today],
   );
+  const { data: scheduledMetaData, refetch: refetchScheduledMeta } =
+    useQueryShellQuery({
+      variables: { ledgerId: ledgerId!, query: scheduledMetaBql },
+      skip: !ledgerId,
+    });
+  const { data: scheduledTotalsData, refetch: refetchScheduledTotals } =
+    useQueryShellQuery({
+      variables: { ledgerId: ledgerId!, query: scheduledTotalsBql },
+      skip: !ledgerId,
+    });
   const { data: weightsData, refetch: refetchWeights } = useQueryShellQuery({
     variables: { ledgerId: ledgerId!, query: weightsBql },
     skip: !ledgerId,
@@ -348,8 +385,19 @@ function MerchantDetailBody({
       composeMerchantStats(
         mapMerchantMeta(metaData?.queryShell?.table ?? null),
         mapMerchantCurrencyTotals(totalsData?.queryShell?.table ?? null),
+        {
+          meta: mapMerchantMeta(scheduledMetaData?.queryShell?.table ?? null),
+          totals: mapMerchantCurrencyTotals(
+            scheduledTotalsData?.queryShell?.table ?? null,
+          ),
+        },
       ),
-    [metaData?.queryShell?.table, totalsData?.queryShell?.table],
+    [
+      metaData?.queryShell?.table,
+      totalsData?.queryShell?.table,
+      scheduledMetaData?.queryShell?.table,
+      scheduledTotalsData?.queryShell?.table,
+    ],
   );
 
   // Totals in currencies that share a symbol read by code, the ledger's own
@@ -357,6 +405,10 @@ function MerchantDetailBody({
   const { primaryCurrency } = useLedgerReadContext(ledgerId!);
   const totalLines = formatMerchantTotals(
     stats?.totalsByCurrency ?? [],
+    primaryCurrency,
+  );
+  const scheduledLines = formatMerchantTotals(
+    stats?.scheduledTotalsByCurrency ?? [],
     primaryCurrency,
   );
   // What the rows add up to, when legs were priced into another currency.
@@ -492,12 +544,21 @@ function MerchantDetailBody({
         refetchMeta(),
         refetchTotals(),
         refetchWeights(),
+        refetchScheduledMeta(),
+        refetchScheduledTotals(),
         refetchJournal(),
       ]);
     } finally {
       setIsRefreshing(false);
     }
-  }, [refetchMeta, refetchTotals, refetchWeights, refetchJournal]);
+  }, [
+    refetchMeta,
+    refetchTotals,
+    refetchWeights,
+    refetchScheduledMeta,
+    refetchScheduledTotals,
+    refetchJournal,
+  ]);
 
   const onRetry = useCallback(() => {
     void onRefresh();
@@ -571,6 +632,12 @@ function MerchantDetailBody({
           {...HERO_AMOUNT_FIT}
         >
           {totalLines[index]}
+        </AmountText>
+      ))}
+
+      {scheduledLines.map((line) => (
+        <AmountText key={`scheduled-${line}`} style={styles.dateRange}>
+          {t("merchantScheduledTotal", { amount: isolateLtr(line) })}
         </AmountText>
       ))}
 

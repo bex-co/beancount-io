@@ -845,6 +845,7 @@ export const uk: Translations = {
   reportsThroughLatestMonth:
     "Показано до {{month}} — останнього місяця із записами.",
   merchantTotalAtRates: "{{amount}} за записаними курсами",
+  merchantScheduledTotal: "{{amount}} заплановано",
   feedCommittedTo: "Зміна в {{ledger}}",
   feedCreatedLedger: "Створено книгу {{ledger}}",
   feedPushCommits: {

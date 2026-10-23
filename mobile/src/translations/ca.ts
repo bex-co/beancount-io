@@ -848,6 +848,7 @@ export const ca: Translations = {
   reportsThroughLatestMonth:
     "Es mostra fins a {{month}}, l'últim mes amb entrades.",
   merchantTotalAtRates: "{{amount}} als tipus de canvi registrats",
+  merchantScheduledTotal: "{{amount}} programat",
   feedCommittedTo: "Canvi a {{ledger}}",
   feedCreatedLedger: "Llibre creat: {{ledger}}",
   feedPushCommits: {

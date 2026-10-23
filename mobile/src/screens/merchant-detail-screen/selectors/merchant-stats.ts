@@ -21,11 +21,29 @@ export interface MerchantCurrencyTotal {
 }
 
 export interface MerchantStats {
+  /** Entries on or before today: paid, not pre-entered (w21/796). */
   transactionCount: number;
   firstDate: string;
+  /** The last entry, a scheduled one included, for the date range. */
   lastDate: string;
   /** One row per currency; empty when the payee has no Expenses/Income legs. */
   totalsByCurrency: MerchantCurrencyTotal[];
+  /** What entries dated after today add, per currency, shown on its own. */
+  scheduledTotalsByCurrency: MerchantCurrencyTotal[];
+}
+
+/**
+ * Which of a merchant's entries a statement reads: those on or before a day,
+ * or those after it. The header counted and totalled pre-entered payments as
+ * paid, "4 transactions · $6,000.00" when $4,500.00 had been (w21/796).
+ */
+export type MerchantSpan = { through: string } | { after: string };
+
+function spanFilter(span: MerchantSpan | undefined): string {
+  if (span === undefined) return "";
+  const day = "through" in span ? span.through : span.after;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return "";
+  return "through" in span ? ` AND date <= ${day}` : ` AND date > ${day}`;
 }
 
 /**
@@ -35,11 +53,12 @@ export interface MerchantStats {
  */
 export function buildMerchantMetaBql(
   payees: string | readonly string[],
+  span?: MerchantSpan,
 ): string {
   return (
     "SELECT count(*) as transaction_count, " +
     "min(date) as first_date, max(date) as last_date " +
-    `FROM #entries WHERE ${anyPayee(payees)}`
+    `FROM #entries WHERE ${anyPayee(payees)}${spanFilter(span)}`
   );
 }
 
@@ -62,11 +81,12 @@ function anyPayee(payees: string | readonly string[]): string {
 export function buildMerchantCurrencyTotalsBql(
   payees: string | readonly string[],
   roots?: { expenses?: string; income?: string },
+  span?: MerchantSpan,
 ): string {
   return (
     "SELECT currency, sum(number) as total " +
     `WHERE ${anyPayee(payees)} ` +
-    `AND ${moneyRootsBqlFilter(roots)} ` +
+    `AND ${moneyRootsBqlFilter(roots)}${spanFilter(span)} ` +
     "GROUP BY currency ORDER BY currency"
   );
 }
@@ -80,11 +100,12 @@ export function buildMerchantCurrencyTotalsBql(
 export function buildMerchantWeightTotalsBql(
   payees: string | readonly string[],
   roots?: { expenses?: string; income?: string },
+  span?: MerchantSpan,
 ): string {
   return (
     "SELECT currency(weight) as currency, sum(number(weight)) as total " +
     `WHERE ${anyPayee(payees)} ` +
-    `AND ${moneyRootsBqlFilter(roots)} ` +
+    `AND ${moneyRootsBqlFilter(roots)}${spanFilter(span)} ` +
     "GROUP BY currency(weight)"
   );
 }
@@ -168,15 +189,35 @@ export function mapMerchantCurrencyTotals(
   return out;
 }
 
+type MerchantMeta = Pick<
+  MerchantStats,
+  "transactionCount" | "firstDate" | "lastDate"
+>;
+
+/**
+ * The header's stats from the entries on or before today (`meta`, `totals`)
+ * and those after it (`scheduled`): the count and totals are what was paid,
+ * the date range runs to the last scheduled entry, and the scheduled totals
+ * are kept apart (w21/796).
+ */
 export function composeMerchantStats(
-  meta: Pick<
-    MerchantStats,
-    "transactionCount" | "firstDate" | "lastDate"
-  > | null,
+  meta: MerchantMeta | null,
   totalsByCurrency: MerchantCurrencyTotal[],
+  scheduled: {
+    meta: MerchantMeta | null;
+    totals: MerchantCurrencyTotal[];
+  } = { meta: null, totals: [] },
 ): MerchantStats | null {
   if (!meta) {
     return null;
   }
-  return { ...meta, totalsByCurrency };
+  return {
+    transactionCount: meta.transactionCount,
+    firstDate: meta.firstDate || scheduled.meta?.firstDate || "",
+    lastDate: scheduled.meta?.lastDate || meta.lastDate,
+    totalsByCurrency,
+    scheduledTotalsByCurrency: scheduled.totals.filter(
+      (row) => row.total !== 0,
+    ),
+  };
 }

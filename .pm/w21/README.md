@@ -12,7 +12,6 @@
 
 ## Inbox
 
-- [796](./796.md) — Merchant detail's total and count include pre-entered entries ("$6,000.00" when $4,500 paid)
 - [797](./797.md) — Merchants' Recurring row keeps the old currency after a payee switches ("¥120,000" for $2,000 rent)
 - [798](./798.md) — Merchants shows a steady $10.99 bill as "~$10.99" because another currency's charges vary
 - [799](./799.md) — A biweekly series with one late payment reads "Twice a month"

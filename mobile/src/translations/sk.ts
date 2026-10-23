@@ -852,6 +852,7 @@ export const sk: Translations = {
   reportsThroughLatestMonth:
     "Zobrazené do {{month}}, posledného mesiaca so záznamami.",
   merchantTotalAtRates: "{{amount}} pri zapísaných kurzoch",
+  merchantScheduledTotal: "{{amount}} naplánované",
   feedCommittedTo: "Commit do {{ledger}}",
   feedCreatedLedger: "Vytvorená kniha {{ledger}}",
   feedPushCommits: {

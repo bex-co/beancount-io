@@ -831,6 +831,7 @@ export const nl: Translations = {
   reportsThroughLatestMonth:
     "Weergegeven tot en met {{month}}, de laatste maand met boekingen.",
   merchantTotalAtRates: "{{amount}} tegen de geboekte koersen",
+  merchantScheduledTotal: "{{amount}} gepland",
   feedCommittedTo: "Commit in {{ledger}}",
   feedCreatedLedger: "Grootboek {{ledger}} aangemaakt",
   feedPushCommits: {

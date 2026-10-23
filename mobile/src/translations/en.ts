@@ -472,6 +472,7 @@ export const en = {
   reportsThroughLatestMonth:
     "Showing through {{month}}, the latest month with entries.",
   merchantTotalAtRates: "{{amount}} at the recorded rates",
+  merchantScheduledTotal: "{{amount}} scheduled",
   feedCommittedTo: "Committed to {{ledger}}",
   feedCreatedLedger: "Created repository {{ledger}}",
   feedPushCommits: {

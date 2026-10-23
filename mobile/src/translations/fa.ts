@@ -814,6 +814,7 @@ export const fa: Translations = {
   feedSourceRelease: "انتشار",
   reportsThroughLatestMonth: "نمایش تا {{month}}، آخرین ماهی که ثبت دارد.",
   merchantTotalAtRates: "{{amount}} با نرخ‌های ثبت‌شده",
+  merchantScheduledTotal: "{{amount}} زمان‌بندی‌شده",
   feedCommittedTo: "تغییر در {{ledger}}",
   feedCreatedLedger: "دفتر {{ledger}} ساخته شد",
   feedPushCommits: {

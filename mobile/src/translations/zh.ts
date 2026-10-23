@@ -751,6 +751,7 @@ export const zh: Translations = {
   feedSourceRelease: "发布",
   reportsThroughLatestMonth: "显示至 {{month}}，即有记录的最近一个月。",
   merchantTotalAtRates: "按记录的汇率：{{amount}}",
+  merchantScheduledTotal: "{{amount}} 已安排",
   feedCommittedTo: "提交到 {{ledger}}",
   feedCreatedLedger: "已创建账本 {{ledger}}",
   feedPushCommits: {

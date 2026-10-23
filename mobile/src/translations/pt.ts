@@ -843,6 +843,7 @@ export const pt: Translations = {
   reportsThroughLatestMonth:
     "Mostrando até {{month}}, o último mês com lançamentos.",
   merchantTotalAtRates: "{{amount}} às taxas registradas",
+  merchantScheduledTotal: "{{amount}} agendado",
   feedCommittedTo: "Alteração em {{ledger}}",
   feedCreatedLedger: "Livro {{ledger}} criado",
   feedPushCommits: {
