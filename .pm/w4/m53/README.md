@@ -1,6 +1,6 @@
 # w4 · m53 — Keep exact amounts in Overview charts
 
-**Worker:** worker1 **Goal:** commodity amounts in Overview chart tables and hover text reconcile with the ledger's decimals **Status:** todo
+**Worker:** worker1 **Goal:** commodity amounts in Overview chart tables and hover text reconcile with the ledger's decimals **Status:** in progress (all but t007 Closeout done)
 
 Minor financial-display residual of [1015](../done/1015.md), independently proven in distributions, Income vs Expenses and Cash Flow. Approximately4h45m across exact data, renderers and verification; this exceeds the inbox-note threshold. See [FINDINGS](./FINDINGS.md).
 
@@ -8,14 +8,14 @@ Minor financial-display residual of [1015](../done/1015.md), independently prove
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| [t001](./t001.md) | Carry exact distribution amounts through grouping | 40m | — |
-| [t002](./t002.md) | Format pie/bar tooltips and Breakdown from exact amounts | 45m | t001 |
-| [t008](./t008.md) | Preserve Income vs Expenses amounts and exact net | 40m | t001 |
-| [t009](./t009.md) | Preserve exact Cash Flow links and savings | 45m | t001 |
-| [t003](./t003.md) | Repeat producer-backed native chart controls | 30m | t002, t008, t009 |
-| [t004](./t004.md) | Adoption surface | 15m | t003 |
-| [t005](./t005.md) | Simplify | 20m | t004 |
-| [t006](./t006.md) | Test coverage | 40m | t004, t005 |
+| [t001](./done/t001.md) | Carry exact distribution amounts through grouping — **DONE** | 40m | — |
+| [t002](./done/t002.md) | Format pie/bar tooltips and Breakdown from exact amounts — **DONE** | 45m | t001 |
+| [t008](./done/t008.md) | Preserve Income vs Expenses amounts and exact net — **DONE** | 40m | t001 |
+| [t009](./done/t009.md) | Preserve exact Cash Flow links and savings — **DONE** | 45m | t001 |
+| [t003](./done/t003.md) | Repeat producer-backed native chart controls — **DONE** | 30m | t002, t008, t009 |
+| [t004](./done/t004.md) | Adoption surface — **DONE** | 15m | t003 |
+| [t005](./done/t005.md) | Simplify — **DONE** | 20m | t004 |
+| [t006](./done/t006.md) | Test coverage — **DONE** | 40m | t004, t005 |
 | [t007](./t007.md) | Closeout | 10m | t006 |
 
 ## Definition of done

@@ -8,6 +8,7 @@ import {
 } from "@/common/components/ui/table";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useFormatNumber } from "@/common/hooks/use-format-number";
+import { fractionDigitsOf } from "@/common/lib/format/format-number";
 import { ChartDataTable } from "../../../components/chart-data-table";
 
 /** Final plotted slices/bars, including grouped Other and bar sorting. */
@@ -17,7 +18,7 @@ export function DistributionDataTable({
   labelledBy,
   absoluteShare = false,
 }: {
-  data: Array<{ name: string; account?: string; value: number }>;
+  data: Array<{ name: string; account?: string; value: number; exact: string }>;
   unit?: string | null;
   labelledBy: string;
   absoluteShare?: boolean;
@@ -54,7 +55,11 @@ export function DistributionDataTable({
             </TableHead>
             <TableCell className="text-end font-mono text-sm tabular-nums">
               <Amount>
-                {formatNum(item.value, unit ?? undefined)}
+                {formatNum(
+                  item.exact,
+                  unit ?? undefined,
+                  fractionDigitsOf(item.exact),
+                )}
                 {unit ? ` ${unit}` : ""}
               </Amount>
             </TableCell>

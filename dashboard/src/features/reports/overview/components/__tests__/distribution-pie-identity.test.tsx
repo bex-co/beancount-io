@@ -2,7 +2,7 @@ import { render } from "@testing-library/react";
 import type { EChartsOption } from "echarts";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DistributionPie } from "../distribution-chart/distribution-pie";
-import type { DistributionItem } from "../distribution-chart/utils";
+import type { DistributionItem } from "../../lib/overview-utils";
 
 /**
  * Leaf account names repeat across parents — a crypto ledger can hold USD at
@@ -21,16 +21,28 @@ vi.mock("@/common/components/react-echarts", () => ({
 }));
 
 vi.mock("@/common/hooks/use-format-number", () => ({
-  useFormatNumber: () => (value: number) => value.toLocaleString("en-US"),
+  useFormatNumber: () => (value: number | string) =>
+    Number(value).toLocaleString("en-US"),
 }));
 
 vi.mock("@/common/hooks/use-theme", () => ({ useIsDarkTheme: () => false }));
 
+const item = (
+  name: string,
+  label: string,
+  value: number,
+): DistributionItem => ({
+  name,
+  label,
+  value,
+  exact: String(value),
+});
+
 const items: DistributionItem[] = [
-  { name: "Assets:Crypto:Coinbase:USD", label: "USD", value: 38313.69 },
-  { name: "Assets:Crypto:Binance:USD", label: "USD", value: 5675.89 },
-  { name: "Assets:Crypto:Coinbase:BTC", label: "BTC", value: 13863.779 },
-  { name: "Other", label: "Other", value: 2001.16 },
+  item("Assets:Crypto:Coinbase:USD", "USD", 38313.69),
+  item("Assets:Crypto:Binance:USD", "USD", 5675.89),
+  item("Assets:Crypto:Coinbase:BTC", "BTC", 13863.779),
+  item("Other", "Other", 2001.16),
 ];
 
 type PieDatum = { name: string; value: number; account?: string };
@@ -108,9 +120,7 @@ describe("DistributionPie account identity", () => {
     render(
       <DistributionPie
         title="Assets Distribution"
-        items={[
-          { name: "Assets:Bank:Checking", label: "Checking", value: 68033 },
-        ]}
+        items={[item("Assets:Bank:Checking", "Checking", 68033)]}
       />,
     );
     expect(tooltipFor(pieData()[0], 100)).toBe(

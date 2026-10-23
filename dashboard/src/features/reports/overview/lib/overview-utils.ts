@@ -9,6 +9,7 @@ import {
   balanceToAmounts,
   chooseDisplayUnit,
   collectUnits,
+  toExactAmount,
   toFiniteAmount,
 } from "./unit-amounts";
 
@@ -157,7 +158,7 @@ export function getBalanceAmounts(
     .map(([currency, value]): CurrencyAmount | null => {
       const numeric = toFiniteAmount(value);
       if (numeric === null) return null;
-      const exact = parseDecimalNumber(String(value));
+      const exact = toExactAmount(value);
       return {
         currency,
         value: inverted ? -numeric : numeric,
@@ -511,8 +512,17 @@ export function resolveMovementTimeFilter(
   return `${startDate} - ${endDate}`;
 }
 
+export type DistributionItem = {
+  name: string;
+  label: string;
+  /** The amount as a double, for geometry, ordering and shares. */
+  value: number;
+  /** The ledger's decimal, for text: a double drops its digits (w4/m53). */
+  exact: string;
+};
+
 export type DistributionData = {
-  items: Array<{ name: string; label: string; value: number }>;
+  items: DistributionItem[];
   /** The one unit every `value` is denominated in, or null when there is none. */
   unit: string | null;
   /** Every unit the underlying accounts hold, so scope can be disclosed. */
@@ -539,13 +549,13 @@ export function buildDistributionData(
   const unit = chooseDisplayUnit(allAmounts, preferredCurrency);
   if (!unit) return { items: [], unit: null, units };
 
-  const items = leaves
-    .map((leaf) => ({
-      name: leaf.name,
-      label: leaf.label,
-      value: leaf.amounts.get(unit) ?? 0,
-    }))
-    .filter((item) => Number.isFinite(item.value) && item.value !== 0);
+  const items = leaves.flatMap((leaf) => {
+    const exact = leaf.amounts.get(unit);
+    const value = Number(exact);
+    return exact !== undefined && Number.isFinite(value) && value !== 0
+      ? [{ name: leaf.name, label: leaf.label, value, exact }]
+      : [];
+  });
 
   return { items, unit, units };
 }

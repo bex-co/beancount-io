@@ -8,9 +8,10 @@ import {
 import { ReactECharts } from "@/common/components/react-echarts";
 import { defaultSplitLine } from "@/common/components/react-echarts/utils";
 import { useFormatNumber } from "@/common/hooks/use-format-number";
+import { fractionDigitsOf } from "@/common/lib/format/format-number";
 import { useId, useMemo } from "react";
 import { getChartColors, getLossColor } from "@/common/lib/chart/color";
-import type { DistributionItem } from "./utils";
+import type { DistributionItem } from "../../lib/overview-utils";
 import { DistributionDataTable } from "./distribution-data-table";
 
 export function DistributionBar({
@@ -42,10 +43,11 @@ export function DistributionBar({
     tooltip: {
       trigger: "item" as const,
       formatter: (params: unknown) => {
-        const p = params as { name?: string; value?: unknown };
+        const p = params as { name?: string; data: { exact: string } };
         const name = p.name ?? "";
-        const value = Number(p.value);
-        return `${name}: ${formatNum(value)}`;
+        // The bar's own decimal, not the plotted double (w4/m53).
+        const amount = p.data.exact;
+        return `${name}: ${formatNum(amount, undefined, fractionDigitsOf(amount))}`;
       },
     },
     grid: {
@@ -77,6 +79,7 @@ export function DistributionBar({
         data: sortedItems.map((d, i) => ({
           value: d.value,
           name: d.name,
+          exact: d.exact,
           itemStyle: {
             color: d.value < 0 ? negativeColor : palette[i % palette.length],
           },

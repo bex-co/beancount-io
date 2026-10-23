@@ -7,8 +7,9 @@ import {
 } from "@/common/components/ui/card";
 import { ReactECharts } from "@/common/components/react-echarts";
 import { useFormatNumber } from "@/common/hooks/use-format-number";
+import { fractionDigitsOf } from "@/common/lib/format/format-number";
 import { useIsDarkTheme } from "@/common/hooks/use-theme";
-import type { DistributionItem } from "./utils";
+import type { DistributionItem } from "../../lib/overview-utils";
 import { useId } from "react";
 import { DistributionDataTable } from "./distribution-data-table";
 
@@ -33,17 +34,17 @@ export function DistributionPie({
       formatter: (params: unknown) => {
         const p = params as {
           name?: string;
-          value?: unknown;
           percent?: number;
-          data?: { account?: string };
+          data: { account?: string; exact: string };
         };
         // Slice labels stay compact so narrow slices do not overflow; the
         // tooltip names the account, because leaf names repeat across parents
         // — two USD balances, three BTC, two ETH on one crypto ledger.
-        const name = p.data?.account ?? p.name ?? "";
-        const value = Number(p.value);
+        const name = p.data.account ?? p.name ?? "";
+        // The slice's own decimal, not the plotted double (w4/m53).
+        const amount = p.data.exact;
         const percent = p.percent ?? 0;
-        return `${name}: ${formatNum(value)} (${percent}%)`;
+        return `${name}: ${formatNum(amount, undefined, fractionDigitsOf(amount))} (${percent}%)`;
       },
     },
     legend: { bottom: 0, type: "scroll" as const, show: false },
@@ -64,6 +65,7 @@ export function DistributionPie({
           name: d.label,
           value: d.value,
           account: d.name,
+          exact: d.exact,
         })),
       },
     ],

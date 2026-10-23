@@ -48,10 +48,9 @@ describe("aggregation across a real tree", () => {
   it("keeps both parents' postings and does not add IRAUSD to USD", () => {
     const totals = aggregateHierarchyBalance(taxes);
     // 295.23 + 27,635.92 — the two direct balances the old base case dropped.
-    expect(totals.get("USD")).toBeCloseTo(27931.15, 2);
-    expect(totals.get("IRAUSD")).toBe(18000);
     // The reported figure was 295.23 + 27,635.92 subtracted and 18,000 added.
-    expect(totals.get("USD")).not.toBeCloseTo(42116.2, 2);
+    expect(totals.get("USD")).toBe("27931.15");
+    expect(totals.get("IRAUSD")).toBe("18000");
   });
 
   it("keeps an ancestor's own postings at every supported depth", () => {
@@ -86,16 +85,16 @@ const assets = node("Assets:US", null, [
 describe("role resolution below the grouping depth", () => {
   it("leaves nested Cash and Checking out of an investing ancestor", () => {
     // 6,377.23 + 386.22 are cash; only ITOT is investing.
-    expect(aggregateHierarchyBalance(assets).get("USD")).toBe(6154.51);
+    expect(aggregateHierarchyBalance(assets).get("USD")).toBe("6154.51");
   });
 
   it("still keeps a cash-named account that declares an activity role", () => {
     const meta: AccountMetaMap = new Map([
       ["Assets:US:ETrade:Cash", { "cash-flow-role": "investing" }],
     ]);
-    expect(
-      aggregateHierarchyBalance(assets, false, meta).get("USD"),
-    ).toBeCloseTo(6540.73, 2);
+    expect(aggregateHierarchyBalance(assets, false, meta).get("USD")).toBe(
+      "6540.73",
+    );
   });
 
   it("excludes an account a declaration marks as cash", () => {
@@ -106,7 +105,7 @@ describe("role resolution below the grouping depth", () => {
   });
 
   it("holds the vacation hours apart from the dollars", () => {
-    expect(aggregateHierarchyBalance(assets).get("VACHR")).toBe(25);
+    expect(aggregateHierarchyBalance(assets).get("VACHR")).toBe("25");
   });
 });
 

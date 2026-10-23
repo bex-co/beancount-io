@@ -21,12 +21,17 @@ vi.mock("@/common/hooks/use-format-number", () => ({
   useFormatNumber: () => (value: number) => String(value),
 }));
 
-function tooltipFor(source: string, target: string, value: number): string {
-  const tooltip = captured.option?.tooltip as {
-    formatter: (params: unknown) => string;
+/** The tooltip ECharts shows for an edge: it passes the link itself. */
+function tooltipFor(source: string, target: string): string {
+  const option = captured.option as {
+    tooltip: { formatter: (params: unknown) => string };
+    series: [{ links: Array<{ source: string; target: string }> }];
   };
-  return tooltip
-    .formatter({ dataType: "edge", data: { source, target, value } })
+  const link = option.series[0].links.find(
+    (candidate) => candidate.source === source && candidate.target === target,
+  );
+  return option.tooltip
+    .formatter({ dataType: "edge", data: link })
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -44,12 +49,8 @@ describe("cash flow sankey tooltips", () => {
         incomeHierarchyData={node("Income:Revenue", { MUSD: -7054 }) as never}
       />,
     );
-    expect(tooltipFor("Income:Revenue", "Cash Flow", 7054)).toContain(
-      "7054 MUSD",
-    );
-    expect(tooltipFor("Income:Revenue", "Cash Flow", 7054)).not.toMatch(
-      /7054 USD/,
-    );
+    expect(tooltipFor("Income:Revenue", "Cash Flow")).toContain("7054 MUSD");
+    expect(tooltipFor("Income:Revenue", "Cash Flow")).not.toMatch(/7054 USD/);
   });
 
   it("names EUR for a euro ledger", () => {
@@ -60,9 +61,7 @@ describe("cash flow sankey tooltips", () => {
         }
       />,
     );
-    expect(tooltipFor("Income:NetRevenue", "Cash Flow", 26328539000)).toContain(
-      "EUR",
-    );
+    expect(tooltipFor("Income:NetRevenue", "Cash Flow")).toContain("EUR");
   });
 
   it("still says USD for a dollar ledger", () => {
@@ -71,9 +70,7 @@ describe("cash flow sankey tooltips", () => {
         incomeHierarchyData={node("Income:Salary", { USD: -1000 }) as never}
       />,
     );
-    expect(tooltipFor("Income:Salary", "Cash Flow", 1000)).toContain(
-      "1000 USD",
-    );
+    expect(tooltipFor("Income:Salary", "Cash Flow")).toContain("1000 USD");
   });
 
   it("discloses the units the diagram leaves out", () => {
@@ -118,7 +115,7 @@ describe("cash flow sankey tooltips", () => {
         }
       />,
     );
-    expect(tooltipFor("Income:Salary", "Cash Flow", 1000)).toContain("USD");
+    expect(tooltipFor("Income:Salary", "Cash Flow")).toContain("USD");
     expect(
       getByText(/Balances in IRAUSD are not included/),
     ).toBeInTheDocument();

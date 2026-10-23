@@ -4,6 +4,7 @@ import { useIsDarkTheme } from "@/common/hooks/use-theme";
 import { useFormatNumber } from "@/common/hooks/use-format-number";
 import { useTranslations } from "@/common/hooks/use-translations";
 import {
+  type SankeyLink,
   hierarchyRoots,
   transformToSankeyData,
 } from "../lib/sankey-data-transformer";
@@ -12,6 +13,7 @@ import { ChartUnitScope } from "./chart-unit-scope";
 import type { AccountMetaMap } from "@/features/reports/cash-flow/lib/model";
 import type { SerializableTreeNode } from "@/graphql/definitions";
 import { CONFINED_TOOLTIP } from "@/common/lib/chart/tooltip";
+import { fractionDigitsOf } from "@/common/lib/format/format-number";
 import { ChartDataTable } from "../../components/chart-data-table";
 import { Amount } from "@/common/components/amount";
 import {
@@ -132,16 +134,16 @@ export default function CashFlowSankey({
       formatter: (params: unknown) => {
         const p = params as {
           dataType?: string;
-          data?: { source?: string; target?: string; value?: number };
+          data?: SankeyLink;
           name?: string;
-          value?: number;
         };
 
         if (p.dataType === "edge" && p.data) {
-          const { source, target, value } = p.data;
+          // The link's own decimal, not the plotted double (w4/m53).
+          const { source, target, exact } = p.data;
           return `
             <strong>${source} → ${target}</strong><br/>
-            ${formatNum(Number(value))}${sankeyData.unit ? ` ${sankeyData.unit}` : ""}
+            ${formatNum(exact, undefined, fractionDigitsOf(exact))}${sankeyData.unit ? ` ${sankeyData.unit}` : ""}
           `;
         }
 
@@ -211,7 +213,11 @@ export default function CashFlowSankey({
                 <TableCell>{link.target}</TableCell>
                 <TableCell className="text-end font-mono text-sm tabular-nums">
                   <Amount>
-                    {formatNum(link.value, sankeyData.unit ?? undefined)}
+                    {formatNum(
+                      link.exact,
+                      sankeyData.unit ?? undefined,
+                      fractionDigitsOf(link.exact),
+                    )}
                     {sankeyData.unit ? ` ${sankeyData.unit}` : ""}
                   </Amount>
                 </TableCell>

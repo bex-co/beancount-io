@@ -8,6 +8,10 @@ import type { CashFlowRoot as RootType } from "@/features/reports/cash-flow/conf
 import type { AccountMetaMap } from "@/features/reports/cash-flow/lib/model";
 import type { SerializableTreeNode } from "@/graphql/definitions";
 import {
+  negateDecimalNumber,
+  sumDecimalNumbers,
+} from "@/common/lib/beancount/decimal-number";
+import {
   type UnitAmounts,
   chooseDisplayUnit,
   collectUnits,
@@ -29,7 +33,10 @@ export type SankeyNode = {
 export type SankeyLink = {
   source: string;
   target: string;
+  /** The flow as a double, for the diagram's geometry. */
   value: number;
+  /** The ledger's decimal, for text: a double drops its digits (w4/m53). */
+  exact: string;
 };
 
 export type SankeyData = {
@@ -206,11 +213,13 @@ interface TransformOptions {
 function projectToUnit(
   group: Map<string, UnitAmounts>,
   unit: string,
-): Map<string, number> {
-  const projected = new Map<string, number>();
+): Map<string, string> {
+  const projected = new Map<string, string>();
   group.forEach((amounts, name) => {
     const amount = amounts.get(unit);
-    if (amount !== undefined && amount !== 0) projected.set(name, amount);
+    if (amount !== undefined && Number(amount) !== 0) {
+      projected.set(name, amount);
+    }
   });
   return projected;
 }
@@ -294,51 +303,40 @@ export function transformToSankeyData(options: TransformOptions): SankeyData {
   const liabilityNodes = projectToUnit(liabilityAmounts, unit);
 
   // Calculate totals — all within the one displayed unit, so no unlike units
-  // are ever added together.
-  const sum = (values: Map<string, number>) =>
-    Array.from(values.values()).reduce((total, value) => total + value, 0);
-  const totalIncome = sum(incomeNodes);
-  const totalExpenses = sum(expenseNodes);
-  const totalInvesting = sum(assetNodes);
-  const totalFinancing = sum(liabilityNodes);
-  const totalSavings =
-    totalIncome - totalExpenses - totalInvesting - totalFinancing;
+  // are ever added together, and as decimals, so Savings is exact.
+  const sum = (values: Map<string, string>) =>
+    sumDecimalNumbers([...values.values()]);
+  const outflows = [expenseNodes, assetNodes, liabilityNodes];
+  const totalSavings = sumDecimalNumbers([
+    sum(incomeNodes),
+    ...outflows.map((group) => negateDecimalNumber(sum(group))),
+  ]);
+  const addLink = (source: string, target: string, exact: string) =>
+    links.push({ source, target, value: Number(exact), exact });
 
   // Add Cash Flow center node
   nodes.push({ name: "Cash Flow" });
 
   // Add income nodes and links
-  incomeNodes.forEach((value, name) => {
-    if (value <= 0) return;
+  incomeNodes.forEach((exact, name) => {
+    if (Number(exact) <= 0) return;
     nodes.push({ name });
-    links.push({ source: name, target: "Cash Flow", value });
+    addLink(name, "Cash Flow", exact);
   });
 
-  // Add expense nodes and links
-  expenseNodes.forEach((value, name) => {
-    if (value <= 0) return;
-    nodes.push({ name });
-    links.push({ source: "Cash Flow", target: name, value });
-  });
-
-  // Add investing nodes and links
-  assetNodes.forEach((value, name) => {
-    if (value <= 0) return;
-    nodes.push({ name });
-    links.push({ source: "Cash Flow", target: name, value });
-  });
-
-  // Add financing nodes and links
-  liabilityNodes.forEach((value, name) => {
-    if (value <= 0) return;
-    nodes.push({ name });
-    links.push({ source: "Cash Flow", target: name, value });
-  });
+  // Add expense, investing and financing nodes and links
+  for (const group of outflows) {
+    group.forEach((exact, name) => {
+      if (Number(exact) <= 0) return;
+      nodes.push({ name });
+      addLink("Cash Flow", name, exact);
+    });
+  }
 
   // Add savings node if there's surplus
-  if (totalSavings > 0) {
+  if (Number(totalSavings) > 0) {
     nodes.push({ name: "Savings" });
-    links.push({ source: "Cash Flow", target: "Savings", value: totalSavings });
+    addLink("Cash Flow", "Savings", totalSavings);
   }
 
   return { nodes, links, unit, units };

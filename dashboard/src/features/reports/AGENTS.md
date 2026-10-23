@@ -140,7 +140,12 @@ each can only be truthful in **one** unit. A ledger balance is a map like
 was supplied, so adding them yields neither a dollar total nor a conversion.
 
 `overview/lib/unit-amounts.ts` is the one unit model. Amounts travel as
-`UnitAmounts` (`unit → amount`), `chooseDisplayUnit` picks the unit the most
+`UnitAmounts` (`unit → amount`, the ledger's decimal string, summed exactly
+with `sumDecimalNumbers`). Chart text — tooltips, Breakdown, Period data,
+Flows, and the computed Other, Net and Savings — formats that decimal with its
+source digits; only geometry, ordering and shares use `Number(amount)`, since a
+double reads 9007199254740993 as …992 and 4.00995 BTC as 4.01 (w4/m53).
+`chooseDisplayUnit` picks the unit the most
 accounts use (ties by magnitude, then alphabetically, so the choice is stable
 across renders), and the chart renders that unit alone and names the omitted
 ones through `page.overview.chartUnitScope`. Both `sankey-data-transformer.ts`

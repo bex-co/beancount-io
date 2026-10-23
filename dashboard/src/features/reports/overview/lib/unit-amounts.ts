@@ -1,17 +1,33 @@
+import {
+  negateDecimalNumber,
+  parseDecimalNumber,
+  sumDecimalNumbers,
+} from "@/common/lib/beancount/decimal-number";
+
 /**
  * Amounts keyed by their currency unit.
  *
- * `{ USD: 386.22, VACHR: 25 }` holds two numbers that are not commensurable:
- * no price was supplied, so adding them yields neither a dollar total nor a
- * conversion. Charts that sum their own parts — a Sankey into node totals and
- * Savings, a pie into the denominator behind its percentages — can therefore
- * be truthful in only one unit, so they choose one and disclose the rest.
+ * `{ USD: "386.22", VACHR: "25" }` holds two numbers that are not
+ * commensurable: no price was supplied, so adding them yields neither a dollar
+ * total nor a conversion. Charts that sum their own parts — a Sankey into node
+ * totals and Savings, a pie into the denominator behind its percentages — can
+ * therefore be truthful in only one unit, so they choose one and disclose the
+ * rest.
+ *
+ * Each amount is the ledger's decimal, summed exactly, so chart text can show
+ * it as recorded; geometry takes `Number(amount)`. A double would read
+ * 9007199254740993 as …992 and 4.00995 as 4.01 before any label saw it
+ * (w4/m53).
  */
-export type UnitAmounts = Map<string, number>;
+export type UnitAmounts = Map<string, string>;
 
-function addAmount(into: UnitAmounts, unit: string, amount: number): void {
-  if (!Number.isFinite(amount) || amount === 0) return;
-  into.set(unit, (into.get(unit) ?? 0) + amount);
+function addAmount(into: UnitAmounts, unit: string, amount: string): void {
+  if (Number(amount) === 0) return;
+  const existing = into.get(unit);
+  into.set(
+    unit,
+    existing === undefined ? amount : sumDecimalNumbers([existing, amount]),
+  );
 }
 
 /** Merge one unit map into another, unit by unit. */
@@ -29,6 +45,16 @@ export function toFiniteAmount(value: unknown): number | null {
   return Number.isFinite(numeric) ? numeric : null;
 }
 
+/**
+ * The same rule, keeping the API amount as the ledger's decimal: `null` for
+ * anything `toFiniteAmount` rejects or that is not a plain decimal.
+ */
+export function toExactAmount(value: unknown): string | null {
+  return toFiniteAmount(value) === null
+    ? null
+    : parseDecimalNumber(String(value));
+}
+
 /** Read every unit a balance carries, rather than USD-or-whatever-is-first. */
 export function readBalance(
   balance: Record<string, unknown> | null | undefined,
@@ -37,9 +63,9 @@ export function readBalance(
 ): void {
   if (!balance) return;
   for (const [unit, raw] of Object.entries(balance)) {
-    const num = toFiniteAmount(raw);
-    if (num === null) continue;
-    addAmount(into, unit, inverse ? -num : num);
+    const exact = toExactAmount(raw);
+    if (exact === null) continue;
+    addAmount(into, unit, inverse ? negateDecimalNumber(exact) : exact);
   }
 }
 
@@ -75,7 +101,10 @@ export function chooseDisplayUnit(
   for (const amounts of entries) {
     amounts.forEach((amount, unit) => {
       accounts.set(unit, (accounts.get(unit) ?? 0) + 1);
-      magnitude.set(unit, (magnitude.get(unit) ?? 0) + Math.abs(amount));
+      magnitude.set(
+        unit,
+        (magnitude.get(unit) ?? 0) + Math.abs(Number(amount)),
+      );
     });
   }
 

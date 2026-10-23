@@ -164,12 +164,15 @@ describe("overview income and expenses chart", () => {
     const tooltip = tooltipOf(captured.at(-1)) as BoundedTooltip & {
       trigger?: string;
       axisPointer?: { type?: string };
-      valueFormatter?: (value: number) => string;
     };
     expectBounded(tooltip);
     expect(tooltip.trigger).toBe("axis");
     expect(tooltip.axisPointer?.type).toBe("shadow");
-    expect(tooltip.valueFormatter?.(4792.4)).toBe("4,792.4");
+    // Each series formats its own bar's decimal (w4/m53).
+    const [income] = captured.at(-1)?.series as Array<{
+      tooltip: { valueFormatter: (value: number, index: number) => string };
+    }>;
+    expect(income!.tooltip.valueFormatter(4792.4, 0)).toBe("4,792.4");
   });
 });
 

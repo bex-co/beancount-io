@@ -135,7 +135,7 @@ describe("CashFlowSankey", () => {
       screen.getByTestId("echarts-mock").textContent ?? "{}",
     ) as { series: Array<{ links: Array<{ target: string; value: number }> }> };
     expect(option.series[0].links).toEqual([
-      { source: "Cash Flow", target: "Assets:US", value: 1500 },
+      { source: "Cash Flow", target: "Assets:US", value: 1500, exact: "1500" },
     ]);
   });
 

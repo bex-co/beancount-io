@@ -1,4 +1,5 @@
-export type DistributionItem = { name: string; label: string; value: number };
+import { sumDecimalNumbers } from "@/common/lib/beancount/decimal-number";
+import type { DistributionItem } from "../../lib/overview-utils";
 
 /**
  * Groups items whose share of the total is below 1% into a single "other" bucket.
@@ -15,19 +16,28 @@ export function groupDistributionData(
   if (total === 0) return rawData;
 
   const mainItems: DistributionItem[] = [];
-  let otherValue = 0;
+  const otherAmounts: string[] = [];
 
   for (const item of rawData) {
     const percentage = (Math.abs(item.value) / total) * 100;
     if (percentage >= 1) {
       mainItems.push(item);
     } else {
-      otherValue += item.value;
+      otherAmounts.push(item.exact);
     }
   }
 
+  // Summed as decimals: small balances that cancel leave no binary residue,
+  // and a lone -0.00001 is not rounded away.
+  const otherExact = sumDecimalNumbers(otherAmounts);
+  const otherValue = Number(otherExact);
   if (otherValue !== 0) {
-    mainItems.push({ name: otherLabel, label: otherLabel, value: otherValue });
+    mainItems.push({
+      name: otherLabel,
+      label: otherLabel,
+      value: otherValue,
+      exact: otherExact,
+    });
   }
 
   return mainItems;

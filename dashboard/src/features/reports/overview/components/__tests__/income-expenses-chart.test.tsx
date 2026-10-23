@@ -9,13 +9,17 @@ type ChartOption = {
   tooltip: {
     trigger: string;
     axisPointer: { type: string };
-    valueFormatter?: (value: number) => string;
     formatter?: unknown;
   };
   xAxis: { data: string[] };
   yAxis: { axisLabel: { formatter: (value: number) => string } };
   legend: { data: string[] };
-  series: Array<{ name: string; type: string; data: number[] }>;
+  series: Array<{
+    name: string;
+    type: string;
+    data: number[];
+    tooltip: { valueFormatter: (value: number, dataIndex: number) => string };
+  }>;
 };
 
 const ledger = vi.hoisted(() => ({ renderCommas: true }));
@@ -92,15 +96,21 @@ describe("IncomeExpensesChart tooltip numbers", () => {
       // Include a synthetic negative scalar to retain signs without altering
       // the report's income-sign transformation or sparse zero handling.
       const values = [15500, 4792.4, 5292.4, 0, -1234.5];
-      expect(
-        values.map((value) => option.tooltip.valueFormatter?.(value)),
-      ).toEqual(expected);
       expect(values.map(option.yAxis.axisLabel.formatter)).toEqual(expected);
-      // Negating the real chart's absent income creates -0. Keep that raw
-      // series value, while its tooltip retains the existing visible "0".
-      const sparseIncome = option.series[0].data[2];
-      expect(sparseIncome).toBe(-0);
-      expect(option.tooltip.valueFormatter?.(sparseIncome)).toBe("0");
+      // Each bar's tooltip formats its own interval's decimal (w4/m53),
+      // including the absent December income plotted at -0, which reads "0".
+      expect(option.series[0].data[2]).toBe(-0);
+      const [january, april, aprilExpenses, zero] = expected;
+      expect(
+        option.series.map((series) =>
+          series.data.map((value, index) =>
+            series.tooltip.valueFormatter(value, index),
+          ),
+        ),
+      ).toEqual([
+        [january, april, zero],
+        [zero, aprilExpenses, zero],
+      ]);
     },
   );
 

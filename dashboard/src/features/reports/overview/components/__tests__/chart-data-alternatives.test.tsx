@@ -299,7 +299,11 @@ describe("Overview chart data alternatives", () => {
         expenses={[{ date: "2026-01-31", balance: { VACHR: 0.000001 } }]}
       />,
     );
-    assertPeriods(await table("Income vs Expenses", "Period data"), "VACHR");
+    const element = await table("Income vs Expenses", "Period data");
+    // The commodity keeps its recorded digits rather than reading 0 (w4/m53).
+    expect(rows(element).map(texts)).toEqual([
+      ["2026-01-31", "0.000003 VACHR", "0.000001 VACHR", "0.000002 VACHR"],
+    ]);
     expect(screen.getByRole("table")).not.toHaveTextContent("USD");
   });
 

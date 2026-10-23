@@ -13,7 +13,7 @@ describe("sankey-data-transformer", () => {
         children: [],
       };
 
-      expect(aggregateHierarchyBalance(node, true).get("USD")).toBe(5000);
+      expect(aggregateHierarchyBalance(node, true).get("USD")).toBe("5000");
     });
 
     it("should sum balances from children", () => {
@@ -30,7 +30,7 @@ describe("sankey-data-transformer", () => {
         ],
       };
 
-      expect(aggregateHierarchyBalance(node, true).get("USD")).toBe(6500);
+      expect(aggregateHierarchyBalance(node, true).get("USD")).toBe("6500");
     });
 
     it("should handle nested hierarchies", () => {
@@ -62,7 +62,7 @@ describe("sankey-data-transformer", () => {
         ],
       };
 
-      expect(aggregateHierarchyBalance(node).get("USD")).toBe(1000);
+      expect(aggregateHierarchyBalance(node).get("USD")).toBe("1000");
     });
 
     it("keeps a parent's own postings alongside its children", () => {
@@ -82,7 +82,7 @@ describe("sankey-data-transformer", () => {
         ],
       };
 
-      expect(aggregateHierarchyBalance(node).get("USD")).toBe(27635.92);
+      expect(aggregateHierarchyBalance(node).get("USD")).toBe("27635.92");
     });
 
     it("keeps unlike units apart instead of adding them", () => {
@@ -105,8 +105,8 @@ describe("sankey-data-transformer", () => {
       };
 
       const totals = aggregateHierarchyBalance(node);
-      expect(totals.get("USD")).toBe(27635.92);
-      expect(totals.get("IRAUSD")).toBe(18000);
+      expect(totals.get("USD")).toBe("27635.92");
+      expect(totals.get("IRAUSD")).toBe("18000");
     });
 
     it("keeps every unit a single leaf holds", () => {
@@ -117,8 +117,8 @@ describe("sankey-data-transformer", () => {
       };
 
       const totals = aggregateHierarchyBalance(node);
-      expect(totals.get("USD")).toBe(386.22);
-      expect(totals.get("VACHR")).toBe(25);
+      expect(totals.get("USD")).toBe("386.22");
+      expect(totals.get("VACHR")).toBe("25");
     });
 
     it("leaves cash descendants out of an investing ancestor", () => {
@@ -158,7 +158,7 @@ describe("sankey-data-transformer", () => {
         ],
       };
 
-      expect(aggregateHierarchyBalance(node).get("USD")).toBe(1000);
+      expect(aggregateHierarchyBalance(node).get("USD")).toBe("1000");
     });
   });
 

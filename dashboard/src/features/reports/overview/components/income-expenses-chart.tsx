@@ -2,9 +2,15 @@ import { ReactECharts } from "@/common/components/react-echarts";
 import { defaultSplitLine } from "@/common/components/react-echarts/utils";
 import { useFormatNumber } from "@/common/hooks/use-format-number";
 import { useTranslations } from "@/common/hooks/use-translations";
+import {
+  negateDecimalNumber,
+  sumDecimalNumbers,
+} from "@/common/lib/beancount/decimal-number";
 import { CONFINED_TOOLTIP } from "@/common/lib/chart/tooltip";
+import { fractionDigitsOf } from "@/common/lib/format/format-number";
 import { type DataSeries } from "../lib/overview-utils";
 import {
+  type UnitAmounts,
   balanceToAmounts,
   chooseDisplayUnit,
   collectUnits,
@@ -42,10 +48,25 @@ export function IncomeExpensesChart({
   const allAmounts = [...incomeAmounts, ...expenseAmounts];
   const unit = chooseDisplayUnit(allAmounts, primaryCurrency);
   const units = collectUnits(allAmounts);
-  const inUnit = (amounts: Map<string, number>) =>
-    unit ? (amounts.get(unit) ?? 0) : 0;
-  const incomeValues = incomeAmounts.map(inUnit);
-  const expensesValues = expenseAmounts.map(inUnit);
+  const inUnit = (amounts: UnitAmounts) =>
+    (unit ? amounts.get(unit) : undefined) ?? "0";
+  // Text reads these decimals and geometry their doubles, which would turn
+  // 9007199254740993 into …992 and 4.00995 into 4.01 (w4/m53). Income is
+  // recorded negative and drawn positive.
+  const incomeExact = incomeAmounts.map((amounts) =>
+    negateDecimalNumber(inUnit(amounts)),
+  );
+  const expensesExact = expenseAmounts.map(inUnit);
+  const incomeValues = incomeAmounts.map((amounts) => -Number(inUnit(amounts)));
+  const expensesValues = expensesExact.map(Number);
+  const exactTooltip = (amounts: string[]) => ({
+    valueFormatter: (_value: unknown, dataIndex: number) =>
+      formatNum(
+        amounts[dataIndex],
+        undefined,
+        fractionDigitsOf(amounts[dataIndex]),
+      ),
+  });
 
   const isEmpty =
     !incomeValues.some((v) => v !== 0) && !expensesValues.some((v) => v !== 0);
@@ -55,10 +76,6 @@ export function IncomeExpensesChart({
       ...CONFINED_TOOLTIP,
       trigger: "axis" as const,
       axisPointer: { type: "shadow" as const },
-      valueFormatter: (value: unknown) =>
-        typeof value === "number"
-          ? formatNum(value === 0 ? 0 : value)
-          : String(value),
     },
     legend: {
       data: [t("common.income"), t("common.expenses")],
@@ -84,13 +101,15 @@ export function IncomeExpensesChart({
       {
         name: t("common.income"),
         type: "bar" as const,
-        data: incomeValues.map((v) => -v),
+        data: incomeValues,
+        tooltip: exactTooltip(incomeExact),
         emphasis: { focus: "series" as const },
       },
       {
         name: t("common.expenses"),
         type: "bar" as const,
         data: expensesValues,
+        tooltip: exactTooltip(expensesExact),
         emphasis: { focus: "series" as const },
       },
     ],
@@ -130,14 +149,12 @@ export function IncomeExpensesChart({
           </TableHeader>
           <TableBody>
             {option.xAxis.data.map((date, index) => {
-              const income = option.series[0].data[index];
-              const expenses = option.series[1].data[index];
-              // Net is a float difference; the formatter's unit precision
-              // keeps its binary error (1625.7399999999998) out of the text.
+              const income = incomeExact[index];
+              const expenses = expensesExact[index];
               const net =
                 income === undefined || expenses === undefined
                   ? undefined
-                  : income - expenses;
+                  : sumDecimalNumbers([income, negateDecimalNumber(expenses)]);
               return (
                 <TableRow key={date}>
                   <TableHead
@@ -155,7 +172,8 @@ export function IncomeExpensesChart({
                         "—"
                       ) : (
                         <Amount>
-                          {formatNum(value, unit)} {unit}
+                          {formatNum(value, unit, fractionDigitsOf(value))}{" "}
+                          {unit}
                         </Amount>
                       )}
                     </TableCell>
