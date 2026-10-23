@@ -814,8 +814,9 @@ function LedgerFileEditorSession({
 
   const recreateFile = useCallback(
     async (content: string, epoch: number, revision: number) => {
+      // No `saving(content)`: this retries a save that already marked its text
+      // the latest, and anything typed since is newer (w21/707).
       if (!startRestore()) return;
-      recoveryRef.current.saving(content);
       try {
         const result = await createLedgerFile({
           variables: {
@@ -892,7 +893,10 @@ function LedgerFileEditorSession({
       }
 
       saveInFlightRef.current = true;
-      recoveryRef.current.saving(content);
+      // An Overwrite resends the text of the save it retries, which marked it
+      // the latest when it began; marked again, it put back the text typed
+      // since (w21/707).
+      if (!viaRestore) recoveryRef.current.saving(content);
       // Read before sending: the refresh after the save replaces it.
       const before = errorsLoaded ? allErrors : null;
       try {

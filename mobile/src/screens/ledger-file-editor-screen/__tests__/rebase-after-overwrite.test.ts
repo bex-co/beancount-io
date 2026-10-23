@@ -43,14 +43,37 @@ describe("after Overwrite or Recreate succeeds", () => {
 
   it("is done by Recreate once the file is created, on the editor's text then", () => {
     const recreate = body("constrecreateFile=", "consthandleSave=");
-    expect(recreate.includes("recoveryRef.current.saving(content)")).toBe(true);
     expect(
       recreate.includes("rebaseOnSaved(recoveryRef.current.latest(),content)"),
     ).toBe(true);
   });
+
+  // w21/707: both retry a save that failed, with the text it sent. Marking that
+  // text the latest again put back what was typed while the first save ran.
+  it("does not mark the retried text the latest again", () => {
+    const recreate = body("constrecreateFile=", "consthandleSave=");
+    expect(recreate.includes("recoveryRef.current.saving(")).toBe(false);
+    const save = body("consthandleSave=", "returntrue;");
+    expect(
+      save.includes("if(!viaRestore)recoveryRef.current.saving(content);"),
+    ).toBe(true);
+    expect(save.split("recoveryRef.current.saving(").length).toBe(2);
+  });
 });
 
 describe("the recovery's latest text", () => {
+  // The screen's order for w21/707: Save sends AAA, BBB is typed while it
+  // runs, the save conflicts, and Overwrite saves AAA over the remote.
+  it("keeps what was typed during a save through its Overwrite", () => {
+    const recovery = createEditorRecovery();
+    recovery.loaded("L1\n");
+    recovery.saving("L1\nAAA\n");
+    recovery.draft("L1\nAAA\nBBB\n");
+    // The Overwrite's save of the same text, then the rebase reads latest().
+    recovery.saved("L1\nAAA\n");
+    expect(recovery.latest()).toBe("L1\nAAA\nBBB\n");
+  });
+
   it("follows the editor's drafts and a save", () => {
     const recovery = createEditorRecovery();
     recovery.loaded("a");
