@@ -53,3 +53,14 @@ is accepted, and no authenticated publisher or submission receipt is verified.
 Restore the existing extension connection, then inspect the actual sign-in,
 agreement and repository-permission steps. Restart the native callback if it
 expires. This temporary access failure is not a platform eligibility rejection.
+
+### Restored browser and concrete agreement — 2026-10-23T21:22:14Z
+
+The actual sign-in page is now readable. It offers Google/GitHub/Apple sign-in
+and the unchecked “I have read and agree” Terms/Privacy control. The exact
+agreement confirmation is pending; no checkbox or sign-in provider is activated.
+The original native callback expired without successful authentication and must
+be restarted after confirmation. Browser connectivity is no longer the remaining
+gate. Preserve the canonical manifest and intended publisher identity, then
+complete native login, the actual GitHub/repository permission checks and the
+supported publication route. No user grant or submission receipt is claimed.

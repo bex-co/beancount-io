@@ -34,7 +34,7 @@
 
 ## Full inventory ownership and execution order
 
-The prepared [m9/t011](../m9/t011.md) official Cursor application awaits its exact final Publisher Terms confirmation. Docker [m9/t012](../m9/t012.md) is prepared at its exact synthetic-ledger consent decision. Cline [m9/t013](../m9/t013.md) is also at its exact synthetic-ledger consent decision. GitHub nomination [m9/t014](../m9/done/t014.md) is sent and archived. LobeHub [m10/t009](../m10/t009.md) requires browser connection restoration. This milestone's t001/t002/t003 remain independent; table order is priority, not a cross-platform dependency.
+The prepared [m9/t011](../m9/t011.md) official Cursor application awaits its exact final Publisher Terms confirmation. Docker [m9/t012](../m9/t012.md) is prepared at its exact synthetic-ledger consent decision. Cline [m9/t013](../m9/t013.md) is also at its exact synthetic-ledger consent decision. GitHub nomination [m9/t014](../m9/done/t014.md) is sent and archived. LobeHub [m10/t009](../m10/t009.md) now reaches its exact sign-in agreement decision. This milestone's t001/t002 require original submitting account/organization access; t003 remains independently submitted. Table order is priority, not a cross-platform dependency.
 
 | Inventory target | Submission / receipt owner | Review, public verification or retained gate |
 | --- | --- | --- |
