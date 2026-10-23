@@ -85,7 +85,9 @@ export function typedAmountInput(input: string, rowNegative: boolean): string {
   if (absolute.startsWith("+")) {
     return signedAmountInput(absolute.slice(1), false);
   }
-  return signedAmountInput(input, rowNegative);
+  // The trimmed text: a pasted " 20" in a negative row was "- 20", which no
+  // parser reads (w21/855).
+  return signedAmountInput(absolute, rowNegative);
 }
 
 export function parseExactAmount(input: string, minorUnits = 2): string | null {

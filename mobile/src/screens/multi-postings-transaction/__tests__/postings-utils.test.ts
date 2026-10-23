@@ -13,6 +13,7 @@ import {
   makePosting,
   parseExactAmount,
   splitAmountSign,
+  typedAmountInput,
   postingAmountAccessibility,
   removePosting,
   remainder,
@@ -1225,5 +1226,22 @@ describe("the Done button's disabled state", () => {
     expect(
       screen.includes("accessibilityState={{disabled:!canSave||saving,"),
     ).toBe(true);
+  });
+});
+
+// w21/855: " 20" pasted into a negative row read "- 20" and refused Done.
+describe("typedAmountInput keeps the row's sign over pasted spaces", () => {
+  it("reads a padded unsigned paste as the row's sign", () => {
+    expect(typedAmountInput(" 20", true)).toBe("-20");
+    expect(typedAmountInput("20 ", true)).toBe("-20");
+    expect(typedAmountInput("\u200e 20", true)).toBe("-20");
+    expect(parseExactAmount(typedAmountInput(" 20", true))).toBe("-20");
+  });
+
+  it("leaves a positive row, and signed pastes, as they were", () => {
+    expect(typedAmountInput(" 20", false)).toBe("20");
+    expect(typedAmountInput(" -20", false)).toBe("-20");
+    expect(typedAmountInput(" -20", true)).toBe("-20");
+    expect(typedAmountInput("", true)).toBe("");
   });
 });
