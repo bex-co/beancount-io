@@ -12,6 +12,7 @@
 
 ## Inbox
 
+- [683](./683.md) — A refused add leaves an empty routed file and a "chore: create file" commit behind
 - [679](./679.md) — Adding an entry to a non-UTF-8 ledger file replaces its non-ASCII bytes with U+FFFD, and the precheck counts that as a fix
 - [680](./680.md) — A NUL character in the payee or narration is committed, and then none of the file's entries load
 - [681](./681.md) — Any add or edit touching an account whose `~`-tolerance balance already fails is refused (gap in w21/618)
