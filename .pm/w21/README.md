@@ -12,6 +12,7 @@
 
 ## Inbox
 
+- [768](./768.md) — w21/749 regression: Cash flow now cuts the right column's suffix line too, so "Savings (expenses)" reads "Savings (expense…"
 - [766](./766.md) — RTL account paths still draw child-before-parent in Money flow, Entry Context balances and Budget cards (w21/743 gap)
 - [767](./767.md) — After a metadata-only edit, an R-flagged entry keeps showing its pre-edit copy (w21/745 consequence)
 - [762](./762.md) — A budget whose cadence changed back-fills the first entry: Monthly $300 then Yearly reads "Budget $2,922.95 · Below target" for $400 spent
