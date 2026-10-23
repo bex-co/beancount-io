@@ -1532,7 +1532,11 @@ def _lot(posting: Any) -> _Lot | None:
         return None
     per, total, units, currency, label, acquired = stated
     if per is not None and total is not None and units:
-        per = per + total / abs(units)
+        # Beancount combines the total with per * |units| before it divides, and
+        # the order changes the last digits (-3 + 10/3 against (10 - 9)/3), so a
+        # manual entry's own cost is the native one only if computed the same
+        # way (w5/1003). Ids written before kept the other order.
+        per = per + total / abs(units) if _FORMER_COMPOUND.get() else (total + per * abs(units)) / abs(units)
     elif per is None and total is not None and units:
         per = total / abs(units)
     return (per, currency, label, acquired)
@@ -2816,6 +2820,8 @@ _NEGATIVE_ZERO: ContextVar[bool] = ContextVar("negative_zero", default=False)
 _EMPTY_LABEL_HIDDEN: ContextVar[bool] = ContextVar("empty_label_hidden", default=False)
 #: Spells a cost label as the importer typed it, as the ids written before labels compared canonically were (w5/999).
 _RAW_LABELS: ContextVar[bool] = ContextVar("raw_labels", default=False)
+#: Computes a compound cost in the order ids were written with before Beancount's own (w5/1003).
+_FORMER_COMPOUND: ContextVar[bool] = ContextVar("former_compound", default=False)
 
 
 def _exactly_normalized(number: Decimal) -> Decimal:
@@ -3049,6 +3055,17 @@ def _hash_import_ids(
         finally:
             _EMPTY_LABEL_HIDDEN.reset(token)
 
+    def spelled_with_former_compound() -> str:
+        token = _FORMER_COMPOUND.set(True)
+        try:
+            rebuilt = sorted(
+                (p.units.number, p.units.currency, _lot_text(p) + ("" if p.account == account else f" [{p.account}]"))
+                for p in _source_postings(entry, account)
+            )
+            return "+".join(_exact_amount(number, currency) + lot for number, currency, lot in rebuilt)
+        finally:
+            _FORMER_COMPOUND.reset(token)
+
     def spelled_with_raw_labels() -> str:
         # Ids written before labels compared as the loader reads them hashed
         # the label as typed; a decomposed `Café` must still find that id (w5/999).
@@ -3091,6 +3108,7 @@ def _hash_import_ids(
     negative_zero = spelled_with_negative_zero()
     unlabelled = spelled_without_empty_labels()
     raw_labelled = spelled_with_raw_labels()
+    former_compound = spelled_with_former_compound()
 
     single_base = _hash_base(date, exact, description, nfc_account)
     seen[single_base] = seen.get(single_base, 0) + 1
@@ -3136,6 +3154,11 @@ def _hash_import_ids(
         negative_counter = f"negzero\0{negative_base}"
         seen[negative_counter] = seen.get(negative_counter, 0) + 1
         older.append(_digest_import_id(negative_base, seen[negative_counter]))
+    if former_compound != exact:
+        compound_base = _hash_base(date, former_compound, description, nfc_account)
+        compound_counter = f"formercompound\0{compound_base}"
+        seen[compound_counter] = seen.get(compound_counter, 0) + 1
+        older.append(_digest_import_id(compound_base, seen[compound_counter]))
     if raw_labelled != exact:
         raw_base = _hash_base(date, raw_labelled, description, nfc_account)
         raw_counter = f"rawlabel\0{raw_base}"
@@ -3196,6 +3219,11 @@ def _hash_import_ids(
             negative_paired_counter = f"paired-negzero\0{negative_paired}"
             seen[negative_paired_counter] = seen.get(negative_paired_counter, 0) + 1
             older.append(_digest_import_id(negative_paired, seen[negative_paired_counter]))
+        if former_compound != exact:
+            compound_paired = _hash_base(date, former_compound, f"{payee}|{description}", nfc_account)
+            compound_paired_counter = f"paired-formercompound\0{compound_paired}"
+            seen[compound_paired_counter] = seen.get(compound_paired_counter, 0) + 1
+            older.append(_digest_import_id(compound_paired, seen[compound_paired_counter]))
         if raw_labelled != exact:
             raw_paired = _hash_base(date, raw_labelled, f"{payee}|{description}", nfc_account)
             raw_paired_counter = f"paired-rawlabel\0{raw_paired}"
