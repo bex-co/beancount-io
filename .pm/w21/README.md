@@ -12,6 +12,7 @@
 
 ## Inbox
 
+- [674](./674.md) — Since w21/641, Home's net worth leaves out next month's entries while the Accounts tab includes them
 - [672](./672.md) — Deleting one of two same-day twin entries shifts the other onto its ID, so a stale screen's Delete silently removes the survivor
 - [673](./673.md) — New Transaction appends LF lines to a CRLF ledger file (add-path sibling of w21/252 and w21/062)
 - [669](./669.md) — Reports' Recent Transactions fetches the newest 200 entries with no end date, so pre-entered entries empty every range
