@@ -1,6 +1,6 @@
 # w4 · m35 — Keep form fields usable when suggestions fail
 
-**Worker:** worker1 **Goal:** A failed suggestions read leaves New Entry fields editable and offers recovery without restarting the draft. **Status:** in progress (t001, t002, t004, t005 done; t003 resumed)
+**Worker:** worker1 **Goal:** A failed suggestions read leaves New Entry fields editable and offers recovery without restarting the draft. **Status:** done
 
 **Severity:** minor. **Estimate:** 145m across six tasks, dashboard only.
 
@@ -14,10 +14,10 @@ Continuous dashboard QA requested for w4, 2026-10-20. **A2 — Frictionless onbo
 | --- | --- | --- | --- |
 | [t001](./done/t001.md) | Retain Payee and Narration fields on suggestion failure — **DONE** | 30m | — |
 | [t002](./done/t002.md) | Retain Account and Currency fields with existing validation — **DONE** | 25m | t001 |
-| [t003](./t003.md) | Verify the visible recovery and draft journey | 35m | t002 |
+| [t003](./done/t003.md) | Verify the visible recovery and draft journey — **DONE** | 35m | t002 |
 | [t004](./done/t004.md) | Simplify the changed field handling — **DONE** | 10m | t003 |
 | [t005](./done/t005.md) | Prove query failure recovery and run dashboard checks — **DONE** | 35m | t003 |
-| [t006](./t006.md) | Close out and archive the milestone | 10m | t003, t004, t005 |
+| [t006](./done/t006.md) | Close out and archive the milestone — **DONE** | 10m | t003, t004, t005 |
 
 ## Fresh live reproduction
 
@@ -71,12 +71,12 @@ No ledger writes, product edits, new tests, commit or push. All temporary contex
 
 ## Definition of done
 
-- [ ] All four live-reproduced failed-read cases retain their named manual fields, honest failure guidance and in-place recovery at desktop/narrow widths.
-- [ ] Accepted form text and focus survive failed retry, retry loading and successful suggestions recovery without restarting New Entry.
-- [ ] Suggestions remain correctly scoped; failed/partial reads do not display stale options.
-- [ ] Existing account availability, exact decimal submission, permissions, disabled state and keyboard selection behavior pass meaningful controls.
-- [ ] Actual query/form regression checks detect the original branches; dashboard native checks pass and evidence states deployment/platform limits.
-- [ ] Tasks and milestone are archived through /pm only when the observable end state holds.
+- [x] All four live-reproduced failed-read cases retain their named manual fields, honest failure guidance and in-place recovery at desktop/narrow widths.
+- [x] Accepted form text and focus survive failed retry, retry loading and successful suggestions recovery without restarting New Entry.
+- [x] Suggestions remain correctly scoped; failed/partial reads do not display stale options.
+- [x] Existing account availability, exact decimal submission, permissions, disabled state and keyboard selection behavior pass meaningful controls.
+- [x] Actual query/form regression checks detect the original branches; dashboard native checks pass and evidence states deployment/platform limits.
+- [x] Tasks and milestone are archived through /pm only when the observable end state holds.
 
 ## Unblocked
 
