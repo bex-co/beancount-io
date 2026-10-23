@@ -30,3 +30,26 @@ export function recentTransactionsUpTo<T extends { date: string }>(
 ): T[] {
   return entries.filter((entry) => entry.date <= today).slice(0, limit);
 }
+
+/**
+ * Whether the month-end page may have run out before reaching today: it came
+ * back full and holds fewer than `limit` entries up to today, because later
+ * entries of this month took its rows (w21/664). Only then is a second read,
+ * ending today, worth making.
+ */
+export function pageEndedBeforeToday(
+  entries: readonly { date: string }[],
+  today: string,
+  limit: number,
+  pageSize: number,
+): boolean {
+  return (
+    entries.length >= pageSize &&
+    recentTransactionsUpTo(entries, today, limit).length < limit
+  );
+}
+
+/** The window ending today, for that second read (the key changes with the day, so it is kept to when it is needed). */
+export function recentTransactionsWindowToToday(today: string): string {
+  return `0001-01-01 - ${today}`;
+}

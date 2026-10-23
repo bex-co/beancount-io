@@ -23,7 +23,7 @@ describe("Home's Recent Transactions with only upcoming entries", () => {
   it("asks for the newest entry only when nothing is up to today", () => {
     expect(
       card.includes(
-        "constemptyUpToToday=data!==undefined&&!error&&entries.length===0;",
+        "constemptyUpToToday=data!==undefined&&!error&&(!needsPast||pastData!==undefined)&&entries.length===0;",
       ),
     ).toBe(true);
     expect(card.includes("limit:1,")).toBe(true);

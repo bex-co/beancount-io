@@ -10,8 +10,10 @@ import { RecentTransactionsSkeleton } from "./home-skeletons";
 import { journalRowKeys } from "@/screens/transactions-screen/utils/merge-journal-page";
 import {
   RECENT_FUTURE_BUFFER,
+  pageEndedBeforeToday,
   recentTransactionsUpTo,
   recentTransactionsWindow,
+  recentTransactionsWindowToToday,
 } from "../selectors/recent-window";
 import { FadeInView } from "@/components/crossfade";
 import { DashboardCard } from "@/components";
@@ -83,8 +85,34 @@ export function RecentTransactionsCard({
     }
   }, [refreshSignal, ledgerId, refetch]);
 
+  const page = (data?.getLedgerJournal.data ??
+    []) as unknown as JournalDirectiveType[];
+  // More than the buffer's worth of entries booked for later this month leave
+  // the page with nothing, or too little, that has happened: read up to today
+  // instead (w21/664).
+  const needsPast = pageEndedBeforeToday(
+    page,
+    today,
+    RECENT_LIMIT,
+    RECENT_LIMIT + RECENT_FUTURE_BUFFER,
+  );
+  const { data: pastData } = useGetLedgerJournalQuery({
+    variables: {
+      ledgerId: ledgerId!,
+      query: {
+        offset: 0,
+        limit: RECENT_LIMIT,
+        directiveTypes: [DirectiveType.TRANSACTION],
+        time: recentTransactionsWindowToToday(today),
+      },
+    },
+    skip: !ledgerId || !needsPast,
+    fetchPolicy: "cache-and-network",
+  });
   const entries = recentTransactionsUpTo(
-    (data?.getLedgerJournal.data ?? []) as unknown as JournalDirectiveType[],
+    needsPast && pastData
+      ? (pastData.getLedgerJournal.data as unknown as JournalDirectiveType[])
+      : page,
     today,
     RECENT_LIMIT,
   );
@@ -92,7 +120,11 @@ export function RecentTransactionsCard({
   // Nothing up to today may still be a ledger with entries booked for later (the
   // rent of the next months), not a new one: the newest entry says which
   // (w21/573). Read only when the card would otherwise show the first-run copy.
-  const emptyUpToToday = data !== undefined && !error && entries.length === 0;
+  const emptyUpToToday =
+    data !== undefined &&
+    !error &&
+    (!needsPast || pastData !== undefined) &&
+    entries.length === 0;
   const { data: newestData } = useGetLedgerJournalQuery({
     variables: {
       ledgerId: ledgerId!,

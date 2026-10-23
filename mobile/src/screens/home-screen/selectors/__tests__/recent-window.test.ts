@@ -1,6 +1,8 @@
 import fs from "fs";
 import path from "path";
 import {
+  pageEndedBeforeToday,
+  recentTransactionsWindowToToday,
   recentTransactionsUpTo,
   recentTransactionsWindow,
 } from "../recent-window";
@@ -58,5 +60,34 @@ describe("Home's Recent Transactions window", () => {
     expect(card.includes("time:recentTransactionsWindow(today),")).toBe(true);
     // `today` is the hook's, so a new day is a new query.
     expect(card.includes("consttoday=useToday();")).toBe(true);
+  });
+});
+
+// w21/664: 27 entries booked for later this month filled the whole page, and
+// the card said "Nothing up to today" beside many past transactions.
+describe("a page that ran out before today", () => {
+  const day = (n: number) => ({
+    date: `2026-10-${String(n).padStart(2, "0")}`,
+  });
+  const future = Array.from({ length: 25 }, (_, i) => day(31 - (i % 9)));
+
+  it("needs the read up to today when later entries took the whole page", () => {
+    expect(pageEndedBeforeToday(future, "2026-10-22", 5, 25)).toBe(true);
+    expect(recentTransactionsWindowToToday("2026-10-22")).toBe(
+      "0001-01-01 - 2026-10-22",
+    );
+  });
+
+  it("also covers a page with only some past rows left", () => {
+    const page = [...future.slice(0, 22), day(20), day(19), day(18)];
+    expect(pageEndedBeforeToday(page, "2026-10-22", 5, 25)).toBe(true);
+  });
+
+  it("leaves a page that reached five past rows, or was not full, alone", () => {
+    const enough = [...future.slice(0, 20), ...[20, 19, 18, 17, 16].map(day)];
+    expect(pageEndedBeforeToday(enough, "2026-10-22", 5, 25)).toBe(false);
+    expect(pageEndedBeforeToday(future.slice(0, 10), "2026-10-22", 5, 25)).toBe(
+      false,
+    );
   });
 });
