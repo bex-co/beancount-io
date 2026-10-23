@@ -248,7 +248,7 @@ def _amounts_declared(entry: Any, spelled: Any) -> bool:
 
 
 def _totals_declared(entry: Any, spelled: Any) -> bool:
-    """Whether every account's stated total per currency is what the entry holds."""
+    """Whether every account's stated total per currency is what the entry holds, and it holds nothing else."""
     from beancount.core.number import MISSING
 
     stated: dict[tuple[str, str], Any] = {}
@@ -271,7 +271,10 @@ def _totals_declared(entry: Any, spelled: Any) -> bool:
         if posting.units is not None and posting.units.number is not None:
             key = (posting.account, posting.units.currency)
             held[key] = held.get(key, 0) + posting.units.number
-    return all(held.get(key) == total for key, total in stated.items() if key[0] not in open_accounts)
+    # A key the line never states, in an account whose amounts it does state, is
+    # a posting somebody added: the line cannot have declared it (w5/1004).
+    extra = any(key not in stated and key[0] not in open_accounts and total for key, total in held.items())
+    return not extra and all(held.get(key) == total for key, total in stated.items() if key[0] not in open_accounts)
 
 
 def authored_entries(snapshot: Any, kind: type) -> list[Any]:
