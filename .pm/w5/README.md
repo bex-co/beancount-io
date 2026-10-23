@@ -36,6 +36,7 @@
 
 ## Inbox
 
+- [987 — Respect forecast boundaries for compact transaction flags](./987.md) — major CLI follow-up to completed 934; a compact forecast entry is skipped during root selection, allowing a false balance assertion into a previously valid working book, reproduced 2026-10-22.
 - [986 — Reject day 366 in a non-leap CSV year](./986.md) — minor CLI date-validation gap; an explicit ordinal date in 2023 is accepted and written as January 1, 2024, reproduced 2026-10-22.
 - [985 — Keep transaction details parseable when redirected](./985.md) — minor CLI follow-up to completed 834; bare source-location headings make the full details stream fail native parsing, reproduced 2026-10-22.
 - [984 — Preserve account names when discovering documents](./984.md) — minor CLI inherited directory-walker NFKC mismatch; valid ligature/full-width account folders lose automatic receipts and doctor reports undeclared ASCII names, reproduced 2026-10-22.
