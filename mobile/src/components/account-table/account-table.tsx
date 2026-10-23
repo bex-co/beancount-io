@@ -41,6 +41,7 @@ import {
   type AccountCategory,
 } from "@/components/account-list/select-account-list";
 import {
+  categoryRowLabel,
   flattenRows,
   revealAccountOverrides,
   rowDisclosure,
@@ -545,7 +546,7 @@ export function AccountTable({
         // (w21/743).
         label={
           item.depth === 0
-            ? t(item.label)
+            ? categoryRowLabel(item.label, item.account, t(item.label))
             : item.own
               ? t("accountOwnPostings", {
                   name: isolateAccountPath(item.label),

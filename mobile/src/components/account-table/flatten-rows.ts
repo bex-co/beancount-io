@@ -194,3 +194,27 @@ export function rowDisclosure(
   });
   return { actions: [{ name, label: text }], chevronLabel: text };
 }
+
+const DEFAULT_ROOTS: Record<string, string> = {
+  assets: "Assets",
+  liabilities: "Liabilities",
+  equity: "Equity",
+  income: "Income",
+  expenses: "Expenses",
+};
+
+/**
+ * A category row's label: the app's word for it, unless the ledger renamed the
+ * root (`option "name_assets" "Activos"`), when it reads as the ledger names it,
+ * as the page it opens is titled (w21/881).
+ */
+export function categoryRowLabel(
+  key: string,
+  account: string,
+  translated: string,
+): string {
+  const defaultRoot = DEFAULT_ROOTS[key];
+  return defaultRoot !== undefined && account !== "" && account !== defaultRoot
+    ? account
+    : translated;
+}

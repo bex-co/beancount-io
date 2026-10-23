@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import {
+  categoryRowLabel,
   flattenRows,
   revealAccountOverrides,
   rowDisclosure,
@@ -335,5 +336,18 @@ describe("the reveal wiring", () => {
         "listRef.current?.scrollToIndex({ index, viewPosition: 0.5 });",
       ),
     ).toBe(true);
+  });
+});
+
+// w21/881: renamed roots showed as "Assets" over a page titled "Activos".
+describe("categoryRowLabel", () => {
+  it("reads the ledger's name for a renamed root", () => {
+    expect(categoryRowLabel("assets", "Activos", "Assets")).toBe("Activos");
+    expect(categoryRowLabel("expenses", "Gastos", "Expenses")).toBe("Gastos");
+  });
+
+  it("keeps the app's word for a default root", () => {
+    expect(categoryRowLabel("assets", "Assets", "Activos")).toBe("Activos");
+    expect(categoryRowLabel("income", "", "Income")).toBe("Income");
   });
 });
