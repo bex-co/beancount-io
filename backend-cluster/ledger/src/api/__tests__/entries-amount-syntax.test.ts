@@ -32,7 +32,7 @@ let unincluded = new Set<string>();
 // The ranges each committed write asked to locate (w23/060), and whether the
 // scripted locator fails or finds nothing.
 const located: { file: string; startLine: number; lineCount: number }[][] = [];
-let locator: "lines" | "throws" | "misses" = "lines";
+let locator: "lines" | "throws" | "misses" | "swallowed" = "lines";
 
 jest.mock("@/server/auth", () => ({
   authMiddleware: async (_ctx: unknown, next: () => Promise<void>) => next(),
@@ -123,6 +123,8 @@ jest.mock("../service-context", () => ({
       }) => {
         located.push(ranges);
         if (locator === "throws") throw new Error("parse failed");
+        // Everything written sits after text the parser cannot get past.
+        if (locator === "swallowed") return ranges.map(() => null);
         return ranges.map(({ file, startLine, lineCount }, index) => {
           if (locator === "misses" && index === 1) return null;
           const overlay = overlays.find((candidate) => candidate.path === file);
@@ -631,6 +633,92 @@ describe("bulk entries dry run", () => {
   it("still commits without dryRun", async () => {
     expect((await post({ entries: [txn("2.00")] })).status).toBe(200);
     expect(committed).toHaveLength(1);
+  });
+});
+
+// w21/682: an entry added after an unclosed quote was "saved" and never read.
+describe("bulk entries that the ledger would not read", () => {
+  let server: http.Server;
+  let url: string;
+
+  beforeAll(async () => {
+    const app = new Koa();
+    const router = new Router();
+    setEntriesHandler(router);
+    app.use(restErrorMiddleware());
+    app.use(bodyParser());
+    app.use(router.routes());
+    server = http.createServer(app.callback());
+    url = await listen(server);
+  });
+
+  afterAll(() => new Promise<void>((resolve) => server.close(() => resolve())));
+
+  // The same parse error before and after the write: its message is all the
+  // comparison sees, so nothing reads as new.
+  const parseError = {
+    message: "parse error: unexpected input",
+    source: { filename: "main.bean", lineno: 3 },
+  };
+
+  beforeEach(() => {
+    MAIN = LF_MAIN;
+    mainBytes = null;
+    baselineErrors = [parseError];
+    committed.length = 0;
+    locator = "lines";
+  });
+  afterAll(() => {
+    locator = "lines";
+  });
+
+  const add = (extra: Record<string, unknown> = {}) =>
+    fetch(`${url}/entries/alice/books/bulk`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        entries: [
+          {
+            type: "transaction",
+            item: {
+              date: "2026-10-22",
+              flag: "*",
+              narration: "QA NEWUNCLOSED",
+              postings: [
+                {
+                  account: "Assets:Cash",
+                  units: { number: "-3.00", currency: "USD" },
+                },
+                {
+                  account: "Equity:Opening",
+                  units: { number: "3.00", currency: "USD" },
+                },
+              ],
+            },
+          },
+        ],
+        ...extra,
+      }),
+    });
+
+  it("refuses an add the reparsed ledger does not contain, committing nothing", async () => {
+    locator = "swallowed";
+    const response = await add();
+    expect(response.status).toBe(400);
+    expect(((await response.json()) as { error: string }).error).toContain(
+      "would not read what is added",
+    );
+    expect(committed).toEqual([]);
+  });
+
+  it("still adds to a ledger with an unrelated parse error elsewhere", async () => {
+    expect((await add()).status).toBe(200);
+    expect(committed).toHaveLength(1);
+  });
+
+  it("does not refuse when the engine cannot say", async () => {
+    locator = "throws";
+    expect((await add()).status).toBe(200);
   });
 });
 

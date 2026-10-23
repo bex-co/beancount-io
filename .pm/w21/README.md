@@ -21,7 +21,6 @@
 - [684](./684.md) — At AX2, Entry Context's balance rows cut account names to "Asset…king" and "Expen…eries"
 - [685](./685.md) — At AX2, Home's budget panel cuts both "Housing:Rent" and "Housing:Utilities" to "Housing…"
 - [683](./683.md) — A refused add leaves an empty routed file and a "chore: create file" commit behind
-- [682](./682.md) — An entry added after an unclosed quote is reported as saved, but the ledger never reads it
 - [678](./678.md) — A sale whose lot doesn't match is still counted in every balance, so the books don't balance
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window
 - [065](./blocked/065.md) — One early-year entry (e.g. 0050) makes the balance sheet 23,718 monthly points (3 MB) and the app stalls — **blocked:** needs an approach decision (per-pill fetch vs server downsample) and a simulator profile of the stall

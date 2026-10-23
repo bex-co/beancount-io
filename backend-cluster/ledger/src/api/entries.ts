@@ -88,6 +88,36 @@ async function writtenEntryHashes(
 }
 
 /**
+ * Refuse a write whose entries the reparsed ledger would not contain. They sit
+ * after text the parser cannot get past, so the ledger would never read them
+ * and the caller would still be told they were saved (w21/682). An engine that
+ * cannot answer is not a reason to refuse.
+ */
+async function assertEntriesAreRead(
+  data: ReturnType<typeof servicesForRequest>["data"],
+  ledgerId: string,
+  updates: { path: string; content: string }[],
+  ranges: ReplacedSourceRange[],
+): Promise<void> {
+  let ids: (string | null)[];
+  try {
+    ids = await data.projectedEntryIds({
+      ledgerId,
+      userId: undefined,
+      overlays: updates.map(({ path, content }) => ({ path, content })),
+      ranges,
+      enforceInputLimits: false,
+    });
+  } catch {
+    return;
+  }
+  if (ids.every((id) => id !== null)) return;
+  throw new BadUserInputError(
+    "The ledger would not read what is added: an earlier line in the file (such as a note with an unclosed quote) swallows it. Fix that line first.",
+  );
+}
+
+/**
  * Wire shape (Python `EntryAddBulkEntriesRequest`): a discriminated union of
  * `{type, item, filename?}` rows plus a request-level default `filename`.
  * File routing is the PYTHON rule — `entry.filename ?? request.filename ??
@@ -371,6 +401,12 @@ export function setEntriesHandler(router: Router): void {
             () => data.getErrors({ ledgerId, userId: undefined }),
             "add",
           );
+          // A parse error already in the file (an unclosed quote) can swallow
+          // what is written after it, and the same message at another line
+          // counts as nothing new: look for the entries themselves (w21/682).
+          if (after.length > 0) {
+            await assertEntriesAreRead(data, ledgerId, updates, ranges);
+          }
         }
         await checkDirectiveLimitForFileChanges(
           client,
