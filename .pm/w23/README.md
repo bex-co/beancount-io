@@ -10,6 +10,7 @@
 
 ## Inbox
 
+- [076](./076.md) — on a new ledger `appendLedgerText` puts transactions above the template's `* Transactions` heading, unlike `addLedgerEntries`
 - [075](./075.md) — typed BQL results return NULL as `""` (undocumented), so a missing payee or price reads as an empty string
 - [074](./074.md) — a file batch within both documented caps (2 × 0.9 MB) fails with `SERVICE_UNAVAILABLE`: the ledger service's 2 MB body limit is hit internally
 - [073](./073.md) — an MCP request over the 2 MiB cap gets 413 "could not be read as a JSON-RPC request", not a size message
