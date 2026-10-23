@@ -58,3 +58,6 @@
 - [901](./901.md) — Ledger errors aren't in file order
 - [902](./902.md) — A misspelled built-in plugin is reported as needing the python-plugins feature
 - [903](./903.md) — Recent changes rows read only "Add 1 entry" or "Update entry"
+- [904](./904.md) — A write during an in-flight refresh shows pre-write data (Apollo deduplicates the refetch)
+- [905](./905.md) — Leaving the picker while Open Account saves lets its callback close the screen now on top
+- [906](./906.md) — An ID-changing Edit flashes "changed or removed" and refetches the ledger twice
