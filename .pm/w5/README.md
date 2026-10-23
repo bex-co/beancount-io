@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1004 — Recognize extra account and currency postings as calculated facts](./1004.md) — major CLI residual after completed 991; extra source keys pass declaration and falsely skip native-ID corrections, reproduced 2026-10-23.
+
 - [1003 — Compare compound costs using native booking arithmetic](./1003.md) — major CLI comparison error; a fully specified three-share compound-cost purchase imports twice because division before cancellation differs from native booking, reproduced 2026-10-23.
 - [1002 — Preserve valid sale lot choices before accepting an eager bulk order](./1002.md) — major CLI residual after completed 980; a bookable eager LIFO/HIFO order still changes the selected lot and turns 100 USD profit into zero, reproduced 2026-10-23.
 - [1001 — Compute cover label context from the lots held on that date](./1001.md) — major CLI residual after completed 983; netted and backdated short covers still change exact labels and strand offsetting Cost positions, reproduced 2026-10-23.
