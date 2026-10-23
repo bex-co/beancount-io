@@ -1662,6 +1662,11 @@ def _booked_for(text: str, lot: _Lot | None, owner: str, left: list[_Leg]) -> It
         if found is not None
         and holder == owner
         and _units_of(other)[1:] == (currency, price)
+        # Legs that move the way the incoming one does: a sale of two shares
+        # beside a purchase of one nets to a sale of one, but is not it, and
+        # accepting the pair hid a changed statement under an existing id
+        # (w5/979).
+        and (_units_of(other)[0] > 0) == (number > 0)
         and _lots_agree(lot, found)
     ]
     # A sale booked across lots takes them in order, so these are the larger
