@@ -284,6 +284,7 @@ export function useCSVParser() {
           description: fields.description || "",
           amount: 0,
           amountInput: fields.amountInput || "",
+          structuralError: errors[0],
           errors,
         };
       }

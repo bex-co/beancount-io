@@ -227,6 +227,12 @@ const zhImporter: Record<string, TranslationEntry> = {
     message: "发现验证错误",
     description: "Alert title for validation errors",
   },
+  "importer.preview.recordWidthError": {
+    message:
+      "此记录不是恰好四个字段（日期、收款人、描述、金额）。请删除该行，或更正文件后重新上传。",
+    description:
+      "Shown on a preview row whose CSV record has more or fewer than the four importer fields; editing its cells cannot fix it",
+  },
   "importer.preview.validationErrorsMessage": {
     message: "某些行存在验证错误。请在继续之前修复它们，否则在导入时将被跳过。",
     description: "Alert message explaining validation errors",

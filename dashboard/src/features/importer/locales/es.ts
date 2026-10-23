@@ -234,6 +234,12 @@ const esImporter: Record<string, TranslationEntry> = {
     message: "Errores de validación encontrados",
     description: "Alert title for validation errors",
   },
+  "importer.preview.recordWidthError": {
+    message:
+      "Este registro no tiene exactamente cuatro campos (fecha, beneficiario, descripción, importe). Elimina la fila o corrige el archivo y vuelve a subirlo.",
+    description:
+      "Shown on a preview row whose CSV record has more or fewer than the four importer fields; editing its cells cannot fix it",
+  },
   "importer.preview.validationErrorsMessage": {
     message:
       "Algunas filas tienen errores de validación. Por favor, corrígelos antes de continuar o se omitirán durante la importación.",

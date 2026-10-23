@@ -237,6 +237,12 @@ const enImporter: Record<string, TranslationEntry> = {
     message: "Validation Errors Found",
     description: "Alert title for validation errors",
   },
+  "importer.preview.recordWidthError": {
+    message:
+      "This record doesn’t have exactly four fields (Date, Payee, Description, Amount). Delete the row, or correct the file and upload it again.",
+    description:
+      "Shown on a preview row whose CSV record has more or fewer than the four importer fields; editing its cells cannot fix it",
+  },
   "importer.preview.validationErrorsMessage": {
     message:
       "Some rows have validation errors. Please fix them before proceeding, or they will be skipped during import.",

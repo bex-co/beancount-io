@@ -230,6 +230,12 @@ const koImporter: Record<string, TranslationEntry> = {
     message: "유효성 검사 오류 발견",
     description: "Alert title for validation errors",
   },
+  "importer.preview.recordWidthError": {
+    message:
+      "이 레코드는 필드가 정확히 네 개(날짜, 수취인, 설명, 금액)가 아닙니다. 행을 삭제하거나 파일을 수정해 다시 업로드하세요.",
+    description:
+      "Shown on a preview row whose CSV record has more or fewer than the four importer fields; editing its cells cannot fix it",
+  },
   "importer.preview.validationErrorsMessage": {
     message:
       "일부 행에 유효성 검사 오류가 있습니다. 진행하기 전에 수정하거나 가져오기 시 건너뜁니다.",

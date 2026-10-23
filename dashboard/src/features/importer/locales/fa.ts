@@ -235,6 +235,12 @@ const faImporter: Record<string, TranslationEntry> = {
     message: "خطاهای اعتبارسنجی یافت شد",
     description: "Alert title for validation errors",
   },
+  "importer.preview.recordWidthError": {
+    message:
+      "این رکورد دقیقاً چهار فیلد (تاریخ، دریافت‌کننده، شرح، مبلغ) ندارد. ردیف را حذف کنید یا فایل را اصلاح و دوباره بارگذاری کنید.",
+    description:
+      "Shown on a preview row whose CSV record has more or fewer than the four importer fields; editing its cells cannot fix it",
+  },
   "importer.preview.validationErrorsMessage": {
     message:
       "برخی ردیف‌ها دارای خطاهای اعتبارسنجی هستند. لطفاً قبل از ادامه آنها را اصلاح کنید یا در هنگام واردات نادیده گرفته می‌شوند.",

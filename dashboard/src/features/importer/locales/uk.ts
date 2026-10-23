@@ -233,6 +233,12 @@ const ukImporter: Record<string, TranslationEntry> = {
     message: "Виявлено помилки перевірки",
     description: "Alert title for validation errors",
   },
+  "importer.preview.recordWidthError": {
+    message:
+      "У цьому записі не рівно чотири поля (дата, одержувач, опис, сума). Видаліть рядок або виправте файл і завантажте його знову.",
+    description:
+      "Shown on a preview row whose CSV record has more or fewer than the four importer fields; editing its cells cannot fix it",
+  },
   "importer.preview.validationErrorsMessage": {
     message:
       "Деякі рядки містять помилки перевірки. Будь ласка, виправте їх перед продовженням, інакше вони будуть пропущені під час імпорту.",

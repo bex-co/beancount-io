@@ -234,6 +234,12 @@ const ptImporter: Record<string, TranslationEntry> = {
     message: "Erros de validação encontrados",
     description: "Alert title for validation errors",
   },
+  "importer.preview.recordWidthError": {
+    message:
+      "Este registro não tem exatamente quatro campos (data, beneficiário, descrição, valor). Exclua a linha ou corrija o arquivo e envie-o novamente.",
+    description:
+      "Shown on a preview row whose CSV record has more or fewer than the four importer fields; editing its cells cannot fix it",
+  },
   "importer.preview.validationErrorsMessage": {
     message:
       "Algumas linhas têm erros de validação. Por favor, corrija-os antes de continuar ou eles serão ignorados durante a importação.",

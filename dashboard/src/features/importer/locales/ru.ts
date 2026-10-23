@@ -234,6 +234,12 @@ const ruImporter: Record<string, TranslationEntry> = {
     message: "Обнаружены ошибки проверки",
     description: "Alert title for validation errors",
   },
+  "importer.preview.recordWidthError": {
+    message:
+      "В этой записи не ровно четыре поля (дата, получатель, описание, сумма). Удалите строку или исправьте файл и загрузите его снова.",
+    description:
+      "Shown on a preview row whose CSV record has more or fewer than the four importer fields; editing its cells cannot fix it",
+  },
   "importer.preview.validationErrorsMessage": {
     message:
       "Некоторые строки содержат ошибки проверки. Пожалуйста, исправьте их перед продолжением, иначе они будут пропущены при импорте.",

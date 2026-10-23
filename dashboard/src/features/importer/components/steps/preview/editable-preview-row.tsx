@@ -66,7 +66,9 @@ export function EditablePreviewRow({
     void trigger();
   }, [row.id, row.decimalComma, row.decimalMixed, trigger]);
 
-  const hasErrors = Object.keys(errors).length > 0;
+  // A wrong-width record is refused whatever its cells say (w4/972).
+  const malformed = Boolean(row.structuralError);
+  const hasErrors = malformed || Object.keys(errors).length > 0;
   // The value an amount imports as, shown when the bank's spelling differs
   // (`-4,50` is -4.50, comma-column `-1.000` is -1000); the cell still edits
   // the raw token.
@@ -89,23 +91,32 @@ export function EditablePreviewRow({
     // on untouched invalid date/amount cells.
     await trigger();
     const values = getValues();
+    const rebuilt = buildParsedRow(
+      {
+        id: row.id,
+        date: values.date,
+        payee: values.payee,
+        description: values.description,
+        amountInput: values.amount,
+      },
+      {
+        decimalComma: row.decimalComma,
+        // A new amount is re-read on its own; editing another field keeps
+        // a mixed column's refusal.
+        decimalMixed: field === "amount" ? false : row.decimalMixed,
+      },
+    );
+    // A record of the wrong width stays refused: its four cells can all be
+    // valid while the field they dropped is still unresolved (w4/972).
     onChange(
       index,
-      buildParsedRow(
-        {
-          id: row.id,
-          date: values.date,
-          payee: values.payee,
-          description: values.description,
-          amountInput: values.amount,
-        },
-        {
-          decimalComma: row.decimalComma,
-          // A new amount is re-read on its own; editing another field keeps
-          // a mixed column's refusal.
-          decimalMixed: field === "amount" ? false : row.decimalMixed,
-        },
-      ),
+      row.structuralError
+        ? {
+            ...rebuilt,
+            structuralError: row.structuralError,
+            errors: [row.structuralError, ...(rebuilt.errors ?? [])],
+          }
+        : rebuilt,
     );
   };
 
@@ -246,6 +257,12 @@ export function EditablePreviewRow({
               aria-live="polite"
               className="text-xs text-destructive space-y-1"
             >
+              {malformed && (
+                <div className="flex items-start gap-1">
+                  <AlertCircle className="w-3 h-3 mt-0.5 shrink-0" />
+                  <span>{t("importer.preview.recordWidthError")}</span>
+                </div>
+              )}
               {Object.entries(errors).map(([field, error]) => (
                 <div key={field} className="flex items-start gap-1">
                   <AlertCircle className="w-3 h-3 mt-0.5 shrink-0" />

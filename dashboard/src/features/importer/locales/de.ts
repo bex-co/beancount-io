@@ -237,6 +237,12 @@ const deImporter: Record<string, TranslationEntry> = {
     message: "Validierungsfehler gefunden",
     description: "Alert title for validation errors",
   },
+  "importer.preview.recordWidthError": {
+    message:
+      "Dieser Datensatz hat nicht genau vier Felder (Datum, Empfänger, Beschreibung, Betrag). Löschen Sie die Zeile oder korrigieren Sie die Datei und laden Sie sie erneut hoch.",
+    description:
+      "Shown on a preview row whose CSV record has more or fewer than the four importer fields; editing its cells cannot fix it",
+  },
   "importer.preview.validationErrorsMessage": {
     message:
       "Einige Zeilen haben Validierungsfehler. Bitte korrigieren Sie diese, bevor Sie fortfahren, oder sie werden beim Import übersprungen.",

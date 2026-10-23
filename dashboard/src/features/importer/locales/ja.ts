@@ -232,6 +232,12 @@ const jaImporter: Record<string, TranslationEntry> = {
     message: "検証エラーが見つかりました",
     description: "Alert title for validation errors",
   },
+  "importer.preview.recordWidthError": {
+    message:
+      "このレコードの項目数が4つ（日付、支払先、説明、金額）ではありません。行を削除するか、ファイルを修正してもう一度アップロードしてください。",
+    description:
+      "Shown on a preview row whose CSV record has more or fewer than the four importer fields; editing its cells cannot fix it",
+  },
   "importer.preview.validationErrorsMessage": {
     message:
       "一部の行に検証エラーがあります。続行する前に修正してください。修正しない場合、インポート時にスキップされます。",

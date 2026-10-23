@@ -233,6 +233,12 @@ const skImporter: Record<string, TranslationEntry> = {
     message: "Nájdené chyby validácie",
     description: "Alert title for validation errors",
   },
+  "importer.preview.recordWidthError": {
+    message:
+      "Tento záznam nemá presne štyri polia (dátum, príjemca, popis, suma). Odstráňte riadok alebo opravte súbor a nahrajte ho znova.",
+    description:
+      "Shown on a preview row whose CSV record has more or fewer than the four importer fields; editing its cells cannot fix it",
+  },
   "importer.preview.validationErrorsMessage": {
     message:
       "Niektoré riadky majú chyby validácie. Prosím, opravte ich pred pokračovaním alebo budú počas importu preskočené.",

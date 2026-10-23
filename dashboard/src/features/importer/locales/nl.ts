@@ -235,6 +235,12 @@ const nlImporter: Record<string, TranslationEntry> = {
     message: "Validatiefouten gevonden",
     description: "Alert title for validation errors",
   },
+  "importer.preview.recordWidthError": {
+    message:
+      "Dit record heeft niet precies vier velden (datum, begunstigde, omschrijving, bedrag). Verwijder de rij, of corrigeer het bestand en upload het opnieuw.",
+    description:
+      "Shown on a preview row whose CSV record has more or fewer than the four importer fields; editing its cells cannot fix it",
+  },
   "importer.preview.validationErrorsMessage": {
     message:
       "Sommige rijen bevatten validatiefouten. Corrigeer deze voordat u doorgaat, anders worden ze overgeslagen tijdens het importeren.",

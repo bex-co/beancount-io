@@ -236,6 +236,12 @@ const bgImporter: Record<string, TranslationEntry> = {
     message: "Открити грешки при валидацията",
     description: "Alert title for validation errors",
   },
+  "importer.preview.recordWidthError": {
+    message:
+      "Този запис няма точно четири полета (дата, получател, описание, сума). Изтрийте реда или поправете файла и го качете отново.",
+    description:
+      "Shown on a preview row whose CSV record has more or fewer than the four importer fields; editing its cells cannot fix it",
+  },
   "importer.preview.validationErrorsMessage": {
     message:
       "Някои редове имат грешки при валидацията. Моля, коригирайтеги преди да продължите или те ще бъдат пропуснати при импортирането.",

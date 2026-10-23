@@ -38,6 +38,13 @@ export type ParsedRow = {
    * the row; an edit re-reads the amount on its own.
    */
   decimalMixed?: boolean;
+  /**
+   * The source record had the wrong number of fields. Editing its four cells
+   * cannot resolve that, so an edited row keeps this reason in `errors` and
+   * stays out of the import until it is removed or the file is corrected and
+   * uploaded again (w4/972).
+   */
+  structuralError?: string;
   errors?: string[];
 };
 
