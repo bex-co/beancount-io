@@ -416,6 +416,9 @@ export const nl: Translations = {
   pluginCopyNotice:
     "Een plug-in heeft deze boeking uit een andere gemaakt, dus je kunt hem hier niet bewerken of verwijderen.",
   pluginCopyOpenSource: "Bronboeking openen",
+  paddingNotice:
+    "Beancount heeft deze correctie ingevoegd voor een saldocontrole, dus ze kan hier niet worden bewerkt of verwijderd.",
+  editEntry: "Boeking bewerken",
   merchantDetailUnavailable:
     "Deze handelaar is niet beschikbaar in het geselecteerde grootboek.",
   commitDetailUnavailable:

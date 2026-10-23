@@ -424,6 +424,9 @@ export const ru: Translations = {
   pluginCopyNotice:
     "Эта запись создана плагином из другой записи, поэтому её нельзя изменить или удалить здесь.",
   pluginCopyOpenSource: "Открыть исходную запись",
+  paddingNotice:
+    "Beancount добавил эту корректировку для проверки баланса, поэтому её нельзя изменить или удалить здесь.",
+  editEntry: "Изменить запись",
   merchantDetailUnavailable: "Этот продавец недоступен в выбранной книге.",
   commitDetailUnavailable: "Это изменение недоступно в выбранной книге.",
   commitDetailGone: "Это изменение больше недоступно.",

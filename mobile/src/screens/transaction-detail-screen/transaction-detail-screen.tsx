@@ -67,7 +67,7 @@ import {
   holdGeneratedEntry,
   selectOwnEntry,
 } from "./selectors/select-own-entry";
-import { selectSourceSlice } from "./selectors/select-source-slice";
+import { selectSourceSlice, sourceKind } from "./selectors/select-source-slice";
 import {
   forgetSavedChecksum,
   isSavedChecksum,
@@ -649,9 +649,22 @@ const TransactionDetailImpl = ({
   }
 
   if (!entry) {
+    // A source that is not a transaction (a pad) is titled and edited as what it
+    // is (w21/841).
+    const kind = sourceSlice ? sourceKind(sourceSlice) : null;
+    const editLabel =
+      kind && kind !== "transaction" ? t("editEntry") : t("editTransaction");
+    const sourceTitle =
+      kind && kind !== "transaction" ? t(kind) : t("transaction");
     return (
       <SafeAreaView edges={["bottom"]} style={styles.container}>
-        <Stack.Screen options={{ title: t("transaction") }} />
+        <Stack.Screen
+          options={{
+            title: sourceTitle,
+            // No actions of the entry that was showing while this loads (w21/842).
+            headerRight: () => null,
+          }}
+        />
         <View style={styles.stateContainer}>
           {loading ? (
             <View style={styles.detailSkeleton}>
@@ -678,9 +691,9 @@ const TransactionDetailImpl = ({
                 <Pressable
                   onPress={handleEdit}
                   accessibilityRole="button"
-                  accessibilityLabel={t("editTransaction")}
+                  accessibilityLabel={editLabel}
                 >
-                  <Text style={styles.stateText}>{t("editTransaction")}</Text>
+                  <Text style={styles.stateText}>{editLabel}</Text>
                 </Pressable>
               ) : null}
             </View>
@@ -877,7 +890,9 @@ const TransactionDetailImpl = ({
           // its source and every other copy: say so, and open the source when
           // the ledger names it (w21/508).
           <View style={styles.copyNotice} testID="transaction-plugin-copy">
-            <Text style={styles.copyNoticeText}>{t("pluginCopyNotice")}</Text>
+            <Text style={styles.copyNoticeText}>
+              {entry.flag === "P" ? t("paddingNotice") : t("pluginCopyNotice")}
+            </Text>
             {generatedFrom ? (
               <Text
                 style={styles.errorAction}

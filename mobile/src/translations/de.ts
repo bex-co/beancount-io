@@ -429,6 +429,9 @@ export const de: Translations = {
   pluginCopyNotice:
     "Ein Plugin hat diesen Eintrag aus einem anderen erzeugt, daher kann er hier nicht bearbeitet oder gelöscht werden.",
   pluginCopyOpenSource: "Quelleintrag öffnen",
+  paddingNotice:
+    "Beancount hat diesen Ausgleich für eine Saldoprüfung eingefügt und er kann hier nicht bearbeitet oder gelöscht werden.",
+  editEntry: "Eintrag bearbeiten",
   merchantDetailUnavailable:
     "Dieser Händler ist im ausgewählten Hauptbuch nicht verfügbar.",
   commitDetailUnavailable:

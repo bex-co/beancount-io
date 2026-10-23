@@ -426,6 +426,9 @@ export const fr: Translations = {
   pluginCopyNotice:
     "Un plugin a généré cette écriture à partir d'une autre ; elle ne peut donc pas être modifiée ni supprimée ici.",
   pluginCopyOpenSource: "Ouvrir l'écriture source",
+  paddingNotice:
+    "Beancount a inséré cet ajustement pour une vérification de solde ; il ne peut donc pas être modifié ni supprimé ici.",
+  editEntry: "Modifier l'écriture",
   merchantDetailUnavailable:
     "Ce marchand n'est pas disponible dans le grand livre sélectionné.",
   commitDetailUnavailable:

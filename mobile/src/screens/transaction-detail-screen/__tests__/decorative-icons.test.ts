@@ -61,3 +61,24 @@ describe("the transaction detail's hero icon", () => {
     expect(row.includes("?entryRowTitle(entry):undefined")).toBe(true);
   });
 });
+
+// w21/841, w21/842: wording for padding; no stale header while an entry reloads.
+describe("the transaction detail's states", () => {
+  it("words a padding entry as padding, not as plugin output", () => {
+    expect(
+      compact.includes(
+        'entry.flag==="P"?t("paddingNotice"):t("pluginCopyNotice")',
+      ),
+    ).toBe(true);
+  });
+
+  it("titles and labels a non-transaction source by its kind", () => {
+    expect(compact.includes('t("editEntry")')).toBe(true);
+    expect(compact.includes("sourceKind(sourceSlice)")).toBe(true);
+  });
+
+  it("clears the previous entry's header actions while it loads", () => {
+    const loading = compact.slice(compact.indexOf("if(!entry){"));
+    expect(loading.slice(0, 900).includes("headerRight:()=>null")).toBe(true);
+  });
+});

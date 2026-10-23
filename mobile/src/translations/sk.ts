@@ -426,6 +426,9 @@ export const sk: Translations = {
   pluginCopyNotice:
     "Tento záznam vytvoril doplnok z iného záznamu, preto ho tu nemožno upraviť ani odstrániť.",
   pluginCopyOpenSource: "Otvoriť zdrojový záznam",
+  paddingNotice:
+    "Beancount vložil toto vyrovnanie na kontrolu zostatku, preto ho tu nemožno upraviť ani odstrániť.",
+  editEntry: "Upraviť záznam",
   merchantDetailUnavailable:
     "Tento obchodník nie je vo zvolenej knihe dostupný.",
   commitDetailUnavailable: "Táto zmena nie je vo zvolenej knihe dostupná.",

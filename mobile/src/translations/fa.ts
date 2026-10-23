@@ -410,6 +410,9 @@ export const fa: Translations = {
   pluginCopyNotice:
     "یک افزونه این ورودی را از ورودی دیگری ساخته است، پس اینجا نمی‌توان آن را ویرایش یا حذف کرد.",
   pluginCopyOpenSource: "باز کردن ورودی منبع",
+  paddingNotice:
+    "Beancount این تعدیل را برای بررسی تراز اضافه کرده است، بنابراین اینجا قابل ویرایش یا حذف نیست.",
+  editEntry: "ویرایش مورد",
   merchantDetailUnavailable: "این فروشنده در دفتر کل انتخاب‌شده موجود نیست.",
   commitDetailUnavailable: "این تغییر در دفتر کل انتخاب‌شده موجود نیست.",
   commitDetailGone: "این تغییر دیگر در دسترس نیست.",

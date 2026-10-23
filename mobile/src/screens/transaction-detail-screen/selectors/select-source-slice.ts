@@ -12,3 +12,27 @@ export function selectSourceSlice(
   const slice = context?.slice?.trim();
   return slice ? slice : null;
 }
+
+const DIRECTIVE_LABEL_KEYS: Readonly<Record<string, string>> = {
+  open: "open",
+  close: "close",
+  balance: "balance",
+  pad: "pad",
+  note: "note",
+  document: "document",
+  price: "price",
+  custom: "custom",
+};
+
+/**
+ * What a source text is, from its first line: a transaction (a flag or `txn`
+ * after the date), or the label key of the directive it is (`pad`, `open`, …).
+ * A padding entry's source is the pad line, which read as a "Transaction" under
+ * "Edit Transaction" (w21/841). Null for text it cannot place.
+ */
+export function sourceKind(slice: string): "transaction" | string | null {
+  const word = /^\d{4}-\d{2}-\d{2}\s+(\S+)/u.exec(slice.trimStart())?.[1];
+  if (!word) return null;
+  if (/^(?:txn|[*!&#?%A-Z])$/u.test(word)) return "transaction";
+  return DIRECTIVE_LABEL_KEYS[word] ?? null;
+}

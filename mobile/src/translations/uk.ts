@@ -423,6 +423,9 @@ export const uk: Translations = {
   pluginCopyNotice:
     "Цей запис створено плагіном з іншого запису, тож його не можна змінити чи видалити тут.",
   pluginCopyOpenSource: "Відкрити вихідний запис",
+  paddingNotice:
+    "Beancount додав це вирівнювання для перевірки балансу, тому його не можна змінити чи видалити тут.",
+  editEntry: "Редагувати запис",
   merchantDetailUnavailable: "Цей продавець недоступний у вибраній книзі.",
   commitDetailUnavailable: "Ця зміна недоступна у вибраній книзі.",
   commitDetailGone: "Ця зміна більше недоступна.",

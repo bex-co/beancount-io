@@ -409,6 +409,9 @@ export const en = {
   pluginCopyNotice:
     "A plugin generated this entry from another one, so it can't be edited or deleted here.",
   pluginCopyOpenSource: "Open the source entry",
+  paddingNotice:
+    "Beancount inserted this padding for a balance check, so it can't be edited or deleted here.",
+  editEntry: "Edit entry",
   merchantDetailUnavailable:
     "This merchant isn't available in the selected ledger.",
   commitDetailUnavailable:

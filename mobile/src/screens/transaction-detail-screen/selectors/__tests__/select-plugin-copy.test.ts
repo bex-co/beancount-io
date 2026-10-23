@@ -262,7 +262,7 @@ describe("isPluginCopy with the ledger's generated_from", () => {
         "utf8",
       )
       .replace(/\s+/g, "");
-    expect(source.includes('{t("pluginCopyNotice")}')).toBe(true);
+    expect(source.includes('t("pluginCopyNotice")')).toBe(true);
     expect(
       source.includes("params:{entry_hash:generatedFrom,ledger:ledgerId}"),
     ).toBe(true);

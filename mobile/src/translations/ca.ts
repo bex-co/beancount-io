@@ -426,6 +426,9 @@ export const ca: Translations = {
   pluginCopyNotice:
     "Un connector ha generat aquesta entrada a partir d'una altra, per això no es pot editar ni suprimir aquí.",
   pluginCopyOpenSource: "Obre l'entrada d'origen",
+  paddingNotice:
+    "Beancount ha inserit aquest ajust per a una comprovació de saldo, així que no es pot editar ni eliminar aquí.",
+  editEntry: "Edita l'entrada",
   merchantDetailUnavailable:
     "Aquest comerç no està disponible al llibre seleccionat.",
   commitDetailUnavailable:

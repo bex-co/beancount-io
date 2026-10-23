@@ -426,6 +426,9 @@ export const es: Translations = {
   pluginCopyNotice:
     "Un plugin generó esta entrada a partir de otra, por eso no se puede editar ni eliminar aquí.",
   pluginCopyOpenSource: "Abrir la entrada de origen",
+  paddingNotice:
+    "Beancount insertó este ajuste para una comprobación de saldo, así que no se puede editar ni eliminar aquí.",
+  editEntry: "Editar entrada",
   merchantDetailUnavailable:
     "Este comercio no está disponible en el libro seleccionado.",
   commitDetailUnavailable:

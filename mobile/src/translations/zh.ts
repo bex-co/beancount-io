@@ -368,6 +368,9 @@ export const zh: Translations = {
   transactionErrorOpenFile: "在文件编辑器中打开",
   pluginCopyNotice: "此条目由插件根据另一条目生成，因此无法在此编辑或删除。",
   pluginCopyOpenSource: "打开源条目",
+  paddingNotice:
+    "Beancount 为余额检查插入了此补差条目，因此无法在此编辑或删除。",
+  editEntry: "编辑条目",
   merchantDetailUnavailable: "所选账本中没有这个商家。",
   commitDetailUnavailable: "所选账本中没有这项更改。",
   commitDetailGone: "此提交已不可用。",

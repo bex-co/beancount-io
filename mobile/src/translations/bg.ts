@@ -417,6 +417,9 @@ export const bg: Translations = {
   pluginCopyNotice:
     "Този запис е създаден от плъгин от друг запис, затова не може да се редактира или изтрие тук.",
   pluginCopyOpenSource: "Отвори изходния запис",
+  paddingNotice:
+    "Beancount добави това изравняване за проверка на баланса, затова не може да се редактира или изтрива тук.",
+  editEntry: "Редактиране на записа",
   merchantDetailUnavailable: "Този търговец не е наличен в избраната книга.",
   commitDetailUnavailable: "Тази промяна не е налична в избраната книга.",
   commitDetailGone: "Тази промяна вече не е налична.",

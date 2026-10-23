@@ -424,6 +424,9 @@ export const pt: Translations = {
   pluginCopyNotice:
     "Um plugin gerou este lançamento a partir de outro, por isso não pode ser editado nem excluído aqui.",
   pluginCopyOpenSource: "Abrir o lançamento de origem",
+  paddingNotice:
+    "O Beancount inseriu este ajuste para uma verificação de saldo, por isso não pode ser editado nem excluído aqui.",
+  editEntry: "Editar lançamento",
   merchantDetailUnavailable:
     "Este comerciante não está disponível no livro-razão selecionado.",
   commitDetailUnavailable:
