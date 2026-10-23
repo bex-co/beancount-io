@@ -1,4 +1,4 @@
-# Prepared inclusion request — not sent
+# Inclusion request — sent 2026-10-23 UTC
 
 To: partnerships@github.com
 Subject: Beancount.io hosted MCP — GitHub MCP Registry inclusion
@@ -38,7 +38,10 @@ Beancount.io publisher
 ---
 
 Operator preparation, checked 2026-10-21 UTC; Cursor evidence updated
-2026-10-22 UTC. No email or review request was sent.
+2026-10-22 UTC. The request was sent on 2026-10-23 at 20:30 UTC; the mail provider
+confirmed Message sent and the actual Sent message was inspected. See
+[nomination receipt](./nomination-receipt.json). GitHub review/publication and
+native VS Code verification remain open.
 The sender/contact is selected by the authorized operator outside this public
-file. Recheck the guide/evidence and curated dedup search before sending; do not
+file. The pre-send canonical gallery search and focused mailbox dedup were completed; do not
 remove the native-verification caveat until that rehearsal actually passes.

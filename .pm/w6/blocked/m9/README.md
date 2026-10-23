@@ -1,6 +1,6 @@
 # w6 · m9 — Reach developer marketplaces and galleries
 
-**Worker:** worker1 **Goal:** Developers discover and connect the hosted MCP server through the supported Docker, Cursor, Cline, and GitHub/VS Code galleries. **Status:** todo (t011-t013 await their exact prepared terms/access decisions; t014 GitHub nomination remains independently actionable)
+**Worker:** worker1 **Goal:** Developers discover and connect the hosted MCP server through the supported Docker, Cursor, Cline, and GitHub/VS Code galleries. **Status:** blocked (t001 and t014 done; exact t011-t013 terms/access decisions and existing publication/native verification remain)
 
 **Implementation estimate:** ~4½h, excluding external review queues and the standing closing tasks.
 
@@ -9,10 +9,10 @@
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
 | [t001](done/t001.md) | Confirm developer-gallery eligibility and existing records — **DONE** | 30m | w6/m8/t001 |
-| [t011](./t011.md) | Submit official Cursor application and retain receipt — **BLOCKED** | 30m | t001 |
-| [t012](./t012.md) | Complete required native checks and submit Docker contribution — **BLOCKED** | 60m | t001 |
-| [t013](./t013.md) | Complete required native checks and send Cline submission — **BLOCKED** | 60m | t001 |
-| [t014](./t014.md) | Send GitHub curated-gallery nomination and record delivery | 30m | t001 |
+| [t011](t011.md) | Submit official Cursor application and retain receipt — **BLOCKED** | 30m | t001 |
+| [t012](t012.md) | Complete required native checks and submit Docker contribution — **BLOCKED** | 60m | t001 |
+| [t013](t013.md) | Complete required native checks and send Cline submission — **BLOCKED** | 60m | t001 |
+| [t014](done/t014.md) | Send GitHub curated-gallery nomination and record delivery — **DONE** | 30m | t001 |
 | [t002](t002.md) | Prepare and submit Docker's remote MCP catalog entry — **BLOCKED** | 60m | t001, t012 |
 | [t003](t003.md) | Package the remote connection for Cursor's official and community marketplaces — **BLOCKED** | 60m | t001, t011 |
 | [t004](t004.md) | Prepare Cline's eligible marketplace submission and remote connection evidence — **BLOCKED** | 45m | t001, t013 |
@@ -95,7 +95,7 @@ This milestone returns from `blocked/` because newly materialized submission/rec
 
 An actual submission receipt closes only its receipt-stage task. Existing native/publication criteria and final verification remain required for this milestone's DoD. Preserve previous blocker history above; reassess concrete tool/account/access requirements at the actual action, carry prior authorization forward, and block only the affected step when a genuinely unmet condition remains. No task waits for another platform's review merely because it is later in the table.
 
-The earlier exclusion of Claude/ChatGPT was the 2026-10-20 scope decision. The owner's 2026-10-23 all-inventory request now places those separate application follow-ups in [m11](../m11/README.md), without duplicating this milestone's targets.
+The earlier exclusion of Claude/ChatGPT was the 2026-10-20 scope decision. The owner's 2026-10-23 all-inventory request now places those separate application follow-ups in [m11](../../m11/README.md), without duplicating this milestone's targets.
 
 ## Current blocked receipt action — 2026-10-23T20:17:19Z
 
@@ -108,3 +108,13 @@ The earlier exclusion of Claude/ChatGPT was the 2026-10-20 scope decision. The o
 ## Current Cline receipt gate — 2026-10-23 UTC
 
 - **t013:** the fresh native wizard, strict task-local settings and current official template/dedup are verified. Real Cline consent is narrowed to the synthetic QA ledger, with native identity/offline/read/write/admin scopes and a local callback. Its exact new-access confirmation is pending. **Unblock:** approve that actual grant, then complete callback and model-free public-SDK native tool checks before truthful issue submission. **Owners:** QA account holder, worker, then Cline reviewers. t014 and later milestones remain independent; no provider credentials or model session are needed for these MCP calls.
+
+## Blocked — remaining work after nomination submission, 2026-10-23 UTC
+
+The GitHub nomination is sent and t014 is archived under done/. All remaining tasks are blocked or depend on an unresolved blocked task, so the milestone returns to blocked/ without affecting independent m10/m11 work.
+
+- **t011:** final official Cursor form is fully prepared; its Submit Application action accepts Publisher Terms. **Unblock:** publisher confirms that exact actual legal-agreement action; worker submits and verifies the receipt. **Owners:** publisher, then worker.
+- **t012:** fresh native Docker consent requests ledger.read/ledger.write for only the synthetic QA ledger, returning through mcp.docker.com. **Unblock:** QA account holder confirms that exact new access; worker completes callback/native checks and actual upstream submission. **Owners:** QA account holder, worker, Docker reviewers.
+- **t013:** fresh native Cline consent requests identity/offline/read/write/admin for only the synthetic QA ledger and a local callback. **Unblock:** QA account holder confirms that exact new access; worker completes callback, model-free native SDK checks and truthful issue submission. **Owners:** QA account holder, worker, Cline reviewers.
+- **t005:** the operator authorization/sending prerequisite is cleared by the actual sent-mail receipt. **Unblock:** GitHub accepts/publishes the record, then the worker verifies actual GitHub/VS Code discovery and the dedicated native journey under existing w1/m34/t003. **Owners:** GitHub reviewers, then QA/client account holder and worker.
+- **t002-t004, t006-t010:** their original eligibility, actual public/native acceptance and closing criteria remain; new receipt tasks unblock their respective next phases, not other platforms' queues. **Unblock:** complete those specific receipt/native/publication prerequisites, then their dependent checks. **Owners:** stated publisher/QA/platform owners, then worker.

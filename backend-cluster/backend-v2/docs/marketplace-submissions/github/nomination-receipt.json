@@ -1,0 +1,19 @@
+{
+  "target": "GitHub curated MCP gallery / downstream VS Code discovery",
+  "state": "submitted; nomination sent; curation/publication pending",
+  "submissionEntry": "mailto:partnerships@github.com",
+  "recipient": "partnerships@github.com",
+  "subject": "Beancount.io hosted MCP \u2014 GitHub MCP Registry inclusion",
+  "sentAtUTC": "2026-10-23T20:30Z",
+  "timestampPrecision": "minute, from Sent-message display",
+  "receipt": "Gmail displayed Message sent; actual message opened in Sent with matching recipient, subject and public-safe body",
+  "sender": "Existing publisher-selected account; private sender identity omitted",
+  "privateMailboxUrl": "Omitted from public record",
+  "registryName": "io.beancount/beancount",
+  "endpoint": "https://beancount.io/api-gateway/mcp",
+  "officialRegistryCheck": "2026-10-23T20:28:29Z: active latest version 1.0.0 with canonical endpoint",
+  "curatedSearchCheck": "2026-10-23T20:28:31Z: canonical-identity default gallery API search returned HTTP 200 and zero records",
+  "dedup": "Focused pre-send mailbox query for recipient and Beancount returned no matching messages",
+  "boundary": "Mail-provider sending receipt, not recipient delivery/read, reviewer acceptance, public listing or authenticated VS Code connection",
+  "nextAction": "Monitor this nomination for actionable feedback; verify actual GitHub and VS Code discovery separately after curation; do not send a duplicate"
+}

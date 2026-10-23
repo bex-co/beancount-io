@@ -34,14 +34,14 @@
 
 ## Full inventory ownership and execution order
 
-The prepared [m9/t011](../m9/t011.md) official Cursor application awaits its exact final Publisher Terms confirmation. Docker [m9/t012](../m9/t012.md) is prepared at its exact synthetic-ledger consent decision. Cline [m9/t013](../m9/t013.md) is also at its exact synthetic-ledger consent decision. The next independent pick is [m9/t014](../m9/t014.md), the GitHub nomination. LobeHub and this milestone's tasks also remain independent; table order is priority, not a cross-platform dependency.
+The prepared [m9/t011](../blocked/m9/t011.md) official Cursor application awaits its exact final Publisher Terms confirmation. Docker [m9/t012](../blocked/m9/t012.md) is prepared at its exact synthetic-ledger consent decision. Cline [m9/t013](../blocked/m9/t013.md) is also at its exact synthetic-ledger consent decision. GitHub nomination [m9/t014](../blocked/m9/done/t014.md) is sent and archived. The next independent pick is [m10/t009](../m10/t009.md), LobeHub; this milestone's tasks remain independent; table order is priority, not a cross-platform dependency.
 
 | Inventory target | Submission / receipt owner | Review, public verification or retained gate |
 | --- | --- | --- |
-| Cursor — official | [m9/t011](../m9/t011.md) | [m9/t003](../m9/t003.md), [m9/t006](../m9/t006.md) |
-| Docker | [m9/t012](../m9/t012.md) | [m9/t002](../m9/t002.md), m9/t006 |
-| Cline | [m9/t013](../m9/t013.md) | [m9/t004](../m9/t004.md), m9/t006 |
-| GitHub curated gallery / VS Code | [m9/t014](../m9/t014.md) | [m9/t005](../m9/t005.md), m9/t006; existing w1/m34/t003 native owner retained |
+| Cursor — official | [m9/t011](../blocked/m9/t011.md) | [m9/t003](../blocked/m9/t003.md), [m9/t006](../blocked/m9/t006.md) |
+| Docker | [m9/t012](../blocked/m9/t012.md) | [m9/t002](../blocked/m9/t002.md), m9/t006 |
+| Cline | [m9/t013](../blocked/m9/t013.md) | [m9/t004](../blocked/m9/t004.md), m9/t006 |
+| GitHub curated gallery / VS Code | [m9/t014](../blocked/m9/done/t014.md) | [m9/t005](../blocked/m9/t005.md), m9/t006; existing w1/m34/t003 native owner retained |
 | LobeHub | [m10/t009](../m10/t009.md) | [m10/t003](../m10/t003.md), [m10/t004](../m10/t004.md) |
 | ChatGPT / OpenAI | Already submitted, publisher-confirmed 2026-10-23 | [m11/t001](./t001.md), existing specific application |
 | Claude | Already submitted, publisher-confirmed 2026-10-23 | [m11/t002](./t002.md), existing specific application |
@@ -53,8 +53,8 @@ The prepared [m9/t011](../m9/t011.md) official Cursor application awaits its exa
 | MCP.so | [041](../blocked/041.md) | Explicit approval of the observed $39 fee or a documented free route; no payment authorized by this plan |
 | PulseMCP | [042](../blocked/042.md) | Platform reopens supported submission/edit intake; no submission sent while paused |
 | Official MCP Registry | Already published under completed w2/m36 | Existing release workflow/canonical record; no duplicate namespace or routine resubmission |
-| cursor.directory — community | Already published under [m9/t003](../m9/t003.md) | Preserve published entry and completed native QA; separate from official Cursor submission |
-| Windsurf / legacy Cascade | Source-backed unavailable marketplace route under [m9/t001](../m9/done/t001.md) | m9/t006 retains explicit eligibility/revisit evidence; manual remote configuration is not a catalog submission |
+| cursor.directory — community | Already published under [m9/t003](../blocked/m9/t003.md) | Preserve published entry and completed native QA; separate from official Cursor submission |
+| Windsurf / legacy Cascade | Source-backed unavailable marketplace route under [m9/t001](../blocked/m9/done/t001.md) | m9/t006 retains explicit eligibility/revisit evidence; manual remote configuration is not a catalog submission |
 
 ## Execution rules
 

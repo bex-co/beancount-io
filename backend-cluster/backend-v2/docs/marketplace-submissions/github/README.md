@@ -1,14 +1,16 @@
 # GitHub and VS Code discovery preparation
 
-Checked 2026-10-21 UTC. [GitHub's documented inclusion route](https://github.blog/ai-and-ml/generative-ai/how-to-find-install-and-manage-mcp-servers-with-the-github-mcp-registry/) asks publishers with an existing official-registry record to contact `partnerships@github.com`.
-`nomination-email.md` is a concrete public-safe request for an authorized
-operator to send; it has not been sent and no external review has started.
+Updated 2026-10-23 UTC; original dated observations below retain their limits. [GitHub's documented inclusion route](https://github.blog/ai-and-ml/generative-ai/how-to-find-install-and-manage-mcp-servers-with-the-github-mcp-registry/) asks publishers with an existing official-registry record to contact `partnerships@github.com`.
+`nomination-email.md` records the public-safe request actually sent on
+2026-10-23 at 20:30 UTC. The mail provider confirmed sending and the Sent
+message was inspected; [receipt](./nomination-receipt.json). Recipient delivery,
+reviewer acceptance and publication are not established by that receipt.
 Do not publish a duplicate official-registry namespace or package.
 
 | Surface | Observed state |
 | --- | --- |
 | Official MCP Registry | `io.beancount/beancount` version 1.0.0 is public and names the canonical hosted URL. |
-| Curated GitHub MCP Registry | Live [Beancount search](https://github.com/mcp?search=beancount) returned no MCPs. Inclusion request remains unsent. |
+| Curated GitHub MCP Registry | Live [Beancount search](https://github.com/mcp?search=beancount) returned no MCPs. The nomination is now sent; curation remains pending. |
 | VS Code public default gallery feed | Anonymous name and registry-identity searches returned HTTP 200 with zero records. All six pages of the observed latest-version feed contain 560 unique records and no canonical name, endpoint or repository match; see the [API evidence](#public-default-gallery-api--2026-10-21-utc). |
 | Native VS Code gallery | The actual `@mcp` catalog reports 51 entries; 50 unique names were observed across overlapping viewports, with no Beancount match. This is not an exhaustive absence or name-filtered result. Installation and authenticated Copilot journey remain unverified; w1/m34/t003 retains shared rehearsal ownership. |
 
@@ -93,3 +95,18 @@ prepared nomination, followed by GitHub's curation decision. After acceptance,
 verify the actual feed/listing and native discovery, then the dedicated synthetic QA
 OAuth/query/preview journey. The completed public API read needs no user-input
 gate, and does not clear those separate publication and host-verification gates.
+
+## Nomination sent — 2026-10-23 UTC
+
+The documented one-off partnerships intake receives the actual sent request;
+Gmail reports Message sent and the matching message is visible in Sent at
+20:30 UTC. The public-safe receipt preserves recipient, subject, canonical
+identity, sending evidence and its limits without private sender/mailbox IDs.
+Earlier dated unsent statements describe the preparation history.
+
+Immediately before sending, the official registry is active at version 1.0.0
+and the canonical-identity query of the public default gallery API returns zero
+records. Those are separate observations from review state and native client
+rendering. The operator/sending gate is now cleared; GitHub curation and the
+existing VS Code native discovery/OAuth/query/preview ownership remain open.
+Do not send another nomination while this one awaits response.
