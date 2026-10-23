@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { RouterContext } from "@/common/types/router-context";
 import {
+  GetLedgerCashFlowAccountsDocument,
   GetLedgerCashFlowDocument,
   GetLedgerDocument,
 } from "@/graphql/definitions";
@@ -27,6 +28,32 @@ function loaderInput(query: (options: QueryOptions) => Promise<unknown>) {
   };
 }
 
+/** Account directives as the membership read returns them. */
+const directives = (...accounts: string[]) => ({
+  data: {
+    getLedgerAccountDirectives: accounts.map((account) => ({
+      account,
+      meta: null,
+    })),
+  },
+});
+
+/** Answers the ledger, membership and report reads. */
+function reads(
+  accounts = directives("Assets:Bank:Checking", "Liabilities:Card"),
+  ledger: unknown = { data: {} },
+) {
+  return vi.fn((options: QueryOptions) =>
+    Promise.resolve(
+      options.query === GetLedgerDocument
+        ? ledger
+        : options.query === GetLedgerCashFlowAccountsDocument
+          ? accounts
+          : { data: {} },
+    ),
+  );
+}
+
 describe("cashFlowLoader", () => {
   const cashFlowCall = (query: ReturnType<typeof vi.fn>) =>
     (query.mock.calls as [QueryOptions][]).find(
@@ -34,18 +61,20 @@ describe("cashFlowLoader", () => {
     )![0];
 
   it("requests the cash flow query with the destination loader deps", async () => {
-    const query = vi.fn((_options: QueryOptions) =>
-      Promise.resolve({ data: {} }),
-    );
+    const query = reads();
 
     await cashFlowLoader(loaderInput(query));
 
-    // The ledger read first, for its root names, then the report.
+    // The ledger read (root names) and cash membership first, then the report.
     expect(query.mock.calls.map(([options]) => options.query)).toEqual([
       GetLedgerDocument,
+      GetLedgerCashFlowAccountsDocument,
       GetLedgerCashFlowDocument,
     ]);
     expect(query.mock.calls[0]![0].variables).toEqual({
+      ledgerId: "open_ledger/example",
+    });
+    expect(query.mock.calls[1]![0].variables).toEqual({
       ledgerId: "open_ledger/example",
     });
     expect(cashFlowCall(query)).toEqual({
@@ -54,6 +83,7 @@ describe("cashFlowLoader", () => {
         ledgerId: "open_ledger/example",
         account: "",
         filter: "",
+        activityFilter: 'any(account:"^Assets:Bank:Checking$")',
         time: "2025",
         interval: "monthly",
         conversion: "at_cost",
@@ -67,25 +97,19 @@ describe("cashFlowLoader", () => {
   });
 
   it("reads the ledger's renamed roots (w4/1022)", async () => {
-    const query = vi.fn((options: QueryOptions) =>
-      Promise.resolve(
-        options.query === GetLedgerDocument
-          ? {
-              data: {
-                getLedger: {
-                  options: {
-                    nameAssets: "Actifs",
-                    nameLiabilities: "Dettes",
-                    nameEquity: "Capital",
-                    nameIncome: "Revenus",
-                    nameExpenses: "Charges",
-                  },
-                },
-              },
-            }
-          : { data: {} },
-      ),
-    );
+    const query = reads(directives("Actifs:Bank:Checking", "Actifs:Fund"), {
+      data: {
+        getLedger: {
+          options: {
+            nameAssets: "Actifs",
+            nameLiabilities: "Dettes",
+            nameEquity: "Capital",
+            nameIncome: "Revenus",
+            nameExpenses: "Charges",
+          },
+        },
+      },
+    });
 
     await cashFlowLoader(loaderInput(query));
 
@@ -95,14 +119,46 @@ describe("cashFlowLoader", () => {
       assetsRoot: "Actifs",
       liabilitiesRoot: "Dettes",
       equityRoot: "Capital",
+      // The renamed asset root's cash account, by the same heuristics.
+      activityFilter: 'any(account:"^Actifs:Bank:Checking$")',
     });
+  });
+
+  it("narrows the reader's filter to cash transactions, keeping it for closing balances (w4/m56)", async () => {
+    const query = reads(
+      directives("Assets:US:BofA:Checking", "Assets:US:ETrade:Cash"),
+    );
+    const input = loaderInput(query);
+    input.deps.filter = "#trip, #home";
+
+    await cashFlowLoader(input);
+
+    expect(cashFlowCall(query).variables).toMatchObject({
+      filter: "#trip, #home",
+      activityFilter:
+        '(#trip, #home) any(account:"^Assets:US:BofA:Checking$", account:"^Assets:US:ETrade:Cash$")',
+    });
+  });
+
+  it("makes no activity read when cash membership could not be read (w4/m56)", async () => {
+    const query = vi.fn((options: QueryOptions) =>
+      options.query === GetLedgerCashFlowAccountsDocument
+        ? Promise.reject(new Error("network"))
+        : Promise.resolve({ data: {} }),
+    );
+
+    await expect(cashFlowLoader(loaderInput(query))).resolves.toBeUndefined();
+    // Never an unfiltered read standing in for the eligible one.
+    expect(
+      query.mock.calls.some(
+        ([options]) => options.query === GetLedgerCashFlowDocument,
+      ),
+    ).toBe(false);
   });
 
   it("prefetches the ledger's stored report conversion", async () => {
     cookies.set("beancount.reportConversion.open_ledger%2Fexample", "units");
-    const query = vi.fn((_options: QueryOptions) =>
-      Promise.resolve({ data: {} }),
-    );
+    const query = reads();
 
     try {
       await cashFlowLoader(loaderInput(query));

@@ -1,9 +1,29 @@
+# Every account the ledger defines, unfiltered: cash membership is resolved
+# from these before any activity is read, because a filtered report's closing
+# hierarchy can hold no cash account at all (w4/m56).
+query GetLedgerCashFlowAccounts($ledgerId: String!) {
+  getLedgerAccountDirectives(ledgerId: $ledgerId) {
+    account
+    openedAt
+    closedAt
+    balance
+    entryCount
+    entryHash
+    closeEntryHash
+    meta
+  }
+}
+
 query GetLedgerCashFlow(
   $ledgerId: String!
   $interval: String!
   $conversion: String!
   $time: String
+  # The reader's filter, for the closing cash balances.
   $filter: String
+  # That filter restricted to transactions with a cash posting
+  # (cashActivityFilter), for the activity intervals.
+  $activityFilter: String!
   $account: String
   # The ledger's own root names (option "name_income" etc.); the producer
   # reads accountName as a prefix, so English literals missed renamed roots
@@ -20,7 +40,7 @@ query GetLedgerCashFlow(
     interval: $interval
     conversion: $conversion
     time: $time
-    filter: $filter
+    filter: $activityFilter
     account: $account
   ) {
     date
@@ -33,7 +53,7 @@ query GetLedgerCashFlow(
     interval: $interval
     conversion: $conversion
     time: $time
-    filter: $filter
+    filter: $activityFilter
     account: $account
   ) {
     date
@@ -46,7 +66,7 @@ query GetLedgerCashFlow(
     interval: $interval
     conversion: $conversion
     time: $time
-    filter: $filter
+    filter: $activityFilter
     account: $account
   ) {
     date
@@ -59,7 +79,7 @@ query GetLedgerCashFlow(
     interval: $interval
     conversion: $conversion
     time: $time
-    filter: $filter
+    filter: $activityFilter
     account: $account
   ) {
     date
@@ -72,7 +92,7 @@ query GetLedgerCashFlow(
     interval: $interval
     conversion: $conversion
     time: $time
-    filter: $filter
+    filter: $activityFilter
     account: $account
   ) {
     date
@@ -95,15 +115,5 @@ query GetLedgerCashFlow(
       cost
       costChildren
     }
-  }
-  getLedgerAccountDirectives(ledgerId: $ledgerId) {
-    account
-    openedAt
-    closedAt
-    balance
-    entryCount
-    entryHash
-    closeEntryHash
-    meta
   }
 }

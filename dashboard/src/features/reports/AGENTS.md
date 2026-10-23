@@ -80,6 +80,21 @@ and the overview Sankey read a renamed root as its type. Never hardcode the
 English root names in a query or classifier.
 Apply the same multi-unit management-schedule rules as the other statements.
 
+Only a transaction with a posting to a cash or cash-equivalent account is cash
+activity: a purchase charged wholly to a card moves no cash, though its legs
+balance and would otherwise read as equal operating and financing flows. The
+page and loader first read every account the ledger defines
+(`GetLedgerCashFlowAccounts`, unfiltered). `cashAccountMembership` resolves
+the cash set by the same declared, ancestor and name rules as the closing
+balances, and `cashActivityFilter` narrows the reader's filter to
+`(filter) any(account:"^A$", …)` for the five interval reads only. The closing
+balances keep the reader's filter. Until membership is known there is no
+activity read, never an unfiltered one; an empty cash set matches no
+transaction (w4/m56). Eligibility is per transaction: one that mixes cash and
+noncash legs (a paycheck with a 401k deferral, a purchase split between cash
+and a card) still reports its noncash legs at full value, which only
+per-posting data could separate.
+
 Interval totals are **direct postings per exact account**, not parent rollups.
 `cash-flow/lib/model.ts` must count every returned account key once — a parent
 with its own activity (for example `Expenses:Taxes:…:Federal` in USD beside

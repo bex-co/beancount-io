@@ -232,6 +232,59 @@ export function subtractBalanceRecords(
   return sumBalanceRecords([left, invertBalanceRecord(right)]);
 }
 
+type CashSource = "declared" | "heuristic" | null;
+
+/**
+ * How an account is cash, or `null` when it is not, given its parent's
+ * membership. A declared role decides for the account itself; otherwise the
+ * account is cash when a cash ancestor's membership carries down or its own
+ * name heuristic matches.
+ */
+function cashSourceOf(
+  account: string,
+  inherited: CashSource,
+  accountMeta?: AccountMetaMap,
+  roots?: AccountRoots,
+): CashSource {
+  const resolution = resolveCashFlowRole(
+    accountAsRootType(account, roots),
+    accountMeta?.get(account),
+  );
+  const isCash =
+    resolution.source === "declared"
+      ? resolution.role === "cash"
+      : inherited !== null || resolution.role === "cash";
+  if (!isCash) return null;
+  return resolution.source === "declared"
+    ? "declared"
+    : (inherited ?? "heuristic");
+}
+
+/**
+ * Every cash & cash-equivalent account the ledger defines — the keys of its
+ * `toAccountMetaMap`, one per `open` directive — by the same rule as
+ * `collectCashAccounts`, but without a report's closing hierarchy: a filter
+ * can leave that hierarchy without any cash account at all (w4/m56). Closed
+ * accounts count, and an ancestor without an `open` directive resolves by its
+ * name, as its hierarchy node does.
+ */
+export function cashAccountMembership(
+  accountMeta: AccountMetaMap,
+  roots?: AccountRoots,
+): string[] {
+  const isCash = (account: string) => {
+    const parts = account.split(":");
+    if (accountAsRootType(parts[0]!, roots) !== "Assets") return false;
+    let source: CashSource = null;
+    for (let depth = 2; depth <= parts.length; depth += 1) {
+      const name = parts.slice(0, depth).join(":");
+      source = cashSourceOf(name, source, accountMeta, roots);
+    }
+    return source !== null;
+  };
+  return [...accountMeta.keys()].filter(isCash).sort();
+}
+
 /**
  * Collect the cash & equivalents accounts from the closing assets hierarchy,
  * with their rollup balances. Roles resolve per leaf account: a declared
@@ -252,31 +305,21 @@ export function collectCashAccounts(
 
   const visit = (
     node: SerializableTreeNode,
-    inheritedCash: "declared" | "heuristic" | null,
+    inheritedCash: CashSource,
   ): void => {
-    const resolution = resolveCashFlowRole(
-      accountAsRootType(node.account, roots),
-      accountMeta?.get(node.account),
+    const cashSource = cashSourceOf(
+      node.account,
+      inheritedCash,
+      accountMeta,
+      roots,
     );
-    // A declared role decides for this node; otherwise the account is cash
-    // when a cash ancestor's membership carries down or its own name
-    // heuristic matches.
-    const isCash =
-      resolution.source === "declared"
-        ? resolution.role === "cash"
-        : inheritedCash !== null || resolution.role === "cash";
-    const cashSource: "declared" | "heuristic" | null = !isCash
-      ? null
-      : resolution.source === "declared"
-        ? "declared"
-        : (inheritedCash ?? "heuristic");
 
     const children = node.children as unknown as SerializableTreeNode[];
     if (children.length > 0) {
       children.forEach((child) => visit(child, cashSource));
       return;
     }
-    if (!isCash) {
+    if (cashSource === null) {
       return;
     }
     const balance = node.balanceChildren ?? node.balance;
@@ -284,7 +327,7 @@ export function collectCashAccounts(
       snapshots.push({
         account: node.account,
         balance,
-        roleSource: cashSource ?? "heuristic",
+        roleSource: cashSource,
       });
     }
   };

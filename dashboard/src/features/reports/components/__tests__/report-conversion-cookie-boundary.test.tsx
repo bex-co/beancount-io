@@ -16,6 +16,7 @@ import { getCookie } from "@/common/hooks/use-cookie-storage-state/cookie";
 import type { RouterContext } from "@/common/types/router-context";
 import {
   GetLedgerBalanceSheetDocument,
+  GetLedgerCashFlowAccountsDocument,
   GetLedgerCashFlowDocument,
   GetLedgerDocument,
   GetLedgerIncomeStatementDocument,
@@ -136,10 +137,16 @@ async function serverConversion(
 
 async function prefetchReports(header: string, ledgerId = LEDGER) {
   const query = vi.fn(
-    async (_options: {
-      query: unknown;
-      variables?: Record<string, unknown>;
-    }) => ({ data: {} }),
+    async (options: { query: unknown; variables?: Record<string, unknown> }) =>
+      options.query === GetLedgerCashFlowAccountsDocument
+        ? {
+            data: {
+              getLedgerAccountDirectives: [
+                { account: "Assets:US:BofA:Checking", meta: null },
+              ],
+            },
+          }
+        : { data: {} },
   );
   const [ledgerOwner, ledgerName] = ledgerId.split("/");
   const input: Parameters<typeof balanceSheetLoader>[0] = {
@@ -157,9 +164,12 @@ async function prefetchReports(header: string, ledgerId = LEDGER) {
     await cashFlowLoader(input);
     await trialBalanceLoader(input);
   });
-  // Cash Flow also reads the ledger for its root names (w4/1022).
+  // Cash Flow also reads the ledger for its root names (w4/1022) and its
+  // cash membership (w4/m56).
   const reports = query.mock.calls.filter(
-    ([options]) => options.query !== GetLedgerDocument,
+    ([options]) =>
+      options.query !== GetLedgerDocument &&
+      options.query !== GetLedgerCashFlowAccountsDocument,
   );
   expect(reports.map(([options]) => options.query)).toEqual([
     GetLedgerBalanceSheetDocument,

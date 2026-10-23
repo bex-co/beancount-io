@@ -3,6 +3,7 @@ import { ArrowLeftRight } from "lucide-react";
 import { ClientOnly, useParams } from "@tanstack/react-router";
 import { useQuery } from "@apollo/client/react";
 import {
+  GetLedgerCashFlowAccountsDocument,
   GetLedgerCashFlowDocument,
   type SerializableTreeNode,
 } from "@/graphql/definitions";
@@ -23,10 +24,12 @@ import {
 } from "@/common/lib/fava-options";
 import {
   buildCashFlowStatement,
+  cashAccountMembership,
   CashFlowReconciliationError,
   collectCashAccounts,
   toAccountMetaMap,
 } from "./lib/model";
+import { cashActivityFilter } from "./lib/cash-eligibility";
 import { mergeIntervalAccountChanges } from "./lib/merge-intervals";
 import { joinCashAccountStatus } from "./lib/cash-account-status";
 import { CashFlowContent } from "./cash-flow-content";
@@ -82,6 +85,33 @@ export default function LedgerCashFlowPage() {
     Partial<Record<string, LegendSelection>>
   >({});
 
+  const roots = useMemo(
+    () => ledgerAccountRoots(ledgerData.options),
+    [ledgerData.options],
+  );
+  // Cash membership first, from every account the ledger defines: only a
+  // transaction that posts to cash is cash activity (w4/m56). Until it is
+  // known the activity read waits, rather than reading every transaction.
+  const accounts = useQuery(GetLedgerCashFlowAccountsDocument, {
+    variables: { ledgerId },
+    fetchPolicy: "cache-first",
+  });
+  const directives = accounts.data?.getLedgerAccountDirectives;
+  const accountMeta = useMemo(
+    () => toAccountMetaMap(directives ?? []),
+    [directives],
+  );
+  const activityFilter = useMemo(
+    () =>
+      directives &&
+      cashActivityFilter(
+        ledgerFilters.searchParams.filter,
+        cashAccountMembership(accountMeta, roots),
+      ),
+    [directives, accountMeta, roots, ledgerFilters.searchParams.filter],
+  );
+  const membershipPending = activityFilter === undefined;
+
   const {
     data,
     loading: isLoading,
@@ -93,26 +123,24 @@ export default function LedgerCashFlowPage() {
       conversion,
       account: ledgerFilters.searchParams.account,
       filter: ledgerFilters.searchParams.filter,
+      // Never sent as "": the read is skipped until membership is known.
+      activityFilter: activityFilter ?? "",
       time: ledgerFilters.searchParams.time,
       interval: timeInterval,
       ...cashFlowRootVariables(ledgerData.options),
     },
+    skip: membershipPending,
     fetchPolicy: "cache-first",
   });
-  const roots = useMemo(
-    () => ledgerAccountRoots(ledgerData.options),
-    [ledgerData.options],
+  const { failure, retrying, retry } = useQueryRetry(
+    accounts.error ?? error,
+    accounts.error ? accounts.refetch : refetch,
   );
-  const { failure, retrying, retry } = useQueryRetry(error, refetch);
 
-  const settled = selectSettledReportData(isLoading, data);
+  // A skipped read reports no loading, so unknown membership is pending too.
+  const settled = selectSettledReportData(isLoading || membershipPending, data);
 
   const cashFlowData = settled.pending ? undefined : settled.data;
-
-  const accountMeta = useMemo(
-    () => toAccountMetaMap(cashFlowData?.getLedgerAccountDirectives ?? []),
-    [cashFlowData],
-  );
 
   const closingCashAccounts = useMemo(
     () =>
@@ -157,10 +185,10 @@ export default function LedgerCashFlowPage() {
     () =>
       joinCashAccountStatus(
         closingCashAccounts,
-        cashFlowData?.getLedgerAccountDirectives ?? [],
+        directives ?? [],
         statement?.invalidRoleValues ?? [],
       ),
-    [closingCashAccounts, cashFlowData, statement],
+    [closingCashAccounts, directives, statement],
   );
 
   if (failure) {

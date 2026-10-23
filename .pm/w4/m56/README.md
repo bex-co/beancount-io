@@ -1,6 +1,6 @@
 # w4 · m56 — Exclude entirely noncash transactions from Cash Flow activities
 
-**Worker:** worker1 **Goal:** activity totals explain transactions that actually touch the resolved cash/equivalent set **Status:** todo
+**Worker:** worker1 **Goal:** activity totals explain transactions that actually touch the resolved cash/equivalent set **Status:** in progress (all but t007 Closeout done)
 
 Minor residual of [m2](../done/m2/README.md), approximately3h15m across eligibility data preparation, query integration and verification. The current public example reports425.83USD of operating cash outflows and financing inflows for20 purchases with no cash leg. Net cash and Income Statement are correct. See [FINDINGS](./FINDINGS.md).
 
@@ -8,12 +8,12 @@ Minor residual of [m2](../done/m2/README.md), approximately3h15m across eligibil
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| [t001](./t001.md) | Resolve cash membership and compose transaction eligibility | 45m | — |
-| [t002](./t002.md) | Apply eligibility to activity reads while retaining report scope | 45m | t001 |
-| [t003](./t003.md) | Repeat native noncash and cash-payment journeys | 30m | t002 |
-| [t004](./t004.md) | Adoption surface | 15m | t003 |
-| [t005](./t005.md) | Simplify | 15m | t004 |
-| [t006](./t006.md) | Test coverage | 35m | t004, t005 |
+| [t001](./done/t001.md) | Resolve cash membership and compose transaction eligibility — **DONE** | 45m | — |
+| [t002](./done/t002.md) | Apply eligibility to activity reads while retaining report scope — **DONE** | 45m | t001 |
+| [t003](./done/t003.md) | Repeat native noncash and cash-payment journeys — **DONE** | 30m | t002 |
+| [t004](./done/t004.md) | Adoption surface — **DONE** | 15m | t003 |
+| [t005](./done/t005.md) | Simplify — **DONE** | 15m | t004 |
+| [t006](./done/t006.md) | Test coverage — **DONE** | 35m | t004, t005 |
 | [t007](./t007.md) | Closeout | 10m | t006 |
 
 ## Definition of done

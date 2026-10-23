@@ -1,10 +1,13 @@
 import type { RouteLoader } from "@/common/types/route-loader";
 import type { LedgerSearchParams } from "@/common/providers/ledger-search-params-provider/context";
 import {
+  GetLedgerCashFlowAccountsDocument,
   GetLedgerCashFlowDocument,
   GetLedgerDocument,
 } from "@/graphql/definitions";
-import { cashFlowRootVariables } from "./lib/account-roots";
+import { cashFlowRootVariables, ledgerAccountRoots } from "./lib/account-roots";
+import { cashActivityFilter } from "./lib/cash-eligibility";
+import { cashAccountMembership, toAccountMetaMap } from "./lib/model";
 import { cashFlowQueryDefaults } from "./constants";
 import { storedReportConversion } from "@/features/reports/components/use-report-conversion";
 
@@ -22,9 +25,22 @@ export const cashFlowLoader: RouteLoader<
   // loaders (trial-balance, balance-sheet, income-statement).
   // The interval reads take the ledger's own root names, as the page does;
   // the ledger read is the layout's, normally already cached.
-  const ledger = await context.client
-    .query({ query: GetLedgerDocument, variables: { ledgerId } })
-    .catch(() => null);
+  const [ledger, accounts] = await Promise.all([
+    context.client
+      .query({ query: GetLedgerDocument, variables: { ledgerId } })
+      .catch(() => null),
+    // Cash membership, as the page resolves it (w4/m56). Without it the page
+    // has no activity read to make, so neither does the loader.
+    context.client
+      .query({
+        query: GetLedgerCashFlowAccountsDocument,
+        variables: { ledgerId },
+      })
+      .catch(() => null),
+  ]);
+  const directives = accounts?.data?.getLedgerAccountDirectives;
+  if (!directives) return;
+  const options = ledger?.data?.getLedger?.options;
   await Promise.allSettled([
     context.client.query({
       query: GetLedgerCashFlowDocument,
@@ -32,10 +48,17 @@ export const cashFlowLoader: RouteLoader<
         ledgerId,
         account: deps.account,
         filter: deps.filter,
+        activityFilter: cashActivityFilter(
+          deps.filter,
+          cashAccountMembership(
+            toAccountMetaMap(directives),
+            ledgerAccountRoots(options),
+          ),
+        ),
         time: deps.time,
         interval: cashFlowQueryDefaults.interval,
         conversion: storedReportConversion(ledgerId),
-        ...cashFlowRootVariables(ledger?.data?.getLedger?.options),
+        ...cashFlowRootVariables(options),
       },
     }),
   ]);
