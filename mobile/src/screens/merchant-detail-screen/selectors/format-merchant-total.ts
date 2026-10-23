@@ -30,28 +30,37 @@ export function formatMerchantTotal({
 }
 
 /**
- * The header's total lines. `$` is the symbol of USD, CAD, AUD and MXN, `¥` of
- * CNY and JPY, `kr` of SEK, NOK and DKK, so a merchant paid in two of them read
- * two identical "$42.50" lines (w21/535). A currency whose symbol another total
- * shares keeps it only when it is the ledger's primary currency; the others read
- * by code ("42.50 CAD").
+ * One amount, by code where its symbol is taken. `$` is the symbol of USD, CAD,
+ * AUD and MXN, `¥` of CNY and JPY, `kr` of SEK, NOK and DKK, so a merchant paid
+ * in two of them read two identical "$42.50" lines (w21/535). A symbol is taken
+ * when the ledger's primary currency or one of `others` shares it: USD read
+ * "$120.00" over its own rows' "−60.00 USD" in a CAD ledger, whose "$" Home
+ * uses for CAD (w21/719). The primary currency always keeps its symbol.
  */
+export function formatMerchantAmount(
+  row: MerchantCurrencyTotal,
+  primaryCurrency?: string,
+  others: readonly string[] = [],
+): string {
+  const symbol = getCurrencySymbol(row.currency);
+  const taken =
+    symbol !== "" &&
+    row.currency !== primaryCurrency &&
+    [...others, ...(primaryCurrency ? [primaryCurrency] : [])].some(
+      (other) => other !== row.currency && getCurrencySymbol(other) === symbol,
+    );
+  return taken
+    ? formatSignedMoneyWithCode(row.total, row.currency)
+    : formatMerchantTotal(row);
+}
+
+/** The header's total lines, each read as {@link formatMerchantAmount} reads it. */
 export function formatMerchantTotals(
   totals: readonly MerchantCurrencyTotal[],
   primaryCurrency?: string,
 ): string[] {
-  return totals.map((row) => {
-    const symbol = getCurrencySymbol(row.currency);
-    const shared =
-      symbol !== "" &&
-      totals.some(
-        (other) =>
-          other.currency !== row.currency &&
-          getCurrencySymbol(other.currency) === symbol,
-      );
-    if (!shared || row.currency === primaryCurrency) {
-      return formatMerchantTotal(row);
-    }
-    return formatSignedMoneyWithCode(row.total, row.currency);
-  });
+  const currencies = totals.map((row) => row.currency);
+  return totals.map((row) =>
+    formatMerchantAmount(row, primaryCurrency, currencies),
+  );
 }

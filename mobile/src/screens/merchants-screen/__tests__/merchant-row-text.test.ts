@@ -95,7 +95,9 @@ describe("the Merchants row", () => {
       path.join(__dirname, "..", "merchant-row.tsx"),
       "utf8",
     );
-    expect(row.includes("merchantRowText(item, t, locale, today)")).toBe(true);
+    expect(
+      row.includes("merchantRowText(item, t, locale, today, primaryCurrency)"),
+    ).toBe(true);
     expect(row.includes("accessibilityLabel={accessibilityLabel}")).toBe(true);
     expect(row.includes("accessibilityLabel={merchant.payee}")).toBe(false);
     expect(row.includes("testID={`merchant-row-${merchant.payee}`}")).toBe(
@@ -152,5 +154,35 @@ describe("merchantRowText amount currency", () => {
     );
     expect(text.trailingAmount?.includes("10.99")).toBe(true);
     expect(text.trailingAmount?.includes("980")).toBe(false);
+  });
+});
+
+// w21/719: the recurring amount read "-$15.99" for USD in a CAD ledger.
+describe("a recurring amount in a ledger whose own dollar is another", () => {
+  it("reads by code, and keeps the symbol in a USD ledger", () => {
+    const row = netflix(true, false);
+    expect(
+      merchantRowText(row, t, "en", "2026-10-21", "CAD").trailingAmount,
+    ).toBe("~15.99 USD");
+    expect(
+      merchantRowText(row, t, "en", "2026-10-21", "USD").trailingAmount,
+    ).toBe("~$15.99");
+  });
+
+  it("is given the ledger's own currency by the Merchants list", () => {
+    const read = (file: string) =>
+      fs
+        .readFileSync(path.join(__dirname, "..", file), "utf8")
+        .replace(/\s+/g, "");
+    expect(
+      read("merchants-screen.tsx").includes(
+        "primaryCurrency={primaryCurrency}",
+      ),
+    ).toBe(true);
+    expect(
+      read("merchant-row.tsx").includes(
+        "merchantRowText(item,t,locale,today,primaryCurrency)",
+      ),
+    ).toBe(true);
   });
 });

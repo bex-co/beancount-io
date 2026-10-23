@@ -33,8 +33,9 @@ describe("formatMerchantTotals", () => {
   });
 
   it("leaves a lone total, and totals with distinct symbols, as they were", () => {
-    expect(formatMerchantTotals([total("CAD", -42.5)], "USD")).toEqual([
-      "-$42.50",
+    expect(formatMerchantTotals([total("CAD", -42.5)])).toEqual(["-$42.50"]);
+    expect(formatMerchantTotals([total("EUR", -42.5)], "USD")).toEqual([
+      "-€42.50",
     ]);
     expect(
       formatMerchantTotals([total("USD", -42.5), total("EUR", -10)], "USD"),
@@ -45,5 +46,21 @@ describe("formatMerchantTotals", () => {
     expect(
       formatMerchantTotals([total("USD", 0), total("CAD", -0.001)], "USD"),
     ).toEqual(["$0.00", "0.00 CAD"]);
+  });
+
+  // w21/719: in a CAD ledger a USD merchant's header read "$120.00" over its
+  // own rows' "−60.00 USD", while Home's "$" is CAD.
+  it("reads a lone total by code when the ledger's own currency has its symbol", () => {
+    expect(formatMerchantTotals([total("USD", -120)], "CAD")).toEqual([
+      "-120.00 USD",
+    ]);
+    expect(formatMerchantTotals([total("CAD", -42.5)], "USD")).toEqual([
+      "-42.50 CAD",
+    ]);
+    // The ledger's own keeps its symbol, a USD ledger's USD included.
+    expect(formatMerchantTotals([total("USD", -120)], "USD")).toEqual([
+      "-$120.00",
+    ]);
+    expect(formatMerchantTotals([total("CAD", -1)], "CAD")).toEqual(["-$1.00"]);
   });
 });

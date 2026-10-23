@@ -146,13 +146,19 @@ const getStyles = (theme: ColorTheme) =>
 interface MerchantRowProps {
   item: MerchantListItem;
   onPress: () => void;
+  /** The ledger's own currency (w21/719). */
+  primaryCurrency?: string;
 }
 
 /**
  * Directory row: brand logo, payee, count (or recurring cadence/amount/next),
  * optional RECURRING badge on general-list rows, overdue tint on the next date.
  */
-export function MerchantRow({ item, onPress }: MerchantRowProps) {
+export function MerchantRow({
+  item,
+  onPress,
+  primaryCurrency,
+}: MerchantRowProps) {
   const styles = useThemeStyle(getStyles);
   const { t, locale } = useTranslations();
   const today = useToday();
@@ -167,7 +173,7 @@ export function MerchantRow({ item, onPress }: MerchantRowProps) {
     trailingMeta,
     trailingOverdue,
     accessibilityLabel,
-  } = merchantRowText(item, t, locale, today);
+  } = merchantRowText(item, t, locale, today, primaryCurrency);
 
   const leading = (
     <>

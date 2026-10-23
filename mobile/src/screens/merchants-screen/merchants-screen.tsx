@@ -36,6 +36,7 @@ import {
   merchantRecurringOverridesVar,
   overrideFor,
 } from "@/common/vars/merchant-recurring-overrides";
+import { useLedgerReadContext } from "@/common/hooks/use-ledger-read-context";
 import { MerchantRow } from "./merchant-row";
 import { MerchantsListSkeleton } from "./merchants-list-skeleton";
 import {
@@ -267,11 +268,17 @@ function MerchantsDirectory() {
   // shows the order already applied, so the two deliberately differ.
   const sortLabel = t(merchantsSortButtonLabelKey(sort));
 
+  // The detail header reads its currencies against the same one (w21/719).
+  const { primaryCurrency } = useLedgerReadContext(ledgerId!);
   const renderItem = useCallback(
     ({ item }: { item: MerchantListItem }) => (
-      <MerchantRow item={item} onPress={() => onPressRow(item)} />
+      <MerchantRow
+        item={item}
+        onPress={() => onPressRow(item)}
+        primaryCurrency={primaryCurrency}
+      />
     ),
-    [onPressRow],
+    [onPressRow, primaryCurrency],
   );
 
   const renderSectionHeader = useCallback(
