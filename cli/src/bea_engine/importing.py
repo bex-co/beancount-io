@@ -524,14 +524,14 @@ def answer(
     ledger_conflicts = False
     batch_conflicts = False
     plugins_ran = bool(options.get("plugin"))
-    written_index: dict[tuple[str, str, str], list[Any]] | None = None
+    written_index: tuple[dict[tuple[str, str, str], list[Any]], dict[tuple[str, str, str], list[Any]]] | None = None
 
-    def written_source(key: tuple[str, str, str]) -> list[Any]:
+    def written_source(key: tuple[str, str, str], *, open_lots: bool = False) -> list[Any]:
         # Parsed on first need: most imports never disagree with the view.
         nonlocal written_index
         if written_index is None:
             written_index = _written_identities(snapshot, account, keys, roots[:2])
-        return written_index.get(key, [])
+        return written_index[1 if open_lots else 0].get(key, [])
 
     hashed = _hash_rows(entries, account, keys, Transaction)
     claimed, owners = _claim_payeeless_ids(hashed, identities, account)
@@ -607,6 +607,7 @@ def answer(
                         # The view proves a key only as far as plugins and the
                         # loader left it alone; without either, a new key is new.
                         source=written_source if key in identities or plugins_ran else None,
+                        open_lots=plugins_ran,
                     )
                 )
                 is not None
@@ -2058,7 +2059,8 @@ def _under_id(
     account: str,
     fingerprint: tuple[Any, ...],
     lookup_only: bool,
-    source: Callable[[tuple[str, str, str]], list[Any]] | None = None,
+    source: Callable[..., list[Any]] | None = None,
+    open_lots: bool = False,
 ) -> Any:
     """The entry a native ID names for this row: the nearest one under it that agrees, else the latest.
 
@@ -2089,13 +2091,29 @@ def _under_id(
     # it, as it is with a row the view keeps (w5/973).
     if found is None and written:
         return min(written, key=lambda other: abs((entry.date - other.date).days))
+    # A written sale with an open cost selector (`{USD}`) is not in the index
+    # above, since its booked lot is only known to the loaded view. When that
+    # view has nothing under the ID at all, nothing contradicts it, and it is
+    # the row already imported (w5/974).
+    if found is None and open_lots and source is not None:
+        unselected = source(key, open_lots=True)
+        agreeing = [
+            other for other in unselected if _same_row(key, other, account, fingerprint, lookup_only=lookup_only)
+        ]
+        pool = agreeing or unselected
+        if pool:
+            return min(pool, key=lambda other: abs((entry.date - other.date).days))
     return found
 
 
 def _written_identities(
     snapshot: Any, account: str, keys: list[str], balance_roots: tuple[str, ...]
-) -> dict[tuple[str, str, str], list[Any]]:
+) -> tuple[dict[tuple[str, str, str], list[Any]], dict[tuple[str, str, str], list[Any]]]:
     """The ledger's own transactions by stable ID, read from the files without plugins or rounding.
+
+    Two indexes: rows whose lots are stated, and rows with an open cost
+    selector, which agree with any lot and so are only evidence where the
+    loaded view holds nothing under the ID (w5/974).
 
     Parsed at full precision: the default 28 digits rounded a wide negative
     amount on reload, so an unchanged re-import read as changed data.
@@ -2106,6 +2124,7 @@ def _written_identities(
     from beancount.parser import parser
 
     index: dict[tuple[str, str, str], list[Any]] = {}
+    open_index: dict[tuple[str, str, str], list[Any]] = {}
     for path, content in sorted(snapshot.contents.items()):
         try:
             # `utf-8-sig`: a BOM before the first directive is no part of it,
@@ -2122,18 +2141,17 @@ def _written_identities(
                 continue
             # An open lot (`{}`) agrees with any value; the booked entry knows
             # which lot it took, so only the loaded view can tell a changed one.
-            if any(
+            has_open_lot = any(
                 (stated := _lot_stated(leg)) is not None and stated[0] is None and stated[1] is None
                 for leg in raw.postings
                 if _has_explicit_units(leg)
-            ):
-                continue
+            )
             written = normalize_entry_strings(raw)
             elsewhere = _issued_elsewhere(written, account, balance_roots)
             for identity in _identities(written, account, keys):
                 if not (elsewhere and _is_native_identity(identity)):
-                    index.setdefault(identity, []).append(written)
-    return index
+                    (open_index if has_open_lot else index).setdefault(identity, []).append(written)
+    return index, open_index
 
 
 def _same_row(
