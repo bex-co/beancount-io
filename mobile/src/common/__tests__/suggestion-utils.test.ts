@@ -480,6 +480,40 @@ test("twoPostingPayees dedupes payees", () => {
 // deriveTwoPostingSuggestions
 // ──────────────────────────────────────────────────────────────────────────────
 
+// w21/833: a purchase and its later refund tied, and the newer (the refund) won.
+test("deriveTwoPostingSuggestions fills a buy-then-return payee in the purchase direction", () => {
+  const purchase = txn("Shoe Store", [
+    { account: "Liabilities:Visa", n: -80 },
+    { account: "Expenses:Clothing", n: 80 },
+  ]);
+  const refund = txn("Shoe Store", [
+    { account: "Expenses:Clothing", n: -80 },
+    { account: "Liabilities:Visa", n: 80 },
+  ]);
+  // The journal is newest first.
+  const result = deriveTwoPostingSuggestions([refund, purchase], "Shoe Store");
+  expect(result.from.autoFill).toBe("Liabilities:Visa");
+  expect(result.to.autoFill).toBe("Expenses:Clothing");
+});
+
+test("deriveTwoPostingSuggestions follows the majority direction of one pair", () => {
+  const buy = (n: number) =>
+    txn("Shoe Store", [
+      { account: "Liabilities:Visa", n: -n },
+      { account: "Expenses:Clothing", n },
+    ]);
+  const refund = txn("Shoe Store", [
+    { account: "Expenses:Clothing", n: -80 },
+    { account: "Liabilities:Visa", n: 80 },
+  ]);
+  const result = deriveTwoPostingSuggestions(
+    [refund, buy(10), buy(20)],
+    "Shoe Store",
+  );
+  expect(result.from.autoFill).toBe("Liabilities:Visa");
+  expect(result.to.autoFill).toBe("Expenses:Clothing");
+});
+
 test("deriveTwoPostingSuggestions auto-fills the most frequent FROM/TO and chips the rest", () => {
   const entries = [
     txn("Starbucks", [

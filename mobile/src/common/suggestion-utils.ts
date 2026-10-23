@@ -331,7 +331,13 @@ export function deriveTwoPostingSuggestions(
   const target = merchantKey(payee);
   const fromCounts = new Map<string, number>();
   const toCounts = new Map<string, number>();
-  const pairCounts = new Map<string, { pair: AccountPair; count: number }>();
+  // Per pair of accounts, either way round: a purchase and its later refund are
+  // one pair, and the direction most used (the older one on a tie, the
+  // purchase) fills it (w21/833).
+  const pairCounts = new Map<
+    string,
+    { directions: Map<string, number>; oldest: AccountPair; count: number }
+  >();
   const fromOrder: string[] = [];
   const toOrder: string[] = [];
   const bump = (
@@ -355,20 +361,40 @@ export function deriveTwoPostingSuggestions(
     }
     bump(fromCounts, fromOrder, pair.from);
     bump(toCounts, toOrder, pair.to);
-    const key = `${pair.from}\u0000${pair.to}`;
+    const key = [pair.from, pair.to].sort().join("\u0000");
+    const direction = `${pair.from}\u0000${pair.to}`;
     const seen = pairCounts.get(key);
-    if (seen) seen.count += 1;
-    else pairCounts.set(key, { pair, count: 1 });
+    if (seen) {
+      seen.count += 1;
+      seen.directions.set(direction, (seen.directions.get(direction) ?? 0) + 1);
+      // Newest first, so the last one seen is the oldest.
+      seen.oldest = pair;
+    } else {
+      pairCounts.set(key, {
+        directions: new Map([[direction, 1]]),
+        oldest: pair,
+        count: 1,
+      });
+    }
   }
 
-  // The most common pair that is a real transfer between two accounts.
+  // The most common pair that is a real transfer between two accounts, in the
+  // direction it was used most.
   let best: AccountPair | null = null;
   let bestCount = 0;
-  for (const { pair, count } of pairCounts.values()) {
-    if (pair.from !== pair.to && count > bestCount) {
-      best = pair;
-      bestCount = count;
-    }
+  for (const { directions, oldest, count } of pairCounts.values()) {
+    if (oldest.from === oldest.to || count <= bestCount) continue;
+    const used = [...directions.entries()].map(([direction, n]) => ({
+      direction,
+      n,
+    }));
+    const top = Math.max(...used.map(({ n }) => n));
+    const tied = used.filter(({ n }) => n === top);
+    const oldestDirection = `${oldest.from}\u0000${oldest.to}`;
+    const chosen = tied.length === 1 ? tied[0].direction : oldestDirection;
+    const [from, to] = chosen.split("\u0000");
+    best = { from, to };
+    bestCount = count;
   }
   const ranked = (
     counts: Map<string, number>,
