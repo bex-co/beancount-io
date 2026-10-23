@@ -15,6 +15,61 @@ import { APOLLO_DEFAULT_OPTIONS } from "../default-options";
 import { createForegroundRefresher } from "../foreground-refresh";
 import { refreshOnForeground } from "../refresh-on-foreground";
 
+// w21/838: a return inside the window was dropped, and nothing caught up later.
+describe("createForegroundRefresher defers a return inside the window", () => {
+  const harness = () => {
+    let clock = 0;
+    const calls: number[] = [];
+    const timers: Array<{ at: number; run: () => void }> = [];
+    const onChange = createForegroundRefresher({
+      refresh: () => calls.push(clock),
+      now: () => clock,
+      minIntervalMs: 30_000,
+      schedule: (run, delayMs) => timers.push({ at: clock + delayMs, run }),
+    });
+    const advance = (ms: number) => {
+      const target = clock + ms;
+      for (const timer of timers.splice(0)) {
+        if (timer.at <= target) {
+          clock = timer.at;
+          timer.run();
+        } else {
+          timers.push(timer);
+        }
+      }
+      clock = target;
+    };
+    return { calls, onChange, advance, timers };
+  };
+
+  it("refreshes once when the window ends, for a return at 10 s", () => {
+    const { calls, onChange, advance } = harness();
+    onChange("background");
+    onChange("active");
+    expect(calls).toEqual([0]);
+    advance(10_000);
+    onChange("background");
+    onChange("active");
+    expect(calls).toEqual([0]);
+    advance(20_000);
+    expect(calls).toEqual([0, 30_000]);
+  });
+
+  it("sends one deferred refresh for several returns inside the window", () => {
+    const { calls, onChange, advance, timers } = harness();
+    onChange("background");
+    onChange("active");
+    for (let i = 0; i < 3; i += 1) {
+      advance(5_000);
+      onChange("inactive");
+      onChange("active");
+    }
+    expect(timers.length).toBe(1);
+    advance(20_000);
+    expect(calls).toEqual([0, 30_000]);
+  });
+});
+
 describe("createForegroundRefresher", () => {
   const harness = (start = 0) => {
     let clock = start;
