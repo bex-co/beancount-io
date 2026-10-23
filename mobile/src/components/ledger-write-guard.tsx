@@ -55,6 +55,18 @@ export function LedgerWriteGuard({ children }: { children: ReactNode }) {
       >
         <Text style={{ color: theme.primary }}>{t("discoveryTitle")}</Text>
       </Pressable>
+      {/* A full-screen modal such as Scan Receipt has no header, Cancel or swipe
+          of its own, so a blocked one needs a way back (w21/872). */}
+      {router.canGoBack() ? (
+        <Pressable
+          testID="ledger-write-guard-back"
+          style={{ paddingVertical: 16 }}
+          accessibilityRole="button"
+          onPress={() => router.back()}
+        >
+          <Text style={{ color: theme.primary }}>{t("back")}</Text>
+        </Pressable>
+      ) : null}
     </SafeAreaView>
   );
 }
