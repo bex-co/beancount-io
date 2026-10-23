@@ -12,6 +12,9 @@
 
 ## Inbox
 
+- [750](./750.md) — A flat range reads grey "+$0.00 (0.00%)" in the chart header, but the line and fill stay green
+- [751](./751.md) — The chart's y-range scales to the move itself, so −$12 on $2.5M draws a full-height crash
+- [752](./752.md) — The chart's change percentage has no thousands separators: "(−10471.20%)"
 - [747](./747.md) — Cash flow draws the synthetic "Savings"/"Other"/"Refunds" nodes beside real categories with the same name
 - [748](./748.md) — In Chinese, Cash flow's income and expense nodes for one group read the same: w21/540's split misses full-width parentheses
 - [749](./749.md) — Cash flow clips the left-column income label at the card's edge (")a20261020")
