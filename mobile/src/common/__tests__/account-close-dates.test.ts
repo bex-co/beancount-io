@@ -132,7 +132,7 @@ describe("closedAccountNamed", () => {
     );
     // The closed wording is chosen by `existingAccountNotice` (w21/723).
     expect(open.includes("existingAccountNotice(")).toBe(true);
-    expect(open.includes("closeDates.get(account),")).toBe(true);
+    expect(open.includes("closeDates.get(existingName),")).toBe(true);
   });
 });
 

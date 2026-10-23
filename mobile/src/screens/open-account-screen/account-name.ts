@@ -229,6 +229,26 @@ export function typedSubPathIssue(
 }
 
 /**
+ * How the ledger spells `account`, among `accounts`, or undefined when it has
+ * no such account. Compared as NFC: the typed name is composed in NFC, but a
+ * ledger imported from a system that writes decomposed Unicode (macOS file
+ * names, some bank exports) holds "Café" as "Cafe" + U+0301, which the engine
+ * keeps as a different account that looks identical (w21/256). The ledger's
+ * dates are keyed by its own spelling, so the notice looked them up with the
+ * typed one and missed (w21/734).
+ */
+export function ledgerSpelling(
+  account: string,
+  accounts: readonly string[] | undefined,
+): string | undefined {
+  const wanted = account.normalize("NFC");
+  return (
+    accounts?.find((candidate) => candidate === account) ??
+    accounts?.find((candidate) => candidate.normalize("NFC") === wanted)
+  );
+}
+
+/**
  * Whether the form may submit, and whether a valid name is refused only
  * because the ledger already opens it. A second `open` for an account breaks
  * the ledger ("Duplicate open directive"), so the ledger's accounts must be
@@ -246,16 +266,9 @@ export function openAccountSubmitState(input: {
   /** A save is running or already committed. */
   busy: boolean;
 }): { canSubmit: boolean; alreadyOpen: boolean } {
-  // Compared as NFC: the typed name is composed in NFC, but a ledger imported
-  // from a system that writes decomposed Unicode (macOS file names, some bank
-  // exports) holds "Café" as "Cafe" + U+0301, which the engine keeps as a
-  // different account that looks identical (w21/256).
-  const wanted = input.account.normalize("NFC");
   const alreadyOpen =
     input.nameOk &&
-    (input.openAccounts ?? []).some(
-      (account) => account.normalize("NFC") === wanted,
-    );
+    ledgerSpelling(input.account, input.openAccounts) !== undefined;
   return {
     alreadyOpen,
     canSubmit:

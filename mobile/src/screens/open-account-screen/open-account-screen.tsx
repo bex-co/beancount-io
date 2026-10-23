@@ -56,6 +56,7 @@ import {
   type AccountRootPrefix,
   validateAccountName,
   existingAccountNotice,
+  ledgerSpelling,
   openAccountSubmitState,
 } from "./account-name";
 import { useOpenAccount } from "./use-open-account";
@@ -316,13 +317,18 @@ export function OpenAccountScreenComponent(): JSX.Element {
   const { alreadyOpen } = submitState;
   const closeDates = useAccountCloseDates(ledgerId);
   const today = useToday();
-  const existing = alreadyOpen
-    ? existingAccountNotice(
-        closeDates.get(account),
-        closeDates.openedOn?.get(account),
-        today,
-      )
-    : null;
+  // The dates are keyed by the ledger's own spelling (w21/734).
+  const existingName = alreadyOpen
+    ? ledgerSpelling(account, meta?.accounts)
+    : undefined;
+  const existing =
+    existingName !== undefined
+      ? existingAccountNotice(
+          closeDates.get(existingName),
+          closeDates.openedOn?.get(existingName),
+          today,
+        )
+      : null;
   const canSubmit = submitState.canSubmit && !saved;
   const rootKey = rootPrefix.toLowerCase() as AccountRoot;
   const rootIcon = getRootIcon(rootKey);
