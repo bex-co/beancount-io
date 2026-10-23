@@ -46,7 +46,6 @@
 
 - [996 — Give Cash Flow statement charts readable period data](./996.md) — minor; live QA, 2026-10-22; both chart views expose monthly values only on pointer hover at both widths; annual tables/CSV do not replace them, Income Statement keyboard control passes.
 
-- [995 — Retry a failed BQL history query without replacing the current editor](./995.md) — minor; live QA, 2026-10-22; older A has only Delete after a transport failure; toggling sends no read and global Execute runs B; real A workaround succeeds at both widths.
 
 
 
