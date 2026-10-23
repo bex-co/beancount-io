@@ -67,7 +67,6 @@
 - [976 — Reopen Gallery results with Arrow Down after Escape](./976.md) — minor; authenticated read-only dashboard QA,2026-10-22; both widths keep available results closed until blur/refocus; debounce ownership, actual selection/Back and IME guard controls retained, no writes.
 
 
-- [974 — Preserve BQL result focus when the editor loads](./974.md) — minor; public dashboard QA with unchanged delayed stylesheet,2026-10-22; native-Tab result focus transfers to the late editor at both widths; untouched autofocus and settled navigation/CSV controls pass, no writes.
 
 
 
