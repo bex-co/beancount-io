@@ -36,6 +36,7 @@
 
 ## Inbox
 
+- [1002 — Preserve valid sale lot choices before accepting an eager bulk order](./1002.md) — major CLI residual after completed 980; a bookable eager LIFO/HIFO order still changes the selected lot and turns 100 USD profit into zero, reproduced 2026-10-23.
 - [1001 — Compute cover label context from the lots held on that date](./1001.md) — major CLI residual after completed 983; netted and backdated short covers still change exact labels and strand offsetting Cost positions, reproduced 2026-10-23.
 - [1000 — Match authored notes, events and customs during imports](./1000.md) — minor CLI duplicate index uses the plugin view; filtered/transformed directives append repeatedly or falsely skip unwritten changes, reproduced 2026-10-23.
 - [999 — Canonicalize acquisition labels for import comparison and hashes](./999.md) — major CLI residual after completed 981; equivalent NFC/NFD cost labels still conflict or duplicate purchases after the empty-label fix, reproduced 2026-10-23.
