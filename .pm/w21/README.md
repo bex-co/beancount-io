@@ -12,7 +12,6 @@
 
 ## Inbox
 
-- [822](./822.md) — Home Spending's two bars sit off-centre (28 pt left, 48 pt right)
 - [823](./823.md) — Copy & Reload after a content change elsewhere lands on "changed or removed", not the current version
 - [824](./824.md) — A Persian/Arabic folder path draws child first in the Files breadcrumb
 - [825](./825.md) — New File accepts a folder that differs from an existing one only by letter case

@@ -80,3 +80,24 @@ describe("barChartLayout", () => {
     expect(source.includes("leftPadding")).toBe(false);
   });
 });
+
+// w21/822: the bars were a share of the plot per bar, not the band's width, so
+// Home's pair sat 28 pt from the left and 48 pt from the right.
+describe("barChartLayout's outer gaps", () => {
+  it("are equal on both sides", () => {
+    for (const count of [1, 2, 3, 6]) {
+      const layout = barChartLayout(393, ["$0", "$500"], count, 12);
+      const left = layout.barX(0) - layout.axisWidth;
+      const right = 393 - (layout.barX(count - 1) + layout.barWidth);
+      expect([count, Math.abs(left - right) < 1e-9]).toEqual([count, true]);
+    }
+  });
+
+  it("leaves equal gaps between bars too", () => {
+    const layout = barChartLayout(393, ["$0", "$500"], 2, 12);
+    const between = layout.barX(1) - (layout.barX(0) + layout.barWidth);
+    expect(Math.abs(between - (layout.barX(0) - layout.axisWidth)) < 1e-9).toBe(
+      true,
+    );
+  });
+});

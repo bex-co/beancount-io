@@ -5,8 +5,6 @@ export const BAR_CHART_MIN_AXIS_WIDTH = 50;
 
 /** Outer and inner band padding, as a fraction of one band step. */
 const BAND_PADDING = 0.2;
-/** A bar's width as a fraction of the plot width per bar. */
-const BAR_FILL = 0.6;
 
 export type BarChartLayout = {
   /** Gutter reserved for the y-axis labels; the plot starts here. */
@@ -42,7 +40,9 @@ export function barChartLayout(
   const plotWidth = Math.max(0, chartWidth - axisWidth);
   // d3's band step with equal inner/outer padding: n - inner + 2 * outer.
   const step = count > 0 ? plotWidth / (count + BAND_PADDING) : 0;
-  const barWidth = count > 0 ? (plotWidth / count) * BAR_FILL : 0;
+  // The band's own width, so the outer gaps match: a share of the plot per bar
+  // left 28 pt on the left of Home's two bars and 48 pt on the right (w21/822).
+  const barWidth = step * (1 - BAND_PADDING);
   const barX = (i: number) => axisWidth + step * BAND_PADDING + step * i;
   return {
     axisWidth,
