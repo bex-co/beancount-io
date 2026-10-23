@@ -687,6 +687,17 @@ describe("leading decimal points and sub-cent remainders", () => {
     expect(parseExactAmount("-.")).toBe(null);
   });
 
+  // w21/792: where the pad's separator is a comma, ",5" was refused.
+  it("reads a leading comma as zero point too", () => {
+    expect(parseExactAmount(",5")).toBe("0.5");
+    expect(parseExactAmount("-,5")).toBe("-0.5");
+    expect(parseExactAmount("\uff0c5")).toBe("0.5");
+    expect(parseExactAmount(",123", 0)).toBe(parseExactAmount(".123", 0));
+    expect(parseExactAmount(",")).toBe(null);
+    expect(parseExactAmount("-,")).toBe(null);
+    expect(parseExactAmount(",5,5")).toBe(null);
+  });
+
   it("shows the remainder it refuses", () => {
     const rem = remainder([
       posting("Expenses:Food", "10.004", "10.004"),

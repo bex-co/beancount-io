@@ -126,13 +126,14 @@ export function parseExactAmount(input: string, minorUnits = 2): string | null {
     /^-?\d{1,3}(,\d{3}){2,}$/.test(normalized)
   ) {
     normalized = normalized.replace(/,/g, "");
-  } else if (/^-?\d+,\d+$/.test(normalized)) {
+  } else if (/^-?\d*,\d+$/.test(normalized)) {
     normalized = normalized.replace(",", ".");
   } else if (normalized.includes(",")) {
     return null;
   }
 
-  // The decimal pad lets "." come first: ".5" is 0.5 (w21/075).
+  // The decimal pad lets "." come first: ".5" is 0.5 (w21/075), and so ",5",
+  // where the pad's separator is a comma (w21/792).
   normalized = normalized.replace(/^(-?)\./, "$10.");
   if (!/^-?\d+(\.\d+)?$/.test(normalized)) return null;
 

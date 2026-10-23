@@ -12,7 +12,6 @@
 
 ## Inbox
 
-- [792](./792.md) — New Transaction refuses an amount starting with a decimal comma (",5")
 - [793](./793.md) — New Transaction shows a green "✓ $0.00" and no format error when an earlier row lacks an account
 - [794](./794.md) — In a zero-decimal ledger, "0.500" is read as 500 (w21/697 regression)
 - [795](./795.md) — Merchant detail shows a pre-entered row as booked, with no "Upcoming" line
