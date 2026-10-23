@@ -16,10 +16,9 @@ import { FadeInView } from "@/components/crossfade";
 import { DashboardCard } from "@/components/dashboard-card";
 import { useGetFeedQuery } from "@/generated-graphql/graphql";
 import { FeedSource } from "@/generated-graphql/types";
-import { formatFeedDate } from "@/common/date-format";
 import {
   feedQueryVariables,
-  feedDateIsCalendarDay,
+  feedRowDate,
   feedRowAction,
   feedSourceLabelKey,
   feedCardIsEmpty,
@@ -102,9 +101,7 @@ function FeedRow({
   };
 
   const sourceLabel = t(feedSourceLabelKey(source));
-  const date = formatFeedDate(publishedAt, locale, {
-    calendarDay: feedDateIsCalendarDay(source),
-  });
+  const date = feedRowDate(publishedAt, source, locale);
   const metaText = [sourceLabel, date, byline].filter(Boolean).join(" · ");
 
   return (

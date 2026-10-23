@@ -1,5 +1,6 @@
 import { FeedSource } from "../../../generated-graphql/types";
 import { getFormatDate } from "../../../common/format-util";
+import { formatFeedDate, formatMoment } from "../../../common/date-format";
 import {
   normalizeOrigin,
   resolveAppLink,
@@ -64,6 +65,23 @@ export function feedRowAction(
  */
 export function feedDateIsCalendarDay(source: FeedSource): boolean {
   return source !== FeedSource.LedgerRss;
+}
+
+/**
+ * The date a row shows: a post's calendar day, or a commit's day and time in
+ * the device's zone (`timeZone`, for a test). Dated only, two commits with one
+ * message on one day read as the same row (w21/715), as Notifications' did
+ * before w21/487.
+ */
+export function feedRowDate(
+  publishedAt: unknown,
+  source: FeedSource,
+  locale: string,
+  timeZone?: string,
+): string {
+  return feedDateIsCalendarDay(source)
+    ? formatFeedDate(publishedAt, locale, { calendarDay: true })
+    : formatMoment(publishedAt, locale, timeZone);
 }
 
 /**

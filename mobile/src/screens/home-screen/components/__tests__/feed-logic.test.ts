@@ -106,9 +106,14 @@ describe("feedDateIsCalendarDay", () => {
       path.join(__dirname, "..", "feed-card.tsx"),
       "utf8",
     );
-    expect(card.includes("calendarDay: feedDateIsCalendarDay(source),")).toBe(
+    expect(card.includes("feedRowDate(publishedAt, source, locale)")).toBe(
       true,
     );
+    const logic = fs.readFileSync(
+      path.join(__dirname, "..", "feed-logic.ts"),
+      "utf8",
+    );
+    expect(logic.includes("return feedDateIsCalendarDay(source)")).toBe(true);
   });
 });
 
@@ -268,5 +273,35 @@ describe("feedRowDetail", () => {
         me,
       ),
     ).toEqual({ subtitle: null, byline: null });
+  });
+});
+
+// w21/715: Latest Updates dated each row only, so two commits with one message
+// on one day read as the same row.
+describe("feedRowDate", () => {
+  const { feedRowDate } = require("../feed-logic");
+  const { FeedSource } = require("../../../../generated-graphql/types");
+
+  it("gives a commit its time, so same-day commits differ", () => {
+    const morning = feedRowDate(
+      "2026-10-23T16:05:00Z",
+      FeedSource.LedgerRss,
+      "en",
+      "America/Los_Angeles",
+    );
+    const afternoon = feedRowDate(
+      "2026-10-23T21:40:00Z",
+      FeedSource.LedgerRss,
+      "en",
+      "America/Los_Angeles",
+    );
+    expect(morning).toBe("Oct 23, 2026, 9:05 AM");
+    expect(afternoon).toBe("Oct 23, 2026, 2:40 PM");
+  });
+
+  it("keeps a post's calendar day without a time", () => {
+    expect(feedRowDate("2026-10-23T00:00:00Z", FeedSource.Blog, "en")).toBe(
+      "Oct 23, 2026",
+    );
   });
 });
