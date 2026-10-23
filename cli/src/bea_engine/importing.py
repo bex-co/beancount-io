@@ -2242,8 +2242,9 @@ def _under_id(
 def _interpolated(entry: Any) -> Any:
     """The authored entry with its one omitted amount filled in, as booking would, else unchanged.
 
-    Only the plain case: a single posting without a number, every other posting
-    an explicit unit amount with no cost or price, and one currency to balance.
+    A single posting without a number, every other posting an explicit unit
+    amount whose weight is known (its units, or its stated cost or price), and
+    one currency to balance (w5/1005, w5/1010).
     """
     from beancount.core.amount import Amount as BcAmount
     from beancount.core.number import MISSING
@@ -2259,9 +2260,12 @@ def _interpolated(entry: Any) -> Any:
     for index, posting in enumerate(entry.postings):
         if index in open_postings:
             continue
-        if not _has_explicit_units(posting) or posting.cost is not None or posting.price is not None:
+        if not _has_explicit_units(posting):
             return entry
-        totals[posting.units.currency] = totals.get(posting.units.currency, Decimal(0)) + posting.units.number
+        weight = _stated_weight(posting)
+        if weight is None:
+            return entry
+        totals[weight[1]] = totals.get(weight[1], Decimal(0)) + weight[0]
     index = open_postings[0]
     stated = getattr(entry.postings[index].units, "currency", None)
     currency = stated if isinstance(stated, str) and stated else None
@@ -2272,6 +2276,31 @@ def _interpolated(entry: Any) -> Any:
     amount = BcAmount(-totals.get(currency, Decimal(0)), currency)
     postings = [*entry.postings[:index], entry.postings[index]._replace(units=amount), *entry.postings[index + 1 :]]
     return entry._replace(postings=postings)
+
+
+def _known(number: Any) -> bool:
+    return number is None or isinstance(number, Decimal)
+
+
+def _stated_weight(posting: Any) -> tuple[Decimal, str] | None:
+    """What an authored posting contributes to the balance, when its cost or price states it fully."""
+    units = posting.units
+    cost, price = posting.cost, posting.price
+    if cost is not None:
+        per, total = getattr(cost, "number_per", None), getattr(cost, "number_total", None)
+        currency = getattr(cost, "currency", None)
+        if not isinstance(currency, str) or not currency or not _known(per) or not _known(total):
+            return None
+        if per is None and total is None:
+            return None
+        sign = 1 if units.number >= 0 else -1
+        return units.number * (per or Decimal(0)) + sign * (total or Decimal(0)), currency
+    if price is not None:
+        number, currency = getattr(price, "number", None), getattr(price, "currency", None)
+        if not isinstance(number, Decimal) or not isinstance(currency, str) or not currency:
+            return None
+        return units.number * number, currency
+    return units.number, units.currency
 
 
 def _authored_directive_keys(snapshot: Any) -> set[str]:
