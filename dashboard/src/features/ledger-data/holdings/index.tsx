@@ -2,11 +2,12 @@ import { PageHeader } from "@/common/components/page-header";
 import { RelatedLinks } from "@/common/components/related-links";
 import { Tabs, TabsContent } from "@/common/components/ui/tabs";
 
-import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
+import { useParams } from "@tanstack/react-router";
+import { useUrlView } from "@/common/hooks/use-url-view";
 
 import { ResponsiveTabTriggerList } from "@/common/components/responsive-tab-trigger-list";
 import { DatasetTable } from "./holdings-table";
-import { DEFAULT_HOLDINGS_VIEW, isHoldingsView } from "./search";
+import { DEFAULT_HOLDINGS_VIEW, HOLDINGS_VIEWS } from "./search";
 import {
   holdingsStatement,
   holdingsStatementByAccount,
@@ -29,28 +30,14 @@ const LedgerHoldingsTabs = () => {
   });
   const ledgerId = createLedgerId(ledgerOwner, ledgerName);
   // The grouping lives in the URL so drilling into an account and coming back
-  // restores the tab. Writes replace the history entry — Back leaves the page
-  // instead of walking through every tab visited — and an unchanged value is
-  // never written, so a rerender cannot add a history entry.
-  // Re-checked here because the router still surfaces raw URL values next to
-  // the validated ones, so an injected `?view=` shape can reach the page.
-  const { view: requestedView } = useSearch({
-    from: "/ledger/$ledgerOwner/$ledgerName/holdings",
-  });
-  const selectedTab = isHoldingsView(requestedView)
-    ? requestedView
-    : DEFAULT_HOLDINGS_VIEW;
-  const navigate = useNavigate({
-    from: "/ledger/$ledgerOwner/$ledgerName/holdings",
-  });
-  const setSelectedTab = (nextTab: string) => {
-    if (!isHoldingsView(nextTab) || nextTab === selectedTab) return;
-    void navigate({
-      to: ".",
-      search: (previous) => ({ ...previous, view: nextTab }),
-      replace: true,
-    });
-  };
+  // restores the tab; the default grouping is written out too.
+  const [selectedTab, setSelectedTab] = useUrlView(
+    "/ledger/$ledgerOwner/$ledgerName/holdings",
+    HOLDINGS_VIEWS,
+    DEFAULT_HOLDINGS_VIEW,
+    "view",
+    { writeFallback: true },
+  );
   const tabOptions = [
     { label: t("page.holdings.holdings"), value: "holdings" },
     { label: t("page.holdings.holdingsByAccount"), value: "by-account" },
