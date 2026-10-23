@@ -1,6 +1,9 @@
+import fs from "fs";
+import path from "path";
 import {
   selectAccountBalanceDisplay,
   selectAccountBalanceSeries,
+  selectAccountUnitsExactFigures,
   selectAccountUnitsSeries,
 } from "../select-account-balance-series";
 import { balanceNotes } from "../../../../common/valuation";
@@ -537,5 +540,48 @@ describe("selectAccountUnitsSeries with a posting dated after today", () => {
       { date: "2026-11-01", value: 16 },
       { date: "2026-12-01", value: 16 },
     ]);
+  });
+});
+
+// w21/782: the headline and its change printed the chart's double,
+// "1.234567890123460000 QAETH", where Accounts read the ledger's digits.
+describe("selectAccountUnitsExactFigures", () => {
+  const eth = "1.234567890123456789";
+  const data = createReport([
+    { date: "2026-09-30", balance: { QAETH: "0.5" } },
+    { date: "2026-10-05", balance: { QAETH: eth } },
+  ]);
+
+  it("gives the latest balance and its change since each point", () => {
+    const figures = selectAccountUnitsExactFigures("QAETH", data, "2026-10-23");
+    expect(figures.get(Number(eth))).toBe(eth);
+    expect(figures.get(Number(eth) - 0.5)).toBe("0.734567890123456789");
+    expect(figures.get(Number(eth) - 0)).toBe(eth);
+  });
+
+  it("is the chart's value at rest, and its change", () => {
+    const series = selectAccountUnitsSeries("QAETH", data, "2026-10-23");
+    const figures = selectAccountUnitsExactFigures("QAETH", data, "2026-10-23");
+    const latest = series[series.length - 1].value;
+    expect(figures.get(latest)).toBe(eth);
+    expect(figures.get(latest - series[0].value)).toBe("0.734567890123456789");
+  });
+
+  it("holds nothing for figures a double reads whole", () => {
+    const plain = createReport([
+      { date: "2026-09-30", balance: { BTC: "0.5" } },
+      { date: "2026-10-05", balance: { BTC: "1.00000050" } },
+    ]);
+    expect(selectAccountUnitsExactFigures("BTC", plain).size).toBe(0);
+  });
+
+  it("is what the screen's chart formats through", () => {
+    const screen = fs.readFileSync(
+      path.join(__dirname, "..", "..", "account-detail-screen.tsx"),
+      "utf8",
+    );
+    expect(screen.includes("const exact = exactFigures?.get(value);")).toBe(
+      true,
+    );
   });
 });

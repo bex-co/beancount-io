@@ -41,10 +41,11 @@ import { ValuationSheet } from "@/components/valuation-sheet";
 import { useLedgerAccess } from "@/common/hooks/use-ledger-access";
 import { useLedgerPrices } from "@/common/hooks/use-ledger-prices";
 import { useToday } from "@/common/hooks/use-today";
-import { formatUnits } from "@/common/number-utils";
+import { formatExactUnits, formatUnits } from "@/common/number-utils";
 import {
   selectAccountBalanceDisplay,
   selectAccountBalanceSeries,
+  selectAccountUnitsExactFigures,
   selectAccountUnitsScale,
   selectAccountUnitsSeries,
 } from "@/screens/account-detail-screen/selectors/select-account-balance-series";
@@ -264,13 +265,28 @@ const AccountDetailScreenImpl = ({
     unitsScale ?? 0,
     unitsCurrency ? selectAccountUnitsScale(unitsCurrency, unitsReportData) : 0,
   );
+  // A figure a double cannot hold prints the ledger's digits (w21/782).
+  const exactFigures = useMemo(
+    () =>
+      unitsCurrency === undefined
+        ? undefined
+        : selectAccountUnitsExactFigures(unitsCurrency, unitsReportData, today),
+    [unitsCurrency, unitsReportData, today],
+  );
   const formatChartValue = useMemo(
     () =>
       unitsCurrency === undefined
         ? undefined
-        : (value: number, includePlus?: boolean) =>
-            formatUnits(value, unitsCurrency, chartScale, includePlus),
-    [unitsCurrency, chartScale],
+        : (value: number, includePlus?: boolean) => {
+            const exact = exactFigures?.get(value);
+            return (
+              (exact !== undefined
+                ? formatExactUnits(exact, unitsCurrency, includePlus)
+                : null) ??
+              formatUnits(value, unitsCurrency, chartScale, includePlus)
+            );
+          },
+    [unitsCurrency, chartScale, exactFigures],
   );
   const chartLabel = [
     t("balance"),

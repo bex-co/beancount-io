@@ -2,10 +2,16 @@ import { AccountJournalQuery } from "@/generated-graphql/graphql";
 import { PostingLite } from "@/common/tx-category";
 import {
   amountIn,
+  formatHolding,
   notInTotalOf,
   type Holding,
 } from "../../../common/balance-display";
-import { amountScale, formatUnits } from "../../../common/number-utils";
+import {
+  amountScale,
+  formatExactUnits,
+  formatUnits,
+} from "../../../common/number-utils";
+import { addExact } from "../../multi-postings-transaction/postings-utils";
 import { currencyMinorUnits } from "../../../common/currency-util";
 import { formatAccountJournalChange } from "../utils/format-account-journal-balance";
 import { entryRowSecondaryText } from "../../transactions-screen/entry-row/entry-row-secondary";
@@ -43,6 +49,13 @@ export type AccountJournalRow = {
   detail?: AccountJournalDetail;
   change: number;
   balance: number;
+  /**
+   * The change and balance as the ledger wrote them, kept only when they need
+   * more digits than a double holds: 18 decimals of ETH read
+   * "1.234567890123460000" (w21/782).
+   */
+  changeExact?: string;
+  balanceExact?: string;
   /** Recorded scale for operating-currency rows; drives journal amount formatting. */
   moneyScale?: number;
   /**
@@ -343,11 +356,25 @@ function entryTitle(entry: AccountJournalItem["entry"]): string {
  * scale: "+500.00 EUR", "-2 ITOT".
  */
 export function formatOtherChanges(holdings: readonly Holding[]): string {
-  return holdings
-    .map((holding) =>
-      formatUnits(holding.number, holding.currency, holding.scale, true),
-    )
-    .join(", ");
+  return holdings.map((holding) => formatHolding(holding, true)).join(", ");
+}
+
+/** An amount as a plain decimal string: its exact text, else its figure. */
+const decimalOf = (amount: {
+  number: number;
+  scale: number;
+  exact?: string;
+}): string => amount.exact ?? amount.number.toFixed(amount.scale);
+
+/**
+ * Amounts summed through their decimal strings when one holds more digits
+ * than a double does, else as numbers: the exact sum, when there is one.
+ */
+function exactSum(
+  amounts: readonly { number: number; scale: number; exact?: string }[],
+): string | undefined {
+  if (!amounts.some((amount) => amount.exact !== undefined)) return undefined;
+  return amounts.reduce((sum, amount) => addExact(sum, decimalOf(amount)), "0");
 }
 
 /** Each currency's sum over the rows' other-currency changes. */
@@ -356,10 +383,13 @@ function sumOtherChanges(rows: readonly AccountJournalRow[]): Holding[] {
   for (const row of rows) {
     for (const holding of row.otherChanges ?? []) {
       const sum = sums.get(holding.currency);
+      const scale = Math.max(sum?.scale ?? 0, holding.scale);
+      const exact = exactSum(sum ? [sum, holding] : [holding]);
       sums.set(holding.currency, {
         currency: holding.currency,
         number: (sum?.number ?? 0) + holding.number,
-        scale: Math.max(sum?.scale ?? 0, holding.scale),
+        scale,
+        ...(exact !== undefined ? { exact } : {}),
       });
     }
   }
@@ -405,8 +435,19 @@ export function groupAccountJournalRowsToSections(
     // one that moved both names the others beside the shown total (w21/421).
     const others = sumOtherChanges(data);
     // Sign is an explicit prefix; the amount carries the symbol (or code suffix).
+    const exactNet = units
+      ? exactSum(
+          data.map((r) => ({
+            number: r.change,
+            scale,
+            exact: r.changeExact,
+          })),
+        )
+      : undefined;
     const shown = units
-      ? formatUnits(net, units.currency, scale, net > 0)
+      ? ((exactNet !== undefined
+          ? formatExactUnits(exactNet, units.currency, net > 0)
+          : null) ?? formatUnits(net, units.currency, scale, net > 0))
       : formatAccountJournalChange(net, currency, scale);
     const totalChange =
       others.length === 0
@@ -495,12 +536,17 @@ export function selectAccountJournalRows(
     // the other leg was nowhere (w21/421).
     const others = notInTotalOf(item.change, shown);
     const otherChanges = others.length > 0 ? { otherChanges: others } : {};
+    const exact = (balance: { exact?: string }) => ({
+      ...(change.exact !== undefined ? { changeExact: change.exact } : {}),
+      ...(balance.exact !== undefined ? { balanceExact: balance.exact } : {}),
+    });
     if (!units) {
       const balance = amountIn(item.balance, currency);
       return [
         {
           ...row,
           ...otherChanges,
+          ...exact(balance),
           change: change.number,
           balance: balance.number,
           moneyScale: Math.min(Math.max(change.scale, balance.scale), moneyCap),
@@ -512,6 +558,7 @@ export function selectAccountJournalRows(
       {
         ...row,
         ...otherChanges,
+        ...exact(balance),
         change: change.number,
         balance: balance.number,
         units: {

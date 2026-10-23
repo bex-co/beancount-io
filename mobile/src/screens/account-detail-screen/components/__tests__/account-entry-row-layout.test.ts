@@ -62,6 +62,8 @@ function load(): (props: Record<string, unknown>) => Node {
     "@/common/number-utils": {
       formatSignedMoneyWithCurrency: (value: number) => `$${value}`,
       formatUnits: (value: number, currency: string) => `${value} ${currency}`,
+      formatExactUnits: (text: string, currency: string) =>
+        `${text} ${currency} (exact)`,
     },
     "@/screens/account-detail-screen/utils/format-account-journal-balance": {
       formatAccountJournalBalance: (value: number) => `$${value}`,
@@ -356,5 +358,26 @@ describe("AccountEntryRow for a planned entry", () => {
       today: "2026-10-23",
     });
     expect(texts(row).includes("entryUpcoming · Statement")).toBe(true);
+  });
+});
+
+// w21/782: the row's change and balance went through a float.
+describe("AccountEntryRow for an 18-decimal holding", () => {
+  it("prints the ledger's digits for the change and the balance", () => {
+    const eth = "1.234567890123456789";
+    const tree = AccountEntryRow({
+      row: {
+        ...broker,
+        change: Number(eth),
+        balance: Number(eth),
+        changeExact: eth,
+        balanceExact: eth,
+        units: { currency: "QAETH", scale: 18, cost: null },
+      },
+      currency: "USD",
+    });
+    expect(
+      findAll(tree, (node) => node.type === "AmountText").map(textOf),
+    ).toEqual([`${eth} QAETH (exact)`, `balance: ${eth} QAETH (exact)`]);
   });
 });

@@ -12,7 +12,6 @@
 
 ## Inbox
 
-- [782](./782.md) — Account detail rounds an 18-decimal holding through a float, unlike the Accounts row
 - [783](./783.md) — VoiceOver reads a split's units chart as "+900.00%" though the visible row is neutral
 - [784](./784.md) — A sub-cent account change shows a red "−$0.00" row under a "$0.00" day header
 - [785](./785.md) — Persian/Arabic search misses the same word in the other script's letters (ی/ي, ک/ك), digits, ZWNJ, hamza

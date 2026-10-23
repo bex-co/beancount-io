@@ -13,6 +13,7 @@ import {
   type BalanceDisplay,
   type BalanceMap,
 } from "../../../common/balance-display";
+import { addExact } from "../../multi-postings-transaction/postings-utils";
 import {
   selectValuation,
   valueBasisOf,
@@ -98,6 +99,43 @@ export function selectAccountUnitsSeries(
   // Held units are the same until the next posting, so a quiet commodity
   // account reads unchanged over a recent window (w21/240).
   return today === undefined ? series : carryBalanceToToday(series, today);
+}
+
+/** More significant digits than a double holds (see `amountIn`). */
+const needsExact = (text: string) =>
+  text.replace(/\D/g, "").replace(/^0+/, "").length > 15;
+const negated = (text: string) =>
+  text.startsWith("-") ? text.slice(1) : `-${text}`;
+
+/**
+ * The ledger's own digits for each figure a units chart shows at rest that a
+ * double cannot hold: each point's balance, and the latest balance's change
+ * since each point. Keyed by the double the chart computes for it, so its
+ * formatter can print them: 18 decimals of ETH read "1.234567890123460000"
+ * where the Accounts row read "1.234567890123456789" (w21/782).
+ */
+export function selectAccountUnitsExactFigures(
+  commodity: string,
+  data?: AccountReportQuery,
+  today?: string,
+): Map<number, string> {
+  const figures = new Map<number, string>();
+  const amounts = (data?.getLedgerAccountReport?.linechartData ?? [])
+    .filter((point) => today === undefined || point.date <= today)
+    .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
+    .map((point) => amountIn(point.balance as BalanceMap, commodity));
+  if (!amounts.some((amount) => amount.exact !== undefined)) return figures;
+  const decimal = (amount: (typeof amounts)[number]) =>
+    amount.exact ?? amount.number.toFixed(amount.scale);
+  const latest = amounts[amounts.length - 1]!;
+  for (const amount of amounts) {
+    if (amount.exact !== undefined) figures.set(amount.number, amount.exact);
+    const change = addExact(decimal(latest), negated(decimal(amount)));
+    if (needsExact(change)) figures.set(latest.number - amount.number, change);
+  }
+  // The latest point's own figure wins a collision.
+  if (latest.exact !== undefined) figures.set(latest.number, latest.exact);
+  return figures;
 }
 
 /**

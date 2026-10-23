@@ -154,7 +154,8 @@ function fromScaled(coeff: bigint, scale: number): string {
   return `${neg ? "-" : ""}${digits.slice(0, split)}.${digits.slice(split)}`;
 }
 
-function addExact(a: string, b: string): string {
+/** The exact sum of two plain decimal strings, at the wider scale. */
+export function addExact(a: string, b: string): string {
   const A = toScaled(a);
   const B = toScaled(b);
   const scale = Math.max(A.scale, B.scale);

@@ -1169,3 +1169,71 @@ describe("an account journal's Custom directives", () => {
     ).toEqual([keys[1]]);
   });
 });
+
+// w21/782: an 18-decimal holding went through a float on this screen and read
+// "1.234567890123460000 QAETH" where Accounts read "1.234567890123456789".
+describe("an amount a double cannot hold", () => {
+  const eth = "1.234567890123456789";
+  const rows = selectAccountJournalRows(
+    "USD",
+    [
+      item(
+        { entry_hash: "x", date: "2026-10-05", directive_type: "Transaction" },
+        { QAETH: eth },
+        { QAETH: eth },
+      ),
+    ],
+    { account: "Assets:Qa20261020Eth", currency: "QAETH" },
+  );
+
+  it("keeps the ledger's digits on the row", () => {
+    expect([rows[0].changeExact, rows[0].balanceExact]).toEqual([eth, eth]);
+  });
+
+  it("totals the day in them", () => {
+    const [day] = groupAccountJournalRowsToSections(
+      [
+        ...rows,
+        { ...rows[0], key: "second", change: 1, changeExact: undefined },
+      ],
+      "USD",
+    );
+    expect(day.totalChange).toBe("+2.234567890123456789 QAETH");
+    expect(groupAccountJournalRowsToSections(rows, "USD")[0].totalChange).toBe(
+      `+${eth} QAETH`,
+    );
+  });
+
+  it("names another currency's leg, and sums it, in them", () => {
+    const [leg] = selectAccountJournalRows("USD", [
+      item(
+        { entry_hash: "y", date: "2026-10-05", directive_type: "Transaction" },
+        { USD: "0", ETH: "0.123456789123456789" },
+        { USD: "0" },
+      ),
+    ]);
+    expect(formatOtherChanges(leg.otherChanges ?? [])).toBe(
+      "+0.123456789123456789 ETH",
+    );
+    const [day] = groupAccountJournalRowsToSections([leg, leg], "USD");
+    expect(day.totalChange).toBe("+0.246913578246913578 ETH");
+  });
+
+  it("leaves an ordinary amount to its figure", () => {
+    const [plain] = selectAccountJournalRows(
+      "USD",
+      [
+        item(
+          { entry_hash: "z", date: "2026-10-05" },
+          { BTC: "0.5" },
+          { BTC: "1" },
+        ),
+      ],
+      { account: "Assets:Btc", currency: "BTC" },
+    );
+    expect([plain.changeExact, plain.balanceExact]).toEqual([
+      undefined,
+      undefined,
+    ]);
+  });
+});

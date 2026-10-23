@@ -14,6 +14,7 @@ import { AccountTypeIcon } from "@/components/account-type-icon";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import {
+  formatExactUnits,
   formatSignedMoneyWithCurrency,
   formatUnits,
 } from "@/common/number-utils";
@@ -161,10 +162,16 @@ export function AccountEntryRow({
   // line of its own under the shown change (w21/421).
   const otherChanges = row.otherChanges ?? [];
   const onlyOthers = otherChanges.length > 0 && row.change === 0;
+  // As the ledger wrote them when a double cannot hold them (w21/782).
+  const exactUnits = (exact: string | undefined, includePlus = false) =>
+    units && exact !== undefined
+      ? formatExactUnits(exact, units.currency, includePlus)
+      : null;
   const changeText = onlyOthers
     ? formatOtherChanges(otherChanges)
     : units
-      ? formatUnits(row.change, units.currency, units.scale, true)
+      ? (exactUnits(row.changeExact, true) ??
+        formatUnits(row.change, units.currency, units.scale, true))
       : formatAccountJournalChange(row.change, currency, row.moneyScale ?? 2);
   const notInTotalText =
     otherChanges.length === 0
@@ -173,7 +180,8 @@ export function AccountEntryRow({
         ? t("valuationNotInTotalTag")
         : `${formatOtherChanges(otherChanges)} · ${t("valuationNotInTotalTag")}`;
   const balanceText = units
-    ? formatUnits(row.balance, units.currency, units.scale)
+    ? (exactUnits(row.balanceExact) ??
+      formatUnits(row.balance, units.currency, units.scale))
     : formatAccountJournalBalance(row.balance, currency, row.moneyScale ?? 2);
   // Open / Balance / Pad / … rows read as plain transactions otherwise: the
   // title falls back to the directive's own account name.
