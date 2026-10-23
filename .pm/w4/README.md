@@ -12,7 +12,6 @@
 
 - [1016 — Keep Events filter choices distinct and named](./1016.md) — minor residual of271; both-width valid modeled types yield unnamed whitespace controls or duplicate global/empty labels; exact row filtering passes, no writes.
 
-- [1015 — Keep source digits and exact text in the rest of Overview's amounts](./1015.md) — minor; m52 /simplify follow-up: commodity digits in FormattedAmounts and the change line, plus tooltip/valuation/holdings text still from doubles; source-only.
 
 
 
