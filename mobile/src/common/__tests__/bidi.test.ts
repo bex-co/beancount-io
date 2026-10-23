@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { isolateLtr } from "../bidi";
+import { isolateLtr, isolateRtlSymbol } from "../bidi";
 
 // w21/095: in Persian, "مانده: -$1,234.50" rendered as `1,234.50$- :مانده`,
 // the sign and symbol pulled to the wrong side of the number.
@@ -61,5 +61,20 @@ describe("isolateLtr", () => {
   it("keeps each holding in the list its own isolate", () => {
     const list = ["-500 EUR", "20 GBP"].map(isolateLtr).join(", ");
     expect(list).toBe("⁦-500 EUR⁩, ⁦20 GBP⁩");
+  });
+});
+
+describe("isolateRtlSymbol", () => {
+  it("isolates a symbol in Arabic or Hebrew script", () => {
+    expect(isolateRtlSymbol("د.ك")).toBe("\u2067د.ك\u2069");
+    expect(isolateRtlSymbol("﷼")).toBe("\u2067﷼\u2069");
+    expect(isolateRtlSymbol("₪")).toBe("₪");
+    expect(isolateRtlSymbol("ש״ח")).toBe("\u2067ש״ח\u2069");
+  });
+
+  it("leaves every other symbol, and no symbol, as it is", () => {
+    for (const symbol of ["$", "€", "¥", "₹", "CHF", "zł", ""]) {
+      expect(isolateRtlSymbol(symbol)).toBe(symbol);
+    }
   });
 });

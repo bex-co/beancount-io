@@ -257,6 +257,44 @@ describe("money at its currency's minor unit", () => {
     expect(kwd.endsWith("12.345")).toBe(true);
   });
 
+  // w21/698: an Arabic-script symbol turned the whole figure right-to-left, so
+  // "-د.ك1,234.500" drew its minus at the far end, as `1,234.500ك.د-`.
+  it("keeps an Arabic-script symbol in its own right-to-left isolate", () => {
+    const rli = (symbol: string) => `\u2067${symbol}\u2069`;
+    expect(formatSignedMoneyWithCurrency(-1234.5, "KWD")).toBe(
+      `-${rli("د.ك")}1,234.500`,
+    );
+    expect(formatSignedMoneyWithCurrency(0, "KWD", true)).toBe(
+      `+${rli("د.ك")}0.000`,
+    );
+    expect(formatMoneyWithCurrency(1234.5, "AED")).toBe(
+      `${rli("د.إ")}1,234.50`,
+    );
+    // Written after the number where the language does, still isolated.
+    expect(formatShortMoneyWithCurrency(-1500, "KWD", "de")).toBe(
+      `-1,5 Tsd. ${rli("د.ك")}`,
+    );
+    // The hero rolls its digits: the sign and symbol stay one run, isolated.
+    const {
+      rollingGlyphs,
+    } = require("../../components/amount-text/rolling-glyphs");
+    expect(
+      rollingGlyphs(formatSignedMoneyWithCurrency(-1.5, "KWD"))[0],
+    ).toEqual({ key: "s5", text: `-${rli("د.ك")}` });
+  });
+
+  it("drops the stray periods currency-icons gives BHD, OMR, SDG and MAD", () => {
+    const rli = (symbol: string) => `\u2067${symbol}\u2069`;
+    expect(formatSignedMoneyWithCurrency(-1, "BHD")).toBe(
+      `-${rli("د.ب")}1.000`,
+    );
+    expect(formatSignedMoneyWithCurrency(-1, "OMR")).toBe(
+      `-${rli("ر.ع")}1.000`,
+    );
+    expect(formatSignedMoneyWithCurrency(-1, "SDG")).toBe(`-${rli("ج.س")}1.00`);
+    expect(formatSignedMoneyWithCurrency(-1, "MAD")).toBe(`-${rli("د.م")}1.00`);
+  });
+
   it("leaves two-decimal currencies and custom commodities alone", () => {
     expect(formatMoneyWithCurrency(1234.5, "USD")).toBe("$1,234.50");
     expect(formatMoneyWithCurrency(1234.5, "MUSD")).toBe("1,234.50 MUSD");

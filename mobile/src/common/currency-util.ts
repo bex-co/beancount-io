@@ -1,4 +1,5 @@
 import CurrencyIcons from "currency-icons";
+import { isolateRtlSymbol } from "./bidi";
 
 // The ledger's operating currencies come from `useLedgerMeta` (scoped to the
 // selected ledger). The first entry is the ledger's primary operating currency
@@ -11,13 +12,22 @@ export const getPrimaryCurrency = (
 
 // Where `currency-icons` gives a local-script or word symbol that does not
 // read as a prefix: JPY's is "円", which rendered "円1,500.00" (w21/070).
+// BHD's ".د.ب" carries a stray leading period, which landed against the digits,
+// and the closing period of OMR, SDG and MAD landed against the minus, so they
+// read as KWD's "د.ك" does (w21/698).
 const SYMBOL_OVERRIDES: Record<string, string> = {
+  BHD: "د.ب",
   CNY: "¥",
   JPY: "¥",
+  MAD: "د.م",
+  OMR: "ر.ع",
+  SDG: "ج.س",
 };
 
 export const getCurrencySymbol = (currency: string) =>
-  SYMBOL_OVERRIDES[currency] ?? (CurrencyIcons[currency]?.symbol || "");
+  isolateRtlSymbol(
+    SYMBOL_OVERRIDES[currency] ?? (CurrencyIcons[currency]?.symbol || ""),
+  );
 
 /**
  * The currency a ledger's headline figures read in: its first operating
