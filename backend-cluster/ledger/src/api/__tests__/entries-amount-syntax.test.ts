@@ -318,6 +318,32 @@ describe("bulk entries keep the file's line ending", () => {
   });
 
   // w21/679: a Latin-1 file was decoded leniently and written back with U+FFFD.
+  // w21/680: a NUL in the narration was committed and the file stopped loading.
+  it("refuses a NUL in the narration, committing nothing", async () => {
+    const response = await fetch(`${url}/entries/alice/books/bulk`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        entries: [
+          {
+            type: "transaction",
+            item: {
+              date: "2026-10-22",
+              flag: "*",
+              narration: "qa nul a\u0000b",
+              postings: [],
+            },
+          },
+        ],
+      }),
+    });
+    expect(response.status).toBe(400);
+    expect(((await response.json()) as { error: string }).error).toContain(
+      "narration contains the control character U+0000",
+    );
+    expect(committed).toEqual([]);
+  });
+
   it("refuses a file that is not valid UTF-8, committing nothing", async () => {
     mainBytes = Buffer.from("; Caf\xe9 latin-1\n", "latin1");
     const response = await add();

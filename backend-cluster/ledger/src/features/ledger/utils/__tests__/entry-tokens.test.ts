@@ -1,5 +1,6 @@
 import {
   assertEntryTokens,
+  assertNoControlCharacters,
   assertSingleEntryText,
   isSingleDirective,
 } from "@/features/ledger/utils/entry-tokens";
@@ -192,5 +193,50 @@ describe("assertSingleEntryText", () => {
     ["Assets:Cash 1 USD", "newContent must be one dated directive"],
   ])("refuses %p", (text, message) => {
     expect(() => assertSingleEntryText(text, "newContent")).toThrow(message);
+  });
+});
+
+// w21/680: a NUL in a payee was committed, and the loader then refused the file.
+describe("assertNoControlCharacters", () => {
+  it.each(["\u0000", "\u0001", "\u001b", "\u007f", "\u000b"])(
+    "refuses %p in a text field, naming it",
+    (char) => {
+      expect(() =>
+        assertNoControlCharacters([txn({ narration: `a${char}b` })]),
+      ).toThrow(/entry 0: narration contains the control character U\+/);
+    },
+  );
+
+  it("finds one in the payee, a metadata value, a key or a nested value", () => {
+    expect(() =>
+      assertNoControlCharacters([txn({ payee: "x\u0000" })]),
+    ).toThrow("entry 0: payee contains");
+    expect(() =>
+      assertNoControlCharacters([txn({ meta: { receipt: "a\u0000" } })]),
+    ).toThrow("entry 0: meta.receipt contains");
+    expect(() =>
+      assertNoControlCharacters([
+        txn({ postings: [{ account: "A:B", comment: "\u0000" }] }),
+      ]),
+    ).toThrow("entry 0: postings[0].comment contains");
+  });
+
+  it("accepts tab, line breaks and ordinary Unicode", () => {
+    expect(() =>
+      assertNoControlCharacters([
+        txn({ narration: "lunch\twith\nthe team\r\n — café 咖啡 ‌" }),
+      ]),
+    ).not.toThrow();
+  });
+});
+
+describe("assertSingleEntryText and control characters", () => {
+  it("refuses a NUL in an edited slice", () => {
+    expect(() =>
+      assertSingleEntryText(
+        '2026-01-01 * "lun\u0000ch"\n  Assets:Cash  1 USD\n  Equity:X',
+        "newContent",
+      ),
+    ).toThrow("newContent contains the control character U+0000");
   });
 });

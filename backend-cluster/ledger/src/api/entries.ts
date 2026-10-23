@@ -22,6 +22,7 @@ import { assertSafeRepoPath, toSafeRepoUrlPath } from "@/shared/safe-repo-path";
 import { addEntriesCommitMessage } from "@/features/ledger/utils/commit-message";
 import {
   assertEntryTokens,
+  assertNoControlCharacters,
   isSingleDirective,
 } from "@/features/ledger/utils/entry-tokens";
 import {
@@ -185,6 +186,7 @@ export function setEntriesHandler(router: Router): void {
       const rows = body.entries ?? [];
       assertDecimalAmounts(rows);
       assertEntryTokens(rows);
+      assertNoControlCharacters(rows);
 
       const client = giteaClientForRequest(ctx);
 

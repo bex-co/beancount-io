@@ -144,6 +144,59 @@ export function assertEntryTokens(
   });
 }
 
+/**
+ * Control characters (`\p{Cc}`: C0, DEL and C1) other than tab, line feed and carriage return. A NUL in
+ * a payee committed cleanly and then made the whole file unreadable to the
+ * loader, which refuses binary data (w21/680).
+ */
+const CONTROL_CHARACTER = /(?![\t\n\r])\p{Cc}/u;
+
+function describeControl(text: string): string {
+  const char = CONTROL_CHARACTER.exec(text)![0];
+  return `U+${char.charCodeAt(0).toString(16).toUpperCase().padStart(4, "0")}`;
+}
+
+/** The path of the first string in `value` (a key or a value) that holds a control character. */
+function findControl(value: unknown, path: string): [string, string] | null {
+  if (typeof value === "string") {
+    return CONTROL_CHARACTER.test(value)
+      ? [path, describeControl(value)]
+      : null;
+  }
+  if (Array.isArray(value)) {
+    for (const [index, entry] of value.entries()) {
+      const found = findControl(entry, `${path}[${index}]`);
+      if (found) return found;
+    }
+    return null;
+  }
+  if (value && typeof value === "object") {
+    for (const [key, entry] of Object.entries(value)) {
+      if (CONTROL_CHARACTER.test(key))
+        return [`${path}.${key}`, describeControl(key)];
+      const found = findControl(entry, path ? `${path}.${key}` : key);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+/** Refuse a row whose text fields (payee, narration, metadata, …) hold a control character. */
+export function assertNoControlCharacters(
+  rows: Array<{ type: string; item: unknown }>,
+): void {
+  rows.forEach((row, idx) => {
+    const found = findControl(row.item, "");
+    if (found) {
+      const field = found[0].replace(/^\./, "");
+      throw new BadUserInputError(
+        `entry ${idx}: ${field} contains the control character ${found[1]}, which the ledger cannot store as text`,
+        field,
+      );
+    }
+  });
+}
+
 /** The lines of `text` that start at column zero outside a string. */
 function topLevelLines(text: string): string[] {
   const lines: string[] = [];
@@ -189,6 +242,12 @@ const CONFIGURATION_KEYWORDS = new Set(["option", "plugin", "include"]);
  * an update of the entry it replaced (w23/036).
  */
 export function assertSingleEntryText(text: string, field: string): void {
+  if (CONTROL_CHARACTER.test(text)) {
+    throw new BadUserInputError(
+      `${field} contains the control character ${describeControl(text)}, which the ledger cannot store as text`,
+      field,
+    );
+  }
   const directives = topLevelLines(text).filter(
     (line) => !line.startsWith(";"),
   );
