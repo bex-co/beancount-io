@@ -638,3 +638,46 @@ describe("NetWorthCard monthly change", () => {
     expect(change()).toBeNull();
   });
 });
+
+/**
+ * A recorded balance and its monthly change keep their decimal: as doubles,
+ * 9007199254740992 and 9007199254740993 are one number (w4/m52). The formatter
+ * here prints what it is given, so the text shows exactly what reached it.
+ */
+describe("NetWorthCard exact amounts", () => {
+  const renderCard = (data: DataSeries) =>
+    render(
+      <NetWorthCard
+        ledgerOwner="owner"
+        ledgerName="book"
+        valuation={null}
+        data={data}
+        primaryCurrency="USD"
+      />,
+    );
+  const change = () =>
+    screen.getByText("page.overview.fromPreviousMonth").parentElement!
+      .textContent;
+
+  it.each([
+    ["an increase", "9007199254740992", "9007199254740993", "+1 USD"],
+    ["a decrease", "9007199254740993", "9007199254740992", "-1 USD"],
+    ["the safe control", "9007199254740990", "9007199254740991", "+1 USD"],
+  ])("shows %s and both months exactly", async (_name, jan, feb, expected) => {
+    renderCard([
+      { date: "2016-01-31", balance: { USD: jan } },
+      { date: "2016-02-29", balance: { USD: feb } },
+    ]);
+    expect(screen.getByText(`${feb} USD`)).toBeInTheDocument();
+    expect(change()).toContain(expected);
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "page.overview.tableView" }),
+    );
+    const [, february, january] = within(
+      screen.getByRole("table", { name: "page.overview.netWorthByMonth" }),
+    ).getAllByRole("row");
+    expect(february).toHaveTextContent(`${feb} USD`);
+    expect(january).toHaveTextContent(`${jan} USD`);
+  });
+});

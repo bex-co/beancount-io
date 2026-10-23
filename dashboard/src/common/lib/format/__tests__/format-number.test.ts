@@ -113,3 +113,34 @@ describe("formatNumber with source fraction digits (w4/m45)", () => {
     expect(formatNumber(1234.5, true, "en", "JPY", 3)).toBe("1,235");
   });
 });
+
+describe("formatNumber with an exact decimal string (w4/m52)", () => {
+  it("formats a balance a double cannot hold, digit for digit", () => {
+    // 2^53 + 1: as a number this is 9007199254740992.
+    expect(formatNumber("9007199254740993", true, "en", "USD")).toBe(
+      "9,007,199,254,740,993.00",
+    );
+    expect(formatNumber("9007199254740993", false, "en", "USD")).toBe(
+      "9007199254740993.00",
+    );
+    expect(formatNumber("-9007199254740993.5", true, "de", "EUR")).toBe(
+      "-9.007.199.254.740.993,50",
+    );
+  });
+
+  it("keeps a commodity's source digits and the ungrouped '.' separator", () => {
+    expect(formatNumber("12345678901234.00995", true, "en", "ETH", 5)).toBe(
+      "12,345,678,901,234.00995",
+    );
+    expect(formatNumber("12345678901234.00995", false, "de", "ETH", 5)).toBe(
+      "12345678901234.00995",
+    );
+  });
+
+  it("formats ordinary amounts as the number would, without a negative zero", () => {
+    expect(formatNumber("4559.8", true, "en", "USD")).toBe(
+      formatNumber(4559.8, true, "en", "USD"),
+    );
+    expect(formatNumber("-0.001", true, "en", "USD")).toBe("0.00");
+  });
+});

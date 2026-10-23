@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  amountDifference,
   buildAccountBalanceRows,
   formatPeriodMonth,
+  getBalanceAmounts,
   getMovementSnapshot,
   getLatestActiveIntervalDate,
   hasOverviewActivity,
@@ -101,10 +103,13 @@ describe("overview financial selectors", () => {
       "Liabilities:Card",
       "Assets:Brokerage",
     ]);
-    expect(rows[1].amounts).toEqual([{ currency: "USD", value: 400 }]);
+    // The ledger's decimal travels with each amount, inverted exactly.
+    expect(rows[1].amounts).toEqual([
+      { currency: "USD", value: 400, exact: "400" },
+    ]);
     expect(rows[2].amounts).toEqual([
-      { currency: "EUR", value: 200 },
-      { currency: "GBP", value: 300 },
+      { currency: "EUR", value: 200, exact: "200" },
+      { currency: "GBP", value: 300, exact: "300" },
     ]);
   });
 
@@ -140,7 +145,9 @@ describe("overview financial selectors", () => {
       ],
     });
 
-    expect(snapshot.total).toEqual([{ currency: "USD", value: 500 }]);
+    expect(snapshot.total).toEqual([
+      { currency: "USD", value: 500, exact: "500" },
+    ]);
     expect(snapshot.average).toEqual([{ currency: "USD", value: 200 }]);
     expect(snapshot.categories.map((category) => category.account)).toEqual([
       "Income:Salary",
@@ -201,5 +208,28 @@ describe("formatPeriodMonth", () => {
 
   it("falls back to the raw value for an unparseable date", () => {
     expect(formatPeriodMonth("not-a-date", "fr")).toBe("not-a-date");
+  });
+});
+
+describe("amountDifference (w4/m52)", () => {
+  const usd = (text: string) => getBalanceAmounts({ USD: text })[0]!;
+
+  it("subtracts the ledger's decimals exactly", () => {
+    expect(
+      amountDifference(usd("9007199254740993"), usd("9007199254740992")),
+    ).toBe("1");
+    expect(
+      amountDifference(usd("9007199254740992"), usd("9007199254740993")),
+    ).toBe("-1");
+    expect(amountDifference(usd("10.50"), usd("4"))).toBe("6.50");
+  });
+
+  it("falls back to the number for an amount without a decimal", () => {
+    expect(
+      amountDifference(
+        { currency: "USD", value: 200 },
+        { currency: "USD", value: 150.25 },
+      ),
+    ).toBe("49.75");
   });
 });

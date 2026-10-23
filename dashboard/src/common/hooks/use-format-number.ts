@@ -11,9 +11,10 @@ import { formatNumber } from "@/common/lib/format/format-number";
  *   formatNum(1234567.89) // "1,234,567.89" or "1234567.89" depending on the option
  *   formatNum(4559.8, "USD") // "4,559.80": ISO currencies use their minor units
  *   formatNum(4.00995, "ETH", 5) // "4.00995": a commodity keeps its source digits
+ *   formatNum("9007199254740993", "USD") // exact: a decimal string is not rounded
  */
 export function useFormatNumber(): (
-  value: number,
+  value: number | string,
   currency?: string,
   fractionDigits?: number,
 ) => string {
@@ -22,7 +23,7 @@ export function useFormatNumber(): (
   const renderCommas = ledgerData.options.renderCommas ?? true;
   const language = i18n.language;
   return useCallback(
-    (value: number, currency?: string, fractionDigits?: number) =>
+    (value: number | string, currency?: string, fractionDigits?: number) =>
       formatNumber(value, renderCommas, language, currency, fractionDigits),
     [renderCommas, language],
   );

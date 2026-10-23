@@ -1,3 +1,8 @@
+import {
+  negateDecimalNumber,
+  parseDecimalNumber,
+  sumDecimalNumbers,
+} from "@/common/lib/beancount/decimal-number";
 import { ledgerDateFormat } from "@/common/lib/format/ledger-date";
 import { parseConcreteTimeFilter } from "@/features/reports/export/reporting-period";
 import {
@@ -27,6 +32,12 @@ export type HierarchyNode = {
 export type CurrencyAmount = {
   currency: string;
   value: number;
+  /**
+   * The decimal the ledger sent, when there is one. Text and differences use
+   * it: a double rounds a large balance (9007199254740993) before either sees
+   * it (w4/m52). `value` stays for sorting and chart coordinates.
+   */
+  exact?: string;
 };
 
 export type AccountBalanceRow = {
@@ -143,16 +154,37 @@ export function getBalanceAmounts(
   if (!balance) return [];
 
   return Object.entries(balance)
-    .map(([currency, value]) => {
+    .map(([currency, value]): CurrencyAmount | null => {
       const numeric = toFiniteAmount(value);
       if (numeric === null) return null;
+      const exact = parseDecimalNumber(String(value));
       return {
         currency,
         value: inverted ? -numeric : numeric,
+        ...(exact !== null && {
+          exact: inverted ? negateDecimalNumber(exact) : exact,
+        }),
       };
     })
     .filter((amount): amount is CurrencyAmount => amount !== null)
     .sort((a, b) => a.currency.localeCompare(b.currency));
+}
+
+const decimalOf = (amount: CurrencyAmount) =>
+  amount.exact ?? parseDecimalNumber(String(amount.value)) ?? "0";
+
+/**
+ * `latest - previous` for two amounts in one currency, as an exact decimal
+ * when both carry the ledger's (w4/m52).
+ */
+export function amountDifference(
+  latest: CurrencyAmount,
+  previous: CurrencyAmount,
+): string {
+  return sumDecimalNumbers([
+    decimalOf(latest),
+    negateDecimalNumber(decimalOf(previous)),
+  ]);
 }
 
 export function prioritizeCurrency(

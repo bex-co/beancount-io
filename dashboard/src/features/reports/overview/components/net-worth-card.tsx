@@ -32,7 +32,9 @@ import { fractionDigitsOf } from "@/common/lib/format/format-number";
 import { getChartColors } from "@/common/lib/chart/color";
 import { formatDateAxis, formatYAxisNumber } from "@/common/lib/chart/chart";
 import type { DataSeries } from "../lib/overview-utils";
+import { isPositiveDecimalNumber } from "@/common/lib/beancount/decimal-number";
 import {
+  amountDifference,
   getBalanceAmounts,
   getComparableAmount,
   prioritizeCurrency,
@@ -297,8 +299,9 @@ export function NetWorthCard({
       : null;
   const change =
     latestComparable && previousComparable
-      ? latestComparable.value - previousComparable.value
+      ? amountDifference(latestComparable, previousComparable)
       : null;
+  const falling = change?.startsWith("-") ?? false;
 
   const chartOption = useMemo<EChartsOption>(() => {
     const formatTick = yAxisTickFormatter(language);
@@ -420,18 +423,18 @@ export function NetWorthCard({
           {change !== null && latestComparable && (
             <div
               className={
-                change >= 0
-                  ? "flex items-center gap-1 text-sm text-emerald-700 dark:text-emerald-400"
-                  : "flex items-center gap-1 text-sm text-rose-600 dark:text-rose-400"
+                falling
+                  ? "flex items-center gap-1 text-sm text-rose-600 dark:text-rose-400"
+                  : "flex items-center gap-1 text-sm text-emerald-700 dark:text-emerald-400"
               }
             >
-              {change >= 0 ? (
-                <TrendingUp className="size-4" />
-              ) : (
+              {falling ? (
                 <TrendingDown className="size-4" />
+              ) : (
+                <TrendingUp className="size-4" />
               )}
               <span className="tabular-nums">
-                {change > 0 ? "+" : ""}
+                {isPositiveDecimalNumber(change) ? "+" : ""}
                 {formatNumber(change, latestComparable.currency)}{" "}
                 {latestComparable.currency}
               </span>

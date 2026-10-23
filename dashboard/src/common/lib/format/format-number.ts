@@ -1,7 +1,9 @@
 /**
  * Format a number respecting the beancount render_commas option.
  *
- * @param value       - The numeric value to format
+ * @param value       - The value to format. A decimal string is formatted
+ *                      exactly, digit for digit, where a double would round
+ *                      a large ledger amount (9007199254740993) first.
  * @param renderCommas - When true, adds thousands separators (e.g. 1,234,567.89).
  *                       When false, omits them (e.g. 1234567.89).
  * @param locale      - Explicit formatting locale. Required for separators:
@@ -15,7 +17,7 @@
  * @returns Formatted number string
  */
 export const formatNumber = (
-  value: number,
+  value: number | string,
   renderCommas: boolean,
   locale: string,
   currency?: string,
@@ -27,7 +29,7 @@ export const formatNumber = (
   const digits = currency ? currencyMinorDigits(currency) : undefined;
   if (digits !== undefined) {
     // A residue that rounds to zero is zero, not "-0.00".
-    const shown = Math.abs(value) < 0.5 * 10 ** -digits ? 0 : value;
+    const shown = Math.abs(Number(value)) < 0.5 * 10 ** -digits ? 0 : value;
     return numberFormat(locale, {
       minimumFractionDigits: digits,
       maximumFractionDigits: digits,
@@ -50,10 +52,17 @@ const numberFormats = new Map<string, Intl.NumberFormat>();
  * A shared `Intl.NumberFormat`: `toLocaleString` with options builds a new
  * formatter per call, which a long daily Budget table pays thousands of times.
  */
+/**
+ * `format` takes a decimal string exactly (ECMA-402 2023); the ES2022 typings
+ * admit only numbers. An older engine converts the string to a number, which
+ * is how every value was formatted before.
+ */
+type ExactNumberFormat = { format(value: number | string): string };
+
 function numberFormat(
   locale: string,
   options: Intl.NumberFormatOptions,
-): Intl.NumberFormat {
+): ExactNumberFormat {
   const key = `${locale}|${JSON.stringify(options)}`;
   let format = numberFormats.get(key);
   if (!format) {
@@ -115,7 +124,7 @@ export const fractionDigitsOf = (
  * shape follow `formatNumber`, which delegates its non-ISO commodities here.
  */
 export const formatQuantity = (
-  value: number,
+  value: number | string,
   fractionDigits: number,
   renderCommas: boolean,
   locale: string,
@@ -125,6 +134,14 @@ export const formatQuantity = (
     return numberFormat(locale, { maximumFractionDigits: digits }).format(
       value,
     );
+  }
+  if (typeof value === "string") {
+    // Ungrouped output uses "." with no grouping, as String/toFixed below do;
+    // it rounds the decimal, not a double.
+    return numberFormat("en", {
+      maximumFractionDigits: digits,
+      useGrouping: false,
+    }).format(value);
   }
   if (Number.isInteger(value)) {
     return String(value);
