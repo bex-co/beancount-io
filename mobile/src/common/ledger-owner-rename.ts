@@ -16,17 +16,27 @@ export function renamedLedgerId(
     : ledgerId;
 }
 
+/** Each ledger id to the one it goes by now. */
+export type LedgerIdMap = (ledgerId: string) => string;
+
+/** A record keyed by ledger id, re-keyed by `map`. */
+export function rekeyLedgers<T>(
+  record: Readonly<Record<string, T>>,
+  map: LedgerIdMap,
+): Record<string, T> {
+  return Object.fromEntries(
+    Object.entries(record).map(([ledgerId, value]) => [map(ledgerId), value]),
+  );
+}
+
 /** A record keyed by ledger id, re-keyed for the renamed owner. */
 export function renameLedgerKeys<T>(
   record: Readonly<Record<string, T>>,
   oldOwner: string,
   newOwner: string,
 ): Record<string, T> {
-  return Object.fromEntries(
-    Object.entries(record).map(([ledgerId, value]) => [
-      renamedLedgerId(ledgerId, oldOwner, newOwner),
-      value,
-    ]),
+  return rekeyLedgers(record, (ledgerId) =>
+    renamedLedgerId(ledgerId, oldOwner, newOwner),
   );
 }
 
@@ -40,7 +50,38 @@ export function renamedLedgerScope<T extends { ledgerId: string | null }>(
   oldOwner: string,
   newOwner: string,
 ): T {
+  return rescopeLedger(scoped, (ledgerId) =>
+    renamedLedgerId(ledgerId, oldOwner, newOwner),
+  );
+}
+
+/** A value stored with its ledger, moved by `map`. */
+export function rescopeLedger<T extends { ledgerId: string | null }>(
+  scoped: T,
+  map: LedgerIdMap,
+): T {
   if (scoped.ledgerId === null) return scoped;
-  const ledgerId = renamedLedgerId(scoped.ledgerId, oldOwner, newOwner);
+  const ledgerId = map(scoped.ledgerId);
   return ledgerId === scoped.ledgerId ? scoped : { ...scoped, ledgerId };
+}
+
+/**
+ * The name a ledger renamed on the web goes by now. The server answers the old
+ * `owner/name` through the host's redirect with the new one, and the app kept
+ * the old: the drawer listed the ledger twice, a "Current ledger" row under
+ * the old name above the real one, and what was remembered for it stayed on
+ * the old id (w21/801). Null when the answer names the selection itself, or
+ * the selection is not an `owner/name`.
+ */
+export function canonicalLedgerId(
+  selected: string | null,
+  answered: { fullName?: string | null } | null | undefined,
+): string | null {
+  const fullName = answered?.fullName ?? "";
+  const isPath = (id: string) => {
+    const separator = id.indexOf("/");
+    return separator > 0 && separator < id.length - 1;
+  };
+  if (!selected || !isPath(selected) || !isPath(fullName)) return null;
+  return fullName === selected ? null : fullName;
 }

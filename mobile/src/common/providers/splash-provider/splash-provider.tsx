@@ -30,6 +30,8 @@ import { clearServerScopedState } from "@/common/server-url-actions";
 import { GetLedgerDocument } from "@/generated-graphql/graphql";
 import { shouldClearLedgerSelection } from "@/common/graphql-error-codes";
 import { settleWithin } from "@/common/settle-within";
+import { canonicalLedgerId } from "@/common/ledger-owner-rename";
+import { renameLedger } from "@/common/vars/rename-ledger-owner";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -135,8 +137,18 @@ const SplashProviderComponent = ({
             // the persisted selection and the check carries on behind it
             // (w21/183).
             const outcome = await settleWithin(check, LEDGER_CHECK_DEADLINE_MS);
+            // Renamed on the web, the ledger answers under its new name: the
+            // selection and what is remembered for it follow (w21/801).
+            const follow = (answer: Awaited<typeof check>) => {
+              const renamed = canonicalLedgerId(ledger, answer.data?.getLedger);
+              if (renamed && ledgerVar() === ledger) {
+                renameLedger(ledger, renamed);
+              }
+            };
+            if (outcome.status === "done") follow(outcome.value);
             if (outcome.status === "timeout") {
               console.warn("Ledger check is slow; opening on the cache");
+              check.then(follow, () => undefined);
               check.catch((late: unknown) => {
                 // Only the ledger it validated: the user may have picked
                 // another from the drawer or a link while it was pending

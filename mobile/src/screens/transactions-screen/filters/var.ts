@@ -1,5 +1,9 @@
 import { makeVar } from "@apollo/client";
-import { renamedLedgerScope } from "@/common/ledger-owner-rename";
+import {
+  renamedLedgerScope,
+  rescopeLedger,
+  type LedgerIdMap,
+} from "@/common/ledger-owner-rename";
 import {
   NO_SCOPED_FILTERS,
   ScopedTransactionFilters,
@@ -68,4 +72,9 @@ export function renameTransactionFiltersOwner(
   transactionFiltersVar(
     renamedLedgerScope(transactionFiltersVar(), oldOwner, newOwner),
   );
+}
+
+/** Keep the filters on a ledger renamed on the web (w21/801). */
+export function moveTransactionFilters(map: LedgerIdMap): void {
+  transactionFiltersVar(rescopeLedger(transactionFiltersVar(), map));
 }

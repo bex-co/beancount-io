@@ -125,6 +125,10 @@ function load(relative: string): any {
         if (id === "./drawer-ledgers") return drawerLedgers;
         if (id === "@/common/graphql-error-codes")
           return { isLedgerGone: () => false };
+        if (id === "@/common/ledger-owner-rename")
+          return require("../../../common/ledger-owner-rename");
+        if (id === "@/common/vars/rename-ledger-owner")
+          return { renameLedger: () => undefined };
         if (id === "@/common/horizontal-swipe-owner")
           return { EdgeSwipeGestureProvider: "EdgeSwipeGestureProvider" };
         if (id === "@/common/ledger-directory/ledger-directory-provider")

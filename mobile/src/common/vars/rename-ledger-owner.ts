@@ -1,5 +1,12 @@
-import { renameTransactionFiltersOwner } from "@/screens/transactions-screen/filters/var";
-import { renameLedgerKeys, renamedLedgerId } from "../ledger-owner-rename";
+import {
+  moveTransactionFilters,
+  renameTransactionFiltersOwner,
+} from "@/screens/transactions-screen/filters/var";
+import {
+  rekeyLedgers,
+  renameLedgerKeys,
+  renamedLedgerId,
+} from "../ledger-owner-rename";
 import { accountUsageVar } from "./account-usage";
 import { ledgerVar } from "./ledger";
 import { merchantRecurringOverridesVar } from "./merchant-recurring-overrides";
@@ -19,4 +26,21 @@ export function renameLedgerOwner(oldOwner: string, newOwner: string): void {
     renameLedgerKeys(merchantRecurringOverridesVar(), oldOwner, newOwner),
   );
   renameTransactionFiltersOwner(oldOwner, newOwner);
+}
+
+/**
+ * Move the selection and everything remembered for one ledger to the name it
+ * was renamed to on the web: left on the old id, the drawer listed it twice
+ * and Recent accounts, merchant marks and filters were dropped (w21/801).
+ */
+export function renameLedger(from: string, to: string): void {
+  if (!from || !to || from === to) return;
+  const map = (ledgerId: string) => (ledgerId === from ? to : ledgerId);
+  const selected = ledgerVar();
+  if (selected) ledgerVar(map(selected));
+  accountUsageVar(rekeyLedgers(accountUsageVar(), map));
+  merchantRecurringOverridesVar(
+    rekeyLedgers(merchantRecurringOverridesVar(), map),
+  );
+  moveTransactionFilters(map);
 }

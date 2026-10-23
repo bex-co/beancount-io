@@ -1,9 +1,12 @@
 import fs from "fs";
 import path from "path";
 import {
+  canonicalLedgerId,
+  rekeyLedgers,
   renameLedgerKeys,
   renamedLedgerId,
   renamedLedgerScope,
+  rescopeLedger,
 } from "../ledger-owner-rename";
 
 // w21/226: renaming the account renames the owner of every ledger it holds, and
@@ -126,5 +129,82 @@ describe("the Profile save", () => {
         "transactionFiltersVar(renamedLedgerScope(transactionFiltersVar(),oldOwner,newOwner)",
       ),
     ).toBe(true);
+  });
+});
+
+// w21/801: a ledger renamed on the web answered under its new name, and the
+// app kept the old one: the drawer listed it twice and per-ledger state was
+// left on the old id.
+describe("a ledger renamed on the web", () => {
+  it("is followed to the name the server answers it under", () => {
+    expect(
+      canonicalLedgerId("qa/personal", { fullName: "qa/personal-2025" }),
+    ).toBe("qa/personal-2025");
+    expect(canonicalLedgerId("qa/personal", { fullName: "qa/personal" })).toBe(
+      null,
+    );
+    // Nothing to follow: no answer, a numeric selection, a malformed name.
+    expect(canonicalLedgerId("qa/personal", undefined)).toBe(null);
+    expect(canonicalLedgerId("2", { fullName: "qa/personal" })).toBe(null);
+    expect(canonicalLedgerId("qa/personal", { fullName: "qa" })).toBe(null);
+    expect(canonicalLedgerId(null, { fullName: "qa/personal" })).toBe(null);
+  });
+
+  it("moves only that ledger's keys and scope", () => {
+    const map = (id: string) =>
+      id === "qa/personal" ? "qa/personal-2025" : id;
+    expect(
+      rekeyLedgers({ "qa/personal": ["Assets:Cash"], "qa/budget": [] }, map),
+    ).toEqual({ "qa/personal-2025": ["Assets:Cash"], "qa/budget": [] });
+    expect(
+      rescopeLedger(
+        { ledgerId: "qa/personal", filters: { range: "all" } },
+        map,
+      ),
+    ).toEqual({ ledgerId: "qa/personal-2025", filters: { range: "all" } });
+    const other = { ledgerId: "qa/budget", filters: {} };
+    expect(rescopeLedger(other, map)).toBe(other);
+  });
+
+  it("is followed when the splash check and the drawer read it", () => {
+    const read = (...parts: string[]) =>
+      fs
+        .readFileSync(path.join(__dirname, "..", "..", ...parts), "utf8")
+        .replace(/\s+/g, "");
+    const splash = read(
+      "common",
+      "providers",
+      "splash-provider",
+      "splash-provider.tsx",
+    );
+    expect(
+      splash.includes(
+        "constrenamed=canonicalLedgerId(ledger,answer.data?.getLedger);if(renamed&&ledgerVar()===ledger){renameLedger(ledger,renamed);}",
+      ),
+    ).toBe(true);
+    expect(
+      splash.includes('if(outcome.status==="done")follow(outcome.value);'),
+    ).toBe(true);
+    expect(splash.includes("check.then(follow,()=>undefined);")).toBe(true);
+    const drawer = read(
+      "components",
+      "ledger-drawer",
+      "account-ledger-drawer.tsx",
+    );
+    expect(
+      drawer.includes(
+        "constrenamedTo=canonicalLedgerId(ledgerId,selectedData?.getLedger);",
+      ),
+    ).toBe(true);
+    expect(drawer.includes("renameLedger(ledgerId,renamedTo);")).toBe(true);
+    const vars = read("common", "vars", "rename-ledger-owner.ts");
+    for (const moved of [
+      "ledgerVar(map(selected))",
+      "accountUsageVar(rekeyLedgers(accountUsageVar(),map));",
+      "merchantRecurringOverridesVar(rekeyLedgers(merchantRecurringOverridesVar(),map),);",
+      "moveTransactionFilters(map);",
+    ]) {
+      expect([moved, vars.includes(moved)]).toEqual([moved, true]);
+    }
   });
 });
