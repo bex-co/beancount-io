@@ -199,6 +199,16 @@ export default function GalleryPage() {
       return;
     }
 
+    // ArrowDown on a closed list reopens the current query's results with the
+    // first active, as a combobox does; focus stays in the field (w4/976).
+    // `searchResults` holds only a settled search for this exact query.
+    if (e.key === "ArrowDown" && !isDropdownOpen && searchResults.length > 0) {
+      e.preventDefault();
+      setIsDropdownOpen(true);
+      setHighlightedIndex(0);
+      return;
+    }
+
     if (!isDropdownOpen || searchResults.length === 0) return;
 
     if (e.key === "ArrowDown") {

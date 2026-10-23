@@ -628,6 +628,103 @@ describe("GalleryPage", () => {
     expect(ledgerNavigations()).toHaveLength(0);
   });
 
+  /** ArrowDown reopens a dismissed list of current results (w4/976). */
+  describe("ArrowDown after Escape", () => {
+    const twoLedgers = {
+      searchLedgers: [
+        {
+          id: "open_ledger/shopify",
+          name: "shopify",
+          fullName: "open_ledger/shopify",
+          description: null,
+          __typename: "Ledger",
+        },
+        {
+          id: "open_ledger/shopify-archive",
+          name: "shopify-archive",
+          fullName: "open_ledger/shopify-archive",
+          description: null,
+          __typename: "Ledger",
+        },
+      ],
+    };
+
+    it("reopens with the first result active, keeping focus, and Enter opens it", async () => {
+      mockQuery(
+        createMockLazyQueryTuple(mockSearchLedgers, {
+          data: twoLedgers,
+          loading: false,
+          error: undefined,
+        }),
+      );
+      const user = userEvent.setup();
+      render(<GalleryPage />);
+      const searchInput = screen.getByRole("combobox");
+      await user.type(searchInput, "shopify");
+      await screen.findAllByRole("option");
+
+      await user.keyboard("{ArrowDown}{ArrowDown}{Escape}");
+      expect(screen.queryByRole("option")).toBeNull();
+      expect(searchInput).toHaveAttribute("aria-expanded", "false");
+
+      await user.keyboard("{ArrowDown}");
+      expect(searchInput).toHaveAttribute("aria-expanded", "true");
+      expect(screen.getAllByRole("option")).toHaveLength(2);
+      expect(searchInput).toHaveAttribute(
+        "aria-activedescendant",
+        "ledger-search-option-0",
+      );
+      expect(searchInput).toHaveFocus();
+
+      await user.keyboard("{Enter}");
+      expect(ledgerNavigations()).toHaveLength(1);
+      expect(JSON.stringify(ledgerNavigations()[0])).toContain("shopify");
+      expect(JSON.stringify(ledgerNavigations()[0])).not.toContain("archive");
+    });
+
+    it.each([
+      ["an empty result", { searchLedgers: [] }, false],
+      ["a pending search", undefined, true],
+    ])("does not reopen %s", async (_, data, loading) => {
+      mockQuery(
+        createMockLazyQueryTuple(mockSearchLedgers, {
+          data,
+          loading,
+          error: undefined,
+        }),
+      );
+      const user = userEvent.setup();
+      render(<GalleryPage />);
+      const searchInput = screen.getByRole("combobox");
+      await user.type(searchInput, "shopify");
+      await user.keyboard("{Escape}{ArrowDown}");
+
+      expect(screen.queryByRole("option")).toBeNull();
+      expect(searchInput).not.toHaveAttribute("aria-activedescendant");
+      await user.keyboard("{Enter}");
+      expect(ledgerNavigations()).toHaveLength(0);
+    });
+
+    it("leaves a composing ArrowDown to the input method", async () => {
+      mockQuery(
+        createMockLazyQueryTuple(mockSearchLedgers, {
+          data: twoLedgers,
+          loading: false,
+          error: undefined,
+        }),
+      );
+      const user = userEvent.setup();
+      render(<GalleryPage />);
+      const searchInput = screen.getByRole("combobox");
+      await user.type(searchInput, "shopify");
+      await screen.findAllByRole("option");
+      await user.keyboard("{Escape}");
+
+      fireEvent.keyDown(searchInput, { key: "ArrowDown", isComposing: true });
+      expect(screen.queryByRole("option")).toBeNull();
+    });
+  });
+
   /** An IME's arrows and Enter stay with its composition (w4/287). */
   it("leaves the highlight and navigation alone while composing", async () => {
     mockQuery(
