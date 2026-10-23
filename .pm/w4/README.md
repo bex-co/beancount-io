@@ -4,7 +4,6 @@
 
 ## Inbox
 
-- [1023 — Preserve multiline Payee text while editing CSV previews](./1023.md) — minor residual of w3/135; native appended text joins LLC/Branch in Payee while Description preserves lines; both widths and Configure/Back, no writes.
 
 
 
