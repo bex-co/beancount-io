@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- [1009 — Explain rate-limited ledger loads in the primary error guidance](./1009.md) — minor; genuine refusal is hidden behind generic load text at two widths; native Retry recovers, full current source exact, no writes.
+
 - [1008 — Honor a return to the current view during pending navigation](./1008.md) — minor residual of142; four genuine held-read cases ignore a newer original-view choice in Holdings/Income; third-choice/recovery controls pass, sources exact, no writes.
 
 - [1007 — Keep nonzero tiny Holdings average costs visible](./1007.md) — minor residual of W0/009; valid producer average0.00000000150 becomes0 in both-width tables/CSVs; threshold/true-zero controls pass, formatter exact, no writes.
@@ -113,6 +115,8 @@
 - [289 — Preserve long amount digits in portrait statement print output](./blocked/289.md) — minor; dashboard QA, 2026-10-20. — **blocked:** fix shipped in `68e973700`; awaiting portrait PDF check
 
 ## Milestones
+
+- [ ] **m51** — [Preserve selected chart units when regrouping periods](./m51/README.md) (6 tasks) ← dashboard QA,2026-10-22; minor; enabled BTC resets on uncached and cached interval changes;1,408 API values exact, no writes.
 
 - [x] **m50** — [Retry failed statement, Account Journal and commodity reads](./done/m50/README.md) (6 tasks) ← dashboard QA,2026-10-21/22; minor, promoted from328 with a sixth equivalent observer; current variables and read-only recovery preserved.
 
