@@ -45,6 +45,71 @@ _ACCOUNT_PATTERN = (
 _DEFAULT_DELIMITER = r"[ \t]+"
 
 
+_FIRST_MARK = 0xE000
+_LAST_MARK = 0xF8FE
+_FILLER = "\uf8ff"
+
+
+def _clusters(text: str) -> list[str]:
+    """The text as base characters, each with the zero-width marks that follow it."""
+    parts: list[str] = []
+    for char in text:
+        if parts and output._columns(char) == 0 and char != "\n":
+            parts[-1] += char
+        else:
+            parts.append(char)
+    return parts
+
+
+def _cell_aligned(text: str) -> tuple[str, dict[str, str]] | None:
+    """The text with each character that is not one terminal column wide stood in for by that many characters.
+
+    `query` pads its tables in terminal columns, but upstream treeify finds
+    and aligns columns by character count: a wide account made the group's
+    end overrun the next column and the whole table was "not hierarchical",
+    and a wide narration put the accounts of other rows at another offset
+    (w5/939). A cluster that is one column wide is one private-use character
+    and a wide one that character and a filler, so character offsets equal
+    columns; the originals are put back in the output. None when nothing
+    needs it, or when the text already uses those code points.
+    """
+    if text.isascii():
+        return None
+    if any(_FIRST_MARK <= ord(char) <= 0xF8FF for char in text):
+        return None
+    table: dict[str, str] = {}
+    pieces: list[str] = []
+    for cluster in _clusters(text):
+        width = sum(output._columns(char) for char in cluster)
+        if len(cluster) == width:
+            pieces.append(cluster)
+            continue
+        if width == 0:
+            return None
+        if cluster not in table:
+            if _FIRST_MARK + len(table) > _LAST_MARK:
+                return None
+            table[cluster] = chr(_FIRST_MARK + len(table))
+        pieces.append(table[cluster] + _FILLER * (width - 1))
+    if not table:
+        return None
+    return "".join(pieces), {mark: cluster for cluster, mark in table.items()}
+
+
+def _restore_cells(text: str, marks: dict[str, str]) -> str:
+    """Undo `_cell_aligned` on upstream's output."""
+    pieces: list[str] = []
+    for char in text:
+        original = marks.get(char)
+        if original is not None:
+            pieces.append(original)
+            continue
+        if char == _FILLER and pieces and pieces[-1] in marks.values():
+            continue
+        pieces.append(char)
+    return "".join(pieces)
+
+
 def _decide_pattern(text: str, delimiter: str | None) -> str:
     """Upstream's pattern with the account column decided once for this input.
 
@@ -309,6 +374,7 @@ def treeify(ctx: typer.Context) -> None:
         context.refuse_terminal_stdin(
             "Input is required with --no-input. Name the file to treeify or pipe the text on stdin."
         )
+    cell_marks: dict[str, str] = {}
     text = checked_text
     if text is None and parsed is not None and not parsed.help:
         text = _read_redirected_input(parsed)
@@ -318,6 +384,10 @@ def treeify(ctx: typer.Context) -> None:
         # render non-ASCII components flat (w5/723). The text is in hand by
         # now, so the column is decided from it; the unscannable corner
         # keeps the per-position form (w5/769).
+        if text is not None:
+            aligned = _cell_aligned(text)
+            if aligned is not None:
+                text, cell_marks = aligned
         parsed.pattern = _decide_pattern(text, parsed.delimiter) if text is not None else _ACCOUNT_PATTERN
         forwarded = [f"--pattern={parsed.pattern}", *forwarded]
     if text is None:
@@ -339,11 +409,12 @@ def treeify(ctx: typer.Context) -> None:
             "grammar, pass -A (loose accounts) or your own -r pattern."
         )
     launch.check_native(completed, "treeify")
+    rendered = _restore_cells(completed.stdout or "", cell_marks) if cell_marks else completed.stdout
     if destination is not None:
-        atomic_write(destination, completed.stdout or "", export=True)
+        atomic_write(destination, rendered or "", export=True)
     else:
         output.utf8_stdout()
-        output.replay(completed.stdout, sys.stdout)
+        output.replay(rendered, sys.stdout)
     output.replay(completed.stderr, sys.stderr)
 
 
