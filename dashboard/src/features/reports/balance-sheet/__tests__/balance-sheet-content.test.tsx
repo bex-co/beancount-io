@@ -95,6 +95,8 @@ function renderContent() {
       // production rather than falling back to Radix's uncontrolled mode.
       selectedTab="netWorth"
       onSelectedTabChange={() => {}}
+      unitSelections={{}}
+      onUnitSelectionChange={() => {}}
       balanceSheetData={balanceSheetData}
       primaryCurrency="USD"
       reportingEntityName="Acme, Inc."

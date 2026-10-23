@@ -154,4 +154,28 @@ describe("LedgerBalanceSheetPage chart selection lifetime", () => {
     rerender(<LedgerBalanceSheetPage />);
     expect(captureProps.mock.calls.at(-1)![0].selectedTab).toBe("assets");
   });
+
+  it("keeps the units chosen in each chart's legend across an uncached read (w4/m51)", () => {
+    settled();
+    const { rerender } = render(<LedgerBalanceSheetPage />);
+    const chosen = { USD: false, BTC: true };
+    act(() =>
+      captureProps.mock.calls
+        .at(-1)![0]
+        .onUnitSelectionChange("netWorth", chosen),
+    );
+    rerender(<LedgerBalanceSheetPage />);
+
+    // Regrouping the period replaces the content (and its charts) while the
+    // new read is in flight.
+    pending();
+    rerender(<LedgerBalanceSheetPage />);
+    expect(screen.queryByText("balance-sheet-content")).not.toBeInTheDocument();
+
+    settled();
+    rerender(<LedgerBalanceSheetPage />);
+    expect(captureProps.mock.calls.at(-1)![0].unitSelections).toEqual({
+      netWorth: chosen,
+    });
+  });
 });

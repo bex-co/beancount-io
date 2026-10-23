@@ -134,6 +134,8 @@ function Statement({
     ...common,
     selectedTab,
     onSelectedTabChange: setSelectedTab,
+    unitSelections: {},
+    onUnitSelectionChange: () => {},
     conversion: replacement ? ("at_value" as const) : ("units" as const),
     timeInterval: replacement ? ("yearly" as const) : ("monthly" as const),
     onTimeIntervalChange: vi.fn(),

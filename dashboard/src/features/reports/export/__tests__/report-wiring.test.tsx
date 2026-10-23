@@ -109,6 +109,8 @@ const sharedProps = {
   // production; supplying them here keeps these renders faithful.
   selectedTab: "netWorth",
   onSelectedTabChange: () => {},
+  unitSelections: {},
+  onUnitSelectionChange: () => {},
   chartMode: "stacked" as const,
   onChartModeChange: () => {},
   fiscalYearEnd: { month: 12, day: 31 },

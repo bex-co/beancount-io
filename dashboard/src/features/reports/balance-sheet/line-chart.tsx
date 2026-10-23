@@ -1,10 +1,11 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { ReactECharts } from "@/common/components/react-echarts";
 import { useFormatNumber } from "@/common/hooks/use-format-number";
 import { fractionDigitsOf } from "@/common/lib/format/format-number";
 import { defaultSplitLine } from "@/common/components/react-echarts/utils";
 import type {
   EChartsOption,
+  LegendComponentOption,
   TooltipComponentFormatterCallback,
   TooltipComponentFormatterCallbackParams,
 } from "echarts";
@@ -18,6 +19,10 @@ import {
   ChartPeriodTable,
   type ChartPeriodSeries,
 } from "../components/chart-period-table";
+import {
+  legendSelectionFor,
+  type LegendSelection,
+} from "../lib/legend-selection";
 
 interface LineChartProps {
   data: DateAndBalance[];
@@ -26,6 +31,13 @@ interface LineChartProps {
   primarySeries?: string;
   inverted?: boolean;
   labelledBy?: string;
+  /**
+   * The units the reader chose in the legend, held by a caller that outlives
+   * this chart (a report whose pending read unmounts it). Without one, the
+   * chart keeps the choice itself across its own data updates (w4/m51).
+   */
+  legendSelection?: LegendSelection;
+  onLegendSelectionChange?: (selected: LegendSelection) => void;
 }
 
 const styles = { height: "250px", width: "100%" };
@@ -41,16 +53,23 @@ export function LineChart({
   primarySeries = "USD",
   inverted,
   labelledBy,
+  legendSelection,
+  onLegendSelectionChange,
 }: LineChartProps) {
   const formatNum = useFormatNumber();
-  const { chartOption, periodSeries } = useMemo((): {
+  const [ownSelection, setOwnSelection] = useState<LegendSelection>();
+  const chosen = onLegendSelectionChange ? legendSelection : ownSelection;
+  const choose = onLegendSelectionChange ?? setOwnSelection;
+  const built = useMemo((): {
     chartOption: EChartsOption;
     periodSeries: ChartPeriodSeries[];
+    commodities: string[];
   } => {
     if (!data || data.length === 0) {
       return {
         chartOption: { series: [] },
         periodSeries: [],
+        commodities: [],
       };
     }
 
@@ -91,19 +110,8 @@ export function LineChart({
       });
     });
 
-    const legendSelected: Record<string, boolean> = (() => {
-      const selected: Record<string, boolean> = {};
-      commodities.forEach((commodity) => {
-        selected[commodity] = commodity === primarySeries;
-      });
-      // if commodity is not USD; select first one
-      if (!selected[primarySeries] && commodities.length > 0) {
-        selected[commodities[0]] = true;
-      }
-      return selected;
-    })();
-
     return {
+      commodities,
       periodSeries: series.map((item) => ({
         unit: item.name,
         values: item.data.map((point) => point[1]),
@@ -151,7 +159,6 @@ export function LineChart({
           bottom: 0,
           type: "scroll",
           pageButtonItemGap: 5,
-          selected: legendSelected,
         },
         grid: {
           left: "0%",
@@ -195,13 +202,39 @@ export function LineChart({
     };
   }, [data, interval, primarySeries, inverted, formatNum]);
 
+  // The reader's legend choice survives a regrouped period or other data
+  // update; ECharts would otherwise take the new option's defaults. A click is
+  // already on screen, so it is stored without a new option: only new data,
+  // or a remount, folds the choice in (w4/m51).
+  const [applied, setApplied] = useState({ built, chosen });
+  if (applied.built !== built) setApplied({ built, chosen });
+  const chartOption = useMemo((): EChartsOption => {
+    const { chartOption: base, commodities } = applied.built;
+    if (commodities.length === 0) return base;
+    return {
+      ...base,
+      legend: {
+        ...(base.legend as LegendComponentOption),
+        selected: legendSelectionFor(
+          commodities,
+          primarySeries,
+          applied.chosen,
+        ),
+      },
+    };
+  }, [applied, primarySeries]);
+
   return (
     <div className={className}>
-      <ReactECharts option={chartOption} style={styles} />
+      <ReactECharts
+        option={chartOption}
+        style={styles}
+        onLegendSelectChanged={choose}
+      />
       {labelledBy && (
         <ChartPeriodTable
           data={data}
-          series={periodSeries}
+          series={built.periodSeries}
           labelledBy={labelledBy}
         />
       )}

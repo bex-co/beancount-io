@@ -35,6 +35,7 @@ import { selectSettledReportData } from "@/features/reports/lib/select-settled-r
 import { ChartPeriodTable } from "../components/chart-period-table";
 import { ResponsiveTabTriggerList } from "@/common/components/responsive-tab-trigger-list";
 import { LineChart } from "@/features/reports/balance-sheet/line-chart";
+import type { LegendSelection } from "@/features/reports/lib/legend-selection";
 import {
   JournalTable,
   type JournalTableItem,
@@ -406,6 +407,9 @@ export default function AccountPage() {
     ledgerId,
     primaryCurrency,
   );
+  // The units chosen in the balance chart's legend, held above the pending
+  // state that unmounts the chart while a new period reads (w4/m51).
+  const [balanceUnits, setBalanceUnits] = useState<LegendSelection>();
 
   const {
     data,
@@ -547,6 +551,8 @@ export default function AccountPage() {
                     data={settledReport.accountBalanceData}
                     interval={timeInterval}
                     primarySeries={primaryCurrency}
+                    legendSelection={balanceUnits}
+                    onLegendSelectionChange={setBalanceUnits}
                   />
                   <ChartPeriodTable
                     data={settledReport.accountBalanceData}

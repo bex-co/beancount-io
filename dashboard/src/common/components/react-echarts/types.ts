@@ -14,6 +14,12 @@ export interface EChartsProps {
   silent?: boolean;
   /** Override the automatic empty-series detection. */
   isEmpty?: boolean;
+  /**
+   * The reader toggled a legend item; receives every item's visibility, as
+   * ECharts reports it. A caller that rebuilds its option can feed the choice
+   * back through `legend.selected` instead of resetting it.
+   */
+  onLegendSelectChanged?: (selected: Record<string, boolean>) => void;
 }
 
 export interface EChartsRef {

@@ -12,6 +12,7 @@ const state = vi.hoisted(() => ({
     setOption: vi.fn(),
     getOption: vi.fn(),
     dispatchAction: vi.fn(),
+    on: vi.fn(),
     dispose: vi.fn(),
     resize: vi.fn(),
     showLoading: vi.fn(),

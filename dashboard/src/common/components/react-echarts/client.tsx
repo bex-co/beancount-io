@@ -1,4 +1,10 @@
-import { useEffect, useRef, useImperativeHandle, forwardRef } from "react";
+import {
+  useEffect,
+  useEffectEvent,
+  useRef,
+  useImperativeHandle,
+  forwardRef,
+} from "react";
 import { APP_DARK_CHART_THEME, APP_LIGHT_CHART_THEME, init } from "./runtime";
 import type { ECharts } from "echarts/core";
 import type { EChartsOption, LegendComponentOption } from "echarts";
@@ -45,6 +51,7 @@ const ReactEChartsClientInner = forwardRef<EChartsRef, EChartsProps>(
       notMerge = false,
       lazyUpdate = false,
       silent = false,
+      onLegendSelectChanged,
     },
     ref,
   ) => {
@@ -55,6 +62,9 @@ const ReactEChartsClientInner = forwardRef<EChartsRef, EChartsProps>(
       option: EChartsOption | null;
       selected: Array<Record<string, boolean>>;
     } | null>(null);
+    const emitLegendSelect = useEffectEvent(
+      (selected: Record<string, boolean>) => onLegendSelectChanged?.(selected),
+    );
     const isDark = useIsDarkTheme();
     // Explicit caller theme wins; otherwise follow the resolved app appearance.
     const resolvedTheme =
@@ -69,6 +79,11 @@ const ReactEChartsClientInner = forwardRef<EChartsRef, EChartsProps>(
 
       const chart = init(chartRef.current, resolvedTheme);
       chartInstanceRef.current = chart;
+      chart.on("legendselectchanged", (event) =>
+        emitLegendSelect(
+          (event as { selected: Record<string, boolean> }).selected,
+        ),
+      );
 
       return () => {
         if (chartInstanceRef.current) {

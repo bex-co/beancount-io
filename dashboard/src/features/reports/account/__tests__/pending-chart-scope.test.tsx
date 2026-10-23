@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import AccountPage from "../index";
 
@@ -168,5 +168,27 @@ describe("AccountPage chart pending scope", () => {
     mockQuery({ loading: true });
     render(<AccountPage />);
     expect(screen.queryByTestId("journal-table")).not.toBeInTheDocument();
+  });
+  it("keeps the balance chart's unit choice across a pending read (w4/m51)", () => {
+    const balanceChart = () =>
+      chartProps.mock.calls
+        .map(([props]) => props as Record<string, unknown>)
+        .filter((props) => "onLegendSelectionChange" in props)
+        .at(-1)!;
+    mockQuery({ data: atCost });
+    const { rerender } = render(<AccountPage />);
+    const chosen = { USD: false, SOL: true };
+    act(() =>
+      (balanceChart().onLegendSelectionChange as (s: object) => void)(chosen),
+    );
+
+    // A new period reads; the chart is withheld (unmounted) meanwhile.
+    mockQuery({ previousData: atCost, loading: true });
+    rerender(<AccountPage />);
+    expect(screen.queryByTestId("line-chart")).not.toBeInTheDocument();
+
+    mockQuery({ data: units });
+    rerender(<AccountPage />);
+    expect(balanceChart().legendSelection).toEqual(chosen);
   });
 });

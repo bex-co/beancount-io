@@ -177,6 +177,11 @@ reader chose — which chart a statement page is showing — belongs to the page
 the content. Pass it down as `selectedTab`/`onSelectedTabChange`, alongside
 `conversion` and `timeInterval`, so an uncached interval or conversion regroups
 the selected chart instead of resetting which chart the reader is looking at.
+The units a reader turns on in a `LineChart` legend are the same kind of view
+state: the chart keeps them across its own data updates, and a page whose
+pending branch unmounts it holds them through `legendSelection` and
+`onLegendSelectionChange` (Balance Sheet per view, Account Balance).
+`legendSelectionFor` reconciles a kept choice with the units a new read has.
 
 Shared ledger filters (`account`, `filter`, `time`) are validated on the ledger parent route and retained across same-ledger navigation (sidebar, Related Pages) via `retainSearchParams`. Report loaders read them from `loaderDeps` so SSR and client requests match the destination URL. Filter edits use replace navigation; Clear all removes the shared filters. On Journal, a genuine shared-filter edit also clears `offset` in that same navigation; explicit links, reloads, history, and unchanged filters preserve their requested page. Ledger switches clear shared filters unless the destination URL supplies new values. Journal action/directive, BQL `query`, and file-edit params are not propagated to unrelated pages.
 

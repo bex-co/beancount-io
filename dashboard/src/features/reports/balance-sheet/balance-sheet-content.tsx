@@ -8,6 +8,7 @@ import type {
   SerializableTreeNode,
 } from "@/graphql/definitions";
 import { LineChart } from "./line-chart";
+import type { LegendSelection } from "../lib/legend-selection";
 import { HierarchyVisualizationCard } from "./hierarchy-visualization-card";
 import { HierarchyListCard } from "./hierarchy-list-card";
 import { useId, useMemo } from "react";
@@ -49,6 +50,13 @@ interface BalanceSheetContentProps {
   onSelectedTabChange: (value: string) => void;
   timeInterval: ChartInterval;
   onTimeIntervalChange: (value: ChartInterval) => void;
+  /**
+   * The units chosen in each chart's legend, by view. Page-owned for the
+   * same reason as the selected chart: a regrouped period keeps them
+   * (w4/m51).
+   */
+  unitSelections: Partial<Record<string, LegendSelection>>;
+  onUnitSelectionChange: (view: string, selected: LegendSelection) => void;
   invertIncomeLiabilitiesEquity: boolean;
   showZeroBalance: boolean;
   showZeroTransactions: boolean;
@@ -75,6 +83,8 @@ export function BalanceSheetContent({
   onSelectedTabChange,
   timeInterval,
   onTimeIntervalChange,
+  unitSelections,
+  onUnitSelectionChange,
   invertIncomeLiabilitiesEquity,
   showZeroBalance,
   showZeroTransactions,
@@ -87,6 +97,11 @@ export function BalanceSheetContent({
 }: BalanceSheetContentProps) {
   const { t } = useTranslations();
   const chartTitleId = useId();
+  const unitsOf = (view: string) => ({
+    legendSelection: unitSelections[view],
+    onLegendSelectionChange: (selected: LegendSelection) =>
+      onUnitSelectionChange(view, selected),
+  });
   const tabOptions = [
     { label: t("common.netWorth"), value: "netWorth" },
     { label: t("common.assets"), value: "assets" },
@@ -242,6 +257,7 @@ export function BalanceSheetContent({
             <LineChart
               labelledBy={`${chartTitleId}-netWorth`}
               data={balanceSheetData.netWorthData}
+              {...unitsOf("netWorth")}
               interval={timeInterval}
               primarySeries={primaryCurrency}
             />
@@ -264,6 +280,7 @@ export function BalanceSheetContent({
             <LineChart
               labelledBy={`${chartTitleId}-assets`}
               data={balanceSheetData.assetsData}
+              {...unitsOf("assets")}
               interval={timeInterval}
               primarySeries={primaryCurrency}
             />
@@ -286,6 +303,7 @@ export function BalanceSheetContent({
             <LineChart
               labelledBy={`${chartTitleId}-liabilities`}
               data={balanceSheetData.liabilitiesData}
+              {...unitsOf("liabilities")}
               interval={timeInterval}
               primarySeries={primaryCurrency}
               inverted={invertIncomeLiabilitiesEquity}
@@ -309,6 +327,7 @@ export function BalanceSheetContent({
             <LineChart
               labelledBy={`${chartTitleId}-equity`}
               data={balanceSheetData.equityData}
+              {...unitsOf("equity")}
               interval={timeInterval}
               primarySeries={primaryCurrency}
               inverted={invertIncomeLiabilitiesEquity}

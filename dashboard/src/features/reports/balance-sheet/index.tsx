@@ -24,6 +24,7 @@ import { BalanceSheetContent } from "./balance-sheet-content";
 import { useReportConversion } from "@/features/reports/components/use-report-conversion";
 import { selectSettledReportData } from "@/features/reports/lib/select-settled-report-data";
 import { useUrlView } from "@/common/hooks/use-url-view";
+import type { LegendSelection } from "../lib/legend-selection";
 import { useQueryRetry } from "@/common/hooks/use-query-retry";
 import { BALANCE_SHEET_VIEWS, DEFAULT_VIEW } from "./search";
 
@@ -61,6 +62,11 @@ export default function LedgerBalanceSheetPage() {
     BALANCE_SHEET_VIEWS,
     DEFAULT_VIEW,
   );
+  // The units chosen in each chart's legend, owned here for the same reason:
+  // regrouping the period unmounts the charts while it reads (w4/m51).
+  const [unitSelections, setUnitSelections] = useState<
+    Partial<Record<string, LegendSelection>>
+  >({});
 
   const {
     data,
@@ -124,6 +130,10 @@ export default function LedgerBalanceSheetPage() {
       onSelectedTabChange={setSelectedTab}
       timeInterval={timeInterval}
       onTimeIntervalChange={setTimeInterval}
+      unitSelections={unitSelections}
+      onUnitSelectionChange={(view, selected) =>
+        setUnitSelections((previous) => ({ ...previous, [view]: selected }))
+      }
       invertIncomeLiabilitiesEquity={getInvertIncomeLiabilitiesEquity(
         ledgerData,
       )}
