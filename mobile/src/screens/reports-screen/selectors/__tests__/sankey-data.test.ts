@@ -1,3 +1,5 @@
+import fs from "fs";
+import path from "path";
 import type { AccountNode } from "../../../../components/account-list/select-account-list";
 import {
   CASH_FLOW_ID,
@@ -15,7 +17,9 @@ import {
   sankeySavings,
   sankeyShortfall,
   transformToSankeyData,
+  fitSankeyLabel,
   sankeyLabelLines,
+  sankeyLabelWidth,
   truncateSankeyLabel,
 } from "../sankey-data";
 import { bg } from "../../../../translations/bg";
@@ -658,5 +662,52 @@ describe("sankeyLabelLines in every language", () => {
       "Qa2026102…",
       "（支出）",
     ]);
+  });
+});
+
+// w21/749: ten characters were allowed whatever their width, so the income
+// column's right-aligned "Qa20261020" ran past the card's left edge.
+describe("fitSankeyLabel", () => {
+  // CoreText's widths at 12 pt (the chart's `fontSizes.xs`), in points.
+  const drawn: [string, number][] = [
+    ["Qa20261020", 73.5],
+    ["Qa202610…", 67.9],
+    ["Groceries", 54.7],
+    ["WWWWWWWWWW", 116.1],
+    ["Savings", 44.1],
+    ["(expenses)", 62.6],
+    ["(Einnahme…", 69.3],
+    ["Investments", 68.5],
+    ["Жилье", 39.6],
+    ["工资收入", 47.7],
+    ["（收入）", 36.0],
+  ];
+
+  it("never reads a label narrower than the system font draws it", () => {
+    for (const [text, width] of drawn) {
+      expect([text, sankeyLabelWidth(text, 12) >= width]).toEqual([text, true]);
+    }
+  });
+
+  it("cuts a label the column cannot hold, and leaves one it can", () => {
+    // The label column (72) less its gap to the node (4).
+    expect(fitSankeyLabel("Qa20261020", 68, 12)).toBe("Qa20261…");
+    expect(fitSankeyLabel("(Einnahme…", 68, 12)).toBe("(Einnah…");
+    expect(fitSankeyLabel("Savings", 68, 12)).toBe("Savings");
+    expect(fitSankeyLabel("Groceries", 68, 12)).toBe("Groceries");
+    // Conservative: the widest letters give up one more than they must.
+    expect(fitSankeyLabel("WWWWWWWWWW", 68, 12)).toBe("WWWW…");
+  });
+
+  it("is what the chart draws each label line through", () => {
+    const chart = fs
+      .readFileSync(
+        path.join(__dirname, "..", "..", "components", "cash-flow-sankey.tsx"),
+        "utf8",
+      )
+      .replace(/\s+/g, "");
+    expect(
+      chart.includes("fitSankeyLabel(text,LABEL_COL-LABEL_GAP,fontSizes.xs)"),
+    ).toBe(true);
   });
 });

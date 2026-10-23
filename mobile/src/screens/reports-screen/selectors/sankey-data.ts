@@ -201,6 +201,51 @@ export function truncateSankeyLabel(
 }
 
 /**
+ * An upper bound on a character's advance in the system font, in ems, from
+ * CoreText's widths at 12 pt: narrow letters and stops, the widest (M, W, m,
+ * w, %, @), digits, other capitals and lowercase, other ASCII, and anything
+ * else (Cyrillic Ж is 1.02 em, CJK 0.99 em).
+ */
+function advanceEm(char: string): number {
+  if (char === "…") return 0.82;
+  if (/[fijlrtI()[\].,:;'|! /]/u.test(char)) return 0.39;
+  if (/[MWmw%@]/u.test(char)) return 0.98;
+  if (/\d/u.test(char)) return 0.65;
+  if (/[A-Z]/u.test(char)) return 0.78;
+  if (/[a-z]/u.test(char)) return 0.62;
+  if (/[\x20-\x7e]/u.test(char)) return 0.72;
+  return 1.05;
+}
+
+/** A label's width at `fontSize`, never less than the system font draws it. */
+export function sankeyLabelWidth(text: string, fontSize: number): number {
+  return Array.from(text).reduce(
+    (width, char) => width + advanceEm(char) * fontSize,
+    0,
+  );
+}
+
+/**
+ * `label` cut with "…" until it fits `maxWidth`. Ten characters were allowed
+ * whatever their width, and a left-column label is right-aligned to its node:
+ * "Qa20261020" ran past the card's left edge and read ")a20261020" (w21/749).
+ */
+export function fitSankeyLabel(
+  label: string,
+  maxWidth: number,
+  fontSize: number,
+): string {
+  if (sankeyLabelWidth(label, fontSize) <= maxWidth) return label;
+  const chars = Array.from(label);
+  while (chars.length > 0) {
+    chars.pop();
+    const cut = `${chars.join("").trimEnd()}…`;
+    if (sankeyLabelWidth(cut, fontSize) <= maxWidth) return cut;
+  }
+  return "…";
+}
+
+/**
  * The lines a beside-node label is drawn on. A group that shares its name with
  * one on the other side reads "Interest (income)" / "Interest (expenses)": cut
  * to one line the suffix went first and both read "Interest …" (w21/540). The

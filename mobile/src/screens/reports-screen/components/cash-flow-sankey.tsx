@@ -26,6 +26,7 @@ import { useEntranceProgress } from "@/common/d3/use-entrance-progress";
 import {
   type SankeyNodeDatum,
   transformToSankeyData,
+  fitSankeyLabel,
   sankeyLabelLines,
   truncateSankeyLabel,
   sankeyColorForRole,
@@ -373,7 +374,13 @@ function CashFlowSankeyPlot({
           const lines = sankeyLabelLines(node.label);
           const twoLines =
             lines.length === 2 && box.y1 - box.y0 >= LABEL_TWO_LINE_HEIGHT;
-          const shown = twoLines ? lines : [truncateSankeyLabel(node.label)];
+          // Cut to the label column too, which a node's label runs into
+          // from the card's edge (w21/749).
+          const shown = (
+            twoLines ? lines : [truncateSankeyLabel(node.label)]
+          ).map((text) =>
+            fitSankeyLabel(text, LABEL_COL - LABEL_GAP, fontSizes.xs),
+          );
           return shown.map((text, index) => (
             <SvgText
               key={`label-${node.id}-${index}`}

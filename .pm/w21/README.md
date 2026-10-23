@@ -30,7 +30,6 @@
 - [750](./750.md) — A flat range reads grey "+$0.00 (0.00%)" in the chart header, but the line and fill stay green
 - [751](./751.md) — The chart's y-range scales to the move itself, so −$12 on $2.5M draws a full-height crash
 - [752](./752.md) — The chart's change percentage has no thousands separators: "(−10471.20%)"
-- [749](./749.md) — Cash flow clips the left-column income label at the card's edge (")a20261020")
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window
 - [065](./blocked/065.md) — One early-year entry (e.g. 0050) makes the balance sheet 23,718 monthly points (3 MB) and the app stalls — **blocked:** needs an approach decision (per-pill fetch vs server downsample) and a simulator profile of the stall
 - [180](./blocked/180.md) — Budget actuals use raw prefix match (`Transport` counts `Transportation`), unlike Reports — **blocked:** needs an owner decision between component matching on the server (a Fava break) and a per-account breakdown for the client
