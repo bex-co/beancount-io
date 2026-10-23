@@ -1141,7 +1141,13 @@ def _extracted(importer: Any, source: Path, existing: Any) -> list[Any]:
             f"Importer {_name(importer)} extract() returned {_type_name(result)} instead of a list of "
             f"Beancount directives{single}."
         )
-    return [_native_units_as_none(entry) for entry in copy.deepcopy(list(result))]
+    # A generator's body runs here, not in the call above: an exit inside it is
+    # still the method's, not the configuration's (w5/953).
+    try:
+        rows = list(result)
+    except SystemExit as exc:
+        raise _method_exited(exc, f"{_name(importer)} extract()") from exc
+    return [_native_units_as_none(entry) for entry in copy.deepcopy(rows)]
 
 
 def _type_name(value: Any) -> str:
