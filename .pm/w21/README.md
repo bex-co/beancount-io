@@ -12,6 +12,7 @@
 
 ## Inbox
 
+- [686](./686.md) — A link opened before sign-in is taken twice, and the sign-in finisher restores the guest example or Home over it
 - [684](./684.md) — At AX2, Entry Context's balance rows cut account names to "Asset…king" and "Expen…eries"
 - [685](./685.md) — At AX2, Home's budget panel cuts both "Housing:Rent" and "Housing:Utilities" to "Housing…"
 - [683](./683.md) — A refused add leaves an empty routed file and a "chore: create file" commit behind
