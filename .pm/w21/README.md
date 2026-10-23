@@ -12,6 +12,11 @@
 
 ## Inbox
 
+- [692](./692.md) — w21/672 is undone by Edit ▸ Cancel: the twin guard stays off, and a later Delete removes the surviving twin
+- [693](./693.md) — Edit Transaction's Reload after a conflict opens the other twin's text, so the next Save overwrites it
+- [694](./694.md) — Since w21/672, Delete after a metadata-only change elsewhere dead-ends on "changed or removed" (w21/250 regression)
+- [695](./695.md) — A CRLF main.bean still gets a bare-LF line when an add creates a routed year file and its include (w21/673 gap)
+- [696](./696.md) — Reports' Recent Transactions says "No transactions yet" when the only income or expense is next month's
 - [691](./691.md) — Editing or deleting an entry in a non-UTF-8 ledger file rewrites its undecodable bytes as U+FFFD (edit-path sibling of w21/679)
 - [690](./690.md) — Transaction detail never shows the brand logo that its list row shows (Amazon, Whole Foods…)
 - [687](./687.md) — Create Ledger presets open every account restricted to the operating currency, so Portfolio refuses its own first share purchase
