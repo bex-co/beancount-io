@@ -2160,18 +2160,27 @@ def _under_id(
     found = identities.get(key)
     if found is not None and not _is_native_identity(key):
         return found
+
+    def spelled(identity: tuple[str, str, str], **kwargs: bool) -> list[Any]:
+        # A row whose source amount the file leaves to booking has nothing to
+        # compare an explicit incoming amount with; the loaded entry holds the
+        # booked one (w5/1005).
+        assert source is not None
+        completed = [_interpolated(other) for other in source(identity, **kwargs)]
+        return [other for other in completed if all(_has_explicit_units(leg) for leg in _source_legs(other, account))]
+
     agreeing = [
         other for other in dated.get(key, []) if _same_row(key, other, account, fingerprint, lookup_only=lookup_only)
     ]
     written: list[Any] = []
     if not agreeing and source is not None:
-        written = source(key)
+        written = spelled(key)
         agreeing = [other for other in written if _same_row(key, other, account, fingerprint, lookup_only=lookup_only)]
     if agreeing and _is_native_identity(key) and source is not None:
         # A plugin's rewrite of the written row can agree with a different bank
         # amount, so the file's own row under the ID has the last word: when
         # it exists and nothing it spells agrees, the row is a change (w5/996).
-        written = source(key)
+        written = spelled(key)
         if written and not any(
             _same_row(key, other, account, fingerprint, lookup_only=lookup_only) for other in written
         ):
@@ -2188,7 +2197,7 @@ def _under_id(
     # view has nothing under the ID at all, nothing contradicts it, and it is
     # the row already imported (w5/974).
     if found is None and open_lots and source is not None:
-        unselected = source(key, open_lots=True)
+        unselected = spelled(key, open_lots=True)
         agreeing = [
             other for other in unselected if _same_row(key, other, account, fingerprint, lookup_only=lookup_only)
         ]
@@ -2196,6 +2205,41 @@ def _under_id(
         if pool:
             return min(pool, key=lambda other: abs((entry.date - other.date).days))
     return found
+
+
+def _interpolated(entry: Any) -> Any:
+    """The authored entry with its one omitted amount filled in, as booking would, else unchanged.
+
+    Only the plain case: a single posting without a number, every other posting
+    an explicit unit amount with no cost or price, and one currency to balance.
+    """
+    from beancount.core.amount import Amount as BcAmount
+    from beancount.core.number import MISSING
+
+    open_postings = [
+        index
+        for index, posting in enumerate(entry.postings)
+        if posting.units is None or posting.units is MISSING or getattr(posting.units, "number", None) is MISSING
+    ]
+    if len(open_postings) != 1:
+        return entry
+    totals: dict[str, Decimal] = {}
+    for index, posting in enumerate(entry.postings):
+        if index in open_postings:
+            continue
+        if not _has_explicit_units(posting) or posting.cost is not None or posting.price is not None:
+            return entry
+        totals[posting.units.currency] = totals.get(posting.units.currency, Decimal(0)) + posting.units.number
+    index = open_postings[0]
+    stated = getattr(entry.postings[index].units, "currency", None)
+    currency = stated if isinstance(stated, str) and stated else None
+    if currency is None and len(totals) == 1:
+        currency = next(iter(totals))
+    if currency is None or set(totals) - {currency}:
+        return entry
+    amount = BcAmount(-totals.get(currency, Decimal(0)), currency)
+    postings = [*entry.postings[:index], entry.postings[index]._replace(units=amount), *entry.postings[index + 1 :]]
+    return entry._replace(postings=postings)
 
 
 def _authored_directive_keys(snapshot: Any) -> set[str]:
