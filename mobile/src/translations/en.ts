@@ -699,6 +699,8 @@ export const en = {
   budgetPanelEmptyGuest: "Sign in to set spending targets",
   budgetPanelRowValue:
     "{{actual}} of {{budget}}, {{percent}}% used, {{status}}",
+  budgetPanelRowValueIncome:
+    "{{actual}} of {{budget}} target, {{percent}}% reached, {{status}}",
   budgetPanelRowValueNoBudget: "{{actual}} of {{budget}}, {{status}}",
   budgetStartsOn: "Starts {{date}}",
   budgetLoadFailed: "Failed to load budgets",

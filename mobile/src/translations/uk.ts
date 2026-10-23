@@ -695,6 +695,8 @@ export const uk: Translations = {
   budgetPanelEmptyGuest: "Увійдіть, щоб встановити цілі витрат",
   budgetPanelRowValue:
     "{{actual}} з {{budget}}, використано {{percent}}%, {{status}}",
+  budgetPanelRowValueIncome:
+    "{{actual}} з цілі {{budget}}, досягнуто {{percent}}%, {{status}}",
   budgetPanelRowValueNoBudget: "{{actual}} з {{budget}}, {{status}}",
   budgetStartsOn: "Починається {{date}}",
   budgetLoadFailed: "Не вдалося завантажити бюджети",

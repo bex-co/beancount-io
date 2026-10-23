@@ -698,6 +698,8 @@ export const ca: Translations = {
   budgetPanelEmptyGuest: "Inicieu la sessió per fixar objectius de despesa",
   budgetPanelRowValue:
     "{{actual}} de {{budget}}, {{percent}}% utilitzat, {{status}}",
+  budgetPanelRowValueIncome:
+    "{{actual}} de l'objectiu de {{budget}}, {{percent}}% assolit, {{status}}",
   budgetPanelRowValueNoBudget: "{{actual}} de {{budget}}, {{status}}",
   budgetStartsOn: "Comença el {{date}}",
   budgetLoadFailed: "No s'han pogut carregar els pressupostos",

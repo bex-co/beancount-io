@@ -684,6 +684,8 @@ export const nl: Translations = {
   budgetPanelEmptyGuest: "Meld je aan om uitgavendoelen in te stellen",
   budgetPanelRowValue:
     "{{actual}} van {{budget}}, {{percent}}% gebruikt, {{status}}",
+  budgetPanelRowValueIncome:
+    "{{actual}} van {{budget}} doel, {{percent}}% bereikt, {{status}}",
   budgetPanelRowValueNoBudget: "{{actual}} van {{budget}}, {{status}}",
   budgetStartsOn: "Begint op {{date}}",
   budgetLoadFailed: "Budgetten konden niet worden geladen",

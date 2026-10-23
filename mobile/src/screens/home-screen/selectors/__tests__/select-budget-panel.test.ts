@@ -1,3 +1,4 @@
+import { en } from "../../../../translations/en";
 import {
   budgetPanelRowAccessibilityValue,
   selectBudgetPanelRows,
@@ -222,6 +223,54 @@ describe("budgetPanelRowAccessibilityValue", () => {
     expect(text.indexOf("percent=73") > -1).toBe(true);
   });
 
+  // w21/790: a salary over its target read "111% used, Above target".
+  it("says an income target is reached, not used", () => {
+    const income = budgetPanelRowAccessibilityValue(
+      row({
+        account: "Income:Salary",
+        shortAccount: "Salary",
+        budget: 5000,
+        actual: 5500,
+        progressPercent: 110,
+        income: true,
+        status: "above",
+      }),
+      t,
+    );
+    expect(income.startsWith("budgetPanelRowValueIncome(")).toBe(true);
+    expect(income.indexOf("percent=110") > -1).toBe(true);
+    // An expense row keeps its wording.
+    expect(
+      budgetPanelRowAccessibilityValue(row(), t).startsWith(
+        "budgetPanelRowValue(",
+      ),
+    ).toBe(true);
+  });
+
+  it('reads an income row in English without "used"', () => {
+    const english = (key: string, options?: Record<string, string | number>) =>
+      Object.entries(options ?? {}).reduce(
+        (text, [name, value]) => text.split(`{{${name}}}`).join(String(value)),
+        (en as unknown as Record<string, string>)[key] ?? key,
+      );
+    const spoken = budgetPanelRowAccessibilityValue(
+      row({
+        account: "Income:Salary",
+        shortAccount: "Salary",
+        budget: 5000,
+        actual: 5500,
+        progressPercent: 110,
+        income: true,
+        status: "above",
+      }),
+      english,
+    );
+    expect(spoken.includes("used")).toBe(false);
+    expect(
+      spoken.startsWith("$5,500.00 of $5,000.00 target, 110% reached"),
+    ).toBe(true);
+  });
+
   it("names the status a favorable budget shows", () => {
     const text = budgetPanelRowAccessibilityValue(row(), t);
 
@@ -340,7 +389,8 @@ describe("the Home panel's status wording and ranking", () => {
       asOf,
     );
     return budgetPanelRowAccessibilityValue(row, (key, options) =>
-      key === "budgetPanelRowValue" && options
+      (key === "budgetPanelRowValue" || key === "budgetPanelRowValueIncome") &&
+      options
         ? `${key}|${String(options.status)}`
         : t(key),
     );

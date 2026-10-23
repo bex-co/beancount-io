@@ -280,7 +280,9 @@ export function budgetPanelRowAccessibilityValue(
       status,
     });
   }
-  return t("budgetPanelRowValue", {
+  // An income target is reached, not used up: "111% used" read a salary
+  // over its target as spending (w21/790).
+  return t(row.income ? "budgetPanelRowValueIncome" : "budgetPanelRowValue", {
     actual: formatSignedMoneyWithCurrency(
       row.actual,
       row.currency,

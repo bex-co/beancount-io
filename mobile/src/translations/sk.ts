@@ -701,6 +701,8 @@ export const sk: Translations = {
   budgetPanelEmptyGuest: "Prihláste sa a nastavte ciele výdavkov",
   budgetPanelRowValue:
     "{{actual}} z {{budget}}, využité {{percent}}%, {{status}}",
+  budgetPanelRowValueIncome:
+    "{{actual}} z cieľa {{budget}}, dosiahnuté {{percent}}%, {{status}}",
   budgetPanelRowValueNoBudget: "{{actual}} z {{budget}}, {{status}}",
   budgetStartsOn: "Začína {{date}}",
   budgetLoadFailed: "Načítanie rozpočtov zlyhalo",

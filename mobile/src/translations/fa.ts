@@ -672,6 +672,8 @@ export const fa: Translations = {
   budgetPanelEmptyGuest: "برای تعیین هدف هزینه وارد شوید",
   budgetPanelRowValue:
     "{{actual}} از {{budget}}، {{percent}}% مصرف‌شده، {{status}}",
+  budgetPanelRowValueIncome:
+    "{{actual}} از هدف {{budget}}، {{percent}}% محقق‌شده، {{status}}",
   budgetPanelRowValueNoBudget: "{{actual}} از {{budget}}، {{status}}",
   budgetStartsOn: "شروع از {{date}}",
   budgetLoadFailed: "بارگذاری بودجه‌ها ناموفق بود",

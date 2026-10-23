@@ -695,6 +695,8 @@ export const pt: Translations = {
   budgetPanelEmptyGuest: "Entre para definir metas de gastos",
   budgetPanelRowValue:
     "{{actual}} de {{budget}}, {{percent}}% utilizado, {{status}}",
+  budgetPanelRowValueIncome:
+    "{{actual}} de uma meta de {{budget}}, {{percent}}% alcançado, {{status}}",
   budgetPanelRowValueNoBudget: "{{actual}} de {{budget}}, {{status}}",
   budgetStartsOn: "Começa em {{date}}",
   budgetLoadFailed: "Falha ao carregar os orçamentos",

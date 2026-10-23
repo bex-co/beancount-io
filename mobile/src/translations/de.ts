@@ -699,6 +699,8 @@ export const de: Translations = {
   budgetPanelEmptyGuest: "Melden Sie sich an, um Ausgabenziele festzulegen",
   budgetPanelRowValue:
     "{{actual}} von {{budget}}, {{percent}}% genutzt, {{status}}",
+  budgetPanelRowValueIncome:
+    "{{actual}} von {{budget}} Ziel, {{percent}}% erreicht, {{status}}",
   budgetPanelRowValueNoBudget: "{{actual}} von {{budget}}, {{status}}",
   budgetStartsOn: "Beginnt am {{date}}",
   budgetLoadFailed: "Budgets konnten nicht geladen werden",

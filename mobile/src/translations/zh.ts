@@ -615,6 +615,8 @@ export const zh: Translations = {
   budgetPanelEmpty: "为任意账户设置目标金额",
   budgetPanelEmptyGuest: "登录以设置支出目标",
   budgetPanelRowValue: "{{actual}} / {{budget}}，已用 {{percent}}%，{{status}}",
+  budgetPanelRowValueIncome:
+    "{{actual}} / 目标 {{budget}}，已达成 {{percent}}%，{{status}}",
   budgetPanelRowValueNoBudget: "{{actual}} / {{budget}}，{{status}}",
   budgetStartsOn: "{{date}} 开始",
   budgetLoadFailed: "加载预算失败",
