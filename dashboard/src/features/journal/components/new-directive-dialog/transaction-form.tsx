@@ -366,10 +366,18 @@ export function TransactionForm({
     });
   };
 
+  // Remove unmounts its own focused button, which left focus on the dialog
+  // and sent Tab back to its top (w4/1010). Move on to the posting that takes
+  // the removed row's place, or the one before it when the last row went.
   const removePosting = (index: number) => {
-    if (fields.length > 1) {
-      remove(index);
-    }
+    if (fields.length <= 1) return;
+    remove(index);
+    const target = Math.min(index, fields.length - 2);
+    requestAnimationFrame(() => {
+      postingRowsRef.current
+        ?.querySelector<HTMLElement>(`[data-posting-row="${target}"] input`)
+        ?.focus();
+    });
   };
 
   const { submit, pending } = usePendingSubmit(form, onSubmit, onPendingChange);
