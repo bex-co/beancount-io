@@ -61,3 +61,4 @@
 - [904](./904.md) — A write during an in-flight refresh shows pre-write data (Apollo deduplicates the refetch)
 - [905](./905.md) — Leaving the picker while Open Account saves lets its callback close the screen now on top
 - [906](./906.md) — An ID-changing Edit flashes "changed or removed" and refetches the ledger twice
+- [907](./907.md) — A stock buy dated after today makes account detail read "0 VOO"
