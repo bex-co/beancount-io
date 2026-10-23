@@ -1,3 +1,4 @@
+import { CardLoadFailure } from "@/components/card-load-failure";
 import { isolateAccountPath } from "@/common/bidi";
 import { useGuest } from "@/common/guest/guest-context";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -288,7 +289,14 @@ function AccountPickerScreenComponent(): JSX.Element {
 
   // Home/Accounts/Reports have usually already fetched this, so render from
   // cache and refresh behind the list instead of skeletoning on every open.
-  const { assets, expenses, loading } = useLedgerReadContext(ledgerId);
+  const {
+    assets,
+    expenses,
+    loading,
+    error: contextError,
+    data: contextData,
+    refetch: contextRefetch,
+  } = useLedgerReadContext(ledgerId);
 
   const [query, setQuery] = useState("");
   const [activeRoot, setActiveRoot] = useState<string | null>(ALL_ROOTS);
@@ -640,6 +648,18 @@ function AccountPickerScreenComponent(): JSX.Element {
             />
           </View>
         ))}
+      </View>
+    );
+  }
+
+  // A failed first read is not an empty ledger: "no accounts yet" with an Open
+  // Account row invited a duplicate (w21/861).
+  if (contextError && contextData === undefined) {
+    return (
+      <View style={styles.container}>
+        <CardLoadFailure
+          onRetry={() => void contextRefetch().catch(() => undefined)}
+        />
       </View>
     );
   }

@@ -1245,3 +1245,45 @@ describe("typedAmountInput keeps the row's sign over pasted spaces", () => {
     expect(typedAmountInput("", true)).toBe("");
   });
 });
+
+// w21/861: a failed first metadata read was an empty ledger with a "$" currency.
+describe("a failed first metadata read", () => {
+  const read = (...parts: string[]) =>
+    require("fs")
+      .readFileSync(
+        require("path").join(__dirname, "..", "..", ...parts),
+        "utf8",
+      )
+      .replace(/\s+/g, "");
+
+  it("shows a failure with Retry in New Transaction, and keeps Done off", () => {
+    const screen = read(
+      "multi-postings-transaction",
+      "multi-postings-transaction-screen.tsx",
+    );
+    expect(
+      screen.includes(
+        "constmetaFailed=Boolean(metaError)&&ledgerMeta===undefined;",
+      ),
+    ).toBe(true);
+    expect(
+      screen.includes(
+        "{metaFailed?(<CardLoadFailureonRetry={()=>voidmetaRefetch()",
+      ),
+    ).toBe(true);
+    expect(
+      screen.includes(
+        "constcanSave=validationError===null&&!saved&&!metaFailed;",
+      ),
+    ).toBe(true);
+  });
+
+  it("shows a failure with Retry in the account picker, not 'no accounts yet'", () => {
+    const picker = read("account-picker-screen", "account-picker-screen.tsx");
+    expect(
+      picker.includes(
+        "if(contextError&&contextData===undefined){return(<Viewstyle={styles.container}><CardLoadFailureonRetry={()=>voidcontextRefetch()",
+      ),
+    ).toBe(true);
+  });
+});

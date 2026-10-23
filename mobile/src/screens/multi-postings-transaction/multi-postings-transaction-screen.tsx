@@ -1,3 +1,4 @@
+import { CardLoadFailure } from "@/components/card-load-failure";
 import { breakableAccount } from "@/common/account-util";
 import {
   currencyMinorUnits,
@@ -492,7 +493,12 @@ const MultiPostingsTransactionScreenComponent = () => {
     expenses,
     currencies,
     loading: metaLoading,
+    error: metaError,
+    refetch: metaRefetch,
   } = useLedgerMeta(userId, ledgerId);
+  // A failed first read leaves no accounts and a blind currency: not an empty
+  // ledger to save into (w21/861).
+  const metaFailed = Boolean(metaError) && ledgerMeta === undefined;
   const { mutate } = useAddEntriesToRemote();
 
   // Optional prefill, currently supplied by the receipt scanner after the LLM
@@ -654,7 +660,7 @@ const MultiPostingsTransactionScreenComponent = () => {
   // Any row's, not the first problem's: a row with no account before it hid
   // an unreadable amount behind a green "✓ $0.00" (w21/793).
   const amountUnreadable = postings.some(hasUnparsedAmount);
-  const canSave = validationError === null && !saved;
+  const canSave = validationError === null && !saved && !metaFailed;
   const hasUnsavedChanges = isTransactionDraftDirty(initialDraft, {
     date,
     payee,
@@ -667,6 +673,10 @@ const MultiPostingsTransactionScreenComponent = () => {
   useUnsavedChangesGuard(hasUnsavedChanges, savedOutRef);
 
   const handleSave = async () => {
+    if (metaFailed) {
+      toast.showToast({ message: t("ledgerLoadError"), type: "error" });
+      return;
+    }
     // The write already committed, or is running; stay silent instead of
     // toasting a validation message or writing a second time.
     const flight = saveFlightRef.current!;
@@ -766,7 +776,8 @@ const MultiPostingsTransactionScreenComponent = () => {
               <Text
                 style={[
                   styles.doneButton,
-                  (!canSave || saving) && styles.doneButtonDisabled,
+                  (!canSave || saving || metaFailed) &&
+                    styles.doneButtonDisabled,
                 ]}
                 numberOfLines={1}
                 maxFontSizeMultiplier={headerActionMaxFontSizeMultiplier}
@@ -825,7 +836,11 @@ const MultiPostingsTransactionScreenComponent = () => {
         </View>
 
         <View style={styles.card}>
-          {metaLoading && !seeded ? (
+          {metaFailed ? (
+            <CardLoadFailure
+              onRetry={() => void metaRefetch().catch(() => undefined)}
+            />
+          ) : metaLoading && !seeded ? (
             <>
               {[160, 120].map((w, i) => (
                 <View
