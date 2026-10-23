@@ -1,6 +1,6 @@
 # w6 · m11 — Complete app-directory and remote-community distribution
 
-**Worker:** worker1 **Goal:** Users discover the existing hosted connector through approved ChatGPT/Claude entries and an accurate remote-MCP community entry. **Status:** todo (t001 review inspection blocked on browser connection; t002/t003 remain independent)
+**Worker:** worker1 **Goal:** Users discover the existing hosted connector through approved ChatGPT/Claude entries and an accurate remote-MCP community entry. **Status:** todo (t001/t002 private review inspection blocked on browser connection; independent t003 remote-community contribution remains actionable)
 
 **Implementation estimate:** ~2h15m plus closing work, excluding external review latency. No recurring polling job is created.
 
@@ -9,7 +9,7 @@
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
 | [t001](./t001.md) | Follow existing ChatGPT application through review/publication — **BLOCKED** | 45m | — |
-| [t002](./t002.md) | Follow existing Claude connector application through review/publication | 45m | — |
+| [t002](./t002.md) | Follow existing Claude connector application through review/publication — **BLOCKED** | 45m | — |
 | [t003](./t003.md) | Submit to Awesome Remote MCP Servers and verify merged entry | 45m | — |
 | [t004](./t004.md) | Adoption surface | 30m | t001, t002, t003 |
 | [t005](./t005.md) | Simplify | 30m | t004 |
@@ -67,3 +67,5 @@ The prepared [m9/t011](../blocked/m9/t011.md) official Cursor application awaits
 ## Blocked
 
 - **t001:** the private existing ChatGPT application cannot be inspected while current browser inventory has no connected browser. Publisher-confirmed submission is retained without refreshing its check time or inventing approval/rejection. **Unblock:** restore the extension connection, then inspect the exact existing management record and handle actual feedback/review state. **Owners:** operator for connection, publisher if account access is genuinely missing, worker/OpenAI reviewers for follow-through. t002/t003 remain independent and the restoration question is already pending.
+
+- **t002:** existing Claude submission is publisher-confirmed, but private feedback/approval cannot be read without the existing browser connection. **Unblock:** restore that connection, inspect the exact submitted record with its intended publisher identity, then act on visible feedback or a genuine observed reviewer wait. **Owners:** operator/publisher, then worker/Claude reviewers. No duplicate application or unobserved check-time refresh is introduced. t003 remains independent.
