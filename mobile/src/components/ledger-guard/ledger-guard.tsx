@@ -151,6 +151,8 @@ const LedgerGuardProviderComponent = ({
         <View style={styles.container} testID="ledger-guard-load-error">
           <View style={styles.content}>
             <Ionicons
+              accessibilityElementsHidden
+              importantForAccessibility="no"
               name="cloud-offline-outline"
               size={64}
               color={theme.black40}
@@ -181,6 +183,8 @@ const LedgerGuardProviderComponent = ({
                 accessibilityLabel={t("settings")}
               >
                 <Ionicons
+                  accessibilityElementsHidden
+                  importantForAccessibility="no"
                   name="settings-outline"
                   size={20}
                   color={theme.black}
@@ -198,6 +202,8 @@ const LedgerGuardProviderComponent = ({
       <View style={styles.container}>
         <View style={styles.content}>
           <Ionicons
+            accessibilityElementsHidden
+            importantForAccessibility="no"
             name="folder-outline"
             size={64}
             color={theme.black40}
@@ -216,6 +222,8 @@ const LedgerGuardProviderComponent = ({
               accessibilityLabel={t("createLedgerEmptyCreate")}
             >
               <Ionicons
+                accessibilityElementsHidden
+                importantForAccessibility="no"
                 name="add-circle-outline"
                 size={20}
                 color={theme.white}
@@ -233,7 +241,13 @@ const LedgerGuardProviderComponent = ({
               accessibilityRole="button"
               accessibilityLabel={t("createLedgerEmptyDiscover")}
             >
-              <Ionicons name="search-outline" size={20} color={theme.black} />
+              <Ionicons
+                accessibilityElementsHidden
+                importantForAccessibility="no"
+                name="search-outline"
+                size={20}
+                color={theme.black}
+              />
               <Text style={[styles.buttonText, styles.buttonTextSecondary]}>
                 {t("createLedgerEmptyDiscover")}
               </Text>
@@ -248,7 +262,13 @@ const LedgerGuardProviderComponent = ({
               accessibilityRole="button"
               accessibilityLabel={t("settings")}
             >
-              <Ionicons name="settings-outline" size={20} color={theme.black} />
+              <Ionicons
+                accessibilityElementsHidden
+                importantForAccessibility="no"
+                name="settings-outline"
+                size={20}
+                color={theme.black}
+              />
               <Text style={[styles.buttonText, styles.buttonTextSecondary]}>
                 {t("settings")}
               </Text>
@@ -264,6 +284,8 @@ const LedgerGuardProviderComponent = ({
       <View style={styles.container} testID="ledger-guard-gone">
         <View style={styles.content}>
           <Ionicons
+            accessibilityElementsHidden
+            importantForAccessibility="no"
             name="alert-circle-outline"
             size={64}
             color={theme.black40}
@@ -281,7 +303,13 @@ const LedgerGuardProviderComponent = ({
               accessibilityRole="button"
               accessibilityLabel={t("createLedgerEmptyDiscover")}
             >
-              <Ionicons name="search-outline" size={20} color={theme.white} />
+              <Ionicons
+                accessibilityElementsHidden
+                importantForAccessibility="no"
+                name="search-outline"
+                size={20}
+                color={theme.white}
+              />
               <Text style={styles.buttonText}>
                 {t("createLedgerEmptyDiscover")}
               </Text>
@@ -296,7 +324,13 @@ const LedgerGuardProviderComponent = ({
               accessibilityRole="button"
               accessibilityLabel={t("settings")}
             >
-              <Ionicons name="settings-outline" size={20} color={theme.black} />
+              <Ionicons
+                accessibilityElementsHidden
+                importantForAccessibility="no"
+                name="settings-outline"
+                size={20}
+                color={theme.black}
+              />
               <Text style={[styles.buttonText, styles.buttonTextSecondary]}>
                 {t("settings")}
               </Text>

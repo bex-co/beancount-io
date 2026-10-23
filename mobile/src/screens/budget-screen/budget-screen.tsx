@@ -186,7 +186,13 @@ function BudgetScreenImpl(): JSX.Element {
                 accessibilityRole="button"
                 accessibilityLabel={t("budgetAdd")}
               >
-                <Ionicons name="add" size={26} color={theme.black} />
+                <Ionicons
+                  accessibilityElementsHidden
+                  importantForAccessibility="no"
+                  name="add"
+                  size={26}
+                  color={theme.black}
+                />
               </TouchableOpacity>
             ) : null,
         }}
@@ -243,6 +249,8 @@ function BudgetScreenImpl(): JSX.Element {
               ) : (
                 <View style={styles.stateContainer}>
                   <Ionicons
+                    accessibilityElementsHidden
+                    importantForAccessibility="no"
                     name="wallet-outline"
                     size={48}
                     color={theme.black60}

@@ -201,7 +201,7 @@ export function LedgerSelectionScreen() {
     }
   };
   const skeleton = (
-    <View accessibilityLabel={t("discoveryLoading")}>
+    <View accessible accessibilityLabel={t("discoveryLoading")}>
       {widths.map((width, index) => (
         <View key={width} style={styles.row}>
           <View style={styles.content}>
@@ -245,7 +245,13 @@ export function LedgerSelectionScreen() {
         ))}
       </View>
       <View style={styles.search}>
-        <Ionicons name="search" size={20} color={theme.black80} />
+        <Ionicons
+          accessibilityElementsHidden
+          importantForAccessibility="no"
+          name="search"
+          size={20}
+          color={theme.black80}
+        />
         <TextInput
           testID="discovery-search"
           style={styles.input}
@@ -265,7 +271,13 @@ export function LedgerSelectionScreen() {
             accessibilityRole="button"
             accessibilityLabel={t("discoveryClear")}
           >
-            <Ionicons name="close-circle" size={20} color={theme.black80} />
+            <Ionicons
+              accessibilityElementsHidden
+              importantForAccessibility="no"
+              name="close-circle"
+              size={20}
+              color={theme.black80}
+            />
           </Pressable>
         ) : null}
       </View>
@@ -362,6 +374,8 @@ export function LedgerSelectionScreen() {
               }}
             >
               <Ionicons
+                accessibilityElementsHidden
+                importantForAccessibility="no"
                 name={item.isStarred ? "star" : "star-outline"}
                 size={24}
                 color={item.isStarred ? theme.primary : theme.black80}
@@ -377,6 +391,8 @@ export function LedgerSelectionScreen() {
           ) : (
             <View style={styles.state}>
               <Ionicons
+                accessibilityElementsHidden
+                importantForAccessibility="no"
                 name={
                   state.error
                     ? "cloud-offline-outline"

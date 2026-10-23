@@ -117,6 +117,8 @@ export function SearchBar({
       style={[styles.field, { minHeight: searchFieldHeight(fontScale) }, style]}
     >
       <Ionicons
+        accessibilityElementsHidden
+        importantForAccessibility="no"
         name="search-outline"
         size={16}
         color={theme.controlPlaceholder}
@@ -146,6 +148,8 @@ export function SearchBar({
             accessibilityLabel={t("clearSearch")}
           >
             <Ionicons
+              accessibilityElementsHidden
+              importantForAccessibility="no"
               name="close-circle"
               size={18}
               color={theme.controlPlaceholder}

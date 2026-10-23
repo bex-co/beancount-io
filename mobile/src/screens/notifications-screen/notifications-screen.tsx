@@ -228,7 +228,13 @@ function ErrorRow({
         )}
       </View>
       {canFix && (
-        <Ionicons name="open-outline" size={16} color={theme.black60} />
+        <Ionicons
+          accessibilityElementsHidden
+          importantForAccessibility="no"
+          name="open-outline"
+          size={16}
+          color={theme.black60}
+        />
       )}
     </View>
   );
@@ -391,6 +397,8 @@ function NotificationsScreenImpl(): JSX.Element {
               ) : errorCount === 0 ? (
                 <View style={styles.emptyRow}>
                   <Ionicons
+                    accessibilityElementsHidden
+                    importantForAccessibility="no"
                     name="checkmark-circle-outline"
                     size={18}
                     color={theme.success}
@@ -468,6 +476,8 @@ function NotificationsScreenImpl(): JSX.Element {
                         </Text>
                       </View>
                       <Ionicons
+                        accessibilityElementsHidden
+                        importantForAccessibility="no"
                         name={directionalIcon("chevron-forward")}
                         size={18}
                         color={theme.black60}

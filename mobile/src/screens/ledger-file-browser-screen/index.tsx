@@ -288,7 +288,13 @@ function FileRow({
         accessibilityHint={tappable ? undefined : t("ledgerFileNotText")}
       >
         <View style={styles.rowIcon}>
-          <Ionicons name={iconName} size={20} color={iconColor} />
+          <Ionicons
+            accessibilityElementsHidden
+            importantForAccessibility="no"
+            name={iconName}
+            size={20}
+            color={iconColor}
+          />
         </View>
         <View style={styles.rowText}>
           <Text style={styles.rowLabel} numberOfLines={1}>
@@ -303,6 +309,8 @@ function FileRow({
         </View>
         {tappable && (
           <Ionicons
+            accessibilityElementsHidden
+            importantForAccessibility="no"
             name={directionalIcon("chevron-forward")}
             size={18}
             color={theme.black40}
@@ -322,6 +330,8 @@ function FileRow({
           >
             {/* A button of its own: the hairline grey was 1.34:1 (w21/702). */}
             <Ionicons
+              accessibilityElementsHidden
+              importantForAccessibility="no"
               name="lock-closed-outline"
               size={19}
               color={theme.black80}
@@ -337,7 +347,13 @@ function FileRow({
             disabled={deleting}
             onPress={onDelete}
           >
-            <Ionicons name="trash-outline" size={20} color={theme.error} />
+            <Ionicons
+              accessibilityElementsHidden
+              importantForAccessibility="no"
+              name="trash-outline"
+              size={20}
+              color={theme.error}
+            />
           </TouchableOpacity>
         ))}
     </View>
@@ -750,6 +766,8 @@ export function LedgerFileBrowserScreen(): JSX.Element {
             onPress: openCreateDialog,
             icon: (
               <Ionicons
+                accessibilityElementsHidden
+                importantForAccessibility="no"
                 name="add-circle-outline"
                 size={26}
                 color={creating ? theme.black40 : theme.primary}
@@ -774,6 +792,8 @@ export function LedgerFileBrowserScreen(): JSX.Element {
             }
           >
             <Ionicons
+              accessibilityElementsHidden
+              importantForAccessibility="no"
               name={directionalIcon("chevron-back")}
               size={20}
               color={theme.primary}
@@ -815,6 +835,8 @@ export function LedgerFileBrowserScreen(): JSX.Element {
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
                 <Ionicons
+                  accessibilityElementsHidden
+                  importantForAccessibility="no"
                   name={error ? "cloud-offline-outline" : "folder-open-outline"}
                   size={40}
                   color={error ? theme.error : theme.black40}
@@ -835,7 +857,13 @@ export function LedgerFileBrowserScreen(): JSX.Element {
                     accessibilityLabel={t("ledgerCreateFile")}
                     accessibilityState={{ disabled: creating }}
                   >
-                    <Ionicons name="add" size={18} color={theme.white} />
+                    <Ionicons
+                      accessibilityElementsHidden
+                      importantForAccessibility="no"
+                      name="add"
+                      size={18}
+                      color={theme.white}
+                    />
                     <Text style={styles.emptyActionText}>
                       {t("ledgerCreateFile")}
                     </Text>

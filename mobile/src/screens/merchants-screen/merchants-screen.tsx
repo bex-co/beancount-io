@@ -326,6 +326,8 @@ function MerchantsDirectory() {
         <View style={styles.emptyContainer}>
           <View style={styles.emptyIcon}>
             <Ionicons
+              accessibilityElementsHidden
+              importantForAccessibility="no"
               name="storefront-outline"
               size={40}
               color={theme.black60}
@@ -345,7 +347,13 @@ function MerchantsDirectory() {
           ]}
         >
           <View style={styles.emptyIcon}>
-            <Ionicons name="search-outline" size={40} color={theme.black60} />
+            <Ionicons
+              accessibilityElementsHidden
+              importantForAccessibility="no"
+              name="search-outline"
+              size={40}
+              color={theme.black60}
+            />
           </View>
           <Text style={styles.emptyMessage}>
             {t("merchantsNoSearchResults")}
@@ -400,6 +408,8 @@ function MerchantsDirectory() {
                 hitSlop={8}
               >
                 <Ionicons
+                  accessibilityElementsHidden
+                  importantForAccessibility="no"
                   name={
                     sort === "count" ? "swap-vertical-outline" : "text-outline"
                   }

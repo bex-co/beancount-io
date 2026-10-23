@@ -100,7 +100,13 @@ export const TransactionsEmptyState = ({
   return (
     <View style={styles.emptyContainer}>
       <View style={styles.iconContainer}>
-        <Ionicons name="receipt-outline" size={40} color={theme.primary} />
+        <Ionicons
+          accessibilityElementsHidden
+          importantForAccessibility="no"
+          name="receipt-outline"
+          size={40}
+          color={theme.primary}
+        />
       </View>
 
       <Text style={styles.title}>

@@ -599,7 +599,12 @@ function MerchantDetailBody({
   const listHeader = (
     <View style={styles.header} testID="merchant-stats-header">
       <View style={styles.logoRow}>
-        <AccountTypeIcon postings={[]} payee={payee} />
+        <View
+          accessible={false}
+          importantForAccessibility="no-hide-descendants"
+        >
+          <AccountTypeIcon postings={[]} payee={payee} />
+        </View>
         <View style={styles.headerText}>
           <Text style={styles.payeeName} numberOfLines={2}>
             {payee}

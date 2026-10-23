@@ -41,6 +41,8 @@ export function StaleDataBanner(): JSX.Element {
   return (
     <View
       style={styles.banner}
+      // Reachable only as an accessible element, or the label is never read.
+      accessible
       accessibilityRole="text"
       accessibilityLabel={t("staleDataNotice")}
     >

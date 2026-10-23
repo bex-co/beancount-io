@@ -62,7 +62,13 @@ export const NoResultsState = () => {
       ]}
     >
       <View style={styles.iconContainer}>
-        <Ionicons name="search-outline" size={40} color={theme.black60} />
+        <Ionicons
+          accessibilityElementsHidden
+          importantForAccessibility="no"
+          name="search-outline"
+          size={40}
+          color={theme.black60}
+        />
       </View>
       <Text style={styles.message}>{t("transactionsNoSearchResults")}</Text>
     </View>
