@@ -1663,12 +1663,13 @@ def _written_quotes(existing: Sequence[Any]) -> dict[tuple[Any, str, str], list[
     """
     from beancount.core.data import Price
 
-    from bea_engine.ledger.reader import entry_generated
+    from bea_engine.ledger.reader import entry_generated, shared_locations
     from bea_engine.managed_price_cache import managed_source_for_path
 
     quotes: dict[tuple[Any, str, str], list[Any]] = {}
+    shared = shared_locations(existing)
     for entry in existing:
-        if not isinstance(entry, Price) or entry_generated(entry, "price"):
+        if not isinstance(entry, Price) or entry_generated(entry, "price", shared):
             continue
         filename = entry.meta.get("filename")
         if isinstance(filename, str) and filename and managed_source_for_path(Path(filename)) is not None:

@@ -6,6 +6,7 @@ import datetime
 import os
 import re
 import unicodedata
+from collections.abc import Sequence
 from decimal import Decimal
 from functools import cache
 from pathlib import Path
@@ -140,7 +141,7 @@ def forget_source_lines() -> None:
     _spelled_entries.cache_clear()
 
 
-def shared_locations(entries: list[Any]) -> frozenset[tuple[str, int]]:
+def shared_locations(entries: Sequence[Any]) -> frozenset[tuple[str, int]]:
     """The locations two or more directives of one type claim on one date.
 
     A plugin may stamp a new entry with its source's `filename` and `lineno`

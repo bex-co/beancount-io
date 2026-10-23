@@ -84,7 +84,6 @@
 - [959 — Treat repeated allowed currencies as one during transaction inference](./959.md) — minor CLI existing-ledger/native-import inference finding; USD/EUR and split-file controls reproduced 2026-10-21.
 - [958 — Keep unused unopened accounts out of remembered CSV settings](./958.md) — minor CLI memory-guard follow-up to 452/714; empty, skipped and fully categorized exports reproduced 2026-10-21.
 - [957 — Allow instrument units in the portfolio preset's holdings account](./957.md) — minor CLI first-purchase setup finding; reproduced twice in USD/EUR on 2026-10-21.
-- [938 — Exclude generated prices and balances from duplicate and conflict checks](./938.md) — major CLI skipped-write gap; quote and balance guards count generated rows as authored, so forced corrections/assertions report zero-write success, reproduced 2026-10-21.
 - [939 — Use display columns for query-to-tree conversion](./939.md) — minor CLI integration gap; wide CJK accounts make valid BQL tables refuse, while wide narrations leave ordinary accounts flat in a successful partial tree, reproduced 2026-10-21.
 - [940 — Keep known net profit when unpriced income and expense cancel](./940.md) — minor CLI report inconsistency; equal foreign-commodity flows leave known 20 USD profit, but its sole period reports unavailable beside the correct headline, reproduced 2026-10-21.
 - [941 — Write an `import-id` on hosted bank imports so the shared dedup contract sees them](./941.md) — minor backend-v2 finding from w5/m5/t004; observed 2026-10-21.

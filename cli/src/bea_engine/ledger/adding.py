@@ -749,8 +749,11 @@ def _balance_match(
     """
     from beancount.core.data import Balance
 
-    from bea_engine.ledger.reader import entry_generated
+    from bea_engine.ledger.reader import entry_generated, shared_locations
 
+    # With the loaded entries' shared locations, so a calculated assertion that
+    # borrows an authored line is told from it (w5/938).
+    shared = shared_locations(entries)
     return next(
         (
             entry
@@ -760,7 +763,7 @@ def _balance_match(
             and entry.account == account
             and entry.amount.currency == currency
             and _same_assertion(entry, number, tolerance)
-            and not entry_generated(entry, "balance")
+            and not entry_generated(entry, "balance", shared)
         ),
         None,
     )
@@ -772,8 +775,9 @@ def _balance_conflict(
     """A written same-key assertion with a different value, or None."""
     from beancount.core.data import Balance
 
-    from bea_engine.ledger.reader import entry_generated
+    from bea_engine.ledger.reader import entry_generated, shared_locations
 
+    shared = shared_locations(entries)
     return next(
         (
             entry
@@ -783,7 +787,7 @@ def _balance_conflict(
             and entry.account == account
             and entry.amount.currency == currency
             and not _same_assertion(entry, number, tolerance)
-            and not entry_generated(entry, "balance")
+            and not entry_generated(entry, "balance", shared)
         ),
         None,
     )
@@ -1022,7 +1026,7 @@ def _price(
 
     from bea_engine import managed_load
     from bea_engine.ledger.models import WRITE_INPUT, PriceDirective
-    from bea_engine.ledger.reader import entry_generated
+    from bea_engine.ledger.reader import entry_generated, shared_locations
     from bea_engine.managed_price_cache import managed_source_for_path
     from bea_engine.query import format_error
 
@@ -1045,6 +1049,7 @@ def _price(
     managed_sources: set[str] = set()
     pair = (currency, amount_currency)
     shadowed_pairs = {pair, (amount_currency, currency)}
+    shared = shared_locations(entries)
     for entry in entries:
         if not isinstance(entry, Price) or entry.date != directive.date:
             continue
@@ -1055,7 +1060,7 @@ def _price(
         managed_source = managed_source_for_path(Path(filename)) if isinstance(filename, str) and filename else None
         if managed_source is not None:
             managed_sources.add(managed_source)
-        elif not entry_generated(entry, "price"):
+        elif not entry_generated(entry, "price", shared):
             # A plugin-made price (implicit_prices) borrows its transaction's
             # location; it is no ledger-authored quote to match or conflict with.
             (local_prices if entry_pair == pair else reciprocal_prices).append(entry)
