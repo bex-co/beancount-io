@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- [1022 — Keep renamed roots in Cash Flow movements and opening cash](./1022.md) — major; valid declared ledger reports opening75/net0 instead of opening0/net75 in UI and exports; actual producer and both-width controls, no writes.
+
 - [1021 — Keep native stepping exact in the Receipt and Budget amount fields](./1021.md) — minor follow-up of 1017's audit; the other two `type="number"` amount fields still step through a double; source-only.
 
 - [1020 — Keep configured account roots in Overview cash flows](./1020.md) — minor; valid declared roles and renamed roots yield No Data Available beside correct 100/25 USD movement; both widths, exact producer and default-root controls, no writes.
