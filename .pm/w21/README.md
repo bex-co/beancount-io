@@ -12,6 +12,9 @@
 
 ## Inbox
 
+- [759](./759.md) — A recurring merchant says "Next Oct 21, 2026" on Oct 23: a past date stays "Next" for a quarter of the cycle
+- [760](./760.md) — Brand logos miss payees typed with a curly apostrophe ("Trader Joe’s", from iOS Smart Punctuation)
+- [761](./761.md) — A merchant whose entries are all scheduled shows its first date as if it already happened
 - [753](./753.md) — w21/737 regression: a `close_tree` child opened after its parent was closed gets a false error, and saves are refused
 - [754](./754.md) — w21/739 regression: `pedantic` (or `unique_prices` before `implicit_prices`) raises a false "Disagreeing price entries"
 - [755](./755.md) — w21/737 regression: E1003 reported twice when `close_tree` is combined with a fava plugin
