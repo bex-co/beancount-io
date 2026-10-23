@@ -133,6 +133,47 @@ const feeAmount = (
 };
 
 /**
+ * A holding received or given at cost for income or an expense: a reinvested
+ * dividend (+0.496 VTI {120 USD}, a 0.48 USD residue, Income −60 USD), an RSU
+ * vest, a staking reward, shares given to charity. Every balance-sheet leg
+ * moves the same way, so the money is the income or expense side: the
+ * reinvested dividend read "+$0.48", its residue, or "+0.5 VTI" without one
+ * (w21/712). A buy or a sale moves cash against the holding and still reads as
+ * the cash.
+ */
+const incomeFundedAmount = (
+  postings: JournalPosting[],
+  roots: RootNames,
+  operatingCurrency?: string,
+): TransactionAmount | null => {
+  const flows = postings.filter((p) => isFeeLine(p.account, roots));
+  const sheet = postings.filter((p) => isBalanceSheet(p.account, roots));
+  if (flows.length === 0 || !sheet.some((p) => p.cost?.currency)) return null;
+  const directions = new Set(
+    sheet.map((p) => Math.sign(parseFloat(p.units.number))),
+  );
+  if (directions.size !== 1) return null;
+  const currencies = new Set(flows.map((p) => p.units.currency));
+  if (currencies.size !== 1) return null;
+  const currency = flows[0]!.units.currency;
+  let total = 0;
+  let scale = 0;
+  for (const p of flows) {
+    const value = parseFloat(p.units.number);
+    if (!Number.isFinite(value)) return null;
+    total += value;
+    scale = Math.max(scale, amountScale(p.units.number));
+  }
+  const value = -total;
+  if (Math.abs(value) < 0.5 * 10 ** -scale) return null;
+  return {
+    text: formatAmount(value, currency, scale, false, operatingCurrency),
+    value,
+    currency,
+  };
+};
+
+/**
  * A corporate action: every posting is a held lot (it has a cost), and the cost
  * of what left equals the cost of what arrived in each cost currency. A split
  * (-10 NVDA {1200 USD}, +100 NVDA {120 USD}) or a merger (-10 OLDCO {100 USD},
@@ -235,6 +276,8 @@ export const selectTransactionAmount = (
     operatingCurrency,
   );
   if (corporateAction) return corporateAction;
+  const incomeFunded = incomeFundedAmount(postings, roots, operatingCurrency);
+  if (incomeFunded) return incomeFunded;
 
   const cashPostings = postings.filter((p) => isBalanceSheet(p.account, roots));
   // Units a lot is held in, whatever the commodity's ticker looks like.

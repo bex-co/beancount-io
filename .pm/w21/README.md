@@ -17,7 +17,6 @@
 - [716](./716.md) — Home's Latest Updates shows only two lines of a multi-commit push and hides "+N more commit(s)"
 - [717](./717.md) — Server settings shows the "older server" result in red, with an advisory saying the server isn't available
 - [718](./718.md) — Home's Latest Updates ledger rows ("Committed to …") are English in every language
-- [712](./712.md) — A reinvested $60 dividend shows as "+$0.48" (the cash residue) or "+0.5 VTI" instead of the income earned
 - [713](./713.md) — After a stock split, account detail's chart reads "+90 QANVDA (+900.00%)" in green (w21/571 gap)
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window
 - [065](./blocked/065.md) — One early-year entry (e.g. 0050) makes the balance sheet 23,718 monthly points (3 MB) and the app stalls — **blocked:** needs an approach decision (per-pill fetch vs server downsample) and a simulator profile of the stall

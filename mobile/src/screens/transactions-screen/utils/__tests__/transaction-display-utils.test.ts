@@ -910,17 +910,110 @@ describe("formatAmount for a commodity that is not a currency", () => {
     expect(formatAmount(10, "BND", 0)).toBe("10.00 BND");
   });
 
-  it("reads the Google RSU as +10 GOOG, as Money flow does", () => {
+  // w21/712 headlines an RSU vest by its income; shares that only move
+  // still read as shares, at the digits Money flow shows.
+  it("reads 10 GOOG moved between accounts as 10 GOOG, as Money flow does", () => {
+    const lot = { number: "150.00", currency: "USD" };
     const tx = makeTransaction({
       postings: [
-        makePosting("Assets:QaGoog", "10", "GOOG", {
-          number: "150.00",
-          currency: "USD",
-        }),
-        makePosting("Income:QaRsu", "-1500.00"),
+        makePosting("Assets:QaBrokerA", "-10", "GOOG", lot),
+        makePosting("Assets:QaBrokerB", "10", "GOOG", lot),
       ],
     });
     const amount = selectTransactionAmount(tx, "USD");
     expect(amount && "text" in amount ? amount.text : "").toBe("10 GOOG");
+  });
+});
+
+// w21/712: a reinvested $60 dividend read "+$0.48" (its cash residue), or
+// "+0.5 VTI" without one: the holding is bought with income, so the money is
+// the income side, as the dashboard reads it.
+describe("a holding received or given at cost for income or an expense", () => {
+  const text = (tx: JournalTransaction) => {
+    const amount = selectTransactionAmount(tx, "USD");
+    return amount && "text" in amount
+      ? `${amount.value > 0 ? "+" : amount.value < 0 ? "-" : ""}${amount.text}`
+      : null;
+  };
+  const vti = (number: string, cost = "120.00") =>
+    makePosting("Assets:Inv:Vti", number, "QAVTI", {
+      number: cost,
+      currency: "USD",
+    });
+
+  it("reads a reinvested dividend as the income, with or without a residue", () => {
+    const dividend = makePosting("Income:Inv:Dividends", "-60.00");
+    expect(
+      text(
+        makeTransaction({
+          postings: [
+            vti("0.496"),
+            makePosting("Assets:Inv:Cash", "0.48"),
+            dividend,
+          ],
+        }),
+      ),
+    ).toBe("+$60.00");
+    expect(
+      text(
+        makeTransaction({
+          postings: [vti("0.5"), dividend],
+        }),
+      ),
+    ).toBe("+$60.00");
+  });
+
+  it("reads an RSU vest by its income and shares given away by the expense", () => {
+    expect(
+      text(
+        makeTransaction({
+          postings: [
+            makePosting("Assets:QaGoog", "10", "GOOG", {
+              number: "150.00",
+              currency: "USD",
+            }),
+            makePosting("Income:QaRsu", "-1500.00"),
+          ],
+        }),
+      ),
+    ).toBe("+$1,500.00");
+    expect(
+      text(
+        makeTransaction({
+          postings: [
+            vti("-10", "100.00"),
+            makePosting("Expenses:Charity", "1000.00"),
+          ],
+        }),
+      ),
+    ).toBe("-$1,000.00");
+  });
+
+  it("leaves buys, sales with a gain and fees as the cash", () => {
+    expect(
+      text(
+        makeTransaction({
+          postings: [
+            vti("10", "100.00"),
+            makePosting("Assets:Inv:Cash", "-1005.00"),
+            makePosting("Expenses:Fees", "5.00"),
+          ],
+        }),
+      ),
+    ).toBe("-$1,005.00");
+    expect(
+      text(
+        makeTransaction({
+          postings: [
+            {
+              ...vti("-10", "100.00"),
+              price: { number: "120.00", currency: "USD" },
+            },
+            makePosting("Assets:Inv:Cash", "1200.00"),
+            makePosting("Income:Inv:Gains", "-200.00"),
+          ],
+        }),
+      ),
+    ).toBe("+$1,200.00");
   });
 });

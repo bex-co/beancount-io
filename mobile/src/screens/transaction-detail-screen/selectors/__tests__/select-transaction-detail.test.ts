@@ -221,6 +221,26 @@ describe("selectPostingRows", () => {
   });
 });
 
+// w21/712: the detail hero read a reinvested $60 dividend as its cash residue.
+describe("the hero of a reinvested dividend", () => {
+  it("reads the income earned", () => {
+    const hero = selectHeroAmountWithLabel(
+      txn([
+        {
+          account: "Assets:Inv:Vti",
+          units: { number: "0.496", currency: "QAVTI" },
+          cost: { number: "120.00", currency: "USD", date: "2026-10-15" },
+        },
+        posting("Assets:Inv:Cash", "0.48"),
+        posting("Income:Inv:Dividends", "-60.00"),
+      ]),
+      MIXED,
+      "USD",
+    );
+    expect(hero.text).toBe("+$60.00");
+  });
+});
+
 // w21/699: a USD posting read "$" in a CAD ledger whose headline "$" is CAD.
 describe("a USD entry in a ledger whose own currency is another dollar", () => {
   const store = txn([
