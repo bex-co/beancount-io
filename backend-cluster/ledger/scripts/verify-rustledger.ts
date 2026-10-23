@@ -1312,6 +1312,35 @@ async function main(): Promise<void> {
       ),
     "the re-check still finds the balance an unused pad hid, with amortize_over",
   );
+  // w21/705: a pad that filled USD still covered the account's later EUR
+  // balance. Beancount gives a pad only each currency's first balance.
+  const otherCurrency = await parseLedgerFiles(
+    {
+      "main.beancount": [
+        "2026-01-01 open Assets:A",
+        "2026-01-01 open Equity:Open",
+        "2026-01-01 open Expenses:F",
+        '2026-01-02 * "dep"',
+        "  Assets:A  50.00 EUR",
+        "  Equity:Open  -50.00 EUR",
+        "2026-02-01 pad Assets:A Equity:Open",
+        "2026-02-02 balance Assets:A  100.00 USD",
+        "2026-02-02 balance Assets:A  50.00 EUR",
+        '2026-02-03 * "spend"',
+        "  Assets:A  -10.00 EUR",
+        "  Expenses:F  10.00 EUR",
+        "2026-02-04 balance Assets:A  50.00 EUR",
+      ].join("\n"),
+    },
+    "main.beancount",
+    { today: "2099-01-01" },
+  );
+  assert(
+    JSON.stringify(otherCurrency.errors.map((e) => [e.code, e.line])) ===
+      JSON.stringify([["E2001", 13]]) &&
+      otherCurrency.errors[0].message.includes("got 40.00 EUR"),
+    `a pad that filled USD leaves a later EUR balance to its own check (got ${otherCurrency.errors.map((e) => `${e.code}@${e.line}`)})`,
+  );
 
   const firstElidedAmortizeSource = [
     'plugin "fava.plugins.amortize_over"',

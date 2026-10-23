@@ -157,4 +157,90 @@ describe("errorsHiddenByUnusedPads", () => {
     expect(seen[0]).toHaveLength(1);
     expect(seen[0][0]).toBe(pad);
   });
+
+  // w21/705: the pad filled USD, so it counted as used and its account's later
+  // EUR balance was never checked on its own, as Beancount checks it.
+  describe("a pad that filled another currency", () => {
+    const source = `2026-01-01 open Assets:Cash
+2026-02-01 pad Assets:Cash Equity:Open
+2026-02-02 balance Assets:Cash  100.00 USD
+2026-02-02 balance Assets:Cash  50.00 EUR
+2026-02-04 balance Assets:Cash  50.00 EUR ; after the spend
+2026-02-05 balance Equity:Open  -100.00 USD
+`;
+    const balance = (
+      date: string,
+      account: string,
+      number: string,
+      currency: string,
+    ): DirectiveJson => ({
+      type: "balance",
+      date,
+      account,
+      amount: { number, currency },
+    });
+    const usdPadding: DirectiveJson = {
+      ...padding,
+      postings: [
+        {
+          account: "Assets:Cash",
+          units: { number: "100.00", currency: "USD" },
+        },
+        {
+          account: "Equity:Open",
+          units: { number: "-100.00", currency: "USD" },
+        },
+      ],
+    };
+    const at = (line: number, message: string): BeancountError => ({
+      ...failed,
+      line,
+      message,
+    });
+    const eur = at(5, "Balance failed for Assets:Cash: expected 50.00 EUR");
+    // Only the blanking caused these: the pad's USD padding is gone.
+    const usd = at(3, "Balance failed for Assets:Cash: expected 100.00 USD");
+    const sourceUsd = at(6, "Balance failed for Equity:Open");
+
+    it("re-checks its account's other currency, without reporting it unused", async () => {
+      const seen: string[] = [];
+      const errors = await errorsHiddenByUnusedPads(
+        [
+          pad,
+          balance("2026-02-02", "Assets:Cash", "100.00", "USD"),
+          balance("2026-02-02", "Assets:Cash", "50.00", "EUR"),
+          balance("2026-02-04", "Assets:Cash", "50.00", "EUR"),
+        ],
+        [usdPadding],
+        { "main.bean": source },
+        [],
+        async (files, unused) => {
+          seen.push(files["main.bean"].split("\n")[1]);
+          expect(unused).toEqual([pad]);
+          return [usd, eur, sourceUsd];
+        },
+      );
+      expect(errors).toEqual([eur]);
+      expect(seen).toEqual([""]);
+    });
+
+    it("is not re-checked when the account asserts only what it filled", async () => {
+      const reparse = jest.fn(async () => [usd]);
+      const errors = await errorsHiddenByUnusedPads(
+        [
+          pad,
+          balance("2026-02-02", "Assets:Cash", "100.00", "USD"),
+          balance("2026-02-09", "Assets:Cash", "100.00", "USD"),
+          // Another account's EUR does not count.
+          balance("2026-02-04", "Assets:Other", "5.00", "EUR"),
+        ],
+        [usdPadding],
+        { "main.bean": source },
+        [],
+        reparse,
+      );
+      expect(errors).toEqual([]);
+      expect(reparse).not.toHaveBeenCalled();
+    });
+  });
 });

@@ -16,7 +16,6 @@
 - [709](./709.md) — Budget hides spending in other currencies: €250 on a USD budget reads "Actual $0.00 · Below target"
 - [710](./710.md) — The balance sheet without a time filter has no Equity:Conversions, so A+L+E doesn't net to zero
 - [711](./711.md) — A fixed $500 monthly investment shows in Merchants as "Monthly · ~1.5625 VTI"
-- [705](./705.md) — A pad used for one currency still hides a later failing balance in another currency (w21/675 gap)
 - [706](./706.md) — An unused pad makes the next pad raise a false "Multiple pad directives"; pad and balance error paths are quadratic
 - [707](./707.md) — File editor: since w21/689, text typed during a save is lost when that save conflicts and you choose Overwrite or Recreate
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window
