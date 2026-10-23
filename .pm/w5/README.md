@@ -40,7 +40,6 @@
 
 - [1003 — Compare compound costs using native booking arithmetic](./1003.md) — major CLI comparison error; a fully specified three-share compound-cost purchase imports twice because division before cancellation differs from native booking, reproduced 2026-10-23.
 - [1002 — Preserve valid sale lot choices before accepting an eager bulk order](./1002.md) — major CLI residual after completed 980; a bookable eager LIFO/HIFO order still changes the selected lot and turns 100 USD profit into zero, reproduced 2026-10-23.
-- [1001 — Compute cover label context from the lots held on that date](./1001.md) — major CLI residual after completed 983; netted and backdated short covers still change exact labels and strand offsetting Cost positions, reproduced 2026-10-23.
 - [999 — Canonicalize acquisition labels for import comparison and hashes](./999.md) — major CLI residual after completed 981; equivalent NFC/NFD cost labels still conflict or duplicate purchases after the empty-label fix, reproduced 2026-10-23.
 - [998 — Recognize manually reordered lots in multi-fill import matching](./998.md) — major CLI residual after completed 977; cost-sorted manual lot postings make a real sale import twice above twelve lots, reproduced 2026-10-23.
 - [992 — Use authored price facts across filtered and transformed views](./992.md) — minor CLI follow-up to completed 938; filtered quotes append repeatedly or miss conflicts, while inverse-only views falsely skip an unauthored reverse quote, reproduced 2026-10-22.

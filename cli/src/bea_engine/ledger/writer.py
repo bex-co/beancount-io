@@ -239,9 +239,12 @@ def _fixed_point_metadata(meta: dict[str, Any] | None) -> dict[str, Any]:
     return {key: _fixed_point(value) for key, value in (meta or {}).items()}
 
 
-#: Asks which `(account, label)` short lots the ledger being written holds; set around a write.
-_SHORT_LOT_LABELS: ContextVar[Callable[[], frozenset[tuple[str, str]]]] = ContextVar(
-    "short_lot_labels", default=lambda: frozenset()
+#: A short lot by what names it: account, commodity, label, then the cost's number, currency and date.
+ShortLot = tuple[str, str, str, Decimal | None, str | None, datetime.date | None]
+
+#: Asks which lots the ledger being written holds short on a date (None: at its end); set around a write.
+_SHORT_LOT_LABELS: ContextVar[Callable[[datetime.date | None], frozenset[ShortLot]]] = ContextVar(
+    "short_lot_labels", default=lambda _date: frozenset()
 )
 
 
@@ -250,19 +253,59 @@ _SHORT_LOT_LABELS: ContextVar[Callable[[], frozenset[tuple[str, str]]]] = Contex
 BATCH_SHORT_LABELS: ContextVar[set[tuple[str, str]] | None] = ContextVar("batch_short_labels", default=None)
 
 
-def held_short_lot_labels(entries: Iterable[Any]) -> frozenset[tuple[str, str]]:
-    """The labelled lots the entries leave short: net negative units per account, commodity and label."""
-    nets: dict[tuple[str, str, str], Decimal] = {}
-    for entry in entries:
-        if not isinstance(entry, Transaction):
-            continue
-        for posting in entry.postings:
-            label = getattr(posting.cost, "label", None)
-            if not label or posting.units is None or posting.units.number is None:
-                continue
-            key = (posting.account, posting.units.currency, label)
-            nets[key] = nets.get(key, Decimal(0)) + posting.units.number
-    return frozenset((account, label) for (account, _, label), net in nets.items() if net < 0)
+def _cost_parts(cost: Any) -> tuple[Decimal | None, str | None, datetime.date | None]:
+    number = getattr(cost, "number", None)
+    if number is None:
+        number = getattr(cost, "number_per", None)
+    currency = getattr(cost, "currency", None)
+    date = getattr(cost, "date", None)
+    return (
+        number if isinstance(number, Decimal) else None,
+        currency if isinstance(currency, str) and currency else None,
+        date if isinstance(date, datetime.date) else None,
+    )
+
+
+def held_short_lots(entries: Iterable[Any]) -> Callable[[datetime.date | None], frozenset[ShortLot]]:
+    """The labelled lots the entries leave short, by full cost, as of a date.
+
+    Netting by label alone let a long at another cost hide a real short, and
+    netting over the whole ledger hid a short a later cover had already closed
+    by the end, though a backdated cover meets it (w5/1001).
+    """
+    transactions = [entry for entry in entries if isinstance(entry, Transaction)]
+    memo: dict[datetime.date | None, frozenset[ShortLot]] = {}
+
+    def as_of(date: datetime.date | None) -> frozenset[ShortLot]:
+        if date not in memo:
+            nets: dict[ShortLot, Decimal] = {}
+            for entry in transactions:
+                if date is not None and entry.date > date:
+                    continue
+                for posting in entry.postings:
+                    label = getattr(posting.cost, "label", None)
+                    if not label or posting.units is None or posting.units.number is None:
+                        continue
+                    key = (posting.account, posting.units.currency, label, *_cost_parts(posting.cost))
+                    nets[key] = nets.get(key, Decimal(0)) + posting.units.number
+            memo[date] = frozenset(key for key, net in nets.items() if net < 0)
+        return memo[date]
+
+    return as_of
+
+
+def _covers_short(posting: Posting, label: str, held: frozenset[ShortLot]) -> bool:
+    """Whether the lot this positive posting names, as far as it states it, is one that is short."""
+    number, currency, date = _cost_parts(posting.cost)
+    units = posting.units
+    commodity = getattr(units, "currency", None)
+    return any(
+        (account, held_commodity, held_label) == (posting.account, commodity, label)
+        and number in (None, held_number)
+        and currency in (None, held_currency)
+        and date in (None, held_date)
+        for account, held_commodity, held_label, held_number, held_currency, held_date in held
+    )
 
 
 @contextmanager
@@ -272,12 +315,12 @@ def short_lot_labels(entries: Callable[[], Iterable[Any]]) -> Any:
     `entries` is called at most once, and only when a positive posting carries a
     lot label, so a write that has none never reads the ledger for this.
     """
-    memo: list[frozenset[tuple[str, str]]] = []
+    memo: list[Callable[[datetime.date | None], frozenset[ShortLot]]] = []
 
-    def labels() -> frozenset[tuple[str, str]]:
+    def labels(date: datetime.date | None) -> frozenset[ShortLot]:
         if not memo:
-            memo.append(held_short_lot_labels(entries()))
-        return memo[0]
+            memo.append(held_short_lots(entries()))
+        return memo[0](date)
 
     token = _SHORT_LOT_LABELS.set(labels)
     batch = BATCH_SHORT_LABELS.set(set())
@@ -303,7 +346,7 @@ def normalize_entry_strings(entry: Any) -> Any:
             for key, value in (meta or {}).items()
         }
 
-    def posting_strings(posting: Posting) -> Posting:
+    def posting_strings(posting: Posting, date: datetime.date | None) -> Posting:
         # A lot label sits right before `@ price`, where a bidi override would
         # reorder how the rest of the row reads; it was written raw (w5/542).
         # A reduction's label is the exception: it selects an existing lot,
@@ -331,7 +374,7 @@ def normalize_entry_strings(entry: Any) -> Any:
                 and bool(label)
                 and (
                     (posting.account, label) in (batch_short or ())
-                    or (posting.account, label) in _SHORT_LOT_LABELS.get()()
+                    or _covers_short(posting, label, _SHORT_LOT_LABELS.get()(date))
                 )
             )
         )
@@ -344,7 +387,7 @@ def normalize_entry_strings(entry: Any) -> Any:
         entry = entry._replace(
             payee=single_line(entry.payee) if entry.payee is not None else None,
             narration=single_line(entry.narration) if entry.narration is not None else None,
-            postings=[posting_strings(posting) for posting in entry.postings],
+            postings=[posting_strings(posting, entry.date) for posting in entry.postings],
         )
     elif isinstance(entry, Note):
         entry = entry._replace(comment=single_line(entry.comment))

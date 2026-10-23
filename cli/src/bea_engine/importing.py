@@ -42,7 +42,7 @@ from bea_engine.ledger.writer import (
     _SHORT_LOT_LABELS,
     BATCH_SHORT_LABELS,
     format_entry,
-    held_short_lot_labels,
+    held_short_lots,
     nfc_entry_accounts,
     normalize_entry_strings,
     with_inferred_cost_parts,
@@ -165,7 +165,7 @@ def _with_short_lots[**P, R](function: Callable[P, R]) -> Callable[P, R]:
 
     @functools.wraps(function)
     def wrapped(*args: P.args, **kwargs: P.kwargs) -> R:
-        token = _SHORT_LOT_LABELS.set(lambda: frozenset())
+        token = _SHORT_LOT_LABELS.set(lambda _date: frozenset())
         opened = OPENED_ACCOUNTS.set(frozenset())
         batch = BATCH_SHORT_LABELS.set(None)
         try:
@@ -241,8 +241,7 @@ def answer(
     existing, errors, options = managed_load.load_file(file, snapshot=snapshot)
     # A positive cover keeps the label of the short lot it covers, in the rows
     # an importer returns as well (w5/925).
-    short_labels = held_short_lot_labels(existing)
-    _SHORT_LOT_LABELS.set(lambda: short_labels)
+    _SHORT_LOT_LABELS.set(held_short_lots(existing))
     BATCH_SHORT_LABELS.set(set())
     # An account the ledger already opens stays usable by name even where its
     # root is one the main file renamed and an include kept (w5/928).
