@@ -1,8 +1,8 @@
 # w4 · m55 — Preserve exact Budget amounts and variance
 
-**Worker:** worker1 **Goal:** distinct recorded Budget targets and actuals retain their amounts and one-unit differences **Status:** in progress (all but t007 Closeout done)
+**Worker:** worker1 **Goal:** distinct recorded Budget targets and actuals retain their amounts and one-unit differences **Status:** done
 
-Minor residual of [m45](../done/m45/README.md)'s Budget precision work, separate from [978](../done/978.md)'s representable-difference tolerance. Approximately3h25m across exact data/proration, presentation/comparison and verification. See [FINDINGS](./FINDINGS.md).
+Minor residual of [m45](../m45/README.md)'s Budget precision work, separate from [978](../978.md)'s representable-difference tolerance. Approximately3h25m across exact data/proration, presentation/comparison and verification. See [FINDINGS](./FINDINGS.md).
 
 ## Tasks (in order)
 
@@ -14,16 +14,16 @@ Minor residual of [m45](../done/m45/README.md)'s Budget precision work, separate
 | [t004](./done/t004.md) | Adoption surface — **DONE** | 15m | t003 |
 | [t005](./done/t005.md) | Simplify — **DONE** | 15m | t004 |
 | [t006](./done/t006.md) | Test coverage — **DONE** | 35m | t004, t005 |
-| [t007](./t007.md) | Closeout | 10m | t006 |
+| [t007](./done/t007.md) | Closeout — **DONE** | 10m | t006 |
 
 ## Definition of done
 
-- [ ] A daily target9007199254740993USD and actual9007199254740992USD retain those exact card and Period data amounts and show Below target/−1.00USD.
-- [ ] Target9007199254740992USD and actual9007199254740993USD retain the exact actual and show Above target/+1.00USD.
-- [ ] The existing history source stays exact; the ordinary100USD/99USD control still shows Below target/−1.00USD.
-- [ ] All three valid producer-backed fixtures pass at1440×1000 and390×844, using Last year and native Period data. Numeric chart/progress geometry may remain approximate.
-- [ ] Existing dated-target precedence, cadence changes/daily-equivalent proration, current/ended-period selection, sparse amounts, income direction, ISO minor units and commodity precision remain compatible. Exact-match proration does not regain floating residue or false variance.
-- [ ] Meaningful data and rendered regressions fail on the old early-Number paths; dashboard gates pass, native evidence identifies source/client and deployment limits, and standing tasks are complete before `/pm done` moves the milestone.
+- [x] A daily target9007199254740993USD and actual9007199254740992USD retain those exact card and Period data amounts and show Below target/−1.00USD.
+- [x] Target9007199254740992USD and actual9007199254740993USD retain the exact actual and show Above target/+1.00USD.
+- [x] The existing history source stays exact; the ordinary100USD/99USD control still shows Below target/−1.00USD.
+- [x] All three valid producer-backed fixtures pass at1440×1000 and390×844, using Last year and native Period data. Numeric chart/progress geometry may remain approximate.
+- [x] Existing dated-target precedence, cadence changes/daily-equivalent proration, current/ended-period selection, sparse amounts, income direction, ISO minor units and commodity precision remain compatible. Exact-match proration does not regain floating residue or false variance.
+- [x] Meaningful data and rendered regressions fail on the old early-Number paths; dashboard gates pass, native evidence identifies source/client and deployment limits, and standing tasks are complete before `/pm done` moves the milestone.
 
 ## Source + Goal linkage
 
