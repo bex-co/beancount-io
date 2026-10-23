@@ -12,6 +12,9 @@
 
 ## Inbox
 
+- [725](./725.md) — A merchant paid by card in a foreign currency shows "€150.00" over rows in dollars (−$110.00, −$55.00)
+- [726](./726.md) — Budget reads an expense booked at cost as "Actual $0.00 · Not in total: 5 VOO" while Spending counts $2,000
+- [727](./727.md) — Spending's "See all" opens Reports 1M on the last active month while Spending says "This month $0.00" (owner call)
 - [723](./723.md) — An account opened with a future date vanishes from Accounts, and Open Account then says it is "already open"
 - [724](./724.md) — Merchant detail keeps the payee spellings it was opened with, so a recasing edit drops the entry from the detail
 - [721](./721.md) — The new AVERAGE error has no file or line when a same-day transaction shares the sale's narration (w21/708 gap)
