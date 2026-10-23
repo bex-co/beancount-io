@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1013 — Keep written transactions after native currency grouping](./1013.md) — major CLI source/order regression; a header-only copy hides the real mixed-currency row and an unchanged import writes another 10 USD and 20 EUR despite duplicate skip, reproduced twice 2026-10-23.
+
 - [1012 — Compare declared tags and links for calculated copies](./1012.md) — minor CLI provenance/filter gap; on-disk tag/link filters return annotations absent from the source file, reproduced twice 2026-10-23.
 
 - [1011 — Compare stated posting facts for calculated copies](./1011.md) — minor CLI provenance gap; on-disk listing retains changed labels, dates, costs, prices and posting flags despite unchanged source, reproduced twice 2026-10-23.
