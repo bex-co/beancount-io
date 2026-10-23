@@ -631,6 +631,61 @@ async function verifyDocumentSourcePaths(): Promise<void> {
   }
 }
 
+/**
+ * w21/738: `option "documents"` discovery never ran, so a statement in the
+ * documents folder never reached the account's journal. The repository's tree
+ * lists the file; only the ledger is read.
+ */
+async function verifyDocumentDiscovery(): Promise<void> {
+  const source = [
+    'option "documents" "documents"',
+    'plugin "fava.plugins.tag_discovered_documents"',
+    "2024-01-01 open Assets:Bank:Checking",
+    '2024-02-01 document Assets:Bank:Checking "receipt.pdf"',
+    "",
+  ].join("\n");
+  const statement = "documents/Assets/Bank/Checking/2024-02-01.statement.pdf";
+  const factory = singleFileRepoFactory(source);
+  const repo = factory.getPublicApiClient;
+  factory.getPublicApiClient = async () => {
+    const client = await repo();
+    client.repos.getTree = async () => ({
+      data: {
+        tree: [
+          { path: "main.bean", type: "blob" },
+          { path: "receipt.pdf", type: "blob" },
+          { path: statement, type: "blob" },
+        ],
+        truncated: false,
+      },
+    });
+    return client;
+  };
+  const journal = new LedgerJournalService(factory as never, {} as never);
+  for (const round of ["parsed", "cached"]) {
+    const { items } = (await journal.getAccountJournal({
+      ledgerId: "synthetic/documents",
+      userId: undefined,
+      query: { account: "Assets:Bank:Checking" },
+    })) as unknown as { items: { entry: Record<string, unknown> }[] };
+    const documents = items
+      .filter((item) => item.entry.directive_type === "Document")
+      .map((item) => [item.entry.filename, item.entry.tags]);
+    // fava's tag_discovered_documents marks only the one found in the folder.
+    deepStrictEqual(
+      documents.sort(),
+      [
+        [statement, ["discovered"]],
+        ["receipt.pdf", []],
+      ].sort(),
+      `the account journal lists the discovered statement beside the written document (${round})`,
+    );
+  }
+  console.log(
+    "✓ option documents discovery reaches the account journal (parsed, cached)",
+  );
+}
+
 async function verifyMultilineSources(): Promise<void> {
   const notes = [
     'qa "quoted" C:\\qa\\receipts\nsecond line\nthird line',
@@ -1975,6 +2030,7 @@ async function main(): Promise<void> {
 
   await verifyMultilineSources();
   await verifyDocumentSourcePaths();
+  await verifyDocumentDiscovery();
 
   // w23/011: an undecodable source the entry point does not reach changes
   // nothing; one it includes is reported by path, and the rest still parses.

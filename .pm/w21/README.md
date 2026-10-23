@@ -21,7 +21,6 @@
 - [742](./742.md) — Account detail's "1 not in total" can't be opened, so the excluded amount appears nowhere on that screen
 - [743](./743.md) — A Persian or Arabic account path shows its segments child-before-parent on Accounts and in the detail header
 - [744](./744.md) — A balance assertion with an explicit `~` tolerance hides the tolerance in account detail
-- [738](./738.md) — `option "documents"` discovery never runs, so statements never appear in account detail
 - [739](./739.md) — `nounused` / `check_commodity` errors are hidden as warnings, and `pedantic` skips `nounused`
 - [740](./740.md) — Errors from built-in plugins carry no file or line, so their Notifications rows can't be tapped
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window

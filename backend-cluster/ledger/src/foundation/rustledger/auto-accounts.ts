@@ -8,13 +8,17 @@ const UNOPENED = [
   /^Invalid reference to unknown account '(.+)'$/u,
 ];
 
-/** The accounts a directive names, as Beancount's `get_entry_accounts`. */
-function accountsOf(directive: DirectiveJson): string[] {
+/**
+ * The accounts a directive names, as Beancount's `get_entry_accounts` (a
+ * custom directive's account values are not among them).
+ */
+export function directiveAccounts(directive: DirectiveJson): string[] {
   switch (directive.type) {
     case "transaction":
       return directive.postings.map((posting) => posting.account);
     case "pad":
       return [directive.account, directive.source_account];
+    case "open":
     case "balance":
     case "note":
     case "document":
@@ -66,7 +70,7 @@ export function openAutoAccounts(
   const added = new Set<string>();
   const withOpens: DirectiveJson[] = [];
   for (const directive of directives) {
-    for (const account of accountsOf(directive)) {
+    for (const account of directiveAccounts(directive)) {
       if (!missing.has(account) || added.has(account)) continue;
       added.add(account);
       withOpens.push({

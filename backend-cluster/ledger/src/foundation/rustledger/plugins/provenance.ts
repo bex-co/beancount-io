@@ -19,7 +19,9 @@ const sourceLocations = new WeakMap<DirectiveJson, DirectiveSourceLocation>();
  * Directives a plugin or the pad pass made from another one: a copy shares its
  * source's identity (so a click on it reaches the source's text), which is why
  * a client has to be told it is a copy before offering to edit or delete it.
- * A directive a plugin only rewrites in place (links, tags) is not one.
+ * A directive a plugin only rewrites in place (links, tags) is not one. A
+ * document found in an `option "documents"` folder has no source text at all,
+ * and is marked too (w21/738).
  */
 const generatedDirectives = new WeakSet<DirectiveJson>();
 
@@ -128,4 +130,3 @@ export function restoreDirectiveSourceLocations(
       sourceLocations.set(directive, location);
   });
 }
-

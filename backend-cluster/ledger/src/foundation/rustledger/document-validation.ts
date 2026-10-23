@@ -29,7 +29,7 @@ import { getDirectiveSourceLocation } from "./plugins/provenance";
  *   - `E7006` (`option "documents"` root): when the engine still emits it
  *     (wasm <0.24), kept only when the configured root directory genuinely has
  *     no files under it in the repo. (The *auto-discovery* of files under that
- *     root is still a no-op — the engine has no filesystem to enumerate — but a
+ *     root is done from the same inventory, in `document-discovery.ts`; a
  *     mistyped/nonexistent root was a real config error.) wasm ≥0.24 does not
  *     emit this check, so there is nothing to reconcile for the option root.
  *

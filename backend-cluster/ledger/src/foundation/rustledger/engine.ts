@@ -40,6 +40,10 @@ import {
 import { reconcileDocumentErrors } from "./document-validation";
 import { averageBookingErrors } from "./average-booking";
 import { openAutoAccounts } from "./auto-accounts";
+import {
+  discoverDocuments,
+  mergeDiscoveredDocuments,
+} from "./document-discovery";
 import { inactiveAfterGeneratedCloses } from "./generated-closes";
 import { reconcileOneCommodityErrors } from "./one-commodity";
 import { reconcileUniquePriceErrors } from "./unique-prices";
@@ -637,6 +641,14 @@ async function parseLedgerFilesUncached(
   );
   let errors = located;
   let paddingTransactions = raw.paddingTransactions;
+  // Beancount finds `option "documents"` files before any plugin (w21/738).
+  const discovered = discoverDocuments(
+    directives,
+    files[entryPoint],
+    entryPoint,
+    options.repoPaths,
+  );
+  errors = [...errors, ...discovered.errors];
 
   // rustledger 0.21's Document JSON omits inline tags/links. Recover them from
   // raw source, while also building the file/line sidecar needed by
@@ -646,6 +658,7 @@ async function parseLedgerFilesUncached(
     options.includeSourceDetails === true ||
     hasHandledPlugin ||
     directives.some((directive) => directive.type === "document") ||
+    discovered.documents.length > 0 ||
     sourceHasNoteSyntax(files)
   ) {
     const needsCompleteSourceIndex =
@@ -669,6 +682,9 @@ async function parseLedgerFilesUncached(
   if (sourceDetails !== undefined) {
     directives = mergeSourceSyntax(directives, sourceDetails);
   }
+  // After the source is indexed: a discovered document has no source of its
+  // own, and an identical written one must keep its identity.
+  directives = mergeDiscoveredDocuments(directives, discovered.documents);
 
   // Whether the balances were checked on the plugins' transformed stream.
   let validatedTransformed = false;
