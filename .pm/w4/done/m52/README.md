@@ -20,7 +20,7 @@
 - [x] Source balances9007199254740992→9007199254740993 USD render the exact latter headline and both distinct monthly table values, with **+1.00 USD** change. The reverse reads **−1.00 USD**; the nearby990→991 control remains correct.
 - [x] Text formatting and subtraction retain exact source decimals until their deliberate currency/display rounding. ECharts may still use approximate numeric coordinates. Existing grouping, locale, ISO minor units, zero/negative display and source-driven commodity behavior remain compatible.
 - [x] Existing first-period/missing values, selection, named/focusable table, view URL, responsive controls and valuation details remain usable. Preserve the separate currency-matching repair [993](../993.md); this milestone does not reopen it.
-- [x] Shared-helper consumers are audited, with owning regressions for changed behavior rather than an unrelated Overview rewrite. Coordinate common formatting work with [1001](../../1001.md).
+- [x] Shared-helper consumers are audited, with owning regressions for changed behavior rather than an unrelated Overview rewrite. Coordinate common formatting work with [1001](../1001.md).
 - [x] Meaningful tests and native1440/390 controls on the built change reproduce the exact producer-backed inputs, with honest model/deployment labeling. Dashboard gates pass, evidence and any deployment limit are recorded, and all closing tasks are complete.
 
 ## Source + Goal linkage
