@@ -19,7 +19,7 @@ import runpy
 import shlex
 import sys
 import unicodedata
-from collections.abc import Callable, Iterable, Iterator, Sequence
+from collections.abc import Callable, Collection, Iterable, Iterator, Sequence
 from contextvars import ContextVar
 from dataclasses import dataclass, replace
 from decimal import Context, Decimal
@@ -481,7 +481,7 @@ def answer(
     opening_balances = _opening_balances(written, account, roots[2])
     # Bank ids another account issued, reached here only through a transfer's
     # counter leg: never an exact match for this account's rows (w5/598).
-    transfer_ids: dict[tuple[str, str, str], Any] = {}
+    transfer_ids: dict[tuple[str, str, str], list[Any]] = {}
     # Every entry under one bank id, not only the last: a reused reference
     # (w5/599) names several, and a row is the one nearest its date.
     dated: dict[tuple[str, str, str], list[Any]] = {}
@@ -501,7 +501,7 @@ def answer(
             second = (entry.meta or {}).get("import-id-2") if elsewhere else None
             for identity in _identities(entry, account, keys):
                 if elsewhere and _is_native_identity(identity) and identity != (account, "import-id", str(second)):
-                    transfer_ids[identity] = entry
+                    transfer_ids.setdefault(identity, []).append(entry)
                 else:
                     identities[identity] = entry
                     dated.setdefault(identity, []).append(entry)
@@ -1898,25 +1898,31 @@ def _issued_elsewhere(entry: Any, account: str, balance_roots: tuple[str, ...]) 
 
 def _transfer_side(
     ids: list[tuple[str, str, str]],
-    transfer_ids: dict[tuple[str, str, str], Any],
+    transfer_ids: dict[tuple[str, str, str], list[Any]],
     entry: Any,
     account: str,
     fingerprint: tuple[Any, ...],
+    taken: Collection[int] = (),
 ) -> tuple[tuple[str, str, str], Any] | None:
     """A transfer whose other side may be this row: its issuer's id, the same amount here, days apart at most.
 
     Some banks give both legs of a transfer one reference, so the id is kept
     as evidence, but only for review: the same id on another date or amount
     is another transaction.
+
+    Every transfer under an id is kept, nearest first: a reference reused by
+    one issuer, or two issuers' transfers, used to leave only the last one
+    written, and a receiving row dated near an earlier transfer found nothing
+    (w5/975). `taken` names transfers (by `id()`) another row already pairs with.
     """
     for key in ids:
-        found = transfer_ids.get(key)
-        if (
-            found is not None
-            and abs((found.date - entry.date).days) <= _TRANSFER_DAYS
-            and _transfer_legs_agree(fingerprint[3], _fingerprint(found, account)[3])
-        ):
-            return key, found
+        for found in sorted(transfer_ids.get(key, []), key=lambda other: abs((other.date - entry.date).days)):
+            if (
+                id(found) not in taken
+                and abs((found.date - entry.date).days) <= _TRANSFER_DAYS
+                and _transfer_legs_agree(fingerprint[3], _fingerprint(found, account)[3])
+            ):
+                return key, found
     return None
 
 
@@ -1994,7 +2000,7 @@ def _transfer_counterpart(
 
 def _assign_counterparts(
     counterparts: dict[tuple[str, ...], list[Any]],
-    transfer_ids: dict[tuple[str, str, str], Any],
+    transfer_ids: dict[tuple[str, str, str], list[Any]],
     rows: Sequence[Any],
     account: str,
     keys: list[str],
@@ -2021,8 +2027,10 @@ def _assign_counterparts(
     assigned: dict[int, int] = {}
     taken: set[int] = set()
     for index, printed in prints.items():
-        side = _transfer_side(_identities(rows[index], account, keys), transfer_ids, rows[index], account, printed)
-        if side is not None and id(side[1]) not in assigned:
+        side = _transfer_side(
+            _identities(rows[index], account, keys), transfer_ids, rows[index], account, printed, assigned.keys()
+        )
+        if side is not None:
             assigned[id(side[1])] = index
             taken.add(index)
     candidates: list[tuple[int, int, int, Any]] = []
