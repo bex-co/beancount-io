@@ -56,7 +56,6 @@
 
 - [983 — Offer Try Again on the remaining QueryView read failures](./983.md) — minor; w4/m50 simplify reviews plus live QA,2026-10-22; Accounts, Documents, Events and Errors lack retry at both widths, with real reload controls; Settings and older retry migrations remain source-derived.
 
-- [982 — Let Receipt Record accept exact decimals](./982.md) — minor residual of W1/028; both-width native12.345KWD corrections are blocked by fixed-cent step before transport; exact12.34 controls pass, no hosted writes.
 
 
 
