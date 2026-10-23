@@ -1,6 +1,6 @@
 # w4 · m55 — Preserve exact Budget amounts and variance
 
-**Worker:** worker1 **Goal:** distinct recorded Budget targets and actuals retain their amounts and one-unit differences **Status:** todo
+**Worker:** worker1 **Goal:** distinct recorded Budget targets and actuals retain their amounts and one-unit differences **Status:** in progress (all but t007 Closeout done)
 
 Minor residual of [m45](../done/m45/README.md)'s Budget precision work, separate from [978](../done/978.md)'s representable-difference tolerance. Approximately3h25m across exact data/proration, presentation/comparison and verification. See [FINDINGS](./FINDINGS.md).
 
@@ -8,12 +8,12 @@ Minor residual of [m45](../done/m45/README.md)'s Budget precision work, separate
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| [t001](./t001.md) | Carry exact targets and actuals through Budget calculations | 60m | — |
-| [t002](./t002.md) | Render exact amounts and derive truthful variance status | 50m | t001 |
-| [t003](./t003.md) | Repeat the producer-backed native Budget controls | 20m | t002 |
-| [t004](./t004.md) | Adoption surface | 15m | t003 |
-| [t005](./t005.md) | Simplify | 15m | t004 |
-| [t006](./t006.md) | Test coverage | 35m | t004, t005 |
+| [t001](./done/t001.md) | Carry exact targets and actuals through Budget calculations — **DONE** | 60m | — |
+| [t002](./done/t002.md) | Render exact amounts and derive truthful variance status — **DONE** | 50m | t001 |
+| [t003](./done/t003.md) | Repeat the producer-backed native Budget controls — **DONE** | 20m | t002 |
+| [t004](./done/t004.md) | Adoption surface — **DONE** | 15m | t003 |
+| [t005](./done/t005.md) | Simplify — **DONE** | 15m | t004 |
+| [t006](./done/t006.md) | Test coverage — **DONE** | 35m | t004, t005 |
 | [t007](./t007.md) | Closeout | 10m | t006 |
 
 ## Definition of done

@@ -29,6 +29,17 @@ Account and budget sub-domains use dialog components for mutations (open/close/d
 - **`holdings-statement.ts`** — Computes portfolio value from raw holding data
 - **`utils.ts`** — Helper functions for currency formatting and grouping
 
+## Budget Amounts
+
+Budget targets, actuals and variance are the ledger's decimal strings
+(`budget/budget-utils.ts`). `calculateBudgetForInterval` sums the
+daily-equivalent shares exactly with `sumDecimalFractions` and rounds once to
+the card's precision: the currency's minor units or the commodity's digits, or
+the recorded digits when those are finer. An exactly met target therefore
+compares as met with no tolerance, and a one-unit difference at 2^53 is not
+lost. The variance subtracts the decimals exactly. Only chart and progress
+geometry use `Number()` (w4/m55).
+
 ## Table Names
 
 Every `<table>` here needs an accessible name, because these pages stack

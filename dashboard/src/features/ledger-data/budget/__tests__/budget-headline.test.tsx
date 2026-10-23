@@ -203,14 +203,15 @@ describe("Budget card with two targets on the same date", () => {
         onDelete={vi.fn()}
       />,
     );
-    // 234.56 × 12 / 31, not the older 123.45 × 12 / 31 = 47.787.
-    expect(valueAfter("Current budget")).toBe("90.797 USD");
+    // 234.56 × 12 / 31 = 90.797…, prorated exactly and rounded to USD cents
+    // (w4/m55); not the older 123.45 × 12 / 31 = 47.79.
+    expect(valueAfter("Current budget")).toBe("90.8 USD");
   });
 });
 
 /**
- * At a 31 × 2^40 USD target the round-off allowance reaches whole dollars;
- * the card still shows a visible ±1 USD difference (w4/978).
+ * A 31 × 2^40 USD target keeps a visible ±1 USD difference (w4/978); exact
+ * proration needs no round-off allowance at that scale (w4/m55).
  */
 describe("Budget card variance at large amounts", () => {
   const LARGE: BudgetEntry[] = [

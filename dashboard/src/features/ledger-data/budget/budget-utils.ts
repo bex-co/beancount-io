@@ -13,6 +13,14 @@ import {
   startOfWeek,
   startOfYear,
 } from "date-fns";
+import {
+  type DecimalFraction,
+  isPositiveDecimalNumber,
+  negateDecimalNumber,
+  parseDecimalNumber,
+  sumDecimalFractions,
+  sumDecimalNumbers,
+} from "@/common/lib/beancount/decimal-number";
 import type {
   BudgetEntry,
   BudgetGroup,
@@ -21,20 +29,25 @@ import type {
 } from "./types";
 
 interface ParsedBudgetAmount {
-  value: number;
+  /**
+   * The ledger's decimal. Budget text and arithmetic use it: a double reads
+   * 9007199254740993 as …992 and loses the one-unit variance (w4/m55).
+   */
+  exact: string;
   currency: string;
 }
 
-interface BudgetFields extends ParsedBudgetAmount {
+interface BudgetFields {
   account: string;
   interval: string;
+  currency: string;
   amount: string;
 }
 
 export function parseBudgetAmount(amount: string): ParsedBudgetAmount {
   const [number = "0", currency = ""] = amount.trim().split(/\s+/);
-  const value = Number.parseFloat(number);
-  return { value: Number.isNaN(value) ? 0 : value, currency };
+  const exact = parseDecimalNumber(number) ?? "0";
+  return { exact, currency };
 }
 
 /**
@@ -51,10 +64,11 @@ export function budgetGroupDirection(
   group: Pick<BudgetGroup, "amount" | "budgetHistory">,
 ): 1 | -1 {
   for (let i = group.budgetHistory.length - 1; i >= 0; i -= 1) {
-    const { value } = parseBudgetAmount(group.budgetHistory[i]!.amount);
-    if (value !== 0) return value < 0 ? -1 : 1;
+    const { exact } = parseBudgetAmount(group.budgetHistory[i]!.amount);
+    if (exact.startsWith("-")) return -1;
+    if (isPositiveDecimalNumber(exact)) return 1;
   }
-  return parseBudgetAmount(group.amount).value < 0 ? -1 : 1;
+  return parseBudgetAmount(group.amount).exact.startsWith("-") ? -1 : 1;
 }
 
 function getBudgetFields(entry: BudgetEntry): BudgetFields | null {
@@ -72,14 +86,13 @@ function getBudgetFields(entry: BudgetEntry): BudgetFields | null {
     return null;
   }
 
-  const value = Number.parseFloat(String((amountRaw as BudgetValue).number));
+  const number = parseDecimalNumber(String((amountRaw as BudgetValue).number));
   const currency = String((amountRaw as BudgetValue).currency ?? "");
-  if (Number.isNaN(value) || !currency) return null;
+  if (number === null || !currency) return null;
 
   return {
     account,
     interval,
-    value,
     currency,
     amount: `${(amountRaw as BudgetValue).number} ${currency}`,
   };
@@ -186,21 +199,28 @@ function getDaysInBudgetPeriod(date: Date, interval: string): number {
 /**
  * Convert the active directives to the chart's interval. This mirrors Fava's
  * daily-equivalent calculation and correctly handles changes mid-period.
+ *
+ * Each day adds its directive's amount over the days in that directive's
+ * period. The sum is taken exactly and rounded once to `digits` — the
+ * budget's display precision — so an exactly met target compares as met and
+ * a share that does not terminate (100 a month over a 7-day week) is rounded
+ * the way the card writes it (w4/m55).
  */
 export function calculateBudgetForInterval(
   intervalEnd: string,
   chartInterval: string,
   history: BudgetHistoryEntry[],
-): number {
+  digits: number,
+): string {
   const end = parseISO(intervalEnd);
   const start = getIntervalStart(end, chartInterval);
   const ordered = [...history]
     .sort((a, b) => a.date.localeCompare(b.date))
     .map((entry) => ({ ...entry, ...parseBudgetAmount(entry.amount) }));
 
+  // Consecutive days under one directive and period length are one term.
+  const terms: DecimalFraction[] = [];
   let activeIndex = -1;
-  let total = 0;
-
   for (let day = start; day <= end; day = addDays(day, 1)) {
     const date = format(day, "yyyy-MM-dd");
     while (
@@ -212,10 +232,20 @@ export function calculateBudgetForInterval(
 
     const active = ordered[activeIndex];
     if (!active) continue;
-    total += active.value / getDaysInBudgetPeriod(day, active.interval);
+    const periodDays = getDaysInBudgetPeriod(day, active.interval);
+    const last = terms.at(-1);
+    if (last?.value === active.exact && last.denominator === periodDays) {
+      last.numerator += 1;
+    } else {
+      terms.push({
+        value: active.exact,
+        numerator: 1,
+        denominator: periodDays,
+      });
+    }
   }
 
-  return total;
+  return sumDecimalFractions(terms, digits);
 }
 
 /**
@@ -255,43 +285,9 @@ export function budgetHeadlinePeriod(
   return { end, bucket: bucket === -1 ? null : bucket };
 }
 
-/**
- * The longest period the chart prorates over, in days. One leap year plus
- * slack — the tolerance below allows one unit in the last place per day
- * summed, and this bounds that day count.
- */
-const MAX_PRORATION_DAYS = 512;
-
-/**
- * Actual minus target, with the proration's own round-off treated as zero.
- *
- * `calculateBudgetForInterval` adds one floating-point daily fraction per day,
- * so an exactly met budget lands a few units in the last place away from the
- * actual: 1650/28 summed over February is 1649.999999999999, and 1650/31
- * summed over January is 1650.0000000000005. Comparing those strictly made the
- * same exactly met 1650 USD target read "Above target +0" in one month and
- * "Below target -0" in the next.
- *
- * The tolerance scales with the numbers being compared and allows one ulp for
- * each day summed, so it absorbs that accumulation. At large amounts that
- * scale reaches whole units — 3.875 at a 3.4e13 USD target — so with the
- * card's `displayDigits` a difference that shows as nonzero at that precision
- * (half a unit or more) is never flattened to "On target" (w4/978).
- */
-export function budgetVariance(
-  actual: number,
-  budget: number,
-  displayDigits?: number,
-): number {
-  const difference = actual - budget;
-  const roundOff =
-    Math.max(Math.abs(actual), Math.abs(budget), 1) *
-    Number.EPSILON *
-    MAX_PRORATION_DAYS;
-  const visible =
-    displayDigits !== undefined &&
-    Math.abs(difference) >= 0.5 * 10 ** -displayDigits;
-  return !visible && Math.abs(difference) <= roundOff ? 0 : difference;
+/** Actual minus target, exactly. */
+export function budgetVariance(actual: string, budget: string): string {
+  return sumDecimalNumbers([actual, negateDecimalNumber(budget)]);
 }
 
 /**
@@ -304,9 +300,10 @@ export function readSparseBalanceAmount(
   balance: Record<string, unknown>,
   currency: string,
   direction = 1,
-): number | null {
+): string | null {
   const value = balance[currency];
-  if (value === null || value === undefined) return 0;
-  const number = typeof value === "string" ? parseFloat(value) : Number(value);
-  return Number.isNaN(number) ? null : number * direction;
+  if (value === null || value === undefined) return "0";
+  const exact = parseDecimalNumber(String(value));
+  if (exact === null) return null;
+  return direction < 0 ? negateDecimalNumber(exact) : exact;
 }

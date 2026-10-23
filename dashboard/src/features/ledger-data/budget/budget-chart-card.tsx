@@ -49,6 +49,11 @@ import {
 import { AddBudgetDialog } from "./add-budget-dialog";
 import { BudgetHistoryTable } from "./budget-history-table";
 import {
+  absDecimalNumber,
+  isPositiveDecimalNumber,
+  negateDecimalNumber,
+} from "@/common/lib/beancount/decimal-number";
+import {
   budgetGroupDirection,
   budgetHeadlinePeriod,
   calculateBudgetForInterval,
@@ -104,13 +109,13 @@ export function BudgetChartCard({
     ? intervalLabels[currentInterval]
     : group.interval;
 
-  const { value: currentBudgetValue, currency: budgetCurrency } = useMemo(
+  const { exact: currentBudgetValue, currency: budgetCurrency } = useMemo(
     () => parseBudgetAmount(group.amount),
     [group.amount],
   );
   const displayCurrency = budgetCurrency || group.currency || primaryCurrency;
   const displayDirection = budgetGroupDirection(group);
-  const displayBudgetValue = Math.abs(currentBudgetValue);
+  const displayBudgetValue = absDecimalNumber(currentBudgetValue);
 
   const { data, loading, error } = useQuery(GetLedgerIntervalTotalsDocument, {
     variables: {
@@ -124,47 +129,19 @@ export function BudgetChartCard({
     fetchPolicy: "cache-first",
   });
 
-  const chartData = (data?.getLedgerIntervalTotals ?? []).map((item) => ({
-    date: item.date,
-    balance: item.balance as Record<string, unknown>,
-    accountBalances: item.accountBalances as Record<string, unknown>,
-  }));
-
-  /**
-   * Every plotted period with its effective target and actual. The chart draws
-   * from this and so does the table below it, so the readable values are the
-   * ones on the canvas rather than a second calculation.
-   */
-  const periodRows = useMemo(
+  const chartData = useMemo(
     () =>
-      chartData.map((item) => ({
+      (data?.getLedgerIntervalTotals ?? []).map((item) => ({
         date: item.date,
-        budget:
-          calculateBudgetForInterval(
-            item.date,
-            group.interval,
-            group.budgetHistory,
-          ) * displayDirection,
-        actual:
-          readSparseBalanceAmount(
-            item.balance,
-            displayCurrency,
-            displayDirection,
-          ) ?? 0,
+        balance: item.balance as Record<string, unknown>,
+        accountBalances: item.accountBalances as Record<string, unknown>,
       })),
-    [
-      chartData,
-      displayCurrency,
-      displayDirection,
-      group.budgetHistory,
-      group.interval,
-    ],
+    [data],
   );
 
   // A commodity is shown at the finest precision the ledger recorded for this
-  // budget's targets and actuals, so 0.0004 BTC is not read as 0 BTC; prorated
-  // targets and the variance round to it (w4/m45). ISO currencies keep their
-  // minor units.
+  // budget's targets and actuals, so 0.0004 BTC is not read as 0 BTC (w4/m45).
+  // ISO currencies keep their minor units.
   const quantityDigits = Math.max(
     ...group.budgetHistory.map((entry) =>
       fractionDigitsOf(entry.amount.trim().split(/\s+/)[0]),
@@ -173,8 +150,51 @@ export function BudgetChartCard({
       fractionDigitsOf(String(item.balance[displayCurrency])),
     ),
   );
+  // Prorated targets round once to the precision amounts are written at —
+  // an ISO currency's minor units, else at least the formatter's three
+  // commodity digits — or the recorded digits when those are finer (w4/m55).
+  const amountDigits = Math.max(
+    quantityDigits,
+    currencyMinorDigits(displayCurrency) ?? 3,
+  );
+
+  /**
+   * Every plotted period with its effective target and actual. The chart draws
+   * from this and so does the table below it, so the readable values are the
+   * ones on the canvas rather than a second calculation.
+   */
+  const periodRows = useMemo(
+    () =>
+      chartData.map((item) => {
+        const budget = calculateBudgetForInterval(
+          item.date,
+          group.interval,
+          group.budgetHistory,
+          amountDigits,
+        );
+        return {
+          date: item.date,
+          budget: displayDirection < 0 ? negateDecimalNumber(budget) : budget,
+          actual:
+            readSparseBalanceAmount(
+              item.balance,
+              displayCurrency,
+              displayDirection,
+            ) ?? "0",
+        };
+      }),
+    [
+      chartData,
+      displayCurrency,
+      displayDirection,
+      group.budgetHistory,
+      group.interval,
+      amountDigits,
+    ],
+  );
+
   const showAmount = useCallback(
-    (value: number) =>
+    (value: string) =>
       `${formatNum(value, displayCurrency, quantityDigits)} ${displayCurrency}`,
     [formatNum, displayCurrency, quantityDigits],
   );
@@ -198,7 +218,7 @@ export function BudgetChartCard({
   const latestActual = useMemo(() => {
     if (chartData.length === 0 || headline === null) return null;
     // A bucket missing for the current period means nothing was posted yet.
-    if (headline.bucket === null) return 0;
+    if (headline.bucket === null) return "0";
     return readSparseBalanceAmount(
       chartData[headline.bucket].balance,
       displayCurrency,
@@ -210,14 +230,15 @@ export function BudgetChartCard({
   // period's own read can supply. While that read is pending or has failed,
   // the latest configured budget is not an answer — it showed 200 USD for a
   // year whose target was 0 — so the value stays unknown instead.
-  const comparisonBudgetValue = useMemo((): number | null => {
+  const comparisonBudgetValue = useMemo((): string | null => {
     if (spanEnded && (loading || error)) return null;
     if (headline === null) return spanEnded ? null : displayBudgetValue;
-    return Math.abs(
+    return absDecimalNumber(
       calculateBudgetForInterval(
         headline.end,
         group.interval,
         group.budgetHistory,
+        amountDigits,
       ),
     );
   }, [
@@ -225,24 +246,21 @@ export function BudgetChartCard({
     displayBudgetValue,
     group.interval,
     group.budgetHistory,
+    amountDigits,
     spanEnded,
     loading,
     error,
   ]);
 
-  // The precision the variance is shown at: an ISO currency's minor units,
-  // else the finest digits the formatter writes for this commodity.
-  const varianceDigits =
-    currencyMinorDigits(displayCurrency) ?? Math.max(quantityDigits, 3);
   const variance = useMemo(() => {
     if (latestActual === null || comparisonBudgetValue === null) return null;
-    return budgetVariance(latestActual, comparisonBudgetValue, varianceDigits);
-  }, [latestActual, comparisonBudgetValue, varianceDigits]);
+    return budgetVariance(latestActual, comparisonBudgetValue);
+  }, [latestActual, comparisonBudgetValue]);
 
   const varianceStatus = useMemo(() => {
     if (variance === null) return null;
-    if (variance > 0) return "above";
-    if (variance < 0) return "below";
+    if (isPositiveDecimalNumber(variance)) return "above";
+    if (variance.startsWith("-")) return "below";
     return "on";
   }, [variance]);
 
@@ -255,8 +273,11 @@ export function BudgetChartCard({
   const progressPercent =
     latestActual !== null &&
     comparisonBudgetValue !== null &&
-    comparisonBudgetValue > 0
-      ? Math.max(0, (latestActual / comparisonBudgetValue) * 100)
+    isPositiveDecimalNumber(comparisonBudgetValue)
+      ? Math.max(
+          0,
+          (Number(latestActual) / Number(comparisonBudgetValue)) * 100,
+        )
       : null;
 
   const chartOption = useMemo((): EChartsOption => {
@@ -273,8 +294,8 @@ export function BudgetChartCard({
 
     const dates = periodRows.map((row) => row.date);
     const colors = getChartColors();
-    const actualValues = periodRows.map((row) => row.actual);
-    const budgetValues = periodRows.map((row) => row.budget);
+    const actualValues = periodRows.map((row) => Number(row.actual));
+    const budgetValues = periodRows.map((row) => Number(row.budget));
 
     const tooltip: TooltipComponentOption = {
       trigger: "axis",
@@ -283,8 +304,11 @@ export function BudgetChartCard({
         if (!Array.isArray(params)) return "";
         let result = `<div><strong>${params[0].name}</strong></div>`;
         params.forEach((param) => {
-          const value = param.value as number;
-          const formatted = typeof value === "number" ? showAmount(value) : "0";
+          // The period's own decimal, not the plotted double (w4/m55).
+          const row = periodRows[param.dataIndex];
+          const formatted = showAmount(
+            param.seriesIndex === 0 ? row.budget : row.actual,
+          );
           result += `<div style="color:${param.color}">
             <span style="display:inline-block;margin-right:4px;border-radius:10px;width:10px;height:10px;background-color:${param.color};"></span>
             ${param.seriesName}: <strong>${formatted}</strong>
@@ -460,7 +484,7 @@ export function BudgetChartCard({
                       "text-destructive",
                   )}
                 >
-                  {variance > 0 ? "+" : ""}
+                  {isPositiveDecimalNumber(variance) ? "+" : ""}
                   {showAmount(variance)}
                 </p>
               </div>

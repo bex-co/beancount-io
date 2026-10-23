@@ -77,9 +77,15 @@ describe("groupBudgetEntries", () => {
       "newer",
     ]);
     // From 2026-10-20 on, the weekly 50 applies, never the older monthly target.
+    // 50 / 7 = 7.142857…, rounded once to the two places asked for.
     expect(
-      calculateBudgetForInterval("2026-10-25", "day", groups[0].budgetHistory),
-    ).toBeCloseTo(50 / 7);
+      calculateBudgetForInterval(
+        "2026-10-25",
+        "day",
+        groups[0].budgetHistory,
+        2,
+      ),
+    ).toBe("7.14");
   });
 
   it("keeps one history per account and currency when cadence changes", () => {
@@ -171,20 +177,20 @@ describe("calculateBudgetForInterval", () => {
   it("converts a monthly target to its daily equivalent", () => {
     const history = [historyEntry("2025-01-01", "monthly", "310 USD")];
 
-    expect(calculateBudgetForInterval("2025-01-31", "monthly", history)).toBe(
-      310,
-    );
-    expect(calculateBudgetForInterval("2025-01-12", "weekly", history)).toBe(
-      70,
+    expect(
+      calculateBudgetForInterval("2025-01-31", "monthly", history, 2),
+    ).toBe("310.00");
+    expect(calculateBudgetForInterval("2025-01-12", "weekly", history, 2)).toBe(
+      "70.00",
     );
   });
 
   it("does not apply a directive before its effective date", () => {
     const history = [historyEntry("2025-01-16", "monthly", "310 USD")];
 
-    expect(calculateBudgetForInterval("2025-01-31", "monthly", history)).toBe(
-      160,
-    );
+    expect(
+      calculateBudgetForInterval("2025-01-31", "monthly", history, 2),
+    ).toBe("160.00");
   });
 
   it("prorates a cadence change in the middle of a chart period", () => {
@@ -193,29 +199,33 @@ describe("calculateBudgetForInterval", () => {
       historyEntry("2025-01-16", "daily", "20 USD"),
     ];
 
-    expect(calculateBudgetForInterval("2025-01-31", "monthly", history)).toBe(
-      470,
-    );
+    expect(
+      calculateBudgetForInterval("2025-01-31", "monthly", history, 2),
+    ).toBe("470.00");
   });
 
   it("preserves negative income targets", () => {
     const history = [historyEntry("2025-01-01", "monthly", "-310 USD")];
 
-    expect(calculateBudgetForInterval("2025-01-31", "monthly", history)).toBe(
-      -310,
-    );
+    expect(
+      calculateBudgetForInterval("2025-01-31", "monthly", history, 2),
+    ).toBe("-310.00");
   });
 });
 
 describe("readSparseBalanceAmount", () => {
   it("treats a missing currency on a returned interval as zero", () => {
-    expect(readSparseBalanceAmount({}, "USD")).toBe(0);
-    expect(readSparseBalanceAmount({ EUR: "10" }, "USD", 1)).toBe(0);
+    expect(readSparseBalanceAmount({}, "USD")).toBe("0");
+    expect(readSparseBalanceAmount({ EUR: "10" }, "USD", 1)).toBe("0");
   });
 
   it("parses present amounts and applies display direction", () => {
-    expect(readSparseBalanceAmount({ USD: "600" }, "USD")).toBe(600);
-    expect(readSparseBalanceAmount({ USD: "1650" }, "USD", -1)).toBe(-1650);
+    expect(readSparseBalanceAmount({ USD: "600" }, "USD")).toBe("600");
+    expect(readSparseBalanceAmount({ USD: "1650" }, "USD", -1)).toBe("-1650");
+    // The ledger's decimal, not a double (w4/m55).
+    expect(readSparseBalanceAmount({ USD: "9007199254740993" }, "USD")).toBe(
+      "9007199254740993",
+    );
   });
 
   it("keeps malformed amounts distinct from sparse zeros", () => {

@@ -6,11 +6,16 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen, within } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import * as apolloClient from "@apollo/client/react";
 import { BudgetChartCard } from "../budget-chart-card";
 import { groupBudgetEntries } from "../budget-utils";
 import type { BudgetEntry } from "../types";
+import {
+  lastTooltip,
+  periodRows,
+  valueAfter,
+  variance,
+} from "./budget-card-readouts";
 
 const chartOptions = vi.hoisted(
   () =>
@@ -78,39 +83,6 @@ function renderCard(
   );
 }
 
-const valueAfter = (label: string) =>
-  screen.getByText(label, { selector: "p" }).nextElementSibling?.textContent;
-const variance = () =>
-  screen
-    .getByText("Variance", { selector: "p" })
-    .parentElement?.nextElementSibling?.textContent?.replace(/\s+/g, " ");
-
-async function periodRow() {
-  await userEvent.setup().click(screen.getByText("Period data"));
-  const table = screen.getByRole("table", { name: /Period data$/ });
-  const [, row] = within(table).getAllByRole("row");
-  return within(row)
-    .getAllByRole("cell")
-    .map((cell) => cell.textContent?.replace(/\s+/g, " ").trim());
-}
-
-/** The tooltip text the chart shows when hovering the September bar. */
-function tooltip() {
-  const option = chartOptions.at(-1)!;
-  const html = option.tooltip!.formatter!(
-    option.series!.map((series) => ({
-      name: "2026-09-30",
-      seriesName: series.name,
-      value: series.data.at(-1),
-      color: "#000",
-    })),
-  );
-  return html
-    .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(new Date(2026, 8, 30, 12));
@@ -129,8 +101,10 @@ describe("Budget card quantity precision", () => {
     expect(valueAfter("Latest actual")).toBe("0.0005 BTC");
     expect(variance()).toBe("+0.0001 BTC");
     expect(screen.getByText("Above target")).toBeInTheDocument();
-    expect(tooltip()).toBe("2026-09-30 Budget: 0.0004 BTC Actual: 0.0005 BTC");
-    expect(await periodRow()).toEqual([
+    expect(lastTooltip(chartOptions.at(-1)!, "2026-09-30")).toBe(
+      "2026-09-30 Budget: 0.0004 BTC Actual: 0.0005 BTC",
+    );
+    expect((await periodRows())[0]).toEqual([
       "2026-09-30",
       "0.0004 BTC",
       "0.0005 BTC",
@@ -176,7 +150,7 @@ describe("Budget card quantity precision", () => {
     expect(valueAfter("Current budget")).toBe("400.00 USD");
     expect(valueAfter("Latest actual")).toBe("500.12 USD");
     expect(variance()).toBe("+100.12 USD");
-    expect(await periodRow()).toEqual([
+    expect((await periodRows())[0]).toEqual([
       "2026-09-30",
       "400.00 USD",
       "500.12 USD",
