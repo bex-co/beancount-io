@@ -32,6 +32,7 @@ import {
 import { useTranslations } from "@/common/hooks/use-translations";
 import { usePendingSubmit } from "@/common/hooks/use-pending-submit";
 import { isPositiveDecimalNumber } from "@/common/lib/beancount/decimal-number";
+import { beancountString } from "@/common/lib/beancount/quoted-string";
 import type {
   ParsedReceipt,
   ReviewFormData,
@@ -129,7 +130,7 @@ export function ReceiptReviewForm({
   const watched = useWatch({ control: form.control });
   const previewDate = watched.date || "YYYY-MM-DD";
   const previewText = [
-    `${previewDate} * "${watched.payee || "Payee"}" "${watched.description || "Description"}"`,
+    `${previewDate} * ${beancountString(watched.payee || "Payee")} ${beancountString(watched.description || "Description")}`,
     `  ${watched.expenseAccount || "Expenses:Account"}  ${watched.amount || "0.00"} ${watched.currency || primaryCurrency}`,
     `  ${watched.paymentAccount || "Assets:Account"}  -${watched.amount || "0.00"} ${watched.currency || primaryCurrency}`,
   ].join("\n");
