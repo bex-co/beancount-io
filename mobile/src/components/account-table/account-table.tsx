@@ -32,6 +32,7 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { formatSignedMoneyWithCurrency } from "@/common/number-utils";
 import { formatHolding, type BalanceDisplay } from "@/common/balance-display";
 import { balanceNotes } from "@/common/valuation";
+import { isolateAccountPath } from "@/common/bidi";
 import { AmountText } from "@/components/amount-text";
 import { HERO_AMOUNT_FIT } from "@/components/amount-text/hero-amount-fit";
 import { ThemedRefreshControl } from "@/components/dashboard-scroll-view";
@@ -538,12 +539,16 @@ export function AccountTable({
         row={item}
         // Category rows label themselves from the i18n key they carry; account
         // rows already hold a display name built from the ledger.
+        // Root first in every direction, however its segments are written
+        // (w21/743).
         label={
           item.depth === 0
             ? t(item.label)
             : item.own
-              ? t("accountOwnPostings", { name: item.label })
-              : item.label
+              ? t("accountOwnPostings", {
+                  name: isolateAccountPath(item.label),
+                })
+              : isolateAccountPath(item.label)
         }
         currency={currency}
         display={displays?.get(item.key)}

@@ -3,6 +3,7 @@ import path from "path";
 import vm from "vm";
 import ts from "typescript";
 import * as dynamicType from "../common/theme/dynamic-type";
+import * as bidi from "../common/bidi";
 
 // iOS keeps a Text's native measurement when the text size changes while the
 // app is open, unless that Text remounts. These tests execute the real owners
@@ -211,6 +212,7 @@ describe("AccountRow live font-scale remeasurement", () => {
       "react-native": reactNative,
       "@/common/hooks/use-theme-style": themeHooks,
       "@/common/theme": partial({ useTheme: () => ({ colorTheme: {} }) }),
+      "@/common/bidi": bidi,
       "@/common/account-util": {
         splitAccountLeaf: (account: string) => ({
           parent: account.slice(0, account.lastIndexOf(":") + 1),

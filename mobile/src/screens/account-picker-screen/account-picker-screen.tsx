@@ -1,3 +1,4 @@
+import { isolateAccountPath } from "@/common/bidi";
 import { useGuest } from "@/common/guest/guest-context";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -247,7 +248,7 @@ const AccountRow = memo(function AccountRow({
           open remeasures the name (see DateSectionHeader). */}
       <View key={fontScale} style={styles.accountName}>
         <Text style={styles.parentPath} numberOfLines={1} ellipsizeMode="head">
-          {parent}
+          {isolateAccountPath(parent)}
         </Text>
         <Text style={styles.leaf} numberOfLines={1}>
           {leaf}

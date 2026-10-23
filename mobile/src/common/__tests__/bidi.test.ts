@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { isolateLtr, isolateRtlSymbol } from "../bidi";
+import { isolateAccountPath, isolateLtr, isolateRtlSymbol } from "../bidi";
 
 // w21/095: in Persian, "مانده: -$1,234.50" rendered as `1,234.50$- :مانده`,
 // the sign and symbol pulled to the wrong side of the number.
@@ -76,5 +76,56 @@ describe("isolateRtlSymbol", () => {
     for (const symbol of ["$", "€", "¥", "₹", "CHF", "zł", ""]) {
       expect(isolateRtlSymbol(symbol)).toBe(symbol);
     }
+  });
+});
+
+// w21/743: "Qa20261020Bank:بانک:ملی" drew the child ملی before its parent, on
+// Accounts, in the detail header and in the picker.
+describe("isolateAccountPath", () => {
+  const LRI = "⁦";
+  const FSI = "⁨";
+  const PDI = "⁩";
+
+  it("isolates each segment of a right-to-left path, in a left-to-right path", () => {
+    expect(isolateAccountPath("Assets:Qa20261020Bank:بانک:ملی")).toBe(
+      `${LRI}${FSI}Assets${PDI}:${FSI}Qa20261020Bank${PDI}:${FSI}بانک${PDI}:${FSI}ملی${PDI}${PDI}`,
+    );
+    // Hebrew too, and a picker's parent path with its trailing separator.
+    expect(isolateAccountPath("Assets:בנק:").startsWith(LRI)).toBe(true);
+    expect(
+      isolateAccountPath("Assets:בנק:").endsWith(`:${FSI}${PDI}${PDI}`),
+    ).toBe(true);
+  });
+
+  it("keeps the order and text, and leaves a left-to-right path alone", () => {
+    const written = "Assets:Qa20261020Bank:بانک:ملی";
+    expect(isolateAccountPath(written).replace(/[⁦⁨⁩]/g, "")).toBe(written);
+    expect(isolateAccountPath("Assets:Bank:Checking")).toBe(
+      "Assets:Bank:Checking",
+    );
+  });
+
+  it("is what Accounts, the detail header and the picker draw", () => {
+    const read = (...parts: string[]) =>
+      fs.readFileSync(path.join(__dirname, "..", "..", ...parts), "utf8");
+    expect(
+      read("components", "account-table", "account-table.tsx").includes(
+        ": isolateAccountPath(item.label)",
+      ),
+    ).toBe(true);
+    expect(
+      read(
+        "screens",
+        "account-detail-screen",
+        "account-detail-screen.tsx",
+      ).includes("{isolateAccountPath(account)}"),
+    ).toBe(true);
+    expect(
+      read(
+        "screens",
+        "account-picker-screen",
+        "account-picker-screen.tsx",
+      ).includes("{isolateAccountPath(parent)}"),
+    ).toBe(true);
   });
 });

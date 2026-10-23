@@ -26,3 +26,22 @@ const RTL_LETTERS = /[֐-ࣿיִ-﷿ﹰ-ﻼ]/;
 export function isolateRtlSymbol(symbol: string): string {
   return RTL_LETTERS.test(symbol) ? `⁧${symbol}⁩` : symbol;
 }
+
+/**
+ * An account path with segments in a right-to-left script, kept root first.
+ * Two such segments around a ":" formed one right-to-left run and swapped, so
+ * "Qa20261020Bank:بانک:ملی" drew the child ملی before its parent (w21/743).
+ * Each segment goes in a first-strong isolate (U+2068 … U+2069), keeping its
+ * own order, and the path in a left-to-right one: an account name reads root
+ * first in every app direction, as Open Account writes it (w0/049). A path in
+ * a left-to-right script is returned as it is.
+ */
+export function isolateAccountPath(path: string): string {
+  if (!RTL_LETTERS.test(path)) return path;
+  return isolateLtr(
+    path
+      .split(":")
+      .map((segment) => `⁨${segment}⁩`)
+      .join(":"),
+  );
+}

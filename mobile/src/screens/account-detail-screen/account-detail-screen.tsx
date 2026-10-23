@@ -36,6 +36,7 @@ import {
 } from "@/screens/accounts-screen/hooks/use-account-journal";
 import { BALANCE_CONVERSION } from "@/common/balance-util";
 import { balanceNotes, valuationDetails } from "@/common/valuation";
+import { isolateAccountPath } from "@/common/bidi";
 import { ValuationSheet } from "@/components/valuation-sheet";
 import { useLedgerAccess } from "@/common/hooks/use-ledger-access";
 import { useLedgerPrices } from "@/common/hooks/use-ledger-prices";
@@ -494,7 +495,7 @@ const AccountDetailScreenImpl = ({
           accessibilityRole="header"
           accessibilityLabel={account}
         >
-          {account}
+          {isolateAccountPath(account)}
         </Text>
         <View style={styles.chartContainer}>
           <BalanceChartCard
