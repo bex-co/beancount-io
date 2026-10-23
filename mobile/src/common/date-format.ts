@@ -64,6 +64,28 @@ export function formatLedgerDate(isoDate: string, locale: string): string {
 }
 
 /**
+ * A ledger month (`YYYY-MM`) by name — "August 2026", "August 2026" in German,
+ * "اوت ۲۰۲۶". Same UTC / Gregorian rules as `formatLedgerDate`; the input
+ * unchanged if it cannot be parsed.
+ */
+export function formatLedgerMonth(yearMonth: string, locale: string): string {
+  try {
+    const [year, month] = yearMonth.split("-").map(Number);
+    const date = utcDate(year, month - 1, 1);
+    if (isNaN(date.getTime())) {
+      return yearMonth;
+    }
+    return date.toLocaleDateString(gregorian(locale), {
+      month: "long",
+      year: "numeric",
+      timeZone: "UTC",
+    });
+  } catch {
+    return yearMonth;
+  }
+}
+
+/**
  * A ledger date in short form — "Aug 17, 2026", "17.08.2026" — for dense list
  * rows (Merchants directory) where the long form wastes the trailing column.
  *

@@ -467,6 +467,8 @@ export const en = {
   feedSourceLedger: "Ledger",
   feedSourceBlog: "Blog",
   feedSourceRelease: "Release",
+  reportsThroughLatestMonth:
+    "Showing through {{month}}, the latest month with entries.",
   merchantTotalAtRates: "{{amount}} at the recorded rates",
   feedCommittedTo: "Committed to {{ledger}}",
   feedCreatedLedger: "Created repository {{ledger}}",

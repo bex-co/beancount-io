@@ -838,6 +838,8 @@ export const fr: Translations = {
   feedSourceLedger: "Livre",
   feedSourceBlog: "Blog",
   feedSourceRelease: "Version",
+  reportsThroughLatestMonth:
+    "Affichage jusqu'à {{month}}, le dernier mois avec des écritures.",
   merchantTotalAtRates: "{{amount}} aux taux enregistrés",
   feedCommittedTo: "Commit dans {{ledger}}",
   feedCreatedLedger: "Livre {{ledger}} créé",

@@ -5,11 +5,14 @@ import {
 import { CardLoadFailure } from "@/components/card-load-failure";
 import { useReactiveVar } from "@apollo/client";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { ColorTheme } from "@/types/theme-props";
 import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useToday } from "@/common/hooks/use-today";
+import { formatLedgerMonth } from "@/common/date-format";
+import { fontSizes } from "@/common/theme";
+import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 import { useGuest } from "@/common/guest/guest-context";
 import { gutter } from "@/common/theme";
 import { LedgerDrawerHeader } from "@/components/ledger-drawer/ledger-drawer-header";
@@ -48,6 +51,7 @@ import {
 import {
   selectIncomeExpenseChartSeries,
   selectStatementAnchorMonth,
+  staleAnchorMonth,
 } from "./selectors/select-income-expense-chart";
 import { topNWithOther } from "./selectors/select-breakdown-rows";
 import {
@@ -71,11 +75,18 @@ const getStyles = (theme: ColorTheme) =>
       flex: 1,
       backgroundColor: theme.white,
     },
+    anchorNote: {
+      paddingHorizontal: 16,
+      paddingBottom: 8,
+      fontSize: fontSizes.sm,
+      color: theme.black80,
+      textAlign: LEADING_TEXT_ALIGN,
+    },
   });
 
 const ReportsScreenImpl = (): JSX.Element => {
   const ledgerId = useLedgerGuard();
-  const { t } = useTranslations();
+  const { t, locale } = useTranslations();
   const styles = useThemeStyle(getStyles);
 
   const [timeRange, setTimeRange] = useState<TimeRange>("6M");
@@ -196,6 +207,9 @@ const ReportsScreenImpl = (): JSX.Element => {
     [stmt, currentMonth],
   );
 
+  // Said when the ranges end on an earlier month than this one (w21/727).
+  const staleAnchor = staleAnchorMonth(anchorMonth, currentMonth, timeRange);
+
   const expense = useMemo(
     () =>
       selectRangedAccountTree(
@@ -256,6 +270,13 @@ const ReportsScreenImpl = (): JSX.Element => {
         options={rangeOptions}
         onChange={setTimeRange}
       />
+      {staleAnchor !== null ? (
+        <Text style={styles.anchorNote}>
+          {t("reportsThroughLatestMonth", {
+            month: formatLedgerMonth(staleAnchor, locale),
+          })}
+        </Text>
+      ) : null}
       <DashboardScrollView
         refreshing={refreshing}
         onRefresh={onRefresh}

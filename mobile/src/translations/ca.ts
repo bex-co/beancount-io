@@ -838,6 +838,8 @@ export const ca: Translations = {
   feedSourceLedger: "Llibre",
   feedSourceBlog: "Blog",
   feedSourceRelease: "Versió",
+  reportsThroughLatestMonth:
+    "Es mostra fins a {{month}}, l'últim mes amb entrades.",
   merchantTotalAtRates: "{{amount}} als tipus de canvi registrats",
   feedCommittedTo: "Canvi a {{ledger}}",
   feedCreatedLedger: "Llibre creat: {{ledger}}",

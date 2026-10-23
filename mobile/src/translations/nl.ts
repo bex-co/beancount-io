@@ -821,6 +821,8 @@ export const nl: Translations = {
   feedSourceLedger: "Grootboek",
   feedSourceBlog: "Blog",
   feedSourceRelease: "Uitgave",
+  reportsThroughLatestMonth:
+    "Weergegeven tot en met {{month}}, de laatste maand met boekingen.",
   merchantTotalAtRates: "{{amount}} tegen de geboekte koersen",
   feedCommittedTo: "Commit in {{ledger}}",
   feedCreatedLedger: "Grootboek {{ledger}} aangemaakt",

@@ -42,6 +42,23 @@ export function selectStatementAnchorMonth(
 }
 
 /**
+ * The month Reports' ranges end on when it is not the current one: a ledger
+ * with nothing yet this month ends them on its latest month with entries
+ * (w21/166), so Spending's "This month $0.00" opened onto August's spending
+ * under the same "1M" with nothing to say so (w21/727). Null when the ranges
+ * end this month, for "ALL", or before the statement has loaded.
+ */
+export function staleAnchorMonth(
+  anchorMonth: string | null,
+  currentMonth: string,
+  range: string,
+): string | null {
+  return range !== "ALL" && anchorMonth !== null && anchorMonth < currentMonth
+    ? anchorMonth
+    : null;
+}
+
+/**
  * Convert IncomeStatement series for the Reports combined chart.
  *
  * Accounting balances keep income and net profit as credits (negative). The

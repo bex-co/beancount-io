@@ -19,7 +19,6 @@
 - [728](./728.md) — Clearing a negative amount leaves a hidden "-", so an empty-looking field shows a format error and blocks Done
 - [729](./729.md) — Typing an amount before choosing the first payee stops that payee's usual accounts from filling in (w21/411 gap)
 - [730](./730.md) — A merged payee suggestion fills in accounts only from the spelling it shows, so variants don't fill in
-- [727](./727.md) — Spending's "See all" opens Reports 1M on the last active month while Spending says "This month $0.00" (owner call)
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window
 - [065](./blocked/065.md) — One early-year entry (e.g. 0050) makes the balance sheet 23,718 monthly points (3 MB) and the app stalls — **blocked:** needs an approach decision (per-pill fetch vs server downsample) and a simulator profile of the stall
 - [180](./blocked/180.md) — Budget actuals use raw prefix match (`Transport` counts `Transportation`), unlike Reports — **blocked:** needs an owner decision between component matching on the server (a Fava break) and a per-account breakdown for the client

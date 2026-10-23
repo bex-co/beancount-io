@@ -836,6 +836,8 @@ export const ru: Translations = {
   feedSourceLedger: "Книга",
   feedSourceBlog: "Блог",
   feedSourceRelease: "Релиз",
+  reportsThroughLatestMonth:
+    "Показано по {{month}} — последний месяц с записями.",
   merchantTotalAtRates: "{{amount}} по записанным курсам",
   feedCommittedTo: "Изменение в {{ledger}}",
   feedCreatedLedger: "Создана книга {{ledger}}",
