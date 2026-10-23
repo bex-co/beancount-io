@@ -74,3 +74,60 @@ describe("buildCommodityChartLabels", () => {
     expect(labels.formatAxisTick(59000)).toBe("59000.00");
   });
 });
+
+describe("tiny and exponent quotes (w4/1003)", () => {
+  it("trims only the mantissa of an exponent quote", () => {
+    expect(formatCommodityPriceLabel("1.25e-10")).toBe("1.25e-10");
+    expect(formatCommodityPriceLabel("2.5e-10")).toBe("2.5e-10");
+    expect(formatCommodityPriceLabel("5e-10")).toBe("5e-10");
+    expect(formatCommodityPriceLabel("1.250E-10")).toBe("1.25E-10");
+    expect(formatCommodityPriceLabel("2.0e+20")).toBe("2e+20");
+    expect(formatCommodityPriceLabel("0.000000002")).toBe("0.000000002");
+    expect(formatCommodityPriceLabel("0.000000000")).toBe("0");
+  });
+
+  it("keeps a nano-price series' ticks distinct and nonzero", () => {
+    const { formatAxisTick } = buildCommodityChartLabels(
+      [
+        { date: "2016-01-01", value: "0.000000001" },
+        { date: "2016-02-01", value: "0.000000002" },
+        { date: "2016-03-01", value: "0.000000003" },
+      ],
+      "QAMICRO/USD",
+      (date) => date,
+    );
+    // ECharts' nice ticks for this series, float noise included.
+    const ticks = [0, 5e-10, 1e-9, 1.5000000000000002e-9, 2e-9, 2.5e-9, 3e-9];
+    expect(ticks.map(formatAxisTick)).toEqual([
+      "0",
+      "5e-10",
+      "1e-9",
+      "1.5e-9",
+      "2e-9",
+      "2.5e-9",
+      "3e-9",
+    ]);
+  });
+
+  it("keeps a constant tiny price nonzero", () => {
+    const values = [2e-9, 2e-9];
+    expect(formatCommodityAxisTick(2e-9, values)).toBe("2e-9");
+    expect(formatCommodityAxisTick(2.2e-9, values)).toBe("2.2e-9");
+  });
+
+  it("writes a fine series above 1e-6 in plain decimals", () => {
+    const values = [0.000001, 0.00000102];
+    expect(formatCommodityAxisTick(0.000001005, values)).toBe("0.000001005");
+  });
+
+  it("keeps ordinary quotes and genuine zero as before", () => {
+    const cusdc = [0.0225, 0.0227, 0.023];
+    expect(
+      [0.018, 0.0225, 0.025].map((tick) =>
+        formatCommodityAxisTick(tick, cusdc),
+      ),
+    ).toEqual(["0.01800", "0.02250", "0.02500"]);
+    expect(formatCommodityAxisTick(0.4, [0, 0, 0])).toBe("0.40");
+    expect(formatCommodityAxisTick(59000, [58000, 60000])).toBe("59000.00");
+  });
+});
