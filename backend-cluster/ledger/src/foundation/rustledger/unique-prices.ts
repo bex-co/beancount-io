@@ -1,0 +1,178 @@
+import type { BeancountError, DirectiveJson, FileMap } from "@rustledger/wasm";
+import { indexBlocks } from "./block-index";
+import { includeTraversalOrder } from "./source-slice";
+
+/** rustledger's `unique_prices` error, raised for every same-day repeat. */
+const DUPLICATE = /^Duplicate price for (\S+?)\/(\S+) on (\d{4}-\d{2}-\d{2})$/u;
+const MESSAGE = "Disagreeing price entries";
+const NUMBER = String.raw`-?\d[\d,]*(?:\.\d+)?`;
+const PRICE_LINE = new RegExp(
+  String.raw`^(\d{4}-\d{2}-\d{2})\s+price\s+(\S+)\s+(${NUMBER})\s+(\S+)`,
+  "u",
+);
+/** A posting's units and the rest of its line, after its flag if it has one. */
+const POSTING = new RegExp(
+  String.raw`^\s+(?:[*!&#?%]\s*|[PSTCURM]\s+)?\S+\s+(${NUMBER})\s+(\S+)(.*)$`,
+  "u",
+);
+const TOTAL_PRICE = new RegExp(String.raw`@@\s*(${NUMBER})\s+(\S+)`, "u");
+const UNIT_PRICE = new RegExp(
+  String.raw`(?<!@)@(?!@)\s*(${NUMBER})\s+(\S+)`,
+  "u",
+);
+const TOTAL_COST = new RegExp(String.raw`\{\{\s*(${NUMBER})\s+([^\s,}]+)`, "u");
+const UNIT_COST = new RegExp(String.raw`\{\s*(${NUMBER})\s+([^\s,}#]+)`, "u");
+const IMPLICIT_PRICES =
+  /^plugin\s+"(?:beancount\.plugins\.)?implicit_prices"/mu;
+
+const toNumber = (text: string) => Number(text.replace(/,/gu, ""));
+
+/** A number's value as text, so `100` and `100.00` agree, as Decimals do. */
+function decimalKey(number: string): string {
+  const negative = number.startsWith("-");
+  const [whole = "", fraction = ""] = number
+    .replace(/,/gu, "")
+    .replace(/^[-+]/u, "")
+    .split(".");
+  const digits = whole.replace(/^0+/u, "") || "0";
+  const decimals = fraction.replace(/0+$/u, "");
+  const key = decimals ? `${digits}.${decimals}` : digits;
+  return negative && key !== "0" ? `-${key}` : key;
+}
+
+type Candidate = { file: string; line: number; number: number | null };
+
+/**
+ * The price a posting line implies under `implicit_prices`, in `quote`: its
+ * price, else its cost when it adds to a position; `null` when the number is
+ * written some other way (an expression, a combined cost).
+ */
+function impliedPrice(
+  line: string,
+  base: string,
+  quote: string,
+): { number: number | null } | null {
+  const posting = POSTING.exec(line);
+  if (posting === null || posting[2] !== base) return null;
+  const units = Math.abs(toNumber(posting[1]!));
+  const rest = posting[3]!.replace(/;.*$/u, "");
+  const total = TOTAL_PRICE.exec(rest);
+  const unit = UNIT_PRICE.exec(rest);
+  if (total || unit) {
+    if ((total ?? unit)![2] !== quote) return null;
+    return {
+      number: total ? toNumber(total[1]!) / units : toNumber(unit![1]!),
+    };
+  }
+  // A sale at cost reduces the position, and Beancount prices no reduction.
+  if (!rest.includes("{") || posting[1]!.startsWith("-")) return null;
+  const totalCost = TOTAL_COST.exec(rest);
+  if (totalCost) {
+    return totalCost[2] === quote
+      ? { number: toNumber(totalCost[1]!) / units }
+      : null;
+  }
+  const unitCost = UNIT_COST.exec(rest);
+  if (unitCost && !rest.includes("#")) {
+    return unitCost[2] === quote ? { number: toNumber(unitCost[1]!) } : null;
+  }
+  return rest.includes(quote) ? { number: null } : null;
+}
+
+/**
+ * Where Beancount reports a group's disagreement: it sorts the day's entries
+ * by line (not file), keeps one entry per number, the last of each, and names
+ * the one for the first number. Price lines are read off the source, and with
+ * `implicit_prices` each priced posting too, on its transaction's line.
+ */
+function disagreementLocator(files: FileMap, entryPoint: string) {
+  const index = indexBlocks(files);
+  const order = includeTraversalOrder(files, entryPoint);
+  const implicit = IMPLICIT_PRICES.test(files[entryPoint] ?? "");
+  return (
+    date: string,
+    base: string,
+    quote: string,
+  ): { file: string; line: number } | null => {
+    const candidates: Candidate[] = [];
+    for (const file of order) {
+      for (const block of index.blocks(file)) {
+        if (!block.text.startsWith(date)) continue;
+        const line = block.startLine + 1;
+        const [header = "", ...postings] = block.text.split("\n");
+        const price = PRICE_LINE.exec(header);
+        if (price !== null) {
+          if (price[2] === base && price[4] === quote) {
+            candidates.push({ file, line, number: toNumber(price[3]!) });
+          }
+          continue;
+        }
+        if (!implicit) continue;
+        for (const posting of postings) {
+          const implied = impliedPrice(posting, base, quote);
+          if (implied) candidates.push({ file, line, ...implied });
+        }
+      }
+    }
+    candidates.sort((a, b) => a.line - b.line);
+    const first = candidates[0]?.number;
+    if (first === null || first === undefined) return null;
+    const at = candidates.findLast((candidate) => candidate.number === first);
+    return at ? { file: at.file, line: at.line } : null;
+  };
+}
+
+/**
+ * Beancount's `unique_prices` refuses a day's prices for a pair only when they
+ * disagree: "Disagreeing price entries", once per pair and day. rustledger's
+ * raises "Duplicate price for VTI/USD on 2024-01-08" for every repeat, equal
+ * ones too and without a location, so a ledger bean-check passes read as
+ * broken (w21/735). Each such error is judged against the day's prices in the
+ * booked stream (`directives`, `implicit_prices`' own included): it is dropped
+ * when they agree, and otherwise replaced by Beancount's one error, on the
+ * line bean-check gives where the source shows it.
+ */
+export function reconcileUniquePriceErrors(
+  errors: readonly BeancountError[],
+  directives: readonly DirectiveJson[],
+  files: FileMap,
+  entryPoint: string,
+): BeancountError[] {
+  if (!errors.some((error) => DUPLICATE.test(error.message))) {
+    return [...errors];
+  }
+  const numbers = new Map<string, Set<string>>();
+  for (const directive of directives) {
+    if (directive.type !== "price") continue;
+    const key = `${directive.date} ${directive.currency}/${directive.amount.currency}`;
+    const seen = numbers.get(key) ?? new Set<string>();
+    seen.add(decimalKey(directive.amount.number));
+    numbers.set(key, seen);
+  }
+  const locate = disagreementLocator(files, entryPoint);
+  const judged = new Set<string>();
+  const reconciled: BeancountError[] = [];
+  for (const error of errors) {
+    const duplicate = DUPLICATE.exec(error.message);
+    if (duplicate === null) {
+      reconciled.push(error);
+      continue;
+    }
+    const [, base = "", quote = "", date = ""] = duplicate;
+    const key = `${date} ${base}/${quote}`;
+    if (judged.has(key)) continue;
+    judged.add(key);
+    if ((numbers.get(key)?.size ?? 0) < 2) continue;
+    const at = locate(date, base, quote);
+    reconciled.push({
+      ...error,
+      message: at ? MESSAGE : `${MESSAGE} (${base}/${quote} on ${date})`,
+      file: at?.file ?? null,
+      line: at?.line ?? null,
+      column: at ? 1 : null,
+      end_line: null,
+      end_column: null,
+    });
+  }
+  return reconciled;
+}

@@ -39,6 +39,7 @@ import {
 } from "./plugins";
 import { reconcileDocumentErrors } from "./document-validation";
 import { averageBookingErrors } from "./average-booking";
+import { reconcileUniquePriceErrors } from "./unique-prices";
 import { locateBookErrors } from "./book-errors";
 import {
   isRawPluginProcessing,
@@ -715,6 +716,8 @@ async function parseLedgerFilesUncached(
   errors = locateOptionErrors(reconcileOptionErrors(errors), files, entryPoint);
   // Beancount refuses a sale from an AVERAGE position; rustledger books it.
   errors = [...errors, ...averageBookingErrors(directives, files, entryPoint)];
+  // Beancount's unique_prices refuses only same-day prices that disagree.
+  errors = reconcileUniquePriceErrors(errors, directives, files, entryPoint);
   errors = locateBookErrors(errors, files, entryPoint);
   errors = reportUrlIncludes(errors, files);
   errors = reportUndecodableSources(errors, files, entryPoint);

@@ -1472,6 +1472,30 @@ async function main(): Promise<void> {
       `the AVERAGE error stays on its sale written ${JSON.stringify(sale)} (got ${located?.file}:${located?.line})`,
     );
   }
+  // w21/735: rustledger's unique_prices flagged every same-day repeat, equal
+  // ones too; Beancount refuses only prices that disagree, once per day.
+  const priceErrors = (
+    await parseLedgerFiles(
+      {
+        "main.beancount": [
+          'plugin "beancount.plugins.unique_prices"',
+          "2024-01-01 commodity VTI",
+          "2024-01-08 price VTI 100 USD",
+          "2024-01-08 price VTI 100.00 USD",
+          "2024-01-09 price VTI 100 USD",
+          "2024-01-09 price VTI 101 USD",
+          "2024-01-09 price VTI 100 USD",
+        ].join("\n"),
+      },
+      "main.beancount",
+      { today: "2099-01-01" },
+    )
+  ).errors.map((e) => `${e.file}:${e.line} ${e.message}`);
+  assert(
+    JSON.stringify(priceErrors) ===
+      JSON.stringify(["main.beancount:7 Disagreeing price entries"]),
+    `unique_prices refuses only disagreeing prices, on bean-check's line (got ${JSON.stringify(priceErrors)})`,
+  );
   // w21/733: a posting flag was read as the sale's account.
   const flagged = (
     await parseLedgerFiles(
