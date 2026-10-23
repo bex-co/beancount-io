@@ -5,7 +5,7 @@ import type { ZodType } from "zod";
 
 import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
-import type { Identity } from "@/server/api/identity";
+import { credentialRejection, type Identity } from "@/server/api/identity";
 import { identityFromState } from "./identity-middleware";
 import { registerRoute, V1_TAG } from "./openapi-registry";
 import { validateRequest, validatedFromState } from "./validation-middleware";
@@ -133,11 +133,15 @@ const SHARED_ERROR_RESPONSES: RouteConfig["responses"] = {
   503: json("A dependency is unavailable; retry later", errorSchema),
 };
 
-function requireIdentity(ctx: RouterContext): Identity {
+async function requireIdentity(
+  ctx: RouterContext,
+  config: AppConfig,
+): Promise<Identity> {
   const identity = identityFromState(ctx);
   if (!identity) {
     throw new UnauthenticatedError(
-      "This endpoint requires a credential: send `x-api-key: <personal-access-token>` or `Authorization: Bearer <token>`.",
+      (await credentialRejection(ctx, config)) ??
+        "This endpoint requires a credential: send `x-api-key: <personal-access-token>` or `Authorization: Bearer <token>`.",
     );
   }
   return identity;
@@ -175,7 +179,7 @@ function registerV1Route<P, Q, B>(
           })
         : await route.handler(deps, {
             ...input,
-            identity: requireIdentity(ctx),
+            identity: await requireIdentity(ctx, deps.config),
           });
     if (result === null) {
       // Koa preserves null as JSON only when its type and status are set first.

@@ -121,6 +121,13 @@ carries its selected `ledger_id`. Application API/mobile tokens targeting
 does not authenticate to MCP, even though a browser session is used to approve
 the OAuth grant.
 
+The reverse holds too: an MCP token does not authenticate to REST or GraphQL.
+Sent there, it is refused with `UNAUTHENTICATED` "This token was issued for the
+MCP endpoint (`/api-gateway/mcp`) and is not accepted here", so a client knows
+to switch credentials rather than resend it. Any other credential header that
+does not resolve (expired, revoked, malformed, another resource's) is refused as
+"not accepted", not as missing.
+
 ### Per-host notes
 
 Each host below has a fixture in

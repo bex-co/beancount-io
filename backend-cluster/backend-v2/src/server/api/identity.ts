@@ -376,6 +376,30 @@ export async function resolveIdentity(
   );
 }
 
+/**
+ * Why a request that sent a credential header has no identity, said to its
+ * caller; `undefined` when it sent none. A token refused is not a token
+ * missing: told to send the header it just sent, an agent retries it instead
+ * of switching credentials (w23/070). An MCP token is named, since agents
+ * connected over MCP try it against REST; otherwise the reasons stay
+ * undistinguished, as `resolveApiKeyIdentity` requires. A browser's expired
+ * session cookie keeps its sign-in refusal.
+ */
+export async function credentialRejection(
+  ctx: RequestLike,
+  config: AppConfig,
+): Promise<string | undefined> {
+  if (!ctx.headers.authorization && !ctx.headers["x-api-key"]) return undefined;
+  const token = getTokenFromCtx(ctx as RouterContext);
+  if (!token) return undefined;
+  if (
+    await resolveOidcIdentity(token, config, OAUTH_CONFIG.resourceBindings.mcp)
+  ) {
+    return "This token was issued for the MCP endpoint (`/api-gateway/mcp`) and is not accepted here: send a personal access token (`x-api-key`) or an application token instead.";
+  }
+  return "The credential sent was not accepted: it is expired, revoked, malformed, or issued for another resource. Send a current personal access token (`x-api-key`) or `Authorization: Bearer <token>`.";
+}
+
 /** At most one `lastUsedAt` write per key per window, per process. */
 const LAST_USED_THROTTLE_MS = 5 * 60 * 1000;
 const lastUsedThrottle = new Map<string, number>();

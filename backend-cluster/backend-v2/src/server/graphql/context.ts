@@ -4,7 +4,11 @@ import { type DatabaseLayer } from "@/foundation/composition";
 import { UnauthenticatedError } from "@/shared/errors";
 import { User } from "@/features/auth/data/user-model";
 import { getTokenFromCtx } from "@/features/auth/utils/auth";
-import { type Identity, resolveIdentity } from "@/server/api/identity";
+import {
+  credentialRejection,
+  type Identity,
+  resolveIdentity,
+} from "@/server/api/identity";
 import { GraphQLLoaders, createLoaders } from "./loaders";
 import { logger } from "@/shared/logger";
 import { clientAddress } from "@/server/client-address";
@@ -18,6 +22,12 @@ export interface IContext {
    * MCP (`server/api/identity.ts`). Undefined for an unauthenticated request.
    */
   identity?: Identity;
+  /**
+   * Why a presented credential resolved no identity; undefined when the
+   * request presented none, or resolved. Refusals say this instead of asking
+   * for a credential the caller sent (w23/070).
+   */
+  credentialRejection?: string;
   /** Alias of `identity?.userId`, kept so resolvers read the caller unchanged. */
   userId?: string;
   token?: string;
@@ -64,6 +74,9 @@ export async function createContext(
   // resolve here, which is what lets a single credential reach GraphQL, REST,
   // and MCP alike (ADR 0006 D2).
   const identity = await resolveIdentity(ctx, database, config);
+  const rejection = identity
+    ? undefined
+    : await credentialRejection(ctx, config);
   const userId = identity?.userId;
   if (userId) {
     await touchLastSeen(userId, database);
@@ -79,14 +92,14 @@ export async function createContext(
 
   const getCurrentUserId = (): string => {
     if (!userId) {
-      throw new UnauthenticatedError("Authentication required");
+      throw new UnauthenticatedError(rejection ?? "Authentication required");
     }
     return userId;
   };
 
   const getCurrentIdentity = (): Identity => {
     if (!identity) {
-      throw new UnauthenticatedError("Authentication required");
+      throw new UnauthenticatedError(rejection ?? "Authentication required");
     }
     return identity;
   };
@@ -108,6 +121,7 @@ export async function createContext(
 
   return {
     identity,
+    ...(rejection && { credentialRejection: rejection }),
     userId,
     // The raw credential as presented (bearer OR cookie). `logout` revokes by
     // exact token and browser sessions arrive by cookie, so this must keep the

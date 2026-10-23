@@ -15,7 +15,9 @@ export const authenticatedMiddleware: MiddlewareFn<IContext> = (
   next,
 ) => {
   if (!context.identity) {
-    throw new UnauthenticatedError("Access denied! Please login to continue!");
+    throw new UnauthenticatedError(
+      context.credentialRejection ?? "Access denied! Please login to continue!",
+    );
   }
   return next();
 };
