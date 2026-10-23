@@ -36,6 +36,7 @@
 
 ## Inbox
 
+- [999 — Canonicalize acquisition labels for import comparison and hashes](./999.md) — major CLI residual after completed 981; equivalent NFC/NFD cost labels still conflict or duplicate purchases after the empty-label fix, reproduced 2026-10-23.
 - [998 — Recognize manually reordered lots in multi-fill import matching](./998.md) — major CLI residual after completed 977; cost-sorted manual lot postings make a real sale import twice above twelve lots, reproduced 2026-10-23.
 - [987 — Respect forecast boundaries for compact transaction flags](./987.md) — major CLI follow-up to completed 934; a compact forecast entry is skipped during root selection, allowing a false balance assertion into a previously valid working book, reproduced 2026-10-22.
 - [988 — Recognize compact option and plugin declarations when choosing a root](./988.md) — major CLI wrong-context balance write/refusal; native compact settings are missed, reproduced 2026-10-22.
