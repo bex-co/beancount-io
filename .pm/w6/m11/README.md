@@ -34,7 +34,7 @@
 
 ## Full inventory ownership and execution order
 
-The next submission is [m9/t011](../m9/t011.md), the official Cursor application. Docker, Cline, the GitHub nomination, LobeHub and this milestone's tasks are independent; do not wait for another platform's review. Table order is priority, not a cross-platform dependency.
+The prepared [m9/t011](../m9/t011.md) official Cursor application awaits its exact final Publisher Terms confirmation. The next independent pick is [m9/t012](../m9/t012.md), Docker. Cline, the GitHub nomination, LobeHub and this milestone's tasks also remain independent; table order is priority, not a cross-platform dependency.
 
 | Inventory target | Submission / receipt owner | Review, public verification or retained gate |
 | --- | --- | --- |
