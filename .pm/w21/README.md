@@ -16,7 +16,6 @@
 - [720](./720.md) — w21/705's fix now hides a later failing balance when a second pad on the same account and currency is unused
 - [721](./721.md) — The new AVERAGE error has no file or line when a same-day transaction shares the sale's narration (w21/708 gap)
 - [722](./722.md) — The AVERAGE check reads the first `booking_method` option, though the last value wins (w21/708 regression)
-- [714](./714.md) — Delete Account's phrase field shows "Type the phrase exactly as shown." from the first correct letter (w21/158 regression)
 - [715](./715.md) — Home's Latest Updates rows carry only a date, so same-message commits on one day look like duplicates
 - [716](./716.md) — Home's Latest Updates shows only two lines of a multi-commit push and hides "+N more commit(s)"
 - [717](./717.md) — Server settings shows the "older server" result in red, with an advisory saying the server isn't available

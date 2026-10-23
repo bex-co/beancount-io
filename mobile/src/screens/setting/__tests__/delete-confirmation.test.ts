@@ -15,7 +15,19 @@ describe("deleteConfirmationCheck", () => {
   });
 
   it("says why a wrong phrase cannot be confirmed", () => {
-    expect(check("sudo delet")).toBe("Type it exactly.");
+    expect(check("sudo deletx")).toBe("Type it exactly.");
+    expect(check("sudo delete now")).toBe("Type it exactly.");
+    expect(check("Sudo")).toBe("Type it exactly.");
+  });
+
+  // w21/714: the mismatch showed, and was read aloud, from the first correct
+  // letter.
+  it("says nothing while the phrase is typed letter by letter", () => {
+    for (let end = 1; end < "sudo delete".length; end += 1) {
+      expect(check("sudo delete".slice(0, end))).toBe(false);
+    }
+    expect(check("sudo ")).toBe(false);
+    expect(check("sx")).toBe("Type it exactly.");
   });
 
   it("disables an empty field without a message", () => {
