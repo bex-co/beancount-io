@@ -214,7 +214,9 @@ function load(relative: string): any {
           useTranslations: () => ({ t: (key: string) => key, locale: "en" }),
         };
       if (id === "@/common/vars") return { ledgerVar };
-      if (id === "./filters/var") return { transactionFiltersVar };
+      if (id === "./filters/var") {
+        return { transactionFiltersVar, transactionSearchResetVar: () => 0 };
+      }
       if (id === "@/common/guest/guest-context")
         return { useGuest: () => guest };
       if (id === "@/common/globalFnFactory") return { AddTransactionCallback };

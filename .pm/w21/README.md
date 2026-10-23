@@ -12,7 +12,6 @@
 
 ## Inbox
 
-- [786](./786.md) — A journal app link replaces the filters but keeps the old search text
 - [787](./787.md) — New File's case-clash error names the typed name, not the existing file ("Main.bean" beside main.bean)
 - [788](./788.md) — VoiceOver reads a Reports category as "N% of total" when N is its share of gross spending
 - [789](./789.md) — Home's Spending card says "No spending yet" on a ledger with months of spending

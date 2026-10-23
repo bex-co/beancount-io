@@ -36,14 +36,24 @@ export function resetTransactionFilters(): void {
 }
 
 /**
+ * How many times filters were set from outside the tab. The search text is
+ * the tab's own state, so a journal link replaced the filters and kept the
+ * search, and the linked account and month could read "No transactions
+ * match" (w21/786); a search typed before the latest count is dropped.
+ */
+export const transactionSearchResetVar = makeVar(0);
+
+/**
  * Replace the filters with ones chosen outside the filter modal, such as a
- * journal app link's (w21/344), owned by the ledger they were meant for.
+ * journal app link's (w21/344), owned by the ledger they were meant for. The
+ * search box empties with them.
  */
 export function setTransactionFiltersForLedger(
   ledgerId: string,
   filters: TransactionFilters,
 ): void {
   transactionFiltersVar({ ledgerId, filters });
+  transactionSearchResetVar(transactionSearchResetVar() + 1);
 }
 
 /**

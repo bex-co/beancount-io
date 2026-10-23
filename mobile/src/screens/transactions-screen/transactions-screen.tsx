@@ -52,7 +52,10 @@ import {
   selectFiltersForLedger,
   toFilterQuery,
 } from "./filters/select-filter-query";
-import { transactionFiltersVar } from "./filters/var";
+import {
+  transactionFiltersVar,
+  transactionSearchResetVar,
+} from "./filters/var";
 
 const PAGE_SIZE = 20;
 /** Only transactions live on this tab; Open/Close/Balance/… stay in the journal. */
@@ -113,13 +116,17 @@ const TransactionList = () => {
   const theme = useTheme().colorTheme;
   const { t, locale } = useTranslations();
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
-  // Kept with its ledger, so a switch starts with an empty box (w21/114).
+  // Kept with its ledger, so a switch starts with an empty box (w21/114), and
+  // with the latest journal link's filters, which empty it too (w21/786).
+  const searchReset = useReactiveVar(transactionSearchResetVar);
   const [scopedSearch, setScopedSearch] = useState<ScopedSearch>({
     ledgerId,
     text: "",
+    reset: searchReset,
   });
-  const searchQuery = searchForLedger(scopedSearch, ledgerId);
-  const setSearchQuery = (text: string) => setScopedSearch({ ledgerId, text });
+  const searchQuery = searchForLedger(scopedSearch, ledgerId, searchReset);
+  const setSearchQuery = (text: string) =>
+    setScopedSearch({ ledgerId, text, reset: searchReset });
 
   // Search runs server-side through `query.filter`, so it reaches transactions
   // past the first page — but only once typing settles. Quote + escape so
@@ -129,6 +136,7 @@ const TransactionList = () => {
   const search = searchForLedger(
     useDebouncedValue(scopedSearch, 300),
     ledgerId,
+    searchReset,
   ).trim();
   const filter = useMemo(() => toPlainSearchFilter(search), [search]);
 
