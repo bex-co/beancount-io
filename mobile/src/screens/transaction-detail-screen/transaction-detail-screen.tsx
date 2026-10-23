@@ -75,6 +75,7 @@ import {
   nextShownChecksum,
 } from "./selectors/select-shown-checksum";
 import { isPluginCopy } from "./selectors/select-plugin-copy";
+import { selectHeroBadges } from "./selectors/select-hero-badges";
 import { useTransactionContext } from "./use-transaction-context";
 import { shouldShowTransactionWriteActions } from "./selectors/select-transaction-write-actions";
 import {
@@ -85,6 +86,7 @@ import { selectEntryErrors } from "./selectors/select-entry-errors";
 import { useLedgerErrors } from "@/common/hooks/use-ledger-errors";
 import { useLedgerRootNames } from "@/common/hooks/use-ledger-root-names";
 import { useOperatingCurrency } from "@/common/hooks/use-operating-currency";
+import { useToday } from "@/common/hooks/use-today";
 import { deleteTransaction } from "./delete-transaction";
 import { ledgerWriteFailureMessage } from "@/common/ledger-refusal";
 import { i18n } from "@/translations";
@@ -160,6 +162,7 @@ const getStyles = (theme: ColorTheme) =>
     },
     heroMeta: {
       flexDirection: "row",
+      flexWrap: "wrap",
       alignItems: "center",
       gap: space.sm,
       marginTop: 12,
@@ -189,6 +192,18 @@ const getStyles = (theme: ColorTheme) =>
       fontSize: fontSizes.xs,
       fontWeight: fontWeights.medium,
       color: theme.warningText,
+    },
+    // A forecast, a pad or a future date: noted, not a warning.
+    noteBadge: {
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 999,
+      backgroundColor: theme.black10,
+    },
+    noteText: {
+      fontSize: fontSizes.xs,
+      fontWeight: fontWeights.medium,
+      color: theme.black80,
     },
     sectionTitle: {
       fontSize: fontSizes.md,
@@ -355,6 +370,7 @@ const TransactionDetailImpl = ({
   const router = useRouter();
   const guest = useGuest();
   const { t, locale } = useTranslations();
+  const today = useToday();
   const toast = useToast();
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
@@ -685,7 +701,12 @@ const TransactionDetailImpl = ({
   const postingRows = selectPostingRows(entry, operatingCurrency);
   const title = selectTransactionTitle(entry) || t("transaction");
   const subtitle = selectTransactionSubtitle(entry);
-  const isPending = entry.flag === "!";
+  const heroBadges = selectHeroBadges(entry, today, {
+    pending: t("pending"),
+    forecast: t("entryForecast"),
+    pad: t("pad"),
+    upcoming: t("entryUpcoming"),
+  });
   const formattedDate = formatLedgerDate(entry.date.slice(0, 10), locale);
   const iconPostings = entry.postings.map((posting) => ({
     account: posting.account,
@@ -809,11 +830,17 @@ const TransactionDetailImpl = ({
               color={theme.black80}
             />
             <Text style={styles.heroDate}>{formattedDate}</Text>
-            {isPending && (
-              <View style={styles.statusBadge}>
-                <View style={styles.statusDot} />
-                <Text style={styles.statusText}>{t("pending")}</Text>
-              </View>
+            {heroBadges.map((badge) =>
+              badge.tone === "warning" ? (
+                <View key={badge.key} style={styles.statusBadge}>
+                  <View style={styles.statusDot} />
+                  <Text style={styles.statusText}>{badge.text}</Text>
+                </View>
+              ) : (
+                <View key={badge.key} style={styles.noteBadge}>
+                  <Text style={styles.noteText}>{badge.text}</Text>
+                </View>
+              ),
             )}
           </View>
         </View>
