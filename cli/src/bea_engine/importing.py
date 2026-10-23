@@ -514,7 +514,7 @@ def answer(
         raise ConflictError("The export changed during extraction; nothing was written. Retry.")
     source_hash = hashlib.sha256(source_bytes).hexdigest()
     other_entries = _authored_directive_keys(snapshot)
-    quotes = _written_quotes(existing)
+    quotes = _written_quotes(snapshot)
     price_conflicts = False
     rows: list[dict[str, Any]] = []
     padded_rows = 0
@@ -1730,25 +1730,18 @@ def _fingerprint(entry: Any, account: str) -> tuple[Any, ...]:
     )
 
 
-def _written_quotes(existing: Sequence[Any]) -> dict[tuple[Any, str, str], list[Any]]:
+def _written_quotes(snapshot: Any) -> dict[tuple[Any, str, str], list[Any]]:
     """The ledger's own price directives by day and pair, as `add price` counts them.
 
-    A price a plugin such as `implicit_prices` generates, or one from the
-    managed quote cache, is no quote the ledger records.
+    Read from the files, so a plugin that filters or inverts a quote changes
+    neither the duplicate nor the conflict decision (w5/992). A price a plugin
+    such as `implicit_prices` generates, or one from the managed quote cache,
+    is no quote the ledger records.
     """
-    from beancount.core.data import Price
-
-    from bea_engine.ledger.reader import entry_generated, shared_locations
-    from bea_engine.managed_price_cache import managed_source_for_path
+    from bea_engine.ledger.reader import authored_prices
 
     quotes: dict[tuple[Any, str, str], list[Any]] = {}
-    shared = shared_locations(existing)
-    for entry in existing:
-        if not isinstance(entry, Price) or entry_generated(entry, "price", shared):
-            continue
-        filename = entry.meta.get("filename")
-        if isinstance(filename, str) and filename and managed_source_for_path(Path(filename)) is not None:
-            continue
+    for entry in authored_prices(snapshot):
         quotes.setdefault((entry.date, entry.currency, entry.amount.currency), []).append(entry)
     return quotes
 

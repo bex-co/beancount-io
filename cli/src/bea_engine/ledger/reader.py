@@ -274,6 +274,30 @@ def _totals_declared(entry: Any, spelled: Any) -> bool:
     return all(held.get(key) == total for key, total in stated.items() if key[0] not in open_accounts)
 
 
+def authored_prices(snapshot: Any) -> list[Any]:
+    """The price directives the ledger's files declare, parsed without plugins (w5/992).
+
+    A plugin may filter prices out of the loaded view or rewrite one (an
+    inverted pair), so the duplicate and conflict decisions for a quote read
+    what the files spell. Each keeps its filename and line.
+    """
+    from beancount.parser import parser
+
+    from bea_engine.managed_price_cache import managed_source_for_path
+
+    prices: list[Any] = []
+    for path, content in sorted(snapshot.contents.items()):
+        if managed_source_for_path(Path(path)) is not None:
+            continue
+        try:
+            text = content.decode("utf-8-sig")
+        except UnicodeDecodeError:
+            continue
+        parsed, _, _ = parser.parse_string(unicodedata.normalize("NFC", text), report_filename=str(path))
+        prices.extend(entry for entry in parsed if isinstance(entry, Price))
+    return prices
+
+
 def entry_generated(
     entry: Any,
     directive_type: str,

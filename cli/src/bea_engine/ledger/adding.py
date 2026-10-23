@@ -1043,7 +1043,7 @@ def _price(
 
     from bea_engine import managed_load
     from bea_engine.ledger.models import WRITE_INPUT, PriceDirective
-    from bea_engine.ledger.reader import entry_generated, shared_locations
+    from bea_engine.ledger.reader import authored_prices
     from bea_engine.managed_price_cache import managed_source_for_path
     from bea_engine.query import format_error
 
@@ -1066,20 +1066,20 @@ def _price(
     managed_sources: set[str] = set()
     pair = (currency, amount_currency)
     shadowed_pairs = {pair, (amount_currency, currency)}
-    shared = shared_locations(entries)
     for entry in entries:
         if not isinstance(entry, Price) or entry.date != directive.date:
             continue
-        entry_pair = (entry.currency, entry.amount.currency)
-        if entry_pair not in shadowed_pairs:
+        if (entry.currency, entry.amount.currency) not in shadowed_pairs:
             continue
         filename = entry.meta.get("filename")
         managed_source = managed_source_for_path(Path(filename)) if isinstance(filename, str) and filename else None
         if managed_source is not None:
             managed_sources.add(managed_source)
-        elif not entry_generated(entry, "price", shared):
-            # A plugin-made price (implicit_prices) borrows its transaction's
-            # location; it is no ledger-authored quote to match or conflict with.
+    # What the files declare, not the loaded view: a filtered quote still
+    # counts and an inverted one is not the quote its file spells (w5/992).
+    for entry in authored_prices(snapshot):
+        entry_pair = (entry.currency, entry.amount.currency)
+        if entry.date == directive.date and entry_pair in shadowed_pairs:
             (local_prices if entry_pair == pair else reciprocal_prices).append(entry)
 
     match = next((entry for entry in local_prices if entry.amount.number == number), None)
