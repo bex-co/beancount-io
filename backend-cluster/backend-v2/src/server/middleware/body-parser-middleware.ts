@@ -5,6 +5,9 @@ import {
   mcpBodyParseFailure,
 } from "@/features/ai-agent/api/mcp-route";
 
+/** The JSON body cap, and how an over-cap MCP refusal names it. */
+const JSON_LIMIT = { bytes: "2mb", label: "2 MiB" } as const;
+
 /** A body the parser refused, carried past koa-bodyparser's own handling. */
 class BodyParseFailure extends Error {
   constructor(readonly cause: Error & { status?: number; body?: unknown }) {
@@ -27,7 +30,7 @@ export function bodyParserMiddleware(): Koa.Middleware {
   const parse = bodyParser({
     // A 1 MiB file needs ~1.4 MiB as base64, plus the request envelope.
     // Explicit file-write boundaries enforce the separate decoded-byte cap.
-    jsonLimit: "2mb",
+    jsonLimit: JSON_LIMIT.bytes,
     formLimit: "56kb",
     // koa-bodyparser carries on to the next middleware after `onerror`
     // returns, so the failure is thrown to stop the request here.
@@ -50,7 +53,10 @@ export function bodyParserMiddleware(): Koa.Middleware {
       if (!(error instanceof BodyParseFailure)) throw error;
       if (ctx.path !== MCP_ENDPOINT_PATH) throw error.cause;
       ctx.status = error.cause.status ?? 400;
-      ctx.body = mcpBodyParseFailure(error.cause.body);
+      ctx.body = mcpBodyParseFailure(
+        error.cause.body,
+        ctx.status === 413 ? JSON_LIMIT.label : undefined,
+      );
     }
   };
 }

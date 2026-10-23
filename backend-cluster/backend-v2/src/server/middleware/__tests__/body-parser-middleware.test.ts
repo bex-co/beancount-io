@@ -118,9 +118,14 @@ describe("bodyParserMiddleware", () => {
       JSON.stringify({ pad: "x".repeat(2 * 1024 * 1024 + 1) }),
     );
     expect(response.status).toBe(413);
-    expect(JSON.parse(response.body)).toMatchObject({
+    // w23/073: it said "could not be read as a JSON-RPC request".
+    expect(JSON.parse(response.body)).toEqual({
       jsonrpc: "2.0",
-      error: { code: -32600 },
+      error: {
+        code: -32600,
+        message:
+          "Invalid Request: the body exceeds the 2 MiB limit (including JSON escaping and the envelope); split large batches into separate requests",
+      },
       id: null,
     });
     expect(reached).not.toHaveBeenCalled();

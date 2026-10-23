@@ -199,9 +199,14 @@ export const MCP_ENDPOINT_PATH = "/api-gateway/mcp";
  * the transport, which is what would otherwise say so in JSON-RPC. `-32700`
  * is the spec's code for text that is not JSON; `-32600` for JSON that is not
  * a request — a bare scalar, or a body past the size limit. `id` is null
- * because no request was read to take one from.
+ * because no request was read to take one from. A body refused for its size
+ * says so, with `sizeLimit`: "could not be read" read like a bug in the
+ * client, not a cap to split a batch under (w23/073).
  */
-export function mcpBodyParseFailure(rawBody: unknown): {
+export function mcpBodyParseFailure(
+  rawBody: unknown,
+  sizeLimit?: string,
+): {
   jsonrpc: "2.0";
   error: { code: number; message: string };
   id: null;
@@ -218,22 +223,27 @@ export function mcpBodyParseFailure(rawBody: unknown): {
   return {
     jsonrpc: "2.0",
     error:
-      typeof rawBody !== "string"
+      sizeLimit !== undefined
         ? {
             code: -32600,
-            message:
-              "Invalid Request: the body could not be read as a JSON-RPC request",
+            message: `Invalid Request: the body exceeds the ${sizeLimit} limit (including JSON escaping and the envelope); split large batches into separate requests`,
           }
-        : isJson
+        : typeof rawBody !== "string"
           ? {
               code: -32600,
               message:
-                "Invalid Request: the body must be a JSON-RPC request object",
+                "Invalid Request: the body could not be read as a JSON-RPC request",
             }
-          : {
-              code: -32700,
-              message: "Parse error: the body is not valid JSON",
-            },
+          : isJson
+            ? {
+                code: -32600,
+                message:
+                  "Invalid Request: the body must be a JSON-RPC request object",
+              }
+            : {
+                code: -32700,
+                message: "Parse error: the body is not valid JSON",
+              },
     id: null,
   };
 }

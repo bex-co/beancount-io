@@ -462,7 +462,8 @@ check applies to a preview. Reads of existing larger files remain available;
 generated directive appends are a separate operation and may grow a ledger file
 beyond this explicit-file limit. The complete JSON request has an independent
 **2 MiB** cap, including JSON escaping, the protocol envelope and all batch
-items. Split large batches into separate requests.
+items. Split large batches into separate requests. A request over it is refused
+with HTTP 413 and JSON-RPC `-32600` "the body exceeds the 2 MiB limit".
 
 `dry_run` defaults to `false`. With `true`, the tool reads existing files as
 needed, checks replacement matches, constructs operations, and runs the same
