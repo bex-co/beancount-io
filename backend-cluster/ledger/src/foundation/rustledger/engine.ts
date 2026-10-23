@@ -729,24 +729,26 @@ async function parseLedgerFilesUncached(
   if (!isRawPluginProcessing(files, entryPoint)) {
     const scopedFiles = stripResult?.strippedFiles ?? scoped;
     const transformed = directives;
+    const hidden = await errorsHiddenByUnusedPads(
+      transformed,
+      padding.paddingTransactions,
+      scopedFiles,
+      errors,
+      // Checked again as the first pass was: the blanked source has no
+      // amortize_over or forecast copies, so every balance on an account a
+      // plugin moved failed against the untransformed postings (w21/704).
+      (blanked, unused) =>
+        validatedTransformed
+          ? transformedValidationErrors(
+              transformed.filter((directive) => !unused.includes(directive)),
+              files[entryPoint],
+            ).then((found) => found ?? [])
+          : withLedger(blanked, entryPoint, (ledger) => ledger.getErrors()),
+    );
+    const cleared = new Set(hidden.cleared);
     errors = [
-      ...errors,
-      ...(await errorsHiddenByUnusedPads(
-        transformed,
-        padding.paddingTransactions,
-        scopedFiles,
-        errors,
-        // Checked again as the first pass was: the blanked source has no
-        // amortize_over or forecast copies, so every balance on an account a
-        // plugin moved failed against the untransformed postings (w21/704).
-        (blanked, unused) =>
-          validatedTransformed
-            ? transformedValidationErrors(
-                transformed.filter((directive) => !unused.includes(directive)),
-                files[entryPoint],
-              ).then((found) => found ?? [])
-            : withLedger(blanked, entryPoint, (ledger) => ledger.getErrors()),
-      )),
+      ...errors.filter((error) => !cleared.has(error)),
+      ...hidden.added,
     ];
   }
   directives = mergePaddingTransactions(

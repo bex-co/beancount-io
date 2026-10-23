@@ -1,6 +1,6 @@
 import type { BeancountError, DirectiveJson, FileMap } from "@rustledger/wasm";
-import { padLocation, unusedPadError } from "./pad-tolerance";
-import { splitIntoBlocks } from "./source-slice";
+import { indexBlocks, type BlockIndex } from "./block-index";
+import { padLocator, unusedPadError } from "./pad-tolerance";
 
 type Pad = Extract<DirectiveJson, { type: "pad" }>;
 
@@ -34,6 +34,23 @@ function paddedCurrencies(
 
 const keyOf = (pad: Pad) => padKey(pad.date, pad.account, pad.source_account);
 
+/** Each account's latest balance date per currency. */
+function lastBalanceDates(
+  directives: readonly DirectiveJson[],
+): Map<string, Map<string, string>> {
+  const last = new Map<string, Map<string, string>>();
+  for (const directive of directives) {
+    if (directive.type !== "balance") continue;
+    const dates = last.get(directive.account) ?? new Map<string, string>();
+    const currency = directive.amount.currency;
+    if ((dates.get(currency) ?? "") < directive.date) {
+      dates.set(currency, directive.date);
+    }
+    last.set(directive.account, dates);
+  }
+  return last;
+}
+
 /**
  * Whether the pad's account asserts a balance after it in a currency the pad
  * did not fill. Beancount gives a pad only each currency's first balance after
@@ -41,29 +58,23 @@ const keyOf = (pad: Pad) => padKey(pad.date, pad.account, pad.source_account);
  * the pad cover it too (w21/705).
  */
 function assertsOtherCurrency(
-  directives: readonly DirectiveJson[],
+  lastBalance: ReadonlyMap<string, ReadonlyMap<string, string>>,
   pad: Pad,
   filled: ReadonlySet<string>,
 ): boolean {
-  return directives.some(
-    (directive) =>
-      directive.type === "balance" &&
-      directive.account === pad.account &&
-      directive.date > pad.date &&
-      !filled.has(directive.amount.currency),
-  );
+  for (const [currency, date] of lastBalance.get(pad.account) ?? []) {
+    if (date > pad.date && !filled.has(currency)) return true;
+  }
+  return false;
 }
 
 /** The account and currency of the balance an error was reported on. */
 function balanceAt(
   error: BeancountError,
-  files: FileMap,
+  index: BlockIndex,
 ): { account: string; currency: string } | null {
-  const source = error.file ? files[error.file] : undefined;
-  if (source === undefined || !error.line) return null;
-  const block = splitIntoBlocks(source).find(
-    (candidate) => candidate.startLine + 1 === error.line,
-  );
+  if (!error.file || !error.line) return null;
+  const block = index.at(error.file, error.line);
   const header = block?.text.split("\n")[0].replace(/;.*$/, "").trim();
   const match = header
     ? /^\d{4}-\d{2}-\d{2}\s+balance\s+(\S+)\s.*\s(\S+)$/.exec(header)
@@ -71,22 +82,25 @@ function balanceAt(
   return match ? { account: match[1], currency: match[2] } : null;
 }
 
-/** `files[file]` with the block written at 1-based `line` blanked, every other line number kept. */
-function withoutBlock(source: string, line: number): string {
+/** `file`'s source with the blocks written at 1-based `starts` blanked, every other line number kept. */
+function withoutBlocks(
+  index: BlockIndex,
+  file: string,
+  source: string,
+  starts: readonly number[],
+): string {
   const lines = source.split("\n");
-  for (const block of splitIntoBlocks(source)) {
-    if (block.startLine + 1 !== line) continue;
+  for (const start of starts) {
+    const block = index.at(file, start);
+    if (block === undefined) continue;
     for (let at = block.startLine; at < block.endLine; at += 1) lines[at] = "";
-    break;
   }
   return lines.join("\n");
 }
 
-const sameError = (a: BeancountError, b: BeancountError) =>
-  a.code === b.code &&
-  a.message === b.message &&
-  (a.file ?? null) === (b.file ?? null) &&
-  (a.line ?? null) === (b.line ?? null);
+/** What tells two reports of one error apart: its code, words and place. */
+const errorKey = (error: BeancountError) =>
+  `${error.code}\0${error.message}\0${error.file ?? ""}\0${error.line ?? ""}`;
 
 /**
  * What an unused pad hides. Beancount pads only the first balance after a pad
@@ -99,6 +113,10 @@ const sameError = (a: BeancountError, b: BeancountError) =>
  * used, but its account's balances in another currency are Beancount's own
  * (w21/705): it is blanked for the second run too, and that run's failures in
  * the currencies it did fill, which only the blanking caused, are left out.
+ *
+ * rustledger also reports "Multiple pad directives" (E2004) on the next pad
+ * after one it still counts as open, an error Beancount does not have: those
+ * that do not recur in the second run come back as `cleared` (w21/706).
  *
  * `reparse` returns the errors rustledger reports for a file map: `files` with
  * the unused pads blanked, or, where balances were checked on a plugin's
@@ -113,8 +131,9 @@ export async function errorsHiddenByUnusedPads(
     files: FileMap,
     unused: readonly DirectiveJson[],
   ) => Promise<readonly BeancountError[]>,
-): Promise<BeancountError[]> {
+): Promise<{ added: BeancountError[]; cleared: BeancountError[] }> {
   const filled = paddedCurrencies(paddingTransactions);
+  const lastBalance = lastBalanceDates(directives);
   const pads = directives.filter(
     (directive): directive is Pad => directive.type === "pad",
   );
@@ -123,29 +142,38 @@ export async function errorsHiddenByUnusedPads(
     const currencies = filled.get(keyOf(pad));
     return (
       currencies !== undefined &&
-      assertsOtherCurrency(directives, pad, currencies)
+      assertsOtherCurrency(lastBalance, pad, currencies)
     );
   });
-  if (unused.length === 0 && partly.length === 0) return [];
+  if (unused.length === 0 && partly.length === 0) {
+    return { added: [], cleared: [] };
+  }
 
-  const claimed = new Set<string>();
-  const extra: BeancountError[] = [];
-  const blanked: FileMap = { ...files };
-  let changed = false;
+  const index = indexBlocks(files);
+  const locate = padLocator(files, index);
+  const seen = new Set(known.map(errorKey));
+  const added: BeancountError[] = [];
+  const starts = new Map<string, number[]>();
   for (const pad of [...unused, ...partly]) {
-    const [file, line] = padLocation(pad, files, claimed);
+    const [file, line] = locate(pad);
     if (!filled.has(keyOf(pad))) {
       const error = unusedPadError(file, line);
-      if (!known.some((existing) => sameError(existing, error))) {
-        extra.push(error);
+      if (!seen.has(errorKey(error))) {
+        seen.add(errorKey(error));
+        added.push(error);
       }
     }
     if (file !== null && line !== null) {
-      blanked[file] = withoutBlock(blanked[file], line);
-      changed = true;
+      const lines = starts.get(file) ?? [];
+      lines.push(line);
+      starts.set(file, lines);
     }
   }
-  if (!changed) return extra;
+  if (starts.size === 0) return { added, cleared: [] };
+  const blanked: FileMap = { ...files };
+  for (const [file, lines] of starts) {
+    blanked[file] = withoutBlocks(index, file, files[file], lines);
+  }
 
   // Blanking a used pad drops the padding it did add, on both its accounts.
   const lost = new Set(
@@ -156,16 +184,20 @@ export async function errorsHiddenByUnusedPads(
       ]),
     ),
   );
-  for (const error of await reparse(blanked, [...unused, ...partly])) {
+  const rechecked = await reparse(blanked, [...unused, ...partly]);
+  for (const error of rechecked) {
     if (!BALANCE_CODES.has(error.code ?? "")) continue;
-    if ([...known, ...extra].some((existing) => sameError(existing, error))) {
-      continue;
-    }
-    const balance = lost.size > 0 ? balanceAt(error, files) : null;
+    if (seen.has(errorKey(error))) continue;
+    const balance = lost.size > 0 ? balanceAt(error, index) : null;
     if (balance && lost.has(`${balance.account}\0${balance.currency}`)) {
       continue;
     }
-    extra.push(error);
+    seen.add(errorKey(error));
+    added.push(error);
   }
-  return extra;
+  const recurring = new Set(rechecked.map(errorKey));
+  const cleared = known.filter(
+    (error) => error.code === "E2004" && !recurring.has(errorKey(error)),
+  );
+  return { added, cleared };
 }

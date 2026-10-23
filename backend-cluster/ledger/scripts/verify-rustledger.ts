@@ -1341,6 +1341,30 @@ async function main(): Promise<void> {
       otherCurrency.errors[0].message.includes("got 40.00 EUR"),
     `a pad that filled USD leaves a later EUR balance to its own check (got ${otherCurrency.errors.map((e) => `${e.code}@${e.line}`)})`,
   );
+  // w21/706: rustledger reported "Multiple pad directives" on the pad after an
+  // unused one; bean-check reports only the unused pad.
+  const padAfterUnused = await parseLedgerFiles(
+    {
+      "main.beancount": [
+        "2026-01-01 open Assets:A",
+        "2026-01-01 open Equity:Open",
+        '2026-01-02 * "dep"',
+        "  Assets:A  100.00 USD",
+        "  Equity:Open",
+        "2026-02-01 pad Assets:A Equity:Open",
+        "2026-02-02 balance Assets:A  100.00 USD",
+        "2026-03-01 pad Assets:A Equity:Open",
+        "2026-03-02 balance Assets:A  120.00 USD",
+      ].join("\n"),
+    },
+    "main.beancount",
+    { today: "2099-01-01" },
+  );
+  assert(
+    JSON.stringify(padAfterUnused.errors.map((e) => [e.code, e.line])) ===
+      JSON.stringify([["E2003", 6]]),
+    `the pad after an unused one raises no Multiple pad directives (got ${padAfterUnused.errors.map((e) => `${e.code}@${e.line}`)})`,
+  );
 
   const firstElidedAmortizeSource = [
     'plugin "fava.plugins.amortize_over"',

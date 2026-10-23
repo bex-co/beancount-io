@@ -40,4 +40,23 @@ describe("withBalanceErrorDates", () => {
     const unlocated = error(null);
     expect(withBalanceErrorDates([unlocated], FILES)[0]).toBe(unlocated);
   });
+
+  // w21/706: the source was split again for every failing balance, so 4000 of
+  // them took seconds.
+  it("dates 4000 failing balances in one pass over the file", () => {
+    const day = (n: number) =>
+      new Date(Date.UTC(2000, 0, 1) + n * 86_400_000)
+        .toISOString()
+        .slice(0, 10);
+    const lines = ["2000-01-01 open Assets:Cash"];
+    for (let i = 1; i <= 4000; i += 1) {
+      lines.push(`${day(i)} balance Assets:Cash  ${i}.00 USD`);
+    }
+    const files = { "main.bean": lines.join("\n") };
+    const errors = lines.slice(1).map((_, i) => error(i + 2));
+    const started = Date.now();
+    const dated = withBalanceErrorDates(errors, files);
+    expect(Date.now() - started < 1000).toBe(true);
+    expect(dated[3999]).toMatchObject({ date: day(4000) });
+  });
 });

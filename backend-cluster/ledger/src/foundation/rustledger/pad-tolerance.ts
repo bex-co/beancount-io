@@ -1,6 +1,6 @@
 import BigNumber from "bignumber.js";
 import type { BeancountError, DirectiveJson, FileMap } from "@rustledger/wasm";
-import { splitIntoBlocks } from "./source-slice";
+import { indexBlocks, type BlockIndex } from "./block-index";
 
 type Balance = Extract<DirectiveJson, { type: "balance" }>;
 type Pad = Extract<DirectiveJson, { type: "pad" }>;
@@ -58,29 +58,41 @@ export function unusedPadError(
   };
 }
 
-/** Where a pad is written: `[file, 1-based line]`, matched by its header. */
-export function padLocation(
-  pad: Pad,
+const PAD_HEADER = /^(\d{4}-\d{2}-\d{2})\s+pad\s+(\S+)\s+(\S+)(\s|$)/;
+
+const padKey = (date: string, account: string, source: string) =>
+  `${date}\0${account}\0${source}`;
+
+/**
+ * Where pads are written: `[file, 1-based line]`, matched by header and handed
+ * out in file order, so twin pads get a line each. The files are read once for
+ * every pad asked about; read again per pad, 4000 pads took seconds (w21/706).
+ */
+export function padLocator(
   files: FileMap,
-  claimed: Set<string>,
-): [string, number] | [null, null] {
-  const header = new RegExp(
-    `^${pad.date}\\s+pad\\s+${escapeRegExp(pad.account)}\\s+${escapeRegExp(pad.source_account)}(\\s|$)`,
-  );
-  for (const [file, source] of Object.entries(files)) {
-    for (const block of splitIntoBlocks(source)) {
-      const key = `${file}:${block.startLine}`;
-      if (!claimed.has(key) && header.test(block.text)) {
-        claimed.add(key);
-        return [file, block.startLine + 1];
+  index: BlockIndex = indexBlocks(files),
+): (pad: Pad) => [string, number] | [null, null] {
+  let written: Map<string, Array<[string, number]>> | undefined;
+  return (pad) => {
+    if (written === undefined) {
+      written = new Map();
+      for (const file of Object.keys(files)) {
+        for (const block of index.blocks(file)) {
+          const header = PAD_HEADER.exec(block.text);
+          if (!header) continue;
+          const key = padKey(header[1], header[2], header[3]);
+          const lines = written.get(key) ?? [];
+          lines.push([file, block.startLine + 1]);
+          written.set(key, lines);
+        }
       }
     }
-  }
-  return [null, null];
-}
-
-function escapeRegExp(text: string): string {
-  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return (
+      written
+        .get(padKey(pad.date, pad.account, pad.source_account))
+        ?.shift() ?? [null, null]
+    );
+  };
 }
 
 /**
@@ -103,19 +115,30 @@ export function dropPaddingWithinTolerance(
   }
   const kept: DirectiveJson[] = [];
   const dropped = new Map<number, boolean>();
+  // The first pad of each date and account pair, found once for all padding.
+  const padIndexes = new Map<string, number>();
+  directives.forEach((directive, index) => {
+    if (directive.type !== "pad") return;
+    const key = padKey(
+      directive.date,
+      directive.account,
+      directive.source_account,
+    );
+    if (!padIndexes.has(key)) padIndexes.set(key, index);
+  });
   for (const transaction of paddingTransactions) {
     const posting =
       transaction.type === "transaction" ? transaction.postings[0] : undefined;
-    const padIndex = posting
-      ? directives.findIndex(
-          (directive) =>
-            directive.type === "pad" &&
-            directive.date === transaction.date &&
-            directive.account === posting.account &&
-            transaction.type === "transaction" &&
-            directive.source_account === transaction.postings[1]?.account,
-        )
-      : -1;
+    const padIndex =
+      posting && transaction.type === "transaction"
+        ? (padIndexes.get(
+            padKey(
+              transaction.date,
+              posting.account,
+              transaction.postings[1]?.account ?? "",
+            ),
+          ) ?? -1)
+        : -1;
     const balance =
       padIndex >= 0 && posting?.units
         ? triggeringBalance(
@@ -139,15 +162,11 @@ export function dropPaddingWithinTolerance(
     kept.push(transaction);
   }
 
-  const claimed = new Set<string>();
+  const locate = padLocator(files);
   const errors: BeancountError[] = [];
   dropped.forEach((unused, padIndex) => {
     if (!unused) return;
-    const [file, line] = padLocation(
-      directives[padIndex] as Pad,
-      files,
-      claimed,
-    );
+    const [file, line] = locate(directives[padIndex] as Pad);
     errors.push(unusedPadError(file, line));
   });
   return { paddingTransactions: kept, errors };

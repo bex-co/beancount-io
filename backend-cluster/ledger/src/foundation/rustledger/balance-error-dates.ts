@@ -1,5 +1,5 @@
 import type { BeancountError, FileMap } from "@rustledger/wasm";
-import { splitIntoBlocks } from "./source-slice";
+import { indexBlocks } from "./block-index";
 
 /** A balance failure that also names the date of the assertion it is on. */
 export type DatedBalanceError = BeancountError & { date?: string };
@@ -16,6 +16,8 @@ export function withBalanceErrorDates(
   errors: readonly BeancountError[],
   files: FileMap,
 ): DatedBalanceError[] {
+  // Split once, however many balances failed (w21/706).
+  const index = indexBlocks(files);
   return errors.map((error) => {
     if (
       (error.code !== "E2001" && error.code !== "E2002") ||
@@ -24,11 +26,8 @@ export function withBalanceErrorDates(
     ) {
       return error;
     }
-    const source = files[error.file];
-    if (source === undefined) return error;
-    const block = splitIntoBlocks(source).find(
-      (candidate) => candidate.startLine + 1 === error.line,
-    );
+    if (files[error.file] === undefined) return error;
+    const block = index.at(error.file, error.line);
     const date = block ? DATED_HEADER.exec(block.text)?.[1] : undefined;
     return date ? { ...error, date } : error;
   });
