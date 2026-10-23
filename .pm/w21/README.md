@@ -24,7 +24,6 @@
 - [742](./742.md) — Account detail's "1 not in total" can't be opened, so the excluded amount appears nowhere on that screen
 - [743](./743.md) — A Persian or Arabic account path shows its segments child-before-parent on Accounts and in the detail header
 - [744](./744.md) — A balance assertion with an explicit `~` tolerance hides the tolerance in account detail
-- [740](./740.md) — Errors from built-in plugins carry no file or line, so their Notifications rows can't be tapped
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window
 - [065](./blocked/065.md) — One early-year entry (e.g. 0050) makes the balance sheet 23,718 monthly points (3 MB) and the app stalls — **blocked:** needs an approach decision (per-pill fetch vs server downsample) and a simulator profile of the stall
 - [180](./blocked/180.md) — Budget actuals use raw prefix match (`Transport` counts `Transportation`), unlike Reports — **blocked:** needs an owner decision between component matching on the server (a Fava break) and a per-account breakdown for the client

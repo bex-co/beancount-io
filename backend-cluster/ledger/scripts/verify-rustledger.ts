@@ -1665,6 +1665,55 @@ async function main(): Promise<void> {
       `${plugin} reports what bean-check does (got ${JSON.stringify(strict)})`,
     );
   }
+  // w21/740: leafonly, noduplicates and coherent_cost errors had no file or
+  // line (coherent_cost none at all), and leafonly came once per posting.
+  const placedErrors = (
+    await parseLedgerFiles(
+      {
+        "main.beancount": [
+          'plugin "beancount.plugins.leafonly"',
+          'plugin "beancount.plugins.noduplicates"',
+          'plugin "beancount.plugins.coherent_cost"',
+          "2024-01-01 open Assets:Cash",
+          "2024-01-01 open Assets:Cash:Sub",
+          "2024-01-01 open Assets:Broker",
+          "2024-01-01 open Equity:Opening",
+          '2024-01-02 * "Parent posting"',
+          "  Assets:Cash  10 USD",
+          "  Assets:Cash  5 USD",
+          "  Assets:Cash:Sub  5 USD",
+          "  Equity:Opening  -20 USD",
+          '2024-01-03 * "Shop" "Dup"',
+          "  Assets:Cash:Sub  1 USD",
+          "  Equity:Opening  -1 USD",
+          '2024-01-03 * "Shop" "Dup"',
+          "  Assets:Cash:Sub  1 USD",
+          "  Equity:Opening  -1 USD",
+          '2024-01-04 * "Buy at cost"',
+          "  Assets:Broker  1 VTI {100 USD}",
+          "  Equity:Opening",
+          '2024-01-05 * "Gift no cost"',
+          "  Assets:Broker  1 VTI",
+          "  Equity:Opening  -1 VTI",
+        ].join("\n"),
+      },
+      "main.beancount",
+      { today: "2099-01-01" },
+    )
+  ).errors
+    .map((e) => `${e.line} ${e.message}`)
+    .sort();
+  assert(
+    JSON.stringify(placedErrors) ===
+      JSON.stringify(
+        [
+          "4 Non-leaf account 'Assets:Cash' has postings on it",
+          '16 Duplicate transaction: 2024-01-03 "Dup"',
+          "22 Currency 'VTI' is used both with and without cost",
+        ].sort(),
+      ),
+    `built-in plugins' errors land on bean-check's lines (got ${JSON.stringify(placedErrors)})`,
+  );
   // w21/733: a posting flag was read as the sale's account.
   const flagged = (
     await parseLedgerFiles(

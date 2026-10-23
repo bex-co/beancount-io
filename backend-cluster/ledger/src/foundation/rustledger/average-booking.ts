@@ -1,6 +1,5 @@
 import type { BeancountError, DirectiveJson, FileMap } from "@rustledger/wasm";
-import { indexBlocks } from "./block-index";
-import { includeTraversalOrder } from "./source-slice";
+import { entryLocator } from "./block-index";
 
 const AVERAGE = "AVERAGE";
 const OPTION = /^option\s+"booking_method"\s+"([A-Z_]+)"/gmu;
@@ -23,9 +22,7 @@ type Units = { number: string; currency: string };
  * its notification could not be opened (w21/721).
  */
 function saleLocator(files: FileMap, entryPoint: string) {
-  const index = indexBlocks(files);
-  const order = includeTraversalOrder(files, entryPoint);
-  const claimed = new Set<string>();
+  const locate = entryLocator(files, entryPoint);
   const holds = (line: string, account: string, units: Units) => {
     const posting = POSTING.exec(line);
     return (
@@ -35,23 +32,8 @@ function saleLocator(files: FileMap, entryPoint: string) {
       Number(posting[2]!.replace(/,/gu, "")) === Number(units.number)
     );
   };
-  return (
-    date: string,
-    account: string,
-    units: Units,
-  ): { file: string; line: number } | null => {
-    for (const file of order) {
-      for (const block of index.blocks(file)) {
-        const key = `${file}\u0000${block.startLine}`;
-        if (!block.text.startsWith(date) || claimed.has(key)) continue;
-        const lines = block.text.split("\n").slice(1);
-        if (!lines.some((line) => holds(line, account, units))) continue;
-        claimed.add(key);
-        return { file, line: block.startLine + 1 };
-      }
-    }
-    return null;
-  };
+  return (date: string, account: string, units: Units) =>
+    locate(date, (line) => holds(line, account, units));
 }
 
 /**

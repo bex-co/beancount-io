@@ -1,12 +1,10 @@
 import type { BeancountError, DirectiveJson, FileMap } from "@rustledger/wasm";
 import { directiveAccounts } from "./auto-accounts";
-import { indexBlocks } from "./block-index";
+import { openLocations } from "./block-index";
 import { beancountPluginRuns } from "./plugins/collect-plugins";
-import { includeTraversalOrder } from "./source-slice";
 
 /** rustledger's own finding, a warning, which the server does not show. */
 const RUSTLEDGER = /^Account '.*' is opened but never used$/u;
-const OPEN = /^\d{4}-\d{2}-\d{2}\s+open\s+(\S+)/u;
 
 /**
  * Beancount's `nounused` (or `pedantic`) refuses an opened account no other
@@ -31,25 +29,14 @@ export function reconcileNounusedErrors(
     else for (const account of directiveAccounts(directive)) used.add(account);
   }
   const unused = [...opened].filter((account) => !used.has(account));
-  const lines = new Map<string, { file: string; line: number }>();
-  if (unused.length > 0) {
-    const index = indexBlocks(files);
-    for (const file of includeTraversalOrder(files, entryPoint)) {
-      for (const block of index.blocks(file)) {
-        const account = OPEN.exec(block.text)?.[1];
-        if (account !== undefined && !lines.has(account)) {
-          lines.set(account, { file, line: block.startLine + 1 });
-        }
-      }
-    }
-  }
+  const lines = unused.length > 0 ? openLocations(files, entryPoint) : null;
   // Each run reports again, as bean-check does for a plugin declared twice.
   return [
     ...errors.filter((error) => !RUSTLEDGER.test(error.message)),
     ...runs
       .flatMap(() => unused)
       .map((account): BeancountError => {
-        const at = lines.get(account);
+        const at = lines?.get(account);
         return {
           message: `Unused account '${account}'`,
           code: "PLUGIN",
