@@ -43,6 +43,12 @@ export function periodAxisLabel(
   interval: string,
   t: (key: string) => string,
   locale = "en",
+  /**
+   * The last day of a window that ended before today, which ends its last
+   * period early: last year's last week runs to January 4 and was labelled
+   * "1/4", a date of the next year (w21/764).
+   */
+  windowEnd?: string,
 ): string {
   const normalized = interval.toLowerCase();
   if (normalized === "yearly") {
@@ -51,7 +57,9 @@ export function periodAxisLabel(
   if (normalized === "daily") {
     return formatLedgerMonthDay(date, locale);
   }
-  const end = addDaysISO(nextIntervalStartISO(date, interval), -1);
+  const periodEnd = addDaysISO(nextIntervalStartISO(date, interval), -1);
+  const end =
+    windowEnd !== undefined && windowEnd < periodEnd ? windowEnd : periodEnd;
   if (normalized === "weekly") {
     return formatLedgerMonthDay(end, locale);
   }
@@ -202,6 +210,22 @@ export function timeWindowStart(
     return `${String(Number(today.slice(0, 4)) - 1).padStart(4, "0")}-01-01`;
   }
   const match = /^(\d{4}-\d{2}-\d{2}) - /.exec(time);
+  return match ? match[1] : undefined;
+}
+
+/**
+ * The last day a budget window's `time` filter covers, or undefined for all
+ * time.
+ */
+export function timeWindowEnd(
+  time: string | undefined,
+  today: string,
+): string | undefined {
+  if (!time) return undefined;
+  if (time === "year-1") {
+    return `${String(Number(today.slice(0, 4)) - 1).padStart(4, "0")}-12-31`;
+  }
+  const match = / - (\d{4}-\d{2}-\d{2})$/.exec(time);
   return match ? match[1] : undefined;
 }
 

@@ -45,6 +45,7 @@ import {
   budgetChartSummary,
   intervalLabelKey,
   periodAxisLabel,
+  timeWindowEnd,
   STATUS_LABEL_KEYS,
 } from "@/screens/budget-screen/selectors/budget-labels";
 import { withYearMarks } from "@/common/d3/axis-year-marks";
@@ -232,8 +233,17 @@ export function BudgetGroupCard({
 
   // One object so the chart and its spoken summary can never describe different
   // series.
+  // A window that ended before today ends its last period with it (w21/764);
+  // one running through today keeps the period's own end (w21/219).
+  const windowEnd = timeWindowEnd(time, today);
   const periodLabels = series.map((point) =>
-    periodAxisLabel(point.date, group.interval, t, locale),
+    periodAxisLabel(
+      point.date,
+      group.interval,
+      t,
+      locale,
+      windowEnd !== undefined && windowEnd < today ? windowEnd : undefined,
+    ),
   );
   const periodDates = series.map((point) => point.date);
   const chartSeries = {
