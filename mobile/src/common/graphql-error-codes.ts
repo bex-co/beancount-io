@@ -27,7 +27,24 @@ export function graphQLErrorCodes(err: unknown): string[] {
  * (w21/054). A network failure is not "gone".
  */
 export function isLedgerGone(err: unknown): boolean {
-  return graphQLErrorCodes(err).includes("NOT_FOUND");
+  const errors =
+    typeof err === "object" && err !== null
+      ? (err as { graphQLErrors?: unknown }).graphQLErrors
+      : undefined;
+  if (!Array.isArray(errors)) return false;
+  return errors.some((error) => {
+    const { message, extensions } = (error ?? {}) as {
+      message?: unknown;
+      extensions?: { code?: unknown };
+    };
+    // A ledger whose main.bean is missing answers NOT_FOUND too ("Ledger entry
+    // point … not found"), but the repository is there and its Files are the
+    // way to repair it: it is not gone (w21/859).
+    return (
+      extensions?.code === "NOT_FOUND" &&
+      !(typeof message === "string" && /entry point/i.test(message))
+    );
+  });
 }
 
 /**

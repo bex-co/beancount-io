@@ -9,6 +9,33 @@ describe("isLedgerGone", () => {
     ).toBe(true);
   });
 
+  // w21/859: the repository is there; only its main.bean is missing, and Files
+  // is how it is repaired.
+  it("is false for a ledger whose entry point is missing", () => {
+    expect(
+      isLedgerGone({
+        graphQLErrors: [
+          {
+            message:
+              "Ledger entry point with ID 'alice/books:main.bean' not found",
+            extensions: { code: "NOT_FOUND" },
+          },
+        ],
+      }),
+    ).toBe(false);
+    // A missing ledger, or a message without the entry point, still is gone.
+    expect(
+      isLedgerGone({
+        graphQLErrors: [
+          {
+            message: "Ledger 'alice/books' not found",
+            extensions: { code: "NOT_FOUND" },
+          },
+        ],
+      }),
+    ).toBe(true);
+  });
+
   it("is false for a network or other failure", () => {
     expect(isLedgerGone(new Error("Network request failed"))).toBe(false);
     expect(
