@@ -651,7 +651,9 @@ const MultiPostingsTransactionScreenComponent = () => {
   const rem = remainder(postings);
   const isBalanced = isRemainderBalanced(rem);
   const validationError = validatePostings(postings);
-  const amountUnreadable = validationError === "invalidAmount";
+  // Any row's, not the first problem's: a row with no account before it hid
+  // an unreadable amount behind a green "✓ $0.00" (w21/793).
+  const amountUnreadable = postings.some(hasUnparsedAmount);
   const canSave = validationError === null && !saved;
   const hasUnsavedChanges = isTransactionDraftDirty(initialDraft, {
     date,

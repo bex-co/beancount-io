@@ -164,9 +164,10 @@ test("the remainder row goes neutral with the format message", () => {
     path.join(__dirname, "..", "multi-postings-transaction-screen.tsx"),
     "utf8",
   );
+  // From every row, whatever problem validation stops at first (w21/793).
   expect(
     screen.includes(
-      'const amountUnreadable = validationError === "invalidAmount";',
+      "const amountUnreadable = postings.some(hasUnparsedAmount);",
     ),
   ).toBe(true);
   expect(screen.includes('testID="new-transaction-amount-format"')).toBe(true);
@@ -1169,5 +1170,26 @@ describe("typedAmountInput", () => {
     expect(typedAmountInput("20", true)).toBe("-20");
     expect(typedAmountInput("20", false)).toBe("20");
     expect(typedAmountInput("", true)).toBe("");
+  });
+});
+
+// w21/793: an earlier row with no account hid a later unreadable amount, so
+// the form read a green "✓ $0.00" with no format error.
+describe("an unreadable amount behind another problem", () => {
+  const {
+    validatePostings,
+    hasUnparsedAmount,
+    remainder,
+  } = require("../postings-utils");
+  const postings = [
+    { account: "Expenses:Food", amountInput: "10", amount: "10" },
+    { account: "Assets:Cash", amountInput: "-10", amount: "-10" },
+    { account: "", amountInput: "1.2.3", amount: null },
+  ];
+
+  it("is still found when validation stops at the missing account", () => {
+    expect(validatePostings(postings)).toBe("missingAccount");
+    expect(remainder(postings)).toBe("0");
+    expect(postings.some(hasUnparsedAmount)).toBe(true);
   });
 });
