@@ -12,6 +12,10 @@
 
 ## Inbox
 
+- [704](./704.md) — Since w21/675, any unused pad in a ledger with an amortize or forecast plugin adds a false "Balance failed"
+- [705](./705.md) — A pad used for one currency still hides a later failing balance in another currency (w21/675 gap)
+- [706](./706.md) — An unused pad makes the next pad raise a false "Multiple pad directives"; pad and balance error paths are quadratic
+- [707](./707.md) — File editor: since w21/689, text typed during a save is lost when that save conflicts and you choose Overwrite or Recreate
 - [703](./703.md) — Home's net-worth hero draws its rolling digits misaligned for an Arabic-symbol currency (KWD)
 - [701](./701.md) — Home's chart tabs: the selected Net Worth / Assets / Liabilities pill is nearly invisible (1.08:1 light, 2.07:1 dark)
 - [702](./702.md) — Files: main.bean's lock button (1.34:1) and the editor's new path line (1.78:1) are near-white in light mode
