@@ -597,6 +597,16 @@ const deJournal: Record<string, TranslationEntry> = {
     description:
       "Shown on a price entry that comes from a managed price include. {source} is the feed URL.",
   },
+  "journal.pluginCopyExplanation": {
+    message:
+      "Ein Plugin hat diesen Eintrag aus einem anderen erzeugt; er kann hier nicht bearbeitet oder gelöscht werden. Ändern Sie stattdessen den Quelleintrag.",
+    description:
+      "Shown on an entry a plugin generated as a copy of another one.",
+  },
+  "journal.openSourceEntry": {
+    message: "Quelleintrag öffnen",
+    description: "Link from a plugin copy to the entry it was made from.",
+  },
 };
 
 export default deJournal;

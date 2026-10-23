@@ -626,6 +626,16 @@ const ruJournal: Record<string, TranslationEntry> = {
     description:
       "Shown on a price entry that comes from a managed price include. {source} is the feed URL.",
   },
+  "journal.pluginCopyExplanation": {
+    message:
+      "Плагин создал эту запись из другой, поэтому её нельзя изменить или удалить здесь. Измените исходную запись.",
+    description:
+      "Shown on an entry a plugin generated as a copy of another one.",
+  },
+  "journal.openSourceEntry": {
+    message: "Открыть исходную запись",
+    description: "Link from a plugin copy to the entry it was made from.",
+  },
 };
 
 export default ruJournal;

@@ -626,6 +626,16 @@ const skJournal: Record<string, TranslationEntry> = {
     description:
       "Shown on a price entry that comes from a managed price include. {source} is the feed URL.",
   },
+  "journal.pluginCopyExplanation": {
+    message:
+      "Plugin vytvoril tento záznam z iného, preto ho tu nemožno upraviť ani odstrániť. Upravte namiesto toho zdrojový záznam.",
+    description:
+      "Shown on an entry a plugin generated as a copy of another one.",
+  },
+  "journal.openSourceEntry": {
+    message: "Otvoriť zdrojový záznam",
+    description: "Link from a plugin copy to the entry it was made from.",
+  },
 };
 
 export default skJournal;

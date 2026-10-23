@@ -577,6 +577,16 @@ const koJournal: Record<string, TranslationEntry> = {
     description:
       "Shown on a price entry that comes from a managed price include. {source} is the feed URL.",
   },
+  "journal.pluginCopyExplanation": {
+    message:
+      "이 항목은 플러그인이 다른 항목에서 생성한 것이라 여기서 편집하거나 삭제할 수 없습니다. 대신 원본 항목을 변경하세요.",
+    description:
+      "Shown on an entry a plugin generated as a copy of another one.",
+  },
+  "journal.openSourceEntry": {
+    message: "원본 항목 열기",
+    description: "Link from a plugin copy to the entry it was made from.",
+  },
 };
 
 export default koJournal;

@@ -611,6 +611,16 @@ const caJournal: Record<string, TranslationEntry> = {
     description:
       "Shown on a price entry that comes from a managed price include. {source} is the feed URL.",
   },
+  "journal.pluginCopyExplanation": {
+    message:
+      "Un connector ha generat aquesta entrada a partir d'una altra, així que no es pot editar ni eliminar aquí. Canvia l'entrada d'origen.",
+    description:
+      "Shown on an entry a plugin generated as a copy of another one.",
+  },
+  "journal.openSourceEntry": {
+    message: "Obre l'entrada d'origen",
+    description: "Link from a plugin copy to the entry it was made from.",
+  },
 };
 
 export default caJournal;

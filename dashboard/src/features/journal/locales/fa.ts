@@ -598,6 +598,16 @@ const faJournal: Record<string, TranslationEntry> = {
     description:
       "Shown on a price entry that comes from a managed price include. {source} is the feed URL.",
   },
+  "journal.pluginCopyExplanation": {
+    message:
+      "یک افزونه این مورد را از مورد دیگری ساخته است، بنابراین اینجا قابل ویرایش یا حذف نیست. به‌جای آن مورد مبدأ را تغییر دهید.",
+    description:
+      "Shown on an entry a plugin generated as a copy of another one.",
+  },
+  "journal.openSourceEntry": {
+    message: "باز کردن مورد مبدأ",
+    description: "Link from a plugin copy to the entry it was made from.",
+  },
 };
 
 export default faJournal;

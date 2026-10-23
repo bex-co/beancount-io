@@ -37,6 +37,7 @@ query GetLedgerEntryContext($entryHash: String!, $ledgerId: String!) {
     balances_before
     balances_after
     managed_source
+    generated_from
   }
 }
 

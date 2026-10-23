@@ -45,6 +45,23 @@ vi.mock("@apollo/client/react", () => ({
   },
 }));
 
+vi.mock("@tanstack/react-router", () => ({
+  Link: ({
+    children,
+    params,
+  }: {
+    children: React.ReactNode;
+    params: { ledgerOwner: string; ledgerName: string; entryHash: string };
+  }) => (
+    <a
+      data-testid="source-entry-link"
+      href={`/ledger/${params.ledgerOwner}/${params.ledgerName}/entry/${params.entryHash}`}
+    >
+      {children}
+    </a>
+  ),
+}));
+
 vi.mock("@/common/hooks/use-translations", () => ({
   useTranslations: () => ({ t: (key: string) => key }),
 }));
@@ -306,6 +323,56 @@ describe("EntryContextPanel", () => {
       fireEvent.click(screen.getByRole("button", { name: "common.save" }));
       await waitFor(() => expect(mocks.updateMutation).toHaveBeenCalled());
       expect(onSaved).not.toHaveBeenCalled();
+    });
+  });
+
+  // w21/874: Delete on a plugin copy removed the whole amortize series.
+  describe("a copy a plugin generated", () => {
+    beforeEach(() => {
+      mocks.contextData = {
+        entry: { meta: { filename: "main.bean", lineno: 92 } },
+        slice:
+          '2026-06-01 * "QA Insurer" "car insurance"\n  amortize_months: 3\n',
+        sha256sum: "copy123",
+        balances_before: null,
+        balances_after: null,
+        generated_from: "c0d24cb1c47671ad54376da2128742be",
+      };
+    });
+
+    it("offers a writer no save or delete, and links to the source", () => {
+      render(
+        <EntryContextPanel
+          entryHash="hash-1"
+          ledgerId="alice/mcp-agent-eval"
+        />,
+      );
+
+      expect(screen.getByLabelText("entry-source")).toHaveAttribute("readonly");
+      expect(screen.queryByText("common.delete")).not.toBeInTheDocument();
+      expect(screen.queryByText("common.save")).not.toBeInTheDocument();
+      expect(
+        screen.getByText("journal.pluginCopyExplanation"),
+      ).toBeInTheDocument();
+      expect(screen.getByTestId("source-entry-link")).toHaveAttribute(
+        "href",
+        "/ledger/alice/mcp-agent-eval/entry/c0d24cb1c47671ad54376da2128742be",
+      );
+    });
+
+    it("leaves an ordinary entry editable, with no notice", () => {
+      mocks.contextData = { ...mocks.contextData, generated_from: null };
+      render(
+        <EntryContextPanel
+          entryHash="hash-1"
+          ledgerId="alice/mcp-agent-eval"
+        />,
+      );
+
+      expect(screen.getByText("common.delete")).toBeInTheDocument();
+      expect(
+        screen.queryByText("journal.pluginCopyExplanation"),
+      ).not.toBeInTheDocument();
     });
   });
 

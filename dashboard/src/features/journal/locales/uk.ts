@@ -626,6 +626,16 @@ const ukJournal: Record<string, TranslationEntry> = {
     description:
       "Shown on a price entry that comes from a managed price include. {source} is the feed URL.",
   },
+  "journal.pluginCopyExplanation": {
+    message:
+      "Плагін створив цей запис з іншого, тому його не можна змінити чи видалити тут. Змініть натомість вихідний запис.",
+    description:
+      "Shown on an entry a plugin generated as a copy of another one.",
+  },
+  "journal.openSourceEntry": {
+    message: "Відкрити вихідний запис",
+    description: "Link from a plugin copy to the entry it was made from.",
+  },
 };
 
 export default ukJournal;

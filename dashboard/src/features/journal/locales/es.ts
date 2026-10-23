@@ -612,6 +612,16 @@ const esJournal: Record<string, TranslationEntry> = {
     description:
       "Shown on a price entry that comes from a managed price include. {source} is the feed URL.",
   },
+  "journal.pluginCopyExplanation": {
+    message:
+      "Un complemento generó esta entrada a partir de otra, así que no se puede editar ni eliminar aquí. Cambia la entrada de origen.",
+    description:
+      "Shown on an entry a plugin generated as a copy of another one.",
+  },
+  "journal.openSourceEntry": {
+    message: "Abrir la entrada de origen",
+    description: "Link from a plugin copy to the entry it was made from.",
+  },
 };
 
 export default esJournal;

@@ -596,6 +596,16 @@ const nlJournal: Record<string, TranslationEntry> = {
     description:
       "Shown on a price entry that comes from a managed price include. {source} is the feed URL.",
   },
+  "journal.pluginCopyExplanation": {
+    message:
+      "Een plug-in heeft deze boeking uit een andere gemaakt, dus ze kan hier niet worden bewerkt of verwijderd. Wijzig in plaats daarvan de brongeboeking.",
+    description:
+      "Shown on an entry a plugin generated as a copy of another one.",
+  },
+  "journal.openSourceEntry": {
+    message: "Brongeboeking openen",
+    description: "Link from a plugin copy to the entry it was made from.",
+  },
 };
 
 export default nlJournal;

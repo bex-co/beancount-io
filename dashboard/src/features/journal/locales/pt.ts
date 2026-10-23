@@ -611,6 +611,16 @@ const ptJournal: Record<string, TranslationEntry> = {
     description:
       "Shown on a price entry that comes from a managed price include. {source} is the feed URL.",
   },
+  "journal.pluginCopyExplanation": {
+    message:
+      "Um plugin gerou este lançamento a partir de outro, por isso não pode ser editado nem excluído aqui. Altere o lançamento de origem.",
+    description:
+      "Shown on an entry a plugin generated as a copy of another one.",
+  },
+  "journal.openSourceEntry": {
+    message: "Abrir o lançamento de origem",
+    description: "Link from a plugin copy to the entry it was made from.",
+  },
 };
 
 export default ptJournal;

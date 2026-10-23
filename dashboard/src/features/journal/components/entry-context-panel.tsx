@@ -1,4 +1,5 @@
 import { useState, useEffect, useId, useRef } from "react";
+import { Link } from "@tanstack/react-router";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import {
@@ -126,9 +127,11 @@ function EntryContextMain({
   entry,
   onGoToFile,
   canWrite,
+  ledgerId,
   onDirtyChange,
   onPendingChange,
 }: {
+  ledgerId: string;
   onDirtyChange?: (dirty: boolean) => void;
   onPendingChange?: (pending: boolean) => void;
   data: GetLedgerEntryContextQuery["getLedgerEntryContext"];
@@ -175,7 +178,11 @@ function EntryContextMain({
   // A price from a managed feed is not in the ledger's files: the ledger
   // refuses to edit or delete it, so the panel offers neither.
   const managedSource = data?.managed_source ?? null;
-  const editable = canWrite && managedSource === null;
+  // A copy a plugin or the pad pass made of another entry has no text of its
+  // own: saving or deleting it acts on the source and every other copy, and a
+  // Delete removed a whole amortize series (w21/874).
+  const generatedFrom = data?.generated_from ?? null;
+  const editable = canWrite && managedSource === null && generatedFrom === null;
 
   // Every write clears the cache, so this entry's source can arrive again
   // while it is open. A clean editor takes it; an edited draft is kept.
@@ -256,6 +263,24 @@ function EntryContextMain({
 
   return (
     <div className="space-y-4">
+      {generatedFrom && (
+        <Alert data-testid="entry-generated-copy">
+          <AlertDescription className="space-y-2">
+            <p>{t("journal.pluginCopyExplanation")}</p>
+            <Link
+              className="underline"
+              to="/ledger/$ledgerOwner/$ledgerName/entry/$entryHash"
+              params={{
+                ledgerOwner: ledgerId.split("/")[0] ?? "",
+                ledgerName: ledgerId.split("/").slice(1).join("/"),
+                entryHash: generatedFrom,
+              }}
+            >
+              {t("journal.openSourceEntry")}
+            </Link>
+          </AlertDescription>
+        </Alert>
+      )}
       {managedSource && (
         <Alert>
           <AlertDescription>
@@ -667,6 +692,7 @@ export function EntryContextPanel({
           entry={entry}
           onGoToFile={handleGoToFile}
           canWrite={canWrite}
+          ledgerId={ledgerId}
           onDirtyChange={onDirtyChange}
           onPendingChange={onPendingChange}
         />

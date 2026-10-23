@@ -33,6 +33,7 @@ const entryData = {
     balances_before: null,
     balances_after: null,
     managed_source: null,
+    generated_from: null,
   },
 } satisfies GetLedgerEntryContextQuery;
 const commitData = {

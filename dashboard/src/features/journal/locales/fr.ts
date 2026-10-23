@@ -612,6 +612,16 @@ const frJournal: Record<string, TranslationEntry> = {
     description:
       "Shown on a price entry that comes from a managed price include. {source} is the feed URL.",
   },
+  "journal.pluginCopyExplanation": {
+    message:
+      "Un plugin a généré cette écriture à partir d'une autre ; elle ne peut donc pas être modifiée ni supprimée ici. Modifiez plutôt l'écriture source.",
+    description:
+      "Shown on an entry a plugin generated as a copy of another one.",
+  },
+  "journal.openSourceEntry": {
+    message: "Ouvrir l'écriture source",
+    description: "Link from a plugin copy to the entry it was made from.",
+  },
 };
 
 export default frJournal;

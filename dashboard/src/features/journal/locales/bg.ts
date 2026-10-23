@@ -596,6 +596,16 @@ const bgJournal: Record<string, TranslationEntry> = {
     description:
       "Shown on a price entry that comes from a managed price include. {source} is the feed URL.",
   },
+  "journal.pluginCopyExplanation": {
+    message:
+      "Тази позиция е генерирана от добавка от друга, затова не може да се редактира или изтрива тук. Променете изходната позиция.",
+    description:
+      "Shown on an entry a plugin generated as a copy of another one.",
+  },
+  "journal.openSourceEntry": {
+    message: "Отваряне на изходната позиция",
+    description: "Link from a plugin copy to the entry it was made from.",
+  },
 };
 
 export default bgJournal;

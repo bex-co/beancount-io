@@ -578,6 +578,16 @@ const jaJournal: Record<string, TranslationEntry> = {
     description:
       "Shown on a price entry that comes from a managed price include. {source} is the feed URL.",
   },
+  "journal.pluginCopyExplanation": {
+    message:
+      "このエントリはプラグインが別のエントリから生成したもので、ここでは編集も削除もできません。元のエントリを変更してください。",
+    description:
+      "Shown on an entry a plugin generated as a copy of another one.",
+  },
+  "journal.openSourceEntry": {
+    message: "元のエントリを開く",
+    description: "Link from a plugin copy to the entry it was made from.",
+  },
 };
 
 export default jaJournal;

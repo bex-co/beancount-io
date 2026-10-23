@@ -580,6 +580,16 @@ const zhJournal: Record<string, TranslationEntry> = {
     description:
       "Shown on a price entry that comes from a managed price include. {source} is the feed URL.",
   },
+  "journal.pluginCopyExplanation": {
+    message:
+      "此条目由插件根据另一条目生成，因此无法在此编辑或删除。请改为修改源条目。",
+    description:
+      "Shown on an entry a plugin generated as a copy of another one.",
+  },
+  "journal.openSourceEntry": {
+    message: "打开源条目",
+    description: "Link from a plugin copy to the entry it was made from.",
+  },
 };
 
 export default zhJournal;

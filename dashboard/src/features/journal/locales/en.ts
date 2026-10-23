@@ -595,6 +595,16 @@ const enJournal: Record<string, TranslationEntry> = {
     description:
       "Shown on a price entry that comes from a managed price include. {source} is the feed URL.",
   },
+  "journal.pluginCopyExplanation": {
+    message:
+      "A plugin generated this entry from another one, so it can't be edited or deleted here. Change the source entry instead.",
+    description:
+      "Shown on an entry a plugin generated as a copy of another one.",
+  },
+  "journal.openSourceEntry": {
+    message: "Open the source entry",
+    description: "Link from a plugin copy to the entry it was made from.",
+  },
 };
 
 export default enJournal;
