@@ -134,4 +134,27 @@ describe("errorsHiddenByUnusedPads", () => {
       ["E2001", 4, later.message],
     ]);
   });
+
+  // w21/704: in a ledger with amortize_over the first run validated the
+  // plugin's transformed stream; the blanked source has none of its copies, so
+  // the engine re-checks that stream instead and needs to know which pads to
+  // leave out of it.
+  it("hands the second run the unused pads themselves", async () => {
+    const used: DirectiveJson = { ...pad, date: "2026-01-15" };
+    const usedPadding: DirectiveJson = { ...padding, date: "2026-01-15" };
+    const seen: (readonly DirectiveJson[])[] = [];
+    await errorsHiddenByUnusedPads(
+      [used, pad],
+      [usedPadding],
+      { "main.bean": MAIN },
+      [],
+      async (_files, unused) => {
+        seen.push(unused);
+        return [];
+      },
+    );
+    expect(seen).toHaveLength(1);
+    expect(seen[0]).toHaveLength(1);
+    expect(seen[0][0]).toBe(pad);
+  });
 });

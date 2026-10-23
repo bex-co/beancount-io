@@ -1270,6 +1270,48 @@ async function main(): Promise<void> {
     !amortizeSnap.errors.some((e) => e.severity === "error"),
     "balance assertions validate against the post-plugin stream",
   );
+  // w21/704: an unused pad re-checks the ledger without it (w21/675); that
+  // re-check skipped the plugins, so the amortized balance failed at -600.00.
+  const unusedPadSource = [
+    amortizeSource,
+    "2017-01-01 open Assets:Cash",
+    "2017-01-01 open Equity:Open",
+    '2017-01-02 * "Deposit"',
+    "  Assets:Cash  100.00 USD",
+    "  Equity:Open",
+    "2017-03-01 pad Assets:Cash Equity:Open",
+    "2017-03-02 balance Assets:Cash  100.00 USD",
+  ].join("\n");
+  const unusedPadCodes = (
+    await parseLedgerFiles(
+      { "main.beancount": unusedPadSource },
+      "main.beancount",
+      { today: "2099-01-01" },
+    )
+  ).errors.map((e) => e.code);
+  assert(
+    JSON.stringify(unusedPadCodes) === JSON.stringify(["E2003"]),
+    `an unused pad beside amortize_over reports only itself (got ${unusedPadCodes})`,
+  );
+  const hiddenUnderPad = await parseLedgerFiles(
+    {
+      "main.beancount": `${unusedPadSource}\n2017-03-03 balance Assets:Cash  90.00 USD`,
+    },
+    "main.beancount",
+    { today: "2099-01-01" },
+  );
+  assert(
+    hiddenUnderPad.errors.some(
+      (e) =>
+        e.code === "E2001" &&
+        e.line === 16 &&
+        e.message.includes("Assets:Cash"),
+    ) &&
+      !hiddenUnderPad.errors.some((e) =>
+        e.message.includes("Assets:Prepaid-Expenses"),
+      ),
+    "the re-check still finds the balance an unused pad hid, with amortize_over",
+  );
 
   const firstElidedAmortizeSource = [
     'plugin "fava.plugins.amortize_over"',

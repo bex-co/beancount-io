@@ -65,14 +65,19 @@ const sameError = (a: BeancountError, b: BeancountError) =>
  * those pads blanked out, line numbers kept: the balance failures that run
  * adds are the ones the pad had silenced.
  *
- * `reparse` returns the errors rustledger reports for a file map.
+ * `reparse` returns the errors rustledger reports for a file map: `files` with
+ * the unused pads blanked, or, where balances were checked on a plugin's
+ * transformed stream, that stream without `unused` (w21/704).
  */
 export async function errorsHiddenByUnusedPads(
   directives: readonly DirectiveJson[],
   paddingTransactions: readonly DirectiveJson[],
   files: FileMap,
   known: readonly BeancountError[],
-  reparse: (files: FileMap) => Promise<readonly BeancountError[]>,
+  reparse: (
+    files: FileMap,
+    unused: readonly DirectiveJson[],
+  ) => Promise<readonly BeancountError[]>,
 ): Promise<BeancountError[]> {
   const unused = unusedPads(directives, paddingTransactions);
   if (unused.length === 0) return [];
@@ -94,7 +99,7 @@ export async function errorsHiddenByUnusedPads(
   }
   if (!changed) return extra;
 
-  for (const error of await reparse(blanked)) {
+  for (const error of await reparse(blanked, unused)) {
     if (!BALANCE_CODES.has(error.code ?? "")) continue;
     if ([...known, ...extra].some((existing) => sameError(existing, error))) {
       continue;

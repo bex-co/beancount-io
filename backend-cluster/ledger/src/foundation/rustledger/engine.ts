@@ -665,6 +665,8 @@ async function parseLedgerFilesUncached(
     directives = mergeSourceSyntax(directives, sourceDetails);
   }
 
+  // Whether the balances were checked on the plugins' transformed stream.
+  let validatedTransformed = false;
   if (applyTs && stripResult) {
     const applied = applyPlugins(declared, directives, raw.options, {
       today: options.today ?? localTodayStr(),
@@ -679,6 +681,7 @@ async function parseLedgerFilesUncached(
     const revalidated = hasHandledPlugin
       ? await transformedValidationErrors(directives, files[entryPoint])
       : null;
+    validatedTransformed = revalidated !== null;
     if (revalidated === null) {
       errors = [...errors, ...pluginErrors];
     } else {
@@ -725,15 +728,24 @@ async function parseLedgerFilesUncached(
   errors = [...errors, ...padding.errors];
   if (!isRawPluginProcessing(files, entryPoint)) {
     const scopedFiles = stripResult?.strippedFiles ?? scoped;
+    const transformed = directives;
     errors = [
       ...errors,
       ...(await errorsHiddenByUnusedPads(
-        directives,
+        transformed,
         padding.paddingTransactions,
         scopedFiles,
         errors,
-        (blanked) =>
-          withLedger(blanked, entryPoint, (ledger) => ledger.getErrors()),
+        // Checked again as the first pass was: the blanked source has no
+        // amortize_over or forecast copies, so every balance on an account a
+        // plugin moved failed against the untransformed postings (w21/704).
+        (blanked, unused) =>
+          validatedTransformed
+            ? transformedValidationErrors(
+                transformed.filter((directive) => !unused.includes(directive)),
+                files[entryPoint],
+              ).then((found) => found ?? [])
+            : withLedger(blanked, entryPoint, (ledger) => ledger.getErrors()),
       )),
     ];
   }
