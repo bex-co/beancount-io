@@ -86,3 +86,31 @@ def test_a_purchase_written_under_the_former_compound_id_still_matches(tmp_path:
     assert result.returncode == 0, result.stdout  # type: ignore[attr-defined]
     assert json.loads(result.stdout)["data"]["written"] == 0  # type: ignore[attr-defined]
     assert ledger.read_bytes() == before
+
+
+NFD_IMPORTER = IMPORTER.replace(
+    "entries, errors, _ = parser.parse_file(str(file)); assert not errors, errors; return entries",
+    "entries, errors, _ = parser.parse_file(str(file)); assert not errors, errors\n"
+    "        import unicodedata\n"
+    "        return [e._replace(postings=[p._replace(cost=p.cost._replace(\n"
+    "            label=unicodedata.normalize('NFD', p.cost.label))) if p.cost else p for p in e.postings])\n"
+    "            for e in entries]",
+)
+
+
+def test_an_id_written_with_both_a_raw_label_and_the_former_arithmetic_still_matches(tmp_path: Path) -> None:
+    """An id from before the label and compound-cost changes carries both older spellings (w5/1009)."""
+    written = (
+        _purchase(-3, 10)
+        .replace("2024-02-01}", '2024-02-01, "Café"}')
+        .replace('"Purchase"\n', '"Purchase"\n  import-id: "csv:sha256:345f500b8f6d41a0"\n')
+    )
+    ledger = _books(tmp_path, written, _purchase(-3, 10).replace("2024-02-01}", '2024-02-01, "Café"}'))
+    (tmp_path / "importer.py").write_text(NFD_IMPORTER)
+    before = ledger.read_bytes()
+
+    result = _import(tmp_path, "--apply")
+
+    assert result.returncode == 0, result.stdout  # type: ignore[attr-defined]
+    assert json.loads(result.stdout)["data"]["written"] == 0  # type: ignore[attr-defined]
+    assert ledger.read_bytes() == before

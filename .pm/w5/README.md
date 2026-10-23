@@ -36,7 +36,6 @@
 
 ## Inbox
 
-- [1009 — Compose historical lot-label and compound-cost import-ID spellings](./1009.md) — minor CLI compatibility regression after completed 999/1003; an unchanged historical trade needs review only when both old spellings coexist, reproduced 2026-10-23.
 
 
 

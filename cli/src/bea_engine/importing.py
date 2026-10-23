@@ -3142,6 +3142,21 @@ def _hash_import_ids(
         finally:
             _FORMER_COMPOUND.reset(token)
 
+    def spelled_with_both_older_lot_spellings() -> str:
+        # An id written when neither change had landed carries both a raw label
+        # and the former compound arithmetic; each alone leaves the other
+        # difference in the hash (w5/1009).
+        labels, compound = _RAW_LABELS.set(True), _FORMER_COMPOUND.set(True)
+        try:
+            rebuilt = sorted(
+                (p.units.number, p.units.currency, _lot_text(p) + ("" if p.account == account else f" [{p.account}]"))
+                for p in _source_postings(entry, account)
+            )
+            return "+".join(_exact_amount(number, currency) + lot for number, currency, lot in rebuilt)
+        finally:
+            _FORMER_COMPOUND.reset(compound)
+            _RAW_LABELS.reset(labels)
+
     def spelled_with_raw_labels() -> str:
         # Ids written before labels compared as the loader reads them hashed
         # the label as typed; a decomposed `Café` must still find that id (w5/999).
@@ -3185,6 +3200,7 @@ def _hash_import_ids(
     unlabelled = spelled_without_empty_labels()
     raw_labelled = spelled_with_raw_labels()
     former_compound = spelled_with_former_compound()
+    both_older = spelled_with_both_older_lot_spellings()
 
     single_base = _hash_base(date, exact, description, nfc_account)
     seen[single_base] = seen.get(single_base, 0) + 1
@@ -3230,6 +3246,11 @@ def _hash_import_ids(
         negative_counter = f"negzero\0{negative_base}"
         seen[negative_counter] = seen.get(negative_counter, 0) + 1
         older.append(_digest_import_id(negative_base, seen[negative_counter]))
+    if both_older not in (exact, former_compound, raw_labelled):
+        both_base = _hash_base(date, both_older, description, nfc_account)
+        both_counter = f"rawlabel-formercompound\0{both_base}"
+        seen[both_counter] = seen.get(both_counter, 0) + 1
+        older.append(_digest_import_id(both_base, seen[both_counter]))
     if former_compound != exact:
         compound_base = _hash_base(date, former_compound, description, nfc_account)
         compound_counter = f"formercompound\0{compound_base}"
@@ -3295,6 +3316,11 @@ def _hash_import_ids(
             negative_paired_counter = f"paired-negzero\0{negative_paired}"
             seen[negative_paired_counter] = seen.get(negative_paired_counter, 0) + 1
             older.append(_digest_import_id(negative_paired, seen[negative_paired_counter]))
+        if both_older not in (exact, former_compound, raw_labelled):
+            both_paired = _hash_base(date, both_older, f"{payee}|{description}", nfc_account)
+            both_paired_counter = f"paired-rawlabel-formercompound\0{both_paired}"
+            seen[both_paired_counter] = seen.get(both_paired_counter, 0) + 1
+            older.append(_digest_import_id(both_paired, seen[both_paired_counter]))
         if former_compound != exact:
             compound_paired = _hash_base(date, former_compound, f"{payee}|{description}", nfc_account)
             compound_paired_counter = f"paired-formercompound\0{compound_paired}"
