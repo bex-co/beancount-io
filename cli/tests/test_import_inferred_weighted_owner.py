@@ -107,3 +107,29 @@ def test_a_calculated_view_does_not_stand_in_for_the_written_amount(tmp_path: Pa
     assert unchanged.returncode == 0, unchanged.stdout  # type: ignore[attr-defined]
     assert changed.returncode == 4, changed.stdout  # type: ignore[attr-defined]
     assert ledger.read_bytes() == before
+
+
+@pytest.mark.parametrize("cost", ["{{1 USD}}", "{-3 # 10 USD}"])
+def test_a_total_that_does_not_divide_evenly_weighs_what_booking_holds(tmp_path: Path, cost: str) -> None:
+    """Booking rounds the unit cost first: Cash is -0.9999999999999999999999999999, not -1 (w5/1010)."""
+    (tmp_path / "importer.py").write_text(
+        "from beancount.parser import parser\nclass Reader:\n    name = 'compound-owner'\n"
+        "    def identify(self, file): return str(file).endswith('.statement')\n"
+        "    def account(self, file): return 'Assets:Cash'\n"
+        "    def extract(self, file, existing_entries=None):\n"
+        "        entries, errors, _ = parser.parse_file(str(file)); assert not errors, errors; return entries\n"
+        "CONFIG = [Reader()]\n"
+    )
+    trade = '2024-02-01 * "Purchase"\n  bank_id: "B1"\n  Assets:Cash@@ USD\n  Assets:Stock 3 HOOL ' + cost + "\n"
+    amount = " -0.9999999999999999999999999999"
+    head = "2024-01-01 open Assets:Stock HOOL\n2024-01-01 open Assets:Cash USD\n"
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(head + trade.replace("@@", ""))
+    (tmp_path / "purchase.statement").write_text(trade.replace("@@", amount))
+    before = ledger.read_bytes()
+
+    result = _bea(tmp_path, "import", "purchase.statement", "--config", "importer.py", "--apply")
+
+    assert result.returncode == 0, result.stdout  # type: ignore[attr-defined]
+    assert json.loads(result.stdout)["data"]["written"] == 0  # type: ignore[attr-defined]
+    assert ledger.read_bytes() == before

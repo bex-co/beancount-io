@@ -2293,8 +2293,13 @@ def _stated_weight(posting: Any) -> tuple[Decimal, str] | None:
             return None
         if per is None and total is None:
             return None
-        sign = 1 if units.number >= 0 else -1
-        return units.number * (per or Decimal(0)) + sign * (total or Decimal(0)), currency
+        # Booking rounds the unit cost first and weighs the units by it, so a
+        # total that does not divide evenly weighs what the loaded entry holds
+        # (w5/1010).
+        from beancount.parser.booking_full import compute_cost_number
+
+        unit_cost = compute_cost_number(cost, units)
+        return None if unit_cost is None else (units.number * unit_cost, currency)
     if price is not None:
         number, currency = getattr(price, "number", None), getattr(price, "currency", None)
         if not isinstance(number, Decimal) or not isinstance(currency, str) or not currency:
