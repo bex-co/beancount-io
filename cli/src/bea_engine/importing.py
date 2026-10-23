@@ -1502,7 +1502,10 @@ def _lot_stated(
         total if isinstance(total, Decimal) else None,
         units if isinstance(units, Decimal) else None,
         cost.currency if isinstance(cost.currency, str) else None,
-        getattr(cost, "label", None) or None,
+        # An explicit empty label stays "": it is a lot of its own beside one
+        # with no label, and folding both to None gave two purchases one id
+        # (w5/981).
+        label if isinstance(label := getattr(cost, "label", None), str) else None,
         cost.date if isinstance(getattr(cost, "date", None), datetime.date) else None,
     )
 
@@ -1584,7 +1587,7 @@ def _lot_text(posting: Any, *, per_only: bool = False, historic: bool = False) -
                 parts.append(currency)
             if acquired is not None:
                 parts.append(acquired.isoformat())
-            if label:
+            if label is not None and (label or not _EMPTY_LABEL_HIDDEN.get()):
                 parts.append(f'"{label}"')
             if parts:
                 cost = f" {{{', '.join(parts)}}}"
@@ -1611,6 +1614,10 @@ def _legs(entry: Any, account: str) -> tuple[_Leg, ...]:
 def _lots_agree(ours: _Lot | None, theirs: _Lot | None) -> bool:
     if ours is None or theirs is None:
         return ours is theirs
+    # An explicit empty label is a statement, not an open field: it is not the
+    # lot that has no label (w5/981). The other way round stays open.
+    if ours[2] == "" and theirs[2] is None:
+        return False
     return all(a is None or b is None or a == b for a, b in zip(ours, theirs, strict=True))
 
 
@@ -2750,6 +2757,8 @@ def _exact_amount(number: Decimal, currency: str) -> str:
 
 #: Set while an older release's spelling of a signed zero is rebuilt for a lookup-only id.
 _NEGATIVE_ZERO: ContextVar[bool] = ContextVar("negative_zero", default=False)
+#: Spells an explicit empty cost label as no label, as the ids written before it counted were (w5/981).
+_EMPTY_LABEL_HIDDEN: ContextVar[bool] = ContextVar("empty_label_hidden", default=False)
 
 
 def _exactly_normalized(number: Decimal) -> Decimal:
@@ -2970,6 +2979,19 @@ def _hash_import_ids(
         finally:
             _NEGATIVE_ZERO.reset(token)
 
+    def spelled_without_empty_labels() -> str:
+        # Ids written before an explicit empty label counted printed none; a
+        # row with one must still find that id (w5/981).
+        token = _EMPTY_LABEL_HIDDEN.set(True)
+        try:
+            rebuilt = sorted(
+                (p.units.number, p.units.currency, _lot_text(p) + ("" if p.account == account else f" [{p.account}]"))
+                for p in _source_postings(entry, account)
+            )
+            return "+".join(_exact_amount(number, currency) + lot for number, currency, lot in rebuilt)
+        finally:
+            _EMPTY_LABEL_HIDDEN.reset(token)
+
     per_legs = sorted(
         (p.units.number, p.units.currency, _lot_text(p, per_only=True, historic=True))
         for p in _source_postings(entry, account)
@@ -2997,6 +3019,7 @@ def _hash_import_ids(
     undated = "+".join(_exact_amount(number, currency) + lot for number, currency, lot in undated_legs)
     blind = "+".join(_exact_amount(number, currency) + lot for number, currency, lot in blind_legs)
     negative_zero = spelled_with_negative_zero()
+    unlabelled = spelled_without_empty_labels()
 
     single_base = _hash_base(date, exact, description, nfc_account)
     seen[single_base] = seen.get(single_base, 0) + 1
@@ -3042,6 +3065,11 @@ def _hash_import_ids(
         negative_counter = f"negzero\0{negative_base}"
         seen[negative_counter] = seen.get(negative_counter, 0) + 1
         older.append(_digest_import_id(negative_base, seen[negative_counter]))
+    if unlabelled != exact:
+        unlabelled_base = _hash_base(date, unlabelled, description, nfc_account)
+        unlabelled_counter = f"unlabelled\0{unlabelled_base}"
+        seen[unlabelled_counter] = seen.get(unlabelled_counter, 0) + 1
+        older.append(_digest_import_id(unlabelled_base, seen[unlabelled_counter]))
     if blind != exact:
         # Written before the child account a parent-filed row posts to was part
         # of the id: lookup-only and content-checked like every older spelling,
@@ -3092,6 +3120,11 @@ def _hash_import_ids(
             negative_paired_counter = f"paired-negzero\0{negative_paired}"
             seen[negative_paired_counter] = seen.get(negative_paired_counter, 0) + 1
             older.append(_digest_import_id(negative_paired, seen[negative_paired_counter]))
+        if unlabelled != exact:
+            unlabelled_paired = _hash_base(date, unlabelled, f"{payee}|{description}", nfc_account)
+            unlabelled_paired_counter = f"paired-unlabelled\0{unlabelled_paired}"
+            seen[unlabelled_paired_counter] = seen.get(unlabelled_paired_counter, 0) + 1
+            older.append(_digest_import_id(unlabelled_paired, seen[unlabelled_paired_counter]))
         if blind != exact:
             blind_paired = _hash_base(date, blind, f"{payee}|{description}", nfc_account)
             blind_paired_counter = f"paired-blind\0{blind_paired}"
