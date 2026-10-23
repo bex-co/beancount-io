@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { ColorTheme } from "@/types/theme-props";
-import { fontSizes, space } from "@/common/theme";
+import { fontSizes, prefersStackedLayout, space } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import {
@@ -45,6 +45,16 @@ const getStyles = (theme: ColorTheme) =>
       flexDirection: "row",
       alignItems: "baseline",
       marginBottom: space.xs,
+    },
+    // At large text sizes the account takes the row and the amounts sit under
+    // it, trailing: beside them both "Housing:Rent" and "Housing:Utilities" read
+    // "Housing…" (w21/685).
+    rowHeaderStacked: {
+      flexDirection: "column",
+      alignItems: "stretch",
+    },
+    amountsStacked: {
+      alignSelf: "flex-end",
     },
     account: {
       flex: 1,
@@ -85,6 +95,7 @@ export function BudgetCard({
   // Keyed on the text size: iOS keeps a Text's old measurement when it
   // changes with the app open (mobile/AGENTS.md; w21/015).
   const { fontScale } = useWindowDimensions();
+  const stacked = prefersStackedLayout(fontScale);
   const router = useRouter();
   const guest = useGuest();
 
@@ -150,7 +161,7 @@ export function BudgetCard({
         text: budgetPanelRowAccessibilityValue(row, t, locale),
       }}
     >
-      <View style={styles.rowHeader}>
+      <View style={[styles.rowHeader, stacked && styles.rowHeaderStacked]}>
         <Text
           key={`account-${fontScale}`}
           style={styles.account}
@@ -158,7 +169,7 @@ export function BudgetCard({
         >
           {row.shortAccount}
         </Text>
-        <AmountText style={styles.amounts}>
+        <AmountText style={[styles.amounts, stacked && styles.amountsStacked]}>
           {`${formatSignedMoneyWithCurrency(row.actual, row.currency, false, row.scale)} / ${formatMoneyWithCurrency(row.budget, row.currency, row.scale)}`}
         </AmountText>
       </View>
