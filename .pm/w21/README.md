@@ -73,3 +73,5 @@
 - [864](./864.md) — Entry Context's location label draws a Persian/Arabic file path wrongly (gap in w21/824)
 - [865](./865.md) — Entry Context's Source Code draws Persian/Arabic lines in the wrong order (gap in w21/780)
 - [866](./866.md) — Entry Context's Source Code splits a line at a lone carriage return (gap in w21/827)
+- [867](./867.md) — Guests can't load Entry Context: GetLedgerTransactionContext isn't in the guest allowlist (w21/635 class)
+- [868](./868.md) — A signed-in reader is told to "Set a spending target" on Home and Budget, which they can't do
