@@ -208,13 +208,20 @@ export function truncateSankeyLabel(
 const GLYPH_MARGIN = 1.03;
 const IDEOGRAPH =
   /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u;
+/**
+ * Characters that draw nothing beside their neighbour: format controls such
+ * as Persian's zero-width non-joiner, and combining accents. Charged the
+ * widest advance, fa's Savings label (37 pt) read 62 pt (w21/774).
+ */
+const ZERO_ADVANCE = /[\p{Cf}\p{Mn}]/u;
 
 /**
  * A character's advance in the system font, in ems, with room to spare: its
- * measured advance, a full em for an ideograph, and for any other character
- * the widest advance measured (Œ, ض).
+ * measured advance, none for a control or combining mark, a full em for an
+ * ideograph, and for any other character the widest advance measured (Œ, ض).
  */
 function advanceEm(char: string): number {
+  if (ZERO_ADVANCE.test(char)) return 0;
   const measured = GLYPH_ADVANCE_EM.get(char);
   if (measured !== undefined) return measured * GLYPH_MARGIN;
   return IDEOGRAPH.test(char) ? GLYPH_MARGIN : 1.15;

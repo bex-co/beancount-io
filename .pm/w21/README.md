@@ -12,7 +12,6 @@
 
 ## Inbox
 
-- [774](./774.md) — w21/749 regression: Cash flow cuts Cyrillic and Persian labels that fit ("Продукты" → "Прод…")
 - [775](./775.md) — With `close_tree` before `auto_accounts`, a valid posting gets a false "inactive account" error and its save is refused
 - [776](./776.md) — With a fava plugin declared, w21/755 also drops w21/753's located "Unopened account … is being closed"
 - [777](./777.md) — Transaction detail drops the Forecast mark and Upcoming label its row shows

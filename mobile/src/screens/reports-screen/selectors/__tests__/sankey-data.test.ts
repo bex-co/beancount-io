@@ -723,6 +723,45 @@ describe("fitSankeyLabel", () => {
     }
   });
 
+  // w21/774: a category's own name in Cyrillic or Persian is cut only when
+  // CoreText draws it wider than the column; ru's Savings is 74.1 pt.
+  it("measures Cyrillic and Persian labels as they are drawn", () => {
+    const zwnj = "\u200c";
+    const persianSavings = `پس${zwnj}انداز`;
+    for (const [text, width] of [
+      ["Продукты", 58.5],
+      ["Зарплата", 55.0],
+      [ru.savings, 74.1],
+      [uk.savings, 82.5],
+      [bg.savings, 75.8],
+      [persianSavings, 37.0],
+      ["مواد غذایی", 51.2],
+    ] as [string, number][]) {
+      const read = sankeyLabelWidth(text, 12);
+      expect([text, read >= width, read < width * 1.4]).toEqual([
+        text,
+        true,
+        true,
+      ]);
+    }
+    expect(fa.savings).toBe(persianSavings);
+    expect(sankeyLabelWidth(zwnj, 12)).toBe(0);
+    expect(sankeyLabelWidth("e\u0301", 12)).toBe(sankeyLabelWidth("e", 12));
+  });
+
+  it("keeps a Cyrillic or Persian label the column holds", () => {
+    expect(fitSankeyLabel("Продукты", 74, 12)).toBe("Продукты");
+    expect(fitSankeyLabel("Зарплата", 74, 12)).toBe("Зарплата");
+    expect(fitSankeyLabel(fa.savings, 74, 12)).toBe(fa.savings);
+    // Each wider than the column, cut to one CoreText draws in it: 70.1,
+    // 71.4 and 64.7 pt.
+    expect(
+      [ru.savings, uk.savings, bg.savings].map((savings) =>
+        fitSankeyLabel(savings, 74, 12),
+      ),
+    ).toEqual(["Сбережен…", "Заощадже…", "Спестява…"]);
+  });
+
   it("is what the chart draws each label line through", () => {
     const chart = fs
       .readFileSync(
