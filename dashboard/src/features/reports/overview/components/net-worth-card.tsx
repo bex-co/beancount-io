@@ -1,4 +1,4 @@
-import { ledgerDateFormat } from "@/common/lib/format/ledger-date";
+import { formatLedgerDate } from "@/common/lib/format/ledger-date";
 import { useId, useMemo } from "react";
 import type { EChartsOption } from "echarts";
 import {
@@ -52,12 +52,10 @@ import {
  * back to the browser's preference instead of the selected app language.
  */
 function formatMonth(date: string, language: string): string {
-  const parsed = new Date(`${date}T00:00:00`);
-  if (Number.isNaN(parsed.getTime())) return date;
-  return ledgerDateFormat(language, {
-    month: "short",
-    year: "numeric",
-  }).format(parsed);
+  return (
+    formatLedgerDate(date, language, { month: "short", year: "numeric" }) ??
+    date
+  );
 }
 
 /**
@@ -78,9 +76,7 @@ function yAxisTickFormatter(language: string): (value: number) => string {
 
 /** `YYYY-MM-DD` as a medium date in the app language, e.g. "Sep 8, 2017". */
 function formatPriceDate(date: string, language: string): string {
-  const parsed = new Date(`${date}T00:00:00`);
-  if (Number.isNaN(parsed.getTime())) return date;
-  return ledgerDateFormat(language, { dateStyle: "medium" }).format(parsed);
+  return formatLedgerDate(date, language, { dateStyle: "medium" }) ?? date;
 }
 
 /**
@@ -340,15 +336,9 @@ export function NetWorthCard({
         boundaryGap: true,
         data: visibleData.map((point) => point.date),
         axisLabel: {
-          formatter: (value: string) => {
-            const parsed = new Date(`${value}T00:00:00`);
-            if (Number.isNaN(parsed.getTime())) {
-              return formatDateAxis(value, "monthly");
-            }
-            return ledgerDateFormat(language, {
-              month: "short",
-            }).format(parsed);
-          },
+          formatter: (value: string) =>
+            formatLedgerDate(value, language, { month: "short" }) ??
+            formatDateAxis(value, "monthly"),
         },
       },
       yAxis: {

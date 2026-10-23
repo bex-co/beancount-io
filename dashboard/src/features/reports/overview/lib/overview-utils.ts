@@ -3,7 +3,7 @@ import {
   parseDecimalNumber,
   sumDecimalNumbers,
 } from "@/common/lib/beancount/decimal-number";
-import { ledgerDateFormat } from "@/common/lib/format/ledger-date";
+import { formatLedgerDate } from "@/common/lib/format/ledger-date";
 import { parseConcreteTimeFilter } from "@/features/reports/export/reporting-period";
 import {
   balanceToAmounts,
@@ -408,12 +408,9 @@ export function getMovementSnapshot({
  * renders "December 2016" next to French headings (and vice versa).
  */
 export function formatPeriodMonth(date: string, language: string): string {
-  const parsed = new Date(`${date}T00:00:00`);
-  if (Number.isNaN(parsed.getTime())) return date;
-  return ledgerDateFormat(language, {
-    month: "long",
-    year: "numeric",
-  }).format(parsed);
+  return (
+    formatLedgerDate(date, language, { month: "long", year: "numeric" }) ?? date
+  );
 }
 
 export function isPartialMonthlyPeriod(

@@ -36,8 +36,6 @@
 
 - **1028** — Preserve ledger dates in shared chart labels (45–55m, dashboard, A2/A3) ← dashboard QA; residual of 285 ([note](./1028.md))
 
-- **1027** — Preserve source dates and reporting months in Overview (50–60m, dashboard, A2/A3) ← dashboard QA; residual of 285 ([note](./1027.md))
-
 
 
 

@@ -1,4 +1,4 @@
-import { ledgerDateFormat } from "@/common/lib/format/ledger-date";
+import { formatLedgerDate } from "@/common/lib/format/ledger-date";
 import { lazy, Suspense, useMemo, useRef, useState } from "react";
 import { useQuery } from "@apollo/client/react";
 import { ChevronRight, Plus, ReceiptText } from "lucide-react";
@@ -38,17 +38,15 @@ const EntryContextDialog = lazy(async () => {
  * so a 2017 row cannot be read as this week's activity.
  */
 function formatActivityDate(date: string, language: string): string {
-  const parsed = new Date(`${date}T00:00:00`);
-  if (Number.isNaN(parsed.getTime())) return date;
   const options: Intl.DateTimeFormatOptions = {
     month: "short",
     day: "numeric",
   };
-  if (parsed.getFullYear() !== new Date().getFullYear()) {
+  // The date's own year, which the Gregorian label shows.
+  if (Number(date.slice(0, 4)) !== new Date().getFullYear()) {
     options.year = "numeric";
   }
-  // Gregorian, so the year compared above is the year the label shows.
-  return ledgerDateFormat(language, options).format(parsed);
+  return formatLedgerDate(date, language, options) ?? date;
 }
 
 function getTitle(transaction: JournalTransaction, fallback: string): string {

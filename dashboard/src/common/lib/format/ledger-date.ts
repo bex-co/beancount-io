@@ -15,3 +15,22 @@ export function ledgerDateFormat(
 ): Intl.DateTimeFormat {
   return new Intl.DateTimeFormat(language, { ...options, calendar: "gregory" });
 }
+
+/**
+ * A `YYYY-MM-DD` ledger date written as that calendar day in the reader's
+ * language, or `null` when it is not one. It is read and formatted in UTC: the
+ * local midnight of a day the browser's zone skipped (Apia's 2011-12-30,
+ * Kiritimati's 1994-12-31) rolls into the next day, so a December price read
+ * as December 31 and a December figure as January (w4/1027).
+ */
+export function formatLedgerDate(
+  date: string,
+  language: string,
+  options: Intl.DateTimeFormatOptions,
+): string | null {
+  const day = new Date(`${date}T00:00:00.000Z`);
+  if (Number.isNaN(day.getTime())) return null;
+  return ledgerDateFormat(language, { ...options, timeZone: "UTC" }).format(
+    day,
+  );
+}
