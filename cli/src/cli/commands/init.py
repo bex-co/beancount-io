@@ -53,8 +53,19 @@ _ACCOUNTS = (
 _CURRENCY_SYMBOL = re.compile(r"[A-Z](?:[A-Z0-9'._-]*[A-Z0-9])?")
 
 
+#: The lexer reads these words as literals, never as commodity symbols, so an
+#: `open ... TRUE` line is a syntax error. Only the exact words: `TRUE1` is a
+#: symbol (w5/935).
+_RESERVED_WORDS = frozenset({"TRUE", "FALSE", "NULL"})
+
+
 def _currency(value: str) -> str:
     currency = value.strip().upper()
+    if currency in _RESERVED_WORDS:
+        raise typer.BadParameter(
+            f"Invalid operating currency: {currency!r} is a reserved word in ledger syntax, not a commodity "
+            "symbol. Use a symbol such as USD or EUR."
+        )
     if not _CURRENCY_SYMBOL.fullmatch(currency):
         raise typer.BadParameter(f"Invalid operating currency: {currency!r}. Use a symbol such as USD or EUR.")
     return currency

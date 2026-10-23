@@ -179,3 +179,36 @@ def test_trailing_underscore_refuses_before_creating_files_or_parent_directories
     assert "Invalid token" not in message
     assert not parent.exists()
     assert not list(tmp_path.rglob("*.bean"))
+
+
+@pytest.mark.parametrize("given", ["TRUE", "FALSE", "NULL", " true ", "Null"])
+def test_reserved_literal_words_are_refused_before_creating_anything(tmp_path: Path, given: str) -> None:
+    """`TRUE`, `FALSE` and `NULL` are lexer literals, not commodities (w5/935)."""
+    parent = tmp_path / "new-parent"
+
+    done = _bea(
+        tmp_path,
+        "--json",
+        "--no-input",
+        "init",
+        str(parent / "books.bean"),
+        "--currency",
+        given,
+        "--date",
+        "2026-01-01",
+    )
+
+    assert done.returncode == 2, done.stdout + done.stderr
+    assert done.stdout == ""
+    assert "reserved word" in done.stderr and given.strip().upper() in done.stderr
+    assert not parent.exists()
+
+
+@pytest.mark.parametrize("symbol", ["TRUE1", "FALSE1", "NULL1", "TRUEX", "NULLS"])
+def test_symbols_that_merely_start_with_a_reserved_word_still_create_a_ledger(tmp_path: Path, symbol: str) -> None:
+    ledger = tmp_path / "books.bean"
+
+    done = _bea(tmp_path, "--json", "--no-input", "init", str(ledger), "--currency", symbol, "--date", "2026-01-01")
+
+    assert done.returncode == 0, done.stderr
+    assert _bea(tmp_path, "--json", "-f", str(ledger), "check").returncode == 0
