@@ -137,3 +137,25 @@ describe("matchBrand inside accented words", () => {
     expect(matchBrand("Amazonas Cafe")).toBe(null);
   });
 });
+
+// w21/760: iOS Smart Punctuation types "Trader Joe’s" (U+2019), which no brand
+// key spells, so the payee lost its logo everywhere.
+describe("matchBrand and curly apostrophes", () => {
+  it("matches a curly apostrophe as the straight one", () => {
+    for (const payee of [
+      "Trader Joe’s",
+      "Lowe’s",
+      "Wendy’s",
+      "Domino’s",
+      "Peet’s Coffee",
+      "Applebee’s",
+    ]) {
+      const straight = matchBrand(payee.replace("’", "'"));
+      expect([payee, straight !== null]).toEqual([payee, true]);
+      expect([payee, matchBrand(payee)]).toEqual([payee, straight]);
+    }
+    expect(matchBrand("Qa20261020 Trader Joe‘s")).toBe(
+      matchBrand("Trader Joe's"),
+    );
+  });
+});

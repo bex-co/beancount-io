@@ -1,5 +1,6 @@
 import { leafName } from "../account-util";
 import { orderAccountsByRootPriority, type RootNames } from "../account-root";
+import { foldQuotes } from "../merchant-key";
 
 // Curated payee → domain map. Keys are lowercase; sorted longest-first at
 // runtime so "uber eats" wins over "uber" when both could match.
@@ -274,7 +275,9 @@ const WORD_CHAR =
 
 export function matchBrand(text: string): string | null {
   if (!text) return null;
-  let normalized = text.toLowerCase().trim();
+  // Curly quotes as straight, as merchants are keyed: iOS Smart Punctuation
+  // types "Trader Joe’s", which no brand key spells (w21/760).
+  let normalized = foldQuotes(text).toLowerCase().trim();
 
   const starred = resolveStarMerchant(normalized);
   if (starred && "brand" in starred) return starred.brand;
