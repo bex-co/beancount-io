@@ -2298,7 +2298,7 @@ def _stated_weight(posting: Any) -> tuple[Decimal, str] | None:
         # (w5/1010).
         from beancount.parser.booking_full import compute_cost_number
 
-        unit_cost = compute_cost_number(cost, units)
+        unit_cost = compute_cost_number(cost, units)  # type: ignore[no-untyped-call]
         return None if unit_cost is None else (units.number * unit_cost, currency)
     if price is not None:
         number, currency = getattr(price, "number", None), getattr(price, "currency", None)

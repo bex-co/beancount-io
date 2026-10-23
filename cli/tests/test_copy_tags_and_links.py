@@ -27,7 +27,7 @@ def derive(entries, options, mode):
     return out, []
 """
 SOURCE = (
-    '2024-01-01 open Assets:Cash USD\n2024-01-01 open Expenses:Food USD\n'
+    "2024-01-01 open Assets:Cash USD\n2024-01-01 open Expenses:Food USD\n"
     '2024-02-01 * "Source row" #source ^receiptA\n  Assets:Cash -10.00 USD\n  Expenses:Food 10.00 USD\n'
 )
 

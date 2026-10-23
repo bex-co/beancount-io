@@ -104,7 +104,8 @@ def copy_row(entries, options, mode):
     for e in entries:
         out.append(e)
         if isinstance(e, Transaction) and e.narration == 'Purchase':
-            clone = e._replace(meta=e.meta.copy(), narration=e.narration if mode == 'changed-cost' else 'Derived purchase')
+            narration = e.narration if mode == 'changed-cost' else 'Derived purchase'
+            clone = e._replace(meta=e.meta.copy(), narration=narration)
             if mode == 'changed-cost':
                 clone = clone._replace(postings=[
                     p._replace(units=p.units._replace(number=p.units.number / 2),
