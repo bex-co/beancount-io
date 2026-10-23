@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { Table, TableBody } from "@/common/components/ui/table";
 import { EditablePreviewRow } from "../editable-preview-row";
@@ -111,5 +112,75 @@ describe("EditablePreviewRow initial diagnostics", () => {
       screen.queryByText("importer.validation.invalidDateFormat"),
     ).not.toBeInTheDocument();
     expect(screen.queryByText("date:")).not.toBeInTheDocument();
+  });
+});
+
+/**
+ * A quoted CSV payee keeps its newline (`… LLC` / `Branch`). Payee opened a
+ * single-line input, which drops line breaks from what it holds, so the first
+ * typed edit joined the lines (w4/1023). Description already had a textarea.
+ */
+describe("EditablePreviewRow multiline payee", () => {
+  const PAYEE = 'qa Café "North", LLC\nBranch';
+  const row = () =>
+    buildParsedRow({
+      date: "2026-10-23",
+      payee: PAYEE,
+      description: "line 1\nline 2",
+      amountInput: "12.50",
+    });
+
+  function renderEditable() {
+    const onChange = vi.fn();
+    render(
+      <Table>
+        <TableBody>
+          <EditablePreviewRow
+            row={row()}
+            index={0}
+            onChange={onChange}
+            onDelete={vi.fn()}
+          />
+        </TableBody>
+      </Table>,
+    );
+    // Re-read each time: the cell's button is replaced while it edits.
+    const payeeCell = () =>
+      screen
+        .getAllByRole("button")
+        .find((button) => button.textContent?.includes("Branch"))!;
+    return { onChange, payeeCell };
+  }
+
+  it("keeps the payee's line break through a typed edit", async () => {
+    const user = userEvent.setup();
+    const { onChange, payeeCell } = renderEditable();
+
+    await user.click(payeeCell());
+    // The one editor open, the Payee cell's.
+    const editor = screen.getByRole("textbox");
+    expect(editor.tagName).toBe("TEXTAREA");
+    expect(editor).toHaveValue(PAYEE);
+
+    await user.keyboard("{End} updated{Enter}");
+    await waitFor(() =>
+      expect(onChange).toHaveBeenLastCalledWith(
+        0,
+        expect.objectContaining({ payee: `${PAYEE} updated` }),
+      ),
+    );
+  });
+
+  it("keeps the original payee when the edit is cancelled", async () => {
+    const user = userEvent.setup();
+    const { onChange, payeeCell } = renderEditable();
+
+    await user.click(payeeCell());
+    await user.keyboard(" discarded{Escape}");
+    expect(onChange).not.toHaveBeenCalledWith(
+      0,
+      expect.objectContaining({ payee: expect.stringContaining("discarded") }),
+    );
+    await waitFor(() => expect(payeeCell()).toHaveFocus());
   });
 });

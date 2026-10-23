@@ -173,6 +173,9 @@ export function EditablePreviewRow({
                 onBlur={field.onBlur}
                 error={validationMessage(errors.payee?.message)}
                 placeholder={t("importer.preview.payeePlaceholder")}
+                // A quoted CSV payee may hold a newline too; a single-line
+                // input dropped it on the first typed edit (w4/1023).
+                multiline
               />
             )}
           />
