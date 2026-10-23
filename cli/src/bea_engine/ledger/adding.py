@@ -1280,7 +1280,9 @@ def _transaction(
         snapshot = write.LedgerSnapshot.capture(file)
         existing, _, options = managed_load.load_file(file)
         currencies = checked_operating_currencies(options)
-        allowed = {e.account: e.currencies for e in existing if isinstance(e, Open)}
+        # Distinct symbols: an `open ... USD, USD` already in a native file
+        # allows one commodity, not two choices (w5/959).
+        allowed = {e.account: list(dict.fromkeys(e.currencies or [])) for e in existing if isinstance(e, Open)}
     normalized = []
     elided = 0
     # Postings whose currency fell back to the operating currency, with what
