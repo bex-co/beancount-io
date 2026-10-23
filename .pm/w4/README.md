@@ -116,6 +116,8 @@
 
 ## Milestones
 
+- [ ] **m55** — [Preserve exact Budget amounts and variance](./m55/README.md) (7 tasks) ← dashboard QA,2026-10-23; minor residual of m45; whole-unit target/actual loss causes false On target, six native controls, no writes.
+
 - [ ] **m54** — [Balance Overview Cash Flow refunds and deficits](./m54/README.md) (7 tasks) ← dashboard QA,2026-10-23; minor; missing25USD inflow/funding in two cases, six native controls, no writes.
 
 - [ ] **m53** — [Keep exact amounts in Overview charts](./m53/README.md) (9 tasks) ← dashboard QA,2026-10-23; minor residual of1015; distribution, Income vs Expenses and Cash Flow text lose fractions/digits, including net/savings; eight native cases, no writes.
