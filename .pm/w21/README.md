@@ -17,6 +17,9 @@
 - [817](./817.md) — Edit Transaction's conflict alert is a dead end (no Copy & Reload)
 - [818](./818.md) — A currency exchange through an Equity conversions account reads as spending ("−$100.00")
 - [819](./819.md) — Since w21/570, a priced purchase reads as an exchange: "$130.00" unsigned, miles "−$95.00"
+- [820](./820.md) — Scrubbing a flat line chart turns its grey line green or red while the row stays grey
+- [821](./821.md) — VoiceOver's Budget chart summary reads unrounded float sums ("−$0.0000000000000036")
+- [822](./822.md) — Home Spending's two bars sit off-centre (28 pt left, 48 pt right)
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window
 - [065](./blocked/065.md) — One early-year entry (e.g. 0050) makes the balance sheet 23,718 monthly points (3 MB) and the app stalls — **blocked:** needs an approach decision (per-pill fetch vs server downsample) and a simulator profile of the stall
 - [180](./blocked/180.md) — Budget actuals use raw prefix match (`Transport` counts `Transportation`), unlike Reports — **blocked:** needs an owner decision between component matching on the server (a Fava break) and a per-account breakdown for the client
