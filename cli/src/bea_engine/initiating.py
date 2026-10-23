@@ -190,6 +190,10 @@ def _prepare_new_file(file: Path) -> Path:
     return file
 
 
+#: Preset accounts opened for any commodity, because they hold instrument units.
+_INSTRUMENT_ACCOUNTS = frozenset({"Assets:Holdings"})
+
+
 def answer_preset(
     file: Path,
     *,
@@ -253,7 +257,11 @@ def answer_preset(
         opened.append("Equity:OpeningBalances")
         opened.sort()
     for account in opened:
-        lines.append(f"{open_day} open {account} {currency}")
+        # The portfolio preset's holdings hold instruments (HOOL, BTC), not
+        # only cash: restricted to the operating currency, its first share
+        # purchase was refused (w5/957).
+        restriction = "" if account in _INSTRUMENT_ACCOUNTS else f" {currency}"
+        lines.append(f"{open_day} open {account}{restriction}")
     if balances:
         lines.append("")
         for account in funded:
