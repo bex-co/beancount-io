@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { toast } from "sonner";
 import type { GetLedgerFileQuery } from "@/graphql/definitions";
 import { Button } from "@/common/components/ui/button";
 import {
@@ -135,6 +136,16 @@ export const FileActionButtons = ({
     setIsDeleteDialogOpen(false);
   };
 
+  // Building the local file can fail in the browser. Say so; the file and
+  // its enabled Download stay for another try (w4/987).
+  const handleDownload = () => {
+    try {
+      onDownload();
+    } catch {
+      toast.error(t("ledgerEditor.fileDownloadFailed", { filename }));
+    }
+  };
+
   return (
     <>
       <div className="flex items-center gap-2 flex-wrap">
@@ -173,7 +184,7 @@ export const FileActionButtons = ({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem
-                onClick={onDownload}
+                onClick={handleDownload}
                 disabled={downloadableContent(fileContent) === null}
               >
                 <Download className="h-4 w-4" />

@@ -5,6 +5,12 @@ const nlFileEditor: Record<string, { message: string; description: string }> = {
     description:
       "Why Delete is unavailable for the ledger's root file, which the server refuses to delete; {filename} is main.bean",
   },
+  "ledgerEditor.fileDownloadFailed": {
+    message:
+      "Kan {filename} niet voorbereiden voor download. Probeer het opnieuw.",
+    description:
+      "Error toast when the browser could not generate a file's local download; the file is unchanged and Download can be tried again. {filename} is the file's name",
+  },
   "ledgerEditor.alignAmounts": {
     message: "Bedragen uitlijnen",
     description: "Menu item to align amounts in editor",

@@ -4,6 +4,11 @@ const koFileEditor: Record<string, { message: string; description: string }> = {
     description:
       "Why Delete is unavailable for the ledger's root file, which the server refuses to delete; {filename} is main.bean",
   },
+  "ledgerEditor.fileDownloadFailed": {
+    message: "{filename} 다운로드를 준비할 수 없습니다. 다시 시도해 주세요.",
+    description:
+      "Error toast when the browser could not generate a file's local download; the file is unchanged and Download can be tried again. {filename} is the file's name",
+  },
   "ledgerEditor.alignAmounts": {
     message: "금액 정렬",
     description: "Menu item to align amounts in editor",
