@@ -12,6 +12,12 @@
 
 ## Inbox
 
+- [735](./735.md) — `unique_prices` flags identical same-day prices as errors; Beancount only flags prices that disagree
+- [736](./736.md) — `onecommodity` ignores Beancount's opt-outs and reports the same account twice
+- [737](./737.md) — `close_tree`'s generated child closes aren't enforced: postings after the parent's close are accepted
+- [738](./738.md) — `option "documents"` discovery never runs, so statements never appear in account detail
+- [739](./739.md) — `nounused` / `check_commodity` errors are hidden as warnings, and `pedantic` skips `nounused`
+- [740](./740.md) — Errors from built-in plugins carry no file or line, so their Notifications rows can't be tapped
 - [731](./731.md) — A push whose commit messages run past 200 characters still hides its commit count (w21/716 variant)
 - [732](./732.md) — In a ledger without operating_currency, a USD merchant's header reads "120.00 USD" while its rows read "−$60.00"
 - [733](./733.md) — The AVERAGE error has no file or line when the sale posting carries a flag (w21/721 variant)
