@@ -68,7 +68,6 @@
 - [974 — Preserve BQL result focus when the editor loads](./974.md) — minor; public dashboard QA with unchanged delayed stylesheet,2026-10-22; native-Tab result focus transfers to the late editor at both widths; untouched autofocus and settled navigation/CSV controls pass, no writes.
 
 
-- [972 — Preserve the remaining CSV row-shape guard after cell edits](./972.md) — minor; W3/m19 residual follow-up,2026-10-22; unrelated Payee/Description edits clear a five-field record's refusal and admit a truncated prepared import; date/source repair controls pass, one write preblocked, no new historical group.
 
 
 
