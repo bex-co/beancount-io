@@ -336,10 +336,12 @@ export function TransactionForm({
     // An Enter the input method is consuming confirms its composition, not
     // the transaction (w4/965).
     if (isCompositionKey(e.nativeEvent)) return;
-    // Ctrl+Enter or Cmd+Enter to submit
+    // Ctrl+Enter or Cmd+Enter submits the way Create does: through the
+    // browser's own check, so an unfinished number ("1e", "-"), which the
+    // input reports as empty, is refused rather than auto-balanced (w4/1014).
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
       e.preventDefault();
-      void submit();
+      e.currentTarget.requestSubmit();
     }
   };
 
