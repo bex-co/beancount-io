@@ -147,7 +147,14 @@ export default function LedgerBudgetPage() {
     [t],
   );
 
-  const last12MonthsRange = useMemo(() => getLast12MonthsRange(), []);
+  // The rolling range ends on the reader's day when they choose it, not the
+  // day the page mounted: a tab opened yesterday still asks for today
+  // (w4/980).
+  const [rollingRange, setRollingRange] = useState<string | undefined>();
+  const selectTimeSpan = (span: string) => {
+    if (span === "last-12-months") setRollingRange(getLast12MonthsRange());
+    setSelectedTimeSpan(span);
+  };
 
   const timeFilter = useMemo(() => {
     switch (selectedTimeSpan) {
@@ -156,11 +163,11 @@ export default function LedgerBudgetPage() {
       case "last-year":
         return "year-1";
       case "last-12-months":
-        return last12MonthsRange;
+        return rollingRange;
       default:
         return undefined;
     }
-  }, [selectedTimeSpan, last12MonthsRange]);
+  }, [selectedTimeSpan, rollingRange]);
 
   const { entries, loading, error, retry } = useBudgetEntries(ledgerId);
 
@@ -273,7 +280,7 @@ export default function LedgerBudgetPage() {
                   label={t("page.budget.budgetTimeSpanFilterLabel")}
                   options={timeSpanOptions}
                   value={selectedTimeSpan}
-                  onChange={setSelectedTimeSpan}
+                  onChange={selectTimeSpan}
                 />
               </div>
             </div>
