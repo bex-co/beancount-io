@@ -41,7 +41,6 @@
 - [693](./blocked/693.md) — Edit Transaction's Reload after a conflict opens the other twin's text, so the next Save overwrites it — **blocked:** its acceptance contradicts itself (a twin moved onto the ID and a metadata-only change look the same after a conflict); needs an owner decision between always refusing Reload on a changed slice and keeping it
 - [694](./blocked/694.md) — Since w21/672, Delete after a metadata-only change elsewhere dead-ends on "changed or removed" (w21/250 regression) — **blocked:** its two acceptance cases cannot both hold (a metadata-only change and a twin swap look the same); same owner decision as w21/693
 - [857](./857.md) — The ledger runs amortize_over/forecast on the server's UTC date, not the user's
-- [865](./865.md) — Entry Context's Source Code draws Persian/Arabic lines in the wrong order (gap in w21/780)
 - [866](./866.md) — Entry Context's Source Code splits a line at a lone carriage return (gap in w21/827)
 - [867](./867.md) — Guests can't load Entry Context: GetLedgerTransactionContext isn't in the guest allowlist (w21/635 class)
 - [868](./868.md) — A signed-in reader is told to "Set a spending target" on Home and Budget, which they can't do
