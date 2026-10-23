@@ -381,7 +381,9 @@ const AccountTableRow = memo(function AccountTableRow({
     <>
       {guides}
       {chevron}
-      <Text style={nameStyle} numberOfLines={1}>
+      {/* Cut in the middle: a folded chain read "Brokerage:Fidelity:…" with the
+          account the row opens, RothIRA, cut off (w21/879). */}
+      <Text style={nameStyle} numberOfLines={1} ellipsizeMode="middle">
         {label}
       </Text>
       {amountBlock}
