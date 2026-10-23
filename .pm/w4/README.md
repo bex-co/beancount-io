@@ -4,7 +4,6 @@
 
 ## Inbox
 
-- [1025 — Preserve Income Statement chart units when regrouping periods](./1025.md) — minor; found while fixing 1024, 2026-10-23.
 
 
 
