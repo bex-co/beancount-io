@@ -53,3 +53,8 @@
 - [896](./896.md) — In a non-dollar ledger, a CAD merchant's total reads "$150.00" while its row reads "150.00 CAD"
 - [897](./897.md) — Merchant detail's scheduled and priced lines are symbol-checked apart from the totals
 - [898](./898.md) — Merchants shows "Search 0 merchants…" above its error and empty states
+- [899](./899.md) — One typo produces 2–3 identical parse-error rows, and the bell counts each
+- [900](./900.md) — A transaction whose header fails to parse still appears on Home with "Transaction" as its amount
+- [901](./901.md) — Ledger errors aren't in file order
+- [902](./902.md) — A misspelled built-in plugin is reported as needing the python-plugins feature
+- [903](./903.md) — Recent changes rows read only "Add 1 entry" or "Update entry"
