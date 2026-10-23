@@ -23,7 +23,6 @@
 - [768](./768.md) — w21/749 regression: Cash flow now cuts the right column's suffix line too, so "Savings (expenses)" reads "Savings (expense…"
 - [766](./766.md) — RTL account paths still draw child-before-parent in Money flow, Entry Context balances and Budget cards (w21/743 gap)
 - [767](./767.md) — After a metadata-only edit, an R-flagged entry keeps showing its pre-edit copy (w21/745 consequence)
-- [762](./762.md) — A budget whose cadence changed back-fills the first entry: Monthly $300 then Yearly reads "Budget $2,922.95 · Below target" for $400 spent
 - [763](./763.md) — An overspent $0 budget shows no progress bar on its Budget card, but a full red bar on Home
 - [764](./764.md) — On LY, a weekly budget's last bar is labelled "1/4" (2026), and VoiceOver reads the span as "1/5–1/4"
 - [765](./765.md) — A budget whose only entry is in the future highlights that entry as in effect while the card says "Starts"

@@ -545,13 +545,27 @@ export function budgetForInterval(
     firstDate > periodStart &&
     firstDate <= intervalEnd &&
     firstDate <= end;
+  // Back to the start of the first budget's own period, not the chart's: a
+  // Monthly budget set on Oct 21 and changed to Yearly the next day covered
+  // the whole year on the yearly chart, "Budget $2,922.95" for $222.95
+  // (w21/762). The budget that governs that first day sets the period.
+  const governing =
+    firstDate === undefined
+      ? undefined
+      : ordered.filter((entry) => entry.date === firstDate).at(-1);
+  const backfillStart =
+    governing === undefined
+      ? periodStart
+      : [periodStart, intervalStartISO(governing.date, governing.interval)]
+          .sort()
+          .at(-1)!;
   // Every directive dated on the first date, not only the first of them: a
   // budget corrected the same day it was set (500, then 300) left the replaced
   // one covering the period start and the correction governing only from its
   // own date, so "Budget $341.94" read where 300 a month gives $212.90 (w21/622).
   const effectiveFrom = (index: number): string =>
     backfilled && ordered[index].date === firstDate
-      ? periodStart
+      ? backfillStart
       : ordered[index].date;
 
   const only = ordered.length === 1 ? ordered[0] : null;

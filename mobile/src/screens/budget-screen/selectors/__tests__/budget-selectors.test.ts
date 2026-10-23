@@ -144,6 +144,48 @@ describe("calculateBudgetForInterval", () => {
     );
   });
 
+  // w21/762: the first budget was back-filled to the start of the chart's
+  // period, in today's cadence: a Monthly set Oct 21, then Yearly, covered the
+  // whole year.
+  it("back-fills the first budget to its own period's start when the cadence changes", () => {
+    // Monthly → Yearly: Oct 1–21 at 300/31, then Oct 22–23 at 3600/365.
+    expect(
+      calculateBudgetForInterval(
+        "2026-12-31",
+        "yearly",
+        [
+          historyEntry("2026-10-21", "monthly", "300 USD"),
+          historyEntry("2026-10-22", "yearly", "3600 USD"),
+        ],
+        "2026-10-23",
+      ),
+    ).toBe(222.95);
+    // Monthly → Quarterly: Nov 1–21 at 300/30, not from Q4's Oct 1.
+    expect(
+      calculateBudgetForInterval(
+        "2026-12-31",
+        "quarterly",
+        [
+          historyEntry("2026-11-21", "monthly", "300 USD"),
+          historyEntry("2026-11-22", "quarterly", "900 USD"),
+        ],
+        "2026-11-23",
+      ),
+    ).toBe(229.57);
+    // Weekly → Monthly: from Monday Oct 19 at 70/7, not from Oct 1.
+    expect(
+      calculateBudgetForInterval(
+        "2026-10-31",
+        "monthly",
+        [
+          historyEntry("2026-10-21", "weekly", "70 USD"),
+          historyEntry("2026-10-22", "monthly", "300 USD"),
+        ],
+        "2026-10-23",
+      ),
+    ).toBe(49.35);
+  });
+
   // w21/622: Add then Update the same day (500, then 300) left the 500 covering
   // the period start and the 300 only from its own date.
   it("lets a same-day correction govern from the period start", () => {
