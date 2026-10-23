@@ -40,7 +40,6 @@
 
 - [1000 — Keep Account Journal selections when Time changes](./1000.md) — minor follow-up to142; live QA, 2026-10-22; Balance-only becomes Transaction after Time edit, flags reset at both widths; expected November balance1 versus actual transactions10, backend/Journal controls pass.
 
-- [999 — Strengthen the read-retry regressions shipped with M50](./999.md) — minor test quality; from the M50 Simplify review (reported after close), re-checked on main; success content, classified-message-during-retry and redundant assertions; optional hook simplifications.
 
 
 
