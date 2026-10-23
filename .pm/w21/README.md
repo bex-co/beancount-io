@@ -33,7 +33,6 @@
 - [666](./666.md) — A pasted "−12.50" (typographic minus) is saved as negative but shows a green "+", and the sign toggle breaks it (w21/463 brings back w21/232)
 - [667](./667.md) — Account detail still shows a blank row for an entry whose payee is only spaces (w21/568 incomplete)
 - [668](./668.md) — Transaction detail repeats the narration under the title when the payee is only spaces or equals the narration
-- [665](./665.md) — Home's net-worth caption and cost footnote still value next month's holdings (w21/641 incomplete)
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window
 - [065](./blocked/065.md) — One early-year entry (e.g. 0050) makes the balance sheet 23,718 monthly points (3 MB) and the app stalls — **blocked:** needs an approach decision (per-pill fetch vs server downsample) and a simulator profile of the stall
 - [180](./blocked/180.md) — Budget actuals use raw prefix match (`Transport` counts `Transportation`), unlike Reports — **blocked:** needs an owner decision between component matching on the server (a Fava break) and a per-account breakdown for the client

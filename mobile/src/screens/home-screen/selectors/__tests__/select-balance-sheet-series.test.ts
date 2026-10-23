@@ -236,3 +236,57 @@ describe("selectSeriesValuation", () => {
     expect(valuation.notInTotal).toEqual([]);
   });
 });
+
+// w21/665: a lot bought next month made today's caption and footnote describe
+// November's holdings while the chart ended today.
+describe("selectSeriesValuation: entries booked for later months", () => {
+  const point = (date: string, usd: number, voo = 0): Point => ({
+    date,
+    balance: voo ? { USD: usd, VOO: voo } : { USD: usd },
+  });
+  const market = createBalanceSheet({
+    netWorthData: [point("2026-10-31", 12000), point("2026-11-30", 17081.51)],
+  });
+  const basis = {
+    cost: {
+      netWorthData: [point("2026-10-31", 12000), point("2026-11-30", 16881.51)],
+      assetsData: [],
+      liabilitiesData: [],
+    },
+    units: {
+      netWorthData: [
+        point("2026-10-31", 12000),
+        point("2026-11-30", 12000, 10),
+      ],
+      assetsData: [],
+      liabilitiesData: [],
+    },
+  } as unknown as BalanceSheetBasisQuery;
+
+  it("reads market, cost and units at today's month, not the later one", () => {
+    const valuation = selectSeriesValuation(
+      "USD",
+      "netWorthData",
+      market,
+      basis,
+      [],
+      "2026-10-22",
+    );
+    expect(valuation.market).toBe(12000);
+    expect(valuation.cost).toBe(12000);
+    expect(valuation.priced).toEqual([]);
+  });
+
+  it("reads the later point once its month arrives", () => {
+    const valuation = selectSeriesValuation(
+      "USD",
+      "netWorthData",
+      market,
+      basis,
+      [],
+      "2026-11-02",
+    );
+    expect(valuation.market).toBe(17081.51);
+    expect(valuation.cost).toBe(16881.51);
+  });
+});

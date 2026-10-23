@@ -33,12 +33,12 @@ export function selectSeriesValuation(
   today: string,
   managed?: readonly ManagedSource[],
 ): Valuation {
-  const points = market?.getLedgerBalanceSheet?.[series];
-  const latest = points?.[points.length - 1];
+  // The point of today's month, like the curves: the series runs on into
+  // months with entries booked for later (w21/665).
   return selectValuation({
-    market: latest?.balance,
-    cost: latestBalance(basis?.cost?.[series]),
-    units: latestBalance(basis?.units?.[series]),
+    market: latestBalance(market?.getLedgerBalanceSheet?.[series], today),
+    cost: latestBalance(basis?.cost?.[series], today),
+    units: latestBalance(basis?.units?.[series], today),
     currency,
     // No valuation date: the latest point is today's standing, valued at the
     // ledger's latest prices as the Accounts tree is, so price age is measured

@@ -159,11 +159,23 @@ export function carryBalanceToToday(
   return forwardFillMonths([...upToToday, { date: today, value: last.value }]);
 }
 
-/** The balance map of a series' latest point (series are chronological). */
+/**
+ * The balance map of a series' latest point (series are chronological). With
+ * `today`, the latest point in or before the current month, as the curves'
+ * `carryBalanceToToday` reads them: a point for next month describes holdings
+ * that are not held yet (w21/665).
+ */
 export function latestBalance(
   points: ReadonlyArray<DateBalancePoint | null | undefined> | null | undefined,
+  today?: string,
 ): DateBalancePoint["balance"] | undefined {
-  return points?.[points.length - 1]?.balance;
+  if (today === undefined) return points?.[points.length - 1]?.balance;
+  const thisMonth = today.slice(0, 7);
+  let latest: DateBalancePoint | null | undefined;
+  for (const point of points ?? []) {
+    if (point?.date && point.date.slice(0, 7) <= thisMonth) latest = point;
+  }
+  return latest?.balance;
 }
 
 /**
