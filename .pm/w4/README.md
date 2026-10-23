@@ -118,6 +118,8 @@
 
 ## Milestones
 
+- [ ] **m56** — Exclude entirely noncash transactions from Cash Flow activities (7 tasks) ← dashboard QA; residual of m2 ([plan](./m56/README.md))
+
 - [ ] **m55** — [Preserve exact Budget amounts and variance](./m55/README.md) (7 tasks) ← dashboard QA,2026-10-23; minor residual of m45; whole-unit target/actual loss causes false On target, six native controls, no writes.
 
 - [ ] **m54** — [Balance Overview Cash Flow refunds and deficits](./m54/README.md) (7 tasks) ← dashboard QA,2026-10-23; minor; missing25USD inflow/funding in two cases, six native controls, no writes.
