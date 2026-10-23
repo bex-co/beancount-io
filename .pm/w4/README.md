@@ -38,7 +38,6 @@
 
 - [1001 — Keep exact report quantities in LineChart text values](./1001.md) — minor residual of W3/494; large source quantities round and24-decimal Account tooltips show zero at both widths; exact raw tables/18-decimal controls pass, no hosted writes.
 
-- [1000 — Keep Account Journal selections when Time changes](./1000.md) — minor follow-up to142; live QA, 2026-10-22; Balance-only becomes Transaction after Time edit, flags reset at both widths; expected November balance1 versus actual transactions10, backend/Journal controls pass.
 
 
 
