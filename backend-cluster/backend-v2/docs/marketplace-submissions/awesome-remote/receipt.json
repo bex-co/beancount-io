@@ -3,7 +3,7 @@
   "state": "submitted; upstream check passed; open and unmerged",
   "submissionUrl": "https://github.com/punkpeye/awesome-remote-mcp-servers/pull/2753",
   "submittedAtUTC": "2026-10-23T20:52:08Z",
-  "lastCheckedAtUTC": "2026-10-23T20:54:37Z",
+  "lastCheckedAtUTC": "2026-10-23T21:30:33Z",
   "headCommit": "936aa053cea358e3204dab3d5747965fd0455caf",
   "baseCommit": "c6ed7fc936741403f24cd90d14ad3f466668a7f3",
   "changedFiles": 1,
@@ -47,5 +47,8 @@
   ],
   "upstreamContributionRules": "https://github.com/punkpeye/awesome-remote-mcp-servers/blob/main/CONTRIBUTING.md",
   "mergeGate": "Upstream requires the submitting account to star the repository before merge; account-owner preference is pending. No star or other engagement action was performed. Maintainer review/merge remains external.",
-  "nextAction": "Resolve the genuine account preference or an upstream waiver, handle actual feedback, then verify merged public entry; do not submit a duplicate PR."
+  "nextAction": "Resolve the genuine account preference or an upstream waiver, handle actual feedback, then verify merged public entry; do not submit a duplicate PR.",
+  "mergeable": true,
+  "reviewComments": 0,
+  "publicChecksAtUTC": "2026-10-23T20:51:13Z"
 }
