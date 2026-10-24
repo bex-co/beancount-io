@@ -1,13 +1,17 @@
 /**
  * Beancount account names are colon-separated components with no spaces.
  * Each component starts with an uppercase, titlecase (`ǅ`) or caseless letter,
- * or a digit, then letters, combining marks, digits, or hyphens — matching
- * what the ledger accepts (hyphenated, numeric, accented, decomposed `É` and
- * Devanagari `हिंदी` names, w4/279) while rejecting empty segments, whitespace,
- * and lowercase-leading Latin components like `Assets:checking`. Names are
- * kept as authored, never normalized.
+ * or an ASCII digit, then letters, combining marks, numbers, the zero-width
+ * joiners or hyphens — matching what the ledger accepts (hyphenated, numeric,
+ * accented, decomposed `É` and Devanagari `हिंदी` names, w4/279; Persian
+ * `فارسی‌حساب` with its ZWNJ, `Qa²` and `QaⅣ`, w4/1048) while rejecting empty
+ * segments, whitespace, lowercase-leading Latin components like
+ * `Assets:checking`, and components the ledger cannot parse that start with
+ * another script's digits (`١٢٣`, `１２３`). Names are kept as authored, never
+ * normalized.
  */
-const ACCOUNT_COMPONENT = /^[\p{Lu}\p{Lt}\p{Lo}\p{Nd}][\p{L}\p{M}\p{Nd}-]*$/u;
+const ACCOUNT_COMPONENT =
+  /^[\p{Lu}\p{Lt}\p{Lo}0-9](?:[\p{L}\p{M}\p{N}-]|\u200C|\u200D)*$/u;
 
 /** Why a name is not a complete account token (w0/017). */
 export type AccountTokenProblem =
@@ -17,7 +21,7 @@ export type AccountTokenProblem =
   | { kind: "component-start"; component: string }
   | { kind: "invalid-character"; component: string };
 
-const COMPONENT_START = /^[\p{Lu}\p{Lt}\p{Lo}\p{Nd}]/u;
+const COMPONENT_START = /^[\p{Lu}\p{Lt}\p{Lo}0-9]/u;
 
 /**
  * The first reason `account` is not a complete account token, or `null` when

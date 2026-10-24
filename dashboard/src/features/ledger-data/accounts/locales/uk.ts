@@ -60,7 +60,7 @@ const ukAccounts: Record<string, TranslationEntry> = {
   },
   "page.accounts.accountNameComponentStart": {
     message:
-      "Кожна частина має починатися з великої літери або цифри — «{component}» так не починається (наприклад, Assets:Bank).",
+      "Кожна частина має починатися з великої літери або цифри від 0 до 9 — «{component}» так не починається (наприклад, Assets:Bank).",
     description:
       "Validation error when a part does not start with an uppercase letter or digit; {component} is that part",
   },

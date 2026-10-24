@@ -56,7 +56,7 @@ const zhAccounts: Record<string, TranslationEntry> = {
   },
   "page.accounts.accountNameComponentStart": {
     message:
-      "每一部分都必须以大写字母或数字开头，“{component}”不符合（例如 Assets:Bank）。",
+      "每一部分都必须以大写字母或数字 0–9 开头，“{component}”不符合（例如 Assets:Bank）。",
     description:
       "Validation error when a part does not start with an uppercase letter or digit; {component} is that part",
   },

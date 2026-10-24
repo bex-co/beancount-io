@@ -61,7 +61,7 @@ const frAccounts: Record<string, TranslationEntry> = {
   },
   "page.accounts.accountNameComponentStart": {
     message:
-      "Chaque partie doit commencer par une majuscule ou un chiffre — « {component} » ne le fait pas (par exemple Assets:Bank).",
+      "Chaque partie doit commencer par une majuscule ou un chiffre de 0 à 9 — « {component} » ne le fait pas (par exemple Assets:Bank).",
     description:
       "Validation error when a part does not start with an uppercase letter or digit; {component} is that part",
   },

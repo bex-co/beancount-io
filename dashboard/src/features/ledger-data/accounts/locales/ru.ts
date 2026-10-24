@@ -59,7 +59,7 @@ const ruAccounts: Record<string, TranslationEntry> = {
   },
   "page.accounts.accountNameComponentStart": {
     message:
-      "Каждая часть должна начинаться с заглавной буквы или цифры — «{component}» так не начинается (например, Assets:Bank).",
+      "Каждая часть должна начинаться с заглавной буквы или цифры от 0 до 9 — «{component}» так не начинается (например, Assets:Bank).",
     description:
       "Validation error when a part does not start with an uppercase letter or digit; {component} is that part",
   },

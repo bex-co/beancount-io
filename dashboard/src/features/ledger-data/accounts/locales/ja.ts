@@ -60,7 +60,7 @@ const jaAccounts: Record<string, TranslationEntry> = {
   },
   "page.accounts.accountNameComponentStart": {
     message:
-      "各部分は大文字または数字で始める必要があります。「{component}」はそうなっていません（例：Assets:Bank）。",
+      "各部分は大文字または 0〜9 の数字で始める必要があります。「{component}」はそうなっていません（例：Assets:Bank）。",
     description:
       "Validation error when a part does not start with an uppercase letter or digit; {component} is that part",
   },

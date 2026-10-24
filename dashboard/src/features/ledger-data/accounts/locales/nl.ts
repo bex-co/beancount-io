@@ -60,7 +60,7 @@ const nlAccounts: Record<string, TranslationEntry> = {
   },
   "page.accounts.accountNameComponentStart": {
     message:
-      "Elk deel moet beginnen met een hoofdletter of cijfer — “{component}” doet dat niet (bijvoorbeeld Assets:Bank).",
+      "Elk deel moet beginnen met een hoofdletter of een cijfer 0–9 — “{component}” doet dat niet (bijvoorbeeld Assets:Bank).",
     description:
       "Validation error when a part does not start with an uppercase letter or digit; {component} is that part",
   },

@@ -60,7 +60,7 @@ const deAccounts: Record<string, TranslationEntry> = {
   },
   "page.accounts.accountNameComponentStart": {
     message:
-      "Jeder Teil muss mit einem Großbuchstaben oder einer Ziffer beginnen – „{component}“ tut das nicht (zum Beispiel Assets:Bank).",
+      "Jeder Teil muss mit einem Großbuchstaben oder einer Ziffer 0–9 beginnen – „{component}“ tut das nicht (zum Beispiel Assets:Bank).",
     description:
       "Validation error when a part does not start with an uppercase letter or digit; {component} is that part",
   },

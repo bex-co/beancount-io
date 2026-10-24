@@ -60,7 +60,7 @@ const bgAccounts: Record<string, TranslationEntry> = {
   },
   "page.accounts.accountNameComponentStart": {
     message:
-      "Всяка част трябва да започва с главна буква или цифра — „{component}“ не започва така (например Assets:Bank).",
+      "Всяка част трябва да започва с главна буква или цифра от 0 до 9 — „{component}“ не започва така (например Assets:Bank).",
     description:
       "Validation error when a part does not start with an uppercase letter or digit; {component} is that part",
   },

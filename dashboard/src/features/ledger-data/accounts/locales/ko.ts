@@ -58,7 +58,7 @@ const koAccounts: Record<string, TranslationEntry> = {
   },
   "page.accounts.accountNameComponentStart": {
     message:
-      "각 부분은 대문자나 숫자로 시작해야 합니다. “{component}”은(는) 그렇지 않습니다(예: Assets:Bank).",
+      "각 부분은 대문자나 0~9 숫자로 시작해야 합니다. “{component}”은(는) 그렇지 않습니다(예: Assets:Bank).",
     description:
       "Validation error when a part does not start with an uppercase letter or digit; {component} is that part",
   },

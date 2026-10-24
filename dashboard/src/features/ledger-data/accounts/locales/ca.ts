@@ -60,7 +60,7 @@ const caAccounts: Record<string, TranslationEntry> = {
   },
   "page.accounts.accountNameComponentStart": {
     message:
-      "Cada part ha de començar amb una lletra majúscula o un dígit; «{component}» no ho fa (per exemple Assets:Bank).",
+      "Cada part ha de començar amb una lletra majúscula o un dígit del 0 al 9; «{component}» no ho fa (per exemple Assets:Bank).",
     description:
       "Validation error when a part does not start with an uppercase letter or digit; {component} is that part",
   },

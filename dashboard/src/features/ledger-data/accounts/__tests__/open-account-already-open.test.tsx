@@ -142,3 +142,51 @@ describe.each(surfaces)(
     });
   },
 );
+
+describe.each(surfaces)(
+  "Joined and numbered account names in $name (w4/1048)",
+  (surface) => {
+    it.each([
+      ["a Persian name with its ZWNJ", "Assets:فارسی‌حساب"],
+      ["a conjunct with its ZWJ", "Assets:Qaक्‍ष"],
+      ["a superscript digit after the start", "Assets:Qa²"],
+      ["a Roman numeral after the start", "Assets:QaⅣ"],
+    ])("accepts %s exactly as typed", async (_, account) => {
+      surface.render();
+      fireEvent.change(surface.field(), { target: { value: account } });
+
+      await waitFor(() => expect(surface.submit()).toBeEnabled());
+      expect(surface.field()).toHaveValue(account);
+      expect(surface.field()).not.toHaveAttribute("aria-invalid", "true");
+    });
+
+    it.each([
+      ["Arabic-Indic", "١٢٣"],
+      ["Persian", "۱۴۰۲"],
+      ["full-width", "１２３"],
+    ])(
+      "refuses a component led by %s digits, says why, and recovers",
+      async (_, component) => {
+        surface.render();
+        fireEvent.change(surface.field(), {
+          target: { value: `Assets:${component}` },
+        });
+
+        expect(
+          await screen.findByText(
+            `Each part must start with a capital letter or a digit 0–9 — “${component}” doesn't (for example Assets:Bank).`,
+          ),
+        ).toBeInTheDocument();
+        expect(surface.field()).toHaveAttribute("aria-invalid", "true");
+        expect(surface.submit()).toBeDisabled();
+
+        // The same digits after an ASCII-led start are a valid name.
+        fireEvent.change(surface.field(), {
+          target: { value: `Assets:Qa${component}` },
+        });
+        await waitFor(() => expect(surface.submit()).toBeEnabled());
+        expect(surface.field()).not.toHaveAttribute("aria-invalid", "true");
+      },
+    );
+  },
+);

@@ -59,7 +59,7 @@ const faAccounts: Record<string, TranslationEntry> = {
   },
   "page.accounts.accountNameComponentStart": {
     message:
-      "هر بخش باید با حرف بزرگ یا رقم شروع شود — «{component}» این‌طور نیست (برای نمونه Assets:Bank).",
+      "هر بخش باید با حرف بزرگ یا رقم 0 تا 9 شروع شود — «{component}» این‌طور نیست (برای نمونه Assets:Bank).",
     description:
       "Validation error when a part does not start with an uppercase letter or digit; {component} is that part",
   },

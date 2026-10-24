@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isCompleteAccountToken } from "../account-token";
+import { accountTokenProblem, isCompleteAccountToken } from "../account-token";
 import { buildOpenAccountSchema } from "../open-account-schema";
 
 describe("isCompleteAccountToken", () => {
@@ -14,6 +14,14 @@ describe("isCompleteAccountToken", () => {
     "Assets:Qa-20261020:E\u0301pargne",
     "Assets:Qa-20261020:\u01C5ep",
     "Assets:现金",
+    // w4/1048: the zero-width joiners inside a word, and Unicode numbers
+    // after a component's first character, all parsed by the ledger.
+    "Assets:فارسی\u200Cحساب",
+    "Assets:Qa\u0915\u094D\u200D\u0937",
+    "Assets:Qa\u00B2",
+    "Assets:Qa\u2163",
+    "Assets:Qa\u0661",
+    "Assets:401k",
   ])("accepts %s", (account) => {
     expect(isCompleteAccountToken(account)).toBe(true);
   });
@@ -28,8 +36,24 @@ describe("isCompleteAccountToken", () => {
     "Assets:Bank_1",
     "Checking",
     "",
+    // w4/1048: an initial Roman numeral or circled letter.
+    "Assets:\u2163Fund",
+    "Assets:\u24B6Fund",
   ])("rejects %s", (account) => {
     expect(isCompleteAccountToken(account)).toBe(false);
+  });
+
+  // w4/1048: the ledger cannot parse a component that starts with another
+  // script's digits, though it accepts them after the first character.
+  it.each([
+    "\u0661\u0662\u0663",
+    "\u06F1\u06F4\u06F0\u06F2",
+    "\uFF11\uFF12\uFF13",
+  ])("says %s must start with a capital or a digit 0-9", (component) => {
+    expect(accountTokenProblem(`Assets:${component}`)).toEqual({
+      kind: "component-start",
+      component,
+    });
   });
 });
 
@@ -67,6 +91,14 @@ describe("buildOpenAccountSchema", () => {
         account: "Assets:QaSyntaxDraft",
       }).success,
     ).toBe(true);
+  });
+
+  it("keeps a joined or numbered name exactly as written", () => {
+    for (const account of ["Assets:فارسی\u200Cحساب", "Assets:Qa\u2163"]) {
+      expect(
+        schema.safeParse({ date: "2026-10-23", account }).data?.account,
+      ).toBe(account);
+    }
   });
 
   it("allows correcting a rejected value into a valid account", () => {

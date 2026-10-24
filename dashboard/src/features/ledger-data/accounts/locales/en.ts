@@ -58,7 +58,7 @@ const enAccounts: Record<string, TranslationEntry> = {
   },
   "page.accounts.accountNameComponentStart": {
     message:
-      "Each part must start with a capital letter or digit — “{component}” doesn't (for example Assets:Bank).",
+      "Each part must start with a capital letter or a digit 0–9 — “{component}” doesn't (for example Assets:Bank).",
     description:
       "Validation error when a part does not start with an uppercase letter or digit; {component} is that part",
   },
