@@ -20,8 +20,6 @@
 
 - **1045** — [Retry a failed first Account Report read in place](./1045.md)
 
-- **1044** — Retry the first Entry Context read without dismissing its dialog (35–50m, dashboard, A2) ← dashboard QA; residual of m50 ([note](./1044.md))
-
 - **1039** — Keep exact Budget amounts and variance on mobile (45–60m, mobile, A2/A3) ← m55 simplify review; source-only mobile counterpart of m55 ([note](./blocked/1039.md)) — **blocked:** fix shipped; simulator check needs approved production budget fixtures
 
 - **1031** — Use actual lot cost currencies in Net Worth valuation disclosures (45–60m dashboard after dependency, A2/A3) ← dashboard QA; residual of m26 ([note](./blocked/1031.md)) — **blocked:** approved lot-specific valuation read

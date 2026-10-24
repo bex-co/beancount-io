@@ -42,6 +42,7 @@ import { registerBeancountLanguage } from "@/common/lib/editor/monaco-beancount-
 import { cn } from "@/common/lib/utils/utils";
 import { toast } from "sonner";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { useQueryRetry } from "@/common/hooks/use-query-retry";
 import {
   getErrorMessageKey,
   useErrorMessage,
@@ -110,11 +111,30 @@ function EntryContextLoading() {
   );
 }
 
-function EntryContextError({ error }: { error: Error }) {
+function EntryContextError({
+  error,
+  onRetry,
+  retrying,
+}: {
+  error: Error;
+  onRetry: () => void;
+  retrying: boolean;
+}) {
   const { t } = useTranslations();
   return (
     <Alert variant="destructive">
-      <AlertDescription>{t(getErrorMessageKey(error))}</AlertDescription>
+      <AlertDescription className="gap-3">
+        <p>{t(getErrorMessageKey(error))}</p>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={onRetry}
+          loading={retrying}
+        >
+          {t("common.tryAgain")}
+        </Button>
+      </AlertDescription>
     </Alert>
   );
 }
@@ -557,6 +577,10 @@ export function EntryContextPanel({
     },
   );
   useRefreshFailedToast(data ? error : undefined, () => void refetch());
+  // A first read that failed offers Try Again in place; its error and busy
+  // button stay while the retry runs, and another failure hands focus back
+  // (w4/1044). A refresh over shown data keeps the toast above instead.
+  const firstRead = useQueryRetry(data ? undefined : error, refetch);
 
   const [deleteEntrySourceSlice] = useMutation<
     DeleteLedgerEntrySourceSliceMutation,
@@ -640,12 +664,18 @@ export function EntryContextPanel({
   };
 
   // A refresh keeps the shown entry, and any draft in it, mounted; only a
-  // first read swaps in the loading or error view (dashboard AGENTS.md).
+  // first read swaps in the error or loading view (dashboard AGENTS.md).
+  if (firstRead.failure && !data) {
+    return (
+      <EntryContextError
+        error={firstRead.failure}
+        onRetry={firstRead.retry}
+        retrying={firstRead.retrying}
+      />
+    );
+  }
   if (loading && !data) {
     return <EntryContextLoading />;
-  }
-  if (error && !data) {
-    return <EntryContextError error={error} />;
   }
   if (data?.getLedgerEntryContext) {
     return (
