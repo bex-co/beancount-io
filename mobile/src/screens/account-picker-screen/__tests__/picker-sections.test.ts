@@ -406,6 +406,26 @@ describe("showCreateBelowResults", () => {
     expect(below("food:groceries")).toBe(false);
   });
 
+  // w21/928: a word inside another word's segment is not an account of that name.
+  it("offers Create for a word that only sits inside other accounts' names", () => {
+    const names = [
+      "Expenses:Healthcare",
+      "Expenses:Childcare",
+      "Expenses:Home:Carpet",
+      "Liabilities:CreditCard:Visa",
+    ];
+    for (const query of ["car", "pet"]) {
+      expect(
+        showCreateBelowResults(query, filterAccounts(query, names), writer),
+      ).toBe(true);
+    }
+    expect(below("car")).toBe(true);
+    // A whole segment is still a hit, however it is spaced or cased.
+    expect(below("visa")).toBe(false);
+    expect(below("Credit Card")).toBe(false);
+    expect(below("food groceries")).toBe(false);
+  });
+
   it("is left to the empty state when there are no results", () => {
     expect(showCreateBelowResults("zzzz", [], writer)).toBe(false);
   });

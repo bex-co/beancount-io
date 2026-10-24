@@ -164,8 +164,13 @@ export function showCreateAccountRow(
  * `Expenses:Transport:Tram`), which left a genuinely new name with no way to
  * create it (w21/258). The row follows the results whenever no result contains
  * every word of the query as a contiguous piece of its name — a name the
- * ledger already has is a real hit and needs no Create. Same access rules as
- * the empty state's row.
+ * ledger already has is a real hit and needs no Create. A piece within a
+ * segment is not one: "car" is inside `CreditCard`, `Healthcare` and `Carpet`,
+ * none of them a category called car, and the row was hidden (w21/928). So a
+ * query without a path is a hit only as a whole segment, or a hyphenated part of
+ * one (spaces ignored:
+ * "credit card" is `CreditCard`), or as words that are each a whole segment of
+ * one account. Same access rules as the empty state's row.
  */
 export function showCreateBelowResults(
   query: string,
@@ -198,9 +203,22 @@ export function showCreateBelowResults(
   ) {
     return !results.some((account) => nameKey(account) === wholeName);
   }
+  if (wholeName.includes(":")) {
+    return !results.some((account) => {
+      const name = nameKey(account);
+      return words.every((word) => name.includes(word));
+    });
+  }
+  const joined = words.join("");
   return !results.some((account) => {
-    const name = nameKey(account);
-    return words.every((word) => name.includes(word));
+    // A hyphenated or underscored segment also offers its parts as names.
+    const segments = nameKey(account)
+      .split(":")
+      .flatMap((segment) => [segment, ...segment.split(/[-_]/)]);
+    return (
+      segments.includes(joined) ||
+      words.every((word) => segments.includes(word))
+    );
   });
 }
 
