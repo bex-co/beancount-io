@@ -91,3 +91,6 @@
 - [934](./934.md) — Offline, Home's budget panel claims "$0.00 · Below target" on a cache miss
 - [935](./935.md) — Offline deletes say "didn't confirm the save", even when no delete was sent
 - [936](./936.md) — "Try again" on "Failed to load" shows no progress, and offline nothing changes
+- [937](./937.md) — A successful save can still land on "This transaction was changed or removed"
+- [938](./938.md) — Edit's Reload can't find a changed entry on a day with more than 10 transactions
+- [939](./939.md) — Edit's refusal line number is off when the draft starts with blank lines
