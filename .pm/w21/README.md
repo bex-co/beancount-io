@@ -94,3 +94,6 @@
 - [937](./937.md) — A successful save can still land on "This transaction was changed or removed"
 - [938](./938.md) — Edit's Reload can't find a changed entry on a day with more than 10 transactions
 - [939](./939.md) — Edit's refusal line number is off when the draft starts with blank lines
+- [940](./940.md) — Saving a file with `\r\r\n` line endings drops a CR on every line
+- [941](./941.md) — Cmd-S on a hardware keyboard saves an unchanged file
+- [942](./942.md) — Tapping the same editor error row again within 3 s doesn't jump
