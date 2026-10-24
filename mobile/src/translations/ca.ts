@@ -378,6 +378,9 @@ export const ca: Translations = {
   ledgerWriteOffline: "No tens connexió. No s'ha desat res.",
   ledgerWriteUnconfirmed:
     "El servidor no ha confirmat el desat. Comproveu-ho abans de tornar-ho a provar.",
+  ledgerDeleteOffline: "No tens connexió. No s'ha suprimit res.",
+  ledgerDeleteUnconfirmed:
+    "El servidor no ha confirmat la supressió. Comproveu-ho abans de tornar-ho a provar.",
   ledgerWriteRateLimited:
     "Massa canvis alhora. Espera un moment i torna-ho a provar.",
   ledgerInvalidAccount: "{{value}} no és un nom de compte vàlid.",

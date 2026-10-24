@@ -377,6 +377,9 @@ export const es: Translations = {
   ledgerWriteOffline: "Estás sin conexión. No se guardó nada.",
   ledgerWriteUnconfirmed:
     "El servidor no confirmó el guardado. Comprueba antes de volver a intentarlo.",
+  ledgerDeleteOffline: "Estás sin conexión. No se eliminó nada.",
+  ledgerDeleteUnconfirmed:
+    "El servidor no confirmó la eliminación. Comprueba antes de volver a intentarlo.",
   ledgerWriteRateLimited:
     "Demasiados cambios a la vez. Espera un momento e inténtalo de nuevo.",
   ledgerInvalidAccount: "{{value}} no es un nombre de cuenta válido.",

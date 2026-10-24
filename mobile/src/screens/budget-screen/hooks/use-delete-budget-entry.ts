@@ -35,6 +35,9 @@ export function useDeleteBudgetEntry(ledgerId: string) {
         return { ok: false, message: null };
       }
       setDeleting(true);
+      // Once the delete is on its way a lost answer is unconfirmed; before that
+      // nothing was deleted (w21/935).
+      let sent = false;
       try {
         const { data: context } = await client.query<
           GetLedgerEntryContextQuery,
@@ -53,6 +56,7 @@ export function useDeleteBudgetEntry(ledgerId: string) {
           return { ok: false, message: null };
         }
 
+        sent = true;
         await deleteSlice({
           variables: { ledgerId, input: { entryHash, sha256sum } },
         });
@@ -71,7 +75,12 @@ export function useDeleteBudgetEntry(ledgerId: string) {
         return {
           ok: false,
           // In the user's language, not the transport's (w21/117).
-          message: ledgerWriteFailureMessage(caught, i18n),
+          message: ledgerWriteFailureMessage(
+            caught,
+            i18n,
+            undefined,
+            sent ? "delete" : "delete-unsent",
+          ),
         };
       } finally {
         setDeleting(false);

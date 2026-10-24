@@ -696,8 +696,12 @@ export function LedgerFileBrowserScreen(): JSX.Element {
         if (changed) await invalidateLedgerData(client, "file");
         const message = changed
           ? t("ledgerDeleteFileChanged")
-          : (ledgerWriteFailureMessage(deleteError, { t }) ??
-            t("ledgerDeleteFileFailed"));
+          : (ledgerWriteFailureMessage(
+              deleteError,
+              { t },
+              undefined,
+              "delete",
+            ) ?? t("ledgerDeleteFileFailed"));
         toast.showToast({ message, type: "error" });
       } finally {
         deleteInFlightRef.current = false;

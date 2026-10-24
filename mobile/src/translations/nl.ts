@@ -368,6 +368,9 @@ export const nl: Translations = {
   ledgerWriteOffline: "Je bent offline. Er is niets opgeslagen.",
   ledgerWriteUnconfirmed:
     "De server heeft het opslaan niet bevestigd. Controleer het voordat je het opnieuw probeert.",
+  ledgerDeleteOffline: "Je bent offline. Er is niets verwijderd.",
+  ledgerDeleteUnconfirmed:
+    "De server heeft het verwijderen niet bevestigd. Controleer het voordat je het opnieuw probeert.",
   ledgerWriteRateLimited:
     "Te veel wijzigingen tegelijk. Wacht even en probeer het opnieuw.",
   ledgerInvalidAccount: "{{value}} is geen geldige accountnaam.",

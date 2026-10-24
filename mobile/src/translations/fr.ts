@@ -378,6 +378,9 @@ export const fr: Translations = {
   ledgerWriteOffline: "Vous êtes hors ligne. Rien n'a été enregistré.",
   ledgerWriteUnconfirmed:
     "Le serveur n'a pas confirmé l'enregistrement. Vérifiez avant de réessayer.",
+  ledgerDeleteOffline: "Vous êtes hors ligne. Rien n'a été supprimé.",
+  ledgerDeleteUnconfirmed:
+    "Le serveur n'a pas confirmé la suppression. Vérifiez avant de réessayer.",
   ledgerWriteRateLimited:
     "Trop de modifications à la fois. Patientez un instant et réessayez.",
   ledgerInvalidAccount: "{{value}} n'est pas un nom de compte valide.",

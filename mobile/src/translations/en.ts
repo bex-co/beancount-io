@@ -361,6 +361,9 @@ export const en = {
   ledgerWriteOffline: "You're offline. Nothing was saved.",
   ledgerWriteUnconfirmed:
     "The server didn't confirm the save. Check before trying again.",
+  ledgerDeleteOffline: "You're offline. Nothing was deleted.",
+  ledgerDeleteUnconfirmed:
+    "The server didn't confirm the delete. Check before trying again.",
   ledgerWriteRateLimited:
     "Too many changes at once. Wait a moment and try again.",
   ledgerInvalidAccount: "{{value}} isn't a valid account name.",

@@ -332,6 +332,8 @@ export const zh: Translations = {
   ledgerRefusalQuoteHint: '要在文本中使用引号，请写成 \\"。',
   ledgerWriteOffline: "你已离线，未保存任何内容。",
   ledgerWriteUnconfirmed: "服务器未确认保存。请先检查，再重试。",
+  ledgerDeleteOffline: "你已离线，未删除任何内容。",
+  ledgerDeleteUnconfirmed: "服务器未确认删除。请先检查，再重试。",
   ledgerWriteRateLimited: "更改过于频繁，请稍后再试。",
   ledgerInvalidAccount: "{{value}} 不是有效的账户名称。",
   ledgerInvalidCurrency: "{{value}} 不是有效的货币。",

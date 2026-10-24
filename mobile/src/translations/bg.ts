@@ -369,6 +369,9 @@ export const bg: Translations = {
   ledgerWriteOffline: "Няма връзка с мрежата. Нищо не е запазено.",
   ledgerWriteUnconfirmed:
     "Сървърът не потвърди запазването. Проверете, преди да опитате отново.",
+  ledgerDeleteOffline: "Няма връзка с мрежата. Нищо не е изтрито.",
+  ledgerDeleteUnconfirmed:
+    "Сървърът не потвърди изтриването. Проверете, преди да опитате отново.",
   ledgerWriteRateLimited:
     "Твърде много промени наведнъж. Изчакайте малко и опитайте отново.",
   ledgerInvalidAccount: "{{value}} не е валидно име на сметка.",

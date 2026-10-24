@@ -379,6 +379,9 @@ export const ru: Translations = {
   ledgerWriteOffline: "Нет подключения к сети. Ничего не сохранено.",
   ledgerWriteUnconfirmed:
     "Сервер не подтвердил сохранение. Проверьте, прежде чем повторять попытку.",
+  ledgerDeleteOffline: "Нет подключения к сети. Ничего не удалено.",
+  ledgerDeleteUnconfirmed:
+    "Сервер не подтвердил удаление. Проверьте, прежде чем повторять попытку.",
   ledgerWriteRateLimited:
     "Слишком много изменений сразу. Подождите немного и повторите попытку.",
   ledgerInvalidAccount: "{{value}} — недопустимое имя счёта.",

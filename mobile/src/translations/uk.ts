@@ -377,6 +377,9 @@ export const uk: Translations = {
   ledgerWriteOffline: "Немає підключення до мережі. Нічого не збережено.",
   ledgerWriteUnconfirmed:
     "Сервер не підтвердив збереження. Перевірте, перш ніж повторювати спробу.",
+  ledgerDeleteOffline: "Немає підключення до мережі. Нічого не видалено.",
+  ledgerDeleteUnconfirmed:
+    "Сервер не підтвердив видалення. Перевірте, перш ніж повторювати спробу.",
   ledgerWriteRateLimited:
     "Забагато змін одночасно. Зачекайте трохи й спробуйте ще раз.",
   ledgerInvalidAccount: "{{value}} — недійсна назва рахунку.",

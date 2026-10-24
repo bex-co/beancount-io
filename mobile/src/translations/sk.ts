@@ -379,6 +379,9 @@ export const sk: Translations = {
   ledgerWriteOffline: "Ste offline. Nič sa neuložilo.",
   ledgerWriteUnconfirmed:
     "Server nepotvrdil uloženie. Skontrolujte to skôr, než to skúsite znova.",
+  ledgerDeleteOffline: "Ste offline. Nič sa neodstránilo.",
+  ledgerDeleteUnconfirmed:
+    "Server nepotvrdil odstránenie. Skontrolujte to skôr, než to skúsite znova.",
   ledgerWriteRateLimited:
     "Príliš veľa zmien naraz. Chvíľu počkajte a skúste to znova.",
   ledgerInvalidAccount: "{{value}} nie je platný názov účtu.",

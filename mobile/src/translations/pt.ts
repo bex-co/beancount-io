@@ -376,6 +376,9 @@ export const pt: Translations = {
   ledgerWriteOffline: "Você está offline. Nada foi salvo.",
   ledgerWriteUnconfirmed:
     "O servidor não confirmou o salvamento. Verifique antes de tentar novamente.",
+  ledgerDeleteOffline: "Você está offline. Nada foi excluído.",
+  ledgerDeleteUnconfirmed:
+    "O servidor não confirmou a exclusão. Verifique antes de tentar novamente.",
   ledgerWriteRateLimited:
     "Alterações demais de uma vez. Aguarde um momento e tente novamente.",
   ledgerInvalidAccount: "{{value}} não é um nome de conta válido.",

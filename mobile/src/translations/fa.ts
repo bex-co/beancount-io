@@ -365,6 +365,9 @@ export const fa: Translations = {
   ledgerWriteOffline: "آفلاین هستید. چیزی ذخیره نشد.",
   ledgerWriteUnconfirmed:
     "سرور ذخیره‌سازی را تأیید نکرد. پیش از تلاش دوباره بررسی کنید.",
+  ledgerDeleteOffline: "آفلاین هستید. چیزی حذف نشد.",
+  ledgerDeleteUnconfirmed:
+    "سرور حذف را تأیید نکرد. پیش از تلاش دوباره بررسی کنید.",
   ledgerWriteRateLimited:
     "تغییرات زیادی هم‌زمان انجام شد. کمی صبر کنید و دوباره امتحان کنید.",
   ledgerInvalidAccount: "{{value}} نام حساب معتبری نیست.",

@@ -497,3 +497,71 @@ describe("ledgerWriteFailureMessage with a single-entry refusal", () => {
     ).toBe("limit must be positive");
   });
 });
+
+// w21/935: every offline delete said "The server didn't confirm the save".
+describe("ledgerWriteFailureMessage for a delete", () => {
+  const offline = new Error("Network request failed");
+
+  it("says the delete, never the save, when the connection drops after it went out", () => {
+    expect(ledgerWriteFailureMessage(offline, i18n, undefined, "delete")).toBe(
+      "ledgerDeleteUnconfirmed",
+    );
+    expect(
+      ledgerWriteFailureMessage(
+        Object.assign(new Error("Response not successful"), {
+          networkError: new Error("Received status code 502"),
+        }),
+        i18n,
+        undefined,
+        "delete",
+      ),
+    ).toBe("ledgerDeleteUnconfirmed");
+  });
+
+  it("says nothing was deleted when it failed before the request went out", () => {
+    expect(
+      ledgerWriteFailureMessage(offline, i18n, undefined, "delete-unsent"),
+    ).toBe("ledgerDeleteOffline");
+  });
+
+  it("keeps the save wording for a save", () => {
+    expect(ledgerWriteFailureMessage(offline, i18n)).toBe(
+      "ledgerWriteUnconfirmed",
+    );
+  });
+
+  it("is worded for a delete in every language", () => {
+    const { en } = require("../../translations/en");
+    expect(en.ledgerDeleteOffline).toBe("You're offline. Nothing was deleted.");
+    expect(en.ledgerDeleteUnconfirmed.includes("save")).toBe(false);
+  });
+
+  it("is what the budget, transaction and file deletes ask for", () => {
+    const fs = require("fs");
+    const path = require("path");
+    const read = (...parts: string[]) =>
+      fs
+        .readFileSync(path.join(__dirname, "..", "..", ...parts), "utf8")
+        .replace(/\s+/g, "");
+    expect(
+      read(
+        "screens",
+        "budget-screen",
+        "hooks",
+        "use-delete-budget-entry.ts",
+      ).includes('sent?"delete":"delete-unsent"'),
+    ).toBe(true);
+    expect(
+      read(
+        "screens",
+        "transaction-detail-screen",
+        "transaction-detail-screen.tsx",
+      ).includes('ledgerWriteFailureMessage(e,i18n,undefined,"delete")'),
+    ).toBe(true);
+    expect(
+      read("screens", "ledger-file-browser-screen", "index.tsx").includes(
+        'ledgerWriteFailureMessage(deleteError,{t},undefined,"delete",)',
+      ),
+    ).toBe(true);
+  });
+});

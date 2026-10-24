@@ -300,7 +300,15 @@ export function ledgerWriteFailureMessage(
   error: unknown,
   i18n: Translate,
   context?: RefusalContext,
+  // A delete's own wording: "didn't confirm the save" was wrong for it (w21/935).
+  // "delete-unsent" is a delete that failed before its request went out (the
+  // checksum read): nothing was deleted, whatever the transport said.
+  kind: "save" | "delete" | "delete-unsent" = "save",
 ): string | null {
+  const offline =
+    kind === "save" ? "ledgerWriteOffline" : "ledgerDeleteOffline";
+  const unconfirmed =
+    kind === "save" ? "ledgerWriteUnconfirmed" : "ledgerDeleteUnconfirmed";
   const refusal = describeLedgerRefusal(error, i18n, context);
   if (refusal) return refusal;
   const codes = graphQLErrorCodes(error);
@@ -323,9 +331,9 @@ export function ledgerWriteFailureMessage(
     codes.includes("SERVICE_UNAVAILABLE") ||
     codes.includes("INTERNAL_SERVER_ERROR")
   ) {
-    return i18n.t("ledgerWriteUnconfirmed");
+    return i18n.t(unconfirmed);
   }
-  if (responseStatus(error) !== null) return i18n.t("ledgerWriteUnconfirmed");
+  if (responseStatus(error) !== null) return i18n.t(unconfirmed);
   if (isTransportFailure(error)) {
     // A request that never left (the token refresh failed first) saved
     // nothing. Any other transport failure is also what a connection that
@@ -333,9 +341,9 @@ export function ledgerWriteFailureMessage(
     // have committed: "Nothing was saved" invited a retry that wrote the entry
     // twice (w21/351).
     return i18n.t(
-      PRE_SEND_FAILURE.test(errorText(error))
-        ? "ledgerWriteOffline"
-        : "ledgerWriteUnconfirmed",
+      PRE_SEND_FAILURE.test(errorText(error)) || kind === "delete-unsent"
+        ? offline
+        : unconfirmed,
     );
   }
   return null;

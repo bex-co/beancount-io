@@ -489,7 +489,8 @@ const TransactionDetailImpl = ({
                   },
                 }),
               // The server's reason is more useful than "delete failed".
-              describeFailure: (e) => ledgerWriteFailureMessage(e, i18n),
+              describeFailure: (e) =>
+                ledgerWriteFailureMessage(e, i18n, undefined, "delete"),
               showRefusal: (title, message) => Alert.alert(title, message),
               messages: {
                 loading: t("deleting"),
