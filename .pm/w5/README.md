@@ -72,6 +72,8 @@ The 27 findings from the MCP QA auth sweep against the hosted endpoint (023–05
 
 - [1016 — Preserve omitted price currencies in native importer entries](./1016.md) — minor CLI gap: native-valid `@ 5` / `@@ 10` sources fail before preview when the printer emits a MISSING class token; explicit-currency controls pass.
 
+- [868 — Preserve package resource directories in portable exports](./868.md) — reopened trivial CLI gap: a required empty resource directory disappears from a successful fresh export; direct/helper and original resource controls checked 2026-10-24.
+
 ## Blocked inbox
 
 - [431 — `add balance`/`add price`/bare-number adds load the ledger twice for pre-checks](./blocked/431.md) — blocked on a maintainer choice between a pre-commit hook in the shared write validation and plugin-free pre-checks that change refusals.
