@@ -159,6 +159,7 @@ export default function LedgerOverviewPage() {
 
   const { accountMeta, pending: accountMetaPending } = useAccountMeta(ledgerId);
 
+  const today = toLocalISODate(new Date());
   const market = valuationData?.market;
   const costNetWorth = data?.getLedgerOverview?.netWorthData;
   const netWorthValuation = useMemo(
@@ -168,11 +169,11 @@ export default function LedgerOverviewPage() {
         cost: costNetWorth ?? [],
         units: valuationData?.held?.netWorthData ?? [],
         currency: primaryCurrency,
-        today: toLocalISODate(new Date()),
+        today,
         pricePairs: valuationData?.getLedgerCommodities ?? [],
         managedSources: valuationData?.getLedgerManagedPrices ?? [],
       }),
-    [market, costNetWorth, valuationData, primaryCurrency],
+    [market, costNetWorth, valuationData, primaryCurrency, today],
   );
 
   // Do not keep a prior period's overview cards while a replacement read is in
@@ -278,6 +279,7 @@ export default function LedgerOverviewPage() {
               primaryCurrency={primaryCurrency}
               ledgerOwner={ledgerOwner}
               ledgerName={ledgerName}
+              today={today}
             />
             <AccountBalancesCard
               assets={market?.assetsHierarchyData}

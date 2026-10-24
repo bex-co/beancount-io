@@ -184,6 +184,20 @@ export function isPriceStale({
 
 type Series = ReadonlyArray<{ date: string; balance: Record<string, unknown> }>;
 
+/**
+ * The points up to the current month. The ledger service returns months past
+ * today when an entry is future-dated, and the latest point of the series then
+ * read as next month: the headline showed it, with a change from this month
+ * under a falling arrow. Mobile caps at today the same way (w21/995).
+ */
+export function throughCurrentMonth<T extends { date: string }>(
+  series: ReadonlyArray<T>,
+  today: string,
+): T[] {
+  const month = today.slice(0, 7);
+  return series.filter((point) => point.date.slice(0, 7) <= month);
+}
+
 /** The series point on `date`, else the latest one. */
 function balanceOn(series: Series, date: string): Balance {
   return (series.find((point) => point.date === date) ?? series.at(-1))
@@ -208,7 +222,7 @@ export function describeLatestNetWorth({
   pricePairs: ReadonlyArray<PricePair>;
   managedSources: ReadonlyArray<ManagedSource>;
 }): NetWorthValuation | null {
-  const latest = market.at(-1);
+  const latest = throughCurrentMonth(market, rest.today).at(-1);
   if (!latest) return null;
   return describeNetWorthValuation({
     ...rest,

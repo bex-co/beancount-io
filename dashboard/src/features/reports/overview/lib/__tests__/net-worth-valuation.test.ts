@@ -4,6 +4,7 @@ import {
   describeNetWorthValuation,
   isPriceStale,
   priceCadenceDays,
+  throughCurrentMonth,
   type PricePair,
 } from "../net-worth-valuation";
 
@@ -349,5 +350,39 @@ describe("early-century price dates", () => {
         priceDates: december,
       }),
     ).toBe(true);
+  });
+});
+
+// w21/995: a future-dated entry puts next month at the end of the series.
+describe("throughCurrentMonth", () => {
+  const series = [
+    { date: "2026-09-30", balance: { USD: "1000" } },
+    { date: "2026-10-31", balance: { USD: "1200" } },
+    { date: "2026-11-30", balance: { USD: "700" } },
+  ];
+
+  it("drops the months after today's", () => {
+    expect(
+      throughCurrentMonth(series, "2026-10-24").map((point) => point.date),
+    ).toEqual(["2026-09-30", "2026-10-31"]);
+  });
+
+  it("describes the current month's point, not the future one", () => {
+    const at = (date: string, usd: string) => ({
+      date,
+      balance: { USD: usd, GLD: "2" },
+    });
+    const market = [at("2026-10-31", "1200"), at("2026-11-30", "700")];
+    const cost = [at("2026-10-31", "1100"), at("2026-11-30", "900")];
+    const valuation = describeLatestNetWorth({
+      market,
+      cost,
+      units: cost,
+      currency: "USD",
+      today: "2026-10-24",
+      pricePairs: [],
+      managedSources: [],
+    });
+    expect(valuation?.costBasis).toBe(1100);
   });
 });

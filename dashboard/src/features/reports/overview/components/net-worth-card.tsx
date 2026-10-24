@@ -38,8 +38,12 @@ import {
   getBalanceAmounts,
   getComparableAmount,
   prioritizeCurrency,
+  toLocalISODate,
 } from "../lib/overview-utils";
-import type { NetWorthValuation } from "../lib/net-worth-valuation";
+import {
+  throughCurrentMonth,
+  type NetWorthValuation,
+} from "../lib/net-worth-valuation";
 import { FormattedAmounts } from "./formatted-amounts";
 import { useUrlView } from "@/common/hooks/use-url-view";
 import {
@@ -258,7 +262,10 @@ export function NetWorthCard({
   primaryCurrency,
   ledgerOwner,
   ledgerName,
+  today = toLocalISODate(new Date()),
 }: {
+  /** The ledger's day (`YYYY-MM-DD`), which the headline is capped at. */
+  today?: string;
   /** Net worth at market value (`at_value`), one point per month. */
   data: DataSeries;
   /** What the latest point discloses; null when it holds nothing to value. */
@@ -281,8 +288,10 @@ export function NetWorthCard({
     DEFAULT_NET_WORTH_VIEW,
   );
   const visibleData = useMemo(() => data.slice(-12), [data]);
-  const latest = visibleData.at(-1);
-  const previous = visibleData.at(-2);
+  // The headline and its change stop at the current month (w21/995).
+  const throughNow = throughCurrentMonth(visibleData, today);
+  const latest = throughNow.at(-1);
+  const previous = throughNow.at(-2);
   const latestAmounts = prioritizeCurrency(
     getBalanceAmounts(latest?.balance),
     primaryCurrency,

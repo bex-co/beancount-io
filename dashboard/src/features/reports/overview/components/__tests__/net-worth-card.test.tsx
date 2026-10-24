@@ -682,3 +682,30 @@ describe("NetWorthCard exact amounts", () => {
     expect(january).toHaveTextContent(`${jan} USD`);
   });
 });
+
+// w21/995: a future-dated entry put next month at the end of the series, and the
+// headline read it with a falling arrow.
+describe("NetWorthCard headline", () => {
+  const withFuture: DataSeries = [
+    { date: "2026-09-30", balance: { USD: 1000 } },
+    { date: "2026-10-31", balance: { USD: 1200 } },
+    { date: "2026-11-30", balance: { USD: 700 } },
+  ];
+
+  it("stops at the current month", () => {
+    render(
+      <NetWorthCard
+        ledgerOwner="owner"
+        ledgerName="book"
+        valuation={null}
+        data={withFuture}
+        primaryCurrency="USD"
+        today="2026-10-24"
+      />,
+    );
+
+    expect(screen.getAllByText(/1200/).length).toBeGreaterThan(0);
+    expect(screen.getByText(/\+200/)).toBeInTheDocument();
+    expect(screen.queryByText(/-500/)).toBeNull();
+  });
+});
