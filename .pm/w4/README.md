@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1045** — [Retry a failed first Account Report read in place](./1045.md)
+
 - **1044** — Retry the first Entry Context read without dismissing its dialog (35–50m, dashboard, A2) ← dashboard QA; residual of m50 ([note](./1044.md))
 
 - **1043** — Retry a failed initial Version History read in place (45–60m, dashboard, A2) ← dashboard QA; residual of m50 ([note](./1043.md))
