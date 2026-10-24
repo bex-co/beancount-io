@@ -739,6 +739,7 @@ export const sk: Translations = {
   budgetUpdate: "Aktualizovať rozpočet",
   budgetAccountPlaceholder: "Expenses:Groceries",
   budgetAccountNotSelected: "Nie je vybraný účet",
+  budgetReplacesCurrent: "Nahradí aktuálny rozpočet tohto účtu.",
   budgetAccountHelp:
     "Rozpočet sa vzťahuje na jeden účet. Novší záznam pre rovnaký účet a menu platí od svojho dátumu.",
   budgetInterval: "Interval",

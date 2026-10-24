@@ -733,6 +733,7 @@ export const ru: Translations = {
   budgetUpdate: "Обновить бюджет",
   budgetAccountPlaceholder: "Expenses:Groceries",
   budgetAccountNotSelected: "Счёт не выбран",
+  budgetReplacesCurrent: "Заменяет текущий бюджет этого счёта.",
   budgetAccountHelp:
     "Бюджет применяется к одному счёту. Более новая запись для того же счёта и валюты действует с указанной даты.",
   budgetInterval: "Интервал",

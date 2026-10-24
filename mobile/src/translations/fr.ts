@@ -737,6 +737,7 @@ export const fr: Translations = {
   budgetUpdate: "Mettre à jour le budget",
   budgetAccountPlaceholder: "Expenses:Groceries",
   budgetAccountNotSelected: "Aucun compte choisi",
+  budgetReplacesCurrent: "Remplace le budget actuel de ce compte.",
   budgetAccountHelp:
     "Un budget s’applique à un seul compte. Une entrée plus récente pour le même compte et la même devise prend effet à sa date.",
   budgetInterval: "Intervalle",

@@ -73,8 +73,45 @@ describe("the Update flow's wiring", () => {
     ).toBe(true);
     expect(
       read("add-budget-screen", "add-budget-screen.tsx").includes(
-        "minimumDate={dates.minimum}",
+        "minimumDate={minimumDate}",
       ),
+    ).toBe(true);
+  });
+});
+
+// w21/947: Add for an account and currency that already have a budget skipped
+// the Update's safeguards.
+describe("Add for an existing budget", () => {
+  const source = fs
+    .readFileSync(path.join(__dirname, "..", "add-budget-screen.tsx"), "utf8")
+    .replace(/\s+/g, "");
+
+  it("takes the Update's earliest date, shows its amount and says it replaces it", () => {
+    expect(
+      source.includes(
+        "constminimumDate=existingDates?.minimum??dates.minimum;",
+      ),
+    ).toBe(true);
+    expect(
+      source.includes(
+        "updateBudgetDates(budgetInEffectDate(existing),newDate())",
+      ),
+    ).toBe(true);
+    expect(source.includes("params.currentAmount??existing?.amount")).toBe(
+      true,
+    );
+    expect(source.includes('t("budgetReplacesCurrent")')).toBe(true);
+    expect(
+      source.includes(
+        "group.account===account.trim()&&group.currency===currency",
+      ),
+    ).toBe(true);
+  });
+
+  it("leaves a new pair, and an Update, as they are", () => {
+    expect(source.includes("constexisting=isUpdate?undefined:")).toBe(true);
+    expect(
+      source.includes("useBudgetGroups(isUpdate?undefined:ledgerId)"),
     ).toBe(true);
   });
 });

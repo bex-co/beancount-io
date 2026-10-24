@@ -721,6 +721,7 @@ export const nl: Translations = {
   budgetUpdate: "Budget bijwerken",
   budgetAccountPlaceholder: "Expenses:Groceries",
   budgetAccountNotSelected: "Geen rekening gekozen",
+  budgetReplacesCurrent: "Vervangt het huidige budget van deze rekening.",
   budgetAccountHelp:
     "Budgetten gelden voor één rekening. Een nieuwere regel voor dezelfde rekening en valuta geldt vanaf de datum.",
   budgetInterval: "Interval",

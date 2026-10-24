@@ -736,6 +736,7 @@ export const ca: Translations = {
   budgetUpdate: "Actualitza el pressupost",
   budgetAccountPlaceholder: "Expenses:Groceries",
   budgetAccountNotSelected: "Cap compte triat",
+  budgetReplacesCurrent: "Substitueix el pressupost actual d'aquest compte.",
   budgetAccountHelp:
     "Els pressupostos s'apliquen a un sol compte. Una entrada més recent per al mateix compte i moneda entra en vigor en la seva data.",
   budgetInterval: "Interval",

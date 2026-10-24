@@ -717,6 +717,7 @@ export const bg: Translations = {
   budgetUpdate: "Актуализиране на бюджета",
   budgetAccountPlaceholder: "Expenses:Groceries",
   budgetAccountNotSelected: "Не е избрана сметка",
+  budgetReplacesCurrent: "Заменя текущия бюджет на тази сметка.",
   budgetAccountHelp:
     "Бюджетът важи за една сметка. По-нов запис за същата сметка и валута влиза в сила на своята дата.",
   budgetInterval: "Интервал",

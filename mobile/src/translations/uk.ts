@@ -731,6 +731,7 @@ export const uk: Translations = {
   budgetUpdate: "Оновити бюджет",
   budgetAccountPlaceholder: "Expenses:Groceries",
   budgetAccountNotSelected: "Рахунок не вибрано",
+  budgetReplacesCurrent: "Замінює поточний бюджет цього рахунку.",
   budgetAccountHelp:
     "Бюджет застосовується до одного рахунку. Новіший запис для того самого рахунку й валюти діє зі своєї дати.",
   budgetInterval: "Інтервал",

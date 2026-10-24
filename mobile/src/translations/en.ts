@@ -738,6 +738,7 @@ export const en = {
   budgetUpdate: "Update Budget",
   budgetAccountPlaceholder: "Expenses:Groceries",
   budgetAccountNotSelected: "No account chosen",
+  budgetReplacesCurrent: "Replaces this account's current budget.",
   budgetAccountHelp:
     "Budgets apply to one account. A newer entry for the same account and currency takes effect on its date.",
   budgetInterval: "Interval",

@@ -11,7 +11,7 @@ import {
 } from "./currency-options";
 import { TextInputModal } from "@/components/text-input-modal";
 import { typedCurrencyCode } from "@/screens/open-account-screen/account-name";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { InlineError } from "@/components/inline-error";
 import {
   Platform,
@@ -44,6 +44,8 @@ import {
 import { pushAccountPicker } from "@/screens/account-picker-screen/push-account-picker";
 import { useUnsavedChangesGuard } from "@/common/hooks/use-unsaved-changes-guard";
 import { updateBudgetDates } from "./update-date";
+import { useBudgetGroups } from "@/screens/budget-screen/hooks/use-budget-groups";
+import { budgetInEffectDate } from "@/screens/budget-screen/selectors/budget-selectors";
 import { DatePickerModal } from "@/components/date-picker-modal";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import { Picker } from "@/components/picker";
@@ -260,6 +262,24 @@ function AddBudgetScreenImpl(): JSX.Element {
       ? ""
       : defaultBudgetCurrency(currencies, ledgerMeta?.currencies ?? []));
 
+  // Adding for an account and currency that already have a budget is an
+  // Update by another road: it keeps the Update's earliest date, shows the
+  // current amount, and says it replaces it (w21/947).
+  const { groups: budgets } = useBudgetGroups(isUpdate ? undefined : ledgerId);
+  const existing = isUpdate
+    ? undefined
+    : budgets.find(
+        (group) =>
+          group.account === account.trim() && group.currency === currency,
+      );
+  const existingDates = existing
+    ? updateBudgetDates(budgetInEffectDate(existing), new Date())
+    : null;
+  const minimumDate = existingDates?.minimum ?? dates.minimum;
+  useEffect(() => {
+    if (minimumDate && date < minimumDate) setDate(minimumDate);
+  }, [minimumDate, date]);
+
   // Written verbatim into the directive, so only a number may pass (w0/038).
   const amountOk = isBudgetAmount(amount);
   const amountInvalid = amount.trim().length > 0 && !amountOk;
@@ -425,8 +445,8 @@ function AddBudgetScreenImpl(): JSX.Element {
               }}
               style={styles.amountInput}
               placeholder={budgetAmountPlaceholder(
-                isUpdate,
-                params.currentAmount,
+                isUpdate || existing !== undefined,
+                params.currentAmount ?? existing?.amount,
               )}
               placeholderTextColor={theme.controlPlaceholder}
               keyboardType={
@@ -456,6 +476,9 @@ function AddBudgetScreenImpl(): JSX.Element {
           />
         ) : null}
         <Text style={styles.help}>{t("budgetAccountHelp")}</Text>
+        {existing ? (
+          <Text style={styles.help}>{t("budgetReplacesCurrent")}</Text>
+        ) : null}
         {closedAt !== undefined && (
           <InlineError
             style={styles.error}
@@ -474,7 +497,7 @@ function AddBudgetScreenImpl(): JSX.Element {
         isVisible={datePickerVisible}
         mode="date"
         date={date}
-        minimumDate={dates.minimum}
+        minimumDate={minimumDate}
         onConfirm={(picked: Date) => {
           setDatePickerVisible(false);
           setDate(picked);
