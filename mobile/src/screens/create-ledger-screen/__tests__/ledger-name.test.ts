@@ -2,6 +2,7 @@ import { translationLocales } from "../../../translations/__tests__/locale-parit
 import {
   classifyCreateLedgerError,
   LEDGER_DESCRIPTION_MAX,
+  setupTitle,
   createRequestFingerprint,
   generateDefaultLedgerName,
   isNewCreateRequest,
@@ -327,5 +328,33 @@ describe("a ledger description over the server's limit", () => {
         'if(kind==="description"){//Thedescription\'serrorrendersontheformsteptoo.setError("description",{message:t("createLedgerDescriptionMaxLength"),});setStep(FORM_STEP);return;}',
       ),
     ).toBe(true);
+  });
+});
+
+// w21/950: a name pasted with a tab or newline was refused as the setup's title.
+describe("setupTitle", () => {
+  it("turns control characters into spaces and trims the ends", () => {
+    expect(setupTitle("Family\tBudget")).toBe("Family Budget");
+    expect(setupTitle("Household\n")).toBe("Household");
+    expect(setupTitle("  Family  ")).toBe("Family");
+    expect(setupTitle("A\r\n\tB")).toBe("A B");
+  });
+
+  it("never holds a control character or a padded end", () => {
+    for (const name of ["x\u0000y", "\u0007bell", "a\u001fb\n", "\t\t"]) {
+      const title = setupTitle(name);
+      expect(/\p{Cc}/u.test(title)).toBe(false);
+      expect(title).toBe(title.trim());
+    }
+  });
+
+  it("is what the setup sends as its title", () => {
+    const source = require("fs")
+      .readFileSync(
+        require("path").join(__dirname, "..", "create-ledger-screen.tsx"),
+        "utf8",
+      )
+      .replace(/\s+/g, "");
+    expect(source.includes("title:setupTitle(values.name),")).toBe(true);
   });
 });

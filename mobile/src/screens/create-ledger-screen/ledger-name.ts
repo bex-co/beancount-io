@@ -45,6 +45,19 @@ export function ledgerSlugPreview(name: string): string | null {
  * Default name that does not collide with existing ledger names:
  * `my-book`, then `my-book-1`, `my-book-2`, …
  */
+/**
+ * The name as the setup's title: a tab or line break pasted from a spreadsheet
+ * cell or a note becomes a space, and the ends are trimmed. The server refuses
+ * a title with a control character, so Review showed its English text and
+ * kept Create disabled (w21/950).
+ */
+export function setupTitle(name: string): string {
+  return name
+    .replace(/\p{Cc}+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function generateDefaultLedgerName(existingNames: string[]): string {
   const baseName = "my-book";
   if (!existingNames.includes(baseName)) {

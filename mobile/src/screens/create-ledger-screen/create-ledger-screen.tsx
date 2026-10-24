@@ -65,6 +65,7 @@ import type { ColorTheme } from "@/types/theme-props";
 import {
   LEDGER_DESCRIPTION_MAX,
   classifyCreateLedgerError,
+  setupTitle,
   createRequestFingerprint,
   generateDefaultLedgerName,
   isNewCreateRequest,
@@ -411,7 +412,7 @@ export function CreateLedgerScreen(): JSX.Element {
     );
     return {
       preset: preset.id,
-      title: values.name,
+      title: setupTitle(values.name),
       ...setupFields(values),
       accounts: opening
         ? [
