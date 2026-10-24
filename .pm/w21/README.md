@@ -99,3 +99,7 @@
 - [942](./942.md) — Tapping the same editor error row again within 3 s doesn't jump
 - [943](./943.md) — A same-day charge and reversal counts as a payment: Next moves, "~" appears, Overdue is lost
 - [944](./944.md) — One off-schedule charge drops the recurrence day-of-month anchor, so Next runs late
+- [945](./945.md) — Update Budget is refused for a closed parent whose children are still open
+- [946](./946.md) — Add Budget saves a yen budget as USD for an account that only spends yen
+- [947](./947.md) — Adding a budget for an already-budgeted account skips Update's safeguards
+- [948](./948.md) — Changing the budget date doesn't recheck when the account opens
