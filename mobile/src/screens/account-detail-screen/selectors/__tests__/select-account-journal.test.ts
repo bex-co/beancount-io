@@ -1237,3 +1237,28 @@ describe("an amount a double cannot hold", () => {
     ]);
   });
 });
+
+// w21/892: a day running past the first page showed the total of the rows loaded.
+describe("groupAccountJournalRowsToSections with more pages to load", () => {
+  const rows = [
+    row("2026-10-22", "QA Cafe 1", -4, 400),
+    row("2026-10-22", "QA Cafe 2", -4, 396),
+    row("2026-10-21", "QA Lunch", -10, 500),
+  ];
+
+  it("leaves out the total of the last, possibly partial, day", () => {
+    const sections = groupAccountJournalRowsToSections(rows, "USD", "en", true);
+    expect(sections.map((section) => section.totalChange)).toEqual([
+      "-$8.00",
+      "",
+    ]);
+  });
+
+  it("totals every day once nothing remains", () => {
+    const sections = groupAccountJournalRowsToSections(rows, "USD", "en");
+    expect(sections.map((section) => section.totalChange)).toEqual([
+      "-$8.00",
+      "-$10.00",
+    ]);
+  });
+});

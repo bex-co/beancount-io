@@ -414,6 +414,12 @@ export function groupAccountJournalRowsToSections(
   rows: AccountJournalRow[],
   currency: string,
   locale = "en",
+  /**
+   * More pages remain: the last day may run on into one, so a total over its
+   * loaded rows is the wrong total ("−$80.00" for a −$100.00 day of 25 entries).
+   * It is left out until the day is complete (w21/892).
+   */
+  morePages = false,
 ): AccountJournalSection[] {
   const groups = new Map<string, AccountJournalRow[]>();
   for (const row of rows) {
@@ -421,7 +427,8 @@ export function groupAccountJournalRowsToSections(
     if (!groups.has(isoDate)) groups.set(isoDate, []);
     groups.get(isoDate)!.push(row);
   }
-  return Array.from(groups.entries()).map(([isoDate, data]) => {
+  const last = groups.size - 1;
+  return Array.from(groups.entries()).map(([isoDate, data], index) => {
     const units = data[0].units;
     const scale = units
       ? Math.max(...data.map((r) => r.units?.scale ?? 0))
@@ -458,7 +465,7 @@ export function groupAccountJournalRowsToSections(
     return {
       isoDate,
       displayDate: formatLedgerDate(isoDate, locale),
-      totalChange,
+      totalChange: morePages && index === last ? "" : totalChange,
       data,
     };
   });

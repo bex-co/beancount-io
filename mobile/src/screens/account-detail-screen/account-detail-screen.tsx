@@ -325,10 +325,6 @@ const AccountDetailScreenImpl = ({
       ),
     [currency, items, unitsCurrency, account],
   );
-  const sections = useMemo(
-    () => groupAccountJournalRowsToSections(rows, currency, locale),
-    [rows, currency, locale],
-  );
 
   // Display rows carry only shaped fields; index the raw items by the same
   // key so a tapped row can hand its full entry to the detail screen.
@@ -343,6 +339,11 @@ const AccountDetailScreenImpl = ({
     items.length,
     total,
     lastJournalPage ?? undefined,
+  );
+  // The last day is partial while more pages remain (w21/892).
+  const sections = useMemo(
+    () => groupAccountJournalRowsToSections(rows, currency, locale, hasMore),
+    [rows, currency, locale, hasMore],
   );
   const isLoadingMore = networkStatus === NetworkStatus.fetchMore;
   const isInitialLoading =
