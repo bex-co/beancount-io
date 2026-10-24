@@ -737,3 +737,49 @@ describe("closed accounts in the Accounts tree", () => {
     ).toBe(true);
   });
 });
+
+// w21/976: the zero-balance graft was quadratic in the number of accounts.
+describe("selectTrialBalanceCategories with a very large chart", () => {
+  const count = 5000;
+  const parents = count / 40;
+  const leafOf = (i: number) => `Assets:Group${i % parents}:Leaf${i}`;
+  const names = Array.from({ length: count }, (_, i) => leafOf(i));
+  const held: Record<string, number | string> = { USD: 1 };
+  const trial = createTrialBalance({
+    assets: {
+      account: "Assets",
+      total: { USD: count },
+      children: Array.from({ length: parents }, (_, p) => ({
+        account: `Assets:Group${p}`,
+        balanceChildren: { USD: 40 } as Record<string, number | string>,
+        children: Array.from({ length: 40 }, (_, k) => ({
+          account: leafOf(p + k * parents),
+          balanceChildren: held,
+        })),
+      })),
+    },
+  });
+
+  it("lists every account once, nested under its parent", () => {
+    const categories = selectTrialBalanceCategories("USD", trial, names);
+    const assets = categories.find((category) => category.key === "assets");
+    const flat: string[] = [];
+    const walk = (nodes: { account: string; children?: unknown[] }[]) => {
+      for (const node of nodes) {
+        flat.push(node.account);
+        walk((node.children ?? []) as never);
+      }
+    };
+    walk((assets?.children ?? []) as never);
+    expect(new Set(flat).size).toBe(flat.length);
+    expect(flat.includes("Assets:Group7:Leaf7")).toBe(true);
+    expect(flat.length >= count).toBe(true);
+  });
+
+  it("builds in well under the quadratic time it took", () => {
+    const start = Date.now();
+    selectTrialBalanceCategories("USD", trial, names);
+    // Several hundred ms on Node before; a generous bound for a loaded machine.
+    expect(Date.now() - start < 150).toBe(true);
+  });
+});

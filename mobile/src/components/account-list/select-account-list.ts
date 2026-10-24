@@ -484,24 +484,43 @@ function graftZeroAccounts(
     return { children: children as RawChild[], keep };
   }
 
+  // Sets, built once: `includes` and `some(startsWith)` per node and per
+  // account made this quadratic, 375 ms at 5,000 accounts (w21/976).
+  const wantedSet = new Set(wanted);
   // A descendant the filters will not drop: listed, or holding something.
   // The raw tree also carries closed accounts, emptied, which they do drop
   // (w21/280).
   const survives = (node: RawChild): boolean =>
-    wanted.includes(node.account) ||
+    wantedSet.has(node.account) ||
     resolveCurrencyBalance(node.balance_children, currency) !== 0 ||
     (options.wholeBalance === true &&
       notInTotalOf(node.balance_children, currency).length > 0);
   const rendered = rawNodes(children).filter(survives);
+  // Every proper ancestor of an account the hierarchy still renders.
+  const renderedAncestors = new Set<string>();
+  for (const node of rendered) {
+    let colon = node.account.lastIndexOf(":");
+    while (colon > 0) {
+      const ancestor = node.account.slice(0, colon);
+      if (renderedAncestors.has(ancestor)) break;
+      renderedAncestors.add(ancestor);
+      colon = ancestor.lastIndexOf(":");
+    }
+  }
   // Copied, never mutated in place: the raw nodes belong to the Apollo cache.
   // Every field `toNode` reads: dropping `balance` left a parent's own postings
   // out of the Accounts tab, so its rows did not add up to it (w21/331).
-  const clone = (node: RawChild): RawChild => ({
-    account: node.account,
-    balance_children: node.balance_children,
-    balance: node.balance,
-    children: (node.children ?? []).map(clone),
-  });
+  const byPath = new Map<string, RawChild>();
+  const clone = (node: RawChild): RawChild => {
+    const copy: RawChild = {
+      account: node.account,
+      balance_children: node.balance_children,
+      balance: node.balance,
+      children: (node.children ?? []).map(clone),
+    };
+    if (!byPath.has(copy.account)) byPath.set(copy.account, copy);
+    return copy;
+  };
   const grafted = children.map(clone);
 
   for (const account of wanted) {
@@ -510,7 +529,7 @@ function graftZeroAccounts(
     }
     // An ancestor of accounts the hierarchy still renders: those rows stand
     // in for it, so it needs neither a graft nor a reprieve from the filter.
-    if (rendered.some((node) => node.account.startsWith(`${account}:`))) {
+    if (renderedAncestors.has(account)) {
       continue;
     }
     let siblings = grafted;
@@ -520,10 +539,11 @@ function graftZeroAccounts(
       // Every ancestor is kept too, so an existing zero ancestor cannot be
       // filtered out from under the account it holds.
       keep.add(path);
-      let node = siblings.find((sibling) => sibling.account === path);
+      let node = byPath.get(path);
       if (!node) {
         node = { account: path, balance_children: {}, children: [] };
         siblings.push(node);
+        byPath.set(path, node);
       }
       node.children = node.children ?? [];
       siblings = node.children;
