@@ -56,6 +56,9 @@ export interface ColorTheme {
   text01: string;
   error: string;
   success: string;
+  /** Success/error as text on the card fill, at least 4.5:1 in both themes (w21/926); `success` and `error` stay for bars and lines. */
+  successText: string;
+  errorText: string;
   warning: string;
   /** Text on a `warning` fill, at least 4.5:1 in both themes (w21/127). */
   onWarning: string;

@@ -148,3 +148,44 @@ function overlay(
   );
   return `#${mixed.join("")}`;
 }
+
+// w21/926: success and error are line and bar colours; as text on the card they
+// measured 4.17:1 and 4.27:1 in light mode.
+describe("success and error as text", () => {
+  for (const name of THEME_NAMES) {
+    const theme = themes[name].colorTheme;
+
+    it(`read at 4.5:1 on the surface and the card in ${name}`, () => {
+      for (const text of [theme.successText, theme.errorText]) {
+        expect(contrastRatio(text, theme.white) >= TEXT_BAR).toBe(true);
+        expect(contrastRatio(text, theme.controlFill) >= TEXT_BAR).toBe(true);
+      }
+    });
+  }
+
+  it("are what the income amount, the change row and the budget figures use", () => {
+    const read = (relative: string) =>
+      fs.readFileSync(path.join(__dirname, "..", "..", "..", relative), "utf8");
+    expect(
+      /amountPositive:\s*\{[^}]*color: theme\.successText/u.test(
+        read("screens/transactions-screen/entry-row/index.tsx"),
+      ),
+    ).toBe(true);
+    expect(
+      read("common/d3/interactive-line-chart.tsx").includes(
+        "color={lineTextColor}",
+      ),
+    ).toBe(true);
+    const budget = read(
+      "screens/budget-screen/components/budget-group-card.tsx",
+    );
+    expect(/errorText:\s*\{[^}]*color: theme\.errorText/u.test(budget)).toBe(
+      true,
+    );
+    expect(
+      budget
+        .replace(/\s+/g, "")
+        .includes("?theme.successText:theme.errorText;"),
+    ).toBe(true);
+  });
+});

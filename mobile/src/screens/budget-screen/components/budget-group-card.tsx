@@ -174,7 +174,7 @@ const getStyles = (theme: ColorTheme) =>
     errorText: {
       paddingHorizontal: gutter,
       fontSize: fontSizes.md,
-      color: theme.error,
+      color: theme.errorText,
     },
   });
 
@@ -273,8 +273,8 @@ export function BudgetGroupCard({
   const statusColor = stats.unjudged
     ? theme.text01
     : stats.favorable
-      ? theme.success
-      : theme.error;
+      ? theme.successText
+      : theme.errorText;
   const [notInTotalNote] = notInTotalNotes(stats.notInTotal, t);
 
   return (

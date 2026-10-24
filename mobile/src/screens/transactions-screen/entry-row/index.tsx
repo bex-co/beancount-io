@@ -124,7 +124,7 @@ const getStyles = (theme: ColorTheme) =>
       textAlign: LEADING_TEXT_ALIGN,
     },
     amountPositive: {
-      color: theme.success,
+      color: theme.successText,
     },
     amountNeutral: {
       color: theme.black90,

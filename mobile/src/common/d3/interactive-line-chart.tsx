@@ -706,6 +706,13 @@ function InteractiveLineChart({
       : (scrubFavorable ?? restingFavorable)
         ? theme.success
         : theme.error;
+  // The change row's text, darker than the line in light mode (w21/926).
+  const lineTextColor =
+    lineColor === theme.success
+      ? theme.successText
+      : lineColor === theme.error
+        ? theme.errorText
+        : lineColor;
 
   // Read off the plotted y positions rather than the values behind them: the
   // cursor worklets already hold `pointYs`, so asking it here costs no second
@@ -889,7 +896,7 @@ function InteractiveLineChart({
             baseline={windowBaseline}
             currency={currency}
             formatValue={formatValue}
-            color={lineColor}
+            color={lineTextColor}
             neutral={neutral}
             scrub={scrub}
           />

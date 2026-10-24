@@ -192,6 +192,8 @@ const lightTheme: ColorTheme = {
   // so income never reads as brand olive.
   error: "#cc4534", //    Error
   success: "#0a8748", //    Success
+  successText: "#087a41", //    Success as text: 5.4 on white, 4.9 on the card fill
+  errorText: "#b83d2e", //    Error as text: 5.6 on white, 5.1 on the card fill
   warning: "#e08a1e", //    Warning
   onWarning: "#1b1e16", //    text on Warning (= black): white was 2.7:1
   warningText: "#935300", //    Warning as text: 6.0 on white, 5.3 on its 14% tint
@@ -243,6 +245,8 @@ const darkTheme: ColorTheme = {
 
   error: "#e8695c", //    Error
   success: "#37c07c", //    Success
+  successText: "#37c07c", //    = success: 6.2 on the card fill
+  errorText: "#e8695c", //    = error: 4.6 on the card fill
   warning: "#f0b24e", //    Warning
   onWarning: CHARCOAL, //    text on Warning: white was 1.9:1
   warningText: "#f0b24e", //    = warning: 9.4 on the surface
