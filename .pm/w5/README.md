@@ -37,6 +37,7 @@
 ## Inbox
 
 - [980 — Preserve trade dependencies in same-day bulk ordering](./980.md) — reopened major CLI gap: bookable labeled transfer chains and stated-cost stock splits are refused; partial add omits a required transfer or sale. Original acceptance and nearby controls rechecked 2026-10-24.
+- [226 — Keep importer selectors unambiguous](./226.md) — reopened minor CLI gap: a listed NAME#N selector can collide with a declared importer name and choose another account. Preserve exact-name priority; collision and ordinary controls verified 2026-10-24.
 
 
 
