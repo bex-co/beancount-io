@@ -471,7 +471,10 @@ export function hasEnoughHistory(
  * opposite sign to its charges, and counted as an event it moved Next to the
  * refund's day, made the amount "~", and could push a short history under the
  * three events detection needs (w21/268). The main sign is the one most points
- * carry, the larger total when they tie; zero amounts stay.
+ * carry, the larger total when they tie. A zero is no payment: a charge and
+ * its same-day reversal net to one, as does a $0 trial entry, and as an event
+ * it became the last payment, moved Next to its day, widened the amount spread
+ * into "~" and hid a missed bill's Overdue (w21/943), so zeros go.
  */
 function withoutCounterSign(series: readonly SeriesPoint[]): SeriesPoint[] {
   let positive = 0;
@@ -488,12 +491,12 @@ function withoutCounterSign(series: readonly SeriesPoint[]): SeriesPoint[] {
     }
   }
   if (positive === 0 || negative === 0) {
-    return [...series];
+    return series.filter((point) => point.amount !== 0);
   }
   const keepPositive =
     positive !== negative ? positive > negative : positiveSum >= negativeSum;
   return series.filter((point) =>
-    keepPositive ? point.amount >= 0 : point.amount <= 0,
+    keepPositive ? point.amount > 0 : point.amount < 0,
   );
 }
 

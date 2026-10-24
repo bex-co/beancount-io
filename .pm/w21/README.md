@@ -45,7 +45,6 @@
 - [882](./blocked/882.md) — Chart axes use the app language's money format while the amounts beside them use English (9 languages) — **blocked:** needs an owner product decision on one number convention for money (app language everywhere vs English everywhere), reversing w21/177 or w3/189
 - [895](./blocked/895.md) — Account detail's range chips filter only the chart, not the list below — **blocked:** owner picks a range-bounded list (backend date bound on all surfaces) or an "All entries" caption
 - [922](./blocked/922.md) — Changing to a payee with no history keeps the previous payee's accounts (owner's call) — **blocked:** owner decides whether a no-history or cleared payee resets an untouched fill (reverses w21/411)
-- [943](./943.md) — A same-day charge and reversal counts as a payment: Next moves, "~" appears, Overdue is lost
 - [944](./944.md) — One off-schedule charge drops the recurrence day-of-month anchor, so Next runs late
 - [945](./945.md) — Update Budget is refused for a closed parent whose children are still open
 - [946](./946.md) — Add Budget saves a yen budget as USD for an account that only spends yen

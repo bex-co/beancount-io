@@ -76,3 +76,48 @@ describe("a refund does not count as a payment", () => {
     expect(verdict.nextExpected).toBe("2026-11-01");
   });
 });
+
+// w21/943: a charge and its same-day reversal nets to $0, which counted as a
+// payment: Next moved to its day, the amount read "~" and a missed bill was
+// not Overdue.
+describe("a net-zero day does not count as a payment", () => {
+  const zero = (date: string): SeriesPoint => ({
+    date,
+    currency: "USD",
+    amount: 0,
+  });
+  const control = detectRecurrence(months(1, 10), TODAY)!;
+
+  it("matches the control for a reversal pair, and for a $0 entry anywhere", () => {
+    for (const series of [
+      [...months(1, 10), zero("2026-10-15")],
+      [zero("2026-01-05"), ...months(2, 10)],
+    ]) {
+      const verdict = detectRecurrence(series, TODAY)!;
+      expect(verdict.nextExpected).toBe(control.nextExpected);
+      expect(verdict.isApproximate).toBe(false);
+      expect(verdict.typicalAmountByCurrency).toEqual(
+        control.typicalAmountByCurrency,
+      );
+    }
+  });
+
+  it("still calls a missed bill overdue", () => {
+    const missed = "2026-11-20";
+    expect(
+      detectRecurrence([...months(1, 10), zero("2026-10-15")], missed)
+        ?.isOverdue,
+    ).toBe(detectRecurrence(months(1, 10), missed)?.isOverdue);
+    expect(detectRecurrence(months(1, 10), missed)?.isOverdue).toBe(true);
+  });
+
+  it("does not make a history of zeros enough", () => {
+    expect(
+      hasEnoughHistory([
+        zero("2026-08-05"),
+        zero("2026-09-05"),
+        zero("2026-10-05"),
+      ]),
+    ).toBe(false);
+  });
+});
