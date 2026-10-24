@@ -78,3 +78,4 @@
 - [961](./961.md) — A budget saved from the app is committed as `Add 2026-10-01 "budget"`, whatever the account
 - [962](./962.md) — A long emoji payee cut at the 60-character limit puts a "�" in the commit subject
 - [963](./963.md) — Latest Updates undercounts a push when a listed commit has an empty first line
+- [964](./964.md) — Account detail still applies a late "load more" page to a different list (w21/116's third screen)
