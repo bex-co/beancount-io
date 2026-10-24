@@ -66,3 +66,7 @@
 - [973](./973.md) — A bill paid late shows Overdue right after it was paid (w21/944 regression)
 - [974](./974.md) — A dirty file editor asks "Discard changes?" twice on a cross-ledger link (w21/923 regression)
 - [975](./975.md) — Global queryDeduplication:false multiplies requests for co-mounted hooks (w21/904 side effect)
+- [976](./976.md) — The Accounts tab tree builder is quadratic in the number of accounts
+- [977](./977.md) — LedgerPrices pulls every price date for every pair, and Apollo writes and reads them all on each mount
+- [978](./978.md) — Notifications renders every ledger error at once, with no virtualization
+- [979](./979.md) — Transactions and Account detail rebuild every date header on each page, with an uncached date formatter
