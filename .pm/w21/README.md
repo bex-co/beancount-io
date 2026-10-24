@@ -46,7 +46,6 @@
 - [895](./blocked/895.md) — Account detail's range chips filter only the chart, not the list below — **blocked:** owner picks a range-bounded list (backend date bound on all surfaces) or an "All entries" caption
 - [922](./blocked/922.md) — Changing to a payee with no history keeps the previous payee's accounts (owner's call) — **blocked:** owner decides whether a no-history or cleared payee resets an untouched fill (reverses w21/411)
 - [951](./blocked/951.md) — Expense accounts are valued at market on Accounts and account detail, but at cost everywhere else — **blocked:** owner confirms flows-at-cost covers Income/Expenses balances; needs a native priced-lot check
-- [970](./970.md) — Transaction rows and the detail headline show wrong digits for amounts of 17 or more significant digits
 - [971](./971.md) — A transaction the ledger could not interpolate shows blank posting amounts and an unsigned headline
 - [972](./972.md) — Accent folding in nameKey (w21/929) hides Create for Expenses:Cafe next to Expenses:Café
 - [973](./973.md) — A bill paid late shows Overdue right after it was paid (w21/944 regression)

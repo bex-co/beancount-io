@@ -7,6 +7,7 @@ import {
 } from "../../../common/currency-util";
 import { amountScale } from "../../../common/number-utils";
 import { isEquityConversion } from "../../../common/tx-category";
+import { addExact } from "../../multi-postings-transaction/postings-utils";
 import {
   JournalDirectiveType,
   JournalPosting,
@@ -43,6 +44,7 @@ export const formatAmount = (
   scale = MIN_FRACTION_DIGITS,
   heldAtCost = false,
   operatingCurrency?: string,
+  exact?: string,
 ): string => {
   // The display floor is the currency's minor unit: "1,500 JPY" as account
   // detail shows it, not "1,500.00 JPY" (w21/070). Only for a national
@@ -57,11 +59,44 @@ export const formatAmount = (
     MAX_FRACTION_DIGITS,
     Math.max(minimumFractionDigits, scale),
   );
-  const formatted = Math.abs(value).toLocaleString("en-US", {
-    minimumFractionDigits,
-    maximumFractionDigits,
-  });
+  const formatted =
+    exact !== undefined && PLAIN_DECIMAL.test(exact) && needsExactDigits(exact)
+      ? groupedExact(exact, minimumFractionDigits)
+      : Math.abs(value).toLocaleString("en-US", {
+          minimumFractionDigits,
+          maximumFractionDigits,
+        });
   return labelRowAmount(formatted, currency, operatingCurrency);
+};
+
+/** A plain decimal, which `addExact` can add without a float. */
+const PLAIN_DECIMAL = /^[+-]?\d+(\.\d+)?$/;
+
+/**
+ * Whether an amount holds more significant digits than a double does: past
+ * that, the double prints digits the ledger never wrote, so the exact string is
+ * used (w21/970).
+ */
+const needsExactDigits = (exact: string): boolean =>
+  exact.replace(/\D/g, "").replace(/^0+/, "").length > 15;
+
+/** An exact decimal, unsigned and grouped by thousands, padded to `minimumFractionDigits`. */
+const groupedExact = (exact: string, minimumFractionDigits: number): string => {
+  const [whole = "0", fraction = ""] = exact.replace(/^[+-]/, "").split(".");
+  const padded = fraction.padEnd(minimumFractionDigits, "0");
+  const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return padded ? `${grouped}.${padded}` : grouped;
+};
+
+/** The exact sum of legs given as decimal strings, or undefined if one is not plain. */
+const exactSum = (numbers: readonly string[]): string | undefined => {
+  let sum = "0";
+  for (const number of numbers) {
+    const trimmed = number.trim();
+    if (!PLAIN_DECIMAL.test(trimmed)) return undefined;
+    sum = addExact(sum, trimmed);
+  }
+  return sum;
 };
 
 /** A transaction's headline amount: one currency, never a cross-currency sum. */
@@ -297,6 +332,10 @@ export const selectTransactionAmount = (
         legs: number;
         largestLeg: number;
         accounts: Set<string>;
+        /** The legs' numbers as written, to sum without a float. */
+        numbers: string[];
+        /** The largest leg as written. */
+        largestExact: string;
       }
     >();
     for (const p of cashPostings) {
@@ -309,8 +348,12 @@ export const selectTransactionAmount = (
         bucket.value += value;
         bucket.scale = Math.max(bucket.scale, scale);
         bucket.legs += 1;
+        if (Math.abs(value) > bucket.largestLeg) {
+          bucket.largestExact = p.units.number;
+        }
         bucket.largestLeg = Math.max(bucket.largestLeg, Math.abs(value));
         bucket.accounts.add(p.account);
+        bucket.numbers.push(p.units.number);
       } else {
         byCurrency.set(currency, {
           value,
@@ -318,6 +361,8 @@ export const selectTransactionAmount = (
           legs: 1,
           largestLeg: Math.abs(value),
           accounts: new Set([p.account]),
+          numbers: [p.units.number],
+          largestExact: p.units.number,
         });
       }
     }
@@ -426,7 +471,8 @@ export const selectTransactionAmount = (
           }
         }
       }
-      const [currency, { value, scale, legs, largestLeg }] = picked;
+      const [currency, bucketPicked] = picked;
+      const { value, scale, legs, largestLeg } = bucketPicked;
       // A transfer between two cash or liability accounts nets to zero in its
       // currency, yet the row still has to say how much moved. Its size is the
       // largest leg; a transfer has no in/out direction at the transaction
@@ -440,6 +486,7 @@ export const selectTransactionAmount = (
             scale,
             heldAtCost.has(currency),
             operatingCurrency,
+            bucketPicked.largestExact.trim(),
           ),
           value: 0,
           currency,
@@ -452,6 +499,7 @@ export const selectTransactionAmount = (
           scale,
           heldAtCost.has(currency),
           operatingCurrency,
+          exactSum(bucketPicked.numbers),
         ),
         value,
         currency,
@@ -484,6 +532,7 @@ export const selectTransactionAmount = (
       amountScale(max.units.number),
       heldAtCost.has(currency),
       operatingCurrency,
+      max.units.number.trim(),
     ),
     value: 0,
     currency,

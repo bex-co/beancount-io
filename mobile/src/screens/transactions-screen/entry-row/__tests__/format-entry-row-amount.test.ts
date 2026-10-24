@@ -156,3 +156,49 @@ describe("selectEntryRowAmount", () => {
     });
   });
 });
+
+// w21/970: a double printed digits the ledger never wrote for 17+ significant
+// digits, and the row disagreed with the detail's posting list.
+describe("a row's amount past what a double holds", () => {
+  const holding = (number: string, currency = "SHIB"): string =>
+    selectEntryRowAmount(
+      transaction([
+        ["Assets:QaWallet", number, currency],
+        ["Income:QaAirdrop", `-${number}`, currency],
+      ]),
+      MIXED,
+    ).amountStr;
+
+  it("keeps the digits as written", () => {
+    expect(holding("1234567890.12345678")).toBe("+1,234,567,890.12345678 SHIB");
+    expect(holding("98765432109.87654321")).toBe(
+      "+98,765,432,109.87654321 SHIB",
+    );
+    expect(holding("1000000000000.00000001")).toBe(
+      "+1,000,000,000,000.00000001 SHIB",
+    );
+    expect(holding("9007199254740993", "ETH")).toBe(
+      "+9,007,199,254,740,993 ETH",
+    );
+    expect(holding("1.234567890123456789", "ETH")).toBe(
+      "+1.234567890123456789 ETH",
+    );
+  });
+
+  it("adds two legs of a bucket exactly", () => {
+    const text = selectEntryRowAmount(
+      transaction([
+        ["Assets:QaWallet", "1000000000000.00000001", "SHIB"],
+        ["Assets:QaWallet", "2.00000002", "SHIB"],
+        ["Income:QaAirdrop", "-1000000000002.00000003", "SHIB"],
+      ]),
+      MIXED,
+    ).amountStr;
+    expect(text).toBe("+1,000,000,000,002.00000003 SHIB");
+  });
+
+  it("leaves amounts of 15 digits or fewer as they were", () => {
+    expect(holding("1234.56", "USD")).toBe("+$1,234.56");
+    expect(holding("0.004", "ETH")).toBe("+0.004 ETH");
+  });
+});
