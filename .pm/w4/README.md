@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1067** — [Keep tiny commodity ticks inside their price range](./1067.md)
+
 - **1066** — [Distinguish constant tiny commodity axis ticks](./1066.md)
 
 - **1065** — [Keep quoted Events types distinct from escaped labels](./1065.md)
