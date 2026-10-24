@@ -17,15 +17,42 @@ describe("the editor's jump to a linked line", () => {
     expect(
       source.includes("useFocusEffect(useCallback(()=>{if(!initialized)"),
     ).toBe(true);
-    expect(source.includes("},[initialLineNum,router]);")).toBe(true);
+    expect(source.includes("},[initialLineNum,router,requestJump]);")).toBe(
+      true,
+    );
   });
 
   it("clears the line once taken, so the same link opened again jumps again", () => {
     expect(
       source.includes(
-        "setJumpToLine(n);router.setParams({initialLine:undefined});",
+        "requestJump(n);router.setParams({initialLine:undefined});",
       ),
     ).toBe(true);
+  });
+});
+
+// w21/942: a second tap on the row already jumped to set an equal value, which
+// React skips, so the editor's effect never ran again.
+describe("a jump asked for twice", () => {
+  it("carries a sequence the editor's jump effect depends on", () => {
+    expect(source.includes("setJumpSeq((seq)=>seq+1);")).toBe(true);
+    expect(source.includes("onJump={requestJump}")).toBe(true);
+    expect(source.includes("jumpSeq={jumpSeq}")).toBe(true);
+    const editor = fs
+      .readFileSync(
+        path.join(
+          __dirname,
+          "..",
+          "..",
+          "..",
+          "components",
+          "code-editor",
+          "code-editor.tsx",
+        ),
+        "utf8",
+      )
+      .replace(/\s+/gu, "");
+    expect(editor.includes("},[jumpToLine,jumpSeq]);")).toBe(true);
   });
 });
 

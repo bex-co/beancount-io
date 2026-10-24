@@ -103,6 +103,8 @@ export type CodeEditorProps = {
   fontScale: number;
   insertSpec: InsertSpec | null;
   jumpToLine: number | null;
+  /** Changes with every request to jump, so the same line asked twice jumps twice (w21/942). */
+  jumpSeq?: number;
 };
 
 // ─── Beancount StreamLanguage ─────────────────────────────────────────────────
@@ -321,6 +323,7 @@ export default function CodeEditor({
   fontScale,
   insertSpec,
   jumpToLine,
+  jumpSeq,
 }: CodeEditorProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
@@ -600,7 +603,7 @@ export default function CodeEditor({
     const view = viewRef.current;
     if (!view || !jumpToLine || view.state.doc.lines <= 1) return;
     return jumpToEditorLine(view, jumpToLine, () => keyboardInsetRef.current);
-  }, [jumpToLine]);
+  }, [jumpToLine, jumpSeq]);
 
   // Keep the cursor above the native keyboard accessory and keyboard.
   useEffect(() => {

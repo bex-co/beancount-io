@@ -1073,6 +1073,14 @@ function LedgerFileEditorSession({
   const [jumpToLine, setJumpToLine] = useState<number | null>(
     !isNaN(initialLineNum ?? NaN) ? initialLineNum : null,
   );
+  // Counts the requests: a tap on the row already jumped to sets the same
+  // line again, which React skipped, so it did nothing for three seconds
+  // (w21/942).
+  const [jumpSeq, setJumpSeq] = useState(0);
+  const requestJump = useCallback((line: number) => {
+    setJumpToLine(line);
+    setJumpSeq((seq) => seq + 1);
+  }, []);
   // Re-arm the jump only when a link asks for a line, then clear the param:
   // a link opened again sets it anew and jumps again. Re-arming on every
   // focus also fired on an ordinary return to the screen (back from View
@@ -1081,9 +1089,9 @@ function LedgerFileEditorSession({
   useEffect(() => {
     const n = !isNaN(initialLineNum ?? NaN) ? initialLineNum : null;
     if (n === null) return;
-    setJumpToLine(n);
+    requestJump(n);
     router.setParams({ initialLine: undefined });
-  }, [initialLineNum, router]);
+  }, [initialLineNum, router, requestJump]);
   // Only start the clear-timer once the file is loaded so CodeEditor has a
   // chance to receive the non-null value and scroll before we reset it.
   useEffect(() => {
@@ -1092,7 +1100,7 @@ function LedgerFileEditorSession({
       return () => clearTimeout(timer);
     }
     return undefined;
-  }, [jumpToLine, initialized]);
+  }, [jumpToLine, jumpSeq, initialized]);
 
   // ── Errors for this file ─────────────────────────────────────────────────
 
@@ -1176,10 +1184,7 @@ function LedgerFileEditorSession({
       ) : null}
 
       {fileErrors.length > 0 && (
-        <ErrorBanner
-          errors={fileErrors}
-          onJump={(line) => setJumpToLine(line)}
-        />
+        <ErrorBanner errors={fileErrors} onJump={requestJump} />
       )}
 
       {editorPathLine(path) ? (
@@ -1256,6 +1261,7 @@ function LedgerFileEditorSession({
               fontScale={fontScale}
               insertSpec={insertSpec}
               jumpToLine={jumpToLine}
+              jumpSeq={jumpSeq}
               // WKWebView adds its own form-navigation bar (∧ ∨ ✓) under the
               // app's insert bar; this editor is a single field, so it is noise.
               dom={{ style: { flex: 1 }, hideKeyboardAccessoryView: true }}
