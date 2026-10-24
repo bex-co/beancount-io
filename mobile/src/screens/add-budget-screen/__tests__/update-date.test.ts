@@ -17,10 +17,17 @@ describe("updateBudgetDates", () => {
     expect(initial.getTime()).toBe(today.getTime());
   });
 
-  it("starts on the current entry's day when that is still ahead", () => {
+  // w21/909: a budget that has not started had its picker floored on, and
+  // started at, its first entry's future date.
+  it("starts on today, unlimited, for a budget that has not started", () => {
     const { minimum, initial } = updateBudgetDates("2026-11-01", today);
-    expect(initial.getTime()).toBe(minimum!.getTime());
-    expect(initial.getDate()).toBe(1);
+    expect(minimum).toBe(undefined);
+    expect(initial.getTime()).toBe(today.getTime());
+  });
+
+  it("still limits an entry dated today", () => {
+    const { minimum } = updateBudgetDates("2026-10-22", today);
+    expect(minimum?.getDate()).toBe(22);
   });
 
   it("leaves an Add unlimited", () => {
