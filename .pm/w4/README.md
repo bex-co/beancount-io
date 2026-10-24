@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1054** — [Infer CSV comma decimals after removing supported grouping fillers](./1054.md)
+
 - **1053** — [Show keyboard focus on the read-only file editor](./1053.md)
 
 - **1039** — Keep exact Budget amounts and variance on mobile (45–60m, mobile, A2/A3) ← m55 simplify review; source-only mobile counterpart of m55 ([note](./blocked/1039.md)) — **blocked:** fix shipped; simulator check needs approved production budget fixtures
