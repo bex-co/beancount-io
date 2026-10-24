@@ -46,7 +46,6 @@
 - [895](./blocked/895.md) — Account detail's range chips filter only the chart, not the list below — **blocked:** owner picks a range-bounded list (backend date bound on all surfaces) or an "All entries" caption
 - [922](./blocked/922.md) — Changing to a payee with no history keeps the previous payee's accounts (owner's call) — **blocked:** owner decides whether a no-history or cleared payee resets an untouched fill (reverses w21/411)
 - [951](./blocked/951.md) — Expense accounts are valued at market on Accounts and account detail, but at cost everywhere else — **blocked:** owner confirms flows-at-cost covers Income/Expenses balances; needs a native priced-lot check
-- [960](./960.md) — A journal link with ?time=0000 makes Transactions fail to load
 - [961](./961.md) — A budget saved from the app is committed as `Add 2026-10-01 "budget"`, whatever the account
 - [962](./962.md) — A long emoji payee cut at the 60-character limit puts a "�" in the commit subject
 - [963](./963.md) — Latest Updates undercounts a push when a listed commit has an empty first line

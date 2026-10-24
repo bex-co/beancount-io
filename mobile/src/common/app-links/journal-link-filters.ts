@@ -15,6 +15,9 @@ const lastDayOf = (year: number, month: number): number =>
 const periodDays = (
   text: string,
 ): { start: string; end: string } | undefined => {
+  // The server reads no date before year 1: 0000 would be sent and refused,
+  // failing the list instead of opening it unfiltered (w21/960).
+  if (/^0000(?!\d)/.test(text)) return undefined;
   const day = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text);
   if (day) {
     const [y, m, d] = [Number(day[1]), Number(day[2]), Number(day[3])];

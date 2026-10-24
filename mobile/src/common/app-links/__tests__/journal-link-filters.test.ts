@@ -91,3 +91,30 @@ describe("journal app link filters (w21/344)", () => {
     );
   });
 });
+
+// w21/960: year 0000 was sent as a date range the server refuses, so the list
+// failed to load.
+describe("a link's time in year 0000", () => {
+  it("opens unfiltered, whichever way the period is written", () => {
+    for (const time of [
+      "0000",
+      "0000-05",
+      "0000-Q2",
+      "0000-05-09",
+      "0000-01 - 0000-03",
+    ]) {
+      expect(journalLinkFilters(new URLSearchParams({ time })).range).toBe(
+        "all",
+      );
+    }
+  });
+
+  it("still reads year 0001 and a window that starts in 0000", () => {
+    expect(
+      journalLinkFilters(new URLSearchParams({ time: "0001" })).range,
+    ).toBe("custom");
+    expect(
+      journalLinkFilters(new URLSearchParams({ time: "0000 - 2025" })).range,
+    ).toBe("all");
+  });
+});
