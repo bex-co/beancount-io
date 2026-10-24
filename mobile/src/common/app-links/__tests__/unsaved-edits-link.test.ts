@@ -111,21 +111,19 @@ describe("an app link to another ledger with a dirty editor", () => {
     expect(asked).toBe(0);
   });
 
-  it("is registered by the editor while it has unsaved changes", () => {
-    const editor = fs.readFileSync(
-      path.join(
-        __dirname,
-        "..",
-        "..",
-        "..",
-        "screens",
-        "ledger-file-editor-screen",
-        "index.tsx",
-      ),
-      "utf8",
+  // w21/974: the editor registered twice, once by the hook and once itself, and
+  // the stack of guards (w21/923) asked each, so a link prompted twice.
+  it("is registered once by the editor, through the hook, while it has unsaved changes", () => {
+    const read = (...parts: string[]) =>
+      fs.readFileSync(path.join(__dirname, "..", "..", "..", ...parts), "utf8");
+    const editor = read("screens", "ledger-file-editor-screen", "index.tsx");
+    expect(editor.includes("useUnsavedChangesGuard(hasUnsavedChanges);")).toBe(
+      true,
     );
-    expect(editor.includes("return registerUnsavedEditsGuard(")).toBe(true);
-    expect(editor.includes("if (!hasUnsavedChanges) return undefined;")).toBe(
+    expect(editor.includes("registerUnsavedEditsGuard")).toBe(false);
+    const hook = read("common", "hooks", "use-unsaved-changes-guard.ts");
+    expect(hook.split("registerUnsavedEditsGuard(").length - 1).toBe(1);
+    expect(hook.includes("if (!hasUnsavedChanges) return undefined;")).toBe(
       true,
     );
   });

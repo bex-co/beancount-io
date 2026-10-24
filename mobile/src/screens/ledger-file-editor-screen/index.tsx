@@ -37,7 +37,6 @@ import {
   headerActionMaxFontSizeMultiplier,
   useTheme,
 } from "@/common/theme";
-import { registerUnsavedEditsGuard } from "@/common/unsaved-edits-guard";
 import { invalidateLedgerData } from "@/common/apollo/invalidate-ledger";
 import { haptics } from "@/common/haptics";
 import { useThemeStyle } from "@/common/hooks";
@@ -1023,33 +1022,8 @@ function LedgerFileEditorSession({
 
   useUnsavedChangesGuard(hasUnsavedChanges);
 
-  // An app link to another ledger switches ledgers before it navigates, which
-  // would remount this session clean; it asks here first (w21/090).
-  useEffect(() => {
-    if (!hasUnsavedChanges) return undefined;
-    return registerUnsavedEditsGuard(
-      () =>
-        new Promise<boolean>((resolve) => {
-          Alert.alert(
-            t("ledgerEditorUnsavedTitle"),
-            t("ledgerEditorUnsavedMessage"),
-            [
-              {
-                text: t("cancel"),
-                style: "cancel",
-                onPress: () => resolve(false),
-              },
-              {
-                text: t("ledgerEditorDiscardChanges"),
-                style: "destructive",
-                onPress: () => resolve(true),
-              },
-            ],
-            { cancelable: true, onDismiss: () => resolve(false) },
-          );
-        }),
-    );
-  }, [hasUnsavedChanges, t]);
+  // The hook also registers the guard an app link to another ledger asks
+  // first (w21/090); a second registration here asked twice (w21/974).
 
   // The first load's Reload, for a file that failed or is unavailable.
   const retryLoad = () => {
