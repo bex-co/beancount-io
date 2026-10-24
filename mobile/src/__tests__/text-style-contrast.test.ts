@@ -35,6 +35,13 @@ const CASES: Case[] = [
     text: "postingAutoTag",
     surface: { theme: "white" },
   },
+  // w21/925: Add Budget's empty Account row, black60 on white, 1.78:1 in light.
+  {
+    name: "Add Budget's empty Account value",
+    file: "screens/add-budget-screen/add-budget-screen.tsx",
+    text: "valueMuted",
+    surface: { style: "card" },
+  },
   // w21/127: white on amber was 1.9:1 dark, 2.7:1 light.
   {
     name: "pending badge on a transaction row",

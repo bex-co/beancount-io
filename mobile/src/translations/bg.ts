@@ -713,6 +713,7 @@ export const bg: Translations = {
   budgetAdd: "Добавяне на бюджет",
   budgetUpdate: "Актуализиране на бюджета",
   budgetAccountPlaceholder: "Expenses:Groceries",
+  budgetAccountNotSelected: "Не е избрана сметка",
   budgetAccountHelp:
     "Бюджетът важи за една сметка. По-нов запис за същата сметка и валута влиза в сила на своята дата.",
   budgetInterval: "Интервал",

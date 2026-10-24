@@ -107,7 +107,7 @@ const getStyles = (theme: ColorTheme) =>
       textAlign: "right",
     },
     valueMuted: {
-      color: theme.black60,
+      color: theme.controlPlaceholder,
     },
     chevron: {
       marginStart: space.xs,
@@ -148,6 +148,8 @@ type FormRowProps = {
   onPress?: () => void;
   muted?: boolean;
   first?: boolean;
+  /** What VoiceOver reads when it differs from what is shown: an example is not a choice (w21/925). */
+  spokenValue?: string;
 };
 
 /** One labelled disclosure row of the form card. */
@@ -157,6 +159,7 @@ function FormRow({
   onPress,
   muted,
   first,
+  spokenValue,
 }: FormRowProps): JSX.Element {
   const styles = useThemeStyle(getStyles);
   const chevronColor = useTheme().colorTheme.black60;
@@ -167,7 +170,7 @@ function FormRow({
       disabled={!onPress}
       accessibilityRole="button"
       accessibilityLabel={label}
-      accessibilityValue={{ text: value }}
+      accessibilityValue={{ text: spokenValue ?? value }}
     >
       <Text style={styles.label}>{label}</Text>
       <Text
@@ -389,6 +392,7 @@ function AddBudgetScreenImpl(): JSX.Element {
             label={t("account")}
             value={account || t("budgetAccountPlaceholder")}
             muted={!account}
+            spokenValue={account ? undefined : t("budgetAccountNotSelected")}
             onPress={isUpdate ? undefined : pickAccount}
           />
 

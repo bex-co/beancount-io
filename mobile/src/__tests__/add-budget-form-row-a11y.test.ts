@@ -13,7 +13,9 @@ describe("Add Budget FormRow accessibility", () => {
     "utf8",
   );
 
-  it("exposes the displayed value via accessibilityValue", () => {
-    expect(source.includes("accessibilityValue={{ text: value }}")).toBe(true);
+  it("exposes the displayed value via accessibilityValue, unless a row speaks another (w21/925)", () => {
+    expect(
+      source.includes("accessibilityValue={{ text: spokenValue ?? value }}"),
+    ).toBe(true);
   });
 });

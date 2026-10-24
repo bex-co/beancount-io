@@ -645,6 +645,7 @@ export const zh: Translations = {
   budgetAdd: "添加预算",
   budgetUpdate: "更新预算",
   budgetAccountPlaceholder: "Expenses:Groceries",
+  budgetAccountNotSelected: "未选择账户",
   budgetAccountHelp:
     "预算适用于单个账户。同一账户和币种的新条目从其日期起生效。",
   budgetInterval: "时间间隔",

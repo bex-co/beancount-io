@@ -731,6 +731,7 @@ export const es: Translations = {
   budgetAdd: "Agregar presupuesto",
   budgetUpdate: "Actualizar presupuesto",
   budgetAccountPlaceholder: "Expenses:Groceries",
+  budgetAccountNotSelected: "Ninguna cuenta elegida",
   budgetAccountHelp:
     "Los presupuestos se aplican a una cuenta. Una entrada más reciente para la misma cuenta y moneda entra en vigor en su fecha.",
   budgetInterval: "Intervalo",

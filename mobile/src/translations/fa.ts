@@ -704,6 +704,7 @@ export const fa: Translations = {
   budgetAdd: "افزودن بودجه",
   budgetUpdate: "به‌روزرسانی بودجه",
   budgetAccountPlaceholder: "Expenses:Groceries",
+  budgetAccountNotSelected: "حسابی انتخاب نشده است",
   budgetAccountHelp:
     "هر بودجه برای یک حساب اعمال می‌شود. مورد جدیدتر برای همان حساب و ارز از تاریخ خود اعمال می‌شود.",
   budgetInterval: "بازه زمانی",
