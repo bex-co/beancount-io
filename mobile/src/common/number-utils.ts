@@ -3,6 +3,7 @@ import {
   getCurrencySymbol,
   isFiatCurrency,
 } from "./currency-util";
+import { absDecimal, parseDecimal, roundDecimal } from "./decimal-number";
 
 const SHORT_NUMBER_SUFFIXES = [
   { value: 1, symbol: "" },
@@ -334,23 +335,71 @@ const moneyDigits = (
   return Math.max(base, natural);
 };
 
+/** `moneyDigits` for an exact decimal from `parseDecimal`. */
+const exactMoneyDigits = (
+  value: string,
+  currency: string,
+  minScale: number,
+): number => {
+  const base = Math.max(currencyMinorUnits(currency), minScale);
+  if (isFiatCurrency(currency)) return base;
+  const trimmed = roundDecimal(
+    absDecimal(value),
+    COMMODITY_MONEY_DIGITS,
+  ).replace(/0+$/, "");
+  return Math.max(base, trimmed.length - trimmed.indexOf(".") - 1);
+};
+
+/**
+ * `signedAmount` for an exact decimal, rounded half away from zero at
+ * `digits`: the ledger's 9007199254740993 reads …993, where a double holds
+ * …992 (w4/1039).
+ */
+const signedExactAmount = (
+  value: string,
+  includePlus: boolean,
+  digits: number,
+): { sign: string; amount: string } => {
+  const rounded = roundDecimal(value, digits);
+  const [whole, fraction] = absDecimal(rounded).split(".");
+  const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const amount = fraction === undefined ? grouped : `${grouped}.${fraction}`;
+  const shownZero = !/[1-9]/.test(amount);
+  return {
+    sign: rounded.startsWith("-") && !shownZero ? "-" : includePlus ? "+" : "",
+    amount,
+  };
+};
+
 /**
  * An unsigned money string annotated with its currency (e.g. "$1,234.50",
  * "¥1,500" or "1,234.50 MUSD"), at the currency's minor unit or `minScale`
  * decimals when that is more. Use for absolute figures where the sign is not shown — a
  * running balance, a category total, an account row. Resolves the symbol from
- * the currency code and falls back to appending the code.
+ * the currency code and falls back to appending the code. Pass the ledger's
+ * decimal string where the figure must stay exact.
  */
 export const formatMoneyWithCurrency = (
-  value: number,
+  value: number | string,
   currency: string,
   minScale = 0,
-): string =>
-  annotateCurrency(
+): string => {
+  const exact = typeof value === "string" ? parseDecimal(value) : null;
+  if (exact !== null) {
+    const digits = exactMoneyDigits(exact, currency, minScale);
+    return annotateCurrency(
+      "",
+      signedExactAmount(absDecimal(exact), false, digits).amount,
+      currency,
+    );
+  }
+  const number = Number(value);
+  return annotateCurrency(
     "",
-    groupThousands(value, moneyDigits(value, currency, minScale)),
+    groupThousands(number, moneyDigits(number, currency, minScale)),
     currency,
   );
+};
 
 /**
  * A signed money string annotated with its currency, resolving the symbol from
@@ -359,19 +408,29 @@ export const formatMoneyWithCurrency = (
  * (e.g. "551,620.00 MUSD") so a custom or unrecognized commodity is never shown
  * as a bare, unlabeled number. Prefer this over `formatSignedMoney` wherever the
  * currency code is available. `minScale` keeps at least that many decimals, for
- * an exact figure finer than the currency's minor unit.
+ * an exact figure finer than the currency's minor unit. Pass the ledger's
+ * decimal string where the figure must stay exact.
  */
 export const formatSignedMoneyWithCurrency = (
-  value: number,
+  value: number | string,
   currency: string,
   includePlus = false,
   minScale = 0,
 ): string => {
-  const { sign, amount } = signedAmount(
-    value,
-    includePlus,
-    moneyDigits(value, currency, minScale),
-  );
+  const exact = typeof value === "string" ? parseDecimal(value) : null;
+  const number = Number(value);
+  const { sign, amount } =
+    exact !== null
+      ? signedExactAmount(
+          exact,
+          includePlus,
+          exactMoneyDigits(exact, currency, minScale),
+        )
+      : signedAmount(
+          number,
+          includePlus,
+          moneyDigits(number, currency, minScale),
+        );
   return annotateCurrency(sign, amount, currency);
 };
 

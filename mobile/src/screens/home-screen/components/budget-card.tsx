@@ -182,7 +182,7 @@ export function BudgetCard({
           {isolateAccountPath(row.shortAccount)}
         </Text>
         <AmountText style={[styles.amounts, stacked && styles.amountsStacked]}>
-          {`${formatSignedMoneyWithCurrency(row.actual, row.currency, false, row.scale)} / ${formatMoneyWithCurrency(row.budget, row.currency, row.scale)}`}
+          {`${formatSignedMoneyWithCurrency(row.actualExact ?? row.actual, row.currency, false, row.scale)} / ${formatMoneyWithCurrency(row.budgetExact ?? row.budget, row.currency, row.scale)}`}
         </AmountText>
       </View>
       <BudgetMeter

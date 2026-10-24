@@ -16,7 +16,7 @@ describe("useBudgetActuals", () => {
       .replace(/\s+/gu, "");
     expect(
       source.includes(
-        "budgetForInterval(date,group.interval,history,today,windowStart,endsOn,)",
+        "budgetForIntervalExact(date,group.interval,history,today,windowStart,endsOn,)",
       ),
     ).toBe(true);
   });

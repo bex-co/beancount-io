@@ -263,7 +263,9 @@ export function BudgetGroupCard({
   };
 
   const scale = budgetDisplayScale(group.budgetHistory);
-  const formatAmount = (value: number) =>
+  // The figures as the ledger's decimals, so 9007199254740993 keeps its last
+  // digit (w4/1039).
+  const formatAmount = (value: string) =>
     formatMoneyWithCurrency(value, currency, scale);
 
   // Spending in another currency could turn the status around: none is
@@ -342,15 +344,15 @@ export function BudgetGroupCard({
         <View style={styles.stat}>
           <Text style={styles.statLabel}>{t("budget")}</Text>
           <AmountText style={styles.statValue}>
-            {formatAmount(stats.budget)}
+            {formatAmount(stats.budgetExact)}
           </AmountText>
         </View>
-        {stats.actual !== null && (
+        {stats.actualExact !== null && (
           <View style={styles.stat}>
             <Text style={styles.statLabel}>{t("budgetActual")}</Text>
             <AmountText style={styles.statValue}>
               {formatSignedMoneyWithCurrency(
-                stats.actual,
+                stats.actualExact,
                 currency,
                 false,
                 scale,
@@ -358,12 +360,12 @@ export function BudgetGroupCard({
             </AmountText>
           </View>
         )}
-        {stats.variance !== null && (
+        {stats.varianceExact !== null && (
           <View style={styles.stat}>
             <Text style={styles.statLabel}>{t("budgetVariance")}</Text>
             <AmountText style={[styles.statValue, { color: statusColor }]}>
               {formatSignedMoneyWithCurrency(
-                stats.variance,
+                stats.varianceExact,
                 currency,
                 true,
                 scale,

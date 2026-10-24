@@ -12,8 +12,9 @@ import {
 import {
   groupDirection,
   budgetDisplayScale,
-  calculateBudgetForInterval,
+  calculateBudgetForIntervalExact,
 } from "../../budget-screen/selectors/budget-selectors";
+import { decimalOf, negateDecimal } from "../../../common/decimal-number";
 import type {
   BudgetGroup,
   VarianceStatus,
@@ -25,8 +26,12 @@ import { notInTotalNotes, type Holding } from "../../../common/balance-display";
 
 export type BudgetPanelInput = {
   group: BudgetGroup;
-  /** Actual activity for the current period, or null when it hasn't loaded. */
-  actual: number | null;
+  /**
+   * Actual activity for the current period, or null when it hasn't loaded:
+   * the ledger's decimal string where it has one, so 9007199254740993 keeps
+   * its last digit (w4/1039).
+   */
+  actual: string | number | null;
   /** Last day of the period the actual covers. */
   periodEnd: string;
   /** The period's activity in other currencies, as the ledger signs it. */
@@ -43,6 +48,9 @@ export type BudgetPanelRow = {
   budget: number;
   /** Actual for the same period, sign-corrected to match. */
   actual: number;
+  /** `budget` and `actual` as exact decimals, which the row shows. */
+  budgetExact?: string;
+  actualExact?: string;
   /**
    * Spend as a percentage of budget, clamped at 0. A budget of 0 has nothing
    * to divide by: 100 (a full meter) once anything is spent, else 0.
@@ -79,21 +87,30 @@ export function selectBudgetPanelRows(
     // favorability rules. It reads a series, so hand it the single period the
     // panel cares about, sign-corrected the way the card's series already is.
     const direction = groupDirection(group);
+    const directed = (value: string) =>
+      direction === 1 ? value : negateDecimal(value);
     const scale = budgetDisplayScale(group.budgetHistory);
+    const actualExact = directed(
+      typeof actual === "string" ? actual : decimalOf(actual ?? 0),
+    );
+    const budgetExact = directed(
+      calculateBudgetForIntervalExact(
+        periodEnd,
+        group.interval,
+        group.budgetHistory,
+        asOf,
+        windowStart,
+      ),
+    );
     const stats = selectBudgetCardStats(
       group,
       [
         {
           date: periodEnd,
-          actual: (actual ?? 0) * direction,
-          budget:
-            calculateBudgetForInterval(
-              periodEnd,
-              group.interval,
-              group.budgetHistory,
-              asOf,
-              windowStart,
-            ) * direction,
+          actual: Number(actualExact),
+          actualExact,
+          budget: Number(budgetExact),
+          budgetExact,
           notInTotal: notInTotal.map((holding) => signed(holding, direction)),
         },
       ],
@@ -116,6 +133,8 @@ export function selectBudgetPanelRows(
           scale,
           budget: stats.budget,
           actual: spent,
+          budgetExact: stats.budgetExact,
+          actualExact: stats.actualExact ?? "0",
           progressPercent: 0,
           noBudget,
           favorable: true,
@@ -137,6 +156,8 @@ export function selectBudgetPanelRows(
         scale,
         budget: stats.budget,
         actual: spent,
+        budgetExact: stats.budgetExact,
+        actualExact: stats.actualExact ?? "0",
         progressPercent: stats.progressPercent ?? 0,
         noBudget,
         favorable: stats.favorable,
@@ -271,12 +292,16 @@ export function budgetPanelRowAccessibilityValue(
   if (row.noBudget || row.startsOn !== undefined) {
     return t("budgetPanelRowValueNoBudget", {
       actual: formatSignedMoneyWithCurrency(
-        row.actual,
+        row.actualExact ?? row.actual,
         row.currency,
         false,
         row.scale,
       ),
-      budget: formatMoneyWithCurrency(row.budget, row.currency, row.scale),
+      budget: formatMoneyWithCurrency(
+        row.budgetExact ?? row.budget,
+        row.currency,
+        row.scale,
+      ),
       status,
     });
   }
@@ -284,12 +309,16 @@ export function budgetPanelRowAccessibilityValue(
   // over its target as spending (w21/790).
   return t(row.income ? "budgetPanelRowValueIncome" : "budgetPanelRowValue", {
     actual: formatSignedMoneyWithCurrency(
-      row.actual,
+      row.actualExact ?? row.actual,
       row.currency,
       false,
       row.scale,
     ),
-    budget: formatMoneyWithCurrency(row.budget, row.currency, row.scale),
+    budget: formatMoneyWithCurrency(
+      row.budgetExact ?? row.budget,
+      row.currency,
+      row.scale,
+    ),
     // Whole percent: a spoken "73.4166 percent" is noise, and the meter it
     // describes is a bar, not a readout.
     percent: spokenPercent(row.progressPercent),

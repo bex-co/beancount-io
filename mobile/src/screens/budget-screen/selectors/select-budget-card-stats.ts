@@ -12,6 +12,13 @@ import {
   type VarianceStatus,
 } from "./budget-selectors";
 import type { Holding } from "../../../common/balance-display";
+import {
+  absDecimal,
+  decimalOf,
+  negateDecimal,
+  parseDecimal,
+  sumDecimals,
+} from "../../../common/decimal-number";
 
 export type BudgetSeriesPoint = {
   date: string;
@@ -19,6 +26,13 @@ export type BudgetSeriesPoint = {
   actual: number;
   /** Prorated budget for the same period, same sign convention. */
   budget: number;
+  /**
+   * `actual` and `budget` as exact decimals, which the card judges and shows;
+   * the numbers draw the chart. A double reads 9007199254740993 as …992
+   * (w4/1039).
+   */
+  actualExact?: string;
+  budgetExact?: string;
   /**
    * The account's activity in other currencies, which `actual` cannot include,
    * same sign convention (w21/709).
@@ -33,6 +47,10 @@ export type BudgetCardStats = {
   actual: number | null;
   /** actual − budget; positive means above target. */
   variance: number | null;
+  /** The same three figures as exact decimals, for display (w4/1039). */
+  budgetExact: string;
+  actualExact: string | null;
+  varianceExact: string | null;
   status: VarianceStatus | null;
   /** True when the variance falls on the good side for this budget's kind. */
   favorable: boolean;
@@ -70,6 +88,19 @@ export function standingStatus(
     return status;
   }
   return null;
+}
+
+/** A point's actual and budget magnitude as exact decimals. */
+function exactFigures(point: BudgetSeriesPoint) {
+  return {
+    actual: point.actualExact ?? decimalOf(point.actual),
+    budget: absDecimal(point.budgetExact ?? decimalOf(point.budget)),
+  };
+}
+
+/** `actual − budget`, exactly. */
+function exactVariance(actual: string, budget: string): string {
+  return sumDecimals([actual, negateDecimal(budget)]);
 }
 
 /** The earliest directive's date, or null with no history. */
@@ -121,8 +152,9 @@ export function selectPointFavorability(
   const scale = statusScale(budgetHistory, currency);
   return series.map((point) => {
     if (beforeFirstBudget(point, firstBudget, today)) return null;
+    const { actual, budget } = exactFigures(point);
     const status = standingStatus(
-      varianceStatus(point.actual - Math.abs(point.budget), scale),
+      varianceStatus(exactVariance(actual, budget), scale),
       point.notInTotal,
     );
     return status === null ? null : isFavorableVariance(status, direction);
@@ -155,10 +187,18 @@ export function selectBudgetCardStats(
   // The series already carries the budget that was in effect for each charted
   // period — not today's amount — so a mid-year raise doesn't retroactively
   // rewrite history. Falls back to the current amount when nothing is charted.
-  const budget = latest ? Math.abs(latest.budget) : Math.abs(group.value);
+  const figures = latest ? exactFigures(latest) : null;
+  const budgetExact = figures
+    ? figures.budget
+    : absDecimal(
+        parseDecimal(group.amount?.trim().split(/\s+/)[0] ?? "") ??
+          decimalOf(group.value),
+      );
+  const budget = Number(budgetExact);
 
-  const actual =
-    latest && Number.isFinite(latest.actual) ? latest.actual : null;
+  const actualExact =
+    latest && Number.isFinite(latest.actual) ? figures!.actual : null;
+  const actual = actualExact === null ? null : Number(actualExact);
   const notInTotal = latest?.notInTotal ?? [];
 
   // Before the budget existed there is no target, so no status and no
@@ -170,6 +210,9 @@ export function selectBudgetCardStats(
       budget,
       actual,
       variance: null,
+      budgetExact,
+      actualExact,
+      varianceExact: null,
       status: null,
       favorable: true,
       progressPercent: null,
@@ -179,12 +222,14 @@ export function selectBudgetCardStats(
     };
   }
 
-  const variance = actual === null ? null : actual - budget;
+  const varianceExact =
+    actualExact === null ? null : exactVariance(actualExact, budgetExact);
+  const variance = varianceExact === null ? null : Number(varianceExact);
   const judged =
-    variance === null
+    varianceExact === null
       ? null
       : varianceStatus(
-          variance,
+          varianceExact,
           statusScale(group.budgetHistory, group.currency),
         );
   const status = judged === null ? null : standingStatus(judged, notInTotal);
@@ -205,6 +250,9 @@ export function selectBudgetCardStats(
     budget,
     actual,
     variance,
+    budgetExact,
+    actualExact,
+    varianceExact,
     status,
     favorable,
     progressPercent,

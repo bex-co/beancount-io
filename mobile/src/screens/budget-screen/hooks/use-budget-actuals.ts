@@ -2,14 +2,15 @@ import { useMemo } from "react";
 import { useGetLedgerIntervalTotalsQuery } from "@/generated-graphql/graphql";
 import {
   BALANCE_CONVERSION,
-  resolveCurrencyBalance,
+  resolveCurrencyBalanceExact,
 } from "@/common/balance-util";
+import { negateDecimal } from "@/common/decimal-number";
 import { notInTotalOf, type Holding } from "@/common/balance-display";
 import { signed } from "@/screens/budget-screen/selectors/signed-holding";
 import { getFormatDate } from "@/common/format-util";
 import {
   budgetNotInTotal,
-  budgetForInterval,
+  budgetForIntervalExact,
   allTimeThroughToday,
   budgetActualsState,
   currentPeriodKnown,
@@ -115,24 +116,34 @@ export function useBudgetActuals({
     const history = prepareBudgetHistory(group.budgetHistory);
     // And start where the window does: its first period is often partial.
     const windowStart = timeWindowStart(time, today);
+    // Exact decimals for the card to judge and show; numbers for the chart.
+    const directed = (value: string) =>
+      direction === 1 ? value : negateDecimal(value);
     const point = (
       date: string,
-      actual: number,
+      actual: string,
       notInTotal: Holding[] = [],
-    ) => ({
-      date,
-      actual: actual * direction,
-      notInTotal: notInTotal.map((holding) => signed(holding, direction)),
-      budget:
-        budgetForInterval(
+    ): BudgetSeriesPoint => {
+      const actualExact = directed(actual);
+      const budgetExact = directed(
+        budgetForIntervalExact(
           date,
           group.interval,
           history,
           today,
           windowStart,
           endsOn,
-        ) * direction,
-    });
+        ),
+      );
+      return {
+        date,
+        actual: Number(actualExact),
+        actualExact,
+        notInTotal: notInTotal.map((holding) => signed(holding, direction)),
+        budget: Number(budgetExact),
+        budgetExact,
+      };
+    };
     // All time lists only periods with postings, and the current period's row
     // follows them from further on: the empty periods between come back as
     // zeros (w21/010, w21/670).
@@ -145,7 +156,7 @@ export function useBudgetActuals({
           group.interval,
           item.date,
         )) {
-          points.push(point(date, 0));
+          points.push(point(date, "0"));
         }
       }
       // Activity in another currency cannot join the actual: it is carried
@@ -153,7 +164,7 @@ export function useBudgetActuals({
       points.push(
         point(
           item.date,
-          resolveCurrencyBalance(item.balance, currency),
+          resolveCurrencyBalanceExact(item.balance, currency),
           budgetNotInTotal(
             notInTotalOf(item.balance, currency),
             budgetedCurrencies,
@@ -167,7 +178,7 @@ export function useBudgetActuals({
     const last = items[items.length - 1];
     if (time === undefined && last && currentPeriodKnown(time, currentData)) {
       for (const date of periodsThrough(last.date, group.interval, today)) {
-        points.push(point(date, 0));
+        points.push(point(date, "0"));
       }
     }
     return points;

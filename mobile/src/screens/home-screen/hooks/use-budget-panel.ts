@@ -6,7 +6,7 @@ import {
   type GetLedgerIntervalTotalsQuery,
   type GetLedgerIntervalTotalsQueryVariables,
 } from "@/generated-graphql/graphql";
-import { resolveCurrencyBalance } from "@/common/balance-util";
+import { resolveCurrencyBalanceExact } from "@/common/balance-util";
 import { notInTotalOf } from "@/common/balance-display";
 import { useToday } from "@/common/hooks/use-today";
 import { mapInBatches } from "@/common/map-in-batches";
@@ -188,7 +188,7 @@ export function useBudgetPanel({
                 group,
                 periodEnd: end,
                 actual: last
-                  ? resolveCurrencyBalance(last.balance, group.currency)
+                  ? resolveCurrencyBalanceExact(last.balance, group.currency)
                   : null,
                 notInTotal: last
                   ? budgetNotInTotal(

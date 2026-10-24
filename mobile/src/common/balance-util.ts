@@ -15,6 +15,8 @@
  * IRA units) stay unconverted under their own key and are ignored by
  * `resolveCurrencyBalance` — matching the dashboard.
  */
+import { decimalOf, parseDecimal } from "./decimal-number";
+
 export const BALANCE_CONVERSION = "at_cost";
 
 /**
@@ -54,4 +56,18 @@ export function resolveCurrencyBalance(
     return isNaN(parsed) ? 0 : parsed;
   }
   return typeof value === "number" ? value : 0;
+}
+
+/**
+ * `resolveCurrencyBalance` as the ledger's exact decimal: a double turns its
+ * 9007199254740993 into …992, which a budget then judged as on target
+ * (w4/1039).
+ */
+export function resolveCurrencyBalanceExact(
+  balanceChildren: Record<string, number | string> | null | undefined,
+  currency: string,
+): string {
+  const value = balanceChildren?.[currency];
+  if (typeof value === "string") return parseDecimal(value) ?? "0";
+  return typeof value === "number" ? decimalOf(value) : "0";
 }

@@ -8,6 +8,9 @@
  *   chart interval, which makes cross-cadence conversion and mid-period
  *   effective dates exact.
  *
+ * Amounts are carried as the ledger's decimal strings wherever a figure is
+ * judged or shown: a double reads 9007199254740993 as …992 (w4/1039).
+ *
  * Mobile has no date-fns, so dates are handled as "YYYY-MM-DD" strings with
  * UTC-based arithmetic: results never shift with the device timezone. Only
  * the default "today" reads local time, because it is a local-calendar question.
@@ -30,6 +33,14 @@ import {
   COMMODITY_MONEY_DIGITS,
   formatMoneyWithCurrency,
 } from "../../../common/number-utils";
+import {
+  absDecimal,
+  compareDecimals,
+  isZeroDecimal,
+  parseDecimal,
+  sumDecimalFractions,
+  type DecimalFraction,
+} from "../../../common/decimal-number";
 
 /**
  * A `custom "budget"` directive as the journal serializes it: the positional
@@ -65,6 +76,8 @@ export interface BudgetGroup {
 
 interface ParsedBudgetAmount {
   value: number;
+  /** The amount as the ledger wrote it, a plain decimal. */
+  exact: string;
   currency: string;
 }
 
@@ -198,8 +211,8 @@ export function daysInBudgetPeriod(iso: string, interval: string): number {
 /** Split a "300 USD" directive amount. Unparseable numbers become 0. */
 function parseBudgetAmount(amount: string): ParsedBudgetAmount {
   const [number = "0", currency = ""] = amount.trim().split(/\s+/);
-  const value = Number.parseFloat(number);
-  return { value: Number.isNaN(value) ? 0 : value, currency };
+  const exact = parseDecimal(number) ?? "0";
+  return { value: Number(exact), exact, currency };
 }
 
 function getBudgetFields(entry: BudgetEntry): BudgetFields | null {
@@ -218,16 +231,17 @@ function getBudgetFields(entry: BudgetEntry): BudgetFields | null {
     return null;
   }
 
-  const value = Number.parseFloat(String(amountRaw.number));
+  const exact = parseDecimal(String(amountRaw.number));
   const currency = String(amountRaw.currency ?? "");
-  if (Number.isNaN(value) || !currency) {
+  if (exact === null || !currency) {
     return null;
   }
 
   return {
     account,
     interval,
-    value,
+    value: Number(exact),
+    exact,
     currency,
     amount: `${amountRaw.number} ${currency}`,
   };
@@ -465,10 +479,10 @@ export function formatBudgetEntryAmount(
   fallbackCurrency: string,
 ): string {
   const [number = "", code] = amount.trim().split(/\s+/);
-  const value = Number.parseFloat(number);
-  if (!Number.isFinite(value)) return amount;
+  const exact = parseDecimal(number);
+  if (exact === null) return amount;
   return formatMoneyWithCurrency(
-    Math.abs(value),
+    absDecimal(exact),
     code || fallbackCurrency,
     amountScale(number),
   );
@@ -520,6 +534,25 @@ export function calculateBudgetForInterval(
   );
 }
 
+/** `calculateBudgetForInterval` as the exact decimal it is computed in. */
+export function calculateBudgetForIntervalExact(
+  intervalEnd: string,
+  chartInterval: string,
+  history: BudgetHistoryEntry[],
+  asOf?: string,
+  windowStart?: string,
+  endsOn?: string,
+): string {
+  return budgetForIntervalExact(
+    intervalEnd,
+    chartInterval,
+    prepareBudgetHistory(history),
+    asOf,
+    windowStart,
+    endsOn,
+  );
+}
+
 /** `calculateBudgetForInterval` over an already-prepared history. */
 export function budgetForInterval(
   intervalEnd: string,
@@ -529,6 +562,27 @@ export function budgetForInterval(
   windowStart?: string,
   endsOn?: string,
 ): number {
+  return Number(
+    budgetForIntervalExact(
+      intervalEnd,
+      chartInterval,
+      ordered,
+      asOf,
+      windowStart,
+      endsOn,
+    ),
+  );
+}
+
+/** `budgetForInterval` as the exact decimal it is computed in. */
+export function budgetForIntervalExact(
+  intervalEnd: string,
+  chartInterval: string,
+  ordered: PreparedBudgetHistory,
+  asOf?: string,
+  windowStart?: string,
+  endsOn?: string,
+): string {
   // The server starts a window's series on its first day, so a 1Y window's
   // first month (or a YTD's first week) holds only part of a period; budget it
   // for that part too, as `asOf` does for the end (w21/102).
@@ -546,7 +600,7 @@ export function budgetForInterval(
   // budgeted (w21/398).
   if (endsOn !== undefined && endsOn < end) end = endsOn;
   if (end < start) {
-    return 0;
+    return "0";
   }
 
   // The common case by far: a single directive, already in effect at the start
@@ -597,11 +651,13 @@ export function budgetForInterval(
     normalizeInterval(only.interval) === normalizeInterval(chartInterval) &&
     end === addDaysISO(nextIntervalStartISO(start, chartInterval), -1)
   ) {
-    return only.value;
+    return only.exact;
   }
 
   let activeIndex = -1;
-  let total = 0;
+  // Each run of days under one directive and one period length is a single
+  // fraction of that directive's amount, summed exactly below.
+  const terms: DecimalFraction[] = [];
   // The denominator only changes when the active directive changes or its own
   // period rolls over, so carry it instead of recomputing it every day.
   let periodEnd = "";
@@ -624,18 +680,21 @@ export function budgetForInterval(
     if (changed || day > periodEnd) {
       periodDays = daysInBudgetPeriod(day, active.interval);
       periodEnd = addDaysISO(nextIntervalStartISO(day, active.interval), -1);
+      terms.push({
+        value: active.exact,
+        numerator: 0,
+        denominator: periodDays,
+      });
     }
-    total += active.value / periodDays;
+    terms[terms.length - 1].numerator += 1;
   }
 
-  // Summing daily equivalents accumulates binary-float error — a 5000/month
-  // budget over 31 days lands on 5000.000000000001. A budget is money, so
-  // settle it at money precision rather than carrying the noise into every
-  // variance and progress figure downstream. A fractional commodity keeps its
-  // recorded scale and a few guard digits: cents turned 0.003 BTC prorated to
-  // today into 0, a budget that read as none (w21/290). Its currency's own
-  // minor unit is the floor: rounded to cents, 100 KWD prorated to 74.1935
-  // read 74.19, and 74.193 spent "Above target" (w21/805).
+  // A budget is money, so the exact sum is settled once at money precision. A
+  // fractional commodity keeps its recorded scale and a few guard digits:
+  // cents turned 0.003 BTC prorated to today into 0, a budget that read as
+  // none (w21/290). Its currency's own minor unit is the floor: rounded to
+  // cents, 100 KWD prorated to 74.1935 read 74.19, and 74.193 spent "Above
+  // target" (w21/805).
   const currency = ordered
     .map((entry) => entry.amount?.trim().split(/\s+/)[1])
     .find((code) => code !== undefined && code !== "");
@@ -643,9 +702,7 @@ export function budgetForInterval(
   // prorated to 0.741935 is not rounded to 0.74 and judged above 0.7419 spent
   // (w21/854).
   const scale = statusScale(ordered, currency);
-  const decimals = scale <= 2 ? 2 : scale + 4;
-  const factor = 10 ** decimals;
-  return Math.round(total * factor) / factor;
+  return sumDecimalFractions(terms, scale <= 2 ? 2 : scale + 4);
 }
 
 /**
@@ -667,8 +724,8 @@ export function budgetDirection(budgetValue: number): 1 | -1 {
  */
 export function groupDirection(group: BudgetGroup): 1 | -1 {
   for (let i = group.budgetHistory.length - 1; i >= 0; i -= 1) {
-    const value = Number.parseFloat(group.budgetHistory[i].amount);
-    if (Number.isFinite(value) && value !== 0) return budgetDirection(value);
+    const { exact } = parseBudgetAmount(group.budgetHistory[i].amount);
+    if (!isZeroDecimal(exact)) return exact.startsWith("-") ? -1 : 1;
   }
   return budgetDirection(group.value);
 }
@@ -704,17 +761,26 @@ export function budgetNotInTotal<T extends { currency: string }>(
 export type VarianceStatus = "above" | "below" | "on";
 
 /**
- * Half a unit of the budget's last recorded digit — half a cent for money.
- * Actuals and prorated budgets are both floating point, so an exact-zero
- * variance never occurs in practice; without a tolerance "on target" would be
- * unreachable and a matched budget would render as a phantom fraction-of-a-cent
- * overage. A fixed half cent was also the tolerance for a 0.003 BTC budget, so
- * a 33% overspend read "On target"; it scales with the budget's own precision
- * (w21/290).
+ * Judged at the digit the card shows: within half a unit of it — half a cent
+ * for money — is on target. A yen budget prorated to cents (967.74) against
+ * ¥968 spent is on target at the yen the card prints (w21/596), and a 0.003
+ * BTC budget is judged at its own precision, not the cent (w21/290).
+ *
+ * Pass the exact decimal variance: a double reads 9007199254740993 −
+ * 9007199254740992 as 0, so a target missed by a dollar read "On target"
+ * (w4/1039). A number is still accepted for figures that only exist as one.
  */
-export function varianceStatus(variance: number, scale = 2): VarianceStatus {
+export function varianceStatus(
+  variance: number | string,
+  scale = 2,
+): VarianceStatus {
   // `budgetScale` is already never below the cent for money in cents, and is
   // the currency's own minor unit for one without (w21/596).
+  if (typeof variance === "string") {
+    const epsilon = `0.${"0".repeat(scale)}5`;
+    if (compareDecimals(absDecimal(variance), epsilon) <= 0) return "on";
+    return variance.startsWith("-") ? "below" : "above";
+  }
   const epsilon = 5 * 10 ** -(scale + 1);
   if (variance > epsilon) {
     return "above";

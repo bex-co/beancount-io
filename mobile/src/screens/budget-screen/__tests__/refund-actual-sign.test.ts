@@ -11,7 +11,7 @@ describe("a refund month's Actual on the budget cards", () => {
   it("is formatted with its sign on the Budget page's card", () => {
     expect(
       read("budget-screen", "components", "budget-group-card.tsx").includes(
-        "{formatSignedMoneyWithCurrency(stats.actual,currency,false,scale,)}",
+        "{formatSignedMoneyWithCurrency(stats.actualExact,currency,false,scale,)}",
       ),
     ).toBe(true);
   });
@@ -19,7 +19,7 @@ describe("a refund month's Actual on the budget cards", () => {
   it("is formatted with its sign on Home's row", () => {
     expect(
       read("home-screen", "components", "budget-card.tsx").includes(
-        "formatSignedMoneyWithCurrency(row.actual,row.currency,false,row.scale)",
+        "formatSignedMoneyWithCurrency(row.actualExact??row.actual,row.currency,false,row.scale)",
       ),
     ).toBe(true);
   });
