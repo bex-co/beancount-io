@@ -43,7 +43,6 @@
 - [857](./blocked/857.md) — The ledger runs amortize_over/forecast on the server's UTC date, not the user's — **blocked:** needs an owner-approved optional client date/time-zone input on every plugin-running read across REST, GraphQL and MCP, with the cache-key policy
 - [879](./blocked/879.md) — The receipt parse contract carries no currency, so a foreign receipt is always booked in the ledger's currency (split from w21/870) — **blocked:** needs an owner-approved `ReceiptParseResult` currency contract (parity, model prompt, both receipt forms) and an AI-quota evaluation
 - [882](./blocked/882.md) — Chart axes use the app language's money format while the amounts beside them use English (9 languages) — **blocked:** needs an owner product decision on one number convention for money (app language everywhere vs English everywhere), reversing w21/177 or w3/189
-- [893](./893.md) — An account first funded this month shows "Not enough data to chart yet"
 - [894](./894.md) — In a foreign-currency-only account, every row reads "Balance: $0.00"
 - [895](./895.md) — Account detail's range chips filter only the chart, not the list below
 - [896](./896.md) — In a non-dollar ledger, a CAD merchant's total reads "$150.00" while its row reads "150.00 CAD"

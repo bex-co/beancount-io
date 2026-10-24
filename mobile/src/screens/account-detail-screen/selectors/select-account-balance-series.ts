@@ -85,20 +85,24 @@ export function selectAccountUnitsSeries(
   today?: string,
 ): SeriesPoint[] {
   const points = data?.getLedgerAccountReport?.linechartData;
-  const series = forwardFillMonths(
-    pointsToMonthlySeries(
-      commodity,
-      // Postings dated after today have not happened: a buy pre-entered for
-      // next month stood in for this month's balance (w21/517).
-      today === undefined
-        ? points
-        : points?.filter((point) => point.date <= today),
-      (balance, currency) => amountIn(balance, currency).number,
+  const series = startingFromZero(
+    forwardFillMonths(
+      pointsToMonthlySeries(
+        commodity,
+        // Postings dated after today have not happened: a buy pre-entered for
+        // next month stood in for this month's balance (w21/517).
+        today === undefined
+          ? points
+          : points?.filter((point) => point.date <= today),
+        (balance, currency) => amountIn(balance, currency).number,
+      ),
     ),
   );
   // Held units are the same until the next posting, so a quiet commodity
   // account reads unchanged over a recent window (w21/240).
-  return today === undefined ? series : carryBalanceToToday(series, today);
+  return today === undefined
+    ? series
+    : startingFromZero(carryBalanceToToday(series, today));
 }
 
 /** More significant digits than a double holds (see `amountIn`). */
@@ -155,6 +159,21 @@ export function selectAccountUnitsScale(
       ),
     0,
   );
+}
+
+/**
+ * A series of one point starts its line at 0: the point before the first posting
+ * is the end of the month earlier, so an account first funded this month still
+ * has two points to draw (w21/893).
+ */
+function startingFromZero(series: SeriesPoint[]): SeriesPoint[] {
+  const first = series[0];
+  if (series.length !== 1 || !first || first.value === 0) return series;
+  const [year, month] = first.date.split("-").map(Number);
+  const before = new Date(Date.UTC(year!, month! - 1, 0))
+    .toISOString()
+    .slice(0, 10);
+  return [{ date: before, value: 0 }, ...series];
 }
 
 type DatedBalance = { date: string; balance: unknown };
@@ -237,6 +256,6 @@ export function selectAccountBalanceSeries(
   // falling back to $0.00 (w21/516).
   if (!last) return now.value === 0 ? series : [now];
   return last.date.slice(0, 7) === current.today.slice(0, 7)
-    ? [...series.slice(0, -1), now]
+    ? [...startingFromZero(series).slice(0, -1), now]
     : forwardFillMonths([...series, now]);
 }

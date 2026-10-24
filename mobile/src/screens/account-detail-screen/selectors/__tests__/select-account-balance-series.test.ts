@@ -304,7 +304,10 @@ describe("a mixed account's balance today", () => {
         balance: { USD: "1250" },
         today: "2026-10-21",
       }),
-    ).toEqual([{ date: "2026-10-21", value: 1250 }]);
+    ).toEqual([
+      { date: "2026-09-30", value: 0 },
+      { date: "2026-10-21", value: 1250 },
+    ]);
   });
 
   it("is unchanged without a current value", () => {
@@ -583,5 +586,36 @@ describe("selectAccountUnitsExactFigures", () => {
     expect(screen.includes("const exact = exactFigures?.get(value);")).toBe(
       true,
     );
+  });
+});
+
+// w21/893: an account first funded this month had a single point to chart.
+describe("an account first funded this month", () => {
+  const today = "2026-10-21";
+  const fresh = {
+    getLedgerAccountReport: {
+      linechartData: [{ date: "2026-10-05", balance: { USD: 1000 } }],
+    },
+  } as unknown as AccountReportQuery;
+
+  it("draws a line from 0 to its balance", () => {
+    expect(
+      selectAccountBalanceSeries(
+        "USD",
+        fresh,
+        { balance: { USD: 1000 }, today },
+        today,
+      ),
+    ).toEqual([
+      { date: "2026-09-30", value: 0 },
+      { date: today, value: 1000 },
+    ]);
+  });
+
+  it("does the same in units", () => {
+    expect(selectAccountUnitsSeries("USD", fresh, today)).toEqual([
+      { date: "2026-09-30", value: 0 },
+      { date: "2026-10-05", value: 1000 },
+    ]);
   });
 });
