@@ -130,7 +130,8 @@ describe("a new file into a folder that already holds it", () => {
     expect(listingHasFile(folder, "/sub/notes.bean")).toBe(true);
     expect(listingHasFile(folder, "sub/other.bean")).toBe(false);
     // A folder of that name is not the file.
-    expect(listingHasFile(folder, "sub/inner")).toBe(false);
+    // A folder at the target path is a clash too (w21/988).
+    expect(listingHasFile(folder, "sub/inner")).toBe(true);
     expect(listingHasFile([], "sub/notes.bean")).toBe(false);
   });
 
@@ -360,5 +361,29 @@ describe("the .git refusal's message", () => {
         String(catalog.ledgerFileNameGit).includes(".git"),
       ]).toEqual([locale, true]);
     }
+  });
+});
+
+// w21/988: a file's name reused as a folder, or a folder's as a file.
+describe("a name that reuses a file as a folder or a folder as a file", () => {
+  const kinds = { files: ["main.bean", "LICENSE"], folders: ["sub", "x.bean"] };
+  const names = [...kinds.files, ...kinds.folders];
+
+  it("refuses a path through an existing file", () => {
+    for (const input of ["main.bean/x", "LICENSE/notes"]) {
+      const check = checkLedgerFileName(input, names, kinds);
+      expect(check.ok).toBe(false);
+      expect(check.ok === false && check.issue).toBe("exists");
+    }
+  });
+
+  it("refuses a file named like a folder already here", () => {
+    const check = checkLedgerFileName("x", names, kinds);
+    expect(check.ok === false && check.issue).toBe("exists");
+  });
+
+  it("still takes a path through a folder, and a new name", () => {
+    expect(checkLedgerFileName("sub/y", names, kinds).ok).toBe(true);
+    expect(checkLedgerFileName("fresh", names, kinds).ok).toBe(true);
   });
 });

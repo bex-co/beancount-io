@@ -96,6 +96,7 @@ function breaksPortablePath(path: string): boolean {
 export function checkLedgerFileName(
   input: string,
   existingNames: readonly string[] = [],
+  kinds: { files?: readonly string[]; folders?: readonly string[] } = {},
 ): LedgerFileNameCheck {
   const trimmed = input.trim();
   if (!trimmed) return { ok: false, issue: "empty" };
@@ -136,7 +137,15 @@ export function checkLedgerFileName(
       return { ok: false, issue: "folderExists", filename, existing: twin };
     }
   }
-  const existing = existingNames.find(
+  // A path that goes through a file as if it were a folder, or a name that is a
+  // folder already here, is refused as the clash it is (w21/988).
+  if (segments.length > 1) {
+    const file = kinds.files?.find((name) => name === segments[0]);
+    if (file !== undefined) {
+      return { ok: false, issue: "exists", filename, existing: file };
+    }
+  }
+  const existing = [...existingNames, ...(kinds.folders ?? [])].find(
     (name) => portableNameKey(name) === portableNameKey(filename),
   );
   if (existing !== undefined) {
@@ -182,7 +191,8 @@ function portableNameKey(name: string): string {
 }
 
 /**
- * Whether a listing of the folder a new file targets already holds it. The
+ * Whether a listing of the folder a new file targets already holds it, as a
+ * file or as a folder of that name (w21/988). The
  * name check only sees the current folder, so `sub/notes` passed at the root
  * even when `sub/notes.bean` existed, and the server refused the create after
  * the dialog had closed (w21/222).
@@ -193,9 +203,7 @@ export function listingHasFile(
 ): boolean {
   const wanted = portableNameKey(filePath.replace(/^\/+/, ""));
   return entries.some(
-    (entry) =>
-      entry.type !== "dir" &&
-      portableNameKey(entry.path.replace(/^\/+/, "")) === wanted,
+    (entry) => portableNameKey(entry.path.replace(/^\/+/, "")) === wanted,
   );
 }
 

@@ -501,10 +501,18 @@ export function LedgerFileBrowserScreen(): JSX.Element {
   // Create is disabled with the reason under the field, never silently.
   const validateNewFilename = useCallback(
     (input: string): boolean | string => {
-      const check = checkLedgerFileName(input, [
-        ...entries.map((entry) => entry.name),
-        ...knownExisting,
-      ]);
+      const check = checkLedgerFileName(
+        input,
+        [...entries.map((entry) => entry.name), ...knownExisting],
+        {
+          files: entries
+            .filter((entry) => entry.type !== "dir")
+            .map((entry) => entry.name),
+          folders: entries
+            .filter((entry) => entry.type === "dir")
+            .map((entry) => entry.name),
+        },
+      );
       if (check.ok) return true;
       switch (check.issue) {
         case "empty":
@@ -530,10 +538,18 @@ export function LedgerFileBrowserScreen(): JSX.Element {
 
   const handleCreate = useCallback(
     async (input: string) => {
-      const check = checkLedgerFileName(input, [
-        ...entries.map((entry) => entry.name),
-        ...knownExisting,
-      ]);
+      const check = checkLedgerFileName(
+        input,
+        [...entries.map((entry) => entry.name), ...knownExisting],
+        {
+          files: entries
+            .filter((entry) => entry.type !== "dir")
+            .map((entry) => entry.name),
+          folders: entries
+            .filter((entry) => entry.type === "dir")
+            .map((entry) => entry.name),
+        },
+      );
       if (!check.ok || !canWrite || createInFlightRef.current) return;
       const { filename } = check;
 
