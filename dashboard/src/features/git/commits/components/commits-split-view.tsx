@@ -3,6 +3,7 @@ import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@apollo/client/react";
 import { History } from "lucide-react";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { useQueryRetry } from "@/common/hooks/use-query-retry";
 import { cn } from "@/common/lib/utils/utils";
 import { CommitsList } from "./commits-list";
 import { CommitDetail } from "./commit-detail";
@@ -78,6 +79,7 @@ function CommitsWorkspace({
     loading: commitsLoading,
     error: commitsError,
     fetchMore,
+    refetch,
   } = useQuery(ListCommitsDocument, {
     variables: {
       ledgerId,
@@ -89,6 +91,11 @@ function CommitsWorkspace({
     fetchPolicy: "network-only",
     notifyOnNetworkStatusChange: false,
   });
+
+  // Try Again re-reads this ledger's first page, never page 2 through
+  // `fetchMore`; the error and its busy button stay while it runs, and a
+  // failed retry hands focus back to the button pressed (w4/1043).
+  const firstPage = useQueryRetry(commitsError, refetch);
 
   const commits = commitsData?.listCommits || [];
   const hasMore = (lastPageSize ?? commits.length) >= 30;
@@ -165,7 +172,9 @@ function CommitsWorkspace({
       onCommitSelect={onCommitSelect}
       commits={commits}
       loading={commitsLoading && !commitsData}
-      error={commitsError}
+      error={firstPage.failure}
+      onRetry={firstPage.retry}
+      retrying={firstPage.retrying}
       hasMore={hasMore}
       loadingMore={loadingMore}
       paginationError={paginationError}

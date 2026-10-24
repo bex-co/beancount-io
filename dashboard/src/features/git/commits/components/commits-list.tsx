@@ -3,6 +3,7 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { getErrorMessageKey } from "@/common/lib/errors/error-message";
 import { Skeleton } from "@/common/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
+import { Button } from "@/common/components/ui/button";
 import { CommitListItem } from "./commit-list-item";
 import type { ListCommitsQuery } from "@/graphql/definitions";
 import { ContinuationControl } from "@/common/components/continuation-control";
@@ -14,6 +15,9 @@ interface CommitsListProps {
   commits: ListCommitsQuery["listCommits"];
   loading: boolean;
   error?: Error;
+  /** Re-reads the failed first page in place. */
+  onRetry: () => void;
+  retrying: boolean;
   hasMore: boolean;
   loadingMore: boolean;
   paginationError: boolean;
@@ -28,6 +32,8 @@ export function CommitsList({
   commits,
   loading,
   error,
+  onRetry,
+  retrying,
   hasMore,
   loadingMore,
   paginationError,
@@ -41,7 +47,17 @@ export function CommitsList({
   if (error) {
     return (
       <Alert variant="destructive">
-        <AlertDescription>{t(getErrorMessageKey(error))}</AlertDescription>
+        <AlertDescription className="gap-3">
+          <p>{t(getErrorMessageKey(error))}</p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onRetry}
+            loading={retrying}
+          >
+            {t("common.tryAgain")}
+          </Button>
+        </AlertDescription>
       </Alert>
     );
   }
