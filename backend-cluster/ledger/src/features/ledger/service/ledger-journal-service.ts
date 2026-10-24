@@ -73,6 +73,7 @@ import {
   type LedgerFileTransform,
 } from "@/features/ledger/operations/commit-ledger-files";
 import type { DirectiveLimitOptions } from "@/core/directive-limit";
+import { entryCommitMessage } from "@/features/ledger/utils/commit-message";
 import { toBeancountErrorsPublic } from "@/features/ledger/service/ledger-data-mappers";
 import { refuseNewLedgerErrors } from "@/features/ledger/utils/new-ledger-errors";
 import type { CacheHelper } from "@/shared/cache";
@@ -972,7 +973,12 @@ export class LedgerJournalService implements ILedgerJournalService {
       ],
     ]);
     await this.assertNoNewErrors(loaded, transforms, "delete", allowInvalid);
-    await this.commitTransforms(ledgerId, userId, transforms, "Delete entry");
+    await this.commitTransforms(
+      ledgerId,
+      userId,
+      transforms,
+      entryCommitMessage("Delete", found.slice),
+    );
     return {
       message: "Entry deleted successfully",
       entryHash,
@@ -1105,7 +1111,12 @@ export class LedgerJournalService implements ILedgerJournalService {
     ]);
     // The projection also reports to `applied`; the commit's run overwrites it.
     await this.assertNoNewErrors(loaded, transforms, "update", allowInvalid);
-    await this.commitTransforms(ledgerId, userId, transforms, "Update entry");
+    await this.commitTransforms(
+      ledgerId,
+      userId,
+      transforms,
+      entryCommitMessage("Update", newContent),
+    );
     // The entry's identity is content-derived, so the edit almost always
     // changed it. Resolve the NEW hash from the committed content so a client
     // can keep the edited entry on screen; fall back to echoing the request

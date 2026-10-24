@@ -432,7 +432,12 @@ export function setEntriesHandler(router: Router): void {
             content: u.content,
             sha: u.sha,
           })),
-          message: addEntriesCommitMessage(rows.length),
+          message: addEntriesCommitMessage(
+            rows.length,
+            [...byFile.values()].flatMap((written) =>
+              written.map(({ text }) => text),
+            ),
+          ),
         });
         ctx.body = successResponse({
           entry_hashes: await writtenEntryHashes(
