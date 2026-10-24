@@ -83,3 +83,5 @@
 - [956](./956.md) — Receipt Try Again after a failed parse uploads the photo again
 - [957](./957.md) — A failed shutter tap on iPad or with haptics off gives no feedback
 - [958](./958.md) — A foreign-currency card or bank account has a grey chart with no percent, while its rows are red and green
+- [959](./959.md) — Picking a parent account in the Transactions filters also returns accounts that merely contain its name
+- [960](./960.md) — A journal link with ?time=0000 makes Transactions fail to load
