@@ -4,7 +4,7 @@
 
 ## Inbox
 
-- **1054** — [Infer CSV comma decimals after removing supported grouping fillers](./1054.md)
+- **1054** — [Infer CSV decimal conventions from supported grouping](./1054.md)
 
 - **1053** — [Show keyboard focus on the read-only file editor](./1053.md)
 
