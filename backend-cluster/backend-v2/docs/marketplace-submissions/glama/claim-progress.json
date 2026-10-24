@@ -1,27 +1,37 @@
 {
   "target": "Glama existing Beancount.io connector",
-  "observedAtUTC": "2026-10-24T06:21:30Z",
+  "observedAtUTC": "2026-10-24T07:05:54Z",
   "adminUrl": "https://glama.ai/mcp/connectors/io.beancount/beancount/admin",
   "accountProfileComplete": true,
   "termsAccepted": true,
   "connectorClaimVerified": true,
   "dnsProofRecordName": "_glama-claim.beancount.io",
-  "dnsProofValue": "Account-bound public verification value is prepared privately and shown in the publisher dialog; omitted here",
+  "dnsProofValue": "Published account-bound domain verification value; omitted here, with SHA-256 retained below.",
   "dnsProofValueSHA256": "4eaff609b57f793da5c479c26525e0f3dd0af7d43f1a4eabc60d18db4ccacce3",
   "dnsReadback": "Exact prepared value matches Cloudflare API, authoritative ajay.ns.cloudflare.com and public recursive1.1.1.1; value SHA-256 retained above.",
   "httpProofStatus": 404,
   "dnsProviderEntry": "https://dash.cloudflare.com/login",
-  "currentGate": "Domain ownership is verified. The private Test Profile still needs dedicated synthetic-only authentication and a full healthy day.",
-  "testProfileConfigured": false,
-  "health": "Unhealthy;0.0% over 20 days at this observation. Private test history confirms unauthenticated HTTP401.",
-  "nextAction": "Discuss and authorize the specific private synthetic-only test access, configure it through the existing Test Profile, then verify a full healthy day under w2/088.",
-  "limit": "Ownership verification is complete. It does not establish authenticated monitoring, a repaired health score or a native accounting journey.",
+  "currentGate": "Authenticated monitoring now succeeds. Observe a full healthy day starting at 2026-10-24T07:01:01Z; original native accounting journey remains separate.",
+  "testProfileConfigured": true,
+  "health": "Healthy; public connector exposes 44 tools. Historical uptime is 0.1% over 20 days, not a full successful day.",
+  "nextAction": "At or after 2026-10-25T07:01:01Z, inspect subsequent Glama checks and public health for a full healthy day under w2/088. Renew the restricted monitoring credential before its 2026-11-23 UTC expiry.",
+  "limit": "Successful initialization/discovery and ownership are verified. A full healthy day and the original native ledger query/write-preview acceptance are not yet established.",
   "history": [
     {
       "observedAtUTC": "2026-10-24T00:53:46Z",
       "connectorClaimVerified": false,
       "dnsReadback": "Current public TXT query returns no value",
       "currentGate": "Existing saved Google identity requires normal Cloudflare sign-in; its newly displayed subscription/privacy/cookie agreement awaits a concrete action-time decision, or the publisher adds the prepared TXT record."
+    },
+    {
+      "observedAtUTC": "2026-10-24T06:21:30Z",
+      "connectorClaimVerified": true,
+      "currentGate": "Domain ownership is verified. The private Test Profile still needs dedicated synthetic-only authentication and a full healthy day.",
+      "testProfileConfigured": false,
+      "health": "Unhealthy;0.0% over 20 days at this observation. Private test history confirms unauthenticated HTTP401.",
+      "testProfileAuthenticationType": "OAuth 2.0 selected through the actual admin UI",
+      "testProfileAuthenticated": false,
+      "testProfileState": "Not Authenticated; the automatic connection test returns HTTP401. No OAuth grant, API key or ledger credential has been supplied to Glama."
     }
   ],
   "claimResult": "The actual existing connector displays Ownership verified and exposes its Admin/Test Profile controls.",
@@ -32,9 +42,9 @@
   "dnsTTL": 1,
   "dnsRecordCount": 1,
   "dnsProofRetention": "Keep published; Glama rechecks domain verification daily.",
-  "testProfileAuthenticationType": "OAuth 2.0 selected through the actual admin UI",
-  "testProfileAuthenticated": false,
-  "testProfileState": "Not Authenticated; the automatic connection test returns HTTP401. No OAuth grant, API key or ledger credential has been supplied to Glama.",
+  "testProfileAuthenticationType": "API Key with Bearer Authentication; saved in Glama private Test Profile",
+  "testProfileAuthenticated": true,
+  "testProfileState": "API Key Configured survives reload. Native connection test succeeds in 1348ms; first-party token metadata confirms use at the same time.",
   "testProfileSupportedTypes": [
     "OAuth 2.0",
     "API Key"
@@ -45,5 +55,24 @@
     "ledger.read",
     "ledger.write",
     "ledger.admin"
-  ]
+  ],
+  "firstHealthyCheckAtUTC": "2026-10-24T07:01:01Z",
+  "firstHealthyCheckDurationMs": 1348,
+  "fullHealthyDayEarliestRecheckAtUTC": "2026-10-25T07:01:01Z",
+  "fullHealthyDayObserved": false,
+  "publicToolCount": 44,
+  "testProfilePersistenceVerified": true,
+  "monitoringCredential": {
+    "name": "glama-mcp-health-readonly",
+    "account": "Dedicated QA account verified against local QA identity configuration",
+    "scopes": [
+      "ledger.read"
+    ],
+    "ledgerRestriction": "Dedicated synthetic mcp-agent-eval ledger only",
+    "expiresDateUTC": "2026-11-23",
+    "expiryPolicy": "End of selected UTC date",
+    "renewBeforeDateUTC": "2026-11-23",
+    "storage": "Glama private Test Profile; plaintext omitted from public files and cleared from browser automation memory after persistence verification",
+    "retained": true
+  }
 }

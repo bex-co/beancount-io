@@ -1,6 +1,6 @@
 # w6 · m8 — Claim and publish the hosted connector on Smithery and Glama
 
-**Worker:** worker1 **Goal:** Users find one accurate, owned, authenticated listing per platform for the existing hosted MCP endpoint. **Status:** blocked (t001 done; Glama ownership verified; remaining tasks depend on removed Smithery intake or w2/088 authenticated health)
+**Worker:** worker1 **Goal:** Users find one accurate, owned, authenticated listing per platform for the existing hosted MCP endpoint. **Status:** blocked (t001 done; Glama ownership and authenticated health verified; remaining tasks depend on removed Smithery intake or w2/088 full healthy-day observation)
 
 **Implementation estimate:** ~3h, excluding external review queues and the standing closing tasks.
 
@@ -49,7 +49,7 @@
 
 ## Blocked
 
-- **t003:** ownership is now verified after the existing authenticated cf CLI publishes one exact TXT proof and actual Glama verification succeeds. The private Test Profile is Not Authenticated/401; OAuth/API-key controls are prepared without a supplied credential. **Unblock:** publisher approves the specific private synthetic-only test access, worker configures/verifies it under w2/088, then Glama records a full healthy day before original metadata/native acceptance closes. **Owners:** publisher for the test-access decision, worker for setup, Glama for health. The former Cloudflare-browser agreement decision is resolved through the existing CLI route.
+- **t003:** ownership and private synthetic-only read authentication are verified. Saving the Bearer API key produces a successful1348ms check at2026-10-24T07:01:01Z; public health is Healthy with44tools, and saved configuration survives reload. **Unblock:** Glama records a full healthy day, earliest recheck2026-10-25T07:01:01Z under w2/088, then worker completes original metadata/native acceptance. **Owners:** Glama for actual checks, worker for observation and dependent verification. Renew monitoring access before2026-11-23UTC. Account/domain/test-access preparation is complete.
 
 - **t002:** the signed-in legacy Smithery wizard returns 403 “Updating servers has been removed”; the candidate listing remains not found. **Unblock:** a working supported direct-directory intake/claim route, followed by ownership/scan and fresh connection proof. **Owner:** Smithery/Arcade and publisher. Details and preserved packet: t002; d9c3490f0.
 

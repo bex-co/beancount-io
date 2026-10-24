@@ -1,8 +1,10 @@
-# Glama ownership verified; health authentication remains
+# Glama ownership verified and authenticated health restored
 
-At **2026-10-24T06:21:30Z**, the existing
+At **2026-10-24T07:05:54Z**, the existing
 [Beancount.io connector](https://glama.ai/mcp/connectors/io.beancount/beancount)
-displays **Ownership verified** and exposes its administration controls.
+displays **Ownership verified**, **Healthy** and **44 available tools**.
+Its private Test Profile reports a successful connection at
+**2026-10-24T07:01:01Z**, taking 1348ms.
 The canonical connector is retained; no duplicate listing was created.
 
 ## DNS and claim completed
@@ -30,22 +32,43 @@ already authorized CLI route. The earlier domain/account preparation history is
 retained in [claim-progress.json](./claim-progress.json); the approved Glama
 free-account Terms/Privacy step had already completed at 00:53UTC.
 
-## Remaining private Test Profile and healthy day
+## Authenticated monitoring restored; full healthy day pending
 
 The real [Test Profile](https://glama.ai/mcp/connectors/io.beancount/beancount/admin/test-profile)
-was initially set to None and its recorded checks return HTTP401. Its supported
-authentication choices are OAuth 2.0 and API Key. OAuth mode is now selected for
-preparation, and the page explicitly reports **Not Authenticated**; its automatic
-unauthenticated test also returns 401. No OAuth grant, API key or ledger
-credential has been supplied to Glama.
+now uses **API Key / Bearer Authentication**. A dedicated QA-account credential,
+`glama-mcp-health-readonly`, has only `ledger.read` and is restricted to the
+synthetic `mcp-agent-eval` ledger. The browser identity was checked against the
+local QA configuration before creating it. No write/admin scope is granted.
+The token is retained privately in Glama; plaintext is absent from this packet
+and cleared from automation memory after verifying persistence.
 
-The expanded **What Glama sends to your authorization server** panel reports
-`openid offline_access ledger.read ledger.write ledger.admin` against the
-canonical MCP resource. This UI does not expose an individual scope editor.
-Actual private test access remains a separate decision. Prefer the narrowest
-supported access to a dedicated synthetic ledger when completing it.
+Saving triggers Glama's native connection test: **success — 1348ms — Healthy**
+at **2026-10-24T07:01:01Z**. Reload preserves **API Key Configured** and the
+successful history entry. The first-party token metadata confirms actual use at
+that time with the same read scope, synthetic restriction and expiry. The public
+connector independently changes to Healthy and exposes 44 tools. Its historical
+uptime is **0.1% over 20 days**; earlier failures remain in that denominator.
+The browser hydrates timestamps into America/Los_Angeles: 00:01:01 PDT on
+October 24 is 07:01:01 UTC. The public initial render also reports 07:01 UTC.
 
-Health still shows Unhealthy, 0.0% over 20 days. The claim is complete, while the
-private authenticated check and full healthy day remain under existing w2/088
-ownership. w6/m8/t003 subsequently aligns/verifies metadata and the native path.
-Prepared auth controls are not successful authentication or repaired health.
+The selected expiry is **2026-11-23 UTC day-end** (displayed locally as Nov 23,
+03:59 PM PST). **Renew before 2026-11-23 UTC**, retaining the same read-only,
+synthetic-only boundary, then verify another actual check. Keep the DNS proof
+published for Glama's daily ownership checks.
+
+**Remaining unblock condition:** at or after **2026-10-25T07:01:01Z**, inspect
+subsequent actual check history and public health to establish one full healthy
+day. A later failure requires investigation and a fresh successful-day window.
+Existing w2/088 retains sole ownership of this observation; it is not yet closed.
+w6/m8/t003 retains its dependency and original metadata/native acceptance.
+Successful initialization and discovery do not establish a ledger query or write
+preview through Glama's native client.
+
+## Previous authentication state
+
+Before setup, checks returned HTTP401 with no test credentials. OAuth mode
+requested `openid offline_access ledger.read ledger.write ledger.admin` without
+an individual scope editor. The supported API-key mode permits the narrower
+read-only synthetic monitor used above. A transient authentication-type UI error
+recovered on reload before credential creation; it is not a current blocker.
+Dated prior observations remain in [claim-progress.json](./claim-progress.json).
