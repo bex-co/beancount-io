@@ -76,6 +76,8 @@ The 27 findings from the MCP QA auth sweep against the hosted endpoint (023–05
 
 - [1017 — Keep generated feeds outside copied plugin resources](./1017.md) — major CLI gap: a fresh export adds a feed inside a plugin package, changing valid net worth from 1,800 to 1,850 USD; direct/helper and ordinary allocation controls checked 2026-10-24.
 
+- [1018 — Preserve dateless lots in listed-quantity replay](./1018.md) — minor CLI gap: resolving inferred quantities in JSON invents acquisition dates and makes a valid three-trade replay ambiguous; null-number, dated and single-add-reply controls pass.
+
 ## Blocked inbox
 
 - [431 — `add balance`/`add price`/bare-number adds load the ledger twice for pre-checks](./blocked/431.md) — blocked on a maintainer choice between a pre-commit hook in the shared write validation and plugin-free pre-checks that change refusals.
