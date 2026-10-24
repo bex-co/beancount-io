@@ -88,3 +88,4 @@
 - [955](./955.md) — Receipt photos are uploaded at any size, so oversized ones always fail to parse
 - [956](./956.md) — Receipt Try Again after a failed parse uploads the photo again
 - [957](./957.md) — A failed shutter tap on iPad or with haptics off gives no feedback
+- [958](./958.md) — A foreign-currency card or bank account has a grey chart with no percent, while its rows are red and green
