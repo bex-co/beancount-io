@@ -74,3 +74,55 @@ def test_an_empty_account_closes_quietly(tmp_path: Path) -> None:
 
 def test_a_same_day_drain_in_the_same_import_keeps_it_quiet(tmp_path: Path) -> None:
     assert _warnings(_import(tmp_path, DRAIN + CLOSE, "--apply")) == []
+
+
+TREE = (
+    'option "operating_currency" "USD"\n{plugin}2024-01-01 open Assets:Bank USD\n'
+    "2024-01-01 open {child} {currency}\n2024-01-01 open Equity:Opening {currency}\n"
+    '2024-01-02 * "Capital"\n  {child} {number} {currency}\n  Equity:Opening -{number} {currency}\n'
+)
+CLOSE_TREE = 'plugin "beancount.plugins.close_tree"\n'
+PARENT = "2024-02-01 close Assets:Bank\n"
+
+
+def _tree(
+    *,
+    plugin: str = CLOSE_TREE,
+    child: str = "Assets:Bank:Checking",
+    currency: str = "USD",
+    number: str = "100.00",
+) -> str:
+    return TREE.format(plugin=plugin, child=child, currency=currency, number=number)
+
+
+@pytest.mark.parametrize("flags", [[], ["--apply"]], ids=["preview", "apply"])
+@pytest.mark.parametrize(
+    ("child", "held"),
+    [("Assets:Bank:Checking", "100.00 USD"), ("Assets:Bank:Checking:Foreign", "125.50 EUR")],
+    ids=["child", "grandchild"],
+)
+def test_close_tree_warns_for_the_funded_descendant_it_closes(
+    tmp_path: Path, flags: list[str], child: str, held: str
+) -> None:
+    number, currency = held.split()
+    ledger = _tree(child=child, currency=currency, number=number)
+
+    (warning,) = _warnings(_import(tmp_path, PARENT, *flags, ledger=ledger))
+
+    assert f"{child} is closed on 2024-02-01 while it still holds {held}" in warning
+
+
+def test_close_tree_apply_writes_only_the_parent_close(tmp_path: Path) -> None:
+    _import(tmp_path, PARENT, "--apply", ledger=_tree())
+
+    assert (tmp_path / "main.bean").read_text() == _tree() + "\n" + PARENT
+
+
+def test_without_close_tree_the_funded_child_stays_open_and_quiet(tmp_path: Path) -> None:
+    assert _warnings(_import(tmp_path, PARENT, ledger=_tree(plugin=""))) == []
+
+
+def test_a_child_the_ledger_already_closed_stays_quiet(tmp_path: Path) -> None:
+    ledger = _tree() + "2024-01-15 close Assets:Bank:Checking\n"
+
+    assert _warnings(_import(tmp_path, PARENT, ledger=ledger)) == []

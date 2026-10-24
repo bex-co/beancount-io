@@ -919,10 +919,11 @@ def answer(
         if isinstance(item, Price) and item.amount.number is not None
     ]
     closes = [item for item in included if isinstance(item, Close)]
+    closed_before = {entry.account for entry in existing if isinstance(entry, Close)}
 
     def inspect(candidate: list[Any]) -> None:
         advisories.extend(unused_quote_advisories(candidate, existing, wanted))
-        advisories.extend(_funded_close_advisories(candidate, options, closes))
+        advisories.extend(_funded_close_advisories(candidate, options, closed_before))
 
     try:
         validation_warnings = ledger_write.validate_append(
@@ -1102,19 +1103,26 @@ def answer(
     return preview
 
 
-def _funded_close_advisories(candidate: list[Any], options: Any, closes: list[Any]) -> list[str]:
-    """A warning for each imported close whose account still holds money once the whole batch is booked.
+def _funded_close_advisories(candidate: list[Any], options: Any, closed_before: set[str]) -> list[str]:
+    """A warning for each account the import newly closes while it still holds money once the whole batch is booked.
 
     Native validation accepts a funded close, and later postings to the account
     are then refused, so the money cannot be moved out afterwards; `add close`
     refuses it. An import keeps its native behavior and says so instead
     (w5/913). Judged on the candidate, so a same-day drain in the same import
-    keeps it quiet.
+    keeps it quiet. The candidate's own closes are read rather than the
+    imported rows: `close_tree` closes a parent's funded descendants with it,
+    and an empty parent alone warned for none of them. An account the ledger
+    had already closed is not this import's doing.
     """
+    from beancount.core.data import Close
+
     from bea_engine.ledger.adding import _plain, _remaining_balance
 
     advisories = []
-    for close in closes:
+    for close in candidate:
+        if not isinstance(close, Close) or close.account in closed_before:
+            continue
         held, stranded = _remaining_balance(candidate, options, close.account, close.date)
         left = [f"{_plain(number)} {currency}" for currency, number in sorted(held.items())] or stranded
         if left:

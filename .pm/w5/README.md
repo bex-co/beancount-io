@@ -40,8 +40,6 @@
 
 - [974 — Retain written native IDs through source inference](./974.md) — reopened major CLI owner-retention gap across booked-lot and multicurrency Cash inference. Filtered repeats and first corrections can write the recorded reference again; standalone native controls and both repetitions verified 2026-10-23.
 
-- [913 — Warn for funded accounts a native import closes through close_tree](./913.md) — reopened minor CLI warning gap; a parent import closes its funded child/grandchild without a preview/apply warning. Explicit closes and drained/previously closed controls work; reproduced twice 2026-10-23.
-
 - [1015 — Compare declared non-transaction directive facts](./1015.md) — minor CLI field/provenance gaps; known method, tolerance and receipt-metadata changes falsely count as written, while equivalent currency lists hide genuine openings. Native controls, enrichment and both repetitions verified 2026-10-23.
 
 - [1014 — Anchor payment references to their written metadata](./1014.md) — major CLI silent omission; calculated native or generated references make real payments skip while their IDs are absent from the file, reproduced twice across CSV/Python and actual generated-ID producers, 2026-10-23.
