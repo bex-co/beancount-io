@@ -190,6 +190,7 @@ export function intervalRanges(
  */
 function firstAndLastDate(
   directives: DirectiveJson[],
+  withPrices = true,
 ): [string, string] | null {
   let first: string | null = null;
   let last: string | null = null;
@@ -197,7 +198,7 @@ function firstAndLastDate(
     if (d.type === "transaction") {
       if (first === null || d.date < first) first = d.date;
     }
-    if (d.type === "transaction" || d.type === "price") {
+    if (d.type === "transaction" || (withPrices && d.type === "price")) {
       if (last === null || d.date > last) last = d.date;
     }
   });
@@ -250,11 +251,12 @@ function seriesRanges(
   directives: DirectiveJson[],
   key: IntervalKey,
   window?: IntervalWindow,
+  withPrices = true,
 ): DateRange[] {
   if (window) {
     return intervalRanges(window.begin, window.end, key, false);
   }
-  const span = firstAndLastDate(directives);
+  const span = firstAndLastDate(directives, withPrices);
   if (!span) return [];
   return intervalRanges(span[0], span[1], key, true);
 }
@@ -293,7 +295,10 @@ export function intervalTotals(
   priceMap: PriceMap,
   window?: IntervalWindow,
 ): DateBalanceWithAccounts[] {
-  const ranges = seriesRanges(directives, key, window);
+  // A flow total ends at the last transaction: a price dated after it adds an
+  // empty month, which moved Reports' anchor onto it (w21/889). Balance series
+  // keep running to the last price, which values them.
+  const ranges = seriesRanges(directives, key, window, false);
   const accumulators = ranges.map(() => {
     const total = new LotInventory();
     const perAccount = new Map<string, LotInventory>();

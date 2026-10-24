@@ -330,6 +330,30 @@ describe("chart span parity (Fava _date_first / _date_last)", () => {
     expect(rows.map((r) => r.date)).toEqual(["2024-01-31", "2024-02-29"]);
   });
 
+  // w21/889: a price dated after the last transaction added an empty month to
+  // the flow totals, and Reports anchored on it.
+  it("ends the flow totals at the last transaction, not at a later price", () => {
+    const withLaterPrice: DirectiveJson[] = [
+      ...LEDGER,
+      {
+        type: "price",
+        date: "2024-03-10",
+        currency: "HOOL",
+        amount: { number: "5", currency: "USD" },
+      } as DirectiveJson,
+    ];
+    const flow = intervalTotals(
+      withLaterPrice,
+      "month",
+      ["Assets"],
+      "USD",
+      usdMap,
+    );
+    const bare = intervalTotals(LEDGER, "month", ["Assets"], "USD", usdMap);
+    expect(flow.map((r) => r.date)).toEqual(bare.map((r) => r.date));
+    expect(flow.map((r) => r.date).includes("2024-03-31")).toBe(false);
+  });
+
   it("extends the last date to include a trailing Price (Transaction|Price + 1 day)", () => {
     const withTrailingPrice: DirectiveJson[] = [
       ...LEDGER,
