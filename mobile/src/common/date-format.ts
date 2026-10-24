@@ -35,6 +35,32 @@ function gregorian(locale: string): string {
 }
 
 /**
+ * One `Intl.DateTimeFormat` per locale and style: `toLocaleDateString` builds a
+ * formatter on every call (about 83 µs), and a list header per date over
+ * thousands of loaded rows paid it again on each page (w21/979).
+ */
+const formatters = new Map<string, Intl.DateTimeFormat>();
+function formatterFor(
+  locale: string,
+  options: Intl.DateTimeFormatOptions,
+): Intl.DateTimeFormat {
+  const key = `${locale}|${options.month}|${options.day ?? ""}|${options.year}`;
+  let formatter = formatters.get(key);
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat(gregorian(locale), {
+      ...options,
+      timeZone: "UTC",
+    });
+    formatters.set(key, formatter);
+  }
+  return formatter;
+}
+
+/** Long dates already written, by locale and day; cleared when it grows large. */
+const longDates = new Map<string, string>();
+const LONG_DATES_MAX = 20_000;
+
+/**
  * A ledger date (`YYYY-MM-DD`) in long form — "December 31, 2025",
  * "31. Dezember 2025", "۳۱ دسامبر ۲۰۲۵".
  *
@@ -46,18 +72,23 @@ function gregorian(locale: string): string {
  * as itself rather than as "Invalid Date".
  */
 export function formatLedgerDate(isoDate: string, locale: string): string {
+  const cacheKey = `${locale}|${isoDate}`;
+  const known = longDates.get(cacheKey);
+  if (known !== undefined) return known;
   try {
     const [year, month, day] = isoDate.split("-").map(Number);
     const date = utcDate(year, month - 1, day);
     if (isNaN(date.getTime())) {
       return isoDate;
     }
-    return date.toLocaleDateString(gregorian(locale), {
+    const text = formatterFor(locale, {
       month: "long",
       day: "numeric",
       year: "numeric",
-      timeZone: "UTC",
-    });
+    }).format(date);
+    if (longDates.size >= LONG_DATES_MAX) longDates.clear();
+    longDates.set(cacheKey, text);
+    return text;
   } catch {
     return isoDate;
   }
@@ -75,11 +106,9 @@ export function formatLedgerMonth(yearMonth: string, locale: string): string {
     if (isNaN(date.getTime())) {
       return yearMonth;
     }
-    return date.toLocaleDateString(gregorian(locale), {
-      month: "long",
-      year: "numeric",
-      timeZone: "UTC",
-    });
+    return formatterFor(locale, { month: "long", year: "numeric" }).format(
+      date,
+    );
   } catch {
     return yearMonth;
   }
@@ -98,12 +127,11 @@ export function formatLedgerDateShort(isoDate: string, locale: string): string {
     if (isNaN(date.getTime())) {
       return isoDate;
     }
-    return date.toLocaleDateString(gregorian(locale), {
+    return formatterFor(locale, {
       month: "short",
       day: "numeric",
       year: "numeric",
-      timeZone: "UTC",
-    });
+    }).format(date);
   } catch {
     return isoDate;
   }

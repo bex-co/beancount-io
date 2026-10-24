@@ -47,7 +47,6 @@
 - [922](./blocked/922.md) — Changing to a payee with no history keeps the previous payee's accounts (owner's call) — **blocked:** owner decides whether a no-history or cleared payee resets an untouched fill (reverses w21/411)
 - [951](./blocked/951.md) — Expense accounts are valued at market on Accounts and account detail, but at cost everywhere else — **blocked:** owner confirms flows-at-cost covers Income/Expenses balances; needs a native priced-lot check
 - [977](./blocked/977.md) — LedgerPrices pulls every price date for every pair, and Apollo writes and reads them all on each mount — **blocked:** owner picks the API shape for bounding price dates across REST/GraphQL/MCP
-- [979](./979.md) — Transactions and Account detail rebuild every date header on each page, with an uncached date formatter
 - [980](./980.md) — Android can loop on a link to a ledger the user cannot read (code path; unverified on device)
 - [981](./981.md) — Add Budget one-currency default (w21/946) does nothing for Expenses accounts
 - [982](./982.md) — An unpriced commodity loses its neutral chart colour again (w21/958 regression)

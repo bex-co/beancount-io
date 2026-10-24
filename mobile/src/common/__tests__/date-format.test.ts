@@ -89,3 +89,52 @@ describe("formatFeedDate", () => {
     expect(formatFeedDate(undefined, "en")).toBe("");
   });
 });
+
+// w21/979: a formatter was built per call, and every loaded page paid it again.
+describe("cached date formatting", () => {
+  const dates = ["2025-12-31", "2026-01-01", "2026-02-28", "2024-02-29"];
+
+  it("reads exactly as toLocaleDateString did, in English, German and Persian", () => {
+    for (const locale of ["en", "de", "fa"]) {
+      for (const iso of dates) {
+        const [y, m, d] = iso.split("-").map(Number);
+        const at = new Date(Date.UTC(y!, m! - 1, d));
+        expect(formatLedgerDate(iso, locale)).toBe(
+          at.toLocaleDateString(`${locale}-u-ca-gregory`, {
+            month: "long",
+            day: "numeric",
+            year: "numeric",
+            timeZone: "UTC",
+          }),
+        );
+        expect(formatLedgerDateShort(iso, locale)).toBe(
+          at.toLocaleDateString(`${locale}-u-ca-gregory`, {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+            timeZone: "UTC",
+          }),
+        );
+      }
+    }
+  });
+
+  it("gives the same text on a repeat, and keeps a malformed date as itself", () => {
+    expect(formatLedgerDate("2026-10-23", "de")).toBe(
+      formatLedgerDate("2026-10-23", "de"),
+    );
+    expect(formatLedgerDate("not-a-date", "en")).toBe("not-a-date");
+  });
+
+  it("formats thousands of dates quickly", () => {
+    const start = Date.now();
+    for (let i = 0; i < 20000; i += 1) {
+      const day = (i % 28) + 1;
+      formatLedgerDate(
+        `2026-${String((i % 12) + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`,
+        "en",
+      );
+    }
+    expect(Date.now() - start < 300).toBe(true);
+  });
+});
