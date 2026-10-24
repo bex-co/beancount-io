@@ -100,3 +100,39 @@ describe("the editor's first load of a changed entry", () => {
     ).toBe(true);
   });
 });
+
+// w21/937: after a save that stayed on screen, the target moved to H2 while the
+// detail screen behind still held the route's H1.
+describe("resolveSaveExit against the route's ID", () => {
+  it("returns to the detail screen, re-keyed, when the saved ID is not the one it holds", () => {
+    const routeEntryHash = "H1";
+    const target = applySavedIdentity(
+      { entryHash: routeEntryHash, sha256sum: "s1" },
+      { entryHash: "H2", newSha256sum: "s2" },
+    );
+    expect(target.entryHash).toBe("H2");
+    // A comment-only save keeps H2: compared with the target it read
+    // "unchanged"; compared with the route's ID it is the detail's H2.
+    expect(resolveSaveExit(target.entryHash, "H2")).toEqual({
+      kind: "unchanged",
+    });
+    expect(resolveSaveExit(routeEntryHash, "H2")).toEqual({
+      kind: "detail",
+      entryHash: "H2",
+    });
+  });
+
+  it("is decided against the route's ID in the screen", () => {
+    const source = require("fs")
+      .readFileSync(
+        require("path").join(__dirname, "..", "edit-transaction-screen.tsx"),
+        "utf8",
+      )
+      .replace(/\s+/g, "");
+    expect(
+      source.includes(
+        'constexit=resolveSaveExit(entryHash??"",saved.entryHash);',
+      ),
+    ).toBe(true);
+  });
+});

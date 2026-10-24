@@ -45,7 +45,6 @@
 - [882](./blocked/882.md) — Chart axes use the app language's money format while the amounts beside them use English (9 languages) — **blocked:** needs an owner product decision on one number convention for money (app language everywhere vs English everywhere), reversing w21/177 or w3/189
 - [895](./blocked/895.md) — Account detail's range chips filter only the chart, not the list below — **blocked:** owner picks a range-bounded list (backend date bound on all surfaces) or an "All entries" caption
 - [922](./blocked/922.md) — Changing to a payee with no history keeps the previous payee's accounts (owner's call) — **blocked:** owner decides whether a no-history or cleared payee resets an untouched fill (reverses w21/411)
-- [937](./937.md) — A successful save can still land on "This transaction was changed or removed"
 - [938](./938.md) — Edit's Reload can't find a changed entry on a day with more than 10 transactions
 - [939](./939.md) — Edit's refusal line number is off when the draft starts with blank lines
 - [940](./940.md) — Saving a file with `\r\r\n` line endings drops a CR on every line

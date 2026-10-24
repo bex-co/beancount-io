@@ -508,7 +508,12 @@ export const EditTransactionScreen = (): JSX.Element => {
         }
         if (!stillDirty) {
           savedOutRef.current = true;
-          const exit = resolveSaveExit(targetEntryHash, saved.entryHash);
+          // Against the route's ID, which the detail screen behind holds, not
+          // the one this save targeted: after a save that stayed on screen the
+          // target had moved, a comment-only save then read "unchanged" and
+          // went back to a detail still keyed on the old ID, which showed
+          // "changed or removed" (w21/937).
+          const exit = resolveSaveExit(entryHash ?? "", saved.entryHash);
           // An edit that kept the entry's hash leaves the detail screen behind
           // with the copy stashed when its row was opened. It predates the
           // edit, and the screen preferred it to the refetched entry, so the

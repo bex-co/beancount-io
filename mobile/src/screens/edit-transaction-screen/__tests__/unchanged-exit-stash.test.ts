@@ -41,7 +41,7 @@ describe("an edit that keeps the entry's hash", () => {
       )
       .replace(/\s+/g, "");
     const exit = src.indexOf(
-      "constexit=resolveSaveExit(targetEntryHash,saved.entryHash);",
+      'constexit=resolveSaveExit(entryHash??"",saved.entryHash);',
     );
     const here = src.indexOf("consthere=isHere();");
     const clear = src.indexOf(
