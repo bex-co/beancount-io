@@ -41,7 +41,9 @@ export async function clearServerScopedState(
   } else {
     await oauthTokenManager.cancelPendingRefreshes();
   }
-  await clearPendingAuthorization();
+  // Best effort: a Keychain that will not delete this must not leave the
+  // session in place after the server has revoked it (w21/967).
+  await clearPendingAuthorization().catch(() => undefined);
   ledgerVar(null);
   accountUsageVar({});
   merchantRecurringOverridesVar({});

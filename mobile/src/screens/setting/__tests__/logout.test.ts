@@ -130,3 +130,46 @@ describe("the Settings log out button", () => {
     expect(button.includes("onPress={onPress}disabled={busy}")).toBe(true);
   });
 });
+
+// w21/967: a failing step of the wipe left the user signed in on a revoked token.
+describe("performLogout when the local wipe fails", () => {
+  it("still marks the sign-out and does not reject", async () => {
+    const events: string[] = [];
+    const deps = dependencies(events);
+    deps.clearLocalState = async () => {
+      events.push("clear-local");
+      throw new Error("Keychain locked");
+    };
+    await performLogout(oauthSession, deps);
+    expect(events).toEqual([
+      "cancel-refreshes",
+      "revoke-oauth",
+      "clear-local",
+      "mark-signed-out",
+    ]);
+  });
+
+  it("clears the session even when the pending authorization will not delete, and the handler still routes", () => {
+    const fs = require("fs");
+    const path = require("path");
+    const read = (...parts: string[]) =>
+      fs
+        .readFileSync(path.join(__dirname, "..", "..", "..", ...parts), "utf8")
+        .replace(/\s+/g, "");
+    const actions = read("common", "server-url-actions.ts");
+    expect(
+      actions.includes(
+        "awaitclearPendingAuthorization().catch(()=>undefined);ledgerVar(null);",
+      ),
+    ).toBe(true);
+    const content = read("screens", "setting", "main-content.tsx");
+    expect(content.includes("try{awaitactionLogout(session);}catch{")).toBe(
+      true,
+    );
+    expect(
+      content.includes(
+        'setLoggingOut(false);}router.replace("/auth/welcome");',
+      ),
+    ).toBe(true);
+  });
+});

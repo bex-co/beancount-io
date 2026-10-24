@@ -36,7 +36,7 @@ describe("the auth-error sign-out", () => {
       // w21/115: Transactions' filters, which outlived the session.
       "resetTransactionFilters();",
       "clearCreateLedgerDraft(),",
-      "await clearPendingAuthorization();",
+      "await clearPendingAuthorization().catch(() => undefined);",
     ]) {
       expect(cleanup.includes(step)).toBe(true);
     }

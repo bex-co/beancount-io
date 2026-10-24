@@ -264,11 +264,15 @@ export const MainContent = () => {
                     setLoggingOut(true);
                     try {
                       await actionLogout(session);
-                      router.replace("/auth/welcome");
+                    } catch {
+                      // Still signed out as far as this device can tell: the
+                      // revocation has run, and Welcome is where it leads
+                      // (w21/967).
                     } finally {
                       loggingOutRef.current = false;
                       setLoggingOut(false);
                     }
+                    router.replace("/auth/welcome");
                   },
                 },
               ],

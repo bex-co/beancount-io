@@ -48,7 +48,10 @@ export async function performLogout(
     // Offline sign-out still removes every local credential and cached account.
   }
 
-  await dependencies.clearLocalState();
+  // A step of the wipe that fails does not stop the sign-out: it goes on to
+  // remember the choice and return, instead of leaving the user "signed in" on
+  // a token the server has revoked (w21/967).
+  await dependencies.clearLocalState().catch(() => undefined);
   // After the wipe, so it survives it. Best effort: sign-out itself is done.
   await dependencies.markSignedOut().catch(() => undefined);
 }
