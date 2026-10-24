@@ -40,8 +40,6 @@
 
 - [1014 — Anchor payment references to their written metadata](./1014.md) — major CLI silent omission; calculated native or generated references make real payments skip while their IDs are absent from the file, reproduced twice across CSV/Python and actual generated-ID producers, 2026-10-23.
 
-- [1013 — Match inferred and explicit source postings without consuming the wrong line](./1013.md) — reopened remaining major CLI matching gap after 8d1566b42; an inferred Cash line is consumed too early and the same statement doubles USD/EUR expenses despite duplicate skip, reproduced twice 2026-10-23.
-
 
 
 

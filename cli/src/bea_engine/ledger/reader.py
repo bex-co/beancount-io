@@ -241,13 +241,23 @@ def _amounts_declared(entry: Any, spelled: Any) -> bool:
         return True
     # Booking groups postings by currency, so the same facts can come back in
     # another order; match them one for one regardless of position (w5/1013).
-    unmatched = list(spelled.postings)
-    for booked in entry.postings:
-        match = next((stated for stated in unmatched if _posting_declared(booked, stated)), None)
-        if match is None:
-            return False
-        unmatched.remove(match)
-    return True
+    # The pairing is searched: an omitted amount agrees with any booked leg of
+    # its account, and handing it the first one took the leg the line states
+    # outright, leaving the inferred one unmatched.
+    stated = list(spelled.postings)
+    owner: dict[int, int] = {}
+
+    def claim(position: int, tried: set[int]) -> bool:
+        for index, line in enumerate(stated):
+            if index in tried or not _posting_declared(entry.postings[position], line):
+                continue
+            tried.add(index)
+            if index not in owner or claim(owner[index], tried):
+                owner[index] = position
+                return True
+        return False
+
+    return all(claim(position, set()) for position in range(len(entry.postings)))
 
 
 def _posting_declared(booked: Any, stated: Any) -> bool:
