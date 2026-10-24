@@ -5,10 +5,13 @@
  * decomposition is a base letter and combining marks, and the base takes the
  * character's length, so every index into the text stays where it was. Hangul
  * syllables, which also decompose, and anything without a base are left alone.
+ * Only Latin letters fold: a Cyrillic "й" is not an "и" with an accent, and
+ * folding it merged distinct names (w21/972).
  *
  * Import-free so the unit runner can load it.
  */
 const COMBINING_MARKS = /^[̀-ͯ]+$/u;
+const LATIN = /^\p{Script=Latin}$/u;
 
 export function foldAccents(text: string): string {
   // eslint-disable-next-line no-control-regex
@@ -20,6 +23,7 @@ export function foldAccents(text: string): string {
     folded +=
       decomposed.length > base.length &&
       base.length === char.length &&
+      LATIN.test(base) &&
       COMBINING_MARKS.test(decomposed.slice(base.length))
         ? base
         : char;

@@ -583,3 +583,19 @@ describe("accountOnlyCurrency", () => {
     ).toBe(true);
   });
 });
+
+// w21/972: the identity key keeps accents, so a different account is not named.
+describe("closedAccountNamed across accents", () => {
+  const dates = closeDatesOf([
+    { account: "Expenses:Café", closedAt: "2026-06-30" },
+    { account: "Expenses:Cafe", closedAt: null },
+  ]);
+
+  it("does not call a different account closed", () => {
+    expect(closedAccountNamed("Expenses:Cafe", "2026-10-23", dates)).toBe(null);
+    expect(closedAccountNamed("Expenses:Café", "2026-10-23", dates)).toEqual({
+      account: "Expenses:Café",
+      closedAt: "2026-06-30",
+    });
+  });
+});

@@ -544,3 +544,24 @@ describe("the picker's Create row across Latin accents", () => {
     );
   });
 });
+
+// w21/972: folding accents in the identity key made Expenses:Cafe and
+// Expenses:Café one account to the Create row and the closed-account notice.
+describe("accent-distinct accounts stay distinct", () => {
+  const writer = { canWrite: true, loading: false };
+
+  it("offers Create for a whole path beside an account that differs by an accent", () => {
+    expect(
+      showCreateBelowResults("Expenses:Cafe", ["Expenses:Café"], writer),
+    ).toBe(true);
+    expect(
+      showCreateBelowResults("Expenses:Café", ["Expenses:Café"], writer),
+    ).toBe(false);
+  });
+
+  it("still treats a plain word as a search that Café satisfies", () => {
+    expect(showCreateBelowResults("cafe", ["Expenses:Café"], writer)).toBe(
+      false,
+    );
+  });
+});

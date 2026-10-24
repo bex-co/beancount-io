@@ -10,6 +10,7 @@ import {
   openOn,
   type CloseDates,
 } from "../../common/account-close-dates";
+import { foldAccents } from "../../common/accent-fold";
 import { filterAccounts } from "../../common/account-search";
 import {
   topAccounts,
@@ -209,15 +210,20 @@ export function showCreateBelowResults(
       return words.every((word) => name.includes(word));
     });
   }
-  const joined = words.join("");
+  // A single word is a search, not a name: "cafe" is a hit on `Expenses:Café`,
+  // while a path typed whole is compared exactly above (w21/929, w21/972).
+  const looseWords = foldAccents(nameKey(query.trim()))
+    .split(/\s+/)
+    .filter(Boolean);
+  const joined = looseWords.join("");
   return !results.some((account) => {
     // A hyphenated or underscored segment also offers its parts as names.
-    const segments = nameKey(account)
+    const segments = foldAccents(nameKey(account))
       .split(":")
       .flatMap((segment) => [segment, ...segment.split(/[-_]/)]);
     return (
       segments.includes(joined) ||
-      words.every((word) => segments.includes(word))
+      looseWords.every((word) => segments.includes(word))
     );
   });
 }

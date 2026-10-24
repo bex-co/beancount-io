@@ -314,3 +314,16 @@ describe("account search across Latin accents", () => {
     expect(fuzzyMatch("zz", "Expenses:Food")).toBe(0);
   });
 });
+
+// w21/972: only Latin letters fold, and only in search.
+describe("foldAccents is Latin only", () => {
+  it("leaves other scripts as they are", () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { foldAccents } = require("../accent-fold");
+    expect(foldAccents("Мой")).toBe("Мой");
+    expect(foldAccents("Ёлка")).toBe("Ёлка");
+    expect(foldAccents("Café")).toBe("Cafe");
+    expect(fuzzyMatch("мои", "Expenses:Мой")).toBe(0);
+    expect(fuzzyMatch("cafe", "Expenses:Café") > 0).toBe(true);
+  });
+});
