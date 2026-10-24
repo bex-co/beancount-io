@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [980 — Preserve trade dependencies in same-day bulk ordering](./980.md) — reopened major CLI gap: a labeled three-account transfer chain is bookable, but atomic add refuses it and partial add strands an avoidable short. Original acceptance and nearby controls rechecked 2026-10-24.
+
 
 
 
