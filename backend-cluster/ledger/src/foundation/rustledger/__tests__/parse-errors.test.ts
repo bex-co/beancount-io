@@ -1,5 +1,6 @@
 import type { BeancountError } from "@rustledger/wasm";
-import { locateParseErrors } from "../parse-errors";
+import { dropUnparsedTransactions, locateParseErrors } from "../parse-errors";
+import type { DirectiveJson } from "@rustledger/wasm";
 
 /**
  * w21/187: a syntax error in any file came back as one `LOAD` error per file,
@@ -101,6 +102,46 @@ describe("locateParseErrors with a repeated error", () => {
     expect(result.map((e) => [e.file, e.line])).toEqual([
       ["main.bean", 90],
       ["main.bean", 91],
+    ]);
+  });
+});
+
+// w21/900: the engine kept the header it could read of a transaction that failed
+// to parse, and listed it with no postings.
+describe("dropUnparsedTransactions", () => {
+  const txn = (date: string, payee: string, postings: unknown[] = []) =>
+    ({
+      type: "transaction",
+      date,
+      payee,
+      narration: "",
+      postings,
+    }) as unknown as DirectiveJson;
+  const files = {
+    "main.bean": [
+      '2026-10-21 * "Quiet"',
+      '2026-10-22 * "Qa Joe"s"',
+      "  Expenses:Food  5 USD",
+    ].join("\n"),
+  };
+  const bad = located("main.bean", 2);
+
+  it("drops the posting-less half of the header that failed to parse", () => {
+    const half = txn("2026-10-22", "Qa Joe");
+    const quiet = txn("2026-10-21", "Quiet");
+    expect(dropUnparsedTransactions([quiet, half], [bad], files)).toEqual([
+      quiet,
+    ]);
+  });
+
+  it("keeps a transaction that has postings, or sits on no bad line", () => {
+    const withPostings = txn("2026-10-22", "Qa Joe", [{ account: "A" }]);
+    const elsewhere = txn("2026-10-21", "Quiet");
+    expect(
+      dropUnparsedTransactions([withPostings, elsewhere], [bad], files),
+    ).toEqual([withPostings, elsewhere]);
+    expect(dropUnparsedTransactions([elsewhere], [], files)).toEqual([
+      elsewhere,
     ]);
   });
 });

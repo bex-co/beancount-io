@@ -7,7 +7,7 @@ import type {
   LedgerOptions,
   QueryResult,
 } from "@rustledger/wasm";
-import { locateParseErrors } from "./parse-errors";
+import { dropUnparsedTransactions, locateParseErrors } from "./parse-errors";
 import { restoreEntrySortOrder } from "./entry-sort-order";
 import { dropPaddingWithinTolerance } from "./pad-tolerance";
 import { errorsHiddenByUnusedPads } from "./pad-recheck";
@@ -652,10 +652,14 @@ async function parseLedgerFilesUncached(
     entryPoint,
     await loadRustledger(),
   );
-  let directives = restoreEntrySortOrder(
-    raw.directives,
+  let directives = dropUnparsedTransactions(
+    restoreEntrySortOrder(
+      raw.directives,
+      stripResult?.strippedFiles ?? scoped,
+      entryPoint,
+    ),
+    located,
     stripResult?.strippedFiles ?? scoped,
-    entryPoint,
   );
   let errors = located;
   let paddingTransactions = raw.paddingTransactions;
