@@ -18,6 +18,10 @@ type LocatingModule = {
  * `parseMultiFile` returns the same errors located (`P0012`, the file, line
  * and column); its messages lead with the file name, which is a field here.
  *
+ * The engine can report one bad line twice with the same message, which read
+ * as several problems and counted several times on the bell: an error repeating
+ * a file, line and message goes once (w21/899).
+ *
  * Errors stay as they were when there is no summary, when the module cannot
  * locate, or when it finds nothing to replace them with.
  */
@@ -50,5 +54,12 @@ export function locateParseErrors(
       ? error.message.replace(`${error.file}: `, "")
       : error.message,
   }));
-  return [...unprefixed, ...rest];
+  const seen = new Set<string>();
+  const distinct = unprefixed.filter((error) => {
+    const key = JSON.stringify([error.file, error.line, error.message]);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  return [...distinct, ...rest];
 }

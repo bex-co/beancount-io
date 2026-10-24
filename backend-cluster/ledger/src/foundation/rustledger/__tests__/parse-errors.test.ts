@@ -87,3 +87,20 @@ describe("locateParseErrors", () => {
     ).toEqual(summaries);
   });
 });
+
+// w21/899: one bad line came back twice with the same message.
+describe("locateParseErrors with a repeated error", () => {
+  it("keeps one error per file, line and message", () => {
+    const result = locateParseErrors([summary("main.bean")], {}, "main.bean", {
+      parseMultiFile: () => [
+        located("main.bean", 90),
+        located("main.bean", 90),
+        located("main.bean", 91),
+      ],
+    });
+    expect(result.map((e) => [e.file, e.line])).toEqual([
+      ["main.bean", 90],
+      ["main.bean", 91],
+    ]);
+  });
+});
