@@ -1,0 +1,19 @@
+{
+  "target": "Glama existing Beancount.io connector",
+  "observedAtUTC": "2026-10-24T00:53:46Z",
+  "adminUrl": "https://glama.ai/mcp/connectors/io.beancount/beancount/admin",
+  "accountProfileComplete": true,
+  "termsAccepted": true,
+  "connectorClaimVerified": false,
+  "dnsProofRecordName": "_glama-claim.beancount.io",
+  "dnsProofValue": "Account-bound public verification value is prepared privately and shown in the publisher dialog; omitted here",
+  "dnsProofValueSHA256": "4eaff609b57f793da5c479c26525e0f3dd0af7d43f1a4eabc60d18db4ccacce3",
+  "dnsReadback": "Current public TXT query returns no value",
+  "httpProofStatus": 404,
+  "dnsProviderEntry": "https://dash.cloudflare.com/login",
+  "currentGate": "Existing saved Google identity requires normal Cloudflare sign-in; its newly displayed subscription/privacy/cookie agreement awaits a concrete action-time decision, or the publisher adds the prepared TXT record.",
+  "testProfileConfigured": false,
+  "health": "Unhealthy; 0.0% over 20 days; latest displayed test 2026-10-24 00:32 UTC",
+  "nextAction": "Publish and verify the exact account-bound domain proof, claim the existing connector, configure the private dedicated synthetic Test Profile and verify a full healthy day.",
+  "limit": "Completed account and terms are not a domain claim, ledger authorization, health repair or duplicate connector submission."
+}
