@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1075** — [Respect early field focus in New Entry](./1075.md)
+
 - **1074** — [Keep AI Fill cancellation quiet when going Back](./1074.md)
 
 - **1073** — [Keep target account focus when AI Fill finishes](./1073.md)
