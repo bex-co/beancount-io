@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1052** — [Keep BQL numeric minus signs before their digits in Persian](./1052.md)
+
 - **1051** — [Give Settings option values usable width on narrow screens](./1051.md)
 
 - **1050** — [Retry a failed Collaborators settings read in place](./1050.md)
