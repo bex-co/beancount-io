@@ -85,3 +85,6 @@
 - [928](./928.md) — The account picker hides Create when the text appears inside another account ("car" in CreditCard)
 - [929](./929.md) — Account picker search ignores accents and offers a look-alike Expenses:Cafe
 - [930](./930.md) — A closed exact account name is explained only when the picker search has no other hits
+- [931](./931.md) — The Cash flow chart's VoiceOver label reads float leftovers ("-$0.0000000000000018")
+- [932](./932.md) — Reports chart summaries read "$222.6" for $222.58
+- [933](./933.md) — Persian chart y-axis ticks use Latin digits under Persian x-axis labels
