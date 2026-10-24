@@ -34,8 +34,6 @@
 
 - **1029** — Preserve exact amounts in Money movement averages (45–60m, dashboard, A2) ← dashboard QA; residual of 1015 ([note](./1029.md))
 
-- **1028** — Preserve ledger dates in shared chart labels (45–55m, dashboard, A2/A3) ← dashboard QA; residual of 285 ([note](./1028.md))
-
 
 
 

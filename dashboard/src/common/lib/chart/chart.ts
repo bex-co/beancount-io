@@ -39,8 +39,15 @@ export const formatYAxisNumber = (numberString: string | number): string => {
   return numbro(numberString).format("0.0a");
 };
 
-import { parseISO, format, getISOWeek, getISOWeekYear } from "date-fns";
+import {
+  parseISO,
+  format,
+  getISOWeek,
+  getISOWeekYear,
+  isValid,
+} from "date-fns";
 import type { ChartInterval } from "@/common/types/chart";
+import { isoDateToCalendar } from "@/common/components/ui/date-picker-utils";
 
 /**
  * Format a date string for chart axis display based on interval
@@ -57,7 +64,11 @@ export const formatDateAxis = (
 ): string => {
   // Strip time portion so ISO timestamps are treated as the plain calendar date
   const datePart = date.includes("T") ? date.split("T")[0] : date;
-  const dateObj = parseISO(datePart);
+  // A civil day, held in UTC: the local midnight of a day the browser's zone
+  // skipped rolls into the next, which labeled Kiritimati's 1994-12-31 point
+  // January 1995 (w4/1028). Other date shapes parse as before.
+  const civil = isoDateToCalendar(datePart);
+  const dateObj = isValid(civil) ? civil : parseISO(datePart);
 
   if (interval === "yearly") {
     return format(dateObj, "yyyy");

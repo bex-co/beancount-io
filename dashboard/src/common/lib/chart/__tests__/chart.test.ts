@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { afterEach, describe, it, expect } from "vitest";
 import {
   formatYAxisNumber,
   formatDateAxis,
@@ -261,4 +261,52 @@ describe("Chart Utils", () => {
       });
     });
   });
+});
+
+/**
+ * A ledger date is a civil day, labeled the same in every browser zone
+ * (w4/1028). Kiritimati skipped 1994-12-31 and Apia 2011-12-30; a local
+ * midnight on either rolls into the next day.
+ */
+describe("formatDateAxis in zones that skipped a day", () => {
+  const originalTz = process.env.TZ;
+  afterEach(() => {
+    process.env.TZ = originalTz;
+  });
+
+  it.each(["UTC", "Pacific/Kiritimati"])(
+    "keeps 1994-12-31 in December, Q4 and 1994 in %s",
+    (zone) => {
+      process.env.TZ = zone;
+      expect(formatDateAxis("1994-12-31", "monthly")).toBe("1994-12");
+      expect(formatDateAxis("1994-12-31", "quarterly")).toBe("1994-Q4");
+      expect(formatDateAxis("1994-12-31", "yearly")).toBe("1994");
+      // Neighbours and a timestamp's date part, as before.
+      expect(formatDateAxis("1994-11-30", "monthly")).toBe("1994-11");
+      expect(formatDateAxis("1995-01-31", "monthly")).toBe("1995-01");
+      expect(formatDateAxis("1994-12-31T23:00:00Z", "monthly")).toBe("1994-12");
+    },
+  );
+
+  it.each(["UTC", "Pacific/Apia"])(
+    "keeps the daily label 2011-12-30 in %s",
+    (zone) => {
+      process.env.TZ = zone;
+      expect(
+        ["2011-12-29", "2011-12-30", "2011-12-31"].map((day) =>
+          formatDateAxis(day, "daily"),
+        ),
+      ).toEqual(["2011-12-29", "2011-12-30", "2011-12-31"]);
+    },
+  );
+
+  it.each(["UTC", "Pacific/Apia", "Pacific/Kiritimati"])(
+    "keeps ISO week-years and leap days in %s",
+    (zone) => {
+      process.env.TZ = zone;
+      expect(formatDateAxis("2021-01-01", "weekly")).toBe("2020-W53");
+      expect(formatDateAxis("2011-12-30", "weekly")).toBe("2011-W52");
+      expect(formatDateAxis("2024-02-29", "daily")).toBe("2024-02-29");
+    },
+  );
 });
