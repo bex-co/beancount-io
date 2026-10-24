@@ -82,3 +82,6 @@
 - [925](./925.md) — Add Budget's empty Account row reads to VoiceOver as "Expenses:Groceries" and is nearly invisible in light mode
 - [926](./926.md) — Green and red figures on Home and Budget cards are below 4.5:1 contrast in light mode
 - [927](./927.md) — Persian or Arabic account paths read child first on four more screens
+- [928](./928.md) — The account picker hides Create when the text appears inside another account ("car" in CreditCard)
+- [929](./929.md) — Account picker search ignores accents and offers a look-alike Expenses:Cafe
+- [930](./930.md) — A closed exact account name is explained only when the picker search has no other hits
