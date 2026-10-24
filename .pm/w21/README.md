@@ -102,3 +102,6 @@
 - [952](./952.md) — Merchant detail stops loading at a hidden page cap that shrinks after every edit
 - [953](./953.md) — "Back to Files" stacks a second copy of the whole tab bar
 - [954](./954.md) — w21/544 reopened: "View errors" still stacks a second Notifications screen
+- [955](./955.md) — Receipt photos are uploaded at any size, so oversized ones always fail to parse
+- [956](./956.md) — Receipt Try Again after a failed parse uploads the photo again
+- [957](./957.md) — A failed shutter tap on iPad or with haptics off gives no feedback
