@@ -1,6 +1,6 @@
 # GitHub and VS Code discovery preparation
 
-Updated 2026-10-23 UTC; original dated observations below retain their limits. [GitHub's documented inclusion route](https://github.blog/ai-and-ml/generative-ai/how-to-find-install-and-manage-mcp-servers-with-the-github-mcp-registry/) asks publishers with an existing official-registry record to contact `partnerships@github.com`.
+Updated 2026-10-24 UTC; original dated observations below retain their limits. [GitHub's documented inclusion route](https://github.blog/ai-and-ml/generative-ai/how-to-find-install-and-manage-mcp-servers-with-the-github-mcp-registry/) asks publishers with an existing official-registry record to contact `partnerships@github.com`.
 `nomination-email.md` records the public-safe request actually sent on
 2026-10-23 at 20:30 UTC. The mail provider confirmed sending and the Sent
 message was inspected; [receipt](./nomination-receipt.json). Recipient delivery,
@@ -110,3 +110,20 @@ records. Those are separate observations from review state and native client
 rendering. The operator/sending gate is now cleared; GitHub curation and the
 existing VS Code native discovery/OAuth/query/preview ownership remain open.
 Do not send another nomination while this one awaits response.
+
+## Recipient intake acknowledged — 2026-10-24 UTC observation
+
+The actual nomination conversation now includes an automated reply from
+`partnerships@github.com` with subject **[Request received] Beancount.io hosted
+MCP — GitHub MCP Registry inclusion**. Its displayed send time is2026-10-23
+20:30UTC. Gmail's expanded details show reply-to `partnerships@github.com`,
+mailed-by `github.com` and signed-by `github.com`. The message confirms intake
+received the request and that the team will review/respond.
+
+This clears uncertainty over automated intake receipt, not human review,
+eligibility, curation acceptance or public publication. No substantive feedback
+is present in this observed reply. The [receipt](./nomination-receipt.json)
+records the new observation while omitting the private support-ticket number,
+mailbox/thread URL and publisher account details. No reply or duplicate
+nomination was sent. Continue monitoring this existing request; actual GitHub/
+VS Code public/native verification remains w6/m9/t006.

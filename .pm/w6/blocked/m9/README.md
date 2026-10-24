@@ -173,3 +173,11 @@ archived under done/ with the fresh active-registry/empty-default-feed control.
 The public result remains pending curation. t006 explicitly owns GitHub
 acceptance/publication and actual gallery installation/QA, alongside existing
 w1/m34/t003 native ownership. The milestone stays blocked on those real outcomes.
+
+## GitHub intake acknowledgment observed — 2026-10-24 UTC
+
+The actual nomination thread contains GitHub's automated received-request
+response with sender/reply-to partnerships@github.com and github.com signature.
+The public-safe receipt is updated. No substantive feedback, new nomination,
+human review decision or public inclusion is claimed; t006 retains curation
+and actual public/native follow-through. Other gallery tasks remain independent.
