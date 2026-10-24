@@ -1,6 +1,6 @@
 # w6 · m10 — List the connector in independent web directories
 
-**Worker:** worker1 **Goal:** People comparing accounting MCP servers find accurate, usable remote listings on the eligible independent directories. **Status:** blocked (t001/t003/t009 done and archived; LobeHub public/claimed with correct preferred HTTP config; MCPMarket review, LobeHub crawler correction and native accounting verification remain)
+**Worker:** worker1 **Goal:** People comparing accounting MCP servers find accurate, usable remote listings on the eligible independent directories. **Status:** todo (t001/t003/t009 done; independent MCPServers.org native t010 and LobeHub correction t012 are open; MCPMarket review and LobeHub native access remain blocked)
 
 **Implementation estimate:** ~2h, excluding external review queues and the standing closing tasks.
 
@@ -12,8 +12,11 @@
 | [t001](done/t001.md) | Submit or correct MCPServers.org's free remote listing — **DONE** | 30m | w6/m8/t001 |
 | [t002](t002.md) | Submit or correct MCPMarket's free remote listing — **BLOCKED: free repository submission** | 30m | w6/m8/t001 |
 | [t003](done/t003.md) | Establish LobeHub eligibility and prepare its supported connector listing — **DONE** | 45m | w6/m8/t001, t009 |
-| [t004](t004.md) | Verify the independent-directory listings after moderation | 15m | t001, t002, t003 |
-| [t005](t005.md) | Adoption surface | 30m | t004, t009 |
+| [t010](t010.md) | Complete MCPServers.org advertised native accounting checks | 45m | t001 |
+| [t011](t011.md) | Complete LobeHub native OAuth and live metadata — **BLOCKED** | 45m | t003, t009 |
+| [t012](t012.md) | Correct LobeHub crawler stdio deployment and verify search indexing | 30m | t003 |
+| [t004](t004.md) | Verify the independent-directory listings after moderation | 15m | t001, t002, t003, t010, t011, t012 |
+| [t005](t005.md) | Adoption surface | 30m | t004, t009, t010, t011, t012 |
 | [t006](t006.md) | Simplify | 30m | t005 |
 | [t007](t007.md) | Test coverage | 45m | t005, t006 |
 | [t008](t008.md) | Closeout | 15m | t007 |
@@ -64,9 +67,9 @@ This milestone returns from `blocked/` because newly materialized submission/rec
 
 An actual submission receipt closes only its receipt-stage task. Existing native/publication criteria and final verification remain required for this milestone's DoD. Preserve previous blocker history above; reassess concrete tool/account/access requirements at the actual action, carry prior authorization forward, and block only the affected step when a genuinely unmet condition remains. No task waits for another platform's review merely because it is later in the table.
 
-The earlier exclusion of Claude/ChatGPT was the 2026-10-20 scope decision. The owner's 2026-10-23 all-inventory request now places those separate application follow-ups in [m11](../m11/README.md), without duplicating this milestone's targets.
+The earlier exclusion of Claude/ChatGPT was the 2026-10-20 scope decision. The owner's 2026-10-23 all-inventory request now places those separate application follow-ups in [m11](../blocked/m11/README.md), without duplicating this milestone's targets.
 
-## Blocked — current native login and remaining review, 2026-10-23 UTC
+## Historical native/review blocker snapshot — 2026-10-23 UTC
 
 - **t009/t003:** account/GitHub/bex-co access and actual canonical publication now complete; both finite tasks are archived. The preferred HTTP URL and public44/64/4capability metadata are verified. No duplicate or prior GitHub decision remains.
 - **t004 — LobeHub:** the public page retains an erroneous crawler stdio option that supported owner fields cannot erase. The actual native web OAuth flow is prepared for only the synthetic ledger and requests identity/offline/profile/email/read/write/admin; its final approval is pending. **Unblock/owners:** publisher approves that specific accounting grant; worker completes callback/native query/preview/unchanged-state; LobeHub removes/corrects the malformed crawler deployment through a supported path.
@@ -96,3 +99,12 @@ known crawler-generated stdio correction. MCPMarket remains in its original
 review queue. Prior LobeHub terms, publisher login and GitHub/bex-co permission
 decisions are complete and are not requested again. Every other pending task
 retains its actual acceptance; the milestone is not closed from publication alone.
+
+## Current execution and blockers — 2026-10-24 UTC
+
+The milestone returns from blocked/ for independent t010 MCPServers.org native checks and t012 LobeHub crawler/search correction. t011 retains LobeHub native accounting and live metadata provenance. These outcomes are extracted from the aggregate t004; none waits for MCPMarket moderation. LobeHub publisher/terms/GitHub/bex-co/publication are already complete.
+
+- **t002 — Unblock:** MCPMarket publishes or supplies actionable review feedback on the original free repository submission; worker verifies/corrects hosted endpoint/OAuth and connection. Owners: MCPMarket, then worker. Review advertised4–6weeks from2026-10-21; no duplicate or paid submission.
+- **t011 — Unblock:** supported browser control is restored/rechecked through044 and actual required synthetic-only accounting consent completes; worker verifies native query/preview/discovery. Owner: worker, publisher only for a genuinely unmet concrete authorization.
+- **t012:** worker can inspect supported correction routes and prepare the exact fix now. If only LobeHub can change crawler data or indexing, park that affected step with its real request/route and **Unblock:** corrected public deployment/search behavior. Owner: LobeHub for platform-only changes, worker for verified results.
+- **t004–t008 — Unblock:** all actual per-directory outcomes and closing prerequisites hold. Owner: worker. Preserve the original observable public/native DoD.

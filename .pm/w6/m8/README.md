@@ -1,6 +1,6 @@
 # w6 · m8 — Claim and publish the hosted connector on Smithery and Glama
 
-**Worker:** worker1 **Goal:** Users find one accurate, owned, authenticated listing per platform for the existing hosted MCP endpoint. **Status:** blocked (t001 done; Glama ownership and authenticated health verified; remaining tasks depend on removed Smithery intake or w2/088 full healthy-day observation)
+**Worker:** worker1 **Goal:** Users find one accurate, owned, authenticated listing per platform for the existing hosted MCP endpoint. **Status:** todo (t001 done; independent Glama native task t009 is open; Smithery intake and the separate w2/088 full healthy-day observation remain blocked)
 
 **Implementation estimate:** ~3h, excluding external review queues and the standing closing tasks.
 
@@ -11,8 +11,9 @@
 | [t001](./done/t001.md) | Audit imported listings and prepare shared submission materials — **DONE** | 30m | — |
 | [t002](./t002.md) | Publish or claim Smithery's existing hosted-server listing — **BLOCKED** | 45m | t001 |
 | [t003](./t003.md) | Align the existing Glama connector after w2/088's ownership and health repair — **BLOCKED** | 45m | t001, w2/088 |
-| [t004](./t004.md) | Verify both public listings through fresh authenticated connections | 60m | t002, t003 |
-| [t005](./t005.md) | Adoption surface | 30m | t004 |
+| [t009](./t009.md) | Verify Glama native accounting independently of Smithery review | 45m | t001 |
+| [t004](./t004.md) | Verify both public listings through fresh authenticated connections | 60m | t002, t003, t009 |
+| [t005](./t005.md) | Adoption surface | 30m | t004, t009 |
 | [t006](./t006.md) | Simplify | 30m | t005 |
 | [t007](./t007.md) | Test coverage | 45m | t005, t006 |
 | [t008](./t008.md) | Closeout | 15m | t007 |
@@ -47,10 +48,20 @@
 - [Glama connector FAQ](https://glama.ai/mcp/faq)
 - [Existing w2/088 health/claim follow-up](https://github.com/bex-co/beancount-io/blob/main/.pm/w2/blocked/088.md)
 
-## Blocked
+## Historical blocker snapshot
 
 - **t003:** ownership and private synthetic-only read authentication are verified. Saving the Bearer API key produces a successful1348ms check at2026-10-24T07:01:01Z; public health is Healthy with44tools, and saved configuration survives reload. **Unblock:** Glama records a full healthy day, earliest recheck2026-10-25T07:01:01Z under w2/088, then worker completes original metadata/native acceptance. **Owners:** Glama for actual checks, worker for observation and dependent verification. Renew monitoring access before2026-11-23UTC. Account/domain/test-access preparation is complete.
 
 - **t002:** the signed-in legacy Smithery wizard returns 403 “Updating servers has been removed”; the candidate listing remains not found. **Unblock:** a working supported direct-directory intake/claim route, followed by ownership/scan and fresh connection proof. **Owner:** Smithery/Arcade and publisher. Details and preserved packet: t002; d9c3490f0.
 
 - **Milestone / t004–t008:** t002 and t003 are unresolved prerequisites. Fresh discovery-to-OAuth verification, adoption, simplification/coverage review and closeout depend on those actual listings; none is marked done. **Unblock:** resolve Smithery’s supported direct listing intake and existing w2/088 Glama claim/test-profile/full-day health, then complete each dependent task in order. **Owners:** platform/publisher for external gates; repository worker for dependent checks. All independent shared materials shipped in d9c3490f0.
+
+## Current execution and blockers — 2026-10-24 UTC
+
+The milestone returns from blocked/ because t009 is a newly isolated independent native task, based on already-observed ownership and authenticated health. This does not claim Smithery intake or the full-day condition cleared. t009 starts from done/t001 without waiting for either; use w6/044 if browser control is needed. t004 is final aggregate acceptance, not a gate on independent native work.
+
+- **t002 — Unblock:** Smithery/Arcade supplies a supported surviving direct-directory route, then worker submits/claims and verifies. Owner: platform/publisher, then worker.
+- **t003 — Unblock:** w2/088 records a full actual healthy day at or after2026-10-25T07:01:01Z, then worker aligns/verifies metadata. Owners: Glama for checks, worker for observation. Existing access/claim decisions are complete; w6/045 coordinates the2026-11-23UTC expiry.
+- **t004–t008 — Unblock:** their own prerequisites and actual final native/public DoD hold. Owner: worker after the recorded platform gates.
+
+The original public/native DoD and standing closing tasks are unchanged. Native evidence is updated in the host guide only when ADR019 fixtures and real-host proof support it.

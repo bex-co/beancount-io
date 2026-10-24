@@ -2,28 +2,50 @@
 
 **Worker:** worker1 — general-purpose adoption worker; accepts the next highest-impact milestone across packages, topics, and A1/A2/A3 rather than owning a permanent specialty.
 
-## Current work and blocker triage — 2026-10-24 UTC
+## Current listing follow-through plan — 2026-10-24 UTC
+
+Source: the owner's request to put every remaining action from the 17-target listing review into w6. This is board arrangement only: no new external check, submission, consent, payment, publication or credential renewal is claimed. Existing m8–m11 and 041/042 remain the owners; eight independent implementation tasks and three sub-hour inbox notes fill the execution/operational gaps without another milestone.
+
+| Work | Owner / next action | Gate and sequencing |
+| --- | --- | --- |
+| One current 17-target tracker | [043](043.md) — reconcile duplicated state, exact operation/install links, current owners, real check times and dated next checks/triggers | Actionable now; external reviews do not block documentation reconciliation. |
+| Supported browser control | [044](044.md) — actual read-only reconnect/retest, then supported update if still required | Last extension failure is historical until reproduced; keep original sessions and approvals. |
+| Credentials through review/monitoring | [045](045.md) — private renewal responsibility and deadlines | Docker expires end 2026-10-31UTC, assess by10-29; Glama expires end 2026-11-23UTC, assess by11-20. No automation or secret on board. |
+| Glama native + Smithery intake | [m8/t009](m8/t009.md) independent native; [m8/t002](m8/t002.md) supported replacement intake | Glama health-day owner remains w2/088 (earliest2026-10-25T07:01:01Z). Neither wait serializes independent native work. |
+| Docker current native session | [m9/t015](m9/t015.md) — investigate later Unauthorized and repair supported OAuth | Earlier successful rehearsal is retained; expiry is not assumed without diagnosis. |
+| Developer review/public/native | [m9/t004](m9/t004.md) Cline; [t016](m9/t016.md) official Cursor; [t017](m9/t017.md) Docker; [t018](m9/t018.md) approved GitHub/VS Code | Follow existing records independently. Public listing and native installation remain required after receipts/approval. |
+| Already-public directory native paths | [m10/t010](m10/t010.md) MCPServers.org; [t011](m10/t011.md) LobeHub accounting/live metadata | No dependency on MCPMarket review. LobeHub's separate final native grant/browser condition remains explicit. |
+| LobeHub deployment/search correctness | [m10/t012](m10/t012.md) — supported crawler correction and actual name search | Start supported-route investigation now; platform-only changes get their exact unblock condition. |
+| Existing remaining applications | [m11](blocked/m11/README.md) — original ChatGPT/Claude account access; Awesome Remote maintainer waiver/review/merge | No duplicate application/PR, repeated waiver comment or fake engagement. |
+| Unsubmitted gated channels | [041](blocked/041.md) MCP.so fee/free route; [042](blocked/042.md) PulseMCP reopening | Planning does not authorize payment or invent a working intake. |
+| Completed baseline / no intake | Official Registry release owner, published cursor.directory and source-backed Windsurf no-marketplace | Check release drift or an actually opened route; do not create phantom submissions. |
+
+**Execution order:** reconcile043 and diagnose m9/t015; recheck044 and record045 deadlines; then perform each independently available native/correction/review action. Complete a platform's due observation or real feedback when available and continue all other tasks. Aggregate verification and standing closing tasks retain their full DoDs. A blocked platform never ends the w6 loop while another actionable item remains.
+
+**Board after arrangement:**70 pending leaves; m8/m9/m10 are live because independent work is materialized, while m2/m6.5/m11 remain under blocked/. No completed task is reopened. The dated snapshots below describe earlier board states, including their old totals and blockers.
+
+## Historical work and blocker triage — 2026-10-24 UTC
 
 | Milestone | Adoption outcome | Current state |
 | --- | --- | --- |
 | [m6](done/m6/README.md) | Install the submitted local-ledger skills from ClawHub without a repository checkout. | Done: historical standalone release verified 13 versions, OpenClaw119/119files, 12supported Hermes installs112/112files, default search and retained first queries. m6.5 subsequently retires those listings for the one suite entry. |
 | [m6.5](./blocked/m6.5/README.md) | Install and update the ledger workflows through one Beancount.io suite. | Public `@puncsky/beancount-io` 0.4.0 and all thirteen standalone listings retired. Nine of twelve tasks done; other-channel grouping/whole-suite refresh implemented, third-party index read-backs and Hermes admission remain. |
 | [m7](done/m7/README.md) | Connect OpenClaw and Hermes to the existing hosted Beancount.io MCP endpoint. | Done; separate from local ClawHub skill distribution. |
-| [m8](blocked/m8/README.md) | Publish or claim the hosted connector on Smithery and Glama. | Glama ownership and private synthetic-only read monitoring are verified; public health is Healthy with44tools. Full healthy-day observation remains under w2/088, earliest recheck2026-10-25T07:01:01Z; supported Smithery intake is separate. |
-| [m9](blocked/m9/README.md) | Complete developer-marketplace submissions, then verify published/native paths. | t011 official Cursor, t012 Docker PR #6042 and t014 GitHub nomination actually submitted. Docker native QA/private reviewer form complete; t002 archived. GitHub curator approval is received, with public/native verification pending. Other platform reviews remain. |
-| [m10](blocked/m10/README.md) | Finish the independent-directory submissions and publication checks. | LobeHub is accepted/public/claimed; t009/t003 archived. Native accounting grant/journey and crawler stdio correction remain t004. MCPServers.org t001 is done; MCPMarket retains its original pending receipt. |
+| [m8](m8/README.md) | Publish or claim the hosted connector on Smithery and Glama. | Glama ownership and private synthetic-only read monitoring are verified; public health is Healthy with44tools. Full healthy-day observation remains under w2/088, earliest recheck2026-10-25T07:01:01Z; supported Smithery intake is separate. |
+| [m9](m9/README.md) | Complete developer-marketplace submissions, then verify published/native paths. | t011 official Cursor, t012 Docker PR #6042 and t014 GitHub nomination actually submitted. Docker native QA/private reviewer form complete; t002 archived. GitHub curator approval is received, with public/native verification pending. Other platform reviews remain. |
+| [m10](m10/README.md) | Finish the independent-directory submissions and publication checks. | LobeHub is accepted/public/claimed; t009/t003 archived. Native accounting grant/journey and crawler stdio correction remain t004. MCPServers.org t001 is done; MCPMarket retains its original pending receipt. |
 | [m11](blocked/m11/README.md) | Complete existing ChatGPT/Claude reviews and remote-community distribution. | t001/t002 exact pages load but require original submitting account/organization access; t003 is actually submitted as PR #2753 with green upstream check, documented Agent review opted in and star waiver requested; awaiting maintainer decision/merge. All 17 targets retain owners. |
 
 
-### Current submission priority and coverage
+### Historical submission priority and coverage
 
-[m9/t011](blocked/m9/done/t011.md), the official Cursor application, is submitted with an actual accepted receipt after explicit final agreement confirmation on 2026-10-24T00:36:38Z. Its community entry and native QA remain complete. Docker [m9/t012](blocked/m9/done/t012.md) is submitted as PR #6042 after actual scoped native query/preview and unchanged-state proof. Cline [m9/t013](blocked/m9/done/t013.md) is submitted as issue #3230 after approved native OAuth, SDK checks and an Agent read-only session. GitHub [m9/t014](blocked/m9/done/t014.md) is sent and archived; GitHub's authenticated reply now confirms review approval, with up to3business days to publish. Fresh public gallery name/identity queries still return zero. LobeHub [m10/t009](blocked/m10/done/t009.md) completes the approved GitHub/bex-co connection and accepted/public publication; [t003](blocked/m10/done/t003.md) payload acceptance is complete. Native accounting access/journey and crawler correction remain t004. The browser now loads ChatGPT [m11/t001](blocked/m11/t001.md) and Claude [m11/t002](blocked/m11/t002.md), but their current identities/organizations cannot access the original submissions; publisher access or actual feedback is needed. The independent [m11/t003](blocked/m11/t003.md) remote-community contribution is submitted as PR #2753 with green checks and awaits its actual merge gates; do not wait for another platform's approval.
+[m9/t011](m9/done/t011.md), the official Cursor application, is submitted with an actual accepted receipt after explicit final agreement confirmation on 2026-10-24T00:36:38Z. Its community entry and native QA remain complete. Docker [m9/t012](m9/done/t012.md) is submitted as PR #6042 after actual scoped native query/preview and unchanged-state proof. Cline [m9/t013](m9/done/t013.md) is submitted as issue #3230 after approved native OAuth, SDK checks and an Agent read-only session. GitHub [m9/t014](m9/done/t014.md) is sent and archived; GitHub's authenticated reply now confirms review approval, with up to 3 business days to publish. Fresh public gallery name/identity queries still return zero. LobeHub [m10/t009](m10/done/t009.md) completes the approved GitHub/bex-co connection and accepted/public publication; [t003](m10/done/t003.md) payload acceptance is complete. Native accounting access/journey and crawler correction remain t004. The browser now loads ChatGPT [m11/t001](blocked/m11/t001.md) and Claude [m11/t002](blocked/m11/t002.md), but their current identities/organizations cannot access the original submissions; publisher access or actual feedback is needed. The independent [m11/t003](blocked/m11/t003.md) remote-community contribution is submitted as PR #2753 with green checks and awaits its actual merge gates; do not wait for another platform's approval.
 
 The [complete 17-target ownership map](blocked/m11/README.md#full-inventory-ownership-and-execution-order) covers every row of the [submission tracker](../../backend-cluster/backend-v2/docs/mcp-marketplaces.md#submission-status-tracker). Receipt-stage tasks require actual accepted submissions; publisher/account/client preparation is not a receipt. Original public/native DoDs remain in force. m8/041/042 keep concrete platform, claim/health or fee gates; no blocked item is silently dropped or reported submitted.
 
 Earlier in this run, m9/m10 returned from blocked/ for newly materialized receipt-stage work. That work has now been performed or parked at its concrete remaining condition, and both milestones are back under blocked/. ChatGPT and Claude are included by the current owner request, superseding their earlier scope exclusion. Dated execution snapshots below are history, not the current next-action list.
 
-## Approval follow-through — 2026-10-24 UTC
+## Historical approval follow-through — 2026-10-24 UTC
 
 The publisher now explicitly agrees to the displayed final agreement actions,
 including Cursor and the other shown services. Official Cursor, Docker and Cline submissions are
@@ -33,7 +55,7 @@ approved agreement/account workflow instead of waiting for Cursor review.
 No actual publication, unrelated payment or broader data grant is inferred from
 the accepted Cursor receipt.
 
-## Current queue reconciliation — 2026-10-24 UTC
+## Historical queue reconciliation — 2026-10-24 UTC
 
 The approval follow-through submits official Cursor, Docker PR #6042 and Cline
 issue #3230; LobeHub publisher login and the free Glama account also complete.
@@ -47,7 +69,7 @@ All later items were scanned; milestone numbers do not imply dependencies.
 | --- | --- | --- |
 | Engine adoption | 19inbox notes +7m2tasks | The20recorded producer/semantic gates still require supported published Rustledger artifacts/contracts. Existing dated primary-source evidence is retained; this board reconciliation does not claim a new engine release check or rerun unchanged failures. Upstream maintainers supply the artifact/contract, then the worker adopts and runs the native/API gates. |
 | Hermes and other skill indexes | 039/040 +3m6.5tasks | Hermes must provide the recorded init/discovery/portable-metadata compatibility. The newly elapsed24-hour skills.rest refresh window was actually checked: old paths and mixed internal tools remain; completed SkillsMP browser results also retain old paths. Index services own correction. Owned suite/skills.sh grouping remain complete. |
-| Smithery/Glama | 7m8tasks | Smithery/Arcade needs a surviving supported intake. Glama ownership and private Bearer API-key monitoring now pass; public health is Healthy with44tools. w2/088 still needs a full healthy day from2026-10-24T07:01:01Z, earliest recheck2026-10-25T07:01:01Z. Read-only synthetic monitoring access expires2026-11-23UTC; renew before that date. Original native checks remain separate. |
+| Smithery/Glama | 7m8tasks | Smithery/Arcade needs a surviving supported intake. Glama ownership and private Bearer API-key monitoring now pass; public health is Healthy with44tools. w2/088 still needs a full healthy day from 2026-10-24T07:01:01Z, earliest recheck2026-10-25T07:01:01Z. Read-only synthetic monitoring access expires2026-11-23UTC; renew before that date. Original native checks remain separate. |
 | Developer galleries | 6m9tasks | Docker native QA/PR and Cline native QA/issue are submitted. Docker's mandatory private-review form is now accepted with a synthetic-only read/write/no-admin key expiring2026-10-31UTC, and its public checklist is complete. t002 is archived; actual publication remains t006. Cline and official Cursor need platform review/publication. GitHub review is approved; publication within the stated3-business-day window, separate actual VS Code gallery/native acceptance and aggregate publication/closing checks remain. |
 | Directory reviews/LobeHub | 6m10tasks | MCPServers.org now has a verified canonical public listing and t001 is archived; advertised native connection remains t004. MCPMarket retains its accepted Free Queue receipt; the latest complete21-result query has no canonical hosted match. LobeHub's approved GitHub/bex-co access and actual publication now complete. The public page verifies44/64/4capability metadata and the preferred HTTP URL. Its crawler stdio defect needs platform correction; actual native synthetic-ledger OAuth/query/preview remains t004, with that separate accounting grant prepared for a concrete decision. |
 | Existing app reviews/community | 7m11tasks | Original submitting account/organization access is required for the exact existing ChatGPT/Claude management records. Remote-community PR #2753 now uses the documented Agent-review title and has one concrete star-waiver request; maintainers must resolve it and review/merge. No account engagement was changed. No duplicate application, fake engagement or assumed approval. |
@@ -201,14 +223,14 @@ Prioritize the major correctness findings (PRINT/FROM/JOURNAL, authored location
 
 ## Milestones
 
-- [ ] **m11** — [Complete app-directory and remote-community distribution](blocked/m11/README.md) (7 tasks; A3/A1) ← explicit all-inventory submission request 2026-10-23. **Blocked:** t001/t002 need original submitting account/organization access after the exact pages load; t003 PR #2753 is submitted and green but unmerged, with publisher preference/maintainer gate. Exact application/receipt links retained.
+- [ ] **m11** — [Complete app-directory and remote-community distribution](blocked/m11/README.md) (7 tasks; A3/A1) ← explicit all-inventory submission request 2026-10-23. **Blocked:** t001/t002 need original submitting account/organization access after the exact pages load; t003 PR #2753 is submitted and green but unmerged, with the existing waiver request and maintainer review/merge gate. Exact application/receipt links retained.
 
 - [ ] **m6.5** — [Distribute the Beancount.io customer skills as one suite](./blocked/m6.5/README.md) (12 tasks; 9 done; A3/A2/A1) ← explicit owner request 2026-10-22, extended to other channels 2026-10-23 UTC. **Blocked:** Hermes admission, third-party index read-backs and final closeout. Owned grouping/whole-suite install refresh and CI checks implemented; suite 0.4.0 public and all thirteen standalone ClawHub listings retired.
 
-- [ ] **m9** — [Reach developer marketplaces and galleries](blocked/m9/README.md) (14 tasks; 8 done; A3/A1) ← expanded by the 2026-10-23 all-submissions request. **Blocked:** t011 official Cursor, t012 Docker, t013 Cline and t014 GitHub nomination are submitted and archived; t002 required private reviewer access is complete and archived; other native/publication gates remain. Platform/native verification remains separate; continue m10/m11.
-- [ ] **m10** — [List the connector in independent web directories](blocked/m10/README.md) (9 tasks; 3 done; A3/A1) ← expanded by the 2026-10-23 all-submissions request. **Blocked:** t001/t003/t009 are done; LobeHub is public/claimed. Native accounting verification and crawler stdio correction remain t004; MCPMarket stays in its original review queue. Continue independent work.
+- [ ] **m9** — [Reach developer marketplaces and galleries](m9/README.md) (18 tasks; 8 done; A3/A1) ← owner listing follow-through 2026-10-24. **Next:** t015 current Docker Unauthorized diagnosis/repair. t004/t016/t017/t018 independently own Cline/Cursor/Docker/GitHub review/public/native outcomes; GitHub approval is complete.
+- [ ] **m10** — [List the connector in independent web directories](m10/README.md) (12 tasks; 3 done; A3/A1) ← owner listing follow-through 2026-10-24. **Next:** t010 MCPServers.org native checks and t012 supported LobeHub crawler/search correction. t011 owns native accounting/live metadata; MCPMarket retains its original pending free receipt.
 
-- [ ] **m8** — [Claim and publish the hosted connector on Smithery and Glama](blocked/m8/README.md) (8 tasks; A3/A1) ← existing local marketplace roadmap, continued under `$loopx w6` on 2026-10-21 UTC; t001 packet shipped; **blocked:** Smithery publisher returns removed-update 403, Glama ownership and authenticated read-only monitoring are verified; w2/088 full-day observation remains (earliest2026-10-25T07:01:01Z)
+- [ ] **m8** — [Claim and publish the hosted connector on Smithery and Glama](m8/README.md) (9 tasks; 1 done; A3/A1) ← owner listing follow-through 2026-10-24. **Next:** t009 independent Glama native accounting; Smithery intake and w2/088 full healthy-day observation keep their own gates.
 
 - [x] **m7** — [Connect OpenClaw and Hermes Agent to the hosted MCP endpoint](done/m7/README.md) (9 tasks; A1; backend-v2 fixtures and docs) ← user request 2026-10-16 to list Beancount.io on OpenClaw and Hermes Agent; ADR 019 D8
 
@@ -225,6 +247,10 @@ Prioritize the major correctness findings (PRINT/FROM/JOURNAL, authored location
 - [x] **m1** — Count canonical BQL rows in MCP text summaries (7 tasks) ← from [003](done/003.md).
 
 ## Inbox
+
+- [043](043.md) — Reconcile one canonical 17-target listing tracker and operational owners/check triggers (~45m).
+- [044](044.md) — Restore/retest supported browser control without repeating completed approvals (~15m).
+- [045](045.md) — Coordinate private Docker reviewer/Glama monitor expiry and renewal responsibility (~30m).
 
 - [041](blocked/041.md) — MCP.so publication — **blocked:** current $39 mandatory fee needs explicit approval or a documented free route; packet is ready.
 - [042](blocked/042.md) — PulseMCP publication — **blocked:** new listings and changes remain paused; needs supported reopened intake.

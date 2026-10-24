@@ -34,27 +34,27 @@
 
 ## Full inventory ownership and execution order
 
-The [m9/t011](../m9/done/t011.md) official Cursor application is submitted with an accepted receipt after explicit final agreement confirmation; vendor review/publication remains open. Docker [m9/t012](../m9/done/t012.md) is actually submitted as PR #6042 after the scoped native Gateway journey; review/publication remains separate. Cline [m9/t013](../m9/done/t013.md) is actually submitted as issue #3230 after native OAuth, SDK query/preview and Agent read-only verification. GitHub nomination [m9/t014](../m9/done/t014.md) is sent and archived. LobeHub [m10/t009](../m10/done/t009.md) completes the approved GitHub/bex-co connection and actual accepted/public publication; native accounting and crawler correction remain t004. This milestone's t001/t002 require original submitting account/organization access; t003 remains independently submitted. Table order is priority, not a cross-platform dependency.
+The [m9/t011](../../m9/done/t011.md) official Cursor application is submitted with an accepted receipt after explicit final agreement confirmation; vendor review/publication remains open. Docker [m9/t012](../../m9/done/t012.md) is actually submitted as PR #6042 after the scoped native Gateway journey; review/publication remains separate. Cline [m9/t013](../../m9/done/t013.md) is actually submitted as issue #3230 after native OAuth, SDK query/preview and Agent read-only verification. GitHub nomination [m9/t014](../../m9/done/t014.md) is sent and archived. LobeHub [m10/t009](../../m10/done/t009.md) completes the approved GitHub/bex-co connection and actual accepted/public publication; native accounting and crawler correction remain t004. This milestone's t001/t002 require original submitting account/organization access; t003 remains independently submitted. Table order is priority, not a cross-platform dependency.
 
 | Inventory target | Submission / receipt owner | Review, public verification or retained gate |
 | --- | --- | --- |
-| Cursor — official | [m9/t011](../m9/done/t011.md) | [m9/t003](../m9/done/t003.md), [m9/t006](../m9/t006.md) |
-| Docker | [m9/t012](../m9/done/t012.md) | [m9/t002](../m9/done/t002.md) submission/private reviewer access complete; m9/t006 retains actual review/publication |
-| Cline | [m9/t013](../m9/done/t013.md) | [m9/t004](../m9/t004.md), m9/t006 |
-| GitHub curated gallery / VS Code | [m9/t014](../m9/done/t014.md) | [m9/t005](../m9/done/t005.md), m9/t006; existing w1/m34/t003 native owner retained |
-| LobeHub | [m10/t009](../m10/done/t009.md) accepted/public; [m10/t003](../m10/done/t003.md) eligible payload complete | [m10/t004](../m10/t004.md) native accounting and malformed crawler stdio correction |
+| Cursor — official | [m9/t011](../../m9/done/t011.md) | [m9/t003](../../m9/done/t003.md) done; [m9/t016](../../m9/t016.md) official review/public/native |
+| Docker | [m9/t012](../../m9/done/t012.md) | [m9/t002](../../m9/done/t002.md) submission/private reviewer access complete; [m9/t017](../../m9/t017.md) actual review/publication; [m9/t015](../../m9/t015.md) current OAuth repair |
+| Cline | [m9/t013](../../m9/done/t013.md) | [m9/t004](../../m9/t004.md), m9/t006 |
+| GitHub curated gallery / VS Code | [m9/t014](../../m9/done/t014.md) | [m9/t005](../../m9/done/t005.md) done; [m9/t018](../../m9/t018.md) approved/public/native; existing w1/m34/t003 native owner retained |
+| LobeHub | [m10/t009](../../m10/done/t009.md) accepted/public; [m10/t003](../../m10/done/t003.md) eligible payload complete | [m10/t011](../../m10/t011.md) native/live metadata; [m10/t012](../../m10/t012.md) crawler correction/search |
 | ChatGPT / OpenAI | Already submitted, publisher-confirmed 2026-10-23 | [m11/t001](t001.md), existing specific application |
 | Claude | Already submitted, publisher-confirmed 2026-10-23 | [m11/t002](t002.md), existing specific application |
 | Awesome Remote MCP Servers | [m11/t003](t003.md) | Same task retains upstream receipt, review and merged entry |
-| Glama | Existing ownership and synthetic-only read monitoring verified; Healthy/44tools. [m8/t003](../m8/t003.md) coordinates existing [w2/088](../../../w2/blocked/088.md) | w2/088 full healthy day, earliest recheck2026-10-25T07:01:01Z, then [m8/t004](../m8/t004.md); renew monitoring credential before2026-11-23UTC; no duplicate listing |
-| Smithery | [m8/t002](../m8/t002.md) | Removed legacy intake remains blocked; platform/publisher must provide a working supported replacement route |
-| MCPServers.org | Canonical public listing verified; original Free $0 receipt retained | [m10/t001](../m10/done/t001.md) done; m10/t004 retains directory-advertised native connection checks |
-| MCPMarket | Accepted Free Queue repository submission; preserve existing receipt | [m10/t002](../m10/t002.md), m10/t004; reviewer publication then endpoint/OAuth metadata and connection checks |
+| Glama | Existing ownership and synthetic-only read monitoring verified; Healthy/44tools. [m8/t003](../../m8/t003.md) coordinates existing [w2/088](../../../w2/blocked/088.md) | w2/088 full healthy day, earliest recheck2026-10-25T07:01:01Z, independent [m8/t009](../../m8/t009.md) native path, final [m8/t004](../../m8/t004.md); renew monitoring credential before2026-11-23UTC; no duplicate listing |
+| Smithery | [m8/t002](../../m8/t002.md) | Removed legacy intake remains blocked; platform/publisher must provide a working supported replacement route |
+| MCPServers.org | Canonical public listing verified; original Free $0 receipt retained | [m10/t001](../../m10/done/t001.md) done; [m10/t010](../../m10/t010.md) retains directory-advertised native checks |
+| MCPMarket | Accepted Free Queue repository submission; preserve existing receipt | [m10/t002](../../m10/t002.md), m10/t004; reviewer publication then endpoint/OAuth metadata and connection checks |
 | MCP.so | [041](../041.md) | Explicit approval of the observed $39 fee or a documented free route; no payment authorized by this plan |
 | PulseMCP | [042](../042.md) | Platform reopens supported submission/edit intake; no submission sent while paused |
 | Official MCP Registry | Already published under completed w2/m36 | Existing release workflow/canonical record; no duplicate namespace or routine resubmission |
-| cursor.directory — community | Already published under [m9/t003](../m9/done/t003.md) | Preserve published entry and completed native QA; separate from official Cursor submission |
-| Windsurf / legacy Cascade | Source-backed unavailable marketplace route under [m9/t001](../m9/done/t001.md) | m9/t006 retains explicit eligibility/revisit evidence; manual remote configuration is not a catalog submission |
+| cursor.directory — community | Already published under [m9/t003](../../m9/done/t003.md) | Preserve published entry and completed native QA; separate from official Cursor submission |
+| Windsurf / legacy Cascade | Source-backed unavailable marketplace route under [m9/t001](../../m9/done/t001.md) | m9/t006 retains explicit eligibility/revisit evidence; manual remote configuration is not a catalog submission |
 
 ## Execution rules
 
@@ -70,7 +70,7 @@ The [m9/t011](../m9/done/t011.md) official Cursor application is submitted with 
 
 - **t002:** the restored browser loads the exact existing connector management page, but it says the submission was not found in the current organization; the signed-in identity differs from the publisher and exposes no switch to the original submitter. **Unblock:** publisher restores original account/organization access or supplies actual feedback, then worker follows supported corrections and public/native verification. **Owners:** publisher, then worker/Claude reviewers. Publisher-confirmed submission remains; no duplicate or invented rejection.
 
-- **t003:** actual PR #2753 and its green Check Submission result are recorded. **Unblock:** publisher resolves the upstream genuine account-star prerequisite or upstream waives it; maintainer reviews/merges, then worker verifies the public entry/setup links. **Owners:** publisher, upstream maintainer, worker. No engagement operation is performed or fabricated, and no duplicate contribution is sent.
+- **t003:** actual PR #2753 and its green Check Submission result are recorded. **Unblock:** upstream resolves the existing waiver request and reviews/merges, then worker verifies the public entry/setup links. **Owners:** upstream maintainer, then worker. The one waiver request is already sent; no repeated comment or engagement action. No engagement operation is performed or fabricated, and no duplicate contribution is sent.
 - **t004-t007:** all three implementation tasks still have unresolved access/publication conditions; adoption, simplify, coverage and closeout cannot establish the milestone DoD ahead of them. **Unblock:** complete actual t001-t003 review/publication/native outcomes, then perform each standing closing check in dependency order. **Owners:** implementation owners above, then worker. No closing task is marked done on a prepared or merely submitted listing.
 
 ## Current milestone placement — 2026-10-23 UTC
@@ -86,3 +86,7 @@ maintainer waiver or merge is yet observed. **Unblock/owners:** upstream
 maintainer resolves that request and reviews/merges; worker verifies actual
 publication and setup links. The existing original-account access conditions
 for t001/t002 remain independent. No new message is needed until feedback.
+
+## Cross-target operational ownership — 2026-10-24 UTC
+
+w6/043 owns one consistent17target current tracker and dated next actions; w6/044 owns supported browser restoration; w6/045 owns reviewer/monitor expiry coordination without duplicating w2/088. m8/m9/m10 now contain independent native/correction tasks and return to the live queue. This milestone remains blocked only on its own original-account and maintainer/publication gates. No existing submission receipt, GitHub curator approval, publisher agreement or retained grant is reopened by this board arrangement.

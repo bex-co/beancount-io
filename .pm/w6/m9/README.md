@@ -1,6 +1,6 @@
 # w6 · m9 — Reach developer marketplaces and galleries
 
-**Worker:** worker1 **Goal:** Developers discover and connect the hosted MCP server through the supported Docker, Cursor, Cline, and GitHub/VS Code galleries. **Status:** blocked (t001/t002/t003/t005/t011/t012/t013/t014 done; official Cursor/Docker review and other native/publication gates remain)
+**Worker:** worker1 **Goal:** Developers discover and connect the hosted MCP server through the supported Docker, Cursor, Cline, and GitHub/VS Code galleries. **Status:** todo (8 tasks done; independent Docker auth repair t015 is open; per-platform review/public/native gates remain t004/t016/t017/t018)
 
 **Implementation estimate:** ~4½h, excluding external review queues and the standing closing tasks.
 
@@ -17,8 +17,12 @@
 | [t003](done/t003.md) | Package the remote connection for Cursor's official and community marketplaces — **DONE** | 60m | t001, t011 |
 | [t004](t004.md) | Prepare Cline's eligible marketplace submission and remote connection evidence — **BLOCKED** | 45m | t001, t013 |
 | [t005](done/t005.md) | Prepare GitHub inclusion and verify VS Code's discovery path — **DONE** | 45m | t001, t014 |
-| [t006](t006.md) | Verify publication and fresh discovery across eligible developer galleries | 30m | t002, t003, t004, t005 |
-| [t007](t007.md) | Adoption surface | 30m | t006, t011, t012, t013, t014 |
+| [t015](t015.md) | Diagnose and repair the later Docker Gateway Unauthorized result | 30m | t012 |
+| [t016](t016.md) | Follow official Cursor review/public/native availability — **BLOCKED** | 45m | t011 |
+| [t017](t017.md) | Follow Docker review through public catalog installation — **BLOCKED** | 45m | t012 |
+| [t018](t018.md) | Verify approved GitHub publication and native VS Code — **BLOCKED** | 45m | t014 |
+| [t006](t006.md) | Verify publication and fresh discovery across eligible developer galleries | 30m | t002, t003, t004, t005, t015, t016, t017, t018 |
+| [t007](t007.md) | Adoption surface | 30m | t006, t011, t012, t013, t014, t015, t016, t017, t018 |
 | [t008](t008.md) | Simplify | 30m | t007 |
 | [t009](t009.md) | Test coverage | 45m | t007, t008 |
 | [t010](t010.md) | Closeout | 15m | t009 |
@@ -95,7 +99,7 @@ This milestone returns from `blocked/` because newly materialized submission/rec
 
 An actual submission receipt closes only its receipt-stage task. Existing native/publication criteria and final verification remain required for this milestone's DoD. Preserve previous blocker history above; reassess concrete tool/account/access requirements at the actual action, carry prior authorization forward, and block only the affected step when a genuinely unmet condition remains. No task waits for another platform's review merely because it is later in the table.
 
-The earlier exclusion of Claude/ChatGPT was the 2026-10-20 scope decision. The owner's 2026-10-23 all-inventory request now places those separate application follow-ups in [m11](../m11/README.md), without duplicating this milestone's targets.
+The earlier exclusion of Claude/ChatGPT was the 2026-10-20 scope decision. The owner's 2026-10-23 all-inventory request now places those separate application follow-ups in [m11](../blocked/m11/README.md), without duplicating this milestone's targets.
 
 ## Historical blocked receipt action — 2026-10-23T20:17:19Z
 
@@ -207,3 +211,15 @@ t006 retains public/native verification; no task or milestone closes from the
 approval alone. No reply or duplicate nomination is sent. The exact existing
 ChatGPT/Claude management pages also remain inaccessible in the current
 organizations; those independent access gates stay with m11.
+
+## Current execution and blockers — 2026-10-24 UTC
+
+The milestone returns from blocked/ for independent t015 Docker-session diagnosis/repair. No vendor gate is claimed cleared. Official Cursor t016, Docker t017, GitHub/VS Code t018 and existing Cline t004 now own their review/native outcomes independently; t006 only reconciles the completed outcomes. Existing cursor.directory publication/native QA stays complete.
+
+- **t004 — Unblock:** actual Cline review feedback/publication, followed by verified advertised install/native path. Owners: Cline, then worker.
+- **t016 — Unblock:** official Cursor review feedback/publication, then actual official install/native proof. Owners: Cursor, then worker.
+- **t017 — Unblock:** Docker review/CI/merge/public catalog availability; coordinate independent t015 and reviewer credential note045. Owners: Docker, then worker.
+- **t018 — Unblock:** already-approved GitHub entry becomes public, then existing VS Code native owner/worker verify. GitHub states up to3business days from the actual2026-10-24T03:54Z approval; no further nomination action is requested.
+- **t006–t010 — Unblock:** actual per-platform outcomes and their closing dependencies hold. Owner: worker. Other platform reviews do not serialize independent work.
+
+Read actual existing feedback/CI changes, correct supported payloads and record real receipt/public/native transitions. Preserve previously approved grants and never substitute generic client compatibility for the published installation path.
