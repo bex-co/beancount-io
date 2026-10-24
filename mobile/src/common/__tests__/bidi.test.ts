@@ -143,6 +143,32 @@ describe("isolateAccountPath", () => {
         ["screens", "home-screen", "components", "budget-card.tsx"],
         "{isolateAccountPath(row.shortAccount)}",
       ],
+      // w21/927: New Transaction, Add Budget, Transaction Filters and the Open
+      // Account preview drew the raw path.
+      [
+        [
+          "screens",
+          "multi-postings-transaction",
+          "multi-postings-transaction-screen.tsx",
+        ],
+        ": isolateAccountPath(posting.account)",
+      ],
+      [
+        ["screens", "add-budget-screen", "add-budget-screen.tsx"],
+        "? isolateAccountPath(account)",
+      ],
+      [
+        [
+          "screens",
+          "transaction-filters-screen",
+          "transaction-filters-screen.tsx",
+        ],
+        "? isolateAccountPath(draft.account)",
+      ],
+      [
+        ["screens", "open-account-screen", "open-account-screen.tsx"],
+        "{ account: isolateAccountPath(account) }",
+      ],
     ] as const) {
       expect([file.at(-1), read(...file).includes(drawn)]).toEqual([
         file.at(-1),

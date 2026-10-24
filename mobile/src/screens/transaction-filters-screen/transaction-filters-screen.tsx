@@ -1,4 +1,5 @@
 import { useGuest } from "@/common/guest/guest-context";
+import { isolateAccountPath } from "@/common/bidi";
 import { useState } from "react";
 import {
   Pressable,
@@ -396,7 +397,11 @@ const TransactionFiltersSheet = ({
               <ListItem
                 key={`account-row-${fontScale}`}
                 // title={t("account").toUpperCase()}
-                content={draft.account ?? t("allAccounts")}
+                content={
+                  draft.account
+                    ? isolateAccountPath(draft.account)
+                    : t("allAccounts")
+                }
                 onPress={pickAccount}
               />
             </View>

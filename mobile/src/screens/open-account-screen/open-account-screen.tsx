@@ -1,4 +1,5 @@
 import { useAccountCloseDates } from "@/common/hooks/use-account-close-dates";
+import { isolateAccountPath } from "@/common/bidi";
 import { formatLedgerDate } from "@/common/date-format";
 import { InlineError } from "@/components/inline-error";
 import { useUnsavedChangesGuard } from "@/common/hooks/use-unsaved-changes-guard";
@@ -435,7 +436,9 @@ export function OpenAccountScreenComponent(): JSX.Element {
         ? t(VALIDATION_KEYS.emptyComponent)
         : null;
   const namePreview =
-    nameOk && !alreadyOpen ? t("openAccountNamePreview", { account }) : null;
+    nameOk && !alreadyOpen
+      ? t("openAccountNamePreview", { account: isolateAccountPath(account) })
+      : null;
   return (
     <SafeAreaView edges={["bottom"]} style={styles.container}>
       <Stack.Screen

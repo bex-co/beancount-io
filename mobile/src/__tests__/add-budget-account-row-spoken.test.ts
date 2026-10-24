@@ -17,9 +17,7 @@ describe("Add Budget's empty Account row", () => {
   it("speaks that no account is chosen, not the example", () => {
     expect(en.budgetAccountNotSelected).toBe("No account chosen");
     expect(
-      source.includes(
-        'spokenValue={account?undefined:t("budgetAccountNotSelected")}',
-      ),
+      source.includes('spokenValue={account||t("budgetAccountNotSelected")}'),
     ).toBe(true);
     expect(
       source.includes("accessibilityValue={{text:spokenValue??value}}"),

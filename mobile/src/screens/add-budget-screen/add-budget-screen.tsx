@@ -1,4 +1,5 @@
 import { formatLedgerDate } from "@/common/date-format";
+import { isolateAccountPath } from "@/common/bidi";
 import { useAccountCloseDates } from "@/common/hooks/use-account-close-dates";
 import { closedBeforeDate } from "@/common/account-close-dates";
 import {
@@ -390,9 +391,13 @@ function AddBudgetScreenImpl(): JSX.Element {
 
           <FormRow
             label={t("account")}
-            value={account || t("budgetAccountPlaceholder")}
+            value={
+              account
+                ? isolateAccountPath(account)
+                : t("budgetAccountPlaceholder")
+            }
             muted={!account}
-            spokenValue={account ? undefined : t("budgetAccountNotSelected")}
+            spokenValue={account || t("budgetAccountNotSelected")}
             onPress={isUpdate ? undefined : pickAccount}
           />
 

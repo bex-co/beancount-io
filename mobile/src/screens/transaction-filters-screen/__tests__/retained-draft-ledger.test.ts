@@ -108,6 +108,8 @@ function loadScreen(): () => any {
           }),
         };
       if (id === "@expo/vector-icons") return { Ionicons: "Icon" };
+      if (id === "@/common/bidi")
+        return { isolateAccountPath: (p: string) => p };
       if (id === "@/common/guest/guest-context")
         return { useGuest: () => null };
       if (id === "@/common/format-util")

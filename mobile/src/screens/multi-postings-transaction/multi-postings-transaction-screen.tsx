@@ -1,5 +1,6 @@
 import { CardLoadFailure } from "@/components/card-load-failure";
 import { breakableAccount } from "@/common/account-util";
+import { isolateAccountPath } from "@/common/bidi";
 import {
   currencyMinorUnits,
   ledgerPrimaryCurrency,
@@ -397,8 +398,8 @@ const PostingRow = ({
           >
             {posting.account
               ? stacked
-                ? breakableAccount(posting.account)
-                : posting.account
+                ? isolateAccountPath(breakableAccount(posting.account))
+                : isolateAccountPath(posting.account)
               : t("postingAccount")}
           </Text>
         </TouchableOpacity>

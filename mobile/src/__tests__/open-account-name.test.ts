@@ -297,9 +297,11 @@ describe("typedSubPathIssue", () => {
     expect(source.includes("openAccounts: meta?.accounts,")).toBe(true);
     expect(source.includes("busy: loading,")).toBe(true);
     expect(source.includes("onSubmitEditing={handleSubmit}")).toBe(true);
-    expect(source.includes('t("openAccountNamePreview", { account })')).toBe(
-      true,
-    );
+    expect(
+      source.includes(
+        't("openAccountNamePreview", { account: isolateAccountPath(account) })',
+      ),
+    ).toBe(true);
   });
 });
 
