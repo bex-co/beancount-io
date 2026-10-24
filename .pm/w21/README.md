@@ -71,3 +71,6 @@
 - [914](./914.md) — CLF, UYW and UYI postings show different decimals from the headline
 - [915](./915.md) — Symlinks in a ledger repo open as "too large to open on your phone"
 - [916](./916.md) — Self-hosted Settings offers Invite Friends with a beancount.io link carrying the local user id
+- [917](./917.md) — Merchants splits full-width and half-width payees, and search misses the full-width one
+- [918](./918.md) — Merchant detail opened offline on a later day shows its load error instead of cached totals
+- [919](./919.md) — Recent Transactions flashes "No transactions yet" while it checks for upcoming entries
