@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { compileAppCss, parseRules } from "@/test/tailwind";
 import { ExactAmountInput } from "../exact-amount-input";
 
 /**
@@ -65,5 +66,31 @@ describe("ExactAmountInput", () => {
     amount().dispatchEvent(focused);
     expect(focused.defaultPrevented).toBe(true);
     vi.restoreAllMocks();
+  });
+});
+
+// w4/1056: in a Persian form the typed -12.50 read "12.50-".
+describe("ExactAmountInput on a right-to-left page", () => {
+  it("edits the amount as one left-to-right run, keeping the exact value", async () => {
+    render(
+      <div dir="rtl">
+        <Field />
+      </div>,
+    );
+    fireEvent.change(amount(), { target: { value: "-12.50" } });
+    expect(amount()).toHaveAttribute("dir", "ltr");
+    expect(amount()).toHaveValue(-12.5);
+    expect((amount() as HTMLInputElement).value).toBe("-12.50");
+  });
+
+  it("keeps the page's alignment: right under a right-to-left ancestor", async () => {
+    render(<Field />);
+    const classes = amount().className.split(/\s+/);
+    expect(classes).toContain("rtl:text-right");
+    const rule = parseRules(await compileAppCss(["rtl:text-right"])).get(
+      "rtl:text-right",
+    );
+    expect(rule).toMatch(/\[dir="rtl"\] \*/);
+    expect(rule).toContain("text-align: right");
   });
 });

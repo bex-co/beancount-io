@@ -27,6 +27,9 @@ function isBelow(a: string, b: string): boolean {
  * and the wheel cannot step a focused amount. Typing, exponent input and the
  * browser's own validity are unchanged. Used by every form that takes an
  * exact amount (New Entry, Receipt Review, Add Budget; w4/1021).
+ *
+ * The amount is edited as one left-to-right run, so a Persian form shows the
+ * typed `-12.50` rather than `12.50-`; it keeps the page's alignment (w4/1056).
  */
 export function ExactAmountInput({
   className,
@@ -76,6 +79,7 @@ export function ExactAmountInput({
 
   return (
     <Input
+      dir="ltr"
       {...props}
       ref={(node) => {
         input.current = node;
@@ -86,7 +90,7 @@ export function ExactAmountInput({
       step="any"
       onKeyDown={step}
       className={cn(
-        "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
+        "rtl:text-right [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
         className,
       )}
     />
