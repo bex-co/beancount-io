@@ -250,6 +250,10 @@ export const TextInputModal: React.FC<TextInputModalProps> = ({
                   autoFocus
                   autoCapitalize="none"
                   autoCorrect={false}
+                  // Return confirms, as the button does: it closed the keyboard
+                  // and nothing else (w21/990). A disabled confirm does nothing.
+                  returnKeyType="done"
+                  onSubmitEditing={handleConfirm}
                 />
                 {inputError ? (
                   <InlineError
