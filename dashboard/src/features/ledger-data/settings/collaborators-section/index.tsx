@@ -17,6 +17,7 @@ import {
   TableRow,
 } from "@/common/components/ui/table";
 import { Skeleton } from "@/common/components/ui/skeleton";
+import { Button } from "@/common/components/ui/button";
 import { Users, AlertCircle } from "lucide-react";
 import {
   ListLedgersDocument,
@@ -36,6 +37,7 @@ import {
   useErrorMessage,
 } from "@/common/lib/errors/error-message";
 import { useUserLimits } from "@/common/hooks/use-user-limits";
+import { useQueryRetry } from "@/common/hooks/use-query-retry";
 import { LedgerAdminPermission } from "@/common/components/ledger-permission/admin";
 import { LimitIndicator } from "@/common/components/limit-indicator";
 import { CollaboratorRow } from "@/features/collaboration/components/collaborator-row";
@@ -52,6 +54,7 @@ export function CollaboratorsSection({ ledgerId }: { ledgerId: string }) {
     data: collaboratorsData,
     loading: collaboratorsLoading,
     error: collaboratorsError,
+    refetch: refetchCollaborators,
   } = useQuery<
     ListLedgerCollaboratorsQuery,
     ListLedgerCollaboratorsQueryVariables
@@ -59,6 +62,13 @@ export function CollaboratorsSection({ ledgerId }: { ledgerId: string }) {
     variables: { ledgerId },
     skip: !ledgerId,
   });
+  // Try Again re-reads this list in place: the error and its busy button stay
+  // while it runs, and another failure hands focus back (w4/1050).
+  const {
+    failure: collaboratorsFailure,
+    retrying: collaboratorsRetrying,
+    retry: retryCollaborators,
+  } = useQueryRetry(collaboratorsError, refetchCollaborators, ledgerId);
 
   const { data: currentUserData } = useQuery(GetCurrentUserDocument);
   const currentUserLogin = currentUserData?.userProfile?.username || null;
@@ -157,7 +167,7 @@ export function CollaboratorsSection({ ledgerId }: { ledgerId: string }) {
           )}
         </LedgerAdminPermission>
 
-        {collaboratorsLoading && (
+        {collaboratorsLoading && !collaboratorsFailure && (
           <div className="space-y-4">
             <div className="flex items-center justify-end">
               <Skeleton className="h-10 w-45" />
@@ -193,20 +203,29 @@ export function CollaboratorsSection({ ledgerId }: { ledgerId: string }) {
           </div>
         )}
 
-        {collaboratorsError && (
+        {collaboratorsFailure && (
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <AlertCircle className="h-12 w-12 text-destructive mb-4" />
             <h3 className="text-lg font-semibold mb-2 text-destructive">
               {t("collaboration.errorLoadingCollaborators")}
             </h3>
             <p className="text-sm text-muted-foreground">
-              {collaboratorsError.message}
+              {t(getErrorMessageKey(collaboratorsFailure))}
             </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-4"
+              onClick={retryCollaborators}
+              loading={collaboratorsRetrying}
+            >
+              {t("common.tryAgain")}
+            </Button>
           </div>
         )}
 
         {!collaboratorsLoading &&
-          !collaboratorsError &&
+          !collaboratorsFailure &&
           collaborators.length === 0 && (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <Users className="h-12 w-12 text-muted-foreground mb-4" />
@@ -223,7 +242,7 @@ export function CollaboratorsSection({ ledgerId }: { ledgerId: string }) {
           )}
 
         {!collaboratorsLoading &&
-          !collaboratorsError &&
+          !collaboratorsFailure &&
           collaborators.length > 0 && (
             <div className="space-y-4">
               <LedgerAdminPermission>
