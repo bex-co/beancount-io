@@ -56,3 +56,4 @@
 - [994](./994.md) — Budget: mobile prorates the current period to today, the dashboard does not, so verdicts differ (product call)
 - [995](./995.md) — Dashboard net worth headline reads next month and a falling arrow when an entry is future-dated (owner: dashboard)
 - [996](./996.md) — A trailing decimal point ("123.") is refused with a red error, including mid-typing (native)
+- [997](./997.md) — A 29-digit amount is accepted by the form, then refused with a misleading "missing amounts" message (native)
