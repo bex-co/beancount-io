@@ -222,7 +222,9 @@ function loadGetStyles(file: string): (theme: unknown) => any {
       require: (id: string) =>
         id === "react-native"
           ? { StyleSheet: { create: (styles: unknown) => styles } }
-          : stub,
+          : id === "@/common/theme/spacing"
+            ? { iconActionSize: 44 }
+            : stub,
     },
   );
   return exports.__getStyles as (theme: unknown) => any;

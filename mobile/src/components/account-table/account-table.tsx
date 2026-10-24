@@ -28,6 +28,7 @@ import {
   space,
   useTheme,
 } from "@/common/theme";
+import { iconActionSize } from "@/common/theme/spacing";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { formatSignedMoneyWithCurrency } from "@/common/number-utils";
 import { formatHolding, type BalanceDisplay } from "@/common/balance-display";
@@ -57,6 +58,19 @@ import { LEADING_TEXT_ALIGN, directionalIcon } from "@/common/rtl";
  * diverge and every level drifts by the difference.
  */
 const INDENT_STEP = 18;
+/** The chevron glyph's size; its slot is `INDENT_STEP` wide. */
+const CHEVRON_SIZE = 14;
+/**
+ * Slop that makes the chevron's target 44 by 44 pt: the 18 by 14 slot with 12
+ * pt of slop was about 42 by 38, and a near miss opened Account detail instead
+ * (w21/1000).
+ */
+const CHEVRON_HIT_SLOP = {
+  top: (iconActionSize - CHEVRON_SIZE) / 2,
+  bottom: (iconActionSize - CHEVRON_SIZE) / 2,
+  left: (iconActionSize - INDENT_STEP) / 2,
+  right: (iconActionSize - INDENT_STEP) / 2,
+};
 /** Left gutter before the first chevron slot — the app-wide screen inset. */
 const GUTTER = gutter;
 /** Track a row's magnitude bar fills at 100% of its widest sibling. */
@@ -283,7 +297,7 @@ const AccountTableRow = memo(function AccountTableRow({
     <Ionicons
       style={styles.chevron}
       name={row.expanded ? "chevron-down" : directionalIcon("chevron-forward")}
-      size={14}
+      size={CHEVRON_SIZE}
       // Dimmer than the label in both themes, so the chevron reads as a control
       // rather than competing with the account name.
       color={theme.black60}
@@ -307,7 +321,7 @@ const AccountTableRow = memo(function AccountTableRow({
         accessibilityLabel={disclosure?.chevronLabel}
         accessibilityState={{ expanded: row.expanded }}
         // Widened to keep a comfortable target under the smaller glyph.
-        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+        hitSlop={CHEVRON_HIT_SLOP}
       >
         {chevronIcon}
       </TouchableOpacity>

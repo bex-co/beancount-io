@@ -65,6 +65,7 @@ function loadRow(): (props: Record<string, unknown>) => Node {
       },
       { get: (target: any, key) => (key in target ? target[key] : stub) },
     ),
+    "@/common/theme/spacing": { iconActionSize: 44 },
     "@/common/hooks/use-translations": {
       useTranslations: () => ({ t, locale: "en" }),
     },
