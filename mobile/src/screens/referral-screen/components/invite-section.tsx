@@ -6,6 +6,9 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { GiftIcon } from "@/screens/referral-screen/components/gift-icon";
 import { ColorTheme } from "@/types/theme-props";
 import { useRouter } from "expo-router";
+import { useReactiveVar } from "@apollo/client";
+import { isOfficialServerUrl } from "@/common/server-url-validation";
+import { getServerUrl, serverUrlOverrideVar } from "@/common/vars/server-url";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -56,11 +59,16 @@ const getStyles = (theme: ColorTheme) =>
     },
   });
 
-export function InviteSection(): JSX.Element {
+export function InviteSection(): JSX.Element | null {
   const theme = useTheme().colorTheme;
   const styles = getStyles(theme);
   const router = useRouter();
   const { t } = useTranslations();
+  useReactiveVar(serverUrlOverrideVar);
+  // The link shared is the hosted service's sign-up page, carrying the user's
+  // id: on a self-hosted server it invites to another service and publishes an
+  // id from this one (w21/916).
+  if (!isOfficialServerUrl(getServerUrl())) return null;
 
   return (
     <View style={styles.container}>
