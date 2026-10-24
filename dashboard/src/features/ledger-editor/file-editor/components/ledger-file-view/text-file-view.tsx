@@ -4,6 +4,7 @@ import type * as monaco from "monaco-editor";
 import type { GetLedgerFileQuery } from "@/graphql/definitions";
 import { useLedgerPermission } from "@/common/hooks/use-ledger-permission";
 import { base64Decode } from "@/common/lib/utils/encode";
+import { cn } from "@/common/lib/utils/utils";
 import { getFilename } from "../../../shared/lib/utils";
 import { useNormalizedLineNumber } from "../../hooks/use-normalized-line-number";
 import LedgerFileBreadcrumb from "../../../shared/components/ledger-file-breadcrumb";
@@ -157,6 +158,7 @@ export const TextFileView = ({
   // unsaved-changes guard, which still compares against the pre-save file.
   const saveInFlightRef = useRef(false);
   const [savePending, setSavePending] = useState(false);
+  const editorReadOnly = !effectiveEditMode || savePending;
   const savedExitRef = useRef(false);
   const handleSaveClick = useCallback(
     async (contentOverride?: string) => {
@@ -233,7 +235,18 @@ export const TextFileView = ({
         </div>
       </div>
       <div className="flex flex-col flex-1 min-h-0">
-        <div className="border overflow-hidden flex-1 flex flex-col">
+        <div
+          className={cn(
+            "border overflow-hidden flex-1 flex flex-col",
+            // A read-only editor hides its cursor, and its own focus outline
+            // sits on a 1px input (Monaco's edit-context div, or its textarea)
+            // under the sticky headings, so keyboard focus showed nowhere.
+            // Mark the frame instead, as the app's baseline ring does
+            // (w4/1053).
+            editorReadOnly &&
+              "has-[.monaco-editor_:is(textarea,.native-edit-context):focus-visible]:outline-2 has-[.monaco-editor_:is(textarea,.native-edit-context):focus-visible]:outline-offset-2 has-[.monaco-editor_:is(textarea,.native-edit-context):focus-visible]:outline-ring",
+          )}
+        >
           {/* The editor gets whatever height the metadata bar does not need,
               and can shrink (min-h-0) when the viewport does. Without this the
               library's own 100%-height wrapper keeps the allocation it was
@@ -245,7 +258,7 @@ export const TextFileView = ({
               filename={filename}
               setEditedContent={handleEditorContentChange}
               lineNumber={normalizedLineNumber}
-              readOnly={!effectiveEditMode || savePending}
+              readOnly={editorReadOnly}
               onSave={handleSaveClick}
               onCancel={handleCancelEdit}
               onEditorMount={handleEditorMount}
