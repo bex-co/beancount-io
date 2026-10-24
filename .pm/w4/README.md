@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1071** — [Pluralize CSV preview row counts](./1071.md)
+
 - **1070** — [Keep a calendar-cleared date visibly empty](./1070.md)
 
 - **1069** — [Lock the open calendar during transaction submission](./1069.md)
