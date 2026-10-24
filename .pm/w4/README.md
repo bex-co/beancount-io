@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1051** — [Give Settings option values usable width on narrow screens](./1051.md)
+
 - **1050** — [Retry a failed Collaborators settings read in place](./1050.md)
 
 - **1049** — [Keep a nonzero range for very small BQL chart values](./1049.md)
