@@ -55,3 +55,4 @@
 - [984](./984.md) — A commit subject for *"Coffee" with no space after the flag is read as a non-transaction (w21/961 regression)
 - [985](./985.md) — A push whose only commit has an empty message produces a bare "+1 more commit(s)" line (w21/963 regression)
 - [986](./986.md) — Saved narration and payee lose LRM/RLM marks and soft hyphens (w21/965 side effect; owner's call)
+- [987](./987.md) — The Cash flow Sankey leaves every node under about 6% of the flow unlabeled
