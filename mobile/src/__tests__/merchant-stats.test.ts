@@ -179,12 +179,10 @@ describe("a merchant with a pre-entered payment", () => {
         "utf8",
       )
       .replace(/\s+/g, "");
-    expect(
-      screen.includes("buildMerchantMetaBql(spellings,{through:today})"),
-    ).toBe(true);
-    expect(
-      screen.includes("buildMerchantMetaBql(spellings,{after:today})"),
-    ).toBe(true);
+    // Split at today on the client, from statements that name no day (w21/918).
+    expect(screen.includes("splitMerchantMeta(")).toBe(true);
+    expect(screen.includes("splitMerchantTotals(")).toBe(true);
+    expect(screen.includes("buildMerchantDailyMetaBql(spellings)")).toBe(true);
     expect(
       screen.includes('t("merchantScheduledTotal",{amount:isolateLtr(line)})'),
     ).toBe(true);

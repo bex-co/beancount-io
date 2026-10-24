@@ -77,13 +77,15 @@ import {
   exactPayeeFilter,
 } from "./selectors/filter-exact-payee";
 import {
-  buildMerchantCurrencyTotalsBql,
-  buildMerchantWeightTotalsBql,
-  buildMerchantMetaBql,
+  buildMerchantDailyMetaBql,
+  buildMerchantDailyTotalsBql,
+  buildMerchantDailyWeightsBql,
   composeMerchantStats,
-  mapMerchantCurrencyTotals,
+  mapMerchantDailyMeta,
+  mapMerchantDailyTotals,
   pricedTotals,
-  mapMerchantMeta,
+  splitMerchantMeta,
+  splitMerchantTotals,
 } from "./selectors/merchant-stats";
 import { useLedgerReadContext } from "@/common/hooks/use-ledger-read-context";
 import { formatMerchantTotals } from "./selectors/format-merchant-total";
@@ -279,53 +281,23 @@ function MerchantDetailBody({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const pagesFetchedRef = useRef(1);
 
-  // What was paid, to today; what is pre-entered after it apart (w21/796).
+  // One read per figure, by day and free of today's date, split at today here:
+  // what was paid apart from what is pre-entered after it (w21/796). A date in
+  // the statement changed its cache key daily, so a merchant opened offline the
+  // next day showed its load error over cached rows (w21/918).
   const metaBql = useMemo(
-    () => buildMerchantMetaBql(spellings, { through: today }),
-    [spellings, today],
-  );
-  const scheduledMetaBql = useMemo(
-    () => buildMerchantMetaBql(spellings, { after: today }),
-    [spellings, today],
+    () => buildMerchantDailyMetaBql(spellings),
+    [spellings],
   );
   const { expenses, income } = useLedgerRootNames();
   const totalsBql = useMemo(
-    () =>
-      buildMerchantCurrencyTotalsBql(
-        spellings,
-        { expenses, income },
-        { through: today },
-      ),
-    [spellings, expenses, income, today],
-  );
-  const scheduledTotalsBql = useMemo(
-    () =>
-      buildMerchantCurrencyTotalsBql(
-        spellings,
-        { expenses, income },
-        { after: today },
-      ),
-    [spellings, expenses, income, today],
+    () => buildMerchantDailyTotalsBql(spellings, { expenses, income }),
+    [spellings, expenses, income],
   );
   const weightsBql = useMemo(
-    () =>
-      buildMerchantWeightTotalsBql(
-        spellings,
-        { expenses, income },
-        { through: today },
-      ),
-    [spellings, expenses, income, today],
+    () => buildMerchantDailyWeightsBql(spellings, { expenses, income }),
+    [spellings, expenses, income],
   );
-  const { data: scheduledMetaData, refetch: refetchScheduledMeta } =
-    useQueryShellQuery({
-      variables: { ledgerId: ledgerId!, query: scheduledMetaBql },
-      skip: !ledgerId,
-    });
-  const { data: scheduledTotalsData, refetch: refetchScheduledTotals } =
-    useQueryShellQuery({
-      variables: { ledgerId: ledgerId!, query: scheduledTotalsBql },
-      skip: !ledgerId,
-    });
   const { data: weightsData, refetch: refetchWeights } = useQueryShellQuery({
     variables: { ledgerId: ledgerId!, query: weightsBql },
     skip: !ledgerId,
@@ -380,25 +352,23 @@ function MerchantDetailBody({
     notifyOnNetworkStatusChange: true,
   });
 
-  const stats = useMemo(
-    () =>
-      composeMerchantStats(
-        mapMerchantMeta(metaData?.queryShell?.table ?? null),
-        mapMerchantCurrencyTotals(totalsData?.queryShell?.table ?? null),
-        {
-          meta: mapMerchantMeta(scheduledMetaData?.queryShell?.table ?? null),
-          totals: mapMerchantCurrencyTotals(
-            scheduledTotalsData?.queryShell?.table ?? null,
-          ),
-        },
-      ),
-    [
-      metaData?.queryShell?.table,
-      totalsData?.queryShell?.table,
-      scheduledMetaData?.queryShell?.table,
-      scheduledTotalsData?.queryShell?.table,
-    ],
-  );
+  const metaTable = metaData?.queryShell?.table;
+  const totalsTable = totalsData?.queryShell?.table;
+  const weightsTable = weightsData?.queryShell?.table;
+  const stats = useMemo(() => {
+    const meta = splitMerchantMeta(
+      mapMerchantDailyMeta(metaTable ?? null),
+      today,
+    );
+    const totals = splitMerchantTotals(
+      mapMerchantDailyTotals(totalsTable ?? null),
+      today,
+    );
+    return composeMerchantStats(meta.paid, totals.paid, {
+      meta: meta.scheduled,
+      totals: totals.scheduled,
+    });
+  }, [metaTable, totalsTable, today]);
 
   // Totals in currencies that share a symbol read by code, the ledger's own
   // keeping it (w21/535).
@@ -408,7 +378,8 @@ function MerchantDetailBody({
   // What the rows add up to, when legs were priced into another currency.
   const priced = pricedTotals(
     paidTotals,
-    mapMerchantCurrencyTotals(weightsData?.queryShell?.table ?? null),
+    splitMerchantTotals(mapMerchantDailyTotals(weightsTable ?? null), today)
+      .paid,
   );
   // A symbol is told apart across all three lines, not within each (w21/897).
   const lineCurrencies = [...paidTotals, ...scheduledTotals, ...priced].map(
@@ -554,21 +525,12 @@ function MerchantDetailBody({
         refetchMeta(),
         refetchTotals(),
         refetchWeights(),
-        refetchScheduledMeta(),
-        refetchScheduledTotals(),
         refetchJournal(),
       ]);
     } finally {
       setIsRefreshing(false);
     }
-  }, [
-    refetchMeta,
-    refetchTotals,
-    refetchWeights,
-    refetchScheduledMeta,
-    refetchScheduledTotals,
-    refetchJournal,
-  ]);
+  }, [refetchMeta, refetchTotals, refetchWeights, refetchJournal]);
 
   const onRetry = useCallback(() => {
     void onRefresh();

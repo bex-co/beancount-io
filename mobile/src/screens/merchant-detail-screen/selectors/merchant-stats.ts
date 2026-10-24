@@ -221,3 +221,129 @@ export function composeMerchantStats(
     ),
   };
 }
+
+/**
+ * The same three reads without a date in their text, one row per day, split at
+ * today on the client. A statement carrying `date <= today` changes its text,
+ * hence its cache key, every day, so a merchant opened offline the day after it
+ * was last viewed missed the persisted cache and showed "Couldn't load" over
+ * its cached rows (w21/918).
+ */
+export function buildMerchantDailyMetaBql(
+  payees: string | readonly string[],
+): string {
+  return (
+    "SELECT date, count(*) as transaction_count " +
+    `FROM #entries WHERE ${anyPayee(payees)} GROUP BY date ORDER BY date`
+  );
+}
+
+export function buildMerchantDailyTotalsBql(
+  payees: string | readonly string[],
+  roots?: { expenses?: string; income?: string },
+): string {
+  return (
+    "SELECT date, currency, sum(number) as total " +
+    `WHERE ${anyPayee(payees)} AND ${moneyRootsBqlFilter(roots)} ` +
+    "GROUP BY date, currency ORDER BY date, currency"
+  );
+}
+
+export function buildMerchantDailyWeightsBql(
+  payees: string | readonly string[],
+  roots?: { expenses?: string; income?: string },
+): string {
+  return (
+    "SELECT date, currency(weight) as currency, sum(number(weight)) as total " +
+    `WHERE ${anyPayee(payees)} AND ${moneyRootsBqlFilter(roots)} ` +
+    "GROUP BY date, currency(weight)"
+  );
+}
+
+/** Day rows of the count statement: soft-fail to null, [] for no entries. */
+export function mapMerchantDailyMeta(
+  table: QueryResultTableLike | null | undefined,
+): { date: string; count: number }[] | null {
+  if (!table?.types || !table.rows) return null;
+  const dateIdx = columnIndex(table.types, "date");
+  const countIdx = columnIndex(table.types, "transaction_count");
+  if (dateIdx < 0 || countIdx < 0) return null;
+  const days: { date: string; count: number }[] = [];
+  for (const row of table.rows) {
+    if (!Array.isArray(row)) continue;
+    const date = asString(row[dateIdx]);
+    const count = asCount(row[countIdx]);
+    if (date && count !== null) days.push({ date, count });
+  }
+  return days;
+}
+
+/** Day rows of a totals or weights statement: soft-fail to []. */
+export function mapMerchantDailyTotals(
+  table: QueryResultTableLike | null | undefined,
+): { date: string; currency: string; total: number }[] {
+  if (!table?.types || !table.rows) return [];
+  const dateIdx = columnIndex(table.types, "date");
+  const currencyIdx = columnIndex(table.types, "currency");
+  const totalIdx = columnIndex(table.types, "total");
+  if (dateIdx < 0 || currencyIdx < 0 || totalIdx < 0) return [];
+  const days: { date: string; currency: string; total: number }[] = [];
+  for (const row of table.rows) {
+    if (!Array.isArray(row)) continue;
+    const date = asString(row[dateIdx]);
+    const currency = asString(row[currencyIdx]);
+    const total = asNumber(row[totalIdx]);
+    if (date && currency && total !== null) {
+      days.push({ date, currency, total });
+    }
+  }
+  return days;
+}
+
+/** The meta of the days on or before `today` (`paid`) and after it, as the old two statements read. */
+export function splitMerchantMeta(
+  days: readonly { date: string; count: number }[] | null,
+  today: string,
+): { paid: MerchantMeta | null; scheduled: MerchantMeta | null } {
+  if (days === null) return { paid: null, scheduled: null };
+  const meta = (rows: readonly { date: string; count: number }[]) => ({
+    transactionCount: rows.reduce((sum, day) => sum + day.count, 0),
+    firstDate: rows.reduce(
+      (min, day) => (day.date < min ? day.date : min),
+      rows[0]?.date ?? "",
+    ),
+    lastDate: rows.reduce(
+      (max, day) => (day.date > max ? day.date : max),
+      rows[0]?.date ?? "",
+    ),
+  });
+  const paid = days.filter((day) => day.date <= today);
+  const later = days.filter((day) => day.date > today);
+  return {
+    paid: meta(paid),
+    scheduled: later.length > 0 ? meta(later) : null,
+  };
+}
+
+/** The per-currency totals of the days on or before `today` and of those after it. */
+export function splitMerchantTotals(
+  days: readonly { date: string; currency: string; total: number }[],
+  today: string,
+): { paid: MerchantCurrencyTotal[]; scheduled: MerchantCurrencyTotal[] } {
+  const sum = (rows: typeof days) => {
+    const byCurrency = new Map<string, number>();
+    for (const row of rows) {
+      byCurrency.set(
+        row.currency,
+        (byCurrency.get(row.currency) ?? 0) + row.total,
+      );
+    }
+    return [...byCurrency]
+      .map(([currency, total]) => ({ currency, total }))
+      .sort((a, b) => a.currency.localeCompare(b.currency));
+  };
+  return {
+    paid: sum(days.filter((day) => day.date <= today)),
+    scheduled: sum(days.filter((day) => day.date > today)),
+  };
+}
