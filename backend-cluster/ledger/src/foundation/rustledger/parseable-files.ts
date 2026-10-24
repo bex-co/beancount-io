@@ -28,9 +28,29 @@ export function commentSkippedLines(source: string): string {
   );
 }
 
+const LEADING_DOT_NUMBER_RE = /(?<![\w.:#^])\.\d/u;
+const LEADING_DOT_OR_TOKEN_RE =
+  /"(?:[^"\\]|\\.)*"|;[^\n]*|(?<![\w.:#^])\.(?=\d)/gu;
+
+/**
+ * `source` with a number written without its leading zero (`.5`, `-.5`,
+ * `+.5`) given one. Beancount's lexer reads `.5` as 0.5; rustledger 0.24
+ * rejects the dot, then keeps the posting with the number 5 and drops the sign,
+ * so Home, Accounts and Reports totalled ten times the amount written
+ * (w21/969). Strings and `;` comments are matched first and left as they are,
+ * and a dot after a letter, digit, `:`, `#` or `^` is part of something else.
+ */
+export function withLeadingZeros(source: string): string {
+  if (!LEADING_DOT_NUMBER_RE.test(source)) return source;
+  return source.replace(LEADING_DOT_OR_TOKEN_RE, (token) =>
+    token === "." ? "0." : token,
+  );
+}
+
 /**
  * The files the engine parses: undecodable sources read as empty files, lines
- * Beancount skips read as comments, and a hidden file no include reaches is
+ * Beancount skips read as comments, a number without its leading zero given
+ * one, and a hidden file no include reaches is
  * left out, since the engine's glob matches `y/.draft.bean` for
  * `include "y/*.bean"` where Beancount's skips it (w21/657).
  */
@@ -47,7 +67,9 @@ export function parseableFiles(files: FileMap, entryPoint: string): FileMap {
       continue;
     }
     const text =
-      content === UNDECODABLE_SOURCE ? "" : commentSkippedLines(content);
+      content === UNDECODABLE_SOURCE
+        ? ""
+        : withLeadingZeros(commentSkippedLines(content));
     if (text !== content) changed = true;
     parseable[path] = text;
   }
