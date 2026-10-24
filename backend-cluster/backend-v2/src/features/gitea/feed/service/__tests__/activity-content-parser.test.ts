@@ -331,6 +331,28 @@ describe("summarizeParsedContent", () => {
     expect(lines.length - 1 + 3).toBe(5);
   });
 
+  // w21/985: with no line listed, "+N more" had nothing above it.
+  it("returns an empty string when every shown commit has an empty message", () => {
+    for (const length of [1, 3]) {
+      const content = JSON.stringify({
+        Commits: Array.from({ length }, (_, i) => ({
+          Sha1: `sha${i}`,
+          Message: "",
+          AuthorName: "Alice",
+          AuthorEmail: "a@b.com",
+          CommitterName: "Alice",
+          CommitterEmail: "a@b.com",
+          Timestamp: "2024-01-01T00:00:00Z",
+        })),
+        HeadCommit: null,
+        CompareURL: "",
+        Len: length,
+      });
+      const parsed = parseActivityContent("commit_repo", content);
+      expect(summarizeParsedContent(parsed, 3)).toBe("");
+    }
+  });
+
   it("returns empty string for push with no commits", () => {
     const content = makePushContent({ Commits: [], Len: 0 });
     const parsed = parseActivityContent("commit_repo", content);

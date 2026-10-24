@@ -303,8 +303,13 @@ export function summarizeParsedContent(
       // From the lines that are listed, not the commits looked at: a commit
       // with a blank first line is dropped from the list, and a count taken
       // before that left a push of five reading as four (w21/963).
+      // And only under a line that is listed: with none (every shown commit had
+      // an empty message) a bare "+N more" says nothing (w21/985).
       const remainder = parsed.totalCount - lines.length;
-      const suffix = remainder > 0 ? `\n+${remainder} more commit(s)` : "";
+      const suffix =
+        remainder > 0 && lines.length > 0
+          ? `\n+${remainder} more commit(s)`
+          : "";
       return fitLines(lines, suffix);
     }
     case "issue": {
