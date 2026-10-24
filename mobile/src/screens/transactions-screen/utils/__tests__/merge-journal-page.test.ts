@@ -145,3 +145,38 @@ describe("identical twins", () => {
     ).toBe(true);
   });
 });
+
+// w21/913: a delete elsewhere skipped a row, and a reorder repeated one.
+describe("mergeJournalPage when the list moved without a repeated row", () => {
+  it("reloads when the total shrank, though no hash repeats", () => {
+    const next = ["landlord", "acme"].map(row);
+    const merged = mergeJournalPage(PAGE_1, next, { loaded: 7, page: 6 });
+    expect(merged.overlapped).toBe(true);
+  });
+
+  const placed = (entry_hash: string, lineno: number) => ({
+    entry_hash,
+    meta: { filename: "main.bean", lineno },
+  });
+
+  it("reloads when a same-total page opens on the last loaded row again", () => {
+    const loaded = [placed("a", 1), placed("b", 2)];
+    const merged = mergeJournalPage(loaded, [placed("b", 2), placed("c", 3)], {
+      loaded: 3,
+      page: 3,
+    });
+    expect(merged.overlapped).toBe(true);
+    expect(merged.data.map((r) => r.entry_hash)).toEqual(["a", "b", "c"]);
+  });
+
+  it("still pages through a true twin, which sits on another line", () => {
+    const loaded = [placed("a", 1), placed("coffee", 2)];
+    const merged = mergeJournalPage(
+      loaded,
+      [placed("coffee", 9), placed("c", 3)],
+      { loaded: 4, page: 4 },
+    );
+    expect(merged.overlapped).toBe(false);
+    expect(merged.data.length).toBe(4);
+  });
+});

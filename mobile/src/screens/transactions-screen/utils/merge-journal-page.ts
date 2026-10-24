@@ -12,6 +12,12 @@
  * reloaded from the top on every page, forever (w21/419). Rows are appended
  * as they are.
  *
+ * A changed total reloads on any change, not only on a repeated hash: a delete
+ * elsewhere shrinks it and shifts a row across the boundary that no page shows
+ * (w21/913). A same-total reorder (an edit that moves an entry) is told by the
+ * page opening on the last loaded row again, at the same place in the same
+ * file; a true twin is at another line and pages through.
+ *
  * Free of `@/` imports so the jest-lite runner can require it.
  */
 export function mergeJournalPage<T extends { entry_hash?: string | null }>(
@@ -23,19 +29,21 @@ export function mergeJournalPage<T extends { entry_hash?: string | null }>(
     totals?.loaded != null &&
     totals?.page != null &&
     totals.loaded !== totals.page;
-  if (!moved) return { data: [...loaded, ...page], overlapped: false };
+  if (!moved) {
+    if (opensOnLastLoaded(loaded, page)) {
+      return { data: dropFirst(loaded, page), overlapped: true };
+    }
+    return { data: [...loaded, ...page], overlapped: false };
+  }
   const seen = new Set(loaded.map((row) => row.entry_hash));
   const data = [...loaded];
-  let overlapped = false;
   for (const row of page) {
-    if (row.entry_hash != null && seen.has(row.entry_hash)) {
-      overlapped = true;
-      continue;
-    }
+    if (row.entry_hash != null && seen.has(row.entry_hash)) continue;
     seen.add(row.entry_hash);
     data.push(row);
   }
-  return { data, overlapped };
+  // The total moved: the list shifted whether or not a hash repeats.
+  return { data, overlapped: true };
 }
 
 /**
@@ -66,4 +74,32 @@ export function journalRowKeys<T extends { entry_hash?: string | null }>(
  */
 export function journalListKey(ledgerId: string, query: object): string {
   return JSON.stringify([ledgerId, query]);
+}
+
+type Placed = {
+  entry_hash?: string | null;
+  meta?: Record<string, unknown> | null;
+};
+
+/** Whether the page's first row is the last loaded one again: same hash, same file and line. */
+function opensOnLastLoaded(
+  loaded: readonly Placed[],
+  page: readonly Placed[],
+): boolean {
+  const last = loaded[loaded.length - 1];
+  const first = page[0];
+  if (!last || !first || last.entry_hash == null) return false;
+  if (first.entry_hash !== last.entry_hash) return false;
+  const place = (row: Placed) => [row.meta?.filename, row.meta?.lineno];
+  const [lastFile, lastLine] = place(last);
+  return (
+    typeof lastFile === "string" &&
+    typeof lastLine === "number" &&
+    place(first)[0] === lastFile &&
+    place(first)[1] === lastLine
+  );
+}
+
+function dropFirst<T>(loaded: readonly T[], page: readonly T[]): T[] {
+  return [...loaded, ...page.slice(1)];
 }
