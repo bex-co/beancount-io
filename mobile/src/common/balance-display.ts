@@ -19,6 +19,7 @@
  * Free of `@/` imports so the jest-lite runner can require it.
  */
 import { isolateLtr } from "./bidi";
+import { isFiatCurrency } from "./currency-util";
 import { resolveCurrencyBalance } from "./balance-util";
 import { amountScale, formatExactUnits, formatUnits } from "./number-utils";
 import type { Valuation } from "./valuation";
@@ -88,14 +89,17 @@ export type BalanceDisplay =
     };
 
 /**
- * Whether a balance is lots held at cost: units that carry a value in the
- * operating currency. A split of such lots is no 900% gain, so its chart reads
- * neutral (w21/713). Units with no value, a foreign-currency card or bank
- * account, are money in another currency: their change has a percent and a
- * direction like any other (w21/958).
+ * Whether a units balance reads neutral on a chart: lots held at cost, or any
+ * commodity (a transfer-in, an RSU grant, an airdrop, unpriced BTC), where a
+ * rise in units is no gain and a split is no 900% one (w21/713). Only a
+ * national currency with no value in the ledger's currency, a foreign-currency
+ * card or bank account, is money in another currency: its change has a percent
+ * and a direction like any other (w21/958). `value` alone could not tell them
+ * apart, since an unpriced commodity has none either (w21/982).
  */
 export const isUnitsHeldAtCost = (display: BalanceDisplay): boolean =>
-  display.kind === "units" && display.value !== null;
+  display.kind === "units" &&
+  (display.value !== null || !isFiatCurrency(display.units.currency));
 
 /**
  * One currency's entry in a balance map with its recorded scale, read strictly:

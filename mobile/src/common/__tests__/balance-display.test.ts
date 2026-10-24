@@ -291,3 +291,28 @@ describe("isUnitsHeldAtCost", () => {
     expect(source.includes("neutral={isUnitsHeldAtCost(display)}")).toBe(true);
   });
 });
+
+// w21/982: `value === null` could not tell a foreign-currency card from a
+// commodity with no cost or price, whose rise in units is no gain.
+describe("isUnitsHeldAtCost for commodities without a value", () => {
+  it("keeps an unpriced commodity neutral, and a foreign-currency card coloured", () => {
+    const btc = selectBalanceDisplay({}, { BTC: "2" }, "USD");
+    expect(btc.kind).toBe("units");
+    expect(isUnitsHeldAtCost(btc)).toBe(true);
+    const rsu = selectBalanceDisplay({}, { RSU: "40" }, "USD");
+    expect(isUnitsHeldAtCost(rsu)).toBe(true);
+    const jpy = selectBalanceDisplay(
+      { JPY: "-30000" },
+      { JPY: "-30000" },
+      "USD",
+    );
+    expect(jpy.kind).toBe("units");
+    expect(isUnitsHeldAtCost(jpy)).toBe(false);
+    const eur = selectBalanceDisplay(
+      { EUR: "-300.00" },
+      { EUR: "-300.00" },
+      "USD",
+    );
+    expect(isUnitsHeldAtCost(eur)).toBe(false);
+  });
+});
