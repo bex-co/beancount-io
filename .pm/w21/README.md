@@ -50,3 +50,4 @@
 - [988](./988.md) — The New File dialog accepts a path that reuses a file name as a folder, or a folder name as a file
 - [989](./989.md) — A case-twin folder below the first path level is accepted in the New File dialog
 - [990](./990.md) — The Return key does nothing in the New File dialog (native)
+- [991](./991.md) — Percent signs are spaced two ways within a locale, and loading/saving strings use three ASCII dots
