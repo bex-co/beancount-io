@@ -18,7 +18,13 @@ import {
   useWindowDimensions,
 } from "react-native";
 import * as Clipboard from "expo-clipboard";
-import { Redirect, Stack, useFocusEffect, useRouter } from "expo-router";
+import {
+  Redirect,
+  Stack,
+  useFocusEffect,
+  useNavigation,
+  useRouter,
+} from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import {
   SafeAreaView,
@@ -89,6 +95,7 @@ import {
   readOnlyNoticeColors,
 } from "./utils";
 import { selectLedgerFileEditorState } from "./select-editor-state";
+import { viewErrorsMove } from "./view-errors-route";
 import { LEADING_TEXT_ALIGN, directionalIcon } from "@/common/rtl";
 import { useRouteParams } from "@/common/hooks/use-route-params";
 import { bindRouteLedger } from "@/common/route-ledger";
@@ -424,6 +431,7 @@ function LedgerFileEditorSession({
   const { fontScale } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const navigation = useNavigation();
   const guest = useGuest();
   const { canWrite: canWriteLedger } = useLedgerAccess();
   // A file that does not round-trip as UTF-8 opens read-only: saving it would
@@ -532,12 +540,21 @@ function LedgerFileEditorSession({
           { text: t("done"), style: "cancel" },
           {
             text: t("ledgerEditorViewErrors"),
-            onPress: () => router.navigate("/(app)/notifications"),
+            onPress: () => {
+              // Read when pressed: the stack may have changed since the save.
+              if (
+                viewErrorsMove(navigation.getState()?.routes) === "dismissTo"
+              ) {
+                router.dismissTo("/(app)/notifications");
+              } else {
+                router.push("/(app)/notifications");
+              }
+            },
           },
         ],
       );
     },
-    [client, ledgerId, router, t],
+    [client, ledgerId, navigation, router, t],
   );
 
   // Set when the screen goes, so a save still in flight can finish the sweep

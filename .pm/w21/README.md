@@ -46,7 +46,6 @@
 - [895](./blocked/895.md) — Account detail's range chips filter only the chart, not the list below — **blocked:** owner picks a range-bounded list (backend date bound on all surfaces) or an "All entries" caption
 - [922](./blocked/922.md) — Changing to a payee with no history keeps the previous payee's accounts (owner's call) — **blocked:** owner decides whether a no-history or cleared payee resets an untouched fill (reverses w21/411)
 - [951](./blocked/951.md) — Expense accounts are valued at market on Accounts and account detail, but at cost everywhere else — **blocked:** owner confirms flows-at-cost covers Income/Expenses balances; needs a native priced-lot check
-- [954](./954.md) — w21/544 reopened: "View errors" still stacks a second Notifications screen
 - [955](./955.md) — Receipt photos are uploaded at any size, so oversized ones always fail to parse
 - [956](./956.md) — Receipt Try Again after a failed parse uploads the photo again
 - [957](./957.md) — A failed shutter tap on iPad or with haptics off gives no feedback

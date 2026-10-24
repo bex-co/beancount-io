@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { viewErrorsMove } from "../view-errors-route";
 
 /**
  * w21/544: View errors opens Notifications, whose error row opens a second
@@ -40,10 +41,34 @@ describe("returning to an editor whose file was saved elsewhere", () => {
     );
   });
 
-  it("returns to an existing Notifications instead of stacking another", () => {
+  it("returns to an existing Notifications instead of stacking another (w21/954)", () => {
+    expect(
+      screen.includes(
+        'if(viewErrorsMove(navigation.getState()?.routes)==="dismissTo"){router.dismissTo("/(app)/notifications");}else{router.push("/(app)/notifications");}',
+      ),
+    ).toBe(true);
     expect(screen.includes('router.navigate("/(app)/notifications")')).toBe(
-      true,
+      false,
     );
-    expect(screen.includes('router.push("/(app)/notifications")')).toBe(false);
+  });
+});
+
+// w21/954: the stack decides it, not a source string.
+describe("viewErrorsMove", () => {
+  it("pops to a Notifications screen below the editor", () => {
+    expect(
+      viewErrorsMove([
+        { name: "(tabs)" },
+        { name: "notifications" },
+        { name: "ledger-file-editor" },
+      ]),
+    ).toBe("dismissTo");
+  });
+
+  it("pushes one when the editor came from Files, or the stack is unknown", () => {
+    expect(
+      viewErrorsMove([{ name: "(tabs)" }, { name: "ledger-file-editor" }]),
+    ).toBe("push");
+    expect(viewErrorsMove(undefined)).toBe("push");
   });
 });
