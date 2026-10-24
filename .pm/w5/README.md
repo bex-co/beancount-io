@@ -78,6 +78,8 @@ The 27 findings from the MCP QA auth sweep against the hosted endpoint (023–05
 
 - [1018 — Preserve dateless lots in listed-quantity replay](./1018.md) — minor CLI gap: resolving inferred quantities in JSON invents acquisition dates and makes a valid three-trade replay ambiguous; null-number, dated and single-add-reply controls pass.
 
+- [1019 — Preserve one-letter cost currency token boundaries](./1019.md) — minor CLI gap: valid X/Q costs lose required spacing, blocking writes and producing invalid PRINT/details exports; two-letter cost and one-letter price controls pass.
+
 ## Blocked inbox
 
 - [431 — `add balance`/`add price`/bare-number adds load the ledger twice for pre-checks](./blocked/431.md) — blocked on a maintainer choice between a pre-commit hook in the shared write validation and plugin-free pre-checks that change refusals.
