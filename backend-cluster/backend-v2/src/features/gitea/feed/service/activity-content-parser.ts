@@ -300,7 +300,10 @@ export function summarizeParsedContent(
       }
       const shown = parsed.commits.slice(0, maxCommits);
       const lines = shown.map((c) => c.message.split("\n")[0]).filter(Boolean);
-      const remainder = parsed.totalCount - shown.length;
+      // From the lines that are listed, not the commits looked at: a commit
+      // with a blank first line is dropped from the list, and a count taken
+      // before that left a push of five reading as four (w21/963).
+      const remainder = parsed.totalCount - lines.length;
       const suffix = remainder > 0 ? `\n+${remainder} more commit(s)` : "";
       return fitLines(lines, suffix);
     }

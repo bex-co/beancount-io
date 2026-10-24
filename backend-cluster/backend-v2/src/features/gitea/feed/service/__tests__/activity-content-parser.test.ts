@@ -306,6 +306,31 @@ describe("summarizeParsedContent", () => {
     expect(summary).toBe("Commit 1\nCommit 2\nCommit 3\n+2 more commit(s)");
   });
 
+  // w21/963: a blank first line dropped a commit from the list but not from the
+  // count the list was measured against.
+  it("counts a commit with a blank first line among the rest, so the total is the push's", () => {
+    const content = JSON.stringify({
+      Commits: Array.from({ length: 5 }, (_, i) => ({
+        Sha1: `sha${i}`,
+        Message: i === 1 ? "" : `Commit ${i + 1}`,
+        AuthorName: "Alice",
+        AuthorEmail: "a@b.com",
+        CommitterName: "Alice",
+        CommitterEmail: "a@b.com",
+        Timestamp: "2024-01-01T00:00:00Z",
+      })),
+      HeadCommit: null,
+      CompareURL: "",
+      Len: 5,
+    });
+    const parsed = parseActivityContent("commit_repo", content);
+    const summary = summarizeParsedContent(parsed, 3);
+    expect(summary).toBe("Commit 1\nCommit 3\n+3 more commit(s)");
+    // Two listed and three more: five commits.
+    const lines = summary.split("\n");
+    expect(lines.length - 1 + 3).toBe(5);
+  });
+
   it("returns empty string for push with no commits", () => {
     const content = makePushContent({ Commits: [], Len: 0 });
     const parsed = parseActivityContent("commit_repo", content);
