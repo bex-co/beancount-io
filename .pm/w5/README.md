@@ -38,15 +38,11 @@
 
 - [1013 — Keep written transactions after native currency grouping](./1013.md) — major CLI source/order regression; a header-only copy hides the real mixed-currency row and an unchanged import writes another 10 USD and 20 EUR despite duplicate skip, reproduced twice 2026-10-23.
 
-- [1012 — Compare declared tags and links for calculated copies](./1012.md) — minor CLI provenance/filter gap; on-disk tag/link filters return annotations absent from the source file, reproduced twice 2026-10-23.
 
-- [1011 — Keep valid inferred quantities in stated-fact comparison](./1011.md) — reopened major CLI regression after c21df5ae0; a native-valid inferred-quantity purchase with a header-only copy crashes listing and new bank import, reproduced twice 2026-10-23.
+- [1011 — Preserve stated total costs across booked lot fragments](./1011.md) — reopened major CLI regression after f11b7b220; a real two-lot sale is hidden and the same settlement adds 500 USD despite duplicate skip. Also retains minor exact-fact cases; reproduced twice on latest main, 2026-10-23.
 
-- [1009 — Compose the old empty-label and compound-cost import ID](./1009.md) — reopened minor CLI lookup branch; unchanged historical acquisitions, including paired payees and repeated rows, require review despite matching native lots, reproduced twice 2026-10-23.
 
-- [1004 — Preserve a real booked sale with a partly inferred cash total](./1004.md) — reopened major CLI regression after 9d82b99cc; on-disk loses the sale and import writes another 500 USD despite explicit duplicate skip, reproduced twice 2026-10-23.
 
-- [1010 — Recover an inferred native-ID owner with its native booked weight](./1010.md) — reopened remaining minor CLI acceptance after 71ab12792; total/compound cost recovery rounds Cash differently and rejects an unchanged native-equivalent statement, reproduced twice 2026-10-23.
 
 
 
