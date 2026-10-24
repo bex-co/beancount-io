@@ -451,7 +451,7 @@ describe("Transactions narrowed empty results", () => {
     const searched = render(TransactionsScreen);
     expect(actions(searched).length).toBe(0);
     expect(text(searched).includes("transactionsNoSearchResults")).toBe(true);
-    expect(journalVariables.query.filter).toBe('"missing\\s+merchant"');
+    expect(journalVariables.query.filter).toBe('"missing" "merchant"');
   });
 
   it("keeps account-filter no-results separate from first-transaction onboarding", () => {

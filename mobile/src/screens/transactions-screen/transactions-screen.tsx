@@ -45,7 +45,7 @@ import {
   JournalSection,
   groupToSections,
 } from "./utils/transaction-display-utils";
-import { toPlainSearchFilter } from "./utils/plain-search-filter";
+import { toWordsSearchFilter } from "./utils/plain-search-filter";
 import { searchForLedger, type ScopedSearch } from "./filters/scoped-search";
 import {
   journalListKey,
@@ -143,7 +143,7 @@ const TransactionList = () => {
     ledgerId,
     searchReset,
   ).trim();
-  const filter = useMemo(() => toPlainSearchFilter(search), [search]);
+  const filter = useMemo(() => toWordsSearchFilter(search), [search]);
 
   // Status / date range / account, picked in the filter modal. Like the search
   // they narrow the query itself, so paging stays consistent with the filter.

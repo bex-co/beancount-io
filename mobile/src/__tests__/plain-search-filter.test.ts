@@ -1,4 +1,7 @@
-import { toPlainSearchFilter } from "../screens/transactions-screen/utils/plain-search-filter";
+import {
+  toPlainSearchFilter,
+  toWordsSearchFilter,
+} from "../screens/transactions-screen/utils/plain-search-filter";
 
 describe("toPlainSearchFilter", () => {
   it("returns undefined for empty or whitespace input", () => {
@@ -236,6 +239,34 @@ describe("toPlainSearchFilter and how text is written", () => {
       expect(/^"[^"]*"$/.test(filter)).toBe(true);
       expect(filter.length - 2 <= 256).toBe(true);
       expect(() => new RegExp(filter.slice(1, -1), "i")).not.toThrow();
+    }
+  });
+});
+
+// w21/911: "sushi dinner" found nothing unless both words sat together in one field.
+describe("toWordsSearchFilter", () => {
+  it("sends each word as its own term, which the engine reads as an AND", () => {
+    expect(toWordsSearchFilter("sushi dinner")).toBe('"sushi" "dinner"');
+    expect(toWordsSearchFilter("dinner   sushi")).toBe('"dinner" "sushi"');
+  });
+
+  it("leaves a single word as the phrase search it was", () => {
+    expect(toWordsSearchFilter("Mr. Marcel".split(" ")[0]!)).toBe(
+      toPlainSearchFilter("Mr."),
+    );
+    expect(toWordsSearchFilter("  ")).toBe(undefined);
+  });
+
+  it("keeps a tag word's alternatives grouped so the OR cannot take its neighbours", () => {
+    const filter = toWordsSearchFilter("#trip sushi")!;
+    expect(filter.startsWith("(#trip,tags:")).toBe(true);
+    expect(filter.endsWith(') "sushi"')).toBe(true);
+  });
+
+  it("holds the pattern cap for each word", () => {
+    const words = ["a".repeat(300), "b".repeat(300)];
+    for (const term of toWordsSearchFilter(words.join(" "))!.split(" ")) {
+      expect(term.length <= 258).toBe(true);
     }
   });
 });

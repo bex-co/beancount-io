@@ -36,13 +36,33 @@ export function toPlainSearchFilter(raw: string): string | undefined {
   // capitalize, so "#japan2026" missed #Japan2026: a third alternative matches
   // the start of any one tag (or link) case-insensitively, through the filter's
   // `tags:` attribute, whose list reads "a, b" (w21/640).
-  if (TAG_OR_LINK.test(trimmed)) {
-    const attribute = trimmed.startsWith("#") ? "tags" : "links";
-    const prefix = `${attribute}:"(?:^|, )${escapeRegExp(trimmed.slice(1))}"`;
-    return `${trimmed},${prefix},${quoted(trimmed)}`;
-  }
+  if (TAG_OR_LINK.test(trimmed)) return tagOrLinkFilter(trimmed);
 
   return quoted(trimmed);
+}
+
+function tagOrLinkFilter(token: string): string {
+  const attribute = token.startsWith("#") ? "tags" : "links";
+  const prefix = `${attribute}:"(?:^|, )${escapeRegExp(token.slice(1))}"`;
+  return `${token},${prefix},${quoted(token)}`;
+}
+
+/**
+ * The Transactions search: several words must all be found, in any order and
+ * in any field, as in Fava, where juxtaposed terms are an AND. The whole input
+ * as one phrase found "sushi dinner" only when both sat together in one field,
+ * so a row reading "SUSHI PLACE / Dinner" matched nothing (w21/911). A single
+ * word is the phrase search as it was. A `#tag` or `^link` word keeps its
+ * alternatives, in parentheses so the `,` (OR) cannot swallow its neighbours.
+ */
+export function toWordsSearchFilter(raw: string): string | undefined {
+  const words = raw.trim().split(/\s+/u).filter(Boolean);
+  if (words.length <= 1) return toPlainSearchFilter(raw);
+  return words
+    .map((word) =>
+      TAG_OR_LINK.test(word) ? `(${tagOrLinkFilter(word)})` : quoted(word),
+    )
+    .join(" ");
 }
 
 /**
