@@ -3,7 +3,7 @@
   "state": "submitted; open and unmerged; Docker review pending",
   "submissionUrl": "https://github.com/docker/mcp-registry/pull/6042",
   "submittedAtUTC": "2026-10-24T01:18:20Z",
-  "lastCheckedAtUTC": "2026-10-24T01:20:03Z",
+  "lastCheckedAtUTC": "2026-10-24T01:50:07Z",
   "baseCommit": "49b643ce3fc73e6ee80bb962719b6e2990e3d397",
   "headCommit": "5a30305e179493b3d5502f2d38821fedb99491d9",
   "changedFiles": 3,
@@ -46,6 +46,7 @@
     "go test -mod=readonly ./..."
   ],
   "testCredentialForm": "https://forms.gle/6Lw3nsvu2d6nFg8e6",
-  "testCredentialFormState": "Not submitted; no test credential shared. The PR leaves this checklist item unchecked.",
-  "nextAction": "Follow Docker review/CI and the private synthetic reviewer-access requirement; then verify actual public catalog discovery and native installation. Do not submit a duplicate PR."
+  "testCredentialFormState": "Not submitted. A single-synthetic-ledger read/write, no-admin, 2026-10-31 UTC-expiring token draft is prepared in first-party UI; exact creation/private-sharing decision is pending. No credential created or sent.",
+  "nextAction": "Follow Docker review/CI and the private synthetic reviewer-access requirement; then verify actual public catalog discovery and native installation. Do not submit a duplicate PR.",
+  "reviewerAccessProgress": "reviewer-access-progress.json"
 }

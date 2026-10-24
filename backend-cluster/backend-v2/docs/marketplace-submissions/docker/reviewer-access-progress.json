@@ -1,0 +1,36 @@
+{
+  "checkedAtUTC": "2026-10-24T01:50:07Z",
+  "submissionUrl": "https://github.com/docker/mcp-registry/pull/6042",
+  "privateIntakeUrl": "https://forms.gle/6Lw3nsvu2d6nFg8e6",
+  "requiredFormFields": [
+    "pull request URL",
+    "contact email",
+    "testing credentials"
+  ],
+  "formSubmitted": false,
+  "credentialCreated": false,
+  "credentialShared": false,
+  "proposal": {
+    "name": "docker-mcp-review-6042",
+    "ledgerRestriction": "one selected synthetic QA ledger",
+    "scopes": [
+      "ledger.read",
+      "ledger.write"
+    ],
+    "ledgerAdmin": false,
+    "expiresAtUTCEndOfDate": "2026-10-31",
+    "reviewerCapability": "Read and modify only the selected synthetic ledger; reviewers are instructed to use dry_run for write previews."
+  },
+  "firstPartyDraftUI": "https://beancount.io/settings/api-keys",
+  "draftVerifiedInUI": true,
+  "confirmation": "Exact new credential creation and transmission to Docker Inc private review form requested; no answer received. Prior native Docker OAuth approval is retained and is a different recipient/access path.",
+  "privateQueueState": "Unobservable",
+  "upstreamObserved": {
+    "open": true,
+    "merged": false,
+    "mergeable": true,
+    "comments": 0,
+    "reportedChecks": 0
+  },
+  "nextAction": "After exact approval, create the restricted expiring reviewer credential, validate its bounds without real writes and submit through the official private form. Otherwise obtain Docker waiver or reviewer-supported alternative. Never publish credentials or the account password."
+}

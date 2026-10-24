@@ -121,3 +121,20 @@ and the PR's corresponding checkbox stays unchecked. Use only explicitly
 approved synthetic reviewer access through that channel if required. Follow
 this existing PR and its actual checks, then verify the public catalog path;
 no duplicate contribution or live-publication claim is made.
+
+## Private review-access preparation — 2026-10-24 UTC
+
+The real Docker private form requires the PR URL, contact email and testing
+credentials. No field was filled with a credential or account password. The
+first-party token dialog supports a single ledger restriction, read/write
+without administration and an expiration date. A draft named
+`docker-mcp-review-6042` is prepared for only the synthetic QA ledger, with
+`ledger.read ledger.write`, no `ledger.admin`, expiring at the end of
+2026-10-31 UTC. **No token has been created or shared.**
+
+The exact decision to generate that credential and transmit it to Docker Inc.'s
+private review form is pending. This is separate from the already completed
+native Docker client's OAuth grant. The [public-safe progress record](./reviewer-access-progress.json)
+contains no credential. At01:50UTC the existing PR is still open/mergeable,
+with no comments or reported checks; no upstream CI pass is inferred.
+Continue other targets while this private-access/reviewer condition remains.

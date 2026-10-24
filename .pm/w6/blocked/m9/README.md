@@ -153,3 +153,14 @@ actual official/community submission records and completed native QA. It is
 archived under done/ with evidence. Official review/publication and subsequent
 actual official-gallery verification remain under t006; the milestone remains
 blocked and its public-listing DoD is unchanged.
+
+## Current Docker private-review gate — 2026-10-24T01:50:07Z
+
+The required private testing-credential form remains incomplete. A first-party
+single-synthetic-ledger read/write/no-admin token draft with2026-10-31UTC expiry
+is ready; no credential is generated/shared. t002 retains this mandatory step
+and its exact new sharing decision, separate from completed client OAuth/t012.
+**Unblock/owners:** account holder confirms the specific credential/private
+Docker-review recipient, then worker verifies bounds and submits the form;
+alternatively Docker reviewers waive or supply a supported replacement. t006
+retains actual publication and catalog verification.
