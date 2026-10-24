@@ -846,16 +846,20 @@ export type BudgetHistoryRow = BudgetHistoryEntry & {
  * so a future-dated entry sorts to the top without being marked live. With
  * every entry in the future, that is the earliest, which previews the budget
  * but is not yet in effect: it was highlighted under a "Starts Nov 1" badge
- * (w21/765).
+ * (w21/765). Identical entries share a hash: only the newest of them is the
+ * one in effect (w21/910).
  */
 export function selectHistoryRows(
   group: BudgetGroup,
   today: string = getFormatDate(new Date()),
 ): BudgetHistoryRow[] {
-  return [...group.budgetHistory].reverse().map((entry) => ({
-    ...entry,
-    isCurrent: entry.entry_hash === group.entry_hash && entry.date <= today,
-  }));
+  let marked = false;
+  return [...group.budgetHistory].reverse().map((entry) => {
+    const isCurrent =
+      !marked && entry.entry_hash === group.entry_hash && entry.date <= today;
+    if (isCurrent) marked = true;
+    return { ...entry, isCurrent };
+  });
 }
 
 /**

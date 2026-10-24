@@ -120,3 +120,21 @@ describe("selectHistoryRows before any entry is in effect", () => {
     ).toEqual([true]);
   });
 });
+
+// w21/910: two identical entries share one hash.
+describe("selectHistoryRows with identical entries", () => {
+  it("marks only the newest twin as the one in effect", () => {
+    const rows = selectHistoryRows(
+      group(
+        [
+          ["2026-10-23", "monthly", "300 USD"],
+          ["2026-10-23", "monthly", "300 USD"],
+        ],
+        "2026-10-23",
+      ),
+      "2026-10-23",
+    );
+    expect(rows.length).toBe(2);
+    expect(rows.map((row) => row.isCurrent)).toEqual([true, false]);
+  });
+});

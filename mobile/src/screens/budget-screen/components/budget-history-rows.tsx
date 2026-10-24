@@ -17,6 +17,7 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { AmountText } from "@/components";
 import { useLedgerAccess } from "@/common/hooks/use-ledger-access";
 import { useToday } from "@/common/hooks/use-today";
+import { journalRowKeys } from "@/screens/transactions-screen/utils/merge-journal-page";
 import { useDeleteBudgetEntry } from "@/screens/budget-screen/hooks/use-delete-budget-entry";
 import { selectBudgetEntryActions } from "@/screens/budget-screen/selectors/select-budget-write-actions";
 import {
@@ -124,6 +125,8 @@ export function BudgetHistoryRows({
 
   const today = useToday();
   const rows = selectHistoryRows(group, today);
+  // Twin entries share a hash: their keys carry the ordinal (w21/910).
+  const keys = journalRowKeys(rows);
 
   const confirmDelete = ({
     entry_hash: entryHash,
@@ -181,7 +184,7 @@ export function BudgetHistoryRows({
       {expanded &&
         rows.map((row) => (
           <View
-            key={row.entry_hash}
+            key={keys.get(row)}
             style={[styles.row, row.isCurrent && styles.rowCurrent]}
           >
             <Text style={styles.date}>
