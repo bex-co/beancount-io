@@ -36,7 +36,7 @@
 
 ## Inbox
 
-- [1013 — Keep written transactions after native currency grouping](./1013.md) — major CLI source/order regression; a header-only copy hides the real mixed-currency row and an unchanged import writes another 10 USD and 20 EUR despite duplicate skip, reproduced twice 2026-10-23.
+- [1013 — Match inferred and explicit source postings without consuming the wrong line](./1013.md) — reopened remaining major CLI matching gap after 8d1566b42; an inferred Cash line is consumed too early and the same statement doubles USD/EUR expenses despite duplicate skip, reproduced twice 2026-10-23.
 
 
 - [1011 — Preserve stated total costs across booked lot fragments](./1011.md) — reopened major CLI regression after f11b7b220; a real two-lot sale is hidden and the same settlement adds 500 USD despite duplicate skip. Also retains minor exact-fact cases; reproduced twice on latest main, 2026-10-23.
