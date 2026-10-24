@@ -16,7 +16,19 @@ export function withoutInvisibleMarks(text: string): string {
   return text.replace(INVISIBLE_MARKS, "");
 }
 
-/** Free text as it is saved: those marks gone, then the ends trimmed. */
+/**
+ * Marks dropped from text that is saved: the ones that carry nothing a reader
+ * sees. The left- and right-to-left marks, the Arabic letter mark and the soft
+ * hyphen stay: a user may have typed an RLM so that trailing punctuation sits
+ * on the right side of Arabic or Hebrew text, and stripping it moved the
+ * punctuation (w21/986). Names, keys and searches fold all of them away through
+ * {@link withoutInvisibleMarks}, so a pasted trailing LRM still merges merchants
+ * and suggestions.
+ */
+const UNSEEN_MARKS =
+  /[\u180e\u200b\u202a-\u202e\u2060-\u2064\u2066-\u2069\ufeff]/gu;
+
+/** Free text as it is saved: unseen marks gone, direction marks kept, then the ends trimmed. */
 export function cleanFreeText(text: string): string {
-  return withoutInvisibleMarks(text).trim();
+  return text.replace(UNSEEN_MARKS, "").trim();
 }

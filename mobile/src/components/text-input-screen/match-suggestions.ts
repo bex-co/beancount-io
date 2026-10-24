@@ -1,6 +1,9 @@
 import { foldArabicScript } from "../../common/arabic-script-fold";
 import { foldQuotes } from "../../common/merchant-key";
-import { cleanFreeText } from "../../common/clean-free-text";
+import {
+  cleanFreeText,
+  withoutInvisibleMarks,
+} from "../../common/clean-free-text";
 import { foldForSearch as fold } from "../../common/search-fold";
 
 /**
@@ -21,10 +24,9 @@ export function matchSuggestions(
   for (const suggestion of suggestions) {
     const item = cleanFreeText(suggestion);
     if (!item) continue;
-    const key = foldArabicScript(foldQuotes(item.normalize("NFC"))).replace(
-      /\s+/gu,
-      " ",
-    );
+    const key = foldArabicScript(
+      foldQuotes(withoutInvisibleMarks(item).normalize("NFC")),
+    ).replace(/\s+/gu, " ");
     if (seen.has(key)) continue;
     seen.add(key);
     if (!query || fold(item).includes(query)) {
