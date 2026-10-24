@@ -62,7 +62,7 @@ describe("summarizeTransaction", () => {
       ]),
     });
     expect(summary.kind).toBe("expense");
-    expect(summary.amounts).toEqual([{ currency: "USD", value: -45 }]);
+    expect(summary.amounts).toMatchObject([{ currency: "USD", value: -45 }]);
   });
 
   it("shows income as money in", () => {
@@ -74,7 +74,7 @@ describe("summarizeTransaction", () => {
       ]),
     });
     expect(summary.kind).toBe("income");
-    expect(summary.amounts).toEqual([{ currency: "USD", value: 1000 }]);
+    expect(summary.amounts).toMatchObject([{ currency: "USD", value: 1000 }]);
   });
 
   it("uses the selected account subtree when one is active", () => {
@@ -86,7 +86,7 @@ describe("summarizeTransaction", () => {
         posting("Income:Salary", "-250"),
       ]),
     });
-    expect(summary.amounts).toEqual([{ currency: "USD", value: 250 }]);
+    expect(summary.amounts).toMatchObject([{ currency: "USD", value: 250 }]);
     expect(summary.accounts).toEqual(["Income:Salary"]);
   });
 
@@ -99,7 +99,7 @@ describe("summarizeTransaction", () => {
       ]),
     });
     expect(summary.kind).toBe("transfer");
-    expect(summary.amounts).toEqual([{ currency: "USD", value: 300 }]);
+    expect(summary.amounts).toMatchObject([{ currency: "USD", value: 300 }]);
   });
 
   it("does not invent one amount for an ambiguous multi-currency entry", () => {
@@ -163,7 +163,7 @@ describe("summarizeTransaction", () => {
           accountFilter: "Assets:Brokerage:Cash",
         });
 
-        expect(summary.amounts).toEqual([{ currency: "USD", value }]);
+        expect(summary.amounts).toMatchObject([{ currency: "USD", value }]);
         expect(summary.accounts).not.toContain("Assets:Brokerage:Cash");
       },
     );
@@ -175,7 +175,7 @@ describe("summarizeTransaction", () => {
         accountFilter: "Assets:Brokerage:ACME",
       });
 
-      expect(summary.amounts).toEqual([{ currency: "ACME", value: 100 }]);
+      expect(summary.amounts).toMatchObject([{ currency: "ACME", value: 100 }]);
     });
 
     it("keeps ordinary fee-only expenses and split-expense payments", () => {
@@ -187,7 +187,7 @@ describe("summarizeTransaction", () => {
         ]),
       });
       expect(fee.kind).toBe("expense");
-      expect(fee.amounts).toEqual([{ currency: "USD", value: -4.95 }]);
+      expect(fee.amounts).toMatchObject([{ currency: "USD", value: -4.95 }]);
 
       const payment = summarizeTransaction({
         ...base,
@@ -198,7 +198,7 @@ describe("summarizeTransaction", () => {
         ]),
       });
       expect(payment.kind).toBe("expense");
-      expect(payment.amounts).toEqual([{ currency: "USD", value: -45 }]);
+      expect(payment.amounts).toMatchObject([{ currency: "USD", value: -45 }]);
     });
 
     it("does not treat a same-unit cost annotation as a commodity trade", () => {
@@ -211,7 +211,9 @@ describe("summarizeTransaction", () => {
       });
 
       expect(summary.kind).toBe("expense");
-      expect(summary.amounts).toEqual([{ currency: "USD", value: -4.95 }]);
+      expect(summary.amounts).toMatchObject([
+        { currency: "USD", value: -4.95 },
+      ]);
     });
 
     it("does not treat an expense-side cost or price-only posting as a costed trade", () => {
@@ -223,7 +225,7 @@ describe("summarizeTransaction", () => {
         ]),
       });
       expect(costedExpense.kind).toBe("expense");
-      expect(costedExpense.amounts).toEqual([
+      expect(costedExpense.amounts).toMatchObject([
         { currency: "SUPPLY", value: -2 },
       ]);
 
@@ -240,7 +242,9 @@ describe("summarizeTransaction", () => {
         ]),
       });
       expect(priceOnly.kind).toBe("expense");
-      expect(priceOnly.amounts).toEqual([{ currency: "USD", value: -4.95 }]);
+      expect(priceOnly.amounts).toMatchObject([
+        { currency: "USD", value: -4.95 },
+      ]);
     });
 
     it("honors configured income and expense account roots", () => {
@@ -286,7 +290,9 @@ describe("summarizeTransaction", () => {
         accountFilter: "Assets:US:BofA:Checking",
         transaction: payroll,
       });
-      expect(summary.amounts).toEqual([{ currency: "USD", value: 2550.6 }]);
+      expect(summary.amounts).toMatchObject([
+        { currency: "USD", value: 2550.6 },
+      ]);
     });
 
     it("does not report a sale as its commission", () => {
@@ -317,7 +323,9 @@ describe("summarizeTransaction", () => {
           posting("Income:Investment:CapitalGains", "-286.00"),
         ]),
       });
-      expect(summary.amounts).toEqual([{ currency: "USD", value: 3665.05 }]);
+      expect(summary.amounts).toMatchObject([
+        { currency: "USD", value: 3665.05 },
+      ]);
     });
 
     it("leaves a pure expense and a pure income alone", () => {
@@ -329,7 +337,9 @@ describe("summarizeTransaction", () => {
         ]),
       });
       expect(expense.kind).toBe("expense");
-      expect(expense.amounts).toEqual([{ currency: "USD", value: -33.71 }]);
+      expect(expense.amounts).toMatchObject([
+        { currency: "USD", value: -33.71 },
+      ]);
 
       const income = summarizeTransaction({
         ...base,
@@ -339,7 +349,7 @@ describe("summarizeTransaction", () => {
         ]),
       });
       expect(income.kind).toBe("income");
-      expect(income.amounts).toEqual([{ currency: "USD", value: 1000 }]);
+      expect(income.amounts).toMatchObject([{ currency: "USD", value: 1000 }]);
     });
   });
   describe("account filters the search box accepts", () => {
@@ -364,14 +374,14 @@ describe("summarizeTransaction", () => {
           accountFilter: "Checking",
           transaction: bankFee,
         }).amounts,
-      ).toEqual([{ currency: "USD", value: -4 }]);
+      ).toMatchObject([{ currency: "USD", value: -4 }]);
       expect(
         summarizeTransaction({
           ...base,
           accountFilter: "Checking",
           transaction: payroll,
         }).amounts,
-      ).toEqual([{ currency: "USD", value: 2550.6 }]);
+      ).toMatchObject([{ currency: "USD", value: 2550.6 }]);
     });
 
     it("gives the full path the same answer as the component", () => {
@@ -401,7 +411,7 @@ describe("summarizeTransaction", () => {
           accountFilter: "Assets:US:BofA:Checking",
           transaction: nested,
         }).amounts,
-      ).toEqual([{ currency: "USD", value: -15 }]);
+      ).toMatchObject([{ currency: "USD", value: -15 }]);
     });
 
     it("accepts a case-insensitive pattern", () => {
@@ -411,7 +421,7 @@ describe("summarizeTransaction", () => {
           accountFilter: "checking",
           transaction: bankFee,
         }).amounts,
-      ).toEqual([{ currency: "USD", value: -4 }]);
+      ).toMatchObject([{ currency: "USD", value: -4 }]);
     });
 
     it("falls back to literal equality for a pattern that cannot compile", () => {
@@ -425,7 +435,7 @@ describe("summarizeTransaction", () => {
           accountFilter: "Assets:Weird[",
           transaction: literal,
         }).amounts,
-      ).toEqual([{ currency: "USD", value: -7 }]);
+      ).toMatchObject([{ currency: "USD", value: -7 }]);
     });
 
     it("selects nothing when no posting matches", () => {
@@ -448,5 +458,79 @@ describe("summarizeTransaction", () => {
       expect(summary.amounts).not.toEqual([{ currency: "USD", value: 0 }]);
       expect(summary.accounts).toContain("Expenses:Financial:Fees");
     });
+  });
+});
+
+/**
+ * Recent activity sums the ledger's decimals (w4/1034): as doubles
+ * +9007199254740993 − 9007199254740992 was 0, so a filtered one-dollar net
+ * vanished, and large income and transfers lost a digit.
+ */
+describe("summarizeTransaction exact totals", () => {
+  it("keeps a large income's every digit", () => {
+    const summary = summarizeTransaction({
+      ...base,
+      transaction: transaction([
+        posting("Assets:QaCash", "9007199254740993"),
+        posting("Income:QaSalary", "-9007199254740993"),
+      ]),
+    });
+    expect(summary.kind).toBe("income");
+    expect(summary.amounts).toEqual([
+      { currency: "USD", value: 9007199254740992, exact: "9007199254740993" },
+    ]);
+  });
+
+  it("keeps a filtered account's one-dollar net beside amounts a double cannot hold", () => {
+    const summary = summarizeTransaction({
+      ...base,
+      accountFilter: "Assets:QaCash",
+      transaction: transaction([
+        posting("Assets:QaCash", "9007199254740993"),
+        posting("Assets:QaCash", "-9007199254740992"),
+        posting("Equity:QaOpening", "-1"),
+      ]),
+    });
+    expect(summary.amounts).toEqual([
+      { currency: "USD", value: 1, exact: "1" },
+    ]);
+  });
+
+  it("keeps the small-net control and drops a genuinely zero net", () => {
+    const control = summarizeTransaction({
+      ...base,
+      accountFilter: "Assets:QaCash",
+      transaction: transaction([
+        posting("Assets:QaCash", "10.00"),
+        posting("Assets:QaCash", "-9.00"),
+        posting("Equity:QaOpening", "-1.00"),
+      ]),
+    });
+    expect(control.amounts).toEqual([
+      { currency: "USD", value: 1, exact: "1.00" },
+    ]);
+    const zero = summarizeTransaction({
+      ...base,
+      accountFilter: "Assets:QaCash",
+      transaction: transaction([
+        posting("Assets:QaCash", "9007199254740993"),
+        posting("Assets:QaCash", "-9007199254740993"),
+      ]),
+    });
+    expect(zero.amounts).toEqual([]);
+  });
+
+  it("states a large transfer from its source decimal", () => {
+    const summary = summarizeTransaction({
+      ...base,
+      transaction: transaction([
+        posting("Assets:QaCash", "-9007199254740993"),
+        posting("Assets:QaReserve", "9007199254740993"),
+      ]),
+    });
+    expect(summary.kind).toBe("transfer");
+    expect(summary.amounts).toEqual([
+      { currency: "USD", value: 9007199254740992, exact: "9007199254740993" },
+    ]);
   });
 });

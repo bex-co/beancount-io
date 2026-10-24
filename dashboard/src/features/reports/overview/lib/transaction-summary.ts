@@ -2,6 +2,12 @@ import type {
   JournalPosting,
   JournalTransaction,
 } from "@/common/types/journal";
+import {
+  absDecimalNumber,
+  negateDecimalNumber,
+  parseDecimalNumber,
+  sumDecimalNumbers,
+} from "@/common/lib/beancount/decimal-number";
 import type { CurrencyAmount } from "./overview-utils";
 import { prioritizeCurrency } from "./overview-utils";
 
@@ -53,23 +59,33 @@ function makeAccountMatcher(filter: string): (account: string) => boolean {
     (pattern ? pattern.test(account) : account === filter);
 }
 
+/** A posting's units as the ledger's decimal, or null when it is not one. */
+function postingDecimal(posting: JournalPosting): string | null {
+  return parseDecimalNumber(String(posting.units.number));
+}
+
+/**
+ * Each currency's exact total, as the ledger's decimals: doubles turned
+ * +9007199254740993 − 9007199254740992 into 0 and hid the one-dollar net, and
+ * cut a digit from large income (w4/1034). `value` stays for ordering.
+ */
 function sumPostings(
   postings: JournalPosting[],
-  transform: (value: number) => number = (value) => value,
+  negate = false,
 ): CurrencyAmount[] {
-  const totals = new Map<string, number>();
+  const totals = new Map<string, string[]>();
   for (const posting of postings) {
-    const value = Number(posting.units.number);
-    if (!Number.isFinite(value)) continue;
-    totals.set(
-      posting.units.currency,
-      (totals.get(posting.units.currency) ?? 0) + transform(value),
-    );
+    const exact = postingDecimal(posting);
+    if (exact === null) continue;
+    totals.set(posting.units.currency, [
+      ...(totals.get(posting.units.currency) ?? []),
+      negate ? negateDecimalNumber(exact) : exact,
+    ]);
   }
-  return Array.from(totals, ([currency, value]) => ({
-    currency,
-    value,
-  })).filter((amount) => amount.value !== 0);
+  return Array.from(totals, ([currency, amounts]) => {
+    const exact = sumDecimalNumbers(amounts);
+    return { currency, value: Number(exact), exact };
+  }).filter((amount) => amount.value !== 0);
 }
 
 function uniqueAccounts(postings: JournalPosting[]): string[] {
@@ -144,7 +160,7 @@ export function summarizeTransaction({
     return {
       kind: "expense",
       amounts: prioritizeCurrency(
-        sumPostings(expensePostings, (value) => -value),
+        sumPostings(expensePostings, true),
         preferredCurrency,
       ),
       accounts: uniqueAccounts(postings),
@@ -159,7 +175,7 @@ export function summarizeTransaction({
     return {
       kind: "income",
       amounts: prioritizeCurrency(
-        sumPostings(incomePostings, (value) => -value),
+        sumPostings(incomePostings, true),
         preferredCurrency,
       ),
       accounts: uniqueAccounts(postings),
@@ -169,21 +185,19 @@ export function summarizeTransaction({
 
   if (postings.length === 2) {
     const [first, second] = postings;
-    const firstValue = Number(first.units.number);
-    const secondValue = Number(second.units.number);
+    const firstExact = postingDecimal(first);
+    const secondExact = postingDecimal(second);
     if (
       first.units.currency === second.units.currency &&
-      Number.isFinite(firstValue) &&
-      Number.isFinite(secondValue) &&
-      Math.abs(firstValue + secondValue) < 1e-9
+      firstExact !== null &&
+      secondExact !== null &&
+      Math.abs(Number(sumDecimalNumbers([firstExact, secondExact]))) < 1e-9
     ) {
+      const exact = absDecimalNumber(firstExact);
       return {
         kind: "transfer",
         amounts: [
-          {
-            currency: first.units.currency,
-            value: Math.abs(firstValue),
-          },
+          { currency: first.units.currency, value: Number(exact), exact },
         ],
         accounts: uniqueAccounts(postings),
         status: getStatus(transaction.flag),
