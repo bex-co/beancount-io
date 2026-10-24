@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1046** — [Keep route-error retries single-flight and restore focus after another failure](./1046.md)
+
 - **1045** — [Retry a failed first Account Report read in place](./1045.md)
 
 - **1044** — Retry the first Entry Context read without dismissing its dialog (35–50m, dashboard, A2) ← dashboard QA; residual of m50 ([note](./1044.md))
