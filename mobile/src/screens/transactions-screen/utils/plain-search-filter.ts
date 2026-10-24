@@ -1,3 +1,5 @@
+import { foldWidth } from "../../../common/width-fold";
+
 /**
  * Serialize ordinary Transactions search text into a Fava advanced-filter
  * STRING literal. Bare tokens reject punctuation (e.g. `Mr. Marcel` →
@@ -98,21 +100,6 @@ function quoted(trimmed: string): string {
     body += encoded;
   }
   return `"${body}"`;
-}
-
-/**
- * Full-width Latin and half-width katakana as their ordinary forms, as the
- * ledger service folds the text it searches (w21/912). Before escaping, so a
- * typed full-width "．" is the escaped dot it folds to and not a regex dot.
- */
-function foldWidth(text: string): string {
-  return text
-    .replace(/[\uff01-\uff5e\u3000]/gu, (char) =>
-      char === "\u3000"
-        ? " "
-        : String.fromCharCode(char.charCodeAt(0) - 0xfee0),
-    )
-    .replace(/[\uff61-\uff9f]+/gu, (run) => run.normalize("NFKC"));
 }
 
 /** The text as composed characters, a whole run of whitespace being one. */

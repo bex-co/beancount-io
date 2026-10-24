@@ -1,4 +1,5 @@
 import { foldArabicScript } from "./arabic-script-fold";
+import { foldWidth } from "./width-fold";
 
 /**
  * One merchant however its payee is spelled: trimmed, composed (NFC), with each
@@ -10,10 +11,10 @@ import { foldArabicScript } from "./arabic-script-fold";
  * Recurrence and manual marks keyed by the displayed spelling saw only part
  * of a merchant's history, and a mark was lost when the display flipped
  * (w21/169). Arabic and Persian spellings of one letter are one (w21/835). The dotted capital İ lowercases to i + U+0307, folded to i so a
- * typed "iş" finds "İşBank" (w21/569). Curly quotes read as straight ones (w21/519). Import-free so the unit runner can load it.
+ * typed "iş" finds "İşBank" (w21/569). Curly quotes read as straight ones (w21/519). Full-width Latin and half-width katakana read as the ordinary forms (w21/917). Import-free so the unit runner can load it.
  */
 export function merchantKey(payee: string): string {
-  return foldArabicScript(foldQuotes(payee.trim().normalize("NFC")))
+  return foldArabicScript(foldQuotes(foldWidth(payee).trim().normalize("NFC")))
     .replace(/\s+/g, " ")
     .toLowerCase()
     .replace(/i\u0307/gu, "i");

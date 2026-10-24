@@ -108,3 +108,30 @@ describe("merchantKey across Arabic-script spellings", () => {
     expect(merchantKey("  Whole  Foods ")).toBe("whole foods");
   });
 });
+
+// w21/917: full-width and half-width forms were separate merchants.
+describe("merchantKey with full-width and half-width text", () => {
+  it("reads them as the ordinary forms, so spellings merge", () => {
+    expect(merchantKey("ＡＭＡＺＯＮ．ＣＯ．ＪＰ")).toBe(
+      merchantKey("Amazon.co.jp"),
+    );
+    expect(merchantKey("ｽﾀｰﾊﾞｯｸｽ")).toBe(merchantKey("スターバックス"));
+    expect(merchantKey("ＡＢＣ　ＤＥＦ")).toBe("abc def");
+  });
+
+  it("lets a plain search find the full-width spelling", () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const {
+      filterMerchants,
+    } = require("../../screens/merchants-screen/selectors/aggregate-payees");
+    const merchants = [
+      { payee: "ＡＭＡＺＯＮ．ＣＯ．ＪＰ" },
+      { payee: "Cafe" },
+    ];
+    expect(
+      filterMerchants(merchants, "amazon").map(
+        (m: { payee: string }) => m.payee,
+      ),
+    ).toEqual(["ＡＭＡＺＯＮ．ＣＯ．ＪＰ"]);
+  });
+});
