@@ -273,6 +273,28 @@ controls. [SkillsMP's discovery contract](https://skillsmp.com/agent-skills#how-
 does not promise an update schedule. Third-party stale pages are not reported as
 fixed merely because the source repository and its install instructions changed.
 
+### Post-window index read-back — 2026-10-24 UTC
+
+At01:42:23UTC, more than24hours after the accepted refresh, the
+[skills.rest company page](https://skills.rest/company/bex-co) still advertises
+27skills, including `ship`/`loopx`. Its
+[ask entry](https://skills.rest/skill/beancount-ask-bex-co) still links to the
+removed `skills/.claude/skills/beancount-ask` path. The automatic submission
+window has elapsed without the requested public correction; private scanner
+status is not exposed. The actual [indexing form](https://skills.rest/contribute)
+still advertises24-hour screening and exposes [support](mailto:support@skills.rest),
+but no existing-request status or owner edit/delete control. No duplicate
+refresh request or support message was sent.
+
+The completed browser [SkillsMP search](https://skillsmp.com/search?q=beancount)
+also still renders the old `skills/.claude/skills/` paths for this repository's
+ask/close/import entries. A bare HTML response is only a client-rendered shell
+and is not evidence that those old paths disappeared. Its footer exposes
+[support](mailto:support@skillsmp.com); no owner correction endpoint or updated
+record was established by this check. These remaining service-controlled
+indexes keep w6/m6.5/t012 open; the owned suite and verified skills.sh grouping
+remain complete.
+
 ## Primary contracts
 
 - [ClawHub publishing](https://github.com/openclaw/clawhub/blob/main/docs/publishing.md)

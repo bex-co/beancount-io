@@ -93,3 +93,10 @@ Claude Code and Codex already publish one shared-version suite. skills.sh still 
 skills.rest accepts one automatic customer-root index refresh, but its old paths/generated selectors and internal entries remain pending read-back. SkillsMP already groups the repository but retains old paths/descriptions; its inspected public contract provides no guaranteed refresh schedule or established owner edit/delete route. t012 retains these external index conditions. A separate optional Pack was explored but not published; it is not a prerequisite for updating the existing collection and no additional local-file permission is needed for this follow-through. No repeated submissions, artificial telemetry, unsolicited messages or new per-skill releases are used.
 
 At 00:40 UTC the skills.sh condition clears independently: after one documented native maintainer install, the public repository page shows all thirteen customer workflows in **Beancount.io suite**, including accruals/property/roll-forward, followed by nineteen explicitly separate **Repository development** entries. t012 now waits only for the other third-party source-index read-backs; no further skills.sh configuration or additional browser file permission is required.
+
+The2026-10-24 post-window read-back confirms t012 is still blocked: skills.rest
+has exceeded its stated24-hour scanner window but still lists27mixed entries
+and the removed ask source path. Completed SkillsMP browser results also retain
+old paths. Official support links are known and a correction note is prepared;
+no message or duplicate form request was sent. The services must correct the
+existing records before those final acceptance checks pass.
