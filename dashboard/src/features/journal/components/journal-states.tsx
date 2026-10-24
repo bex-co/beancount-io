@@ -179,14 +179,19 @@ export function PageLoadingState({
 
 /**
  * Page-level error state component
- * For pages with headers and card layouts
+ * For pages with headers and card layouts. `onRetry` adds a Try Again that
+ * re-runs the failed read in place, busy while `retrying` (w4/1045).
  */
 export function PageErrorState({
   title,
   subtitle,
+  onRetry,
+  retrying = false,
 }: {
   title?: string;
   subtitle?: string;
+  onRetry?: () => void;
+  retrying?: boolean;
 }) {
   const { t } = useTranslations();
   const errorTitle = title || t("common.error");
@@ -207,6 +212,17 @@ export function PageErrorState({
             <div className="text-center">
               <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
               <div className="text-red-500 mb-2">{errorSubtitle}</div>
+              {onRetry && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onRetry}
+                  loading={retrying}
+                  className="mt-2"
+                >
+                  {t("common.tryAgain")}
+                </Button>
+              )}
             </div>
           </div>
         </CardContent>

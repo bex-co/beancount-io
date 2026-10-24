@@ -90,16 +90,12 @@ export function usePaginatedSocialList<
   // mounted while it runs (Apollo clears `error` meanwhile), and a failed retry
   // hands focus back to that button (w4/1041). A retry still pending when the
   // profile changes says nothing about the new one.
-  const firstPageRetry = useQueryRetry(enabled ? error : undefined, refetch);
-  const retryUsernameRef = useRef(username);
-  const failure =
-    error || retryUsernameRef.current === username
-      ? firstPageRetry.failure
-      : undefined;
-  const retry = () => {
-    retryUsernameRef.current = username;
-    firstPageRetry.retry();
-  };
+  const firstPageRetry = useQueryRetry(
+    enabled ? error : undefined,
+    refetch,
+    username,
+  );
+  const failure = firstPageRetry.failure;
 
   const [fetchPage] = useLazyQuery<TData, TVariables>(document, {
     fetchPolicy: "network-only",
@@ -175,7 +171,7 @@ export function usePaginatedSocialList<
     loadMore,
     retryLoadMore: loadMore,
     /** Re-read the failed first page in place. */
-    retry,
+    retry: firstPageRetry.retry,
     retrying: firstPageRetry.retrying,
   };
 }

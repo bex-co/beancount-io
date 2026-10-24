@@ -413,23 +413,34 @@ export default function AccountPage() {
   const [balanceUnits, setBalanceUnits] = useState<LegendSelection>();
   const [changeUnits, setChangeUnits] = useState<LegendSelection>();
 
+  const reportVariables = {
+    accountName: accountName,
+    ledgerId: ledgerId,
+    interval: timeInterval,
+    conversion: conversion,
+    time: ledgerFilters.searchParams.time,
+    filter: ledgerFilters.searchParams.filter,
+    account: ledgerFilters.searchParams.account,
+  };
   const {
     data,
     previousData,
     loading: isLoading,
     error,
+    refetch,
   } = useQuery(GetLedgerAccountReportDocument, {
-    variables: {
-      accountName: accountName,
-      ledgerId: ledgerId,
-      interval: timeInterval,
-      conversion: conversion,
-      time: ledgerFilters.searchParams.time,
-      filter: ledgerFilters.searchParams.filter,
-      account: ledgerFilters.searchParams.account,
-    },
+    variables: reportVariables,
     fetchPolicy: "cache-first",
   });
+  // Try Again re-reads this report, not the page or its journal: the error
+  // and its busy button stay while it runs, another failure hands focus
+  // back, and a retry still pending for another account or period keeps no
+  // failure for this one (w4/1045).
+  const reportRetry = useQueryRetry(
+    error,
+    refetch,
+    JSON.stringify(reportVariables),
+  );
 
   const accountReportData =
     data?.getLedgerAccountReport || previousData?.getLedgerAccountReport;
@@ -446,16 +457,7 @@ export default function AccountPage() {
   );
   const settledReport = settled.pending ? undefined : settled.data;
 
-  if (isLoading && !accountReportData) {
-    return (
-      <PageLoadingState
-        title={t("page.accountReport.title")}
-        subtitle={t("page.accountReport.loading")}
-      />
-    );
-  }
-
-  if (error) {
+  if (reportRetry.failure) {
     return (
       <PageErrorState
         title={t("page.accountReport.title")}
@@ -463,7 +465,18 @@ export default function AccountPage() {
         // turns a classified failure — an unparseable date in the Time filter,
         // say — into localized correction guidance, and still falls back to a
         // safe generic message for unknown or transport failures.
-        subtitle={formatError(error)}
+        subtitle={formatError(reportRetry.failure)}
+        onRetry={reportRetry.retry}
+        retrying={reportRetry.retrying}
+      />
+    );
+  }
+
+  if (isLoading && !accountReportData) {
+    return (
+      <PageLoadingState
+        title={t("page.accountReport.title")}
+        subtitle={t("page.accountReport.loading")}
       />
     );
   }
