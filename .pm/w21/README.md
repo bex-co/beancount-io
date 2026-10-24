@@ -57,3 +57,7 @@
 - [980](./980.md) — Android can loop on a link to a ledger the user cannot read (code path; unverified on device)
 - [981](./981.md) — Add Budget one-currency default (w21/946) does nothing for Expenses accounts
 - [982](./982.md) — An unpriced commodity loses its neutral chart colour again (w21/958 regression)
+- [983](./983.md) — A journal link with a regex account filter now matches nothing (w21/959 regression)
+- [984](./984.md) — A commit subject for *"Coffee" with no space after the flag is read as a non-transaction (w21/961 regression)
+- [985](./985.md) — A push whose only commit has an empty message produces a bare "+1 more commit(s)" line (w21/963 regression)
+- [986](./986.md) — Saved narration and payee lose LRM/RLM marks and soft hyphens (w21/965 side effect; owner's call)
