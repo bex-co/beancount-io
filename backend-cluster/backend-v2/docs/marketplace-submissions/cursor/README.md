@@ -18,7 +18,7 @@ customer skill trees. Format validation does not establish marketplace acceptanc
 
 | Destination | State / next action |
 | --- | --- |
-| [Official Cursor](https://cursor.com/marketplace/publish) | Publisher identity sign-in succeeded. Application is prepared but unsent; final Submit Application explicitly agrees to [Publisher Terms](https://cursor.com/marketplace-publisher-terms) and requires the operator’s action-time approval. The root index now supplies the supported nested-package layout; actual intake and review remain unverified. |
+| [Official Cursor](https://cursor.com/marketplace/publish) | Submitted on 2026-10-24T00:36:38Z after the publisher's explicit final agreement confirmation. The actual page displays Thanks for applying and confirms receipt; [public-safe receipt](./submission-receipt.json). No application ID or specific management URL is exposed. Vendor review/publication remains pending; do not resubmit. |
 | [cursor.directory](https://cursor.directory/plugins/new?type=mcp_server) | The [Beancount.io listing](https://cursor.directory/plugins/beancountio) clears its scan/hidden banners by 21:54 UTC and appears first under the directory’s New sort. Add to Cursor opens the correct native review and installs the URL-only User entry; the newly approved native OAuth and [desktop query/preview](./native-desktop-rehearsal-20261022.md) now pass, with precise host visibility limits. [Dated receipt and limits](./directory/README.md#scan-and-native-install-follow-through--2026-10-21-utc). No duplicate submission or data PR is needed. |
 
 Cursor IDE 3.24.18 is now installed from the official vendor download after disk
@@ -32,3 +32,15 @@ records the client versions, scope narrowing, observed results and verification
 limits. This is local native-agent compatibility evidence, not a marketplace
 installation or publication receipt. Keep account identifiers and credentials
 outside these public files.
+
+## Official submission accepted — 2026-10-24T00:36:38Z
+
+The publisher explicitly confirms the actual displayed terms/submission action.
+The worker clicks Submit Application once and the real form replaces the fields
+with **Thanks for applying** and **We've received your submission**. The live
+receipt is retained; it exposes no application ID or dedicated management URL.
+[submission-receipt.json](./submission-receipt.json) records public-safe evidence.
+This clears the finite submission/receipt task. Vendor review, approval and
+official marketplace availability remain unverified under the original gallery
+verification tasks. The separate community listing and retained native QA grant
+are preserved; no second application is submitted.

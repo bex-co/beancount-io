@@ -1,6 +1,6 @@
 # w6 · m9 — Reach developer marketplaces and galleries
 
-**Worker:** worker1 **Goal:** Developers discover and connect the hosted MCP server through the supported Docker, Cursor, Cline, and GitHub/VS Code galleries. **Status:** blocked (t001 and t014 done; exact t011-t013 terms/access decisions and existing publication/native verification remain)
+**Worker:** worker1 **Goal:** Developers discover and connect the hosted MCP server through the supported Docker, Cursor, Cline, and GitHub/VS Code galleries. **Status:** blocked (t001/t011/t014 done; official Cursor review and other exact native/publication gates remain)
 
 **Implementation estimate:** ~4½h, excluding external review queues and the standing closing tasks.
 
@@ -9,7 +9,7 @@
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
 | [t001](done/t001.md) | Confirm developer-gallery eligibility and existing records — **DONE** | 30m | w6/m8/t001 |
-| [t011](t011.md) | Submit official Cursor application and retain receipt — **BLOCKED** | 30m | t001 |
+| [t011](done/t011.md) | Submit official Cursor application and retain receipt — **DONE** | 30m | t001 |
 | [t012](t012.md) | Complete required native checks and submit Docker contribution — **BLOCKED** | 60m | t001 |
 | [t013](t013.md) | Complete required native checks and send Cline submission — **BLOCKED** | 60m | t001 |
 | [t014](done/t014.md) | Send GitHub curated-gallery nomination and record delivery — **DONE** | 30m | t001 |
@@ -97,7 +97,7 @@ An actual submission receipt closes only its receipt-stage task. Existing native
 
 The earlier exclusion of Claude/ChatGPT was the 2026-10-20 scope decision. The owner's 2026-10-23 all-inventory request now places those separate application follow-ups in [m11](../m11/README.md), without duplicating this milestone's targets.
 
-## Current blocked receipt action — 2026-10-23T20:17:19Z
+## Historical blocked receipt action — 2026-10-23T20:17:19Z
 
 - **t011:** the actual complete official application is ready, and its final button accepts Publisher Terms. The browser tool requires the publisher's execution-time confirmation for that legal agreement; the exact question is pending and the live prepared page is retained. **Unblock:** publisher confirms this specific submission/terms action; worker clicks and verifies the real receipt. **Owners:** publisher, then worker. No official submission or platform review has begun. This does not defer t012, t013 or t014.
 
@@ -113,8 +113,16 @@ The earlier exclusion of Claude/ChatGPT was the 2026-10-20 scope decision. The o
 
 The GitHub nomination is sent and t014 is archived under done/. All remaining tasks are blocked or depend on an unresolved blocked task, so the milestone returns to blocked/ without affecting independent m10/m11 work.
 
-- **t011:** final official Cursor form is fully prepared; its Submit Application action accepts Publisher Terms. **Unblock:** publisher confirms that exact actual legal-agreement action; worker submits and verifies the receipt. **Owners:** publisher, then worker.
+- **t011:** completed on 2026-10-24T00:36:38Z after explicit confirmation and actual accepted receipt; archived under done/. Official review/publication remains under t003/t006.
 - **t012:** fresh native Docker consent requests ledger.read/ledger.write for only the synthetic QA ledger, returning through mcp.docker.com. **Unblock:** QA account holder confirms that exact new access; worker completes callback/native checks and actual upstream submission. **Owners:** QA account holder, worker, Docker reviewers.
 - **t013:** fresh native Cline consent requests identity/offline/read/write/admin for only the synthetic QA ledger and a local callback. **Unblock:** QA account holder confirms that exact new access; worker completes callback, model-free native SDK checks and truthful issue submission. **Owners:** QA account holder, worker, Cline reviewers.
 - **t005:** the operator authorization/sending prerequisite is cleared by the actual sent-mail receipt. **Unblock:** GitHub accepts/publishes the record, then the worker verifies actual GitHub/VS Code discovery and the dedicated native journey under existing w1/m34/t003. **Owners:** GitHub reviewers, then QA/client account holder and worker.
 - **t002-t004, t006-t010:** their original eligibility, actual public/native acceptance and closing criteria remain; new receipt tasks unblock their respective next phases, not other platforms' queues. **Unblock:** complete those specific receipt/native/publication prerequisites, then their dependent checks. **Owners:** stated publisher/QA/platform owners, then worker.
+
+## Current Cursor outcome — 2026-10-24T00:36:38Z
+
+The official application is actually submitted and t011 is archived. Its
+separate community listing/native QA remains complete and retained. Vendor
+review/publication is the remaining Cursor condition; no action-time terms
+answer remains outstanding for this submitted application. Other targets keep
+their own authorization/native/publication requirements and are processed next.

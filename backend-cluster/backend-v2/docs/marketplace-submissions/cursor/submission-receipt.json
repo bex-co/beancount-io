@@ -1,0 +1,19 @@
+{
+  "target": "Cursor \u2014 official",
+  "state": "submitted; pending vendor review",
+  "observedAtUTC": "2026-10-24T00:36:38Z",
+  "submissionUrl": "https://cursor.com/marketplace/publish",
+  "applicationSpecificManageUrl": null,
+  "receiptHeading": "Thanks for applying",
+  "receiptText": "We've received your submission.",
+  "publisherTerms": "https://cursor.com/marketplace-publisher-terms",
+  "agreement": "Publisher explicitly confirms the displayed final agreement and submission in the active conversation; the worker then clicks Submit Application.",
+  "organizationName": "Beancount.io",
+  "organizationHandle": "beancount",
+  "repository": "https://github.com/bex-co/beancount-io",
+  "website": "https://beancount.io",
+  "contact": "Existing publisher contact supplied privately; omitted here",
+  "review": "Vendor review pending; no approval or publication observed",
+  "limit": "The generic form shows an actual receipt but exposes no application ID or application-specific management URL. Native/community evidence is separate from official marketplace publication.",
+  "nextAction": "Follow this existing submission for vendor feedback; verify approved official listing and actual marketplace connection after publication. Do not submit another application."
+}
