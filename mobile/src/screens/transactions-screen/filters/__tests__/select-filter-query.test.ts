@@ -237,15 +237,25 @@ describe("toFilterQuery", () => {
     expect(pattern.test("Assets:Bank:Checking-Old")).toBe(false);
   });
 
-  it("escapes the pattern, and honours a renamed root", () => {
-    expect(
-      toFilterQuery(filters({ account: "Expenses:Food+Drink" }), TODAY).account,
-    ).toBe("^Expenses:Food\\+Drink(:|$)");
+  it("honours a renamed root", () => {
     expect(
       toFilterQuery(filters({ account: "Gastos:Comida" }), TODAY, {
         expenses: "Gastos",
       }).account,
     ).toBe("^Gastos:Comida(:|$)");
+  });
+
+  // w21/983: a dashboard link carries the server's own regex syntax; escaping
+  // and anchoring it matched no account.
+  it("passes a pattern from a link through untouched", () => {
+    for (const account of [
+      "Expenses:Food.*",
+      "Expenses:Food|Expenses:Rent",
+      "^Expenses:(Food|Rent)",
+      "Expenses:Food+Drink",
+    ]) {
+      expect(toFilterQuery(filters({ account }), TODAY).account).toBe(account);
+    }
   });
 
   it("leaves a bare component, as a link carries it, the looser match", () => {

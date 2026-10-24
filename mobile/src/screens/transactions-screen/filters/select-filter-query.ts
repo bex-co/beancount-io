@@ -134,6 +134,9 @@ const statusFilterActive = (filters: TransactionFilters): boolean =>
   filters.statuses.length > 0 &&
   !TRANSACTION_STATUSES.every((status) => filters.statuses.includes(status));
 
+/** Characters that make an account filter a pattern rather than a name. */
+const REGEX_SYNTAX = /[.*+?^${}()|[\]\\]/;
+
 /**
  * Translates filter state into query fields, omitting whatever is inactive so
  * the variables stay identical to an unfiltered query when nothing is set.
@@ -158,11 +161,15 @@ export const toFilterQuery = (
     // A path from a root is a whole account and its children, not a run of
     // components found anywhere: `Expenses:Travel` also matched
     // `Assets:Reimbursable:Expenses:Travel`. A bare component, as a link
-    // carries it, stays the looser match (w21/113, w21/959).
+    // carries it, stays the looser match (w21/113, w21/959). A value with regex
+    // syntax is the server's own Fava regex, as a dashboard link writes it
+    // (`^Expenses:(Food|Rent)`, `Expenses:Food.*`), and passes through as it
+    // is, the same split the server makes (w21/983).
     query.account =
       filters.account.includes(":") &&
+      !REGEX_SYNTAX.test(filters.account) &&
       getAccountRoot(filters.account, roots) !== null
-        ? `^${filters.account.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(:|$)`
+        ? `^${filters.account}(:|$)`
         : filters.account;
   }
 
