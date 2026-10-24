@@ -435,3 +435,62 @@ describe("the Add Budget form and the close date", () => {
     expect(form.includes('t("accountPickerClosedOn"')).toBe(true);
   });
 });
+
+// w21/945: a parent closed when it was split into open children still has a
+// budget, which Update and Add refused.
+describe("closedBeforeDate for a closed parent with open children", () => {
+  const split = closeDatesOf([
+    {
+      account: "Expenses:Food",
+      openedAt: "2024-01-01",
+      closedAt: "2026-06-30",
+    },
+    {
+      account: "Expenses:Food:Groceries",
+      openedAt: "2026-06-01",
+      closedAt: null,
+    },
+    {
+      account: "Expenses:Food:Restaurants",
+      openedAt: "2026-06-01",
+      closedAt: null,
+    },
+  ]);
+
+  it("does not refuse a date while a child is open", () => {
+    expect(closedBeforeDate("Expenses:Food", "2026-10-23", split)).toBe(
+      undefined,
+    );
+  });
+
+  it("still refuses a closed account with no open children, or whose children closed", () => {
+    const lone = closeDatesOf([
+      {
+        account: "Expenses:Gym",
+        openedAt: "2024-01-01",
+        closedAt: "2026-06-30",
+      },
+    ]);
+    expect(closedBeforeDate("Expenses:Gym", "2026-10-23", lone)).toBe(
+      "2026-06-30",
+    );
+    const allClosed = closeDatesOf([
+      {
+        account: "Expenses:Food",
+        openedAt: "2024-01-01",
+        closedAt: "2026-06-30",
+      },
+      {
+        account: "Expenses:Food:Groceries",
+        openedAt: "2026-06-01",
+        closedAt: "2026-08-31",
+      },
+    ]);
+    expect(closedBeforeDate("Expenses:Food", "2026-10-23", allClosed)).toBe(
+      "2026-08-31",
+    );
+    expect(closedBeforeDate("Expenses:Food", "2026-08-31", allClosed)).toBe(
+      undefined,
+    );
+  });
+});

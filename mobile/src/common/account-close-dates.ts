@@ -242,15 +242,17 @@ export function firstOpeningAfter(
 }
 
 /**
- * The day `account` closed, when a budget (or entry) dated `onDate` falls after
- * it: that budget never applies (w21/877). Undefined for an account that is
- * open, unknown, or not yet closed on that date.
+ * The day a budget on `account` ended, when one dated `onDate` falls after it:
+ * that budget never applies (w21/877). Undefined for an account that is open,
+ * unknown, or not yet closed on that date. A parent closed when it was split
+ * into children that are still open has not ended (`budgetEndsOn`, w21/486), so
+ * its Update and Add are not refused (w21/945).
  */
 export function closedBeforeDate(
   account: string,
   onDate: string,
   closeDates: CloseDates,
 ): string | undefined {
-  const closedAt = closeDates.get(account.trim());
-  return closedAt !== undefined && onDate > closedAt ? closedAt : undefined;
+  const endsOn = budgetEndsOn(account.trim(), closeDates);
+  return endsOn !== undefined && onDate > endsOn ? endsOn : undefined;
 }
