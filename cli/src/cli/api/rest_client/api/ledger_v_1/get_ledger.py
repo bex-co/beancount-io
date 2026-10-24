@@ -106,7 +106,7 @@ def sync_detailed(
     """Get one ledger
 
      Metadata for a single ledger: description, visibility, clone URLs, timestamps, and the caller's
-    permissions when available.
+    permissions and `isStarred` when available.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -141,7 +141,7 @@ def sync(
     """Get one ledger
 
      Metadata for a single ledger: description, visibility, clone URLs, timestamps, and the caller's
-    permissions when available.
+    permissions and `isStarred` when available.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -171,7 +171,7 @@ async def asyncio_detailed(
     """Get one ledger
 
      Metadata for a single ledger: description, visibility, clone URLs, timestamps, and the caller's
-    permissions when available.
+    permissions and `isStarred` when available.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -204,7 +204,7 @@ async def asyncio(
     """Get one ledger
 
      Metadata for a single ledger: description, visibility, clone URLs, timestamps, and the caller's
-    permissions when available.
+    permissions and `isStarred` when available.
 
     Args:
         owner (str): Ledger owner's username Example: alice.

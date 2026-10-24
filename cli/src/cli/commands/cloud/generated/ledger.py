@@ -60,7 +60,7 @@ def register_ledger_commands(ledger_app: typer.Typer) -> None:
     @ledger_app.command(
         "show",
         cls=SingleValueCommand,
-        help="Get one ledger.\n\nMetadata for a single ledger: description, visibility, clone URLs, timestamps, and the caller's permissions when available.",
+        help="Get one ledger.\n\nMetadata for a single ledger: description, visibility, clone URLs, timestamps, and the caller's permissions and `isStarred` when available.",
     )
     def ledger_show(
         full_name: Annotated[str, typer.Argument(help="Ledger full name (e.g. username/my-ledger)")],

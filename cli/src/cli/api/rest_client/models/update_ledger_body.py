@@ -14,9 +14,8 @@ T = TypeVar("T", bound="UpdateLedgerBody")
 class UpdateLedgerBody:
     """
     Attributes:
-        name (None | str | Unset): The ledger's name: lowercase letters, numbers, hyphens, and underscores, up to 100
-            characters.
-        description (None | str | Unset): A short description shown with the ledger.
+        name (None | str | Unset): Lowercase letters, numbers, and underscores, joined by single hyphens.
+        description (None | str | Unset): A short description shown with the ledger, up to 2048 characters.
         private (bool | None | Unset): true makes the ledger visible only to its owner and collaborators; false makes it
             public, readable by anyone; omitted leaves it as it is.
     """

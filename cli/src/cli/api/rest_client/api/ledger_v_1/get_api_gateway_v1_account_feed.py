@@ -12,27 +12,22 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    offset: float | None | Unset = 0.0,
-    limit: float | None | Unset = 10.0,
+    offset: int | None | Unset = 0,
+    limit: int | Unset = 10,
     source: str | Unset = UNSET,
     locale: str | Unset = UNSET,
 ) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
 
-    json_offset: float | None | Unset
+    json_offset: int | None | Unset
     if isinstance(offset, Unset):
         json_offset = UNSET
     else:
         json_offset = offset
     params["offset"] = json_offset
 
-    json_limit: float | None | Unset
-    if isinstance(limit, Unset):
-        json_limit = UNSET
-    else:
-        json_limit = limit
-    params["limit"] = json_limit
+    params["limit"] = limit
 
     params["source"] = source
 
@@ -122,8 +117,8 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    offset: float | None | Unset = 0.0,
-    limit: float | None | Unset = 10.0,
+    offset: int | None | Unset = 0,
+    limit: int | Unset = 10,
     source: str | Unset = UNSET,
     locale: str | Unset = UNSET,
 ) -> Response[GetApiGatewayV1AccountFeedResponse200 | V1Error]:
@@ -132,11 +127,11 @@ def sync_detailed(
      Merged blog, release, and ledger activity, newest first. Requires a session or account-wide OAuth
     credential with ledger.read. Source accepts BLOG, CHANGELOG, or LEDGER_RSS case-insensitively;
     omitted or empty means all sources. Locale defaults to the caller's profile then English. Offset
-    defaults to 0 and limit to 10.
+    defaults to 0 and limit to 10, at most 100.
 
     Args:
-        offset (float | None | Unset):  Default: 0.0.
-        limit (float | None | Unset):  Default: 10.0.
+        offset (int | None | Unset):  Default: 0.
+        limit (int | Unset):  Default: 10.
         source (str | Unset):
         locale (str | Unset):
 
@@ -165,8 +160,8 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    offset: float | None | Unset = 0.0,
-    limit: float | None | Unset = 10.0,
+    offset: int | None | Unset = 0,
+    limit: int | Unset = 10,
     source: str | Unset = UNSET,
     locale: str | Unset = UNSET,
 ) -> GetApiGatewayV1AccountFeedResponse200 | V1Error | None:
@@ -175,11 +170,11 @@ def sync(
      Merged blog, release, and ledger activity, newest first. Requires a session or account-wide OAuth
     credential with ledger.read. Source accepts BLOG, CHANGELOG, or LEDGER_RSS case-insensitively;
     omitted or empty means all sources. Locale defaults to the caller's profile then English. Offset
-    defaults to 0 and limit to 10.
+    defaults to 0 and limit to 10, at most 100.
 
     Args:
-        offset (float | None | Unset):  Default: 0.0.
-        limit (float | None | Unset):  Default: 10.0.
+        offset (int | None | Unset):  Default: 0.
+        limit (int | Unset):  Default: 10.
         source (str | Unset):
         locale (str | Unset):
 
@@ -203,8 +198,8 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    offset: float | None | Unset = 0.0,
-    limit: float | None | Unset = 10.0,
+    offset: int | None | Unset = 0,
+    limit: int | Unset = 10,
     source: str | Unset = UNSET,
     locale: str | Unset = UNSET,
 ) -> Response[GetApiGatewayV1AccountFeedResponse200 | V1Error]:
@@ -213,11 +208,11 @@ async def asyncio_detailed(
      Merged blog, release, and ledger activity, newest first. Requires a session or account-wide OAuth
     credential with ledger.read. Source accepts BLOG, CHANGELOG, or LEDGER_RSS case-insensitively;
     omitted or empty means all sources. Locale defaults to the caller's profile then English. Offset
-    defaults to 0 and limit to 10.
+    defaults to 0 and limit to 10, at most 100.
 
     Args:
-        offset (float | None | Unset):  Default: 0.0.
-        limit (float | None | Unset):  Default: 10.0.
+        offset (int | None | Unset):  Default: 0.
+        limit (int | Unset):  Default: 10.
         source (str | Unset):
         locale (str | Unset):
 
@@ -244,8 +239,8 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    offset: float | None | Unset = 0.0,
-    limit: float | None | Unset = 10.0,
+    offset: int | None | Unset = 0,
+    limit: int | Unset = 10,
     source: str | Unset = UNSET,
     locale: str | Unset = UNSET,
 ) -> GetApiGatewayV1AccountFeedResponse200 | V1Error | None:
@@ -254,11 +249,11 @@ async def asyncio(
      Merged blog, release, and ledger activity, newest first. Requires a session or account-wide OAuth
     credential with ledger.read. Source accepts BLOG, CHANGELOG, or LEDGER_RSS case-insensitively;
     omitted or empty means all sources. Locale defaults to the caller's profile then English. Offset
-    defaults to 0 and limit to 10.
+    defaults to 0 and limit to 10, at most 100.
 
     Args:
-        offset (float | None | Unset):  Default: 0.0.
-        limit (float | None | Unset):  Default: 10.0.
+        offset (int | None | Unset):  Default: 0.
+        limit (int | Unset):  Default: 10.
         source (str | Unset):
         locale (str | Unset):
 

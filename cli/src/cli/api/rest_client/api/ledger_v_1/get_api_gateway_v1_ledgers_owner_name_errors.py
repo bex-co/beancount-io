@@ -100,7 +100,9 @@ def sync_detailed(
 ) -> Response[V1Error | list[Any]]:
     """List the ledger's parse and validation errors
 
-     What `bean-check` reports for this ledger. An empty list means the ledger is currently valid.
+     What `bean-check` reports for this ledger. An empty list means the ledger is currently valid. The
+    engine's warnings (a one-posting entry, closing an account with a balance) are not listed: `bean-
+    check` does not fail on them.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -134,7 +136,9 @@ def sync(
 ) -> V1Error | list[Any] | None:
     """List the ledger's parse and validation errors
 
-     What `bean-check` reports for this ledger. An empty list means the ledger is currently valid.
+     What `bean-check` reports for this ledger. An empty list means the ledger is currently valid. The
+    engine's warnings (a one-posting entry, closing an account with a balance) are not listed: `bean-
+    check` does not fail on them.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -163,7 +167,9 @@ async def asyncio_detailed(
 ) -> Response[V1Error | list[Any]]:
     """List the ledger's parse and validation errors
 
-     What `bean-check` reports for this ledger. An empty list means the ledger is currently valid.
+     What `bean-check` reports for this ledger. An empty list means the ledger is currently valid. The
+    engine's warnings (a one-posting entry, closing an account with a balance) are not listed: `bean-
+    check` does not fail on them.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -195,7 +201,9 @@ async def asyncio(
 ) -> V1Error | list[Any] | None:
     """List the ledger's parse and validation errors
 
-     What `bean-check` reports for this ledger. An empty list means the ledger is currently valid.
+     What `bean-check` reports for this ledger. An empty list means the ledger is currently valid. The
+    engine's warnings (a one-posting entry, closing an account with a balance) are not listed: `bean-
+    check` does not fail on them.
 
     Args:
         owner (str): Ledger owner's username Example: alice.

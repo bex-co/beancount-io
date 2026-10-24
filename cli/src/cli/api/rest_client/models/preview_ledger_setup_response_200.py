@@ -8,6 +8,7 @@ from attrs import field as _attrs_field
 
 if TYPE_CHECKING:
     from ..models.preview_ledger_setup_response_200_files import PreviewLedgerSetupResponse200Files
+    from ..models.preview_ledger_setup_response_200_validation import PreviewLedgerSetupResponse200Validation
 
 
 T = TypeVar("T", bound="PreviewLedgerSetupResponse200")
@@ -22,6 +23,7 @@ class PreviewLedgerSetupResponse200:
         history_start (str):
         accounts (list[str]):
         files (PreviewLedgerSetupResponse200Files):
+        validation (PreviewLedgerSetupResponse200Validation):
     """
 
     preset: str
@@ -29,6 +31,7 @@ class PreviewLedgerSetupResponse200:
     history_start: str
     accounts: list[str]
     files: PreviewLedgerSetupResponse200Files
+    validation: PreviewLedgerSetupResponse200Validation
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -42,6 +45,8 @@ class PreviewLedgerSetupResponse200:
 
         files = self.files.to_dict()
 
+        validation = self.validation.to_dict()
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -51,6 +56,7 @@ class PreviewLedgerSetupResponse200:
                 "historyStart": history_start,
                 "accounts": accounts,
                 "files": files,
+                "validation": validation,
             }
         )
 
@@ -59,6 +65,9 @@ class PreviewLedgerSetupResponse200:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.preview_ledger_setup_response_200_files import PreviewLedgerSetupResponse200Files  # noqa: PLC0415
+        from ..models.preview_ledger_setup_response_200_validation import (
+            PreviewLedgerSetupResponse200Validation,  # noqa: PLC0415
+        )
 
         d = dict(src_dict)
         preset = d.pop("preset")
@@ -71,12 +80,15 @@ class PreviewLedgerSetupResponse200:
 
         files = PreviewLedgerSetupResponse200Files.from_dict(d.pop("files"))
 
+        validation = PreviewLedgerSetupResponse200Validation.from_dict(d.pop("validation"))
+
         preview_ledger_setup_response_200 = cls(
             preset=preset,
             operating_currency=operating_currency,
             history_start=history_start,
             accounts=accounts,
             files=files,
+            validation=validation,
         )
 
         preview_ledger_setup_response_200.additional_properties = d

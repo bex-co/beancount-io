@@ -182,8 +182,9 @@ def sync_detailed(
         with_children (GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset):
         conversion (str | Unset):
         directive_types (str | Unset): JSON-encoded directive kinds to include, e.g.
-            ["Transaction"]. Omitted, every kind is returned — including the epoch-dated
-            `open`/`close` directives that fall inside any time window.
+            ["Transaction"]: any of Transaction, Balance, Commodity, Close, Custom, Document, Event,
+            Note, Open, Pad, Price, in any case. Omitted, every kind is returned — including the
+            epoch-dated `open`/`close` directives that fall inside any time window.
         transaction_subtypes (str | Unset): JSON-encoded string array, including [] for an empty
             filter list
         document_subtypes (str | Unset): JSON-encoded string array, including [] for an empty
@@ -260,8 +261,9 @@ def sync(
         with_children (GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset):
         conversion (str | Unset):
         directive_types (str | Unset): JSON-encoded directive kinds to include, e.g.
-            ["Transaction"]. Omitted, every kind is returned — including the epoch-dated
-            `open`/`close` directives that fall inside any time window.
+            ["Transaction"]: any of Transaction, Balance, Commodity, Close, Custom, Document, Event,
+            Note, Open, Pad, Price, in any case. Omitted, every kind is returned — including the
+            epoch-dated `open`/`close` directives that fall inside any time window.
         transaction_subtypes (str | Unset): JSON-encoded string array, including [] for an empty
             filter list
         document_subtypes (str | Unset): JSON-encoded string array, including [] for an empty
@@ -333,8 +335,9 @@ async def asyncio_detailed(
         with_children (GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset):
         conversion (str | Unset):
         directive_types (str | Unset): JSON-encoded directive kinds to include, e.g.
-            ["Transaction"]. Omitted, every kind is returned — including the epoch-dated
-            `open`/`close` directives that fall inside any time window.
+            ["Transaction"]: any of Transaction, Balance, Commodity, Close, Custom, Document, Event,
+            Note, Open, Pad, Price, in any case. Omitted, every kind is returned — including the
+            epoch-dated `open`/`close` directives that fall inside any time window.
         transaction_subtypes (str | Unset): JSON-encoded string array, including [] for an empty
             filter list
         document_subtypes (str | Unset): JSON-encoded string array, including [] for an empty
@@ -409,8 +412,9 @@ async def asyncio(
         with_children (GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset):
         conversion (str | Unset):
         directive_types (str | Unset): JSON-encoded directive kinds to include, e.g.
-            ["Transaction"]. Omitted, every kind is returned — including the epoch-dated
-            `open`/`close` directives that fall inside any time window.
+            ["Transaction"]: any of Transaction, Balance, Commodity, Close, Custom, Document, Event,
+            Note, Open, Pad, Price, in any case. Omitted, every kind is returned — including the
+            epoch-dated `open`/`close` directives that fall inside any time window.
         transaction_subtypes (str | Unset): JSON-encoded string array, including [] for an empty
             filter list
         document_subtypes (str | Unset): JSON-encoded string array, including [] for an empty

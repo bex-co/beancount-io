@@ -17,25 +17,15 @@ def _get_kwargs(
     owner: str,
     name: str,
     *,
-    page: float | None | Unset = 1.0,
-    limit: float | None | Unset = 10.0,
+    page: int | Unset = 1,
+    limit: int | Unset = 10,
 ) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
 
-    json_page: float | None | Unset
-    if isinstance(page, Unset):
-        json_page = UNSET
-    else:
-        json_page = page
-    params["page"] = json_page
+    params["page"] = page
 
-    json_limit: float | None | Unset
-    if isinstance(limit, Unset):
-        json_limit = UNSET
-    else:
-        json_limit = limit
-    params["limit"] = json_limit
+    params["limit"] = limit
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -133,8 +123,8 @@ def sync_detailed(
     name: str,
     *,
     client: AuthenticatedClient,
-    page: float | None | Unset = 1.0,
-    limit: float | None | Unset = 10.0,
+    page: int | Unset = 1,
+    limit: int | Unset = 10,
 ) -> Response[V1Error | list[GetApiGatewayV1LedgersOwnerNameCollaboratorsResponse200Item]]:
     """List ledger collaborators
 
@@ -144,8 +134,8 @@ def sync_detailed(
     Args:
         owner (str): Ledger owner's username Example: alice.
         name (str): Ledger (repository) name Example: main-ledger.
-        page (float | None | Unset):  Default: 1.0.
-        limit (float | None | Unset):  Default: 10.0.
+        page (int | Unset):  Default: 1.
+        limit (int | Unset):  Default: 10.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -174,8 +164,8 @@ def sync(
     name: str,
     *,
     client: AuthenticatedClient,
-    page: float | None | Unset = 1.0,
-    limit: float | None | Unset = 10.0,
+    page: int | Unset = 1,
+    limit: int | Unset = 10,
 ) -> V1Error | list[GetApiGatewayV1LedgersOwnerNameCollaboratorsResponse200Item] | None:
     """List ledger collaborators
 
@@ -185,8 +175,8 @@ def sync(
     Args:
         owner (str): Ledger owner's username Example: alice.
         name (str): Ledger (repository) name Example: main-ledger.
-        page (float | None | Unset):  Default: 1.0.
-        limit (float | None | Unset):  Default: 10.0.
+        page (int | Unset):  Default: 1.
+        limit (int | Unset):  Default: 10.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -210,8 +200,8 @@ async def asyncio_detailed(
     name: str,
     *,
     client: AuthenticatedClient,
-    page: float | None | Unset = 1.0,
-    limit: float | None | Unset = 10.0,
+    page: int | Unset = 1,
+    limit: int | Unset = 10,
 ) -> Response[V1Error | list[GetApiGatewayV1LedgersOwnerNameCollaboratorsResponse200Item]]:
     """List ledger collaborators
 
@@ -221,8 +211,8 @@ async def asyncio_detailed(
     Args:
         owner (str): Ledger owner's username Example: alice.
         name (str): Ledger (repository) name Example: main-ledger.
-        page (float | None | Unset):  Default: 1.0.
-        limit (float | None | Unset):  Default: 10.0.
+        page (int | Unset):  Default: 1.
+        limit (int | Unset):  Default: 10.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -249,8 +239,8 @@ async def asyncio(
     name: str,
     *,
     client: AuthenticatedClient,
-    page: float | None | Unset = 1.0,
-    limit: float | None | Unset = 10.0,
+    page: int | Unset = 1,
+    limit: int | Unset = 10,
 ) -> V1Error | list[GetApiGatewayV1LedgersOwnerNameCollaboratorsResponse200Item] | None:
     """List ledger collaborators
 
@@ -260,8 +250,8 @@ async def asyncio(
     Args:
         owner (str): Ledger owner's username Example: alice.
         name (str): Ledger (repository) name Example: main-ledger.
-        page (float | None | Unset):  Default: 1.0.
-        limit (float | None | Unset):  Default: 10.0.
+        page (int | Unset):  Default: 1.
+        limit (int | Unset):  Default: 10.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

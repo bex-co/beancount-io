@@ -29,6 +29,9 @@ class PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200:
         dry_run (bool):
         count (int):
         wrote (list[PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200WroteItem]):
+        entry_hashes (list[str]): The hash each committed entry now carries, in request order — what getEntryContext,
+            the source-slice update and delete take. Empty on a dry run, or when the hashes could not be resolved after the
+            commit.
         diff (list[PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200DiffItem]):
         errors_before (int):
         errors_after (int):
@@ -41,6 +44,7 @@ class PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200:
     dry_run: bool
     count: int
     wrote: list[PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200WroteItem]
+    entry_hashes: list[str]
     diff: list[PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200DiffItem]
     errors_before: int
     errors_after: int
@@ -60,6 +64,8 @@ class PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200:
         for wrote_item_data in self.wrote:
             wrote_item = wrote_item_data.to_dict()
             wrote.append(wrote_item)
+
+        entry_hashes = self.entry_hashes
 
         diff = []
         for diff_item_data in self.diff:
@@ -86,6 +92,7 @@ class PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200:
                 "dryRun": dry_run,
                 "count": count,
                 "wrote": wrote,
+                "entryHashes": entry_hashes,
                 "diff": diff,
                 "errorsBefore": errors_before,
                 "errorsAfter": errors_after,
@@ -124,6 +131,8 @@ class PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200:
 
             wrote.append(wrote_item)
 
+        entry_hashes = cast(list[str], d.pop("entryHashes"))
+
         diff = []
         _diff = d.pop("diff")
         for diff_item_data in _diff:
@@ -152,6 +161,7 @@ class PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200:
             dry_run=dry_run,
             count=count,
             wrote=wrote,
+            entry_hashes=entry_hashes,
             diff=diff,
             errors_before=errors_before,
             errors_after=errors_after,

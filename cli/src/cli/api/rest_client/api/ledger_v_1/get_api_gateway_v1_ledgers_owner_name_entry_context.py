@@ -109,7 +109,10 @@ def sync_detailed(
 ) -> Response[Any | V1Error]:
     """Get the source context around one entry
 
-     The ledger text surrounding a directive, addressed by its hash — what to read before editing it.
+     The ledger text surrounding a directive, addressed by its hash — what to read before editing it. A
+    result with `generated_from` is a copy a plugin or a pad generated from that source entry: it shares
+    the source's slice and sha256sum, so editing or deleting it would change the source and every other
+    copy.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -146,7 +149,10 @@ def sync(
 ) -> Any | V1Error | None:
     """Get the source context around one entry
 
-     The ledger text surrounding a directive, addressed by its hash — what to read before editing it.
+     The ledger text surrounding a directive, addressed by its hash — what to read before editing it. A
+    result with `generated_from` is a copy a plugin or a pad generated from that source entry: it shares
+    the source's slice and sha256sum, so editing or deleting it would change the source and every other
+    copy.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -178,7 +184,10 @@ async def asyncio_detailed(
 ) -> Response[Any | V1Error]:
     """Get the source context around one entry
 
-     The ledger text surrounding a directive, addressed by its hash — what to read before editing it.
+     The ledger text surrounding a directive, addressed by its hash — what to read before editing it. A
+    result with `generated_from` is a copy a plugin or a pad generated from that source entry: it shares
+    the source's slice and sha256sum, so editing or deleting it would change the source and every other
+    copy.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -213,7 +222,10 @@ async def asyncio(
 ) -> Any | V1Error | None:
     """Get the source context around one entry
 
-     The ledger text surrounding a directive, addressed by its hash — what to read before editing it.
+     The ledger text surrounding a directive, addressed by its hash — what to read before editing it. A
+    result with `generated_from` is a copy a plugin or a pad generated from that source entry: it shares
+    the source's slice and sha256sum, so editing or deleting it would change the source and every other
+    copy.
 
     Args:
         owner (str): Ledger owner's username Example: alice.

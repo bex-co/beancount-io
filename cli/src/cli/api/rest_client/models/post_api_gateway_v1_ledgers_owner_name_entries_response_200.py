@@ -15,14 +15,20 @@ class PostApiGatewayV1LedgersOwnerNameEntriesResponse200:
     """
     Attributes:
         success (bool):
+        entry_hashes (list[str]): The hash each committed entry now carries, in request order — what getEntryContext,
+            the source-slice update and delete take. Empty on a dry run, or when the hashes could not be resolved after the
+            commit.
         message (None | str | Unset):
     """
 
     success: bool
+    entry_hashes: list[str]
     message: None | str | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         success = self.success
+
+        entry_hashes = self.entry_hashes
 
         message: None | str | Unset
         if isinstance(self.message, Unset):
@@ -35,6 +41,7 @@ class PostApiGatewayV1LedgersOwnerNameEntriesResponse200:
         field_dict.update(
             {
                 "success": success,
+                "entryHashes": entry_hashes,
             }
         )
         if message is not UNSET:
@@ -47,6 +54,8 @@ class PostApiGatewayV1LedgersOwnerNameEntriesResponse200:
         d = dict(src_dict)
         success = d.pop("success")
 
+        entry_hashes = cast(list[str], d.pop("entryHashes"))
+
         def _parse_message(data: object) -> None | str | Unset:
             if data is None:
                 return data
@@ -58,6 +67,7 @@ class PostApiGatewayV1LedgersOwnerNameEntriesResponse200:
 
         post_api_gateway_v1_ledgers_owner_name_entries_response_200 = cls(
             success=success,
+            entry_hashes=entry_hashes,
             message=message,
         )
 

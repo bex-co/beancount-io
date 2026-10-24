@@ -21,8 +21,8 @@ T = TypeVar("T", bound="CreateLedgerBody")
 class CreateLedgerBody:
     """
     Attributes:
-        name (str): The ledger's name: lowercase letters, numbers, hyphens, and underscores, up to 100 characters.
-        description (None | str | Unset): A short description shown with the ledger.
+        name (str): Lowercase letters, numbers, and underscores, joined by single hyphens.
+        description (None | str | Unset): A short description shown with the ledger, up to 2048 characters.
         private (bool | None | Unset): true or omitted keeps the ledger visible only to its owner and collaborators;
             false makes it public, readable by anyone.
         template (CreateLedgerBodyTemplateType1 | CreateLedgerBodyTemplateType2Type1 |

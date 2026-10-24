@@ -17,6 +17,8 @@ def _get_kwargs(
     account: str | Unset = UNSET,
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
+    limit: int | Unset = UNSET,
+    offset: int | None | Unset = UNSET,
 ) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
@@ -26,6 +28,15 @@ def _get_kwargs(
     params["filter"] = filter_
 
     params["time"] = time
+
+    params["limit"] = limit
+
+    json_offset: int | None | Unset
+    if isinstance(offset, Unset):
+        json_offset = UNSET
+    else:
+        json_offset = offset
+    params["offset"] = json_offset
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -114,6 +125,8 @@ def sync_detailed(
     account: str | Unset = UNSET,
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
+    limit: int | Unset = UNSET,
+    offset: int | None | Unset = UNSET,
 ) -> Response[Any | V1Error]:
     """Read Beancount journal text with account, time, and expression filters
 
@@ -128,6 +141,9 @@ def sync_detailed(
             range. It bounds transactions only — undated structural directives such as `open` and
             `close` carry the epoch date and appear in every window, so a single-day journal still
             lists them. Use directiveTypes to ask for transactions alone.
+        limit (int | Unset): Entries per page. Omitted, REST and GraphQL return every entry; MCP
+            returns 200.
+        offset (int | None | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -143,6 +159,8 @@ def sync_detailed(
         account=account,
         filter_=filter_,
         time=time,
+        limit=limit,
+        offset=offset,
     )
 
     response = client.get_httpx_client().request(
@@ -160,6 +178,8 @@ def sync(
     account: str | Unset = UNSET,
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
+    limit: int | Unset = UNSET,
+    offset: int | None | Unset = UNSET,
 ) -> Any | V1Error | None:
     """Read Beancount journal text with account, time, and expression filters
 
@@ -174,6 +194,9 @@ def sync(
             range. It bounds transactions only — undated structural directives such as `open` and
             `close` carry the epoch date and appear in every window, so a single-day journal still
             lists them. Use directiveTypes to ask for transactions alone.
+        limit (int | Unset): Entries per page. Omitted, REST and GraphQL return every entry; MCP
+            returns 200.
+        offset (int | None | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -190,6 +213,8 @@ def sync(
         account=account,
         filter_=filter_,
         time=time,
+        limit=limit,
+        offset=offset,
     ).parsed
 
 
@@ -201,6 +226,8 @@ async def asyncio_detailed(
     account: str | Unset = UNSET,
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
+    limit: int | Unset = UNSET,
+    offset: int | None | Unset = UNSET,
 ) -> Response[Any | V1Error]:
     """Read Beancount journal text with account, time, and expression filters
 
@@ -215,6 +242,9 @@ async def asyncio_detailed(
             range. It bounds transactions only — undated structural directives such as `open` and
             `close` carry the epoch date and appear in every window, so a single-day journal still
             lists them. Use directiveTypes to ask for transactions alone.
+        limit (int | Unset): Entries per page. Omitted, REST and GraphQL return every entry; MCP
+            returns 200.
+        offset (int | None | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -230,6 +260,8 @@ async def asyncio_detailed(
         account=account,
         filter_=filter_,
         time=time,
+        limit=limit,
+        offset=offset,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -245,6 +277,8 @@ async def asyncio(
     account: str | Unset = UNSET,
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
+    limit: int | Unset = UNSET,
+    offset: int | None | Unset = UNSET,
 ) -> Any | V1Error | None:
     """Read Beancount journal text with account, time, and expression filters
 
@@ -259,6 +293,9 @@ async def asyncio(
             range. It bounds transactions only — undated structural directives such as `open` and
             `close` carry the epoch date and appear in every window, so a single-day journal still
             lists them. Use directiveTypes to ask for transactions alone.
+        limit (int | Unset): Entries per page. Omitted, REST and GraphQL return every entry; MCP
+            returns 200.
+        offset (int | None | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -276,5 +313,7 @@ async def asyncio(
             account=account,
             filter_=filter_,
             time=time,
+            limit=limit,
+            offset=offset,
         )
     ).parsed

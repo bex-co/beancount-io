@@ -15,27 +15,17 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     *,
     username: str,
-    page: float | None | Unset = UNSET,
-    limit: float | None | Unset = UNSET,
+    page: int | Unset = UNSET,
+    limit: int | Unset = UNSET,
 ) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
 
     params["username"] = username
 
-    json_page: float | None | Unset
-    if isinstance(page, Unset):
-        json_page = UNSET
-    else:
-        json_page = page
-    params["page"] = json_page
+    params["page"] = page
 
-    json_limit: float | None | Unset
-    if isinstance(limit, Unset):
-        json_limit = UNSET
-    else:
-        json_limit = limit
-    params["limit"] = json_limit
+    params["limit"] = limit
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -122,8 +112,8 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     username: str,
-    page: float | None | Unset = UNSET,
-    limit: float | None | Unset = UNSET,
+    page: int | Unset = UNSET,
+    limit: int | Unset = UNSET,
 ) -> Response[GetApiGatewayV1SocialStarredRepositoriesResponse200 | V1Error]:
     """Read starred-repositories
 
@@ -132,8 +122,8 @@ def sync_detailed(
 
     Args:
         username (str):
-        page (float | None | Unset):
-        limit (float | None | Unset):
+        page (int | Unset):
+        limit (int | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -160,8 +150,8 @@ def sync(
     *,
     client: AuthenticatedClient,
     username: str,
-    page: float | None | Unset = UNSET,
-    limit: float | None | Unset = UNSET,
+    page: int | Unset = UNSET,
+    limit: int | Unset = UNSET,
 ) -> GetApiGatewayV1SocialStarredRepositoriesResponse200 | V1Error | None:
     """Read starred-repositories
 
@@ -170,8 +160,8 @@ def sync(
 
     Args:
         username (str):
-        page (float | None | Unset):
-        limit (float | None | Unset):
+        page (int | Unset):
+        limit (int | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -193,8 +183,8 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     username: str,
-    page: float | None | Unset = UNSET,
-    limit: float | None | Unset = UNSET,
+    page: int | Unset = UNSET,
+    limit: int | Unset = UNSET,
 ) -> Response[GetApiGatewayV1SocialStarredRepositoriesResponse200 | V1Error]:
     """Read starred-repositories
 
@@ -203,8 +193,8 @@ async def asyncio_detailed(
 
     Args:
         username (str):
-        page (float | None | Unset):
-        limit (float | None | Unset):
+        page (int | Unset):
+        limit (int | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -229,8 +219,8 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     username: str,
-    page: float | None | Unset = UNSET,
-    limit: float | None | Unset = UNSET,
+    page: int | Unset = UNSET,
+    limit: int | Unset = UNSET,
 ) -> GetApiGatewayV1SocialStarredRepositoriesResponse200 | V1Error | None:
     """Read starred-repositories
 
@@ -239,8 +229,8 @@ async def asyncio(
 
     Args:
         username (str):
-        page (float | None | Unset):
-        limit (float | None | Unset):
+        page (int | Unset):
+        limit (int | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

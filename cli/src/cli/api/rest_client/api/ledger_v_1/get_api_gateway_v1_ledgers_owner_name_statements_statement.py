@@ -24,7 +24,7 @@ def _get_kwargs(
     account: str | Unset = UNSET,
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
-    conversion: str | Unset = "USD",
+    conversion: str | Unset = UNSET,
     interval: str | Unset = "monthly",
     shape: GetApiGatewayV1LedgersOwnerNameStatementsStatementShape
     | Unset = GetApiGatewayV1LedgersOwnerNameStatementsStatementShape.SUMMARY,
@@ -137,7 +137,7 @@ def sync_detailed(
     account: str | Unset = UNSET,
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
-    conversion: str | Unset = "USD",
+    conversion: str | Unset = UNSET,
     interval: str | Unset = "monthly",
     shape: GetApiGatewayV1LedgersOwnerNameStatementsStatementShape
     | Unset = GetApiGatewayV1LedgersOwnerNameStatementsStatementShape.SUMMARY,
@@ -158,7 +158,8 @@ def sync_detailed(
         filter_ (str | Unset):
         time (str | Unset): Reporting period as a Fava time expression Example: 2026-01-01 -
             2026-12-31.
-        conversion (str | Unset): Convert amounts to this currency Default: 'USD'. Example: USD.
+        conversion (str | Unset): Convert amounts to this currency (default: the ledger's
+            operating currency) Example: USD.
         interval (str | Unset): Bucket the period: day, week, month, quarter, year Default:
             'monthly'. Example: month.
         shape (GetApiGatewayV1LedgersOwnerNameStatementsStatementShape | Unset): summary returns
@@ -202,7 +203,7 @@ def sync(
     account: str | Unset = UNSET,
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
-    conversion: str | Unset = "USD",
+    conversion: str | Unset = UNSET,
     interval: str | Unset = "monthly",
     shape: GetApiGatewayV1LedgersOwnerNameStatementsStatementShape
     | Unset = GetApiGatewayV1LedgersOwnerNameStatementsStatementShape.SUMMARY,
@@ -223,7 +224,8 @@ def sync(
         filter_ (str | Unset):
         time (str | Unset): Reporting period as a Fava time expression Example: 2026-01-01 -
             2026-12-31.
-        conversion (str | Unset): Convert amounts to this currency Default: 'USD'. Example: USD.
+        conversion (str | Unset): Convert amounts to this currency (default: the ledger's
+            operating currency) Example: USD.
         interval (str | Unset): Bucket the period: day, week, month, quarter, year Default:
             'monthly'. Example: month.
         shape (GetApiGatewayV1LedgersOwnerNameStatementsStatementShape | Unset): summary returns
@@ -262,7 +264,7 @@ async def asyncio_detailed(
     account: str | Unset = UNSET,
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
-    conversion: str | Unset = "USD",
+    conversion: str | Unset = UNSET,
     interval: str | Unset = "monthly",
     shape: GetApiGatewayV1LedgersOwnerNameStatementsStatementShape
     | Unset = GetApiGatewayV1LedgersOwnerNameStatementsStatementShape.SUMMARY,
@@ -283,7 +285,8 @@ async def asyncio_detailed(
         filter_ (str | Unset):
         time (str | Unset): Reporting period as a Fava time expression Example: 2026-01-01 -
             2026-12-31.
-        conversion (str | Unset): Convert amounts to this currency Default: 'USD'. Example: USD.
+        conversion (str | Unset): Convert amounts to this currency (default: the ledger's
+            operating currency) Example: USD.
         interval (str | Unset): Bucket the period: day, week, month, quarter, year Default:
             'monthly'. Example: month.
         shape (GetApiGatewayV1LedgersOwnerNameStatementsStatementShape | Unset): summary returns
@@ -325,7 +328,7 @@ async def asyncio(
     account: str | Unset = UNSET,
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
-    conversion: str | Unset = "USD",
+    conversion: str | Unset = UNSET,
     interval: str | Unset = "monthly",
     shape: GetApiGatewayV1LedgersOwnerNameStatementsStatementShape
     | Unset = GetApiGatewayV1LedgersOwnerNameStatementsStatementShape.SUMMARY,
@@ -346,7 +349,8 @@ async def asyncio(
         filter_ (str | Unset):
         time (str | Unset): Reporting period as a Fava time expression Example: 2026-01-01 -
             2026-12-31.
-        conversion (str | Unset): Convert amounts to this currency Default: 'USD'. Example: USD.
+        conversion (str | Unset): Convert amounts to this currency (default: the ledger's
+            operating currency) Example: USD.
         interval (str | Unset): Bucket the period: day, week, month, quarter, year Default:
             'monthly'. Example: month.
         shape (GetApiGatewayV1LedgersOwnerNameStatementsStatementShape | Unset): summary returns

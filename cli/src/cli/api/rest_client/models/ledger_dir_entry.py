@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -19,11 +19,17 @@ class LedgerDirEntry:
         path (str):
         name (str):
         type_ (LedgerDirEntryType):
+        size (int): Size in bytes
+        sha (str): Blob SHA: send it back as the optimistic lock of a delete or update
+        last_commit_sha (None | str): The commit that last touched the entry, when known
     """
 
     path: str
     name: str
     type_: LedgerDirEntryType
+    size: int
+    sha: str
+    last_commit_sha: None | str
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -33,6 +39,13 @@ class LedgerDirEntry:
 
         type_ = self.type_.value
 
+        size = self.size
+
+        sha = self.sha
+
+        last_commit_sha: None | str
+        last_commit_sha = self.last_commit_sha
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -40,6 +53,9 @@ class LedgerDirEntry:
                 "path": path,
                 "name": name,
                 "type": type_,
+                "size": size,
+                "sha": sha,
+                "lastCommitSha": last_commit_sha,
             }
         )
 
@@ -54,10 +70,24 @@ class LedgerDirEntry:
 
         type_ = LedgerDirEntryType(d.pop("type"))
 
+        size = d.pop("size")
+
+        sha = d.pop("sha")
+
+        def _parse_last_commit_sha(data: object) -> None | str:
+            if data is None:
+                return data
+            return cast(None | str, data)
+
+        last_commit_sha = _parse_last_commit_sha(d.pop("lastCommitSha"))
+
         ledger_dir_entry = cls(
             path=path,
             name=name,
             type_=type_,
+            size=size,
+            sha=sha,
+            last_commit_sha=last_commit_sha,
         )
 
         ledger_dir_entry.additional_properties = d

@@ -9,6 +9,7 @@ from ...models.search_ledgers_archived import SearchLedgersArchived
 from ...models.search_ledgers_exclusive import SearchLedgersExclusive
 from ...models.search_ledgers_include_desc import SearchLedgersIncludeDesc
 from ...models.search_ledgers_is_private import SearchLedgersIsPrivate
+from ...models.search_ledgers_order import SearchLedgersOrder
 from ...models.search_ledgers_private import SearchLedgersPrivate
 from ...models.search_ledgers_response_200_item import SearchLedgersResponse200Item
 from ...models.search_ledgers_template import SearchLedgersTemplate
@@ -19,15 +20,15 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    page: float | None | Unset = UNSET,
-    limit: float | None | Unset = UNSET,
+    page: int | Unset = UNSET,
+    limit: int | Unset = UNSET,
     q: str | Unset = UNSET,
     topic: SearchLedgersTopic | Unset = UNSET,
     include_desc: SearchLedgersIncludeDesc | Unset = UNSET,
-    uid: float | None | Unset = UNSET,
-    priority_owner_id: float | None | Unset = UNSET,
-    team_id: float | None | Unset = UNSET,
-    starred_by: float | None | Unset = UNSET,
+    uid: int | Unset = UNSET,
+    priority_owner_id: int | Unset = UNSET,
+    team_id: int | Unset = UNSET,
+    starred_by: int | Unset = UNSET,
     private: SearchLedgersPrivate | Unset = UNSET,
     is_private: SearchLedgersIsPrivate | Unset = UNSET,
     template: SearchLedgersTemplate | Unset = UNSET,
@@ -35,24 +36,14 @@ def _get_kwargs(
     mode: str | Unset = UNSET,
     exclusive: SearchLedgersExclusive | Unset = UNSET,
     sort: str | Unset = UNSET,
-    order: str | Unset = UNSET,
+    order: SearchLedgersOrder | Unset = UNSET,
 ) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
 
-    json_page: float | None | Unset
-    if isinstance(page, Unset):
-        json_page = UNSET
-    else:
-        json_page = page
-    params["page"] = json_page
+    params["page"] = page
 
-    json_limit: float | None | Unset
-    if isinstance(limit, Unset):
-        json_limit = UNSET
-    else:
-        json_limit = limit
-    params["limit"] = json_limit
+    params["limit"] = limit
 
     params["q"] = q
 
@@ -68,33 +59,13 @@ def _get_kwargs(
 
     params["includeDesc"] = json_include_desc
 
-    json_uid: float | None | Unset
-    if isinstance(uid, Unset):
-        json_uid = UNSET
-    else:
-        json_uid = uid
-    params["uid"] = json_uid
+    params["uid"] = uid
 
-    json_priority_owner_id: float | None | Unset
-    if isinstance(priority_owner_id, Unset):
-        json_priority_owner_id = UNSET
-    else:
-        json_priority_owner_id = priority_owner_id
-    params["priorityOwnerId"] = json_priority_owner_id
+    params["priorityOwnerId"] = priority_owner_id
 
-    json_team_id: float | None | Unset
-    if isinstance(team_id, Unset):
-        json_team_id = UNSET
-    else:
-        json_team_id = team_id
-    params["teamId"] = json_team_id
+    params["teamId"] = team_id
 
-    json_starred_by: float | None | Unset
-    if isinstance(starred_by, Unset):
-        json_starred_by = UNSET
-    else:
-        json_starred_by = starred_by
-    params["starredBy"] = json_starred_by
+    params["starredBy"] = starred_by
 
     json_private: str | Unset = UNSET
     if not isinstance(private, Unset):
@@ -130,7 +101,11 @@ def _get_kwargs(
 
     params["sort"] = sort
 
-    params["order"] = order
+    json_order: str | Unset = UNSET
+    if not isinstance(order, Unset):
+        json_order = order.value
+
+    params["order"] = json_order
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -221,15 +196,15 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    page: float | None | Unset = UNSET,
-    limit: float | None | Unset = UNSET,
+    page: int | Unset = UNSET,
+    limit: int | Unset = UNSET,
     q: str | Unset = UNSET,
     topic: SearchLedgersTopic | Unset = UNSET,
     include_desc: SearchLedgersIncludeDesc | Unset = UNSET,
-    uid: float | None | Unset = UNSET,
-    priority_owner_id: float | None | Unset = UNSET,
-    team_id: float | None | Unset = UNSET,
-    starred_by: float | None | Unset = UNSET,
+    uid: int | Unset = UNSET,
+    priority_owner_id: int | Unset = UNSET,
+    team_id: int | Unset = UNSET,
+    starred_by: int | Unset = UNSET,
     private: SearchLedgersPrivate | Unset = UNSET,
     is_private: SearchLedgersIsPrivate | Unset = UNSET,
     template: SearchLedgersTemplate | Unset = UNSET,
@@ -237,22 +212,22 @@ def sync_detailed(
     mode: str | Unset = UNSET,
     exclusive: SearchLedgersExclusive | Unset = UNSET,
     sort: str | Unset = UNSET,
-    order: str | Unset = UNSET,
+    order: SearchLedgersOrder | Unset = UNSET,
 ) -> Response[V1Error | list[SearchLedgersResponse200Item]]:
     """Search ledgers with ownership, visibility, sorting, and pagination filters
 
      Search ledgers with ownership, visibility, sorting, and pagination filters
 
     Args:
-        page (float | None | Unset):
-        limit (float | None | Unset):
+        page (int | Unset): 1-based page number Example: 1.
+        limit (int | Unset): Page size, at most 100 Example: 20.
         q (str | Unset):
         topic (SearchLedgersTopic | Unset):
         include_desc (SearchLedgersIncludeDesc | Unset):
-        uid (float | None | Unset):
-        priority_owner_id (float | None | Unset):
-        team_id (float | None | Unset):
-        starred_by (float | None | Unset):
+        uid (int | Unset):
+        priority_owner_id (int | Unset):
+        team_id (int | Unset):
+        starred_by (int | Unset):
         private (SearchLedgersPrivate | Unset):
         is_private (SearchLedgersIsPrivate | Unset):
         template (SearchLedgersTemplate | Unset):
@@ -260,7 +235,7 @@ def sync_detailed(
         mode (str | Unset):
         exclusive (SearchLedgersExclusive | Unset):
         sort (str | Unset):
-        order (str | Unset):
+        order (SearchLedgersOrder | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -300,15 +275,15 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    page: float | None | Unset = UNSET,
-    limit: float | None | Unset = UNSET,
+    page: int | Unset = UNSET,
+    limit: int | Unset = UNSET,
     q: str | Unset = UNSET,
     topic: SearchLedgersTopic | Unset = UNSET,
     include_desc: SearchLedgersIncludeDesc | Unset = UNSET,
-    uid: float | None | Unset = UNSET,
-    priority_owner_id: float | None | Unset = UNSET,
-    team_id: float | None | Unset = UNSET,
-    starred_by: float | None | Unset = UNSET,
+    uid: int | Unset = UNSET,
+    priority_owner_id: int | Unset = UNSET,
+    team_id: int | Unset = UNSET,
+    starred_by: int | Unset = UNSET,
     private: SearchLedgersPrivate | Unset = UNSET,
     is_private: SearchLedgersIsPrivate | Unset = UNSET,
     template: SearchLedgersTemplate | Unset = UNSET,
@@ -316,22 +291,22 @@ def sync(
     mode: str | Unset = UNSET,
     exclusive: SearchLedgersExclusive | Unset = UNSET,
     sort: str | Unset = UNSET,
-    order: str | Unset = UNSET,
+    order: SearchLedgersOrder | Unset = UNSET,
 ) -> V1Error | list[SearchLedgersResponse200Item] | None:
     """Search ledgers with ownership, visibility, sorting, and pagination filters
 
      Search ledgers with ownership, visibility, sorting, and pagination filters
 
     Args:
-        page (float | None | Unset):
-        limit (float | None | Unset):
+        page (int | Unset): 1-based page number Example: 1.
+        limit (int | Unset): Page size, at most 100 Example: 20.
         q (str | Unset):
         topic (SearchLedgersTopic | Unset):
         include_desc (SearchLedgersIncludeDesc | Unset):
-        uid (float | None | Unset):
-        priority_owner_id (float | None | Unset):
-        team_id (float | None | Unset):
-        starred_by (float | None | Unset):
+        uid (int | Unset):
+        priority_owner_id (int | Unset):
+        team_id (int | Unset):
+        starred_by (int | Unset):
         private (SearchLedgersPrivate | Unset):
         is_private (SearchLedgersIsPrivate | Unset):
         template (SearchLedgersTemplate | Unset):
@@ -339,7 +314,7 @@ def sync(
         mode (str | Unset):
         exclusive (SearchLedgersExclusive | Unset):
         sort (str | Unset):
-        order (str | Unset):
+        order (SearchLedgersOrder | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -374,15 +349,15 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    page: float | None | Unset = UNSET,
-    limit: float | None | Unset = UNSET,
+    page: int | Unset = UNSET,
+    limit: int | Unset = UNSET,
     q: str | Unset = UNSET,
     topic: SearchLedgersTopic | Unset = UNSET,
     include_desc: SearchLedgersIncludeDesc | Unset = UNSET,
-    uid: float | None | Unset = UNSET,
-    priority_owner_id: float | None | Unset = UNSET,
-    team_id: float | None | Unset = UNSET,
-    starred_by: float | None | Unset = UNSET,
+    uid: int | Unset = UNSET,
+    priority_owner_id: int | Unset = UNSET,
+    team_id: int | Unset = UNSET,
+    starred_by: int | Unset = UNSET,
     private: SearchLedgersPrivate | Unset = UNSET,
     is_private: SearchLedgersIsPrivate | Unset = UNSET,
     template: SearchLedgersTemplate | Unset = UNSET,
@@ -390,22 +365,22 @@ async def asyncio_detailed(
     mode: str | Unset = UNSET,
     exclusive: SearchLedgersExclusive | Unset = UNSET,
     sort: str | Unset = UNSET,
-    order: str | Unset = UNSET,
+    order: SearchLedgersOrder | Unset = UNSET,
 ) -> Response[V1Error | list[SearchLedgersResponse200Item]]:
     """Search ledgers with ownership, visibility, sorting, and pagination filters
 
      Search ledgers with ownership, visibility, sorting, and pagination filters
 
     Args:
-        page (float | None | Unset):
-        limit (float | None | Unset):
+        page (int | Unset): 1-based page number Example: 1.
+        limit (int | Unset): Page size, at most 100 Example: 20.
         q (str | Unset):
         topic (SearchLedgersTopic | Unset):
         include_desc (SearchLedgersIncludeDesc | Unset):
-        uid (float | None | Unset):
-        priority_owner_id (float | None | Unset):
-        team_id (float | None | Unset):
-        starred_by (float | None | Unset):
+        uid (int | Unset):
+        priority_owner_id (int | Unset):
+        team_id (int | Unset):
+        starred_by (int | Unset):
         private (SearchLedgersPrivate | Unset):
         is_private (SearchLedgersIsPrivate | Unset):
         template (SearchLedgersTemplate | Unset):
@@ -413,7 +388,7 @@ async def asyncio_detailed(
         mode (str | Unset):
         exclusive (SearchLedgersExclusive | Unset):
         sort (str | Unset):
-        order (str | Unset):
+        order (SearchLedgersOrder | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -451,15 +426,15 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    page: float | None | Unset = UNSET,
-    limit: float | None | Unset = UNSET,
+    page: int | Unset = UNSET,
+    limit: int | Unset = UNSET,
     q: str | Unset = UNSET,
     topic: SearchLedgersTopic | Unset = UNSET,
     include_desc: SearchLedgersIncludeDesc | Unset = UNSET,
-    uid: float | None | Unset = UNSET,
-    priority_owner_id: float | None | Unset = UNSET,
-    team_id: float | None | Unset = UNSET,
-    starred_by: float | None | Unset = UNSET,
+    uid: int | Unset = UNSET,
+    priority_owner_id: int | Unset = UNSET,
+    team_id: int | Unset = UNSET,
+    starred_by: int | Unset = UNSET,
     private: SearchLedgersPrivate | Unset = UNSET,
     is_private: SearchLedgersIsPrivate | Unset = UNSET,
     template: SearchLedgersTemplate | Unset = UNSET,
@@ -467,22 +442,22 @@ async def asyncio(
     mode: str | Unset = UNSET,
     exclusive: SearchLedgersExclusive | Unset = UNSET,
     sort: str | Unset = UNSET,
-    order: str | Unset = UNSET,
+    order: SearchLedgersOrder | Unset = UNSET,
 ) -> V1Error | list[SearchLedgersResponse200Item] | None:
     """Search ledgers with ownership, visibility, sorting, and pagination filters
 
      Search ledgers with ownership, visibility, sorting, and pagination filters
 
     Args:
-        page (float | None | Unset):
-        limit (float | None | Unset):
+        page (int | Unset): 1-based page number Example: 1.
+        limit (int | Unset): Page size, at most 100 Example: 20.
         q (str | Unset):
         topic (SearchLedgersTopic | Unset):
         include_desc (SearchLedgersIncludeDesc | Unset):
-        uid (float | None | Unset):
-        priority_owner_id (float | None | Unset):
-        team_id (float | None | Unset):
-        starred_by (float | None | Unset):
+        uid (int | Unset):
+        priority_owner_id (int | Unset):
+        team_id (int | Unset):
+        starred_by (int | Unset):
         private (SearchLedgersPrivate | Unset):
         is_private (SearchLedgersIsPrivate | Unset):
         template (SearchLedgersTemplate | Unset):
@@ -490,7 +465,7 @@ async def asyncio(
         mode (str | Unset):
         exclusive (SearchLedgersExclusive | Unset):
         sort (str | Unset):
-        order (str | Unset):
+        order (SearchLedgersOrder | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
