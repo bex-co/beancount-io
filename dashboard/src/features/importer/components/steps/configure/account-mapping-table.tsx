@@ -1,3 +1,4 @@
+import { Amount } from "@/common/components/amount";
 import { useState, useMemo } from "react";
 import {
   useFieldArray,
@@ -357,7 +358,8 @@ export function AccountMappingTable({
                       {txn.description || ""}
                     </TableCell>
                     <TableCell className="text-sm text-right font-medium">
-                      {formatImportReviewAmount(txn.amount)}
+                      {/* Sign before digits on a right-to-left page (w4/1047). */}
+                      <Amount>{formatImportReviewAmount(txn.amount)}</Amount>
                     </TableCell>
                     <TableCell>
                       <FormField

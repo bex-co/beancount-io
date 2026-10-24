@@ -184,3 +184,43 @@ describe("EditablePreviewRow multiline payee", () => {
     await waitFor(() => expect(payeeCell()).toHaveFocus());
   });
 });
+
+// w4/1047: on a right-to-left page the preview amount read "2.50-".
+describe("EditablePreviewRow amounts on a right-to-left page", () => {
+  const rtl = (amountInput: string) =>
+    render(
+      <div dir="rtl">
+        <Table>
+          <TableBody>
+            <EditablePreviewRow
+              row={buildParsedRow({
+                date: "2026-10-23",
+                payee: "QA Bakery",
+                description: "Synthetic purchase",
+                amountInput,
+              })}
+              index={0}
+              onChange={vi.fn()}
+              onDelete={vi.fn()}
+            />
+          </TableBody>
+        </Table>
+      </div>,
+    );
+
+  it("shows the amount as one left-to-right run", () => {
+    rtl("-2.50");
+    const run = screen.getByText("-2.50");
+    expect(run.tagName).toBe("BDI");
+    expect(run).toHaveAttribute("dir", "ltr");
+    expect(screen.getByText("QA Bakery").closest("bdi")).toBeNull();
+    expect(screen.getByText("Synthetic purchase").closest("bdi")).toBeNull();
+  });
+
+  it("leaves an empty amount's prompt as prose", () => {
+    rtl("");
+    expect(
+      screen.getByText("importer.preview.amountPlaceholder").closest("bdi"),
+    ).toBeNull();
+  });
+});

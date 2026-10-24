@@ -8,6 +8,7 @@ import { Input } from "@/common/components/ui/input";
 import { Textarea } from "@/common/components/ui/textarea";
 import { Button } from "@/common/components/ui/button";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { Amount } from "@/common/components/amount";
 import { cn } from "@/common/lib/utils/utils";
 import { isCompositionKey } from "@/common/lib/keyboard/is-composition-key";
 
@@ -33,6 +34,11 @@ interface EditableCellProps {
   multiline?: boolean;
   className?: string;
   disabled?: boolean;
+  /**
+   * The value is a signed number: shown as one left-to-right run, so a
+   * right-to-left page keeps "-2.50" rather than "2.50-" (w4/1047).
+   */
+  numeric?: boolean;
 }
 
 export function EditableCell({
@@ -48,6 +54,7 @@ export function EditableCell({
   multiline = false,
   className,
   disabled = false,
+  numeric = false,
 }: EditableCellProps) {
   const { t } = useTranslations();
   const [isEditing, setIsEditing] = useState(false);
@@ -267,8 +274,12 @@ export function EditableCell({
             className,
           )}
         >
-          {displayValue ??
-            (value || placeholder || t("importer.preview.clickToEdit"))}
+          {numeric && (displayValue ?? value) ? (
+            <Amount>{displayValue ?? value}</Amount>
+          ) : (
+            (displayValue ??
+            (value || placeholder || t("importer.preview.clickToEdit")))
+          )}
         </span>
         {error && (
           <p

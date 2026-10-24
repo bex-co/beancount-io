@@ -226,6 +226,7 @@ export function EditablePreviewRow({
                 placeholder={t("importer.preview.amountPlaceholder")}
                 type="text"
                 className="text-right"
+                numeric
               />
             )}
           />

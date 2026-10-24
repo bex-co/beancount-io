@@ -280,3 +280,20 @@ describe("AccountMappingTable date display", () => {
     expect(screen.getByText("12/1/2025")).toBeInTheDocument();
   });
 });
+
+// w4/1047: on a right-to-left page the review amount read "2.5-".
+describe("AccountMappingTable amounts on a right-to-left page", () => {
+  it("shows each amount as one left-to-right run, and leaves payees alone", () => {
+    render(
+      <div dir="rtl">
+        <Harness />
+      </div>,
+    );
+    for (const text of ["-4.5", "-45.67"]) {
+      const run = screen.getByText(text);
+      expect(run.tagName).toBe("BDI");
+      expect(run).toHaveAttribute("dir", "ltr");
+    }
+    expect(screen.getByText("QA Coffee").closest("bdi")).toBeNull();
+  });
+});
