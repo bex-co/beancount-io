@@ -9,22 +9,34 @@
  */
 type UnsavedEditsCheck = () => Promise<boolean>;
 
-let active: UnsavedEditsCheck | null = null;
+// Every dirty screen in the stack, the newest last: a form pushed over another
+// (Open Account over New Transaction) left the screen below with nothing
+// registered once the top one went, and a link then switched ledgers under its
+// draft without asking (w21/923).
+const active: UnsavedEditsCheck[] = [];
 
 /**
  * Register `check`, which asks the user and resolves true to discard the
- * edits and go on, false to stay. Returns the unregister function.
+ * edits and go on, false to stay. Returns the unregister function, which
+ * removes this check and no other.
  */
 export function registerUnsavedEditsGuard(
   check: UnsavedEditsCheck,
 ): () => void {
-  active = check;
+  active.push(check);
   return () => {
-    if (active === check) active = null;
+    const at = active.lastIndexOf(check);
+    if (at >= 0) active.splice(at, 1);
   };
 }
 
-/** Whether it is fine to throw away the active screen's unsaved edits. */
-export function confirmDiscardUnsavedEdits(): Promise<boolean> {
-  return active ? active() : Promise.resolve(true);
+/**
+ * Whether it is fine to throw away every screen's unsaved edits: each is asked,
+ * the newest first, and one that says stay stops the rest.
+ */
+export async function confirmDiscardUnsavedEdits(): Promise<boolean> {
+  for (const check of [...active].reverse()) {
+    if (!(await check())) return false;
+  }
+  return true;
 }
