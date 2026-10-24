@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1064** — [Retain zero-valued positions in grouped Holdings](./1064.md)
+
 - **1063** — [Protect Entry Context drafts during history navigation](./1063.md)
 
 - **1062** — [Leave Entry Context Escape to active editor widgets](./1062.md)
