@@ -27,6 +27,7 @@ import {
   directiveTypeLabelKey,
   formatOtherChanges,
 } from "@/screens/account-detail-screen/selectors/select-account-journal";
+import { formatHolding } from "@/common/balance-display";
 import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 import {
   entryFlagBadge,
@@ -182,7 +183,9 @@ export function AccountEntryRow({
   const balanceText = units
     ? (exactUnits(row.balanceExact) ??
       formatUnits(row.balance, units.currency, units.scale))
-    : formatAccountJournalBalance(row.balance, currency, row.moneyScale ?? 2);
+    : row.otherBalances
+      ? row.otherBalances.map((holding) => formatHolding(holding)).join(", ")
+      : formatAccountJournalBalance(row.balance, currency, row.moneyScale ?? 2);
   // Open / Balance / Pad / … rows read as plain transactions otherwise: the
   // title falls back to the directive's own account name.
   const typeLabelKey = directiveTypeLabelKey(row.directiveType);

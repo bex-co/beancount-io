@@ -1262,3 +1262,31 @@ describe("groupAccountJournalRowsToSections with more pages to load", () => {
     ]);
   });
 });
+
+// w21/894: an account holding only foreign currencies read "Balance: $0.00".
+describe("an account holding none of the currency shown", () => {
+  const rows = selectAccountJournalRows("USD", [
+    item(
+      { entry_hash: "gbp", date: "2026-10-12" },
+      { GBP: "800.00" },
+      { EUR: "1000.00", GBP: "800.00" },
+    ),
+    item(
+      { entry_hash: "usd", date: "2026-10-05" },
+      { USD: "5.00" },
+      { USD: "5.00", EUR: "1000.00" },
+    ),
+  ]);
+
+  it("lists the running holdings in place of the zero", () => {
+    expect(
+      rows[0].otherBalances!.map(
+        (holding) => `${holding.number} ${holding.currency}`,
+      ),
+    ).toEqual(["1000 EUR", "800 GBP"]);
+  });
+
+  it("leaves a row with a balance in the shown currency alone", () => {
+    expect(rows[1].otherBalances).toBe(undefined);
+  });
+});

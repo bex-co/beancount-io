@@ -71,6 +71,11 @@ export type AccountJournalRow = {
    * Shown in place of the zero, not in the running total.
    */
   otherChanges?: Holding[];
+  /**
+   * The running holdings of an account that holds none of the currency shown,
+   * in place of its "$0.00" balance (w21/894).
+   */
+  otherBalances?: Holding[];
 };
 
 /** The account a journal shows in units, and the commodity it holds. */
@@ -549,10 +554,13 @@ export function selectAccountJournalRows(
     });
     if (!units) {
       const balance = amountIn(item.balance, currency);
+      const held =
+        balance.number === 0 ? notInTotalOf(item.balance, currency) : [];
       return [
         {
           ...row,
           ...otherChanges,
+          ...(held.length > 0 ? { otherBalances: held } : {}),
           ...exact(balance),
           change: change.number,
           balance: balance.number,
