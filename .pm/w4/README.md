@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1074** — [Keep AI Fill cancellation quiet when going Back](./1074.md)
+
 - **1073** — [Keep target account focus when AI Fill finishes](./1073.md)
 
 - **1072** — [Prevent multi-second freezes when selecting all CSV rows](./1072.md)
