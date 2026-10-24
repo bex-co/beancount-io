@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1069** — [Lock the open calendar during transaction submission](./1069.md)
+
 - **1068** — [Exclude malformed amounts from CSV decimal-convention evidence](./1068.md)
 
 - **1067** — [Keep tiny commodity ticks inside their price range](./1067.md)
