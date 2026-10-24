@@ -535,7 +535,7 @@ def answer(
         # Parsed on first need: most imports never disagree with the view.
         nonlocal written_index
         if written_index is None:
-            written_index = _written_identities(snapshot, account, keys, roots[:2])
+            written_index = _written_identities(snapshot, account, keys, roots[:2], options)
         return written_index[1 if open_lots else 0].get(key, [])
 
     hashed = _hash_rows(entries, account, keys, Transaction)
@@ -2202,12 +2202,14 @@ def _under_id(
         return found
 
     def spelled(identity: tuple[str, str, str], **kwargs: bool) -> list[Any]:
-        # A row whose source amount the file leaves to booking has nothing to
-        # compare an explicit incoming amount with; the loaded entry holds the
-        # booked one (w5/1005).
         assert source is not None
-        completed = [_interpolated(other) for other in source(identity, **kwargs)]
-        return [other for other in completed if all(_has_explicit_units(leg) for leg in _source_legs(other, account))]
+        return source(identity, **kwargs)
+
+    def stated(rows: list[Any]) -> list[Any]:
+        # A row whose source amount even booking could not complete has
+        # nothing to compare an explicit incoming amount with; it still owns
+        # its ID (w5/974).
+        return [other for other in rows if _completed(other, account)]
 
     agreeing = [
         other for other in dated.get(key, []) if _same_row(key, other, account, fingerprint, lookup_only=lookup_only)
@@ -2220,7 +2222,7 @@ def _under_id(
         # A plugin's rewrite of the written row can agree with a different bank
         # amount, so the file's own row under the ID has the last word: when
         # it exists and nothing it spells agrees, the row is a change (w5/996).
-        written = spelled(key)
+        written = stated(spelled(key))
         if written and not any(
             _same_row(key, other, account, fingerprint, lookup_only=lookup_only) for other in written
         ):
@@ -2247,73 +2249,9 @@ def _under_id(
     return found
 
 
-def _interpolated(entry: Any) -> Any:
-    """The authored entry with its one omitted amount filled in, as booking would, else unchanged.
-
-    A single posting without a number, every other posting an explicit unit
-    amount whose weight is known (its units, or its stated cost or price), and
-    one currency to balance (w5/1005, w5/1010).
-    """
-    from beancount.core.amount import Amount as BcAmount
-    from beancount.core.number import MISSING
-
-    open_postings = [
-        index
-        for index, posting in enumerate(entry.postings)
-        if posting.units is None or posting.units is MISSING or getattr(posting.units, "number", None) is MISSING
-    ]
-    if len(open_postings) != 1:
-        return entry
-    totals: dict[str, Decimal] = {}
-    for index, posting in enumerate(entry.postings):
-        if index in open_postings:
-            continue
-        if not _has_explicit_units(posting):
-            return entry
-        weight = _stated_weight(posting)
-        if weight is None:
-            return entry
-        totals[weight[1]] = totals.get(weight[1], Decimal(0)) + weight[0]
-    index = open_postings[0]
-    stated = getattr(entry.postings[index].units, "currency", None)
-    currency = stated if isinstance(stated, str) and stated else None
-    if currency is None and len(totals) == 1:
-        currency = next(iter(totals))
-    if currency is None or set(totals) - {currency}:
-        return entry
-    amount = BcAmount(-totals.get(currency, Decimal(0)), currency)
-    postings = [*entry.postings[:index], entry.postings[index]._replace(units=amount), *entry.postings[index + 1 :]]
-    return entry._replace(postings=postings)
-
-
-def _known(number: Any) -> bool:
-    return number is None or isinstance(number, Decimal)
-
-
-def _stated_weight(posting: Any) -> tuple[Decimal, str] | None:
-    """What an authored posting contributes to the balance, when its cost or price states it fully."""
-    units = posting.units
-    cost, price = posting.cost, posting.price
-    if cost is not None:
-        per, total = getattr(cost, "number_per", None), getattr(cost, "number_total", None)
-        currency = getattr(cost, "currency", None)
-        if not isinstance(currency, str) or not currency or not _known(per) or not _known(total):
-            return None
-        if per is None and total is None:
-            return None
-        # Booking rounds the unit cost first and weighs the units by it, so a
-        # total that does not divide evenly weighs what the loaded entry holds
-        # (w5/1010).
-        from beancount.parser.booking_full import compute_cost_number
-
-        unit_cost = compute_cost_number(cost, units)  # type: ignore[no-untyped-call]
-        return None if unit_cost is None else (units.number * unit_cost, currency)
-    if price is not None:
-        number, currency = getattr(price, "number", None), getattr(price, "currency", None)
-        if not isinstance(number, Decimal) or not isinstance(currency, str) or not currency:
-            return None
-        return units.number * number, currency
-    return units.number, units.currency
+def _completed(entry: Any, account: str) -> bool:
+    """Whether every source posting of a row states its units, as booking leaves them."""
+    return all(_has_explicit_units(leg) for leg in _source_legs(entry, account))
 
 
 def _authored_directive_keys(snapshot: Any) -> set[str]:
@@ -2340,7 +2278,7 @@ def _authored_directive_keys(snapshot: Any) -> set[str]:
 
 
 def _written_identities(
-    snapshot: Any, account: str, keys: list[str], balance_roots: tuple[str, ...]
+    snapshot: Any, account: str, keys: list[str], balance_roots: tuple[str, ...], options: Any
 ) -> tuple[dict[tuple[str, str, str], list[Any]], dict[tuple[str, str, str], list[Any]]]:
     """The ledger's own transactions by stable ID, read from the files without plugins or rounding.
 
@@ -2350,6 +2288,11 @@ def _written_identities(
 
     Parsed at full precision: the default 28 digits rounded a wide negative
     amount on reload, so an unchanged re-import read as changed data.
+
+    A row that leaves a source amount to booking is held as the files book
+    it, before any plugin runs: summing the other postings missed the
+    tolerance booking rounds to (w5/1005), the lot an open selector takes,
+    and a missing amount booking splits by currency (w5/974).
     """
     from decimal import MAX_PREC, localcontext
 
@@ -2358,6 +2301,8 @@ def _written_identities(
 
     index: dict[tuple[str, str, str], list[Any]] = {}
     open_index: dict[tuple[str, str, str], list[Any]] = {}
+    authored: list[Any] = []
+    incomplete: list[tuple[Any, list[tuple[str, str, str]], bool]] = []
     for path, content in sorted(snapshot.contents.items()):
         try:
             # `utf-8-sig`: a BOM before the first directive is no part of it,
@@ -2369,6 +2314,7 @@ def _written_identities(
         with localcontext() as exact:
             exact.prec = MAX_PREC
             parsed, _, _ = parser.parse_string(unicodedata.normalize("NFC", text), report_filename=str(path))
+        authored.extend(parsed)
         for raw in parsed:
             if not isinstance(raw, Transaction) or not _source_legs(raw, account):
                 continue
@@ -2381,10 +2327,46 @@ def _written_identities(
             )
             written = normalize_entry_strings(raw)
             elsewhere = _issued_elsewhere(written, account, balance_roots)
-            for identity in _identities(written, account, keys):
-                if not (elsewhere and _is_native_identity(identity)):
-                    (open_index if has_open_lot else index).setdefault(identity, []).append(written)
+            owned = [
+                identity
+                for identity in _identities(written, account, keys)
+                if not (elsewhere and _is_native_identity(identity))
+            ]
+            if owned and not _completed(written, account):
+                incomplete.append((written, owned, has_open_lot))
+                continue
+            for identity in owned:
+                (open_index if has_open_lot else index).setdefault(identity, []).append(written)
+    booked = _booked_by_line(authored, options) if incomplete else {}
+    for written, owned, has_open_lot in incomplete:
+        twin = booked.get((written.meta.get("filename"), written.meta.get("lineno")))
+        held = normalize_entry_strings(twin) if twin is not None else written
+        for identity in owned:
+            (open_index if has_open_lot else index).setdefault(identity, []).append(held)
     return index, open_index
+
+
+def _booked_by_line(authored: list[Any], options: Any) -> dict[tuple[Any, Any], Any]:
+    """The authored transactions as native booking completes them, by file and line.
+
+    Booking runs before any plugin, so the files alone decide it. A row
+    booking refuses has no entry here.
+    """
+    from beancount.core import data
+    from beancount.parser import booking
+
+    entries, errors = booking.book(data.sorted(authored), options)  # type: ignore[no-untyped-call]
+    refused = {
+        (entry.meta.get("filename"), entry.meta.get("lineno"))
+        for error in errors
+        if (entry := getattr(error, "entry", None)) is not None
+    }
+    return {
+        line: entry
+        for entry in entries
+        if isinstance(entry, data.Transaction)
+        and (line := (entry.meta.get("filename"), entry.meta.get("lineno"))) not in refused
+    }
 
 
 def _same_row(
@@ -2401,6 +2383,8 @@ def _same_row(
     generated = _is_generated_identity(key)
     if generated and not lookup_only:
         return True
+    if not _completed(found, account):
+        return False
     found_print = _fingerprint(found, account)
     if not _legs_agree(fingerprint[3], found_print[3]):
         return False

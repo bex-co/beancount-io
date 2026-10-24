@@ -38,8 +38,6 @@
 
 - [1005 — Match inferred native-ID cash after native tolerance rounding](./1005.md) — reopened minor CLI source-projection gap; a native 7.80 USD repeat is reconstructed as 7.77 and conflicts, including skip/human apply. Normal CLI creation and precise/cents/explicit controls verified twice 2026-10-23.
 
-- [974 — Retain written native IDs through source inference](./974.md) — reopened major CLI owner-retention gap across booked-lot and multicurrency Cash inference. Filtered repeats and first corrections can write the recorded reference again; standalone native controls and both repetitions verified 2026-10-23.
-
 - [1015 — Compare declared non-transaction directive facts](./1015.md) — minor CLI field/provenance gaps; known method, tolerance and receipt-metadata changes falsely count as written, while equivalent currency lists hide genuine openings. Native controls, enrichment and both repetitions verified 2026-10-23.
 
 - [1014 — Anchor payment references to their written metadata](./1014.md) — major CLI silent omission; calculated native or generated references make real payments skip while their IDs are absent from the file, reproduced twice across CSV/Python and actual generated-ID producers, 2026-10-23.
