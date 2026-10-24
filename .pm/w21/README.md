@@ -97,3 +97,5 @@
 - [940](./940.md) — Saving a file with `\r\r\n` line endings drops a CR on every line
 - [941](./941.md) — Cmd-S on a hardware keyboard saves an unchanged file
 - [942](./942.md) — Tapping the same editor error row again within 3 s doesn't jump
+- [943](./943.md) — A same-day charge and reversal counts as a payment: Next moves, "~" appears, Overdue is lost
+- [944](./944.md) — One off-schedule charge drops the recurrence day-of-month anchor, so Next runs late
