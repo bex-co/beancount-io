@@ -60,3 +60,4 @@
 - [998](./998.md) — The range pills are about 28 pt tall with no touch slop (native)
 - [999](./999.md) — The search ✕ and the Filters button overlap in the 8 pt gap and are under 44 pt
 - [1000](./1000.md) — The Accounts expand chevron is a small nested target inside a row that navigates
+- [1001](./1001.md) — Merchants, Merchant detail and the account picker lists have no home-indicator inset
