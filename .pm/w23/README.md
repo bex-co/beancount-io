@@ -10,6 +10,7 @@
 
 ## Inbox
 
+- [080](./080.md) — `/api-gateway/mcp` accepts any `Origin` (the MCP transport spec says a bad `Origin` MUST get 403); owner picks validate vs document
 - [079](./079.md) — a structured posting with a `price` but no `units` is accepted and written without the price
 - [078](./078.md) — a ledger-pinned credential refuses its own ledger when the owner's case differs (`PUNCSKY/…`), though account-wide tokens accept it
 - [075](./blocked/075.md) — typed BQL results return NULL as `""` (undocumented), so a missing payee or price reads as an empty string — **blocked:** documented as `""` (option a shipped); owner picks `null` on REST/MCP, `null` everywhere, or keeping `""`
