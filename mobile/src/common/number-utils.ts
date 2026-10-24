@@ -3,6 +3,7 @@ import {
   getCurrencySymbol,
   isFiatCurrency,
 } from "./currency-util";
+import { localizeDigits } from "./date-format";
 import { absDecimal, parseDecimal, roundDecimal } from "./decimal-number";
 
 const SHORT_NUMBER_SUFFIXES = [
@@ -62,7 +63,8 @@ const COMPACT_STYLES: Record<string, CompactStyle> = {
     currencyAfter: true,
   },
   fa: {
-    decimal: ".",
+    // The Arabic decimal separator, as Intl writes it in Persian (w21/933).
+    decimal: "\u066b",
     suffixes: ["", " هزار", " میلیون", " میلیارد", " تریلیون", " کوادریلیون"],
     currencyAfter: false,
   },
@@ -145,7 +147,11 @@ export const shortNumber = (number: number | string, locale = "en"): string => {
         ? fractionDigits(shortNum)
         : shortNum.toFixed(1)
       ).replace(".", style.decimal);
-  return sign + digits + style.suffixes[tier];
+  // Persian ticks use Persian digits, as the dates beside them do (w21/884);
+  // full amounts stay Latin (w3/189).
+  const written =
+    locale.split(/[-_]/)[0] === "fa" ? localizeDigits(digits, locale) : digits;
+  return sign + written + style.suffixes[tier];
 };
 
 /** `Number.prototype.toFixed` rejects anything above this. */
@@ -484,7 +490,9 @@ export const formatShortMoneyWithCurrency = (
 const isolateLeadingNumber = (text: string): string => {
   // A symbol of Arabic script is already in its own isolate.
   if (text.includes("\u2067")) return text;
-  const rtl = text.search(/[\u0590-\u08ff]/u);
+  // Letters only: Persian digits and their decimal mark are numbers, not the
+  // suffix word (w21/933).
+  const rtl = text.search(/[\u0590-\u065f\u066d-\u06ef\u06fa-\u08ff]/u);
   if (rtl <= 0) return text;
   const lead = text.slice(0, rtl).trimEnd();
   if (lead === "") return text;

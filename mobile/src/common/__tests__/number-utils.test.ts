@@ -348,20 +348,32 @@ describe("compact amounts in the app's language", () => {
 describe("formatShortMoneyWithCurrency in Persian", () => {
   it("isolates the signed number from the right-to-left suffix word", () => {
     expect(formatShortMoneyWithCurrency(-2000, "USD", "fa")).toBe(
-      "\u2066-$2\u2069 هزار",
+      "\u2066-$۲\u2069 هزار",
     );
     expect(
       formatShortMoneyWithCurrency(-1500, "EUR", "fa").startsWith(
-        "\u2066-€1.5\u2069 ",
+        "\u2066-€۱\u066b۵\u2069 ",
       ),
     ).toBe(true);
   });
 
   it("leaves a positive tick, a small one and other languages alone", () => {
-    expect(formatShortMoneyWithCurrency(-500, "USD", "fa")).toBe("-$500");
+    expect(formatShortMoneyWithCurrency(-500, "USD", "fa")).toBe("-$۵۰۰");
     expect(formatShortMoneyWithCurrency(-2000, "USD", "en")).toBe("-$2K");
     expect(formatShortMoneyWithCurrency(2000, "USD", "fa")).toBe(
-      "\u2066$2\u2069 هزار",
+      "\u2066$۲\u2069 هزار",
     );
+  });
+
+  // w21/933: the ticks used Latin digits and "." beside Persian x-axis labels.
+  it("writes the ticks in Persian digits with the Persian decimal mark", () => {
+    expect(shortNumber(1500, "fa")).toBe("۱\u066b۵ هزار");
+    expect(shortNumber(222.6, "fa-IR")).toBe("۲۲۲\u066b۶");
+    expect(shortNumber(1500, "en")).toBe("1.5K");
+    expect(shortNumber(1500, "de")).toBe("1,5 Tsd.");
+  });
+
+  it("leaves a full amount in Latin digits", () => {
+    expect(formatSignedMoneyWithCurrency(1234.5, "USD")).toBe("$1,234.50");
   });
 });
