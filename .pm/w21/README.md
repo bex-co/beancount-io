@@ -51,3 +51,4 @@
 - [989](./989.md) — A case-twin folder below the first path level is accepted in the New File dialog
 - [990](./990.md) — The Return key does nothing in the New File dialog (native)
 - [991](./991.md) — Percent signs are spaced two ways within a locale, and loading/saving strings use three ASCII dots
+- [992](./992.md) — The New Ledger name limit is checked on the typed text, but the server checks the slug
