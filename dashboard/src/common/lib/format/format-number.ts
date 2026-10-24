@@ -81,16 +81,44 @@ function numberFormat(
  * `GLD`), crypto (`BTC`) and ledger-defined units (`MUSD`, `VACHR`) keep the
  * source-driven formatting, so their recorded precision is never cut.
  */
+/**
+ * ISO 4217 minor units where `Intl` follows CLDR's cash digits instead: the
+ * dashboard rounded HUF, COP, IDR, PKR and the rest to whole units, a loss of
+ * precision mobile does not make (w21/993). Every other code takes the digits
+ * `Intl` reports, which agree with ISO.
+ */
+const ISO_MINOR_DIGITS: Readonly<Record<string, number>> = {
+  AFN: 2,
+  ALL: 2,
+  COP: 2,
+  HUF: 2,
+  IDR: 2,
+  IQD: 3,
+  IRR: 2,
+  KPW: 2,
+  LAK: 2,
+  LBP: 2,
+  MGA: 2,
+  MMK: 2,
+  PKR: 2,
+  SLL: 2,
+  SOS: 2,
+  SYP: 2,
+  YER: 2,
+};
+
 export function currencyMinorDigits(currency: string): number | undefined {
   if (minorDigitsCache.has(currency)) return minorDigitsCache.get(currency);
   let digits: number | undefined;
   try {
     isoCurrencies ??= new Set(Intl.supportedValuesOf("currency"));
     if (isoCurrencies.has(currency)) {
-      digits = new Intl.NumberFormat("en", {
-        style: "currency",
-        currency,
-      }).resolvedOptions().maximumFractionDigits;
+      digits =
+        ISO_MINOR_DIGITS[currency] ??
+        new Intl.NumberFormat("en", {
+          style: "currency",
+          currency,
+        }).resolvedOptions().maximumFractionDigits;
     }
   } catch {
     digits = undefined;

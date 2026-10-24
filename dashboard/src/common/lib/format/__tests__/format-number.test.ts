@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { formatNumber, fractionDigitsOf } from "../format-number";
+import {
+  currencyMinorDigits,
+  formatNumber,
+  fractionDigitsOf,
+} from "../format-number";
 
 describe("formatNumber", () => {
   it("uses the supplied locale for thousands separators", () => {
@@ -158,5 +162,27 @@ describe("formatNumber with more than 20 source places (w4/1001)", () => {
 
   it("still caps a double at 20 places", () => {
     expect(formatNumber(1e-24, true, "en", "NEAR", 24)).toBe("0");
+  });
+});
+
+// w21/993: CLDR's cash digits rounded HUF, COP, IDR and PKR to whole units.
+describe("ISO 4217 minor units", () => {
+  it("keeps the cents of the currencies CLDR rounds to whole units", () => {
+    expect(formatNumber("1234.56", true, "en", "HUF")).toBe("1,234.56");
+    for (const code of ["COP", "IDR", "PKR", "AFN", "ALL", "YER"]) {
+      expect(currencyMinorDigits(code)).toBe(2);
+    }
+  });
+
+  it("keeps three digits for the dinar, and none for yen and won", () => {
+    expect(formatNumber("1234.567", true, "en", "IQD")).toBe("1,234.567");
+    expect(currencyMinorDigits("JPY")).toBe(0);
+    expect(currencyMinorDigits("KRW")).toBe(0);
+    expect(currencyMinorDigits("USD")).toBe(2);
+    expect(currencyMinorDigits("KWD")).toBe(3);
+  });
+
+  it("leaves a commodity that is not an ISO currency alone", () => {
+    expect(currencyMinorDigits("BTC")).toBe(undefined);
   });
 });
