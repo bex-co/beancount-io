@@ -5,7 +5,7 @@
   "license": "MIT",
   "packageManager": "yarn@4.17.0",
   "engines": {
-    "node": "^20.19.0 || ^22.13.0 || >=24"
+    "node": "^22.23.4 || ^24.22.1 || >=26.12.1"
   },
   "scripts": {
     "dev": "ts-node -r tsconfig-paths/register --transpile-only ./server.ts",

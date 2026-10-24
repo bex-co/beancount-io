@@ -1,4 +1,5 @@
 import http from "node:http";
+import { brotliCompressSync, gzipSync } from "node:zlib";
 import Koa from "koa";
 import Router from "@koa/router";
 import { bodyParserMiddleware } from "../body-parser-middleware";
@@ -204,6 +205,55 @@ describe("bodyParserMiddleware", () => {
     expect(response.status).toBe(400);
     expect(await response.text()).not.toContain("jsonrpc");
     expect(reached).not.toHaveBeenCalled();
+  });
+
+  const postEncoded = (path: string, body: Buffer, encoding: string) =>
+    fetch(`${base}${path}`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "content-encoding": encoding,
+      },
+      body: new Uint8Array(body),
+      signal: AbortSignal.timeout(5000),
+    });
+
+  // CVE-2026-111497: a Brotli body reached zlib's decoder before any auth.
+  describe("Brotli-encoded bodies", () => {
+    const brotli = brotliCompressSync(Buffer.from('{"a":1}'));
+
+    it.each([
+      ["a REST route", "/api-gateway/v1/echo", "br"],
+      ["the GraphQL route", "/api-gateway", "BR"],
+      ["an encoding list naming br", "/api-gateway/v1/echo", "gzip, br"],
+      ["an oidc-provider core route", "/api-gateway/oauth/raw", "br"],
+    ])("refuses one on %s with 415", async (_label, path, encoding) => {
+      const response = await postEncoded(path, brotli, encoding);
+      expect(response.status).toBe(415);
+      expect(await response.text()).toContain("Brotli");
+      expect(reached).not.toHaveBeenCalled();
+    });
+
+    it("refuses one on the MCP endpoint as a JSON-RPC error", async () => {
+      const response = await postEncoded(MCP_ENDPOINT_PATH, brotli, "br");
+      expect(response.status).toBe(415);
+      expect(await response.json()).toMatchObject({
+        jsonrpc: "2.0",
+        error: { code: -32600 },
+        id: null,
+      });
+      expect(reached).not.toHaveBeenCalled();
+    });
+
+    it("still parses a gzip body", async () => {
+      const response = await postEncoded(
+        "/api-gateway/v1/echo",
+        gzipSync(Buffer.from('{"a":1}')),
+        "gzip",
+      );
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({ received: { a: 1 } });
+    });
   });
 
   it("skips oidc-provider's core routes but still parses interaction routes", async () => {

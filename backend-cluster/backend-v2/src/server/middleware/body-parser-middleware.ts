@@ -16,6 +16,27 @@ class BodyParseFailure extends Error {
 }
 
 /**
+ * `Content-Encoding` names Brotli, alone or anywhere in a list of encodings.
+ *
+ * koa-bodyparser hands such a body to zlib's Brotli decoder (via co-body and
+ * inflation) before anyone has authenticated. CVE-2026-111497 was an
+ * out-of-bounds write in exactly that decoder; patching Node closes it, and
+ * this keeps the next decoder bug off the unauthenticated surface too. No
+ * client of ours compresses a request body with Brotli — git gzips large
+ * upload-pack requests, so gzip and deflate stay accepted.
+ */
+const BROTLI_ENCODING = /(^|,)\s*br\s*(,|$)/i;
+
+function brotliBodyRefusal(): BodyParseFailure {
+  return new BodyParseFailure(
+    Object.assign(new Error("Brotli-encoded request bodies are not accepted"), {
+      status: 415,
+      expose: true,
+    }),
+  );
+}
+
+/**
  * The application's one body parser.
  *
  * Two paths are special. oidc-provider's core routes parse their own body from
@@ -25,6 +46,9 @@ class BodyParseFailure extends Error {
  * parse every response as JSON, and the refusal happened here, before the
  * route that knows that ever ran (w5/048). Every other path keeps the parser's
  * own error, translated by whatever error middleware sits above it.
+ *
+ * A Brotli-encoded body is refused on every path, the OIDC core included,
+ * before any decoder sees it.
  */
 export function bodyParserMiddleware(): Koa.Middleware {
   const parse = bodyParser({
@@ -44,8 +68,11 @@ export function bodyParserMiddleware(): Koa.Middleware {
     const isOidcCore =
       ctx.path.startsWith("/api-gateway/oauth/") &&
       !ctx.path.startsWith("/api-gateway/oauth/interaction/");
-    if (isOidcCore) return next();
     try {
+      if (BROTLI_ENCODING.test(ctx.get("Content-Encoding"))) {
+        throw brotliBodyRefusal();
+      }
+      if (isOidcCore) return await next();
       // Type cast: root @types/koa and @koa/router's bundled copy are
       // structurally incompatible
       return await parse(ctx as unknown as Parameters<typeof parse>[0], next);

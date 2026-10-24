@@ -83,7 +83,7 @@ When a new package gets real code, add a `<package>/AGENTS.md` documenting its t
 
 ## Tooling
 
-- Node ≥ 20 (`mobile/package.json` sets `engines.node >= 20.19.4`); Node CI jobs run Node 22.
+- Node ≥ 20 (`mobile/package.json` sets `engines.node >= 20.19.4`); Node CI jobs run Node 22. Anything that runs a server — backend-v2, ledger, the dashboard image, the agent-box sandbox — needs a Node with the CVE-2026-111497 Brotli fix: 22.23.4, 24.22.1, 26.12.1 or later (backend-v2 and ledger `engines` enforce it). The Dockerfiles pin exact base-image versions for the same reason; a floating tag lets a cached, unpatched image survive `docker compose up --build`.
 - Packages pin different Yarn majors — always run Yarn from inside the package directory so its local configuration wins:
   - `dashboard/` → Yarn 4.17.0 (Berry); installs with `yarn install --immutable`.
   - `mobile/` → Yarn 1.22.22 (Classic); installs with `yarn install --frozen-lockfile`.

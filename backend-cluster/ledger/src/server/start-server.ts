@@ -20,6 +20,7 @@ import { setMetricsHandler } from "@/api/metrics";
 import { restErrorMiddleware } from "@/server/error-middleware";
 import { getRustledgerWorkerPool } from "@/foundation/rustledger";
 import { requestContextMiddleware } from "@/server/request-context-middleware";
+import { brotliBodyRefusal } from "@/server/brotli-body-refusal";
 import { MAX_PROJECTED_BYTES } from "@/features/ledger/service/ledger-data-service";
 
 /**
@@ -38,6 +39,8 @@ export function buildApp(): Koa {
   // Outermost, so the error middleware's own logging carries the request ID.
   app.use(requestContextMiddleware());
   app.use(restErrorMiddleware());
+  // Before the parser, so no Brotli body reaches zlib's decoder.
+  app.use(brotliBodyRefusal());
   app.use(bodyParser({ jsonLimit: String(JSON_BODY_LIMIT_BYTES) }));
 
   setHealthzHandler(router);

@@ -22,7 +22,7 @@
     "codegen": "yarn generate:openapi"
   },
   "devDependencies": {
-    "@cloudflare/sandbox": "*",
+    "@cloudflare/sandbox": "0.12.14",
     "@cloudflare/vitest-pool-workers": "^0.7.0",
     "@eslint/js": "^9.17.0",
     "@types/accept-language-parser": "^1.5.8",

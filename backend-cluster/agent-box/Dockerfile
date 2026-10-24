@@ -1,4 +1,4 @@
-FROM docker.io/cloudflare/sandbox:0.6.7
+FROM docker.io/cloudflare/sandbox:0.12.14
 # pnpm is used by the AI SDK harness bridge's bootstrap recipe to install its
 # in-container dependencies (m17). Without it the harness createSession fails
 # with "pnpm: command not found" (exit 127).
