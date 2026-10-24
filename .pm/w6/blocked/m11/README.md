@@ -46,7 +46,7 @@ The [m9/t011](../m9/done/t011.md) official Cursor application is submitted with 
 | ChatGPT / OpenAI | Already submitted, publisher-confirmed 2026-10-23 | [m11/t001](t001.md), existing specific application |
 | Claude | Already submitted, publisher-confirmed 2026-10-23 | [m11/t002](t002.md), existing specific application |
 | Awesome Remote MCP Servers | [m11/t003](t003.md) | Same task retains upstream receipt, review and merged entry |
-| Glama | Existing connector; [m8/t003](../m8/t003.md) coordinates existing [w2/088](../../../w2/blocked/088.md) claim/test-profile ownership | w2/088 full-day health repair, then [m8/t004](../m8/t004.md); no duplicate listing |
+| Glama | Existing connector ownership verified; [m8/t003](../m8/t003.md) coordinates existing [w2/088](../../../w2/blocked/088.md) private test-profile/health repair | w2/088 full-day health repair, then [m8/t004](../m8/t004.md); no duplicate listing |
 | Smithery | [m8/t002](../m8/t002.md) | Removed legacy intake remains blocked; platform/publisher must provide a working supported replacement route |
 | MCPServers.org | Accepted free submission; preserve existing receipt | [m10/t001](../m10/t001.md), m10/t004; moderator publication then actual connection checks |
 | MCPMarket | Accepted Free Queue repository submission; preserve existing receipt | [m10/t002](../m10/t002.md), m10/t004; reviewer publication then endpoint/OAuth metadata and connection checks |

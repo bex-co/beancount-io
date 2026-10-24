@@ -1,19 +1,49 @@
 {
   "target": "Glama existing Beancount.io connector",
-  "observedAtUTC": "2026-10-24T00:53:46Z",
+  "observedAtUTC": "2026-10-24T06:21:30Z",
   "adminUrl": "https://glama.ai/mcp/connectors/io.beancount/beancount/admin",
   "accountProfileComplete": true,
   "termsAccepted": true,
-  "connectorClaimVerified": false,
+  "connectorClaimVerified": true,
   "dnsProofRecordName": "_glama-claim.beancount.io",
   "dnsProofValue": "Account-bound public verification value is prepared privately and shown in the publisher dialog; omitted here",
   "dnsProofValueSHA256": "4eaff609b57f793da5c479c26525e0f3dd0af7d43f1a4eabc60d18db4ccacce3",
-  "dnsReadback": "Current public TXT query returns no value",
+  "dnsReadback": "Exact prepared value matches Cloudflare API, authoritative ajay.ns.cloudflare.com and public recursive1.1.1.1; value SHA-256 retained above.",
   "httpProofStatus": 404,
   "dnsProviderEntry": "https://dash.cloudflare.com/login",
-  "currentGate": "Existing saved Google identity requires normal Cloudflare sign-in; its newly displayed subscription/privacy/cookie agreement awaits a concrete action-time decision, or the publisher adds the prepared TXT record.",
+  "currentGate": "Domain ownership is verified. The private Test Profile still needs dedicated synthetic-only authentication and a full healthy day.",
   "testProfileConfigured": false,
-  "health": "Unhealthy; 0.0% over 20 days; latest displayed test 2026-10-24 00:32 UTC",
-  "nextAction": "Publish and verify the exact account-bound domain proof, claim the existing connector, configure the private dedicated synthetic Test Profile and verify a full healthy day.",
-  "limit": "Completed account and terms are not a domain claim, ledger authorization, health repair or duplicate connector submission."
+  "health": "Unhealthy;0.0% over 20 days at this observation. Private test history confirms unauthenticated HTTP401.",
+  "nextAction": "Discuss and authorize the specific private synthetic-only test access, configure it through the existing Test Profile, then verify a full healthy day under w2/088.",
+  "limit": "Ownership verification is complete. It does not establish authenticated monitoring, a repaired health score or a native accounting journey.",
+  "history": [
+    {
+      "observedAtUTC": "2026-10-24T00:53:46Z",
+      "connectorClaimVerified": false,
+      "dnsReadback": "Current public TXT query returns no value",
+      "currentGate": "Existing saved Google identity requires normal Cloudflare sign-in; its newly displayed subscription/privacy/cookie agreement awaits a concrete action-time decision, or the publisher adds the prepared TXT record."
+    }
+  ],
+  "claimResult": "The actual existing connector displays Ownership verified and exposes its Admin/Test Profile controls.",
+  "dnsProofPublished": true,
+  "dnsSetupMethod": "Existing authenticated Cloudflare cf CLI 0.15.0; no additional browser login or agreement acceptance.",
+  "dnsCreatedAtUTC": "2026-10-24T06:11:16.775195Z",
+  "dnsRecordType": "TXT",
+  "dnsTTL": 1,
+  "dnsRecordCount": 1,
+  "dnsProofRetention": "Keep published; Glama rechecks domain verification daily.",
+  "testProfileAuthenticationType": "OAuth 2.0 selected through the actual admin UI",
+  "testProfileAuthenticated": false,
+  "testProfileState": "Not Authenticated; the automatic connection test returns HTTP401. No OAuth grant, API key or ledger credential has been supplied to Glama.",
+  "testProfileSupportedTypes": [
+    "OAuth 2.0",
+    "API Key"
+  ],
+  "oauthRequestedScopes": [
+    "openid",
+    "offline_access",
+    "ledger.read",
+    "ledger.write",
+    "ledger.admin"
+  ]
 }

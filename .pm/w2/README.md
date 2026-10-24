@@ -71,7 +71,7 @@
 - [084 — Say plainly where ledger data goes, and how the suite relates to upstream Beancount](./blocked/084.md) — **blocked:** the "Your data" draft is written in the note; the owner approves the affiliation wording
 - [086 — Check that non-English ledger requests route to the right skill](./blocked/086.md) — **blocked:** 25 prompts added and routed 25/25 on one client; the Codex rerun waits for Codex usage
 - [087 — Decide whether to publish the skill suite from a slim public mirror repository](./blocked/087.md) — **blocked:** owner decision (repository, credential, portal identities)
-- [088 — Glama shows the hosted MCP connector at 0.0% uptime over 15 days](./blocked/088.md) — **blocked:** endpoint verified correct (ADR 007 401 + discovery); operator adds a QA test profile on Glama
+- [088 — Glama shows the hosted MCP connector at 0.0% uptime over 15 days](./blocked/088.md) — **blocked:** domain ownership verified through existing cf CLI; private synthetic test authentication and a full healthy day remain
 
 ## Cross-queue promotions and follow-ups
 

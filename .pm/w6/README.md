@@ -9,7 +9,7 @@
 | [m6](done/m6/README.md) | Install the submitted local-ledger skills from ClawHub without a repository checkout. | Done: historical standalone release verified 13 versions, OpenClaw119/119files, 12supported Hermes installs112/112files, default search and retained first queries. m6.5 subsequently retires those listings for the one suite entry. |
 | [m6.5](./blocked/m6.5/README.md) | Install and update the ledger workflows through one Beancount.io suite. | Public `@puncsky/beancount-io` 0.4.0 and all thirteen standalone listings retired. Nine of twelve tasks done; other-channel grouping/whole-suite refresh implemented, third-party index read-backs and Hermes admission remain. |
 | [m7](done/m7/README.md) | Connect OpenClaw and Hermes to the existing hosted Beancount.io MCP endpoint. | Done; separate from local ClawHub skill distribution. |
-| [m8](blocked/m8/README.md) | Publish or claim the hosted connector on Smithery and Glama. | Shared packet and approved Glama account/terms complete. Prepared domain-proof TXT awaits DNS publication; existing claim/private-QA/full-day health remain. Supported Smithery intake is separate. |
+| [m8](blocked/m8/README.md) | Publish or claim the hosted connector on Smithery and Glama. | Glama ownership is verified after the existing cf CLI publishes the DNS proof. Private synthetic Test Profile authentication and a full healthy day remain; supported Smithery intake is separate. |
 | [m9](blocked/m9/README.md) | Complete developer-marketplace submissions, then verify published/native paths. | t011 official Cursor, t012 Docker PR #6042 and t014 GitHub nomination actually submitted. Docker native QA passes; platform review/private reviewer inputs and other native/publication gates remain. |
 | [m10](blocked/m10/README.md) | Finish the independent-directory submissions and publication checks. | t009 terms and native publisher login complete; actual publish requires a newly observed broad GitHub scope decision. Original free submissions remain pending without resubmission. |
 | [m11](blocked/m11/README.md) | Complete existing ChatGPT/Claude reviews and remote-community distribution. | t001/t002 exact pages load but require original submitting account/organization access; t003 is actually submitted as PR #2753 with green upstream check, documented Agent review opted in and star waiver requested; awaiting maintainer decision/merge. All 17 targets retain owners. |
@@ -47,16 +47,19 @@ All later items were scanned; milestone numbers do not imply dependencies.
 | --- | --- | --- |
 | Engine adoption | 19inbox notes +7m2tasks | The20recorded producer/semantic gates still require supported published Rustledger artifacts/contracts. Existing dated primary-source evidence is retained; this board reconciliation does not claim a new engine release check or rerun unchanged failures. Upstream maintainers supply the artifact/contract, then the worker adopts and runs the native/API gates. |
 | Hermes and other skill indexes | 039/040 +3m6.5tasks | Hermes must provide the recorded init/discovery/portable-metadata compatibility. The newly elapsed24-hour skills.rest refresh window was actually checked: old paths and mixed internal tools remain; completed SkillsMP browser results also retain old paths. Index services own correction. Owned suite/skills.sh grouping remain complete. |
-| Smithery/Glama | 7m8tasks | Smithery/Arcade needs a surviving supported intake. Glama's approved terms/free account are complete; exact DNS proof is ready, but the newly displayed Cloudflare login agreement decision is pending. Then finish the private synthetic Test Profile and full healthy-day proof under existing w2/088 ownership. |
+| Smithery/Glama | 7m8tasks | Smithery/Arcade needs a surviving supported intake. Glama account/domain ownership is verified through the existing authenticated cf CLI and actual DNS check. The private Test Profile still needs specific synthetic-only authentication and a full healthy day under existing w2/088 ownership. Cloudflare browser-login approval is no longer a prerequisite. |
 | Developer galleries | 7m9tasks | Docker native QA/PR and Cline native QA/issue are submitted. Docker's mandatory private-review form now has a concrete restricted/expiring synthetic token draft, with exact creation/private-sharing confirmation pending; none is created/shared. Cline and official Cursor need platform review/publication. GitHub nomination is sent; curation, separate actual VS Code gallery/native acceptance and aggregate publication/closing checks remain. |
 | Directory reviews/LobeHub | 9m10tasks | MCPServers.org and MCPMarket retain their accepted free submissions and advertised review queues. LobeHub login/terms are cleared, but its real publish guard requires verified GitHub connection with newly displayed gist/read:org/read:user/repo/user:email/workflow permissions. The exact broad-scope decision is pending; no authorization or organization Grant is clicked. Then publish and verify actual QA/publication. |
 | Existing app reviews/community | 7m11tasks | Original submitting account/organization access is required for the exact existing ChatGPT/Claude management records. Remote-community PR #2753 now uses the documented Agent-review title and has one concrete star-waiver request; maintainers must resolve it and review/merge. No account engagement was changed. No duplicate application, fake engagement or assumed approval. |
 | Other intake | 041/042 | MCP.so still needs explicit39USD spending approval or a supported free route. PulseMCP needs supported intake to reopen. Broad agreement approval is not substituted for a financial decision. |
 
-The three newly encountered agreement/access questions above are specific new
-conditions, not re-requests for approved Cursor/Docker/Cline actions. Their
-browser pages and task-local preparation are retained, without issuing new
-credentials or assuming that elapsed time is an answer. No unchanged blocked
+The former Cloudflare browser-login agreement condition is cleared by the
+existing authenticated cf CLI route: one TXT record is published and actual
+Glama ownership verification succeeds. Remaining access decisions concern
+LobeHub's broad GitHub grant, Docker's private reviewer credential and Glama's
+private synthetic Test Profile; no new Glama test credential has been supplied.
+Previously approved Cursor/Docker/Cline actions are not requested again.
+No unchanged blocked
 host test is repeated to simulate progress. The complete current63-leaf snapshot
 and dependency evidence are retained under ignored
 `backend-cluster/backend-v2/tmp/w6-next-blocked-20261024/`. The earlier64-leaf
@@ -200,7 +203,7 @@ Prioritize the major correctness findings (PRINT/FROM/JOURNAL, authored location
 - [ ] **m9** — [Reach developer marketplaces and galleries](blocked/m9/README.md) (14 tasks; 7 done; A3/A1) ← expanded by the 2026-10-23 all-submissions request. **Blocked:** t011 official Cursor, t012 Docker, t013 Cline and t014 GitHub nomination are submitted and archived; other native/reviewer/publication gates remain. Platform/native verification remains separate; continue m10/m11.
 - [ ] **m10** — [List the connector in independent web directories](blocked/m10/README.md) (9 tasks; A3/A1) ← expanded by the 2026-10-23 all-submissions request. **Blocked:** t009 native login succeeds, but a newly shown GitHub private-repository/workflow/Gist scope awaits its exact decision; original two free submissions remain in review. Continue independent work.
 
-- [ ] **m8** — [Claim and publish the hosted connector on Smithery and Glama](blocked/m8/README.md) (8 tasks; A3/A1) ← existing local marketplace roadmap, continued under `$loopx w6` on 2026-10-21 UTC; t001 packet shipped; **blocked:** Smithery publisher returns removed-update 403, Glama awaits w2/088 claim and full-day health
+- [ ] **m8** — [Claim and publish the hosted connector on Smithery and Glama](blocked/m8/README.md) (8 tasks; A3/A1) ← existing local marketplace roadmap, continued under `$loopx w6` on 2026-10-21 UTC; t001 packet shipped; **blocked:** Smithery publisher returns removed-update 403, Glama ownership is verified; w2/088 private test authentication and full-day health remain
 
 - [x] **m7** — [Connect OpenClaw and Hermes Agent to the hosted MCP endpoint](done/m7/README.md) (9 tasks; A1; backend-v2 fixtures and docs) ← user request 2026-10-16 to list Beancount.io on OpenClaw and Hermes Agent; ADR 019 D8
 

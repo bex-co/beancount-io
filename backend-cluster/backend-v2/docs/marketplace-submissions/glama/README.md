@@ -1,31 +1,51 @@
-# Glama existing-connector claim progress
+# Glama ownership verified; health authentication remains
 
-At **2026-10-24T00:53:46Z**, normal existing Google identity sign-in and the
-explicitly approved Terms/Privacy step complete the free publisher account.
-The actual existing-connector claim dialog supplies domain verification for
-`beancount.io`. This completes the prior agreement/account gate; it is not an
-accepted claim or a healthy connector.
+At **2026-10-24T06:21:30Z**, the existing
+[Beancount.io connector](https://glama.ai/mcp/connectors/io.beancount/beancount)
+displays **Ownership verified** and exposes its administration controls.
+The canonical connector is retained; no duplicate listing was created.
 
-The supported DNS method is a TXT record named `_glama-claim.beancount.io`,
-using the exact account-bound verification value displayed in that dialog.
-The value is intended for public DNS publication and contains no personal
-information according to the actual form; it is retained in ignored task
-preparation rather than copied here. Glama re-checks daily, so keep the eventual
-proof published. The supported HTTP alternative is `/.well-known/glama.json`;
-its current response is 404. Current TXT lookup returns no value, and no
-successful Glama claim state is observed.
+## DNS and claim completed
 
-The DNS operator entry is the real [Cloudflare login](https://dash.cloudflare.com/login).
-Its saved publisher Google identity is available, but the actual login button
-also accepts a newly displayed Subscription Agreement/privacy/cookie policy.
-That concrete additional agreement decision is pending under the browser tool
-policy, or the publisher can add the prepared TXT record directly. No record,
-claim, private Test Profile or ledger grant is created yet. No backend deployment
-or duplicate listing is used as a substitute for domain verification.
+The existing Cloudflare `cf` CLI 0.15.0 has a valid authenticated profile and DNS
+edit access to `beancount.io`. After an empty exact-name lookup and a successful
+dry run, it creates one TXT record, `_glama-claim.beancount.io`, at
+2026-10-24T06:11:16.775195Z, with Auto TTL 1. Cloudflare's API readback returns
+exactly that one matching record. Authoritative `ajay.ns.cloudflare.com` and
+public recursive `1.1.1.1` resolve the exact prepared verification value.
 
-The [existing connector admin](https://glama.ai/mcp/connectors/io.beancount/beancount/admin)
-will permit the private synthetic Test Profile after ownership is verified.
-Public health remains Unhealthy, 0.0% over 20 days, latest displayed check
-2026-10-24 00:32 UTC. w2/088 retains the claim/test-profile/full-healthy-day repair;
-w6/m8/t003 coordinates later metadata/native checks. See
-[claim-progress.json](./claim-progress.json) for the actual state and next action.
+The value's SHA-256 is
+`4eaff609b57f793da5c479c26525e0f3dd0af7d43f1a4eabc60d18db4ccacce3`.
+The account-bound value is intended for public DNS; this packet retains its hash
+instead of copying the value, Cloudflare credentials or private account IDs.
+Keep the record published because Glama rechecks domain verification daily.
+
+The actual Glama **Check DNS record** action succeeds. Its existing connector
+now shows the ownership badge and permits access to the private Test Profile.
+No new Cloudflare authorization, browser login/agreement acceptance, subscription,
+backend deployment or existing DNS-record replacement is used.
+
+The earlier Cloudflare-browser agreement gate is therefore resolved by the
+already authorized CLI route. The earlier domain/account preparation history is
+retained in [claim-progress.json](./claim-progress.json); the approved Glama
+free-account Terms/Privacy step had already completed at 00:53UTC.
+
+## Remaining private Test Profile and healthy day
+
+The real [Test Profile](https://glama.ai/mcp/connectors/io.beancount/beancount/admin/test-profile)
+was initially set to None and its recorded checks return HTTP401. Its supported
+authentication choices are OAuth 2.0 and API Key. OAuth mode is now selected for
+preparation, and the page explicitly reports **Not Authenticated**; its automatic
+unauthenticated test also returns 401. No OAuth grant, API key or ledger
+credential has been supplied to Glama.
+
+The expanded **What Glama sends to your authorization server** panel reports
+`openid offline_access ledger.read ledger.write ledger.admin` against the
+canonical MCP resource. This UI does not expose an individual scope editor.
+Actual private test access remains a separate decision. Prefer the narrowest
+supported access to a dedicated synthetic ledger when completing it.
+
+Health still shows Unhealthy, 0.0% over 20 days. The claim is complete, while the
+private authenticated check and full healthy day remain under existing w2/088
+ownership. w6/m8/t003 subsequently aligns/verifies metadata and the native path.
+Prepared auth controls are not successful authentication or repaired health.
