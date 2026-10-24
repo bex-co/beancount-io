@@ -105,3 +105,4 @@
 - [948](./948.md) — Changing the budget date doesn't recheck when the account opens
 - [949](./949.md) — A ledger description over 2048 characters fails Create with a generic retry message
 - [950](./950.md) — A pasted ledger name with a tab or line break shows the server's raw "Title" error on Review
+- [951](./951.md) — Expense accounts are valued at market on Accounts and account detail, but at cost everywhere else
