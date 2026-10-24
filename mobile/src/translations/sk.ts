@@ -234,8 +234,8 @@ export const sk: Translations = {
   accountPickerNoAccounts: "Táto kniha zatiaľ nemá žiadne účty.",
   cancel: "Zrušiť",
   confirm: "Potvrdiť",
-  saving: "Ukladanie...",
-  deleting: "Odstraňuje sa...",
+  saving: "Ukladanie…",
+  deleting: "Odstraňuje sa…",
   saveSuccess: "Transakcia uložená!",
   saveFailed: "Ukladanie zlyhalo",
   profilePartialSave:
@@ -297,7 +297,7 @@ export const sk: Translations = {
   to: "Pre",
   date: "Dátum",
   save: "Uložiť",
-  pleaseInput: "Prosím zadajte...",
+  pleaseInput: "Prosím zadajte…",
   inviteFriends: "Pozvať priateľov",
   inviteSummary:
     "Zdieľajte tento profesionálny nástroj na finančné riadenie a pomôžte ostatným vybudovať ich finančnú budúcnosť.",
@@ -311,7 +311,7 @@ export const sk: Translations = {
   recommend:
     "Rád by som zdieľal tento profesionálny nástroj na finančné riadenie, ktorý mi pomohol efektívne organizovať moje financie.",
   shareError: "Zdieľanie zlyhalo",
-  loading: "načítavanie...",
+  loading: "načítavanie…",
   "01": "JAN",
   "02": "FEB",
   "03": "MAR",
@@ -370,7 +370,7 @@ export const sk: Translations = {
     "Zadajte kód meny alebo aktíva, napríklad EUR alebo VTI.",
   openAccountCurrencyInvalid:
     "Použite veľké písmená, číslice a ' . _ -, začínajúce písmenom, napríklad EUR alebo VTI.",
-  openAccountSaving: "Otvára sa...",
+  openAccountSaving: "Otvára sa…",
   openAccountFailed: "Účet sa nepodarilo otvoriť. Skúste to znova.",
   ledgerWouldBreak: "Toto by pridalo chybu do vašej knihy: {{detail}}",
   ledgerRefusalLine: "riadok {{line}}",
@@ -414,7 +414,7 @@ export const sk: Translations = {
     "V názvoch účtov používajte len písmená, číslice a spojovníky.",
   transaction: "Transakcia",
   transactionActions: "Akcie transakcie",
-  loadingMore: "Načítava sa viac...",
+  loadingMore: "Načítava sa viac…",
   noMoreEntries: "Žiadne ďalšie záznamy",
   loadMoreFailed: "Nepodarilo sa načítať ďalšie záznamy.",
   a11yTapToExpand: "Dvojitým ťuknutím rozbalíte",
@@ -551,7 +551,7 @@ export const sk: Translations = {
   receiptAllowCamera: "Povoliť fotoaparát",
   receiptCancel: "Zrušiť",
   receiptUploading: "Nahráva sa fotka…",
-  receiptUploadingProgress: "Nahrávam fotografiu… {{percent}} %",
+  receiptUploadingProgress: "Nahrávam fotografiu… {{percent}} %",
   receiptParsing: "AI číta vašu účtenku…",
   receiptRevealTitle: "Toto sme prečítali",
   receiptRevealSpoken: "Doklad prečítaný: {{summary}}",
@@ -647,7 +647,7 @@ export const sk: Translations = {
   ledgerMainFileProtected: "main.bean nemožno odstrániť",
   // ledger file editor
   ledgerEditorSave: "Uložiť",
-  ledgerEditorSaving: "Ukladá sa...",
+  ledgerEditorSaving: "Ukladá sa…",
   ledgerEditorSaveSuccess: "Súbor uložený",
   ledgerEditorSaveFailed: "Uloženie zlyhalo",
   ledgerEditorSaveLeftErrorsTitle: "Uložené, s novou chybou v knihe",
@@ -723,9 +723,9 @@ export const sk: Translations = {
     "V tejto knihe nie sú nastavené žiadne ciele výdavkov.",
   ledgerEmptyHintReader: "Potiahnutím nadol obnovíte.",
   budgetPanelRowValue:
-    "{{actual}} z {{budget}}, využité {{percent}}%, {{status}}",
+    "{{actual}} z {{budget}}, využité {{percent}} %, {{status}}",
   budgetPanelRowValueIncome:
-    "{{actual}} z cieľa {{budget}}, dosiahnuté {{percent}}%, {{status}}",
+    "{{actual}} z cieľa {{budget}}, dosiahnuté {{percent}} %, {{status}}",
   budgetPanelRowValueNoBudget: "{{actual}} z {{budget}}, {{status}}",
   budgetStartsOn: "Začína {{date}}",
   budgetLoadFailed: "Načítanie rozpočtov zlyhalo",
@@ -861,8 +861,8 @@ export const sk: Translations = {
     "Zadajte sumu. Tlačidlom znamienka prepnete medzi plusom a mínusom.",
   expandAccount: "Rozbaliť {{account}}",
   collapseAccount: "Zbaliť {{account}}",
-  breakdownRowShareSpending: "{{amount}}, {{percent}} % z výdavkov",
-  breakdownRowShareEarnings: "{{amount}}, {{percent}} % z príjmov",
+  breakdownRowShareSpending: "{{amount}}, {{percent}} % z výdavkov",
+  breakdownRowShareEarnings: "{{amount}}, {{percent}} % z príjmov",
   budgetChartSummary: {
     one: "Rozpočet verzus skutočnosť za {{span}}. Skutočnosť {{actual}} z rozpočtu {{budget}} za {{count}} obdobie, {{missed}}.",
     few: "Rozpočet verzus skutočnosť za {{span}}. Skutočnosť {{actual}} z rozpočtu {{budget}} za {{count}} obdobia, {{missed}}.",

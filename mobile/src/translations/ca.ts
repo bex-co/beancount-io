@@ -236,8 +236,8 @@ export const ca: Translations = {
   accountPickerNoAccounts: "Aquest llibre encara no té comptes.",
   cancel: "Cancel·lar",
   confirm: "Confirmar",
-  saving: "Guardant...",
-  deleting: "Suprimint...",
+  saving: "Guardant…",
+  deleting: "Suprimint…",
   saveSuccess: "Transacció guardada!",
   saveFailed: "Error al guardar",
   profilePartialSave:
@@ -295,7 +295,7 @@ export const ca: Translations = {
   to: "A",
   date: "Data",
   save: "Guardar",
-  pleaseInput: "Si us plau, introdueix...",
+  pleaseInput: "Si us plau, introdueix…",
   inviteFriends: "Convida amics",
   inviteSummary:
     "Comparteix aquesta eina professional de gestió financera i ajuda altres a construir el seu futur financer.",
@@ -309,7 +309,7 @@ export const ca: Translations = {
   recommend:
     "M'agradaria compartir aquesta eina professional de gestió financera que m'ha ajudat a organitzar les meves finances de manera eficaç.",
   shareError: "Error en compartir",
-  loading: "carregant...",
+  loading: "carregant…",
   "01": "GEN",
   "02": "FEB",
   "03": "MAR",
@@ -368,7 +368,7 @@ export const ca: Translations = {
     "Introduïu un codi de moneda o actiu, com EUR o VTI.",
   openAccountCurrencyInvalid:
     "Feu servir majúscules, dígits i ' . _ -, començant per una lletra, com EUR o VTI.",
-  openAccountSaving: "S'està obrint...",
+  openAccountSaving: "S'està obrint…",
   openAccountFailed: "No s'ha pogut obrir el compte. Torna-ho a provar.",
   ledgerWouldBreak: "Això afegiria un error al teu llibre: {{detail}}",
   ledgerRefusalLine: "línia {{line}}",
@@ -413,7 +413,7 @@ export const ca: Translations = {
     "Als noms de compte, fes servir només lletres, xifres i guions.",
   transaction: "Transacció",
   transactionActions: "Accions de la transacció",
-  loadingMore: "Carregant més...",
+  loadingMore: "Carregant més…",
   noMoreEntries: "No hi ha més entrades",
   loadMoreFailed: "No s'han pogut carregar més entrades.",
   a11yTapToExpand: "Toqueu dos cops per expandir",
@@ -645,7 +645,7 @@ export const ca: Translations = {
   ledgerMainFileProtected: "main.bean no es pot eliminar",
   // ledger file editor
   ledgerEditorSave: "Desa",
-  ledgerEditorSaving: "S'està desant...",
+  ledgerEditorSaving: "S'està desant…",
   ledgerEditorSaveSuccess: "Fitxer desat",
   ledgerEditorSaveFailed: "No s'ha pogut desar",
   ledgerEditorSaveLeftErrorsTitle: "Desat, amb un error nou al llibre",

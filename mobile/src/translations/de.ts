@@ -237,8 +237,8 @@ export const de: Translations = {
   accountPickerNoAccounts: "Dieses Hauptbuch hat noch keine Konten.",
   cancel: "Abbrechen",
   confirm: "Bestätigen",
-  saving: "Speichern...",
-  deleting: "Löschen...",
+  saving: "Speichern…",
+  deleting: "Löschen…",
   saveSuccess: "Transaktion gespeichert!",
   saveFailed: "Speichern fehlgeschlagen",
   profilePartialSave:
@@ -294,7 +294,7 @@ export const de: Translations = {
   to: "An",
   date: "Datum",
   save: "Speichern",
-  pleaseInput: "Bitte eingeben...",
+  pleaseInput: "Bitte eingeben…",
   inviteFriends: "Freunde einladen",
   inviteSummary:
     "Teilen Sie dieses professionelle Finanzmanagement-Tool und helfen Sie anderen, ihre finanzielle Zukunft aufzubauen.",
@@ -308,7 +308,7 @@ export const de: Translations = {
   recommend:
     "Ich möchte dieses professionelle Finanzmanagement-Tool teilen, das mir geholfen hat, meine Finanzen effektiv zu organisieren.",
   shareError: "Teilen fehlgeschlagen",
-  loading: "laden...",
+  loading: "laden…",
   "01": "JAN",
   "02": "FEB",
   "03": "MÄR",
@@ -368,7 +368,7 @@ export const de: Translations = {
     "Geben Sie ein Währungs- oder Wertpapierkürzel ein, zum Beispiel EUR oder VTI.",
   openAccountCurrencyInvalid:
     "Verwenden Sie Großbuchstaben, Ziffern und ' . _ -, beginnend mit einem Buchstaben, etwa EUR oder VTI.",
-  openAccountSaving: "Wird eröffnet...",
+  openAccountSaving: "Wird eröffnet…",
   openAccountFailed:
     "Konto konnte nicht eröffnet werden. Bitte erneut versuchen.",
   ledgerWouldBreak:
@@ -416,7 +416,7 @@ export const de: Translations = {
     "Verwenden Sie in Kontonamen nur Buchstaben, Ziffern und Bindestriche.",
   transaction: "Transaktion",
   transactionActions: "Transaktionsaktionen",
-  loadingMore: "Lädt mehr...",
+  loadingMore: "Lädt mehr…",
   noMoreEntries: "Keine weiteren Einträge",
   loadMoreFailed: "Weitere Einträge konnten nicht geladen werden.",
   a11yTapToExpand: "Zum Aufklappen doppeltippen",
@@ -556,7 +556,7 @@ export const de: Translations = {
   receiptAllowCamera: "Kamera erlauben",
   receiptCancel: "Abbrechen",
   receiptUploading: "Foto wird hochgeladen…",
-  receiptUploadingProgress: "Foto wird hochgeladen… {{percent}} %",
+  receiptUploadingProgress: "Foto wird hochgeladen… {{percent}} %",
   receiptParsing: "Die KI liest Ihren Beleg…",
   receiptRevealTitle: "Das haben wir gelesen",
   receiptRevealSpoken: "Beleg gelesen: {{summary}}",
@@ -648,7 +648,7 @@ export const de: Translations = {
   ledgerMainFileProtected: "main.bean kann nicht gelöscht werden",
   // ledger file editor
   ledgerEditorSave: "Speichern",
-  ledgerEditorSaving: "Speichern...",
+  ledgerEditorSaving: "Speichern…",
   ledgerEditorSaveSuccess: "Datei gespeichert",
   ledgerEditorSaveFailed: "Speichern fehlgeschlagen",
   ledgerEditorSaveLeftErrorsTitle: "Gespeichert, mit neuem Fehler im Hauptbuch",
@@ -721,9 +721,9 @@ export const de: Translations = {
     "In diesem Hauptbuch wurden keine Ausgabenziele festgelegt.",
   ledgerEmptyHintReader: "Zum Aktualisieren nach unten ziehen.",
   budgetPanelRowValue:
-    "{{actual}} von {{budget}}, {{percent}}% genutzt, {{status}}",
+    "{{actual}} von {{budget}}, {{percent}} % genutzt, {{status}}",
   budgetPanelRowValueIncome:
-    "{{actual}} von {{budget}} Ziel, {{percent}}% erreicht, {{status}}",
+    "{{actual}} von {{budget}} Ziel, {{percent}} % erreicht, {{status}}",
   budgetPanelRowValueNoBudget: "{{actual}} von {{budget}}, {{status}}",
   budgetStartsOn: "Beginnt am {{date}}",
   budgetLoadFailed: "Budgets konnten nicht geladen werden",
@@ -858,8 +858,8 @@ export const de: Translations = {
     "Betrag eingeben. Mit der Vorzeichentaste zwischen positiv und negativ wechseln.",
   expandAccount: "{{account}} ausklappen",
   collapseAccount: "{{account}} einklappen",
-  breakdownRowShareSpending: "{{amount}}, {{percent}} % der Ausgaben",
-  breakdownRowShareEarnings: "{{amount}}, {{percent}} % der Einnahmen",
+  breakdownRowShareSpending: "{{amount}}, {{percent}} % der Ausgaben",
+  breakdownRowShareEarnings: "{{amount}}, {{percent}} % der Einnahmen",
   budgetChartSummary: {
     one: "Budget gegen Ist für {{span}}. Ist {{actual}} von geplanten {{budget}} über {{count}} Periode, {{missed}}.",
     other:

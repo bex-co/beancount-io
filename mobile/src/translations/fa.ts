@@ -227,8 +227,8 @@ export const fa: Translations = {
   accountPickerNoAccounts: "این دفتر هنوز هیچ حسابی ندارد.",
   cancel: "لغو",
   confirm: "تأیید",
-  saving: "در حال ذخیره...",
-  deleting: "در حال حذف...",
+  saving: "در حال ذخیره…",
+  deleting: "در حال حذف…",
   saveSuccess: "تراکنش ذخیره شد!",
   saveFailed: "ذخیره ناموفق",
   profilePartialSave:
@@ -283,7 +283,7 @@ export const fa: Translations = {
   to: "به",
   date: "تاریخ",
   save: "ذخیره",
-  pleaseInput: "لطفاً وارد کنید...",
+  pleaseInput: "لطفاً وارد کنید…",
   inviteFriends: "دعوت دوستان",
   inviteSummary:
     "این ابزار حرفه‌ای مدیریت مالی را به اشتراک بگذارید و به دیگران کمک کنید تا آینده مالی خود را بسازند.",
@@ -297,7 +297,7 @@ export const fa: Translations = {
   recommend:
     "می‌خواهم این ابزار حرفه‌ای مدیریت مالی را که به من در سازماندهی مؤثر امور مالی‌ام کمک کرده است، به اشتراک بگذارم.",
   shareError: "اشتراک‌گذاری ناموفق",
-  loading: "در حال بارگذاری...",
+  loading: "در حال بارگذاری…",
   "01": "ژان",
   "02": "فور",
   "03": "مار",
@@ -355,7 +355,7 @@ export const fa: Translations = {
     "کد ارز یا دارایی را وارد کنید، مثلاً EUR یا VTI.",
   openAccountCurrencyInvalid:
     "از حروف بزرگ انگلیسی، ارقام و ' . _ - استفاده کنید و با یک حرف شروع کنید، مانند EUR یا VTI.",
-  openAccountSaving: "در حال افتتاح...",
+  openAccountSaving: "در حال افتتاح…",
   openAccountFailed: "افتتاح حساب ناموفق بود. دوباره تلاش کنید.",
   ledgerWouldBreak: "این کار یک خطا به دفتر شما اضافه می‌کند: {{detail}}",
   ledgerRefusalLine: "خط {{line}}",
@@ -399,7 +399,7 @@ export const fa: Translations = {
     "در نام حساب‌ها فقط از حروف، ارقام و خط تیره استفاده کنید.",
   transaction: "تراکنش",
   transactionActions: "اقدامات تراکنش",
-  loadingMore: "در حال بارگذاری بیشتر...",
+  loadingMore: "در حال بارگذاری بیشتر…",
   noMoreEntries: "رکورد دیگری نیست",
   loadMoreFailed: "بارگذاری ورودی‌های بیشتر ممکن نشد.",
   a11yTapToExpand: "برای باز کردن دو بار ضربه بزنید",
@@ -622,7 +622,7 @@ export const fa: Translations = {
   ledgerMainFileProtected: "main.bean را نمی‌توان حذف کرد",
   // ledger file editor
   ledgerEditorSave: "ذخیره",
-  ledgerEditorSaving: "در حال ذخیره...",
+  ledgerEditorSaving: "در حال ذخیره…",
   ledgerEditorSaveSuccess: "فایل ذخیره شد",
   ledgerEditorSaveFailed: "ذخیره ناموفق بود",
   ledgerEditorSaveLeftErrorsTitle: "ذخیره شد، با یک خطای تازه در دفتر",
@@ -692,9 +692,9 @@ export const fa: Translations = {
   budgetNoBudgetsFoundReader: "در این دفتر هدف هزینه‌ای تعیین نشده است.",
   ledgerEmptyHintReader: "برای تازه‌سازی به پایین بکشید.",
   budgetPanelRowValue:
-    "{{actual}} از {{budget}}، {{percent}}% مصرف‌شده، {{status}}",
+    "{{actual}} از {{budget}}، {{percent}}٪ مصرف‌شده، {{status}}",
   budgetPanelRowValueIncome:
-    "{{actual}} از هدف {{budget}}، {{percent}}% محقق‌شده، {{status}}",
+    "{{actual}} از هدف {{budget}}، {{percent}}٪ محقق‌شده، {{status}}",
   budgetPanelRowValueNoBudget: "{{actual}} از {{budget}}، {{status}}",
   budgetStartsOn: "شروع از {{date}}",
   budgetLoadFailed: "بارگذاری بودجه‌ها ناموفق بود",

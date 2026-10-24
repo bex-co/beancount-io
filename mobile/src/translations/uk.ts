@@ -232,8 +232,8 @@ export const uk: Translations = {
   accountPickerNoAccounts: "У цій книзі ще немає рахунків.",
   cancel: "Скасувати",
   confirm: "Підтвердити",
-  saving: "Збереження...",
-  deleting: "Видалення...",
+  saving: "Збереження…",
+  deleting: "Видалення…",
   saveSuccess: "Транзакцію збережено!",
   saveFailed: "Помилка збереження",
   profilePartialSave:
@@ -295,7 +295,7 @@ export const uk: Translations = {
   to: "До",
   date: "Дата",
   save: "Зберегти",
-  pleaseInput: "Будь ласка, введіть...",
+  pleaseInput: "Будь ласка, введіть…",
   inviteFriends: "Запросити друзів",
   inviteSummary:
     "Поділіться цим професійним інструментом фінансового управління та допоможіть іншим побудувати своє фінансове майбутнє.",
@@ -309,7 +309,7 @@ export const uk: Translations = {
   recommend:
     "Я хотів би поділитися цим професійним інструментом фінансового управління, який допоміг мені ефективно організувати свої фінанси.",
   shareError: "Помилка поділитися",
-  loading: "завантаження...",
+  loading: "завантаження…",
   "01": "СІЧ",
   "02": "ЛЮТ",
   "03": "БЕР",
@@ -367,7 +367,7 @@ export const uk: Translations = {
     "Введіть код валюти чи активу, наприклад EUR або VTI.",
   openAccountCurrencyInvalid:
     "Використовуйте великі літери, цифри та ' . _ -, починаючи з літери, як-от EUR або VTI.",
-  openAccountSaving: "Відкриваємо...",
+  openAccountSaving: "Відкриваємо…",
   openAccountFailed: "Не вдалося відкрити рахунок. Спробуйте ще раз.",
   ledgerWouldBreak: "Це додасть помилку до вашої книги: {{detail}}",
   ledgerRefusalLine: "рядок {{line}}",
@@ -412,7 +412,7 @@ export const uk: Translations = {
     "У назвах рахунків використовуйте лише літери, цифри та дефіси.",
   transaction: "Транзакція",
   transactionActions: "Дії з транзакцією",
-  loadingMore: "Завантажується ще...",
+  loadingMore: "Завантажується ще…",
   noMoreEntries: "Більше записів немає",
   loadMoreFailed: "Не вдалося завантажити більше записів.",
   a11yTapToExpand: "Торкніться двічі, щоб розгорнути",
@@ -640,7 +640,7 @@ export const uk: Translations = {
   ledgerMainFileProtected: "main.bean видалити не можна",
   // ledger file editor
   ledgerEditorSave: "Зберегти",
-  ledgerEditorSaving: "Зберігаємо...",
+  ledgerEditorSaving: "Зберігаємо…",
   ledgerEditorSaveSuccess: "Файл збережено",
   ledgerEditorSaveFailed: "Не вдалося зберегти",
   ledgerEditorSaveLeftErrorsTitle: "Збережено, але в книзі нова помилка",

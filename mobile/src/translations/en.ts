@@ -225,8 +225,8 @@ export const en = {
   accountPickerNoAccounts: "This ledger has no accounts yet.",
   cancel: "Cancel",
   confirm: "Confirm",
-  saving: "Saving...",
-  deleting: "Deleting...",
+  saving: "Saving…",
+  deleting: "Deleting…",
   saveSuccess: "Transaction saved!",
   saveFailed: "Failed to save",
   profilePartialSave:
@@ -281,7 +281,7 @@ export const en = {
   to: "To",
   date: "Date",
   save: "Save",
-  pleaseInput: "Please input...",
+  pleaseInput: "Please input…",
   inviteFriends: "Invite Friends",
   inviteSummary:
     "Share this professional financial management tool and help others build their financial future.",
@@ -295,7 +295,7 @@ export const en = {
   recommend:
     "I'd like to share this professional financial management tool that has helped me organize my finances effectively.",
   shareError: "Failed to share",
-  loading: "loading...",
+  loading: "loading…",
   "01": "JAN",
   "02": "FEB",
   "03": "MAR",
@@ -352,7 +352,7 @@ export const en = {
     "Enter a commodity code, such as EUR or VTI.",
   openAccountCurrencyInvalid:
     "Use capital letters, digits and ' . _ -, starting with a letter, like EUR or VTI.",
-  openAccountSaving: "Opening...",
+  openAccountSaving: "Opening…",
   openAccountFailed: "Couldn't open the account. Please try again.",
   ledgerWouldBreak: "This would add an error to your ledger: {{detail}}",
   ledgerRefusalLine: "line {{line}}",
@@ -396,7 +396,7 @@ export const en = {
     "Use only letters, numbers, and hyphens in account names.",
   transaction: "Transaction",
   transactionActions: "Transaction actions",
-  loadingMore: "Loading more...",
+  loadingMore: "Loading more…",
   noMoreEntries: "No more entries",
   loadMoreFailed: "Couldn't load more entries.",
   a11yTapToExpand: "Double-tap to expand",
@@ -648,7 +648,7 @@ export const en = {
   ledgerMainFileProtected: "main.bean cannot be deleted",
   // ledger file editor
   ledgerEditorSave: "Save",
-  ledgerEditorSaving: "Saving...",
+  ledgerEditorSaving: "Saving…",
   ledgerEditorSaveSuccess: "File saved",
   ledgerEditorSaveFailed: "Failed to save",
   ledgerEditorSaveLeftErrorsTitle: "Saved, with a new ledger error",

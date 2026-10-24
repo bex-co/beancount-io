@@ -231,8 +231,8 @@ export const nl: Translations = {
   accountPickerNoAccounts: "Dit grootboek heeft nog geen rekeningen.",
   cancel: "Annuleren",
   confirm: "Bevestigen",
-  saving: "Opslaan...",
-  deleting: "Verwijderen...",
+  saving: "Opslaan…",
+  deleting: "Verwijderen…",
   saveSuccess: "Transactie opgeslagen!",
   saveFailed: "Opslaan mislukt",
   profilePartialSave:
@@ -287,7 +287,7 @@ export const nl: Translations = {
   to: "Naar",
   date: "Datum",
   save: "Opslaan",
-  pleaseInput: "Voer in...",
+  pleaseInput: "Voer in…",
   inviteFriends: "Vrienden uitnodigen",
   inviteSummary:
     "Deel deze professionele tool voor financieel beheer en help anderen hun financiële toekomst op te bouwen.",
@@ -301,7 +301,7 @@ export const nl: Translations = {
   recommend:
     "Ik zou deze professionele tool voor financieel beheer willen delen die mij heeft geholpen mijn financiën effectief te organiseren.",
   shareError: "Delen mislukt",
-  loading: "laden...",
+  loading: "laden…",
   "01": "JAN",
   "02": "FEB",
   "03": "MRT",
@@ -359,7 +359,7 @@ export const nl: Translations = {
     "Voer een valuta- of effectcode in, zoals EUR of VTI.",
   openAccountCurrencyInvalid:
     "Gebruik hoofdletters, cijfers en ' . _ -, beginnend met een letter, zoals EUR of VTI.",
-  openAccountSaving: "Openen...",
+  openAccountSaving: "Openen…",
   openAccountFailed: "Account openen is mislukt. Probeer het opnieuw.",
   ledgerWouldBreak: "Dit zou een fout aan je grootboek toevoegen: {{detail}}",
   ledgerRefusalLine: "regel {{line}}",
@@ -403,7 +403,7 @@ export const nl: Translations = {
     "Gebruik in accountnamen alleen letters, cijfers en koppeltekens.",
   transaction: "Transactie",
   transactionActions: "Transactieacties",
-  loadingMore: "Meer laden...",
+  loadingMore: "Meer laden…",
   noMoreEntries: "Geen verdere vermeldingen",
   loadMoreFailed: "Meer boekingen laden is mislukt.",
   a11yTapToExpand: "Tik twee keer om uit te vouwen",
@@ -631,7 +631,7 @@ export const nl: Translations = {
   ledgerMainFileProtected: "main.bean kan niet worden verwijderd",
   // ledger file editor
   ledgerEditorSave: "Opslaan",
-  ledgerEditorSaving: "Opslaan...",
+  ledgerEditorSaving: "Opslaan…",
   ledgerEditorSaveSuccess: "Bestand opgeslagen",
   ledgerEditorSaveFailed: "Opslaan mislukt",
   ledgerEditorSaveLeftErrorsTitle:

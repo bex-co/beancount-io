@@ -233,8 +233,8 @@ export const ru: Translations = {
   accountPickerNoAccounts: "В этой книге пока нет счетов.",
   cancel: "Отмена",
   confirm: "Подтвердить",
-  saving: "Сохранение...",
-  deleting: "Удаление...",
+  saving: "Сохранение…",
+  deleting: "Удаление…",
   saveSuccess: "Транзакция сохранена!",
   saveFailed: "Ошибка сохранения",
   profilePartialSave:
@@ -296,7 +296,7 @@ export const ru: Translations = {
   to: "Кому",
   date: "Дата",
   save: "Сохранить",
-  pleaseInput: "Пожалуйста, введите...",
+  pleaseInput: "Пожалуйста, введите…",
   inviteFriends: "Пригласить друзей",
   inviteSummary:
     "Поделитесь этим профессиональным инструментом финансового управления и помогите другим построить своё финансовое будущее.",
@@ -310,7 +310,7 @@ export const ru: Translations = {
   recommend:
     "Я хотел бы поделиться этим профессиональным инструментом финансового управления, который помог мне эффективно организовать свои финансы.",
   shareError: "Ошибка при отправке",
-  loading: "загрузка...",
+  loading: "загрузка…",
   "01": "ЯНВ",
   "02": "ФЕВ",
   "03": "МАР",
@@ -369,7 +369,7 @@ export const ru: Translations = {
     "Введите код валюты или актива, например EUR или VTI.",
   openAccountCurrencyInvalid:
     "Используйте заглавные буквы, цифры и ' . _ -, начиная с буквы, например EUR или VTI.",
-  openAccountSaving: "Открываем...",
+  openAccountSaving: "Открываем…",
   openAccountFailed: "Не удалось открыть счёт. Попробуйте ещё раз.",
   ledgerWouldBreak: "Это добавит ошибку в вашу книгу: {{detail}}",
   ledgerRefusalLine: "строка {{line}}",
@@ -413,7 +413,7 @@ export const ru: Translations = {
     "В названиях счетов используйте только буквы, цифры и дефисы.",
   transaction: "Транзакция",
   transactionActions: "Действия с транзакцией",
-  loadingMore: "Загружается ещё...",
+  loadingMore: "Загружается ещё…",
   noMoreEntries: "Больше записей нет",
   loadMoreFailed: "Не удалось загрузить ещё записи.",
   a11yTapToExpand: "Дважды коснитесь, чтобы развернуть",
@@ -641,7 +641,7 @@ export const ru: Translations = {
   ledgerMainFileProtected: "main.bean удалить нельзя",
   // ledger file editor
   ledgerEditorSave: "Сохранить",
-  ledgerEditorSaving: "Сохраняем...",
+  ledgerEditorSaving: "Сохраняем…",
   ledgerEditorSaveSuccess: "Файл сохранён",
   ledgerEditorSaveFailed: "Не удалось сохранить",
   ledgerEditorSaveLeftErrorsTitle: "Сохранено, но в книге новая ошибка",

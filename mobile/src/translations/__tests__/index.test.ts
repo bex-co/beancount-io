@@ -251,10 +251,10 @@ describe("translations", () => {
     });
 
     it("has status message keys", () => {
-      expect(en.saving).toBe("Saving...");
+      expect(en.saving).toBe("Saving…");
       expect(en.saveSuccess).toBe("Transaction saved!");
       expect(en.saveFailed).toBe("Failed to save");
-      expect(en.loading).toBe("loading...");
+      expect(en.loading).toBe("loading…");
     });
 
     it("has referral keys", () => {

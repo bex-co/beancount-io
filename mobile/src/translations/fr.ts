@@ -234,8 +234,8 @@ export const fr: Translations = {
   accountPickerNoAccounts: "Ce grand livre n'a encore aucun compte.",
   cancel: "Annuler",
   confirm: "Confirmer",
-  saving: "Enregistrement...",
-  deleting: "Suppression...",
+  saving: "Enregistrement…",
+  deleting: "Suppression…",
   saveSuccess: "Transaction enregistrée !",
   saveFailed: "Échec de l'enregistrement",
   profilePartialSave:
@@ -293,7 +293,7 @@ export const fr: Translations = {
   to: "À",
   date: "Date",
   save: "Enregistrer",
-  pleaseInput: "Veuillez saisir...",
+  pleaseInput: "Veuillez saisir…",
   inviteFriends: "Inviter des amis",
   inviteSummary:
     "Partagez cet outil professionnel de gestion financière et aidez les autres à bâtir leur avenir financier.",
@@ -307,7 +307,7 @@ export const fr: Translations = {
   recommend:
     "Je souhaite partager cet outil professionnel de gestion financière qui m'a aidé à organiser efficacement mes finances.",
   shareError: "Échec du partage",
-  loading: "chargement...",
+  loading: "chargement…",
   "01": "JANV",
   "02": "FÉV",
   "03": "MARS",
@@ -367,7 +367,7 @@ export const fr: Translations = {
     "Saisissez un code de devise ou d'actif, comme EUR ou VTI.",
   openAccountCurrencyInvalid:
     "Utilisez des majuscules, des chiffres et ' . _ -, en commençant par une lettre, comme EUR ou VTI.",
-  openAccountSaving: "Ouverture...",
+  openAccountSaving: "Ouverture…",
   openAccountFailed: "Impossible d'ouvrir le compte. Veuillez réessayer.",
   ledgerWouldBreak:
     "Cela ajouterait une erreur à votre grand livre : {{detail}}",
@@ -413,7 +413,7 @@ export const fr: Translations = {
     "N'utilisez que des lettres, des chiffres et des traits d'union dans les noms de compte.",
   transaction: "Transaction",
   transactionActions: "Actions de la transaction",
-  loadingMore: "Chargement en cours...",
+  loadingMore: "Chargement en cours…",
   noMoreEntries: "Aucune autre entrée",
   loadMoreFailed: "Impossible de charger d'autres écritures.",
   a11yTapToExpand: "Touchez deux fois pour développer",
@@ -553,7 +553,7 @@ export const fr: Translations = {
   receiptAllowCamera: "Autoriser la caméra",
   receiptCancel: "Annuler",
   receiptUploading: "Envoi de la photo…",
-  receiptUploadingProgress: "Envoi de la photo… {{percent}} %",
+  receiptUploadingProgress: "Envoi de la photo… {{percent}} %",
   receiptParsing: "L'IA lit votre reçu…",
   receiptRevealTitle: "Voici ce que nous avons lu",
   receiptRevealSpoken: "Reçu lu : {{summary}}",
@@ -645,7 +645,7 @@ export const fr: Translations = {
   ledgerMainFileProtected: "main.bean ne peut pas être supprimé",
   // ledger file editor
   ledgerEditorSave: "Enregistrer",
-  ledgerEditorSaving: "Enregistrement...",
+  ledgerEditorSaving: "Enregistrement…",
   ledgerEditorSaveSuccess: "Fichier enregistré",
   ledgerEditorSaveFailed: "Échec de l'enregistrement",
   ledgerEditorSaveLeftErrorsTitle:
@@ -721,9 +721,9 @@ export const fr: Translations = {
     "Aucun objectif de dépenses n'a été défini dans ce registre.",
   ledgerEmptyHintReader: "Tirez vers le bas pour actualiser.",
   budgetPanelRowValue:
-    "{{actual}} sur {{budget}}, {{percent}}% utilisé, {{status}}",
+    "{{actual}} sur {{budget}}, {{percent}} % utilisé, {{status}}",
   budgetPanelRowValueIncome:
-    "{{actual}} sur un objectif de {{budget}}, {{percent}}% atteint, {{status}}",
+    "{{actual}} sur un objectif de {{budget}}, {{percent}} % atteint, {{status}}",
   budgetPanelRowValueNoBudget: "{{actual}} sur {{budget}}, {{status}}",
   budgetStartsOn: "Commence le {{date}}",
   budgetLoadFailed: "Échec du chargement des budgets",
@@ -859,8 +859,8 @@ export const fr: Translations = {
     "Saisissez le montant. Utilisez le bouton de signe pour passer du positif au négatif.",
   expandAccount: "Développer {{account}}",
   collapseAccount: "Replier {{account}}",
-  breakdownRowShareSpending: "{{amount}}, {{percent}} % des dépenses",
-  breakdownRowShareEarnings: "{{amount}}, {{percent}} % des revenus",
+  breakdownRowShareSpending: "{{amount}}, {{percent}} % des dépenses",
+  breakdownRowShareEarnings: "{{amount}}, {{percent}} % des revenus",
   budgetChartSummary: {
     one: "Budget et réel pour {{span}}. Réel {{actual}} sur {{budget}} budgété sur {{count}} période, {{missed}}.",
     many: "Budget et réel pour {{span}}. Réel {{actual}} sur {{budget}} budgété sur {{count}} périodes, {{missed}}.",

@@ -234,8 +234,8 @@ export const es: Translations = {
   accountPickerNoAccounts: "Este libro aún no tiene cuentas.",
   cancel: "Cancelar",
   confirm: "Confirmar",
-  saving: "Guardando...",
-  deleting: "Eliminando...",
+  saving: "Guardando…",
+  deleting: "Eliminando…",
   saveSuccess: "¡Transacción guardada!",
   saveFailed: "Error al guardar",
   profilePartialSave:
@@ -294,7 +294,7 @@ export const es: Translations = {
   to: "A",
   date: "Fecha",
   save: "Guardar",
-  pleaseInput: "Introduce...",
+  pleaseInput: "Introduce…",
   inviteFriends: "Invitar amigos",
   inviteSummary:
     "Comparte esta herramienta profesional de gestión financiera y ayuda a otros a construir su futuro financiero.",
@@ -308,7 +308,7 @@ export const es: Translations = {
   recommend:
     "Me gustaría compartir esta herramienta profesional de gestión financiera que me ha ayudado a organizar mis finanzas de manera efectiva.",
   shareError: "Error al compartir",
-  loading: "cargando...",
+  loading: "cargando…",
   "01": "ENE",
   "02": "FEB",
   "03": "MAR",
@@ -367,7 +367,7 @@ export const es: Translations = {
     "Introduce un código de moneda o activo, como EUR o VTI.",
   openAccountCurrencyInvalid:
     "Usa mayúsculas, dígitos y ' . _ -, empezando por una letra, como EUR o VTI.",
-  openAccountSaving: "Abriendo...",
+  openAccountSaving: "Abriendo…",
   openAccountFailed: "No se pudo abrir la cuenta. Inténtalo de nuevo.",
   ledgerWouldBreak: "Esto añadiría un error a tu libro: {{detail}}",
   ledgerRefusalLine: "línea {{line}}",
@@ -413,7 +413,7 @@ export const es: Translations = {
     "Usa solo letras, números y guiones en los nombres de cuenta.",
   transaction: "Transacción",
   transactionActions: "Acciones de la transacción",
-  loadingMore: "Cargando más...",
+  loadingMore: "Cargando más…",
   noMoreEntries: "No hay más entradas",
   loadMoreFailed: "No se pudieron cargar más entradas.",
   a11yTapToExpand: "Toca dos veces para expandir",
@@ -644,7 +644,7 @@ export const es: Translations = {
   ledgerMainFileProtected: "main.bean no se puede eliminar",
   // ledger file editor
   ledgerEditorSave: "Guardar",
-  ledgerEditorSaving: "Guardando...",
+  ledgerEditorSaving: "Guardando…",
   ledgerEditorSaveSuccess: "Archivo guardado",
   ledgerEditorSaveFailed: "Error al guardar",
   ledgerEditorSaveLeftErrorsTitle: "Guardado, con un error nuevo en el libro",

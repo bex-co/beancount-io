@@ -230,8 +230,8 @@ export const bg: Translations = {
   accountPickerNoAccounts: "Тази книга все още няма сметки.",
   cancel: "Отказ",
   confirm: "Потвърждение",
-  saving: "Запазване...",
-  deleting: "Изтриване...",
+  saving: "Запазване…",
+  deleting: "Изтриване…",
   saveSuccess: "Транзакцията е запазена!",
   saveFailed: "Неуспешно запазване",
   profilePartialSave:
@@ -287,7 +287,7 @@ export const bg: Translations = {
   to: "До",
   date: "Дата",
   save: "Запазване",
-  pleaseInput: "Моля въведете...",
+  pleaseInput: "Моля въведете…",
   inviteFriends: "Поканете приятели",
   inviteSummary:
     "Споделете този професионален инструмент за финансово управление и помогнете на другите да изградят своето финансово бъдеще.",
@@ -301,7 +301,7 @@ export const bg: Translations = {
   recommend:
     "Бих искал да споделя този професионален инструмент за финансово управление, който ми помогна да организирам ефективно финансите си.",
   shareError: "Неуспешно споделяне",
-  loading: "зареждане...",
+  loading: "зареждане…",
   "01": "ЯНУ",
   "02": "ФЕВ",
   "03": "МАР",
@@ -360,7 +360,7 @@ export const bg: Translations = {
     "Въведете код на валута или актив, например EUR или VTI.",
   openAccountCurrencyInvalid:
     "Използвайте главни букви, цифри и ' . _ -, започващи с буква, например EUR или VTI.",
-  openAccountSaving: "Открива се...",
+  openAccountSaving: "Открива се…",
   openAccountFailed: "Сметката не беше открита. Опитайте отново.",
   ledgerWouldBreak: "Това ще добави грешка в книгата ви: {{detail}}",
   ledgerRefusalLine: "ред {{line}}",
@@ -405,7 +405,7 @@ export const bg: Translations = {
     "В имената на сметки използвайте само букви, цифри и тирета.",
   transaction: "Транзакция",
   transactionActions: "Действия за транзакцията",
-  loadingMore: "Зарежда се още...",
+  loadingMore: "Зарежда се още…",
   noMoreEntries: "Няма повече записи",
   loadMoreFailed: "Не успяхме да заредим още записи.",
   a11yTapToExpand: "Докоснете два пъти, за да разгънете",
@@ -629,7 +629,7 @@ export const bg: Translations = {
   ledgerMainFileProtected: "main.bean не може да бъде изтрит",
   // ledger file editor
   ledgerEditorSave: "Запази",
-  ledgerEditorSaving: "Запазва се...",
+  ledgerEditorSaving: "Запазва се…",
   ledgerEditorSaveSuccess: "Файлът е запазен",
   ledgerEditorSaveFailed: "Запазването е неуспешно",
   ledgerEditorSaveLeftErrorsTitle: "Запазено, с нова грешка в книгата",
