@@ -1,4 +1,4 @@
-import { ErrorInfo } from "react";
+import type { ErrorInfo, Ref } from "react";
 import { AlertCircle } from "lucide-react";
 import { Card, CardContent } from "@/common/components/ui/card";
 import { Button } from "@/common/components/ui/button";
@@ -10,6 +10,9 @@ interface ErrorBoundaryFallbackProps {
   error: Error | null;
   errorInfo: ErrorInfo | null;
   onRetry: () => void;
+  /** A recovery is running: Try Again stays, busy, until it settles. */
+  retrying?: boolean;
+  retryRef?: Ref<HTMLButtonElement>;
 }
 
 /**
@@ -24,6 +27,8 @@ export function ErrorBoundaryFallback({
   error,
   errorInfo,
   onRetry,
+  retrying = false,
+  retryRef,
 }: ErrorBoundaryFallbackProps) {
   const { t } = useTranslations();
   const staleBuild = isChunkLoadError(error);
@@ -62,7 +67,13 @@ export function ErrorBoundaryFallback({
                 {t("common.reloadPage")}
               </Button>
             ) : (
-              <Button variant="outline" size="sm" onClick={onRetry}>
+              <Button
+                ref={retryRef}
+                variant="outline"
+                size="sm"
+                onClick={onRetry}
+                loading={retrying}
+              >
                 {t("common.tryAgain")}
               </Button>
             )}

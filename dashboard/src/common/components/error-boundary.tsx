@@ -1,4 +1,4 @@
-import { Component, ErrorInfo, ReactNode } from "react";
+import { Component, ErrorInfo, ReactNode, createRef } from "react";
 import { ErrorBoundaryFallback } from "./error-boundary-fallback";
 
 interface Props {
@@ -19,7 +19,16 @@ interface State {
   hasError: boolean;
   error: Error | null;
   errorInfo: ErrorInfo | null;
+  /** An awaited recovery is running; Try Again is busy until it settles. */
+  retrying: boolean;
 }
+
+const CLEARED = {
+  hasError: false,
+  error: null,
+  errorInfo: null,
+  retrying: false,
+} as const;
 
 /**
  * Error boundary that degrades a single panel instead of blanking the app.
@@ -29,12 +38,13 @@ interface State {
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = {
-      hasError: false,
-      error: null,
-      errorInfo: null,
-    };
+    this.state = { ...CLEARED };
   }
+
+  /** The default fallback's Try Again, for the focus handback below. */
+  private retryButton = createRef<HTMLButtonElement>();
+  /** The commit after a recovery settles decides where focus goes. */
+  private settlingRetry = false;
 
   static getDerivedStateFromError(error: Error): Partial<State> {
     return { hasError: true, error };
@@ -59,19 +69,37 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidUpdate(previous: Props) {
     if (this.state.hasError && previous.resetKey !== this.props.resetKey) {
-      this.setState({ hasError: false, error: null, errorInfo: null });
+      this.setState({ ...CLEARED });
+    }
+    // A recovery whose loader failed again re-throws on the next render, and
+    // the fallback that catches it is a new one: the Try Again the reader
+    // pressed is gone. Hand focus to its replacement, unless the reader moved
+    // it meanwhile (w4/1046).
+    if (this.settlingRetry) {
+      this.settlingRetry = false;
+      const active = document.activeElement;
+      if (this.state.hasError && (!active || active === document.body)) {
+        this.retryButton.current?.focus();
+      }
     }
   }
 
   handleRetry = async () => {
-    const clear = () =>
-      this.setState({ hasError: false, error: null, errorInfo: null });
     // A plain panel retry stays immediate; only a recovery is awaited.
-    if (!this.props.onRetry) return clear();
+    if (!this.props.onRetry) return this.setState({ ...CLEARED });
+    // One recovery at a time: a second Enter while it runs sends nothing.
+    if (this.state.retrying) return;
+    const resetKey = this.props.resetKey;
+    this.setState({ retrying: true });
     try {
       await this.props.onRetry();
     } finally {
-      clear();
+      // Leaving the route while it ran already cleared this boundary; the
+      // abandoned recovery neither clears nor focuses anything there.
+      if (resetKey === this.props.resetKey) {
+        this.settlingRetry = true;
+        this.setState({ ...CLEARED });
+      }
     }
   };
 
@@ -86,6 +114,8 @@ export class ErrorBoundary extends Component<Props, State> {
           error={this.state.error}
           errorInfo={this.state.errorInfo}
           onRetry={() => void this.handleRetry()}
+          retrying={this.state.retrying}
+          retryRef={this.retryButton}
         />
       );
     }
