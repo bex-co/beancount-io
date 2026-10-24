@@ -74,3 +74,22 @@ describe("a file's line endings across open and save", () => {
     ).toBe(true);
   });
 });
+
+// w21/941: Cmd-S on a clean buffer sent an unchanged file as a write.
+describe("the editor's save request", () => {
+  it("does nothing for a buffer equal to the saved document", () => {
+    const source = fs
+      .readFileSync(path.join(__dirname, "..", "code-editor.tsx"), "utf8")
+      .replace(/\s+/g, "");
+    const start = source.indexOf("requestSaveRef.current=()=>{");
+    const guard = source.indexOf(
+      "if(document.eq(savedDocumentRef.current))return;",
+      start,
+    );
+    const send = source.indexOf(
+      "onSaveRef.current(content,epoch,revision)",
+      start,
+    );
+    expect(start > -1 && guard > start && send > guard).toBe(true);
+  });
+});

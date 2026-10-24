@@ -373,6 +373,10 @@ export default function CodeEditor({
     const view = viewRef.current;
     if (!view || appliedAccessRef.current) return;
     const document = view.state.doc;
+    // A clean buffer has nothing to save: the Save button is disabled for it,
+    // and a hardware keyboard's Cmd-S sent the same text back as a write
+    // (w21/941).
+    if (document.eq(savedDocumentRef.current)) return;
     const content = view.state.doc.toString();
     const epoch = documentEpochRef.current;
     const revision = editRevisionRef.current;
