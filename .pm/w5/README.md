@@ -36,8 +36,6 @@
 
 ## Inbox
 
-- [1015 — Compare declared non-transaction directive facts](./1015.md) — minor CLI field/provenance gaps; known method, tolerance and receipt-metadata changes falsely count as written, while equivalent currency lists hide genuine openings. Native controls, enrichment and both repetitions verified 2026-10-23.
-
 
 
 

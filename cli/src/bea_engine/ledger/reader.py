@@ -225,8 +225,34 @@ def _declares(entry: Any, *, strict: bool = False) -> bool | None:
             and (entry.links or frozenset()) == (spelled.links or frozenset())
             and _amounts_declared(entry, spelled)
         )
-    ignored = {"meta", "postings", "diff_amount", "tolerance", "booking"}
-    return all(getattr(entry, name) == getattr(spelled, name) for name in entry._fields if name not in ignored)
+    return all(
+        _field_declared(name, getattr(entry, name), getattr(spelled, name))
+        for name in entry._fields
+        if name not in {"postings", "diff_amount"}
+    )
+
+
+def _field_declared(name: str, held: Any, stated: Any) -> bool:
+    """Whether a directive field holds what its line states (w5/1015).
+
+    A booking method or tolerance the line omits agrees with any value; one it
+    states, zero included, must be held. Allowed currencies are a set, and no
+    list and an empty one both leave the account unrestricted. Of the
+    metadata, the keys the line writes must hold their values, beside the
+    loader's location bookkeeping and any key a plugin adds of its own.
+    """
+    if name in {"booking", "tolerance"}:
+        return stated is None or held == stated
+    if name == "currencies":
+        return set(held or ()) == set(stated or ())
+    if name == "meta":
+        held = held or {}
+        return all(
+            key in held and held[key] == value
+            for key, value in (stated or {}).items()
+            if key not in {"filename", "lineno"} and not key.startswith("__")
+        )
+    return bool(held == stated)
 
 
 def _amounts_declared(entry: Any, spelled: Any) -> bool:
