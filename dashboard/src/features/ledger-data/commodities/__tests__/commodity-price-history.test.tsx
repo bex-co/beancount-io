@@ -100,3 +100,43 @@ describe("CommodityPriceHistory", () => {
     expect(classes).toContain("max-w-full");
   });
 });
+
+// w4/1055: in Persian the history read "37.63-" for a -37.63 price.
+describe("CommodityPriceHistory on a right-to-left page", () => {
+  const qaoil: CommodityPairWithPrices = {
+    __typename: "CommodityPairWithPrices",
+    base: "QAOIL",
+    quote: "USD",
+    prices: [
+      { __typename: "PricePoint", date: "2026-10-01", value: "-37.63" },
+      { __typename: "PricePoint", date: "2026-10-02", value: "-5.250" },
+      { __typename: "PricePoint", date: "2026-10-03", value: "0.00" },
+      { __typename: "PricePoint", date: "2026-10-04", value: "12.50" },
+    ],
+  };
+
+  it("runs each exact price left to right and leaves dates alone", async () => {
+    const user = userEvent.setup();
+    render(
+      <div dir="rtl">
+        <CommodityPriceHistory commodity={qaoil} />
+      </div>,
+    );
+    const toggle = screen.getByRole("button", {
+      name: "Show price history for QAOIL/USD",
+    });
+    toggle.focus();
+    await user.keyboard("{Enter}");
+
+    for (const value of ["-37.63", "-5.250", "0.00", "12.50"]) {
+      const run = screen.getByText(value);
+      expect(run.tagName).toBe("BDI");
+      expect(run).toHaveAttribute("dir", "ltr");
+    }
+    expect(screen.getByText("2026-10-01").closest("bdi")).toBeNull();
+
+    await user.keyboard("{Enter}");
+    expect(screen.queryByText("-37.63")).toBeNull();
+    expect(toggle).toHaveFocus();
+  });
+});

@@ -10,6 +10,7 @@ import {
 } from "@/common/components/ui/table";
 import type { CommodityPairWithPrices } from "@/graphql/definitions";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { Amount } from "@/common/components/amount";
 import { commodityPairLabel } from "./commodity-pair-label";
 
 export function CommodityPriceHistory({
@@ -61,7 +62,8 @@ export function CommodityPriceHistory({
                     {price.date}
                   </TableCell>
                   <TableCell className="text-right font-mono text-xs tabular-nums">
-                    {price.value}
+                    {/* Sign before digits on a right-to-left page (w4/1055). */}
+                    <Amount>{price.value}</Amount>
                   </TableCell>
                 </TableRow>
               ))}
