@@ -61,3 +61,43 @@ def test_the_unchanged_repeat_skips_and_a_correction_conflicts(tmp_path: Path, l
     assert json.loads(repeat.stdout)["data"]["written"] == 0  # type: ignore[attr-defined]
     assert changed.returncode == 4, changed.stdout  # type: ignore[attr-defined]
     assert ledger.read_bytes() == before
+
+
+# Booking rounds an omitted amount to the tolerance its other postings infer:
+# 4.8 + 2.97 books Cash at -7.8 by default, at -7.77 with precise interpolation
+# or when 4.80 states cents (w5/1005).
+ROUNDED = {
+    "bare": ("", "  Assets:Cash\n  Expenses:Food 4.8 USD\n  Expenses:Food 2.97 USD\n", "-7.80", "-7.77"),
+    "currency": ("", "  Assets:Cash USD\n  Expenses:Food 4.8 USD\n  Expenses:Food 2.97 USD\n", "-7.80", "-7.77"),
+    "reversed": ("", "  Assets:Cash\n  Expenses:Food 2.97 USD\n  Expenses:Food 4.8 USD\n", "-7.80", "-7.77"),
+    "precise": (
+        'option "use_precise_interpolation" "TRUE"\n',
+        "  Assets:Cash\n  Expenses:Food 4.8 USD\n  Expenses:Food 2.97 USD\n",
+        "-7.77",
+        "-7.80",
+    ),
+    "cents": ("", "  Assets:Cash\n  Expenses:Food 4.80 USD\n  Expenses:Food 2.97 USD\n", "-7.77", "-7.80"),
+}
+
+
+@pytest.mark.parametrize("skip", [False, True], ids=["default", "skip"])
+@pytest.mark.parametrize("layout", list(ROUNDED))
+def test_an_omitted_amount_is_compared_as_booking_rounds_it(tmp_path: Path, layout: str, skip: bool) -> None:
+    options, postings, booked, other = ROUNDED[layout]
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(
+        'option "operating_currency" "USD"\n' + options
+        + "2024-01-01 open Assets:Cash USD\n2024-01-01 open Expenses:Food USD\n"
+        + '2024-02-01 * "Source row"\n  bank_id: "B1"\n' + postings
+    )  # fmt: skip
+    before = ledger.read_bytes()
+    flags = ["--duplicates", "skip"] if skip else []
+
+    repeat = _import(tmp_path, booked, *flags, "--apply")
+    changed = _import(tmp_path, other, *flags, "--apply")
+
+    assert repeat.returncode == 0, repeat.stdout  # type: ignore[attr-defined]
+    assert json.loads(repeat.stdout)["data"]["rows"][0]["status"] == "duplicate"  # type: ignore[attr-defined]
+    assert json.loads(repeat.stdout)["data"]["written"] == 0  # type: ignore[attr-defined]
+    assert changed.returncode == 4, changed.stdout  # type: ignore[attr-defined]
+    assert ledger.read_bytes() == before
