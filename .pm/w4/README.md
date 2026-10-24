@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1072** — [Prevent multi-second freezes when selecting all CSV rows](./1072.md)
+
 - **1071** — [Pluralize CSV preview row counts](./1071.md)
 
 - **1070** — [Keep a calendar-cleared date visibly empty](./1070.md)
