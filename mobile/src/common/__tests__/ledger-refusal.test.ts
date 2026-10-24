@@ -565,3 +565,51 @@ describe("ledgerWriteFailureMessage for a delete", () => {
     ).toBe(true);
   });
 });
+
+// w21/939: the server drops a draft's leading blank lines before it validates,
+// so its line numbers start that far above the editor's.
+describe("describeLedgerRefusal for a draft with leading blank lines", () => {
+  const words = {
+    t: (key: string, params?: Record<string, string>) =>
+      key === "ledgerRefusalLine"
+        ? `line ${params?.line}`
+        : key === "ledgerWouldBreak"
+          ? `Would break: ${params?.detail}`
+          : key,
+  };
+  const where = { filename: "main.bean", lineno: 3, lineCount: 6 };
+
+  it("maps the entry's first line to the editor line it is on", () => {
+    // The entry's header is on line 3 of the editor after two blank lines.
+    const draft =
+      '\n\n2026-10-20 * "Cafe"\n  Expenses:Food  6.00 USD\n  Assets:Cash  -5.00 USD';
+    expect(
+      describeLedgerRefusal(
+        wouldBreak("Transaction does not balance (main.bean:3)"),
+        words,
+        { where: { ...where, lineCount: draft.split("\n").length }, draft },
+      ),
+    ).toBe("Would break: Transaction does not balance (line 3)");
+  });
+
+  it("is unchanged for a draft with none", () => {
+    const draft = '2026-10-20 * "Cafe"\n  Expenses:Food  6.00 USD';
+    expect(
+      describeLedgerRefusal(
+        wouldBreak("Transaction does not balance (main.bean:3)"),
+        words,
+        { where: { ...where, lineCount: 2 }, draft },
+      ),
+    ).toBe("Would break: Transaction does not balance (line 1)");
+  });
+
+  it("still sees an unbalanced quote in the header after blank lines", () => {
+    const draft = '\n\n2026-10-20 * "Joe"s"\n  Expenses:Food  5 USD';
+    const message = describeLedgerRefusal(
+      wouldBreak("parse error: unexpected input (main.bean:3)"),
+      words,
+      { where: { ...where, lineCount: 4 }, draft },
+    );
+    expect(message?.includes("ledgerRefusalQuoteHint")).toBe(true);
+  });
+});

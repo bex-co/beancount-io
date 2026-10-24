@@ -66,13 +66,16 @@ function tidyRefusalDetail(
   detail: string,
   i18n: Translate,
   where?: EntryLocation,
+  // Blank lines the server dropped from the top of the draft before it
+  // validated: its lines start that many below the editor's (w21/939).
+  leadingBlank = 0,
 ): string {
   const seen = new Set<string>();
   const parts: string[] = [];
   for (const part of detail.split("; ")) {
     const text = where
       ? part.replace(/ \(([^()]+):(\d+)\)$/, (_all, file: string, line) => {
-          const editorLine = Number(line) - where.lineno + 1;
+          const editorLine = Number(line) - where.lineno + 1 + leadingBlank;
           if (!sameFile(file, where.filename)) return _all;
           if (editorLine >= 1 && editorLine <= where.lineCount) {
             return ` (${i18n.t("ledgerRefusalLine", { line: String(editorLine) })})`;
@@ -94,6 +97,13 @@ function tidyRefusalDetail(
   return parts.join("; ");
 }
 
+/** The server's own trim of a replacement: blank lines at the top go. */
+const LEADING_BLANK_LINES = /^(?:[ \t]*\r?\n)+/u;
+const withoutLeadingBlankLines = (draft: string) =>
+  draft.replace(LEADING_BLANK_LINES, "");
+const leadingBlankLines = (draft: string) =>
+  (LEADING_BLANK_LINES.exec(draft)?.[0].match(/\n/g) ?? []).length;
+
 /**
  * Whether the first line of an entry has more or fewer quotes than a header can
  * hold once escapes are set aside: a payee and a narration make at most four,
@@ -101,7 +111,7 @@ function tidyRefusalDetail(
  * that escapes the closing one, ends the string early.
  */
 function headerQuotesUnbalanced(draft: string): boolean {
-  const header = draft.split("\n", 1)[0] ?? "";
+  const header = withoutLeadingBlankLines(draft).split("\n", 1)[0] ?? "";
   const quotes = (header.replace(/\\./g, "").match(/"/g) ?? []).length;
   return quotes % 2 === 1 || quotes > 4;
 }
@@ -118,7 +128,8 @@ export function describeLedgerRefusal(
 ): string | null {
   const raw = newLedgerErrorDetail(error);
   if (!raw) return null;
-  const detail = tidyRefusalDetail(raw, i18n, context.where);
+  const leadingBlank = leadingBlankLines(context.draft ?? "");
+  const detail = tidyRefusalDetail(raw, i18n, context.where, leadingBlank);
   const message = i18n.t("ledgerWouldBreak", { detail });
   if (
     context.draft === undefined ||
