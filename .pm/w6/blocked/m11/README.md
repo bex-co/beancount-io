@@ -1,6 +1,6 @@
 # w6 · m11 — Complete app-directory and remote-community distribution
 
-**Worker:** worker1 **Goal:** Users discover the existing hosted connector through approved ChatGPT/Claude entries and an accurate remote-MCP community entry. **Status:** blocked (t001/t002 need original submitting account/organization access; t003 actually submitted with green upstream check, awaiting account preference/review/merge; closing tasks deferred)
+**Worker:** worker1 **Goal:** Users discover the existing hosted connector through approved ChatGPT/Claude entries and an accurate remote-MCP community entry. **Status:** blocked (t001/t002 need original submitting account/organization access; t003 actually submitted with green upstream check, documented Agent review opted in and waiver requested; awaiting maintainer decision/merge; closing tasks deferred)
 
 **Implementation estimate:** ~2h15m plus closing work, excluding external review latency. No recurring polling job is created.
 
@@ -34,7 +34,7 @@
 
 ## Full inventory ownership and execution order
 
-The [m9/t011](../m9/done/t011.md) official Cursor application is submitted with an accepted receipt after explicit final agreement confirmation; vendor review/publication remains open. Docker [m9/t012](../m9/done/t012.md) is actually submitted as PR #6042 after the scoped native Gateway journey; review/publication remains separate. Cline [m9/t013](../m9/done/t013.md) is also at its exact synthetic-ledger consent decision. GitHub nomination [m9/t014](../m9/done/t014.md) is sent and archived. LobeHub [m10/t009](../m10/t009.md) completes the approved terms/native login and now reaches a newly shown broad GitHub scope decision. This milestone's t001/t002 require original submitting account/organization access; t003 remains independently submitted. Table order is priority, not a cross-platform dependency.
+The [m9/t011](../m9/done/t011.md) official Cursor application is submitted with an accepted receipt after explicit final agreement confirmation; vendor review/publication remains open. Docker [m9/t012](../m9/done/t012.md) is actually submitted as PR #6042 after the scoped native Gateway journey; review/publication remains separate. Cline [m9/t013](../m9/done/t013.md) is actually submitted as issue #3230 after native OAuth, SDK query/preview and Agent read-only verification. GitHub nomination [m9/t014](../m9/done/t014.md) is sent and archived. LobeHub [m10/t009](../m10/t009.md) completes the approved terms/native login and now reaches a newly shown broad GitHub scope decision. This milestone's t001/t002 require original submitting account/organization access; t003 remains independently submitted. Table order is priority, not a cross-platform dependency.
 
 | Inventory target | Submission / receipt owner | Review, public verification or retained gate |
 | --- | --- | --- |
@@ -76,3 +76,13 @@ The [m9/t011](../m9/done/t011.md) official Cursor application is submitted with 
 ## Current milestone placement — 2026-10-23 UTC
 
 Every remaining task is blocked or transitively deferred, so m11 moves to blocked/. This does not stop the workstream loop from checking later inbox/blocked items whose exact unblock conditions changed. The public three-line PR is submitted and green; it is not counted as a merged listing.
+
+## Community prerequisite follow-through — 2026-10-24T02:47:50Z
+
+For t003, a concrete star-waiver request is posted on the existing PR and the
+publicly documented 🤖🤖🤖 Agent-review title is applied. The renewed upstream
+check passes; account stars, source diff and PR identity are unchanged. No
+maintainer waiver or merge is yet observed. **Unblock/owners:** upstream
+maintainer resolves that request and reviews/merges; worker verifies actual
+publication and setup links. The existing original-account access conditions
+for t001/t002 remain independent. No new message is needed until feedback.

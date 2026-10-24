@@ -1,9 +1,11 @@
 # Awesome Remote MCP Servers submission
 
 Submitted **2026-10-23T20:52:08Z** as [PR #2753](https://github.com/punkpeye/awesome-remote-mcp-servers/pull/2753).
-Last verified **2026-10-23T21:30:33Z**: open, unmerged, mergeable, with no review comments. The upstream
-[Check Submission job](https://github.com/punkpeye/awesome-remote-mcp-servers/actions/runs/40022526316/job/120650397085)
-passes in 8 seconds; the welcome job is intentionally post-merge and skipped.
+Last verified **2026-10-24T02:47:50Z**: open, unmerged and mergeable, with
+one publisher follow-up and no maintainer response. The fresh
+[Check Submission job](https://github.com/punkpeye/awesome-remote-mcp-servers/actions/runs/40055474068/job/120757394614)
+passes in7seconds after the documented Agent-review opt-in; the post-merge
+welcome job remains skipped.
 
 [entry.md](./entry.md) is the exact three-line Finance entry. The upstream diff
 changes one README, adds three lines and deletes none. It uses the canonical
@@ -20,9 +22,20 @@ without disabling certificate verification. Details: [receipt.json](./receipt.js
 ## Remaining review and merge gate
 
 The [upstream contribution rules](https://github.com/punkpeye/awesome-remote-mcp-servers/blob/main/CONTRIBUTING.md)
-require the submitting account to star the repository before merge. That public
-account preference is not silently performed or claimed; its owner's choice is
-pending. The actual PR is submitted and its automated check is green. Handle
-maintainer feedback, resolve the genuine account preference or an upstream
-waiver, and verify the merged public entry before reporting publication. Do not
-create a duplicate contribution or request unrelated engagement.
+require the submitting account to star the repository before merge. They also
+explicitly offer an automated-agent review route by ending the PR title in
+`🤖🤖🤖`. The existing PR now uses that documented title; the source diff and
+three-line entry are unchanged. This opt-in is not itself an exemption from the
+separate star condition.
+
+A [single follow-up](https://github.com/punkpeye/awesome-remote-mcp-servers/pull/2753#issuecomment-6378906070),
+posted2026-10-24T02:44:52Z, asks maintainers to waive the star prerequisite for
+this agent-submitted catalog entry. No star or other engagement change was made.
+The exact public comment and title read back successfully. The GitHub connector
+could read the PR but could not mutate this upstream repository; the existing
+same-identity CLI completed both authorized operations without new credentials.
+
+The renewed Check Submission passes at02:45:18UTC. At02:47:50UTC no maintainer
+response or merge is observed. Follow this existing waiver/review request and
+handle actual feedback. Publication remains open until the merged entry and
+setup links are verified. Do not resubmit or repeatedly comment while waiting.

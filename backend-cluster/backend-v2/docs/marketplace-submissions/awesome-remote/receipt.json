@@ -1,9 +1,9 @@
 {
   "target": "Awesome Remote MCP Servers",
-  "state": "submitted; upstream check passed; open and unmerged",
+  "state": "submitted; documented agent review opted in; star waiver requested; fresh upstream check passed; open and unmerged",
   "submissionUrl": "https://github.com/punkpeye/awesome-remote-mcp-servers/pull/2753",
   "submittedAtUTC": "2026-10-23T20:52:08Z",
-  "lastCheckedAtUTC": "2026-10-23T21:30:33Z",
+  "lastCheckedAtUTC": "2026-10-24T02:47:50Z",
   "headCommit": "936aa053cea358e3204dab3d5747965fd0455caf",
   "baseCommit": "c6ed7fc936741403f24cd90d14ad3f466668a7f3",
   "changedFiles": 1,
@@ -13,8 +13,9 @@
   "descriptionCharacters": 93,
   "checkSubmission": {
     "state": "passed",
-    "durationSeconds": 8,
-    "url": "https://github.com/punkpeye/awesome-remote-mcp-servers/actions/runs/40022526316/job/120650397085"
+    "durationSeconds": 7,
+    "url": "https://github.com/punkpeye/awesome-remote-mcp-servers/actions/runs/40055474068/job/120757394614",
+    "completedAtUTC": "2026-10-24T02:45:18Z"
   },
   "postMergeWelcome": "skipped because the PR is not merged",
   "canonicalEndpoint": "https://beancount.io/api-gateway/mcp",
@@ -46,9 +47,27 @@
     }
   ],
   "upstreamContributionRules": "https://github.com/punkpeye/awesome-remote-mcp-servers/blob/main/CONTRIBUTING.md",
-  "mergeGate": "Upstream requires the submitting account to star the repository before merge; account-owner preference is pending. No star or other engagement action was performed. Maintainer review/merge remains external.",
-  "nextAction": "Resolve the genuine account preference or an upstream waiver, handle actual feedback, then verify merged public entry; do not submit a duplicate PR.",
+  "mergeGate": "The documented star prerequisite remains unless maintainers waive it. A concrete waiver request is now posted on the existing PR and the documented agent-review path is enabled. No account star/preference change was made. Maintainer waiver/review/merge remains external.",
+  "nextAction": "Follow the existing waiver request and documented agent-review route, address actual maintainer feedback and verify the merged public entry/setup links. Do not repeat the request, create another PR or change account engagement to manufacture clearance.",
   "mergeable": true,
   "reviewComments": 0,
-  "publicChecksAtUTC": "2026-10-23T20:51:13Z"
+  "publicChecksAtUTC": "2026-10-23T20:51:13Z",
+  "initialCheckSubmission": {
+    "state": "passed",
+    "durationSeconds": 8,
+    "url": "https://github.com/punkpeye/awesome-remote-mcp-servers/actions/runs/40022526316/job/120650397085"
+  },
+  "agentReview": {
+    "documentedRoute": "https://github.com/punkpeye/awesome-remote-mcp-servers/blob/main/CONTRIBUTING.md",
+    "contributionRulesBlob": "263e96fea0635f959b03760436519289c611c467",
+    "title": "Add Beancount.io to Finance \ud83e\udd16\ud83e\udd16\ud83e\udd16",
+    "titleUpdatedAtUTC": "2026-10-24T02:45:15Z",
+    "waiverCommentUrl": "https://github.com/punkpeye/awesome-remote-mcp-servers/pull/2753#issuecomment-6378906070",
+    "waiverRequestedAtUTC": "2026-10-24T02:44:52Z",
+    "waiverAccepted": false,
+    "maintainerResponseObserved": false,
+    "accountEngagementChanged": false,
+    "sourceDiffChanged": false
+  },
+  "conversationComments": 1
 }
