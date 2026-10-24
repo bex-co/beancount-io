@@ -53,9 +53,16 @@ export function staleAnchorMonth(
   currentMonth: string,
   range: string,
 ): string | null {
-  return range !== "ALL" && anchorMonth !== null && anchorMonth < currentMonth
-    ? anchorMonth
-    : null;
+  if (range === "ALL" || anchorMonth === null || anchorMonth >= currentMonth) {
+    return null;
+  }
+  // YTD starts this January: an anchor before it is outside the range, and
+  // "Showing through December" sat over an empty report every January
+  // (w21/890).
+  if (range === "YTD" && anchorMonth < `${currentMonth.slice(0, 4)}-01`) {
+    return null;
+  }
+  return anchorMonth;
 }
 
 /**

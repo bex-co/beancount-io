@@ -45,3 +45,18 @@ describe("formatLedgerMonth", () => {
     ).toBe(true);
   });
 });
+
+// w21/890: every January, YTD showed an empty report under "Showing through
+// December".
+describe("staleAnchorMonth for YTD", () => {
+  it("has no banner when the anchor is before this year", () => {
+    expect(staleAnchorMonth("2026-12", "2027-01", "YTD")).toBe(null);
+    expect(staleAnchorMonth("2025-08", "2026-10", "YTD")).toBe(null);
+  });
+
+  it("keeps the banner for an anchor inside this year, and for other ranges", () => {
+    expect(staleAnchorMonth("2026-08", "2026-10", "YTD")).toBe("2026-08");
+    expect(staleAnchorMonth("2026-12", "2027-01", "1M")).toBe("2026-12");
+    expect(staleAnchorMonth("2026-12", "2027-01", "ALL")).toBe(null);
+  });
+});
