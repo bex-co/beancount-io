@@ -69,3 +69,4 @@
 - [977](./977.md) — LedgerPrices pulls every price date for every pair, and Apollo writes and reads them all on each mount
 - [978](./978.md) — Notifications renders every ledger error at once, with no virtualization
 - [979](./979.md) — Transactions and Account detail rebuild every date header on each page, with an uncached date formatter
+- [980](./980.md) — Android can loop on a link to a ledger the user cannot read (code path; unverified on device)
