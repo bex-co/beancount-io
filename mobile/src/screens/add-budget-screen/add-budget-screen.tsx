@@ -1,7 +1,10 @@
 import { formatLedgerDate } from "@/common/date-format";
 import { isolateAccountPath } from "@/common/bidi";
 import { useAccountCloseDates } from "@/common/hooks/use-account-close-dates";
-import { closedBeforeDate } from "@/common/account-close-dates";
+import {
+  accountOnlyCurrency,
+  closedBeforeDate,
+} from "@/common/account-close-dates";
 import {
   budgetCurrencyOptions,
   defaultBudgetCurrency,
@@ -247,8 +250,12 @@ function AddBudgetScreenImpl(): JSX.Element {
 
   // Empty means "not chosen yet" — the picker only ever sets a non-empty value,
   // so the ledger's default fills in until then without an effect to sync it.
+  // And an account that holds one currency starts the budget in it, until one is
+  // chosen by hand (w21/946).
+  const closeDates = useAccountCloseDates(ledgerId);
   const currency =
     pickedCurrency ||
+    accountOnlyCurrency(account, closeDates) ||
     (metaLoading
       ? ""
       : defaultBudgetCurrency(currencies, ledgerMeta?.currencies ?? []));
@@ -262,7 +269,6 @@ function AddBudgetScreenImpl(): JSX.Element {
   // read stops the wait; the amount then goes as typed.
   const metaSettled = ledgerMeta !== undefined || Boolean(metaError);
   // A budget dated after its account closed never applies (w21/877).
-  const closeDates = useAccountCloseDates(ledgerId);
   const closedAt = closedBeforeDate(account, getFormatDate(date), closeDates);
   const canSubmit =
     closedAt === undefined &&

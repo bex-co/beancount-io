@@ -21,6 +21,8 @@ import { foldArabicScript } from "./arabic-script-fold";
  */
 export type CloseDates = ReadonlyMap<string, string> & {
   readonly openedOn?: ReadonlyMap<string, string>;
+  /** The currencies each account holds a balance in, when the read supplied them (w21/946). */
+  readonly held?: ReadonlyMap<string, readonly string[]>;
 };
 
 export function closeDatesOf(
@@ -29,17 +31,40 @@ export function closeDatesOf(
         account: string;
         closedAt?: string | null;
         openedAt?: string | null;
+        balance?: Record<string, unknown> | null;
       }[]
     | null
     | undefined,
 ): CloseDates {
   const dates = new Map<string, string>();
   const opened = new Map<string, string>();
-  for (const { account, closedAt, openedAt } of directives ?? []) {
+  const held = new Map<string, string[]>();
+  for (const { account, closedAt, openedAt, balance } of directives ?? []) {
     if (closedAt) dates.set(account, closedAt.slice(0, 10));
     if (openedAt) opened.set(account, openedAt.slice(0, 10));
+    if (balance && typeof balance === "object") {
+      held.set(
+        account,
+        Object.keys(balance).filter(
+          (currency) => Number(balance[currency]) !== 0,
+        ),
+      );
+    }
   }
-  return Object.assign(dates, { openedOn: opened });
+  return Object.assign(dates, { openedOn: opened, held });
+}
+
+/**
+ * The one currency an account holds, or undefined when it holds none, several,
+ * or the read carried no balances. A budget on an account that spends only in
+ * yen starts in yen, not the ledger's dollar default (w21/946).
+ */
+export function accountOnlyCurrency(
+  account: string,
+  closeDates: CloseDates,
+): string | undefined {
+  const currencies = closeDates.held?.get(account.trim());
+  return currencies?.length === 1 ? currencies[0] : undefined;
 }
 
 /**

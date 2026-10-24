@@ -1,4 +1,5 @@
 import {
+  accountOnlyCurrency,
   budgetHasEnded,
   closeDatesOf,
   closedAccountNamed,
@@ -492,5 +493,57 @@ describe("closedBeforeDate for a closed parent with open children", () => {
     expect(closedBeforeDate("Expenses:Food", "2026-08-31", allClosed)).toBe(
       undefined,
     );
+  });
+});
+
+// w21/946: a budget on a yen account was saved in the ledger's dollar default.
+describe("accountOnlyCurrency", () => {
+  const dates = closeDatesOf([
+    { account: "Expenses:Travel:Japan", balance: { JPY: "120000" } },
+    { account: "Expenses:Travel:Mixed", balance: { JPY: "5000", EUR: "40" } },
+    { account: "Expenses:Travel:Empty", balance: {} },
+    { account: "Expenses:Travel:Settled", balance: { JPY: "0", USD: "12.50" } },
+    { account: "Expenses:Travel:Unknown" },
+  ]);
+
+  it("names the one currency an account holds", () => {
+    expect(accountOnlyCurrency("Expenses:Travel:Japan", dates)).toBe("JPY");
+    expect(accountOnlyCurrency(" Expenses:Travel:Japan ", dates)).toBe("JPY");
+    // A currency whose balance has netted to zero is not held.
+    expect(accountOnlyCurrency("Expenses:Travel:Settled", dates)).toBe("USD");
+  });
+
+  it("names none for several currencies, none, an unknown account or no balances read", () => {
+    expect(accountOnlyCurrency("Expenses:Travel:Mixed", dates)).toBe(undefined);
+    expect(accountOnlyCurrency("Expenses:Travel:Empty", dates)).toBe(undefined);
+    expect(accountOnlyCurrency("Expenses:Travel:Unknown", dates)).toBe(
+      undefined,
+    );
+    expect(accountOnlyCurrency("Expenses:Nowhere", dates)).toBe(undefined);
+    expect(
+      accountOnlyCurrency("Expenses:Travel:Japan", new Map() as never),
+    ).toBe(undefined);
+  });
+
+  it("is what the form starts the budget's currency from, and the query asks for", () => {
+    const fs = require("fs");
+    const path = require("path");
+    const read = (...parts: string[]) =>
+      fs
+        .readFileSync(path.join(__dirname, "..", "..", ...parts), "utf8")
+        .replace(/\s+/g, "");
+    expect(
+      read("screens", "add-budget-screen", "add-budget-screen.tsx").includes(
+        "pickedCurrency||accountOnlyCurrency(account,closeDates)||",
+      ),
+    ).toBe(true);
+    expect(
+      read(
+        "common",
+        "graphql",
+        "queries",
+        "ledgerAccountCloseDates.graphql",
+      ).includes("balance"),
+    ).toBe(true);
   });
 });
