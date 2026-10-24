@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1073** — [Keep target account focus when AI Fill finishes](./1073.md)
+
 - **1072** — [Prevent multi-second freezes when selecting all CSV rows](./1072.md)
 
 - **1071** — [Pluralize CSV preview row counts](./1071.md)
