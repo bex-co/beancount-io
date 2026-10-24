@@ -57,3 +57,6 @@
 - [995](./995.md) — Dashboard net worth headline reads next month and a falling arrow when an entry is future-dated (owner: dashboard)
 - [996](./996.md) — A trailing decimal point ("123.") is refused with a red error, including mid-typing (native)
 - [997](./997.md) — A 29-digit amount is accepted by the form, then refused with a misleading "missing amounts" message (native)
+- [998](./998.md) — The range pills are about 28 pt tall with no touch slop (native)
+- [999](./999.md) — The search ✕ and the Filters button overlap in the 8 pt gap and are under 44 pt
+- [1000](./1000.md) — The Accounts expand chevron is a small nested target inside a row that navigates
