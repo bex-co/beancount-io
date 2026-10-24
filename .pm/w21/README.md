@@ -64,3 +64,5 @@
 - [978](./978.md) — Notifications renders every ledger error at once, with no virtualization
 - [979](./979.md) — Transactions and Account detail rebuild every date header on each page, with an uncached date formatter
 - [980](./980.md) — Android can loop on a link to a ledger the user cannot read (code path; unverified on device)
+- [981](./981.md) — Add Budget one-currency default (w21/946) does nothing for Expenses accounts
+- [982](./982.md) — An unpriced commodity loses its neutral chart colour again (w21/958 regression)
