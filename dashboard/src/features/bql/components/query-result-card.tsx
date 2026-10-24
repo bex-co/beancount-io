@@ -16,6 +16,7 @@ import {
   type RowComponentProps,
 } from "react-window";
 import { cn } from "@/common/lib/utils/utils";
+import { Amount } from "@/common/components/amount";
 import {
   formatInventoryEntries,
   formatInventoryLikeCell,
@@ -60,32 +61,36 @@ interface QueryResultCardProps {
   onDelete: (query: string) => void;
 }
 
+/** Result types whose values are plain signed numbers. */
+const NUMERIC_DTYPES = new Set(["Decimal", "int", "float"]);
+
+/**
+ * One result cell. Numbers and every amount run read left to right inside an
+ * RTL page, so a Persian result keeps "-1.25" rather than "1.25-" (w4/1052);
+ * text, accounts and dates keep the page's direction.
+ */
 function renderQueryCell(
   cell: unknown,
   dtype: string | null | undefined,
 ): ReactNode {
   const inventoryText = formatInventoryLikeCell(cell, dtype);
   if (inventoryText !== null) {
-    if (
-      inventoryText === "" ||
-      cell === null ||
-      typeof cell !== "object" ||
-      Array.isArray(cell)
-    ) {
-      return inventoryText;
+    if (inventoryText === "") return inventoryText;
+    if (cell === null || typeof cell !== "object" || Array.isArray(cell)) {
+      return <Amount>{inventoryText}</Amount>;
     }
     const entries = formatInventoryEntries(cell);
     if (entries.length <= 1) {
-      return inventoryText.replace(/\r\n/g, ", ");
+      return <Amount>{inventoryText.replace(/\r\n/g, ", ")}</Amount>;
     }
     // One element per unit, as Holdings renders the same data: the CRLF-joined
     // text from the formatter is the CSV's shape, not the screen's.
     return (
       <span className="inline-flex flex-col leading-tight">
         {entries.map(({ currency, amount }) => (
-          <span key={currency}>
+          <Amount key={currency}>
             {amount} {currency}
-          </span>
+          </Amount>
         ))}
       </span>
     );
@@ -96,7 +101,12 @@ function renderQueryCell(
     return JSON.stringify(cell);
   }
 
-  return String(cell ?? "");
+  const text = String(cell ?? "");
+  return text !== "" && dtype != null && NUMERIC_DTYPES.has(dtype) ? (
+    <Amount>{text}</Amount>
+  ) : (
+    text
+  );
 }
 
 type ResultTable = NonNullable<

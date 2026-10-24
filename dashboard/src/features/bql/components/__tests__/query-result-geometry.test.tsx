@@ -43,7 +43,7 @@ function lineCountOf(element: Element): number {
     const flattens = /(^|\s)(truncate|whitespace-nowrap)(\s|$)/.test(
       cell.className,
     );
-    const stacked = cell.querySelectorAll(".inline-flex > span").length;
+    const stacked = cell.querySelectorAll(".inline-flex > *").length;
     const lines = flattens
       ? 1
       : stacked > 0
