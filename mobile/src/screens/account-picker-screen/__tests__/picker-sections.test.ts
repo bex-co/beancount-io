@@ -450,9 +450,17 @@ describe("showCreateBelowResults", () => {
         "utf8",
       )
       .replace(/\s+/g, "");
+    // And, with a closed or not-yet-open exact name, why it is not offered
+    // (w21/930).
     expect(
-      source.includes("ListFooterComponent={showCreateFooter?createRow:null}"),
+      source.includes(
+        "ListFooterComponent={showCreateFooter?createRow:searchResults.length>0?matchNotes:null}",
+      ),
     ).toBe(true);
+    expect(source.split("{matchNotes}").length).toBe(2);
+    expect(source.includes("constmatchNotes=closedMatch||futureMatch?(")).toBe(
+      true,
+    );
   });
 });
 

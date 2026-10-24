@@ -628,6 +628,39 @@ function AccountPickerScreenComponent(): JSX.Element {
     </TouchableOpacity>
   );
 
+  // Why a name typed exactly is not offered to create: it closed, or opens
+  // later. Under the results too, not only in the empty state, where loose
+  // matches hid the reason and the Create row (w21/930).
+  const matchNotes =
+    closedMatch || futureMatch ? (
+      <>
+        {closedMatch ? (
+          <Text
+            key={`closed-${fontScale}`}
+            testID="account-picker-closed-row"
+            style={styles.emptyText}
+          >
+            {t("accountPickerClosedOn", {
+              name: closedMatch.account,
+              date: formatLedgerDate(closedMatch.closedAt, locale),
+            })}
+          </Text>
+        ) : null}
+        {futureMatch ? (
+          <Text
+            key={`future-${fontScale}`}
+            testID="account-picker-opens-row"
+            style={styles.emptyText}
+          >
+            {t("accountPickerOpensOn", {
+              name: futureMatch.account,
+              date: formatLedgerDate(futureMatch.openedAt, locale),
+            })}
+          </Text>
+        ) : null}
+      </>
+    ) : null;
+
   if (loading && accounts.length === 0) {
     return (
       <View style={styles.container}>
@@ -747,34 +780,17 @@ function AccountPickerScreenComponent(): JSX.Element {
                   ? t("accountPickerNoAccounts")
                   : t("accountPickerNoResults")}
             </Text>
-            {closedMatch ? (
-              <Text
-                key={`closed-${fontScale}`}
-                testID="account-picker-closed-row"
-                style={styles.emptyText}
-              >
-                {t("accountPickerClosedOn", {
-                  name: closedMatch.account,
-                  date: formatLedgerDate(closedMatch.closedAt, locale),
-                })}
-              </Text>
-            ) : null}
-            {futureMatch ? (
-              <Text
-                key={`future-${fontScale}`}
-                testID="account-picker-opens-row"
-                style={styles.emptyText}
-              >
-                {t("accountPickerOpensOn", {
-                  name: futureMatch.account,
-                  date: formatLedgerDate(futureMatch.openedAt, locale),
-                })}
-              </Text>
-            ) : null}
+            {matchNotes}
             {showCreateRow && createRow}
           </View>
         }
-        ListFooterComponent={showCreateFooter ? createRow : null}
+        ListFooterComponent={
+          showCreateFooter
+            ? createRow
+            : searchResults.length > 0
+              ? matchNotes
+              : null
+        }
         renderItem={({ item }) => (
           <AccountRow
             account={item}
