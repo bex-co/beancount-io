@@ -10,6 +10,7 @@
 
 ## Inbox
 
+- [081](./081.md) — raw writes accept amounts with more than 28 significant digits; the engine silently rounds them ("No new bean-check errors"); w21/997 covered only the structured path
 - [080](./080.md) — `/api-gateway/mcp` accepts any `Origin` (the MCP transport spec says a bad `Origin` MUST get 403); owner picks validate vs document
 - [079](./079.md) — a structured posting with a `price` but no `units` is accepted and written without the price
 - [078](./078.md) — a ledger-pinned credential refuses its own ledger when the owner's case differs (`PUNCSKY/…`), though account-wide tokens accept it
