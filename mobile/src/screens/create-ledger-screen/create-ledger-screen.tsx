@@ -65,6 +65,7 @@ import type { ColorTheme } from "@/types/theme-props";
 import {
   LEDGER_DESCRIPTION_MAX,
   classifyCreateLedgerError,
+  ledgerNameWithinLimit,
   setupTitle,
   createRequestFingerprint,
   generateDefaultLedgerName,
@@ -231,7 +232,9 @@ export function CreateLedgerScreen(): JSX.Element {
           name: z
             .string()
             .min(1, t("createLedgerNameRequired"))
-            .max(100, t("createLedgerNameMaxLength"))
+            .refine(ledgerNameWithinLimit, {
+              message: t("createLedgerNameMaxLength"),
+            })
             .refine(isNewLedgerName, {
               message: t("createLedgerNameInvalid"),
             }),

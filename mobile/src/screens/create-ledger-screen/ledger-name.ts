@@ -24,6 +24,19 @@ export function slugifyLedgerName(text: string): string {
 const NEW_LEDGER_NAME_PATTERN =
   /^(?=[a-z0-9_-]*[a-z0-9])[a-z0-9_]+(?:-[a-z0-9_]+)*$/;
 
+/** The longest ledger name the server takes, counted on the slug (w21/992). */
+const LEDGER_NAME_MAX = 100;
+
+/**
+ * Whether the name's slug is within the server's limit. The server counts the
+ * name after transformation, so a typed "a" × 100 and two spaces (102
+ * characters) is a 100-character name, and the form refused it on its raw
+ * length.
+ */
+export function ledgerNameWithinLimit(name: string): boolean {
+  return slugifyLedgerName(name).length <= LEDGER_NAME_MAX;
+}
+
 /** Whether `name` slugifies to a name the server will create. */
 export function isNewLedgerName(name: string): boolean {
   return NEW_LEDGER_NAME_PATTERN.test(slugifyLedgerName(name));

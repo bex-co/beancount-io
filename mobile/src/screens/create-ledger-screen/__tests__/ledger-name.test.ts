@@ -2,6 +2,7 @@ import { translationLocales } from "../../../translations/__tests__/locale-parit
 import {
   classifyCreateLedgerError,
   LEDGER_DESCRIPTION_MAX,
+  ledgerNameWithinLimit,
   setupTitle,
   createRequestFingerprint,
   generateDefaultLedgerName,
@@ -356,5 +357,29 @@ describe("setupTitle", () => {
       )
       .replace(/\s+/g, "");
     expect(source.includes("title:setupTitle(values.name),")).toBe(true);
+  });
+});
+
+// w21/992: the server counts the name after slugifying.
+describe("ledgerNameWithinLimit", () => {
+  it("counts the slug, not the typed text", () => {
+    expect(ledgerNameWithinLimit("a".repeat(100) + "  ")).toBe(true);
+    expect(ledgerNameWithinLimit("a".repeat(101))).toBe(false);
+    expect(ledgerNameWithinLimit("a".repeat(100) + "!!!")).toBe(true);
+  });
+
+  it("is what the form's name schema checks", () => {
+    const source = require("fs")
+      .readFileSync(
+        require("path").join(__dirname, "..", "create-ledger-screen.tsx"),
+        "utf8",
+      )
+      .replace(/\s+/g, "");
+    expect(
+      source.includes(
+        '.refine(ledgerNameWithinLimit,{message:t("createLedgerNameMaxLength"),})',
+      ),
+    ).toBe(true);
+    expect(source.includes(".max(100,")).toBe(false);
   });
 });
