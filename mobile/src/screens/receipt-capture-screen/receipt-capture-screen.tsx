@@ -15,6 +15,7 @@ import {
   receiptCanRetry,
   receiptErrorKey,
   receiptRevealFields,
+  receiptTooLarge,
   shotFromLibraryResult,
 } from "./receipt-utils";
 import { CameraView, type CapturedShot } from "./camera-view";
@@ -105,6 +106,12 @@ const ReceiptCaptureScreenImpl = () => {
         }),
       );
       if (picked) {
+        if (receiptTooLarge(picked)) {
+          // Never started: an upload that can only fail as unreadable.
+          void deleteReceiptShot(picked.uri);
+          Alert.alert(t("receiptTooLarge"));
+          return;
+        }
         keepPhoto(picked);
       }
     } catch {
@@ -115,6 +122,11 @@ const ReceiptCaptureScreenImpl = () => {
   };
 
   const handleCapture = (captured: CapturedShot) => {
+    if (receiptTooLarge(captured)) {
+      void deleteReceiptShot(captured.uri);
+      Alert.alert(t("receiptTooLarge"));
+      return;
+    }
     keepPhoto(captured);
   };
 

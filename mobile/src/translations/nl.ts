@@ -560,6 +560,8 @@ export const nl: Translations = {
     "Toegang tot de camera is nodig om je bon te fotograferen. Zet dit aan in Instellingen.",
   receiptLibraryPermission:
     "Toegang tot de fotobibliotheek is nodig om een bon te kiezen. Zet dit aan in Instellingen.",
+  receiptTooLarge:
+    "Deze afbeelding is te groot om te lezen (meer dan 5 MB, of meer dan 8000 pixels per zijde). Kies een kleinere.",
   // notifications
   notificationsBell: "Meldingen",
   notificationsTitle: "Meldingen",

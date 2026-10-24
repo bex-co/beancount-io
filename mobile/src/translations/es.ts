@@ -571,6 +571,8 @@ export const es: Translations = {
     "Se necesita acceso a la cámara para fotografiar tu recibo. Actívalo en Ajustes.",
   receiptLibraryPermission:
     "Se necesita acceso a la galería para elegir un recibo. Actívalo en Ajustes.",
+  receiptTooLarge:
+    "Esta imagen es demasiado grande para leerla (más de 5 MB o más de 8000 píxeles por lado). Elige una más pequeña.",
   // notifications
   notificationsBell: "Notificaciones",
   notificationsTitle: "Notificaciones",

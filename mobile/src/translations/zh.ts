@@ -501,6 +501,8 @@ export const zh: Translations = {
   receiptUploadFailed: "上传失败，请重试。",
   receiptCameraPermission: "拍摄小票需要相机权限，请在“设置”中开启。",
   receiptLibraryPermission: "选择小票需要相册权限，请在“设置”中开启。",
+  receiptTooLarge:
+    "此图片太大，无法读取（超过 5 MB，或单边超过 8000 像素）。请选择更小的图片。",
   // notifications
   notificationsBell: "通知",
   notificationsTitle: "通知",

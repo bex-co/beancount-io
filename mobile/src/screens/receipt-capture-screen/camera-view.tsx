@@ -88,6 +88,8 @@ export type CapturedShot = {
   uri: string;
   mimeType: string;
   filename: string;
+  width?: number;
+  height?: number;
 };
 
 export const CameraView = ({
@@ -146,6 +148,8 @@ export const CameraView = ({
           uri: photo.uri,
           mimeType: "image/jpeg",
           filename: "receipt.jpg",
+          width: photo.width,
+          height: photo.height,
         });
       }
     } catch {

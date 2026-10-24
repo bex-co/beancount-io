@@ -571,6 +571,8 @@ export const fr: Translations = {
     "L'accès à l'appareil photo est nécessaire pour photographier votre reçu. Activez-le dans Réglages.",
   receiptLibraryPermission:
     "L'accès à la galerie est nécessaire pour choisir un reçu. Activez-le dans Réglages.",
+  receiptTooLarge:
+    "Cette image est trop grande pour être lue (plus de 5 Mo, ou plus de 8000 pixels par côté). Choisissez-en une plus petite.",
   // notifications
   notificationsBell: "Notifications",
   notificationsTitle: "Notifications",

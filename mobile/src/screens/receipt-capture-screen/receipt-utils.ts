@@ -114,6 +114,9 @@ export type LibraryPickResult = {
         uri: string;
         mimeType?: string | null;
         fileName?: string | null;
+        fileSize?: number | null;
+        width?: number | null;
+        height?: number | null;
       } | null)[]
     | null;
 };
@@ -123,7 +126,33 @@ export type PickedShot = {
   uri: string;
   mimeType: string;
   filename: string;
+  /** What the picker or camera reported, when it did. */
+  fileSize?: number;
+  width?: number;
+  height?: number;
 };
+
+/**
+ * The most a receipt image may be: the model that reads it takes 5 MB and 8000
+ * pixels a side, and a larger one failed every parse as "Could not read
+ * receipt", with a Try Again that could not help (w21/955). The dashboard caps
+ * uploads at the same 5 MB.
+ */
+const RECEIPT_MAX_BYTES = 5 * 1024 * 1024;
+const RECEIPT_MAX_SIDE = 8000;
+
+/** Whether a shot reports a size or a side past what can be read. */
+export const receiptTooLarge = (
+  shot: Pick<PickedShot, "fileSize" | "width" | "height">,
+): boolean =>
+  (shot.fileSize ?? 0) > RECEIPT_MAX_BYTES ||
+  (shot.width ?? 0) > RECEIPT_MAX_SIDE ||
+  (shot.height ?? 0) > RECEIPT_MAX_SIDE;
+
+const sizeField = (value: number | null | undefined) =>
+  typeof value === "number" && Number.isFinite(value) && value > 0
+    ? value
+    : undefined;
 
 /**
  * Normalize one library pick into a shot, or `null` when there is nothing to
@@ -153,7 +182,17 @@ export const shotFromLibraryResult = (
     asset.fileName && (fileType === null || nameType === fileType)
       ? asset.fileName
       : `${stem(asset.fileName)}.${fileType ? extensionOf(asset.uri) : mimeToExt(mimeType)}`;
-  return { uri: asset.uri, mimeType, filename };
+  const fileSize = sizeField(asset.fileSize);
+  const width = sizeField(asset.width);
+  const height = sizeField(asset.height);
+  return {
+    uri: asset.uri,
+    mimeType,
+    filename,
+    ...(fileSize !== undefined ? { fileSize } : {}),
+    ...(width !== undefined ? { width } : {}),
+    ...(height !== undefined ? { height } : {}),
+  };
 };
 
 const EXTENSION_TYPES: Record<string, string> = {

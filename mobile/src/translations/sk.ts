@@ -569,6 +569,8 @@ export const sk: Translations = {
     "Na odfotenie účtenky je potrebný prístup ku kamere. Povoľte ho v Nastaveniach.",
   receiptLibraryPermission:
     "Na výber účtenky je potrebný prístup ku knižnici fotiek. Povoľte ho v Nastaveniach.",
+  receiptTooLarge:
+    "Tento obrázok je príliš veľký na prečítanie (viac ako 5 MB alebo viac ako 8000 pixelov na stranu). Vyberte menší.",
   // notifications
   notificationsBell: "Upozornenia",
   notificationsTitle: "Upozornenia",

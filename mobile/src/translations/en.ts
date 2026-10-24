@@ -577,6 +577,8 @@ export const en = {
     "Camera access is needed to take a photo of your receipt. Enable it in Settings.",
   receiptLibraryPermission:
     "Photo library access is needed to choose a receipt. Enable it in Settings.",
+  receiptTooLarge:
+    "This image is too large to read (over 5 MB, or over 8000 pixels on a side). Choose a smaller one.",
   // notifications
   notificationsBell: "Notifications",
   notificationsTitle: "Notifications",
