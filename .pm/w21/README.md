@@ -74,3 +74,6 @@
 - [917](./917.md) — Merchants splits full-width and half-width payees, and search misses the full-width one
 - [918](./918.md) — Merchant detail opened offline on a later day shows its load error instead of cached totals
 - [919](./919.md) — Recent Transactions flashes "No transactions yet" while it checks for upcoming entries
+- [920](./920.md) — Lakh ("1,00,000") and apostrophe-grouped ("1'234.50") amounts are refused
+- [921](./921.md) — A payee's usual accounts don't fill when 50 newer entries contain its name
+- [922](./922.md) — Changing to a payee with no history keeps the previous payee's accounts (owner's call)
