@@ -279,3 +279,38 @@ describe("filterAccounts across Arabic-script spellings", () => {
     expect(filterAccounts("ملي", accounts)).toEqual(["Assets:Qa:بانك-ملي"]);
   });
 });
+
+// w21/929: "cafe" found nothing beside Expenses:Café and offered a look-alike.
+describe("account search across Latin accents", () => {
+  const chart = [
+    "Expenses:Café",
+    "Assets:Épargne",
+    "Assets:İşBank",
+    "Income:Pay",
+  ];
+
+  it("finds an accented account from its plain spelling", () => {
+    expect(filterAccounts("cafe", chart)).toEqual(["Expenses:Café"]);
+    expect(filterAccounts("Cafe", chart)).toEqual(["Expenses:Café"]);
+    expect(filterAccounts("epargne", chart)).toEqual(["Assets:Épargne"]);
+    expect(filterAccounts("isbank", chart)).toEqual(["Assets:İşBank"]);
+  });
+
+  it("finds a decomposed spelling, and still finds the accent when typed", () => {
+    expect(filterAccounts("café", ["Expenses:Café"])).toEqual([
+      "Expenses:Café",
+    ]);
+    expect(filterAccounts("café", chart)).toEqual(["Expenses:Café"]);
+  });
+
+  it("ranks the account the accent names ahead of its look-alike", () => {
+    const both = ["Expenses:Cafe", "Expenses:Café"];
+    expect(filterAccounts("café", both)[0]).toBe("Expenses:Café");
+    expect(filterAccounts("cafe", both)[0]).toBe("Expenses:Cafe");
+  });
+
+  it("leaves ASCII scoring as it was", () => {
+    expect(fuzzyMatch("exfo", "Expenses:Food") > 0).toBe(true);
+    expect(fuzzyMatch("zz", "Expenses:Food")).toBe(0);
+  });
+});

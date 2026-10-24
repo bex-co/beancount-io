@@ -13,6 +13,7 @@
  * Kept free of any `@/` imports so the jest-lite runner can require it.
  */
 
+import { foldAccents } from "./accent-fold";
 import { foldArabicLetters } from "./arabic-script-fold";
 import { SEGMENT_SEPARATOR } from "./account-util";
 import { frecencyScore, type RankingContext } from "./account-frecency";
@@ -97,8 +98,9 @@ export function fuzzyMatch(pattern: string, text: string): number {
   // Both sides as NFC: a ledger imported from a system that writes decomposed
   // Unicode holds "Café" as "Cafe" + U+0301, which neither "café" nor "Café"
   // would find (w21/256). Plain ASCII, nearly every account, skips the work.
-  pattern = toNfc(pattern);
-  text = toNfc(text);
+  // And without accents, so "cafe" finds `Expenses:Café` (w21/929).
+  pattern = foldAccents(toNfc(pattern));
+  text = foldAccents(toNfc(text));
   if (pattern.length === 0) {
     return 1;
   }

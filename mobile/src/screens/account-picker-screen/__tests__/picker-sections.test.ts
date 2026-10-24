@@ -526,3 +526,13 @@ describe("pickerAccounts for a budget", () => {
     ).toBe(false);
   });
 });
+
+// w21/929: with accents folded, "cafe" is a hit on Expenses:Café, not a name to create.
+describe("the picker's Create row across Latin accents", () => {
+  const writer = { canWrite: true, loading: false };
+  it("offers no Create below a result that holds the plain spelling", () => {
+    expect(showCreateBelowResults("cafe", ["Expenses:Café"], writer)).toBe(
+      false,
+    );
+  });
+});

@@ -1,3 +1,4 @@
+import { foldAccents } from "./accent-fold";
 import { foldArabicScript } from "./arabic-script-fold";
 /**
  * Which accounts a new posting may use on a given date (w21/045).
@@ -175,9 +176,9 @@ export function listedAccountsAsOf(
  * so their exact name read as new and offered Create, which Open Account then
  * refused as "already open" (w21/122).
  */
-/** An account name as the picker compares it: NFC, lower-cased, one Arabic-script spelling (w21/836). */
+/** An account name as the picker compares it: NFC, lower-cased, one Arabic-script spelling (w21/836), without Latin accents (w21/929). */
 export function nameKey(text: string): string {
-  return foldArabicScript(text.normalize("NFC")).toLowerCase();
+  return foldAccents(foldArabicScript(text.normalize("NFC"))).toLowerCase();
 }
 
 export function closedAccountNamed(
