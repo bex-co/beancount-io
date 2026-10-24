@@ -94,8 +94,6 @@ import { merchantKey } from "@/common/merchant-key";
 import { useRouteParams } from "@/common/hooks/use-route-params";
 
 const PAGE_SIZE = 20;
-/** Free-text filter inflates pages; stop after this many raw fetches. */
-const MAX_PAGES = 25;
 const DIRECTIVE_TYPES = [DirectiveType.TRANSACTION];
 
 const getStyles = (theme: ColorTheme) =>
@@ -279,7 +277,11 @@ function MerchantDetailBody({
   const overrides = useReactiveVar(merchantRecurringOverridesVar);
   const { detections, enoughHistory } = usePayeeRecurrence(ledgerId);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const pagesFetchedRef = useRef(1);
+  // The row count at which a page came back with nothing new: the list stops
+  // there instead of asking again, until it reloads to another length. Replaces
+  // a page counter that only went up, so the list stopped at 500 rows and, after
+  // every edit reloaded it from the top, ever sooner (w21/952).
+  const stalledAtRef = useRef<number | null>(null);
 
   // One read per figure, by day and free of today's date, split at today here:
   // what was paid apart from what is pre-entered after it (w21/796). A date in
@@ -418,7 +420,7 @@ function MerchantDetailBody({
   const rawTotal = journalData?.getLedgerJournal.total;
   const total = typeof rawTotal === "number" ? rawTotal : 0;
   const hasMore =
-    rawEntries.length < total && pagesFetchedRef.current < MAX_PAGES;
+    rawEntries.length < total && stalledAtRef.current !== rawEntries.length;
   const isLoadingMore = networkStatus === NetworkStatus.fetchMore;
 
   const sections = useMemo(
@@ -452,6 +454,7 @@ function MerchantDetailBody({
     // An entry added elsewhere shifted the pages; reload from the top, where
     // it now sits (w21/035).
     let listMoved = false;
+    let gained = false;
     try {
       await fetchMore({
         variables: {
@@ -478,6 +481,7 @@ function MerchantDetailBody({
             },
           );
           listMoved = overlapped;
+          gained = data.length > (prev.getLedgerJournal.data || []).length;
           return {
             ...prev,
             getLedgerJournal: {
@@ -488,7 +492,7 @@ function MerchantDetailBody({
           };
         },
       });
-      pagesFetchedRef.current += 1;
+      if (!gained && !listMoved) stalledAtRef.current = rawEntries.length;
       if (listMoved) void refetchJournal().catch(() => undefined);
     } catch (err) {
       console.error("Error loading more merchant transactions:", err);
@@ -519,7 +523,7 @@ function MerchantDetailBody({
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    pagesFetchedRef.current = 1;
+    stalledAtRef.current = null;
     try {
       await Promise.all([
         refetchMeta(),
