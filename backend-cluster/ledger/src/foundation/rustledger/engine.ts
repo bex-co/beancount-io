@@ -72,6 +72,7 @@ import {
   locateIncludeAndPluginErrors,
   reportUrlIncludes,
 } from "./url-include-errors";
+import { explainUnknownPlugins } from "./plugin-typos";
 import { parseableFiles } from "./parseable-files";
 import { reportUndecodableSources } from "./undecodable-sources";
 import { collapsedCostOfSumError } from "./cost-of-sum-guard";
@@ -812,6 +813,7 @@ async function parseLedgerFilesUncached(
   errors = locateBookErrors(errors, files, entryPoint);
   errors = reportUrlIncludes(errors, files, entryPoint);
   errors = locateIncludeAndPluginErrors(errors, files, entryPoint);
+  errors = explainUnknownPlugins(errors);
   errors = reportUndecodableSources(errors, files, entryPoint);
 
   if (isRawPluginProcessing(files, entryPoint)) {
