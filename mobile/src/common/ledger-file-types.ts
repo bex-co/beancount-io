@@ -27,3 +27,20 @@ export function isEditableTextFile(path: string): boolean {
   const dot = filename.lastIndexOf(".");
   return !BINARY_EXTENSIONS.has(dot < 0 ? "" : filename.slice(dot + 1));
 }
+
+/**
+ * Whether a directory listing's entry opens in the editor. A symlink or a
+ * submodule has no content of its own (Gitea fills a target and sends none), so
+ * a link named `prices.bean` opened the editor on "too large to open on your
+ * phone" (w21/915).
+ */
+export function isOpenableTextEntry(entry: {
+  name: string;
+  type: string;
+}): boolean {
+  return (
+    entry.type !== "symlink" &&
+    entry.type !== "submodule" &&
+    isEditableTextFile(entry.name)
+  );
+}

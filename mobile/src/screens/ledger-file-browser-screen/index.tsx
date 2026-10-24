@@ -57,7 +57,7 @@ import { haptics } from "@/common/haptics";
 import { settleWithin } from "@/common/settle-within";
 import { CONNECTION_TIMEOUT_MS } from "@/common/oauth/discovery";
 import { encodeLedgerFileContent } from "@/common/ledger-file-content";
-import { isEditableTextFile } from "@/common/ledger-file-types";
+import { isOpenableTextEntry } from "@/common/ledger-file-types";
 import {
   buildLedgerFilePath,
   canDeleteLedgerFile,
@@ -255,15 +255,18 @@ function FileRow({
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
   const isDir = entry.type === "dir";
-  const editable = !isDir && isEditableTextFile(entry.name);
+  const editable = !isDir && isOpenableTextEntry(entry);
+  const isLink = entry.type === "symlink" || entry.type === "submodule";
   const tappable = isDir || editable;
   const protectedFile = !isDir && !canDeleteLedgerFile(entry.path);
 
   const iconName = isDir
     ? "folder-outline"
-    : editable
-      ? "code-slash-outline"
-      : "document-outline";
+    : isLink
+      ? "link-outline"
+      : editable
+        ? "code-slash-outline"
+        : "document-outline";
 
   const iconColor = isDir
     ? theme.primary
@@ -737,7 +740,7 @@ export function LedgerFileBrowserScreen(): JSX.Element {
   const handleEntryPress = (entry: DirEntry) => {
     if (entry.type === "dir") {
       updatePathStack((stack) => pushPathStack(stack, entry.path));
-    } else if (isEditableTextFile(entry.name)) {
+    } else if (isOpenableTextEntry(entry)) {
       router.push({
         pathname: guest
           ? "/examples/ledger-file-editor"
