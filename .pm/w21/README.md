@@ -82,3 +82,6 @@
 - [958](./958.md) — A foreign-currency card or bank account has a grey chart with no percent, while its rows are red and green
 - [959](./959.md) — Picking a parent account in the Transactions filters also returns accounts that merely contain its name
 - [960](./960.md) — A journal link with ?time=0000 makes Transactions fail to load
+- [961](./961.md) — A budget saved from the app is committed as `Add 2026-10-01 "budget"`, whatever the account
+- [962](./962.md) — A long emoji payee cut at the 60-character limit puts a "�" in the commit subject
+- [963](./963.md) — Latest Updates undercounts a push when a listed commit has an empty first line
