@@ -1,6 +1,6 @@
 # w6 · m9 — Reach developer marketplaces and galleries
 
-**Worker:** worker1 **Goal:** Developers discover and connect the hosted MCP server through the supported Docker, Cursor, Cline, and GitHub/VS Code galleries. **Status:** blocked (t001/t011/t012/t014 done; official Cursor/Docker review and other native/publication gates remain)
+**Worker:** worker1 **Goal:** Developers discover and connect the hosted MCP server through the supported Docker, Cursor, Cline, and GitHub/VS Code galleries. **Status:** blocked (t001/t011/t012/t013/t014 done; official Cursor/Docker review and other native/publication gates remain)
 
 **Implementation estimate:** ~4½h, excluding external review queues and the standing closing tasks.
 
@@ -11,7 +11,7 @@
 | [t001](done/t001.md) | Confirm developer-gallery eligibility and existing records — **DONE** | 30m | w6/m8/t001 |
 | [t011](done/t011.md) | Submit official Cursor application and retain receipt — **DONE** | 30m | t001 |
 | [t012](done/t012.md) | Complete required native checks and submit Docker contribution — **DONE** | 60m | t001 |
-| [t013](t013.md) | Complete required native checks and send Cline submission — **BLOCKED** | 60m | t001 |
+| [t013](done/t013.md) | Complete required native checks and send Cline submission — **DONE** | 60m | t001 |
 | [t014](done/t014.md) | Send GitHub curated-gallery nomination and record delivery — **DONE** | 30m | t001 |
 | [t002](t002.md) | Prepare and submit Docker's remote MCP catalog entry — **BLOCKED** | 60m | t001, t012 |
 | [t003](t003.md) | Package the remote connection for Cursor's official and community marketplaces — **BLOCKED** | 60m | t001, t011 |
@@ -115,7 +115,7 @@ The GitHub nomination is sent and t014 is archived under done/. All remaining ta
 
 - **t011:** completed on 2026-10-24T00:36:38Z after explicit confirmation and actual accepted receipt; archived under done/. Official review/publication remains under t003/t006.
 - **t012:** completed on 2026-10-24T01:20:03Z after actual native Gateway checks and submitted PR #6042; archived under done/. Docker review, private reviewer access and publication remain under t002/t006.
-- **t013:** fresh native Cline consent requests identity/offline/read/write/admin for only the synthetic QA ledger and a local callback. **Unblock:** QA account holder confirms that exact new access; worker completes callback, model-free native SDK checks and truthful issue submission. **Owners:** QA account holder, worker, Cline reviewers.
+- **t013:** completed on2026-10-24T01:43:48Z after approved native OAuth/discovery/query/preview and actual submission issue #3230; archived under done/. Review/publication remains under t004/t006.
 - **t005:** the operator authorization/sending prerequisite is cleared by the actual sent-mail receipt. **Unblock:** GitHub accepts/publishes the record, then the worker verifies actual GitHub/VS Code discovery and the dedicated native journey under existing w1/m34/t003. **Owners:** GitHub reviewers, then QA/client account holder and worker.
 - **t002-t004, t006-t010:** their original eligibility, actual public/native acceptance and closing criteria remain; new receipt tasks unblock their respective next phases, not other platforms' queues. **Unblock:** complete those specific receipt/native/publication prerequisites, then their dependent checks. **Owners:** stated publisher/QA/platform owners, then worker.
 
@@ -135,3 +135,13 @@ acceptance remains open in t002/t006. Local upstream validation/catalog/Go tests
 and the actual Gateway query/preview/unchanged-state checks pass. No upstream
 CI success, shared private reviewer credentials or public listing is asserted.
 Proceed with the next independent client workflow while Docker reviews.
+
+## Current Cline outcome — 2026-10-24T01:43:48Z
+
+Actual submission issue #3230 is open and the finite receipt task t013 is
+archived. CLI installation/browser OAuth, public native SDK44-tool/query/one
+unchanged-state preview and a real Agent README/read-tool session are recorded
+with distinct limits. No review approval or public listing is inferred.
+**Unblock:** Cline reviewers approve/publish this existing issue, then the worker
+verifies actual catalog discovery and the remaining original native acceptance
+under t004/t006. Continue independent publisher/index workflows meanwhile.

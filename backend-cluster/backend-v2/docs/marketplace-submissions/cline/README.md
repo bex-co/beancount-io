@@ -16,14 +16,26 @@ Canonical registry identity: `io.beancount/beancount`.
    ledger.read ledger.write ledger.admin`; the consent page selects a ledger
    but does not offer individual scope controls. Review that access before
    approving. For review, use only the dedicated QA account's synthetic ledger.
-3. After the connection initializes, enumerate the live tools and resources,
+3. After the connection initializes, enumerate the live tools,
    then run a read against the known synthetic fixture. Use the [shared
    reviewer rehearsal](../../mcp-marketplaces.md#reviewer-rehearsal) to verify a
    known answer and one tool-supported `dry_run` preview without changing data.
 
-The setup controls and URL-only configuration were checked in the real
-extension on 2026-10-21 UTC. Authenticated discovery, query and preview still
-need completion; this is not a claim that the host journey is verified.
+For the official Cline CLI 3.0.73, run
+`cline mcp add --transport streamableHttp beancount-io https://beancount.io/api-gateway/mcp`
+without `--yes`. In its wizard, choose Remote HTTP and OAuth, leaving the client
+ID empty for dynamic registration. Complete the browser consent above. A name
+already installed must be managed through the existing entry; adding it again
+does not renew its authorization. When running a model session, explicitly use
+`--auto-approve false`; Cline CLI otherwise defaults to automatic approval.
+
+The extension's setup controls and URL-only configuration were checked on
+2026-10-21 UTC. On 2026-10-24 UTC the official CLI completed OAuth, and its
+public native SDK using the same isolated OAuth settings discovered44tools,
+queried the synthetic fixture and passed one unchanged-state dry-run preview.
+See [the dated native evidence](./native-rehearsal-20261024.md) for exact client
+versions, results and limits. This does not claim a fresh authenticated
+VS Code extension journey or resource enumeration through the SDK.
 The [current client documentation](https://docs.cline.bot/mcp/mcp-overview) covers
 MCP management.
 The [MCP guide](../../mcp.md) explains scopes, credential boundaries, capabilities
@@ -180,3 +192,20 @@ Primary implementation references: the [CLI's early MCP return](https://github.c
 [explicit settings-path precedence](https://github.com/cline/cline/blob/c718573538d76310f464541617ab665108a6c999/sdk/packages/shared/src/storage/paths.ts#L431),
 [public MCP exports](https://github.com/cline/cline/blob/c718573538d76310f464541617ab665108a6c999/sdk/packages/core/src/index.ts#L320),
 and [native manager](https://github.com/cline/cline/blob/c718573538d76310f464541617ab665108a6c999/sdk/packages/core/src/extensions/mcp/manager.ts#L144).
+
+## Submitted — 2026-10-24 UTC
+
+[Actual submission issue #3230](https://github.com/cline/mcp-marketplace/issues/3230)
+is open, created2026-10-24T01:43:48Z by the publisher, with zero comments at creation.
+The [public-safe receipt](./submission-receipt.json) and
+[actual native rehearsal](./native-rehearsal-20261024.md) supersede the dated
+preparation gates above: approved native OAuth,44-tool discovery, known query,
+one unchanged-state preview and an actual Agent read-only session now succeed.
+The submitted body describes the operator/CLI/SDK/Agent stages explicitly.
+Original historical observations retain their dates and limits.
+
+The initial attempt to apply the template's label was rejected for label
+permissions and created no issue; an empty duplicate search preceded normal
+issue creation without labels. No label or repository permission was changed.
+Review acceptance and public Marketplace availability remain unverified. Follow
+this existing issue and the real catalog rather than submitting another entry.

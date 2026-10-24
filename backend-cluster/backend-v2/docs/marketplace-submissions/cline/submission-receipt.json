@@ -1,0 +1,20 @@
+{
+  "status": "submitted",
+  "repository": "cline/mcp-marketplace",
+  "issueNumber": 3230,
+  "url": "https://github.com/cline/mcp-marketplace/issues/3230",
+  "submittedAtUTC": "2026-10-24T01:43:48Z",
+  "lastCheckedAtUTC": "2026-10-24T01:43:48Z",
+  "state": "open",
+  "comments": 0,
+  "labels": [],
+  "identity": "io.beancount/beancount",
+  "remoteURL": "https://beancount.io/api-gateway/mcp",
+  "nativeEvidence": "native-rehearsal-20261024.md",
+  "submissionBody": "submission.md",
+  "publicationVerified": false,
+  "reviewApproved": false,
+  "privateCredentialsShared": false,
+  "nextAction": "Follow existing issue for reviewer feedback and actual public catalog publication; do not duplicate.",
+  "submissionNote": "Initial explicit-label attempt was rejected for label permissions and created no issue. After an empty all-states duplicate search, normal issue creation without labels succeeded. No repository permission or label was modified."
+}
