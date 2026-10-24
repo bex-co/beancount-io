@@ -554,7 +554,11 @@ skills deduplicate against each other: the ledger itself is the dedup database.
   from …"), for banks that give both legs one reference; otherwise it is new.
   An exact match is skipped;
   reused native IDs with different source amounts or commodities are conflicts
-  requiring review. An ID repeated within one export with different data is a
+  requiring review. Source amounts compare however either side groups them
+  into postings: a `-104 USD` withdrawal matches `-100 USD` and `-4 USD`, and a
+  written `-4 HOOL` lot reduction matches a statement's `-1` and `-3` fills
+  of it, provided each unit moves for the same account, in the same direction,
+  at the same price and from a lot both sides agree on. An ID repeated within one export with different data is a
   conflict too; it names the earlier row of the import, and the fix is in the
   source file rather than the ledger. An ID repeated within one export with the
   same amount on another date — a monthly autopay reusing one

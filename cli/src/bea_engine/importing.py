@@ -19,11 +19,11 @@ import runpy
 import shlex
 import sys
 import unicodedata
-from collections.abc import Callable, Iterable, Iterator, Sequence
+from collections import deque
+from collections.abc import Callable, Iterable, Sequence
 from contextvars import ContextVar
 from dataclasses import dataclass, replace
 from decimal import Context, Decimal
-from itertools import combinations
 from pathlib import Path
 from typing import Any
 
@@ -1669,97 +1669,97 @@ def _legs_agree(ours: Sequence[_Leg], theirs: Sequence[_Leg]) -> bool:
     hand-entered twin new and bea's own write a conflict (w5/467). Lots both
     sides state at 100 and 120 USD still differ (w5/349).
 
-    Each booked leg answers for one incoming leg. A greedy pass handed the
-    first compatible booked leg to whichever incoming leg came first, so two
-    `{}` fills over three lots, or a `{"X"}` and a `{100 USD}` selector that
-    both fit one lot, failed though an assignment exists (w5/896); the
-    assignment is searched, the more specific incoming legs first.
+    How either row groups its units into postings is no part of that: two
+    `{}` fills over three lots (w5/896), a `-104 USD` withdrawal against
+    `-100` and `-4`, or a written `-4 HOOL` against a `{}` fill of one and a
+    dated fill of three (w5/998). So each of our legs draws its units from the
+    legs of theirs it is compatible with, as a flow: the rows agree when every
+    leg of ours is met in full and every leg of theirs is used up. Matching
+    whole legs to subsets made thirteen lots bought one day, listed by cost,
+    match neither of the two fills that sold them (w5/998). A leg moving the
+    other way, at another price, for another owner, or from a lot the other
+    states differently never supplies it (w5/979). Zero amounts carry no units
+    to share, so they pair off one for one.
     """
-    order = sorted(ours, key=lambda leg: 0 if leg[1] is None else leg[1].count(None))
+    from decimal import MAX_PREC, localcontext
 
-    def assign(position: int, left: list[_Leg]) -> bool:
-        if position == len(order):
-            return not left
-        text, lot, owner = order[position]
-        for chosen in _booked_for(text, lot, owner, left):
-            remaining = [leg for index, leg in enumerate(left) if index not in chosen]
-            if assign(position + 1, remaining):
-                return True
+    def links(mine: Sequence[_Leg], other: Sequence[_Leg]) -> list[list[int]]:
+        return [[j for j, leg in enumerate(other) if _supplies(leg, wanted)] for wanted in mine]
+
+    zero = [leg for leg in ours if _units_of(leg[0])[0] == 0]
+    zero_theirs = [leg for leg in theirs if _units_of(leg[0])[0] == 0]
+    ours = [leg for leg in ours if _units_of(leg[0])[0] != 0]
+    theirs = [leg for leg in theirs if _units_of(leg[0])[0] != 0]
+    with localcontext() as exact:
+        exact.prec = MAX_PREC
+        return _transported(
+            [abs(_units_of(text)[0]) for text, _, _ in ours],
+            [abs(_units_of(text)[0]) for text, _, _ in theirs],
+            links(ours, theirs),
+        ) and _transported([Decimal(1)] * len(zero), [Decimal(1)] * len(zero_theirs), links(zero, zero_theirs))
+
+
+def _supplies(leg: _Leg, wanted: _Leg) -> bool:
+    """Whether a booked leg can supply units to an incoming one.
+
+    Same owner, commodity, price and direction, and a lot that agrees.
+    """
+    (number, currency, price), (count, unit, quoted) = _units_of(leg[0]), _units_of(wanted[0])
+    return (
+        leg[2] == wanted[2]
+        and (currency, price) == (unit, quoted)
+        and (number > 0) == (count > 0)
+        and _lots_agree(wanted[1], leg[1])
+    )
+
+
+def _transported(demand: list[Decimal], supply: list[Decimal], links: list[list[int]]) -> bool:
+    """Whether every demand can be met in full from the supplies it links to, using each supply up exactly.
+
+    A maximum flow from the demands to the supplies (Edmonds-Karp): the rows
+    hold a handful of legs, and shortest augmenting paths end whatever the
+    amounts are.
+    """
+    total = sum(demand, Decimal(0))
+    if total != sum(supply, Decimal(0)):
         return False
+    count = len(demand)
+    source, sink = count + len(supply), count + len(supply) + 1
+    residual: dict[int, dict[int, Decimal]] = {node: {} for node in range(sink + 1)}
 
-    return assign(0, list(theirs))
+    def connect(start: int, end: int, amount: Decimal) -> None:
+        residual[start][end] = residual[start].get(end, Decimal(0)) + amount
+        residual[end].setdefault(start, Decimal(0))
 
-
-def _booked_for(text: str, lot: _Lot | None, owner: str, left: list[_Leg]) -> Iterator[set[int]]:
-    """Each way the booked legs can stand for one incoming leg: one leg of its own, or the lots it spans."""
-    for index, (other, found, holder) in enumerate(left):
-        if other == text and holder == owner and _lots_agree(lot, found):
-            yield {index}
-    # A stated per-unit cost spans lots too, those that book at that same cost:
-    # six shares at `{100 USD}` sold FIFO across two 100 USD purchases are two
-    # booked legs, and requiring an open per-unit number left the manual sale
-    # unmatched, so its import was written a second time (w5/978).
-    if lot is None:
-        return
-    number, currency, price = _units_of(text)
-    compatible = [
-        index
-        for index, (other, found, holder) in enumerate(left)
-        if found is not None
-        and holder == owner
-        and _units_of(other)[1:] == (currency, price)
-        # Legs that move the way the incoming one does: a sale of two shares
-        # beside a purchase of one nets to a sale of one, but is not it, and
-        # accepting the pair hid a changed statement under an existing id
-        # (w5/979).
-        and (_units_of(other)[0] > 0) == (number > 0)
-        and _lots_agree(lot, found)
-    ]
-    # A sale booked across lots takes them in order, so these are the larger
-    # candidate sets first; a long run of lots keeps the all-or-nothing reading.
-    if len(compatible) > _SPLIT_SEARCH_LEGS:
-        # Too many lots to try every subset, but booking takes them in order:
-        # the lots one fill spans are a run of the compatible legs. Trying only
-        # the whole set made a sale split into two fills conflict with its own
-        # first import once it spanned thirteen lots (w5/977). A hand-written
-        # sale lists its lots in any order, so a run is also looked for in
-        # acquisition-date and in cost order, the orders booking takes them in
-        # (w5/998).
-        def acquired(index: int) -> datetime.date:
-            booked = left[index][1]
-            return booked[3] if booked is not None and booked[3] is not None else datetime.date.max
-
-        def cost(index: int) -> Decimal:
-            booked = left[index][1]
-            return booked[0] if booked is not None and booked[0] is not None else Decimal(0)
-
-        orders = [
-            compatible,
-            sorted(compatible, key=lambda i: (acquired(i), i)),
-            sorted(compatible, key=lambda i: (cost(i), i)),
-            sorted(compatible, key=lambda i: (-cost(i), i)),
-        ]
-        seen: set[frozenset[int]] = set()
-        for order in orders:
-            for start in range(len(order)):
-                running = Decimal(0)
-                for end in range(start, len(order)):
-                    running += _units_of(left[order[end]][0])[0]
-                    if abs(running) > abs(number):
-                        break
-                    run = frozenset(order[start : end + 1])
-                    if running == number and end > start and run not in seen:
-                        seen.add(run)
-                        yield set(run)
-        return
-    for size in range(len(compatible), 1, -1):
-        for subset in combinations(compatible, size):
-            if sum(_units_of(left[index][0])[0] for index in subset) == number:
-                yield set(subset)
-
-
-#: How many compatible booked legs are searched for every subset; beyond it only runs of consecutive lots are tried.
-_SPLIT_SEARCH_LEGS = 12
+    for index, amount in enumerate(demand):
+        connect(source, index, amount)
+        for other in links[index]:
+            connect(index, count + other, total)
+    for index, amount in enumerate(supply):
+        connect(count + index, sink, amount)
+    moved = Decimal(0)
+    while moved < total:
+        came: dict[int, int] = {source: source}
+        queue = deque([source])
+        while queue and sink not in came:
+            node = queue.popleft()
+            for following, room in residual[node].items():
+                if room > 0 and following not in came:
+                    came[following] = node
+                    queue.append(following)
+        if sink not in came:
+            return False
+        path = []
+        node = sink
+        while node != source:
+            path.append((came[node], node))
+            node = came[node]
+        step = min(residual[start][end] for start, end in path)
+        for start, end in path:
+            residual[start][end] -= step
+            residual[end][start] += step
+        moved += step
+    return True
 
 
 def _units_of(text: str) -> tuple[Decimal, str, str]:

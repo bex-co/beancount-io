@@ -61,8 +61,6 @@
 
 
 
-- [998 — Match equivalent source postings in imports](./998.md) — major CLI duplicate writes or false B1 conflicts across cash and stock posting groups, including mixed partial lot selectors. Working groups and genuine amount/date corrections remain distinct; verified 2026-10-24.
-
 The 27 findings from the MCP QA auth sweep against the hosted endpoint (023–054, less the five under [Dropped](#dropped)) were fixed in `backend-cluster/backend-v2` and closed on 2026-10-02 and 2026-10-03; each note under [`done/`](./done/) records what shipped and in which commit. None has been re-observed against the hosted endpoint yet — the fixes reach it with the next backend deploy.
 
 ## Blocked inbox
