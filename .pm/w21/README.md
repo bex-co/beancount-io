@@ -45,7 +45,6 @@
 - [882](./blocked/882.md) — Chart axes use the app language's money format while the amounts beside them use English (9 languages) — **blocked:** needs an owner product decision on one number convention for money (app language everywhere vs English everywhere), reversing w21/177 or w3/189
 - [895](./blocked/895.md) — Account detail's range chips filter only the chart, not the list below — **blocked:** owner picks a range-bounded list (backend date bound on all surfaces) or an "All entries" caption
 - [922](./blocked/922.md) — Changing to a payee with no history keeps the previous payee's accounts (owner's call) — **blocked:** owner decides whether a no-history or cleared payee resets an untouched fill (reverses w21/411)
-- [924](./924.md) — A deferred foreground refresh after Log out shows "Your session ended" and can break the next sign-in
 - [925](./925.md) — Add Budget's empty Account row reads to VoiceOver as "Expenses:Groceries" and is nearly invisible in light mode
 - [926](./926.md) — Green and red figures on Home and Budget cards are below 4.5:1 contrast in light mode
 - [927](./927.md) — Persian or Arabic account paths read child first on four more screens

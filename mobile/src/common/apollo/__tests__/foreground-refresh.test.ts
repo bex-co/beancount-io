@@ -25,7 +25,14 @@ describe("createForegroundRefresher defers a return inside the window", () => {
       refresh: () => calls.push(clock),
       now: () => clock,
       minIntervalMs: 30_000,
-      schedule: (run, delayMs) => timers.push({ at: clock + delayMs, run }),
+      schedule: (run, delayMs) => {
+        const timer = { at: clock + delayMs, run };
+        timers.push(timer);
+        return () => {
+          const at = timers.indexOf(timer);
+          if (at >= 0) timers.splice(at, 1);
+        };
+      },
     });
     const advance = (ms: number) => {
       const target = clock + ms;
@@ -285,5 +292,71 @@ describe("what wakes on a return to the app", () => {
     expect(
       provider.includes('AppState.addEventListener("change",onChange)'),
     ).toBe(true);
+  });
+});
+
+// w21/924: a deferred run fired after Log out, with no session to refresh with.
+describe("createForegroundRefresher cancel", () => {
+  it("drops a pending run so it never fires", () => {
+    const calls: number[] = [];
+    let pending: (() => void) | null = null;
+    const onChange = createForegroundRefresher({
+      refresh: () => calls.push(1),
+      now: () => 40_000,
+      schedule: (run) => {
+        pending = run;
+        return () => {
+          pending = null;
+        };
+      },
+    });
+    onChange("background");
+    onChange("active");
+    onChange("background");
+    onChange("active");
+    expect(calls.length).toBe(1);
+    expect(pending).not.toBe(null);
+    onChange.cancel();
+    expect(pending).toBe(null);
+  });
+
+  it("does not refresh if a timer it could not clear still runs", () => {
+    const calls: number[] = [];
+    let stray: (() => void) | undefined;
+    const onChange = createForegroundRefresher({
+      refresh: () => calls.push(1),
+      now: () => 40_000,
+      schedule: (run) => {
+        stray = run;
+      },
+    });
+    onChange("background");
+    onChange("active");
+    onChange("background");
+    onChange("active");
+    onChange.cancel();
+    stray?.();
+    expect(calls.length).toBe(1);
+  });
+});
+
+describe("every foreground refresher is cancelled when its effect ends", () => {
+  it("in the directory provider, the hook and the example provider", () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fs = require("fs");
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const path = require("path");
+    for (const file of [
+      "../../ledger-directory/ledger-directory-provider.tsx",
+      "../../hooks/use-foreground-refresh.ts",
+      "../../../screens/examples/example-ledger-provider.tsx",
+    ]) {
+      const source = fs
+        .readFileSync(path.join(__dirname, file), "utf8")
+        .replace(/\s+/g, "");
+      expect(source.includes("subscription.remove();onChange.cancel();")).toBe(
+        true,
+      );
+    }
   });
 });

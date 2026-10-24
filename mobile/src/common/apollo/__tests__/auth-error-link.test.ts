@@ -112,4 +112,27 @@ describe("OAuth Apollo refresh link", () => {
     expect(failure instanceof OAuthRefreshError).toBe(true);
     expect(teardownCalls).toBe(0);
   });
+
+  // w21/924: a request still in flight after Log out has no session to end.
+  it("leaves a signed-out app alone when a request comes back unauthenticated", async () => {
+    let teardownCalls = 0;
+    let refreshCalls = 0;
+    const errorLink = createAuthErrorLink({
+      getSession: () => null,
+      refresh: async () => {
+        refreshCalls += 1;
+        return "access-new";
+      },
+      teardown: async () => {
+        teardownCalls += 1;
+      },
+      onTerminalRefreshFailure: () => {},
+    });
+    const downstream = new ApolloLink(() => Observable.of(unauthenticated));
+
+    await observableResult(errorLink.concat(downstream)).catch(() => undefined);
+    await Promise.resolve();
+    expect(teardownCalls).toBe(0);
+    expect(refreshCalls).toBe(0);
+  });
 });

@@ -32,7 +32,10 @@ export function LedgerDirectoryProvider({
       refresh: () => void directory.revalidate().catch(() => {}),
     });
     const subscription = AppState.addEventListener("change", onChange);
-    return () => subscription.remove();
+    return () => {
+      subscription.remove();
+      onChange.cancel();
+    };
   }, [directory]);
   return <Context.Provider value={directory}>{children}</Context.Provider>;
 }

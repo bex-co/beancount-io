@@ -72,7 +72,10 @@ function GuestLedgerSession({
       },
     });
     const subscription = AppState.addEventListener("change", onChange);
-    return () => subscription.remove();
+    return () => {
+      subscription.remove();
+      onChange.cancel();
+    };
   }, [client, failed, retry]);
   const selectedTransaction = useMemo(
     () => makeVar<StashedTransaction | null>(null),

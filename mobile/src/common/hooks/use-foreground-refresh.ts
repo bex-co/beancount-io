@@ -25,6 +25,9 @@ export function useForegroundRefresh(enabled: boolean): void {
       },
     });
     const subscription = AppState.addEventListener("change", onChange);
-    return () => subscription.remove();
+    return () => {
+      subscription.remove();
+      onChange.cancel();
+    };
   }, [client, enabled]);
 }

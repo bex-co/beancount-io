@@ -19,7 +19,12 @@ export function createAuthErrorLink(dependencies: AuthErrorLinkDependencies) {
     if (!unauthenticated) return undefined;
 
     const session = dependencies.getSession();
-    if (session?.kind !== "oauth" || operation.getContext().oauthRetry) {
+    // No session is a signed-out app: whatever was still in flight (a deferred
+    // refresh after Log out) has nothing to end, and tearing down again set
+    // "Your session ended" over the Welcome screen and cleared a pending
+    // sign-in (w21/924).
+    if (session === null) return undefined;
+    if (session.kind !== "oauth" || operation.getContext().oauthRetry) {
       void dependencies.teardown();
       return undefined;
     }
