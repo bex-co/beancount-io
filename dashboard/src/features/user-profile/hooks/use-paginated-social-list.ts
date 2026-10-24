@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { useLazyQuery, useQuery } from "@apollo/client/react";
 import type { DocumentNode, OperationVariables } from "@apollo/client";
+import { useQueryRetry } from "@/common/hooks/use-query-retry";
 
 export const SOCIAL_PAGE_SIZE = 20;
 
@@ -85,6 +86,21 @@ export function usePaginatedSocialList<
     },
   );
 
+  // Try Again on a failed first page keeps its error and a busy button
+  // mounted while it runs (Apollo clears `error` meanwhile), and a failed retry
+  // hands focus back to that button (w4/1041). A retry still pending when the
+  // profile changes says nothing about the new one.
+  const firstPageRetry = useQueryRetry(enabled ? error : undefined, refetch);
+  const retryUsernameRef = useRef(username);
+  const failure =
+    error || retryUsernameRef.current === username
+      ? firstPageRetry.failure
+      : undefined;
+  const retry = () => {
+    retryUsernameRef.current = username;
+    firstPageRetry.retry();
+  };
+
   const [fetchPage] = useLazyQuery<TData, TVariables>(document, {
     fetchPolicy: "network-only",
   });
@@ -151,13 +167,15 @@ export function usePaginatedSocialList<
     items,
     /** Last returned page size from the API (legacy field). */
     total: firstPage.length,
-    loading: Boolean(enabled && loading && items.length === 0),
+    loading: Boolean(enabled && loading && items.length === 0 && !failure),
     loadingMore,
     hasMore,
-    error: error ?? null,
+    error: failure ?? null,
     loadMoreError,
     loadMore,
     retryLoadMore: loadMore,
-    refetch,
+    /** Re-read the failed first page in place. */
+    retry,
+    retrying: firstPageRetry.retrying,
   };
 }

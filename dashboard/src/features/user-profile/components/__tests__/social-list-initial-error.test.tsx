@@ -52,7 +52,8 @@ const followers = {
   loadMoreError: null as Error | null,
   loadMore: vi.fn(),
   retryLoadMore: vi.fn(),
-  refetch: vi.fn(),
+  retry: vi.fn(),
+  retrying: false,
 };
 const following = { ...followers, following: followers.followers };
 const starred = {
@@ -187,7 +188,7 @@ describe.each(cases)("$tab tab first-page failure", (testCase) => {
     const { rerender } = renderTabs(testCase.tab);
 
     await user.click(screen.getByRole("button", { name: "Try again" }));
-    expect(testCase.state.refetch).toHaveBeenCalledTimes(1);
+    expect(testCase.state.retry).toHaveBeenCalledTimes(1);
 
     // The retry succeeds.
     state.error = null;
@@ -226,7 +227,7 @@ describe.each(cases)("$tab tab first-page failure", (testCase) => {
     retry.focus();
     expect(retry).toHaveFocus();
     await user.keyboard("{Enter}");
-    expect(testCase.state.refetch).toHaveBeenCalledTimes(1);
+    expect(testCase.state.retry).toHaveBeenCalledTimes(1);
   });
 
   it("still reports a continuation failure separately", () => {

@@ -40,14 +40,25 @@ interface UserProfileTabsProps {
  * say the list could not be loaded, not that the person has no followers —
  * the profile's own counts come from a different, still-successful read.
  */
-function SocialListError({ onRetry }: { onRetry: () => void }) {
+function SocialListError({
+  onRetry,
+  retrying,
+}: {
+  onRetry: () => void;
+  retrying: boolean;
+}) {
   const { t } = useTranslations();
   return (
     <div className="flex flex-col items-center gap-3 py-6 sm:py-8">
       <p role="alert" className="text-sm text-destructive">
         {t("userProfile.listLoadError")}
       </p>
-      <Button variant="outline" onClick={onRetry} className="h-11 px-6">
+      <Button
+        variant="outline"
+        onClick={onRetry}
+        loading={retrying}
+        className="h-11 px-6"
+      >
         {t("common.tryAgain")}
       </Button>
     </div>
@@ -153,7 +164,8 @@ export function UserProfileTabs({
     loadingMore: followersLoadingMore,
     hasMore: followersHasMore,
     error: followersError,
-    refetch: refetchFollowers,
+    retry: retryFollowersRead,
+    retrying: followersRetrying,
     loadMoreError: followersLoadMoreError,
     loadMore: loadMoreFollowers,
     retryLoadMore: retryFollowers,
@@ -164,7 +176,8 @@ export function UserProfileTabs({
     loadingMore: followingLoadingMore,
     hasMore: followingHasMore,
     error: followingError,
-    refetch: refetchFollowing,
+    retry: retryFollowingRead,
+    retrying: followingRetrying,
     loadMoreError: followingLoadMoreError,
     loadMore: loadMoreFollowing,
     retryLoadMore: retryFollowing,
@@ -175,7 +188,8 @@ export function UserProfileTabs({
     loadingMore: starredLoadingMore,
     hasMore: starredHasMore,
     error: starredError,
-    refetch: refetchStarred,
+    retry: retryStarredRead,
+    retrying: starredRetrying,
     loadMoreError: starredLoadMoreError,
     loadMore: loadMoreStarred,
     retryLoadMore: retryStarred,
@@ -254,7 +268,10 @@ export function UserProfileTabs({
             </div>
           )}
           {!followersLoading && followers.length === 0 && followersError && (
-            <SocialListError onRetry={() => void refetchFollowers()} />
+            <SocialListError
+              onRetry={retryFollowersRead}
+              retrying={followersRetrying}
+            />
           )}
           {!followersLoading && followers.length === 0 && !followersError && (
             <p className="text-center text-muted-foreground py-6 sm:py-8 text-sm sm:text-base">
@@ -296,7 +313,10 @@ export function UserProfileTabs({
             </div>
           )}
           {!followingLoading && following.length === 0 && followingError && (
-            <SocialListError onRetry={() => void refetchFollowing()} />
+            <SocialListError
+              onRetry={retryFollowingRead}
+              retrying={followingRetrying}
+            />
           )}
           {!followingLoading && following.length === 0 && !followingError && (
             <p className="text-center text-muted-foreground py-6 sm:py-8 text-sm sm:text-base">
@@ -338,7 +358,10 @@ export function UserProfileTabs({
             </div>
           )}
           {!starredLoading && starredRepos.length === 0 && starredError && (
-            <SocialListError onRetry={() => void refetchStarred()} />
+            <SocialListError
+              onRetry={retryStarredRead}
+              retrying={starredRetrying}
+            />
           )}
           {!starredLoading && starredRepos.length === 0 && !starredError && (
             <p className="text-center text-muted-foreground py-6 sm:py-8 text-sm sm:text-base">
