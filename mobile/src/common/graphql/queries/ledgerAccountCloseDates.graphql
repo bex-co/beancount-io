@@ -3,6 +3,5 @@ query LedgerAccountCloseDates($ledgerId: String!) {
     account
     closedAt
     openedAt
-    balance
   }
 }

@@ -1,17 +1,19 @@
 import { formatLedgerDate } from "@/common/date-format";
 import { isolateAccountPath } from "@/common/bidi";
 import { useAccountCloseDates } from "@/common/hooks/use-account-close-dates";
+import { closedBeforeDate } from "@/common/account-close-dates";
 import {
   accountOnlyCurrency,
-  closedBeforeDate,
-} from "@/common/account-close-dates";
+  heldCurrenciesOf,
+} from "@/components/account-list/held-currencies";
+import { useTrialBalance } from "@/screens/accounts-screen/hooks/use-trial-balance";
 import {
   budgetCurrencyOptions,
   defaultBudgetCurrency,
 } from "./currency-options";
 import { TextInputModal } from "@/components/text-input-modal";
 import { typedCurrencyCode } from "@/screens/open-account-screen/account-name";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { InlineError } from "@/components/inline-error";
 import {
   Platform,
@@ -255,9 +257,12 @@ function AddBudgetScreenImpl(): JSX.Element {
   // And an account that holds one currency starts the budget in it, until one is
   // chosen by hand (w21/946).
   const closeDates = useAccountCloseDates(ledgerId);
+  // From the trial balance in units, which holds every root's accounts.
+  const { data: heldData } = useTrialBalance(ledgerId, undefined, "units");
+  const held = useMemo(() => heldCurrenciesOf(heldData), [heldData]);
   const currency =
     pickedCurrency ||
-    accountOnlyCurrency(account, closeDates) ||
+    accountOnlyCurrency(account, held) ||
     (metaLoading
       ? ""
       : defaultBudgetCurrency(currencies, ledgerMeta?.currencies ?? []));
