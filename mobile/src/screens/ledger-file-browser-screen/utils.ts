@@ -124,10 +124,18 @@ export function checkLedgerFileName(
   }
   const filename = [...segments.slice(0, -1), named].join("/");
   if (breaksPortablePath(filename)) return { ok: false, issue: "portable" };
-  // A folder the path goes into, spelled as one already here but for its
-  // letter case or Unicode form: a clone on macOS or Windows keeps one of the
-  // two (w21/825), as it does for file names (w21/770).
+  // A path that goes through a file as if it were a folder, whatever its letter
+  // case or Unicode form, is refused as the file clash it is (w21/988, w21/1003).
   if (segments.length > 1) {
+    const file = kinds.files?.find(
+      (name) => portableNameKey(name) === portableNameKey(segments[0]!),
+    );
+    if (file !== undefined) {
+      return { ok: false, issue: "exists", filename, existing: file };
+    }
+    // A folder the path goes into, spelled as one already here but for its
+    // letter case or Unicode form: a clone on macOS or Windows keeps one of the
+    // two (w21/825), as it does for file names (w21/770).
     const folder = segments[0]!;
     const twin = existingNames.find(
       (name) =>
@@ -137,15 +145,20 @@ export function checkLedgerFileName(
       return { ok: false, issue: "folderExists", filename, existing: twin };
     }
   }
-  // A path that goes through a file as if it were a folder, or a name that is a
-  // folder already here, is refused as the clash it is (w21/988).
-  if (segments.length > 1) {
-    const file = kinds.files?.find((name) => name === segments[0]);
-    if (file !== undefined) {
-      return { ok: false, issue: "exists", filename, existing: file };
-    }
+  // A name that is a folder already here is that folder clash, worded as one
+  // (w21/988, w21/1003); a file of that name, any twin of it, is a file clash.
+  const folderClash = kinds.folders?.find(
+    (name) => portableNameKey(name) === portableNameKey(filename),
+  );
+  if (folderClash !== undefined) {
+    return {
+      ok: false,
+      issue: "folderExists",
+      filename,
+      existing: folderClash,
+    };
   }
-  const existing = [...existingNames, ...(kinds.folders ?? [])].find(
+  const existing = existingNames.find(
     (name) => portableNameKey(name) === portableNameKey(filename),
   );
   if (existing !== undefined) {

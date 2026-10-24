@@ -381,9 +381,26 @@ describe("a name that reuses a file as a folder or a folder as a file", () => {
     }
   });
 
-  it("refuses a file named like a folder already here", () => {
+  it("refuses a file named like a folder already here, worded as the folder", () => {
     const check = checkLedgerFileName("x", names, kinds);
-    expect(check.ok === false && check.issue).toBe("exists");
+    expect(check.ok === false && check.issue).toBe("folderExists");
+    expect(check.ok === false && check.existing).toBe("x.bean");
+  });
+
+  // w21/1003: the case-twin check ran first and reported a file as a folder.
+  it("reports a case twin of a file as a file, in a path and as a name", () => {
+    const inPath = checkLedgerFileName("Main.bean/x", names, kinds);
+    expect(inPath.ok === false && inPath.issue).toBe("exists");
+    expect(inPath.ok === false && inPath.existing).toBe("main.bean");
+    const asName = checkLedgerFileName("MAIN", names, kinds);
+    expect(asName.ok === false && asName.issue).toBe("exists");
+    expect(asName.ok === false && asName.existing).toBe("main.bean");
+  });
+
+  it("still reports a case twin of a folder as a folder", () => {
+    const check = checkLedgerFileName("SUB/y", names, kinds);
+    expect(check.ok === false && check.issue).toBe("folderExists");
+    expect(check.ok === false && check.existing).toBe("sub");
   });
 
   it("still takes a path through a folder, and a new name", () => {
