@@ -396,7 +396,7 @@ function MerchantsDirectory() {
           />
         }
         ListHeaderComponent={
-          isInitialLoading ? null : (
+          isInitialLoading || error || showBlankEmpty ? null : (
             <View style={styles.searchRow}>
               <SearchBar
                 testID="merchants-search"
