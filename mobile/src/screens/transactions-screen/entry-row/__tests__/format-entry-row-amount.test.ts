@@ -202,3 +202,28 @@ describe("a row's amount past what a double holds", () => {
     expect(holding("0.004", "ETH")).toBe("+0.004 ETH");
   });
 });
+
+// w21/971: a transaction the ledger could not interpolate has a leg with no
+// number and no currency.
+describe("a transaction with a leg the ledger could not interpolate", () => {
+  const elided = (legs: Leg[]): string =>
+    selectEntryRowAmount(
+      transaction(legs.map(([a, n, c]) => [a, n, c ?? ""] as Leg)),
+      MIXED,
+    ).amountStr;
+
+  it("is not read as a spend from the legs that remain", () => {
+    expect(
+      elided([
+        ["Expenses:Food", "12.50", "USD"],
+        ["Assets:Cash", "", ""],
+      ]),
+    ).toBe(MIXED);
+    expect(
+      elided([
+        ["Expenses:Food", "", ""],
+        ["Assets:Cash", "", ""],
+      ]),
+    ).toBe(MIXED);
+  });
+});

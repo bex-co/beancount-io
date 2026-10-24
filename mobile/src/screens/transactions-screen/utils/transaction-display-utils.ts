@@ -305,6 +305,12 @@ export const selectTransactionAmount = (
 ): TransactionAmount | null => {
   const postings = txn.postings ?? [];
   if (!postings.length) return null;
+  // A leg the ledger could not interpolate has no number: what the entry moved
+  // is not known, and a headline from the other legs read as a spend with no
+  // sign (w21/971).
+  if (postings.some((p) => p.units.number.trim() === "")) {
+    return { mixed: true };
+  }
 
   const corporateAction = corporateActionAmount(
     postings,

@@ -764,3 +764,19 @@ describe("selectPostingRows: the lot behind a cost", () => {
     expect(postingBasisText(bare, t)).toBe(`cost ${isolateLtr("$100.00")}`);
   });
 });
+
+// w21/971: a posting the ledger could not interpolate read as a blank amount.
+describe("selectPostingRows for a posting with no number", () => {
+  it("shows a dash instead of a blank", () => {
+    const rows = selectPostingRows(
+      txn([
+        posting("Expenses:Food", "12.50", "USD"),
+        posting("Assets:Cash", "", ""),
+      ]),
+    );
+    expect(rows[1]!.amount).toBe("—");
+    expect(rows[1]!.amount.trim()).not.toBe("");
+    expect(rows[1]!.sign).toBe(0);
+    expect(rows[0]!.amount).toBe("+$12.50");
+  });
+});

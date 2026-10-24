@@ -128,6 +128,9 @@ function formatPostingUnits(
   sign: -1 | 0 | 1;
 } {
   const trimmed = number.trim();
+  // A transaction the ledger could not interpolate comes back with no number
+  // and no currency on the leg it failed on: a dash, not a blank (w21/971).
+  if (trimmed === "") return { amount: "\u2014", sign: 0 };
   if (!/^[+-]?\d+(\.\d+)?$/.test(trimmed)) {
     return { amount: `${number} ${currency}`, sign: 0 };
   }
