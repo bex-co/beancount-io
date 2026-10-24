@@ -116,13 +116,13 @@ PR #6042 contains exactly the three reviewed files, including tested minimal
 ledger scopes in its setup readme. No credentials are included.
 
 The receipt-stage task is complete. Docker reviewers still own approval and
-publication; the official private test-credentials form has not been submitted,
-and the PR's corresponding checkbox stays unchecked. Use only explicitly
-approved synthetic reviewer access through that channel if required. Follow
+publication. The official private test-credentials form is now submitted with an
+accepted receipt, as recorded below; the PR checklist is updated without secret
+content. The reviewer credential remains limited to the approved synthetic ledger. Follow
 this existing PR and its actual checks, then verify the public catalog path;
 no duplicate contribution or live-publication claim is made.
 
-## Private review-access preparation — 2026-10-24 UTC
+## Earlier private review-access preparation — 2026-10-24T01:50:07Z
 
 The real Docker private form requires the PR URL, contact email and testing
 credentials. No field was filled with a credential or account password. The
@@ -138,3 +138,32 @@ native Docker client's OAuth grant. The [public-safe progress record](./reviewer
 contains no credential. At01:50UTC the existing PR is still open/mergeable,
 with no comments or reported checks; no upstream CI pass is inferred.
 Continue other targets while this private-access/reviewer condition remains.
+
+## Private reviewer access submitted — 2026-10-24T19:52:18Z
+
+After the publisher's explicit approval, the first-party UI creates exactly one
+`docker-mcp-review-6042` credential: **ledger.read + ledger.write**, **no admin**,
+restricted to the dedicated synthetic `mcp-agent-eval` ledger. Saved metadata
+confirms that restriction and expiration at the **end of 2026-10-31 UTC**
+(Oct31,16:59 PDT in the local UI). No new subscription, account password or
+account-wide key is supplied. These are saved-metadata checks; the new key has
+not been used for an accounting request. Earlier official Gateway native
+OAuth/query/dry-run evidence remains independently recorded above.
+
+The [official private form](https://forms.gle/6Lw3nsvu2d6nFg8e6) receives the
+existing PR URL, contact address, credential and synthetic-only review
+instructions. One Submit action reaches the actual receipt, observed at
+**2026-10-24T19:51:56Z**: **Got it. We'll email you with a resolution.**
+Instructions require read/query first and `appendLedgerText` write previews
+with `dry_run: true`, `allowInvalid: false`, without committed accounting changes.
+The retained key is private; its plaintext is absent from public files and
+cleared from automation memory after the accepted receipt.
+
+The existing [PR #6042](https://github.com/docker/mcp-registry/pull/6042) now has
+its test-credential checkbox checked, with only scope/expiry/receipt metadata.
+The API update response remains open, unmerged and mergeable, with the same
+three-file contribution. No new review or upstream-check result is inferred
+from that metadata update. The finite submission task w6/m9/t002 can close;
+actual review/publication and public catalog/native verification remain under
+t006. If review needs access after October31, arrange renewal through the same
+private channel. Do not resubmit the form or create another PR.

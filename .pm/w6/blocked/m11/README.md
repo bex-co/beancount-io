@@ -39,7 +39,7 @@ The [m9/t011](../m9/done/t011.md) official Cursor application is submitted with 
 | Inventory target | Submission / receipt owner | Review, public verification or retained gate |
 | --- | --- | --- |
 | Cursor — official | [m9/t011](../m9/done/t011.md) | [m9/t003](../m9/done/t003.md), [m9/t006](../m9/t006.md) |
-| Docker | [m9/t012](../m9/done/t012.md) | [m9/t002](../m9/t002.md), m9/t006 |
+| Docker | [m9/t012](../m9/done/t012.md) | [m9/t002](../m9/done/t002.md) submission/private reviewer access complete; m9/t006 retains actual review/publication |
 | Cline | [m9/t013](../m9/done/t013.md) | [m9/t004](../m9/t004.md), m9/t006 |
 | GitHub curated gallery / VS Code | [m9/t014](../m9/done/t014.md) | [m9/t005](../m9/done/t005.md), m9/t006; existing w1/m34/t003 native owner retained |
 | LobeHub | [m10/t009](../m10/t009.md) | [m10/t003](../m10/t003.md), [m10/t004](../m10/t004.md) |

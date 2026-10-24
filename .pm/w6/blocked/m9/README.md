@@ -1,6 +1,6 @@
 # w6 · m9 — Reach developer marketplaces and galleries
 
-**Worker:** worker1 **Goal:** Developers discover and connect the hosted MCP server through the supported Docker, Cursor, Cline, and GitHub/VS Code galleries. **Status:** blocked (t001/t003/t005/t011/t012/t013/t014 done; official Cursor/Docker review and other native/publication gates remain)
+**Worker:** worker1 **Goal:** Developers discover and connect the hosted MCP server through the supported Docker, Cursor, Cline, and GitHub/VS Code galleries. **Status:** blocked (t001/t002/t003/t005/t011/t012/t013/t014 done; official Cursor/Docker review and other native/publication gates remain)
 
 **Implementation estimate:** ~4½h, excluding external review queues and the standing closing tasks.
 
@@ -13,7 +13,7 @@
 | [t012](done/t012.md) | Complete required native checks and submit Docker contribution — **DONE** | 60m | t001 |
 | [t013](done/t013.md) | Complete required native checks and send Cline submission — **DONE** | 60m | t001 |
 | [t014](done/t014.md) | Send GitHub curated-gallery nomination and record delivery — **DONE** | 30m | t001 |
-| [t002](t002.md) | Prepare and submit Docker's remote MCP catalog entry — **BLOCKED** | 60m | t001, t012 |
+| [t002](done/t002.md) | Prepare and submit Docker's remote MCP catalog entry — **DONE** | 60m | t001, t012 |
 | [t003](done/t003.md) | Package the remote connection for Cursor's official and community marketplaces — **DONE** | 60m | t001, t011 |
 | [t004](t004.md) | Prepare Cline's eligible marketplace submission and remote connection evidence — **BLOCKED** | 45m | t001, t013 |
 | [t005](done/t005.md) | Prepare GitHub inclusion and verify VS Code's discovery path — **DONE** | 45m | t001, t014 |
@@ -154,7 +154,7 @@ archived under done/ with evidence. Official review/publication and subsequent
 actual official-gallery verification remain under t006; the milestone remains
 blocked and its public-listing DoD is unchanged.
 
-## Current Docker private-review gate — 2026-10-24T01:50:07Z
+## Historical Docker private-review gate — 2026-10-24T01:50:07Z
 
 The required private testing-credential form remains incomplete. A first-party
 single-synthetic-ledger read/write/no-admin token draft with2026-10-31UTC expiry
@@ -181,3 +181,19 @@ response with sender/reply-to partnerships@github.com and github.com signature.
 The public-safe receipt is updated. No substantive feedback, new nomination,
 human review decision or public inclusion is claimed; t006 retains curation
 and actual public/native follow-through. Other gallery tasks remain independent.
+
+## Docker private-review submission complete — 2026-10-24T19:52:18Z
+
+**t002 is done and archived** after the approved synthetic-only read/write,
+no-admin credential is created, its saved expiry/restriction verified and the
+required Docker private form returns an accepted receipt. The public PR
+checkbox is checked without credential content. The key expires at the end of
+2026-10-31UTC and is retained privately; arrange renewal if review needs later
+access. All finite t002 acceptance criteria now hold. Existing native QA is
+retained; no new accounting request or real ledger write is made.
+
+**Remaining unblock/owners:** Docker reviewers review/merge/publish PR #6042;
+worker verifies actual public catalog discovery and native installation under
+t006. Its latest update response is still open/unmerged/mergeable, not approved
+publication. The previous native OAuth and private-sharing decisions are cleared
+and are not requested again. Other independent targets continue.
