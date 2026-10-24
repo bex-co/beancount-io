@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { ChevronDown, ExternalLink } from "lucide-react";
 import { track } from "@/common/analytics/events";
 import { Button } from "@/common/components/ui/button";
@@ -34,6 +34,24 @@ export function WhatsNew() {
   const [manuallyExpanded, setManuallyExpanded] = useState(false);
   const { unreadCount, items, loading, failed } = changelog;
 
+  // Show, Hide, Mark all as read and opening the last unread release swap the
+  // layout and remove the control the reader pressed. After such an action
+  // here, a dropped focus goes to the disclosure in the new layout; a
+  // background read or another tab's watermark never moves focus (w4/1040).
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  const handOffRef = useRef(false);
+  const handOffFocus = () => {
+    handOffRef.current = true;
+  };
+  useLayoutEffect(() => {
+    if (!handOffRef.current) return;
+    handOffRef.current = false;
+    const active = document.activeElement;
+    if (!active || active === document.body || !active.isConnected) {
+      toggleRef.current?.focus();
+    }
+  });
+
   if (failed || (!loading && items.length === 0)) {
     return null;
   }
@@ -54,6 +72,7 @@ export function WhatsNew() {
   const latest = items[0];
   const expanded = unreadCount > 0 || manuallyExpanded;
   const handleOpen = (item: ChangelogRelease) => {
+    if (changelog.isUnread(item)) handOffFocus();
     changelog.markRead(item);
     track("changelog_release_opened", { surface: "dashboard" });
   };
@@ -98,13 +117,17 @@ export function WhatsNew() {
             </span>
           </a>
           <Button
+            ref={toggleRef}
             variant="ghost"
             size="icon-sm"
             className="shrink-0"
             aria-expanded={false}
             aria-controls={SECTION_ID}
             aria-label={t("common.whatsNewExpand")}
-            onClick={() => setManuallyExpanded(true)}
+            onClick={() => {
+              handOffFocus();
+              setManuallyExpanded(true);
+            }}
           >
             <ChevronDown
               className="size-4 transition-transform duration-200 ease-out group-hover:translate-y-0.5 motion-reduce:transition-none"
@@ -142,7 +165,10 @@ export function WhatsNew() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => changelog.markAllRead()}
+              onClick={() => {
+                handOffFocus();
+                changelog.markAllRead();
+              }}
             >
               {t("common.whatsNewMarkRead")}
             </Button>
@@ -159,12 +185,16 @@ export function WhatsNew() {
           </Button>
           {unreadCount === 0 && (
             <Button
+              ref={toggleRef}
               variant="ghost"
               size="icon-sm"
               aria-expanded
               aria-controls={SECTION_ID}
               aria-label={t("common.whatsNewCollapse")}
-              onClick={() => setManuallyExpanded(false)}
+              onClick={() => {
+                handOffFocus();
+                setManuallyExpanded(false);
+              }}
             >
               <ChevronDown className="size-4 rotate-180" aria-hidden="true" />
             </Button>
