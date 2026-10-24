@@ -44,7 +44,7 @@
 - [879](./blocked/879.md) — The receipt parse contract carries no currency, so a foreign receipt is always booked in the ledger's currency (split from w21/870) — **blocked:** needs an owner-approved `ReceiptParseResult` currency contract (parity, model prompt, both receipt forms) and an AI-quota evaluation
 - [882](./blocked/882.md) — Chart axes use the app language's money format while the amounts beside them use English (9 languages) — **blocked:** needs an owner product decision on one number convention for money (app language everywhere vs English everywhere), reversing w21/177 or w3/189
 - [895](./blocked/895.md) — Account detail's range chips filter only the chart, not the list below — **blocked:** owner picks a range-bounded list (backend date bound on all surfaces) or an "All entries" caption
-- [922](./922.md) — Changing to a payee with no history keeps the previous payee's accounts (owner's call)
+- [922](./blocked/922.md) — Changing to a payee with no history keeps the previous payee's accounts (owner's call) — **blocked:** owner decides whether a no-history or cleared payee resets an untouched fill (reverses w21/411)
 - [923](./923.md) — A dirty New Transaction loses its link guard after Open Account is pushed over it
 - [924](./924.md) — A deferred foreground refresh after Log out shows "Your session ended" and can break the next sign-in
 - [925](./925.md) — Add Budget's empty Account row reads to VoiceOver as "Expenses:Groceries" and is nearly invisible in light mode
