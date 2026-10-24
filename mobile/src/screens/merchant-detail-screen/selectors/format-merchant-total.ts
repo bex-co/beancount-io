@@ -35,7 +35,9 @@ export function formatMerchantTotal({
  * in two of them read two identical "$42.50" lines (w21/535). A symbol is taken
  * when the ledger's primary currency or one of `others` shares it: USD read
  * "$120.00" over its own rows' "−60.00 USD" in a CAD ledger, whose "$" Home
- * uses for CAD (w21/719). The primary currency always keeps its symbol.
+ * uses for CAD (w21/719). The primary currency always keeps its symbol, and
+ * so does USD: another dollar currency reads by code, as its rows do, so a CAD
+ * merchant in a EUR ledger no longer read "$150.00" over "-150.00 CAD" (w21/896).
  */
 export function formatMerchantAmount(
   row: MerchantCurrencyTotal,
@@ -43,12 +45,19 @@ export function formatMerchantAmount(
   others: readonly string[] = [],
 ): string {
   const symbol = getCurrencySymbol(row.currency);
+  const otherDollar =
+    primaryCurrency !== undefined &&
+    symbol === "$" &&
+    row.currency !== "USD" &&
+    row.currency !== primaryCurrency;
   const taken =
-    symbol !== "" &&
-    row.currency !== primaryCurrency &&
-    [...others, ...(primaryCurrency ? [primaryCurrency] : [])].some(
-      (other) => other !== row.currency && getCurrencySymbol(other) === symbol,
-    );
+    otherDollar ||
+    (symbol !== "" &&
+      row.currency !== primaryCurrency &&
+      [...others, ...(primaryCurrency ? [primaryCurrency] : [])].some(
+        (other) =>
+          other !== row.currency && getCurrencySymbol(other) === symbol,
+      ));
   return taken
     ? formatSignedMoneyWithCode(row.total, row.currency)
     : formatMerchantTotal(row);

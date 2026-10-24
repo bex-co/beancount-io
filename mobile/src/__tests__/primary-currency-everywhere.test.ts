@@ -32,3 +32,25 @@ describe("the ledger's primary currency", () => {
     ).toBe(true);
   });
 });
+
+// w21/896: a CAD merchant in a EUR ledger read "$150.00" over rows of "-150.00 CAD".
+describe("another dollar currency in a ledger that is not in dollars", () => {
+  it("reads the merchant header by code, as its rows read", () => {
+    expect(labelRowAmount("150.00", "CAD", "EUR")).toBe("150.00 CAD");
+    expect(formatMerchantAmount({ total: -150, currency: "CAD" }, "EUR")).toBe(
+      "-150.00 CAD",
+    );
+    expect(formatMerchantAmount({ total: 80, currency: "AUD" }, "GBP")).toBe(
+      "80.00 AUD",
+    );
+  });
+
+  it("keeps the dollar sign for USD and for the primary currency", () => {
+    expect(formatMerchantAmount({ total: 150, currency: "USD" }, "EUR")).toBe(
+      "$150.00",
+    );
+    expect(formatMerchantAmount({ total: 150, currency: "CAD" }, "CAD")).toBe(
+      "$150.00",
+    );
+  });
+});
