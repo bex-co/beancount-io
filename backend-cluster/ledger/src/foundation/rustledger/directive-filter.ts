@@ -238,9 +238,30 @@ function foldArabicScript(text: string): string {
     .replace(/\u200c/gu, " ");
 }
 
+const FULL_WIDTH_ASCII = /[\uff01-\uff5e\u3000]/gu;
+const HALF_WIDTH_KATAKANA = /[\uff61-\uff9f]+/gu;
+
+/**
+ * Full-width Latin and half-width katakana as their ordinary forms. Card and
+ * bank exports write "ＡＭＡＺＯＮ．ＣＯ．ＪＰ" and "ｽﾀｰﾊﾞｯｸｽ" where a keyboard
+ * types "amazon" and "スターバックス", so neither found the other (w21/912).
+ * Full-width forms are U+FF01–FF5E, 0xFEE0 above ASCII, and U+3000 is a space;
+ * a run of half-width katakana is composed (ｶ + ﾞ is ガ) by NFKC. Applied to the
+ * pattern and to the text it searches.
+ */
+function foldWidth(text: string): string {
+  return text
+    .replace(FULL_WIDTH_ASCII, (char) =>
+      char === "\u3000"
+        ? " "
+        : String.fromCharCode(char.charCodeAt(0) - 0xfee0),
+    )
+    .replace(HALF_WIDTH_KATAKANA, (run) => run.normalize("NFKC"));
+}
+
 /** What a search and the text it searches are compared as. */
 function foldForSearch(text: string): string {
-  return foldArabicScript(foldDottedI(text));
+  return foldArabicScript(foldDottedI(foldWidth(text)));
 }
 
 function makeMatcher(rawSearch: string): FilterValueMatcher {

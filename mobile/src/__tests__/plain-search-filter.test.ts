@@ -270,3 +270,18 @@ describe("toWordsSearchFilter", () => {
     }
   });
 });
+
+// w21/912: a typed full-width dot must not become an unescaped regex dot.
+describe("toPlainSearchFilter with full-width text", () => {
+  it("folds it to the ordinary form before escaping", () => {
+    expect(toPlainSearchFilter("ＡＭＡＺＯＮ．ＣＯ．ＪＰ")).toBe(
+      toPlainSearchFilter("AMAZON.CO.JP"),
+    );
+    expect(toPlainSearchFilter("ｽﾀｰﾊﾞｯｸｽ")).toBe(
+      toPlainSearchFilter("スターバックス"),
+    );
+    expect(toPlainSearchFilter("ａｂｃ　ｄｅｆ")).toBe(
+      toPlainSearchFilter("abc def"),
+    );
+  });
+});

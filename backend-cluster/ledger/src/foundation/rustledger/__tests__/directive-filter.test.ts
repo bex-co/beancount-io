@@ -320,6 +320,37 @@ describe("filterDirectives — AdvancedFilter parity", () => {
     );
   });
 
+  // w21/912: exports write full-width Latin and half-width katakana.
+  it("finds full-width and half-width Japanese text by its ordinary form, both ways", () => {
+    const entry = (payee: string): DirectiveJson => ({
+      type: "transaction",
+      date: "2026-10-20",
+      flag: "*",
+      payee,
+      narration: "",
+      tags: [],
+      links: [],
+      postings: [],
+    });
+    const other = entry("Starbucks");
+    const pairs: [string, string][] = [
+      ["amazon", "ＡＭＡＺＯＮ．ＣＯ．ＪＰ"],
+      ["amazon\\.co\\.jp", "ＡＭＡＺＯＮ．ＣＯ．ＪＰ"],
+      ["スターバックス", "ｽﾀｰﾊﾞｯｸｽ 渋谷"],
+      ["abc", "ＡＢＣ"],
+      ["ｽﾀｰﾊﾞｯｸｽ", "スターバックス渋谷"],
+      ["ＡＢＣ", "abc"],
+    ];
+    for (const [search, payee] of pairs) {
+      const found = entry(payee);
+      expect([
+        search,
+        payee,
+        filterDirectives([found, other], { filter: `"${search}"` }),
+      ]).toEqual([search, payee, [found]]);
+    }
+  });
+
   it("compares only Amount-shaped metadata values", () => {
     const primitiveMeta = {
       type: "note",

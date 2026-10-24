@@ -44,7 +44,6 @@
 - [879](./blocked/879.md) — The receipt parse contract carries no currency, so a foreign receipt is always booked in the ledger's currency (split from w21/870) — **blocked:** needs an owner-approved `ReceiptParseResult` currency contract (parity, model prompt, both receipt forms) and an AI-quota evaluation
 - [882](./blocked/882.md) — Chart axes use the app language's money format while the amounts beside them use English (9 languages) — **blocked:** needs an owner product decision on one number convention for money (app language everywhere vs English everywhere), reversing w21/177 or w3/189
 - [895](./blocked/895.md) — Account detail's range chips filter only the chart, not the list below — **blocked:** owner picks a range-bounded list (backend date bound on all surfaces) or an "All entries" caption
-- [912](./912.md) — Full-width and half-width Japanese text doesn't match in search
 - [913](./913.md) — "Load more" skips a row after a deletion elsewhere, and repeats one after a reorder
 - [914](./914.md) — CLF, UYW and UYI postings show different decimals from the headline
 - [915](./915.md) — Symlinks in a ledger repo open as "too large to open on your phone"
