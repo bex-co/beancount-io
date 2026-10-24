@@ -1,6 +1,8 @@
-# LobeHub hosted connector preparation
+# LobeHub hosted connector published; connection verification remains
 
-Checked 2026-10-21 UTC. The [current first-party publishing guide](https://market.lobehub.com/s/publish-mcp) supports an existing Streamable HTTP service. The [manifest reference](https://market.lobehub.com/s/publish-mcp/references/manifest) defines `cloudEndpoint` as a URL string; `lhm.plugin.json` points directly to the canonical Beancount.io hosted endpoint. The LobeHub identifier `beancount-io` is a platform slug; the official registry identity stays `io.beancount/beancount`.
+Current outcome **2026-10-24T21:27:16Z**: [beancount-io@1.0.0 is public](https://lobehub.com/mcp/beancount-io), claimed and owner-published. Public capability metadata is44tools/64resource templates/4prompts. The preferred HTTP endpoint is correct; the known crawler stdio defect and native OAuth journey below remain open. [Actual receipt and limits](./submission-receipt.json).
+
+Original preparation checked2026-10-21UTC. The [current first-party publishing guide](https://market.lobehub.com/s/publish-mcp) supports an existing Streamable HTTP service. The [manifest reference](https://market.lobehub.com/s/publish-mcp/references/manifest) defines `cloudEndpoint` as a URL string; `lhm.plugin.json` points directly to the canonical Beancount.io hosted endpoint. The LobeHub identifier `beancount-io` is a platform slug; the official registry identity stays `io.beancount/beancount`.
 
 The published CLI 0.0.42 requires Node ≥22 and nonempty identifier, name, version
 and description before first publication. The identifier uses lowercase letters,
@@ -111,3 +113,87 @@ without a connection; after approval, restart the same supported connection
 if needed and verify actual status/repository access. Expiry does not require
 another scope confirmation when the recipient/permissions remain identical.
 No other organization access is requested or granted.
+
+## Accepted publication and owner update — 2026-10-24 UTC
+
+The publisher approves the exact GitHub scopes and publishing-organization
+access. A fresh native connection completes; only bex-co Grant is activated,
+other organizations remain untouched, and final Authorize returns success.
+CLI github status confirms Connected. Authenticated owned-plugin list is empty
+and the actual complete public name query still has four unrelated entries.
+
+The official publish command accepts the canonical bex-co/beancount-io repo,
+creates beancount-io@1.0.0 at21:04:24.862UTC and returns success/processing.
+The owned record is claimed. Initial public metadata has no declared capabilities
+and a crawler-generated bea-init stdio recipe. Official owner update merges
+reviewed metadata into the same version and makes it published at21:18:54.027UTC.
+No duplicate record or personal fork is used.
+
+The [manifest](./lhm.plugin.json) now contains actual MCP definitions:
+44tools from fresh Cline SDK0.0.95 discovery through its existing retained QA
+OAuth connection;64generic resource templates from the prior actual Docker
+Gateway discovery;4static prompt descriptors from canonical source commit
+2da3e6f9a, matching the prior native four-prompt observation. Provenance and
+freshness limits are in [metadata-provenance.json](./metadata-provenance.json).
+No concrete account/ledger/file resource URIs or credentials are included.
+All definitions pass the MCP SDK Tool/ResourceTemplate/Prompt schemas.
+No accounting call is made during metadata capture.
+
+A fresh Docker metadata retry is not counted as successful: its engine was
+initially stopped, and after becoming available the stored OAuth access returns
+Unauthorized. The eight Gateway-internal tools are excluded, never published
+as service definitions. The original dated successful Docker journey and the
+currently working Cline metadata connection are retained separately.
+
+Anonymous official-SDK detail/manifest reads for explicit en-US/version1.0.0
+verify all44/64/4definitions, Stocks & Finance, the updated description and
+canonical recommended HTTP endpoint. An initial default read is stale; explicit
+version readback and the refreshed actual public page both show the update.
+The actual [installation tab](https://lobehub.com/mcp/beancount-io?activeTab=deployment)
+shows the same URL in its mcpServers JSON.
+
+## Remaining platform metadata correction
+
+The crawler also labels a bea-init command as a recommended stdio deployment.
+That command is a CLI onboarding example, not an MCP stdio server; it is not
+executed. The official manifest reference explicitly preserves other crawler
+deployment options when cloudEndpoint is supplied, and strips unknown fields.
+The owner update cannot remove this extra option through its supported fields.
+Use **Connect via HTTP**. LobeHub must correct/remove the erroneous stdio option
+through a supported operator/correction path; this remains under t004.
+No private/admin API or invented manifest property is used to hide the defect.
+
+## Actual client preparation; native accounting grant pending
+
+The directory's LobeHub recipe mentions Desktop Skills/Custom Skills. The
+current signed-in web client's actual supported path is
+[Settings → Connectors](https://app.lobehub.com/settings/connector) →
+**Add Custom Connector** (the dialog says Add Custom MCP Skill).
+Streamable HTTP, beancount-io and the canonical endpoint are selected, with
+OAuth and automatic dynamic client registration (client ID/secret left blank).
+
+Authorize & Connect reaches the real Beancount.io consent page returning to
+app.lobehub.com. It requests openid/offline_access/profile/email and
+ledger.read/write/admin. Only the dedicated synthetic mcp-agent-eval ledger is
+selected; All accessible ledgers is unselected. Exact accounting-access approval
+is pending. No final Approve access, new LobeHub ledger grant, client accounting
+query, preview, committed write or model call occurs. This is a different data
+access decision from the completed GitHub account/organization connection.
+After that approval, complete callback/install, then a known read and one
+supported dry_run with unchanged-state evidence. Retain the existing grants
+and canonical entry; neither publisher setup nor publication is requested again.
+
+## Discovery and metadata maintenance
+
+The post-update complete public name query still shows the four other authors'
+entries without the canonical result. The direct canonical detail/version
+manifest is verified separately; name-index propagation remains an external
+follow-through under t004. No duplicate record is created to work around indexing.
+
+Refresh the declared protocol arrays when the hosted MCP definitions change:
+use authenticated discovery, retain service definitions and generic resource
+templates, exclude Gateway-internal tools/prompts and concrete ledger URIs,
+validate against the MCP SDK schemas, then use the supported owner update.
+Preserve actual source/capture timestamps in metadata-provenance.json; static
+source snapshots are not fresh authenticated wire-level discovery. The native
+credentials remain in their existing private stores.

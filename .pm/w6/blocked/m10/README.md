@@ -1,6 +1,6 @@
 # w6 · m10 — List the connector in independent web directories
 
-**Worker:** worker1 **Goal:** People comparing accounting MCP servers find accurate, usable remote listings on the eligible independent directories. **Status:** blocked (t001 published/verified and archived; t009 native login complete; newly observed broad GitHub scope awaits its exact decision; existing free-submission review and publication gates remain)
+**Worker:** worker1 **Goal:** People comparing accounting MCP servers find accurate, usable remote listings on the eligible independent directories. **Status:** blocked (t001/t003/t009 done and archived; LobeHub public/claimed with correct preferred HTTP config; MCPMarket review, LobeHub crawler correction and native accounting verification remain)
 
 **Implementation estimate:** ~2h, excluding external review queues and the standing closing tasks.
 
@@ -8,10 +8,10 @@
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| [t009](t009.md) | Complete LobeHub publisher setup and submit remote listing — **BLOCKED** | 45m | w6/m8/t001 |
+| [t009](done/t009.md) | Complete LobeHub publisher setup and submit remote listing — **DONE** | 45m | w6/m8/t001 |
 | [t001](done/t001.md) | Submit or correct MCPServers.org's free remote listing — **DONE** | 30m | w6/m8/t001 |
 | [t002](t002.md) | Submit or correct MCPMarket's free remote listing — **BLOCKED: free repository submission** | 30m | w6/m8/t001 |
-| [t003](t003.md) | Establish LobeHub eligibility and prepare its supported connector listing — **BLOCKED** | 45m | w6/m8/t001, t009 |
+| [t003](done/t003.md) | Establish LobeHub eligibility and prepare its supported connector listing — **DONE** | 45m | w6/m8/t001, t009 |
 | [t004](t004.md) | Verify the independent-directory listings after moderation | 15m | t001, t002, t003 |
 | [t005](t005.md) | Adoption surface | 30m | t004, t009 |
 | [t006](t006.md) | Simplify | 30m | t005 |
@@ -68,7 +68,8 @@ The earlier exclusion of Claude/ChatGPT was the 2026-10-20 scope decision. The o
 
 ## Blocked — current native login and remaining review, 2026-10-23 UTC
 
-- **t009:** prior terms are approved and the actual publisher/CLI login succeeds. The real publish command requires verified GitHub connection; its newly shown OAuth request includes private repositories, Actions workflows and Gists, without a supported CLI narrowing option. **Unblock:** publisher decides that exact new scope or LobeHub supplies a narrower supported route; worker completes actual connection/repository checks and accepted submission. **Owners:** publisher/LobeHub, then worker. No GitHub/organization grant or plugin submission is claimed. See t009 and its dated packet.
+- **t009/t003:** account/GitHub/bex-co access and actual canonical publication now complete; both finite tasks are archived. The preferred HTTP URL and public44/64/4capability metadata are verified. No duplicate or prior GitHub decision remains.
+- **t004 — LobeHub:** the public page retains an erroneous crawler stdio option that supported owner fields cannot erase. The actual native web OAuth flow is prepared for only the synthetic ledger and requests identity/offline/profile/email/read/write/admin; its final approval is pending. **Unblock/owners:** publisher approves that specific accounting grant; worker completes callback/native query/preview/unchanged-state; LobeHub removes/corrects the malformed crawler deployment through a supported path.
 - **t001:** public search/detail metadata and endpoint/OAuth discovery are now verified; task archived under done/. Directory-advertised native installation/query/preview remains t004. No repeat or paid submission.
 - **t002:** accepted original Free Queue receipt remains the baseline; latest complete query still has21results/End of results without the canonical hosted entry. **Unblock:** MCPMarket publishes an actual record, then worker verifies hosted metadata/connection. **Owners:** MCPMarket reviewers, then worker.
 - **t003-t008:** retain their explicit native/publication and standing closing acceptance; they depend on the preceding blocked work. **Unblock:** the relevant actual publication/access conditions and dependent checks, not a prepared payload or an unrelated platform review. **Owners:** recorded publisher/platforms, then worker.
@@ -85,3 +86,13 @@ retains its original receipt. t009's fresh GitHub connection page again asks
 for the same broad scopes plus an explicit organization-access decision;
 no Authorize or Grant is clicked. Only the affected external steps remain
 blocked. t004 retains its actual native installation/connection acceptance.
+
+## Current publication outcome — 2026-10-24T21:27:16Z
+
+LobeHub accepted publication and same-version owner update are verified; t009
+and t003 are done/archived. The public claimed page shows44tools,64resource
+templates and4prompts. t004 keeps real client accounting verification and the
+known crawler-generated stdio correction. MCPMarket remains in its original
+review queue. Prior LobeHub terms, publisher login and GitHub/bex-co permission
+decisions are complete and are not requested again. Every other pending task
+retains its actual acceptance; the milestone is not closed from publication alone.

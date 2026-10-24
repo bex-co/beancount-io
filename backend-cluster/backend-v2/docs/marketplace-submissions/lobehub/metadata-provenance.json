@@ -1,0 +1,26 @@
+{
+  "target": "beancount-io@1.0.0 on LobeHub",
+  "endpoint": "https://beancount.io/api-gateway/mcp",
+  "tools": {
+    "count": 44,
+    "observedAtUTC": "2026-10-24T21:16:24.366Z",
+    "source": "Official Cline SDK0.0.95 with existing retained synthetic-only native OAuth",
+    "accountingCalls": 0
+  },
+  "resources": {
+    "count": 64,
+    "shape": "MCP resource templates only; no concrete account/ledger/file URIs",
+    "observedAtUTC": "2026-10-24T01:01:37.589Z",
+    "source": "Prior actual official Docker Gateway discovery through retained synthetic-only native OAuth",
+    "freshDiscoveryThisPass": false
+  },
+  "prompts": {
+    "count": 4,
+    "sourceCommit": "2da3e6f9a",
+    "sourcePath": "src/features/ai-agent/api/mcp-prompts.ts",
+    "sourceExportedAtUTC": "2026-10-24T21:17:52.143Z",
+    "limit": "Static canonical source descriptors. Prior native Gateway discovery observed4prompts; this pass does not claim a fresh wire-level prompt list."
+  },
+  "manifestSHA256": "3e0cade33f51086bbbc912ad3c8a28dee41dabfb58e8c16fcfa7105546b7d538",
+  "deploymentBoundary": "Owner cloudEndpoint pins the preferred HTTP URL. Official owner API retains crawler-derived extra deployment options; unsupported fields are not invented to erase them."
+}

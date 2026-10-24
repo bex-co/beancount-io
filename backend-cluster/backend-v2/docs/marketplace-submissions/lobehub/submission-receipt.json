@@ -1,0 +1,117 @@
+{
+  "target": "LobeHub Beancount.io hosted MCP",
+  "identifier": "beancount-io",
+  "version": "1.0.0",
+  "state": "Published and claimed; preferred HTTP configuration verified; crawler-generated extra stdio option needs platform correction; native OAuth journey pending",
+  "lastCheckedAtUTC": "2026-10-24T21:27:16Z",
+  "submittedAtUTC": "2026-10-24T21:04:24.862Z",
+  "publisherCLI": "@lobehub/market-cli0.0.42",
+  "publisherCommand": "lhm plugin publish https://github.com/bex-co/beancount-io --dir docs/marketplace-submissions/lobehub --output json",
+  "repository": "https://github.com/bex-co/beancount-io",
+  "repositoryAcceptedByPublisher": true,
+  "repositoryAccessProof": "Official publish guard accepts the canonical organization repository after the approved GitHub account/bex-co grant. No personal fork or independent admin-permission assertion.",
+  "githubConnection": {
+    "connected": true,
+    "nativeStatusVerified": true,
+    "scopes": [
+      "gist",
+      "read:org",
+      "read:user",
+      "repo",
+      "user:email",
+      "workflow"
+    ],
+    "organizationGranted": "bex-co",
+    "otherOrganizationsGranted": false,
+    "identityConfirmation": "Additional GitHub identity confirmation clears before final authorization; callback displays authorization success.",
+    "credentials": "Retained only in native credential storage; no access token, OAuth state/code or private organization list in this packet."
+  },
+  "dedup": {
+    "ownedPluginsBefore": 0,
+    "publicSearchURL": "https://lobehub.com/mcp?q=beancount",
+    "displayedPrepublishResults": 4,
+    "prepublishCanonicalMatch": false,
+    "paginationComplete": true
+  },
+  "acceptedReceipt": {
+    "success": true,
+    "action": "created",
+    "identifier": "beancount-io",
+    "version": "1.0.0",
+    "status": "processing",
+    "message": "Publication created for beancount-io@1.0.0; repository enrichment is processing"
+  },
+  "ownerUpdate": {
+    "accepted": true,
+    "action": "Merged into existing version1.0.0",
+    "status": "published",
+    "isClaimed": true,
+    "updatedAtUTC": "2026-10-24T21:18:54.027Z"
+  },
+  "publicListingURL": "https://lobehub.com/mcp/beancount-io",
+  "installationEntryURL": "https://lobehub.com/mcp/beancount-io?activeTab=deployment",
+  "nativeClientEntryURL": "https://app.lobehub.com/settings/connector",
+  "publicListingVerified": true,
+  "publicSDKReadbackAtUTC": "2026-10-24T21:19:35.219Z",
+  "publicSDKAuthentication": "None; official SDK public detail/manifest methods, explicit en-US/version1.0.0 and no-cache request",
+  "publicCapabilities": {
+    "tools": 44,
+    "resourceTemplates": 64,
+    "prompts": 4
+  },
+  "preferredConnection": {
+    "type": "http",
+    "url": "https://beancount.io/api-gateway/mcp",
+    "authenticationGuidance": "OAuth",
+    "installationMethod": "none"
+  },
+  "metadataProvenance": "metadata-provenance.json",
+  "metadataDefects": [
+    {
+      "issue": "Repository crawler retains an invalid bea init stdio deployment alongside the correct HTTP deployment.",
+      "scope": "Secondary installation option; it is not an MCP server and was not executed.",
+      "ownerAPIConstraint": "Official manifest reference says cloudEndpoint overrides the preferred remote URL while other crawler deployment options remain; unknown extra fields are stripped. No unsupported delete/override field is invented.",
+      "unblock": "LobeHub corrects/removes the crawler-generated stdio option through a supported operator/correction path.",
+      "owner": "LobeHub; repository publisher coordinates correction."
+    },
+    {
+      "issue": "Generated LobeHub desktop instructions mention Skills/Custom Skills; current web client places custom MCP under Settings/Connectors.",
+      "verifiedRoute": "Settings \u2192 Connectors \u2192 Add Custom Connector \u2192 Streamable HTTP/OAuth",
+      "limit": "Web client route verified; no Desktop journey claimed."
+    }
+  ],
+  "nativeConnection": {
+    "configurationPrepared": true,
+    "mcpName": "beancount-io",
+    "endpoint": "https://beancount.io/api-gateway/mcp",
+    "oauthType": "OAuth; automatic dynamic client registration",
+    "consentReached": true,
+    "returnOrigin": "https://app.lobehub.com",
+    "requestedScopes": [
+      "openid",
+      "offline_access",
+      "profile",
+      "email",
+      "ledger.read",
+      "ledger.write",
+      "ledger.admin"
+    ],
+    "selectedLedger": "Dedicated synthetic mcp-agent-eval ledger only",
+    "allAccessibleLedgersSelected": false,
+    "approveAccessClicked": false,
+    "grantCreated": false,
+    "accountingReadExecuted": false,
+    "writePreviewExecuted": false,
+    "decision": "Exact new native accounting grant requested; pending. The completed GitHub repository authorization is retained separately."
+  },
+  "nextAction": "Complete the specifically approved native synthetic-ledger grant when answered, install/test through LobeHub, then read/query and one supported dry_run with unchanged-state proof. Coordinate removal of the malformed crawler stdio option. No duplicate listing, repeat GitHub authorization or new paid plan.",
+  "publicNameSearchFollowThrough": {
+    "observedOnUTC": "2026-10-24",
+    "source": "Actual name-query reload after owner update",
+    "url": "https://lobehub.com/mcp?q=beancount",
+    "displayedOtherEntries": 4,
+    "canonicalMatch": false,
+    "paginationComplete": true,
+    "limit": "Public direct detail/version manifest are verified, while name-index propagation is still pending; not directory-wide absence or rejection."
+  }
+}
