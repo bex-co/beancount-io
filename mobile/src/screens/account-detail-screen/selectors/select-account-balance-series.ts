@@ -41,10 +41,16 @@ export function selectAccountBalanceDisplay(
   current?: BalanceMap,
   managed?: readonly ManagedSource[],
 ): BalanceDisplay {
-  const points = valued?.getLedgerAccountReport?.linechartData;
+  // Postings dated after today have not happened: a buy pre-entered for next
+  // week turned a cash account into "0 VOO" (w21/907). The report is change
+  // only, so a point's date is its posting's, and the cap is by day.
+  const happened = <T extends { date: string }>(
+    points: readonly T[] | null | undefined,
+  ) => points?.filter((point) => point.date <= today);
+  const points = happened(valued?.getLedgerAccountReport?.linechartData);
   const latest = points?.[points.length - 1];
   const unitsBalance = latestBalance(
-    units?.getLedgerAccountReport?.linechartData,
+    happened(units?.getLedgerAccountReport?.linechartData),
   );
   // Today's value when the trial balance has it, as the Accounts row reads,
   // for every kind of balance. Only a single commodity used it: a mixed

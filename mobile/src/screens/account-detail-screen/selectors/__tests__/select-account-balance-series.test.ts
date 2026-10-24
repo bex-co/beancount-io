@@ -619,3 +619,35 @@ describe("an account first funded this month", () => {
     ]);
   });
 });
+
+// w21/907: a buy dated after today turned a cash account into "0 VOO".
+describe("selectAccountBalanceDisplay with a stock buy still to come", () => {
+  const today = "2026-10-23";
+  const prices = [
+    { base: "VOO", quote: "USD", prices: [{ date: "2026-10-01" }] },
+  ];
+  const kindWith = (buyDate: string, on: string) =>
+    selectAccountBalanceDisplay(
+      "USD",
+      createReport([
+        { date: "2026-10-05", balance: { USD: "4800" } },
+        { date: buyDate, balance: { USD: "0", VOO: "10" } },
+      ]),
+      createReport([
+        { date: "2026-10-05", balance: { USD: "4800" } },
+        { date: buyDate, balance: { VOO: "10" } },
+      ]),
+      prices,
+      on,
+      { USD: "4800" },
+    ).kind;
+
+  it("reads in money until the buy has happened", () => {
+    expect(kindWith("2026-11-02", today)).toBe("money");
+    expect(kindWith("2026-10-28", today)).toBe("money");
+  });
+
+  it("reads in units once today passes the buy", () => {
+    expect(kindWith("2026-10-28", "2026-10-29")).toBe("units");
+  });
+});
