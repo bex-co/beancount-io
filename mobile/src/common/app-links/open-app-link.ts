@@ -51,6 +51,21 @@ function canonicalAppLinkTarget(
 }
 
 /**
+ * Links just handed to the browser. On Android an `https` link the app claims
+ * (`app.json` verifies `/ledger/…`) opens the app again, which handled it,
+ * failed the same probe and handed it to the browser again, so a ledger the
+ * user cannot read looped without reaching one (w21/980). A URL handed over
+ * recently is not probed or handed over a second time.
+ */
+const HANDED_TO_BROWSER_MS = 15_000;
+const handedToBrowser = new Map<string, number>();
+
+const recentlyHandedToBrowser = (url: string): boolean => {
+  const at = handedToBrowser.get(url);
+  return at !== undefined && Date.now() - at < HANDED_TO_BROWSER_MS;
+};
+
+/**
  * Select the target ledger via the same readability probe as ledger discovery,
  * then navigate. On failure leave the current selection intact and open the
  * original URL in the browser.
@@ -69,6 +84,9 @@ export async function openAppLinkTarget(args: {
 }): Promise<OpenAppLinkResult> {
   const { client, sourceUrl, isCurrentSession } = args;
   let target = args.target;
+  if (recentlyHandedToBrowser(sourceUrl)) {
+    return { ok: false, reason: "unreadable" };
+  }
   try {
     const { data } = await client.query<GetLedgerQuery>({
       query: GetLedgerDocument,
@@ -78,6 +96,8 @@ export async function openAppLinkTarget(args: {
     target = canonicalAppLinkTarget(target, data?.getLedger?.id);
   } catch {
     if (isCurrentSession()) {
+      if (handedToBrowser.size > 50) handedToBrowser.clear();
+      handedToBrowser.set(sourceUrl, Date.now());
       await Linking.openURL(sourceUrl);
     }
     return { ok: false, reason: "unreadable" };

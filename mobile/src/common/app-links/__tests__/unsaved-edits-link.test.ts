@@ -12,6 +12,7 @@ import * as guard from "../../unsaved-edits-guard";
 let ledger: string | null = "alice/books";
 const replaced: string[] = [];
 const pushed: unknown[] = [];
+const opened: string[] = [];
 function load() {
   const exports: Record<string, any> = {};
   const source = ts.transpileModule(
@@ -28,7 +29,11 @@ function load() {
     },
     "react-native": {
       InteractionManager: { runAfterInteractions: (fn: () => void) => fn() },
-      Linking: { openURL: async () => {} },
+      Linking: {
+        openURL: async (url: string) => {
+          opened.push(url);
+        },
+      },
     },
     "@/generated-graphql/graphql": { GetLedgerDocument: "GetLedger" },
     "@/common/vars": {
@@ -209,5 +214,69 @@ describe("an app link opened from inside the app", () => {
     expect(ledger).toBe("bob/other");
     expect(pushed).toEqual([]);
     expect(replaced).toEqual([]);
+  });
+});
+
+// w21/980: on Android the browser hand-off re-opened the app on the same https
+// URL, which probed and handed it over again, without end.
+describe("an app link to a ledger the user cannot read", () => {
+  const failing = {
+    query: async () => {
+      throw new Error("FORBIDDEN");
+    },
+  };
+  let urlCounter = 0;
+  const openUnreadable = (sourceUrl: string) =>
+    openAppLinkTarget({
+      client: failing,
+      target: { ledgerFullName: "alice/private", href: "/" },
+      sourceUrl,
+      isCurrentSession: () => true,
+    });
+
+  beforeEach(() => {
+    opened.length = 0;
+    urlCounter += 1;
+  });
+
+  it("hands the URL to the browser once, however often it is delivered again", async () => {
+    const url = `https://beancount.io/ledger/alice/private/journal?n=${urlCounter}`;
+    const first = JSON.stringify(await openUnreadable(url));
+    const again = JSON.stringify(await openUnreadable(url));
+    const third = JSON.stringify(await openUnreadable(url));
+    expect(first).toBe(JSON.stringify({ ok: false, reason: "unreadable" }));
+    expect(again).toBe(first);
+    expect(third).toBe(first);
+    expect(opened).toEqual([url]);
+  });
+
+  it("probes a re-delivered URL no more than once", async () => {
+    let probes = 0;
+    const counting = {
+      query: async () => {
+        probes += 1;
+        throw new Error("FORBIDDEN");
+      },
+    };
+    const url = `https://beancount.io/ledger/alice/private/journal?probe=${urlCounter}`;
+    for (let i = 0; i < 3; i += 1) {
+      await openAppLinkTarget({
+        client: counting,
+        target: { ledgerFullName: "alice/private", href: "/" },
+        sourceUrl: url,
+        isCurrentSession: () => true,
+      });
+    }
+    expect(probes).toBe(1);
+  });
+
+  it("still hands over a different URL", async () => {
+    await openUnreadable(
+      `https://beancount.io/ledger/alice/private/a?n=${urlCounter}`,
+    );
+    await openUnreadable(
+      `https://beancount.io/ledger/alice/private/b?n=${urlCounter}`,
+    );
+    expect(opened.length).toBe(2);
   });
 });
