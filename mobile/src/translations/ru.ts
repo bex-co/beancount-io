@@ -786,6 +786,8 @@ export const ru: Translations = {
   createLedgerNamePlaceholder: "my-book",
   createLedgerNameRequired: "Введите название книги.",
   createLedgerNameMaxLength: "Название должно быть не длиннее 100 символов.",
+  createLedgerDescriptionMaxLength:
+    "Описание может содержать не более 2048 символов.",
   createLedgerNameInvalid:
     "Название должно содержать хотя бы одну букву или цифру.",
   createLedgerNameConflict: "Книга с таким названием уже существует.",

@@ -793,6 +793,8 @@ export const en = {
   createLedgerNamePlaceholder: "my-book",
   createLedgerNameRequired: "Enter a ledger name.",
   createLedgerNameMaxLength: "Name must be 100 characters or fewer.",
+  createLedgerDescriptionMaxLength:
+    "The description can be at most 2048 characters.",
   createLedgerNameInvalid: "Name must include at least one letter or number.",
   createLedgerNameConflict: "A ledger with this name already exists.",
   createLedgerNameReserved:

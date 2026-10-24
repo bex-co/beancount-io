@@ -784,6 +784,8 @@ export const uk: Translations = {
   createLedgerNamePlaceholder: "my-book",
   createLedgerNameRequired: "Введіть назву книги.",
   createLedgerNameMaxLength: "Назва має містити не більше ніж 100 символів.",
+  createLedgerDescriptionMaxLength:
+    "Опис може містити щонайбільше 2048 символів.",
   createLedgerNameInvalid:
     "Назва повинна містити принаймні одну літеру або цифру.",
   createLedgerNameConflict: "Книга з такою назвою вже існує.",

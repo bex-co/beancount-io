@@ -770,6 +770,8 @@ export const bg: Translations = {
   createLedgerNamePlaceholder: "my-book",
   createLedgerNameRequired: "Въведете име на книгата.",
   createLedgerNameMaxLength: "Името трябва да е до 100 знака.",
+  createLedgerDescriptionMaxLength:
+    "Описанието може да е най-много 2048 знака.",
   createLedgerNameInvalid: "Името трябва да съдържа поне една буква или цифра.",
   createLedgerNameConflict: "Вече съществува книга с това име.",
   createLedgerNameReserved:

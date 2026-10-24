@@ -1,6 +1,7 @@
 import { translationLocales } from "../../../translations/__tests__/locale-parity";
 import {
   classifyCreateLedgerError,
+  LEDGER_DESCRIPTION_MAX,
   createRequestFingerprint,
   generateDefaultLedgerName,
   isNewCreateRequest,
@@ -283,5 +284,48 @@ describe("classifyCreateLedgerError for a reserved name", () => {
         catalog.createLedgerNameConflict,
       );
     }
+  });
+});
+
+// w21/949: a description over 2048 characters failed Create with advice to retry.
+describe("a ledger description over the server's limit", () => {
+  it("is classified as the description's error, not a general one", () => {
+    expect(
+      classifyCreateLedgerError(
+        new Error("A ledger description can be at most 2048 characters"),
+      ),
+    ).toBe("description");
+    expect(
+      classifyCreateLedgerError({
+        graphQLErrors: [
+          {
+            message: "A ledger description can be at most 2048 characters",
+            extensions: { code: "BAD_USER_INPUT" },
+          },
+        ],
+      }),
+    ).toBe("description");
+    expect(classifyCreateLedgerError(new Error("boom"))).toBe("other");
+  });
+
+  it("is checked in the form, with its field error, and returns to the form step", () => {
+    const fs = require("fs");
+    const path = require("path");
+    const source = fs
+      .readFileSync(
+        path.join(__dirname, "..", "create-ledger-screen.tsx"),
+        "utf8",
+      )
+      .replace(/\s+/g, "");
+    expect(LEDGER_DESCRIPTION_MAX).toBe(2048);
+    expect(source.includes("[...value].length<=LEDGER_DESCRIPTION_MAX")).toBe(
+      true,
+    );
+    expect(source.includes("maxLength={LEDGER_DESCRIPTION_MAX}")).toBe(true);
+    expect(
+      source.includes(
+        'if(kind==="description"){//Thedescription\'serrorrendersontheformsteptoo.setError("description",{message:t("createLedgerDescriptionMaxLength"),});setStep(FORM_STEP);return;}',
+      ),
+    ).toBe(true);
   });
 });

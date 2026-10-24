@@ -792,6 +792,7 @@ export const sk: Translations = {
   createLedgerNamePlaceholder: "my-book",
   createLedgerNameRequired: "Zadajte názov knihy.",
   createLedgerNameMaxLength: "Názov môže mať najviac 100 znakov.",
+  createLedgerDescriptionMaxLength: "Popis môže mať najviac 2048 znakov.",
   createLedgerNameInvalid:
     "Názov musí obsahovať aspoň jedno písmeno alebo číslicu.",
   createLedgerNameConflict: "Kniha s týmto názvom už existuje.",

@@ -774,6 +774,8 @@ export const nl: Translations = {
   createLedgerNamePlaceholder: "my-book",
   createLedgerNameRequired: "Voer een grootboeknaam in.",
   createLedgerNameMaxLength: "De naam mag maximaal 100 tekens zijn.",
+  createLedgerDescriptionMaxLength:
+    "De beschrijving mag maximaal 2048 tekens bevatten.",
   createLedgerNameInvalid:
     "De naam moet minstens één letter of cijfer bevatten.",
   createLedgerNameConflict: "Er bestaat al een grootboek met deze naam.",

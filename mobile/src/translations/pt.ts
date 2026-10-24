@@ -786,6 +786,8 @@ export const pt: Translations = {
   createLedgerNamePlaceholder: "my-book",
   createLedgerNameRequired: "Digite um nome de livro.",
   createLedgerNameMaxLength: "O nome deve ter 100 caracteres ou menos.",
+  createLedgerDescriptionMaxLength:
+    "A descrição pode ter no máximo 2048 caracteres.",
   createLedgerNameInvalid:
     "O nome deve incluir pelo menos uma letra ou um número.",
   createLedgerNameConflict: "Já existe um livro com este nome.",

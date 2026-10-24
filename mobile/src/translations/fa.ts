@@ -761,6 +761,7 @@ export const fa: Translations = {
   createLedgerNamePlaceholder: "my-book",
   createLedgerNameRequired: "یک نام برای دفترکل وارد کنید.",
   createLedgerNameMaxLength: "نام باید حداکثر ۱۰۰ نویسه باشد.",
+  createLedgerDescriptionMaxLength: "توضیحات حداکثر می‌تواند ۲۰۴۸ نویسه باشد.",
   createLedgerNameInvalid: "نام باید حداقل یک حرف یا عدد داشته باشد.",
   createLedgerNameConflict: "دفترکلی با این نام از قبل وجود دارد.",
   createLedgerNameReserved:

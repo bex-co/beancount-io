@@ -58,7 +58,10 @@ export function generateDefaultLedgerName(existingNames: string[]): string {
 }
 
 export type CreateLedgerErrorKind =
-  "conflict" | "reserved" | "creating" | "tier" | "other";
+  "conflict" | "reserved" | "creating" | "tier" | "description" | "other";
+
+/** The longest ledger description the server takes, in code points as Gitea counts them (w21/949). */
+export const LEDGER_DESCRIPTION_MAX = 2048;
 
 function isReservedName(error: unknown): boolean {
   const gqlErrors = (
@@ -90,6 +93,7 @@ export function classifyCreateLedgerError(
   // read before any text (w21/566).
   if (isReservedName(error)) return "reserved";
   if (lower.includes("still in progress")) return "creating";
+  if (lower.includes("ledger description can be at most")) return "description";
   if (
     lower.includes("already exists") ||
     lower.includes("name conflict") ||

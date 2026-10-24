@@ -63,6 +63,7 @@ import { LEADING_TEXT_ALIGN, leadingInputTextAlign } from "@/common/rtl";
 import { InlineError } from "@/components/inline-error";
 import type { ColorTheme } from "@/types/theme-props";
 import {
+  LEDGER_DESCRIPTION_MAX,
   classifyCreateLedgerError,
   createRequestFingerprint,
   generateDefaultLedgerName,
@@ -233,7 +234,11 @@ export function CreateLedgerScreen(): JSX.Element {
             .refine(isNewLedgerName, {
               message: t("createLedgerNameInvalid"),
             }),
-          description: z.string(),
+          description: z
+            .string()
+            .refine((value) => [...value].length <= LEDGER_DESCRIPTION_MAX, {
+              message: t("createLedgerDescriptionMaxLength"),
+            }),
           private: z.boolean(),
           template: z.enum(["STARTER", "SAMPLE"]),
           // Checked here, in the user's language, rather than refused on Review
@@ -546,6 +551,14 @@ export function CreateLedgerScreen(): JSX.Element {
           setStep(FORM_STEP);
           return;
         }
+        if (kind === "description") {
+          // The description's error renders on the form step too.
+          setError("description", {
+            message: t("createLedgerDescriptionMaxLength"),
+          });
+          setStep(FORM_STEP);
+          return;
+        }
         if (kind === "reserved") {
           setError("name", { message: t("createLedgerNameReserved") });
           setStep(FORM_STEP);
@@ -754,10 +767,17 @@ export function CreateLedgerScreen(): JSX.Element {
                     placeholderTextColor={theme.controlPlaceholder}
                     style={styles.input}
                     accessibilityLabel={t("createLedgerDescription")}
+                    maxLength={LEDGER_DESCRIPTION_MAX}
                   />
                 )}
               />
             </View>
+            {errors.description?.message ? (
+              <InlineError
+                style={styles.error}
+                message={errors.description.message}
+              />
+            ) : null}
 
             <View style={[styles.switchRow, styles.rowDivider]}>
               <Text style={styles.label}>{t("createLedgerPrivate")}</Text>

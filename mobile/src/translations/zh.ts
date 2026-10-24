@@ -699,6 +699,7 @@ export const zh: Translations = {
   createLedgerNamePlaceholder: "my-book",
   createLedgerNameRequired: "请输入账本名称。",
   createLedgerNameMaxLength: "名称不能超过 100 个字符。",
+  createLedgerDescriptionMaxLength: "描述最多 2048 个字符。",
   createLedgerNameInvalid: "名称至少包含一个字母或数字。",
   createLedgerNameConflict: "已存在同名账本。",
   createLedgerNameReserved:
