@@ -73,7 +73,12 @@ export function OptionsTableSection({
           <Table aria-labelledby={titleId}>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-75">{t("common.option")}</TableHead>
+                {/* A fixed 300px name column left a narrow screen's values
+                    about 9px, one character per line (w4/1051). Below sm
+                    the two share the width. */}
+                <TableHead className="w-2/5 sm:w-75">
+                  {t("common.option")}
+                </TableHead>
                 <TableHead>{t("common.value")}</TableHead>
               </TableRow>
             </TableHeader>
