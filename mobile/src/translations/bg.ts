@@ -567,6 +567,7 @@ export const bg: Translations = {
   notificationsTitle: "Известия",
   notificationsErrorsSection: "Грешки в книгата",
   notificationsChangesSection: "Последни промени",
+  notificationsShowMoreErrors: "Покажи още ({{count}})",
   notificationsLedgerHealthy: "Книгата е наред — няма грешки.",
   notificationsNoChanges: "Няма скорошни промени.",
   notificationsShowOlder: "Показване на по-стари промени",

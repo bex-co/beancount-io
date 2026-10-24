@@ -560,6 +560,7 @@ export const fa: Translations = {
   notificationsTitle: "اعلان‌ها",
   notificationsErrorsSection: "خطاهای دفتر کل",
   notificationsChangesSection: "تغییرات اخیر",
+  notificationsShowMoreErrors: "نمایش بیشتر ({{count}})",
   notificationsLedgerHealthy: "دفتر کل سالم است — بدون خطا.",
   notificationsNoChanges: "تغییر اخیری نیست.",
   notificationsShowOlder: "نمایش تغییرات قدیمی‌تر",

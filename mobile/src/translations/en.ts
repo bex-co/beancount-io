@@ -585,6 +585,7 @@ export const en = {
   notificationsTitle: "Notifications",
   notificationsErrorsSection: "Ledger Errors",
   notificationsChangesSection: "Recent Changes",
+  notificationsShowMoreErrors: "Show more ({{count}})",
   notificationsLedgerHealthy: "Ledger is healthy — no errors.",
   notificationsNoChanges: "No recent changes.",
   notificationsShowOlder: "Show older changes",

@@ -574,6 +574,7 @@ export const ru: Translations = {
   notificationsTitle: "Уведомления",
   notificationsErrorsSection: "Ошибки книги",
   notificationsChangesSection: "Последние изменения",
+  notificationsShowMoreErrors: "Показать ещё ({{count}})",
   notificationsLedgerHealthy: "С книгой всё в порядке — ошибок нет.",
   notificationsNoChanges: "Недавних изменений нет.",
   notificationsShowOlder: "Показать более старые изменения",

@@ -569,6 +569,7 @@ export const nl: Translations = {
   notificationsTitle: "Meldingen",
   notificationsErrorsSection: "Grootboekfouten",
   notificationsChangesSection: "Recente wijzigingen",
+  notificationsShowMoreErrors: "Meer tonen ({{count}})",
   notificationsLedgerHealthy: "Het grootboek is in orde — geen fouten.",
   notificationsNoChanges: "Geen recente wijzigingen.",
   notificationsShowOlder: "Oudere wijzigingen tonen",

@@ -580,6 +580,7 @@ export const fr: Translations = {
   notificationsTitle: "Notifications",
   notificationsErrorsSection: "Erreurs du grand livre",
   notificationsChangesSection: "Modifications récentes",
+  notificationsShowMoreErrors: "Afficher plus ({{count}})",
   notificationsLedgerHealthy: "Le grand livre est sain — aucune erreur.",
   notificationsNoChanges: "Aucune modification récente.",
   notificationsShowOlder: "Afficher les modifications plus anciennes",

@@ -580,6 +580,7 @@ export const ca: Translations = {
   notificationsTitle: "Notificacions",
   notificationsErrorsSection: "Errors del llibre",
   notificationsChangesSection: "Canvis recents",
+  notificationsShowMoreErrors: "Mostra'n més ({{count}})",
   notificationsLedgerHealthy: "El llibre està en ordre: cap error.",
   notificationsNoChanges: "Cap canvi recent.",
   notificationsShowOlder: "Mostra els canvis anteriors",

@@ -3,6 +3,7 @@ import { isShowingStaleDataFromQueries } from "@/common/apollo/stale-data";
 import { isolatePath } from "@/common/bidi";
 import { routeText } from "@/common/route-text";
 import {
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -56,6 +57,9 @@ import {
 import { CardLoadFailure } from "@/components/card-load-failure";
 import { selectCardLoadState } from "@/common/apollo/card-load-state";
 
+/** Errors drawn at a time. */
+const ERRORS_PAGE = 50;
+
 const SKELETON_WIDTHS = [180, 220, 160, 200, 140, 190];
 
 const getStyles = (theme: ColorTheme) =>
@@ -76,6 +80,16 @@ const getStyles = (theme: ColorTheme) =>
       paddingHorizontal: 16,
       paddingTop: 20,
       paddingBottom: 8,
+    },
+    showMore: {
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+    },
+    showMoreText: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: theme.primary,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     divider: {
       height: StyleSheet.hairlineWidth,
@@ -282,6 +296,9 @@ function NotificationsScreenImpl(): JSX.Element {
     error: errorsError,
   });
 
+  // A bad import can produce thousands of errors; each row is about eight
+  // native views, so they are drawn a page at a time (w21/978).
+  const [shownErrors, setShownErrors] = useState(ERRORS_PAGE);
   const [refreshing, setRefreshing] = useState(false);
   const {
     data: commitsData,
@@ -419,12 +436,33 @@ function NotificationsScreenImpl(): JSX.Element {
                   </Text>
                 </View>
               ) : (
-                errors.map((err, i) => (
-                  <View key={i}>
-                    <ErrorRow err={err} ledgerId={ledgerId} />
-                    <View style={styles.divider} />
-                  </View>
-                ))
+                <>
+                  {errors.slice(0, shownErrors).map((err, i) => (
+                    <View key={i}>
+                      <ErrorRow err={err} ledgerId={ledgerId} />
+                      <View style={styles.divider} />
+                    </View>
+                  ))}
+                  {shownErrors < errors.length ? (
+                    <Pressable
+                      testID="notifications-show-more-errors"
+                      style={styles.showMore}
+                      onPress={() =>
+                        setShownErrors((count) => count + ERRORS_PAGE)
+                      }
+                      accessibilityRole="button"
+                    >
+                      <Text style={styles.showMoreText}>
+                        {t("notificationsShowMoreErrors", {
+                          count: Math.min(
+                            ERRORS_PAGE,
+                            errors.length - shownErrors,
+                          ),
+                        })}
+                      </Text>
+                    </Pressable>
+                  ) : null}
+                </>
               )}
             </FadeInView>
           )}

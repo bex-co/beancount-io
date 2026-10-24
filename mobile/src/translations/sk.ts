@@ -578,6 +578,7 @@ export const sk: Translations = {
   notificationsTitle: "Upozornenia",
   notificationsErrorsSection: "Chyby knihy",
   notificationsChangesSection: "Nedávne zmeny",
+  notificationsShowMoreErrors: "Zobraziť viac ({{count}})",
   notificationsLedgerHealthy: "Kniha je v poriadku — žiadne chyby.",
   notificationsNoChanges: "Žiadne nedávne zmeny.",
   notificationsShowOlder: "Zobraziť staršie zmeny",

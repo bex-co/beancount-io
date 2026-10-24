@@ -509,6 +509,7 @@ export const zh: Translations = {
   notificationsTitle: "通知",
   notificationsErrorsSection: "账本错误",
   notificationsChangesSection: "最近变更",
+  notificationsShowMoreErrors: "显示更多（{{count}}）",
   notificationsLedgerHealthy: "账本正常 — 没有错误。",
   notificationsNoChanges: "暂无最近变更。",
   notificationsShowOlder: "显示更早的更改",

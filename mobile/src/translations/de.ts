@@ -584,6 +584,7 @@ export const de: Translations = {
   notificationsTitle: "Mitteilungen",
   notificationsErrorsSection: "Hauptbuch-Fehler",
   notificationsChangesSection: "Letzte Änderungen",
+  notificationsShowMoreErrors: "Mehr anzeigen ({{count}})",
   notificationsLedgerHealthy: "Hauptbuch in Ordnung — keine Fehler.",
   notificationsNoChanges: "Keine aktuellen Änderungen.",
   notificationsShowOlder: "Ältere Änderungen anzeigen",

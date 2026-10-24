@@ -580,6 +580,7 @@ export const es: Translations = {
   notificationsTitle: "Notificaciones",
   notificationsErrorsSection: "Errores del libro",
   notificationsChangesSection: "Cambios recientes",
+  notificationsShowMoreErrors: "Mostrar más ({{count}})",
   notificationsLedgerHealthy: "El libro está en orden: sin errores.",
   notificationsNoChanges: "Sin cambios recientes.",
   notificationsShowOlder: "Mostrar cambios anteriores",

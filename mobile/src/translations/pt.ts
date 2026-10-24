@@ -578,6 +578,7 @@ export const pt: Translations = {
   notificationsTitle: "Notificações",
   notificationsErrorsSection: "Erros do livro-razão",
   notificationsChangesSection: "Alterações recentes",
+  notificationsShowMoreErrors: "Mostrar mais ({{count}})",
   notificationsLedgerHealthy: "O livro-razão está saudável — sem erros.",
   notificationsNoChanges: "Sem alterações recentes.",
   notificationsShowOlder: "Mostrar alterações anteriores",

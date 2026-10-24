@@ -573,6 +573,7 @@ export const uk: Translations = {
   notificationsTitle: "Сповіщення",
   notificationsErrorsSection: "Помилки книги",
   notificationsChangesSection: "Останні зміни",
+  notificationsShowMoreErrors: "Показати ще ({{count}})",
   notificationsLedgerHealthy: "З книгою все гаразд — помилок немає.",
   notificationsNoChanges: "Останніх змін немає.",
   notificationsShowOlder: "Показати старіші зміни",
