@@ -216,6 +216,15 @@ function anchorCounts(days: readonly CalendarDay[]): Map<number, number> {
 const ANCHOR_TOLERANCE_DAYS = 3;
 
 /**
+ * A series this long may carry off-anchor events: one extra charge, a payment
+ * made late, a second payment in a month. About a tenth of them, at least one;
+ * shorter series stay strict, where one event is a third of the evidence
+ * (w21/944).
+ */
+const ANCHOR_MIN_EVENTS_FOR_OUTLIERS = 6;
+const ANCHOR_OUTLIER_SHARE = 0.1;
+
+/**
  * The day of the month a series is kept on, or null when it is not: the day
  * most events fall on (at least two, and half of them), with every event within
  * `ANCHOR_TOLERANCE_DAYS` of that day in its own month (clamped at a short
@@ -224,8 +233,10 @@ const ANCHOR_TOLERANCE_DAYS = 3;
  * month's last day for a bill due on the 1st, is still that month's, so one of
  * them no longer drops the anchor (w21/271). Every-four-weeks payments share
  * the monthly gap band but drift through the month, so they keep the day-count
- * step (w21/007). `lastDue` is the last event's due date, which is where the
- * next period counts from.
+ * step (w21/007). A long series may carry an outlier or two (see
+ * `ANCHOR_OUTLIER_SHARE`); they are left out of the count of periods and of
+ * `lastDue`, which is the last on-anchor event's due date, where the next
+ * period counts from.
  */
 function monthDayAnchor(
   eventDays: readonly number[],
@@ -258,6 +269,11 @@ function monthDayAnchor(
     const first = Math.floor(utcDate(year, month, 1).getTime() / MS_PER_DAY);
     return first + Math.min(anchor, daysInMonth(year, month)) - 1;
   };
+  const allowedOutliers =
+    days.length >= ANCHOR_MIN_EVENTS_FOR_OUTLIERS
+      ? Math.max(1, Math.floor(days.length * ANCHOR_OUTLIER_SHARE))
+      : 0;
+  let outliers = 0;
   let previous: number | null = null;
   let lastDue = 0;
   for (let i = 0; i < days.length; i++) {
@@ -273,12 +289,18 @@ function monthDayAnchor(
         nominal = candidate;
       }
     }
-    if (distance > ANCHOR_TOLERANCE_DAYS) return null;
+    if (distance > ANCHOR_TOLERANCE_DAYS) {
+      if (++outliers > allowedOutliers) return null;
+      continue;
+    }
     // The next period or, after a paused or combined one, a later whole number
     // of them; two payments in one period still end the anchor (w21/459).
     if (previous !== null) {
       const step = nominal - previous;
-      if (step <= 0 || step % months !== 0) return null;
+      if (step <= 0 || step % months !== 0) {
+        if (++outliers > allowedOutliers) return null;
+        continue;
+      }
     }
     previous = nominal;
     lastDue = dueOn(nominal);
