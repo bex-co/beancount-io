@@ -65,7 +65,13 @@ export function lineEndingOf(text: string): LineEnding {
   return crlf > all - crlf ? "\r\n" : "\n";
 }
 
-/** `content`'s line breaks written as `ending`. */
+/**
+ * `content`'s line breaks written as `ending`. Every `\n` is one: a `\r` before
+ * it is a character of the line, as the editor opened it (`\r\r\n` is a line
+ * ending and a stray `\r`), so saving it as CRLF dropped one `\r` from every
+ * line of such a file (w21/940). Pasted CRLF text is normalized as it goes in
+ * (`pastedText`).
+ */
 export function withLineEnding(content: string, ending: LineEnding): string {
-  return content.replace(/\r?\n/g, ending);
+  return content.replace(/\n/g, ending);
 }

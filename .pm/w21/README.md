@@ -45,7 +45,6 @@
 - [882](./blocked/882.md) — Chart axes use the app language's money format while the amounts beside them use English (9 languages) — **blocked:** needs an owner product decision on one number convention for money (app language everywhere vs English everywhere), reversing w21/177 or w3/189
 - [895](./blocked/895.md) — Account detail's range chips filter only the chart, not the list below — **blocked:** owner picks a range-bounded list (backend date bound on all surfaces) or an "All entries" caption
 - [922](./blocked/922.md) — Changing to a payee with no history keeps the previous payee's accounts (owner's call) — **blocked:** owner decides whether a no-history or cleared payee resets an untouched fill (reverses w21/411)
-- [940](./940.md) — Saving a file with `\r\r\n` line endings drops a CR on every line
 - [941](./941.md) — Cmd-S on a hardware keyboard saves an unchanged file
 - [942](./942.md) — Tapping the same editor error row again within 3 s doesn't jump
 - [943](./943.md) — A same-day charge and reversal counts as a payment: Next moves, "~" appears, Overdue is lost

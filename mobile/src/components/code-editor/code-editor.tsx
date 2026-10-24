@@ -41,7 +41,7 @@ import { detectIndentUnit, INSERT_INDENT, wrapSelection } from "./indent-unit";
 import { jumpScrollTop } from "./jump-scroll";
 import { editorFontSize } from "./editor-font";
 import { DRAFT_DEBOUNCE_MS } from "./editor-recovery";
-import { EDITOR_LINE_SEPARATOR, editorText } from "./editor-text";
+import { EDITOR_LINE_SEPARATOR, editorText, pastedText } from "./editor-text";
 import {
   beancountIndent,
   copyBeancountState,
@@ -198,6 +198,7 @@ function buildExtensions(
   return [
     // A lone carriage return is a character, as Beancount reads it (w21/815).
     EditorState.lineSeparator.of(EDITOR_LINE_SEPARATOR),
+    EditorView.clipboardInputFilter.of((text) => pastedText(text)),
     accessCompartment.of([
       EditorState.readOnly.of(readOnly),
       EditorView.editable.of(!readOnly),

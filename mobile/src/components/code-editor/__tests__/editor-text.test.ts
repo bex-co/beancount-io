@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
-import { EDITOR_LINE_SEPARATOR, editorText } from "../editor-text";
+import { EDITOR_LINE_SEPARATOR, editorText, pastedText } from "../editor-text";
+import { withLineEnding } from "../../../common/ledger-file-content";
 
 // w21/815: CodeMirror's default separator broke lines at a lone carriage
 // return, so a save rewrote "Order 12\r34" to two lines and an error's line
@@ -39,6 +40,36 @@ describe("the editor's text", () => {
     expect(
       source.includes(
         'Text.of(editorText(documentSpec.savedValue).split("\\n"))',
+      ),
+    ).toBe(true);
+  });
+});
+
+// w21/940: saving a `\r\r\n` file dropped one carriage return from every line.
+describe("a file's line endings across open and save", () => {
+  it("round-trips a doubled carriage return byte for byte", () => {
+    for (const file of [
+      "a\r\nb\r\nc\r\r\n",
+      "a\r\r\nb\r\r\nc\r\r\n",
+      "Order 12\r34\r\nx\r\n",
+    ]) {
+      expect(withLineEnding(editorText(file), "\r\n")).toBe(file);
+    }
+    expect(withLineEnding(editorText("a\nb\n"), "\n")).toBe("a\nb\n");
+  });
+
+  it("writes a pasted CRLF text with the file's own ending", () => {
+    expect(withLineEnding(pastedText("x\r\ny"), "\r\n")).toBe("x\r\ny");
+    expect(withLineEnding(pastedText("x\r\ny"), "\n")).toBe("x\ny");
+  });
+
+  it("filters what the editor takes from the clipboard", () => {
+    const source = fs
+      .readFileSync(path.join(__dirname, "..", "code-editor.tsx"), "utf8")
+      .replace(/\s+/g, "");
+    expect(
+      source.includes(
+        "EditorView.clipboardInputFilter.of((text)=>pastedText(text)),",
       ),
     ).toBe(true);
   });

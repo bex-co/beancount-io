@@ -11,3 +11,13 @@ export const EDITOR_LINE_SEPARATOR = "\n";
 export function editorText(value: string): string {
   return value.replace(/\r\n/g, "\n");
 }
+
+/**
+ * Text pasted into the editor with its CRLF breaks as the editor writes them.
+ * The save writes every `\n` as the file's ending and keeps a `\r` before it as
+ * a character, so a pasted "x\r\ny" would otherwise save with a doubled `\r`
+ * (w21/940).
+ */
+export function pastedText(text: string): string {
+  return text.replace(/\r\n/g, "\n");
+}
