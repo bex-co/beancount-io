@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1050** — [Retry a failed Collaborators settings read in place](./1050.md)
+
 - **1049** — [Keep a nonzero range for very small BQL chart values](./1049.md)
 
 - **1048** — [Match Open Account Unicode names to the ledger grammar](./1048.md)
