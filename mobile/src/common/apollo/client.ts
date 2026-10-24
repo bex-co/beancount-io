@@ -31,4 +31,8 @@ export const apolloClient = new ApolloClient({
   link,
   cache,
   defaultOptions: APOLLO_DEFAULT_OPTIONS,
+  // A read sent after a write must not fold into one already in flight: that
+  // one answers with the rows as they stood before the write, and a deleted row
+  // stayed listed until the next refresh (w21/904).
+  queryDeduplication: false,
 });
