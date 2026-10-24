@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1059** — [Keep Bitcoin source units visible in CSV currency validation](./1059.md)
+
 - **1058** — [Keep very small CSV amounts nonzero in Configure review](./1058.md)
 
 - **1057** — [Use valid number syntax in New Entry amount examples](./1057.md)
