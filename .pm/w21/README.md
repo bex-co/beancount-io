@@ -47,7 +47,7 @@
 - [922](./blocked/922.md) — Changing to a payee with no history keeps the previous payee's accounts (owner's call) — **blocked:** owner decides whether a no-history or cleared payee resets an untouched fill (reverses w21/411)
 - [951](./blocked/951.md) — Expense accounts are valued at market on Accounts and account detail, but at cost everywhere else — **blocked:** owner confirms flows-at-cost covers Income/Expenses balances; needs a native priced-lot check
 - [977](./blocked/977.md) — LedgerPrices pulls every price date for every pair, and Apollo writes and reads them all on each mount — **blocked:** owner picks the API shape for bounding price dates across REST/GraphQL/MCP
-- [994](./994.md) — Budget: mobile prorates the current period to today, the dashboard does not, so verdicts differ (product call)
+- [994](./blocked/994.md) — Budget: mobile prorates the current period to today, the dashboard does not, so verdicts differ (product call) — **blocked:** owner picks full-period or prorated target for the period in progress, then both apps follow
 - [995](./995.md) — Dashboard net worth headline reads next month and a falling arrow when an entry is future-dated (owner: dashboard)
 - [996](./996.md) — A trailing decimal point ("123.") is refused with a red error, including mid-typing (native)
 - [997](./997.md) — A 29-digit amount is accepted by the form, then refused with a misleading "missing amounts" message (native)
