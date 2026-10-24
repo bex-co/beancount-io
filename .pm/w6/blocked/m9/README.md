@@ -1,6 +1,6 @@
 # w6 · m9 — Reach developer marketplaces and galleries
 
-**Worker:** worker1 **Goal:** Developers discover and connect the hosted MCP server through the supported Docker, Cursor, Cline, and GitHub/VS Code galleries. **Status:** blocked (t001/t003/t011/t012/t013/t014 done; official Cursor/Docker review and other native/publication gates remain)
+**Worker:** worker1 **Goal:** Developers discover and connect the hosted MCP server through the supported Docker, Cursor, Cline, and GitHub/VS Code galleries. **Status:** blocked (t001/t003/t005/t011/t012/t013/t014 done; official Cursor/Docker review and other native/publication gates remain)
 
 **Implementation estimate:** ~4½h, excluding external review queues and the standing closing tasks.
 
@@ -16,7 +16,7 @@
 | [t002](t002.md) | Prepare and submit Docker's remote MCP catalog entry — **BLOCKED** | 60m | t001, t012 |
 | [t003](done/t003.md) | Package the remote connection for Cursor's official and community marketplaces — **DONE** | 60m | t001, t011 |
 | [t004](t004.md) | Prepare Cline's eligible marketplace submission and remote connection evidence — **BLOCKED** | 45m | t001, t013 |
-| [t005](t005.md) | Prepare GitHub inclusion and verify VS Code's discovery path — **BLOCKED** | 45m | t001, t014 |
+| [t005](done/t005.md) | Prepare GitHub inclusion and verify VS Code's discovery path — **DONE** | 45m | t001, t014 |
 | [t006](t006.md) | Verify publication and fresh discovery across eligible developer galleries | 30m | t002, t003, t004, t005 |
 | [t007](t007.md) | Adoption surface | 30m | t006, t011, t012, t013, t014 |
 | [t008](t008.md) | Simplify | 30m | t007 |
@@ -82,7 +82,7 @@
 
 - **t005:** concrete GitHub nomination is prepared and unsent. Source-backed anonymous API checks of installed VS Code 1.135.0's public default feed return zero name/identity results; all six latest-feed pages contain 560 unique records with no canonical name/endpoint/repository match. This independent read substep is complete without a user-input gate. The earlier native `@mcp` snapshot remains 51 entries/50 observed names; effective organization policy, typed native filtering and install/Copilot OAuth/query/preview are not inferred from the public feed. **Unblock:** authorized operator request, curated acceptance and fresh native QA discovery/OAuth/query/preview under w1/m34/t003. **Owner:** publisher, GitHub reviewers and QA/client account holder.
 
-  The [nomination evidence correction](t005.md#nomination-evidence-correction--2026-10-22-utc)
+  The [nomination evidence correction](done/t005.md#nomination-evidence-correction--2026-10-22-utc)
   removes its stale claim that Cursor native verification is still open and
   links the completed community OAuth/query/preview record. VS Code verification
   remains open; the corrected request is still unsent.
@@ -164,3 +164,12 @@ and its exact new sharing decision, separate from completed client OAuth/t012.
 Docker-review recipient, then worker verifies bounds and submits the form;
 alternatively Docker reviewers waive or supply a supported replacement. t006
 retains actual publication and catalog verification.
+
+## GitHub preparation triage closure — 2026-10-24T02:34:06Z
+
+The original t005 criteria hold on shipped evidence: canonical registry identity,
+separate GitHub/VS Code discovery records and the actual sent nomination. It is
+archived under done/ with the fresh active-registry/empty-default-feed control.
+The public result remains pending curation. t006 explicitly owns GitHub
+acceptance/publication and actual gallery installation/QA, alongside existing
+w1/m34/t003 native ownership. The milestone stays blocked on those real outcomes.
