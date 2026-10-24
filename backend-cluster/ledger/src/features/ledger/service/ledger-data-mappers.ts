@@ -40,11 +40,26 @@ export function toAttributesPublic(
  * the same reason. `severity` keeps a warning from passing for an error: the
  * engine marks a one-posting entry or closing an account with a balance as
  * warnings while `bean-check` passes, and every client counted them (w21/188).
+ *
+ * Listed by file and line, those without a location last: the engine appends
+ * them phase by phase, so an option error on line 2 came after a plugin error
+ * on line 27 (w21/901). The sort is stable, so errors on one line keep the
+ * engine's order.
  */
 export function toBeancountErrorsPublic(
   errors: BeancountError[],
 ): BeancountErrorPublic[] {
-  return errors.map((error) => ({
+  const located = (error: BeancountError) =>
+    !!error.file && error.line !== null && error.line !== undefined;
+  const ordered = [...errors].sort((left, right) => {
+    if (located(left) !== located(right)) return located(left) ? -1 : 1;
+    if (!located(left)) return 0;
+    return (
+      (left.file! < right.file! ? -1 : left.file! > right.file! ? 1 : 0) ||
+      left.line! - right.line!
+    );
+  });
+  return ordered.map((error) => ({
     message: error.message,
     source:
       error.file && error.line !== null && error.line !== undefined

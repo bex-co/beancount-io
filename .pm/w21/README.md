@@ -44,7 +44,6 @@
 - [879](./blocked/879.md) — The receipt parse contract carries no currency, so a foreign receipt is always booked in the ledger's currency (split from w21/870) — **blocked:** needs an owner-approved `ReceiptParseResult` currency contract (parity, model prompt, both receipt forms) and an AI-quota evaluation
 - [882](./blocked/882.md) — Chart axes use the app language's money format while the amounts beside them use English (9 languages) — **blocked:** needs an owner product decision on one number convention for money (app language everywhere vs English everywhere), reversing w21/177 or w3/189
 - [895](./blocked/895.md) — Account detail's range chips filter only the chart, not the list below — **blocked:** owner picks a range-bounded list (backend date bound on all surfaces) or an "All entries" caption
-- [901](./901.md) — Ledger errors aren't in file order
 - [902](./902.md) — A misspelled built-in plugin is reported as needing the python-plugins feature
 - [903](./903.md) — Recent changes rows read only "Add 1 entry" or "Update entry"
 - [904](./904.md) — A write during an in-flight refresh shows pre-write data (Apollo deduplicates the refetch)

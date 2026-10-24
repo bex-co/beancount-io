@@ -27,3 +27,29 @@ describe("toBeancountErrorsPublic severity", () => {
     ).toEqual(["warning", "error"]);
   });
 });
+
+// w21/901: errors came phase by phase, an option error on line 2 listed last.
+describe("toBeancountErrorsPublic order", () => {
+  const at = (message: string, file: string | null, line: number | null) =>
+    ({ ...raw("error", message), file, line }) as BeancountError;
+
+  it("lists errors by file and line, those without a location last", () => {
+    expect(
+      toBeancountErrorsPublic([
+        at("plugin", "main.bean", 27),
+        at("nowhere", null, null),
+        at("other", "other.bean", 1),
+        at("first", "main.bean", 9),
+        at("option", "main.bean", 2),
+        at("same line, later", "main.bean", 9),
+      ]).map((error) => error.message),
+    ).toEqual([
+      "option",
+      "first",
+      "same line, later",
+      "plugin",
+      "other",
+      "nowhere",
+    ]);
+  });
+});
