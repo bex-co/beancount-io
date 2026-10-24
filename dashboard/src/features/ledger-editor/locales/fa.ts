@@ -78,4 +78,14 @@ export default {
     message: "حذف فایل {path}",
     description: "Generated commit message for deleting a file",
   },
+  "ledgerEditor.folderNamesChecking": {
+    message: "در حال بررسی نام‌هایی که از قبل در این پوشه هستند…",
+    description:
+      "Shown while a create or upload form waits for the target folder's existing names before allowing the write",
+  },
+  "ledgerEditor.folderNamesFailed": {
+    message: "بررسی نام‌هایی که از قبل در این پوشه هستند ممکن نشد.",
+    description:
+      "Shown with Try Again when reading the target folder's existing names failed, so a name clash cannot be ruled out",
+  },
 };

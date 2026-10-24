@@ -28,7 +28,8 @@ vi.mock("@apollo/client/react", () => ({
     cache: { evict: () => true, gc: () => [] },
   }),
   useMutation: () => [vi.fn()],
-  useQuery: () => ({ data: undefined }),
+  // The folder has been read and holds nothing yet.
+  useQuery: () => ({ data: { getLedgerDirContent: [] } }),
 }));
 
 vi.mock("@/common/hooks/use-ledger-permission", () => ({

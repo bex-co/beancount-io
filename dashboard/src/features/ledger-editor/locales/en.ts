@@ -78,4 +78,14 @@ export default {
     message: "Delete file {path}",
     description: "Generated commit message for deleting a file",
   },
+  "ledgerEditor.folderNamesChecking": {
+    message: "Checking the names already in this folder…",
+    description:
+      "Shown while a create or upload form waits for the target folder's existing names before allowing the write",
+  },
+  "ledgerEditor.folderNamesFailed": {
+    message: "Couldn't check the names already in this folder.",
+    description:
+      "Shown with Try Again when reading the target folder's existing names failed, so a name clash cannot be ruled out",
+  },
 };

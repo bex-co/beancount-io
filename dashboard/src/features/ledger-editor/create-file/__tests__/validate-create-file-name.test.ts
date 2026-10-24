@@ -119,6 +119,13 @@ describe("createFileNameIssue", () => {
     );
   });
 
+  it("waits on an unknown listing only where a clash is possible (w4/1036)", () => {
+    expect(createFileNameIssue("main.bean", null)).toBe("unchecked");
+    expect(createFileNameIssue("reports/main.bean", null)).toBeNull();
+    expect(createFileNameIssue("../evil.bean", null)).toBe("unsafe");
+    expect(createFileNameIssue("   ", null)).toBe("empty");
+  });
+
   it("reports empty, unsafe, and colliding names", () => {
     expect(createFileNameIssue("   ", ["main.bean"])).toBe("empty");
     expect(createFileNameIssue("../evil.bean", ["main.bean"])).toBe("unsafe");

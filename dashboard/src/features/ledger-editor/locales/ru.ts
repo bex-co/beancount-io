@@ -79,4 +79,14 @@ export default {
     message: "Удалить файл {path}",
     description: "Generated commit message for deleting a file",
   },
+  "ledgerEditor.folderNamesChecking": {
+    message: "Проверяем имена, которые уже есть в этой папке…",
+    description:
+      "Shown while a create or upload form waits for the target folder's existing names before allowing the write",
+  },
+  "ledgerEditor.folderNamesFailed": {
+    message: "Не удалось проверить имена, которые уже есть в этой папке.",
+    description:
+      "Shown with Try Again when reading the target folder's existing names failed, so a name clash cannot be ruled out",
+  },
 };

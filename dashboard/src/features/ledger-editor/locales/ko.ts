@@ -78,4 +78,14 @@ export default {
     message: "파일 삭제 {path}",
     description: "Generated commit message for deleting a file",
   },
+  "ledgerEditor.folderNamesChecking": {
+    message: "이 폴더에 이미 있는 이름을 확인하는 중…",
+    description:
+      "Shown while a create or upload form waits for the target folder's existing names before allowing the write",
+  },
+  "ledgerEditor.folderNamesFailed": {
+    message: "이 폴더에 이미 있는 이름을 확인하지 못했습니다.",
+    description:
+      "Shown with Try Again when reading the target folder's existing names failed, so a name clash cannot be ruled out",
+  },
 };

@@ -4,17 +4,14 @@ import { getLedgerFilesRootPath } from "@/common/hooks/use-file-navigate";
 import { useState, useRef, useId, useMemo, useEffect } from "react";
 import type { DragEvent } from "react";
 import { useParams, useNavigate } from "@tanstack/react-router";
-import { useMutation, useQuery } from "@apollo/client/react";
+import { useMutation } from "@apollo/client/react";
 import { useRefreshDirectory } from "@/features/ledger-editor/shared/hooks/use-refresh-directory";
 import { Card, CardContent } from "@/common/components/ui/card";
 import { Button } from "@/common/components/ui/button";
 import { Input } from "@/common/components/ui/input";
 import { Label } from "@/common/components/ui/label";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
-import {
-  CreateLedgerFileDocument,
-  GetLedgerDirContentDocument,
-} from "@/graphql/definitions";
+import { CreateLedgerFileDocument } from "@/graphql/definitions";
 
 import { Upload, X, FileText, AlertCircle } from "lucide-react";
 import type {
@@ -29,6 +26,8 @@ import { toast } from "sonner";
 import { useLedger } from "@/common/hooks/use-ledger";
 import { useLedgerPermission } from "@/common/hooks/use-ledger-permission";
 import { WriteAccessRequired } from "@/features/ledger-editor/shared/components/write-access-required";
+import { FolderNamesStatus } from "@/features/ledger-editor/shared/components/folder-names-status";
+import { useFolderNames } from "@/features/ledger-editor/shared/hooks/use-folder-names";
 import { formatFileSize } from "../shared/lib/utils";
 
 // Maximum file size allowed (1MB)
@@ -90,6 +89,7 @@ const UploadFilesPage = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadSizeLimitId = useId();
   const uploadClashId = useId();
+  const folderCheckId = useId();
   /** Where the last upload stopped, and what it had already written. */
   const [uploadFailure, setUploadFailure] = useState<{
     fileName: string;
@@ -98,14 +98,8 @@ const UploadFilesPage = () => {
   } | null>(null);
 
   // The folder's names: Gitea refuses to create a path that already exists.
-  const { data: dirData } = useQuery(GetLedgerDirContentDocument, {
-    variables: { ledgerId, dirPath: dirPath || null },
-    skip: !ledgerId,
-  });
-  const existingNames = useMemo(
-    () => new Set((dirData?.getLedgerDirContent ?? []).map((e) => e.name)),
-    [dirData],
-  );
+  const folder = useFolderNames(ledgerId, dirPath);
+  const existingNames = useMemo(() => new Set(folder.names), [folder.names]);
 
   const refreshDirectory = useRefreshDirectory(ledgerId, dirPath);
   const [createFileMutation] = useMutation<
@@ -119,6 +113,9 @@ const UploadFilesPage = () => {
   const hasExistingFiles = selectedFiles.some((file) =>
     existingNames.has(file.name),
   );
+  // Until the folder's names arrive, any chosen file might clash.
+  const awaitsFolderCheck = selectedFiles.length > 0 && folder.names === null;
+  const folderCheckShown = Boolean(folder.failure) || awaitsFolderCheck;
 
   // This also guards the handler before any file is read or sent.
   const isUploadDisabled =
@@ -126,7 +123,8 @@ const UploadFilesPage = () => {
     selectedFiles.length === 0 ||
     isUploading ||
     hasOversizedFiles ||
-    hasExistingFiles;
+    hasExistingFiles ||
+    awaitsFolderCheck;
 
   /**
    * Handle cancel button click - navigate back to files view
@@ -491,6 +489,13 @@ const UploadFilesPage = () => {
                 {t("ledgerEditor.removeExistingFiles")}
               </p>
             )}
+            <FolderNamesStatus
+              id={folderCheckId}
+              checking={awaitsFolderCheck}
+              failure={folder.failure}
+              retrying={folder.retrying}
+              onRetry={folder.retry}
+            />
             <div className="flex items-center gap-3">
               <Button
                 variant="default"
@@ -500,6 +505,7 @@ const UploadFilesPage = () => {
                   [
                     hasOversizedFiles && uploadSizeLimitId,
                     hasExistingFiles && uploadClashId,
+                    folderCheckShown && folderCheckId,
                   ]
                     .filter(Boolean)
                     .join(" ") || undefined

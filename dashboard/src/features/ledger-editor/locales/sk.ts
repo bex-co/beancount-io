@@ -79,4 +79,15 @@ export default {
     message: "Odstrániť súbor {path}",
     description: "Generated commit message for deleting a file",
   },
+  "ledgerEditor.folderNamesChecking": {
+    message: "Kontrolujú sa názvy, ktoré už sú v tomto priečinku…",
+    description:
+      "Shown while a create or upload form waits for the target folder's existing names before allowing the write",
+  },
+  "ledgerEditor.folderNamesFailed": {
+    message:
+      "Názvy, ktoré už sú v tomto priečinku, sa nepodarilo skontrolovať.",
+    description:
+      "Shown with Try Again when reading the target folder's existing names failed, so a name clash cannot be ruled out",
+  },
 };

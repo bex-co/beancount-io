@@ -79,4 +79,14 @@ export default {
     message: "Supprimer le fichier {path}",
     description: "Generated commit message for deleting a file",
   },
+  "ledgerEditor.folderNamesChecking": {
+    message: "Vérification des noms déjà présents dans ce dossier…",
+    description:
+      "Shown while a create or upload form waits for the target folder's existing names before allowing the write",
+  },
+  "ledgerEditor.folderNamesFailed": {
+    message: "Impossible de vérifier les noms déjà présents dans ce dossier.",
+    description:
+      "Shown with Try Again when reading the target folder's existing names failed, so a name clash cannot be ruled out",
+  },
 };

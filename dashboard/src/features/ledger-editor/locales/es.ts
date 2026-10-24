@@ -79,4 +79,14 @@ export default {
     message: "Eliminar archivo {path}",
     description: "Generated commit message for deleting a file",
   },
+  "ledgerEditor.folderNamesChecking": {
+    message: "Comprobando los nombres que ya hay en esta carpeta…",
+    description:
+      "Shown while a create or upload form waits for the target folder's existing names before allowing the write",
+  },
+  "ledgerEditor.folderNamesFailed": {
+    message: "No se pudieron comprobar los nombres que ya hay en esta carpeta.",
+    description:
+      "Shown with Try Again when reading the target folder's existing names failed, so a name clash cannot be ruled out",
+  },
 };

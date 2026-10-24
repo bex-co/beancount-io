@@ -4,6 +4,8 @@ export type CreateFileNameIssue =
   | "emptySegment"
   | "git"
   | "exists"
+  /** The folder's names are not known yet, so a clash cannot be ruled out. */
+  | "unchecked"
   | null;
 
 function createFilePathIssue(path: string): CreateFileNameIssue {
@@ -32,26 +34,12 @@ export function isSafeCreateFilePath(path: string): boolean {
 }
 
 /**
- * Whether `filename` (possibly nested under `dirPath`) collides with an
- * existing directory entry name at the create target.
+ * What stops `filename` (possibly nested under `dirPath`) from being created.
+ * `existingNames` is the target folder's listing, or null while it is unknown.
  */
-export function createFileNameCollides(
-  filename: string,
-  existingNames: ReadonlyArray<string>,
-): boolean {
-  const trimmed = filename.trim();
-  if (!trimmed) return false;
-  // Nested paths (a/b/c.bean) create into missing dirs; only collide when the
-  // typed name is a single segment in the current directory listing.
-  if (trimmed.includes("/")) {
-    return false;
-  }
-  return existingNames.some((name) => name === trimmed);
-}
-
 export function createFileNameIssue(
   filename: string,
-  existingNames: ReadonlyArray<string>,
+  existingNames: ReadonlyArray<string> | null,
   dirPath = "",
 ): CreateFileNameIssue {
   const trimmed = filename.trim();
@@ -59,6 +47,9 @@ export function createFileNameIssue(
   const fullPath = dirPath ? `${dirPath}/${trimmed}` : trimmed;
   const pathIssue = createFilePathIssue(fullPath);
   if (pathIssue) return pathIssue;
-  if (createFileNameCollides(trimmed, existingNames)) return "exists";
-  return null;
+  // Nested paths (a/b/c.bean) create into missing dirs; only a single
+  // segment can collide with the current directory listing.
+  if (trimmed.includes("/")) return null;
+  if (existingNames === null) return "unchecked";
+  return existingNames.includes(trimmed) ? "exists" : null;
 }
