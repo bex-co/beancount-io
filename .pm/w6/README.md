@@ -27,8 +27,8 @@ Earlier in this run, m9/m10 returned from blocked/ for newly materialized receip
 
 The publisher now explicitly agrees to the displayed final agreement actions,
 including Cursor and the other shown services. Official Cursor, Docker and Cline submissions are
-accepted and t011/t012/t013 are archived; **65 pending leaves remain** after those receipt
-closures. The prior all-blocked snapshot below is historical. Continue the next
+accepted and t011/t012/t013 are archived; **64 pending leaves remain** after those receipt
+closures and the evidence-backed original Cursor packaging closure (t003). The prior all-blocked snapshot below is historical. Continue the next
 approved agreement/account workflow instead of waiting for Cursor review.
 No actual publication, unrelated payment or broader data grant is inferred from
 the accepted Cursor receipt.
@@ -168,7 +168,7 @@ Prioritize the major correctness findings (PRINT/FROM/JOURNAL, authored location
 
 - [ ] **m6.5** — [Distribute the Beancount.io customer skills as one suite](./blocked/m6.5/README.md) (12 tasks; 9 done; A3/A2/A1) ← explicit owner request 2026-10-22, extended to other channels 2026-10-23 UTC. **Blocked:** Hermes admission, third-party index read-backs and final closeout. Owned grouping/whole-suite install refresh and CI checks implemented; suite 0.4.0 public and all thirteen standalone ClawHub listings retired.
 
-- [ ] **m9** — [Reach developer marketplaces and galleries](blocked/m9/README.md) (14 tasks; 5 done; A3/A1) ← expanded by the 2026-10-23 all-submissions request. **Blocked:** t011 official Cursor, t012 Docker, t013 Cline and t014 GitHub nomination are submitted and archived; other native/reviewer/publication gates remain. Platform/native verification remains separate; continue m10/m11.
+- [ ] **m9** — [Reach developer marketplaces and galleries](blocked/m9/README.md) (14 tasks; 6 done; A3/A1) ← expanded by the 2026-10-23 all-submissions request. **Blocked:** t011 official Cursor, t012 Docker, t013 Cline and t014 GitHub nomination are submitted and archived; other native/reviewer/publication gates remain. Platform/native verification remains separate; continue m10/m11.
 - [ ] **m10** — [List the connector in independent web directories](blocked/m10/README.md) (9 tasks; A3/A1) ← expanded by the 2026-10-23 all-submissions request. **Blocked:** t009 native login succeeds, but a newly shown GitHub private-repository/workflow/Gist scope awaits its exact decision; original two free submissions remain in review. Continue independent work.
 
 - [ ] **m8** — [Claim and publish the hosted connector on Smithery and Glama](blocked/m8/README.md) (8 tasks; A3/A1) ← existing local marketplace roadmap, continued under `$loopx w6` on 2026-10-21 UTC; t001 packet shipped; **blocked:** Smithery publisher returns removed-update 403, Glama awaits w2/088 claim and full-day health

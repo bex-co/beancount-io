@@ -1,6 +1,6 @@
 # w6 · m9 — Reach developer marketplaces and galleries
 
-**Worker:** worker1 **Goal:** Developers discover and connect the hosted MCP server through the supported Docker, Cursor, Cline, and GitHub/VS Code galleries. **Status:** blocked (t001/t011/t012/t013/t014 done; official Cursor/Docker review and other native/publication gates remain)
+**Worker:** worker1 **Goal:** Developers discover and connect the hosted MCP server through the supported Docker, Cursor, Cline, and GitHub/VS Code galleries. **Status:** blocked (t001/t003/t011/t012/t013/t014 done; official Cursor/Docker review and other native/publication gates remain)
 
 **Implementation estimate:** ~4½h, excluding external review queues and the standing closing tasks.
 
@@ -14,7 +14,7 @@
 | [t013](done/t013.md) | Complete required native checks and send Cline submission — **DONE** | 60m | t001 |
 | [t014](done/t014.md) | Send GitHub curated-gallery nomination and record delivery — **DONE** | 30m | t001 |
 | [t002](t002.md) | Prepare and submit Docker's remote MCP catalog entry — **BLOCKED** | 60m | t001, t012 |
-| [t003](t003.md) | Package the remote connection for Cursor's official and community marketplaces — **BLOCKED** | 60m | t001, t011 |
+| [t003](done/t003.md) | Package the remote connection for Cursor's official and community marketplaces — **DONE** | 60m | t001, t011 |
 | [t004](t004.md) | Prepare Cline's eligible marketplace submission and remote connection evidence — **BLOCKED** | 45m | t001, t013 |
 | [t005](t005.md) | Prepare GitHub inclusion and verify VS Code's discovery path — **BLOCKED** | 45m | t001, t014 |
 | [t006](t006.md) | Verify publication and fresh discovery across eligible developer galleries | 30m | t002, t003, t004, t005 |
@@ -145,3 +145,11 @@ with distinct limits. No review approval or public listing is inferred.
 **Unblock:** Cline reviewers approve/publish this existing issue, then the worker
 verifies actual catalog discovery and the remaining original native acceptance
 under t004/t006. Continue independent publisher/index workflows meanwhile.
+
+## Cursor packaging triage closure — 2026-10-24 UTC
+
+The original t003 acceptance now holds: valid hosted-only package, distinct
+actual official/community submission records and completed native QA. It is
+archived under done/ with evidence. Official review/publication and subsequent
+actual official-gallery verification remain under t006; the milestone remains
+blocked and its public-listing DoD is unchanged.
