@@ -154,7 +154,6 @@ describe("isBudgetAmount", () => {
       "1,23,4",
       "$500",
       "1e3",
-      "12.",
       "1.2.3,4",
       "-",
       "",
@@ -215,7 +214,7 @@ describe("a budget amount typed with other keyboards' digits", () => {
   });
 
   it("still refuses what is not a number", () => {
-    for (const text of ["۵۰۰abc", "۵۰۰٫", "12..3"]) {
+    for (const text of ["۵۰۰abc", "12..3"]) {
       expect(isBudgetAmount(text)).toBe(false);
     }
   });

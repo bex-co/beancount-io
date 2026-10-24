@@ -48,7 +48,6 @@
 - [951](./blocked/951.md) — Expense accounts are valued at market on Accounts and account detail, but at cost everywhere else — **blocked:** owner confirms flows-at-cost covers Income/Expenses balances; needs a native priced-lot check
 - [977](./blocked/977.md) — LedgerPrices pulls every price date for every pair, and Apollo writes and reads them all on each mount — **blocked:** owner picks the API shape for bounding price dates across REST/GraphQL/MCP
 - [994](./blocked/994.md) — Budget: mobile prorates the current period to today, the dashboard does not, so verdicts differ (product call) — **blocked:** owner picks full-period or prorated target for the period in progress, then both apps follow
-- [996](./996.md) — A trailing decimal point ("123.") is refused with a red error, including mid-typing (native)
 - [997](./997.md) — A 29-digit amount is accepted by the form, then refused with a misleading "missing amounts" message (native)
 - [998](./998.md) — The range pills are about 28 pt tall with no touch slop (native)
 - [999](./999.md) — The search ✕ and the Filters button overlap in the 8 pt gap and are under 44 pt

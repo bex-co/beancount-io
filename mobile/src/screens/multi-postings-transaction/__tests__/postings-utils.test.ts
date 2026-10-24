@@ -49,7 +49,6 @@ test("parseExactAmount normalizes a single comma decimal separator", () => {
 });
 
 test("parseExactAmount rejects incomplete or prefix-only junk", () => {
-  expect(parseExactAmount("1.")).toBe(null);
   expect(parseExactAmount("1,25,00")).toBe(null);
   expect(parseExactAmount("abc")).toBe(null);
   expect(parseExactAmount("1.00USD")).toBe(null);
@@ -929,7 +928,7 @@ test("parseExactAmount keeps the sign and thousands grouping of such input", () 
 
 test("parseExactAmount still refuses what is not a number in any script", () => {
   expect(parseExactAmount("۱۲abc")).toBe(null);
-  expect(parseExactAmount("۱٫")).toBe(null);
+  expect(parseExactAmount("۱٫")).toBe("1");
   expect(parseExactAmount("١٢٫٥٫٠")).toBe(null);
 });
 
@@ -1309,4 +1308,16 @@ describe("parseExactAmount with lakh and apostrophe grouping", () => {
     expect(parseExactAmount("1,2,3")).toBe(null);
     expect(parseExactAmount("1'23")).toBe(null);
   });
+});
+
+// w21/996: "123." is the amount so far while typing "123.50", and Beancount reads
+// it as 123.
+test("parseExactAmount reads a trailing decimal mark as the whole number", () => {
+  expect(parseExactAmount("123.")).toBe("123");
+  expect(parseExactAmount("5.")).toBe("5");
+  expect(parseExactAmount("-5.")).toBe("-5");
+  expect(parseExactAmount("123,")).toBe("123");
+  expect(parseExactAmount(".")).toBe(null);
+  expect(parseExactAmount(",")).toBe(null);
+  expect(parseExactAmount("1,234,")).toBe(null);
 });

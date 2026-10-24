@@ -48,7 +48,7 @@ describe("Create Ledger's opening line", () => {
     expect(source.includes('t("createLedgerReviewOpening", {')).toBe(true);
   });
 
-  // w21/326: "12." typed, then "Decide later": the field disappeared but its
+  // w21/326: "12.5." typed, then "Decide later": the field disappeared but its
   // value stayed, and Next's validation kept failing on it with no message.
   it('clears the hidden amount when "Decide later" is picked', () => {
     const source = fs
@@ -70,7 +70,7 @@ describe("Create Ledger's opening line", () => {
 
   it("would otherwise refuse the hidden value: it does not parse as an amount", () => {
     // The refine the form runs on `openingAmount` is `openingAmountValue`.
-    expect(openingAmountValue("12.")).toBe(null);
+    expect(openingAmountValue("12.5.")).toBe(null);
     expect(openingAmountValue("")).not.toBe(null);
   });
 });

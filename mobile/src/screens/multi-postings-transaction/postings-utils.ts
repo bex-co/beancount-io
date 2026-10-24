@@ -112,7 +112,10 @@ export function parseExactAmount(input: string, minorUnits = 2): string | null {
     trimmed = trimmed.replace(/\u066c/g, "");
   }
 
-  let normalized = trimmed;
+  // A decimal mark with no digits after it is the amount so far, mid-typing, and
+  // Beancount reads "123." as 123: not an error to show under every keystroke
+  // (w21/996). Only plain digits before it; "1,234," stays a guess we don't make.
+  let normalized = trimmed.replace(/^(-?\d+)[.,]$/, "$1");
   // One group of thousands in a currency with no decimals: "1.500" yen is
   // 1500. Never after a lone zero, which no thousands group follows: "0.500"
   // read as 500, a thousand times what was typed (w21/794).
