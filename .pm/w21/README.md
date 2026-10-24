@@ -103,3 +103,5 @@
 - [946](./946.md) — Add Budget saves a yen budget as USD for an account that only spends yen
 - [947](./947.md) — Adding a budget for an already-budgeted account skips Update's safeguards
 - [948](./948.md) — Changing the budget date doesn't recheck when the account opens
+- [949](./949.md) — A ledger description over 2048 characters fails Create with a generic retry message
+- [950](./950.md) — A pasted ledger name with a tab or line break shows the server's raw "Title" error on Review
