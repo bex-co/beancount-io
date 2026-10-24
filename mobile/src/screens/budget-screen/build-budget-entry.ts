@@ -40,7 +40,7 @@ export type BudgetEntryInput = {
  * unambiguous ("1,234.56", "1.234,56"), all written as `49.99`-style ASCII
  * (w21/514). The text is otherwise written verbatim, so `12..3`, `abc` or
  * `1e3` used to commit an unparsable `custom "budget"` line (w0/038): those
- * stay refused, as does a lone sign or a trailing point.
+ * stay refused, as does a lone sign or more than 28 digits.
  */
 function parseBudgetAmount(text: string, minorUnits?: number): string | null {
   return parseExactAmount(text.trim().replace(/^\+/u, ""), minorUnits);

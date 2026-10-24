@@ -47,10 +47,36 @@ import { directiveToText } from "@/foundation/rustledger/journal-serialize";
  */
 const DECIMAL_NUMBER = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/;
 
-export function isDecimalNumber(value: unknown): boolean {
+/** The engine's Decimal holds 28 digits: more is an error, or a changed value. */
+const MAX_DECIMAL_DIGITS = 28;
+
+/**
+ * Whether the number fits the engine's 28 digits, as it will be written. At 29
+ * or more it raises `P0012` on the posting, which a client saw as "multiple
+ * postings with missing amounts", and a fraction past 28 places is cut off
+ * (`0.000…1` became `0`) (w21/997).
+ */
+function fitsEngineDecimal(raw: string): boolean {
+  const exponent = /[eE]([+-]?\d+)$/.exec(raw);
+  if (exponent && Math.abs(Number(exponent[1])) > 100) return false;
+  const match = /^[+-]?(\d*)(?:\.(\d*))?$/.exec(toBeancountNumber(raw));
+  if (!match) return false;
+  const whole = match[1].replace(/^0+/, "");
+  const fraction = match[2] ?? "";
   return (
-    (typeof value === "number" && Number.isFinite(value)) ||
-    (typeof value === "string" && DECIMAL_NUMBER.test(value))
+    whole.length + fraction.length <= MAX_DECIMAL_DIGITS &&
+    fraction.length <= MAX_DECIMAL_DIGITS
+  );
+}
+
+export function isDecimalNumber(value: unknown): boolean {
+  if (typeof value === "number") {
+    return Number.isFinite(value) && fitsEngineDecimal(String(value));
+  }
+  return (
+    typeof value === "string" &&
+    DECIMAL_NUMBER.test(value) &&
+    fitsEngineDecimal(value)
   );
 }
 

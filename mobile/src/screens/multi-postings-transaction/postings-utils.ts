@@ -90,6 +90,8 @@ export function typedAmountInput(input: string, rowNegative: boolean): string {
   return signedAmountInput(absolute, rowNegative);
 }
 
+const MAX_AMOUNT_DIGITS = 28;
+
 export function parseExactAmount(input: string, minorUnits = 2): string | null {
   let trimmed = toAsciiNumerals(input)
     // Direction marks a right-to-left locale's formatting puts around a sign,
@@ -155,6 +157,12 @@ export function parseExactAmount(input: string, minorUnits = 2): string | null {
   const body = neg ? normalized.slice(1) : normalized;
   const [wholeRaw, frac = ""] = body.split(".");
   const whole = wholeRaw.replace(/^0+(?=\d)/, "") || "0";
+  // The engine reads 28 digits: at 29 it errors on the posting, and a longer
+  // fraction is cut off, so neither is an amount to accept (w21/997).
+  const digits = whole.replace(/^0+/, "").length + frac.length;
+  if (digits > MAX_AMOUNT_DIGITS || frac.length > MAX_AMOUNT_DIGITS) {
+    return null;
+  }
   const value = `${neg ? "-" : ""}${whole}${frac.length ? `.${frac}` : ""}`;
   if (value === "-0" || /^-0\.0+$/.test(value)) {
     return frac.length ? `0.${frac}` : "0";

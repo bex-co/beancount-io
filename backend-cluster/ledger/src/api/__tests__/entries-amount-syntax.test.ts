@@ -248,6 +248,31 @@ describe("bulk entries refuse amounts that are not decimals (w3/641)", () => {
     expect(committed).toHaveLength(1);
   });
 
+  // w21/997: the engine holds 28 digits. At 29 it raises P0012, and a fraction
+  // past 28 places is cut off, so neither is written.
+  it.each([
+    ["9".repeat(29), `-${"9".repeat(29)}`],
+    [`${"9".repeat(27)}.99`, `-${"9".repeat(27)}.99`],
+    ["0.0000000000000000000000000000001", "-0.0000000000000000000000000000001"],
+  ])(
+    "refuses %s as more than the engine's 28 digits",
+    async (first, second) => {
+      const response = await post([transaction(first, second)]);
+
+      expect(response.status).toBe(400);
+      expect(committed).toEqual([]);
+    },
+  );
+
+  it("still writes an amount of 28 digits", async () => {
+    const response = await post([
+      transaction("9".repeat(28), `-${"9".repeat(28)}`),
+    ]);
+
+    expect(response.status).toBe(200);
+    expect(committed).toHaveLength(1);
+  });
+
   // w23/043: accepted by the decimal check, unreadable to Beancount as typed.
   it("writes a leading-dot amount with its zero", async () => {
     const response = await post([transaction(".5", "-.5")]);

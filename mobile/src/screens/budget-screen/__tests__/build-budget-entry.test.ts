@@ -150,6 +150,7 @@ describe("isBudgetAmount", () => {
   it("refuses text the ledger cannot parse as a number", () => {
     for (const text of [
       "12..3",
+      "9".repeat(29),
       "abc",
       "1,23,4",
       "$500",

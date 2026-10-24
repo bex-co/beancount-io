@@ -1321,3 +1321,16 @@ test("parseExactAmount reads a trailing decimal mark as the whole number", () =>
   expect(parseExactAmount(",")).toBe(null);
   expect(parseExactAmount("1,234,")).toBe(null);
 });
+
+// w21/997: the engine reads 28 digits; at 29 it errors on the posting, and a
+// longer fraction is cut off.
+test("parseExactAmount accepts 28 digits and refuses more", () => {
+  const nines = (count: number) => "9".repeat(count);
+  expect(parseExactAmount(nines(28))).toBe(nines(28));
+  expect(parseExactAmount(`${nines(26)}.99`)).toBe(`${nines(26)}.99`);
+  expect(parseExactAmount(nines(29))).toBe(null);
+  expect(parseExactAmount(`-${nines(29)}`)).toBe(null);
+  expect(parseExactAmount(`${nines(27)}.99`)).toBe(null);
+  expect(parseExactAmount(`0.${"0".repeat(30)}1`)).toBe(null);
+  expect(parseExactAmount(`0.${"0".repeat(26)}1`)).toBe(`0.${"0".repeat(26)}1`);
+});
