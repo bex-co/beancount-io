@@ -66,3 +66,7 @@
 - [969](./969.md) — An amount written with a leading dot (`.5 USD`) is read as 5, ten times too large (native)
 - [970](./970.md) — Transaction rows and the detail headline show wrong digits for amounts of 17 or more significant digits
 - [971](./971.md) — A transaction the ledger could not interpolate shows blank posting amounts and an unsigned headline
+- [972](./972.md) — Accent folding in nameKey (w21/929) hides Create for Expenses:Cafe next to Expenses:Café
+- [973](./973.md) — A bill paid late shows Overdue right after it was paid (w21/944 regression)
+- [974](./974.md) — A dirty file editor asks "Discard changes?" twice on a cross-ledger link (w21/923 regression)
+- [975](./975.md) — Global queryDeduplication:false multiplies requests for co-mounted hooks (w21/904 side effect)
