@@ -47,3 +47,28 @@ describe("the Transactions filters' accessibility", () => {
     }
   });
 });
+
+// w21/999: the Filters button was about 32 pt with a slop that covered the gap
+// to the search field's ✕.
+describe("the Filters button's target", () => {
+  const source = fs
+    .readFileSync(path.join(__dirname, "..", "transactions-header.tsx"), "utf8")
+    .replace(/\s+/g, "");
+
+  it("is a 44 pt wide box with vertical slop, not a slop all round", () => {
+    expect(source.includes("filterButton:{minWidth:iconActionSize,")).toBe(
+      true,
+    );
+    expect(
+      source.includes(
+        "constFILTER_HIT_SLOP={top:(iconActionSize-FILTER_ICON_SIZE)/2,bottom:(iconActionSize-FILTER_ICON_SIZE)/2,};",
+      ),
+    ).toBe(true);
+    expect(
+      source.includes(
+        "style={styles.filterButton}onPress={onOpenFilters}hitSlop={FILTER_HIT_SLOP}",
+      ),
+    ).toBe(true);
+    expect(source.includes("hitSlop={8}")).toBe(false);
+  });
+});

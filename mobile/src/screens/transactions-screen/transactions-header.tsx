@@ -2,9 +2,16 @@ import { StyleSheet, View, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useThemeStyle } from "@/common/hooks";
 import { gutter, space, useTheme } from "@/common/theme";
+import { iconActionSize } from "@/common/theme/spacing";
 import { SearchBar } from "@/components/search-bar";
 import { ColorTheme } from "@/types/theme-props";
 import { useTranslations } from "@/common/hooks/use-translations";
+
+const FILTER_ICON_SIZE = 16;
+const FILTER_HIT_SLOP = {
+  top: (iconActionSize - FILTER_ICON_SIZE) / 2,
+  bottom: (iconActionSize - FILTER_ICON_SIZE) / 2,
+};
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -15,12 +22,21 @@ const getStyles = (theme: ColorTheme) =>
       marginHorizontal: gutter,
       marginBottom: space.sm,
     },
+    // 44 pt wide, taking back the field's trailing padding so the funnel sits
+    // where it did; the height is slop (w21/999).
+    filterButton: {
+      minWidth: iconActionSize,
+      marginEnd: -space.md,
+      alignItems: "center",
+      justifyContent: "center",
+    },
     // Sits on the funnel's upper trailing corner, so an active filter is
-    // visible without opening the sheet.
+    // visible without opening the sheet. The funnel is centred in the 44 pt
+    // box, 14 pt in from its end.
     filterDot: {
       position: "absolute",
       top: -1,
-      end: -2,
+      end: (iconActionSize - FILTER_ICON_SIZE) / 2 - 2,
       width: 8,
       height: 8,
       borderRadius: 4,
@@ -61,8 +77,9 @@ export const TransactionsHeader = ({
         placeholder={t("search")}
         right={
           <TouchableOpacity
+            style={styles.filterButton}
             onPress={onOpenFilters}
-            hitSlop={8}
+            hitSlop={FILTER_HIT_SLOP}
             accessibilityRole="button"
             accessibilityLabel={t("filters")}
             // The dot is the only cue that the list is filtered; say it too
@@ -75,7 +92,7 @@ export const TransactionsHeader = ({
           >
             <Ionicons
               name="options-outline"
-              size={16}
+              size={FILTER_ICON_SIZE}
               color={theme.controlPlaceholder}
             />
             {activeFilterCount > 0 && <View style={styles.filterDot} />}

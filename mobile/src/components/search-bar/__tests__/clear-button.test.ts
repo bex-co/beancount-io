@@ -36,3 +36,23 @@ describe("the search bar's clear button", () => {
     expect(missing).toEqual([]);
   });
 });
+
+// w21/999: the ✕ was about 34 pt and its slop covered the gap to the Filters
+// button, so a tap just right of it opened Filters. Width is layout, which a
+// neighbour cannot overlap; height is slop.
+describe("the search bar's clear button target", () => {
+  const source = fs
+    .readFileSync(path.join(__dirname, "..", "index.tsx"), "utf8")
+    .replace(/\s+/g, "");
+
+  it("is a 44 pt wide box, and 44 pt tall with the slop", () => {
+    expect(source.includes("clear:{minWidth:iconActionSize,")).toBe(true);
+    expect(
+      source.includes(
+        "constCLEAR_HIT_SLOP={top:(iconActionSize-CLEAR_ICON_SIZE)/2,bottom:(iconActionSize-CLEAR_ICON_SIZE)/2,};",
+      ),
+    ).toBe(true);
+    expect(source.includes("hitSlop={CLEAR_HIT_SLOP}")).toBe(true);
+    expect(source.includes("hitSlop={8}")).toBe(false);
+  });
+});

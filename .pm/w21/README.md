@@ -48,7 +48,6 @@
 - [951](./blocked/951.md) — Expense accounts are valued at market on Accounts and account detail, but at cost everywhere else — **blocked:** owner confirms flows-at-cost covers Income/Expenses balances; needs a native priced-lot check
 - [977](./blocked/977.md) — LedgerPrices pulls every price date for every pair, and Apollo writes and reads them all on each mount — **blocked:** owner picks the API shape for bounding price dates across REST/GraphQL/MCP
 - [994](./blocked/994.md) — Budget: mobile prorates the current period to today, the dashboard does not, so verdicts differ (product call) — **blocked:** owner picks full-period or prorated target for the period in progress, then both apps follow
-- [999](./999.md) — The search ✕ and the Filters button overlap in the 8 pt gap and are under 44 pt
 - [1000](./1000.md) — The Accounts expand chevron is a small nested target inside a row that navigates
 - [1001](./1001.md) — Merchants, Merchant detail and the account picker lists have no home-indicator inset
 - [1002](./1002.md) — A plain "file already exists" in a subfolder is toasted as "A folder named …" (w21/989 regression)

@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { fontSizes, space, useTheme } from "@/common/theme";
+import { iconActionSize } from "@/common/theme/spacing";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { ColorTheme } from "@/types/theme-props";
@@ -29,6 +30,12 @@ import {
  * `./metrics` so nothing can pin a box to the default text size by accident.
  */
 export { SEARCH_BAR_RADIUS, searchFieldHeight } from "./metrics";
+
+const CLEAR_ICON_SIZE = 18;
+const CLEAR_HIT_SLOP = {
+  top: (iconActionSize - CLEAR_ICON_SIZE) / 2,
+  bottom: (iconActionSize - CLEAR_ICON_SIZE) / 2,
+};
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -61,7 +68,12 @@ const getStyles = (theme: ColorTheme) =>
     inputAndroid: {
       padding: 0,
     },
+    // Its own 44 pt box: 18 pt of icon with a slop of 8 was about 34 pt, and
+    // the slop covered the gap to the control after it (w21/999). The width is
+    // layout, so a neighbour cannot overlap it; the height is slop, so the field
+    // stays as tall as it was.
     clear: {
+      minWidth: iconActionSize,
       justifyContent: "center",
       alignItems: "center",
     },
@@ -143,7 +155,7 @@ export function SearchBar({
           <TouchableOpacity
             style={styles.clear}
             onPress={() => onChangeText("")}
-            hitSlop={8}
+            hitSlop={CLEAR_HIT_SLOP}
             accessibilityRole="button"
             accessibilityLabel={t("clearSearch")}
           >
@@ -151,7 +163,7 @@ export function SearchBar({
               accessibilityElementsHidden
               importantForAccessibility="no"
               name="close-circle"
-              size={18}
+              size={CLEAR_ICON_SIZE}
               color={theme.controlPlaceholder}
             />
           </TouchableOpacity>
