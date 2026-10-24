@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1048** — [Accept supported joiners and numeric suffixes in Open Account names](./1048.md)
+
 - **1047** — [Keep CSV review minus signs before their amounts in Persian](./1047.md)
 
 - **1046** — [Keep route-error retries single-flight and restore focus after another failure](./1046.md)
