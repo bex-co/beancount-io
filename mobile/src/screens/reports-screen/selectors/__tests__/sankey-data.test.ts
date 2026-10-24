@@ -10,6 +10,7 @@ import {
   cashFlowChartSummary,
   categorizeAccount,
   extractAccountAtDepth,
+  unlabeledNodeNotes,
   isExcludedAccount,
   pickNumericAmount,
   sankeyColorForRole,
@@ -458,8 +459,15 @@ describe("cashFlowChartSummary", () => {
       fs.readFileSync(path.join(__dirname, "..", "..", ...parts), "utf8");
     expect(
       read("components", "cash-flow-sankey.tsx").includes(
-        "accessibilityLabel={cashFlowChartSummary(data, currency, t)}",
+        "accessibilityLabel={spokenSummary}",
       ),
+    ).toBe(true);
+    expect(
+      read("components", "cash-flow-sankey.tsx")
+        .replace(/\s+/gu, "")
+        .includes(
+          '[cashFlowChartSummary(data,currency,t),...unlabeled,].join(".")',
+        ),
     ).toBe(true);
     expect(
       read("reports-screen.tsx")
@@ -796,5 +804,46 @@ describe("fitSankeyLabel", () => {
     expect(
       chart.includes("fitSankeyLabel(text,LABEL_COL-LABEL_GAP,fontSizes.xs)"),
     ).toBe(true);
+  });
+});
+
+// w21/987: nodes under one line of text got no label, so four of six expense
+// categories were unnamed red slivers.
+describe("unlabeledNodeNotes", () => {
+  const nodes = [
+    ["Salary", "income", 6000, 150],
+    ["Cash flow", "hub", 6000, 270],
+    ["Rent", "expenses", 2000, 68],
+    ["Food", "expenses", 600, 20.4],
+    ["Transport", "expenses", 250, 8.5],
+    ["Health", "expenses", 200, 6.8],
+    ["Fun", "expenses", 150, 5.1],
+    ["Other", "expenses", 112, 3.8],
+    ["Savings", "savings", 2788, 91.4],
+  ].map(([label, role, value, height]) => ({
+    label: label as string,
+    role: role as string,
+    value: value as number,
+    height: height as number,
+  }));
+
+  it("names and values every node too short for a label, not the hub or the tall ones", () => {
+    expect(unlabeledNodeNotes(nodes, "USD", 12)).toEqual([
+      "Transport $250.00",
+      "Health $200.00",
+      "Fun $150.00",
+      "Other $112.00",
+    ]);
+  });
+
+  it("is empty when every node fits its label, and skips an empty node", () => {
+    expect(unlabeledNodeNotes(nodes, "USD", 3)).toEqual([]);
+    expect(
+      unlabeledNodeNotes(
+        [{ label: "Dust", role: "expenses", value: 0, height: 0 }],
+        "USD",
+        12,
+      ),
+    ).toEqual([]);
   });
 });

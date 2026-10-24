@@ -653,6 +653,40 @@ export function sankeyShortfall(data: SankeyData): number | null {
 }
 
 /**
+ * The names and amounts of the nodes too short to carry a label of their own
+ * (`minHeight`, one line of text), "Transport $250.00": the node is drawn, but
+ * every expense is the same red and a tap only dims ribbons, so four of six
+ * categories were unnamed slivers (w21/987). The chart shows them under it and
+ * speaks them. The hub and a node with nothing in it are left out.
+ */
+export function unlabeledNodeNotes(
+  nodes: readonly {
+    label: string;
+    role: string;
+    value?: number;
+    height: number;
+  }[],
+  currency: string,
+  minHeight: number,
+): string[] {
+  return nodes
+    .filter(
+      (node) =>
+        node.role !== "hub" &&
+        node.height < minHeight &&
+        (node.value ?? 0) > 0 &&
+        node.label.trim() !== "",
+    )
+    .map(
+      (node) =>
+        `${node.label} ${formatSignedMoneyWithCurrency(
+          roundMoney(node.value!, currency),
+          currency,
+        )}`,
+    );
+}
+
+/**
  * The chart's screen-reader summary. The Sankey draws no values, so this is the
  * only way assistive technology learns any magnitude from it: money is
  * formatted like the income/expense chart beside it (with the ledger's

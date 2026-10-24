@@ -1,6 +1,6 @@
 import { useLedgerRootNames } from "@/common/hooks/use-ledger-root-names";
 import { useMemo, useState } from "react";
-import { LayoutChangeEvent, StyleSheet, View } from "react-native";
+import { LayoutChangeEvent, StyleSheet, Text, View } from "react-native";
 import Svg, { Path, Rect, Text as SvgText } from "react-native-svg";
 import Animated, {
   SharedValue,
@@ -12,7 +12,7 @@ import { fontSizes, gutter, space, useTheme } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { ScreenWidth } from "@/common/screen-util";
-import { LTR_PLOT } from "@/common/rtl";
+import { LEADING_TEXT_ALIGN, LTR_PLOT } from "@/common/rtl";
 import { LoadingTile } from "@/components/loading-tile";
 import type { AccountNode } from "@/components/account-list/select-account-list";
 import {
@@ -30,6 +30,7 @@ import {
   sankeyLabelLines,
   sankeyColorForRole,
   cashFlowChartSummary,
+  unlabeledNodeNotes,
 } from "../selectors/sankey-data";
 
 /** Plot height; the skeleton is this plus the legend so the card does not jump. */
@@ -146,6 +147,13 @@ const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
     plot: {
       ...LTR_PLOT,
+    },
+    unlabeled: {
+      paddingHorizontal: gutter,
+      paddingTop: space.xs,
+      fontSize: fontSizes.xs,
+      color: theme.black80,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     skeleton: {
       height: SANKEY_HEIGHT + LEGEND_HEIGHT,
@@ -306,13 +314,32 @@ function CashFlowSankeyPlot({
   }
 
   const nodeColor = (node: LayoutNode) => sankeyColorForRole(node.role, theme);
+  // A node shorter than a line of text has no label of its own: it is named
+  // and valued under the chart instead, and in the spoken summary (w21/987).
+  const unlabeled = unlabeledNodeNotes(
+    (graph?.nodes ?? []).map((node) => {
+      const box = nodeBox(node);
+      return {
+        label: node.label,
+        role: node.role,
+        value: node.value,
+        height: box ? box.y1 - box.y0 : Infinity,
+      };
+    }),
+    currency,
+    fontSizes.xs,
+  );
+  const spokenSummary = [
+    cashFlowChartSummary(data, currency, t),
+    ...unlabeled,
+  ].join(". ");
 
   return (
     <View
       style={styles.plot}
       onLayout={onLayout}
       accessible
-      accessibilityLabel={cashFlowChartSummary(data, currency, t)}
+      accessibilityLabel={spokenSummary}
     >
       <Svg width={width} height={SANKEY_HEIGHT}>
         {graph?.links.map((link, index) => {
@@ -399,6 +426,11 @@ function CashFlowSankeyPlot({
           ));
         })}
       </Svg>
+      {unlabeled.length > 0 ? (
+        <Text style={styles.unlabeled} testID="sankey-unlabeled-nodes">
+          {unlabeled.join(" · ")}
+        </Text>
+      ) : null}
       <ChartLegend>
         <LegendItem color={theme.success} label={t("income")} />
         <LegendItem color={theme.error} label={t("expenses")} />
