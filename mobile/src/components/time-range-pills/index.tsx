@@ -85,6 +85,14 @@ const PILL_PADDING_V = 6;
 export const PILL_GAP = PILL_MARGIN * 2;
 export const PILL_RADIUS = 14;
 export const PILL_HEIGHT = PILL_PADDING_V * 2 + 16;
+/**
+ * The pill is drawn 28 pt tall; a tap a little above or below missed it. Slop
+ * brings the target to 44 pt without changing how the row looks (w21/998).
+ */
+const PILL_HIT_SLOP = {
+  top: (44 - PILL_HEIGHT) / 2,
+  bottom: (44 - PILL_HEIGHT) / 2,
+};
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -299,6 +307,7 @@ export function TimeRangePills<T extends PillKey>({
           <TouchableOpacity
             key={layoutKey(option.key)}
             style={styles.pill}
+            hitSlop={PILL_HIT_SLOP}
             onLayout={handleLayout(option.key)}
             onPress={() => {
               if (!active) {
