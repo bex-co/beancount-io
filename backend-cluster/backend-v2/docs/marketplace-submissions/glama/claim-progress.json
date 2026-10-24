@@ -1,6 +1,6 @@
 {
   "target": "Glama existing Beancount.io connector",
-  "observedAtUTC": "2026-10-24T07:05:54Z",
+  "observedAtUTC": "2026-10-24T19:56:22Z",
   "adminUrl": "https://glama.ai/mcp/connectors/io.beancount/beancount/admin",
   "accountProfileComplete": true,
   "termsAccepted": true,
@@ -13,7 +13,7 @@
   "dnsProviderEntry": "https://dash.cloudflare.com/login",
   "currentGate": "Authenticated monitoring now succeeds. Observe a full healthy day starting at 2026-10-24T07:01:01Z; original native accounting journey remains separate.",
   "testProfileConfigured": true,
-  "health": "Healthy; public connector exposes 44 tools. Historical uptime is 0.1% over 20 days, not a full successful day.",
+  "health": "Healthy; public connector retains44tools. Historical uptime is3.2% over20days; full healthy day not yet observed.",
   "nextAction": "At or after 2026-10-25T07:01:01Z, inspect subsequent Glama checks and public health for a full healthy day under w2/088. Renew the restricted monitoring credential before its 2026-11-23 UTC expiry.",
   "limit": "Successful initialization/discovery and ownership are verified. A full healthy day and the original native ledger query/write-preview acceptance are not yet established.",
   "history": [
@@ -32,6 +32,11 @@
       "testProfileAuthenticationType": "OAuth 2.0 selected through the actual admin UI",
       "testProfileAuthenticated": false,
       "testProfileState": "Not Authenticated; the automatic connection test returns HTTP401. No OAuth grant, API key or ledger credential has been supplied to Glama."
+    },
+    {
+      "observedAtUTC": "2026-10-24T07:05:54Z",
+      "health": "Healthy; public connector exposes 44 tools. Historical uptime is 0.1% over 20 days, not a full successful day.",
+      "currentGate": "Authenticated monitoring now succeeds. Observe a full healthy day starting at 2026-10-24T07:01:01Z; original native accounting journey remains separate."
     }
   ],
   "claimResult": "The actual existing connector displays Ownership verified and exposes its Admin/Test Profile controls.",
@@ -74,5 +79,18 @@
     "renewBeforeDateUTC": "2026-11-23",
     "storage": "Glama private Test Profile; plaintext omitted from public files and cleared from browser automation memory after persistence verification",
     "retained": true
+  },
+  "latestMonitoringObservation": {
+    "observedAtUTC": "2026-10-24T19:56:22Z",
+    "latestCheckAtUTC": "2026-10-24T19:53:19Z",
+    "latestDurationMs": 1197,
+    "recentDisplayedChecks": 10,
+    "allRecentDisplayedChecksHealthy": true,
+    "oldestDisplayedCheckAtUTC": "2026-10-24T14:19:00Z",
+    "oldestDisplayedCheckPrecision": "minute",
+    "historicalUptimePercent": 3.2,
+    "historicalWindowDays": 20,
+    "fullHealthyDayObserved": false,
+    "limit": "Only the ten displayed recent history entries were inspected; the complete earlier interval is not inferred from this page."
   }
 }

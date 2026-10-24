@@ -1,6 +1,6 @@
 # w6 · m10 — List the connector in independent web directories
 
-**Worker:** worker1 **Goal:** People comparing accounting MCP servers find accurate, usable remote listings on the eligible independent directories. **Status:** blocked (t009 native login complete; newly observed broad GitHub scope awaits its exact decision; existing free-submission review and publication gates remain)
+**Worker:** worker1 **Goal:** People comparing accounting MCP servers find accurate, usable remote listings on the eligible independent directories. **Status:** blocked (t001 published/verified and archived; t009 native login complete; newly observed broad GitHub scope awaits its exact decision; existing free-submission review and publication gates remain)
 
 **Implementation estimate:** ~2h, excluding external review queues and the standing closing tasks.
 
@@ -9,7 +9,7 @@
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
 | [t009](t009.md) | Complete LobeHub publisher setup and submit remote listing — **BLOCKED** | 45m | w6/m8/t001 |
-| [t001](t001.md) | Submit or correct MCPServers.org's free remote listing — **BLOCKED: submitted** | 30m | w6/m8/t001 |
+| [t001](done/t001.md) | Submit or correct MCPServers.org's free remote listing — **DONE** | 30m | w6/m8/t001 |
 | [t002](t002.md) | Submit or correct MCPMarket's free remote listing — **BLOCKED: free repository submission** | 30m | w6/m8/t001 |
 | [t003](t003.md) | Establish LobeHub eligibility and prepare its supported connector listing — **BLOCKED** | 45m | w6/m8/t001, t009 |
 | [t004](t004.md) | Verify the independent-directory listings after moderation | 15m | t001, t002, t003 |
@@ -69,7 +69,19 @@ The earlier exclusion of Claude/ChatGPT was the 2026-10-20 scope decision. The o
 ## Blocked — current native login and remaining review, 2026-10-23 UTC
 
 - **t009:** prior terms are approved and the actual publisher/CLI login succeeds. The real publish command requires verified GitHub connection; its newly shown OAuth request includes private repositories, Actions workflows and Gists, without a supported CLI narrowing option. **Unblock:** publisher decides that exact new scope or LobeHub supplies a narrower supported route; worker completes actual connection/repository checks and accepted submission. **Owners:** publisher/LobeHub, then worker. No GitHub/organization grant or plugin submission is claimed. See t009 and its dated packet.
-- **t001/t002:** accepted original free submissions remain the baseline; no duplicate is sent. **Unblock:** moderators publish an actual record and worker verifies hosted metadata/connection. **Owners:** respective directory reviewers, then worker.
+- **t001:** public search/detail metadata and endpoint/OAuth discovery are now verified; task archived under done/. Directory-advertised native installation/query/preview remains t004. No repeat or paid submission.
+- **t002:** accepted original Free Queue receipt remains the baseline; latest complete query still has21results/End of results without the canonical hosted entry. **Unblock:** MCPMarket publishes an actual record, then worker verifies hosted metadata/connection. **Owners:** MCPMarket reviewers, then worker.
 - **t003-t008:** retain their explicit native/publication and standing closing acceptance; they depend on the preceding blocked work. **Unblock:** the relevant actual publication/access conditions and dependent checks, not a prepared payload or an unrelated platform review. **Owners:** recorded publisher/platforms, then worker.
 
 Every remaining task is now blocked or transitively deferred, so m10 returns to blocked/. This does not defer independent m11 work.
+
+## Publication follow-through — 2026-10-24T19:58:05Z
+
+MCPServers.org now exposes one canonical public Beancount.io hosted entry,
+verified through the actual name query and detail page. t001 is done and archived.
+The endpoint's unauthenticated401/OAuth discovery also matches the listing.
+MCPMarket's complete21-result query still has no canonical hosted match and
+retains its original receipt. t009's fresh GitHub connection page again asks
+for the same broad scopes plus an explicit organization-access decision;
+no Authorize or Grant is clicked. Only the affected external steps remain
+blocked. t004 retains its actual native installation/connection acceptance.

@@ -94,3 +94,20 @@ supported narrower verified-account route. If approved, restart the native
 connection if its callback expires, verify repository access and submit once;
 then retain the real receipt and perform actual public/native verification.
 The original Terms/Privacy question is resolved, not asked again.
+
+## Fresh GitHub request — 2026-10-24T20:02:48Z
+
+Native github status still reports Not connected. A single fresh supported
+`github connect` request reaches the actual GitHub authorization page with the
+same gist/read:org/read:user/repo/user:email/workflow scopes. The page also
+exposes a separate organization Grant action for the canonical publishing
+organization; none is clicked. The CLI has no narrowing option. Public-doc
+extraction is403/unavailable, while the native CLI and actual GitHub page are
+readable; no access failure is treated as publication ineligibility.
+
+The concrete account-plus-publishing-organization scope decision is pending.
+No Authorize/Grant is performed. The native five-minute status poll expires
+without a connection; after approval, restart the same supported connection
+if needed and verify actual status/repository access. Expiry does not require
+another scope confirmation when the recipient/permissions remain identical.
+No other organization access is requested or granted.

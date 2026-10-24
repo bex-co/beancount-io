@@ -72,3 +72,14 @@ an individual scope editor. The supported API-key mode permits the narrower
 read-only synthetic monitor used above. A transient authentication-type UI error
 recovered on reload before credential creation; it is not a current blocker.
 Dated prior observations remain in [claim-progress.json](./claim-progress.json).
+
+## Scheduled-monitoring follow-through — 2026-10-24T19:56:22Z
+
+The saved private credential remains configured. Glama's ten displayed recent
+checks are all successful, from14:19UTC through the latest check at
+**19:53:19UTC**, which takes1197ms. The public connector remains Healthy and
+its historical uptime improves to **3.2% over20days**. Initial server-rendered
+UTC times agree with the current UTC clock; hydrated browser times are PDT.
+Only the displayed ten-check history is inspected, not an inferred complete
+history. The full healthy-day gate remains pending until at least
+**2026-10-25T07:01:01Z**; no additional manual test, credential or grant is made.

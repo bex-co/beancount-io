@@ -3,7 +3,7 @@
   "state": "submitted; documented agent review opted in; star waiver requested; fresh upstream check passed; open and unmerged",
   "submissionUrl": "https://github.com/punkpeye/awesome-remote-mcp-servers/pull/2753",
   "submittedAtUTC": "2026-10-23T20:52:08Z",
-  "lastCheckedAtUTC": "2026-10-24T07:10:37Z",
+  "lastCheckedAtUTC": "2026-10-24T19:58:05Z",
   "headCommit": "936aa053cea358e3204dab3d5747965fd0455caf",
   "baseCommit": "c6ed7fc936741403f24cd90d14ad3f466668a7f3",
   "changedFiles": 1,
@@ -71,6 +71,19 @@
   },
   "conversationComments": 1,
   "latestReviewReadback": {
+    "observedAtUTC": "2026-10-24T19:58:05Z",
+    "previousCheckedAtUTC": "2026-10-24T07:10:37Z",
+    "state": "open",
+    "conversationComments": 1,
+    "maintainerFeedbackObserved": false,
+    "duplicateSubmissionSent": false,
+    "merged": false,
+    "mergeable": true,
+    "submittedReviews": 0,
+    "reviewDecision": "No review decision reported",
+    "checks": "Existing check-submission remains successful; welcome checks skipped because not merged"
+  },
+  "previousReviewReadback": {
     "observedAtUTC": "2026-10-24T07:10:37Z",
     "previousCheckedAtUTC": "2026-10-24T02:47:50Z",
     "state": "open",

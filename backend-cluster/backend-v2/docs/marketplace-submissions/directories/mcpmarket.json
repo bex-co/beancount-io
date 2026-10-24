@@ -56,6 +56,19 @@
       "result": "No canonical Beancount.io hosted connector among these complete displayed query results",
       "action": "Retain original Free Queue repository receipt; no repeat or paid submission",
       "limit": "Displayed name-query results do not expose private moderation state, directory-wide absence or native connection proof"
+    },
+    {
+      "observedAtUTC": "2026-10-24T19:58:05Z",
+      "url": "https://mcpmarket.com/search?q=beancount",
+      "initialResults": 21,
+      "loadMoreClicks": 1,
+      "finalResults": 21,
+      "terminalText": "End of results",
+      "loadMoreRemaining": false,
+      "result": "No canonical Beancount.io hosted connector in the completed displayed query",
+      "action": "Retain original Free Queue receipt without resubmission",
+      "limit": "Public name-query observation; no private moderation or directory-wide absence claim."
     }
-  ]
+  ],
+  "lastCheckedAtUTC": "2026-10-24T19:58:05Z"
 }

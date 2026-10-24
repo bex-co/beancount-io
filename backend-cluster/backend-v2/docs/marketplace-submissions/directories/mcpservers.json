@@ -17,9 +17,9 @@
   "receiptHeading": "Submission Successful!",
   "receiptText": "Your MCP server \"Beancount.io\" has been submitted successfully.",
   "review": "Within 2 weeks; email on approval",
-  "state": "Submitted; pending moderation; no public listing URL or receipt ID exposed",
+  "state": "Published; canonical public search result and hosted-server detail verified",
   "contact": "Publisher public-profile contact supplied privately in form; omitted here",
-  "authenticatedConnection": "Not run through this directory; verify after publication",
+  "authenticatedConnection": "Project installer and bounded native configuration reads verified; new client-specific OAuth/query/preview remains under w6/m10/t004. Earlier independent host QA is retained separately.",
   "publicRecheck": {
     "observedAtUTC": "2026-10-21T19:41:23Z",
     "url": "https://mcpservers.org/search?query=beancount",
@@ -49,6 +49,75 @@
       "result": "Only unrelated StdioA/beancount-mcp; no canonical Beancount.io hosted connector in the complete displayed query",
       "action": "Retain accepted Free $0 submission; no duplicate submission",
       "limit": "Native browser follow-through resolves the earlier public-read limitation, not private moderation state, directory-wide absence or native accounting verification"
+    },
+    {
+      "observedAtUTC": "2026-10-24T19:58:05Z",
+      "url": "https://mcpservers.org/search?query=beancount",
+      "displayedStatus": "Showing 1-2 of 2 servers",
+      "result": "Canonical Beancount.io hosted entry plus unrelated StdioA/beancount-mcp",
+      "publicListingURL": "https://mcpservers.org/servers/github-com-bex-co-beancount-io-blob-main-backend-cluster-backend-v2-docs-mcp-md",
+      "verifiedMetadata": [
+        "Beancount.io name",
+        "Finance category",
+        "Canonical hosted endpoint",
+        "Streamable HTTP/OAuth description",
+        "Canonical public guide/source links",
+        "io.beancount/beancount in imported guide"
+      ],
+      "advertisedInstallCommand": "npx add-mcp 'https://beancount.io/api-gateway/mcp'",
+      "action": "Retain original Free $0 submission; close finite publication task w6/m10/t001; native connection verification remains t004",
+      "limit": "Publication and metadata verified; advertised installer not executed and no new authenticated native journey claimed."
     }
-  ]
+  ],
+  "lastCheckedAtUTC": "2026-10-24T20:02:48Z",
+  "publicListingURL": "https://mcpservers.org/servers/github-com-bex-co-beancount-io-blob-main-backend-cluster-backend-v2-docs-mcp-md",
+  "publicListingVerified": true,
+  "publishedEndpointBoundaryCheck": {
+    "observedAtUTC": "2026-10-24T19:58:05.656011+00:00",
+    "source": "Actual endpoint advertised on newly published MCPServers.org listing",
+    "endpoint": "https://beancount.io/api-gateway/mcp",
+    "anonymousInitializeStatus": 401,
+    "wwwAuthenticate": "Bearer resource_metadata=\"https://beancount.io/.well-known/oauth-protected-resource\"",
+    "protectedResourceMetadataURL": "https://beancount.io/.well-known/oauth-protected-resource",
+    "metadataHTTPStatus": 200,
+    "metadataResource": "https://beancount.io/api-gateway/mcp",
+    "authorizationServers": [
+      "https://beancount.io"
+    ],
+    "limit": "Anonymous OAuth-discovery boundary check only; no installation, user grant, authenticated query or write preview is claimed."
+  },
+  "projectInstallerVerification": {
+    "observedAtUTC": "2026-10-24T20:02:48Z",
+    "advertisedPackage": "add-mcp",
+    "version": "2.6.0",
+    "packageRepository": "https://github.com/neon-solutions/add-mcp",
+    "target": "https://beancount.io/api-gateway/mcp",
+    "execution": "Official npm package, run separately in three task-local project workspaces with --agent <client> --name beancount-io --yes; no global install or repository dependency declaration",
+    "configurationResults": {
+      "codex": {
+        "path": ".codex/config.toml",
+        "installerExit": 0,
+        "nativeVersion": "codex-cli0.163.0",
+        "nativeReadback": "mcp get returns enabled streamable_http with canonical URL and null credential fields"
+      },
+      "claude-code": {
+        "path": ".mcp.json",
+        "installerExit": 0,
+        "nativeVersion": "2.1.310",
+        "nativeReadback": "mcp get finds Project config/http/canonical URL; Pending approval"
+      },
+      "cursor": {
+        "path": ".cursor/mcp.json",
+        "installerExit": 0,
+        "nativeVersion": "2026.10.19-6bbf2c4",
+        "nativeReadback": "An isolated Git project root resolves configuration; exact server enable succeeds, list-tools requires authentication"
+      }
+    },
+    "credentialFieldsAdded": false,
+    "toolAutoApprovalEnabled": false,
+    "newOAuthGrantCreated": false,
+    "nativeAccountingJourneyComplete": false,
+    "limit": "Project configuration generation and bounded host recognition are verified. Claude project trust, fresh client-specific OAuth and native accounting query/preview remain separate; no global trust or force flag is used."
+  },
+  "publicListingCheckedAtUTC": "2026-10-24T19:58:05Z"
 }
