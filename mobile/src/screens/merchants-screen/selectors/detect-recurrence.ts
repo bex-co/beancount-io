@@ -289,16 +289,19 @@ function monthDayAnchor(
         nominal = candidate;
       }
     }
-    if (distance > ANCHOR_TOLERANCE_DAYS) {
-      if (++outliers > allowedOutliers) return null;
-      continue;
-    }
+    // Off its due day: an outlier. Mid-series it is left out of the count of
+    // periods; the newest payment, though, is that month's even when late, and
+    // skipping it left Next on the month before and "Overdue" right after the
+    // bill was paid (w21/973).
+    const offAnchor = distance > ANCHOR_TOLERANCE_DAYS;
+    if (offAnchor && ++outliers > allowedOutliers) return null;
+    if (offAnchor && i < days.length - 1) continue;
     // The next period or, after a paused or combined one, a later whole number
     // of them; two payments in one period still end the anchor (w21/459).
     if (previous !== null) {
       const step = nominal - previous;
       if (step <= 0 || step % months !== 0) {
-        if (++outliers > allowedOutliers) return null;
+        if (!offAnchor && ++outliers > allowedOutliers) return null;
         continue;
       }
     }

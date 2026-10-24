@@ -56,3 +56,32 @@ describe("an outlier in a long series does not move Next", () => {
     );
   });
 });
+
+// w21/973: the newest payment, paid late, was skipped as an outlier, leaving Next
+// on the month before and the bill "Overdue" right after it was paid.
+describe("a bill paid late is not overdue", () => {
+  const FIRST_TO_SEPT = monthly("2026-01", 9, "01");
+
+  it("moves Next on from the late payment's month", () => {
+    const series = on([...FIRST_TO_SEPT, "2026-10-08"]);
+    const verdict = detectRecurrence(series, "2026-10-23")!;
+    expect(verdict.isOverdue).toBe(false);
+    expect(verdict.nextExpected! >= "2026-11-01").toBe(true);
+  });
+
+  it("does the same for a payment on the 6th, and late in a longer series", () => {
+    expect(
+      detectRecurrence(on([...FIRST_TO_SEPT, "2026-10-06"]), "2026-10-23")!
+        .isOverdue,
+    ).toBe(false);
+    const dates = [...monthly("2025-12", 9, "01"), "2026-09-19"];
+    const verdict = detectRecurrence(on(dates), "2026-10-10")!;
+    expect(verdict.nextExpected! >= "2026-10-01").toBe(true);
+    expect(verdict.isOverdue).toBe(false);
+  });
+
+  it("is still overdue when the next month's payment is missed", () => {
+    const series = on([...FIRST_TO_SEPT, "2026-10-08"]);
+    expect(detectRecurrence(series, "2026-11-20")!.isOverdue).toBe(true);
+  });
+});
