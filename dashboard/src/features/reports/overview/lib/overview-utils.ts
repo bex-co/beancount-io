@@ -211,25 +211,28 @@ export function getComparableAmount(
   );
 }
 
+/**
+ * Every account in the hierarchy, parents and roots included. A node's own
+ * `balance` holds just its direct postings (`balanceChildren` rolls up the
+ * subtree), so reading each node's own balance counts every posting once.
+ * Keeping only leaves dropped a parent's real holdings, and with them whole
+ * Accounts rows and distribution slices (w4/1030). Callers drop zero rows.
+ */
 function flattenHierarchy(input?: unknown): HierarchyNode[] {
   if (!input) return [];
   const roots: HierarchyNode[] = Array.isArray(input)
     ? (input as HierarchyNode[])
     : [input as HierarchyNode];
 
-  const leaves: HierarchyNode[] = [];
+  const nodes: HierarchyNode[] = [];
   const stack = [...roots];
   while (stack.length) {
     const node = stack.pop();
     if (!node) continue;
-    const children = Array.isArray(node.children) ? node.children : [];
-    if (children.length === 0) {
-      leaves.push(node);
-    } else {
-      stack.push(...children);
-    }
+    nodes.push(node);
+    if (Array.isArray(node.children)) stack.push(...node.children);
   }
-  return leaves;
+  return nodes;
 }
 
 export function buildAccountBalanceRows({
