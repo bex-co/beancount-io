@@ -34,12 +34,12 @@
 
 ## Full inventory ownership and execution order
 
-The [m9/t011](../m9/done/t011.md) official Cursor application is submitted with an accepted receipt after explicit final agreement confirmation; vendor review/publication remains open. Docker [m9/t012](../m9/t012.md) is prepared at its exact synthetic-ledger consent decision. Cline [m9/t013](../m9/t013.md) is also at its exact synthetic-ledger consent decision. GitHub nomination [m9/t014](../m9/done/t014.md) is sent and archived. LobeHub [m10/t009](../m10/t009.md) completes the approved terms/native login and now reaches a newly shown broad GitHub scope decision. This milestone's t001/t002 require original submitting account/organization access; t003 remains independently submitted. Table order is priority, not a cross-platform dependency.
+The [m9/t011](../m9/done/t011.md) official Cursor application is submitted with an accepted receipt after explicit final agreement confirmation; vendor review/publication remains open. Docker [m9/t012](../m9/done/t012.md) is actually submitted as PR #6042 after the scoped native Gateway journey; review/publication remains separate. Cline [m9/t013](../m9/t013.md) is also at its exact synthetic-ledger consent decision. GitHub nomination [m9/t014](../m9/done/t014.md) is sent and archived. LobeHub [m10/t009](../m10/t009.md) completes the approved terms/native login and now reaches a newly shown broad GitHub scope decision. This milestone's t001/t002 require original submitting account/organization access; t003 remains independently submitted. Table order is priority, not a cross-platform dependency.
 
 | Inventory target | Submission / receipt owner | Review, public verification or retained gate |
 | --- | --- | --- |
 | Cursor — official | [m9/t011](../m9/done/t011.md) | [m9/t003](../m9/t003.md), [m9/t006](../m9/t006.md) |
-| Docker | [m9/t012](../m9/t012.md) | [m9/t002](../m9/t002.md), m9/t006 |
+| Docker | [m9/t012](../m9/done/t012.md) | [m9/t002](../m9/t002.md), m9/t006 |
 | Cline | [m9/t013](../m9/t013.md) | [m9/t004](../m9/t004.md), m9/t006 |
 | GitHub curated gallery / VS Code | [m9/t014](../m9/done/t014.md) | [m9/t005](../m9/t005.md), m9/t006; existing w1/m34/t003 native owner retained |
 | LobeHub | [m10/t009](../m10/t009.md) | [m10/t003](../m10/t003.md), [m10/t004](../m10/t004.md) |

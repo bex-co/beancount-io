@@ -1,0 +1,51 @@
+{
+  "target": "Docker MCP Catalog",
+  "state": "submitted; open and unmerged; Docker review pending",
+  "submissionUrl": "https://github.com/docker/mcp-registry/pull/6042",
+  "submittedAtUTC": "2026-10-24T01:18:20Z",
+  "lastCheckedAtUTC": "2026-10-24T01:20:03Z",
+  "baseCommit": "49b643ce3fc73e6ee80bb962719b6e2990e3d397",
+  "headCommit": "5a30305e179493b3d5502f2d38821fedb99491d9",
+  "changedFiles": 3,
+  "additions": 39,
+  "deletions": 0,
+  "mergeable": true,
+  "upstreamChecks": "No checks reported at last observation; not claimed green",
+  "nativeQAAtUTC": "2026-10-24T01:04:04.596Z",
+  "gatewayVersion": "v0.44.1",
+  "oauthScopes": [
+    "ledger.read",
+    "ledger.write"
+  ],
+  "allAccessibleLedgers": false,
+  "serviceToolCount": 44,
+  "gatewayInternalToolCount": 8,
+  "resourceCount": 8,
+  "resourceTemplateCount": 64,
+  "nativeQA": {
+    "query": true,
+    "observedDryRunCalls": 1,
+    "dryRun": true,
+    "wrote": [],
+    "newValidationErrors": [],
+    "cashBeforeUSD": "49.75",
+    "cashAfterUSD": "49.75",
+    "ledgerCommitUnchanged": true,
+    "entryCountsUnchanged": true,
+    "mainFileUnchanged": true,
+    "mainFileSHA256": "77c3a591efd311e01d03d2f3a91f2919151c0fb0708e1abe1a10ce6ec7e29915",
+    "previewPayeeRowsAfter": 0
+  },
+  "toolingLimits": [
+    "OAuth callback and code exchange succeed; authorize exits 1 removing an absent legacy keychain entry after storing the new credential. Direct official Gateway uses that credential successfully.",
+    "Docker Desktop tools socket is unavailable and generic tools ls returns initialize EOF; neither is counted as a successful test or GUI journey."
+  ],
+  "localUpstreamChecks": [
+    "go run -mod=readonly ./cmd/validate --name=beancount-io",
+    "go run -mod=readonly ./cmd/catalog beancount-io",
+    "go test -mod=readonly ./..."
+  ],
+  "testCredentialForm": "https://forms.gle/6Lw3nsvu2d6nFg8e6",
+  "testCredentialFormState": "Not submitted; no test credential shared. The PR leaves this checklist item unchecked.",
+  "nextAction": "Follow Docker review/CI and the private synthetic reviewer-access requirement; then verify actual public catalog discovery and native installation. Do not submit a duplicate PR."
+}

@@ -1,6 +1,8 @@
-# Docker MCP Catalog preparation
+# Docker MCP Catalog submission
 
-This is a preparation artifact for the hosted Beancount.io service at `https://beancount.io/api-gateway/mcp`. It does not package the service or a ledger engine in a Docker image. The three files under `servers/beancount-io/` are intended for the same directory in [docker/mcp-registry](https://github.com/docker/mcp-registry).
+Submitted on **2026-10-24T01:18:20Z** as [Docker PR #6042](https://github.com/docker/mcp-registry/pull/6042), pending Docker review/publication. [Actual receipt](./submission-receipt.json) and [native rehearsal](./native-rehearsal-20261024.md) retain the observed results and limits.
+
+The entry connects to the hosted Beancount.io service at `https://beancount.io/api-gateway/mcp`. It does not package the service or a ledger engine in a Docker image. The three files under `servers/beancount-io/` are intended for the same directory in [docker/mcp-registry](https://github.com/docker/mcp-registry).
 
 The entry uses Streamable HTTP, OAuth and dynamic tool discovery. `tools.json` is deliberately `[]`; its contents are discovered after the user authorizes the connection. `beancount-io.personal_access_token` and `BEANCOUNT_IO_PERSONAL_ACCESS_TOKEN` are Docker credential identifiers, not credentials or instructions to publish a key. The [MCP guide](../../mcp.md) explains scopes, the hosted-ledger boundary and confirmation requirements.
 
@@ -53,7 +55,7 @@ under `~/.docker/mcp/catalogs`. Inspect the actual catalog contents rather than
 treating command exit status as proof that the server was imported; no remote
 catalog was published by this local operation.
 
-The [remote contribution guide](https://github.com/docker/mcp-registry/blob/main/CONTRIBUTING.md#-adding-a-remote-mcp-server) requires these three files and OAuth testing, followed by a Docker-team-reviewed upstream pull request. No submission is represented by this directory. Use the private credential-sharing channel linked by Docker only when the operator proceeds with review; never attach credentials to a commit, pull request, or public board.
+The [remote contribution guide](https://github.com/docker/mcp-registry/blob/main/CONTRIBUTING.md#-adding-a-remote-mcp-server) requires these three files and OAuth testing, followed by a Docker-team-reviewed upstream pull request. The actual contribution is now submitted as PR #6042; this does not establish approved public catalog availability. Use the private credential-sharing channel linked by Docker only when the operator proceeds with review; never attach credentials to a commit, pull request, or public board.
 
 ## Renewed native preparation — 2026-10-22 UTC
 
@@ -102,3 +104,20 @@ under ignored `backend-cluster/backend-v2/tmp/w6-native-20261022T0818/`.
 - [Gateway server-entry specification](https://github.com/docker/mcp-gateway/blob/main/docs/server-entry-spec.md)
 - [Gateway standalone usage](https://github.com/docker/mcp-gateway#usage)
 - [Gateway v0.44.1 prerelease assets](https://github.com/docker/mcp-gateway/releases/tag/v0.44.1)
+
+## Current native and submission outcome — 2026-10-24 UTC
+
+The publisher confirms the previously displayed synthetic-only access steps.
+The actual native OAuth callback/code exchange and official Gateway
+query/preview/unchanged-state journey complete; detailed CLI/keychain and Desktop
+visibility limits are in the [dated rehearsal](./native-rehearsal-20261024.md).
+The current upstream validator, catalog generator and all Go tests pass. Actual
+PR #6042 contains exactly the three reviewed files, including tested minimal
+ledger scopes in its setup readme. No credentials are included.
+
+The receipt-stage task is complete. Docker reviewers still own approval and
+publication; the official private test-credentials form has not been submitted,
+and the PR's corresponding checkbox stays unchecked. Use only explicitly
+approved synthetic reviewer access through that channel if required. Follow
+this existing PR and its actual checks, then verify the public catalog path;
+no duplicate contribution or live-publication claim is made.
