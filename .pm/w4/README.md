@@ -4,7 +4,7 @@
 
 ## Inbox
 
-- **1048** — [Accept supported joiners and numeric suffixes in Open Account names](./1048.md)
+- **1048** — [Match Open Account Unicode names to the ledger grammar](./1048.md)
 
 - **1047** — [Keep CSV review minus signs before their amounts in Persian](./1047.md)
 
