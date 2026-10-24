@@ -197,3 +197,11 @@ validate against the MCP SDK schemas, then use the supported owner update.
 Preserve actual source/capture timestamps in metadata-provenance.json; static
 source snapshots are not fresh authenticated wire-level discovery. The native
 credentials remain in their existing private stores.
+
+**Browser handoff follow-through21:35:23UTC:** the browser tool now requires
+an update of the ChatGPT extension in Chrome before further UI control.
+The native consent/client pages were already retained for handoff. No final
+Approve access or callback completion is inferred. Restore that supported
+browser connection and use the existing exact accounting-access answer; do
+not repeat a previously approved identical GitHub or accounting permission
+question merely because an OAuth callback expires.

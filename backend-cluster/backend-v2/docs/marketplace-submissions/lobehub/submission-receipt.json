@@ -102,7 +102,12 @@
     "grantCreated": false,
     "accountingReadExecuted": false,
     "writePreviewExecuted": false,
-    "decision": "Exact new native accounting grant requested; pending. The completed GitHub repository authorization is retained separately."
+    "decision": "Exact new native accounting grant requested; pending. The completed GitHub repository authorization is retained separately.",
+    "browserAvailability": {
+      "observedAtUTC": "2026-10-24T21:35:23Z",
+      "state": "Browser tool requires updating the ChatGPT extension in Chrome before further UI control.",
+      "limit": "Consent/client tabs were marked for handoff before this tool interruption. No Approve access, callback, grant or accounting result is inferred."
+    }
   },
   "nextAction": "Complete the specifically approved native synthetic-ledger grant when answered, install/test through LobeHub, then read/query and one supported dry_run with unchanged-state proof. Coordinate removal of the malformed crawler stdio option. No duplicate listing, repeat GitHub authorization or new paid plan.",
   "publicNameSearchFollowThrough": {
