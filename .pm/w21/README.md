@@ -70,3 +70,6 @@
 - [966](./966.md) — The ledger filter in the drawer and Browse ledgers ignores quote, accent and width folding
 - [967](./967.md) — Log out can fail halfway and leave the user signed in on a revoked token, with no message
 - [968](./968.md) — Delete Account gives no feedback if local sign-out throws after the server deleted the account
+- [969](./969.md) — An amount written with a leading dot (`.5 USD`) is read as 5, ten times too large (native)
+- [970](./970.md) — Transaction rows and the detail headline show wrong digits for amounts of 17 or more significant digits
+- [971](./971.md) — A transaction the ledger could not interpolate shows blank posting amounts and an unsigned headline
