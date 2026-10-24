@@ -1,3 +1,4 @@
+import { cleanFreeText } from "@/common/clean-free-text";
 import { matchSuggestions } from "./match-suggestions";
 import React, { useMemo, useState } from "react";
 import {
@@ -168,7 +169,7 @@ export const TextInputScreen: React.FC<TextInputScreenProps> = ({
   // Trimmed: a trailing space (iOS adds one after a completion) would save a
   // payee that looks identical on screen and is a different string in the file.
   const commit = (selected: string) => {
-    onSave?.(selected.trim());
+    onSave?.(cleanFreeText(selected));
     router.back();
   };
 

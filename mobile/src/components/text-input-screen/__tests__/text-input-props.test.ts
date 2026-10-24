@@ -17,7 +17,7 @@ describe("TextInputScreen input", () => {
     expect(source.includes('autoCapitalize="none"')).toBe(true);
   });
 
-  it("commits the trimmed value", () => {
-    expect(source.includes("onSave?.(selected.trim());")).toBe(true);
+  it("commits the trimmed value, without invisible marks (w21/965)", () => {
+    expect(source.includes("onSave?.(cleanFreeText(selected));")).toBe(true);
   });
 });

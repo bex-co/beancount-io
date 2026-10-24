@@ -1,5 +1,6 @@
 import { foldArabicScript } from "./arabic-script-fold";
 import { foldWidth } from "./width-fold";
+import { withoutInvisibleMarks } from "./clean-free-text";
 
 /**
  * One merchant however its payee is spelled: trimmed, composed (NFC), with each
@@ -14,7 +15,9 @@ import { foldWidth } from "./width-fold";
  * typed "iş" finds "İşBank" (w21/569). Curly quotes read as straight ones (w21/519). Full-width Latin and half-width katakana read as the ordinary forms (w21/917). Import-free so the unit runner can load it.
  */
 export function merchantKey(payee: string): string {
-  return foldArabicScript(foldQuotes(foldWidth(payee).trim().normalize("NFC")))
+  return foldArabicScript(
+    foldQuotes(foldWidth(withoutInvisibleMarks(payee)).trim().normalize("NFC")),
+  )
     .replace(/\s+/g, " ")
     .toLowerCase()
     .replace(/i\u0307/gu, "i");

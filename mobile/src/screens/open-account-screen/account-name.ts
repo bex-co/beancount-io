@@ -1,4 +1,5 @@
 import type { AccountRoot, RootNames } from "../../common/account-root";
+import { cleanFreeText } from "../../common/clean-free-text";
 
 /** The five canonical Beancount account roots, in conventional display order. */
 export const ACCOUNT_ROOT_PREFIXES = [
@@ -41,7 +42,7 @@ export function composeAccountName(rootName: string, subPath: string): string {
   const components = subPath
     .normalize("NFC")
     .split(":")
-    .map((component) => component.trim())
+    .map((component) => cleanFreeText(component))
     .filter(Boolean);
 
   return [rootName, ...components].join(":");

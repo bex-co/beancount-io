@@ -73,6 +73,7 @@ function load() {
       useStackKeyboardOffset: () => 0,
     },
     "./match-suggestions": require("../match-suggestions"),
+    "@/common/clean-free-text": require("../../../common/clean-free-text"),
   };
   vm.runInNewContext(source, {
     exports,
