@@ -377,7 +377,11 @@ function MerchantsDirectory() {
       {showStale ? <StaleDataBanner /> : null}
       <SectionList
         style={styles.list}
-        contentContainerStyle={styles.listContent}
+        // A pushed screen has no tab bar to clear the home indicator (w21/1001).
+        contentContainerStyle={[
+          styles.listContent,
+          { paddingBottom: insets.bottom },
+        ]}
         sections={isInitialLoading || error ? [] : sections}
         keyExtractor={(item, index) =>
           `${item.inRecurringSection ? "r" : "a"}:${item.merchant.payee}:${index}`

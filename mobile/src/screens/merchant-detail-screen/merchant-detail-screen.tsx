@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { Stack, useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { NetworkStatus, useReactiveVar } from "@apollo/client";
 import {
   fontSizes,
@@ -271,6 +272,7 @@ function MerchantDetailBody({
   const ledgerId = useLedgerGuard();
   const router = useRouter();
   const styles = useThemeStyle(getStyles);
+  const insets = useSafeAreaInsets();
   const theme = useTheme().colorTheme;
   const { t, locale } = useTranslations();
   const today = useToday();
@@ -725,7 +727,11 @@ function MerchantDetailBody({
       ) : null}
       <SectionList
         style={styles.list}
-        contentContainerStyle={styles.listContent}
+        // A pushed screen has no tab bar to clear the home indicator (w21/1001).
+        contentContainerStyle={[
+          styles.listContent,
+          { paddingBottom: insets.bottom },
+        ]}
         sections={listError ? [] : sections}
         keyExtractor={(item, index) =>
           // Unique per row: identical twins share a hash (w21/419).

@@ -2,6 +2,7 @@ import { CardLoadFailure } from "@/components/card-load-failure";
 import { isolateAccountPath } from "@/common/bidi";
 import { useGuest } from "@/common/guest/guest-context";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   View,
   Text,
@@ -282,6 +283,7 @@ function AccountPickerScreenComponent(): JSX.Element {
   const { t, locale } = useTranslations();
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
+  const insets = useSafeAreaInsets();
   const { fontScale } = useWindowDimensions();
   const {
     canWrite,
@@ -732,7 +734,12 @@ function AccountPickerScreenComponent(): JSX.Element {
         automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}
         keyboardDismissMode="on-drag"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.listContent}
+        // The bottom row clears the home indicator on this pushed screen too
+        // (w21/1001).
+        contentContainerStyle={[
+          styles.listContent,
+          { paddingBottom: gutter + insets.bottom },
+        ]}
         stickySectionHeadersEnabled={false}
         // A real chart of accounts runs to hundreds of rows; the defaults keep
         // most of them mounted, which multiplies the cost of every keystroke.
