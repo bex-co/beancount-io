@@ -1,4 +1,5 @@
 import { getFormatDate } from "../../../common/format-util";
+import { getAccountRoot, type RootNames } from "../../../common/account-root";
 import {
   NO_FILTERS,
   ScopedTransactionFilters,
@@ -140,6 +141,7 @@ const statusFilterActive = (filters: TransactionFilters): boolean =>
 export const toFilterQuery = (
   filters: TransactionFilters,
   today: Date,
+  roots: RootNames = {},
 ): FilterQuery => {
   const query: FilterQuery = {};
 
@@ -153,7 +155,15 @@ export const toFilterQuery = (
   }
 
   if (filters.account) {
-    query.account = filters.account;
+    // A path from a root is a whole account and its children, not a run of
+    // components found anywhere: `Expenses:Travel` also matched
+    // `Assets:Reimbursable:Expenses:Travel`. A bare component, as a link
+    // carries it, stays the looser match (w21/113, w21/959).
+    query.account =
+      filters.account.includes(":") &&
+      getAccountRoot(filters.account, roots) !== null
+        ? `^${filters.account.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(:|$)`
+        : filters.account;
   }
 
   return query;

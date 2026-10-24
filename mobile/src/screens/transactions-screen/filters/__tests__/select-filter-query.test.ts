@@ -221,12 +221,40 @@ describe("toFilterQuery", () => {
     );
   });
 
-  it("passes the picked account through", () => {
+  // w21/959: a path from a root is a whole account and its children; as a bare
+  // name the server found it as a run of components anywhere, so Expenses:Travel
+  // also returned Assets:Reimbursable:Expenses:Travel.
+  it("anchors a picked path from a root to that account and its children", () => {
     const query = toFilterQuery(
       filters({ account: "Assets:Bank:Checking" }),
       TODAY,
     );
-    expect(query.account).toBe("Assets:Bank:Checking");
+    expect(query.account).toBe("^Assets:Bank:Checking(:|$)");
+    const pattern = new RegExp(query.account!, "i");
+    expect(pattern.test("Assets:Bank:Checking")).toBe(true);
+    expect(pattern.test("Assets:Bank:Checking:Joint")).toBe(true);
+    expect(pattern.test("Liabilities:Assets:Bank:Checking")).toBe(false);
+    expect(pattern.test("Assets:Bank:Checking-Old")).toBe(false);
+  });
+
+  it("escapes the pattern, and honours a renamed root", () => {
+    expect(
+      toFilterQuery(filters({ account: "Expenses:Food+Drink" }), TODAY).account,
+    ).toBe("^Expenses:Food\\+Drink(:|$)");
+    expect(
+      toFilterQuery(filters({ account: "Gastos:Comida" }), TODAY, {
+        expenses: "Gastos",
+      }).account,
+    ).toBe("^Gastos:Comida(:|$)");
+  });
+
+  it("leaves a bare component, as a link carries it, the looser match", () => {
+    expect(toFilterQuery(filters({ account: "Food" }), TODAY).account).toBe(
+      "Food",
+    );
+    expect(
+      toFilterQuery(filters({ account: "Food:Groceries" }), TODAY).account,
+    ).toBe("Food:Groceries");
   });
 
   it("combines every filter group", () => {
@@ -243,7 +271,7 @@ describe("toFilterQuery", () => {
     expect(query).toEqual({
       transactionSubtypes: ["cleared"],
       time: "2026-01-01 - 2026-01-31",
-      account: "Expenses:Food",
+      account: "^Expenses:Food(:|$)",
     });
   });
 });

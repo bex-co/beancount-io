@@ -462,7 +462,7 @@ describe("Transactions narrowed empty results", () => {
     const tree = render(TransactionsScreen);
     expect(actions(tree).length).toBe(0);
     expect(text(tree).includes("transactionsNoSearchResults")).toBe(true);
-    expect(journalVariables.query.account).toBe("Expenses:Food");
+    expect(journalVariables.query.account).toBe("^Expenses:Food(:|$)");
   });
 
   it("restores the first-transaction action after clearing the search", () => {
