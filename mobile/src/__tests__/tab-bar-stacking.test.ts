@@ -22,4 +22,18 @@ describe("opening a ledger returns to the tab bar already mounted", () => {
       expect(source.includes('router.replace("/(app)/(tabs)")')).toBe(false);
     }
   });
+
+  // w21/953: the missing-file screen's Back to Files replaced the editor with a
+  // second copy of the tab bar.
+  it("pops from the missing file's Back to Files too, signed in and as a guest", () => {
+    const source = read("screens", "ledger-file-editor-screen", "index.tsx");
+    expect(
+      source.includes(
+        'router.dismissTo(guest?"/examples/(tabs)/ledger":"/(app)/(tabs)/ledger",);',
+      ),
+    ).toBe(true);
+    expect(
+      source.includes('router.replace(guest?"/examples/(tabs)/ledger"'),
+    ).toBe(false);
+  });
 });

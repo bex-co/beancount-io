@@ -13,9 +13,9 @@ describe("missing-file Back to Files", () => {
     "utf8",
   );
 
-  it("navigates explicitly to the Files tab instead of router.back()", () => {
+  it("navigates explicitly to the Files tab instead of router.back(), popping to the tab bar already mounted (w21/953)", () => {
     expect(
-      /router\.replace\(\s*guest\s*\? \"\/examples\/\(tabs\)\/ledger\"\s*: \"\/\(app\)\/\(tabs\)\/ledger\"/.test(
+      /router\.dismissTo\(\s*guest\s*\? \"\/examples\/\(tabs\)\/ledger\"\s*: \"\/\(app\)\/\(tabs\)\/ledger\"/.test(
         source,
       ),
     ).toBe(true);

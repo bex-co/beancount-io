@@ -1234,7 +1234,9 @@ function LedgerFileEditorSession({
                 onPress={() => {
                   // Always land on Files for this labeled recovery action —
                   // history existence does not mean the prior screen is Files.
-                  router.replace(
+                  // Pops to the tab bar already mounted: replacing stacked a second
+                  // copy of it (w21/953, as w21/242).
+                  router.dismissTo(
                     guest ? "/examples/(tabs)/ledger" : "/(app)/(tabs)/ledger",
                   );
                 }}
