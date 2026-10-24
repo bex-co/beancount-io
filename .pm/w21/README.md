@@ -47,7 +47,6 @@
 - [922](./blocked/922.md) — Changing to a payee with no history keeps the previous payee's accounts (owner's call) — **blocked:** owner decides whether a no-history or cleared payee resets an untouched fill (reverses w21/411)
 - [951](./blocked/951.md) — Expense accounts are valued at market on Accounts and account detail, but at cost everywhere else — **blocked:** owner confirms flows-at-cost covers Income/Expenses balances; needs a native priced-lot check
 - [977](./blocked/977.md) — LedgerPrices pulls every price date for every pair, and Apollo writes and reads them all on each mount — **blocked:** owner picks the API shape for bounding price dates across REST/GraphQL/MCP
-- [989](./989.md) — A case-twin folder below the first path level is accepted in the New File dialog
 - [990](./990.md) — The Return key does nothing in the New File dialog (native)
 - [991](./991.md) — Percent signs are spaced two ways within a locale, and loading/saving strings use three ASCII dots
 - [992](./992.md) — The New Ledger name limit is checked on the typed text, but the server checks the slug

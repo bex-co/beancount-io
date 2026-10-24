@@ -5,6 +5,7 @@ import {
   checkLedgerFileName,
   clashingFileName,
   listingHasFile,
+  clashIsFolder,
   parentDirectory,
 } from "../utils";
 
@@ -385,5 +386,30 @@ describe("a name that reuses a file as a folder or a folder as a file", () => {
   it("still takes a path through a folder, and a new name", () => {
     expect(checkLedgerFileName("sub/y", names, kinds).ok).toBe(true);
     expect(checkLedgerFileName("fresh", names, kinds).ok).toBe(true);
+  });
+});
+
+// w21/989: the server's twin below the first level is a folder, and the toast
+// called it a file.
+describe("a twin the server names below the first level", () => {
+  it("is a folder when it is shorter than the path sent", () => {
+    expect(clashIsFolder("qa-2024/q1", "qa-2024/Q1/b.bean")).toBe(true);
+    expect(clashIsFolder("a/b", "a/B/x.bean")).toBe(true);
+  });
+
+  it("is a file when it is as deep as the path sent", () => {
+    expect(clashIsFolder("main.bean", "Main.bean")).toBe(false);
+    expect(clashIsFolder("sub/main.bean", "sub/Main.bean")).toBe(false);
+  });
+
+  it("is worded as a folder in the create handler, and not remembered as a name here", () => {
+    const source = require("fs")
+      .readFileSync(require("path").join(__dirname, "..", "index.tsx"), "utf8")
+      .replace(/\s+/g, "");
+    expect(
+      source.includes(
+        'if(clashIsFolder(existing,filePath)){toast.showToast({message:t("ledgerFolderNameExists",{name:existing}),',
+      ),
+    ).toBe(true);
   });
 });

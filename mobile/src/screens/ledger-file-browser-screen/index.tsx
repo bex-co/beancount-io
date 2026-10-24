@@ -63,6 +63,7 @@ import {
   canDeleteLedgerFile,
   checkLedgerFileName,
   clashingFileName,
+  clashIsFolder,
   deleteEmptiesFolder,
   listingHasFile,
   parentDirectory,
@@ -637,8 +638,17 @@ export function LedgerFileBrowserScreen(): JSX.Element {
         // where the generic failure toast told the user nothing (w21/564).
         if (isConflictFailure(createError)) {
           const existing = clashingFileName(createError, filename);
-          setKnownExisting((known) => [...known, existing]);
           void invalidateLedgerData(client, "file");
+          // A folder twin below the first level: named as the folder it is,
+          // and not remembered as a name of this folder (w21/989).
+          if (clashIsFolder(existing, filePath)) {
+            toast.showToast({
+              message: t("ledgerFolderNameExists", { name: existing }),
+              type: "error",
+            });
+            return;
+          }
+          setKnownExisting((known) => [...known, existing]);
           toast.showToast({
             message: t("ledgerFileNameExists", { name: existing }),
             type: "error",

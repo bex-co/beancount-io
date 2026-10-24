@@ -177,6 +177,18 @@ export function clashingFileName(error: unknown, sent: string): string {
   return sent;
 }
 
+/**
+ * Whether the twin the server named is a folder the new file's path goes
+ * through, not a file: its path is shorter than the path sent. The server walks
+ * every depth ("2024/q1 already exists as ..."), and the toast called a folder
+ * a file (w21/989).
+ */
+export function clashIsFolder(twin: string, sentPath: string): boolean {
+  const depth = (path: string) =>
+    path.replace(/^\/+|\/+$/g, "").split("/").length;
+  return depth(twin) < depth(sentPath);
+}
+
 /** Characters that draw nothing: a name holding one looks like one without. */
 const INVISIBLE = /[\u00ad\u200b-\u200d\u2060\ufeff]/gu;
 
