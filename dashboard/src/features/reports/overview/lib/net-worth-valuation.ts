@@ -88,7 +88,11 @@ function dayNumber(date: string): number | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
   if (!match) return null;
   const [, year, month, day] = match;
-  return Date.UTC(Number(year), Number(month) - 1, Number(day)) / DAY_MS;
+  // Not Date.UTC, which reads years 0–99 as 1900–1999: a 0099-12-30 quote was
+  // then 693,928 days in the future of 0100-01-31 (w4/1032).
+  const value = new Date(0);
+  value.setUTCFullYear(Number(year), Number(month) - 1, Number(day));
+  return value.getTime() / DAY_MS;
 }
 
 function nonZero(balance: Balance, currency: string): number | null {

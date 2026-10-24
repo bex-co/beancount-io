@@ -294,3 +294,60 @@ describe("describeLatestNetWorth", () => {
     ).toBeNull();
   });
 });
+
+/**
+ * Price ages keep a date's own year (w4/1032). `Date.UTC` reads years 0–99
+ * as 1900–1999, so a 0099-12-30 quote was 693,928 days in the future of
+ * 0100-01-31 and read as fresh beside its own January date.
+ */
+describe("early-century price dates", () => {
+  const priced = (date: string, priceDates: string[]) =>
+    describeNetWorthValuation({
+      market: { USD: "20.00" },
+      cost: { USD: "10.00" },
+      units: { QA0099DATE: "1" },
+      currency: "USD",
+      date,
+      today: "2026-10-23",
+      pricePairs: [pair("QA0099DATE", priceDates)],
+      managedSources: [],
+    });
+  const december = ["0099-12-28", "0099-12-29", "0099-12-30"];
+
+  it("ages a 0099-12-30 quote 32 days by 0100-01-31 and flags it stale", () => {
+    const valuation = priced("0100-01-31", december);
+    expect(valuation?.staleSince).toBe("0099-12-30");
+    expect(valuation?.holdings[0]).toMatchObject({
+      currency: "QA0099DATE",
+      priceDate: "0099-12-30",
+      stale: true,
+    });
+  });
+
+  it("keeps the same quote fresh the next day, as in modern years", () => {
+    expect(priced("0099-12-31", december)?.staleSince).toBeNull();
+    expect(
+      priced("2000-01-31", ["1999-12-28", "1999-12-29", "1999-12-30"])
+        ?.staleSince,
+    ).toBe("1999-12-30");
+  });
+
+  it("measures cadence across the 0099 → 0100 boundary and early leap days", () => {
+    expect(priceCadenceDays(["0099-12-31", "0100-01-01", "0100-01-02"])).toBe(
+      1,
+    );
+    expect(priceCadenceDays(["0096-02-28", "0096-02-29", "0096-03-01"])).toBe(
+      1,
+    );
+  });
+
+  it("ages a managed early-century quote by calendar days", () => {
+    expect(
+      isPriceStale({
+        ageDays: 32,
+        managedFreshness: "recent",
+        priceDates: december,
+      }),
+    ).toBe(true);
+  });
+});
