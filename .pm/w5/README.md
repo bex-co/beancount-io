@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1005 — Match inferred native-ID cash after native tolerance rounding](./1005.md) — reopened minor CLI source-projection gap; a native 7.80 USD repeat is reconstructed as 7.77 and conflicts, including skip/human apply. Normal CLI creation and precise/cents/explicit controls verified twice 2026-10-23.
+
 - [974 — Retain written native IDs through source inference](./974.md) — reopened major CLI owner-retention gap across booked-lot and multicurrency Cash inference. Filtered repeats and first corrections can write the recorded reference again; standalone native controls and both repetitions verified 2026-10-23.
 
 - [913 — Warn for funded accounts a native import closes through close_tree](./913.md) — reopened minor CLI warning gap; a parent import closes its funded child/grandchild without a preview/apply warning. Explicit closes and drained/previously closed controls work; reproduced twice 2026-10-23.
