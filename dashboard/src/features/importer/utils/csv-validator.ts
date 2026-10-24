@@ -123,6 +123,9 @@ const COMMA_DECIMAL_TAIL = /^[^,]*,(?:\d{1,2}|\d{4,})$/;
 const COMMA_GROUPING =
   /^(?:[1-9]\d{0,2}(?:,\d{3})+|[1-9]\d?(?:,\d{2})*,\d{3})$/;
 const SINGLE_COMMA_THREE = /^\d+,\d{3}$/;
+// Two or more dot groups (`1.650.000`): no convention writes two decimal
+// points, so the cell proves dot grouping (the CLI's w5/753).
+const DOT_GROUPING_TWO = /^[1-9]\d{0,2}(?:\.\d{3}){2,}$/;
 
 // Symbols that name the currency a row must post, ported from the CLI's
 // `_SYMBOL_CURRENCIES` (w3/421, w4/m44). `£` is also GIP, FKP, SHP and EGP,
@@ -219,12 +222,23 @@ function splitAmountSign(value: string): SplitAmount {
 
 type SeparatorVote = "us" | "eu" | "eu-weak" | null;
 
-function separatorVote(core: string): SeparatorVote {
+/**
+ * One cell's evidence for the column's decimal mark. The grouping fillers the
+ * parser removes (spaces, apostrophes) go first, so `1 234,567` votes as
+ * `1234,567` does: the vote saw one shape and the parse another, and the
+ * column fell back to point decimals and refused the row (w4/1054, the CLI's
+ * w5/906).
+ */
+function separatorVote(rawCore: string): SeparatorVote {
+  const core = rawCore.replace(THOUSAND_FILLER, "");
   if (core.includes(".") && core.includes(",")) {
     return core.lastIndexOf(",") > core.lastIndexOf(".") ? "eu" : "us";
   }
   if (COMMA_DECIMAL_TAIL.test(core)) return "eu-weak";
   if (SINGLE_COMMA_THREE.test(core) && !COMMA_GROUPING.test(core)) return "eu";
+  // `1.234.567` proves dot grouping, so its column reads `1.250` as 1250,
+  // not 1.25 (w4/1054).
+  if (DOT_GROUPING_TWO.test(core)) return "eu";
   return null;
 }
 

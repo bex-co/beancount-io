@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { act, renderHook } from "@testing-library/react";
 import { useCSVParser } from "../use-csv-parser";
-import { buildParsedRow } from "../../utils/csv-validator";
+import { buildParsedRow, parseAmount } from "../../utils/csv-validator";
 
 describe("useCSVParser", () => {
   describe("parseCSV – basic behaviour", () => {
@@ -888,6 +888,77 @@ describe("useCSVParser", () => {
       const { result } = renderHook(() => useCSVParser());
       expect(typeof result.current.parseFile).toBe("function");
       expect(typeof result.current.parseCSV).toBe("function");
+    });
+  });
+
+  // w4/1054: the column's decimal mark is read from the shape the parser
+  // reads, as the CLI does (w5/906, w5/753).
+  describe("parseCSV – grouped amounts decide the decimal mark", () => {
+    const parse = (amounts: string[]) => {
+      const { result } = renderHook(() => useCSVParser());
+      return result.current.parseCSV(
+        [
+          "Date;Payee;Description;Amount",
+          ...amounts.map(
+            (amount, index) =>
+              `2026-10-0${index + 1};qa-20261024-${index};Row ${index};${amount}`,
+          ),
+        ].join("\r\n"),
+      );
+    };
+    const exact = (parsed: ReturnType<typeof parse>) =>
+      parsed.rows.map(
+        (row) =>
+          parseAmount(row.amountInput, { decimalComma: row.decimalComma })
+            .decimal,
+      );
+
+    it.each([
+      ["a space", " "],
+      ["a no-break space", "\u00a0"],
+      ["a narrow no-break space", "\u202f"],
+      ["an apostrophe", "'"],
+      ["a curly apostrophe", "\u2019"],
+    ])("reads three comma decimals grouped by %s", (_, filler) => {
+      const token = `-1${filler}234,567`;
+      const parsed = parse([token, "0"]);
+      expect(parsed.errorCount).toBe(0);
+      expect(parsed.rows.map((row) => row.amount)).toEqual([-1234.567, 0]);
+      expect(exact(parsed)).toEqual(["-1234.567", "0"]);
+      // The token as the bank wrote it stays for editing.
+      expect(parsed.rows[0].amountInput).toBe(token);
+    });
+
+    it("reads a dot-grouped column whole, single-dot companions too", () => {
+      const parsed = parse(["-1.234.567", "-1.250"]);
+      expect(parsed.errorCount).toBe(0);
+      expect(parsed.rows.map((row) => row.amount)).toEqual([-1234567, -1250]);
+      // The same as the explicit comma-decimal spelling of that column.
+      expect(
+        parse(["-1.234.567,00", "-1.250"]).rows.map((r) => r.amount),
+      ).toEqual([-1234567, -1250]);
+    });
+
+    it("keeps the spellings that already worked, and the ambiguous ones", () => {
+      expect(parse(["-1234,567", "0"]).rows.map((r) => r.amount)).toEqual([
+        -1234.567, 0,
+      ]);
+      expect(parse(["-1 234,56", "0"]).rows.map((r) => r.amount)).toEqual([
+        -1234.56, 0,
+      ]);
+      expect(parse(["-1 234.567", "0"]).rows.map((r) => r.amount)).toEqual([
+        -1234.567, 0,
+      ]);
+      // A lone single dot still decides nothing: it stays a point decimal.
+      expect(parse(["-1.250", "0"]).rows.map((r) => r.amount)).toEqual([
+        -1.25, 0,
+      ]);
+    });
+
+    it("still refuses a column that proves both decimal marks", () => {
+      const parsed = parse(["-1.234.567", "1,234.56"]);
+      expect(parsed.validCount).toBe(0);
+      expect(parsed.rows[0].errors?.join(" ")).toMatch(/mixes point decimals/);
     });
   });
 });
