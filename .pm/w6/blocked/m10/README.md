@@ -1,6 +1,6 @@
 # w6 · m10 — List the connector in independent web directories
 
-**Worker:** worker1 **Goal:** People comparing accounting MCP servers find accurate, usable remote listings on the eligible independent directories. **Status:** blocked (t009 actual sign-in agreement awaits exact confirmation; existing free-submission review and publication gates remain)
+**Worker:** worker1 **Goal:** People comparing accounting MCP servers find accurate, usable remote listings on the eligible independent directories. **Status:** blocked (t009 native login complete; newly observed broad GitHub scope awaits its exact decision; existing free-submission review and publication gates remain)
 
 **Implementation estimate:** ~2h, excluding external review queues and the standing closing tasks.
 
@@ -68,7 +68,7 @@ The earlier exclusion of Claude/ChatGPT was the 2026-10-20 scope decision. The o
 
 ## Blocked — current native login and remaining review, 2026-10-23 UTC
 
-- **t009:** the restored browser reads the real sign-in page and its unchecked Terms/Privacy control. Exact action-time agreement confirmation is pending; the expired native callback has no authenticated result. **Unblock:** publisher confirms that actual agreement; worker restarts the callback, completes normal login and actual GitHub/repository checks, then publishes and retains the receipt. **Owners:** publisher, worker, then LobeHub. Browser connectivity is no longer the gate; no account/grant/submission is claimed.
+- **t009:** prior terms are approved and the actual publisher/CLI login succeeds. The real publish command requires verified GitHub connection; its newly shown OAuth request includes private repositories, Actions workflows and Gists, without a supported CLI narrowing option. **Unblock:** publisher decides that exact new scope or LobeHub supplies a narrower supported route; worker completes actual connection/repository checks and accepted submission. **Owners:** publisher/LobeHub, then worker. No GitHub/organization grant or plugin submission is claimed. See t009 and its dated packet.
 - **t001/t002:** accepted original free submissions remain the baseline; no duplicate is sent. **Unblock:** moderators publish an actual record and worker verifies hosted metadata/connection. **Owners:** respective directory reviewers, then worker.
 - **t003-t008:** retain their explicit native/publication and standing closing acceptance; they depend on the preceding blocked work. **Unblock:** the relevant actual publication/access conditions and dependent checks, not a prepared payload or an unrelated platform review. **Owners:** recorded publisher/platforms, then worker.
 

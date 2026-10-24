@@ -64,3 +64,33 @@ be restarted after confirmation. Browser connectivity is no longer the remaining
 gate. Preserve the canonical manifest and intended publisher identity, then
 complete native login, the actual GitHub/repository permission checks and the
 supported publication route. No user grant or submission receipt is claimed.
+
+## Publisher login complete; GitHub scope decision — 2026-10-24T00:45:26Z
+
+The publisher explicitly approves the shown agreement steps. The worker accepts
+LobeHub Terms/Privacy, completes normal existing Google identity sign-in and
+skips optional onboarding. The actual native CLI callback displays
+**Authentication Successful**, the CLI exits successfully, and an authenticated
+owned-plugin list returns an empty data array. Credentials remain in the native
+user credential store, outside tracked files.
+
+The fresh public name query still has four other authors' projects, both page
+directions disabled, with no canonical hosted connector in that displayed query.
+A real supported `plugin publish` attempt using the canonical repository and
+manifest fails with **A verified GitHub account is required**; no accepted
+submission or listing is created.
+
+The official `github connect` opens a previously unshown GitHub OAuth request
+for `gist read:org read:user repo user:email workflow`: public/private repository
+access, Actions workflow updates, Gist read/write and identity/organization
+reads. The installed CLI's help/source exposes no scope-narrowing option; the
+server supplies that authorization URL. No Authorize or organization Grant is
+clicked. This is broader access than the already-approved login/terms and is
+pending its own concrete action-time decision. All organizations remain
+restricted. Do not alter OAuth parameters or extract another client's token.
+
+**Next:** publisher decides this actual new scope, or LobeHub supplies a
+supported narrower verified-account route. If approved, restart the native
+connection if its callback expires, verify repository access and submit once;
+then retain the real receipt and perform actual public/native verification.
+The original Terms/Privacy question is resolved, not asked again.
