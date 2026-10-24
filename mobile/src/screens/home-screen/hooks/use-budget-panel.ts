@@ -160,7 +160,14 @@ export function useBudgetPanel({
                   }),
                   fetchPolicy,
                 })
-                .then(({ data }) => data?.getLedgerIntervalTotals ?? []);
+                .then(({ data }) => {
+                  // A cache-only read that misses resolves with no data
+                  // instead of rejecting: it must fail here, not read as no
+                  // spending (w21/934).
+                  const rows = data?.getLedgerIntervalTotals;
+                  if (!rows) throw new Error("no cached totals");
+                  return rows;
+                });
             // The period in progress, to today, but never before the window's own
             // start (a weekly period spanning New Year's).
             const windowStart = timeWindowStart(time, today) ?? start;
@@ -174,6 +181,9 @@ export function useBudgetPanel({
             )
               .then((read) => read ?? totals("network-only"))
               .catch(() => totals("cache-only"))
+              // Offline after an online run that had scheduled entries, only
+              // the window to today was cached.
+              .catch(() => totals("cache-only", toToday))
               // Nothing fetched and nothing cached: the row would read "$0.00 of
               // $500.00", a claim about spending a failed read cannot back
               // (w21/080).
