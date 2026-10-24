@@ -77,3 +77,5 @@
 - [920](./920.md) — Lakh ("1,00,000") and apostrophe-grouped ("1'234.50") amounts are refused
 - [921](./921.md) — A payee's usual accounts don't fill when 50 newer entries contain its name
 - [922](./922.md) — Changing to a payee with no history keeps the previous payee's accounts (owner's call)
+- [923](./923.md) — A dirty New Transaction loses its link guard after Open Account is pushed over it
+- [924](./924.md) — A deferred foreground refresh after Log out shows "Your session ended" and can break the next sign-in
