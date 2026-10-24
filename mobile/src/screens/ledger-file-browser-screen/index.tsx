@@ -62,8 +62,7 @@ import {
   buildLedgerFilePath,
   canDeleteLedgerFile,
   checkLedgerFileName,
-  clashingFileName,
-  clashIsFolder,
+  createClash,
   deleteEmptiesFolder,
   listingHasFile,
   parentDirectory,
@@ -637,11 +636,12 @@ export function LedgerFileBrowserScreen(): JSX.Element {
         // list was stale): say so by name, remember it, and refresh the list,
         // where the generic failure toast told the user nothing (w21/564).
         if (isConflictFailure(createError)) {
-          const existing = clashingFileName(createError, filename);
+          const clash = createClash(createError, filename, filePath);
+          const existing = clash.name;
           void invalidateLedgerData(client, "file");
           // A folder twin below the first level: named as the folder it is,
           // and not remembered as a name of this folder (w21/989).
-          if (clashIsFolder(existing, filePath)) {
+          if (clash.folder) {
             toast.showToast({
               message: t("ledgerFolderNameExists", { name: existing }),
               type: "error",

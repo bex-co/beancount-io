@@ -33,7 +33,7 @@ describe("a create over a file that already exists", () => {
     // The file the server says is there (w21/787), the name sent otherwise.
     expect(
       handler.includes(
-        'constexisting=clashingFileName(createError,filename);voidinvalidateLedgerData(client,"file");',
+        'constclash=createClash(createError,filename,filePath);constexisting=clash.name;voidinvalidateLedgerData(client,"file");',
       ),
     ).toBe(true);
     expect(handler.includes('t("ledgerFileNameExists",{name:existing})')).toBe(

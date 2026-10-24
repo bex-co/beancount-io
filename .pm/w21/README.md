@@ -48,5 +48,4 @@
 - [951](./blocked/951.md) — Expense accounts are valued at market on Accounts and account detail, but at cost everywhere else — **blocked:** owner confirms flows-at-cost covers Income/Expenses balances; needs a native priced-lot check
 - [977](./blocked/977.md) — LedgerPrices pulls every price date for every pair, and Apollo writes and reads them all on each mount — **blocked:** owner picks the API shape for bounding price dates across REST/GraphQL/MCP
 - [994](./blocked/994.md) — Budget: mobile prorates the current period to today, the dashboard does not, so verdicts differ (product call) — **blocked:** owner picks full-period or prorated target for the period in progress, then both apps follow
-- [1002](./1002.md) — A plain "file already exists" in a subfolder is toasted as "A folder named …" (w21/989 regression)
 - [1003](./1003.md) — New File clash wording: a folder used as a file name says "file" (w21/988 regression)

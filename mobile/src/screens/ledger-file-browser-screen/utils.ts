@@ -189,6 +189,23 @@ export function clashIsFolder(twin: string, sentPath: string): boolean {
   return depth(twin) < depth(sentPath);
 }
 
+/**
+ * What a create that was refused as a conflict clashed with: the name to show
+ * and remember, and whether it is a folder. Only a twin the server named can be
+ * a folder; the fallback is the name typed, which is relative to the folder
+ * being browsed and so always shallower than the path sent, and was called a
+ * folder in any subfolder (w21/1002).
+ */
+export function createClash(
+  error: unknown,
+  filename: string,
+  filePath: string,
+): { name: string; folder: boolean } {
+  const name = clashingFileName(error, filePath);
+  if (name === filePath) return { name: filename, folder: false };
+  return { name, folder: clashIsFolder(name, filePath) };
+}
+
 /** Characters that draw nothing: a name holding one looks like one without. */
 const INVISIBLE = /[\u00ad\u200b-\u200d\u2060\ufeff]/gu;
 

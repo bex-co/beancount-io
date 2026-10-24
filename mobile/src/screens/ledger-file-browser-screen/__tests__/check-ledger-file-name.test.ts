@@ -6,6 +6,7 @@ import {
   clashingFileName,
   listingHasFile,
   clashIsFolder,
+  createClash,
   parentDirectory,
 } from "../utils";
 
@@ -268,7 +269,9 @@ describe("clashingFileName", () => {
       ),
     ).toBe(true);
     expect(
-      screen.includes("constexisting=clashingFileName(createError,filename);"),
+      screen.includes(
+        "constclash=createClash(createError,filename,filePath);constexisting=clash.name;",
+      ),
     ).toBe(true);
     expect(screen.includes('t("ledgerFileNameExists",{name:existing})')).toBe(
       true,
@@ -408,8 +411,35 @@ describe("a twin the server names below the first level", () => {
       .replace(/\s+/g, "");
     expect(
       source.includes(
-        'if(clashIsFolder(existing,filePath)){toast.showToast({message:t("ledgerFolderNameExists",{name:existing}),',
+        'if(clash.folder){toast.showToast({message:t("ledgerFolderNameExists",{name:existing}),',
       ),
     ).toBe(true);
+  });
+});
+
+// w21/1002: the name typed is the fallback for a plain conflict, and in a
+// subfolder it is always shallower than the path sent, so it was called a folder.
+describe("a plain conflict refusal", () => {
+  const plain = { graphQLErrors: [{ message: "File already exists" }] };
+  const twin = {
+    graphQLErrors: [{ message: "qa-2024/q1 already exists as qa-2024/Q1" }],
+  };
+
+  it("names the typed file, in the root and in a subfolder", () => {
+    expect(createClash(plain, "notes.bean", "notes.bean")).toEqual({
+      name: "notes.bean",
+      folder: false,
+    });
+    expect(createClash(plain, "notes.bean", "2024/notes.bean")).toEqual({
+      name: "notes.bean",
+      folder: false,
+    });
+  });
+
+  it("still names a folder the server named", () => {
+    expect(createClash(twin, "b.bean", "qa-2024/Q1/b.bean")).toEqual({
+      name: "qa-2024/Q1",
+      folder: true,
+    });
   });
 });
