@@ -54,3 +54,5 @@
 - [999](./999.md) — The search ✕ and the Filters button overlap in the 8 pt gap and are under 44 pt
 - [1000](./1000.md) — The Accounts expand chevron is a small nested target inside a row that navigates
 - [1001](./1001.md) — Merchants, Merchant detail and the account picker lists have no home-indicator inset
+- [1002](./1002.md) — A plain "file already exists" in a subfolder is toasted as "A folder named …" (w21/989 regression)
+- [1003](./1003.md) — New File clash wording: a folder used as a file name says "file" (w21/988 regression)
