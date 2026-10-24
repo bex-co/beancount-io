@@ -36,7 +36,7 @@
 
 ## Inbox
 
-- [994 — Complete native acquisition-cost inference](./994.md) — reopened major CLI gap: native cost-weight rounding and signed totals break reply replay and import identity; original plain/currency/zero cases remain. Repaired and remaining cases rechecked 2026-10-24.
+- [994 — Complete native acquisition-cost inference](./994.md) — reopened major CLI gap: native weights, unfinished inference and independent currency groups break replies or trade identity. Original and added controls checked 2026-10-24.
 - [995 — Resolve inferred posting prices before import decisions](./995.md) — reopened major CLI gap: known-weight, repeating and independent currency groups skip trades; inferred-zero restatements conflict. Original and added controls checked 2026-10-24.
 - [980 — Preserve trade dependencies in same-day bulk ordering](./980.md) — reopened major CLI gap: bookable labeled transfer chains and stated-cost stock splits are refused; partial add omits a required transfer or sale. Original acceptance and nearby controls rechecked 2026-10-24.
 - [226 — Keep importer selectors unambiguous](./226.md) — reopened minor CLI gap: a listed NAME#N selector can collide with a declared importer name and choose another account. Preserve exact-name priority; collision and ordinary controls verified 2026-10-24.
