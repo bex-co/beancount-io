@@ -51,13 +51,21 @@ export function entryLocation(entry: unknown): EntryLocation | null {
     : null;
 }
 
-/** The IDs of a journal page's transactions dated `date`, at most `limit`. */
+/**
+ * The IDs of a journal page's transactions dated `date`. With `at`, only those
+ * that still look like the entry it was read from (payee and narration, or
+ * accounts: the rows carry both), so a busy day costs as many context reads as
+ * it has look-alikes, and the first-written of a dozen is still a candidate
+ * instead of falling off a fixed cap of the newest ten (w21/938). Without it,
+ * at most `limit`.
+ */
 export function sameDayTransactionIds(
   items: readonly unknown[],
   date: string,
+  at?: EntryLocation,
   limit = 10,
 ): string[] {
-  return items
+  const ids = items
     .filter((item): item is { entry_hash: string; date: string } => {
       const entry = item as {
         entry_hash?: unknown;
@@ -68,11 +76,35 @@ export function sameDayTransactionIds(
         typeof entry.entry_hash === "string" &&
         typeof entry.date === "string" &&
         entry.date.slice(0, 10) === date &&
-        entry.directive_type === "Transaction"
+        entry.directive_type === "Transaction" &&
+        (at === undefined || rowLooksLike(item, at))
       );
     })
-    .map((entry) => entry.entry_hash)
-    .slice(0, limit);
+    .map((entry) => entry.entry_hash);
+  return at === undefined ? ids.slice(0, limit) : ids;
+}
+
+/** A journal row's name and posting accounts, read like a context read's. */
+function rowLooksLike(row: unknown, at: EntryLocation): boolean {
+  const { payee, narration, postings } = row as {
+    payee?: unknown;
+    narration?: unknown;
+    postings?: unknown;
+  };
+  const accounts = Array.isArray(postings)
+    ? postings
+        .map((posting) => (posting as { account?: unknown })?.account)
+        .filter((account): account is string => typeof account === "string")
+        .sort()
+    : [];
+  return recognisable(
+    {
+      payee: typeof payee === "string" ? payee.trim() : "",
+      narration: typeof narration === "string" ? narration.trim() : "",
+      accounts,
+    },
+    at,
+  );
 }
 
 /**
@@ -81,7 +113,10 @@ export function sameDayTransactionIds(
  * keeps both; the next entry of the day moving up into a deleted one's place
  * keeps neither (w21/852).
  */
-function recognisable(candidate: EntryLocation, at: EntryLocation): boolean {
+function recognisable(
+  candidate: Pick<EntryLocation, "payee" | "narration" | "accounts">,
+  at: EntryLocation,
+): boolean {
   const named =
     (candidate.payee !== "" || candidate.narration !== "") &&
     candidate.payee === at.payee &&

@@ -237,6 +237,7 @@ export const EditTransactionScreen = (): JSX.Element => {
         sameDayTransactionIds(
           (journal.data?.getLedgerJournal?.data ?? []) as unknown[],
           at.date,
+          at,
         ).map(async (candidate) => {
           try {
             const result = await client.query({

@@ -196,4 +196,37 @@ describe("finding a changed entry again", () => {
     );
     expect(copy.includes("awaithandleReload();")).toBe(true);
   });
+
+  // w21/938: only the newest ten of a busy day were ever read, so the first
+  // written of twelve never relocated.
+  it("keeps every look-alike of a busy day, and reads none of the others", () => {
+    const row = (hash: string, payee: string) => ({
+      entry_hash: hash,
+      date: "2026-10-20",
+      directive_type: "Transaction",
+      payee,
+      narration: "latte",
+      postings: [{ account: "Expenses:Food" }, { account: "Assets:Cash" }],
+    });
+    // Newest first: h11 … h0, the target being the first written (h0).
+    const rows = Array.from({ length: 12 }, (_, i) =>
+      row(`h${11 - i}`, i === 11 ? "Cafe" : `Other ${i}`),
+    );
+    // The accounts match on every row here; the name tells them apart only
+    // for rows with distinct accounts, so give the others their own.
+    const busy = rows.map((r, i) =>
+      i === 11
+        ? r
+        : {
+            ...r,
+            postings: [
+              { account: `Expenses:Other${i}` },
+              { account: "Assets:Cash" },
+            ],
+          },
+    );
+    expect(sameDayTransactionIds(busy, "2026-10-20", at)).toEqual(["h0"]);
+    // Without the entry to look for, the old cap of ten stands.
+    expect(sameDayTransactionIds(busy, "2026-10-20").length).toBe(10);
+  });
 });
