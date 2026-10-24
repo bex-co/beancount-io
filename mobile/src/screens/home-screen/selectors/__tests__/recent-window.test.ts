@@ -186,12 +186,23 @@ describe("Home's Recent Transactions card with a second read", () => {
       ),
     ).toBe(true);
     expect(
-      card.includes(
-        'cardState==="failed"?(<CardLoadFailureonRetry={refetchAll}/>',
-      ),
+      card.includes('cardState==="failed"?(<CardLoadFailureonRetry={retry}/>'),
     ).toBe(true);
     expect(
       card.includes('cardState==="loading"?(<RecentTransactionsSkeleton/>'),
+    ).toBe(true);
+  });
+
+  it("passes the newest-entry read to the card state, and Retry reaches it", () => {
+    expect(
+      card.includes(
+        "newest:emptyUpToToday?{hasData:newestData!==undefined,error:newestError}:null,",
+      ),
+    ).toBe(true);
+    expect(
+      card.includes(
+        "refetchAll();void refetchNewestRef.current?.()".replace(/\s+/g, ""),
+      ),
     ).toBe(true);
   });
 
@@ -202,5 +213,52 @@ describe("Home's Recent Transactions card with a second read", () => {
     expect(card.includes("if(refreshSignal>0&&ledgerId)refetchAll();")).toBe(
       true,
     );
+  });
+});
+
+// w21/919: with nothing up to today the card flashed its first-run copy while
+// the newest-entry read was pending, and kept it if that read failed.
+describe("selectRecentCardState with the newest-entry read", () => {
+  const page = { loading: false, hasData: true, error: undefined };
+
+  it("holds the skeleton while it is pending", () => {
+    expect(
+      selectRecentCardState({
+        page,
+        past: null,
+        newest: { hasData: false, error: undefined },
+        shown: 0,
+      }),
+    ).toBe("loading");
+  });
+
+  it("shows the failure when it fails", () => {
+    expect(
+      selectRecentCardState({
+        page,
+        past: null,
+        newest: { hasData: false, error: new Error("offline") },
+        shown: 0,
+      }),
+    ).toBe("failed");
+  });
+
+  it("is ready once it landed, and not asked for when rows are shown", () => {
+    expect(
+      selectRecentCardState({
+        page,
+        past: null,
+        newest: { hasData: true, error: undefined },
+        shown: 0,
+      }),
+    ).toBe("ready");
+    expect(
+      selectRecentCardState({
+        page,
+        past: null,
+        newest: { hasData: false, error: undefined },
+        shown: 2,
+      }),
+    ).toBe("ready");
   });
 });

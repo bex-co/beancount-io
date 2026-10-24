@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { ColorTheme } from "@/types/theme-props";
@@ -109,9 +109,16 @@ export function RecentTransactionsCard({
   });
   // Both reads, so a pull to refresh or a Retry reaches the one ending today
   // too (w21/700).
+  // Set once the newest-entry read below is declared, while it is asked for.
+  const refetchNewestRef = useRef<(() => Promise<unknown>) | null>(null);
   const refetchAll = () => {
     void refetch().catch(() => undefined);
     if (needsPast) void refetchPast().catch(() => undefined);
+  };
+  // Its failure is the card's too, and Retry has to reach it (w21/919).
+  const retry = () => {
+    refetchAll();
+    void refetchNewestRef.current?.().catch(() => undefined);
   };
   useEffect(() => {
     if (refreshSignal > 0 && ledgerId) refetchAll();
@@ -134,7 +141,11 @@ export function RecentTransactionsCard({
     !error &&
     (!needsPast || pastData !== undefined) &&
     entries.length === 0;
-  const { data: newestData } = useGetLedgerJournalQuery({
+  const {
+    data: newestData,
+    error: newestError,
+    refetch: refetchNewest,
+  } = useGetLedgerJournalQuery({
     variables: {
       ledgerId: ledgerId!,
       query: {
@@ -147,6 +158,7 @@ export function RecentTransactionsCard({
     fetchPolicy: "cache-and-network",
   });
   const newest = newestData?.getLedgerJournal.data?.[0]?.date;
+  refetchNewestRef.current = emptyUpToToday ? refetchNewest : null;
   const upcomingOnly = emptyUpToToday && newest !== undefined && newest > today;
 
   // Twin entries share a hash: their keys carry the ordinal (w21/419, w21/524).
@@ -155,6 +167,9 @@ export function RecentTransactionsCard({
     page: { loading, hasData: data !== undefined, error },
     past: needsPast
       ? { hasData: pastData !== undefined, error: pastError }
+      : null,
+    newest: emptyUpToToday
+      ? { hasData: newestData !== undefined, error: newestError }
       : null,
     shown: entries.length,
   });
@@ -170,7 +185,7 @@ export function RecentTransactionsCard({
   return (
     <DashboardCard title={t("recentTransactions")} onSeeAll={onSeeAll} bleed>
       {cardState === "failed" ? (
-        <CardLoadFailure onRetry={refetchAll} />
+        <CardLoadFailure onRetry={retry} />
       ) : cardState === "loading" ? (
         <RecentTransactionsSkeleton />
       ) : (

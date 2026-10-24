@@ -70,15 +70,23 @@ type RecentRead = { loading: boolean; hasData: boolean; error: unknown };
  * failed one left that for good (w21/700). So it is part of the card's state:
  * pending, it holds the skeleton, and failed, the failure tile. Rows already
  * shown stay: they are the newest that have happened, just fewer.
+ *
+ * With nothing shown, the card also reads the newest entry, to tell a ledger
+ * whose entries are all booked for later from a new one; until that read lands
+ * the card holds the skeleton, and a failed one shows the failure, rather than
+ * the first-run copy and its button (w21/919).
  */
 export function selectRecentCardState({
   page,
   past,
+  newest = null,
   shown,
 }: {
   page: RecentRead;
   /** The read up to today; `null` while the page does not need it. */
   past: Omit<RecentRead, "loading"> | null;
+  /** The newest-entry read; `null` while nothing is left to tell apart. */
+  newest?: Omit<RecentRead, "loading"> | null;
   shown: number;
 }): CardLoadState {
   if (selectCardLoadState(page) === "failed") return "failed";
@@ -88,5 +96,12 @@ export function selectRecentCardState({
       ? "ready"
       : selectCardLoadState({ ...past, loading: !past.hasData });
   if (second === "failed") return "failed";
-  return page.loading || second === "loading" ? "loading" : "ready";
+  const last =
+    newest === null
+      ? "ready"
+      : selectCardLoadState({ ...newest, loading: !newest.hasData });
+  if (last === "failed") return "failed";
+  return page.loading || second === "loading" || last === "loading"
+    ? "loading"
+    : "ready";
 }
