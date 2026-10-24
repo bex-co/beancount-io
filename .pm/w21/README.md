@@ -45,7 +45,6 @@
 - [882](./blocked/882.md) — Chart axes use the app language's money format while the amounts beside them use English (9 languages) — **blocked:** needs an owner product decision on one number convention for money (app language everywhere vs English everywhere), reversing w21/177 or w3/189
 - [895](./blocked/895.md) — Account detail's range chips filter only the chart, not the list below — **blocked:** owner picks a range-bounded list (backend date bound on all surfaces) or an "All entries" caption
 - [922](./blocked/922.md) — Changing to a payee with no history keeps the previous payee's accounts (owner's call) — **blocked:** owner decides whether a no-history or cleared payee resets an untouched fill (reverses w21/411)
-- [931](./931.md) — The Cash flow chart's VoiceOver label reads float leftovers ("-$0.0000000000000018")
 - [932](./932.md) — Reports chart summaries read "$222.6" for $222.58
 - [933](./933.md) — Persian chart y-axis ticks use Latin digits under Persian x-axis labels
 - [934](./934.md) — Offline, Home's budget panel claims "$0.00 · Below target" on a cache miss

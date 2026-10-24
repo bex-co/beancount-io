@@ -3,7 +3,10 @@ import { GLYPH_ADVANCE_EM } from "./sankey-glyph-widths";
 import { leafName } from "../../../common/account-util";
 import { getCurrencySymbol } from "../../../common/currency-util";
 import { topNWithOther } from "./select-breakdown-rows";
-import { formatShortMoneyWithCurrency } from "../../../common/number-utils";
+import {
+  formatShortMoneyWithCurrency,
+  roundMoney,
+} from "../../../common/number-utils";
 import { getAccountRoot, type RootNames } from "../../../common/account-root";
 
 /**
@@ -662,8 +665,10 @@ export function cashFlowChartSummary(
   t: (key: string, params?: Record<string, unknown>) => string,
   locale = "en",
 ): string {
+  // Settled at money precision: totals of 10.10, 20.20 and -30.30 land on
+  // -1.8e-15, which a screen reader read out as "$0.0000000000000018" (w21/931).
   const money = (value: number) =>
-    formatShortMoneyWithCurrency(value, currency, locale);
+    formatShortMoneyWithCurrency(roundMoney(value, currency), currency, locale);
   const totals = {
     income: money(data.totalIncome),
     expenses: money(data.totalExpenses),

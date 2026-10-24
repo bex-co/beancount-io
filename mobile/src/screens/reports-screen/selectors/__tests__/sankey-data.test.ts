@@ -413,6 +413,23 @@ describe("cashFlowChartSummary", () => {
     );
   });
 
+  // w21/931: floats that net to zero read out as "$0.0000000000000018".
+  it("reads sums that net to zero as zero", () => {
+    const data = transformToSankeyData({
+      income: [
+        node("Income:Salary", 10.1),
+        node("Income:Bonus", 20.2),
+        node("Income:Clawback", -30.3),
+      ],
+      expenses: [node("Expenses:Food", 50)],
+      ...labels,
+    });
+    const summary = cashFlowChartSummary(data, "USD", t);
+    expect(summary.includes("Income $0,")).toBe(true);
+    expect(/0\.0000/.test(summary)).toBe(false);
+    expect(summary.includes("-$0")).toBe(false);
+  });
+
   it("leaves savings out when income exactly meets expenses", () => {
     expect(sankeySavings(flow(5000, 5000))).toBe(null);
     expect(sankeyShortfall(flow(5000, 5000))).toBe(null);
