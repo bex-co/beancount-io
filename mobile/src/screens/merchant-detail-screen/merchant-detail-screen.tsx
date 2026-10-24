@@ -403,21 +403,31 @@ function MerchantDetailBody({
   // Totals in currencies that share a symbol read by code, the ledger's own
   // keeping it (w21/535).
   const { primaryCurrency } = useLedgerReadContext(ledgerId!);
+  const paidTotals = stats?.totalsByCurrency ?? [];
+  const scheduledTotals = stats?.scheduledTotalsByCurrency ?? [];
+  // What the rows add up to, when legs were priced into another currency.
+  const priced = pricedTotals(
+    paidTotals,
+    mapMerchantCurrencyTotals(weightsData?.queryShell?.table ?? null),
+  );
+  // A symbol is told apart across all three lines, not within each (w21/897).
+  const lineCurrencies = [...paidTotals, ...scheduledTotals, ...priced].map(
+    (row) => row.currency,
+  );
   const totalLines = formatMerchantTotals(
-    stats?.totalsByCurrency ?? [],
+    paidTotals,
     primaryCurrency,
+    lineCurrencies,
   );
   const scheduledLines = formatMerchantTotals(
-    stats?.scheduledTotalsByCurrency ?? [],
+    scheduledTotals,
     primaryCurrency,
+    lineCurrencies,
   );
-  // What the rows add up to, when legs were priced into another currency.
   const pricedLines = formatMerchantTotals(
-    pricedTotals(
-      stats?.totalsByCurrency ?? [],
-      mapMerchantCurrencyTotals(weightsData?.queryShell?.table ?? null),
-    ),
+    priced,
     primaryCurrency,
+    lineCurrencies,
   );
 
   const rawEntries = useMemo(

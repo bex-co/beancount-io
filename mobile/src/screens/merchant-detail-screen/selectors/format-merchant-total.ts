@@ -63,12 +63,17 @@ export function formatMerchantAmount(
     : formatMerchantTotal(row);
 }
 
-/** The header's total lines, each read as {@link formatMerchantAmount} reads it. */
+/**
+ * The header's total lines, each read as {@link formatMerchantAmount} reads it.
+ * `alsoShown` names the currencies of the header's other lines (scheduled,
+ * priced), which a symbol must be told apart from too (w21/897).
+ */
 export function formatMerchantTotals(
   totals: readonly MerchantCurrencyTotal[],
   primaryCurrency?: string,
+  alsoShown: readonly string[] = [],
 ): string[] {
-  const currencies = totals.map((row) => row.currency);
+  const currencies = [...totals.map((row) => row.currency), ...alsoShown];
   return totals.map((row) =>
     formatMerchantAmount(row, primaryCurrency, currencies),
   );

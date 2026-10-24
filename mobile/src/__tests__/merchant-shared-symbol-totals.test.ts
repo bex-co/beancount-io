@@ -64,3 +64,19 @@ describe("formatMerchantTotals", () => {
     expect(formatMerchantTotals([total("CAD", -1)], "CAD")).toEqual(["-$1.00"]);
   });
 });
+
+// w21/897: the scheduled and priced lines were checked apart from the totals.
+describe("formatMerchantTotals across the header's lines", () => {
+  it("reads both currencies by code when one line's symbol is another line's", () => {
+    const shown = ["USD", "CAD"];
+    expect(formatMerchantTotals([total("USD", 100)], "EUR", shown)).toEqual([
+      "100.00 USD",
+    ]);
+    expect(formatMerchantTotals([total("CAD", 50)], "EUR", shown)).toEqual([
+      "50.00 CAD",
+    ]);
+    expect(
+      formatMerchantTotals([total("JPY", 1500)], "EUR", ["JPY", "CNY"]),
+    ).toEqual(["1,500 JPY"]);
+  });
+});
