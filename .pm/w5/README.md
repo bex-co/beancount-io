@@ -43,8 +43,6 @@
 - [1013 — Match inferred and explicit source postings without consuming the wrong line](./1013.md) — reopened remaining major CLI matching gap after 8d1566b42; an inferred Cash line is consumed too early and the same statement doubles USD/EUR expenses despite duplicate skip, reproduced twice 2026-10-23.
 
 
-- [1011 — Preserve written postings across cost inference and lot splitting](./1011.md) — major CLI normalization gaps; split total-cost sales can duplicate 500 USD, and a native-valid inferred total blocks listing/new import with a TypeError. Native arithmetic-order mismatch also duplicates a 3 USD settlement. Prior precise-fact scope retained; reproduced twice 2026-10-23.
-
 
 
 

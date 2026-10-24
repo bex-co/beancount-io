@@ -269,10 +269,14 @@ def _annotations_declared(booked: Any, stated: Any) -> bool:
     """Whether the cost, price and flag the line states are the booked posting's own (w5/1011).
 
     Only what is written is compared: an open selector (`{}`, `{USD}`), an
-    omitted price and an unflagged posting agree with anything. A total cost
-    or price is normalized per unit as booking does.
+    omitted price and an unflagged posting agree with anything, and each
+    component of a cost or price the line does state must agree exactly.
+    A total or compound cost is normalized per unit as booking does: over the
+    line's own quantity, which booking divides before splitting a reduction
+    across lots, adding before dividing; a component booking infers leaves
+    the number to it.
     """
-    from beancount.core.number import MISSING
+    from beancount.parser.booking_full import compute_cost_number
 
     if stated.flag is not None and stated.flag != booked.flag:
         return False
@@ -280,33 +284,37 @@ def _annotations_declared(booked: Any, stated: Any) -> bool:
     if spec is not None:
         if cost is None:
             return False
-        per, total = spec.number_per, spec.number_total
-        if per is not MISSING and (per is not None or total is not None):
-            # The booked quantity: the line may leave its own to booking.
-            units = abs(booked.units.number) if booked.units is not None else None
-            if isinstance(units, Decimal) and units:
-                expected = (per or Decimal(0)) + (total or Decimal(0)) / units
-                if abs(expected - cost.number) > _NUMBER_SLACK:
-                    return False
+        # The line's own quantity, else the one booking inferred for it.
+        units = stated.units if _has_number(stated.units) else booked.units
+        expected = compute_cost_number(spec, units) if _has_number(units) and units.number else None  # type: ignore[no-untyped-call]
+        if expected is not None and expected != cost.number:
+            return False
         if isinstance(spec.currency, str) and spec.currency and spec.currency != cost.currency:
             return False
         if spec.date is not None and spec.date != cost.date:
             return False
-        if spec.label is not None and unicodedata.normalize("NFC", spec.label) != unicodedata.normalize(
-            "NFC", cost.label or ""
+        # An explicit empty label is a label of its own, not an absent one.
+        if spec.label is not None and (
+            cost.label is None or unicodedata.normalize("NFC", spec.label) != unicodedata.normalize("NFC", cost.label)
         ):
             return False
     price = stated.price
-    if price is not None and isinstance(price.number, Decimal) and isinstance(price.currency, str) and price.currency:
-        booked_price = booked.price
-        if booked_price is None or booked_price.currency != price.currency:
-            return False
-        if abs(booked_price.number - price.number) > _NUMBER_SLACK:
-            return False
+    if price is not None:
+        number = price.number if isinstance(price.number, Decimal) else None
+        currency = price.currency if isinstance(price.currency, str) and price.currency else None
+        if number is not None or currency is not None:
+            booked_price = booked.price
+            if booked_price is None:
+                return False
+            if currency is not None and booked_price.currency != currency:
+                return False
+            if number is not None and booked_price.number != number:
+                return False
     return True
 
 
-_NUMBER_SLACK = Decimal("0.000001")
+def _has_number(units: Any) -> bool:
+    return units is not None and isinstance(getattr(units, "number", None), Decimal)
 
 
 def _annotation_compatible(booked: Any, stated: Any) -> bool:
