@@ -127,7 +127,11 @@ export const MainContent = () => {
         t("deleteAccountConfirmMismatch"),
       ) === true
     ) {
-      handleDeleteAccount();
+      // Never an unhandled rejection from here: the deletion settles its own
+      // outcome, and whatever else throws is reported as a failure (w21/968).
+      handleDeleteAccount().catch(() =>
+        Alert.alert("", t("deleteAccountFailed")),
+      );
     }
   };
 

@@ -20,6 +20,13 @@ export async function runAccountDeletion({
     return "failed";
   }
   if (!deleted) return "failed";
-  await signOut();
+  // The account is gone either way: a sign-out that throws (the same Keychain
+  // failure as a Log out, w21/967) must not turn the deletion into no word at
+  // all (w21/968).
+  try {
+    await signOut();
+  } catch {
+    // Reported as deleted below; the screen goes to Welcome regardless.
+  }
   return "deleted";
 }

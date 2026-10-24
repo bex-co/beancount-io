@@ -46,7 +46,6 @@
 - [895](./blocked/895.md) — Account detail's range chips filter only the chart, not the list below — **blocked:** owner picks a range-bounded list (backend date bound on all surfaces) or an "All entries" caption
 - [922](./blocked/922.md) — Changing to a payee with no history keeps the previous payee's accounts (owner's call) — **blocked:** owner decides whether a no-history or cleared payee resets an untouched fill (reverses w21/411)
 - [951](./blocked/951.md) — Expense accounts are valued at market on Accounts and account detail, but at cost everywhere else — **blocked:** owner confirms flows-at-cost covers Income/Expenses balances; needs a native priced-lot check
-- [968](./968.md) — Delete Account gives no feedback if local sign-out throws after the server deleted the account
 - [969](./969.md) — An amount written with a leading dot (`.5 USD`) is read as 5, ten times too large (native)
 - [970](./970.md) — Transaction rows and the detail headline show wrong digits for amounts of 17 or more significant digits
 - [971](./971.md) — A transaction the ledger could not interpolate shows blank posting amounts and an unsigned headline

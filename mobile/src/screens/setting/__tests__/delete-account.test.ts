@@ -68,3 +68,27 @@ describe("Settings delete-account wiring", () => {
     expect(source.includes('t("deleteAccountInProgress")')).toBe(true);
   });
 });
+
+// w21/968: the account was deleted, but a sign-out that threw left no word.
+describe("runAccountDeletion when the local sign-out throws", () => {
+  it("still reports the deletion", async () => {
+    const outcome = await runAccountDeletion({
+      deleteAccount: async () => true,
+      signOut: async () => {
+        throw new Error("Keychain locked");
+      },
+    });
+    expect(outcome).toBe("deleted");
+  });
+
+  it("is caught in the screen's confirm handler", () => {
+    const source = fs
+      .readFileSync(path.join(__dirname, "..", "main-content.tsx"), "utf8")
+      .replace(/\s+/g, "");
+    expect(
+      source.includes(
+        'handleDeleteAccount().catch(()=>Alert.alert("",t("deleteAccountFailed")),);',
+      ),
+    ).toBe(true);
+  });
+});
