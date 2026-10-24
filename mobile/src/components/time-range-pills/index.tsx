@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  I18nManager,
   LayoutChangeEvent,
   ScrollView,
   StyleSheet,
@@ -23,7 +24,7 @@ import {
 } from "@/common/theme";
 import { easeStandard } from "@/common/theme/motion-easing";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
-import { selectedPillRevealOffset } from "./reveal-offset";
+import { pillScrollTarget, selectedPillRevealOffset } from "./reveal-offset";
 
 /**
  * A pill's key. `null` is a legal key so a row can carry an "All" sentinel
@@ -181,6 +182,7 @@ export function TimeRangePills<T extends PillKey>({
   const scrollRef = useRef<ScrollView>(null);
   const viewportRef = useRef(0);
   const revealedRef = useRef(false);
+  const offsetRef = useRef(0);
 
   const x = useSharedValue(0);
   const width = useSharedValue(0);
@@ -244,6 +246,28 @@ export function TimeRangePills<T extends PillKey>({
     }
   }, [value]);
 
+  // Brings a pill cut off at either edge whole into view, from where the row
+  // has been scrolled to: a tapped chip, or a range set from outside, after the
+  // first paint (w21/891). A right-to-left row's offsets are mirrored, which is
+  // left to the system.
+  const revealPill = useCallback((key: T) => {
+    if (I18nManager.isRTL) return;
+    const layout = layouts.current[layoutKey(key)];
+    if (!layout) return;
+    const target = pillScrollTarget(
+      layout,
+      viewportRef.current,
+      offsetRef.current,
+    );
+    if (target !== null) {
+      scrollRef.current?.scrollTo({ x: target, animated: true });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (revealedRef.current) revealPill(value);
+  }, [value, revealPill]);
+
   const handleLayout = (key: T) => (event: LayoutChangeEvent) => {
     layouts.current[layoutKey(key)] = event.nativeEvent.layout;
     if (key === value) {
@@ -285,6 +309,7 @@ export function TimeRangePills<T extends PillKey>({
                 // down: the indicator should already be travelling by the time
                 // the parent re-renders.
                 moveTo(option.key, true);
+                revealPill(option.key);
               }
               onChange(option.key);
             }}
@@ -320,6 +345,10 @@ export function TimeRangePills<T extends PillKey>({
         viewportRef.current = event.nativeEvent.layout.width;
         revealSelected();
       }}
+      onScroll={(event) => {
+        offsetRef.current = event.nativeEvent.contentOffset.x;
+      }}
+      scrollEventThrottle={16}
       // The indicator is `position: absolute` against this content view, so
       // the `onLayout` x it reads and the origin it paints from are the same
       // box — the invariant the non-scrolling row relies on too.

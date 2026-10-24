@@ -130,6 +130,7 @@ const reactNative = {
   ScrollView: "ScrollView",
   SectionList: "SectionList",
   TouchableOpacity: "TouchableOpacity",
+  I18nManager: { isRTL: false },
   useWindowDimensions: () => ({ fontScale }),
 };
 const themeHooks = { useThemeStyle: (fn: any) => fn({}) };
@@ -284,6 +285,7 @@ describe("TimeRangePills live font-scale remeasurement", () => {
     "@/common/haptics": { haptics: { selection() {} } },
     "./reveal-offset": {
       selectedPillRevealOffset: (layout: { x: number }) => layout.x,
+      pillScrollTarget: () => null,
     },
   });
   const options = [
