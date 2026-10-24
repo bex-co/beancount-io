@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
+  AccessibilityInfo,
   AppState,
   Linking,
   Pressable,
@@ -55,6 +56,23 @@ const styles = StyleSheet.create({
     borderColor: CHROME.shutterRing,
   },
   shutterPressed: { opacity: 0.7 },
+  notice: {
+    position: "absolute",
+    left: 24,
+    right: 24,
+    alignItems: "center",
+  },
+  noticeText: {
+    color: CHROME.icon,
+    backgroundColor: CHROME.buttonFill,
+    fontSize: fontSizes.md,
+    textAlign: "center",
+    lineHeight: 22,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    overflow: "hidden",
+  },
   denied: {
     flex: 1,
     alignItems: "center",
@@ -107,6 +125,15 @@ export const CameraView = ({
   const cameraRef = useRef<ExpoCameraView>(null);
   const [flash, setFlash] = useState<"off" | "on">("off");
   const [capturing, setCapturing] = useState(false);
+  // Said in words as well as a haptic, which an iPad has no engine for and
+  // System Haptics can turn off; a camera that never starts shows it too
+  // (w21/957).
+  const [notice, setNotice] = useState<string | null>(null);
+  const showNotReady = () => {
+    const message = t("receiptCameraNotReady");
+    setNotice(message);
+    AccessibilityInfo.announceForAccessibility(message);
+  };
   const asked = useRef(false);
   // The one automatic request has come back, so a refusal is on record.
   const [prompted, setPrompted] = useState(false);
@@ -144,6 +171,7 @@ export const CameraView = ({
         quality: 0.85,
       });
       if (photo?.uri) {
+        setNotice(null);
         onCapture({
           uri: photo.uri,
           mimeType: "image/jpeg",
@@ -157,6 +185,7 @@ export const CameraView = ({
       // device: say so with a haptic, and leave no unhandled rejection
       // (w21/873). The shutter stays usable, to try again.
       haptics.error();
+      showNotReady();
     } finally {
       setCapturing(false);
     }
@@ -237,7 +266,26 @@ export const CameraView = ({
         style={styles.camera}
         facing="back"
         flash={flash}
+        onMountError={showNotReady}
       />
+
+      {notice ? (
+        <View
+          style={[
+            styles.notice,
+            { bottom: insets.bottom + 36 + SHUTTER_SIZE + 16 },
+          ]}
+          pointerEvents="none"
+        >
+          <Text
+            testID="receipt-camera-notice"
+            style={styles.noticeText}
+            accessibilityLiveRegion="polite"
+          >
+            {notice}
+          </Text>
+        </View>
+      ) : null}
 
       <View style={[styles.topBar, { top: insets.top + 12 }]}>
         <Pressable

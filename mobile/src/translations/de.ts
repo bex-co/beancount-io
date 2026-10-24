@@ -575,6 +575,8 @@ export const de: Translations = {
     "Für das Foto Ihres Belegs wird Kamerazugriff benötigt. Aktivieren Sie ihn in den Einstellungen.",
   receiptLibraryPermission:
     "Für die Auswahl eines Belegs wird Zugriff auf die Mediathek benötigt. Aktivieren Sie ihn in den Einstellungen.",
+  receiptCameraNotReady:
+    "Die Kamera ist nicht bereit. Versuchen Sie es erneut oder wählen Sie aus Ihren Fotos.",
   receiptTooLarge:
     "Dieses Bild ist zu groß zum Auslesen (über 5 MB oder über 8000 Pixel pro Seite). Wählen Sie ein kleineres.",
   // notifications

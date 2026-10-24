@@ -569,6 +569,8 @@ export const pt: Translations = {
     "É preciso acesso à câmera para fotografar seu recibo. Ative nos Ajustes.",
   receiptLibraryPermission:
     "É preciso acesso à galeria para escolher um recibo. Ative nos Ajustes.",
+  receiptCameraNotReady:
+    "A câmera não está pronta. Tente novamente ou escolha entre as fotos.",
   receiptTooLarge:
     "Esta imagem é grande demais para ser lida (mais de 5 MB ou mais de 8000 pixels por lado). Escolha uma menor.",
   // notifications

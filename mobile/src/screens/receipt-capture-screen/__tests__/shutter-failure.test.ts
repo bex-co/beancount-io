@@ -23,3 +23,44 @@ describe("the receipt shutter", () => {
     );
   });
 });
+
+// w21/957: a haptic is nothing on an iPad or with System Haptics off, and a camera
+// that never started showed a black preview with no word.
+describe("the receipt camera's failure notice", () => {
+  const source = fs
+    .readFileSync(path.join(__dirname, "..", "camera-view.tsx"), "utf8")
+    .replace(/\s+/g, "");
+
+  it("is said in visible, announced text on a failed capture and on a mount error", () => {
+    expect(
+      source.includes(
+        'constmessage=t("receiptCameraNotReady");setNotice(message);AccessibilityInfo.announceForAccessibility(message);',
+      ),
+    ).toBe(true);
+    expect(source.includes("onMountError={showNotReady}")).toBe(true);
+    const handler = source.slice(
+      source.indexOf("consthandleShutter=async()=>{"),
+    );
+    const caught = handler.indexOf("}catch{");
+    expect(
+      handler
+        .slice(caught, caught + 600)
+        .includes("haptics.error();showNotReady();"),
+    ).toBe(true);
+    expect(source.includes('accessibilityLiveRegion="polite"')).toBe(true);
+    expect(source.includes("{notice?(")).toBe(true);
+  });
+
+  it("is cleared by a capture that works", () => {
+    expect(source.includes("if(photo?.uri){setNotice(null);onCapture({")).toBe(
+      true,
+    );
+  });
+
+  it("is worded in every language", () => {
+    const { en } = require("../../../translations/en");
+    expect(en.receiptCameraNotReady).toBe(
+      "Camera isn't ready. Try again or choose from photos.",
+    );
+  });
+});

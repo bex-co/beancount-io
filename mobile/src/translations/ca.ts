@@ -571,6 +571,8 @@ export const ca: Translations = {
     "Cal accés a la càmera per fotografiar el rebut. Activa'l a la Configuració.",
   receiptLibraryPermission:
     "Cal accés a la galeria per triar un rebut. Activa'l a la Configuració.",
+  receiptCameraNotReady:
+    "La càmera no està a punt. Torneu-ho a provar o trieu de les fotos.",
   receiptTooLarge:
     "Aquesta imatge és massa gran per llegir-la (més de 5 MB o més de 8000 píxels per costat). Trieu-ne una de més petita.",
   // notifications
