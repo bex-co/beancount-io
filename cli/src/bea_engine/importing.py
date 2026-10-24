@@ -503,7 +503,7 @@ def answer(
             # first leg's account, a migrated transfer's savings row was held
             # as its other side, and `include` booked it twice (w5/818).
             second = (entry.meta or {}).get("import-id-2") if elsewhere else None
-            for identity in _identities(entry, account, keys):
+            for identity in _declared_identities(entry, account, keys):
                 if elsewhere and _is_native_identity(identity) and identity != (account, "import-id", str(second)):
                     transfer_ids.setdefault(identity, []).append(entry)
                 else:
@@ -1873,6 +1873,24 @@ def _directive_key(entry: Any, base: Path | None = None) -> str:
 
 def _match_text(value: str | None) -> str:
     return unicodedata.normalize("NFC", " ".join((value or "").casefold().split()))
+
+
+def _declared_identities(entry: Any, account: str, keys: list[str]) -> list[tuple[str, str, str]]:
+    """The stable IDs a loaded entry carries that its own line also writes (w5/1014).
+
+    A plugin that copies a row, or rewrites one in place, under another
+    reference makes no ledger record of it: taking the reference on its word
+    called a real, different B2 payment already imported while the file
+    holds only B1. An entry whose line cannot be read keeps what it carries.
+    """
+    from bea_engine.ledger.reader import declared_entry
+
+    carried = _identities(entry, account, keys)
+    spelled = declared_entry(entry)
+    if spelled is None or type(spelled) is not type(entry):
+        return carried
+    written = set(_identities(normalize_entry_strings(spelled), account, keys))
+    return [identity for identity in carried if identity in written]
 
 
 def _identities(entry: Any, account: str, keys: list[str]) -> list[tuple[str, str, str]]:

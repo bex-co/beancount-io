@@ -188,6 +188,15 @@ def _spelled_entries(filename: str) -> dict[int, Any]:
     return {entry.meta["lineno"]: entry for entry in entries}
 
 
+def declared_entry(entry: Any) -> Any:
+    """The directive the file spells at an entry's location, parsed without plugins; None if none can be read."""
+    meta = entry.meta or {}
+    lineno = meta.get("lineno")
+    if not isinstance(lineno, int):
+        return None
+    return _spelled_entries(str(meta.get("filename"))).get(lineno)
+
+
 def _declares(entry: Any, *, strict: bool = False) -> bool | None:
     """Whether this entry is spelled at its location; None if no declaration can be read.
 
@@ -195,11 +204,7 @@ def _declares(entry: Any, *, strict: bool = False) -> bool | None:
     transaction keeps the source's header, so the flag, the tags, the links and the
     amounts the line states must agree too, or both copies passed as written (w5/937).
     """
-    meta = entry.meta or {}
-    lineno = meta.get("lineno")
-    if not isinstance(lineno, int):
-        return None
-    spelled = _spelled_entries(str(meta.get("filename"))).get(lineno)
+    spelled = declared_entry(entry)
     if spelled is None:
         return None
     if type(spelled) is not type(entry):
