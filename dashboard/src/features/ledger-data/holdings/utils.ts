@@ -115,6 +115,12 @@ export function formatPercentageCell(value: unknown): string {
     const trimmed = value.trim();
     if (trimmed === "") return "";
     if (/^-?0(?:\.0+)?$/.test(trimmed)) return "0";
+    // Rounded as the decimal the query returned: as a double 2.675 sits just
+    // below the half, so it read 2.67 (w4/1033).
+    if (/^-?\d+(?:\.\d+)?$/.test(trimmed)) {
+      const [whole, fraction = ""] = roundDecimalString(trimmed, 2).split(".");
+      return `${whole}.${fraction.padEnd(2, "0")}`;
+    }
     const parsed = Number(trimmed);
     if (!Number.isFinite(parsed)) return trimmed;
     if (parsed === 0) return "0";

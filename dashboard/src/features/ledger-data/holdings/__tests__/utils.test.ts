@@ -92,6 +92,47 @@ describe("Holdings Utils", () => {
       expect(formatPercentageCell(null)).toBe("");
       expect(formatPercentageCell(undefined)).toBe("");
     });
+
+    /**
+     * The query returns a decimal; rounding its double put 2.675, which
+     * binary holds as 2.67499…, on the wrong side of the half (w4/1033).
+     */
+    it("rounds the returned decimal half away from zero, not its double", () => {
+      expect(formatPercentageCell("2.675")).toBe("2.68");
+      expect(formatPercentageCell("-2.675")).toBe("-2.68");
+      expect(formatPercentageCell("1.005")).toBe("1.01");
+      expect(formatPercentageCell("9.995")).toBe("10.00");
+      expect(formatPercentageCell("2.674999")).toBe("2.67");
+    });
+
+    it("keeps two fixed places, the controls and other inputs as before", () => {
+      expect(formatPercentageCell("1.25")).toBe("1.25");
+      expect(formatPercentageCell("0.42")).toBe("0.42");
+      expect(formatPercentageCell("2.5")).toBe("2.50");
+      expect(formatPercentageCell("3")).toBe("3.00");
+      expect(formatPercentageCell("0.004")).toBe("0.00");
+      expect(formatPercentageCell("n/a")).toBe("n/a");
+      expect(formatPercentageCell(2.5)).toBe("2.50");
+    });
+  });
+
+  describe("percentage cells in the CSV export", () => {
+    it("export the same exact rounding the table shows, leaving amounts lossless", () => {
+      const csv = tableToCSV(
+        ["account", "market_value", "unrealized_profit_pct"],
+        [
+          ["Assets:Up", "102.675", "2.675"],
+          ["Assets:Down", "97.325", "-2.675"],
+          ["Total", "200.00", "0.42"],
+        ],
+      );
+      expect(csv.split("\n").slice(1)).toEqual([
+        '"Assets:Up","102.675","2.68"',
+        '"Assets:Down","97.325","-2.68"',
+        '"Total","200.00","0.42"',
+      ]);
+      expect(formatHoldingsCell("2.675", "unrealized_profit_pct")).toBe("2.68");
+    });
   });
 
   describe("csvObjectToString", () => {
