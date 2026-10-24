@@ -88,6 +88,16 @@ export type BalanceDisplay =
     };
 
 /**
+ * Whether a balance is lots held at cost: units that carry a value in the
+ * operating currency. A split of such lots is no 900% gain, so its chart reads
+ * neutral (w21/713). Units with no value, a foreign-currency card or bank
+ * account, are money in another currency: their change has a percent and a
+ * direction like any other (w21/958).
+ */
+export const isUnitsHeldAtCost = (display: BalanceDisplay): boolean =>
+  display.kind === "units" && display.value !== null;
+
+/**
  * One currency's entry in a balance map with its recorded scale, read strictly:
  * a missing or unparseable entry is zero.
  */

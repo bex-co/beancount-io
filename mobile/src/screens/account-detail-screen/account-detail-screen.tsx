@@ -1,4 +1,5 @@
 import { contentPadding } from "@/common/screen-util";
+import { isUnitsHeldAtCost } from "@/common/balance-display";
 import { useGuest } from "@/common/guest/guest-context";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -544,8 +545,10 @@ const AccountDetailScreenImpl = ({
             error={chartFailed}
             onRetry={retryChart}
             netWorthSign={netWorthSign}
-            // Units held, not money: a split is no 900% gain (w21/713).
-            neutral={unitsCurrency !== undefined}
+            // Lots held at cost, not money: a split is no 900% gain (w21/713).
+            // A foreign-currency account keeps its percent and its colour
+            // (w21/958).
+            neutral={isUnitsHeldAtCost(display)}
             onLabelPress={openValuation}
           />
         </View>

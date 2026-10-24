@@ -58,13 +58,13 @@ describe("account detail's chart of units", () => {
       )
       .replace(/\s+/g, "");
 
-  it("is drawn neutral, its change with no percent", () => {
+  it("is drawn neutral for lots held at cost, its change with no percent (a foreign-currency account keeps its percent, w21/958)", () => {
     expect(
       read(
         "screens",
         "account-detail-screen",
         "account-detail-screen.tsx",
-      ).includes("neutral={unitsCurrency!==undefined}"),
+      ).includes("neutral={isUnitsHeldAtCost(display)}"),
     ).toBe(true);
     expect(
       read("components", "balance-chart-card", "index.tsx").includes(

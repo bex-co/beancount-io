@@ -1,6 +1,7 @@
 import {
   amountIn,
   holdingsOf,
+  isUnitsHeldAtCost,
   notInTotalOf,
   selectBalanceDisplay,
 } from "../balance-display";
@@ -243,5 +244,50 @@ describe("selectBalanceDisplay for a commodity bought in two currencies", () => 
     if (shown.kind !== "units") return;
     expect(shown.value).toBe(null);
     expect(shown.notInTotal).toEqual([]);
+  });
+});
+
+// w21/958: every account shown in units got a grey chart with no percent, a
+// foreign-currency card as much as a split of lots held at cost.
+describe("isUnitsHeldAtCost", () => {
+  it("is false for a foreign-currency balance, which has no value in the ledger's currency", () => {
+    const eur = selectBalanceDisplay(
+      { EUR: "-300.00" },
+      { EUR: "-300.00" },
+      "USD",
+    );
+    expect(eur.kind).toBe("units");
+    expect(isUnitsHeldAtCost(eur)).toBe(false);
+  });
+
+  it("is true for units that carry a value, and false for money", () => {
+    expect(
+      isUnitsHeldAtCost({
+        kind: "units",
+        units: { currency: "QANVDA", number: 40, scale: 0 },
+        value: { amount: 8000, basis: null },
+        notInTotal: [],
+      }),
+    ).toBe(true);
+    expect(
+      isUnitsHeldAtCost({ kind: "money", value: 12, notInTotal: [] }),
+    ).toBe(false);
+  });
+
+  it("is what the account chart's neutral reads", () => {
+    const source = require("fs")
+      .readFileSync(
+        require("path").join(
+          __dirname,
+          "..",
+          "..",
+          "screens",
+          "account-detail-screen",
+          "account-detail-screen.tsx",
+        ),
+        "utf8",
+      )
+      .replace(/\s+/g, "");
+    expect(source.includes("neutral={isUnitsHeldAtCost(display)}")).toBe(true);
   });
 });
