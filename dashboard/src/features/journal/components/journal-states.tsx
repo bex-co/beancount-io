@@ -1,5 +1,6 @@
 import { AlertCircle, BarChart3, BookOpen } from "lucide-react";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
+import { Button } from "@/common/components/ui/button";
 import { Card, CardContent } from "@/common/components/ui/card";
 import { useTranslations } from "@/common/hooks/use-translations";
 
@@ -77,15 +78,34 @@ export function JournalLoadingState() {
 
 /**
  * Error state component for journal operations
- * Displays error message with consistent styling
+ * Displays error message with consistent styling, and a Try Again that
+ * re-runs the failed read in place (w4/1037)
  */
-export function JournalErrorState({ message }: { message: string }) {
+export function JournalErrorState({
+  message,
+  onRetry,
+  retrying = false,
+}: {
+  message: string;
+  onRetry: () => void;
+  retrying?: boolean;
+}) {
   const { t } = useTranslations();
 
   return (
     <Alert variant="destructive">
-      <AlertDescription>
-        {t("journal.errorLoadingJournalEntries")}: {message}
+      <AlertDescription className="gap-3">
+        <p>
+          {t("journal.errorLoadingJournalEntries")}: {message}
+        </p>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onRetry}
+          loading={retrying}
+        >
+          {t("common.tryAgain")}
+        </Button>
       </AlertDescription>
     </Alert>
   );

@@ -39,6 +39,7 @@ import {
 } from "@/features/journal/components/journal-states";
 import { createLedgerId } from "@/common/lib/utils/encode";
 import { getErrorMessageKey } from "@/common/lib/errors/error-message";
+import { useQueryRetry } from "@/common/hooks/use-query-retry";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { Authenticated } from "@/common/components/authenticated";
 import { useLedger } from "@/common/hooks/use-ledger";
@@ -188,6 +189,7 @@ const JournalContent = () => {
     },
     fetchPolicy: "cache-and-network",
   });
+  const { failure, retrying, retry } = useQueryRetry(error, refetch);
 
   // Type assertion for now - the data will be properly typed once GraphQL schema is updated
   const allJournalData = useMemo(
@@ -313,9 +315,13 @@ const JournalContent = () => {
           </span>
         </div>
 
-        {error ? (
+        {failure ? (
           <div className="p-4">
-            <JournalErrorState message={t(getErrorMessageKey(error))} />
+            <JournalErrorState
+              message={t(getErrorMessageKey(failure))}
+              onRetry={retry}
+              retrying={retrying}
+            />
           </div>
         ) : loading ? (
           <JournalLoadingState />

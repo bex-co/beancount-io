@@ -24,13 +24,15 @@ describe("JournalLoadingState", () => {
 
 describe("JournalErrorState", () => {
   it("renders the error message", () => {
-    render(<JournalErrorState message="Network timeout" />);
+    render(<JournalErrorState message="Network timeout" onRetry={() => {}} />);
 
     expect(screen.getByText(/Network timeout/)).toBeInTheDocument();
   });
 
   it("renders with an error prefix from translations", () => {
-    const { container } = render(<JournalErrorState message="Server error" />);
+    const { container } = render(
+      <JournalErrorState message="Server error" onRetry={() => {}} />,
+    );
 
     expect(container.textContent).toMatch(/Server error/);
   });
