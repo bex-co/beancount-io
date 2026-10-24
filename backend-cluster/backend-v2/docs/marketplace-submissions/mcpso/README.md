@@ -26,3 +26,15 @@ then retain the real receipt and verify the public listing and OAuth guidance.
 The shared canonical copy and synthetic reviewer steps remain in
 [the marketplace packet](../../mcp-marketplaces.md); preparation is not
 publication.
+
+## Route recheck — 2026-10-24T07:10:37Z
+
+The current public [Remote Server form](https://mcp.so/submit?type=remote-server)
+still exposes the $39 paid submission and Pay and submit automatically action.
+Following its own MCP Server tab to the
+[repository submission form](https://mcp.so/submit?type=server) exposes the same
+paid action. Neither inspected form establishes a supported free-review route.
+This is a fresh public form read; it does not claim another browser submission
+attempt, new search result, payment or moderation status. The prepared remote
+submission remains blocked on the previously specified spending decision or an
+actual supported free route.
