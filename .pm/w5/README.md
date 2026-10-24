@@ -43,7 +43,7 @@
 - [1013 — Match inferred and explicit source postings without consuming the wrong line](./1013.md) — reopened remaining major CLI matching gap after 8d1566b42; an inferred Cash line is consumed too early and the same statement doubles USD/EUR expenses despite duplicate skip, reproduced twice 2026-10-23.
 
 
-- [1011 — Preserve stated total costs across booked lot fragments](./1011.md) — reopened major CLI regression after f11b7b220; a real two-lot sale is hidden and the same settlement adds 500 USD despite duplicate skip. Also retains minor exact-fact cases; reproduced twice on latest main, 2026-10-23.
+- [1011 — Preserve written postings across cost inference and lot splitting](./1011.md) — major CLI normalization gaps; split total-cost sales can duplicate 500 USD, and a native-valid inferred total blocks listing/new import with a TypeError. Prior precise-fact scope retained; reproduced twice 2026-10-23.
 
 
 
