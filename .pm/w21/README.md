@@ -45,7 +45,7 @@
 - [882](./blocked/882.md) — Chart axes use the app language's money format while the amounts beside them use English (9 languages) — **blocked:** needs an owner product decision on one number convention for money (app language everywhere vs English everywhere), reversing w21/177 or w3/189
 - [895](./blocked/895.md) — Account detail's range chips filter only the chart, not the list below — **blocked:** owner picks a range-bounded list (backend date bound on all surfaces) or an "All entries" caption
 - [922](./blocked/922.md) — Changing to a payee with no history keeps the previous payee's accounts (owner's call) — **blocked:** owner decides whether a no-history or cleared payee resets an untouched fill (reverses w21/411)
-- [951](./951.md) — Expense accounts are valued at market on Accounts and account detail, but at cost everywhere else
+- [951](./blocked/951.md) — Expense accounts are valued at market on Accounts and account detail, but at cost everywhere else — **blocked:** owner confirms flows-at-cost covers Income/Expenses balances; needs a native priced-lot check
 - [952](./952.md) — Merchant detail stops loading at a hidden page cap that shrinks after every edit
 - [953](./953.md) — "Back to Files" stacks a second copy of the whole tab bar
 - [954](./954.md) — w21/544 reopened: "View errors" still stacks a second Notifications screen
