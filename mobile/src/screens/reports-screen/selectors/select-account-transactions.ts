@@ -64,7 +64,7 @@ export function accountPrefixFilter(accountPrefix: string | string[]): string {
  * the chart whenever the newest statement month's only activity is a transfer.
  * "YTD" is the current calendar year (`currentYear`, from the clock unless
  * given), so a stale ledger lists nothing for it.
- * "ALL" skips the window; a null anchor (statement not resolved yet) yields an
+ * "ALL" skips the window, entries after `today` included; a null anchor (statement not resolved yet) yields an
  * empty list rather than a list windowed on the wrong month.
  *
  * NOTE (backend gap): there is no account-filtered transaction query, so this
@@ -78,6 +78,7 @@ export function selectAccountTransactions(
   anchorMonth: string | null,
   limit: number = ACCOUNT_TRANSACTIONS_LIMIT,
   currentYear?: number,
+  today?: string,
 ): JournalTransaction[] {
   const matching = entries
     .filter((entry) => involvesAccount(entry, accountPrefix))
@@ -96,7 +97,13 @@ export function selectAccountTransactions(
   return matching
     .filter((entry) => {
       const month = entry.date.slice(0, 7);
-      return month >= cutoffKey && month <= anchorMonth;
+      // Not past today either: the charts above leave a pre-entered entry out,
+      // so a list that opened on it matched no figure (w21/908).
+      return (
+        month >= cutoffKey &&
+        month <= anchorMonth &&
+        (today === undefined || entry.date <= today)
+      );
     })
     .slice(0, limit);
 }

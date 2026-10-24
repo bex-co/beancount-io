@@ -392,3 +392,42 @@ describe("shouldProbeForAny", () => {
     expect(shouldProbeForAny("1M", false, false)).toBe(false);
   });
 });
+
+// w21/908: the list showed a pre-entered entry the charts above it leave out.
+describe("selectAccountTransactions up to today", () => {
+  const entries = [
+    txn("2026-10-30", [{ account: "Expenses:Rent", number: "400" }], "rent"),
+    txn("2026-10-05", [{ account: "Expenses:Food", number: "120" }], "food"),
+  ];
+  const today = "2026-10-23";
+
+  it("lists only what has happened for 1M, 3M and 6M", () => {
+    for (const range of ["1M", "3M", "6M"] as const) {
+      expect(
+        selectAccountTransactions(
+          entries,
+          "Expenses",
+          range,
+          "2026-10",
+          undefined,
+          undefined,
+          today,
+        ).map((e) => e.entry_hash),
+      ).toEqual(["food"]);
+    }
+  });
+
+  it("keeps the pre-entered entry for All", () => {
+    expect(
+      selectAccountTransactions(
+        entries,
+        "Expenses",
+        "ALL",
+        "2026-10",
+        undefined,
+        undefined,
+        today,
+      ).map((e) => e.entry_hash),
+    ).toEqual(["rent", "food"]);
+  });
+});

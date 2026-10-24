@@ -130,8 +130,16 @@ export function AccountTransactionsCard({
   );
   const entries = useMemo(
     () =>
-      selectAccountTransactions(journal, accountPrefix, timeRange, listAnchor),
-    [journal, accountPrefix, timeRange, listAnchor],
+      selectAccountTransactions(
+        journal,
+        accountPrefix,
+        timeRange,
+        listAnchor,
+        undefined,
+        undefined,
+        today,
+      ),
+    [journal, accountPrefix, timeRange, listAnchor, today],
   );
   // Twin entries share a hash: their keys carry the ordinal (w21/419, w21/524).
   const rowKeys = useMemo(() => journalRowKeys(entries), [entries]);
