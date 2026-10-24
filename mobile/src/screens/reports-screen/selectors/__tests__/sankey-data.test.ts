@@ -401,7 +401,7 @@ describe("cashFlowChartSummary", () => {
   it("formats the totals with the currency and names savings when drawn", () => {
     expect(sankeySavings(flow(5000, 3000))).toBe(2000);
     expect(cashFlowChartSummary(flow(5000, 3000), "USD", t)).toBe(
-      "Cash flow from income to expenses. Income $5K, expenses $3K, savings $2K.",
+      "Cash flow from income to expenses. Income $5,000.00, expenses $3,000.00, savings $2,000.00.",
     );
   });
 
@@ -409,11 +409,18 @@ describe("cashFlowChartSummary", () => {
     expect(sankeySavings(flow(3000, 5000))).toBe(null);
     expect(sankeyShortfall(flow(3000, 5000))).toBe(2000);
     expect(cashFlowChartSummary(flow(3000, 5000), "USD", t)).toBe(
-      "Cash flow from income to expenses. Income $3K, expenses $5K, from savings $2K.",
+      "Cash flow from income to expenses. Income $3,000.00, expenses $5,000.00, from savings $2,000.00.",
     );
   });
 
   // w21/931: floats that net to zero read out as "$0.0000000000000018".
+  // w21/932: the axis's short form read 222.58 as "$222.6".
+  it("reads cents in full", () => {
+    expect(cashFlowChartSummary(flow(222.58, 195.71), "USD", t)).toBe(
+      "Cash flow from income to expenses. Income $222.58, expenses $195.71, savings $26.87.",
+    );
+  });
+
   it("reads sums that net to zero as zero", () => {
     const data = transformToSankeyData({
       income: [
@@ -425,7 +432,7 @@ describe("cashFlowChartSummary", () => {
       ...labels,
     });
     const summary = cashFlowChartSummary(data, "USD", t);
-    expect(summary.includes("Income $0,")).toBe(true);
+    expect(summary.includes("Income $0.00,")).toBe(true);
     expect(/0\.0000/.test(summary)).toBe(false);
     expect(summary.includes("-$0")).toBe(false);
   });
@@ -434,13 +441,13 @@ describe("cashFlowChartSummary", () => {
     expect(sankeySavings(flow(5000, 5000))).toBe(null);
     expect(sankeyShortfall(flow(5000, 5000))).toBe(null);
     expect(cashFlowChartSummary(flow(5000, 5000), "USD", t)).toBe(
-      "Cash flow from income to expenses. Income $5K, expenses $5K.",
+      "Cash flow from income to expenses. Income $5,000.00, expenses $5,000.00.",
     );
   });
 
   it("labels a currency without a symbol by its code", () => {
     expect(cashFlowChartSummary(flow(5000, 3000), "MUSD", t)).toBe(
-      "Cash flow from income to expenses. Income 5K MUSD, expenses 3K MUSD, savings 2K MUSD.",
+      "Cash flow from income to expenses. Income 5,000.00 MUSD, expenses 3,000.00 MUSD, savings 2,000.00 MUSD.",
     );
   });
 
@@ -451,7 +458,7 @@ describe("cashFlowChartSummary", () => {
       fs.readFileSync(path.join(__dirname, "..", "..", ...parts), "utf8");
     expect(
       read("components", "cash-flow-sankey.tsx").includes(
-        "accessibilityLabel={cashFlowChartSummary(data, currency, t, locale)}",
+        "accessibilityLabel={cashFlowChartSummary(data, currency, t)}",
       ),
     ).toBe(true);
     expect(

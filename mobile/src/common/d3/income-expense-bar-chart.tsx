@@ -4,6 +4,7 @@ import { curveMonotoneX, line as d3Line } from "d3-shape";
 import { contentPadding, ScreenWidth } from "@/common/screen-util";
 import {
   formatShortMoneyWithCurrency,
+  formatSignedMoneyWithCurrency,
   roundMoney,
 } from "@/common/number-utils";
 import { useTheme } from "@/common/theme";
@@ -183,31 +184,29 @@ function IncomeExpenseBarChart({
       axisWidth={axisWidth}
       yScale={yScale}
       currency={currency}
+      // Full amounts: the axis's short form read 222.58 as "$222.6" (w21/932).
       accessibilityLabel={t("incomeExpenseChartSummary", {
         count: months.length,
-        income: formatShortMoneyWithCurrency(
+        income: formatSignedMoneyWithCurrency(
           roundMoney(
             income.reduce((sum, v) => sum + v, 0),
             currency,
           ),
           currency,
-          locale,
         ),
-        expense: formatShortMoneyWithCurrency(
+        expense: formatSignedMoneyWithCurrency(
           roundMoney(
             expense.reduce((sum, v) => sum + v, 0),
             currency,
           ),
           currency,
-          locale,
         ),
-        net: formatShortMoneyWithCurrency(
+        net: formatSignedMoneyWithCurrency(
           roundMoney(
             net.reduce((sum, v) => sum + v, 0),
             currency,
           ),
           currency,
-          locale,
         ),
       })}
       legend={

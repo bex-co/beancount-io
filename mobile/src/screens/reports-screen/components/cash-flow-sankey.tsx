@@ -242,7 +242,7 @@ function CashFlowSankeyPlot({
 }: CashFlowSankeyProps): JSX.Element {
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
-  const { t, locale } = useTranslations();
+  const { t } = useTranslations();
   // A ledger that renames its roots has Ingresos/Gastos, not Income/Expenses
   // (w21/235).
   const roots = useLedgerRootNames();
@@ -312,7 +312,7 @@ function CashFlowSankeyPlot({
       style={styles.plot}
       onLayout={onLayout}
       accessible
-      accessibilityLabel={cashFlowChartSummary(data, currency, t, locale)}
+      accessibilityLabel={cashFlowChartSummary(data, currency, t)}
     >
       <Svg width={width} height={SANKEY_HEIGHT}>
         {graph?.links.map((link, index) => {

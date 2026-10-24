@@ -45,7 +45,7 @@ describe("the Reports chart's spoken net", () => {
     for (const series of ["income", "expense", "net"]) {
       expect(
         chart.includes(
-          `${series}:formatShortMoneyWithCurrency(roundMoney(${series}.reduce((sum,v)=>sum+v,0),currency,),currency,locale,)`,
+          `${series}:formatSignedMoneyWithCurrency(roundMoney(${series}.reduce((sum,v)=>sum+v,0),currency,),currency,)`,
         ),
       ).toBe(true);
     }
