@@ -55,9 +55,12 @@ function entryLabel(text: string): string {
   const [, date, rest] = match;
   const words = wordsOf(rest!);
   const keyword = words[0] ?? "";
-  // A transaction has a flag (`*`, `!`, …) or `txn`; every other directive is
-  // a lowercase word.
-  const isTransaction = keyword === "txn" || keyword.length === 1;
+  // A transaction has a flag (`*`, `!`, `&`, `#`, `?`, `%`, or a capital letter)
+  // or `txn`, with or without a space before what follows (`*"Coffee"`); every
+  // other directive is a lowercase word (w21/984).
+  const isTransaction = /^(txn(?=[\s"]|$)|[*!&#?%]|[A-Z](?=[\s"]|$))/.test(
+    rest!,
+  );
   let subject: string;
   if (isTransaction) {
     const strings = [...rest!.matchAll(/"((?:[^"\\]|\\.)*)"/g)].map((quoted) =>

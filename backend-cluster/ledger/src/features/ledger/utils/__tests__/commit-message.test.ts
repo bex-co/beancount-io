@@ -71,6 +71,16 @@ describe("commit messages for directives that are not transactions", () => {
     expect(add("2026-10-22 *")).toBe("Add 2026-10-22 transaction");
   });
 
+  // w21/984: a flag with no space before the string was read as a directive.
+  it("names a transaction whose flag touches its string", () => {
+    expect(add('2026-10-22 *"Coffee" "x"')).toBe('Add 2026-10-22 "Coffee"');
+    expect(add('2026-10-22 !"Coffee"')).toBe('Add 2026-10-22 "Coffee"');
+    expect(add('2026-10-22 P "Coffee"')).toBe('Add 2026-10-22 "Coffee"');
+    expect(entryCommitMessage("Update", '2026-10-22 *"Coffee" "x"')).toBe(
+      'Update 2026-10-22 "Coffee"',
+    );
+  });
+
   it("still names a transaction by its payee, the flag or txn leading", () => {
     expect(add('2026-10-22 txn "Cafe" "latte"')).toBe('Add 2026-10-22 "Cafe"');
     expect(add('2026-10-22 ! "Cafe"')).toBe('Add 2026-10-22 "Cafe"');
