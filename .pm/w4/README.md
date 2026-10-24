@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1063** — [Protect Entry Context drafts during history navigation](./1063.md)
+
 - **1062** — [Leave Entry Context Escape to active editor widgets](./1062.md)
 
 - **1061** — [Keep Entry Context keyboard focus visible in forced colors](./1061.md)
