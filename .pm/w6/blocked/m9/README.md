@@ -197,3 +197,13 @@ worker verifies actual public catalog discovery and native installation under
 t006. Its latest update response is still open/unmerged/mergeable, not approved
 publication. The previous native OAuth and private-sharing decisions are cleared
 and are not requested again. Other independent targets continue.
+
+## GitHub curator decision complete — 2026-10-24T20:10:06Z
+
+The authenticated original-thread reply confirms review approval for inclusion,
+with up to3business days before publication and no further submitter action.
+Fresh public default-gallery name/identity searches still return200/zero.
+t006 retains public/native verification; no task or milestone closes from the
+approval alone. No reply or duplicate nomination is sent. The exact existing
+ChatGPT/Claude management pages also remain inaccessible in the current
+organizations; those independent access gates stay with m11.

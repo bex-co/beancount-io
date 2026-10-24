@@ -1,6 +1,6 @@
 {
   "target": "GitHub curated MCP gallery / downstream VS Code discovery",
-  "state": "submitted; GitHub intake acknowledged receipt; curation/publication pending",
+  "state": "approved; GitHub curator review accepted; public gallery publication pending",
   "submissionEntry": "mailto:partnerships@github.com",
   "recipient": "partnerships@github.com",
   "subject": "Beancount.io hosted MCP \u2014 GitHub MCP Registry inclusion",
@@ -14,9 +14,9 @@
   "officialRegistryCheck": "2026-10-23T20:28:29Z: active latest version 1.0.0 with canonical endpoint",
   "curatedSearchCheck": "2026-10-23T20:28:31Z: canonical-identity default gallery API search returned HTTP 200 and zero records",
   "dedup": "Focused pre-send mailbox query for recipient and Beancount returned no matching messages",
-  "boundary": "Mail-provider sending proof plus recipient automated intake acknowledgment; not human reading, curator acceptance, public listing or authenticated VS Code connection",
-  "nextAction": "Monitor this nomination for actionable feedback; verify actual GitHub and VS Code discovery separately after curation; do not send a duplicate",
-  "lastCheckedAtUTC": "2026-10-24T02:38:28Z",
+  "boundary": "Authenticated recipient review approval is observed; actual public GitHub/VS Code gallery publication and native install/OAuth/query/preview remain unverified.",
+  "nextAction": "Wait for the stated up-to3-business-day publication window, verify actual GitHub/VS Code public discovery, then complete the native QA journey under w6/m9/t006 and existing w1/m34 ownership. No reply or duplicate nomination is needed now.",
+  "lastCheckedAtUTC": "2026-10-24T20:10:06Z",
   "recipientAcknowledgment": {
     "observedAtUTC": "2026-10-24T02:38:28Z",
     "receivedAtUTC": "2026-10-23T20:30Z",
@@ -29,5 +29,51 @@
     "result": "Automated response confirms the request was received and will be reviewed by the team; no substantive feedback or curation decision.",
     "privateTicketId": "Omitted",
     "privateMailboxUrl": "Omitted"
+  },
+  "curatorApproval": {
+    "observedAtUTC": "2026-10-24T20:10:06Z",
+    "receivedAtUTC": "2026-10-24T03:54Z",
+    "timestampPrecision": "minute; actual reply shows2026-10-23 20:54 PDT",
+    "from": "partnerships@github.com",
+    "replyTo": "partnerships@github.com",
+    "mailedBy": "github.com",
+    "signedBy": "github.com",
+    "subject": "[GitHub] Re: Beancount.io hosted MCP \u2014 GitHub MCP Registry inclusion",
+    "reviewApproved": true,
+    "messageSummary": "GitHub confirms the hosted MCP server was reviewed and approved for inclusion. Their team will add it; allow up to3business days to appear. No further submitter action is requested.",
+    "publicationVerified": false,
+    "privateTicketId": "Omitted",
+    "privateMailboxUrl": "Omitted"
+  },
+  "latestPublicGalleryReadback": {
+    "checkedAtUTC": "2026-10-24T20:10:06.401983+00:00",
+    "queries": [
+      {
+        "query": "beancount",
+        "url": "https://api.mcp.github.com/v0.1/servers?limit=100&version=latest&search=beancount",
+        "status": 200,
+        "count": 0,
+        "metadata": {
+          "count": 0,
+          "per_page": 100,
+          "total": 0,
+          "total_pages": 0
+        },
+        "servers": []
+      },
+      {
+        "query": "io.beancount/beancount",
+        "url": "https://api.mcp.github.com/v0.1/servers?limit=100&version=latest&search=io.beancount%2Fbeancount",
+        "status": 200,
+        "count": 0,
+        "metadata": {
+          "count": 0,
+          "per_page": 100,
+          "total": 0,
+          "total_pages": 0
+        },
+        "servers": []
+      }
+    ]
   }
 }

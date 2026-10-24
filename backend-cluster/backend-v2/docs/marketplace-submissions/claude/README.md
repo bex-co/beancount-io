@@ -19,3 +19,13 @@ The worker then addresses supported corrections and follows the same record
 through public/native verification. Browser connectivity is no longer the
 remaining prerequisite. No extra permission, new account or connector is
 created by this inspection; private account identity is not recorded here.
+
+## Exact existing-page recheck — 2026-10-24T20:07:11Z
+
+The actual original management URL loads again and reports: **That submission wasn’t found in this organization.**
+No review feedback, rejection or approval is exposed. The original publisher's
+submission confirmation is retained; no duplicate application is created and
+no account is logged out or switched. The current browser identity still does not expose the publisher submission.
+**Unblock:** original submitting account/organization access or actual review
+feedback, then worker handles supported corrections and public/native checks.
+Private identities and mailbox information remain outside tracked evidence.

@@ -1,17 +1,19 @@
-# GitHub and VS Code discovery preparation
+# GitHub curated approval; public discovery pending
 
 Updated 2026-10-24 UTC; original dated observations below retain their limits. [GitHub's documented inclusion route](https://github.blog/ai-and-ml/generative-ai/how-to-find-install-and-manage-mcp-servers-with-the-github-mcp-registry/) asks publishers with an existing official-registry record to contact `partnerships@github.com`.
 `nomination-email.md` records the public-safe request actually sent on
 2026-10-23 at 20:30 UTC. The mail provider confirmed sending and the Sent
 message was inspected; [receipt](./nomination-receipt.json). Recipient delivery,
-reviewer acceptance and publication are not established by that receipt.
+reviewer acceptance and publication were not established by the sent receipt alone.
+The later authenticated GitHub reply now confirms **review approval**; public
+gallery publication remains pending, as recorded below.
 Do not publish a duplicate official-registry namespace or package.
 
 | Surface | Observed state |
 | --- | --- |
 | Official MCP Registry | `io.beancount/beancount` version 1.0.0 is public and names the canonical hosted URL. |
-| Curated GitHub MCP Registry | Live [Beancount search](https://github.com/mcp?search=beancount) returned no MCPs. The nomination is now sent; curation remains pending. |
-| VS Code public default gallery feed | Anonymous name and registry-identity searches returned HTTP 200 with zero records. All six pages of the observed latest-version feed contain 560 unique records and no canonical name, endpoint or repository match; see the [API evidence](#public-default-gallery-api--2026-10-21-utc). |
+| Curated GitHub MCP Registry | GitHub confirms review approval in the original thread, received2026-10-24T03:54Z. They will publish within up to3business days and request no further action. Public listing is not yet verified. |
+| VS Code public default gallery feed | Fresh2026-10-24T20:10:06Z name and identity queries each return200/zero records, so approval is not reported as publication. Earlier anonymous searches also returned HTTP200/zero records. All six pages of the observed latest-version feed contain 560 unique records and no canonical name, endpoint or repository match; see the [API evidence](#public-default-gallery-api--2026-10-21-utc). |
 | Native VS Code gallery | The actual `@mcp` catalog reports 51 entries; 50 unique names were observed across overlapping viewports, with no Beancount match. This is not an exhaustive absence or name-filtered result. Installation and authenticated Copilot journey remain unverified; w1/m34/t003 retains shared rehearsal ownership. |
 
 [VS Code's current discovery guide](https://code.visualstudio.com/docs/agent-customization/mcp-servers#find-another-server) documents gallery search with `@mcp` and Browse MCP Servers. After curated inclusion, check the native Beancount result, install from that actual entry, and complete the shared synthetic QA OAuth/query/preview rehearsal. Record client version, listing/feed URL, date and deployment revision availability.
@@ -127,3 +129,26 @@ records the new observation while omitting the private support-ticket number,
 mailbox/thread URL and publisher account details. No reply or duplicate
 nomination was sent. Continue monitoring this existing request; actual GitHub/
 VS Code public/native verification remains w6/m9/t006.
+
+## Curator approval verified — 2026-10-24T20:10:06Z
+
+Refreshing the **existing nomination conversation** exposes a new substantive
+GitHub reply, received **2026-10-24T03:54Z** (October23,20:54 PDT; minute
+precision). The expanded details show from/reply-to partnerships@github.com,
+mailed-by github.com and signed-by github.com. GitHub confirms that Beancount.io
+has been reviewed and approved for inclusion. Their team will add the server;
+they ask for up to **3 business days** for it to appear and request no further
+action from the submitter. No reply or repeated nomination is sent.
+
+Actual public default-gallery API checks at20:10UTC still returnHTTP200 with
+zero records for both beancount and io.beancount/beancount. The
+[receipt](./nomination-receipt.json) retains exact query URLs/counts and approval
+metadata, omitting the private support-ticket number, mailbox/thread URL and
+publisher account details. This is **approved, pending public publication**.
+The original sent/intake history above is preserved; its earlier no-feedback
+limits are superseded by this reply.
+
+Next verify public GitHub/VS Code discovery during the stated publication
+window, then the actual native gallery-install/OAuth/query/preview journey under
+w6/m9/t006 and existing w1/m34 ownership. No native discovery or connection is
+inferred from approval or anonymous API absence.
