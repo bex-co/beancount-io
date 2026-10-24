@@ -36,7 +36,7 @@
 
 ## Inbox
 
-- [974 — Retain known native IDs when cash depends on a booked lot](./974.md) — reopened major CLI duplicate gap; a filtered repayment or stock sale with inferred Cash and an open selector loses its written bank owner. Repeats duplicate 65 USD outflow or 300 USD receipt; controls and both repetitions verified 2026-10-23.
+- [974 — Retain written native IDs through source inference](./974.md) — reopened major CLI owner-retention gap across booked-lot and multicurrency Cash inference. Filtered repeats and first corrections can write the recorded reference again; standalone native controls and both repetitions verified 2026-10-23.
 
 - [913 — Warn for funded accounts a native import closes through close_tree](./913.md) — reopened minor CLI warning gap; a parent import closes its funded child/grandchild without a preview/apply warning. Explicit closes and drained/previously closed controls work; reproduced twice 2026-10-23.
 
