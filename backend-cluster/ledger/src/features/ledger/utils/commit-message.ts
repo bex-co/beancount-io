@@ -18,26 +18,57 @@ export function addEntriesCommitMessage(
 
 const MAX_LABEL = 60;
 
+/** A line without its trailing `;` comment (a `;` inside a quoted string stays). */
+function withoutComment(line: string): string {
+  let quoted = false;
+  for (let i = 0; i < line.length; i += 1) {
+    const char = line[i];
+    if (char === "\\" && quoted) i += 1;
+    else if (char === '"') quoted = !quoted;
+    else if (char === ";" && !quoted) return line.slice(0, i);
+  }
+  return line;
+}
+
+/** The words of a directive's first line, a quoted string being one word. */
+function wordsOf(line: string): string[] {
+  return [...line.matchAll(/"((?:[^"\\]|\\.)*)"|\S+/g)].map((match) =>
+    (match[1] ?? match[0]).trim(),
+  );
+}
+
 /**
- * Which entry a commit is about, from its text: its date and its payee or
- * narration (or the rest of its first line for a directive with neither), as in
- * `2026-10-22 "Coffee"`. The history's rows all read "Add 1 entry" or "Update
- * entry", differing only by time and SHA (w21/903). Empty when the text has no
- * dated first line.
+ * Which entry a commit is about, from its text: its date and, for a
+ * transaction, its payee or narration (`2026-10-22 "Coffee"`); for any other
+ * directive its type and first argument (`2026-10-01 custom budget
+ * Expenses:Food`), since a quoted string there is not a name: a budget read
+ * `"budget"` whatever the account. The history's rows all read "Add 1 entry" or
+ * "Update entry", differing only by time and SHA (w21/903, w21/961). Empty when
+ * the text has no dated first line.
  */
 function entryLabel(text: string): string {
   const first = text.split(/\r\n|\r|\n/).find((line) => line.trim() !== "");
-  const match = /^(\d{4}-\d{2}-\d{2})\s+(.*)$/.exec(first?.trim() ?? "");
+  const match = /^(\d{4}-\d{2}-\d{2})\s+(.*)$/.exec(
+    withoutComment(first ?? "").trim(),
+  );
   if (!match) return "";
   const [, date, rest] = match;
-  const strings = [...rest!.matchAll(/"((?:[^"\\]|\\.)*)"/g)].map((quoted) =>
-    quoted[1]!.trim(),
-  );
-  const named =
-    (strings.length > 1 ? strings[0] || strings[1] : strings[0]) ?? "";
-  const subject = named
-    ? `"${named}"`
-    : rest!.replace(/^[*!]\s*/, "").replace(/\s+/g, " ");
+  const words = wordsOf(rest!);
+  const keyword = words[0] ?? "";
+  // A transaction has a flag (`*`, `!`, …) or `txn`; every other directive is
+  // a lowercase word.
+  const isTransaction = keyword === "txn" || keyword.length === 1;
+  let subject: string;
+  if (isTransaction) {
+    const strings = [...rest!.matchAll(/"((?:[^"\\]|\\.)*)"/g)].map((quoted) =>
+      quoted[1]!.trim(),
+    );
+    const named =
+      (strings.length > 1 ? strings[0] || strings[1] : strings[0]) ?? "";
+    subject = named ? `"${named}"` : "transaction";
+  } else {
+    subject = words.slice(0, keyword === "custom" ? 3 : 2).join(" ");
+  }
   const label = `${date} ${subject}`.trim();
   return label.length > MAX_LABEL ? `${label.slice(0, MAX_LABEL - 1)}…` : label;
 }
