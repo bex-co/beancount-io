@@ -27,6 +27,7 @@ import { registerBeancountLanguage } from "@/common/lib/editor/monaco-beancount-
 import { createLedgerId, base64Encode } from "@/common/lib/utils/encode";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
+import { restoreFocusOnDialogClose } from "@/common/lib/focus/restore-focus-on-dialog-close";
 import { toast } from "sonner";
 import { getFileLanguage } from "@/features/ledger-editor/shared/lib/utils";
 import { useLedger } from "@/common/hooks/use-ledger";
@@ -61,6 +62,13 @@ const CreateFilePage = () => {
   // Allow the post-create navigate without prompting; cleared after each leave.
   const allowNavigationRef = useRef(false);
   const savingRef = useRef(false);
+  // Stay, Escape and an outside dismissal keep the draft, so they hand focus
+  // back to whatever asked to leave, or to the filename when nothing here did
+  // (browser Back). A confirmed departure leaves focus to its destination
+  // (w4/1035).
+  const filenameRef = useRef<HTMLInputElement>(null);
+  const departureOpenerRef = useRef<HTMLElement | null>(null);
+  const leavingRef = useRef(false);
   // Leaving this page or its folder ends the creation journey, so an older
   // save's late success cannot take the reader away from where they went
   // (w4/304). The write itself still lands.
@@ -234,6 +242,7 @@ const CreateFilePage = () => {
                 <span>/</span>
               </div>
               <Input
+                ref={filenameRef}
                 type="text"
                 placeholder={t("ledgerEditor.nameYourFile")}
                 value={filename}
@@ -340,7 +349,25 @@ const CreateFilePage = () => {
         open={blocker.status === "blocked"}
         onOpenChange={(open) => !open && blocker.reset?.()}
       >
-        <DialogContent className="sm:max-w-md">
+        <DialogContent
+          className="sm:max-w-md"
+          onOpenAutoFocus={() => {
+            leavingRef.current = false;
+            const opener = document.activeElement;
+            departureOpenerRef.current =
+              opener instanceof HTMLElement && opener !== document.body
+                ? opener
+                : null;
+          }}
+          onCloseAutoFocus={(event) => {
+            if (leavingRef.current) return;
+            restoreFocusOnDialogClose(
+              event,
+              departureOpenerRef.current,
+              filenameRef.current,
+            );
+          }}
+        >
           <DialogHeader>
             <DialogTitle>{t("ledgerEditor.unsavedChanges")}</DialogTitle>
             <DialogDescription>
@@ -357,7 +384,10 @@ const CreateFilePage = () => {
             </Button>
             <Button
               variant="destructive"
-              onClick={() => blocker.proceed?.()}
+              onClick={() => {
+                leavingRef.current = true;
+                blocker.proceed?.();
+              }}
               className="w-full sm:w-auto"
             >
               {t("ledgerEditor.leaveWithoutSaving")}
