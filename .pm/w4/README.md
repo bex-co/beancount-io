@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1062** — [Leave Entry Context Escape to active editor widgets](./1062.md)
+
 - **1061** — [Keep Entry Context keyboard focus visible in forced colors](./1061.md)
 
 - **1060** — [Separate the inferred posting amount from its auto label in Persian](./1060.md)
