@@ -107,3 +107,5 @@
 - [950](./950.md) — A pasted ledger name with a tab or line break shows the server's raw "Title" error on Review
 - [951](./951.md) — Expense accounts are valued at market on Accounts and account detail, but at cost everywhere else
 - [952](./952.md) — Merchant detail stops loading at a hidden page cap that shrinks after every edit
+- [953](./953.md) — "Back to Files" stacks a second copy of the whole tab bar
+- [954](./954.md) — w21/544 reopened: "View errors" still stacks a second Notifications screen
