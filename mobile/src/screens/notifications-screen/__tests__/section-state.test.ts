@@ -78,9 +78,7 @@ describe("Notifications screen wiring", () => {
   it("shows a failed errors load with Try again rather than the healthy state", () => {
     expect(source.includes('errorsLoadState === "failed" ? (')).toBe(true);
     expect(
-      source.includes(
-        "<CardLoadFailure onRetry={() => void refetchErrors()} />",
-      ),
+      source.includes("<CardLoadFailure onRetry={() => refetchErrors()} />"),
     ).toBe(true);
   });
 });

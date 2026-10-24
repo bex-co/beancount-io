@@ -404,7 +404,7 @@ function NotificationsScreenImpl(): JSX.Element {
           ) : (
             <FadeInView>
               {errorsLoadState === "failed" ? (
-                <CardLoadFailure onRetry={() => void refetchErrors()} />
+                <CardLoadFailure onRetry={() => refetchErrors()} />
               ) : errorCount === 0 && errorsStale ? null : errorCount === 0 ? (
                 <View style={styles.emptyRow}>
                   <Ionicons
@@ -443,7 +443,7 @@ function NotificationsScreenImpl(): JSX.Element {
                 hasData: commitsData !== undefined,
                 error: commitsError,
               }) === "failed" ? (
-                <CardLoadFailure onRetry={() => void refetchCommits()} />
+                <CardLoadFailure onRetry={() => refetchCommits()} />
               ) : commits.length === 0 ? (
                 <View style={styles.emptyRow}>
                   <Text style={styles.emptyText}>

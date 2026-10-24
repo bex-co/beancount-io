@@ -273,7 +273,7 @@ function CommitDetailScreenImpl({
           <FadeInView>
             {selectCardLoadState({ loading, hasData: false, error }) ===
             "failed" ? (
-              <CardLoadFailure onRetry={() => void refetch()} />
+              <CardLoadFailure onRetry={() => refetch()} />
             ) : (
               <Text style={styles.emptyText}>{t("commitDetailNoDiff")}</Text>
             )}

@@ -202,7 +202,7 @@ export function BudgetCard({
       return <BudgetSkeleton />;
     }
     if (groupsFailed) {
-      return <CardLoadFailure onRetry={() => void refetchGroups()} />;
+      return <CardLoadFailure onRetry={() => refetchGroups()} />;
     }
     if (rowsFailed) {
       return <CardLoadFailure onRetry={retryRows} />;

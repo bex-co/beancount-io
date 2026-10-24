@@ -319,7 +319,7 @@ function MerchantsDirectory() {
       return (
         <View>
           <Text style={styles.errorText}>{t("merchantsLoadError")}</Text>
-          <CardLoadFailure onRetry={() => void onRefresh()} />
+          <CardLoadFailure onRetry={() => onRefresh()} />
         </View>
       );
     }

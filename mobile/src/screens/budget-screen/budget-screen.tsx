@@ -248,7 +248,7 @@ function BudgetScreenImpl(): JSX.Element {
               error ? (
                 <View style={styles.stateContainer}>
                   <Text style={styles.stateText}>{t("budgetLoadFailed")}</Text>
-                  <CardLoadFailure onRetry={() => void onRefresh()} />
+                  <CardLoadFailure onRetry={() => onRefresh()} />
                 </View>
               ) : (
                 <View style={styles.stateContainer}>

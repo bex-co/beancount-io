@@ -149,7 +149,7 @@ export const MainContent = () => {
           </View>
         )}
         {!user && !userLoading && userError && (
-          <CardLoadFailure onRetry={() => void refetchUser()} />
+          <CardLoadFailure onRetry={() => refetchUser()} />
         )}
         {user && (
           <ListItemHorizontal

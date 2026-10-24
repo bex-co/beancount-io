@@ -460,7 +460,7 @@ export function ProfileScreen(): JSX.Element {
   } else if (loading) {
     body = <ProfileSkeleton />;
   } else {
-    body = <CardLoadFailure onRetry={() => void refetch()} />;
+    body = <CardLoadFailure onRetry={() => refetch()} />;
   }
 
   return (

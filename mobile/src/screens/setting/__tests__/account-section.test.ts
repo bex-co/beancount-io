@@ -32,7 +32,7 @@ describe("Settings' Account section", () => {
     expect(src.includes('testID="setting-profile-loading"')).toBe(true);
     expect(
       src.includes(
-        "{!user&&!userLoading&&userError&&(<CardLoadFailureonRetry={()=>voidrefetchUser()}/>)}",
+        "{!user&&!userLoading&&userError&&(<CardLoadFailureonRetry={()=>refetchUser()}/>)}",
       ),
     ).toBe(true);
   });

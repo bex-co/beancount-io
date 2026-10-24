@@ -231,7 +231,7 @@ const AccountsScreenImpl = (): JSX.Element => {
           ))}
         </View>
       ) : accountsFailed ? (
-        <CardLoadFailure onRetry={() => void onRefresh()} />
+        <CardLoadFailure onRetry={() => onRefresh()} />
       ) : (
         <FadeInView fill>
           <AccountTable

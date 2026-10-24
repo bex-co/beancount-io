@@ -11,7 +11,7 @@ describe("the Budget screen's first-load failure", () => {
   it("offers Try again, refetching the directives and the interval totals", () => {
     expect(
       source.includes(
-        '<Textstyle={styles.stateText}>{t("budgetLoadFailed")}</Text><CardLoadFailureonRetry={()=>voidonRefresh()}/>',
+        '<Textstyle={styles.stateText}>{t("budgetLoadFailed")}</Text><CardLoadFailureonRetry={()=>onRefresh()}/>',
       ),
     ).toBe(true);
     expect(

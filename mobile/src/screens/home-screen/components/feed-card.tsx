@@ -181,7 +181,7 @@ export function FeedCard({
   return (
     <DashboardCard title={t("latestUpdates")} bleed>
       {loadState === "failed" ? (
-        <CardLoadFailure onRetry={() => void refetch()} />
+        <CardLoadFailure onRetry={() => refetch()} />
       ) : loading && items.length === 0 ? (
         <FeedSkeleton />
       ) : (

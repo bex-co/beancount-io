@@ -89,7 +89,7 @@ describe("Reports and Accounts", () => {
     const source = read("screens", "accounts-screen", "accounts-screen.tsx");
     expect(source.includes(") : accountsFailed ? (")).toBe(true);
     expect(
-      source.includes("<CardLoadFailure onRetry={() => void onRefresh()} />"),
+      source.includes("<CardLoadFailure onRetry={() => onRefresh()} />"),
     ).toBe(true);
   });
 });
