@@ -148,7 +148,9 @@ describe("overview financial selectors", () => {
     expect(snapshot.total).toEqual([
       { currency: "USD", value: 500, exact: "500" },
     ]);
-    expect(snapshot.average).toEqual([{ currency: "USD", value: 200 }]);
+    expect(snapshot.average).toEqual([
+      { currency: "USD", value: 200, exact: "200.00" },
+    ]);
     expect(snapshot.categories.map((category) => category.account)).toEqual([
       "Income:Salary",
       "Income:Interest",
@@ -231,5 +233,81 @@ describe("amountDifference (w4/m52)", () => {
         { currency: "USD", value: 150.25 },
       ),
     ).toBe("49.75");
+  });
+});
+
+/**
+ * Money movement averages come from the ledger's decimals (w4/1029): rounding
+ * a double to cents made a 0.003 BTC average 0 and turned
+ * 9007199254740993 USD into …992.
+ */
+describe("Money movement averages are exact", () => {
+  const month = (date: string, balance: Record<string, string>) => ({
+    date,
+    balance,
+    accountBalances: {},
+  });
+  const averageOn = (
+    date: string,
+    series: ReturnType<typeof month>[],
+    inverted = true,
+  ) =>
+    getMovementSnapshot({ series, date, preferredCurrency: "USD", inverted })
+      .average;
+
+  it("keeps a commodity's small means and the USD controls", () => {
+    const income = [
+      month("2026-01-31", { BTC: "-0.003", USD: "-3.00" }),
+      month("2026-02-28", { BTC: "-0.003", USD: "-3.00" }),
+      month("2026-03-31", { BTC: "-0.003", USD: "-3.00" }),
+    ];
+    expect(averageOn("2026-03-31", income)).toEqual([
+      { currency: "USD", value: 3, exact: "3.0000" },
+      { currency: "BTC", value: 0.003, exact: "0.00300" },
+    ]);
+    const spending = income.map((point) =>
+      month(point.date, { BTC: "0.001", USD: "1.00" }),
+    );
+    expect(averageOn("2026-02-28", spending, false)).toEqual([
+      { currency: "USD", value: 1, exact: "1.0000" },
+      { currency: "BTC", value: 0.001, exact: "0.00100" },
+    ]);
+  });
+
+  it("keeps every whole-unit digit beyond what a double holds", () => {
+    const income = ["2026-01-31", "2026-02-28", "2026-03-31"].map((date) =>
+      month(date, { USD: "-9007199254740993" }),
+    );
+    expect(averageOn("2026-02-28", income)[0]!.exact).toBe(
+      "9007199254740993.00",
+    );
+    expect(averageOn("2026-03-31", income)[0]!.exact).toBe(
+      "9007199254740993.00",
+    );
+  });
+
+  it("rounds a repeating mean once, two places past its sources", () => {
+    const income = [
+      month("2026-01-31", { USD: "-10" }),
+      month("2026-02-28", {}),
+      month("2026-03-31", {}),
+      month("2026-04-30", { USD: "-1" }),
+    ];
+    // (10 + 0 + 0) / 3, with no binary residue.
+    expect(averageOn("2026-04-30", income)).toEqual([
+      { currency: "USD", value: 3.33, exact: "3.33" },
+    ]);
+  });
+
+  it("averages cancelling amounts to a genuine zero, and has none for the first month", () => {
+    const income = [
+      month("2026-01-31", { BTC: "-0.005" }),
+      month("2026-02-28", { BTC: "0.005" }),
+      month("2026-03-31", { BTC: "-1" }),
+    ];
+    expect(averageOn("2026-03-31", income)).toEqual([
+      { currency: "BTC", value: 0, exact: "0.00000" },
+    ]);
+    expect(averageOn("2026-01-31", income)).toEqual([]);
   });
 });

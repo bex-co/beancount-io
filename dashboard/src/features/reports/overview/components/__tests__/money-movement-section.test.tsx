@@ -161,3 +161,45 @@ describe("filtered money-movement default on 2026-10-15", () => {
     ).toHaveLength(2);
   });
 });
+
+/**
+ * The cards' average footers read the exact means (w4/1029): a 0.003 BTC
+ * monthly income averaged to 0 once rounded to cents, and 9007199254740993
+ * USD became …992. The real snapshot, formatter and translations run.
+ */
+describe("Money movement averages", () => {
+  const quarter = (balance: Record<string, string>) =>
+    ["2026-01-31", "2026-02-28", "2026-03-31"].map((date) => ({
+      date,
+      balance,
+      accountBalances: {},
+    }));
+
+  it("shows a commodity's small averages beside the USD ones", () => {
+    render(
+      <MoneyMovementSection
+        {...props}
+        income={quarter({ BTC: "-0.003", USD: "-3.00" })}
+        expenses={quarter({ BTC: "0.001", USD: "1.00" })}
+      />,
+    );
+    const text = document.body.textContent ?? "";
+    expect(screen.getAllByText("March 2026").length).toBeGreaterThan(0);
+    expect(text).toContain("0.003 BTC");
+    expect(text).toContain("0.001 BTC");
+    expect(text).not.toMatch(/[+−-]?0 BTC/);
+  });
+
+  it("keeps every digit of a whole-unit average", () => {
+    render(
+      <MoneyMovementSection
+        {...props}
+        income={quarter({ USD: "-9007199254740993" })}
+        expenses={quarter({ USD: "1.00" })}
+      />,
+    );
+    const text = document.body.textContent ?? "";
+    expect(text).toContain("9,007,199,254,740,993.00 USD");
+    expect(text).not.toContain("9,007,199,254,740,992.00");
+  });
+});

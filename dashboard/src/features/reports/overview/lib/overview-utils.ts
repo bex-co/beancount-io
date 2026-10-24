@@ -1,8 +1,10 @@
 import {
   negateDecimalNumber,
   parseDecimalNumber,
+  sumDecimalFractions,
   sumDecimalNumbers,
 } from "@/common/lib/beancount/decimal-number";
+import { fractionDigitsOf } from "@/common/lib/format/format-number";
 import { formatLedgerDate } from "@/common/lib/format/ledger-date";
 import { parseConcreteTimeFilter } from "@/features/reports/export/reporting-period";
 import {
@@ -322,26 +324,42 @@ export function getFilteredDefaultIntervalDate(
   return latestActive ?? dates.filter(begun).at(-1) ?? dates.at(-1);
 }
 
+/**
+ * Each unit's mean over the preceding points, from the ledger's decimals. It
+ * is rounded once, two places past the finest source amount: a mean over two
+ * points is then exact and one over three (10/3) stops there, while doubles
+ * read 9007199254740993 as …992 and rounding to cents made a 0.003 BTC
+ * average 0 (w4/1029). Display applies the unit's own digits afterwards.
+ */
 function averageBalances(
   points: IntervalDataSeries,
   inverted: boolean,
   preferredCurrency: string,
 ): CurrencyAmount[] {
   if (points.length === 0) return [];
-  const totals = new Map<string, number>();
+  const totals = new Map<string, string[]>();
   for (const point of points) {
     for (const amount of getBalanceAmounts(point.balance, inverted)) {
-      totals.set(
-        amount.currency,
-        (totals.get(amount.currency) ?? 0) + amount.value,
-      );
+      totals.set(amount.currency, [
+        ...(totals.get(amount.currency) ?? []),
+        decimalOf(amount),
+      ]);
     }
   }
   return prioritizeCurrency(
-    Array.from(totals, ([currency, value]) => ({
-      currency,
-      value: Number((value / points.length).toFixed(2)),
-    })),
+    Array.from(totals, ([currency, amounts]) => {
+      const exact = sumDecimalFractions(
+        [
+          {
+            value: sumDecimalNumbers(amounts),
+            numerator: 1,
+            denominator: points.length,
+          },
+        ],
+        Math.max(0, ...amounts.map(fractionDigitsOf)) + 2,
+      );
+      return { currency, value: Number(exact), exact };
+    }),
     preferredCurrency,
   );
 }
