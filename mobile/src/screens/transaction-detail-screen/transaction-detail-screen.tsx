@@ -426,17 +426,21 @@ const TransactionDetailImpl = ({
   // An Edit's own save legitimately changes the slice: a read that is the
   // slice that save returned is adopted. Anything else is not, so an Edit that
   // was cancelled leaves the guard on (w21/692).
+  // Worked out while rendering, not after it: an effect adopting the saved
+  // checksum ran after the frame that already compared the old one, painting
+  // "changed or removed" for a frame and refetching the ledger a second time
+  // (w21/906). The effect only stores it.
+  const shownSha = nextShownChecksum(pinnedSha, readSha, {
+    loading,
+    adoptNext: isSavedChecksum(readSha),
+  });
   useEffect(() => {
-    const next = nextShownChecksum(pinnedSha, readSha, {
-      loading,
-      adoptNext: isSavedChecksum(readSha),
-    });
-    if (next !== pinnedSha) {
+    if (shownSha !== pinnedSha) {
       if (isSavedChecksum(readSha)) forgetSavedChecksum();
-      setPinnedSha(next);
+      setPinnedSha(shownSha);
     }
-  }, [pinnedSha, readSha, loading]);
-  const entryReplaced = isShownEntryReplaced(pinnedSha, readSha, loading);
+  }, [shownSha, pinnedSha, readSha]);
+  const entryReplaced = isShownEntryReplaced(shownSha, readSha, loading);
   useFocusEffect(
     useCallback(() => {
       if (!entryHash) return;
@@ -454,7 +458,7 @@ const TransactionDetailImpl = ({
   const [deleting, setDeleting] = useState(false);
   const deleteFlight = useRef(createSingleFlight(setDeleting)).current;
 
-  const sha256sum = pinnedSha ?? readSha;
+  const sha256sum = shownSha ?? readSha;
 
   const handleEdit = useCallback(() => {
     if (!canWrite || !sha256sum) return;

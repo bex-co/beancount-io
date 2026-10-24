@@ -1,3 +1,5 @@
+import fs from "fs";
+import path from "path";
 import {
   forgetSavedChecksum,
   isOtherSlice,
@@ -86,5 +88,37 @@ describe("adopting the slice an Edit saved", () => {
     expect(isSavedChecksum(undefined)).toBe(false);
     forgetSavedChecksum();
     expect(isSavedChecksum("sha-A2")).toBe(false);
+  });
+});
+
+// w21/906: the saved checksum was adopted in an effect, after the frame that
+// compared the old one and painted "changed or removed".
+describe("the frame that reads an Edit's saved checksum", () => {
+  it("shows the saved slice as the shown one, so it is not read as replaced", () => {
+    rememberSavedChecksum("sha-saved");
+    const read = "sha-saved";
+    const shown = nextShownChecksum("sha-old", read, {
+      loading: false,
+      adoptNext: isSavedChecksum(read),
+    });
+    expect(shown).toBe("sha-saved");
+    expect(isShownEntryReplaced(shown, read, false)).toBe(false);
+    // Compared against the old pin, as the screen did, it was.
+    expect(isShownEntryReplaced("sha-old", read, false)).toBe(true);
+    forgetSavedChecksum();
+  });
+
+  it("compares the checksum worked out while rendering", () => {
+    const source = fs
+      .readFileSync(
+        path.join(__dirname, "../../transaction-detail-screen.tsx"),
+        "utf8",
+      )
+      .replace(/\s+/g, "");
+    expect(
+      source.includes(
+        "constentryReplaced=isShownEntryReplaced(shownSha,readSha,loading);",
+      ),
+    ).toBe(true);
   });
 });
