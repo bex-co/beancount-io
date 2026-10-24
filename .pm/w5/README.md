@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [994 — Complete native acquisition-cost inference](./994.md) — reopened major CLI gap: native cost-weight rounding and signed totals break reply replay and import identity; original plain/currency/zero cases remain. Repaired and remaining cases rechecked 2026-10-24.
+- [995 — Resolve inferred prices before matching weighted trades](./995.md) — reopened major CLI gap: costed or priced balancing legs leave source prices unresolved, silently skipping distinct trades and native-ID corrections. Original and weighted controls rechecked 2026-10-24.
 - [980 — Preserve trade dependencies in same-day bulk ordering](./980.md) — reopened major CLI gap: bookable labeled transfer chains and stated-cost stock splits are refused; partial add omits a required transfer or sale. Original acceptance and nearby controls rechecked 2026-10-24.
 - [226 — Keep importer selectors unambiguous](./226.md) — reopened minor CLI gap: a listed NAME#N selector can collide with a declared importer name and choose another account. Preserve exact-name priority; collision and ordinary controls verified 2026-10-24.
 - [947 — Keep closed holdings when their converted balance is zero](./947.md) — reopened minor CLI gap: published offsetting cost lots still disappear after their units net to zero. Original currency/zero-price controls pass; gross-lot and genuine-empty cases rechecked 2026-10-24.
@@ -83,4 +85,3 @@ As of 2026-09-29, m10, m11, m12 and inbox 019–022 are complete. `beancount-io`
 The earlier sequence was m3 → m4 → m5. Real-client MCP journeys run against the hosted endpoint, not a duplicate stack. m3 and m4 have no dependency on each other; m5/t001 depends on m4/t009. The customer skill installation work in m3 builds on w1/m21's completed accounting-engine integration. The larger Plaid sandbox journey remains an explicit deferred follow-up in w2/009. m5 verifies and repairs the four prompts already shipped by w2/008; it does not recreate their registration or bodies.
 
 Authenticated CLI live-price milestones m6 → m7 → m8 completed with CLI 0.3.0 on 2026-09-21. The existing m5 blocker remains independent.
-- [995 — Resolve inferred prices before matching weighted trades](./995.md) — reopened major CLI gap: costed or priced balancing legs leave source prices unresolved, silently skipping distinct trades and native-ID corrections. Original and weighted controls rechecked 2026-10-24.
