@@ -290,8 +290,17 @@ function AddBudgetScreenImpl(): JSX.Element {
   const metaSettled = ledgerMeta !== undefined || Boolean(metaError);
   // A budget dated after its account closed never applies (w21/877).
   const closedAt = closedBeforeDate(account, getFormatDate(date), closeDates);
+  // And before the account exists: the card would judge months it had no
+  // account for (w21/948). Only declared accounts have an open date, so a
+  // parent rolled up from its children is never refused.
+  const openedAt = closeDates.openedOn?.get(account.trim());
+  const opensLater =
+    openedAt !== undefined && getFormatDate(date) < openedAt
+      ? openedAt
+      : undefined;
   const canSubmit =
     closedAt === undefined &&
+    opensLater === undefined &&
     account.trim().length > 0 &&
     amountOk &&
     currency.trim().length > 0 &&
@@ -485,6 +494,15 @@ function AddBudgetScreenImpl(): JSX.Element {
             message={t("accountPickerClosedOn", {
               name: account,
               date: formatLedgerDate(closedAt, locale),
+            })}
+          />
+        )}
+        {opensLater !== undefined && (
+          <InlineError
+            style={styles.error}
+            message={t("accountPickerOpensOn", {
+              name: account,
+              date: formatLedgerDate(opensLater, locale),
             })}
           />
         )}

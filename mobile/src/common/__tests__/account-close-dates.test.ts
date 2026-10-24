@@ -431,9 +431,45 @@ describe("the Add Budget form and the close date", () => {
     .replace(/\s+/g, "");
 
   it("refuses a date past the close, and hands the picker its date", () => {
-    expect(form.includes("canSubmit=closedAt===undefined&&")).toBe(true);
+    expect(
+      form.includes("canSubmit=closedAt===undefined&&opensLater===undefined&&"),
+    ).toBe(true);
     expect(form.includes("entryDate:getFormatDate(date),")).toBe(true);
     expect(form.includes('t("accountPickerClosedOn"')).toBe(true);
+  });
+});
+
+// w21/948: a date before the account opened was accepted.
+describe("the Add Budget form and the open date", () => {
+  const form = require("fs")
+    .readFileSync(
+      require("path").join(
+        __dirname,
+        "..",
+        "..",
+        "screens",
+        "add-budget-screen",
+        "add-budget-screen.tsx",
+      ),
+      "utf8",
+    )
+    .replace(/\s+/g, "");
+  const dates = closeDatesOf([
+    { account: "Expenses:Gym", openedAt: "2026-11-01" },
+  ]);
+
+  it("knows when an account opens, and nothing for a rolled-up parent", () => {
+    expect(dates.openedOn?.get("Expenses:Gym")).toBe("2026-11-01");
+    expect(dates.openedOn?.get("Expenses")).toBe(undefined);
+  });
+
+  it("disables Done and names the open date for a date before it", () => {
+    expect(
+      form.includes(
+        "openedAt!==undefined&&getFormatDate(date)<openedAt?openedAt:undefined;",
+      ),
+    ).toBe(true);
+    expect(form.includes('t("accountPickerOpensOn"')).toBe(true);
   });
 });
 
