@@ -55,3 +55,4 @@
 - [993](./993.md) — Dashboard rounds some currencies (HUF, COP, IDR, …) to whole units; mobile follows ISO 4217 (owner: dashboard)
 - [994](./994.md) — Budget: mobile prorates the current period to today, the dashboard does not, so verdicts differ (product call)
 - [995](./995.md) — Dashboard net worth headline reads next month and a falling arrow when an entry is future-dated (owner: dashboard)
+- [996](./996.md) — A trailing decimal point ("123.") is refused with a red error, including mid-typing (native)
