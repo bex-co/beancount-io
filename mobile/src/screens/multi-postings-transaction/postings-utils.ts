@@ -99,6 +99,8 @@ export function parseExactAmount(input: string, minorUnits = 2): string | null {
     // Grouping by a space, no-break or narrow no-break space, between digits
     // and a group of three: "1 234,56" (French, Russian, …).
     .replace(/(\d)[ \u00a0\u2009\u202f](?=\d{3}(?!\d))/g, "$1")
+    // And by an apostrophe (Swiss, Liechtenstein): "1'234.50" (w21/920).
+    .replace(/(\d)['\u2019\u02bc](?=\d{3}(?!\d))/g, "$1")
     .trim();
   if (!trimmed) return null;
   // The Arabic thousands separator groups three digits and is never a decimal
@@ -126,7 +128,11 @@ export function parseExactAmount(input: string, minorUnits = 2): string | null {
   ) {
     normalized = normalized.replace(/\./g, "").replace(",", ".");
   }
-  if (
+  // Indian grouping, a group of three then twos: "1,23,456.78". At least one
+  // pair of digits, so a lone "1,250" stays a decimal comma (w21/031).
+  if (/^-?\d{1,2}(,\d{2})+,\d{3}(\.\d+)?$/.test(normalized)) {
+    normalized = normalized.replace(/,/g, "");
+  } else if (
     /^-?\d{1,3}(,\d{3})+\.\d+$/.test(normalized) ||
     /^-?\d{1,3}(,\d{3}){2,}$/.test(normalized)
   ) {

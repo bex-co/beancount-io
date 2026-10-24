@@ -1287,3 +1287,26 @@ describe("a failed first metadata read", () => {
     ).toBe(true);
   });
 });
+
+// w21/920: Indian and apostrophe grouping, pasted from a bank message, was refused.
+describe("parseExactAmount with lakh and apostrophe grouping", () => {
+  it("reads Indian grouping", () => {
+    expect(parseExactAmount("1,23,456.78")).toBe("123456.78");
+    expect(parseExactAmount("1,00,000")).toBe("100000");
+    expect(parseExactAmount("12,34,567")).toBe("1234567");
+    expect(parseExactAmount("-1,00,000")).toBe("-100000");
+  });
+
+  it("reads apostrophe grouping, straight or curly", () => {
+    expect(parseExactAmount("1'234.50")).toBe("1234.50");
+    expect(parseExactAmount("1’234.50")).toBe("1234.50");
+    expect(parseExactAmount("12'345")).toBe("12345");
+  });
+
+  it("keeps the rules it must not disturb", () => {
+    expect(parseExactAmount("1,250")).toBe("1.250");
+    expect(parseExactAmount("1,234.56")).toBe("1234.56");
+    expect(parseExactAmount("1,2,3")).toBe(null);
+    expect(parseExactAmount("1'23")).toBe(null);
+  });
+});
