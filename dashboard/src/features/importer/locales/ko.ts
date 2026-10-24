@@ -394,8 +394,9 @@ const koImporter: Record<string, TranslationEntry> = {
     description: "Filter option for all amounts",
   },
   "importer.accountMapping.positiveOnly": {
-    message: "양수만",
-    description: "Filter option for positive amounts",
+    message: "0 또는 양수",
+    description:
+      "Filter option for amounts of zero or more: zero amounts are included, negative ones are not",
   },
   "importer.accountMapping.negativeOnly": {
     message: "음수만",

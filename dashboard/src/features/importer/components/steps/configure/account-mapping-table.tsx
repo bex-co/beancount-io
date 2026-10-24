@@ -204,9 +204,11 @@ export function AccountMappingTable({
 
   return (
     <div className="space-y-4">
-      {/* Filters */}
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1">
+      {/* Filters. They wrap rather than clip the selected amount filter: a
+          fixed width cut "Zero or positive" and longer translations short
+          (w4/1042). */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative min-w-48 flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder={t("importer.accountMapping.searchPlaceholder")}
@@ -222,7 +224,7 @@ export function AccountMappingTable({
         >
           {/* The selected value is not the control's purpose (w4/319). */}
           <SelectTrigger
-            className="w-45"
+            className="min-w-48 max-w-full"
             aria-label={t("importer.accountMapping.filterByAmount")}
           >
             <Filter className="h-4 w-4 mr-2" />

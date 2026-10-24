@@ -409,8 +409,9 @@ const nlImporter: Record<string, TranslationEntry> = {
     description: "Filter option for all amounts",
   },
   "importer.accountMapping.positiveOnly": {
-    message: "Alleen positief",
-    description: "Filter option for positive amounts",
+    message: "Nul of positief",
+    description:
+      "Filter option for amounts of zero or more: zero amounts are included, negative ones are not",
   },
   "importer.accountMapping.negativeOnly": {
     message: "Alleen negatief",

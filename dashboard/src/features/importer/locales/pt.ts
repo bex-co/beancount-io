@@ -418,8 +418,9 @@ const ptImporter: Record<string, TranslationEntry> = {
     description: "Filter option for all amounts",
   },
   "importer.accountMapping.positiveOnly": {
-    message: "Apenas positivos",
-    description: "Filter option for positive amounts",
+    message: "Zero ou positivos",
+    description:
+      "Filter option for amounts of zero or more: zero amounts are included, negative ones are not",
   },
   "importer.accountMapping.negativeOnly": {
     message: "Apenas negativos",

@@ -396,8 +396,9 @@ const jaImporter: Record<string, TranslationEntry> = {
     description: "Filter option for all amounts",
   },
   "importer.accountMapping.positiveOnly": {
-    message: "プラスのみ",
-    description: "Filter option for positive amounts",
+    message: "ゼロまたはプラス",
+    description:
+      "Filter option for amounts of zero or more: zero amounts are included, negative ones are not",
   },
   "importer.accountMapping.negativeOnly": {
     message: "マイナスのみ",

@@ -388,8 +388,9 @@ const zhImporter: Record<string, TranslationEntry> = {
     description: "Filter option for all amounts",
   },
   "importer.accountMapping.positiveOnly": {
-    message: "仅正数",
-    description: "Filter option for positive amounts",
+    message: "零或正数",
+    description:
+      "Filter option for amounts of zero or more: zero amounts are included, negative ones are not",
   },
   "importer.accountMapping.negativeOnly": {
     message: "仅负数",

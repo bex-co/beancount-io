@@ -422,8 +422,9 @@ const caImporter: Record<string, TranslationEntry> = {
     description: "Filter option for all amounts",
   },
   "importer.accountMapping.positiveOnly": {
-    message: "Només positius",
-    description: "Filter option for positive amounts",
+    message: "Zero o positius",
+    description:
+      "Filter option for amounts of zero or more: zero amounts are included, negative ones are not",
   },
   "importer.accountMapping.negativeOnly": {
     message: "Només negatius",

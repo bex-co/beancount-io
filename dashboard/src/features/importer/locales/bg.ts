@@ -410,8 +410,9 @@ const bgImporter: Record<string, TranslationEntry> = {
     description: "Filter option for all amounts",
   },
   "importer.accountMapping.positiveOnly": {
-    message: "Само положителни",
-    description: "Filter option for positive amounts",
+    message: "Нулеви или положителни",
+    description:
+      "Filter option for amounts of zero or more: zero amounts are included, negative ones are not",
   },
   "importer.accountMapping.negativeOnly": {
     message: "Само отрицателни",
