@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1065** — [Keep quoted Events types distinct from escaped labels](./1065.md)
+
 - **1064** — [Retain zero-valued positions in grouped Holdings](./1064.md)
 
 - **1063** — [Protect Entry Context drafts during history navigation](./1063.md)
