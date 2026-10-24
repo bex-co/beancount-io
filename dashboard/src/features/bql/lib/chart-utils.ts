@@ -107,6 +107,26 @@ export function decodeQueryChartValue(
 }
 
 /**
+ * Below this, a series is plotted scaled. ECharts still draws 1e-18 (the
+ * extent needs 19 decimals) and collapses from about 1e-20; series down to
+ * here keep their plain axis.
+ */
+const SMALLEST_UNSCALED = 1e-15;
+
+/**
+ * The power of ten a series is plotted in, or 0 to plot it as is. ECharts
+ * rounds an automatic axis extent to 20 decimals, so a series whose values
+ * are all smaller than about 1e-19 collapses to [0, 0]: zero-height bars and
+ * a flat line (w4/1049). Such a series is plotted scaled by `10^-exponent`.
+ */
+function displayExponent(values: readonly number[]): number {
+  const largest = Math.max(0, ...values.map(Math.abs));
+  return largest > 0 && largest < SMALLEST_UNSCALED
+    ? Math.floor(Math.log10(largest))
+    : 0;
+}
+
+/**
  * Parse query result and generate ECharts configuration.
  * Returns null when the result shape is unplottable or any value cannot be
  * decoded without inventing a number (multi-unit, missing, malformed).
@@ -157,6 +177,12 @@ export function parseQueryChart(result: QueryResultTable): ChartConfig | null {
     return null;
   }
 
+  // A tiny series is drawn in a power of ten its ticks name ("2e-24"); the
+  // tooltip still says each row's exact decimal.
+  const exponent = displayExponent(values);
+  const plotted =
+    exponent === 0 ? values : values.map((value) => value * 10 ** -exponent);
+
   const option: EChartsOption = {
     tooltip: {
       ...CONFINED_TOOLTIP,
@@ -184,12 +210,22 @@ export function parseQueryChart(result: QueryResultTable): ChartConfig | null {
     yAxis: {
       type: "value",
       name: seriesUnit,
+      ...(exponent === 0
+        ? {}
+        : {
+            axisLabel: {
+              formatter: (tick: number) =>
+                tick === 0
+                  ? "0"
+                  : `${Number(tick.toPrecision(12))}e${exponent}`,
+            },
+          }),
     },
     series: [
       {
         name: seriesUnit,
         type: chartType,
-        data: values,
+        data: plotted,
         smooth: chartType === "line",
         areaStyle: chartType === "line" ? {} : undefined,
       },
