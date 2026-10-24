@@ -1,7 +1,7 @@
 import { contentPadding } from "@/common/screen-util";
 import { isUnitsHeldAtCost } from "@/common/balance-display";
 import { useGuest } from "@/common/guest/guest-context";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   SectionList,
@@ -359,6 +359,12 @@ const AccountDetailScreenImpl = ({
     null,
   );
   const loadMoreFailed = loadMoreFailedFor === listKey;
+  // Apollo applies a page to the query's variables when it lands, not those it
+  // was asked for, so a page that returns after the list changed (another
+  // conversion, account or ledger) is dropped, as on Transactions (w21/116,
+  // w21/964).
+  const listKeyRef = useRef(listKey);
+  listKeyRef.current = listKey;
 
   const loadMore = useCallback(
     async (retry = false) => {
@@ -367,6 +373,7 @@ const AccountDetailScreenImpl = ({
       }
       if (loadMoreFailed && !retry) return;
       setLoadMoreFailedFor(null);
+      const requestedFor = listKeyRef.current;
       let listMoved = false;
       try {
         await fetchMore({
@@ -381,6 +388,7 @@ const AccountDetailScreenImpl = ({
             },
           },
           updateQuery: (prev, { fetchMoreResult }) => {
+            if (listKeyRef.current !== requestedFor) return prev;
             if (!fetchMoreResult?.getLedgerAccountJournal) {
               return prev;
             }
