@@ -43,6 +43,23 @@ export function toPlainSearchFilter(raw: string): string | undefined {
   return quoted(trimmed);
 }
 
+/**
+ * The payee field alone, matched whole: the quoted text anchored at both ends
+ * (padded for the trailing space a bank import leaves), spelled as tolerantly
+ * as the search is. The plain filter is a substring match over payee and
+ * narration, so "Uber" among "Uber Eats" entries filled the newest 50 of them
+ * and none of its own (w21/921). A pattern too long to send falls back to the
+ * plain filter; callers still compare the payee themselves.
+ */
+export function toExactPayeeFilter(raw: string): string | undefined {
+  const trimmed = raw.trim();
+  if (!trimmed) return undefined;
+  const pattern = `^\\s*${quoted(trimmed).slice(1, -1)}\\s*$`;
+  return pattern.length > MAX_PATTERN_LENGTH
+    ? toPlainSearchFilter(raw)
+    : `payee:"${pattern}"`;
+}
+
 function tagOrLinkFilter(token: string): string {
   const attribute = token.startsWith("#") ? "tags" : "links";
   const prefix = `${attribute}:"(?:^|, )${escapeRegExp(token.slice(1))}"`;
