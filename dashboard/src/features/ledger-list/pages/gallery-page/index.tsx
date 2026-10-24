@@ -21,6 +21,7 @@ import { useDebounce } from "@/common/hooks/use-debounce";
 import { decodeLedgerId } from "@/common/lib/utils/encode";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { getErrorMessageKey } from "@/common/lib/errors/error-message";
+import { useQueryRetry } from "@/common/hooks/use-query-retry";
 import { PageSEO } from "@/common/components/seo/page-seo";
 import { Button } from "@/common/components/ui/button";
 import { validateGallerySearch } from "./search";
@@ -79,10 +80,10 @@ export default function GalleryPage() {
   const setSearchQuery = (value: string) => setDraft({ location, value });
   const debouncedQuery = useDebounce(searchQuery, 300);
 
-  const [searchLedgers, { data, loading, error, variables }] = useLazyQuery<
-    SearchLedgersQuery,
-    SearchLedgersQueryVariables
-  >(SearchLedgersDocument);
+  const [searchLedgers, { data, loading, error, variables, refetch }] =
+    useLazyQuery<SearchLedgersQuery, SearchLedgersQueryVariables>(
+      SearchLedgersDocument,
+    );
 
   const normalizedQuery = searchQuery.trim();
   const normalizedDebounced = debouncedQuery.trim();
@@ -101,6 +102,33 @@ export default function GalleryPage() {
     data?.searchLedgers !== undefined;
   const searchResults =
     searchIsSettled && data?.searchLedgers ? data.searchLedgers : [];
+
+  // What the reader is looking at now, for a retry that settles later.
+  const liveSearch = useRef({ query: normalizedQuery, open: isDropdownOpen });
+  useEffect(() => {
+    liveSearch.current = { query: normalizedQuery, open: isDropdownOpen };
+  });
+  // Try Again re-runs the failed search unchanged (w4/1038). Its failure is
+  // shown only while that search is still the one on screen, so Clear, a new
+  // query or Escape never bring an old error back (w4/212). A retry that
+  // lands for the open search hands focus to the field, so Arrow Down and
+  // Enter can pick a result.
+  const failureRef = useRef<HTMLDivElement>(null);
+  const retrySearch = async () => {
+    const query = variables?.q;
+    await refetch();
+    // Focus still on the busy Try Again, or dropped with it, was never moved.
+    const active = document.activeElement;
+    const lost =
+      !active ||
+      active === document.body ||
+      Boolean(failureRef.current?.contains(active));
+    if (lost && liveSearch.current.open && liveSearch.current.query === query) {
+      inputRef.current?.focus();
+    }
+  };
+  const { failure, retrying, retry } = useQueryRetry(currentError, retrySearch);
+  const searchFailure = resultsBelongToCurrentQuery ? failure : undefined;
 
   useEffect(() => {
     if (normalizedQuery === urlQuery) return;
@@ -341,32 +369,42 @@ export default function GalleryPage() {
                       )}
                     </div>
 
-                    {/* Dropdown */}
-                    {isDropdownOpen && (
+                    {/* Dropdown. A failed search replaces the listbox with
+                        its own alert, so Try Again is never a listbox child. */}
+                    {isDropdownOpen && searchFailure ? (
+                      <div
+                        ref={failureRef}
+                        className="absolute z-50 w-full mt-1 bg-popover text-popover-foreground rounded-md border shadow-lg p-4"
+                      >
+                        <Alert variant="destructive">
+                          <AlertDescription className="gap-3">
+                            <p>
+                              {t("page.gallery.failedToSearchLedgers")}:{" "}
+                              {t(getErrorMessageKey(searchFailure))}
+                            </p>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={retry}
+                              loading={retrying}
+                            >
+                              {t("common.tryAgain")}
+                            </Button>
+                          </AlertDescription>
+                        </Alert>
+                      </div>
+                    ) : isDropdownOpen ? (
                       <div
                         ref={dropdownRef}
                         id="ledger-search-listbox"
                         role="listbox"
                         className="absolute z-50 w-full mt-1 bg-popover text-popover-foreground rounded-md border shadow-lg max-h-[300px] overflow-auto"
                       >
-                        {queryIsEligible &&
-                        !searchIsSettled &&
-                        !currentError ? (
+                        {queryIsEligible && !searchIsSettled ? (
                           <div className="flex items-center justify-center py-8">
                             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                           </div>
                         ) : null}
-
-                        {currentError && (
-                          <div className="p-4">
-                            <Alert variant="destructive">
-                              <AlertDescription>
-                                {t("page.gallery.failedToSearchLedgers")}:{" "}
-                                {t(getErrorMessageKey(currentError))}
-                              </AlertDescription>
-                            </Alert>
-                          </div>
-                        )}
 
                         {searchIsSettled && searchResults.length === 0 && (
                           <div className="p-4 text-center text-sm text-muted-foreground">
@@ -420,7 +458,7 @@ export default function GalleryPage() {
                           </div>
                         )}
                       </div>
-                    )}
+                    ) : null}
                   </div>
 
                   <p className="sr-only" role="status" aria-live="polite">

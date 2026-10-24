@@ -24,8 +24,6 @@
 
 - **1039** — Keep exact Budget amounts and variance on mobile (45–60m, mobile, A2/A3) ← m55 simplify review; source-only mobile counterpart of m55 ([note](./1039.md))
 
-- **1038** — Retry Gallery search without clearing the query (45–60m, dashboard, A2) ← dashboard QA; residual of m50 ([note](./1038.md))
-
 - **1031** — Use actual lot cost currencies in Net Worth valuation disclosures (45–60m dashboard after dependency, A2/A3) ← dashboard QA; residual of m26 ([note](./blocked/1031.md)) — **blocked:** approved lot-specific valuation read
 
 
