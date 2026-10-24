@@ -44,6 +44,7 @@ import {
 } from "./picker-sections";
 import { ColorTheme } from "@/types/theme-props";
 import { useRouter } from "expo-router";
+import { useIsHere } from "@/common/hooks/use-is-here";
 import { SelectedAccount } from "@/common/globalFnFactory";
 import { pushOpenAccount } from "@/screens/open-account-screen/push-open-account";
 import { accountOrderFor, parseCreateRoot } from "./push-account-picker";
@@ -269,6 +270,7 @@ const AccountRow = memo(function AccountRow({
 
 function AccountPickerScreenComponent(): JSX.Element {
   const router = useRouter();
+  const isHere = useIsHere();
   const guest = useGuest();
   const ledgerId = useLedgerGuard();
   const { type, selectedItem, entryDate, createRoot } = useRouteParams<{
@@ -492,9 +494,11 @@ function AccountPickerScreenComponent(): JSX.Element {
     (account: string, at: number) => {
       if (!guest) recordAccountUsage(ledgerId, account, at);
       onSelectedRef.current?.(account);
-      router.back();
+      // An account created while the user has since left the picker still
+      // arrives, but must not pop whichever screen is on top now (w21/905).
+      if (isHere()) router.back();
     },
-    [ledgerId, router, guest],
+    [ledgerId, router, guest, isHere],
   );
 
   const onPick = useCallback(
