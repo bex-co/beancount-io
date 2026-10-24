@@ -4,7 +4,7 @@
 
 ## Inbox
 
-- **1056** — [Keep typed negative amounts left to right in Persian forms](./1056.md)
+- **1056** — [Keep negative entry amounts readable in Persian forms](./1056.md)
 
 - **1039** — Keep exact Budget amounts and variance on mobile (45–60m, mobile, A2/A3) ← m55 simplify review; source-only mobile counterpart of m55 ([note](./blocked/1039.md)) — **blocked:** fix shipped; simulator check needs approved production budget fixtures
 
