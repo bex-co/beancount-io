@@ -66,7 +66,7 @@ describe("cancelling a receipt upload", () => {
   it("aborts the request and the transfer, and ignores late results", () => {
     const source = read("use-receipt-workflow.ts");
     for (const piece of [
-      'abandonAttempt(attempt.current);setPhase({kind:"idle"});',
+      'abandonAttempt(attempt.current);uploaded.current=null;setPhase({kind:"idle"});',
       "if(!live())return;",
       "FileSystem.createUploadTask(",
     ]) {

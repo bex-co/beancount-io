@@ -58,6 +58,8 @@ export const useReceiptWorkflow = (): ReceiptWorkflow => {
   const [phase, setPhase] = useState<ReceiptPhase>({ kind: "idle" });
 
   const attempt = useRef<Attempt | null>(null);
+  // The photo that reached storage, by its file, for a parse retried from it.
+  const uploaded = useRef<{ uri: string; objectKey: string } | null>(null);
   // Leaving the screen abandons the attempt in flight, as Cancel does: Android's
   // hardware Back pops the modal mid-upload (w21/638).
   useEffect(
@@ -87,70 +89,81 @@ export const useReceiptWorkflow = (): ReceiptWorkflow => {
       // must not move a screen the user already left.
       const live = () => !run.cancelled;
       try {
-        setPhase({ kind: "uploading", percent: null });
+        // A photo that already reached storage is parsed again from there:
+        // Try Again after a failed parse re-sent the whole photo, ~80 s on a
+        // slow link (w21/956).
+        const uploadPhoto = async (): Promise<string | null> => {
+          setPhase({ kind: "uploading", percent: null });
 
-        // 1. Get presigned upload URL (30s timeout — Apollo has no built-in timeout)
-        const urlResult = await Promise.race([
-          generateUploadUrl({
-            variables: { mimeType, filename },
-            context: { fetchOptions: { signal: run.abort.signal } },
-          }),
-          new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error("upload_url_timeout")), 30_000),
-          ),
-        ]);
-        if (!live()) return;
-        const uploadData = urlResult.data?.generateTempAssetUploadUrl;
-        if (!uploadData) throw new Error("upload_url_failed");
+          // 1. Get presigned upload URL (30s timeout — Apollo has no built-in timeout)
+          const urlResult = await Promise.race([
+            generateUploadUrl({
+              variables: { mimeType, filename },
+              context: { fetchOptions: { signal: run.abort.signal } },
+            }),
+            new Promise<never>((_, reject) =>
+              setTimeout(() => reject(new Error("upload_url_timeout")), 30_000),
+            ),
+          ]);
+          if (!live()) return null;
+          const uploadData = urlResult.data?.generateTempAssetUploadUrl;
+          if (!uploadData) throw new Error("upload_url_failed");
 
-        // 2. PUT image to S3 via presigned URL
-        // expo-file-system handles Content-Length automatically — plain fetch with
-        // a Blob body omits it, causing S3 to hang indefinitely.
-        // The limit is idle time, not the whole transfer: a slow link that
-        // keeps moving bytes finishes, a stalled one fails (w21/205).
-        let timedOut = false;
-        const idle = createIdleGuard(UPLOAD_IDLE_MS, () => {
-          timedOut = true;
-          void run.upload?.cancelAsync();
-        });
-        let lastPercent: number | null = null;
-        const task = FileSystem.createUploadTask(
-          uploadData.uploadUrl,
-          uri,
-          {
-            httpMethod: "PUT",
-            headers: { "Content-Type": mimeType },
-            uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
-          },
-          (progress) => {
-            idle.touch();
-            const percent = uploadPercent(progress);
-            if (percent !== lastPercent && live()) {
-              lastPercent = percent;
-              setPhase({ kind: "uploading", percent });
-            }
-          },
-        );
-        run.upload = task;
-        idle.touch();
-        // The background session keeps uploading while JS is suspended, so the
-        // silence there is not a stall: the clock stops with the app and starts
-        // afresh on return (w21/636).
-        const appState = AppState.addEventListener("change", (state) => {
-          if (state === "active") idle.touch();
-          else idle.stop();
-        });
-        let uploadResult: Awaited<ReturnType<typeof task.uploadAsync>>;
-        try {
-          uploadResult = await task.uploadAsync();
-        } finally {
-          idle.stop();
-          appState.remove();
-        }
-        if (!live()) return;
-        const outcome = uploadOutcome(uploadResult, timedOut);
-        if (outcome === "timeout") throw new Error("upload_s3_timeout");
-        if (outcome === "failed") throw new Error("upload_failed");
+          // 2. PUT image to S3 via presigned URL
+          // expo-file-system handles Content-Length automatically — plain fetch with
+          // a Blob body omits it, causing S3 to hang indefinitely.
+          // The limit is idle time, not the whole transfer: a slow link that
+          // keeps moving bytes finishes, a stalled one fails (w21/205).
+          let timedOut = false;
+          const idle = createIdleGuard(UPLOAD_IDLE_MS, () => {
+            timedOut = true;
+            void run.upload?.cancelAsync();
+          });
+          let lastPercent: number | null = null;
+          const task = FileSystem.createUploadTask(
+            uploadData.uploadUrl,
+            uri,
+            {
+              httpMethod: "PUT",
+              headers: { "Content-Type": mimeType },
+              uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+            },
+            (progress) => {
+              idle.touch();
+              const percent = uploadPercent(progress);
+              if (percent !== lastPercent && live()) {
+                lastPercent = percent;
+                setPhase({ kind: "uploading", percent });
+              }
+            },
+          );
+          run.upload = task;
+          idle.touch();
+          // The background session keeps uploading while JS is suspended, so the
+          // silence there is not a stall: the clock stops with the app and starts
+          // afresh on return (w21/636).
+          const appState = AppState.addEventListener("change", (state) => {
+            if (state === "active") idle.touch();
+            else idle.stop();
+          });
+          let uploadResult: Awaited<ReturnType<typeof task.uploadAsync>>;
+          try {
+            uploadResult = await task.uploadAsync();
+          } finally {
+            idle.stop();
+            appState.remove();
+          }
+          if (!live()) return null;
+          const outcome = uploadOutcome(uploadResult, timedOut);
+          if (outcome === "timeout") throw new Error("upload_s3_timeout");
+          if (outcome === "failed") throw new Error("upload_failed");
+          return uploadData.objectKey;
+        };
+        const stored =
+          uploaded.current?.uri === uri ? uploaded.current.objectKey : null;
+        const objectKey = stored ?? (await uploadPhoto());
+        if (objectKey === null) return;
+        uploaded.current = { uri, objectKey };
 
         // 3. Parse receipt with LLM. Under Apollo's default errorPolicy a
         // GraphQL error rejects here rather than populating `result.errors`;
@@ -160,11 +173,14 @@ export const useReceiptWorkflow = (): ReceiptWorkflow => {
         let parseResult: Awaited<ReturnType<typeof parseReceipt>>;
         try {
           parseResult = await parseReceipt({
-            variables: { s3ObjectKey: uploadData.objectKey, ledgerId },
+            variables: { s3ObjectKey: objectKey, ledgerId },
             context: { fetchOptions: { signal: run.abort.signal } },
           });
         } catch (parseErr) {
           if (!live()) return;
+          // A key that failed to parse again may be gone from storage: the next
+          // try uploads afresh.
+          if (stored !== null) uploaded.current = null;
           captureError(parseErr, { phase: "parse", ledgerId });
           throw new Error(parseErrorCode(parseErr));
         }
@@ -212,10 +228,15 @@ export const useReceiptWorkflow = (): ReceiptWorkflow => {
 
   const cancel = useCallback(() => {
     abandonAttempt(attempt.current);
+    uploaded.current = null;
     setPhase({ kind: "idle" });
   }, []);
 
-  const reset = useCallback(() => setPhase({ kind: "idle" }), []);
+  // Retaking drops the photo, so its stored copy goes with it.
+  const reset = useCallback(() => {
+    uploaded.current = null;
+    setPhase({ kind: "idle" });
+  }, []);
 
   return { phase, startCapture, cancel, reset };
 };
