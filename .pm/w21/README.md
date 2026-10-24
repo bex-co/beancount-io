@@ -76,3 +76,5 @@
 - [964](./964.md) — Account detail still applies a late "load more" page to a different list (w21/116's third screen)
 - [965](./965.md) — Invisible format characters survive trimming in payee, narration and account names
 - [966](./966.md) — The ledger filter in the drawer and Browse ledgers ignores quote, accent and width folding
+- [967](./967.md) — Log out can fail halfway and leave the user signed in on a revoked token, with no message
+- [968](./968.md) — Delete Account gives no feedback if local sign-out throws after the server deleted the account
