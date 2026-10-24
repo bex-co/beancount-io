@@ -687,6 +687,12 @@ describe("selectPostingRows amounts", () => {
     expect(amounts("4.5", "USD")).toBe("+$4.50");
   });
 
+  // w21/914: no symbol in the icon table, but minor units of their own.
+  it("pads a currency that has minor units but no symbol", () => {
+    expect(amounts("12.5", "CLF")).toBe("+12.5000 CLF");
+    expect(amounts("-3", "UYW")).toBe("-3.0000 UYW");
+  });
+
   it("keeps a yen amount whole and a longer recorded scale as written", () => {
     expect(amounts("1500", "JPY")).toBe("+1,500 JPY");
     expect(amounts("1.2345", "EUR")).toBe("+1.2345 EUR");

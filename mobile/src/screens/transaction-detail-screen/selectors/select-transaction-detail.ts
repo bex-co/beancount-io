@@ -3,7 +3,7 @@ import { entryRowSecondaryText } from "../../transactions-screen/entry-row/entry
 import { isolateLtr } from "../../../common/bidi";
 import {
   currencyMinorUnits,
-  getCurrencySymbol,
+  isFiatCurrency,
   labelRowAmount,
 } from "../../../common/currency-util";
 import type { JournalTransaction } from "../../transactions-screen/types";
@@ -113,7 +113,9 @@ export type PostingDisplayRow = {
 /**
  * Format a posting units number from its recorded decimal string so commodity
  * quantities keep their source scale (e.g. 1.843 RGAGX). USD still pads to
- * two fraction digits when the source is shorter. Avoids parseFloat →
+ * two fraction digits when the source is shorter. A currency is what the headline
+ * calls one, so CLF, UYW and UYI (no symbol, but minor units) pad to theirs too
+ * (w21/914). Avoids parseFloat →
  * maximumFractionDigits: 2 which rounded share quantities away.
  */
 function formatPostingUnits(
@@ -140,9 +142,7 @@ function formatPostingUnits(
   // A ticker can also be a currency code (BND, AMD, NOK), so units held at a
   // cost are a commodity whatever their name says (w21/506).
   const minorUnits =
-    !heldAtCost && getCurrencySymbol(currency) !== ""
-      ? currencyMinorUnits(currency)
-      : 0;
+    !heldAtCost && isFiatCurrency(currency) ? currencyMinorUnits(currency) : 0;
   const displayFrac =
     fracPart.length < minorUnits ? fracPart.padEnd(minorUnits, "0") : fracPart;
   const groupedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
