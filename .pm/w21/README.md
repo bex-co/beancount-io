@@ -88,3 +88,6 @@
 - [931](./931.md) — The Cash flow chart's VoiceOver label reads float leftovers ("-$0.0000000000000018")
 - [932](./932.md) — Reports chart summaries read "$222.6" for $222.58
 - [933](./933.md) — Persian chart y-axis ticks use Latin digits under Persian x-axis labels
+- [934](./934.md) — Offline, Home's budget panel claims "$0.00 · Below target" on a cache miss
+- [935](./935.md) — Offline deletes say "didn't confirm the save", even when no delete was sent
+- [936](./936.md) — "Try again" on "Failed to load" shows no progress, and offline nothing changes
