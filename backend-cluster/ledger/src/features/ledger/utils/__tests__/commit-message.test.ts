@@ -76,3 +76,22 @@ describe("commit messages for directives that are not transactions", () => {
     expect(add('2026-10-22 ! "Cafe"')).toBe('Add 2026-10-22 "Cafe"');
   });
 });
+
+// w21/962: the cut counted UTF-16 units and could split an emoji.
+describe("a long label", () => {
+  it("is cut by code point, never through an emoji", () => {
+    const text = `2026-10-22 * "${"x".repeat(46)}🍕 and more text"`;
+    const subject = addEntriesCommitMessage(1, [text]);
+    expect(subject.includes("\ufffd")).toBe(false);
+    expect(/[\ud800-\udbff](?![\udc00-\udfff])/.test(subject)).toBe(false);
+    expect(/(?<![\ud800-\udbff])[\udc00-\udfff]/.test(subject)).toBe(false);
+    expect(Array.from(subject.replace(/^Add /, "")).length).toBe(60);
+    expect(subject.endsWith("…")).toBe(true);
+  });
+
+  it("keeps a short one whole", () => {
+    expect(addEntriesCommitMessage(1, ['2026-10-22 * "🍕"'])).toBe(
+      'Add 2026-10-22 "🍕"',
+    );
+  });
+});

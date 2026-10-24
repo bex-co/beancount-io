@@ -70,7 +70,11 @@ function entryLabel(text: string): string {
     subject = words.slice(0, keyword === "custom" ? 3 : 2).join(" ");
   }
   const label = `${date} ${subject}`.trim();
-  return label.length > MAX_LABEL ? `${label.slice(0, MAX_LABEL - 1)}…` : label;
+  // By code point: a cut through an emoji's surrogate pair left a "�" (w21/962).
+  const points = Array.from(label);
+  return points.length > MAX_LABEL
+    ? `${points.slice(0, MAX_LABEL - 1).join("")}…`
+    : label;
 }
 
 /** `Update 2026-10-22 "Coffee"`, or the bare verb and noun when nothing names it. */
