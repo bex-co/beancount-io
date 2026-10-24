@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1047** — [Keep CSV review minus signs before their amounts in Persian](./1047.md)
+
 - **1046** — [Keep route-error retries single-flight and restore focus after another failure](./1046.md)
 
 - **1045** — [Retry a failed first Account Report read in place](./1045.md)
