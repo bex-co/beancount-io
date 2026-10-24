@@ -64,3 +64,42 @@ describe("ledger search", () => {
     expect(/\bdescription\b/.test(query)).toBe(true);
   });
 });
+
+// w21/966: the ledger filter was literal about quotes, Unicode form, width and
+// Arabic script, unlike every other search.
+describe("ledgerMatchesQuery folds as the other searches do", () => {
+  const rows: [string, string][] = [
+    ["Mom’s household", "Mom's"],
+    ["Mom's household", "Mom’s"],
+    ["Café budget", "café"],
+    ["İstanbul expenses", "istanbul"],
+    ["ＦＸ trades", "fx"],
+    ["كافي شاپ", "کافی"],
+    ["Costco‎ run", "costco"],
+  ];
+
+  it("finds each description from the other way of writing it", () => {
+    for (const [description, query] of rows) {
+      expect([
+        description,
+        query,
+        ledgerMatchesQuery({ fullName: "me/book", description }, query),
+      ]).toEqual([description, query, true]);
+    }
+  });
+
+  it("still misses a word that is not there, and keeps the word split", () => {
+    expect(
+      ledgerMatchesQuery(
+        { fullName: "me/my-book", description: "Mom’s household" },
+        "work",
+      ),
+    ).toBe(false);
+    expect(
+      ledgerMatchesQuery(
+        { fullName: "me/my-book", description: null },
+        "my book",
+      ),
+    ).toBe(true);
+  });
+});

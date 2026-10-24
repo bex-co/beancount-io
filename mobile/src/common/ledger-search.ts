@@ -1,3 +1,5 @@
+import { foldForSearch } from "./search-fold";
+
 /**
  * The words a ledger search is made of: the query, lower-cased and split on
  * whitespace and on the characters a ledger name is hyphenated with (`-`, `_`,
@@ -5,8 +7,10 @@
  * people type (w21/244).
  */
 function searchWords(text: string): string[] {
-  return text
-    .toLocaleLowerCase()
+  // Folded as every other search is, on both sides: a curly apostrophe, a
+  // decomposed é, a Turkish İ, full-width letters and Arabic-script spellings
+  // matched nothing typed the other way (w21/966).
+  return foldForSearch(text)
     .split(/[\s\-_/.]+/)
     .filter(Boolean);
 }

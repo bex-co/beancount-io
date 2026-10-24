@@ -1,24 +1,7 @@
 import { foldArabicScript } from "../../common/arabic-script-fold";
 import { foldQuotes } from "../../common/merchant-key";
-import {
-  cleanFreeText,
-  withoutInvisibleMarks,
-} from "../../common/clean-free-text";
-
-/**
- * A suggestion in the form text is compared in: NFC, lower-cased, runs of whitespace as one space, with the dot
- * a lower-cased Turkish "İ" leaves behind (`i` + U+0307) taken off. Plain
- * `toLowerCase().includes()` found nothing for "iş" in "İşBank ATM" and nothing
- * for a composed "café" in a ledger that stores "Cafe" + U+0301 (w21/257).
- */
-function fold(text: string): string {
-  return foldArabicScript(
-    foldQuotes(withoutInvisibleMarks(text)).normalize("NFC"),
-  )
-    .toLowerCase()
-    .replace(/i\u0307/gu, "i")
-    .replace(/\s+/gu, " ");
-}
+import { cleanFreeText } from "../../common/clean-free-text";
+import { foldForSearch as fold } from "../../common/search-fold";
 
 /**
  * The suggestions to offer for what is typed: trimmed, the empty ones dropped,
