@@ -64,7 +64,7 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 describe("a write while a refresh is in flight", () => {
   it("is read back by the invalidation, not folded into the older request", async () => {
     const { invalidateLedgerData } = require("../invalidate-ledger");
-    const { client, query, state } = makeClient(false);
+    const { client, query, state } = makeClient(true);
     const rows: string[][] = [];
     const watch = client.watchQuery({
       query,
@@ -89,10 +89,30 @@ describe("a write while a refresh is in flight", () => {
     expect(rows[rows.length - 1]).toEqual(["Coffee"]);
   });
 
-  it("is turned on for the app's client", () => {
-    const source = fs
-      .readFileSync(path.join(__dirname, "../client.ts"), "utf8")
-      .replace(/\s+/g, "");
-    expect(source.includes("queryDeduplication:false,")).toBe(true);
+  // w21/975: switching deduplication off for the whole client sent a request
+  // for every co-mounted hook of one query.
+  it("leaves the app's client deduplicating, and skips it only for the read-back", () => {
+    const read = (file: string) =>
+      fs.readFileSync(path.join(__dirname, file), "utf8").replace(/\s+/g, "");
+    expect(read("../client.ts").includes("queryDeduplication")).toBe(false);
+    expect(
+      read("../invalidate-ledger.ts").includes(
+        "queryDeduplication:false,},},NetworkStatus.refetch,)",
+      ),
+    ).toBe(true);
+  });
+
+  it("sends one request for five identical watchers", async () => {
+    const { client, query, state } = makeClient(true);
+    const watches = Array.from({ length: 5 }, () =>
+      client.watchQuery({
+        query,
+        variables: { ledgerId: "L" },
+        fetchPolicy: "cache-and-network",
+      }),
+    );
+    for (const watch of watches) watch.subscribe(() => undefined);
+    await wait(250);
+    expect(state.requests).toBe(1);
   });
 });

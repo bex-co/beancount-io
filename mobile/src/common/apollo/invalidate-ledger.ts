@@ -23,7 +23,7 @@
  *
  * Kept free of any `@/` imports so the jest-lite runner can require it.
  */
-import { makeVar } from "@apollo/client";
+import { makeVar, NetworkStatus } from "@apollo/client";
 import type { ApolloClient } from "@apollo/client";
 
 /**
@@ -185,6 +185,23 @@ export async function invalidateLedgerData(
         }
         cache.gc();
       },
+      // The read-back after a write must not fold into a read already in
+      // flight: that one answers with the rows as they stood before the write,
+      // and a deleted row stayed listed (w21/904). Only these reads skip
+      // deduplication; the screens' own co-mounted queries still share one
+      // request (w21/975).
+      onQueryUpdated: (observableQuery) =>
+        observableQuery.reobserve(
+          {
+            fetchPolicy: "network-only",
+            pollInterval: 0,
+            context: {
+              ...observableQuery.options.context,
+              queryDeduplication: false,
+            },
+          },
+          NetworkStatus.refetch,
+        ),
     });
     succeeded = true;
   } catch (error: unknown) {
