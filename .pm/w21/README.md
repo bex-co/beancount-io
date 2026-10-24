@@ -79,3 +79,6 @@
 - [922](./922.md) — Changing to a payee with no history keeps the previous payee's accounts (owner's call)
 - [923](./923.md) — A dirty New Transaction loses its link guard after Open Account is pushed over it
 - [924](./924.md) — A deferred foreground refresh after Log out shows "Your session ended" and can break the next sign-in
+- [925](./925.md) — Add Budget's empty Account row reads to VoiceOver as "Expenses:Groceries" and is nearly invisible in light mode
+- [926](./926.md) — Green and red figures on Home and Budget cards are below 4.5:1 contrast in light mode
+- [927](./927.md) — Persian or Arabic account paths read child first on four more screens
