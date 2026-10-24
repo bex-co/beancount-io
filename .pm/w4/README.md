@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1053** — [Show keyboard focus on the read-only file editor](./1053.md)
+
 - **1052** — [Keep BQL numeric minus signs before their digits in Persian](./1052.md)
 
 - **1051** — [Give Settings option values usable width on narrow screens](./1051.md)
