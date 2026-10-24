@@ -76,3 +76,5 @@
 - [962](./962.md) — A long emoji payee cut at the 60-character limit puts a "�" in the commit subject
 - [963](./963.md) — Latest Updates undercounts a push when a listed commit has an empty first line
 - [964](./964.md) — Account detail still applies a late "load more" page to a different list (w21/116's third screen)
+- [965](./965.md) — Invisible format characters survive trimming in payee, narration and account names
+- [966](./966.md) — The ledger filter in the drawer and Browse ledgers ignores quote, accent and width folding
