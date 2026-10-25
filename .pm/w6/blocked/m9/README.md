@@ -1,6 +1,6 @@
 # w6 · m9 — Reach developer marketplaces and galleries
 
-**Worker:** worker1 **Goal:** Developers discover and connect the hosted MCP server through the supported Docker, Cursor, Cline, and GitHub/VS Code galleries. **Status:** todo (9 tasks done; t015 current native repair complete; review/public/native gates remain t004/t016/t017/t018; renewable OAuth is independent w6/046)
+**Worker:** worker1 **Goal:** Developers discover and connect the hosted MCP server through the supported Docker, Cursor, Cline, and GitHub/VS Code galleries. **Status:** blocked (9 tasks done; current Docker native repair complete; platform publication gates remain; renewable OAuth is independently actionable in w6/046)
 
 **Implementation estimate:** ~4½h, excluding external review queues and the standing closing tasks.
 
@@ -99,7 +99,7 @@ This milestone returns from `blocked/` because newly materialized submission/rec
 
 An actual submission receipt closes only its receipt-stage task. Existing native/publication criteria and final verification remain required for this milestone's DoD. Preserve previous blocker history above; reassess concrete tool/account/access requirements at the actual action, carry prior authorization forward, and block only the affected step when a genuinely unmet condition remains. No task waits for another platform's review merely because it is later in the table.
 
-The earlier exclusion of Claude/ChatGPT was the 2026-10-20 scope decision. The owner's 2026-10-23 all-inventory request now places those separate application follow-ups in [m11](../blocked/m11/README.md), without duplicating this milestone's targets.
+The earlier exclusion of Claude/ChatGPT was the 2026-10-20 scope decision. The owner's 2026-10-23 all-inventory request now places those separate application follow-ups in [m11](../m11/README.md), without duplicating this milestone's targets.
 
 ## Historical blocked receipt action — 2026-10-23T20:17:19Z
 
@@ -227,3 +227,20 @@ Read actual existing feedback/CI changes, correct supported payloads and record 
 ## Current native repair outcome — 2026-10-25 UTC
 
 t015 is complete with actual Gateway discovery/query/preview and unchanged-state evidence. Its separate offline-renewal consent loop is an independent actionable inbox note w6/046, not hidden behind Docker review. All remaining tasks here depend on the recorded platform publication gates; re-triage milestone placement next.
+
+## Blocked — 2026-10-25 UTC
+
+t015's current-session repair and real native accounting checks ship in
+fbf140b40. The separate renewable-consent reproduction is live as w6/046,
+not deferred behind these platform reviews. Every remaining milestone task
+is blocked or depends on these unchanged public/native publication gates.
+
+- **t004 — Unblock:** Cline gives actual review feedback or publishes issue3230's entry; worker handles the resulting advertised public/native route. Owner: Cline, then worker. Latest actual issue remains open without comments.
+- **t016 — Unblock:** Cursor gives actual feedback or publishes the already-accepted official application; worker verifies its official path. Owner: Cursor, then worker. Existing community/native work stays complete.
+- **t017 — Unblock:** Docker maintainers approve the two existing action_required workflow runs, then review/merge/publish PR6042; worker addresses actual executed failures if any and verifies catalog installation. Both current runs have zero executed jobs; no failing code test is inferred. Owners: Docker maintainers, then worker. Accepted private reviewer access is complete.
+- **t018 — Unblock:** GitHub publishes the already-approved entry (stated up to three business days), then existing VS Code owner/worker verifies actual public/native installation. Owners: GitHub, then worker/native owner.
+- **t006–t010 — Unblock:** all required per-platform results and closing prerequisites actually hold; owner: worker after those gates.
+
+Fresh public API/name checks on2026-10-25T00:11–00:13UTC retain the existing
+receipts and zero GitHub gallery results; no duplicate application, comment or
+nomination is needed. Continue m10 and the live inbox while these waits remain.
