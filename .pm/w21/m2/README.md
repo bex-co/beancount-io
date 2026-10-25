@@ -1,6 +1,6 @@
 # w21 · m2 — Readable-width caps for the remaining bespoke screens
 
-**Worker:** worker1 **Goal:** every mobile screen caps its content to a readable column on iPad **Status:** todo (t001–t005 done)
+**Worker:** worker1 **Goal:** every mobile screen caps its content to a readable column on iPad **Status:** todo (t001–t006 done)
 
 ## Tasks (in order)
 
@@ -11,7 +11,7 @@
 | t003 | Verify the zero-hit screens need no cap — **DONE** | 30m | —     |
 | t004 | Adoption surface — **DONE**                | 15m | t001, t002, t003   |
 | t005 | Simplify — **DONE**                      | 20m | t004               |
-| t006 | Test coverage                              | 30m | t004               |
+| t006 | Test coverage — **DONE**                 | 30m | t004               |
 | t007 | Closeout                                   | 15m | t005, t006         |
 
 ## Definition of done
