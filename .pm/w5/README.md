@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1028 — Preserve decimal markers in batch-update requests](./1028.md) — minor CLI regression: a malformed decimal row aborts every valid update before per-row validation; previous behavior and Add controls pass, checked 2026-10-25.
+
 - [1027 — Reject duplicate batch-update CSV columns](./1027.md) — minor CLI gap: repeated id/account/flag headers silently choose the last cell and apply; unique mappings and JSON-duplicate/unknown-column refusals pass, checked 2026-10-25.
 
 - [1026 — Plan updates from complete multiline headers](./1026.md) — minor CLI gap: tags land inside payee/narration text and narration replacements cannot apply; one-line, flag-only and existing-tag controls pass, checked 2026-10-25.
