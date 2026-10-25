@@ -28,7 +28,7 @@
 
 - **1068** — [Exclude malformed amounts from CSV decimal-convention evidence](./1068.md)
 
-- **1067** — [Keep tiny commodity ticks inside their price range](./1067.md)
+- **1067** — [Keep tiny chart ticks inside their plotted range](./1067.md)
 
 - **1066** — [Distinguish constant tiny commodity axis ticks](./1066.md)
 
