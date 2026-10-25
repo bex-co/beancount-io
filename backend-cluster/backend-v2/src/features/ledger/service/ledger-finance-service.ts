@@ -1,12 +1,22 @@
 import { parseLedgerId } from "@/shared/str";
 import { unwrapFavaResponse } from "@/foundation/fava";
 import { filterNullish } from "@/shared/tools";
+import { InternalServerError } from "@/shared/errors";
 import type { Identity } from "@/server/api/identity";
 import {
   authorizeLedger,
   AuthorizedLedgerService,
 } from "@/features/ledger/utils/authorize-ledger";
 import { AUTHORIZATION_ACTIONS } from "@/server/api/authorization/authorization-contract";
+import {
+  composeHoldings,
+  holdingsDetailQuery,
+  resolveHoldingsConversion,
+} from "@/features/ledger/utils/holdings";
+import type {
+  HoldingsGrouping,
+  HoldingsResult,
+} from "@/features/ledger/utils/holdings";
 import type {
   OverviewPublic,
   IncomeStatementDataPublic,
@@ -37,7 +47,15 @@ export interface ILedgerFinanceService {
   getTrialBalance(
     params: BaseParams & ConversionParams,
   ): Promise<TrialBalanceDataPublic>;
+
+  getHoldings(params: HoldingsParams): Promise<HoldingsResult>;
 }
+
+export type HoldingsParams = BaseParams & {
+  account?: string;
+  conversion?: string;
+  groupBy?: HoldingsGrouping;
+};
 
 export class LedgerFinanceService
   extends AuthorizedLedgerService
@@ -128,5 +146,45 @@ export class LedgerFinanceService
       ),
       "get ledger trial balance",
     );
+  }
+
+  async getHoldings(params: HoldingsParams): Promise<HoldingsResult> {
+    const { ledgerId, identity, account, conversion, groupBy } = params;
+    const { favaApiClient, ledgerOwner, ledgerName } = await this.getClient(
+      ledgerId,
+      identity,
+    );
+    const options = await unwrapFavaResponse(
+      favaApiClient.reports.getLedgerOptions(ledgerOwner, ledgerName),
+      "get ledger options",
+    );
+    const target = resolveHoldingsConversion(
+      conversion,
+      options?.operating_currency ?? [],
+    );
+    const queryResult = await unwrapFavaResponse(
+      favaApiClient.shell.queryShell(ledgerOwner, ledgerName, {
+        query: holdingsDetailQuery(target),
+      }),
+      "get ledger holdings",
+    );
+    const result = queryResult.result;
+    if (!("types" in result && "rows" in result)) {
+      throw new InternalServerError("Holdings query returned no table");
+    }
+    return composeHoldings({
+      columns: result.types.map((col) => col.name),
+      rows: result.rows as (
+        | string
+        | number
+        | boolean
+        | null
+        | Record<string, unknown>
+      )[][],
+      groupBy: groupBy ?? "account",
+      account,
+      conversionTarget: target,
+      asOf: new Date().toISOString().slice(0, 10),
+    });
   }
 }

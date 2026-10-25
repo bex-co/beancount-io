@@ -11,6 +11,7 @@ import {
 import { AllowAnonymous } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import { filterNullish } from "@/shared/tools";
+import { BadUserInputError } from "@/shared/errors";
 import { GraphQLJSONObject } from "graphql-scalars";
 import { DateAndBalance, ConversionArgs } from "./ledger-report-resolver.types";
 import type { ILedgerFinanceService } from "@/features/ledger/service/ledger-finance-service";
@@ -159,6 +160,93 @@ class TrialBalanceData {
 
 @ArgsType()
 class IncomeStatementArgs extends ConversionArgs {}
+
+@ArgsType()
+class HoldingsArgs {
+  @Field(() => String, { nullable: true })
+  account?: string;
+
+  // No default: an omitted conversion values in the operating currency
+  // when the ledger declares exactly one, else each group's held
+  // currency — as on REST and MCP.
+  @Field(() => String, { nullable: true })
+  conversion?: string;
+
+  @Field(() => String, { defaultValue: "account" })
+  groupBy?: string;
+}
+
+@ObjectType()
+class HoldingsMoney {
+  @Field(() => String)
+  number: string;
+
+  @Field(() => String)
+  currency: string;
+}
+
+@ObjectType()
+class HoldingsGroup {
+  @Field(() => String, { nullable: true })
+  account?: string;
+
+  @Field(() => [String], { nullable: true })
+  accounts?: string[];
+
+  @Field(() => String)
+  commodity: string;
+
+  @Field(() => HoldingsMoney)
+  units: HoldingsMoney;
+
+  @Field(() => HoldingsMoney)
+  averageCost: HoldingsMoney;
+
+  @Field(() => HoldingsMoney)
+  costBasis: HoldingsMoney;
+
+  @Field(() => HoldingsMoney)
+  marketValue: HoldingsMoney;
+
+  @Field(() => HoldingsMoney, { nullable: true })
+  price?: HoldingsMoney | null;
+}
+
+@ObjectType()
+class MissingPriceLeg {
+  @Field(() => String)
+  from: string;
+
+  @Field(() => String)
+  to: string;
+}
+
+@ObjectType()
+class HoldingsData {
+  @Field(() => String)
+  groupBy: string;
+
+  @Field(() => [HoldingsGroup])
+  groups: HoldingsGroup[];
+
+  @Field(() => GraphQLJSONObject)
+  totals: {
+    cost_basis: Record<string, string>;
+    market_value: Record<string, string>;
+  };
+
+  @Field(() => String)
+  valuation: string;
+
+  @Field(() => [MissingPriceLeg])
+  missingPrices: MissingPriceLeg[];
+
+  @Field(() => [String])
+  missingPriceSummary: string[];
+
+  @Field(() => String)
+  asOf: string;
+}
 
 @Resolver()
 export class LedgerFinanceQueryResolver {
@@ -337,6 +425,53 @@ export class LedgerFinanceQueryResolver {
       equityHierarchyData: this.mapTreeNode(data.equity_hierarchy_data),
       expensesHierarchyData: this.mapTreeNode(data.expenses_hierarchy_data),
       assetsHierarchyData: this.mapTreeNode(data.assets_hierarchy_data),
+    };
+  }
+
+  @AllowAnonymous()
+  @Query(() => HoldingsData, {
+    description: "Get the holdings of a specific ledger",
+  })
+  async getLedgerHoldings(
+    @Arg("ledgerId", () => String) ledgerId: string,
+    @Args() args: HoldingsArgs,
+    @Ctx() ctx: IContext,
+  ): Promise<HoldingsData> {
+    if (
+      args.groupBy !== undefined &&
+      args.groupBy !== "account" &&
+      args.groupBy !== "commodity"
+    ) {
+      throw new BadUserInputError(
+        `Unsupported groupBy "${args.groupBy}": pass "account" or "commodity".`,
+      );
+    }
+    const data = await this.financeService.getHoldings({
+      ledgerId,
+      identity: ctx.identity,
+      ...filterNullish({
+        account: args.account,
+        conversion: args.conversion,
+        groupBy: args.groupBy,
+      }),
+    });
+    return {
+      groupBy: data.group_by,
+      groups: data.groups.map((group) => ({
+        account: group.account,
+        accounts: group.accounts,
+        commodity: group.commodity,
+        units: group.units,
+        averageCost: group.average_cost,
+        costBasis: group.cost_basis,
+        marketValue: group.market_value,
+        price: group.price,
+      })),
+      totals: data.totals,
+      valuation: data.valuation,
+      missingPrices: data.missing_prices,
+      missingPriceSummary: data.missing_price_summary,
+      asOf: data.as_of,
     };
   }
 

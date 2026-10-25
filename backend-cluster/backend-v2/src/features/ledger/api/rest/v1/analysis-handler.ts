@@ -20,7 +20,7 @@ import type { Identity } from "@/server/api/identity";
  * these say what it *did* — a trial balance, an account's report, totals per
  * interval, the transactions behind a payee, the context around one entry.
  *
- * Thirteen reads are listed here for REST/MCP. Remaining family members keep
+ * Fourteen reads are listed here for REST/MCP. Remaining family members keep
  * reasons that survived re-reading (w3/m7/t001): two journals and a plaintext
  * journal are already covered by the paged `/journal` endpoint, two ledger-list
  * reads are client-side filtering over `GET /v1/ledgers`, `journalEntries` is a
@@ -132,6 +132,32 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
         ledgerId,
         identity,
         ...query,
+      }),
+  },
+  {
+    segment: "holdings",
+    summary: "Get holdings",
+    description:
+      "Lots grouped by account or commodity — units, average cost, cost basis, market value — valued at today's quotes. `conversion` takes a currency or `units` (default: the operating currency when the ledger declares exactly one, else each group's held currency); `account` names a parent account or a regular expression. Costless cash and fully-sold groups are left out; groups without a quote value at cost and are named in `missing_prices`.",
+    query: z.object({
+      account: filterQuery.shape.account,
+      conversion: z.string().optional().openapi({
+        description:
+          "Convert money columns to this currency, or `units` for each group's held currency (default: the operating currency when the ledger declares exactly one)",
+        example: "USD",
+      }),
+      groupBy: z.enum(["account", "commodity"]).default("account").openapi({
+        description: "Group lots by account or by commodity",
+        example: "commodity",
+      }),
+    }),
+    uriPath: "",
+    fetch: (s, { ledgerId, identity, query }) =>
+      s.ledgerFinance.getHoldings({
+        ledgerId,
+        identity,
+        ...query,
+        groupBy: (query.groupBy ?? "account") as "account" | "commodity",
       }),
   },
   {

@@ -37,6 +37,7 @@ const fakeServices = () => ({
   ledgerFinance: {
     getOverview: jest.fn().mockResolvedValue(["overview"]),
     getTrialBalance: jest.fn().mockResolvedValue(["trialBalance"]),
+    getHoldings: jest.fn().mockResolvedValue(["holdings"]),
   },
   ledgerJournal: { getContext: jest.fn().mockResolvedValue(["entryContext"]) },
   ledgerAccount: {
@@ -88,6 +89,7 @@ const SAMPLE_QUERY: Record<string, string> = {
   narration: "groceries",
   entryHash: "abc123",
   accountName: "Expenses:Groceries",
+  groupBy: "commodity",
   // This suite's property is that both surfaces resolve through the same
   // service call, which it checks by comparing the raw result — so it asks
   // for the unprojected shape (w2/m28:t002). The summary projection has its
@@ -123,8 +125,8 @@ const uriFor = (read: (typeof ANALYSIS_READS)[number]) => {
  * plausible-looking data.
  */
 describe("ledger analysis reads", () => {
-  it("ports thirteen analysis reads", () => {
-    expect(ANALYSIS_READS).toHaveLength(13);
+  it("ports fourteen analysis reads", () => {
+    expect(ANALYSIS_READS).toHaveLength(14);
   });
 
   it.each(ANALYSIS_READS)(

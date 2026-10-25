@@ -1,12 +1,12 @@
 # w22 · m6 — Backend parity for holdings, register, and capital-gains
 
-**Worker:** worker1 **Goal:** the three CLI reports are readable through REST, GraphQL, and MCP with CLI-equivalent shapes and inputs **Status:** todo
+**Worker:** worker1 **Goal:** the three CLI reports are readable through REST, GraphQL, and MCP with CLI-equivalent shapes and inputs **Status:** todo (t001 done)
 
 ## Tasks (in order)
 
 | id   | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
-| t001 | Holdings end to end on all three surfaces | 3h | — |
+| t001 | Holdings end to end on all three surfaces — **DONE** | 3h | — |
 | t002 | Register end to end on all three surfaces | 2h30m | — |
 | t003 | Capital-gains end to end on all three surfaces | 3h | — |
 | t004 | Adoption surface | 30m | t003 |
@@ -16,7 +16,7 @@
 
 ## Definition of done
 
-- `holdings`, `register`, and `capital-gains` each read through REST, GraphQL, and MCP with the CLI report's inputs, defaults, and result shapes.
+- `holdings`, `register`, and `capital-gains` each read through REST, GraphQL, and MCP with result shapes mirroring the CLI report and the inputs each backend engine can honor exactly. Documented deltas (t001): no `time`/`filter`/`interval`/`allow-errors` (BQL positions are all-time; Fava-expression filters don't translate; no period grouping for a snapshot; Fava load errors fail the read), no per-quote `price_date`/provenance (unobservable via BQL), number strings normalized rather than scale-preserved, quotes pinned at `today()` (deliberately excluding future-dated prices, as the dashboard does).
 - The parity gate holds: `surface-parity` gaps stay zero, `parity-baseline` is intact, `op-class-coverage` passes, and `docs/openapi/v1.json` is regenerated with no drift.
 - Each report's contract tests drive REST, GraphQL, and MCP against controlled dependencies; service-call-only mocks are not enough.
 - `yarn typecheck`, `yarn test`, and `yarn generate-v1-openapi` pass from `backend-cluster/backend-v2/`.

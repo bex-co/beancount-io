@@ -18,6 +18,7 @@ describe("LedgerFinanceQueryResolver", () => {
     getIncomeStatement: jest.Mock;
     getBalanceSheet: jest.Mock;
     getTrialBalance: jest.Mock;
+    getHoldings: jest.Mock;
   };
 
   const ledgerId = "user/test-ledger";
@@ -40,6 +41,7 @@ describe("LedgerFinanceQueryResolver", () => {
       getIncomeStatement: jest.fn(),
       getBalanceSheet: jest.fn(),
       getTrialBalance: jest.fn(),
+      getHoldings: jest.fn(),
     };
 
     mockContext = {
@@ -226,6 +228,80 @@ describe("LedgerFinanceQueryResolver", () => {
 
       await expect(
         resolver.getLedgerTrialBalance(ledgerId, {}, mockContext),
+      ).rejects.toThrow(InternalServerError);
+    });
+  });
+
+  describe("getLedgerHoldings", () => {
+    const holdings = {
+      group_by: "account",
+      groups: [
+        {
+          account: "Assets:Broker:AAPL",
+          commodity: "AAPL",
+          units: { number: "10", currency: "AAPL" },
+          average_cost: { number: "150", currency: "USD" },
+          cost_basis: { number: "1500", currency: "USD" },
+          market_value: { number: "1800", currency: "USD" },
+          price: { number: "180", currency: "USD" },
+        },
+      ],
+      totals: {
+        cost_basis: { USD: "1500" },
+        market_value: { USD: "1800" },
+      },
+      valuation: "complete",
+      missing_prices: [],
+      missing_price_summary: [],
+      as_of: "2026-10-25",
+    };
+
+    it("should delegate to financeService and map the result", async () => {
+      mockFinanceService.getHoldings.mockResolvedValue(holdings);
+
+      const result = await resolver.getLedgerHoldings(
+        ledgerId,
+        { conversion: "USD", groupBy: "account" },
+        mockContext,
+      );
+
+      expect(mockFinanceService.getHoldings).toHaveBeenCalledWith(
+        expect.objectContaining({
+          ledgerId,
+          identity: IDENTITY,
+          conversion: "USD",
+          groupBy: "account",
+        }),
+      );
+      expect(result.groupBy).toBe("account");
+      expect(result.groups).toHaveLength(1);
+      expect(result.groups[0]).toMatchObject({
+        account: "Assets:Broker:AAPL",
+        averageCost: { number: "150", currency: "USD" },
+        costBasis: { number: "1500", currency: "USD" },
+        marketValue: { number: "1800", currency: "USD" },
+      });
+      expect(result.asOf).toBe("2026-10-25");
+    });
+
+    it("should refuse an unsupported grouping", async () => {
+      await expect(
+        resolver.getLedgerHoldings(
+          ledgerId,
+          { groupBy: "currency" },
+          mockContext,
+        ),
+      ).rejects.toThrow('Unsupported groupBy "currency"');
+      expect(mockFinanceService.getHoldings).not.toHaveBeenCalled();
+    });
+
+    it("should propagate errors thrown by the service", async () => {
+      mockFinanceService.getHoldings.mockRejectedValue(
+        new InternalServerError("get ledger holdings"),
+      );
+
+      await expect(
+        resolver.getLedgerHoldings(ledgerId, {}, mockContext),
       ).rejects.toThrow(InternalServerError);
     });
   });
