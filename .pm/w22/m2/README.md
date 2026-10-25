@@ -1,12 +1,12 @@
 # w22 · m2 — No-code OFX/QFX import through upstream beangulp
 
-**Worker:** worker1 **Goal:** `bea import bank.ofx --account Assets:Checking` previews and applies with no `importers.py`, using the shared duplicate review and rules **Status:** todo
+**Worker:** worker1 **Goal:** `bea import bank.ofx --account Assets:Checking` previews and applies with no `importers.py`, using the shared duplicate review and rules **Status:** todo (t001 done)
 
 ## Tasks (in order)
 
 | id   | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
-| t001 | Spike and decision note: what the managed engine already provides for OFX | 30m | — |
+| t001 | Spike and decision note: what the managed engine already provides for OFX — **DONE** | 30m | — |
 | t002 | Engine adapter: OFX/QFX file to native directive request with FITID in `import-id` | 60m | t001 |
 | t003 | Frontend dispatch: `bea import *.ofx|*.qfx` with rules and remembered mapping | 50m | t002 |
 | t004 | Real-sample fixtures and docs | 45m | t003 |
