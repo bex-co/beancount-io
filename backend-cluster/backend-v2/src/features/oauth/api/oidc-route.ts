@@ -696,11 +696,11 @@ export function setOidcRoutes(
           details.missingResourceScopes &&
           Object.keys(details.missingResourceScopes).length > 0
         ) {
-          for (const [indicator, scopes] of Object.entries(
-            details.missingResourceScopes,
-          )) {
-            const scope = scopes.join(" ");
-            grant.addResourceScope(indicator, scope);
+          // These details are a delta against the previous SSO grant. This
+          // grant is new, so it needs the complete approved request; copying
+          // only the delta loses existing scopes and resumes into consent.
+          for (const indicator of Object.keys(details.missingResourceScopes)) {
+            grant.addResourceScope(indicator, requestedScope);
           }
         } else {
           const paramResources = Array.isArray(params.resource)

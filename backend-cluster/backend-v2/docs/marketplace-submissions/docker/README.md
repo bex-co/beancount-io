@@ -230,3 +230,22 @@ actual recipient use when observable. Keep retained grants and let an unneeded
 key expire. [Exact coordination and read-only evidence](./reviewer-access-progress.json)
 record the future condition; no new key, renewal, revocation or automation occurs.
 Native OAuth renewal remains the separate w6/046.
+
+## Renewable consent source repair — 2026-10-25 UTC
+
+The same native offline/read/write flow still loops after the earlier consent
+binding deployment. A real-provider regression proves the owning source bug:
+a fresh Grant incorrectly copies only the missing-scope delta from the old
+SSO grant, losing its existing read/write scopes. Two shared-cookie upgrades
+fail, while fresh-cookie offline and same-scope controls pass. The minimum
+fix grants the complete supported request for that selected resource, keeping
+the newly approved ledger selection and existing credential checks.
+
+Five cases now pass, including actual provider refresh exchanges. Required
+backend validation passes 389 suites/6,976 tests, typecheck, formatting/targeted
+lint and unchanged OpenAPI. [Source proof, native-runtime limits and next action](./oauth-renewal-repair-20261025.json)
+keep hosted rollout/native refresh acceptance pending. The current standalone
+macOS launcher bypasses Desktop through DOCKER_MCP_IN_CONTAINER=1, which also
+skips the vendor's initial refresh scheduler. Neither a new access token nor
+waiting under that launcher proves automatic renewal. No reviewer key or
+retained grant is replaced/revoked.

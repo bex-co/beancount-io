@@ -1,0 +1,72 @@
+{
+  "owner": "w6/046",
+  "dateUTC": "2026-10-25",
+  "state": "Verified first-party source repair; hosted rollout and native renewable-token/refresh acceptance remain pending",
+  "reproduction": {
+    "hosted": "Same existing Docker Gateway0.44.1 DCR client, openid/offline_access/read/write, correct requester mcp.docker.com and only the authorized synthetic ledger. After approval the deployed861d10a5c service returns to Choose a ledger; no callback. Owned incomplete listener canceled, retained grant unchanged.",
+    "publicDCRLimit": "Existing server-side grant_types and old exact expiry are unobserved; no registration theory is used as proof.",
+    "controlled": "Real HTTP/provider/DCR/PKCE with the same registered client, an initial minimal read/write grant, actual shared SSO cookies and full resume-cookie absorption."
+  },
+  "rootCause": {
+    "code": "src/features/oauth/api/oidc-route.ts",
+    "detail": "The route creates a fresh Grant but populates resource scopes from missingResourceScopes, a delta against the old SSO grant. An offline upgrade then creates a grant with offline_access only; the resumed flow is missing ledger.read/ledger.write and enters consent again.",
+    "observedDiagnostic": {
+      "requested": "offline_access ledger.read ledger.write",
+      "newGrantResourceScopes": "offline_access",
+      "resumedMissingScopes": [
+        "ledger.read",
+        "ledger.write"
+      ]
+    }
+  },
+  "regression": {
+    "path": "src/features/oauth/api/__tests__/oidc-route.test.ts",
+    "testNamePattern": "completes same-client MCP scope upgrade",
+    "beforeFix": {
+      "handlerSHA256": "c8b2e7dbf4872665b812562060587ce4e08c16e99e4cb70e06de6931e584af21",
+      "failed": 2,
+      "passed": 3,
+      "unrelatedSkipped": 110,
+      "durationSeconds": 4.399
+    },
+    "cases": [
+      "Same minimal scopes with reused SSO: matching control",
+      "Offline upgrade without openid, fresh cookies: matching control with actual refresh",
+      "Offline upgrade with openid, fresh cookies: matching control with actual refresh",
+      "Offline upgrade without openid, reused SSO: prior loop",
+      "Offline upgrade with openid, reused SSO: prior loop"
+    ],
+    "afterFix": {
+      "passed": 5,
+      "failed": 0,
+      "durationSeconds": 4.79,
+      "refreshTokenExchange": "Actual provider refresh requests succeed for all four offline cases; approved ledger pin and read/write claims retained."
+    }
+  },
+  "fix": "Populate the new Grant with the complete supported request for each selected resource, preserving the newly approved ledger selection and all existing identity/scope checks. Do not reuse an old ledger grant.",
+  "validation": {
+    "runtime": "Verified official Node22.23.4",
+    "fullSuitesPassed": 389,
+    "fullTestsPassed": 6976,
+    "snapshotsPassed": 1,
+    "fullDurationSeconds": 247.017,
+    "typecheck": "passed",
+    "formatAndTargetedLint": "passed",
+    "openAPIGeneration": "passed, no drift",
+    "parity": "Required full-suite gates pass; no operation eligibility, protocol exception, credential policy or frozen baseline changed."
+  },
+  "nativeClientBoundary": {
+    "existingLauncher": "Standalone macOS Gateway with DOCKER_MCP_IN_CONTAINER=1; existing Docker daemon responds, native CLI reports Desktop not running without that flag.",
+    "autoRefreshLimit": "Pinned v0.44.1 startup excludes initial OAuth provider scheduling when that flag is set. CLI exposes authorize/ls/revoke, with no force-refresh or expiry option. Authorization success alone cannot prove a native refresh.",
+    "normalRuntime": "No available Docker Desktop entry was found in the current native-app inventory. Ordinary macOS startup requires Desktop; Linux CE is a different supported runtime. No app install, vendor patch, token export, credential-store edit or alternative token borrowing is performed.",
+    "sources": [
+      "https://github.com/docker/mcp-gateway/blob/v0.44.1/pkg/gateway/run.go#L345-L408",
+      "https://github.com/docker/mcp-gateway/blob/v0.44.1/pkg/oauth/provider.go#L107-L181",
+      "https://github.com/docker/mcp-gateway/blob/v0.44.1/pkg/oauth/provider.go#L310-L351",
+      "https://github.com/docker/mcp-gateway/blob/v0.44.1/cmd/docker-mcp/commands/root.go#L67-L85",
+      "https://github.com/docker/mcp-gateway/blob/v0.44.1/pkg/docker/client.go#L60-L70"
+    ]
+  },
+  "next": "Ship verified source, deploy the same existing hosted service, reauthorize the same scoped native client once, prove returned refresh capability and native accounting. Observe actual refresh only through a supported running scheduler; keep its runtime/expiry condition explicit if unavailable.",
+  "privacy": "No access/refresh token, cookie, code/state URL, private infrastructure, account identity or raw ledger contents. No retained grant or reviewer key is revoked."
+}

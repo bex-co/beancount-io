@@ -477,10 +477,12 @@ describe("oidc-route: unified MCP + identity provider", () => {
     loginBody?: Record<string, string>;
     prompt?: string;
     resource?: string;
+    /** Reuse the browser's SSO cookies across authorizations for one client. */
+    cookieJar?: CookieJar;
     /** What the consent page is told to show, when it differs from `scope`. */
     displayedScope?: string;
   }): Promise<{ code: string; verifier: string }> {
-    const jar = new CookieJar();
+    const jar = opts.cookieJar ?? new CookieJar();
     const { codeVerifier, codeChallenge } = pkce();
     const state = crypto.randomBytes(8).toString("hex");
 
@@ -497,7 +499,10 @@ describe("oidc-route: unified MCP + identity provider", () => {
     if (opts.prompt) authUrl.searchParams.set("prompt", opts.prompt);
     if (opts.resource) authUrl.searchParams.set("resource", opts.resource);
 
-    const authRes = await fetch(authUrl, { redirect: "manual" });
+    const authRes = await fetch(authUrl, {
+      ...(opts.cookieJar ? { headers: { cookie: jar.header() } } : {}),
+      redirect: "manual",
+    });
     expect(authRes.status).toBe(303);
     jar.absorb(authRes);
     const consentUrl = new URL(authRes.headers.get("location")!);
@@ -551,6 +556,7 @@ describe("oidc-route: unified MCP + identity provider", () => {
       headers: { cookie: jar.header() },
       redirect: "manual",
     });
+    jar.absorb(resumeRes);
     expect(resumeRes.status).toBe(303);
     const finalLocation = new URL(resumeRes.headers.get("location")!);
     const callback =
@@ -2452,6 +2458,70 @@ describe("oidc-route: unified MCP + identity provider", () => {
     expect(refreshToken).toBeTruthy();
     expect((await refresh(clientId, refreshToken)).status).toBe(200);
   });
+
+  it.each<[boolean, string, boolean]>([
+    [true, "ledger.read ledger.write", false],
+    [false, "offline_access ledger.read ledger.write", true],
+    [false, "openid offline_access ledger.read ledger.write", true],
+    [true, "offline_access ledger.read ledger.write", true],
+    [true, "openid offline_access ledger.read ledger.write", true],
+  ])(
+    "completes same-client MCP scope upgrade (reuse browser session: %s, scopes: %s)",
+    async (reuseBrowserSession, scope, expectsRefresh) => {
+      const { clientId, redirectUri } = await registerMcpClient();
+      const resource = `${ISSUER}/api-gateway/mcp`;
+      const cookieJar = new CookieJar();
+      const minimal = await driveAuthorizationCode({
+        clientId,
+        clientAuth: "",
+        scope: "ledger.read ledger.write",
+        redirectUri,
+        resource,
+        loginBody: { ledgerId: "ada/personal" },
+        cookieJar,
+      });
+      const minimalTokens = await exchangeToken({
+        ...minimal,
+        clientId,
+        redirectUri,
+        resource,
+      });
+      expect(minimalTokens.access_token).toEqual(expect.any(String));
+      expect(minimalTokens.refresh_token).toBeUndefined();
+      expect(cookieJar.header()).toContain("_session=");
+
+      const upgraded = await driveAuthorizationCode({
+        clientId,
+        clientAuth: "",
+        scope,
+        redirectUri,
+        resource,
+        loginBody: { ledgerId: "ada/personal" },
+        cookieJar: reuseBrowserSession ? cookieJar : new CookieJar(),
+      });
+      const upgradedTokens = await exchangeToken({
+        ...upgraded,
+        clientId,
+        redirectUri,
+        resource,
+      });
+      expect(upgradedTokens.access_token).toEqual(expect.any(String));
+      const claims = decodeJwt(upgradedTokens.access_token as string);
+      expect(claims.ledger_id).toBe("ada/personal");
+      expect(String(claims.scope).split(" ")).toEqual(
+        expect.arrayContaining(["ledger.read", "ledger.write"]),
+      );
+      if (expectsRefresh) {
+        expect(upgradedTokens.refresh_token).toEqual(expect.any(String));
+        expect(
+          (await refresh(clientId, upgradedTokens.refresh_token as string))
+            .status,
+        ).toBe(200);
+      } else {
+        expect(upgradedTokens.refresh_token).toBeUndefined();
+      }
+    },
+  );
 
   it("leaves a silent prompt=none request silent rather than forcing consent", async () => {
     const { clientId, redirectUri } = await registerMcpClient();
