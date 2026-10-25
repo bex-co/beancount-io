@@ -123,6 +123,17 @@ describe("BQL charts of very small values", () => {
     expect(chart.plotted).toEqual([1e-24, 1]);
   });
 
+  it("parses a 150,000-point result without throwing (w4/1076)", () => {
+    const rows: [string, string][] = Array.from({ length: 150_000 }, (_, i) => [
+      `row-${i}`,
+      i % 2 === 0 ? "1" : "-1",
+    ]);
+    const config = parseQueryChart(table("str", rows));
+    expect(config).not.toBeNull();
+    const series = (config!.option.series as { data: number[] }[])[0];
+    expect(series.data).toHaveLength(150_000);
+  });
+
   it("keeps each repeated label's own exact value in the tooltip", () => {
     const chart = draw(
       table("str", [

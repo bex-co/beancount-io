@@ -120,7 +120,13 @@ const SMALLEST_UNSCALED = 1e-15;
  * a flat line (w4/1049). Such a series is plotted scaled by `10^-exponent`.
  */
 function displayExponent(values: readonly number[]): number {
-  const largest = Math.max(0, ...values.map(Math.abs));
+  // A supported result can hold more points than the runtime accepts as
+  // spread arguments; fold instead of expanding every point (w4/1076).
+  let largest = 0;
+  for (const value of values) {
+    const magnitude = Math.abs(value);
+    if (magnitude > largest) largest = magnitude;
+  }
   return largest > 0 && largest < SMALLEST_UNSCALED
     ? Math.floor(Math.log10(largest))
     : 0;
