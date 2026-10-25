@@ -109,6 +109,26 @@ describe("tiny and exponent quotes (w4/1003)", () => {
     ]);
   });
 
+  it("keeps constant tiny series' padded ticks distinct (w4/1066)", () => {
+    for (const constant of [1e-9, -1e-9]) {
+      const values = [constant, constant, constant];
+      // The chart pads a constant positive series to 80–110% (mirrored for
+      // negatives); neighbouring padded ticks must not collapse.
+      const ticks = [0.8, 0.85, 0.9, 0.95, 1, 1.05, 1.1].map(
+        (factor) => constant * factor,
+      );
+      const shown = ticks.map((tick) => formatCommodityAxisTick(tick, values));
+      expect(new Set(shown).size).toBe(shown.length);
+      expect(shown).not.toContain("0");
+    }
+    // Half-step crossing a power of ten keeps its resolution.
+    const near = [9.5e-10, 9.5e-10];
+    const crossing = [9.5e-10, 9.75e-10, 1e-9, 1.025e-9].map((tick) =>
+      formatCommodityAxisTick(tick, near),
+    );
+    expect(new Set(crossing).size).toBe(crossing.length);
+  });
+
   it("keeps a constant tiny price nonzero", () => {
     const values = [2e-9, 2e-9];
     expect(formatCommodityAxisTick(2e-9, values)).toBe("2e-9");

@@ -29,7 +29,10 @@ export function commodityAxisDecimals(values: number[]): number {
   if (range === 0) {
     const abs = Math.abs(min);
     if (abs === 0 || abs >= 1) return 2;
-    return Math.max(2, Math.ceil(-Math.log10(abs)) + 1);
+    // The chart pads a constant series (80–110%), so its ticks step by a
+    // fraction of the quote itself; one extra digit beyond the quote's own
+    // scale would collapse neighbouring padded ticks (w4/1066).
+    return Math.max(2, Math.ceil(-Math.log10(abs)) + 2);
   }
 
   return Math.max(2, Math.ceil(-Math.log10(range / 10)));
@@ -48,9 +51,8 @@ export function formatCommodityAxisTick(
   const decimals = commodityAxisDecimals(values);
   if (decimals <= FIXED_AXIS_DECIMALS) return value.toFixed(decimals);
   if (value === 0) return "0";
-  const magnitude = Math.max(
-    ...values.filter((each) => Number.isFinite(each)).map(Math.abs),
-  );
-  const digits = decimals + Math.floor(Math.log10(magnitude)) + 1;
+  // Significant digits at this tick's own magnitude, so a padded tick that
+  // crosses a power of ten keeps the same resolution (w4/1066).
+  const digits = decimals + Math.floor(Math.log10(Math.abs(value))) + 1;
   return String(Number(value.toPrecision(Math.min(Math.max(digits, 1), 15))));
 }
