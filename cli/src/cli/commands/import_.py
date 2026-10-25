@@ -216,7 +216,17 @@ def _unread_header_hint(
     # header the delimiter did not split, read as "its columns" (w5/627).
     single = headers[0].lstrip("\ufeff") if headers and len(headers) == 1 else None
     if single is not None and _NOT_CSV.match(single):
-        kind = "a QIF" if single.startswith("!") else "an OFX"
+        if single.startswith("!"):
+            kind = "a QIF"
+        elif _looks_like_ofx(source):
+            return (
+                f"{source.name} looks like an OFX file, not a CSV export, so it has no columns to map: "
+                "import it without --csv."
+            )
+        else:
+            # XML, but without OFX markers anywhere in the head: Camt.053
+            # and friends are not OFX content, so the OFX remedy would loop.
+            kind = "an XML"
         return (
             f"{source.name} looks like {kind} file, not a CSV export, so it has no columns to map: "
             "use a Python importer that reads it."
@@ -259,7 +269,16 @@ def _refuse_not_csv(source: Path) -> None:
     except OSError:
         return
     kind = _not_csv_kind(first.decode("utf-8", errors="replace"))
+    if kind == "an OFX" and _looks_like_ofx(source):
+        raise UsageError(
+            f"{source.name} looks like an OFX file, not a CSV export, so it has no columns to map: "
+            "import it without --csv."
+        )
     if kind is not None:
+        if kind == "an OFX":
+            # XML, but without OFX markers anywhere in the head: Camt.053
+            # and friends are not OFX content, so the OFX remedy would loop.
+            kind = "an XML"
         raise UsageError(
             f"{source.name} looks like {kind} file, not a CSV export, so it has no columns to map: "
             "use a Python importer that reads it."
@@ -269,6 +288,40 @@ def _refuse_not_csv(source: Path) -> None:
 #: The first line of an export that is not CSV at all: QIF's `!Type:`, OFX 1's
 #: SGML header, OFX 2's XML declaration.
 _NOT_CSV = re.compile(r"!(?:Type|Account|Option)\b|OFXHEADER:|<\?xml|<OFX>", re.IGNORECASE)
+
+#: OFX by extension, and OFX by content: the SGML header block or the root
+#: tag. A bare XML declaration is not enough — Camt.053 is XML too.
+_OFX_SUFFIXES = (".ofx", ".qfx")
+_OFX_MARKERS = re.compile(rb"OFXHEADER:|<OFX[\s>]", re.IGNORECASE)
+
+#: Account ids as the engine's multi-account scan reads them: upstream
+#: `find_acctids` over the raw text, case-sensitive, whitespace stripped by
+#: the caller. The memory key matches the engine's view on purpose.
+_ACCTID = re.compile(rb"<ACCTID>([^<]*)")
+
+
+def _looks_like_ofx(source: Path) -> bool:
+    """Whether the export is OFX by its suffix or by its opening bytes."""
+    if source.suffix.lower() in _OFX_SUFFIXES:
+        return True
+    try:
+        with source.open("rb") as stream:
+            head = stream.read(4096)
+    except OSError:
+        return False
+    return _OFX_MARKERS.search(head) is not None
+
+
+def _ofx_acctids(source: Path) -> list[str]:
+    """The file's distinct account ids, in order, for the memory key."""
+    try:
+        raw = source.read_bytes()
+    except OSError:
+        return []
+    return list(
+        dict.fromkeys(match.group(1).decode("ascii", errors="replace").strip() for match in _ACCTID.finditer(raw))
+    )
+
 
 _SEPARATOR_NAMES = {",": "comma", ";": "semicolon", "\t": "tab", "|": "pipe"}
 
@@ -457,6 +510,32 @@ def _stored_sources(record: Path) -> list[dict[str, Any]]:
     ]
 
 
+def _ofx_record(file: Path, *, reading: bool = False) -> Path:
+    return _record(file, "ofx-", reading=reading)
+
+
+def _stored_ofx_accounts(record: Path) -> list[dict[str, Any]]:
+    """The well-formed entries of a remembered-OFX record.
+
+    An entry that is not an object, or whose account id or account is not
+    a string, reads as no memory for that part, so stale local state never
+    blocks an import. The next successful run rewrites the record from the
+    surviving entries.
+    """
+    try:
+        data = json.loads(record.read_text())
+    except (OSError, ValueError, RecursionError):
+        return []
+    accounts = data.get("accounts") if isinstance(data, dict) else None
+    if not isinstance(accounts, list):
+        return []
+    return [
+        entry
+        for entry in accounts
+        if isinstance(entry, dict) and isinstance(entry.get("acctid"), str) and isinstance(entry.get("account"), str)
+    ]
+
+
 def _source_sha256(source: Path) -> str | None:
     try:
         return hashlib.sha256(source.read_bytes()).hexdigest()
@@ -521,6 +600,17 @@ def _find_csv_entry(file: Path, headers: list[str] | None, account: str) -> dict
             and _same_account(entry.get("account"), account)
             and isinstance(entry.get("mapping"), str)
         ):
+            return entry
+    return None
+
+
+def _find_ofx_entry(file: Path, acctid: str) -> dict[str, Any] | None:
+    """The remembered entry for an OFX account id, without side effects."""
+    record = _ofx_record(file, reading=True)
+    if not _is_record(record):
+        return None
+    for entry in _stored_ofx_accounts(record):
+        if entry.get("acctid") == acctid:
             return entry
     return None
 
@@ -649,6 +739,49 @@ def _recall_csv(
     return entry
 
 
+def _recall_ofx(file: Path, source: Path, account: str | None = None, *, notes: list[str]) -> dict[str, Any] | None:
+    """A remembered `--ofx` run for this root ledger and OFX account id, if any.
+
+    Returns the stored entry only when the file names exactly one account id
+    and the memory holds it — and, when `--account` was typed, only when it
+    names the same account. A typed account that differs recalls nothing: it
+    wins for this run and the memory is updated after. An unreadable
+    remembered `--rules` path degrades to an unruled import, announced in
+    `notes`, as the CSV recall does.
+    """
+    from cli.csv_mapper import load_rules
+
+    acctids = [acctid for acctid in _ofx_acctids(source) if acctid]
+    if len(acctids) != 1:
+        return None
+    entry = _find_ofx_entry(file, acctids[0])
+    if entry is None:
+        return None
+    if account is not None and not _same_account(entry.get("account"), account):
+        return None
+    rules_path = entry.get("rules")
+    if isinstance(rules_path, str):
+        if is_descriptor_path(rules_path):
+            notes.append(
+                f"Remembered --rules {shlex.quote(rules_path)} names a file descriptor, not a file; "
+                "importing without rules. Re-pass --rules to restore it."
+            )
+            entry["rules"] = None
+            return entry
+        try:
+            remembered = Path(rules_path)
+            if remembered.exists() and not remembered.is_file() and not remembered.is_dir():
+                raise UsageError(output.not_a_file(remembered))
+            load_rules(remembered)
+        except UsageError as exc:
+            notes.append(
+                f"Remembered --rules {shlex.quote(rules_path)} cannot be used ({exc}); importing without rules. "
+                "Re-pass --rules to restore it."
+            )
+            entry["rules"] = None
+    return entry
+
+
 def _reads_header(source: Path, delimiter: str, headers: Any, skip: int = 0) -> bool:
     """Whether a remembered delimiter still reads this file's header as the remembered one."""
     from cli.csv_mapper import header_signature, probe_decoding, read_header
@@ -736,9 +869,38 @@ def _remember_csv(
         return False
 
 
+def _remember_ofx(file: Path, spec: dict[str, Any], notes: list[str]) -> bool:
+    """Persist a resolved OFX account id, replacing the entry for its id.
+
+    A failed save is named in `notes` as well as on stderr, so the JSON
+    envelope of the import that succeeded says its settings were not kept.
+    """
+    acctid = spec.get("acctid")
+    if not acctid:
+        return False
+    record = _ofx_record(file)
+    try:
+        record.parent.mkdir(parents=True, exist_ok=True)
+        # Imports run side by side each add an entry here; without the lock
+        # the later replace drops the earlier one (w5/214). The lock file
+        # sits beside the directory, which holds nothing but records.
+        with exclusive_lock(record.parent.with_name(f"{record.parent.name}.lock")):
+            stored = _stored_ofx_accounts(_ofx_record(file, reading=True))
+            accounts = [entry for entry in stored if entry.get("acctid") != acctid]
+            atomic_write(record, json.dumps({"accounts": [*accounts, spec]}))
+        return True
+    except OSError as exc:
+        notes.append(f"Could not remember the OFX account: {exc}. Pass --account on the next import.")
+        output.note(notes[-1])
+        return False
+
+
 def import_entries(
     source: Annotated[
-        Path, typer.Argument(help="Bank/card export: a CSV for --csv, or a file a configured importer recognizes")
+        Path,
+        typer.Argument(
+            help="Bank/card export: a CSV for --csv, OFX/QFX for --ofx, or a file a configured importer recognizes"
+        ),
     ],
     csv_mapping: Annotated[
         str | None,
@@ -749,7 +911,13 @@ def import_entries(
             "leading rows), or 'auto' to read the header row; no Python importer needed",
         ),
     ] = None,
-    csv_account: Annotated[str | None, typer.Option("--account", help="Source account for --csv rows")] = None,
+    csv_account: Annotated[str | None, typer.Option("--account", help="Source account for --csv or --ofx rows")] = None,
+    ofx: Annotated[
+        bool,
+        typer.Option(
+            "--ofx", help="OFX/QFX bank export; detected from the file when omitted, no Python importer needed"
+        ),
+    ] = False,
     date_format: Annotated[
         str | None,
         typer.Option("--date-format", help="strptime date format for --csv; inferred from the file if unset"),
@@ -763,13 +931,13 @@ def import_entries(
     ] = None,
     rules_file: Annotated[
         Path | None,
-        typer.Option("--rules", click_type=NonEmptyPath(), help="TOML categorization rules for --csv rows"),
+        typer.Option("--rules", click_type=NonEmptyPath(), help="TOML categorization rules for --csv or --ofx rows"),
     ] = None,
     default_account: Annotated[
         str | None,
         typer.Option(
             "--default-account",
-            help="Counter account for --csv rows no rule matches "
+            help="Counter account for --csv or --ofx rows no rule matches "
             "[default: Expenses:Uncategorized, under the ledger's own expenses root]",
         ),
     ] = None,
@@ -806,10 +974,12 @@ def import_entries(
     """Preview bank-export entries; write with --apply.
 
     A CSV needs no Python importer: name its columns with --csv, or let bea
-    read the header row, and categorize with --rules. Other formats go through
-    a configured importer's Beangulp identify/account/extract interface.
-    Possible duplicates require an explicit --duplicates skip/include decision
-    before applying.
+    read the header row, and categorize with --rules. An OFX/QFX export needs
+    none either: bea detects it and reads its statements, with --account
+    naming the export's account. Other formats go through a configured
+    importer's Beangulp identify/account/extract interface. Possible
+    duplicates require an explicit --duplicates skip/include decision before
+    applying.
     """
     from cli.csv_mapper import (
         detect_delimiter,
@@ -849,6 +1019,8 @@ def import_entries(
     csv_skip: int | None = None
     if csv_mapping is not None and config is not None:
         raise UsageError("Pass --csv or --config, not both.")
+    if ofx and (csv_mapping is not None or config is not None):
+        raise UsageError("Pass only one of --csv, --config, or --ofx.")
     if is_descriptor_path(source) and (held_descriptor(source) is None or source.is_file()):
         # The export is read here and by the engine child through one shared
         # offset, so a descriptor cannot pass through like --rules does; it
@@ -898,6 +1070,11 @@ def import_entries(
     csv_request: str | None = csv_mapping
     config_to_remember: Path | None = None
     csv_to_remember: dict[str, Any] | None = None
+    ofx_to_remember: dict[str, Any] | None = None
+    ofx_mode = ofx
+    ofx_origin = "--ofx"
+    ofx_acctid: str | None = None
+    ofx_recalled: dict[str, Any] | None = None
     # The sign this run chose for its own file, applied to the stored entry
     # under the record lock: the map in `csv_to_remember` predates it (w5/886).
     sign_change: tuple[Path, bool] | None = None
@@ -1010,6 +1187,32 @@ def import_entries(
             exc.details = list(dict.fromkeys([*notes, *exc.details]))
             raise
 
+    def ofx_notes(*, refusal: bool = False) -> list[str]:
+        """Resolved OFX settings for output; only recalled or detected settings enrich refusals."""
+        if refusal and ofx_origin == "--ofx":
+            return []
+        notes = [*config_notes]
+        if remembered_run:
+            settings = ["--ofx"]
+            if csv_run_account is not None:
+                settings.append(shlex.join(["--account", csv_run_account]))
+            if csv_rules_arg is not None and not rules_is_descriptor:
+                settings.append(shlex.join(["--rules", str(csv_rules_arg)]))
+            if default_account is not None:
+                settings.append(f"--default-account {default_account}")
+            if recalled_source is not None and recalled_source != source.name:
+                notes.append(
+                    f"Using settings remembered from {recalled_source} for {source.name}: {' '.join(settings)}."
+                )
+            else:
+                notes.append(f"Using remembered settings for {source.name}: {' '.join(settings)}.")
+        elif ofx_origin == "detected --ofx":
+            notes.append(f"Detected {source.name} as an OFX export; parsed with beangulp's OFX importer.")
+        else:
+            notes.append("Using OFX import (--ofx).")
+        notes.extend(recall_notes)
+        return notes
+
     if csv_request is not None:
         # `--csv auto` listed a QIF's `!Type:Bank` as "its columns", and a
         # mapping said the file "lacks" them; no mapping can read it (w5/846).
@@ -1078,7 +1281,58 @@ def import_entries(
                     if peek.skip is not None and csv_request is not None:
                         csv_request = f"{csv_request},skip={peek.skip}"
                     csv_origin = "inferred --csv"
-    if csv_request is None and config is None:
+    if not ofx_mode and csv_mapping is None and config is None and _looks_like_ofx(source):
+        # An explicitly configured ledger keeps its Python importers for OFX
+        # files too: only an unconfigured one takes the no-code path
+        # unasked. Explicit --ofx always wins.
+        if _config_available(file, config_notes) is None:
+            ofx_mode = True
+            ofx_origin = "detected --ofx"
+    if ofx_mode:
+        found_acctids = [acctid for acctid in _ofx_acctids(source) if acctid]
+        ofx_acctid = found_acctids[0] if len(found_acctids) == 1 else None
+        if not ofx:
+            ofx_recalled = _recall_ofx(file, source, csv_account, notes=recall_notes)
+            if ofx_recalled is not None:
+                if recall_notes:
+                    ofx_to_remember = ofx_recalled
+                csv_run_account = csv_account or ofx_recalled["account"]
+                remembered_run = True
+                ofx_origin = "remembered --ofx"
+                if isinstance(ofx_recalled.get("source"), str):
+                    recalled_source = ofx_recalled["source"]
+                if csv_rules_arg is None and isinstance(ofx_recalled.get("rules"), str):
+                    csv_rules_arg = Path(ofx_recalled["rules"])
+                if default_account is None and isinstance(ofx_recalled.get("default_account"), str):
+                    default_account = ofx_recalled["default_account"]
+                # An option typed on a recalled run wins for this run, so it
+                # must also be what the next flag-free run replays (w5/073).
+                typed_ofx = {
+                    "rules": (
+                        "--rules",
+                        str(csv_rules_arg) if rules_file is not None and not rules_is_descriptor else None,
+                    ),
+                    "default_account": ("--default-account", chosen_default_account),
+                }
+                ofx_updates = {
+                    key: (flag, value)
+                    for key, (flag, value) in typed_ofx.items()
+                    if value is not None and ofx_recalled.get(key) != value
+                }
+                if ofx_updates:
+                    changes = []
+                    for key, (flag, value) in ofx_updates.items():
+                        change = f"{flag} {shlex.quote(value)}"
+                        prior_value = ofx_recalled.get(key)
+                        if isinstance(prior_value, str):
+                            change += f" (was {shlex.quote(prior_value)})"
+                        changes.append(change)
+                    ofx_to_remember = {**ofx_recalled, **{key: value for key, (_, value) in ofx_updates.items()}}
+                    discarded_note = (
+                        f"Updated remembered settings for {source.name}: {', '.join(changes)}. "
+                        "A flag-free run of this bank account now uses them."
+                    )
+    if not ofx_mode and csv_request is None and config is None:
         remembered = _recall_csv(file, source, csv_account, notes=recall_notes, skip=csv_skip)
         if remembered is not None:
             if recall_notes:
@@ -1464,6 +1718,91 @@ def import_entries(
                 **_signed(_sign_ledger_files(prior), source, ledger=mapping.sign == "ledger"),
             }
             sign_change = (source, mapping.sign == "ledger")
+    elif ofx_mode:
+        if importer_name is not None:
+            # The mirror of the CSV refusal above: the built-in OFX importer
+            # has no named importers, so the name would be dropped and the
+            # rows written (w5/240).
+            raise UsageError(
+                f"--importer selects a Python importer by name, but this import reads {source.name} with "
+                "the built-in OFX importer, which has no named importers. Remove --importer, or choose a "
+                "Python importer with --config FILE.",
+                details=ofx_notes(refusal=True),
+            )
+        csv_only = [
+            flag for flag, value in (("--date-format", date_format), ("--delimiter", delimiter)) if value is not None
+        ]
+        if csv_only:
+            applies = "applies" if len(csv_only) == 1 else "apply"
+            raise UsageError(
+                f"{', '.join(csv_only)} {applies} only to --csv rows, but this import reads {source.name} as "
+                f"OFX. Remove {'it' if len(csv_only) == 1 else 'them'} to import the OFX file.",
+                details=ofx_notes(refusal=True),
+            )
+        if csv_run_account is None:
+            if ofx_origin == "detected --ofx":
+                raise UsageError(
+                    f"Detected {source.name} as an OFX export, but not which account the export belongs to. "
+                    "Add --account ACCOUNT, naming the account it belongs to, or choose a Python importer with "
+                    "--config FILE.",
+                    details=ofx_notes(refusal=True),
+                )
+            raise UsageError(
+                # No example account: one that was never typed sent pasted
+                # savings rows into checking (w5/470, w5/612).
+                "--ofx needs --account ACCOUNT, naming the account the export belongs to.",
+                details=ofx_notes(refusal=True),
+            )
+        launch.require_feature("beangulp")
+        frontend_notes = ofx_notes()
+        if rules_is_descriptor:
+            frontend_notes.append(
+                f"--rules {csv_rules_arg} is a file descriptor; it applies to this import only and is not "
+                "remembered. The remembered rules, if any, still apply to later imports."
+            )
+        for line in frontend_notes:
+            output.note(line)
+        argv += ["--ofx", "--account", csv_run_account, "--config-source", ofx_origin]
+        if default_account is not None:
+            # Unset, the engine derives it from the ledger's expenses root,
+            # which only the loaded options can name.
+            argv += ["--default-account", default_account]
+        if csv_rules_arg is not None:
+            argv += ["--rules", str(csv_rules_arg)]
+        if not remembered_run:
+            prior = _find_ofx_entry(file, ofx_acctid) if ofx_acctid is not None else None
+            if prior is not None:
+                ofx_discarded: list[str] = []
+                if isinstance(prior.get("rules"), str) and csv_rules_arg is None:
+                    ofx_discarded.append(shlex.join(["--rules", prior["rules"]]))
+                if (
+                    isinstance(prior.get("default_account"), str)
+                    and chosen_default_account is None
+                    # Records written before the default followed the
+                    # ledger's root stored the built-in name itself.
+                    and prior["default_account"] != "Expenses:Uncategorized"
+                ):
+                    ofx_discarded.append(f"--default-account {prior['default_account']}")
+                if ofx_discarded:
+                    discarded_note = (
+                        f"Discarded remembered settings for {source.name}: "
+                        f"{', '.join(ofx_discarded)}. Re-pass them to keep them across refreshes."
+                    )
+            if rules_is_descriptor:
+                # A descriptor cannot be replayed, so the prior entry's
+                # rules carry forward instead of being wiped (w5/792).
+                carried = prior.get("rules") if prior is not None else None
+                stored_rules = carried if isinstance(carried, str) and not is_descriptor_path(carried) else None
+            else:
+                stored_rules = str(csv_rules_arg) if csv_rules_arg is not None else None
+            if ofx_acctid is not None:
+                ofx_to_remember = {
+                    "acctid": ofx_acctid,
+                    "account": csv_run_account,
+                    "rules": stored_rules,
+                    "default_account": default_account,
+                    "source": source.name,
+                }
     else:
         config_path, config_source = _config_path(
             file,
@@ -1492,12 +1831,22 @@ def import_entries(
         ]
         if ignored:
             applies = "applies" if len(ignored) == 1 else "apply"
-            instead = "replace --config with --csv auto" if config is not None else "add --csv auto"
+            if _looks_like_ofx(source):
+                instead = (
+                    "replace --config with --ofx to import it without an importer"
+                    if config is not None
+                    else "pass --ofx to import it without an importer"
+                )
+            else:
+                instead = (
+                    f"replace --config with --csv auto to read {source.name} by its header row"
+                    if config is not None
+                    else f"add --csv auto to read {source.name} by its header row"
+                )
             raise UsageError(
-                f"{', '.join(ignored)} {applies} only to --csv rows, but this import uses the Python importers "
-                f"from {config_path} ({config_source}), which choose the account and categories themselves. "
-                f"Remove {'it' if len(ignored) == 1 else 'them'} to use the importer, or {instead} to read "
-                f"{source.name} by its header row.",
+                f"{', '.join(ignored)} {applies} only to --csv or --ofx rows, but this import uses the Python "
+                f"importers from {config_path} ({config_source}), which choose the account and categories "
+                f"themselves. Remove {'it' if len(ignored) == 1 else 'them'} to use the importer, or {instead}.",
                 details=config_notes,
             )
         config_to_remember = config_path
@@ -1508,8 +1857,25 @@ def import_entries(
         if importer_name is not None:
             argv += ["--importer", importer_name]
 
-    json_remembered = (
-        {
+    if remembered_run and ofx_mode:
+        json_remembered: dict[str, Any] | None = {
+            "mapping": None,
+            "source": recalled_source,
+            "account": csv_run_account,
+            "date_format": None,
+            "delimiter": None,
+            "encoding": None,
+            "decimal": None,
+            "skip": None,
+            "rules": (
+                (ofx_recalled.get("rules") if isinstance(ofx_recalled, dict) else None)
+                if rules_is_descriptor
+                else (str(csv_rules_arg) if csv_rules_arg is not None else None)
+            ),
+            "default_account": default_account,
+        }
+    elif remembered_run:
+        json_remembered = {
             "mapping": csv_request,
             "source": recalled_source,
             "account": csv_run_account,
@@ -1525,9 +1891,8 @@ def import_entries(
             ),
             "default_account": default_account,
         }
-        if remembered_run
-        else None
-    )
+    else:
+        json_remembered = None
     try:
         preview = launch.helper_json(argv, writes="--apply" in argv, pass_fds=sorted(set(descriptor_fds)))
     except BeaError as exc:
@@ -1559,13 +1924,14 @@ def import_entries(
     # Only a successful preview/apply commits settings. A rejected apply may
     # carry a preview in error.result, but must preserve the previous memory.
     if memory_note is not None:
-        csv_to_remember = config_to_remember = None
+        csv_to_remember = config_to_remember = ofx_to_remember = None
     # The engine compares NFC account names. Match its spelling both when
     # rejecting unopened settings and when persisting a valid mapping (w5/714).
-    if csv_to_remember is not None:
+    pending_remember = csv_to_remember if csv_to_remember is not None else ofx_to_remember
+    if pending_remember is not None:
         for key in ("account", "default_account"):
-            if isinstance(account := csv_to_remember.get(key), str):
-                csv_to_remember[key] = unicodedata.normalize("NFC", account)
+            if isinstance(account := pending_remember.get(key), str):
+                pending_remember[key] = unicodedata.normalize("NFC", account)
     unopened = {
         unicodedata.normalize("NFC", account)
         for account in preview.get("unopened_accounts") or []
@@ -1573,14 +1939,14 @@ def import_entries(
     }
     mistaken = [
         account
-        for account in ((csv_to_remember or {}).get("account"), (csv_to_remember or {}).get("default_account"))
+        for account in ((pending_remember or {}).get("account"), (pending_remember or {}).get("default_account"))
         if isinstance(account, str) and account in unopened
     ]
     if mistaken:
         # A preview with a mistyped source or default account would otherwise
         # register it beside the right one, and every later flag-free import of
         # the header refuses to choose between them (w5/452).
-        csv_to_remember = None
+        csv_to_remember = ofx_to_remember = None
         not_remembered = (
             f"Not remembering these settings: {', '.join(mistaken)} "
             f"{'is' if len(mistaken) == 1 else 'are'} not open in this ledger."
@@ -1590,6 +1956,13 @@ def import_entries(
     if (
         csv_to_remember is not None
         and _remember_csv(file, csv_to_remember, frontend_notes, sign_change=sign_change)
+        and discarded_note is not None
+    ):
+        frontend_notes.append(discarded_note)
+        output.note(discarded_note)
+    if (
+        ofx_to_remember is not None
+        and _remember_ofx(file, ofx_to_remember, frontend_notes)
         and discarded_note is not None
     ):
         frontend_notes.append(discarded_note)
@@ -1633,7 +2006,7 @@ def import_entries(
             summary += f", {preview['invalid']} invalid"
         typer.echo(summary)
         headers = ["ROW", "STATUS", "DATE", "PAYEE / NARRATION", "SOURCE AMOUNT", "ID"]
-        if csv_mode:
+        if csv_mode or ofx_mode:
             headers.append("RULE")
         rows = preview["rows"]
         output.table(
@@ -1646,7 +2019,7 @@ def import_entries(
                     " / ".join(v for v in (row["payee"], row["narration"]) if v),
                     row["amount"],
                     row.get("id_source") or "",
-                    *([row.get("rule") or ""] if csv_mode else []),
+                    *([row.get("rule") or ""] if csv_mode or ofx_mode else []),
                 ]
                 for row in rows
             ],

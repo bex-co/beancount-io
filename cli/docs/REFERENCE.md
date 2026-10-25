@@ -99,16 +99,17 @@ Usage: bea import [OPTIONS] {source}
 
 | Argument | Type | Required | Help |
 | --- | --- | --- | --- |
-| `source` | path | yes | Bank/card export: a CSV for --csv, or a file a configured importer recognizes |
+| `source` | path | yes | Bank/card export: a CSV for --csv, OFX/QFX for --ofx, or a file a configured importer recognizes |
 
 | Option | Type | Default | Help |
 | --- | --- | --- | --- |
 | `--csv` | str |  | Column mapping (date=Date, amount=Amount, narration=Description, ...; delimiter=';' overrides detection, encoding=cp1252 overrides UTF-8, decimal=comma\|point forces the convention, skip=2 skips leading rows), or 'auto' to read the header row; no Python importer needed |
-| `--account` | str |  | Source account for --csv rows |
+| `--account` | str |  | Source account for --csv or --ofx rows |
+| `--ofx` | flag |  | OFX/QFX bank export; detected from the file when omitted, no Python importer needed |
 | `--date-format` | str |  | strptime date format for --csv; inferred from the file if unset |
 | `--delimiter` | str |  | CSV field delimiter for --csv: ',', ';', '\|', or 'tab' (detected from the header when omitted) |
-| `--rules` | path |  | TOML categorization rules for --csv rows |
-| `--default-account` | str |  | Counter account for --csv rows no rule matches [default: Expenses:Uncategorized, under the ledger's own expenses root] |
+| `--rules` | path |  | TOML categorization rules for --csv or --ofx rows |
+| `--default-account` | str |  | Counter account for --csv or --ofx rows no rule matches [default: Expenses:Uncategorized, under the ledger's own expenses root] |
 | `--config` | path |  | Python CONFIG file; defaults to the saved path or root-ledger/importers.py |
 | `--importer` | str |  | Importer name when multiple match |
 | `--apply` | flag |  | Validate and write the previewed entries |

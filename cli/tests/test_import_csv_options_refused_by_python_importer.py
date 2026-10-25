@@ -54,7 +54,7 @@ def test_the_default_importer_refuses_an_account_and_rules_it_would_drop(book: P
     result = _import(book, "--account", "Assets:Savings", "--rules", rules, "--apply")
 
     assert result.exit_code == 2, result.output
-    assert "--account, --rules apply only to --csv rows" in result.stderr
+    assert "--account, --rules apply only to --csv or --ofx rows" in result.stderr
     assert "importers.py (default beside root ledger)" in result.stderr
     assert "add --csv auto" in result.stderr
     assert result.stdout == ""
@@ -80,7 +80,7 @@ def test_each_column_mapping_option_is_named_in_preview_and_json(book: Path, fla
 
     assert result.exit_code == 2, result.output
     error = json.loads(result.stderr)["error"]
-    assert error["message"].startswith(f"{flag} applies only to --csv rows")
+    assert error["message"].startswith(f"{flag} applies only to --csv or --ofx rows")
     assert result.stdout == ""
     assert book.read_text() == LEDGER
 
@@ -96,7 +96,7 @@ def test_a_remembered_config_refuses_the_same_options(book: Path, tmp_path: Path
     result = _import(book, "--account", "Assets:Savings", "--apply")
 
     assert result.exit_code == 2, result.output
-    assert "--account applies only to --csv rows" in result.stderr
+    assert "--account applies only to --csv or --ofx rows" in result.stderr
     assert f"{config} (remembered)" in result.stderr
     assert book.read_text() == LEDGER
 
@@ -105,7 +105,7 @@ def test_an_explicit_config_refuses_them_and_names_the_csv_alternative(book: Pat
     result = _import(book, "--config", str(CONFIG), "--account", "Assets:Savings", "--apply")
 
     assert result.exit_code == 2, result.output
-    assert "--account applies only to --csv rows" in result.stderr
+    assert "--account applies only to --csv or --ofx rows" in result.stderr
     assert "replace --config with --csv auto" in result.stderr
     assert book.read_text() == LEDGER
 

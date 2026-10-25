@@ -26,8 +26,18 @@ runner = CliRunner()
             [],
             "bank.qif looks like a QIF file, not a CSV export",
         ),
-        ("bank.ofx", "OFXHEADER:100\nDATA:OFXSGML\n\n<OFX>\n</OFX>\n", [], "bank.ofx looks like an OFX file"),
-        ("bank2.ofx", '<?xml version="1.0"?>\n<OFX></OFX>\n', [], "bank2.ofx looks like an OFX file"),
+        (
+            "bank.ofx",
+            "OFXHEADER:100\nDATA:OFXSGML\n\n<OFX>\n</OFX>\n",
+            ["--csv", "auto"],
+            "bank.ofx looks like an OFX file, not a CSV export, so it has no columns to map: import it without --csv.",
+        ),
+        (
+            "bank2.ofx",
+            '<?xml version="1.0"?>\n<OFX></OFX>\n',
+            ["--csv", "auto"],
+            "bank2.ofx looks like an OFX file, not a CSV export, so it has no columns to map: import it without --csv.",
+        ),
         (
             "semi.csv",
             "When;What;HowMuch\n2026-02-01;A;-1,00\n",
