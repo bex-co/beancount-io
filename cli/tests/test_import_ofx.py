@@ -426,3 +426,189 @@ def test_ofx_flag_misuse_is_a_usage_error(tmp_path: Path, extra: list[str], mess
     source = _ofx(tmp_path, OFX_CHECKING_ROWS)
     error = _refusal(_plain_engine("import", "--file", str(ledger), "--source", str(source), "--ofx", *extra))
     assert error["message"] == message
+
+
+def test_ofx_missing_trnamt_names_the_row(
+    tmp_path: Path, ofx_engine: Callable[..., subprocess.CompletedProcess[str]]
+) -> None:
+    ledger = _ledger(tmp_path)
+    source = _ofx(tmp_path, OFX_CHECKING_ROWS)
+    source.write_text(source.read_text().replace("<TRNAMT>-42.50", "", 1))
+    error = _refusal(
+        ofx_engine("import", "--file", str(ledger), "--source", str(source), "--ofx", "--account", "Assets:Checking")
+    )
+    assert error["message"].endswith("OFX row 1 has no TRNAMT amount; cannot post it.")
+
+
+def test_ofx_unparseable_dtposted_names_the_row(
+    tmp_path: Path, ofx_engine: Callable[..., subprocess.CompletedProcess[str]]
+) -> None:
+    ledger = _ledger(tmp_path)
+    source = _ofx(tmp_path, OFX_CHECKING_ROWS)
+    source.write_text(source.read_text().replace("<DTPOSTED>20260805", "<DTPOSTED>not-a-date", 1))
+    error = _refusal(
+        ofx_engine("import", "--file", str(ledger), "--source", str(source), "--ofx", "--account", "Assets:Checking")
+    )
+    assert "OFX row 2 has a DTPOSTED beangulp cannot parse" in error["message"]
+
+
+def test_ofx_unparseable_trnamt_names_the_value(
+    tmp_path: Path, ofx_engine: Callable[..., subprocess.CompletedProcess[str]]
+) -> None:
+    ledger = _ledger(tmp_path)
+    source = _ofx(tmp_path, OFX_CHECKING_ROWS)
+    source.write_text(source.read_text().replace("<TRNAMT>1200.00", "<TRNAMT>lots", 1))
+    error = _refusal(
+        ofx_engine("import", "--file", str(ledger), "--source", str(source), "--ofx", "--account", "Assets:Checking")
+    )
+    assert error["message"].endswith("OFX row 2 has a TRNAMT beangulp cannot parse ('lots').")
+
+
+def test_ofx_unknown_charset_is_refused_not_guessed(
+    tmp_path: Path, ofx_engine: Callable[..., subprocess.CompletedProcess[str]]
+) -> None:
+    """A wrong charset guess would reword narrations and mint new hashes."""
+    ledger = _ledger(tmp_path)
+    source = _ofx(tmp_path, OFX_CHECKING_ROWS)
+    source.write_text(source.read_text().replace("CHARSET:1252", "CHARSET:EBCDIC-X", 1))
+    error = _refusal(
+        ofx_engine("import", "--file", str(ledger), "--source", str(source), "--ofx", "--account", "Assets:Checking")
+    )
+    assert error["message"].endswith("declares OFX CHARSET 'ebcdic-x', which bea cannot decode; re-export as UTF-8.")
+
+
+def test_ofx_undecodable_bytes_name_the_codec(
+    tmp_path: Path, ofx_engine: Callable[..., subprocess.CompletedProcess[str]]
+) -> None:
+    ledger = _ledger(tmp_path)
+    source = _ofx(tmp_path, OFX_CHECKING_ROWS)
+    raw = source.read_bytes().replace(b"CHARSET:1252", b"CHARSET:USASCII").replace(b"CARD PURCHASE", b"CARD \xfc")
+    source.write_bytes(raw)
+    error = _refusal(
+        ofx_engine("import", "--file", str(ledger), "--source", str(source), "--ofx", "--account", "Assets:Checking")
+    )
+    assert "cannot be decoded as ascii (OFX CHARSET usascii)" in error["message"]
+
+
+def test_ofx_latin_byte_decodes_per_the_header_charset(
+    tmp_path: Path, ofx_engine: Callable[..., subprocess.CompletedProcess[str]]
+) -> None:
+    """CHARSET:1252 reads 0xFC as ü; the locale never decides."""
+    ledger = _ledger(tmp_path)
+    source = _ofx(tmp_path, OFX_CHECKING_ROWS)
+    source.write_bytes(source.read_bytes().replace(b"CARD PURCHASE", b"CARD F\xfcr"))
+    preview = _answer(
+        ofx_engine("import", "--file", str(ledger), "--source", str(source), "--ofx", "--account", "Assets:Checking")
+    )
+    assert preview["rows"][0]["narration"] == "PEETS COFFEE / CARD F\xfcr"
+
+
+def test_ofx2_prolog_encoding_decodes_the_file(
+    tmp_path: Path, ofx_engine: Callable[..., subprocess.CompletedProcess[str]]
+) -> None:
+    ledger = _ledger(tmp_path)
+    source = tmp_path / "statement.ofx"
+    source.write_bytes(
+        b'<?xml version="1.0" encoding="WINDOWS-1252"?>\n'
+        b"<OFX><BANKMSGSRSV1><STMTTRNRS><TRNUID>1</TRNUID><STATUS><CODE>0</CODE><SEVERITY>INFO</SEVERITY></STATUS>"
+        b"<STMTRS><CURDEF>USD</CURDEF>"
+        b"<BANKACCTFROM><BANKID>111000025</BANKID><ACCTID>P-1</ACCTID><ACCTTYPE>CHECKING</ACCTTYPE></BANKACCTFROM>"
+        b"<BANKTRANLIST><DTSTART>20260801</DTSTART><DTEND>20260810</DTEND>"
+        b"<STMTTRN><TRNTYPE>DEBIT</TRNTYPE><DTPOSTED>20260803</DTPOSTED><TRNAMT>-5.00</TRNAMT>"
+        b"<FITID>P1</FITID><NAME>CAF\xc9</NAME></STMTTRN>"
+        b"</BANKTRANLIST></STMTRS></STMTTRNRS></BANKMSGSRSV1></OFX>\n"
+    )
+    preview = _answer(
+        ofx_engine("import", "--file", str(ledger), "--source", str(source), "--ofx", "--account", "Assets:Checking")
+    )
+    assert [row["status"] for row in preview["rows"]] == ["new"]
+    assert preview["rows"][0]["narration"] == "CAF\xc9"
+
+
+def test_ofx_invalid_curdef_is_refused(
+    tmp_path: Path, ofx_engine: Callable[..., subprocess.CompletedProcess[str]]
+) -> None:
+    ledger = _ledger(tmp_path)
+    source = _ofx(tmp_path, OFX_CHECKING_ROWS)
+    source.write_text(source.read_text().replace("<CURDEF>USD\n", "<CURDEF>US DOLLARS\n", 1))
+    error = _refusal(
+        ofx_engine("import", "--file", str(ledger), "--source", str(source), "--ofx", "--account", "Assets:Checking")
+    )
+    assert "statement currency" in error["message"]
+
+
+def test_ofx_statement_without_any_acctid_still_imports(
+    tmp_path: Path, ofx_engine: Callable[..., subprocess.CompletedProcess[str]]
+) -> None:
+    """Only several account ids refuse; none at all just imports."""
+    ledger = _ledger(tmp_path)
+    source = _ofx(tmp_path, OFX_CHECKING_ROWS)
+    source.write_text(source.read_text().replace("<ACCTID>CHK-9", "<ACCTIDX>CHK-9"))
+    preview = _answer(
+        ofx_engine("import", "--file", str(ledger), "--source", str(source), "--ofx", "--account", "Assets:Checking")
+    )
+    assert [row["status"] for row in preview["rows"]] == ["new", "new"]
+
+
+def test_ofx_many_missing_fitids_truncate_the_note(
+    tmp_path: Path, ofx_engine: Callable[..., subprocess.CompletedProcess[str]]
+) -> None:
+    ledger = _ledger(tmp_path)
+    rows = [
+        (kind, f"2026080{day}", amount, None, f"EXAMPLE MERCHANT {day}", f"MEMO {day}")
+        for day, (kind, amount) in enumerate(
+            [
+                ("DEBIT", "-1.00"),
+                ("DEBIT", "-2.00"),
+                ("DEBIT", "-3.00"),
+                ("DEBIT", "-4.00"),
+                ("DEBIT", "-5.00"),
+                ("DEBIT", "-6.00"),
+            ],
+            start=1,
+        )
+    ]
+    source = _ofx(tmp_path, rows)
+    preview = _answer(
+        ofx_engine("import", "--file", str(ledger), "--source", str(source), "--ofx", "--account", "Assets:Checking")
+    )
+    assert [row["status"] for row in preview["rows"]] == ["new"] * 6
+    assert preview["notes"] == [
+        "6 OFX row(s) carry no FITID (row 1, row 2, row 3, row 4, row 5; …), so their import-ids are "
+        "content hashes: a reworded memo re-imports them as new rows."
+    ]
+
+
+def test_ofx_framed_narration_hashes_stably(
+    tmp_path: Path, ofx_engine: Callable[..., subprocess.CompletedProcess[str]]
+) -> None:
+    """A `|` in the narration takes the framed hash path, still under `ofx:`."""
+    ledger = _ledger(tmp_path)
+    rows = [("DEBIT", "20260803", "-42.50", None, "PEETS COFFEE", "CARD A|B")]
+    source = _ofx(tmp_path, rows)
+    preview = _answer(
+        ofx_engine("import", "--file", str(ledger), "--source", str(source), "--ofx", "--account", "Assets:Checking")
+    )
+    assert preview["rows"][0]["id_source"] == "hash"
+    assert 'import-id: "ofx:sha256:' in preview["rows"][0]["entry"]
+    _answer(
+        ofx_engine(
+            "import", "--file", str(ledger), "--source", str(source), "--ofx", "--account", "Assets:Checking", "--apply"
+        )
+    )
+    again = _answer(
+        ofx_engine("import", "--file", str(ledger), "--source", str(source), "--ofx", "--account", "Assets:Checking")
+    )
+    assert [row["status"] for row in again["rows"]] == ["duplicate"]
+
+
+def test_ofx_empty_statement_has_no_brokerage_hint(
+    tmp_path: Path, ofx_engine: Callable[..., subprocess.CompletedProcess[str]]
+) -> None:
+    ledger = _ledger(tmp_path)
+    source = _ofx(tmp_path, [])
+    error = _refusal(
+        ofx_engine("import", "--file", str(ledger), "--source", str(source), "--ofx", "--account", "Assets:Checking")
+    )
+    assert error["message"].endswith("holds no bank or credit-card transactions to import.")
+    assert "Brokerage" not in error["message"]

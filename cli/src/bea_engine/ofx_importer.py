@@ -228,7 +228,7 @@ class OfxImporter:
 
     def _build_row(self, source: Path, row: int, upstream: Any, stmttrn: Any, currency: str) -> Any:
         """One single-legged transaction from upstream, with row-located errors."""
-        from decimal import InvalidOperation
+        from decimal import Decimal, InvalidOperation
 
         where = f"{source} OFX row {row}"
         if _tag_text(stmttrn, "dtposted") is None:
@@ -237,8 +237,13 @@ class OfxImporter:
         if raw_amount is None:
             raise UsageError(f"{where} has no TRNAMT amount; cannot post it.")
         try:
+            Decimal(raw_amount)
+        except InvalidOperation:
+            # Beancount's D, which upstream converts with, reports garbage
+            # as ValueError — the same type a bad DTPOSTED raises — so the
+            # amount is judged here, where the row names the right tag.
+            raise UsageError(f"{where} has a TRNAMT beangulp cannot parse ({raw_amount!r}).") from None
+        try:
             return upstream.build_transaction(stmttrn, "*", self._account, currency)
         except ValueError as exc:
             raise UsageError(f"{where} has a DTPOSTED beangulp cannot parse ({exc}).") from None
-        except (InvalidOperation, TypeError) as exc:
-            raise UsageError(f"{where} has a TRNAMT beangulp cannot parse ({raw_amount!r}).") from exc

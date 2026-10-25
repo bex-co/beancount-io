@@ -395,3 +395,126 @@ def test_non_ofx_xml_is_not_detected_as_ofx(books: Path, tmp_path: Path) -> None
     assert "looks like an XML file, not a CSV export" in message
     assert "use a Python importer that reads it" in message
     assert "beangulp" not in result.stderr
+
+
+def test_ofx_rules_and_default_are_recalled(
+    books: Path, tmp_path: Path, beangulp_engine: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A flag-free run replays remembered rules and default, not just the account."""
+    monkeypatch.setenv("BEA_ENGINE_PYTHON", beangulp_engine)
+    monkeypatch.delenv("BEA_ENGINE_DIR", raising=False)
+    rules = tmp_path / "rules.toml"
+    rules.write_text('[[rule]]\nmatch = "PEETS"\naccount = "Expenses:Food"\n')
+    first = _import(
+        books,
+        str(books.parent / "checking.ofx"),
+        "--account",
+        "Assets:Checking",
+        "--rules",
+        str(rules),
+        "--default-account",
+        "Expenses:Food",
+        "--apply",
+    )
+    assert first.exit_code == 0, first.output
+
+    second = _import(books, str(books.parent / "checking.ofx"))
+    assert second.exit_code == 0, second.output
+    note = " ".join(second.stderr.split())
+    assert "Using remembered settings for checking.ofx: --ofx --account Assets:Checking" in note
+    assert f"--rules {rules}" in note and "--default-account Expenses:Food" in note
+
+
+def test_ofx_typed_default_updates_the_memory(
+    books: Path, beangulp_engine: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A typed `--default-account` on a recalled run wins and replays."""
+    monkeypatch.setenv("BEA_ENGINE_PYTHON", beangulp_engine)
+    monkeypatch.delenv("BEA_ENGINE_DIR", raising=False)
+    first = _import(books, str(books.parent / "checking.ofx"), "--account", "Assets:Checking", "--apply")
+    assert first.exit_code == 0, first.output
+
+    moved = _import(books, str(books.parent / "checking.ofx"), "--default-account", "Expenses:Food")
+    assert moved.exit_code == 0, moved.output
+    assert (
+        "Updated remembered settings for checking.ofx: --default-account Expenses:Food. "
+        "A flag-free run of this bank account now uses them." in " ".join(moved.stderr.split())
+    )
+
+    replayed = _import(books, str(books.parent / "checking.ofx"))
+    assert replayed.exit_code == 0, replayed.output
+    assert "--default-account Expenses:Food" in " ".join(replayed.stderr.split())
+
+
+def test_ofx_explicit_run_discards_dropped_rules(
+    books: Path, tmp_path: Path, beangulp_engine: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Explicit `--ofx` without `--rules` forgets remembered rules, announced."""
+    monkeypatch.setenv("BEA_ENGINE_PYTHON", beangulp_engine)
+    monkeypatch.delenv("BEA_ENGINE_DIR", raising=False)
+    rules = tmp_path / "rules.toml"
+    rules.write_text('[[rule]]\nmatch = "PEETS"\naccount = "Expenses:Food"\n')
+    first = _import(
+        books, str(books.parent / "checking.ofx"), "--account", "Assets:Checking", "--rules", str(rules), "--apply"
+    )
+    assert first.exit_code == 0, first.output
+
+    dropped = _import(books, str(books.parent / "checking.ofx"), "--ofx", "--account", "Assets:Checking")
+    assert dropped.exit_code == 0, dropped.output
+    assert (
+        f"Discarded remembered settings for checking.ofx: --rules {rules}. "
+        "Re-pass them to keep them across refreshes." in " ".join(dropped.stderr.split())
+    )
+
+    replayed = _import(books, str(books.parent / "checking.ofx"))
+    assert replayed.exit_code == 0, replayed.output
+    assert "--rules" not in " ".join(replayed.stderr.split())
+
+
+def test_ofx_corrupt_record_reads_as_no_memory(
+    books: Path, bea_config_dir: Path, beangulp_engine: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A corrupt OFX record degrades to a fresh run instead of blocking."""
+    monkeypatch.setenv("BEA_ENGINE_PYTHON", beangulp_engine)
+    monkeypatch.delenv("BEA_ENGINE_DIR", raising=False)
+    first = _import(books, str(books.parent / "checking.ofx"), "--account", "Assets:Checking", "--apply")
+    assert first.exit_code == 0, first.output
+    records = list(bea_config_dir.glob("importers/ofx-*.json"))
+    assert len(records) == 1
+    records[0].write_text("{not json")
+
+    second = _import(books, str(books.parent / "checking.ofx"))
+    assert second.exit_code == 2, second.output
+    assert "but not which account the export belongs to" in " ".join(second.stderr.split())
+
+
+def test_ofx_deleted_remembered_rules_degrade_announced(
+    books: Path, tmp_path: Path, beangulp_engine: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Remembered rules that vanish import unruled, with a note saying so."""
+    monkeypatch.setenv("BEA_ENGINE_PYTHON", beangulp_engine)
+    monkeypatch.delenv("BEA_ENGINE_DIR", raising=False)
+    rules = tmp_path / "rules.toml"
+    rules.write_text('[[rule]]\nmatch = "PEETS"\naccount = "Expenses:Food"\n')
+    first = _import(
+        books, str(books.parent / "checking.ofx"), "--account", "Assets:Checking", "--rules", str(rules), "--apply"
+    )
+    assert first.exit_code == 0, first.output
+    rules.unlink()
+
+    second = _import(books, str(books.parent / "checking.ofx"))
+    assert second.exit_code == 0, second.output
+    assert f"Remembered --rules {rules} cannot be used" in " ".join(second.stderr.split())
+    assert "unmatched" in second.stdout
+
+
+def test_ofx_mistyped_account_is_not_remembered(
+    books: Path, bea_config_dir: Path, beangulp_engine: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A typo account previews but is never written to the OFX memory."""
+    monkeypatch.setenv("BEA_ENGINE_PYTHON", beangulp_engine)
+    monkeypatch.delenv("BEA_ENGINE_DIR", raising=False)
+    typo = _import(books, str(books.parent / "checking.ofx"), "--account", "Assets:Savngs")
+    assert typo.exit_code == 0, typo.stderr
+    assert "Not remembering these settings: Assets:Savngs is not open in this ledger." in typo.stderr
+    assert list(bea_config_dir.glob("importers/ofx-*.json")) == []
