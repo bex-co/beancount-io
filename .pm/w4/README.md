@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1079** — [Restore entry-page focus after Keep editing](./1079.md)
+
 - **1078** — [Keep late entry completion from discarding a query draft](./1078.md)
 
 - **1077** — [Preserve typed filters while suggestions refresh](./1077.md)
