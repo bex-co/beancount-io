@@ -1,6 +1,6 @@
 # w6 · m8 — Claim and publish the hosted connector on Smithery and Glama
 
-**Worker:** worker1 **Goal:** Users find one accurate, owned, authenticated listing per platform for the existing hosted MCP endpoint. **Status:** blocked (t001/t009 done; Smithery supported intake and w2/088 full healthy-day gate remain; dependent aggregate/closing tasks deferred)
+**Worker:** worker1 **Goal:** Users find one accurate, owned, authenticated listing per platform for the existing hosted MCP endpoint. **Status:** blocked (t001/t003/t009 done; Smithery supported intake remains; dependent aggregate/closing tasks deferred)
 
 **Implementation estimate:** ~3h, excluding external review queues and the standing closing tasks.
 
@@ -10,7 +10,7 @@
 | --- | --- | --- | --- |
 | [t001](./done/t001.md) | Audit imported listings and prepare shared submission materials — **DONE** | 30m | — |
 | [t002](./t002.md) | Publish or claim Smithery's existing hosted-server listing — **BLOCKED** | 45m | t001 |
-| [t003](./t003.md) | Align the existing Glama connector after w2/088's ownership and health repair — **BLOCKED** | 45m | t001, w2/088 |
+| [t003](./done/t003.md) | Align the existing Glama connector after w2/088's ownership and health repair — **DONE** | 45m | t001, w2/088 |
 | [t009](./done/t009.md) | Verify Glama native accounting independently of Smithery review — **DONE** | 45m | t001 |
 | [t004](./t004.md) | Verify both public listings through fresh authenticated connections | 60m | t002, t003, t009 |
 | [t005](./t005.md) | Adoption surface | 30m | t004, t009 |
@@ -81,3 +81,18 @@ the tasks whose condition clears, then complete final aggregate/standing
 acceptance. **Owners:** Smithery/Arcade for intake; Glama for actual monitoring;
 worker for dated verification and follow-through. No remaining account/domain
 or private monitoring-access approval is inferred. Other w6 tasks continue.
+
+## Current remaining gate — 2026-10-25 UTC
+
+Glama's prerequisite w2/088 is archived after the actual after-day follow-up,
+and [t003](./done/t003.md) now verifies canonical metadata/ownership with no
+rewrite needed. Existing native accounting t009 remains done. There is no
+Glama account/domain/test-profile approval or health-day wait left.
+
+**Blocked:** only t002's supported Smithery intake and t004–t008's transitive
+implementation/closing conditions remain. **Unblock/owners:** Smithery/Arcade
+provides a working direct-directory submission/claim route, then worker
+completes t002 and performs the actual aggregate/standing checks. Original
+public/native DoDs are retained; no dependent closing task is claimed done.
+Keep existing Glama monitor/DNS proof, with renewal assessment2026-11-20UTC
+or actual failure and expiry end2026-11-23UTC.

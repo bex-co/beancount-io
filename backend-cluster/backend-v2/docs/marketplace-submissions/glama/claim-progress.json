@@ -14,7 +14,7 @@
   "currentGate": "Original after-a-day health recheck completed under w2/088; existing native accounting proof retained. No setup/health-day approval or wait remains.",
   "testProfileConfigured": true,
   "health": "Healthy, ownership verified,44tools. Public historical uptime6.1%over21days; a new scheduled successful check follows the first success by24h19m42s.",
-  "nextAction": "Retain DNS proof and private read-only monitor; assess renewal by2026-11-20UTC or actual failure. Worker verifies remaining metadata under w6/m8/t003; Smithery remains separate.",
+  "nextAction": "Health follow-up w2/088 and Glama metadata/native work w6/m8/t003/t009 are archived. Retain DNS proof and private read-only monitor; assess renewal by2026-11-20UTC or actual failure. Smithery remains separate.",
   "limit": "Only the latest ten records are exposed on the inspected Test Profile UI; earlier recorded cohorts and the first successful check are retained in claim-progress.json. This is the original after-a-day health follow-up, not an exhaustive export, continuous availability proof or a24-hour100%uptime SLA. No unseen check is marked successful.",
   "history": [
     {
@@ -130,7 +130,7 @@
   "monitoringCredentialRenewalPlan": {
     "assessmentDueDateUTC": "2026-11-20",
     "earlierTrigger": "Actual scheduled-monitor access failure",
-    "owner": "Worker coordinates existing w2/088 and w6/m8/t003; Glama runs scheduled checks",
+    "owner": "Worker / existing Glama listing and monitor maintenance; w6/045 retains the assessed dates/private route.",
     "issuerSettingsURL": "https://beancount.io/settings/api-keys",
     "privateUpdateURL": "https://glama.ai/mcp/connectors/io.beancount/beancount/admin/test-profile",
     "supportedUI": "Existing API Key / Bearer Authentication Test Profile; replace private value only when renewal is needed, save and verify its actual test/history plus persistence",

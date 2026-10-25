@@ -2,16 +2,16 @@
 
 **Worker:** worker1 — general-purpose adoption worker; accepts the next highest-impact milestone across packages, topics, and A1/A2/A3 rather than owning a permanent specialty.
 
-## Current listing follow-through plan — 2026-10-24 UTC
+## Current listing follow-through plan — 2026-10-25 UTC
 
-Source: the owner's request to put every remaining action from the 17-target listing review into w6. This is board arrangement only: no new external check, submission, consent, payment, publication or credential renewal is claimed. Existing m8–m11 and 041/042 remain the owners; eight independent implementation tasks and three sub-hour inbox notes fill the execution/operational gaps without another milestone.
+Source: the owner's request to complete all remaining actions from the17-target listing review in w6. The table links actual shipped receipts/native observations and the remaining owners/gates; dated snapshots below retain their historical queue states.
 
 | Work | Owner / next action | Gate and sequencing |
 | --- | --- | --- |
 | One current 17-target tracker | [043done](done/043.md) — one17-target current tracker, exact operation/install links, owners, original check times and manual triggers | Resolved2026-10-25; historical receipts remain in owning packets, external state/check timestamps unchanged. |
 | Supported browser control | [044](done/044.md) — actual read-only reconnect/retest, then supported update if still required | Resolved2026-10-25T00:10:54Z: actual supported browser/page access succeeds; keep original sessions and approvals. |
 | Credentials through review/monitoring | [045done](done/045.md) — verified retained-key bounds, renewal ownership, dates and private routes | Docker expires end 2026-10-31UTC, assess by10-29; Glama expires end 2026-11-23UTC, assess by11-20. No automation or secret on board. |
-| Glama native + Smithery intake | [m8/t009](blocked/m8/done/t009.md) independent native; [m8/t002](blocked/m8/t002.md) supported replacement intake | Glama health-day owner remains w2/088 (earliest2026-10-25T07:01:01Z). Neither wait serializes independent native work. |
+| Glama complete + Smithery intake | [m8/t003 done](blocked/m8/done/t003.md) health/metadata; [t009 done](blocked/m8/done/t009.md) native; [t002](blocked/m8/t002.md) Smithery intake | Glama after-day health note w2/088 is archived with bounded actual evidence. Smithery still needs a supported intake; it does not reopen Glama. |
 | Docker current native session | [m9/t015](blocked/m9/done/t015.md) — current Unauthorized repaired; [046](blocked/046.md) owns renewable OAuth | Scope-upgrade fix37f5a25b6 deployed in4d4857a68; same-client offline callback/access+refresh issuance and native accounting pass. Only actual scheduled refresh in a supported runtime remains. |
 | Developer review/public/native | [m9/t004](blocked/m9/t004.md) Cline; [t016](blocked/m9/t016.md) official Cursor; [t017](blocked/m9/t017.md) Docker; [t018](blocked/m9/t018.md) approved GitHub/VS Code | Follow existing records independently. Public listing and native installation remain required after receipts/approval. |
 | Already-public directory native paths | [m10/t010](blocked/m10/done/t010.md) MCPServers.org; [t011](blocked/m10/done/t011.md) LobeHub accounting/live metadata | Both native acceptance tasks are complete. MCPMarket review and LobeHub crawler deployment correction remain independent external gates. |
@@ -22,7 +22,7 @@ Source: the owner's request to put every remaining action from the 17-target lis
 
 **Execution order:**043tracker,044browser recovery and independent native/correction follow-through are shipped. 045credential coordination is complete;046scope-upgrade repair is deployed and native offline/accounting acceptance passes; only actual scheduled refresh/runtime proof remains. Perform each newly available review/publication action independently. Complete a platform's due observation or real feedback when available and continue all other tasks. Aggregate verification and standing closing tasks retain their full DoDs. A blocked platform never ends the w6 loop while another actionable item remains.
 
-**Board after arrangement:**64 pending leaves; m8–m11 are parked on their remaining platform/time gates with m2/m6.5. Credential coordination045is archived;046OAuth renewal retains only the actual scheduled-refresh runtime/expiry condition; deployment access and native offline grant/accounting are now verified. No live milestone or inbox remains; all64pending leaves are blocked or transitively dependent. MCP.so submission041 is archived; successor047 preserves original review/live/native acceptance, so64pending leaves remain. No completed task is reopened. The dated snapshots below describe earlier board states, including their old totals and blockers.
+**Board after arrangement:**63 pending leaves; m8–m11 are parked on their remaining platform/time gates with m2/m6.5. Credential coordination045is archived;046OAuth renewal retains only the actual scheduled-refresh runtime/expiry condition; deployment access and native offline grant/accounting are now verified. No live milestone or inbox remains; all63pending leaves are blocked or transitively dependent. MCP.so submission041 is archived; successor047 preserves original review/live/native acceptance, so63pending leaves remain. No completed task is reopened. The dated snapshots below describe earlier board states, including their old totals and blockers.
 
 ## Historical work and blocker triage — 2026-10-24 UTC
 
@@ -230,7 +230,7 @@ Prioritize the major correctness findings (PRINT/FROM/JOURNAL, authored location
 - [ ] **m9** — [Reach developer marketplaces and galleries](blocked/m9/README.md) (18 tasks; 9 done; A3/A1) ← owner listing follow-through 2026-10-24. **blocked:** current native t015 is done; independent046 owns renewable consent, while t004/t016/t017/t018 retain actual review/publication gates. t004/t016/t017/t018 independently own Cline/Cursor/Docker/GitHub review/public/native outcomes; GitHub approval is complete.
 - [ ] **m10** — [List the connector in independent web directories](blocked/m10/README.md) (13 tasks; 6 done; A3/A1) ← owner listing follow-through2026-10-24 — **blocked:** t002 original MCPMarket free review and t012 sent LobeHub crawler correction; native accounting, deployed guard and canonical search verified. Closing tasks defer transitively; inbox046 continues.
 
-- [ ] **m8** — [Claim and publish the hosted connector on Smithery and Glama](blocked/m8/README.md) (9 tasks; 2 done; A3/A1) ← owner listing follow-through 2026-10-24. **blocked:** native t009 is complete; Smithery intake and w2/088 full healthy-day observation retain their exact external/time gates.
+- [ ] **m8** — [Claim and publish the hosted connector on Smithery and Glama](blocked/m8/README.md) (9 tasks; 3 done; A3/A1) ← owner listing follow-through2026-10-24. **blocked:** Glama health/metadata t003 and native t009 are complete; Smithery t002 supported intake and aggregate/closing dependents remain.
 
 - [x] **m7** — [Connect OpenClaw and Hermes Agent to the hosted MCP endpoint](done/m7/README.md) (9 tasks; A1; backend-v2 fixtures and docs) ← user request 2026-10-16 to list Beancount.io on OpenClaw and Hermes Agent; ADR 019 D8
 
