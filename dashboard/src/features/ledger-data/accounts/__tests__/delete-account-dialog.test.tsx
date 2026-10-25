@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { toast } from "sonner";
@@ -93,6 +93,43 @@ describe("DeleteAccountDialog", () => {
       expect(screen.getByRole("button", { name: "Delete" })).toBeEnabled(),
     );
     expect(screen.queryByRole("button", { name: "Try Again" })).toBeNull();
+  });
+
+  it("holds dismissal while a deletion is pending (w4/1085)", async () => {
+    mockUseQuery.mockReturnValue({
+      data: {
+        getLedgerEntryContext: {
+          sha256sum: "sum1",
+          slice: "2023-01-01 open Assets:Checking",
+          entry: { meta: { filename: "main.bean", lineno: 3 } },
+        },
+      },
+      loading: false,
+      error: undefined,
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof useQuery>);
+    let resolveDelete: (value: unknown) => void = () => {};
+    const mockDeleteFn = vi.fn().mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveDelete = resolve;
+        }),
+    );
+    mockUseMutation.mockReturnValue([
+      mockDeleteFn,
+      { loading: false },
+    ] as unknown as ReturnType<typeof useMutation>);
+    const onOpenChange = vi.fn();
+    render(
+      <DeleteAccountDialog {...defaultProps} onOpenChange={onOpenChange} />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+    expect(mockDeleteFn).toHaveBeenCalledTimes(1);
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    resolveDelete({});
+    await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
   });
 
   it("renders dialog title with delete icon when open=true", () => {

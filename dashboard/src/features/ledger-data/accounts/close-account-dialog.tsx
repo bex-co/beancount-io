@@ -2,6 +2,7 @@ import { useState, type RefObject } from "react";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { restoreFocusOnDialogClose } from "@/common/lib/focus/restore-focus-on-dialog-close";
+import { usePendingAction } from "@/common/hooks/use-pending-action";
 import { useMutation } from "@apollo/client/react";
 import { format } from "date-fns";
 import { BulkEntriesDocument, LedgerEntryType } from "@/graphql/definitions";
@@ -40,7 +41,10 @@ export function CloseAccountDialog({
   const { t } = useTranslations();
   const formatError = useErrorMessage();
   const [error, setError] = useState<string | null>(null);
-  const [addEntryClose, { loading }] = useMutation(BulkEntriesDocument);
+  const [addEntryClose] = useMutation(BulkEntriesDocument);
+  // One in-flight close owns this opening: dismissal waits for it, and its
+  // completion cannot land on a later account's confirmation (w4/1085).
+  const { run, pending } = usePendingAction();
 
   // The offered date is snapshotted when this confirmation opens, so the
   // busy text and the prepared request always name the same day even if
@@ -57,11 +61,12 @@ export function CloseAccountDialog({
   const closeDate = offered?.date ?? today();
 
   const handleOpenChange = (v: boolean) => {
+    if (!v && pending) return;
     if (!v) setError(null);
     onOpenChange(v);
   };
 
-  const handleConfirm = async () => {
+  const doConfirm = async (): Promise<boolean | void> => {
     if (!account) return;
     setError(null);
     try {
@@ -82,6 +87,7 @@ export function CloseAccountDialog({
         );
         onSuccess();
         handleOpenChange(false);
+        return true;
       } else {
         setError(result.data?.bulkEntries.message ?? formatError(undefined));
         if (openKey) setOffered({ key: openKey, date: today() });
@@ -90,11 +96,17 @@ export function CloseAccountDialog({
       setError(formatError(err));
       if (openKey) setOffered({ key: openKey, date: today() });
     }
+    return undefined;
+  };
+
+  const handleConfirm = () => {
+    void run(doConfirm);
   };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
+        busy={pending}
         className="sm:max-w-[440px]"
         onCloseAutoFocus={(event) => {
           restoreFocusOnDialogClose(
@@ -127,10 +139,14 @@ export function CloseAccountDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => handleOpenChange(false)}>
+          <Button
+            variant="outline"
+            disabled={pending}
+            onClick={() => handleOpenChange(false)}
+          >
             {t("common.cancel")}
           </Button>
-          <Button onClick={handleConfirm} loading={loading}>
+          <Button onClick={handleConfirm} loading={pending}>
             {t("page.accounts.closeAccount")}
           </Button>
         </DialogFooter>

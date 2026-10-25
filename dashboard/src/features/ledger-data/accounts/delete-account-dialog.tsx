@@ -2,6 +2,7 @@ import { useRef, useState, type RefObject } from "react";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { restoreFocusOnDialogClose } from "@/common/lib/focus/restore-focus-on-dialog-close";
+import { usePendingAction } from "@/common/hooks/use-pending-action";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { MonacoEditor as Editor } from "@/common/components/monaco-editor";
 import {
@@ -46,7 +47,9 @@ export function DeleteAccountDialog({
   const { t } = useTranslations();
   const formatError = useErrorMessage();
   const [error, setError] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  // One in-flight deletion owns this opening: dismissal waits for it, and
+  // its completion cannot land on a later account's confirmation (w4/1085).
+  const { run, pending: isDeleting } = usePendingAction();
   const isDark = useIsDarkTheme();
 
   const isClosed = account?.closedAt !== null;
@@ -103,14 +106,14 @@ export function DeleteAccountDialog({
     (!isClosed || !!closeCtx?.sha256sum);
 
   const handleOpenChange = (v: boolean) => {
+    if (!v && isDeleting) return;
     if (!v) setError(null);
     onOpenChange(v);
   };
 
-  const handleDelete = async () => {
-    if (!account || !openCtx?.sha256sum || isDeleting) return;
+  const doDelete = async (): Promise<boolean | void> => {
+    if (!account || !openCtx?.sha256sum) return;
     setError(null);
-    setIsDeleting(true);
     try {
       const entries: { entryHash: string; sha256sum: string }[] = [
         { entryHash: account.entryHash, sha256sum: openCtx.sha256sum },
@@ -129,11 +132,15 @@ export function DeleteAccountDialog({
       );
       onSuccess();
       handleOpenChange(false);
+      return true;
     } catch (err) {
       setError(formatError(err));
-    } finally {
-      setIsDeleting(false);
+      return undefined;
     }
+  };
+
+  const handleDelete = () => {
+    void run(doDelete);
   };
 
   const openEntryFilename =
@@ -152,6 +159,7 @@ export function DeleteAccountDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
+        busy={isDeleting}
         className="sm:max-w-[560px]"
         onCloseAutoFocus={(event) => {
           restoreFocusOnDialogClose(
@@ -287,7 +295,11 @@ export function DeleteAccountDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => handleOpenChange(false)}>
+          <Button
+            variant="outline"
+            disabled={isDeleting}
+            onClick={() => handleOpenChange(false)}
+          >
             {t("common.cancel")}
           </Button>
           <Button

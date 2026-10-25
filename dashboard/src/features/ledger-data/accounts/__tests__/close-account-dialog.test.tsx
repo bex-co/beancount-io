@@ -121,6 +121,27 @@ describe("CloseAccountDialog", () => {
     });
   });
 
+  it("holds dismissal while a close is pending (w4/1085)", async () => {
+    let resolveMutation: (value: unknown) => void = () => {};
+    mockMutation.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveMutation = resolve;
+        }),
+    );
+    const onOpenChange = vi.fn();
+    render(
+      <CloseAccountDialog {...defaultProps} onOpenChange={onOpenChange} />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /close account/i }));
+    expect(mockMutation).toHaveBeenCalledTimes(1);
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    resolveMutation({ data: { bulkEntries: { success: true } } });
+    await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
+  });
+
   it("shows error message when mutation returns failure", async () => {
     const user = userEvent.setup();
     mockMutation.mockResolvedValue({
