@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [085 — Preserve every currency in a partially retained pad export](./085.md) — reopened major CLI gap: cutoff export passes check but loses one currency and halves net worth; original padding controls still pass, checked 2026-10-24.
+
 - [1022 — Reject calendar-week dates outside their stated year](./1022.md) — minor CLI gap: impossible week-zero/53 tuples write in the previous or next year, including mixed files; valid calendar/ISO and original ordinal controls pass, checked 2026-10-24.
 
 - [1021 — Make CSV currency recovery hints fit the headers](./1021.md) — minor CLI gap: a suggested `currency=EUR`/`INR` setting reads the existing amount column as a currency; renamed, single-currency and real-column controls pass, checked 2026-10-24.
