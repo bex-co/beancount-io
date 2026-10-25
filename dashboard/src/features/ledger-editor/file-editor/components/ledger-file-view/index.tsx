@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { useNavigate, useParams } from "@tanstack/react-router";
@@ -192,8 +192,21 @@ export default function LedgerFileView({
     }
   };
 
+  // The view's current scope, for deciding whether a late delete success
+  // still belongs to the journey on screen (w4/1091).
+  const viewScopeRef = useRef({ ledgerId, filePath });
+  viewScopeRef.current = { ledgerId, filePath };
+  const viewAliveRef = useRef(true);
+  useEffect(() => {
+    viewAliveRef.current = true;
+    return () => {
+      viewAliveRef.current = false;
+    };
+  }, []);
+
   const runDeleteFile = async () => {
     if (!fileContent) return;
+    const journey = { ledgerId, filePath };
 
     await deleteFileMutation({
       variables: {
@@ -215,6 +228,17 @@ export default function LedgerFileView({
       onCompleted: () => {
         toast.success(t("ledgerEditor.fileDeletedSuccess"));
         cleanCache();
+        // The deletion counts wherever the reader went, but its success
+        // navigation belongs only to the still-current file journey: a
+        // reader who left for Journal stays there (w4/1091).
+        const current = viewScopeRef.current;
+        if (
+          !viewAliveRef.current ||
+          current.ledgerId !== journey.ledgerId ||
+          current.filePath !== journey.filePath
+        ) {
+          return;
+        }
         // After deletion, navigate back to parent directory
         const parentPath = getParentPath(filePath);
         fileNavigate(ledgerId, "dir", parentPath);
