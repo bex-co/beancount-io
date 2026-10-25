@@ -1,0 +1,45 @@
+name: "Beancount.io ledger checks"
+description: "Install bea and validate a Beancount ledger: bea check plus bea format --check, with findings as annotations."
+
+inputs:
+  version:
+    description: "Published beancount-io version to install."
+    required: false
+    default: "0.3.1"
+  file:
+    description: "Root ledger path, relative to the repository."
+    required: false
+    default: "main.bean"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up uv
+      uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+      with:
+        version: "0.12.15"
+        enable-cache: false
+    - name: Install bea
+      shell: bash
+      run: |
+        uv tool install --python 3.12 "beancount-io==${{ inputs.version }}"
+        echo "$(uv tool dir --bin)" >> "$GITHUB_PATH"
+    - name: Register bea problem matchers
+      shell: bash
+      run: echo "::add-matcher::${{ github.action_path }}/problem-matcher.json"
+    - name: Validate ledger
+      shell: bash
+      run: bea --no-input --file "${{ inputs.file }}" check
+    - name: Check formatting
+      shell: bash
+      run: bea --no-input format "${{ inputs.file }}" --check
+    - name: Remove bea problem matchers
+      if: always()
+      shell: bash
+      run: |
+        echo "::remove-matcher owner=bea-check::"
+        echo "::remove-matcher owner=bea-format::"
+
+branding:
+  icon: "check-circle"
+  color: "green"
