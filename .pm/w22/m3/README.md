@@ -1,6 +1,6 @@
 # w22 · m3 — Holdings and register reports
 
-**Worker:** worker1 **Goal:** `bea report holdings` and `bea report register ACCOUNT` answer "what do I hold?" and "show this account's running balance" without hand-written BQL **Status:** todo (t001–t005 done)
+**Worker:** worker1 **Goal:** `bea report holdings` and `bea report register ACCOUNT` answer "what do I hold?" and "show this account's running balance" without hand-written BQL **Status:** todo (t001–t006 done)
 
 ## Tasks (in order)
 
@@ -11,7 +11,7 @@
 | t003 | Frontend `bea report holdings` and `bea report register` — **DONE** | 50m | t001, t002 |
 | t004 | Live-price provenance in both reports — **DONE** | 30m | t003 |
 | t005 | Docs and skill-guide pointer — **DONE** | 30m | t004 |
-| t006 | Adoption surface | 25m | t005 |
+| t006 | Adoption surface — **DONE** | 25m | t005 |
 | t007 | Simplify | 25m | t006 |
 | t008 | Test coverage | 45m | t006 |
 | t009 | Closeout | 15m | t007, t008 |
