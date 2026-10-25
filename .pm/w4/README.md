@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1083** — [Retry a failed account-deletion source preview in place](./1083.md)
+
 - **1082** — [Restore retry focus after failed exports and Budget deletions](./1082.md)
 
 - **1081** — [Translate the cadence in Budget deletion confirmations](./1081.md)
