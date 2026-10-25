@@ -1021,13 +1021,15 @@ in-place results also include `skipped` (empty when none were skipped), as do
 reported in-place failure results. `scanned` counts the plaintext files and
 does not include the encrypted files in `skipped`.
 
-### GitHub Actions for a ledger repository
+### GitHub Actions and pre-commit for a ledger repository
 
 Copy the [ledger-check workflow](examples/ledger-check.yml) into your ledger
-repository to run both checks on pushes and pull requests. The
+repository to run both checks on pushes and pull requests through the shared
+action, with findings as annotations. The
 [setup and rehearsal notes](examples/ledger-check.md) explain the pinned released
-CLI, ledger-path setting, and expected failures. The workflow checks local files
-without a Beancount.io login and never formats or commits them automatically.
+CLI, ledger-path setting, expected failures, and the `bea-check` / `bea-format`
+pre-commit hooks. The checks read local files without a Beancount.io login and
+never format or commit them automatically.
 
 ## Listing directives
 
