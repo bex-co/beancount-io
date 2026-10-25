@@ -187,6 +187,8 @@ Record year-end prices in ./main.bean, all dated 2026-12-01: VTI 300.00 USD, BTC
 What do I hold at year end and what is it worth, per lot, with unrealized gains? Ledger is ./main.bean. Also: what were my realized gains in 2026?
 ```
 
+Answer the realized half with `bea report capital-gains --from-date 2026-01-01 --to-date 2026-12-31`, tied to the booked figure with the query below; the per-lot unrealized half stays BQL.
+
 Expect (checkpoint `year_end`), each from shown queries: market values
 VTI 6000.00, BTC 18000.00, ETH 12000.00, OAKST 620000.00; unrealized
 +2400.00 / +6000.00 / 0.00 / +110000.00; and realized 2026 gains of

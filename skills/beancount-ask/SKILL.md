@@ -64,7 +64,7 @@ bea --file "$ledger" --json --no-input report income-statement --time "$month"
 - **Spending** comes from the `weight` recipes. `balance` and `report` value at market, and a commodity without a price makes them exit 1 with `result.missing_prices` (a valuation gap, not an engine failure); pass `-x at_cost` for book value and disclose the missing prices.
 - **Entry searches** use root-scoped `list transaction --search/--tag/--link`, read to completion (beancount-init's `references/bea-cli.md`, Version notes, on `list` pages).
 - **Market values** come from the ledger's price directives and managed price includes, which resolve during a `bea` load; `bea --file "$ledger" price status` reports their freshness. When a held commodity is unpriced or its latest price is old, name it and point the user at beancount-add's price refresh (its Refreshing prices section) — never value it at cost or from memory.
-- **Realized gains** for a period (per closed lot, with holding period, tied to the booked gain postings) come from beancount-trade's `references/realized-gains.md` (from this skill's folder, `../beancount-trade/references/realized-gains.md`); recording a trade itself is `beancount-trade`.
+- **Realized gains** for a period (per closed lot, with holding period, tied to the booked gain postings) start with `bea report capital-gains --from-date/--to-date`, then the booked tie-out in beancount-trade's `references/realized-gains.md` (from this skill's folder, `../beancount-trade/references/realized-gains.md`); recording a trade itself is `beancount-trade`.
 
 ### 2. Translate the question
 
