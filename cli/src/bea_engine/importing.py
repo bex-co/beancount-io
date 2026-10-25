@@ -215,7 +215,6 @@ def answer(
     from bea_engine import managed_load
     from bea_engine.csv_mapper import (
         CsvImporter,
-        load_rules,
         parse_decimal,
         parse_delimiter,
         parse_encoding,
@@ -278,35 +277,9 @@ def answer(
             raise UsageError("--csv needs --account ACCOUNT, naming the account the export belongs to.")
         mapping = parse_mapping(csv_mapping)
         csv_id_mapped = mapping.column("id") is not None
-        # Before the preview, not after: an invalid name would otherwise block
-        # every row with the wrong diagnosis instead of failing on the typo.
-        csv_account = _valid_account(csv_account, "--account", roots)
-        # The built-in fallback follows the ledger's expenses root: the literal
-        # `Expenses:` name is refused on a ledger that sets `name_expenses`.
-        if default_account is None:
-            default_account = f"{roots[-1]}:Uncategorized"
-            fallback = f"the built-in default account {default_account}"
-        else:
-            default_account = _valid_account(default_account, "--default-account", roots)
-            fallback = f"--default-account {default_account}"
-            named_settings.append(default_account)
-        named_settings.append(csv_account)
-        # A counter posting to the source account cancels the bank movement:
-        # `-100 USD` and `+100 USD` on Assets:Checking, written with exit 0
-        # and gone from its balance (w5/468).
-        if default_account == csv_account:
-            raise UsageError(
-                f"{fallback} is the --account being imported; an uncategorized row would post against its "
-                "own source and cancel out. Name the account its money goes to or comes from."
-            )
-        rules = load_rules(Path(rules_file), roots) if rules_file is not None else None
-        for number, listed in enumerate(rules or [], start=1):
-            if listed.account == csv_account:
-                raise UsageError(
-                    f"Rules file {rules_file}: rule {number} (match {listed.pattern!r}) posts to {listed.account}, the "
-                    "--account being imported; a matching row would post against its own source and cancel out. "
-                    "Name the account its money goes to or comes from."
-                )
+        csv_account, default_account, rules = _nocode_settings(
+            csv_account, default_account, rules_file, roots, named_settings
+        )
         resolved_date_format = "%Y-%m-%d" if date_format is None else date_format
         resolved_delimiter = parse_delimiter(delimiter) if delimiter is not None else None
         resolved_encoding = parse_encoding(encoding) if encoding is not None else "utf-8"
@@ -330,17 +303,7 @@ def answer(
             ledger=file,
         )
         preview_config = csv_mapping
-        try:
-            account = str(importer.account(str(source)))
-            with capturing(logs):
-                entries = _extracted(importer, source, existing)
-        except EngineError as exc:
-            _with_output(exc, logs)
-            raise
-        except Exception as exc:
-            raise _with_output(
-                LedgerError(f"Importer failed ({type(exc).__name__}): {exc}.", traceback=_traceback(exc)), logs
-            ) from exc
+        account, entries = _extracted_rows(importer, source, existing, logs)
         skipped_blank = importer.skipped_blank_rows
         skipped_pending = len(importer.skipped_pending) + len(importer.skipped_unposted)
         if importer.skipped_pending:
@@ -393,43 +356,12 @@ def answer(
     elif ofx_mode:
         if csv_account is None:
             raise UsageError("--ofx needs --account ACCOUNT, naming the account the export belongs to.")
-        # The preamble mirrors the --csv one above: same built-in default,
-        # same cancel-out and rule-target checks. Keep the two in step.
-        csv_account = _valid_account(csv_account, "--account", roots)
-        if default_account is None:
-            default_account = f"{roots[-1]}:Uncategorized"
-            fallback = f"the built-in default account {default_account}"
-        else:
-            default_account = _valid_account(default_account, "--default-account", roots)
-            fallback = f"--default-account {default_account}"
-            named_settings.append(default_account)
-        named_settings.append(csv_account)
-        if default_account == csv_account:
-            raise UsageError(
-                f"{fallback} is the --account being imported; an uncategorized row would post against its "
-                "own source and cancel out. Name the account its money goes to or comes from."
-            )
-        ofx_rules = load_rules(Path(rules_file), roots) if rules_file is not None else None
-        for number, listed in enumerate(ofx_rules or [], start=1):
-            if listed.account == csv_account:
-                raise UsageError(
-                    f"Rules file {rules_file}: rule {number} (match {listed.pattern!r}) posts to {listed.account}, the "
-                    "--account being imported; a matching row would post against its own source and cancel out. "
-                    "Name the account its money goes to or comes from."
-                )
+        csv_account, default_account, ofx_rules = _nocode_settings(
+            csv_account, default_account, rules_file, roots, named_settings
+        )
         importer = OfxImporter(account=csv_account, rules=ofx_rules, default_account=default_account)
         preview_config = "ofx"
-        try:
-            account = str(importer.account(str(source)))
-            with capturing(logs):
-                entries = _extracted(importer, source, existing)
-        except EngineError as exc:
-            _with_output(exc, logs)
-            raise
-        except Exception as exc:
-            raise _with_output(
-                LedgerError(f"Importer failed ({type(exc).__name__}): {exc}.", traceback=_traceback(exc)), logs
-            ) from exc
+        account, entries = _extracted_rows(importer, source, existing, logs)
         if importer.missing_fitids:
             sampled = ", ".join(f"row {number}" for number in importer.missing_fitids[:5])
             if len(importer.missing_fitids) > 5:
@@ -1218,6 +1150,69 @@ def _native_units_as_none(entry: Any) -> Any:
     return entry._replace(
         postings=[posting._replace(units=None) if posting.units is MISSING else posting for posting in postings]
     )
+
+
+def _nocode_settings(
+    csv_account: str,
+    default_account: str | None,
+    rules_file: Path | None,
+    roots: tuple[str, ...],
+    named_settings: list[str],
+) -> tuple[str, str, Any]:
+    """Validated source account, default account, and rules for a no-code import.
+
+    Shared by the `--csv` and `--ofx` paths: the built-in default follows the
+    ledger's expenses root, a counter posting to the source account cancels
+    the bank movement, and a rule posting there would do it row by row.
+    """
+    from bea_engine.csv_mapper import load_rules
+
+    # Before the preview, not after: an invalid name would otherwise block
+    # every row with the wrong diagnosis instead of failing on the typo.
+    csv_account = _valid_account(csv_account, "--account", roots)
+    # The built-in fallback follows the ledger's expenses root: the literal
+    # `Expenses:` name is refused on a ledger that sets `name_expenses`.
+    if default_account is None:
+        default_account = f"{roots[-1]}:Uncategorized"
+        fallback = f"the built-in default account {default_account}"
+    else:
+        default_account = _valid_account(default_account, "--default-account", roots)
+        fallback = f"--default-account {default_account}"
+        named_settings.append(default_account)
+    named_settings.append(csv_account)
+    # A counter posting to the source account cancels the bank movement:
+    # `-100 USD` and `+100 USD` on Assets:Checking, written with exit 0
+    # and gone from its balance (w5/468).
+    if default_account == csv_account:
+        raise UsageError(
+            f"{fallback} is the --account being imported; an uncategorized row would post against its "
+            "own source and cancel out. Name the account its money goes to or comes from."
+        )
+    rules = load_rules(Path(rules_file), roots) if rules_file is not None else None
+    for number, listed in enumerate(rules or [], start=1):
+        if listed.account == csv_account:
+            raise UsageError(
+                f"Rules file {rules_file}: rule {number} (match {listed.pattern!r}) posts to {listed.account}, the "
+                "--account being imported; a matching row would post against its own source and cancel out. "
+                "Name the account its money goes to or comes from."
+            )
+    return csv_account, default_account, rules
+
+
+def _extracted_rows(importer: Any, source: Path, existing: Any, logs: io.StringIO) -> tuple[str, list[Any]]:
+    """A no-code importer's account and rows, with its failures located."""
+    try:
+        account = str(importer.account(str(source)))
+        with capturing(logs):
+            entries = _extracted(importer, source, existing)
+    except EngineError as exc:
+        _with_output(exc, logs)
+        raise
+    except Exception as exc:
+        raise _with_output(
+            LedgerError(f"Importer failed ({type(exc).__name__}): {exc}.", traceback=_traceback(exc)), logs
+        ) from exc
+    return account, entries
 
 
 def _extracted(importer: Any, source: Path, existing: Any) -> list[Any]:

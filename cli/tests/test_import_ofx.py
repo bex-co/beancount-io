@@ -18,6 +18,8 @@ from pathlib import Path
 
 import pytest
 
+from tests.conftest import OFX_CHECKING_ROWS, OfxRow, render_ofx, write_ofx
+
 CLI_ROOT = Path(__file__).resolve().parents[1]
 OVERLAY = [
     "uv",
@@ -37,35 +39,6 @@ option "operating_currency" "USD"
 2026-01-01 open Assets:Checking USD
 2026-01-01 open Expenses:Food USD
 2026-01-01 open Expenses:Uncategorized USD
-"""
-
-OFX_ROW = "<STMTTRN><TRNTYPE>{trntype}<DTPOSTED>{posted}<TRNAMT>{amount}{fitid}<NAME>{name}{memo}</STMTTRN>"
-
-OFX_FILE = """\
-OFXHEADER:100
-DATA:OFXSGML
-VERSION:102
-SECURITY:NONE
-ENCODING:USASCII
-CHARSET:1252
-COMPRESSION:NONE
-OLDFILEUID:NONE
-NEWFILEUID:NONE
-
-<OFX>
-<SIGNONMSGSRSV1><SONRS><STATUS><CODE>0<SEVERITY>INFO</STATUS><DTSERVER>20260810<CURDEF>USD<LANGUAGE>ENG</SONRS></SIGNONMSGSRSV1>
-<BANKMSGSRSV1>
-<STMTTRNRS><TRNUID>1<STATUS><CODE>0<SEVERITY>INFO</STATUS>
-<STMTRS>
-<CURDEF>USD
-<BANKACCTFROM><BANKID>111000025<ACCTID>{acctid}<ACCTTYPE>CHECKING</BANKACCTFROM>
-<BANKTRANLIST><DTSTART>20260801<DTEND>20260810
-{rows}
-</BANKTRANLIST>
-<LEDGERBAL><BALAMT>5400.00<DTASOF>20260810</LEDGERBAL>
-</STMTRS></STMTTRNRS>
-</BANKMSGSRSV1>
-</OFX>
 """
 
 BROKERAGE_FILE = """\
@@ -149,25 +122,12 @@ def _ledger(tmp_path: Path) -> Path:
 
 def _ofx(
     tmp_path: Path,
-    rows: list[tuple[str, str, str, str | None, str, str | None]],
+    rows: list[OfxRow],
     name: str = "checking.ofx",
     acctid: str = "CHK-9",
 ) -> Path:
     """One OFX file from (trntype, posted, amount, fitid, name, memo) rows."""
-    rendered = "\n".join(
-        OFX_ROW.format(
-            trntype=trntype,
-            posted=posted,
-            amount=amount,
-            fitid=f"<FITID>{fitid}" if fitid is not None else "",
-            name=name,
-            memo=f"<MEMO>{memo}" if memo is not None else "",
-        )
-        for trntype, posted, amount, fitid, name, memo in rows
-    )
-    source = tmp_path / name
-    source.write_text(OFX_FILE.format(acctid=acctid, rows=rendered))
-    return source
+    return write_ofx(tmp_path / name, rows, acctid=acctid)
 
 
 def _answer(completed: subprocess.CompletedProcess[str]) -> dict:
@@ -182,18 +142,12 @@ def _refusal(completed: subprocess.CompletedProcess[str]) -> dict:
     return answer["error"]
 
 
-CHECKING_ROWS = [
-    ("DEBIT", "20260803", "-42.50", "TXN-001", "PEETS COFFEE", "CARD PURCHASE"),
-    ("CREDIT", "20260805", "1200.00", "TXN-002", "PAYROLL", "DIRECT DEP"),
-]
-
-
 def test_ofx_posts_debits_and_credits_with_file_signs(
     tmp_path: Path, ofx_engine: Callable[..., subprocess.CompletedProcess[str]]
 ) -> None:
     """A debit posts negative, a credit positive, FITIDs become `ofx:` ids."""
     ledger = _ledger(tmp_path)
-    source = _ofx(tmp_path, CHECKING_ROWS)
+    source = _ofx(tmp_path, OFX_CHECKING_ROWS)
     preview = _answer(
         ofx_engine("import", "--file", str(ledger), "--source", str(source), "--ofx", "--account", "Assets:Checking")
     )
@@ -231,7 +185,7 @@ def test_ofx_reimport_skips_exact_fitid_matches(
     tmp_path: Path, ofx_engine: Callable[..., subprocess.CompletedProcess[str]]
 ) -> None:
     ledger = _ledger(tmp_path)
-    source = _ofx(tmp_path, CHECKING_ROWS)
+    source = _ofx(tmp_path, OFX_CHECKING_ROWS)
     _answer(
         ofx_engine(
             "import", "--file", str(ledger), "--source", str(source), "--ofx", "--account", "Assets:Checking", "--apply"
@@ -249,7 +203,7 @@ def test_ofx_duplicate_fitid_with_different_data_conflicts(
 ) -> None:
     """One FITID on two different rows of a file is a conflict, not two rows."""
     ledger = _ledger(tmp_path)
-    rows = [CHECKING_ROWS[0], (*CHECKING_ROWS[1][:3], "TXN-001", *CHECKING_ROWS[1][4:])]
+    rows = [OFX_CHECKING_ROWS[0], (*OFX_CHECKING_ROWS[1][:3], "TXN-001", *OFX_CHECKING_ROWS[1][4:])]
     source = _ofx(tmp_path, rows)
     preview = _answer(
         ofx_engine("import", "--file", str(ledger), "--source", str(source), "--ofx", "--account", "Assets:Checking")
@@ -262,7 +216,7 @@ def test_ofx_identical_rows_sharing_a_fitid_preview_as_one(
     tmp_path: Path, ofx_engine: Callable[..., subprocess.CompletedProcess[str]]
 ) -> None:
     ledger = _ledger(tmp_path)
-    source = _ofx(tmp_path, [CHECKING_ROWS[0], CHECKING_ROWS[0], CHECKING_ROWS[1]])
+    source = _ofx(tmp_path, [OFX_CHECKING_ROWS[0], OFX_CHECKING_ROWS[0], OFX_CHECKING_ROWS[1]])
     preview = _answer(
         ofx_engine("import", "--file", str(ledger), "--source", str(source), "--ofx", "--account", "Assets:Checking")
     )
@@ -275,7 +229,7 @@ def test_ofx_row_without_fitid_gets_a_stable_content_hash(
 ) -> None:
     """No FITID means an `ofx:sha256:` id, a note, and a stable re-import."""
     ledger = _ledger(tmp_path)
-    rows = [(*CHECKING_ROWS[0][:3], None, *CHECKING_ROWS[0][4:]), CHECKING_ROWS[1]]
+    rows = [(*OFX_CHECKING_ROWS[0][:3], None, *OFX_CHECKING_ROWS[0][4:]), OFX_CHECKING_ROWS[1]]
     source = _ofx(tmp_path, rows)
     preview = _answer(
         ofx_engine("import", "--file", str(ledger), "--source", str(source), "--ofx", "--account", "Assets:Checking")
@@ -309,7 +263,7 @@ def test_ofx_hash_matches_a_row_imported_before_under_csv(
     older spelling as a lookup, so the row is a duplicate, not new.
     """
     ledger = _ledger(tmp_path)
-    rows = [(*CHECKING_ROWS[0][:3], None, *CHECKING_ROWS[0][4:])]
+    rows = [(*OFX_CHECKING_ROWS[0][:3], None, *OFX_CHECKING_ROWS[0][4:])]
     source = _ofx(tmp_path, rows)
     preview = _answer(
         ofx_engine("import", "--file", str(ledger), "--source", str(source), "--ofx", "--account", "Assets:Checking")
@@ -333,7 +287,7 @@ def test_ofx_rules_categorize_and_default_catches_the_rest(
 ) -> None:
     """`--rules` match narrations; the rest post to `--default-account`."""
     ledger = _ledger(tmp_path)
-    source = _ofx(tmp_path, CHECKING_ROWS, name="card.qfx")
+    source = _ofx(tmp_path, OFX_CHECKING_ROWS, name="card.qfx")
     rules = tmp_path / "rules.toml"
     rules.write_text('[[rule]]\nmatch = "PEETS"\naccount = "Expenses:Food"\n')
     preview = _answer(
@@ -362,10 +316,8 @@ def test_ofx_multi_acctid_file_is_refused(
     tmp_path: Path, ofx_engine: Callable[..., subprocess.CompletedProcess[str]]
 ) -> None:
     ledger = _ledger(tmp_path)
-    block = OFX_FILE.format(acctid="CHK-10", rows="").split("<STMTTRNRS>")[1].split("</STMTTRNRS>")[0]
-    text = OFX_FILE.format(acctid="CHK-9", rows="").replace(
-        "</BANKMSGSRSV1>", f"<STMTTRNRS>{block}</STMTTRNRS>\n</BANKMSGSRSV1>"
-    )
+    block = render_ofx([], acctid="CHK-10").split("<STMTTRNRS>")[1].split("</STMTTRNRS>")[0]
+    text = render_ofx([], acctid="CHK-9").replace("</BANKMSGSRSV1>", f"<STMTTRNRS>{block}</STMTTRNRS>\n</BANKMSGSRSV1>")
     source = tmp_path / "multi.ofx"
     source.write_text(text)
     error = _refusal(
@@ -407,7 +359,7 @@ def test_ofx_statement_without_curdef_is_refused(
 ) -> None:
     """Upstream silently skips a currencyless statement; bea refuses it."""
     ledger = _ledger(tmp_path)
-    source = _ofx(tmp_path, CHECKING_ROWS)
+    source = _ofx(tmp_path, OFX_CHECKING_ROWS)
     source.write_text(source.read_text().replace("<CURDEF>USD\n", ""))
     error = _refusal(
         ofx_engine("import", "--file", str(ledger), "--source", str(source), "--ofx", "--account", "Assets:Checking")
@@ -420,7 +372,7 @@ def test_ofx_empty_memo_reads_as_absent(
 ) -> None:
     """An empty `<MEMO></MEMO>` means what an absent memo means."""
     ledger = _ledger(tmp_path)
-    source = _ofx(tmp_path, [CHECKING_ROWS[0]])
+    source = _ofx(tmp_path, [OFX_CHECKING_ROWS[0]])
     source.write_text(source.read_text().replace("<MEMO>CARD PURCHASE", "<MEMO></MEMO>"))
     preview = _answer(
         ofx_engine("import", "--file", str(ledger), "--source", str(source), "--ofx", "--account", "Assets:Checking")
@@ -433,7 +385,7 @@ def test_ofx_missing_dtposted_names_the_row(
     tmp_path: Path, ofx_engine: Callable[..., subprocess.CompletedProcess[str]]
 ) -> None:
     ledger = _ledger(tmp_path)
-    source = _ofx(tmp_path, CHECKING_ROWS)
+    source = _ofx(tmp_path, OFX_CHECKING_ROWS)
     source.write_text(source.read_text().replace("<DTPOSTED>20260805", "", 1))
     error = _refusal(
         ofx_engine("import", "--file", str(ledger), "--source", str(source), "--ofx", "--account", "Assets:Checking")
@@ -450,7 +402,7 @@ def test_ofx_without_beangulp_names_the_feature(tmp_path: Path) -> None:
     else:
         pytest.skip("beangulp is installed here; nothing to refuse")
     ledger = _ledger(tmp_path)
-    source = _ofx(tmp_path, CHECKING_ROWS)
+    source = _ofx(tmp_path, OFX_CHECKING_ROWS)
     error = _refusal(
         _plain_engine("import", "--file", str(ledger), "--source", str(source), "--ofx", "--account", "Assets:Checking")
     )
@@ -471,6 +423,6 @@ def test_ofx_without_beangulp_names_the_feature(tmp_path: Path) -> None:
 def test_ofx_flag_misuse_is_a_usage_error(tmp_path: Path, extra: list[str], message: str) -> None:
     """Mode conflicts and a missing `--account` fail before `extract()` runs."""
     ledger = _ledger(tmp_path)
-    source = _ofx(tmp_path, CHECKING_ROWS)
+    source = _ofx(tmp_path, OFX_CHECKING_ROWS)
     error = _refusal(_plain_engine("import", "--file", str(ledger), "--source", str(source), "--ofx", *extra))
     assert error["message"] == message

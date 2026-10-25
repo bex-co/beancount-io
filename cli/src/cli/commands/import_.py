@@ -486,24 +486,30 @@ def _csv_record(file: Path, *, reading: bool = False) -> Path:
     return _record(file, "csv-", reading=reading)
 
 
-def _stored_sources(record: Path) -> list[dict[str, Any]]:
-    """The well-formed entries of a remembered-CSV record.
+def _record_entries(record: Path, key: str) -> list[Any]:
+    """The stored list under `key`, or [] when the record is corrupt.
 
-    A corrupt record — unreadable, not JSON, `sources` not a list, an entry
-    that is not an object, or headers that are not a list of strings — reads
-    as no memory for that part, so stale local state never blocks an import.
-    The next successful run rewrites the record from the surviving entries.
+    A corrupt record — unreadable, not JSON, or the key not holding a list —
+    reads as no memory, so stale local state never blocks an import. The
+    next successful run rewrites the record from the surviving entries.
     """
     try:
         data = json.loads(record.read_text())
     except (OSError, ValueError, RecursionError):
         return []
-    sources = data.get("sources") if isinstance(data, dict) else None
-    if not isinstance(sources, list):
-        return []
+    entries = data.get(key) if isinstance(data, dict) else None
+    return entries if isinstance(entries, list) else []
+
+
+def _stored_sources(record: Path) -> list[dict[str, Any]]:
+    """The well-formed entries of a remembered-CSV record.
+
+    An entry that is not an object, or whose headers are not a list of
+    strings, reads as no memory for that part.
+    """
     return [
         entry
-        for entry in sources
+        for entry in _record_entries(record, "sources")
         if isinstance(entry, dict)
         and isinstance(entry.get("headers"), list)
         and all(isinstance(header, str) for header in entry["headers"])
@@ -518,20 +524,11 @@ def _stored_ofx_accounts(record: Path) -> list[dict[str, Any]]:
     """The well-formed entries of a remembered-OFX record.
 
     An entry that is not an object, or whose account id or account is not
-    a string, reads as no memory for that part, so stale local state never
-    blocks an import. The next successful run rewrites the record from the
-    surviving entries.
+    a string, reads as no memory for that part.
     """
-    try:
-        data = json.loads(record.read_text())
-    except (OSError, ValueError, RecursionError):
-        return []
-    accounts = data.get("accounts") if isinstance(data, dict) else None
-    if not isinstance(accounts, list):
-        return []
     return [
         entry
-        for entry in accounts
+        for entry in _record_entries(record, "accounts")
         if isinstance(entry, dict) and isinstance(entry.get("acctid"), str) and isinstance(entry.get("account"), str)
     ]
 
@@ -628,6 +625,38 @@ def _entry_skip(entry: dict[str, Any]) -> int | None:
         return None
 
 
+def _usable_rules(entry: dict[str, Any], notes: list[str]) -> None:
+    """Drop a remembered `--rules` path that cannot be used, announcing it."""
+    from cli.csv_mapper import load_rules
+
+    rules_path = entry.get("rules")
+    if not isinstance(rules_path, str):
+        return
+    if is_descriptor_path(rules_path):
+        # Records written before descriptors stopped being remembered
+        # still hold `/dev/fd/0`: dropped without opening it, which
+        # would read stdin or wait on a terminal (w5/792).
+        notes.append(
+            f"Remembered --rules {shlex.quote(rules_path)} names a file descriptor, not a file; "
+            "importing without rules. Re-pass --rules to restore it."
+        )
+        entry["rules"] = None
+        return
+    try:
+        remembered = Path(rules_path)
+        # Opening a pipe nobody feeds waits forever, so it is judged
+        # before `load_rules` reads it (w5/893).
+        if remembered.exists() and not remembered.is_file() and not remembered.is_dir():
+            raise UsageError(output.not_a_file(remembered))
+        load_rules(remembered)
+    except UsageError as exc:
+        notes.append(
+            f"Remembered --rules {shlex.quote(rules_path)} cannot be used ({exc}); importing without rules. "
+            "Re-pass --rules to restore it."
+        )
+        entry["rules"] = None
+
+
 def _recall_csv(
     file: Path, source: Path, account: str | None = None, *, notes: list[str], skip: int | None = None
 ) -> dict[str, Any] | None:
@@ -640,7 +669,7 @@ def _recall_csv(
     remembered `--rules` path degrades to an unruled import, each announced
     in `notes`. The caller persists the repaired entry only after success.
     """
-    from cli.csv_mapper import header_signature, load_rules, parse_mapping, read_header
+    from cli.csv_mapper import header_signature, parse_mapping, read_header
 
     record = _csv_record(file, reading=True)
     if not _is_record(record):
@@ -711,31 +740,7 @@ def _recall_csv(
                 f"Dropped remembered sign=ledger for {source.name}; sign is never re-applied across files. "
                 "Pass sign=ledger explicitly for a ledger-signed export."
             )
-    rules_path = entry.get("rules")
-    if isinstance(rules_path, str):
-        if is_descriptor_path(rules_path):
-            # Records written before descriptors stopped being remembered
-            # still hold `/dev/fd/0`: dropped without opening it, which
-            # would read stdin or wait on a terminal (w5/792).
-            notes.append(
-                f"Remembered --rules {shlex.quote(rules_path)} names a file descriptor, not a file; "
-                "importing without rules. Re-pass --rules to restore it."
-            )
-            entry["rules"] = None
-            return entry
-        try:
-            remembered = Path(rules_path)
-            # Opening a pipe nobody feeds waits forever, so it is judged
-            # before `load_rules` reads it (w5/893).
-            if remembered.exists() and not remembered.is_file() and not remembered.is_dir():
-                raise UsageError(output.not_a_file(remembered))
-            load_rules(remembered)
-        except UsageError as exc:
-            notes.append(
-                f"Remembered --rules {shlex.quote(rules_path)} cannot be used ({exc}); importing without rules. "
-                "Re-pass --rules to restore it."
-            )
-            entry["rules"] = None
+    _usable_rules(entry, notes)
     return entry
 
 
@@ -749,8 +754,6 @@ def _recall_ofx(file: Path, source: Path, account: str | None = None, *, notes: 
     remembered `--rules` path degrades to an unruled import, announced in
     `notes`, as the CSV recall does.
     """
-    from cli.csv_mapper import load_rules
-
     acctids = [acctid for acctid in _ofx_acctids(source) if acctid]
     if len(acctids) != 1:
         return None
@@ -759,26 +762,7 @@ def _recall_ofx(file: Path, source: Path, account: str | None = None, *, notes: 
         return None
     if account is not None and not _same_account(entry.get("account"), account):
         return None
-    rules_path = entry.get("rules")
-    if isinstance(rules_path, str):
-        if is_descriptor_path(rules_path):
-            notes.append(
-                f"Remembered --rules {shlex.quote(rules_path)} names a file descriptor, not a file; "
-                "importing without rules. Re-pass --rules to restore it."
-            )
-            entry["rules"] = None
-            return entry
-        try:
-            remembered = Path(rules_path)
-            if remembered.exists() and not remembered.is_file() and not remembered.is_dir():
-                raise UsageError(output.not_a_file(remembered))
-            load_rules(remembered)
-        except UsageError as exc:
-            notes.append(
-                f"Remembered --rules {shlex.quote(rules_path)} cannot be used ({exc}); importing without rules. "
-                "Re-pass --rules to restore it."
-            )
-            entry["rules"] = None
+    _usable_rules(entry, notes)
     return entry
 
 

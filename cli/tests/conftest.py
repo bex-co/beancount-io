@@ -483,3 +483,64 @@ def ask_on_a_terminal(tmp_path: Path, stub_model: StubModel) -> Callable[..., Te
             os.close(fd)
 
     return run
+
+
+#: One OFX statement row: (trntype, dtposted, trnamt, fitid or None, name, memo or None).
+OfxRow = tuple[str, str, str, str | None, str, str | None]
+
+#: The canonical synthetic OFX rows: a debit with a memo and a credit.
+OFX_CHECKING_ROWS: list[OfxRow] = [
+    ("DEBIT", "20260803", "-42.50", "TXN-001", "PEETS COFFEE", "CARD PURCHASE"),
+    ("CREDIT", "20260805", "1200.00", "TXN-002", "PAYROLL", "DIRECT DEP"),
+]
+
+_OFX_ROW = "<STMTTRN><TRNTYPE>{trntype}<DTPOSTED>{posted}<TRNAMT>{amount}{fitid}<NAME>{name}{memo}</STMTTRN>"
+
+_OFX_FILE = """\
+OFXHEADER:100
+DATA:OFXSGML
+VERSION:102
+SECURITY:NONE
+ENCODING:USASCII
+CHARSET:1252
+COMPRESSION:NONE
+OLDFILEUID:NONE
+NEWFILEUID:NONE
+
+<OFX>
+<SIGNONMSGSRSV1><SONRS><STATUS><CODE>0<SEVERITY>INFO</STATUS><DTSERVER>20260810<CURDEF>USD<LANGUAGE>ENG</SONRS></SIGNONMSGSRSV1>
+<BANKMSGSRSV1>
+<STMTTRNRS><TRNUID>1<STATUS><CODE>0<SEVERITY>INFO</STATUS>
+<STMTRS>
+<CURDEF>USD
+<BANKACCTFROM><BANKID>111000025<ACCTID>{acctid}<ACCTTYPE>CHECKING</BANKACCTFROM>
+<BANKTRANLIST><DTSTART>20260801<DTEND>20260810
+{rows}
+</BANKTRANLIST>
+<LEDGERBAL><BALAMT>5400.00<DTASOF>20260810</LEDGERBAL>
+</STMTRS></STMTTRNRS>
+</BANKMSGSRSV1>
+</OFX>
+"""
+
+
+def render_ofx(rows: list[OfxRow] | None = None, *, acctid: str = "CHK-9") -> str:
+    """Render a synthetic OFX statement file for import tests. All ids are invented."""
+    rendered = "\n".join(
+        _OFX_ROW.format(
+            trntype=trntype,
+            posted=posted,
+            amount=amount,
+            fitid=f"<FITID>{fitid}" if fitid is not None else "",
+            name=name,
+            memo=f"<MEMO>{memo}" if memo is not None else "",
+        )
+        for trntype, posted, amount, fitid, name, memo in (rows if rows is not None else OFX_CHECKING_ROWS)
+    )
+    return _OFX_FILE.format(acctid=acctid, rows=rendered)
+
+
+def write_ofx(path: Path, rows: list[OfxRow] | None = None, *, acctid: str = "CHK-9") -> Path:
+    """Write a synthetic OFX statement file for import tests. All ids are invented."""
+    path.write_text(render_ofx(rows, acctid=acctid))
+    return path

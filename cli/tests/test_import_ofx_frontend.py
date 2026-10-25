@@ -20,6 +20,7 @@ import pytest
 from typer.testing import CliRunner
 
 from cli.main import app
+from tests.conftest import write_ofx
 
 runner = CliRunner()
 CLI_ROOT = Path(__file__).resolve().parents[1]
@@ -30,34 +31,6 @@ option "operating_currency" "USD"
 2026-01-01 open Assets:Checking USD
 2026-01-01 open Expenses:Food USD
 2026-01-01 open Expenses:Uncategorized USD
-"""
-
-OFX_FILE = """\
-OFXHEADER:100
-DATA:OFXSGML
-VERSION:102
-SECURITY:NONE
-ENCODING:USASCII
-CHARSET:1252
-COMPRESSION:NONE
-OLDFILEUID:NONE
-NEWFILEUID:NONE
-
-<OFX>
-<SIGNONMSGSRSV1><SONRS><STATUS><CODE>0<SEVERITY>INFO</STATUS><DTSERVER>20260810<CURDEF>USD<LANGUAGE>ENG</SONRS></SIGNONMSGSRSV1>
-<BANKMSGSRSV1>
-<STMTTRNRS><TRNUID>1<STATUS><CODE>0<SEVERITY>INFO</STATUS>
-<STMTRS>
-<CURDEF>USD
-<BANKACCTFROM><BANKID>111000025<ACCTID>{acctid}<ACCTTYPE>CHECKING</BANKACCTFROM>
-<BANKTRANLIST><DTSTART>20260801<DTEND>20260810
-<STMTTRN><TRNTYPE>DEBIT<DTPOSTED>20260803<TRNAMT>-42.50<FITID>TXN-001<NAME>PEETS COFFEE<MEMO>CARD PURCHASE</STMTTRN>
-<STMTTRN><TRNTYPE>CREDIT<DTPOSTED>20260805<TRNAMT>1200.00<FITID>TXN-002<NAME>PAYROLL<MEMO>DIRECT DEP</STMTTRN>
-</BANKTRANLIST>
-<LEDGERBAL><BALAMT>5400.00<DTASOF>20260810</LEDGERBAL>
-</STMTRS></STMTTRNRS>
-</BANKMSGSRSV1>
-</OFX>
 """
 
 BEANGULP_HINT = "Engine feature 'beangulp' is not enabled. Run: bea engine enable beangulp"
@@ -90,7 +63,7 @@ def beangulp_engine(tmp_path_factory: pytest.TempPathFactory) -> str:
 def books(tmp_path: Path, bea_config_dir: Path) -> Path:
     ledger = tmp_path / "main.bean"
     ledger.write_text(LEDGER)
-    (tmp_path / "checking.ofx").write_text(OFX_FILE.format(acctid="CHK-9"))
+    write_ofx(tmp_path / "checking.ofx")
     return ledger
 
 
@@ -133,7 +106,7 @@ def test_ofx_with_a_beangulp_less_override_names_the_override(books: Path, monke
 
 def test_ofx_content_under_any_suffix_dispatches(books: Path, tmp_path: Path) -> None:
     renamed = tmp_path / "statement.txt"
-    renamed.write_text(OFX_FILE.format(acctid="CHK-9"))
+    write_ofx(renamed)
     result = _import(books, str(renamed), "--account", "Assets:Checking")
     try:
         import examples.importers.ofx  # noqa: F401
@@ -281,7 +254,7 @@ def test_ofx_account_is_remembered_per_acctid(
     assert "2 exact duplicates" in second.stdout
 
     other = tmp_path / "other.ofx"
-    other.write_text(OFX_FILE.format(acctid="CHK-10"))
+    write_ofx(other, acctid="CHK-10")
     third = _import(books, str(other))
     assert third.exit_code == 2, third.output
     assert "but not which account the export belongs to" in " ".join(third.stderr.split())

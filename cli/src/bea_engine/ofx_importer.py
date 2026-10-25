@@ -30,6 +30,9 @@ from bea_engine.protocol import UsageError
 
 OFX_SUFFIXES = (".ofx", ".qfx")
 
+# Mirrors `cli.engine.launch.require_feature`'s message for direct engine
+# callers; the frontend cannot be imported from here (ADR014), so the two
+# texts are kept identical by hand. Update both together.
 BEANGULP_HINT = "Engine feature 'beangulp' is not enabled. Run: bea engine enable beangulp"
 
 # `CHARSET:` values the OFX spec allows, to the codec that reads them.
