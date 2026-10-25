@@ -1,6 +1,6 @@
 # w6 · m8 — Claim and publish the hosted connector on Smithery and Glama
 
-**Worker:** worker1 **Goal:** Users find one accurate, owned, authenticated listing per platform for the existing hosted MCP endpoint. **Status:** todo (t001/t009 done; all remaining tasks depend on Smithery intake or the separate w2/088 full healthy-day observation; pending milestone triage)
+**Worker:** worker1 **Goal:** Users find one accurate, owned, authenticated listing per platform for the existing hosted MCP endpoint. **Status:** blocked (t001/t009 done; Smithery supported intake and w2/088 full healthy-day gate remain; dependent aggregate/closing tasks deferred)
 
 **Implementation estimate:** ~3h, excluding external review queues and the standing closing tasks.
 
@@ -65,3 +65,19 @@ The milestone returns from blocked/ because t009 is a newly isolated independent
 - **t004–t008 — Unblock:** their own prerequisites and actual final native/public DoD hold. Owner: worker after the recorded platform gates.
 
 The original public/native DoD and standing closing tasks are unchanged. Native evidence is updated in the host guide only when ADR019 fixtures and real-host proof support it.
+
+## Blocked — 2026-10-25 UTC
+
+t009 is implemented and shipped in b74835388 with actual Glama native
+OAuth/discovery/query/valid preview and unchanged-state evidence. Every other
+open task is blocked or depends on blocked work. The fresh primary Smithery
+notice recheck still establishes no supported replacement intake; Glama's
+full-day threshold is still in the future.
+
+**Unblock:** Smithery/Arcade supplies a supported direct-directory intake for
+t002, or w2/088 can actually establish one full healthy day at or after
+2026-10-25T07:01:01Z for t003 (a later failure resets the window). Resume only
+the tasks whose condition clears, then complete final aggregate/standing
+acceptance. **Owners:** Smithery/Arcade for intake; Glama for actual monitoring;
+worker for dated verification and follow-through. No remaining account/domain
+or private monitoring-access approval is inferred. Other w6 tasks continue.

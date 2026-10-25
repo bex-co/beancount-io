@@ -46,8 +46,8 @@ The [m9/t011](../../m9/done/t011.md) official Cursor application is submitted wi
 | ChatGPT / OpenAI | Already submitted, publisher-confirmed 2026-10-23 | [m11/t001](t001.md), existing specific application |
 | Claude | Already submitted, publisher-confirmed 2026-10-23 | [m11/t002](t002.md), existing specific application |
 | Awesome Remote MCP Servers | [m11/t003](t003.md) | Same task retains upstream receipt, review and merged entry |
-| Glama | Existing ownership and synthetic-only read monitoring verified; Healthy/44tools. [m8/t003](../../m8/t003.md) coordinates existing [w2/088](../../../w2/blocked/088.md) | w2/088 full healthy day, earliest recheck2026-10-25T07:01:01Z, independent [m8/t009](../../m8/done/t009.md) native path, final [m8/t004](../../m8/t004.md); renew monitoring credential before2026-11-23UTC; no duplicate listing |
-| Smithery | [m8/t002](../../m8/t002.md) | Removed legacy intake remains blocked; platform/publisher must provide a working supported replacement route |
+| Glama | Existing ownership and synthetic-only read monitoring verified; Healthy/44tools. [m8/t003](../m8/t003.md) coordinates existing [w2/088](../../../w2/blocked/088.md) | w2/088 full healthy day, earliest recheck2026-10-25T07:01:01Z, independent [m8/t009](../m8/done/t009.md) native path, final [m8/t004](../m8/t004.md); renew monitoring credential before2026-11-23UTC; no duplicate listing |
+| Smithery | [m8/t002](../m8/t002.md) | Removed legacy intake remains blocked; platform/publisher must provide a working supported replacement route |
 | MCPServers.org | Canonical public listing verified; original Free $0 receipt retained | [m10/t001](../../m10/done/t001.md) done; [m10/t010](../../m10/t010.md) retains directory-advertised native checks |
 | MCPMarket | Accepted Free Queue repository submission; preserve existing receipt | [m10/t002](../../m10/t002.md), m10/t004; reviewer publication then endpoint/OAuth metadata and connection checks |
 | MCP.so | [041](../041.md) | Explicit approval of the observed $39 fee or a documented free route; no payment authorized by this plan |
