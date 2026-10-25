@@ -3,13 +3,13 @@
 - Status: Done (shipped as w4/m3; implementation reviewed 2026-09-27)
 - Date: 2026-08-25
 - Decision owners: Dashboard (resolver + consumers), Backend (expose `open` metadata via GraphQL)
-- Scope: a single metadata key on `open` directives that overrides the cash-flow report's heuristic classification — its values, precedence, validation, and consumers. Working-backwards source: [PRFAQ — Declare Your Cash-Flow Classification in the Ledger](../../dashboard/docs/PRFAQ-cash-flow-ledger-classification.md) (its appendix is the normative spec). Implementing milestone: [w4/m3 (done)](../../.pm/w4/done/m3/README.md). Extends [ADR002](./ADR002-dashboard-cash-flow-report.md), which shipped the report with heuristic-only classification.
+- Scope: a single metadata key on `open` directives that overrides the cash-flow report's heuristic classification — its values, precedence, validation, and consumers. Working-backwards source: [PRFAQ — Declare Your Cash-Flow Classification in the Ledger](../../dashboard/docs/PRFAQ-cash-flow-ledger-classification.md) (its appendix is the normative spec). Implementing milestone: [w4/m3 (done)](../../.pm/w4/done/m3/README.md). Extends [ADR023](./ADR023-dashboard-cash-flow-report.md), which shipped the report with heuristic-only classification.
 
 ## Context
 
-w4/m2 shipped the cash-flow report (ADR002) with classification inferred entirely client-side: root-account mapping plus name-matched cash equivalents from `dashboard/src/features/reports/cash-flow/config.ts` (`CASH_FLOW_ACTIVITY_BY_ROOT` + `CASH_EQUIVALENT_PATTERNS`). That heuristic is right for the common case and silently wrong for the rest — a brokerage sweep looks investing, a credit-card payment looks financing, a money-market fund or stablecoin wallet misses the cash-name patterns. ADR002's own negative consequences predicted this: the first "your cash flow is miscategorized" report was a matter of when, not if. Today a user whose ledger the heuristic gets wrong has no fix short of a feature request against our `config.ts`; the only honesty mechanism is the "classification is inferred" disclosure carried by every export and the account-status panel.
+w4/m2 shipped the cash-flow report (ADR023) with classification inferred entirely client-side: root-account mapping plus name-matched cash equivalents from `dashboard/src/features/reports/cash-flow/config.ts` (`CASH_FLOW_ACTIVITY_BY_ROOT` + `CASH_EQUIVALENT_PATTERNS`). That heuristic is right for the common case and silently wrong for the rest — a brokerage sweep looks investing, a credit-card payment looks financing, a money-market fund or stablecoin wallet misses the cash-name patterns. ADR023's own negative consequences predicted this: the first "your cash flow is miscategorized" report was a matter of when, not if. Today a user whose ledger the heuristic gets wrong has no fix short of a feature request against our `config.ts`; the only honesty mechanism is the "classification is inferred" disclosure carried by every export and the account-status panel.
 
-ADR002 explicitly deferred user-tagged classification ("User-tagged classification via account metadata — deferred, not rejected"). This ADR is that follow-up, designed via the working-backwards PRFAQ.
+ADR023 explicitly deferred user-tagged classification ("User-tagged classification via account metadata — deferred, not rejected"). This ADR is that follow-up, designed via the working-backwards PRFAQ.
 
 ## Decision Drivers
 
@@ -37,7 +37,7 @@ Accept account classifications declared directly in the ledger as **`cash-flow-r
 - **Invalid values fall back, visibly.** An unrecognized value (typo, wrong case, non-string) is treated as absent: resolution falls through to the heuristic and the account is flagged in the status panel ("unknown value, using default"). Nothing fails to render; nothing is silently accepted.
 - **Not date-effective.** A statement for any period uses the declarations as they stand today; changing a classification means editing the `open` directive, and the ledger's version control is the audit trail.
 - **One shared resolver.** `dashboard/src/features/reports/cash-flow/lib/role-resolver.ts` (`resolveCashFlowRole`) produces the final role and its source (`declared` | `heuristic`, plus the raw invalid value for flagging). Every consumer reads from it: the cash-flow report (sections, CCE set, bottom line), CSV/Markdown/print exports (the Markdown and print inferred-classification disclosures appear only while at least one row is still heuristic-resolved; CSV carries no notices), and the overview Sankey (`"cash"` excludes the account from flow nodes; activity roles honored for non-`Income` accounts; `Income` stays the source side and `Equity` stays excluded — declarations never remap those two).
-- **Backend surface.** The existing `getLedgerAccountDirectives` GraphQL query gains a `meta` field carrying each account's `open`-directive metadata; the cash-flow page already fetches those directives for its cash-account status panel, so declared roles arrive in the same request and are merged ahead of the heuristics. This is a deliberate, scoped exception to ADR002's "no backend changes" driver: the ledger service's open entries already carry `meta`, so the backend work is one mapped field, not new computation or a new endpoint.
+- **Backend surface.** The existing `getLedgerAccountDirectives` GraphQL query gains a `meta` field carrying each account's `open`-directive metadata; the cash-flow page already fetches those directives for its cash-account status panel, so declared roles arrive in the same request and are merged ahead of the heuristics. This is a deliberate, scoped exception to ADR023's "no backend changes" driver: the ledger service's open entries already carry `meta`, so the backend work is one mapped field, not new computation or a new endpoint.
 
 ## Alternatives Considered
 
@@ -69,7 +69,7 @@ The ledger is the source of truth; plain text is diffable, greppable, and script
 
 ### Negative
 
-- **Breaks ADR002's zero-backend-change boundary.** Exposing `open` metadata added a `meta` field to the existing `getLedgerAccountDirectives` query in `backend-cluster/backend-v2` — scoped (exposure of already-returned data) and in this monorepo, but a backend change of the kind v1 deliberately avoided.
+- **Breaks ADR023's zero-backend-change boundary.** Exposing `open` metadata added a `meta` field to the existing `getLedgerAccountDirectives` query in `backend-cluster/backend-v2` — scoped (exposure of already-returned data) and in this monorepo, but a backend change of the kind v1 deliberately avoided.
 - **Key collision risk.** A user already using `cash-flow-role` for something else would see it interpreted by this report; mitigated by the key being namespaced by report, documented, and read only by this feature.
 - **Declared-vs-inferred confusion risk.** Mitigated by a per-row "declared" marker (heuristic rows carry no marker; a separate "inferred" marker was not built) and the export disclosure gating.
 - **Support load from typos.** Mitigated by status-panel flagging rather than silent fallback.
@@ -85,7 +85,7 @@ The ledger is the source of truth; plain text is diffable, greppable, and script
 Internal:
 
 - `dashboard/docs/PRFAQ-cash-flow-ledger-classification.md` — working-backwards source; appendix is the normative, parser-verified spec
-- `docs/adrs/ADR002-dashboard-cash-flow-report.md` — the heuristic-only report this ADR extends (see its "User-tagged classification via account metadata" deferred alternative)
+- `docs/adrs/ADR023-dashboard-cash-flow-report.md` — the heuristic-only report this ADR extends (see its "User-tagged classification via account metadata" deferred alternative)
 - `dashboard/src/features/reports/cash-flow/lib/role-resolver.ts` — the shared resolver (`resolveCashFlowRole`)
 - `dashboard/src/features/reports/cash-flow/config.ts` — the published fallback heuristics (`CASH_FLOW_ACTIVITY_BY_ROOT` + `CASH_EQUIVALENT_PATTERNS`)
 - `.pm/w4/done/m3/` — completed implementing milestone

@@ -1,4 +1,4 @@
-# ADR 001: Ask AI Chat History Persistence
+# ADR 022: Ask AI Chat History Persistence
 
 - Status: Proposed
 - Date: 2026-08-17

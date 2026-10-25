@@ -1,0 +1,223 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1130" width="1200" height="1130" role="img" aria-labelledby="t d">
+  <title id="t">Mobile billing architecture (ADR 001)</title>
+  <desc id="d">Stripe stays as it is. The App Store and Google Play become two more sources of the plan. The mobile app buys in the store and sends the evidence to the backend; the store billing service verifies it and records store subscriptions; getUserTier takes the highest tier from the store rows and Stripe.</desc>
+  <style>
+    :root {
+      --bg: #ffffff; --text: #1f2328; --muted: #57606a; --line: #57606a; --frame: #8c959f;
+      --new-fill: #dafbe1; --new-stroke: #1a7f37;
+      --chg-fill: #fff8c5; --chg-stroke: #9a6700;
+      --old-fill: #f6f8fa; --old-stroke: #8c959f;
+      --step: #0969da; --step-text: #ffffff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0d1117; --text: #e6edf3; --muted: #9198a1; --line: #9198a1; --frame: #6e7681;
+        --new-fill: #12261e; --new-stroke: #3fb950;
+        --chg-fill: #272115; --chg-stroke: #d29922;
+        --old-fill: #161b22; --old-stroke: #6e7681;
+        --step: #1f6feb; --step-text: #ffffff;
+      }
+    }
+    text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif; fill: var(--text); }
+    .bg { fill: var(--bg); }
+    .h1 { font-size: 22px; font-weight: 600; }
+    .lead { font-size: 13px; fill: var(--muted); }
+    .h2 { font-size: 14px; font-weight: 600; }
+    .name { font-size: 15px; font-weight: 600; text-anchor: middle; }
+    .sub { font-size: 12px; fill: var(--muted); text-anchor: middle; }
+    .lbl { font-size: 12px; fill: var(--muted); }
+    .end { text-anchor: end; }
+    .legend { font-size: 12px; fill: var(--muted); }
+    .step-text { font-size: 13px; }
+    .new { fill: var(--new-fill); stroke: var(--new-stroke); stroke-width: 1.5; }
+    .chg { fill: var(--chg-fill); stroke: var(--chg-stroke); stroke-width: 1.5; }
+    .old { fill: var(--old-fill); stroke: var(--old-stroke); stroke-width: 1.5; }
+    .frame { fill: none; stroke: var(--frame); stroke-width: 1.2; stroke-dasharray: 6 4; }
+    .container { fill: none; stroke: var(--frame); stroke-width: 1.2; }
+    .edge { fill: none; stroke: var(--line); stroke-width: 1.6; marker-end: url(#arrow); }
+    .push { fill: none; stroke: var(--line); stroke-width: 1.6; stroke-dasharray: 6 4; marker-end: url(#arrow); }
+    .arrowhead { fill: var(--line); }
+    .badge { fill: var(--step); }
+    .badge-text { font-size: 12px; font-weight: 700; fill: var(--step-text); text-anchor: middle; }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path class="arrowhead" d="M0,0 L10,5 L0,10 z"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1200" height="1130"/>
+
+  <!-- Title and legend -->
+  <text class="h1" x="40" y="44">Mobile billing architecture · ADR 001</text>
+  <text class="lead" x="40" y="70">Stripe stays as it is. The App Store and Google Play become two more sources of the plan, and getUserTier takes the highest tier.</text>
+
+  <rect class="new" x="40" y="91" width="18" height="13" rx="3"/>
+  <text class="legend" x="64" y="102">New</text>
+  <rect class="chg" x="112" y="91" width="18" height="13" rx="3"/>
+  <text class="legend" x="136" y="102">Changed</text>
+  <rect class="old" x="210" y="91" width="18" height="13" rx="3"/>
+  <text class="legend" x="234" y="102">Existing, unchanged</text>
+  <path class="edge" d="M380,97 H420"/>
+  <text class="legend" x="430" y="102">call or request</text>
+  <path class="push" d="M540,97 H580"/>
+  <text class="legend" x="590" y="102">notification pushed by a provider</text>
+  <circle class="badge" cx="808" cy="97" r="10"/>
+  <text class="badge-text" x="808" y="101">1</text>
+  <text class="legend" x="824" y="102">store purchase step, explained below</text>
+
+  <!-- Clients -->
+  <rect class="chg" x="330" y="130" width="280" height="70" rx="8"/>
+  <text class="name" x="470" y="160">Mobile app</text>
+  <text class="sub" x="470" y="182">iOS · Android · plan screen · expo-iap</text>
+
+  <rect class="chg" x="840" y="130" width="280" height="70" rx="8"/>
+  <text class="name" x="980" y="160">Web dashboard</text>
+  <text class="sub" x="980" y="182">billing settings · shows store billing</text>
+
+  <!-- External stores -->
+  <rect class="frame" x="40" y="255" width="480" height="140" rx="10"/>
+  <text class="lbl" x="56" y="274">External stores</text>
+
+  <rect class="old" x="60" y="285" width="210" height="90" rx="8"/>
+  <text class="name" x="165" y="318">App Store</text>
+  <text class="sub" x="165" y="340">StoreKit 2</text>
+  <text class="sub" x="165" y="358">App Store Server API</text>
+
+  <rect class="old" x="290" y="285" width="210" height="90" rx="8"/>
+  <text class="name" x="395" y="318">Google Play</text>
+  <text class="sub" x="395" y="340">Play Billing · Developer API</text>
+  <text class="sub" x="395" y="358">notifications via Pub/Sub</text>
+
+  <rect class="old" x="840" y="285" width="280" height="90" rx="8"/>
+  <text class="name" x="980" y="318">Stripe</text>
+  <text class="sub" x="980" y="340">Checkout · Customer Portal</text>
+  <text class="sub" x="980" y="358">subscriptions · webhooks</text>
+
+  <!-- Client edges -->
+  <path class="edge" d="M380,200 V255"/>
+  <circle class="badge" cx="380" cy="227" r="10"/>
+  <text class="badge-text" x="380" y="231">1</text>
+  <text class="lbl end" x="362" y="232">buy · change plan · restore</text>
+
+  <path class="edge" d="M590,200 V480"/>
+  <circle class="badge" cx="590" cy="300" r="10"/>
+  <text class="badge-text" x="590" y="304">2</text>
+  <text class="lbl" x="606" y="296">confirm purchase:</text>
+  <text class="lbl" x="606" y="313">signed transaction or token</text>
+
+  <path class="edge" d="M980,200 V285"/>
+  <text class="lbl" x="990" y="247">Checkout · Portal</text>
+
+  <path class="edge" d="M840,185 H810 V505 H780"/>
+  <text class="lbl end" x="800" y="412">read plan ·</text>
+  <text class="lbl end" x="800" y="428">Stripe plan changes</text>
+
+  <!-- backend-v2 -->
+  <rect class="container" x="20" y="440" width="1160" height="490" rx="12"/>
+  <text class="h2" x="40" y="464">backend-v2</text>
+
+  <!-- Store side -->
+  <rect class="new" x="60" y="480" width="440" height="80" rx="8"/>
+  <text class="name" x="280" y="506">Store billing service</text>
+  <text class="sub" x="280" y="528">notification endpoints (REST) · confirmStorePurchase</text>
+  <text class="sub" x="280" y="546">verify · acknowledge Google · normalize · claim</text>
+
+  <path class="push" d="M170,395 V480"/>
+  <circle class="badge" cx="170" cy="414" r="10"/>
+  <text class="badge-text" x="170" y="418">5</text>
+  <text class="lbl" x="186" y="419">renewals · refunds · expiry</text>
+
+  <path class="edge" d="M420,480 V395"/>
+  <circle class="badge" cx="420" cy="414" r="10"/>
+  <text class="badge-text" x="420" y="418">4</text>
+  <text class="lbl" x="436" y="419">verify · acknowledge</text>
+
+  <rect class="new" x="60" y="610" width="240" height="60" rx="8"/>
+  <text class="name" x="180" y="636">Reconciliation job</text>
+  <text class="sub" x="180" y="656">hourly + daily · exits when done</text>
+  <path class="edge" d="M180,610 V560"/>
+
+  <path class="edge" d="M420,560 V818"/>
+  <text class="lbl" x="430" y="700">write rows</text>
+
+  <!-- Center -->
+  <rect class="chg" x="560" y="480" width="220" height="80" rx="8"/>
+  <text class="name" x="670" y="506">GraphQL API</text>
+  <text class="sub" x="670" y="528">+ confirmStorePurchase</text>
+  <text class="sub" x="670" y="546">+ storeBillingIdentity</text>
+
+  <path class="edge" d="M560,520 H500"/>
+  <circle class="badge" cx="530" cy="520" r="10"/>
+  <text class="badge-text" x="530" y="524">3</text>
+
+  <path class="edge" d="M670,560 V596"/>
+  <circle class="badge" cx="670" cy="578" r="10"/>
+  <text class="badge-text" x="670" y="582">6</text>
+  <text class="lbl" x="686" y="583">every product request</text>
+
+  <rect class="chg" x="560" y="596" width="220" height="80" rx="8"/>
+  <text class="name" x="670" y="622">Plan-limit checks</text>
+  <text class="sub" x="670" y="644">ledgers · entries · AI · API keys</text>
+  <text class="sub" x="670" y="662">mobile waivers removed</text>
+
+  <path class="edge" d="M670,676 V716"/>
+
+  <rect class="chg" x="560" y="716" width="220" height="70" rx="8"/>
+  <text class="name" x="670" y="744">getUserTier</text>
+  <text class="sub" x="670" y="766">highest tier across sources</text>
+
+  <path class="edge" d="M600,786 V818"/>
+  <text class="lbl" x="610" y="808">active rows</text>
+
+  <!-- Stripe side -->
+  <rect class="chg" x="840" y="480" width="280" height="80" rx="8"/>
+  <text class="name" x="980" y="506">Stripe billing service</text>
+  <text class="sub" x="980" y="528">webhook · Checkout · Portal · plan changes</text>
+  <text class="sub" x="980" y="546">new: refuses changes while a store renews</text>
+
+  <path class="push" d="M930,375 V480"/>
+  <text class="lbl" x="940" y="432">webhooks</text>
+  <path class="edge" d="M1060,480 V375"/>
+  <text class="lbl" x="1070" y="432">live tier</text>
+
+  <path class="edge" d="M780,530 H840"/>
+
+  <path class="edge" d="M780,751 H1000 V560"/>
+  <text class="lbl" x="790" y="772">Stripe tier · cached fallback</text>
+
+  <path class="edge" d="M1080,560 V818"/>
+  <text class="lbl end" x="1070" y="800">customers · cached tier</text>
+
+  <!-- Databases -->
+  <path class="new" d="M200,826 V896 A210,10 0 0 0 620,896 V826"/>
+  <ellipse class="new" cx="410" cy="826" rx="210" ry="10"/>
+  <text class="name" x="410" y="862">PostgreSQL · new tables</text>
+  <text class="sub" x="410" y="882">store_subscriptions · store_billing_events · billing_identities</text>
+
+  <path class="old" d="M800,826 V896 A160,10 0 0 0 1120,896 V826"/>
+  <ellipse class="old" cx="960" cy="826" rx="160" ry="10"/>
+  <text class="name" x="960" y="862">PostgreSQL · existing</text>
+  <text class="sub" x="960" y="882">paid_customers</text>
+
+  <!-- Steps -->
+  <text class="h2" x="40" y="970">Store purchase, step by step</text>
+  <circle class="badge" cx="50" cy="991" r="10"/>
+  <text class="badge-text" x="50" y="995">1</text>
+  <text class="step-text" x="70" y="996">The app buys, changes or restores the plan in the App Store or Google Play.</text>
+  <circle class="badge" cx="50" cy="1013" r="10"/>
+  <text class="badge-text" x="50" y="1017">2</text>
+  <text class="step-text" x="70" y="1018">The app sends the signed transaction or purchase token to confirmStorePurchase.</text>
+  <circle class="badge" cx="50" cy="1035" r="10"/>
+  <text class="badge-text" x="50" y="1039">3</text>
+  <text class="step-text" x="70" y="1040">GraphQL hands the evidence to the store billing service.</text>
+  <circle class="badge" cx="50" cy="1057" r="10"/>
+  <text class="badge-text" x="50" y="1061">4</text>
+  <text class="step-text" x="70" y="1062">The service verifies it with the store, acknowledges a Google purchase, and writes store_subscriptions.</text>
+  <circle class="badge" cx="50" cy="1079" r="10"/>
+  <text class="badge-text" x="50" y="1083">5</text>
+  <text class="step-text" x="70" y="1084">Renewals, refunds and expiry arrive as notifications, and the service re-reads the store. The reconciliation job repairs missed ones.</text>
+  <circle class="badge" cx="50" cy="1101" r="10"/>
+  <text class="badge-text" x="50" y="1105">6</text>
+  <text class="step-text" x="70" y="1106">Every product request checks plan limits; getUserTier takes the highest tier from the store rows and Stripe.</text>
+</svg>

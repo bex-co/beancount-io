@@ -2,7 +2,7 @@
 
 Status: Shipped as [w4/m3](../../.pm/w4/done/m3/README.md); the design is recorded in [ADR003](../../docs/adrs/ADR003-dashboard-cash-flow-ledger-roles.md). This document describes the feature as built. Two parts of the original working-backwards draft were not built: an "inferred" row marker (only a "declared" marker exists) and instrumentation for the success measures.
 Date: 2026-08-25
-Related: [ADR002 — Cash-Flow Report](../../docs/adrs/ADR002-dashboard-cash-flow-report.md), [ADR003 — Cash-Flow Classification Declared in the Ledger](../../docs/adrs/ADR003-dashboard-cash-flow-ledger-roles.md)
+Related: [ADR023 — Cash-Flow Report](../../docs/adrs/ADR023-dashboard-cash-flow-report.md), [ADR003 — Cash-Flow Classification Declared in the Ledger](../../docs/adrs/ADR003-dashboard-cash-flow-ledger-roles.md)
 
 ---
 

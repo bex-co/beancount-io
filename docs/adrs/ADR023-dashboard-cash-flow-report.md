@@ -1,4 +1,4 @@
-# ADR 002: Cash Flow Report — statement page, charts, exports, and account status
+# ADR 023: Cash Flow Report — statement page, charts, exports, and account status
 
 - Status: Done (shipped as w4/m2; implementation reviewed 2026-09-27)
 - Date: 2026-08-20

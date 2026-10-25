@@ -1,446 +1,343 @@
-# ADR 001: Self-Built Cross-Platform Mobile Billing
+# ADR 001: Selling the beancount.io Plans in the Mobile Apps
 
-- Status: Deferred (2026-10-03) — shelved by owner decision; nothing in this record is implemented, and reviving it requires an explicit owner decision
-- Date: 2026-07-27
+- Status: Proposed (revived 2026-10-25) — the owner decided to sell the beancount.io plans in the iOS and Android apps. This revision replaces the 2026-07-27 design and ends the 2026-10-03 deferral. Nothing in it is implemented yet.
+- Date: 2026-07-27 (revised 2026-10-25)
 - Decision owners: Mobile and Backend
-- Scope: Beancount Web, iOS, and Android subscription entitlements
+- Scope: plan purchase, plan changes, and plan limits on iOS and Android, and the Web and backend changes those require. Web billing through Stripe stays as [PRFAQ005](../prfaqs/PRFAQ005-plan-changes-and-yearly-billing.md) defines it.
 
-## Current State
+## Goal
 
-In-app purchase is not being built. The direction in force is:
+The iOS and Android apps sell the same self-serve plans as `beancount.io/pricing`, with the same limits, through each store's own billing:
 
-- **The mobile app is consumption-only.** It does not sell subscriptions, and it carries no native purchase library, purchase screen, or subscription-management surface. A subscriber who bought on the Web signs in and uses their tier.
-- **The app does not prompt for an upgrade.** Commit `abfc55c1` removed the plan-upgrade calls to action from the quota and ledger-limit errors in all 13 locales and replaced them with neutral explanations (for example, the agent quota notice in `mobile/src/translations/en.ts` now only says the allowance resets next month). It also hid "Open in browser" from the iOS ledger menu (`mobile/src/components/ledger-drawer/ledger-drawer.tsx`).
-- **Billing stays Stripe-only on the backend.** `paid_customers` requires a Stripe customer ID (`backend-cluster/backend-v2/src/features/stripe/data/paid-customer-model/schema.ts`), and tier resolution reads that table and calls Stripe (`backend-cluster/backend-v2/src/features/stripe/operations/get-user-tier.ts`). None of the provider-neutral tables, services, or callbacks described below exist.
-- **Residue.** Three GraphQL operation documents — `SubscriptionStatus`, `CreateSubscriptionSession`, and `CancelSubscription` in `mobile/src/common/graphql/queries/` — have no caller in the app. They are kept on `mobile/scripts/graphql-operations-allowlist.json` with this record as the stated reason. They are Stripe-shaped (a Checkout session and a Stripe cancellation), so they are not the provider-neutral operations this design calls for; a revival replaces them rather than building on them.
+| Plan         | Web monthly | Web yearly | Ledgers | Collaborators per ledger | Ledger entries | AI Assistant tokens a month |
+| ------------ | ----------- | ---------- | ------- | ------------------------ | -------------- | --------------------------- |
+| Free         | $0          | —          | 1       | 1                        | 1,000          | 20K                         |
+| Premium      | $14.99      | $143.88    | 5       | 5                        | Unlimited      | 500K                        |
+| Growth       | $99.99      | $959.88    | 20      | 10                       | Unlimited      | 2M                          |
+| Organization | $499.99     | $4,799.88  | 500     | 50                       | Unlimited      | 10M                         |
+| Enterprise   | Contact     | Contact    | ∞       | ∞                        | Unlimited      | ∞                           |
 
-The rest of this record is the design to pick up if in-app purchase is revived. It is kept because the analysis still holds; it is not a commitment or a schedule. See [Revival Prerequisites](#revival-prerequisites) for what must be settled before any of it starts.
+Limits come from `TIER_LIMITS` in `backend-cluster/backend-v2/src/features/stripe/service/stripe.ts`. The pricing page's other rows (backups, automation and integrations, OIDC SSO, multi-entity consolidation) are provided on request, as PRFAQ005 records. They apply to a plan however it was bought.
 
-## Context
+A subscriber has one Beancount plan whichever of Stripe, the App Store, or Google Play bills it, and the plan unlocks the same limits on the Web, the CLI, the API, and both apps.
 
-Beancount sells subscriptions on the Web through Stripe Checkout. The backend creates Checkout sessions, receives Stripe webhooks, stores Stripe customer records, and derives a user's subscription tier from Stripe subscriptions and Price IDs.
+## Current State (2026-10-25)
 
-Selling the same digital service inside the iOS and Android apps would be subject to store payment rules. For a globally distributed application, consumer purchases that unlock features in the app must use Apple In-App Purchase and Google Play Billing by default. Stripe Checkout may remain available on the Web and may be offered from a mobile app only in storefronts and programs where external purchasing is explicitly allowed. A region-specific external-purchase implementation is not part of this decision.
+- **App Review rejected 1.20261002.50 for not offering the subscription through in-app purchase (guideline 3.1.1).** The app gives Web subscribers their paid limits but sells nothing itself.
+- **The app sells nothing.** It has no purchase library, purchase screen, or plan-management surface. Commit `abfc55c1` removed the upgrade prompts from its quota and ledger-limit errors.
+- **Some plan limits do not apply on mobile.** `backend-cluster/backend-v2/src/server/api/request-platform.ts` says "The mobile app is free independently of the account's web subscription". On a request marked as mobile:
+  - ledger creation skips the ledger limit (`features/ledger/operations/create-ledger.ts:75`);
+  - entry writes skip the 1,000-entry limit (`features/ledger/operations/directive-limit-bypass.ts`);
+  - file import, receipt reading, and category suggestions skip the AI-token limit (`assertAssistedQuotaAvailable` in `features/llm/service/llm-service.ts:153`).
 
-If mobile purchase is revived, the desired product behavior is:
+  Ask AI is not exempt: `features/ai-agent/service/agent-handler/self-hosted-agent-handler.ts:74` checks the token allowance on every client. So a Web plan changes what the app allows, which is what guideline 3.1.3(b) requires to be purchasable in the app. The exemptions are keyed on the client-supplied `x-app-id` header, which the code itself documents is "not proof of a native client".
 
-- A subscription purchased through Stripe, the App Store, or Google Play unlocks the same Beancount account entitlement.
-- Existing Stripe subscribers retain their subscriptions without migration of payment credentials, renewal dates, invoices, or customer management.
-- Authorization decisions are made by the Beancount backend, not by a mobile client or an individual payment provider.
-- Users are prevented, where possible, from buying the same entitlement through more than one provider.
-- Subscription management remains with the provider that created the subscription.
+- **Every plan limit already resolves through one function.** `getUserTier` (`features/stripe/operations/get-user-tier.ts`) lists the user's live Stripe subscriptions and takes the highest recognized tier. If Stripe is unreachable, it falls back to the last tier it verified, cached in `paid_customers.period_tier` and `current_period_end`. Its callers are ledger creation, collaborators, the entry-limit lookup, AI usage, the account profile, and API-key creation. No product code calls Stripe directly.
+- **Billing verbs are GraphQL-only, and that is documented.** `BILLING_VERBS` in `backend-cluster/backend-v2/src/server/api/op-class.ts` exempts them from REST and MCP with recorded reasons and per-verb authorization actions.
+- **Account deletion cancels Stripe subscriptions** (`features/auth/service/account-service.ts:348`).
+- **Leftovers.** Three Stripe-shaped GraphQL documents in `mobile/src/common/graphql/queries/` have no caller: `SubscriptionStatus`, `CreateSubscriptionSession`, and `CancelSubscription`. They are allowlisted in `mobile/scripts/graphql-operations-allowlist.json`.
 
-The backend billing model is Stripe-specific. In particular, `paid_customers` requires a Stripe customer ID, full subscription reads call Stripe, and tier resolution maps Stripe Price IDs directly to Beancount tiers. That model cannot safely represent App Store or Google Play subscriptions.
+## Store Policy Constraints
 
-## Decision Drivers
-
-- Compliance with App Store and Google Play payment policies.
-- One entitlement model across Web, iOS, and Android.
-- Server-authoritative authorization and fraud resistance.
-- Preservation of the existing Stripe integration and subscribers.
-- A small initial catalog: Premium monthly and Premium annual.
-- Control of customer and billing data without a required subscription-platform vendor.
-- Acceptable engineering and operational complexity for the Backend team.
-- Idempotent recovery from duplicate, delayed, missing, and out-of-order provider notifications.
+- **Apple 3.1.1:** unlocking features or functionality in the app requires in-app purchase.
+- **Apple 3.1.3(b):** a plan bought on the Web may be used in the app only if that plan is also offered as an in-app purchase.
+- **Apple 3.1.3(c):** services sold directly to an organization for its members may be bought outside in-app purchase; consumer and single-user sales may not. Enterprise is a sales contract with an organization, so it qualifies.
+- **Apple 3.1.2:** auto-renewable subscriptions must be available on all of the user's devices, and the app must describe what the user gets for the price before asking them to subscribe.
+- **Google Play's Payments policy:** in-app digital subscriptions use Google Play's billing system. Google's alternative-billing and external-offer programs require enrollment and apply only in eligible regions.
+- **Out of scope:** Apple's United States storefront now permits buttons and links to Web purchase. Linking out there, and Google's programs, would each be a separate later decision.
 
 ## Decision
 
-This decision is deferred; the sections from here to [Rollback and Failure Containment](#rollback-and-failure-containment) describe the intended design, not work in progress.
+### D1. Catalog: the six self-serve plan variants in both stores
 
-If in-app purchase is revived, Beancount will build and operate a provider-neutral billing service in the existing backend.
+| Canonical plan       | Stripe (existing)             | App Store product                   | Google Play subscription / base plan |
+| -------------------- | ----------------------------- | ----------------------------------- | ------------------------------------ |
+| Premium monthly      | Premium monthly Price ID      | `io.beancount.premium.monthly`      | `premium` / `monthly`                |
+| Premium yearly       | Premium yearly Price ID       | `io.beancount.premium.yearly`       | `premium` / `yearly`                 |
+| Growth monthly       | Growth monthly Price ID       | `io.beancount.growth.monthly`       | `growth` / `monthly`                 |
+| Growth yearly        | Growth yearly Price ID        | `io.beancount.growth.yearly`        | `growth` / `yearly`                  |
+| Organization monthly | Organization monthly Price ID | `io.beancount.organization.monthly` | `organization` / `monthly`           |
+| Organization yearly  | Organization yearly Price ID  | `io.beancount.organization.yearly`  | `organization` / `yearly`            |
 
-The payment providers will be:
+- **Configuration.** The mapping from a store product to tier and cycle is version-controlled backend configuration, next to the Stripe `SUBSCRIPTION_CONFIG`. Store credentials stay in environment secrets.
+- **Enterprise** is not sold in the apps (3.1.3(c)). Free needs no product.
+- **Prices.** Each store charges its own price points. At launch the US price point is the one nearest the Web USD price, and other storefronts use the store's equalized prices. A different store price is a pricing decision outside this ADR.
+- **No offers at launch.** There are no trials or introductory offers, matching PRFAQ005's scope.
+- **Displayed prices.** The app shows the price and terms the store returns; it never hard-codes a Stripe amount.
 
-- Web: Stripe Billing and the existing Stripe Checkout and Customer Portal flows.
-- iOS: StoreKit 2 and App Store In-App Purchase.
-- Android: Google Play Billing.
+### D2. One set of limits on every client
 
-RevenueCat will not be introduced for the initial implementation. It remains a future option if the operational cost of the self-built integration exceeds its benefit.
+The mobile plan exemptions end in the same app release that ships purchase. A plan cannot be sold in an app that already waives its limits, and the exemptions would remain reachable by anyone who sends the header.
 
-The mobile client will use an Expo-compatible native IAP library, initially `expo-iap`, to access StoreKit and Play Billing. Adding the dependency still requires the repository's normal dependency approval. IAP features require an Expo development build and cannot be tested in Expo Go.
+- Ledger creation, entry writes, and assisted AI requests apply the owner's plan limits on every client. `requestPlatform` no longer affects plan limits.
+- Nothing already stored is locked, per PRFAQ005's rules. Existing ledgers keep working above the ledger limit, and entries can always be edited and deleted. Only creating a ledger, adding entries past 1,000 on Free, and AI requests past the month's allowance are refused.
+- Each refusal in the app opens the plan sheet (D14) instead of a dead-end error.
+- Free mobile users above a Free limit lose the waiver. Release notes and the plan sheet say so.
 
-The backend will use Apple's official App Store Server Node Library for JWS verification and App Store Server API access. It will use the Google Play Developer API for purchase verification, acknowledgement, and subscription reconciliation.
+### D3. Architecture: Stripe stays as it is; the stores become two more sources of the plan
 
-### Authoritative Entitlements
+The App Store and Google Play are merchants of record. They take payment, set local prices, collect tax, and handle renewal, refunds, and plan changes. Beancount receives signed evidence that an account holds a plan until a given time. In the backend, the two stores are therefore two more **sources** of a user's tier, not two more payment integrations.
 
-Payment-provider records are evidence for an entitlement; they are not the authorization interface used by product features.
+`getUserTier` stays the single seam and becomes:
 
-All product limits, including ledger, collaborator, directive, and AI quota limits, will read a Beancount entitlement projection. Product code must not call Stripe, Apple, or Google directly to decide whether a request is allowed.
-
-The entitlement projection will contain, at minimum:
-
-- the Beancount user ID;
-- the entitlement ID, initially `premium`;
-- the resolved Beancount tier;
-- whether access is currently granted;
-- the access expiration time, when applicable;
-- the subscription that currently grants access;
-- the time at which the projection was last verified.
-
-If more than one valid subscription grants the same entitlement, access remains available, but the account is flagged as having duplicate billing sources. The UI must not intentionally create a second subscription while an equivalent entitlement is active.
-
-### High-Level Architecture
-
-```mermaid
-flowchart TB
-  user@{ shape: tri, label: "customer" }
-
-  subgraph clients["client applications"]
-    mobile["Expo mobile app (device client)"]
-    web["Web dashboard (browser client)"]
-  end
-
-  subgraph providers["external payment providers"]
-    apple["Apple App Store and StoreKit 2"]
-    google["Google Play Billing"]
-    stripe["Stripe Billing"]
-  end
-
-  subgraph backend["Beancount backend"]
-    graphql["GraphQL API"]
-    callbacks["REST provider callback handlers (backend API component)"]
-    billing["Billing service"]
-    authz["Product authorization services"]
-    reconcile["Reconciliation job (scheduled process, exits when done)"]
-    store[(PostgreSQL billing tables)]
-  end
-
-  user --> mobile
-  user --> web
-  mobile -->|purchase| apple
-  mobile -->|purchase| google
-  web -->|Checkout and Customer Portal| stripe
-  mobile -->|confirm purchase and read status| graphql
-  web -->|read status| graphql
-  graphql -->|billing commands| billing
-  graphql -->|product requests| authz
-  authz -->|read user entitlements| store
-  callbacks --> billing
-  reconcile --> billing
-  billing -->|write subscriptions, events, and entitlements| store
-  billing -->|verify and reconcile| apple
-  billing -->|verify, acknowledge, and reconcile| google
-  billing -->|verify and reconcile| stripe
-  apple -->|server notifications| callbacks
-  google -->|RTDN through Pub/Sub| callbacks
-  stripe -->|webhooks| callbacks
+```text
+effective tier = highestTier( Stripe tier (unchanged, live with cached fallback),
+                              tiers of the user's active store subscriptions )
 ```
 
-Provider notifications are triggers to fetch or verify current provider state. They are not trusted as the sole source of truth.
+- **Stripe.** The Stripe path, `paid_customers`, Checkout, the Customer Portal, plan changes, and billing email are not migrated or rewritten.
+- **Store reads.** Store state is read from Beancount's own tables, so a product request never waits on Apple or Google.
 
-## Domain Model
+![Mobile billing architecture: the app buys in the App Store or Google Play and sends the evidence to the backend; the store billing service verifies it and writes store subscriptions; getUserTier takes the highest tier from the store rows and Stripe, which is unchanged.](../images/adr001-mobile-billing-architecture.svg)
 
-The exact Drizzle schema may evolve during implementation, but it must preserve the following concepts.
+Store notifications only trigger a fresh read of provider state; they are never trusted as the state itself.
 
-### `billing_identities`
+### D4. Data model
 
-Stores stable, non-secret identifiers used to associate provider purchases with a Beancount account.
+The Drizzle schema may change in detail but keeps these concepts.
 
-| Field                          | Purpose                                       |
-| ------------------------------ | --------------------------------------------- |
-| `user_id`                      | Beancount account ID                          |
-| `apple_app_account_token`      | Stable UUID supplied to StoreKit purchases    |
-| `google_obfuscated_account_id` | Stable one-way value supplied to Play Billing |
-| timestamps                     | Audit and lifecycle metadata                  |
+**`billing_identities`:** stable, non-secret identifiers supplied to the stores at purchase.
 
-The existing Beancount user ID is text and must not be assumed to be a UUID. Apple requires `appAccountToken` to be a UUID, so it will be generated and stored separately. The Google identifier must not expose an email address or other direct personal data.
+| Field                          | Purpose                                                              |
+| ------------------------------ | -------------------------------------------------------------------- |
+| `user_id`                      | Beancount account (text; not assumed to be a UUID)                   |
+| `apple_app_account_token`      | Random UUID passed to StoreKit (`appAccountToken`); unique           |
+| `google_obfuscated_account_id` | Opaque random value passed to Play Billing; unique; no personal data |
 
-### `billing_subscriptions`
+Both values are stored rather than derived, because notifications arrive carrying only the token and must be mapped back to an account.
 
-Stores normalized current state while retaining enough provider information for reconciliation.
+**`store_subscriptions`:** current normalized state of each store subscription.
 
-| Field                      | Purpose                                         |
-| -------------------------- | ----------------------------------------------- |
-| `id`                       | Internal subscription ID                        |
-| `user_id`                  | Owning Beancount account                        |
-| `provider`                 | `STRIPE`, `APP_STORE`, or `GOOGLE_PLAY`         |
-| `environment`              | `SANDBOX` or `PRODUCTION`                       |
-| `external_subscription_id` | Provider-unique stable identifier               |
-| `external_customer_id`     | Optional provider customer identifier           |
-| `product_id`               | Provider product identifier                     |
-| `base_plan_id`             | Optional Google Play base plan identifier       |
-| `tier`                     | Normalized Beancount tier                       |
-| `provider_status`          | Provider-native status for diagnosis            |
-| `normalized_status`        | Beancount lifecycle status                      |
-| `current_period_start`     | Current service period start                    |
-| `current_period_end`       | Current service period end                      |
-| `will_renew`               | Whether automatic renewal is currently expected |
-| `revoked_at`               | Refund or revocation time, if any               |
-| `provider_updated_at`      | Provider event or transaction time              |
-| timestamps                 | Local persistence metadata                      |
+| Field                                     | Purpose                                                                              |
+| ----------------------------------------- | ------------------------------------------------------------------------------------ |
+| `id`                                      | Internal ID                                                                          |
+| `user_id`                                 | Owning account; **nullable** for a purchase not yet claimed (D9)                     |
+| `provider`                                | `APP_STORE` or `GOOGLE_PLAY`                                                         |
+| `environment`                             | `PRODUCTION` or `SANDBOX` (D8)                                                       |
+| `external_id`                             | Apple original transaction ID; Google purchase token                                 |
+| `replaced_by_id`                          | The row that superseded this one through a Google linked purchase token              |
+| `product_id`, `base_plan_id`              | Store identifiers                                                                    |
+| `tier`, `cycle`                           | Mapped from D1 configuration                                                         |
+| `provider_status`                         | Store-native status, for diagnosis                                                   |
+| `status`                                  | Normalized: `ACTIVE`, `GRACE`, `PENDING`, `ON_HOLD`, `EXPIRED`, `REVOKED`, `UNKNOWN` |
+| `access_ends_at`                          | End of the paid or grace period                                                      |
+| `will_renew`, `pending_product_id`        | Auto-renew state and any scheduled plan change                                       |
+| `acknowledged_at`                         | Google acknowledgement time                                                          |
+| `revoked_at`                              | Refund or revocation time                                                            |
+| `provider_updated_at`, `last_verified_at` | Ordering and freshness                                                               |
 
-There must be a unique constraint on provider, environment, and external subscription ID. A provider purchase token or original transaction must not grant access to two Beancount users.
+- A unique constraint on (`provider`, `environment`, `external_id`) ensures one store purchase never grants access to two accounts.
+- A store row grants its tier when `status` is `ACTIVE` or `GRACE`, `now < access_ends_at`, and the account owns the row.
+- `PENDING`, `ON_HOLD`, `EXPIRED`, `REVOKED`, and `UNKNOWN` grant nothing. `UNKNOWN` also covers an unmapped product, which fails closed and raises an alert.
 
-For Apple, the stable external subscription ID is the original transaction ID. For Google Play, the purchase token is the primary identifier and linked purchase tokens must be processed during upgrades, downgrades, and resubscriptions. For Stripe, the identifier is the Stripe Subscription ID rather than the Stripe Customer ID.
+**`store_billing_events`:** idempotent notification inbox, unique on (`provider`, `environment`, `external_event_id`). It records received and processed times, attempt count, and redacted last error. A raw payload is retained only for replay, with personal data removed, for the retention period set in the release gates.
 
-### `billing_events`
+### D5. Effective tier and the billing source
 
-Provides an idempotent notification inbox.
+- **Effective tier** is the highest tier any active source grants, Stripe or store. Plans from different sources never add up.
+- **Billing source** is the source whose subscription will renew.
+- **One renewing source per account.** Every purchase entry point (Web Checkout and plan changes, the in-app plan sheet) is offered only when no other source is set to renew.
+- **Server-side guard.** Each Stripe verb that would create or change a subscription refuses with a typed `BILLED_BY_STORE` error while a store subscription will renew: `createSubscriptionSession`, `upgradeSubscription`, `previewPlanChange`, `changePlan`, and `resumeSubscription`. The UI hides these verbs too, but the server enforces the rule.
+- **Duplicates.** A store purchase cannot be refused after the fact, because the store has already taken payment. When a store purchase arrives while another source renews:
+  - it is accepted, and the highest tier applies;
+  - the account is flagged as having duplicate billing;
+  - the user is told where to cancel the other subscription;
+  - support sees the duplicate in a metric.
 
-| Field               | Purpose                              |
-| ------------------- | ------------------------------------ |
-| `provider`          | Notification source                  |
-| `environment`       | Provider environment                 |
-| `external_event_id` | Provider or Pub/Sub event identifier |
-| `event_type`        | Provider event type                  |
-| `received_at`       | Receipt time                         |
-| `processed_at`      | Successful processing time           |
-| `attempt_count`     | Retry count                          |
-| `last_error`        | Redacted failure information         |
+### D6. Plan changes follow each source's own rules, configured to match PRFAQ005
 
-The unique key is provider, environment, and external event ID. Raw provider payloads may be retained only when needed for replay, with secrets and unnecessary personal information removed and with a documented retention period.
+PRFAQ005's rule is that gains apply immediately and losses apply at the end of the period already paid for.
 
-### `user_entitlements`
+- **App Store.** All six products sit in one subscription group, so an Apple ID holds one at a time. Group levels form a total order, highest first:
+  1. Organization yearly
+  2. Organization monthly
+  3. Growth yearly
+  4. Growth monthly
+  5. Premium yearly
+  6. Premium monthly
 
-Materializes the authorization result so product requests do not depend on provider availability.
+  Apple applies a move up the order immediately and refunds the unused part of the old plan prorated. It applies a move down at the next renewal. This reproduces PRFAQ005, including monthly to yearly as a gain. This behavior must be confirmed in the App Store sandbox before launch.
 
-| Field                    | Purpose                                |
-| ------------------------ | -------------------------------------- |
-| `user_id`                | Beancount account ID                   |
-| `entitlement_id`         | Initially `premium`                    |
-| `tier`                   | Effective tier                         |
-| `is_active`              | Authorization result                   |
-| `active_until`           | Expiration time, if applicable         |
-| `source_subscription_id` | Subscription currently granting access |
-| `verified_at`            | Last successful verification time      |
+- **Google Play.** Each tier is one subscription with `monthly` and `yearly` base plans. The app changes plans through Play Billing replacement, passing the current purchase token:
+  - gains apply immediately: `charge-prorated-price` when the billing period stays the same, otherwise `with-time-proration`;
+  - losses use `deferred`.
 
-Entitlements are updated in the same database transaction as normalized subscription changes whenever possible.
+  The backend follows `linkedPurchaseToken` and marks the replaced row with `replaced_by_id`.
 
-## Product Catalog
+- **Stripe.** Unchanged (PRFAQ005).
+- **Across sources.** There is no proration. To switch, the user turns off renewal at the current source, which lifts the one-renewing-source guard, then buys at the new one. During the overlap, the higher tier applies.
 
-Provider products have different identifiers but map to the same canonical entitlement.
+### D7. Purchase and lifecycle flows
 
-| Canonical product | Stripe                  | App Store                      | Google Play                     |
-| ----------------- | ----------------------- | ------------------------------ | ------------------------------- |
-| Premium monthly   | Stripe monthly Price ID | `io.beancount.premium.monthly` | `premium` / `monthly` base plan |
-| Premium annual    | Stripe annual Price ID  | `io.beancount.premium.annual`  | `premium` / `annual` base plan  |
+**iOS purchase**
 
-The mapping from provider product ID to canonical product, tier, and entitlement will be version-controlled backend configuration. Provider credentials and signing keys remain environment configuration or secrets.
+1. The signed-in app fetches the six products, and its `appAccountToken` from the backend.
+2. StoreKit 2 runs the purchase with that token.
+3. The app sends the signed transaction to `confirmStorePurchase`.
+4. The backend verifies the JWS with Apple's App Store Server Library, checking bundle ID, environment, product, and token owner. When needed, it reads current state from the App Store Server API.
+5. The backend upserts the row in one transaction.
+6. The app finishes the transaction only after the backend accepts it. On the next launch, the app re-sends unfinished transactions.
 
-The client must display the localized price and subscription terms returned by the current store. It must not hard-code a Stripe price, currency, or formatted amount for App Store or Google Play purchases.
+App Store Server Notifications V2 for renewals, renewal-preference changes, billing retry, grace, expiry, refund, and revocation go to one REST endpoint for both environments. The signed payload is verified before use.
 
-Growth and Organization are not included in the first mobile purchase release. Before release, Product and Legal must determine whether those plans are true organization-only enterprise services or consumer-accessible multiplatform subscriptions. Consumer-accessible features may require corresponding App Store products.
+**Android purchase**
 
-## Purchase and Lifecycle Flows
+1. The app fetches the three subscriptions and their base-plan offers.
+2. It launches billing with `obfuscatedAccountId`, adding the old purchase token and replacement mode for a plan change.
+3. A pending purchase grants nothing.
+4. On a completed purchase, the app sends the product and purchase token to `confirmStorePurchase`.
+5. The backend reads `purchases.subscriptionsv2.get`, verifies package, product, account, and state, and upserts the row.
+6. The backend acknowledges the purchase after it is stored. The client finishes the purchase after the backend responds.
 
-### iOS Initial Purchase
+Real-time developer notifications (RTDN) arrive through a Pub/Sub push subscription. The endpoint verifies the push's OIDC token, then re-reads the subscription; it does not act on the notification type alone.
 
-1. The authenticated app requests current App Store products.
-2. Before purchase, the app obtains the user's stable Apple app account token from the backend.
-3. The app starts the StoreKit purchase with that token.
-4. The app sends the signed transaction or a transaction identifier to the backend.
-5. The backend verifies Apple's JWS and, when necessary, queries the App Store Server API.
-6. The backend verifies bundle ID, environment, product ID, transaction state, ownership token, and revocation state.
-7. The backend transactionally upserts the subscription and entitlement.
-8. The client finishes the StoreKit transaction only after durable backend acceptance. Failed submissions remain recoverable on the next app launch.
+The client never submits a tier, expiry, active flag, price, or currency as trusted data.
 
-App Store Server Notifications V2 update renewals, renewal preference, billing issues, expiration, refunds, and revocations. All signed notification data is verified before use. Out-of-order notifications must not overwrite newer provider state.
+### D8. Sandbox purchases in production
 
-### Android Initial Purchase
+App Review and TestFlight buy with Apple's sandbox against the production app, and Google license testers buy test purchases with real tokens. The production backend therefore:
 
-1. The authenticated app queries Play Billing `ProductDetails` and eligible offers.
-2. The app starts the billing flow with the stable obfuscated account ID.
-3. Pending purchases remain pending and do not grant access.
-4. When a purchase becomes purchased, the app sends the product ID and purchase token to the backend.
-5. The backend calls `purchases.subscriptionsv2.get` and verifies package name, product, account association, purchase state, and expiration.
-6. The backend transactionally upserts the subscription and entitlement.
-7. After durable processing, the backend acknowledges an unacknowledged initial purchase through the Google Play Developer API.
+- accepts sandbox and test evidence;
+- grants the plan to the purchasing account, with `environment = SANDBOX` (or Google's test-purchase flag) recorded;
+- excludes those rows from revenue and conversion metrics.
 
-Google Real-time Developer Notifications are delivered through Pub/Sub. On every relevant notification, the backend calls the Google Play Developer API for current state instead of deriving access from the notification type alone. New purchases must be acknowledged within Google's required window.
+A sandbox row and a production row never satisfy each other's uniqueness or claims. Rejecting sandbox evidence would make the reviewer's purchase fail.
 
-### Stripe Purchase and Lifecycle
+### D9. Ownership, restore, and unclaimed purchases
 
-The existing Stripe Checkout and Customer Portal remain the systems of interaction for Web billing.
+- **Restore** re-sends the store's current entitlements (`Transaction.currentEntitlements` on iOS, `getAvailablePurchases` on Android) through `confirmStorePurchase`. The backend verifies each one; nothing is granted locally.
+- **Unclaimed purchases.** A purchase that arrives without a Beancount token is stored with `user_id` null. Examples are a purchase made before sign-in on that device, or a notification for a token the backend has not seen. The first signed-in account that presents it claims it.
+- **No silent transfers.** A purchase already owned by another account is never transferred silently. The app explains the conflict and offers support. Transfer rules for deleted and merged accounts are a release gate.
+- **Disabled at launch.** Family Sharing, App Store offer codes, and promoted in-app purchases are off. Each needs a claim path before it is enabled.
 
-On Checkout completion and relevant subscription, invoice, refund, and deletion events, the Stripe integration will also upsert `billing_subscriptions` and `user_entitlements`. Existing Stripe behavior may continue during migration, but new authorization code must read the provider-neutral entitlement.
+### D10. Account deletion
 
-Stripe subscription management, payment method changes, invoices, proration, and refunds remain in Stripe. This ADR does not move existing subscriptions or payment credentials to another provider.
+- **Stripe:** unchanged; subscriptions are cancelled.
+- **Google Play:** renewal is cancelled through the Play Developer API before the account is deleted.
+- **App Store:** the developer cannot cancel an Apple subscription. Before deletion is confirmed, the app and the dashboard say that the App Store subscription keeps billing until it is cancelled in the Apple account, and the app offers StoreKit's manage-subscriptions sheet. Deletion then proceeds, and the store rows lose their `user_id` while they are retained for audit.
 
-## Normalized Access Rules
+### D11. Refunds and revocations
 
-Provider status values will be preserved for support, but entitlement decisions use explicit Beancount rules.
+- A refunded or revoked store subscription stops granting its tier at the verified revocation time. PRFAQ005's downgrade rules then apply.
+- AI tokens already used are not clawed back, and ledger data is never locked.
+- Stripe refunds and disputes keep their current handling.
 
-- Active, trialing, and recognized grace-period subscriptions grant access until their verified access end.
-- Turning off automatic renewal does not immediately revoke access. Access remains until the paid period expires.
-- Pending purchases do not grant access.
-- A Google account-hold state does not grant access unless a separate verified grace period applies.
-- Expired subscriptions do not grant access.
-- Refunded and revoked subscriptions stop granting access according to the provider's verified effective time.
-- A billing-retry state grants access only when the provider reports an active grace period or a still-valid service period.
-- Provider state with an unknown product ID fails closed and creates an operational alert.
+### D12. Reconciliation
 
-The detailed provider-to-normalized-state table must be implemented and unit tested before production rollout.
+- **Hourly:** the job re-reads rows that changed or whose `access_ends_at` falls within 48 hours, and acknowledges any verified, unacknowledged Google purchase. Google refunds an unacknowledged purchase after three days.
+- **Daily:** a sweep re-reads every active row.
+- **Objective:** a missed notification leaves a plan wrong for at most 24 hours. Mismatches are metered and alerted.
 
-## Backend API Surface
+### D13. API surface and parity
 
-The public API will expose provider-neutral operations. Exact GraphQL names may be adjusted during schema design, but the responsibilities are:
+- **`Query.subscriptionStatus`** gains the billing source, store product and cycle, `will_renew`, any scheduled change, and a management destination suited to the provider. It keeps its existing GraphQL-only billing exemption.
+- **New verbs.** `Query.storeBillingIdentity` (Apple account token and Google obfuscated ID) and `Mutation.confirmStorePurchase` (provider plus signed transaction or purchase token; also used for restore and claim) are registered in `BILLING_VERBS` with:
+  - new authorization actions, and a matching update to the OpenFGA model in `backend-cluster/backend-v2/authz/`;
+  - a new recorded REST reason: store purchase evidence exists only inside the native app, whose API client is GraphQL;
+  - the existing MCP billing exemption.
+- **Store notifications** are provider-to-server REST callbacks, outside the customer-facing parity table.
+- **The Stripe verbs** in D5 gain the `BILLED_BY_STORE` refusal.
+- **Leftovers.** When the store verbs land, the allowlisted mobile `SubscriptionStatus` document is rewritten for the extended fields. `CreateSubscriptionSession` and `CancelSubscription` are Stripe Checkout and cancellation, which the app never uses, so they are deleted.
 
-- query the current entitlement, tier, expiration, renewal expectation, and billing source;
-- confirm an App Store purchase using provider-signed evidence;
-- confirm a Google Play purchase using a purchase token;
-- request a fresh provider reconciliation when the user explicitly restores a purchase;
-- return a provider-appropriate subscription management destination.
+### D14. Mobile and Web user interface
 
-The client never submits a tier, expiration date, active flag, price, or currency as trusted billing data.
+- **Library.** The app uses `expo-iap`, which supports StoreKit 2, Play Billing subscription offers, and Play replacement modes. Adding it follows the repository's dependency approval. Purchase needs a development build; it does not run in Expo Go.
+- **Plan screen.** A plan screen in Settings, plus a plan sheet opened from every refused limit:
+  - creating a ledger;
+  - adding an entry past 1,000;
+  - Ask AI over the allowance;
+  - receipt or import AI over the allowance.
 
-Provider callbacks use REST endpoints because they require provider-specific raw bodies, signatures, JWS payloads, or Pub/Sub envelopes:
+  The sheet compares the plans with the same rows as the pricing page and shows store prices. It also shows 3.1.2 disclosures (what each plan includes, price, period, auto-renewal), Terms and Privacy links, Restore Purchases, and Manage Subscription (StoreKit's sheet on iOS; Play's subscriptions page for the package on Android).
 
-- App Store Server Notifications V2 endpoint;
-- Google Pub/Sub push endpoint or subscriber;
-- the existing Stripe webhook endpoint.
+- **Stripe-billed users in the app** see that their plan is billed through beancount.io and get no purchase button. Outside the US storefront, the app shows no link to Web purchase.
+- **Store-billed users on the Web dashboard** see which store bills them and how to manage it there; Stripe plan flows are not offered.
+- **Feature flag.** A server-side switch per provider in the public configuration (`readFeatureFlags`) can stop new purchases without removing verified access. The purchase surface is on in builds sent to review, because a hidden feature would violate guideline 2.3.1.
+- **Quality.** All strings go into the 13 locales. Screens are checked in light and dark themes and at large text sizes.
 
-## Restore and Account Ownership
+## Rollout Plan
 
-Restore is an account-linking operation, not merely a local UI refresh.
-
-- A restored purchase is verified by the backend before access is granted.
-- A provider subscription already owned by another Beancount account is not silently transferred.
-- The app presents a recoverable support path for legitimate account mistakes.
-- Transfer behavior must be documented before launch, including how deleted and merged accounts are handled.
-- The UI shows the current billing source and prevents an equivalent purchase when an entitlement is already active.
-
-Cross-provider upgrades do not receive automatic proration. A user moving between Stripe, Apple, and Google must cancel the original subscription and switch at the end of its service period unless a separately designed migration offer exists.
-
-## Migration Plan
-
-### Phase 1: Introduce the Billing Domain
-
-- Add provider-neutral tables, models, service interfaces, and product mapping.
-- Make Stripe webhook processing dual-write to the existing model and the new billing model.
-- Add a provider-neutral entitlement query.
-- Keep existing Stripe authorization active while shadow-comparing both results.
-
-### Phase 2: Backfill Existing Stripe Subscribers
-
-The current database stores Stripe Customer IDs but does not persist every Stripe Subscription ID. The backfill will:
-
-1. enumerate existing paid customer records;
-2. list subscriptions for each Stripe customer;
-3. normalize active, trialing, and canceled-but-not-expired subscriptions;
-4. persist Stripe Subscription IDs and entitlement projections;
-5. record and manually investigate mismatches.
-
-The backfill is idempotent and supports dry-run reporting before mutation.
-
-### Phase 3: Add Store Providers
-
-- Configure App Store products, keys, Sandbox notifications, and production notifications.
-- Configure Google Play products, service account access, Pub/Sub, license testers, and production notifications.
-- Add the native IAP library and mobile purchase, restore, status, and management UI.
-- Release behind independent iOS and Android feature flags.
-
-### Phase 4: Switch Authorization
-
-- Run shadow comparison long enough to cover at least one renewal and cancellation test cycle in each provider environment.
-- Switch tier and quota checks to `user_entitlements`.
-- Retain the Stripe-specific tables and API only for Stripe customer and billing management until a separate cleanup decision is made.
+1. **Backend, with no visible change.** Add the D4 tables, store verification and notification endpoints (sandbox first), the merged `getUserTier`, the `BILLED_BY_STORE` guard, the extended `subscriptionStatus`, and the new verbs with authz and parity entries. With no store rows, every user's tier is unchanged.
+2. **Store setup.**
+   - App Store Connect: the Paid Apps agreement and tax and banking details; one subscription group with the six products at the D6 levels, plus review screenshots and notes; notification URLs for production and sandbox.
+   - Play Console: the payments profile; three subscriptions with two base plans each; the RTDN Pub/Sub topic; service-account permission to view financial data and manage orders and subscriptions; license testers.
+3. **Mobile.** Add `expo-iap`, the plan screen and sheet, restore, management, and the deletion warning. Run sandbox and license-tester end-to-end tests against a staging backend.
+4. **Launch, in one app release on both platforms.** Remove the D2 exemptions and turn on purchase. Submit the six in-app purchases with the app version. Replace "no in-app purchases" in the App Store descriptions in all 14 locales and in the Play copy. Include a demo account in review notes. Use a staged rollout on Play.
 
 ## Reliability and Operations
 
-- Every notification handler is idempotent.
-- Provider timestamps or a fresh provider read prevent stale events from overwriting newer state.
-- Processing failures are retried and visible in metrics and alerts.
-- A scheduled reconciliation job verifies recently changed and currently active subscriptions with each provider.
-- Purchase tokens, signed transactions, private keys, and service credentials are never logged.
-- Production and sandbox data are strictly separated.
-- Provider secrets are server-only and rotated according to provider guidance.
-- Metrics cover notification lag, verification failures, acknowledgement failures, reconciliation mismatches, unknown products, and duplicate billing sources.
-- Support tooling can inspect normalized state and initiate safe reconciliation but cannot fabricate an active provider purchase.
+- Every handler is idempotent, and provider timestamps or a fresh read prevent stale events from overwriting newer state.
+- Purchase tokens, signed transactions, keys, and service credentials are never logged.
+- Metrics cover notification lag, verification and acknowledgement failures, unknown products, reconciliation mismatches, duplicate billing, and sandbox versus production counts.
+- Support tooling can show a user's sources and normalized rows and can trigger reconciliation. It cannot grant a store plan.
 
 ## Testing Strategy
 
-- Unit-test every provider-to-normalized-state transition and access rule.
-- Contract-test JWS verification, Google API response parsing, product mapping, and idempotency using recorded redacted fixtures.
-- Test StoreKit with a local StoreKit configuration, Apple Sandbox, and TestFlight.
-- Test Play Billing with license testers, pending transactions, accelerated renewals, grace period, account hold, cancellation, refund, and revocation.
-- Test Stripe with test-mode Checkout, renewal, failed payment, cancellation, upgrade, and refund events.
-- End-to-end test purchase interruption, app termination, restore, delayed notification, duplicate event, out-of-order event, missed notification followed by reconciliation, and an attempted duplicate cross-provider subscription.
-- Verify the purchase and management UI in light and dark themes and in supported locales.
+- Unit-test every store-status-to-normalized-status mapping, the effective-tier merge, the one-renewing-source guard, and the `BILLED_BY_STORE` refusals.
+- Contract-test JWS verification, Play API parsing, product mapping, and inbox idempotency with recorded, redacted fixtures.
+- **App Store:** a local StoreKit configuration, the sandbox, and TestFlight. Cover each D6 level change, cancellation, billing retry, grace, refund, and revocation.
+- **Google Play:** license testers with accelerated renewals. Cover each replacement mode, pending purchases, grace, account hold, cancellation, refund, and an acknowledgement recovered by reconciliation.
+- **End to end:**
+  - purchase interrupted by app termination;
+  - restore, and claim of an unclaimed purchase;
+  - a purchase owned by another account;
+  - duplicate and out-of-order notifications, and a missed notification fixed by reconciliation;
+  - a cross-source duplicate;
+  - account deletion with each source;
+  - each D2 limit refusal opening the plan sheet.
+- Check the plan screens in light and dark themes, at large text sizes, and in every locale.
 
 ## Consequences
 
 ### Positive
 
-- Beancount controls its entitlement domain and customer mapping.
-- Existing Stripe subscribers and Web billing remain unchanged.
-- Product authorization is independent of any single billing provider.
-- There is no required subscription-management SaaS dependency or associated platform fee.
-- Provider behavior is explicit, testable, and available to internal operations.
-- The architecture can add additional providers without changing product authorization code.
+- The apps sell every self-serve plan on the pricing page, which satisfies guidelines 3.1.1 and 3.1.3(b).
+- One plan and one set of limits apply on every client, and the header-based waiver disappears.
+- The Stripe path and existing subscribers are untouched. The change is additive behind the existing `getUserTier` seam.
 
 ### Negative
 
-- Beancount owns three provider integrations and their policy/API changes.
-- The team must operate notification delivery, verification, acknowledgement, retries, reconciliation, and support tooling.
-- Subscription lifecycle edge cases create more implementation and testing work than the purchase UI itself.
-- Provider dashboards remain necessary for payment operations and financial reporting.
-- Engineering and on-call costs may exceed the monetary cost of a managed service.
+- Store purchases cost Apple's and Google's commission, and store prices drift from Web prices across storefronts.
+- Free users of the app lose the mobile waivers for new ledgers, entries past 1,000, and assisted AI past the allowance.
+- Beancount operates two store integrations: verification, notifications, acknowledgement, reconciliation, and their policy changes.
+- Plan state now lives in two shapes: Stripe through `paid_customers` and live reads, stores through `store_subscriptions`.
 
 ## Alternatives Considered
 
-### RevenueCat
-
-RevenueCat can wrap StoreKit and Play Billing, validate purchases, receive provider notifications, and import existing Stripe Subscription IDs into unified entitlements.
-
-It is not selected initially because Beancount already has a backend, database, Stripe integration, user identity, and a small product catalog, and the team prefers to own the entitlement system. RevenueCat should be reconsidered if:
-
-- subscription lifecycle incidents consume material on-call time;
-- the catalog or number of apps grows substantially;
-- Product requires hosted paywalls, rapid experiments, or managed offer targeting;
-- provider API maintenance delays roadmap delivery;
-- self-built reconciliation cannot meet reliability objectives.
-
-### StoreKit 2 Without a Shared Backend Billing Domain
-
-Rejected because StoreKit is Apple-only and device-local state cannot authorize Web or Android access. Cross-platform entitlements require server-owned state.
-
-### Stripe Checkout for All Mobile Purchases
-
-Rejected as the default because external digital-goods purchasing is not globally available under App Store and Google Play policies. A future storefront-specific external-purchase ADR may supplement this architecture.
-
-### Consumption-Only Mobile App
-
-The mobile app allows existing Web subscribers to sign in without offering mobile purchases. This is the state in force while this record is deferred (see [Current State](#current-state)). It is simpler and needs no store integration, but it does not sell a subscription in the app; that requirement is what a revival of this record would serve.
+- **RevenueCat.** Rejected by owner decision on 2026-10-25. Beancount keeps the store integrations and plan data in its own backend.
+- **A provider-neutral billing domain that also migrates Stripe** (this ADR's 2026-07-27 design: dual-write, backfill, shadow comparison, an authorization switch). Not adopted. It rewrites a working Stripe path to gain nothing the merged `getUserTier` lacks. Revisit if a fourth source appears or if tier resolution must stop calling Stripe live.
+- **Stripe Checkout for mobile purchases.** Rejected by store policy outside the programs named under Store Policy Constraints.
+- **Keeping the mobile plan exemptions.** Rejected. The app would sell plans whose limits it waives, and the waiver remains reachable through a header.
+- **A tier-independent app with no purchase** (exempting Ask AI too). Rejected because it contradicts the goal.
 
 ## Rollback and Failure Containment
 
-- Mobile purchase entry points are protected by remote feature flags per platform.
-- A provider can be disabled without removing access already verified through other providers.
-- During migration, the existing Stripe authorization path remains available until shadow comparison is accepted.
-- If notification processing is degraded, cached entitlements continue only until their verified access end; the system does not extend access indefinitely based solely on a failed provider read.
+- The per-provider switch stops new purchases. Verified store rows keep granting access until `access_ends_at`.
+- If store notifications or reads fail, stored rows grant access only until `access_ends_at`; access is never extended on an unread state.
 - Reconciliation is safe to repeat and is the recovery path for missed events.
-
-## Revival Prerequisites
-
-Reviving this record takes an explicit owner decision. The design above also has gaps that must be closed before implementation starts:
-
-- **API parity.** The [Backend API Surface](#backend-api-surface) is specified as GraphQL operations plus REST provider callbacks only. The repository requires every customer-facing capability on REST, GraphQL, and MCP wherever protocol and credential policy permit (`backend-cluster/backend-v2/docs/api-parity.md`). Each new operation — entitlement read, purchase confirmation, restore, management destination — needs all three surfaces or a documented exemption.
-- **Refunds and chargebacks.** The access rules stop a refunded or revoked subscription "according to the provider's verified effective time" and go no further. Still undefined: Stripe disputes and chargebacks, partial refunds, whether access already consumed is clawed back, and what the user sees when access is removed.
-- **Reconciliation cadence.** The scheduled reconciliation job has no stated frequency, lookback window, or objective for how long a missed notification may leave an entitlement wrong.
-- **Unowned open questions.** None of the items under [Open Questions and Release Gates](#open-questions-and-release-gates) has an owner.
-- **Residue.** Decide whether the three allowlisted Stripe-shaped mobile GraphQL operations are deleted or replaced (see [Current State](#current-state)).
+- Removing the D2 exemptions is a code change, not a flag. Rolling it back needs an app release, because the plan sheet ships in the same release.
 
 ## Open Questions and Release Gates
 
-- Confirm the Premium annual price, trial, introductory offer, and regional availability in each store.
-- Decide whether Growth and Organization are enterprise-only or require mobile IAP products.
-- Approve the mobile IAP and server library dependencies.
-- Define purchase-transfer rules between Beancount accounts.
-- Define account-deletion behavior for active store subscriptions.
-- Finalize grace-period access policy for each provider.
-- Decide the retention period for billing event payloads and financial audit data.
-- Confirm support ownership and operational response targets.
+Each item needs an owner before implementation starts. No production release happens until the ownership, duplicate-billing, refund and revocation, sandbox, and reconciliation paths pass end-to-end tests.
 
-No production mobile billing release may occur until these items have owners and the account ownership, duplicate subscription, refund/revocation, and reconciliation paths have passing end-to-end tests.
+- Store price points per storefront, and whether they differ from Web prices.
+- Whether any user who relied on the mobile waivers is grandfathered.
+- Purchase-transfer rules between accounts, and handling for merged and deleted accounts.
+- Grace-period length in each store.
+- Retention period for notification payloads and billing audit data.
+- Support ownership and response targets for store billing.
+- Whether to link to Web purchase on the US storefront, as a separate decision.
 
 ## References
 
+- [PRFAQ005: Plan changes and yearly billing](../prfaqs/PRFAQ005-plan-changes-and-yearly-billing.md)
+- [ADR 008: API surface parity](./ADR008-backend-v2-surface-parity.md) and `backend-cluster/backend-v2/docs/api-parity.md`
 - [Apple App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/)
-- [Apple In-App Purchase](https://developer.apple.com/documentation/storekit/in-app-purchase)
+- [Apple auto-renewable subscriptions and subscription groups](https://developer.apple.com/app-store/subscriptions/)
 - [Apple App Store Server Library](https://developer.apple.com/documentation/AppStoreServerAPI/simplifying-your-implementation-by-using-the-app-store-server-library)
 - [Apple App Store Server Notifications](https://developer.apple.com/documentation/AppStoreServerNotifications)
-- [Google Play Payments policy](https://support.google.com/googleplay/android-developer/answer/9858738?hl=en)
+- [Google Play Payments policy](https://support.google.com/googleplay/android-developer/answer/9858738)
 - [Google Play backend integration](https://developer.android.com/google/play/billing/backend)
-- [Google Play subscription lifecycle](https://developer.android.com/google/play/billing/lifecycle/subscriptions)
+- [Google Play subscription lifecycle and replacement modes](https://developer.android.com/google/play/billing/lifecycle/subscriptions)
 - [Expo in-app purchase guide](https://docs.expo.dev/guides/in-app-purchases/)
-- [RevenueCat Stripe external purchase import](https://www.revenuecat.com/docs/web/integrations/stripe/track-external-purchases)

@@ -28,7 +28,7 @@ belongs in `common/lib/export/`, where BQL and legacy table exports reuse it.
 The browser print flow is labeled **Print / Save as PDF** because the browser—not
 the app—creates the PDF. Balance Sheet, Income Statement, and Cash Flow are the
 supported statement exports (scope expanded from the original two by
-`docs/adrs/ADR002-dashboard-cash-flow-report.md`).
+`docs/adrs/ADR023-dashboard-cash-flow-report.md`).
 Label the statement action **Export**, not **Download**, because it generates a
 new representation of the filtered report. Reserve **Download** for existing
 files and assets.

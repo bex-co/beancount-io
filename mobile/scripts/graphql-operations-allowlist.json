@@ -1,5 +1,5 @@
 {
-  "SubscriptionStatus": "Mobile billing is proposed in docs/adrs/ADR001-mobile-billing.md; it reads the subscription tier through this operation.",
-  "CreateSubscriptionSession": "Mobile billing is proposed in docs/adrs/ADR001-mobile-billing.md; it starts a purchase through this operation.",
-  "CancelSubscription": "Mobile billing is proposed in docs/adrs/ADR001-mobile-billing.md; it cancels a subscription through this operation."
+  "SubscriptionStatus": "Mobile billing (docs/adrs/ADR001-mobile-billing.md, D13) reads the plan and billing source through this query; the document is rewritten for its extended fields when the store verbs land.",
+  "CreateSubscriptionSession": "Stripe Checkout, which mobile billing never uses; docs/adrs/ADR001-mobile-billing.md D13 deletes it when the store verbs land.",
+  "CancelSubscription": "Stripe cancellation, which mobile billing never uses; docs/adrs/ADR001-mobile-billing.md D13 deletes it when the store verbs land."
 }
