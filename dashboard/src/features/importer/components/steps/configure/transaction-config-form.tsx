@@ -137,6 +137,23 @@ export function TransactionConfigForm({
     defaultValues,
   });
 
+  // A stored error keeps the language it was validated in; quietly
+  // revalidate only the fields already showing one when the language
+  // changes, so its text follows without another submit (w4/1086).
+  const latestErrorsRef = useRef(form.formState.errors);
+  useEffect(() => {
+    latestErrorsRef.current = form.formState.errors;
+  });
+  const previousLanguageRef = useRef(i18n.language);
+  useEffect(() => {
+    if (previousLanguageRef.current === i18n.language) return;
+    previousLanguageRef.current = i18n.language;
+    const names = Object.keys(latestErrorsRef.current) as Array<keyof FormData>;
+    if (names.length > 0) void form.trigger(names);
+    // form identity is stable; the language change is the trigger.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [i18n.language]);
+
   useEffect(() => {
     const subscription = form.watch((values) => {
       if (!values.transactions) return;
