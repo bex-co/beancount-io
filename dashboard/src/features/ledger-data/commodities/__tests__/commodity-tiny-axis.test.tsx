@@ -152,6 +152,27 @@ describe("Commodity chart with tiny prices", () => {
     }
   });
 
+  it("keeps 1e-24 ticks inside the plotted range (w4/1067)", async () => {
+    renderPage([
+      "0.000000000000000000000001",
+      "0.000000000000000000000002",
+      "0.000000000000000000000003",
+    ]);
+    const instance = await chart();
+    const labels = yAxisLabels(instance);
+
+    expect(labels.length).toBeGreaterThan(3);
+    expect(new Set(labels).size).toBe(labels.length);
+    expect(labels).not.toContain("0");
+    for (const label of labels) {
+      expect(Number(label)).toBeGreaterThan(0);
+      expect(Number(label)).toBeLessThan(4e-24);
+    }
+    expect(tooltip(instance, "2016-01-01")).toContain(
+      "QAMICRO/USD: 0.000000000000000000000001",
+    );
+  });
+
   it("keeps exponent quotes' values in the tooltip", async () => {
     renderPage(["1.25e-10", "2.5e-10", "5e-10"]);
     const instance = await chart();
