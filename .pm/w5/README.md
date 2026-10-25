@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1034 — Collect the whole resolved register subtree](./1034.md) — minor CLI selection gap: anchored parent regexes drop child-only transactions or return false empty; literal/full-subtree/native controls pass, checked 2026-10-25.
+
 - [1033 — Use the requested currency quote in Holdings](./1033.md) — major CLI valuation gap: a current direct USD quote is ignored for an older cost-currency quote or a false missing-price refusal; native/report controls pass, checked 2026-10-25.
 
 - [1032 — Accept UTF-8 BOMs in OFX XML exports](./1032.md) — minor CLI input gap: valid BOM bank/card files fail before parsing through automatic, forced and configured import; plain controls pass, checked 2026-10-25.
