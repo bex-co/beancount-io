@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1085** — [Keep late account-close results with their confirmation](./1085.md)
+
 - **1084** — [Keep the pending Close Account date equal to its request](./1084.md)
 
 - **1083** — [Retry a failed account-deletion source preview in place](./1083.md)
