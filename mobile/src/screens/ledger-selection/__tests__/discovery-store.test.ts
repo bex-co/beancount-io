@@ -47,11 +47,13 @@ describe("ledger discovery", () => {
       "open_ledger_copy/example",
     ]);
     await store.loadMore();
+    // w21/1008: page 2's featured row joins the end, ranked among the new
+    // rows only — it no longer jumps above the rows already shown.
     expect(store.getSnapshot().items.map((item) => item.id)).toEqual([
       "open_ledger/amazon",
-      "open_ledger/apple",
       "other/first",
       "open_ledger_copy/example",
+      "open_ledger/apple",
       "other/next",
     ]);
     await store.load("explore", "annual", true);
@@ -59,6 +61,25 @@ describe("ledger discovery", () => {
       "open_ledger/amazon",
       "other/first",
       "open_ledger_copy/example",
+    ]);
+  });
+  it("lands a page-2 featured row after the rows already shown", async () => {
+    const store = new DiscoveryStore({
+      page: async (_tab, _q, page) => ({
+        items:
+          page === 1
+            ? [ledger("a/x"), ledger("b/y")]
+            : [ledger("open_ledger/z")],
+        hasMore: page === 1,
+      }),
+      star: async () => true,
+    });
+    await store.load("explore", "");
+    await store.loadMore();
+    expect(store.getSnapshot().items.map((item) => item.id)).toEqual([
+      "a/x",
+      "b/y",
+      "open_ledger/z",
     ]);
   });
   it("preserves server order in Your ledgers and Starred", async () => {

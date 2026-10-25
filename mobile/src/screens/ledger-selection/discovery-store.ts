@@ -63,8 +63,8 @@ export class DiscoveryStore {
     this.state = { ...this.state, ...patch };
     this.listeners.forEach((listener) => listener());
   }
-  private merge(items: DiscoveryItem[]) {
-    const merged = [
+  private overlay(items: DiscoveryItem[]) {
+    return [
       ...new Map(
         items.map((item) => [
           item.id,
@@ -75,12 +75,17 @@ export class DiscoveryStore {
         ]),
       ).values(),
     ].filter((item) => this.tab !== "starred" || item.isStarred === true);
-    if (this.tab !== "explore") return merged;
-    // Rank the whole loaded list, so later pages keep featured examples above
-    // other results while preserving server order within each group.
+  }
+  /**
+   * Featured examples first on Explore, server order within each group. Runs
+   * over one page at a time: ranking the whole loaded list on Load more
+   * lifted page-2 featured rows above rows already on screen (w21/1008).
+   */
+  private rank(items: DiscoveryItem[]) {
+    if (this.tab !== "explore") return items;
     const isOpenLedger = (item: DiscoveryItem) =>
       item.fullName.split("/")[0].toLowerCase() === "open_ledger";
-    return merged.sort(
+    return [...items].sort(
       (a, b) => Number(isOpenLedger(b)) - Number(isOpenLedger(a)),
     );
   }
@@ -103,7 +108,10 @@ export class DiscoveryStore {
     try {
       const result = await this.api.page(tab, query, 1, this.request.signal);
       if (generation !== this.generation) return;
-      this.update({ items: this.merge(result.items), hasMore: result.hasMore });
+      this.update({
+        items: this.rank(this.overlay(result.items)),
+        hasMore: result.hasMore,
+      });
     } catch {
       if (generation === this.generation) this.update({ error: true });
     } finally {
@@ -130,8 +138,16 @@ export class DiscoveryStore {
       );
       if (generation !== this.generation) return;
       this.page++;
+      // Rows already shown keep their places: a new page refreshes them in
+      // place, and only brand-new rows join the end, ranked among themselves.
+      const page = this.overlay(result.items);
+      const seen = new Set(this.state.items.map((item) => item.id));
+      const latest = new Map(page.map((item) => [item.id, item]));
       this.update({
-        items: this.merge([...this.state.items, ...result.items]),
+        items: [
+          ...this.state.items.map((item) => latest.get(item.id) ?? item),
+          ...this.rank(page.filter((item) => !seen.has(item.id))),
+        ],
         hasMore: result.hasMore,
       });
     } catch {
@@ -148,7 +164,8 @@ export class DiscoveryStore {
       const actual = await this.api.star(item.id, desired);
       if (actual !== desired) throw new Error("Star change was not confirmed");
       this.stars.set(item.id, actual);
-      this.update({ items: this.merge(this.state.items) });
+      // No re-rank: a star change never moves rows (w21/1008).
+      this.update({ items: this.overlay(this.state.items) });
     } finally {
       const pending = new Set(this.state.pending);
       pending.delete(item.id);
