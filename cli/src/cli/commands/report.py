@@ -51,6 +51,8 @@ TimeOpt = Annotated[
 AccountOpt = Annotated[
     str | None, typer.Option("--account", "-a", help="Account filter: a parent account or a regular expression")
 ]
+FromDateOpt = Annotated[str | None, typer.Option("--from-date", help="Capital-gains sales on or after YYYY-MM-DD.")]
+ToDateOpt = Annotated[str | None, typer.Option("--to-date", help="Capital-gains sales on or before YYYY-MM-DD.")]
 IntervalOpt = Annotated[ReportInterval, typer.Option("--interval", "-i", help="Reporting interval")]
 GroupByOpt = Annotated[HoldingsGrouping, typer.Option("--group-by", help="Holdings grouping: account or commodity")]
 AllowErrorsOpt = Annotated[
@@ -220,12 +222,16 @@ def _ask(
     interval: ReportInterval | None = None,
     accounts: list[str] | None = None,
     group_by: HoldingsGrouping | None = None,
+    from_date: str | None = None,
+    to_date: str | None = None,
     allow_errors: bool,
 ) -> tuple[Any, dict[str, Any]]:
     """Ask the engine for one report payload and surface tolerated load errors."""
     account = account_filter("--account", account)
     refuse_blank_filter("--conversion", conversion)
     refuse_blank_filter("--time", time)
+    refuse_blank_filter("--from-date", from_date)
+    refuse_blank_filter("--to-date", to_date)
     for position, term in enumerate(accounts or [], start=1):
         # A positional has no flag to drop: "drop accounts" named the Typer
         # parameter, which no user can type (w5/305).
@@ -250,6 +256,10 @@ def _ask(
         argv += ["--conversion", conversion]
     if time is not None:
         argv += ["--time", time]
+    if from_date is not None:
+        argv += ["--from-date", from_date]
+    if to_date is not None:
+        argv += ["--to-date", to_date]
     if allow_errors or not ctx.strict_reads():
         argv.append("--allow-errors")
     if kind == "balances" and accounts:
@@ -532,6 +542,66 @@ def _row_cells(row: dict[str, Any], conversion: str, precision: Mapping[str, int
         _amounts(row["balance"], conversion, precision),
     ]
     return cells
+
+
+@report_app.command("capital-gains", cls=SingleValueCommand)
+def capital_gains(
+    time: TimeOpt = None,
+    account: AccountOpt = None,
+    from_date: FromDateOpt = None,
+    to_date: ToDateOpt = None,
+    allow_errors: AllowErrorsOpt = False,
+) -> None:
+    """Realized gain and loss per sale lot."""
+    file, data = _ask(
+        "capital-gains",
+        conversion=None,
+        time=time,
+        account=account,
+        from_date=from_date,
+        to_date=to_date,
+        allow_errors=allow_errors,
+    )
+    if context.current().json_output:
+        _emit_json(file, data)
+        return
+    conversion = str(data["conversion"])
+    _heading("Capital Gains", data)
+    precision = _precision(data)
+    rows = data["rows"]
+    if not rows:
+        typer.echo("No sales.")
+        return
+    output.table(
+        ["SOLD", "ACCOUNT", "COMMODITY", "ACQUIRED", "HELD", "QTY", "PROCEEDS", "BASIS", "GAIN"],
+        [
+            [
+                str(row["sold"]),
+                row["account"],
+                row["commodity"],
+                "" if row["acquired"] is None else str(row["acquired"]),
+                _held(row),
+                _money(row["quantity"], conversion, precision),
+                _money(row["proceeds"], conversion, precision),
+                _money(row["basis"], conversion, precision),
+                _money(row["gain"], conversion, precision),
+            ]
+            for row in rows
+        ],
+    )
+    totals = data["totals"]
+    typer.echo("")
+    typer.echo(f"  {'One year or less:':<20} {_amounts(totals['one_year_or_less'], conversion, precision)}")
+    typer.echo(f"  {'More than one year:':<20} {_amounts(totals['more_than_one_year'], conversion, precision)}")
+    if totals["holding_unknown"]:
+        typer.echo(f"  {'Holding unknown:':<20} {_amounts(totals['holding_unknown'], conversion, precision)}")
+
+
+def _held(row: dict[str, Any]) -> str:
+    """Holding period as days with its one-year bucket; unknown when undated."""
+    if row["held_days"] is None:
+        return "unknown"
+    return f"{row['held_days']} days ({'long' if row['long_held'] else 'short'})"
 
 
 def balance(

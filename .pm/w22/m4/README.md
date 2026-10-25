@@ -1,13 +1,13 @@
 # w22 · m4 — `bea report capital-gains`: realized gains by lot
 
-**Worker:** worker1 **Goal:** a personal investor or an agent reads realized gains per sale lot with one verb **Status:** todo (t001 done)
+**Worker:** worker1 **Goal:** a personal investor or an agent reads realized gains per sale lot with one verb **Status:** todo (t001, t002 done)
 
 ## Tasks (in order)
 
 | id   | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
 | t001 | Engine answer: realized gain/loss per reduction with holding period — **DONE** | 60m | w22/m3/t001 |
-| t002 | Frontend `bea report capital-gains` with date range, text and JSON | 45m | t001 |
+| t002 | Frontend `bea report capital-gains` with date range, text and JSON — **DONE** | 45m | t001 |
 | t003 | Fixtures for FIFO, specific-lot, partial lots and multi-currency, plus docs | 45m | t002 |
 | t004 | Adoption surface | 25m | t003 |
 | t005 | Simplify | 25m | t004 |

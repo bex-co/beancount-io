@@ -984,6 +984,22 @@ Usage: bea report register [OPTIONS] {account}
 | `--time, -t` | str |  | Time filter: year, month, 2026, 2026-08, or "2026-01 - 2026-06" |
 | `--allow-errors` | flag |  | Show partial data with errors on stderr; opts strict reads into partial answers |
 
+### `bea report capital-gains`
+
+Realized gain and loss per sale lot.
+
+```text
+Usage: bea report capital-gains [OPTIONS]
+```
+
+| Option | Type | Default | Help |
+| --- | --- | --- | --- |
+| `--time, -t` | str |  | Time filter: year, month, 2026, 2026-08, or "2026-01 - 2026-06" |
+| `--account, -a` | str |  | Account filter: a parent account or a regular expression |
+| `--from-date` | str |  | Capital-gains sales on or after YYYY-MM-DD. |
+| `--to-date` | str |  | Capital-gains sales on or before YYYY-MM-DD. |
+| `--allow-errors` | flag |  | Show partial data with errors on stderr; opts strict reads into partial answers |
+
 ### `bea doctor lex`
 
 Run bean-doctor lex.
