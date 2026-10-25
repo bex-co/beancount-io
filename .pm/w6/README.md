@@ -16,7 +16,7 @@ Source: the owner's request to put every remaining action from the 17-target lis
 | Developer review/public/native | [m9/t004](blocked/m9/t004.md) Cline; [t016](blocked/m9/t016.md) official Cursor; [t017](blocked/m9/t017.md) Docker; [t018](blocked/m9/t018.md) approved GitHub/VS Code | Follow existing records independently. Public listing and native installation remain required after receipts/approval. |
 | Already-public directory native paths | [m10/t010](blocked/m10/done/t010.md) MCPServers.org; [t011](blocked/m10/done/t011.md) LobeHub accounting/live metadata | Both native acceptance tasks are complete. MCPMarket review and LobeHub crawler deployment correction remain independent external gates. |
 | LobeHub deployment/search correctness | [m10/t012](blocked/m10/t012.md) — supported crawler correction and actual name search | Start supported-route investigation now; platform-only changes get their exact unblock condition. |
-| Existing remaining applications | [m11](blocked/m11/README.md) — ChatGPT in review (publisher estimate2026-11-03); Claude original status/access; Awesome Remote maintainer waiver/review/merge | No duplicate application/PR, repeated waiver comment or fake engagement. |
+| Existing remaining applications | [m11](blocked/m11/README.md) — ChatGPT in review (publisher estimate2026-11-03); Claude in review (no supplied estimate); Awesome Remote maintainer waiver/review/merge | No duplicate application/PR, repeated waiver comment or fake engagement. |
 | Unsubmitted gated channels | [041](blocked/041.md) MCP.so fee/free route; [042](blocked/042.md) PulseMCP reopening | Planning does not authorize payment or invent a working intake. |
 | Completed baseline / no intake | Official Registry release owner, published cursor.directory and source-backed Windsurf no-marketplace | Check release drift or an actually opened route; do not create phantom submissions. |
 
@@ -223,7 +223,7 @@ Prioritize the major correctness findings (PRINT/FROM/JOURNAL, authored location
 
 ## Milestones
 
-- [ ] **m11** — [Complete app-directory and remote-community distribution](blocked/m11/README.md) (7 tasks; A3/A1) ← explicit all-inventory submission request 2026-10-23. **Blocked:** t001 publisher-reported in review, estimate2026-11-03 and no user action now; t002 original submitting account/organization status/access; t003 PR #2753 is submitted and green but unmerged, with the existing waiver request and maintainer review/merge gate. Exact application/receipt links retained.
+- [ ] **m11** — [Complete app-directory and remote-community distribution](blocked/m11/README.md) (7 tasks; A3/A1) ← explicit all-inventory submission request 2026-10-23. **Blocked:** t001 publisher-reported in review, estimate2026-11-03 and no user action now; t002 publisher-reported in review, no supplied estimate and no user action now; t003 PR #2753 is submitted and green but unmerged, with the existing waiver request and maintainer review/merge gate. Exact application/receipt links retained.
 
 - [ ] **m6.5** — [Distribute the Beancount.io customer skills as one suite](./blocked/m6.5/README.md) (12 tasks; 9 done; A3/A2/A1) ← explicit owner request 2026-10-22, extended to other channels 2026-10-23 UTC. **Blocked:** Hermes admission, third-party index read-backs and final closeout. Owned grouping/whole-suite install refresh and CI checks implemented; suite 0.4.0 public and all thirteen standalone ClawHub listings retired.
 

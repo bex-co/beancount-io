@@ -1,6 +1,6 @@
 # w6 · m11 — Complete app-directory and remote-community distribution
 
-**Worker:** worker1 **Goal:** Users discover the existing hosted connector through approved ChatGPT/Claude entries and an accurate remote-MCP community entry. **Status:** blocked (t001 is publisher-confirmed in review, estimated2026-11-03; t002 needs original submitting account/organization status/access; t003 actually submitted with green upstream check, documented Agent review opted in and waiver requested; awaiting maintainer decision/merge; closing tasks deferred)
+**Worker:** worker1 **Goal:** Users discover the existing hosted connector through approved ChatGPT/Claude entries and an accurate remote-MCP community entry. **Status:** blocked (t001/t002 are publisher-confirmed in review; ChatGPT estimate2026-11-03, Claude has no supplied estimate; t003 actually submitted with green upstream check, documented Agent review opted in and waiver requested; awaiting maintainer decision/merge; closing tasks deferred)
 
 **Implementation estimate:** ~2h15m plus closing work, excluding external review latency. No recurring polling job is created.
 
@@ -9,7 +9,7 @@
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
 | [t001](t001.md) | Follow existing ChatGPT application through review/publication — **BLOCKED: in review, estimate2026-11-03** | 45m | — |
-| [t002](t002.md) | Follow existing Claude connector application through review/publication — **BLOCKED** | 45m | — |
+| [t002](t002.md) | Follow existing Claude connector application through review/publication — **BLOCKED: in review** | 45m | — |
 | [t003](t003.md) | Submit to Awesome Remote MCP Servers and verify merged entry — **BLOCKED: submitted, check passed** | 45m | — |
 | [t004](t004.md) | Adoption surface | 30m | t001, t002, t003 |
 | [t005](t005.md) | Simplify | 30m | t004 |
@@ -34,7 +34,7 @@
 
 ## Full inventory ownership and execution order
 
-The [m9/t011](../m9/done/t011.md) official Cursor application is submitted with an accepted receipt after explicit final agreement confirmation; vendor review/publication remains open. Docker [m9/t012](../m9/done/t012.md) is actually submitted as PR #6042 after the scoped native Gateway journey; review/publication remains separate. Cline [m9/t013](../m9/done/t013.md) is actually submitted as issue #3230 after native OAuth, SDK query/preview and Agent read-only verification. GitHub nomination [m9/t014](../m9/done/t014.md) is sent and archived. LobeHub [m10/t009](../m10/done/t009.md) completes the approved GitHub/bex-co connection and actual accepted/public publication; native accounting and crawler correction remain t004. Publisher reports t001 in review with estimated completion2026-11-03; t002 still needs original submitting account/organization status/access, and t003 remains independently submitted. Table order is priority, not a cross-platform dependency.
+The [m9/t011](../m9/done/t011.md) official Cursor application is submitted with an accepted receipt after explicit final agreement confirmation; vendor review/publication remains open. Docker [m9/t012](../m9/done/t012.md) is actually submitted as PR #6042 after the scoped native Gateway journey; review/publication remains separate. Cline [m9/t013](../m9/done/t013.md) is actually submitted as issue #3230 after native OAuth, SDK query/preview and Agent read-only verification. GitHub nomination [m9/t014](../m9/done/t014.md) is sent and archived. LobeHub [m10/t009](../m10/done/t009.md) completes the approved GitHub/bex-co connection and actual accepted/public publication; native accounting and crawler correction remain t004. Publisher reports t001 in review with estimated completion2026-11-03; publisher also reports t002 in review without an estimated completion date, and t003 remains independently submitted. Table order is priority, not a cross-platform dependency.
 
 | Inventory target | Submission / receipt owner | Review, public verification or retained gate |
 | --- | --- | --- |
@@ -44,7 +44,7 @@ The [m9/t011](../m9/done/t011.md) official Cursor application is submitted with 
 | GitHub curated gallery / VS Code | [m9/t014](../m9/done/t014.md) | [m9/t005](../m9/done/t005.md) done; [m9/t018](../m9/t018.md) approved/public/native; existing w1/m34/t003 native owner retained |
 | LobeHub | [m10/t009](../m10/done/t009.md) accepted/public; [m10/t003](../m10/done/t003.md) eligible payload complete | [m10/t011](../m10/done/t011.md) native/live metadata; [m10/t012](../m10/t012.md) crawler correction/search |
 | ChatGPT / OpenAI | Publisher-reported in review, received2026-10-25T05:13:44Z; estimated completion2026-11-03 | [m11/t001](t001.md), OpenAI review then public/native verification; no user action now |
-| Claude | Already submitted, publisher-confirmed 2026-10-23 | [m11/t002](t002.md), existing specific application |
+| Claude | Publisher-reported in review, received2026-10-25T05:34:59Z; no supplied completion estimate | [m11/t002](t002.md), Claude review then public/native verification; no user action now |
 | Awesome Remote MCP Servers | [m11/t003](t003.md) | Same task retains upstream receipt, review and merged entry |
 | Glama | Existing ownership and synthetic-only read monitoring verified; Healthy/44tools. [m8/t003](../m8/t003.md) coordinates existing [w2/088](../../../w2/blocked/088.md) | w2/088 full healthy day, earliest recheck2026-10-25T07:01:01Z, independent [m8/t009](../m8/done/t009.md) native path, final [m8/t004](../m8/t004.md); renew monitoring credential before2026-11-23UTC; no duplicate listing |
 | Smithery | [m8/t002](../m8/t002.md) | Removed legacy intake remains blocked; platform/publisher must provide a working supported replacement route |
@@ -68,7 +68,7 @@ The [m9/t011](../m9/done/t011.md) official Cursor application is submitted with 
 
 - **t001:** publisher reports **in review**, estimated completion**2026-11-03**, update received2026-10-25T05:13:44Z. This clears the current status-information request; original-organization UI access is not independently restored. **Unblock:** actual review feedback/decision/publication, or manual check on/after2026-11-03; worker then handles corrections and public/native verification. **Owners:** OpenAI reviewers, then worker. No publisher action is needed now; the estimated date is not guaranteed approval and no duplicate application is created.
 
-- **t002:** the restored browser loads the exact existing connector management page, but it says the submission was not found in the current organization; the signed-in identity differs from the publisher and exposes no switch to the original submitter. **Unblock:** publisher restores original account/organization access or supplies actual feedback, then worker follows supported corrections and public/native verification. **Owners:** publisher, then worker/Claude reviewers. Publisher-confirmed submission remains; no duplicate or invented rejection.
+- **t002:** publisher reports **in review**, update received2026-10-25T05:34:59Z; no completion estimate or requested changes supplied. The current status-information request is cleared, while original-account UI access is not independently restored. **Unblock:** actual review feedback/decision/publication, otherwise a manual check on2026-10-27UTC; worker then handles corrections and public/native verification. **Owners:** Claude reviewers, then worker. No user action now; manual date is internal, not a vendor promise or automation. No duplicate application.
 
 - **t003:** actual PR #2753 and its green Check Submission result are recorded. **Unblock:** upstream resolves the existing waiver request and reviews/merges, then worker verifies the public entry/setup links. **Owners:** upstream maintainer, then worker. The one waiver request is already sent; no repeated comment or engagement action. No engagement operation is performed or fabricated, and no duplicate contribution is sent.
 - **t004-t007:** all three implementation tasks still have unresolved access/publication conditions; adoption, simplify, coverage and closeout cannot establish the milestone DoD ahead of them. **Unblock:** complete actual t001-t003 review/publication/native outcomes, then perform each standing closing check in dependency order. **Owners:** implementation owners above, then worker. No closing task is marked done on a prepared or merely submitted listing.

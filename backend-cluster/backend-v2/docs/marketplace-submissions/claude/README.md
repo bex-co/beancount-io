@@ -1,4 +1,20 @@
-# Existing Claude connector review access
+# Existing Claude connector review
+
+## Current publisher-reported review — 2026-10-25T05:34:59Z
+
+The publisher reports that the existing connector application is **in review**.
+No estimated completion date or requested changes were supplied. This is a
+direct publisher update; the worker has not independently viewed the review
+screen or restored original-account access.
+
+The current status-information request is satisfied. No further publisher
+action is needed for Claude now. Claude reviewers own the remaining review;
+the worker follows actual feedback, a decision/publication event, or a manual
+check on2026-10-27UTC, then verifies approved public/native availability. That
+manual date is an internal check trigger, not a vendor estimate or recurring
+monitor. Reuse the existing application below; no duplicate is created.
+
+## Historical submission and direct-access observations
 
 The publisher confirmed submission on 2026-10-23 and supplied the
 [existing connector application](https://claude.ai/directory/manage/beancount-io).
