@@ -39,7 +39,7 @@ skills/
     SKILL.md
     references/               The schedule contract and deterministic calculation
     evals/                    Partial-period, reversal, invoice, and rerun fixtures
-docs/skills/                  Installation, first-query, first-month, migration, and importer graduation guides; rehearsal evidence
+docs/skills/                  Installation, first-query, first-month, migration, and importer graduation guides; the BQL cookbook; rehearsal evidence
   examples/                   Synthetic journey inputs and expected results
 scripts/skills/               Suite installer, CI checks, routing runner and routing.json, journey checkpoint verifiers, and tests
   tmp/                        Scratch space — gitignored, safe for experiments
