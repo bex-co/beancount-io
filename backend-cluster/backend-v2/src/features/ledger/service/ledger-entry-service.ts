@@ -314,6 +314,20 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
           `entry ${index}: at most one posting may omit its amount, found ${elided}`,
         );
       }
+      // A price without units has no meaning, and the ledger would render the
+      // posting elided with the price silently gone. Refuse it here, naming
+      // the posting, on every surface at once (w23/079).
+      input.entry.postings.forEach((posting, postingIndex) => {
+        const hasUnits =
+          posting.units !== undefined && posting.units !== null;
+        const hasPrice =
+          posting.price !== undefined && posting.price !== null;
+        if (hasPrice && !hasUnits) {
+          throw new BadUserInputError(
+            `entry ${index}: postings[${postingIndex}].price needs units; a posting without an amount can't carry a price`,
+          );
+        }
+      });
     });
     // A malformed amount was a 500 in the ledger, reported as "service
     // unavailable, retry", or was committed as unparseable text. Refuse it

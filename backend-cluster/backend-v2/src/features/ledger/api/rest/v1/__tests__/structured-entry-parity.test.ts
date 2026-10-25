@@ -741,6 +741,45 @@ describe.each(["rest", "gql", "mcp"])("elided postings via %s", (surface) => {
       await f.close();
     }
   });
+
+  it("refuses a price without units before committing (w23/079)", async () => {
+    const batch = [
+      {
+        type: "transaction",
+        entry: {
+          date,
+          flag: "*",
+          narration: "px",
+          postings: [
+            {
+              account: "Assets:Cash",
+              price: { number: "1", currency: "USD" },
+            },
+            {
+              account: "Equity:Initial",
+              units: { number: "-10", currency: "USD" },
+            },
+          ],
+        },
+      },
+    ] as unknown as LedgerEntryInput[];
+    const f = await fixture();
+    try {
+      const result = await f.call(surface, batch);
+      expect(result.success).toBe(false);
+      expect(f.write).not.toHaveBeenCalled();
+      expect(f.committed).toEqual([]);
+      const text = JSON.stringify(
+        "errors" in result ? result.errors : result,
+      );
+      expect(text).toContain(
+        "entry 0: postings[0].price needs units",
+      );
+      expect(text).toContain("can't carry a price");
+    } finally {
+      await f.close();
+    }
+  });
 });
 
 describe.each(["rest", "gql", "mcp"])(
