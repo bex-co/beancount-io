@@ -1,0 +1,102 @@
+{
+  "owner": "w2/088",
+  "dependent": "w6/m8/t003",
+  "observedAtUTC": "2026-10-25T07:27:41.741369Z",
+  "publicURL": "https://glama.ai/mcp/connectors/io.beancount/beancount",
+  "adminURL": "https://glama.ai/mcp/connectors/io.beancount/beancount/admin/test-profile",
+  "result": "Original after-one-day follow-up completed: ownership retained, authenticated check after24hours succeeds, actual public uptime recorded.",
+  "firstHealthyCheckAtUTC": "2026-10-24T07:01:01Z",
+  "latestCheckAtUTC": "2026-10-25T07:20:43.866904Z",
+  "elapsedSeconds": 87582.866904,
+  "trigger": "New scheduled Glama check observed on reload; no manual test, credential replacement or grant change performed.",
+  "public": {
+    "ownershipVerified": true,
+    "status": "Healthy",
+    "historicalUptimePercent": 6.1,
+    "historicalWindowDays": 21,
+    "toolCount": 44,
+    "name": "Beancount.io",
+    "description": "Query, edit, and reconcile a hosted Beancount ledger: BQL, reports, files, and bank imports.",
+    "endpoint": "https://beancount.io/api-gateway/mcp",
+    "transport": "Streamable HTTP",
+    "repository": "https://github.com/bex-co/beancount-io"
+  },
+  "recentVisibleChecks": [
+    {
+      "atUTC": "2026-10-25T07:20:43.866904Z",
+      "status": "success",
+      "health": "Healthy",
+      "durationMs": 1252
+    },
+    {
+      "atUTC": "2026-10-25T07:00:27.668042Z",
+      "status": "success",
+      "health": "Healthy",
+      "durationMs": 3075
+    },
+    {
+      "atUTC": "2026-10-25T04:45:46.890816Z",
+      "status": "success",
+      "health": "Healthy",
+      "durationMs": 1237
+    },
+    {
+      "atUTC": "2026-10-25T04:27:40.504818Z",
+      "status": "success",
+      "health": "Healthy",
+      "durationMs": 1555
+    },
+    {
+      "atUTC": "2026-10-25T03:36:56.681488Z",
+      "status": "success",
+      "health": "Healthy",
+      "durationMs": 1437
+    },
+    {
+      "atUTC": "2026-10-25T03:13:04.033346Z",
+      "status": "success",
+      "health": "Healthy",
+      "durationMs": 1723
+    },
+    {
+      "atUTC": "2026-10-25T02:55:13.380448Z",
+      "status": "success",
+      "health": "Healthy",
+      "durationMs": 1137
+    },
+    {
+      "atUTC": "2026-10-25T02:29:48.506919Z",
+      "status": "success",
+      "health": "Healthy",
+      "durationMs": 1825
+    },
+    {
+      "atUTC": "2026-10-25T01:53:19.614677Z",
+      "status": "success",
+      "health": "Healthy",
+      "durationMs": 1123
+    },
+    {
+      "atUTC": "2026-10-25T01:28:17.123594Z",
+      "status": "success",
+      "health": "Healthy",
+      "durationMs": 2465
+    }
+  ],
+  "profile": {
+    "configured": true,
+    "type": "API Key / Bearer Authentication",
+    "replacementFieldEmpty": true,
+    "credentialsChanged": false
+  },
+  "listing": {
+    "nameDescriptionEndpointMatchServerJSON": true,
+    "registrySourceOfTruthOverrideEnabled": false,
+    "metadataChanged": false,
+    "scopeAndSetupGuide": "https://github.com/bex-co/beancount-io/blob/main/backend-cluster/backend-v2/docs/mcp.md",
+    "nativeProof": "native-rehearsal-20261025.json"
+  },
+  "historyBoundary": "Only the latest ten records are exposed on the inspected Test Profile UI; earlier recorded cohorts and the first successful check are retained in claim-progress.json. This is the original after-a-day health follow-up, not an exhaustive export, continuous availability proof or a24-hour100%uptime SLA. No unseen check is marked successful.",
+  "credentialBoundary": "Existing retained read-only synthetic-ledger monitor, expiry end2026-11-23UTC; renewal assessment2026-11-20UTC. No secret values.",
+  "privacy": "Public metadata and bounded status/timestamp observations only; no credential, cookie, account contact, raw ledger content or private infrastructure."
+}

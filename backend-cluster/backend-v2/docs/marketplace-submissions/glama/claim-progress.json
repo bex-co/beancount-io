@@ -1,6 +1,6 @@
 {
   "target": "Glama existing Beancount.io connector",
-  "observedAtUTC": "2026-10-24T19:56:22Z",
+  "observedAtUTC": "2026-10-25T07:27:41.741369Z",
   "adminUrl": "https://glama.ai/mcp/connectors/io.beancount/beancount/admin",
   "accountProfileComplete": true,
   "termsAccepted": true,
@@ -11,11 +11,11 @@
   "dnsReadback": "Exact prepared value matches Cloudflare API, authoritative ajay.ns.cloudflare.com and public recursive1.1.1.1; value SHA-256 retained above.",
   "httpProofStatus": 404,
   "dnsProviderEntry": "https://dash.cloudflare.com/login",
-  "currentGate": "Authenticated monitoring now succeeds. Observe a full healthy day starting at 2026-10-24T07:01:01Z; original native accounting journey remains separate.",
+  "currentGate": "Original after-a-day health recheck completed under w2/088; existing native accounting proof retained. No setup/health-day approval or wait remains.",
   "testProfileConfigured": true,
-  "health": "Healthy; public connector retains44tools. Historical uptime is3.2% over20days; full healthy day not yet observed.",
-  "nextAction": "At or after 2026-10-25T07:01:01Z, inspect subsequent Glama checks and public health for a full healthy day under w2/088. Renew the restricted monitoring credential before its 2026-11-23 UTC expiry.",
-  "limit": "Successful initialization/discovery and ownership are verified. A full healthy day and the original native ledger query/write-preview acceptance are not yet established.",
+  "health": "Healthy, ownership verified,44tools. Public historical uptime6.1%over21days; a new scheduled successful check follows the first success by24h19m42s.",
+  "nextAction": "Retain DNS proof and private read-only monitor; assess renewal by2026-11-20UTC or actual failure. Worker verifies remaining metadata under w6/m8/t003; Smithery remains separate.",
+  "limit": "Only the latest ten records are exposed on the inspected Test Profile UI; earlier recorded cohorts and the first successful check are retained in claim-progress.json. This is the original after-a-day health follow-up, not an exhaustive export, continuous availability proof or a24-hour100%uptime SLA. No unseen check is marked successful.",
   "history": [
     {
       "observedAtUTC": "2026-10-24T00:53:46Z",
@@ -37,6 +37,25 @@
       "observedAtUTC": "2026-10-24T07:05:54Z",
       "health": "Healthy; public connector exposes 44 tools. Historical uptime is 0.1% over 20 days, not a full successful day.",
       "currentGate": "Authenticated monitoring now succeeds. Observe a full healthy day starting at 2026-10-24T07:01:01Z; original native accounting journey remains separate."
+    },
+    {
+      "observedAtUTC": "2026-10-24T19:56:22Z",
+      "health": "Healthy; public connector retains44tools. Historical uptime is3.2% over20days; full healthy day not yet observed.",
+      "currentGate": "Authenticated monitoring now succeeds. Observe a full healthy day starting at 2026-10-24T07:01:01Z; original native accounting journey remains separate.",
+      "latestMonitoringObservation": {
+        "observedAtUTC": "2026-10-24T19:56:22Z",
+        "latestCheckAtUTC": "2026-10-24T19:53:19Z",
+        "latestDurationMs": 1197,
+        "recentDisplayedChecks": 10,
+        "allRecentDisplayedChecksHealthy": true,
+        "oldestDisplayedCheckAtUTC": "2026-10-24T14:19:00Z",
+        "oldestDisplayedCheckPrecision": "minute",
+        "historicalUptimePercent": 3.2,
+        "historicalWindowDays": 20,
+        "fullHealthyDayObserved": false,
+        "limit": "Only the ten displayed recent history entries were inspected; the complete earlier interval is not inferred from this page."
+      },
+      "fullHealthyDayObserved": false
     }
   ],
   "claimResult": "The actual existing connector displays Ownership verified and exposes its Admin/Test Profile controls.",
@@ -64,7 +83,7 @@
   "firstHealthyCheckAtUTC": "2026-10-24T07:01:01Z",
   "firstHealthyCheckDurationMs": 1348,
   "fullHealthyDayEarliestRecheckAtUTC": "2026-10-25T07:01:01Z",
-  "fullHealthyDayObserved": false,
+  "fullHealthyDayObserved": true,
   "publicToolCount": 44,
   "testProfilePersistenceVerified": true,
   "monitoringCredential": {
@@ -83,17 +102,16 @@
     "renewalOwner": "Repository worker through w2/088 and w6/m8/t003 / existing connector maintenance"
   },
   "latestMonitoringObservation": {
-    "observedAtUTC": "2026-10-24T19:56:22Z",
-    "latestCheckAtUTC": "2026-10-24T19:53:19Z",
-    "latestDurationMs": 1197,
+    "observedAtUTC": "2026-10-25T07:27:41.741369Z",
+    "latestCheckAtUTC": "2026-10-25T07:20:43.866904Z",
+    "latestDurationMs": 1252,
     "recentDisplayedChecks": 10,
     "allRecentDisplayedChecksHealthy": true,
-    "oldestDisplayedCheckAtUTC": "2026-10-24T14:19:00Z",
-    "oldestDisplayedCheckPrecision": "minute",
-    "historicalUptimePercent": 3.2,
-    "historicalWindowDays": 20,
-    "fullHealthyDayObserved": false,
-    "limit": "Only the ten displayed recent history entries were inspected; the complete earlier interval is not inferred from this page."
+    "historicalUptimePercent": 6.1,
+    "historicalWindowDays": 21,
+    "fullDayFollowUpComplete": true,
+    "historyExhaustive": false,
+    "evidence": "health-followup-20261025.json"
   },
   "monitoringCredentialMetadataRecheck": {
     "observedAtUTC": "2026-10-25T01:58:28Z",
@@ -119,5 +137,7 @@
     "condition": "If monitoring still needs access beyond end2026-11-23UTC, renew before expiry within the same synthetic-ledger/ledger.read-only boundary. If not needed, allow natural expiry. Keep the daily DNS ownership proof.",
     "verification": "Saved key metadata/pin/scope/expiry; actual private profile check and later scheduled result. A new failed check restarts the full healthy-day condition after repair.",
     "performedThisChange": "Coordination and read-only metadata; no new key, rotation, grant revocation or automation."
-  }
+  },
+  "fullDayFollowUpObserved": true,
+  "fullHealthyDayObservationMeaning": "Original after-a-day follow-up: first and current scheduled success are more than24hours apart, current public status is Healthy and all ten displayed recent checks succeed. The historyBoundary explicitly excludes a claim about every unseen check or100%continuous uptime."
 }

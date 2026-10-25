@@ -139,3 +139,20 @@ Keep the DNS proof published. Retain prior grants; let an unneeded key expire.
 [Exact dates, routes and responsibility](./claim-progress.json) are recorded
 without plaintext. No early replacement, renewal, revocation or polling job
 is performed by this coordination change.
+
+## After-one-day health follow-up — 2026-10-25T07:27:41.741369Z
+
+The retained private API Key/Bearer profile remains configured. A new scheduled
+check at **2026-10-25T07:20:43.866904Z** succeeds in1252ms, more than24hours
+after the first success at2026-10-24T07:01:01Z. The current ten displayed recent
+checks all succeed. Public ownership is verified, status **Healthy**, with
+**44tools**, canonical endpoint/source and historical uptime**6.1%over21days**.
+
+This completes w2/088's original instruction to recheck after a day and record
+observed uptime. [Exact timestamps, current metadata and limits](./health-followup-20261025.json)
+retain that the UI exposes only ten recent records: this is not an exhaustive
+full-interval export or a continuous100%availability claim. No unseen check
+is inferred successful. Existing earlier cohorts and native accounting proof
+remain separate, and no manual check/new credential/revocation occurs. Keep
+DNS proof and the read-only synthetic monitor; assess renewal by2026-11-20UTC
+before end2026-11-23UTC expiry, or earlier actual failure.

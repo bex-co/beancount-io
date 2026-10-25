@@ -71,7 +71,6 @@
 - [084 — Say plainly where ledger data goes, and how the suite relates to upstream Beancount](./blocked/084.md) — **blocked:** the "Your data" draft is written in the note; the owner approves the affiliation wording
 - [086 — Check that non-English ledger requests route to the right skill](./blocked/086.md) — **blocked:** 25 prompts added and routed 25/25 on one client; the Codex rerun waits for Codex usage
 - [087 — Decide whether to publish the skill suite from a slim public mirror repository](./blocked/087.md) — **blocked:** owner decision (repository, credential, portal identities)
-- [088 — Glama shows the hosted MCP connector at 0.0% uptime over 15 days](./blocked/088.md) — **blocked:** ownership and synthetic-only read authentication verified; first Healthy check2026-10-24T07:01:01Z; full-day recheck due no earlier than2026-10-25T07:01:01Z; renew credential before2026-11-23UTC
 
 ## Cross-queue promotions and follow-ups
 

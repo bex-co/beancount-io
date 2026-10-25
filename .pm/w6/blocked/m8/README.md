@@ -46,7 +46,7 @@
 
 - [Smithery publishing](https://smithery.ai/docs/build/publish)
 - [Glama connector FAQ](https://glama.ai/mcp/faq)
-- [Existing w2/088 health/claim follow-up](https://github.com/bex-co/beancount-io/blob/main/.pm/w2/blocked/088.md)
+- [Existing w2/088 health/claim follow-up](https://github.com/bex-co/beancount-io/blob/main/.pm/w2/done/088.md)
 
 ## Historical blocker snapshot
 
