@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1024 — Handle dateless lots in close diagnostics](./1024.md) — minor CLI gap: inferred offsetting lots crash direct close and block a closing-statement refund; dated, empty, force and label controls pass, checked 2026-10-24.
+
 - [1023 — Canonicalize signed zero in imported directive keys](./1023.md) — minor CLI gap: unchanged native zero balance/tolerance conflicts and blocks new rows; numeric note metadata duplicates, while precision/type/Price controls hold, checked 2026-10-24.
 
 - [085 — Preserve every currency in a partially retained pad export](./085.md) — reopened major CLI gap: cutoff export passes check but loses one currency and halves net worth; original padding controls still pass, checked 2026-10-24.
