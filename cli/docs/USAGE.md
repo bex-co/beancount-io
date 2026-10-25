@@ -1684,6 +1684,46 @@ like every `--date` flag; Unix timestamps, `20260201`, week dates
 `source.filename`/`source.lineno` separately; those locations are never written
 back as transaction metadata.
 
+## Updating directives
+
+An import parks rows it cannot categorize on `Expenses:Uncategorized` with
+flag `!`. List that review queue and recategorize each row with `bea update
+transaction`, and the queue drains without a hand edit:
+
+```bash
+bea add transaction "Mystery" --date 2026-08-02 --flag '!' --posting "Expenses:Uncategorized 5" --posting "Assets:Checking" --meta 'import-id:demo-1'
+bea list transaction --flag '!' --details
+bea update transaction --id demo-1 --account Expenses:Dining --flag '*'
+bea update transaction --id demo-1 --account Expenses:Dining --flag '*' --apply
+bea list transaction --flag '!'
+```
+
+`--id` takes the row's import-id, a `ref` metadata value, or `file:line`; an
+id shared by two rows is refused rather than guessed at. A bare `--account`
+retargets the queue's leg, while `OLD=NEW` names another leg. `--flag`,
+`--tag`, and `--narration` retouch the header. Every form previews a diff and
+writes only with `--apply`, and only the entry's own lines change.
+
+A longer queue goes through one mapping file, previewed and then applied in a
+single write per file; a rejected row never aborts the valid ones:
+
+```bash
+bea add transaction "First" --date 2026-08-02 --flag '!' --posting "Expenses:Uncategorized 5" --posting "Assets:Checking" --meta 'import-id:demo-1'
+bea add transaction "Second" --date 2026-08-03 --flag '!' --posting "Expenses:Uncategorized 7" --posting "Assets:Checking" --meta 'import-id:demo-2'
+cat > queue.csv <<'EOF'
+id,account,flag
+demo-1,Expenses:Dining,*
+demo-2,Expenses:Groceries,*
+EOF
+bea update transactions --from queue.csv
+bea update transactions --from queue.csv --apply
+bea list transaction --flag '!'
+```
+
+JSON rows use the single-row fields; pass `--from -` to read either form from
+stdin. Any rejection exits **1** with per-row results, as `bea add
+transactions --partial` reports.
+
 ## Reports
 
 Human tables round each currency to the finest precision the ledger itself

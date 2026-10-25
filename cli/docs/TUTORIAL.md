@@ -80,14 +80,19 @@ bea --file august/main.bean add transaction "Bank fee" --date 2026-08-31 \
 bea --file august/main.bean add balance --date 2026-09-01 --account Assets:Checking \
   --amount "3206.81 USD"
 bea --file august/main.bean list transaction --flag '!' --details
+export ID=$(bea --json --file august/main.bean list transaction --flag '!' | jq -r '.data[0].meta["import-id"]')
+bea --file august/main.bean update transaction --id "$ID" --account Expenses:Dining --flag '*'
+bea --file august/main.bean update transaction --id "$ID" --account Expenses:Dining --flag '*' --apply
+bea --file august/main.bean list transaction --flag '!'
 ```
 
-The queue holds the Mystery Shop row. `--details` shows its file and line
-number. Open that location in your editor, change its `Expenses:Uncategorized`
-posting to the right account, and change its flag from `!` to `*` once reviewed.
-Keep the `import-id` line so the next import of this export still skips it.
-Run `bea --file august/main.bean check` and list the `!` queue again to confirm
-that the reviewed transaction is gone.
+The queue holds the Mystery Shop row, and `--details` shows its import-id.
+`update transaction` previews the recategorization as a diff and, on
+`--apply`, rewrites only that entry's lines — keeping its `import-id` line so
+the next import of this export still skips it. (The fence reads the id with
+`jq`; on your own ledger, copy it from the `--details` output, or pass the
+entry's `file:line` instead.) The final listing is empty: the queue is clear
+and `check` stays green.
 
 ## Read the month
 

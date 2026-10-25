@@ -300,6 +300,23 @@ the category value, or `unmatched`), and JSON rows carry the same value in
 opening any missing accounts: a rule naming an account the ledger does not
 open fails validation with the `bea add open` command to run.
 
+Clear the queue with `bea update transaction`: point `--id` at a row's
+import-id (or its `file:line` from `--details`), preview the diff, and apply
+it. Only that entry's lines change, and its `import-id` stays, so the next
+import of the export still skips it:
+
+```bash
+bea --file books/main.bean list transaction --flag '!' --details
+export ID=$(bea --json --file books/main.bean list transaction --flag '!' | jq -r '.data[0].meta["import-id"]')
+bea --file books/main.bean update transaction --id "$ID" --account Expenses:Dining --flag '*'
+bea --file books/main.bean update transaction --id "$ID" --account Expenses:Dining --flag '*' --apply
+bea --file books/main.bean list transaction --flag '!'
+```
+
+For a longer queue, `bea update transactions --from queue.csv` applies a whole
+`id,account,flag` mapping in one previewed write per file; see [Updating
+directives](USAGE.md#updating-directives).
+
 ```bash
 cat > category.csv <<'EOF'
 Date,Description,Amount,Category
