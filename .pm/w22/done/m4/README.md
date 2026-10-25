@@ -1,6 +1,6 @@
 # w22 · m4 — `bea report capital-gains`: realized gains by lot
 
-**Worker:** worker1 **Goal:** a personal investor or an agent reads realized gains per sale lot with one verb **Status:** todo (t001–t006 done)
+**Worker:** worker1 **Goal:** a personal investor or an agent reads realized gains per sale lot with one verb **Status:** done
 
 ## Tasks (in order)
 
@@ -12,7 +12,7 @@
 | t004 | Adoption surface — **DONE** | 25m | t003 |
 | t005 | Simplify — **DONE** | 25m | t004 |
 | t006 | Test coverage — **DONE** | 45m | t004 |
-| t007 | Closeout | 15m | t005, t006 |
+| t007 | Closeout — **DONE** | 15m | t005, t006 |
 
 ## Definition of done
 
