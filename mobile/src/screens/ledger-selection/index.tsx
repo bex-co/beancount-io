@@ -415,7 +415,11 @@ export function LedgerSelectionScreen() {
                       : `discoveryEmpty_${tab}`,
                 )}
               </Text>
-              {!state.error && tab === "starred" && !query.trim() ? (
+              {/* The yours tab's empty copy invites exploring too (w21/1009);
+                  explore needs none — it would link to itself. */}
+              {!state.error &&
+              (tab === "starred" || tab === "yours") &&
+              !query.trim() ? (
                 <Pressable
                   style={styles.action}
                   onPress={() => setTab("explore")}
