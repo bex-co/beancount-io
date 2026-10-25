@@ -1,6 +1,12 @@
 import { useLedgerRootNames } from "@/common/hooks/use-ledger-root-names";
 import { useMemo, useState } from "react";
-import { LayoutChangeEvent, StyleSheet, Text, View } from "react-native";
+import {
+  LayoutChangeEvent,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import Svg, { Path, Rect, Text as SvgText } from "react-native-svg";
 import Animated, {
   SharedValue,
@@ -11,7 +17,6 @@ import { ColorTheme } from "@/types/theme-props";
 import { fontSizes, gutter, space, useTheme } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { ScreenWidth } from "@/common/screen-util";
 import { LEADING_TEXT_ALIGN, LTR_PLOT } from "@/common/rtl";
 import { LoadingTile } from "@/components/loading-tile";
 import type { AccountNode } from "@/components/account-list/select-account-list";
@@ -254,7 +259,11 @@ function CashFlowSankeyPlot({
   // A ledger that renames its roots has Ingresos/Gastos, not Income/Expenses
   // (w21/235).
   const roots = useLedgerRootNames();
-  const [width, setWidth] = useState(ScreenWidth - gutter * 2);
+  // The live window width, not the launch-time one: `onLayout` below
+  // re-measures the container, but the first frame should already follow a
+  // rotation (w21/1004).
+  const windowWidth = useWindowDimensions().width;
+  const [width, setWidth] = useState(windowWidth - gutter * 2);
   const [pressed, setPressed] = useState<string | null>(null);
 
   const data = useMemo(

@@ -114,8 +114,8 @@ const getStyles = (theme: ColorTheme) =>
       color: theme.black80,
     },
     chartContainer: {
-      // The chart is `ScreenWidth - contentPadding * 2` wide: padded by 10 it
-      // sat flush left with 12 pt spare on the right (w21/220).
+      // The chart fills this container: padded by 10 it sat flush left with
+      // 12 pt spare on the right (w21/220).
       paddingHorizontal: contentPadding,
     },
   });

@@ -21,7 +21,8 @@ import { scaleLinear } from "d3-scale";
 import { line as d3Line, area as d3Area, curveMonotoneX } from "d3-shape";
 import { haptics } from "@/common/haptics";
 import { useHorizontalSwipeOwnerGesture } from "@/common/horizontal-swipe-owner";
-import { contentPadding, ScreenWidth } from "@/common/screen-util";
+import { contentPadding } from "@/common/screen-util";
+import { useChartWidth } from "./use-chart-width";
 import { durations, fontSizes, fontWeights, useTheme } from "@/common/theme";
 import { easeStandard } from "@/common/theme/motion-easing";
 import { AmountText, RollingAmount } from "@/components/amount-text";
@@ -529,7 +530,9 @@ function InteractiveLineChart({
   const { t } = useTranslations();
   const swipeOwner = useHorizontalSwipeOwnerGesture();
 
-  const chartWidth = ScreenWidth - contentPadding * 2;
+  // Measured from the container, so an iPad rotation or Split View resize
+  // re-lays the curve instead of keeping the launch width (w21/1004).
+  const { width: chartWidth, onLayout } = useChartWidth(contentPadding * 2);
   const count = numbers.length;
   const hasSeries = count > 1;
 
@@ -878,7 +881,7 @@ function InteractiveLineChart({
     // Owner marker covers the header/labels too, so swipes starting above the
     // plot can't be claimed by the ledger drawer's edge gesture.
     <GestureDetector gesture={swipeOwner}>
-      <View>
+      <View onLayout={onLayout}>
         <View
           style={styles.header}
           onLayout={

@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { Button } from "@/components";
 import * as Clipboard from "expo-clipboard";
-import { contentPadding, ScreenWidth } from "@/common/screen-util";
+import { contentPadding } from "@/common/screen-util";
 import { CommonMargin } from "@/common/common-margin";
 import { ReferralGiftIcon } from "@/screens/referral-screen/components/referral-gift-icon";
 import { useTranslations } from "@/common/hooks/use-translations";
@@ -44,7 +44,10 @@ const getStyles = (theme: ColorTheme) =>
     },
     shareLinkContainer: {
       minHeight: 48,
-      width: ScreenWidth - 2 * contentPadding,
+      // Stretched, not computed from the launch-time screen width: the body
+      // already insets by `contentPadding`, and a fixed width froze through
+      // iPad rotations (w21/1004).
+      alignSelf: "stretch",
       borderColor: theme.black40,
       borderRadius: 8,
       borderWidth: 1,
@@ -71,7 +74,7 @@ const getStyles = (theme: ColorTheme) =>
     },
     shareBtn: {
       // backgroundColor: theme.white,
-      width: ScreenWidth - 2 * contentPadding,
+      alignSelf: "stretch",
     },
     share: {
       fontWeight: "bold",

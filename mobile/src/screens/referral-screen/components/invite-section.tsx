@@ -37,9 +37,9 @@ const getStyles = (theme: ColorTheme) =>
       borderBottomColor: theme.black60,
       borderBottomWidth: onePx,
     },
-    // `flex: 1` rather than a width computed from `ScreenWidth`: Yoga already
-    // knows what is left beside the 80pt gift icon, and the computed figure
-    // ignored the real padding as well as any wrapping the copy needs.
+    // `flex: 1` rather than a width computed from the screen size: Yoga
+    // already knows what is left beside the 80pt gift icon, and the computed
+    // figure ignored the real padding as well as any wrapping the copy needs.
     summaryContainer: {
       flex: 1,
       justifyContent: "center",

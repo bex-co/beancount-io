@@ -36,11 +36,10 @@ describe("the budget chart's width", () => {
 
   it("is measured from its own layout, not derived from the screen", () => {
     const chart = read("budget-bar-chart-d3.tsx");
-    expect(
-      chart.includes(
-        "onLayout={(event)=>setMeasured(event.nativeEvent.layout.width)}",
-      ),
-    ).toBe(true);
+    // w21/1004: the inline measure moved into the shared `useChartWidth`
+    // hook, which still measures this chart's own container.
+    expect(chart.includes("useChartWidth(")).toBe(true);
+    expect(chart.includes("onLayout={onLayout}")).toBe(true);
     expect(chart.includes("budgetColumnWidth(")).toBe(true);
     expect(chart.includes("availableWidth")).toBe(false);
   });

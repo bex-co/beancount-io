@@ -1,7 +1,9 @@
+import { View } from "react-native";
 import { Circle, G, Path, Text as SvgText } from "react-native-svg";
 import { scaleBand, scaleLinear } from "d3-scale";
 import { curveMonotoneX, line as d3Line } from "d3-shape";
-import { contentPadding, ScreenWidth } from "@/common/screen-util";
+import { contentPadding } from "@/common/screen-util";
+import { useChartWidth } from "./use-chart-width";
 import {
   formatShortMoneyWithCurrency,
   formatSignedMoneyWithCurrency,
@@ -89,6 +91,9 @@ function IncomeExpenseBarChart({
 
   // Before the early return below: hooks cannot run conditionally.
   const entrance = useEntranceProgress(months.length > 0);
+  // Measured from the container, so an iPad rotation or Split View resize
+  // re-lays the columns instead of keeping the launch width (w21/1004).
+  const { width: containerWidth, onLayout } = useChartWidth(contentPadding * 2);
 
   if (months.length === 0) {
     return <ChartPlaceholder height={chartHeight} />;
@@ -124,7 +129,7 @@ function IncomeExpenseBarChart({
     AXIS_FONT_SIZE,
     LEFT_PADDING,
   );
-  const availableWidth = ScreenWidth - contentPadding * 2 - axisWidth;
+  const availableWidth = containerWidth - axisWidth;
   const groupWidth = Math.max(MIN_GROUP_WIDTH, availableWidth / months.length);
   const plotWidth = groupWidth * months.length;
   const subScale = scaleBand<string>()
@@ -177,98 +182,100 @@ function IncomeExpenseBarChart({
     : "";
 
   return (
-    <ScrollableAxisChart
-      chartHeight={chartHeight}
-      plotWidth={plotWidth}
-      yTicks={yTicks}
-      axisWidth={axisWidth}
-      yScale={yScale}
-      currency={currency}
-      // Full amounts: the axis's short form read 222.58 as "$222.6" (w21/932).
-      accessibilityLabel={t("incomeExpenseChartSummary", {
-        count: months.length,
-        income: formatSignedMoneyWithCurrency(
-          roundMoney(
-            income.reduce((sum, v) => sum + v, 0),
+    <View onLayout={onLayout}>
+      <ScrollableAxisChart
+        chartHeight={chartHeight}
+        plotWidth={plotWidth}
+        yTicks={yTicks}
+        axisWidth={axisWidth}
+        yScale={yScale}
+        currency={currency}
+        // Full amounts: the axis's short form read 222.58 as "$222.6" (w21/932).
+        accessibilityLabel={t("incomeExpenseChartSummary", {
+          count: months.length,
+          income: formatSignedMoneyWithCurrency(
+            roundMoney(
+              income.reduce((sum, v) => sum + v, 0),
+              currency,
+            ),
             currency,
           ),
-          currency,
-        ),
-        expense: formatSignedMoneyWithCurrency(
-          roundMoney(
-            expense.reduce((sum, v) => sum + v, 0),
+          expense: formatSignedMoneyWithCurrency(
+            roundMoney(
+              expense.reduce((sum, v) => sum + v, 0),
+              currency,
+            ),
             currency,
           ),
-          currency,
-        ),
-        net: formatSignedMoneyWithCurrency(
-          roundMoney(
-            net.reduce((sum, v) => sum + v, 0),
+          net: formatSignedMoneyWithCurrency(
+            roundMoney(
+              net.reduce((sum, v) => sum + v, 0),
+              currency,
+            ),
             currency,
           ),
-          currency,
-        ),
-      })}
-      legend={
-        <>
-          <LegendItem color={theme.success} label={t("income")} />
-          <LegendItem color={theme.error} label={t("expenses")} />
-          <LegendItem mark="line" color={netColor} label={t("netProfit")} />
-        </>
-      }
-    >
-      {/* Grouped income / expense bars */}
-      {months.map((month, i) => {
-        const x0 = groupX(i);
-        return (
-          <G key={`group-${month}`}>
-            {barRect(
-              income[i],
-              x0 + (subScale("income") ?? 0),
-              `inc-${month}`,
-              theme.success,
-              i,
-            )}
-            {barRect(
-              expense[i],
-              x0 + (subScale("expense") ?? 0),
-              `exp-${month}`,
-              theme.error,
-              i,
-            )}
-          </G>
-        );
-      })}
+        })}
+        legend={
+          <>
+            <LegendItem color={theme.success} label={t("income")} />
+            <LegendItem color={theme.error} label={t("expenses")} />
+            <LegendItem mark="line" color={netColor} label={t("netProfit")} />
+          </>
+        }
+      >
+        {/* Grouped income / expense bars */}
+        {months.map((month, i) => {
+          const x0 = groupX(i);
+          return (
+            <G key={`group-${month}`}>
+              {barRect(
+                income[i],
+                x0 + (subScale("income") ?? 0),
+                `inc-${month}`,
+                theme.success,
+                i,
+              )}
+              {barRect(
+                expense[i],
+                x0 + (subScale("expense") ?? 0),
+                `exp-${month}`,
+                theme.error,
+                i,
+              )}
+            </G>
+          );
+        })}
 
-      {/* Net profit line + per-point dots (dots keep a single month visible) */}
-      {hasLine && (
-        <Path d={netPath} fill="none" stroke={netColor} strokeWidth={2.5} />
-      )}
-      {net.map((value, i) => (
-        <Circle
-          key={`net-${months[i]}`}
-          cx={centerX(i)}
-          cy={yScale(value)}
-          r={3}
-          fill={netColor}
-        />
-      ))}
+        {/* Net profit line + per-point dots (dots keep a single month visible) */}
+        {hasLine && (
+          <Path d={netPath} fill="none" stroke={netColor} strokeWidth={2.5} />
+        )}
+        {net.map((value, i) => (
+          <Circle
+            key={`net-${months[i]}`}
+            cx={centerX(i)}
+            cy={yScale(value)}
+            r={3}
+            fill={netColor}
+          />
+        ))}
 
-      {/* X axis labels — month abbreviation per column, with the year where
+        {/* X axis labels — month abbreviation per column, with the year where
           it changes (w21/497) */}
-      {months.map((month, i) => (
-        <SvgText
-          key={`x-${month}`}
-          x={centerX(i)}
-          y={chartHeight - 8}
-          fontSize={LABEL_FONT_SIZE}
-          fill={theme.text01}
-          textAnchor="middle"
-        >
-          {columnLabels[i]}
-        </SvgText>
-      ))}
-    </ScrollableAxisChart>
+        {months.map((month, i) => (
+          <SvgText
+            key={`x-${month}`}
+            x={centerX(i)}
+            y={chartHeight - 8}
+            fontSize={LABEL_FONT_SIZE}
+            fill={theme.text01}
+            textAnchor="middle"
+          >
+            {columnLabels[i]}
+          </SvgText>
+        ))}
+      </ScrollableAxisChart>
+    </View>
   );
 }
 

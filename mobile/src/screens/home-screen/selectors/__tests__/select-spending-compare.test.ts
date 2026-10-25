@@ -118,10 +118,13 @@ describe("spendingChartSummary", () => {
 
   it("is the label of the one accessible chart element", () => {
     const read = (...parts: string[]) =>
-      fs.readFileSync(path.join(__dirname, ...parts), "utf8");
+      fs
+        .readFileSync(path.join(__dirname, ...parts), "utf8")
+        .replace(/\s+/g, "");
     expect(
       read("..", "..", "..", "..", "common", "d3", "bar-chart-d3.tsx").includes(
-        "<View accessible accessibilityLabel={accessibilityLabel}>",
+        // w21/1004: the View also carries the container-measure `onLayout`.
+        "<ViewaccessibleaccessibilityLabel={accessibilityLabel}onLayout={onLayout}>",
       ),
     ).toBe(true);
     expect(

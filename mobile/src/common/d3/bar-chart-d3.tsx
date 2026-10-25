@@ -1,7 +1,8 @@
 import { View } from "react-native";
 import Svg, { Text as SvgText, G, Line } from "react-native-svg";
 import { scaleLinear } from "d3-scale";
-import { contentPadding, ScreenWidth } from "@/common/screen-util";
+import { contentPadding } from "@/common/screen-util";
+import { useChartWidth } from "./use-chart-width";
 import { useTheme } from "@/common/theme";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { formatShortMoneyWithCurrency } from "@/common/number-utils";
@@ -40,8 +41,10 @@ function BarChart({
   const theme = useTheme().colorTheme;
   const { t, locale } = useTranslations();
 
-  // Chart dimensions
-  const chartWidth = ScreenWidth - contentPadding * 2;
+  // Chart dimensions — measured from the container, so an iPad rotation
+  // or Split View resize re-lays the bars instead of keeping the launch
+  // width (w21/1004).
+  const { width: chartWidth, onLayout } = useChartWidth(contentPadding * 2);
   const chartHeight = BAR_CHART_HEIGHT;
   const axisFontSize = 12;
   const labelFontSize = 13;
@@ -73,7 +76,11 @@ function BarChart({
   const entrance = useEntranceProgress(numbers.length > 0);
 
   return (
-    <View accessible accessibilityLabel={accessibilityLabel}>
+    <View
+      accessible
+      accessibilityLabel={accessibilityLabel}
+      onLayout={onLayout}
+    >
       <Svg width={chartWidth} height={chartHeight}>
         {/* Y axis grid lines and labels */}
         {yTicks.map((tick: number, i: number) => (

@@ -1,8 +1,8 @@
-import { useState } from "react";
 import { View } from "react-native";
 import { Path, Text as SvgText } from "react-native-svg";
 import { scaleLinear } from "d3-scale";
-import { contentPadding, ScreenWidth } from "@/common/screen-util";
+import { contentPadding } from "@/common/screen-util";
+import { useChartWidth } from "./use-chart-width";
 import { formatShortMoneyWithCurrency } from "@/common/number-utils";
 import { useTheme } from "@/common/theme";
 import { useTranslations } from "@/common/hooks/use-translations";
@@ -78,10 +78,10 @@ function BudgetBarChart({
   const { t, locale } = useTranslations();
 
   const chartHeight = height;
-  // The width the chart really has, once laid out. Until then, the screen less
-  // the Budget list's gutter and the card's own, so the first frame is close.
-  const [measured, setMeasured] = useState<number | null>(null);
-  const containerWidth = measured ?? ScreenWidth - contentPadding * 4;
+  // The width the chart really has, once laid out. Until then, the live
+  // window less the Budget list's gutter and the card's own, so the first
+  // frame is close — and a rotation before layout still lands right (w21/1004).
+  const { width: containerWidth, onLayout } = useChartWidth(contentPadding * 4);
 
   // Before the early return below: hooks cannot run conditionally.
   const entrance = useEntranceProgress(labels.length > 0);
@@ -133,7 +133,7 @@ function BudgetBarChart({
     .join(" ");
 
   return (
-    <View onLayout={(event) => setMeasured(event.nativeEvent.layout.width)}>
+    <View onLayout={onLayout}>
       <ScrollableAxisChart
         chartHeight={chartHeight}
         plotWidth={plotWidth}
