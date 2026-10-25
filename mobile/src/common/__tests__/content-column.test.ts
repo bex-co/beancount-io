@@ -41,110 +41,143 @@ describe("the shared content columns", () => {
   });
 });
 
+// One row per capped surface: the full test title, its file, and the needle
+// that proves the wiring. A spread where the consumer spreads one; the bare
+// name where it passes the column straight through (w21/m2/t005).
+const consumers: [title: string, file: string, needle: string][] = [
+  [
+    "the dashboard scaffold caps its content",
+    "components/dashboard-scroll-view/index.tsx",
+    "...contentColumn",
+  ],
+  [
+    "the Picker sheet caps itself",
+    "components/picker/index.tsx",
+    "...sheetColumn",
+  ],
+  [
+    "the valuation sheet caps itself",
+    "components/valuation-sheet/index.tsx",
+    "...sheetColumn",
+  ],
+  [
+    "Add Budget caps its form",
+    "screens/add-budget-screen/add-budget-screen.tsx",
+    "...contentColumn",
+  ],
+  [
+    "Open Account caps its form",
+    "screens/open-account-screen/open-account-screen.tsx",
+    "...contentColumn",
+  ],
+  [
+    "the transaction form caps itself",
+    "screens/multi-postings-transaction/multi-postings-transaction-screen.tsx",
+    "...contentColumn",
+  ],
+  [
+    "Transactions caps its list",
+    "screens/transactions-screen/transactions-screen.tsx",
+    "contentColumn",
+  ],
+  [
+    "Merchants caps its list",
+    "screens/merchants-screen/merchants-screen.tsx",
+    "contentColumn",
+  ],
+  [
+    "merchant detail caps its list",
+    "screens/merchant-detail-screen/merchant-detail-screen.tsx",
+    "contentColumn",
+  ],
+  [
+    "Budget caps its list",
+    "screens/budget-screen/budget-screen.tsx",
+    "contentColumn",
+  ],
+  [
+    "Notifications caps its list",
+    "screens/notifications-screen/notifications-screen.tsx",
+    "contentColumn",
+  ],
+  [
+    "ledger selection caps its list",
+    "screens/ledger-selection/index.tsx",
+    "contentColumn",
+  ],
+  [
+    "account detail caps its list",
+    "screens/account-detail-screen/account-detail-screen.tsx",
+    "contentColumn",
+  ],
+  [
+    "the file browser caps its list",
+    "screens/ledger-file-browser-screen/index.tsx",
+    "contentColumn",
+  ],
+  [
+    "transaction detail caps its content",
+    "screens/transaction-detail-screen/transaction-detail-screen.tsx",
+    "contentColumn",
+  ],
+  [
+    "commit detail caps its content",
+    "screens/commit-detail-screen/commit-detail-screen.tsx",
+    "contentColumn",
+  ],
+  [
+    "account picker caps its content",
+    "screens/account-picker-screen/account-picker-screen.tsx",
+    "contentColumn",
+  ],
+  [
+    "transaction filters caps its content",
+    "screens/transaction-filters-screen/transaction-filters-screen.tsx",
+    "contentColumn",
+  ],
+  [
+    "create ledger caps its content",
+    "screens/create-ledger-screen/create-ledger-screen.tsx",
+    "contentColumn",
+  ],
+  [
+    "profile caps its content",
+    "screens/profile/profile-screen.tsx",
+    "contentColumn",
+  ],
+  [
+    "referral caps its content",
+    "screens/referral-screen/referral-screen.tsx",
+    "contentColumn",
+  ],
+  ["welcome caps its content", "screens/welcome/index.tsx", "contentColumn"],
+  [
+    "server settings caps its content",
+    "screens/welcome/server-settings-screen.tsx",
+    "contentColumn",
+  ],
+  [
+    "the agent chat caps its content",
+    "screens/agent-screen/agent-screen.tsx",
+    "contentColumn",
+  ],
+  [
+    "settings about caps its content",
+    "screens/setting/about.tsx",
+    "contentColumn",
+  ],
+  [
+    "the accounts table caps its list",
+    "components/account-table/account-table.tsx",
+    "contentColumn",
+  ],
+];
+
 describe("the screens and sheets use the shared columns", () => {
-  it("the dashboard scaffold caps its content", () => {
-    expect(
-      readSource("components/dashboard-scroll-view/index.tsx").includes(
-        "...contentColumn",
-      ),
-    ).toBe(true);
-  });
-
-  it("the Picker sheet caps itself", () => {
-    expect(
-      readSource("components/picker/index.tsx").includes("...sheetColumn"),
-    ).toBe(true);
-  });
-
-  it("the valuation sheet caps itself", () => {
-    expect(
-      readSource("components/valuation-sheet/index.tsx").includes(
-        "...sheetColumn",
-      ),
-    ).toBe(true);
-  });
-
-  it("Add Budget caps its form", () => {
-    expect(
-      readSource("screens/add-budget-screen/add-budget-screen.tsx").includes(
-        "...contentColumn",
-      ),
-    ).toBe(true);
-  });
-
-  it("Open Account caps its form", () => {
-    expect(
-      readSource(
-        "screens/open-account-screen/open-account-screen.tsx",
-      ).includes("...contentColumn"),
-    ).toBe(true);
-  });
-
-  it("the transaction form caps itself", () => {
-    expect(
-      readSource(
-        "screens/multi-postings-transaction/multi-postings-transaction-screen.tsx",
-      ).includes("...contentColumn"),
-    ).toBe(true);
-  });
-
-  // w21/m2/t001: the bespoke list screens.
-  for (const [name, file] of [
-    ["Transactions", "screens/transactions-screen/transactions-screen.tsx"],
-    ["Merchants", "screens/merchants-screen/merchants-screen.tsx"],
-    [
-      "merchant detail",
-      "screens/merchant-detail-screen/merchant-detail-screen.tsx",
-    ],
-    ["Budget", "screens/budget-screen/budget-screen.tsx"],
-    ["Notifications", "screens/notifications-screen/notifications-screen.tsx"],
-    ["ledger selection", "screens/ledger-selection/index.tsx"],
-    [
-      "account detail",
-      "screens/account-detail-screen/account-detail-screen.tsx",
-    ],
-    ["the file browser", "screens/ledger-file-browser-screen/index.tsx"],
-  ]) {
-    it(`${name} caps its list`, () => {
-      expect(readSource(file).includes("contentColumn")).toBe(true);
+  // SettingScreen needs none — it only renders About, which is capped.
+  for (const [title, file, needle] of consumers) {
+    it(title, () => {
+      expect(readSource(file).includes(needle)).toBe(true);
     });
   }
-
-  // w21/m2/t002: the detail, form, and settings screens. SettingScreen needs
-  // none — it only renders About, which is capped.
-  for (const [name, file] of [
-    [
-      "transaction detail",
-      "screens/transaction-detail-screen/transaction-detail-screen.tsx",
-    ],
-    ["commit detail", "screens/commit-detail-screen/commit-detail-screen.tsx"],
-    [
-      "account picker",
-      "screens/account-picker-screen/account-picker-screen.tsx",
-    ],
-    [
-      "transaction filters",
-      "screens/transaction-filters-screen/transaction-filters-screen.tsx",
-    ],
-    ["create ledger", "screens/create-ledger-screen/create-ledger-screen.tsx"],
-    ["profile", "screens/profile/profile-screen.tsx"],
-    ["referral", "screens/referral-screen/referral-screen.tsx"],
-    ["welcome", "screens/welcome/index.tsx"],
-    ["server settings", "screens/welcome/server-settings-screen.tsx"],
-    ["the agent chat", "screens/agent-screen/agent-screen.tsx"],
-    ["settings about", "screens/setting/about.tsx"],
-  ]) {
-    it(`${name} caps its content`, () => {
-      expect(readSource(file).includes("contentColumn")).toBe(true);
-    });
-  }
-
-  // w21/m2/t003: the Accounts table is the accounts screen's list.
-  it("the accounts table caps its list", () => {
-    expect(
-      readSource("components/account-table/account-table.tsx").includes(
-        "contentColumn",
-      ),
-    ).toBe(true);
-  });
 });
