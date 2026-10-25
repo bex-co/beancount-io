@@ -1,0 +1,8 @@
+;; Synthetic fixture for the ledger-check action and hooks (w22/m5): a clean
+;; ledger the checks accept.
+2026-01-01 open Assets:Cash USD
+2026-01-01 open Expenses:Food USD
+
+2026-01-02 * "Lunch"
+  Assets:Cash    -10 USD
+  Expenses:Food   10 USD

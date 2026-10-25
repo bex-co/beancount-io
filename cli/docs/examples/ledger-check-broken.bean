@@ -1,0 +1,9 @@
+;; Synthetic fixture for the ledger-check action and hooks (w22/m5): the
+;; lunch transaction is short 1 USD on purpose, so `bea check` reports
+;; line 7 and `bea format --check` flags the file.
+2026-01-01 open Assets:Cash USD
+2026-01-01 open Expenses:Food USD
+
+2026-01-02 * "Lunch"
+  Assets:Cash  -10 USD
+  Expenses:Food  9 USD
