@@ -115,7 +115,7 @@ for your first month end to end, follow the
 | `bea init [DIRECTORY]` | Create a local ledger with common accounts, or a setup preset (`--preset personal@1`) |
 | `bea add TYPE` | Append one of eleven directive types |
 | `bea update TYPE` | Rewrite entries in place; recategorize the import review queue |
-| `bea import SOURCE` | Preview or apply a bank CSV (`--csv`) or importer (`--config`) |
+| `bea import SOURCE` | Preview or apply a bank CSV (`--csv`), OFX/QFX (`--ofx`), or importer (`--config`) |
 | `bea ingest OP` | Beangulp identify/extract/archive (needs `bea engine enable beangulp`) |
 | `bea price` | Managed price status/refresh/export, or fetch quotes via bean-price (needs `bea engine enable beanprice`; not `bea add price`) |
 | `bea list TYPE` | Inspect directives and filter transactions |

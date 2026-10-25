@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic OFX 2.x sample: one multi-currency account, one statement per
+     currency. All ids, names, and amounts are invented for tests and docs. -->
+<OFX>
+  <SIGNONMSGSRSV1>
+    <SONRS>
+      <STATUS><CODE>0</CODE><SEVERITY>INFO</SEVERITY></STATUS>
+      <DTSERVER>20260810</DTSERVER>
+      <LANGUAGE>ENG</LANGUAGE>
+    </SONRS>
+  </SIGNONMSGSRSV1>
+  <BANKMSGSRSV1>
+    <STMTTRNRS>
+      <TRNUID>1</TRNUID>
+      <STATUS><CODE>0</CODE><SEVERITY>INFO</SEVERITY></STATUS>
+      <STMTRS>
+        <CURDEF>USD</CURDEF>
+        <BANKACCTFROM>
+          <BANKID>111000025</BANKID>
+          <ACCTID>MC-2002</ACCTID>
+          <ACCTTYPE>CHECKING</ACCTTYPE>
+        </BANKACCTFROM>
+        <BANKTRANLIST>
+          <DTSTART>20260801</DTSTART>
+          <DTEND>20260810</DTEND>
+          <STMTTRN>
+            <TRNTYPE>DEBIT</TRNTYPE>
+            <DTPOSTED>20260803</DTPOSTED>
+            <TRNAMT>-150.00</TRNAMT>
+            <FITID>MC-USD-01</FITID>
+            <NAME>EXAMPLE WIDGET SUPPLY</NAME>
+            <MEMO>WIRE FEE</MEMO>
+          </STMTTRN>
+        </BANKTRANLIST>
+        <LEDGERBAL><BALAMT>4850.00</BALAMT><DTASOF>20260810</DTASOF></LEDGERBAL>
+      </STMTRS>
+    </STMTTRNRS>
+    <STMTTRNRS>
+      <TRNUID>2</TRNUID>
+      <STATUS><CODE>0</CODE><SEVERITY>INFO</SEVERITY></STATUS>
+      <STMTRS>
+        <CURDEF>EUR</CURDEF>
+        <BANKACCTFROM>
+          <BANKID>111000025</BANKID>
+          <ACCTID>MC-2002</ACCTID>
+          <ACCTTYPE>CHECKING</ACCTTYPE>
+        </BANKACCTFROM>
+        <BANKTRANLIST>
+          <DTSTART>20260801</DTSTART>
+          <DTEND>20260810</DTEND>
+          <STMTTRN>
+            <TRNTYPE>CREDIT</TRNTYPE>
+            <DTPOSTED>20260806</DTPOSTED>
+            <TRNAMT>900.00</TRNAMT>
+            <FITID>MC-EUR-01</FITID>
+            <NAME>EXAMPLE CLIENT REFUND</NAME>
+          </STMTTRN>
+        </BANKTRANLIST>
+        <LEDGERBAL><BALAMT>900.00</BALAMT><DTASOF>20260810</DTASOF></LEDGERBAL>
+      </STMTRS>
+    </STMTTRNRS>
+  </BANKMSGSRSV1>
+</OFX>

@@ -1,10 +1,13 @@
 # Importing bank exports
 
-A bank CSV needs no Python importer. When its header row names columns bea
+A bank CSV or OFX/QFX export needs no Python importer. When its header row names columns bea
 recognizes, `bea import statement.csv --account Assets:Checking` is the whole
 command; otherwise name the columns with `--csv`. Either way bea previews the
 resulting Beancount directives, checks duplicates, validates the candidate
-ledger, and applies only when requested.
+ledger, and applies only when requested. OFX/QFX exports follow the same shape —
+`bea import statement.ofx --account Assets:Checking` — and are documented under
+[OFX without an importer (`--ofx`)](#ofx-without-an-importer---ofx); what follows
+walks through CSV.
 
 ```bash
 bea --no-input init books --currency USD --date 2026-08-01
@@ -32,8 +35,8 @@ The first import previews every row; the mapping is remembered, so `--apply`
 re-runs flag-free. The `rules.toml` above matches the bundled
 [rules example](examples/rules.toml). The walkthrough as written exits **0**
 throughout and leaves one `!`-flagged row for the categorization queue below.
-A Python importer remains the advanced path for formats the column mapping
-cannot express; it is documented second, under
+A Python importer remains the advanced path for formats neither no-code path
+covers; it is documented after them, under
 [A Python importer (`--config`)](#a-python-importer---config).
 
 The preview includes every directive, destination accounts, row status, date,
@@ -433,6 +436,46 @@ may name the importer the ledger relies on. The refusal names the file. Make
 it readable or delete it, or choose for that run with `--config FILE` or
 `--csv auto`.
 
+## OFX without an importer (`--ofx`)
+
+An OFX or QFX export — the format banks offer beside CSV — imports with no
+Python importer either. bea detects `.ofx`/`.qfx` files (and OFX content under
+any suffix) and parses their statements with the OFX importer Beangulp ships
+as an example, so preview, duplicate matching, `--rules`, validation, diff,
+and `--apply` behave exactly as for CSV. Parsing needs Beangulp in the
+managed engine: `bea engine enable beangulp` once, and the import refuses
+with that hint until it is enabled.
+
+```bash norun
+# Needs 'bea engine enable beangulp'.
+bea --file books/main.bean import statement.ofx --account Assets:Checking
+bea --file books/main.bean import statement.ofx --apply
+```
+
+The first import previews every row; the account is remembered per OFX account
+id, so `--apply` re-runs flag-free, as does next month's export from the same
+account. `--rules` match the statement text (merchant name, memo, and type
+joined with ` / `), `--default-account` catches the rest, and unmatched rows
+post to `<expenses root>:Uncategorized` with flag `!` for the review queue —
+the same mapping the CSV path uses. Pass `--ofx` to force the OFX path, for
+example when the ledger also keeps Python importers: a configured ledger
+otherwise keeps using them for OFX files too.
+
+Each statement row posts its amount with the sign the file states, dated per
+`DTPOSTED`. A row's `FITID` becomes `import-id: "ofx:<FITID>"`; a row without
+one gets an `ofx:sha256:` content-hash import-id and a preview note saying so.
+A file mixing several account ids is refused — import one account per run, or
+use `--config` with one importer per account — as is a file holding no bank
+or credit-card transactions: investment statements need a Python importer.
+Ledger balances are ignored: no `Balance` directive is emitted.
+
+Synthetic samples live beside the other examples: [checking.ofx](examples/checking.ofx)
+(a checking account), [credit-card.qfx](examples/credit-card.qfx) (a credit card),
+[multi-currency.ofx](examples/multi-currency.ofx) (one account, a USD and a EUR
+statement, in OFX 2.x form), and [fitid-collision.ofx](examples/fitid-collision.ofx)
+(one `FITID` reused on two different rows, which preview as a conflict). All ids,
+names, and amounts in them are invented.
+
 ## A Python importer (`--config`)
 
 For formats the column mapping cannot express, `bea import` calls configured
@@ -527,8 +570,9 @@ bea --file books-py/main.bean check
 ```
 
 For a bank's native CSV, try [`--csv`](#csv-without-an-importer---csv)
-first; for OFX or QIF, or a CSV the mapping cannot express, use an importer
-for that exact format.
+first; for OFX/QFX, try [`--ofx`](#ofx-without-an-importer---ofx) first; for
+QIF, or a CSV the mapping cannot express, use an importer for that exact
+format.
 The sample is a configuration example, not a universal bank parser. Legacy
 Beancount v2 importers that take a `FileMemo` need Beangulp's `Adapter` in the
 configuration; the CLI calls the current interface directly. `Adapter` accepts
@@ -713,8 +757,9 @@ append operation and intentionally does not deduplicate.
 ## Python dependencies and metadata
 
 No extra dependency is needed for the CSV mapper or the importer interface
-itself. Configurations that `import beangulp` (or other importer packages) need
-those packages in the **managed engine**, not the bea frontend:
+itself. The no-code OFX import and configurations that `import beangulp` (or
+other importer packages) need Beangulp in the **managed engine**, not the bea
+frontend:
 
 ```bash norun
 # Needs network to provision Beangulp into the managed engine, a Python importer,
@@ -722,6 +767,7 @@ those packages in the **managed engine**, not the bea frontend:
 bea engine enable beangulp
 # The system libmagic library is optional: only importers that call
 # python-magic themselves need it.
+bea --file books/main.bean import bank.ofx --account Assets:Checking
 bea --file books/main.bean import bank.ofx --config importers.py
 # Standalone Beangulp lifecycle (not bea import --apply):
 bea ingest identify --config ingest.py downloads/

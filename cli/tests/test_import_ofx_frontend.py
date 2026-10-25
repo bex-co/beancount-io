@@ -23,6 +23,7 @@ from cli.main import app
 
 runner = CliRunner()
 CLI_ROOT = Path(__file__).resolve().parents[1]
+EXAMPLES = CLI_ROOT / "docs" / "examples"
 
 LEDGER = """\
 option "operating_currency" "USD"
@@ -332,6 +333,76 @@ def test_ofx_typed_account_updates_the_memory(
     replayed = _import(books, str(books.parent / "checking.ofx"))
     assert replayed.exit_code == 0, replayed.output
     assert "Using remembered settings for checking.ofx: --ofx --account Assets:Savings." in replayed.stderr
+
+
+def test_docs_checking_fixture_imports_end_to_end(
+    tmp_path: Path, bea_config_dir: Path, beangulp_engine: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The documented checking sample previews and applies (w22/m2/t004)."""
+    monkeypatch.setenv("BEA_ENGINE_PYTHON", beangulp_engine)
+    monkeypatch.delenv("BEA_ENGINE_DIR", raising=False)
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(LEDGER)
+    preview = _import(ledger, str(EXAMPLES / "checking.ofx"), "--account", "Assets:Checking")
+    assert preview.exit_code == 0, preview.output
+    assert "OfxImporter → Assets:Checking: 4 ready" in preview.stdout
+    applied = _import(ledger, str(EXAMPLES / "checking.ofx"), "--account", "Assets:Checking", "--apply")
+    assert applied.exit_code == 0, applied.output
+    assert "Wrote 4 entries" in applied.stdout
+    assert 'import-id: "ofx:2026080301"' in ledger.read_text()
+
+
+def test_docs_credit_card_fixture_reads_cc_statements(
+    tmp_path: Path, bea_config_dir: Path, beangulp_engine: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The `.qfx` sample reads `CCSTMTRS` transactional statements."""
+    monkeypatch.setenv("BEA_ENGINE_PYTHON", beangulp_engine)
+    monkeypatch.delenv("BEA_ENGINE_DIR", raising=False)
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(LEDGER + "2026-01-01 open Liabilities:Card USD\n")
+    preview = _import(ledger, str(EXAMPLES / "credit-card.qfx"), "--account", "Liabilities:Card")
+    assert preview.exit_code == 0, preview.output
+    assert "OfxImporter → Liabilities:Card: 3 ready" in preview.stdout
+    applied = _import(ledger, str(EXAMPLES / "credit-card.qfx"), "--account", "Liabilities:Card", "--apply")
+    assert applied.exit_code == 0, applied.output
+    assert "Wrote 3 entries" in applied.stdout
+    assert 'import-id: "ofx:CC-2026080601"' in ledger.read_text()
+
+
+def test_docs_multi_currency_fixture_imports_both_statements(
+    tmp_path: Path, bea_config_dir: Path, beangulp_engine: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """One OFX 2.x file, one account id, a USD and a EUR statement."""
+    monkeypatch.setenv("BEA_ENGINE_PYTHON", beangulp_engine)
+    monkeypatch.delenv("BEA_ENGINE_DIR", raising=False)
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(
+        'option "operating_currency" "USD"\n'
+        "2026-01-01 open Assets:Checking USD,EUR\n"
+        "2026-01-01 open Expenses:Uncategorized USD,EUR\n"
+    )
+    preview = _import(ledger, str(EXAMPLES / "multi-currency.ofx"), "--account", "Assets:Checking")
+    assert preview.exit_code == 0, preview.output
+    assert "OfxImporter → Assets:Checking: 2 ready" in preview.stdout
+    applied = _import(ledger, str(EXAMPLES / "multi-currency.ofx"), "--account", "Assets:Checking", "--apply")
+    assert applied.exit_code == 0, applied.output
+    text = ledger.read_text()
+    assert "-150.00 USD" in text and "900.00 EUR" in text
+
+
+def test_docs_fitid_collision_fixture_flags_the_reused_id(
+    tmp_path: Path, bea_config_dir: Path, beangulp_engine: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """One FITID on two different rows conflicts; the clean row stays new."""
+    monkeypatch.setenv("BEA_ENGINE_PYTHON", beangulp_engine)
+    monkeypatch.delenv("BEA_ENGINE_DIR", raising=False)
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(LEDGER)
+    preview = _import(ledger, str(EXAMPLES / "fitid-collision.ofx"), "--account", "Assets:Checking")
+    assert preview.exit_code == 0, preview.output
+    assert "OfxImporter → Assets:Checking: 2 ready" in preview.stdout
+    assert "1 conflict" in preview.stdout
+    assert "Row 2: Stable ID repeats row 1 of this import" in preview.stdout
 
 
 def test_qif_still_points_at_a_python_importer(books: Path, tmp_path: Path) -> None:
