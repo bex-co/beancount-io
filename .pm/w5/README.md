@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1037 — Preserve quoted CSV reference line breaks](./1037.md) — major CLI wrong-row update: multiline IDs flatten and select another transaction; 20USD Taxi categorized instead of 10USD Coffee, JSON/native controls pass, checked 2026-10-25.
+
 - [1036 — State Capital Gains sale-date bounds in output](./1036.md) — minor CLI metadata gap: correctly bounded/empty rows keep the full-book period and heading with no active bounds; equivalent time/native controls pass, checked 2026-10-25.
 
 - [1035 — Classify actual short-position reductions in Capital Gains](./1035.md) — major CLI reporting gap: positive covers disappear while negative openings become sales; booked gains/losses and long/native controls pass, checked 2026-10-25.
