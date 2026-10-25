@@ -23,7 +23,7 @@ from bea_engine import protocol
 from bea_engine.ledger.text import checked_operating_currencies, fold_account, regex_reads_otherwise
 from bea_engine.query import format_error
 
-KINDS = ("overview", "income-statement", "balance-sheet", "trial-balance", "holdings")
+KINDS = ("overview", "income-statement", "balance-sheet", "trial-balance", "holdings", "register")
 GROUPINGS = ("account", "commodity")
 INTERVALS = ("monthly", "quarterly", "yearly", "weekly", "daily")
 CONVERSIONS = ("units", "at_cost", "at_value")
@@ -109,6 +109,8 @@ def answer(
         return _balance_sheet(filtered, resolved_conversion, interval, allow_errors, ledger_errors)
     if kind == "holdings":
         return _holdings(filtered, resolved_conversion, group_by, allow_errors, ledger_errors)
+    if kind == "register":
+        return _register(filtered, resolved_conversion, allow_errors, ledger_errors)
     return _trial_balance(filtered, resolved_conversion, allow_errors, ledger_errors)
 
 
@@ -550,6 +552,122 @@ def _holdings_valuation(
         "missing_price_dates": dated,
         "missing_price_summary": summary,
     }
+
+
+def _register(filtered: Any, conversion: str, allow_errors: bool, ledger_errors: list[str]) -> dict[str, Any]:
+    """One account's dated postings with a running balance, oldest first.
+
+    The `--account` pattern selects the register's root: the one matched
+    account every other matched posting account sits under, refused when the
+    pattern spans several trees. The rows are that subtree's postings (plus
+    its balance assertions, which move nothing), oldest first, each naming
+    its own account. The running balance converts through the same call the
+    statement trees use, so the last row is the trial-balance total
+    (w22/m3/t002).
+    """
+    from beancount.core.data import Balance
+
+    from fava.core.conversion import cost_or_value
+    from fava.core.group_entries import TransactionPosting, group_entries_by_account
+    from fava.core.inventory import CounterInventory
+
+    if not filtered.account:
+        raise protocol.UsageError(
+            "Register needs --account. Name the account to list, such as --account Assets:Checking.",
+            ledger_errors=ledger_errors,
+        )
+    matches = _report_filter_match(filtered.account, filtered.ledger.root_accounts)
+    by_account = group_entries_by_account(filtered.entries)
+    active = sorted(
+        name
+        for name, rows in by_account.items()
+        if matches(name) and any(isinstance(row, TransactionPosting) or isinstance(row, Balance) for row in rows)
+    )
+    # A pattern that literally names an account path selects it — including a
+    # parent with no postings of its own — while a true regex only resolves
+    # when its matched accounts collapse under one of themselves. Regex
+    # metacharacters can never spell a real account path, so the literal test
+    # cannot mistake one for the other.
+    root = _register_root(filtered.account, active)
+    if active and root is None:
+        matched = ", ".join(active)
+        raise protocol.UsageError(
+            f"Register needs one account; {filtered.account!r} matches several: {matched}. Name one account to list.",
+            ledger_errors=ledger_errors,
+        )
+    # The pattern selects the root; the register shows the whole subtree, so a
+    # regex that matches a parent but not its children still ends at the total.
+    wanted = {name for name in by_account if root is not None and (name == root or name.startswith(root + ":"))}
+    ordered: list[tuple[Any, str]] = [(row, name) for name in by_account for row in by_account[name] if name in wanted]
+
+    def _row_date(row: Any) -> Any:
+        return row.transaction.date if isinstance(row, TransactionPosting) else row.date
+
+    ordered.sort(key=lambda item: _row_date(item[0]))
+    rows: list[dict[str, Any]] = []
+    running = CounterInventory()
+    balances: list[tuple[date | None, Mapping[str, Decimal]]] = []
+    prices = filtered.ledger.prices
+    for row, name in ordered:
+        if isinstance(row, TransactionPosting):
+            posting = row.posting
+            running.add_position(posting)
+            cost = posting.cost
+            rows.append(
+                {
+                    "date": row.transaction.date,
+                    "entry": "transaction",
+                    "account": name,
+                    "payee": row.transaction.payee,
+                    "narration": row.transaction.narration,
+                    "amount": {"number": posting.units.number, "currency": posting.units.currency},
+                    "cost": (
+                        {"number": cost.number, "currency": cost.currency, "date": cost.date}
+                        if cost is not None
+                        else None
+                    ),
+                }
+            )
+        elif isinstance(row, Balance):
+            rows.append(
+                {
+                    "date": row.date,
+                    "entry": "balance",
+                    "account": name,
+                    "payee": None,
+                    "narration": None,
+                    "amount": {"number": row.amount.number, "currency": row.amount.currency},
+                    "cost": None,
+                }
+            )
+        else:
+            continue
+        balance = _balance_map(cost_or_value(running, conversion, prices, filtered.end_date))
+        rows[-1]["balance"] = balance
+        balances.append((filtered.end_date, balance))
+    if not rows:
+        balances.append((filtered.end_date, {}))
+    valuation = _valuation(conversion, balances, allow_errors, filtered.ledger, ledger_errors, wanted)
+    metadata = _metadata(filtered, conversion, ledger_errors) | valuation
+    return metadata | {
+        "display_precision": _display_precision(filtered),
+        "account": root,
+        "rows": rows,
+    }
+
+
+def _register_root(pattern: str, active: list[str]) -> str | None:
+    """The one subtree `pattern` names, or None when it spans several."""
+    if active:
+        candidate = ":".join(active[0].split(":")[: len(pattern.split(":"))])
+        if candidate.lower() == pattern.lower() and all(
+            name == candidate or name.startswith(candidate + ":") for name in active
+        ):
+            return candidate
+        roots = [name for name in active if all(other == name or other.startswith(name + ":") for other in active)]
+        if len(roots) == 1:
+            return roots[0]
+    return None
 
 
 def _load(

@@ -432,7 +432,7 @@ def report(
         typer.Option(
             "--kind",
             "-k",
-            help="Report: overview, income-statement, balance-sheet, trial-balance, or holdings.",
+            help="Report: overview, income-statement, balance-sheet, trial-balance, holdings, or register.",
         ),
     ],
     conversion: Annotated[
