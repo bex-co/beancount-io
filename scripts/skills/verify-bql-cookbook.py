@@ -96,13 +96,13 @@ def run_recipe(bea: list[str], recipe: Recipe, timeout: float) -> RecipeResult:
 
 def bea_error(stderr: str) -> str:
     """First useful line of bea's complaint (its JSON envelope, else raw text)."""
-    text = stderr.strip()
-    if not text:
-        return "no error detail"
+    text = stderr.strip() or "no error detail"
     try:
-        return str(json.loads(text).get("error", {}).get("message", text)).splitlines()[0]
-    except (json.JSONDecodeError, AttributeError, IndexError):
-        return text.splitlines()[0]
+        message = json.loads(text).get("error", {}).get("message", text)
+    except (json.JSONDecodeError, AttributeError):
+        message = text
+    lines = str(message).splitlines()
+    return lines[0] if lines else text.splitlines()[0]
 
 
 def verify(cookbook: Path, bea: list[str], timeout: float) -> list[RecipeResult]:
