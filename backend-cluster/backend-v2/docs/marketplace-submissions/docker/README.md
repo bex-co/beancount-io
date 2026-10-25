@@ -257,3 +257,23 @@ the available CLI/strict SSH checks do not provide a verified alternate route.
 normal-runtime/expiry conditions. Inspect deployment history before retrying
 the rollout. Controlled refresh tests are complete; deployed native callback,
 refresh capability and actual scheduled refresh are still pending.
+
+## Actual rollout and offline callback repair — 2026-10-25 UTC
+
+The browser connection recovered. After checking existing deployment history,
+the worker deployed public4d4857a6824bc5965cc3dff841a3d319c6df2121 containing
+37f5a25b6; actual UI reports Deploy live/SUCCESS, backend healthy and all three
+commands exit0. Deployment access is no longer an operator blocker.
+
+At04:05UTC the same original Gateway0.44.1 client completes offline consent,
+callback and token exchange with **access:true, refresh:true**. The native CLI
+still exits1 on its known legacy-keychain erase AFTER storing the new
+credential. The subsequent unmodified Gateway passes nine accounting/resource
+calls and one preview, with zero errors and unchanged commit/counts/file
+SHA256/Cash49.75USD/marker absence. This proves the stored credential works.
+
+[Updated evidence](./oauth-renewal-repair-20261025.json) retains the nonzero
+CLI result and the distinction from actual automatic refresh. Only an observed
+scheduled refresh across real expiry remains. The worker is checking supported
+Linux CE on the existing daemon with a fresh secure credential store; Docker
+Desktop is not asserted to be required. No host tokens are exported or borrowed.

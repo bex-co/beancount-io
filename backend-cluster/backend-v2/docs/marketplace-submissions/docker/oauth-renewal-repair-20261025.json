@@ -1,7 +1,7 @@
 {
   "owner": "w6/046",
   "dateUTC": "2026-10-25",
-  "state": "Source repair shipped in37f5a25b6; hosted rollout blocked on existing deployment access, actual native refresh additionally blocked on supported runtime/scheduler",
+  "state": "Source repair37f5a25b6 deployed through public4d4857a68; same-client native offline callback, refresh-token issuance and accounting pass. Actual scheduled native refresh remains unobserved.",
   "reproduction": {
     "hosted": "Same existing Docker Gateway0.44.1 DCR client, openid/offline_access/read/write, correct requester mcp.docker.com and only the authorized synthetic ledger. After approval the deployed861d10a5c service returns to Choose a ledger; no callback. Owned incomplete listener canceled, retained grant unchanged.",
     "publicDCRLimit": "Existing server-side grant_types and old exact expiry are unobserved; no registration theory is used as proof.",
@@ -68,19 +68,91 @@
     ],
     "accessTokenTTLSeconds": 3600
   },
-  "next": "After verified hosted rollout: one same-client scoped offline authorization, actual callback and refresh capability, native query/one preview and unchanged controls. Prove real refresh only with the supported scheduler/runtime across actual expiry; retain046 as blocked until all acceptance is observed.",
+  "next": "Only real scheduled native refresh remains: use a vendor-supported scheduler/runtime across actual expiry. Existing macOS container-bypass skips it. Investigate supported Linux CE client on the existing daemon with a fresh secure credential store; do not require Docker Desktop merely because the old launcher cannot schedule. No token export, borrowed host token, fake expiry or second backend stack.",
   "privacy": "No access/refresh token, cookie, code/state URL, private infrastructure, account identity or raw ledger contents. No retained grant or reviewer key is revoked.",
   "sourceCommit": "37f5a25b6",
   "rollout": {
-    "checkedAtUTC": "2026-10-25T02:38:00Z",
-    "lastVerifiedDeployedRevision": "861d10a5c22618ca2f29c60d432aa9326c8e2080",
-    "newDeploymentVerified": false,
+    "checkedAtUTC": "2026-10-25T04:05:50.619Z",
+    "lastVerifiedDeployedRevision": "4d4857a6824bc5965cc3dff841a3d319c6df2121",
+    "newDeploymentVerified": true,
     "accessEvidence": [
-      "Deployment browser call timed out and its connection reset; fresh browser inventory empty. Chrome selection and in-app browser unavailable.",
-      "Existing authenticated CLI returns404 for the known hosted service.",
-      "Read-only SSH attempt failed strict host-key verification; authenticated DNS search found no SSHFP record. No trust override or remote deployment command executed."
+      "Supported Chrome connection recovered; existing deployment history confirmed no second run had started.",
+      "Existing-service deployment started2026-10-25T04:03UTC; Deploy live/SUCCESS, public source revision4d4857a6824bc5965cc3dff841a3d319c6df2121, backend healthy and all three commands exit0.",
+      "Public revision contains37f5a25b6; OAuth handler repair retained."
     ],
-    "unblock": "Restore supported browser access to the existing signed-in deployment control, or an authorized/verifiable CLI route to that same service. Inspect current deploy state before creating another run; deploy a public revision containing37f5a25b6 and verify healthy rollout.",
-    "owners": "Operator restores existing access/runtime; worker performs rollout and native acceptance. No new consent approval is pending."
+    "unblock": "Deployment access condition cleared; no operator action or additional deployment approval is pending.",
+    "owners": "Worker completed existing-service rollout; native scheduled-refresh runtime remains separate.",
+    "previousAccessCheck": {
+      "checkedAtUTC": "2026-10-25T02:38:00Z",
+      "lastVerifiedDeployedRevision": "861d10a5c22618ca2f29c60d432aa9326c8e2080",
+      "newDeploymentVerified": false,
+      "accessEvidence": [
+        "Deployment browser call timed out and its connection reset; fresh browser inventory empty. Chrome selection and in-app browser unavailable.",
+        "Existing authenticated CLI returns404 for the known hosted service.",
+        "Read-only SSH attempt failed strict host-key verification; authenticated DNS search found no SSHFP record. No trust override or remote deployment command executed."
+      ],
+      "unblock": "Restore supported browser access to the existing signed-in deployment control, or an authorized/verifiable CLI route to that same service. Inspect current deploy state before creating another run; deploy a public revision containing37f5a25b6 and verify healthy rollout.",
+      "owners": "Operator restores existing access/runtime; worker performs rollout and native acceptance. No new consent approval is pending."
+    }
+  },
+  "nativeOfflineAcceptance": {
+    "startedAtUTC": "2026-10-25T04:05:43.526Z",
+    "finishedAtUTC": "2026-10-25T04:05:50.619Z",
+    "client": "Official unchanged Gateway0.44.1, original DCR client and retained profile",
+    "scope": "openid offline_access ledger.read ledger.write",
+    "ledgerBoundary": "Only the previously authorized synthetic ledger; all-ledgers scope not selected",
+    "callback": "Native page shows Authorization Successful; original consent loop no longer reproduces",
+    "tokenExchange": {
+      "accessPresent": true,
+      "refreshPresent": true,
+      "valuesExported": false
+    },
+    "cliExitCode": 1,
+    "cliLimit": "After storing the collision-resistant native credential, legacy-keychain erase returns credentials not found. Nonzero exit is retained; subsequent unmodified Gateway accounting proves the newly stored credential works.",
+    "nativeAccountingOrResourceCalls": 9,
+    "previewCallCount": 1,
+    "verification": {
+      "nativeGateway": true,
+      "previewCallCount": 1,
+      "checkCommitUnchanged": true,
+      "entryCountsUnchanged": true,
+      "errorsBefore": 0,
+      "errorsAfter": 0,
+      "mainFileSHA256": "77c3a591efd311e01d03d2f3a91f2919151c0fb0708e1abe1a10ce6ec7e29915",
+      "mainFileUnchanged": true,
+      "cashBefore": [
+        [
+          {
+            "USD": "49.75"
+          }
+        ]
+      ],
+      "cashAfter": [
+        [
+          {
+            "USD": "49.75"
+          }
+        ]
+      ],
+      "previewPayeeRowsBefore": 0,
+      "previewPayeeRowsAfter": 0,
+      "previewResultKeys": [
+        "appendedUnsorted",
+        "count",
+        "diff",
+        "dry_run",
+        "entryHashes",
+        "summary",
+        "validation",
+        "wrote"
+      ],
+      "previewMetadata": {
+        "count": 1,
+        "dry_run": true,
+        "summary": "Would add 1 directive to main.bean. No new bean-check errors.",
+        "wrote": []
+      }
+    },
+    "actualScheduledRefreshObserved": false
   }
 }
