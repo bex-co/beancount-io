@@ -70,8 +70,16 @@ export function CommitDetail({ ledgerId, commitSha }: CommitDetailProps) {
   };
 
   const commit = data?.getCommitDetails;
-  const totalLines = commit
-    ? commit.stats.additions + commit.stats.deletions
+  // Retain the last successful details for this same ledger/SHA through a
+  // refresh (pending or failed), so the mounted file list/diff and its
+  // disclosure state survive instead of being replaced by skeletons
+  // (w4/1087). The parent remounts per ledger/SHA, so this never leaks
+  // another commit's diff.
+  const [retained, setRetained] = useState<typeof commit>(undefined);
+  if (commit && retained !== commit) setRetained(commit);
+  const shownCommit = commit ?? (loading || error ? retained : undefined);
+  const totalLines = shownCommit
+    ? shownCommit.stats.additions + shownCommit.stats.deletions
     : 0;
   const isLargeDiff = totalLines >= 1000;
   const showDiff = loadedDiffSha === commitSha;
@@ -97,6 +105,7 @@ export function CommitDetail({ ledgerId, commitSha }: CommitDetailProps) {
               <Button
                 variant="outline"
                 size="sm"
+                disabled={loading}
                 onClick={() => void refetch()}
               >
                 {t("common.tryAgain")}
@@ -106,7 +115,7 @@ export function CommitDetail({ ledgerId, commitSha }: CommitDetailProps) {
         </Alert>
       )}
 
-      {loading && (
+      {loading && !shownCommit && (
         <div className="space-y-3 p-4" aria-busy="true">
           <Skeleton className="h-6 w-3/5" />
           <Skeleton className="h-7 w-4/5" />
@@ -115,24 +124,24 @@ export function CommitDetail({ ledgerId, commitSha }: CommitDetailProps) {
         </div>
       )}
 
-      {!loading && !error && !commit && (
+      {!loading && !error && !shownCommit && (
         <Alert className="m-4">
           <AlertDescription>{t("commits.notFound")}</AlertDescription>
         </Alert>
       )}
 
-      {!loading && !error && commit && (
-        <div className="space-y-0">
+      {shownCommit && (
+        <div className="space-y-0" aria-busy={loading || undefined}>
           <CommitMetadata
-            sha={commit.sha}
-            message={commit.message}
-            author={commit.author}
-            stats={commit.stats}
-            fileCount={commit.files.length}
+            sha={shownCommit.sha}
+            message={shownCommit.message}
+            author={shownCommit.author}
+            stats={shownCommit.stats}
+            fileCount={shownCommit.files.length}
           />
 
           <CommitFileList
-            files={commit.files}
+            files={shownCommit.files}
             onFileSelect={(filename) =>
               requestFileFocus(getDiffFileId(filename))
             }
@@ -165,7 +174,10 @@ export function CommitDetail({ ledgerId, commitSha }: CommitDetailProps) {
                 )}
               </div>
             ) : (
-              <DiffViewer diff={commit.diff || ""} focusRequest={activeFocus} />
+              <DiffViewer
+                diff={shownCommit.diff || ""}
+                focusRequest={activeFocus}
+              />
             )}
           </div>
         </div>
