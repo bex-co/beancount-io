@@ -42,6 +42,23 @@ describe("shared CSV serialization", () => {
     ).toBe("account,amount\nAssets:Cash,1.00");
   });
 
+  it("preserves empty single-column records as quoted empty fields (w4/1089)", () => {
+    expect(rowsToCSV([["blank_text"], [""]])).toBe('blank_text\n""');
+    expect(rowsToCSV([["blank_text"], [""], [""], [""]])).toBe(
+      'blank_text\n""\n""\n""',
+    );
+    expect(rowsToCSV([["total"], [""]])).toBe('total\n""');
+    // Zero data rows stay zero, and wider empty fields are unchanged.
+    expect(rowsToCSV([["blank_text"]])).toBe("blank_text");
+    expect(
+      rowsToCSV([
+        ["a", "b"],
+        ["", ""],
+      ]),
+    ).toBe("a,b\n,");
+    expect(rowsToCSV([["x"], ["ordinary"]])).toBe("x\nordinary");
+  });
+
   it("prepends the UTF-8 BOM expected by Excel", async () => {
     const bytes = new Uint8Array(await readBlob(createCSVBlob("現金")));
     expect(Array.from(bytes.slice(0, 3))).toEqual([0xef, 0xbb, 0xbf]);

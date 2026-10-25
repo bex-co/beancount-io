@@ -46,7 +46,13 @@ export function rowsToCSV(
   options: CSVOptions = {},
 ): string {
   return rows
-    .map((row) => row.map((value) => escapeCSVField(value, options)).join(","))
+    .map((row) => {
+      const fields = row.map((value) => escapeCSVField(value, options));
+      // A one-field empty record would otherwise serialize to a blank line,
+      // indistinguishable from a missing record (w4/1089).
+      if (fields.length === 1 && fields[0] === "") return '""';
+      return fields.join(",");
+    })
     .join("\n");
 }
 
