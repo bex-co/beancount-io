@@ -1,6 +1,6 @@
 # w6 · m8 — Claim and publish the hosted connector on Smithery and Glama
 
-**Worker:** worker1 **Goal:** Users find one accurate, owned, authenticated listing per platform for the existing hosted MCP endpoint. **Status:** todo (t001 done; independent Glama native task t009 is open; Smithery intake and the separate w2/088 full healthy-day observation remain blocked)
+**Worker:** worker1 **Goal:** Users find one accurate, owned, authenticated listing per platform for the existing hosted MCP endpoint. **Status:** todo (t001/t009 done; all remaining tasks depend on Smithery intake or the separate w2/088 full healthy-day observation; pending milestone triage)
 
 **Implementation estimate:** ~3h, excluding external review queues and the standing closing tasks.
 
@@ -11,7 +11,7 @@
 | [t001](./done/t001.md) | Audit imported listings and prepare shared submission materials — **DONE** | 30m | — |
 | [t002](./t002.md) | Publish or claim Smithery's existing hosted-server listing — **BLOCKED** | 45m | t001 |
 | [t003](./t003.md) | Align the existing Glama connector after w2/088's ownership and health repair — **BLOCKED** | 45m | t001, w2/088 |
-| [t009](./t009.md) | Verify Glama native accounting independently of Smithery review | 45m | t001 |
+| [t009](./done/t009.md) | Verify Glama native accounting independently of Smithery review — **DONE** | 45m | t001 |
 | [t004](./t004.md) | Verify both public listings through fresh authenticated connections | 60m | t002, t003, t009 |
 | [t005](./t005.md) | Adoption surface | 30m | t004, t009 |
 | [t006](./t006.md) | Simplify | 30m | t005 |

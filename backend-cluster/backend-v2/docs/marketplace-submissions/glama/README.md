@@ -83,3 +83,40 @@ UTC times agree with the current UTC clock; hydrated browser times are PDT.
 Only the displayed ten-check history is inspected, not an inferred complete
 history. The full healthy-day gate remains pending until at least
 **2026-10-25T07:01:01Z**; no additional manual test, credential or grant is made.
+
+## Native inspector accounting verified — 2026-10-25T00:19:03Z
+
+The existing public connector's **Try in Browser** link opens Glama's actual
+MCP Inspector with the canonical endpoint. Native OAuth identifies Glama MCP
+Inspector and returns to glama.ai; only the dedicated synthetic ledger is
+selected, with all-ledger access unselected. The previously authorized synthetic
+QA boundary is retained, including the native identity/offline/read/write/admin
+scopes. No production ledger, model call, payment or new connector is used.
+
+The authenticated native UI discovers **44 tools, 8 resources, 64 resource
+templates and 4 prompts**. Structured Cash BQL returns **49.75 USD** before and
+after preview. Rendered native request logs expose actual structured
+`checkLedger` responses: zero errors, the same commit and identical complete
+directive counts before/after (16 transactions, 12 opens, 1 balance, 0 notes).
+
+The first preview exposes a client form limitation: its text field is a
+single-line HTML input and removes transaction newlines, producing one projected
+parse error. It remains `dry_run: true`, `allowInvalid: false`, `wrote: []`.
+The valid single-line note preview then reports **Would add 1 directive to
+main.bean. No new bean-check errors.**, with zero projected errors and
+`wrote: []`. There are exactly two append tool requests in the native request
+log, both previews; no committed directive is written.
+
+Independent authenticated read-only controls surround the native preview and
+confirm the identical main-file SHA-256, commit, full directive counts, zero
+errors, Cash49.75USD and zero preview-payee rows. These controls are explicitly
+separate from the actual Glama UI calls. [Public-safe native and control
+evidence](./native-rehearsal-20261025.json) omits tokens, account/contact details
+and raw ledger contents. Inspector build and deployed revision are not exposed.
+
+The connector is Healthy with44tools; the newly observed public uptime is4.5%
+over20days and its displayed last test is2026-10-24T23:59UTC. This is still
+short of the full-day gate. w2/088 retains that observation, earliest
+2026-10-25T07:01:01Z; no health-day completion or new fixture-qualified host
+support is inferred. The separate Install in Client modal generates a direct
+Bearer-key recipe; it does not establish OAuth for every listed client.

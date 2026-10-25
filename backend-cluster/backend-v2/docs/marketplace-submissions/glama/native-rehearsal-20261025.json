@@ -1,0 +1,181 @@
+{
+  "observedAt": "2026-10-25T00:19:03Z",
+  "client": "Glama MCP Inspector (native web UI)",
+  "clientBuild": "not exposed",
+  "deployedRevision": "not exposed",
+  "listing": "https://glama.ai/mcp/connectors/io.beancount/beancount",
+  "entry": "Try in Browser",
+  "endpoint": "https://beancount.io/api-gateway/mcp",
+  "oauth": {
+    "completed": true,
+    "clientDisplayName": "Glama MCP Inspector",
+    "returnOrigin": "https://glama.ai",
+    "scopes": [
+      "openid",
+      "offline_access",
+      "ledger.read",
+      "ledger.write",
+      "ledger.admin"
+    ],
+    "syntheticLedgerOnly": true,
+    "accountWideAccess": false,
+    "grantRetained": true
+  },
+  "nativeDiscovery": {
+    "tools": 44,
+    "resources": 8,
+    "resourceTemplates": 64,
+    "prompts": 4
+  },
+  "nativeChecks": {
+    "checkLedgerBeforeAfter": true,
+    "errorsBefore": 0,
+    "errorsAfter": 0,
+    "commitBefore": "39f42f337d13c406cfd331bc5fc65e4eb5652cc7",
+    "commitAfter": "39f42f337d13c406cfd331bc5fc65e4eb5652cc7",
+    "entryCountsBefore": [
+      {
+        "type": "Balance",
+        "number": 1
+      },
+      {
+        "type": "Close",
+        "number": 0
+      },
+      {
+        "type": "Commodity",
+        "number": 0
+      },
+      {
+        "type": "Custom",
+        "number": 0
+      },
+      {
+        "type": "Document",
+        "number": 0
+      },
+      {
+        "type": "Event",
+        "number": 0
+      },
+      {
+        "type": "Note",
+        "number": 0
+      },
+      {
+        "type": "Open",
+        "number": 12
+      },
+      {
+        "type": "Pad",
+        "number": 0
+      },
+      {
+        "type": "Price",
+        "number": 0
+      },
+      {
+        "type": "Query",
+        "number": 0
+      },
+      {
+        "type": "Transaction",
+        "number": 16
+      }
+    ],
+    "entryCountsAfter": [
+      {
+        "type": "Balance",
+        "number": 1
+      },
+      {
+        "type": "Close",
+        "number": 0
+      },
+      {
+        "type": "Commodity",
+        "number": 0
+      },
+      {
+        "type": "Custom",
+        "number": 0
+      },
+      {
+        "type": "Document",
+        "number": 0
+      },
+      {
+        "type": "Event",
+        "number": 0
+      },
+      {
+        "type": "Note",
+        "number": 0
+      },
+      {
+        "type": "Open",
+        "number": 12
+      },
+      {
+        "type": "Pad",
+        "number": 0
+      },
+      {
+        "type": "Price",
+        "number": 0
+      },
+      {
+        "type": "Query",
+        "number": 0
+      },
+      {
+        "type": "Transaction",
+        "number": 16
+      }
+    ],
+    "cashBeforeUSD": "49.75",
+    "cashAfterUSD": "49.75"
+  },
+  "nativePreview": {
+    "observedAppendToolRequests": 2,
+    "allDryRun": true,
+    "allAllowInvalid": false,
+    "wroteBeforeAfter": [],
+    "firstAttempt": {
+      "formElement": "input[type=text]",
+      "multilineInputCollapsed": true,
+      "newValidationErrors": 1,
+      "result": "parse error, preview only"
+    },
+    "successfulAttempt": {
+      "directiveType": "note",
+      "count": 1,
+      "summary": "Would add 1 directive to main.bean. No new bean-check errors.",
+      "validation": {
+        "errorsBefore": 0,
+        "errorsAfter": 0,
+        "newErrors": []
+      },
+      "wrote": []
+    }
+  },
+  "independentReadControls": {
+    "beforeAt": "2026-10-25T00:15:38.297Z",
+    "afterAt": "2026-10-25T00:17:35.843Z",
+    "source": "independent read-only MCP control, separate from actual Glama native UI calls",
+    "mainFileSHA256Before": "77c3a591efd311e01d03d2f3a91f2919151c0fb0708e1abe1a10ce6ec7e29915",
+    "mainFileSHA256After": "77c3a591efd311e01d03d2f3a91f2919151c0fb0708e1abe1a10ce6ec7e29915",
+    "commitUnchanged": true,
+    "entryCountsUnchanged": true,
+    "cashUnchanged": true,
+    "previewPayeeRowsBeforeAfter": 0
+  },
+  "limits": [
+    "Native request-log structured results prove commit/count checks; independent control proves main-file hash.",
+    "Inspector version and deployed revision are not exposed.",
+    "Install-in-client modal also offers a Bearer API-key recipe; that recipe is not OAuth proof.",
+    "Multiline directive entry is limited by the native single-line form; one valid single-line note preview is verified.",
+    "Full healthy-day observation remains owned by w2/088, earliest2026-10-25T07:01:01Z.",
+    "No host fixture or blanket verified-host-table support claim is added."
+  ]
+}
