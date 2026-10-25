@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1076** — [Keep large BQL charts from crashing the query workspace](./1076.md)
+
 - **1075** — [Respect early field focus in New Entry](./1075.md)
 
 - **1074** — [Keep AI Fill cancellation quiet when going Back](./1074.md)
