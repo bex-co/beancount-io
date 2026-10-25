@@ -1,0 +1,46 @@
+;; BQL cookbook fixture: the mess a fresh import leaves behind (all figures invented).
+;; An uncategorized row, a foreign-currency charge, a transfer still sitting in
+;; suspense, and one txn flagged for review.
+option "title" "Cookbook extras"
+option "operating_currency" "USD"
+
+2026-01-01 open Assets:Bank:Checking USD
+2026-01-01 open Assets:Bank:Savings USD
+2026-01-01 open Assets:Suspense USD
+2026-01-01 open Liabilities:CreditCard:Amex USD
+2026-01-01 open Income:Salary USD
+2026-01-01 open Expenses:Food:Groceries USD,EUR
+2026-01-01 open Expenses:Uncategorized USD
+2026-01-01 open Equity:Opening-Balances
+
+2026-06-01 * "Opening balance"
+  Assets:Bank:Checking  4000.00 USD
+  Equity:Opening-Balances
+
+2026-06-05 * "ACME CORP" "Salary"
+  Assets:Bank:Checking  3000.00 USD
+  Income:Salary        -3000.00 USD
+
+2026-06-09 * "TRADER JOES" "Groceries"
+  Liabilities:CreditCard:Amex  -78.20 USD
+  Expenses:Food:Groceries        78.20 USD
+
+;; Foreign charge: 300 EUR at 1.10 USD. weight is the 330 USD actually paid;
+;; cost(position) stays 300 EUR.
+2026-06-12 * "HOTEL IBIS" "Paris hotel"
+  Liabilities:CreditCard:Amex  -330.00 USD
+  Expenses:Food:Groceries       300 EUR @ 1.10 USD
+
+;; Import row the rules could not categorize.
+2026-06-15 * "SQ *COFFEE CART" "Card purchase"
+  Assets:Bank:Checking       -42.17 USD
+  Expenses:Uncategorized       42.17 USD
+
+;; Money left checking for the brokerage; the other side has not imported yet.
+2026-06-18 * "Transfer to brokerage (unmatched)"
+  Assets:Bank:Checking  -250.00 USD
+  Assets:Suspense        250.00 USD
+
+2026-06-20 ! "WHOLE FOODS" "Groceries - receipt missing"
+  Assets:Bank:Checking   -63.40 USD
+  Expenses:Food:Groceries  63.40 USD
