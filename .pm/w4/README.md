@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1082** — [Return failed Journal exports to the retry button](./1082.md)
+
 - **1081** — [Translate the cadence in Budget deletion confirmations](./1081.md)
 
 - **1080** — [Return cancelled Budget deletion to its history row](./1080.md)
