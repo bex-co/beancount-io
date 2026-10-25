@@ -9,6 +9,7 @@ import {
   ViewStyle,
 } from "react-native";
 import { useTheme, gutter } from "@/common/theme";
+import { contentColumn } from "@/common/content-column";
 import { refreshAppearance } from "./refresh-appearance";
 
 const styles = StyleSheet.create({
@@ -16,6 +17,7 @@ const styles = StyleSheet.create({
     // Side gutters keep cards off the screen edges — the app-wide inset.
     // Dashboard cards bring their own bottom margin, so spacing between them
     // stays uniform without extra spacers.
+    ...contentColumn,
     paddingHorizontal: gutter,
     // Fill the frame even when the cards are short, so the whole area stays
     // inside the scrollable content and pull-to-refresh works everywhere.

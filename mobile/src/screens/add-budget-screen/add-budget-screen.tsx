@@ -43,6 +43,7 @@ import {
   space,
   useTheme,
 } from "@/common/theme";
+import { contentColumn } from "@/common/content-column";
 import { pushAccountPicker } from "@/screens/account-picker-screen/push-account-picker";
 import { useUnsavedChangesGuard } from "@/common/hooks/use-unsaved-changes-guard";
 import { updateBudgetDates } from "./update-date";
@@ -78,6 +79,8 @@ const getStyles = (theme: ColorTheme) =>
       color: theme.black60,
     },
     content: {
+      // Capped centered column on iPad; a no-op on phones (w21/1005).
+      ...contentColumn,
       paddingHorizontal: gutter,
       paddingTop: space.md,
       paddingBottom: space.xl,

@@ -142,6 +142,7 @@ function loadPicker() {
     "@/common/hooks/use-translations": {
       useTranslations: () => ({ t: (key: string) => key }),
     },
+    "@/common/content-column": { sheetColumn: {} },
     "./wheel-position": wheelPosition,
   };
   vm.runInNewContext(source, {

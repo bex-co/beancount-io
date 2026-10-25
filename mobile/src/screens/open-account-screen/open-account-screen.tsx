@@ -36,6 +36,7 @@ import {
   useTheme,
   withAlpha,
 } from "@/common/theme";
+import { contentColumn } from "@/common/content-column";
 import { DatePickerModal } from "@/components/date-picker-modal";
 import { useLedgerGuard } from "@/components/ledger-guard";
 import { Picker } from "@/components/picker";
@@ -89,6 +90,8 @@ const getStyles = (theme: ColorTheme) =>
       color: theme.black60,
     },
     content: {
+      // Capped centered column on iPad; a no-op on phones (w21/1005).
+      ...contentColumn,
       paddingHorizontal: gutter,
       paddingTop: space.md,
       paddingBottom: space.xl,

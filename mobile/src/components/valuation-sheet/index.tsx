@@ -22,6 +22,7 @@ import { Button } from "@/components/button";
 import { ColorTheme } from "@/types/theme-props";
 import { useGuest } from "@/common/guest/guest-context";
 import { prefersStackedLayout } from "@/common/theme/dynamic-type";
+import { sheetColumn } from "@/common/content-column";
 import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 
 const getStyles = (theme: ColorTheme) =>
@@ -32,6 +33,7 @@ const getStyles = (theme: ColorTheme) =>
       justifyContent: "flex-end",
     },
     sheet: {
+      ...sheetColumn,
       backgroundColor: theme.white,
       borderTopLeftRadius: 16,
       borderTopRightRadius: 16,

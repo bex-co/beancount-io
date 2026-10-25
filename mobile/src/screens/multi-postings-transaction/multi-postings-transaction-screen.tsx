@@ -38,6 +38,7 @@ import {
   prefersStackedLayout,
   useTheme,
 } from "@/common/theme";
+import { contentColumn } from "@/common/content-column";
 import { AmountText } from "@/components/amount-text";
 import { useThemeStyle, useToast } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
@@ -108,6 +109,8 @@ const getStyles = (theme: ColorTheme) =>
     // Cards bring their own 12px bottom margin; match it at the top so the
     // header-to-card gap equals the card-to-card gap.
     scrollContent: {
+      // Capped centered column on iPad; a no-op on phones (w21/1005).
+      ...contentColumn,
       paddingTop: 12,
     },
     card: {

@@ -31,6 +31,7 @@ import {
 } from "@/common/theme";
 import { easeStandard } from "@/common/theme/motion-easing";
 import { ColorTheme } from "@/types/theme-props";
+import { sheetColumn } from "@/common/content-column";
 
 const { height: screenHeight } = Dimensions.get("window");
 import {
@@ -76,6 +77,7 @@ const getStyles = (theme: ColorTheme) =>
       justifyContent: "flex-end",
     },
     modalContainer: {
+      ...sheetColumn,
       backgroundColor: theme.white,
       borderTopLeftRadius: 16,
       borderTopRightRadius: 16,

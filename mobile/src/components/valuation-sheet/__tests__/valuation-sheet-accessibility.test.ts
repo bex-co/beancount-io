@@ -69,6 +69,7 @@ function load(): (props: Record<string, unknown>) => Node | null {
     "@/common/vars/server-url": { getServerUrl: () => "" },
     "@/components/button": { Button: "Button" },
     "@/common/guest/guest-context": { useGuest: () => guest },
+    "@/common/content-column": { sheetColumn: {} },
   };
   vm.runInNewContext(source, {
     exports,
