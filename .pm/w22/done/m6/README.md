@@ -1,6 +1,6 @@
 # w22 · m6 — Backend parity for holdings, register, and capital-gains
 
-**Worker:** worker1 **Goal:** the three CLI reports are readable through REST, GraphQL, and MCP with CLI-equivalent shapes and inputs **Status:** todo (t001–t004 done)
+**Worker:** worker1 **Goal:** the three CLI reports are readable through REST, GraphQL, and MCP with CLI-equivalent shapes and inputs **Status:** done
 
 ## Tasks (in order)
 
@@ -10,9 +10,9 @@
 | t002 | Register end to end on all three surfaces — **DONE** | 2h30m | — |
 | t003 | Capital-gains end to end on all three surfaces — **DONE** | 3h | — |
 | t004 | Adoption surface — **DONE** | 30m | t003 |
-| t005 | Simplify | 30m | t004 |
-| t006 | Test coverage | 1h | t004 |
-| t007 | Closeout | 15m | t005, t006 |
+| t005 | Simplify — **DONE** | 30m | t004 |
+| t006 | Test coverage — **DONE** | 1h | t004 |
+| t007 | Closeout — **DONE** | 15m | t005, t006 |
 
 ## Definition of done
 

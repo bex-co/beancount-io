@@ -9,4 +9,4 @@
 - [x] **m3** — [Holdings and register reports](./done/m3/README.md) (9 tasks) ← `/pm-brainstorm for cli` 2026-10-24
 - [x] **m4** — [`bea report capital-gains`: realized gains by lot](./done/m4/README.md) (7 tasks) ← `/pm-brainstorm for cli` 2026-10-24
 - [x] **m5** — [A reusable CI check for ledger repositories](./done/m5/README.md) (8 tasks) ← `/pm-brainstorm for cli` 2026-10-24
-- [ ] **m6** — [Backend parity for holdings, register, and capital-gains](./m6/README.md) (7 tasks) ← promoted from `w22/003` 2026-10-25
+- [x] **m6** — [Backend parity for holdings, register, and capital-gains](./done/m6/README.md) (7 tasks) ← promoted from `w22/003` 2026-10-25
