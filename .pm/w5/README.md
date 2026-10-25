@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [965 — Keep query ordering consistent for nullable cost fields](./965.md) — reopened minor CLI gap: dateless Cost comparisons still cycle and source order changes LIMIT 1; original mixed-type and numeric controls pass, rechecked 2026-10-25.
+
 - [1024 — Handle dateless lots in close diagnostics](./1024.md) — minor CLI gap: inferred offsetting lots crash direct close and block a closing-statement refund; dated, empty, force and label controls pass, checked 2026-10-24.
 
 - [1023 — Canonicalize signed zero in imported directive keys](./1023.md) — minor CLI gap: unchanged native zero balance/tolerance conflicts and blocks new rows; numeric note metadata duplicates, while precision/type/Price controls hold, checked 2026-10-24.
