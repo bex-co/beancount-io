@@ -1,12 +1,12 @@
 # w21 · m3 — BQL cookbook: tested query recipes for humans and agents
 
-**Worker:** worker1 **Goal:** one linkable page of BQL recipes whose every query CI executes against a fixture ledger **Status:** todo
+**Worker:** worker1 **Goal:** one linkable page of BQL recipes whose every query CI executes against a fixture ledger **Status:** todo (t001 done)
 
 ## Tasks (in order)
 
 | id   | title                                                                 | est | depends_on       |
 | ---- | --------------------------------------------------------------------- | --- | ---------------- |
-| t001 | Inventory the recipes already in the skills and CLI docs              | 30m | —                |
+| t001 | Inventory the recipes already in the skills and CLI docs — **DONE**   | 30m | —                |
 | t002 | Write about 20 recipes on the example fixture ledgers                 | 60m | t001             |
 | t003 | Add a runner that executes every fenced recipe and fails on drift     | 45m | t002             |
 | t004 | Wire the runner into `CI (skills)` and link the cookbook              | 25m | t003             |
