@@ -114,6 +114,7 @@ class TestPreviewAndApply:
         assert ledger.read_text() == LEDGER.replace(
             '2026-01-02 ! "Mystery Shop"', '2026-01-02 * "Mystery Shop"'
         ).replace("Expenses:Uncategorized 9.99 USD", "Expenses:Groceries 9.99 USD")
+        assert 'import-id: "abc123"' in ledger.read_text()
         check = run_engine("check", "--file", str(ledger))
         assert check.returncode == 0
 
@@ -148,6 +149,82 @@ class TestPreviewAndApply:
         assert completed.returncode == 2
         assert "OLD=NEW" in envelope(completed)["error"]["message"]
         assert ledger.read_bytes() == before
+
+    def test_old_missing_names_the_entry_accounts(self, ledger: Path) -> None:
+        before = ledger.read_bytes()
+        completed = update(ledger, {"id": "abc123", "account": "Expenses:Missing=Expenses:Dining"}, "--apply")
+        assert completed.returncode == 2
+        message = envelope(completed)["error"]["message"]
+        assert "No posting to Expenses:Missing" in message
+        assert "Expenses:Uncategorized" in message
+        assert ledger.read_bytes() == before
+
+    def test_double_holding_leg_asks_for_old_new(self, tmp_path: Path) -> None:
+        file = tmp_path / "main.bean"
+        file.write_text(
+            'option "operating_currency" "USD"\n'
+            "2026-01-01 open Assets:Checking\n"
+            "2026-01-01 open Expenses:Dining\n"
+            "2026-01-01 open Expenses:Uncategorized\n"
+            '\n2026-01-02 ! "Split"\n'
+            '  import-id: "k"\n'
+            "  Expenses:Uncategorized 5.00 USD\n"
+            "  Expenses:Uncategorized 4.00 USD\n"
+            "  Assets:Checking -9.00 USD\n"
+        )
+        before = file.read_bytes()
+        completed = update(file, {"id": "k", "account": "Expenses:Dining"}, "--apply")
+        assert completed.returncode == 2
+        assert "OLD=NEW" in envelope(completed)["error"]["message"]
+        assert file.read_bytes() == before
+
+    def test_bare_account_honors_renamed_roots(self, tmp_path: Path) -> None:
+        file = tmp_path / "main.bean"
+        file.write_text(
+            'option "operating_currency" "USD"\n'
+            'option "name_expenses" "Costs"\n'
+            "2026-01-01 open Assets:Checking\n"
+            "2026-01-01 open Costs:Dining\n"
+            "2026-01-01 open Costs:Uncategorized\n"
+            '\n2026-01-02 ! "Shop"\n'
+            '  import-id: "k"\n'
+            "  Costs:Uncategorized 9.99 USD\n"
+            "  Assets:Checking\n"
+        )
+        completed = update(file, {"id": "k", "account": "Costs:Dining"}, "--apply")
+        assert completed.returncode == 0, completed.stdout
+        assert "Costs:Dining 9.99 USD" in file.read_text()
+
+    def test_tag_sigil_is_stripped(self, ledger: Path) -> None:
+        completed = update(ledger, {"id": "abc123", "tags": ["#trip"]}, "--apply")
+        assert completed.returncode == 0, completed.stdout
+        assert "#trip" in ledger.read_text()
+        assert "##trip" not in ledger.read_text()
+
+    def test_narration_newline_becomes_a_space(self, ledger: Path) -> None:
+        completed = update(ledger, {"id": "abc123", "narration": "hello\nworld"}, "--apply")
+        assert completed.returncode == 0, completed.stdout
+        assert '"hello world"' in ledger.read_text()
+
+    def test_retarget_to_another_normalization_warns(self, tmp_path: Path) -> None:
+        import unicodedata
+
+        nfd = unicodedata.normalize("NFD", "Expenses:Café")
+        file = tmp_path / "main.bean"
+        file.write_text(
+            'option "operating_currency" "USD"\n'
+            "2026-01-01 open Assets:Checking\n"
+            f"2026-01-01 open {nfd}\n"
+            "2026-01-01 open Expenses:Uncategorized\n"
+            '\n2026-01-02 ! "Shop"\n'
+            '  import-id: "k"\n'
+            "  Expenses:Uncategorized 9.99 USD\n"
+            "  Assets:Checking\n"
+        )
+        completed = update(file, {"id": "k", "account": "Expenses:Café"})
+        assert completed.returncode == 0, completed.stdout
+        warnings = envelope(completed)["data"]["warnings"]
+        assert any("Re-save the ledger in Unicode NFC" in warning for warning in warnings)
 
     def test_noop_answers_written_0(self, ledger: Path) -> None:
         before = ledger.read_bytes()
@@ -348,6 +425,27 @@ class TestBytesPreserved:
         completed = update(file, {"id": "abc123", "flag": "*"}, "--apply")
         assert completed.returncode == 0
         assert file.read_bytes() == b"\xef\xbb\xbf" + LEDGER.replace('2026-01-02 ! "', '2026-01-02 * "').encode("utf-8")
+
+    def test_bom_line_one_entry_is_found(self, tmp_path: Path) -> None:
+        file = tmp_path / "main.bean"
+        body = (
+            '2026-01-02 ! "Shop"\n'
+            '  import-id: "k"\n'
+            "  Expenses:Uncategorized 9.99 USD\n"
+            "  Assets:Checking\n"
+            'option "operating_currency" "USD"\n'
+            "2026-01-01 open Assets:Checking\n"
+            "2026-01-01 open Expenses:Groceries\n"
+            "2026-01-01 open Expenses:Uncategorized\n"
+        )
+        file.write_bytes(b"\xef\xbb\xbf" + body.encode("utf-8"))
+        # The flag change exercises the header pattern on the BOM-glued line.
+        completed = update(file, {"id": "k", "account": "Expenses:Groceries", "flag": "*"}, "--apply")
+        assert completed.returncode == 0, completed.stdout
+        assert file.read_bytes().startswith(b"\xef\xbb\xbf")
+        text = file.read_bytes().decode("utf-8-sig")
+        assert "Expenses:Groceries 9.99 USD" in text
+        assert text.startswith('2026-01-02 * "Shop"')
 
     def test_missing_trailing_newline_is_preserved(self, tmp_path: Path) -> None:
         file = tmp_path / "main.bean"

@@ -113,6 +113,67 @@ def test_no_change_is_a_usage_error(tmp_path: Path) -> None:
     assert ledger.read_text() == LEDGER
 
 
+def test_tag_and_narration_pass_through(tmp_path: Path) -> None:
+    ledger = _ledger(tmp_path)
+    result = runner.invoke(
+        app,
+        [
+            "--file",
+            str(ledger),
+            "update",
+            "transaction",
+            "--id",
+            "abc123",
+            "--tag",
+            "trip",
+            "--tag",
+            "food",
+            "--narration",
+            "Corner Deli",
+            "--apply",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert '2026-01-02 ! "Corner Deli" #trip #food' in ledger.read_text()
+
+
+def test_allow_errors_passes_through(tmp_path: Path) -> None:
+    ledger = _ledger(tmp_path)
+    with ledger.open("a") as handle:
+        handle.write("\n2026-02-01 balance Assets:Checking 999.00 USD\n")
+    refused = runner.invoke(
+        app, ["--file", str(ledger), "update", "transaction", "--id", "abc123", "--flag", "*", "--apply"]
+    )
+    assert refused.exit_code == 1
+    allowed = runner.invoke(
+        app,
+        ["--file", str(ledger), "update", "transaction", "--id", "abc123", "--flag", "*", "--apply", "--allow-errors"],
+    )
+    assert allowed.exit_code == 0, allowed.output
+    assert '2026-01-02 * "Mystery Shop"' in ledger.read_text()
+
+
+def test_repeated_id_is_refused(tmp_path: Path) -> None:
+    ledger = _ledger(tmp_path)
+    result = runner.invoke(
+        app, ["--file", str(ledger), "update", "transaction", "--id", "abc123", "--id", "bbb", "--flag", "*"]
+    )
+    assert result.exit_code == 2
+    assert ledger.read_text() == LEDGER
+
+
+def test_json_unknown_id_is_a_json_error(tmp_path: Path) -> None:
+    ledger = _ledger(tmp_path)
+    result = runner.invoke(
+        app, ["--json", "--file", str(ledger), "update", "transaction", "--id", "nope", "--flag", "*", "--apply"]
+    )
+    assert result.exit_code == 2
+    payload = json.loads(result.output)
+    assert payload["error"]["category"] == "usage"
+    assert "nope" in payload["error"]["message"]
+    assert ledger.read_text() == LEDGER
+
+
 def test_noop_apply_succeeds_without_writing(tmp_path: Path) -> None:
     ledger = _ledger(tmp_path)
     result = runner.invoke(

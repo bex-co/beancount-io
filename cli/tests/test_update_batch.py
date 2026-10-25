@@ -115,7 +115,79 @@ class TestEngineBatch:
         assert error["result"]["written"] == 1
         assert error["result"]["written_rows"] == [1]
         assert error["result"]["rejected_rows"] == [0]
+        assert [row["status"] for row in error["result"]["rows"]] == ["rejected", "ok"]
         assert "Expenses:Groceries 9.99 USD" in ledger.read_text()
+
+    def test_noop_plus_reject_message(self, tmp_path: Path) -> None:
+        ledger = _ledger(tmp_path)
+        completed = batch(ledger, [{"id": "bbb", "flag": "!"}, {"id": "nope", "flag": "*"}], "--apply")
+        assert completed.returncode == 1, completed.stdout
+        error = json.loads(completed.stdout)["error"]
+        assert error["message"] == "Updated 0 of 2 transactions; 1 row was rejected. 1 was already up to date."
+        assert error["result"]["unchanged_rows"] == [0]
+        assert ledger.read_text() == LEDGER
+
+    def test_schema_reject_appends_an_example(self, tmp_path: Path) -> None:
+        ledger = _ledger(tmp_path)
+        completed = batch(ledger, [{"id": "aaa"}], "--apply")
+        assert completed.returncode == 1, completed.stdout
+        details = json.loads(completed.stdout)["error"]["details"]
+        assert details[0] == "Row 1: Nothing to change: pass 'account', 'flag', 'tags', or 'narration' alongside 'id'."
+        assert any(line.startswith("Example row:") for line in details)
+        assert ledger.read_text() == LEDGER
+
+    def test_in_loop_revalidation_rejects_late(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        from bea_engine.ledger import write as ledger_write
+
+        root = tmp_path / "main.bean"
+        root.write_text('option "operating_currency" "USD"\ninclude "a.bean"\ninclude "b.bean"\n')
+        first = tmp_path / "a.bean"
+        first.write_text(
+            "2026-01-01 open Assets:Checking\n"
+            "2026-01-01 open Expenses:Groceries\n"
+            "2026-01-01 open Expenses:Uncategorized\n"
+            '\n2026-01-02 ! "Shop"\n'
+            '  import-id: "aaa"\n'
+            "  Expenses:Uncategorized 9.99 USD\n"
+            "  Assets:Checking\n"
+        )
+        second = tmp_path / "b.bean"
+        second.write_text(
+            "2026-01-01 open Expenses:Dining\n"
+            '\n2026-01-03 ! "Store"\n'
+            '  import-id: "bbb"\n'
+            "  Expenses:Uncategorized 5.00 USD\n"
+            "  Assets:Checking\n"
+        )
+        real_validate = ledger_write.validate_candidate
+        calls = 0
+
+        def fail_fourth(candidate: Path, target: Path, **kwargs: Any) -> list[str]:
+            nonlocal calls
+            calls += 1
+            if calls == 4:
+                raise protocol.LedgerError("the second file no longer validates")
+            return real_validate(candidate, target, **kwargs)
+
+        monkeypatch.setattr(ledger_write, "validate_candidate", fail_fourth)
+        with pytest.raises(protocol.LedgerError, match="Updated 1 of 2 transactions"):
+            updating.answer(root, "transactions", {"rows": ROWS}, apply=True)
+        assert "Expenses:Groceries 9.99 USD" in first.read_text()
+        assert "Expenses:Uncategorized 5.00 USD" in second.read_text()
+
+    def test_in_loop_conflict_reports_written_rows(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        from bea_engine.ledger import write as ledger_write
+
+        ledger = _ledger(tmp_path)
+
+        def fail_once(target: Path, candidate: Path, original: bytes, original_stat: Any) -> None:
+            raise protocol.ConflictError("The ledger changed during the operation.")
+
+        monkeypatch.setattr(ledger_write, "replace_checked", fail_once)
+        with pytest.raises(protocol.ConflictError, match="already written") as caught:
+            updating.answer(ledger, "transactions", {"rows": ROWS}, apply=True)
+        assert caught.value.result == {"written": 0, "written_rows": [], "rejected_rows": []}
+        assert ledger.read_text() == LEDGER
 
     def test_second_row_for_one_entry_is_rejected(self, tmp_path: Path) -> None:
         ledger = _ledger(tmp_path)

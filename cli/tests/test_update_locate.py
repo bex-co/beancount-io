@@ -94,6 +94,52 @@ def test_colon_value_without_a_file_is_metadata(ledger: Path) -> None:
         updating.locate_transaction(_entries(ledger), "stmt:42")
 
 
+def test_repeated_ref_is_ambiguous(tmp_path: Path) -> None:
+    file = tmp_path / "main.bean"
+    file.write_text(
+        LEDGER + '\n2026-01-04 * "Again"\n  ref: "bank-ref-7"\n  Expenses:Groceries 1.00 USD\n  Assets:Checking\n'
+    )
+    with pytest.raises(protocol.UsageError, match="matches 2 transactions.*file:line"):
+        updating.locate_transaction(_entries(file), "bank-ref-7")
+
+
+def test_typed_ref_resolves(tmp_path: Path) -> None:
+    file = tmp_path / "main.bean"
+    file.write_text(
+        'option "operating_currency" "USD"\n'
+        "2026-01-01 open Assets:Checking\n"
+        "2026-01-01 open Expenses:Groceries\n"
+        '\n2026-01-02 * "Numbered"\n'
+        "  ref: 42\n"
+        "  Expenses:Groceries 1.00 USD\n"
+        "  Assets:Checking\n"
+    )
+    entry = updating.locate_transaction(_entries(file), "42")
+    assert entry.narration == "Numbered"
+
+
+def test_line_zero_is_not_a_location(ledger: Path) -> None:
+    with pytest.raises(protocol.UsageError, match="No transaction with import-id or ref"):
+        updating.locate_transaction(_entries(ledger), f"{ledger}:0")
+
+
+def test_drive_letter_without_a_file_is_metadata(ledger: Path) -> None:
+    with pytest.raises(protocol.UsageError, match="No transaction with import-id or ref") as caught:
+        updating.locate_transaction(_entries(ledger), "C:\\x.bean:12")
+    assert repr("C:\\x.bean:12") in str(caught.value)
+
+
+def test_duplicated_location_is_ambiguous(ledger: Path) -> None:
+    from beancount.core.data import Transaction
+
+    entries = _entries(ledger)
+    entry = next(entry for entry in entries if isinstance(entry, Transaction))
+    # A plugin stamping a second entry with the source's location: the same
+    # entry object twice shares one (file, line, date, type) key.
+    with pytest.raises(protocol.UsageError, match="holds 2 transactions"):
+        updating.locate_transaction([entry, entry], f"{ledger}:{entry.meta['lineno']}")
+
+
 def test_synthesized_entry_never_resolves() -> None:
     from beancount.parser import parser
 
