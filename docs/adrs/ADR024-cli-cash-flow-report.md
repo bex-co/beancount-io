@@ -13,7 +13,7 @@ The classification semantics are already decided by ADR003/ADR023; this record b
 
 ## Decision
 
-`bea report cash-flow` is the dashboard statement's offline twin, computed engine-side from raw postings in units (never converted), with four deliberate deviations noted below.
+`bea report cash-flow` is the dashboard statement's offline twin, computed engine-side from posting inventories converted at cost, with four deliberate deviations noted below.
 
 **Mirrored verbatim (ADR003/ADR023, `role-resolver.ts`, `model.ts`):**
 
@@ -26,7 +26,7 @@ The classification semantics are already decided by ADR003/ADR023; this record b
 **CLI surface (new):**
 
 - **Period:** `--time` (fava period, like every sibling) intersected with `--from-date`/`--to-date` (inclusive, capital-gains style). Flows sum postings in the window; closing sums postings before its exclusive end.
-- **No `--conversion`** (capital-gains precedent: it "takes no --conversion" so rows tie to booked figures). Converting would break the cash identity the report exists to show; the engine always computes in units and `metadata.conversion` reads `"units"`. Multi-currency rule: per-currency amounts in every row, total, and bottom line; totals never sum across currencies.
+- **No `--conversion`** (capital-gains precedent: it "takes no --conversion" so rows tie to booked figures). `at_cost` is the one conversion the dashboard statement reconciles under — the page itself tells the user to try it when another conversion fails to reconcile — so the engine always computes at cost and `metadata.conversion` reads `"at_cost"`. Lots collapse to the cash they moved; cost-less positions stay in their own units. Multi-currency rule: per-currency amounts in every row, total, and bottom line; totals never sum across currencies.
 - **No `--interval` series in v1** (trial-balance precedent). Charts stay dashboard-side.
 - **`--account` narrows rows and the CCE set together** (per-posting match, capital-gains style), so the statement still reconciles under a filter.
 - **Signs:** rows, section totals, and `net_change` are cash impact (`"row_signs": "positive_for_inflow"`, mirroring `net_profit_signs`); `opening`/`closing`/cash-account balances keep beancount signs. The human heading states both.
@@ -48,7 +48,7 @@ The classification semantics are already decided by ADR003/ADR023; this record b
 }
 ```
 
-Amounts are exact decimal strings; zero-balance bottom lines carry `{}` (units spell a quiet row empty, per `_cell`). `invalid_role_values` is sorted by account.
+Amounts are exact decimal strings; zero-balance bottom lines carry `{}` (a per-unit-family conversion spells a quiet row empty, per `_cell`). `invalid_role_values` is sorted by account. Membership gates rows: an account in the CCE set — including by subtree inheritance — is never a row, following the model's stated intent ("never double-counted"); the dashboard's row loop resolves the direct role, which can list an inherited-cash leaf as a row while counting it in closing.
 
 ## Alternatives Considered
 

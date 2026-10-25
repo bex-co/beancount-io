@@ -23,7 +23,16 @@ from bea_engine import protocol
 from bea_engine.ledger.text import checked_operating_currencies, fold_account, regex_reads_otherwise
 from bea_engine.query import format_error
 
-KINDS = ("overview", "income-statement", "balance-sheet", "trial-balance", "holdings", "register", "capital-gains")
+KINDS = (
+    "overview",
+    "income-statement",
+    "balance-sheet",
+    "trial-balance",
+    "holdings",
+    "register",
+    "capital-gains",
+    "cash-flow",
+)
 GROUPINGS = ("account", "commodity")
 INTERVALS = ("monthly", "quarterly", "yearly", "weekly", "daily")
 CONVERSIONS = ("units", "at_cost", "at_value")
@@ -107,6 +116,10 @@ def answer(
         # Gains stay in each lot's own currencies so the rows tie to the
         # booked gain postings; converting them would break that tie.
         raise protocol.UsageError("capital-gains reports in each lot's cost currency and takes no --conversion.")
+    if kind == "cash-flow" and conversion is not None:
+        # Rows must sum to the change in cash balances, and any valuation
+        # difference would break that identity; the report always runs at cost.
+        raise protocol.UsageError("cash-flow reports at cost so rows tie to cash balances and takes no --conversion.")
     filtered, resolved_conversion, ledger_errors = _load(file, account, time, conversion, allow_errors)
     if kind == "overview":
         return _overview(filtered, resolved_conversion, interval, allow_errors, ledger_errors)
@@ -120,6 +133,8 @@ def answer(
         return _register(filtered, resolved_conversion, allow_errors, ledger_errors)
     if kind == "capital-gains":
         return _capital_gains(filtered, bounds, ledger_errors)
+    if kind == "cash-flow":
+        return _cash_flow(filtered, bounds, ledger_errors)
     return _trial_balance(filtered, resolved_conversion, allow_errors, ledger_errors)
 
 
@@ -821,6 +836,224 @@ def _capital_gains(filtered: Any, bounds: tuple[date | None, date | None], ledge
         "rows": rows,
         "totals": totals,
     }
+
+
+# Cash-flow classification mirrors the dashboard statement (ADR003/ADR023):
+# `cash-flow-role` open metadata wins, else these name patterns mark cash and
+# the root maps to an activity. Same patterns, same order, same roots.
+_CASH_EQUIVALENT_PATTERNS = (
+    re.compile(r"^Assets:.*Cash$", re.IGNORECASE),
+    re.compile(r"^Assets:.*Checking$", re.IGNORECASE),
+    re.compile(r"^Assets:.*Savings$", re.IGNORECASE),
+    re.compile(r"^Assets:.*Bank", re.IGNORECASE),
+)
+_CASH_FLOW_ACTIVITY_BY_ROOT = {
+    "Income": "operating",
+    "Expenses": "operating",
+    "Assets": "investing",
+    "Liabilities": "financing",
+    "Equity": "financing",
+}
+_CASH_FLOW_ROLES = ("cash", "operating", "investing", "financing")
+_CASH_FLOW_ROLE_KEY = "cash-flow-role"
+_CASH_FLOW_ACTIVITIES = ("operating", "investing", "financing")
+
+
+def _root_type_map(options: Any) -> dict[str, str]:
+    """Ledger root names read as their Beancount type (w4/1022 on the dashboard)."""
+    names = (
+        ("name_assets", "Assets"),
+        ("name_liabilities", "Liabilities"),
+        ("name_equity", "Equity"),
+        ("name_income", "Income"),
+        ("name_expenses", "Expenses"),
+    )
+    return {str(options.get(key, canonical)): canonical for key, canonical in names}
+
+
+def _resolve_cash_flow_role(account: str, declared: Any, root_types: Mapping[str, str]) -> tuple[str, str, Any]:
+    """Role, source, and invalid declared value for one account (ADR003).
+
+    A declared `cash-flow-role` decides both axes at once; anything else —
+    missing key, typo, wrong case, non-string — falls through to the name
+    heuristics, and the raw value comes back for flagging. Never raises.
+    """
+    first, _, rest = account.partition(":")
+    typed = root_types.get(first, first) + (f":{rest}" if rest else "")
+    if isinstance(declared, str) and declared in _CASH_FLOW_ROLES:
+        return declared, "declared", None
+    if any(pattern.search(typed) for pattern in _CASH_EQUIVALENT_PATTERNS):
+        role: str = "cash"
+    else:
+        role = _CASH_FLOW_ACTIVITY_BY_ROOT.get(typed.split(":", 1)[0], "financing")
+    return role, "heuristic", declared
+
+
+def _cash_accounts(opens: Mapping[str, Any], root_types: Mapping[str, str]) -> dict[str, str]:
+    """CCE membership with heuristic inheritance down subtrees (model.ts).
+
+    A declared role decides its own account; otherwise a cash-matching
+    ancestor's membership carries down, else the account's own name decides.
+    Only Assets-rooted accounts can be cash. Returns account -> source.
+    """
+    members: dict[str, str] = {}
+    for account in sorted(opens):
+        if root_types.get(account.split(":", 1)[0]) != "Assets":
+            continue
+        parts = account.split(":")
+        source: str | None = None
+        for depth in range(2, len(parts) + 1):
+            name = ":".join(parts[:depth])
+            role, resolved, _ = _resolve_cash_flow_role(name, opens.get(name), root_types)
+            if resolved == "declared":
+                source = "declared" if role == "cash" else None
+            elif source is not None or role == "cash":
+                source = source if source is not None else "heuristic"
+            else:
+                source = None
+        if source is not None:
+            members[account] = source
+    return members
+
+
+def _cash_flow(filtered: Any, bounds: tuple[date | None, date | None], ledger_errors: list[str]) -> dict[str, Any]:
+    """Direct-method cash flow: inverted non-cash flows explain the CCE change.
+
+    Flows and closing accumulate posting inventories over their windows and
+    convert at cost — the conversion the dashboard statement reconciles
+    under (`at_cost` reads booked costs only, so lots collapse to the cash
+    they moved and cost-less cash stays in its own units). Flows cover
+    `--time` intersected with the inclusive `--from-date`/`--to-date`
+    bounds; closing covers cash postings before its exclusive end; opening
+    is closing minus net change, the double-entry identity the dashboard
+    statement is built on. `--account` narrows rows and the CCE set together
+    so the statement still reconciles. Accounts outside the five roots are
+    excluded from rows and surface via the shared unrooted-accounts note.
+    Membership — not the direct role — gates rows, so an inherited-cash
+    leaf is never double-counted.
+    """
+    from beancount.core.data import Open, Transaction
+
+    from fava.core.conversion import cost_or_value
+    from fava.core.inventory import CounterInventory
+
+    matches = _report_filter_match(filtered.account, filtered.ledger.root_accounts) if filtered.account else None
+    root_types = _root_type_map(filtered.ledger.options)
+    opens: dict[str, Any] = {}
+    for entry in filtered.ledger.all_entries:
+        if isinstance(entry, Open):
+            opens[entry.account] = (entry.meta or {}).get(_CASH_FLOW_ROLE_KEY)
+    members = _cash_accounts(opens, root_types)
+    prices = filtered.ledger.prices
+
+    start, end = bounds
+    _, period_end = filtered.period
+    cutoff = period_end
+    if end is not None:
+        bound_end = None if end == date.max else end + timedelta(days=1)
+        cutoff = bound_end if cutoff is None or bound_end is None else min(cutoff, bound_end)
+
+    flow_books: dict[str, CounterInventory] = {}
+    for entry in filtered.entries:
+        if not isinstance(entry, Transaction):
+            continue
+        if start is not None and entry.date < start:
+            continue
+        if end is not None and entry.date > end:
+            continue
+        for posting in entry.postings:
+            if posting.units is None or posting.units.number is None:
+                continue
+            if matches is not None and not matches(posting.account):
+                continue
+            # Fava's inventory reads units/cost duck-typed; beancount postings
+            # flow through the same call in interval_totals at runtime.
+            flow_books.setdefault(posting.account, CounterInventory()).add_position(posting)  # type: ignore[arg-type]
+    flows = {account: _balance_map(cost_or_value(book, "at_cost", prices)) for account, book in flow_books.items()}
+
+    closing_books: dict[str, CounterInventory] = {}
+    if cutoff is not None:
+        for entry in filtered.ledger.all_entries:
+            if not isinstance(entry, Transaction) or entry.date >= cutoff:
+                continue
+            for posting in entry.postings:
+                if posting.units is None or posting.units.number is None:
+                    continue
+                if posting.account not in members:
+                    continue
+                if matches is not None and not matches(posting.account):
+                    continue
+                # Same duck-typed call as the flows loop above.
+                closing_books.setdefault(posting.account, CounterInventory()).add_position(posting)  # type: ignore[arg-type]
+    closing = {account: _balance_map(cost_or_value(book, "at_cost", prices)) for account, book in closing_books.items()}
+
+    sections: dict[str, list[dict[str, Any]]] = {activity: [] for activity in _CASH_FLOW_ACTIVITIES}
+    for account in sorted(flows):
+        if account in members:
+            continue
+        if root_types.get(account.split(":", 1)[0]) not in _CASH_FLOW_ACTIVITY_BY_ROOT:
+            continue
+        role, source, _ = _resolve_cash_flow_role(account, opens.get(account), root_types)
+        if role == "cash":
+            continue
+        amounts = {currency: -total for currency, total in flows[account].items()}
+        if all(total == 0 for total in amounts.values()):
+            continue
+        sections[role].append({"account": account, "amounts": amounts, "role_source": source})
+
+    totals: dict[str, dict[str, Decimal]] = {activity: {} for activity in _CASH_FLOW_ACTIVITIES}
+    for activity, rows in sections.items():
+        for row in rows:
+            for currency, total in row["amounts"].items():
+                totals[activity][currency] = totals[activity].get(currency, Decimal(0)) + total
+    net_change: dict[str, Decimal] = {}
+    for activity_totals in totals.values():
+        for currency, total in activity_totals.items():
+            net_change[currency] = net_change.get(currency, Decimal(0)) + total
+    closing_total: dict[str, Decimal] = {}
+    for account_amounts in closing.values():
+        for currency, total in account_amounts.items():
+            closing_total[currency] = closing_total.get(currency, Decimal(0)) + total
+    opening = {
+        currency: closing_total.get(currency, Decimal(0)) - net_change.get(currency, Decimal(0))
+        for currency in set(closing_total) | set(net_change)
+    }
+    invalid_role_values = [
+        {"account": account, "value": _jsonable_role_value(value)}
+        for account in sorted(opens)
+        if (value := opens[account]) is not None and not (isinstance(value, str) and value in _CASH_FLOW_ROLES)
+    ]
+    # No quotes are read — at_cost converts lots from booked costs, and
+    # cost-less positions stay in their own units — so valuation is trivially
+    # complete; the keys stay for the shared heading.
+    metadata = _metadata(filtered, "at_cost", ledger_errors) | {
+        "valuation": "complete",
+        "missing_prices": [],
+        "missing_price_dates": [],
+        "missing_price_summary": [],
+    }
+    return metadata | {
+        "display_precision": _display_precision(filtered),
+        "row_signs": "positive_for_inflow",
+        "sections": sections,
+        "totals": totals,
+        "net_change": net_change,
+        "opening": opening,
+        "closing": closing_total,
+        "cash_accounts": [
+            {"account": account, "balance": closing.get(account, {}), "role_source": members[account]}
+            for account in sorted(members)
+            if matches is None or matches(account)
+        ],
+        "invalid_role_values": invalid_role_values,
+    }
+
+
+def _jsonable_role_value(value: Any) -> Any:
+    """A declared role value safe for the JSON envelope."""
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    return str(value)
 
 
 def _load(

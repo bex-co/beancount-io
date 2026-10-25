@@ -434,7 +434,7 @@ def report(
             "-k",
             help=(
                 "Report: overview, income-statement, balance-sheet, trial-balance, "
-                "holdings, register, or capital-gains."
+                "holdings, register, capital-gains, or cash-flow."
             ),
         ),
     ],
@@ -453,11 +453,9 @@ def report(
     ] = False,
     group_by: Annotated[str, typer.Option("--group-by", help="Holdings grouping: account or commodity.")] = "account",
     from_date: Annotated[
-        str | None, typer.Option("--from-date", help="Capital-gains sales on or after YYYY-MM-DD.")
+        str | None, typer.Option("--from-date", help="Include entries on or after YYYY-MM-DD.")
     ] = None,
-    to_date: Annotated[
-        str | None, typer.Option("--to-date", help="Capital-gains sales on or before YYYY-MM-DD.")
-    ] = None,
+    to_date: Annotated[str | None, typer.Option("--to-date", help="Include entries on or before YYYY-MM-DD.")] = None,
 ) -> None:
     """Compute one financial report and answer with its JSON-ready payload.
 
