@@ -23,8 +23,9 @@ for this already-created GitHub submission.
 **Next:** maintainers review/merge or provide actionable feedback; the worker
 handles corrections and verifies actual public metadata and the advertised
 authenticated native path before reporting publication. Manual follow-up
-2026-10-27UTC if no earlier event; no automated monitor is created. w6/041
-retains that publication acceptance, with no spending decision pending.
+2026-10-27UTC if no earlier event; no automated monitor is created. [w6/041](../../../../../.pm/w6/done/041.md) archives the completed submission;
+[w6/047](../../../../../.pm/w6/blocked/047.md) retains publication acceptance,
+with no spending decision pending.
 
 ## Historical webpage-only preparation and fee assumption
 

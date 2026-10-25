@@ -21,7 +21,7 @@
 - Existing ChatGPT and Claude submissions are reused, required supported feedback is addressed, and both have actual approved public entries with verified native synthetic OAuth/query/preview paths.
 - The remote-only community list has an accurate merged canonical entry and working setup links, without a duplicate contribution.
 - The shared tracker retains actual submit/manage links, status, UTC last checked at, receipts/evidence and next actions. Publisher-confirmed submission, inspected review state and public publication remain distinct.
-- All 17 tracker rows retain the execution owner below. Existing m8/m9/m10 and 041/042 publication gates remain open until their own acceptance holds; completing this milestone alone does not mean every w6 submission is finished.
+- All 17 tracker rows retain the execution owner below. Existing m8/m9/m10 and 047/042 publication gates remain open until their own acceptance holds; completing this milestone alone does not mean every w6 submission is finished.
 - All standing closing tasks pass and mandatory archive moves are complete. Pending review, unavailable account access or unpaid fees are not completion.
 
 ## Source + Goal linkage
@@ -50,7 +50,7 @@ The [m9/t011](../m9/done/t011.md) official Cursor application is submitted with 
 | Smithery | [m8/t002](../m8/t002.md) | Removed legacy intake remains blocked; platform/publisher must provide a working supported replacement route |
 | MCPServers.org | Canonical public listing verified; original Free $0 receipt retained | [m10/t001](../m10/done/t001.md) done; [m10/t010](../m10/done/t010.md) retains directory-advertised native checks |
 | MCPMarket | Accepted Free Queue repository submission; preserve existing receipt | [m10/t002](../m10/t002.md), m10/t004; reviewer publication then endpoint/OAuth metadata and connection checks |
-| MCP.so | [041](../041.md), actual [PR6071](https://github.com/chatmcp/mcpso/pull/6071) submitted2026-10-25T07:03:59Z | Maintainer review/import and actual public/native verification remain; website fee is not a prerequisite, no payment/login needed for the completed GitHub submission |
+| MCP.so | [041 done](../../done/041.md), actual [PR6071](https://github.com/chatmcp/mcpso/pull/6071) submitted2026-10-25T07:03:59Z | [047](../047.md) owns maintainer review/import and actual public/native verification; website fee is not a prerequisite, no payment/login needed for the completed GitHub submission |
 | PulseMCP | [042](../042.md) | Platform reopens supported submission/edit intake; no submission sent while paused |
 | Official MCP Registry | Already published under completed w2/m36 | Existing release workflow/canonical record; no duplicate namespace or routine resubmission |
 | cursor.directory — community | Already published under [m9/t003](../m9/done/t003.md) | Preserve published entry and completed native QA; separate from official Cursor submission |
