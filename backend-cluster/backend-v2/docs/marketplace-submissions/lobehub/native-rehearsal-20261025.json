@@ -126,6 +126,6 @@
     "ownerRepublishRequired": false,
     "manifestSHA256": "3e0cade33f51086bbbc912ad3c8a28dee41dabfb58e8c16fcfa7105546b7d538"
   },
-  "remaining": "Crawler stdio option and canonical name search remain w6/m10/t012. This native acceptance does not add an ADR019 host fixture or change another platform review.",
+  "remaining": "Crawler stdio option/derived classification remains w6/m10/t012; exact maintainer correction request submitted, while actual canonical name search now passes. See correction-request-20261025.json. Native acceptance adds no ADR019 host fixture and changes no other platform review.",
   "privacy": "No credential, code/state URL, private deployment detail, user/account identity, concrete resource URI or raw ledger contents is included. All existing grants retained."
 }

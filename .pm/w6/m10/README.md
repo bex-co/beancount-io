@@ -1,6 +1,6 @@
 # w6 · m10 — List the connector in independent web directories
 
-**Worker:** worker1 **Goal:** People comparing accounting MCP servers find accurate, usable remote listings on the eligible independent directories. **Status:** todo (6 tasks done; t010/t011 native accounting verified; t012 supported crawler/search correction is next)
+**Worker:** worker1 **Goal:** People comparing accounting MCP servers find accurate, usable remote listings on the eligible independent directories. **Status:** todo (6 tasks done; native accounting/search verified; t012 awaits sent platform correction and t002 retains original review; aggregate closing tasks deferred)
 
 **Implementation estimate:** ~2h, excluding external review queues and the standing closing tasks.
 
@@ -15,7 +15,7 @@
 | [t013](done/t013.md) | Bind OAuth interaction routes to the signed-cookie interaction — **DONE** | 45m | — |
 | [t010](done/t010.md) | Complete MCPServers.org advertised native accounting checks — **DONE** | 45m | t001, t013 |
 | [t011](done/t011.md) | Complete LobeHub native OAuth and live metadata — **DONE** | 45m | t003, t009, t013 |
-| [t012](t012.md) | Correct LobeHub crawler stdio deployment and verify search indexing | 30m | t003 |
+| [t012](t012.md) | Correct LobeHub crawler stdio deployment and verify search indexing — **BLOCKED** | 30m | t003 |
 | [t004](t004.md) | Verify the independent-directory listings after moderation | 15m | t001, t002, t003, t010, t011, t012, t013 |
 | [t005](t005.md) | Adoption surface | 30m | t004, t009, t010, t011, t012, t013 |
 | [t006](t006.md) | Simplify | 30m | t005 |
@@ -147,3 +147,14 @@ independent metadata replaces older resource/prompt freshness limits precisely;
 native UI itself enumerates44tools only. Next independent pick is t012's
 supported malformed crawler deployment/search correction; MCPMarket remains
 in its original external free review.
+
+## Blocked — current LobeHub correction / MCPMarket review
+
+2026-10-25T01:46:45.207519Z: t012 verifies canonical name discovery and
+sends one exact existing-issue maintainer correction request for the invalid
+stdio option/derived Local Service classification. **Unblock/owners:** LobeHub
+removes it or supplies a supported owner edit route; worker verifies public
+metadata/instructions. Next manual check2026-10-27UTC or real feedback.
+The actual native OAuth/query/preview outcome remains completed t011.
+t002 retains the original MCPMarket free review; t004–t008 remain transitively
+deferred until those two actual publication/correction DoDs hold.

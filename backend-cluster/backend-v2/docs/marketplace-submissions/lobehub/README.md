@@ -1,6 +1,6 @@
 # LobeHub published connector and native accounting verified
 
-Current outcome **2026-10-25T01:41:31Z**: the [canonical listing](https://lobehub.com/mcp/beancount-io) remains claimed/published at1.0.0. Actual native OAuth,44-tool sync, five-call accounting and one dry-run preview pass. Cash49.75USD, commit/counts and independent file hash are unchanged. [Native evidence and exact visibility limits](./native-rehearsal-20261025.json). The crawler stdio defect and canonical name-search verification remain m10/t012; publication and native connection do not close that task.
+Current outcome **2026-10-25T01:41:31Z**: the [canonical listing](https://lobehub.com/mcp/beancount-io) remains claimed/published at1.0.0. Actual native OAuth,44-tool sync, five-call accounting and one dry-run preview pass. Cash49.75USD, commit/counts and independent file hash are unchanged. [Native evidence and exact visibility limits](./native-rehearsal-20261025.json). Public name search now returns the canonical entry first among5results. The crawler stdio defect remains m10/t012; publication and native connection do not close that task.
 
 ## Current native connection recipe
 
@@ -11,6 +11,12 @@ At the actual Beancount consent, select only the synthetic QA ledger and leave A
 ## Current capability provenance
 
 Fresh independent canonical MCP SDK discovery at2026-10-25T01:36:05.291Z verifies44tools/64generic resource templates/4prompts. The normalized published definitions match by name; template order alone differs, so no repeat owner update is needed. Native LobeHub actually syncs/displays44tools; its Connector UI does not expose resource/template/prompt enumeration. [Full provenance](./metadata-provenance.json) preserves the older Cline/Docker/source capture separately. These checks add no ADR019 fixture-qualified host claim.
+
+## Current crawler correction request — 2026-10-25 UTC
+
+The complete [public name query](https://lobehub.com/mcp?q=beancount) now returns5results, with the canonical entry first and both page directions disabled. Name discovery is verified. The public installation tab still recommends the invalid bea-init stdio option and derives Local Service/hybrid presentation. The HTTP option and native accounting remain valid.
+
+One exact correction request is [submitted on existing issue18706](https://github.com/lobehub/lobehub/issues/18706#issuecomment-6392098911), with identical body read back. It asks maintainers to remove only that generated option, preserve the owned HTTP version/metadata and refresh derived service classification, or provide a supported owner correction route. [Receipt, public evidence and unblock condition](./correction-request-20261025.json). This is a sent request, not an observed correction. Next manual check2026-10-27UTC or actual maintainer feedback; no duplicate comments, private admin API or repeated owner publish.
 
 ## Historical publisher preparation and dated follow-through
 

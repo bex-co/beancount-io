@@ -118,5 +118,13 @@
     "canonicalMatch": false,
     "paginationComplete": true,
     "limit": "Public direct detail/version manifest are verified, while name-index propagation is still pending; not directory-wide absence or rejection."
+  },
+  "publicDiscoveryFollowThrough20261025": {
+    "checkedAtUTC": "2026-10-25T01:46:45.207519Z",
+    "publicSearchURL": "https://lobehub.com/mcp?q=beancount",
+    "results": 5,
+    "canonicalPosition": 1,
+    "state": "Canonical query discovery now verified; malformed generated stdio option has one sent maintainer correction request.",
+    "evidence": "correction-request-20261025.json"
   }
 }

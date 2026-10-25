@@ -1,0 +1,57 @@
+{
+  "owner": "w6/m10/t012",
+  "lastCheckedAtUTC": "2026-10-25T01:46:45.207519Z",
+  "listing": "https://lobehub.com/mcp/beancount-io?activeTab=deployment",
+  "version": "1.0.0",
+  "publicBrowserObservationDateUTC": "2026-10-25",
+  "observedProblem": {
+    "recommendedOptions": [
+      "Correct canonical HTTP OAuth",
+      "Incorrect generated Manual/stdio CLI onboarding command"
+    ],
+    "invalidCommand": "bea",
+    "invalidArgs": [
+      "--no-input",
+      "init",
+      "books",
+      "--currency",
+      "USD",
+      "--date",
+      "2026-08-01",
+      "--opening-balance",
+      "Assets:Checking 1000"
+    ],
+    "effect": "Local Service search card / hybrid detail classification despite a remote HTTP connector; init creates local bookkeeping files and is not an MCP server. The invalid recipe was not executed."
+  },
+  "search": {
+    "url": "https://lobehub.com/mcp?q=beancount",
+    "displayedResults": 5,
+    "previousAndNextDisabled": true,
+    "canonicalPosition": 1,
+    "canonicalURL": "https://lobehub.com/mcp/beancount-io",
+    "state": "Actual public canonical name discovery now verified; earlier index delay resolved."
+  },
+  "ownerUpdateLimit": {
+    "source": "https://market.lobehub.com/s/publish-mcp/references/manifest",
+    "result": "Supported cloudEndpoint owner update retains other crawler options; no supported owner deployment deletion/reindex field established. Latest audited CLI0.0.43 / SDK0.44.0 exposes deployment editing only through administrative services, which are not used.",
+    "auditedAtUTC": "2026-10-25T00:13:42Z"
+  },
+  "correctionRequest": {
+    "existingIssue": "https://github.com/lobehub/lobehub/issues/18706",
+    "receiptURL": "https://github.com/lobehub/lobehub/issues/18706#issuecomment-6392098911",
+    "submittedAtUTC": "2026-10-25T01:45:51Z",
+    "exactBodyReadbackVerified": true,
+    "request": [
+      "Remove only the generated bea-init stdio option",
+      "Preserve canonical HTTP URL, owned listing1.0.0 and44/64/4metadata",
+      "Refresh derived service classification, or provide a supported owner correction/reset route"
+    ],
+    "state": "Sent; platform removal/correction not yet observed",
+    "followUp": "Maintainer response or public correction; next manual check2026-10-27UTC, without duplicate comments or owner republish."
+  },
+  "unblock": {
+    "owner": "LobeHub marketplace maintainers; repository worker verifies public/native results",
+    "condition": "Supported owner correction becomes available, or maintainers remove the invalid generated option and public deployment/classification reflects canonical remote HTTP. Preserve actual existing publication/native acceptance."
+  },
+  "privacy": "Only public listing/configuration and issue receipt; no credentials, personal contact, private infrastructure or ledger contents."
+}
