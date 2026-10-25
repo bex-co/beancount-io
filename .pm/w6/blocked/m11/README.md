@@ -34,7 +34,7 @@
 
 ## Full inventory ownership and execution order
 
-The [m9/t011](../m9/done/t011.md) official Cursor application is submitted with an accepted receipt after explicit final agreement confirmation; vendor review/publication remains open. Docker [m9/t012](../m9/done/t012.md) is actually submitted as PR #6042 after the scoped native Gateway journey; review/publication remains separate. Cline [m9/t013](../m9/done/t013.md) is actually submitted as issue #3230 after native OAuth, SDK query/preview and Agent read-only verification. GitHub nomination [m9/t014](../m9/done/t014.md) is sent and archived. LobeHub [m10/t009](../../m10/done/t009.md) completes the approved GitHub/bex-co connection and actual accepted/public publication; native accounting and crawler correction remain t004. This milestone's t001/t002 require original submitting account/organization access; t003 remains independently submitted. Table order is priority, not a cross-platform dependency.
+The [m9/t011](../m9/done/t011.md) official Cursor application is submitted with an accepted receipt after explicit final agreement confirmation; vendor review/publication remains open. Docker [m9/t012](../m9/done/t012.md) is actually submitted as PR #6042 after the scoped native Gateway journey; review/publication remains separate. Cline [m9/t013](../m9/done/t013.md) is actually submitted as issue #3230 after native OAuth, SDK query/preview and Agent read-only verification. GitHub nomination [m9/t014](../m9/done/t014.md) is sent and archived. LobeHub [m10/t009](../m10/done/t009.md) completes the approved GitHub/bex-co connection and actual accepted/public publication; native accounting and crawler correction remain t004. This milestone's t001/t002 require original submitting account/organization access; t003 remains independently submitted. Table order is priority, not a cross-platform dependency.
 
 | Inventory target | Submission / receipt owner | Review, public verification or retained gate |
 | --- | --- | --- |
@@ -42,14 +42,14 @@ The [m9/t011](../m9/done/t011.md) official Cursor application is submitted with 
 | Docker | [m9/t012](../m9/done/t012.md) | [m9/t002](../m9/done/t002.md) submission/private reviewer access complete; [m9/t017](../m9/t017.md) actual review/publication; [m9/t015](../m9/done/t015.md) current OAuth repair |
 | Cline | [m9/t013](../m9/done/t013.md) | [m9/t004](../m9/t004.md), m9/t006 |
 | GitHub curated gallery / VS Code | [m9/t014](../m9/done/t014.md) | [m9/t005](../m9/done/t005.md) done; [m9/t018](../m9/t018.md) approved/public/native; existing w1/m34/t003 native owner retained |
-| LobeHub | [m10/t009](../../m10/done/t009.md) accepted/public; [m10/t003](../../m10/done/t003.md) eligible payload complete | [m10/t011](../../m10/t011.md) native/live metadata; [m10/t012](../../m10/t012.md) crawler correction/search |
+| LobeHub | [m10/t009](../m10/done/t009.md) accepted/public; [m10/t003](../m10/done/t003.md) eligible payload complete | [m10/t011](../m10/done/t011.md) native/live metadata; [m10/t012](../m10/t012.md) crawler correction/search |
 | ChatGPT / OpenAI | Already submitted, publisher-confirmed 2026-10-23 | [m11/t001](t001.md), existing specific application |
 | Claude | Already submitted, publisher-confirmed 2026-10-23 | [m11/t002](t002.md), existing specific application |
 | Awesome Remote MCP Servers | [m11/t003](t003.md) | Same task retains upstream receipt, review and merged entry |
 | Glama | Existing ownership and synthetic-only read monitoring verified; Healthy/44tools. [m8/t003](../m8/t003.md) coordinates existing [w2/088](../../../w2/blocked/088.md) | w2/088 full healthy day, earliest recheck2026-10-25T07:01:01Z, independent [m8/t009](../m8/done/t009.md) native path, final [m8/t004](../m8/t004.md); renew monitoring credential before2026-11-23UTC; no duplicate listing |
 | Smithery | [m8/t002](../m8/t002.md) | Removed legacy intake remains blocked; platform/publisher must provide a working supported replacement route |
-| MCPServers.org | Canonical public listing verified; original Free $0 receipt retained | [m10/t001](../../m10/done/t001.md) done; [m10/t010](../../m10/t010.md) retains directory-advertised native checks |
-| MCPMarket | Accepted Free Queue repository submission; preserve existing receipt | [m10/t002](../../m10/t002.md), m10/t004; reviewer publication then endpoint/OAuth metadata and connection checks |
+| MCPServers.org | Canonical public listing verified; original Free $0 receipt retained | [m10/t001](../m10/done/t001.md) done; [m10/t010](../m10/done/t010.md) retains directory-advertised native checks |
+| MCPMarket | Accepted Free Queue repository submission; preserve existing receipt | [m10/t002](../m10/t002.md), m10/t004; reviewer publication then endpoint/OAuth metadata and connection checks |
 | MCP.so | [041](../041.md) | Explicit approval of the observed $39 fee or a documented free route; no payment authorized by this plan |
 | PulseMCP | [042](../042.md) | Platform reopens supported submission/edit intake; no submission sent while paused |
 | Official MCP Registry | Already published under completed w2/m36 | Existing release workflow/canonical record; no duplicate namespace or routine resubmission |

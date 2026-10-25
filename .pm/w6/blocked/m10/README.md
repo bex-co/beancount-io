@@ -1,6 +1,6 @@
 # w6 · m10 — List the connector in independent web directories
 
-**Worker:** worker1 **Goal:** People comparing accounting MCP servers find accurate, usable remote listings on the eligible independent directories. **Status:** todo (6 tasks done; native accounting/search verified; t012 awaits sent platform correction and t002 retains original review; aggregate closing tasks deferred)
+**Worker:** worker1 **Goal:** People comparing accounting MCP servers find accurate, usable remote listings on the eligible independent directories. **Status:** blocked (6 of13tasks done; t002 original MCPMarket review and t012 sent LobeHub platform correction; all closing tasks defer transitively)
 
 **Implementation estimate:** ~2h, excluding external review queues and the standing closing tasks.
 
@@ -68,7 +68,7 @@ This milestone returns from `blocked/` because newly materialized submission/rec
 
 An actual submission receipt closes only its receipt-stage task. Existing native/publication criteria and final verification remain required for this milestone's DoD. Preserve previous blocker history above; reassess concrete tool/account/access requirements at the actual action, carry prior authorization forward, and block only the affected step when a genuinely unmet condition remains. No task waits for another platform's review merely because it is later in the table.
 
-The earlier exclusion of Claude/ChatGPT was the 2026-10-20 scope decision. The owner's 2026-10-23 all-inventory request now places those separate application follow-ups in [m11](../blocked/m11/README.md), without duplicating this milestone's targets.
+The earlier exclusion of Claude/ChatGPT was the 2026-10-20 scope decision. The owner's 2026-10-23 all-inventory request now places those separate application follow-ups in [m11](../m11/README.md), without duplicating this milestone's targets.
 
 ## Historical native/review blocker snapshot — 2026-10-23 UTC
 
@@ -158,3 +158,24 @@ metadata/instructions. Next manual check2026-10-27UTC or real feedback.
 The actual native OAuth/query/preview outcome remains completed t011.
 t002 retains the original MCPMarket free review; t004–t008 remain transitively
 deferred until those two actual publication/correction DoDs hold.
+
+## Current milestone block — 2026-10-25 UTC
+
+All remaining tasks are blocked or depend on two concrete platform outcomes.
+t010/t011 native accounting, t013 deployed consent guard and actual LobeHub
+name discovery are complete. Do not reopen or repeat them.
+
+- **t002 — Unblock/owner:** MCPMarket publishes or supplies actionable feedback
+  on its accepted2026-10-21 free repository submission. Worker verifies actual
+  hosted endpoint/OAuth/source/native setup. Advertised4–6week window is
+ 2026-11-18through12-02; no duplicate or paid submission.
+- **t012 — Unblock/owner:** LobeHub removes the generated bea-init stdio option
+  or supplies a supported owner correction/reset route. Existing issue18706
+  comment6392098911 is sent/read back. Worker verifies canonical HTTP-only
+  deployment and derived remote classification. Next manual check2026-10-27UTC
+  or actual maintainer response; no repeated unchanged request.
+- **t004–t008:** actual per-directory/public/native DoDs and standing closing
+  criteria remain mandatory; these tasks defer transitively, not completed
+  from receipts or preparation. Their owner is the worker after the above gates.
+
+Independent w6 inbox043/045/046 and other newly cleared conditions continue.
