@@ -12,6 +12,7 @@ import {
 import { BadUserInputError } from "@/shared/errors";
 import { directiveLimitExemptParams } from "@/features/ledger/operations/directive-limit-bypass";
 import { normalizeJournalKinds } from "@/features/ledger/utils/journal-kinds";
+import { assertAmountsFitEngineDecimal } from "@/features/ledger/utils/engine-decimal";
 
 /**
  * The page a journal read asks for: limit 1–1000 (default 20), offset 0 or
@@ -469,6 +470,9 @@ export class LedgerJournalService
         "newContent is empty; delete the entry instead of saving it blank",
       );
     }
+    // The slice commits verbatim; an amount past the engine's 28 digits would
+    // read back rounded with no check failing (w23/081).
+    assertAmountsFitEngineDecimal(newContent);
 
     const data = await unwrapFavaResponse(
       favaApiClient.journal.updateSourceSlice(

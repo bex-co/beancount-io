@@ -5,6 +5,7 @@ import type { DirectiveLimitPreview } from "@/features/ledger/operations/directi
 import { BadUserInputError } from "@/shared/errors";
 import { resolveEntryFile } from "@/features/ledger/utils/entry-file-resolver";
 import { parseDirectiveDate } from "@/features/ledger/utils/directive-date";
+import { assertAmountsFitEngineDecimal } from "@/features/ledger/utils/engine-decimal";
 import {
   insertDirectives,
   parseDirectiveText,
@@ -99,6 +100,10 @@ export class DirectiveAppendWorkflow implements IDirectiveAppendWorkflow {
     input: AppendDirectiveTextInput;
   }): Promise<AppendDirectiveTextResult> {
     const { text, path, dryRun = false, allowInvalid = false } = input;
+    // The projected bean-check cannot see engine rounding: it runs the engine
+    // over the new text and the engine rounds instead of failing. Refuse an
+    // amount past its 28 digits here, before any read (w23/081).
+    assertAmountsFitEngineDecimal(text);
     const directives = parseDirectiveText(text);
     if (directives.length > MAX_APPENDED_DIRECTIVES) {
       throw new BadUserInputError(

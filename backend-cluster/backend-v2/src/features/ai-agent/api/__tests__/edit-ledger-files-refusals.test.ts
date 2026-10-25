@@ -38,7 +38,15 @@ async function fixture() {
     "qa-latin1.txt",
     // A legacy name a new file could no longer take (w23/054).
     "aux.bean",
+    // Holds a long literal committed before the 28-digit refusal (w23/081).
+    "legacy.bean",
   ]);
+  const LEGACY_BEAN = [
+    '2021-01-02 * "legacy"',
+    "  Assets:Cash  999999999999999999999999999.99 USD",
+    "  Equity:Initial",
+    "",
+  ].join("\n");
   const getLedgerFilesContent = jest.fn(
     async (_owner: string, _name: string, { files }: { files: string[] }) => ({
       data: {
@@ -60,7 +68,10 @@ async function fixture() {
                   name: path,
                   type: "file",
                   sha: "s1",
-                  content: '2026-01-05 * "Cafe"\n2026-02-05 * "Cafe"\n',
+                  content:
+                    path === "legacy.bean"
+                      ? LEGACY_BEAN
+                      : '2026-01-05 * "Cafe"\n2026-02-05 * "Cafe"\n',
                 },
           ),
       },
@@ -840,4 +851,102 @@ describe("an argument the tool does not declare", () => {
       }
     },
   );
+});
+
+/**
+ * w23/081. Amounts past the engine's 28 digits read back rounded with no
+ * check failing, so the file tools refuse them in the new text — and only
+ * the new text, so an edit elsewhere in a file holding a legacy long
+ * literal still lands.
+ */
+describe("amounts past 28 digits in file writes", () => {
+  const LONG_TXN = [
+    '2021-01-02 * "raw"',
+    "  Assets:Cash  999999999999999999999999999.99 USD",
+    "  Equity:Initial",
+    "",
+  ].join("\n");
+
+  it("refuses a create holding one, naming the literal", async () => {
+    const f = await fixture();
+    try {
+      const result = await f.client.callTool({
+        name: "createLedgerFiles",
+        arguments: {
+          ledger: "alice/main",
+          description: "add raw",
+          files: [{ path: "raw.bean", content: LONG_TXN }],
+        },
+      });
+      expect(result.isError).toBe(true);
+      expect(result.structuredContent).toMatchObject({
+        error: {
+          code: "BAD_USER_INPUT",
+          message: expect.stringContaining(
+            "999999999999999999999999999.99 has more than 28 significant digits",
+          ),
+        },
+      });
+      expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("refuses an exact-text edit inserting one", async () => {
+    const f = await fixture();
+    try {
+      const result = await f.client.callTool({
+        name: "updateLedgerFiles",
+        arguments: {
+          ledger: "alice/main",
+          description: "edit amount",
+          files: [
+            {
+              path: "main.bean",
+              old_string: '2026-01-05 * "Cafe"',
+              new_string: LONG_TXN,
+            },
+          ],
+        },
+      });
+      expect(result.isError).toBe(true);
+      expect(result.structuredContent).toMatchObject({
+        error: {
+          code: "BAD_USER_INPUT",
+          message: expect.stringContaining("more than 28 significant digits"),
+        },
+      });
+      expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("still edits around a legacy long literal it does not touch", async () => {
+    const f = await fixture();
+    f.changeLedgerFiles.mockResolvedValue({
+      data: { success: true, data: {} },
+    });
+    try {
+      const result = await f.client.callTool({
+        name: "updateLedgerFiles",
+        arguments: {
+          ledger: "alice/main",
+          description: "rename a payee",
+          files: [
+            {
+              path: "legacy.bean",
+              old_string: '"legacy"',
+              new_string: '"renamed"',
+            },
+          ],
+        },
+      });
+      expect(result.isError).toBeFalsy();
+      expect(f.changeLedgerFiles).toHaveBeenCalledTimes(1);
+    } finally {
+      await f.close();
+    }
+  });
 });

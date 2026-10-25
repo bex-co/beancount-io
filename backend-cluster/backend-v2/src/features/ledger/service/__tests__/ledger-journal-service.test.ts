@@ -521,6 +521,33 @@ describe("LedgerJournalService", () => {
       expect(mockUpdateSourceSlice).not.toHaveBeenCalled();
     });
 
+    // w23/081: the slice commits verbatim, and an amount past the engine's
+    // 28 digits would read back rounded with no check failing. REST,
+    // GraphQL and MCP all edit through here.
+    it("refuses an amount past 28 digits before the ledger sees it", async () => {
+      const newContent = [
+        '2021-01-02 * "raw"',
+        "  Assets:Cash  9999999999999999999999999999.99 USD",
+        "  Equity:Initial",
+        "",
+      ].join("\n");
+      await expect(
+        service.updateSourceSlice({
+          ledgerId: LEDGER_ID,
+          identity: IDENTITY,
+          entryHash: "h",
+          sha256sum: "s",
+          newContent,
+        }),
+      ).rejects.toMatchObject({
+        category: "BAD_USER_INPUT",
+        message: expect.stringContaining(
+          "9999999999999999999999999999.99 has more than 28 significant digits",
+        ),
+      });
+      expect(mockUpdateSourceSlice).not.toHaveBeenCalled();
+    });
+
     it("throws InternalServerError on failure", async () => {
       mockUpdateSourceSlice.mockResolvedValue({ data: { success: false } });
 

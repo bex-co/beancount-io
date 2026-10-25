@@ -1523,6 +1523,59 @@ describe("LedgerWorkflow", () => {
       ).rejects.toThrow("Main.bean already exists as main.bean");
       expect(mockFavaApiClient.ledgers.createLedgerFile).not.toHaveBeenCalled();
     });
+
+    // w23/081: an amount past the engine's 28 digits reads back rounded with
+    // no check failing.
+    it("refuses text holding an amount past 28 digits", async () => {
+      const text = [
+        '2021-01-02 * "raw"',
+        "  Assets:Cash  999999999999999999999999999.99 USD",
+        "  Equity:Initial",
+        "",
+      ].join("\n");
+      await expect(
+        workflow.createLedgerFile({
+          identity: IDENTITY,
+          ledgerId,
+          input: {
+            path: "raw.bean",
+            content: Buffer.from(text, "utf8").toString("base64"),
+          },
+          platform: "web",
+        }),
+      ).rejects.toMatchObject({
+        category: "BAD_USER_INPUT",
+        message: expect.stringContaining(
+          "999999999999999999999999999.99 has more than 28 significant digits",
+        ),
+      });
+      expect(mockFavaApiClient.ledgers.createLedgerFile).not.toHaveBeenCalled();
+    });
+
+    // The same mutations carry binary uploads (receipt PDFs), which never
+    // reach the engine as amounts and skip the scan (w23/081).
+    it("does not scan binary content for amounts", async () => {
+      mockFavaApiClient.ledgers.createLedgerFile.mockResolvedValue({
+        data: {
+          success: true,
+          data: { path: "scan.pdf", content: "", sha: "pdf1" },
+        },
+      });
+      const binary = Buffer.concat([
+        Buffer.from([0xff, 0xd8, 0xff]),
+        Buffer.from(" 999999999999999999999999999.99 USD"),
+      ]);
+      await workflow.createLedgerFile({
+        identity: IDENTITY,
+        ledgerId,
+        input: {
+          path: "scan.pdf",
+          content: binary.toString("base64"),
+        },
+        platform: "web",
+      });
+      expect(mockFavaApiClient.ledgers.createLedgerFile).toHaveBeenCalled();
+    });
   });
 
   describe("updateLedgerFile", () => {
@@ -1581,6 +1634,32 @@ describe("LedgerWorkflow", () => {
           platform: "web",
         }),
       ).rejects.toThrow(OperationNotAllowedError);
+    });
+
+    // w23/081: a replacement is all new text.
+    it("refuses a replacement holding an amount past 28 digits", async () => {
+      const text = [
+        '2021-01-02 * "raw"',
+        "  Assets:Cash  9999999999999999999999999999.99 USD",
+        "  Equity:Initial",
+        "",
+      ].join("\n");
+      await expect(
+        workflow.updateLedgerFile({
+          identity: IDENTITY,
+          ledgerId,
+          input: {
+            path: "raw.bean",
+            content: Buffer.from(text, "utf8").toString("base64"),
+            sha: "abc123",
+          },
+          platform: "web",
+        }),
+      ).rejects.toMatchObject({
+        category: "BAD_USER_INPUT",
+        message: expect.stringContaining("more than 28 significant digits"),
+      });
+      expect(mockFavaApiClient.ledgers.updateLedgerFile).not.toHaveBeenCalled();
     });
   });
 

@@ -700,3 +700,70 @@ it("allows MCP to shrink an already oversized file to the exact byte limit", asy
     await f.close();
   }
 });
+
+/**
+ * w23/081. An amount past the engine's 28 digits reads back rounded with no
+ * check failing, so every file-write surface refuses it in the new text —
+ * while 28-digit and ordinary amounts still commit.
+ */
+describe.each<Surface>(["rest", "gql", "mcp"])(
+  "amounts past 28 digits via %s",
+  (surface) => {
+    const LONG_TXN = [
+      '2021-01-02 * "raw"',
+      "  Assets:Cash  999999999999999999999999999.99 USD",
+      "  Equity:Initial",
+      "",
+    ].join("\n");
+    const FINE_TXN = [
+      '2021-01-02 * "ok"',
+      "  Assets:Cash  99999999999999999999999999.99 USD",
+      "  Equity:Initial",
+      "",
+    ].join("\n");
+
+    it("refuses a create holding one, committing nothing", async () => {
+      const f = await fixture();
+      try {
+        expect(await f.write(surface, LONG_TXN)).toMatchObject({
+          ok: false,
+          code: "BAD_USER_INPUT",
+        });
+        expect(f.state.clients).toBe(0);
+        expect(f.files.size).toBe(0);
+        expect(f.commits).toHaveLength(0);
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("refuses a replacement holding one, leaving the file", async () => {
+      const original = "; previous\n";
+      const f = await fixture({ "existing.bean": original });
+      try {
+        expect(await f.write(surface, LONG_TXN, true)).toMatchObject({
+          ok: false,
+          code: "BAD_USER_INPUT",
+        });
+        expect(f.files.get("existing.bean")).toEqual({
+          content: original,
+          sha: "initial-existing.bean",
+        });
+        expect(f.commits).toHaveLength(0);
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("still creates a file with 28-digit and ordinary amounts", async () => {
+      const f = await fixture();
+      try {
+        expect(await f.write(surface, FINE_TXN)).toMatchObject({ ok: true });
+        expect(f.files.get("new.bean")?.content === FINE_TXN).toBe(true);
+        expect(f.commits).toHaveLength(1);
+      } finally {
+        await f.close();
+      }
+    });
+  },
+);

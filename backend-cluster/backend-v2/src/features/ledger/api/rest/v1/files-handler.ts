@@ -1,5 +1,6 @@
 import { z } from "@/shared/zod-openapi-setup";
 import { NotFoundError } from "@/shared/errors";
+import { assertAmountsFitEngineDecimal } from "@/features/ledger/utils/engine-decimal";
 import { ledgerIdOf, ledgerPathSchema } from "./schemas";
 import { json } from "@/server/rest/v1-schemas";
 import { v1Route } from "@/server/rest/v1-route";
@@ -154,6 +155,8 @@ export const FILE_ROUTES = [
       200: json("The commit succeeded", commitAckSchema),
     },
     handler: async ({ layers }, { identity, params, body }) => {
+      // The whole content is new text on a create-or-replace PUT (w23/081).
+      assertAmountsFitEngineDecimal(body.content);
       await layers.services.ledgerRepo.changeFiles({
         ledgerId: ledgerIdOf(params),
         identity,

@@ -20,6 +20,7 @@ import {
 } from "./write-validation";
 import { unifiedDiff } from "@/shared/unified-diff";
 import { assertWritableText } from "@/shared/file-content";
+import { assertAmountsFitEngineDecimal } from "@/features/ledger/utils/engine-decimal";
 
 /** Commits one edit call makes before a lost race is the caller's (w23/017). */
 const MAX_COMMIT_ATTEMPTS = 3;
@@ -286,6 +287,15 @@ export async function executeEditLedgerFiles(
         path: normalizeAgentRepoPath(file.path),
       }));
       assertFoldable(normalizedFiles);
+      // Only the new text is checked: an untouched long literal already in
+      // the file is the projection's to report, not this edit's (w23/081).
+      for (const file of normalizedFiles) {
+        if (file.operation === "create" || file.operation === "replace") {
+          assertAmountsFitEngineDecimal(file.content);
+        } else if (file.operation === "update") {
+          assertAmountsFitEngineDecimal(file.new_string);
+        }
+      }
       const pathsToFetch = [
         ...new Set(
           normalizedFiles

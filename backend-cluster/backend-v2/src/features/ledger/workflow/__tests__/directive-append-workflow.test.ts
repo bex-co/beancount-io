@@ -426,6 +426,37 @@ describe("DirectiveAppendWorkflow", () => {
     expect(ledgerRepo.getFilesContent).not.toHaveBeenCalled();
   });
 
+  // w23/081: the projected bean-check runs the engine, which rounds instead
+  // of failing, so a 29-digit amount would commit and read back changed.
+  it.each([false, true])(
+    "refuses an amount past 28 digits before reading anything (dryRun %p)",
+    async (dryRun) => {
+      const { workflow, ledgerRepo } = fixture({
+        files: { "main.bean": "" },
+      });
+      const text = [
+        '2021-01-02 * "raw"',
+        "  Assets:Cash  999999999999999999999999999.99 USD",
+        "  Equity:Initial",
+        "",
+      ].join("\n");
+      await expect(
+        workflow.appendDirectiveText({
+          identity: IDENTITY,
+          ledgerId: LEDGER_ID,
+          input: { text, dryRun },
+        }),
+      ).rejects.toMatchObject({
+        category: "BAD_USER_INPUT",
+        message: expect.stringContaining(
+          "999999999999999999999999999.99 has more than 28 significant digits",
+        ),
+      });
+      expect(ledgerRepo.getFilesContent).not.toHaveBeenCalled();
+      expect(ledgerRepo.changeGeneratedFiles).not.toHaveBeenCalled();
+    },
+  );
+
   it("reads every routed file in one batched call", async () => {
     const { workflow, ledgerRepo } = fixture({
       files: { "main.bean": "", "txns/2026.bean": "" },

@@ -1,3 +1,4 @@
+import { isUtf8 } from "buffer";
 import {
   assertNoPortableTwin,
   listingOf,
@@ -8,6 +9,7 @@ import type {
   LegacyJournalResult,
 } from "./ledger-workflow.types";
 import { resolveLegacyLedgerId } from "@/features/ledger/utils/resolve-legacy-ledger";
+import { assertAmountsFitEngineDecimal } from "@/features/ledger/utils/engine-decimal";
 import type { BeancountOptionsPublic } from "@/foundation/fava";
 import { type AppConfig } from "@/config/config";
 import { type DbExecutor } from "@/drizzle/drizzle";
@@ -398,6 +400,17 @@ function assertSearchArgs(args: SearchLedgersParams): void {
   if (order !== undefined && order !== "asc" && order !== "desc") {
     throw new BadUserInputError('order must be "asc" or "desc"', "order");
   }
+}
+
+/**
+ * Refuse file text holding an amount past the engine's 28 digits (w23/081).
+ * These mutations also carry binary uploads (receipt PDFs from the file
+ * uploader), which never reach the engine as amounts and skip the scan.
+ */
+function assertFileTextFitsEngineDecimal(base64Content: string): void {
+  const bytes = Buffer.from(base64Content.replace(/\s/g, ""), "base64");
+  if (!isUtf8(bytes)) return;
+  assertAmountsFitEngineDecimal(bytes.toString("utf-8"));
 }
 
 export class LedgerWorkflow implements ILedgerWorkflow {
@@ -905,6 +918,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     // A new file: its name has to work on every checkout (w23/054).
     assertPortableRepoPath(input.path);
     assertExplicitFileContentSize(input.content, "base64");
+    assertFileTextFitsEngineDecimal(input.content);
     const fileOptions: LedgerCreateFileOptions = {
       path: input.path,
       content: input.content,
@@ -959,6 +973,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     const userId = identity.userId;
     assertSafeRepoPath(input.path);
     assertExplicitFileContentSize(input.content, "base64");
+    assertFileTextFitsEngineDecimal(input.content);
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const fileOptions: LedgerUpdateFileOptions = {
       path: input.path,
