@@ -13,6 +13,9 @@
 
 ## Inbox
 
+- [1008](./1008.md) — Browse ledgers: Load more re-sorts the whole list, so featured open_ledger rows from page 2 jump above rows already on screen
+- [1009](./1009.md) — An empty "Your ledgers" tab says to explore public ledgers but offers no link to do so
+- [1010](./1010.md) — Switching Browse-ledgers tabs briefly shows the previous tab's rows
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window
 - [065](./blocked/065.md) — One early-year entry (e.g. 0050) makes the balance sheet 23,718 monthly points (3 MB) and the app stalls — **blocked:** needs an approach decision (per-pill fetch vs server downsample) and a simulator profile of the stall
 - [180](./blocked/180.md) — Budget actuals use raw prefix match (`Transport` counts `Transportation`), unlike Reports — **blocked:** needs an owner decision between component matching on the server (a Fava break) and a per-account breakdown for the client
