@@ -182,6 +182,17 @@ atomic replace, answering `"written": 1`. An edit that lands while the write
 runs is refused as `conflict`. A request that changes nothing answers
 `"written": 0` with `"noop": true`.
 
+`--type transactions` carries `rows` of the single-row shape and answers one
+JSON object per row: `{"rows": [{"row", "id", "status", ...}], "diff", ...}`,
+where a row is `ok` (with its `target`, `lineno`, `changes`, and own `diff`),
+`unchanged` (it already matches), or `rejected` (with a `reason`). Unlike `add
+transactions`, there is no `--partial`: valid rows always write and rejected
+rows never abort them. The exit status is still 1 whenever any row was
+rejected — the documented partial-failure code — with `written`, zero-based
+`written_rows` and `rejected_rows`, and `unchanged_rows` in the result, as
+`add` reports. A preview answers every row's status with exit 0 even when some
+are rejected, so the caller can fix the mapping and preview again.
+
 Two answers are not a plain append. A `price` that the ledger already records
 exactly answers `{"written": 0, "duplicate": true, "source": {...}}` and touches
 nothing; `--strict-read` makes it refuse a ledger that does not load instead of

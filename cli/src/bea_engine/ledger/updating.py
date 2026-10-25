@@ -38,7 +38,7 @@ from bea_engine.ledger.text import (
 )
 from bea_engine.query import format_error
 
-TYPES = ("transaction",)
+TYPES = ("transaction", "transactions")
 
 
 def parse_location(id_text: str) -> tuple[Path, int] | None:
@@ -279,9 +279,19 @@ def _outside_quotes(spans: list[re.Match[str]], position: int) -> bool:
     return all(not (span.start() <= position < span.end()) for span in spans)
 
 
+def _fresh_tags(entry: Any, changes: _Changes) -> list[str]:
+    """The requested tags the entry does not already carry, in request order."""
+    return [tag for tag in dict.fromkeys(changes.tags or []) if tag not in set(entry.tags or ())]
+
+
 def _edit_header(line: str, entry: Any, changes: _Changes) -> str:
-    """The header line with the requested flag, narration and tags applied."""
-    if changes.flag is not None:
+    """The header line with the requested flag, narration and tags applied.
+
+    Byte-identical when nothing about the header changes: an equal flag keeps
+    even the `txn` keyword's spelling, and comment spacing is never normalized
+    as a side effect.
+    """
+    if changes.flag is not None and changes.flag != entry.flag:
         matched = _HEADER_FLAG.match(line)
         if matched is None:  # pragma: no cover - the located entry parsed from this line
             raise protocol.UsageError(
@@ -290,6 +300,7 @@ def _edit_header(line: str, entry: Any, changes: _Changes) -> str:
             )
         line = f"{matched.group(1)}{changes.flag}{matched.group(3)}"
     body, comment = _split_comment(line)
+    before = body
     spans = list(_QUOTED.finditer(body))
     if changes.has_narration:
         assert changes.narration is not None
@@ -307,7 +318,7 @@ def _edit_header(line: str, entry: Any, changes: _Changes) -> str:
             body = body[:at].rstrip() + f" {quoted}" + body[at:]
             spans = list(_QUOTED.finditer(body))
     if changes.tags:
-        fresh = [tag for tag in dict.fromkeys(changes.tags) if tag not in set(entry.tags or ())]
+        fresh = _fresh_tags(entry, changes)
         if fresh:
             tail = _TAG_LINK_TAIL.search(body)
             if tail is not None and not _outside_quotes(spans, tail.start()):
@@ -317,6 +328,8 @@ def _edit_header(line: str, entry: Any, changes: _Changes) -> str:
             at = tail.end() if tail is not None else len(body)
             addition = "".join(f" #{tag}" for tag in fresh)
             body = body[:at].rstrip() + addition + body[at:]
+    if body == before:
+        return line
     return body + (f" {comment}" if comment else "")
 
 
@@ -366,20 +379,51 @@ def _retarget_accounts(entry: Any, options: dict[str, Any], changes: _Changes) -
     )
 
 
-def _edit_postings(lines: list[str], start: int, end: int, old: str, new: str) -> list[str]:
-    """The span lines with every posting to `old` retargeted to `new`.
+def _summarize(entry: Any, options: dict[str, Any], changes: _Changes) -> list[str]:
+    """The row's changes as `field: old → new` phrases, for the batch table."""
+    summary = []
+    if changes.account is not None:
+        old, new = _retarget_accounts(entry, options, changes)
+        if old != new:
+            summary.append(f"account: {old} → {new}")
+    if changes.flag is not None and changes.flag != entry.flag:
+        summary.append(f"flag: {entry.flag} → {changes.flag}")
+    fresh = _fresh_tags(entry, changes) if changes.tags else []
+    if fresh:
+        summary.append(f"tags: {', '.join(f'+{tag}' for tag in fresh)}")
+    if changes.has_narration and changes.narration != entry.narration:
+        before = entry.narration if entry.narration is not None else "—"
+        summary.append(f"narration: {before!r} → {changes.narration!r}")
+    return summary
 
-    Only the account token is swapped; indentation, flags, amounts and
-    alignment stay byte-identical. Metadata lines can never match: their first
-    token ends with a colon, which no account does.
+
+def plan_lines(
+    lines: list[str], entries: list[Any], options: dict[str, Any], entry: Any, changes: _Changes
+) -> dict[int, str]:
+    """The entry's rewritten lines by 0-based index; every other line stays verbatim.
+
+    One row's plan, computed against the file as read: batch rows plan against
+    the same original and combine, which is sound because entry spans never
+    overlap and no edit adds or removes a line.
     """
-    edited = list(lines)
-    for number in range(start - 1, min(end, len(lines))):
-        matched = _POSTING_LINE.match(lines[number])
-        if matched is None or matched.group(3) != old or matched.group(3).endswith(":"):
-            continue
-        edited[number] = f"{matched.group(1)}{matched.group(2)}{new}{matched.group(4)}"
-    return edited
+    start, end = entry_span(entries, entry, len(lines))
+    planned: dict[int, str] = {}
+    if changes.flag is not None or changes.has_narration or changes.tags:
+        rewritten = _edit_header(lines[start - 1], entry, changes)
+        if rewritten != lines[start - 1]:
+            planned[start - 1] = rewritten
+    if changes.account is not None:
+        old, new = _retarget_accounts(entry, options, changes)
+        if old != new:
+            # Only the account token is swapped; indentation, flags, amounts
+            # and alignment stay byte-identical. Metadata lines can never
+            # match: their first token ends with a colon, which no account does.
+            for number in range(start - 1, min(end, len(lines))):
+                matched = _POSTING_LINE.match(lines[number])
+                if matched is None or matched.group(3) != old or matched.group(3).endswith(":"):
+                    continue
+                planned[number] = f"{matched.group(1)}{matched.group(2)}{new}{matched.group(4)}"
+    return planned
 
 
 def _decode(target: Path, original: bytes) -> tuple[str, bool]:
@@ -412,16 +456,12 @@ def plan_rewrite(
     """
     text, bom = _decode(target, original)
     lines = text.split("\n")
-    start, end = entry_span(entries, entry, len(lines))
-    edited = list(lines)
-    if changes.flag is not None or changes.has_narration or changes.tags:
-        edited[start - 1] = _edit_header(lines[start - 1], entry, changes)
-    if changes.account is not None:
-        old, new = _retarget_accounts(entry, options, changes)
-        if old != new:
-            edited = _edit_postings(edited, start, end, old, new)
-    if edited == lines:
+    planned = plan_lines(lines, entries, options, entry, changes)
+    if not planned:
         return text, ""
+    edited = list(lines)
+    for number, rewritten in planned.items():
+        edited[number] = rewritten
     new_text = "\n".join(edited)
     diff = "".join(
         difflib.unified_diff(
@@ -457,6 +497,437 @@ def _notes(entry: Any, options: dict[str, Any], changes: _Changes, snapshot: led
     return ledger_write.respelled_account_notes([new], snapshot)
 
 
+@dataclass
+class _RowPlan:
+    """One batch row, resolved to its entry and planned against the file as read."""
+
+    index: int
+    changes: _Changes
+    entry: Any
+    target: Path
+    lineno: int
+    edits: dict[int, str]
+    summary: list[str]
+
+
+def _row_reason(index: int, exc: Exception) -> str:
+    """`Row N: ...` for a row's failure.
+
+    The single-row refusals end in "Nothing was written", which a batch must
+    not repeat: its other rows may still write.
+    """
+    return f"Row {index + 1}: {str(exc).removesuffix(' Nothing was written.')}"
+
+
+def _plan_rows(
+    entries: list[Any], options: dict[str, Any], rows: list[Any], file_lines: dict[Path, list[str]]
+) -> tuple[list[_RowPlan], list[str], list[int], dict[int, str], bool]:
+    """Resolve and plan every row.
+
+    Returns the plans, the `Row N` detail lines, the rejected 0-based indexes,
+    the per-row reasons, and whether any row failed its own shape (which earns
+    the answer an example row). A row that resolves but changes nothing plans
+    to no edits; it reports `unchanged`, never rejected.
+    """
+    plans: list[_RowPlan] = []
+    rejected: list[str] = []
+    rejected_rows: list[int] = []
+    reasons: dict[int, str] = {}
+    schema_rejects = False
+    seen: dict[tuple[str, int], int] = {}
+
+    def refuse(index: int, reason: str, *, schema: bool = False) -> None:
+        rejected.append(reason)
+        rejected_rows.append(index)
+        reasons[index] = reason
+        nonlocal schema_rejects
+        schema_rejects = schema_rejects or schema
+
+    for index, item in enumerate(rows):
+        if not isinstance(item, dict):
+            refuse(index, f"Row {index + 1} must be an object with 'id' and the fields to change.", schema=True)
+            continue
+        try:
+            changes = _validate_request(item)
+        except protocol.UsageError as exc:
+            refuse(index, _row_reason(index, exc), schema=True)
+            continue
+        try:
+            entry = locate_transaction(entries, changes.id)
+        except protocol.UsageError as exc:
+            refuse(index, _row_reason(index, exc))
+            continue
+        key = (str((entry.meta or {})["filename"]), int((entry.meta or {})["lineno"]))
+        if key in seen:
+            refuse(
+                index,
+                f"Row {index + 1} targets {key[0]}:{key[1]}, already targeted by row {seen[key] + 1}; "
+                "merge them into one row.",
+            )
+            continue
+        seen[key] = index
+        try:
+            summary = _summarize(entry, options, changes)
+        except protocol.UsageError as exc:
+            refuse(index, _row_reason(index, exc))
+            continue
+        target = Path(key[0])
+        edits = plan_lines(file_lines[target], entries, options, entry, changes)
+        plans.append(
+            _RowPlan(
+                index=index, changes=changes, entry=entry, target=target, lineno=key[1], edits=edits, summary=summary
+            )
+        )
+    return plans, rejected, rejected_rows, reasons, schema_rejects
+
+
+def _merge_edits(plans: list[_RowPlan]) -> dict[int, str]:
+    """Every planned line rewrite, by 0-based index; spans never overlap, so none collide."""
+    return {number: line for plan in plans for number, line in plan.edits.items()}
+
+
+def _combined_text(lines: list[str], edits: dict[int, str]) -> str:
+    """The file's lines with every planned rewrite applied."""
+    rewritten = list(lines)
+    for number, new_line in edits.items():
+        rewritten[number] = new_line
+    return "\n".join(rewritten)
+
+
+def _file_diff(text: str, new_text: str, target: Path) -> str:
+    """One file's unified diff, in the shape the import preview answers."""
+    return "".join(
+        difflib.unified_diff(text.splitlines(True), new_text.splitlines(True), fromfile=str(target), tofile=str(target))
+    )
+
+
+def _validate_text(
+    target: Path, snapshot: ledger_write.LedgerSnapshot, new_text: str, *, allow_errors: bool
+) -> list[str]:
+    """The warnings for a candidate file content, raising what it would break."""
+    with ledger_write.candidate_file(target, new_text) as candidate:
+        return ledger_write.validate_candidate(candidate, target, allow_errors=allow_errors, snapshot=snapshot)
+
+
+def _validate_plans(
+    plans: list[_RowPlan],
+    file_lines: dict[Path, list[str]],
+    snapshot: ledger_write.LedgerSnapshot,
+    rejected: list[str],
+    rejected_rows: list[int],
+    reasons: dict[int, str],
+    *,
+    allow_errors: bool,
+) -> dict[Path, list[_RowPlan]]:
+    """Validate every file's combined rewrite, attributing failures to rows.
+
+    Each file's rows validate together first: one load per file, not per row.
+    When a file's combination fails, its rows validate alone so the answer
+    names the guilty ones; survivors that pass alone but fail together are
+    rejected with the combined error and a way forward, never silently dropped.
+    Validation details are already `file:line` located, so they join the
+    answer verbatim beneath their `Row N` line.
+    """
+    by_file: dict[Path, list[_RowPlan]] = {}
+    for plan in plans:
+        by_file.setdefault(plan.target, []).append(plan)
+    valid: dict[Path, list[_RowPlan]] = {}
+    for target in sorted(by_file):
+        file_plans = [plan for plan in by_file[target] if plan.edits]
+        if not file_plans:
+            continue
+        combined = _combined_text(file_lines[target], _merge_edits(file_plans))
+        try:
+            _validate_text(target, snapshot, combined, allow_errors=allow_errors)
+        except protocol.LedgerError:
+            survivors: list[_RowPlan] = []
+            for plan in file_plans:
+                single = _combined_text(file_lines[target], plan.edits)
+                try:
+                    _validate_text(target, snapshot, single, allow_errors=allow_errors)
+                except protocol.LedgerError as exc:
+                    reason = _row_reason(plan.index, exc)
+                    rejected.append(reason)
+                    rejected.extend(exc.details)
+                    rejected_rows.append(plan.index)
+                    reasons[plan.index] = reason
+                else:
+                    survivors.append(plan)
+            if not survivors:
+                continue
+            combined = _combined_text(file_lines[target], _merge_edits(survivors))
+            try:
+                _validate_text(target, snapshot, combined, allow_errors=allow_errors)
+            except protocol.LedgerError as exc:
+                together = ", ".join(f"row {plan.index + 1}" for plan in survivors)
+                for plan in survivors:
+                    reason = (
+                        f"Row {plan.index + 1}: valid alone, but {together} together "
+                        f"would leave the ledger invalid: {exc}"
+                    )
+                    rejected.append(reason)
+                    rejected_rows.append(plan.index)
+                    reasons[plan.index] = reason
+                rejected.extend(exc.details)
+            else:
+                valid[target] = survivors
+        else:
+            valid[target] = file_plans
+    return valid
+
+
+def _row_payload(
+    rows: list[Any],
+    plans: list[_RowPlan],
+    reasons: dict[int, str],
+    file_texts: dict[Path, str],
+    file_lines: dict[Path, list[str]],
+) -> list[dict[str, Any]]:
+    """Every row's result, in input order: one JSON object per row."""
+    by_index = {plan.index: plan for plan in plans}
+    payload = []
+    for index, item in enumerate(rows):
+        raw_id = item.get("id") if isinstance(item, dict) else None
+        if index in reasons:
+            payload.append({"row": index + 1, "id": raw_id, "status": "rejected", "reason": reasons[index]})
+            continue
+        plan = by_index[index]
+        if not plan.edits:
+            payload.append(
+                {
+                    "row": index + 1,
+                    "id": plan.changes.id,
+                    "status": "unchanged",
+                    "target": str(plan.target),
+                    "lineno": plan.lineno,
+                    "changes": [],
+                    "diff": "",
+                    "noop": True,
+                }
+            )
+            continue
+        single = _combined_text(file_lines[plan.target], plan.edits)
+        payload.append(
+            {
+                "row": index + 1,
+                "id": plan.changes.id,
+                "status": "ok",
+                "target": str(plan.target),
+                "lineno": plan.lineno,
+                "changes": plan.summary,
+                "diff": _file_diff(file_texts[plan.target], single, plan.target),
+            }
+        )
+    return payload
+
+
+def _transactions(file: Path, request: dict[str, Any], *, apply: bool, allow_errors: bool) -> dict[str, Any]:
+    """Preview or apply a batch of rows, writing every valid row.
+
+    Unlike `add transactions`, there is no `--partial`: valid rows always
+    write and rejected rows never abort them. The exit status is still nonzero
+    whenever any row was rejected — the documented partial-failure code, 1 —
+    with `written_rows` and `rejected_rows` in the result, as `add` reports.
+    """
+    from bea_engine import managed_load
+
+    rows = request.get("rows")
+    if not isinstance(rows, list):
+        raise protocol.UsageError("'rows' must be an array of update rows. Nothing was written.")
+    if not rows:
+        raise protocol.UsageError("No rows to update. Nothing was written.")
+
+    def load(snapshot: ledger_write.LedgerSnapshot | None = None) -> tuple[list[Any], dict[str, Any]]:
+        entries, errors, options = managed_load.load_file(file, snapshot=snapshot)
+        _gate_load_errors(errors, file, allow_errors=allow_errors)
+        return list(entries), options
+
+    def files(snapshot: ledger_write.LedgerSnapshot) -> tuple[dict[Path, str], dict[Path, list[str]], dict[Path, bool]]:
+        texts, lines, marks = {}, {}, {}
+        for path, content in snapshot.contents.items():
+            if snapshot.stats[path] is None:
+                continue
+            text, bom = _decode(path, content)
+            texts[path] = text
+            lines[path] = text.split("\n")
+            marks[path] = bom
+        return texts, lines, marks
+
+    def report(
+        row_payload: list[dict[str, Any]],
+        diff: str,
+        *,
+        written: int,
+        rejected_rows: list[int],
+        unchanged_rows: list[int],
+        warnings: list[str],
+    ) -> dict[str, Any]:
+        return {
+            "rows": row_payload,
+            "diff": diff,
+            "ready": sum(1 for row in row_payload if row["status"] == "ok"),
+            "unchanged": len(unchanged_rows),
+            "rejected": len(rejected_rows),
+            "written": written,
+            "warnings": warnings,
+        }
+
+    def refuse_partial(
+        row_payload: list[dict[str, Any]],
+        rejected: list[str],
+        *,
+        written: int,
+        written_rows: list[int],
+        rejected_rows: list[int],
+        unchanged_rows: list[int],
+        schema_rejects: bool,
+    ) -> protocol.LedgerError:
+        count = len(rejected_rows)
+        noun = "row was" if count == 1 else "rows were"
+        total = len(rows)
+        message = f"Updated {written} of {total} transactions; {count} {noun} rejected."
+        if unchanged_rows:
+            alone = "was" if len(unchanged_rows) == 1 else "were"
+            message += f" {len(unchanged_rows)} {alone} already up to date."
+        details = list(rejected)
+        if schema_rejects:
+            details.append(
+                'Example row: {"id": "9f2c", "account": "Expenses:Groceries", "flag": "*"}. '
+                "Use bea update transactions --help for the full row shape."
+            )
+        return protocol.LedgerError(
+            message,
+            details=details,
+            result={
+                "rows": row_payload,
+                "written": written,
+                "written_rows": sorted(written_rows),
+                "rejected_rows": rejected_rows,
+                "unchanged_rows": sorted(unchanged_rows),
+            },
+        )
+
+    if not apply:
+        entries, options = load()
+        snapshot = ledger_write.LedgerSnapshot.capture(file)
+        file_texts, file_lines, _ = files(snapshot)
+        plans, rejected, rejected_rows, reasons, schema_rejects = _plan_rows(entries, options, rows, file_lines)
+        valid = _validate_plans(
+            plans, file_lines, snapshot, rejected, rejected_rows, reasons, allow_errors=allow_errors
+        )
+        diffs = "".join(
+            _file_diff(
+                file_texts[target],
+                _combined_text(file_lines[target], _merge_edits(valid[target])),
+                target,
+            )
+            for target in sorted(valid)
+        )
+        notes: list[str] = []
+        for plan in plans:
+            if plan.edits and plan.index not in reasons:
+                notes.extend(_notes(plan.entry, options, plan.changes, snapshot))
+        row_payload = _row_payload(rows, plans, reasons, file_texts, file_lines)
+        unchanged_rows = [row["row"] - 1 for row in row_payload if row["status"] == "unchanged"]
+        return report(
+            row_payload,
+            diffs,
+            written=0,
+            rejected_rows=rejected_rows,
+            unchanged_rows=unchanged_rows,
+            warnings=notes,
+        )
+
+    with ledger_write.locked_graph(file, file, deciding=True) as snapshot:
+        entries, options = load(snapshot)
+        file_texts, file_lines, marks = files(snapshot)
+        plans, rejected, rejected_rows, reasons, schema_rejects = _plan_rows(entries, options, rows, file_lines)
+        # Every file validates before any file writes, so a validation failure
+        # never leaves half the batch behind.
+        valid = _validate_plans(
+            plans, file_lines, snapshot, rejected, rejected_rows, reasons, allow_errors=allow_errors
+        )
+        for directory in dict.fromkeys([*(path.parent for path in snapshot.contents)]):
+            ledger_write.sweep_abandoned_candidates(directory)
+        written_rows: list[int] = []
+        warnings: list[str] = []
+        for target in sorted(valid):
+            # Re-read the bytes each previous replace left: the next file's
+            # plan is unaffected (disjoint spans, no line added or removed),
+            # but its validation and compare must run against the ledger as it
+            # stands, with every earlier file's retargets already in it.
+            snapshot = ledger_write.LedgerSnapshot.capture(file)
+            file_texts, file_lines, marks = files(snapshot)
+            file_plans = valid[target]
+            combined = _combined_text(file_lines[target], _merge_edits(file_plans))
+            original = snapshot.require_target(target)
+            try:
+                original_stat = target.stat()
+            except OSError:
+                raise protocol.ConflictError(
+                    f"The ledger changed during the operation: {target}. Nothing was written; retry."
+                ) from None
+            ledger_write.require_writable(target)
+            new_text = ("\ufeff" if marks[target] else "") + combined
+            with ledger_write.candidate_file(target, new_text) as candidate:
+                try:
+                    warnings.extend(
+                        ledger_write.validate_candidate(candidate, target, allow_errors=allow_errors, snapshot=snapshot)
+                    )
+                except protocol.LedgerError as exc:
+                    for plan in file_plans:
+                        reason = _row_reason(plan.index, exc)
+                        rejected.append(reason)
+                        rejected_rows.append(plan.index)
+                        reasons[plan.index] = reason
+                    rejected.extend(exc.details)
+                    continue
+                try:
+                    snapshot.verify()
+                    ledger_write.replace_checked(target, candidate, original, original_stat)
+                except protocol.ConflictError as exc:
+                    raise protocol.ConflictError(
+                        f"{exc} {len(written_rows)} of {len(rows)} rows were already written; retry to apply the rest.",
+                        result={
+                            "written": len(written_rows),
+                            "written_rows": sorted(written_rows),
+                            "rejected_rows": rejected_rows,
+                        },
+                    ) from exc
+            written_rows.extend(plan.index for plan in file_plans)
+            for plan in file_plans:
+                warnings.extend(_notes(plan.entry, options, plan.changes, snapshot))
+        row_payload = _row_payload(rows, plans, reasons, file_texts, file_lines)
+        unchanged_rows = [row["row"] - 1 for row in row_payload if row["status"] == "unchanged"]
+        diffs = "".join(
+            _file_diff(
+                file_texts[target],
+                _combined_text(file_lines[target], _merge_edits(valid[target])),
+                target,
+            )
+            for target in sorted(valid)
+            if all(plan.index in written_rows for plan in valid[target])
+        )
+        if rejected_rows:
+            raise refuse_partial(
+                row_payload,
+                rejected,
+                written=len(written_rows),
+                written_rows=written_rows,
+                rejected_rows=rejected_rows,
+                unchanged_rows=unchanged_rows,
+                schema_rejects=schema_rejects,
+            )
+        return report(
+            row_payload,
+            diffs,
+            written=len(written_rows),
+            rejected_rows=[],
+            unchanged_rows=unchanged_rows,
+            warnings=warnings,
+        )
+
+
 def answer(
     file: Path,
     directive_type: str,
@@ -466,6 +937,8 @@ def answer(
     allow_errors: bool = False,
 ) -> dict[str, Any]:
     """Preview or apply one entry's update, and report what changed."""
+    if directive_type == "transactions":
+        return _transactions(file, request, apply=apply, allow_errors=allow_errors)
     if directive_type != "transaction":
         raise protocol.UsageError(f"Unknown directive type {directive_type!r}. Use one of: {', '.join(TYPES)}.")
     from bea_engine import managed_load

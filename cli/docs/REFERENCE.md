@@ -669,6 +669,20 @@ Usage: bea update transaction [OPTIONS]
 | `--apply` | flag |  | Rewrite the entry; without it, preview the diff only |
 | `--allow-errors` | flag |  | Allow semantic ledger errors; syntax and pad account references must be valid |
 
+### `bea update transactions`
+
+Recategorize a batch of transactions from a JSON or CSV mapping.
+
+```text
+Usage: bea update transactions [OPTIONS]
+```
+
+| Option | Type | Default | Help |
+| --- | --- | --- | --- |
+| `--from` | path | required | JSON or CSV file mapping ids to changes; - reads stdin |
+| `--apply` | flag |  | Rewrite the entries; without it, preview the diff only |
+| `--allow-errors` | flag |  | Allow semantic ledger errors; syntax and pad account references must be valid |
+
 ### `bea list note`
 
 List note directives from a .bean file.
