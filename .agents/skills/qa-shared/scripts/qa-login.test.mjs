@@ -3,6 +3,7 @@ import { spawn } from "node:child_process";
 import { once } from "node:events";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import http from "node:http";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
@@ -10,9 +11,18 @@ const helper = fileURLToPath(new URL("./qa-login.mjs", import.meta.url));
 const email = "qa-fixture@example.test";
 const password = "synthetic credential for helper tests";
 const token = "synthetic-session-value";
+const scratchRoot = new URL("../../../../.tmp/", import.meta.url);
+await mkdir(scratchRoot, { recursive: true });
+// The helper prefers ./.env, so tests run in an empty directory: a real ./.env
+// at the repo root must never leak into assertions.
+const hermeticCwd = await mkdtemp(
+  fileURLToPath(new URL("qa-login-cwd-", scratchRoot)),
+);
+test.after(() => rm(hermeticCwd, { recursive: true, force: true }));
 
-function start(args, credentials = true) {
+function start(args, credentials = true, cwd = hermeticCwd) {
   const child = spawn(process.execPath, [helper, ...args], {
+    cwd,
     env: {
       ...process.env,
       QA_EMAIL: credentials ? email : "",
@@ -154,4 +164,52 @@ test("an explicit package file selects its own account without ambient fallback"
   assert.equal((await incomplete.closed)[0], 2);
   assert.equal(submitted, undefined);
   assert.equal(incomplete.output.stdout, "");
+});
+
+test("./.env wins over ambient variables and a half-supplied pair fails", async (t) => {
+  const directory = await mkdtemp(
+    fileURLToPath(new URL("qa-env-dotenv-", scratchRoot)),
+  );
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  let submitted;
+  const server = http.createServer(async (request, response) => {
+    let body = "";
+    for await (const chunk of request) body += chunk;
+    submitted = JSON.parse(body).variables;
+    response.end(
+      JSON.stringify({ errors: [{ message: "fixture rejection" }] }),
+    );
+  });
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  t.after(() => server.close());
+  const url = `http://127.0.0.1:${server.address().port}`;
+  const fileEmail = "dotenv-fixture@example.test";
+  const filePassword = "dotenv synthetic account";
+
+  await writeFile(
+    join(directory, ".env"),
+    `QA_EMAIL=${fileEmail}\nQA_PASSWORD="${filePassword}"\n`,
+    { mode: 0o600 },
+  );
+  const preferred = start(["--server-url", url], true, directory);
+  assert.equal((await preferred.closed)[0], 1);
+  assert.deepEqual(submitted, { email: fileEmail, password: filePassword });
+  for (const secret of [fileEmail, filePassword]) {
+    assert.ok(!preferred.output.stdout.includes(secret));
+    assert.ok(!preferred.output.stderr.includes(secret));
+  }
+
+  submitted = undefined;
+  await writeFile(join(directory, ".env"), `QA_EMAIL=${fileEmail}\n`);
+  const partial = start(["--server-url", url], true, directory);
+  assert.equal((await partial.closed)[0], 2);
+  assert.equal(submitted, undefined);
+  assert.equal(partial.output.stdout, "");
+
+  submitted = undefined;
+  await writeFile(join(directory, ".env"), "UNRELATED=1\n");
+  const fallback = start(["--server-url", url], true, directory);
+  assert.equal((await fallback.closed)[0], 1);
+  assert.deepEqual(submitted, { email, password });
 });

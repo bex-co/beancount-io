@@ -34,11 +34,14 @@ use ledger contents and independent calculations as controls.
 
 ## Credentials and real data
 
-Load credentials only inside a helper process from the environment or the
-user-designated environment file. The package defaults are `dashboard/.env` for
-dashboard QA and `mobile/.env` for native QA. Resolve each path in the checkout
-being tested; a missing file is not permission to reuse another package's account.
-Never print, `cat`, source with shell tracing,
+Load credentials only inside a helper process, preferring the repo-root
+`./.env` file: run helpers from the repo root with no file flag, and when
+`./.env` names the needed variables those win over the ambient environment.
+An explicit `--env-file` / `--credentials-file` still wins over both, for
+runs that need a different account than the shared one. A file that names
+only half of a multi-variable credential fails instead of mixing accounts;
+an `./.env` that names none of the needed variables leaves the ambient
+environment alone. Never print, `cat`, source with shell tracing,
 or paste the values into a tool call. Ask for the file path or missing variable
 names, never for the password in chat. Do not search unrelated credential stores.
 
@@ -46,12 +49,14 @@ Keep password submission outside tools that record request bodies or echo code.
 From the repo root, use the bundled helper (Node >=20.12):
 
 ```sh
-node .agents/skills/qa-shared/scripts/qa-login.mjs --env-file /path/to/.env
+node .agents/skills/qa-shared/scripts/qa-login.mjs
 ```
 
-Omit `--env-file` when the variables are already in the environment and no package
-file is selected. An explicit file supplies both QA variables and overrides any
-inherited account; an incomplete file fails instead of mixing credentials. For a
+With no flag the helper prefers `./.env` at the repo root, then the ambient
+environment. Pass `--env-file /path/to/.env` only for a run that needs a
+different account: an explicit file supplies both QA variables and overrides
+`./.env` and any inherited account, and an incomplete file fails instead of
+mixing credentials. For a
 user-selected deployment, pass its `--server-url`; the default is
 `https://beancount.io/`. It authenticates through GraphQL, retains the session
 cookie in memory, and prints only a one-use loopback URL that expires after 60s.

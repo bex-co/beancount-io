@@ -11,9 +11,14 @@ import test from "node:test";
 const helper = fileURLToPath(new URL("./qa-mcp.mjs", import.meta.url));
 const token = "bcio_synthetic_helper_test_value_0123456789";
 const otherToken = "bcio_from_file_only_9876543210";
+// The helper prefers ./.env, so tests run in an empty directory: a real ./.env
+// at the repo root must never leak into assertions.
+const hermeticCwd = await mkdtemp(join(tmpdir(), "qa-mcp-cwd-"));
+test.after(() => rm(hermeticCwd, { recursive: true, force: true }));
 
-function run(args, env = { QA_MCP_TOKEN: token }) {
+function run(args, env = { QA_MCP_TOKEN: token }, cwd = hermeticCwd) {
   const child = spawn(process.execPath, [helper, ...args], {
+    cwd,
     env: {
       ...Object.fromEntries(
         Object.entries(process.env).filter(
@@ -189,6 +194,45 @@ test("--credentials-file wins over the ambient token and must be complete", asyn
     ]);
     assert.equal(missing.code, 2);
     assert.match(missing.stderr, /Cannot load/);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+    await server.close();
+  }
+});
+
+test("./.env wins over the ambient token and yields to an explicit file", async () => {
+  const server = await startServer();
+  const dir = await mkdtemp(join(tmpdir(), "qa-mcp-dotenv-"));
+  try {
+    const preferred = "bcio_preferred_from_dotenv_24680";
+    await writeFile(join(dir, ".env"), `QA_MCP_TOKEN=${preferred}\n`);
+    const result = await run(
+      ["--url", `${server.base}/json`, "tools-list"],
+      { QA_MCP_TOKEN: token },
+      dir,
+    );
+    assert.equal(result.code, 0, result.stderr);
+    assert.equal(server.seen.at(-1).headers.authorization, `Bearer ${preferred}`);
+    assert.doesNotMatch(result.stdout, new RegExp(preferred));
+
+    const envFile = join(dir, "mcp.env");
+    await writeFile(envFile, `BEANCOUNT_MCP_TOKEN=${otherToken}\n`);
+    const explicit = await run(
+      ["--credentials-file", envFile, "--url", `${server.base}/json`, "tools-list"],
+      { QA_MCP_TOKEN: token },
+      dir,
+    );
+    assert.equal(explicit.code, 0, explicit.stderr);
+    assert.equal(server.seen.at(-1).headers.authorization, `Bearer ${otherToken}`);
+
+    await writeFile(join(dir, ".env"), "UNRELATED=1\n");
+    const fallback = await run(
+      ["--url", `${server.base}/json`, "tools-list"],
+      { QA_MCP_TOKEN: token },
+      dir,
+    );
+    assert.equal(fallback.code, 0, fallback.stderr);
+    assert.equal(server.seen.at(-1).headers.authorization, `Bearer ${token}`);
   } finally {
     await rm(dir, { recursive: true, force: true });
     await server.close();

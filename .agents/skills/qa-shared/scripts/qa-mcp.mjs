@@ -3,7 +3,7 @@
 // process: it is read from the environment or an env file, sent only as a
 // bearer header, and scrubbed from everything this helper prints.
 import { parseArgs, parseEnv } from "node:util";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 const DEFAULT_URL = "https://beancount.io/api-gateway/mcp";
 const DEFAULT_PROTOCOL_VERSION = "2025-11-25";
@@ -30,7 +30,7 @@ commands
 
 options
   --url URL                 endpoint (default ${DEFAULT_URL}; http only on loopback)
-  --credentials-file FILE   read QA_MCP_TOKEN (or BEANCOUNT_MCP_TOKEN) from FILE instead of the environment
+  --credentials-file FILE   read QA_MCP_TOKEN (or BEANCOUNT_MCP_TOKEN) from FILE instead of ./.env or the environment
                             (not --env-file, which Node consumes itself)
   --anonymous               send no credential
   --protocol-version V      MCP-Protocol-Version header (default ${DEFAULT_PROTOCOL_VERSION})
@@ -92,27 +92,41 @@ if (
   fail("Use an HTTPS endpoint, or HTTP loopback for local QA.", 2);
 }
 
-// Credential resolution: an explicit file wins over the ambient environment
-// and must itself be complete; a missing file is an error, not a fallback.
+// Credential resolution: an explicit file wins and must itself be complete; a
+// missing file is an error, not a fallback. Otherwise the repo-root ./.env is
+// preferred: when it names a token that wins over the ambient environment, and
+// when it names none the environment still applies.
+function tokenFrom(source) {
+  for (const name of TOKEN_VARIABLES) {
+    if (source[name]) return source[name];
+  }
+  return "";
+}
 let token = "";
 if (!values.anonymous) {
-  let source = process.env;
   if (values["credentials-file"]) {
+    let source;
     try {
       source = parseEnv(readFileSync(values["credentials-file"], "utf8"));
     } catch {
       fail("Cannot load the MCP environment file; check its path and permissions.", 2);
     }
-  }
-  for (const name of TOKEN_VARIABLES) {
-    if (source[name]) {
-      token = source[name];
-      break;
+    token = tokenFrom(source);
+  } else {
+    if (existsSync("./.env")) {
+      let preferred;
+      try {
+        preferred = parseEnv(readFileSync("./.env", "utf8"));
+      } catch {
+        fail("Cannot parse ./.env; check its format and permissions.", 2);
+      }
+      token = tokenFrom(preferred);
     }
+    if (!token) token = tokenFrom(process.env);
   }
   if (!token) {
     fail(
-      `Set ${TOKEN_VARIABLES.join(" or ")} in the environment or --credentials-file, or pass --anonymous.`,
+      `Set ${TOKEN_VARIABLES.join(" or ")} in ./.env, the environment, or --credentials-file, or pass --anonymous.`,
       2,
     );
   }

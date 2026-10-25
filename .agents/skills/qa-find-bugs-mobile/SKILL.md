@@ -68,10 +68,11 @@ selected server before signing in or writing anything.
 - Prefer `testID` and inspected view bounds. Taps use logical points. Expo MCP
   resizes screenshots, so **do not blindly divide its image coordinates by 3**.
   Determine the native dimensions and capture scale, or use view bounds.
-- Load `QA_EMAIL` / `QA_PASSWORD` from **`mobile/.env`**, unless the user supplies
-  another path. Pass `--env-file mobile/.env` to the shared helper from the repo
-  root (or `--env-file .env` when working inside `mobile/`). Do not reuse the
-  dashboard file implicitly; the two packages may use different QA accounts.
+- Load `QA_EMAIL` / `QA_PASSWORD` from the repo-root **`./.env`**, unless the user
+  supplies another path. Run the shared helper from the repo root with no file
+  flag; pass `--env-file <path>` only when native QA needs a different account
+  than the shared one. Do not reuse another package's account implicitly —
+  when the accounts differ, name the file explicitly.
   Keep the values inside the credential helper. Tap the native
   Sign In action, complete its browser OAuth/PKCE authorization, and verify that
   control returns to the app and survives a relaunch. Never inject a fabricated

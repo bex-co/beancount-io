@@ -3,7 +3,7 @@
 import http from "node:http";
 import { randomBytes } from "node:crypto";
 import { parseArgs, parseEnv } from "node:util";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 
 function fail(message, code = 1) {
@@ -31,9 +31,29 @@ try {
         2,
       );
     }
+  } else if (existsSync("./.env")) {
+    // Preferred default: the repo-root ./.env wins over ambient variables. A
+    // half-supplied pair would mix two accounts, so it fails; an ./.env naming
+    // neither variable leaves the ambient account alone.
+    let preferred;
+    try {
+      preferred = parseEnv(readFileSync("./.env", "utf8"));
+    } catch {
+      fail("Cannot parse ./.env; check its format and permissions.", 2);
+    }
+    if (preferred.QA_EMAIL || preferred.QA_PASSWORD) {
+      if (!preferred.QA_EMAIL || !preferred.QA_PASSWORD) {
+        fail(
+          "./.env names only half the QA pair; set both QA_EMAIL and QA_PASSWORD there or remove them so the environment applies.",
+          2,
+        );
+      }
+      process.env.QA_EMAIL = preferred.QA_EMAIL;
+      process.env.QA_PASSWORD = preferred.QA_PASSWORD;
+    }
   }
   if (!process.env.QA_EMAIL || !process.env.QA_PASSWORD) {
-    fail("Set QA_EMAIL and QA_PASSWORD in the environment or --env-file.", 2);
+    fail("Set QA_EMAIL and QA_PASSWORD in ./.env, the environment, or --env-file.", 2);
   }
 
   if (values["type-field"]) {

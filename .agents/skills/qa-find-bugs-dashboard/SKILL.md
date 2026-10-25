@@ -55,9 +55,10 @@ matches local HEAD before declaring a source fix missing from production.
 ## Prepare the browser
 
 - Record the initial browser session. Authenticate using `QA_EMAIL` and
-  `QA_PASSWORD` from **`dashboard/.env`**, unless the user supplies another path.
+  `QA_PASSWORD` from the repo-root **`./.env`**, unless the user supplies another path.
   From the repo root, run
-  `node .agents/skills/qa-shared/scripts/qa-login.mjs --env-file dashboard/.env`.
+  `node .agents/skills/qa-shared/scripts/qa-login.mjs` with no flag (add
+  `--env-file <path>` only for a different account).
   The helper hides the password and transfers session cookies in memory.
   Inspect `features/auth/hooks/use-login-form.ts`,
   `graphql/query/auth.graphql`, and the backend auth resolver/cookie helper for the

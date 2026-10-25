@@ -51,16 +51,18 @@ on a designated QA ledger needed to reproduce bugs.
   `rpc <method> [json]`, and `raw --method GET|DELETE|POST [--accept TEXT]
   [--body TEXT]` for transport checks. `--anonymous` omits the credential. It
   reads `QA_MCP_TOKEN` (falling back to `BEANCOUNT_MCP_TOKEN`) from the
-  environment or `--credentials-file` (not `--env-file`, which Node itself
-  consumes after the script path), prints status, an allowlist of headers and the parsed
+  repo-root `./.env` (preferred), the environment, or `--credentials-file`
+  (not `--env-file`, which Node itself consumes after the script path; an
+  explicit file wins over both), prints status, an allowlist of headers and the parsed
   JSON-RPC messages, redacts `bcio_` prefixes and the token value, exits `2`
   for usage or credential problems and `3` for network failures or hangs. Run
   it from the repo root; `--url` defaults to the production endpoint and
   accepts HTTP only on loopback.
 - Use a user-designated QA credential: a `bcio_` key minted on a dedicated QA
   account for a synthetic ledger, ideally one read/write key pinned to the
-  ledger and one `ledger.read` key on the same ledger, both short-lived. Ask
-  for the variable names or environment-file path, never for the value. Do not
+  ledger and one `ledger.read` key on the same ledger, both short-lived. The
+  token lives in the repo-root `./.env` unless the user names another file; ask
+  for the variable names or file path, never for the value. Do not
   mint keys on, or point tools at, a personal account or ledger. Browser
   cookies from `qa-login.mjs` are not MCP credentials; the endpoint refuses
   them by design.
@@ -89,7 +91,7 @@ and deepen the journeys that show failures. Report each skipped group and why.
 | Journey | Observable promise |
 | --- | --- |
 | transport | Anonymous `POST` returns `401` with `WWW-Authenticate: Bearer resource_metadata=…`, and that URL returns `200` with an RFC 9728 document naming an authorization server that also resolves. Authenticated `GET`/`DELETE` return `405` with `Allow: POST` and complete; anonymous `GET` still returns `401`. Missing `Accept` values or a wrong content type fail before tool execution. A notification returns `202`; an unknown method returns a JSON-RPC error. `/mcp` behaves as `docs/mcp.md` states. |
-| discovery | `initialize` negotiates each supported protocol version and returns `serverInfo` and instructions. `tools/list`, `resources/templates/list` and `prompts/list` match the documented inventory: every tool has a title, description, `inputSchema` and an object `outputSchema`; names are unique; prompt arguments are declared; `resources/list` emptiness is documented. Compare with `mcp-tools.ts`, `mcp-resources.ts`, `mcp-prompts.ts`. |
+| discovery | `initialize` negotiates each supported protocol version and returns `serverInfo` and instructions. `tools/list`, `resources/templates/list` and `prompts/list` match the documented inventory: every tool has a title, description, `inputSchema` and an object `outputSchema`; names are unique; prompt arguments are declared; `resources/list` returns the documented instance set (static reads plus capped source files per ledger), not templates. Compare with `mcp-tools.ts`, `mcp-resources.ts`, `mcp-prompts.ts`. |
 | boundaries | A `ledger.read` key gets `isError: true` with `FORBIDDEN` on every write and admin tool, never a success or an internal error. A pinned key naming another `ledger` is refused; an unpinned key without `ledger` is refused with a hint naming `listLedgers`; resource URIs obey the same pin. A revoked or expired credential fails on the next request with `UNAUTHENTICATED` or `401`. A browser session cookie is refused with the discovery hint. |
 | reads | `runBqlQuery` and `runBqlQueryStructured` agree with REST `query` and GraphQL `queryShell` on rows, columns, decimals and dates; `structuredContent` and the text block describe the same result. `listLedgers` paging, `checkLedger`, `getLedgerContext`, `getEntryContext`, `listLedgerFiles` and `readLedgerFiles` line ranges match ledger contents and their REST counterparts. Empty, missing and forbidden cases return the documented code, not an empty success. |
 | resources | Vocabulary, analysis, journal, statement and file templates expand as documented, including reserved `{+path}`, query parameters and JSON-encoded array filters. MIME types and `contents` shapes match the doc; a failure is a JSON-RPC error whose `data.code` matches the table, with the message unprefixed. Each read matches the REST route with the same suffix. |

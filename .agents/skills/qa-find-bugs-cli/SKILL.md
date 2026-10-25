@@ -77,9 +77,9 @@ failure. Do not classify these documented behaviors as bugs.
 ## Hosted journeys and credentials
 
 Local journeys need no login. Inspect `BEA_API_URL` and `BEA_DASHBOARD_URL`
-independently; the browser sign-in origin is not the REST origin. Use a
-user-designated QA token via the child environment or the CLI's real
-`bea cloud login` device flow with the isolated configuration directory.
+independently; the browser sign-in origin is not the REST origin. Use the
+QA token from the repo-root `./.env` via the child environment, or the CLI's
+real `bea cloud login` device flow with the isolated configuration directory.
 Do not assume `cli/.env` exists or load another package's credentials. Browser
 cookies from the shared dashboard helper are not CLI tokens. If browser login
 needs QA_EMAIL/QA_PASSWORD, use the shared credential rules and a verified
