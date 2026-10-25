@@ -60,8 +60,9 @@ const deJournal: Record<string, TranslationEntry> = {
     description: "Validation error when amount is not numeric",
   },
   "journal.amountPlaceholder": {
-    message: "Betrag (z.B. 100,00)",
-    description: "Placeholder for amount field",
+    message: "Betrag (z.B. 100.00)",
+    description:
+      "Placeholder for amount field. The example 100.00 denotes the amount field's input syntax; its digits and decimal point must stay invariant.",
   },
   "journal.amountRequired": {
     message: "Betrag ist erforderlich",
