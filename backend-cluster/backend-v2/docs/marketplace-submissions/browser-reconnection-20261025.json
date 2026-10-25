@@ -1,0 +1,12 @@
+{
+  "observedAt": "2026-10-25T00:10:54Z",
+  "tool": "supported Chrome extension browser control",
+  "previousFailureAt": "2026-10-24T21:35:23Z",
+  "connectionRestored": true,
+  "observedPage": "https://glama.ai/mcp/connectors/io.beancount/beancount",
+  "observedTitle": "Beancount.io - MCP Connector | Glama",
+  "pageLoaded": true,
+  "extensionUpdatePerformedThisPass": false,
+  "accountOrGrantChange": false,
+  "limits": "Browser recovery only; original publisher-account access and native accounting consent are separate task gates."
+}

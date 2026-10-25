@@ -9,7 +9,7 @@ Source: the owner's request to put every remaining action from the 17-target lis
 | Work | Owner / next action | Gate and sequencing |
 | --- | --- | --- |
 | One current 17-target tracker | [043](043.md) — reconcile duplicated state, exact operation/install links, current owners, real check times and dated next checks/triggers | Actionable now; external reviews do not block documentation reconciliation. |
-| Supported browser control | [044](044.md) — actual read-only reconnect/retest, then supported update if still required | Last extension failure is historical until reproduced; keep original sessions and approvals. |
+| Supported browser control | [044](done/044.md) — actual read-only reconnect/retest, then supported update if still required | Resolved2026-10-25T00:10:54Z: actual supported browser/page access succeeds; keep original sessions and approvals. |
 | Credentials through review/monitoring | [045](045.md) — private renewal responsibility and deadlines | Docker expires end 2026-10-31UTC, assess by10-29; Glama expires end 2026-11-23UTC, assess by11-20. No automation or secret on board. |
 | Glama native + Smithery intake | [m8/t009](m8/t009.md) independent native; [m8/t002](m8/t002.md) supported replacement intake | Glama health-day owner remains w2/088 (earliest2026-10-25T07:01:01Z). Neither wait serializes independent native work. |
 | Docker current native session | [m9/t015](m9/t015.md) — investigate later Unauthorized and repair supported OAuth | Earlier successful rehearsal is retained; expiry is not assumed without diagnosis. |
@@ -22,7 +22,7 @@ Source: the owner's request to put every remaining action from the 17-target lis
 
 **Execution order:** reconcile043 and diagnose m9/t015; recheck044 and record045 deadlines; then perform each independently available native/correction/review action. Complete a platform's due observation or real feedback when available and continue all other tasks. Aggregate verification and standing closing tasks retain their full DoDs. A blocked platform never ends the w6 loop while another actionable item remains.
 
-**Board after arrangement:**70 pending leaves; m8/m9/m10 are live because independent work is materialized, while m2/m6.5/m11 remain under blocked/. No completed task is reopened. The dated snapshots below describe earlier board states, including their old totals and blockers.
+**Board after arrangement:**69 pending leaves; m8/m9/m10 are live because independent work is materialized, while m2/m6.5/m11 remain under blocked/. No completed task is reopened. The dated snapshots below describe earlier board states, including their old totals and blockers.
 
 ## Historical work and blocker triage — 2026-10-24 UTC
 
@@ -249,7 +249,6 @@ Prioritize the major correctness findings (PRINT/FROM/JOURNAL, authored location
 ## Inbox
 
 - [043](043.md) — Reconcile one canonical 17-target listing tracker and operational owners/check triggers (~45m).
-- [044](044.md) — Restore/retest supported browser control without repeating completed approvals (~15m).
 - [045](045.md) — Coordinate private Docker reviewer/Glama monitor expiry and renewal responsibility (~30m).
 
 - [041](blocked/041.md) — MCP.so publication — **blocked:** current $39 mandatory fee needs explicit approval or a documented free route; packet is ready.
