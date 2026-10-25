@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1036 — State Capital Gains sale-date bounds in output](./1036.md) — minor CLI metadata gap: correctly bounded/empty rows keep the full-book period and heading with no active bounds; equivalent time/native controls pass, checked 2026-10-25.
+
 - [1035 — Classify actual short-position reductions in Capital Gains](./1035.md) — major CLI reporting gap: positive covers disappear while negative openings become sales; booked gains/losses and long/native controls pass, checked 2026-10-25.
 
 - [1034 — Collect the whole resolved register subtree](./1034.md) — minor CLI selection gap: anchored parent regexes drop child-only transactions or return false empty; literal/full-subtree/native controls pass, checked 2026-10-25.
