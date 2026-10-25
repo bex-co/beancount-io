@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1080** — [Return cancelled Budget deletion to its history row](./1080.md)
+
 - **1079** — [Restore entry-page focus after Keep editing](./1079.md)
 
 - **1078** — [Keep late entry completion from discarding a query draft](./1078.md)
