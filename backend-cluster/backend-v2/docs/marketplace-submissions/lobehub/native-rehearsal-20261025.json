@@ -1,0 +1,131 @@
+{
+  "owner": "w6/m10/t011",
+  "lastCheckedAtUTC": "2026-10-25T01:41:31Z",
+  "endpoint": "https://beancount.io/api-gateway/mcp",
+  "nativeClient": "Signed-in LobeHub web app, Settings / Connectors and actual Lobe AI conversation, displayed model DeepSeek V4.1 Flash High",
+  "oauth": {
+    "existingConnectorReused": true,
+    "observedFailure": "Old prefilled Client ID plus blank Edit secret produces a callback success:false / client authentication failed; parent UI hides the specific error.",
+    "recovery": "In the same existing Connector Edit, clear BOTH optional Client ID and Secret, then use Authorize & Connect for supported automatic DCR. Callback returns success:true,synced:true and Settings updated. No connector or prior grant is deleted.",
+    "boundary": "openid/offline_access/profile/email/ledger.read/write/admin; only the previously authorized synthetic ledger selected; All accessible ledgers unselected",
+    "diagnosisLimit": "Current upstream source confirms an Edit path can replace stored secret/auth-method fields and a related earlier registered-method fix. The actual deployed LobeHub revision and earlier stored secret were not inspected. Fresh DCR recovery is observed; no broader root cause is inferred.",
+    "diagnosticCleanup": "Temporary same-origin callback-message listener and network observation removed; no callback URL/code/state replay or Document interception.",
+    "source": [
+      "https://github.com/lobehub/lobehub/blob/e1d7bc56550145ed31026d4798d735720579c233/src/features/Connectors/CustomConnectorModal/index.tsx",
+      "https://github.com/lobehub/lobehub/pull/20404"
+    ]
+  },
+  "nativeDiscovery": {
+    "tools": 44,
+    "groups": {
+      "readOnly": 9,
+      "create": 22,
+      "update": 7,
+      "delete": 6
+    },
+    "resourceAndPromptEnumeration": "Not exposed by this native Connector UI; generic template/prompt freshness is independently verified below."
+  },
+  "nativeAccounting": {
+    "visibleCallGroup": "5 calls /20s",
+    "calls": [
+      "checkLedger",
+      "runBqlQueryStructured",
+      "appendLedgerText",
+      "checkLedger",
+      "runBqlQueryStructured"
+    ],
+    "query": "SELECT sum(position) AS cash WHERE account = 'Assets:Cash'",
+    "cashBeforeUSD": "49.75",
+    "cashAfterUSD": "49.75",
+    "preview": {
+      "calls": 1,
+      "text": "2026-10-25 note Assets:Cash \"W6 LobeHub native preview 20261025\"",
+      "path": "main.bean",
+      "dry_run": true,
+      "allowInvalid": false,
+      "count": 1,
+      "wrote": [],
+      "validation": {
+        "errorsBefore": 0,
+        "errorsAfter": 0,
+        "newErrors": []
+      }
+    },
+    "nativeUIEvidence": "Actual five tool headings and expanded preview Arguments/Response structuredContent verified. Native Agent reports identical commit/counts and zero errors; independent controls below corroborate exact state.",
+    "mode": "Manual retained; no approval bypass or admin call.",
+    "limit": "Full direct before/after checkLedger JSON was not separately exported from the UI; exact commit/counts also come from native Agent output and independent MCP controls."
+  },
+  "independentControl": {
+    "source": "Existing synthetic-only QA credential, direct read-only MCP SDK; separate from actual native LobeHub calls",
+    "beforeAtUTC": "2026-10-25T01:35:51.526Z",
+    "afterAtUTC": "2026-10-25T01:37:04.452Z",
+    "identical": true,
+    "commit": "39f42f337d13c406cfd331bc5fc65e4eb5652cc7",
+    "mainFileSHA256": "77c3a591efd311e01d03d2f3a91f2919151c0fb0708e1abe1a10ce6ec7e29915",
+    "directiveCounts": [
+      {
+        "type": "Balance",
+        "number": 1
+      },
+      {
+        "type": "Close",
+        "number": 0
+      },
+      {
+        "type": "Commodity",
+        "number": 0
+      },
+      {
+        "type": "Custom",
+        "number": 0
+      },
+      {
+        "type": "Document",
+        "number": 0
+      },
+      {
+        "type": "Event",
+        "number": 0
+      },
+      {
+        "type": "Note",
+        "number": 0
+      },
+      {
+        "type": "Open",
+        "number": 12
+      },
+      {
+        "type": "Pad",
+        "number": 0
+      },
+      {
+        "type": "Price",
+        "number": 0
+      },
+      {
+        "type": "Query",
+        "number": 0
+      },
+      {
+        "type": "Transaction",
+        "number": 16
+      }
+    ],
+    "errors": [],
+    "cashUSD": "49.75"
+  },
+  "metadata": {
+    "observedAtUTC": "2026-10-25T01:36:05.291Z",
+    "source": "Independent canonical MCP SDK discovery using the existing synthetic-only QA control credential; separate from native LobeHub UI",
+    "tools": 44,
+    "genericResourceTemplates": 64,
+    "prompts": 4,
+    "normalizedPublishedFieldsMatchByName": true,
+    "resourceOrderOnlyDifference": true,
+    "ownerRepublishRequired": false,
+    "manifestSHA256": "3e0cade33f51086bbbc912ad3c8a28dee41dabfb58e8c16fcfa7105546b7d538"
+  },
+  "remaining": "Crawler stdio option and canonical name search remain w6/m10/t012. This native acceptance does not add an ADR019 host fixture or change another platform review.",
+  "privacy": "No credential, code/state URL, private deployment detail, user/account identity, concrete resource URI or raw ledger contents is included. All existing grants retained."
+}

@@ -1,6 +1,20 @@
-# LobeHub hosted connector published; connection verification remains
+# LobeHub published connector and native accounting verified
 
-Current outcome **2026-10-24T21:27:16Z**: [beancount-io@1.0.0 is public](https://lobehub.com/mcp/beancount-io), claimed and owner-published. Public capability metadata is44tools/64resource templates/4prompts. The preferred HTTP endpoint is correct; the known crawler stdio defect and native OAuth journey below remain open. [Actual receipt and limits](./submission-receipt.json).
+Current outcome **2026-10-25T01:41:31Z**: the [canonical listing](https://lobehub.com/mcp/beancount-io) remains claimed/published at1.0.0. Actual native OAuth,44-tool sync, five-call accounting and one dry-run preview pass. Cash49.75USD, commit/counts and independent file hash are unchanged. [Native evidence and exact visibility limits](./native-rehearsal-20261025.json). The crawler stdio defect and canonical name-search verification remain m10/t012; publication and native connection do not close that task.
+
+## Current native connection recipe
+
+Use [Settings → Connectors](https://app.lobehub.com/settings/connector). Reuse an existing beancount-io Connector with **Edit**, or use **Add Custom Connector** for a first install. The actual modal currently says Skill Settings / Add Custom MCP Skill. Choose Streamable HTTP, beancount-io, the canonical endpoint and OAuth. Leave **both Client ID and Client Secret empty** for automatic DCR. An old auto-filled ID with the redacted blank Edit secret is not a complete reusable client configuration: the actual attempt fails client authentication. Clearing both through this supported UI branch restores the same connector, with callback success:true/synced:true. No prior grant or Connector is deleted.
+
+At the actual Beancount consent, select only the synthetic QA ledger and leave All accessible ledgers unselected. The existing approved scope includes identity/offline/profile/email and ledger.read/write/admin. Settings updates and9read-only/22create/7update/6delete tools appear. Pin beancount-io in the native conversation's Add context → Skills selection, keep Manual mode and request only the known query and one dry_run. Verify real tool records and independent unchanged state before claiming acceptance.
+
+## Current capability provenance
+
+Fresh independent canonical MCP SDK discovery at2026-10-25T01:36:05.291Z verifies44tools/64generic resource templates/4prompts. The normalized published definitions match by name; template order alone differs, so no repeat owner update is needed. Native LobeHub actually syncs/displays44tools; its Connector UI does not expose resource/template/prompt enumeration. [Full provenance](./metadata-provenance.json) preserves the older Cline/Docker/source capture separately. These checks add no ADR019 fixture-qualified host claim.
+
+## Historical publisher preparation and dated follow-through
+
+The sections below retain the original preparation and submission history; the current outcomes above supersede their earlier pending states.
 
 Original preparation checked2026-10-21UTC. The [current first-party publishing guide](https://market.lobehub.com/s/publish-mcp) supports an existing Streamable HTTP service. The [manifest reference](https://market.lobehub.com/s/publish-mcp/references/manifest) defines `cloudEndpoint` as a URL string; `lhm.plugin.json` points directly to the canonical Beancount.io hosted endpoint. The LobeHub identifier `beancount-io` is a platform slug; the official registry identity stays `io.beancount/beancount`.
 

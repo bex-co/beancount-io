@@ -1,6 +1,6 @@
 # w6 · m10 — List the connector in independent web directories
 
-**Worker:** worker1 **Goal:** People comparing accounting MCP servers find accurate, usable remote listings on the eligible independent directories. **Status:** todo (5 tasks done; verified source deployed and t010 three-client native checks pass; t011 is ready to resume; t012 supported correction remains independent)
+**Worker:** worker1 **Goal:** People comparing accounting MCP servers find accurate, usable remote listings on the eligible independent directories. **Status:** todo (6 tasks done; t010/t011 native accounting verified; t012 supported crawler/search correction is next)
 
 **Implementation estimate:** ~2h, excluding external review queues and the standing closing tasks.
 
@@ -14,7 +14,7 @@
 | [t003](done/t003.md) | Establish LobeHub eligibility and prepare its supported connector listing — **DONE** | 45m | w6/m8/t001, t009 |
 | [t013](done/t013.md) | Bind OAuth interaction routes to the signed-cookie interaction — **DONE** | 45m | — |
 | [t010](done/t010.md) | Complete MCPServers.org advertised native accounting checks — **DONE** | 45m | t001, t013 |
-| [t011](t011.md) | Complete LobeHub native OAuth and live metadata — **BLOCKED** | 45m | t003, t009, t013 |
+| [t011](done/t011.md) | Complete LobeHub native OAuth and live metadata — **DONE** | 45m | t003, t009, t013 |
 | [t012](t012.md) | Correct LobeHub crawler stdio deployment and verify search indexing | 30m | t003 |
 | [t004](t004.md) | Verify the independent-directory listings after moderation | 15m | t001, t002, t003, t010, t011, t012, t013 |
 | [t005](t005.md) | Adoption surface | 30m | t004, t009, t010, t011, t012, t013 |
@@ -137,3 +137,13 @@ query/one preview/unchanged-state checks. t010 is archived. This clears
 t013's rollout gate and makes t011's independent LobeHub native journey
 actionable; browser access and earlier scoped approvals are retained.
 The LobeHub crawler correction and MCPMarket's original review remain separate.
+
+## LobeHub native acceptance — 2026-10-25T01:41:31Z
+
+Supported same-Connector automatic DCR resolves the concrete native client-auth
+failure. Callback/tool sync and native five-call query/one-preview checks pass
+with independent unchanged-state evidence. t011 is done/archived. Fresh
+independent metadata replaces older resource/prompt freshness limits precisely;
+native UI itself enumerates44tools only. Next independent pick is t012's
+supported malformed crawler deployment/search correction; MCPMarket remains
+in its original external free review.
