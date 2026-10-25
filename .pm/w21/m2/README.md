@@ -1,12 +1,12 @@
 # w21 · m2 — Readable-width caps for the remaining bespoke screens
 
-**Worker:** worker1 **Goal:** every mobile screen caps its content to a readable column on iPad **Status:** todo
+**Worker:** worker1 **Goal:** every mobile screen caps its content to a readable column on iPad **Status:** todo (t001 done)
 
 ## Tasks (in order)
 
 | id   | title                                      | est | depends_on         |
 | ---- | ------------------------------------------ | --- | ------------------ |
-| t001 | Cap the bespoke list screens               | 45m | —                  |
+| t001 | Cap the bespoke list screens — **DONE**    | 45m | —                  |
 | t002 | Cap the detail, form, and settings screens | 45m | —                  |
 | t003 | Verify the zero-hit screens need no cap    | 30m | —                  |
 | t004 | Adoption surface                           | 15m | t001, t002, t003   |

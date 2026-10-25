@@ -20,6 +20,7 @@ import {
   space,
   useTheme,
 } from "@/common/theme";
+import { contentColumn } from "@/common/content-column";
 import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useToday } from "@/common/hooks/use-today";
@@ -107,6 +108,8 @@ const getStyles = (theme: ColorTheme) =>
       flex: 1,
     },
     listContent: {
+      // Capped centered column on iPad; a no-op on phones (w21/m2).
+      ...contentColumn,
       flexGrow: 1,
     },
     header: {

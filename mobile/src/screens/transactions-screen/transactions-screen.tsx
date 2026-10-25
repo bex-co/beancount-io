@@ -19,6 +19,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { fontSizes, fontWeights, useTheme } from "@/common/theme";
+import { contentColumn } from "@/common/content-column";
 import { useThemeStyle, useDebouncedValue } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { ColorTheme } from "@/types/theme-props";
@@ -79,6 +80,8 @@ const getStyles = (theme: ColorTheme) =>
     // the whole area stays inside the scrollable content and pull-to-refresh works
     // even with nothing to show.
     listContent: {
+      // Capped centered column on iPad; a no-op on phones (w21/m2).
+      ...contentColumn,
       flexGrow: 1,
     },
     errorContainer: {

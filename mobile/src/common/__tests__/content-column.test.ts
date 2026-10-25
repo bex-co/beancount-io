@@ -87,4 +87,26 @@ describe("the screens and sheets use the shared columns", () => {
       ).includes("...contentColumn"),
     ).toBe(true);
   });
+
+  // w21/m2/t001: the bespoke list screens.
+  for (const [name, file] of [
+    ["Transactions", "screens/transactions-screen/transactions-screen.tsx"],
+    ["Merchants", "screens/merchants-screen/merchants-screen.tsx"],
+    [
+      "merchant detail",
+      "screens/merchant-detail-screen/merchant-detail-screen.tsx",
+    ],
+    ["Budget", "screens/budget-screen/budget-screen.tsx"],
+    ["Notifications", "screens/notifications-screen/notifications-screen.tsx"],
+    ["ledger selection", "screens/ledger-selection/index.tsx"],
+    [
+      "account detail",
+      "screens/account-detail-screen/account-detail-screen.tsx",
+    ],
+    ["the file browser", "screens/ledger-file-browser-screen/index.tsx"],
+  ]) {
+    it(`${name} caps its list`, () => {
+      expect(readSource(file).includes("contentColumn")).toBe(true);
+    });
+  }
 });

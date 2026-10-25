@@ -16,6 +16,7 @@ import { useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { ColorTheme } from "@/types/theme-props";
 import { fonts, useTheme } from "@/common/theme";
+import { contentColumn } from "@/common/content-column";
 import { useThemeStyle, useToast } from "@/common/hooks";
 import * as Clipboard from "expo-clipboard";
 import { useTranslations } from "@/common/hooks/use-translations";
@@ -69,6 +70,8 @@ const getStyles = (theme: ColorTheme) =>
       backgroundColor: theme.white,
     },
     scrollContent: {
+      // Capped centered column on iPad; a no-op on phones (w21/m2).
+      ...contentColumn,
       flexGrow: 1,
     },
     sectionHeader: {

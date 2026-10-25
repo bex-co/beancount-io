@@ -14,6 +14,7 @@ import { Stack, useRouter } from "expo-router";
 import { NetworkStatus } from "@apollo/client";
 import { ColorTheme } from "@/types/theme-props";
 import { fontSizes, fontWeights, useTheme } from "@/common/theme";
+import { contentColumn } from "@/common/content-column";
 import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { selectReadContextState } from "@/common/apollo/card-load-state";
@@ -607,7 +608,12 @@ const AccountDetailScreenImpl = ({
         ListHeaderComponent={listHeader}
         // flexGrow keeps the empty / error state inside the scrollable content so
         // the whole area — not just the chart header — stays pull-to-refreshable.
-        contentContainerStyle={{ paddingBottom: 24, flexGrow: 1 }}
+        contentContainerStyle={{
+          // Capped centered column on iPad; a no-op on phones (w21/m2).
+          ...contentColumn,
+          paddingBottom: 24,
+          flexGrow: 1,
+        }}
         alwaysBounceVertical
         showsVerticalScrollIndicator={false}
         indicatorStyle={themeName === "dark" ? "white" : "default"}

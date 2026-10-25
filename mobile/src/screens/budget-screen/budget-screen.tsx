@@ -20,6 +20,7 @@ import {
   space,
   useTheme,
 } from "@/common/theme";
+import { contentColumn } from "@/common/content-column";
 import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { GetLedgerIntervalTotalsDocument } from "@/generated-graphql/graphql";
@@ -54,6 +55,8 @@ const getStyles = (theme: ColorTheme) =>
     // only carry a bottom margin, and flexGrow so the empty and error states
     // stay inside the scrollable area and remain pull-to-refreshable.
     list: {
+      // Capped centered column on iPad; a no-op on phones (w21/m2).
+      ...contentColumn,
       paddingHorizontal: gutter,
       paddingTop: space.lg,
       paddingBottom: space.xxl,

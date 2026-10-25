@@ -19,6 +19,7 @@ import {
   type GetLedgerQuery,
 } from "@/generated-graphql/graphql";
 import { prefersStackedLayout, space, useTheme } from "@/common/theme";
+import { contentColumn } from "@/common/content-column";
 import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useToast } from "@/common/hooks/use-toast";
@@ -284,6 +285,8 @@ export function LedgerSelectionScreen() {
       <FlatList
         data={items}
         keyExtractor={(item) => item.id}
+        // Capped centered column on iPad; a no-op on phones (w21/m2).
+        contentContainerStyle={contentColumn}
         keyboardShouldPersistTaps="handled"
         // The last ledgers scroll above the keyboard (w21/145).
         automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}
