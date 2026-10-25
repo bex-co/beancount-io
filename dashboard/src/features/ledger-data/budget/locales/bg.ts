@@ -75,6 +75,31 @@ const bgBudget: Record<string, TranslationEntry> = {
     description:
       "Confirmation message for deleting a budget. {interval}, {amount}, {account}, {date} are replaced with actual values.",
   },
+  "page.budget.budgetDeleteIntervalDaily": {
+    message: "Дневно",
+    description:
+      "Cadence phrase inside the delete-budget confirmation sentence",
+  },
+  "page.budget.budgetDeleteIntervalWeekly": {
+    message: "Седмично",
+    description:
+      "Cadence phrase inside the delete-budget confirmation sentence",
+  },
+  "page.budget.budgetDeleteIntervalMonthly": {
+    message: "Месечно",
+    description:
+      "Cadence phrase inside the delete-budget confirmation sentence",
+  },
+  "page.budget.budgetDeleteIntervalQuarterly": {
+    message: "Тримесечно",
+    description:
+      "Cadence phrase inside the delete-budget confirmation sentence",
+  },
+  "page.budget.budgetDeleteIntervalYearly": {
+    message: "Годишно",
+    description:
+      "Cadence phrase inside the delete-budget confirmation sentence",
+  },
   "page.budget.budgetDeleteTitle": {
     message: "Изтриване на бюджет",
     description: "Dialog title for deleting a budget",

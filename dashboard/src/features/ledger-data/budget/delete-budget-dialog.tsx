@@ -32,6 +32,14 @@ interface DeleteBudgetDialogProps {
   fallbackFocusRef?: RefObject<HTMLElement | null>;
 }
 
+const DELETE_INTERVAL_KEYS: Record<string, string> = {
+  daily: "page.budget.budgetDeleteIntervalDaily",
+  weekly: "page.budget.budgetDeleteIntervalWeekly",
+  monthly: "page.budget.budgetDeleteIntervalMonthly",
+  quarterly: "page.budget.budgetDeleteIntervalQuarterly",
+  yearly: "page.budget.budgetDeleteIntervalYearly",
+};
+
 export function DeleteBudgetDialog({
   target,
   ledgerId,
@@ -47,6 +55,10 @@ export function DeleteBudgetDialog({
     message: string;
   } | null>(null);
   const { t } = useTranslations();
+  const deleteIntervalLabel = (interval: string) => {
+    const key = DELETE_INTERVAL_KEYS[interval.toLowerCase()];
+    return key ? t(key) : interval;
+  };
   const formatError = useErrorMessage();
   const client = useApolloClient();
   const clearCache = useApolloCacheClear();
@@ -109,7 +121,10 @@ export function DeleteBudgetDialog({
           <AlertDialogDescription>
             {target &&
               t("page.budget.budgetDeleteDescription", {
-                interval: target.interval.toLowerCase(),
+                // The confirmation sentence carries its own localized
+                // cadence phrase; the stored token stays a fallback for an
+                // unknown cadence (w4/1081).
+                interval: deleteIntervalLabel(target.interval),
                 amount: target.amount,
                 account: target.account,
                 date: target.date ?? "",

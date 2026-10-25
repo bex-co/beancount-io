@@ -75,6 +75,31 @@ const deBudget: Record<string, TranslationEntry> = {
     description:
       "Confirmation message for deleting a budget. {interval}, {amount}, {account}, {date} are replaced with actual values.",
   },
+  "page.budget.budgetDeleteIntervalDaily": {
+    message: "tägliche",
+    description:
+      "Cadence phrase inside the delete-budget confirmation sentence",
+  },
+  "page.budget.budgetDeleteIntervalWeekly": {
+    message: "wöchentliche",
+    description:
+      "Cadence phrase inside the delete-budget confirmation sentence",
+  },
+  "page.budget.budgetDeleteIntervalMonthly": {
+    message: "monatliche",
+    description:
+      "Cadence phrase inside the delete-budget confirmation sentence",
+  },
+  "page.budget.budgetDeleteIntervalQuarterly": {
+    message: "vierteljährliche",
+    description:
+      "Cadence phrase inside the delete-budget confirmation sentence",
+  },
+  "page.budget.budgetDeleteIntervalYearly": {
+    message: "jährliche",
+    description:
+      "Cadence phrase inside the delete-budget confirmation sentence",
+  },
   "page.budget.budgetDeleteTitle": {
     message: "Budget löschen",
     description: "Dialog title for deleting a budget",

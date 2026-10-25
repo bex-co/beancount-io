@@ -75,6 +75,31 @@ const koBudget: Record<string, TranslationEntry> = {
     description:
       "Confirmation message for deleting a budget. {interval}, {amount}, {account}, {date} are replaced with actual values.",
   },
+  "page.budget.budgetDeleteIntervalDaily": {
+    message: "매일",
+    description:
+      "Cadence phrase inside the delete-budget confirmation sentence",
+  },
+  "page.budget.budgetDeleteIntervalWeekly": {
+    message: "매주",
+    description:
+      "Cadence phrase inside the delete-budget confirmation sentence",
+  },
+  "page.budget.budgetDeleteIntervalMonthly": {
+    message: "매월",
+    description:
+      "Cadence phrase inside the delete-budget confirmation sentence",
+  },
+  "page.budget.budgetDeleteIntervalQuarterly": {
+    message: "분기별",
+    description:
+      "Cadence phrase inside the delete-budget confirmation sentence",
+  },
+  "page.budget.budgetDeleteIntervalYearly": {
+    message: "매년",
+    description:
+      "Cadence phrase inside the delete-budget confirmation sentence",
+  },
   "page.budget.budgetDeleteTitle": {
     message: "예산 삭제",
     description: "Dialog title for deleting a budget",
