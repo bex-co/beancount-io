@@ -95,11 +95,17 @@ SELECT account, sum(cost(position)) as balance
 WHERE account ~ '^Assets:|^Liabilities:' GROUP BY account ORDER BY account
 ```
 
-Point-in-time: add `AND date < 2026-07-01`. For "does this match my bank" → that's `beancount-reconcile`, not a query.
+Point-in-time: add `AND date < 2026-07-01`. For "does this match my bank" → that's `beancount-reconcile`, not a query. For an account's dated postings with a running balance, run `bea report register ACCOUNT` instead of querying — its last row is the trial-balance total.
 
 ## 8. Holdings, market value, and unrealized gains (open lots)
 
-"What do I hold, what is it worth, how is it allocated?" Open lots first — every lot still held, at its own cost:
+"What do I hold, what is it worth, how is it allocated?" Start with the command, not a query:
+
+```bash
+bea --file "$ledger" --json --no-input report holdings [--group-by commodity]
+```
+
+It answers units, average cost, cost basis, and market value per position, labels values from stale quotes, and reports unpriced commodities in `missing_prices` instead of valuing them. Use the BQL below only for what the command does not answer: per-lot costs, unrealized gains, and allocation. Open lots first — every lot still held, at its own cost:
 
 <!-- recipe: holdings-lots -->
 ```sql

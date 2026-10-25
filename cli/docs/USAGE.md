@@ -12,7 +12,7 @@ bea ingest identify|extract|archive --config ingest.py [PATH…]   # needs beang
 bea price status|refresh | bea price [bean-price options…]     # latter needs beanprice
 bea check | format | query "<BQL>"
 bea list <type> | bea add <type>          # eleven directive types; add transactions --from PATH
-bea report balance-sheet | income-statement | trial-balance | overview
+bea report balance-sheet | income-statement | trial-balance | overview | holdings | register ACCOUNT
 bea balance [ACCOUNT…]                    # trial balance pruned to matching subtrees
 bea ask ["question"]                      # requires beancount-io[ask] and hosted credentials
 
@@ -1768,6 +1768,8 @@ bea report overview
 bea report income-statement
 bea report balance-sheet
 bea report trial-balance
+bea report holdings
+bea report register Assets:Checking
 bea balance Checking
 ```
 
@@ -1781,15 +1783,27 @@ work as in reports. Under `--json` the terms are listed one by one in
 for `balance "food cash"`) beside the space-joined `account_filter`, and with
 several terms the text heading quotes each one (`'food' or 'cash'`).
 
-All four accept `--conversion / -x`, `--time / -t`, `--account / -a`, and
+All six accept `--conversion / -x`, `--time / -t`, and
 `--allow-errors`. Conversion defaults to the ledger's single operating
 currency. With zero or multiple operating currencies, it defaults to `units`
-and keeps currencies separate. All but `trial-balance` accept `--interval / -i`
+and keeps currencies separate. All but `trial-balance`, `holdings`, and
+`register` accept `--interval / -i`
 (`monthly`, `quarterly`, `yearly`, `weekly`, `daily`; default `monthly`).
+
+`holdings` lists every non-cash position with units, average cost, cost
+basis, and market value, grouped by account or — with `--group-by commodity`
+— by commodity across accounts; `--account / -a` narrows the positions.
+`register` takes the account as a positional argument instead of `--account`
+and lists one subtree's dated postings oldest first with the running balance,
+so its last row is the trial-balance total. A market value from a stale
+managed quote reads `1,700 USD (stale)`; under `--json` each group names the
+source behind its quotes in `price_source` / `conversion_source`.
 
 ```bash
 bea report income-statement --time 2026 --interval quarterly
 bea report balance-sheet --conversion EUR
+bea report holdings --group-by commodity --time 2026
+bea report register Assets:Checking --time 2026-01
 ```
 
 Each report states its period, as-of date, account filter, and valuation.
