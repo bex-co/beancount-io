@@ -169,17 +169,20 @@ export function AccountMappingTable({
   ).length;
 
   // Toggle all visible rows without remounting field-array identities.
+  // One aggregate update: per-row setValue clones the whole form value on
+  // every call, making a bulk toggle quadratic in the row count (w4/1072).
   const handleToggleAll = () => {
     const shouldSelectAll = filteredIndices.some(
       (index) => !transactions[index]?.selected,
     );
-
-    filteredIndices.forEach((index) => {
-      setValue(`transactions.${index}.selected`, shouldSelectAll, {
-        shouldDirty: true,
-        shouldTouch: true,
-      });
-    });
+    const visible = new Set(filteredIndices);
+    setValue(
+      "transactions",
+      transactions.map((txn, index) =>
+        txn && visible.has(index) ? { ...txn, selected: shouldSelectAll } : txn,
+      ),
+      { shouldDirty: true, shouldTouch: true },
+    );
     onDraftChange?.();
   };
 

@@ -281,6 +281,44 @@ describe("AccountMappingTable date display", () => {
   });
 });
 
+// w4/1072: a bulk toggle is one aggregate form update, not one per row.
+describe("AccountMappingTable bulk toggle", () => {
+  it("toggles every visible row at once and keeps header focus", async () => {
+    const user = userEvent.setup();
+    const rows = Array.from({ length: 30 }, (_, i) => ({
+      id: `row-${i}`,
+      rowIndex: i,
+      date: "2026-10-01",
+      payee: i % 2 === 0 ? "Visible QA" : "Other QA",
+      description: "",
+      amount: -1,
+      amountInput: "-1",
+      targetAccount: "Expenses:Food",
+      selected: true,
+    }));
+    render(<Harness transactions={rows} />);
+    await user.type(
+      screen.getByPlaceholderText("importer.accountMapping.searchPlaceholder"),
+      "Visible",
+    );
+    const header = screen.getByRole("checkbox", {
+      name: "importer.accountMapping.selectAll",
+    });
+    await user.click(header);
+    // Visible (even) rows are now off; the header reads its visible set.
+    expect(header).toHaveAttribute("aria-checked", "false");
+    expect(header).toHaveFocus();
+    await user.click(header);
+    expect(header).toHaveAttribute("aria-checked", "true");
+    expect(header).toHaveFocus();
+    // Hidden rows kept their selection through both bulk toggles.
+    await user.clear(
+      screen.getByPlaceholderText("importer.accountMapping.searchPlaceholder"),
+    );
+    expect(header).toHaveAttribute("aria-checked", "true");
+  });
+});
+
 // w4/1058: tiny nonzero review amounts must not read as zero.
 describe("AccountMappingTable very small amounts", () => {
   it("distinguishes ±1e-24 from explicit zero", () => {
