@@ -29,6 +29,7 @@ from cli.commands.price import PriceCommand, price
 from cli.commands.query import query
 from cli.commands.report import balance, report_app
 from cli.commands.treeify import treeify
+from cli.commands.update import update_app
 from cli.commands.upgrade import current_channel, upgrade
 from cli.completion import complete_shell
 from cli.completion import install as install_completion_callback
@@ -528,6 +529,7 @@ app.command(
 )(treeify)
 
 app.add_typer(add_app, name="add", rich_help_panel=_LOCAL_PANEL)
+app.add_typer(update_app, name="update", rich_help_panel=_LOCAL_PANEL)
 app.add_typer(list_app, name="list", rich_help_panel=_LOCAL_PANEL)
 app.add_typer(report_app, name="report", rich_help_panel=_LOCAL_PANEL)
 app.add_typer(doctor_app, name="doctor", rich_help_panel=_LOCAL_PANEL)

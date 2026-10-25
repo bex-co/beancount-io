@@ -651,6 +651,24 @@ Usage: bea add transactions [OPTIONS]
 | `--allow-errors` | flag |  | Allow semantic ledger errors; syntax and pad account references must be valid |
 | `--into` | path |  | Write to an included file, relative to the root ledger |
 
+### `bea update transaction`
+
+Recategorize or retouch one imported transaction.
+
+```text
+Usage: bea update transaction [OPTIONS]
+```
+
+| Option | Type | Default | Help |
+| --- | --- | --- | --- |
+| `--id` | str | required | Entry to change: an import-id, a ref, or file:line |
+| `--account, -a` | str |  | Retarget postings: an account, or OLD=NEW to name the leg |
+| `--flag` | str |  | Transaction flag |
+| `--tag` | str (repeatable) |  | Tag to add (repeat for multiple) |
+| `--narration, -n` | str |  | Replacement narration |
+| `--apply` | flag |  | Rewrite the entry; without it, preview the diff only |
+| `--allow-errors` | flag |  | Allow semantic ledger errors; syntax and pad account references must be valid |
+
 ### `bea list note`
 
 List note directives from a .bean file.
