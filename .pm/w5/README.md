@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1033 — Use the requested currency quote in Holdings](./1033.md) — major CLI valuation gap: a current direct USD quote is ignored for an older cost-currency quote or a false missing-price refusal; native/report controls pass, checked 2026-10-25.
+
 - [1032 — Accept UTF-8 BOMs in OFX XML exports](./1032.md) — minor CLI input gap: valid BOM bank/card files fail before parsing through automatic, forced and configured import; plain controls pass, checked 2026-10-25.
 
 - [1031 — Preserve bank identity in OFX routing](./1031.md) — major CLI gap: account memory and the multi-account guard omit bank IDs, routing distinct banks’ payments to one ledger account; native-valid, repeated 2026-10-25.
@@ -77,7 +79,7 @@
 - [995 — Resolve inferred posting prices before import decisions](./995.md) — reopened major CLI gap: known weights, repeating/independent price groups and balanced foreign-currency fees skip trades; inferred-zero restatements conflict. Controls checked 2026-10-24.
 - [980 — Preserve trade dependencies in same-day bulk ordering](./980.md) — reopened major CLI gap: bookable labeled transfer chains and stated-cost stock splits are refused; partial add omits a required transfer or sale. Original acceptance and nearby controls rechecked 2026-10-24.
 - [226 — Keep importer selectors unambiguous](./226.md) — reopened minor CLI gap: a listed NAME#N selector can collide with a declared importer name and choose another account. Preserve exact-name priority; collision and ordinary controls verified 2026-10-24.
-- [947 — Keep closed holdings when their converted balance is zero](./947.md) — reopened minor CLI gap: published offsetting cost lots still disappear after their units net to zero. Original currency/zero-price controls pass; gross-lot and genuine-empty cases rechecked 2026-10-24.
+- [947 — Keep held cost lots when their units net to zero](./947.md) — reopened minor CLI gap: closed balance and new Holdings commodity grouping discard nonempty offsetting lots; original controls pass, new grouping/native-cost controls checked 2026-10-25.
 
 
 
