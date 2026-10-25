@@ -1,4 +1,22 @@
-# Existing ChatGPT application review access
+# Existing ChatGPT application review
+
+## Current publisher-reported review — 2026-10-25T05:13:44Z
+
+The publisher reports that the existing application is **in review**, with
+**estimated completion2026-11-03**. This update is supplied directly by the
+publisher; the worker has not independently viewed the review screen or
+restored original-organization access. The date is an estimate, with no
+timezone supplied, not an approval or publication commitment. No requested
+changes were supplied in this update.
+
+The current status-information request is satisfied. No further publisher
+action is needed for ChatGPT now. OpenAI reviewers own the remaining review;
+the worker follows actual feedback or a manual check on/after2026-11-03, then
+verifies approval, public availability and the native synthetic accounting
+path. Reuse the existing management URL below. No duplicate application or
+recurring monitor is created.
+
+## Historical submission and direct-access observations
 
 The publisher confirmed submission on 2026-10-23 and supplied the
 [existing application](https://platform.openai.com/plugins/manage/plugin_asdk_app_6ad4537f69288191816f3fc04b1ac11a).
