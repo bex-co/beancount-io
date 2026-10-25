@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1023 — Canonicalize signed zero in imported directive keys](./1023.md) — minor CLI gap: unchanged native zero balance/tolerance conflicts and blocks new rows; numeric note metadata duplicates, while precision/type/Price controls hold, checked 2026-10-24.
+
 - [085 — Preserve every currency in a partially retained pad export](./085.md) — reopened major CLI gap: cutoff export passes check but loses one currency and halves net worth; original padding controls still pass, checked 2026-10-24.
 
 - [1022 — Reject calendar-week dates outside their stated year](./1022.md) — minor CLI gap: impossible week-zero/53 tuples write in the previous or next year, including mixed files; valid calendar/ISO and original ordinal controls pass, checked 2026-10-24.
