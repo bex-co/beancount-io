@@ -33,6 +33,9 @@ function MockLink({ to, search, onClick, ...props }: MockLinkProps) {
 /** `vi.mock("@tanstack/react-router", async () => (await import(…)).routerMock)` */
 export const routerMock = {
   Link: MockLink,
+  // Entry Context's history guard mounts only inside a router (w4/1063).
+  useRouter: () => ({}),
+  useBlocker: () => ({ status: "idle", reset: () => {}, proceed: () => {} }),
   // Tests render after hydration; SSR-gated controls are already live.
   useHydrated: () => true,
   useRouterState: <T>({

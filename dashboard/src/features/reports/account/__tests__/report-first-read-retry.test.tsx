@@ -25,6 +25,8 @@ vi.mock("@tanstack/react-router", () => ({
   useParams: () => ({ ...params }),
   useSearch: () => ({}),
   useNavigate: () => vi.fn(),
+  useRouter: () => ({}),
+  useBlocker: () => ({ status: "idle", reset: vi.fn(), proceed: vi.fn() }),
 }));
 vi.mock("@/common/hooks/use-ledger-search-params", () => ({
   useLedgerSearchParams: () => ({

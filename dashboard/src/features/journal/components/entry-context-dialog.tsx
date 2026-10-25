@@ -24,6 +24,7 @@ import type {
 } from "@/common/types/journal";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { restoreFocusOnDialogClose } from "@/common/lib/focus/restore-focus-on-dialog-close";
+import { useBlocker, useRouter } from "@tanstack/react-router";
 import { EntryContextPanel } from "@/features/journal/components/entry-context-panel";
 import { hasActiveMonacoWidget } from "@/features/journal/components/entry-editor-escape";
 import { Amount } from "@/common/components/amount";
@@ -181,6 +182,10 @@ export function EntryContextDialog({
     else leave();
   };
 
+  // Router exits (Back, sidebar links) unmount this dialog's owner without
+  // reaching requestLeave; EntryHistoryGuard below covers them (w4/1063).
+  const router = useRouter({ warn: false });
+
   return (
     <Dialog
       open={open}
@@ -276,6 +281,70 @@ export function EntryContextDialog({
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        {router ? (
+          <EntryHistoryGuard
+            open={open}
+            dirty={dirty}
+            writing={writing}
+            onDiscard={() => setDirty(false)}
+          />
+        ) : null}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/**
+ * Guards router exits from a dirty Entry Context draft the way the
+ * standalone entry page does (w4/1063): a write in flight blocks silently,
+ * a dirty draft asks Keep editing / Discard, and Discard completes exactly
+ * the blocked navigation. Mounted only inside a router.
+ */
+function EntryHistoryGuard({
+  open,
+  dirty,
+  writing,
+  onDiscard,
+}: {
+  open: boolean;
+  dirty: boolean;
+  writing: boolean;
+  onDiscard: () => void;
+}) {
+  const { t } = useTranslations();
+  useBlocker({
+    shouldBlockFn: () => open && writing,
+    enableBeforeUnload: () => open && writing,
+  });
+  const blocker = useBlocker({
+    shouldBlockFn: () => open && dirty && !writing,
+    enableBeforeUnload: () => open && dirty && !writing,
+    withResolver: true,
+  });
+  if (blocker.status !== "blocked") return null;
+  return (
+    <Dialog open onOpenChange={(next) => !next && blocker.reset?.()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{t("journal.discardEntryEditTitle")}</DialogTitle>
+          <DialogDescription>
+            {t("journal.discardEntryEditDescription")}
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="flex-col gap-2 sm:flex-row">
+          <Button variant="outline" onClick={() => blocker.reset?.()}>
+            {t("journal.keepEditing")}
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={() => {
+              onDiscard();
+              blocker.proceed?.();
+            }}
+          >
+            {t("journal.discardEntryEdit")}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

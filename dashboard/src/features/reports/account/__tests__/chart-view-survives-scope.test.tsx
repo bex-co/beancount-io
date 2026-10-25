@@ -48,6 +48,8 @@ vi.mock("@tanstack/react-router", async () => {
         search: (previous: Record<string, unknown>) => Record<string, unknown>;
       }) =>
         router.set(search(router.search)),
+    useRouter: () => ({}),
+    useBlocker: () => ({ status: "idle", reset: () => {}, proceed: () => {} }),
   };
 });
 
