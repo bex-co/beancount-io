@@ -1,4 +1,32 @@
-# MCP.so remote submission prepared
+# MCP.so GitHub submission
+
+Submitted on **2026-10-25T07:03:59Z** as
+[PR #6071](https://github.com/chatmcp/mcpso/pull/6071), verified open and
+non-draft at **2026-10-25T07:04:22Z**. [Actual receipt](./submission-receipt.json)
+records the head, eight-line README diff, public checks and precise limits.
+
+The entry includes the canonical Streamable HTTP endpoint, OAuth with PKCE,
+setup/scope documentation and public source. Homepage, guide, source and
+OAuth discovery return200; anonymous MCP initialization returns401 with
+the expected metadata challenge, and discovery advertises PKCE S256. Diff
+and secret checks pass. No upstream status checks are reported; an open PR
+is a submission receipt, not approval or publication in the live directory.
+
+The earlier fee-only blocker was based on checking the website forms without
+checking the official GitHub route. The maintainer's
+[existing submission issue](https://github.com/chatmcp/mcpso/issues/1) invites
+server links. At the publisher's explicit request, this submission is a PR.
+No duplicate issue/comment, website login, payment or paid-form submission
+was made. The public39USD automatic-publishing option is not a prerequisite
+for this already-created GitHub submission.
+
+**Next:** maintainers review/merge or provide actionable feedback; the worker
+handles corrections and verifies actual public metadata and the advertised
+authenticated native path before reporting publication. Manual follow-up
+2026-10-27UTC if no earlier event; no automated monitor is created. w6/041
+retains that publication acceptance, with no spending decision pending.
+
+## Historical webpage-only preparation and fee assumption
 
 At **2026-10-23T21:28:12Z**, the actual
 [remote-server form](https://mcp.so/submit?type=remote-server) still offers only

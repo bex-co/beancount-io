@@ -17,7 +17,7 @@ Source: the owner's request to put every remaining action from the 17-target lis
 | Already-public directory native paths | [m10/t010](blocked/m10/done/t010.md) MCPServers.org; [t011](blocked/m10/done/t011.md) LobeHub accounting/live metadata | Both native acceptance tasks are complete. MCPMarket review and LobeHub crawler deployment correction remain independent external gates. |
 | LobeHub deployment/search correctness | [m10/t012](blocked/m10/t012.md) — supported crawler correction and actual name search | Start supported-route investigation now; platform-only changes get their exact unblock condition. |
 | Existing remaining applications | [m11](blocked/m11/README.md) — ChatGPT in review (publisher estimate2026-11-03); Claude in review (no supplied estimate); Awesome Remote maintainer waiver/review/merge | No duplicate application/PR, repeated waiver comment or fake engagement. |
-| Unsubmitted gated channels | [041](blocked/041.md) MCP.so fee/free route; [042](blocked/042.md) PulseMCP reopening | Planning does not authorize payment or invent a working intake. |
+| Other catalog follow-through | [041](blocked/041.md) MCP.so submitted PR6071/review/publication; [042](blocked/042.md) PulseMCP reopening | Actual GitHub receipt clears the previous fee-only blocker; PulseMCP intake remains independent. |
 | Completed baseline / no intake | Official Registry release owner, published cursor.directory and source-backed Windsurf no-marketplace | Check release drift or an actually opened route; do not create phantom submissions. |
 
 **Execution order:**043tracker,044browser recovery and independent native/correction follow-through are shipped. 045credential coordination is complete;046scope-upgrade repair is deployed and native offline/accounting acceptance passes; only actual scheduled refresh/runtime proof remains. Perform each newly available review/publication action independently. Complete a platform's due observation or real feedback when available and continue all other tasks. Aggregate verification and standing closing tasks retain their full DoDs. A blocked platform never ends the w6 loop while another actionable item remains.
@@ -250,7 +250,7 @@ Prioritize the major correctness findings (PRINT/FROM/JOURNAL, authored location
 
 - [046](blocked/046.md) — Docker renewable OAuth — **blocked:** fix37f5a25b6 deployed; same-client offline callback/refresh issuance/accounting pass. Only actual native scheduled refresh remains; worker checks supported Linux CE before requesting operator setup. Current grant retained.
 
-- [041](blocked/041.md) — MCP.so publication — **blocked:** current $39 mandatory fee needs explicit approval or a documented free route; packet is ready.
+- [041](blocked/041.md) — MCP.so — **submitted:** [PR6071](https://github.com/chatmcp/mcpso/pull/6071),2026-10-25T07:03:59Z; **blocked:** maintainer review/live publication and advertised native verification. No fee or website-login decision pending.
 - [042](blocked/042.md) — PulseMCP publication — **blocked:** new listings and changes remain paused; needs supported reopened intake.
 
 - [039](blocked/039.md) — Recheck Hermes support for consent-gated ledger instruction scaffolding — **blocked:** needs a compatible Hermes host policy; retain the approved workflow and do not force installation.

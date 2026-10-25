@@ -1,0 +1,68 @@
+{
+  "target": "MCP.so",
+  "status": "submitted",
+  "route": "GitHub pull request",
+  "url": "https://github.com/chatmcp/mcpso/pull/6071",
+  "submittedAtUTC": "2026-10-25T07:03:59Z",
+  "verifiedAtUTC": "2026-10-25T07:04:22Z",
+  "repository": "chatmcp/mcpso",
+  "number": 6071,
+  "title": "Add Beancount.io remote MCP server",
+  "state": "OPEN",
+  "isDraft": false,
+  "headSHA": "f8f3431e9a1c799373131fc473d0c65c98277862",
+  "baseSHA": "e14f33850f449dce186eb78bbf05b075065c2ca4",
+  "files": [
+    {
+      "path": "README.md",
+      "additions": 8,
+      "deletions": 0
+    }
+  ],
+  "statusChecks": [],
+  "checkBoundary": "No checks are reported; CLEAN merge state is not review approval or publication.",
+  "entry": {
+    "name": "Beancount.io",
+    "identity": "io.beancount/beancount",
+    "endpoint": "https://beancount.io/api-gateway/mcp",
+    "transport": "Streamable HTTP",
+    "authentication": "OAuth authorization code flow with PKCE",
+    "guide": "https://github.com/bex-co/beancount-io/blob/main/backend-cluster/backend-v2/docs/mcp.md",
+    "source": "https://github.com/bex-co/beancount-io"
+  },
+  "duplicateSearch": "GitHub repository-wide beancount issue/PR search returned zero before this submission; no second issue/comment or paid form was submitted.",
+  "validation": {
+    "checkedAtUTC": "2026-10-25T07:01:26.638204Z",
+    "checks": {
+      "homepage": {
+        "url": "https://beancount.io",
+        "httpStatus": 200
+      },
+      "guide": {
+        "url": "https://github.com/bex-co/beancount-io/blob/main/backend-cluster/backend-v2/docs/mcp.md",
+        "httpStatus": 200
+      },
+      "source": {
+        "url": "https://github.com/bex-co/beancount-io",
+        "httpStatus": 200
+      },
+      "oauthDiscovery": {
+        "url": "https://beancount.io/.well-known/oauth-authorization-server",
+        "httpStatus": 200,
+        "pkceS256": true
+      },
+      "mcp": {
+        "url": "https://beancount.io/api-gateway/mcp",
+        "httpStatus": 401,
+        "oauthChallengePresent": true
+      }
+    }
+  },
+  "diffCheck": "passed",
+  "secretScan": "passed",
+  "feePaid": false,
+  "mcpsoWebsiteLoginUsed": false,
+  "publication": "Not verified. The PR proposes a README entry for review; it does not populate or prove publication in the live database-backed directory.",
+  "next": "MCP.so maintainers review/merge or request corrections; worker handles actual feedback and verifies the public connector/advertised native path. Manual follow-up2026-10-27UTC if no earlier event; no recurring automation.",
+  "privacy": "Public source/endpoint/PR metadata only; no credentials, account email, tokens, cookies, private infrastructure or ledger contents."
+}
