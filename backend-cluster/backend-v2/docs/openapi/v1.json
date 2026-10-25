@@ -4110,10 +4110,18 @@
                   "properties": {
                     "success": {
                       "type": "boolean"
+                    },
+                    "entryHashes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "The hash each committed entry now carries, in request order — what getEntryContext, the source-slice update and delete take. Empty when the hashes could not be resolved after the commit."
                     }
                   },
                   "required": [
-                    "success"
+                    "success",
+                    "entryHashes"
                   ]
                 }
               }

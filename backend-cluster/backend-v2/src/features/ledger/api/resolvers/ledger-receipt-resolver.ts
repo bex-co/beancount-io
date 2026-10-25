@@ -48,6 +48,12 @@ class InsertReceiptTransactionInput implements InsertReceiptInput {
 class InsertReceiptResult {
   @Field(() => Boolean)
   success: boolean;
+
+  @Field(() => [String], {
+    description:
+      "The hash each committed entry now carries, in request order, for getLedgerEntryContext and the source-slice update and delete; empty when it could not be resolved after the commit",
+  })
+  entryHashes: string[];
 }
 
 @Resolver()
@@ -66,11 +72,12 @@ export class LedgerReceiptMutationResolver {
     input: InsertReceiptTransactionInput,
     @Ctx() ctx: IContext,
   ): Promise<InsertReceiptResult> {
-    return this.receiptWorkflow.insertReceiptTransaction({
+    const result = await this.receiptWorkflow.insertReceiptTransaction({
       ledgerId,
       receiptObjectKey,
       input,
       identity: ctx.getCurrentIdentity(),
     });
+    return { success: result.success, entryHashes: result.entryHashes ?? [] };
   }
 }

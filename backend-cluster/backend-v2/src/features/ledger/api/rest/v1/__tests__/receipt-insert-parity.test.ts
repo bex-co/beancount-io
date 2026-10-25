@@ -152,11 +152,13 @@ async function fixture(caller = identity) {
           body: JSON.stringify(body),
         },
       ),
-    gql: (vars: Record<string, unknown> = { receiptObjectKey, input }) =>
+    gql: (
+      vars: Record<string, unknown> = { receiptObjectKey, input },
+      selection = "success",
+    ) =>
       graphql({
         schema,
-        source:
-          "mutation($ledgerId:String!,$receiptObjectKey:String!,$input:InsertReceiptTransactionInput!) { insertReceiptTransaction(ledgerId:$ledgerId,receiptObjectKey:$receiptObjectKey,input:$input) { success } }",
+        source: `mutation($ledgerId:String!,$receiptObjectKey:String!,$input:InsertReceiptTransactionInput!) { insertReceiptTransaction(ledgerId:$ledgerId,receiptObjectKey:$receiptObjectKey,input:$input) { ${selection} } }`,
         variableValues: { ledgerId: "alice/main", ...vars },
         contextValue: { identity: caller, getCurrentIdentity: () => caller },
       }),
@@ -185,7 +187,7 @@ it.each([identity, { ...identity, ledgerScope: undefined }])(
       const g = await f.gql();
       const m = await f.mcp();
       expect(r.status).toBe(200);
-      expect(await r.json()).toEqual({ success: true });
+      expect(await r.json()).toEqual({ success: true, entryHashes: [] });
       expect(g.errors).toBeUndefined();
       expect(g.data!.insertReceiptTransaction).toEqual({ success: true });
       expect(m.isError).not.toBe(true);
@@ -305,6 +307,96 @@ it("stores the receipt in git with a linked document when configured", async () 
   } finally {
     await f.close();
   }
+});
+
+// w23/083: the result named neither the file nor the hash, so an agent had
+// to list-and-guess its own entry. The bulk write already resolves both;
+// the surfaces below must carry them.
+describe("written file and entry hashes", () => {
+  // Dry runs resolve nothing; commits resolve the bulk result's files and
+  // hashes — so the assertions below pin the commit's values, not the
+  // check's.
+  const resolvingWrite = (files: string[], entryHashes: string[]) =>
+    jest.fn(async (...call: unknown[]) =>
+      call[6] === true
+        ? { success: true }
+        : { success: true, files, entryHashes },
+    );
+
+  it("reports the S3 commit's file and hash on every surface", async () => {
+    const f = await fixture();
+    f.write.mockImplementation(
+      resolvingWrite(["2026.bean"], ["tx-hash"]) as never,
+    );
+    try {
+      const r = await f.rest();
+      expect(await r.json()).toEqual({
+        success: true,
+        entryHashes: ["tx-hash"],
+      });
+      const g = await f.gql(undefined, "success entryHashes");
+      expect(g.errors).toBeUndefined();
+      expect(g.data!.insertReceiptTransaction).toEqual({
+        success: true,
+        entryHashes: ["tx-hash"],
+      });
+      const m = await f.mcp();
+      expect(m.isError).not.toBe(true);
+      expect((m.structuredContent as { result: unknown }).result).toEqual({
+        summary:
+          "Inserted receipt transaction for Café Fixture on 2026-09-01. No new bean-check errors.",
+        success: true,
+        wrote: [{ path: "2026.bean" }],
+        entryHashes: ["tx-hash"],
+        validation: { errorsBefore: 0, errorsAfter: 0, newErrors: [] },
+      });
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("reports the git commit's document and transaction hashes in request order", async () => {
+    const f = await fixture();
+    f.state.bcio = { receipt_storage: "git" };
+    f.write.mockImplementation(
+      resolvingWrite(["main.bean"], ["doc-hash", "tx-hash"]) as never,
+    );
+    try {
+      const r = await f.rest();
+      expect(await r.json()).toEqual({
+        success: true,
+        entryHashes: ["doc-hash", "tx-hash"],
+      });
+      const m = await f.mcp();
+      expect((m.structuredContent as { result: unknown }).result).toEqual(
+        expect.objectContaining({
+          wrote: [{ path: "main.bean" }],
+          entryHashes: ["doc-hash", "tx-hash"],
+        }),
+      );
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("answers empty files and hashes when the commit resolves neither", async () => {
+    const f = await fixture();
+    try {
+      const r = await f.rest();
+      expect(await r.json()).toEqual({ success: true, entryHashes: [] });
+      const g = await f.gql(undefined, "success entryHashes");
+      expect(g.data!.insertReceiptTransaction).toEqual({
+        success: true,
+        entryHashes: [],
+      });
+      const m = await f.mcp();
+      expect((m.structuredContent as { result: unknown }).result).toEqual(
+        expect.objectContaining({ wrote: [], entryHashes: [] }),
+      );
+    } finally {
+      await f.close();
+    }
+  });
 });
 
 it.each(["tmp/usr_other/receipt.pdf", "assets/usr_alice/receipt.pdf"])(

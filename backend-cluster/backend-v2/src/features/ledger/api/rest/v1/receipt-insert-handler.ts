@@ -30,7 +30,13 @@ export const receiptInsertInput = z
   })
   .strict();
 
-export const receiptInsertResult = z.object({ success: z.boolean() });
+const receiptInsertResult = z.object({
+  success: z.boolean(),
+  entryHashes: z.array(z.string()).openapi({
+    description:
+      "The hash each committed entry now carries, in request order — what getEntryContext, the source-slice update and delete take. Empty when the hashes could not be resolved after the commit.",
+  }),
+});
 
 export const receiptInsertRoute = v1Route({
   method: "post",
@@ -42,11 +48,16 @@ export const receiptInsertRoute = v1Route({
   query: z.object({}).strict(),
   body: receiptInsertInput,
   responses: { 200: json("Insertion result", receiptInsertResult) },
-  handler: ({ layers }, { identity, params, body }) =>
-    layers.workflows.ledgerReceipt.insertReceiptTransaction({
-      ledgerId: ledgerIdOf(params),
-      receiptObjectKey: body.receiptObjectKey,
-      input: body.input,
-      identity,
-    }),
+  handler: async ({ layers }, { identity, params, body }) => {
+    const result =
+      await layers.workflows.ledgerReceipt.insertReceiptTransaction({
+        ledgerId: ledgerIdOf(params),
+        receiptObjectKey: body.receiptObjectKey,
+        input: body.input,
+        identity,
+      });
+    // The workflow also reports which files the entries landed in for MCP's
+    // write outcome; v1 adds only the hashes, as for bulk adds (w23/060).
+    return { success: result.success, entryHashes: result.entryHashes ?? [] };
+  },
 });

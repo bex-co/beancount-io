@@ -40,6 +40,21 @@ export type InsertReceiptInput = {
   documentAccount: string;
 };
 
+export type InsertReceiptResult = {
+  success: boolean;
+  /**
+   * Files the committed entries landed in, for MCP's `wrote` (the bulk
+   * route reports files, not lines). Absent when unresolvable (w23/083).
+   */
+  files?: string[];
+  /**
+   * The hash each committed entry now carries, in request order — under
+   * git storage the document directive first, then the transaction.
+   * Absent when unresolvable (w23/083).
+   */
+  entryHashes?: string[];
+};
+
 export interface ILedgerReceiptWorkflow {
   /**
    * Takes the caller's real `Identity`, not a bare userId, because the
@@ -51,7 +66,7 @@ export interface ILedgerReceiptWorkflow {
     receiptObjectKey: string;
     input: InsertReceiptInput;
     identity: Identity;
-  }): Promise<{ success: boolean }>;
+  }): Promise<InsertReceiptResult>;
 }
 
 function slugify(text: string): string {
@@ -116,7 +131,7 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
     receiptObjectKey: string;
     input: InsertReceiptInput;
     identity: Identity;
-  }): Promise<{ success: boolean }> {
+  }): Promise<InsertReceiptResult> {
     const { ledgerId, receiptObjectKey, input, identity } = params;
     // One composite decision precedes the options read, S3 promotion, file
     // commit, and ledger mutation. LedgerEntry's later authorization is
@@ -162,7 +177,7 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
     identity: Identity;
     bcioData: BcioOptionsPublic | undefined;
     favaApiClient: FavaApiClient;
-  }): Promise<{ success: boolean }> {
+  }): Promise<InsertReceiptResult> {
     const {
       ledgerId,
       receiptObjectKey,
@@ -225,8 +240,9 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
 
     // Receipts don't get mobile directive-limit bypass treatment yet — no
     // caller of this workflow threads a platform through today.
+    let committed: { files?: string[]; entryHashes?: string[] };
     try {
-      await this.ledgerEntryWriter.writeBulkEntries(
+      committed = await this.ledgerEntryWriter.writeBulkEntries(
         identity.userId,
         ledgerOwner,
         ledgerName,
@@ -268,7 +284,13 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
       throw error;
     }
 
-    return { success: true };
+    return {
+      success: true,
+      ...(committed.files !== undefined && { files: committed.files }),
+      ...(committed.entryHashes !== undefined && {
+        entryHashes: committed.entryHashes,
+      }),
+    };
   }
 
   private async s3Strategy(params: {
@@ -276,7 +298,7 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
     receiptObjectKey: string;
     input: InsertReceiptInput;
     identity: Identity;
-  }): Promise<{ success: boolean }> {
+  }): Promise<InsertReceiptResult> {
     const { ledgerId, receiptObjectKey, input, identity } = params;
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
 
@@ -309,7 +331,7 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
 
     // Receipts don't get mobile directive-limit bypass treatment yet — no
     // caller of this workflow threads a platform through today.
-    await this.ledgerEntryWriter.writeBulkEntries(
+    const committed = await this.ledgerEntryWriter.writeBulkEntries(
       identity.userId,
       ledgerOwner,
       ledgerName,
@@ -324,6 +346,12 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
       });
     });
 
-    return { success: true };
+    return {
+      success: true,
+      ...(committed.files !== undefined && { files: committed.files }),
+      ...(committed.entryHashes !== undefined && {
+        entryHashes: committed.entryHashes,
+      }),
+    };
   }
 }

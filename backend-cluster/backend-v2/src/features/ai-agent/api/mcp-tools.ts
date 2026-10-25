@@ -14,10 +14,7 @@ import {
   parseReceiptOutputSchema,
   executeParseReceipt,
 } from "../tools/parse-receipt-tool";
-import {
-  receiptInsertInput,
-  receiptInsertResult,
-} from "@/features/ledger/api/rest/v1/receipt-insert-handler";
+import { receiptInsertInput } from "@/features/ledger/api/rest/v1/receipt-insert-handler";
 import {
   fileParseInput,
   fileParseResult,
@@ -452,8 +449,11 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     description:
       "Promote the caller-owned temporary receipt named by receiptObjectKey into receipt storage and append the confirmed transaction. input carries date, payee, description, postings [{account,amountNumber,amountCurrency}], and documentAccount. ledger is required unless pinned. Applies immediately.",
     inputSchema: insertReceiptTransactionInput,
+    // Shaped inline, not from `receiptInsertResult`: that schema grew an
+    // `entryHashes` of its own (w23/083), which would collide with the
+    // outcome's key.
     outputSchema: mcpOutputSchema(
-      toolOutputSchema(withWriteOutcome(receiptInsertResult.shape)),
+      toolOutputSchema(withWriteOutcome({ success: z.boolean() })),
     ),
     execute: async (context, input) => {
       const { ledger, ...args } = insertReceiptTransactionInput.parse(input);
@@ -470,6 +470,10 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
             input: args.input,
           }),
       );
+      // The files and hashes the commit reports, so an agent need not query
+      // to find the entry it just added (w23/083) — the bulk route reports
+      // files, not lines, as for bank imports (w5/942).
+      const { files, entryHashes, ...rest } = written;
       return {
         ok: true,
         result: {
@@ -477,9 +481,9 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
             `Inserted receipt transaction for ${args.input.payee} on ${args.input.date}`,
             validation,
           ),
-          ...written,
-          wrote: [],
-          entryHashes: [],
+          ...rest,
+          wrote: (files ?? []).map((path) => ({ path })),
+          entryHashes: entryHashes ?? [],
           validation,
         },
       };
