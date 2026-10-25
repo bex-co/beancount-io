@@ -6,6 +6,6 @@
 
 - [x] **m1** — [`bea update transaction`: resolve the review queue in place](./done/m1/README.md) (9 tasks) ← `/pm-brainstorm for cli` 2026-10-24
 - [x] **m2** — [No-code OFX/QFX import through upstream beangulp](./done/m2/README.md) (8 tasks) ← `/pm-brainstorm for cli` 2026-10-24
-- [ ] **m3** — [Holdings and register reports](./m3/README.md) (9 tasks) ← `/pm-brainstorm for cli` 2026-10-24
+- [x] **m3** — [Holdings and register reports](./done/m3/README.md) (9 tasks) ← `/pm-brainstorm for cli` 2026-10-24
 - [ ] **m4** — [`bea report capital-gains`: realized gains by lot](./m4/README.md) (7 tasks) ← `/pm-brainstorm for cli` 2026-10-24
 - [ ] **m5** — [A reusable CI check for ledger repositories](./m5/README.md) (8 tasks) ← `/pm-brainstorm for cli` 2026-10-24
