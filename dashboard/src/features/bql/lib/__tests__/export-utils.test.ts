@@ -207,7 +207,8 @@ describe("export-utils", () => {
 
       const csv = tableToCSV(result);
 
-      expect(csv).toBe("text\n\n   \nvalue");
+      // The one-field empty record stays explicit (w4/1089).
+      expect(csv).toBe('text\n""\n   \nvalue');
     });
 
     it("should handle special characters", () => {
