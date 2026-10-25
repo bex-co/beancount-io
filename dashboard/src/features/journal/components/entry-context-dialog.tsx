@@ -25,6 +25,7 @@ import type {
 import { useTranslations } from "@/common/hooks/use-translations";
 import { restoreFocusOnDialogClose } from "@/common/lib/focus/restore-focus-on-dialog-close";
 import { EntryContextPanel } from "@/features/journal/components/entry-context-panel";
+import { hasActiveMonacoWidget } from "@/features/journal/components/entry-editor-escape";
 import { Amount } from "@/common/components/amount";
 
 interface EntryContextDialogProps {
@@ -189,6 +190,15 @@ export function EntryContextDialog({
       }
     >
       <DialogContent
+        // An active Monaco Find / Go to Line widget owns Escape: preventing
+        // the dialog dismissal lets Monaco close the widget, and a later
+        // bare Escape leaves through requestLeave as usual (w4/1062).
+        onEscapeKeyDown={(event) => {
+          const content = event.currentTarget as unknown as ParentNode | null;
+          if (content && hasActiveMonacoWidget(content)) {
+            event.preventDefault();
+          }
+        }}
         className="w-[95vw] sm:w-[90vw] md:min-w-[600px] md:max-w-2xl lg:min-w-[800px] lg:max-w-4xl max-h-[80vh] overflow-hidden flex flex-col"
         onCloseAutoFocus={(event) => {
           if (skipFocusRestoreRef.current) {
