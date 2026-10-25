@@ -1,0 +1,42 @@
+{
+  "target": "PulseMCP",
+  "checkedAtUTC": "2026-10-25T07:34:40Z",
+  "status": "paused",
+  "officialSubmitURL": "https://www.pulsemcp.com/submit",
+  "officialNoticeUpdatedDate": "2026-09-03",
+  "notice": "Not accepting new server/client submissions or changes to existing listings; no reopening date promised.",
+  "supportedInterimAction": "Publish to the Official MCP Registry; PulseMCP says it will pick records up automatically once back.",
+  "interimActionAlreadySatisfied": true,
+  "registry": {
+    "url": "https://registry.modelcontextprotocol.io/v0.1/servers/io.beancount%2Fbeancount/versions/latest",
+    "name": "io.beancount/beancount",
+    "version": "1.0.0",
+    "status": "active",
+    "isLatest": true,
+    "publishedAtUTC": "2026-10-05T22:32:08.196577Z",
+    "endpoint": "https://beancount.io/api-gateway/mcp",
+    "transport": "streamable-http"
+  },
+  "publicSearch": {
+    "url": "https://www.pulsemcp.com/servers?q=beancount",
+    "query": "beancount",
+    "completeVisibleResultCount": 1,
+    "displayedRange": "Showing1-1of1servers",
+    "result": {
+      "name": "Beanquery (Beancount Ledger)",
+      "author": "Tammo van Lessen",
+      "url": "https://www.pulsemcp.com/servers/vanto-beanquery"
+    },
+    "canonicalHostedMatchObserved": false,
+    "limit": "One complete name query inspected; no claim about inaccessible moderation queues or every possible catalog identifier."
+  },
+  "githubRouteAudit": {
+    "repository": "https://github.com/pulsemcp/mcp-servers",
+    "description": "PulseMCP-authored and maintained server implementations, not a documented external-directory submission source.",
+    "result": "No supported catalog PR route established by the inspected official source; no speculative PR/issue sent."
+  },
+  "next": "PulseMCP resumes/auto-ingests the already active registry record or exposes a supported correction/intake route; worker verifies public canonical metadata and actual native setup. Manual follow-up2026-11-01UTC or earlier actual reopening/import event.",
+  "operatorInputNeededNow": false,
+  "submissionSentToPulseMCP": false,
+  "privacy": "Public registry/directory/notice metadata only. No login, credential, payment, private account or raw ledger contents."
+}

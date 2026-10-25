@@ -51,7 +51,7 @@ The [m9/t011](../m9/done/t011.md) official Cursor application is submitted with 
 | MCPServers.org | Canonical public listing verified; original Free $0 receipt retained | [m10/t001](../m10/done/t001.md) done; [m10/t010](../m10/done/t010.md) retains directory-advertised native checks |
 | MCPMarket | Accepted Free Queue repository submission; preserve existing receipt | [m10/t002](../m10/t002.md), m10/t004; reviewer publication then endpoint/OAuth metadata and connection checks |
 | MCP.so | [041 done](../../done/041.md), actual [PR6071](https://github.com/chatmcp/mcpso/pull/6071) submitted2026-10-25T07:03:59Z | [047](../047.md) owns maintainer review/import and actual public/native verification; website fee is not a prerequisite, no payment/login needed for the completed GitHub submission |
-| PulseMCP | [042](../042.md) | Platform reopens supported submission/edit intake; no submission sent while paused |
+| PulseMCP | [042](../042.md), official registry prerequisite already met (active1.0.0) | Platform auto-import/reopening or supported correction, then public/native verification; no direct submission sent while paused and no user action now |
 | Official MCP Registry | Already published under completed w2/m36 | Existing release workflow/canonical record; no duplicate namespace or routine resubmission |
 | cursor.directory — community | Already published under [m9/t003](../m9/done/t003.md) | Preserve published entry and completed native QA; separate from official Cursor submission |
 | Windsurf / legacy Cascade | Source-backed unavailable marketplace route under [m9/t001](../m9/done/t001.md) | m9/t006 retains explicit eligibility/revisit evidence; manual remote configuration is not a catalog submission |
