@@ -1,6 +1,6 @@
 # w6 · m10 — List the connector in independent web directories
 
-**Worker:** worker1 **Goal:** People comparing accounting MCP servers find accurate, usable remote listings on the eligible independent directories. **Status:** todo (3 tasks done; t013 consent-binding regression/fix is the next prerequisite; t010/t011 await it; t012 supported correction remains independent)
+**Worker:** worker1 **Goal:** People comparing accounting MCP servers find accurate, usable remote listings on the eligible independent directories. **Status:** todo (4 tasks done; t013 source regression/fix verified; deploy shipped revision and resume t010/t011; t012 supported correction remains independent)
 
 **Implementation estimate:** ~2h, excluding external review queues and the standing closing tasks.
 
@@ -12,7 +12,7 @@
 | [t001](done/t001.md) | Submit or correct MCPServers.org's free remote listing — **DONE** | 30m | w6/m8/t001 |
 | [t002](t002.md) | Submit or correct MCPMarket's free remote listing — **BLOCKED: free repository submission** | 30m | w6/m8/t001 |
 | [t003](done/t003.md) | Establish LobeHub eligibility and prepare its supported connector listing — **DONE** | 45m | w6/m8/t001, t009 |
-| [t013](t013.md) | Bind OAuth interaction routes to the signed-cookie interaction | 45m | — |
+| [t013](done/t013.md) | Bind OAuth interaction routes to the signed-cookie interaction — **DONE** | 45m | — |
 | [t010](t010.md) | Complete MCPServers.org advertised native accounting checks — **BLOCKED** | 45m | t001, t013 |
 | [t011](t011.md) | Complete LobeHub native OAuth and live metadata — **BLOCKED** | 45m | t003, t009, t013 |
 | [t012](t012.md) | Correct LobeHub crawler stdio deployment and verify search indexing | 30m | t003 |
@@ -119,3 +119,12 @@ rollout/native acceptance. **Unblock/owner:** worker completes t013's verified
 guard, then resumes these native checks; a genuine rollout gate is recorded
 separately. This does not block independent supported crawler correction t012
 or tracker/credential inbox work. No new scope or grant revocation is inferred.
+
+## Consent source repair — 2026-10-25 UTC
+
+t013's controlled real-provider proof and minimum guard are verified and
+archived. Required rebased backend checks pass (389suites/6,971tests).
+The available existing hosted-service deployment must resolve the shipped
+public revision and pass health before t010/t011's fresh sequential native
+acceptance. This precise rollout boundary satisfies t013's source task; it
+does not close or claim the dependent native outcomes.

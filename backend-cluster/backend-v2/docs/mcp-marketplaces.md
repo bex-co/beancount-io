@@ -1,6 +1,6 @@
 # Hosted MCP marketplace submissions
 
-Updated **2026-10-24 UTC**; each target's last check is recorded separately below.
+Updated **2026-10-25 UTC**; each target's last check is recorded separately below.
 This is the shared submission packet for w6/m8–m10, 041 and 042, plus subsequent
 directory submissions. A submission, registry import, or supported transport does not prove
 a public listing or a successful sign-in. Recheck the target before submitting;
@@ -52,6 +52,16 @@ next action together. Keep original receipts and append dated observations to
 the linked packet; do not replace submission history with a later search result.
 Use `published` only after observing the actual public record. Record rejection
 or requested changes explicitly when visible in the existing application.
+
+## Native OAuth acceptance prerequisite
+
+The2026-10-25 native directory checks exposed a cross-flow consent mismatch
+when browser tabs shared an interaction cookie. The backend guard and five
+real-provider regressions are recorded in the [binding repair evidence](./marketplace-submissions/directories/oauth-interaction-binding-20261025.json).
+Verified source does not prove hosted rollout. Deploy the shipped public
+revision through the existing service, verify health/revision, then resume
+MCPServers.org m10/t010 and LobeHub m10/t011 sequentially with the exact
+requester and callback. Existing synthetic grants remain retained.
 
 ## Canonical listing copy
 

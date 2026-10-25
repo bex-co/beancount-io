@@ -911,9 +911,7 @@ describe("oidc-route: unified MCP + identity provider", () => {
     const afterSignOut = await interactionUrlFor(
       mobileAuthUrl({ screen_hint: "select_account" }),
     );
-    expect(afterSignOut.searchParams.get("screen_hint")).toBe(
-      "select_account",
-    );
+    expect(afterSignOut.searchParams.get("screen_hint")).toBe("select_account");
 
     // A hint this server does not know is a newer app talking to an older
     // server: the user still gets the login form, never an error.
@@ -1855,6 +1853,262 @@ describe("oidc-route: unified MCP + identity provider", () => {
     );
     expect(res.status).toBe(400);
     expect(await res.json()).toEqual({ error: "interaction_not_found" });
+  });
+
+  describe("parallel browser consent binding", () => {
+    const resource = `${ISSUER}/api-gateway/mcp`;
+
+    // The dashboard forwards cookies sent to /oauth/consent, not cookies for
+    // its internal backend URL. Keep cookie paths here: the interaction cookie
+    // is shared by both tabs, but each resume cookie has its own UID path.
+    class BrowserCookieJar {
+      private cookies = new Map<
+        string,
+        { name: string; value: string; path: string }
+      >();
+
+      absorb(response: Response): void {
+        for (const raw of response.headers.getSetCookie()) {
+          const [pair, ...attributes] = raw.split(";");
+          const separator = pair.indexOf("=");
+          const name = pair.slice(0, separator).trim();
+          const value = pair.slice(separator + 1).trim();
+          const options = new Map(
+            attributes.map((attribute) => {
+              const [key, ...parts] = attribute.trim().split("=");
+              return [key.toLowerCase(), parts.join("=")];
+            }),
+          );
+          const pathname = new URL(response.url).pathname;
+          const path =
+            options.get("path") ??
+            (pathname.slice(0, pathname.lastIndexOf("/")) || "/");
+          const key = `${path}:${name}`;
+          if (
+            options.get("max-age") === "0" ||
+            (options.has("expires") &&
+              Date.parse(options.get("expires")!) <= Date.now())
+          ) {
+            this.cookies.delete(key);
+          } else {
+            this.cookies.set(key, { name, value, path });
+          }
+        }
+      }
+
+      header(url: URL): string {
+        return [...this.cookies.values()]
+          .filter(
+            ({ path }) =>
+              url.pathname === path ||
+              url.pathname.startsWith(path.endsWith("/") ? path : `${path}/`),
+          )
+          .sort((a, b) => b.path.length - a.path.length)
+          .map(({ name, value }) => `${name}=${value}`)
+          .join("; ");
+      }
+    }
+
+    async function startBrowserAuthorization(
+      jar: BrowserCookieJar,
+      name: "A" | "B",
+    ) {
+      const redirectUri =
+        name === "A"
+          ? "http://127.0.0.1:18787/callback"
+          : "http://127.0.0.1:28787/callback";
+      const registration = await registerHost([redirectUri], {
+        client_name: `parallel-client-${name}`,
+      });
+      expect(registration.status).toBe(201);
+      const clientId = registration.clientId!;
+      const scope =
+        name === "A" ? "openid ledger.read" : "openid ledger.read ledger.write";
+      const { codeVerifier, codeChallenge } = pkce();
+      const state = crypto.randomBytes(16).toString("hex");
+      const authorizationUrl = new URL(`${ISSUER}/api-gateway/oauth/auth`);
+      authorizationUrl.search = new URLSearchParams({
+        client_id: clientId,
+        response_type: "code",
+        scope,
+        resource,
+        redirect_uri: redirectUri,
+        code_challenge: codeChallenge,
+        code_challenge_method: "S256",
+        state,
+      }).toString();
+      const response = await fetch(authorizationUrl, {
+        headers: { cookie: jar.header(authorizationUrl) },
+        redirect: "manual",
+      });
+      expect(response.status).toBe(303);
+      jar.absorb(response);
+      const consentUrl = new URL(response.headers.get("location")!);
+      expect(consentUrl.pathname).toBe("/oauth/consent");
+      const uid = consentUrl.searchParams.get("uid")!;
+      expect(uid).toEqual(expect.any(String));
+      return {
+        clientId,
+        redirectUri,
+        scope,
+        state,
+        codeVerifier,
+        uid,
+        consentUrl,
+      };
+    }
+
+    async function readBrowserRequester(jar: BrowserCookieJar, uid: string) {
+      const browserUrl = new URL("/oauth/consent/requester", ISSUER);
+      return fetch(`${ISSUER}/api-gateway/oauth/interaction/${uid}`, {
+        headers: { cookie: jar.header(browserUrl) },
+        redirect: "manual",
+      });
+    }
+
+    async function approveBrowserInteraction(
+      jar: BrowserCookieJar,
+      pending: Awaited<ReturnType<typeof startBrowserAuthorization>>,
+    ) {
+      const response = await fetch(
+        `${ISSUER}/api-gateway/oauth/interaction/${pending.uid}/login`,
+        {
+          method: "POST",
+          headers: {
+            authorization: `Bearer ${TEST_TOKEN}`,
+            cookie: jar.header(pending.consentUrl),
+            "content-type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            ledgerId: "ada/personal",
+            scope: pending.scope,
+          }),
+          redirect: "manual",
+        },
+      );
+      expect(response.status).toBe(303);
+      jar.absorb(response);
+      const resumeUrl = new URL(response.headers.get("location")!, ISSUER);
+      await response.arrayBuffer();
+      const resumed = await fetch(resumeUrl, {
+        headers: { cookie: jar.header(resumeUrl) },
+        redirect: "manual",
+      });
+      expect(resumed.status).toBe(303);
+      jar.absorb(resumed);
+      const callback = new URL(resumed.headers.get("location")!);
+      await resumed.arrayBuffer();
+      expect(callback.origin + callback.pathname).toBe(pending.redirectUri);
+      expect(callback.searchParams.get("state")).toBe(pending.state);
+      expect(callback.searchParams.get("error")).toBeNull();
+      const code = callback.searchParams.get("code");
+      expect(code).toEqual(expect.any(String));
+      const tokens = await exchangeToken({
+        code: code!,
+        verifier: pending.codeVerifier,
+        clientId: pending.clientId,
+        redirectUri: pending.redirectUri,
+        resource,
+      });
+      expect(tokens.error).toBeUndefined();
+      expect(tokens.access_token).toEqual(expect.any(String));
+      expect(decodeJwt(tokens.access_token as string)).toMatchObject({
+        ledger_id: "ada/personal",
+        aud: resource,
+      });
+    }
+
+    it.each(["A", "B"] as const)(
+      "completes matching public client %s with its own cookies",
+      async (name) => {
+        const jar = new BrowserCookieJar();
+        const pending = await startBrowserAuthorization(jar, name);
+        const details = await readBrowserRequester(jar, pending.uid);
+        expect(details.status).toBe(200);
+        expect(await details.json()).toMatchObject({
+          uid: pending.uid,
+          client: pending.clientId,
+          redirect_uri: pending.redirectUri,
+        });
+        await approveBrowserInteraction(jar, pending);
+      },
+    );
+
+    it.each(["read", "approve", "cancel"] as const)(
+      "rejects %s for URL A with cookie B and leaves sibling B usable",
+      async (operation) => {
+        const jar = new BrowserCookieJar();
+        const first = await startBrowserAuthorization(jar, "A");
+        const firstDetails = await readBrowserRequester(jar, first.uid);
+        expect(await firstDetails.json()).toMatchObject({
+          uid: first.uid,
+          client: first.clientId,
+        });
+        // Starting the second tab replaces the cookie at /oauth/consent;
+        // the first tab's already rendered form still names the first UID.
+        const second = await startBrowserAuthorization(jar, "B");
+        expect(second.uid).not.toBe(first.uid);
+        const upsert = jest.spyOn(MemoryAdapter.prototype, "upsert");
+        let observation;
+        try {
+          const response =
+            operation === "read"
+              ? await readBrowserRequester(jar, first.uid)
+              : await fetch(
+                  `${ISSUER}/api-gateway/oauth/interaction/${first.uid}/login`,
+                  {
+                    method: "POST",
+                    headers: {
+                      authorization: `Bearer ${TEST_TOKEN}`,
+                      cookie: jar.header(first.consentUrl),
+                      "content-type": "application/x-www-form-urlencoded",
+                    },
+                    body: new URLSearchParams(
+                      operation === "cancel"
+                        ? { decision: "cancel" }
+                        : { ledgerId: "ada/personal", scope: first.scope },
+                    ),
+                    redirect: "manual",
+                  },
+                );
+          const body = await response.json().catch(() => ({}));
+          const interactions = new MemoryAdapter("Interaction");
+          observation = {
+            status: response.status,
+            redirect: response.headers.get("location"),
+            disclosedClient: body.client,
+            firstResult: (await interactions.find(first.uid))?.result,
+            siblingResult: (await interactions.find(second.uid))?.result,
+            grantWrites: upsert.mock.contexts.filter(
+              (context) => context.model === "Grant",
+            ).length,
+            codeWrites: upsert.mock.contexts.filter(
+              (context) => context.model === "AuthorizationCode",
+            ).length,
+          };
+        } finally {
+          upsert.mockRestore();
+        }
+
+        const siblingDetails = await readBrowserRequester(jar, second.uid);
+        expect(siblingDetails.status).toBe(200);
+        expect(await siblingDetails.json()).toMatchObject({
+          uid: second.uid,
+          client: second.clientId,
+          redirect_uri: second.redirectUri,
+        });
+        await approveBrowserInteraction(jar, second);
+        expect(observation).toEqual({
+          status: 400,
+          redirect: null,
+          disclosedClient: undefined,
+          firstResult: undefined,
+          siblingResult: undefined,
+          grantWrites: 0,
+          codeWrites: 0,
+        });
+      },
+    );
   });
 
   it("resource indicators: dynamic clients cannot request an API token", async () => {

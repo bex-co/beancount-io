@@ -1,0 +1,61 @@
+{
+  "dateUTC": "2026-10-25",
+  "owner": "w6/m10/t013",
+  "context": "Actual directory-advertised native onboarding exposed a requester/callback mismatch when two client authorizations shared one browser.",
+  "rootCause": "GET and POST interaction routes accepted a URL UID different from the interaction selected by the provider-validated signed cookie.",
+  "regression": {
+    "file": "src/features/oauth/api/__tests__/oidc-route.test.ts",
+    "testGroup": "parallel browser consent binding",
+    "method": "Real HTTP, oidc-provider middleware, DCR, path-aware shared browser cookies, real in-memory provider adapter writes and PKCE token exchange; no mock of the proposed guard.",
+    "beforeFix": {
+      "passed": 2,
+      "failed": 3,
+      "failureCases": [
+        "read mismatched URL A / signed cookie B",
+        "approve mismatched URL A / signed cookie B",
+        "cancel mismatched URL A / signed cookie B"
+      ],
+      "handlerSHA256": "257738c9b1a2fc9de63d14478033a2cf0692e897430c83cebc7d63959effa10f",
+      "durationSeconds": 4.596,
+      "limit": "Original terminal result retained; no pre-fix log file was created. Initial opaque-token fixture errors were corrected and excluded from this proof."
+    },
+    "afterFix": {
+      "passed": 5,
+      "failed": 0
+    },
+    "assertions": [
+      "Mismatch returns HTTP400 without another client disclosure or redirect",
+      "No grant/code writes and neither interaction completed by mismatched request",
+      "Matching clients retain signed-cookie validation and complete PKCE exchange",
+      "Sibling B remains usable after each rejected operation"
+    ]
+  },
+  "fix": "Compare interaction.uid to ctx.params.uid immediately after interactionDetails in both routes, before client details, approval or cancellation.",
+  "validation": {
+    "runtime": "Node22.23.4, official distribution checksum verified",
+    "typecheck": "passed",
+    "focusedTests": "5 passed, 105 unrelated tests skipped by focused test-name filter",
+    "fullSuiteBeforeRebase": {
+      "suitesPassed": 388,
+      "testsPassed": 6942,
+      "snapshotsPassed": 1
+    },
+    "formatAndTargetedLint": "passed",
+    "openAPIGeneration": "passed; no snapshot drift",
+    "localInfrastructureNote": "First whole-suite attempt exhausted the default4GB heap before suite results. The complete rerun with8GB passed; no test exclusion or changed test policy.",
+    "fullSuiteAfterRebase": {
+      "suitesPassed": 389,
+      "testsPassed": 6971,
+      "snapshotsPassed": 1,
+      "durationSeconds": 198.267,
+      "baselinePublicMain": "d492c9871"
+    }
+  },
+  "rollout": {
+    "state": "Verified source fix ready to ship; hosted deployment and fresh native acceptance are not yet claimed.",
+    "nextAction": "Deploy the shipped public main revision through the existing hosted service, verify resolved revision and health, then resume sequential native checks in w6/m10/t010 and t011.",
+    "owner": "Repository worker through existing operator deployment access",
+    "endpoint": "https://beancount.io/api-gateway/mcp"
+  },
+  "privacy": "No tokens, cookies, authorization codes, private infrastructure details or ledger contents are included. Existing synthetic test grants are retained."
+}

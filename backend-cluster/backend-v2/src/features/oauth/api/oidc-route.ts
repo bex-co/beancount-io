@@ -532,6 +532,11 @@ export function setOidcRoutes(
     try {
       pinRequestToIssuer(ctx.req);
       const interaction = await provider.interactionDetails(ctx.req, ctx.res);
+      // The provider selects by signed cookie; another tab may have replaced it
+      // after this page loaded. Never use that cookie for a different URL UID.
+      if (interaction.uid !== ctx.params.uid) {
+        throw new errors.InvalidRequest("authorization interaction mismatch");
+      }
       const clientId = String(interaction.params.client_id ?? "");
       const client = clientId
         ? await provider.Client.find(clientId)
@@ -564,6 +569,9 @@ export function setOidcRoutes(
     try {
       pinRequestToIssuer(ctx.req);
       const interaction = await provider.interactionDetails(ctx.req, ctx.res);
+      if (interaction.uid !== ctx.params.uid) {
+        throw new errors.InvalidRequest("authorization interaction mismatch");
+      }
       const { params, prompt } = interaction;
 
       const interactionBody = ctx.request.body as {
