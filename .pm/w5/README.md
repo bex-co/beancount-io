@@ -36,7 +36,7 @@
 
 ## Inbox
 
-- [943 — Keep numeric importer IDs stable after serialization](./943.md) — reopened major CLI gap: exponent/signed-zero numeric IDs lose their lookup key after writing and a corrected payment writes again; original presence and nearby controls pass, checked 2026-10-24.
+- [943 — Keep numeric importer IDs stable after serialization](./943.md) — reopened major CLI gap: numeric IDs lose their lookup key, include repeats and corrections write again; original and three-policy controls pass, checked 2026-10-24.
 
 - [924 — Refuse explicit currency symbols that contradict CSV row units](./924.md) — reopened major CLI gap: ₿/BTC, ₭/LAK and ៛/KHR are silently booked as USD; original five-symbol and ambiguity controls pass, checked 2026-10-24.
 
