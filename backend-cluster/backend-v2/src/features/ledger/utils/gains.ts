@@ -49,11 +49,10 @@ function parseBound(
   name: "from-date" | "to-date",
 ): string {
   const match = ISO_DATE.exec(value);
+  // The round trip rejects rollovers (`2024-13-01`, `2024-02-30`):
+  // `Date.UTC` never yields NaN for four/two/two-digit inputs.
   const valid =
     match !== null &&
-    Number.isInteger(
-      Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])),
-    ) &&
     new Date(
       Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])),
     )

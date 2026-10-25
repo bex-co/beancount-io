@@ -39,6 +39,7 @@ import type {
 import {
   DirectiveType,
   type AccountJournalEntryPublic,
+  type BeancountOptionsPublic,
   type FavaApiClient,
   type JournalTransactionPublic,
 } from "@/foundation/fava";
@@ -191,9 +192,10 @@ export class LedgerFinanceService
       ledgerId,
       identity,
     );
-    const options = await unwrapFavaResponse(
-      favaApiClient.reports.getLedgerOptions(ledgerOwner, ledgerName),
-      "get ledger options",
+    const options = await this.reportOptions(
+      favaApiClient,
+      ledgerOwner,
+      ledgerName,
     );
     const target = resolveHoldingsConversion(
       conversion,
@@ -226,14 +228,7 @@ export class LedgerFinanceService
     });
   }
 
-  private rootsOf(options: {
-    name_assets?: string;
-    name_liabilities?: string;
-    name_equity?: string;
-    name_income?: string;
-    name_expenses?: string;
-  } | null): string[] {
-    if (options === null || options === undefined) return [];
+  private rootsOf(options: BeancountOptionsPublic): string[] {
     return [
       options.name_assets,
       options.name_liabilities,
@@ -256,10 +251,7 @@ export class LedgerFinanceService
       identity,
     );
     const [options, postings, balances] = await Promise.all([
-      unwrapFavaResponse(
-        favaApiClient.reports.getLedgerOptions(ledgerOwner, ledgerName),
-        "get ledger options",
-      ),
+      this.reportOptions(favaApiClient, ledgerOwner, ledgerName),
       unwrapFavaResponse(
         favaApiClient.reports.getLedgerPostingsPerAccount(
           ledgerOwner,
@@ -294,6 +286,33 @@ export class LedgerFinanceService
     return { account: root, rows: mapRegisterRows(items, root) };
   }
 
+  /** One options read: roots for the account matcher, operating currency. */
+  private reportOptions(
+    favaApiClient: Pick<FavaApiClient, "reports">,
+    ledgerOwner: string,
+    ledgerName: string,
+  ): Promise<BeancountOptionsPublic> {
+    return unwrapFavaResponse(
+      favaApiClient.reports.getLedgerOptions(ledgerOwner, ledgerName),
+      "get ledger options",
+    );
+  }
+
+  /** Every page of a `{ items, total }` journal read, in order. */
+  private async pageAll<T>(
+    fetch: (offset: number) => Promise<{ items: T[]; total: number }>,
+  ): Promise<T[]> {
+    const all: T[] = [];
+    let offset = 0;
+    for (;;) {
+      const page = await fetch(offset);
+      all.push(...page.items);
+      offset += page.items.length;
+      if (page.items.length === 0 || offset >= page.total) break;
+    }
+    return all;
+  }
+
   /** Accounts asserting a balance in the window, all pages. */
   private async balanceAccounts(
     favaApiClient: Pick<FavaApiClient, "journal">,
@@ -301,10 +320,8 @@ export class LedgerFinanceService
     ledgerName: string,
     time: string | undefined,
   ): Promise<string[]> {
-    const accounts: string[] = [];
-    let offset = 0;
-    for (;;) {
-      const data = await unwrapFavaResponse(
+    const items = await this.pageAll((offset) =>
+      unwrapFavaResponse(
         favaApiClient.journal.getJournal(ledgerOwner, ledgerName, {
           ...filterNullish({ time }),
           directive_types: [DirectiveType.Balance],
@@ -312,16 +329,13 @@ export class LedgerFinanceService
           offset,
         }),
         "get ledger balance accounts",
-      );
-      for (const item of data.items) {
-        if ("account" in item && typeof item.account === "string") {
-          accounts.push(item.account);
-        }
-      }
-      offset += data.items.length;
-      if (data.items.length === 0 || offset >= data.total) break;
-    }
-    return accounts;
+      ),
+    );
+    return items.flatMap((item) =>
+      "account" in item && typeof item.account === "string"
+        ? [item.account]
+        : [],
+    );
   }
 
   async getCapitalGains(params: GainsParams): Promise<GainsResult> {
@@ -333,10 +347,7 @@ export class LedgerFinanceService
       identity,
     );
     const [options, transactions] = await Promise.all([
-      unwrapFavaResponse(
-        favaApiClient.reports.getLedgerOptions(ledgerOwner, ledgerName),
-        "get ledger options",
-      ),
+      this.reportOptions(favaApiClient, ledgerOwner, ledgerName),
       this.journalTransactions(
         favaApiClient,
         ledgerOwner,
@@ -360,10 +371,8 @@ export class LedgerFinanceService
     ledgerName: string,
     time: string | undefined,
   ): Promise<JournalTransactionPublic[]> {
-    const transactions: JournalTransactionPublic[] = [];
-    let offset = 0;
-    for (;;) {
-      const data = await unwrapFavaResponse(
+    const items = await this.pageAll((offset) =>
+      unwrapFavaResponse(
         favaApiClient.journal.getJournal(ledgerOwner, ledgerName, {
           ...filterNullish({ time }),
           directive_types: [DirectiveType.Transaction],
@@ -371,20 +380,17 @@ export class LedgerFinanceService
           offset,
         }),
         "get ledger transactions",
-      );
-      for (const item of data.items) {
-        if (item.directive_type === DirectiveType.Transaction) {
-          transactions.push(item as JournalTransactionPublic);
-        }
-      }
-      offset += data.items.length;
-      if (data.items.length === 0 || offset >= data.total) break;
-    }
-    return transactions;
+      ),
+    );
+    return items.flatMap((item) =>
+      item.directive_type === DirectiveType.Transaction
+        ? [item as JournalTransactionPublic]
+        : [],
+    );
   }
 
   /** The root's journal items, newest-first, all pages. */
-  private async registerItems(
+  private registerItems(
     favaApiClient: Pick<FavaApiClient, "journal">,
     ledgerOwner: string,
     ledgerName: string,
@@ -392,10 +398,8 @@ export class LedgerFinanceService
     time: string | undefined,
     target: string | null,
   ): Promise<AccountJournalEntryPublic[]> {
-    const items: AccountJournalEntryPublic[] = [];
-    let offset = 0;
-    for (;;) {
-      const data = await unwrapFavaResponse(
+    return this.pageAll((offset) =>
+      unwrapFavaResponse(
         favaApiClient.journal.getAccountJournal(ledgerOwner, ledgerName, {
           account: root,
           ...filterNullish({ time }),
@@ -406,11 +410,7 @@ export class LedgerFinanceService
           offset,
         }),
         "get ledger register",
-      );
-      items.push(...data.items);
-      offset += data.items.length;
-      if (data.items.length === 0 || offset >= data.total) break;
-    }
-    return items;
+      ),
+    );
   }
 }
