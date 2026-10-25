@@ -54,8 +54,6 @@ jobs:
         run: python3 scripts/skills/ci-check.py
       - name: Run ci-check unit tests
         run: python3 scripts/skills/test_ci_check.py
-      - name: Run BQL cookbook recipes
-        run: python3 scripts/skills/verify-bql-cookbook.py
       - name: Run cookbook verifier tests
         run: python3 scripts/skills/test_verify_bql_cookbook.py
       - name: Run customer-suite installer and first-query tests

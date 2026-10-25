@@ -550,6 +550,19 @@ def check_ledgers() -> None:
         fail(f"`bea check` disagrees with oracle bean-check for: {bea_disagree}")
 
 
+def check_cookbook() -> None:
+    """Every BQL cookbook recipe runs against its fixture with rows back."""
+    verifier = REPO_ROOT / "scripts" / "skills" / "verify-bql-cookbook.py"
+    result = subprocess.run(
+        [sys.executable, str(verifier)], capture_output=True, text=True
+    )
+    print(result.stdout, end="")
+    if result.returncode != 0:
+        print(result.stderr, end="", file=sys.stderr)
+        fail("BQL cookbook recipes failed (see above)")
+    print("OK cookbook recipes")
+
+
 def check_bea_first() -> None:
     """Every customer skill states a bea preference once and keeps raw appends in fallbacks."""
     for path in sorted(SKILLS_DIR.glob("beancount-*/SKILL.md")):
@@ -674,6 +687,7 @@ def main() -> None:
     check_bea_minimum()
     check_python()
     check_ledgers()
+    check_cookbook()
     check_bea_first()
     check_no_redundant_installs()
     check_plugin_manifests()
