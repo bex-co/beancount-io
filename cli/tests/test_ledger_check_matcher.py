@@ -14,7 +14,8 @@ import re
 import subprocess
 from pathlib import Path
 
-CLI_ROOT = Path(__file__).resolve().parents[1]
+from tests.report_helpers import CLI_ROOT, bea
+
 MATCHER = json.loads((CLI_ROOT / "action" / "problem-matcher.json").read_text())
 
 
@@ -23,24 +24,17 @@ def _patterns(owner: str) -> list[re.Pattern[str]]:
     return [re.compile(pattern["regexp"]) for pattern in matcher["pattern"]]
 
 
-def _run(*args: str) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        ["uv", "run", "--quiet", "--project", str(CLI_ROOT), "--no-sync", "python", "-m", "cli.main", *args],
-        capture_output=True,
-        text=True,
-        timeout=300,
-        cwd=CLI_ROOT,
-        check=False,
-    )
+def _run(tmp_path: Path, *args: str) -> subprocess.CompletedProcess[str]:
+    return bea(list(args), tmp_path)
 
 
 def _combined(proc: subprocess.CompletedProcess[str]) -> list[str]:
     return f"{proc.stdout}\n{proc.stderr}".splitlines()
 
 
-def test_check_finding_matches_with_file_line_and_message() -> None:
+def test_check_finding_matches_with_file_line_and_message(tmp_path: Path) -> None:
     fixture = CLI_ROOT / "docs" / "examples" / "ledger-check-broken.bean"
-    proc = _run("--no-input", "--file", str(fixture), "check")
+    proc = _run(tmp_path, "--no-input", "--file", str(fixture), "check")
     assert proc.returncode != 0
     (pattern,) = _patterns("bea-check")
     hits = [line for line in _combined(proc) if pattern.match(line)]
@@ -52,18 +46,18 @@ def test_check_finding_matches_with_file_line_and_message() -> None:
     assert "does not balance" in found.group(3)
 
 
-def test_check_context_lines_match_nothing() -> None:
+def test_check_context_lines_match_nothing(tmp_path: Path) -> None:
     fixture = CLI_ROOT / "docs" / "examples" / "ledger-check-broken.bean"
-    proc = _run("--no-input", "--file", str(fixture), "check")
+    proc = _run(tmp_path, "--no-input", "--file", str(fixture), "check")
     (pattern,) = _patterns("bea-check")
     context = [line for line in _combined(proc) if "Lunch" in line or "Expenses:Food" in line]
     assert context, _combined(proc)
     assert [line for line in context if pattern.match(line)] == []
 
 
-def test_format_finding_matches_with_file() -> None:
+def test_format_finding_matches_with_file(tmp_path: Path) -> None:
     fixture = CLI_ROOT / "docs" / "examples" / "ledger-check-broken.bean"
-    proc = _run("--no-input", "format", str(fixture), "--check")
+    proc = _run(tmp_path, "--no-input", "format", str(fixture), "--check")
     assert proc.returncode != 0
     (pattern,) = _patterns("bea-format")
     hits = [line for line in _combined(proc) if pattern.match(line)]
@@ -74,11 +68,11 @@ def test_format_finding_matches_with_file() -> None:
     assert found.group(1) == f"would format: {fixture}"
 
 
-def test_clean_fixture_matches_nothing() -> None:
+def test_clean_fixture_matches_nothing(tmp_path: Path) -> None:
     fixture = CLI_ROOT / "docs" / "examples" / "ledger-check-clean.bean"
-    checked = _run("--no-input", "--file", str(fixture), "check")
+    checked = _run(tmp_path, "--no-input", "--file", str(fixture), "check")
     assert checked.returncode == 0, checked.stderr
-    formatted = _run("--no-input", "format", str(fixture), "--check")
+    formatted = _run(tmp_path, "--no-input", "format", str(fixture), "--check")
     assert formatted.returncode == 0, formatted.stderr
     patterns = _patterns("bea-check") + _patterns("bea-format")
     lines = _combined(checked) + _combined(formatted)
