@@ -205,7 +205,15 @@ export function TransactionConfigForm({
       }
       return txn;
     });
-    form.setValue("transactions", updatedTransactions);
+    // Apply each filled row as a scalar update: an aggregate array setValue
+    // regenerates every field-array ID, remounting the row being edited and
+    // losing its focus/caret even when nothing was applied (w4/1073).
+    updatedTransactions.forEach((txn, index) => {
+      if (txn === currentTransactions[index]) return;
+      form.setValue(`transactions.${index}.targetAccount`, txn.targetAccount, {
+        shouldDirty: true,
+      });
+    });
     return applied;
   };
 

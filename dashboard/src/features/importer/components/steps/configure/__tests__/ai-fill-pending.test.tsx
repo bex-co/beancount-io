@@ -132,6 +132,39 @@ describe("AI Fill with a pending request", () => {
     expect(targets()[0]).toHaveValue("Expenses:Manual");
   });
 
+  it("keeps the edited target's focus and caret when another row fills (w4/1073)", async () => {
+    renderForm();
+    const edited = targets()[0];
+    edited.focus();
+    fireEvent.change(edited, { target: { value: "Expenses:Manual" } });
+    fireEvent.click(aiFill());
+    await waitFor(() => expect(pending).toHaveLength(1));
+    pending[0].resolve(new Map([food(1)] as [number, unknown][]));
+
+    await waitFor(() => expect(targets()[1]).toHaveValue("Expenses:Food"));
+    expect(targets()[0]).toBe(edited);
+    expect(edited).toHaveFocus();
+    expect(edited).toHaveValue("Expenses:Manual");
+    fireEvent.change(edited, {
+      target: { value: "Expenses:Manual:More" },
+    });
+    expect(edited).toHaveValue("Expenses:Manual:More");
+  });
+
+  it("keeps focus when no suggestion applies (w4/1073)", async () => {
+    renderForm();
+    const edited = targets()[0];
+    edited.focus();
+    fireEvent.change(edited, { target: { value: "Expenses:Manual" } });
+    fireEvent.click(aiFill());
+    await waitFor(() => expect(pending).toHaveLength(1));
+    pending[0].resolve(new Map());
+
+    await waitFor(() => expect(aiFill()).toBeEnabled());
+    expect(targets()[0]).toBe(edited);
+    expect(edited).toHaveFocus();
+  });
+
   it("still fills a target left as it was when the request started", async () => {
     renderForm();
     fireEvent.change(targets()[0], {
