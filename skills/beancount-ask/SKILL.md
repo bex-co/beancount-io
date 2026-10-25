@@ -68,7 +68,7 @@ bea --file "$ledger" --json --no-input report income-statement --time "$month"
 
 ### 2. Translate the question
 
-Map the question to a recipe in `references/bql-recipes.md` — **read it first; every query there is tested**. Resolve the period against today's date ("last month") and state the resolved range in the answer. For "why did this change" questions use the variance recipe (section 9): thresholds are the user's stated policy, every claimed driver cites its postings, and an explanation the postings don't support is labelled unresolved — never an invented cause. When the question is ambiguous ("how much do I spend?" — which period, which categories, total or average?), ask which one the user means: a precise answer to the wrong question reads as authoritative.
+Map the question to a recipe in `references/bql-recipes.md` — **read it first; every query there is tested**. For the human-readable starting point, the [BQL cookbook](https://github.com/bex-co/beancount-io/blob/main/docs/skills/bql-cookbook.md) runs the same recipe families against fixture ledgers with verified shapes. Resolve the period against today's date ("last month") and state the resolved range in the answer. For "why did this change" questions use the variance recipe (section 9): thresholds are the user's stated policy, every claimed driver cites its postings, and an explanation the postings don't support is labelled unresolved — never an invented cause. When the question is ambiguous ("how much do I spend?" — which period, which categories, total or average?), ask which one the user means: a precise answer to the wrong question reads as authoritative.
 
 ### 3. Run, then answer
 

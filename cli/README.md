@@ -186,6 +186,8 @@ and output exceptions.
   no-code CSV and OFX import, rules, and Python importers.
 - [Reference](https://github.com/bex-co/beancount-io/blob/main/cli/docs/REFERENCE.md):
   every command's usage, arguments, and options, generated from the code.
+- [BQL cookbook](https://github.com/bex-co/beancount-io/blob/main/docs/skills/bql-cookbook.md):
+  22 tested query recipes for humans and agents, each executed by CI.
 
 ## Development
 
