@@ -277,3 +277,42 @@ CLI result and the distinction from actual automatic refresh. Only an observed
 scheduled refresh across real expiry remains. The worker is checking supported
 Linux CE on the existing daemon with a fresh secure credential store; Docker
 Desktop is not asserted to be required. No host tokens are exported or borrowed.
+
+## Supported Linux CE expiry test — 2026-10-25T19:16:55.137Z
+
+The supported native scheduler now runs in a client-only Linux container on
+the existing Docker daemon. Official release Gateway0.44.1 and
+docker-credential-pass0.9.12 archives pass their published SHA256 checks. The
+base image reports HEAD, so the actual executable is the unchanged release
+binary that reports v0.44.1. A fresh isolated pass/GPG store holds only this
+client's new synthetic-only DCR grant; no host credential is copied. The
+transient GPG key has no passphrase and private files have owner-only access.
+
+The [vendor-supported CE mode](https://github.com/docker/mcp-gateway/blob/v0.44.1/docs/oauth-ce-mode.md)
+uses `DOCKER_MCP_USE_CE=true`, `DOCKER_MCP_IN_CONTAINER=0` and Docker's
+`credsStore: pass`. Register the one-server local OCI catalog with the
+supported `catalog create --server file://...` command, and make the same
+remote server available in the default legacy catalog for initial scheduling.
+Use `oauth authorize beancount-io --scopes 'openid offline_access ledger.read ledger.write'`,
+select only the intended synthetic ledger, then run the native Gateway with
+`--servers beancount-io --catalog docker-mcp.yaml --secrets <empty-env-file>`.
+The task-specific callback port54339 has host-loopback-only exposure and a
+container-local TCP bridge to the native loopback listener. This is a client
+runtime; the hosted MCP endpoint, backend and existing daemon are reused.
+
+Native callback succeeds with access+refresh. The CLI again exits1 after
+saving the current credential because absent legacy-entry removal fails,
+now reproduced with Linux pass as well as macOS. Do not seed a legacy entry
+or hide the result. The unchanged Gateway connects, discovers44service
+tools/8resources/64templates/4prompts, completes baseline read controls and
+logs its running CE OAuth provider loop.
+
+**Acceptance is in flight:** original real expiry is
+**2026-10-25T20:09:12.214754078Z**. The connected test observes metadata only
+while the native scheduler runs, then requires access/refresh rotation and
+post-expiry accounting plus exactly one dry-run with unchanged-state controls.
+No automatic refresh or post-expiry success has yet been observed.
+[Exact runtime, checksums and acceptance boundary](./oauth-renewal-repair-20261025.json)
+replace the earlier runtime-setup blocker; worker owns the pending observation,
+with no new operator input. [The newer0.44.2 release comparison](https://github.com/docker/mcp-gateway/compare/v0.44.1...v0.44.2)
+changes only Go build/toolchain files, not this OAuth implementation.

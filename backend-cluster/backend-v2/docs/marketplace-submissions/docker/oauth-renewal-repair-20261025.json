@@ -1,7 +1,7 @@
 {
   "owner": "w6/046",
   "dateUTC": "2026-10-25",
-  "state": "Source repair37f5a25b6 deployed through public4d4857a68; same-client native offline callback, refresh-token issuance and accounting pass. Actual scheduled native refresh remains unobserved.",
+  "state": "Deployed scope-upgrade repair and native offline/accounting pass. Supported Linux CE runtime now runs the actual native scheduler; real-expiry acceptance is in flight.",
   "reproduction": {
     "hosted": "Same existing Docker Gateway0.44.1 DCR client, openid/offline_access/read/write, correct requester mcp.docker.com and only the authorized synthetic ledger. After approval the deployed861d10a5c service returns to Choose a ledger; no callback. Owned incomplete listener canceled, retained grant unchanged.",
     "publicDCRLimit": "Existing server-side grant_types and old exact expiry are unobserved; no registration theory is used as proof.",
@@ -68,7 +68,7 @@
     ],
     "accessTokenTTLSeconds": 3600
   },
-  "next": "Only real scheduled native refresh remains: use a vendor-supported scheduler/runtime across actual expiry. Existing macOS container-bypass skips it. Investigate supported Linux CE client on the existing daemon with a fresh secure credential store; do not require Docker Desktop merely because the old launcher cannot schedule. No token export, borrowed host token, fake expiry or second backend stack.",
+  "next": "Worker observes the already running native CE test across original actual expiry2026-10-25T20:09:12.214754078Z, then verifies rotation and native accounting/one-preview/unchanged-state controls. No operator setup or approval is needed; retain the scoped grant and do not reauthorize while this test runs.",
   "privacy": "No access/refresh token, cookie, code/state URL, private infrastructure, account identity or raw ledger contents. No retained grant or reviewer key is revoked.",
   "sourceCommit": "37f5a25b6",
   "rollout": {
@@ -154,5 +154,56 @@
       }
     },
     "actualScheduledRefreshObserved": false
-  }
+  },
+  "nativeScheduledRefresh": {
+    "state": "Running across real expiry; no refresh or post-expiry success claimed yet.",
+    "startedAtUTC": "2026-10-25T19:16:55.137Z",
+    "originalExpiresAtUTC": "2026-10-25T20:09:12.214754078Z",
+    "client": {
+      "gateway": "Official unchanged Linux ARM64 Gateway v0.44.1",
+      "archiveSHA256": "75e9f9df92355bab788a057b4d59308abd73473f7db209cd22df03456978b70c",
+      "credentialHelper": "Official docker-credential-pass v0.9.12",
+      "helperSHA256": "cbebaeba45523050a75beabd4fd0dc7267ab095b02961940e41e6fc38d6b3ee0",
+      "newerReleaseCheck": "v0.44.2 changes only Go build/toolchain files; no OAuth implementation difference in the actual release comparison."
+    },
+    "runtime": {
+      "daemon": "Existing OrbStack Docker29.8.2 daemon; client-only Linux container, no second backend/engine/database",
+      "baseImage": "docker/mcp-gateway:v0.44.1@sha256:b0a3876ffbb352813d658cf25c137b8eae29bbe23db5944560a1c9059533bb16",
+      "binaryLimit": "Base image reports HEAD; replaced with the digest-verified, unchanged official release binary that reports v0.44.1.",
+      "nativeMode": {
+        "DOCKER_MCP_USE_CE": "true",
+        "DOCKER_MCP_IN_CONTAINER": "0"
+      },
+      "credentials": "Fresh isolated pass/GPG store, task-owned encryption key and owner-only private files; no host keychain, personal GPG keys or existing token copied.",
+      "keyProtection": "Transient two-day GPG encryption key has no passphrase; isolated directory permissions are enforced.",
+      "callback": "Native callback54339 is exposed only on host127.0.0.1; a client-container-local TCP bridge reaches the native loopback listener without changing callback bytes.",
+      "limits": "cap-drop ALL, no-new-privileges, 512MiB, one CPU,128PIDs"
+    },
+    "authorization": {
+      "flow": "Fresh native DCR and supported oauth authorize with openid offline_access ledger.read ledger.write",
+      "boundary": "Same previously authorized synthetic-only QA ledger; no all-ledgers/admin scope",
+      "callbackSuccessful": true,
+      "accessPresent": true,
+      "refreshPresent": true,
+      "cliExitCode": 1,
+      "cliLimit": "Native save succeeds, then deleting an absent legacy pass entry fails. This is observed on Linux as well as macOS; no legacy credential is manually seeded or deleted."
+    },
+    "initialNativeDiscovery": {
+      "serviceTools": 44,
+      "resources": 8,
+      "resourceTemplates": 64,
+      "prompts": 4,
+      "providerLoopStarted": true,
+      "mode": "CE"
+    },
+    "observation": "Metadata-only observer invokes the official helper inside this same isolated client. Only expiry, presence and one-way fingerprints leave the container; no credential value is exported. Gateway stays connected while its native scheduler runs. No fake expiry, token endpoint call by the harness or intervening reauthorization.",
+    "acceptance": "After the original actual expiry, require advanced expiry, changed access and refresh fingerprints, native accounting reads and exactly one dry-run, with commit/count/file/Cash/marker controls unchanged.",
+    "sources": [
+      "https://github.com/docker/mcp-gateway/blob/v0.44.1/docs/oauth-ce-mode.md",
+      "https://github.com/docker/mcp-gateway/releases/tag/v0.44.1",
+      "https://github.com/docker/docker-credential-helpers/releases/tag/v0.9.12",
+      "https://github.com/docker/mcp-gateway/compare/v0.44.1...v0.44.2"
+    ]
+  },
+  "checkedAtUTC": "2026-10-25T19:16:55.137Z"
 }
