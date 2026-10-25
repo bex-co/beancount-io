@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1089** — [Preserve empty single-column records in query CSV](./1089.md)
+
 - **1088** — [Keep language changes inside the current file draft](./1088.md)
 
 - **1087** — [Keep loaded commit details through cache refresh](./1087.md)
