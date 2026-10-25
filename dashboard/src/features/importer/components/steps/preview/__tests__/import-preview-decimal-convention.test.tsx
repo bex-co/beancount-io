@@ -57,9 +57,7 @@ describe("ImportPreviewTable amount column convention", () => {
   it("shows a comma-decimal file's rows valid, with the amounts they import as", async () => {
     renderPreview(EU_QUOTED);
 
-    expect(
-      screen.getByText("importer.preview.validCount"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("importer.preview.validCount")).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByText("-4.50")).toBeInTheDocument();
     });
@@ -105,9 +103,7 @@ describe("ImportPreviewTable amount column convention", () => {
   it("names the mixed convention, keeps it across other edits, and lets an amount edit resolve the row", async () => {
     const onResultChange = renderPreview(MIXED);
 
-    expect(
-      screen.getByText("importer.preview.validCount"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("importer.preview.validCount")).toBeInTheDocument();
     // Each refused row names it under its cell and in its diagnostic row.
     await waitFor(() => {
       expect(
