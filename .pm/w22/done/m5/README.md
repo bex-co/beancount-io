@@ -1,6 +1,6 @@
 # w22 · m5 — A reusable CI check for ledger repositories
 
-**Worker:** worker1 **Goal:** a ledger repository adds `bea` validation with one `uses:` line or a pre-commit hook, and findings appear as line-level annotations **Status:** todo (t001–t007 done)
+**Worker:** worker1 **Goal:** a ledger repository adds `bea` validation with one `uses:` line or a pre-commit hook, and findings appear as line-level annotations **Status:** done
 
 ## Tasks (in order)
 
@@ -13,7 +13,7 @@
 | t005 | Adoption surface — **DONE** | 25m | t004 |
 | t006 | Simplify — **DONE** | 25m | t005 |
 | t007 | Test coverage — **DONE** | 45m | t005 |
-| t008 | Closeout | 15m | t006, t007 |
+| t008 | Closeout — **DONE** | 15m | t006, t007 |
 
 ## Definition of done
 
