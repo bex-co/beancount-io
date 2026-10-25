@@ -108,6 +108,7 @@ import {
   withPostWriteValidation,
 } from "../tools/write-validation";
 import { BANK_OPERATIONS } from "../tools/bank-import-tool";
+import { normalizeAgentRepoPath } from "../tools/agent-repo-path";
 import { LEDGER_ENTRY_POINT } from "@/features/ledger/utils/ledger-entry-point";
 import {
   checkLedgerDescription,
@@ -610,6 +611,10 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
             ledgerId,
             input: {
               ...args,
+              // Models spell shell-style `./old.bean`; every other file
+              // tool normalizes that here, before the strict validator.
+              oldPath: normalizeAgentRepoPath(args.oldPath),
+              newPath: normalizeAgentRepoPath(args.newPath),
               message: args.message ?? undefined,
               updateIncludes: args.updateIncludes ?? undefined,
             },

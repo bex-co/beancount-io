@@ -857,3 +857,50 @@ describe.each(["rest", "gql", "mcp"])("moving a file that includes others via %s
     }
   });
 });
+
+// w23/084: models spell shell-style `./old.bean`; every file tool except
+// rename already normalizes that at the MCP layer. REST and GraphQL stay
+// strict behind the shared validator — pinned here, not an oversight.
+describe("dot-prefix normalization", () => {
+  const tree = { "main.bean": "; root\n", "old.bean": "; old\n" };
+
+  it("renames ./old to new on MCP and reports canonical paths", async () => {
+    const f = await fixture(identity, tree);
+    try {
+      const outcome = await f.call("mcp", "./old.bean", "./new.bean");
+      expect(outcome.success).toBe(true);
+      expect(outcome.result).toEqual(
+        expect.objectContaining({
+          oldPath: "old.bean",
+          newPath: "new.bean",
+          wrote: [{ path: "new.bean" }],
+        }),
+      );
+      expect(f.files.get("new.bean")?.content).toBe("; old\n");
+    } finally {
+      await f.close();
+    }
+  });
+
+  it.each(["rest", "gql"])("still refuses ./old on %s", async (surface) => {
+    const f = await fixture(identity, tree);
+    try {
+      const outcome = await f.call(surface, "./old.bean", "new.bean");
+      expect(outcome.success).toBe(false);
+      expect(f.change).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("still refuses ../x on MCP", async () => {
+    const f = await fixture(identity, tree);
+    try {
+      const outcome = await f.call("mcp", "../old.bean", "new.bean");
+      expect(outcome.success).toBe(false);
+      expect(f.change).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+});
