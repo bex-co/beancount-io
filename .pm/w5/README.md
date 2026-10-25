@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1047 — Retarget inferred postings beside compact comments](./1047.md) — minor CLI update gap: adjacent semicolon makes the account edit a no-op while a requested review flag can still clear; 48-book single/batch and native controls, checked 2026-10-25.
+
 - [1046 — Keep currencies compatible in partial realized gains](./1046.md) — minor CLI arithmetic gap: allow-errors subtracts100USD from150EUR and calls it50USD; explicit-cost native/parser and same-currency controls pass, checked 2026-10-25.
 
 - [1045 — Preserve exact native bank IDs from CSV cells](./1045.md) — major CLI missing-payment gap: edge spaces collapse distinct IDs into exact duplicates or false conflicts; raw-ID importer/native controls pass, checked 2026-10-25.
