@@ -459,10 +459,7 @@ def _holdings(
             key: tuple[str, ...] = (
                 (name, commodity, cost.currency) if group_by == "account" else (commodity, cost.currency)
             )
-            found = lots.get(key)
-            if found is None:
-                lots[key] = [Decimal(0), Decimal(0), set()]
-                found = lots[key]
+            found = lots.setdefault(key, [Decimal(0), Decimal(0), set()])
             found[0] += number
             found[1] += number * cost.number
             found[2].add(name)
@@ -537,8 +534,9 @@ def _quote_source(
     """
     if when is None or quote is None:
         return None
+    day = when.isoformat()
     for record in sources.get((base, quote), []):
-        if when.isoformat() in (record.get("effective_dates") or []):
+        if day in (record.get("effective_dates") or []):
             return {
                 "alias": record.get("alias"),
                 "freshness": record.get("freshness"),
@@ -563,10 +561,11 @@ def _holdings_valuation(
     missing leg values at cost (or stays in its own currency) under
     `--allow-errors` and fails strict reads, the same policy as every report.
     """
-    pairs = [{"from": base, "to": quote} for base, quote in sorted(set(missing))]
-    dated = [{"from": base, "to": quote, "date": end} for base, quote in sorted(set(missing))]
+    legs = sorted(set(missing))
+    pairs = [{"from": base, "to": quote} for base, quote in legs]
+    dated = [{"from": base, "to": quote, "date": end} for base, quote in legs]
     summary = []
-    for base, quote in sorted(set(missing)):
+    for base, quote in legs:
         all_prices = ledger.prices.get_all_prices((base, quote))
         if not all_prices:
             summary.append(f"{base} has no {quote} price at any date; valued at cost")
@@ -575,7 +574,7 @@ def _holdings_valuation(
         summary.append(f"{base} → {quote} has no price before {earliest}; earlier holdings valued at cost")
     if pairs and not allow_errors:
         raise protocol.LedgerError(
-            f"Missing prices for {', '.join(sorted({base for base, _ in set(missing)}))}. "
+            f"Missing prices for {', '.join(sorted({base for base, _ in legs}))}. "
             "Each holding is valued at the period end. Add prices covering the dates below "
             "or pass --allow-errors for cost-basis values.",
             details=summary,
