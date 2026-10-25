@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1078** — [Keep late entry completion from discarding a query draft](./1078.md)
+
 - **1077** — [Preserve typed filters while suggestions refresh](./1077.md)
 
 - **1076** — [Keep large BQL charts from crashing the query workspace](./1076.md)
