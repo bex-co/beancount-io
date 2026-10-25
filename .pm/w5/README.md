@@ -36,11 +36,13 @@
 
 ## Inbox
 
+- [1042 — Insert narration before compact header tags and links](./1042.md) — minor CLI planner gap: valid bare headers receive a string after an existing tag/link and refuse; single/batch, spaced and tag-addition controls checked 2026-10-25.
+
 - [1041 — Preserve Unicode numeric-suffix transaction IDs](./1041.md) — minor CLI lookup crash: valid superscript/circled string IDs raise ValueError and abort a batch; both metadata keys, exact ASCII neighbors and file-line controls checked 2026-10-25.
 
 - [1040 — Report completed batch edits before a read-only include](./1040.md) — minor CLI outcome gap: first include changes, second refuses3 saying nothing was written with no result; human/JSON, mapping order and formatter controls checked 2026-10-25.
 
-- [1039 — Preserve compact header text during flag updates](./1039.md) — major CLI text loss: flag-only updates delete adjacent payee/narration while apply/check succeed; single/batch, five compact spellings and native controls checked 2026-10-25.
+- [1039 — Preserve compact header text during flag updates](./1039.md) — major CLI text loss: flag-only updates delete adjacent payee/narration or tags/links while apply/check succeed; single/batch, five compact spellings and native controls checked 2026-10-25.
 
 - [1038 — Retarget decomposed Unicode posting accounts](./1038.md) — minor CLI missed category edit: normalized read names never match raw NFD tokens; explicit and bare-queue updates can clear the flag while leaving9.99 in the old category, single/batch and native/NFC controls checked 2026-10-25.
 
