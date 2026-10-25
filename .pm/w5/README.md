@@ -36,7 +36,7 @@
 
 ## Inbox
 
-- [1031 — Include bank identity in OFX account memory](./1031.md) — major CLI gap: banks sharing an account number overwrite each other’s explicit mappings and later payments post to the wrong bank account; native-valid, repeated 2026-10-25.
+- [1031 — Preserve bank identity in OFX routing](./1031.md) — major CLI gap: account memory and the multi-account guard omit bank IDs, routing distinct banks’ payments to one ledger account; native-valid, repeated 2026-10-25.
 
 - [1030 — Resolve decimal IDs copied from transaction listings](./1030.md) — minor CLI lookup gap: small numeric ref/import-id values printed in fixed point require a hidden exponent spelling in Update; integer/date/string controls pass, checked 2026-10-25.
 
