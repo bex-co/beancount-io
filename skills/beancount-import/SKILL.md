@@ -47,7 +47,14 @@ Read beancount-init's `references/bea-cli.md` (from this skill's folder, `../bea
   and apply. Keep rules in the ledger repository after confirmation. Run the
   additional ±3-day manual-entry duplicate review; CLI duplicate detection
   alone does not cover it.
-- **OFX/QIF or unsupported CSV semantics:** run the normalization, dedup,
+- **OFX/QFX:** run `bea import` with `--ofx` (flag-free `.ofx`/`.qfx`
+  files and OFX content under any suffix auto-detect; the beangulp
+  requirement is in beancount-init's `references/bea-cli.md`, Version
+  notes). Confirm the account and rules once; `bea` remembers them per
+  ACCTID and replays them on repeat imports. Run the additional ±3-day
+  manual-entry duplicate review; CLI duplicate detection alone does not
+  cover it.
+- **QIF or unsupported CSV semantics:** run the normalization, dedup,
   suggestion and confirmation stages below, then use the shared JSON batch
   recipe, preserving `import-id` and flags. This also handles mixed per-row
   duplicate decisions that a single `--duplicates` policy cannot express.
@@ -122,7 +129,7 @@ Config block format — one `source` stanza per export source:
 ;;   imports: 1
 ```
 
-Bump `imports:` only when entries are written (a fully-deduped no-op changes nothing). For sources requiring custom normalization, **when it reaches 3+, suggest once**: "you've imported this source N times — want me to codify it as a tested beangulp importer via `beancount-importer-author`?" Simple CSV mappings already provide repeatable imports and need no graduation nudge. Each fact is stored once. A source the `bea` CSV mapper handles (chase-checking and amex-card above) records exactly what every `bea import` run is passed: `csv_mapping:` (with `sign=bank|ledger` for a single amount column; a `debit=…,credit=…` pair needs none), `date_format:` as a strptime format, and the durable `rules:` path, because `bea` does not remember the sign (beancount-init's `references/bea-cli.md`, Version notes). Every other source — OFX/QFX, QIF, or CSV the mapper cannot represent — records one `format:` line with its `columns`, date order (`MDY`/`DMY`), and `sign` rule (other-bank above, whose type column sets the sign). A stanza written before this convention may carry both forms; its `csv_mapping:` and `date_format:` win.
+Bump `imports:` only when entries are written (a fully-deduped no-op changes nothing). For sources requiring custom normalization, **when it reaches 3+, suggest once**: "you've imported this source N times — want me to codify it as a tested beangulp importer via `beancount-importer-author`?" Simple CSV mappings already provide repeatable imports and need no graduation nudge. Each fact is stored once. A source the `bea` CSV mapper handles (chase-checking and amex-card above) records exactly what every `bea import` run is passed: `csv_mapping:` (with `sign=bank|ledger` for a single amount column; a `debit=…,credit=…` pair needs none), `date_format:` as a strptime format, and the durable `rules:` path, because `bea` does not remember the sign (beancount-init's `references/bea-cli.md`, Version notes). An OFX/QFX source records its `acctid:`, `account:`, and durable `rules:` path — exactly what the no-code path replays per ACCTID — with no `format:` line, since the parser owns columns, dates, and signs. Every other source — QIF, or CSV the mapper cannot represent — records one `format:` line with its `columns`, date order (`MDY`/`DMY`), and `sign` rule (other-bank above, whose type column sets the sign). A stanza written before this convention may carry both forms; its `csv_mapping:` and `date_format:` win.
 
 ### 2. Normalize
 

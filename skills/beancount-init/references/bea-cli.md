@@ -334,6 +334,11 @@ suite's minimum version no longer needs it.
 - **`add close` (0.3.1).** It writes a close even when the account still
   holds a balance, without a warning. Later releases refuse that close
   (naming the balance) unless `--force` is passed.
+- **OFX import (after 0.3.1).** `bea import` reads OFX/QFX with no
+  importer: `.ofx`/`.qfx` files and OFX content auto-detect (or pass
+  `--ofx`), the account and rules are remembered per ACCTID, and the run
+  needs the `beangulp` engine feature (`bea engine enable beangulp`).
+  On 0.3.1, run the manual normalization stages instead.
 
 ## Failure and resume
 
