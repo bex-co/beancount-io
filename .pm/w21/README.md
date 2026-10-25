@@ -48,6 +48,5 @@
 - [951](./blocked/951.md) — Expense accounts are valued at market on Accounts and account detail, but at cost everywhere else — **blocked:** owner confirms flows-at-cost covers Income/Expenses balances; needs a native priced-lot check
 - [977](./blocked/977.md) — LedgerPrices pulls every price date for every pair, and Apollo writes and reads them all on each mount — **blocked:** owner picks the API shape for bounding price dates across REST/GraphQL/MCP
 - [994](./blocked/994.md) — Budget: mobile prorates the current period to today, the dashboard does not, so verdicts differ (product call) — **blocked:** owner picks full-period or prorated target for the period in progress, then both apps follow
-- [1004](./1004.md) — Charts and the referral screen use a screen width read once at start, so on iPad they keep it after rotation
 - [1005](./1005.md) — No readable-width cap anywhere; the Picker and valuation sheets stretch full width on iPad
 - [1006](./1006.md) — The Ask-AI screen hard-codes keyboardVerticalOffset 96 (feature currently disabled)
