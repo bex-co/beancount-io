@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1086** — [Translate existing import errors when the language changes](./1086.md)
+
 - **1085** — [Keep late account actions with their confirmation](./1085.md)
 
 - **1084** — [Keep the pending Close Account date equal to its request](./1084.md)
