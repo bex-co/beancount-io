@@ -11,6 +11,7 @@ cli/
 ├── src/bea_engine/# `bea-engine` helper — the ledger operations that load Beancount
 ├── src/bea_engine/ledger/ # Directive models, reader, writer, atomic ledger writes
 ├── src/fava/      # Vendored Fava reporting subset, now engine-side
+├── action/        # Shipped CI surfaces: composite action, problem matcher, hook script (the hooks manifest lives at the repo root: pre-commit reads it there)
 ├── openapi/       # Pinned v1 OpenAPI snapshot the REST client is generated from
 ├── tests/         # Pytest suite
 ├── scripts/       # Release plumbing plus scripts/gen_reference.py (docs/REFERENCE.md generator)
