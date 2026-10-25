@@ -1,5 +1,6 @@
 import { commitLedgerFiles } from "@/features/ledger/operations/commit-ledger-files";
 import { isGiteaWriteConflict } from "@/features/gitea/utils/gitea-error";
+import { ServiceUnavailableError } from "@/shared/errors";
 
 /**
  * w23/017. Two writers committing to one ledger at once: Gitea answers the
@@ -91,5 +92,42 @@ describe("a commit that loses the race for the branch ref", () => {
 
     expect(attempts).toBe(2);
     expect(remote).toBe("; 0\n; 1\n");
+  });
+
+  // w23/m1: the production lost-race 500 (w23/072) matches no conflict rule,
+  // so no retry fires — but the failure must read retryable, never
+  // "not allowed" for an authorized credential.
+  it("reports an unrecognized commit 500 as retryable without retrying", async () => {
+    let attempts = 0;
+    const client = {
+      repos: {
+        repoGetContents: jest.fn(async () => ({
+          data: {
+            content: Buffer.from("; a\n").toString("base64"),
+            encoding: "base64",
+            sha: "blob-a",
+          },
+        })),
+        repoChangeFiles: jest.fn(async () => {
+          attempts += 1;
+          throw Object.assign(new Error("HTTP 500"), {
+            status: 500,
+            error: { message: "internal error" },
+          });
+        }),
+      },
+    };
+
+    await expect(
+      commitLedgerFiles(
+        client as never,
+        "alice",
+        "books",
+        new Map([["race.bean", (content: string | null) => `${content ?? ""}; b\n`]]),
+        "edit",
+        { directiveLimit: { exempt: true } },
+      ),
+    ).rejects.toBeInstanceOf(ServiceUnavailableError);
+    expect(attempts).toBe(1);
   });
 });

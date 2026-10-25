@@ -3,6 +3,7 @@ import {
   NotFoundError,
   OperationNotAllowedError,
   ResourceLimitReachedError,
+  ServiceUnavailableError,
 } from "@/shared/errors";
 import {
   giteaErrorMessage,
@@ -21,6 +22,13 @@ import {
  */
 const QUOTA_REJECTION_RE =
   /repo_size_limit_exceeded|repo_storage_limit_exceeded|incoming_object_limit_exceeded|repository size limit exceeded/iu;
+
+/**
+ * Git's own wording when a pre-receive hook declines the push — a policy
+ * refusal, not an outage, so it stays an `OperationNotAllowedError` while
+ * every other unclaimed 5xx becomes retryable (w23/m1).
+ */
+const HOOK_DECLINED_RE = /pre-receive hook declined/iu;
 
 function quotaErrorFromHookMessage(
   message: string,
@@ -49,6 +57,10 @@ function quotaErrorFromHookMessage(
  *   - `404` → `NotFoundError` (missing file/repo — not a policy rejection);
  *   - `409` / `422` sha-mismatch (`isGiteaWriteConflict`) → `ConflictError`
  *     (the caller-supplied blob SHA went stale under a concurrent write);
+ *   - `5xx` neither matcher claims → `ServiceUnavailableError`, except a
+ *     pre-receive hook decline, which stays a refusal: a Gitea-side failure
+ *     (an outage, a ref lock with a new signature) is retryable, never
+ *     "not allowed" (w23/m1);
  *   - anything else → `OperationNotAllowedError` carrying the underlying
  *     reason (e.g. Gitea's pre-receive hooks rejecting the push), instead of
  *     the default `InternalServerError` which would be masked to a generic
@@ -81,6 +93,9 @@ export function giteaWriteErrorFromCause(
     const quotaError = quotaErrorFromHookMessage(message);
     if (quotaError) {
       return quotaError;
+    }
+    if (status >= 500 && !HOOK_DECLINED_RE.test(message)) {
+      return new ServiceUnavailableError("Gitea");
     }
     const statusFallback = `Gitea request failed with HTTP ${status}`;
     return new OperationNotAllowedError(
