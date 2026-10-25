@@ -130,6 +130,20 @@ def _money(
     return _amounts({str(amount["currency"]): amount["number"]}, conversion, precision)
 
 
+def _valued(amount: dict[str, Any], group: dict[str, Any], conversion: str, precision: Mapping[str, int]) -> str:
+    """A market value labelled when either quote behind it is stale.
+
+    The value compounds the commodity quote with the conversion leg; one
+    stale leg taints the cell. The heading already names the stale source,
+    so the cell only says *that* it is stale (w22/m3/t004).
+    """
+    cell = _money(amount, conversion, precision)
+    legs = [group.get("price_source"), group.get("conversion_source")]
+    if any(isinstance(leg, dict) and leg.get("freshness") == "stale" for leg in legs):
+        cell += " (stale)"
+    return cell
+
+
 def _print_tree(
     node: dict[str, Any],
     depth: int = 0,
@@ -456,7 +470,7 @@ def holdings(
                 _money(group["units"], conversion, precision),
                 _money(group["average_cost"], conversion, precision),
                 _money(group["cost_basis"], conversion, precision),
-                _money(group["market_value"], conversion, precision),
+                _valued(group["market_value"], group, conversion, precision),
             ]
             for group in groups
         ],

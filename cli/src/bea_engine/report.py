@@ -444,6 +444,7 @@ def _holdings(
     prices = filtered.ledger.prices
     end = filtered.end_date
     target = None if conversion in CONVERSIONS else conversion
+    sources = _price_source_index(filtered.ledger.options.get("bea_managed_price_sources", []))
     # The entry filter keeps whole transactions, so a counterparty's lots
     # survive it; every report prunes its tree by the same matcher instead.
     matches = _report_filter_match(filtered.account, filtered.ledger.root_accounts) if filtered.account else None
@@ -476,8 +477,9 @@ def _holdings(
         if price is None:
             missing.append((commodity, held))
         currency = held
+        leg_date = None
         if target is not None and target != held:
-            _, rate = prices.get_price_point((held, target), end)
+            leg_date, rate = prices.get_price_point((held, target), end)
             if rate is not None:
                 basis, market = basis * rate, market * rate
                 price = price * rate if price is not None else None
@@ -494,6 +496,8 @@ def _holdings(
             "market_value": {"number": market, "currency": currency},
             "price": {"number": price, "currency": currency} if price is not None else None,
             "price_date": quote_date,
+            "price_source": _quote_source(sources, commodity, held, quote_date),
+            "conversion_source": (_quote_source(sources, held, target, leg_date) if leg_date is not None else None),
         }
         groups.append(group)
     valuation = _holdings_valuation(missing, end, allow_errors, filtered.ledger, ledger_errors)
@@ -510,6 +514,38 @@ def _holdings(
         "groups": groups,
         "totals": totals,
     }
+
+
+def _price_source_index(records: list[dict[str, Any]]) -> dict[tuple[str, str], list[dict[str, Any]]]:
+    """Managed sources by the pair they quote, in include order."""
+    index: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    for record in records:
+        pair = (str(record.get("commodity")), str(record.get("quote")))
+        index.setdefault(pair, []).append(record)
+    return index
+
+
+def _quote_source(
+    sources: dict[tuple[str, str], list[dict[str, Any]]], base: str, quote: str | None, when: date | None
+) -> dict[str, Any] | None:
+    """The managed source behind one quote, reusing the w5/m7 provenance fields.
+
+    A source claims the quote when the pair matches and the quote date is one
+    of its effective dates — the points that survived shadowing into the
+    ledger. A ledger-authored quote matches no source and answers None: it is
+    not a live price at all, stale or otherwise (w22/m3/t004).
+    """
+    if when is None or quote is None:
+        return None
+    for record in sources.get((base, quote), []):
+        if when.isoformat() in (record.get("effective_dates") or []):
+            return {
+                "alias": record.get("alias"),
+                "freshness": record.get("freshness"),
+                "observed_at": record.get("observed_at"),
+                "revision": record.get("revision"),
+            }
+    return None
 
 
 def _holdings_valuation(
