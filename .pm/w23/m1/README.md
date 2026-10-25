@@ -1,12 +1,12 @@
 # w23 · m1 — Fence concurrent same-entry updates
 
-**Worker:** worker1 **Goal:** overlapped `updateEntrySource` calls leave exactly one entry with the winner's content and report the loser honestly (never a duplicate, never a silent deletion, never `FORBIDDEN`) **Status:** todo
+**Worker:** worker1 **Goal:** overlapped `updateEntrySource` calls leave exactly one entry with the winner's content and report the loser honestly (never a duplicate, never a silent deletion, never `FORBIDDEN`) **Status:** todo (t001 done)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
-| t001 | Reproduce and root-cause the mis-resolution | 1h | — |
+| t001 | Reproduce and root-cause the mis-resolution — **DONE** | 1h | — |
 | t002 | Fence same-entry updates | 1h | t001 |
 | t003 | Translate commit failures as retryable, not forbidden | 45m | t001 |
 | t004 | Adoption surface | 20m | t002, t003 |
@@ -16,7 +16,7 @@
 
 ## Definition of done
 
-- Overlapped same-entry `updateEntrySource` calls, fired in true overlap repeatedly, always leave exactly one entry carrying the winner's content; the loser gets `CONFLICT` (stale `sha256sum`) or `NOT_FOUND` (hash rotated) — never a second commit, never `FORBIDDEN`, never a reported `OK` that deleted the entry.
+- Overlapped same-entry `updateEntrySource` calls, fired in true overlap repeatedly, always leave exactly one entry carrying the winner's content; the loser gets `CONFLICT` (stale `sha256sum`) or `NOT_FOUND` (hash rotated) — never a second commit, never `FORBIDDEN`, never a reported `OK` that deleted the entry, and (t001 experiment 3) never a silent edit of an unaddressed identical twin.
 - A commit-step failure (Gitea 500/lock) on any write path reports `SERVICE_UNAVAILABLE` (retryable), never `FORBIDDEN`/`OPERATION_NOT_ALLOWED`.
 - Race tests run the overlap repeatedly (the bug needed 3 rounds to show all 3 outcomes) and assert single-entry + winner-content + honest loser on every surface the update exposes (REST, GraphQL, MCP).
 - `docs/mcp.md` retry contracts (`CONFLICT` → re-read + resend fresh `sha256sum`) hold for update races; nothing documents the old `FORBIDDEN`-on-commit behavior.
