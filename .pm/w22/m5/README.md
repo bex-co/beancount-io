@@ -1,13 +1,13 @@
 # w22 · m5 — A reusable CI check for ledger repositories
 
-**Worker:** worker1 **Goal:** a ledger repository adds `bea` validation with one `uses:` line or a pre-commit hook, and findings appear as line-level annotations **Status:** todo (t001 done)
+**Worker:** worker1 **Goal:** a ledger repository adds `bea` validation with one `uses:` line or a pre-commit hook, and findings appear as line-level annotations **Status:** todo (t001, t002 done)
 
 ## Tasks (in order)
 
 | id   | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
 | t001 | Composite action with a problem matcher — **DONE** | 50m | — |
-| t002 | `.pre-commit-hooks.yaml` with check and format hooks | 30m | — |
+| t002 | `.pre-commit-hooks.yaml` with check and format hooks — **DONE** | 30m | — |
 | t003 | Fixture ledger and matcher-regex test | 40m | t001 |
 | t004 | Replace the copy-paste example workflow and update docs | 25m | t003 |
 | t005 | Adoption surface | 25m | t004 |

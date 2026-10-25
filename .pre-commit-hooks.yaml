@@ -1,0 +1,19 @@
+# Shared pre-commit hooks for Beancount ledger repositories. Pre-commit reads
+# this file from the hook repository's root, so it lives here rather than
+# under cli/ next to the action. Both hooks need `bea` on PATH; install it
+# once with `uv tool install 'beancount-io==<version>'`.
+- id: bea-check
+  name: bea check
+  description: Validate the ledger against its root file.
+  entry: cli/action/bea-check.sh
+  language: script
+  files: \.beancount$|\.bean$
+  pass_filenames: false
+  args: [main.bean]
+- id: bea-format
+  name: bea format --check
+  description: Reject formatting drift in changed ledger files.
+  entry: bea --no-input format --check
+  language: system
+  files: \.beancount$|\.bean$
+  pass_filenames: true
