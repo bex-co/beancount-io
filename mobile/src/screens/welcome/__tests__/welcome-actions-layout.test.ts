@@ -88,6 +88,7 @@ function loadWelcome(): any {
           prefersStackedLayout: dynamicType.prefersStackedLayout,
           useTheme: () => ({ colorTheme: {} }),
         };
+      if (id === "@/common/content-column") return { contentColumn: {} };
       if (id === "@/components") return { Button: "Button" };
       if (id === "@/components/pressable-scale")
         return { PressableScale: "PressableScale" };

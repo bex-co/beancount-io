@@ -203,6 +203,7 @@ function screen(
           return { useTranslations: () => ({ t: (key: string) => key }) };
         if (id === "@/common/theme")
           return { useTheme: () => ({ colorTheme: {} }) };
+        if (id === "@/common/content-column") return { contentColumn: {} };
         if (id === "@/common/vars")
           return { ledgerVar: () => events.push("select") };
         if (id === "@/common/rtl") return {};

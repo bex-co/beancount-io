@@ -21,6 +21,7 @@ import {
   space,
   useTheme,
 } from "@/common/theme";
+import { contentColumn } from "@/common/content-column";
 import { useLedgerAccess } from "@/common/hooks/use-ledger-access";
 import { useLedgerReadContext } from "@/common/hooks/use-ledger-read-context";
 import { useAccountCloseDates } from "@/common/hooks/use-account-close-dates";
@@ -163,6 +164,8 @@ const getStyles = (theme: ColorTheme) =>
     listContent: {
       // The keyboard inset below keeps the last rows reachable; a fixed
       // 150 pt fell short of a 291–336 pt keyboard (w21/145).
+      // Capped centered column on iPad; a no-op on phones (w21/m2).
+      ...contentColumn,
       paddingBottom: gutter,
     },
     emptyText: {

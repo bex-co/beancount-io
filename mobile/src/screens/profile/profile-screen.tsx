@@ -36,6 +36,7 @@ import {
   space,
   useTheme,
 } from "@/common/theme";
+import { contentColumn } from "@/common/content-column";
 import { LEADING_TEXT_ALIGN, leadingInputTextAlign } from "@/common/rtl";
 import { isGravatarUrl } from "@/common/user-display";
 import type { ColorTheme } from "@/types/theme-props";
@@ -65,6 +66,8 @@ const getStyles = (theme: ColorTheme) =>
     container: { flex: 1, backgroundColor: theme.white },
     flex: { flex: 1 },
     content: {
+      // Capped centered column on iPad; a no-op on phones (w21/m2).
+      ...contentColumn,
       paddingHorizontal: gutter,
       paddingTop: space.lg,
       paddingBottom: space.xl,

@@ -25,6 +25,7 @@ import {
   useTheme,
   withAlpha,
 } from "@/common/theme";
+import { contentColumn } from "@/common/content-column";
 import { AmountText } from "@/components/amount-text";
 import { AccountTypeIcon } from "@/components/account-type-icon";
 import { entryRowTitle } from "@/screens/transactions-screen/entry-row/entry-row-secondary";
@@ -109,6 +110,8 @@ const getStyles = (theme: ColorTheme) =>
       backgroundColor: theme.white,
     },
     scrollContent: {
+      // Capped centered column on iPad; a no-op on phones (w21/m2).
+      ...contentColumn,
       paddingHorizontal: gutter,
       paddingBottom: 40,
     },

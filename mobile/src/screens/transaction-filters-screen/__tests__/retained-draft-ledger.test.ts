@@ -135,6 +135,7 @@ function loadScreen(): () => any {
           headerActionMaxFontSizeMultiplier: 1,
           useTheme: () => ({ colorTheme: anything }),
         };
+      if (id === "@/common/content-column") return { contentColumn: {} };
       if (id === "@/components")
         return { Button: "Button", DatePickerModal: "DatePickerModal" };
       if (id === "@/screens/multi-postings-transaction/list-item")

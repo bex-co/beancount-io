@@ -16,6 +16,7 @@ import { isToolUIPart } from "ai";
 
 import { ColorTheme } from "@/types/theme-props";
 import { fontSizes, fontWeights, space, useTheme } from "@/common/theme";
+import { contentColumn } from "@/common/content-column";
 import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { LedgerGuard } from "@/components/ledger-guard";
@@ -32,7 +33,12 @@ const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.white },
     list: { flex: 1 },
-    listContent: { paddingVertical: space.sm, flexGrow: 1 },
+    listContent: {
+      // Capped centered column on iPad; a no-op on phones (w21/m2).
+      ...contentColumn,
+      paddingVertical: space.sm,
+      flexGrow: 1,
+    },
     presets: {
       paddingHorizontal: space.lg,
       paddingTop: space.sm,

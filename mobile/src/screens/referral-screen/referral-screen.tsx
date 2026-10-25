@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { Button } from "@/components";
 import * as Clipboard from "expo-clipboard";
+import { contentColumn } from "@/common/content-column";
 import { contentPadding } from "@/common/screen-util";
 import { CommonMargin } from "@/common/common-margin";
 import { ReferralGiftIcon } from "@/screens/referral-screen/components/referral-gift-icon";
@@ -27,7 +28,11 @@ const getStyles = (theme: ColorTheme) =>
       flex: 1,
     },
     body: {
-      margin: contentPadding,
+      // Capped centered column on iPad; a no-op on phones (w21/m2). Padding,
+      // not margin: the column sets width 100%, which margins would push past
+      // the frame.
+      ...contentColumn,
+      padding: contentPadding,
       flexGrow: 1,
       alignItems: "center",
     },

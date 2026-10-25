@@ -12,6 +12,7 @@ import { Stack, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useReactiveVar } from "@apollo/client";
 import { useTheme } from "@/common/theme";
+import { contentColumn } from "@/common/content-column";
 import { ColorTheme } from "@/types/theme-props";
 import { useTranslations } from "@/common/hooks/use-translations";
 import {
@@ -40,6 +41,8 @@ const getStyles = (theme: ColorTheme) =>
       backgroundColor: theme.white,
     },
     content: {
+      // Capped centered column on iPad; a no-op on phones (w21/m2).
+      ...contentColumn,
       flexGrow: 1,
       padding: 20,
       gap: 16,

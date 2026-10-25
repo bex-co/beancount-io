@@ -11,6 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Redirect, Stack } from "expo-router";
 import { ColorTheme } from "@/types/theme-props";
 import { fonts } from "@/common/theme";
+import { contentColumn } from "@/common/content-column";
 import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useGetCommitDetailsQuery } from "@/generated-graphql/graphql";
@@ -280,7 +281,9 @@ function CommitDetailScreenImpl({
           </FadeInView>
         ) : (
           <FadeInView fill>
-            <ScrollView>
+            {/* Capped centered column on iPad; a no-op on phones (w21/m2).
+                The diff keeps its own horizontal scroller inside it. */}
+            <ScrollView contentContainerStyle={contentColumn}>
               {/* Summary */}
               <View style={styles.section}>
                 <Text style={styles.messageLine}>

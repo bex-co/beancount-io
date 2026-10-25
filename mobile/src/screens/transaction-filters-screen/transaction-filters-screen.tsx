@@ -23,6 +23,7 @@ import {
   headerActionMaxFontSizeMultiplier,
   useTheme,
 } from "@/common/theme";
+import { contentColumn } from "@/common/content-column";
 import { Button, DatePickerModal } from "@/components";
 import { ListItem } from "@/screens/multi-postings-transaction/list-item";
 import { ColorTheme } from "@/types/theme-props";
@@ -56,6 +57,8 @@ const getStyles = (theme: ColorTheme) =>
       backgroundColor: theme.white,
     },
     scrollContent: {
+      // Capped centered column on iPad; a no-op on phones (w21/m2).
+      ...contentColumn,
       paddingBottom: 24,
     },
     section: {

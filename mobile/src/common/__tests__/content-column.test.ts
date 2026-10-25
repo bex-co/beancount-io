@@ -109,4 +109,33 @@ describe("the screens and sheets use the shared columns", () => {
       expect(readSource(file).includes("contentColumn")).toBe(true);
     });
   }
+
+  // w21/m2/t002: the detail, form, and settings screens. SettingScreen needs
+  // none — it only renders About, which is capped.
+  for (const [name, file] of [
+    [
+      "transaction detail",
+      "screens/transaction-detail-screen/transaction-detail-screen.tsx",
+    ],
+    ["commit detail", "screens/commit-detail-screen/commit-detail-screen.tsx"],
+    [
+      "account picker",
+      "screens/account-picker-screen/account-picker-screen.tsx",
+    ],
+    [
+      "transaction filters",
+      "screens/transaction-filters-screen/transaction-filters-screen.tsx",
+    ],
+    ["create ledger", "screens/create-ledger-screen/create-ledger-screen.tsx"],
+    ["profile", "screens/profile/profile-screen.tsx"],
+    ["referral", "screens/referral-screen/referral-screen.tsx"],
+    ["welcome", "screens/welcome/index.tsx"],
+    ["server settings", "screens/welcome/server-settings-screen.tsx"],
+    ["the agent chat", "screens/agent-screen/agent-screen.tsx"],
+    ["settings about", "screens/setting/about.tsx"],
+  ]) {
+    it(`${name} caps its content`, () => {
+      expect(readSource(file).includes("contentColumn")).toBe(true);
+    });
+  }
 });

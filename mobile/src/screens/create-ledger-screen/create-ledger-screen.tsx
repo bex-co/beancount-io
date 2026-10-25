@@ -57,6 +57,7 @@ import {
   space,
   useTheme,
 } from "@/common/theme";
+import { contentColumn } from "@/common/content-column";
 import { useLedgerDirectory } from "@/common/ledger-directory/ledger-directory-provider";
 import { ledgerVar } from "@/common/vars";
 import { LEADING_TEXT_ALIGN, leadingInputTextAlign } from "@/common/rtl";
@@ -115,6 +116,8 @@ const getStyles = (theme: ColorTheme) =>
       textAlign: LEADING_TEXT_ALIGN,
     },
     content: {
+      // Capped centered column on iPad; a no-op on phones (w21/m2).
+      ...contentColumn,
       paddingHorizontal: gutter,
       paddingTop: space.md,
       paddingBottom: space.xl,

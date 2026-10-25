@@ -13,6 +13,7 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { ColorTheme } from "@/types/theme-props";
 import { useThemeStyle } from "@/common/hooks";
 import { prefersStackedLayout, useTheme } from "@/common/theme";
+import { contentColumn } from "@/common/content-column";
 import { Button } from "@/components";
 import { PressableScale } from "@/components/pressable-scale";
 import { startGuestVisit } from "@/common/guest/guest-state";
@@ -29,7 +30,11 @@ const getStyles = (theme: ColorTheme) =>
       flex: 1,
       backgroundColor: theme.white,
     },
-    content: { flexGrow: 1 },
+    content: {
+      // Capped centered column on iPad; a no-op on phones (w21/m2).
+      ...contentColumn,
+      flexGrow: 1,
+    },
     artwork: {
       flex: 1,
       minHeight: 188,
