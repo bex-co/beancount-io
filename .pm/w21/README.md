@@ -5,7 +5,7 @@
 ## Milestones
 
 - [x] **m1** — [Entry edits and deletes refuse changes that would break the ledger](./done/m1/README.md) (7 tasks) ← from mobile QA 2026-10-20
-- [ ] **m2** — [Readable-width caps for the remaining bespoke screens](./m2/README.md) (7 tasks) ← promoted from w21/1007, follow-up to w21/1005
+- [x] **m2** — [Readable-width caps for the remaining bespoke screens](./done/m2/README.md) (7 tasks) ← promoted from w21/1007, follow-up to w21/1005
 
 ## Dropped
 
