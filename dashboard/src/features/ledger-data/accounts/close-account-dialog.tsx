@@ -42,7 +42,19 @@ export function CloseAccountDialog({
   const [error, setError] = useState<string | null>(null);
   const [addEntryClose, { loading }] = useMutation(BulkEntriesDocument);
 
-  const closeDate = format(new Date(), "yyyy-MM-dd");
+  // The offered date is snapshotted when this confirmation opens, so the
+  // busy text and the prepared request always name the same day even if
+  // the clock rolls over while the request is in flight (w4/1084). A
+  // failed attempt refreshes the offer for the next one (below).
+  const today = () => format(new Date(), "yyyy-MM-dd");
+  const openKey = open && account ? account.entryHash : null;
+  const [offered, setOffered] = useState<{ key: string; date: string } | null>(
+    null,
+  );
+  if (openKey !== (offered?.key ?? null)) {
+    setOffered(openKey ? { key: openKey, date: today() } : null);
+  }
+  const closeDate = offered?.date ?? today();
 
   const handleOpenChange = (v: boolean) => {
     if (!v) setError(null);
@@ -72,9 +84,11 @@ export function CloseAccountDialog({
         handleOpenChange(false);
       } else {
         setError(result.data?.bulkEntries.message ?? formatError(undefined));
+        if (openKey) setOffered({ key: openKey, date: today() });
       }
     } catch (err) {
       setError(formatError(err));
+      if (openKey) setOffered({ key: openKey, date: today() });
     }
   };
 
