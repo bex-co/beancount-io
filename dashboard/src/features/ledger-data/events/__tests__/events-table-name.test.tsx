@@ -528,4 +528,44 @@ describe("Events type filter with blank and look-alike types", () => {
     );
     await waitFor(() => expect(rowsShown()).toHaveLength(6));
   });
+
+  it("keeps quoted authored types distinct from escaped labels (w4/1065)", async () => {
+    const quoted: GetLedgerEventsQuery["getLedgerEvents"] = [
+      event("All Types", "qa plain all types"),
+      event('"All Types"', "qa quoted all types"),
+      event(" ", "qa one space"),
+      event("\\u0020", "qa literal escape"),
+    ];
+    const { requests, user } = await setup("en", "");
+    await resolve(requests[0], quoted);
+    await screen.findByRole("table", { name: "Events" });
+
+    const trigger = () =>
+      screen.getByRole("button", {
+        name: /^All Types$|^"|\(no type\)/,
+      });
+    await user.click(trigger());
+    const names = (await screen.findAllByRole("menuitem")).map((item) =>
+      item.textContent?.trim(),
+    );
+    expect(names).toEqual([
+      "All Types",
+      '"\\u0020"',
+      '"\\"All Types\\""',
+      '"All Types"',
+      '"\\\\u0020"',
+    ]);
+    expect(new Set(names).size).toBe(names.length);
+    await user.keyboard("{Escape}");
+
+    for (const [item, row] of [
+      ['"\\"All Types\\""', "qa quoted all types"],
+      ['"\\\\u0020"', "qa literal escape"],
+    ]) {
+      await user.click(trigger());
+      await user.click(await screen.findByRole("menuitem", { name: item }));
+      await waitFor(() => expect(rowsShown()).toEqual([row]));
+      expect(screen.getByRole("button", { name: item })).toBeInTheDocument();
+    }
+  });
 });

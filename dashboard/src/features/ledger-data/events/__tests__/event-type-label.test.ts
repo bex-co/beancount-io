@@ -15,6 +15,23 @@ describe("eventTypeLabel (w4/1016)", () => {
     expect(label("(no type)")).toBe('"(no type)"');
   });
 
+  it("distinguishes authored notation from presentation escaping (w4/1065)", () => {
+    const pairs: Array<[string, string]> = [
+      ["All Types", '"All Types"'],
+      ['"All Types"', '"\\"All Types\\""'],
+      ["(no type)", '"(no type)"'],
+      ['"(no type)"', '"\\"(no type)\\""'],
+      [" ", '"\\u0020"'],
+      ["\\u0020", '"\\\\u0020"'],
+    ];
+    for (const [authored, expected] of pairs) {
+      expect(label(authored)).toBe(expected);
+    }
+    const shown = pairs.map(([authored]) => label(authored));
+    expect(new Set(shown).size).toBe(shown.length);
+    expect(label('say "hi"')).toBe('"say \\"hi\\""');
+  });
+
   it("spells out blank and invisible types so each reads differently", () => {
     const shown = [" ", "  ", "\t", " x", "a​b", 'say "hi"\t'].map(label);
     expect(shown).toEqual([

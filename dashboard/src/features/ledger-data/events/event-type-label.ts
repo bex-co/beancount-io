@@ -15,9 +15,15 @@ export function eventTypeLabel(
   if (type === "") return emptyTypeLabel;
   const blankEdges = type.trim() !== type;
   const invisible = /[\p{Cc}\p{Cf}]/u.test(type);
+  // A type carrying quote/backslash notation (e.g. the literal `"All Types"`)
+  // would otherwise read exactly like another type's quoted presentation,
+  // so it is presented escaped too (w4/1065). Unchanged presentations then
+  // contain no quote or backslash and can never collide with a quoted one.
+  const notation = type.includes('"') || type.includes("\\");
   if (
     !blankEdges &&
     !invisible &&
+    !notation &&
     type !== allTypesLabel &&
     type !== emptyTypeLabel
   ) {
