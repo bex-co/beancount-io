@@ -33,11 +33,11 @@ fetching:
 
 ```bash norun
 # Needs network once. System libmagic is optional (python-magic importers only).
-bea engine enable beangulp    # then: bea ingest identify|extract|archive …
+bea engine enable beangulp    # then: bea import --ofx … / bea ingest …
 bea engine enable beanprice   # then: bea price …  (not bea add price)
 ```
 
-`bea import --csv` and `bea add price` work without those features. The eight
+`bea import --csv` and `bea add price` work without those features; `bea import --ofx` needs Beangulp. The eight
 `beancount-*` ledger skills for Claude Code and Codex run on this single `bea`
 installation and never ask you to install Beancount separately — see the
 [skills installation guide](https://github.com/bex-co/beancount-io/blob/main/docs/skills/installation.md)
@@ -183,7 +183,7 @@ and output exceptions.
 - [Usage](https://github.com/bex-co/beancount-io/blob/main/cli/docs/USAGE.md):
   the contract — targets, JSON envelope, exit codes, prompts, environment.
 - [Importing](https://github.com/bex-co/beancount-io/blob/main/cli/docs/IMPORTING.md):
-  no-code CSV import, rules, and Python importers.
+  no-code CSV and OFX import, rules, and Python importers.
 - [Reference](https://github.com/bex-co/beancount-io/blob/main/cli/docs/REFERENCE.md):
   every command's usage, arguments, and options, generated from the code.
 
