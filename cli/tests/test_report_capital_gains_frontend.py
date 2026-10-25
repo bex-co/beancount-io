@@ -7,12 +7,10 @@ the shared heading, one row per closed lot, and the one-year buckets.
 from __future__ import annotations
 
 import json
-import os
 import subprocess
-import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+from tests.report_helpers import bea, write_ledger
 
 LEDGER = """\
 option "operating_currency" "USD"
@@ -36,36 +34,12 @@ option "operating_currency" "USD"
 """
 
 
-def _env(tmp_path: Path) -> dict[str, str]:
-    env = {k: v for k, v in os.environ.items() if not k.startswith("BEA_")}
-    env.update(
-        BEA_CONFIG_DIR=str(tmp_path / "config"),
-        XDG_CACHE_HOME=str(tmp_path / "cache"),
-        XDG_DATA_HOME=str(tmp_path / "data"),
-        BEA_NO_UPDATE_NOTIFIER="1",
-        PYTHONPATH=str(ROOT / "src"),
-        TERM="dumb",
-        NO_COLOR="1",
-    )
-    return env
-
-
 def _bea(tmp_path: Path, *args: str) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        [sys.executable, "-m", "cli.main", *args],
-        env=_env(tmp_path),
-        cwd=tmp_path,
-        capture_output=True,
-        text=True,
-        timeout=300,
-        check=False,
-    )
+    return bea(list(args), tmp_path)
 
 
 def _write(tmp_path: Path, text: str) -> Path:
-    ledger = tmp_path / "main.beancount"
-    ledger.write_text(text)
-    return ledger
+    return write_ledger(tmp_path, text)
 
 
 def test_capital_gains_text_table(tmp_path: Path) -> None:

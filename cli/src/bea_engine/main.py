@@ -455,9 +455,9 @@ def report(
     from_date: Annotated[
         str | None, typer.Option("--from-date", help="Capital-gains sales on or after YYYY-MM-DD.")
     ] = None,
-    to_date: Annotated[str | None, typer.Option("--to-date", help="Capital-gains sales on or before YYYY-MM-DD.")] = (
-        None
-    ),
+    to_date: Annotated[
+        str | None, typer.Option("--to-date", help="Capital-gains sales on or before YYYY-MM-DD.")
+    ] = None,
 ) -> None:
     """Compute one financial report and answer with its JSON-ready payload.
 

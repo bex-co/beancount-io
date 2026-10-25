@@ -10,12 +10,10 @@ is a bare day count.
 from __future__ import annotations
 
 import json
-import os
-import subprocess
 from pathlib import Path
 from typing import Any
 
-CLI_ROOT = Path(__file__).resolve().parents[1]
+from tests.report_helpers import engine, write_ledger
 
 FIFO = """\
 option "operating_currency" "USD"
@@ -76,31 +74,7 @@ option "operating_currency" "USD"
 
 
 def _engine(ledger: Path, *args: str) -> dict[str, Any]:
-    proc = subprocess.run(
-        [
-            "uv",
-            "run",
-            "--quiet",
-            "--project",
-            str(CLI_ROOT),
-            "--no-sync",
-            "python",
-            "-m",
-            "bea_engine",
-            "report",
-            "--file",
-            str(ledger),
-            "--kind",
-            "capital-gains",
-            *args,
-        ],
-        env={**os.environ, "PYTHONPATH": str(CLI_ROOT / "src")},
-        capture_output=True,
-        text=True,
-        timeout=300,
-        cwd=CLI_ROOT,
-        check=False,
-    )
+    proc = engine(["report", "--file", str(ledger), "--kind", "capital-gains", *args], ledger.parent)
     assert proc.returncode == 0, proc.stderr
     payload = json.loads(proc.stdout)
     assert payload["ok"] is True, payload
@@ -108,38 +82,12 @@ def _engine(ledger: Path, *args: str) -> dict[str, Any]:
 
 
 def _engine_raw(ledger: Path, *args: str) -> tuple[int, dict[str, Any]]:
-    proc = subprocess.run(
-        [
-            "uv",
-            "run",
-            "--quiet",
-            "--project",
-            str(CLI_ROOT),
-            "--no-sync",
-            "python",
-            "-m",
-            "bea_engine",
-            "report",
-            "--file",
-            str(ledger),
-            "--kind",
-            "capital-gains",
-            *args,
-        ],
-        env={**os.environ, "PYTHONPATH": str(CLI_ROOT / "src")},
-        capture_output=True,
-        text=True,
-        timeout=300,
-        cwd=CLI_ROOT,
-        check=False,
-    )
+    proc = engine(["report", "--file", str(ledger), "--kind", "capital-gains", *args], ledger.parent)
     return proc.returncode, json.loads(proc.stdout)
 
 
 def _write(tmp_path: Path, text: str) -> Path:
-    ledger = tmp_path / "main.beancount"
-    ledger.write_text(text)
-    return ledger
+    return write_ledger(tmp_path, text)
 
 
 def test_fifo_attributes_oldest_first(tmp_path: Path) -> None:

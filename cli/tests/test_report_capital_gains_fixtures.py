@@ -8,14 +8,11 @@ expected per-lot figures, and every fixture's totals equal the booked
 from __future__ import annotations
 
 import json
-import os
-import subprocess
-import sys
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
-CLI_ROOT = Path(__file__).resolve().parents[1]
+from tests.report_helpers import bea, engine_json, write_ledger
 
 # Three buys and two partial sells (FIFO): the first sale closes the
 # January lot and halves the February lot; the second sale closes the
@@ -67,81 +64,19 @@ option "operating_currency" "USD"
 """
 
 
-def _env(tmp_path: Path) -> dict[str, str]:
-    env = {k: v for k, v in os.environ.items() if not k.startswith("BEA_")}
-    env.update(
-        BEA_CONFIG_DIR=str(tmp_path / "config"),
-        XDG_CACHE_HOME=str(tmp_path / "cache"),
-        XDG_DATA_HOME=str(tmp_path / "data"),
-        BEA_NO_UPDATE_NOTIFIER="1",
-        PYTHONPATH=str(CLI_ROOT / "src"),
-        TERM="dumb",
-        NO_COLOR="1",
-    )
-    return env
-
-
 def _engine(ledger: Path, tmp_path: Path, *args: str) -> dict[str, Any]:
-    proc = subprocess.run(
-        [
-            "uv",
-            "run",
-            "--quiet",
-            "--project",
-            str(CLI_ROOT),
-            "--no-sync",
-            "python",
-            "-m",
-            "bea_engine",
-            "report",
-            "--file",
-            str(ledger),
-            "--kind",
-            "capital-gains",
-            *args,
-        ],
-        env=_env(tmp_path),
-        capture_output=True,
-        text=True,
-        timeout=300,
-        cwd=CLI_ROOT,
-        check=False,
-    )
-    assert proc.returncode == 0, proc.stderr
-    payload = json.loads(proc.stdout)
-    assert payload["ok"] is True, payload
-    return payload["data"]
+    return engine_json(["report", "--file", str(ledger), "--kind", "capital-gains", *args], tmp_path)["data"]
 
 
 def _write(tmp_path: Path, text: str) -> Path:
-    ledger = tmp_path / "main.beancount"
-    ledger.write_text(text)
-    return ledger
+    return write_ledger(tmp_path, text)
 
 
 def _booked_gains(ledger: Path, tmp_path: Path, year: str) -> dict[str, Decimal]:
     """Negated `Income:CapitalGains` balances for the year, per currency."""
-    proc = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "cli.main",
-            "--file",
-            str(ledger),
-            "--json",
-            "balance",
-            "CapitalGains",
-            "--time",
-            year,
-            "--conversion",
-            "units",
-        ],
-        env=_env(tmp_path),
-        cwd=tmp_path,
-        capture_output=True,
-        text=True,
-        timeout=300,
-        check=False,
+    proc = bea(
+        ["--file", str(ledger), "--json", "balance", "CapitalGains", "--time", year, "--conversion", "units"],
+        tmp_path,
     )
     assert proc.returncode == 0, proc.stderr
     data = json.loads(proc.stdout)["data"]
