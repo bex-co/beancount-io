@@ -89,7 +89,10 @@ export function toLedgerFilterSearchParam(
 ): string | number | undefined {
   if (!normalized) return undefined;
   if (/^\d{4}$/.test(normalized)) {
-    return Number(normalized);
+    const asNumber = Number(normalized);
+    // A leading-zero year (0100, 0001) is a supported period; keep its
+    // four-digit spelling instead of collapsing it to 100/1 (w4/1092).
+    return String(asNumber) === normalized ? asNumber : normalized;
   }
   return normalized;
 }

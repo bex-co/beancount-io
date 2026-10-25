@@ -60,6 +60,24 @@ describe("parseLedgerFilterSearch / schema", () => {
     });
   });
 
+  it("preserves leading zeros in bare years (w4/1092)", () => {
+    expect(ledgerFilterSearchSchema.parse({ time: "0100" })).toEqual({
+      time: "0100",
+    });
+    expect(ledgerFilterSearchSchema.parse({ time: "0001" })).toEqual({
+      time: "0001",
+    });
+    expect(parseLedgerFilterSearch({ time: "0100" }).time).toBe("0100");
+    expect(
+      applyLedgerFilterSearch({}, { account: "", filter: "", time: "0001" })
+        .time,
+    ).toBe("0001");
+    // Ordinary years keep their numeric clean-URL encoding.
+    expect(ledgerFilterSearchSchema.parse({ time: "2016" })).toEqual({
+      time: 2016,
+    });
+  });
+
   it("preserves unrelated keys when applying or clearing filters", () => {
     const prev = {
       action: "new-entry",
