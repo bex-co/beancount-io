@@ -432,7 +432,10 @@ def report(
         typer.Option(
             "--kind",
             "-k",
-            help="Report: overview, income-statement, balance-sheet, trial-balance, holdings, or register.",
+            help=(
+                "Report: overview, income-statement, balance-sheet, trial-balance, "
+                "holdings, register, or capital-gains."
+            ),
         ),
     ],
     conversion: Annotated[
@@ -449,6 +452,12 @@ def report(
         bool, typer.Option("--allow-errors", help="Answer even when the ledger has load errors or missing prices.")
     ] = False,
     group_by: Annotated[str, typer.Option("--group-by", help="Holdings grouping: account or commodity.")] = "account",
+    from_date: Annotated[
+        str | None, typer.Option("--from-date", help="Capital-gains sales on or after YYYY-MM-DD.")
+    ] = None,
+    to_date: Annotated[str | None, typer.Option("--to-date", help="Capital-gains sales on or before YYYY-MM-DD.")] = (
+        None
+    ),
 ) -> None:
     """Compute one financial report and answer with its JSON-ready payload.
 
@@ -470,6 +479,8 @@ def report(
             interval=interval,
             allow_errors=allow_errors,
             group_by=group_by,
+            from_date=from_date,
+            to_date=to_date,
         )
 
 

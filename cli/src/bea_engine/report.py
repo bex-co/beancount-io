@@ -23,7 +23,7 @@ from bea_engine import protocol
 from bea_engine.ledger.text import checked_operating_currencies, fold_account, regex_reads_otherwise
 from bea_engine.query import format_error
 
-KINDS = ("overview", "income-statement", "balance-sheet", "trial-balance", "holdings", "register")
+KINDS = ("overview", "income-statement", "balance-sheet", "trial-balance", "holdings", "register", "capital-gains")
 GROUPINGS = ("account", "commodity")
 INTERVALS = ("monthly", "quarterly", "yearly", "weekly", "daily")
 CONVERSIONS = ("units", "at_cost", "at_value")
@@ -76,6 +76,8 @@ def answer(
     accounts: list[str] | None = None,
     allow_errors: bool = False,
     group_by: str = "account",
+    from_date: str | None = None,
+    to_date: str | None = None,
 ) -> dict[str, Any]:
     """Compute one report or a filtered balance tree and return its JSON-ready payload."""
     # `AT_COST` lexes as a currency, so a keyword in another case is refused
@@ -99,7 +101,12 @@ def answer(
     # Validated for every kind, like the interval, but only holdings reads it.
     if group_by not in GROUPINGS:
         raise protocol.UsageError(f"Unknown grouping {group_by!r}. Choose one of: {', '.join(GROUPINGS)}.")
+    bounds = _date_bounds(from_date, to_date)
 
+    if kind == "capital-gains" and conversion is not None:
+        # Gains stay in each lot's own currencies so the rows tie to the
+        # booked gain postings; converting them would break that tie.
+        raise protocol.UsageError("capital-gains reports in each lot's cost currency and takes no --conversion.")
     filtered, resolved_conversion, ledger_errors = _load(file, account, time, conversion, allow_errors)
     if kind == "overview":
         return _overview(filtered, resolved_conversion, interval, allow_errors, ledger_errors)
@@ -111,6 +118,8 @@ def answer(
         return _holdings(filtered, resolved_conversion, group_by, allow_errors, ledger_errors)
     if kind == "register":
         return _register(filtered, resolved_conversion, allow_errors, ledger_errors)
+    if kind == "capital-gains":
+        return _capital_gains(filtered, bounds, ledger_errors)
     return _trial_balance(filtered, resolved_conversion, allow_errors, ledger_errors)
 
 
@@ -703,6 +712,115 @@ def _register_root(pattern: str, active: list[str]) -> str | None:
         if len(roots) == 1:
             return roots[0]
     return None
+
+
+def _date_bounds(from_date: str | None, to_date: str | None) -> tuple[date | None, date | None]:
+    """Inclusive sale-date bounds for capital-gains; malformed input is refused."""
+    start = end = None
+    if from_date is not None:
+        try:
+            start = date.fromisoformat(from_date)
+        except ValueError as exc:
+            raise protocol.UsageError(f"Invalid --from-date {from_date!r}. Use YYYY-MM-DD.") from exc
+    if to_date is not None:
+        try:
+            end = date.fromisoformat(to_date)
+        except ValueError as exc:
+            raise protocol.UsageError(f"Invalid --to-date {to_date!r}. Use YYYY-MM-DD.") from exc
+    if start is not None and end is not None and start > end:
+        raise protocol.UsageError(f"--from-date {from_date!r} is after --to-date {to_date!r}.")
+    return start, end
+
+
+def _capital_gains(filtered: Any, bounds: tuple[date | None, date | None], ledger_errors: list[str]) -> dict[str, Any]:
+    """Realized gain/loss per reduction, from the booked cost and price.
+
+    A closed lot is a reducing posting that carries both: splits and
+    own-account transfers reduce without a price, so they are movements,
+    not sales. FIFO vs specific-lot is the ledger's own booking —
+    Beancount matched the lot at load, and the posting's cost names it,
+    acquisition date included. Proceeds and basis stay in their own
+    currencies, and totals never sum across currencies. The one-year boundary
+    (`held_days > 365`) is a bare day count with no jurisdiction rules
+    attached (w22/m4/t001).
+    """
+    from beancount.core.data import Transaction
+    from beancount.core.position import Cost
+
+    matches = _report_filter_match(filtered.account, filtered.ledger.root_accounts) if filtered.account else None
+    start, end = bounds
+    rows: list[dict[str, Any]] = []
+    for entry in filtered.entries:
+        if not isinstance(entry, Transaction):
+            continue
+        if start is not None and entry.date < start:
+            continue
+        if end is not None and entry.date > end:
+            continue
+        for posting in entry.postings:
+            units = posting.units
+            cost = posting.cost
+            price = posting.price
+            # A booked sale: negative units with a resolved cost and price.
+            # Anything less (an unmatched cost spec, an incomplete posting)
+            # is not a lot the books closed.
+            if (
+                units is None
+                or units.number is None
+                or units.number >= 0
+                or not isinstance(cost, Cost)
+                or cost.number is None
+                or price is None
+                or price.number is None
+            ):
+                continue
+            if matches is not None and not matches(posting.account):
+                continue
+            quantity = -units.number
+            proceeds = quantity * price.number
+            basis = quantity * cost.number
+            acquired = cost.date
+            held = (entry.date - acquired).days if acquired is not None else None
+            # Cost and price currencies always match: the loader refuses a
+            # mixed posting before any report sees it (w22/m4/t001).
+            gain = {"number": proceeds - basis, "currency": cost.currency}
+            rows.append(
+                {
+                    "account": posting.account,
+                    "commodity": units.currency,
+                    "acquired": acquired,
+                    "sold": entry.date,
+                    "held_days": held,
+                    "long_held": (held > 365) if held is not None else None,
+                    "quantity": {"number": quantity, "currency": units.currency},
+                    "proceeds": {"number": proceeds, "currency": price.currency},
+                    "basis": {"number": basis, "currency": cost.currency},
+                    "gain": gain,
+                }
+            )
+    totals: dict[str, dict[str, Decimal]] = {"one_year_or_less": {}, "more_than_one_year": {}, "holding_unknown": {}}
+    for row in rows:
+        if row["held_days"] is None:
+            bucket = totals["holding_unknown"]
+        elif row["held_days"] > 365:
+            bucket = totals["more_than_one_year"]
+        else:
+            bucket = totals["one_year_or_less"]
+        currency = row["gain"]["currency"]
+        bucket[currency] = bucket.get(currency, Decimal(0)) + row["gain"]["number"]
+    # No quotes are read — every figure comes from booked postings — so
+    # valuation is trivially complete; the keys stay for the shared heading.
+    metadata = _metadata(filtered, "units", ledger_errors) | {
+        "valuation": "complete",
+        "missing_prices": [],
+        "missing_price_dates": [],
+        "missing_price_summary": [],
+    }
+    return metadata | {
+        "display_precision": _display_precision(filtered),
+        "rows": rows,
+        "totals": totals,
+    }
 
 
 def _load(
