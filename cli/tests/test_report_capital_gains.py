@@ -90,6 +90,21 @@ def _write(tmp_path: Path, text: str) -> Path:
     return write_ledger(tmp_path, text)
 
 
+TOTAL_PRICE = """\
+option "operating_currency" "USD"
+2026-01-01 open Assets:Brokerage USD,VTI
+2026-01-01 open Assets:Checking USD
+2026-01-01 open Income:Gains USD
+2026-01-02 * "Buy"
+  Assets:Brokerage  10 VTI {150 USD}
+  Assets:Checking
+2026-03-02 * "Sell for a total"
+  Assets:Brokerage  -10 VTI {150 USD} @@ 1600 USD
+  Assets:Checking  1600 USD
+  Income:Gains
+"""
+
+
 def test_fifo_attributes_oldest_first(tmp_path: Path) -> None:
     data = _engine(_write(tmp_path, FIFO))
     rows = data["rows"]
@@ -159,6 +174,9 @@ def test_invalid_bounds_are_refused(tmp_path: Path) -> None:
     code, payload = _engine_raw(ledger, "--from-date", "2026-05-01", "--to-date", "2026-01-01")
     assert code == 2
     assert payload["error"]["message"] == "--from-date '2026-05-01' is after --to-date '2026-01-01'."
+    code, payload = _engine_raw(ledger, "--to-date", "2026-02-30")
+    assert code == 2
+    assert payload["error"]["message"] == "Invalid --to-date '2026-02-30'. Use YYYY-MM-DD."
 
 
 def test_conversion_is_refused(tmp_path: Path) -> None:
@@ -172,3 +190,17 @@ def test_conversion_is_refused(tmp_path: Path) -> None:
 def test_account_filter_prunes(tmp_path: Path) -> None:
     data = _engine(_write(tmp_path, SPECIFIC), "--account", "Assets:IRA")
     assert data["rows"] == []
+
+
+def test_time_filter_narrows_sales(tmp_path: Path) -> None:
+    data = _engine(_write(tmp_path, SPECIFIC), "--time", "2026-03")
+    assert [row["sold"] for row in data["rows"]] == ["2026-03-02"]
+    assert data["totals"]["one_year_or_less"] == {"USD": "40"}
+
+
+def test_total_price_sale_uses_per_unit_proceeds(tmp_path: Path) -> None:
+    data = _engine(_write(tmp_path, TOTAL_PRICE))
+    (row,) = data["rows"]
+    assert row["proceeds"] == {"number": "1600", "currency": "USD"}
+    assert row["basis"] == {"number": "1500", "currency": "USD"}
+    assert row["gain"] == {"number": "100", "currency": "USD"}
