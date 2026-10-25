@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1095** — [Keep the Version History cursor in sync after Refresh](./1095.md)
+
 - **1094** — [Hydrate legacy file links before handing off to the file route](./1094.md)
 
 - **1093** — [Preserve percent sequences inside payee filters](./1093.md)
