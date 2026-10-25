@@ -149,6 +149,21 @@ semantic errors — a failing assertion, an unknown account — but never invali
 syntax and never an inactive pad account. `--into PATH` writes to an included
 file, resolved relative to the root ledger.
 
+### `update`
+
+`--type` is `transaction` (one entry) or `transactions` (a batch of rows).
+The request names its entry with `id`, in one of three forms:
+
+- an `import-id` metadata value, which every bea import stamps;
+- a `ref` metadata value, which bank importers use;
+- `file:line`, the entry's header line, which names the entry outright.
+
+An `import-id` always wins when a `ref` elsewhere spells the same value. A
+value shared by two entries is refused as ambiguous (naming each `file:line`
+so the caller can pick one), and an unknown value as not found; both are
+`usage` failures and both change no bytes. Only entries written in a ledger
+file resolve — a plugin-synthesized row has no source lines to rewrite.
+
 Two answers are not a plain append. A `price` that the ledger already records
 exactly answers `{"written": 0, "duplicate": true, "source": {...}}` and touches
 nothing; `--strict-read` makes it refuse a ledger that does not load instead of
