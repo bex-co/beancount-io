@@ -22,7 +22,7 @@ Source: the owner's request to put every remaining action from the 17-target lis
 
 **Execution order:** reconcile043 and diagnose m9/t015; recheck044 and record045 deadlines; then perform each independently available native/correction/review action. Complete a platform's due observation or real feedback when available and continue all other tasks. Aggregate verification and standing closing tasks retain their full DoDs. A blocked platform never ends the w6 loop while another actionable item remains.
 
-**Board after arrangement:**68 pending leaves; m10 remains live; m8 and m9 are parked on their remaining platform/time gates with m2/m6.5/m11. Independent renewal note046 remains live. No completed task is reopened. The dated snapshots below describe earlier board states, including their old totals and blockers.
+**Board after arrangement:**69 pending leaves; m10 remains live; m8 and m9 are parked on their remaining platform/time gates with m2/m6.5/m11. Independent renewal note046 remains live. No completed task is reopened. The dated snapshots below describe earlier board states, including their old totals and blockers.
 
 ## Historical work and blocker triage — 2026-10-24 UTC
 
@@ -228,7 +228,7 @@ Prioritize the major correctness findings (PRINT/FROM/JOURNAL, authored location
 - [ ] **m6.5** — [Distribute the Beancount.io customer skills as one suite](./blocked/m6.5/README.md) (12 tasks; 9 done; A3/A2/A1) ← explicit owner request 2026-10-22, extended to other channels 2026-10-23 UTC. **Blocked:** Hermes admission, third-party index read-backs and final closeout. Owned grouping/whole-suite install refresh and CI checks implemented; suite 0.4.0 public and all thirteen standalone ClawHub listings retired.
 
 - [ ] **m9** — [Reach developer marketplaces and galleries](blocked/m9/README.md) (18 tasks; 9 done; A3/A1) ← owner listing follow-through 2026-10-24. **blocked:** current native t015 is done; independent046 owns renewable consent, while t004/t016/t017/t018 retain actual review/publication gates. t004/t016/t017/t018 independently own Cline/Cursor/Docker/GitHub review/public/native outcomes; GitHub approval is complete.
-- [ ] **m10** — [List the connector in independent web directories](m10/README.md) (12 tasks; 3 done; A3/A1) ← owner listing follow-through 2026-10-24. **Next:** t010 MCPServers.org native checks and t012 supported LobeHub crawler/search correction. t011 owns native accounting/live metadata; MCPMarket retains its original pending free receipt.
+- [ ] **m10** — [List the connector in independent web directories](m10/README.md) (13 tasks; 3 done; A3/A1) ← owner listing follow-through 2026-10-24. **Next:** t013 controlled OAuth interaction-binding regression/fix, then deferred t010/t011 native checks; t012 supported LobeHub crawler/search correction stays independent. t011 owns native accounting/live metadata; MCPMarket retains its original pending free receipt.
 
 - [ ] **m8** — [Claim and publish the hosted connector on Smithery and Glama](blocked/m8/README.md) (9 tasks; 2 done; A3/A1) ← owner listing follow-through 2026-10-24. **blocked:** native t009 is complete; Smithery intake and w2/088 full healthy-day observation retain their exact external/time gates.
 

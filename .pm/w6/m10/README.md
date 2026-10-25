@@ -1,6 +1,6 @@
 # w6 · m10 — List the connector in independent web directories
 
-**Worker:** worker1 **Goal:** People comparing accounting MCP servers find accurate, usable remote listings on the eligible independent directories. **Status:** todo (t001/t003/t009 done; independent MCPServers.org native t010 and LobeHub correction t012 are open; MCPMarket review and LobeHub native access remain blocked)
+**Worker:** worker1 **Goal:** People comparing accounting MCP servers find accurate, usable remote listings on the eligible independent directories. **Status:** todo (3 tasks done; t013 consent-binding regression/fix is the next prerequisite; t010/t011 await it; t012 supported correction remains independent)
 
 **Implementation estimate:** ~2h, excluding external review queues and the standing closing tasks.
 
@@ -12,11 +12,12 @@
 | [t001](done/t001.md) | Submit or correct MCPServers.org's free remote listing — **DONE** | 30m | w6/m8/t001 |
 | [t002](t002.md) | Submit or correct MCPMarket's free remote listing — **BLOCKED: free repository submission** | 30m | w6/m8/t001 |
 | [t003](done/t003.md) | Establish LobeHub eligibility and prepare its supported connector listing — **DONE** | 45m | w6/m8/t001, t009 |
-| [t010](t010.md) | Complete MCPServers.org advertised native accounting checks | 45m | t001 |
-| [t011](t011.md) | Complete LobeHub native OAuth and live metadata — **BLOCKED** | 45m | t003, t009 |
+| [t013](t013.md) | Bind OAuth interaction routes to the signed-cookie interaction | 45m | — |
+| [t010](t010.md) | Complete MCPServers.org advertised native accounting checks — **BLOCKED** | 45m | t001, t013 |
+| [t011](t011.md) | Complete LobeHub native OAuth and live metadata — **BLOCKED** | 45m | t003, t009, t013 |
 | [t012](t012.md) | Correct LobeHub crawler stdio deployment and verify search indexing | 30m | t003 |
-| [t004](t004.md) | Verify the independent-directory listings after moderation | 15m | t001, t002, t003, t010, t011, t012 |
-| [t005](t005.md) | Adoption surface | 30m | t004, t009, t010, t011, t012 |
+| [t004](t004.md) | Verify the independent-directory listings after moderation | 15m | t001, t002, t003, t010, t011, t012, t013 |
+| [t005](t005.md) | Adoption surface | 30m | t004, t009, t010, t011, t012, t013 |
 | [t006](t006.md) | Simplify | 30m | t005 |
 | [t007](t007.md) | Test coverage | 45m | t005, t006 |
 | [t008](t008.md) | Closeout | 15m | t007 |
@@ -108,3 +109,13 @@ The milestone returns from blocked/ for independent t010 MCPServers.org native c
 - **t011 — Unblock:** supported browser control is restored/rechecked through044 and actual required synthetic-only accounting consent completes; worker verifies native query/preview/discovery. Owner: worker, publisher only for a genuinely unmet concrete authorization.
 - **t012:** worker can inspect supported correction routes and prepare the exact fix now. If only LobeHub can change crawler data or indexing, park that affected step with its real request/route and **Unblock:** corrected public deployment/search behavior. Owner: LobeHub for platform-only changes, worker for verified results.
 - **t004–t008 — Unblock:** all actual per-directory outcomes and closing prerequisites hold. Owner: worker. Preserve the original observable public/native DoD.
+
+## Current native consent prerequisite — 2026-10-25 UTC
+
+t013 is newly actionable after actual project-client onboarding exposes a
+requester/callback mismatch consistent with a source-level interaction binding
+gap. t010/t011 are deferred until its controlled regression/fix and precise
+rollout/native acceptance. **Unblock/owner:** worker completes t013's verified
+guard, then resumes these native checks; a genuine rollout gate is recorded
+separately. This does not block independent supported crawler correction t012
+or tracker/credential inbox work. No new scope or grant revocation is inferred.
