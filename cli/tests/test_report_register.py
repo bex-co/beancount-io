@@ -204,6 +204,25 @@ def test_register_time_filter_narrows_rows(tmp_path: Path) -> None:
     ]
 
 
+def test_register_at_cost_runs_on_book_value(tmp_path: Path) -> None:
+    data = _engine(_write(tmp_path, LEDGER), "register", "--account", "Assets:Brokerage", "--conversion", "at_cost")
+    (row,) = data["rows"]
+    assert row["balance"] == {"USD": "1500"}
+    assert data["valuation"] == "complete"
+
+
+def test_register_parent_pattern_is_case_insensitive(tmp_path: Path) -> None:
+    data = _engine(_write(tmp_path, LEDGER), "register", "--account", "assets")
+    assert data["account"] == "Assets"
+    assert len(data["rows"]) == 5
+
+
+def test_register_single_match_regex_resolves(tmp_path: Path) -> None:
+    data = _engine(_write(tmp_path, LEDGER), "register", "--account", "Check.*")
+    assert data["account"] == "Assets:Checking"
+    assert len(data["rows"]) == 4
+
+
 def test_register_missing_prices_fail_strict(tmp_path: Path) -> None:
     ledger = _write(tmp_path, NOPRICE)
     code, payload = _engine_raw(ledger, "register", "--account", "Assets:Brokerage")

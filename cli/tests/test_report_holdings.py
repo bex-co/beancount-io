@@ -203,6 +203,7 @@ def test_holdings_unpriced_values_at_cost_when_allowed(tmp_path: Path) -> None:
     assert group["market_value"] == {"number": "1500", "currency": "USD"}
     assert group["price"] is None
     assert group["price_date"] is None
+    assert data["missing_price_summary"] == ["VTI has no USD price at any date; valued at cost"]
 
 
 def test_holdings_converts_to_target_currency(tmp_path: Path) -> None:
@@ -249,3 +250,52 @@ def test_holdings_account_filter_prunes_counterparties(tmp_path: Path) -> None:
 def test_holdings_sold_out_position_drops_out(tmp_path: Path) -> None:
     data = _engine(_write(tmp_path, SOLD_OUT))
     assert data["groups"] == []
+
+
+LATE_PRICE = """\
+option "operating_currency" "USD"
+2026-01-01 open Assets:Brokerage USD,VTI
+2026-01-01 open Assets:Checking USD
+2026-01-02 * "Buy"
+  Assets:Brokerage  10 VTI {150 USD}
+  Assets:Checking
+2026-01-10 price VTI 170 USD
+2026-02-10 price VTI 190 USD
+"""
+
+
+def test_holdings_values_at_the_period_end(tmp_path: Path) -> None:
+    ledger = _write(tmp_path, LATE_PRICE)
+    whole = _engine(ledger)
+    assert whole["groups"][0]["market_value"] == {"number": "1900", "currency": "USD"}
+    assert whole["groups"][0]["price_date"] == "2026-02-10"
+    january = _engine(ledger, "--time", "2026-01")
+    assert january["groups"][0]["market_value"] == {"number": "1700", "currency": "USD"}
+    assert january["groups"][0]["price_date"] == "2026-01-10"
+
+
+MIXED_COST = """\
+option "operating_currency" "USD"
+2026-01-01 open Assets:Brokerage EUR,VTI,USD
+2026-01-01 open Assets:Checking USD,EUR
+2026-01-02 * "Buy dollars"
+  Assets:Brokerage  10 VTI {150 USD}
+  Assets:Checking
+2026-01-03 * "Buy euros"
+  Assets:Brokerage  10 VTI {140 EUR}
+  Assets:Checking
+2026-01-10 price VTI 170 USD
+2026-01-10 price VTI 150 EUR
+"""
+
+
+def test_holdings_splits_cost_currencies(tmp_path: Path) -> None:
+    data = _engine(_write(tmp_path, MIXED_COST), "--conversion", "units")
+    assert [(group["cost_basis"], group["market_value"]) for group in data["groups"]] == [
+        ({"number": "1400", "currency": "EUR"}, {"number": "1500", "currency": "EUR"}),
+        ({"number": "1500", "currency": "USD"}, {"number": "1700", "currency": "USD"}),
+    ]
+    assert data["totals"] == {
+        "cost_basis": {"EUR": "1400", "USD": "1500"},
+        "market_value": {"EUR": "1500", "USD": "1700"},
+    }
