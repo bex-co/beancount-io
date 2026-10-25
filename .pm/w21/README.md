@@ -52,6 +52,5 @@
 - [951](./blocked/951.md) — Expense accounts are valued at market on Accounts and account detail, but at cost everywhere else — **blocked:** owner confirms flows-at-cost covers Income/Expenses balances; needs a native priced-lot check
 - [977](./blocked/977.md) — LedgerPrices pulls every price date for every pair, and Apollo writes and reads them all on each mount — **blocked:** owner picks the API shape for bounding price dates across REST/GraphQL/MCP
 - [994](./blocked/994.md) — Budget: mobile prorates the current period to today, the dashboard does not, so verdicts differ (product call) — **blocked:** owner picks full-period or prorated target for the period in progress, then both apps follow
-- [1008](./1008.md) — Browse ledgers: Load more re-sorts the whole list, so featured rows jump above rows on screen
 - [1009](./1009.md) — An empty "Your ledgers" tab says to explore public ledgers but offers no link
 - [1010](./1010.md) — Switching Browse-ledgers tabs briefly shows the previous tab's rows
