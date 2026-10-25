@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1087** — [Keep loaded commit details through cache refresh](./1087.md)
+
 - **1086** — [Translate existing import errors when the language changes](./1086.md)
 
 - **1085** — [Keep late account actions with their confirmation](./1085.md)
