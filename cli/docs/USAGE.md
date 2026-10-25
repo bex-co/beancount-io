@@ -12,7 +12,7 @@ bea ingest identify|extract|archive --config ingest.py [PATH…]   # needs beang
 bea price status|refresh | bea price [bean-price options…]     # latter needs beanprice
 bea check | format | query "<BQL>"
 bea list <type> | bea add <type>          # eleven directive types; add transactions --from PATH
-bea report balance-sheet | income-statement | trial-balance | overview | holdings | register ACCOUNT
+bea report balance-sheet | income-statement | trial-balance | overview | holdings | register ACCOUNT | capital-gains
 bea balance [ACCOUNT…]                    # trial balance pruned to matching subtrees
 bea ask ["question"]                      # requires beancount-io[ask] and hosted credentials
 
@@ -1770,6 +1770,7 @@ bea report balance-sheet
 bea report trial-balance
 bea report holdings
 bea report register Assets:Checking
+bea report capital-gains
 bea balance Checking
 ```
 
@@ -1783,11 +1784,13 @@ work as in reports. Under `--json` the terms are listed one by one in
 for `balance "food cash"`) beside the space-joined `account_filter`, and with
 several terms the text heading quotes each one (`'food' or 'cash'`).
 
-All six accept `--conversion / -x`, `--time / -t`, and
-`--allow-errors`. Conversion defaults to the ledger's single operating
-currency. With zero or multiple operating currencies, it defaults to `units`
-and keeps currencies separate. All but `trial-balance`, `holdings`, and
-`register` accept `--interval / -i`
+All seven accept `--time / -t` and `--allow-errors`. All but
+`capital-gains` also accept `--conversion / -x`: conversion defaults to the
+ledger's single operating currency, and with zero or multiple operating
+currencies it defaults to `units` and keeps currencies separate.
+`capital-gains` takes no conversion — gains stay in each lot's cost currency
+so the rows tie to the booked gain postings. All but `trial-balance`,
+`holdings`, `register`, and `capital-gains` accept `--interval / -i`
 (`monthly`, `quarterly`, `yearly`, `weekly`, `daily`; default `monthly`).
 
 `holdings` lists every non-cash position with units, average cost, cost
@@ -1798,12 +1801,18 @@ and lists one subtree's dated postings oldest first with the running balance,
 so its last row is the trial-balance total. A market value from a stale
 managed quote reads `1,700 USD (stale)`; under `--json` each group names the
 source behind its quotes in `price_source` / `conversion_source`.
+`capital-gains` lists one row per closed lot — acquired and sold dates,
+quantity, proceeds, basis, and gain — with `--from-date / --to-date`
+bounding the sales (both ends inclusive). Rows bucket into held one year or
+less vs more than one year, a bare day count with no tax rules attached;
+splits and transfers carry no price and stay out.
 
 ```bash
 bea report income-statement --time 2026 --interval quarterly
 bea report balance-sheet --conversion EUR
 bea report holdings --group-by commodity --time 2026
 bea report register Assets:Checking --time 2026-01
+bea report capital-gains --from-date 2026-01-01 --to-date 2026-12-31
 ```
 
 Each report states its period, as-of date, account filter, and valuation.
