@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { toast } from "sonner";
 import { TransactionConfigForm } from "../transaction-config-form";
@@ -163,6 +169,31 @@ describe("AI Fill with a pending request", () => {
     await waitFor(() => expect(aiFill()).toBeEnabled());
     expect(targets()[0]).toBe(edited);
     expect(edited).toHaveFocus();
+  });
+
+  it("stays quiet when Back unmounts the form mid-request (w4/1074)", async () => {
+    vi.mocked(toast.error).mockClear();
+    const { unmount } = render(
+      <TransactionConfigForm
+        rows={rows}
+        ledgerId="owner/books"
+        configDraft={null}
+        onConfigDraftChange={vi.fn()}
+        onSubmit={vi.fn()}
+        onBack={vi.fn()}
+      />,
+    );
+    fireEvent.click(aiFill());
+    await waitFor(() => expect(pending).toHaveLength(1));
+    unmount();
+    const abort = new Error("The operation was aborted");
+    abort.name = "AbortError";
+    pending[0].reject(abort);
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(toast.error).not.toHaveBeenCalled();
+    expect(toast.success).not.toHaveBeenCalled();
   });
 
   it("still fills a target left as it was when the request started", async () => {

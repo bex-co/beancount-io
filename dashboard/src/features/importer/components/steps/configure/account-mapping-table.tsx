@@ -1,5 +1,5 @@
 import { Amount } from "@/common/components/amount";
-import { useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import {
   useFieldArray,
   Control,
@@ -101,12 +101,24 @@ export function AccountMappingTable({
 
   const loading = isAILoading || aiLoading;
 
+  // Async feedback belongs to the live attempt: unmounting (Back to
+  // Preview) aborts the lazy query, and that deliberate cancellation must
+  // not surface as a failure toast from an unmounted table (w4/1074).
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   const handleAICategorize = async () => {
     if (!onAICategorize) return;
 
     setIsAILoading(true);
     try {
       const applied = await onAICategorize();
+      if (!mountedRef.current) return;
       // Only suggestions confident enough to fill a target count; a
       // completed request that filled nothing says so (w4/324).
       toast.success(t("importer.accountMapping.aiSuccess"), {
@@ -118,11 +130,13 @@ export function AccountMappingTable({
             : t("importer.accountMapping.aiNoneApplied"),
       });
     } catch (err) {
+      if (!mountedRef.current) return;
+      if (err instanceof Error && err.name === "AbortError") return;
       toast.error(t("importer.accountMapping.aiFailed"), {
         description: formatError(err),
       });
     } finally {
-      setIsAILoading(false);
+      if (mountedRef.current) setIsAILoading(false);
     }
   };
 
