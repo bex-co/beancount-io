@@ -135,7 +135,7 @@ without administration and an expiration date. A draft named
 The exact decision to generate that credential and transmit it to Docker Inc.'s
 private review form is pending. This is separate from the already completed
 native Docker client's OAuth grant. The [public-safe progress record](./reviewer-access-progress.json)
-contains no credential. At01:50UTC the existing PR is still open/mergeable,
+contains no credential. At01:50 UTC the existing PR is still open/mergeable,
 with no comments or reported checks; no upstream CI pass is inferred.
 Continue other targets while this private-access/reviewer condition remains.
 
@@ -206,6 +206,27 @@ refresh, revoke the retained grant or replace the private reviewer key.
 The actual upstream [Security Review](https://github.com/docker/mcp-registry/actions/runs/40049180641)
 and [Code/Server Validation](https://github.com/docker/mcp-registry/actions/runs/40049180736)
 runs are `action_required`, awaiting maintainer approval, with zero executed
-jobs at2026-10-25T00:13UTC. That is a concrete upstream workflow-approval gate,
+jobs at 2026-10-25T00:13 UTC. That is a concrete upstream workflow-approval gate,
 not an executed failing test. The private reviewer form remains accepted;
 publication/native catalog installation stays under m9/t017.
+
+## Reviewer credential coordination — 2026-10-25T01:58:28Z
+
+Read-only [first-party API-key metadata](https://beancount.io/settings/api-keys)
+confirms the existing reviewer credential is **Active**, limited to the same
+synthetic ledger, **ledger.read + ledger.write / no admin**, and expires at
+the **end of 2026-10-31 UTC**. Last used is **Never used**; this is metadata,
+not a reviewer-key runtime test or a conclusion about code review.
+
+**Worker / m9/t017 assesses by 2026-10-29 UTC**, or earlier actual access failure
+or private reviewer request. If access is needed beyond expiry, preserve the
+same recipient/scope/ledger boundary and coordinate a bounded replacement
+through Docker's [already accepted private review channel](https://forms.gle/6Lw3nsvu2d6nFg8e6).
+Use a supported response edit or existing private reviewer reply when offered.
+A separate renewal/edit URL is unverified: if needed, Docker must supply its
+secure update route under existing PR6042; do not duplicate the accepted form
+or publish credentials in a public comment. Verify saved bounds/expiry and
+actual recipient use when observable. Keep retained grants and let an unneeded
+key expire. [Exact coordination and read-only evidence](./reviewer-access-progress.json)
+record the future condition; no new key, renewal, revocation or automation occurs.
+Native OAuth renewal remains the separate w6/046.

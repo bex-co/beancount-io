@@ -32,7 +32,7 @@
     "comments": 0,
     "reportedChecks": 0
   },
-  "nextAction": "Follow existing Docker PR review and actual catalog publication under w6/m9/t006. Retain the reviewer key until expiry; renew through the same private channel if review needs access after 2026-10-31 UTC. Do not duplicate the form or PR.",
+  "nextAction": "Follow existing Docker approval/review/public catalog under w6/m9/t017. Assess reviewer access by2026-10-29UTC against its end2026-10-31UTC expiry; if still needed, obtain the supported secure private update path and renew within the existing boundary. Native OAuth046 is separate.",
   "history": [
     {
       "checkedAtUTC": "2026-10-24T01:50:07Z",
@@ -53,5 +53,31 @@
   "credentialRetained": true,
   "reviewInstructions": "Read/query first; appendLedgerText previews use dry_run:true and allowInvalid:false, with no committed accounting changes. Contact submitter privately if review needs renewal after 2026-10-31 UTC.",
   "publicPRChecklistUpdated": true,
-  "publicPRUpdatedAtUTC": "2026-10-24T19:52:18Z"
+  "publicPRUpdatedAtUTC": "2026-10-24T19:52:18Z",
+  "credentialMetadataRecheck": {
+    "observedAtUTC": "2026-10-25T01:58:28Z",
+    "source": "https://beancount.io/settings/api-keys",
+    "state": "Active",
+    "scopes": [
+      "ledger.read",
+      "ledger.write"
+    ],
+    "ledgerRestriction": "Same dedicated synthetic QA ledger; account-wide not granted",
+    "expiresAtUTCEndOfDate": "2026-10-31",
+    "localDisplay": "Oct31,2026,16:59PDT; minute precision",
+    "lastUsed": "Never used",
+    "limit": "Read-only saved-metadata observation. No plaintext retrieved, reviewer-key accounting request, revocation, new key or renewed expiry."
+  },
+  "renewalPlan": {
+    "assessmentDueDateUTC": "2026-10-29",
+    "earlierTrigger": "Actual reviewer access failure or a private request requiring longer review access",
+    "owner": "Repository worker coordinates w6/m9/t017; Docker reviewers own review timing/private update channel; publisher only for a genuinely new authorization requirement",
+    "condition": "If review still needs access beyond end2026-10-31UTC, arrange bounded replacement before expiry, retaining the same recipient, one synthetic ledger and read/write without admin. If access is no longer needed, let this retained credential expire.",
+    "issuanceSettingsURL": "https://beancount.io/settings/api-keys",
+    "existingAcceptedPrivateChannel": "https://forms.gle/6Lw3nsvu2d6nFg8e6",
+    "privateUpdateRoute": "Use a Docker-supported response-edit option or an existing private reviewer request/reply when offered. No separate renewal/edit link has been verified; if one is needed and unavailable, Docker must supply a secure update route under the existing PR6042.",
+    "deliveryBoundary": "Coordinate through the accepted private review channel. Do not duplicate the accepted form/PR or publish a key in a public comment; a public route request may contain only the PR reference.",
+    "verification": "Confirm saved bounds and expiry, then actual reviewer acceptance/use when observable. Keep old retained grants; no automatic rotation or test-end revocation.",
+    "performedThisChange": "Coordination and read-only metadata only; no renewal claimed."
+  }
 }

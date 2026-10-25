@@ -30,7 +30,7 @@ backend deployment or existing DNS-record replacement is used.
 The earlier Cloudflare-browser agreement gate is therefore resolved by the
 already authorized CLI route. The earlier domain/account preparation history is
 retained in [claim-progress.json](./claim-progress.json); the approved Glama
-free-account Terms/Privacy step had already completed at 00:53UTC.
+free-account Terms/Privacy step had already completed at 00:53 UTC.
 
 ## Authenticated monitoring restored; full healthy day pending
 
@@ -76,8 +76,8 @@ Dated prior observations remain in [claim-progress.json](./claim-progress.json).
 ## Scheduled-monitoring follow-through — 2026-10-24T19:56:22Z
 
 The saved private credential remains configured. Glama's ten displayed recent
-checks are all successful, from14:19UTC through the latest check at
-**19:53:19UTC**, which takes1197ms. The public connector remains Healthy and
+checks are all successful, from14:19 UTC through the latest check at
+**19:53:19 UTC**, which takes1197ms. The public connector remains Healthy and
 its historical uptime improves to **3.2% over20days**. Initial server-rendered
 UTC times agree with the current UTC clock; hydrated browser times are PDT.
 Only the displayed ten-check history is inspected, not an inferred complete
@@ -115,8 +115,27 @@ evidence](./native-rehearsal-20261025.json) omits tokens, account/contact detail
 and raw ledger contents. Inspector build and deployed revision are not exposed.
 
 The connector is Healthy with44tools; the newly observed public uptime is4.5%
-over20days and its displayed last test is2026-10-24T23:59UTC. This is still
+over20days and its displayed last test is 2026-10-24T23:59 UTC. This is still
 short of the full-day gate. w2/088 retains that observation, earliest
 2026-10-25T07:01:01Z; no health-day completion or new fixture-qualified host
 support is inferred. The separate Install in Client modal generates a direct
 Bearer-key recipe; it does not establish OAuth for every listed client.
+
+## Monitor credential coordination — 2026-10-25T01:58:28Z
+
+Read-only [first-party key metadata](https://beancount.io/settings/api-keys)
+confirms the existing monitor is **Active**, **ledger.read only**, restricted
+to the same synthetic ledger and expiring at the **end of 2026-11-23 UTC**.
+Its last use is 2026-10-25T01:53 UTC (minute precision). Key use alone is not
+another observed Glama health result or full healthy-day completion.
+
+**Worker assesses by 2026-11-20 UTC**, or earlier actual access failure, through
+the existing w2/088 / w6/m8/t003 ownership. If the monitor still needs access
+beyond expiry, issue a bounded replacement through the first-party key settings
+with exactly the same read-only synthetic restriction, update the existing
+[private Test Profile](https://glama.ai/mcp/connectors/io.beancount/beancount/admin/test-profile)
+API Key / Bearer field, save and verify actual check success plus persistence.
+Keep the DNS proof published. Retain prior grants; let an unneeded key expire.
+[Exact dates, routes and responsibility](./claim-progress.json) are recorded
+without plaintext. No early replacement, renewal, revocation or polling job
+is performed by this coordination change.

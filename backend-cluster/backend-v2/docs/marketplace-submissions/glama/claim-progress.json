@@ -78,7 +78,9 @@
     "expiryPolicy": "End of selected UTC date",
     "renewBeforeDateUTC": "2026-11-23",
     "storage": "Glama private Test Profile; plaintext omitted from public files and cleared from browser automation memory after persistence verification",
-    "retained": true
+    "retained": true,
+    "assessmentDueDateUTC": "2026-11-20",
+    "renewalOwner": "Repository worker through w2/088 and w6/m8/t003 / existing connector maintenance"
   },
   "latestMonitoringObservation": {
     "observedAtUTC": "2026-10-24T19:56:22Z",
@@ -92,5 +94,30 @@
     "historicalWindowDays": 20,
     "fullHealthyDayObserved": false,
     "limit": "Only the ten displayed recent history entries were inspected; the complete earlier interval is not inferred from this page."
+  },
+  "monitoringCredentialMetadataRecheck": {
+    "observedAtUTC": "2026-10-25T01:58:28Z",
+    "source": "https://beancount.io/settings/api-keys",
+    "state": "Active",
+    "scopes": [
+      "ledger.read"
+    ],
+    "ledgerRestriction": "Same dedicated synthetic QA ledger",
+    "expiresAtUTCEndOfDate": "2026-11-23",
+    "localDisplay": "Nov23,2026,15:59PST; minute precision",
+    "lastUsedAtUTC": "2026-10-25T01:53Z",
+    "lastUsedPrecision": "minute; actual UI Oct24,18:53PDT",
+    "limit": "Metadata use is not a new Glama health outcome or a full healthy-day observation."
+  },
+  "monitoringCredentialRenewalPlan": {
+    "assessmentDueDateUTC": "2026-11-20",
+    "earlierTrigger": "Actual scheduled-monitor access failure",
+    "owner": "Worker coordinates existing w2/088 and w6/m8/t003; Glama runs scheduled checks",
+    "issuerSettingsURL": "https://beancount.io/settings/api-keys",
+    "privateUpdateURL": "https://glama.ai/mcp/connectors/io.beancount/beancount/admin/test-profile",
+    "supportedUI": "Existing API Key / Bearer Authentication Test Profile; replace private value only when renewal is needed, save and verify its actual test/history plus persistence",
+    "condition": "If monitoring still needs access beyond end2026-11-23UTC, renew before expiry within the same synthetic-ledger/ledger.read-only boundary. If not needed, allow natural expiry. Keep the daily DNS ownership proof.",
+    "verification": "Saved key metadata/pin/scope/expiry; actual private profile check and later scheduled result. A new failed check restarts the full healthy-day condition after repair.",
+    "performedThisChange": "Coordination and read-only metadata; no new key, rotation, grant revocation or automation."
   }
 }
