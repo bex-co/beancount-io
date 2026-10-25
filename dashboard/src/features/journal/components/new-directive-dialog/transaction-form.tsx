@@ -545,7 +545,10 @@ export function TransactionForm({
                                   }
                                   className={
                                     autoBalance && !field.value
-                                      ? "text-muted-foreground italic"
+                                      ? // Reserve the auto label's space so the
+                                        // right-aligned inferred amount cannot
+                                        // run underneath it (w4/1060).
+                                        "text-muted-foreground italic pe-14"
                                       : ""
                                   }
                                   {...field}
