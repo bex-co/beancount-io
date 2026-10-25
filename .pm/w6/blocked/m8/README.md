@@ -96,3 +96,14 @@ completes t002 and performs the actual aggregate/standing checks. Original
 public/native DoDs are retained; no dependent closing task is claimed done.
 Keep existing Glama monitor/DNS proof, with renewal assessment2026-11-20UTC
 or actual failure and expiry end2026-11-23UTC.
+
+## Smithery direct-directory route — 2026-10-25 UTC
+
+Glama remains complete. Smithery t002 still has no established surviving
+intake; current primary notice/docs and the official public GitHub
+organization/API offer no catalog-PR route. A public-metadata-only request
+to the transition notice's contact is prepared under t002, with explicit
+email authorization requested and no message sent. **Unblock:** publisher
+authorizes that reviewed contact action, Smithery/Arcade supplies supported
+intake or curated inclusion, and worker verifies the actual public/native
+result. The complete original task/milestone DoDs remain unchanged.

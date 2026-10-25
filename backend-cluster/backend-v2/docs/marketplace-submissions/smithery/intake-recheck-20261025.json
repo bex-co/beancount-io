@@ -1,0 +1,42 @@
+{
+  "owner": "w6/m8/t002",
+  "checkedAtUTC": "2026-10-25T22:13:11Z",
+  "status": "blocked; direct-directory intake unestablished, reviewed contact request not sent",
+  "sources": [
+    {
+      "url": "https://smithery.ai/future",
+      "observation": "Official notice retains a curated, verified, direct-URL directory after2026-10-31 and retires proxy/account/API/CLI services. It identifies ani@smithery.ai as its setup/migration contact, but does not supply a replacement submission/claim route."
+    },
+    {
+      "url": "https://smithery.ai/docs/build/publish",
+      "observation": "Legacy URL publishing still describes a Smithery Gateway proxy and links to smithery.ai/new. It does not establish a surviving direct-directory intake."
+    },
+    {
+      "url": "https://github.com/smithery-ai",
+      "observation": "Official organization, linked from the publishing documentation, reports no public repositories."
+    },
+    {
+      "url": "https://api.github.com/orgs/smithery-ai/repos?type=public&per_page=100",
+      "observation": "Actual public repository API returns an empty array. No supported public catalog PR route is established."
+    }
+  ],
+  "historicalWizard": {
+    "observedDateUTC": "2026-10-21",
+    "status": 403,
+    "message": "Updating servers has been removed. Contact support@smithery.ai.",
+    "repeatedThisCheck": false
+  },
+  "request": {
+    "recipient": "ani@smithery.ai",
+    "recipientSource": "https://smithery.ai/future",
+    "draft": "directory-request.md",
+    "purpose": "Ask for the supported direct-directory submission/claim route or curated inclusion of the canonical Beancount.io remote MCP endpoint.",
+    "contentBoundary": "Public service identity, endpoint, OAuth, source, setup and registry links only.",
+    "sent": false,
+    "publisherAuthorization": "Specific external-email authorization requested; no response recorded by this packet.",
+    "submissionAccepted": false
+  },
+  "unblock": "Publisher explicitly authorizes the prepared email, then worker sends it through an authorized mailbox and records the actual sent receipt. Smithery/Arcade supplies supported intake or curated inclusion; worker follows it and verifies real public/native acceptance.",
+  "nextManualDateUTC": "2026-10-31",
+  "limits": "No new sign-in, broader GitHub permission, repeated removed wizard, QA grant, paid route, public issue/PR or email transmission occurred. A draft or sent inquiry does not establish accepted listing submission."
+}
