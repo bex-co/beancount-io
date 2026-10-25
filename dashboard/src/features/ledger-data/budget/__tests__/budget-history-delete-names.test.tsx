@@ -62,6 +62,7 @@ describe("Budget history Delete buttons", () => {
       .click();
     expect(onDelete).toHaveBeenCalledWith(
       expect.objectContaining({ entry_hash: "a", date: "2026-01-01" }),
+      expect.any(HTMLElement),
     );
   });
 

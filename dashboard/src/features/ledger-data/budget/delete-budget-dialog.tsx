@@ -19,6 +19,8 @@ import {
   AlertDialogTitle,
 } from "@/common/components/ui/alert-dialog";
 import { Loader2 } from "lucide-react";
+import { restoreFocusOnDialogClose } from "@/common/lib/focus/restore-focus-on-dialog-close";
+import type { RefObject } from "react";
 import type { BudgetGroup } from "./types";
 
 interface DeleteBudgetDialogProps {
@@ -26,6 +28,8 @@ interface DeleteBudgetDialogProps {
   ledgerId: string;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  returnFocusRef?: RefObject<HTMLElement | null>;
+  fallbackFocusRef?: RefObject<HTMLElement | null>;
 }
 
 export function DeleteBudgetDialog({
@@ -33,6 +37,8 @@ export function DeleteBudgetDialog({
   ledgerId,
   onOpenChange,
   onSuccess,
+  returnFocusRef,
+  fallbackFocusRef,
 }: DeleteBudgetDialogProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   // Keyed to the directive it is about, so it never shows for another row.
@@ -87,7 +93,15 @@ export function DeleteBudgetDialog({
         if (!v && !isDeleting) onOpenChange(v);
       }}
     >
-      <AlertDialogContent>
+      <AlertDialogContent
+        onCloseAutoFocus={(event) => {
+          restoreFocusOnDialogClose(
+            event,
+            returnFocusRef?.current,
+            fallbackFocusRef?.current,
+          );
+        }}
+      >
         <AlertDialogHeader>
           <AlertDialogTitle>
             {t("page.budget.budgetDeleteTitle")}

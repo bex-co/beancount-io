@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from "@testing-library/react";
+import { useState } from "react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DeleteBudgetDialog } from "../delete-budget-dialog";
@@ -48,6 +49,44 @@ function setup() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+});
+
+describe("DeleteBudgetDialog cancel focus (w4/1080)", () => {
+  it("returns Cancel focus to the exact history-row opener", async () => {
+    const user = userEvent.setup();
+    const returnFocusRef: { current: HTMLElement | null } = { current: null };
+    function Harness() {
+      const [current, setCurrent] = useState<BudgetGroup | null>(target);
+      return (
+        <>
+          <button
+            type="button"
+            ref={(el) => {
+              returnFocusRef.current = el;
+            }}
+          >
+            Delete budget row
+          </button>
+          <DeleteBudgetDialog
+            target={current}
+            ledgerId="qa/books"
+            onOpenChange={(open) => {
+              if (!open) setCurrent(null);
+            }}
+            onSuccess={vi.fn()}
+            returnFocusRef={returnFocusRef}
+          />
+        </>
+      );
+    }
+    render(<Harness />);
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: "Delete budget row" }),
+      ).toHaveFocus(),
+    );
+  });
 });
 
 describe("DeleteBudgetDialog failures", () => {

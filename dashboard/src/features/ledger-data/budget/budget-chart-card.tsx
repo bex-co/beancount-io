@@ -74,7 +74,7 @@ interface BudgetChartCardProps {
   conversion: ConversionOption;
   primaryCurrency: string;
   time?: string;
-  onDelete: (group: BudgetGroup) => void;
+  onDelete: (group: BudgetGroup, opener: HTMLElement | null) => void;
 }
 
 const chartStyle = { height: "260px", width: "100%" };

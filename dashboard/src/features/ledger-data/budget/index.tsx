@@ -101,6 +101,12 @@ export default function LedgerBudgetPage() {
     setIsAddOpen(true);
   };
 
+  const deleteReturnFocusRef = useRef<HTMLElement | null>(null);
+  const openDeleteBudget = (group: BudgetGroup, opener: HTMLElement | null) => {
+    deleteReturnFocusRef.current = opener;
+    setDeleteTarget(group);
+  };
+
   const intervalOptions = useMemo(
     () => [
       { value: "ALL", label: t("page.budget.budgetIntervalAll") },
@@ -313,7 +319,7 @@ export default function LedgerBudgetPage() {
                   conversion={conversion}
                   primaryCurrency={primaryCurrency}
                   time={timeFilter}
-                  onDelete={setDeleteTarget}
+                  onDelete={openDeleteBudget}
                 />
               ))}
             </div>
@@ -341,6 +347,8 @@ export default function LedgerBudgetPage() {
           if (!open) setDeleteTarget(null);
         }}
         onSuccess={() => setDeleteTarget(null)}
+        returnFocusRef={deleteReturnFocusRef}
+        fallbackFocusRef={headerAddRef}
       />
     </div>
   );

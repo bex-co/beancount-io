@@ -17,7 +17,7 @@ import type { BudgetGroup } from "./types";
 
 interface BudgetHistoryTableProps {
   group: BudgetGroup;
-  onDelete: (group: BudgetGroup) => void;
+  onDelete: (group: BudgetGroup, opener: HTMLElement | null) => void;
   /**
    * Ids of the card's account title and currency badge. Both are needed:
    * `groupBudgetEntries` keys a group by account *and* currency, so the
@@ -125,14 +125,17 @@ export function BudgetHistoryTable({
                       variant="ghost"
                       size="icon-sm"
                       className="text-muted-foreground transition-opacity hover:bg-destructive/10 hover:text-destructive sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
-                      onClick={() =>
-                        onDelete({
-                          ...group,
-                          interval: entry.interval,
-                          amount: entry.amount,
-                          entry_hash: entry.entry_hash,
-                          date: entry.date,
-                        })
+                      onClick={(event) =>
+                        onDelete(
+                          {
+                            ...group,
+                            interval: entry.interval,
+                            amount: entry.amount,
+                            entry_hash: entry.entry_hash,
+                            date: entry.date,
+                          },
+                          event.currentTarget,
+                        )
                       }
                       aria-label={deleteLabels[index]}
                     >
