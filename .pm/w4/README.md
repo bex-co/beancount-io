@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1092** — [Preserve leading zeros in bare-year Time filters](./1092.md)
+
 - **1091** — [Keep the current page after a departed file deletion completes](./1091.md)
 
 - **1090** — [Allow only one pending delete per file](./1090.md)
