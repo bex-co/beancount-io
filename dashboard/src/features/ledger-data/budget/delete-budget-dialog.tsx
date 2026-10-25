@@ -20,6 +20,7 @@ import {
 } from "@/common/components/ui/alert-dialog";
 import { Loader2 } from "lucide-react";
 import { restoreFocusOnDialogClose } from "@/common/lib/focus/restore-focus-on-dialog-close";
+import { usePendingAction } from "@/common/hooks/use-pending-action";
 import type { RefObject } from "react";
 import type { BudgetGroup } from "./types";
 
@@ -48,7 +49,9 @@ export function DeleteBudgetDialog({
   returnFocusRef,
   fallbackFocusRef,
 }: DeleteBudgetDialogProps) {
-  const [isDeleting, setIsDeleting] = useState(false);
+  // Failed source-read/deletion returns focus to Delete for the retry,
+  // unless the reader deliberately moved elsewhere (w4/1082).
+  const { run, pending: isDeleting } = usePendingAction();
   // Keyed to the directive it is about, so it never shows for another row.
   const [failure, setFailure] = useState<{
     entryHash: string;
@@ -64,10 +67,9 @@ export function DeleteBudgetDialog({
   const clearCache = useApolloCacheClear();
   const [deleteMutation] = useMutation(DeleteLedgerEntrySourceSliceDocument);
 
-  const handleDelete = async () => {
+  const doDelete = async (): Promise<boolean | void> => {
     if (!target) return;
     const { entry_hash: entryHash } = target;
-    setIsDeleting(true);
     setFailure(null);
     try {
       const { data } = await client.query({
@@ -90,12 +92,16 @@ export function DeleteBudgetDialog({
       onOpenChange(false);
       clearCache();
       onSuccess();
+      return true;
     } catch (err) {
       // The dialog stays open on its target, with Cancel and Delete to retry.
       setFailure({ entryHash, message: formatError(err) });
-    } finally {
-      setIsDeleting(false);
+      return undefined;
     }
+  };
+
+  const handleDelete = () => {
+    void run(doDelete);
   };
 
   return (

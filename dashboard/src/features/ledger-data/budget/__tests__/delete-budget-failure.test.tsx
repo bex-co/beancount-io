@@ -130,6 +130,27 @@ describe("DeleteBudgetDialog failures", () => {
     expect(clearCache).toHaveBeenCalledTimes(1);
   });
 
+  it("returns focus to Delete after a failed source read (w4/1082)", async () => {
+    let rejectRead: (error: Error) => void = () => {};
+    query.mockImplementationOnce(
+      () =>
+        new Promise((_resolve, reject) => {
+          rejectRead = reject;
+        }),
+    );
+    const { user } = setup();
+    const retry = screen.getByRole("button", { name: "Delete" });
+    await user.click(retry);
+    // A browser drops a disabled control's focus to the dialog; jsdom
+    // does not, so move it the way the browser leaves it.
+    screen.getByRole("alertdialog").focus();
+    rejectRead(new Error("Failed to fetch"));
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
+    await waitFor(() => expect(retry).toHaveFocus());
+    await user.keyboard("{Enter}");
+    await waitFor(() => expect(query).toHaveBeenCalledTimes(2));
+  });
+
   it("does not delete without a checksum and says so", async () => {
     query.mockResolvedValueOnce({ data: { getLedgerEntryContext: null } });
     const { onSuccess, user } = setup();

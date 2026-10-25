@@ -18,6 +18,7 @@ import {
 } from "@/graphql/definitions";
 import { toast } from "sonner";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { usePendingAction } from "@/common/hooks/use-pending-action";
 
 interface ExportJournalButtonProps {
   ledgerId: string;
@@ -37,7 +38,9 @@ export function ExportJournalButton({
   time,
 }: ExportJournalButtonProps) {
   const { t } = useTranslations();
-  const [isExporting, setIsExporting] = useState(false);
+  // The pending-action handback returns focus to Export after a failed
+  // read, unless the reader deliberately moved elsewhere (w4/1082).
+  const { run, pending: isExporting } = usePendingAction();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const [getPlaintextJournal] = useLazyQuery<
@@ -45,10 +48,8 @@ export function ExportJournalButton({
     GetLedgerPlaintextJournalQueryVariables
   >(GetLedgerPlaintextJournalDocument);
 
-  const handleExport = async () => {
+  const doExport = async (): Promise<boolean | void> => {
     try {
-      setIsExporting(true);
-
       const { data } = await getPlaintextJournal({
         variables: {
           ledgerId,
@@ -85,12 +86,16 @@ export function ExportJournalButton({
 
       toast.success(t("journal.journalExportedSuccess"));
       setIsDialogOpen(false);
+      return true;
     } catch (error) {
       console.error("Failed to export journal:", error);
       toast.error(t("journal.failedToExportJournal"));
-    } finally {
-      setIsExporting(false);
+      return undefined;
     }
+  };
+
+  const handleExport = () => {
+    void run(doExport);
   };
 
   return (
