@@ -1,6 +1,6 @@
 # w22 · m1 — `bea update transaction`: resolve the review queue in place
 
-**Worker:** worker1 **Goal:** an imported `!` / `Expenses:Uncategorized` row is categorized with one previewed, atomic, git-friendly `bea` command instead of a hand edit **Status:** todo (t001–t008 done)
+**Worker:** worker1 **Goal:** an imported `!` / `Expenses:Uncategorized` row is categorized with one previewed, atomic, git-friendly `bea` command instead of a hand edit **Status:** done
 
 ## Tasks (in order)
 
@@ -14,7 +14,7 @@
 | t006 | Adoption surface — **DONE** | 25m | t005 |
 | t007 | Simplify — **DONE** | 25m | t006 |
 | t008 | Test coverage — **DONE** | 45m | t006 |
-| t009 | Closeout | 15m | t007, t008 |
+| t009 | Closeout — **DONE** | 15m | t007, t008 |
 
 ## Definition of done
 
