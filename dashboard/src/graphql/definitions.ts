@@ -596,6 +596,26 @@ export type FollowUserResponse = {
   success: Scalars['Boolean']['output'];
 };
 
+export type GainsData = {
+  __typename: 'GainsData';
+  rows: Array<GainsRow>;
+  totals: Scalars['JSONObject']['output'];
+};
+
+export type GainsRow = {
+  __typename: 'GainsRow';
+  account: Scalars['String']['output'];
+  acquired: Maybe<Scalars['String']['output']>;
+  basis: HoldingsMoney;
+  commodity: Scalars['String']['output'];
+  gain: HoldingsMoney;
+  heldDays: Maybe<Scalars['Float']['output']>;
+  longHeld: Maybe<Scalars['Boolean']['output']>;
+  proceeds: HoldingsMoney;
+  quantity: HoldingsMoney;
+  sold: Scalars['String']['output'];
+};
+
 export type GetCliAuthRequestResponse = {
   __typename: 'GetCliAuthRequestResponse';
   client: CliAuthClientInfoType;
@@ -607,6 +627,35 @@ export type GetCliAuthRequestResponse = {
 export type GetCliAuthSessionResponse = {
   __typename: 'GetCliAuthSessionResponse';
   status: CliAuthStatus;
+};
+
+export type HoldingsData = {
+  __typename: 'HoldingsData';
+  asOf: Scalars['String']['output'];
+  groupBy: Scalars['String']['output'];
+  groups: Array<HoldingsGroup>;
+  missingPriceSummary: Array<Scalars['String']['output']>;
+  missingPrices: Array<MissingPriceLeg>;
+  totals: Scalars['JSONObject']['output'];
+  valuation: Scalars['String']['output'];
+};
+
+export type HoldingsGroup = {
+  __typename: 'HoldingsGroup';
+  account: Maybe<Scalars['String']['output']>;
+  accounts: Maybe<Array<Scalars['String']['output']>>;
+  averageCost: HoldingsMoney;
+  commodity: Scalars['String']['output'];
+  costBasis: HoldingsMoney;
+  marketValue: HoldingsMoney;
+  price: Maybe<HoldingsMoney>;
+  units: HoldingsMoney;
+};
+
+export type HoldingsMoney = {
+  __typename: 'HoldingsMoney';
+  currency: Scalars['String']['output'];
+  number: Scalars['String']['output'];
 };
 
 export type HomeChartsResponse = {
@@ -1076,6 +1125,12 @@ export type MintedApiKeyType = {
   key: ApiKeyType;
   /** The key itself. Returned by this mutation and never retrievable again. */
   plaintext: Scalars['String']['output'];
+};
+
+export type MissingPriceLeg = {
+  __typename: 'MissingPriceLeg';
+  from: Scalars['String']['output'];
+  to: Scalars['String']['output'];
 };
 
 export type Mutation = {
@@ -2022,6 +2077,8 @@ export type Query = {
   getLedgerAttributes: LedgerAttributes;
   /** Get the balance sheet of a specific ledger, including report-only current earnings in equity and its interval series under the configured account names */
   getLedgerBalanceSheet: BalanceSheetData;
+  /** Get the realized capital gains of a specific ledger */
+  getLedgerCapitalGains: GainsData;
   getLedgerCollaboratorPermission: LedgerCollaborator;
   /** Get the commodities of a specific ledger */
   getLedgerCommodities: Array<CommodityPairWithPrices>;
@@ -2041,6 +2098,8 @@ export type Query = {
   getLedgerEvents: Array<Event>;
   /** Get the content of a specific ledger file */
   getLedgerFile: Maybe<LedgerFileContent>;
+  /** Get the holdings of a specific ledger */
+  getLedgerHoldings: HoldingsData;
   /** Get the income statement of a specific ledger */
   getLedgerIncomeStatement: IncomeStatementData;
   /** Get interval totals for a specific account */
@@ -2068,6 +2127,8 @@ export type Query = {
   getLedgerPlaintextJournal: PlaintextJournalResponse;
   /** Count postings per account over the filtered Statistics report stream */
   getLedgerPostingsPerAccount: Array<PostingsPerAccount>;
+  /** Get the register of a specific ledger account */
+  getLedgerRegister: RegisterData;
   /** Get the Beancount source files of a ledger (main.bean plus every file it includes) */
   getLedgerSourceFiles: Array<Scalars['String']['output']>;
   /** Get the tags of a specific ledger */
@@ -2253,6 +2314,15 @@ export type QueryGetLedgerBalanceSheetArgs = {
 };
 
 
+export type QueryGetLedgerCapitalGainsArgs = {
+  account?: InputMaybe<Scalars['String']['input']>;
+  fromDate?: InputMaybe<Scalars['String']['input']>;
+  ledgerId: Scalars['String']['input'];
+  time?: InputMaybe<Scalars['String']['input']>;
+  toDate?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type QueryGetLedgerCollaboratorPermissionArgs = {
   collaborator: Scalars['String']['input'];
   ledgerId: Scalars['String']['input'];
@@ -2313,6 +2383,14 @@ export type QueryGetLedgerEventsArgs = {
 export type QueryGetLedgerFileArgs = {
   ledgerId: Scalars['String']['input'];
   path: Scalars['String']['input'];
+};
+
+
+export type QueryGetLedgerHoldingsArgs = {
+  account?: InputMaybe<Scalars['String']['input']>;
+  conversion?: InputMaybe<Scalars['String']['input']>;
+  groupBy?: Scalars['String']['input'];
+  ledgerId: Scalars['String']['input'];
 };
 
 
@@ -2405,6 +2483,14 @@ export type QueryGetLedgerPlaintextJournalArgs = {
 export type QueryGetLedgerPostingsPerAccountArgs = {
   account?: InputMaybe<Scalars['String']['input']>;
   filter?: InputMaybe<Scalars['String']['input']>;
+  ledgerId: Scalars['String']['input'];
+  time?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryGetLedgerRegisterArgs = {
+  account: Scalars['String']['input'];
+  conversion?: InputMaybe<Scalars['String']['input']>;
   ledgerId: Scalars['String']['input'];
   time?: InputMaybe<Scalars['String']['input']>;
 };
@@ -2692,6 +2778,37 @@ export type ReceiptPostingInput = {
   account: Scalars['String']['input'];
   amountCurrency: Scalars['String']['input'];
   amountNumber: Scalars['String']['input'];
+};
+
+export type RegisterCost = {
+  __typename: 'RegisterCost';
+  currency: Scalars['String']['output'];
+  date: Scalars['String']['output'];
+  number: Scalars['String']['output'];
+};
+
+export type RegisterData = {
+  __typename: 'RegisterData';
+  account: Maybe<Scalars['String']['output']>;
+  rows: Array<RegisterRow>;
+};
+
+export type RegisterPosting = {
+  __typename: 'RegisterPosting';
+  account: Scalars['String']['output'];
+  amount: HoldingsMoney;
+  cost: Maybe<RegisterCost>;
+};
+
+export type RegisterRow = {
+  __typename: 'RegisterRow';
+  balance: Scalars['JSONObject']['output'];
+  change: Scalars['JSONObject']['output'];
+  date: Scalars['String']['output'];
+  entry: Scalars['String']['output'];
+  narration: Maybe<Scalars['String']['output']>;
+  payee: Maybe<Scalars['String']['output']>;
+  postings: Array<RegisterPosting>;
 };
 
 export type RenameLedgerFileResponse = {

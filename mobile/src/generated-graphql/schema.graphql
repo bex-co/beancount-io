@@ -83,6 +83,10 @@ type AddEntryResponse {
 }
 
 type AddLedgerEntryResponse {
+  """
+  The hash each committed entry now carries, in request order, for getLedgerEntryContext and the source-slice update and delete; empty on a dry run, or when it could not be resolved after the commit
+  """
+  entryHashes: [String!]!
   message: String
   success: Boolean!
 }
@@ -115,6 +119,10 @@ type AppendDirectiveTextResponse {
   """Unified diff per touched file; populated on dry runs only"""
   diff: [DirectiveTextDiff!]!
   dryRun: Boolean!
+  """
+  The hash each committed entry now carries, in request order, for getLedgerEntryContext and the source-slice update and delete; empty on a dry run, or when it could not be resolved after the commit
+  """
+  entryHashes: [String!]!
   errorsAfter: Float!
   errorsBefore: Float!
   message: String!
@@ -554,6 +562,24 @@ type FollowUserResponse {
   success: Boolean!
 }
 
+type GainsData {
+  rows: [GainsRow!]!
+  totals: JSONObject!
+}
+
+type GainsRow {
+  account: String!
+  acquired: String
+  basis: HoldingsMoney!
+  commodity: String!
+  gain: HoldingsMoney!
+  heldDays: Float
+  longHeld: Boolean
+  proceeds: HoldingsMoney!
+  quantity: HoldingsMoney!
+  sold: String!
+}
+
 type GetCliAuthRequestResponse {
   client: CliAuthClientInfoType!
   expiresAt: String!
@@ -563,6 +589,32 @@ type GetCliAuthRequestResponse {
 
 type GetCliAuthSessionResponse {
   status: CliAuthStatus!
+}
+
+type HoldingsData {
+  asOf: String!
+  groupBy: String!
+  groups: [HoldingsGroup!]!
+  missingPriceSummary: [String!]!
+  missingPrices: [MissingPriceLeg!]!
+  totals: JSONObject!
+  valuation: String!
+}
+
+type HoldingsGroup {
+  account: String
+  accounts: [String!]
+  averageCost: HoldingsMoney!
+  commodity: String!
+  costBasis: HoldingsMoney!
+  marketValue: HoldingsMoney!
+  price: HoldingsMoney
+  units: HoldingsMoney!
+}
+
+type HoldingsMoney {
+  currency: String!
+  number: String!
 }
 
 type HomeChartsResponse {
@@ -955,6 +1007,18 @@ type LedgerSetupPreview {
   historyStart: String!
   operatingCurrency: String!
   preset: String!
+  """bean-check's verdict on the files; creation refuses on errors."""
+  validation: LedgerSetupValidation!
+}
+
+type LedgerSetupValidation {
+  errors: [LedgerSetupValidationError!]!
+  ok: Boolean!
+}
+
+type LedgerSetupValidationError {
+  message: String!
+  source: String
 }
 
 """Template used to populate a newly created ledger"""
@@ -1010,6 +1074,11 @@ type MintedApiKeyType {
   key: ApiKeyType!
   """The key itself. Returned by this mutation and never retrievable again."""
   plaintext: String!
+}
+
+type MissingPriceLeg {
+  from: String!
+  to: String!
 }
 
 type Mutation {
@@ -1661,11 +1730,13 @@ type Query {
   getCliAuthSession(deviceCode: String!): GetCliAuthSessionResponse!
   getCommitDetails(ledgerId: String!, sha: String!): CommitDetails!
   getFeed(
+    """Items per page: an integer from 1 to 100."""
     limit: Float! = 10
     """
     Language code (en, zh, etc.). If not provided, uses user's profile locale.
     """
     locale: String
+    """Items to skip: a non-negative integer."""
     offset: Float! = 0
     """
     Restrict the feed to one source: BLOG, LEDGER_RSS, or CHANGELOG. Omit for the merged feed.
@@ -1703,6 +1774,8 @@ type Query {
   Get the balance sheet of a specific ledger, including report-only current earnings in equity and its interval series under the configured account names
   """
   getLedgerBalanceSheet(account: String, conversion: String, filter: String, interval: String! = "monthly", ledgerId: String!, time: String): BalanceSheetData!
+  """Get the realized capital gains of a specific ledger"""
+  getLedgerCapitalGains(account: String, fromDate: String, ledgerId: String!, time: String, toDate: String): GainsData!
   getLedgerCollaboratorPermission(collaborator: String!, ledgerId: String!): LedgerCollaborator!
   """Get the commodities of a specific ledger"""
   getLedgerCommodities(ledgerId: String!): [CommodityPairWithPrices!]!
@@ -1724,6 +1797,8 @@ type Query {
   getLedgerEvents(account: String, filter: String, ledgerId: String!, time: String): [Event!]!
   """Get the content of a specific ledger file"""
   getLedgerFile(ledgerId: String!, path: String!): LedgerFileContent
+  """Get the holdings of a specific ledger"""
+  getLedgerHoldings(account: String, conversion: String, groupBy: String! = "account", ledgerId: String!): HoldingsData!
   """Get the income statement of a specific ledger"""
   getLedgerIncomeStatement(account: String, conversion: String, filter: String, interval: String! = "monthly", ledgerId: String!, time: String): IncomeStatementData!
   """Get interval totals for a specific account"""
@@ -1757,6 +1832,8 @@ type Query {
   getLedgerPlaintextJournal(ledgerId: String!, query: PlaintextJournalQueryInput): PlaintextJournalResponse!
   """Count postings per account over the filtered Statistics report stream"""
   getLedgerPostingsPerAccount(account: String, filter: String, ledgerId: String!, time: String): [PostingsPerAccount!]!
+  """Get the register of a specific ledger account"""
+  getLedgerRegister(account: String!, conversion: String, ledgerId: String!, time: String): RegisterData!
   """
   Get the Beancount source files of a ledger (main.bean plus every file it includes)
   """
@@ -1938,6 +2015,33 @@ input ReceiptPostingInput {
   account: String!
   amountCurrency: String!
   amountNumber: String!
+}
+
+type RegisterCost {
+  currency: String!
+  date: String!
+  number: String!
+}
+
+type RegisterData {
+  account: String
+  rows: [RegisterRow!]!
+}
+
+type RegisterPosting {
+  account: String!
+  amount: HoldingsMoney!
+  cost: RegisterCost
+}
+
+type RegisterRow {
+  balance: JSONObject!
+  change: JSONObject!
+  date: String!
+  entry: String!
+  narration: String
+  payee: String
+  postings: [RegisterPosting!]!
 }
 
 type RenameLedgerFileResponse {
