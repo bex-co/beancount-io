@@ -134,7 +134,25 @@ interface SliceTarget {
   localOccurrence: number;
   sha256sum: string;
   startLine: number;
+  /**
+   * Same-SHA dated blocks in the file when the target was located. The
+   * (SHA, occurrence) pair only addresses the same entry while the twin set
+   * is unchanged: after a raced edit rotates one twin, the stale pair
+   * addresses a surviving twin instead (w23/m1).
+   */
+  matchCount: number;
 }
+
+/** Dated blocks in `fileText` whose source text hashes to `sha256`. */
+function countShaMatches(fileText: string, sha256: string): number {
+  let count = 0;
+  for (const block of splitIntoBlocks(fileText)) {
+    if (block.isDated && sliceSha256(block.text) === sha256) count += 1;
+  }
+  return count;
+}
+
+const STALE_TARGET = "it has changed since it was loaded; refresh and retry";
 
 /**
  * Re-locate an entry's exact source block in ONE file's CURRENT content. Runs
@@ -142,12 +160,20 @@ interface SliceTarget {
  * that shift line offsets are handled without re-booking the target in
  * isolation. If the old line now contains another dated block, treat the target
  * as changed; if it disappeared entirely, report it missing.
+ *
+ * A changed twin count is a changed target too: with two identical entries the
+ * stale (SHA, occurrence) pair still matches after a raced edit — but it
+ * matches the twin the caller did not address. Refusing beats silently
+ * editing the wrong entry (w23/m1).
  */
 function relocateSlice(
   file: string,
   content: string,
   target: SliceTarget,
 ): EntrySlice {
+  if (countShaMatches(content, target.sha256sum) !== target.matchCount) {
+    throw new ConflictError("Entry", STALE_TARGET);
+  }
   const found = findEntrySliceBySourceSha(
     file,
     content,
@@ -160,10 +186,7 @@ function relocateSlice(
     (block) => block.isDated && block.startLine === target.startLine,
   );
   if (blockAtOriginalLine) {
-    throw new ConflictError(
-      "Entry",
-      "it has changed since it was loaded; refresh and retry",
-    );
+    throw new ConflictError("Entry", STALE_TARGET);
   }
   throw new NotFoundError("Entry", target.base);
 }
@@ -968,6 +991,7 @@ export class LedgerJournalService implements ILedgerJournalService {
             localOccurrence: found.localOccurrence,
             sha256sum,
             startLine: found.startLine,
+            matchCount: countShaMatches(files[found.file] ?? "", sha256sum),
           },
         ]),
       ],
@@ -1037,6 +1061,10 @@ export class LedgerJournalService implements ILedgerJournalService {
         localOccurrence: slice.localOccurrence,
         sha256sum: entries[index].sha256sum,
         startLine: slice.startLine,
+        matchCount: countShaMatches(
+          files[slice.file] ?? "",
+          entries[index].sha256sum,
+        ),
       };
       const list = byFile.get(slice.file);
       if (list) list.push(target);
@@ -1101,6 +1129,7 @@ export class LedgerJournalService implements ILedgerJournalService {
             localOccurrence: found.localOccurrence,
             sha256sum,
             startLine: found.startLine,
+            matchCount: countShaMatches(files[found.file] ?? "", sha256sum),
           },
           newContent,
           (result) => {

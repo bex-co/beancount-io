@@ -1,13 +1,13 @@
 # w23 · m1 — Fence concurrent same-entry updates
 
-**Worker:** worker1 **Goal:** overlapped `updateEntrySource` calls leave exactly one entry with the winner's content and report the loser honestly (never a duplicate, never a silent deletion, never `FORBIDDEN`) **Status:** todo (t001 done)
+**Worker:** worker1 **Goal:** overlapped `updateEntrySource` calls leave exactly one entry with the winner's content and report the loser honestly (never a duplicate, never a silent deletion, never `FORBIDDEN`) **Status:** todo (t001–t002 done)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
 | t001 | Reproduce and root-cause the mis-resolution — **DONE** | 1h | — |
-| t002 | Fence same-entry updates | 1h | t001 |
+| t002 | Fence same-entry updates — **DONE** | 1h | t001 |
 | t003 | Translate commit failures as retryable, not forbidden | 45m | t001 |
 | t004 | Adoption surface | 20m | t002, t003 |
 | t005 | Simplify | 30m | t004 |
