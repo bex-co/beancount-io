@@ -712,8 +712,8 @@ lists the accounting and bank suffixes; replace the braces with your ledger and 
 | Family                                  | URI suffixes                                                                                                                                              |
 | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Vocabulary (11)                         | `payees`, `narrations`, `currencies`, `tags`, `links`, `years`, `commodities`, `events{?account,filter,time}`, `errors`, `attributes`, `managed-prices`   |
-| Analysis without required arguments (6) | `trial-balance`, `interval-totals`, `account-last-entries`, `entries-count`, `postings-per-account`, `account-directives`                                 |
-| Analysis with required arguments (5)    | `account-report/{accountName}`, `payee-transactions/{payee}`, `narration-transactions{?narration}`, `payee-accounts/{payee}`, `entry-context/{entryHash}` |
+| Analysis without required arguments (10) | `overview`, `documents`, `trial-balance`, `holdings`, `capital-gains`, `interval-totals`, `account-last-entries`, `entries-count`, `postings-per-account`, `account-directives` |
+| Analysis with required arguments (6)    | `account-report/{accountName}`, `register/{account}`, `payee-transactions/{payee}`, `narration-transactions{?narration}`, `payee-accounts/{payee}`, `entry-context/{entryHash}` |
 | Bank connections and accounts (4)       | `banks`, `banks/{itemId}`, `banks/{itemId}/accounts`, `bank-accounts`                                                                                     |
 | Bank staging and suggestions (3)        | `bank-transactions/unsynced{?accountId}`, `bank-transactions/suggested-categories{?accountId}`, `banks/{itemId}/suggested-mapping`                        |
 | File contents (1)                       | `files/{+path}`                                                                                                                                           |
