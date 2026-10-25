@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1088** — [Keep language changes inside the current file draft](./1088.md)
+
 - **1087** — [Keep loaded commit details through cache refresh](./1087.md)
 
 - **1086** — [Translate existing import errors when the language changes](./1086.md)
