@@ -107,3 +107,12 @@ email authorization requested and no message sent. **Unblock:** publisher
 authorizes that reviewed contact action, Smithery/Arcade supplies supported
 intake or curated inclusion, and worker verifies the actual public/native
 result. The complete original task/milestone DoDs remain unchanged.
+
+## Smithery contact gate cleared — 2026-10-25T23:08:09Z
+
+Publisher authorized the prepared request. Actual Gmail **Message sent**
+confirms one public-metadata-only email to the official transition contact.
+t002 now waits on Smithery/Arcade's supported intake or curated-inclusion
+response, then worker public/native verification. No further publisher
+authorization is pending, and no accepted listing submission is inferred.
+Keep this request and original DoD; do not send a duplicate inquiry.

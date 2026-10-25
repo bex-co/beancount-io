@@ -1,7 +1,11 @@
-# Smithery direct-directory request — draft, not sent
+# Smithery direct-directory request — sent 2026-10-25 UTC
 
 **To:** [ani@smithery.ai](mailto:ani@smithery.ai), the contact in the
 [official transition notice](https://smithery.ai/future).
+
+**Sent confirmation:** 2026-10-25T23:08:09Z, Gmail “Message sent”, after the
+publisher explicitly authorized this reviewed request. Exactly one Send action;
+matching Sent recipient/subject search found no existing message beforehand.
 
 **Subject:** Beancount.io direct MCP directory inclusion after October 31
 
@@ -34,5 +38,9 @@ Beancount.io
 
 Only public service metadata is included. No QA credentials, account password,
 ledger contents, billing commitment or agreement acceptance is part of this
-draft. Sending is a separate action that requires the publisher's explicit
-authorization. This file does not establish a sent request or submission.
+request. The email was sent after the publisher's explicit authorization.
+Plain-text wrapping and code formatting were normalized; its checked body
+contains 1,142 characters. The actual Gmail compose readback matched the
+reviewed content before sending. The sent confirmation establishes an inquiry,
+not recipient delivery, a reply or accepted listing submission. Private mailbox
+identity and the screenshot remain outside the public repository.

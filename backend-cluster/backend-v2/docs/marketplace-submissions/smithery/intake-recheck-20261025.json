@@ -1,7 +1,7 @@
 {
   "owner": "w6/m8/t002",
-  "checkedAtUTC": "2026-10-25T22:13:11Z",
-  "status": "blocked; direct-directory intake unestablished, reviewed contact request not sent",
+  "checkedAtUTC": "2026-10-25T23:08:09Z",
+  "status": "blocked on Smithery/Arcade supported intake or curated inclusion; authorized public-metadata request sent",
   "sources": [
     {
       "url": "https://smithery.ai/future",
@@ -29,14 +29,27 @@
   "request": {
     "recipient": "ani@smithery.ai",
     "recipientSource": "https://smithery.ai/future",
-    "draft": "directory-request.md",
     "purpose": "Ask for the supported direct-directory submission/claim route or curated inclusion of the canonical Beancount.io remote MCP endpoint.",
     "contentBoundary": "Public service identity, endpoint, OAuth, source, setup and registry links only.",
-    "sent": false,
-    "publisherAuthorization": "Specific external-email authorization requested; no response recorded by this packet.",
-    "submissionAccepted": false
+    "sent": true,
+    "publisherAuthorization": "Publisher explicitly replied authorize to the reviewed recipient and request; authorization condition cleared.",
+    "submissionAccepted": false,
+    "sentConfirmedAtUTC": "2026-10-25T23:08:09Z",
+    "channel": "Existing authenticated Gmail mailbox; private sender identity and screenshots are not published.",
+    "dedupe": "Exact Sent recipient/subject query returned No messages matched your search before composing.",
+    "sendActionCount": 1,
+    "receipt": "Actual Gmail alert Message sent; no send retry or duplicate request.",
+    "bodyReadback": {
+      "matchesApprovedContent": true,
+      "plainTextCharacters": 1142,
+      "plainTextSHA256": "fad257154c2ddc3c15932e7eb015ba28c8f2e6a58a63b768d4de65ae82510dad",
+      "formatting": "Approved Markdown soft wraps/backticks normalized for plain-text email."
+    },
+    "recipientDeliveryOrReplyObserved": false,
+    "reviewedMessage": "directory-request.md"
   },
-  "unblock": "Publisher explicitly authorizes the prepared email, then worker sends it through an authorized mailbox and records the actual sent receipt. Smithery/Arcade supplies supported intake or curated inclusion; worker follows it and verifies real public/native acceptance.",
+  "unblock": "Email authorization and sending are complete. Smithery/Arcade supplies a supported direct-directory submission/claim route or curated inclusion; worker follows the same request and verifies actual ownership/public/native acceptance. No new publisher action is required now.",
   "nextManualDateUTC": "2026-10-31",
-  "limits": "No new sign-in, broader GitHub permission, repeated removed wizard, QA grant, paid route, public issue/PR or email transmission occurred. A draft or sent inquiry does not establish accepted listing submission."
+  "limits": "Exactly one authorized public-metadata email sent. No QA credentials, ledger contents, account password, broader GitHub grant, paid route, duplicate removed wizard, public issue or PR. Gmail send confirmation does not prove recipient delivery/read, accepted submission or publication.",
+  "sourceCheckedAtUTC": "2026-10-25T22:13:11Z"
 }
