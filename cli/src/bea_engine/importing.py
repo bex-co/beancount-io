@@ -186,6 +186,7 @@ def answer(
     *,
     csv_mapping: str | None = None,
     csv_account: str | None = None,
+    ofx: bool = False,
     date_format: str | None = None,
     delimiter: str | None = None,
     encoding: str | None = None,
@@ -221,11 +222,14 @@ def answer(
         parse_mapping,
     )
     from bea_engine.ledger.reader import entry_generated, forget_source_lines, shared_locations
+    from bea_engine.ofx_importer import OfxImporter
 
     if duplicates not in {"review", "skip", "include"}:
         raise UsageError(f"--duplicates must be review, skip, or include; got {duplicates!r}.")
     if csv_mapping is not None and config is not None:
         raise UsageError("Pass --csv or --config, not both.")
+    if ofx and (csv_mapping is not None or config is not None):
+        raise UsageError("Pass only one of --csv, --config, or --ofx.")
     # Refused before the ledger loads or the importer's extract() runs, which
     # may have side effects of its own (w5/604).
     _effective_id_keys(id_keys)
@@ -261,6 +265,8 @@ def answer(
     notes: list[str] = []
     roots = ledger_roots(options)
     csv_mode = csv_mapping is not None
+    ofx_mode = ofx
+    nocode_mode = csv_mode or ofx_mode
     skipped_blank = 0
     skipped_pending = 0
     csv_id_mapped = False
@@ -384,9 +390,60 @@ def answer(
                 f"so they post to {default_account} with flag '!' instead of cancelling out. Categorize them with "
                 "--rules."
             )
+    elif ofx_mode:
+        if csv_account is None:
+            raise UsageError("--ofx needs --account ACCOUNT, naming the account the export belongs to.")
+        # The preamble mirrors the --csv one above: same built-in default,
+        # same cancel-out and rule-target checks. Keep the two in step.
+        csv_account = _valid_account(csv_account, "--account", roots)
+        if default_account is None:
+            default_account = f"{roots[-1]}:Uncategorized"
+            fallback = f"the built-in default account {default_account}"
+        else:
+            default_account = _valid_account(default_account, "--default-account", roots)
+            fallback = f"--default-account {default_account}"
+            named_settings.append(default_account)
+        named_settings.append(csv_account)
+        if default_account == csv_account:
+            raise UsageError(
+                f"{fallback} is the --account being imported; an uncategorized row would post against its "
+                "own source and cancel out. Name the account its money goes to or comes from."
+            )
+        ofx_rules = load_rules(Path(rules_file), roots) if rules_file is not None else None
+        for number, listed in enumerate(ofx_rules or [], start=1):
+            if listed.account == csv_account:
+                raise UsageError(
+                    f"Rules file {rules_file}: rule {number} (match {listed.pattern!r}) posts to {listed.account}, the "
+                    "--account being imported; a matching row would post against its own source and cancel out. "
+                    "Name the account its money goes to or comes from."
+                )
+        importer = OfxImporter(account=csv_account, rules=ofx_rules, default_account=default_account)
+        preview_config = "ofx"
+        try:
+            account = str(importer.account(str(source)))
+            with capturing(logs):
+                entries = _extracted(importer, source, existing)
+        except EngineError as exc:
+            _with_output(exc, logs)
+            raise
+        except Exception as exc:
+            raise _with_output(
+                LedgerError(f"Importer failed ({type(exc).__name__}): {exc}.", traceback=_traceback(exc)), logs
+            ) from exc
+        if importer.missing_fitids:
+            sampled = ", ".join(f"row {number}" for number in importer.missing_fitids[:5])
+            if len(importer.missing_fitids) > 5:
+                sampled += "; …"
+            notes.append(
+                f"{len(importer.missing_fitids)} OFX row(s) carry no FITID ({sampled}), so their import-ids are "
+                "content hashes: a reworded memo re-imports them as new rows."
+            )
     else:
         if config is None:
-            raise UsageError("Choose a Python importer with --config FILE, or use --csv for a column mapping.")
+            raise UsageError(
+                "Choose a Python importer with --config FILE, a column mapping with --csv, "
+                "or an OFX/QFX file with --ofx."
+            )
         config = expand_path(config, "--config").resolve()
         preview_config = str(config)
         sys.path.insert(0, str(config.parent))
@@ -538,7 +595,7 @@ def answer(
             written_index = _written_identities(snapshot, account, keys, roots[:2], options)
         return written_index[1 if open_lots else 0].get(key, [])
 
-    hashed = _hash_rows(entries, account, keys, Transaction)
+    hashed = _hash_rows(entries, account, keys, Transaction, prefix="ofx" if ofx_mode else "csv")
     claimed, owners = _claim_payeeless_ids(hashed, identities, account)
     batch_rows: dict[int, int] = {}
     reused_here = _reused_references(entries, account, keys)
@@ -813,7 +870,7 @@ def answer(
                 first_uses,
                 stage_opens,
                 ledger=file,
-                source=account if csv_mode else None,
+                source=account if nocode_mode else None,
                 windows=windows,
                 lifecycles=lifecycles,
                 opening_balances=opening_balances,
@@ -844,7 +901,7 @@ def answer(
             if match
             else None,
         }
-        if csv_mode:
+        if nocode_mode:
             row_dict["rule"] = rule
         rows.append(row_dict)
         if include and isinstance(entry, Balance):
@@ -892,7 +949,7 @@ def answer(
                 first_uses,
                 stage_opens,
                 ledger=file,
-                source=account if csv_mode else None,
+                source=account if nocode_mode else None,
                 windows=windows_after,
                 lifecycles=lifecycles_after,
                 opening_balances=opening_balances,
@@ -2976,9 +3033,9 @@ def _hash_base(date: str, amount: str, description: str, account: str) -> str:
     return f"{date}|{amount}|{description}|{account}"
 
 
-def _digest_import_id(base: str, occurrence: int) -> str:
+def _digest_import_id(base: str, occurrence: int, *, prefix: str = "csv") -> str:
     digest_input = base if occurrence == 1 else f"{base}|{occurrence}"
-    return "csv:sha256:" + hashlib.sha256(digest_input.encode("utf-8")).hexdigest()[:16]
+    return f"{prefix}:sha256:" + hashlib.sha256(digest_input.encode("utf-8")).hexdigest()[:16]
 
 
 @dataclass(frozen=True)
@@ -3001,7 +3058,9 @@ class _HashedRow:
     legs: tuple[_Leg, ...]
 
 
-def _hash_rows(entries: list[Any], account: str, keys: list[str], transaction: type[Any]) -> dict[int, _HashedRow]:
+def _hash_rows(
+    entries: list[Any], account: str, keys: list[str], transaction: type[Any], *, prefix: str = "csv"
+) -> dict[int, _HashedRow]:
     """Generated ids for every row that gets one, numbered in export order.
 
     The decision mirrors the preview loop: a transaction posting to the source
@@ -3021,10 +3080,16 @@ def _hash_rows(entries: list[Any], account: str, keys: list[str], transaction: t
         if _supplied(entry.meta.get("import-id")) or _native_import_id(entry.meta, keys) is not None:
             continue
         if not _needs_framing(raw.narration, raw.payee, entry.narration, entry.payee):
-            hashed[index] = _hash_import_ids(entry, account, seen, raw_narration=raw.narration, raw_payee=raw.payee)
+            hashed[index] = _hash_import_ids(
+                entry, account, seen, raw_narration=raw.narration, raw_payee=raw.payee, prefix=prefix
+            )
             continue
-        framed = _hash_import_ids(entry, account, seen, raw_narration=raw.narration, raw_payee=raw.payee, framed=True)
-        older = _hash_import_ids(entry, account, unframed_seen, raw_narration=raw.narration, raw_payee=raw.payee)
+        framed = _hash_import_ids(
+            entry, account, seen, raw_narration=raw.narration, raw_payee=raw.payee, framed=True, prefix=prefix
+        )
+        older = _hash_import_ids(
+            entry, account, unframed_seen, raw_narration=raw.narration, raw_payee=raw.payee, prefix=prefix
+        )
         hashed[index] = replace(
             framed,
             narration_only=tuple(dict.fromkeys([*framed.narration_only, older.canonical, *older.narration_only])),
@@ -3112,6 +3177,7 @@ def _hash_import_ids(
     raw_narration: str | None,
     raw_payee: str | None,
     framed: bool = False,
+    prefix: str = "csv",
 ) -> _HashedRow:
     """The canonical import id, plus every older spelling to also match on.
 
@@ -3410,7 +3476,10 @@ def _hash_import_ids(
         # too wrote `single`, which stays one of the spellings to look for.
         base, counter = single_base, f"single\0{single_base}"
     seen[counter] = seen.get(counter, 0) + 1
-    canonical = _digest_import_id(base, seen[counter])
+    # Only the canonical id carries the prefix: every older spelling above
+    # stays `csv:`, the only content-hash prefix a released bea ever wrote,
+    # so a row imported before keeps matching under its stored id.
+    canonical = _digest_import_id(base, seen[counter], prefix=prefix)
     return _HashedRow(
         canonical=canonical,
         group=single_base,

@@ -599,7 +599,8 @@ skills deduplicate against each other: the ledger itself is the dedup database.
   `importer` for an `import-id` the importer supplied.
 - A row with a native ID is written with `import-id: "<kind>:<id>"` (`bank_id`
   becomes `bank:`, `fitid` becomes `ofx:`). A row without one is written with
-  `import-id: "csv:sha256:<16 hex>"` hashed from
+  a content-hash import-id — `csv:sha256:<16 hex>` for CSV and `--config` rows,
+  `ofx:sha256:<16 hex>` for `--ofx` rows — hashed from
   `date|amount|description|account` per the convention: the ISO date, the
   exact source amount with its commodity and trailing zeros stripped
   (`-54.2 USD`) — with the per-unit cost (and acquisition date and lot label,

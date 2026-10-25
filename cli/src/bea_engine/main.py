@@ -556,7 +556,10 @@ def import_entries(
     csv_mapping: Annotated[
         str | None, typer.Option("--csv", help="Column mapping (date=Date,amount=Amount,...); no Python importer.")
     ] = None,
-    csv_account: Annotated[str | None, typer.Option("--account", help="Source account for --csv rows.")] = None,
+    csv_account: Annotated[
+        str | None, typer.Option("--account", help="Source account for --csv or --ofx rows.")
+    ] = None,
+    ofx: Annotated[bool, typer.Option("--ofx", help="Read an OFX/QFX export; no Python importer.")] = False,
     date_format: Annotated[str | None, typer.Option("--date-format", help="strptime date format for --csv.")] = None,
     delimiter: Annotated[
         str | None, typer.Option("--delimiter", help="CSV field delimiter for --csv: ',', ';', '|', or 'tab'.")
@@ -570,10 +573,10 @@ def import_entries(
     ] = None,
     skip: Annotated[int, typer.Option("--skip", help="Leading rows to skip before the --csv header.")] = 0,
     rules_file: Annotated[
-        Path | None, typer.Option("--rules", help="TOML categorization rules for --csv rows.", readable=False)
+        Path | None, typer.Option("--rules", help="TOML categorization rules for --csv or --ofx rows.", readable=False)
     ] = None,
     default_account: Annotated[
-        str | None, typer.Option("--default-account", help="Counter account for unmatched --csv rows.")
+        str | None, typer.Option("--default-account", help="Counter account for unmatched --csv or --ofx rows.")
     ] = None,
     config: Annotated[Path | None, typer.Option("--config", help="Python CONFIG file of Beangulp importers.")] = None,
     importer_name: Annotated[str | None, typer.Option("--importer", help="Importer name when multiple match.")] = None,
@@ -626,6 +629,7 @@ def import_entries(
                 source,
                 csv_mapping=csv_mapping,
                 csv_account=csv_account,
+                ofx=ofx,
                 date_format=date_format,
                 delimiter=delimiter,
                 encoding=encoding,
@@ -640,7 +644,7 @@ def import_entries(
                 id_keys=list(id_key) if id_key else None,
                 into=into,
                 allow_errors=allow_errors,
-                config_source=config_source,
+                config_source="--ofx" if ofx else config_source,
                 delimiter_source=delimiter_source,
             )
 

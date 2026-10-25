@@ -669,6 +669,22 @@ def load_rules(path: Path, roots: Collection[str] | None = None) -> list[CsvRule
         raise UsageError(f"Rules file {path}: {exc}") from exc
 
 
+def match_rule(rules: list[CsvRule], *texts: str) -> CsvRule | None:
+    """The first rule whose pattern searches any of the given texts.
+
+    Bank exports mix Unicode normalization forms; rules compare NFC text,
+    as `list --search` does, so equal-looking text matches. A quoted
+    multi-line cell is previewed and written with its CR/LF runs as one
+    space, so rules see that text too: it is the only text a user can read
+    a pattern off.
+    """
+    normalized = [unicodedata.normalize("NFC", re.sub(r"[\r\n]+", " ", text)) for text in texts]
+    for rule in rules:
+        if any(rule.expression.search(text) for text in normalized):
+            return rule
+    return None
+
+
 def _refuse_unknown_rule_keys(path: Path, raw: dict[str, Any]) -> None:
     """Refuse a table or key a rules file does not define, rather than ignore it.
 
@@ -1916,18 +1932,9 @@ class CsvImporter:
         """
 
         category_text = row.get(category_header, "").strip() if category_header is not None else ""
-        # Bank exports mix Unicode normalization forms; rules compare NFC
-        # text, as `list --search` does, so equal-looking text matches.
-        # A quoted multi-line cell is previewed and written with its CR/LF runs
-        # as one space, so rules see that text too: it is the only text a user
-        # can read a pattern off.
-        texts = [
-            unicodedata.normalize("NFC", re.sub(r"[\r\n]+", " ", text))
-            for text in (payee or "", narration, category_text)
-        ]
-        for rule in self._rules:
-            if any(rule.expression.search(text) for text in texts):
-                return rule.account, "*", rule.pattern
+        matched = match_rule(self._rules, payee or "", narration, category_text)
+        if matched is not None:
+            return matched.account, "*", matched.pattern
         if category_header is not None:
             if category_header not in row:
                 raise UsageError(f"{where}: the CSV lacks category column {category_header!r}.")

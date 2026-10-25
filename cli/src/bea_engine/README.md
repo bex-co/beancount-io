@@ -92,7 +92,7 @@ doing money arithmetic, and a float would silently round.
 | `report --file PATH --kind KIND`    | one financial report (trees, series, valuation metadata)   |
 | `balance --file PATH [ACCOUNT...]`  | filtered balances or the trial balance                     |
 | `init --file PATH --currency CCY --date DATE` | starter ledger creation                          |
-| `import --file PATH --source PATH`  | CSV/Beangulp extract, dedup preview, optional append       |
+| `import --file PATH --source PATH`  | CSV/OFX/Beangulp extract, dedup preview, optional append   |
 | `update --file PATH --type TYPE --request JSON [--apply]` | rewrite one entry in place: a preview diff, or the write |
 | `version`                           | `{"version": "0.1.0"}`                                     |
 
@@ -233,6 +233,35 @@ bea-engine append --file main.bean --text - --dry-run <<'EOF'
   Assets:Checking
 EOF
 ```
+
+### `import`
+
+Three ways to feed one export file into the same dedup preview, of
+which each run picks one:
+
+- `--csv MAPPING --account ACCOUNT`: a CSV file with a column mapping;
+- `--ofx --account ACCOUNT`: an OFX/QFX file, parsed by the OFX importer
+  beangulp ships as an example — no Python importer of your own;
+- `--config FILE`: a Python file of Beangulp importers.
+
+The preview answers one row per extracted entry — status, reason,
+import-id source, and entry text — plus ready/written counts, validation
+errors and warnings, and the unified diff of what `--apply` would write.
+Exact import-id matches are always skipped; `--duplicates` only decides
+possible (fingerprint) matches. `--rules` and `--default-account`
+categorize the `--csv` and `--ofx` rows no rule matches, which otherwise
+post to `<expenses root>:Uncategorized` with flag `!` for review.
+
+`--ofx` needs the `beangulp` engine feature (`bea engine enable
+beangulp`). Each statement row posts its amount to `--account` with the
+sign the file states, dated per DTPOSTED. A row's FITID becomes
+`import-id: "ofx:<FITID>"`; a row without one gets an `ofx:sha256:`
+content-hash import-id and a preview note saying so. A file mixing
+several ACCTID values is refused — import one account per run, or use
+`--config` with one importer per account — as is a file holding no bank
+or credit-card transactions: investment statements need a Python
+importer. Ledger balances are ignored: no `Balance` directive is
+emitted.
 
 ## Licensing
 
