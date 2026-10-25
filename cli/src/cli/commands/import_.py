@@ -295,9 +295,11 @@ _OFX_SUFFIXES = (".ofx", ".qfx")
 _OFX_MARKERS = re.compile(rb"OFXHEADER:|<OFX[\s>]", re.IGNORECASE)
 
 #: Account ids as the engine's multi-account scan reads them: upstream
-#: `find_acctids` over the raw text, case-sensitive, whitespace stripped by
-#: the caller. The memory key matches the engine's view on purpose.
-_ACCTID = re.compile(rb"<ACCTID>([^<]*)")
+#: `find_acctids`' pattern over the raw text, case-insensitive (the soup
+#: parser lowercases tags, so a mixed-case account still parses),
+#: whitespace stripped by the caller. The memory key matches the engine's
+#: view on purpose.
+_ACCTID = re.compile(rb"<ACCTID>([^<]*)", re.IGNORECASE)
 
 
 def _looks_like_ofx(source: Path) -> bool:

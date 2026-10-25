@@ -30,6 +30,10 @@ from bea_engine.protocol import UsageError
 
 OFX_SUFFIXES = (".ofx", ".qfx")
 
+#: Upstream `find_acctids`' pattern, case-insensitive: the multi-account
+#: refusal must see the same statements the lowercasing soup parser will.
+_ACCTID = re.compile(r"<ACCTID>([^<]*)", re.IGNORECASE)
+
 # Mirrors `cli.engine.launch.require_feature`'s message for direct engine
 # callers; the frontend cannot be imported from here (ADR014), so the two
 # texts are kept identical by hand. Update both together.
@@ -143,9 +147,12 @@ class OfxImporter:
             from examples.importers import ofx as upstream
         except ImportError:
             raise UsageError(BEANGULP_HINT) from None
-        # `find_acctids` yields raw tag text, newlines included, so `1` and
-        # `1\n` would count as two accounts without the strip.
-        acctids = list(dict.fromkeys(acctid.strip() for acctid in upstream.find_acctids(text)))
+        # Upstream's `find_acctids` matches `<ACCTID>` case-sensitively, but
+        # the soup parser lowercases tags, so a mixed-case second account
+        # would parse yet escape the refusal. Scan case-insensitively so the
+        # refusal sees every statement the parser will. Values are yielded
+        # raw, newlines included, so `1` and `1\n` still need the strip.
+        acctids = list(dict.fromkeys(match.group(1).strip() for match in _ACCTID.finditer(text)))
         if len(acctids) > 1:
             joined = ", ".join(acctids)
             raise UsageError(

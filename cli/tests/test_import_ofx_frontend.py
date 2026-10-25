@@ -19,8 +19,9 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
+from cli.commands.import_ import _ofx_acctids
 from cli.main import app
-from tests.conftest import write_ofx
+from tests.conftest import render_ofx, write_ofx
 
 runner = CliRunner()
 CLI_ROOT = Path(__file__).resolve().parents[1]
@@ -518,3 +519,17 @@ def test_ofx_mistyped_account_is_not_remembered(
     assert typo.exit_code == 0, typo.stderr
     assert "Not remembering these settings: Assets:Savngs is not open in this ledger." in typo.stderr
     assert list(bea_config_dir.glob("importers/ofx-*.json")) == []
+
+
+def test_ofx_memory_key_sees_mixed_case_acctids(tmp_path: Path) -> None:
+    """The memory scan matches the engine's case-insensitive view.
+
+    A lowercased second `<ACCTID>` still parses upstream, so the frontend
+    scan must see it too — otherwise the memory would key a two-account
+    file under its first account alone.
+    """
+    block = render_ofx([], acctid="CHK-10").split("<STMTTRNRS>")[1].split("</STMTTRNRS>")[0]
+    text = render_ofx([], acctid="CHK-9").replace("</BANKMSGSRSV1>", f"<STMTTRNRS>{block}</STMTTRNRS>\n</BANKMSGSRSV1>")
+    source = tmp_path / "mixed.ofx"
+    source.write_text(text.replace("<ACCTID>CHK-10", "<acctid>CHK-10"))
+    assert _ofx_acctids(source) == ["CHK-9", "CHK-10"]

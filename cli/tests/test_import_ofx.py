@@ -327,6 +327,27 @@ def test_ofx_multi_acctid_file_is_refused(
     assert "--config" in error["message"]
 
 
+def test_ofx_mixed_case_acctid_file_is_refused(
+    tmp_path: Path, ofx_engine: Callable[..., subprocess.CompletedProcess[str]]
+) -> None:
+    """A lowercased second `<ACCTID>` still counts as a second account.
+
+    OFX tags are uppercase, but the soup parser lowercases them, so a
+    spec-violating file's second statement would parse — and import under
+    the first account — while upstream's case-sensitive scan saw only one.
+    """
+    ledger = _ledger(tmp_path)
+    block = render_ofx([], acctid="CHK-10").split("<STMTTRNRS>")[1].split("</STMTTRNRS>")[0]
+    text = render_ofx([], acctid="CHK-9").replace("</BANKMSGSRSV1>", f"<STMTTRNRS>{block}</STMTTRNRS>\n</BANKMSGSRSV1>")
+    source = tmp_path / "mixed.ofx"
+    source.write_text(text.replace("<ACCTID>CHK-10", "<acctid>CHK-10"))
+    error = _refusal(
+        ofx_engine("import", "--file", str(ledger), "--source", str(source), "--ofx", "--account", "Assets:Checking")
+    )
+    assert "holds transactions for 2 accounts (CHK-9, CHK-10)" in error["message"]
+    assert "--config" in error["message"]
+
+
 def test_ofx_investment_only_file_points_at_config(
     tmp_path: Path, ofx_engine: Callable[..., subprocess.CompletedProcess[str]]
 ) -> None:
