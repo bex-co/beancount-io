@@ -23,7 +23,8 @@ from bea_engine import protocol
 from bea_engine.ledger.text import checked_operating_currencies, fold_account, regex_reads_otherwise
 from bea_engine.query import format_error
 
-KINDS = ("overview", "income-statement", "balance-sheet", "trial-balance")
+KINDS = ("overview", "income-statement", "balance-sheet", "trial-balance", "holdings")
+GROUPINGS = ("account", "commodity")
 INTERVALS = ("monthly", "quarterly", "yearly", "weekly", "daily")
 CONVERSIONS = ("units", "at_cost", "at_value")
 # Words people reach for that name a conversion mode rather than a currency;
@@ -74,6 +75,7 @@ def answer(
     interval: str = "monthly",
     accounts: list[str] | None = None,
     allow_errors: bool = False,
+    group_by: str = "account",
 ) -> dict[str, Any]:
     """Compute one report or a filtered balance tree and return its JSON-ready payload."""
     # `AT_COST` lexes as a currency, so a keyword in another case is refused
@@ -94,6 +96,9 @@ def answer(
         raise protocol.UsageError(f"Unknown report kind {kind!r}. Choose one of: {', '.join(KINDS)}.")
     if interval not in INTERVALS:
         raise protocol.UsageError(f"Unknown interval {interval!r}. Choose one of: {', '.join(INTERVALS)}.")
+    # Validated for every kind, like the interval, but only holdings reads it.
+    if group_by not in GROUPINGS:
+        raise protocol.UsageError(f"Unknown grouping {group_by!r}. Choose one of: {', '.join(GROUPINGS)}.")
 
     filtered, resolved_conversion, ledger_errors = _load(file, account, time, conversion, allow_errors)
     if kind == "overview":
@@ -102,6 +107,8 @@ def answer(
         return _income_statement(filtered, resolved_conversion, interval, allow_errors, ledger_errors)
     if kind == "balance-sheet":
         return _balance_sheet(filtered, resolved_conversion, interval, allow_errors, ledger_errors)
+    if kind == "holdings":
+        return _holdings(filtered, resolved_conversion, group_by, allow_errors, ledger_errors)
     return _trial_balance(filtered, resolved_conversion, allow_errors, ledger_errors)
 
 
@@ -414,6 +421,134 @@ def _trial_balance(filtered: Any, conversion: str, allow_errors: bool, ledger_er
     return metadata | {
         "display_precision": _display_precision(filtered),
         **{name: (_tree_json(tree) if tree is not None else None) for name, tree in sections.items()},
+    }
+
+
+def _holdings(
+    filtered: Any, conversion: str, group_by: str, allow_errors: bool, ledger_errors: list[str]
+) -> dict[str, Any]:
+    """One row per held lot-group: units, average cost, cost basis, market value.
+
+    Upstream Fava renders holdings client-side from balances, so there is no
+    holdings module to wrap; this composes the same primitives instead. The
+    account tree aggregates postings into per-account costed inventories, each
+    lot is valued through the ledger's price map at the period end, and a
+    currency conversion re-expresses the money columns through one more quote.
+    Lots without cost are cash, not holdings, and groups netting to zero units
+    are fully sold — both are left out (w22/m3/t001).
+    """
+    from fava.core.tree import Tree
+
+    prices = filtered.ledger.prices
+    end = filtered.end_date
+    target = None if conversion in CONVERSIONS else conversion
+    # The entry filter keeps whole transactions, so a counterparty's lots
+    # survive it; every report prunes its tree by the same matcher instead.
+    matches = _report_filter_match(filtered.account, filtered.ledger.root_accounts) if filtered.account else None
+    # (scope..., commodity, cost currency) -> [units, cost basis, accounts].
+    lots: dict[tuple[str, ...], list[Any]] = {}
+    for name, node in sorted(Tree(filtered.entries).items()):
+        if not name or (matches is not None and not matches(name)):
+            continue
+        for (commodity, cost), number in node.balance.items():
+            if cost is None or number == 0:
+                continue
+            key: tuple[str, ...] = (
+                (name, commodity, cost.currency) if group_by == "account" else (commodity, cost.currency)
+            )
+            found = lots.get(key)
+            if found is None:
+                lots[key] = [Decimal(0), Decimal(0), set()]
+                found = lots[key]
+            found[0] += number
+            found[1] += number * cost.number
+            found[2].add(name)
+    groups = []
+    missing: list[tuple[str, str]] = []
+    for key, (units, basis, accounts) in sorted(lots.items()):
+        if units == 0:
+            continue
+        commodity, held = key[-2], key[-1]
+        quote_date, price = prices.get_price_point((commodity, held), end)
+        market = units * price if price is not None else basis
+        if price is None:
+            missing.append((commodity, held))
+        currency = held
+        if target is not None and target != held:
+            _, rate = prices.get_price_point((held, target), end)
+            if rate is not None:
+                basis, market = basis * rate, market * rate
+                price = price * rate if price is not None else None
+                currency = target
+            else:
+                missing.append((held, target))
+        average = basis / units
+        group: dict[str, Any] = {"account": key[0]} if group_by == "account" else {"accounts": sorted(accounts)}
+        group |= {
+            "commodity": commodity,
+            "units": {"number": units, "currency": commodity},
+            "average_cost": {"number": average, "currency": currency},
+            "cost_basis": {"number": basis, "currency": currency},
+            "market_value": {"number": market, "currency": currency},
+            "price": {"number": price, "currency": currency} if price is not None else None,
+            "price_date": quote_date,
+        }
+        groups.append(group)
+    valuation = _holdings_valuation(missing, end, allow_errors, filtered.ledger, ledger_errors)
+    totals: dict[str, dict[str, Decimal]] = {"cost_basis": {}, "market_value": {}}
+    for group in groups:
+        for column in ("cost_basis", "market_value"):
+            amount = group[column]
+            total = totals[column]
+            total[amount["currency"]] = total.get(amount["currency"], Decimal(0)) + amount["number"]
+    metadata = _metadata(filtered, conversion, ledger_errors) | valuation
+    return metadata | {
+        "display_precision": _display_precision(filtered),
+        "group_by": group_by,
+        "groups": groups,
+        "totals": totals,
+    }
+
+
+def _holdings_valuation(
+    missing: list[tuple[str, str]],
+    end: date | None,
+    allow_errors: bool,
+    ledger: Any,
+    ledger_errors: list[str],
+) -> dict[str, Any]:
+    """The strict/partial contract for holdings prices, in `_valuation`'s shape.
+
+    `_valuation` judges leftovers against a report-wide conversion; a holding
+    is already unvalued when its own commodity has no quote in its cost
+    currency, whatever the conversion, so the legs are named explicitly. Each
+    missing leg values at cost (or stays in its own currency) under
+    `--allow-errors` and fails strict reads, the same policy as every report.
+    """
+    pairs = [{"from": base, "to": quote} for base, quote in sorted(set(missing))]
+    dated = [{"from": base, "to": quote, "date": end} for base, quote in sorted(set(missing))]
+    summary = []
+    for base, quote in sorted(set(missing)):
+        all_prices = ledger.prices.get_all_prices((base, quote))
+        if not all_prices:
+            summary.append(f"{base} has no {quote} price at any date; valued at cost")
+            continue
+        earliest = min(point[0] for point in all_prices)
+        summary.append(f"{base} → {quote} has no price before {earliest}; earlier holdings valued at cost")
+    if pairs and not allow_errors:
+        raise protocol.LedgerError(
+            f"Missing prices for {', '.join(sorted({base for base, _ in set(missing)}))}. "
+            "Each holding is valued at the period end. Add prices covering the dates below "
+            "or pass --allow-errors for cost-basis values.",
+            details=summary,
+            result={"missing_prices": pairs, "missing_price_dates": dated},
+            ledger_errors=ledger_errors,
+        )
+    return {
+        "valuation": "partial" if pairs else "complete",
+        "missing_prices": pairs,
+        "missing_price_dates": dated,
+        "missing_price_summary": summary,
     }
 
 
