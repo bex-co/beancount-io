@@ -1,6 +1,6 @@
 # w6 · m9 — Reach developer marketplaces and galleries
 
-**Worker:** worker1 **Goal:** Developers discover and connect the hosted MCP server through the supported Docker, Cursor, Cline, and GitHub/VS Code galleries. **Status:** blocked (9 tasks done; current Docker native repair complete; platform publication gates remain; renewable OAuth is independently actionable in w6/046)
+**Worker:** worker1 **Goal:** Developers discover and connect the hosted MCP server through the supported Docker, Cursor, Cline, and GitHub/VS Code galleries. **Status:** blocked (9 tasks done; current Docker native repair complete; platform publication gates remain; renewable OAuth source fix is shipped; w6/046 retains separate deployment/runtime gates)
 
 **Implementation estimate:** ~4½h, excluding external review queues and the standing closing tasks.
 
@@ -244,3 +244,11 @@ is blocked or depends on these unchanged public/native publication gates.
 Fresh public API/name checks on2026-10-25T00:11–00:13UTC retain the existing
 receipts and zero GitHub gallery results; no duplicate application, comment or
 nomination is needed. Continue m10 and the live inbox while these waits remain.
+
+## Independent renewable-flow follow-through — 2026-10-25T02:38Z
+
+[w6/046](../046.md) now ships the controlled, green scope-upgrade fix in
+37f5a25b6 and is parked on verified access to the existing deployment plus a
+supported native refresh runtime. Its source work was performed independently
+of Docker review. Hosted rollout and actual native refresh are still unproved;
+this neither reopens t015 nor changes the platform publication gates above.

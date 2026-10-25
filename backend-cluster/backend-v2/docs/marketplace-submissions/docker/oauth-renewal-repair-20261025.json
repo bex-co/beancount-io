@@ -1,7 +1,7 @@
 {
   "owner": "w6/046",
   "dateUTC": "2026-10-25",
-  "state": "Verified first-party source repair; hosted rollout and native renewable-token/refresh acceptance remain pending",
+  "state": "Source repair shipped in37f5a25b6; hosted rollout blocked on existing deployment access, actual native refresh additionally blocked on supported runtime/scheduler",
   "reproduction": {
     "hosted": "Same existing Docker Gateway0.44.1 DCR client, openid/offline_access/read/write, correct requester mcp.docker.com and only the authorized synthetic ledger. After approval the deployed861d10a5c service returns to Choose a ledger; no callback. Owned incomplete listener canceled, retained grant unchanged.",
     "publicDCRLimit": "Existing server-side grant_types and old exact expiry are unobserved; no registration theory is used as proof.",
@@ -65,8 +65,22 @@
       "https://github.com/docker/mcp-gateway/blob/v0.44.1/pkg/oauth/provider.go#L310-L351",
       "https://github.com/docker/mcp-gateway/blob/v0.44.1/cmd/docker-mcp/commands/root.go#L67-L85",
       "https://github.com/docker/mcp-gateway/blob/v0.44.1/pkg/docker/client.go#L60-L70"
-    ]
+    ],
+    "accessTokenTTLSeconds": 3600
   },
-  "next": "Ship verified source, deploy the same existing hosted service, reauthorize the same scoped native client once, prove returned refresh capability and native accounting. Observe actual refresh only through a supported running scheduler; keep its runtime/expiry condition explicit if unavailable.",
-  "privacy": "No access/refresh token, cookie, code/state URL, private infrastructure, account identity or raw ledger contents. No retained grant or reviewer key is revoked."
+  "next": "After verified hosted rollout: one same-client scoped offline authorization, actual callback and refresh capability, native query/one preview and unchanged controls. Prove real refresh only with the supported scheduler/runtime across actual expiry; retain046 as blocked until all acceptance is observed.",
+  "privacy": "No access/refresh token, cookie, code/state URL, private infrastructure, account identity or raw ledger contents. No retained grant or reviewer key is revoked.",
+  "sourceCommit": "37f5a25b6",
+  "rollout": {
+    "checkedAtUTC": "2026-10-25T02:38:00Z",
+    "lastVerifiedDeployedRevision": "861d10a5c22618ca2f29c60d432aa9326c8e2080",
+    "newDeploymentVerified": false,
+    "accessEvidence": [
+      "Deployment browser call timed out and its connection reset; fresh browser inventory empty. Chrome selection and in-app browser unavailable.",
+      "Existing authenticated CLI returns404 for the known hosted service.",
+      "Read-only SSH attempt failed strict host-key verification; authenticated DNS search found no SSHFP record. No trust override or remote deployment command executed."
+    ],
+    "unblock": "Restore supported browser access to the existing signed-in deployment control, or an authorized/verifiable CLI route to that same service. Inspect current deploy state before creating another run; deploy a public revision containing37f5a25b6 and verify healthy rollout.",
+    "owners": "Operator restores existing access/runtime; worker performs rollout and native acceptance. No new consent approval is pending."
+  }
 }

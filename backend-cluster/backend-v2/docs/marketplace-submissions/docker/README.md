@@ -249,3 +249,11 @@ macOS launcher bypasses Desktop through DOCKER_MCP_IN_CONTAINER=1, which also
 skips the vendor's initial refresh scheduler. Neither a new access token nor
 waiting under that launcher proves automatic renewal. No reviewer key or
 retained grant is replaced/revoked.
+
+The source repair is shipped in **37f5a25b6**. At2026-10-25T02:38Z its rollout
+is **unverified**, following loss of the existing deployment browser connection;
+the available CLI/strict SSH checks do not provide a verified alternate route.
+[w6/046](../../../../../.pm/w6/blocked/046.md) is parked with exact access and
+normal-runtime/expiry conditions. Inspect deployment history before retrying
+the rollout. Controlled refresh tests are complete; deployed native callback,
+refresh capability and actual scheduled refresh are still pending.
