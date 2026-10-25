@@ -316,3 +316,33 @@ No automatic refresh or post-expiry success has yet been observed.
 replace the earlier runtime-setup blocker; worker owns the pending observation,
 with no new operator input. [The newer0.44.2 release comparison](https://github.com/docker/mcp-gateway/compare/v0.44.1...v0.44.2)
 changes only Go build/toolchain files, not this OAuth implementation.
+
+## Actual scheduled rotation and remaining native failure — 2026-10-25 UTC
+
+The real-expiry test has finished. Native scheduling initiates refresh at
+approximately20:09:02UTC, ten seconds before the original20:09:12UTC expiry.
+The in-client observer sees changed access/refresh fingerprints and advanced
+expiry21:09:02.981908656UTC at20:09:13UTC. No new authorization occurs during
+this observation. This proves an actual native scheduled refresh exchange.
+
+Full acceptance **fails**: after the original expiry, the first native
+`appendLedgerText` dry-run returns Unauthorized. One preview is attempted,
+zero previews succeed, and the later read/unchanged-state controls are not
+reached. Those controls are not reported as passing. The background test has
+exited; it is no longer awaiting expiry.
+
+The Gateway log shows the new token was saved, but deleting the absent
+legacy pass entry fails. [TokenStore.Save](https://github.com/docker/mcp-gateway/blob/v0.44.1/pkg/oauth/token_store.go)
+returns that error; [refreshTokenCE](https://github.com/docker/mcp-gateway/blob/v0.44.1/pkg/oauth/provider.go)
+returns before the [connection reload](https://github.com/docker/mcp-gateway/blob/v0.44.1/pkg/gateway/run.go#L716-L739).
+The cached native connection therefore retains its expired bearer. No reload
+appears in the actual log. This is the supported client/helper integration
+gate, not another unobserved Beancount consent-loop failure.
+
+**Unblock:** Docker supplies a supported client/helper fix or runtime that
+handles absent legacy entries and reloads its cached OAuth connection. Worker
+then proves native post-expiry query/one-preview/unchanged-state acceptance.
+The0.44.2 release changes no relevant OAuth code. Keep retained grants; do not
+seed a legacy credential or patch a vendor binary to manufacture acceptance.
+The [evidence packet](./oauth-renewal-repair-20261025.json) preserves the exact
+partial success and failure. Docker listing review remains independently pending.

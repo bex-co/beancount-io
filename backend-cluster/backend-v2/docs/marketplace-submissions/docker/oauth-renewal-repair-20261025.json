@@ -1,7 +1,7 @@
 {
   "owner": "w6/046",
   "dateUTC": "2026-10-25",
-  "state": "Deployed scope-upgrade repair and native offline/accounting pass. Supported Linux CE runtime now runs the actual native scheduler; real-expiry acceptance is in flight.",
+  "state": "Actual native CE scheduled exchange rotates access and refresh credentials across real expiry, but the connected post-expiry call fails Unauthorized. Native legacy-entry cleanup failure prevents connection reload; full acceptance remains blocked.",
   "reproduction": {
     "hosted": "Same existing Docker Gateway0.44.1 DCR client, openid/offline_access/read/write, correct requester mcp.docker.com and only the authorized synthetic ledger. After approval the deployed861d10a5c service returns to Choose a ledger; no callback. Owned incomplete listener canceled, retained grant unchanged.",
     "publicDCRLimit": "Existing server-side grant_types and old exact expiry are unobserved; no registration theory is used as proof.",
@@ -68,7 +68,7 @@
     ],
     "accessTokenTTLSeconds": 3600
   },
-  "next": "Worker observes the already running native CE test across original actual expiry2026-10-25T20:09:12.214754078Z, then verifies rotation and native accounting/one-preview/unchanged-state controls. No operator setup or approval is needed; retain the scoped grant and do not reauthorize while this test runs.",
+  "next": "Docker Gateway must provide a supported fix/runtime that treats an absent legacy entry correctly and reloads cached OAuth connections after native refresh. Then worker verifies a real-expiry query/one-preview/unchanged-state journey. No repeated consent, token-store seeding or new backend deployment substitutes for it.",
   "privacy": "No access/refresh token, cookie, code/state URL, private infrastructure, account identity or raw ledger contents. No retained grant or reviewer key is revoked.",
   "sourceCommit": "37f5a25b6",
   "rollout": {
@@ -156,7 +156,7 @@
     "actualScheduledRefreshObserved": false
   },
   "nativeScheduledRefresh": {
-    "state": "Running across real expiry; no refresh or post-expiry success claimed yet.",
+    "state": "Actual scheduled rotation observed; post-expiry connected accounting failed Unauthorized. Not accepted.",
     "startedAtUTC": "2026-10-25T19:16:55.137Z",
     "originalExpiresAtUTC": "2026-10-25T20:09:12.214754078Z",
     "client": {
@@ -203,7 +203,35 @@
       "https://github.com/docker/mcp-gateway/releases/tag/v0.44.1",
       "https://github.com/docker/docker-credential-helpers/releases/tag/v0.9.12",
       "https://github.com/docker/mcp-gateway/compare/v0.44.1...v0.44.2"
-    ]
+    ],
+    "originalExpiryCrossedAtUTC": "2026-10-25T20:09:19.343Z",
+    "firstRotationObservedAtUTC": "2026-10-25T20:09:13Z",
+    "newExpiresAtUTC": "2026-10-25T21:09:02.981908656Z",
+    "rotation": {
+      "expiryAdvanced": true,
+      "accessFingerprintChanged": true,
+      "refreshFingerprintChanged": true,
+      "freshAuthorizationDuringObservation": false
+    },
+    "nativeResult": {
+      "baselineAccountingAndResourceCallsPassed": 4,
+      "postExpiryFirstCall": "appendLedgerText with dry_run:true, allowInvalid:false; failed Unauthorized",
+      "previewAttempts": 1,
+      "successfulPreviews": 0,
+      "postExpiryReadsAndUnchangedStateControls": "Not reached because the first call failed; do not claim passing controls.",
+      "gatewayReloadObserved": false,
+      "failure": "After saving the rotated collision-resistant credential, deleting an absent legacy pass entry fails. refreshTokenCE returns before reloadFn, leaving the cached connection on its expired bearer."
+    },
+    "upstreamBoundary": {
+      "owner": "Docker Gateway / supported credential-helper integration",
+      "unblock": "Supported native client/runtime completes token saving and cached-connection reload after actual scheduled rotation; worker repeats bounded synthetic-only acceptance.",
+      "latestReleaseComparison": "v0.44.2 changes only Go toolchain/build files; pinned OAuth token-store/provider implementation is unchanged.",
+      "sources": [
+        "https://github.com/docker/mcp-gateway/blob/v0.44.1/pkg/oauth/token_store.go",
+        "https://github.com/docker/mcp-gateway/blob/v0.44.1/pkg/oauth/provider.go",
+        "https://github.com/docker/mcp-gateway/blob/v0.44.1/pkg/gateway/run.go#L716-L739"
+      ]
+    }
   },
-  "checkedAtUTC": "2026-10-25T19:16:55.137Z"
+  "checkedAtUTC": "2026-10-25T22:09:56Z"
 }
