@@ -950,6 +950,40 @@ Usage: bea report trial-balance [OPTIONS]
 | `--account, -a` | str |  | Account filter: a parent account or a regular expression |
 | `--allow-errors` | flag |  | Show partial data with errors on stderr; opts strict reads into partial answers |
 
+### `bea report holdings`
+
+What the ledger holds: units, cost, and market value.
+
+```text
+Usage: bea report holdings [OPTIONS]
+```
+
+| Option | Type | Default | Help |
+| --- | --- | --- | --- |
+| `--conversion, -x` | str |  | Currency or units/at_cost/at_value; defaults to the single operating currency, otherwise units |
+| `--time, -t` | str |  | Time filter: year, month, 2026, 2026-08, or "2026-01 - 2026-06" |
+| `--account, -a` | str |  | Account filter: a parent account or a regular expression |
+| `--group-by` | choice: account \| commodity | account | Holdings grouping: account or commodity |
+| `--allow-errors` | flag |  | Show partial data with errors on stderr; opts strict reads into partial answers |
+
+### `bea report register`
+
+Dated postings with a running balance for one account.
+
+```text
+Usage: bea report register [OPTIONS] {account}
+```
+
+| Argument | Type | Required | Help |
+| --- | --- | --- | --- |
+| `account` | str | yes | Account to list; names the register's subtree |
+
+| Option | Type | Default | Help |
+| --- | --- | --- | --- |
+| `--conversion, -x` | str |  | Currency or units/at_cost/at_value; defaults to the single operating currency, otherwise units |
+| `--time, -t` | str |  | Time filter: year, month, 2026, 2026-08, or "2026-01 - 2026-06" |
+| `--allow-errors` | flag |  | Show partial data with errors on stderr; opts strict reads into partial answers |
+
 ### `bea doctor lex`
 
 Run bean-doctor lex.

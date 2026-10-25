@@ -32,6 +32,11 @@ class ReportInterval(StrEnum):
     daily = "daily"
 
 
+class HoldingsGrouping(StrEnum):
+    account = "account"
+    commodity = "commodity"
+
+
 ConversionOpt = Annotated[
     str | None,
     typer.Option(
@@ -47,6 +52,7 @@ AccountOpt = Annotated[
     str | None, typer.Option("--account", "-a", help="Account filter: a parent account or a regular expression")
 ]
 IntervalOpt = Annotated[ReportInterval, typer.Option("--interval", "-i", help="Reporting interval")]
+GroupByOpt = Annotated[HoldingsGrouping, typer.Option("--group-by", help="Holdings grouping: account or commodity")]
 AllowErrorsOpt = Annotated[
     bool,
     typer.Option(
@@ -113,6 +119,15 @@ def _amounts(
         return f"{shown:,.{max(minimum, -int(shown.as_tuple().exponent))}f} {currency}"
 
     return "  ".join(render(currency, number) for currency, number in sorted(balance.items())) or "—"
+
+
+def _money(
+    amount: dict[str, Any] | None, conversion: str | None = None, precision: Mapping[str, int] | None = None
+) -> str:
+    """One `{number, currency}` object through the shared amount renderer."""
+    if amount is None:
+        return "—"
+    return _amounts({str(amount["currency"]): amount["number"]}, conversion, precision)
 
 
 def _print_tree(
@@ -190,6 +205,7 @@ def _ask(
     account: str | None = None,
     interval: ReportInterval | None = None,
     accounts: list[str] | None = None,
+    group_by: HoldingsGrouping | None = None,
     allow_errors: bool,
 ) -> tuple[Any, dict[str, Any]]:
     """Ask the engine for one report payload and surface tolerated load errors."""
@@ -214,6 +230,8 @@ def _ask(
             argv += ["--account", account]
         if interval is not None:
             argv += ["--interval", interval.value]
+        if group_by is not None:
+            argv += ["--group-by", group_by.value]
     if conversion is not None:
         argv += ["--conversion", conversion]
     if time is not None:
@@ -398,6 +416,108 @@ def trial_balance(
             continue
         typer.echo("")
         _print_tree(tree, conversion=conversion, precision=precision)
+
+
+@report_app.command("holdings", cls=SingleValueCommand)
+def holdings(
+    conversion: ConversionOpt = None,
+    time: TimeOpt = None,
+    account: AccountOpt = None,
+    group_by: GroupByOpt = HoldingsGrouping.account,
+    allow_errors: AllowErrorsOpt = False,
+) -> None:
+    """What the ledger holds: units, cost, and market value."""
+    file, data = _ask(
+        "holdings",
+        conversion=conversion,
+        time=time,
+        account=account,
+        group_by=group_by,
+        allow_errors=allow_errors,
+    )
+    if context.current().json_output:
+        _emit_json(file, data)
+        return
+    conversion = str(data["conversion"])
+    _heading("Holdings", data)
+    precision = _precision(data)
+    groups = data["groups"]
+    if not groups:
+        typer.echo("No holdings.")
+        return
+    by_account = data["group_by"] == "account"
+    headers = ["ACCOUNT" if by_account else "ACCOUNTS", "COMMODITY", "UNITS", "AVG COST", "COST BASIS", "MARKET VALUE"]
+    output.table(
+        headers,
+        [
+            [
+                group["account"] if by_account else ", ".join(group["accounts"]),
+                group["commodity"],
+                _money(group["units"], conversion, precision),
+                _money(group["average_cost"], conversion, precision),
+                _money(group["cost_basis"], conversion, precision),
+                _money(group["market_value"], conversion, precision),
+            ]
+            for group in groups
+        ],
+    )
+    totals = data["totals"]
+    typer.echo("")
+    typer.echo(f"  {'Cost basis:':<16} {_amounts(totals['cost_basis'], conversion, precision)}")
+    typer.echo(f"  {'Market value:':<16} {_amounts(totals['market_value'], conversion, precision)}")
+
+
+@report_app.command("register", cls=SingleValueCommand)
+def register(
+    account: Annotated[str, typer.Argument(help="Account to list; names the register's subtree")],
+    conversion: ConversionOpt = None,
+    time: TimeOpt = None,
+    allow_errors: AllowErrorsOpt = False,
+) -> None:
+    """Dated postings with a running balance for one account."""
+    if not account.strip():
+        raise UsageError("ACCOUNT argument is empty; pass the account to list, such as Assets:Checking.")
+    file, data = _ask("register", conversion=conversion, time=time, account=account, allow_errors=allow_errors)
+    if context.current().json_output:
+        _emit_json(file, data)
+        return
+    conversion = str(data["conversion"])
+    _heading("Register", data)
+    precision = _precision(data)
+    rows = data["rows"]
+    if not rows:
+        typer.echo("No entries.")
+        return
+    show_account = len({row["account"] for row in rows}) > 1
+    headers = ["DATE", *(["ACCOUNT"] if show_account else []), "DESCRIPTION", "AMOUNT", "COST", "BALANCE"]
+    output.table(
+        headers,
+        [_row_cells(row, conversion, precision, show_account) for row in rows],
+    )
+
+
+def _row_cells(row: dict[str, Any], conversion: str, precision: Mapping[str, int], show_account: bool) -> list[str]:
+    """One register row's cells; the account column appears only across accounts."""
+    if row["entry"] == "balance":
+        description = "Balance check"
+    else:
+        description = " ".join(part for part in (row["payee"], row["narration"]) if part)
+    cost = row["cost"]
+    cost_cell = ""
+    if cost is not None:
+        cost_cell = _money(cost, conversion, precision)
+        if cost["date"]:
+            cost_cell += f" ({cost['date']})"
+    cells = [str(row["date"])]
+    if show_account:
+        cells.append(row["account"])
+    cells += [
+        description,
+        _money(row["amount"], conversion, precision),
+        cost_cell,
+        _amounts(row["balance"], conversion, precision),
+    ]
+    return cells
 
 
 def balance(
