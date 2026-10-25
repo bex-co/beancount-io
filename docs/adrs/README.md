@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-Status as of **2026-10-06**. Of the 20 ADRs, **10 are Done, 2 are Rejected, and 8 remain Proposed or Accepted with work or verification outstanding** (ADR 001 · Mobile billing was revived from Deferred on 2026-10-25).
+Status as of **2026-10-25**. Of the 21 ADRs, **10 are Done, 2 are Rejected, and 9 remain Proposed or Accepted with work or verification outstanding** (ADR 001 · Mobile billing was revived from Deferred on 2026-10-25).
 
 `Done` means the decision's implementation is present within its stated scope. Explicitly out-of-scope follow-ups do not prevent completion. Required work and deployment gates without completion evidence keep a record open. `Rejected` means the decision will not be built; any code that still reflects it is named in the row. `Deferred` means the design is shelved by owner decision and needs a new decision to revive. The rows below do not certify a production rollout.
 
@@ -28,5 +28,6 @@ Each ADR number is unique across all packages; a new record takes the next numbe
 | [021 · Better ledger creation](./ADR021-backend-v2-ledger-creation-experience.md) | Proposed | Designs the full [PRFAQ001](../prfaqs/PRFAQ001-ledger-creation.md) scope; private signup creation and the transaction-free Starter have shipped, while the setup specification, catalog, staged flow, idempotent create, and CLI presets are unimplemented and [product questions](./ADR021-backend-v2-ledger-creation-experience.md#open-questions) are open. |
 | [022 · Dashboard chat history](./ADR022-dashboard-chat-history-persistence.md) | Proposed | Both [dashboard surfaces](../../dashboard/src/features/ai-agent/pages/agent/page.tsx) already use `useChat` against UIMessage-stream routes, but chat/message tables, history list/read/delete on REST, GraphQL, and MCP, and the history UI are absent; [open requirements](./ADR022-dashboard-chat-history-persistence.md#requirements-to-settle-before-implementation) must be settled first. |
 | [023 · Dashboard cash-flow report](./ADR023-dashboard-cash-flow-report.md) | Done | [Report implementation](../../dashboard/src/features/reports/cash-flow/) and [export tests](../../dashboard/src/features/reports/export/__tests__/cash-flow-export.test.tsx) cover the statement, charts, account panel, and exports. |
+| [024 · CLI cash-flow report](./ADR024-cli-cash-flow-report.md) | Proposed | Contract written; implementing as [w21/m4](../../.pm/w21/m4/README.md) (engine read, command, fixture tests). |
 
 Focused verification on 2026-09-27 passed: backend-v2 **554** tests, ledger **218**, dashboard **138**, and CLI **426** (**1,336 total**). The CLI run deselected eight optional-price and live-probe tests. These were existing tests; no production conformance run, store purchase flow, or paid model evaluation was performed.
