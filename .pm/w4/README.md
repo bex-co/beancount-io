@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1081** — [Translate the cadence in Budget deletion confirmations](./1081.md)
+
 - **1080** — [Return cancelled Budget deletion to its history row](./1080.md)
 
 - **1079** — [Restore entry-page focus after Keep editing](./1079.md)
