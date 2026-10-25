@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1091** — [Keep the current page after a departed file deletion completes](./1091.md)
+
 - **1090** — [Allow only one pending delete per file](./1090.md)
 
 - **1089** — [Preserve empty single-column records in query CSV](./1089.md)
