@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1027 — Reject duplicate batch-update CSV columns](./1027.md) — minor CLI gap: repeated id/account/flag headers silently choose the last cell and apply; unique mappings and JSON-duplicate/unknown-column refusals pass, checked 2026-10-25.
+
 - [1026 — Plan updates from complete multiline headers](./1026.md) — minor CLI gap: tags land inside payee/narration text and narration replacements cannot apply; one-line, flag-only and existing-tag controls pass, checked 2026-10-25.
 
 - [1025 — Preserve multiline strings during account updates](./1025.md) — minor CLI gap: retargeting changes literal memo, narration and posting metadata along with the real posting; plain/prose/flag-only/other-entry controls pass, checked 2026-10-25.
