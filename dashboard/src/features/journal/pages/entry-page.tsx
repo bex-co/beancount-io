@@ -19,6 +19,7 @@ import {
 import { useLedger } from "@/common/hooks/use-ledger";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { createLedgerId } from "@/common/lib/utils/encode";
+import { restoreFocusOnDialogClose } from "@/common/lib/focus/restore-focus-on-dialog-close";
 import { EntryContextPanel } from "@/features/journal/components/entry-context-panel";
 
 /**
@@ -40,6 +41,8 @@ export default function EntryPage() {
   // (w4/250). A completed delete leaves without asking.
   const [dirty, setDirty] = useState(false);
   const leavingRef = useRef(false);
+  const editorRegionRef = useRef<HTMLDivElement | null>(null);
+  const keepEditingRef = useRef(false);
   // A save or delete in flight holds the page without asking: its own exit
   // (the saved entry's address, or the Journal after a delete) is the one
   // that leaves, so it never lands on a page or draft opened after it (w4/m49).
@@ -76,7 +79,10 @@ export default function EntryPage() {
         </Button>
       </div>
 
-      <div className="overflow-hidden rounded-xl border bg-card p-4 shadow-sm sm:p-6">
+      <div
+        ref={editorRegionRef}
+        className="overflow-hidden rounded-xl border bg-card p-4 shadow-sm sm:p-6"
+      >
         <EntryContextPanel
           key={`${ledgerId}:${entryHash}`}
           entryHash={entryHash}
@@ -107,9 +113,28 @@ export default function EntryPage() {
 
       <Dialog
         open={blocker.status === "blocked"}
-        onOpenChange={(open) => !open && blocker.reset?.()}
+        onOpenChange={(open) => {
+          if (open) return;
+          keepEditingRef.current = true;
+          blocker.reset?.();
+        }}
       >
-        <DialogContent className="sm:max-w-md">
+        <DialogContent
+          className="sm:max-w-md"
+          // Keep editing cancels the departure: return focus to the retained
+          // editor instead of the body/skip link (w4/1079). Discard's
+          // navigation owns the destination's focus.
+          onCloseAutoFocus={(event) => {
+            if (!keepEditingRef.current) return;
+            keepEditingRef.current = false;
+            restoreFocusOnDialogClose(
+              event,
+              editorRegionRef.current?.querySelector<HTMLElement>(
+                "textarea, [role='textbox']",
+              ),
+            );
+          }}
+        >
           <DialogHeader>
             <DialogTitle>{t("journal.discardEntryEditTitle")}</DialogTitle>
             <DialogDescription>
@@ -117,7 +142,13 @@ export default function EntryPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-col gap-2 sm:flex-row">
-            <Button variant="outline" onClick={() => blocker.reset?.()}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                keepEditingRef.current = true;
+                blocker.reset?.();
+              }}
+            >
               {t("journal.keepEditing")}
             </Button>
             <Button variant="destructive" onClick={() => blocker.proceed?.()}>

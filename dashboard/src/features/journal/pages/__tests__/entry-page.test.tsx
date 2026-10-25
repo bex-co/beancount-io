@@ -1,15 +1,21 @@
 import type { ReactNode } from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import EntryPage from "../entry-page";
 
 const mockUseParams = vi.fn();
 const mockNavigate = vi.fn();
+const blockerState = vi.hoisted(() => ({
+  status: "idle" as "idle" | "blocked",
+  reset: vi.fn(),
+  proceed: vi.fn(),
+}));
 
 vi.mock("@tanstack/react-router", () => ({
   useParams: () => mockUseParams(),
   useNavigate: () => mockNavigate,
-  useBlocker: () => ({ status: "idle" }),
+  useBlocker: () => blockerState,
   Link: ({
     children,
     to,
@@ -52,6 +58,7 @@ vi.mock("@/features/journal/components/entry-context-panel", () => ({
     <div data-testid="entry-context-panel">
       <span data-testid="ledger-id">{ledgerId}</span>
       <span data-testid="entry-hash">{entryHash}</span>
+      <textarea aria-label="entry-source" defaultValue="draft" />
     </div>
   ),
 }));
@@ -59,11 +66,27 @@ vi.mock("@/features/journal/components/entry-context-panel", () => ({
 describe("EntryPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    blockerState.status = "idle";
     mockUseParams.mockReturnValue({
       ledgerOwner: "open_ledger",
       ledgerName: "real-estate-example",
       entryHash: "2f4431f658f3553e73512ea3ebc1a2d4",
     });
+  });
+
+  it("returns focus to the retained editor after Keep editing (w4/1079)", async () => {
+    blockerState.status = "blocked";
+    const user = userEvent.setup();
+    const { rerender } = render(<EntryPage />);
+    await user.click(
+      screen.getByRole("button", { name: "journal.keepEditing" }),
+    );
+    expect(blockerState.reset).toHaveBeenCalled();
+    blockerState.status = "idle";
+    rerender(<EntryPage />);
+    await waitFor(() =>
+      expect(screen.getByLabelText("entry-source")).toHaveFocus(),
+    );
   });
 
   it("binds the route ledger identity and entry hash to the context panel", () => {
