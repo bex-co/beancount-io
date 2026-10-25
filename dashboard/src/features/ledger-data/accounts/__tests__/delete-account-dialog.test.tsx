@@ -57,6 +57,44 @@ describe("DeleteAccountDialog", () => {
     ] as unknown as ReturnType<typeof useMutation>);
   });
 
+  it("retries a failed source preview in place and recovers (w4/1083)", async () => {
+    const user = userEvent.setup();
+    const refetch = vi.fn().mockResolvedValue({});
+    mockUseQuery.mockReturnValue({
+      data: undefined,
+      loading: false,
+      error: new Error("offline"),
+      refetch,
+    } as unknown as ReturnType<typeof useQuery>);
+    const { rerender } = render(<DeleteAccountDialog {...defaultProps} />);
+    const retry = screen.getByRole("button", { name: "Try Again" });
+    expect(screen.getByRole("button", { name: "Delete" })).toBeDisabled();
+
+    await user.click(retry);
+    expect(refetch).toHaveBeenCalled();
+
+    // Another failure keeps the retry action focused for the next attempt.
+    await waitFor(() => expect(retry).toHaveFocus());
+
+    mockUseQuery.mockReturnValue({
+      data: {
+        getLedgerEntryContext: {
+          sha256sum: "sum1",
+          slice: "2023-01-01 open Assets:Checking",
+          entry: { meta: { filename: "main.bean", lineno: 3 } },
+        },
+      },
+      loading: false,
+      error: undefined,
+      refetch,
+    } as unknown as ReturnType<typeof useQuery>);
+    rerender(<DeleteAccountDialog {...defaultProps} />);
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Delete" })).toBeEnabled(),
+    );
+    expect(screen.queryByRole("button", { name: "Try Again" })).toBeNull();
+  });
+
   it("renders dialog title with delete icon when open=true", () => {
     render(<DeleteAccountDialog {...defaultProps} />);
     expect(screen.getByRole("dialog")).toBeInTheDocument();

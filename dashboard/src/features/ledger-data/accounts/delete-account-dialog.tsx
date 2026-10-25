@@ -1,4 +1,4 @@
-import { useState, type RefObject } from "react";
+import { useRef, useState, type RefObject } from "react";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { restoreFocusOnDialogClose } from "@/common/lib/focus/restore-focus-on-dialog-close";
@@ -55,6 +55,7 @@ export function DeleteAccountDialog({
     data: openCtxData,
     loading: openCtxLoading,
     error: openCtxError,
+    refetch: refetchOpenCtx,
   } = useQuery(GetLedgerEntryContextDocument, {
     variables: { ledgerId, entryHash: account?.entryHash ?? "" },
     skip: !open || !account?.entryHash,
@@ -65,6 +66,7 @@ export function DeleteAccountDialog({
     data: closeCtxData,
     loading: closeCtxLoading,
     error: closeCtxError,
+    refetch: refetchCloseCtx,
   } = useQuery(GetLedgerEntryContextDocument, {
     variables: { ledgerId, entryHash: account?.closeEntryHash ?? "" },
     skip: !open || !account?.closeEntryHash,
@@ -77,6 +79,19 @@ export function DeleteAccountDialog({
 
   const contextLoading = openCtxLoading || closeCtxLoading;
   const contextError = openCtxError ?? closeCtxError;
+
+  // Retry only the failed previews, in place; after another failure the
+  // retry action keeps focus for the next attempt (w4/1083).
+  const retryRef = useRef<HTMLButtonElement | null>(null);
+  const handleRetry = () => {
+    const retries: Promise<unknown>[] = [];
+    if (openCtxError) retries.push(refetchOpenCtx());
+    if (closeCtxError) retries.push(refetchCloseCtx());
+    if (retries.length === 0) return;
+    void Promise.allSettled(retries).then(() => {
+      retryRef.current?.focus();
+    });
+  };
 
   const openCtx = openCtxData?.getLedgerEntryContext;
   const closeCtx = closeCtxData?.getLedgerEntryContext;
@@ -173,7 +188,20 @@ export function DeleteAccountDialog({
 
           {contextError && (
             <Alert variant="destructive">
-              <AlertDescription>{formatError(contextError)}</AlertDescription>
+              <AlertDescription className="gap-3">
+                <p>{formatError(contextError)}</p>
+                <Button
+                  ref={retryRef}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRetry}
+                  loading={contextLoading}
+                  disabled={contextLoading}
+                >
+                  {t("common.tryAgain")}
+                </Button>
+              </AlertDescription>
             </Alert>
           )}
 
