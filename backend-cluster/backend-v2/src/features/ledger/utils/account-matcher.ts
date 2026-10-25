@@ -1,3 +1,5 @@
+import { BadUserInputError } from "@/shared/errors";
+
 /**
  * `bea report --account`'s matcher, mirroring Fava's `account_predicate`
  * (`cli/src/fava/core/filters.py`, Beancount.io changes included).
@@ -54,6 +56,25 @@ function loadsAsAccount(value: string): boolean {
     if (code < 0x80 && !TOKEN_ASCII.test(char)) return false;
   }
   return ACCOUNT_PREFIX_RE.test(value);
+}
+
+/**
+ * Refuse a pattern that is neither an account spelling nor a compilable
+ * regular expression — `_invalid_pattern`: without this the match below
+ * falls back to equality and silently misses accounts.
+ */
+export function assertValidAccountPattern(pattern: string): void {
+  try {
+    new RegExp(pattern);
+  } catch (error) {
+    const reason =
+      error instanceof Error && error.message !== ""
+        ? error.message
+        : "cannot be compiled";
+    throw new BadUserInputError(
+      `Invalid account filter '${pattern}': ${reason}. Pass a parent account such as Expenses:Food, or a regular expression such as 'Expenses:(Food|Rent)'.`,
+    );
+  }
 }
 
 /** Whether one account name satisfies an `--account` filter. */

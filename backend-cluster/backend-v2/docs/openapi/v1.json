@@ -14634,6 +14634,195 @@
         }
       }
     },
+    "/api-gateway/v1/ledgers/{owner}/{name}/capital-gains": {
+      "get": {
+        "summary": "Get realized capital gains",
+        "description": "One row per closed lot — quantity, proceeds, basis, gain — plus one-year bucket totals. A lot closes when a reducing posting carries booked cost and price; splits and own-account transfers carry no price and are left out. `fromDate`/`toDate` bound the sale date, `account` filters the posting account, and `time` scopes the window; all figures stay in their booked currencies.",
+        "tags": [
+          "Ledger v1"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "apiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
+              "description": "Ledger owner's username",
+              "example": "alice"
+            },
+            "required": true,
+            "description": "Ledger owner's username",
+            "name": "owner",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
+              "description": "Ledger (repository) name",
+              "example": "main-ledger"
+            },
+            "required": true,
+            "description": "Ledger (repository) name",
+            "name": "name",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Restrict to one account and its children",
+              "example": "Assets:Bank:Checking"
+            },
+            "required": false,
+            "description": "Restrict to one account and its children",
+            "name": "account",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Fava time expression",
+              "example": "2026"
+            },
+            "required": false,
+            "description": "Fava time expression",
+            "name": "time",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Sales on or after YYYY-MM-DD",
+              "example": "2024-01-01"
+            },
+            "required": false,
+            "description": "Sales on or after YYYY-MM-DD",
+            "name": "fromDate",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Sales on or before YYYY-MM-DD",
+              "example": "2024-12-31"
+            },
+            "required": false,
+            "description": "Sales on or before YYYY-MM-DD",
+            "name": "toDate",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get realized capital gains",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed validation against the documented schema",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credential, or a credential that no longer resolves",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "The action needs a paid plan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The credential lacks the permission this business action requires",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such ledger, or no access to it",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The change conflicts with the resource's current state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The server failed; the request may be retried",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "A dependency is unavailable; retry later",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api-gateway/v1/ledgers/{owner}/{name}/interval-totals": {
       "get": {
         "summary": "Get totals per interval",

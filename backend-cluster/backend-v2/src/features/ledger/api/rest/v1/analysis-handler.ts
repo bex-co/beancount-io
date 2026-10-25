@@ -20,7 +20,7 @@ import type { Identity } from "@/server/api/identity";
  * these say what it *did* — a trial balance, an account's report, totals per
  * interval, the transactions behind a payee, the context around one entry.
  *
- * Fifteen reads are listed here for REST/MCP. Remaining family members keep
+ * Sixteen reads are listed here for REST/MCP. Remaining family members keep
  * reasons that survived re-reading (w3/m7/t001): two journals and a plaintext
  * journal are already covered by the paged `/journal` endpoint, two ledger-list
  * reads are client-side filtering over `GET /v1/ledgers`, `journalEntries` is a
@@ -186,6 +186,31 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
         // Required by the schema above; a bypassed `undefined` becomes the
         // service's "Register needs an account" refusal, not a crash.
         account: query.account ?? "",
+      }),
+  },
+  {
+    segment: "capital-gains",
+    summary: "Get realized capital gains",
+    description:
+      "One row per closed lot — quantity, proceeds, basis, gain — plus one-year bucket totals. A lot closes when a reducing posting carries booked cost and price; splits and own-account transfers carry no price and are left out. `fromDate`/`toDate` bound the sale date, `account` filters the posting account, and `time` scopes the window; all figures stay in their booked currencies.",
+    query: z.object({
+      account: filterQuery.shape.account,
+      time: filterQuery.shape.time,
+      fromDate: z.string().optional().openapi({
+        description: "Sales on or after YYYY-MM-DD",
+        example: "2024-01-01",
+      }),
+      toDate: z.string().optional().openapi({
+        description: "Sales on or before YYYY-MM-DD",
+        example: "2024-12-31",
+      }),
+    }),
+    uriPath: "",
+    fetch: (s, { ledgerId, identity, query }) =>
+      s.ledgerFinance.getCapitalGains({
+        ledgerId,
+        identity,
+        ...query,
       }),
   },
   {

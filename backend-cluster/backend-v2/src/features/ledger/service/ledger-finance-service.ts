@@ -23,6 +23,12 @@ import {
   selectRegisterRoot,
 } from "@/features/ledger/utils/register";
 import type { RegisterResult } from "@/features/ledger/utils/register";
+import {
+  composeGains,
+  resolveGainsBounds,
+} from "@/features/ledger/utils/gains";
+import type { GainsResult } from "@/features/ledger/utils/gains";
+import { assertValidAccountPattern } from "@/features/ledger/utils/account-matcher";
 import { BadUserInputError } from "@/shared/errors";
 import type {
   OverviewPublic,
@@ -34,6 +40,7 @@ import {
   DirectiveType,
   type AccountJournalEntryPublic,
   type FavaApiClient,
+  type JournalTransactionPublic,
 } from "@/foundation/fava";
 
 type BaseParams = { ledgerId: string; identity: Identity | undefined };
@@ -63,6 +70,8 @@ export interface ILedgerFinanceService {
   getHoldings(params: HoldingsParams): Promise<HoldingsResult>;
 
   getRegister(params: RegisterParams): Promise<RegisterResult>;
+
+  getCapitalGains(params: GainsParams): Promise<GainsResult>;
 }
 
 export type HoldingsParams = BaseParams & {
@@ -75,6 +84,13 @@ export type RegisterParams = BaseParams & {
   account: string;
   time?: string;
   conversion?: string;
+};
+
+export type GainsParams = BaseParams & {
+  account?: string;
+  time?: string;
+  fromDate?: string;
+  toDate?: string;
 };
 
 export class LedgerFinanceService
@@ -170,6 +186,7 @@ export class LedgerFinanceService
 
   async getHoldings(params: HoldingsParams): Promise<HoldingsResult> {
     const { ledgerId, identity, account, conversion, groupBy } = params;
+    if (account !== undefined) assertValidAccountPattern(account);
     const { favaApiClient, ledgerOwner, ledgerName } = await this.getClient(
       ledgerId,
       identity,
@@ -228,6 +245,7 @@ export class LedgerFinanceService
 
   async getRegister(params: RegisterParams): Promise<RegisterResult> {
     const { ledgerId, identity, account, time, conversion } = params;
+    assertValidAccountPattern(account);
     if (account === undefined || account === "") {
       throw new BadUserInputError(
         "Register needs an account. Name the account to list, such as Assets:Checking.",
@@ -304,6 +322,65 @@ export class LedgerFinanceService
       if (data.items.length === 0 || offset >= data.total) break;
     }
     return accounts;
+  }
+
+  async getCapitalGains(params: GainsParams): Promise<GainsResult> {
+    const { ledgerId, identity, account, time, fromDate, toDate } = params;
+    const { start, end } = resolveGainsBounds(fromDate, toDate);
+    if (account !== undefined) assertValidAccountPattern(account);
+    const { favaApiClient, ledgerOwner, ledgerName } = await this.getClient(
+      ledgerId,
+      identity,
+    );
+    const [options, transactions] = await Promise.all([
+      unwrapFavaResponse(
+        favaApiClient.reports.getLedgerOptions(ledgerOwner, ledgerName),
+        "get ledger options",
+      ),
+      this.journalTransactions(
+        favaApiClient,
+        ledgerOwner,
+        ledgerName,
+        time,
+      ),
+    ]);
+    return composeGains({
+      transactions,
+      account,
+      roots: this.rootsOf(options),
+      start,
+      end,
+    });
+  }
+
+  /** The window's transactions, newest-first, all pages. */
+  private async journalTransactions(
+    favaApiClient: Pick<FavaApiClient, "journal">,
+    ledgerOwner: string,
+    ledgerName: string,
+    time: string | undefined,
+  ): Promise<JournalTransactionPublic[]> {
+    const transactions: JournalTransactionPublic[] = [];
+    let offset = 0;
+    for (;;) {
+      const data = await unwrapFavaResponse(
+        favaApiClient.journal.getJournal(ledgerOwner, ledgerName, {
+          ...filterNullish({ time }),
+          directive_types: [DirectiveType.Transaction],
+          limit: 1000,
+          offset,
+        }),
+        "get ledger transactions",
+      );
+      for (const item of data.items) {
+        if (item.directive_type === DirectiveType.Transaction) {
+          transactions.push(item as JournalTransactionPublic);
+        }
+      }
+      offset += data.items.length;
+      if (data.items.length === 0 || offset >= data.total) break;
+    }
+    return transactions;
   }
 
   /** The root's journal items, newest-first, all pages. */

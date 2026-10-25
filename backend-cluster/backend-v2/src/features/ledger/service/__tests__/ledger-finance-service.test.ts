@@ -176,6 +176,17 @@ describe("LedgerFinanceService.getHoldings", () => {
       service.getHoldings({ ledgerId: LEDGER_ID, identity: IDENTITY }),
     ).rejects.toThrow("Holdings query returned no table");
   });
+
+  it("refuses an uncompilable account pattern before touching Fava", async () => {
+    await expect(
+      service.getHoldings({
+        ledgerId: LEDGER_ID,
+        identity: IDENTITY,
+        account: "([",
+      }),
+    ).rejects.toThrow("Invalid account filter '(['");
+    expect(mockReports.getLedgerOptions).not.toHaveBeenCalled();
+  });
 });
 
 describe("LedgerFinanceService.getRegister", () => {
@@ -289,6 +300,17 @@ describe("LedgerFinanceService.getRegister", () => {
     await expect(
       service.getRegister({ ledgerId: LEDGER_ID, identity: IDENTITY, account: "" }),
     ).rejects.toThrow("Register needs an account");
+    expect(mockJournal.getAccountJournal).not.toHaveBeenCalled();
+  });
+
+  it("refuses an uncompilable account pattern before touching Fava", async () => {
+    await expect(
+      service.getRegister({
+        ledgerId: LEDGER_ID,
+        identity: IDENTITY,
+        account: "([",
+      }),
+    ).rejects.toThrow("Invalid account filter '(['");
     expect(mockJournal.getAccountJournal).not.toHaveBeenCalled();
   });
 
@@ -406,5 +428,130 @@ describe("LedgerFinanceService.getRegister", () => {
       "testledger",
       expect.not.objectContaining({ conversion: expect.anything() }),
     );
+  });
+});
+
+describe("LedgerFinanceService.getCapitalGains", () => {
+  let service: LedgerFinanceService;
+
+  const sale = (date: string) => ({
+    date,
+    entry_hash: `h-${date}`,
+    directive_type: "Transaction",
+    flag: "*",
+    postings: [
+      {
+        account: "Assets:Broker",
+        units: { number: "-10", currency: "HOOL" },
+        cost: { number: "100.00", currency: "USD", date: "2023-01-10" },
+        price: { number: "150.00", currency: "USD" },
+      },
+    ],
+  });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (authorizeLedger as jest.Mock).mockResolvedValue({
+      ledgerRepoId: 1,
+      ownerUserId: USER_ID,
+    });
+    service = new LedgerFinanceService(
+      mockFavaClientFactory as any,
+      {} as any,
+    );
+    mockReports.getLedgerOptions.mockResolvedValue(
+      ok({
+        operating_currency: ["USD"],
+        name_assets: "Assets",
+        name_liabilities: "Liabilities",
+        name_equity: "Equity",
+        name_income: "Income",
+        name_expenses: "Expenses",
+      }),
+    );
+  });
+
+  it("composes closed lots from the journal", async () => {
+    mockJournal.getJournal.mockResolvedValue(
+      ok({ items: [sale("2024-03-15")], total: 1, is_empty: false }),
+    );
+
+    const result = await service.getCapitalGains({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+    });
+
+    expect(authorizeLedger).toHaveBeenCalledWith(
+      IDENTITY,
+      LEDGER_ID,
+      AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+      expect.anything(),
+    );
+    expect(mockJournal.getJournal).toHaveBeenCalledWith(
+      "testowner",
+      "testledger",
+      expect.objectContaining({ limit: 1000, offset: 0 }),
+    );
+    expect(result.rows).toEqual([
+      {
+        account: "Assets:Broker",
+        commodity: "HOOL",
+        acquired: "2023-01-10",
+        sold: "2024-03-15",
+        held_days: 430,
+        long_held: true,
+        quantity: { number: "10", currency: "HOOL" },
+        proceeds: { number: "1500", currency: "USD" },
+        basis: { number: "1000", currency: "USD" },
+        gain: { number: "500", currency: "USD" },
+      },
+    ]);
+    expect(result.totals.more_than_one_year).toEqual({ USD: "500" });
+  });
+
+  it("refuses bad bounds and patterns before touching Fava", async () => {
+    await expect(
+      service.getCapitalGains({
+        ledgerId: LEDGER_ID,
+        identity: IDENTITY,
+        fromDate: "2024-13-01",
+      }),
+    ).rejects.toThrow("Invalid from-date '2024-13-01'. Use YYYY-MM-DD.");
+    await expect(
+      service.getCapitalGains({
+        ledgerId: LEDGER_ID,
+        identity: IDENTITY,
+        account: "([",
+      }),
+    ).rejects.toThrow("Invalid account filter '(['");
+    expect(mockJournal.getJournal).not.toHaveBeenCalled();
+    expect(mockReports.getLedgerOptions).not.toHaveBeenCalled();
+  });
+
+  it("pages the journal and forwards time", async () => {
+    mockJournal.getJournal
+      .mockResolvedValueOnce(
+        ok({ items: [sale("2024-03-15")], total: 2, is_empty: false }),
+      )
+      .mockResolvedValueOnce(
+        ok({ items: [sale("2023-03-15")], total: 2, is_empty: false }),
+      );
+
+    const result = await service.getCapitalGains({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+      time: "2023 - 2024",
+    });
+
+    expect(mockJournal.getJournal).toHaveBeenCalledTimes(2);
+    expect(mockJournal.getJournal).toHaveBeenCalledWith(
+      "testowner",
+      "testledger",
+      expect.objectContaining({ time: "2023 - 2024" }),
+    );
+    expect(result.rows.map((row) => row.sold)).toEqual([
+      "2023-03-15",
+      "2024-03-15",
+    ]);
   });
 });

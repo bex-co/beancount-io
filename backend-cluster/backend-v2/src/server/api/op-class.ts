@@ -815,6 +815,7 @@ const LEDGER_READ_ACTION_BY_VERB = {
   "Query.getLedgerTrialBalance": AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
   "Query.getLedgerHoldings": AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
   "Query.getLedgerRegister": AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+  "Query.getLedgerCapitalGains": AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
   "Query.getLedgerAttributes": AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
   "Query.getLedgerOptions": AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
   "Query.getLedgerCommodities": AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
@@ -941,6 +942,15 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = (
       mcpResource: "ledgerRegister",
       mcpExempt:
         "Reachable as the `ledgerRegister` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+    },
+    {
+      verb: "Query.getLedgerCapitalGains",
+      class: "read",
+      gql: "Query.getLedgerCapitalGains",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/capital-gains",
+      mcpResource: "ledgerCapitalGains",
+      mcpExempt:
+        "Reachable as the `ledgerCapitalGains` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
     },
     {
       verb: "Query.getLedgerAttributes",

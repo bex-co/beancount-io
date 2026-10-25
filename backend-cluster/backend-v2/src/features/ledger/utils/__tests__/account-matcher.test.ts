@@ -1,4 +1,6 @@
+import { BadUserInputError } from "@/shared/errors";
 import {
+  assertValidAccountPattern,
   isAccountSpelling,
   matchesAccountPattern,
 } from "../account-matcher";
@@ -78,5 +80,24 @@ describe("matchesAccountPattern", () => {
   it("falls back to literal equality when the pattern does not compile", () => {
     expect(matchesAccountPattern("([", "([", ROOTS)).toBe(true);
     expect(matchesAccountPattern("([", "Assets:Broker", ROOTS)).toBe(false);
+  });
+});
+
+describe("assertValidAccountPattern", () => {
+  it("accepts spellings and compilable patterns", () => {
+    expect(() =>
+      assertValidAccountPattern("Assets:Broker:AAPL"),
+    ).not.toThrow();
+    expect(() => assertValidAccountPattern("broker")).not.toThrow();
+    expect(() =>
+      assertValidAccountPattern("Expenses:(Dining|Groceries)"),
+    ).not.toThrow();
+  });
+
+  it("refuses a pattern that does not compile", () => {
+    expect(() => assertValidAccountPattern("([")).toThrow(BadUserInputError);
+    expect(() => assertValidAccountPattern("([")).toThrow(
+      "Invalid account filter '(['",
+    );
   });
 });

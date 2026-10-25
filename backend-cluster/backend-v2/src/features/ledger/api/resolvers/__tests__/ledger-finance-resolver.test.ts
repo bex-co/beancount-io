@@ -20,6 +20,7 @@ describe("LedgerFinanceQueryResolver", () => {
     getTrialBalance: jest.Mock;
     getHoldings: jest.Mock;
     getRegister: jest.Mock;
+    getCapitalGains: jest.Mock;
   };
 
   const ledgerId = "user/test-ledger";
@@ -44,6 +45,7 @@ describe("LedgerFinanceQueryResolver", () => {
       getTrialBalance: jest.fn(),
       getHoldings: jest.fn(),
       getRegister: jest.fn(),
+      getCapitalGains: jest.fn(),
     };
 
     mockContext = {
@@ -365,6 +367,63 @@ describe("LedgerFinanceQueryResolver", () => {
           { account: "Assets:Checking" },
           mockContext,
         ),
+      ).rejects.toThrow(InternalServerError);
+    });
+  });
+
+  describe("getLedgerCapitalGains", () => {
+    it("should delegate to financeService and map the result", async () => {
+      mockFinanceService.getCapitalGains.mockResolvedValue({
+        rows: [
+          {
+            account: "Assets:Broker",
+            commodity: "HOOL",
+            acquired: "2023-01-10",
+            sold: "2024-03-15",
+            held_days: 430,
+            long_held: true,
+            quantity: { number: "10", currency: "HOOL" },
+            proceeds: { number: "1500", currency: "USD" },
+            basis: { number: "1000", currency: "USD" },
+            gain: { number: "500", currency: "USD" },
+          },
+        ],
+        totals: {
+          one_year_or_less: {},
+          more_than_one_year: { USD: "500" },
+          holding_unknown: {},
+        },
+      });
+
+      const result = await resolver.getLedgerCapitalGains(
+        ledgerId,
+        { fromDate: "2024-01-01", toDate: "2024-12-31" },
+        mockContext,
+      );
+
+      expect(mockFinanceService.getCapitalGains).toHaveBeenCalledWith(
+        expect.objectContaining({
+          ledgerId,
+          identity: IDENTITY,
+          fromDate: "2024-01-01",
+          toDate: "2024-12-31",
+        }),
+      );
+      expect(result.rows).toHaveLength(1);
+      expect(result.rows[0]).toMatchObject({
+        heldDays: 430,
+        longHeld: true,
+        gain: { number: "500", currency: "USD" },
+      });
+    });
+
+    it("should propagate errors thrown by the service", async () => {
+      mockFinanceService.getCapitalGains.mockRejectedValue(
+        new InternalServerError("get ledger capital gains"),
+      );
+
+      await expect(
+        resolver.getLedgerCapitalGains(ledgerId, {}, mockContext),
       ).rejects.toThrow(InternalServerError);
     });
   });

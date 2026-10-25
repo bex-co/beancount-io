@@ -320,6 +320,67 @@ class RegisterData {
   rows: RegisterRow[];
 }
 
+@ArgsType()
+class CapitalGainsArgs {
+  @Field(() => String, { nullable: true })
+  account?: string;
+
+  @Field(() => String, { nullable: true })
+  time?: string;
+
+  @Field(() => String, { nullable: true })
+  fromDate?: string;
+
+  @Field(() => String, { nullable: true })
+  toDate?: string;
+}
+
+@ObjectType()
+class GainsRow {
+  @Field(() => String)
+  account: string;
+
+  @Field(() => String)
+  commodity: string;
+
+  @Field(() => String, { nullable: true })
+  acquired?: string | null;
+
+  @Field(() => String)
+  sold: string;
+
+  @Field(() => Number, { nullable: true })
+  heldDays?: number | null;
+
+  @Field(() => Boolean, { nullable: true })
+  longHeld?: boolean | null;
+
+  @Field(() => HoldingsMoney)
+  quantity: HoldingsMoney;
+
+  @Field(() => HoldingsMoney)
+  proceeds: HoldingsMoney;
+
+  @Field(() => HoldingsMoney)
+  basis: HoldingsMoney;
+
+  @Field(() => HoldingsMoney)
+  gain: HoldingsMoney;
+}
+
+@ObjectType()
+class GainsData {
+  @Field(() => [GainsRow])
+  rows: GainsRow[];
+
+  @Field(() => GraphQLJSONObject)
+  totals: {
+    one_year_or_less: Record<string, string>;
+    more_than_one_year: Record<string, string>;
+    holding_unknown: Record<string, string>;
+  };
+}
+
 @Resolver()
 export class LedgerFinanceQueryResolver {
   constructor(private readonly financeService: ILedgerFinanceService) {}
@@ -568,6 +629,42 @@ export class LedgerFinanceQueryResolver {
     return {
       account: data.account,
       rows: data.rows,
+    };
+  }
+
+  @AllowAnonymous()
+  @Query(() => GainsData, {
+    description: "Get the realized capital gains of a specific ledger",
+  })
+  async getLedgerCapitalGains(
+    @Arg("ledgerId", () => String) ledgerId: string,
+    @Args() args: CapitalGainsArgs,
+    @Ctx() ctx: IContext,
+  ): Promise<GainsData> {
+    const data = await this.financeService.getCapitalGains({
+      ledgerId,
+      identity: ctx.identity,
+      ...filterNullish({
+        account: args.account,
+        time: args.time,
+        fromDate: args.fromDate,
+        toDate: args.toDate,
+      }),
+    });
+    return {
+      rows: data.rows.map((row) => ({
+        account: row.account,
+        commodity: row.commodity,
+        acquired: row.acquired,
+        sold: row.sold,
+        heldDays: row.held_days,
+        longHeld: row.long_held,
+        quantity: row.quantity,
+        proceeds: row.proceeds,
+        basis: row.basis,
+        gain: row.gain,
+      })),
+      totals: data.totals,
     };
   }
 
