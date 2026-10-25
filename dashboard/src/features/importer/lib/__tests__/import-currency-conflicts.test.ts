@@ -23,6 +23,10 @@ describe("amountCurrencySymbols", () => {
     ["-₮4.50", "₮", ["MNT"]],
     ["-₼4.50", "₼", ["AZN"]],
     ["-₲4.50", "₲", ["PYG"]],
+    // Unambiguous units added by w4/1059.
+    ["-₿4.50", "₿", ["BTC"]],
+    ["-₭1250.00", "₭", ["LAK"]],
+    ["-៛2500.00", "៛", ["KHR"]],
   ])("reads %s as %s", (cell, symbol, currencies) => {
     expect(amountCurrencySymbols(cell)).toEqual([{ symbol, currencies }]);
   });
@@ -99,6 +103,25 @@ describe("findImportCurrencyConflicts", () => {
     for (const cell of ["-€4.50€", "-$4.50€", "-4.50€"]) {
       expect(findImportCurrencyConflicts([row(0, cell)], "EUR")).toEqual([]);
     }
+  });
+
+  it("refuses ₿/₭/៛ rows under USD and clears them under their own currency (w4/1059)", () => {
+    const rows = [row(0, "-₿4.50"), row(1, "-₭1250.00"), row(2, "-៛2500.00")];
+    expect(findImportCurrencyConflicts(rows, "USD")).toEqual([
+      { symbol: "₿", currencies: ["BTC"], rows: [1] },
+      { symbol: "₭", currencies: ["LAK"], rows: [2] },
+      { symbol: "៛", currencies: ["KHR"], rows: [3] },
+    ]);
+    expect(findImportCurrencyConflicts([row(0, "-₿4.50")], "BTC")).toEqual([]);
+    expect(findImportCurrencyConflicts([row(0, "-₭1250.00")], "LAK")).toEqual(
+      [],
+    );
+    expect(findImportCurrencyConflicts([row(0, "-៛2500.00")], "KHR")).toEqual(
+      [],
+    );
+    expect(
+      findImportCurrencyConflicts([row(0, "-₭1250.00", false)], "USD"),
+    ).toEqual([]);
   });
 
   it("ignores deselected rows", () => {

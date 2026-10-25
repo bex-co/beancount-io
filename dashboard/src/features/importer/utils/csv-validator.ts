@@ -150,6 +150,12 @@ const SYMBOL_CURRENCIES: Record<string, readonly string[]> = {
   "₮": ["MNT"],
   "₼": ["AZN"],
   "₲": ["PYG"],
+  // ₿ (U+20BF), ₭ (LAK) and ៛ (KHR) are unambiguous source units the sign
+  // splitter already strips; without entries here a USD import silently
+  // replaced them (w4/1059).
+  "₿": ["BTC"],
+  "₭": ["LAK"],
+  "៛": ["KHR"],
 };
 
 type AmountCurrencySymbol = {
