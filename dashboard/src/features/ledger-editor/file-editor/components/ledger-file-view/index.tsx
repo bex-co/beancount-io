@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { useNavigate, useParams } from "@tanstack/react-router";
@@ -178,7 +178,21 @@ export default function LedgerFileView({
     }
   };
 
+  // One in-flight delete per file view: a second confirmation cannot
+  // prepare an identical DeleteLedgerFile request (w4/1090).
+  const deleteInFlightRef = useRef(false);
+
   const handleDeleteFile = async () => {
+    if (!fileContent || deleteInFlightRef.current) return;
+    deleteInFlightRef.current = true;
+    try {
+      await runDeleteFile();
+    } finally {
+      deleteInFlightRef.current = false;
+    }
+  };
+
+  const runDeleteFile = async () => {
     if (!fileContent) return;
 
     await deleteFileMutation({

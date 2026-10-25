@@ -42,6 +42,7 @@ import { LedgerWritePermission } from "@/common/components/ledger-permission/wri
 import { useIsMac } from "../hooks/use-platform";
 import { imageMimeType } from "@/common/lib/image-mime-type";
 import { restoreFocusOnDialogClose } from "@/common/lib/focus/restore-focus-on-dialog-close";
+import { usePendingAction } from "@/common/hooks/use-pending-action";
 
 export interface NonTextFileViewProps {
   filePath: string;
@@ -116,19 +117,37 @@ export const FileActionButtons = ({
     setIsDeleteDialogOpen(true);
   };
 
-  const handleConfirmDelete = async () => {
+  // One delete per file owns the pending slot: a second confirmation
+  // cannot prepare another identical request while it runs (w4/1090).
+  const { run: runDelete, pending: deletePending } = usePendingAction();
+
+  const handleConfirmDelete = () => {
     deleteConfirmedRef.current = true;
     setIsDeleteDialogOpen(false);
-    try {
-      await onDelete?.();
-    } catch {
-      // The delete reported its own failure and this file is still here:
-      // give a reader whose focus was lost the actions back, not the top of
-      // the page (w4/306). A deliberate move while waiting is kept.
-      const active = document.activeElement;
-      if (!active || active === document.body) {
-        moreActionsTriggerRef.current?.focus();
-      }
+    void (async () => {
+      let landed = false;
+      const attempt = runDelete(async () => {
+        try {
+          if (onDelete) await onDelete();
+          landed = true;
+          return true;
+        } catch {
+          return undefined;
+        }
+      });
+      if (attempt === null) return;
+      await attempt;
+      if (!landed) handleDeleteFailureFocus();
+    })();
+  };
+
+  const handleDeleteFailureFocus = () => {
+    // The delete reported its own failure and this file is still here:
+    // give a reader whose focus was lost the actions back, not the top of
+    // the page (w4/306). A deliberate move while waiting is kept.
+    const active = document.activeElement;
+    if (!active || active === document.body) {
+      moreActionsTriggerRef.current?.focus();
     }
   };
 
@@ -196,6 +215,7 @@ export const FileActionButtons = ({
                   <DropdownMenuItem
                     variant="destructive"
                     onClick={handleDeleteClick}
+                    disabled={deletePending}
                   >
                     <Trash2 className="h-4 w-4" />
                     {t("common.delete")}
@@ -256,6 +276,7 @@ export const FileActionButtons = ({
             <Button
               variant="destructive"
               onClick={handleConfirmDelete}
+              disabled={deletePending}
               className="w-full sm:w-auto"
             >
               {t("common.delete")}

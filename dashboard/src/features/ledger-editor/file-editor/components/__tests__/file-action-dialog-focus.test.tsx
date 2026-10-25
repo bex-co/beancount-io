@@ -359,4 +359,31 @@ describe("file actions menu-launched Delete dialog focus", () => {
       elsewhere.remove();
     });
   });
+
+  it("offers no second delete while one is pending (w4/1090)", async () => {
+    const { user, t, opener, onDelete, openDelete, finishDelete } = await setup(
+      "en",
+      "held",
+    );
+    const dialog = await openDelete();
+    await user.tab();
+    await user.keyboard("{Enter}");
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+    expect(onDelete).toHaveBeenCalledTimes(1);
+
+    // Reopening the menu during the held request shows Delete unavailable.
+    await user.click(opener);
+    await screen.findByRole("menu");
+    expect(
+      screen.getByRole("menuitem", { name: t("common.delete") }),
+    ).toHaveAttribute("aria-disabled", "true");
+    await user.keyboard("{Escape}");
+    expect(onDelete).toHaveBeenCalledTimes(1);
+
+    await act(async () => finishDelete());
+    await waitFor(() => expect(onDelete).toHaveBeenCalledTimes(1));
+    void dialog;
+  });
 });
