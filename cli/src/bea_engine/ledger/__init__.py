@@ -21,5 +21,5 @@ Layout:
 - `text` — the two text primitives the ledger side needs
 - `listing` / `adding` / `appending` — what the `list`, `add`, and `append`
   helper commands answer
-- `updating` — locating one transaction for the `update` helper command
+- `updating` — locating and rewriting one transaction for the `update` helper command
 """

@@ -93,6 +93,7 @@ doing money arithmetic, and a float would silently round.
 | `balance --file PATH [ACCOUNT...]`  | filtered balances or the trial balance                     |
 | `init --file PATH --currency CCY --date DATE` | starter ledger creation                          |
 | `import --file PATH --source PATH`  | CSV/Beangulp extract, dedup preview, optional append       |
+| `update --file PATH --type TYPE --request JSON [--apply]` | rewrite one entry in place: a preview diff, or the write |
 | `version`                           | `{"version": "0.1.0"}`                                     |
 
 `shell` and `source-shell` are exceptions to the envelope contract: a terminal session
@@ -163,6 +164,23 @@ value shared by two entries is refused as ambiguous (naming each `file:line`
 so the caller can pick one), and an unknown value as not found; both are
 `usage` failures and both change no bytes. Only entries written in a ledger
 file resolve — a plugin-synthesized row has no source lines to rewrite.
+
+The request changes the entry with `account`, `flag`, `tags`, or `narration`
+(or `--request -` to read the JSON from stdin). A bare `account` retargets the
+review queue's leg — the unique posting to the holding account (`<expenses
+root>:Uncategorized`, normally `Expenses:Uncategorized`), or the only posting
+when the entry holds one — and `OLD=NEW` names the leg outright. Only the
+entry's own lines are rewritten: its header line for a flag, narration, or
+tags, its posting lines for an account retarget. Indentation, amounts, and
+alignment stay byte-identical, and no line is added or removed.
+
+Without `--apply` the command previews: it answers `{"id", "target",
+"lineno", "diff", "written": 0, "warnings"}` and writes nothing. `--apply`
+validates the rewritten file as a whole — the write is refused when the ledger
+would no longer load, like `add` — and installs it through the same locked,
+atomic replace, answering `"written": 1`. An edit that lands while the write
+runs is refused as `conflict`. A request that changes nothing answers
+`"written": 0` with `"noop": true`.
 
 Two answers are not a plain append. A `price` that the ledger already records
 exactly answers `{"written": 0, "duplicate": true, "source": {...}}` and touches

@@ -296,6 +296,39 @@ def add(
         _report_redirect(answer.data, ledger, redirect, "warnings")
 
 
+@app.command()
+def update(
+    file: Annotated[Path, typer.Option("--file", "-f", help="Root ledger file the write is validated against.")],
+    type: Annotated[str, typer.Option("--type", "-t", help="Directive type: transaction.")],
+    request: Annotated[
+        str, typer.Option("--request", help="The update as JSON: id plus account, flag, tags, or narration.")
+    ],
+    apply: Annotated[
+        bool, typer.Option("--apply", help="Rewrite the entry; without it, preview the diff only.")
+    ] = False,
+    allow_errors: Annotated[
+        bool, typer.Option("--allow-errors", help="Accept semantic ledger errors; syntax must still be valid.")
+    ] = False,
+) -> None:
+    """Rewrite one entry in place, previewed as a diff unless `--apply` writes it.
+
+    The request names its entry with `id` — an import-id, a `ref`, or
+    `file:line` — and changes it with `account` (a bare account retargets the
+    review queue's leg, `OLD=NEW` names the leg outright), `flag`, `tags`, or
+    `narration`. Only the entry's own lines change, so neighbours keep their
+    bytes and the diff stays reviewable. Answers `{"id", "target", "lineno",
+    "diff", "written", "warnings"}` with `written` 0 on a preview and 1 on an
+    applied write.
+    """
+    with protocol.answering("update") as answer:
+        from bea_engine.ledger import updating, write
+
+        ledger, _, redirect = write.write_through_root(_ledger(file), None)
+        with _redirect_on_failure(redirect):
+            answer.data = updating.answer(ledger, type, _request(request), apply=apply, allow_errors=allow_errors)
+        _report_redirect(answer.data, ledger, redirect, "warnings")
+
+
 @contextmanager
 def _redirect_on_failure(redirect: str | None) -> Iterator[None]:
     """Say a refused write was checked against the root, as the answer would have.
