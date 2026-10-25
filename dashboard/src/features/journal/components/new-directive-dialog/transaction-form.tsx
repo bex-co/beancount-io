@@ -165,11 +165,23 @@ export function TransactionForm({
   // wide querySelector steals focus from whoever is typing.
   useEffect(() => {
     const timer = setTimeout(() => {
-      document
-        .querySelector<HTMLElement>(
-          "[data-transaction-payee] [role='combobox'], [data-transaction-payee] input",
-        )
-        ?.focus();
+      const payee = document.querySelector<HTMLElement>(
+        "[data-transaction-payee] [role='combobox'], [data-transaction-payee] input",
+      );
+      if (!payee) return;
+      // Respect a field the reader already chose in this form while the
+      // handoff was pending (w4/1075); only an untouched mount — or focus
+      // held by another form/dialog control — defaults to Payee.
+      const active = document.activeElement;
+      if (
+        active instanceof HTMLElement &&
+        active !== payee &&
+        payee.closest("form")?.contains(active) &&
+        active.matches("input, textarea, select, [role='combobox']")
+      ) {
+        return;
+      }
+      payee.focus();
     }, 150);
     return () => clearTimeout(timer);
   }, []);
