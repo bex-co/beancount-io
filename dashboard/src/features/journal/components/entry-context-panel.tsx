@@ -319,7 +319,7 @@ function EntryContextMain({
         ) : location && locationLabel ? (
           <button
             type="button"
-            className="font-mono text-sm rounded underline cursor-pointer text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="font-mono text-sm rounded underline cursor-pointer text-left outline-none focus-visible:ring-2 focus-visible:ring-ring forced-colors:focus-visible:[outline-style:solid] forced-colors:focus-visible:outline-2 forced-colors:focus-visible:outline-offset-2 forced-colors:focus-visible:outline-[CanvasText]"
             aria-label={t("journal.openEntrySource", {
               location: locationLabel,
             })}
@@ -337,7 +337,7 @@ function EntryContextMain({
         <div className="w-full rounded-md overflow-hidden">
           <button
             type="button"
-            className="flex w-full items-center justify-between p-2 bg-muted text-foreground cursor-pointer transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+            className="flex w-full items-center justify-between p-2 bg-muted text-foreground cursor-pointer transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset forced-colors:focus-visible:[outline-style:solid] forced-colors:focus-visible:outline-2 forced-colors:focus-visible:-outline-offset-2 forced-colors:focus-visible:outline-[CanvasText]"
             aria-expanded={isContextOpen}
             aria-controls={balancesRegionId}
             onClick={() => setIsContextOpen(!isContextOpen)}

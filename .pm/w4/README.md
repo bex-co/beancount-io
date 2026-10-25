@@ -50,8 +50,6 @@
 
 - **1062** — [Leave Entry Context Escape to active editor widgets](./1062.md)
 
-- **1061** — [Keep Entry Context and Documents keyboard focus visible in forced colors](./1061.md)
-
 - **1039** — Keep exact Budget amounts and variance on mobile (45–60m, mobile, A2/A3) ← m55 simplify review; source-only mobile counterpart of m55 ([note](./blocked/1039.md)) — **blocked:** fix shipped; simulator check needs approved production budget fixtures
 
 - **1031** — Use actual lot cost currencies in Net Worth valuation disclosures (45–60m dashboard after dependency, A2/A3) ← dashboard QA; residual of m26 ([note](./blocked/1031.md)) — **blocked:** approved lot-specific valuation read

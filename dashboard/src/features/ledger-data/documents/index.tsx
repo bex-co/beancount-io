@@ -45,7 +45,7 @@ export function DocumentRow({ document, onActivate }: DocumentRowProps) {
       <TableCell className="w-64 font-medium px-2 sm:px-3 py-1.5 sm:py-2">
         <button
           type="button"
-          className="text-left font-medium text-primary hover:text-primary/80 underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="text-left font-medium text-primary hover:text-primary/80 underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring forced-colors:focus-visible:[outline-style:solid] forced-colors:focus-visible:outline-2 forced-colors:focus-visible:outline-offset-2 forced-colors:focus-visible:outline-[CanvasText]"
           onClick={(event) => {
             event.stopPropagation();
             onActivate();
