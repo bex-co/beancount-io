@@ -281,6 +281,54 @@ describe("AccountMappingTable date display", () => {
   });
 });
 
+// w4/1058: tiny nonzero review amounts must not read as zero.
+describe("AccountMappingTable very small amounts", () => {
+  it("distinguishes ±1e-24 from explicit zero", () => {
+    render(
+      <Harness
+        transactions={[
+          {
+            id: "tiny-pos",
+            rowIndex: 0,
+            date: "2026-10-01",
+            payee: "Tiny positive",
+            description: "",
+            amount: 1e-24,
+            amountInput: "0.000000000000000000000001",
+            targetAccount: "Expenses:Food",
+            selected: true,
+          },
+          {
+            id: "tiny-neg",
+            rowIndex: 1,
+            date: "2026-10-02",
+            payee: "Tiny negative",
+            description: "",
+            amount: -1e-24,
+            amountInput: "-0.000000000000000000000001",
+            targetAccount: "Expenses:Food",
+            selected: true,
+          },
+          {
+            id: "zero",
+            rowIndex: 2,
+            date: "2026-10-04",
+            payee: "Explicit zero",
+            description: "",
+            amount: 0,
+            amountInput: "0",
+            targetAccount: "Expenses:Food",
+            selected: true,
+          },
+        ]}
+      />,
+    );
+    expect(screen.getByText("1e-24")).toBeInTheDocument();
+    expect(screen.getByText("-1e-24")).toBeInTheDocument();
+    expect(screen.getByText("0")).toBeInTheDocument();
+  });
+});
+
 // w4/1047: on a right-to-left page the review amount read "2.5-".
 describe("AccountMappingTable amounts on a right-to-left page", () => {
   it("shows each amount as one left-to-right run, and leaves payees alone", () => {

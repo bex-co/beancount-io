@@ -12,6 +12,12 @@ describe("formatImportReviewAmount", () => {
     expect(formatImportReviewAmount(-45.67)).toBe("-45.67");
   });
 
+  it("keeps very small nonzero amounts distinguishable from zero (w4/1058)", () => {
+    expect(formatImportReviewAmount(1e-24)).toBe("1e-24");
+    expect(formatImportReviewAmount(-1e-24)).toBe("-1e-24");
+    expect(formatImportReviewAmount(1e-20)).toBe("0.00000000000000000001");
+  });
+
   it("renders real zero as 0", () => {
     expect(formatImportReviewAmount(0)).toBe("0");
     expect(formatImportReviewAmount(-0)).toBe("0");
