@@ -6,6 +6,8 @@ import { NewDirectiveDialog } from "../index";
 
 const state = vi.hoisted(() => ({
   after: [] as { message: string }[],
+  deferRefetch: false,
+  resolveRefetch: null as null | ((value: unknown) => void),
 }));
 
 // The forms are not under test: each just reports a successful write.
@@ -25,13 +27,18 @@ vi.mock("@/common/hooks/use-apollo-cache", () => ({
 vi.mock("@apollo/client/react", () => ({
   useQuery: () => ({
     data: { getLedgerErrors: [] },
-    refetch: async () => ({ data: { getLedgerErrors: state.after } }),
+    refetch: () =>
+      state.deferRefetch
+        ? new Promise((resolve) => {
+            state.resolveRefetch = resolve;
+          })
+        : Promise.resolve({ data: { getLedgerErrors: state.after } }),
   }),
 }));
 vi.mock("sonner", () => ({ toast: { warning: vi.fn(), success: vi.fn() } }));
 
 function renderDialog(onSuccess: (outcome: { leftErrors: boolean }) => void) {
-  render(
+  return render(
     <NewDirectiveDialog
       open
       onOpenChange={() => {}}
@@ -61,6 +68,20 @@ describe("New Entry reports a write that broke the ledger (w3/640)", () => {
     expect(vi.mocked(toast.warning).mock.calls[0]![0]).toContain(
       "Account Assets:Cash is already open",
     );
+  });
+
+  it("does not call the departed page's success handler (w4/1078)", async () => {
+    state.deferRefetch = true;
+    const onSuccess = vi.fn();
+    const { unmount } = renderDialog(onSuccess);
+    await userEvent.click(screen.getByRole("button", { name: "write" }));
+    await waitFor(() => expect(state.resolveRefetch).not.toBeNull());
+    unmount();
+    state.resolveRefetch?.({ data: { getLedgerErrors: [] } });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(onSuccess).not.toHaveBeenCalled();
+    state.deferRefetch = false;
+    state.resolveRefetch = null;
   });
 
   it("reports a clean write as plain success", async () => {

@@ -81,12 +81,29 @@ export function NewDirectiveDialog({
 
   // Each form submits with the handler of the render it submitted from, so
   // `session` here is the session that write belongs to.
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   const handleSuccess = async () => {
     // Read before the cache clear below drops it: the pre-write errors.
     const before = writeOutcome.snapshot();
     if (liveSession.current === session) onOpenChange(false);
     clearCache();
-    onSuccess?.({ leftErrors: await writeOutcome.report(before) });
+    const outcome = { leftErrors: await writeOutcome.report(before) };
+    // The reader may have left while the outcome was read; a late
+    // completion must not act on a page they have already left, nor on a
+    // newer dialog session (w4/1078). A null live session is this write's
+    // own close above, which still completes normally.
+    if (!mountedRef.current) return;
+    if (liveSession.current !== null && liveSession.current !== session) {
+      return;
+    }
+    onSuccess?.(outcome);
   };
 
   return (

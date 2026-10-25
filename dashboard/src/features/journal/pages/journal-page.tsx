@@ -140,6 +140,16 @@ const JournalContent = () => {
     replaceOffset(typeof value === "function" ? value(offset) : value);
   };
 
+  // A late entry completion must not navigate this page back into view
+  // after the reader has left it (w4/1078).
+  const pageAliveRef = useRef(true);
+  useEffect(() => {
+    pageAliveRef.current = true;
+    return () => {
+      pageAliveRef.current = false;
+    };
+  }, []);
+
   useEffect(() => {
     if (appliedFilterKey === filterKey) return;
     setAppliedFilterKey(filterKey);
@@ -385,6 +395,7 @@ const JournalContent = () => {
         }}
         ledgerId={ledgerId}
         onSuccess={({ leftErrors }) => {
+          if (!pageAliveRef.current) return;
           // A write that broke the ledger already warned with its error.
           if (!leftErrors) toast.success(t("journal.entryCreatedSuccess"));
           setOffset(0);
