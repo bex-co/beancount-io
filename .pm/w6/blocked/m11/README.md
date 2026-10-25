@@ -39,7 +39,7 @@ The [m9/t011](../../m9/done/t011.md) official Cursor application is submitted wi
 | Inventory target | Submission / receipt owner | Review, public verification or retained gate |
 | --- | --- | --- |
 | Cursor — official | [m9/t011](../../m9/done/t011.md) | [m9/t003](../../m9/done/t003.md) done; [m9/t016](../../m9/t016.md) official review/public/native |
-| Docker | [m9/t012](../../m9/done/t012.md) | [m9/t002](../../m9/done/t002.md) submission/private reviewer access complete; [m9/t017](../../m9/t017.md) actual review/publication; [m9/t015](../../m9/t015.md) current OAuth repair |
+| Docker | [m9/t012](../../m9/done/t012.md) | [m9/t002](../../m9/done/t002.md) submission/private reviewer access complete; [m9/t017](../../m9/t017.md) actual review/publication; [m9/t015](../../m9/done/t015.md) current OAuth repair |
 | Cline | [m9/t013](../../m9/done/t013.md) | [m9/t004](../../m9/t004.md), m9/t006 |
 | GitHub curated gallery / VS Code | [m9/t014](../../m9/done/t014.md) | [m9/t005](../../m9/done/t005.md) done; [m9/t018](../../m9/t018.md) approved/public/native; existing w1/m34/t003 native owner retained |
 | LobeHub | [m10/t009](../../m10/done/t009.md) accepted/public; [m10/t003](../../m10/done/t003.md) eligible payload complete | [m10/t011](../../m10/t011.md) native/live metadata; [m10/t012](../../m10/t012.md) crawler correction/search |

@@ -12,7 +12,7 @@ Source: the owner's request to put every remaining action from the 17-target lis
 | Supported browser control | [044](done/044.md) — actual read-only reconnect/retest, then supported update if still required | Resolved2026-10-25T00:10:54Z: actual supported browser/page access succeeds; keep original sessions and approvals. |
 | Credentials through review/monitoring | [045](045.md) — private renewal responsibility and deadlines | Docker expires end 2026-10-31UTC, assess by10-29; Glama expires end 2026-11-23UTC, assess by11-20. No automation or secret on board. |
 | Glama native + Smithery intake | [m8/t009](blocked/m8/done/t009.md) independent native; [m8/t002](blocked/m8/t002.md) supported replacement intake | Glama health-day owner remains w2/088 (earliest2026-10-25T07:01:01Z). Neither wait serializes independent native work. |
-| Docker current native session | [m9/t015](m9/t015.md) — investigate later Unauthorized and repair supported OAuth | Earlier successful rehearsal is retained; expiry is not assumed without diagnosis. |
+| Docker current native session | [m9/t015](m9/done/t015.md) — current Unauthorized repaired; [046](046.md) owns renewable OAuth | Earlier successful rehearsal is retained; expiry is not assumed without diagnosis. |
 | Developer review/public/native | [m9/t004](m9/t004.md) Cline; [t016](m9/t016.md) official Cursor; [t017](m9/t017.md) Docker; [t018](m9/t018.md) approved GitHub/VS Code | Follow existing records independently. Public listing and native installation remain required after receipts/approval. |
 | Already-public directory native paths | [m10/t010](m10/t010.md) MCPServers.org; [t011](m10/t011.md) LobeHub accounting/live metadata | No dependency on MCPMarket review. LobeHub's separate final native grant/browser condition remains explicit. |
 | LobeHub deployment/search correctness | [m10/t012](m10/t012.md) — supported crawler correction and actual name search | Start supported-route investigation now; platform-only changes get their exact unblock condition. |
@@ -227,7 +227,7 @@ Prioritize the major correctness findings (PRINT/FROM/JOURNAL, authored location
 
 - [ ] **m6.5** — [Distribute the Beancount.io customer skills as one suite](./blocked/m6.5/README.md) (12 tasks; 9 done; A3/A2/A1) ← explicit owner request 2026-10-22, extended to other channels 2026-10-23 UTC. **Blocked:** Hermes admission, third-party index read-backs and final closeout. Owned grouping/whole-suite install refresh and CI checks implemented; suite 0.4.0 public and all thirteen standalone ClawHub listings retired.
 
-- [ ] **m9** — [Reach developer marketplaces and galleries](m9/README.md) (18 tasks; 8 done; A3/A1) ← owner listing follow-through 2026-10-24. **Next:** t015 current Docker Unauthorized diagnosis/repair. t004/t016/t017/t018 independently own Cline/Cursor/Docker/GitHub review/public/native outcomes; GitHub approval is complete.
+- [ ] **m9** — [Reach developer marketplaces and galleries](m9/README.md) (18 tasks; 9 done; A3/A1) ← owner listing follow-through 2026-10-24. **Native repaired:** t015 passes current Gateway discovery/query/preview; independent046 owns renewable-consent diagnosis. t004/t016/t017/t018 independently own Cline/Cursor/Docker/GitHub review/public/native outcomes; GitHub approval is complete.
 - [ ] **m10** — [List the connector in independent web directories](m10/README.md) (12 tasks; 3 done; A3/A1) ← owner listing follow-through 2026-10-24. **Next:** t010 MCPServers.org native checks and t012 supported LobeHub crawler/search correction. t011 owns native accounting/live metadata; MCPMarket retains its original pending free receipt.
 
 - [ ] **m8** — [Claim and publish the hosted connector on Smithery and Glama](blocked/m8/README.md) (9 tasks; 2 done; A3/A1) ← owner listing follow-through 2026-10-24. **blocked:** native t009 is complete; Smithery intake and w2/088 full healthy-day observation retain their exact external/time gates.
@@ -250,6 +250,7 @@ Prioritize the major correctness findings (PRINT/FROM/JOURNAL, authored location
 
 - [043](043.md) — Reconcile one canonical 17-target listing tracker and operational owners/check triggers (~45m).
 - [045](045.md) — Coordinate private Docker reviewer/Glama monitor expiry and renewal responsibility (~30m).
+- [046](046.md) — Fix Docker renewable OAuth consent loop; keep current repaired native grant (~45m).
 
 - [041](blocked/041.md) — MCP.so publication — **blocked:** current $39 mandatory fee needs explicit approval or a documented free route; packet is ready.
 - [042](blocked/042.md) — PulseMCP publication — **blocked:** new listings and changes remain paused; needs supported reopened intake.

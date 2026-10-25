@@ -1,0 +1,115 @@
+{
+  "observedAt": "2026-10-25T00:28:48Z",
+  "gatewayVersion": "0.44.1",
+  "deployedRevision": "not exposed",
+  "initialProbe": {
+    "serviceTools": 0,
+    "gatewayManagementTools": 8,
+    "resources": 0,
+    "templates": 0,
+    "failure": "initialize Unauthorized using stored OAuth credential"
+  },
+  "supportedRepair": {
+    "sameExistingClient": true,
+    "syntheticLedgerOnly": true,
+    "accountWideAccess": false,
+    "scopes": [
+      "ledger.read",
+      "ledger.write"
+    ],
+    "authorizationCallback": true,
+    "accessTokenReturned": true,
+    "refreshTokenReturned": false,
+    "cliExitCode": 1,
+    "cliFailure": "absent legacy keychain item removal after storing the collision-resistant credential",
+    "currentGatewayUsesStoredCredential": true
+  },
+  "nativeDiscovery": {
+    "serviceTools": 44,
+    "gatewayManagementTools": 8,
+    "resources": 8,
+    "templates": 64
+  },
+  "journeyStartedAt": "2026-10-25T00:27:27.707Z",
+  "journeyFinishedAt": "2026-10-25T00:27:31.993Z",
+  "verification": {
+    "nativeGateway": true,
+    "previewCallCount": 1,
+    "checkCommitUnchanged": true,
+    "entryCountsUnchanged": true,
+    "errorsBefore": 0,
+    "errorsAfter": 0,
+    "mainFileSHA256": "77c3a591efd311e01d03d2f3a91f2919151c0fb0708e1abe1a10ce6ec7e29915",
+    "mainFileUnchanged": true,
+    "cashBefore": [
+      [
+        {
+          "USD": "49.75"
+        }
+      ]
+    ],
+    "cashAfter": [
+      [
+        {
+          "USD": "49.75"
+        }
+      ]
+    ],
+    "previewPayeeRowsBefore": 0,
+    "previewPayeeRowsAfter": 0,
+    "previewResultKeys": [
+      "appendedUnsorted",
+      "count",
+      "diff",
+      "dry_run",
+      "entryHashes",
+      "summary",
+      "validation",
+      "wrote"
+    ],
+    "previewMetadata": {
+      "count": 1,
+      "dry_run": true,
+      "summary": "Would add 1 directive to main.bean. No new bean-check errors.",
+      "wrote": []
+    }
+  },
+  "renewalLimits": {
+    "requestWithoutOfflineAccessIsNotRenewable": true,
+    "exactOldTokenExpiryWasNotInspected": true,
+    "extraOfflineScopeConsentsReachedRepeatedLedgerSelection": true,
+    "renewableCallbackOrTokenExchangeObserved": false,
+    "metadataOnlyInspection": {
+      "scopesSupported": [
+        "openid",
+        "offline_access",
+        "profile",
+        "email",
+        "ledger.read",
+        "ledger.write",
+        "ledger.admin"
+      ],
+      "requiredScopesPresent": false,
+      "redirectUri": "https://mcp.docker.com/oauth/callback",
+      "authorizationServer": "https://beancount.io",
+      "resourceUrl": "https://beancount.io/api-gateway/mcp",
+      "serverSideGrantTypesNotRetained": true
+    },
+    "followUp": "w6/046",
+    "workingReadWriteGrantRetained": true
+  },
+  "publicReviewGate": {
+    "sourceObservedAt": "2026-10-25T00:13:29Z",
+    "runURLs": [
+      "https://github.com/docker/mcp-registry/actions/runs/40049180641",
+      "https://github.com/docker/mcp-registry/actions/runs/40049180736"
+    ],
+    "state": "action_required; both await upstream maintainer workflow approval; zero executed jobs",
+    "notAnExecutedTestFailure": true
+  },
+  "limits": [
+    "No successful automatic refresh is claimed.",
+    "Private reviewer token and its accepted form are separate from native OAuth.",
+    "No new backend deployment, duplicate contribution, production-ledger write or grant revocation."
+  ]
+}

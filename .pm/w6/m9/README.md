@@ -1,6 +1,6 @@
 # w6 · m9 — Reach developer marketplaces and galleries
 
-**Worker:** worker1 **Goal:** Developers discover and connect the hosted MCP server through the supported Docker, Cursor, Cline, and GitHub/VS Code galleries. **Status:** todo (8 tasks done; independent Docker auth repair t015 is open; per-platform review/public/native gates remain t004/t016/t017/t018)
+**Worker:** worker1 **Goal:** Developers discover and connect the hosted MCP server through the supported Docker, Cursor, Cline, and GitHub/VS Code galleries. **Status:** todo (9 tasks done; t015 current native repair complete; review/public/native gates remain t004/t016/t017/t018; renewable OAuth is independent w6/046)
 
 **Implementation estimate:** ~4½h, excluding external review queues and the standing closing tasks.
 
@@ -17,7 +17,7 @@
 | [t003](done/t003.md) | Package the remote connection for Cursor's official and community marketplaces — **DONE** | 60m | t001, t011 |
 | [t004](t004.md) | Prepare Cline's eligible marketplace submission and remote connection evidence — **BLOCKED** | 45m | t001, t013 |
 | [t005](done/t005.md) | Prepare GitHub inclusion and verify VS Code's discovery path — **DONE** | 45m | t001, t014 |
-| [t015](t015.md) | Diagnose and repair the later Docker Gateway Unauthorized result | 30m | t012 |
+| [t015](done/t015.md) | Diagnose and repair the later Docker Gateway Unauthorized result — **DONE** | 30m | t012 |
 | [t016](t016.md) | Follow official Cursor review/public/native availability — **BLOCKED** | 45m | t011 |
 | [t017](t017.md) | Follow Docker review through public catalog installation — **BLOCKED** | 45m | t012 |
 | [t018](t018.md) | Verify approved GitHub publication and native VS Code — **BLOCKED** | 45m | t014 |
@@ -223,3 +223,7 @@ The milestone returns from blocked/ for independent t015 Docker-session diagnosi
 - **t006–t010 — Unblock:** actual per-platform outcomes and their closing dependencies hold. Owner: worker. Other platform reviews do not serialize independent work.
 
 Read actual existing feedback/CI changes, correct supported payloads and record real receipt/public/native transitions. Preserve previously approved grants and never substitute generic client compatibility for the published installation path.
+
+## Current native repair outcome — 2026-10-25 UTC
+
+t015 is complete with actual Gateway discovery/query/preview and unchanged-state evidence. Its separate offline-renewal consent loop is an independent actionable inbox note w6/046, not hidden behind Docker review. All remaining tasks here depend on the recorded platform publication gates; re-triage milestone placement next.

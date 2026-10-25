@@ -205,3 +205,11 @@ Approve access or callback completion is inferred. Restore that supported
 browser connection and use the existing exact accounting-access answer; do
 not repeat a previously approved identical GitHub or accounting permission
 question merely because an OAuth callback expires.
+
+## Docker retry ownership correction — 2026-10-25 UTC
+
+The historical Unauthorized metadata retry above is now reproduced, repaired
+and documented in the [owning Docker packet](../docker/native-repair-20261025.json).
+Current native service discovery/query/preview and unchanged-state checks pass;
+automatic renewal remains an independent w6/046 follow-up. This correction
+does not change the provenance/freshness of the earlier LobeHub manifest.

@@ -167,3 +167,45 @@ from that metadata update. The finite submission task w6/m9/t002 can close;
 actual review/publication and public catalog/native verification remain under
 t006. If review needs access after October31, arrange renewal through the same
 private channel. Do not resubmit the form or create another PR.
+
+## Current native session repaired — 2026-10-25T00:28:48Z
+
+The later failure previously recorded only in the LobeHub metadata packet is
+now reproduced in its owning Docker record. Actual Gateway discovery exposes
+only eight management tools, no service resources/templates, and logs
+`initialize: Unauthorized` with the stored OAuth credential. The existing
+engine is available; the local profile and canonical endpoint are retained.
+
+Supported same-client `oauth authorize --scopes 'ledger.read ledger.write'`
+completes the native callback for only the synthetic QA ledger. It explicitly
+reports **access:true / refresh:false**. The known macOS legacy-keychain erasure
+error still yields CLI exit1 after the new collision-resistant credential is
+stored; this is not reported as a clean CLI exit. The actual unmodified Gateway
+then successfully uses that credential:44service tools plus8management tools,
+8resources and64templates. No credential is copied to this packet.
+
+The fresh native journey,2026-10-25T00:27:27.707Z–00:27:31.993Z, passes one
+balanced-transaction `appendLedgerText` preview with `dry_run:true`,
+`allowInvalid:false`, zero new errors and `wrote:[]`. Native before/after reads
+prove identical commit, all entry counts, main-file SHA-256, zero validation
+errors, Cash49.75USD and zero preview-payee rows.
+[Current repair and precise limits](./native-repair-20261025.json) preserve
+the earlier successful rehearsal rather than replacing it with this later run.
+
+**Renewal is separate:** the minimal read/write command returns no refresh
+token. Adding offline_access, with and without openid, reaches repeated
+synthetic-ledger consent rather than an observed callback/token exchange.
+Those incomplete callback listeners are stopped; the working scoped grant
+is retained. Public DCR metadata supports offline_access but does not retain
+server-side grant_types, so a narrow-registration or server-side grant cause
+is not proved. Current access repair is complete; **w6/046** owns the
+independent renewable-flow diagnosis/fix. Reauthorize through the supported
+scoped flow if the current access token later expires. Do not claim automatic
+refresh, revoke the retained grant or replace the private reviewer key.
+
+The actual upstream [Security Review](https://github.com/docker/mcp-registry/actions/runs/40049180641)
+and [Code/Server Validation](https://github.com/docker/mcp-registry/actions/runs/40049180736)
+runs are `action_required`, awaiting maintainer approval, with zero executed
+jobs at2026-10-25T00:13UTC. That is a concrete upstream workflow-approval gate,
+not an executed failing test. The private reviewer form remains accepted;
+publication/native catalog installation stays under m9/t017.
