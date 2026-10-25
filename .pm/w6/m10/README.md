@@ -1,6 +1,6 @@
 # w6 · m10 — List the connector in independent web directories
 
-**Worker:** worker1 **Goal:** People comparing accounting MCP servers find accurate, usable remote listings on the eligible independent directories. **Status:** todo (4 tasks done; t013 source regression/fix verified; deploy shipped revision and resume t010/t011; t012 supported correction remains independent)
+**Worker:** worker1 **Goal:** People comparing accounting MCP servers find accurate, usable remote listings on the eligible independent directories. **Status:** todo (5 tasks done; verified source deployed and t010 three-client native checks pass; t011 is ready to resume; t012 supported correction remains independent)
 
 **Implementation estimate:** ~2h, excluding external review queues and the standing closing tasks.
 
@@ -13,7 +13,7 @@
 | [t002](t002.md) | Submit or correct MCPMarket's free remote listing — **BLOCKED: free repository submission** | 30m | w6/m8/t001 |
 | [t003](done/t003.md) | Establish LobeHub eligibility and prepare its supported connector listing — **DONE** | 45m | w6/m8/t001, t009 |
 | [t013](done/t013.md) | Bind OAuth interaction routes to the signed-cookie interaction — **DONE** | 45m | — |
-| [t010](t010.md) | Complete MCPServers.org advertised native accounting checks — **BLOCKED** | 45m | t001, t013 |
+| [t010](done/t010.md) | Complete MCPServers.org advertised native accounting checks — **DONE** | 45m | t001, t013 |
 | [t011](t011.md) | Complete LobeHub native OAuth and live metadata — **BLOCKED** | 45m | t003, t009, t013 |
 | [t012](t012.md) | Correct LobeHub crawler stdio deployment and verify search indexing | 30m | t003 |
 | [t004](t004.md) | Verify the independent-directory listings after moderation | 15m | t001, t002, t003, t010, t011, t012, t013 |
@@ -128,3 +128,12 @@ The available existing hosted-service deployment must resolve the shipped
 public revision and pass health before t010/t011's fresh sequential native
 acceptance. This precise rollout boundary satisfies t013's source task; it
 does not close or claim the dependent native outcomes.
+
+## Hosted/native follow-through — 2026-10-25T01:23:51.141Z
+
+Actual existing-service deployment resolves861d10a5c, backend/ledger health
+passes, and all three MCPServers.org installer-project native paths pass
+query/one preview/unchanged-state checks. t010 is archived. This clears
+t013's rollout gate and makes t011's independent LobeHub native journey
+actionable; browser access and earlier scoped approvals are retained.
+The LobeHub crawler correction and MCPMarket's original review remain separate.

@@ -52,9 +52,13 @@
     }
   },
   "rollout": {
-    "state": "Verified source fix ready to ship; hosted deployment and fresh native acceptance are not yet claimed.",
-    "nextAction": "Deploy the shipped public main revision through the existing hosted service, verify resolved revision and health, then resume sequential native checks in w6/m10/t010 and t011.",
-    "owner": "Repository worker through existing operator deployment access",
+    "state": "Existing hosted service successfully deployed the verified public revision; backend and ledger healthy. Subsequent canonical MCP controls and three native CLI accounting routes pass.",
+    "publicSourceSHA": "861d10a5c22618ca2f29c60d432aa9326c8e2080",
+    "endpointRecoveredAtUTC": "2026-10-25T01:16:47.185Z",
+    "lastNativeControlAtUTC": "2026-10-25T01:23:51.141Z",
+    "evidence": "native-install-rehearsal-20261025.json",
+    "nextAction": "Continue LobeHub native acceptance in w6/m10/t011.",
+    "owner": "Repository worker",
     "endpoint": "https://beancount.io/api-gateway/mcp"
   },
   "privacy": "No tokens, cookies, authorization codes, private infrastructure details or ledger contents are included. Existing synthetic test grants are retained."

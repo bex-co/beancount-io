@@ -19,7 +19,7 @@
   "review": "Within 2 weeks; email on approval",
   "state": "Published; canonical public search result and hosted-server detail verified",
   "contact": "Publisher public-profile contact supplied privately in form; omitted here",
-  "authenticatedConnection": "Project installer and bounded native configuration reads verified; new client-specific OAuth/query/preview remains under w6/m10/t004. Earlier independent host QA is retained separately.",
+  "authenticatedConnection": "Actual add-mcp-generated native project routes pass in Codex0.163.0, Claude Code2.1.310 and Cursor Agent2026.10.19-6bbf2c4: known Cash query, exactly one dry-run preview each, unchanged native checks and independent file hash. Exact visibility limits are retained in native-install-rehearsal-20261025.json; no new desktop/host fixture claim.",
   "publicRecheck": {
     "observedAtUTC": "2026-10-21T19:41:23Z",
     "url": "https://mcpservers.org/search?query=beancount",
@@ -69,7 +69,7 @@
       "limit": "Publication and metadata verified; advertised installer not executed and no new authenticated native journey claimed."
     }
   ],
-  "lastCheckedAtUTC": "2026-10-24T20:02:48Z",
+  "lastCheckedAtUTC": "2026-10-25T01:23:51.141Z",
   "publicListingURL": "https://mcpservers.org/servers/github-com-bex-co-beancount-io-blob-main-backend-cluster-backend-v2-docs-mcp-md",
   "publicListingVerified": true,
   "publishedEndpointBoundaryCheck": {
@@ -119,5 +119,14 @@
     "nativeAccountingJourneyComplete": false,
     "limit": "Project configuration generation and bounded host recognition are verified. Claude project trust, fresh client-specific OAuth and native accounting query/preview remain separate; no global trust or force flag is used."
   },
-  "publicListingCheckedAtUTC": "2026-10-24T19:58:05Z"
+  "publicListingCheckedAtUTC": "2026-10-24T19:58:05Z",
+  "nativeProjectAcceptance": {
+    "checkedAtUTC": "2026-10-25T01:23:51.141Z",
+    "owner": "w6/m10/t010 done",
+    "evidence": "native-install-rehearsal-20261025.json",
+    "clients": 3,
+    "nativeAccountingCalls": 16,
+    "dryRunPreviews": 3,
+    "ledgerUnchanged": true
+  }
 }

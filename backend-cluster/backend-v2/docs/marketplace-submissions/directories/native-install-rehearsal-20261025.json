@@ -1,0 +1,336 @@
+{
+  "owner": "w6/m10/t010",
+  "source": "Actual MCPServers.org public installer and add-mcp2.6.0 generated project configurations, exercised by installed native clients",
+  "endpoint": "https://beancount.io/api-gateway/mcp",
+  "lastCheckedAtUTC": "2026-10-25T01:23:51.141Z",
+  "rollout": {
+    "publicSourceSHA": "861d10a5c22618ca2f29c60d432aa9326c8e2080",
+    "existingHostedService": "Successful manual deployment; actual log resolves this public main revision; backend and ledger healthy",
+    "endpointRecoveredAtUTC": "2026-10-25T01:16:47.185Z",
+    "transientLimit": "One connection check returned502 during deployment; subsequent canonical MCP controls and all native accounting calls pass."
+  },
+  "configuration": {
+    "Codex": {
+      "projectFile": ".codex/config.toml",
+      "trust": "Only the isolated installer project trusted through native UI",
+      "authentication": "Retained successful native OAuth, openid/offline/read/write, synthetic ledger pinned",
+      "runtimeBoundary": "Shell/apps disabled; other configured MCP servers and plugins disabled for this invocation; only three accounting tools allowlisted"
+    },
+    "ClaudeCode": {
+      "projectFile": ".mcp.json",
+      "trust": "Only beancount-io project MCP server enabled",
+      "authentication": "Fresh sequential native OAuth success after deployment; requester Claude Code and localhost62056 callback match",
+      "scopes": "openid/offline/read/write/admin, one existing authorized synthetic ledger; account-wide unselected",
+      "nativeToolCount": 44,
+      "runtimeBoundary": "Built-in tools disabled; exact three MCP tools allowed; dontAsk; no permission denials"
+    },
+    "Cursor": {
+      "projectFile": ".cursor/mcp.json",
+      "trust": "Only the isolated installer workspace trusted",
+      "authentication": "Fresh sequential native OAuth success after deployment; requester Cursor and localhost8787 callback match",
+      "scopes": "openid/offline/read/write/admin, one existing authorized synthetic ledger; account-wide unselected",
+      "nativeToolCount": 44,
+      "runtimeBoundary": "Task-local cli.json allows exact three tools, denies other41service tools plus shell/files/web fetch; no force or approve-all flag",
+      "permissionReference": "https://prod.cursor.com/docs/cli/reference/permissions"
+    }
+  },
+  "endpointOrCredentialOverrides": false,
+  "nativeResults": [
+    {
+      "client": "Codex0.163.0",
+      "completedAtUTC": "2026-10-25T01:18:23.916221+00:00",
+      "nativeAccountingCalls": [
+        "checkLedger",
+        "runBqlQueryStructured",
+        "appendLedgerText",
+        "checkLedger",
+        "runBqlQueryStructured"
+      ],
+      "checksIdentical": true,
+      "commit": "39f42f337d13c406cfd331bc5fc65e4eb5652cc7",
+      "directiveCounts": [
+        {
+          "type": "Balance",
+          "number": 1
+        },
+        {
+          "type": "Close",
+          "number": 0
+        },
+        {
+          "type": "Commodity",
+          "number": 0
+        },
+        {
+          "type": "Custom",
+          "number": 0
+        },
+        {
+          "type": "Document",
+          "number": 0
+        },
+        {
+          "type": "Event",
+          "number": 0
+        },
+        {
+          "type": "Note",
+          "number": 0
+        },
+        {
+          "type": "Open",
+          "number": 12
+        },
+        {
+          "type": "Pad",
+          "number": 0
+        },
+        {
+          "type": "Price",
+          "number": 0
+        },
+        {
+          "type": "Query",
+          "number": 0
+        },
+        {
+          "type": "Transaction",
+          "number": 16
+        }
+      ],
+      "errors": [],
+      "cashBeforeUSD": "49.75",
+      "cashAfterUSD": "49.75",
+      "preview": {
+        "count": 1,
+        "dry_run": true,
+        "wrote": [],
+        "validation": {
+          "errorsBefore": 0,
+          "errorsAfter": 0,
+          "newErrors": []
+        }
+      }
+    },
+    {
+      "client": "Claude Code2.1.310",
+      "completedAtUTC": "2026-10-25T01:20:20.224163+00:00",
+      "nativeAccountingCalls": [
+        "checkLedger",
+        "runBqlQueryStructured",
+        "appendLedgerText",
+        "checkLedger",
+        "runBqlQueryStructured"
+      ],
+      "checksIdentical": true,
+      "commit": "39f42f337d13c406cfd331bc5fc65e4eb5652cc7",
+      "directiveCounts": [
+        {
+          "type": "Balance",
+          "number": 1
+        },
+        {
+          "type": "Close",
+          "number": 0
+        },
+        {
+          "type": "Commodity",
+          "number": 0
+        },
+        {
+          "type": "Custom",
+          "number": 0
+        },
+        {
+          "type": "Document",
+          "number": 0
+        },
+        {
+          "type": "Event",
+          "number": 0
+        },
+        {
+          "type": "Note",
+          "number": 0
+        },
+        {
+          "type": "Open",
+          "number": 12
+        },
+        {
+          "type": "Pad",
+          "number": 0
+        },
+        {
+          "type": "Price",
+          "number": 0
+        },
+        {
+          "type": "Query",
+          "number": 0
+        },
+        {
+          "type": "Transaction",
+          "number": 16
+        }
+      ],
+      "errors": [],
+      "cashBeforeUSD": "49.75",
+      "cashAfterUSD": "49.75",
+      "preview": {
+        "count": 1,
+        "dry_run": true,
+        "wrote": [],
+        "validation": {
+          "errorsBefore": 0,
+          "errorsAfter": 0,
+          "newErrors": []
+        }
+      }
+    },
+    {
+      "client": "Cursor Agent2026.10.19-6bbf2c4",
+      "completedAtUTC": "2026-10-25T01:23:30.419623+00:00",
+      "nativeToolCount": 44,
+      "nativeAccountingCalls": [
+        "checkLedger",
+        "checkLedger",
+        "runBqlQueryStructured",
+        "appendLedgerText",
+        "checkLedger",
+        "runBqlQueryStructured"
+      ],
+      "checksIdentical": true,
+      "commit": "39f42f337d13c406cfd331bc5fc65e4eb5652cc7",
+      "directiveCounts": [
+        {
+          "type": "Balance",
+          "number": 1
+        },
+        {
+          "type": "Close",
+          "number": 0
+        },
+        {
+          "type": "Commodity",
+          "number": 0
+        },
+        {
+          "type": "Custom",
+          "number": 0
+        },
+        {
+          "type": "Document",
+          "number": 0
+        },
+        {
+          "type": "Event",
+          "number": 0
+        },
+        {
+          "type": "Note",
+          "number": 0
+        },
+        {
+          "type": "Open",
+          "number": 12
+        },
+        {
+          "type": "Pad",
+          "number": 0
+        },
+        {
+          "type": "Price",
+          "number": 0
+        },
+        {
+          "type": "Query",
+          "number": 0
+        },
+        {
+          "type": "Transaction",
+          "number": 16
+        }
+      ],
+      "errors": [],
+      "cashBeforeUSD": "49.75",
+      "cashAfterUSD": "49.75",
+      "preview": {
+        "count": 1,
+        "dry_run": true,
+        "wrote": [],
+        "validation": {
+          "errorsBefore": 0,
+          "errorsAfter": 0,
+          "newErrors": []
+        }
+      },
+      "visibilityLimit": "The Agent saw checkLedger text summarized as ok and repeated that read once. The native CLI event log retains complete structuredContent, which the operator compares for exact commit/counts. Do not claim those fields were visible to the model."
+    }
+  ],
+  "independentReadOnlyControl": {
+    "beforeAtUTC": "2026-10-25T01:16:47.185Z",
+    "afterAtUTC": "2026-10-25T01:23:51.141Z",
+    "identical": true,
+    "commit": "39f42f337d13c406cfd331bc5fc65e4eb5652cc7",
+    "mainFileSHA256": "77c3a591efd311e01d03d2f3a91f2919151c0fb0708e1abe1a10ce6ec7e29915",
+    "directiveCounts": [
+      {
+        "type": "Balance",
+        "number": 1
+      },
+      {
+        "type": "Close",
+        "number": 0
+      },
+      {
+        "type": "Commodity",
+        "number": 0
+      },
+      {
+        "type": "Custom",
+        "number": 0
+      },
+      {
+        "type": "Document",
+        "number": 0
+      },
+      {
+        "type": "Event",
+        "number": 0
+      },
+      {
+        "type": "Note",
+        "number": 0
+      },
+      {
+        "type": "Open",
+        "number": 12
+      },
+      {
+        "type": "Pad",
+        "number": 0
+      },
+      {
+        "type": "Price",
+        "number": 0
+      },
+      {
+        "type": "Query",
+        "number": 0
+      },
+      {
+        "type": "Transaction",
+        "number": 16
+      }
+    ],
+    "cashUSD": "49.75",
+    "errors": []
+  },
+  "limits": [
+    "CLI-native project installation acceptance; this does not assert a new desktop GUI journey or add an ADR019 host fixture.",
+    "No new native resource/template/prompt enumeration is claimed for these CLI routes.",
+    "Two Codex driver configuration failures occurred before any accounting calls; the corrected successful native transcript supplies the evidence.",
+    "Existing grants are retained. No ledger write, duplicate directory submission, private credential or private deployment detail is included."
+  ]
+}
