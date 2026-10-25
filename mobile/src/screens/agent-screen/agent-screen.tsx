@@ -26,6 +26,7 @@ import { messageText } from "./message-text";
 import { classifyAgentError, isRetryable } from "./agent-errors";
 import { AGENT_PRESET_KEYS } from "./presets";
 import { useRouteParams } from "@/common/hooks/use-route-params";
+import { useStackKeyboardOffset } from "@/common/hooks/use-stack-keyboard-offset";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -258,6 +259,11 @@ function AgentScreenImpl() {
 
   const errorKind = error ? classifyAgentError(error) : undefined;
 
+  // The shared stack offset (insets.top + 44 on iOS), not a literal: 96 only
+  // matched one inset size, floating the composer ~24 pt too high on iPad
+  // (w21/1006).
+  const keyboardVerticalOffset = useStackKeyboardOffset();
+
   return (
     <SafeAreaView style={styles.container} edges={["bottom"]}>
       <Stack.Screen
@@ -281,7 +287,7 @@ function AgentScreenImpl() {
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 96 : 0}
+        keyboardVerticalOffset={keyboardVerticalOffset}
       >
         <ScrollView
           ref={scrollRef}
