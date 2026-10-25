@@ -100,3 +100,13 @@ and the removed ask source path. Completed SkillsMP browser results also retain
 old paths. Official support links are known and a correction note is prepared;
 no message or duplicate form request was sent. The services must correct the
 existing records before those final acceptance checks pass.
+
+## skills.rest support step prepared — 2026-10-25 UTC
+
+The actual company/ask/form readback still fails t012's index acceptance. A
+public-repository-only correction draft now identifies the exact old source,
+generated selector and mixed customer/development collection. Specific email
+authorization for support@skills.rest is requested, with no message sent.
+**Unblock:** publisher authorizes this reviewed request, service corrects the
+existing public records, then worker verifies them. SkillsMP and Hermes retain
+their separate original gates; no completed native suite work is reopened.

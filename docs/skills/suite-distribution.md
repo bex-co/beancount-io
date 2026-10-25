@@ -295,6 +295,26 @@ record was established by this check. These remaining service-controlled
 indexes keep w6/m6.5/t012 open; the owned suite and verified skills.sh grouping
 remain complete.
 
+### skills.rest correction prepared — 2026-10-25 UTC
+
+Actual browser readback at23:31:14UTC still shows27skills in the
+[organization index](https://skills.rest/company/bex-co), including repository
+maintenance tools. The [ask entry](https://skills.rest/skill/beancount-ask-bex-co)
+still points to the removed `skills/.claude/skills/beancount-ask` source and
+uses `beancount-ask-bex-co` as its install selector instead of the authored
+`beancount-ask` name. The actual indexing form still advertises24hours and
+exposes no control for an existing request; its footer supplies
+[support@skills.rest](mailto:support@skills.rest). No duplicate refresh is sent.
+
+A [specific correction email](catalog-corrections/skills-rest.md) is prepared
+with canonical customer source/install links, valid frontmatter names and
+customer/development collection separation. Explicit authorization to send
+this new recipient/request has been requested; no email is sent or live-index
+repair claimed. This is separate from the authorized Smithery inquiry.
+**Unblock:** authorize that reviewed message, then the service corrects its
+existing records and the worker reads back current customer paths/selectors
+and collection boundaries. SkillsMP remains independently pending under t012.
+
 ## Primary contracts
 
 - [ClawHub publishing](https://github.com/openclaw/clawhub/blob/main/docs/publishing.md)
