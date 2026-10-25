@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1031 — Include bank identity in OFX account memory](./1031.md) — major CLI gap: banks sharing an account number overwrite each other’s explicit mappings and later payments post to the wrong bank account; native-valid, repeated 2026-10-25.
+
 - [1030 — Resolve decimal IDs copied from transaction listings](./1030.md) — minor CLI lookup gap: small numeric ref/import-id values printed in fixed point require a hidden exponent spelling in Update; integer/date/string controls pass, checked 2026-10-25.
 
 - [1029 — Keep every written include in batch-update diffs](./1029.md) — minor CLI output gap: all split-file edits persist, but apply returns only the last file’s diff; preview and one-file controls pass, checked 2026-10-25.
@@ -60,7 +62,7 @@
 
 - [1021 — Make CSV currency recovery hints fit the headers](./1021.md) — minor CLI gap: a suggested `currency=EUR`/`INR` setting reads the existing amount column as a currency; renamed, single-currency and real-column controls pass, checked 2026-10-24.
 
-- [1020 — Preserve native semantics of generated-looking references](./1020.md) — major CLI gap: native aliases matching the hash grammar silently skip corrected amounts and payments from separate custom namespaces; genuine generated-ID controls pass, checked 2026-10-24.
+- [1020 — Preserve native semantics of generated-looking references](./1020.md) — major CLI gap: native aliases matching the hash grammar silently skip corrected amounts and payments from separate custom namespaces; genuine generated-ID controls pass, checked 2026-10-24. Automatic/configured OFX bank/card callers rechecked 2026-10-25.
 
 - [1015 — Preserve types in declared non-transaction metadata](./1015.md) — reopened minor CLI gap: metadata copies that swap booleans and numbers are misclassified as written; full original field/currency/string-metadata and new type controls pass, checked 2026-10-24.
 
