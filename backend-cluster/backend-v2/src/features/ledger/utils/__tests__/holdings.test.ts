@@ -219,6 +219,37 @@ describe("composeHoldings", () => {
     expect(result.groups[0]!.price).toBeNull();
   });
 
+  it("orders several missing legs by pair, not by first sighting", () => {
+    const zebra = row(
+      "Assets:Broker:ZEBRA",
+      "ZEBRA",
+      "USD",
+      map("ZEBRA", "5"),
+      map("USD", "500.00"),
+      map("USD", "500.00"),
+      "",
+    );
+    const aapl = row(
+      "Assets:Broker:AAPL",
+      "AAPL",
+      "USD",
+      map("AAPL", "10"),
+      map("USD", "1500.00"),
+      map("USD", "1500.00"),
+      "",
+    );
+    const result = composeHoldings({ ...base, rows: [zebra, aapl] });
+    expect(result.valuation).toBe("partial");
+    expect(result.missing_prices).toEqual([
+      { from: "AAPL", to: "USD" },
+      { from: "ZEBRA", to: "USD" },
+    ]);
+    expect(result.missing_price_summary).toEqual([
+      "AAPL has no USD quote at 2026-10-25; valued at cost",
+      "ZEBRA has no USD quote at 2026-10-25; valued at cost",
+    ]);
+  });
+
   it("converts money columns through the quoted leg", () => {
     const rated = row(
       "Assets:Broker:AAPL",

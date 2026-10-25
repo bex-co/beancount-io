@@ -246,6 +246,117 @@ describe("optional account narrowing", () => {
   );
 });
 
+/**
+ * The parity case above proves REST and MCP call the service the *same*
+ * way — these prove they pass the *right* arguments. A `fetch` that
+ * dropped `groupBy` on both surfaces would still pass parity.
+ */
+describe("report reads wire their queries", () => {
+  const read = (segment: string) =>
+    ANALYSIS_READS.find((r) => r.segment === segment)!;
+
+  it("holdings passes its filters and defaults the grouping", async () => {
+    const services = fakeServices();
+    await read("holdings").fetch(services as never, {
+      ledgerId: LEDGER,
+      identity: undefined,
+      query: {
+        account: "Assets:Broker",
+        conversion: "EUR",
+        groupBy: "commodity",
+      },
+    });
+    expect(services.ledgerFinance.getHoldings).toHaveBeenCalledWith({
+      ledgerId: LEDGER,
+      identity: undefined,
+      account: "Assets:Broker",
+      conversion: "EUR",
+      groupBy: "commodity",
+    });
+
+    await read("holdings").fetch(services as never, {
+      ledgerId: LEDGER,
+      identity: undefined,
+      query: {},
+    });
+    expect(services.ledgerFinance.getHoldings).toHaveBeenLastCalledWith({
+      ledgerId: LEDGER,
+      identity: undefined,
+      groupBy: "account",
+    });
+  });
+
+  it("register passes its filters and guards a bypassed account", async () => {
+    const services = fakeServices();
+    await read("register").fetch(services as never, {
+      ledgerId: LEDGER,
+      identity: undefined,
+      query: {
+        account: "Assets:Bank:Checking",
+        time: "2024",
+        conversion: "USD",
+      },
+    });
+    expect(services.ledgerFinance.getRegister).toHaveBeenCalledWith({
+      ledgerId: LEDGER,
+      identity: undefined,
+      account: "Assets:Bank:Checking",
+      time: "2024",
+      conversion: "USD",
+    });
+
+    await read("register").fetch(services as never, {
+      ledgerId: LEDGER,
+      identity: undefined,
+      query: { account: undefined },
+    });
+    expect(services.ledgerFinance.getRegister).toHaveBeenLastCalledWith(
+      expect.objectContaining({ account: "" }),
+    );
+  });
+
+  it("capital-gains passes its bounds and filters", async () => {
+    const services = fakeServices();
+    await read("capital-gains").fetch(services as never, {
+      ledgerId: LEDGER,
+      identity: undefined,
+      query: {
+        account: "Assets:Broker",
+        time: "2024",
+        fromDate: "2024-01-01",
+        toDate: "2024-12-31",
+      },
+    });
+    expect(services.ledgerFinance.getCapitalGains).toHaveBeenCalledWith({
+      ledgerId: LEDGER,
+      identity: undefined,
+      account: "Assets:Broker",
+      time: "2024",
+      fromDate: "2024-01-01",
+      toDate: "2024-12-31",
+    });
+  });
+
+  it("refuses a register read without an account before reading", async () => {
+    const services = fakeServices();
+    const rest = await startV1TestServer(
+      { services } as unknown as AppLayers,
+      config,
+      { apiKeys: false },
+    );
+    rest.setIdentity(ctx(services).identity);
+    try {
+      const response = await fetch(
+        `${rest.url}/api-gateway/v1/ledgers/alice/main/register`,
+      );
+      expect(response.status).toBeGreaterThanOrEqual(400);
+      expect(services.ledgerFinance.getRegister).not.toHaveBeenCalled();
+    } finally {
+      await rest.close();
+    }
+  });
+});
+
 describe("report query validation", () => {
   it.each(["account=one&account=two", "owner=bob", "unknown=value"])(
     "refuses %s before reading",
