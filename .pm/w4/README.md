@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1090** — [Allow only one pending delete per file](./1090.md)
+
 - **1089** — [Preserve empty single-column records in query CSV](./1089.md)
 
 - **1088** — [Keep language changes inside the current file draft](./1088.md)
