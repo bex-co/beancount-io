@@ -235,8 +235,24 @@ type SeparatorVote = "us" | "eu" | "eu-weak" | null;
  * column fell back to point decimals and refused the row (w4/1054, the CLI's
  * w5/906).
  */
+/**
+ * A complete supported monetary spelling under either convention, ignoring
+ * numeric precision: `oops.1,00` has EU-shaped separators but is not a
+ * number under any convention, so it must not vote (w4/1068).
+ */
+function isCompleteMonetarySpelling(core: string): boolean {
+  return [false, true].some((decimalComma) => {
+    const normalized = normalizeBankAmount(core, decimalComma);
+    return (
+      normalized !== null &&
+      /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(normalized)
+    );
+  });
+}
+
 function separatorVote(rawCore: string): SeparatorVote {
   const core = rawCore.replace(THOUSAND_FILLER, "");
+  if (!isCompleteMonetarySpelling(core)) return null;
   if (core.includes(".") && core.includes(",")) {
     return core.lastIndexOf(",") > core.lastIndexOf(".") ? "eu" : "us";
   }

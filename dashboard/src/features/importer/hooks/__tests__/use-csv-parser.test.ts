@@ -929,6 +929,18 @@ describe("useCSVParser", () => {
       expect(parsed.rows[0].amountInput).toBe(token);
     });
 
+    it.each(["oops.1,00", "oops,12"])(
+      "does not let the malformed %s vote the column comma-decimal (w4/1068)",
+      (malformed) => {
+        const parsed = parse(["-1,250", malformed]);
+        expect(parsed.rows[0].amount).toBe(-1250);
+        expect(parsed.rows[0].decimalComma).not.toBe(true);
+        expect(exact(parsed)[0]).toBe("-1250");
+        expect(parsed.rows[1].errors?.length).toBeGreaterThan(0);
+        expect(parsed.errorCount).toBe(1);
+      },
+    );
+
     it("reads a dot-grouped column whole, single-dot companions too", () => {
       const parsed = parse(["-1.234.567", "-1.250"]);
       expect(parsed.errorCount).toBe(0);
