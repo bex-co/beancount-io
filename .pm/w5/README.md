@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1030 — Resolve decimal IDs copied from transaction listings](./1030.md) — minor CLI lookup gap: small numeric ref/import-id values printed in fixed point require a hidden exponent spelling in Update; integer/date/string controls pass, checked 2026-10-25.
+
 - [1029 — Keep every written include in batch-update diffs](./1029.md) — minor CLI output gap: all split-file edits persist, but apply returns only the last file’s diff; preview and one-file controls pass, checked 2026-10-25.
 
 - [1028 — Preserve decimal markers in batch-update requests](./1028.md) — minor CLI regression: a malformed decimal row aborts every valid update before per-row validation; previous behavior and Add controls pass, checked 2026-10-25.
