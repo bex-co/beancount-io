@@ -1000,6 +1000,22 @@ Usage: bea report capital-gains [OPTIONS]
 | `--to-date` | str |  | Capital-gains sales on or before YYYY-MM-DD. |
 | `--allow-errors` | flag |  | Show partial data with errors on stderr; opts strict reads into partial answers |
 
+### `bea report cash-flow`
+
+Where the money went: operating, investing, and financing flows.
+
+```text
+Usage: bea report cash-flow [OPTIONS]
+```
+
+| Option | Type | Default | Help |
+| --- | --- | --- | --- |
+| `--time, -t` | str |  | Time filter: year, month, 2026, 2026-08, or "2026-01 - 2026-06" |
+| `--account, -a` | str |  | Account filter: a parent account or a regular expression |
+| `--from-date` | str |  | Cash-flow entries on or after YYYY-MM-DD. |
+| `--to-date` | str |  | Cash-flow entries on or before YYYY-MM-DD. |
+| `--allow-errors` | flag |  | Show partial data with errors on stderr; opts strict reads into partial answers |
+
 ### `bea doctor lex`
 
 Run bean-doctor lex.

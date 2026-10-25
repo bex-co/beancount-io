@@ -53,6 +53,8 @@ AccountOpt = Annotated[
 ]
 FromDateOpt = Annotated[str | None, typer.Option("--from-date", help="Capital-gains sales on or after YYYY-MM-DD.")]
 ToDateOpt = Annotated[str | None, typer.Option("--to-date", help="Capital-gains sales on or before YYYY-MM-DD.")]
+CashFlowFromOpt = Annotated[str | None, typer.Option("--from-date", help="Cash-flow entries on or after YYYY-MM-DD.")]
+CashFlowToOpt = Annotated[str | None, typer.Option("--to-date", help="Cash-flow entries on or before YYYY-MM-DD.")]
 IntervalOpt = Annotated[ReportInterval, typer.Option("--interval", "-i", help="Reporting interval")]
 GroupByOpt = Annotated[HoldingsGrouping, typer.Option("--group-by", help="Holdings grouping: account or commodity")]
 AllowErrorsOpt = Annotated[
@@ -172,7 +174,7 @@ def _filter_text(metadata: dict[str, Any]) -> str:
     return single_line(metadata.get("account_filter") or "all")
 
 
-def _heading(title: str, metadata: dict[str, Any], *, profit_line: bool = False) -> None:
+def _heading(title: str, metadata: dict[str, Any], *, profit_line: bool = False, convention: str | None = None) -> None:
     output.utf8_stdout()
     period = metadata["period"]
     dates = f"{period['start']} through {metadata['as_of']}" if period["start"] else "no dated activity"
@@ -180,8 +182,9 @@ def _heading(title: str, metadata: dict[str, Any], *, profit_line: bool = False)
     typer.echo(f"Valuation: {metadata['conversion']}; account: {_filter_text(metadata)}")
     # Only reports that print an explicit profit figure may promise its sign;
     # the balance sheet's earnings line carries the opposite (credit) sign and
-    # explains itself where it is printed.
-    convention = "Account balances use Beancount signs (credits negative)"
+    # explains itself where it is printed. Cash flow brings its own convention:
+    # its rows are cash impact, only its bottom lines are balances.
+    convention = convention or "Account balances use Beancount signs (credits negative)"
     typer.echo(f"{convention}; profit is positive for a gain." if profit_line else f"{convention}.")
     for source in metadata.get("price_sources", []):
         if source["freshness"] != "recent" or source["error"]:
@@ -602,6 +605,64 @@ def _held(row: dict[str, Any]) -> str:
     if row["held_days"] is None:
         return "unknown"
     return f"{row['held_days']} days ({'long' if row['long_held'] else 'short'})"
+
+
+@report_app.command("cash-flow", cls=SingleValueCommand)
+def cash_flow(
+    time: TimeOpt = None,
+    account: AccountOpt = None,
+    from_date: CashFlowFromOpt = None,
+    to_date: CashFlowToOpt = None,
+    allow_errors: AllowErrorsOpt = False,
+) -> None:
+    """Where the money went: operating, investing, and financing flows."""
+    file, data = _ask(
+        "cash-flow",
+        conversion=None,
+        time=time,
+        account=account,
+        from_date=from_date,
+        to_date=to_date,
+        allow_errors=allow_errors,
+    )
+    if context.current().json_output:
+        _emit_json(file, data)
+        return
+    conversion = str(data["conversion"])
+    _heading(
+        "Cash Flow",
+        data,
+        convention="Row amounts are cash impact (positive for an inflow); "
+        "opening/closing balances use Beancount signs (credits negative)",
+    )
+    precision = _precision(data)
+    sections = data["sections"]
+    activities = ("operating", "investing", "financing")
+    if not any(sections[activity] for activity in activities):
+        typer.echo("No cash flows in this period.")
+    for activity in activities:
+        rows = sections[activity]
+        if not rows:
+            continue
+        typer.echo("")
+        typer.echo(activity.title())
+        output.table(
+            ["ACCOUNT", "AMOUNT"],
+            [[row["account"], _amounts(row["amounts"], conversion, precision)] for row in rows],
+        )
+    totals = data["totals"]
+    typer.echo("")
+    for activity in activities:
+        if sections[activity]:
+            typer.echo(f"  {f'Total {activity}:':<20} {_amounts(totals[activity], conversion, precision)}")
+    typer.echo(f"  {'Net change in cash:':<20} {_amounts(data['net_change'], conversion, precision)}")
+    typer.echo(f"  {'Opening cash:':<20} {_amounts(data['opening'], conversion, precision)}")
+    typer.echo(f"  {'Closing cash:':<20} {_amounts(data['closing'], conversion, precision)}")
+    cash_accounts = [entry["account"] for entry in data["cash_accounts"]]
+    if cash_accounts:
+        typer.echo(f"\nCash accounts: {', '.join(cash_accounts)}")
+    for invalid in data["invalid_role_values"]:
+        output.note(f"{invalid['account']}: unknown cash-flow-role value {invalid['value']!r}; using the default.")
 
 
 def balance(
