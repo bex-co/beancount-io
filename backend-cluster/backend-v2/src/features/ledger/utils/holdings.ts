@@ -1,5 +1,6 @@
 import BigNumber from "bignumber.js";
-import { BadUserInputError } from "@/shared/errors";
+import { matchesAccountPattern } from "./account-matcher";
+import { resolveConversionTarget } from "./report-conversion";
 
 /**
  * Holdings groups composed from one fixed BQL detail query, mirroring
@@ -43,9 +44,6 @@ export type HoldingsResult = {
   as_of: string;
 };
 
-/** A commodity code as interpolated into the detail query's double quotes. */
-const COMMODITY = /^[A-Za-z][A-Za-z0-9._'-]{0,23}$/;
-
 type HoldingsColumn =
   | "account"
   | "currency"
@@ -80,42 +78,14 @@ export function holdingsDetailQuery(conversionTarget: string | null): string {
 /**
  * Resolve the conversion target: an explicit currency, `units` for none,
  * or the ledger's single operating currency when omitted — the CLI's
- * default. Anything else is refused, naming what this read supports.
+ * default. The BQL path cannot honor Fava's cost/value modes, so only
+ * `units` joins currencies here.
  */
 export function resolveHoldingsConversion(
   conversion: string | undefined,
   operatingCurrencies: string[],
 ): string | null {
-  if (conversion === undefined) {
-    return operatingCurrencies.length === 1 &&
-      COMMODITY.test(operatingCurrencies[0]!)
-      ? operatingCurrencies[0]!
-      : null;
-  }
-  if (conversion.toLowerCase() === "units") return null;
-  if (!COMMODITY.test(conversion) || /^(at_cost|at_value)$/i.test(conversion)) {
-    throw new BadUserInputError(
-      `Unsupported conversion "${conversion}": pass a currency code or "units".`,
-    );
-  }
-  return conversion;
-}
-
-/**
- * `bea report --account`'s matcher (Fava `account_predicate`): the pattern
- * names a parent account or a regular expression, matched
- * case-insensitively. An invalid regex is refused as bad input, as a bad
- * Fava filter is elsewhere.
- */
-export function matchesHoldingsAccount(pattern: string, name: string): boolean {
-  if (name === pattern || name.startsWith(`${pattern}:`)) return true;
-  try {
-    return new RegExp(pattern, "i").test(name);
-  } catch {
-    throw new BadUserInputError(
-      `Invalid --account pattern "${pattern}": pass a parent account or a regular expression.`,
-    );
-  }
+  return resolveConversionTarget(conversion, operatingCurrencies, []);
 }
 
 type BqlCell = string | number | boolean | null | Record<string, unknown>;
@@ -160,10 +130,12 @@ export function composeHoldings(params: {
   rows: BqlCell[][];
   groupBy: HoldingsGrouping;
   account: string | undefined;
+  roots: readonly string[];
   conversionTarget: string | null;
   asOf: string;
 }): HoldingsResult {
-  const { columns, rows, groupBy, account, conversionTarget, asOf } = params;
+  const { columns, rows, groupBy, account, roots, conversionTarget, asOf } =
+    params;
   const at = (name: HoldingsColumn): number => columns.indexOf(name);
   // (scope..., commodity, cost currency) -> [units, cost basis, accounts,
   // market value, price]. The CLI's lot table, keyed the same way.
@@ -189,7 +161,7 @@ export function composeHoldings(params: {
     ) {
       continue;
     }
-    if (account !== undefined && !matchesHoldingsAccount(account, name)) {
+    if (account !== undefined && !matchesAccountPattern(account, name, roots)) {
       continue;
     }
     // Costless lots are cash, not holdings — same exclusion as the CLI.

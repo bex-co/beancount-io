@@ -248,6 +248,78 @@ class HoldingsData {
   asOf: string;
 }
 
+@ArgsType()
+class RegisterArgs {
+  @Field(() => String)
+  account: string;
+
+  @Field(() => String, { nullable: true })
+  time?: string;
+
+  // No default: an omitted conversion values in the operating currency
+  // when the ledger declares exactly one, else each row's held
+  // currencies — as on REST and MCP.
+  @Field(() => String, { nullable: true })
+  conversion?: string;
+}
+
+@ObjectType()
+class RegisterCost {
+  @Field(() => String)
+  number: string;
+
+  @Field(() => String)
+  currency: string;
+
+  @Field(() => String)
+  date: string;
+}
+
+@ObjectType()
+class RegisterPosting {
+  @Field(() => String)
+  account: string;
+
+  @Field(() => HoldingsMoney)
+  amount: HoldingsMoney;
+
+  @Field(() => RegisterCost, { nullable: true })
+  cost?: RegisterCost | null;
+}
+
+@ObjectType()
+class RegisterRow {
+  @Field(() => String)
+  date: string;
+
+  @Field(() => String)
+  entry: string;
+
+  @Field(() => String, { nullable: true })
+  payee?: string | null;
+
+  @Field(() => String, { nullable: true })
+  narration?: string | null;
+
+  @Field(() => [RegisterPosting])
+  postings: RegisterPosting[];
+
+  @Field(() => GraphQLJSONObject)
+  change: Record<string, string>;
+
+  @Field(() => GraphQLJSONObject)
+  balance: Record<string, string>;
+}
+
+@ObjectType()
+class RegisterData {
+  @Field(() => String, { nullable: true })
+  account?: string | null;
+
+  @Field(() => [RegisterRow])
+  rows: RegisterRow[];
+}
+
 @Resolver()
 export class LedgerFinanceQueryResolver {
   constructor(private readonly financeService: ILedgerFinanceService) {}
@@ -472,6 +544,30 @@ export class LedgerFinanceQueryResolver {
       missingPrices: data.missing_prices,
       missingPriceSummary: data.missing_price_summary,
       asOf: data.as_of,
+    };
+  }
+
+  @AllowAnonymous()
+  @Query(() => RegisterData, {
+    description: "Get the register of a specific ledger account",
+  })
+  async getLedgerRegister(
+    @Arg("ledgerId", () => String) ledgerId: string,
+    @Args() args: RegisterArgs,
+    @Ctx() ctx: IContext,
+  ): Promise<RegisterData> {
+    const data = await this.financeService.getRegister({
+      ledgerId,
+      identity: ctx.identity,
+      account: args.account,
+      ...filterNullish({
+        time: args.time,
+        conversion: args.conversion,
+      }),
+    });
+    return {
+      account: data.account,
+      rows: data.rows,
     };
   }
 

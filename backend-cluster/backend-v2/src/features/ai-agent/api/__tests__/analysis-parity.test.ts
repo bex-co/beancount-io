@@ -38,6 +38,7 @@ const fakeServices = () => ({
     getOverview: jest.fn().mockResolvedValue(["overview"]),
     getTrialBalance: jest.fn().mockResolvedValue(["trialBalance"]),
     getHoldings: jest.fn().mockResolvedValue(["holdings"]),
+    getRegister: jest.fn().mockResolvedValue(["register"]),
   },
   ledgerJournal: { getContext: jest.fn().mockResolvedValue(["entryContext"]) },
   ledgerAccount: {
@@ -125,8 +126,8 @@ const uriFor = (read: (typeof ANALYSIS_READS)[number]) => {
  * plausible-looking data.
  */
 describe("ledger analysis reads", () => {
-  it("ports fourteen analysis reads", () => {
-    expect(ANALYSIS_READS).toHaveLength(14);
+  it("ports fifteen analysis reads", () => {
+    expect(ANALYSIS_READS).toHaveLength(15);
   });
 
   it.each(ANALYSIS_READS)(

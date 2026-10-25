@@ -17,11 +17,23 @@ import type {
   HoldingsGrouping,
   HoldingsResult,
 } from "@/features/ledger/utils/holdings";
+import {
+  mapRegisterRows,
+  resolveRegisterConversion,
+  selectRegisterRoot,
+} from "@/features/ledger/utils/register";
+import type { RegisterResult } from "@/features/ledger/utils/register";
+import { BadUserInputError } from "@/shared/errors";
 import type {
   OverviewPublic,
   IncomeStatementDataPublic,
   BalanceSheetDataPublic,
   TrialBalanceDataPublic,
+} from "@/foundation/fava";
+import {
+  DirectiveType,
+  type AccountJournalEntryPublic,
+  type FavaApiClient,
 } from "@/foundation/fava";
 
 type BaseParams = { ledgerId: string; identity: Identity | undefined };
@@ -49,12 +61,20 @@ export interface ILedgerFinanceService {
   ): Promise<TrialBalanceDataPublic>;
 
   getHoldings(params: HoldingsParams): Promise<HoldingsResult>;
+
+  getRegister(params: RegisterParams): Promise<RegisterResult>;
 }
 
 export type HoldingsParams = BaseParams & {
   account?: string;
   conversion?: string;
   groupBy?: HoldingsGrouping;
+};
+
+export type RegisterParams = BaseParams & {
+  account: string;
+  time?: string;
+  conversion?: string;
 };
 
 export class LedgerFinanceService
@@ -183,8 +203,137 @@ export class LedgerFinanceService
       )[][],
       groupBy: groupBy ?? "account",
       account,
+      roots: this.rootsOf(options),
       conversionTarget: target,
       asOf: new Date().toISOString().slice(0, 10),
     });
+  }
+
+  private rootsOf(options: {
+    name_assets?: string;
+    name_liabilities?: string;
+    name_equity?: string;
+    name_income?: string;
+    name_expenses?: string;
+  } | null): string[] {
+    if (options === null || options === undefined) return [];
+    return [
+      options.name_assets,
+      options.name_liabilities,
+      options.name_equity,
+      options.name_income,
+      options.name_expenses,
+    ].filter((root): root is string => typeof root === "string");
+  }
+
+  async getRegister(params: RegisterParams): Promise<RegisterResult> {
+    const { ledgerId, identity, account, time, conversion } = params;
+    if (account === undefined || account === "") {
+      throw new BadUserInputError(
+        "Register needs an account. Name the account to list, such as Assets:Checking.",
+      );
+    }
+    const { favaApiClient, ledgerOwner, ledgerName } = await this.getClient(
+      ledgerId,
+      identity,
+    );
+    const [options, postings, balances] = await Promise.all([
+      unwrapFavaResponse(
+        favaApiClient.reports.getLedgerOptions(ledgerOwner, ledgerName),
+        "get ledger options",
+      ),
+      unwrapFavaResponse(
+        favaApiClient.reports.getLedgerPostingsPerAccount(
+          ledgerOwner,
+          ledgerName,
+          filterNullish({ time }),
+        ),
+        "get ledger postings per account",
+      ),
+      this.balanceAccounts(favaApiClient, ledgerOwner, ledgerName, time),
+    ]);
+    const roots = this.rootsOf(options);
+    const root = selectRegisterRoot(
+      account,
+      postings.map((row) => row.account),
+      balances,
+      roots,
+    );
+    if (root === null) return { account: null, rows: [] };
+    const target = resolveRegisterConversion(
+      conversion,
+      options?.operating_currency ?? [],
+    );
+    const items = await this.registerItems(
+      favaApiClient,
+      ledgerOwner,
+      ledgerName,
+      root,
+      time,
+      target,
+    );
+    if (items.length === 0) return { account: null, rows: [] };
+    return { account: root, rows: mapRegisterRows(items, root) };
+  }
+
+  /** Accounts asserting a balance in the window, all pages. */
+  private async balanceAccounts(
+    favaApiClient: Pick<FavaApiClient, "journal">,
+    ledgerOwner: string,
+    ledgerName: string,
+    time: string | undefined,
+  ): Promise<string[]> {
+    const accounts: string[] = [];
+    let offset = 0;
+    for (;;) {
+      const data = await unwrapFavaResponse(
+        favaApiClient.journal.getJournal(ledgerOwner, ledgerName, {
+          ...filterNullish({ time }),
+          directive_types: [DirectiveType.Balance],
+          limit: 1000,
+          offset,
+        }),
+        "get ledger balance accounts",
+      );
+      for (const item of data.items) {
+        if ("account" in item && typeof item.account === "string") {
+          accounts.push(item.account);
+        }
+      }
+      offset += data.items.length;
+      if (data.items.length === 0 || offset >= data.total) break;
+    }
+    return accounts;
+  }
+
+  /** The root's journal items, newest-first, all pages. */
+  private async registerItems(
+    favaApiClient: Pick<FavaApiClient, "journal">,
+    ledgerOwner: string,
+    ledgerName: string,
+    root: string,
+    time: string | undefined,
+    target: string | null,
+  ): Promise<AccountJournalEntryPublic[]> {
+    const items: AccountJournalEntryPublic[] = [];
+    let offset = 0;
+    for (;;) {
+      const data = await unwrapFavaResponse(
+        favaApiClient.journal.getAccountJournal(ledgerOwner, ledgerName, {
+          account: root,
+          ...filterNullish({ time }),
+          with_children: true,
+          ...(target === null ? {} : { conversion: target }),
+          directive_types: [DirectiveType.Transaction, DirectiveType.Balance],
+          limit: 1000,
+          offset,
+        }),
+        "get ledger register",
+      );
+      items.push(...data.items);
+      offset += data.items.length;
+      if (data.items.length === 0 || offset >= data.total) break;
+    }
+    return items;
   }
 }

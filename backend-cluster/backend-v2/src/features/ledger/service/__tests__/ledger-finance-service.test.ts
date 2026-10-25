@@ -13,11 +13,20 @@ jest.mock("@/features/ledger/utils/authorize-ledger", () => ({
 
 const mockReports = {
   getLedgerOptions: jest.fn(),
+  getLedgerPostingsPerAccount: jest.fn(),
 };
 const mockShell = {
   queryShell: jest.fn(),
 };
-const mockFavaApiClient = { reports: mockReports, shell: mockShell };
+const mockJournal = {
+  getJournal: jest.fn(),
+  getAccountJournal: jest.fn(),
+};
+const mockFavaApiClient = {
+  reports: mockReports,
+  shell: mockShell,
+  journal: mockJournal,
+};
 const mockFavaClientFactory = {
   getPublicApiClient: jest.fn().mockResolvedValue(mockFavaApiClient),
 };
@@ -166,5 +175,236 @@ describe("LedgerFinanceService.getHoldings", () => {
     await expect(
       service.getHoldings({ ledgerId: LEDGER_ID, identity: IDENTITY }),
     ).rejects.toThrow("Holdings query returned no table");
+  });
+});
+
+describe("LedgerFinanceService.getRegister", () => {
+  let service: LedgerFinanceService;
+
+  const txnItem = (date: string) => ({
+    entry: {
+      date,
+      entry_hash: `h-${date}`,
+      directive_type: "Transaction",
+      flag: "*",
+      payee: "Store",
+      narration: "Goods",
+      postings: [
+        {
+          account: "Assets:Checking",
+          units: { number: "-10.00", currency: "USD" },
+          cost: null,
+        },
+        {
+          account: "Expenses:Food",
+          units: { number: "10.00", currency: "USD" },
+          cost: null,
+        },
+      ],
+    },
+    change: { USD: "-10.00" },
+    balance: { USD: "90.00" },
+  });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (authorizeLedger as jest.Mock).mockResolvedValue({
+      ledgerRepoId: 1,
+      ownerUserId: USER_ID,
+    });
+    service = new LedgerFinanceService(
+      mockFavaClientFactory as any,
+      {} as any,
+    );
+    mockReports.getLedgerOptions.mockResolvedValue(
+      ok({
+        operating_currency: ["USD"],
+        name_assets: "Assets",
+        name_liabilities: "Liabilities",
+        name_equity: "Equity",
+        name_income: "Income",
+        name_expenses: "Expenses",
+      }),
+    );
+    mockReports.getLedgerPostingsPerAccount.mockResolvedValue(
+      ok([
+        { account: "Assets:Checking", count: 2 },
+        { account: "Expenses:Food", count: 1 },
+      ]),
+    );
+    mockJournal.getJournal.mockResolvedValue(
+      ok({ items: [], total: 0, is_empty: true }),
+    );
+  });
+
+  it("resolves the root and maps rows oldest-first", async () => {
+    mockJournal.getAccountJournal.mockResolvedValue(
+      ok({
+        items: [txnItem("2024-02-01"), txnItem("2024-01-01")],
+        total: 2,
+        account: "Assets:Checking",
+        with_children: true,
+      }),
+    );
+
+    const result = await service.getRegister({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+      account: "Assets:Checking",
+    });
+
+    expect(authorizeLedger).toHaveBeenCalledWith(
+      IDENTITY,
+      LEDGER_ID,
+      AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+      expect.anything(),
+    );
+    expect(mockJournal.getAccountJournal).toHaveBeenCalledWith(
+      "testowner",
+      "testledger",
+      expect.objectContaining({
+        account: "Assets:Checking",
+        with_children: true,
+        conversion: "USD",
+        limit: 1000,
+        offset: 0,
+      }),
+    );
+    expect(result.account).toBe("Assets:Checking");
+    expect(result.rows.map((row) => row.date)).toEqual([
+      "2024-01-01",
+      "2024-02-01",
+    ]);
+    // Only the subtree posting rides along.
+    expect(result.rows[0]!.postings).toEqual([
+      {
+        account: "Assets:Checking",
+        amount: { number: "-10.00", currency: "USD" },
+        cost: null,
+      },
+    ]);
+  });
+
+  it("requires an account", async () => {
+    await expect(
+      service.getRegister({ ledgerId: LEDGER_ID, identity: IDENTITY, account: "" }),
+    ).rejects.toThrow("Register needs an account");
+    expect(mockJournal.getAccountJournal).not.toHaveBeenCalled();
+  });
+
+  it("refuses a pattern spanning several trees", async () => {
+    await expect(
+      service.getRegister({ ledgerId: LEDGER_ID, identity: IDENTITY, account: "e" }),
+    ).rejects.toThrow("Register needs one account; 'e' matches several");
+    expect(mockJournal.getAccountJournal).not.toHaveBeenCalled();
+  });
+
+  it("answers null with no rows when nothing matches", async () => {
+    const result = await service.getRegister({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+      account: "Assets:Nope",
+    });
+
+    expect(result).toEqual({ account: null, rows: [] });
+    expect(mockJournal.getAccountJournal).not.toHaveBeenCalled();
+  });
+
+  it("answers null when the resolved root has no rows", async () => {
+    mockReports.getLedgerPostingsPerAccount.mockResolvedValue(
+      ok([{ account: "Assets:Checking", count: 1 }]),
+    );
+    mockJournal.getAccountJournal.mockResolvedValue(
+      ok({ items: [], total: 0, account: "Assets:Checking", with_children: true }),
+    );
+
+    const result = await service.getRegister({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+      account: "Assets:Checking",
+    });
+
+    expect(result).toEqual({ account: null, rows: [] });
+  });
+
+  it("pages the journal to the total", async () => {
+    mockJournal.getAccountJournal
+      .mockResolvedValueOnce(
+        ok({
+          items: [txnItem("2024-02-01")],
+          total: 2,
+          account: "Assets:Checking",
+          with_children: true,
+        }),
+      )
+      .mockResolvedValueOnce(
+        ok({
+          items: [txnItem("2024-01-01")],
+          total: 2,
+          account: "Assets:Checking",
+          with_children: true,
+        }),
+      );
+
+    const result = await service.getRegister({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+      account: "Assets:Checking",
+    });
+
+    expect(mockJournal.getAccountJournal).toHaveBeenCalledTimes(2);
+    expect(result.rows.map((row) => row.date)).toEqual([
+      "2024-01-01",
+      "2024-02-01",
+    ]);
+  });
+
+  it("forwards time to every source and omits conversion without one target", async () => {
+    mockReports.getLedgerOptions.mockResolvedValue(
+      ok({
+        operating_currency: ["USD", "EUR"],
+        name_assets: "Assets",
+        name_liabilities: "Liabilities",
+        name_equity: "Equity",
+        name_income: "Income",
+        name_expenses: "Expenses",
+      }),
+    );
+    mockJournal.getAccountJournal.mockResolvedValue(
+      ok({
+        items: [txnItem("2024-01-01")],
+        total: 1,
+        account: "Assets:Checking",
+        with_children: true,
+      }),
+    );
+
+    await service.getRegister({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+      account: "Assets:Checking",
+      time: "2024",
+    });
+
+    expect(mockReports.getLedgerPostingsPerAccount).toHaveBeenCalledWith(
+      "testowner",
+      "testledger",
+      { time: "2024" },
+    );
+    expect(mockJournal.getJournal).toHaveBeenCalledWith(
+      "testowner",
+      "testledger",
+      expect.objectContaining({ time: "2024" }),
+    );
+    expect(mockJournal.getAccountJournal).toHaveBeenCalledWith(
+      "testowner",
+      "testledger",
+      expect.objectContaining({ time: "2024" }),
+    );
+    expect(mockJournal.getAccountJournal).toHaveBeenCalledWith(
+      "testowner",
+      "testledger",
+      expect.not.objectContaining({ conversion: expect.anything() }),
+    );
   });
 });

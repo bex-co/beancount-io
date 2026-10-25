@@ -20,7 +20,7 @@ import type { Identity } from "@/server/api/identity";
  * these say what it *did* — a trial balance, an account's report, totals per
  * interval, the transactions behind a payee, the context around one entry.
  *
- * Fourteen reads are listed here for REST/MCP. Remaining family members keep
+ * Fifteen reads are listed here for REST/MCP. Remaining family members keep
  * reasons that survived re-reading (w3/m7/t001): two journals and a plaintext
  * journal are already covered by the paged `/journal` endpoint, two ledger-list
  * reads are client-side filtering over `GET /v1/ledgers`, `journalEntries` is a
@@ -158,6 +158,34 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
         identity,
         ...query,
         groupBy: (query.groupBy ?? "account") as "account" | "commodity",
+      }),
+  },
+  {
+    segment: "register",
+    summary: "Get one account's register",
+    description:
+      "One account's dated entries with a running balance, oldest first — each entry with the subtree postings behind it. `account` names a parent account or a regular expression resolving to one subtree; `conversion` takes a currency or `units` (default: the operating currency when the ledger declares exactly one, else each row's held currencies). A time window carries the opening balance forward.",
+    query: z.object({
+      account: z.string().openapi({
+        description: "The account to list: a parent account or a regular expression",
+        example: "Assets:Bank:Checking",
+      }),
+      time: filterQuery.shape.time,
+      conversion: z.string().optional().openapi({
+        description:
+          "Convert money columns to this currency, or `units` for each row's held currencies (default: the operating currency when the ledger declares exactly one)",
+        example: "USD",
+      }),
+    }),
+    uriPath: "/{account}",
+    fetch: (s, { ledgerId, identity, query }) =>
+      s.ledgerFinance.getRegister({
+        ledgerId,
+        identity,
+        ...query,
+        // Required by the schema above; a bypassed `undefined` becomes the
+        // service's "Register needs an account" refusal, not a crash.
+        account: query.account ?? "",
       }),
   },
   {

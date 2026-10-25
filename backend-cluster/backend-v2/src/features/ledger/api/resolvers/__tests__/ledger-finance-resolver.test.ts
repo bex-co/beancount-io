@@ -19,6 +19,7 @@ describe("LedgerFinanceQueryResolver", () => {
     getBalanceSheet: jest.Mock;
     getTrialBalance: jest.Mock;
     getHoldings: jest.Mock;
+    getRegister: jest.Mock;
   };
 
   const ledgerId = "user/test-ledger";
@@ -42,6 +43,7 @@ describe("LedgerFinanceQueryResolver", () => {
       getBalanceSheet: jest.fn(),
       getTrialBalance: jest.fn(),
       getHoldings: jest.fn(),
+      getRegister: jest.fn(),
     };
 
     mockContext = {
@@ -302,6 +304,67 @@ describe("LedgerFinanceQueryResolver", () => {
 
       await expect(
         resolver.getLedgerHoldings(ledgerId, {}, mockContext),
+      ).rejects.toThrow(InternalServerError);
+    });
+  });
+
+  describe("getLedgerRegister", () => {
+    it("should delegate to financeService and map the result", async () => {
+      mockFinanceService.getRegister.mockResolvedValue({
+        account: "Assets:Checking",
+        rows: [
+          {
+            date: "2024-01-05",
+            entry: "transaction",
+            payee: "Employer",
+            narration: "Salary",
+            postings: [
+              {
+                account: "Assets:Checking",
+                amount: { number: "3000.00", currency: "USD" },
+                cost: null,
+              },
+            ],
+            change: { USD: "3000.00" },
+            balance: { USD: "3000.00" },
+          },
+        ],
+      });
+
+      const result = await resolver.getLedgerRegister(
+        ledgerId,
+        { account: "Assets:Checking", conversion: "USD" },
+        mockContext,
+      );
+
+      expect(mockFinanceService.getRegister).toHaveBeenCalledWith(
+        expect.objectContaining({
+          ledgerId,
+          identity: IDENTITY,
+          account: "Assets:Checking",
+          conversion: "USD",
+        }),
+      );
+      expect(result.account).toBe("Assets:Checking");
+      expect(result.rows).toHaveLength(1);
+      expect(result.rows[0]).toMatchObject({
+        date: "2024-01-05",
+        entry: "transaction",
+        payee: "Employer",
+      });
+    });
+
+    it("should propagate errors thrown by the service", async () => {
+      mockFinanceService.getRegister.mockRejectedValue(
+        new InternalServerError("get ledger register"),
+      );
+
+      await expect(
+        resolver.getLedgerRegister(
+          ledgerId,
+          { account: "Assets:Checking" },
+          mockContext,
+        ),
       ).rejects.toThrow(InternalServerError);
     });
   });

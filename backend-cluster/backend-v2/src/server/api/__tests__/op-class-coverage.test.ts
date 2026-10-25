@@ -94,9 +94,10 @@ describe("op-class coverage", () => {
     // that REST `/options` and the `ledgerOptions` resource bind to; 81 since
     // w1/m39 added `previewPlanChange` (PRFAQ005), browser-session billing;
     // 82 since w3/m53 added `previewLedgerSetup` (ADR021 setup preview);
-    // 83 since w22/m6:t001 added `getLedgerHoldings`, the holdings report.
+    // 83 since w22/m6:t001 added `getLedgerHoldings`, the holdings report;
+    // 84 since w22/m6:t002 added `getLedgerRegister`, the register report.
     expect(graphqlOps.filter((op) => op.startsWith("GQL Query.")).length).toBe(
-      83,
+      84,
     );
     // 63 since w2/m28:t005 added `appendLedgerText`, the Beancount-text
     // dialect of `bulkEntries`, on all three surfaces; 64 since w2/m32 added
@@ -255,8 +256,8 @@ describe("op-class coverage", () => {
     // selection (ADR 0008 D2), which is the entire reason 50 in-scope reads can
     // reach MCP at all — so they must not be held to the tool budget, and a
     // single number covering both would quietly do exactly that.
-    // Ten vocabulary reads (w3/m6), fourteen analysis reads (w3/m7 + postings
-    // counts + w22/m6 holdings), seven bank reads (w3/m8), and the file template m5 proved the
+    // Ten vocabulary reads (w3/m6), fifteen analysis reads (w3/m7 + postings
+    // counts + w22/m6 holdings and register), seven bank reads (w3/m8), and the file template m5 proved the
     // shape with. This number is expected to climb as
     // the read surface ports; the tool count above is not.
     // w2/m27 drops the three legacy compat resources from MCP (compat-only
@@ -264,9 +265,10 @@ describe("op-class coverage", () => {
     // Account-wide OAuth feed access adds `getFeed`. w1/m36 withdraws
     // `publicKeys`, `publicKey`, `allTierQuotas`, and `aiCfoUsage` by
     // directory policy. w6/m3 adds `ledgerOptions`, the effective core
-    // options GraphQL already served. w22/m6:t001 adds `ledgerHoldings`.
+    // options GraphQL already served. w22/m6:t001 adds `ledgerHoldings`,
+    // w22/m6:t002 adds `ledgerRegister`.
     const resources = mcpOps.filter((op) => op.startsWith("MCP resource:"));
-    expect(resources).toHaveLength(64);
+    expect(resources).toHaveLength(65);
   });
 });
 

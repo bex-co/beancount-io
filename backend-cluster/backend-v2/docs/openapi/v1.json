@@ -14456,6 +14456,184 @@
         }
       }
     },
+    "/api-gateway/v1/ledgers/{owner}/{name}/register": {
+      "get": {
+        "summary": "Get one account's register",
+        "description": "One account's dated entries with a running balance, oldest first — each entry with the subtree postings behind it. `account` names a parent account or a regular expression resolving to one subtree; `conversion` takes a currency or `units` (default: the operating currency when the ledger declares exactly one, else each row's held currencies). A time window carries the opening balance forward.",
+        "tags": [
+          "Ledger v1"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "apiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
+              "description": "Ledger owner's username",
+              "example": "alice"
+            },
+            "required": true,
+            "description": "Ledger owner's username",
+            "name": "owner",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
+              "description": "Ledger (repository) name",
+              "example": "main-ledger"
+            },
+            "required": true,
+            "description": "Ledger (repository) name",
+            "name": "name",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "The account to list: a parent account or a regular expression",
+              "example": "Assets:Bank:Checking"
+            },
+            "required": true,
+            "description": "The account to list: a parent account or a regular expression",
+            "name": "account",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Fava time expression",
+              "example": "2026"
+            },
+            "required": false,
+            "description": "Fava time expression",
+            "name": "time",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Convert money columns to this currency, or `units` for each row's held currencies (default: the operating currency when the ledger declares exactly one)",
+              "example": "USD"
+            },
+            "required": false,
+            "description": "Convert money columns to this currency, or `units` for each row's held currencies (default: the operating currency when the ledger declares exactly one)",
+            "name": "conversion",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get one account's register",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed validation against the documented schema",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credential, or a credential that no longer resolves",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "The action needs a paid plan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The credential lacks the permission this business action requires",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such ledger, or no access to it",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The change conflicts with the resource's current state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The server failed; the request may be retried",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "A dependency is unavailable; retry later",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api-gateway/v1/ledgers/{owner}/{name}/interval-totals": {
       "get": {
         "summary": "Get totals per interval",

@@ -2,7 +2,6 @@ import { BadUserInputError } from "@/shared/errors";
 import {
   composeHoldings,
   holdingsDetailQuery,
-  matchesHoldingsAccount,
   resolveHoldingsConversion,
 } from "../holdings";
 
@@ -38,6 +37,7 @@ const base = {
   columns: COLUMNS,
   groupBy: "account" as const,
   account: undefined,
+  roots: ["Assets", "Liabilities", "Equity", "Income", "Expenses"],
   conversionTarget: null,
   asOf: "2026-10-25",
 };
@@ -81,38 +81,6 @@ describe("resolveHoldingsConversion", () => {
       BadUserInputError,
     );
     expect(() => resolveHoldingsConversion("at_cost", ["USD"])).toThrow(
-      BadUserInputError,
-    );
-  });
-});
-
-describe("matchesHoldingsAccount", () => {
-  it("matches a parent account and its children only", () => {
-    expect(matchesHoldingsAccount("Assets", "Assets:Broker:AAPL")).toBe(true);
-    expect(matchesHoldingsAccount("Assets:Broker", "Assets:Broker:AAPL")).toBe(
-      true,
-    );
-    expect(matchesHoldingsAccount("Assets:Broker", "Assets:Bank:Checking")).toBe(
-      false,
-    );
-    // Not a parent, but the pattern is also tried as a regex — and matches.
-    expect(matchesHoldingsAccount("Assets:Bro", "Assets:Broker:AAPL")).toBe(
-      true,
-    );
-    expect(matchesHoldingsAccount("Assets:Bro$", "Assets:Broker:AAPL")).toBe(
-      false,
-    );
-  });
-
-  it("matches a case-insensitive regex", () => {
-    expect(matchesHoldingsAccount("broker", "Assets:Broker:AAPL")).toBe(true);
-    expect(matchesHoldingsAccount("Expenses:(Dining|Groceries)", "Expenses:Dining")).toBe(
-      true,
-    );
-  });
-
-  it("refuses an invalid regex as bad input", () => {
-    expect(() => matchesHoldingsAccount("([", "Assets:Broker")).toThrow(
       BadUserInputError,
     );
   });
@@ -202,6 +170,26 @@ describe("composeHoldings", () => {
       ...base,
       account: "Assets:Broker",
       rows: [aapl, cash, sold],
+    });
+    expect(result.groups.map((group) => group.account)).toEqual([
+      "Assets:Broker:AAPL",
+    ]);
+  });
+
+  it("anchors an account pattern away from prefix siblings", () => {
+    const sibling = row(
+      "Assets:Broker2:AAPL",
+      "AAPL",
+      "USD",
+      map("AAPL", "7"),
+      map("USD", "700.00"),
+      map("USD", "700.00"),
+      "",
+    );
+    const result = composeHoldings({
+      ...base,
+      account: "Assets:Broker",
+      rows: [aapl, sibling],
     });
     expect(result.groups.map((group) => group.account)).toEqual([
       "Assets:Broker:AAPL",
