@@ -1,6 +1,6 @@
 # w21 · m3 — BQL cookbook: tested query recipes for humans and agents
 
-**Worker:** worker1 **Goal:** one linkable page of BQL recipes whose every query CI executes against a fixture ledger **Status:** todo (t001-t006 done)
+**Worker:** worker1 **Goal:** one linkable page of BQL recipes whose every query CI executes against a fixture ledger **Status:** todo (t001-t007 done)
 
 ## Tasks (in order)
 
@@ -12,7 +12,7 @@
 | t004 | Wire the runner into `CI (skills)` and link the cookbook — **DONE**  | 25m | t003             |
 | t005 | Adoption surface — **DONE**                                           | 20m | t004             |
 | t006 | Simplify — **DONE**                                                   | 20m | t005             |
-| t007 | Test coverage                                                         | 30m | t005             |
+| t007 | Test coverage — **DONE**                                               | 30m | t005             |
 | t008 | Closeout                                                              | 15m | t006, t007       |
 
 ## Definition of done

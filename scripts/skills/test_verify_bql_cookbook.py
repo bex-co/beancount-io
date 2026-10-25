@@ -61,6 +61,88 @@ class ParseTests(unittest.TestCase):
             verify.parse_recipes(page)
 
 
+class MalformedDeclarationTests(unittest.TestCase):
+    """Markers that do not match the strict `cookbook: name | fixture: path` shape
+    are not recipes; a page of only-malformed markers has no recipes at all."""
+
+    def setUp(self):
+        scratch = SCRIPTS / "tmp"
+        scratch.mkdir(exist_ok=True)
+        temporary = tempfile.TemporaryDirectory(dir=scratch)
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name).resolve()
+
+    def assert_no_recipes(self, page: str):
+        path = self.root / "cookbook.md"
+        path.write_text(page, encoding="utf-8")
+        self.assertEqual(verify.parse_recipes(page), [])
+        with self.assertRaisesRegex(ValueError, "no cookbook recipes found"):
+            verify.verify(path, ["bea"], timeout=90)
+
+    def test_marker_without_fixture_is_ignored(self):
+        self.assert_no_recipes(
+            cookbook_page(f"<!-- cookbook: lonely -->\n```sql\nSELECT 1\n```")
+        )
+
+    def test_marker_with_empty_name_is_ignored(self):
+        self.assert_no_recipes(
+            cookbook_page(f"<!-- cookbook:  | fixture: {EVAL1} -->\n```sql\nSELECT 1\n```")
+        )
+
+    def test_non_sql_fence_is_ignored(self):
+        self.assert_no_recipes(
+            cookbook_page(f"<!-- cookbook: bql-fence | fixture: {EVAL1} -->\n```bql\nSELECT 1\n```")
+        )
+
+    def test_marker_without_fence_is_ignored(self):
+        self.assert_no_recipes(
+            cookbook_page(f"<!-- cookbook: nofence | fixture: {EVAL1} -->\nSELECT 1\n")
+        )
+
+
+class TimeoutTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        if not BEA or not shutil.which(BEA):
+            raise RuntimeError("bea is required: set BEA to an installed executable or run uv sync in cli/.")
+
+    def test_sub_second_timeout_fails_with_timeout_detail(self):
+        result = verify.run_recipe(
+            [BEA],
+            verify.Recipe("slow", EVAL1, "SELECT account WHERE account ~ '^Expenses:'"),
+            timeout=0.001,
+        )
+        self.assertFalse(result.ok)
+        self.assertTrue(
+            result.detail.startswith("timed out after "),
+            f"timeout must be reported, got: {result.detail}",
+        )
+
+
+class StatementCountTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        if not BEA or not shutil.which(BEA):
+            raise RuntimeError("bea is required: set BEA to an installed executable or run uv sync in cli/.")
+
+    def test_two_statements_fail(self):
+        result = verify.run_recipe(
+            [BEA],
+            verify.Recipe("two", EVAL1, "SELECT account WHERE account ~ '^Expenses:'; SELECT 1"),
+            timeout=90,
+        )
+        self.assertFalse(result.ok)
+        self.assertIn("One BQL statement per invocation", result.detail)
+
+    def test_trailing_semicolon_passes(self):
+        result = verify.run_recipe(
+            [BEA],
+            verify.Recipe("semi", EVAL1, "SELECT account WHERE account ~ '^Expenses:';"),
+            timeout=90,
+        )
+        self.assertTrue(result.ok, result.detail)
+
+
 class RunnerTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
