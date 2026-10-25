@@ -5,6 +5,7 @@
 ## Milestones
 
 - [x] **m1** — [Entry edits and deletes refuse changes that would break the ledger](./done/m1/README.md) (7 tasks) ← from mobile QA 2026-10-20
+- [ ] **m2** — [Readable-width caps for the remaining bespoke screens](./m2/README.md) (7 tasks) ← promoted from w21/1007, follow-up to w21/1005
 
 ## Dropped
 
@@ -48,4 +49,3 @@
 - [951](./blocked/951.md) — Expense accounts are valued at market on Accounts and account detail, but at cost everywhere else — **blocked:** owner confirms flows-at-cost covers Income/Expenses balances; needs a native priced-lot check
 - [977](./blocked/977.md) — LedgerPrices pulls every price date for every pair, and Apollo writes and reads them all on each mount — **blocked:** owner picks the API shape for bounding price dates across REST/GraphQL/MCP
 - [994](./blocked/994.md) — Budget: mobile prorates the current period to today, the dashboard does not, so verdicts differ (product call) — **blocked:** owner picks full-period or prorated target for the period in progress, then both apps follow
-- [1007](./1007.md) — Readable-width caps for the screens with bespoke scrollers (follow-up to w21/1005)
