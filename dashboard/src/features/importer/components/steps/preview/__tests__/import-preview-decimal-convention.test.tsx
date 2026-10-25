@@ -58,7 +58,7 @@ describe("ImportPreviewTable amount column convention", () => {
     renderPreview(EU_QUOTED);
 
     expect(
-      screen.getByText(/^3\s+importer\.preview\.validCount$/),
+      screen.getByText("importer.preview.validCount"),
     ).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByText("-4.50")).toBeInTheDocument();
@@ -106,7 +106,7 @@ describe("ImportPreviewTable amount column convention", () => {
     const onResultChange = renderPreview(MIXED);
 
     expect(
-      screen.getByText(/^0\s+importer\.preview\.validCount$/),
+      screen.getByText("importer.preview.validCount"),
     ).toBeInTheDocument();
     // Each refused row names it under its cell and in its diagnostic row.
     await waitFor(() => {

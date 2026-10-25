@@ -202,12 +202,42 @@ const caImporter: Record<string, TranslationEntry> = {
     description: "Description for preview table",
   },
   "importer.preview.validCount": {
-    message: "Vàlides",
-    description: "Badge label for valid transaction count",
+    message: "{count} Vàlides",
+    description: "Badge label for valid transaction count ({count} rows)",
+  },
+  "importer.preview.validCount_one": {
+    message: "{count} Vàlida",
+    description:
+      "Badge label for valid transaction count, plural form for count category one",
+  },
+  "importer.preview.validCount_many": {
+    message: "{count} Vàlides",
+    description:
+      "Badge label for valid transaction count, plural form for count category many",
+  },
+  "importer.preview.validCount_other": {
+    message: "{count} Vàlides",
+    description:
+      "Badge label for valid transaction count, plural form for count category other",
   },
   "importer.preview.errorsCount": {
-    message: "Errors",
-    description: "Badge label for error transaction count",
+    message: "{count} Errors",
+    description: "Badge label for error transaction count ({count} rows)",
+  },
+  "importer.preview.errorsCount_one": {
+    message: "{count} Error",
+    description:
+      "Badge label for error transaction count, plural form for count category one",
+  },
+  "importer.preview.errorsCount_many": {
+    message: "{count} Errors",
+    description:
+      "Badge label for error transaction count, plural form for count category many",
+  },
+  "importer.preview.errorsCount_other": {
+    message: "{count} Errors",
+    description:
+      "Badge label for error transaction count, plural form for count category other",
   },
   "importer.preview.row": {
     message: "Fila",

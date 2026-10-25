@@ -115,12 +115,12 @@ export function ImportPreviewTable({
           <div className="flex gap-2">
             <Badge variant="outline" className="flex items-center gap-1">
               <CheckCircle className="w-3 h-3 text-primary" />
-              {validCount} {t("importer.preview.validCount")}
+              {t("importer.preview.validCount", { count: validCount })}
             </Badge>
             {errorCount > 0 && (
               <Badge variant="destructive" className="flex items-center gap-1">
                 <AlertCircle className="w-3 h-3" />
-                {errorCount} {t("importer.preview.errorsCount")}
+                {t("importer.preview.errorsCount", { count: errorCount })}
               </Badge>
             )}
           </div>

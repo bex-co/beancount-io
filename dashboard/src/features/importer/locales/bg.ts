@@ -201,12 +201,32 @@ const bgImporter: Record<string, TranslationEntry> = {
     description: "Description for preview table",
   },
   "importer.preview.validCount": {
-    message: "Валидни",
-    description: "Badge label for valid transaction count",
+    message: "{count} Валидни",
+    description: "Badge label for valid transaction count ({count} rows)",
+  },
+  "importer.preview.validCount_one": {
+    message: "{count} Валидна",
+    description:
+      "Badge label for valid transaction count, plural form for count category one",
+  },
+  "importer.preview.validCount_other": {
+    message: "{count} Валидни",
+    description:
+      "Badge label for valid transaction count, plural form for count category other",
   },
   "importer.preview.errorsCount": {
-    message: "Грешки",
-    description: "Badge label for error transaction count",
+    message: "{count} Грешки",
+    description: "Badge label for error transaction count ({count} rows)",
+  },
+  "importer.preview.errorsCount_one": {
+    message: "{count} Грешка",
+    description:
+      "Badge label for error transaction count, plural form for count category one",
+  },
+  "importer.preview.errorsCount_other": {
+    message: "{count} Грешки",
+    description:
+      "Badge label for error transaction count, plural form for count category other",
   },
   "importer.preview.row": {
     message: "Ред",

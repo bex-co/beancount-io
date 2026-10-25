@@ -200,12 +200,32 @@ const nlImporter: Record<string, TranslationEntry> = {
     description: "Description for preview table",
   },
   "importer.preview.validCount": {
-    message: "Geldig",
-    description: "Badge label for valid transaction count",
+    message: "{count} Geldig",
+    description: "Badge label for valid transaction count ({count} rows)",
+  },
+  "importer.preview.validCount_one": {
+    message: "{count} Geldig",
+    description:
+      "Badge label for valid transaction count, plural form for count category one",
+  },
+  "importer.preview.validCount_other": {
+    message: "{count} Geldig",
+    description:
+      "Badge label for valid transaction count, plural form for count category other",
   },
   "importer.preview.errorsCount": {
-    message: "Fouten",
-    description: "Badge label for error transaction count",
+    message: "{count} Fouten",
+    description: "Badge label for error transaction count ({count} rows)",
+  },
+  "importer.preview.errorsCount_one": {
+    message: "{count} Fout",
+    description:
+      "Badge label for error transaction count, plural form for count category one",
+  },
+  "importer.preview.errorsCount_other": {
+    message: "{count} Fouten",
+    description:
+      "Badge label for error transaction count, plural form for count category other",
   },
   "importer.preview.row": {
     message: "Rij",

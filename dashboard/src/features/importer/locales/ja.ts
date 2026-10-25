@@ -197,12 +197,22 @@ const jaImporter: Record<string, TranslationEntry> = {
     description: "Description for preview table",
   },
   "importer.preview.validCount": {
-    message: "有効",
-    description: "Badge label for valid transaction count",
+    message: "{count} 有効",
+    description: "Badge label for valid transaction count ({count} rows)",
+  },
+  "importer.preview.validCount_other": {
+    message: "{count} 有効",
+    description:
+      "Badge label for valid transaction count, plural form for count category other",
   },
   "importer.preview.errorsCount": {
-    message: "エラー",
-    description: "Badge label for error transaction count",
+    message: "{count} エラー",
+    description: "Badge label for error transaction count ({count} rows)",
+  },
+  "importer.preview.errorsCount_other": {
+    message: "{count} エラー",
+    description:
+      "Badge label for error transaction count, plural form for count category other",
   },
   "importer.preview.row": {
     message: "行",

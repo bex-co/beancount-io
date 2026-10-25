@@ -202,12 +202,32 @@ const enImporter: Record<string, TranslationEntry> = {
     description: "Description for preview table",
   },
   "importer.preview.validCount": {
-    message: "Valid",
-    description: "Badge label for valid transaction count",
+    message: "{count} Valid",
+    description: "Badge label for valid transaction count ({count} rows)",
+  },
+  "importer.preview.validCount_one": {
+    message: "{count} Valid",
+    description:
+      "Badge label for valid transaction count, plural form for count category one",
+  },
+  "importer.preview.validCount_other": {
+    message: "{count} Valid",
+    description:
+      "Badge label for valid transaction count, plural form for count category other",
   },
   "importer.preview.errorsCount": {
-    message: "Errors",
-    description: "Badge label for error transaction count",
+    message: "{count} Errors",
+    description: "Badge label for error transaction count ({count} rows)",
+  },
+  "importer.preview.errorsCount_one": {
+    message: "{count} Error",
+    description:
+      "Badge label for error transaction count, plural form for count category one",
+  },
+  "importer.preview.errorsCount_other": {
+    message: "{count} Errors",
+    description:
+      "Badge label for error transaction count, plural form for count category other",
   },
   "importer.preview.row": {
     message: "Row",

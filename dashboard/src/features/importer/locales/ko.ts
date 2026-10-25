@@ -195,12 +195,22 @@ const koImporter: Record<string, TranslationEntry> = {
     description: "Description for preview table",
   },
   "importer.preview.validCount": {
-    message: "유효",
-    description: "Badge label for valid transaction count",
+    message: "{count} 유효",
+    description: "Badge label for valid transaction count ({count} rows)",
+  },
+  "importer.preview.validCount_other": {
+    message: "{count} 유효",
+    description:
+      "Badge label for valid transaction count, plural form for count category other",
   },
   "importer.preview.errorsCount": {
-    message: "오류",
-    description: "Badge label for error transaction count",
+    message: "{count} 오류",
+    description: "Badge label for error transaction count ({count} rows)",
+  },
+  "importer.preview.errorsCount_other": {
+    message: "{count} 오류",
+    description:
+      "Badge label for error transaction count, plural form for count category other",
   },
   "importer.preview.row": {
     message: "행",

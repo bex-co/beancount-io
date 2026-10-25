@@ -198,12 +198,52 @@ const ukImporter: Record<string, TranslationEntry> = {
     description: "Description for preview table",
   },
   "importer.preview.validCount": {
-    message: "Дійсні",
-    description: "Badge label for valid transaction count",
+    message: "{count} Дійсні",
+    description: "Badge label for valid transaction count ({count} rows)",
+  },
+  "importer.preview.validCount_one": {
+    message: "{count} Дійсна",
+    description:
+      "Badge label for valid transaction count, plural form for count category one",
+  },
+  "importer.preview.validCount_few": {
+    message: "{count} Дійсні",
+    description:
+      "Badge label for valid transaction count, plural form for count category few",
+  },
+  "importer.preview.validCount_many": {
+    message: "{count} Дійсних",
+    description:
+      "Badge label for valid transaction count, plural form for count category many",
+  },
+  "importer.preview.validCount_other": {
+    message: "{count} Дійсні",
+    description:
+      "Badge label for valid transaction count, plural form for count category other",
   },
   "importer.preview.errorsCount": {
-    message: "Помилки",
-    description: "Badge label for error transaction count",
+    message: "{count} помилки",
+    description: "Badge label for error transaction count ({count} rows)",
+  },
+  "importer.preview.errorsCount_one": {
+    message: "{count} помилка",
+    description:
+      "Badge label for error transaction count, plural form for count category one",
+  },
+  "importer.preview.errorsCount_few": {
+    message: "{count} помилки",
+    description:
+      "Badge label for error transaction count, plural form for count category few",
+  },
+  "importer.preview.errorsCount_many": {
+    message: "{count} помилок",
+    description:
+      "Badge label for error transaction count, plural form for count category many",
+  },
+  "importer.preview.errorsCount_other": {
+    message: "{count} помилки",
+    description:
+      "Badge label for error transaction count, plural form for count category other",
   },
   "importer.preview.row": {
     message: "Рядок",

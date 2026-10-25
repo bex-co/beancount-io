@@ -84,7 +84,7 @@ describe("Smart Import keeps a wrong-width record refused after edits", () => {
       upload("shape.csv", FIXTURE);
 
       await waitFor(() =>
-        expect(validCount()).toBe("1 importer.preview.validCount"),
+        expect(validCount()).toBe("importer.preview.validCount(1)"),
       );
       expect(screen.getByText(STRUCTURAL)).toBeInTheDocument();
       expect(cell("amount", 2)).toHaveTextContent("-12");
@@ -98,7 +98,7 @@ describe("Smart Import keeps a wrong-width record refused after edits", () => {
       await waitFor(() =>
         expect(cell(field, 2)).toHaveTextContent("qa-972-edited"),
       );
-      expect(validCount()).toBe("1 importer.preview.validCount");
+      expect(validCount()).toBe("importer.preview.validCount(1)");
       expect(screen.getByText(STRUCTURAL)).toBeInTheDocument();
       expect(parseLLMFile).not.toHaveBeenCalled();
     },
@@ -117,7 +117,7 @@ describe("Smart Import keeps a wrong-width record refused after edits", () => {
       ].join("\n"),
     );
     await waitFor(() =>
-      expect(validCount()).toBe("1 importer.preview.validCount"),
+      expect(validCount()).toBe("importer.preview.validCount(1)"),
     );
 
     await user.click(cell("payee", 2));
@@ -125,12 +125,12 @@ describe("Smart Import keeps a wrong-width record refused after edits", () => {
     await waitFor(() =>
       expect(cell("payee", 2)).toHaveTextContent("qa-972-payee"),
     );
-    expect(validCount()).toBe("1 importer.preview.validCount");
+    expect(validCount()).toBe("importer.preview.validCount(1)");
 
     await user.click(cell("date", 2));
     await user.keyboard("{Control>}a{/Control}2026-02-28{Enter}");
     await waitFor(() =>
-      expect(validCount()).toBe("2 importer.preview.validCount"),
+      expect(validCount()).toBe("importer.preview.validCount(2)"),
     );
   });
 });

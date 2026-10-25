@@ -199,12 +199,52 @@ const ruImporter: Record<string, TranslationEntry> = {
     description: "Description for preview table",
   },
   "importer.preview.validCount": {
-    message: "Действительные",
-    description: "Badge label for valid transaction count",
+    message: "{count} Действительные",
+    description: "Badge label for valid transaction count ({count} rows)",
+  },
+  "importer.preview.validCount_one": {
+    message: "{count} Действительная",
+    description:
+      "Badge label for valid transaction count, plural form for count category one",
+  },
+  "importer.preview.validCount_few": {
+    message: "{count} Действительные",
+    description:
+      "Badge label for valid transaction count, plural form for count category few",
+  },
+  "importer.preview.validCount_many": {
+    message: "{count} Действительных",
+    description:
+      "Badge label for valid transaction count, plural form for count category many",
+  },
+  "importer.preview.validCount_other": {
+    message: "{count} Действительные",
+    description:
+      "Badge label for valid transaction count, plural form for count category other",
   },
   "importer.preview.errorsCount": {
-    message: "Ошибки",
-    description: "Badge label for error transaction count",
+    message: "{count} ошибки",
+    description: "Badge label for error transaction count ({count} rows)",
+  },
+  "importer.preview.errorsCount_one": {
+    message: "{count} ошибка",
+    description:
+      "Badge label for error transaction count, plural form for count category one",
+  },
+  "importer.preview.errorsCount_few": {
+    message: "{count} ошибки",
+    description:
+      "Badge label for error transaction count, plural form for count category few",
+  },
+  "importer.preview.errorsCount_many": {
+    message: "{count} ошибок",
+    description:
+      "Badge label for error transaction count, plural form for count category many",
+  },
+  "importer.preview.errorsCount_other": {
+    message: "{count} ошибки",
+    description:
+      "Badge label for error transaction count, plural form for count category other",
   },
   "importer.preview.row": {
     message: "Строка",
