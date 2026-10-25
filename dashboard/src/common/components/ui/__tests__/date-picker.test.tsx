@@ -62,6 +62,39 @@ describe("DatePicker pending lock (w4/1069)", () => {
   });
 });
 
+describe("DatePicker calendar clear (w4/1070)", () => {
+  it("stays visibly empty after deselecting the selected day, then reselects it", async () => {
+    const user = userEvent.setup();
+    // The form echoes its default day back when the field becomes
+    // undefined (react-hook-form's Controller in Open Account, w4/1070);
+    // the cleared draft must stay empty against that echo.
+    function EchoingDatePicker() {
+      const [value, setValue] = useState<string | undefined>("2026-10-01");
+      return (
+        <DatePicker
+          id="date"
+          value={value}
+          onChange={(next) => setValue(next ?? "2026-10-01")}
+        />
+      );
+    }
+    render(<EchoingDatePicker />);
+    const input = screen.getByRole("textbox");
+    expect(input).toHaveValue("10/01/2026");
+
+    const day = () =>
+      document.querySelector<HTMLElement>('[data-day="10/1/2026"]')!;
+    await user.click(screen.getByRole("button", { name: "Select date" }));
+    await user.click(day());
+    expect(input).toHaveValue("");
+
+    // No phantom selection remains: choosing the same day selects it again.
+    await user.click(screen.getByRole("button", { name: "Select date" }));
+    await user.click(day());
+    expect(input).toHaveValue("10/01/2026");
+  });
+});
+
 describe("DatePicker typing contract", () => {
   it("publishes the canonical day for Persian digits and keeps the typed text (w4/325)", () => {
     const onValue = vi.fn();

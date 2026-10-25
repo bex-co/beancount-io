@@ -158,7 +158,10 @@ export function DatePicker({
 
   const commitDate = (date: string | undefined) => {
     setIsEditing(false);
-    setHeldDraft(false);
+    // A calendar deselection clears the date: give it the typed-clear
+    // treatment, holding the empty draft against the form's default echo
+    // instead of letting that echo repaint a valid-looking day (w4/1070).
+    setHeldDraft(date === undefined);
     echoRef.current = null;
     onChange(date);
     setInputValue(formatIsoDate(date, displayPattern));
@@ -177,7 +180,10 @@ export function DatePicker({
     setOpen(false);
   };
 
-  const selected = value ? isoDateToCalendar(value) : undefined;
+  // While an empty/invalid draft is held, the echoed default is not a
+  // selection; showing it selected would make the next click deselect
+  // again instead of choosing that day (w4/1070).
+  const selected = heldDraft || !value ? undefined : isoDateToCalendar(value);
   const { startMonth, endMonth } = rollingCalendarBounds(
     month ?? selected ?? calendarToday(),
   );
