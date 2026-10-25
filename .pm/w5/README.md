@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1026 — Plan updates from complete multiline headers](./1026.md) — minor CLI gap: tags land inside payee/narration text and narration replacements cannot apply; one-line, flag-only and existing-tag controls pass, checked 2026-10-25.
+
 - [1025 — Preserve multiline strings during account updates](./1025.md) — minor CLI gap: retargeting changes literal memo, narration and posting metadata along with the real posting; plain/prose/flag-only/other-entry controls pass, checked 2026-10-25.
 
 - [965 — Keep query ordering consistent for nullable cost fields](./965.md) — reopened minor CLI gap: dateless Cost comparisons still cycle and source order changes LIMIT 1; original mixed-type and numeric controls pass, rechecked 2026-10-25.
