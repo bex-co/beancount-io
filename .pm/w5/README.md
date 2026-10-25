@@ -52,7 +52,7 @@
 
 - [1031 — Preserve bank identity in OFX routing](./1031.md) — major CLI gap: account memory and the multi-account guard omit bank IDs, routing distinct banks’ payments to one ledger account; native-valid, repeated 2026-10-25.
 
-- [1030 — Resolve decimal IDs copied from transaction listings](./1030.md) — minor CLI lookup gap: small numeric ref/import-id values printed in fixed point require a hidden exponent spelling in Update; integer/date/string controls pass, checked 2026-10-25.
+- [1030 — Resolve canonical metadata IDs in Update](./1030.md) — minor CLI lookup gaps: fixed-point small decimals and decomposed Unicode refs fail while native/composed alternatives resolve; original numeric and single/batch Unicode controls checked 2026-10-25.
 
 - [1029 — Keep every written include in batch-update diffs](./1029.md) — minor CLI output gap: all split-file edits persist, but apply returns only the last file’s diff; preview and one-file controls pass, checked 2026-10-25.
 
