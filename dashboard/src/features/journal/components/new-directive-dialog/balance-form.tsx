@@ -170,6 +170,7 @@ export function BalanceForm({
                   <FormLabel className="sr-only">{t("journal.date")}</FormLabel>
                   <FormControl>
                     <DatePicker
+                      disabled={pending}
                       value={field.value}
                       onChange={(newDate) => field.onChange(newDate)}
                       required

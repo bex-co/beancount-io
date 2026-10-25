@@ -107,6 +107,7 @@ export function OpenAccountForm({
                   <FormLabel className="sr-only">{t("journal.date")}</FormLabel>
                   <FormControl>
                     <DatePicker
+                      disabled={pending}
                       value={field.value}
                       onChange={(d) => field.onChange(d)}
                       required

@@ -244,6 +244,7 @@ export function AddBudgetDialog({
                     <FormLabel>{t("page.budget.budgetDate")}</FormLabel>
                     <FormControl>
                       <DatePicker
+                        disabled={pending}
                         value={field.value}
                         onChange={(d) => field.onChange(d)}
                         className="[&>div]:w-full"

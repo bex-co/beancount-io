@@ -36,6 +36,11 @@ interface DatePickerProps {
   value: string | undefined;
   onChange: (date: string | undefined) => void;
   required?: boolean;
+  /**
+   * Locks the input, trigger and any already-open calendar (w4/1069). The
+   * calendar renders in a portal, so a disabled fieldset cannot lock it.
+   */
+  disabled?: boolean;
   className?: string;
   /** From FormControl: the form's own error state and message ids. */
   "aria-invalid"?: boolean | "true" | "false";
@@ -54,6 +59,7 @@ export function DatePicker({
   value,
   onChange,
   required = false,
+  disabled = false,
   className = "",
   "aria-invalid": formInvalid,
   "aria-describedby": describedBy,
@@ -160,11 +166,13 @@ export function DatePicker({
   };
 
   const handleCalendarSelect = (date: Date | undefined) => {
+    if (disabled) return;
     commitDate(date ? calendarToIsoDate(date) : undefined);
     setOpen(false);
   };
 
   const handleTodayClick = () => {
+    if (disabled) return;
     commitDate(todayIsoDate());
     setOpen(false);
   };
@@ -184,6 +192,7 @@ export function DatePicker({
       <div className="relative flex gap-2 w-[160px]">
         <Input
           id={id}
+          disabled={disabled}
           value={inputValue}
           placeholder={hint}
           title={t("common.dateInputFormat", { pattern: hint, iso: isoHint })}
@@ -217,11 +226,18 @@ export function DatePicker({
               : undefined
           }
         />
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover
+          open={open && !disabled}
+          onOpenChange={(next) => {
+            if (disabled && next) return;
+            setOpen(next);
+          }}
+        >
           <PopoverTrigger asChild>
             <Button
               type="button"
               variant="ghost"
+              disabled={disabled}
               className="absolute top-1/2 right-2 size-6 -translate-y-1/2"
             >
               <CalendarIcon className="size-3.5" />

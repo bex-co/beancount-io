@@ -40,6 +40,28 @@ function ControlledDatePicker({
   );
 }
 
+describe("DatePicker pending lock (w4/1069)", () => {
+  it("closes an open calendar and locks input and trigger when disabled", async () => {
+    const user = userEvent.setup();
+    const onValue = vi.fn();
+    const { rerender } = render(
+      <DatePicker id="date" value="2026-10-01" onChange={onValue} />,
+    );
+    await user.click(screen.getByRole("button", { name: "Select date" }));
+    expect(screen.getByRole("button", { name: /October 15/ })).toBeVisible();
+
+    rerender(
+      <DatePicker id="date" value="2026-10-01" onChange={onValue} disabled />,
+    );
+    expect(screen.getByRole("textbox")).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Select date" })).toBeDisabled();
+    expect(
+      screen.queryByRole("button", { name: /October 15/ }),
+    ).not.toBeInTheDocument();
+    expect(onValue).not.toHaveBeenCalled();
+  });
+});
+
 describe("DatePicker typing contract", () => {
   it("publishes the canonical day for Persian digits and keeps the typed text (w4/325)", () => {
     const onValue = vi.fn();

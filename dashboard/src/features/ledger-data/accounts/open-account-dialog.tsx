@@ -152,6 +152,7 @@ export function OpenAccountDialog({
                     <FormLabel>{t("page.accounts.openDate")}</FormLabel>
                     <FormControl>
                       <DatePicker
+                        disabled={pending}
                         value={field.value}
                         onChange={(d) => field.onChange(d)}
                         className="[&>div]:w-full"

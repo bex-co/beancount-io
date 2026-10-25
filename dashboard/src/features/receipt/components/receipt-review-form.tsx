@@ -161,6 +161,7 @@ export function ReceiptReviewForm({
                         <FormLabel>{t("receipt.review.date")}</FormLabel>
                         <FormControl>
                           <DatePicker
+                            disabled={pending}
                             id="receipt-date"
                             value={field.value}
                             onChange={(d) => field.onChange(d)}
