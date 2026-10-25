@@ -6,6 +6,8 @@
 
 - [x] **m1** — [Entry edits and deletes refuse changes that would break the ledger](./done/m1/README.md) (7 tasks) ← from mobile QA 2026-10-20
 - [x] **m2** — [Readable-width caps for the remaining bespoke screens](./done/m2/README.md) (7 tasks) ← promoted from w21/1007, follow-up to w21/1005
+- [ ] **m3** — [BQL cookbook: tested query recipes for humans and agents](./m3/README.md) (8 tasks) ← `/pm-brainstorm for w21` 2026-10-25, candidate 2
+- [ ] **m4** — [`bea report cash-flow`: where the money went, by period](./m4/README.md) (8 tasks) ← `/pm-brainstorm for w21` 2026-10-25, candidate 3
 
 ## Dropped
 
@@ -13,6 +15,8 @@
 
 ## Inbox
 
+- [1011](./1011.md) — `bea doctor` warns when a ledger has no `AGENTS.md` or a `CLAUDE.md` that does not point at it
+- [1012](./1012.md) — Link the BQL cookbook from `bea query --help` and the CLI README (after w21/m3)
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window
 - [065](./blocked/065.md) — One early-year entry (e.g. 0050) makes the balance sheet 23,718 monthly points (3 MB) and the app stalls — **blocked:** needs an approach decision (per-pill fetch vs server downsample) and a simulator profile of the stall
 - [180](./blocked/180.md) — Budget actuals use raw prefix match (`Transport` counts `Transportation`), unlike Reports — **blocked:** needs an owner decision between component matching on the server (a Fava break) and a per-account breakdown for the client
