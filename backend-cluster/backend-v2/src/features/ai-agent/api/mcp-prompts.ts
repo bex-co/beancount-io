@@ -1,7 +1,11 @@
 import { z } from "zod";
 import { BadUserInputError } from "@/shared/errors";
 import type { Identity } from "@/server/api/identity";
-import { LEDGER_ID_PATTERN, ledgerSelection } from "./mcp-ledger-selection";
+import {
+  LEDGER_ID_PATTERN,
+  ledgerIdMatchesPin,
+  ledgerSelection,
+} from "./mcp-ledger-selection";
 
 /**
  * The MCP `prompts` fragment (w2/008).
@@ -109,7 +113,7 @@ function ledgerLine(identity: Identity, requested: string | undefined): string {
   // playbook that echoed a ledger outside it would read as an instruction,
   // and the agent would spend its first calls discovering by 403 what this
   // line can just say.
-  if (pin && requested && requested !== pin) {
+  if (pin && requested && !ledgerIdMatchesPin(requested, pin)) {
     return `Ledger: ${pin}. You asked for ${requested}, which is outside this credential's ledger restriction — every call below targets ${pin} or is refused.`;
   }
   const selected = requested ?? pin;

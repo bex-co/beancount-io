@@ -19,7 +19,10 @@ import {
   MCP_TRANSPORT_OP_ID,
   MCP_HANDSHAKE_OP_ID,
 } from "@/server/api/rate-limit";
-import { LEDGER_ID_PATTERN } from "./mcp-ledger-selection";
+import {
+  LEDGER_ID_PATTERN,
+  ledgerIdMatchesPin,
+} from "./mcp-ledger-selection";
 import { parseLedgerId } from "@/shared/str";
 
 export { ledgerSelection } from "./mcp-ledger-selection";
@@ -100,12 +103,15 @@ export function resolveMcpLedger(
     );
   }
   parseLedgerId(ledger);
-  if (context.identity.ledgerScope && ledger !== context.identity.ledgerScope) {
+  const pin = context.identity.ledgerScope;
+  if (pin && !ledgerIdMatchesPin(ledger, pin)) {
     throw new ForbiddenError(
       "The selected ledger is outside this credential's ledger restriction",
       "ledger",
       "This credential is pinned to one ledger and cannot reach another. Omit `ledger`, or use a credential without a pin.",
     );
   }
-  return ledger;
+  // The pin's spelling is canonical: a request for `PUNCSKY/x` resolves to the
+  // pin so every downstream lookup sees one owner spelling (w23/078).
+  return pin ?? ledger;
 }
