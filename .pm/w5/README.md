@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1022 — Reject calendar-week dates outside their stated year](./1022.md) — minor CLI gap: impossible week-zero/53 tuples write in the previous or next year, including mixed files; valid calendar/ISO and original ordinal controls pass, checked 2026-10-24.
+
 - [1021 — Make CSV currency recovery hints fit the headers](./1021.md) — minor CLI gap: a suggested `currency=EUR`/`INR` setting reads the existing amount column as a currency; renamed, single-currency and real-column controls pass, checked 2026-10-24.
 
 - [1020 — Preserve native semantics of generated-looking references](./1020.md) — major CLI gap: native aliases matching the hash grammar silently skip corrected amounts and payments from separate custom namespaces; genuine generated-ID controls pass, checked 2026-10-24.
