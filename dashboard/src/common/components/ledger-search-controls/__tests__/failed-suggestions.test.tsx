@@ -373,6 +373,38 @@ describe("LedgerSearchControls when suggestions fail", () => {
     },
   );
 
+  it("keeps an uncommitted draft through a same-ledger suggestions refresh (w4/1077)", async () => {
+    const { client, router, attributeReads, primaryReads } =
+      await mountControls();
+    const user = userEvent.setup();
+    await resolve(attributeReads()[0], attributes());
+    await resolve(primaryReads()[0], statement());
+
+    const { time } = fields();
+    await user.click(time);
+    await user.clear(time);
+    await user.type(time, "2018");
+    expect(router.state.location.search.time).toBe("2017-09");
+
+    // The cache eviction after a write makes the suggestions read load again.
+    await act(async () => {
+      client.cache.evict({ id: "ROOT_QUERY" });
+      client.cache.gc();
+    });
+    await waitFor(() => expect(attributeReads()).toHaveLength(2));
+
+    // Same input, same draft, same focus; nothing committed itself.
+    expect(fields().time).toBe(time);
+    expect(time).toHaveValue("2018");
+    expect(time).toHaveFocus();
+    expect(router.state.location.search.time).toBe("2017-09");
+
+    await resolve(attributeReads()[1], attributes("Second"));
+    expect(fields().time).toBe(time);
+    expect(time).toHaveValue("2018");
+    expect(time).toHaveFocus();
+  });
+
   it("removes the warning on a successful reread and commits genuine recovered suggestions without the draft blur overwriting selection", async () => {
     const { client, router, attributeReads, primaryReads } =
       await mountControls();

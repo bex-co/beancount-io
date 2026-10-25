@@ -1,4 +1,4 @@
-import { useContext, useMemo } from "react";
+import { useContext, useMemo, useState } from "react";
 import { XIcon } from "lucide-react";
 import { Button } from "@/common/components/ui/button.tsx";
 import { Skeleton } from "@/common/components/ui/skeleton.tsx";
@@ -94,6 +94,21 @@ export const LedgerSearchControls = ({
     variables: { ledgerId },
   });
 
+  // A same-ledger refresh (e.g. the cache eviction after a write) must not
+  // replace already-rendered controls with Skeletons: that unmounts the
+  // comboboxes and discards their uncommitted drafts (w4/1077). Retain the
+  // last healthy suggestions for this ledger while it reloads.
+  // React's store-from-previous-render pattern, keyed to this ledger.
+  const [retained, setRetained] = useState<{
+    ledgerId: string;
+    data: typeof data;
+  } | null>(null);
+  if (data && (retained?.data !== data || retained.ledgerId !== ledgerId)) {
+    setRetained({ ledgerId, data });
+  }
+  const shownData =
+    data ?? (retained?.ledgerId === ledgerId ? retained.data : undefined);
+
   const handleFilterChange = (
     filterType: keyof LedgerSearchParams,
     value: string,
@@ -114,8 +129,8 @@ export const LedgerSearchControls = ({
   );
   const isStack = layout === "stack";
 
-  // Loading state
-  if (loading) {
+  // Loading state (initial load only; a refresh keeps the controls above)
+  if (loading && !shownData && !error) {
     return (
       <div
         className={cn(
@@ -130,7 +145,7 @@ export const LedgerSearchControls = ({
   }
 
   // No data state
-  if (!data?.getLedgerAttributes && !error) {
+  if (!shownData?.getLedgerAttributes && !error) {
     return null;
   }
 
@@ -142,7 +157,7 @@ export const LedgerSearchControls = ({
     years = [],
     links = [],
     payees = [],
-  } = (error ? undefined : data?.getLedgerAttributes) ?? {};
+  } = (error ? undefined : shownData?.getLedgerAttributes) ?? {};
 
   // Generate all partial account paths and sort hierarchically
   const sortedAccounts = generateAllAccountPaths(accounts);
