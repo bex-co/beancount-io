@@ -28,6 +28,7 @@ import {
   space,
   useTheme,
 } from "@/common/theme";
+import { contentColumn } from "@/common/content-column";
 import { iconActionSize } from "@/common/theme/spacing";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { formatSignedMoneyWithCurrency } from "@/common/number-utils";
@@ -85,6 +86,8 @@ const getStyles = (theme: ColorTheme) =>
     // the short "no accounts" text — sits inside the scrollable content and stays
     // pull-to-refreshable.
     listContent: {
+      // Capped centered column on iPad; a no-op on phones (w21/m2).
+      ...contentColumn,
       flexGrow: 1,
     },
     columnHeader: {

@@ -138,4 +138,13 @@ describe("the screens and sheets use the shared columns", () => {
       expect(readSource(file).includes("contentColumn")).toBe(true);
     });
   }
+
+  // w21/m2/t003: the Accounts table is the accounts screen's list.
+  it("the accounts table caps its list", () => {
+    expect(
+      readSource("components/account-table/account-table.tsx").includes(
+        "contentColumn",
+      ),
+    ).toBe(true);
+  });
 });
