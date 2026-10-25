@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { DatasetTable } from "../holdings-table";
+import { unitsFirstRowsFilter } from "../utils";
 import { useQuery } from "@apollo/client/react";
 import { QueryShellDocument } from "@/graphql/definitions";
 
@@ -188,6 +189,38 @@ describe("DatasetTable", () => {
       expect(screen.getByText("1000.00")).toBeInTheDocument();
       expect(screen.getByText("Liabilities:CreditCard")).toBeInTheDocument();
       expect(screen.getByText("-500.00")).toBeInTheDocument();
+    });
+
+    it("retains a zero-valued grouped position through the real table (w4/1064)", () => {
+      vi.mocked(useQuery).mockReturnValue({
+        data: {
+          queryShell: {
+            resultType: "table",
+            table: {
+              types: [{ name: "units" }, { name: "cost" }, { name: "value" }],
+              rows: [
+                [{ QAFREE: "10" }, "0", "0"],
+                [{}, "2480.00", ""],
+              ],
+            },
+            text: null,
+          },
+        },
+        loading: false,
+        error: undefined,
+      });
+
+      render(
+        <DatasetTable
+          query={mockQuery}
+          ledgerId={mockLedgerId}
+          ariaLabel="Holdings"
+          rowsFilter={unitsFirstRowsFilter}
+        />,
+      );
+
+      expect(screen.getByText(/QAFREE/)).toBeInTheDocument();
+      expect(screen.queryByText("2480.00")).not.toBeInTheDocument();
     });
 
     it("should display row count", () => {

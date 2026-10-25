@@ -505,6 +505,16 @@ describe("Holdings Utils", () => {
       ];
       expect(unitsFirstRowsFilter(rows)).toHaveLength(1);
     });
+
+    it("keeps a zero-valued position whose units are nonzero (w4/1064)", () => {
+      const rows = [
+        [{ QAFREE: "10" }, "0", "0", {}, {}, "0"],
+        [{ QA: "0" }, "100", "200", { USD: "100" }, { USD: "200" }, "10"],
+      ];
+      const result = unitsFirstRowsFilter(rows);
+      expect(result).toHaveLength(1);
+      expect(result[0][0]).toEqual({ QAFREE: "10" });
+    });
   });
 
   describe("holdingsRowsFilter", () => {

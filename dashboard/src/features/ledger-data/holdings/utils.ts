@@ -208,12 +208,21 @@ export const defaultRowsFilter = (row: unknown[][]): unknown[][] => {
   return row.filter((row) => !row.slice(1).every((o: unknown) => isEmpty(o)));
 };
 
-/** Units is column 0 (by-currency / by-cost-currency). Drop empty inventories. */
+/**
+ * Units is column 0 (by-currency / by-cost-currency). A row is a real
+ * position when its unit inventory holds a nonzero quantity — even when
+ * every cost/quote cell is zero or empty (w4/1064). Sold or
+ * remembered-price-only groups carry an empty or all-zero inventory.
+ */
 export const unitsFirstRowsFilter = (rows: unknown[][]): unknown[][] => {
-  return rows.filter(
-    (row) =>
-      !isEmpty(row[0]) && !row.slice(1).every((o: unknown) => isEmpty(o)),
-  );
+  return rows.filter((row) => {
+    const units = row[0];
+    if (isEmpty(units)) return false;
+    if (typeof units === "object" && units !== null && !Array.isArray(units)) {
+      return Object.values(units).some((quantity) => !isEmpty(quantity));
+    }
+    return true;
+  });
 };
 
 export const holdingsRowsFilter = (row: unknown[][]): unknown[][] => {
