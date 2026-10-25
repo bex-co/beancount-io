@@ -1,6 +1,6 @@
 # w22 · m2 — No-code OFX/QFX import through upstream beangulp
 
-**Worker:** worker1 **Goal:** `bea import bank.ofx --account Assets:Checking` previews and applies with no `importers.py`, using the shared duplicate review and rules **Status:** todo (t001–t007 done)
+**Worker:** worker1 **Goal:** `bea import bank.ofx --account Assets:Checking` previews and applies with no `importers.py`, using the shared duplicate review and rules **Status:** done
 
 ## Tasks (in order)
 
@@ -13,7 +13,7 @@
 | t005 | Adoption surface — **DONE** | 25m | t004 |
 | t006 | Simplify — **DONE** | 25m | t005 |
 | t007 | Test coverage — **DONE** | 45m | t005 |
-| t008 | Closeout | 15m | t006, t007 |
+| t008 | Closeout — **DONE** | 15m | t006, t007 |
 
 ## Definition of done
 
