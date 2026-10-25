@@ -3,6 +3,7 @@ import { RelatedLinks } from "@/common/components/related-links";
 import { getLedgerFilesRootPath } from "@/common/hooks/use-file-navigate";
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate, useBlocker } from "@tanstack/react-router";
+import { isLanguageOnlyTransition } from "@/common/lib/router/language-only-transition";
 import { useMutation } from "@apollo/client/react";
 import { useRefreshDirectory } from "@/features/ledger-editor/shared/hooks/use-refresh-directory";
 import { Card, CardContent } from "@/common/components/ui/card";
@@ -114,7 +115,8 @@ const CreateFilePage = () => {
   const hasDraft = normalizedFilename !== "" || content.trim() !== "";
 
   const blocker = useBlocker({
-    shouldBlockFn: () => {
+    shouldBlockFn: ({ current, next }) => {
+      if (isLanguageOnlyTransition(current, next)) return false;
       if (allowNavigationRef.current) {
         allowNavigationRef.current = false;
         return false;

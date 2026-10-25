@@ -18,7 +18,7 @@ const blockerState = vi.hoisted(() => ({
   status: "idle" as "idle" | "blocked",
   reset: vi.fn(),
   proceed: vi.fn(),
-  shouldBlockFn: null as null | (() => boolean),
+  shouldBlockFn: null as null | ((args: unknown) => boolean),
   enableBeforeUnload: null as null | boolean | (() => boolean),
 }));
 
@@ -30,7 +30,7 @@ vi.mock("@tanstack/react-router", () => ({
   }),
   useNavigate: () => create.navigate,
   useBlocker: (opts: {
-    shouldBlockFn: () => boolean;
+    shouldBlockFn: (args: unknown) => boolean;
     enableBeforeUnload?: boolean | (() => boolean);
   }) => {
     blockerState.shouldBlockFn = opts.shouldBlockFn;
@@ -151,7 +151,12 @@ describe("CreateFilePage while creating", () => {
       "qa-create.txt",
     );
     // The departure is the submitted draft's own, so it is not blocked.
-    expect(blockerState.shouldBlockFn?.()).toBe(false);
+    expect(
+      blockerState.shouldBlockFn?.({
+        current: { routeId: "r", pathname: "/f", params: {}, search: {} },
+        next: { routeId: "r", pathname: "/o", params: {}, search: {} },
+      }),
+    ).toBe(false);
   });
 
   it("keeps the draft editable after a failed create", async () => {
@@ -163,7 +168,12 @@ describe("CreateFilePage while creating", () => {
     fireEvent.change(text(), { target: { value: "retry revision\n" } });
     expect(text()).toHaveValue("retry revision\n");
     expect(create.navigate).not.toHaveBeenCalled();
-    expect(blockerState.shouldBlockFn?.()).toBe(true);
+    expect(
+      blockerState.shouldBlockFn?.({
+        current: { routeId: "r", pathname: "/f", params: {}, search: {} },
+        next: { routeId: "r", pathname: "/o", params: {}, search: {} },
+      }),
+    ).toBe(true);
   });
 
   it("completes a create whose folder refresh fails afterwards (w4/248)", async () => {

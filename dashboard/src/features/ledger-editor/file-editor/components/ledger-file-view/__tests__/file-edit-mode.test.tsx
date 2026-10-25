@@ -7,13 +7,13 @@ const blockerState = vi.hoisted(() => ({
   status: "idle" as "idle" | "blocked",
   reset: vi.fn(),
   proceed: vi.fn(),
-  shouldBlockFn: null as null | (() => boolean),
+  shouldBlockFn: null as null | ((args: unknown) => boolean),
   enableBeforeUnload: null as null | boolean | (() => boolean),
 }));
 
 vi.mock("@tanstack/react-router", () => ({
   useBlocker: (opts: {
-    shouldBlockFn: () => boolean;
+    shouldBlockFn: (args: unknown) => boolean;
     enableBeforeUnload?: boolean | (() => boolean);
   }) => {
     blockerState.shouldBlockFn = opts.shouldBlockFn;
@@ -36,6 +36,11 @@ vi.mock("../text-editor-utils", () => ({
   foldAll: vi.fn(),
   unfoldAll: vi.fn(),
 }));
+
+const DEPARTURE = {
+  current: { routeId: "r", pathname: "/f", params: {}, search: {} },
+  next: { routeId: "r", pathname: "/other", params: {}, search: {} },
+};
 
 describe("EditModeToolbar draft guard", () => {
   const onSave = vi.fn();
@@ -63,7 +68,7 @@ describe("EditModeToolbar draft guard", () => {
       />,
     );
 
-    expect(blockerState.shouldBlockFn?.()).toBe(false);
+    expect(blockerState.shouldBlockFn?.(DEPARTURE)).toBe(false);
     expect(
       typeof blockerState.enableBeforeUnload === "function"
         ? blockerState.enableBeforeUnload()
@@ -82,7 +87,7 @@ describe("EditModeToolbar draft guard", () => {
       />,
     );
 
-    expect(blockerState.shouldBlockFn?.()).toBe(true);
+    expect(blockerState.shouldBlockFn?.(DEPARTURE)).toBe(true);
     expect(
       typeof blockerState.enableBeforeUnload === "function"
         ? blockerState.enableBeforeUnload()

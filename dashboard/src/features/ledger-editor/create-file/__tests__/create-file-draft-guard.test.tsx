@@ -5,7 +5,7 @@ const blockerState = vi.hoisted(() => ({
   status: "idle" as "idle" | "blocked",
   reset: vi.fn(),
   proceed: vi.fn(),
-  shouldBlockFn: null as null | (() => boolean),
+  shouldBlockFn: null as null | ((args: unknown) => boolean),
   enableBeforeUnload: null as null | boolean | (() => boolean),
 }));
 
@@ -17,7 +17,7 @@ vi.mock("@tanstack/react-router", () => ({
   }),
   useNavigate: () => vi.fn(),
   useBlocker: (opts: {
-    shouldBlockFn: () => boolean;
+    shouldBlockFn: (args: unknown) => boolean;
     enableBeforeUnload?: boolean | (() => boolean);
   }) => {
     blockerState.shouldBlockFn = opts.shouldBlockFn;
@@ -93,6 +93,11 @@ vi.mock("sonner", () => ({ toast: { error: vi.fn() } }));
 
 import CreateFilePage from "../index";
 
+const DEPARTURE = {
+  current: { routeId: "r", pathname: "/f", params: {}, search: {} },
+  next: { routeId: "r", pathname: "/other", params: {}, search: {} },
+};
+
 describe("CreateFilePage draft guard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -103,7 +108,7 @@ describe("CreateFilePage draft guard", () => {
 
   it("treats empty filename and content as clean", () => {
     render(<CreateFilePage />);
-    expect(blockerState.shouldBlockFn?.()).toBe(false);
+    expect(blockerState.shouldBlockFn?.(DEPARTURE)).toBe(false);
     expect(
       typeof blockerState.enableBeforeUnload === "function"
         ? blockerState.enableBeforeUnload()
@@ -116,7 +121,7 @@ describe("CreateFilePage draft guard", () => {
     fireEvent.change(screen.getByPlaceholderText("ledgerEditor.nameYourFile"), {
       target: { value: "notes.bean" },
     });
-    expect(blockerState.shouldBlockFn?.()).toBe(true);
+    expect(blockerState.shouldBlockFn?.(DEPARTURE)).toBe(true);
     expect(
       typeof blockerState.enableBeforeUnload === "function"
         ? blockerState.enableBeforeUnload()
@@ -124,12 +129,35 @@ describe("CreateFilePage draft guard", () => {
     ).toBe(true);
   });
 
+  it("lets a language-only transition through with a draft (w4/1088)", () => {
+    render(<CreateFilePage />);
+    fireEvent.change(screen.getByPlaceholderText("ledgerEditor.nameYourFile"), {
+      target: { value: "notes.bean" },
+    });
+    const languageOnly = {
+      current: {
+        routeId: "r",
+        pathname: "/f",
+        params: {},
+        search: { lang: "en" },
+      },
+      next: {
+        routeId: "r",
+        pathname: "/f",
+        params: {},
+        search: { lang: "de" },
+      },
+    };
+    expect(blockerState.shouldBlockFn?.(languageOnly)).toBe(false);
+    expect(blockerState.shouldBlockFn?.(DEPARTURE)).toBe(true);
+  });
+
   it("blocks when the editor draft is non-empty", () => {
     render(<CreateFilePage />);
     fireEvent.change(screen.getByLabelText("file-content"), {
       target: { value: "2024-01-01 open Assets:Cash" },
     });
-    expect(blockerState.shouldBlockFn?.()).toBe(true);
+    expect(blockerState.shouldBlockFn?.(DEPARTURE)).toBe(true);
     expect(
       typeof blockerState.enableBeforeUnload === "function"
         ? blockerState.enableBeforeUnload()
@@ -142,7 +170,7 @@ describe("CreateFilePage draft guard", () => {
     const filename = screen.getByPlaceholderText("ledgerEditor.nameYourFile");
     fireEvent.change(filename, { target: { value: "notes.bean" } });
     fireEvent.change(filename, { target: { value: "" } });
-    expect(blockerState.shouldBlockFn?.()).toBe(false);
+    expect(blockerState.shouldBlockFn?.(DEPARTURE)).toBe(false);
     expect(
       typeof blockerState.enableBeforeUnload === "function"
         ? blockerState.enableBeforeUnload()

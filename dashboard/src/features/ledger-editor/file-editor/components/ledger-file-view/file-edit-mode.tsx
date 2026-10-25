@@ -1,5 +1,6 @@
 import { useEffect, useRef, type RefObject } from "react";
 import { useBlocker } from "@tanstack/react-router";
+import { isLanguageOnlyTransition } from "@/common/lib/router/language-only-transition";
 import type * as monaco from "monaco-editor";
 import { Button } from "@/common/components/ui/button";
 import {
@@ -71,7 +72,10 @@ export function EditModeToolbar({
 
   // Block all navigation (route changes, query params, browser back/refresh) with unsaved changes
   const blocker = useBlocker({
-    shouldBlockFn: () => hasUnsavedChanges && !savedExitRef?.current,
+    shouldBlockFn: ({ current, next }) =>
+      !isLanguageOnlyTransition(current, next) &&
+      hasUnsavedChanges &&
+      !savedExitRef?.current,
     enableBeforeUnload: () => hasUnsavedChanges,
     withResolver: true,
   });
