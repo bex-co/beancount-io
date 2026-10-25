@@ -1,4 +1,4 @@
-"""Locate and rewrite one transaction for `bea-engine update`.
+"""Locate and rewrite transactions for `bea-engine update`.
 
 An imported row is found by the identity its importer wrote: the `import-id`
 metadata every bea import stamps, or the `ref` metadata bank importers use.
@@ -249,14 +249,16 @@ def entry_span(entries: list[Any], entry: Any, line_count: int) -> tuple[int, in
     start = int(meta["lineno"])
     filename = os.path.normcase(os.path.abspath(str(meta["filename"])))
     shared = reader.shared_locations(entries)
-    following = [
-        other.meta["lineno"]
-        for other in entries
-        if isinstance((other.meta or {}).get("lineno"), int)
-        and (other.meta or {}).get("lineno", 0) > start
-        and os.path.normcase(os.path.abspath(str((other.meta or {}).get("filename", "")))) == filename
-        and not _generated(other, shared)
-    ]
+    following = []
+    for other in entries:
+        other_meta = other.meta or {}
+        lineno = other_meta.get("lineno")
+        if not isinstance(lineno, int) or lineno <= start:
+            continue
+        other_file = os.path.normcase(os.path.abspath(str(other_meta.get("filename", ""))))
+        if other_file != filename or _generated(other, shared):
+            continue
+        following.append(lineno)
     return start, min(following) - 1 if following else line_count
 
 
@@ -463,15 +465,7 @@ def plan_rewrite(
     for number, rewritten in planned.items():
         edited[number] = rewritten
     new_text = "\n".join(edited)
-    diff = "".join(
-        difflib.unified_diff(
-            text.splitlines(True),
-            new_text.splitlines(True),
-            fromfile=str(target),
-            tofile=str(target),
-        )
-    )
-    return (("\ufeff" if bom else "") + new_text), diff
+    return (("\ufeff" if bom else "") + new_text), _file_diff(text, new_text, target)
 
 
 def _planned_answer(
@@ -847,7 +841,7 @@ def _transactions(file: Path, request: dict[str, Any], *, apply: bool, allow_err
         valid = _validate_plans(
             plans, file_lines, snapshot, rejected, rejected_rows, reasons, allow_errors=allow_errors
         )
-        for directory in dict.fromkeys([*(path.parent for path in snapshot.contents)]):
+        for directory in dict.fromkeys(path.parent for path in snapshot.contents):
             ledger_write.sweep_abandoned_candidates(directory)
         written_rows: list[int] = []
         warnings: list[str] = []

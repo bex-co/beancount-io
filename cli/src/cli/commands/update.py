@@ -10,8 +10,6 @@ from __future__ import annotations
 
 import csv
 import json
-import os
-import sys
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -20,8 +18,9 @@ import typer
 from cli import context, output
 from cli.completion import fixed_values
 from cli.errors import UsageError
+from cli.rows import parse_json, read_text
 from cli.single_value import SingleValueCommand
-from cli.utils import RawPath, decode_error_message, inert_text
+from cli.utils import RawPath, inert_text
 
 update_app = typer.Typer(
     help="Rewrite directives of a local .bean file in place", no_args_is_help=True, rich_markup_mode=None
@@ -146,106 +145,12 @@ def update_transaction(
     _rendered(data, file=file, apply=apply)
 
 
-_MAX_JSON_DEPTH = 100
-
-
-def _nesting_depth(value: Any) -> int:
-    """How deep lists and objects nest in a parsed JSON value, without recursing."""
-    deepest = 0
-    pending: list[tuple[Any, int]] = [(value, 1)]
-    while pending:
-        item, depth = pending.pop()
-        if isinstance(item, dict):
-            children: Any = item.values()
-        elif isinstance(item, list):
-            children = item
-        else:
-            continue
-        deepest = max(deepest, depth)
-        pending.extend((child, depth + 1) for child in children)
-    return deepest
-
-
-def _unique_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
-    """A JSON object whose keys are distinct; a repeated key would silently keep only the last value."""
-    result: dict[str, Any] = {}
-    for key, value in pairs:
-        if key in result:
-            raise ValueError(f"key {key!r} appears more than once in one object; keep one.")
-        result[key] = value
-    return result
-
-
-def _alternating_nuls(data: bytes) -> bool:
-    """Whether NULs sit on one byte parity densely, as BOM-less UTF-16 ASCII does."""
-    even, odd = data[0::2].count(0), data[1::2].count(0)
-    return min(even, odd) == 0 and max(even, odd) >= 2 and 4 * max(even, odd) >= len(data) // 2
-
-
 _CSV_COLUMNS = ("id", "account", "flag")
 
 
-def _read_mapping_text(from_file: str) -> tuple[str, str]:
-    """The `--from` bytes as text; unreadable input is a usage error, phrased like `--file`'s.
-
-    Stdin is read as bytes and decoded exactly like a file: the text stream
-    would decode with the locale's codec, so the same bytes could pass on one
-    machine and fail with a raw codec error on another.
-    """
-    stdin = from_file == "-"
-    name = "stdin" if stdin else from_file
-    unattended = "Mappings are required with --no-input. Pipe the rows on stdin or name a file with --from PATH."
-    if stdin:
-        context.refuse_terminal_stdin(unattended)
-        buffer = getattr(sys.stdin, "buffer", None)
-        data = buffer.read() if buffer is not None else sys.stdin.read().encode("utf-8")
-    else:
-        try:
-            with Path(from_file).open("rb") as handle:
-                # A named terminal (`--from /dev/stdin`) waits for a human
-                # exactly like `-` does, so it is refused the same way when
-                # unattended; pipes and regular files are read as before.
-                if os.isatty(handle.fileno()) and context.current().no_input:
-                    raise UsageError(unattended)
-                data = handle.read()
-        except FileNotFoundError as exc:
-            raise UsageError(
-                f"No mappings file at '{from_file}' (from --from). "
-                "Name a JSON or CSV file with --from PATH, or pass --from - to read stdin."
-            ) from exc
-        except IsADirectoryError as exc:
-            raise UsageError(f"Mappings path '{from_file}' (from --from) is a directory; expected a file.") from exc
-        except OSError as exc:
-            raise UsageError(f"Cannot read mappings file '{from_file}' (from --from): {exc.strerror}.") from exc
-    utf16 = f"'{name}' (from --from) looks like UTF-16 text; re-save it as UTF-8 and retry."
-    try:
-        text = data.decode("utf-8-sig")
-    except UnicodeDecodeError as exc:
-        message = decode_error_message(name, exc, data)
-        if data.startswith((b"\xff\xfe", b"\xfe\xff")):
-            message = f"{message} {utf16}"
-        raise UsageError(message) from exc
-    if "\x00" in text:
-        if _alternating_nuls(data):
-            raise UsageError(utf16)
-        offset = data.index(b"\x00")
-        raise UsageError(f"'{name}' (from --from) contains a NUL byte at byte {offset}; remove it and retry.")
-    return text, name
-
-
 def _rows_from_json(text: str, name: str) -> list[Any]:
-    """The mapping's JSON array; shape problems are usage errors quoting the input."""
-    too_deep = f"'{name}' (from --from) nests JSON too deeply; send a flat array of rows."
-    try:
-        loaded = json.loads(text, object_pairs_hook=_unique_keys)
-    except json.JSONDecodeError as exc:
-        raise UsageError(f"Invalid JSON at line {exc.lineno}, column {exc.colno}: {exc.msg}.") from exc
-    except RecursionError as exc:
-        raise UsageError(too_deep) from exc
-    except ValueError as exc:
-        raise UsageError(f"Invalid JSON in '{name}' (from --from): {exc}") from exc
-    if _nesting_depth(loaded) > _MAX_JSON_DEPTH:
-        raise UsageError(too_deep)
+    """The mapping's JSON array; a misshapen file is a usage error quoting the input."""
+    loaded = parse_json(text, name)
     if not isinstance(loaded, list):
         raise UsageError(f"'{name}' (from --from) must hold an array of rows, or CSV with an id column.")
     return loaded
@@ -292,7 +197,7 @@ def _load_mapping(from_file: str) -> list[Any]:
     Detected by content — a `[` opens the array, anything else is CSV — so
     stdin needs no format flag either.
     """
-    text, name = _read_mapping_text(from_file)
+    text, name = read_text(from_file, noun="Mappings", json_only=False)
     if not text.strip():
         raise UsageError(f"'{name}' (from --from) holds no rows.")
     if text.lstrip().startswith("["):

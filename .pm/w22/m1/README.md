@@ -1,6 +1,6 @@
 # w22 · m1 — `bea update transaction`: resolve the review queue in place
 
-**Worker:** worker1 **Goal:** an imported `!` / `Expenses:Uncategorized` row is categorized with one previewed, atomic, git-friendly `bea` command instead of a hand edit **Status:** todo (t001–t006 done)
+**Worker:** worker1 **Goal:** an imported `!` / `Expenses:Uncategorized` row is categorized with one previewed, atomic, git-friendly `bea` command instead of a hand edit **Status:** todo (t001–t007 done)
 
 ## Tasks (in order)
 
@@ -12,7 +12,7 @@
 | t004 | Batch form: `bea update transactions --from PATH` — **DONE** | 45m | t003 |
 | t005 | Docs: add the "clear the `!` queue" step to the CSV tutorial and examples — **DONE** | 30m | t004 |
 | t006 | Adoption surface — **DONE** | 25m | t005 |
-| t007 | Simplify | 25m | t006 |
+| t007 | Simplify — **DONE** | 25m | t006 |
 | t008 | Test coverage | 45m | t006 |
 | t009 | Closeout | 15m | t007, t008 |
 
