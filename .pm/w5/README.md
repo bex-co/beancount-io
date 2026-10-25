@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1025 — Preserve multiline strings during account updates](./1025.md) — minor CLI gap: retargeting changes literal memo, narration and posting metadata along with the real posting; plain/prose/flag-only/other-entry controls pass, checked 2026-10-25.
+
 - [965 — Keep query ordering consistent for nullable cost fields](./965.md) — reopened minor CLI gap: dateless Cost comparisons still cycle and source order changes LIMIT 1; original mixed-type and numeric controls pass, rechecked 2026-10-25.
 
 - [1024 — Handle dateless lots in close diagnostics](./1024.md) — minor CLI gap: inferred offsetting lots crash direct close and block a closing-statement refund; dated, empty, force and label controls pass, checked 2026-10-24.
