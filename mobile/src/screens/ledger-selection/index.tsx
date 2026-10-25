@@ -157,11 +157,16 @@ export function LedgerSelectionScreen() {
     void store.load(tab, remoteQuery);
   }, [store, tab, remoteQuery]);
   const waitingForSearch = tab === "explore" && query.trim() !== debounced;
-  const items = waitingForSearch
-    ? []
-    : tab === "explore"
-      ? state.items
-      : filterLedgers(state.items, query);
+  // The load for a new tab starts in an effect after paint; until its rows
+  // land, the state still holds the previous tab's. Blank them so the switch
+  // shows the skeleton immediately instead of stale rows (w21/1010).
+  const tabStale = state.loadedTab !== tab;
+  const items =
+    tabStale || waitingForSearch
+      ? []
+      : tab === "explore"
+        ? state.items
+        : filterLedgers(state.items, query);
   // A star that fails after the user left (a slow connection, then Back) must
   // not toast over whatever screen is showing now (w21/300).
   const showError = () => {
@@ -388,8 +393,9 @@ export function LedgerSelectionScreen() {
         )}
         ListEmptyComponent={
           // A retry in flight is a load: it must not read as an empty account
-          // ("Your ledgers will appear here") (w21/383).
-          state.loading || state.refreshing || waitingForSearch ? (
+          // ("Your ledgers will appear here") (w21/383). A tab whose rows
+          // have not landed yet skeletons the same way (w21/1010).
+          state.loading || state.refreshing || waitingForSearch || tabStale ? (
             skeleton
           ) : (
             <View style={styles.state}>

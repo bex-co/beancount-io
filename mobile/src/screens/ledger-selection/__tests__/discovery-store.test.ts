@@ -82,6 +82,29 @@ describe("ledger discovery", () => {
       "open_ledger/z",
     ]);
   });
+  it("tracks which tab the rows belong to across a switch", async () => {
+    const next = deferred<{ items: DiscoveryItem[]; hasMore: boolean }>();
+    const store = new DiscoveryStore({
+      page: async (tab) =>
+        tab === "yours"
+          ? { items: [ledger("mine/a")], hasMore: false }
+          : next.promise,
+      star: async () => true,
+    });
+    await store.load("yours", "");
+    expect(store.getSnapshot().loadedTab).toBe("yours");
+    // The new tab's load declares itself synchronously, before its rows land,
+    // so the screen can blank the old tab's rows (w21/1010).
+    const loading = store.load("starred", "");
+    expect(store.getSnapshot().loadedTab).toBe("starred");
+    expect(store.getSnapshot().items).toEqual([]);
+    next.resolve({ items: [ledger("mine/a", true)], hasMore: false });
+    await loading;
+    expect(store.getSnapshot().loadedTab).toBe("starred");
+    expect(store.getSnapshot().items.map((item) => item.id)).toEqual([
+      "mine/a",
+    ]);
+  });
   it("preserves server order in Your ledgers and Starred", async () => {
     const items = [
       ledger("other/first", true),
@@ -274,7 +297,8 @@ describe("a retry from a failed first load", () => {
       .replace(/\s+/g, "");
     expect(
       src.includes(
-        "state.loading||state.refreshing||waitingForSearch?(skeleton",
+        // w21/1010: a tab whose rows have not landed yet skeletons too.
+        "state.loading||state.refreshing||waitingForSearch||tabStale?(skeleton",
       ),
     ).toBe(true);
     expect(

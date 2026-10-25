@@ -11,6 +11,8 @@ export type DiscoveryItem = {
 type Page = { items: DiscoveryItem[]; hasMore: boolean };
 type State = {
   items: DiscoveryItem[];
+  /** Which tab `items` belong to; the screen skeletons on a mismatch (w21/1010). */
+  loadedTab: DiscoveryTab;
   loading: boolean;
   refreshing: boolean;
   loadingMore: boolean;
@@ -27,6 +29,7 @@ export function filterLedgers(items: DiscoveryItem[], query: string) {
 export class DiscoveryStore {
   private state: State = {
     items: [],
+    loadedTab: "yours",
     loading: true,
     refreshing: false,
     loadingMore: false,
@@ -103,6 +106,7 @@ export class DiscoveryStore {
       loadingMore: false,
       error: false,
       hasMore: false,
+      loadedTab: tab,
       ...(!refresh ? { items: [] } : {}),
     });
     try {
@@ -111,6 +115,7 @@ export class DiscoveryStore {
       this.update({
         items: this.rank(this.overlay(result.items)),
         hasMore: result.hasMore,
+        loadedTab: tab,
       });
     } catch {
       if (generation === this.generation) this.update({ error: true });
