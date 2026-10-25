@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1035 — Classify actual short-position reductions in Capital Gains](./1035.md) — major CLI reporting gap: positive covers disappear while negative openings become sales; booked gains/losses and long/native controls pass, checked 2026-10-25.
+
 - [1034 — Collect the whole resolved register subtree](./1034.md) — minor CLI selection gap: anchored parent regexes drop child-only transactions or return false empty; literal/full-subtree/native controls pass, checked 2026-10-25.
 
 - [1033 — Use the requested currency quote in Holdings](./1033.md) — major CLI valuation gap: a current direct USD quote is ignored for an older cost-currency quote or a false missing-price refusal; native/report controls pass, checked 2026-10-25.
