@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CHART_INTERVALS, type ChartInterval } from "@/common/types/chart";
 
 /**
  * A report's selected view belongs in the URL.
@@ -21,21 +22,30 @@ export function isOneOfViews<T extends string>(
 }
 
 /**
+ * A report's grouping interval is view preference too, held in `?interval=`
+ * so a shared scope edit keeps it (w4/m57). Absent or unknown means the
+ * default, which leaves the URL clean.
+ */
+export function parseIntervalSearch(value: unknown): ChartInterval | undefined {
+  return isOneOfViews(CHART_INTERVALS, value) ? value : undefined;
+}
+
+/**
  * Builds the `validateSearch` schema for a page whose selected view is held in
- * `?view=`. Compose it on the child route; the ledger filters stay on the
- * parent.
+ * `?view=`, and, for a report with an interval selector, `?interval=`. Compose
+ * it on the child route; the ledger filters stay on the parent.
  */
 export function createViewSearchSchema<T extends string>(
   views: readonly T[],
-  fallback: T,
+  { interval = false }: { interval?: boolean } = {},
 ) {
-  // `view` stays optional in the output: the default selection leaves the URL
+  // Both stay optional in the output: the default selection leaves the URL
   // clean, and nothing that links here has to name a view it does not care
-  // about. The page applies `fallback` when it is absent or unrecognised.
-  void fallback;
+  // about. The page applies its default when either is absent or unrecognised.
   return z
-    .object({ view: z.unknown().optional() })
-    .transform(({ view }): { view?: T } => ({
-      view: isOneOfViews(views, view) ? view : undefined,
+    .object({ view: z.unknown().optional(), interval: z.unknown().optional() })
+    .transform((search): { view?: T; interval?: ChartInterval } => ({
+      view: isOneOfViews(views, search.view) ? search.view : undefined,
+      ...(interval ? { interval: parseIntervalSearch(search.interval) } : {}),
     }));
 }

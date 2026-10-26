@@ -1,13 +1,12 @@
 import type { RouteLoader } from "@/common/types/route-loader";
-import type { LedgerSearchParams } from "@/common/providers/ledger-search-params-provider/context";
+import type { ReportLoaderDeps } from "@/common/lib/navigation/report-interval";
 import { GetLedgerIncomeStatementDocument } from "@/graphql/definitions";
-import { incomeStatementQueryDefaults } from "./constants";
 import { storedReportConversion } from "@/features/reports/components/use-report-conversion";
 
 export const incomeStatementLoader: RouteLoader<
   "/ledger/$ledgerOwner/$ledgerName/income-statement",
   void,
-  LedgerSearchParams
+  ReportLoaderDeps
 > = async ({ params, context, deps }) => {
   const ledgerId = `${params.ledgerOwner}/${params.ledgerName}`;
   await Promise.allSettled([
@@ -18,7 +17,7 @@ export const incomeStatementLoader: RouteLoader<
         account: deps.account,
         filter: deps.filter,
         time: deps.time,
-        interval: incomeStatementQueryDefaults.interval,
+        interval: deps.interval,
         conversion: storedReportConversion(ledgerId),
       },
     }),

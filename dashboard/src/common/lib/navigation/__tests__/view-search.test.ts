@@ -10,7 +10,7 @@ import { cashFlowViewFixtures } from "./view-search-fixtures";
  */
 
 const VIEWS = ["netCashFlow", "byActivity"] as const;
-const schema = createViewSearchSchema(VIEWS, "netCashFlow");
+const schema = createViewSearchSchema(VIEWS);
 
 describe("recognising a view", () => {
   it("accepts the ones the page offers", () => {

@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { normalizeListSearchOffset } from "@/common/lib/list-search-params";
-import { isOneOfViews } from "@/common/lib/navigation/view-search";
+import type { ChartInterval } from "@/common/types/chart";
+import {
+  isOneOfViews,
+  parseIntervalSearch,
+} from "@/common/lib/navigation/view-search";
 
 /** Highest account-journal offset a URL may request (20-row pages). */
 export const ACCOUNT_JOURNAL_MAX_OFFSET = 1_000_000;
@@ -17,6 +21,8 @@ export interface AccountJournalSearch {
   offset?: number;
   /** Selected chart; absent means the default view. */
   view?: AccountView;
+  /** Chart grouping interval; absent means monthly. */
+  interval?: ChartInterval;
 }
 
 /**
@@ -29,20 +35,27 @@ export interface AccountJournalSearch {
  * The selected chart lives here too: a shared account/filter/time change makes
  * the ledger layout replace its Outlet, unmounting the page, so a chart held in
  * page state reverted to Account Balance on every scope edit. An unknown view
- * is dropped rather than failing to render.
+ * is dropped rather than failing to render. The grouping interval follows the
+ * same rule (w4/m57).
  *
  * The shared account/filter/time params stay on the parent ledger route; this
  * position belongs to one account's journal and is not a shared report filter.
  */
 export const accountJournalSearchSchema = z
-  .object({ offset: z.unknown().optional(), view: z.unknown().optional() })
-  .transform(({ offset, view }): AccountJournalSearch => {
+  .object({
+    offset: z.unknown().optional(),
+    view: z.unknown().optional(),
+    interval: z.unknown().optional(),
+  })
+  .transform(({ offset, view, interval }): AccountJournalSearch => {
     const bounded = normalizeListSearchOffset(
       offset,
       ACCOUNT_JOURNAL_MAX_OFFSET,
     );
+    const chosenInterval = parseIntervalSearch(interval);
     return {
       ...(bounded === undefined ? {} : { offset: bounded }),
       ...(isOneOfViews(ACCOUNT_VIEWS, view) ? { view } : {}),
+      ...(chosenInterval ? { interval: chosenInterval } : {}),
     };
   });

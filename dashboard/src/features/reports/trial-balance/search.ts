@@ -17,7 +17,4 @@ export const DEFAULT_VIEW: TrialBalanceViewsView = "assets";
  * The selected chart lives in the URL so it survives the ledger layout
  * replacing its Outlet on a shared account/filter/time change.
  */
-export const viewSearchSchema = createViewSearchSchema(
-  TRIAL_BALANCE_VIEWS,
-  DEFAULT_VIEW,
-);
+export const viewSearchSchema = createViewSearchSchema(TRIAL_BALANCE_VIEWS);

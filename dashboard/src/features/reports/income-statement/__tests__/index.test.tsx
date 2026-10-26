@@ -208,3 +208,61 @@ describe("LedgerIncomeStatementPage chart selection lifetime", () => {
     expect(captureProps.mock.calls.at(-1)![0].chartMode).toBe("stacked");
   });
 });
+
+/** The interval the page's latest report read asked for. */
+const requestedInterval = () =>
+  (
+    vi
+      .mocked(useQuery)
+      .mock.calls.filter(
+        ([, options]) =>
+          (options as { variables?: { interval?: string } } | undefined)
+            ?.variables?.interval,
+      )
+      .at(-1)![1] as { variables: { interval: string } }
+  ).variables.interval;
+
+describe("LedgerIncomeStatementPage interval across a shared scope change (w4/m57)", () => {
+  it("keeps the reader's interval when the layout remounts the page", () => {
+    vi.mocked(useQuery).mockReturnValue({
+      data: {
+        getLedgerIncomeStatement: { netProfitData: [] },
+        getLedgerAccounts: [],
+      },
+      loading: false,
+    } as never);
+    const first = render(<LedgerIncomeStatementPage />);
+    expect(captureProps.mock.calls.at(-1)![0].timeInterval).toBe("monthly");
+    expect(requestedInterval()).toBe("monthly");
+
+    act(() =>
+      captureProps.mock.calls.at(-1)![0].onTimeIntervalChange("weekly"),
+    );
+    expect(routerSearch.current.interval).toBe("weekly");
+
+    // A Time edit replaces the layout's Outlet: the whole page unmounts.
+    first.unmount();
+    render(<LedgerIncomeStatementPage />);
+    const props = captureProps.mock.calls.at(-1)![0];
+    expect(props.timeInterval).toBe("weekly");
+    expect(requestedInterval()).toBe("weekly");
+
+    // Monthly is the default, which leaves the URL clean.
+    act(() => props.onTimeIntervalChange("monthly"));
+    expect(routerSearch.current.interval).toBeUndefined();
+  });
+
+  it("falls back to monthly for an interval it does not recognise", () => {
+    routerSearch.current = { interval: "fortnightly" };
+    vi.mocked(useQuery).mockReturnValue({
+      data: {
+        getLedgerIncomeStatement: { netProfitData: [] },
+        getLedgerAccounts: [],
+      },
+      loading: false,
+    } as never);
+    render(<LedgerIncomeStatementPage />);
+    expect(captureProps.mock.calls.at(-1)![0].timeInterval).toBe("monthly");
+    expect(requestedInterval()).toBe("monthly");
+  });
+});

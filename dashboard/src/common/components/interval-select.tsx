@@ -5,9 +5,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/common/components/ui/select.tsx";
-import type { ChartInterval } from "@/common/types/chart";
+import { CHART_INTERVALS, type ChartInterval } from "@/common/types/chart";
 import type { ComponentProps } from "react";
 import { useTranslations } from "@/common/hooks/use-translations.ts";
+
+const INTERVAL_LABEL_KEYS = {
+  yearly: "component.intervalSelect.yearly",
+  quarterly: "component.intervalSelect.quarterly",
+  monthly: "userSettings.monthly",
+  weekly: "userSettings.weekly",
+  daily: "component.intervalSelect.daily",
+} as const satisfies Record<ChartInterval, string>;
 
 interface IntervalSelectProps {
   value: ChartInterval;
@@ -45,17 +53,11 @@ export function IntervalSelect({
         <SelectValue placeholder={defaultPlaceholder} />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="yearly">
-          {t("component.intervalSelect.yearly")}
-        </SelectItem>
-        <SelectItem value="quarterly">
-          {t("component.intervalSelect.quarterly")}
-        </SelectItem>
-        <SelectItem value="monthly">{t("userSettings.monthly")}</SelectItem>
-        <SelectItem value="weekly">{t("userSettings.weekly")}</SelectItem>
-        <SelectItem value="daily">
-          {t("component.intervalSelect.daily")}
-        </SelectItem>
+        {CHART_INTERVALS.map((interval) => (
+          <SelectItem key={interval} value={interval}>
+            {t(INTERVAL_LABEL_KEYS[interval])}
+          </SelectItem>
+        ))}
       </SelectContent>
     </Select>
   );

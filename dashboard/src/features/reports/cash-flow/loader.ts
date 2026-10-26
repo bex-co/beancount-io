@@ -1,5 +1,5 @@
 import type { RouteLoader } from "@/common/types/route-loader";
-import type { LedgerSearchParams } from "@/common/providers/ledger-search-params-provider/context";
+import type { ReportLoaderDeps } from "@/common/lib/navigation/report-interval";
 import {
   GetLedgerCashFlowAccountsDocument,
   GetLedgerCashFlowDocument,
@@ -8,13 +8,12 @@ import {
 import { cashFlowRootVariables, ledgerAccountRoots } from "./lib/account-roots";
 import { cashActivityFilter } from "./lib/cash-eligibility";
 import { cashAccountMembership, toAccountMetaMap } from "./lib/model";
-import { cashFlowQueryDefaults } from "./constants";
 import { storedReportConversion } from "@/features/reports/components/use-report-conversion";
 
 export const cashFlowLoader: RouteLoader<
   "/ledger/$ledgerOwner/$ledgerName/cash-flow",
   void,
-  LedgerSearchParams
+  ReportLoaderDeps
 > = async ({ params, context, deps }) => {
   const ledgerId = `${params.ledgerOwner}/${params.ledgerName}`;
   // Settled, not awaited-to-throw: a rejection here (e.g. an invalid `filter`
@@ -56,7 +55,7 @@ export const cashFlowLoader: RouteLoader<
           ),
         ),
         time: deps.time,
-        interval: cashFlowQueryDefaults.interval,
+        interval: deps.interval,
         conversion: storedReportConversion(ledgerId),
         ...cashFlowRootVariables(options),
       },

@@ -2,7 +2,6 @@ import { useParams } from "@tanstack/react-router";
 import { useQuery } from "@apollo/client/react";
 import { GetLedgerBalanceSheetDocument } from "@/graphql/definitions";
 import { useState, useMemo } from "react";
-import type { ChartInterval } from "@/common/types/chart";
 import { useLedgerSearchParams } from "@/common/hooks/use-ledger-search-params";
 import { useLedger } from "@/common/hooks/use-ledger";
 import { createLedgerId } from "@/common/lib/utils/encode";
@@ -12,7 +11,6 @@ import {
   ReportErrorState,
   ReportEmptyState,
 } from "@/common/components/state-components";
-import { balanceSheetQueryDefaults } from "./constants";
 import {
   getShowAccountsWithZeroBalance,
   getShowAccountsWithZeroTransactions,
@@ -24,6 +22,7 @@ import { BalanceSheetContent } from "./balance-sheet-content";
 import { useReportConversion } from "@/features/reports/components/use-report-conversion";
 import { selectSettledReportData } from "@/features/reports/lib/select-settled-report-data";
 import { useUrlView } from "@/common/hooks/use-url-view";
+import { useReportInterval } from "@/common/hooks/use-report-interval";
 import type { LegendSelection } from "../lib/legend-selection";
 import { useQueryRetry } from "@/common/hooks/use-query-retry";
 import { BALANCE_SHEET_VIEWS, DEFAULT_VIEW } from "./search";
@@ -46,8 +45,9 @@ export default function LedgerBalanceSheetPage() {
   } = useLedger();
   const ledgerFilters = useLedgerSearchParams();
   const reportingEntityTitle = (ledgerData.options.title ?? "").trim();
-  const [timeInterval, setTimeInterval] = useState<ChartInterval>(
-    balanceSheetQueryDefaults.interval,
+  // In the URL too, so a shared scope edit regroups by the reader\'s choice.
+  const [timeInterval, setTimeInterval] = useReportInterval(
+    "/ledger/$ledgerOwner/$ledgerName/balance-sheet",
   );
   const [conversion, setConversion] = useReportConversion(
     ledgerId,

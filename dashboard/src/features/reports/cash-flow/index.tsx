@@ -7,8 +7,6 @@ import {
   GetLedgerCashFlowDocument,
   type SerializableTreeNode,
 } from "@/graphql/definitions";
-import type { ChartInterval } from "@/common/types/chart";
-import { cashFlowQueryDefaults } from "./constants";
 import { useLedger } from "@/common/hooks/use-ledger";
 import { useLedgerSearchParams } from "@/common/hooks/use-ledger-search-params";
 import { createLedgerId } from "@/common/lib/utils/encode";
@@ -36,6 +34,7 @@ import { CashFlowContent } from "./cash-flow-content";
 import { useReportConversion } from "@/features/reports/components/use-report-conversion";
 import { selectSettledReportData } from "@/features/reports/lib/select-settled-report-data";
 import { useUrlView } from "@/common/hooks/use-url-view";
+import { useReportInterval } from "@/common/hooks/use-report-interval";
 import { CASH_FLOW_VIEWS, DEFAULT_VIEW } from "./search";
 import { PageHeader } from "@/common/components/page-header";
 import { ConversionSelect } from "@/common/components/conversion-select";
@@ -63,8 +62,9 @@ export default function LedgerCashFlowPage() {
   } = useLedger();
   const ledgerFilters = useLedgerSearchParams();
   const reportingEntityTitle = (ledgerData.options.title ?? "").trim();
-  const [timeInterval, setTimeInterval] = useState<ChartInterval>(
-    cashFlowQueryDefaults.interval,
+  // In the URL too, so a shared scope edit regroups by the reader\'s choice.
+  const [timeInterval, setTimeInterval] = useReportInterval(
+    "/ledger/$ledgerOwner/$ledgerName/cash-flow",
   );
   const [conversion, setConversion] = useReportConversion(
     ledgerId,

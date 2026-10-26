@@ -84,8 +84,35 @@ vi.mock("@/features/reports/income-statement/date-balance-chart", () => ({
 }));
 
 vi.mock("@/common/components/interval-select", () => ({
-  IntervalSelect: () => <div data-testid="interval-select">Monthly</div>,
+  IntervalSelect: ({
+    value,
+    onValueChange,
+  }: {
+    value: string;
+    onValueChange: (value: string) => void;
+  }) => (
+    <button
+      type="button"
+      data-testid="interval-select"
+      onClick={() => onValueChange(value === "weekly" ? "monthly" : "weekly")}
+    >
+      {value}
+    </button>
+  ),
 }));
+
+/** The interval the account report read asked for most recently. */
+const requestedInterval = () =>
+  (
+    vi
+      .mocked(useQuery)
+      .mock.calls.filter(
+        ([, options]) =>
+          (options as { variables?: { interval?: string } } | undefined)
+            ?.variables?.interval,
+      )
+      .at(-1)![1] as { variables: { interval: string } }
+  ).variables.interval;
 
 vi.mock("@/common/components/conversion-select", () => ({
   ConversionSelect: () => <div data-testid="conversion-select">At Cost</div>,
@@ -160,5 +187,34 @@ describe("AccountPage chart view across a scope change", () => {
     router.set({ view: "<script>" });
     render(<AccountPage />);
     expect(screen.getByTestId("line-chart")).toBeInTheDocument();
+  });
+
+  it("keeps a chosen interval when the page is unmounted and remounted (w4/m57)", async () => {
+    const user = userEvent.setup();
+    const first = render(<AccountPage />);
+    expect(requestedInterval()).toBe("monthly");
+
+    await user.click(screen.getAllByTestId("interval-select")[0]);
+    expect(router.search.interval).toBe("weekly");
+    expect(requestedInterval()).toBe("weekly");
+
+    first.unmount();
+    act(() => router.set({ ...router.search, time: "2016" }));
+    render(<AccountPage />);
+
+    expect(screen.getAllByTestId("interval-select")[0]).toHaveTextContent(
+      "weekly",
+    );
+    expect(requestedInterval()).toBe("weekly");
+
+    // Back to the default leaves the URL clean.
+    await user.click(screen.getAllByTestId("interval-select")[0]);
+    expect(router.search.interval).toBeUndefined();
+  });
+
+  it("falls back to monthly for an unknown interval", () => {
+    router.set({ interval: "hourly" });
+    render(<AccountPage />);
+    expect(requestedInterval()).toBe("monthly");
   });
 });

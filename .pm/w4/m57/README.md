@@ -1,16 +1,16 @@
 # w4 · m57 — Keep report interval choices through shared-filter changes
 
-**Worker:** worker1 **Goal:** readers comparing dates keep the grouping interval they chose on Account, Balance Sheet, Income Statement and Cash Flow. **Status:** todo
+**Worker:** worker1 **Goal:** readers comparing dates keep the grouping interval they chose on Account, Balance Sheet, Income Statement and Cash Flow. **Status:** in progress (t001–t005 done)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| [t001](./t001.md) | Define a validated report-scoped interval preference | 30m | — |
-| [t002](./t002.md) | Wire four report pages and matching server reads | 35m | t001 |
-| [t003](./t003.md) | Verify adoption surfaces and document the preference | 10m | t002 |
-| [t004](./t004.md) | Simplify the selection and query plumbing | 10m | t003 |
-| [t005](./t005.md) | Cover the real scope/remount regressions | 40m | t004 |
+| [t001](./done/t001.md) | Define a validated report-scoped interval preference — **DONE** | 30m | — |
+| [t002](./done/t002.md) | Wire four report pages and matching server reads — **DONE** | 35m | t001 |
+| [t003](./done/t003.md) | Verify adoption surfaces and document the preference — **DONE** | 10m | t002 |
+| [t004](./done/t004.md) | Simplify the selection and query plumbing — **DONE** | 10m | t003 |
+| [t005](./done/t005.md) | Cover the real scope/remount regressions — **DONE** | 40m | t004 |
 | [t006](./t006.md) | Verify repaired journeys, ship and close out | 15m | t005 |
 
 140 minutes: one shared selection contract, four page/schema integrations, matching SSR loader inputs and meaningful lifecycle/browser verification. This is one minor interval-retention finding across four independently reproduced consumers, not four duplicate reports. Details and evidence are in [FINDINGS.md](./FINDINGS.md).

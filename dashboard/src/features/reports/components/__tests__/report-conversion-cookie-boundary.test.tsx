@@ -152,7 +152,12 @@ async function prefetchReports(header: string, ledgerId = LEDGER) {
   const input: Parameters<typeof balanceSheetLoader>[0] = {
     params: { ledgerOwner, ledgerName },
     context: { client: { query } } as unknown as RouterContext,
-    deps: { account: "Assets:US", filter: "currency:USD", time: "2017-09" },
+    deps: {
+      account: "Assets:US",
+      filter: "currency:USD",
+      time: "2017-09",
+      interval: "monthly",
+    },
     abortController: new AbortController(),
     preload: false,
     cause: "enter",

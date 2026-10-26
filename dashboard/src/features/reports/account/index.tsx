@@ -11,7 +11,7 @@ import {
 } from "@/common/components/ui/card";
 import { Tabs, TabsContent } from "@/common/components/ui/tabs";
 import { IntervalSelect } from "@/common/components/interval-select";
-import type { ChartInterval, ConversionOption } from "@/common/types/chart";
+import type { ConversionOption } from "@/common/types/chart";
 import { ConversionSelect } from "@/common/components/conversion-select";
 import { DollarSign, Activity } from "lucide-react";
 import {
@@ -31,6 +31,7 @@ import {
   DEFAULT_ACCOUNT_VIEW,
 } from "./search";
 import { useUrlView } from "@/common/hooks/use-url-view";
+import { useReportInterval } from "@/common/hooks/use-report-interval";
 import { selectSettledReportData } from "@/features/reports/lib/select-settled-report-data";
 import { ChartPeriodTable } from "../components/chart-period-table";
 import { ResponsiveTabTriggerList } from "@/common/components/responsive-tab-trigger-list";
@@ -59,7 +60,6 @@ import { useLedger } from "@/common/hooks/use-ledger";
 import { createLedgerId } from "@/common/lib/utils/encode";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { accountQueryDefaults } from "./constants";
 import { getAccountJournalWithChildren } from "@/common/lib/fava-options";
 import { useQueryRetry } from "@/common/hooks/use-query-retry";
 
@@ -401,8 +401,9 @@ export default function AccountPage() {
     },
   ];
   const { primaryCurrency, ledgerName: ledgerDisplayName } = useLedger();
-  const [timeInterval, setTimeInterval] = useState<ChartInterval>(
-    accountQueryDefaults.interval,
+  // In the URL too, so a shared scope edit regroups by the reader\'s choice.
+  const [timeInterval, setTimeInterval] = useReportInterval(
+    "/ledger/$ledgerOwner/$ledgerName/account/$accountName",
   );
   const [conversion, setConversion] = useReportConversion(
     ledgerId,

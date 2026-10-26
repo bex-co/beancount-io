@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { RouterContext } from "@/common/types/router-context";
+import type { ChartInterval } from "@/common/types/chart";
 import {
   GetLedgerCashFlowAccountsDocument,
   GetLedgerCashFlowDocument,
@@ -16,11 +17,14 @@ vi.mock("@/common/hooks/use-cookie-storage-state/cookie", () => ({
 
 type QueryOptions = { query: unknown; variables?: Record<string, unknown> };
 
-function loaderInput(query: (options: QueryOptions) => Promise<unknown>) {
+function loaderInput(
+  query: (options: QueryOptions) => Promise<unknown>,
+  interval: ChartInterval = "monthly",
+) {
   return {
     params: { ledgerOwner: "open_ledger", ledgerName: "example" },
     context: { client: { query } } as unknown as RouterContext,
-    deps: { account: "", filter: "", time: "2025" },
+    deps: { account: "", filter: "", time: "2025", interval },
     abortController: new AbortController(),
     preload: false,
     cause: "enter" as const,
@@ -94,6 +98,14 @@ describe("cashFlowLoader", () => {
         equityRoot: "Equity",
       },
     });
+  });
+
+  it("prefetches the interval the URL selected (w4/m57)", async () => {
+    const query = reads();
+
+    await cashFlowLoader(loaderInput(query, "weekly"));
+
+    expect(cashFlowCall(query).variables).toMatchObject({ interval: "weekly" });
   });
 
   it("reads the ledger's renamed roots (w4/1022)", async () => {

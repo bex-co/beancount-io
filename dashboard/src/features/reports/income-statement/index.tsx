@@ -3,8 +3,6 @@ import { TrendingUp } from "lucide-react";
 import { useParams } from "@tanstack/react-router";
 import { useQuery } from "@apollo/client/react";
 import { GetLedgerIncomeStatementDocument } from "@/graphql/definitions";
-import type { ChartInterval } from "@/common/types/chart";
-import { incomeStatementQueryDefaults } from "./constants";
 import { useLedger } from "@/common/hooks/use-ledger";
 import { useLedgerSearchParams } from "@/common/hooks/use-ledger-search-params";
 import { createLedgerId } from "@/common/lib/utils/encode";
@@ -25,6 +23,7 @@ import { IncomeStatementContent } from "./income-statement-content";
 import { useReportConversion } from "@/features/reports/components/use-report-conversion";
 import { selectSettledReportData } from "@/features/reports/lib/select-settled-report-data";
 import { useUrlView } from "@/common/hooks/use-url-view";
+import { useReportInterval } from "@/common/hooks/use-report-interval";
 import { useQueryRetry } from "@/common/hooks/use-query-retry";
 import type { LegendSelection } from "../lib/legend-selection";
 import {
@@ -52,8 +51,9 @@ export default function LedgerIncomeStatementPage() {
   } = useLedger();
   const ledgerFilters = useLedgerSearchParams();
   const reportingEntityTitle = (ledgerData.options.title ?? "").trim();
-  const [timeInterval, setTimeInterval] = useState<ChartInterval>(
-    incomeStatementQueryDefaults.interval,
+  // In the URL too, so a shared scope edit regroups by the reader\'s choice.
+  const [timeInterval, setTimeInterval] = useReportInterval(
+    "/ledger/$ledgerOwner/$ledgerName/income-statement",
   );
   const [conversion, setConversion] = useReportConversion(
     ledgerId,

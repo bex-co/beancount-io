@@ -216,6 +216,12 @@ reader chose — which chart a statement page is showing — belongs to the page
 the content. Pass it down as `selectedTab`/`onSelectedTabChange`, alongside
 `conversion` and `timeInterval`, so an uncached interval or conversion regroups
 the selected chart instead of resetting which chart the reader is looking at.
+The selected chart and grouping interval are page-scoped URL params (`?view=`,
+`?interval=`) read through `useUrlView`, because a shared scope edit unmounts
+the page itself at the layout boundary. The default (Monthly) stays out of the
+URL and an unknown value falls back to it; `reportIntervalLoaderDeps`
+(`common/lib/navigation/report-interval.ts`) passes the same interval to the
+statement loaders so the server read matches the page query.
 The units a reader turns on in a chart legend are the same kind of view state:
 `useLegendSelection` (`lib/legend-selection.ts`) keeps them across the chart's
 own data updates (`LineChart` and the Cash Flow and Income Statement bar

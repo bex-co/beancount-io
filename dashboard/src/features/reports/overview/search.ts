@@ -12,7 +12,4 @@ export const DEFAULT_NET_WORTH_VIEW: NetWorthView = "chart";
  * cards, so this choice cannot live in the card's own state: a shared
  * account/filter/time edit would flip it back to the chart.
  */
-export const overviewSearchSchema = createViewSearchSchema(
-  NET_WORTH_VIEWS,
-  DEFAULT_NET_WORTH_VIEW,
-);
+export const overviewSearchSchema = createViewSearchSchema(NET_WORTH_VIEWS);
