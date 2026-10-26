@@ -1,6 +1,6 @@
 # w23 · m9 — Unify the universal write-flag spellings
 
-**Worker:** worker1 **Goal:** agents pass `dry_run`/`dryRun` and `allowInvalid`/`allow_invalid` in either spelling on every surface without memorizing per-flag, per-tool conventions **Status:** todo (t001–t005 done)
+**Worker:** worker1 **Goal:** agents pass `dry_run`/`dryRun` and `allowInvalid`/`allow_invalid` in either spelling on every surface without memorizing per-flag, per-tool conventions **Status:** todo (t001–t006 done)
 
 ## Tasks (in order)
 
@@ -11,7 +11,7 @@
 | t003 | Commit-despite-errors aliases end to end ✅ | 60m | t002 |
 | t004 | Document the flag spellings ✅ | 30m | t003 |
 | t005 | Adoption surface ✅ | 20m | t004 |
-| t006 | Simplify | 30m | t005 |
+| t006 | Simplify ✅ | 30m | t005 |
 | t007 | Test coverage | 45m | t005 |
 | t008 | Closeout | 15m | t006, t007 |
 

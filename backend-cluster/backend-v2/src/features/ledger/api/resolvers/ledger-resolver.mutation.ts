@@ -19,9 +19,10 @@ function withResolvedPreview<
   const { dry_run, ...rest } = input;
   return {
     ...rest,
-    // The workflow reads `dryRun === true`, so false and missing agree.
+    // The workflow reads `dryRun === true`, so false and missing agree;
+    // the resolver also reads explicit null as missing.
     dryRun: resolveFlagAlias(
-      { primary: dry_run ?? undefined, legacy: rest.dryRun ?? undefined },
+      { primary: dry_run, legacy: rest.dryRun },
       DRY_RUN_NAMES,
     ),
   };
