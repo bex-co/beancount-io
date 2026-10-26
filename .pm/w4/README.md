@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1104** — [Navigate to a surviving folder after deleting its last file](./1104.md)
+
 - **1103** — [Retain initial profile search and sort choices](./1103.md)
 
 - **1102** — [Scope report filters to the actual ledger route](./1102.md)
