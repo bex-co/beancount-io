@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate, useRouter, useSearch } from "@tanstack/react-router";
+import {
+  useHydrated,
+  useNavigate,
+  useRouter,
+  useSearch,
+} from "@tanstack/react-router";
 import { BookOpen, ChevronDown, Search, SearchX, X } from "lucide-react";
 import { Button } from "@/common/components/ui/button";
 import { Input } from "@/common/components/ui/input";
@@ -35,6 +40,10 @@ export function LedgerCollection({
 }) {
   const { t } = useTranslations();
   const searchInput = useRef<HTMLInputElement>(null);
+  // Search and sort are server-rendered; a choice made before hydration
+  // attaches their handlers is overwritten by the controlled value, so they
+  // wait until they can keep it (w4/1103, as Gallery does).
+  const hydrated = useHydrated();
   // Search, ordering, and the revealed count live in the profile URL beside
   // `tab`, so opening a ledger and pressing Back rebuilds this list. Writes
   // replace the history entry and the query write is debounced, so neither
@@ -218,6 +227,7 @@ export function LedgerCollection({
               // fires during the gesture that departs — before a link
               // activates — so the draft lands in the entry being left.
               onBlur={commitQuery}
+              disabled={!hydrated}
               className="h-11 bg-card ps-10 pe-11 shadow-none [&::-webkit-search-cancel-button]:appearance-none"
             />
             {query && (
@@ -236,6 +246,7 @@ export function LedgerCollection({
             <select
               aria-label={t("userProfile.sortLedgers")}
               value={sort}
+              disabled={!hydrated}
               onChange={(event) => {
                 const nextSort = event.target.value as LedgerCollectionSort;
                 updateSearch({
@@ -246,7 +257,7 @@ export function LedgerCollection({
                   show: undefined,
                 });
               }}
-              className="h-11 w-full cursor-pointer appearance-none rounded-md border bg-card ps-3 pe-9 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:w-auto"
+              className="h-11 w-full cursor-pointer appearance-none disabled:cursor-not-allowed disabled:opacity-50 rounded-md border bg-card ps-3 pe-9 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:w-auto"
             >
               <option value="updated">
                 {t("userProfile.recentlyUpdated")}

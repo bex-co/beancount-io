@@ -12,8 +12,6 @@
 
 - **1104** — [Navigate to a surviving folder after deleting its last file](./1104.md)
 
-- **1103** — [Retain initial profile search and sort choices](./1103.md)
-
 - **1031** — Use actual lot cost currencies in Net Worth valuation disclosures (45–60m dashboard after dependency, A2/A3) ← dashboard QA; residual of m26 ([note](./blocked/1031.md)) — **blocked:** approved lot-specific valuation read
 
 
