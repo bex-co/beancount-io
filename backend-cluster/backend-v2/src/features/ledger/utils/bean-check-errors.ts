@@ -27,6 +27,17 @@ export interface BeanCheckError {
 /** A transaction whose postings do not sum to zero, per the ledger engine. */
 export const UNBALANCED_ERROR_CODE = "E3001";
 
+/**
+ * A located syntax error, per the ledger engine (`parseMultiFile` reports
+ * these with file and line; w21/187). An unlocatable file keeps the `LOAD`
+ * code with a "parse errors in ..." summary instead.
+ */
+export const PARSE_ERROR_CODE = "P0012";
+
+/** The engine's one-per-file syntax-error summary, with no file or line. */
+export const LOAD_ERROR_CODE = "LOAD";
+export const LOAD_PARSE_SUMMARY_PATTERN = /^parse errors in /;
+
 /** bean-check's verdict around a write. */
 export interface WriteValidation {
   readonly errorsBefore: number;

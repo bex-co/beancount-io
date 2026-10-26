@@ -182,6 +182,49 @@ describe("envelopeFromThrown", () => {
     expect(envelopeFromThrown(domain).newLedgerErrors).toBe(named);
   });
 
+  // w23/093: the joined detail is all the wording there is to read on
+  // this path, so a parse error anywhere in it flips the hint.
+  it("says the edit itself is invalid when the ledger's detail names a parse error", () => {
+    const domain = favaApiErrorToDomainError(
+      new FavaApiError("refused", 400, {
+        success: false,
+        error: "would introduce 1 new bean-check error",
+        code: "NEW_LEDGER_ERRORS",
+        details: {
+          count: 1,
+          action: "update",
+          detail: "parse error: unexpected input (main.bean:5)",
+        },
+      }),
+      "edit entry source",
+    );
+    expect(envelopeFromThrown(domain).hint).toMatch(
+      /edit is not valid Beancount/,
+    );
+    expect(envelopeFromThrown(domain).hint).not.toMatch(
+      /valid Beancount but would break/,
+    );
+  });
+
+  it("keeps the valid-but-breaks hint when the ledger's detail has no parse error", () => {
+    const domain = favaApiErrorToDomainError(
+      new FavaApiError("refused", 400, {
+        success: false,
+        error: "would introduce 1 new bean-check error",
+        code: "NEW_LEDGER_ERRORS",
+        details: {
+          count: 1,
+          action: "update",
+          detail: "Account Expenses:NotOpened was never opened",
+        },
+      }),
+      "edit entry source",
+    );
+    expect(envelopeFromThrown(domain).hint).toMatch(
+      /valid Beancount but would break/,
+    );
+  });
+
   // w23/074: the ledger service's body refusal surfaced as SERVICE_UNAVAILABLE
   // "a dependency is down, retry", and the caller retried forever.
   it("tells a change too large for the ledger service to split, not to retry", () => {

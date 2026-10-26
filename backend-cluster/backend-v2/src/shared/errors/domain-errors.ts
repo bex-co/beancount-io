@@ -154,30 +154,34 @@ export type NewLedgerErrorsWrite = "text" | "entries" | "update" | "delete";
 
 const NEW_LEDGER_ERRORS_WORDING: Record<
   NewLedgerErrorsWrite,
-  { field: string; subject: string; valid: string; fix: string }
+  { field: string; subject: string; valid: string; invalid: string; fix: string }
 > = {
   text: {
     field: "text",
     subject: "appending it",
     valid: "text is valid Beancount",
+    invalid: "text itself is not valid Beancount",
     fix: "Fix the directives, or pass `allowInvalid: true` to record them anyway.",
   },
   entries: {
     field: "entries",
     subject: "adding these entries",
     valid: "entries are valid",
+    invalid: "entries are not valid Beancount",
     fix: "Fix the entries, or pass `allowInvalid: true` to record them anyway.",
   },
   update: {
     field: "entry",
     subject: "this edit",
     valid: "edit is valid Beancount",
+    invalid: "edit is not valid Beancount",
     fix: "Change the edit, or pass `allowInvalid: true` to commit it anyway.",
   },
   delete: {
     field: "entry",
     subject: "this deletion",
     valid: "entry can be deleted",
+    invalid: "deletion leaves text that is not valid Beancount",
     fix: "Fix what depends on the entry first, or pass `allowInvalid: true` to delete it anyway.",
   },
 };
@@ -196,12 +200,20 @@ export class NewLedgerErrorsError extends ValidationError {
     write: NewLedgerErrorsWrite,
     count: number,
     newLedgerErrors: string,
+    opts?: { hasParseError?: boolean },
   ) {
-    const { field, subject, valid, fix } = NEW_LEDGER_ERRORS_WORDING[write];
+    const { field, subject, valid, invalid, fix } =
+      NEW_LEDGER_ERRORS_WORDING[write];
+    // A semantic-only breakage keeps "valid but would break the ledger";
+    // when the text itself does not parse, saying so points the agent at
+    // the lines instead of the ledger (w23/093).
+    const hint = opts?.hasParseError
+      ? `The ${invalid} — the message names each new error. ${fix}`
+      : `The ${valid} but would break the ledger — the message names each new error. ${fix}`;
     super(
       field,
       `${subject} would introduce ${count} new bean-check error${count === 1 ? "" : "s"}: ${newLedgerErrors}`,
-      `The ${valid} but would break the ledger — the message names each new error. ${fix}`,
+      hint,
       { newLedgerErrors },
     );
   }

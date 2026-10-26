@@ -18,7 +18,6 @@
 ## Inbox
 
 - [092](./092.md) — BQL queries over ~16 KB URL-encoded fail with `INTERNAL_SERVER_ERROR` instead of a documented limit refusal
-- [093](./093.md) — append refusal hint claims "valid Beancount" when the errors include parse errors (rescoped 2026-10-26: the dry-run premise was wrong, previews report errors by design)
 - [094](./094.md) — typed entry insert has `price` but no `cost`: agents cannot record lot costs except as raw text
 - [095](./095.md) — five mutation tools have no `dry_run`: rename, typed add, and all three entry-source writes
 - [096](./096.md) — bank tool arguments mix `snake_case` and `camelCase` with no alias

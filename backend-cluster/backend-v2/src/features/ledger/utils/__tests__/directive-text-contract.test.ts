@@ -1,5 +1,10 @@
 import { unbalancedOrValidationError } from "../directive-text-contract";
-import { toBeanCheckErrors, UNBALANCED_ERROR_CODE } from "../bean-check-errors";
+import {
+  LOAD_ERROR_CODE,
+  PARSE_ERROR_CODE,
+  toBeanCheckErrors,
+  UNBALANCED_ERROR_CODE,
+} from "../bean-check-errors";
 import { ErrorCategory } from "@/shared/errors";
 
 /**
@@ -86,6 +91,86 @@ describe("unbalancedOrValidationError", () => {
     ).toMatchObject({
       metadata: { hint: expect.stringContaining("allowInvalid") },
     });
+  });
+});
+
+describe("unbalancedOrValidationError parse-aware hint (w23/093)", () => {
+  it("says the text itself is invalid for a coded parse error", () => {
+    const error = unbalancedOrValidationError([
+      {
+        message: "parse error: unexpected input",
+        source: "main.bean:98",
+        code: PARSE_ERROR_CODE,
+      },
+    ]);
+    expect(error).toMatchObject({
+      category: ErrorCategory.VALIDATION_FAILED,
+      metadata: {
+        hint: expect.stringContaining("text itself is not valid Beancount"),
+      },
+    });
+    expect(error).toMatchObject({
+      metadata: {
+        hint: expect.not.stringContaining("valid Beancount but would break"),
+      },
+    });
+  });
+
+  it("says invalid for an unlocatable file's LOAD summary", () => {
+    const error = unbalancedOrValidationError([
+      { message: "parse errors in main.bean", code: LOAD_ERROR_CODE },
+    ]);
+    expect(error).toMatchObject({
+      metadata: {
+        hint: expect.stringContaining("text itself is not valid Beancount"),
+      },
+    });
+  });
+
+  it("falls back to the wording when the engine reported no code", () => {
+    const error = unbalancedOrValidationError([
+      { message: "parse error: unexpected input (main.bean:99)" },
+    ]);
+    expect(error).toMatchObject({
+      metadata: {
+        hint: expect.stringContaining("text itself is not valid Beancount"),
+      },
+    });
+  });
+
+  it("keeps the valid-but-breaks hint for semantic-only errors", () => {
+    const error = unbalancedOrValidationError([
+      { message: "Account Expenses:NotOpened was never opened", code: "E1001" },
+    ]);
+    expect(error).toMatchObject({
+      metadata: {
+        hint: expect.stringContaining("valid Beancount but would break"),
+      },
+    });
+  });
+
+  it("says invalid when any new error parses badly, with the rest named", () => {
+    // The note's repro: one interpolation failure plus two parse errors.
+    const error = unbalancedOrValidationError([
+      { message: "interpolation failed", code: "E2001" },
+      {
+        message: "parse error: unexpected input",
+        source: "main.bean:98",
+        code: PARSE_ERROR_CODE,
+      },
+      {
+        message: "parse error: unexpected input",
+        source: "main.bean:99",
+        code: PARSE_ERROR_CODE,
+      },
+    ]);
+    expect(error).toMatchObject({
+      metadata: {
+        hint: expect.stringContaining("text itself is not valid Beancount"),
+      },
+    });
+    expect(error.message).toContain("interpolation failed");
+    expect(error.message).toContain("main.bean:98");
   });
 });
 

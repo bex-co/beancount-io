@@ -141,6 +141,9 @@ export function favaApiErrorToDomainError(
       action === "update" || action === "delete" ? action : "entries",
       count,
       named,
+      // The ledger joins the errors into one string without codes, so the
+      // wording is all there is to read (w23/093).
+      { hasParseError: /parse error/i.test(named) },
     );
   }
 
