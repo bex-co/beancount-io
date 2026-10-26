@@ -252,3 +252,105 @@ it("refuses upload with a scopeless credential on every surface", async () => {
     await f.close();
   }
 });
+
+// w23/m11/t002: every key spelling works at every download input.
+it.each(["s3ObjectKey", "receiptObjectKey"])(
+  "accepts the %s download twin on every surface",
+  async (twin) => {
+    const f = await fixture();
+    try {
+      const up = await f.rest("upload-url", {
+        filename: "receipt.pdf",
+        mimeType: "application/pdf",
+      });
+      expect(up.status).toBe(200);
+      const { objectKey } = (await up.json()) as { objectKey: string };
+      const rd = await f.rest(
+        `download-url?${twin}=${encodeURIComponent(objectKey)}`,
+      );
+      expect(rd.status).toBe(200);
+      const gd = await f.gql(
+        `query($key:String!) { generateTempAssetDownloadUrl(${twin}:$key) { downloadUrl expiresIn } }`,
+        { key: objectKey },
+      );
+      expect(gd.errors).toBeUndefined();
+      const md = await f.client.readResource({
+        uri: `beancount://temp-assets/download-url?${twin}=${encodeURIComponent(objectKey)}`,
+      });
+      const content = md.contents[0];
+      if (!content || !("text" in content))
+        throw new Error("Expected text resource");
+      for (const result of [
+        await rd.json(),
+        gd.data!.generateTempAssetDownloadUrl,
+        JSON.parse(content.text),
+      ])
+        expect(result).toEqual({
+          downloadUrl: "https://storage.invalid/download",
+          expiresIn: 600,
+        });
+    } finally {
+      await f.close();
+    }
+  },
+);
+
+it("refuses two different download keys as bad input on every surface", async () => {
+  const f = await fixture();
+  try {
+    const up = await f.rest("upload-url", {
+      filename: "receipt.pdf",
+      mimeType: "application/pdf",
+    });
+    expect(up.status).toBe(200);
+    const { objectKey } = (await up.json()) as { objectKey: string };
+    const other = "tmp/usr_alice/other.pdf";
+    const rest = await f.rest(
+      `download-url?objectKey=${encodeURIComponent(objectKey)}&s3ObjectKey=${encodeURIComponent(other)}`,
+    );
+    expect(rest.status).toBe(400);
+    expect(await rest.json()).toMatchObject({
+      error: { code: "BAD_USER_INPUT" },
+    });
+    const gql = await f.gql(
+      "query($a:String!,$b:String!) { generateTempAssetDownloadUrl(objectKey:$a,receiptObjectKey:$b) { downloadUrl } }",
+      { a: objectKey, b: other },
+    );
+    expect(gql.errors?.[0].originalError).toMatchObject({
+      category: "BAD_USER_INPUT",
+    });
+    await expect(
+      f.client.readResource({
+        uri: `beancount://temp-assets/download-url?objectKey=${encodeURIComponent(objectKey)}&receiptObjectKey=${encodeURIComponent(other)}`,
+      }),
+    ).rejects.toMatchObject({ data: { code: "BAD_USER_INPUT" } });
+    expect(getSignedUrl).toHaveBeenCalledTimes(1);
+  } finally {
+    await f.close();
+  }
+});
+
+it("refuses a missing download key as bad input on every surface", async () => {
+  const f = await fixture();
+  try {
+    const rest = await f.rest("download-url?");
+    expect(rest.status).toBe(400);
+    expect(await rest.json()).toMatchObject({
+      error: { code: "BAD_USER_INPUT" },
+    });
+    const gql = await f.gql(
+      "query { generateTempAssetDownloadUrl { downloadUrl } }",
+    );
+    expect(gql.errors?.[0].originalError).toMatchObject({
+      category: "BAD_USER_INPUT",
+    });
+    await expect(
+      f.client.readResource({
+        uri: "beancount://temp-assets/download-url?",
+      }),
+    ).rejects.toMatchObject({ data: { code: "BAD_USER_INPUT" } });
+    expect(getSignedUrl).not.toHaveBeenCalled();
+  } finally {
+    await f.close();
+  }
+});

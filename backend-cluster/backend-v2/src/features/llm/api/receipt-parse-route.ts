@@ -2,6 +2,7 @@ import { requestPlatform } from "@/server/api/request-platform";
 import { z } from "@/shared/zod-openapi-setup";
 import { v1Route } from "@/server/rest/v1-route";
 import { json } from "@/server/rest/v1-schemas";
+import { resolveObjectKey } from "@/features/ledger/utils/object-key-alias";
 import {
   ledgerPathSchema,
   ledgerIdOf,
@@ -23,14 +24,27 @@ export const receiptParseRoute = v1Route({
     "Parse a caller-owned temporary image or PDF and recommend accounts from the selected ledger. Requires current content and asset read access; consumes extraction and recommendation tokens. No ledger write or preview.",
   params: ledgerPathSchema,
   query: z.object({}).strict(),
-  body: z.object({ s3ObjectKey: z.string() }).strict(),
+  body: z
+    .object({
+      s3ObjectKey: z.string().optional(),
+      // Twins (w23/m11/t002): every key spelling works at every input.
+      objectKey: z
+        .string()
+        .optional()
+        .describe("Alias of s3ObjectKey, as the upload URL spells it."),
+      receiptObjectKey: z
+        .string()
+        .optional()
+        .describe("Alias of s3ObjectKey, as the insert path spells it."),
+    })
+    .strict(),
   responses: {
     200: json("Parsed receipt and account recommendations", receiptParseResult),
   },
   handler: ({ layers }, { identity, params, body, ctx }) =>
     layers.services.llm.parseReceipt(
       identity,
-      body.s3ObjectKey,
+      resolveObjectKey(body),
       ledgerIdOf(params),
       requestPlatform(ctx.headers),
     ),

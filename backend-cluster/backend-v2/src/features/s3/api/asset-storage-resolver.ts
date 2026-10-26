@@ -2,6 +2,7 @@ import { Resolver, Mutation, Query, Arg, Ctx } from "type-graphql";
 import { Authenticated } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import type { IAssetStorageService } from "@/features/s3/service/asset-storage-service";
+import { resolveObjectKey } from "@/features/ledger/utils/object-key-alias";
 import {
   TempAssetUploadUrlResponse,
   TempAssetDownloadUrlResponse,
@@ -35,16 +36,27 @@ export class AssetStorageResolver {
   })
   async generateTempAssetDownloadUrl(
     @Arg("objectKey", () => String, {
+      nullable: true,
       description: "S3 object key returned by generateTempAssetUploadUrl",
     })
-    objectKey: string,
+    objectKey: string | undefined,
+    @Arg("s3ObjectKey", () => String, {
+      nullable: true,
+      description: "Alias of objectKey, as the parse routes spell it.",
+    })
+    s3ObjectKey: string | undefined,
+    @Arg("receiptObjectKey", () => String, {
+      nullable: true,
+      description: "Alias of objectKey, as the insert path spells it.",
+    })
+    receiptObjectKey: string | undefined,
     @Ctx() ctx: IContext,
   ): Promise<TempAssetDownloadUrlResponse> {
     // Ownership is enforced in the service: only tmp/ keys uploaded by the
     // caller can be presigned, never another tenant's or a permanent asset.
     return this.assetStorage.generateTempDownloadUrl(
       ctx.getCurrentIdentity(),
-      objectKey,
+      resolveObjectKey({ objectKey, s3ObjectKey, receiptObjectKey }),
     );
   }
 }

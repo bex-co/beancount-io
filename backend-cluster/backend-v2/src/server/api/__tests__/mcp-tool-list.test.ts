@@ -253,9 +253,14 @@ describe("MCP tool list", () => {
     // fourteen listed write tools: measured at 114,071 bytes. Each twin carries
     // one sentence naming the spelling's home surface, which is the
     // guidance the milestone exists to publish.
+    //
+    // 113 KB since w23/m11/t002 twinned the object-key arguments on the
+    // parse tools: measured at 114,778 bytes. Each twin carries one
+    // sentence naming the spelling's home surface, which is the guidance
+    // the milestone exists to publish.
     const { tools } = await listToolsRaw();
     const bytes = Buffer.byteLength(JSON.stringify(tools), "utf8");
-    expect(bytes).toBeLessThan(112 * 1024);
+    expect(bytes).toBeLessThan(113 * 1024);
   });
 
   // w23/m7/t006: every mutation preview flag is advertised where agents

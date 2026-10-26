@@ -6,6 +6,7 @@ import {
   DRY_RUN_NAMES,
   resolveFlagAlias,
 } from "@/features/ledger/utils/flag-alias";
+import { resolveObjectKey } from "@/features/ledger/utils/object-key-alias";
 import { BQL_SIZE_DESCRIPTION } from "@/features/ledger/utils/bql-size-description";
 import {
   SOURCE_SLICE_OPERATION_OUTPUTS,
@@ -550,7 +551,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
         ok: true,
         result: await context.llmService.parseFile(
           context.identity,
-          args.s3ObjectKey,
+          resolveObjectKey(args),
           args.fileFormat,
           context.platform,
         ),

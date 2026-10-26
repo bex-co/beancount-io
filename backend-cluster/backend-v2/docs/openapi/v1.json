@@ -3454,8 +3454,28 @@
             "schema": {
               "type": "string"
             },
-            "required": true,
+            "required": false,
             "name": "objectKey",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Alias of objectKey, as the parse routes spell it."
+            },
+            "required": false,
+            "description": "Alias of objectKey, as the parse routes spell it.",
+            "name": "s3ObjectKey",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Alias of objectKey, as the insert path spells it."
+            },
+            "required": false,
+            "description": "Alias of objectKey, as the insert path spells it.",
+            "name": "receiptObjectKey",
             "in": "query"
           }
         ],
@@ -3601,10 +3621,17 @@
                   },
                   "fileFormat": {
                     "type": "string"
+                  },
+                  "objectKey": {
+                    "type": "string",
+                    "description": "Alias of s3ObjectKey, as the upload URL spells it."
+                  },
+                  "receiptObjectKey": {
+                    "type": "string",
+                    "description": "Alias of s3ObjectKey, as the insert path spells it."
                   }
                 },
                 "required": [
-                  "s3ObjectKey",
                   "fileFormat"
                 ],
                 "additionalProperties": false
@@ -3796,11 +3823,16 @@
                 "properties": {
                   "s3ObjectKey": {
                     "type": "string"
+                  },
+                  "objectKey": {
+                    "type": "string",
+                    "description": "Alias of s3ObjectKey, as the upload URL spells it."
+                  },
+                  "receiptObjectKey": {
+                    "type": "string",
+                    "description": "Alias of s3ObjectKey, as the insert path spells it."
                   }
                 },
-                "required": [
-                  "s3ObjectKey"
-                ],
                 "additionalProperties": false
               }
             }

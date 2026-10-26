@@ -5,6 +5,7 @@ import { logger } from "@/shared/logger";
 import type { ToolContext } from "./types";
 import { toolOutputSchema } from "./types";
 import { runToolSafely } from "../utils/run-tool";
+import { resolveObjectKey } from "@/features/ledger/utils/object-key-alias";
 
 const toolLogger = logger.child({ module: "tool:parse-receipt" });
 
@@ -20,9 +21,19 @@ export const parseReceiptInputSchema = z
   .object({
     objectKey: z
       .string()
+      .optional()
       .describe(
         "S3 object key of the uploaded receipt file (starts with tmp/)",
       ),
+    // Twins (w23/m11/t002): every key spelling works at every input.
+    s3ObjectKey: z
+      .string()
+      .optional()
+      .describe("Alias of objectKey, as the parse routes spell it."),
+    receiptObjectKey: z
+      .string()
+      .optional()
+      .describe("Alias of objectKey, as the insert path spells it."),
   })
   .strict();
 
@@ -45,7 +56,7 @@ export async function executeParseReceipt(
     execute: async () => {
       const result = await llmService.parseReceipt(
         identity,
-        input.objectKey,
+        resolveObjectKey(input),
         ledgerId,
         ctx.platform,
       );

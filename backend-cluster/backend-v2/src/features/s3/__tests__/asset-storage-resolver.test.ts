@@ -100,6 +100,8 @@ describe("AssetStorageResolver", () => {
     it("should delegate to the ownership-checked temp presign with the session user", async () => {
       const result = await resolver.generateTempAssetDownloadUrl(
         "tmp/user123/2026-03-30-testnanoi.pdf",
+        undefined,
+        undefined,
         mockContext,
       );
 

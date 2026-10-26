@@ -2,6 +2,7 @@ import { Arg, Ctx, Mutation, Resolver } from "type-graphql";
 import { Authenticated } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import type { ILLMService } from "../service/llm-service";
+import { resolveObjectKey } from "@/features/ledger/utils/object-key-alias";
 import {
   FileParseResult,
   ReceiptParseResult,
@@ -18,9 +19,20 @@ export class LLMParserResolver {
   })
   async parseFile(
     @Arg("s3ObjectKey", () => String, {
+      nullable: true,
       description: "S3 object key from upload",
     })
-    s3ObjectKey: string,
+    s3ObjectKey: string | undefined,
+    @Arg("objectKey", () => String, {
+      nullable: true,
+      description: "Alias of s3ObjectKey, as the upload URL spells it.",
+    })
+    objectKey: string | undefined,
+    @Arg("receiptObjectKey", () => String, {
+      nullable: true,
+      description: "Alias of s3ObjectKey, as the insert path spells it.",
+    })
+    receiptObjectKey: string | undefined,
     @Arg("fileFormat", () => String, {
       description: "File format type (e.g., csv, pdf, xlsx, json, etc.)",
     })
@@ -29,7 +41,7 @@ export class LLMParserResolver {
   ): Promise<FileParseResult> {
     return this.llm.parseFile(
       ctx.getCurrentIdentity(),
-      s3ObjectKey,
+      resolveObjectKey({ objectKey, s3ObjectKey, receiptObjectKey }),
       fileFormat,
       ctx.platform,
     );
@@ -42,9 +54,20 @@ export class LLMParserResolver {
   })
   async parseReceipt(
     @Arg("s3ObjectKey", () => String, {
+      nullable: true,
       description: "S3 object key of the receipt (image or PDF only)",
     })
-    s3ObjectKey: string,
+    s3ObjectKey: string | undefined,
+    @Arg("objectKey", () => String, {
+      nullable: true,
+      description: "Alias of s3ObjectKey, as the upload URL spells it.",
+    })
+    objectKey: string | undefined,
+    @Arg("receiptObjectKey", () => String, {
+      nullable: true,
+      description: "Alias of s3ObjectKey, as the insert path spells it.",
+    })
+    receiptObjectKey: string | undefined,
     @Arg("ledgerId", () => String, {
       description:
         "Ledger ID used to fetch available accounts for recommendation",
@@ -56,7 +79,7 @@ export class LLMParserResolver {
     // reaches `parseReceipt` gets it — not just this resolver.
     return this.llm.parseReceipt(
       ctx.getCurrentIdentity(),
-      s3ObjectKey,
+      resolveObjectKey({ objectKey, s3ObjectKey, receiptObjectKey }),
       ledgerId,
       ctx.platform,
     );

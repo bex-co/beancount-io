@@ -1,6 +1,7 @@
 import { feedQuery } from "@/features/gitea/feed/api/feed-route";
 import { suggestCategoriesQuery } from "@/features/llm/api/suggest-categories-route";
 import { tempAssetDownloadQuery } from "@/features/s3/api/temp-asset-routes";
+import { resolveObjectKey } from "@/features/ledger/utils/object-key-alias";
 import { bankAccountQuery } from "@/features/ledger/api/rest/v1/banks-handler";
 import { publicProfileQuery } from "@/features/gitea/user-profile/api/public-profile-route";
 import {
@@ -429,7 +430,7 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
       JSON.stringify(
         await context.assetStorage.generateTempDownloadUrl(
           context.identity,
-          tempAssetDownloadQuery.parse(variables).objectKey,
+          resolveObjectKey(tempAssetDownloadQuery.parse(variables)),
         ),
       ),
   },

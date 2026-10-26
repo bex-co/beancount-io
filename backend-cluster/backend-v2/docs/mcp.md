@@ -1474,7 +1474,7 @@ starring retains one star, and access is checked again before unstar.
 `generateTempAssetUploadUrl` accepts optional `filename` and `mimeType` and
 returns `uploadUrl`, `objectKey`, and `expiresIn` (seconds). PUT the bytes to the
 returned URL with the supplied MIME type. Then use the object key in an ingestion
-operation or read `beancount://temp-assets/download-url{?objectKey}` to obtain a
+operation or read `beancount://temp-assets/download-url{?objectKey,s3ObjectKey,receiptObjectKey}` to obtain a
 `downloadUrl` and its `expiresIn`.
 
 The existing policy requires read capability for both operations, including URL

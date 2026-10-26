@@ -58,6 +58,8 @@ describe("LLMParserResolver", () => {
     it("hands the service the caller's real identity", async () => {
       const result = await resolver.parseFile(
         "tmp/file.csv",
+        undefined,
+        undefined,
         "csv",
         mockContext,
       );
@@ -77,6 +79,8 @@ describe("LLMParserResolver", () => {
     it("hands the service the caller's real identity, still pinned", async () => {
       const result = await resolver.parseReceipt(
         "tmp/receipt.jpg",
+        undefined,
+        undefined,
         "ledger123",
         mockContext,
       );

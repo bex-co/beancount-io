@@ -1,13 +1,13 @@
 # w23 · m11 — Unify the temp-asset object-key spellings
 
-**Worker:** worker1 **Goal:** agents pass `objectKey`/`s3ObjectKey`/`receiptObjectKey` in any spelling on MCP, REST, and GraphQL without memorizing which tool takes which **Status:** todo (t001 done)
+**Worker:** worker1 **Goal:** agents pass `objectKey`/`s3ObjectKey`/`receiptObjectKey` in any spelling on MCP, REST, and GraphQL without memorizing which tool takes which **Status:** todo (t001–t002 done)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
 | t001 | Map the key splits, decide the canonical spelling ✅ | 30m | — |
-| t002 | Parse-path key aliases end to end | 45m | t001 |
+| t002 | Parse-path key aliases end to end ✅ | 45m | t001 |
 | t003 | Insert-path key alias end to end | 45m | t002 |
 | t004 | Document the key spellings | 30m | t003 |
 | t005 | Adoption surface | 20m | t004 |

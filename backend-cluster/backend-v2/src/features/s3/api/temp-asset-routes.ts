@@ -1,6 +1,7 @@
 import { z } from "@/shared/zod-openapi-setup";
 import { v1Route } from "@/server/rest/v1-route";
 import { json } from "@/server/rest/v1-schemas";
+import { resolveObjectKey } from "@/features/ledger/utils/object-key-alias";
 
 export const tempAssetUploadInput = z
   .object({
@@ -9,7 +10,18 @@ export const tempAssetUploadInput = z
   })
   .strict();
 export const tempAssetDownloadQuery = z
-  .object({ objectKey: z.string() })
+  .object({
+    objectKey: z.string().optional(),
+    // Twins (w23/m11/t002): every key spelling works at every input.
+    s3ObjectKey: z
+      .string()
+      .optional()
+      .describe("Alias of objectKey, as the parse routes spell it."),
+    receiptObjectKey: z
+      .string()
+      .optional()
+      .describe("Alias of objectKey, as the insert path spells it."),
+  })
   .strict();
 export const tempAssetUploadResult = z.object({
   uploadUrl: z.string(),
@@ -57,7 +69,7 @@ export const TEMP_ASSET_ROUTES = [
     handler: async ({ layers }, { identity, query }) =>
       layers.services.assetStorage.generateTempDownloadUrl(
         identity,
-        query.objectKey,
+        resolveObjectKey(query),
       ),
   }),
 ];

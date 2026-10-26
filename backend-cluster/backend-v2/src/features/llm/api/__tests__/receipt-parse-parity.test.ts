@@ -191,16 +191,22 @@ async function fixture(caller = identity, appId?: string) {
         {
           method: "POST",
           headers: { "content-type": "application/json", ...requestHeaders },
-          body: JSON.stringify({
-            s3ObjectKey: (body as typeof input).s3ObjectKey,
-          }),
+          body: JSON.stringify(
+            Object.fromEntries(
+              ["s3ObjectKey", "objectKey", "receiptObjectKey"]
+                .filter((k) => k in (body as Record<string, unknown>))
+                .map((k) => [k, (body as Record<string, unknown>)[k]]),
+            ),
+          ),
         },
       ),
-    gql: (args = input) =>
+    gql: (
+      args: Record<string, unknown> = input,
+      source = "mutation($s3ObjectKey:String!,$ledgerId:String!) { parseReceipt(s3ObjectKey:$s3ObjectKey,ledgerId:$ledgerId) { date payee description amount sourceAccount targetAccount } }",
+    ) =>
       graphql({
         schema,
-        source:
-          "mutation($s3ObjectKey:String!,$ledgerId:String!) { parseReceipt(s3ObjectKey:$s3ObjectKey,ledgerId:$ledgerId) { date payee description amount sourceAccount targetAccount } }",
+        source,
         variableValues: args,
         contextValue: {
           identity: caller,
@@ -576,6 +582,115 @@ it("keeps concurrent and subsequent web requests subject to quota on the same ac
         response.bodyUsed ? undefined : response.text(),
       ),
     ]);
+    await f.close();
+  }
+});
+
+// w23/m11/t002: every key spelling works at every input.
+it.each(["objectKey", "receiptObjectKey"])(
+  "accepts the %s twin on every surface",
+  async (twin) => {
+    const f = await fixture();
+    try {
+      const r = await f.rest({ [twin]: input.s3ObjectKey });
+      expect(r.status).toBe(200);
+      expect(await r.json()).toEqual({ ...receipt, ...recommendation });
+      const g = await f.gql(
+        { key: input.s3ObjectKey, ledgerId: input.ledgerId },
+        `mutation($key:String!,$ledgerId:String!) { parseReceipt(${twin}:$key,ledgerId:$ledgerId) { date payee description amount sourceAccount targetAccount } }`,
+      );
+      expect(g.errors).toBeUndefined();
+      expect(g.data!.parseReceipt).toEqual({ ...receipt, ...recommendation });
+      const m = await f.client.callTool({
+        name: "parseReceipt",
+        arguments: { [twin]: input.s3ObjectKey },
+      });
+      expect(m.isError).not.toBe(true);
+      expect((m.structuredContent as { result: unknown }).result).toEqual({
+        ...receipt,
+        ...recommendation,
+      });
+    } finally {
+      await f.close();
+    }
+  },
+);
+
+it("accepts two spellings of the same key without refusing", async () => {
+  const f = await fixture();
+  try {
+    const r = await f.rest({
+      s3ObjectKey: input.s3ObjectKey,
+      receiptObjectKey: input.s3ObjectKey,
+    });
+    expect(r.status).toBe(200);
+    expect(await r.json()).toEqual({ ...receipt, ...recommendation });
+  } finally {
+    await f.close();
+  }
+});
+
+it("refuses two different keys as bad input on every surface", async () => {
+  const f = await fixture();
+  const other = "tmp/usr_alice/other.pdf";
+  try {
+    const r = await f.rest({
+      s3ObjectKey: input.s3ObjectKey,
+      objectKey: other,
+    });
+    expect(r.status).toBe(400);
+    expect(await r.json()).toMatchObject({
+      error: { code: "BAD_USER_INPUT" },
+    });
+    const g = await f.gql(
+      { a: input.s3ObjectKey, b: other, ledgerId: input.ledgerId },
+      "mutation($a:String!,$b:String!,$ledgerId:String!) { parseReceipt(s3ObjectKey:$a,receiptObjectKey:$b,ledgerId:$ledgerId) { date } }",
+    );
+    expect(g.errors?.[0].originalError).toMatchObject({
+      category: "BAD_USER_INPUT",
+    });
+    const m = await f.client.callTool({
+      name: "parseReceipt",
+      arguments: { s3ObjectKey: input.s3ObjectKey, objectKey: other },
+    });
+    expect(m.isError).toBe(true);
+    expect(m.structuredContent).toMatchObject({
+      error: { code: "BAD_USER_INPUT" },
+    });
+    expect(f.check).not.toHaveBeenCalled();
+    expect(f.metadata).not.toHaveBeenCalled();
+    expect(f.charge).not.toHaveBeenCalled();
+  } finally {
+    await f.close();
+  }
+});
+
+it("refuses a missing key as bad input on every surface", async () => {
+  const f = await fixture();
+  try {
+    const r = await f.rest({});
+    expect(r.status).toBe(400);
+    expect(await r.json()).toMatchObject({
+      error: { code: "BAD_USER_INPUT" },
+    });
+    const g = await f.gql(
+      { ledgerId: input.ledgerId },
+      "mutation($ledgerId:String!) { parseReceipt(ledgerId:$ledgerId) { date } }",
+    );
+    expect(g.errors?.[0].originalError).toMatchObject({
+      category: "BAD_USER_INPUT",
+    });
+    const m = await f.client.callTool({
+      name: "parseReceipt",
+      arguments: {},
+    });
+    expect(m.isError).toBe(true);
+    expect(m.structuredContent).toMatchObject({
+      error: { code: "BAD_USER_INPUT" },
+    });
+    expect(f.check).not.toHaveBeenCalled();
+    expect(f.metadata).not.toHaveBeenCalled();
+  } finally {
     await f.close();
   }
 });

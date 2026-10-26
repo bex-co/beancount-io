@@ -212,11 +212,13 @@ async function fixture(caller = identity, appId?: string) {
         headers: { "content-type": "application/json", ...headers },
         body: JSON.stringify(body),
       }),
-    gql: (args = input) =>
+    gql: (
+      args: Record<string, unknown> = input,
+      source = "mutation($s3ObjectKey:String!,$fileFormat:String!) { parseFile(s3ObjectKey:$s3ObjectKey,fileFormat:$fileFormat) { rows { date payee description amount } } }",
+    ) =>
       graphql({
         schema,
-        source:
-          "mutation($s3ObjectKey:String!,$fileFormat:String!) { parseFile(s3ObjectKey:$s3ObjectKey,fileFormat:$fileFormat) { rows { date payee description amount } } }",
+        source,
         variableValues: args,
         contextValue: {
           identity: caller,
@@ -411,3 +413,93 @@ it.each(["beancount-mobile", "mobile-beancount"])(
     }
   },
 );
+
+// w23/m11/t002: every key spelling works at every input.
+it.each(["objectKey", "receiptObjectKey"])(
+  "accepts the %s twin on every surface",
+  async (twin) => {
+    const f = await fixture();
+    try {
+      const r = await f.rest({ [twin]: input.s3ObjectKey, fileFormat: "csv" });
+      expect(r.status).toBe(200);
+      expect(await r.json()).toEqual({ rows });
+      const g = await f.gql(
+        { key: input.s3ObjectKey, fileFormat: "csv" },
+        `mutation($key:String!,$fileFormat:String!) { parseFile(${twin}:$key,fileFormat:$fileFormat) { rows { date payee description amount } } }`,
+      );
+      expect(g.errors).toBeUndefined();
+      expect(g.data!.parseFile).toEqual({ rows });
+      const m = await f.mcp({ [twin]: input.s3ObjectKey, fileFormat: "csv" });
+      expect(m.isError).not.toBe(true);
+      expect((m.structuredContent as { result: unknown }).result).toEqual({
+        rows,
+      });
+    } finally {
+      await f.close();
+    }
+  },
+);
+
+it("refuses two different keys as bad input on every surface", async () => {
+  const f = await fixture();
+  const other = "tmp/usr_alice/other.csv";
+  try {
+    const r = await f.rest({
+      s3ObjectKey: input.s3ObjectKey,
+      objectKey: other,
+      fileFormat: "csv",
+    });
+    expect(r.status).toBe(400);
+    expect(await r.json()).toMatchObject({
+      error: { code: "BAD_USER_INPUT" },
+    });
+    const g = await f.gql(
+      { a: input.s3ObjectKey, b: other, fileFormat: "csv" },
+      "mutation($a:String!,$b:String!,$fileFormat:String!) { parseFile(s3ObjectKey:$a,receiptObjectKey:$b,fileFormat:$fileFormat) { rows { date } } }",
+    );
+    expect(g.errors?.[0].originalError).toMatchObject({
+      category: "BAD_USER_INPUT",
+    });
+    const m = await f.mcp({
+      s3ObjectKey: input.s3ObjectKey,
+      objectKey: other,
+      fileFormat: "csv",
+    });
+    expect(m.isError).toBe(true);
+    expect(m.structuredContent).toMatchObject({
+      error: { code: "BAD_USER_INPUT" },
+    });
+    expect(f.check).not.toHaveBeenCalled();
+    expect(f.metadata).not.toHaveBeenCalled();
+    expect(f.charge).not.toHaveBeenCalled();
+  } finally {
+    await f.close();
+  }
+});
+
+it("refuses a missing key as bad input on every surface", async () => {
+  const f = await fixture();
+  try {
+    const r = await f.rest({ fileFormat: "csv" });
+    expect(r.status).toBe(400);
+    expect(await r.json()).toMatchObject({
+      error: { code: "BAD_USER_INPUT" },
+    });
+    const g = await f.gql(
+      { fileFormat: "csv" },
+      "mutation($fileFormat:String!) { parseFile(fileFormat:$fileFormat) { rows { date } } }",
+    );
+    expect(g.errors?.[0].originalError).toMatchObject({
+      category: "BAD_USER_INPUT",
+    });
+    const m = await f.mcp({ fileFormat: "csv" });
+    expect(m.isError).toBe(true);
+    expect(m.structuredContent).toMatchObject({
+      error: { code: "BAD_USER_INPUT" },
+    });
+    expect(f.check).not.toHaveBeenCalled();
+    expect(f.metadata).not.toHaveBeenCalled();
+  } finally {
+    await f.close();
+  }
+});

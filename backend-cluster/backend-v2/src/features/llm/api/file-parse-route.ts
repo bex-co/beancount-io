@@ -2,9 +2,22 @@ import { requestPlatform } from "@/server/api/request-platform";
 import { z } from "@/shared/zod-openapi-setup";
 import { v1Route } from "@/server/rest/v1-route";
 import { json } from "@/server/rest/v1-schemas";
+import { resolveObjectKey } from "@/features/ledger/utils/object-key-alias";
 
 export const fileParseInput = z
-  .object({ s3ObjectKey: z.string(), fileFormat: z.string() })
+  .object({
+    s3ObjectKey: z.string().optional(),
+    fileFormat: z.string(),
+    // Twins (w23/m11/t002): every key spelling works at every input.
+    objectKey: z
+      .string()
+      .optional()
+      .describe("Alias of s3ObjectKey, as the upload URL spells it."),
+    receiptObjectKey: z
+      .string()
+      .optional()
+      .describe("Alias of s3ObjectKey, as the insert path spells it."),
+  })
   .strict();
 export const fileParseResult = z.object({
   rows: z.array(
@@ -28,7 +41,7 @@ export const fileParseRoute = v1Route({
   handler: ({ layers }, { identity, body, ctx }) =>
     layers.services.llm.parseFile(
       identity,
-      body.s3ObjectKey,
+      resolveObjectKey(body),
       body.fileFormat,
       requestPlatform(ctx.headers),
     ),
