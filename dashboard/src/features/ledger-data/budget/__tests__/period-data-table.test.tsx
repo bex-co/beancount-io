@@ -73,18 +73,22 @@ function mockRead(override: Record<string, unknown>) {
   } as never);
 }
 
-function renderDining(time?: string) {
+function diningCard(time?: string, ledgerId = "l1") {
   const [group] = groupBudgetEntries(DINING, "2026-03-31");
-  return render(
+  return (
     <BudgetChartCard
       time={time}
       group={group}
-      ledgerId="l1"
+      ledgerId={ledgerId}
       conversion="AT_COST"
       primaryCurrency="USD"
       onDelete={vi.fn()}
-    />,
+    />
   );
+}
+
+function renderDining(time?: string) {
+  return render(diningCard(time));
 }
 
 beforeEach(() => {
@@ -261,5 +265,71 @@ describe("the header target for a dated period (w4/184)", () => {
       screen.getByText("Current budget", { selector: "p" }).nextElementSibling
         ?.textContent,
     ).toBe(money(200));
+  });
+});
+
+/**
+ * A new time span re-reads the periods, and the table is withheld while that
+ * read is pending; the reader's open or closed choice must outlast it
+ * (w4/1106).
+ */
+describe("period data across a time-span change", () => {
+  const YEAR = Array.from({ length: 12 }, (_, month) => ({
+    date: `2026-${String(month + 1).padStart(2, "0")}-28`,
+    balance: month === 0 ? { USD: "160.5" } : {},
+    accountBalances: {},
+  }));
+
+  it("keeps an opened table open, with the new span's rows", async () => {
+    const user = userEvent.setup();
+    const view = renderDining();
+    await user.click(screen.getByText("Period data"));
+    expect(screen.getByText("Period data").closest("details")).toHaveAttribute(
+      "open",
+    );
+
+    mockRead({ loading: true });
+    view.rerender(diningCard("year"));
+    expect(
+      screen.queryByRole("table", { name: "Expenses:Dining USD Period data" }),
+    ).not.toBeInTheDocument();
+
+    mockRead({ data: { getLedgerIntervalTotals: YEAR } });
+    view.rerender(diningCard("year"));
+    expect(screen.getByText("Period data").closest("details")).toHaveAttribute(
+      "open",
+    );
+    expect(within(periodTable()).getAllByRole("row")).toHaveLength(13);
+  });
+
+  it("keeps a deliberately closed table closed", async () => {
+    const user = userEvent.setup();
+    const view = renderDining();
+    const summary = screen.getByText("Period data");
+    await user.click(summary);
+    expect(summary.closest("details")).toHaveAttribute("open");
+    await user.click(summary);
+    expect(summary.closest("details")).not.toHaveAttribute("open");
+
+    mockRead({ loading: true });
+    view.rerender(diningCard("year"));
+    mockRead({ data: { getLedgerIntervalTotals: YEAR } });
+    view.rerender(diningCard("year"));
+    expect(
+      screen.getByText("Period data").closest("details"),
+    ).not.toHaveAttribute("open");
+  });
+
+  it("starts closed on another ledger", async () => {
+    const user = userEvent.setup();
+    const view = renderDining();
+    await user.click(screen.getByText("Period data"));
+    expect(screen.getByText("Period data").closest("details")).toHaveAttribute(
+      "open",
+    );
+    view.rerender(diningCard(undefined, "l2"));
+    expect(
+      screen.getByText("Period data").closest("details"),
+    ).not.toHaveAttribute("open");
   });
 });

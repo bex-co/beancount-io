@@ -91,6 +91,12 @@ export function BudgetChartCard({
   const currencyId = useId();
   const periodsId = useId();
   const [isAddOpen, setIsAddOpen] = useState(false);
+  // Whether the reader opened Period data. Held on the card, not the details
+  // element: a new time span re-reads the periods, which unmounts the table
+  // while it loads, and the reopened one must keep the reader's choice
+  // (w4/1106). Another ledger starts closed.
+  const [periodsOpen, setPeriodsOpen] = useState({ ledgerId, open: false });
+  const showPeriods = periodsOpen.ledgerId === ledgerId && periodsOpen.open;
   const { t } = useTranslations();
   const formatNum = useFormatNumber();
   const currentInterval = toIntervalEnum(group.interval);
@@ -534,7 +540,14 @@ export function BudgetChartCard({
             one must not look like a table of zeros. A disclosure keeps long
             histories out of the way while staying reachable by keyboard. */}
         {!loading && !error && periodRows.length > 0 && (
-          <details className="group/periods mt-4 rounded-lg border">
+          <details
+            className="group/periods mt-4 rounded-lg border"
+            open={showPeriods}
+            onToggle={(event) => {
+              const open = event.currentTarget.open;
+              if (open !== showPeriods) setPeriodsOpen({ ledgerId, open });
+            }}
+          >
             <summary
               id={periodsId}
               className="cursor-pointer list-none px-3 py-2 text-sm font-medium text-muted-foreground outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
