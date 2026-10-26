@@ -1560,9 +1560,21 @@ anyway.
 
 `addLedgerEntries` accepts `entries: [{type, entry}]` and optional `ledger`.
 Only pinned credentials can omit the ledger. It supports transaction, commodity,
-price, note, balance, open, close, budget, document, and event directives using
+price, note, balance, open, close, pad, budget, document, and event directives using
 the REST input shapes. GraphQL instead uses an uppercase enum and a payload field
 named after the directive; its budget interval enum maps to lowercase here.
+Postings carry lot cost, price, and annotations on all three surfaces. `cost`
+is the lot basis (`{number currency [, date] [, label]}`, e.g.
+`{100 USD, 2024-01-15, "lot-a"}`), which booking matches against; `price` is a
+per-unit market annotation (`@`), and `totalPrice` the whole-posting price
+(`@@`). Cost and price are different facts: cost says what was paid for the
+lot, price says what one unit was worth. A posting takes at most one price —
+`price` with `totalPrice` is refused — and cost, like either price, needs
+units. Postings also take `tags`, `links`, and string-valued `meta`, written
+onto the posting line and beneath it. An `open` takes `booking` (`STRICT`,
+`FIFO`, `LIFO`, `NONE`); anything else is refused. A `balance` takes
+`tolerance`, a plain-decimal slack rendered `~`. A `pad` takes
+`sourceAccount`.
 A budget's account must be one the ledger opens, a parent of one (a budget on
 `Expenses:Food` covers its children), or one the same call opens. bean-check
 never reads a `custom "budget"` account, so otherwise the budget would match no

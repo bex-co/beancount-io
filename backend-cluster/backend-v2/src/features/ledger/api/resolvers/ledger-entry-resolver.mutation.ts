@@ -17,6 +17,17 @@ import type {
   ILedgerEntryService,
   LedgerEntryInput,
 } from "@/features/ledger/service/ledger-entry-service";
+import {
+  BALANCE_TOLERANCE_DESCRIPTION,
+  OPEN_BOOKING_DESCRIPTION,
+  PAD_SOURCE_DESCRIPTION,
+  POSTING_COST_DESCRIPTION,
+  POSTING_LINKS_DESCRIPTION,
+  POSTING_META_DESCRIPTION,
+  POSTING_PRICE_DESCRIPTION,
+  POSTING_TAGS_DESCRIPTION,
+  POSTING_TOTAL_PRICE_DESCRIPTION,
+} from "@/features/ledger/utils/entry-field-descriptions";
 
 enum BudgetInterval {
   DAILY = "daily",
@@ -114,32 +125,43 @@ class LedgerPostingInput {
   @Field(() => String)
   account: string;
 
-  @Field(() => LedgerAmountInput, { nullable: true })
+  @Field(() => LedgerAmountInput, {
+    nullable: true,
+    description: POSTING_PRICE_DESCRIPTION,
+  })
   price?: LedgerAmountInput;
 
   @Field(() => LedgerAmountInput, {
     nullable: true,
-    description: "Total price (`@@`); exclusive with the per-unit price",
+    description: POSTING_TOTAL_PRICE_DESCRIPTION,
   })
   totalPrice?: LedgerAmountInput;
 
   @Field(() => LedgerCostInput, {
     nullable: true,
-    description:
-      "Lot basis `{number currency [, date] [, label]}`; needs units like price",
+    description: POSTING_COST_DESCRIPTION,
   })
   cost?: LedgerCostInput;
 
   @Field(() => String, { nullable: true })
   flag?: string;
 
-  @Field(() => [String], { nullable: true })
+  @Field(() => [String], {
+    nullable: true,
+    description: POSTING_TAGS_DESCRIPTION,
+  })
   tags?: string[];
 
-  @Field(() => [String], { nullable: true })
+  @Field(() => [String], {
+    nullable: true,
+    description: POSTING_LINKS_DESCRIPTION,
+  })
   links?: string[];
 
-  @Field(() => GraphQLJSONObject, { nullable: true })
+  @Field(() => GraphQLJSONObject, {
+    nullable: true,
+    description: POSTING_META_DESCRIPTION,
+  })
   meta?: Record<string, string>;
 }
 
@@ -216,7 +238,7 @@ class LedgerBalanceInput {
 
   @Field(() => String, {
     nullable: true,
-    description: "Explicit balance tolerance as a plain decimal",
+    description: BALANCE_TOLERANCE_DESCRIPTION,
   })
   tolerance?: string;
 }
@@ -232,7 +254,10 @@ class LedgerOpenInput {
   @Field(() => [String])
   currencies: string[];
 
-  @Field(() => BookingMethod, { nullable: true })
+  @Field(() => BookingMethod, {
+    nullable: true,
+    description: OPEN_BOOKING_DESCRIPTION,
+  })
   booking?: BookingMethod;
 }
 
@@ -253,7 +278,7 @@ class LedgerPadInput {
   @Field(() => String)
   account: string;
 
-  @Field(() => String)
+  @Field(() => String, { description: PAD_SOURCE_DESCRIPTION })
   sourceAccount: string;
 }
 

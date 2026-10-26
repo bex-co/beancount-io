@@ -315,7 +315,8 @@
                                   "number",
                                   "currency"
                                 ],
-                                "additionalProperties": false
+                                "additionalProperties": false,
+                                "description": "Per-unit price (`@` annotation); exclusive with the total price"
                               },
                               "totalPrice": {
                                 "type": "object",
@@ -377,21 +378,24 @@
                                 "nullable": true,
                                 "items": {
                                   "type": "string"
-                                }
+                                },
+                                "description": "Posting tags (`#tag`), sorted onto the posting line"
                               },
                               "links": {
                                 "type": "array",
                                 "nullable": true,
                                 "items": {
                                   "type": "string"
-                                }
+                                },
+                                "description": "Posting links (`^link`), sorted onto the posting line"
                               },
                               "meta": {
                                 "type": "object",
                                 "nullable": true,
                                 "additionalProperties": {
                                   "type": "string"
-                                }
+                                },
+                                "description": "Posting metadata, written beneath the posting"
                               }
                             },
                             "required": [
@@ -542,6 +546,7 @@
                         },
                         "sourceAccount": {
                           "type": "string",
+                          "description": "Account to pad from",
                           "example": "Equity:Opening-Balances"
                         }
                       },

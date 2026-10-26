@@ -2,6 +2,17 @@ import { z } from "@/shared/zod-openapi-setup";
 import { ledgerPathSchema } from "./schemas";
 import { json } from "@/server/rest/v1-schemas";
 import { v1Route } from "@/server/rest/v1-route";
+import {
+  BALANCE_TOLERANCE_DESCRIPTION,
+  OPEN_BOOKING_DESCRIPTION,
+  PAD_SOURCE_DESCRIPTION,
+  POSTING_COST_DESCRIPTION,
+  POSTING_LINKS_DESCRIPTION,
+  POSTING_META_DESCRIPTION,
+  POSTING_PRICE_DESCRIPTION,
+  POSTING_TAGS_DESCRIPTION,
+  POSTING_TOTAL_PRICE_DESCRIPTION,
+} from "@/features/ledger/utils/entry-field-descriptions";
 
 /**
  * REST/MCP null tolerance: an explicit null on an optional field means the
@@ -21,7 +32,7 @@ const dateSchema = z.string().openapi({ example: "2026-08-23" });
 
 const bookingSchema = z
   .enum(["STRICT", "FIFO", "LIFO", "NONE"])
-  .openapi({ description: "Booking method for the account" });
+  .openapi({ description: OPEN_BOOKING_DESCRIPTION });
 
 const costSchema = z.strictObject({
   number: z
@@ -40,20 +51,25 @@ const postingSchema = z.strictObject({
     description:
       "Posting amount; omit on at most one posting per transaction to elide it",
   }),
-  price: nullToUndefined(amountSchema),
-  totalPrice: nullToUndefined(amountSchema).optional().openapi({
-    description: "Total price (`@@`); exclusive with the per-unit price",
-  }),
+  price: nullToUndefined(amountSchema)
+    .optional()
+    .openapi({ description: POSTING_PRICE_DESCRIPTION }),
+  totalPrice: nullToUndefined(amountSchema)
+    .optional()
+    .openapi({ description: POSTING_TOTAL_PRICE_DESCRIPTION }),
   cost: nullToUndefined(costSchema)
     .optional()
-    .openapi({
-      description:
-        "Lot basis `{number currency [, date] [, label]}`; needs units like price",
-    }),
+    .openapi({ description: POSTING_COST_DESCRIPTION }),
   flag: nullToUndefined(z.string()),
-  tags: nullToUndefined(z.array(z.string())),
-  links: nullToUndefined(z.array(z.string())),
-  meta: nullToUndefined(z.record(z.string(), z.string())),
+  tags: nullToUndefined(z.array(z.string()))
+    .optional()
+    .openapi({ description: POSTING_TAGS_DESCRIPTION }),
+  links: nullToUndefined(z.array(z.string()))
+    .optional()
+    .openapi({ description: POSTING_LINKS_DESCRIPTION }),
+  meta: nullToUndefined(z.record(z.string(), z.string()))
+    .optional()
+    .openapi({ description: POSTING_META_DESCRIPTION }),
 });
 
 /**
@@ -97,7 +113,10 @@ const entrySchema = z.discriminatedUnion("type", [
     entry: z.strictObject({
       date: dateSchema,
       account: z.string(),
-      sourceAccount: z.string().openapi({ example: "Equity:Opening-Balances" }),
+      sourceAccount: z.string().openapi({
+        description: PAD_SOURCE_DESCRIPTION,
+        example: "Equity:Opening-Balances",
+      }),
     }),
   }),
   z.strictObject({
@@ -107,7 +126,7 @@ const entrySchema = z.discriminatedUnion("type", [
       account: z.string(),
       amount: amountSchema,
       tolerance: nullToUndefined(z.string()).optional().openapi({
-        description: "Explicit balance tolerance as a plain decimal",
+        description: BALANCE_TOLERANCE_DESCRIPTION,
       }),
     }),
   }),
