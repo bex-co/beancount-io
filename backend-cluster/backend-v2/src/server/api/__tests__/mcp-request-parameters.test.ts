@@ -7,6 +7,8 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import {
   CallToolResultSchema,
+  InitializeResultSchema,
+  LATEST_PROTOCOL_VERSION,
   McpError,
   ResultSchema,
   type Request,
@@ -149,6 +151,20 @@ describe("MCP outer request parameters over SDK dispatch (w6/001)", () => {
       field: "bogus",
     },
     {
+      method: "initialize",
+      params: { protocolVersion: "2025-11-25", capabilities: {} },
+      field: "clientInfo",
+    },
+    {
+      method: "initialize",
+      params: {
+        protocolVersion: "2025-11-25",
+        capabilities: 5,
+        clientInfo: { name: "request-parameters", version: "1" },
+      },
+      field: "capabilities",
+    },
+    {
       method: "tools/call",
       params: {
         name: "runBqlQuery",
@@ -228,6 +244,36 @@ describe("MCP outer request parameters over SDK dispatch (w6/001)", () => {
         message: 'Unrecognized key: "bogus"',
         hint: expect.any(String),
       });
+      expect(f.domainAccess).not.toHaveBeenCalled();
+    });
+  });
+
+  it("a valid initialize negotiates exactly like the SDK (w23/118)", async () => {
+    await withClient(async (f) => {
+      const current = await f.client.request(
+        request("initialize", {
+          protocolVersion: LATEST_PROTOCOL_VERSION,
+          capabilities: {},
+          clientInfo: { name: "request-parameters", version: "1" },
+        }),
+        InitializeResultSchema,
+      );
+      expect(current.protocolVersion).toBe(LATEST_PROTOCOL_VERSION);
+      expect(current.serverInfo).toEqual({
+        name: "beancount-mcp",
+        version: "1.0.0",
+      });
+      expect(current.capabilities.tools).toBeDefined();
+      expect(current.instructions).toEqual(expect.any(String));
+      const ancient = await f.client.request(
+        request("initialize", {
+          protocolVersion: "1999-01-01",
+          capabilities: {},
+          clientInfo: { name: "request-parameters", version: "1" },
+        }),
+        InitializeResultSchema,
+      );
+      expect(ancient.protocolVersion).toBe(LATEST_PROTOCOL_VERSION);
       expect(f.domainAccess).not.toHaveBeenCalled();
     });
   });

@@ -30,11 +30,15 @@ import {
   CreateTaskResultSchema,
   ErrorCode,
   GetPromptRequestSchema,
+  InitializeRequestSchema,
+  LATEST_PROTOCOL_VERSION,
   ListToolsRequestSchema,
   McpError,
   ReadResourceRequestSchema,
+  SUPPORTED_PROTOCOL_VERSIONS,
   type CallToolRequest,
   type GetPromptResult,
+  type InitializeResult,
   type ListToolsResult,
 } from "@modelcontextprotocol/sdk/types.js";
 import type {
@@ -493,12 +497,15 @@ function publishToolSecuritySchemes(server: McpServer): void {
  * grant narrowed or revoked mid-session takes effect on the very next call —
  * the same reasoning that moved `authorizeLedger` into every tool in w1/m19.
  */
+/** The server identity both the constructor and the `initialize` override answer. */
+const MCP_SERVER_INFO = { name: "beancount-mcp", version: "1.0.0" } as const;
+
 export function assembleMcpRegistry(
   toolCtx: McpRequestContext,
   config: AppConfig,
 ): McpServer {
   const server = new McpServer(
-    { name: "beancount-mcp", version: "1.0.0" },
+    { ...MCP_SERVER_INFO },
     { instructions: buildInstructions(toolCtx.identity) },
   );
 
@@ -848,6 +855,45 @@ export function assembleMcpRegistry(
       build,
     );
   }
+
+  // `initialize` is answered here, like `tools/call`, `resources/read` and
+  // `prompts/get`. The SDK's own handler lets a validation failure escape as
+  // `-32603` with a raw zod dump and no `data` — every other method answers
+  // `-32602` with this server's envelope, and the handshake is the worst
+  // method to shape differently (w23/118). The success path reproduces the
+  // SDK's negotiation exactly; the client-capability side effects it drops
+  // are unobserved — this server does no sampling, elicitation, or tasks —
+  // and must be revisited if it ever does.
+  //
+  // `getCapabilities` is d.ts-private but present at runtime; reading it
+  // through a structural cast (the file's `publishToolSecuritySchemes`
+  // precedent) answers the live capability set rather than a frozen copy
+  // that would silently drop whatever a future SDK minor adds. The
+  // negotiation test below is the tripwire if the SDK ever removes it.
+  const sdkServer = server.server as unknown as {
+    getCapabilities(): InitializeResult["capabilities"];
+  };
+  server.server.setRequestHandler(
+    InitializeRequestSchema.pick({ method: true }).passthrough(),
+    async (rawRequest): Promise<InitializeResult> => {
+      const validated = InitializeRequestSchema.safeParse(rawRequest);
+      if (!validated.success) {
+        return refuseMcpParameters(
+          validated.error,
+          "Supply `params.protocolVersion`, `params.capabilities`, and `params.clientInfo` ({name, version}); the handshake takes no other parameters.",
+        );
+      }
+      const requestedVersion = validated.data.params.protocolVersion;
+      return {
+        protocolVersion: SUPPORTED_PROTOCOL_VERSIONS.includes(requestedVersion)
+          ? requestedVersion
+          : LATEST_PROTOCOL_VERSION,
+        capabilities: sdkServer.getCapabilities(),
+        serverInfo: { ...MCP_SERVER_INFO },
+        instructions: buildInstructions(toolCtx.identity),
+      };
+    },
+  );
 
   // `prompts/list` stays the SDK's; `prompts/get` is answered here, like
   // `tools/call` and `resources/read` above. The SDK refuses an unknown name,
