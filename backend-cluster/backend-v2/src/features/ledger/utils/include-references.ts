@@ -1,13 +1,16 @@
 /**
- * Shared repository walk for include-aware guards (w23/m4/t001).
+ * Shared include-aware guard code for rename and delete (w23/m4/t001).
  *
  * Rename and delete both reason about `include` lines, and both must see the
  * whole tree rather than trusting the entry-point-reachable set: an orphan
- * file nobody includes today breaks the day someone includes it. This walk is
- * extracted verbatim from the rename guard so the two cannot drift.
+ * file nobody includes today breaks the day someone includes it. The walk is
+ * extracted verbatim from the rename guard so the two cannot drift, and both
+ * delete paths share the scan, the Fava reads, and the refusal below.
  */
 import { decodeFileContent } from "@/shared/file-content";
 import { BadUserInputError } from "@/shared/errors";
+import { type FavaApiClient, unwrapFavaResponse } from "@/foundation/fava";
+import { operationNotAllowedFromCause } from "./operation-not-allowed-from-cause";
 import {
   isGlobPattern,
   isUrlTarget,
@@ -95,6 +98,48 @@ export interface LedgerFileContent {
   path: string;
   content?: string | null;
   encoding?: string | null;
+}
+
+/**
+ * The Fava reads behind {@link findDanglingDeleteIncluders}, shared by both
+ * delete paths (w23/m4/t005): the repo service's batches and the workflow's
+ * single-file delete list and read with identical calls, so the pair lives
+ * here rather than once per caller.
+ */
+export function deleteGuardFileAccess(
+  favaApiClient: FavaApiClient,
+  ledgerOwner: string,
+  ledgerName: string,
+): Pick<
+  Parameters<typeof findDanglingDeleteIncluders>[0],
+  "listDir" | "readFiles"
+> {
+  return {
+    listDir: (dir) =>
+      unwrapFavaResponse(
+        favaApiClient.ledgers.getLedgerDirContent(ledgerOwner, ledgerName, {
+          ...(dir === undefined ? {} : { dir_path: dir }),
+        }),
+        "list ledger files for delete guard",
+        (cause) =>
+          operationNotAllowedFromCause(
+            "list ledger files for delete guard",
+            cause,
+          ),
+      ),
+    readFiles: (paths) =>
+      unwrapFavaResponse(
+        favaApiClient.ledgers.getLedgerFilesContent(ledgerOwner, ledgerName, {
+          files: paths,
+        }),
+        "read ledger files for delete guard",
+        (cause) =>
+          operationNotAllowedFromCause(
+            "read ledger files for delete guard",
+            cause,
+          ),
+      ),
+  };
 }
 
 /**

@@ -34,6 +34,7 @@ import {
 } from "@/shared/errors";
 import { listDirectory } from "@/features/ledger/utils/directory-listing";
 import {
+  deleteGuardFileAccess,
   findDanglingDeleteIncluders,
   refuseDanglingDeletes,
 } from "@/features/ledger/utils/include-references";
@@ -407,30 +408,7 @@ export class LedgerRepoService
     }
     if (deleted.size === 0) return;
     const dangling = await findDanglingDeleteIncluders({
-      listDir: (dir) =>
-        unwrapFavaResponse(
-          favaApiClient.ledgers.getLedgerDirContent(ledgerOwner, ledgerName, {
-            ...(dir === undefined ? {} : { dir_path: dir }),
-          }),
-          "list ledger files for delete guard",
-          (cause) =>
-            operationNotAllowedFromCause(
-              "list ledger files for delete guard",
-              cause,
-            ),
-        ),
-      readFiles: (paths) =>
-        unwrapFavaResponse(
-          favaApiClient.ledgers.getLedgerFilesContent(ledgerOwner, ledgerName, {
-            files: paths,
-          }),
-          "read ledger files for delete guard",
-          (cause) =>
-            operationNotAllowedFromCause(
-              "read ledger files for delete guard",
-              cause,
-            ),
-        ),
+      ...deleteGuardFileAccess(favaApiClient, ledgerOwner, ledgerName),
       deletedPaths: deleted,
       overlays: projected,
     });

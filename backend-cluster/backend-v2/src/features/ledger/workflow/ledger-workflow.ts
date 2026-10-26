@@ -121,6 +121,7 @@ import {
   resolveIncludeTarget,
 } from "@/features/ledger/utils/include-target";
 import {
+  deleteGuardFileAccess,
   findDanglingDeleteIncluders,
   refuseDanglingDeletes,
   scanLedgerBeanFiles,
@@ -1046,36 +1047,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     // still-included file refuses naming the includers.
     refuseDanglingDeletes(
       await findDanglingDeleteIncluders({
-        listDir: (dir) =>
-          unwrapFavaResponse(
-            favaApiClient.ledgers.getLedgerDirContent(
-              ledgerOwner,
-              ledgerName,
-              {
-                ...(dir === undefined ? {} : { dir_path: dir }),
-              },
-            ),
-            "list ledger files for delete guard",
-            (cause) =>
-              operationNotAllowedFromCause(
-                "list ledger files for delete guard",
-                cause,
-              ),
-          ),
-        readFiles: (paths) =>
-          unwrapFavaResponse(
-            favaApiClient.ledgers.getLedgerFilesContent(
-              ledgerOwner,
-              ledgerName,
-              { files: paths },
-            ),
-            "read ledger files for delete guard",
-            (cause) =>
-              operationNotAllowedFromCause(
-                "read ledger files for delete guard",
-                cause,
-              ),
-          ),
+        ...deleteGuardFileAccess(favaApiClient, ledgerOwner, ledgerName),
         deletedPaths: [input.path],
       }),
     );
