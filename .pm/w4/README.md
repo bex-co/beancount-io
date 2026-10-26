@@ -30,8 +30,6 @@
 
 - **1095** — [Keep the Version History cursor in sync after Refresh](./1095.md)
 
-- **1094** — [Hydrate legacy file links before handing off to the file route](./1094.md)
-
 - **1031** — Use actual lot cost currencies in Net Worth valuation disclosures (45–60m dashboard after dependency, A2/A3) ← dashboard QA; residual of m26 ([note](./blocked/1031.md)) — **blocked:** approved lot-specific valuation read
 
 

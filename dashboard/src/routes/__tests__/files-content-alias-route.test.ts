@@ -1,75 +1,37 @@
 import { describe, it, expect, vi } from "vitest";
-import { isRedirect } from "@tanstack/react-router";
+import { fileHandoff } from "@/features/ledger-editor/files-content/file-handoff";
 
 /**
  * The legacy `/files/content` route is a compatibility alias that only renders
  * the directory browser. These cases exercise the route module's real
- * `validateSearch` and `beforeLoad`, so a regression in dispatch fails here
- * rather than only in a browser.
+ * `validateSearch` and file handoff, so a regression in dispatch fails here
+ * rather than only in a browser. The handoff's lifecycle — after mount, never
+ * during hydration — is covered by files-content-alias-handoff.test.tsx.
  */
 
-// `createFileRoute(path)(options)` normally builds a Route. Returning the
-// options verbatim exposes the route's own beforeLoad/validateSearch for direct
-// invocation; everything else (including `redirect`) stays real.
 vi.mock("@tanstack/react-router", async (importOriginal) => {
   const actual =
     await importOriginal<typeof import("@tanstack/react-router")>();
   return { ...actual, createFileRoute: () => (options: unknown) => options };
 });
 
-// The alias renders the directory page; this suite is about dispatch, not that
-// component's tree.
 vi.mock("@/features/ledger-editor/files-content", () => ({
   default: () => null,
 }));
 
-type ContentSearch = {
-  type: "file" | "dir";
-  path: string;
-  editMode?: boolean;
-  lineNumber?: number;
-};
-
-type ContentRoute = {
-  validateSearch: (search: unknown) => ContentSearch;
-  beforeLoad: (ctx: {
-    params: { ledgerOwner: string; ledgerName: string };
-    search: ContentSearch;
-  }) => void;
-};
-
 const PARAMS = { ledgerOwner: "open_ledger", ledgerName: "stock-example" };
 
-async function loadRoute(): Promise<ContentRoute> {
+/** Runs the real search validation and handoff decision. */
+async function dispatch(rawSearch: Record<string, unknown>) {
   const mod =
     await import("@/routes/ledger.$ledgerOwner.$ledgerName.files.content");
-  return mod.Route as unknown as ContentRoute;
-}
-
-/** Runs the real beforeLoad, returning the thrown redirect's options or null. */
-async function dispatch(rawSearch: Record<string, unknown>) {
-  const route = await loadRoute();
-  // Dispatch lives in beforeLoad; without it the alias silently renders the
-  // directory browser for every target, which is the defect this suite pins.
-  expect(typeof route.beforeLoad).toBe("function");
-  const search = route.validateSearch(rawSearch);
-  try {
-    route.beforeLoad({ params: PARAMS, search });
-    return null;
-  } catch (thrown) {
-    // A thrown non-redirect would be a real failure, not a dispatch decision.
-    expect(isRedirect(thrown)).toBe(true);
-    return (
-      thrown as {
-        options: {
-          to: string;
-          params: Record<string, string>;
-          search: Record<string, unknown>;
-          replace?: boolean;
-        };
-      }
-    ).options;
-  }
+  const route = mod.Route as unknown as {
+    validateSearch: (search: unknown) => Parameters<typeof fileHandoff>[1];
+    beforeLoad?: unknown;
+  };
+  // A beforeLoad redirect would change the initial route while it hydrates.
+  expect(route.beforeLoad).toBeUndefined();
+  return fileHandoff(PARAMS, route.validateSearch(rawSearch));
 }
 
 const BLOB_ROUTE = "/ledger/$ledgerOwner/$ledgerName/files/blob/$branch/$";
