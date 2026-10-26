@@ -11,7 +11,10 @@ jest.mock("@/shared/logger", () => ({
   },
 }));
 
+import { buildSchema } from "type-graphql";
+import { GraphQLInputObjectType } from "graphql";
 import { PlaidMutationResolver } from "../plaid-resolver.mutation";
+import { HealthResolver } from "@/features/healthz/api/health-resolver";
 import { ConflictError } from "@/shared/errors";
 import type { IContext } from "@/server/graphql/context";
 import type { IPlaidItemService } from "@/features/plaid/service/plaid-item-service";
@@ -529,5 +532,44 @@ describe("PlaidMutationResolver", () => {
         resolver.createPlaidLinkToken(PINNED, scopedCtx(PINNED)),
       ).resolves.toEqual({ linkToken: "tok" });
     });
+  });
+
+  // w23/m8/t007: GraphQL takes the camelCase spelling only — the snake_case
+  // aliases are MCP-only (docs/mcp.md bank import workflow). Introspecting
+  // the built schema pins every bank mutation argument and the submit-input
+  // fields at once: adding a snake_case arg fails this test.
+  it("exposes no snake_case bank arguments", async () => {
+    const schema = await buildSchema({
+      resolvers: [PlaidMutationResolver, HealthResolver],
+      validate: false,
+      authChecker: () => true,
+      container: {
+        get: (target) =>
+          target === PlaidMutationResolver
+            ? new PlaidMutationResolver(
+                buildMockPlaidItemService(),
+                buildMockPlaidSyncService(),
+              )
+            : new HealthResolver(),
+      },
+    });
+    const offending: string[] = [];
+    for (const field of Object.values(
+      schema.getMutationType()?.getFields() ?? {},
+    )) {
+      for (const arg of field.args) {
+        if (arg.name.includes("_")) offending.push(`${field.name}.${arg.name}`);
+      }
+    }
+    const submitInput = schema.getType("PlaidTransactionSubmitInput");
+    if (submitInput instanceof GraphQLInputObjectType) {
+      for (const name of Object.keys(submitInput.getFields())) {
+        if (name.includes("_"))
+          offending.push(`PlaidTransactionSubmitInput.${name}`);
+      }
+    } else {
+      offending.push("PlaidTransactionSubmitInput.missing");
+    }
+    expect(offending).toEqual([]);
   });
 });
