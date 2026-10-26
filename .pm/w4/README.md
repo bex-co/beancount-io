@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1100** — [Retain early Create File filename typing](./1100.md)
+
 - **1099** — [Keep Accounts search unavailable until it can retain typing](./1099.md)
 
 - **1098** — [Run only the requested BQL bookmark on startup](./1098.md)
