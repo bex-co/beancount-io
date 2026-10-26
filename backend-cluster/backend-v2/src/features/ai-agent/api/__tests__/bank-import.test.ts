@@ -302,6 +302,188 @@ describe("bank import on MCP", () => {
     });
   });
 
+  // w23/m8/t002: the bank tools took snake_case ids while REST and
+  // GraphQL take camelCase, so a pasted id died in strict validation. Both
+  // spellings are accepted; two different ids are refused rather than
+  // guessed — the same rule m3 set for entry hashes.
+  describe.each([
+    {
+      tool: "syncBankTransactions",
+      service: "plaidSync",
+      method: "syncItemTransactions",
+      argIndex: 1,
+      camel: "itemId",
+      snake: "item_id",
+      id: "pitm_1",
+      other: "pitm_2",
+      extra: {},
+    },
+    {
+      tool: "reconcileBankAccounts",
+      service: "plaidItem",
+      method: "reconcileItemAccounts",
+      argIndex: 1,
+      camel: "itemId",
+      snake: "item_id",
+      id: "pitm_1",
+      other: "pitm_2",
+      extra: {},
+    },
+    {
+      tool: "refreshBankConnection",
+      service: "plaidItem",
+      method: "refreshItemStatus",
+      argIndex: 1,
+      camel: "itemId",
+      snake: "item_id",
+      id: "pitm_1",
+      other: "pitm_2",
+      extra: {},
+    },
+    {
+      tool: "unlinkBankConnection",
+      service: "plaidItem",
+      method: "unlinkItem",
+      argIndex: 1,
+      camel: "itemId",
+      snake: "item_id",
+      id: "pitm_1",
+      other: "pitm_2",
+      extra: {},
+    },
+    {
+      tool: "mapBankAccount",
+      service: "plaidItem",
+      method: "updateAccountMapping",
+      argIndex: 1,
+      camel: "accountId",
+      snake: "account_id",
+      id: "pacc_1",
+      other: "pacc_2",
+      extra: { ledger_account: "Assets:Checking" },
+    },
+    {
+      tool: "setBankAccountCurrency",
+      service: "plaidItem",
+      method: "updateAccountCurrency",
+      argIndex: 1,
+      camel: "accountId",
+      snake: "account_id",
+      id: "pacc_1",
+      other: "pacc_2",
+      extra: { currency: "USD" },
+    },
+    {
+      tool: "discardStagedBankTransactions",
+      service: "plaidSync",
+      method: "deleteTransactions",
+      argIndex: 2,
+      camel: "transactionIds",
+      snake: "transaction_ids",
+      id: ["ptxn_1"],
+      other: ["ptxn_2"],
+      extra: {},
+    },
+  ])("$tool id aliases", (entry) => {
+    const mockOf = (services: ReturnType<typeof fakeServices>) =>
+      (services[entry.service as "plaidSync"] as Record<string, jest.Mock>)[
+        entry.method
+      ] as jest.Mock;
+    const failureOf = (result: Awaited<ReturnType<typeof call>>) =>
+      (
+        result.structuredContent as {
+          error?: { code?: string; message?: string };
+        }
+      ).error;
+
+    it("accepts the camelCase spelling", async () => {
+      const services = fakeServices();
+      const result = await call(services, entry.tool, {
+        ...entry.extra,
+        [entry.camel]: entry.id,
+      });
+      expect(result.isError).not.toBe(true);
+      expect(mockOf(services).mock.calls[0]?.[entry.argIndex]).toEqual(
+        entry.id,
+      );
+    });
+
+    it("keeps accepting the snake_case spelling", async () => {
+      const services = fakeServices();
+      const result = await call(services, entry.tool, {
+        ...entry.extra,
+        [entry.snake]: entry.id,
+      });
+      expect(result.isError).not.toBe(true);
+      expect(mockOf(services).mock.calls[0]?.[entry.argIndex]).toEqual(
+        entry.id,
+      );
+    });
+
+    it("accepts both spellings when they name the same id", async () => {
+      const services = fakeServices();
+      const result = await call(services, entry.tool, {
+        ...entry.extra,
+        [entry.camel]: entry.id,
+        [entry.snake]: entry.id,
+      });
+      expect(result.isError).not.toBe(true);
+      expect(mockOf(services).mock.calls[0]?.[entry.argIndex]).toEqual(
+        entry.id,
+      );
+    });
+
+    it("refuses two different ids without calling the service", async () => {
+      const services = fakeServices();
+      const result = await call(services, entry.tool, {
+        ...entry.extra,
+        [entry.camel]: entry.id,
+        [entry.snake]: entry.other,
+      });
+      expect(result.isError).toBe(true);
+      expect(failureOf(result)?.code).toBe("BAD_USER_INPUT");
+      expect(failureOf(result)?.message).toContain("two different");
+      expect(mockOf(services)).not.toHaveBeenCalled();
+    });
+
+    it("names the missing id instead of letting the service guess", async () => {
+      const services = fakeServices();
+      const result = await call(services, entry.tool, { ...entry.extra });
+      expect(result.isError).toBe(true);
+      expect(failureOf(result)?.code).toBe("BAD_USER_INPUT");
+      expect(failureOf(result)?.message).toContain(entry.snake);
+      expect(mockOf(services)).not.toHaveBeenCalled();
+    });
+  });
+
+  it("advertises both id spellings on the seven bank tools", async () => {
+    const { client, close } = await connect(ctx(fakeServices()));
+    try {
+      const { tools } = await client.listTools();
+      const byName = new Map(tools.map((tool) => [tool.name, tool]));
+      const expected: Record<string, [string, string]> = {
+        syncBankTransactions: ["itemId", "item_id"],
+        reconcileBankAccounts: ["itemId", "item_id"],
+        refreshBankConnection: ["itemId", "item_id"],
+        unlinkBankConnection: ["itemId", "item_id"],
+        mapBankAccount: ["accountId", "account_id"],
+        setBankAccountCurrency: ["accountId", "account_id"],
+        discardStagedBankTransactions: ["transactionIds", "transaction_ids"],
+      };
+      for (const [name, keys] of Object.entries(expected)) {
+        const properties = Object.keys(
+          byName.get(name)?.inputSchema.properties ?? {},
+        );
+        expect({ tool: name, properties }).toEqual({
+          tool: name,
+          properties: expect.arrayContaining(keys),
+        });
+      }
+    } finally {
+      await close();
+    }
+  });
+
   // w5/942: the write reports where it landed and what it wrote, as every
   // other write tool does, so an agent need not query to find the entries.
   describe("importStagedBankTransactions reports its write", () => {

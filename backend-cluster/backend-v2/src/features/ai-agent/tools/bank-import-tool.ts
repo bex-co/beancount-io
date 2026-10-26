@@ -7,6 +7,7 @@ import {
   wroteFileSchema,
 } from "./types";
 import { runToolSafely } from "../utils/run-tool";
+import { resolveBankIdAlias } from "./bank-id-alias";
 import {
   readBeanCheckErrors,
   summarizeWrite,
@@ -94,10 +95,45 @@ function bankOperation<S extends z.ZodObject>(
   };
 }
 
-const itemIdField = z.string().describe("The linked bank's id (item_id).");
-const accountIdField = z
-  .string()
-  .describe("The linked bank account's id (account_id).");
+// Both spellings accepted (w23/m8/t002); executors resolve to the camelCase
+// id before the service so it never sees the alias.
+const itemIdFields = {
+  itemId: z.string().optional().describe("The linked bank's id."),
+  item_id: z.string().optional().describe("Alias of itemId."),
+};
+const ITEM_ID_NAMES = {
+  primary: "itemId",
+  legacy: "item_id",
+  what: "bank item ids",
+} as const;
+const accountIdFields = {
+  accountId: z.string().optional().describe("The linked bank account's id."),
+  account_id: z.string().optional().describe("Alias of accountId."),
+};
+const ACCOUNT_ID_NAMES = {
+  primary: "accountId",
+  legacy: "account_id",
+  what: "bank account ids",
+} as const;
+const transactionIdsFields = {
+  transactionIds: z
+    .array(z.string())
+    .min(1)
+    .optional()
+    .describe(
+      "The staged transactions to remove, each by its `transactionId` from listStagedBankTransactions — not its `id`.",
+    ),
+  transaction_ids: z
+    .array(z.string())
+    .min(1)
+    .optional()
+    .describe("Alias of transactionIds."),
+};
+const TRANSACTION_IDS_NAMES = {
+  primary: "transactionIds",
+  legacy: "transaction_ids",
+  what: "staged transaction lists",
+} as const;
 
 const submitInput = z.object({
   transactions: z
@@ -127,12 +163,15 @@ export const BANK_OPERATIONS = {
   sync: bankOperation(
     "sync",
     "import",
-    z.object({ item_id: itemIdField, dry_run: dryRunField }),
+    z.object({ ...itemIdFields, dry_run: dryRunField }),
     "Pull new transactions from a linked bank into staging; nothing is written to the ledger. dry_run reports what would be pulled.",
-    ({ services, identity, ledgerId }, { item_id, dry_run }) =>
+    ({ services, identity, ledgerId }, { itemId, item_id, dry_run }) =>
       services.plaidSync.syncItemTransactions(
         identity,
-        item_id,
+        resolveBankIdAlias(
+          { primary: itemId, legacy: item_id },
+          ITEM_ID_NAMES,
+        ),
         "manual",
         ledgerId,
         dry_run ?? false,
@@ -148,33 +187,34 @@ export const BANK_OPERATIONS = {
   discard: bankOperation(
     "discard",
     "import",
-    z.object({
-      transaction_ids: z
-        .array(z.string())
-        .min(1)
-        .describe(
-          "The staged transactions to remove, each by its `transactionId` from listStagedBankTransactions — not its `id`.",
-        ),
-      dry_run: dryRunField,
-    }),
+    z.object({ ...transactionIdsFields, dry_run: dryRunField }),
     "Remove staged bank transactions so they are never imported. dry_run reports what would be removed.",
-    ({ services, identity, ledgerId }, { transaction_ids, dry_run }) =>
+    (
+      { services, identity, ledgerId },
+      { transactionIds, transaction_ids, dry_run },
+    ) =>
       services.plaidSync.deleteTransactions(
         identity,
         ledgerId,
-        transaction_ids,
+        resolveBankIdAlias(
+          { primary: transactionIds, legacy: transaction_ids },
+          TRANSACTION_IDS_NAMES,
+        ),
         dry_run ?? false,
       ),
   ),
   reconcile: bankOperation(
     "reconcile",
     "connection",
-    z.object({ item_id: itemIdField, dry_run: dryRunField }),
+    z.object({ ...itemIdFields, dry_run: dryRunField }),
     "Re-read which accounts a linked bank shares; accounts the bank no longer shares can be deleted along with their staged transactions. dry_run reports the changes without applying them.",
-    ({ services, identity, ledgerId }, { item_id, dry_run }) =>
+    ({ services, identity, ledgerId }, { itemId, item_id, dry_run }) =>
       services.plaidItem.reconcileItemAccounts(
         identity,
-        item_id,
+        resolveBankIdAlias(
+          { primary: itemId, legacy: item_id },
+          ITEM_ID_NAMES,
+        ),
         ledgerId,
         dry_run ?? false,
       ),
@@ -183,14 +223,20 @@ export const BANK_OPERATIONS = {
     "map_account",
     "connection",
     z.object({
-      account_id: accountIdField,
+      ...accountIdFields,
       ledger_account: z.string().describe("The ledger account to map it to."),
     }),
     "Point a linked bank account at a ledger account; replaces any existing mapping.",
-    ({ services, identity, ledgerId }, { account_id, ledger_account }) =>
+    (
+      { services, identity, ledgerId },
+      { accountId, account_id, ledger_account },
+    ) =>
       services.plaidItem.updateAccountMapping(
         identity,
-        account_id,
+        resolveBankIdAlias(
+          { primary: accountId, legacy: account_id },
+          ACCOUNT_ID_NAMES,
+        ),
         ledger_account,
         ledgerId,
       ),
@@ -199,14 +245,17 @@ export const BANK_OPERATIONS = {
     "set_currency",
     "connection",
     z.object({
-      account_id: accountIdField,
+      ...accountIdFields,
       currency: z.string().describe("The account's currency, e.g. USD."),
     }),
     "Set a linked bank account's currency; replaces the current value.",
-    ({ services, identity, ledgerId }, { account_id, currency }) =>
+    ({ services, identity, ledgerId }, { accountId, account_id, currency }) =>
       services.plaidItem.updateAccountCurrency(
         identity,
-        account_id,
+        resolveBankIdAlias(
+          { primary: accountId, legacy: account_id },
+          ACCOUNT_ID_NAMES,
+        ),
         currency,
         ledgerId,
       ),
@@ -214,20 +263,30 @@ export const BANK_OPERATIONS = {
   refresh: bankOperation(
     "refresh",
     "connection",
-    z.object({ item_id: itemIdField }),
+    z.object({ ...itemIdFields }),
     "Re-read a linked bank connection's health status from the bank.",
-    ({ services, identity, ledgerId }, { item_id }) =>
-      services.plaidItem.refreshItemStatus(identity, item_id, ledgerId),
+    ({ services, identity, ledgerId }, { itemId, item_id }) =>
+      services.plaidItem.refreshItemStatus(
+        identity,
+        resolveBankIdAlias(
+          { primary: itemId, legacy: item_id },
+          ITEM_ID_NAMES,
+        ),
+        ledgerId,
+      ),
   ),
   unlink: bankOperation(
     "unlink",
     "connection",
-    z.object({ item_id: itemIdField, dry_run: dryRunField }),
+    z.object({ ...itemIdFields, dry_run: dryRunField }),
     "Sever a linked bank connection. Linking a new bank happens in a browser through the bank's own widget, not here. dry_run reports what would be removed.",
-    ({ services, identity, ledgerId }, { item_id, dry_run }) =>
+    ({ services, identity, ledgerId }, { itemId, item_id, dry_run }) =>
       services.plaidItem.unlinkItem(
         identity,
-        item_id,
+        resolveBankIdAlias(
+          { primary: itemId, legacy: item_id },
+          ITEM_ID_NAMES,
+        ),
         ledgerId,
         dry_run ?? false,
       ),
