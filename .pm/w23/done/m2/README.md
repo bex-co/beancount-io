@@ -1,6 +1,6 @@
 # w23 · m2 — Fix the journal filter mini-language
 
-**Worker:** worker1 **Goal:** journal `filter` finds what it claims: `account:` scans transaction postings, `tag:`/`link:` match entry tags/links, full `a:b:c` paths are expressible, and the syntax is documented on every surface **Status:** in progress
+**Worker:** worker1 **Goal:** journal `filter` finds what it claims: `account:` scans transaction postings, `tag:`/`link:` match entry tags/links, full `a:b:c` paths are expressible, and the syntax is documented on every surface **Status:** done
 
 ## Tasks (in order)
 
@@ -13,7 +13,7 @@
 | t005 | Adoption surface ✅ | 20m | t004 |
 | t006 | Simplify ✅ | 30m | t005 |
 | t007 | Test coverage ✅ | 45m | t005 |
-| t008 | Closeout | 15m | t006, t007 |
+| t008 | Closeout ✅ | 15m | t006, t007 |
 
 ## Definition of done
 
