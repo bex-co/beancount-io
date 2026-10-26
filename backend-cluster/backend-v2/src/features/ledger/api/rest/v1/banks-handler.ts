@@ -32,12 +32,16 @@ const itemPath = ledgerPathSchema.extend({
 const accountPath = ledgerPathSchema.extend({
   accountId: z.string().openapi({ description: "The bank account's id" }),
 });
-export const bankAccountQuery = z.object({
-  accountId: z
-    .string()
-    .optional()
-    .openapi({ description: "Restrict to one bank account" }),
-});
+export const bankAccountQuery = z
+  .object({
+    accountId: z
+      .string()
+      .optional()
+      .openapi({ description: "Restrict to one bank account" }),
+  })
+  // Strict like its MCP twin and noPreviewQuery: an unknown key is a
+  // mistyped filter, not an unfiltered list (w23/112).
+  .strict();
 
 const dryRunQuery = z.object({
   dry_run: booleanQuery.openapi({

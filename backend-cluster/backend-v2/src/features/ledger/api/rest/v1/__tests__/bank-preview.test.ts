@@ -250,7 +250,9 @@ describe("REST bank spelling", () => {
   // Unlike the strict bodies above, the account query is lenient: an
   // unknown key is dropped and the call runs unfiltered. MCP strictifies
   // this same schema, so only REST behaves this way (follow-up note).
-  it("ignores a snake_case staged query instead of filtering", async () => {
+  // w23/112: the query schema is strict now — a mistyped filter key is
+  // refused instead of silently returning the unfiltered list.
+  it("refuses a snake_case staged query instead of ignoring it", async () => {
     const ok = await fetch(
       `${server.url}${ledger}/bank-transactions/unsynced?accountId=acc_1`,
     );
@@ -260,14 +262,17 @@ describe("REST bank spelling", () => {
       "acc_1",
       expect.anything(),
     );
-    const unfiltered = await fetch(
+    const refused = await fetch(
       `${server.url}${ledger}/bank-transactions/unsynced?account_id=acc_1`,
     );
-    expect(unfiltered.status).toBe(200);
-    expect(unsynced).toHaveBeenLastCalledWith(
-      expect.anything(),
-      undefined,
-      expect.anything(),
-    );
+    expect(refused.status).toBe(400);
+    expect(await refused.json()).toMatchObject({
+      ok: false,
+      error: {
+        code: "VALIDATION_FAILED",
+        message: expect.stringContaining("account_id"),
+      },
+    });
+    expect(unsynced).toHaveBeenCalledTimes(1);
   });
 });

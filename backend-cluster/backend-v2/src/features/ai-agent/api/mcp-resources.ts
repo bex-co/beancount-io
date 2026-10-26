@@ -354,12 +354,12 @@ const bankResources: readonly McpResourceDescriptor[] = [
     mimeType: "application/json",
     uriTemplate: `${RESOURCE_SCHEME}://{owner}/{name}/bank-transactions/unsynced`,
     queryNames: Object.keys(bankAccountQuery.shape),
-    read: async (ctx, vars) =>
+    read: async (ctx, { owner, name, ...query }) =>
       JSON.stringify(
         await ctx.services.plaidItem.getUnsyncedTransactions(
           ctx.identity,
-          bankAccountQuery.parse(vars).accountId,
-          resolveLedgerId(ctx, vars),
+          bankAccountQuery.parse(query).accountId,
+          resolveLedgerId(ctx, { owner, name }),
         ),
       ),
   },
@@ -371,12 +371,12 @@ const bankResources: readonly McpResourceDescriptor[] = [
     mimeType: "application/json",
     uriTemplate: `${RESOURCE_SCHEME}://{owner}/{name}/bank-transactions/suggested-categories`,
     queryNames: Object.keys(bankAccountQuery.shape),
-    read: async (ctx, vars) =>
+    read: async (ctx, { owner, name, ...query }) =>
       JSON.stringify(
         await ctx.services.plaidItem.suggestCategories(
           ctx.identity,
-          resolveLedgerId(ctx, vars),
-          bankAccountQuery.parse(vars).accountId,
+          resolveLedgerId(ctx, { owner, name }),
+          bankAccountQuery.parse(query).accountId,
         ),
       ),
   },
