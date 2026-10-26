@@ -32,6 +32,7 @@
 - [111](./111.md) — `listLedgerEntries` / journal returns `is_empty: false` alongside `total: 0` on filtered-to-zero results (ledger-level flag; should be result-level)
 - [112](./112.md) — REST bank queries silently drop unknown keys instead of refusing them (m8/t005 follow-up; `.strict()` on `bankAccountQuery`)
 - [113](./113.md) — every validated REST GET query schema silently drops unknown keys (32 routes verified; w23/112 pattern repo-wide; MCP/GraphQL strict)
+- [114](./114.md) — REST file writes take no `dryRun` while MCP previews them (m9/t001 follow-up; flags exist only on MCP)
 - [082](./blocked/082.md) — `createPullRequest` fails on production: Gitea 500 while creating the `pr-patch-*` branch, on MCP and REST alike — **blocked:** needs the Gitea server-log cause for one failing branch create (owner), then a production rerun
 - [080](./blocked/080.md) — `/api-gateway/mcp` accepts any `Origin` (the MCP transport spec says a bad `Origin` MUST get 403); owner picks validate vs document — **blocked:** owner picks 403-on-foreign-Origin vs documented non-validation
 - [075](./blocked/075.md) — typed BQL results return NULL as `""` (undocumented), so a missing payee or price reads as an empty string — **blocked:** documented as `""` (option a shipped); owner picks `null` on REST/MCP, `null` everywhere, or keeping `""`

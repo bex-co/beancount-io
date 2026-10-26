@@ -6,7 +6,7 @@
 
 | id | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
-| t001 | Reproduce + map the flag splits, decide canonical spellings | 45m | — |
+| t001 | Reproduce + map the flag splits, decide canonical spellings ✅ | 45m | — |
 | t002 | Preview-flag aliases end to end | 60m | t001 |
 | t003 | Commit-despite-errors aliases end to end | 60m | t002 |
 | t004 | Document the flag spellings | 30m | t003 |
