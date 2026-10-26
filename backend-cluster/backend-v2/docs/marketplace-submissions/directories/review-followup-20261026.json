@@ -99,5 +99,106 @@
     "approvalReceivedAtUTC": "2026-10-24T03:54Z",
     "nativeInstallationVerifiedNow": false
   },
-  "next": "Handle actual maintainer feedback/publication on the same records. Existing manual dates remain unchanged; no publisher action is requested now."
+  "next": "Handle actual maintainer feedback/publication on the same records. Existing manual dates remain unchanged; no publisher action is requested now.",
+  "mailFollowup": {
+    "checkedAtUTC": "2026-10-26T08:08:29Z",
+    "scope": "Existing signed-in publisher mailbox; focused vendor-domain/Beancount/last3days search, excluding automated CI notices. Only the relevant existing GitHub nomination thread was opened. No claim about other publisher mailboxes, spam or vendor dashboards.",
+    "existingNominationThreadMessages": 3,
+    "latestRelevantReply": "Previously recorded curator approval received2026-10-24T03:54Z; up to3business days for publication, no submitter action requested. No later reply displayed in that same thread.",
+    "newActionableFeedbackObserved": false,
+    "publicGalleryLastCheckedAtUTC": "2026-10-26T07:33:01Z",
+    "messageSent": false,
+    "privacy": "No mailbox/account identifier, private thread URL, ticket number or raw mail body published."
+  },
+  "latestReviewReadbacks": [
+    {
+      "target": "docker",
+      "checkedAtUTC": "2026-10-26T08:09:42.431955Z",
+      "state": "OPEN",
+      "updatedAt": "2026-10-24T19:52:18Z",
+      "mergedAt": null,
+      "closedAt": null,
+      "reviews": 0,
+      "comments": 0,
+      "reviewDecision": "REVIEW_REQUIRED",
+      "checks": []
+    },
+    {
+      "target": "cline",
+      "checkedAtUTC": "2026-10-26T08:09:42.367230Z",
+      "state": "OPEN",
+      "updatedAt": "2026-10-24T01:43:48Z",
+      "mergedAt": null,
+      "closedAt": null,
+      "reviews": 0,
+      "comments": 0,
+      "reviewDecision": null,
+      "checks": []
+    },
+    {
+      "target": "mcpso",
+      "checkedAtUTC": "2026-10-26T08:09:42.026077Z",
+      "state": "OPEN",
+      "updatedAt": "2026-10-25T07:03:59Z",
+      "mergedAt": null,
+      "closedAt": null,
+      "reviews": 0,
+      "comments": 0,
+      "reviewDecision": "",
+      "checks": []
+    },
+    {
+      "target": "awesome",
+      "checkedAtUTC": "2026-10-26T08:09:42.432306Z",
+      "state": "OPEN",
+      "updatedAt": "2026-10-24T02:45:15Z",
+      "mergedAt": null,
+      "closedAt": null,
+      "reviews": 0,
+      "comments": 1,
+      "reviewDecision": "",
+      "checks": [
+        {
+          "name": "welcome",
+          "status": "COMPLETED",
+          "conclusion": "SKIPPED"
+        },
+        {
+          "name": "welcome",
+          "status": "COMPLETED",
+          "conclusion": "SKIPPED"
+        },
+        {
+          "name": "check-submission",
+          "status": "COMPLETED",
+          "conclusion": "SUCCESS"
+        },
+        {
+          "name": "check-submission",
+          "status": "COMPLETED",
+          "conclusion": "SUCCESS"
+        }
+      ]
+    }
+  ],
+  "dockerWorkflowReadbacks": {
+    "checkedAtUTC": "2026-10-26T08:11:06.203073Z",
+    "runs": [
+      {
+        "id": 40049180641,
+        "status": "completed",
+        "conclusion": "action_required",
+        "updated_at": "2026-10-24T01:18:23Z",
+        "html_url": "https://github.com/docker/mcp-registry/actions/runs/40049180641"
+      },
+      {
+        "id": 40049180736,
+        "status": "completed",
+        "conclusion": "action_required",
+        "updated_at": "2026-10-24T01:18:23Z",
+        "html_url": "https://github.com/docker/mcp-registry/actions/runs/40049180736"
+      }
+    ],
+    "limit": "Empty PR check rollup is not approval. Existing workflow runs remain an independent maintainer action."
+  }
 }

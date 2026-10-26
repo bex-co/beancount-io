@@ -218,3 +218,8 @@ publication is observed. [Dated review readback](../directories/review-followup-
 is a receipt-status check only; the earlier native evidence retains its own
 date and limits. Follow this existing issue on real feedback/publication or the
 recorded2026-10-27UTC manual date. No duplicate issue or reminder was sent.
+
+A final existing-record read at **2026-10-26T08:09:42Z** retains the same open,
+unclosed issue state and no new maintainer feedback. The exact review,
+comment and check counts are in the [latest readback](../directories/review-followup-20261026.json).
+No new native test, publication, message or submission is inferred.

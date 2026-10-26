@@ -16,7 +16,7 @@
   "dedup": "Focused pre-send mailbox query for recipient and Beancount returned no matching messages",
   "boundary": "Authenticated recipient review approval is observed; actual public GitHub/VS Code gallery publication and native install/OAuth/query/preview remain unverified.",
   "nextAction": "Wait for the stated up-to3-business-day publication window, verify actual GitHub/VS Code public discovery, then complete the native QA journey under w6/m9/t006 and existing w1/m34 ownership. No reply or duplicate nomination is needed now.",
-  "lastCheckedAtUTC": "2026-10-26T07:33:01.553369Z",
+  "lastCheckedAtUTC": "2026-10-26T08:08:29Z",
   "recipientAcknowledgment": {
     "observedAtUTC": "2026-10-24T02:38:28Z",
     "receivedAtUTC": "2026-10-23T20:30Z",
@@ -78,5 +78,15 @@
     "scope": "Two public name/identity queries only; no new mailbox, full-feed or native observation.",
     "publicationVerified": false,
     "evidence": "../directories/review-followup-20261026.json"
+  },
+  "mailThreadFollowup": {
+    "checkedAtUTC": "2026-10-26T08:08:29Z",
+    "scope": "Existing signed-in publisher mailbox; focused vendor-domain/Beancount/last3days search, excluding automated CI notices. Only the relevant existing GitHub nomination thread was opened. No claim about other publisher mailboxes, spam or vendor dashboards.",
+    "existingNominationThreadMessages": 3,
+    "latestRelevantReply": "Previously recorded curator approval received2026-10-24T03:54Z; up to3business days for publication, no submitter action requested. No later reply displayed in that same thread.",
+    "newActionableFeedbackObserved": false,
+    "publicGalleryLastCheckedAtUTC": "2026-10-26T07:33:01Z",
+    "messageSent": false,
+    "privacy": "No mailbox/account identifier, private thread URL, ticket number or raw mail body published."
   }
 }

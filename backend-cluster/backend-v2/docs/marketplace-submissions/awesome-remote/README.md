@@ -48,3 +48,8 @@ are SUCCESS; welcome runs are SKIPPED. No maintainer waiver decision or other
 feedback is observed. [Dated readback](../directories/review-followup-20261026.json).
 Continue on a real response/merge or the existing2026-10-27UTC manual date; no
 additional comment, submission, star or engagement change was made.
+
+A final existing-record read at **2026-10-26T08:09:42Z** retains the same open,
+unmerged/unresolved state and no new maintainer feedback. The exact review,
+comment and check counts are in the [latest readback](../directories/review-followup-20261026.json).
+No new native test, publication, message or submission is inferred.

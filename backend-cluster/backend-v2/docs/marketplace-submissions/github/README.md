@@ -162,3 +162,12 @@ scan or native IDE test. The authenticated curator approval receivedOct24 remain
 valid; publication/native installation is still unverified. No new email,
 nomination or scope request was sent. Follow actual publication/feedback, or the
 recorded2026-10-29UTC manual check after the stated up-to3-business-day window.
+
+## Existing curator thread — 2026-10-26T08:08:29Z
+
+The existing nomination thread still displays three messages and the already
+recorded approval receivedOct24at03:54UTC, with no later reply or requested
+submitter action. [Scoped mail follow-up](../directories/review-followup-20261026.json)
+records its limited search boundary; no message was sent. Public gallery queries
+retain their separate07:33UTC observation, and actual publication/native
+installation remains unverified.

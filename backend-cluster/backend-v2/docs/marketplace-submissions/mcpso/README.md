@@ -76,3 +76,8 @@ checks reported. Its last upstream update remains2026-10-25T07:03:59Z.
 public-directory import or native acceptance. Continue on real review/merge/import
 or the recorded2026-10-27UTC manual date. Submission is already complete through
 the free GitHub route; no payment, new login, duplicate PR or reminder is pending.
+
+A final existing-record read at **2026-10-26T08:09:42Z** retains the same open,
+unmerged/unresolved state and no new maintainer feedback. The exact review,
+comment and check counts are in the [latest readback](../directories/review-followup-20261026.json).
+No new native test, publication, message or submission is inferred.
