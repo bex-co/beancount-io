@@ -99,6 +99,11 @@ journeys end to end. The rules:
   If restoration fails, stop writing and report the exact residue.
 - Keep write volume at human pace, and never probe write rate limits against
   production.
+- The designated ledger is shared: sibling QA loops may run concurrently.
+  Never edit or delete another loop's `qa-`-prefixed probes, and never assume
+  count or file-byte baselines hold across a run — re-pin (re-snapshot and
+  re-check) before each comparison, and on mismatch re-verify inside the fresh
+  window rather than filing the drift as a bug (w23/110).
 
 The authorization does **not** cover: any other ledger (the QA account's other
 ledgers, which may hold real data; public `open_ledger/*` ledgers; other
