@@ -685,6 +685,19 @@ describe("bulk entries dry run", () => {
     expect(committed).toEqual([]);
   });
 
+  // w23/m7/t002: a dry run previews the per-file appended entry text.
+  it("previews the appended entry text per file", async () => {
+    const response = await post({ entries: [txn("2.00")], dryRun: true });
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      data: { preview: { path: string; text: string }[] };
+    };
+    expect(body.data.preview).toHaveLength(1);
+    expect(body.data.preview[0]?.path).toBe("main.bean");
+    expect(body.data.preview[0]?.text).toContain('"receipt"');
+    expect(committed).toEqual([]);
+  });
+
   it("refuses an unbalanced entry exactly as the write would", async () => {
     const response = await post({ entries: [txn("1.00")], dryRun: true });
     expect(response.status).toBe(400);

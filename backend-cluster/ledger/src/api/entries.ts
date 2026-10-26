@@ -353,6 +353,8 @@ export function setEntriesHandler(router: Router): void {
       const updates: Array<{ path: string; content: string; sha: string }> = [];
       // Where each row's text lands, to find its hash once committed.
       const ranges: ReplacedSourceRange[] = [];
+      // Per-file appended text for a dry run's preview (w23/m7/t002).
+      const preview: Array<{ path: string; text: string }> = [];
       for (const [path, written] of byFile) {
         const cached = currentContents.get(path);
         if (!cached) {
@@ -362,6 +364,7 @@ export function setEntriesHandler(router: Router): void {
         // entryInputToText is the format_entries block for one entry.
         const eol = lineEndingOf(cached.current);
         let newContents = cached.current + eol;
+        let appended = "";
         for (const { index, text: block } of written) {
           // The file's own line ending, so a CRLF file stays CRLF (w21/673).
           const text = withLineEnding(block, eol);
@@ -371,7 +374,9 @@ export function setEntriesHandler(router: Router): void {
             lineCount: newlines(text.replace(/\n$/, "")) + 1,
           };
           newContents += text;
+          appended += text;
         }
+        preview.push({ path, text: appended });
         updates.push({
           path,
           content: Buffer.from(newContents, "utf8").toString("base64"),
@@ -429,6 +434,7 @@ export function setEntriesHandler(router: Router): void {
           ctx.body = successResponse({
             entry_hashes: [],
             included_files: included,
+            preview,
           });
           return;
         }

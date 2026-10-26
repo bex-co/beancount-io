@@ -271,8 +271,17 @@ const EXTERNAL_ADMIN: ToolAnnotations = {
 
 // One schema object per ledger-targeted tool, shared by `inputSchema` and the
 // handler's parse so the advertised and executed contracts cannot drift.
+// MCP keeps its file-tool snake-case spelling for the preview flag while
+// REST spells it dryRun (same split the append path ships; w23/m7/t002).
 const addLedgerEntriesInput = entriesBodySchema
-  .extend({ ledger: ledgerSelection })
+  .omit({ dryRun: true })
+  .extend({
+    ledger: ledgerSelection,
+    dry_run: z
+      .boolean()
+      .optional()
+      .describe("Run every check and return the preview without committing"),
+  })
   .strict();
 const renameLedgerFileInput = renameFileInput.extend({
   ledger: ledgerSelection,
@@ -376,19 +385,23 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     title: "Add Structured Ledger Entries",
     annotations: APPEND,
     description:
-      "Append entries [{type,entry}]. Supports transaction, commodity, price, note, balance, open, close, pad, budget, document, event. Budget interval uses lowercase daily/weekly/monthly/quarterly/yearly. One posting per transaction may omit its amount and is written elided. An unbalanced transaction is refused with UNBALANCED, and entries that would add bean-check errors (a second open for an open account, a balance against an unopened account), or a budget for an account the ledger lacks, with VALIDATION_FAILED naming each error, unless allowInvalid records them deliberately. ledger is required unless pinned. The commit message is composed from the entries; there is no message argument.",
+      "Append entries [{type,entry}]. Supports transaction, commodity, price, note, balance, open, close, pad, budget, document, event. Budget interval uses lowercase daily/weekly/monthly/quarterly/yearly. One posting per transaction may omit its amount and is written elided. An unbalanced transaction is refused with UNBALANCED, and entries that would add bean-check errors (a second open for an open account, a balance against an unopened account), or a budget for an account the ledger lacks, with VALIDATION_FAILED naming each error, unless allowInvalid records them deliberately. ledger is required unless pinned. The commit message is composed from the entries; there is no message argument. dry_run previews without committing.",
     inputSchema: addLedgerEntriesInput,
     outputSchema: mcpOutputSchema(
       toolOutputSchema(
         withWriteOutcome({
           success: z.boolean(),
           message: z.string().optional(),
+          dry_run: z.boolean(),
           files: z.array(z.string()).optional(),
+          preview: z
+            .array(z.object({ path: z.string(), text: z.string() }))
+            .describe("Per-file entry text; populated on dry runs only"),
         }),
       ),
     ),
     execute: async (context, input) => {
-      const { ledger, entries, allowInvalid } =
+      const { ledger, entries, allowInvalid, dry_run } =
         addLedgerEntriesInput.parse(input);
       const ledgerId = resolveMcpLedger(context, ledger);
       const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
@@ -409,27 +422,32 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
             entries,
             "web",
             allowInvalid ?? false,
+            dry_run ?? false,
           ),
       );
-      const { includedFiles = [], ...written } = outcome.written;
+      // The service spells the echo dryRun; MCP publishes dry_run (w23/m7/t002).
+      const { includedFiles = [], dryRun, ...written } = outcome.written;
       const files = written.files ?? [];
       const noun = entries.length === 1 ? "entry" : "entries";
       // The entry point gained an include for a routed file (w23/062).
       const included =
         includedFiles.length > 0
-          ? `; ${LEDGER_ENTRY_POINT} now includes ${includedFiles.join(", ")}`
+          ? `; ${LEDGER_ENTRY_POINT} ${dryRun ? "would include" : "now includes"} ${includedFiles.join(", ")}`
           : "";
       const touched = [
         ...new Set([...files, ...(included ? [LEDGER_ENTRY_POINT] : [])]),
       ];
+      const verb = dryRun ? "Would add" : "Added";
       return {
         ok: true,
         result: {
           summary: summarizeWrite(
-            `Added ${entries.length} ${noun}${files.length > 0 ? ` to ${files.join(", ")}` : ""}${included}`,
+            `${verb} ${entries.length} ${noun}${files.length > 0 ? ` to ${files.join(", ")}` : ""}${included}`,
             outcome.validation,
           ),
           ...written,
+          dry_run: dryRun,
+          preview: written.preview ?? [],
           wrote: touched.map((path) => ({ path })),
           entryHashes: written.entryHashes ?? [],
           validation: outcome.validation,

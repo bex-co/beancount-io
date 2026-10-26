@@ -53,6 +53,7 @@ describe("LedgerEntryMutationResolver", () => {
       [{ type: "commodity", entry: { date: "2024-01-01", currency: "USD" } }],
       "web",
       false,
+      false,
     );
     expect(result.success).toBe(true);
   });

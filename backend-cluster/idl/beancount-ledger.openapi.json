@@ -15258,6 +15258,14 @@
             "type": "array",
             "title": "Included Files",
             "description": "Files the write reached outside the include closure, now included from the entry point in the same commit."
+          },
+          "preview": {
+            "items": {
+              "$ref": "#/components/schemas/BulkEntriesPreviewFile"
+            },
+            "type": "array",
+            "title": "Preview",
+            "description": "Per-file entry text on a dry run; absent on a commit."
           }
         },
         "type": "object",
@@ -15479,6 +15487,27 @@
         ],
         "title": "BulkPadEntry",
         "description": "A pad account entry in a bulk request."
+      },
+      "BulkEntriesPreviewFile": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path",
+            "description": "File the previewed entries would append to"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "description": "Entry text that would append to the file"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path",
+          "text"
+        ],
+        "title": "BulkEntriesPreviewFile",
+        "description": "Per-file preview of a bulk-entries dry run."
       }
     },
     "securitySchemes": {

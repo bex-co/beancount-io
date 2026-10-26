@@ -3605,6 +3605,11 @@ export interface EntryAddBulkEntriesResult {
    * Files the write reached outside the include closure, now included from the entry point in the same commit.
    */
   included_files: string[];
+  /**
+   * Preview
+   * Per-file entry text on a dry run; absent on a commit.
+   */
+  preview?: BulkEntriesPreviewFile[];
 }
 
 /** SuccessResponse[EntryAddBulkEntriesResult] */
@@ -3710,6 +3715,23 @@ export interface BulkPadEntry {
    * Target file path (defaults to the request filename or main.bean)
    */
   filename?: string | null;
+}
+
+/**
+ * BulkEntriesPreviewFile
+ * Per-file preview of a bulk-entries dry run.
+ */
+export interface BulkEntriesPreviewFile {
+  /**
+   * Path
+   * File the previewed entries would append to
+   */
+  path: string;
+  /**
+   * Text
+   * Entry text that would append to the file
+   */
+  text: string;
 }
 
 export type QueryParamsType = Record<string | number, any>;

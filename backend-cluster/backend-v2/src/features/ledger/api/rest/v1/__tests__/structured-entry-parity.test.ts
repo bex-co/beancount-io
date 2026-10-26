@@ -151,6 +151,32 @@ async function fixture(
         },
       );
     }
+    // A dry run runs the same refusals above, then answers a preview and
+    // commits nothing (w23/m7/t002). The mock cannot render beancount text —
+    // content fidelity is proven at the ledger level — so it previews one
+    // marker line per row, which is enough to prove the plumbing end to end.
+    if (body.dryRun === true) {
+      const rows = (body.entries ?? []) as {
+        type?: unknown;
+        filename?: unknown;
+      }[];
+      const byFile = new Map<string, string[]>();
+      rows.forEach((row, index) => {
+        const file =
+          typeof row.filename === "string" ? row.filename : "main.bean";
+        const lines = byFile.get(file) ?? [];
+        lines.push(`# preview row ${index}: ${String(row.type)}`);
+        byFile.set(file, lines);
+      });
+      return envelope({
+        entry_hashes: [],
+        included_files: [],
+        preview: [...byFile].map(([path, lines]) => ({
+          path,
+          text: lines.join("\n"),
+        })),
+      });
+    }
     committed.push(...body.entries);
     // The ledger answers each committed entry's hash (w23/060).
     return envelope({
@@ -250,15 +276,16 @@ async function fixture(
     call: async (
       surface: string,
       batch = entries,
-      opts: { allowInvalid?: boolean } = {},
+      opts: { allowInvalid?: boolean; dryRun?: boolean; dry_run?: boolean } = {},
     ) => {
       if (surface === "rest") {
+        const { dry_run: _ignored, ...restOpts } = opts;
         const response = await fetch(
           `${rest.url}/api-gateway/v1/ledgers/alice/main/entries`,
           {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ entries: batch, ...opts }),
+            body: JSON.stringify({ entries: batch, ...restOpts }),
           },
         );
         return {
@@ -271,10 +298,14 @@ async function fixture(
           type: type.toUpperCase(),
           [type]: type === "budget" ? { ...entry, interval: "MONTHLY" } : entry,
         }));
+        // Preview selections ride a wider mutation so the shared selections
+        // every existing test pins stay untouched (w23/m7/t002).
+        const previewing = opts.dryRun === true;
         const response = await graphql({
           schema,
-          source:
-            'mutation($entries:[AddEntryInput!]!,$allowInvalid:Boolean) { bulkEntries(ledgerId:"alice/main",entries:$entries,allowInvalid:$allowInvalid) { success message entryHashes } }',
+          source: previewing
+            ? 'mutation($entries:[AddEntryInput!]!,$allowInvalid:Boolean,$dryRun:Boolean) { bulkEntries(ledgerId:"alice/main",entries:$entries,allowInvalid:$allowInvalid,dryRun:$dryRun) { success message dryRun entryHashes preview { path text } } }'
+            : 'mutation($entries:[AddEntryInput!]!,$allowInvalid:Boolean) { bulkEntries(ledgerId:"alice/main",entries:$entries,allowInvalid:$allowInvalid) { success message entryHashes } }',
           variableValues: { entries: input, ...opts },
           contextValue: {
             identity: caller,
@@ -288,11 +319,14 @@ async function fixture(
           errors: response.errors,
         };
       }
+      // MCP spells the preview flag dry_run; the camel twin would be an
+      // unrecognized key under the strict tool input (w23/m7/t002).
+      const { dryRun: _ignored, ...mcpOpts } = opts;
       const response = await client.callTool({
         name: "addLedgerEntries",
         arguments: {
           entries: batch,
-          ...opts,
+          ...mcpOpts,
           ...(caller.ledgerScope ? {} : { ledger: "alice/main" }),
         },
       });
@@ -318,7 +352,8 @@ it.each([identity, { ...identity, ledgerScope: undefined }])(
       const f = await fixture(caller);
       try {
         // REST and GraphQL keep the `{success, message}` contract plus the
-        // committed entries' hashes (w23/060); MCP carries the write outcome
+        // committed entries' hashes (w23/060); REST also echoes the dryRun
+        // flag with its preview (w23/m7/t002). MCP carries the write outcome
         // (summary first, then wrote, entryHashes, validation) around the
         // same committed batch.
         const entryHashes = Array.from(
@@ -335,7 +370,9 @@ it.each([identity, { ...identity, ledgerScope: undefined }])(
                     "Added 10 entries to main.bean. No new bean-check errors.",
                   success: true,
                   message: "Added 10 entries successfully",
+                  dry_run: false,
                   files: ["main.bean"],
+                  preview: [],
                   wrote: [{ path: "main.bean" }],
                   entryHashes,
                   validation: {
@@ -344,11 +381,19 @@ it.each([identity, { ...identity, ledgerScope: undefined }])(
                     newErrors: [],
                   },
                 }
-              : {
-                  success: true,
-                  message: "Added 10 entries successfully",
-                  entryHashes,
-                },
+              : surface === "rest"
+                ? {
+                    success: true,
+                    message: "Added 10 entries successfully",
+                    dryRun: false,
+                    entryHashes,
+                    preview: [],
+                  }
+                : {
+                    success: true,
+                    message: "Added 10 entries successfully",
+                    entryHashes,
+                  },
         });
         expect(f.write).toHaveBeenCalledTimes(1);
         expect(f.committed).toHaveLength(10);
@@ -402,7 +447,9 @@ it("reports an unbalanced write in the MCP validation envelope", async () => {
           "Added 1 entry to main.bean. 1 new bean-check error: Transaction does not balance: residual 5.00 USD (main.bean:73)",
         success: true,
         message: "Added 1 entry successfully",
+        dry_run: false,
         files: ["main.bean"],
+        preview: [],
         wrote: [{ path: "main.bean" }],
         entryHashes: ["hash-0"],
         validation: {
@@ -1252,6 +1299,133 @@ describe.each(["rest", "gql", "mcp"])("total price and pad via %s", (surface) =>
         "entry 0: postings[0].totalPrice needs units",
       );
       expect(text).toContain("can't carry a total price");
+    } finally {
+      await f.close();
+    }
+  });
+});
+
+describe.each(["rest", "gql", "mcp"])("typed add preview via %s", (surface) => {
+  // MCP spells the preview flag dry_run; REST and GraphQL dryRun (w23/m7/t002).
+  const previewOpts = () =>
+    surface === "mcp" ? { dry_run: true } : { dryRun: true };
+
+  // w23/m7/t002: a dry run previews without committing on every surface.
+  it("previews a batch without committing it", async () => {
+    const batch = [
+      {
+        type: "transaction",
+        entry: {
+          date,
+          flag: "*",
+          narration: "previewed",
+          postings: [
+            {
+              account: "Expenses:Food",
+              units: { number: "10", currency: "USD" },
+            },
+            {
+              account: "Assets:Cash",
+              units: { number: "-10", currency: "USD" },
+            },
+          ],
+        },
+      },
+    ] as unknown as LedgerEntryInput[];
+    const f = await fixture();
+    try {
+      const result = await f.call(surface, batch, previewOpts());
+      expect(result.success).toBe(true);
+      expect(f.committed).toEqual([]);
+      // The checks still ran ledger-side: the hop went out flagged dryRun.
+      expect(f.write).toHaveBeenCalled();
+      expect(f.write.mock.calls[0]?.[2]).toMatchObject({ dryRun: true });
+      const body = result.result as Record<string, unknown>;
+      if (surface === "mcp") {
+        expect(body).toMatchObject({
+          dry_run: true,
+          entryHashes: [],
+          wrote: [],
+          preview: [
+            {
+              path: "main.bean",
+              text: expect.stringContaining("# preview row 0: transaction"),
+            },
+          ],
+        });
+      } else {
+        expect(body).toMatchObject({
+          dryRun: true,
+          entryHashes: [],
+          preview: [
+            {
+              path: "main.bean",
+              text: expect.stringContaining("# preview row 0: transaction"),
+            },
+          ],
+        });
+      }
+    } finally {
+      await f.close();
+    }
+  });
+
+  // w23/m7/t002: a dry run refuses imbalance exactly as the commit would.
+  it("refuses an unbalanced batch on a dry run", async () => {
+    const f = await fixture();
+    f.state.unbalanced = true;
+    try {
+      const result = await f.call(surface, unbalancedBatch, previewOpts());
+      expect(result.success).toBe(false);
+      expect(f.committed).toEqual([]);
+      if (surface === "rest") {
+        expect(result.result).toMatchObject({
+          ok: false,
+          error: {
+            code: "UNBALANCED",
+            message: expect.stringContaining("residual 5 USD"),
+          },
+        });
+      } else if (surface === "gql") {
+        // Raw `graphql()` bypasses Apollo's formatError, so no
+        // extensions.code here — the message carries the residual.
+        expect(
+          (result.errors ?? []).some((error) =>
+            String(error.message).includes("residual 5 USD"),
+          ),
+        ).toBe(true);
+      } else {
+        expect(result.full).toMatchObject({
+          ok: false,
+          error: {
+            code: "UNBALANCED",
+            message: expect.stringContaining("residual 5 USD"),
+          },
+        });
+      }
+    } finally {
+      await f.close();
+    }
+  });
+
+  // w23/m7/t002: the preview message says what would happen, not what did.
+  it("says Would add on a dry run", async () => {
+    const batch = [
+      {
+        type: "open",
+        entry: { date, account: "Assets:New", currencies: ["USD"] },
+      },
+    ] as unknown as LedgerEntryInput[];
+    const f = await fixture();
+    try {
+      const result = await f.call(surface, batch, previewOpts());
+      expect(result.success).toBe(true);
+      const body = result.result as Record<string, unknown>;
+      const text = String(
+        surface === "mcp" ? body.summary : body.message,
+      );
+      expect(text).toContain("Would add 1 entry");
+      expect(text).not.toContain("Added 1 entry");
     } finally {
       await f.close();
     }

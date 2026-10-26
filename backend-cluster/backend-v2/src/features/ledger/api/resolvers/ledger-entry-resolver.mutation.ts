@@ -78,6 +78,15 @@ const ENTRY_HASHES_DESCRIPTION =
   "The hash each committed entry now carries, in request order, for getLedgerEntryContext and the source-slice update and delete; empty on a dry run, or when it could not be resolved after the commit";
 
 @ObjectType()
+class EntryPreviewFile {
+  @Field(() => String)
+  path: string;
+
+  @Field(() => String)
+  text: string;
+}
+
+@ObjectType()
 class AddLedgerEntryResponse {
   @Field(() => Boolean)
   success: boolean;
@@ -85,8 +94,16 @@ class AddLedgerEntryResponse {
   @Field(() => String, { nullable: true })
   message?: string;
 
+  @Field(() => Boolean)
+  dryRun: boolean;
+
   @Field(() => [String], { description: ENTRY_HASHES_DESCRIPTION })
   entryHashes: string[];
+
+  @Field(() => [EntryPreviewFile], {
+    description: "Per-file entry text; populated on dry runs only",
+  })
+  preview: EntryPreviewFile[];
 }
 
 @InputType()
@@ -485,6 +502,12 @@ export class LedgerEntryMutationResolver {
         "Record entries deliberately even when they are unbalanced (UNBALANCED) or would add bean-check errors such as a second open for an open account (VALIDATION_FAILED), instead of refusing them",
     })
     allowInvalid?: boolean,
+    @Arg("dryRun", () => Boolean, {
+      nullable: true,
+      description:
+        "Run every check and return the preview without committing",
+    })
+    dryRun?: boolean,
   ): Promise<AddLedgerEntryResponse> {
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const result = await this.ledgerEntry.addBulkEntries(
@@ -494,8 +517,13 @@ export class LedgerEntryMutationResolver {
       entries.map(toServiceEntry),
       ctx.platform,
       allowInvalid ?? false,
+      dryRun ?? false,
     );
-    return { ...result, entryHashes: result.entryHashes ?? [] };
+    return {
+      ...result,
+      entryHashes: result.entryHashes ?? [],
+      preview: result.preview ?? [],
+    };
   }
 
   @Authenticated()

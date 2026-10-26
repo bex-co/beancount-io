@@ -178,6 +178,7 @@ export type LedgerEntryInput =
 export type AddBulkEntriesResult = {
   success: boolean;
   message?: string;
+  dryRun: boolean;
   files?: string[];
   /**
    * The hash each committed entry now carries, in request order; empty when
@@ -189,6 +190,11 @@ export type AddBulkEntriesResult = {
    * from the entry point in the same commit (w23/062).
    */
   includedFiles?: string[];
+  /**
+   * Per-file entry text the batch would append; populated on dry runs only,
+   * like the append preview's diff (w23/m7/t002).
+   */
+  preview?: Array<{ path: string; text: string }>;
 };
 
 type BulkEntries = EntryAddBulkEntriesRequest["entries"];
@@ -238,6 +244,8 @@ export interface ILedgerEntryService {
     inputs: LedgerEntryInput[],
     platform: "web" | "mobile",
     allowInvalid?: boolean,
+    /** Run every check the write would and commit nothing (w23/m7/t002). */
+    dryRun?: boolean,
   ): Promise<AddBulkEntriesResult>;
 
   /**
@@ -283,6 +291,7 @@ export class LedgerEntryService implements ILedgerEntryService {
     inputs: LedgerEntryInput[],
     platform: "web" | "mobile",
     allowInvalid = false,
+    dryRun = false,
   ): Promise<AddBulkEntriesResult> {
     const ledgerId = `${ledgerOwner}/${ledgerName}`;
     await authorizeLedger(
@@ -298,6 +307,7 @@ export class LedgerEntryService implements ILedgerEntryService {
       inputs,
       platform,
       allowInvalid,
+      dryRun,
     );
   }
 
@@ -477,7 +487,7 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
       }
     }
 
-    const { entryHashes, includedFiles } = await this.addEntries(
+    const { entryHashes, includedFiles, preview } = await this.addEntries(
       favaApiClient,
       ledgerOwner,
       ledgerName,
@@ -489,17 +499,22 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
 
     const noun = inputs.length === 1 ? "entry" : "entries";
     // A routed file nothing included is included from the entry point in the
-    // same commit (w23/062); the result says so.
+    // same commit (w23/062); the result says so. A preview would include it.
     const included =
       includedFiles.length > 0
-        ? `; ${LEDGER_ENTRY_POINT} now includes ${includedFiles.join(", ")}`
+        ? `; ${LEDGER_ENTRY_POINT} ${dryRun ? "would include" : "now includes"} ${includedFiles.join(", ")}`
         : "";
     return {
       success: true,
-      message: `Added ${inputs.length} ${noun} successfully${included}`,
-      files: distinctFiles,
+      dryRun,
+      message: dryRun
+        ? `Would add ${inputs.length} ${noun} successfully${included}`
+        : `Added ${inputs.length} ${noun} successfully${included}`,
+      // Nothing landed on a dry run; the preview carries where it would.
+      files: dryRun ? [] : distinctFiles,
       entryHashes,
       ...(includedFiles.length > 0 && { includedFiles }),
+      ...(dryRun && { preview }),
     };
   }
 
@@ -778,7 +793,11 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
     platform: "web" | "mobile" = "web",
     allowInvalid = false,
     dryRun = false,
-  ): Promise<{ entryHashes: string[]; includedFiles: string[] }> {
+  ): Promise<{
+    entryHashes: string[];
+    includedFiles: string[];
+    preview: Array<{ path: string; text: string }>;
+  }> {
     const written = await unwrapFavaResponse(
       favaApiClient.entries.addBulkEntries(
         ledgerOwner,
@@ -794,6 +813,10 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
     return {
       entryHashes: result?.entry_hashes ?? [],
       includedFiles: result?.included_files ?? [],
+      preview: (result?.preview ?? []).map((file) => ({
+        path: file.path,
+        text: file.text,
+      })),
     };
   }
 }

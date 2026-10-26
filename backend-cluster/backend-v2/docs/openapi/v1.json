@@ -905,6 +905,11 @@
             "type": "boolean",
             "nullable": true,
             "description": "Record entries deliberately even when they are unbalanced (UNBALANCED) or would add bean-check errors such as a second open for an open account (VALIDATION_FAILED), instead of refusing them"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Run every check and return the preview without committing"
           }
         },
         "required": [
@@ -10488,11 +10493,35 @@
                         "type": "string"
                       },
                       "description": "The hash each committed entry now carries, in request order — what getEntryContext, the source-slice update and delete take. Empty on a dry run, or when the hashes could not be resolved after the commit."
+                    },
+                    "dryRun": {
+                      "type": "boolean"
+                    },
+                    "preview": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "text": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "text"
+                        ],
+                        "additionalProperties": false
+                      }
                     }
                   },
                   "required": [
                     "success",
-                    "entryHashes"
+                    "entryHashes",
+                    "dryRun",
+                    "preview"
                   ],
                   "additionalProperties": false
                 }

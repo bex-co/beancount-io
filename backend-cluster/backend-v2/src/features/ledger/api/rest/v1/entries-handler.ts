@@ -190,6 +190,12 @@ export const entriesBodySchema = z
         description:
           "Record entries deliberately even when they are unbalanced (UNBALANCED) or would add bean-check errors such as a second open for an open account (VALIDATION_FAILED), instead of refusing them",
       }),
+    dryRun: nullToUndefined(z.boolean())
+      .optional()
+      .openapi({
+        description:
+          "Run every check and return the preview without committing",
+      }),
   })
   .openapi("EntriesRequest", {
     description: "One or more directives to add to the ledger",
@@ -282,6 +288,10 @@ export const ENTRY_ROUTES = [
           success: z.boolean(),
           message: nullToUndefined(z.string()),
           entryHashes: entryHashesSchema,
+          dryRun: z.boolean(),
+          preview: z.array(
+            z.strictObject({ path: z.string(), text: z.string() }),
+          ),
         }),
       ),
     },
@@ -299,6 +309,7 @@ export const ENTRY_ROUTES = [
         // drift apart.
         "web",
         body.allowInvalid ?? false,
+        body.dryRun ?? false,
       );
       // The service also reports which files the batch landed in for MCP's
       // write outcome; v1 adds only the hashes (w23/060).
@@ -306,6 +317,8 @@ export const ENTRY_ROUTES = [
         success: result.success,
         message: result.message,
         entryHashes: result.entryHashes ?? [],
+        dryRun: result.dryRun,
+        preview: result.preview ?? [],
       };
     },
   }),
