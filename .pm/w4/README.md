@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1099** — [Keep Accounts search unavailable until it can retain typing](./1099.md)
+
 - **1098** — [Run only the requested BQL bookmark on startup](./1098.md)
 
 - **1097** — [Preserve commodity histories when refreshing prices](./1097.md)
