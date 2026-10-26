@@ -1,6 +1,6 @@
 # w4 · m57 — Keep report interval choices through shared-filter changes
 
-**Worker:** worker1 **Goal:** readers comparing dates keep the grouping interval they chose on Account, Balance Sheet, Income Statement and Cash Flow. **Status:** in progress (t001–t005 done)
+**Worker:** worker1 **Goal:** readers comparing dates keep the grouping interval they chose on Account, Balance Sheet, Income Statement and Cash Flow. **Status:** done
 
 ## Tasks (in order)
 
@@ -11,7 +11,7 @@
 | [t003](./done/t003.md) | Verify adoption surfaces and document the preference — **DONE** | 10m | t002 |
 | [t004](./done/t004.md) | Simplify the selection and query plumbing — **DONE** | 10m | t003 |
 | [t005](./done/t005.md) | Cover the real scope/remount regressions — **DONE** | 40m | t004 |
-| [t006](./t006.md) | Verify repaired journeys, ship and close out | 15m | t005 |
+| [t006](./done/t006.md) | Verify repaired journeys, ship and close out — **DONE** | 15m | t005 |
 
 140 minutes: one shared selection contract, four page/schema integrations, matching SSR loader inputs and meaningful lifecycle/browser verification. This is one minor interval-retention finding across four independently reproduced consumers, not four duplicate reports. Details and evidence are in [FINDINGS.md](./FINDINGS.md).
 
@@ -32,5 +32,5 @@
 - **Goal linkage:** A2 — frictionless onboarding and analysis. A reader should change the dates being compared without silently changing how the report groups them.
 - **Expected outcome:** choose Weekly once, compare another date scope and keep weekly figures on all four report pages.
 - **Why now:** the completed view-lifetime repairs retain the chart tab/bar mode, but the adjacent interval still lives below the same outer remount boundary. Repair this one preference coherently rather than weakening the pending-data safeguards.
-- **Prior work:** [142](../done/142.md) establishes the page-scoped view-preference decision; [174](../done/174.md) applies it to Account and explicitly leaves interval policy unverified; [998](../done/998.md), [M16](../done/m16/README.md) and [M51](../done/m51/README.md) cover other choices/lifetimes. Keep those completed outcomes closed. Record one interval-consumer residual of that family, without increasing historical finding groups.
+- **Prior work:** [142](../142.md) establishes the page-scoped view-preference decision; [174](../174.md) applies it to Account and explicitly leaves interval policy unverified; [998](../998.md), [M16](../m16/README.md) and [M51](../m51/README.md) cover other choices/lifetimes. Keep those completed outcomes closed. Record one interval-consumer residual of that family, without increasing historical finding groups.
 - **Adoption surface:** included because selection/bookmark behavior is user-facing. Check existing dashboard README/report guidance and package/catalog descriptions for accuracy; update only guidance that actually changes.

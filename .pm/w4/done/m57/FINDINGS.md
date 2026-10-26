@@ -41,9 +41,9 @@ All production IntervalSelect consumers were audited. The four page owners above
 
 ## Dedupe and policy
 
-All5,729 board markdowns across queues/states/tombstones and7 open milestone READMEs checked at fetched main **28fe6fb116211b6489a07c8ee50249b263baf67a**, with targeted page/layout history. [142](../done/142.md) explicitly decided chart choice is a view preference that outlives a shared-scope edit. [174](../done/174.md) repaired Account's view but explicitly left interval preference policy unverified. This new independent evidence covers that missing choice on Account and the three interval-bearing statements. Keep those actual view repairs closed; record one interval-consumer residual of their family, not four historical finding groups.
+All5,729 board markdowns across queues/states/tombstones and7 open milestone READMEs checked at fetched main **28fe6fb116211b6489a07c8ee50249b263baf67a**, with targeted page/layout history. [142](../142.md) explicitly decided chart choice is a view preference that outlives a shared-scope edit. [174](../174.md) repaired Account's view but explicitly left interval preference policy unverified. This new independent evidence covers that missing choice on Account and the three interval-bearing statements. Keep those actual view repairs closed; record one interval-consumer residual of their family, not four historical finding groups.
 
-[998](../done/998.md) handles bar mode, [M16](../done/m16/README.md) inner report-read view lifetime, [M51](../done/m51/README.md) legend selection, and1024/1025 sibling legend owners. [099](../done/099.md) protects Account pending interval/conversion data. None retains the interval across the outer scope remount. Existing honest pending behavior remains required. No interval-retention correction appears in the targeted histories through this fetched main.
+[998](../998.md) handles bar mode, [M16](../m16/README.md) inner report-read view lifetime, [M51](../m51/README.md) legend selection, and1024/1025 sibling legend owners. [099](../099.md) protects Account pending interval/conversion data. None retains the interval across the outer scope remount. Existing honest pending behavior remains required. No interval-retention correction appears in the targeted histories through this fetched main.
 
 ## Deployed source and evidence
 

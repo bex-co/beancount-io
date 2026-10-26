@@ -132,7 +132,7 @@
 
 ## Milestones
 
-- [ ] **m57** — [Keep report interval choices through shared-filter changes](./m57/README.md) (6 tasks) ← dashboard QA
+- [x] **m57** — [Keep report interval choices through shared-filter changes](./done/m57/README.md) (6 tasks) ← dashboard QA; shipped `0e535850b`
 
 - [x] **m56** — Exclude entirely noncash transactions from Cash Flow activities (7 tasks) ← dashboard QA; residual of m2 ([plan](./done/m56/README.md))
 
