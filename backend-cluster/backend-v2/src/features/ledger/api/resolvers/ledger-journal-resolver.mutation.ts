@@ -12,6 +12,7 @@ import { Authenticated } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import type { ILedgerJournalService } from "@/features/ledger/service/ledger-journal-service";
 import { resolveEntryHash } from "@/features/ledger/utils/entry-hash-alias";
+import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 
 @InputType()
 class DeleteSourceSliceInput {
@@ -37,7 +38,7 @@ class DeleteSourceSliceInput {
   @Field(() => Boolean, {
     nullable: true,
     description:
-      "Run every check and return the preview without committing",
+      PREVIEW_FLAG_DESCRIPTION,
   })
   dryRun?: boolean;
 }
@@ -98,7 +99,7 @@ class DeleteMultiSourceSlicesInput {
   @Field(() => Boolean, {
     nullable: true,
     description:
-      "Run every check and return the preview without committing",
+      PREVIEW_FLAG_DESCRIPTION,
   })
   dryRun?: boolean;
 }
@@ -147,7 +148,7 @@ class UpdateSourceSliceInput {
   @Field(() => Boolean, {
     nullable: true,
     description:
-      "Run every check and return the preview without committing",
+      PREVIEW_FLAG_DESCRIPTION,
   })
   dryRun?: boolean;
 }

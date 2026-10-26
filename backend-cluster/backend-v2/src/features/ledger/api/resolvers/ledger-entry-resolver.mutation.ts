@@ -28,6 +28,7 @@ import {
   POSTING_TAGS_DESCRIPTION,
   POSTING_TOTAL_PRICE_DESCRIPTION,
 } from "@/features/ledger/utils/entry-field-descriptions";
+import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 
 enum BudgetInterval {
   DAILY = "daily",
@@ -505,7 +506,7 @@ export class LedgerEntryMutationResolver {
     @Arg("dryRun", () => Boolean, {
       nullable: true,
       description:
-        "Run every check and return the preview without committing",
+        PREVIEW_FLAG_DESCRIPTION,
     })
     dryRun?: boolean,
   ): Promise<AddLedgerEntryResponse> {

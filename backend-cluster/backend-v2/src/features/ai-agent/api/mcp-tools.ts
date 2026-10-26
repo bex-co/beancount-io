@@ -2,6 +2,7 @@ import { entriesBodySchema } from "@/features/ledger/api/rest/v1/entries-handler
 import { parseLedgerId } from "@/shared/str";
 import { resolveCommitMessage } from "@/features/ledger/utils/commit-message-alias";
 import { BQL_SIZE_DESCRIPTION } from "@/features/ledger/utils/bql-size-description";
+import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 import {
   SOURCE_SLICE_OPERATION_OUTPUTS,
   SOURCE_SLICE_OPERATION_SCHEMAS,
@@ -281,7 +282,7 @@ const addLedgerEntriesInput = entriesBodySchema
     dry_run: z
       .boolean()
       .optional()
-      .describe("Run every check and return the preview without committing"),
+      .describe(PREVIEW_FLAG_DESCRIPTION),
   })
   .strict();
 const renameLedgerFileInput = renameFileInput
@@ -291,7 +292,7 @@ const renameLedgerFileInput = renameFileInput
     dry_run: z
       .boolean()
       .optional()
-      .describe("Run every check and return the preview without committing"),
+      .describe(PREVIEW_FLAG_DESCRIPTION),
   })
   .strict();
 const insertReceiptTransactionInput = receiptInsertInput

@@ -277,10 +277,15 @@ the principal inputs; inspect the schema before constructing a call.
 | `listLedgerFiles`            | Optional `dir_path`; lists one directory level, directories first. A `dir_path` that does not exist, or names a file, is `NOT_FOUND`.                                    | Read       |
 | `readLedgerFiles`            | `files: [{ path, start_line?, end_line? }]`; returns text and line-range metadata.                                                                                        | Read       |
 | `appendLedgerText`           | `text`, optional `path`, `dry_run`, `allowInvalid`; appends Beancount directive text, routed by type and date and inserted in date order.                                 | Write      |
+| `addLedgerEntries`           | `entries: [{type, entry}]`, optional `dry_run`, `allowInvalid`; appends structured directives, routed by type and date. A preview returns the per-file entry text.      | Write      |
 | `refreshManagedPrices`       | Optional `ledger`; re-fetches every managed price include (`include "https://beancount.io/prices/BTC-USD"`) now and returns each source's status. Never edits the ledger. | Write      |
 | `createLedgerFiles`          | `description` or `message`, `files: [{ path, content }]`, optional `dry_run`; creates new files in one commit.                                                             | Write      |
 | `updateLedgerFiles`          | `description` or `message`, `files: [{ path, old_string, new_string } | { path, content }]`, optional `dry_run`; replaces exact text or whole files in one commit.         | Write      |
 | `deleteLedgerFiles`          | `description` or `message`, `files: [{ path }]`, optional `dry_run`; deletes files in one commit.                                                                          | Write      |
+| `updateEntrySource`          | `entryHash`, `sha256sum`, `newContent`, optional `dry_run`; replaces one entry's source. A preview returns the stored replacement.                                        | Write      |
+| `deleteEntrySource`          | `entryHash`, `sha256sum`, optional `dry_run`; deletes one entry's source.                                                                                                  | Write      |
+| `deleteEntrySources`         | `entries: [{entryHash, sha256sum}]`, optional `dry_run`; deletes entries' source in one commit.                                                                            | Write      |
+| `renameLedgerFile`           | `oldPath`, `newPath`, optional `message`, `updateIncludes`, `dry_run`; moves a file, rewriting includes. A preview names the move plus the rewritten include lines.     | Write      |
 | `syncBankTransactions`       | `item_id`, optional `dry_run`; pulls new transactions from a linked bank into staging.                                                                                    | Write      |
 | `importStagedBankTransactions` | `transactions: [{ transaction_id, target_account, source_account? }]`, optional `filename`, `dry_run`; writes staged transactions into the ledger.                     | Write      |
 | `discardStagedBankTransactions` | `transaction_ids`, optional `dry_run`; removes staged transactions.                                                                                                  | Write      |
@@ -1495,7 +1500,8 @@ concealed as not found. The result is `{success}`. No preview; a failed entry
 write keeps the temporary upload for retry.
 
 `renameLedgerFile` accepts `oldPath`, `newPath`, optional `message` (or
-`description`), optional `updateIncludes`, and optional `ledger`. Pinned
+`description`), optional `updateIncludes`, optional `dry_run`, and optional
+`ledger`. Pinned
 credentials may omit the ledger; unpinned callers must select it. The
 protected workflow validates both repository-relative paths and moves the
 file preserving its content in one atomic commit (default message
@@ -1511,11 +1517,18 @@ matches a glob that `newPath` would not, the rename is refused even with
 `updateIncludes`. The moved file's own relative includes are held to the same
 rule: a move to another folder that would point them elsewhere is refused
 without `updateIncludes` and rewritten with it, and a glob in the moved file
-is refused. The result contains `oldPath`, `newPath` and `updatedIncludes`. Write capability and current content-write access are
+is refused. The result contains `message`, `oldPath`, `newPath`,
+`updatedIncludes`, and `preview`. Write capability and current content-write access are
 required.
 
+With `dry_run: true` the workflow runs every check the commit runs, then
+returns the move plus the `updateIncludes` rewrites — a `Would rename …`
+message with the rewritten include lines per file in `preview` — without
+committing anything. A missing source, an occupied target, and a
+still-included path refuse on a preview exactly as on a commit.
+
 This operation exposes GraphQL's existing contract: it has no caller-supplied
-SHA or preview flag. Repository conflicts remain errors.
+SHA. Repository conflicts remain errors.
 
 Deleting a still-included file is refused with the same include counting —
 there is no `updateIncludes` for delete, so drop the include first (see
@@ -1543,9 +1556,14 @@ uses, on REST, GraphQL, and MCP alike — paste the hash straight from
 different hashes is refused with `BAD_USER_INPUT` rather than guessed.
 
 Use the current source checksum returned by entry context. Each tool accepts
-only its own arguments and optional `ledger`; a pinned credential may omit the
-ledger. Current content-write access is required. Each delegates source
-validation and mutation to the ledger service and does not support preview.
+only its own arguments, optional `dry_run`, and optional `ledger`; a pinned
+credential may omit the ledger. Current content-write access is required. Each
+delegates source validation and mutation to the ledger service. With
+`dry_run: true` the tool resolves the slice and runs every check the commit
+runs, then returns what it would change — a `Would …` message and the
+affected text per file in `preview` — without committing anything: no slice
+touched, no files reported written, no new hashes minted (an update still
+names the hash the entry would carry, for the next edit).
 
 An edit or delete that would leave the ledger with a bean-check error it did
 not have — deleting an entry a balance assertion depends on, or re-dating it
@@ -1554,11 +1572,13 @@ and each new error named in `newLedgerErrors`, the same refusal
 `addLedgerEntries` gives (w21/m1). When the only new error is imbalance, the
 refusal is `UNBALANCED` with the residual instead, as on add. Errors the
 ledger already had never block. Pass `allowInvalid: true` to commit the write
-anyway.
+anyway. A preview is refused exactly the same way: the checks do not depend
+on committing.
 
 ### Insert structured directives
 
-`addLedgerEntries` accepts `entries: [{type, entry}]` and optional `ledger`.
+`addLedgerEntries` accepts `entries: [{type, entry}]`, optional `dry_run`,
+and optional `ledger`.
 Only pinned credentials can omit the ledger. It supports transaction, commodity,
 price, note, balance, open, close, pad, budget, document, and event directives using
 the REST input shapes. GraphQL instead uses an uppercase enum and a payload field
@@ -1606,7 +1626,12 @@ distinct from raw file editing. REST and MCP impose no separate batch-size
 limit beyond the shared ledger contract. Optional null fields are treated as
 absent. Transaction metadata accepts string-valued objects on all three
 surfaces. Ledger-side date, posting, and quota validation still applies.
-There is no preview argument.
+With `dry_run: true` the tool runs every check the commit runs, then returns
+what it would append — a `Would add …` message and the per-file entry text in
+`preview` — without committing anything: no entries written, `entryHashes`
+empty, and `wrote` naming at most the entry point the batch would newly
+include. The `UNBALANCED` and `VALIDATION_FAILED` refusals above refuse a
+preview exactly as they refuse a commit.
 
 ### Legacy transaction insertion
 

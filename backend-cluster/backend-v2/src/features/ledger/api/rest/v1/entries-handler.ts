@@ -13,6 +13,7 @@ import {
   POSTING_TAGS_DESCRIPTION,
   POSTING_TOTAL_PRICE_DESCRIPTION,
 } from "@/features/ledger/utils/entry-field-descriptions";
+import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 
 /**
  * REST/MCP null tolerance: an explicit null on an optional field means the
@@ -193,8 +194,7 @@ export const entriesBodySchema = z
     dryRun: nullToUndefined(z.boolean())
       .optional()
       .openapi({
-        description:
-          "Run every check and return the preview without committing",
+        description: PREVIEW_FLAG_DESCRIPTION,
       }),
   })
   .openapi("EntriesRequest", {
@@ -278,7 +278,7 @@ export const ENTRY_ROUTES = [
     path: "/api-gateway/v1/ledgers/{owner}/{name}/entries",
     summary: "Add directives to the ledger",
     description:
-      "Appends one or more Beancount directives, routed to the right file by type and date and committed as a single commit. All-or-nothing: if any directive fails, none are written. A transaction whose residual is outside the ledger's tolerance is refused with UNBALANCED, and directives that would add bean-check errors (a second open for an open account, a balance against an unopened account), or a budget for an account the ledger lacks, are refused with VALIDATION_FAILED naming each new error; allowInvalid records either deliberately. One posting per transaction may omit its amount and is written elided.",
+      "Appends one or more Beancount directives, routed to the right file by type and date and committed as a single commit. All-or-nothing: if any directive fails, none are written. A transaction whose residual is outside the ledger's tolerance is refused with UNBALANCED, and directives that would add bean-check errors (a second open for an open account, a balance against an unopened account), or a budget for an account the ledger lacks, are refused with VALIDATION_FAILED naming each new error; allowInvalid records either deliberately. One posting per transaction may omit its amount and is written elided. `dryRun` returns the per-file entry text without committing.",
     params: ledgerPathSchema,
     body: entriesBodySchema,
     responses: {

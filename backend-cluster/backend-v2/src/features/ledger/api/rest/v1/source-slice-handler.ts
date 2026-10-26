@@ -2,6 +2,7 @@ import { z } from "@/shared/zod-openapi-setup";
 import { v1Route } from "@/server/rest/v1-route";
 import { json } from "@/server/rest/v1-schemas";
 import { resolveEntryHash } from "@/features/ledger/utils/entry-hash-alias";
+import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 import { ledgerPathSchema, ledgerIdOf } from "./schemas";
 // Both spellings accepted (w23/m3/t001); handlers resolve to `entryHash`
 // before the service so the wire contract never sees the alias.
@@ -24,7 +25,7 @@ const allowInvalid = z
 const dryRun = z
   .boolean()
   .optional()
-  .describe("Run every check and return the preview without committing.");
+  .describe(PREVIEW_FLAG_DESCRIPTION);
 export const deleteSliceInput = sliceRef.extend({ allowInvalid, dryRun });
 export const deleteSlicesInput = z
   .object({ entries: z.array(sliceRef), allowInvalid, dryRun })

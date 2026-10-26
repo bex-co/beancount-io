@@ -8,6 +8,7 @@ import {
   updateSliceResult,
 } from "@/features/ledger/api/rest/v1/source-slice-handler";
 import { resolveEntryHash } from "@/features/ledger/utils/entry-hash-alias";
+import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 import {
   mcpOutputSchema,
   toolOutputSchema,
@@ -31,7 +32,7 @@ const dryRunInput = {
   dry_run: z
     .boolean()
     .optional()
-    .describe("Run every check and return the preview without committing"),
+    .describe(PREVIEW_FLAG_DESCRIPTION),
 } as const;
 
 /** One MCP tool per entry-source operation (ADR 019, 2026-10-18; w1/m38). */

@@ -21,6 +21,7 @@ import {
   LEDGER_DESCRIPTION_MAX,
   LedgerTemplate,
 } from "@/features/ledger/workflow/ledger-workflow.types";
+import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 
 registerEnumType(LedgerTemplate, {
   name: "LedgerTemplate",
@@ -388,7 +389,7 @@ export class RenameLedgerFileInput {
   @Field(() => Boolean, {
     nullable: true,
     description:
-      "Run every check and return the preview without committing",
+      PREVIEW_FLAG_DESCRIPTION,
   })
   dryRun?: boolean;
 }

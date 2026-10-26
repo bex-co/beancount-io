@@ -2,6 +2,7 @@ import { z } from "@/shared/zod-openapi-setup";
 import { v1Route } from "@/server/rest/v1-route";
 import { json } from "@/server/rest/v1-schemas";
 import { resolveCommitMessage } from "@/features/ledger/utils/commit-message-alias";
+import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 import { ledgerPathSchema, ledgerIdOf } from "./schemas";
 
 export const renameFileInput = z
@@ -17,7 +18,7 @@ export const renameFileInput = z
     dryRun: z
       .boolean()
       .optional()
-      .describe("Run every check and return the preview without committing."),
+      .describe(PREVIEW_FLAG_DESCRIPTION),
   })
   .strict();
 const previewFile = z.object({ path: z.string(), text: z.string() });
