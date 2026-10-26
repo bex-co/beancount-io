@@ -662,7 +662,7 @@ function renderPositionString(posting: PostingJson): string {
       parts.push(`${perUnit} ${posting.cost.currency ?? ""}`.trim());
     }
     if (posting.cost.date) parts.push(posting.cost.date);
-    if (posting.cost.label) parts.push(`"${posting.cost.label}"`);
+    if (posting.cost.label) parts.push(`"${escapeString(posting.cost.label)}"`);
     str = `${str} {${parts.join(", ")}}`;
   }
   if (posting.price) {

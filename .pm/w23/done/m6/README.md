@@ -1,6 +1,6 @@
 # w23 · m6 — Complete the typed entry schema
 
-**Worker:** worker1 **Goal:** the typed entry path expresses what investments and careful bookkeeping need — posting cost, total price, posting tags/links/meta, open booking, balance tolerance, and pad — identically on REST, GraphQL, and MCP **Status:** todo
+**Worker:** worker1 **Goal:** the typed entry path expresses what investments and careful bookkeeping need — posting cost, total price, posting tags/links/meta, open booking, balance tolerance, and pad — identically on REST, GraphQL, and MCP **Status:** done
 
 ## Tasks (in order)
 
@@ -15,7 +15,7 @@
 | t005 | Adoption surface ✅ | 20m | t004 |
 | t006 | Simplify ✅ | 30m | t005 |
 | t007 | Test coverage ✅ | 45m | t005 |
-| t008 | Closeout | 15m | t006, t007 |
+| t008 | Closeout ✅ | 15m | t006, t007 |
 
 ## Definition of done
 
