@@ -250,7 +250,7 @@ describe("MCP tool list", () => {
     // fork the contract.
     //
     // 112 KB since w23/m9/t002 twinned the preview flag as dryRun on the
-    // fifteen write tools: measured at 114,071 bytes. Each twin carries
+    // fourteen listed write tools: measured at 114,071 bytes. Each twin carries
     // one sentence naming the spelling's home surface, which is the
     // guidance the milestone exists to publish.
     const { tools } = await listToolsRaw();

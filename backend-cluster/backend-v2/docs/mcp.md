@@ -319,6 +319,31 @@ scopes or widen its ledger restriction. MCP key results use
 `created_at` for REST/GraphQL's camelCase fields; `revoked` remains available
 for compatibility. Only creation returns the plaintext key.
 
+### Write-flag spellings
+
+Two flags appear on the write tools, and both spellings of each work
+everywhere the flag exists, on MCP, REST, and GraphQL alike — a call
+pasted from another surface need not be respelled. Passing both
+spellings with two different values is refused with `BAD_USER_INPUT`
+rather than guessed; omitting both leaves the flag off.
+
+| Flag | MCP | REST | GraphQL |
+| ---- | --- | ---- | ------- |
+| Preview | `dry_run`, or `dryRun` | bodies take `dryRun`, bank queries take `dry_run`; each accepts the other | `dryRun`, or `dry_run` |
+| Commit despite errors | `allowInvalid`, or `allow_invalid` | `allowInvalid`, or `allow_invalid` | `allowInvalid`, or `allow_invalid` |
+
+The preview flag is offered on fourteen listed tools: the entry,
+file, slice, and rename writes plus the five bank tools that move
+state (`sync`, `import`, `discard`, `reconcile`, `unlink`). The three
+config-only bank tools (`mapBankAccount`, `setBankAccountCurrency`,
+`refreshBankConnection`) publish no preview argument. The matching
+REST surface is the six write bodies, the five bank-query routes, and
+— accepting `false` and refusing `true` — the three config routes;
+GraphQL offers it on the six write mutations. The errors flag is
+offered where a write can add bean-check errors: the entry and slice
+writes on all three surfaces. File, bank, and rename writes take no
+errors flag.
+
 ### Tools renamed on 2026-10-18
 
 Seven tools used to take an `operation` argument and run one of several
