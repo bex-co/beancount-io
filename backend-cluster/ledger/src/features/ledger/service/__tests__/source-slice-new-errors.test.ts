@@ -3,7 +3,11 @@ import { commitLedgerFiles } from "@/features/ledger/operations/commit-ledger-fi
 import { findEntrySliceAsync } from "@/foundation/rustledger/source-slice-worker";
 import { sliceSha256 } from "@/foundation/rustledger";
 import { LedgerJournalService } from "@/features/ledger/service/ledger-journal-service";
-import { ConflictError, NewLedgerErrorsError } from "@/shared/errors";
+import {
+  ConflictError,
+  NewLedgerErrorsError,
+  UnbalancedTransactionError,
+} from "@/shared/errors";
 
 // Source-slice edits and deletes are refused when they would add a bean-check
 // error, as structured adds are (w0/m2, w21/m1). The WASM engine cannot boot
@@ -43,6 +47,10 @@ const FARMERS = [
   "  Expenses:Food",
 ].join("\n");
 const FARMERS_LATE = FARMERS.replace("2026-08-28", "2026-08-30");
+const FARMERS_UNBALANCED = FARMERS.replace(
+  "  Expenses:Food",
+  "  Expenses:Food  23.00 USD",
+);
 const COFFEE = [
   '2026-08-31 * "COFFEE"',
   "  Assets:Cash  -3.00 USD",
@@ -76,7 +84,7 @@ function lineOf(content: string, text: string, occurrence = 0): number {
 
 function fakeErrors(content: string) {
   const errors: { message: string; file: string; line: number }[] = [];
-  if (!content.includes(FARMERS)) {
+  if (!content.includes(FARMERS) && content.includes(BALANCE)) {
     errors.push({
       message:
         "Balance failed for Assets:Cash: expected 49.75 USD, got 73.25 USD",
@@ -89,6 +97,13 @@ function fakeErrors(content: string) {
       message: "Duplicate open directive for Assets:Cash",
       file: "main.bean",
       line: lineOf(content, DUPLICATE_OPEN),
+    });
+  }
+  if (content.includes(FARMERS_UNBALANCED)) {
+    errors.push({
+      message: "Transaction does not balance: residual -0.50 USD",
+      file: "main.bean",
+      line: lineOf(content, FARMERS_UNBALANCED.split("\n")[0]),
     });
   }
   return errors;
@@ -197,6 +212,27 @@ describe("source-slice writes that would break the ledger", () => {
       ),
     });
     expect(commitMock).not.toHaveBeenCalled();
+  });
+
+  // w23/087: an edit whose only new error is imbalance reads UNBALANCED
+  // like an add, not VALIDATION_FAILED.
+  it("refuses an edit that unbalances the entry as UNBALANCED", async () => {
+    files = { "main.bean": ledger(FARMERS) };
+    const before = files["main.bean"];
+    await expect(
+      service().updateSourceSlice({
+        ledgerId: LEDGER_ID,
+        userId: "user-1",
+        entryHash: "farmers",
+        sha256sum: sliceSha256(FARMERS),
+        newContent: FARMERS_UNBALANCED,
+      }),
+    ).rejects.toMatchObject({
+      constructor: UnbalancedTransactionError,
+      metadata: { code: "UNBALANCED", details: { residual: "-0.50 USD" } },
+    });
+    expect(commitMock).not.toHaveBeenCalled();
+    expect(files["main.bean"]).toBe(before);
   });
 
   it("refuses a multi-delete that removes the entry", async () => {

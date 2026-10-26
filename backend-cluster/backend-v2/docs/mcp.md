@@ -1504,8 +1504,10 @@ An edit or delete that would leave the ledger with a bean-check error it did
 not have — deleting an entry a balance assertion depends on, or re-dating it
 past one — is refused before anything is committed, with `VALIDATION_FAILED`
 and each new error named in `newLedgerErrors`, the same refusal
-`addLedgerEntries` gives (w21/m1). Errors the ledger already had never block.
-Pass `allowInvalid: true` to commit the write anyway.
+`addLedgerEntries` gives (w21/m1). When the only new error is imbalance, the
+refusal is `UNBALANCED` with the residual instead, as on add. Errors the
+ledger already had never block. Pass `allowInvalid: true` to commit the write
+anyway.
 
 ### Insert structured directives
 

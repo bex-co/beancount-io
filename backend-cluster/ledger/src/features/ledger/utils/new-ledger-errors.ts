@@ -1,5 +1,17 @@
 import type { BeancountErrorPublic } from "@/foundation/ledger-api-types";
-import { NewLedgerErrorsError, type LedgerWriteAction } from "@/shared/errors";
+import {
+  NewLedgerErrorsError,
+  UnbalancedTransactionError,
+  type LedgerWriteAction,
+} from "@/shared/errors";
+
+/**
+ * The engine's imbalance wording, shared with the structural balance check's
+ * message (`transaction-balance.ts`). An edit whose ONLY new error speaks it
+ * is refused as UNBALANCED like an add, not VALIDATION_FAILED (w23/087).
+ */
+const IMBALANCE_PREFIX = "Transaction does not balance";
+const RESIDUAL_SUFFIX = /residual (.+)$/;
 
 /**
  * The engine ends an interpolation or lot-match error with the entry's date
@@ -66,7 +78,19 @@ export async function refuseNewLedgerErrors(
 ): Promise<void> {
   if (after.every((error) => error.severity === "warning")) return;
   const introduced = newLedgerErrors(await before(), after);
-  if (introduced.length > 0) {
-    throw new NewLedgerErrorsError(introduced, action);
+  if (introduced.length === 0) return;
+  const [only] = introduced;
+  if (introduced.length === 1 && only !== undefined) {
+    const text = withoutEntryTag(only.message);
+    const residual = RESIDUAL_SUFFIX.exec(text)?.[1];
+    if (text.startsWith(IMBALANCE_PREFIX) && residual !== undefined) {
+      throw new UnbalancedTransactionError(
+        only.source
+          ? `${only.message} (${only.source.filename}:${only.source.lineno})`
+          : only.message,
+        { residual },
+      );
+    }
   }
+  throw new NewLedgerErrorsError(introduced, action);
 }

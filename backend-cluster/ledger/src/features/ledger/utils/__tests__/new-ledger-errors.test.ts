@@ -1,6 +1,9 @@
 import type { BeancountErrorPublic } from "@/foundation/ledger-api-types";
 import { newLedgerErrors, refuseNewLedgerErrors } from "../new-ledger-errors";
-import { NewLedgerErrorsError } from "@/shared/errors";
+import {
+  NewLedgerErrorsError,
+  UnbalancedTransactionError,
+} from "@/shared/errors";
 
 const at = (message: string, filename: string, lineno: number) => ({
   message,
@@ -197,6 +200,46 @@ describe("refuseNewLedgerErrors", () => {
         "this edit would introduce 2 new bean-check errors: parse error: unexpected input (2024.bean:7); parse error: unexpected input (2024.bean:9)",
       metadata: { details: { count: 2 } },
     });
+  });
+
+  // w23/087: the add path refuses imbalance as UNBALANCED; an edit whose
+  // only new error is imbalance must read the same, not VALIDATION_FAILED.
+  it("refuses a lone introduced imbalance as UNBALANCED with the residual", async () => {
+    await expect(
+      refuseNewLedgerErrors(
+        [
+          at(
+            "Transaction does not balance: residual -0.50 USD",
+            "main.bean",
+            89,
+          ),
+        ],
+        async () => [],
+        "update",
+      ),
+    ).rejects.toMatchObject({
+      constructor: UnbalancedTransactionError,
+      message:
+        "Transaction does not balance: residual -0.50 USD (main.bean:89)",
+      metadata: { code: "UNBALANCED", details: { residual: "-0.50 USD" } },
+    });
+  });
+
+  it("keeps VALIDATION_FAILED when imbalance arrives with another error", async () => {
+    await expect(
+      refuseNewLedgerErrors(
+        [
+          at(
+            "Transaction does not balance: residual -0.50 USD",
+            "main.bean",
+            89,
+          ),
+          at("Balance failed for Assets:Cash", "main.bean", 90),
+        ],
+        async () => [],
+        "update",
+      ),
+    ).rejects.toBeInstanceOf(NewLedgerErrorsError);
   });
 
   it("lets a write through that leaves only errors the ledger had", async () => {

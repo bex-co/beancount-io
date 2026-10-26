@@ -563,7 +563,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     title: "Update Entry Source",
     annotations: DESTRUCTIVE,
     description:
-      "Replace one entry's source text with newContent, addressed by entryHash (listLedgerEntries' entry_hash) and sha256sum from getEntryContext. Returns the entry's new hash as newEntryHash; the request's entryHash is stale after the commit. A replacement that would take a free ledger past its directive limit is RESOURCE_LIMIT_REACHED. A write that would add a bean-check error the ledger did not have — deleting an entry a balance assertion depends on, re-dating it past one — is refused with VALIDATION_FAILED naming each new error; pass allowInvalid: true to commit it anyway.",
+      "Replace one entry's source text with newContent, addressed by entryHash (listLedgerEntries' entry_hash) and sha256sum from getEntryContext. Returns the entry's new hash as newEntryHash; the request's entryHash is stale after the commit. A replacement that would take a free ledger past its directive limit is RESOURCE_LIMIT_REACHED. A write that would add a bean-check error the ledger did not have is refused with VALIDATION_FAILED naming each new error — lone imbalance refuses as UNBALANCED with the residual; pass allowInvalid: true to commit it anyway.",
     inputSchema: SOURCE_SLICE_OPERATION_SCHEMAS.update,
     outputSchema: SOURCE_SLICE_OPERATION_OUTPUTS.update,
     execute: SOURCE_SLICE_EXECUTORS.update,
@@ -771,7 +771,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     // Open world: `private: false` publishes the ledger to anyone (w1/174).
     annotations: { ...APPEND, openWorldHint: true },
     description:
-      "Create a ledger owned by the authenticated user. Requires name; accepts description, private, template (STARTER default, including null: options and accounts without transactions; SAMPLE: demonstration transactions), a setup specification (mutually exclusive with template), and a requestId for idempotent retries. Refused with FORBIDDEN for a ledger-pinned credential: use a credential without a pin.",
+      "Create a ledger owned by the authenticated user. Requires name; accepts description, private, template (STARTER default, including null: options and accounts without transactions; SAMPLE: demonstration transactions), a setup specification (mutually exclusive with template), and a requestId for idempotent retries. Refused for ledger-pinned credentials.",
     inputSchema: LIFECYCLE_OPERATION_SCHEMAS.create,
     outputSchema: lifecycleToolOutput,
     execute: LIFECYCLE_EXECUTORS.create,
