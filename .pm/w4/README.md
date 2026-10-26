@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1107** — [Enable profile tabs when they can respond](./1107.md)
+
 - **1106** — [Keep Budget period tables open when changing time spans](./1106.md)
 
 - **1105** — [Gate report view selectors until they can respond](./1105.md)
