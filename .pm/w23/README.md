@@ -6,6 +6,7 @@
 
 - [x] **m1** — [Fence concurrent same-entry updates](./done/m1/README.md) (7 tasks) ← promoted from `w23/085` 2026-10-25
 - [x] **m2** — [Fix the journal filter mini-language](./done/m2/README.md) (8 tasks) ← promoted from `w23/089` 2026-10-26
+- [ ] **m3** — [Unify mutation-tool parameter naming](./m3/README.md) (7 tasks) ← promoted from `w23/090` 2026-10-26
 
 ## Dropped
 
@@ -14,7 +15,6 @@
 
 ## Inbox
 
-- [090](./090.md) — mutation tools disagree on parameter naming: `entry_hash` vs `entryHash`, commit message `description` vs `message` vs none
 - [091](./091.md) — `deleteLedgerFiles` deletes a still-`include`d file and breaks the ledger; rename refuses the same thing
 - [092](./092.md) — BQL queries over ~10 KB fail with `INTERNAL_SERVER_ERROR` instead of a documented limit refusal
 - [093](./093.md) — `appendLedgerText` `dry_run` reports ok for text the live path refuses with 3 bean-check errors
