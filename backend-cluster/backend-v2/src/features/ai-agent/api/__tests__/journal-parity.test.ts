@@ -345,6 +345,59 @@ describe("journal adapter contracts", () => {
     }
   });
 
+  // w23/m10/t002: the filter twin reaches the ledger filter on every
+  // surface — filterAccount on REST/MCP, filter_account on GraphQL.
+  it("accepts the filter twin on every surface", async () => {
+    const f = await fixture();
+    try {
+      const rest = await f.rest(
+        "account-journal?account=Assets:Bank&filterAccount=Assets:Cash",
+      );
+      expect(rest.status).toBe(200);
+      const body = await rest.json();
+      expect(
+        await f.mcp(
+          "account-journal?account=Assets:Bank&filterAccount=Assets:Cash",
+        ),
+      ).toEqual(body);
+      const gql = await f.gql(
+        'getLedgerAccountJournal(ledgerId: "alice/main", query: { account: "Assets:Bank", filter_account: "Assets:Cash" }) { items { entry change balance } total account with_children }',
+      );
+      expect(gql.errors).toBeUndefined();
+      expect(gql.data?.getLedgerAccountJournal).toEqual(body);
+      expect(f.journal.getAccountJournal).toHaveBeenCalledTimes(3);
+      for (const call of f.journal.getAccountJournal.mock.calls)
+        expect(call[2]).toMatchObject({ filter_account: "Assets:Cash" });
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("refuses two different filters on every surface", async () => {
+    const f = await fixture();
+    try {
+      expect(
+        (
+          await f.rest(
+            "account-journal?account=Assets:Bank&filter_account=Assets:Cash&filterAccount=Expenses:Food",
+          )
+        ).status,
+      ).toBe(400);
+      await expect(
+        f.mcp(
+          "account-journal?account=Assets:Bank&filter_account=Assets:Cash&filterAccount=Expenses:Food",
+        ),
+      ).rejects.toThrow(/two different accounts/);
+      const gql = await f.gql(
+        'getLedgerAccountJournal(ledgerId: "alice/main", query: { account: "Assets:Bank", filter_account: "Assets:Cash", filterAccount: "Expenses:Food" }) { total }',
+      );
+      expect(gql.errors?.[0]?.message).toContain("two different accounts");
+      expect(f.journal.getAccountJournal).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+
   it("reads source files using the canonical file action", async () => {
     const f = await fixture();
     try {

@@ -14,6 +14,7 @@ import { GraphQLJSONObject } from "graphql-scalars";
 import type { ILedgerJournalService } from "@/features/ledger/service/ledger-journal-service";
 import { JOURNAL_FILTER_DESCRIPTION } from "@/features/ledger/utils/journal-filter-description";
 import { resolveEntryHash } from "@/features/ledger/utils/entry-hash-alias";
+import { resolveFilterAccount } from "@/features/ledger/utils/query-param-alias";
 
 @ObjectType()
 class JournalResponse {
@@ -171,6 +172,13 @@ class AccountJournalQueryInput {
   })
   filterAccount?: string;
 
+  // Twin (w23/m10/t002): MCP and REST spell it `filter_account`.
+  @Field(() => String, {
+    nullable: true,
+    description: "Alias of filterAccount, as MCP and REST spell it.",
+  })
+  filter_account?: string;
+
   @Field(() => String, {
     nullable: true,
     description: JOURNAL_FILTER_DESCRIPTION,
@@ -274,10 +282,17 @@ export class LedgerJournalQueryResolver {
     @Arg("query", () => AccountJournalQueryInput)
     queryInput: AccountJournalQueryInput,
   ): Promise<AccountJournalResponse> {
+    const { filter_account, ...rest } = queryInput;
     return this.journalService.getAccountJournal({
       ledgerId,
       identity: ctx.identity,
-      query: queryInput,
+      query: {
+        ...rest,
+        filterAccount: resolveFilterAccount({
+          primary: filter_account,
+          legacy: queryInput.filterAccount,
+        }),
+      },
     });
   }
 }

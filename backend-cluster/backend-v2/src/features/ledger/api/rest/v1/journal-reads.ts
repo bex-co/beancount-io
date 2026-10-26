@@ -1,6 +1,7 @@
 import { z } from "@/shared/zod-openapi-setup";
 import { booleanQuery } from "@/server/rest/v1-schemas";
 import { JOURNAL_KINDS } from "@/features/ledger/utils/journal-kinds";
+import { resolveFilterAccount } from "@/features/ledger/utils/query-param-alias";
 import {
   PLAINTEXT_PAGE_MAX,
   type JournalQueryParams,
@@ -90,6 +91,11 @@ const accountJournalQuery = filters.extend({
   account: z.string(),
   /** Shared report-stream AccountFilter; same wire name as the ledger service. */
   filter_account: z.string().optional(),
+  // Twin (w23/m10/t002): GraphQL spells it `filterAccount`.
+  filterAccount: z
+    .string()
+    .optional()
+    .describe("Alias of filter_account, as GraphQL spells it."),
   limit: z.coerce.number().int().min(1).max(1000).optional(),
   offset: z.coerce.number().int().min(0).optional(),
   with_children: booleanQuery,
@@ -139,16 +145,21 @@ export const JOURNAL_READS = [
     summary: "Read account entries with changes and running balances",
     query: accountJournalQuery,
     fetch: (services: Services, { ledgerId, identity, query }: ReadParams) => {
-      const { filter_account, ...rest } = query as typeof query & {
-        filter_account?: string;
-      };
+      const { filter_account, filterAccount, ...rest } =
+        query as typeof query & {
+          filter_account?: string;
+          filterAccount?: string;
+        };
       return services.ledgerJournal.getAccountJournal({
         ledgerId,
         identity,
         query: {
           ...rest,
           account: query.account ?? "",
-          filterAccount: filter_account,
+          filterAccount: resolveFilterAccount({
+            primary: filter_account,
+            legacy: filterAccount,
+          }),
         },
       });
     },
