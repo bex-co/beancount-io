@@ -14,7 +14,7 @@
 | t004 | Document the new entry fields ✅ | 30m | t010 |
 | t005 | Adoption surface ✅ | 20m | t004 |
 | t006 | Simplify ✅ | 30m | t005 |
-| t007 | Test coverage | 45m | t005 |
+| t007 | Test coverage ✅ | 45m | t005 |
 | t008 | Closeout | 15m | t006, t007 |
 
 ## Definition of done

@@ -1216,6 +1216,46 @@ describe.each(["rest", "gql", "mcp"])("total price and pad via %s", (surface) =>
       await f.close();
     }
   });
+
+  // w23/m6/t007: a total price needs units, like every other price.
+  it("refuses a total price without units before committing", async () => {
+    const batch = [
+      {
+        type: "transaction",
+        entry: {
+          date,
+          flag: "*",
+          narration: "buy",
+          postings: [
+            {
+              account: "Assets:Broker",
+              totalPrice: { number: "1000", currency: "USD" },
+            },
+            {
+              account: "Assets:Cash",
+              units: { number: "-1000", currency: "USD" },
+            },
+          ],
+        },
+      },
+    ] as unknown as LedgerEntryInput[];
+    const f = await fixture();
+    try {
+      const result = await f.call(surface, batch);
+      expect(result.success).toBe(false);
+      expect(f.write).not.toHaveBeenCalled();
+      expect(f.committed).toEqual([]);
+      const text = JSON.stringify(
+        "errors" in result ? result.errors : result,
+      );
+      expect(text).toContain(
+        "entry 0: postings[0].totalPrice needs units",
+      );
+      expect(text).toContain("can't carry a total price");
+    } finally {
+      await f.close();
+    }
+  });
 });
 
 describe.each(["rest", "gql", "mcp"])(
@@ -1392,6 +1432,30 @@ describe.each(["rest", "gql", "mcp"])(
           },
         } as unknown as LedgerEntryInput,
         'entry 0: amount.number "1.000,00" is not a decimal number',
+      ],
+      // w23/m6/t007: cost numbers ride the same decimal refusal.
+      [
+        "a cost",
+        {
+          type: "transaction",
+          entry: {
+            date,
+            flag: "*",
+            narration: "Buy",
+            postings: [
+              {
+                account: "Assets:Broker",
+                units: { number: "10", currency: "HOOLI" },
+                cost: { number: "abc", currency: "USD" },
+              },
+              {
+                account: "Assets:Cash",
+                units: { number: "-1000", currency: "USD" },
+              },
+            ],
+          },
+        } as LedgerEntryInput,
+        'entry 0: postings[0].cost.number "abc" is not a decimal number',
       ],
       // w23/m6/t010: total-price numbers ride the same decimal refusal.
       [

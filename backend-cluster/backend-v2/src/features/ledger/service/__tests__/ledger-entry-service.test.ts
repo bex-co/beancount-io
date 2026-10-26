@@ -726,6 +726,45 @@ describe("LedgerEntryService", () => {
       },
     );
 
+    // w23/m6/t007: pad routes through pad_file like open routes through
+    // account_file.
+    it("routes a pad entry to pad_file", async () => {
+      mockGetLedgerBcioOptions.mockResolvedValue({
+        data: {
+          success: true,
+          data: {
+            ...mockBcioOptionsResponse.data.data,
+            pad_file: "pads/{year}.bean",
+          },
+        },
+      });
+
+      await service.addBulkEntries(
+        IDENTITY,
+        "testuser",
+        "test-ledger",
+        [
+          {
+            type: "pad",
+            entry: {
+              date: "2026-03-04",
+              account: "Assets:Cash",
+              sourceAccount: "Equity:Opening-Balances",
+            },
+          },
+        ],
+        "web",
+      );
+
+      expect(firstItem()).toEqual(
+        expect.objectContaining({
+          type: "pad",
+          filename: "pads/2026.bean",
+        }),
+      );
+      expect(mockAddBulkEntries).toHaveBeenCalledTimes(1);
+    });
+
     it("skips file creation when the target file already exists", async () => {
       await service.addBulkEntries(
         IDENTITY,
