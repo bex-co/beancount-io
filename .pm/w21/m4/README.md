@@ -1,6 +1,6 @@
 # w21 · m4 — `bea report cash-flow`: where the money went, by period
 
-**Worker:** worker1 **Goal:** a native, offline cash-flow report with `--json` that reconciles to the change in cash balances **Status:** todo (t001-t004 done)
+**Worker:** worker1 **Goal:** a native, offline cash-flow report with `--json` that reconciles to the change in cash balances **Status:** todo (t001-t005 done)
 
 ## Tasks (in order)
 
@@ -10,7 +10,7 @@
 | t002 | Implement the engine read — **DONE**                                  | 60m | t001       |
 | t003 | Add `bea report cash-flow` with table and `--json` output — **DONE**  | 45m | t002       |
 | t004 | Fixture tests: transfers net to zero, multi-currency, empty period — **DONE** | 40m | t003 |
-| t005 | Adoption surface                                                       | 20m | t004       |
+| t005 | Adoption surface — **DONE**                                            | 20m | t004       |
 | t006 | Simplify                                                               | 20m | t005       |
 | t007 | Test coverage                                                          | 30m | t005       |
 | t008 | Closeout                                                               | 15m | t006, t007 |

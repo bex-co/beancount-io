@@ -125,7 +125,7 @@ for your first month end to end, follow the
 | `bea doctor OP` | Beancount's eleven diagnostic operations |
 | `bea example` | Generate an example ledger history |
 | `bea treeify` | Render an account column in any text as a tree |
-| `bea report TYPE` | Overview, income statement, balance sheet, trial balance, holdings, register, or capital gains |
+| `bea report TYPE` | Overview, income statement, balance sheet, trial balance, holdings, register, capital gains, or cash flow |
 | `bea balance [ACCOUNT…]` | Trial-balance subtrees for matching accounts |
 | `bea ask [QUESTION]` | Ask about a local ledger through the hosted AI service |
 | `bea cloud …` | Sign in and manage hosted ledgers |

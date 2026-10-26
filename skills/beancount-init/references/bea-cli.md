@@ -79,6 +79,7 @@ the only approval.
 bea --file "$ledger" --json --no-input query "$query"
 bea --file "$ledger" --json --no-input report income-statement --time "$month"
 bea --file "$ledger" --json --no-input report balance-sheet --time "$month"
+bea --file "$ledger" --json --no-input report cash-flow --time "$month"
 ```
 
 A read on a ledger that already fails its check is refused under `--json`
@@ -93,7 +94,7 @@ A report values every row at market in the operating currency, so under
 — an `@`-priced foreign charge, an option lot. That is a valuation gap, not a
 failure: pass `-x at_cost` for book value (lots at cost, unpriced commodities in
 their own units), or disclose the missing prices; spending in the currency paid
-comes from beancount-ask's `weight` recipes.
+comes from beancount-ask's `weight` recipes. `report cash-flow` is the exception: it always runs at cost and takes no `--conversion`, so it never reports missing prices.
 
 Use BQL to enumerate all relevant postings/accounts; `list` returns a limited
 page (Version notes). For a human-readable transaction, use `list transaction --details`.
