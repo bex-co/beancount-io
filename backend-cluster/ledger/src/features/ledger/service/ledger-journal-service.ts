@@ -742,7 +742,6 @@ export class LedgerJournalService implements ILedgerJournalService {
   }): Promise<JournalResult> {
     const { ledgerId, userId, query } = params;
     const snapshot = await this.loadSnapshot(ledgerId, userId);
-    const isEmpty = snapshot.directives.length === 0;
 
     // Assign occurrence-disambiguated entry IDs over the FULL unfiltered stream
     // (the same stream `getContext`/`findEntrySlice` resolve against), so a
@@ -793,7 +792,11 @@ export class LedgerJournalService implements ILedgerJournalService {
         string,
         unknown
       >[],
-      is_empty: isEmpty,
+      // Result-level, not ledger-level: a filter matching nothing on a
+      // non-empty ledger answers total 0 with is_empty true, while an
+      // out-of-range page over matches elsewhere keeps total and reports
+      // false (w23/111).
+      is_empty: total === 0,
     };
   }
 
