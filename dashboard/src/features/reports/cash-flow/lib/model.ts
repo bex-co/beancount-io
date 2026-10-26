@@ -272,17 +272,33 @@ export function cashAccountMembership(
   accountMeta: AccountMetaMap,
   roots?: AccountRoots,
 ): string[] {
-  const isCash = (account: string) => {
-    const parts = account.split(":");
-    if (accountAsRootType(parts[0]!, roots) !== "Assets") return false;
-    let source: CashSource = null;
-    for (let depth = 2; depth <= parts.length; depth += 1) {
-      const name = parts.slice(0, depth).join(":");
-      source = cashSourceOf(name, source, accountMeta, roots);
-    }
-    return source !== null;
-  };
-  return [...accountMeta.keys()].filter(isCash).sort();
+  return [...accountMeta.keys()]
+    .filter((account) => isCashAccountByMembership(account, accountMeta, roots))
+    .sort();
+}
+
+/**
+ * Whether one account counts as cash, by the same declared, ancestor and
+ * name rules `collectCashAccounts` snapshots with. The row loop gates on
+ * this — not on the account's direct role — so a cash-matching ancestor's
+ * inherited membership keeps a nested leaf out of the rows, exactly as it
+ * keeps it in the closing balance. A leaf that explicitly declares a
+ * non-cash role resolves non-cash here too, so the declaration still pulls
+ * it out of the subtree and into its activity.
+ */
+export function isCashAccountByMembership(
+  account: string,
+  accountMeta?: AccountMetaMap,
+  roots?: AccountRoots,
+): boolean {
+  const parts = account.split(":");
+  if (accountAsRootType(parts[0]!, roots) !== "Assets") return false;
+  let source: CashSource = null;
+  for (let depth = 2; depth <= parts.length; depth += 1) {
+    const name = parts.slice(0, depth).join(":");
+    source = cashSourceOf(name, source, accountMeta, roots);
+  }
+  return source !== null;
 }
 
 /**
@@ -411,6 +427,11 @@ export function buildCashFlowStatement(input: {
       const typed = accountAsRootType(account, input.roots);
       const prefix = typed.split(":")[0] as CashFlowRoot;
       if ((CASH_FLOW_ACTIVITY_BY_ROOT[prefix] ?? null) === null) return;
+      // Membership gates rows: an inherited-cash leaf counts in closing, so
+      // it must not also read as an investing row. Declared non-cash leaves
+      // resolve non-cash above too, so their rows survive.
+      if (isCashAccountByMembership(account, input.accountMeta, input.roots))
+        return;
       const { role, source } = resolveCashFlowRole(typed, meta);
       if (role === "cash") return;
       const activity = role;

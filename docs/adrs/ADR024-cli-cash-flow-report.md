@@ -13,7 +13,7 @@ The classification semantics are already decided by ADR003/ADR023; this record b
 
 ## Decision
 
-`bea report cash-flow` is the dashboard statement's offline twin, computed engine-side from posting inventories converted at cost, with four deliberate deviations noted below.
+`bea report cash-flow` is the dashboard statement's offline twin, computed engine-side from posting inventories converted at cost, with three deliberate deviations noted below.
 
 **Mirrored verbatim (ADR003/ADR023, `role-resolver.ts`, `model.ts`):**
 
@@ -48,7 +48,7 @@ The classification semantics are already decided by ADR003/ADR023; this record b
 }
 ```
 
-Amounts are exact decimal strings; zero-balance bottom lines carry `{}` (a per-unit-family conversion spells a quiet row empty, per `_cell`). `invalid_role_values` is sorted by account. Membership gates rows: an account in the CCE set — including by subtree inheritance — is never a row, following the model's stated intent ("never double-counted"); the dashboard's row loop resolves the direct role, which can list an inherited-cash leaf as a row while counting it in closing.
+Amounts are exact decimal strings; zero-balance bottom lines carry `{}` (a per-unit-family conversion spells a quiet row empty, per `_cell`). `invalid_role_values` is sorted by account. Membership gates rows: an account in the CCE set — including by subtree inheritance — is never a row, following the model's stated intent ("never double-counted"). The dashboard row loop briefly resolved the direct role instead, which could list an inherited-cash leaf as a row while counting it in closing; it now gates on the same membership, so this deviation is closed.
 
 ## Alternatives Considered
 
