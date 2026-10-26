@@ -29,6 +29,28 @@ export function resolveBankIdAlias<T extends string | string[]>(
   return resolved;
 }
 
+/**
+ * The optional-argument twin of {@link resolveBankIdAlias}: both spellings
+ * missing resolves to `undefined` instead of throwing, but two different
+ * values still refuse rather than guess.
+ */
+export function resolveOptionalBankIdAlias<T extends string | string[]>(
+  values: { primary?: T; legacy?: T },
+  names: { primary: string; legacy: string; what: string },
+): T | undefined {
+  const { primary, legacy } = values;
+  if (
+    primary !== undefined &&
+    legacy !== undefined &&
+    !sameIds(primary, legacy)
+  ) {
+    throw new BadUserInputError(
+      `Pass ${names.primary} or ${names.legacy}, not two different ${names.what}.`,
+    );
+  }
+  return primary ?? legacy;
+}
+
 function sameIds(a: string | string[], b: string | string[]): boolean {
   if (Array.isArray(a) || Array.isArray(b)) {
     return (

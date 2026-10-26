@@ -11,8 +11,9 @@ import type { McpRequestContext } from "../mcp-context";
 /**
  * w23/057. w5/039 refused unknown top-level arguments; one level down they
  * were still dropped, so `readLedgerFiles` with `startLine` returned the
- * whole file and a misspelt `sourceAccount` imported against the default
- * account.
+ * whole file and a misspelt account imported against the default account.
+ * (`sourceAccount` was the original example; w23/m8/t003 made it a real
+ * alias, so the case uses a still-unknown key.)
  */
 const identity: Identity = {
   userId: "usr_alice",
@@ -60,12 +61,12 @@ describe("an unknown key inside a tool argument", () => {
           {
             transaction_id: "t1",
             target_account: "Expenses:Food",
-            // The misspelling of the optional `source_account`.
-            sourceAccount: "Assets:Checking",
+            // A misspelling of the optional `source_account`.
+            sourceAcct: "Assets:Checking",
           },
         ],
       },
-      'transactions.0: Unrecognized key: "sourceAccount"',
+      'transactions.0: Unrecognized key: "sourceAcct"',
     ],
   ])("is refused on %s, naming its path", async (name, args, message) => {
     const f = await fixture();

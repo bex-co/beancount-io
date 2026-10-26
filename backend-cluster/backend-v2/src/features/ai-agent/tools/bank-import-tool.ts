@@ -7,7 +7,10 @@ import {
   wroteFileSchema,
 } from "./types";
 import { runToolSafely } from "../utils/run-tool";
-import { resolveBankIdAlias } from "./bank-id-alias";
+import {
+  resolveBankIdAlias,
+  resolveOptionalBankIdAlias,
+} from "./bank-id-alias";
 import {
   readBeanCheckErrors,
   summarizeWrite,
@@ -135,19 +138,60 @@ const TRANSACTION_IDS_NAMES = {
   what: "staged transaction lists",
 } as const;
 
+const TRANSACTION_ITEM_NAMES = {
+  id: {
+    primary: "transactionId",
+    legacy: "transaction_id",
+    what: "staged transaction ids",
+  },
+  target: {
+    primary: "targetAccount",
+    legacy: "target_account",
+    what: "target accounts",
+  },
+  source: {
+    primary: "sourceAccount",
+    legacy: "source_account",
+    what: "source accounts",
+  },
+} as const;
+const LEDGER_ACCOUNT_NAMES = {
+  primary: "ledgerAccount",
+  legacy: "ledger_account",
+  what: "ledger accounts",
+} as const;
 const submitInput = z.object({
   transactions: z
     .array(
       z.object({
-        transaction_id: z
+        transactionId: z
           .string()
+          .optional()
           .describe(
             "The staged row's `transactionId` from listStagedBankTransactions — not its `id`.",
           ),
+        transaction_id: z
+          .string()
+          .optional()
+          .describe("Alias of transactionId."),
+        targetAccount: z
+          .string()
+          .optional()
+          .describe("The ledger account to book this against."),
         target_account: z
           .string()
-          .describe("The ledger account to book this against."),
-        source_account: z.string().optional(),
+          .optional()
+          .describe("Alias of targetAccount."),
+        sourceAccount: z
+          .string()
+          .optional()
+          .describe(
+            "Overrides the source account normally derived from the mapping.",
+          ),
+        source_account: z
+          .string()
+          .optional()
+          .describe("Alias of sourceAccount."),
       }),
     )
     .min(1)
@@ -224,12 +268,16 @@ export const BANK_OPERATIONS = {
     "connection",
     z.object({
       ...accountIdFields,
-      ledger_account: z.string().describe("The ledger account to map it to."),
+      ledgerAccount: z
+        .string()
+        .optional()
+        .describe("The ledger account to map it to."),
+      ledger_account: z.string().optional().describe("Alias of ledgerAccount."),
     }),
     "Point a linked bank account at a ledger account; replaces any existing mapping.",
     (
       { services, identity, ledgerId },
-      { accountId, account_id, ledger_account },
+      { accountId, account_id, ledgerAccount, ledger_account },
     ) =>
       services.plaidItem.updateAccountMapping(
         identity,
@@ -237,7 +285,10 @@ export const BANK_OPERATIONS = {
           { primary: accountId, legacy: account_id },
           ACCOUNT_ID_NAMES,
         ),
-        ledger_account,
+        resolveBankIdAlias(
+          { primary: ledgerAccount, legacy: ledger_account },
+          LEDGER_ACCOUNT_NAMES,
+        ),
         ledgerId,
       ),
   ),
@@ -309,9 +360,18 @@ async function submitTransactions(
       owner,
       name,
       transactions.map((t) => ({
-        transactionId: t.transaction_id,
-        targetAccount: t.target_account,
-        sourceAccount: t.source_account,
+        transactionId: resolveBankIdAlias(
+          { primary: t.transactionId, legacy: t.transaction_id },
+          TRANSACTION_ITEM_NAMES.id,
+        ),
+        targetAccount: resolveBankIdAlias(
+          { primary: t.targetAccount, legacy: t.target_account },
+          TRANSACTION_ITEM_NAMES.target,
+        ),
+        sourceAccount: resolveOptionalBankIdAlias(
+          { primary: t.sourceAccount, legacy: t.source_account },
+          TRANSACTION_ITEM_NAMES.source,
+        ),
       })),
       filename,
       dry_run ?? false,

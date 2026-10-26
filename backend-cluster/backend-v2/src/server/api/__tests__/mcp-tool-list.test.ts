@@ -243,9 +243,14 @@ describe("MCP tool list", () => {
     // sentence to the three entry-source tools: measured at 111,798 bytes.
     // The flag is typed-API surface the parity tests pin, so trimming it
     // on MCP alone would fork the contract.
+    //
+    // 111 KB since w23/m8/t002-t003 aliased the bank id arguments toward
+    // camelCase: measured at 112,847 bytes. The aliases are typed-API
+    // surface the parity tests pin, so trimming them on MCP alone would
+    // fork the contract.
     const { tools } = await listToolsRaw();
     const bytes = Buffer.byteLength(JSON.stringify(tools), "utf8");
-    expect(bytes).toBeLessThan(110 * 1024);
+    expect(bytes).toBeLessThan(111 * 1024);
   });
 
   // w23/m7/t006: every mutation preview flag is advertised where agents

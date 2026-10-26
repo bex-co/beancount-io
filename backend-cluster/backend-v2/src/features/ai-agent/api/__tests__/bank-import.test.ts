@@ -484,6 +484,178 @@ describe("bank import on MCP", () => {
     }
   });
 
+  // w23/m8/t003: the nested bank spellings alias like the top-level ids —
+  // the submit-item triple and map_account's ledger account accept
+  // camelCase, with the same conflict refusal.
+  describe("nested bank aliases", () => {
+    const failureOf = (result: Awaited<ReturnType<typeof call>>) =>
+      (
+        result.structuredContent as {
+          error?: { code?: string; message?: string };
+        }
+      ).error;
+
+    it("accepts the camelCase submit triple", async () => {
+      const services = fakeServices();
+      const result = await call(services, "importStagedBankTransactions", {
+        transactions: [
+          {
+            transactionId: "tx_1",
+            targetAccount: "Expenses:Food",
+            sourceAccount: "Assets:Checking",
+          },
+        ],
+      });
+      expect(result.isError).not.toBe(true);
+      expect(
+        services.plaidSync.submitTransactionsToLedger.mock.calls[0]?.[3],
+      ).toEqual([
+        {
+          transactionId: "tx_1",
+          targetAccount: "Expenses:Food",
+          sourceAccount: "Assets:Checking",
+        },
+      ]);
+    });
+
+    it("accepts a mixed batch spelling by spelling", async () => {
+      const services = fakeServices();
+      const result = await call(services, "importStagedBankTransactions", {
+        transactions: [
+          { transactionId: "tx_1", targetAccount: "Expenses:Food" },
+          {
+            transaction_id: "tx_2",
+            target_account: "Expenses:Travel",
+            source_account: "Assets:Savings",
+          },
+        ],
+      });
+      expect(result.isError).not.toBe(true);
+      expect(
+        services.plaidSync.submitTransactionsToLedger.mock.calls[0]?.[3],
+      ).toEqual([
+        {
+          transactionId: "tx_1",
+          targetAccount: "Expenses:Food",
+          sourceAccount: undefined,
+        },
+        {
+          transactionId: "tx_2",
+          targetAccount: "Expenses:Travel",
+          sourceAccount: "Assets:Savings",
+        },
+      ]);
+    });
+
+    it.each([
+      ["transactionId", "transaction_id", "tx_1", "tx_2"],
+      ["targetAccount", "target_account", "Expenses:Food", "Expenses:Travel"],
+      ["sourceAccount", "source_account", "Assets:A", "Assets:B"],
+    ])(
+      "refuses conflicting %s and %s without submitting",
+      async (camel, snake, one, two) => {
+        const services = fakeServices();
+        const result = await call(services, "importStagedBankTransactions", {
+          transactions: [
+            {
+              transaction_id: "tx_1",
+              target_account: "Expenses:Food",
+              [camel]: one,
+              [snake]: two,
+            },
+          ],
+        });
+        expect(result.isError).toBe(true);
+        expect(failureOf(result)?.code).toBe("BAD_USER_INPUT");
+        expect(failureOf(result)?.message).toContain("two different");
+        expect(
+          services.plaidSync.submitTransactionsToLedger,
+        ).not.toHaveBeenCalled();
+      },
+    );
+
+    it("names a missing target account instead of submitting", async () => {
+      const services = fakeServices();
+      const result = await call(services, "importStagedBankTransactions", {
+        transactions: [{ transactionId: "tx_1" }],
+      });
+      expect(result.isError).toBe(true);
+      expect(failureOf(result)?.code).toBe("BAD_USER_INPUT");
+      expect(failureOf(result)?.message).toContain("target_account");
+      expect(
+        services.plaidSync.submitTransactionsToLedger,
+      ).not.toHaveBeenCalled();
+    });
+
+    it("accepts ledgerAccount on mapBankAccount", async () => {
+      const services = fakeServices();
+      const result = await call(services, "mapBankAccount", {
+        accountId: "pacc_1",
+        ledgerAccount: "Assets:Checking",
+      });
+      expect(result.isError).not.toBe(true);
+      expect(
+        services.plaidItem.updateAccountMapping.mock.calls[0]?.slice(1, 3),
+      ).toEqual(["pacc_1", "Assets:Checking"]);
+    });
+
+    it("refuses conflicting ledger accounts without mapping", async () => {
+      const services = fakeServices();
+      const result = await call(services, "mapBankAccount", {
+        account_id: "pacc_1",
+        ledgerAccount: "Assets:Checking",
+        ledger_account: "Assets:Savings",
+      });
+      expect(result.isError).toBe(true);
+      expect(failureOf(result)?.code).toBe("BAD_USER_INPUT");
+      expect(failureOf(result)?.message).toContain("two different");
+      expect(services.plaidItem.updateAccountMapping).not.toHaveBeenCalled();
+    });
+
+    it("names a missing ledger account instead of mapping", async () => {
+      const services = fakeServices();
+      const result = await call(services, "mapBankAccount", {
+        account_id: "pacc_1",
+      });
+      expect(result.isError).toBe(true);
+      expect(failureOf(result)?.code).toBe("BAD_USER_INPUT");
+      expect(failureOf(result)?.message).toContain("ledger_account");
+      expect(services.plaidItem.updateAccountMapping).not.toHaveBeenCalled();
+    });
+
+    it("advertises the nested aliases", async () => {
+      const { client, close } = await connect(ctx(fakeServices()));
+      try {
+        const { tools } = await client.listTools();
+        const byName = new Map(tools.map((tool) => [tool.name, tool]));
+        const submit = byName.get("importStagedBankTransactions");
+        const itemProperties = (
+          submit?.inputSchema.properties as
+            | Record<string, { items?: { properties?: object } }>
+            | undefined
+        )?.transactions?.items?.properties;
+        expect(Object.keys(itemProperties ?? {})).toEqual(
+          expect.arrayContaining([
+            "transactionId",
+            "transaction_id",
+            "targetAccount",
+            "target_account",
+            "sourceAccount",
+            "source_account",
+          ]),
+        );
+        const mapProperties = Object.keys(
+          byName.get("mapBankAccount")?.inputSchema.properties ?? {},
+        );
+        expect(mapProperties).toEqual(
+          expect.arrayContaining(["ledgerAccount", "ledger_account"]),
+        );
+      } finally {
+        await close();
+      }
+    });
+  });
+
   // w5/942: the write reports where it landed and what it wrote, as every
   // other write tool does, so an agent need not query to find the entries.
   describe("importStagedBankTransactions reports its write", () => {
