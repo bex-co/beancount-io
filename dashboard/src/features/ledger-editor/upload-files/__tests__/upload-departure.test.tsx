@@ -20,6 +20,7 @@ const page = vi.hoisted(() => ({
 }));
 
 vi.mock("@tanstack/react-router", () => ({
+  useHydrated: () => true,
   useParams: () => ({
     ledgerOwner: "owner",
     ledgerName: "books",

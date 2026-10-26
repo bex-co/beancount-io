@@ -13,6 +13,7 @@ import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
  */
 
 vi.mock("@tanstack/react-router", () => ({
+  useHydrated: () => true,
   useParams: () => ({
     ledgerOwner: "owner",
     ledgerName: "books",

@@ -3,7 +3,7 @@ import { RelatedLinks } from "@/common/components/related-links";
 import { getLedgerFilesRootPath } from "@/common/hooks/use-file-navigate";
 import { useState, useRef, useId, useMemo, useEffect } from "react";
 import type { DragEvent } from "react";
-import { useParams, useNavigate } from "@tanstack/react-router";
+import { useHydrated, useParams, useNavigate } from "@tanstack/react-router";
 import { useMutation } from "@apollo/client/react";
 import { useRefreshDirectory } from "@/features/ledger-editor/shared/hooks/use-refresh-directory";
 import { Card, CardContent } from "@/common/components/ui/card";
@@ -87,6 +87,9 @@ const UploadFilesPage = () => {
   };
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // A server-rendered chooser does nothing until hydration attaches its
+  // handler, and an early click is not replayed, so it waits (w4/1096).
+  const hydrated = useHydrated();
   const uploadSizeLimitId = useId();
   const uploadClashId = useId();
   const folderCheckId = useId();
@@ -353,6 +356,7 @@ const UploadFilesPage = () => {
               type="file"
               multiple
               onChange={handleFileSelect}
+              disabled={!hydrated}
               className="hidden"
             />
 
@@ -370,7 +374,7 @@ const UploadFilesPage = () => {
                   variant="outline"
                   size="sm"
                   onClick={handleChooseFiles}
-                  disabled={isUploading}
+                  disabled={isUploading || !hydrated}
                 >
                   {t("ledgerEditor.chooseYourFiles")}
                 </Button>
