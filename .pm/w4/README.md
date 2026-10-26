@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1105** — [Gate report view selectors until they can respond](./1105.md)
+
 - **1104** — [Navigate to a surviving folder after deleting its last file](./1104.md)
 
 - **1103** — [Retain initial profile search and sort choices](./1103.md)
