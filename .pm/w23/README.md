@@ -6,7 +6,7 @@
 
 - [x] **m1** — [Fence concurrent same-entry updates](./done/m1/README.md) (7 tasks) ← promoted from `w23/085` 2026-10-25
 - [x] **m2** — [Fix the journal filter mini-language](./done/m2/README.md) (8 tasks) ← promoted from `w23/089` 2026-10-26
-- [ ] **m3** — [Unify mutation-tool parameter naming](./m3/README.md) (7 tasks) ← promoted from `w23/090` 2026-10-26
+- [x] **m3** — [Unify mutation-tool parameter naming](./done/m3/README.md) (7 tasks) ← promoted from `w23/090` 2026-10-26
 
 ## Dropped
 
