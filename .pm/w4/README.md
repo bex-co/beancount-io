@@ -4,7 +4,7 @@
 
 ## Inbox
 
-- **1103** — [Keep profile search unavailable until typing can be retained](./1103.md)
+- **1103** — [Retain initial profile search and sort choices](./1103.md)
 
 - **1102** — [Scope report filters to the actual ledger route](./1102.md)
 
