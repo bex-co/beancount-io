@@ -200,5 +200,26 @@
       }
     ],
     "limit": "Empty PR check rollup is not approval. Existing workflow runs remain an independent maintainer action."
-  }
+  },
+  "remainingRequestFollowups": [
+    {
+      "target": "Smithery / Arcade",
+      "checkedAtUTC": "2026-10-26T08:32:56.611341Z",
+      "observation": "Focused existing-mailbox search for messages from smithery.ai or arcade.dev containing Beancount in the last3days returns no messages. The existing authorized request remains sent; no reply or supported accepted intake is observed.",
+      "limit": "One publisher mailbox/search only; no new website intake, other mailbox or spam search claimed.",
+      "messageSent": false
+    },
+    {
+      "target": "LobeHub crawler correction",
+      "checkedAtUTC": "2026-10-26T08:30:45.144195Z",
+      "url": "https://github.com/lobehub/lobehub/issues/18706",
+      "state": "OPEN",
+      "upstreamUpdatedAt": "2026-10-25T01:45:51Z",
+      "commentCount": 2,
+      "commentsAfterRecordedRequest": 0,
+      "observation": "Existing issue18706 remains open with no later maintainer response after the recorded correction request.",
+      "limit": "Issue review only; public deployment-tab instructions and native acceptance retain their earlier separate observations.",
+      "messageSent": false
+    }
+  ]
 }
