@@ -157,9 +157,9 @@ describe("overlapped updates on identical twins", () => {
     const svc = riggedService(remote);
     // The loser located against the pre-race snapshot (a stale file-map
     // read racing the winner's commit); the commit re-reads live.
-    const frozen: Record<string, string> = { "main.bean": MAIN_TWO };
+    let frozen: Record<string, string> | null = { "main.bean": MAIN_TWO };
     loadMock.mockImplementation(async () => ({
-      files: frozen,
+      files: frozen ?? { "main.bean": remote.text },
       entryPoint: "main.bean",
       repoPaths: ["main.bean"],
       managedPrices: [],
@@ -191,6 +191,27 @@ describe("overlapped updates on identical twins", () => {
     expect(remote.text).toContain(txn("AAA"));
     expect(remote.text).toContain(txn("Lunch"));
     expect(remote.text).not.toContain("BBB");
+
+    // The documented retry loop: re-read the addressed entry's fresh sha
+    // and resend — the retry commits (w23/m1/t004).
+    frozen = null;
+    findMock.mockImplementation(async () => ({
+      file: "main.bean",
+      slice: txn("AAA"),
+      sha256: sliceSha256(txn("AAA")),
+      startLine: 3,
+      endLine: 6,
+      localOccurrence: 0,
+    }));
+    await svc.updateSourceSlice({
+      ledgerId: "alice/main",
+      userId: "user-1",
+      entryHash: ENTRY_ID,
+      sha256sum: sliceSha256(txn("AAA")),
+      newContent: txn("BBB-retry"),
+    });
+    expect(remote.text).toContain(txn("BBB-retry"));
+    expect(remote.text).toContain(txn("Lunch"));
   });
 
   it("still edits one twin when nothing raced", async () => {
