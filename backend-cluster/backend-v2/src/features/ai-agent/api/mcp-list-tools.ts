@@ -58,7 +58,8 @@ export async function executeListBankConnections(
 export const listStagedBankTransactionsDescription =
   "List bank transactions staged for import. Each row's `transactionId` — not its `id` — is what importStagedBankTransactions and discardStagedBankTransactions take; optional accountId filter.";
 
-export const listStagedBankTransactionsInput = bankAccountQuery.strict();
+// bankAccountQuery is strict at the base since w23/112; no re-strict needed.
+export const listStagedBankTransactionsInput = bankAccountQuery;
 
 export const listStagedBankTransactionsOutput = toolOutputSchema(
   z.array(z.unknown()),
