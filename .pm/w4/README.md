@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1097** — [Preserve commodity histories when refreshing prices](./1097.md)
+
 - **1096** — [Disable the Files upload chooser until hydration](./1096.md)
 
 - **1095** — [Keep the Version History cursor in sync after Refresh](./1095.md)
