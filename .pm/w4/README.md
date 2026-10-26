@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1102** — [Scope report filters to the actual ledger route](./1102.md)
+
 - **1101** — [Enable Filters only when its sheet can open](./1101.md)
 
 - **1100** — [Retain early Create File filename typing](./1100.md)
