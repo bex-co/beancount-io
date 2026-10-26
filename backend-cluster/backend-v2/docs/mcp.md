@@ -774,6 +774,16 @@ files. A template with a required argument a URI cannot guess, such as
 `{archive}` or `{prNumber}`, is not enumerable and appears only in the template
 list. Clients vary in how they expose these reads to an agent.
 
+A `{?name,…}` suffix marks the query-string names a template reads — not
+that they are optional. Several are effectively required: `pull-request`
+needs `prNumber`, `commit-details` needs `sha`, `social/profile` needs
+`username`, `collaborators/permission` needs `collaborator`,
+`asset-download-url` needs `ledgerRepoId`, `temp-assets/download-url`
+needs the object key, `suggest-categories` needs `transactions`,
+`narration-transactions` needs `narration`.
+Reading one bare refuses with `BAD_USER_INPUT` naming the missing name;
+add it and read again (w23/107).
+
 Ledger-scoped templates start with `beancount://{owner}/{name}/`. The following table
 lists the accounting and bank suffixes; replace the braces with your ledger and resource values.
 
