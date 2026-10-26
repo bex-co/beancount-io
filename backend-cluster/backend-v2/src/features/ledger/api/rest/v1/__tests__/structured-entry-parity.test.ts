@@ -2046,3 +2046,39 @@ it("commits exactly 1000 entries on REST", async () => {
     await f.close();
   }
 });
+
+// w23/105: the four types with no typed form refuse naming the exclusion
+// and the raw-text way out, instead of just listing the accepted set.
+it.each(["custom", "query", "option", "plugin"])(
+  "refuses %s naming the deliberate exclusion on REST and MCP",
+  async (type) => {
+    const f = await fixture();
+    try {
+      const batch = [{ type, entry: {} }] as never;
+      const rest = await f.call("rest", batch);
+      expect(rest.success).toBe(false);
+      expect(rest.result).toMatchObject({
+        ok: false,
+        error: {
+          code: "VALIDATION_FAILED",
+          message: expect.stringContaining("deliberately excluded"),
+        },
+      });
+      expect(String(
+        (rest.result as { error: { message: string } }).error.message,
+      )).toContain("raw text via file writes");
+      const mcp = await f.call("mcp", batch);
+      expect(mcp.success).toBe(false);
+      expect(mcp.full).toMatchObject({
+        ok: false,
+        error: {
+          code: "BAD_USER_INPUT",
+          message: expect.stringContaining("deliberately excluded"),
+        },
+      });
+      expect(f.write).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  },
+);

@@ -64,7 +64,8 @@ export enum LedgerEntryType {
 
 registerEnumType(LedgerEntryType, {
   name: "LedgerEntryType",
-  description: "Discriminator selecting which entry payload to add",
+  description:
+    "Discriminator selecting which entry payload to add. custom, query, option, and plugin are deliberately excluded — add them as raw text via file writes",
 });
 
 enum BookingMethod {

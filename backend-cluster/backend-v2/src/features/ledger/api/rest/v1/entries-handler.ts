@@ -184,7 +184,23 @@ const entrySchema = z.discriminatedUnion("type", [
       description: z.string(),
     }),
   }),
-]);
+],
+{
+  // Deliberate exclusion (w23/105): option/plugin are file-level config,
+  // not entries, and custom/query have no typed form — the refusal says
+  // so instead of just listing the accepted set.
+  error: (issue) => {
+    if (issue.code !== "invalid_union") return issue.message;
+    const raw = (issue as { options?: unknown }).options;
+    const options = Array.isArray(raw)
+      ? raw.map((option) => `'${String(option)}'`).join(" | ")
+      : "a supported entry type";
+    return (
+      `Invalid entry type; expected ${options}. ` +
+      "custom, query, option, and plugin are deliberately excluded from the typed path — add them as raw text via file writes"
+    );
+  },
+});
 
 export const entriesBodySchema = z
   .strictObject({
