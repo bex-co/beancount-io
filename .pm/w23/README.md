@@ -36,6 +36,7 @@
 - [115](./115.md) — quoted `FROM "<table>"` names are silently ignored (any quoted name returns postings scope, even nonexistent tables; w23/109's quoted bypass is unsafe)
 - [116](./116.md) — with-clause `FROM` resolves table-first where stock resolves column-first (`FROM accounts`: bare 34, +LIMIT 12, +WHERE errors; stock 34 in all forms)
 - [117](./117.md) — `prompts/get` silently ignores unknown string args while tools refuse unknown keys (unknown number args refused, then ignored-in-spirit; full-surface strictness map)
+- [118](./118.md) — `initialize` validation failures answer `-32603` with a raw zod dump instead of `-32602` + shaped `BAD_USER_INPUT` like every other method
 - [082](./blocked/082.md) — `createPullRequest` fails on production: Gitea 500 while creating the `pr-patch-*` branch, on MCP and REST alike — **blocked:** needs the Gitea server-log cause for one failing branch create (owner), then a production rerun
 - [080](./blocked/080.md) — `/api-gateway/mcp` accepts any `Origin` (the MCP transport spec says a bad `Origin` MUST get 403); owner picks validate vs document — **blocked:** owner picks 403-on-foreign-Origin vs documented non-validation
 - [075](./blocked/075.md) — typed BQL results return NULL as `""` (undocumented), so a missing payee or price reads as an empty string — **blocked:** documented as `""` (option a shipped); owner picks `null` on REST/MCP, `null` everywhere, or keeping `""`
