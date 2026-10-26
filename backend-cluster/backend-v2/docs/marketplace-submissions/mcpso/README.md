@@ -67,3 +67,12 @@ This is a fresh public form read; it does not claim another browser submission
 attempt, new search result, payment or moderation status. The prepared remote
 submission remains blocked on the previously specified spending decision or an
 actual supported free route.
+
+## Existing PR review — 2026-10-26T06:30:21Z
+
+The SAME PR6071 remains OPEN/unmerged, with zero reviews/comments and no status
+checks reported. Its last upstream update remains2026-10-25T07:03:59Z.
+[Review readback](../directories/review-followup-20261026.json) does not establish
+public-directory import or native acceptance. Continue on real review/merge/import
+or the recorded2026-10-27UTC manual date. Submission is already complete through
+the free GitHub route; no payment, new login, duplicate PR or reminder is pending.

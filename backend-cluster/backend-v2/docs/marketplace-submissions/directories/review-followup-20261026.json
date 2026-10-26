@@ -1,0 +1,103 @@
+{
+  "scope": "Existing submission review readbacks plus two public GitHub gallery queries only; no fresh native acceptance, exhaustive feed claim, publication, message or resubmission.",
+  "reviewReadbacks": [
+    {
+      "target": "Cline",
+      "checkedAtUTC": "2026-10-26T06:30:21Z",
+      "url": "https://github.com/cline/mcp-marketplace/issues/3230",
+      "state": "OPEN",
+      "updatedAt": "2026-10-24T01:43:48Z",
+      "mergedAt": null,
+      "closedAt": null,
+      "reviewDecision": null,
+      "reviewCount": 0,
+      "commentCount": 0,
+      "checks": [],
+      "scope": "Review receipt only; no fresh public/native publication verification, comment, reminder or resubmission."
+    },
+    {
+      "target": "MCP.so",
+      "checkedAtUTC": "2026-10-26T06:30:21Z",
+      "url": "https://github.com/chatmcp/mcpso/pull/6071",
+      "state": "OPEN",
+      "updatedAt": "2026-10-25T07:03:59Z",
+      "mergedAt": null,
+      "closedAt": null,
+      "reviewDecision": "",
+      "reviewCount": 0,
+      "commentCount": 0,
+      "checks": [],
+      "scope": "Review receipt only; no fresh public/native publication verification, comment, reminder or resubmission."
+    },
+    {
+      "target": "Awesome Remote",
+      "checkedAtUTC": "2026-10-26T06:32:16Z",
+      "url": "https://github.com/punkpeye/awesome-remote-mcp-servers/pull/2753",
+      "state": "OPEN",
+      "updatedAt": "2026-10-24T02:45:15Z",
+      "mergedAt": null,
+      "closedAt": null,
+      "reviewDecision": "",
+      "reviewCount": 0,
+      "commentCount": 1,
+      "checks": [
+        {
+          "name": "welcome",
+          "conclusion": "SKIPPED",
+          "status": "COMPLETED"
+        },
+        {
+          "name": "welcome",
+          "conclusion": "SKIPPED",
+          "status": "COMPLETED"
+        },
+        {
+          "name": "check-submission",
+          "conclusion": "SUCCESS",
+          "status": "COMPLETED"
+        },
+        {
+          "name": "check-submission",
+          "conclusion": "SUCCESS",
+          "status": "COMPLETED"
+        }
+      ],
+      "scope": "Review receipt only; no fresh public/native publication verification, comment, reminder or resubmission."
+    }
+  ],
+  "githubGallery": {
+    "checkedAtUTC": "2026-10-26T07:33:01.553369Z",
+    "status": "approved_pending_publication",
+    "queries": [
+      {
+        "url": "https://api.mcp.github.com/v0.1/servers?limit=100&version=latest&search=beancount",
+        "checkedAtUTC": "2026-10-26T07:33:01.110530Z",
+        "httpStatus": 200,
+        "recordCount": 0,
+        "metadata": {
+          "count": 0,
+          "per_page": 100,
+          "total": 0,
+          "total_pages": 0
+        },
+        "responseSHA256": "c37a8432dcde93cc295c25e6d46a59090d142d1fb56e250d13e79debc659ff38"
+      },
+      {
+        "url": "https://api.mcp.github.com/v0.1/servers?limit=100&version=latest&search=io.beancount%2Fbeancount",
+        "checkedAtUTC": "2026-10-26T07:33:01.553369Z",
+        "httpStatus": 200,
+        "recordCount": 0,
+        "metadata": {
+          "count": 0,
+          "per_page": 100,
+          "total": 0,
+          "total_pages": 0
+        },
+        "responseSHA256": "c37a8432dcde93cc295c25e6d46a59090d142d1fb56e250d13e79debc659ff38"
+      }
+    ],
+    "approvalReceivedAtUTC": "2026-10-24T03:54Z",
+    "nativeInstallationVerifiedNow": false
+  },
+  "next": "Handle actual maintainer feedback/publication on the same records. Existing manual dates remain unchanged; no publisher action is requested now."
+}

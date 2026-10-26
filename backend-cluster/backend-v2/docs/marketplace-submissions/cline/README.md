@@ -209,3 +209,12 @@ permissions and created no issue; an empty duplicate search preceded normal
 issue creation without labels. No label or repository permission was changed.
 Review acceptance and public Marketplace availability remain unverified. Follow
 this existing issue and the real catalog rather than submitting another entry.
+
+## Existing submission review — 2026-10-26T06:30:21Z
+
+A fresh read of the SAME issue3230 is OPEN, with zero comments and no closure;
+its last upstream update remains2026-10-24T01:43:48Z. No maintainer feedback or
+publication is observed. [Dated review readback](../directories/review-followup-20261026.json)
+is a receipt-status check only; the earlier native evidence retains its own
+date and limits. Follow this existing issue on real feedback/publication or the
+recorded2026-10-27UTC manual date. No duplicate issue or reminder was sent.

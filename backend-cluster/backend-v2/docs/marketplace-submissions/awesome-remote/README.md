@@ -39,3 +39,12 @@ The renewed Check Submission passes at02:45:18UTC. At02:47:50UTC no maintainer
 response or merge is observed. Follow this existing waiver/review request and
 handle actual feedback. Publication remains open until the merged entry and
 setup links are verified. Do not resubmit or repeatedly comment while waiting.
+
+## Existing waiver/review follow-up — 2026-10-26T06:32:16Z
+
+The SAME PR2753 remains OPEN/unmerged, with zero reviews and exactly one comment:
+the publisher's existing waiver request. Both reported check-submission runs
+are SUCCESS; welcome runs are SKIPPED. No maintainer waiver decision or other
+feedback is observed. [Dated readback](../directories/review-followup-20261026.json).
+Continue on a real response/merge or the existing2026-10-27UTC manual date; no
+additional comment, submission, star or engagement change was made.

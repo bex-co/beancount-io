@@ -152,3 +152,13 @@ Next verify public GitHub/VS Code discovery during the stated publication
 window, then the actual native gallery-install/OAuth/query/preview journey under
 w6/m9/t006 and existing w1/m34 ownership. No native discovery or connection is
 inferred from approval or anonymous API absence.
+
+## Public gallery follow-up — 2026-10-26T07:33:01Z
+
+The public default gallery API name and canonical-identity searches both return
+HTTP200 and zero records. [Exact requests, times and response hashes](../directories/review-followup-20261026.json)
+retain this limited observation: these are two searches, not a fresh full-feed
+scan or native IDE test. The authenticated curator approval receivedOct24 remains
+valid; publication/native installation is still unverified. No new email,
+nomination or scope request was sent. Follow actual publication/feedback, or the
+recorded2026-10-29UTC manual check after the stated up-to3-business-day window.

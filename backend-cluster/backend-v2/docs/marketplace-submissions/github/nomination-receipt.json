@@ -16,7 +16,7 @@
   "dedup": "Focused pre-send mailbox query for recipient and Beancount returned no matching messages",
   "boundary": "Authenticated recipient review approval is observed; actual public GitHub/VS Code gallery publication and native install/OAuth/query/preview remain unverified.",
   "nextAction": "Wait for the stated up-to3-business-day publication window, verify actual GitHub/VS Code public discovery, then complete the native QA journey under w6/m9/t006 and existing w1/m34 ownership. No reply or duplicate nomination is needed now.",
-  "lastCheckedAtUTC": "2026-10-24T20:10:06Z",
+  "lastCheckedAtUTC": "2026-10-26T07:33:01.553369Z",
   "recipientAcknowledgment": {
     "observedAtUTC": "2026-10-24T02:38:28Z",
     "receivedAtUTC": "2026-10-23T20:30Z",
@@ -46,34 +46,37 @@
     "privateMailboxUrl": "Omitted"
   },
   "latestPublicGalleryReadback": {
-    "checkedAtUTC": "2026-10-24T20:10:06.401983+00:00",
+    "checkedAtUTC": "2026-10-26T07:33:01.553369Z",
     "queries": [
       {
-        "query": "beancount",
         "url": "https://api.mcp.github.com/v0.1/servers?limit=100&version=latest&search=beancount",
-        "status": 200,
-        "count": 0,
+        "checkedAtUTC": "2026-10-26T07:33:01.110530Z",
+        "httpStatus": 200,
+        "recordCount": 0,
         "metadata": {
           "count": 0,
           "per_page": 100,
           "total": 0,
           "total_pages": 0
         },
-        "servers": []
+        "responseSHA256": "c37a8432dcde93cc295c25e6d46a59090d142d1fb56e250d13e79debc659ff38"
       },
       {
-        "query": "io.beancount/beancount",
         "url": "https://api.mcp.github.com/v0.1/servers?limit=100&version=latest&search=io.beancount%2Fbeancount",
-        "status": 200,
-        "count": 0,
+        "checkedAtUTC": "2026-10-26T07:33:01.553369Z",
+        "httpStatus": 200,
+        "recordCount": 0,
         "metadata": {
           "count": 0,
           "per_page": 100,
           "total": 0,
           "total_pages": 0
         },
-        "servers": []
+        "responseSHA256": "c37a8432dcde93cc295c25e6d46a59090d142d1fb56e250d13e79debc659ff38"
       }
-    ]
+    ],
+    "scope": "Two public name/identity queries only; no new mailbox, full-feed or native observation.",
+    "publicationVerified": false,
+    "evidence": "../directories/review-followup-20261026.json"
   }
 }
