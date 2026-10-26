@@ -82,7 +82,7 @@
 
 - [ ] **m54** — [Ledger creation: staged creation flow on dashboard and mobile](./blocked/m54/README.md) (7 tasks) ← `/pm-brainstorm w3` 2026-10-20 candidate 2, from PRFAQ001 + ADR021 — sequenced after m53 — **blocked:** demo list flag needs an API contract; closeout also awaits linked dashboard QA repairs. Starter copy648 is done.
 
-- [ ] **m55** — [`beancount-roll-forward`: explain how a balance-sheet account moved](./m55/README.md) (6 tasks) ← `/pm-brainstorm w3` 2026-10-20 candidate 3, from ADR020 P1
+- [x] **m55** — [`beancount-roll-forward`: explain how a balance-sheet account moved](./done/m55/README.md) (6 tasks) ← `/pm-brainstorm w3` 2026-10-20 candidate 3, from ADR020 P1
 
 - [ ] **m56** — [Variance explanation in `beancount-ask`, reused by `beancount-close`](./m56/README.md) (6 tasks) ← `/pm-brainstorm w3` 2026-10-20 candidate 4, from ADR020 P1
 

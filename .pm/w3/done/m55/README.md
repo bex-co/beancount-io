@@ -1,17 +1,17 @@
 # w3 · m55 — `beancount-roll-forward`: explain how a balance-sheet account moved
 
-**Worker:** worker3 **Goal:** a new read-only customer skill explains an account's movement from opening to closing with every component tied to an executed query and no balancing plug. **Status:** todo (remaining t004, t005, t006)
+**Worker:** worker3 **Goal:** a new read-only customer skill explains an account's movement from opening to closing with every component tied to an executed query and no balancing plug. **Status:** done
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| [t001](done/t001.md) | Write the roll-forward skill and its calculation reference — **DONE** | 90m | — |
-| [t002](done/t002.md) | Write evals and fixtures for the roll-forward cases — **DONE** | 60m | t001 |
-| [t003](done/t003.md) | Adoption surface — **DONE** | 30m | t002 |
-| t004 | Simplify | 15m | t003 |
-| t005 | Test coverage | 45m | t003 |
-| t006 | Closeout | 10m | t004, t005 |
+| t001 | Write the roll-forward skill and its calculation reference — **DONE** | 90m | — |
+| t002 | Write evals and fixtures for the roll-forward cases — **DONE** | 60m | t001 |
+| t003 | Adoption surface — **DONE** | 30m | t002 |
+| t004 | Simplify — **DONE** | 15m | t003 |
+| t005 | Test coverage — **DONE** | 45m | t003 |
+| t006 | Closeout — **DONE** | 10m | t004, t005 |
 
 ## Definition of done
 
@@ -32,3 +32,7 @@
 - **t002** — evals pass 6/6 on Claude Code; the Codex runs are quota-blocked at the account level. Unblock condition is written in t002.
 
 The stale Codex quota condition is cleared by successful native runs recorded in `t002` and source `703fe36ca`; current client/source limits remain in the dated evidence. Continue the remaining tasks above.
+
+## Closeout (2026-10-26)
+
+All six tasks done; the milestone's definition of done was verified observably at close (see t006). Closed by this task.
