@@ -238,6 +238,14 @@ export function setOidcRoutes(
           const configuredResource = resourceForClient(client.clientId);
           return selectOAuthResource(configuredResource, oneOf);
         },
+        // Released hosts such as Docker Gateway omit resource on refresh.
+        // With openid present, the provider otherwise issues a UserInfo token
+        // instead of the API JWT. Reuse only the resource already in the
+        // refresh grant; normal resource validation still enforces its audience.
+        // Authorization-code exchanges and identity clients keep their behavior.
+        useGrantedResource: (ctx) =>
+          ctx.oidc.params?.grant_type === "refresh_token" &&
+          Boolean(resourceForClient(ctx.oidc.client?.clientId)),
         getResourceServerInfo: (_ctx, resourceIndicator, client) => {
           const configuredResource = resourceForClient(client.clientId);
           if (!configuredResource) {

@@ -2405,6 +2405,89 @@ describe("oidc-route: unified MCP + identity provider", () => {
     ).rejects.toMatchObject({ status: 400 });
   });
 
+  it.each(["pinned MCP", "account-wide MCP", "mobile"] as const)(
+    "retains the approved audience when %s refresh omits resource",
+    async (kind) => {
+      const mobile = kind === "mobile";
+      const { clientId, redirectUri } = mobile
+        ? { clientId: MOBILE_CLIENT_ID, redirectUri: MOBILE_REDIRECT_URIS[0] }
+        : await registerMcpClient();
+      const resource = `${ISSUER}${mobile ? "/v1" : "/api-gateway/mcp"}`;
+      const scope = "openid offline_access ledger.read ledger.write";
+      const loginBody: Record<string, string> | undefined = mobile
+        ? undefined
+        : kind === "pinned MCP"
+          ? { ledgerId: "ada/personal" }
+          : { accountWide: "true", scope };
+      const authorization = await driveAuthorizationCode({
+        clientId,
+        clientAuth: "",
+        scope,
+        redirectUri,
+        loginBody,
+        prompt: "consent",
+        resource,
+      });
+      const tokens = await exchangeToken({
+        ...authorization,
+        clientId,
+        redirectUri,
+        resource,
+      });
+      let refreshToken = tokens.refresh_token as string;
+      // The released Docker Gateway sends no resource in its refresh request.
+      // Exercise a second rotation with scope narrowing as well: neither the
+      // audience nor the ledger pin may disappear or acquire more authority.
+      for (const narrowedScope of [undefined, "openid ledger.read"]) {
+        const body = new URLSearchParams({
+          grant_type: "refresh_token",
+          refresh_token: refreshToken,
+          client_id: clientId,
+        });
+        if (narrowedScope) body.set("scope", narrowedScope);
+        const response = await fetch(`${ISSUER}/api-gateway/oauth/token`, {
+          method: "POST",
+          headers: { "content-type": "application/x-www-form-urlencoded" },
+          body,
+        });
+        expect(response.status).toBe(200);
+        const refreshed = (await response.json()) as {
+          access_token: string;
+          refresh_token: string;
+        };
+        const claims = decodeJwt(refreshed.access_token);
+        expect(claims.aud).toBe(resource);
+        expect(claims.ledger_id).toBe(
+          kind === "pinned MCP" ? "ada/personal" : undefined,
+        );
+        expect(String(claims.scope).split(" ").sort()).toEqual(
+          (narrowedScope ?? scope).split(" ").sort(),
+        );
+        const verificationConfig = {
+          env: "test",
+          oauth: { issuer: ISSUER, jwks: getJwks("test" as AppConfig["env"]) },
+        } as AppConfig;
+        expect(
+          await resolveOidcIdentity(
+            refreshed.access_token,
+            verificationConfig,
+            mobile ? "api" : "mcp",
+          ),
+        ).toMatchObject({ userId: TEST_USER.id });
+        expect(
+          await resolveOidcIdentity(
+            refreshed.access_token,
+            verificationConfig,
+            mobile ? "mcp" : "api",
+          ),
+        ).toBeNull();
+        expect(refreshed.refresh_token).toEqual(expect.any(String));
+        expect(refreshed.refresh_token).not.toBe(refreshToken);
+        refreshToken = refreshed.refresh_token;
+      }
+    },
+  );
+
   it("uses the MCP resource for authorization, refresh, and discovery", async () => {
     const { clientId, redirectUri } = await registerMcpClient();
     const resource = `${ISSUER}/api-gateway/mcp`;

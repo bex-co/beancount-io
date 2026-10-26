@@ -1,0 +1,86 @@
+{
+  "owner": "w6/046",
+  "lastCheckedAtUTC": "2026-10-26T07:35:10Z",
+  "status": "source_fix_validated_rollout_pending",
+  "finding": "The unmodified Docker Gateway successfully rotates access/refresh credentials and reloads, but its refreshed access token is opaque UserInfo rather than the MCP-audience JWT. Initialization is refused and advertised capabilities are removed.",
+  "native": {
+    "gatewayVersion": "0.44.1",
+    "helperVersion": "secretservice 0.9.12",
+    "originalExpiresAtUTC": "2026-10-26T07:18:05.161089714Z",
+    "rotatedExpiresAtUTC": "2026-10-26T08:17:55.56880575Z",
+    "rotationObservedAtUTC": "2026-10-26T07:18:11Z",
+    "accessChanged": true,
+    "refreshChanged": true,
+    "saveSucceeded": true,
+    "connectionInvalidated": true,
+    "reloadAttempted": true,
+    "reloadInitialize": "Unauthorized",
+    "removedCapabilities": {
+      "tools": 44,
+      "prompts": 4,
+      "resources": 8,
+      "templates": 64
+    },
+    "previewAttempt": "unknown tool appendLedgerText; no server-side preview executed",
+    "completeAcceptanceVerified": false,
+    "freshConnectionControl": "Same retained refreshed credential also fails initialization; independent metadata-only observation identifies opaque access format. No token value leaves the native store/runtime."
+  },
+  "priorAttempt": {
+    "startedAtUTC": "2026-10-26T06:21:41.157Z",
+    "lastSuccessfulMetadataAtUTC": "2026-10-26T06:45:57Z",
+    "result": "Observer Docker metadata call exceeded its 15-second limit; harness closed before expiry. Four initial controls passed; no refresh or preview proved. Original evidence retained privately.",
+    "resumption": "Same grant and original expiry resumed2026-10-26T06:59:28.824Z; observer timeout60seconds, at most3 ETIMEDOUT retries. No observer errors recorded in that completed expiry observation."
+  },
+  "rootCause": {
+    "path": "src/features/oauth/api/oidc-route.ts",
+    "provider": "Installed oidc-provider resourceIndicators defaults useGrantedResource to false. Its resolve_resource selects no resource for an openid refresh without an explicit resource parameter. This mints opaque UserInfo access rather than API JWT.",
+    "gatewaySource": "https://github.com/docker/mcp-gateway/blob/v0.44.1/pkg/oauth/provider.go#L310-L351",
+    "providerSource": "https://github.com/panva/node-oidc-provider/blob/v9.11.5/lib/helpers/resolve_resource.js",
+    "fix": "During refresh grants for API clients, opt into the already-granted resource. Existing grant-membership/configured-audience checks remain; code exchange and identity-only behavior remain unchanged.",
+    "installedVersion": "9.11.5",
+    "sourceSHA256": "f7621e9fba834ecdff26039096a259046d36fc640e2e4327ba77e0162e3c1c41",
+    "installedSourceMatchesOfficialTag": true
+  },
+  "regression": {
+    "path": "src/features/oauth/api/__tests__/oidc-route.test.ts",
+    "pattern": "retains the approved audience",
+    "beforeFix": {
+      "failed": 3,
+      "skipped": 115,
+      "failure": "Invalid JWT: opaque access token"
+    },
+    "afterFix": {
+      "passed": 118,
+      "failed": 0,
+      "scope": "Full OAuth route suite. Three new real HTTP/provider/PKCE cases cover pinned MCP, account-wide MCP and mobile. Each rotates twice, including narrowed scope; verifies signature/expected audience, rejects other API audience, preserves pin, and rotates refresh credentials."
+    }
+  },
+  "validation": {
+    "runtime": "Official Node22.23.4",
+    "typecheck": "passed",
+    "targetedLint": "passed",
+    "format": "passed",
+    "openAPI": "generated without drift",
+    "fullBackend": {
+      "suitesPassed": 398,
+      "testsPassed": 7463,
+      "snapshotsPassed": 1,
+      "failed": 0,
+      "durationSeconds": 232.394,
+      "configuration": "Node22.23.4,2workers,1024MB idle recycle,8GB heap cap; no assertion or gate changes"
+    },
+    "initialFullRun": "Default4GB heap exhausted before reporting a suite result; failure log retained. Full configured rerun passes."
+  },
+  "next": "Ship verified source, roll out the existing hosted service, then resume the unmodified native CE scheduler with its retained grant. Actual post-expiry query/preview and unchanged-state acceptance remains required; source tests alone do not close046.",
+  "privacy": "No credential values, fingerprints, client IDs, private infrastructure or ledger contents published. Existing grants/stores retained. No vendor patch, fake expiry, manual token refresh, new backend stack or scope expansion.",
+  "activeNativeRecovery": {
+    "startedAtUTC": "2026-10-26T07:30:09.439Z",
+    "originalExpiresAtUTC": "2026-10-26T08:17:55.56880575Z",
+    "nativeSchedulerObserved": true,
+    "initialCapabilities": 0,
+    "initialCapabilityReason": "Retained opaque access token from earlier failed expiry; native CE scheduler still starts. After rollout and next automatic refresh, verify real tool recovery and one dry-run with surrounding unchanged-state controls.",
+    "reauthorized": false,
+    "manualRefresh": false,
+    "limitation": "A short preparation attempt observed the log before the provider-start line was flushed and ended on its observer assertion. Preserved separately; bounded wait for the actual scheduler line is now used. No credential changed."
+  }
+}

@@ -393,3 +393,20 @@ unchanged commit, entry counts, file hash, cash and zero persisted marker.
 No further publisher input, token export, grant revocation, manual refresh,
 new deployment or duplicate submission is needed. Earlier timeout and pass
 failures remain historical evidence. Listing review remains separate.
+
+## Actual rotation and first-party resource repair — 2026-10-26T07:20:39Z
+
+The resumed unmodified SecretService native attempt crosses original expiry
+07:18:05UTC and observes access+refresh rotation. Native save succeeds and reload
+is attempted. MCP initialize returns Unauthorized and the Gateway removes
+capabilities; the attempted dry-run cannot reach the server. Fresh connection
+control also fails with the same retained credential. Metadata-only diagnosis
+shows opaque access format, rather than the required MCP-audience JWT.
+
+[Exact new source repair](./refresh-resource-repair-20261026.json) proves that
+an `openid` refresh omitting `resource` selects UserInfo by default. Three real
+provider regressions fail before the minimal backend repair; all118 OAuth tests
+pass afterward, including scope narrowing, ledger pins and audience rejection.
+Full backend checks, source ship, existing-service rollout and retained-grant
+native acceptance continue under046. The earlier observer timeout and original
+pass-helper failure remain separately recorded. No new approval or token export.

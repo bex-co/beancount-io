@@ -121,6 +121,13 @@ carries its selected `ledger_id`. Application API/mobile tokens targeting
 does not authenticate to MCP, even though a browser session is used to approve
 the OAuth grant.
 
+A refresh request that omits `resource` retains the API audience already
+authorized in its refresh grant, including when `openid` is present. It also
+retains the approved ledger boundary and cannot increase scopes. An explicit
+resource still undergoes the same audience checks. This supports released hosts
+such as Docker Gateway, whose refresh request omits the parameter; it does not
+change authorization-code exchanges or identity-only clients.
+
 The reverse holds too: an MCP token does not authenticate to REST or GraphQL.
 Sent there, it is refused with `UNAUTHENTICATED` "This token was issued for the
 MCP endpoint (`/api-gateway/mcp`) and is not accepted here", so a client knows
