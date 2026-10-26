@@ -482,9 +482,11 @@
                         },
                         "currencies": {
                           "type": "array",
+                          "nullable": true,
                           "items": {
                             "type": "string"
-                          }
+                          },
+                          "description": "Valid currencies for the account; omit for a bare open line"
                         },
                         "booking": {
                           "type": "string",
@@ -501,8 +503,7 @@
                       },
                       "required": [
                         "date",
-                        "account",
-                        "currencies"
+                        "account"
                       ],
                       "additionalProperties": false
                     }

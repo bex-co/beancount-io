@@ -107,7 +107,11 @@ const entrySchema = z.discriminatedUnion("type", [
     entry: z.strictObject({
       date: dateSchema,
       account: z.string(),
-      currencies: z.array(z.string()),
+      // Optional (w23/106): stock beancount accepts a currency-less open.
+      currencies: nullToUndefined(z.array(z.string())).openapi({
+        description:
+          "Valid currencies for the account; omit for a bare open line",
+      }),
       booking: nullToUndefined(bookingSchema),
     }),
   }),

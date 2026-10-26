@@ -213,7 +213,8 @@ describe("v1 authentication and scope", () => {
 describe("v1 request validation", () => {
   it("rejects a body that does not match the published schema", async () => {
     const { status, body } = await call("POST", `${LEDGER}/entries`, {
-      entries: [{ type: "open", entry: { date: "not-a-date", account: "A" } }],
+      // currencies is optional since w23/106; account is still required.
+      entries: [{ type: "open", entry: { date: "not-a-date" } }],
     });
     expect(status).toBe(400);
     expect(body).toMatchObject({

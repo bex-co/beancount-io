@@ -74,7 +74,7 @@ type BookingMethod = NonNullable<Open["booking"]>;
 type OpenInput = {
   date: string;
   account: string;
-  currencies: string[];
+  currencies?: string[];
   booking?: BookingMethod;
 };
 
@@ -617,7 +617,8 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
         const item: Open = {
           date: input.entry.date,
           account: input.entry.account,
-          currencies: input.entry.currencies,
+          // The Fava contract requires the array; absent renders bare (w23/106).
+          currencies: input.entry.currencies ?? [],
           booking: input.entry.booking ?? undefined,
         };
         return { type: "open", item, filename };

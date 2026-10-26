@@ -275,8 +275,11 @@ class LedgerOpenInput {
   @Field(() => String)
   account: string;
 
-  @Field(() => [String])
-  currencies: string[];
+  @Field(() => [String], {
+    nullable: true,
+    description: "Valid currencies for the account; omit for a bare open line",
+  })
+  currencies?: string[];
 
   @Field(() => BookingMethod, {
     nullable: true,

@@ -2082,3 +2082,27 @@ it.each(["custom", "query", "option", "plugin"])(
     }
   },
 );
+
+// w23/106: stock beancount accepts a currency-less open; the typed path
+// used to invent the requirement. Absent renders bare (currencies []).
+it.each(["rest", "gql", "mcp"])(
+  "accepts a currency-less open on %s",
+  async (surface) => {
+    const f = await fixture();
+    try {
+      const batch = [
+        { type: "open", entry: { date, account: "Assets:New" } },
+      ] as unknown as LedgerEntryInput[];
+      const result = await f.call(surface, batch);
+      expect(result.success).toBe(true);
+      expect(f.write).toHaveBeenCalled();
+      expect(f.committed).toHaveLength(1);
+      expect(f.committed[0]).toMatchObject({
+        type: "open",
+        item: { account: "Assets:New", currencies: [] },
+      });
+    } finally {
+      await f.close();
+    }
+  },
+);
