@@ -21,9 +21,11 @@ def _get_kwargs(
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
     filter_account: str | Unset = UNSET,
+    filterAccount: str | Unset = UNSET,
     limit: int | Unset = UNSET,
     offset: int | None | Unset = UNSET,
     with_children: GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset = UNSET,
+    withChildren: GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset = UNSET,
     conversion: str | Unset = UNSET,
     directive_types: str | Unset = UNSET,
     transaction_subtypes: str | Unset = UNSET,
@@ -41,6 +43,8 @@ def _get_kwargs(
 
     params["filter_account"] = filter_account
 
+    params["filterAccount"] = filterAccount
+
     params["limit"] = limit
 
     json_offset: int | None | Unset
@@ -55,6 +59,12 @@ def _get_kwargs(
         json_with_children = with_children.value
 
     params["with_children"] = json_with_children
+
+    json_withChildren: str | Unset = UNSET
+    if not isinstance(withChildren, Unset):
+        json_withChildren = withChildren.value
+
+    params["withChildren"] = json_withChildren
 
     params["conversion"] = conversion
 
@@ -154,9 +164,11 @@ def sync_detailed(
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
     filter_account: str | Unset = UNSET,
+    filterAccount: str | Unset = UNSET,
     limit: int | Unset = UNSET,
     offset: int | None | Unset = UNSET,
     with_children: GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset = UNSET,
+    withChildren: GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset = UNSET,
     conversion: str | Unset = UNSET,
     directive_types: str | Unset = UNSET,
     transaction_subtypes: str | Unset = UNSET,
@@ -177,9 +189,12 @@ def sync_detailed(
             `close` carry the epoch date and appear in every window, so a single-day journal still
             lists them. Use directiveTypes to ask for transactions alone.
         filter_account (str | Unset):
+        filterAccount (str | Unset): Alias of filter_account, as GraphQL spells it.
         limit (int | Unset):
         offset (int | None | Unset):
         with_children (GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset):
+        withChildren (GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset): Alias of
+            with_children.
         conversion (str | Unset):
         directive_types (str | Unset): JSON-encoded directive kinds to include, e.g.
             ["Transaction"]: any of Transaction, Balance, Commodity, Close, Custom, Document, Event,
@@ -207,9 +222,11 @@ def sync_detailed(
         filter_=filter_,
         time=time,
         filter_account=filter_account,
+        filterAccount=filterAccount,
         limit=limit,
         offset=offset,
         with_children=with_children,
+        withChildren=withChildren,
         conversion=conversion,
         directive_types=directive_types,
         transaction_subtypes=transaction_subtypes,
@@ -233,9 +250,11 @@ def sync(
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
     filter_account: str | Unset = UNSET,
+    filterAccount: str | Unset = UNSET,
     limit: int | Unset = UNSET,
     offset: int | None | Unset = UNSET,
     with_children: GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset = UNSET,
+    withChildren: GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset = UNSET,
     conversion: str | Unset = UNSET,
     directive_types: str | Unset = UNSET,
     transaction_subtypes: str | Unset = UNSET,
@@ -256,9 +275,12 @@ def sync(
             `close` carry the epoch date and appear in every window, so a single-day journal still
             lists them. Use directiveTypes to ask for transactions alone.
         filter_account (str | Unset):
+        filterAccount (str | Unset): Alias of filter_account, as GraphQL spells it.
         limit (int | Unset):
         offset (int | None | Unset):
         with_children (GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset):
+        withChildren (GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset): Alias of
+            with_children.
         conversion (str | Unset):
         directive_types (str | Unset): JSON-encoded directive kinds to include, e.g.
             ["Transaction"]: any of Transaction, Balance, Commodity, Close, Custom, Document, Event,
@@ -287,9 +309,11 @@ def sync(
         filter_=filter_,
         time=time,
         filter_account=filter_account,
+        filterAccount=filterAccount,
         limit=limit,
         offset=offset,
         with_children=with_children,
+        withChildren=withChildren,
         conversion=conversion,
         directive_types=directive_types,
         transaction_subtypes=transaction_subtypes,
@@ -307,9 +331,11 @@ async def asyncio_detailed(
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
     filter_account: str | Unset = UNSET,
+    filterAccount: str | Unset = UNSET,
     limit: int | Unset = UNSET,
     offset: int | None | Unset = UNSET,
     with_children: GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset = UNSET,
+    withChildren: GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset = UNSET,
     conversion: str | Unset = UNSET,
     directive_types: str | Unset = UNSET,
     transaction_subtypes: str | Unset = UNSET,
@@ -330,9 +356,12 @@ async def asyncio_detailed(
             `close` carry the epoch date and appear in every window, so a single-day journal still
             lists them. Use directiveTypes to ask for transactions alone.
         filter_account (str | Unset):
+        filterAccount (str | Unset): Alias of filter_account, as GraphQL spells it.
         limit (int | Unset):
         offset (int | None | Unset):
         with_children (GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset):
+        withChildren (GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset): Alias of
+            with_children.
         conversion (str | Unset):
         directive_types (str | Unset): JSON-encoded directive kinds to include, e.g.
             ["Transaction"]: any of Transaction, Balance, Commodity, Close, Custom, Document, Event,
@@ -360,9 +389,11 @@ async def asyncio_detailed(
         filter_=filter_,
         time=time,
         filter_account=filter_account,
+        filterAccount=filterAccount,
         limit=limit,
         offset=offset,
         with_children=with_children,
+        withChildren=withChildren,
         conversion=conversion,
         directive_types=directive_types,
         transaction_subtypes=transaction_subtypes,
@@ -384,9 +415,11 @@ async def asyncio(
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
     filter_account: str | Unset = UNSET,
+    filterAccount: str | Unset = UNSET,
     limit: int | Unset = UNSET,
     offset: int | None | Unset = UNSET,
     with_children: GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset = UNSET,
+    withChildren: GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset = UNSET,
     conversion: str | Unset = UNSET,
     directive_types: str | Unset = UNSET,
     transaction_subtypes: str | Unset = UNSET,
@@ -407,9 +440,12 @@ async def asyncio(
             `close` carry the epoch date and appear in every window, so a single-day journal still
             lists them. Use directiveTypes to ask for transactions alone.
         filter_account (str | Unset):
+        filterAccount (str | Unset): Alias of filter_account, as GraphQL spells it.
         limit (int | Unset):
         offset (int | None | Unset):
         with_children (GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset):
+        withChildren (GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset): Alias of
+            with_children.
         conversion (str | Unset):
         directive_types (str | Unset): JSON-encoded directive kinds to include, e.g.
             ["Transaction"]: any of Transaction, Balance, Commodity, Close, Custom, Document, Event,
@@ -439,9 +475,11 @@ async def asyncio(
             filter_=filter_,
             time=time,
             filter_account=filter_account,
+            filterAccount=filterAccount,
             limit=limit,
             offset=offset,
             with_children=with_children,
+            withChildren=withChildren,
             conversion=conversion,
             directive_types=directive_types,
             transaction_subtypes=transaction_subtypes,

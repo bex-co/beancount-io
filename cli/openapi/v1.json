@@ -8887,6 +8887,16 @@
           },
           {
             "schema": {
+              "type": "string",
+              "description": "Alias of filter_account, as GraphQL spells it."
+            },
+            "required": false,
+            "description": "Alias of filter_account, as GraphQL spells it.",
+            "name": "filterAccount",
+            "in": "query"
+          },
+          {
+            "schema": {
               "type": "integer",
               "minimum": 1,
               "maximum": 1000
@@ -8915,6 +8925,20 @@
             },
             "required": false,
             "name": "with_children",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "description": "Alias of with_children."
+            },
+            "required": false,
+            "description": "Alias of with_children.",
+            "name": "withChildren",
             "in": "query"
           },
           {
