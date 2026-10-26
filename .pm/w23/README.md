@@ -16,6 +16,7 @@
 - [x] **m10** — [Unify the account-journal param spellings](./done/m10/README.md) (8 tasks) ← promoted from `w23/098` 2026-10-26
 - [x] **m11** — [Unify the temp-asset object-key spellings](./done/m11/README.md) (8 tasks) ← promoted from `w23/100` 2026-10-26
 - [x] **m12** — [Refuse unknown keys on every REST GET query](./done/m12/README.md) (8 tasks) ← promoted from `w23/113` 2026-10-26
+- [ ] **m13** — [Preview lifecycle mutations with dry_run](./m13/README.md) (9 tasks) ← promoted from `w23/120` 2026-10-26
 
 ## Dropped
 
@@ -29,7 +30,6 @@
 - [117](./117.md) — `prompts/get` silently ignores unknown string args while tools refuse unknown keys (unknown number args refused, then ignored-in-spirit; full-surface strictness map)
 - [118](./118.md) — `initialize` validation failures answer `-32603` with a raw zod dump instead of `-32602` + shaped `BAD_USER_INPUT` like every other method
 - [119](./119.md) — set-typed BQL cells render space-joined in text (`runBqlQuery`, GraphQL, stock) but comma-joined in structured (MCP structured, REST; dtype says `set`, value is a string)
-- [120](./120.md) — lifecycle mutations take no `dry_run` while every content mutation previews (m7 follow-up; `deleteLedger` destroys blind; no documented exclusion)
 - [122](./122.md) — non-`count` aggregates over an empty set return a `str`-typed empty string (`sum`/`min`/`max`/`avg`/`first` → `""`; `count(*)` → `0` correct; stock yields zero rows — 022)
 - [123](./123.md) — CLI OpenAPI pin drifted behind the file-write preview flag (w23/114 follow-up; `make spec-sync && make codegen`)
 - [082](./blocked/082.md) — `createPullRequest` fails on production: Gitea 500 while creating the `pr-patch-*` branch, on MCP and REST alike — **blocked:** needs the Gitea server-log cause for one failing branch create (owner), then a production rerun
