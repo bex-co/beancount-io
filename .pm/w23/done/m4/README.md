@@ -1,6 +1,6 @@
 # w23 · m4 — Guard deleting an included file
 
-**Worker:** worker1 **Goal:** deleting a file that is still `include`d is refused with guidance (or rewrites the includes in the same commit), like rename, on REST, GraphQL, and MCP alike **Status:** in progress
+**Worker:** worker1 **Goal:** deleting a file that is still `include`d is refused with guidance (or rewrites the includes in the same commit), like rename, on REST, GraphQL, and MCP alike **Status:** done
 
 ## Tasks (in order)
 
@@ -12,7 +12,7 @@
 | t004 | Adoption surface ✅ | 20m | t003 |
 | t005 | Simplify ✅ | 30m | t004 |
 | t006 | Test coverage ✅ | 45m | t004 |
-| t007 | Closeout | 15m | t005, t006 |
+| t007 | Closeout ✅ | 15m | t005, t006 |
 
 ## Definition of done
 
