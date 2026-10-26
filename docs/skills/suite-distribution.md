@@ -147,6 +147,15 @@ verified content bundle and ZIP routes remain independent of that host limitatio
 
 ## Hermes admission limits
 
+**Latest source check, 2026-10-26T04:52:58Z:** stable
+[v0.22.5](https://github.com/NousResearch/hermes-agent/releases/tag/v0.22.5)
+still retains the prior portable metadata check, skill/plugin guards and
+admission implementation. The inspected main changes do not establish a
+compatible path. [Twelve-file comparison and native-test limits](hermes-compatibility-20261026.json)
+retain the exact Git blobs and next trigger. No new native rejection or
+successful install is claimed from this source comparison; the actual older
+rehearsal below remains the runtime evidence. No publisher input is pending.
+
 Hermes **v0.22.4**, official commit
 `4d04303818b61bf3aa09278af48356315515965b`, supports portable Agent Plugins v1
 packages through its native plugin installer. Two actual checks on the complete

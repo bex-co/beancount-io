@@ -153,3 +153,12 @@ by the later owner direction to publish consolidated sets directly.
 worker verification of customer-only suite scope and current paths.
 No message or submission is claimed; skills.rest's accepted form and Hermes
 remain separate pending gates.
+
+
+## Hermes source follow-through — 2026-10-26T04:52:58Z
+
+Stable v0.22.5 and inspected main do not clear t005's supported metadata/init
+admission requirements. [Twelve-file comparison](../../../../docs/skills/hermes-compatibility-20261026.json)
+retains exact source hashes and the native-test boundary. No unchanged native
+refusal is rerun or implied. The platform gate remains; no publisher input is
+pending and independent w6 work continues.

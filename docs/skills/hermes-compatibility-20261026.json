@@ -1,0 +1,143 @@
+{
+  "owner": "w6/m6.5/t005; w6/039; w6/040",
+  "lastCheckedAtUTC": "2026-10-26T04:52:58Z",
+  "state": "No compatible supported released Hermes path identified; existing admission and source-filter gates retained.",
+  "stable": {
+    "tag": "v0.22.5",
+    "commit": "bf0203a794a07aac3ff764972ab9087baa4e4f4e",
+    "publishedAtUTC": "2026-10-23T05:28:45Z",
+    "url": "https://github.com/NousResearch/hermes-agent/releases/tag/v0.22.5"
+  },
+  "main": {
+    "observedCommit": "5b32cfc230078417fc523e12b9aabbc9b59f684b",
+    "commitTimeUTC": "2026-10-26T03:55:41Z",
+    "ref": "main",
+    "sourceLimit": "The source comparison retains exact per-file Git blob hashes from the fetched main tree; release availability is checked separately."
+  },
+  "comparisons": [
+    {
+      "path": "tools/skills_guard.py",
+      "stable": "4258d3a8a146a39edd4b5ab47a6fadb18e28a3aa",
+      "main": "4258d3a8a146a39edd4b5ab47a6fadb18e28a3aa",
+      "v0224": "4258d3a8a146a39edd4b5ab47a6fadb18e28a3aa",
+      "stableMatchesPrior": true,
+      "mainMatchesStable": true
+    },
+    {
+      "path": "tools/plugin_guard.py",
+      "stable": "bb1a334d75d34923ceb1900e0805804e4fff9d7c",
+      "main": "bb1a334d75d34923ceb1900e0805804e4fff9d7c",
+      "v0224": "bb1a334d75d34923ceb1900e0805804e4fff9d7c",
+      "stableMatchesPrior": true,
+      "mainMatchesStable": true
+    },
+    {
+      "path": "tools/plugin_guard_context.py",
+      "stable": "32b535c09d9b350afeed0197ee7bcd1ce92c86a7",
+      "main": "32b535c09d9b350afeed0197ee7bcd1ce92c86a7",
+      "v0224": "32b535c09d9b350afeed0197ee7bcd1ce92c86a7",
+      "stableMatchesPrior": true,
+      "mainMatchesStable": true
+    },
+    {
+      "path": "hermes_cli/agent_plugins.py",
+      "stable": "b2b5081fef3bceeb83a7ce1e55570f2fe8fc3f26",
+      "main": "64205785b0447a0b7917ad4359ac308877efcc09",
+      "v0224": "b2b5081fef3bceeb83a7ce1e55570f2fe8fc3f26",
+      "stableMatchesPrior": true,
+      "mainMatchesStable": false
+    },
+    {
+      "path": "hermes_cli/plugins_manifest.py",
+      "stable": "95419c36c6bf831fe72a32d582a1dad4be1db81d",
+      "main": "8153f476a4182959bf255092459e71ca57eec623",
+      "v0224": "95419c36c6bf831fe72a32d582a1dad4be1db81d",
+      "stableMatchesPrior": true,
+      "mainMatchesStable": false
+    },
+    {
+      "path": "hermes_cli/plugins_admission.py",
+      "stable": "0b2d42fbba569a549e27d5f9dc105a00fade9d3b",
+      "main": "6ba8f3c36171c552afc1e5bff076aab02c022e36",
+      "v0224": "0b2d42fbba569a549e27d5f9dc105a00fade9d3b",
+      "stableMatchesPrior": true,
+      "mainMatchesStable": false
+    },
+    {
+      "path": "hermes_cli/plugin_validate.py",
+      "stable": "ea88f7ce2a747b62466c652b39c6499fa4292dbb",
+      "main": "c6e609e9fb2b855882cdb8907d5029873ded7c2a",
+      "v0224": "ea88f7ce2a747b62466c652b39c6499fa4292dbb",
+      "stableMatchesPrior": true,
+      "mainMatchesStable": false
+    },
+    {
+      "path": "hermes_cli/plugins_cmd_install.py",
+      "stable": "ded3fef3d44ec1808d23335e1a5c068add9e4fa8",
+      "main": "e0062e36a7c484bc392bd70c7bf739b68774182b",
+      "v0224": "5c0423a5ade6071f5cc87d8928e7e0c6441362b7",
+      "stableMatchesPrior": false,
+      "mainMatchesStable": false
+    },
+    {
+      "path": "hermes_cli/skills_hub.py",
+      "stable": "9da626af276c6afe48e4ee132a5651576e9dac6c",
+      "main": "9da626af276c6afe48e4ee132a5651576e9dac6c",
+      "v0224": "9da626af276c6afe48e4ee132a5651576e9dac6c",
+      "stableMatchesPrior": true,
+      "mainMatchesStable": true
+    },
+    {
+      "path": "tools/skills_hub.py",
+      "stable": "6f1dff8ad040947348563ff86f2de57a16cc0cff",
+      "main": "6f1dff8ad040947348563ff86f2de57a16cc0cff",
+      "v0224": "6f1dff8ad040947348563ff86f2de57a16cc0cff",
+      "stableMatchesPrior": true,
+      "mainMatchesStable": true
+    },
+    {
+      "path": "tools/skills_hub_search.py",
+      "stable": "fabdf931e58352fbdfc5d7dea6be22d05fcc1809",
+      "main": "fabdf931e58352fbdfc5d7dea6be22d05fcc1809",
+      "v0224": "fabdf931e58352fbdfc5d7dea6be22d05fcc1809",
+      "stableMatchesPrior": true,
+      "mainMatchesStable": true
+    },
+    {
+      "path": "tools/skills_hub_clawhub.py",
+      "stable": "ce59608ffbde441b33ec0bde265a8e8099d43501",
+      "main": "ce59608ffbde441b33ec0bde265a8e8099d43501",
+      "v0224": "ce59608ffbde441b33ec0bde265a8e8099d43501",
+      "stableMatchesPrior": true,
+      "mainMatchesStable": true
+    }
+  ],
+  "review": {
+    "metadata": "Stable agent_plugins.py retains the string-key/string-value metadata check. Main changes to that file are comments, with the incompatible metadata check retained.",
+    "stableInstallChanges": "v0.22.4 to v0.22.5 installer changes concern brief output, source announcements and activation reporting. The blocker parser, guards and admission files remain identical.",
+    "mainChanges": "Portable namespace/data naming, settled dependency selections, app-availability diagnostics, activation reporting and validator hook argument do not establish compatible nested metadata or init admission.",
+    "filteredSearch": "CLI hub, facade, search router and ClawHub adapter are identical across v0.22.4, stable v0.22.5 and inspected main. No source-filter fix is identified; the earlier exact transport/timing cause is not newly inferred."
+  },
+  "nativeTest": {
+    "newInstallAttempted": false,
+    "newScannerRunAttempted": false,
+    "newRejectionClaimed": false,
+    "reason": "The relevant blocker implementation has not changed. Preserve the earlier actual v0.22.4 native results; do not repeat identical refusal or claim fresh v0.22.5/native-current-suite findings from source inspection.",
+    "forceInstall": false,
+    "scannerBypass": false,
+    "workflowOmission": false
+  },
+  "unblock": {
+    "owner": "Hermes host/security-policy maintainers, then repository worker",
+    "conditions": [
+      "A supported published portable contract accepts the complete suite metadata.",
+      "Default admission permits the retained consent-gated ledger instruction-file scaffolding.",
+      "A supported source-filter discovery correction becomes available for w6/040."
+    ],
+    "then": "Rehearse applicable native install/discovery/update/init on synthetic data and verify complete references and intended file effects.",
+    "nextManualCheckOnOrAfterUTC": "2026-10-27T04:52:58Z",
+    "earlierTrigger": "Relevant actual release, supported policy/contract change or actionable upstream feedback.",
+    "publisherInputRequired": false
+  },
+  "otherWork": "This check does not block independent w6 cases. No email, PR, account, token or software installation performed for this Hermes audit."
+}
