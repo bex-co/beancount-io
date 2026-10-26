@@ -264,7 +264,7 @@ unsubmitted set published or claim that old records were deleted.
 | Codex plugin | One `beancount-io` entry at the same 0.4.0 version and canonical source tree. | Already a suite; no separate per-skill publication found in the repository's release configuration. |
 | Git/link installer | One checkout supplies the complete source inventory to both clients. | Retain it for local source edits; current guidance prefers the plugin for one versioned managed install. |
 | `npx skills` / skills.sh | Before the update, the repository page mixed 29 rows: ten customer workflows and nineteen contributor tools. At 00:40 UTC, the public page shows all thirteen customer workflows under **Beancount.io suite**, followed by nineteen **Repository development** entries. | Root `skills.sh.json` and its inventory gate are shipped. One documented maintainer install triggers the supported configuration sync; the public read-back verifies both groups and all three previously missing customer entries. Install and repeated whole-suite refresh from the explicit customer `skills/` URL pass for both agents, with telemetry disabled in QA. |
-| skills.sh consolidated Pack | [One customer suite](https://www.skills.sh/p/CTUrAfLQdDvNeNv2) created 2026-10-26 UTC with thirteen customer workflows from source suite 0.4.2. | [Publication and native checks](catalog-corrections/consolidated-submissions-20261026.json) retain the single Pack and its exact archive. Native delivery is incomplete: 1.5.23 omits two references; current 1.7.4 fails discovery. This is a published collection, not a passing installation route or a fix for old indexed records. |
+| skills.sh consolidated Pack | [One customer suite](https://www.skills.sh/p/CTUrAfLQdDvNeNv2) created 2026-10-26 UTC with thirteen customer workflows from source suite 0.4.2. | [Publication and native checks](catalog-corrections/consolidated-submissions-20261026.json) retain the single Pack and its exact archive. The latest production 1.7.4 check exits successfully but delivers only 59/61 files to both agents. Owner editing is available; the selector workaround fails the local control below. Complete native delivery remains open. |
 | `gh skill` | A Git-repository install route; no separate Beancount.io per-skill publishing job or release inventory was found. | Preserve the earlier whole-suite commands and pin behavior. Document the preview-command prerequisite: the default local 2.74.0 lacks `gh skill`; this audit does not claim a new native rehearsal of the earlier 2.96.0 controls. |
 | skills.rest | Last public readback, 2026-10-25: 27 indexed skills including internal tooling, old customer paths and generated selectors. | Owner explicitly requested one additional overall-suite submission. [2026-10-26 form receipt and complete fields](catalog-corrections/skills-rest-submission-20261026.json) retain one accepted action for only the customer root, a single-suite request and internal-record exclusion/deindexing. Native plugin support and live cleanup are unverified; read back after the 24-hour window, with no automatic resubmission. |
 | SkillsMP | Actual direct collection readback, 2026-10-26: 27 entries, eight customer and nineteen internal; ask still points to the removed source path. Public search is unavailable. | [Fresh evidence and route limits](catalog-corrections/skillsmp-recheck-20261026.json) retain current scope without inferring cleanup from search failure. [Current owner direction](catalog-corrections/skillsmp.md) selects direct suite publication; the historical email draft is superseded. No supported suite intake is established; private publisher capabilities remain unknown. No user approval is pending. |
@@ -465,3 +465,30 @@ every omitted production file remain unobserved.
 retains those boundaries. A supported complete-delivery/client path is needed;
 then verify all61 hashes. No email, new publication or publisher input is
 pending. The current install guide continues using the verified routes.
+
+### Delivery routes and selector control — 2026-10-26 evening UTC
+
+The SkillsMP collection's displayed refresh advances to October 26 at 11:37
+(timezone unspecified), but it still contains eight customer and nineteen
+internal skills, missing five customer workflows. Ask's GitHub link remains
+stale; its displayed `--skill beancount-ask` selector is valid. The sign-in page
+was inspected without creating an account or accepting terms. Supported suite
+intake remains unestablished; private publisher features remain unknown.
+
+The existing Pack's authenticated owner editor supports adding/removing skills
+and saving in place. This inspection was cancelled without changing its thirteen
+entries. Its GitHub source tab offers a separate connection, which was not used.
+No transport-version, retry or concurrency control was observed in the editor;
+uploading ZIP content does not establish archive-based native delivery.
+
+A new isolated localhost control runs unmodified Skills CLI 1.7.4 with one
+`--skill` selector. It installs only the selected directory on both agents,
+but downloads both indexed skills and both required references first. Serial
+selectors therefore do not reduce download fanout. This is a local control,
+not another production install: the latest production result remains the
+07:08:07 UTC 59/61-file failure. Preserve the existing Pack and check a supported
+complete-delivery fix, or perform the next bounded native recheck on/after
+2026-10-27T07:08:07Z. The accepted skills.rest request independently reaches
+its readback window at 2026-10-27T00:24:54Z.
+[Current UI findings and native control](catalog-corrections/delivery-route-followup-20261026.json)
+retain the request observations, exact client hash and remaining owners.

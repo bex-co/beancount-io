@@ -63,8 +63,10 @@ separate host-policy requirement.
 
 The [new customer-only Pack](https://www.skills.sh/p/CTUrAfLQdDvNeNv2) is
 created from source suite 0.4.2. Its native delivery remains under t012:
-1.5.23 installs thirteen entries but only 59/61 files; current 1.7.4 fails
-discovery. Preserve the single published Pack and complete-source inventory;
+1.5.23 installs thirteen entries but only 59/61 files; the latest1.7.4 production
+check also delivers59/61 despite exit0. Owner editing is available, but a new
+local control rules out serial `--skill` selection as a download-fanout remedy.
+Preserve the single published Pack and complete-source inventory;
 wait for supported delivery/client recovery, then verify all 61 hashes.
 [Current channel actions and exact evidence](../../../../docs/skills/catalog-corrections/consolidated-submissions-20261026.json)
 distinguish publication from usable installation. No email gate remains.

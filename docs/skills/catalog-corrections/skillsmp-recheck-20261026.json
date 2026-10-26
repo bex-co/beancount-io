@@ -132,5 +132,14 @@
     "lastDirectCollectionCheckUTC": "2026-10-26T02:03:06Z",
     "actualCollectionStillMixed": true,
     "limit": "No supported suite publication route established; private management untested. The separate skills.sh Pack is not a SkillsMP publication."
+  },
+  "laterBrowserObservation": {
+    "windowUTC": {
+      "from": "2026-10-26T19:56:25Z",
+      "through": "2026-10-26T20:19:06Z",
+      "limit": "Browser observations occurred within this window; no invented per-action timestamp."
+    },
+    "evidence": "delivery-route-followup-20261026.json",
+    "state": "Refresh labels advanced, but collection remains 8 customer + 19 internal. Ask source stale; displayed CLI selector valid. Sign-in page inspected, private publisher capability still unknown."
   }
 }

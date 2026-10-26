@@ -1,0 +1,253 @@
+{
+  "owner": "w6/m6.5/t012",
+  "recordedAtUTC": "2026-10-26T20:19:06Z",
+  "observationWindowUTC": {
+    "from": "2026-10-26T19:56:25Z",
+    "through": "2026-10-26T20:19:06Z",
+    "limit": "Browser observations occurred within this window; no invented per-action timestamp."
+  },
+  "skillsmp": {
+    "collectionUrl": "https://skillsmp.com/creators/bex-co/beancount-io",
+    "actualBrowserRead": true,
+    "entries": [
+      {
+        "name": "beancount-import",
+        "url": "https://skillsmp.com/creators/bex-co/beancount-io/skills-claude-skills-beancount-import"
+      },
+      {
+        "name": "beancount-init",
+        "url": "https://skillsmp.com/creators/bex-co/beancount-io/skills-claude-skills-beancount-init"
+      },
+      {
+        "name": "beancount-reconcile",
+        "url": "https://skillsmp.com/creators/bex-co/beancount-io/skills-claude-skills-beancount-reconcile"
+      },
+      {
+        "name": "beancount-ask",
+        "url": "https://skillsmp.com/creators/bex-co/beancount-io/skills-claude-skills-beancount-ask"
+      },
+      {
+        "name": "beancount-close",
+        "url": "https://skillsmp.com/creators/bex-co/beancount-io/skills-claude-skills-beancount-close"
+      },
+      {
+        "name": "beancount-importer-author",
+        "url": "https://skillsmp.com/creators/bex-co/beancount-io/skills-claude-skills-beancount-importer-author"
+      },
+      {
+        "name": "beancount-migrate",
+        "url": "https://skillsmp.com/creators/bex-co/beancount-io/skills-claude-skills-beancount-migrate"
+      },
+      {
+        "name": "beancount-options",
+        "url": "https://skillsmp.com/creators/bex-co/beancount-io/skills-claude-skills-beancount-options"
+      },
+      {
+        "name": "qa-find-bugs-mcp",
+        "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-qa-find-bugs-mcp"
+      },
+      {
+        "name": "loopx",
+        "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-loopx"
+      },
+      {
+        "name": "mermaid",
+        "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-mermaid"
+      },
+      {
+        "name": "pm",
+        "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-pm"
+      },
+      {
+        "name": "routine-flaky-test-fixer",
+        "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-routine-flaky-test-fixer"
+      },
+      {
+        "name": "ship",
+        "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-ship"
+      },
+      {
+        "name": "pm-brainstorm",
+        "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-pm-brainstorm"
+      },
+      {
+        "name": "qa-find-bugs-cli",
+        "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-qa-find-bugs-cli"
+      },
+      {
+        "name": "qa-find-bugs-mobile",
+        "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-qa-find-bugs-mobile"
+      },
+      {
+        "name": "mobile-release",
+        "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-mobile-release"
+      },
+      {
+        "name": "qa-find-bugs-dashboard",
+        "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-qa-find-bugs-dashboard"
+      },
+      {
+        "name": "routine-abstraction-improver",
+        "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-routine-abstraction-improver"
+      },
+      {
+        "name": "routine-abstraction-police",
+        "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-routine-abstraction-police"
+      },
+      {
+        "name": "routine-dead-code-removal",
+        "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-routine-dead-code-removal"
+      },
+      {
+        "name": "routine-logic-bugfixer",
+        "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-routine-logic-bugfixer"
+      },
+      {
+        "name": "routine-shipped-feature-inliner",
+        "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-routine-shipped-feature-inliner"
+      },
+      {
+        "name": "routine-dup-unifier",
+        "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-routine-dup-unifier"
+      },
+      {
+        "name": "routine-logic-simplifier",
+        "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-routine-logic-simplifier"
+      },
+      {
+        "name": "routine-useless-test-pruner",
+        "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-routine-useless-test-pruner"
+      }
+    ],
+    "customerCount": 8,
+    "internalCount": 19,
+    "missingCustomerEntries": [
+      "beancount-accruals",
+      "beancount-add",
+      "beancount-property",
+      "beancount-roll-forward",
+      "beancount-trade"
+    ],
+    "displayedSourceActivity": "October 17, 2026 at 14:03",
+    "displayedCatalogRefreshed": "October 26, 2026 at 11:37",
+    "displayedTimezone": null,
+    "detail": {
+      "installCommand": "npx skills add https://github.com/bex-co/beancount-io --skill beancount-ask",
+      "sourceUrl": "https://github.com/bex-co/beancount-io/tree/main/skills/.claude/skills/beancount-ask",
+      "url": "https://skillsmp.com/creators/bex-co/beancount-io/skills-claude-skills-beancount-ask"
+    },
+    "detailLimit": "Source link remains stale. The displayed name-based --skill selector is valid; native installation was not performed for this observation.",
+    "signInPageInspected": true,
+    "newAccountCreated": false,
+    "termsAccepted": false,
+    "authenticatedPublisherDashboardInspected": false,
+    "publicRouteFinding": "Discovery docs describe GitHub scanning, and sign-in/changelog describe favorites/history. No supported customer-suite intake established. Private publisher capability remains unknown.",
+    "primaryContracts": [
+      "https://skillsmp.com/agent-skills#how-can-my-skill-be-discovered",
+      "https://skillsmp.com/changelog"
+    ],
+    "submissionPerformed": false,
+    "emailSent": false,
+    "unblock": "SkillsMP refreshes the canonical customer source with internal entries excluded/separated, or supplies a supported suite publication route; worker verifies the real result."
+  },
+  "packOwnerManagement": {
+    "url": "https://www.skills.sh/p/CTUrAfLQdDvNeNv2",
+    "actualAuthenticatedOwnerUiInspected": true,
+    "authentication": "Routine refresh of the already authorized Vercel integration, same account/team and read-only team-data scope; no new team or expanded permission selected.",
+    "existingCustomerSkills": 13,
+    "observedControls": [
+      "Edit skills in pack",
+      "Add skills",
+      "Remove",
+      "Save",
+      "Cancel"
+    ],
+    "addSources": [
+      "GitHub",
+      "Drag & drop",
+      "Skills.sh"
+    ],
+    "githubSourceState": "Not connected; Connect GitHub offered, not used.",
+    "transportFinding": "No owner control for discovery version, archive transport, download retry or concurrency observed in the inspected editor. ZIP is an upload source, not proof of v0.2 archive delivery.",
+    "editSessionResult": "Cancelled; Save was disabled. No content mutation, upload, removal, deletion or additional Pack creation.",
+    "primaryContract": "https://www.skills.sh/docs/packs",
+    "lastProductionNativeCheckUTC": "2026-10-26T07:08:07Z",
+    "productionNativeEvidence": "skills-sh-partial-install-20261026.json",
+    "productionNativeState": "Published, but last native check delivers 59/61 files to both agents. No new production install this observation.",
+    "nextProductionNativeCheckNotBeforeUTC": "2026-10-27T07:08:07Z",
+    "earlierTrigger": "Relevant supported client/delivery fix or independently demonstrated recovery."
+  },
+  "nativeSelectionControl": {
+    "observedAtUTC": "2026-10-26T20:08:28.370Z",
+    "cliVersion": "1.7.4",
+    "cliSHA256": "b7d92e2a619e8982d38390572750efb8c2ec81cdf23c33aed2fa426d080a1e4e",
+    "exitCode": 0,
+    "selected": "w6-selected-control",
+    "installations": {
+      "codex": {
+        "selectedInstalled": true,
+        "selectedReferenceInstalled": true,
+        "unselectedInstalled": false
+      },
+      "claude-code": {
+        "selectedInstalled": true,
+        "selectedReferenceInstalled": true,
+        "unselectedInstalled": false
+      }
+    },
+    "unselectedMainFetched": true,
+    "unselectedReferenceFetched": true,
+    "requests": [
+      {
+        "path": "/.well-known/agent-skills/index.json",
+        "status": 200
+      },
+      {
+        "path": "/.well-known/skills/index.json",
+        "status": 200
+      },
+      {
+        "path": "/.well-known/agent-skills/w6-selected-control/SKILL.md",
+        "status": 200
+      },
+      {
+        "path": "/.well-known/agent-skills/w6-unselected-control/SKILL.md",
+        "status": 200
+      },
+      {
+        "path": "/.well-known/agent-skills/w6-selected-control/references/required.md",
+        "status": 200
+      },
+      {
+        "path": "/.well-known/agent-skills/w6-unselected-control/references/required.md",
+        "status": 200
+      }
+    ],
+    "telemetryDisabled": true,
+    "hostPatched": false,
+    "scope": "Disposable localhost HTTP fixture with two synthetic skills; both files for each return 200. Official unmodified skills CLI; isolated project, no model call or ledger/account data.",
+    "commandShape": "skills add http://127.0.0.1:<port> --skill w6-selected-control -a claude-code codex -y",
+    "fixtureDeclaredSkills": [
+      "w6-selected-control",
+      "w6-unselected-control"
+    ],
+    "declaredFilesPerSkill": [
+      "SKILL.md",
+      "references/required.md"
+    ],
+    "fixtureSourceSHA256": "ecefed7cc86d17959a8e0ed49f447c67d5c4b27e91414c5b22c63f4c19514047",
+    "runtime": "Official Node 22.23.4, npm skills 1.7.4.",
+    "conclusion": "--skill filters installed directories after fetching all indexed skills and their files. Serial selectors do not reduce the pre-filter download fanout.",
+    "cleanup": "Server closed; process exited 0. No global profile change, host patch, credential or telemetry."
+  },
+  "remaining": {
+    "status": "blocked",
+    "skillsRestAcceptedRequestPreserved": true,
+    "skillsRestReadbackNotBeforeUTC": "2026-10-27T00:24:54Z",
+    "pack": "Supported complete delivery/client path, then all 61 file hashes on both agents. Existing Pack is editable and should be updated in place if source updates are needed.",
+    "skillsmp": "Supported suite intake or real canonical-source index correction.",
+    "ownerInputRequiredNow": false,
+    "duplicatePublicationPerformed": false,
+    "supportOutreachPerformed": false
+  }
+}
