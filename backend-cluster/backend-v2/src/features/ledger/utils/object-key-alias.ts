@@ -23,7 +23,8 @@ export function resolveObjectKey(input: {
   ).flatMap(([name, value]) =>
     value === undefined || value === null ? [] : [[name, value] as const],
   );
-  if (entries.length === 0) {
+  const first = entries[0];
+  if (first === undefined) {
     throw new BadUserInputError(
       "objectKey is required — s3ObjectKey and receiptObjectKey work too.",
     );
@@ -32,13 +33,6 @@ export function resolveObjectKey(input: {
     const names = entries.map(([name]) => name).join(" and ");
     throw new BadUserInputError(
       `Pass one object key, not ${names} with different values.`,
-    );
-  }
-  const first = entries[0];
-  if (first === undefined) {
-    // Unreachable: the empty case threw above.
-    throw new Error(
-      "Provide one of objectKey, s3ObjectKey, receiptObjectKey.",
     );
   }
   return first[1];
