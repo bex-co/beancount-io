@@ -1,6 +1,6 @@
 # w23 · m12 — Refuse unknown keys on every REST GET query
 
-**Worker:** worker1 **Goal:** every REST GET query schema refuses undeclared keys with 400 instead of silently dropping the filter **Status:** todo (t001–t007 done)
+**Worker:** worker1 **Goal:** every REST GET query schema refuses undeclared keys with 400 instead of silently dropping the filter **Status:** done
 
 ## Tasks (in order)
 
@@ -13,7 +13,7 @@
 | t005 | Adoption surface ✅ | 20m | t004 |
 | t006 | Simplify ✅ | 30m | t005 |
 | t007 | Test coverage ✅ | 30m | t005 |
-| t008 | Closeout | 15m | t006, t007 |
+| t008 | Closeout ✅ | 15m | t006, t007 |
 
 ## Definition of done
 
