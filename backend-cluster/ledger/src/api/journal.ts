@@ -124,7 +124,9 @@ export function setJournalHandler(router: Router): void {
       sha256sum: string;
       new_content: string;
       allowInvalid?: boolean | null;
+      dryRun?: boolean | null;
     };
+    const dryRun = body.dryRun === true;
     const result = await journal.updateSourceSlice({
       ledgerId: ledgerIdOf(ctx),
       userId: "",
@@ -132,14 +134,18 @@ export function setJournalHandler(router: Router): void {
       sha256sum: body.sha256sum,
       newContent: body.new_content,
       allowInvalid: body.allowInvalid === true,
+      dryRun,
     });
     ctx.body = successResponse({
       // Python fava-slim template: f"Updated entry {entry_hash}"
-      message: `Updated entry ${body.entry_hash}`,
+      message: dryRun
+        ? `Would update entry ${body.entry_hash}`
+        : `Updated entry ${body.entry_hash}`,
       entry_hash: result.entryHash,
       new_entry_hash: result.newEntryHash,
       new_sha256sum: result.newSha256sum,
       files: result.files,
+      ...(dryRun ? { preview: result.preview } : {}),
     });
   });
 
@@ -150,19 +156,25 @@ export function setJournalHandler(router: Router): void {
       entry_hash: string;
       sha256sum: string;
       allowInvalid?: boolean | null;
+      dryRun?: boolean | null;
     };
+    const dryRun = body.dryRun === true;
     const result = await journal.deleteSourceSlice({
       ledgerId: ledgerIdOf(ctx),
       userId: "",
       entryHash: body.entry_hash,
       sha256sum: body.sha256sum,
       allowInvalid: body.allowInvalid === true,
+      dryRun,
     });
     ctx.body = successResponse({
       // Python fava-slim template: f"Deleted entry {entry_hash}"
-      message: `Deleted entry ${body.entry_hash}`,
+      message: dryRun
+        ? `Would delete entry ${body.entry_hash}`
+        : `Deleted entry ${body.entry_hash}`,
       entry_hash: result.entryHash,
       files: result.files,
+      ...(dryRun ? { preview: result.preview } : {}),
     });
   });
 
@@ -173,21 +185,28 @@ export function setJournalHandler(router: Router): void {
     const body = (ctx.request.body ?? {}) as {
       entries: { entry_hash: string; sha256sum: string }[];
       allowInvalid?: boolean | null;
+      dryRun?: boolean | null;
     };
+    const dryRun = body.dryRun === true;
     const result = await journal.deleteMultiSourceSlices({
       ledgerId: ledgerIdOf(ctx),
       userId: "",
       allowInvalid: body.allowInvalid === true,
+      dryRun,
       entries: (body.entries ?? []).map((e) => ({
         entryHash: e.entry_hash,
         sha256sum: e.sha256sum,
       })),
     });
+    const count = result.deletedHashes.length;
     ctx.body = successResponse({
       // Python: f"Deleted {n} entries: {', '.join(deleted_hashes)}"
-      message: `Deleted ${result.deletedHashes.length} entries: ${result.deletedHashes.join(", ")}`,
+      message: dryRun
+        ? `Would delete ${count} entries: ${result.deletedHashes.join(", ")}`
+        : `Deleted ${count} entries: ${result.deletedHashes.join(", ")}`,
       deleted_hashes: result.deletedHashes,
       files: result.files,
+      ...(dryRun ? { preview: result.preview } : {}),
     });
   });
 }

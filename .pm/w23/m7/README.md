@@ -8,7 +8,7 @@
 | ---- | ----- | --- | ---------- |
 | t001 | Reproduce + map the five preview gaps ✅ | 30m | — |
 | t002 | Typed add preview end to end ✅ | 60m | t001 |
-| t003 | Entry-source update/delete preview end to end | 60m | t002 |
+| t003 | Entry-source update/delete preview end to end ✅ | 60m | t002 |
 | t004 | Rename preview end to end | 60m | t003 |
 | t005 | Document write previews | 30m | t004 |
 | t006 | Adoption surface | 20m | t005 |

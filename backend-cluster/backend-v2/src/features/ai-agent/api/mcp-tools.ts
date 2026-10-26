@@ -584,7 +584,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     title: "Update Entry Source",
     annotations: DESTRUCTIVE,
     description:
-      "Replace one entry's source text with newContent, addressed by the entry_hash listLedgerEntries returns (as entryHash or entry_hash) and sha256sum from getEntryContext. The commit message is composed from the operation; there is no message argument. Returns the entry's new hash as newEntryHash; the request's hash is stale after the commit. A replacement that would take a free ledger past its directive limit is RESOURCE_LIMIT_REACHED. A write that would add a bean-check error the ledger did not have is refused with VALIDATION_FAILED naming each new error — lone imbalance refuses as UNBALANCED with the residual; pass allowInvalid: true to commit it anyway.",
+      "Replace one entry's source text with newContent, addressed by the entry_hash listLedgerEntries returns (as entryHash or entry_hash) and sha256sum from getEntryContext. The commit message is composed from the operation; there is no message argument. Returns the entry's new hash as newEntryHash; the request's hash is stale after the commit. A replacement that would take a free ledger past its directive limit is RESOURCE_LIMIT_REACHED. A write that would add a bean-check error the ledger did not have is refused with VALIDATION_FAILED naming each new error — lone imbalance refuses as UNBALANCED with the residual; pass allowInvalid: true to commit it anyway. dry_run previews without committing.",
     inputSchema: SOURCE_SLICE_OPERATION_SCHEMAS.update,
     outputSchema: SOURCE_SLICE_OPERATION_OUTPUTS.update,
     execute: SOURCE_SLICE_EXECUTORS.update,
@@ -594,7 +594,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     title: "Delete Entry Source",
     annotations: DESTRUCTIVE,
     description:
-      "Delete one entry's source text, addressed by the entry_hash listLedgerEntries returns (as entryHash or entry_hash) and sha256sum from getEntryContext. The commit message is composed from the operation; there is no message argument. A write that would add a bean-check error the ledger did not have — deleting an entry a balance assertion depends on, re-dating it past one — is refused with VALIDATION_FAILED naming each new error; pass allowInvalid: true to commit it anyway.",
+      "Delete one entry's source text, addressed by the entry_hash listLedgerEntries returns (as entryHash or entry_hash) and sha256sum from getEntryContext. The commit message is composed from the operation; there is no message argument. A write that would add a bean-check error the ledger did not have — deleting an entry a balance assertion depends on, re-dating it past one — is refused with VALIDATION_FAILED naming each new error; pass allowInvalid: true to commit it anyway. dry_run previews without committing.",
     inputSchema: SOURCE_SLICE_OPERATION_SCHEMAS.delete,
     outputSchema: SOURCE_SLICE_OPERATION_OUTPUTS.delete,
     execute: SOURCE_SLICE_EXECUTORS.delete,
@@ -604,7 +604,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     title: "Delete Several Entry Sources",
     annotations: DESTRUCTIVE,
     description:
-      "Delete several entries' source text in one commit; entries is a list of {entryHash or entry_hash, sha256sum} — the entry_hash listLedgerEntries returns under either spelling. The commit message is composed from the operation; there is no message argument. Returns the deleted count. A write that would add a bean-check error the ledger did not have — deleting an entry a balance assertion depends on, re-dating it past one — is refused with VALIDATION_FAILED naming each new error; pass allowInvalid: true to commit it anyway.",
+      "Delete several entries' source text in one commit; entries is a list of {entryHash or entry_hash, sha256sum} — the entry_hash listLedgerEntries returns under either spelling. The commit message is composed from the operation; there is no message argument. Returns the deleted count. A write that would add a bean-check error the ledger did not have — deleting an entry a balance assertion depends on, re-dating it past one — is refused with VALIDATION_FAILED naming each new error; pass allowInvalid: true to commit it anyway. dry_run previews without committing.",
     inputSchema: SOURCE_SLICE_OPERATION_SCHEMAS.delete_many,
     outputSchema: SOURCE_SLICE_OPERATION_OUTPUTS.delete_many,
     execute: SOURCE_SLICE_EXECUTORS.delete_many,

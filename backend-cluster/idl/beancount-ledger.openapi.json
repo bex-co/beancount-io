@@ -9347,6 +9347,11 @@
           "allowInvalid": {
             "type": "boolean",
             "description": "Delete the entries even when that would add bean-check errors (NEW_LEDGER_ERRORS), instead of refusing it."
+          },
+          "dryRun": {
+            "type": "boolean",
+            "title": "Dry Run",
+            "description": "Run every check and return the preview without committing"
           }
         },
         "type": "object",
@@ -9378,6 +9383,14 @@
             "type": "array",
             "title": "Files",
             "description": "Each ledger file the write rewrote, once."
+          },
+          "preview": {
+            "items": {
+              "$ref": "#/components/schemas/SourceSlicePreviewFile"
+            },
+            "type": "array",
+            "title": "Preview",
+            "description": "Per-file affected text on a dry run; absent on a commit."
           }
         },
         "type": "object",
@@ -9403,6 +9416,11 @@
           "allowInvalid": {
             "type": "boolean",
             "description": "Delete the entry even when that would add bean-check errors (NEW_LEDGER_ERRORS), instead of refusing it."
+          },
+          "dryRun": {
+            "type": "boolean",
+            "title": "Dry Run",
+            "description": "Run every check and return the preview without committing"
           }
         },
         "type": "object",
@@ -9432,6 +9450,14 @@
             "type": "array",
             "title": "Files",
             "description": "Each ledger file the write rewrote, once."
+          },
+          "preview": {
+            "items": {
+              "$ref": "#/components/schemas/SourceSlicePreviewFile"
+            },
+            "type": "array",
+            "title": "Preview",
+            "description": "Per-file affected text on a dry run; absent on a commit."
           }
         },
         "type": "object",
@@ -14344,6 +14370,11 @@
           "allowInvalid": {
             "type": "boolean",
             "description": "Commit the edit even when it would add bean-check errors (NEW_LEDGER_ERRORS), instead of refusing it."
+          },
+          "dryRun": {
+            "type": "boolean",
+            "title": "Dry Run",
+            "description": "Run every check and return the preview without committing"
           }
         },
         "type": "object",
@@ -14384,6 +14415,14 @@
             "type": "array",
             "title": "Files",
             "description": "Each ledger file the write rewrote, once."
+          },
+          "preview": {
+            "items": {
+              "$ref": "#/components/schemas/SourceSlicePreviewFile"
+            },
+            "type": "array",
+            "title": "Preview",
+            "description": "Per-file affected text on a dry run; absent on a commit."
           }
         },
         "type": "object",
@@ -15508,6 +15547,27 @@
         ],
         "title": "BulkEntriesPreviewFile",
         "description": "Per-file preview of a bulk-entries dry run."
+      },
+      "SourceSlicePreviewFile": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path",
+            "description": "File the previewed slice belongs to"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "description": "Stored replacement on update, removed slice on delete"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path",
+          "text"
+        ],
+        "title": "SourceSlicePreviewFile",
+        "description": "Per-file preview of a source-slice dry run."
       }
     },
     "securitySchemes": {

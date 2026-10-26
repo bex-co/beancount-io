@@ -917,6 +917,11 @@ export interface DeleteMultiSourceSlicesRequest {
   entries: DeleteMultiSourceSliceItem[];
   /** Delete the entries even when that would add bean-check errors (NEW_LEDGER_ERRORS), instead of refusing it. */
   allowInvalid?: boolean;
+  /**
+   * Dry Run
+   * Run every check and return the preview without committing
+   */
+  dryRun?: boolean;
 }
 
 /**
@@ -939,6 +944,11 @@ export interface DeleteMultiSourceSlicesResponse {
    * Each ledger file the write rewrote, once.
    */
   files?: string[];
+  /**
+   * Preview
+   * Per-file affected text on a dry run; absent on a commit.
+   */
+  preview?: SourceSlicePreviewFile[];
 }
 
 /**
@@ -958,6 +968,11 @@ export interface DeleteSourceSliceRequest {
   sha256sum: string;
   /** Delete the entry even when that would add bean-check errors (NEW_LEDGER_ERRORS), instead of refusing it. */
   allowInvalid?: boolean;
+  /**
+   * Dry Run
+   * Run every check and return the preview without committing
+   */
+  dryRun?: boolean;
 }
 
 /**
@@ -980,6 +995,11 @@ export interface DeleteSourceSliceResponse {
    * Each ledger file the write rewrote, once.
    */
   files?: string[];
+  /**
+   * Preview
+   * Per-file affected text on a dry run; absent on a commit.
+   */
+  preview?: SourceSlicePreviewFile[];
 }
 
 /**
@@ -3223,6 +3243,11 @@ export interface UpdateSourceSliceRequest {
   new_content: string;
   /** Commit the edit even when it would add bean-check errors (NEW_LEDGER_ERRORS), instead of refusing it. */
   allowInvalid?: boolean;
+  /**
+   * Dry Run
+   * Run every check and return the preview without committing
+   */
+  dryRun?: boolean;
 }
 
 /**
@@ -3255,6 +3280,11 @@ export interface UpdateSourceSliceResponse {
    * Each ledger file the write rewrote, once.
    */
   files?: string[];
+  /**
+   * Preview
+   * Per-file affected text on a dry run; absent on a commit.
+   */
+  preview?: SourceSlicePreviewFile[];
 }
 
 /**
@@ -3730,6 +3760,23 @@ export interface BulkEntriesPreviewFile {
   /**
    * Text
    * Entry text that would append to the file
+   */
+  text: string;
+}
+
+/**
+ * SourceSlicePreviewFile
+ * Per-file preview of a source-slice dry run.
+ */
+export interface SourceSlicePreviewFile {
+  /**
+   * Path
+   * File the previewed slice belongs to
+   */
+  path: string;
+  /**
+   * Text
+   * Stored replacement on update, removed slice on delete
    */
   text: string;
 }

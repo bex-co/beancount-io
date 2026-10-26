@@ -21,9 +21,13 @@ const allowInvalid = z
   .describe(
     "Commit even when the write would add bean-check errors (VALIDATION_FAILED with newLedgerErrors), instead of refusing it.",
   );
-export const deleteSliceInput = sliceRef.extend({ allowInvalid });
+const dryRun = z
+  .boolean()
+  .optional()
+  .describe("Run every check and return the preview without committing.");
+export const deleteSliceInput = sliceRef.extend({ allowInvalid, dryRun });
 export const deleteSlicesInput = z
-  .object({ entries: z.array(sliceRef), allowInvalid })
+  .object({ entries: z.array(sliceRef), allowInvalid, dryRun })
   .strict();
 export const updateSliceInput = deleteSliceInput.extend({
   newContent: z.string(),
@@ -33,13 +37,22 @@ const withoutFiles = <T extends { files: string[] }>({
   files: _files,
   ...result
 }: T) => result;
+const previewFile = z.object({ path: z.string(), text: z.string() });
 export const deleteSliceResult = z.object({
   message: z.string(),
+  dryRun: z.boolean(),
   entryHash: z.string(),
+  preview: z
+    .array(previewFile)
+    .describe("Per-file affected text; populated on dry runs only."),
 });
 export const deleteSlicesResult = z.object({
   message: z.string(),
+  dryRun: z.boolean(),
   deletedCount: z.number().int(),
+  preview: z
+    .array(previewFile)
+    .describe("Per-file affected text; populated on dry runs only."),
 });
 export const updateSliceResult = deleteSliceResult.extend({
   newSha256sum: z.string(),
@@ -50,7 +63,7 @@ export const updateSliceResult = deleteSliceResult.extend({
     ),
 });
 const description =
-  "Modify entry source using the current sha256sum from entry context. Ledger content-write authority is checked before delegation. Stale source hashes are refused by the ledger service. An update returns the entry's new hash — the request's entryHash is stale after the commit. An update or delete that would add bean-check errors the ledger did not have — deleting an entry a balance assertion depends on, re-dating it past one — is refused with VALIDATION_FAILED, naming each new error in newLedgerErrors; errors the ledger already had never block, and `allowInvalid: true` commits anyway. When the only new error is imbalance, the refusal is UNBALANCED with the residual instead. An update that would take a free ledger past its directive limit is refused with RESOURCE_LIMIT_REACHED, naming the limit and the projected count; deletes always pass. No preview.";
+  "Modify entry source using the current sha256sum from entry context. Ledger content-write authority is checked before delegation. Stale source hashes are refused by the ledger service. An update returns the entry's new hash — the request's entryHash is stale after the commit. An update or delete that would add bean-check errors the ledger did not have — deleting an entry a balance assertion depends on, re-dating it past one — is refused with VALIDATION_FAILED, naming each new error in newLedgerErrors; errors the ledger already had never block, and `allowInvalid: true` commits anyway. When the only new error is imbalance, the refusal is UNBALANCED with the residual instead. An update that would take a free ledger past its directive limit is refused with RESOURCE_LIMIT_REACHED, naming the limit and the projected count; deletes always pass. `dryRun` previews without committing: same checks, per-file affected text, no hashes.";
 export const SOURCE_SLICE_ROUTES = [
   v1Route({
     method: "post",
@@ -69,6 +82,7 @@ export const SOURCE_SLICE_ROUTES = [
           entryHash: resolveEntryHash(body),
           sha256sum: body.sha256sum,
           allowInvalid: body.allowInvalid,
+          dryRun: body.dryRun,
         })
         .then(withoutFiles),
   }),
@@ -91,6 +105,7 @@ export const SOURCE_SLICE_ROUTES = [
             sha256sum: entry.sha256sum,
           })),
           allowInvalid: body.allowInvalid,
+          dryRun: body.dryRun,
         })
         .then(withoutFiles),
   }),
@@ -114,6 +129,7 @@ export const SOURCE_SLICE_ROUTES = [
           sha256sum: body.sha256sum,
           newContent: body.newContent,
           allowInvalid: body.allowInvalid,
+          dryRun: body.dryRun,
         })
         .then(withoutFiles),
   }),

@@ -237,9 +237,14 @@ describe("MCP tool list", () => {
     // posting `totalPrice` field to the shared entry schema: measured at
     // 110,078 bytes. Both are typed-API surface the parity tests pin, so
     // trimming them on MCP alone would fork the contract.
+    //
+    // 110 KB since w23/m7/t003 added the `dry_run` flag and the preview
+    // sentence to the three entry-source tools: measured at 111,798 bytes.
+    // The flag is typed-API surface the parity tests pin, so trimming it
+    // on MCP alone would fork the contract.
     const { tools } = await listToolsRaw();
     const bytes = Buffer.byteLength(JSON.stringify(tools), "utf8");
-    expect(bytes).toBeLessThan(108 * 1024);
+    expect(bytes).toBeLessThan(110 * 1024);
   });
 
   it("exposes each operation as its own tool, never behind a selector argument", async () => {

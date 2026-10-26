@@ -109,20 +109,32 @@ export type AccountJournalResult = {
  */
 type TouchedFiles = { files: string[] };
 
+/** The affected block per file: stored replacement on update, removed slice on delete. */
+type SlicePreview = Array<{ path: string; text: string }>;
+
 export type DeleteSliceResult = {
   message: string;
+  dryRun: boolean;
   entryHash: string;
+  /** Per-file affected text; populated on dry runs only (w23/m7/t003). */
+  preview?: SlicePreview;
 } & TouchedFiles;
 
 export type DeleteMultiSlicesResult = {
   message: string;
+  dryRun: boolean;
   /** How many entries were deleted — hashes are stale the moment they are. */
   deletedCount: number;
+  /** Per-file affected text; populated on dry runs only (w23/m7/t003). */
+  preview?: SlicePreview;
 } & TouchedFiles;
 
 export type UpdateSliceResult = TouchedFiles & {
   message: string;
+  dryRun: boolean;
   entryHash: string;
+  /** Per-file affected text; populated on dry runs only (w23/m7/t003). */
+  preview?: SlicePreview;
   newSha256sum: string;
   /** The entry's public ID after the commit, re-read post-commit (w2/m26). */
   newEntryHash: string;
@@ -190,6 +202,8 @@ export interface ILedgerJournalService {
     sha256sum: string;
     /** Commit even when the delete adds bean-check errors (w21/m1). */
     allowInvalid?: boolean;
+    /** Run every check and commit nothing (w23/m7/t003). */
+    dryRun?: boolean;
   }): Promise<DeleteSliceResult>;
 
   deleteMultiSourceSlices(params: {
@@ -198,6 +212,8 @@ export interface ILedgerJournalService {
     entries: { entryHash: string; sha256sum: string }[];
     /** Commit even when the deletes add bean-check errors (w21/m1). */
     allowInvalid?: boolean;
+    /** Run every check and commit nothing (w23/m7/t003). */
+    dryRun?: boolean;
   }): Promise<DeleteMultiSlicesResult>;
 
   updateSourceSlice(params: {
@@ -210,6 +226,8 @@ export interface ILedgerJournalService {
     platform?: "web" | "mobile";
     /** Commit even when the edit adds bean-check errors (w21/m1). */
     allowInvalid?: boolean;
+    /** Run every check and commit nothing (w23/m7/t003). */
+    dryRun?: boolean;
   }): Promise<UpdateSliceResult>;
 }
 
@@ -386,8 +404,10 @@ export class LedgerJournalService
     entryHash: string;
     sha256sum: string;
     allowInvalid?: boolean;
+    dryRun?: boolean;
   }): Promise<DeleteSliceResult> {
-    const { ledgerId, identity, entryHash, sha256sum, allowInvalid } = params;
+    const { ledgerId, identity, entryHash, sha256sum, allowInvalid, dryRun } =
+      params;
     const { favaApiClient, ledgerOwner, ledgerName } = await this.getClient(
       ledgerId,
       identity,
@@ -399,13 +419,19 @@ export class LedgerJournalService
         entry_hash: entryHash,
         sha256sum,
         ...(allowInvalid && { allowInvalid: true }),
+        ...(dryRun && { dryRun: true }),
       }),
       "delete source slice",
     );
     return {
       message: data.message,
+      dryRun: dryRun ?? false,
       entryHash: data.entry_hash,
-      files: data.files ?? [],
+      files: dryRun ? [] : (data.files ?? []),
+      preview: (data.preview ?? []).map((file) => ({
+        path: file.path,
+        text: file.text,
+      })),
     };
   }
 
@@ -414,8 +440,9 @@ export class LedgerJournalService
     identity: Identity;
     entries: { entryHash: string; sha256sum: string }[];
     allowInvalid?: boolean;
+    dryRun?: boolean;
   }): Promise<DeleteMultiSlicesResult> {
-    const { ledgerId, identity, entries, allowInvalid } = params;
+    const { ledgerId, identity, entries, allowInvalid, dryRun } = params;
     const { favaApiClient, ledgerOwner, ledgerName } = await this.getClient(
       ledgerId,
       identity,
@@ -429,13 +456,19 @@ export class LedgerJournalService
           sha256sum: e.sha256sum,
         })),
         ...(allowInvalid && { allowInvalid: true }),
+        ...(dryRun && { dryRun: true }),
       }),
       "delete source slices",
     );
     return {
       message: data.message,
+      dryRun: dryRun ?? false,
       deletedCount: data.deleted_hashes.length,
-      files: data.files ?? [],
+      files: dryRun ? [] : (data.files ?? []),
+      preview: (data.preview ?? []).map((file) => ({
+        path: file.path,
+        text: file.text,
+      })),
     };
   }
 
@@ -447,6 +480,7 @@ export class LedgerJournalService
     newContent: string;
     platform?: "web" | "mobile";
     allowInvalid?: boolean;
+    dryRun?: boolean;
   }): Promise<UpdateSliceResult> {
     const {
       ledgerId,
@@ -456,6 +490,7 @@ export class LedgerJournalService
       newContent,
       platform = "web",
       allowInvalid,
+      dryRun,
     } = params;
     const { favaApiClient, ledgerOwner, ledgerName } = await this.getClient(
       ledgerId,
@@ -483,6 +518,7 @@ export class LedgerJournalService
           sha256sum,
           new_content: newContent,
           ...(allowInvalid && { allowInvalid: true }),
+          ...(dryRun && { dryRun: true }),
         },
         directiveLimitExemptParams(platform),
       ),
@@ -490,12 +526,17 @@ export class LedgerJournalService
     );
     return {
       message: data.message,
+      dryRun: dryRun ?? false,
       // The entry's NEW content-derived hash (the ledger service resolves it
       // from the committed content), not an echo of the request.
       entryHash: data.entry_hash,
       newSha256sum: data.new_sha256sum,
       newEntryHash: data.new_entry_hash,
-      files: data.files ?? [],
+      files: dryRun ? [] : (data.files ?? []),
+      preview: (data.preview ?? []).map((file) => ({
+        path: file.path,
+        text: file.text,
+      })),
     };
   }
 }

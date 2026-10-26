@@ -307,7 +307,11 @@ describe("LedgerJournalResolver", () => {
 
   describe("deleteLedgerEntrySourceSlice", () => {
     it("should delegate to service and return result", async () => {
-      const expected = { message: "Deleted", entryHash: "test-entry-hash" };
+      const expected = {
+        message: "Deleted",
+        entryHash: "test-entry-hash",
+        dryRun: false,
+      };
       mockJournalService.deleteSourceSlice.mockResolvedValue(expected);
 
       const result = await mutationResolver.deleteLedgerEntrySourceSlice(
@@ -322,8 +326,9 @@ describe("LedgerJournalResolver", () => {
         entryHash: "test-entry-hash",
         sha256sum: "abc123",
         allowInvalid: false,
+        dryRun: false,
       });
-      expect(result).toEqual(expected);
+      expect(result).toEqual({ ...expected, preview: [] });
     });
 
     it("should propagate errors thrown by the service", async () => {
@@ -346,6 +351,7 @@ describe("LedgerJournalResolver", () => {
       const expected = {
         message: "Deleted 2 entries",
         deletedHashes: ["hash-1", "hash-2"],
+        dryRun: false,
       };
       mockJournalService.deleteMultiSourceSlices.mockResolvedValue(expected);
 
@@ -369,8 +375,9 @@ describe("LedgerJournalResolver", () => {
           { entryHash: "hash-2", sha256sum: "sha-2" },
         ],
         allowInvalid: false,
+        dryRun: false,
       });
-      expect(result).toEqual(expected);
+      expect(result).toEqual({ ...expected, preview: [] });
     });
 
     it("should propagate errors thrown by the service", async () => {
@@ -394,6 +401,7 @@ describe("LedgerJournalResolver", () => {
         message: "Updated",
         entryHash: "test-entry-hash",
         newSha256sum: "new-sha",
+        dryRun: false,
       };
       mockJournalService.updateSourceSlice.mockResolvedValue(expected);
 
@@ -415,8 +423,9 @@ describe("LedgerJournalResolver", () => {
         newContent: "2024-01-01 * Updated",
         platform: "mobile",
         allowInvalid: false,
+        dryRun: false,
       });
-      expect(result).toEqual(expected);
+      expect(result).toEqual({ ...expected, preview: [] });
     });
 
     it("should propagate errors thrown by the service", async () => {

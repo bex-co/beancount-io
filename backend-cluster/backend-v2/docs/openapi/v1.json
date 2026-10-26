@@ -11089,7 +11089,7 @@
     "/api-gateway/v1/ledgers/{owner}/{name}/entry-source/delete": {
       "post": {
         "summary": "Delete one entry source slice",
-        "description": "Modify entry source using the current sha256sum from entry context. Ledger content-write authority is checked before delegation. Stale source hashes are refused by the ledger service. An update returns the entry's new hash — the request's entryHash is stale after the commit. An update or delete that would add bean-check errors the ledger did not have — deleting an entry a balance assertion depends on, re-dating it past one — is refused with VALIDATION_FAILED, naming each new error in newLedgerErrors; errors the ledger already had never block, and `allowInvalid: true` commits anyway. When the only new error is imbalance, the refusal is UNBALANCED with the residual instead. An update that would take a free ledger past its directive limit is refused with RESOURCE_LIMIT_REACHED, naming the limit and the projected count; deletes always pass. No preview.",
+        "description": "Modify entry source using the current sha256sum from entry context. Ledger content-write authority is checked before delegation. Stale source hashes are refused by the ledger service. An update returns the entry's new hash — the request's entryHash is stale after the commit. An update or delete that would add bean-check errors the ledger did not have — deleting an entry a balance assertion depends on, re-dating it past one — is refused with VALIDATION_FAILED, naming each new error in newLedgerErrors; errors the ledger already had never block, and `allowInvalid: true` commits anyway. When the only new error is imbalance, the refusal is UNBALANCED with the residual instead. An update that would take a free ledger past its directive limit is refused with RESOURCE_LIMIT_REACHED, naming the limit and the projected count; deletes always pass. `dryRun` previews without committing: same checks, per-file affected text, no hashes.",
         "tags": [
           "Ledger v1"
         ],
@@ -11147,6 +11147,10 @@
                   "allowInvalid": {
                     "type": "boolean",
                     "description": "Commit even when the write would add bean-check errors (VALIDATION_FAILED with newLedgerErrors), instead of refusing it."
+                  },
+                  "dryRun": {
+                    "type": "boolean",
+                    "description": "Run every check and return the preview without committing."
                   }
                 },
                 "required": [
@@ -11168,13 +11172,37 @@
                     "message": {
                       "type": "string"
                     },
+                    "dryRun": {
+                      "type": "boolean"
+                    },
                     "entryHash": {
                       "type": "string"
+                    },
+                    "preview": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "text": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "text"
+                        ]
+                      },
+                      "description": "Per-file affected text; populated on dry runs only."
                     }
                   },
                   "required": [
                     "message",
-                    "entryHash"
+                    "dryRun",
+                    "entryHash",
+                    "preview"
                   ]
                 }
               }
@@ -11276,7 +11304,7 @@
     "/api-gateway/v1/ledgers/{owner}/{name}/entry-source/delete-many": {
       "post": {
         "summary": "Delete multiple entry source slices",
-        "description": "Modify entry source using the current sha256sum from entry context. Ledger content-write authority is checked before delegation. Stale source hashes are refused by the ledger service. An update returns the entry's new hash — the request's entryHash is stale after the commit. An update or delete that would add bean-check errors the ledger did not have — deleting an entry a balance assertion depends on, re-dating it past one — is refused with VALIDATION_FAILED, naming each new error in newLedgerErrors; errors the ledger already had never block, and `allowInvalid: true` commits anyway. When the only new error is imbalance, the refusal is UNBALANCED with the residual instead. An update that would take a free ledger past its directive limit is refused with RESOURCE_LIMIT_REACHED, naming the limit and the projected count; deletes always pass. No preview.",
+        "description": "Modify entry source using the current sha256sum from entry context. Ledger content-write authority is checked before delegation. Stale source hashes are refused by the ledger service. An update returns the entry's new hash — the request's entryHash is stale after the commit. An update or delete that would add bean-check errors the ledger did not have — deleting an entry a balance assertion depends on, re-dating it past one — is refused with VALIDATION_FAILED, naming each new error in newLedgerErrors; errors the ledger already had never block, and `allowInvalid: true` commits anyway. When the only new error is imbalance, the refusal is UNBALANCED with the residual instead. An update that would take a free ledger past its directive limit is refused with RESOURCE_LIMIT_REACHED, naming the limit and the projected count; deletes always pass. `dryRun` previews without committing: same checks, per-file affected text, no hashes.",
         "tags": [
           "Ledger v1"
         ],
@@ -11346,6 +11374,10 @@
                   "allowInvalid": {
                     "type": "boolean",
                     "description": "Commit even when the write would add bean-check errors (VALIDATION_FAILED with newLedgerErrors), instead of refusing it."
+                  },
+                  "dryRun": {
+                    "type": "boolean",
+                    "description": "Run every check and return the preview without committing."
                   }
                 },
                 "required": [
@@ -11367,13 +11399,37 @@
                     "message": {
                       "type": "string"
                     },
+                    "dryRun": {
+                      "type": "boolean"
+                    },
                     "deletedCount": {
                       "type": "integer"
+                    },
+                    "preview": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "text": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "text"
+                        ]
+                      },
+                      "description": "Per-file affected text; populated on dry runs only."
                     }
                   },
                   "required": [
                     "message",
-                    "deletedCount"
+                    "dryRun",
+                    "deletedCount",
+                    "preview"
                   ]
                 }
               }
@@ -11475,7 +11531,7 @@
     "/api-gateway/v1/ledgers/{owner}/{name}/entry-source": {
       "put": {
         "summary": "Update an entry source slice",
-        "description": "Modify entry source using the current sha256sum from entry context. Ledger content-write authority is checked before delegation. Stale source hashes are refused by the ledger service. An update returns the entry's new hash — the request's entryHash is stale after the commit. An update or delete that would add bean-check errors the ledger did not have — deleting an entry a balance assertion depends on, re-dating it past one — is refused with VALIDATION_FAILED, naming each new error in newLedgerErrors; errors the ledger already had never block, and `allowInvalid: true` commits anyway. When the only new error is imbalance, the refusal is UNBALANCED with the residual instead. An update that would take a free ledger past its directive limit is refused with RESOURCE_LIMIT_REACHED, naming the limit and the projected count; deletes always pass. No preview.",
+        "description": "Modify entry source using the current sha256sum from entry context. Ledger content-write authority is checked before delegation. Stale source hashes are refused by the ledger service. An update returns the entry's new hash — the request's entryHash is stale after the commit. An update or delete that would add bean-check errors the ledger did not have — deleting an entry a balance assertion depends on, re-dating it past one — is refused with VALIDATION_FAILED, naming each new error in newLedgerErrors; errors the ledger already had never block, and `allowInvalid: true` commits anyway. When the only new error is imbalance, the refusal is UNBALANCED with the residual instead. An update that would take a free ledger past its directive limit is refused with RESOURCE_LIMIT_REACHED, naming the limit and the projected count; deletes always pass. `dryRun` previews without committing: same checks, per-file affected text, no hashes.",
         "tags": [
           "Ledger v1"
         ],
@@ -11534,6 +11590,10 @@
                     "type": "boolean",
                     "description": "Commit even when the write would add bean-check errors (VALIDATION_FAILED with newLedgerErrors), instead of refusing it."
                   },
+                  "dryRun": {
+                    "type": "boolean",
+                    "description": "Run every check and return the preview without committing."
+                  },
                   "newContent": {
                     "type": "string"
                   }
@@ -11558,8 +11618,30 @@
                     "message": {
                       "type": "string"
                     },
+                    "dryRun": {
+                      "type": "boolean"
+                    },
                     "entryHash": {
                       "type": "string"
+                    },
+                    "preview": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "text": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "text"
+                        ]
+                      },
+                      "description": "Per-file affected text; populated on dry runs only."
                     },
                     "newSha256sum": {
                       "type": "string"
@@ -11571,7 +11653,9 @@
                   },
                   "required": [
                     "message",
+                    "dryRun",
                     "entryHash",
+                    "preview",
                     "newSha256sum",
                     "newEntryHash"
                   ]

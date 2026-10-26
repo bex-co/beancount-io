@@ -389,19 +389,25 @@ export type AccountJournalResult = {
 /** The files a slice write rewrote, each once (w23/042). */
 type TouchedFiles = { files: string[] };
 
+/** The affected block per file: stored replacement on update, removed slice on delete. */
+type SlicePreview = Array<{ path: string; text: string }>;
+
 export type DeleteSliceResult = {
   message: string;
   entryHash: string;
+  preview: SlicePreview;
 } & TouchedFiles;
 
 export type DeleteMultiSlicesResult = {
   message: string;
   deletedHashes: string[];
+  preview: SlicePreview;
 } & TouchedFiles;
 
 export type UpdateSliceResult = TouchedFiles & {
   message: string;
   entryHash: string;
+  preview: SlicePreview;
   newSha256sum: string;
   /**
    * The entry's public ID after the commit, re-read from the fresh
@@ -478,12 +484,16 @@ interface ILedgerJournalService {
     userId: string;
     entryHash: string;
     sha256sum: string;
+    /** Run every check and commit nothing (w23/m7/t003). */
+    dryRun?: boolean;
   }): Promise<DeleteSliceResult>;
 
   deleteMultiSourceSlices(params: {
     ledgerId: string;
     userId: string;
     entries: { entryHash: string; sha256sum: string }[];
+    /** Run every check and commit nothing (w23/m7/t003). */
+    dryRun?: boolean;
   }): Promise<DeleteMultiSlicesResult>;
 
   updateSourceSlice(params: {
@@ -492,6 +502,8 @@ interface ILedgerJournalService {
     entryHash: string;
     sha256sum: string;
     newContent: string;
+    /** Run every check and commit nothing (w23/m7/t003). */
+    dryRun?: boolean;
   }): Promise<UpdateSliceResult>;
 }
 
@@ -981,8 +993,11 @@ export class LedgerJournalService implements ILedgerJournalService {
     sha256sum: string;
     /** Commit even when the delete adds bean-check errors. */
     allowInvalid?: boolean;
+    /** Run every check and commit nothing. */
+    dryRun?: boolean;
   }): Promise<DeleteSliceResult> {
-    const { ledgerId, userId, entryHash, sha256sum, allowInvalid } = params;
+    const { ledgerId, userId, entryHash, sha256sum, allowInvalid, dryRun } =
+      params;
     const loaded = await this.loadFileMap(ledgerId, userId);
     const { files, entryPoint, repoPaths, managedPricePaths } = loaded;
     const sourceEntryHash = await this.resolveSourceEntryId(
@@ -1016,16 +1031,19 @@ export class LedgerJournalService implements ILedgerJournalService {
       ],
     ]);
     await this.assertNoNewErrors(loaded, transforms, "delete", allowInvalid);
-    await this.commitTransforms(
-      ledgerId,
-      userId,
-      transforms,
-      entryCommitMessage("Delete", found.slice),
-    );
+    if (!dryRun) {
+      await this.commitTransforms(
+        ledgerId,
+        userId,
+        transforms,
+        entryCommitMessage("Delete", found.slice),
+      );
+    }
     return {
-      message: "Entry deleted successfully",
+      message: dryRun ? "Would delete the entry" : "Entry deleted successfully",
       entryHash,
       files: [found.file],
+      preview: [{ path: found.file, text: found.slice }],
     };
   }
 
@@ -1035,8 +1053,10 @@ export class LedgerJournalService implements ILedgerJournalService {
     entries: { entryHash: string; sha256sum: string }[];
     /** Commit even when the deletes add bean-check errors. */
     allowInvalid?: boolean;
+    /** Run every check and commit nothing. */
+    dryRun?: boolean;
   }): Promise<DeleteMultiSlicesResult> {
-    const { ledgerId, userId, entries, allowInvalid } = params;
+    const { ledgerId, userId, entries, allowInvalid, dryRun } = params;
     const loaded = await this.loadFileMap(ledgerId, userId);
     const { files, entryPoint, repoPaths, managedPricePaths } = loaded;
     const snapshot = await parseLedgerFiles(files, entryPoint, { repoPaths });
@@ -1069,12 +1089,14 @@ export class LedgerJournalService implements ILedgerJournalService {
     const byFile = new Map<string, SliceTarget[]>();
     const seenTargets = new Set<string>();
     const deletedHashes: string[] = [];
+    const preview: SlicePreview = [];
     located.forEach((slice, index) => {
       const { base } = parseEntryId(sourceHashes[index]);
       const identity = `${slice.file}\u0000${slice.sha256}\u0000${slice.localOccurrence}`;
       if (seenTargets.has(identity)) return;
       seenTargets.add(identity);
       deletedHashes.push(entries[index].entryHash);
+      preview.push({ path: slice.file, text: slice.slice });
       const target: SliceTarget = sliceTarget(
         files,
         slice,
@@ -1094,11 +1116,16 @@ export class LedgerJournalService implements ILedgerJournalService {
     );
 
     await this.assertNoNewErrors(loaded, transforms, "delete", allowInvalid);
-    await this.commitTransforms(ledgerId, userId, transforms, "Delete entries");
+    if (!dryRun) {
+      await this.commitTransforms(ledgerId, userId, transforms, "Delete entries");
+    }
     return {
-      message: `Deleted ${deletedHashes.length} entries successfully`,
+      message: dryRun
+        ? `Would delete ${deletedHashes.length} entries`
+        : `Deleted ${deletedHashes.length} entries successfully`,
       deletedHashes,
       files: [...byFile.keys()],
+      preview,
     };
   }
 
@@ -1110,9 +1137,18 @@ export class LedgerJournalService implements ILedgerJournalService {
     newContent: string;
     /** Commit even when the edit adds bean-check errors. */
     allowInvalid?: boolean;
+    /** Run every check and commit nothing. */
+    dryRun?: boolean;
   }): Promise<UpdateSliceResult> {
-    const { ledgerId, userId, entryHash, sha256sum, newContent, allowInvalid } =
-      params;
+    const {
+      ledgerId,
+      userId,
+      entryHash,
+      sha256sum,
+      newContent,
+      allowInvalid,
+      dryRun,
+    } = params;
     // Control characters are checked against the entry being replaced, once
     // it is found (w21/816).
     assertSingleEntryText(newContent, "newContent", { controls: false });
@@ -1153,13 +1189,16 @@ export class LedgerJournalService implements ILedgerJournalService {
       ],
     ]);
     // The projection also reports to `applied`; the commit's run overwrites it.
+    // On a dry run the projection's report is the preview's ground truth.
     await this.assertNoNewErrors(loaded, transforms, "update", allowInvalid);
-    await this.commitTransforms(
-      ledgerId,
-      userId,
-      transforms,
-      entryCommitMessage("Update", newContent),
-    );
+    if (!dryRun) {
+      await this.commitTransforms(
+        ledgerId,
+        userId,
+        transforms,
+        entryCommitMessage("Update", newContent),
+      );
+    }
     // The entry's identity is content-derived, so the edit almost always
     // changed it. Resolve the NEW hash from the committed content so a client
     // can keep the edited entry on screen; fall back to echoing the request
@@ -1180,7 +1219,7 @@ export class LedgerJournalService implements ILedgerJournalService {
             },
           )) ?? entryHash);
     return {
-      message: "Entry updated successfully",
+      message: dryRun ? "Would update the entry" : "Entry updated successfully",
       entryHash: newEntryHash,
       files: [found.file],
       // The entry's block as a fresh read serves it: the checksum the entry's
@@ -1196,6 +1235,12 @@ export class LedgerJournalService implements ILedgerJournalService {
             ) ?? servedSliceText(applied.current.stored)),
       ),
       newEntryHash,
+      preview: [
+        {
+          path: found.file,
+          text: applied.current?.stored ?? newContent,
+        },
+      ],
     };
   }
 

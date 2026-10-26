@@ -33,6 +33,22 @@ class DeleteSourceSliceInput {
       "Delete the entry even when that would add bean-check errors (VALIDATION_FAILED), instead of refusing",
   })
   allowInvalid?: boolean;
+
+  @Field(() => Boolean, {
+    nullable: true,
+    description:
+      "Run every check and return the preview without committing",
+  })
+  dryRun?: boolean;
+}
+
+@ObjectType()
+class SlicePreviewFile {
+  @Field(() => String)
+  path: string;
+
+  @Field(() => String)
+  text: string;
 }
 
 @ObjectType()
@@ -40,8 +56,16 @@ class DeleteSourceSliceResponse {
   @Field(() => String)
   message: string;
 
+  @Field(() => Boolean)
+  dryRun: boolean;
+
   @Field(() => String)
   entryHash: string;
+
+  @Field(() => [SlicePreviewFile], {
+    description: "Per-file affected text; populated on dry runs only",
+  })
+  preview: SlicePreviewFile[];
 }
 
 @InputType()
@@ -70,6 +94,13 @@ class DeleteMultiSourceSlicesInput {
       "Delete the entries even when that would add bean-check errors (VALIDATION_FAILED), instead of refusing",
   })
   allowInvalid?: boolean;
+
+  @Field(() => Boolean, {
+    nullable: true,
+    description:
+      "Run every check and return the preview without committing",
+  })
+  dryRun?: boolean;
 }
 
 @ObjectType()
@@ -77,8 +108,16 @@ class DeleteMultiSourceSlicesResponse {
   @Field(() => String)
   message: string;
 
+  @Field(() => Boolean)
+  dryRun: boolean;
+
   @Field(() => Int)
   deletedCount: number;
+
+  @Field(() => [SlicePreviewFile], {
+    description: "Per-file affected text; populated on dry runs only",
+  })
+  preview: SlicePreviewFile[];
 }
 
 @InputType()
@@ -104,12 +143,22 @@ class UpdateSourceSliceInput {
       "Commit the edit even when it would add bean-check errors (VALIDATION_FAILED), instead of refusing",
   })
   allowInvalid?: boolean;
+
+  @Field(() => Boolean, {
+    nullable: true,
+    description:
+      "Run every check and return the preview without committing",
+  })
+  dryRun?: boolean;
 }
 
 @ObjectType()
 class UpdateSourceSliceResponse {
   @Field(() => String)
   message: string;
+
+  @Field(() => Boolean)
+  dryRun: boolean;
 
   @Field(() => String)
   entryHash: string;
@@ -122,6 +171,11 @@ class UpdateSourceSliceResponse {
       "The entry's public ID after the commit — use it for the next edit, not entryHash.",
   })
   newEntryHash: string;
+
+  @Field(() => [SlicePreviewFile], {
+    description: "Per-file affected text; populated on dry runs only",
+  })
+  preview: SlicePreviewFile[];
 }
 
 @Resolver()
@@ -137,13 +191,15 @@ export class LedgerJournalMutationResolver {
     @Arg("input", () => DeleteSourceSliceInput) input: DeleteSourceSliceInput,
     @Ctx() ctx: IContext,
   ): Promise<DeleteSourceSliceResponse> {
-    return this.journalService.deleteSourceSlice({
+    const result = await this.journalService.deleteSourceSlice({
       ledgerId,
       identity: ctx.getCurrentIdentity(),
       entryHash: resolveEntryHash(input),
       sha256sum: input.sha256sum,
       allowInvalid: input.allowInvalid ?? false,
+      dryRun: input.dryRun ?? false,
     });
+    return { ...result, preview: result.preview ?? [] };
   }
 
   @Authenticated()
@@ -157,7 +213,7 @@ export class LedgerJournalMutationResolver {
     input: DeleteMultiSourceSlicesInput,
     @Ctx() ctx: IContext,
   ): Promise<DeleteMultiSourceSlicesResponse> {
-    return this.journalService.deleteMultiSourceSlices({
+    const result = await this.journalService.deleteMultiSourceSlices({
       ledgerId,
       identity: ctx.getCurrentIdentity(),
       entries: input.entries.map((e) => ({
@@ -165,7 +221,9 @@ export class LedgerJournalMutationResolver {
         sha256sum: e.sha256sum,
       })),
       allowInvalid: input.allowInvalid ?? false,
+      dryRun: input.dryRun ?? false,
     });
+    return { ...result, preview: result.preview ?? [] };
   }
 
   @Authenticated()
@@ -177,7 +235,7 @@ export class LedgerJournalMutationResolver {
     @Arg("input", () => UpdateSourceSliceInput) input: UpdateSourceSliceInput,
     @Ctx() ctx: IContext,
   ): Promise<UpdateSourceSliceResponse> {
-    return this.journalService.updateSourceSlice({
+    const result = await this.journalService.updateSourceSlice({
       ledgerId,
       identity: ctx.getCurrentIdentity(),
       entryHash: resolveEntryHash(input),
@@ -185,6 +243,8 @@ export class LedgerJournalMutationResolver {
       newContent: input.newContent,
       platform: ctx.platform,
       allowInvalid: input.allowInvalid ?? false,
+      dryRun: input.dryRun ?? false,
     });
+    return { ...result, preview: result.preview ?? [] };
   }
 }

@@ -81,7 +81,12 @@ async function fixture(caller = identity) {
   ]);
   const state = { writable: true, limited: false, breaks: false };
   const envelope = (data: unknown) => ({ data: { success: true, data } });
-  type Ref = { entry_hash: string; sha256sum: string; allowInvalid?: boolean };
+  type Ref = {
+    entry_hash: string;
+    sha256sum: string;
+    allowInvalid?: boolean;
+    dryRun?: boolean;
+  };
   function validate(ref: Ref) {
     const text = slices.get(ref.entry_hash);
     if (text === undefined || hash(text) !== ref.sha256sum)
@@ -105,6 +110,16 @@ async function fixture(caller = identity) {
   const deleteSourceSlice = jest.fn(async (_owner, _name, ref: Ref) => {
     validate(ref);
     refuseBreaking(ref, "delete");
+    if (ref.dryRun === true) {
+      return envelope({
+        message: `Would delete entry ${ref.entry_hash}`,
+        entry_hash: ref.entry_hash,
+        files: ["main.bean"],
+        preview: [
+          { path: "main.bean", text: slices.get(ref.entry_hash) ?? "" },
+        ],
+      });
+    }
     slices.delete(ref.entry_hash);
     return envelope({
       message: "Deleted",
@@ -113,9 +128,25 @@ async function fixture(caller = identity) {
     });
   });
   const deleteMultiSourceSlices = jest.fn(
-    async (_owner, _name, body: { entries: Ref[]; allowInvalid?: boolean }) => {
+    async (
+      _owner: string,
+      _name: string,
+      body: { entries: Ref[]; allowInvalid?: boolean; dryRun?: boolean },
+    ) => {
       body.entries.forEach(validate);
       refuseBreaking(body, "delete");
+      if (body.dryRun === true) {
+        const hashes = body.entries.map((ref) => ref.entry_hash);
+        return envelope({
+          message: `Would delete ${hashes.length} entries: ${hashes.join(", ")}`,
+          deleted_hashes: hashes,
+          files: ["main.bean", "2026/imports.bean"],
+          preview: body.entries.map((ref) => ({
+            path: "main.bean",
+            text: slices.get(ref.entry_hash) ?? "",
+          })),
+        });
+      }
       body.entries.forEach((ref) => slices.delete(ref.entry_hash));
       return envelope({
         message: "Deleted",
@@ -138,6 +169,16 @@ async function fixture(caller = identity) {
           error,
           code: "directive_limit_exceeded",
           details: { limit: 2, current: 5 },
+        });
+      }
+      if (body.dryRun === true) {
+        return envelope({
+          message: `Would update entry ${body.entry_hash}`,
+          entry_hash: "entry1-updated",
+          new_sha256sum: hash(body.new_content),
+          new_entry_hash: "entry1-updated",
+          files: ["2026/imports.bean"],
+          preview: [{ path: "2026/imports.bean", text: body.new_content }],
         });
       }
       slices.set(body.entry_hash, body.new_content);
@@ -233,9 +274,15 @@ async function fixture(caller = identity) {
         };
       }
       if (surface === "gql") {
+        // A preview call selects the dry-run echo, like typed-add's
+        // bulkEntries fixture (w23/m7/t002).
+        const fields =
+          input.dryRun === true
+            ? `${spec.fields} dryRun preview { path text }`
+            : spec.fields;
         const response = await graphql({
           schema,
-          source: `mutation($input:${spec.inputType}!) { ${spec.field}(ledgerId:"alice/main",input:$input) { ${spec.fields} } }`,
+          source: `mutation($input:${spec.inputType}!) { ${spec.field}(ledgerId:"alice/main",input:$input) { ${fields} } }`,
           variableValues: { input },
           contextValue: { identity: caller, getCurrentIdentity: () => caller },
         });
@@ -313,10 +360,14 @@ describe.each(["rest", "gql", "mcp"])("source edits via %s", (surface) => {
               newSha256sum: hash("; replacement café\n"),
               newEntryHash: "entry1-updated",
             };
+            // REST echoes dryRun with its preview; MCP spells the echo
+            // dry_run; GraphQL keeps its narrow selections (w23/m7/t003).
             expect(result.result).toEqual(
               surface === "mcp"
                 ? {
                     ...updated,
+                    dry_run: false,
+                    preview: [],
                     summary:
                       "Updated entry entry1 (new hash entry1-updated). No new bean-check errors.",
                     // w23/042: the file the ledger rewrote, not always [].
@@ -324,7 +375,9 @@ describe.each(["rest", "gql", "mcp"])("source edits via %s", (surface) => {
                     entryHashes: ["entry1-updated"],
                     validation: emptyValidation,
                   }
-                : updated,
+                : surface === "rest"
+                  ? { ...updated, dryRun: false, preview: [] }
+                  : updated,
             );
           } else if (operation === "delete_many") {
             expect(f.slices.has("entry1")).toBe(false);
@@ -333,6 +386,8 @@ describe.each(["rest", "gql", "mcp"])("source edits via %s", (surface) => {
               surface === "mcp"
                 ? {
                     ...deleted,
+                    dry_run: false,
+                    preview: [],
                     summary: "Deleted 2 entries. No new bean-check errors.",
                     wrote: [
                       { path: "main.bean" },
@@ -341,7 +396,9 @@ describe.each(["rest", "gql", "mcp"])("source edits via %s", (surface) => {
                     entryHashes: ["entry1", "entry2"],
                     validation: emptyValidation,
                   }
-                : deleted,
+                : surface === "rest"
+                  ? { ...deleted, dryRun: false, preview: [] }
+                  : deleted,
             );
           } else {
             expect(f.slices.has("entry1")).toBe(false);
@@ -350,12 +407,16 @@ describe.each(["rest", "gql", "mcp"])("source edits via %s", (surface) => {
               surface === "mcp"
                 ? {
                     ...deleted,
+                    dry_run: false,
+                    preview: [],
                     summary: "Deleted entry entry1. No new bean-check errors.",
                     wrote: [{ path: "main.bean" }],
                     entryHashes: ["entry1"],
                     validation: emptyValidation,
                   }
-                : deleted,
+                : surface === "rest"
+                  ? { ...deleted, dryRun: false, preview: [] }
+                  : deleted,
             );
           }
           expect(f.slices.has("entry2")).toBe(operation !== "delete_many");
@@ -396,7 +457,9 @@ describe.each(["rest", "gql", "mcp"])("source edits via %s", (surface) => {
           (
             await f.call(surface, operation, {
               ...args(operation),
-              dry_run: true,
+              // MCP spells the preview flag dry_run, REST and GraphQL
+              // dryRun; each surface refuses the other's spelling (w23/m7).
+              ...(surface === "mcp" ? { dryRun: true } : { dry_run: true }),
             })
           ).success,
         ).toBe(false);
@@ -406,6 +469,127 @@ describe.each(["rest", "gql", "mcp"])("source edits via %s", (surface) => {
         await f.close();
       }
     });
+  });
+});
+
+// A preview (w23/m7/t003) resolves the slice and runs every check, threads
+// the flag past the ledger hop, reports what it WOULD change, and writes
+// nothing: no slice touched, no files echoed, no hashes minted.
+describe.each(["rest", "gql", "mcp"])("source-slice preview via %s", (surface) => {
+  const previewArgs = (operation: Operation): Record<string, unknown> => ({
+    ...(args(operation) as Record<string, unknown>),
+    ...(surface === "mcp" ? { dry_run: true } : { dryRun: true }),
+  });
+  const journalKey = (operation: Operation) =>
+    operation === "update"
+      ? "updateSourceSlice"
+      : operation === "delete"
+        ? "deleteSourceSlice"
+        : "deleteMultiSourceSlices";
+  const replacement = "; replacement café\n";
+  describe.each(Object.keys(operations) as Operation[])("%s", (operation) => {
+    it("previews without writing, threading dryRun past the hop", async () => {
+      const f = await fixture();
+      const before = [...f.slices];
+      try {
+        const result = await f.call(surface, operation, previewArgs(operation));
+        expect(result.success).toBe(true);
+        expect([...f.slices]).toEqual(before);
+        // The hop body is the third call argument on every op; the
+        // generated client passes a fourth config argument on some.
+        const hop = f.journal[journalKey(operation)];
+        expect(hop).toHaveBeenCalledTimes(1);
+        expect(hop.mock.calls[0][2]).toMatchObject({ dryRun: true });
+        const emptyValidation = {
+          errorsBefore: 0,
+          errorsAfter: 0,
+          newErrors: [],
+        };
+        if (operation === "update") {
+          const would = {
+            message: "Would update entry entry1",
+            entryHash: "entry1-updated",
+            newSha256sum: hash(replacement),
+            newEntryHash: "entry1-updated",
+            ...(surface === "mcp" ? { dry_run: true } : { dryRun: true }),
+            preview: [{ path: "2026/imports.bean", text: replacement }],
+          };
+          expect(result.result).toEqual(
+            surface === "mcp"
+              ? {
+                  ...would,
+                  summary:
+                    "Would update entry entry1 (new hash entry1-updated). No new bean-check errors.",
+                  wrote: [],
+                  entryHashes: ["entry1-updated"],
+                  validation: emptyValidation,
+                }
+              : would,
+          );
+        } else if (operation === "delete_many") {
+          const would = {
+            message: "Would delete 2 entries: entry1, entry2",
+            deletedCount: 2,
+            ...(surface === "mcp" ? { dry_run: true } : { dryRun: true }),
+            preview: [
+              { path: "main.bean", text: original },
+              { path: "main.bean", text: "; second\n" },
+            ],
+          };
+          expect(result.result).toEqual(
+            surface === "mcp"
+              ? {
+                  ...would,
+                  summary:
+                    "Would delete 2 entries. No new bean-check errors.",
+                  wrote: [],
+                  entryHashes: ["entry1", "entry2"],
+                  validation: emptyValidation,
+                }
+              : would,
+          );
+        } else {
+          const would = {
+            message: "Would delete entry entry1",
+            entryHash: "entry1",
+            ...(surface === "mcp" ? { dry_run: true } : { dryRun: true }),
+            preview: [{ path: "main.bean", text: original }],
+          };
+          expect(result.result).toEqual(
+            surface === "mcp"
+              ? {
+                  ...would,
+                  summary:
+                    "Would delete entry entry1. No new bean-check errors.",
+                  wrote: [],
+                  entryHashes: ["entry1"],
+                  validation: emptyValidation,
+                }
+              : would,
+          );
+        }
+      } finally {
+        await f.close();
+      }
+    });
+  });
+  // The same checks as a commit: an empty replacement is refused by the
+  // service guard before the hop, even as a preview.
+  it("still refuses an empty replacement on a preview", async () => {
+    const f = await fixture();
+    const before = [...f.slices];
+    try {
+      const result = await f.call(surface, "update", {
+        ...previewArgs("update"),
+        newContent: "  \n",
+      });
+      expect(result.success).toBe(false);
+      expect([...f.slices]).toEqual(before);
+      for (const call of Object.values(f.journal))
+        expect(call).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
   });
 });
 
@@ -642,6 +826,54 @@ describe.each(["rest", "gql", "mcp"])(
             });
           } else {
             // MCP carries the same field (w23/077), past its output schema.
+            expect(result.full).toMatchObject({
+              ok: false,
+              error: {
+                code: "VALIDATION_FAILED",
+                message,
+                hint: expect.stringContaining("allowInvalid: true"),
+                newLedgerErrors: BALANCE_FAILED,
+              },
+            });
+          }
+        } finally {
+          await f.close();
+        }
+      });
+
+      // A preview runs the same checks (w23/m7/t003): the refusal the
+      // ledger returns for a breaking commit refuses the preview too, with
+      // the same code and the same named error.
+      it("refuses the preview the same way, changing nothing", async () => {
+        const f = await fixture();
+        f.state.breaks = true;
+        const before = [...f.slices];
+        try {
+          const result = await f.call(surface, operation, {
+            ...(args(operation) as Record<string, unknown>),
+            ...(surface === "mcp" ? { dry_run: true } : { dryRun: true }),
+          });
+          expect(result.success).toBe(false);
+          expect([...f.slices]).toEqual(before);
+          const message = expect.stringContaining(
+            `${subject} would introduce 1 new bean-check error: ${BALANCE_FAILED}`,
+          );
+          const metadata = {
+            field: "entry",
+            newLedgerErrors: BALANCE_FAILED,
+          };
+          if (surface === "rest") {
+            expect(result.result).toMatchObject({
+              ok: false,
+              error: { code: "VALIDATION_FAILED", message, metadata },
+            });
+          } else if (surface === "gql") {
+            expect(result.errors?.[0]?.originalError).toMatchObject({
+              category: "VALIDATION_FAILED",
+              message,
+              metadata,
+            });
+          } else {
             expect(result.full).toMatchObject({
               ok: false,
               error: {
