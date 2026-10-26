@@ -56,7 +56,9 @@
       "channel": "skills.sh consolidated Pack",
       "status": "published_native_delivery_incomplete",
       "entry": "https://www.skills.sh/p/CTUrAfLQdDvNeNv2",
-      "action": "One Pack is created with thirteen customer workflows. Retain it and verify complete native delivery after recovery; no duplicate Pack."
+      "action": "One Pack remains published; 1.7.4 exits0 but delivers59/61files to both agents. Controlled429 reproduces silent omission. Wait for a supported complete delivery path, then verify all61 hashes; no duplicate publication or email.",
+      "lastCheckedAtUTC": "2026-10-26T07:08:07Z",
+      "evidence": "skills-sh-partial-install-20261026.json"
     },
     {
       "channel": "skills.rest",
@@ -170,15 +172,52 @@
       },
       "diagnostic": "Separate anonymous probe of the documented legacy well-known index returned HTTP 429. This does not establish the cause of each missing file or discovery failure; no rate-limit bypass or header spoofing attempted.",
       "complete61FileInstallationVerified": false,
-      "managedUpdateVerified": false
+      "managedUpdateVerified": false,
+      "recheck174": {
+        "observedAtUTC": "2026-10-26T07:08:07Z",
+        "exitCode": 0,
+        "agents": {
+          "codex": {
+            "skillCount": 13,
+            "expectedFileCount": 61,
+            "actualFileCount": 59,
+            "missing": [
+              "beancount-import/references/categorization.md",
+              "beancount-add/LICENSE"
+            ],
+            "changed": [],
+            "extra": [],
+            "allDownloadedHashesMatch": true,
+            "priorMissingFilesNowPresent": true
+          },
+          "claude-code": {
+            "skillCount": 13,
+            "expectedFileCount": 61,
+            "actualFileCount": 59,
+            "missing": [
+              "beancount-import/references/categorization.md",
+              "beancount-add/LICENSE"
+            ],
+            "changed": [],
+            "extra": [],
+            "allDownloadedHashesMatch": true,
+            "priorMissingFilesNowPresent": true
+          }
+        },
+        "evidence": "skills-sh-partial-install-20261026.json",
+        "completeInstallVerified": false
+      },
+      "controlled429Case": "Unmodified1.7.4 installs SKILL.md but silently omits a declared reference returning429; nativeexit0/Done. Local fixture is stopped, no telemetry or credential."
     },
     "next": {
-      "manualCheckNotBeforeUTC": "2026-10-27T02:17:39Z",
-      "earlierTrigger": "Actual delivery recovery or a supported client fix, with the rate condition cleared.",
+      "manualCheckNotBeforeUTC": "2026-10-27T07:08:07Z",
+      "earlierTrigger": "Relevant supported client/delivery fix or actual demonstrated recovery; preserve Retry-After and full-file validation.",
       "action": "One bounded isolated native installation; compare all 61 files and thirteen skills for both agent destinations. Edit the existing Pack for future source refreshes instead of creating another Pack.",
       "owner": "Platform/client recovery, then repository worker verification; no publisher input or email pending."
-    }
+    },
+    "lastCheckedAtUTC": "2026-10-26T07:08:07Z"
   },
   "privacy": "Only public customer source and canonical MIT-0 text uploaded. No internal skill, eval fixture, credential, private account identity or ledger data included. No support email, paid action, new account, catalog PR or ClawHub upload performed.",
-  "limits": "Pack publication does not prove complete native delivery, delete old index records, publish a SkillsMP plugin, clear skills.rest review, change the historical ClawHub release or clear Hermes host policy. No recurring automation created."
+  "limits": "Pack publication does not prove complete native delivery, delete old index records, publish a SkillsMP plugin, clear skills.rest review, change the historical ClawHub release or clear Hermes host policy. No recurring automation created.",
+  "lastUpdatedAtUTC": "2026-10-26T07:08:07Z"
 }

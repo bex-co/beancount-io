@@ -445,3 +445,23 @@ window and Hermes admission.
   marker when no package runtime extensions are present.
 - [Hermes portable plugins](https://github.com/NousResearch/hermes-agent/blob/4d04303818b61bf3aa09278af48356315515965b/website/docs/developer-guide/plugins/index.md#portable-agent-plugins-v1-packages)
   describe its native install, enable, namespaced skill loading and update paths.
+
+
+### Pack native false-success control — 2026-10-26T07:08:07Z
+
+One later, bounded Skills CLI1.7.4 check now discovers and installs thirteen
+entries with exit0, but both destinations contain only59/61files. This time
+`beancount-import/references/categorization.md` and `beancount-add/LICENSE`
+are absent; all downloaded hashes match and the previously missing pair is
+present. Full installation remains unverified. No Pack is republished.
+
+A disposable localhost well-known fixture isolates a concrete client defect:
+its index declares a required reference that always returns429/Retry-After1;
+unmodified1.7.4 requests it once, omits it, then exits0 with Done. The
+inspected fetcher discards unsuccessful file results without a completeness
+check. A separate public index probe returns429/Retry-After60; statuses for
+every omitted production file remain unobserved.
+[Exact native and controlled evidence](catalog-corrections/skills-sh-partial-install-20261026.json)
+retains those boundaries. A supported complete-delivery/client path is needed;
+then verify all61 hashes. No email, new publication or publisher input is
+pending. The current install guide continues using the verified routes.

@@ -1,0 +1,100 @@
+{
+  "owner": "w6/m6.5/t012",
+  "lastCheckedAtUTC": "2026-10-26T07:08:07Z",
+  "status": "published_pack_native_install_incomplete",
+  "entry": "https://www.skills.sh/p/CTUrAfLQdDvNeNv2",
+  "sourceSuiteVersion": "0.4.2",
+  "nativeRecheck": {
+    "version": "1.7.4",
+    "command": "DISABLE_TELEMETRY=1 SKILLS_NO_TELEMETRY=1 npx --yes skills@1.7.4 add https://www.skills.sh/p/CTUrAfLQdDvNeNv2 -a claude-code codex -y",
+    "exitCode": 0,
+    "agents": {
+      "codex": {
+        "skillCount": 13,
+        "expectedFileCount": 61,
+        "actualFileCount": 59,
+        "missing": [
+          "beancount-import/references/categorization.md",
+          "beancount-add/LICENSE"
+        ],
+        "changed": [],
+        "extra": [],
+        "allDownloadedHashesMatch": true,
+        "priorMissingFilesNowPresent": true
+      },
+      "claude-code": {
+        "skillCount": 13,
+        "expectedFileCount": 61,
+        "actualFileCount": 59,
+        "missing": [
+          "beancount-import/references/categorization.md",
+          "beancount-add/LICENSE"
+        ],
+        "changed": [],
+        "extra": [],
+        "allDownloadedHashesMatch": true,
+        "priorMissingFilesNowPresent": true
+      }
+    },
+    "completeInstallVerified": false,
+    "limit": "A success message and thirteen folders do not prove full installation. Different files are missing than in the earlier 1.5.23 run; no cause of each individual failed production fetch is inferred."
+  },
+  "separatePublicIndexProbe": {
+    "url": "https://www.skills.sh/p/CTUrAfLQdDvNeNv2/.well-known/skills/index.json",
+    "status": 429,
+    "retryAfter": "60",
+    "observedAtUTC": "2026-10-26T07:00:35.483Z",
+    "limit": "A separately observed 429 is not a captured status for each omitted production file. Retry-After is respected; no bypass or repeated install follows."
+  },
+  "deterministicNativeReproduction": {
+    "cliVersion": "1.7.4",
+    "sourceMetadata": "https://registry.npmjs.org/skills/1.7.4",
+    "cliFileSHA256": "b7d92e2a619e8982d38390572750efb8c2ec81cdf23c33aed2fa426d080a1e4e",
+    "fixture": "One disposable localhost well-known index declares SKILL.md and references/required.md. SKILL.md returns200; required.md always returns429 with Retry-After1. No external skill, credential or ledger used.",
+    "nativeResult": {
+      "cliVersion": "1.7.4",
+      "exitCode": 0,
+      "mainSkillInstalled": true,
+      "requiredReferenceInstalled": false,
+      "requiredFileReturned429": true,
+      "requiredFileRequestCount": 1,
+      "successMessageObserved": true,
+      "requests": [
+        {
+          "path": "/.well-known/agent-skills/index.json",
+          "status": 200
+        },
+        {
+          "path": "/.well-known/skills/index.json",
+          "status": 200
+        },
+        {
+          "path": "/.well-known/agent-skills/w6-required-file-fixture/SKILL.md",
+          "status": 200
+        },
+        {
+          "path": "/.well-known/agent-skills/w6-required-file-fixture/references/required.md",
+          "status": 429
+        }
+      ]
+    },
+    "serverStopped": true,
+    "telemetryDisabled": true,
+    "hostPatched": false,
+    "conclusion": "Released CLI exits0 and reports Done while omitting a declared required reference after one failed fetch."
+  },
+  "reviewedClientBehavior": {
+    "function": "WellKnownProvider.fetchLegacySkillByEntry",
+    "behavior": "Non-success file responses or fetch errors yield null; only successful results are added before createSkill, with no complete-file check. No documented retry/concurrency switch was established in the inspected source.",
+    "limit": "This proves silent omission in the controlled case; it does not attribute every production failure to HTTP429."
+  },
+  "unblock": {
+    "owner": "Supported skills CLI/platform delivery path, then repository worker",
+    "condition": "A supported rate-aware/retrying or fail-closed path permits an actual complete thirteen-skill,61-file installation. Verify every uploaded hash for both agents.",
+    "nextManualCheckOnOrAfterUTC": "2026-10-27T07:08:07Z",
+    "earlierTrigger": "Relevant actual client/platform fix or independently demonstrated delivery recovery.",
+    "emailPending": false,
+    "republishRequired": false
+  },
+  "boundaries": "One consolidated Pack is retained. No new publication, account, permission, email, telemetry event or customer skill change. The working versioned plugin/source installation routes remain separate."
+}
