@@ -668,6 +668,15 @@ function renderPositionString(posting: PostingJson): string {
   if (posting.price) {
     str += ` @ ${posting.price.number} ${posting.price.currency}`;
   }
+  // Total price rides a render-side extension like posting tags (w23/m6/t010).
+  // Both set renders both, which the engine bean-check refuses — the typed
+  // API refuses the combination before it ever gets here.
+  const totalPrice = (
+    posting as PostingJson & { totalPrice?: AmountValue }
+  ).totalPrice;
+  if (totalPrice) {
+    str += ` @@ ${totalPrice.number} ${totalPrice.currency}`;
+  }
   return str;
 }
 

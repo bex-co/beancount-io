@@ -41,6 +41,9 @@ const postingSchema = z.strictObject({
       "Posting amount; omit on at most one posting per transaction to elide it",
   }),
   price: nullToUndefined(amountSchema),
+  totalPrice: nullToUndefined(amountSchema).optional().openapi({
+    description: "Total price (`@@`); exclusive with the per-unit price",
+  }),
   cost: nullToUndefined(costSchema)
     .optional()
     .openapi({
@@ -88,6 +91,14 @@ const entrySchema = z.discriminatedUnion("type", [
   z.strictObject({
     type: z.literal("close"),
     entry: z.strictObject({ date: dateSchema, account: z.string() }),
+  }),
+  z.strictObject({
+    type: z.literal("pad"),
+    entry: z.strictObject({
+      date: dateSchema,
+      account: z.string(),
+      sourceAccount: z.string().openapi({ example: "Equity:Opening-Balances" }),
+    }),
   }),
   z.strictObject({
     type: z.literal("balance"),

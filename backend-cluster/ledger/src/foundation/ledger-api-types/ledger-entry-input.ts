@@ -25,6 +25,8 @@ type PostingInput = {
   tags?: string[];
   links?: string[];
   meta?: Record<string, string>;
+  /** Total price (`@@`); exclusive with per-unit `price` (w23/m6/t010). */
+  totalPrice?: AmountInput;
 };
 
 type TransactionInput = {
@@ -66,6 +68,8 @@ type OpenInput = {
 };
 
 type CloseInput = { date: string; account: string };
+
+type PadInput = { date: string; account: string; sourceAccount: string };
 
 type DocumentInput = {
   date: string;
@@ -126,6 +130,7 @@ export type LedgerEntryInput =
   | { type: "balance"; entry: BalanceInput }
   | { type: "open"; entry: OpenInput }
   | { type: "close"; entry: CloseInput }
+  | { type: "pad"; entry: PadInput }
   | { type: "custom"; entry: CustomInput }
   | { type: "budget"; entry: BudgetInput }
   | { type: "document"; entry: DocumentInput }

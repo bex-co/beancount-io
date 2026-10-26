@@ -187,6 +187,17 @@ function toDirective(input: LedgerEntryInput): DirectiveJson {
           ...(posting.tags ? { tags: [...posting.tags] } : {}),
           ...(posting.links ? { links: [...posting.links] } : {}),
           ...(posting.meta ? { meta: { ...posting.meta } } : {}),
+          // Total price has no engine representation (price is a bare
+          // per-unit AmountValue); it rides the same render-side extension
+          // as posting tags (w23/m6/t010).
+          ...(posting.totalPrice
+            ? {
+                totalPrice: {
+                  number: toBeancountNumber(posting.totalPrice.number),
+                  currency: posting.totalPrice.currency,
+                },
+              }
+            : {}),
         })),
         ...(entry.meta ? { meta: { ...entry.meta } } : {}),
       };
@@ -242,6 +253,13 @@ function toDirective(input: LedgerEntryInput): DirectiveJson {
         type: "close",
         date: input.entry.date,
         account: input.entry.account,
+      };
+    case "pad":
+      return {
+        type: "pad",
+        date: input.entry.date,
+        account: input.entry.account,
+        source_account: input.entry.sourceAccount,
       };
     case "custom": {
       const { entry } = input;

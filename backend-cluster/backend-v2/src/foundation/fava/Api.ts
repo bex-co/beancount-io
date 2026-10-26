@@ -1144,6 +1144,9 @@ export interface EntryAddBulkEntriesRequest {
     | ({
         type: "transaction";
       } & BulkTransactionEntry)
+    | ({
+        type: "pad";
+      } & BulkPadEntry)
   )[];
   /**
    * Filename
@@ -2222,6 +2225,8 @@ export interface Posting {
    * @uniqueItems true
    */
   links?: string[];
+  /** Total price of the posting (`@@`) */
+  totalPrice?: Amount | null;
 }
 
 /**
@@ -3661,6 +3666,50 @@ export interface SuccessResponseProjectedEntryIds {
 export interface ShellQueryBody {
   /** Query */
   query: string;
+}
+
+/**
+ * Pad
+ * A Beancount Pad directive.
+ */
+export interface Pad {
+  /**
+   * Date
+   * Date of the directive
+   * @format date
+   */
+  date: string;
+  /**
+   * Meta
+   * Metadata of the directive
+   */
+  meta?: Record<string, string | number | boolean | null> | null;
+  /**
+   * Account
+   * Account to pad
+   */
+  account: string;
+  /**
+   * Source Account
+   * Account to pad from
+   */
+  sourceAccount: string;
+}
+
+/**
+ * BulkPadEntry
+ * A pad account entry in a bulk request.
+ */
+export interface BulkPadEntry {
+  /** Type */
+  type: "pad";
+  /** Pad directive to add */
+  item: Pad;
+  /**
+   * Filename
+   * Target file path (defaults to the request filename or main.bean)
+   */
+  filename?: string | null;
 }
 
 export type QueryParamsType = Record<string | number, any>;

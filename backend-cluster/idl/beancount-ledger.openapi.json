@@ -9870,6 +9870,9 @@
                 },
                 {
                   "$ref": "#/components/schemas/BulkDocumentEntry"
+                },
+                {
+                  "$ref": "#/components/schemas/BulkPadEntry"
                 }
               ],
               "discriminator": {
@@ -9884,7 +9887,8 @@
                   "note": "#/components/schemas/BulkNoteEntry",
                   "open": "#/components/schemas/BulkOpenEntry",
                   "price": "#/components/schemas/BulkPriceEntry",
-                  "transaction": "#/components/schemas/BulkTransactionEntry"
+                  "transaction": "#/components/schemas/BulkTransactionEntry",
+                  "pad": "#/components/schemas/BulkPadEntry"
                 }
               }
             },
@@ -12436,6 +12440,17 @@
             "uniqueItems": true,
             "title": "Links",
             "description": "Posting links"
+          },
+          "totalPrice": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Amount"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Total price of the posting (`@@`)"
           }
         },
         "type": "object",
@@ -15368,6 +15383,102 @@
           "query"
         ],
         "title": "ShellQueryBody"
+      },
+      "Pad": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date",
+            "description": "Date of the directive"
+          },
+          "meta": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {},
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meta",
+            "description": "Metadata of the directive"
+          },
+          "account": {
+            "type": "string",
+            "title": "Account",
+            "description": "Account to pad"
+          },
+          "sourceAccount": {
+            "type": "string",
+            "title": "Source Account",
+            "description": "Account to pad from"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "account",
+          "sourceAccount"
+        ],
+        "title": "Pad",
+        "description": "A Beancount Pad directive."
+      },
+      "BulkPadEntry": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "pad",
+            "title": "Type"
+          },
+          "item": {
+            "$ref": "#/components/schemas/Pad",
+            "description": "Pad directive to add"
+          },
+          "filename": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filename",
+            "description": "Target file path (defaults to the request filename or main.bean)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "item"
+        ],
+        "title": "BulkPadEntry",
+        "description": "A pad account entry in a bulk request."
       }
     },
     "securitySchemes": {

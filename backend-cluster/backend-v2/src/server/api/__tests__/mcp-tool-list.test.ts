@@ -232,9 +232,14 @@ describe("MCP tool list", () => {
     // before the shared DELETE_INCLUDE_GUARD_DESCRIPTION). The description
     // is the shared constant every surface publishes, so trimming it on
     // MCP alone would fork the contract the parity tests pin.
+    //
+    // 108 KB since w23/m6/t010 added the `pad` entry variant and the
+    // posting `totalPrice` field to the shared entry schema: measured at
+    // 110,078 bytes. Both are typed-API surface the parity tests pin, so
+    // trimming them on MCP alone would fork the contract.
     const { tools } = await listToolsRaw();
     const bytes = Buffer.byteLength(JSON.stringify(tools), "utf8");
-    expect(bytes).toBeLessThan(107 * 1024);
+    expect(bytes).toBeLessThan(108 * 1024);
   });
 
   it("exposes each operation as its own tool, never behind a selector argument", async () => {

@@ -10,7 +10,7 @@
 | t002 | Posting cost end to end ✅ | 60m | t001 |
 | t003 | Posting meta, tags, and links end to end ✅ | 45m | t002 |
 | t009 | Open booking and balance tolerance end to end ✅ | 60m | t003 |
-| t010 | Total price and pad end to end | 60m | t009 |
+| t010 | Total price and pad end to end ✅ | 60m | t009 |
 | t004 | Document the new entry fields | 30m | t010 |
 | t005 | Adoption surface | 20m | t004 |
 | t006 | Simplify | 30m | t005 |

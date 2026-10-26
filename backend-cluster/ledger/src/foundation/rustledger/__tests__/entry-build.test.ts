@@ -591,4 +591,40 @@ describe("entryInputToText — Fava-exact serialization parity", () => {
     });
     expect(out).toContain("100 ~  0.01 USD");
   });
+
+  // w23/m6/t010: a total price renders `@@`, never divided per unit.
+  it("renders a total price on a posting", () => {
+    const out = entryInputToText({
+      type: "transaction",
+      entry: {
+        date: "2024-01-15",
+        flag: "*",
+        postings: [
+          {
+            units: { number: "10", currency: "HOOLI" },
+            account: "Assets:Broker",
+            totalPrice: { number: "1000", currency: "USD" },
+          },
+          {
+            units: { number: "-1000", currency: "USD" },
+            account: "Assets:Cash",
+          },
+        ],
+      },
+    });
+    expect(out).toContain("10 HOOLI @@ 1000 USD");
+  });
+
+  // w23/m6/t010: pad renders the source account.
+  it("renders a pad directive", () => {
+    const out = entryInputToText({
+      type: "pad",
+      entry: {
+        date: "2024-01-15",
+        account: "Assets:Cash",
+        sourceAccount: "Equity:Opening-Balances",
+      },
+    });
+    expect(out).toContain("pad Assets:Cash Equity:Opening-Balances");
+  });
 });

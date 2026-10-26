@@ -317,6 +317,27 @@
                                 ],
                                 "additionalProperties": false
                               },
+                              "totalPrice": {
+                                "type": "object",
+                                "nullable": true,
+                                "properties": {
+                                  "number": {
+                                    "type": "string",
+                                    "description": "Decimal amount",
+                                    "example": "42.50"
+                                  },
+                                  "currency": {
+                                    "type": "string",
+                                    "example": "USD"
+                                  }
+                                },
+                                "required": [
+                                  "number",
+                                  "currency"
+                                ],
+                                "additionalProperties": false,
+                                "description": "Total price (`@@`); exclusive with the per-unit price"
+                              },
                               "cost": {
                                 "type": "object",
                                 "nullable": true,
@@ -490,6 +511,44 @@
                       "required": [
                         "date",
                         "account"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "entry"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "pad"
+                      ]
+                    },
+                    "entry": {
+                      "type": "object",
+                      "properties": {
+                        "date": {
+                          "type": "string",
+                          "example": "2026-08-23"
+                        },
+                        "account": {
+                          "type": "string"
+                        },
+                        "sourceAccount": {
+                          "type": "string",
+                          "example": "Equity:Opening-Balances"
+                        }
+                      },
+                      "required": [
+                        "date",
+                        "account",
+                        "sourceAccount"
                       ],
                       "additionalProperties": false
                     }

@@ -39,6 +39,7 @@ export enum LedgerEntryType {
   BALANCE = "balance",
   OPEN = "open",
   CLOSE = "close",
+  PAD = "pad",
   BUDGET = "budget",
   DOCUMENT = "document",
   EVENT = "event",
@@ -115,6 +116,12 @@ class LedgerPostingInput {
 
   @Field(() => LedgerAmountInput, { nullable: true })
   price?: LedgerAmountInput;
+
+  @Field(() => LedgerAmountInput, {
+    nullable: true,
+    description: "Total price (`@@`); exclusive with the per-unit price",
+  })
+  totalPrice?: LedgerAmountInput;
 
   @Field(() => LedgerCostInput, {
     nullable: true,
@@ -239,6 +246,18 @@ class LedgerCloseInput {
 }
 
 @InputType()
+class LedgerPadInput {
+  @Field(() => String)
+  date: string;
+
+  @Field(() => String)
+  account: string;
+
+  @Field(() => String)
+  sourceAccount: string;
+}
+
+@InputType()
 class LedgerDocumentInput {
   @Field(() => String)
   date: string;
@@ -314,6 +333,9 @@ class AddEntryInput {
   @Field(() => LedgerCloseInput, { nullable: true })
   close?: LedgerCloseInput;
 
+  @Field(() => LedgerPadInput, { nullable: true })
+  pad?: LedgerPadInput;
+
   @Field(() => LedgerBudgetInput, { nullable: true })
   budget?: LedgerBudgetInput;
 
@@ -354,6 +376,8 @@ function toServiceEntry(input: AddEntryInput): LedgerEntryInput {
       return { type: "open", entry: requirePayload(input, input.open) };
     case LedgerEntryType.CLOSE:
       return { type: "close", entry: requirePayload(input, input.close) };
+    case LedgerEntryType.PAD:
+      return { type: "pad", entry: requirePayload(input, input.pad) };
     case LedgerEntryType.BUDGET:
       return { type: "budget", entry: requirePayload(input, input.budget) };
     case LedgerEntryType.DOCUMENT:

@@ -8,6 +8,7 @@ import {
   Balance,
   Open,
   Close,
+  Pad,
   type BcioOptionsPublic,
   unwrapFavaResponse,
 } from "@/foundation/fava";
@@ -39,6 +40,7 @@ type PostingInput = {
   tags?: string[];
   links?: string[];
   meta?: Record<string, string>;
+  totalPrice?: AmountInput;
 };
 
 type TransactionInput = {
@@ -76,6 +78,8 @@ type OpenInput = {
 };
 
 type CloseInput = { date: string; account: string };
+
+type PadInput = { date: string; account: string; sourceAccount: string };
 
 type DocumentInput = {
   date: string;
@@ -126,6 +130,14 @@ function entryAmounts(
         ...(posting.cost
           ? [[`postings[${index}].cost.number`, posting.cost.number] as const]
           : []),
+        ...(posting.totalPrice
+          ? [
+              [
+                `postings[${index}].totalPrice.number`,
+                posting.totalPrice.number,
+              ] as const,
+            ]
+          : []),
       ]);
     case "balance":
       return [
@@ -150,6 +162,7 @@ export type LedgerEntryInput =
   | { type: "balance"; entry: BalanceInput }
   | { type: "open"; entry: OpenInput }
   | { type: "close"; entry: CloseInput }
+  | { type: "pad"; entry: PadInput }
   | { type: "budget"; entry: BudgetInput }
   | { type: "document"; entry: DocumentInput }
   | { type: "event"; entry: EventInput };
@@ -194,6 +207,7 @@ const ENTRY_FILE_TYPE: Record<
   balance: "Balance",
   open: "Open",
   close: "Close",
+  pad: "Pad",
   budget: "Budget",
   document: "Document",
   event: "Event",
@@ -362,6 +376,20 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
             `entry ${index}: postings[${postingIndex}].cost needs units; a posting without an amount can't carry a cost`,
           );
         }
+        // A total price is still a price: it needs units, and it excludes
+        // the per-unit price (w23/m6/t010).
+        const hasTotalPrice =
+          posting.totalPrice !== undefined && posting.totalPrice !== null;
+        if (hasTotalPrice && !hasUnits) {
+          throw new BadUserInputError(
+            `entry ${index}: postings[${postingIndex}].totalPrice needs units; a posting without an amount can't carry a total price`,
+          );
+        }
+        if (hasTotalPrice && hasPrice) {
+          throw new BadUserInputError(
+            `entry ${index}: postings[${postingIndex}].totalPrice excludes price; a posting can't carry both`,
+          );
+        }
       });
     });
     // A malformed amount was a 500 in the ledger, reported as "service
@@ -504,6 +532,12 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
                   currency: posting.price.currency,
                 }
               : null,
+            totalPrice: posting.totalPrice
+              ? {
+                  number: posting.totalPrice.number,
+                  currency: posting.totalPrice.currency,
+                }
+              : null,
             cost: posting.cost
               ? {
                   number: posting.cost.number,
@@ -574,6 +608,14 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
           account: input.entry.account,
         };
         return { type: "close", item, filename };
+      }
+      case "pad": {
+        const item: Pad = {
+          date: input.entry.date,
+          account: input.entry.account,
+          sourceAccount: input.entry.sourceAccount,
+        };
+        return { type: "pad", item, filename };
       }
       case "budget": {
         const { entry } = input;
