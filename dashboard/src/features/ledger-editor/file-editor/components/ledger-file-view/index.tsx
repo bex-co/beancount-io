@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
-import { useQuery, useMutation } from "@apollo/client/react";
+import { useApolloClient, useQuery, useMutation } from "@apollo/client/react";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import {
@@ -25,6 +25,7 @@ import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { useFileNavigate } from "@/common/hooks/use-file-navigate";
 import { useWriteOutcome } from "@/common/hooks/use-write-outcome";
 import { getParentPath, getFilename } from "../../../shared/lib/utils";
+import { nearestSurvivingDirectory } from "../../../shared/lib/surviving-directory";
 import {
   FileLoadingView,
   FileErrorView,
@@ -71,6 +72,7 @@ export default function LedgerFileView({
   const { t } = useTranslations();
   const formatError = useErrorMessage();
   const cleanCache = useApolloCacheClear();
+  const client = useApolloClient();
   const fileNavigate = useFileNavigate();
   const navigate = useNavigate();
   const writeOutcome = useWriteOutcome(ledgerId);
@@ -225,23 +227,33 @@ export default function LedgerFileView({
             : formatError(error),
         );
       },
-      onCompleted: () => {
+      onCompleted: async () => {
         toast.success(t("ledgerEditor.fileDeletedSuccess"));
-        cleanCache();
         // The deletion counts wherever the reader went, but its success
         // navigation belongs only to the still-current file journey: a
         // reader who left for Journal stays there (w4/1091).
-        const current = viewScopeRef.current;
-        if (
-          !viewAliveRef.current ||
-          current.ledgerId !== journey.ledgerId ||
-          current.filePath !== journey.filePath
-        ) {
+        const stillCurrent = () => {
+          const current = viewScopeRef.current;
+          return (
+            viewAliveRef.current &&
+            current.ledgerId === journey.ledgerId &&
+            current.filePath === journey.filePath
+          );
+        };
+        if (!stillCurrent()) {
+          cleanCache();
           return;
         }
-        // After deletion, navigate back to parent directory
-        const parentPath = getParentPath(filePath);
-        fileNavigate(ledgerId, "dir", parentPath);
+        // Back to the parent folder, or the nearest one that survived: Git
+        // removes a folder with its last file (w4/1104).
+        const directory = await nearestSurvivingDirectory(
+          client,
+          journey.ledgerId,
+          getParentPath(journey.filePath),
+        );
+        cleanCache();
+        if (!stillCurrent()) return;
+        fileNavigate(journey.ledgerId, "dir", directory);
       },
     });
   };

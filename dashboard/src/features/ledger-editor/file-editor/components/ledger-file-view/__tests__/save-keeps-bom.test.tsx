@@ -20,6 +20,7 @@ const state = vi.hoisted(() => ({
   file: undefined as unknown,
 }));
 vi.mock("@apollo/client/react", () => ({
+  useApolloClient: () => ({ query: async () => ({ data: {} }) }),
   useQuery: () => ({
     data: {
       getLedgerFile: {

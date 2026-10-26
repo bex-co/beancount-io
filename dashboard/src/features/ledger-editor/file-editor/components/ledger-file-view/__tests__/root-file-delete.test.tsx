@@ -15,6 +15,7 @@ const { contentViewProps } = vi.hoisted(() => ({
 }));
 
 vi.mock("@apollo/client/react", () => ({
+  useApolloClient: () => ({ query: async () => ({ data: {} }) }),
   useQuery: () => ({
     data: {
       getLedgerFile: { path: "main.bean", sha: "sha", content: "" },

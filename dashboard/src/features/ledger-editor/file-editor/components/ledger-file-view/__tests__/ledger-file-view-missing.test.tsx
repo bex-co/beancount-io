@@ -20,6 +20,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@apollo/client/react", () => ({
+  useApolloClient: () => ({ query: async () => ({ data: {} }) }),
   useQuery: () => mocks.queryResult,
   useMutation: () => [vi.fn(), {}],
 }));

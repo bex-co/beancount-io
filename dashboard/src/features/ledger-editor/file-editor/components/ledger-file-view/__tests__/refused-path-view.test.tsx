@@ -14,6 +14,7 @@ const state = vi.hoisted(() => ({
 }));
 
 vi.mock("@apollo/client/react", () => ({
+  useApolloClient: () => ({ query: async () => ({ data: {} }) }),
   useQuery: (document: { definitions: { name?: { value: string } }[] }) =>
     document.definitions[0]?.name?.value === "GetLedgerFile"
       ? {
