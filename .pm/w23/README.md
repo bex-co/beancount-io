@@ -13,6 +13,7 @@
 - [x] **m7** — [Preview every mutation with dry_run](./done/m7/README.md) (9 tasks) ← promoted from `w23/095` 2026-10-26
 - [x] **m8** — [Unify bank-tool parameter naming](./done/m8/README.md) (8 tasks) ← promoted from `w23/096` 2026-10-26
 - [x] **m9** — [Unify the universal write-flag spellings](./done/m9/README.md) (8 tasks) ← promoted from `w23/097` 2026-10-26
+- [ ] **m10** — [Unify the account-journal param spellings](./m10/README.md) (8 tasks) ← promoted from `w23/098` 2026-10-26
 
 ## Dropped
 
@@ -21,7 +22,6 @@
 
 ## Inbox
 
-- [098](./098.md) — `account-journal` takes `filter_account`/`with_children` where every other resource param is camelCase
 - [099](./099.md) — resource param-validation errors hint at `tools/list` instead of the resource templates
 - [100](./100.md) — the temp-asset object key has three spellings: `receiptObjectKey`, `objectKey`, `s3ObjectKey`
 - [101](./101.md) — `renameLedgerFile` takes `message` where its file-write siblings take `description`
