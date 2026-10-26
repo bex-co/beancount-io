@@ -9,17 +9,23 @@ from ...models.get_api_gateway_v1_temp_assets_download_url_response_200 import (
     GetApiGatewayV1TempAssetsDownloadUrlResponse200,
 )
 from ...models.v1_error import V1Error
-from ...types import UNSET, Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    object_key: str,
+    object_key: str | Unset = UNSET,
+    s_3_object_key: str | Unset = UNSET,
+    receipt_object_key: str | Unset = UNSET,
 ) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
 
     params["objectKey"] = object_key
+
+    params["s3ObjectKey"] = s_3_object_key
+
+    params["receiptObjectKey"] = receipt_object_key
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -105,7 +111,9 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    object_key: str,
+    object_key: str | Unset = UNSET,
+    s_3_object_key: str | Unset = UNSET,
+    receipt_object_key: str | Unset = UNSET,
 ) -> Response[GetApiGatewayV1TempAssetsDownloadUrlResponse200 | V1Error]:
     """Create a download URL for the caller's temporary asset
 
@@ -113,7 +121,9 @@ def sync_detailed(
     selector is required.
 
     Args:
-        object_key (str):
+        object_key (str | Unset):
+        s_3_object_key (str | Unset): Alias of objectKey, as the parse routes spell it.
+        receipt_object_key (str | Unset): Alias of objectKey, as the insert path spells it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -125,6 +135,8 @@ def sync_detailed(
 
     kwargs = _get_kwargs(
         object_key=object_key,
+        s_3_object_key=s_3_object_key,
+        receipt_object_key=receipt_object_key,
     )
 
     response = client.get_httpx_client().request(
@@ -137,7 +149,9 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    object_key: str,
+    object_key: str | Unset = UNSET,
+    s_3_object_key: str | Unset = UNSET,
+    receipt_object_key: str | Unset = UNSET,
 ) -> GetApiGatewayV1TempAssetsDownloadUrlResponse200 | V1Error | None:
     """Create a download URL for the caller's temporary asset
 
@@ -145,7 +159,9 @@ def sync(
     selector is required.
 
     Args:
-        object_key (str):
+        object_key (str | Unset):
+        s_3_object_key (str | Unset): Alias of objectKey, as the parse routes spell it.
+        receipt_object_key (str | Unset): Alias of objectKey, as the insert path spells it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -158,13 +174,17 @@ def sync(
     return sync_detailed(
         client=client,
         object_key=object_key,
+        s_3_object_key=s_3_object_key,
+        receipt_object_key=receipt_object_key,
     ).parsed
 
 
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    object_key: str,
+    object_key: str | Unset = UNSET,
+    s_3_object_key: str | Unset = UNSET,
+    receipt_object_key: str | Unset = UNSET,
 ) -> Response[GetApiGatewayV1TempAssetsDownloadUrlResponse200 | V1Error]:
     """Create a download URL for the caller's temporary asset
 
@@ -172,7 +192,9 @@ async def asyncio_detailed(
     selector is required.
 
     Args:
-        object_key (str):
+        object_key (str | Unset):
+        s_3_object_key (str | Unset): Alias of objectKey, as the parse routes spell it.
+        receipt_object_key (str | Unset): Alias of objectKey, as the insert path spells it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -184,6 +206,8 @@ async def asyncio_detailed(
 
     kwargs = _get_kwargs(
         object_key=object_key,
+        s_3_object_key=s_3_object_key,
+        receipt_object_key=receipt_object_key,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -194,7 +218,9 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    object_key: str,
+    object_key: str | Unset = UNSET,
+    s_3_object_key: str | Unset = UNSET,
+    receipt_object_key: str | Unset = UNSET,
 ) -> GetApiGatewayV1TempAssetsDownloadUrlResponse200 | V1Error | None:
     """Create a download URL for the caller's temporary asset
 
@@ -202,7 +228,9 @@ async def asyncio(
     selector is required.
 
     Args:
-        object_key (str):
+        object_key (str | Unset):
+        s_3_object_key (str | Unset): Alias of objectKey, as the parse routes spell it.
+        receipt_object_key (str | Unset): Alias of objectKey, as the insert path spells it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -216,5 +244,7 @@ async def asyncio(
         await asyncio_detailed(
             client=client,
             object_key=object_key,
+            s_3_object_key=s_3_object_key,
+            receipt_object_key=receipt_object_key,
         )
     ).parsed
