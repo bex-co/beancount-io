@@ -1,5 +1,5 @@
 import { useContext, useRef, useState } from "react";
-import { useLocation, Link } from "@tanstack/react-router";
+import { useHydrated, useLocation, Link } from "@tanstack/react-router";
 import {
   BookOpen,
   CircleHelp,
@@ -70,6 +70,9 @@ export function LayoutHeader({
   const returnPath = useSafeReturnPath();
   const { searchParams } = useContext(LedgerSearchParamsContext);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  // The sheet opens from client state, so a click before hydration does
+  // nothing and is not replayed; the trigger waits until it can (w4/1101).
+  const hydrated = useHydrated();
   const filtersOpenerRef = useRef<HTMLButtonElement>(null);
   const inlineFiltersRef = useRef<HTMLDivElement>(null);
   // The header can change layout while the filter sheet is open (a wider
@@ -126,6 +129,7 @@ export function LayoutHeader({
                     size="sm"
                     className="@min-[52rem]/ledger-header:hidden"
                     aria-label={t("component.searchControls.filters")}
+                    disabled={!hydrated}
                   >
                     <ListFilter className="h-4 w-4" />
                     <span className="ml-1.5 hidden xs:inline">

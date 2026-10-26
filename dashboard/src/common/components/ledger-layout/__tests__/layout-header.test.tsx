@@ -8,6 +8,7 @@ const locationMock = vi.hoisted(() => ({
 }));
 
 vi.mock("@tanstack/react-router", () => ({
+  useHydrated: () => true,
   useLocation: () => locationMock,
   useRouterState: ({ select }: { select: (state: unknown) => unknown }) =>
     select({
