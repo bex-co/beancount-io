@@ -236,6 +236,40 @@ describe("filterDirectives — AdvancedFilter parity", () => {
     ).toEqual([]);
   });
 
+  // w23/m2: a deliberate deviation from Fava, where bare `account:` sees
+  // only directives that HAVE an account attribute and silently misses
+  // every transaction. Here it also scans posting accounts, like the
+  // top-level `account` param agents already use.
+  it("matches account: against posting accounts as well as directive accounts", () => {
+    const txn = {
+      type: "transaction",
+      date: "2024-05-01",
+      flag: "*",
+      payee: "Bank",
+      narration: "deposit",
+      tags: [],
+      links: [],
+      postings: [
+        { account: "Assets:Bank:Checking", units: { number: "1", currency: "USD" } },
+        { account: "Income:Salary", units: { number: "-1", currency: "USD" } },
+      ],
+    } as DirectiveJson;
+    const open = {
+      type: "open",
+      date: "2024-01-01",
+      account: "Assets:Bank:Checking",
+      currencies: ["USD"],
+    } as DirectiveJson;
+    expect(filterDirectives([txn, open], { filter: "account:Checking" })).toEqual([
+      txn,
+      open,
+    ]);
+    expect(filterDirectives([txn, open], { filter: "account:Salary" })).toEqual([
+      txn,
+    ]);
+    expect(filterDirectives([txn, open], { filter: "account:Nope" })).toEqual([]);
+  });
+
   it("accepts Unicode unquoted filter words", () => {
     const unicode: DirectiveJson[] = [
       {

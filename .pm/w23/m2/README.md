@@ -1,12 +1,12 @@
 # w23 · m2 — Fix the journal filter mini-language
 
-**Worker:** worker1 **Goal:** journal `filter` finds what it claims: `account:` scans transaction postings, `tag:`/`link:` match entry tags/links, full `a:b:c` paths are expressible, and the syntax is documented on every surface **Status:** todo
+**Worker:** worker1 **Goal:** journal `filter` finds what it claims: `account:` scans transaction postings, `tag:`/`link:` match entry tags/links, full `a:b:c` paths are expressible, and the syntax is documented on every surface **Status:** in progress
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
-| t001 | Match account: against transaction postings | 45m | — |
+| t001 | Match account: against transaction postings ✅ | 45m | — |
 | t002 | Match tag: and link: against entry tags/links | 45m | — |
 | t003 | Accept quoted values with colons | 30m | — |
 | t004 | Document the filter language | 30m | t001, t002, t003 |

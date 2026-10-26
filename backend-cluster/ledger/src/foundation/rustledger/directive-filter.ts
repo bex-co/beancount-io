@@ -19,7 +19,9 @@ import { utcDate } from "./utc-date";
  *  - AdvancedFilter — the tag/link/string/key DSL, parsed with the same grammar
  *    (`#tag`, `^link`, bare/`"quoted"` strings, `key:str`, `key<op>num`,
  *    `<op>num`, `any(...)`, `all(...)`, `-` negation, `,` OR, juxtaposition AND,
- *    and parentheses).
+ *    and parentheses). One deliberate deviation: bare `account:` also scans
+ *    transaction postings (see `keyPredicate`), where Fava sees only
+ *    directives that have an `account` attribute.
  *  - TimeFilter (date range only) — keep entries whose date is inside the parsed
  *    `[begin, end)` range. See the note below on Fava's summarization gap.
  *
@@ -825,9 +827,15 @@ function postingAttribute(posting: PostingJson, key: string): AttributeLookup {
  * otherwise, if `key` is in `obj.meta`, match the meta value. Meta values that
  * are not plain strings are stringified the way Python's `str()` renders them
  * for the common cases.
+ *
+ * Deviation (w23/m2): bare `account:` also scans a transaction's postings.
+ * Fava-faithful directive-only matching silently misses every transaction —
+ * a Transaction has no `account` attribute — while agents expect the field
+ * to find postings like the top-level `account` param does. Explicit
+ * `any(account:…)` is unaffected: posting targets take the direct path.
  */
 function keyPredicate(key: string, match: FilterValueMatcher): EntryPredicate {
-  return (target): boolean => {
+  const direct: EntryPredicate = (target): boolean => {
     const attribute =
       target.kind === "directive"
         ? directiveAttribute(target.directive, key)
@@ -842,6 +850,14 @@ function keyPredicate(key: string, match: FilterValueMatcher): EntryPredicate {
       return match(meta[key]);
     }
     return false;
+  };
+  if (key !== "account") return direct;
+  return (target): boolean => {
+    if (direct(target)) return true;
+    if (target.kind !== "directive") return false;
+    return getPostings(target.directive).some((posting) =>
+      direct({ kind: "posting", posting }),
+    );
   };
 }
 
