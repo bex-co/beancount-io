@@ -19,6 +19,19 @@ import {
   SheetTrigger,
 } from "@/common/components/ui/sheet";
 
+const PAGE_SIZE = 30;
+
+/** How far the list has been continued, for the list length it produced. */
+interface Continuation {
+  count: number;
+  pages: number;
+  lastPageSize: number | null;
+  loadedOlderCount: number | null;
+  failed: boolean;
+  /** Whether the list has rendered at `count` since this was recorded. */
+  shown: boolean;
+}
+
 interface CommitsSplitViewProps {
   ledgerId: string;
   selectedCommitSha?: string;
@@ -44,13 +57,10 @@ function CommitsWorkspace({
   const { t } = useTranslations();
   const navigate = useNavigate();
   const [historyOpen, setHistoryOpen] = useState(false);
-  const page = useRef(1);
   const paging = useRef(false);
   const active = useRef(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [paginationError, setPaginationError] = useState(false);
-  const [lastPageSize, setLastPageSize] = useState<number | null>(null);
-  const [loadedOlderCount, setLoadedOlderCount] = useState<number | null>(null);
+  const [continuation, setContinuation] = useState<Continuation | null>(null);
   const [ledgerOwner, ledgerName] = ledgerId.split("/");
   // Another commit is loading: the layout keeps this workspace mounted, so
   // the detail pane says so instead of showing the previous diff (w4/246).
@@ -85,7 +95,7 @@ function CommitsWorkspace({
       ledgerId,
       branch: "main",
       page: 1,
-      limit: 30,
+      limit: PAGE_SIZE,
     },
     // A newly mounted ledger starts with a fresh first page and cursor.
     fetchPolicy: "network-only",
@@ -98,48 +108,85 @@ function CommitsWorkspace({
   const firstPage = useQueryRetry(commitsError, refetch);
 
   const commits = commitsData?.listCommits || [];
-  const hasMore = (lastPageSize ?? commits.length) >= 30;
+  // Paging state belongs to the list it produced. Refresh replaces the list
+  // with a fresh first page while this workspace stays mounted, so once that
+  // list has shown and then changed, the continuation is stale and the next
+  // page is 2 again (w4/1095). Until it has shown, it still applies: Apollo
+  // can render the old list once more after a page's merge.
+  if (
+    continuation &&
+    !continuation.shown &&
+    continuation.count === commits.length
+  ) {
+    setContinuation({ ...continuation, shown: true });
+  }
+  const current =
+    continuation &&
+    (!continuation.shown || continuation.count === commits.length)
+      ? continuation
+      : null;
+  const pagesLoaded = current?.pages ?? 1;
+  const hasMore = (current?.lastPageSize ?? commits.length) >= PAGE_SIZE;
 
   const loadOlder = async () => {
     if (paging.current || !hasMore) return;
     paging.current = true;
     setLoadingMore(true);
-    setLoadedOlderCount(null);
+    setContinuation(
+      (previous) => previous && { ...previous, loadedOlderCount: null },
+    );
+    const base = commits.length;
     const previousShas = new Set(commits.map((commit) => commit.sha));
+    let mergedCount: number | null = null;
     try {
       const result = await fetchMore({
-        variables: { page: page.current + 1 },
+        variables: { page: pagesLoaded + 1 },
         // A request from an unmounted ledger must not merge into a later
-        // visit's fresh first page, even when Apollo still completes it.
-        updateQuery: (previous, { fetchMoreResult }) =>
-          active.current
-            ? {
-                ...previous,
-                listCommits: Array.from(
-                  new Map(
-                    [
-                      ...previous.listCommits,
-                      ...fetchMoreResult.listCommits,
-                    ].map((commit) => [commit.sha, commit]),
-                  ).values(),
-                ),
-              }
-            : previous,
+        // visit's fresh first page, even when Apollo still completes it, and
+        // one that started before a Refresh must not merge into the
+        // refreshed list.
+        updateQuery: (previous, { fetchMoreResult }) => {
+          if (!active.current || previous.listCommits?.length !== base) {
+            return previous;
+          }
+          const listCommits = Array.from(
+            new Map(
+              [...previous.listCommits, ...fetchMoreResult.listCommits].map(
+                (commit) => [commit.sha, commit],
+              ),
+            ).values(),
+          );
+          mergedCount = listCommits.length;
+          return { ...previous, listCommits };
+        },
       });
       if (!active.current) return;
       if (!result.data) throw new Error("Missing commit history page");
-      page.current += 1;
-      setLastPageSize(result.data.listCommits.length);
-      setLoadedOlderCount(
-        new Set(
+      if (mergedCount === null) return;
+      const count = mergedCount;
+      setContinuation({
+        count,
+        pages: pagesLoaded + 1,
+        lastPageSize: result.data.listCommits.length,
+        loadedOlderCount: new Set(
           result.data.listCommits
             .filter((commit) => !previousShas.has(commit.sha))
             .map((commit) => commit.sha),
         ).size,
-      );
-      setPaginationError(false);
+        failed: false,
+        shown: false,
+      });
     } catch {
-      if (active.current) setPaginationError(true);
+      if (active.current) {
+        setContinuation({
+          count: base,
+          pages: pagesLoaded,
+          lastPageSize: current?.lastPageSize ?? null,
+          loadedOlderCount: null,
+          failed: true,
+          shown: false,
+        });
+      }
     } finally {
       paging.current = false;
       if (active.current) setLoadingMore(false);
@@ -177,8 +224,8 @@ function CommitsWorkspace({
       retrying={firstPage.retrying}
       hasMore={hasMore}
       loadingMore={loadingMore}
-      paginationError={paginationError}
-      loadedOlderCount={loadedOlderCount}
+      paginationError={current?.failed ?? false}
+      loadedOlderCount={current?.loadedOlderCount ?? null}
       onLoadMore={loadOlder}
     />
   );

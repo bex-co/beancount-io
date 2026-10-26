@@ -146,7 +146,7 @@ async function mountHistory({
     name: "ListCommits",
     variables: { ledgerId: "alice/books", branch: "main", page: 1, limit: 30 },
   });
-  return { requests, router, user: userEvent.setup() };
+  return { requests, router, client, user: userEvent.setup() };
 }
 
 async function resolve(request: CommitRequest, data: ListCommitsQuery) {
@@ -164,6 +164,19 @@ function expectHistory(count: number, prefix = "a") {
     );
   });
   return links;
+}
+
+/** Page 1 after a newer commit lands: the new head, then a000–a028. */
+function refreshedFirstPage(): ListCommitsQuery {
+  return {
+    listCommits: [...page(0, 1, "n").listCommits, ...page(0, 29).listCommits],
+  };
+}
+
+function historyShas() {
+  return screen
+    .getAllByTestId("commit-list-item")
+    .map((link) => link.getAttribute("href")!.split("/").at(-1));
 }
 
 describe("commit history pagination through Apollo", () => {
@@ -426,5 +439,75 @@ describe("commit history pagination through Apollo", () => {
     expect(requests[7].variables).toEqual(oldPage.variables);
     await resolve(requests[7], page(60, 7));
     await waitFor(() => expectHistory(67));
+  });
+
+  it("continues from page 2 after Refresh replaces two pages with a fresh first page (w4/1095)", async () => {
+    const { requests, client, user } = await mountHistory();
+    await resolve(requests[0], page(0, 30));
+    await waitFor(() => expectHistory(30));
+    await user.click(
+      screen.getByRole("button", { name: en["commits.loadOlder"] }),
+    );
+    await waitFor(() => expect(requests).toHaveLength(2));
+    await resolve(requests[1], page(30, 30));
+    await waitFor(() => expectHistory(60));
+
+    // Out of date → Refresh evicts the root query, as useApolloCacheClear does.
+    act(() => {
+      client.cache.evict({ id: "ROOT_QUERY" });
+    });
+    await waitFor(() => expect(requests).toHaveLength(3));
+    expect(requests[2].variables.page).toBe(1);
+    await resolve(requests[2], refreshedFirstPage());
+    await waitFor(() => expect(historyShas()).toHaveLength(30));
+
+    await user.click(
+      screen.getByRole("button", { name: en["commits.loadOlder"] }),
+    );
+    await waitFor(() => expect(requests).toHaveLength(4));
+    expect(requests[3].variables.page).toBe(2);
+    await resolve(requests[3], page(29, 30));
+    await waitFor(() => expect(historyShas()).toHaveLength(60));
+    expect(historyShas()).toEqual([
+      sha(0, "n"),
+      ...Array.from({ length: 59 }, (_, index) => sha(index)),
+    ]);
+  });
+
+  it("drops a continuation that was pending when Refresh replaced the list (w4/1095)", async () => {
+    const { requests, client, user } = await mountHistory();
+    await resolve(requests[0], page(0, 30));
+    await waitFor(() => expectHistory(30));
+    await user.click(
+      screen.getByRole("button", { name: en["commits.loadOlder"] }),
+    );
+    await waitFor(() => expect(requests).toHaveLength(2));
+    await resolve(requests[1], page(30, 30));
+    await waitFor(() => expectHistory(60));
+    await user.click(
+      screen.getByRole("button", { name: en["commits.loadOlder"] }),
+    );
+    await waitFor(() => expect(requests).toHaveLength(3));
+    const stale = requests[2];
+    expect(stale.variables.page).toBe(3);
+
+    act(() => {
+      client.cache.evict({ id: "ROOT_QUERY" });
+    });
+    // The old generation's page 3 lands after the eviction; it must not be
+    // merged into whatever list replaces the evicted one.
+    await resolve(stale, page(60, 30));
+    await waitFor(() => expect(requests).toHaveLength(4));
+    expect(requests[3].variables.page).toBe(1);
+    await resolve(requests[3], refreshedFirstPage());
+    await waitFor(() => expect(historyShas()).toHaveLength(30));
+    expect(historyShas()[0]).toBe(sha(0, "n"));
+    expect(screen.queryByText("Synthetic a change 60")).not.toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: en["commits.loadOlder"] }),
+    );
+    await waitFor(() => expect(requests).toHaveLength(5));
+    expect(requests[4].variables.page).toBe(2);
   });
 });
