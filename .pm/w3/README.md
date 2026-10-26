@@ -86,7 +86,7 @@
 
 - [x] **m56** — [Variance explanation in `beancount-ask`, reused by `beancount-close`](./done/m56/README.md) (6 tasks) ← `/pm-brainstorm w3` 2026-10-20 candidate 4, from ADR020 P1
 
-- [ ] **m57** — [`beancount-accruals`: supported accrual drafts with explicit period policy](./m57/README.md) (7 tasks) ← `/pm-brainstorm w3` 2026-10-20 candidate 5, from ADR020 P1 — sequenced after m55, m56
+- [x] **m57** — [`beancount-accruals`: supported accrual drafts with explicit period policy](./done/m57/README.md) (7 tasks) ← `/pm-brainstorm w3` 2026-10-20 candidate 5, from ADR020 P1 — sequenced after m55, m56
 
 - [ ] **m58** — [Reconciliation exception register in `beancount-reconcile`, summarized by `beancount-close`](./m58/README.md) (6 tasks) ← `/pm-brainstorm w3` 2026-10-20 candidate 6, from ADR020 P1 — sequenced after w2/m48 closeout
 

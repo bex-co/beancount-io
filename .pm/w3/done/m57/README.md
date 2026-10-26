@@ -1,18 +1,18 @@
 # w3 · m57 — `beancount-accruals`: supported accrual drafts with explicit period policy
 
-**Worker:** worker3 **Goal:** a new customer skill prepares deterministic, idempotent accrual drafts under an explicit period policy, posted only through the suite's existing propose/confirm/check flow. **Status:** todo (remaining t005, t006, t007)
+**Worker:** worker3 **Goal:** a new customer skill prepares deterministic, idempotent accrual drafts under an explicit period policy, posted only through the suite's existing propose/confirm/check flow. **Status:** done
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| [t001](done/t001.md) | Define the schedule contract and deterministic calculation reference — **DONE** | 75m | — |
-| [t002](done/t002.md) | Write the accruals skill with stable schedule identity — **DONE** | 90m | t001 |
-| [t003](done/t003.md) | Write evals for partial periods, reversals, invoices, and reruns — **DONE** | 60m | t002 |
-| [t004](done/t004.md) | Adoption surface — **DONE** | 30m | t003 |
-| t005 | Simplify | 15m | t004 |
-| t006 | Test coverage | 45m | t004 |
-| t007 | Closeout | 10m | t005, t006 |
+| t001 | Define the schedule contract and deterministic calculation reference — **DONE** | 75m | — |
+| t002 | Write the accruals skill with stable schedule identity — **DONE** | 90m | t001 |
+| t003 | Write evals for partial periods, reversals, invoices, and reruns — **DONE** | 60m | t002 |
+| t004 | Adoption surface — **DONE** | 30m | t003 |
+| t005 | Simplify — **DONE** | 15m | t004 |
+| t006 | Test coverage — **DONE** | 45m | t004 |
+| t007 | Closeout — **DONE** | 10m | t005, t006 |
 
 ## Definition of done
 
@@ -33,3 +33,7 @@
 - **t003** — Claude Code evals pass 5/5; the Codex runs are quota-blocked at the account level. Unblock condition is written in t003.
 
 The stale Codex quota condition is cleared by successful native runs recorded in `t003` and source `703fe36ca`; current client/source limits remain in the dated evidence. Continue the remaining tasks above.
+
+## Closeout (2026-10-26)
+
+All seven tasks done; the milestone's definition of done was verified observably at close (see t007). Closed by this task.
