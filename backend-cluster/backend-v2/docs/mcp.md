@@ -817,8 +817,13 @@ can run to hundreds of kilobytes — while REST and GraphQL return every entry,
 the export the dashboard downloads.
 
 Account journal requires `account`, accepts `filter`, `time`, `limit`, `offset`,
-`with_children`, and `conversion`, and defaults to 20 entries, offset 0,
-`with_children=true`, and `conversion=at_cost`. Source files returns filenames
+`conversion`, the AccountFilter `filter_account` (or `filterAccount`),
+and `with_children` (or `withChildren`), and defaults to 20 entries, offset 0,
+`with_children=true`, and `conversion=at_cost`. Both spellings of the two
+params work on every surface — the camel twins are accepted on the MCP
+resource and REST query, the snake twins on the GraphQL input — and passing
+both spellings with two different values is refused with `BAD_USER_INPUT`
+rather than guessed. Source files returns filenames
 from the ledger service, rather than a repository directory listing.
 
 Additional report resources are `overview`, `documents`, `accounts`,
