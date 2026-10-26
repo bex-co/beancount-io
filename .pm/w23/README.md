@@ -9,7 +9,7 @@
 - [x] **m3** — [Unify mutation-tool parameter naming](./done/m3/README.md) (7 tasks) ← promoted from `w23/090` 2026-10-26
 - [x] **m4** — [Guard deleting an included file](./done/m4/README.md) (7 tasks) ← promoted from `w23/091` 2026-10-26
 - [x] **m5** — [Handle oversize BQL queries](./done/m5/README.md) (8 tasks) ← promoted from `w23/092` 2026-10-26
-- [ ] **m6** — [Complete the typed entry schema](./m6/README.md) (8 tasks) ← promoted from `w23/094` 2026-10-26
+- [ ] **m6** — [Complete the typed entry schema](./m6/README.md) (10 tasks) ← promoted from `w23/094` 2026-10-26
 
 ## Dropped
 

@@ -6,10 +6,12 @@
 
 | id | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
-| t001 | Posting cost and total price | 60m | — |
-| t002 | Posting tags, links, and meta | 45m | t001 |
-| t003 | Open booking, balance tolerance, pad | 60m | t002 |
-| t004 | Document the new entry fields | 30m | t003 |
+| t001 | Spike — map each gap to its layers ✅ | 30m | — |
+| t002 | Posting cost end to end | 60m | t001 |
+| t003 | Posting meta, tags, and links end to end | 45m | t002 |
+| t009 | Open booking and balance tolerance end to end | 60m | t003 |
+| t010 | Total price and pad end to end | 60m | t009 |
+| t004 | Document the new entry fields | 30m | t010 |
 | t005 | Adoption surface | 20m | t004 |
 | t006 | Simplify | 30m | t005 |
 | t007 | Test coverage | 45m | t005 |
