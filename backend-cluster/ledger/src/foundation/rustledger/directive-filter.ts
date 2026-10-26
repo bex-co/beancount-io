@@ -434,6 +434,14 @@ function lex(data: string): FilterToken[] {
       pos += 1;
       continue;
     }
+    // A stray quote is an unterminated or misplaced quoted value — name the
+    // fix (w23/m2/t003). The grammar has no escape sequences, so a quote is
+    // only legal wrapping a whole value.
+    if (char === '"' || char === "'") {
+      throw new AdvancedFilterParseError(
+        `Unterminated or misplaced quote — wrap the whole value in matching quotes, e.g. key:"a:b"`,
+      );
+    }
     // Fava raises FilterIllegalCharError; we fail the whole parse (keep-all).
     throw new AdvancedFilterParseError(`Illegal character "${char}"`);
   }
@@ -483,6 +491,13 @@ class FilterParser {
   public parse(): EntryPredicate {
     const expr = this.parseOr();
     if (this.pos !== this.tokens.length) {
+      // An unquoted colon inside a value parses as a second lookup, leaving
+      // `:…` trailing — point at quoting (w23/m2/t003).
+      if (this.tokens[this.pos]?.type === "EQ_OP") {
+        throw new AdvancedFilterParseError(
+          `Trailing tokens — a ":" starts a new lookup; quote values containing colons, e.g. account:"Assets:Bank:Checking"`,
+        );
+      }
       throw new AdvancedFilterParseError("Trailing tokens");
     }
     return expr;

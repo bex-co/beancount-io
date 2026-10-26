@@ -319,6 +319,49 @@ describe("filterDirectives — AdvancedFilter parity", () => {
     ).toThrow(/link:qal1nk/);
   });
 
+  // w23/m2/t003: a full a:b:c path is expressible quoted; the grammar has
+  // no escape sequences, so quoting is the only way to carry a colon.
+  it("matches a quoted full account path", () => {
+    const txn = {
+      type: "transaction",
+      date: "2024-05-01",
+      flag: "*",
+      narration: "deposit",
+      tags: [],
+      links: [],
+      postings: [
+        { account: "Assets:Bank:Checking", units: { number: "1", currency: "USD" } },
+        { account: "Income:Salary", units: { number: "-1", currency: "USD" } },
+      ],
+    } as DirectiveJson;
+    expect(
+      filterDirectives([txn], { filter: 'account:"Assets:Bank:Checking"' }),
+    ).toEqual([txn]);
+    expect(
+      filterDirectives([txn], { filter: "account:'Assets:Bank:Checking'" }),
+    ).toEqual([txn]);
+    expect(
+      filterDirectives([txn], { filter: 'account:"Assets:Bank:Savings"' }),
+    ).toEqual([]);
+  });
+
+  // w23/m2/t003: an unquoted colon is a second lookup, not part of the
+  // value — the refusal must say so and point at quoting.
+  it("hints at quoting when an unquoted value carries a colon", () => {
+    expect(() =>
+      filterDirectives(DIRECTIVES, { filter: "account:Assets:Bank:Checking" }),
+    ).toThrow(/quote/);
+  });
+
+  // w23/m2/t003: malformed quotes refuse with a quote-specific error.
+  it("refuses malformed quotes with a quote-specific error", () => {
+    for (const bad of ['account:"Checking', "account:'Checking", 'tag:"a']) {
+      expect(() => filterDirectives(DIRECTIVES, { filter: bad })).toThrow(
+        /[Qq]uot/,
+      );
+    }
+  });
+
   it("accepts Unicode unquoted filter words", () => {
     const unicode: DirectiveJson[] = [
       {
