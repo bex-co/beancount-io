@@ -245,6 +245,8 @@ async function fixture(caller = identity) {
     // w23/m9/t002: the twin spelling, sent only by the spelling tests.
     dry_run?: boolean;
     allowInvalid?: boolean;
+    // w23/m9/t003: the errors twin, likewise raw-only.
+    allow_invalid?: boolean;
   };
   return {
     state,
@@ -275,7 +277,7 @@ async function fixture(caller = identity) {
       if (surface === "gql") {
         const result = await graphql({
           schema,
-          source: `mutation { appendLedgerText(ledgerId: "alice/main", text: ${JSON.stringify(args.text)}${args.path ? `, path: ${JSON.stringify(args.path)}` : ""}${args.dryRun !== undefined ? `, dryRun: ${args.dryRun}` : ""}${args.dry_run !== undefined ? `, dry_run: ${args.dry_run}` : ""}${args.allowInvalid ? ", allowInvalid: true" : ""}) { success message dryRun count wrote { path line } entryHashes diff { path diff } errorsBefore errorsAfter newErrors { message } appendedUnsorted } }`,
+          source: `mutation { appendLedgerText(ledgerId: "alice/main", text: ${JSON.stringify(args.text)}${args.path ? `, path: ${JSON.stringify(args.path)}` : ""}${args.dryRun !== undefined ? `, dryRun: ${args.dryRun}` : ""}${args.dry_run !== undefined ? `, dry_run: ${args.dry_run}` : ""}${args.allowInvalid !== undefined ? `, allowInvalid: ${args.allowInvalid}` : ""}${args.allow_invalid !== undefined ? `, allow_invalid: ${args.allow_invalid}` : ""}) { success message dryRun count wrote { path line } entryHashes diff { path diff } errorsBefore errorsAfter newErrors { message } appendedUnsorted } }`,
           contextValue: {
             identity: caller,
             getCurrentIdentity: () => caller,
@@ -302,7 +304,16 @@ async function fixture(caller = identity) {
                   : {}),
               }
             : { ...(args.dryRun && { dry_run: true }) }),
-          ...(args.allowInvalid && { allowInvalid: true }),
+          ...(raw
+            ? {
+                ...(args.allowInvalid !== undefined
+                  ? { allowInvalid: args.allowInvalid }
+                  : {}),
+                ...(args.allow_invalid !== undefined
+                  ? { allow_invalid: args.allow_invalid }
+                  : {}),
+              }
+            : { ...(args.allowInvalid && { allowInvalid: true }) }),
         },
       });
       const structured = result.structuredContent as Record<string, never>;
@@ -532,6 +543,46 @@ describe("appending Beancount text through the real adapters", () => {
             data.newErrors,
         ).toHaveLength(1);
         expect(f.changeLedgerFiles).toHaveBeenCalledTimes(1);
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
+  // w23/m9/t003: the allow_invalid twin records like allowInvalid.
+  it.each(["rest", "gql", "mcp"] as const)(
+    "commits an invalid directive under the allow_invalid twin via %s",
+    async (surface) => {
+      const f = await fixture();
+      f.state.projectedErrors = [
+        { message: "Transaction does not balance: residual 5 USD" },
+      ];
+      try {
+        const result = await f.call(
+          surface,
+          { text: TXN, allow_invalid: true },
+          true,
+        );
+        expect(result.ok).toBe(true);
+        expect(f.changeLedgerFiles).toHaveBeenCalledTimes(1);
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
+  it.each(["rest", "gql", "mcp"] as const)(
+    "refuses one true and one false errors flag via %s",
+    async (surface) => {
+      const f = await fixture();
+      try {
+        const result = await f.call(
+          surface,
+          { text: TXN, allowInvalid: false, allow_invalid: true },
+          true,
+        );
+        expect(result.ok).toBe(false);
+        expect(f.changeLedgerFiles).not.toHaveBeenCalled();
       } finally {
         await f.close();
       }

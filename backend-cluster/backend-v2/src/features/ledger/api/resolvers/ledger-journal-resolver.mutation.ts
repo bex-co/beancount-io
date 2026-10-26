@@ -14,6 +14,7 @@ import type { ILedgerJournalService } from "@/features/ledger/service/ledger-jou
 import { resolveEntryHash } from "@/features/ledger/utils/entry-hash-alias";
 import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 import {
+  ALLOW_INVALID_NAMES,
   DRY_RUN_NAMES,
   resolveFlagAlias,
 } from "@/features/ledger/utils/flag-alias";
@@ -38,6 +39,13 @@ class DeleteSourceSliceInput {
       "Delete the entry even when that would add bean-check errors (VALIDATION_FAILED), instead of refusing",
   })
   allowInvalid?: boolean;
+
+  // Twin (w23/m9/t003): no surface spells it `allow_invalid` yet.
+  @Field(() => Boolean, {
+    nullable: true,
+    description: "Alias of allowInvalid.",
+  })
+  allow_invalid?: boolean;
 
   @Field(() => Boolean, {
     nullable: true,
@@ -105,6 +113,13 @@ class DeleteMultiSourceSlicesInput {
   })
   allowInvalid?: boolean;
 
+  // Twin (w23/m9/t003): no surface spells it `allow_invalid` yet.
+  @Field(() => Boolean, {
+    nullable: true,
+    description: "Alias of allowInvalid.",
+  })
+  allow_invalid?: boolean;
+
   @Field(() => Boolean, {
     nullable: true,
     description: PREVIEW_FLAG_DESCRIPTION,
@@ -158,6 +173,13 @@ class UpdateSourceSliceInput {
       "Commit the edit even when it would add bean-check errors (VALIDATION_FAILED), instead of refusing",
   })
   allowInvalid?: boolean;
+
+  // Twin (w23/m9/t003): no surface spells it `allow_invalid` yet.
+  @Field(() => Boolean, {
+    nullable: true,
+    description: "Alias of allowInvalid.",
+  })
+  allow_invalid?: boolean;
 
   @Field(() => Boolean, {
     nullable: true,
@@ -216,7 +238,10 @@ export class LedgerJournalMutationResolver {
       identity: ctx.getCurrentIdentity(),
       entryHash: resolveEntryHash(input),
       sha256sum: input.sha256sum,
-      allowInvalid: input.allowInvalid ?? false,
+      allowInvalid: resolveFlagAlias(
+        { primary: input.allow_invalid, legacy: input.allowInvalid },
+        ALLOW_INVALID_NAMES,
+      ),
       dryRun: resolveFlagAlias(
         { primary: input.dry_run, legacy: input.dryRun },
         DRY_RUN_NAMES,
@@ -243,7 +268,10 @@ export class LedgerJournalMutationResolver {
         entryHash: resolveEntryHash(e),
         sha256sum: e.sha256sum,
       })),
-      allowInvalid: input.allowInvalid ?? false,
+      allowInvalid: resolveFlagAlias(
+        { primary: input.allow_invalid, legacy: input.allowInvalid },
+        ALLOW_INVALID_NAMES,
+      ),
       dryRun: resolveFlagAlias(
         { primary: input.dry_run, legacy: input.dryRun },
         DRY_RUN_NAMES,
@@ -268,7 +296,10 @@ export class LedgerJournalMutationResolver {
       sha256sum: input.sha256sum,
       newContent: input.newContent,
       platform: ctx.platform,
-      allowInvalid: input.allowInvalid ?? false,
+      allowInvalid: resolveFlagAlias(
+        { primary: input.allow_invalid, legacy: input.allowInvalid },
+        ALLOW_INVALID_NAMES,
+      ),
       dryRun: resolveFlagAlias(
         { primary: input.dry_run, legacy: input.dryRun },
         DRY_RUN_NAMES,

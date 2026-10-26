@@ -278,6 +278,7 @@ async function fixture(
       batch = entries,
       opts: {
         allowInvalid?: boolean;
+        allow_invalid?: boolean;
         dryRun?: boolean;
         dry_run?: boolean;
       } = {},
@@ -285,7 +286,7 @@ async function fixture(
       raw = false,
     ) => {
       if (surface === "rest") {
-        const { dry_run: _stripped, ...restOpts } = opts;
+        const { dry_run: _s1, allow_invalid: _s2, ...restOpts } = opts;
         const sent = raw ? opts : restOpts;
         const response = await fetch(
           `${rest.url}/api-gateway/v1/ledgers/alice/main/entries`,
@@ -313,8 +314,8 @@ async function fixture(
         const response = await graphql({
           schema,
           source: previewing
-            ? 'mutation($entries:[AddEntryInput!]!,$allowInvalid:Boolean,$dryRun:Boolean,$dry_run:Boolean) { bulkEntries(ledgerId:"alice/main",entries:$entries,allowInvalid:$allowInvalid,dryRun:$dryRun,dry_run:$dry_run) { success message dryRun entryHashes preview { path text } } }'
-            : 'mutation($entries:[AddEntryInput!]!,$allowInvalid:Boolean) { bulkEntries(ledgerId:"alice/main",entries:$entries,allowInvalid:$allowInvalid) { success message entryHashes } }',
+            ? 'mutation($entries:[AddEntryInput!]!,$allowInvalid:Boolean,$allow_invalid:Boolean,$dryRun:Boolean,$dry_run:Boolean) { bulkEntries(ledgerId:"alice/main",entries:$entries,allowInvalid:$allowInvalid,allow_invalid:$allow_invalid,dryRun:$dryRun,dry_run:$dry_run) { success message dryRun entryHashes preview { path text } } }'
+            : 'mutation($entries:[AddEntryInput!]!,$allowInvalid:Boolean,$allow_invalid:Boolean) { bulkEntries(ledgerId:"alice/main",entries:$entries,allowInvalid:$allowInvalid,allow_invalid:$allow_invalid) { success message entryHashes } }',
           variableValues: { entries: input, ...opts },
           contextValue: {
             identity: caller,
@@ -330,7 +331,7 @@ async function fixture(
       }
       // MCP spells the preview flag dry_run; the camel twin rides
       // along only when the spelling test sends it raw (w23/m9/t002).
-      const { dryRun: _stripped, ...mcpOpts } = opts;
+      const { dryRun: _s1, allow_invalid: _s2, ...mcpOpts } = opts;
       const sent = raw ? opts : mcpOpts;
       const response = await client.callTool({
         name: "addLedgerEntries",
@@ -573,6 +574,56 @@ describe.each(["rest", "gql", "mcp"])(
             },
           });
         }
+      } finally {
+        await f.close();
+      }
+    });
+
+    // w23/m9/t003: the allow_invalid twin records like allowInvalid.
+    it("writes the imbalance with the allow_invalid twin", async () => {
+      const f = await fixture(identity, [
+        [],
+        [
+          {
+            message: "Transaction does not balance: residual 5 USD",
+            source: { filename: "main.bean", lineno: 73 },
+          },
+        ],
+      ]);
+      try {
+        const result = await f.call(
+          surface,
+          unbalancedBatch,
+          {
+            allow_invalid: true,
+          },
+          true,
+        );
+        expect(result.success).toBe(true);
+        expect(f.committed).toHaveLength(1);
+        expect(f.write.mock.calls[0]?.[2]).toMatchObject({
+          allowInvalid: true,
+        });
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("refuses one true and one false errors flag", async () => {
+      const f = await fixture();
+      try {
+        const result = await f.call(
+          surface,
+          unbalancedBatch,
+          {
+            allowInvalid: false,
+            allow_invalid: true,
+          },
+          true,
+        );
+        expect(result.success).toBe(false);
+        expect(f.committed).toEqual([]);
+        expect(f.write).not.toHaveBeenCalled();
       } finally {
         await f.close();
       }

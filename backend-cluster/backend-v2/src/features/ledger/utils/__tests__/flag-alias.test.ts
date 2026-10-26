@@ -1,5 +1,9 @@
 import { BadUserInputError } from "@/shared/errors";
-import { DRY_RUN_NAMES, resolveFlagAlias } from "../flag-alias";
+import {
+  ALLOW_INVALID_NAMES,
+  DRY_RUN_NAMES,
+  resolveFlagAlias,
+} from "../flag-alias";
 
 // w23/m9/t002: the one preview-flag spelling rule.
 describe("resolveFlagAlias", () => {
@@ -43,5 +47,23 @@ describe("resolveFlagAlias", () => {
     expect(() =>
       resolveFlagAlias({ primary: true, legacy: false }, DRY_RUN_NAMES),
     ).toThrow(/dry_run.*dryRun/);
+  });
+});
+
+// w23/m9/t003: the same rule covers the commit-despite-errors flag.
+describe("resolveFlagAlias with ALLOW_INVALID_NAMES", () => {
+  it("accepts either spelling, off when both are missing", () => {
+    expect(resolveFlagAlias({ primary: true }, ALLOW_INVALID_NAMES)).toBe(true);
+    expect(resolveFlagAlias({ legacy: true }, ALLOW_INVALID_NAMES)).toBe(true);
+    expect(resolveFlagAlias({}, ALLOW_INVALID_NAMES)).toBe(false);
+  });
+
+  it("refuses a split pair naming both spellings", () => {
+    expect(() =>
+      resolveFlagAlias({ primary: true, legacy: false }, ALLOW_INVALID_NAMES),
+    ).toThrow(BadUserInputError);
+    expect(() =>
+      resolveFlagAlias({ primary: false, legacy: true }, ALLOW_INVALID_NAMES),
+    ).toThrow(/allow_invalid.*allowInvalid/);
   });
 });

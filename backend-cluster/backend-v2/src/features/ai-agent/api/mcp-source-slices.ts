@@ -9,6 +9,7 @@ import {
 } from "@/features/ledger/api/rest/v1/source-slice-handler";
 import { resolveEntryHash } from "@/features/ledger/utils/entry-hash-alias";
 import {
+  ALLOW_INVALID_NAMES,
   DRY_RUN_NAMES,
   resolveFlagAlias,
 } from "@/features/ledger/utils/flag-alias";
@@ -137,7 +138,10 @@ export const SOURCE_SLICE_EXECUTORS = {
           entryHash,
           sha256sum: args.sha256sum,
           newContent: args.newContent,
-          allowInvalid: args.allowInvalid,
+          allowInvalid: resolveFlagAlias(
+            { primary: args.allow_invalid, legacy: args.allowInvalid },
+            ALLOW_INVALID_NAMES,
+          ),
           dryRun: resolveFlagAlias(
             { primary: args.dry_run, legacy: args.dryRun },
             DRY_RUN_NAMES,
@@ -166,7 +170,10 @@ export const SOURCE_SLICE_EXECUTORS = {
           ledgerId,
           entryHash,
           sha256sum: args.sha256sum,
-          allowInvalid: args.allowInvalid,
+          allowInvalid: resolveFlagAlias(
+            { primary: args.allow_invalid, legacy: args.allowInvalid },
+            ALLOW_INVALID_NAMES,
+          ),
           dryRun: resolveFlagAlias(
             { primary: args.dry_run, legacy: args.dryRun },
             DRY_RUN_NAMES,
@@ -180,7 +187,7 @@ export const SOURCE_SLICE_EXECUTORS = {
     );
   },
   delete_many: (context: McpRequestContext, input: unknown) => {
-    const { ledger, entries, allowInvalid, dry_run, dryRun } =
+    const { ledger, entries, allowInvalid, allow_invalid, dry_run, dryRun } =
       SOURCE_SLICE_OPERATION_SCHEMAS.delete_many.parse(input);
     const ledgerId = resolveMcpLedger(context, ledger);
     const resolved = entries.map((entry) => ({
@@ -195,7 +202,10 @@ export const SOURCE_SLICE_EXECUTORS = {
           identity: context.identity,
           ledgerId,
           entries: resolved,
-          allowInvalid,
+          allowInvalid: resolveFlagAlias(
+            { primary: allow_invalid, legacy: allowInvalid },
+            ALLOW_INVALID_NAMES,
+          ),
           dryRun: resolveFlagAlias(
             { primary: dry_run, legacy: dryRun },
             DRY_RUN_NAMES,

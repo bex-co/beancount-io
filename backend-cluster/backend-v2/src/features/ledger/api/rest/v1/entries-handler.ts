@@ -15,6 +15,7 @@ import {
 } from "@/features/ledger/utils/entry-field-descriptions";
 import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 import {
+  ALLOW_INVALID_NAMES,
   DRY_RUN_NAMES,
   resolveFlagAlias,
 } from "@/features/ledger/utils/flag-alias";
@@ -193,6 +194,11 @@ export const entriesBodySchema = z
       description:
         "Record entries deliberately even when they are unbalanced (UNBALANCED) or would add bean-check errors such as a second open for an open account (VALIDATION_FAILED), instead of refusing them",
     }),
+    // Twin (w23/m9/t003): no surface spells it `allow_invalid` yet — the
+    // twin exists so snake_case callers need not memorize the exception.
+    allow_invalid: nullToUndefined(z.boolean()).optional().openapi({
+      description: "Alias of allowInvalid.",
+    }),
     dryRun: nullToUndefined(z.boolean()).optional().openapi({
       description: PREVIEW_FLAG_DESCRIPTION,
     }),
@@ -235,6 +241,10 @@ const directiveTextBodySchema = z
     allowInvalid: nullToUndefined(z.boolean()).optional().openapi({
       description:
         "Commit even when the text introduces new bean-check errors, instead of refusing with UNBALANCED or VALIDATION_FAILED",
+    }),
+    // Twin (w23/m9/t003): see the entries body above.
+    allow_invalid: nullToUndefined(z.boolean()).optional().openapi({
+      description: "Alias of allowInvalid.",
     }),
   })
   .openapi("DirectiveTextRequest", {
@@ -312,7 +322,10 @@ export const ENTRY_ROUTES = [
         // re-checked here; a second implementation of the rule is how the two
         // drift apart.
         "web",
-        body.allowInvalid ?? false,
+        resolveFlagAlias(
+          { primary: body.allow_invalid, legacy: body.allowInvalid },
+          ALLOW_INVALID_NAMES,
+        ),
         resolveFlagAlias(
           { primary: body.dry_run, legacy: body.dryRun },
           DRY_RUN_NAMES,
@@ -353,7 +366,10 @@ export const ENTRY_ROUTES = [
             { primary: body.dry_run, legacy: body.dryRun },
             DRY_RUN_NAMES,
           ),
-          allowInvalid: body.allowInvalid ?? false,
+          allowInvalid: resolveFlagAlias(
+            { primary: body.allow_invalid, legacy: body.allowInvalid },
+            ALLOW_INVALID_NAMES,
+          ),
         },
       ),
   }),

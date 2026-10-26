@@ -30,6 +30,7 @@ import {
 } from "@/features/ledger/utils/entry-field-descriptions";
 import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 import {
+  ALLOW_INVALID_NAMES,
   DRY_RUN_NAMES,
   resolveFlagAlias,
 } from "@/features/ledger/utils/flag-alias";
@@ -507,6 +508,12 @@ export class LedgerEntryMutationResolver {
         "Record entries deliberately even when they are unbalanced (UNBALANCED) or would add bean-check errors such as a second open for an open account (VALIDATION_FAILED), instead of refusing them",
     })
     allowInvalid?: boolean,
+    // Twin (w23/m9/t003): no surface spells it `allow_invalid` yet.
+    @Arg("allow_invalid", () => Boolean, {
+      nullable: true,
+      description: "Alias of allowInvalid.",
+    })
+    allow_invalid?: boolean,
     @Arg("dryRun", () => Boolean, {
       nullable: true,
       description: PREVIEW_FLAG_DESCRIPTION,
@@ -525,7 +532,10 @@ export class LedgerEntryMutationResolver {
       ledgerName,
       entries.map(toServiceEntry),
       ctx.platform,
-      allowInvalid ?? false,
+      resolveFlagAlias(
+        { primary: allow_invalid, legacy: allowInvalid },
+        ALLOW_INVALID_NAMES,
+      ),
       resolveFlagAlias({ primary: dry_run, legacy: dryRun }, DRY_RUN_NAMES),
     );
     return {
@@ -570,6 +580,12 @@ export class LedgerEntryMutationResolver {
       description: "Commit even when the text introduces new bean-check errors",
     })
     allowInvalid?: boolean,
+    // Twin (w23/m9/t003): no surface spells it `allow_invalid` yet.
+    @Arg("allow_invalid", () => Boolean, {
+      nullable: true,
+      description: "Alias of allowInvalid.",
+    })
+    allow_invalid?: boolean,
   ): Promise<AppendDirectiveTextResponse> {
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const result = await this.ledgerEntry.appendDirectiveText(
@@ -583,7 +599,10 @@ export class LedgerEntryMutationResolver {
           { primary: dry_run, legacy: dryRun },
           DRY_RUN_NAMES,
         ),
-        allowInvalid: allowInvalid ?? false,
+        allowInvalid: resolveFlagAlias(
+          { primary: allow_invalid, legacy: allowInvalid },
+          ALLOW_INVALID_NAMES,
+        ),
       },
     );
     return {

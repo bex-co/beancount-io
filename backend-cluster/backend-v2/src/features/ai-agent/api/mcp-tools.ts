@@ -2,6 +2,7 @@ import { entriesBodySchema } from "@/features/ledger/api/rest/v1/entries-handler
 import { parseLedgerId } from "@/shared/str";
 import { resolveCommitMessage } from "@/features/ledger/utils/commit-message-alias";
 import {
+  ALLOW_INVALID_NAMES,
   DRY_RUN_NAMES,
   resolveFlagAlias,
 } from "@/features/ledger/utils/flag-alias";
@@ -407,6 +408,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
         ledger,
         entries,
         allowInvalid,
+        allow_invalid,
         dry_run,
         dryRun: dryRunFlag,
       } = addLedgerEntriesInput.parse(input);
@@ -428,7 +430,10 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
             ledgerName,
             entries,
             "web",
-            allowInvalid ?? false,
+            resolveFlagAlias(
+              { primary: allow_invalid, legacy: allowInvalid },
+              ALLOW_INVALID_NAMES,
+            ),
             resolveFlagAlias(
               { primary: dry_run, legacy: dryRunFlag },
               DRY_RUN_NAMES,

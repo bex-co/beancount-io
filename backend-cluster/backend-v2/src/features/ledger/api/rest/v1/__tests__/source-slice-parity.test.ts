@@ -932,6 +932,43 @@ describe.each(["rest", "gql", "mcp"])(
           await f.close();
         }
       });
+
+      // w23/m9/t003: the allow_invalid twin commits like allowInvalid.
+      it("commits the same request with the allow_invalid twin", async () => {
+        const f = await fixture();
+        f.state.breaks = true;
+        try {
+          const result = await f.call(surface, operation, {
+            ...args(operation),
+            allow_invalid: true,
+          });
+          expect(result.success).toBe(true);
+          if (operation === "update") {
+            expect(f.slices.get("entry1")).toBe("; replacement café\n");
+          } else {
+            expect(f.slices.has("entry1")).toBe(false);
+          }
+        } finally {
+          await f.close();
+        }
+      });
+
+      it("refuses one true and one false errors flag", async () => {
+        const f = await fixture();
+        f.state.breaks = true;
+        const before = [...f.slices];
+        try {
+          const result = await f.call(surface, operation, {
+            ...args(operation),
+            allowInvalid: false,
+            allow_invalid: true,
+          });
+          expect(result.success).toBe(false);
+          expect([...f.slices]).toEqual(before);
+        } finally {
+          await f.close();
+        }
+      });
     });
   },
 );

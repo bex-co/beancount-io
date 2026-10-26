@@ -9,9 +9,17 @@ import { BadUserInputError } from "@/shared/errors";
  *
  * `DRY_RUN_NAMES` are positional labels: the `dry_run` value always goes
  * in `primary`, the `dryRun` value in `legacy`, on every surface. Neither
- * wins — a split pair throws.
+ * wins — a split pair throws. The same rule covers the
+ * commit-despite-errors flag (w23/m9/t003), uniform `allowInvalid` with a
+ * novel `allow_invalid` twin.
  */
 export const DRY_RUN_NAMES = { primary: "dry_run", legacy: "dryRun" } as const;
+
+/** The commit-despite-errors twin, same positional convention. */
+export const ALLOW_INVALID_NAMES = {
+  primary: "allow_invalid",
+  legacy: "allowInvalid",
+} as const;
 
 export function resolveFlagAlias(
   values: { primary?: boolean | null; legacy?: boolean | null },

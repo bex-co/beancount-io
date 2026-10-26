@@ -906,6 +906,11 @@
             "nullable": true,
             "description": "Record entries deliberately even when they are unbalanced (UNBALANCED) or would add bean-check errors such as a second open for an open account (VALIDATION_FAILED), instead of refusing them"
           },
+          "allow_invalid": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Alias of allowInvalid."
+          },
           "dryRun": {
             "type": "boolean",
             "nullable": true,
@@ -950,6 +955,11 @@
             "type": "boolean",
             "nullable": true,
             "description": "Commit even when the text introduces new bean-check errors, instead of refusing with UNBALANCED or VALIDATION_FAILED"
+          },
+          "allow_invalid": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Alias of allowInvalid."
           }
         },
         "required": [
@@ -11194,6 +11204,10 @@
                     "type": "boolean",
                     "description": "Commit even when the write would add bean-check errors (VALIDATION_FAILED with newLedgerErrors), instead of refusing it."
                   },
+                  "allow_invalid": {
+                    "type": "boolean",
+                    "description": "Alias of allowInvalid."
+                  },
                   "dryRun": {
                     "type": "boolean",
                     "description": "Run every check and return the preview without committing"
@@ -11425,6 +11439,10 @@
                     "type": "boolean",
                     "description": "Commit even when the write would add bean-check errors (VALIDATION_FAILED with newLedgerErrors), instead of refusing it."
                   },
+                  "allow_invalid": {
+                    "type": "boolean",
+                    "description": "Alias of allowInvalid."
+                  },
                   "dryRun": {
                     "type": "boolean",
                     "description": "Run every check and return the preview without committing"
@@ -11643,6 +11661,10 @@
                   "allowInvalid": {
                     "type": "boolean",
                     "description": "Commit even when the write would add bean-check errors (VALIDATION_FAILED with newLedgerErrors), instead of refusing it."
+                  },
+                  "allow_invalid": {
+                    "type": "boolean",
+                    "description": "Alias of allowInvalid."
                   },
                   "dryRun": {
                     "type": "boolean",

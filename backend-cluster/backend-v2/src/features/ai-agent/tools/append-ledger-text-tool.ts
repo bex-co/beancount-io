@@ -10,6 +10,7 @@ import {
 import { toolOutputSchema, withWriteOutcome } from "./types";
 import { runToolSafely } from "../utils/run-tool";
 import {
+  ALLOW_INVALID_NAMES,
   DRY_RUN_NAMES,
   resolveFlagAlias,
 } from "@/features/ledger/utils/flag-alias";
@@ -45,7 +46,9 @@ export const appendLedgerTextInputSchema = z
       .boolean()
       .optional()
       .describe("Alias of dry_run, as REST and GraphQL spell it."),
-    allowInvalid: z.boolean().optional().default(false),
+    allowInvalid: z.boolean().optional(),
+    // Twin (w23/m9/t003): no surface spells it `allow_invalid` yet.
+    allow_invalid: z.boolean().optional().describe("Alias of allowInvalid."),
     ledger: ledgerSelection,
   })
   .strict();
@@ -86,7 +89,10 @@ export async function executeAppendLedgerText(
             { primary: args.dry_run, legacy: args.dryRun },
             DRY_RUN_NAMES,
           ),
-          allowInvalid: args.allowInvalid,
+          allowInvalid: resolveFlagAlias(
+            { primary: args.allow_invalid, legacy: args.allowInvalid },
+            ALLOW_INVALID_NAMES,
+          ),
         },
       );
       const validation = {

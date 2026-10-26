@@ -3,6 +3,7 @@ import { v1Route } from "@/server/rest/v1-route";
 import { json } from "@/server/rest/v1-schemas";
 import { resolveEntryHash } from "@/features/ledger/utils/entry-hash-alias";
 import {
+  ALLOW_INVALID_NAMES,
   DRY_RUN_NAMES,
   resolveFlagAlias,
 } from "@/features/ledger/utils/flag-alias";
@@ -26,6 +27,9 @@ const allowInvalid = z
   .describe(
     "Commit even when the write would add bean-check errors (VALIDATION_FAILED with newLedgerErrors), instead of refusing it.",
   );
+// Twin (w23/m9/t003): no surface spells it `allow_invalid` yet — the
+// twin exists so snake_case callers need not memorize the exception.
+const allow_invalid = z.boolean().optional().describe("Alias of allowInvalid.");
 const dryRun = z.boolean().optional().describe(PREVIEW_FLAG_DESCRIPTION);
 // Twin (w23/m9/t002): MCP spells it `dry_run`.
 const dry_run = z
@@ -34,6 +38,7 @@ const dry_run = z
   .describe("Alias of dryRun, as MCP spells it.");
 export const deleteSliceInput = sliceRef.extend({
   allowInvalid,
+  allow_invalid,
   dryRun,
   dry_run,
 });
@@ -41,6 +46,7 @@ export const deleteSlicesInput = z
   .object({
     entries: z.array(sliceRef),
     allowInvalid,
+    allow_invalid,
     dryRun,
     dry_run,
   })
@@ -97,7 +103,10 @@ export const SOURCE_SLICE_ROUTES = [
           ledgerId: ledgerIdOf(params),
           entryHash: resolveEntryHash(body),
           sha256sum: body.sha256sum,
-          allowInvalid: body.allowInvalid,
+          allowInvalid: resolveFlagAlias(
+            { primary: body.allow_invalid, legacy: body.allowInvalid },
+            ALLOW_INVALID_NAMES,
+          ),
           dryRun: resolveFlagAlias(
             { primary: body.dry_run, legacy: body.dryRun },
             DRY_RUN_NAMES,
@@ -123,7 +132,10 @@ export const SOURCE_SLICE_ROUTES = [
             entryHash: resolveEntryHash(entry),
             sha256sum: entry.sha256sum,
           })),
-          allowInvalid: body.allowInvalid,
+          allowInvalid: resolveFlagAlias(
+            { primary: body.allow_invalid, legacy: body.allowInvalid },
+            ALLOW_INVALID_NAMES,
+          ),
           dryRun: resolveFlagAlias(
             { primary: body.dry_run, legacy: body.dryRun },
             DRY_RUN_NAMES,
@@ -150,7 +162,10 @@ export const SOURCE_SLICE_ROUTES = [
           entryHash: resolveEntryHash(body),
           sha256sum: body.sha256sum,
           newContent: body.newContent,
-          allowInvalid: body.allowInvalid,
+          allowInvalid: resolveFlagAlias(
+            { primary: body.allow_invalid, legacy: body.allowInvalid },
+            ALLOW_INVALID_NAMES,
+          ),
           dryRun: resolveFlagAlias(
             { primary: body.dry_run, legacy: body.dryRun },
             DRY_RUN_NAMES,
