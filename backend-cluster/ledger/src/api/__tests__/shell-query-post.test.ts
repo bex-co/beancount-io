@@ -102,14 +102,35 @@ describe("shell query POST twins (w23/m5/t002)", () => {
     expect(received[0]?.text).toBe(true);
   });
 
-  it("reads a missing body query as the empty query, like the GET twin", async () => {
+  it.each([{}, { query: 42 }, { query: null }])(
+    "reads a missing or non-string body query (%j) as the empty query, like the GET twin",
+    async (body) => {
+      const res = await fetch(`${url}/shell/o/r/query`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      expect(res.status).toBe(200);
+      expect(received[0]?.query).toBe("");
+    },
+  );
+
+  // w23/m5/t007: the note's exact complaint — a unicode-heavy query whose
+  // URL encoding would 431 past the parser cliff (~36 KB encoded here)
+  // arrives intact in a POST body.
+  it("runs a unicode-heavy long query from a POST body", async () => {
+    const query = `SELECT '${"é".repeat(6000)}'`;
+    expect(Buffer.byteLength(encodeURIComponent(query))).toBeGreaterThan(
+      16384,
+    );
     const res = await fetch(`${url}/shell/o/r/query`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({}),
+      body: JSON.stringify({ query }),
     });
     expect(res.status).toBe(200);
-    expect(received[0]?.query).toBe("");
+    expect(received).toHaveLength(1);
+    expect(received[0]?.query).toBe(query);
   });
 
   it("keeps serving short queries over GET", async () => {
