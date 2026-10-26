@@ -114,6 +114,11 @@ type BudgetInput = {
  */
 const DECIMAL_NUMBER = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/;
 
+/** An optional field counts as set unless it is null or undefined. */
+function isPresent(value: unknown): boolean {
+  return value !== undefined && value !== null;
+}
+
 /** Every amount an entry carries, with the field path a refusal names. */
 function entryAmounts(
   input: LedgerEntryInput,
@@ -360,17 +365,14 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
       // posting elided with the price silently gone. Refuse it here, naming
       // the posting, on every surface at once (w23/079).
       input.entry.postings.forEach((posting, postingIndex) => {
-        const hasUnits =
-          posting.units !== undefined && posting.units !== null;
-        const hasPrice =
-          posting.price !== undefined && posting.price !== null;
+        const hasUnits = isPresent(posting.units);
+        const hasPrice = isPresent(posting.price);
         if (hasPrice && !hasUnits) {
           throw new BadUserInputError(
             `entry ${index}: postings[${postingIndex}].price needs units; a posting without an amount can't carry a price`,
           );
         }
-        const hasCost =
-          posting.cost !== undefined && posting.cost !== null;
+        const hasCost = isPresent(posting.cost);
         if (hasCost && !hasUnits) {
           throw new BadUserInputError(
             `entry ${index}: postings[${postingIndex}].cost needs units; a posting without an amount can't carry a cost`,
@@ -378,8 +380,7 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
         }
         // A total price is still a price: it needs units, and it excludes
         // the per-unit price (w23/m6/t010).
-        const hasTotalPrice =
-          posting.totalPrice !== undefined && posting.totalPrice !== null;
+        const hasTotalPrice = isPresent(posting.totalPrice);
         if (hasTotalPrice && !hasUnits) {
           throw new BadUserInputError(
             `entry ${index}: postings[${postingIndex}].totalPrice needs units; a posting without an amount can't carry a total price`,
