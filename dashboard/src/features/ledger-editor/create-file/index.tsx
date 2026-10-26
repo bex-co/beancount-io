@@ -2,7 +2,12 @@ import { PageHeader } from "@/common/components/page-header";
 import { RelatedLinks } from "@/common/components/related-links";
 import { getLedgerFilesRootPath } from "@/common/hooks/use-file-navigate";
 import { useEffect, useRef, useState } from "react";
-import { useParams, useNavigate, useBlocker } from "@tanstack/react-router";
+import {
+  useBlocker,
+  useHydrated,
+  useNavigate,
+  useParams,
+} from "@tanstack/react-router";
 import { isLanguageOnlyTransition } from "@/common/lib/router/language-only-transition";
 import { useMutation } from "@apollo/client/react";
 import { useRefreshDirectory } from "@/features/ledger-editor/shared/hooks/use-refresh-directory";
@@ -67,6 +72,7 @@ const CreateFilePage = () => {
   // (browser Back). A confirmed departure leaves focus to its destination
   // (w4/1035).
   const filenameRef = useRef<HTMLInputElement>(null);
+  const hydrated = useHydrated();
   const departureOpenerRef = useRef<HTMLElement | null>(null);
   const leavingRef = useRef(false);
   // Leaving this page or its folder ends the creation journey, so an older
@@ -238,7 +244,10 @@ const CreateFilePage = () => {
                 onChange={(e) => {
                   if (!savingRef.current) setFilename(e.target.value);
                 }}
-                readOnly={isSaving}
+                // Before hydration there is no onChange to keep what is typed,
+                // and hydration would wipe it; read-only still takes the
+                // autofocus, so typing starts here once ready (w4/1100).
+                readOnly={isSaving || !hydrated}
                 className="flex-1 min-w-0"
                 autoFocus
                 aria-invalid={Boolean(filenameError)}

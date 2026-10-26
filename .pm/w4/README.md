@@ -18,8 +18,6 @@
 
 - **1101** — [Enable Filters only when its sheet can open](./1101.md)
 
-- **1100** — [Retain early Create File filename typing](./1100.md)
-
 - **1031** — Use actual lot cost currencies in Net Worth valuation disclosures (45–60m dashboard after dependency, A2/A3) ← dashboard QA; residual of m26 ([note](./blocked/1031.md)) — **blocked:** approved lot-specific valuation read
 
 
