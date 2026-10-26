@@ -106,6 +106,16 @@ beforeEach(() => {
   parseMock.mockImplementation(async () => ({ directives: [], errors: [] }));
 });
 
+/** A located slice: one 3-line transaction block at `startLine`. */
+const located = (text: string, startLine: number, localOccurrence: number) => ({
+  file: "main.bean",
+  slice: text,
+  sha256: sliceSha256(text),
+  startLine,
+  endLine: startLine + 3,
+  localOccurrence,
+});
+
 describe("overlapped updates on one unique entry", () => {
   it.each([1, 2, 3, 4, 5])(
     "round %i leaves one entry with the winner's content and fails the loser",
@@ -119,14 +129,7 @@ describe("overlapped updates on one unique entry", () => {
         managedPrices: [],
         managedPricePaths: [],
       }));
-      findMock.mockImplementation(async () => ({
-        file: "main.bean",
-        slice: txn("Lunch"),
-        sha256: sliceSha256(txn("Lunch")),
-        startLine: 3,
-        endLine: 6,
-        localOccurrence: 0,
-      }));
+      findMock.mockImplementation(async () => located(txn("Lunch"), 3, 0));
       const sha = sliceSha256(txn("Lunch"));
       const attempt = (narration: string) =>
         svc
@@ -165,14 +168,7 @@ describe("overlapped updates on identical twins", () => {
       managedPrices: [],
       managedPricePaths: [],
     }));
-    findMock.mockImplementation(async () => ({
-      file: "main.bean",
-      slice: txn("Lunch"),
-      sha256: sliceSha256(txn("Lunch")),
-      startLine: 3,
-      endLine: 6,
-      localOccurrence: 0,
-    }));
+    findMock.mockImplementation(async () => located(txn("Lunch"), 3, 0));
     const sha = sliceSha256(txn("Lunch"));
     const update = (narration: string) =>
       svc.updateSourceSlice({
@@ -195,14 +191,7 @@ describe("overlapped updates on identical twins", () => {
     // The documented retry loop: re-read the addressed entry's fresh sha
     // and resend — the retry commits (w23/m1/t004).
     frozen = null;
-    findMock.mockImplementation(async () => ({
-      file: "main.bean",
-      slice: txn("AAA"),
-      sha256: sliceSha256(txn("AAA")),
-      startLine: 3,
-      endLine: 6,
-      localOccurrence: 0,
-    }));
+    findMock.mockImplementation(async () => located(txn("AAA"), 3, 0));
     await svc.updateSourceSlice({
       ledgerId: "alice/main",
       userId: "user-1",
@@ -224,14 +213,7 @@ describe("overlapped updates on identical twins", () => {
       managedPrices: [],
       managedPricePaths: [],
     }));
-    findMock.mockImplementation(async () => ({
-      file: "main.bean",
-      slice: txn("Lunch"),
-      sha256: sliceSha256(txn("Lunch")),
-      startLine: 8,
-      endLine: 11,
-      localOccurrence: 1,
-    }));
+    findMock.mockImplementation(async () => located(txn("Lunch"), 8, 1));
     await svc.updateSourceSlice({
       ledgerId: "alice/main",
       userId: "user-1",
@@ -260,14 +242,7 @@ describe("overlapped updates on identical twins", () => {
         managedPricePaths: [],
       };
     });
-    findMock.mockImplementation(async () => ({
-      file: "main.bean",
-      slice: txn("Lunch"),
-      sha256: sliceSha256(txn("Lunch")),
-      startLine: 3,
-      endLine: 6,
-      localOccurrence: 0,
-    }));
+    findMock.mockImplementation(async () => located(txn("Lunch"), 3, 0));
     const sha = sliceSha256(txn("Lunch"));
     // An unrelated raced edit rotates one twin before the delete commits.
     await svc.updateSourceSlice({

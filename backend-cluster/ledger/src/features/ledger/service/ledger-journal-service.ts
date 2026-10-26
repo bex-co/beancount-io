@@ -152,6 +152,26 @@ function countShaMatches(fileText: string, sha256: string): number {
   return count;
 }
 
+/**
+ * A re-location target rooted in the LOCATE snapshot: the twin count MUST
+ * come from `files` (the snapshot the slice was found in), never from fresh
+ * content — counting at relocate time would bless whatever raced in (w23/m1).
+ */
+function sliceTarget(
+  files: FileMap,
+  found: Pick<EntrySlice, "file" | "localOccurrence" | "startLine">,
+  base: string,
+  sha256sum: string,
+): SliceTarget {
+  return {
+    base,
+    localOccurrence: found.localOccurrence,
+    sha256sum,
+    startLine: found.startLine,
+    matchCount: countShaMatches(files[found.file] ?? "", sha256sum),
+  };
+}
+
 const STALE_TARGET = "it has changed since it was loaded; refresh and retry";
 
 /**
@@ -986,13 +1006,12 @@ export class LedgerJournalService implements ILedgerJournalService {
       [
         found.file,
         makeDeleteTransform(found.file, [
-          {
-            base: parseEntryId(sourceEntryHash).base,
-            localOccurrence: found.localOccurrence,
+          sliceTarget(
+            files,
+            found,
+            parseEntryId(sourceEntryHash).base,
             sha256sum,
-            startLine: found.startLine,
-            matchCount: countShaMatches(files[found.file] ?? "", sha256sum),
-          },
+          ),
         ]),
       ],
     ]);
@@ -1056,16 +1075,12 @@ export class LedgerJournalService implements ILedgerJournalService {
       if (seenTargets.has(identity)) return;
       seenTargets.add(identity);
       deletedHashes.push(entries[index].entryHash);
-      const target: SliceTarget = {
+      const target: SliceTarget = sliceTarget(
+        files,
+        slice,
         base,
-        localOccurrence: slice.localOccurrence,
-        sha256sum: entries[index].sha256sum,
-        startLine: slice.startLine,
-        matchCount: countShaMatches(
-          files[slice.file] ?? "",
-          entries[index].sha256sum,
-        ),
-      };
+        entries[index].sha256sum,
+      );
       const list = byFile.get(slice.file);
       if (list) list.push(target);
       else byFile.set(slice.file, [target]);
@@ -1124,13 +1139,12 @@ export class LedgerJournalService implements ILedgerJournalService {
         found.file,
         makeReplaceTransform(
           found.file,
-          {
-            base: parseEntryId(sourceEntryHash).base,
-            localOccurrence: found.localOccurrence,
+          sliceTarget(
+            files,
+            found,
+            parseEntryId(sourceEntryHash).base,
             sha256sum,
-            startLine: found.startLine,
-            matchCount: countShaMatches(files[found.file] ?? "", sha256sum),
-          },
+          ),
           newContent,
           (result) => {
             applied.current = result;
