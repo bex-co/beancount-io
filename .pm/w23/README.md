@@ -15,6 +15,7 @@
 - [x] **m9** — [Unify the universal write-flag spellings](./done/m9/README.md) (8 tasks) ← promoted from `w23/097` 2026-10-26
 - [x] **m10** — [Unify the account-journal param spellings](./done/m10/README.md) (8 tasks) ← promoted from `w23/098` 2026-10-26
 - [x] **m11** — [Unify the temp-asset object-key spellings](./done/m11/README.md) (8 tasks) ← promoted from `w23/100` 2026-10-26
+- [ ] **m12** — [Refuse unknown keys on every REST GET query](./m12/README.md) (8 tasks) ← promoted from `w23/113` 2026-10-26
 
 ## Dropped
 
@@ -23,7 +24,6 @@
 
 ## Inbox
 
-- [113](./113.md) — every validated REST GET query schema silently drops unknown keys (32 routes verified; w23/112 pattern repo-wide; MCP/GraphQL strict)
 - [114](./114.md) — REST file writes take no `dryRun` while MCP previews them (m9/t001 follow-up; flags exist only on MCP)
 - [115](./115.md) — quoted `FROM "<table>"` names are silently ignored (any quoted name returns postings scope, even nonexistent tables; w23/109's quoted bypass is unsafe)
 - [116](./116.md) — with-clause `FROM` resolves table-first where stock resolves column-first (`FROM accounts`: bare 34, +LIMIT 12, +WHERE errors; stock 34 in all forms)
