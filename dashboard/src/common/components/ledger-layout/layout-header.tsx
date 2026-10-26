@@ -42,20 +42,7 @@ import { UserNav } from "../user-nav.tsx";
 import { ImportDropdown } from "./import-dropdown.tsx";
 import { LedgerOutOfDateIndicator } from "./ledger-out-of-date-indicator";
 import { LedgerWritePermission } from "../ledger-permission/write.tsx";
-
-function shouldShowLedgerFilters(pathname: string): boolean {
-  return (
-    /^\/ledger\/[^/]+\/[^/]+\/?$/.test(pathname) ||
-    pathname.includes("/journal") ||
-    pathname.includes("/income-statement") ||
-    pathname.includes("/balance-sheet") ||
-    pathname.includes("/trial-balance") ||
-    pathname.includes("/account/") ||
-    pathname.includes("/events") ||
-    pathname.includes("/statistics") ||
-    pathname.includes("/cash-flow")
-  );
-}
+import { shouldShowLedgerFilters } from "./ledger-filter-pages";
 
 export function LayoutHeader({
   ledgerId,

@@ -163,6 +163,23 @@ describe("LayoutHeader", () => {
     expect(screen.getByText("1")).toBeInTheDocument();
   });
 
+  it("offers no report filters for a Files page named journal.txt (w4/1102)", () => {
+    for (const file of ["journal.txt", "notes.txt"]) {
+      locationMock.pathname = `/ledger/alice/book/files/blob/main/qa-route-scope/${file}`;
+      const { unmount } = render(<LayoutHeader ledgerId="alice/book" />);
+      expect(screen.queryByText(/Ledger search/)).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: "Filters" }),
+      ).not.toBeInTheDocument();
+      unmount();
+    }
+
+    locationMock.pathname = "/ledger/alice/book/journal";
+    render(<LayoutHeader ledgerId="alice/book" />);
+    expect(screen.getByText("Ledger search (inline)")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Filters" })).toBeInTheDocument();
+  });
+
   it("returns a signed-out visitor to this page, query and fragment (w4/237)", () => {
     locationMock.pathname = "/ledger/open_ledger/example/journal";
     Object.assign(locationMock, {
