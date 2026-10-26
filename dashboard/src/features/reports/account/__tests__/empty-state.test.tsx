@@ -10,6 +10,7 @@ import AccountPage from "../index";
 vi.mock("@apollo/client/react", () => ({ useQuery: vi.fn() }));
 
 vi.mock("@tanstack/react-router", () => ({
+  useHydrated: () => true,
   useParams: () => ({
     ledgerOwner: "demo",
     ledgerName: "empty",

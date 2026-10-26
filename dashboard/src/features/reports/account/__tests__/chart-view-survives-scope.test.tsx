@@ -33,6 +33,7 @@ const router = vi.hoisted(() => {
 vi.mock("@tanstack/react-router", async () => {
   const { useSyncExternalStore } = await import("react");
   return {
+    useHydrated: () => true,
     useParams: () => ({
       ledgerOwner: "open_ledger",
       ledgerName: "crypto-example",

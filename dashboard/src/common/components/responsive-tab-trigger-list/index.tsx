@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { useHydrated } from "@tanstack/react-router";
 import { Label } from "@/common/components/ui/label.tsx";
 import {
   Select,
@@ -31,6 +32,10 @@ export const ResponsiveTabTriggerList = ({
   const { t } = useTranslations();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
+  // Both forms switch views from client state; a choice before hydration
+  // attaches their handlers is dropped, so they wait until they can respond
+  // (w4/1105). The selected view still renders on the server.
+  const hydrated = useHydrated();
 
   // Radix closes an open list when the window resizes and focuses this
   // trigger again, but past `lg` the trigger is hidden and focus fell to the
@@ -58,6 +63,7 @@ export const ResponsiveTabTriggerList = ({
           className="flex w-fit lg:hidden"
           size="sm"
           id="view-selector"
+          disabled={!hydrated}
         >
           <SelectValue placeholder={t("common.selectAView")} />
         </SelectTrigger>
@@ -74,7 +80,7 @@ export const ResponsiveTabTriggerList = ({
         className="**:data-[slot=badge]:bg-muted-foreground/30 hidden **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:px-1 lg:flex"
       >
         {tabOptions.map((tab) => (
-          <TabsTrigger key={tab.value} value={tab.value}>
+          <TabsTrigger key={tab.value} value={tab.value} disabled={!hydrated}>
             {tab.label}
           </TabsTrigger>
         ))}

@@ -48,6 +48,7 @@ vi.mock("@/graphql/definitions", async (importOriginal) => {
 });
 
 vi.mock("@tanstack/react-router", () => ({
+  useHydrated: () => true,
   useParams: () => ({
     ledgerOwner: "demo",
     ledgerName: "books",

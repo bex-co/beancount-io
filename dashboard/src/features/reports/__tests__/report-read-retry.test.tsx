@@ -18,6 +18,7 @@ import IncomeStatementPage from "@/features/reports/income-statement";
 import TrialBalancePage from "@/features/reports/trial-balance";
 
 vi.mock("@tanstack/react-router", () => ({
+  useHydrated: () => true,
   useParams: () => ({
     ledgerOwner: "demo",
     ledgerName: "books",

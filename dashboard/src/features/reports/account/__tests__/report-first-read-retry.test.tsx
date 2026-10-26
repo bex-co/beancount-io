@@ -22,6 +22,7 @@ const params = vi.hoisted(() => ({
   accountName: "Assets:US:Vanguard:RGAGX",
 }));
 vi.mock("@tanstack/react-router", () => ({
+  useHydrated: () => true,
   useParams: () => ({ ...params }),
   useSearch: () => ({}),
   useNavigate: () => vi.fn(),
