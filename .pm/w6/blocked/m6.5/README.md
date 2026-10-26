@@ -110,3 +110,15 @@ authorization for support@skills.rest is requested, with no message sent.
 **Unblock:** publisher authorizes this reviewed request, service corrects the
 existing public records, then worker verifies them. SkillsMP and Hermes retain
 their separate original gates; no completed native suite work is reopened.
+
+## Overall-suite request accepted — 2026-10-26 UTC
+
+The owner requested one additional overall-suite skills.rest submission and
+complete local records. Actual form acceptance at 00:24:54 UTC follows one
+Submit for only the customer root, with explicit single-suite and internal-
+record exclusion/deindexing instructions. t012 retains the exact payload and
+receipt. **Unblock:** service processes it and worker verifies public scope/
+collection/cleanup after the advertised 24-hour window, earliest
+2026-10-27T00:24:54Z, or earlier actual feedback. Native plugin support is not
+proved by this form. No further publisher input is pending for the submission;
+the old email draft is unsent. SkillsMP/Hermes gates and the full DoD remain.

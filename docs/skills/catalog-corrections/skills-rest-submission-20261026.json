@@ -1,0 +1,97 @@
+{
+  "owner": "w6/m6.5/t012",
+  "platform": "skills.rest",
+  "product": "Beancount.io customer suite (beancount-io)",
+  "status": "accepted_indexing_request; suite publication and internal-record cleanup unverified",
+  "formURL": "https://skills.rest/contribute",
+  "authorization": "Owner explicitly requested one additional overall-suite submission and an updated local form record. This authorizes this single follow-up, not repeated automatic submissions or a support email.",
+  "preparedAtUTC": "2026-10-26T00:24:08.967794+00:00",
+  "submissionConfirmedAtUTC": "2026-10-26T00:24:54Z",
+  "timestampMeaning": "Worker observed the actual success UI and then read UTC clock; no server-created timestamp or request ID is exposed.",
+  "publicMainObservedBeforeSubmit": "c8a96a56c56aa205e44b475d1a5f2a19eff59536",
+  "sourceRevisionLimit": "Public main was observed while the form was prepared. The indexing service may fetch a later main revision; no immutable source pin is claimed.",
+  "humanEnteredFormFields": {
+    "repo_url": "https://github.com/bex-co/beancount-io/tree/main/skills",
+    "email": "",
+    "notes": "Beancount.io customer suite (beancount-io): ONE plugin/collection containing all 13 beancount-* workflows. Index ONLY the submitted /skills subtree. Suite: https://clawhub.ai/plugins/@puncsky/beancount-io ; setup: https://github.com/bex-co/beancount-io/blob/main/docs/skills/installation.md . Exclude/de-index repository-internal .agents/skills/** and root .claude/skills/**, including qa-find-bugs-dashboard, other QA skills, pm, loopx, ship and routine-*. Update the existing records, correct obsolete skills/.claude/skills/* source paths and use authored SKILL.md names as selectors. This owner-authorized resubmission requests one customer-suite entry and cleanup of old records, without duplicate individual listings. A folder-index receipt alone must not be treated as plugin publication; plugin/collection support needs verification."
+  },
+  "uiReadback": {
+    "allThreeFieldsMatch": true,
+    "notesCharacters": 840,
+    "notesSHA256": "2328ef45b38a1773aac41e9064fd48ccb33547f2896ea744ad425a7a6300fcd7",
+    "contactFieldBlank": true
+  },
+  "requestedScope": {
+    "sourceSubtree": "skills/",
+    "distribution": "One customer suite/plugin collection; no duplicate individual product listings",
+    "customerWorkflows": [
+      "beancount-accruals",
+      "beancount-add",
+      "beancount-ask",
+      "beancount-close",
+      "beancount-import",
+      "beancount-importer-author",
+      "beancount-init",
+      "beancount-migrate",
+      "beancount-options",
+      "beancount-property",
+      "beancount-reconcile",
+      "beancount-roll-forward",
+      "beancount-trade"
+    ],
+    "excludeAndDeindex": [
+      ".agents/skills/**",
+      ".claude/skills/**"
+    ],
+    "namedInternalExamples": [
+      "qa-find-bugs-dashboard",
+      "other QA skills",
+      "pm",
+      "loopx",
+      "ship",
+      "routine-*"
+    ],
+    "existingRecords": "Update the existing Beancount.io records and obsolete paths/selectors, preserving customer-suite scope."
+  },
+  "receipt": {
+    "submitActionCount": 1,
+    "successObserved": true,
+    "text": "\u2713 Skill submitted successfully! Our automated scanner will inspect and index your skill within 24 hours.",
+    "requestId": null,
+    "manageOrEditURL": null,
+    "advertisedIndexingWindowHours": 24,
+    "screenshot": "Actual success page retained in ignored task scratch; no screenshot or private account data is published."
+  },
+  "interfaceLimits": {
+    "visibleFields": [
+      "repo_url",
+      "email",
+      "notes"
+    ],
+    "pluginSpecificArtifactTypeOrVersionField": false,
+    "folderRequestAccepted": true,
+    "nativePluginCollectionSupportVerified": false,
+    "serverPayloadOrQueueEntryInspected": false
+  },
+  "publicOutcome": {
+    "indexingCompleteVerified": false,
+    "singleSuiteEntryVerified": false,
+    "internalEntriesRemovedVerified": false,
+    "oldPathsAndSelectorsFixedVerified": false,
+    "nativePluginPublicationVerified": false
+  },
+  "followup": {
+    "earliestAdvertisedWindowEndUTC": "2026-10-27T00:24:54Z",
+    "nextManualCheckDateUTC": "2026-10-27",
+    "trigger": "After the advertised window, or earlier actual indexing feedback/publication. Manual follow-up only; no recurring task created.",
+    "readbackURLs": [
+      "https://skills.rest/company/bex-co",
+      "https://skills.rest/skill/beancount-ask-bex-co",
+      "https://skills.rest/skill/qa-find-bugs-dashboard-bex-co"
+    ],
+    "acceptance": "Verify customer-only source paths and canonical selectors, exclusion/deindexing of internal development entries, no duplicate listings and actual support for one suite/collection. If plugin-level publication is unsupported, record that explicit limitation instead of reporting a plugin release.",
+    "owner": "skills.rest processes the request; repository worker verifies the public result. No new publisher input is required for this submitted form."
+  },
+  "historicalBoundary": "Earlier canonical-root refresh acceptance is retained separately. The first ingestion of the internal QA listing remains unattributed; this receipt does not reconstruct that history.",
+  "privacy": "Only public source/catalog/install URLs and scope instructions transmitted. Optional contact left blank. No credential, private account identifier, ledger data, support email, new login, or individual internal-skill submission."
+}

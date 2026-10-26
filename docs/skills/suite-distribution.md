@@ -238,7 +238,7 @@ installation guidance target the complete suite.
 | Git/link installer | One checkout supplies the complete source inventory to both clients. | Retain it for local source edits; current guidance prefers the plugin for one versioned managed install. |
 | `npx skills` / skills.sh | Before the update, the repository page mixed 29 rows: ten customer workflows and nineteen contributor tools. At 00:40 UTC, the public page shows all thirteen customer workflows under **Beancount.io suite**, followed by nineteen **Repository development** entries. | Root `skills.sh.json` and its inventory gate are shipped. One documented maintainer install triggers the supported configuration sync; the public read-back verifies both groups and all three previously missing customer entries. Install and repeated whole-suite refresh from the explicit customer `skills/` URL pass for both agents, with telemetry disabled in QA. |
 | `gh skill` | A Git-repository install route; no separate Beancount.io per-skill publishing job or release inventory was found. | Preserve the earlier whole-suite commands and pin behavior. Document the preview-command prerequisite: the default local 2.74.0 lacks `gh skill`; this audit does not claim a new native rehearsal of the earlier 2.96.0 controls. |
-| skills.rest | Its company page advertises 27 indexed skills, including internal `ship`/`loopx`; the customer ask page still uses the removed `skills/.claude/skills/` path and a generated `beancount-ask-bex-co` selector. | Submit one canonical customer-root refresh through its automatic indexing form, with grouping/internal-exclusion corrections and no contact details. The form confirms acceptance and a scanner window of up to 24 hours. Public cleanup is still pending; no repeated submission or claim of completed indexing. |
+| skills.rest | Last public readback, 2026-10-25: 27 indexed skills including internal tooling, old customer paths and generated selectors. | Owner explicitly requested one additional overall-suite submission. [2026-10-26 form receipt and complete fields](catalog-corrections/skills-rest-submission-20261026.json) retain one accepted action for only the customer root, a single-suite request and internal-record exclusion/deindexing. Native plugin support and live cleanup are unverified; read back after the 24-hour window, with no automatic resubmission. |
 | SkillsMP | Live search already groups this project by repository, but previews still point at old `skills/.claude/skills/` paths and older descriptions. | Record the stale index separately from owned releases. Its public documentation describes GitHub discovery without a guaranteed refresh schedule; an owner-edit/delete endpoint was not established in this audit. No unsupported mutation or unsolicited outreach is used. |
 
 The [skills.sh customization contract](https://www.skills.sh/docs/customize)
@@ -314,6 +314,34 @@ repair claimed. This is separate from the authorized Smithery inquiry.
 **Unblock:** authorize that reviewed message, then the service corrects its
 existing records and the worker reads back current customer paths/selectors
 and collection boundaries. SkillsMP remains independently pending under t012.
+
+### Owner-requested overall-suite submission — 2026-10-26 UTC
+
+The owner explicitly requested one additional overall submission and updated
+local form records. At 00:24:54 UTC the actual form confirms acceptance after
+one Submit action for the canonical customer `skills/` root. The
+[complete field-level receipt](catalog-corrections/skills-rest-submission-20261026.json)
+records every entered field, blank optional contact, the full notes and their
+UI readback, observed public main revision, success text and exact timestamp
+meaning. This controlled follow-up is owner-authorized; it does not authorize
+recurring retries or a support email. Earlier refresh history is preserved.
+
+The notes ask for **one customer suite/plugin collection**, the 13 customer
+workflows only, and exclusion/deindexing of `.agents/skills/**` and root
+`.claude/skills/**`, explicitly including the dashboard-QA entry and other
+repository tools. They request correction of existing source paths/selectors
+and no duplicate individual listings. The internal QA entry's first ingestion
+remains unattributed; this receipt does not reconstruct it.
+
+The form has no plugin-specific type/artifact/version fields. Actual acceptance
+proves an indexing request, with an advertised 24-hour window; single-plugin
+support, scope enforcement and live cleanup remain unverified. Next manual
+readback is on or after 2026-10-27T00:24:54Z or earlier actual feedback/publication.
+Verify the requested public suite/collection and internal exclusions; if the
+service lacks native plugin support, record that limitation explicitly. The
+[earlier support draft](catalog-corrections/skills-rest.md#earlier-email-draft--not-sent)
+remains unsent and is not the current default next action. No further publisher
+input is needed for this accepted form. SkillsMP stays independently pending.
 
 ## Primary contracts
 
