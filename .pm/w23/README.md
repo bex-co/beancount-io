@@ -14,6 +14,7 @@
 - [x] **m8** — [Unify bank-tool parameter naming](./done/m8/README.md) (8 tasks) ← promoted from `w23/096` 2026-10-26
 - [x] **m9** — [Unify the universal write-flag spellings](./done/m9/README.md) (8 tasks) ← promoted from `w23/097` 2026-10-26
 - [x] **m10** — [Unify the account-journal param spellings](./done/m10/README.md) (8 tasks) ← promoted from `w23/098` 2026-10-26
+- [ ] **m11** — [Unify the temp-asset object-key spellings](./m11/README.md) (8 tasks) ← promoted from `w23/100` 2026-10-26
 
 ## Dropped
 
@@ -22,7 +23,6 @@
 
 ## Inbox
 
-- [100](./100.md) — the temp-asset object key has three spellings: `receiptObjectKey`, `objectKey`, `s3ObjectKey`
 - [101](./101.md) — `renameLedgerFile` takes `message` where its file-write siblings take `description`
 - [102](./102.md) — `commits?page=` past the int32 offset answers `INTERNAL_SERVER_ERROR` instead of an empty page
 - [103](./103.md) — `addLedgerEntries` has no batch-size cap: 20,000 entries commit in one call
