@@ -205,6 +205,11 @@ local-path update is not substituted for registry update. Existing standalone
 copies are unchanged, but their old online install/update routes are retired.
 Future publication uses the suite.
 
+Legacy source-filter discovery note 040 is [dropped as superseded](../../.pm/w6/README.md#dropped)
+by this retired standalone route. Its failed native cohorts remain in the
+[historical rehearsal](clawhub-rehearsal.md#hermes-search-discovery); no upstream
+search fix is claimed. Full Hermes suite metadata/init admission remains open.
+
 ## Standalone listing retirement — 2026-10-22 UTC
 
 The owner requested cleanup of the scattered distribution entries after the

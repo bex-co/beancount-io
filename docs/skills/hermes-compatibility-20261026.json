@@ -131,13 +131,20 @@
     "owner": "Hermes host/security-policy maintainers, then repository worker",
     "conditions": [
       "A supported published portable contract accepts the complete suite metadata.",
-      "Default admission permits the retained consent-gated ledger instruction-file scaffolding.",
-      "A supported source-filter discovery correction becomes available for w6/040."
+      "Default admission permits the retained consent-gated ledger instruction-file scaffolding."
     ],
     "then": "Rehearse applicable native install/discovery/update/init on synthetic data and verify complete references and intended file effects.",
     "nextManualCheckOnOrAfterUTC": "2026-10-27T04:52:58Z",
     "earlierTrigger": "Relevant actual release, supported policy/contract change or actionable upstream feedback.",
     "publisherInputRequired": false
   },
-  "otherWork": "This check does not block independent w6 cases. No email, PR, account, token or software installation performed for this Hermes audit."
+  "otherWork": "This check does not block independent w6 cases. No email, PR, account, token or software installation performed for this Hermes audit.",
+  "scopeReconciliation": {
+    "dateUTC": "2026-10-26",
+    "disposition": "w6/040 dropped as superseded by owner-selected standalone listing retirement in m6.5/t011.",
+    "historicalEvidence": "https://github.com/bex-co/beancount-io/blob/a8fc3a8ee42b9166957cd7bff7d60f57bdf8bf77/.pm/w6/blocked/040.md",
+    "noUpstreamFixClaimed": true,
+    "stillRequired": "Complete-suite metadata compatibility, intended consent-gated init behavior, and native install/discovery/update without scan bypass.",
+    "sourceObservationUnchanged": "The earlier twelve-file comparison remains historical fact; its lastCheckedAtUTC is not advanced by this scope decision."
+  }
 }

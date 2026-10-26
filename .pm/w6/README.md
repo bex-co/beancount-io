@@ -36,7 +36,7 @@ Source: the owner's request to complete all remaining actions from the17-target 
 
 **Execution order:** shipped tracker/browser/native prerequisites remain complete. 045 credential coordination is done. 046 now runs the supported SecretService real-expiry test; its earlier pass-helper failure is retained. Perform newly available review/publication actions independently while this bounded observation runs. Aggregate verification and standing closing tasks retain their full DoDs; one blocked platform never ends the w6 loop while another actionable item remains.
 
-**Board after this unblock:** 63 pending leaves: 046 is live while its actual-expiry native test runs; the other 62 remain blocked or transitively dependent. Milestone and submission counts are unchanged. Historical snapshots below retain their earlier queue states.
+**Current board:** 62 pending leaves: 046 is live during actual-expiry acceptance and 61 remain blocked or transitively dependent. Obsolete standalone-discovery note 040 is dropped below; milestone task counts are unchanged. Historical snapshots retain their earlier queue states.
 
 ## Historical work and blocker triage — 2026-10-24 UTC
 
@@ -178,7 +178,7 @@ are unchanged; no identical native policy/search repro is repeated.
 | [016](blocked/016.md), [017](blocked/017.md), [018](blocked/018.md), [022](blocked/022.md), [023](blocked/023.md), [024](blocked/024.md), [025](blocked/025.md), [029](blocked/029.md), [034](blocked/034.md), [037](blocked/037.md), [035](blocked/035.md) | Eleven retained merged source candidates still lack a suitable published WASM artifact. | Rustledger maintainer publishes a compatible artifact; repository worker adopts it with the owning package manager and verifies each exact native/API case. |
 | [m2](blocked/m2/README.md), [026](blocked/026.md), [027](blocked/027.md), [028](blocked/028.md), [031](blocked/031.md), [032](blocked/032.md), [033](blocked/033.md), [036](blocked/036.md), [038](blocked/038.md) | The exact contract/semantic requirements remain unmet; a version increase alone is insufficient. Static table metadata does not clear m2's expression/WASM schema requirement. | Rustledger maintainers implement and publish the required contracts; repository worker adopts and verifies. Any outward upstream request still needs explicit authorization. |
 | [039](blocked/039.md) | Current init1.0.4 native control is DANGEROUS/18findings with no installed directory; host scanner unchanged. | Hermes maintainers provide a compatible policy/install path; worker rehearses no-force consent/validation/existing-file preservation. |
-| [040](blocked/040.md) | The m6 closeout's fresh default search now finds all13suite names among16results. The previously observed explicit-source failure remains independently tracked and is not retested by this closeout. | Hermes host/index correction or genuinely changed relevant input; worker verifies bounded source-filter controls and an actually returned listing install without force. |
+| [040](https://github.com/bex-co/beancount-io/blob/a8fc3a8ee42b9166957cd7bff7d60f57bdf8bf77/.pm/w6/blocked/040.md) | The m6 closeout's fresh default search now finds all13suite names among16results. The previously observed explicit-source failure remains independently tracked and is not retested by this closeout. | Hermes host/index correction or genuinely changed relevant input; worker verifies bounded source-filter controls and an actually returned listing install without force. |
 
 
 **Source/publication follow-through — 2026-10-23T21:01:46Z:** [035](blocked/035.md)
@@ -260,15 +260,18 @@ Prioritize the major correctness findings (PRINT/FROM/JOURNAL, authored location
 
 - [x] **m1** — Count canonical BQL rows in MCP text summaries (7 tasks) ← from [003](done/003.md).
 
+## Dropped
+
+- ~~**040**~~ — Recheck Hermes source-filtered ClawHub discovery — dropped 2026-10-26: owner-retired standalone online install/search route is superseded by the complete suite (m6.5/t011); current Hermes metadata/init admission remains under 039 and m6.5/t005. [Historical failure record](https://github.com/bex-co/beancount-io/blob/a8fc3a8ee42b9166957cd7bff7d60f57bdf8bf77/.pm/w6/blocked/040.md); this is retirement, not a claimed upstream fix.
+
 ## Inbox
 
-- [046](046.md) — Docker renewable OAuth — **blocked:** fix37f5a25b6 deployed; same-client offline callback/refresh issuance/accounting pass. Actual scheduled access/refresh rotation passes; post-expiry native preview fails Unauthorized after legacy-entry cleanup prevents connection reload. Docker-supported client/helper repair then worker acceptance required; no operator input. Current grant retained.
+- [046](046.md) — Docker renewable OAuth — **in progress:** official SecretService preflight and confirmed same-client grant pass; native initial controls and CE scheduler run. Worker observes real expiry 2026-10-26T07:18:05.161089714Z, then verifies rotation/reload, exactly one dry-run and unchanged ledger state. No publisher input pending.
 
 - [047](blocked/047.md) — MCP.so publication follow-through — submission041 is archived with actual PR6071 receipt; **blocked:** maintainer review/import, live listing and advertised native verification. No fee or website-login decision pending.
 - [042](blocked/042.md) — PulseMCP — **blocked:** official interim registry step already met (active1.0.0); await platform auto-import or supported reopening/correction, then public/native verification. No user action now.
 
 - [039](blocked/039.md) — Recheck Hermes support for consent-gated ledger instruction scaffolding — **blocked:** needs a compatible Hermes host policy; retain the approved workflow and do not force installation.
-- [040](blocked/040.md) — Recheck Hermes source-filtered ClawHub discovery — **blocked:** fresh changed-catalog cohort finds the original eleven via default/all, omits newly public roll-forward, and returns none with `--source clawhub`; needs a relevant host/index correction or changed catalog candidate.
 
 
 

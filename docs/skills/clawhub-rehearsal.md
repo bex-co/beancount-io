@@ -67,7 +67,7 @@ In the 2026-10-19 rehearsal, after every listing is public, `hermes skills searc
 
 Source inspection distinguishes this from an unpublished skill: Hermes's [source-filtered adapter](https://github.com/NousResearch/hermes-agent/blob/d923a5eb487a17c0a68801bba9ef0f56c81040a8/tools/skills_hub_clawhub.py) walks the catalog before its lightweight fallback, while the [unfiltered router](https://github.com/NousResearch/hermes-agent/blob/d923a5eb487a17c0a68801bba9ef0f56c81040a8/tools/skills_hub_search.py) can answer from the centralized index without querying the live sources when that index has matches. This suggests a host catalog/index gap; it does not prove which cache or timeout is responsible. No local host-source patch, fabricated cache, or upstream issue was used to change the result. Recheck search after the host/index is updated; use explicit publisher-qualified installs meanwhile.
 
-**Update 2026-10-20:** in a new isolated profile, the exact default command `hermes skills search beancount` now returns fourteen entries including all eleven suite skills. `hermes skills search beancount --source all --json --limit 30` confirms the complete set. The source-filtered command above still returns `[]`, while the registry control still includes all eleven. Default discovery has recovered; the narrower source-filtered gap remains tracked in [w6/040](../../.pm/w6/blocked/040.md). No host or cache patch was applied.
+**Update 2026-10-20:** in a new isolated profile, the exact default command `hermes skills search beancount` now returns fourteen entries including all eleven suite skills. `hermes skills search beancount --source all --json --limit 30` confirms the complete set. The source-filtered command above still returns `[]`, while the registry control still includes all eleven. Default discovery has recovered; the narrower source-filtered gap remains tracked in [w6/040](https://github.com/bex-co/beancount-io/blob/a8fc3a8ee42b9166957cd7bff7d60f57bdf8bf77/.pm/w6/blocked/040.md). No host or cache patch was applied.
 
 ## First-query control and host acceptance
 
@@ -102,7 +102,7 @@ bea --file "$ledger" --json --no-input query "SELECT account, sum(weight) as tot
 
 OpenClaw's initial default Codex-harness attempt stopped before inference with `Codex native skill discovery returned errors`. A read-only native discovery probe identified an unrelated installed skill outside this worktree that lacks a description. That attempt is not counted as successful. The successful run explicitly used the [documented embedded runtime](https://docs.openclaw.ai/providers/openai/runtimes), with `agents.defaults.models["openai/gpt-6.1-sol"].agentRuntime.id` set to `openclaw`. It made a real authenticated model turn; neither the host nor skill source was patched. The skill optionally checked the absent sibling contract, then loaded its own bundled copy successfully.
 
-The installation and first-query rehearsal is complete under t008's provision for recording compatibility gaps with follow-ups. Hermes init remains unsupported under the retained workflow ([w6/039](../../.pm/w6/blocked/039.md)); source-filtered search remains incomplete ([w6/040](../../.pm/w6/blocked/040.md)). Default Hermes search, standalone installs and real queries are verified. These results do not claim complete Hermes suite support or successful default Codex-harness execution.
+The installation and first-query rehearsal is complete under t008's provision for recording compatibility gaps with follow-ups. Hermes init remains unsupported under the retained workflow ([w6/039](../../.pm/w6/blocked/039.md)); source-filtered search remains incomplete ([w6/040](https://github.com/bex-co/beancount-io/blob/a8fc3a8ee42b9166957cd7bff7d60f57bdf8bf77/.pm/w6/blocked/040.md)). Default Hermes search, standalone installs and real queries are verified. These results do not claim complete Hermes suite support or successful default Codex-harness execution.
 
 ## Suite 0.3.2 synchronization — 2026-10-20
 
@@ -453,7 +453,7 @@ public roll-forward listing, while public ClawHub search returns fifteen
 results including roll-forward and those eleven. Explicit `--source clawhub`
 still returns `[]` (exit 0, 30.478 seconds). Search results do not establish
 installed versions; use owner-qualified installs and byte checks. The separate
-[source-filter follow-up](../../.pm/w6/blocked/040.md) remains open.
+[source-filter follow-up](https://github.com/bex-co/beancount-io/blob/a8fc3a8ee42b9166957cd7bff7d60f57bdf8bf77/.pm/w6/blocked/040.md) remains open.
 
 For the three remaining exact 1.0.4 submissions, one supported normal
 scan/writeback request per version is accepted at 02:39 UTC. By 02:45 UTC all
@@ -512,7 +512,7 @@ and displays all thirteen suite identifiers among sixteen results. The rendered
 Identifier column is reconstructed across wrapped lines; installed versions are
 verified separately. This clears the earlier default-search omission. The
 explicit-source behavior is not retried here and remains tracked in
-[040](../../.pm/w6/blocked/040.md).
+[040](https://github.com/bex-co/beancount-io/blob/a8fc3a8ee42b9166957cd7bff7d60f57bdf8bf77/.pm/w6/blocked/040.md).
 
 The earlier exact-1.0.4 standalone first-query results above remain the model-
 backed evidence. This closeout makes no new model call, credential copy, grant,
