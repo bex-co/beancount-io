@@ -10,17 +10,7 @@ export function resolveBankIdAlias<T extends string | string[]>(
   values: { primary?: T; legacy?: T },
   names: { primary: string; legacy: string; what: string },
 ): T {
-  const { primary, legacy } = values;
-  if (
-    primary !== undefined &&
-    legacy !== undefined &&
-    !sameIds(primary, legacy)
-  ) {
-    throw new BadUserInputError(
-      `Pass ${names.primary} or ${names.legacy}, not two different ${names.what}.`,
-    );
-  }
-  const resolved = primary ?? legacy;
+  const resolved = resolveOptionalBankIdAlias(values, names);
   if (resolved === undefined) {
     throw new BadUserInputError(
       `${names.primary} is required — ${names.legacy} works too.`,

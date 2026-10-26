@@ -83,6 +83,12 @@ const call = async (
   await close();
   return result;
 };
+const failureOf = (result: Awaited<ReturnType<typeof call>>) =>
+  (
+    result.structuredContent as {
+      error?: { code?: string; message?: string };
+    }
+  ).error;
 
 describe("bank import on MCP", () => {
   const BANK_TOOLS = [
@@ -389,12 +395,6 @@ describe("bank import on MCP", () => {
       (services[entry.service as "plaidSync"] as Record<string, jest.Mock>)[
         entry.method
       ] as jest.Mock;
-    const failureOf = (result: Awaited<ReturnType<typeof call>>) =>
-      (
-        result.structuredContent as {
-          error?: { code?: string; message?: string };
-        }
-      ).error;
 
     it("accepts the camelCase spelling", async () => {
       const services = fakeServices();
@@ -488,13 +488,6 @@ describe("bank import on MCP", () => {
   // the submit-item triple and map_account's ledger account accept
   // camelCase, with the same conflict refusal.
   describe("nested bank aliases", () => {
-    const failureOf = (result: Awaited<ReturnType<typeof call>>) =>
-      (
-        result.structuredContent as {
-          error?: { code?: string; message?: string };
-        }
-      ).error;
-
     it("accepts the camelCase submit triple", async () => {
       const services = fakeServices();
       const result = await call(services, "importStagedBankTransactions", {
