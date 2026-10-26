@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1103** — [Keep profile search unavailable until typing can be retained](./1103.md)
+
 - **1102** — [Scope report filters to the actual ledger route](./1102.md)
 
 - **1101** — [Enable Filters only when its sheet can open](./1101.md)
