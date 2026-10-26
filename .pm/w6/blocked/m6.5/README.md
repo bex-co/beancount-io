@@ -122,3 +122,15 @@ collection/cleanup after the advertised 24-hour window, earliest
 2026-10-27T00:24:54Z, or earlier actual feedback. Native plugin support is not
 proved by this form. No further publisher input is pending for the submission;
 the old email draft is unsent. SkillsMP/Hermes gates and the full DoD remain.
+
+## SkillsMP scope check and concrete next step — 2026-10-26 UTC
+
+Direct collection readback under t012 still has 27 entries (eight customer and
+nineteen internal) and the old ask source; a failed public search does not
+clear those findings. Supported owner intake/edit remains unestablished,
+with private capabilities untested. A specific public-source correction
+email is prepared for the official contact and awaits explicit authorization.
+**Unblock:** authorized request or a supplied owner route, service correction,
+then worker verification of customer-only suite scope and current paths.
+No message or submission is claimed; skills.rest's accepted form and Hermes
+remain separate pending gates.

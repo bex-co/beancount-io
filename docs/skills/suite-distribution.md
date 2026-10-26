@@ -239,7 +239,7 @@ installation guidance target the complete suite.
 | `npx skills` / skills.sh | Before the update, the repository page mixed 29 rows: ten customer workflows and nineteen contributor tools. At 00:40 UTC, the public page shows all thirteen customer workflows under **Beancount.io suite**, followed by nineteen **Repository development** entries. | Root `skills.sh.json` and its inventory gate are shipped. One documented maintainer install triggers the supported configuration sync; the public read-back verifies both groups and all three previously missing customer entries. Install and repeated whole-suite refresh from the explicit customer `skills/` URL pass for both agents, with telemetry disabled in QA. |
 | `gh skill` | A Git-repository install route; no separate Beancount.io per-skill publishing job or release inventory was found. | Preserve the earlier whole-suite commands and pin behavior. Document the preview-command prerequisite: the default local 2.74.0 lacks `gh skill`; this audit does not claim a new native rehearsal of the earlier 2.96.0 controls. |
 | skills.rest | Last public readback, 2026-10-25: 27 indexed skills including internal tooling, old customer paths and generated selectors. | Owner explicitly requested one additional overall-suite submission. [2026-10-26 form receipt and complete fields](catalog-corrections/skills-rest-submission-20261026.json) retain one accepted action for only the customer root, a single-suite request and internal-record exclusion/deindexing. Native plugin support and live cleanup are unverified; read back after the 24-hour window, with no automatic resubmission. |
-| SkillsMP | Live search already groups this project by repository, but previews still point at old `skills/.claude/skills/` paths and older descriptions. | Record the stale index separately from owned releases. Its public documentation describes GitHub discovery without a guaranteed refresh schedule; an owner-edit/delete endpoint was not established in this audit. No unsupported mutation or unsolicited outreach is used. |
+| SkillsMP | Actual direct collection readback, 2026-10-26: 27 entries, eight customer and nineteen internal; ask still points to the removed source path. Public search is unavailable. | [Fresh evidence and route limits](catalog-corrections/skillsmp-recheck-20261026.json) retain current scope without inferring cleanup from search failure. [A customer-suite correction request](catalog-corrections/skillsmp.md) is prepared for the official contact, awaiting explicit email authorization. No form/submission/edit route established; private publisher capabilities remain unknown. |
 
 The [skills.sh customization contract](https://www.skills.sh/docs/customize)
 supports grouping, not hiding or deleting old per-skill catalog entries. Its
@@ -342,6 +342,33 @@ service lacks native plugin support, record that limitation explicitly. The
 [earlier support draft](catalog-corrections/skills-rest.md#earlier-email-draft--not-sent)
 remains unsent and is not the current default next action. No further publisher
 input is needed for this accepted form. SkillsMP stays independently pending.
+
+### SkillsMP direct collection and correction route — 2026-10-26 UTC
+
+Although the public search UI reports an unavailable service, direct ask and
+repository records load after normal browser verification completes without
+interaction. At 01:46:19 UTC the actual
+[repository collection](https://skillsmp.com/creators/bex-co/beancount-io)
+contains 27 unique child entries: eight customer workflows and nineteen internal
+development tools. The ask link still points to the removed customer layout.
+The current 13-workflow customer source therefore does not match this collection.
+[Exact entry names and observations](catalog-corrections/skillsmp-recheck-20261026.json)
+retain that result; no search success, live cleanup or first-ingestion cause
+is inferred.
+
+Current discovery docs describe GitHub scanning without a guaranteed update
+schedule. The inspected public API documents search; anonymous collection/detail
+pages provide install/favorite controls and no observed owner mutation/intake.
+The matching-name GitHub project inspected is a search client, not an established
+catalog-data contribution route. Private publisher management is untested, so
+self-service modification is unestablished rather than declared impossible.
+
+The [official support request draft](catalog-corrections/skillsmp.md) asks to
+refresh only `skills/`, exclude/deindex internal records, retain one customer
+suite/collection and supply any required submit/claim/update route. Specific
+email authorization is requested; no request is sent. The existing collection
+is not a submitted native plugin. This remains under t012, independently of
+the accepted skills.rest form's 24-hour window and Hermes admission.
 
 ## Primary contracts
 

@@ -1,0 +1,118 @@
+{
+  "owner": "w6/m6.5/t012",
+  "checkedAtUTC": "2026-10-26T01:46:19Z",
+  "state": "Existing repository collection is mixed/stale; supported owner correction route unestablished; specific email draft not sent.",
+  "collection": {
+    "url": "https://skillsmp.com/creators/bex-co/beancount-io",
+    "actualBrowserLoaded": true,
+    "uniqueVisibleEntryLinks": 27,
+    "customerEntries": [
+      "beancount-import",
+      "beancount-close",
+      "beancount-ask",
+      "beancount-options",
+      "beancount-importer-author",
+      "beancount-init",
+      "beancount-migrate",
+      "beancount-reconcile"
+    ],
+    "internalEntries": [
+      "loopx",
+      "mermaid",
+      "pm",
+      "routine-flaky-test-fixer",
+      "ship",
+      "pm-brainstorm",
+      "qa-find-bugs-cli",
+      "qa-find-bugs-mcp",
+      "qa-find-bugs-mobile",
+      "mobile-release",
+      "qa-find-bugs-dashboard",
+      "routine-abstraction-improver",
+      "routine-abstraction-police",
+      "routine-dead-code-removal",
+      "routine-logic-bugfixer",
+      "routine-shipped-feature-inliner",
+      "routine-dup-unifier",
+      "routine-logic-simplifier",
+      "routine-useless-test-pruner"
+    ],
+    "expectedCustomerEntries": [
+      "beancount-accruals",
+      "beancount-add",
+      "beancount-ask",
+      "beancount-close",
+      "beancount-import",
+      "beancount-importer-author",
+      "beancount-init",
+      "beancount-migrate",
+      "beancount-options",
+      "beancount-property",
+      "beancount-reconcile",
+      "beancount-roll-forward",
+      "beancount-trade"
+    ],
+    "missingCustomerEntries": [
+      "beancount-accruals",
+      "beancount-add",
+      "beancount-property",
+      "beancount-roll-forward",
+      "beancount-trade"
+    ],
+    "displayedLatestSourceActivity": "October 4, 2026 at 10:20",
+    "displayedCatalogRefreshed": "October 17, 2026 at 00:09",
+    "displayedTimestampLimit": "Preserved as shown by the browser; no timezone is supplied in those labels and none is inferred."
+  },
+  "staleSourceControl": {
+    "url": "https://skillsmp.com/creators/bex-co/beancount-io/skills-claude-skills-beancount-ask",
+    "actualGitHubLink": "https://github.com/bex-co/beancount-io/tree/main/skills/.claude/skills/beancount-ask",
+    "correctGitHubLink": "https://github.com/bex-co/beancount-io/tree/main/skills/beancount-ask",
+    "installSelectorCorrectnessCheckedThisObservation": false
+  },
+  "searchControl": {
+    "url": "https://skillsmp.com/search?q=beancount",
+    "actualBrowserResult": "Failed to load skills; Search is unavailable. Try again.",
+    "retryClicked": false,
+    "limit": "An unavailable search is not evidence that stale or internal records have disappeared."
+  },
+  "browserVerification": "Direct detail page briefly showed normal automatic browser security verification, then loaded without a challenge interaction, retry, bypass or new account.",
+  "routeInvestigation": [
+    {
+      "url": "https://skillsmp.com/agent-skills#how-can-my-skill-be-discovered",
+      "finding": "GitHub SKILL.md discovery; no guaranteed inclusion or fixed update schedule."
+    },
+    {
+      "url": "https://skillsmp.com/docs/api",
+      "finding": "Documents GET keyword search, not index/collection submission or mutation."
+    },
+    {
+      "url": "https://skillsmp.com/creators/bex-co/beancount-io",
+      "finding": "Inspected anonymous collection/detail UI has install/favorite/share controls, with no observed submit/claim/refresh/edit/delete control."
+    },
+    {
+      "url": "https://skillsmp.com/changelog",
+      "finding": "Inspected registration and community descriptions concern favorites/history and reviewed X posts, not a supported publisher intake."
+    },
+    {
+      "url": "https://github.com/yan-labs/skillsmp",
+      "finding": "Matching-name repository is a search CLI/library. No established vendor catalog-data PR route follows from it."
+    },
+    {
+      "url": "https://skillsmp.com/about",
+      "finding": "Official feedback contact is support@skillsmp.com."
+    }
+  ],
+  "limits": "No authenticated publisher dashboard inspected; private management capabilities remain unknown. No claim that all self-service modification is impossible, no cause inferred for search failure, and no attribution of first ingestion.",
+  "proposedRequest": {
+    "recipient": "support@skillsmp.com",
+    "draft": "skillsmp.md",
+    "purpose": "Correct existing collection to one customer suite from skills/; exclude/deindex internal tools; update old paths and establish supported intake/claim/update plus suite capability.",
+    "authorization": "Specific recipient/request authorization requested; no reply recorded in this evidence.",
+    "sent": false,
+    "submissionReceipt": null,
+    "contentBoundary": "Public repository, source, install and catalog data only."
+  },
+  "unblock": "Publisher authorizes the reviewed email, then worker sends it once and retains the real receipt; or the service provides a supported owner correction route. SkillsMP processes the existing collection and worker verifies customer-only scope, current paths and actual suite/collection support.",
+  "otherChannels": "The separate skills.rest overall submission is already accepted and remains in its own 24-hour readback window. Hermes remains independent.",
+  "performedMutations": "No SkillsMP submission, email, account creation, API key, paid action, catalog PR, index edit or internal-skill upload."
+}
