@@ -20,6 +20,7 @@ def _get_kwargs(
     *,
     body: BankTransactionSubmission | Unset = UNSET,
     dry_run: PostApiGatewayV1LedgersOwnerNameBankTransactionsSubmitDryRun | Unset = UNSET,
+    dryRun: PostApiGatewayV1LedgersOwnerNameBankTransactionsSubmitDryRun | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -30,6 +31,12 @@ def _get_kwargs(
         json_dry_run = dry_run.value
 
     params["dry_run"] = json_dry_run
+
+    json_dryRun: str | Unset = UNSET
+    if not isinstance(dryRun, Unset):
+        json_dryRun = dryRun.value
+
+    params["dryRun"] = json_dryRun
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -123,6 +130,7 @@ def sync_detailed(
     client: AuthenticatedClient,
     body: BankTransactionSubmission | Unset = UNSET,
     dry_run: PostApiGatewayV1LedgersOwnerNameBankTransactionsSubmitDryRun | Unset = UNSET,
+    dryRun: PostApiGatewayV1LedgersOwnerNameBankTransactionsSubmitDryRun | Unset = UNSET,
 ) -> Response[Any | V1Error]:
     """Write staged transactions into the ledger
 
@@ -134,6 +142,8 @@ def sync_detailed(
         name (str): Ledger (repository) name Example: main-ledger.
         dry_run (PostApiGatewayV1LedgersOwnerNameBankTransactionsSubmitDryRun | Unset): Validate
             and report what would change, without changing anything.
+        dryRun (PostApiGatewayV1LedgersOwnerNameBankTransactionsSubmitDryRun | Unset): Alias of
+            dry_run, as request bodies spell it.
         body (BankTransactionSubmission | Unset):
 
     Raises:
@@ -149,6 +159,7 @@ def sync_detailed(
         name=name,
         body=body,
         dry_run=dry_run,
+        dryRun=dryRun,
     )
 
     response = client.get_httpx_client().request(
@@ -165,6 +176,7 @@ def sync(
     client: AuthenticatedClient,
     body: BankTransactionSubmission | Unset = UNSET,
     dry_run: PostApiGatewayV1LedgersOwnerNameBankTransactionsSubmitDryRun | Unset = UNSET,
+    dryRun: PostApiGatewayV1LedgersOwnerNameBankTransactionsSubmitDryRun | Unset = UNSET,
 ) -> Any | V1Error | None:
     """Write staged transactions into the ledger
 
@@ -176,6 +188,8 @@ def sync(
         name (str): Ledger (repository) name Example: main-ledger.
         dry_run (PostApiGatewayV1LedgersOwnerNameBankTransactionsSubmitDryRun | Unset): Validate
             and report what would change, without changing anything.
+        dryRun (PostApiGatewayV1LedgersOwnerNameBankTransactionsSubmitDryRun | Unset): Alias of
+            dry_run, as request bodies spell it.
         body (BankTransactionSubmission | Unset):
 
     Raises:
@@ -192,6 +206,7 @@ def sync(
         client=client,
         body=body,
         dry_run=dry_run,
+        dryRun=dryRun,
     ).parsed
 
 
@@ -202,6 +217,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
     body: BankTransactionSubmission | Unset = UNSET,
     dry_run: PostApiGatewayV1LedgersOwnerNameBankTransactionsSubmitDryRun | Unset = UNSET,
+    dryRun: PostApiGatewayV1LedgersOwnerNameBankTransactionsSubmitDryRun | Unset = UNSET,
 ) -> Response[Any | V1Error]:
     """Write staged transactions into the ledger
 
@@ -213,6 +229,8 @@ async def asyncio_detailed(
         name (str): Ledger (repository) name Example: main-ledger.
         dry_run (PostApiGatewayV1LedgersOwnerNameBankTransactionsSubmitDryRun | Unset): Validate
             and report what would change, without changing anything.
+        dryRun (PostApiGatewayV1LedgersOwnerNameBankTransactionsSubmitDryRun | Unset): Alias of
+            dry_run, as request bodies spell it.
         body (BankTransactionSubmission | Unset):
 
     Raises:
@@ -228,6 +246,7 @@ async def asyncio_detailed(
         name=name,
         body=body,
         dry_run=dry_run,
+        dryRun=dryRun,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -242,6 +261,7 @@ async def asyncio(
     client: AuthenticatedClient,
     body: BankTransactionSubmission | Unset = UNSET,
     dry_run: PostApiGatewayV1LedgersOwnerNameBankTransactionsSubmitDryRun | Unset = UNSET,
+    dryRun: PostApiGatewayV1LedgersOwnerNameBankTransactionsSubmitDryRun | Unset = UNSET,
 ) -> Any | V1Error | None:
     """Write staged transactions into the ledger
 
@@ -253,6 +273,8 @@ async def asyncio(
         name (str): Ledger (repository) name Example: main-ledger.
         dry_run (PostApiGatewayV1LedgersOwnerNameBankTransactionsSubmitDryRun | Unset): Validate
             and report what would change, without changing anything.
+        dryRun (PostApiGatewayV1LedgersOwnerNameBankTransactionsSubmitDryRun | Unset): Alias of
+            dry_run, as request bodies spell it.
         body (BankTransactionSubmission | Unset):
 
     Raises:
@@ -270,5 +292,6 @@ async def asyncio(
             client=client,
             body=body,
             dry_run=dry_run,
+            dryRun=dryRun,
         )
     ).parsed

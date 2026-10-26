@@ -34,10 +34,12 @@ class EntriesRequest:
             EntriesRequestEntriesItemType5 | EntriesRequestEntriesItemType6 | EntriesRequestEntriesItemType7 |
             EntriesRequestEntriesItemType8 | EntriesRequestEntriesItemType9]): Directives to append, committed all-or-
             nothing
-        allow_invalid (bool | None | Unset): Record entries deliberately even when they are unbalanced (UNBALANCED) or
+        allowInvalid (bool | None | Unset): Record entries deliberately even when they are unbalanced (UNBALANCED) or
             would add bean-check errors such as a second open for an open account (VALIDATION_FAILED), instead of refusing
             them
-        dry_run (bool | None | Unset): Run every check and return the preview without committing
+        allow_invalid (bool | None | Unset): Alias of allowInvalid.
+        dryRun (bool | None | Unset): Run every check and return the preview without committing
+        dry_run (bool | None | Unset): Alias of dryRun, as MCP spells it.
     """
 
     entries: list[
@@ -53,7 +55,9 @@ class EntriesRequest:
         | EntriesRequestEntriesItemType8
         | EntriesRequestEntriesItemType9
     ]
+    allowInvalid: bool | None | Unset = UNSET
     allow_invalid: bool | None | Unset = UNSET
+    dryRun: bool | None | Unset = UNSET
     dry_run: bool | None | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
@@ -96,11 +100,23 @@ class EntriesRequest:
 
             entries.append(entries_item)
 
+        allowInvalid: bool | None | Unset
+        if isinstance(self.allowInvalid, Unset):
+            allowInvalid = UNSET
+        else:
+            allowInvalid = self.allowInvalid
+
         allow_invalid: bool | None | Unset
         if isinstance(self.allow_invalid, Unset):
             allow_invalid = UNSET
         else:
             allow_invalid = self.allow_invalid
+
+        dryRun: bool | None | Unset
+        if isinstance(self.dryRun, Unset):
+            dryRun = UNSET
+        else:
+            dryRun = self.dryRun
 
         dry_run: bool | None | Unset
         if isinstance(self.dry_run, Unset):
@@ -115,10 +131,14 @@ class EntriesRequest:
                 "entries": entries,
             }
         )
+        if allowInvalid is not UNSET:
+            field_dict["allowInvalid"] = allowInvalid
         if allow_invalid is not UNSET:
-            field_dict["allowInvalid"] = allow_invalid
+            field_dict["allow_invalid"] = allow_invalid
+        if dryRun is not UNSET:
+            field_dict["dryRun"] = dryRun
         if dry_run is not UNSET:
-            field_dict["dryRun"] = dry_run
+            field_dict["dry_run"] = dry_run
 
         return field_dict
 
@@ -246,6 +266,15 @@ class EntriesRequest:
 
             entries.append(entries_item)
 
+        def _parse_allowInvalid(data: object) -> bool | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(bool | None | Unset, data)
+
+        allowInvalid = _parse_allowInvalid(d.pop("allowInvalid", UNSET))
+
         def _parse_allow_invalid(data: object) -> bool | None | Unset:
             if data is None:
                 return data
@@ -253,7 +282,16 @@ class EntriesRequest:
                 return data
             return cast(bool | None | Unset, data)
 
-        allow_invalid = _parse_allow_invalid(d.pop("allowInvalid", UNSET))
+        allow_invalid = _parse_allow_invalid(d.pop("allow_invalid", UNSET))
+
+        def _parse_dryRun(data: object) -> bool | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(bool | None | Unset, data)
+
+        dryRun = _parse_dryRun(d.pop("dryRun", UNSET))
 
         def _parse_dry_run(data: object) -> bool | None | Unset:
             if data is None:
@@ -262,11 +300,13 @@ class EntriesRequest:
                 return data
             return cast(bool | None | Unset, data)
 
-        dry_run = _parse_dry_run(d.pop("dryRun", UNSET))
+        dry_run = _parse_dry_run(d.pop("dry_run", UNSET))
 
         entries_request = cls(
             entries=entries,
+            allowInvalid=allowInvalid,
             allow_invalid=allow_invalid,
+            dryRun=dryRun,
             dry_run=dry_run,
         )
 

@@ -19,6 +19,7 @@ def _get_kwargs(
     item_id: str,
     *,
     dry_run: PostApiGatewayV1LedgersOwnerNameBanksItemIdSyncDryRun | Unset = UNSET,
+    dryRun: PostApiGatewayV1LedgersOwnerNameBanksItemIdSyncDryRun | Unset = UNSET,
 ) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
@@ -28,6 +29,12 @@ def _get_kwargs(
         json_dry_run = dry_run.value
 
     params["dry_run"] = json_dry_run
+
+    json_dryRun: str | Unset = UNSET
+    if not isinstance(dryRun, Unset):
+        json_dryRun = dryRun.value
+
+    params["dryRun"] = json_dryRun
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -116,6 +123,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     dry_run: PostApiGatewayV1LedgersOwnerNameBanksItemIdSyncDryRun | Unset = UNSET,
+    dryRun: PostApiGatewayV1LedgersOwnerNameBanksItemIdSyncDryRun | Unset = UNSET,
 ) -> Response[Any | V1Error]:
     """Pull new transactions from the bank
 
@@ -129,6 +137,8 @@ def sync_detailed(
         item_id (str): The linked bank's item id
         dry_run (PostApiGatewayV1LedgersOwnerNameBanksItemIdSyncDryRun | Unset): Validate and
             report what would change, without changing anything.
+        dryRun (PostApiGatewayV1LedgersOwnerNameBanksItemIdSyncDryRun | Unset): Alias of dry_run,
+            as request bodies spell it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -143,6 +153,7 @@ def sync_detailed(
         name=name,
         item_id=item_id,
         dry_run=dry_run,
+        dryRun=dryRun,
     )
 
     response = client.get_httpx_client().request(
@@ -159,6 +170,7 @@ def sync(
     *,
     client: AuthenticatedClient,
     dry_run: PostApiGatewayV1LedgersOwnerNameBanksItemIdSyncDryRun | Unset = UNSET,
+    dryRun: PostApiGatewayV1LedgersOwnerNameBanksItemIdSyncDryRun | Unset = UNSET,
 ) -> Any | V1Error | None:
     """Pull new transactions from the bank
 
@@ -172,6 +184,8 @@ def sync(
         item_id (str): The linked bank's item id
         dry_run (PostApiGatewayV1LedgersOwnerNameBanksItemIdSyncDryRun | Unset): Validate and
             report what would change, without changing anything.
+        dryRun (PostApiGatewayV1LedgersOwnerNameBanksItemIdSyncDryRun | Unset): Alias of dry_run,
+            as request bodies spell it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -187,6 +201,7 @@ def sync(
         item_id=item_id,
         client=client,
         dry_run=dry_run,
+        dryRun=dryRun,
     ).parsed
 
 
@@ -197,6 +212,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     dry_run: PostApiGatewayV1LedgersOwnerNameBanksItemIdSyncDryRun | Unset = UNSET,
+    dryRun: PostApiGatewayV1LedgersOwnerNameBanksItemIdSyncDryRun | Unset = UNSET,
 ) -> Response[Any | V1Error]:
     """Pull new transactions from the bank
 
@@ -210,6 +226,8 @@ async def asyncio_detailed(
         item_id (str): The linked bank's item id
         dry_run (PostApiGatewayV1LedgersOwnerNameBanksItemIdSyncDryRun | Unset): Validate and
             report what would change, without changing anything.
+        dryRun (PostApiGatewayV1LedgersOwnerNameBanksItemIdSyncDryRun | Unset): Alias of dry_run,
+            as request bodies spell it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -224,6 +242,7 @@ async def asyncio_detailed(
         name=name,
         item_id=item_id,
         dry_run=dry_run,
+        dryRun=dryRun,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -238,6 +257,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     dry_run: PostApiGatewayV1LedgersOwnerNameBanksItemIdSyncDryRun | Unset = UNSET,
+    dryRun: PostApiGatewayV1LedgersOwnerNameBanksItemIdSyncDryRun | Unset = UNSET,
 ) -> Any | V1Error | None:
     """Pull new transactions from the bank
 
@@ -251,6 +271,8 @@ async def asyncio(
         item_id (str): The linked bank's item id
         dry_run (PostApiGatewayV1LedgersOwnerNameBanksItemIdSyncDryRun | Unset): Validate and
             report what would change, without changing anything.
+        dryRun (PostApiGatewayV1LedgersOwnerNameBanksItemIdSyncDryRun | Unset): Alias of dry_run,
+            as request bodies spell it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -267,5 +289,6 @@ async def asyncio(
             item_id=item_id,
             client=client,
             dry_run=dry_run,
+            dryRun=dryRun,
         )
     ).parsed

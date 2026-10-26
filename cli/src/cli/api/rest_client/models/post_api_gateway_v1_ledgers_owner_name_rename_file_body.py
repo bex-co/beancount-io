@@ -19,7 +19,8 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileBody:
         message (None | str | Unset):
         description (None | str | Unset): Alias of message, as the MCP file tools spell it.
         update_includes (bool | None | Unset):
-        dry_run (bool | Unset): Run every check and return the preview without committing.
+        dryRun (bool | Unset): Run every check and return the preview without committing
+        dry_run (bool | Unset): Alias of dryRun, as MCP spells it.
     """
 
     old_path: str
@@ -27,6 +28,7 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileBody:
     message: None | str | Unset = UNSET
     description: None | str | Unset = UNSET
     update_includes: bool | None | Unset = UNSET
+    dryRun: bool | Unset = UNSET
     dry_run: bool | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
@@ -52,6 +54,8 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileBody:
         else:
             update_includes = self.update_includes
 
+        dryRun = self.dryRun
+
         dry_run = self.dry_run
 
         field_dict: dict[str, Any] = {}
@@ -68,8 +72,10 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileBody:
             field_dict["description"] = description
         if update_includes is not UNSET:
             field_dict["updateIncludes"] = update_includes
+        if dryRun is not UNSET:
+            field_dict["dryRun"] = dryRun
         if dry_run is not UNSET:
-            field_dict["dryRun"] = dry_run
+            field_dict["dry_run"] = dry_run
 
         return field_dict
 
@@ -107,7 +113,9 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileBody:
 
         update_includes = _parse_update_includes(d.pop("updateIncludes", UNSET))
 
-        dry_run = d.pop("dryRun", UNSET)
+        dryRun = d.pop("dryRun", UNSET)
+
+        dry_run = d.pop("dry_run", UNSET)
 
         post_api_gateway_v1_ledgers_owner_name_rename_file_body = cls(
             old_path=old_path,
@@ -115,6 +123,7 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileBody:
             message=message,
             description=description,
             update_includes=update_includes,
+            dryRun=dryRun,
             dry_run=dry_run,
         )
 

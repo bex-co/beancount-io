@@ -21,13 +21,17 @@ class PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteManyBody:
     """
     Attributes:
         entries (list[PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteManyBodyEntriesItem]):
-        allow_invalid (bool | Unset): Commit even when the write would add bean-check errors (VALIDATION_FAILED with
+        allowInvalid (bool | Unset): Commit even when the write would add bean-check errors (VALIDATION_FAILED with
             newLedgerErrors), instead of refusing it.
-        dry_run (bool | Unset): Run every check and return the preview without committing.
+        allow_invalid (bool | Unset): Alias of allowInvalid.
+        dryRun (bool | Unset): Run every check and return the preview without committing
+        dry_run (bool | Unset): Alias of dryRun, as MCP spells it.
     """
 
     entries: list[PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteManyBodyEntriesItem]
+    allowInvalid: bool | Unset = UNSET
     allow_invalid: bool | Unset = UNSET
+    dryRun: bool | Unset = UNSET
     dry_run: bool | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
@@ -36,7 +40,11 @@ class PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteManyBody:
             entries_item = entries_item_data.to_dict()
             entries.append(entries_item)
 
+        allowInvalid = self.allowInvalid
+
         allow_invalid = self.allow_invalid
+
+        dryRun = self.dryRun
 
         dry_run = self.dry_run
 
@@ -47,10 +55,14 @@ class PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteManyBody:
                 "entries": entries,
             }
         )
+        if allowInvalid is not UNSET:
+            field_dict["allowInvalid"] = allowInvalid
         if allow_invalid is not UNSET:
-            field_dict["allowInvalid"] = allow_invalid
+            field_dict["allow_invalid"] = allow_invalid
+        if dryRun is not UNSET:
+            field_dict["dryRun"] = dryRun
         if dry_run is not UNSET:
-            field_dict["dryRun"] = dry_run
+            field_dict["dry_run"] = dry_run
 
         return field_dict
 
@@ -70,13 +82,19 @@ class PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteManyBody:
 
             entries.append(entries_item)
 
-        allow_invalid = d.pop("allowInvalid", UNSET)
+        allowInvalid = d.pop("allowInvalid", UNSET)
 
-        dry_run = d.pop("dryRun", UNSET)
+        allow_invalid = d.pop("allow_invalid", UNSET)
+
+        dryRun = d.pop("dryRun", UNSET)
+
+        dry_run = d.pop("dry_run", UNSET)
 
         post_api_gateway_v1_ledgers_owner_name_entry_source_delete_many_body = cls(
             entries=entries,
+            allowInvalid=allowInvalid,
             allow_invalid=allow_invalid,
+            dryRun=dryRun,
             dry_run=dry_run,
         )
 

@@ -124,7 +124,7 @@ def sync_detailed(
     bean-check errors (a second open for an open account, a balance against an unopened account), or a
     budget for an account the ledger lacks, are refused with VALIDATION_FAILED naming each new error;
     allowInvalid records either deliberately. One posting per transaction may omit its amount and is
-    written elided.
+    written elided. `dryRun` returns the per-file entry text without committing.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -167,7 +167,7 @@ def sync(
     bean-check errors (a second open for an open account, a balance against an unopened account), or a
     budget for an account the ledger lacks, are refused with VALIDATION_FAILED naming each new error;
     allowInvalid records either deliberately. One posting per transaction may omit its amount and is
-    written elided.
+    written elided. `dryRun` returns the per-file entry text without committing.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -205,7 +205,7 @@ async def asyncio_detailed(
     bean-check errors (a second open for an open account, a balance against an unopened account), or a
     budget for an account the ledger lacks, are refused with VALIDATION_FAILED naming each new error;
     allowInvalid records either deliberately. One posting per transaction may omit its amount and is
-    written elided.
+    written elided. `dryRun` returns the per-file entry text without committing.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -246,7 +246,7 @@ async def asyncio(
     bean-check errors (a second open for an open account, a balance against an unopened account), or a
     budget for an account the ledger lacks, are refused with VALIDATION_FAILED naming each new error;
     allowInvalid records either deliberately. One posting per transaction may omit its amount and is
-    written elided.
+    written elided. `dryRun` returns the per-file entry text without committing.
 
     Args:
         owner (str): Ledger owner's username Example: alice.

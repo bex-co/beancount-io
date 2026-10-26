@@ -906,10 +906,20 @@
             "nullable": true,
             "description": "Record entries deliberately even when they are unbalanced (UNBALANCED) or would add bean-check errors such as a second open for an open account (VALIDATION_FAILED), instead of refusing them"
           },
+          "allow_invalid": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Alias of allowInvalid."
+          },
           "dryRun": {
             "type": "boolean",
             "nullable": true,
             "description": "Run every check and return the preview without committing"
+          },
+          "dry_run": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Alias of dryRun, as MCP spells it."
           }
         },
         "required": [
@@ -936,10 +946,20 @@
             "nullable": true,
             "description": "Run every check and return the diff and projected errors without committing"
           },
+          "dry_run": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Alias of dryRun, as MCP spells it."
+          },
           "allowInvalid": {
             "type": "boolean",
             "nullable": true,
             "description": "Commit even when the text introduces new bean-check errors, instead of refusing with UNBALANCED or VALIDATION_FAILED"
+          },
+          "allow_invalid": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Alias of allowInvalid."
           }
         },
         "required": [
@@ -10291,7 +10311,11 @@
                   },
                   "dryRun": {
                     "type": "boolean",
-                    "description": "Run every check and return the preview without committing."
+                    "description": "Run every check and return the preview without committing"
+                  },
+                  "dry_run": {
+                    "type": "boolean",
+                    "description": "Alias of dryRun, as MCP spells it."
                   }
                 },
                 "required": [
@@ -10457,7 +10481,7 @@
     "/api-gateway/v1/ledgers/{owner}/{name}/entries": {
       "post": {
         "summary": "Add directives to the ledger",
-        "description": "Appends one or more Beancount directives, routed to the right file by type and date and committed as a single commit. All-or-nothing: if any directive fails, none are written. A transaction whose residual is outside the ledger's tolerance is refused with UNBALANCED, and directives that would add bean-check errors (a second open for an open account, a balance against an unopened account), or a budget for an account the ledger lacks, are refused with VALIDATION_FAILED naming each new error; allowInvalid records either deliberately. One posting per transaction may omit its amount and is written elided.",
+        "description": "Appends one or more Beancount directives, routed to the right file by type and date and committed as a single commit. All-or-nothing: if any directive fails, none are written. A transaction whose residual is outside the ledger's tolerance is refused with UNBALANCED, and directives that would add bean-check errors (a second open for an open account, a balance against an unopened account), or a budget for an account the ledger lacks, are refused with VALIDATION_FAILED naming each new error; allowInvalid records either deliberately. One posting per transaction may omit its amount and is written elided. `dryRun` returns the per-file entry text without committing.",
         "tags": [
           "Ledger v1"
         ],
@@ -11180,9 +11204,17 @@
                     "type": "boolean",
                     "description": "Commit even when the write would add bean-check errors (VALIDATION_FAILED with newLedgerErrors), instead of refusing it."
                   },
+                  "allow_invalid": {
+                    "type": "boolean",
+                    "description": "Alias of allowInvalid."
+                  },
                   "dryRun": {
                     "type": "boolean",
-                    "description": "Run every check and return the preview without committing."
+                    "description": "Run every check and return the preview without committing"
+                  },
+                  "dry_run": {
+                    "type": "boolean",
+                    "description": "Alias of dryRun, as MCP spells it."
                   }
                 },
                 "required": [
@@ -11407,9 +11439,17 @@
                     "type": "boolean",
                     "description": "Commit even when the write would add bean-check errors (VALIDATION_FAILED with newLedgerErrors), instead of refusing it."
                   },
+                  "allow_invalid": {
+                    "type": "boolean",
+                    "description": "Alias of allowInvalid."
+                  },
                   "dryRun": {
                     "type": "boolean",
-                    "description": "Run every check and return the preview without committing."
+                    "description": "Run every check and return the preview without committing"
+                  },
+                  "dry_run": {
+                    "type": "boolean",
+                    "description": "Alias of dryRun, as MCP spells it."
                   }
                 },
                 "required": [
@@ -11622,9 +11662,17 @@
                     "type": "boolean",
                     "description": "Commit even when the write would add bean-check errors (VALIDATION_FAILED with newLedgerErrors), instead of refusing it."
                   },
+                  "allow_invalid": {
+                    "type": "boolean",
+                    "description": "Alias of allowInvalid."
+                  },
                   "dryRun": {
                     "type": "boolean",
-                    "description": "Run every check and return the preview without committing."
+                    "description": "Run every check and return the preview without committing"
+                  },
+                  "dry_run": {
+                    "type": "boolean",
+                    "description": "Alias of dryRun, as MCP spells it."
                   },
                   "newContent": {
                     "type": "string"
@@ -17241,6 +17289,20 @@
             "description": "Validate and report what would change, without changing anything.",
             "name": "dry_run",
             "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "description": "Alias of dry_run, as request bodies spell it."
+            },
+            "required": false,
+            "description": "Alias of dry_run, as request bodies spell it.",
+            "name": "dryRun",
+            "in": "query"
           }
         ],
         "responses": {
@@ -18175,6 +18237,20 @@
             "description": "Validate and report what would change, without changing anything.",
             "name": "dry_run",
             "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "description": "Alias of dry_run, as request bodies spell it."
+            },
+            "required": false,
+            "description": "Alias of dry_run, as request bodies spell it.",
+            "name": "dryRun",
+            "in": "query"
           }
         ],
         "responses": {
@@ -18333,6 +18409,20 @@
             "required": false,
             "description": "Validate and report what would change, without changing anything.",
             "name": "dry_run",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "description": "Alias of dry_run, as request bodies spell it."
+            },
+            "required": false,
+            "description": "Alias of dry_run, as request bodies spell it.",
+            "name": "dryRun",
             "in": "query"
           }
         ],
@@ -18501,6 +18591,20 @@
             "required": false,
             "description": "Validate and report what would change, without changing anything.",
             "name": "dry_run",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "description": "Alias of dry_run, as request bodies spell it."
+            },
+            "required": false,
+            "description": "Alias of dry_run, as request bodies spell it.",
+            "name": "dryRun",
             "in": "query"
           }
         ],
@@ -18680,6 +18784,20 @@
             "description": "Validate and report what would change, without changing anything.",
             "name": "dry_run",
             "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "description": "Alias of dry_run, as request bodies spell it."
+            },
+            "required": false,
+            "description": "Alias of dry_run, as request bodies spell it.",
+            "name": "dryRun",
+            "in": "query"
           }
         ],
         "responses": {
@@ -18845,6 +18963,17 @@
             },
             "required": false,
             "name": "dry_run",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "false"
+              ]
+            },
+            "required": false,
+            "name": "dryRun",
             "in": "query"
           }
         ],
@@ -19024,6 +19153,17 @@
             "required": false,
             "name": "dry_run",
             "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "false"
+              ]
+            },
+            "required": false,
+            "name": "dryRun",
+            "in": "query"
           }
         ],
         "requestBody": {
@@ -19198,6 +19338,17 @@
             },
             "required": false,
             "name": "dry_run",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "false"
+              ]
+            },
+            "required": false,
+            "name": "dryRun",
             "in": "query"
           }
         ],

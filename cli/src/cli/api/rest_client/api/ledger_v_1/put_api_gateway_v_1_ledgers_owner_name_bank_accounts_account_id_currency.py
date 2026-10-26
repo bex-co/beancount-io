@@ -21,6 +21,7 @@ def _get_kwargs(
     *,
     body: BankAccountCurrency | Unset = UNSET,
     dry_run: PutApiGatewayV1LedgersOwnerNameBankAccountsAccountIdCurrencyDryRun | Unset = UNSET,
+    dryRun: PutApiGatewayV1LedgersOwnerNameBankAccountsAccountIdCurrencyDryRun | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -31,6 +32,12 @@ def _get_kwargs(
         json_dry_run = dry_run.value
 
     params["dry_run"] = json_dry_run
+
+    json_dryRun: str | Unset = UNSET
+    if not isinstance(dryRun, Unset):
+        json_dryRun = dryRun.value
+
+    params["dryRun"] = json_dryRun
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -126,6 +133,7 @@ def sync_detailed(
     client: AuthenticatedClient,
     body: BankAccountCurrency | Unset = UNSET,
     dry_run: PutApiGatewayV1LedgersOwnerNameBankAccountsAccountIdCurrencyDryRun | Unset = UNSET,
+    dryRun: PutApiGatewayV1LedgersOwnerNameBankAccountsAccountIdCurrencyDryRun | Unset = UNSET,
 ) -> Response[Any | V1Error]:
     """Set a bank account's currency
 
@@ -137,6 +145,7 @@ def sync_detailed(
         name (str): Ledger (repository) name Example: main-ledger.
         account_id (str): The bank account's id
         dry_run (PutApiGatewayV1LedgersOwnerNameBankAccountsAccountIdCurrencyDryRun | Unset):
+        dryRun (PutApiGatewayV1LedgersOwnerNameBankAccountsAccountIdCurrencyDryRun | Unset):
         body (BankAccountCurrency | Unset):
 
     Raises:
@@ -153,6 +162,7 @@ def sync_detailed(
         account_id=account_id,
         body=body,
         dry_run=dry_run,
+        dryRun=dryRun,
     )
 
     response = client.get_httpx_client().request(
@@ -170,6 +180,7 @@ def sync(
     client: AuthenticatedClient,
     body: BankAccountCurrency | Unset = UNSET,
     dry_run: PutApiGatewayV1LedgersOwnerNameBankAccountsAccountIdCurrencyDryRun | Unset = UNSET,
+    dryRun: PutApiGatewayV1LedgersOwnerNameBankAccountsAccountIdCurrencyDryRun | Unset = UNSET,
 ) -> Any | V1Error | None:
     """Set a bank account's currency
 
@@ -181,6 +192,7 @@ def sync(
         name (str): Ledger (repository) name Example: main-ledger.
         account_id (str): The bank account's id
         dry_run (PutApiGatewayV1LedgersOwnerNameBankAccountsAccountIdCurrencyDryRun | Unset):
+        dryRun (PutApiGatewayV1LedgersOwnerNameBankAccountsAccountIdCurrencyDryRun | Unset):
         body (BankAccountCurrency | Unset):
 
     Raises:
@@ -198,6 +210,7 @@ def sync(
         client=client,
         body=body,
         dry_run=dry_run,
+        dryRun=dryRun,
     ).parsed
 
 
@@ -209,6 +222,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
     body: BankAccountCurrency | Unset = UNSET,
     dry_run: PutApiGatewayV1LedgersOwnerNameBankAccountsAccountIdCurrencyDryRun | Unset = UNSET,
+    dryRun: PutApiGatewayV1LedgersOwnerNameBankAccountsAccountIdCurrencyDryRun | Unset = UNSET,
 ) -> Response[Any | V1Error]:
     """Set a bank account's currency
 
@@ -220,6 +234,7 @@ async def asyncio_detailed(
         name (str): Ledger (repository) name Example: main-ledger.
         account_id (str): The bank account's id
         dry_run (PutApiGatewayV1LedgersOwnerNameBankAccountsAccountIdCurrencyDryRun | Unset):
+        dryRun (PutApiGatewayV1LedgersOwnerNameBankAccountsAccountIdCurrencyDryRun | Unset):
         body (BankAccountCurrency | Unset):
 
     Raises:
@@ -236,6 +251,7 @@ async def asyncio_detailed(
         account_id=account_id,
         body=body,
         dry_run=dry_run,
+        dryRun=dryRun,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -251,6 +267,7 @@ async def asyncio(
     client: AuthenticatedClient,
     body: BankAccountCurrency | Unset = UNSET,
     dry_run: PutApiGatewayV1LedgersOwnerNameBankAccountsAccountIdCurrencyDryRun | Unset = UNSET,
+    dryRun: PutApiGatewayV1LedgersOwnerNameBankAccountsAccountIdCurrencyDryRun | Unset = UNSET,
 ) -> Any | V1Error | None:
     """Set a bank account's currency
 
@@ -262,6 +279,7 @@ async def asyncio(
         name (str): Ledger (repository) name Example: main-ledger.
         account_id (str): The bank account's id
         dry_run (PutApiGatewayV1LedgersOwnerNameBankAccountsAccountIdCurrencyDryRun | Unset):
+        dryRun (PutApiGatewayV1LedgersOwnerNameBankAccountsAccountIdCurrencyDryRun | Unset):
         body (BankAccountCurrency | Unset):
 
     Raises:
@@ -280,5 +298,6 @@ async def asyncio(
             client=client,
             body=body,
             dry_run=dry_run,
+            dryRun=dryRun,
         )
     ).parsed
