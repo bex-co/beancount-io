@@ -23,7 +23,6 @@
 
 ## Inbox
 
-- [111](./111.md) — `listLedgerEntries` / journal returns `is_empty: false` alongside `total: 0` on filtered-to-zero results (ledger-level flag; should be result-level)
 - [112](./112.md) — REST bank queries silently drop unknown keys instead of refusing them (m8/t005 follow-up; `.strict()` on `bankAccountQuery`)
 - [113](./113.md) — every validated REST GET query schema silently drops unknown keys (32 routes verified; w23/112 pattern repo-wide; MCP/GraphQL strict)
 - [114](./114.md) — REST file writes take no `dryRun` while MCP previews them (m9/t001 follow-up; flags exist only on MCP)

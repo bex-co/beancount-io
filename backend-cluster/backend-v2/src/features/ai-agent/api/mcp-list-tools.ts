@@ -121,7 +121,11 @@ export const listLedgerEntriesOutput = toolOutputSchema(
   z.object({
     total: z.number(),
     data: z.array(z.record(z.string(), z.unknown())),
-    is_empty: z.boolean(),
+    // Result-level: true when the filtered result holds no entries, even
+    // on a non-empty ledger (w23/111).
+    is_empty: z
+      .boolean()
+      .describe("True when this result holds no entries (total 0)."),
   }),
 );
 
