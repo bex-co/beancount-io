@@ -269,6 +269,79 @@ describe("source-slice writes that would break the ledger", () => {
   });
 });
 
+// A preview runs the same projection check as a commit (w23/m7/t008): the
+// refusal happens before the commit is skipped, so a breaking preview
+// refuses and allowInvalid previews the breaking change instead.
+describe("source-slice previews that would break the ledger", () => {
+  beforeEach(() => {
+    files = { "main.bean": ledger(FARMERS, BALANCE) };
+  });
+
+  it("refuses a breaking update on a preview, committing nothing", async () => {
+    const before = files["main.bean"];
+    await expect(
+      service().updateSourceSlice({
+        ledgerId: LEDGER_ID,
+        userId: "user-1",
+        entryHash: "farmers",
+        sha256sum: sliceSha256(FARMERS),
+        newContent: FARMERS_LATE,
+        dryRun: true,
+      }),
+    ).rejects.toBeInstanceOf(NewLedgerErrorsError);
+    expect(commitMock).not.toHaveBeenCalled();
+    expect(files["main.bean"]).toBe(before);
+  });
+
+  it("refuses a breaking delete on a preview, committing nothing", async () => {
+    const before = files["main.bean"];
+    await expect(
+      service().deleteSourceSlice({
+        ledgerId: LEDGER_ID,
+        userId: "user-1",
+        entryHash: "farmers",
+        sha256sum: sliceSha256(FARMERS),
+        dryRun: true,
+      }),
+    ).rejects.toBeInstanceOf(NewLedgerErrorsError);
+    expect(commitMock).not.toHaveBeenCalled();
+    expect(files["main.bean"]).toBe(before);
+  });
+
+  it("refuses a breaking multi-delete on a preview, committing nothing", async () => {
+    const before = files["main.bean"];
+    await expect(
+      service().deleteMultiSourceSlices({
+        ledgerId: LEDGER_ID,
+        userId: "user-1",
+        entries: [{ entryHash: "farmers", sha256sum: sliceSha256(FARMERS) }],
+        dryRun: true,
+      }),
+    ).rejects.toBeInstanceOf(NewLedgerErrorsError);
+    expect(commitMock).not.toHaveBeenCalled();
+    expect(files["main.bean"]).toBe(before);
+  });
+
+  it("previews the breaking change when allowInvalid asks for it", async () => {
+    const before = files["main.bean"];
+    const updated = await service().updateSourceSlice({
+      ledgerId: LEDGER_ID,
+      userId: "user-1",
+      entryHash: "farmers",
+      sha256sum: sliceSha256(FARMERS),
+      newContent: FARMERS_LATE,
+      allowInvalid: true,
+      dryRun: true,
+    });
+    expect(updated.message).toBe("Would update the entry");
+    expect(updated.preview).toEqual([
+      { path: "main.bean", text: expect.stringContaining("2026-08-30") },
+    ]);
+    expect(commitMock).not.toHaveBeenCalled();
+    expect(files["main.bean"]).toBe(before);
+  });
+});
+
 describe("source-slice writes on a ledger that already has errors", () => {
   it("does not count an existing error that the write only moved", async () => {
     // Deleting COFFEE shifts the duplicate open three lines up.

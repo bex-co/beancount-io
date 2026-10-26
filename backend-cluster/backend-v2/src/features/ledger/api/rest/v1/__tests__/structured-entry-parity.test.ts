@@ -277,15 +277,18 @@ async function fixture(
       surface: string,
       batch = entries,
       opts: { allowInvalid?: boolean; dryRun?: boolean; dry_run?: boolean } = {},
+      // The spelling test sends the other surface's flag untouched.
+      raw = false,
     ) => {
       if (surface === "rest") {
-        const { dry_run: _ignored, ...restOpts } = opts;
+        const { dry_run: _stripped, ...restOpts } = opts;
+        const sent = raw ? opts : restOpts;
         const response = await fetch(
           `${rest.url}/api-gateway/v1/ledgers/alice/main/entries`,
           {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ entries: batch, ...restOpts }),
+            body: JSON.stringify({ entries: batch, ...sent }),
           },
         );
         return {
@@ -321,12 +324,13 @@ async function fixture(
       }
       // MCP spells the preview flag dry_run; the camel twin would be an
       // unrecognized key under the strict tool input (w23/m7/t002).
-      const { dryRun: _ignored, ...mcpOpts } = opts;
+      const { dryRun: _stripped, ...mcpOpts } = opts;
+      const sent = raw ? opts : mcpOpts;
       const response = await client.callTool({
         name: "addLedgerEntries",
         arguments: {
           entries: batch,
-          ...mcpOpts,
+          ...sent,
           ...(caller.ledgerScope ? {} : { ledger: "alice/main" }),
         },
       });
@@ -1408,6 +1412,49 @@ describe.each(["rest", "gql", "mcp"])("typed add preview via %s", (surface) => {
     }
   });
 
+  // w23/m7/t008: a preview runs the same checks — entries that would add
+  // a bean-check error refuse on a dry run exactly as on a commit.
+  it("refuses breaking entries on a dry run", async () => {
+    const f = await fixture();
+    f.state.wouldBreak = true;
+    try {
+      const result = await f.call(surface, duplicateOpenBatch, previewOpts());
+      expect(result.success).toBe(false);
+      expect(f.committed).toEqual([]);
+      const named = "Duplicate open directive for Assets:Cash (main.bean:74)";
+      if (surface === "rest") {
+        expect(result.result).toMatchObject({
+          ok: false,
+          error: {
+            code: "VALIDATION_FAILED",
+            message: expect.stringContaining(named),
+            metadata: { field: "entries", newLedgerErrors: named },
+          },
+        });
+      } else if (surface === "gql") {
+        const refusal = (result.errors ?? []).find((error) =>
+          String(error.message).includes(named),
+        );
+        expect(
+          (refusal?.originalError as { metadata?: unknown } | undefined)
+            ?.metadata,
+        ).toMatchObject({ field: "entries", newLedgerErrors: named });
+      } else {
+        expect(result.full).toMatchObject({
+          ok: false,
+          error: {
+            code: "VALIDATION_FAILED",
+            message: expect.stringContaining(named),
+            hint: expect.stringContaining("allowInvalid: true"),
+            newLedgerErrors: named,
+          },
+        });
+      }
+    } finally {
+      await f.close();
+    }
+  });
+
   // w23/m7/t002: the preview message says what would happen, not what did.
   it("says Would add on a dry run", async () => {
     const batch = [
@@ -1426,6 +1473,46 @@ describe.each(["rest", "gql", "mcp"])("typed add preview via %s", (surface) => {
       );
       expect(text).toContain("Would add 1 entry");
       expect(text).not.toContain("Added 1 entry");
+    } finally {
+      await f.close();
+    }
+  });
+
+  // w23/m7/t008: MCP spells the flag dry_run, REST and GraphQL dryRun;
+  // each surface refuses the other's spelling before the writer runs.
+  it("refuses the other surface's preview spelling", async () => {
+    const f = await fixture();
+    try {
+      if (surface === "gql") {
+        // Flat args, not an input object: an unknown argument fails
+        // GraphQL validation itself.
+        const result = await graphql({
+          schema,
+          source: `mutation { bulkEntries(ledgerId:"alice/main",entries:[],dry_run:true) { success } }`,
+          contextValue: {
+            identity,
+            getCurrentIdentity: () => identity,
+            platform: "web",
+          },
+        });
+        expect(result.errors?.length).toBeGreaterThan(0);
+      } else {
+        const batch = [
+          {
+            type: "open",
+            entry: { date, account: "Assets:New", currencies: ["USD"] },
+          },
+        ] as unknown as LedgerEntryInput[];
+        const result = await f.call(
+          surface,
+          batch,
+          surface === "mcp" ? { dryRun: true } : { dry_run: true },
+          true,
+        );
+        expect(result.success).toBe(false);
+      }
+      expect(f.committed).toEqual([]);
+      expect(f.write).not.toHaveBeenCalled();
     } finally {
       await f.close();
     }

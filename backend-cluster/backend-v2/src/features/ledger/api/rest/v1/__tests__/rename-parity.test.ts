@@ -869,6 +869,37 @@ describe.each(["rest", "gql", "mcp"])("rename preview via %s", (surface) => {
     }
   });
 
+  // The rewrite loop runs on a preview too (w23/m7/t008): refusing to
+  // re-encode a non-UTF-8 includer is a check, not a commit step (w23/030).
+  it("refuses to rewrite a non-UTF-8 includer on a preview", async () => {
+    const f = await fixture(identity, { "b.bean": "; b\n" });
+    const latin1 = Buffer.concat([
+      Buffer.from("; Caf"),
+      Buffer.from([0xe9]),
+      Buffer.from('\ninclude "b.bean"\n'),
+    ]).toString("base64");
+    f.files.set("main.bean", { content: latin1, sha: "sha-l", encoding: "base64" });
+    const before = contents(f);
+    try {
+      const result = await f.call(surface, "b.bean", "c.bean", {
+        ...previewFlag,
+        updateIncludes: true,
+      });
+      expect(result.success).toBe(false);
+      if (surface === "rest")
+        expect(result.result).toMatchObject({
+          error: {
+            code: "BAD_USER_INPUT",
+            message: expect.stringContaining("main.bean is not valid UTF-8"),
+          },
+        });
+      expect(contents(f)).toEqual(before);
+      expect(f.change).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+
   it("refuses the other surface's preview spelling", async () => {
     const f = await fixture();
     try {
