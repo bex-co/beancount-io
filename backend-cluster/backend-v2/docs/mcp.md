@@ -286,14 +286,14 @@ the principal inputs; inspect the schema before constructing a call.
 | `deleteEntrySource`          | `entryHash`, `sha256sum`, optional `dry_run`; deletes one entry's source.                                                                                                  | Write      |
 | `deleteEntrySources`         | `entries: [{entryHash, sha256sum}]`, optional `dry_run`; deletes entries' source in one commit.                                                                            | Write      |
 | `renameLedgerFile`           | `oldPath`, `newPath`, optional `message`, `updateIncludes`, `dry_run`; moves a file, rewriting includes. A preview names the move plus the rewritten include lines.     | Write      |
-| `syncBankTransactions`       | `item_id`, optional `dry_run`; pulls new transactions from a linked bank into staging.                                                                                    | Write      |
-| `importStagedBankTransactions` | `transactions: [{ transaction_id, target_account, source_account? }]`, optional `filename`, `dry_run`; writes staged transactions into the ledger.                     | Write      |
-| `discardStagedBankTransactions` | `transaction_ids`, optional `dry_run`; removes staged transactions.                                                                                                  | Write      |
-| `reconcileBankAccounts`      | `item_id`, optional `dry_run`; re-reads which accounts a bank shares and can delete ones it no longer shares.                                                             | Admin      |
-| `mapBankAccount`             | `account_id`, `ledger_account`; points a bank account at a ledger account.                                                                                                | Admin      |
-| `setBankAccountCurrency`     | `account_id`, `currency`; sets a bank account's currency.                                                                                                                 | Admin      |
-| `refreshBankConnection`      | `item_id`; re-reads a connection's health.                                                                                                                                | Admin      |
-| `unlinkBankConnection`       | `item_id`, optional `dry_run`; severs a linked bank.                                                                                                                      | Admin      |
+| `syncBankTransactions`       | `itemId`, optional `dry_run`; pulls new transactions from a linked bank into staging.                                                                                     | Write      |
+| `importStagedBankTransactions` | `transactions: [{ transactionId, targetAccount, sourceAccount? }]`, optional `filename`, `dry_run`; writes staged transactions into the ledger.                       | Write      |
+| `discardStagedBankTransactions` | `transactionIds`, optional `dry_run`; removes staged transactions.                                                                                                   | Write      |
+| `reconcileBankAccounts`      | `itemId`, optional `dry_run`; re-reads which accounts a bank shares and can delete ones it no longer shares.                                                              | Admin      |
+| `mapBankAccount`             | `accountId`, `ledgerAccount`; points a bank account at a ledger account.                                                                                                  | Admin      |
+| `setBankAccountCurrency`     | `accountId`, `currency`; sets a bank account's currency.                                                                                                                  | Admin      |
+| `refreshBankConnection`      | `itemId`; re-reads a connection's health.                                                                                                                                 | Admin      |
+| `unlinkBankConnection`       | `itemId`, optional `dry_run`; severs a linked bank.                                                                                                                       | Admin      |
 | `listBankConnections`        | `{}`; linked bank connections (`item_id`) and their accounts (`account_id`, mapping) — the `banks` and `bank-accounts` resources as a tool.                               | Admin      |
 | `listStagedBankTransactions` | Optional `accountId`; transactions staged for import, with the ids `importStagedBankTransactions` and `discardStagedBankTransactions` take — the `bank-transactions/unsynced` resource as a tool.          | Read       |
 
@@ -523,17 +523,25 @@ After linking:
 
 1. Read the `banks` and `bank-accounts` resources, or call
    `listBankConnections`, to find connection IDs and ledger-account mappings.
-2. Call `syncBankTransactions` with `item_id` to pull bank transactions into
+2. Call `syncBankTransactions` with `itemId` to pull bank transactions into
    staging.
 3. Read `bank-transactions/unsynced` or call `listStagedBankTransactions`
    (optionally with `accountId` to select one bank account). Select the
    transactions and accounts to
    book; the suggestion resources can help categorize them.
 4. Call `importStagedBankTransactions` with
-   `transactions: [{ transaction_id, target_account, source_account? }]`.
+   `transactions: [{ transactionId, targetAccount, sourceAccount? }]`.
    Optional `filename` selects an existing ledger file.
-5. Call `discardStagedBankTransactions` with `transaction_ids` to remove
+5. Call `discardStagedBankTransactions` with `transactionIds` to remove
    unwanted staged transactions.
+
+Every bank id argument above also accepts the snake_case spelling the tools
+historically took (`item_id`, `account_id`, `transaction_ids`, and the
+submit-item `transaction_id`/`target_account`/`source_account` triple plus
+`mapBankAccount`'s `ledger_account`), so ids paste straight from the
+resources that report them. Passing both spellings with two different ids
+is refused with `BAD_USER_INPUT` rather than guessed. REST and GraphQL
+take the camelCase spelling only, as they always have.
 
 `syncBankTransactions`, `importStagedBankTransactions`,
 `discardStagedBankTransactions`, `reconcileBankAccounts`, and

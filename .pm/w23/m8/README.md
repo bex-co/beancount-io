@@ -9,7 +9,7 @@
 | t001 | Reproduce + map the bank naming splits ✅ | 30m | — |
 | t002 | MCP top-level id aliases end to end ✅ | 60m | t001 |
 | t003 | MCP nested bank aliases end to end ✅ | 45m | t002 |
-| t004 | Document bank naming | 30m | t003 |
+| t004 | Document bank naming ✅ | 30m | t003 |
 | t005 | Adoption surface | 20m | t004 |
 | t006 | Simplify | 30m | t005 |
 | t007 | Test coverage | 45m | t005 |
