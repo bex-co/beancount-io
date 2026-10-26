@@ -254,6 +254,17 @@ describe("entryInputToText — Fava-exact serialization parity", () => {
     expect(covered.size).toBe(goldenKeys.length);
   });
 
+  // w23/106: omitted currencies render exactly like an explicit empty
+  // list — a bare `open` line, byte-identical to the open_none golden.
+  it("renders an omitted open currencies like an explicit empty list", () => {
+    const omitted = entryInputToText({
+      type: "open",
+      entry: { date: "2024-01-01", account: "Assets:Checking" },
+    });
+    expect(omitted).toBe(goldenText["open_none"]);
+    expect(omitted).toBe("2024-01-01 open Assets:Checking\n\n");
+  });
+
   /**
    * A budget reaches this module as a `custom` directive, because that is the
    * only shape the bulk-entries contract defines for one — there is no

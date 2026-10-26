@@ -63,7 +63,8 @@ type BookingMethod = "STRICT" | "FIFO" | "LIFO" | "NONE";
 type OpenInput = {
   date: string;
   account: string;
-  currencies: string[];
+  // Optional (w23/106): stock beancount accepts a currency-less open.
+  currencies?: string[];
   booking?: BookingMethod;
 };
 

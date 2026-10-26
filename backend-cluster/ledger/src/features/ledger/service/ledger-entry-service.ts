@@ -55,7 +55,12 @@ type NoteInput = { date: string; content: string; account: string };
 
 type BalanceInput = { date: string; account: string; amount: AmountInput };
 
-type OpenInput = { date: string; account: string; currencies: string[] };
+type OpenInput = {
+  date: string;
+  account: string;
+  // Optional (w23/106): stock beancount accepts a currency-less open.
+  currencies?: string[];
+};
 
 type CloseInput = { date: string; account: string };
 
