@@ -102,6 +102,26 @@ def test_cash_flow_empty_period(tmp_path: Path) -> None:
     assert "Net change in cash:" in proc.stdout
 
 
+NOCASH = """\
+option "operating_currency" "USD"
+2026-01-01 open Assets:Brokerage USD,VTI
+2026-01-01 open Income:Gains USD
+2026-01-05 * "Grant"
+  Assets:Brokerage  10 VTI {100 USD}
+  Income:Gains  -1000 USD
+"""
+
+
+def test_cash_flow_without_cash_accounts(tmp_path: Path) -> None:
+    ledger = write_ledger(tmp_path, NOCASH)
+    proc = _bea(tmp_path, "--file", str(ledger), "report", "cash-flow")
+    assert proc.returncode == 0, proc.stderr
+    assert "Operating" in proc.stdout
+    assert "Investing" in proc.stdout
+    assert "Net change in cash:" in proc.stdout
+    assert "Cash accounts:" not in proc.stdout
+
+
 def test_cash_flow_invalid_role_is_noted(tmp_path: Path) -> None:
     ledger = write_ledger(tmp_path, WEIRD_ROLE)
     proc = _bea(tmp_path, "--file", str(ledger), "report", "cash-flow")

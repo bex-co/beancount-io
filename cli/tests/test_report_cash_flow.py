@@ -183,6 +183,115 @@ def test_declared_investing_pulls_account_out_of_cash(tmp_path: Path) -> None:
     assert "Assets:Bank:CD" not in [entry["account"] for entry in data["cash_accounts"]]
 
 
+NOCASH = """\
+option "operating_currency" "USD"
+2026-01-01 open Assets:Brokerage USD,VTI
+2026-01-01 open Income:Gains USD
+2026-01-05 * "Grant"
+  Assets:Brokerage  10 VTI {100 USD}
+  Income:Gains  -1000 USD
+"""
+
+EURCASH = """\
+option "operating_currency" "USD"
+2026-01-01 open Assets:Bank:Checking USD
+2026-01-01 open Assets:Bank:Savings EUR
+2026-01-01 open Income:Salary USD
+2026-01-01 open Expenses:Food USD,EUR
+2026-01-01 open Equity:Opening USD,EUR
+2026-01-05 * "Opening"
+  Assets:Bank:Checking  4000.00 USD
+  Assets:Bank:Savings  500 EUR
+  Equity:Opening
+2026-01-06 * "Salary"
+  Assets:Bank:Checking  3000.00 USD
+  Income:Salary        -3000.00 USD
+2026-01-10 * "Groceries"
+  Assets:Bank:Savings  -50 EUR
+  Expenses:Food          50 EUR
+"""
+
+NESTED = """\
+option "operating_currency" "USD"
+2026-01-01 open Assets:Cash USD
+2026-01-01 open Assets:Cash:Petty USD
+2026-01-01 open Income:Salary USD
+2026-01-05 * "Seed"
+  Assets:Cash:Petty  100.00 USD
+  Income:Salary
+"""
+
+
+def test_no_cash_accounts_still_reports_sections(tmp_path: Path) -> None:
+    data = _cash_flow(write_ledger(tmp_path, NOCASH))
+    assert data["cash_accounts"] == []
+    assert data["closing"] == {}
+    operating = {row["account"]: row["amounts"] for row in data["sections"]["operating"]}
+    assert operating == {"Income:Gains": {"USD": "1000"}}
+    investing = {row["account"]: row["amounts"] for row in data["sections"]["investing"]}
+    assert investing == {"Assets:Brokerage": {"USD": "-1000"}}
+    assert data["net_change"] == {"USD": "0"}
+    assert data["opening"] == {"USD": "0"}
+
+
+def test_foreign_cash_stays_in_its_own_units(tmp_path: Path) -> None:
+    data = _cash_flow(write_ledger(tmp_path, EURCASH))
+    operating = {row["account"]: row["amounts"] for row in data["sections"]["operating"]}
+    assert operating == {
+        "Expenses:Food": {"EUR": "-50"},
+        "Income:Salary": {"USD": "3000.00"},
+    }
+    assert data["net_change"] == {"USD": "7000.00", "EUR": "450"}
+    assert data["closing"] == {"USD": "7000.00", "EUR": "450"}
+    assert data["opening"] == {"USD": "0.00", "EUR": "0"}
+
+
+def test_inherited_cash_leaf_is_never_a_row(tmp_path: Path) -> None:
+    data = _cash_flow(write_ledger(tmp_path, NESTED))
+    assert [entry["account"] for entry in data["cash_accounts"]] == ["Assets:Cash", "Assets:Cash:Petty"]
+    rows = [row["account"] for section in data["sections"].values() for row in section]
+    assert rows == ["Income:Salary"]
+    assert data["closing"] == {"USD": "100.00"}
+    assert data["net_change"] == {"USD": "100.00"}
+    assert data["opening"] == {"USD": "0.00"}
+
+
+def test_to_date_before_activity_is_empty_with_zero_position(tmp_path: Path) -> None:
+    data = _cash_flow(write_ledger(tmp_path, BASE), "--to-date", "2025-12-31")
+    assert data["sections"] == {"operating": [], "investing": [], "financing": []}
+    assert data["net_change"] == {}
+    assert data["closing"] == {}
+    assert data["opening"] == {}
+
+
+def test_malformed_bounds_are_refused(tmp_path: Path) -> None:
+    import json
+
+    ledger = write_ledger(tmp_path, BASE)
+    proc = engine(
+        ["report", "--file", str(ledger), "--kind", "cash-flow", "--from-date", "banana"],
+        tmp_path,
+    )
+    assert proc.returncode == 2
+    assert "Invalid --from-date" in json.loads(proc.stdout)["error"]["message"]
+    proc = engine(
+        [
+            "report",
+            "--file",
+            str(ledger),
+            "--kind",
+            "cash-flow",
+            "--from-date",
+            "2026-02-01",
+            "--to-date",
+            "2026-01-01",
+        ],
+        tmp_path,
+    )
+    assert proc.returncode == 2
+    assert "is after --to-date" in json.loads(proc.stdout)["error"]["message"]
+
+
 def test_conversion_is_refused(tmp_path: Path) -> None:
     import json
 
