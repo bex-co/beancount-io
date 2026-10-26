@@ -303,6 +303,51 @@ describe("LedgerJournalResolver", () => {
         ),
       ).rejects.toThrow(InternalServerError);
     });
+
+    // w23/m10/t007: explicit nulls read as missing, and a null native
+    // never conflicts with a set twin.
+    it("treats explicit null params as missing", async () => {
+      mockJournalService.getAccountJournal.mockResolvedValue({ total: 0 });
+
+      await queryResolver.getLedgerAccountJournal(
+        "testuser/testrepo",
+        mockContext as IContext,
+        {
+          account: "Assets:Cash",
+          filterAccount: null,
+          with_children: null,
+        } as never,
+      );
+
+      expect(mockJournalService.getAccountJournal).toHaveBeenCalledWith({
+        ledgerId: "testuser/testrepo",
+        identity: expect.anything(),
+        query: expect.objectContaining({
+          filterAccount: undefined,
+          with_children: undefined,
+        }),
+      });
+    });
+
+    it("resolves the twin when the native is null", async () => {
+      mockJournalService.getAccountJournal.mockResolvedValue({ total: 0 });
+
+      await queryResolver.getLedgerAccountJournal(
+        "testuser/testrepo",
+        mockContext as IContext,
+        {
+          account: "Assets:Cash",
+          with_children: null,
+          withChildren: false,
+        } as never,
+      );
+
+      expect(mockJournalService.getAccountJournal).toHaveBeenCalledWith({
+        ledgerId: "testuser/testrepo",
+        identity: expect.anything(),
+        query: expect.objectContaining({ with_children: false }),
+      });
+    });
   });
 
   describe("deleteLedgerEntrySourceSlice", () => {

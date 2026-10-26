@@ -449,6 +449,74 @@ describe("journal adapter contracts", () => {
     }
   });
 
+  // w23/m10/t007: agreement is not a conflict — both spellings set to
+  // the same filter reach the ledger filter on every surface.
+  it("accepts both filter spellings when they agree", async () => {
+    const f = await fixture();
+    try {
+      const rest = await f.rest(
+        "account-journal?account=Assets:Bank&filter_account=Assets:Cash&filterAccount=Assets:Cash",
+      );
+      expect(rest.status).toBe(200);
+      await f.mcp(
+        "account-journal?account=Assets:Bank&filter_account=Assets:Cash&filterAccount=Assets:Cash",
+      );
+      const gql = await f.gql(
+        'getLedgerAccountJournal(ledgerId: "alice/main", query: { account: "Assets:Bank", filter_account: "Assets:Cash", filterAccount: "Assets:Cash" }) { total }',
+      );
+      expect(gql.errors).toBeUndefined();
+      expect(f.journal.getAccountJournal).toHaveBeenCalledTimes(3);
+      for (const call of f.journal.getAccountJournal.mock.calls)
+        expect(call[2]).toMatchObject({ filter_account: "Assets:Cash" });
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("accepts both children spellings when they agree", async () => {
+    const f = await fixture();
+    try {
+      const rest = await f.rest(
+        "account-journal?account=Assets:Bank&with_children=false&withChildren=false",
+      );
+      expect(rest.status).toBe(200);
+      await f.mcp(
+        "account-journal?account=Assets:Bank&with_children=false&withChildren=false",
+      );
+      const gql = await f.gql(
+        'getLedgerAccountJournal(ledgerId: "alice/main", query: { account: "Assets:Bank", with_children: false, withChildren: false }) { total }',
+      );
+      expect(gql.errors).toBeUndefined();
+      expect(f.journal.getAccountJournal).toHaveBeenCalledTimes(3);
+      for (const call of f.journal.getAccountJournal.mock.calls)
+        expect(call[2]).toMatchObject({ with_children: false });
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("leaves both params missing on every surface", async () => {
+    const f = await fixture();
+    try {
+      const rest = await f.rest("account-journal?account=Assets:Bank");
+      expect(rest.status).toBe(200);
+      await f.mcp("account-journal?account=Assets:Bank");
+      const gql = await f.gql(
+        'getLedgerAccountJournal(ledgerId: "alice/main", query: { account: "Assets:Bank" }) { total }',
+      );
+      expect(gql.errors).toBeUndefined();
+      expect(f.journal.getAccountJournal).toHaveBeenCalledTimes(3);
+      for (const call of f.journal.getAccountJournal.mock.calls) {
+        // The adapters pass the params through missing; the service
+        // default (children included) applies at the ledger.
+        expect(call[2].filter_account).toBeUndefined();
+        expect(call[2].with_children).toBe(true);
+      }
+    } finally {
+      await f.close();
+    }
+  });
+
   it("reads source files using the canonical file action", async () => {
     const f = await fixture();
     try {

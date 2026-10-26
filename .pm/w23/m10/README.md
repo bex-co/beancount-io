@@ -1,6 +1,6 @@
 # w23 · m10 — Unify the account-journal param spellings
 
-**Worker:** worker1 **Goal:** agents pass `filterAccount`/`filter_account` and `withChildren`/`with_children` in either spelling on MCP, REST, and GraphQL without memorizing which surface takes which **Status:** todo (t001–t006 done)
+**Worker:** worker1 **Goal:** agents pass `filterAccount`/`filter_account` and `withChildren`/`with_children` in either spelling on MCP, REST, and GraphQL without memorizing which surface takes which **Status:** todo (t001–t007 done)
 
 ## Tasks (in order)
 
@@ -12,7 +12,7 @@
 | t004 | Document the param spellings ✅ | 30m | t003 |
 | t005 | Adoption surface ✅ | 20m | t004 |
 | t006 | Simplify ✅ | 30m | t005 |
-| t007 | Test coverage | 45m | t005 |
+| t007 | Test coverage ✅ | 45m | t005 |
 | t008 | Closeout | 15m | t006, t007 |
 
 ## Definition of done
