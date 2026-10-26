@@ -158,6 +158,31 @@ async function fixture() {
       };
       return content.result?.generated_from;
     },
+    journal,
+    /** Two different hashes in one call refuse before the ledger read. */
+    conflictRefused: async (surface: string) => {
+      if (surface === "rest") {
+        const response = await fetch(
+          `${rest.url}/api-gateway/v1/ledgers/alice/main/entry-context?entryHash=copy&entry_hash=own`,
+        );
+        expect(response.status).toBe(400);
+        return;
+      }
+      if (surface === "gql") {
+        const response = await graphql({
+          schema,
+          source: `query { getLedgerEntryContext(ledgerId:"alice/main",entryHash:"copy",entry_hash:"own") { slice } }`,
+          contextValue: { identity, getCurrentIdentity: () => identity },
+        });
+        expect(response.errors).not.toBeUndefined();
+        return;
+      }
+      const response = await client.callTool({
+        name: "getEntryContext",
+        arguments: { entryHash: "copy", entry_hash: "own" },
+      });
+      expect(response.isError).toBe(true);
+    },
     /** Each surface's refusal message for an entry hash. */
     refusal: async (surface: string, entryHash: string) => {
       if (surface === "rest") {
@@ -231,6 +256,17 @@ describe.each(["rest", "gql", "mcp"])("entry context via %s", (surface) => {
       expect(await f.generatedFrom(surface, "copy", "entry_hash")).toBe(
         "template-hash",
       );
+    } finally {
+      await f.close();
+    }
+  });
+
+  // w23/m3/t006: two different hashes refuse before the ledger read.
+  it("refuses conflicting entryHash and entry_hash", async () => {
+    const f = await fixture();
+    try {
+      await f.conflictRefused(surface);
+      expect(f.journal.getContext).not.toHaveBeenCalled();
     } finally {
       await f.close();
     }

@@ -462,6 +462,19 @@ describe("v1 files", () => {
     expect(services.ledgerRepo.changeFiles.mock.calls.length).toBe(before);
   });
 
+  // w23/m3/t006: the delete path refuses a conflict the same way.
+  it("refuses conflicting description and message on a file delete", async () => {
+    server.setIdentity(writeToken);
+    const before = services.ledgerRepo.changeFiles.mock.calls.length;
+    const { status, body } = await call("DELETE", `${LEDGER}/files/old.bean`, {
+      message: "One text",
+      description: "Another text",
+    });
+    expect(status).toBe(400);
+    expect(body).toMatchObject({ error: { code: "BAD_USER_INPUT" } });
+    expect(services.ledgerRepo.changeFiles.mock.calls.length).toBe(before);
+  });
+
   it("refuses a file write from a read-only token", async () => {
     server.setIdentity(readOnlyToken);
     services.ledgerRepo.changeFiles.mockRejectedValueOnce(

@@ -288,6 +288,25 @@ describe("one call to a file tool", () => {
     },
   );
 
+  // w23/m3/t006: the alias keeps the old requiredness — one of the two
+  // spellings must be present, and its absence refuses before any work.
+  it("createLedgerFiles refuses without description or message", async () => {
+    const f = await fixture();
+    try {
+      const result = await f.client.callTool({
+        name: "createLedgerFiles",
+        arguments: {
+          ledger: "alice/main",
+          files: [{ path: "a.bean", content: "; a\n" }],
+        },
+      });
+      expect(result.isError).toBe(true);
+      expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+
   // w23/m3/t002: REST and GraphQL spell the commit message `message`, so the
   // file tools accept it where they took only `description`.
   it("deleteLedgerFiles commits under the message spelling", async () => {

@@ -584,19 +584,27 @@ describe.each<Surface>(["rest", "gql", "mcp"])(
   "commit message spelling via %s",
   (surface) => {
     const alias = surface === "mcp" ? "message" : "description";
-    it(`accepts the ${alias} spelling`, async () => {
-      const f = await fixture();
-      try {
-        expect(
-          await f.write(surface, "; aliased\n", false, false, alias),
-        ).toMatchObject({ ok: true });
-        expect(f.commits).toEqual([
-          { message: "Size contract edit", paths: ["new.bean"] },
-        ]);
-      } finally {
-        await f.close();
-      }
-    });
+    it.each([false, true])(
+      `accepts the ${alias} spelling (update=%s)`,
+      async (update) => {
+        const f = await fixture(
+          update ? { "existing.bean": "; previous\n" } : {},
+        );
+        try {
+          expect(
+            await f.write(surface, "; aliased\n", update, false, alias),
+          ).toMatchObject({ ok: true });
+          expect(f.commits).toEqual([
+            {
+              message: "Size contract edit",
+              paths: [update ? "existing.bean" : "new.bean"],
+            },
+          ]);
+        } finally {
+          await f.close();
+        }
+      },
+    );
 
     it("refuses two different texts before repository work", async () => {
       const f = await fixture();
