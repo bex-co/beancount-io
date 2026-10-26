@@ -68,7 +68,7 @@
     ],
     "accessTokenTTLSeconds": 3600
   },
-  "next": "The missing-resource refresh repair cd20fa75f is deployed healthy. Continue the already-running retained-grant native scheduler through08:17:55UTC and verify actual renewal/reload/query/one-preview/unchanged state.",
+  "next": "046 is complete. Follow Docker maintainer workflow approval/review/merge/import under m9/t017; verify actual public catalog/native installation when published. No publisher input is pending.",
   "privacy": "No access/refresh token, cookie, code/state URL, private infrastructure, account identity or raw ledger contents. No retained grant or reviewer key is revoked.",
   "sourceCommit": "37f5a25b6",
   "rollout": {
@@ -235,10 +235,11 @@
   },
   "checkedAtUTC": "2026-10-25T22:09:56Z",
   "secretserviceFollowup": {
-    "lastCheckedAtUTC": "2026-10-26T07:40:36Z",
+    "lastCheckedAtUTC": "2026-10-26T08:24:01.754424Z",
     "evidence": "secretservice-preflight-20261026.json",
-    "status": "SecretService rotation/save/reload exposed the opaque refresh-resource bug. Repair cd20fa75f is shipped, full398suites/7463tests pass, and existing service rollout is healthy. Retained-grant native recovery observation runs through08:17:55UTC.",
+    "status": "Verified: cd20fa75f deployed; actual native retained-grant scheduled recovery crosses08:17:55UTC, restores44tools and passes9accounting/resource calls including1dry-run with unchanged state.046 complete; grants/store retained.",
     "authorizationListener": "The earlier timeout is superseded by one successful confirmed request for the same registered client.",
-    "sourceRepair": "refresh-resource-repair-20261026.json"
+    "sourceRepair": "refresh-resource-repair-20261026.json",
+    "nativeAcceptance": "secretservice-native-acceptance-20261026.json"
   }
 }

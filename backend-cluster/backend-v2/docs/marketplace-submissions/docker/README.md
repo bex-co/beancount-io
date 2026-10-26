@@ -182,7 +182,7 @@ reports **access:true / refresh:false**. The known macOS legacy-keychain erasure
 error still yields CLI exit1 after the new collision-resistant credential is
 stored; this is not reported as a clean CLI exit. The actual unmodified Gateway
 then successfully uses that credential:44service tools plus8management tools,
-8resources and64templates. No credential is copied to this packet.
+8 resources and64templates. No credential is copied to this packet.
 
 The fresh native journey,2026-10-25T00:27:27.707Z–00:27:31.993Z, passes one
 balanced-transaction `appendLedgerText` preview with `dry_run:true`,
@@ -253,7 +253,7 @@ retained grant is replaced/revoked.
 The source repair is shipped in **37f5a25b6**. At2026-10-25T02:38Z its rollout
 is **unverified**, following loss of the existing deployment browser connection;
 the available CLI/strict SSH checks do not provide a verified alternate route.
-[w6/046](../../../../../.pm/w6/046.md) is parked with exact access and
+[w6/046](../../../../../.pm/w6/done/046.md) is parked with exact access and
 normal-runtime/expiry conditions. Inspect deployment history before retrying
 the rollout. Controlled refresh tests are complete; deployed native callback,
 refresh capability and actual scheduled refresh are still pending.
@@ -304,7 +304,7 @@ Native callback succeeds with access+refresh. The CLI again exits1 after
 saving the current credential because absent legacy-entry removal fails,
 now reproduced with Linux pass as well as macOS. Do not seed a legacy entry
 or hide the result. The unchanged Gateway connects, discovers44service
-tools/8resources/64templates/4prompts, completes baseline read controls and
+tools/8 resources/64templates/4 prompts, completes baseline read controls and
 logs its running CE OAuth provider loop.
 
 **Acceptance is in flight:** original real expiry is
@@ -387,7 +387,7 @@ pass, and the unmodified CE provider loop runs. Original token expiry is
 retains the successful callback and in-flight boundary; automatic rotation,
 connection reload and post-expiry accounting are not yet claimed.
 
-The [live 046 note](../../../../../.pm/w6/046.md) is owned by the worker while
+The [live 046 note](../../../../../.pm/w6/done/046.md) is owned by the worker while
 this bounded observation runs. It then requires exactly one dry-run plus
 unchanged commit, entry counts, file hash, cash and zero persisted marker.
 No further publisher input, token export, grant revocation, manual refresh,
@@ -405,7 +405,7 @@ shows opaque access format, rather than the required MCP-audience JWT.
 
 [Exact new source repair](./refresh-resource-repair-20261026.json) proves that
 an `openid` refresh omitting `resource` selects UserInfo by default. Three real
-provider regressions fail before the minimal backend repair; all118 OAuth tests
+provider regressions fail before the minimal backend repair; all 118 OAuth tests
 pass afterward, including scope narrowing, ledger pins and audience rejection.
 Full backend checks, source ship, existing-service rollout and retained-grant
 native acceptance continue under046. The earlier observer timeout and original
@@ -414,13 +414,34 @@ pass-helper failure remain separately recorded. No new approval or token export.
 ## Resource repair deployed; native recovery running — 2026-10-26T07:40:36Z
 
 `cd20fa75f` ships the minimal refresh-resource repair after398backend suites,
-7,463tests, typecheck, targeted lint and unchanged OpenAPI pass. The existing
+7,463 tests, typecheck, targeted lint and unchanged OpenAPI pass. The existing
 service reports Deploy live/SUCCESS, all three commands exit0, and backend and
 ledger health checks pass. The logs identify the same public source revision.
 
 The same grant/keyring remains in use. An unmodified native CE scheduler is
-already running from07:30:09UTC across its retained credential's actual expiry
+already running from 07:30:09 UTC across its retained credential's actual expiry
 **08:17:55.56880575UTC**. Initial tools are absent with the earlier opaque access;
 after automatic refresh/reload, require restored tools and native query/one
 preview/unchanged-state controls. No new authorization, fake expiry or manual
 refresh is used. [Current rollout and acceptance boundary](./refresh-resource-repair-20261026.json).
+
+## Actual native renewal acceptance complete — 2026-10-26T08:18:07Z
+
+[Full actual acceptance](./secretservice-native-acceptance-20261026.json) closes
+w6/046. The retained grant's native CE scheduler crosses its original actual
+expiry 08:17:55.56880575 UTC, rotates access+refresh and reloads44 tools,4 prompts,
+8 resources and67 resource templates. Refreshed access is now the expected JWT,
+with the original read/write scopes and exact synthetic ledger pin preserved.
+
+All9 native accounting/resource calls succeed after expiry:four controls before and
+four after exactly one dry-run. The preview has `dry_run:true`, `wrote:[]`, one directive
+and zero validation errors. Commit, entry counts, file hash, cash and zero
+persisted marker remain unchanged. The SDK/Gateway process exits0. No manual
+refresh, expiry edit, reauthorization, credential export or vendor patch is used.
+
+This is recovery from the earlier opaque credential: the process starts with
+zero tools and automatically restores them after the deployed repair and next
+scheduled rotation. Earlier failed attempts remain historical; the pass-helper
+defect is not claimed fixed. Official Docker gallery publication/install remains
+under maintainer review. Source CI passes398 suites/7,480 tests and Secret scan.
+The owned client runtime is stopped; the keyring volume and all grants remain.

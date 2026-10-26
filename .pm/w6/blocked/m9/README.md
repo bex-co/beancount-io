@@ -1,6 +1,6 @@
 # w6 · m9 — Reach developer marketplaces and galleries
 
-**Worker:** worker1 **Goal:** Developers discover and connect the hosted MCP server through the supported Docker, Cursor, Cline, and GitHub/VS Code galleries. **Status:** blocked (9 tasks done; current Docker native repair complete; platform publication gates remain; renewable OAuth source fix is shipped; w6/046 retains actual-expiry acceptance, with actual SecretService rotation/save/reload observed and a first-party refreshed-resource repair in progress)
+**Worker:** worker1 **Goal:** Developers discover and connect the hosted MCP server through the supported Docker, Cursor, Cline, and GitHub/VS Code galleries. **Status:** blocked (9 tasks done; current/native renewable OAuth follow-up 046 complete; remaining actual platform review/publication gates and dependent closing tasks remain)
 
 **Implementation estimate:** ~4½h, excluding external review queues and the standing closing tasks.
 
@@ -63,7 +63,7 @@
 
 - **t002:** validated payload, working temporary OCI catalog and standalone discovery/DCR are ready. The dedicated synthetic QA session is established and the consent page selected only that ledger with read/write scopes; no grant/read/preview or submission occurred. **Unblock:** the specific temporary access decision, fresh native OAuth and successful gateway query/preview/unchanged-state/callback, then documented upstream review. **Owner:** QA account holder, repository worker and Docker reviewers in that order. Other gallery preparations proceed independently.
 
-- **t003:** the actual root multi-plugin index validates; the community listing appears in New and its real install link reaches the native client. The approved 2026-10-22 desktop journey completes synthetic-only identity/offline/read/write/admin OAuth,44tools/8resources, Cash BQL and one dry-run preview; Cash49.75USD before/after and preview-payee0rows. Native structured commit/count and literal wrote-array visibility limits are documented. The operator requests retention of this User entry and grant; no revocation is required. **Unblock:** separate official Publisher Terms approval, actual prepared application submission/receipt, then official platform review and the remaining gallery verification. The typed community name search now resolves the canonical entry, clearing the earlier indexing gap. **Owner:** publisher/operator, platform and repository worker. Native QA and nested repository format are cleared gates; w1/m34/t003's VSCode/fallback-port portion remains separate.
+- **t003:** the actual root multi-plugin index validates; the community listing appears in New and its real install link reaches the native client. The approved 2026-10-22 desktop journey completes synthetic-only identity/offline/read/write/admin OAuth,44 tools/8 resources, Cash BQL and one dry-run preview; Cash49.75USD before/after and preview-payee0rows. Native structured commit/count and literal wrote-array visibility limits are documented. The operator requests retention of this User entry and grant; no revocation is required. **Unblock:** separate official Publisher Terms approval, actual prepared application submission/receipt, then official platform review and the remaining gallery verification. The typed community name search now resolves the canonical entry, clearing the earlier indexing gap. **Owner:** publisher/operator, platform and repository worker. Native QA and nested repository format are cleared gates; w1/m34/t003's VSCode/fallback-port portion remains separate.
 
 - **t004:** required icon/setup/issue payload is prepared. Real Cline 4.1.25 setup accepts the URL-only entry; isolated CLI 3.0.73 reaches native OAuth consent, and the dedicated synthetic QA session is available. The exact public catalog feed has no Beancount match across 203 entries/149 MCP servers; the blank native panel is not rendering proof. No grant was approved; required template confirmations stay unchecked. **Unblock:** the specific temporary access decision, fresh OAuth, authenticated discovery/query/preview/unchanged-state, then authorized submission and review. **Owner:** QA/client account holder, repository worker and Cline reviewers.
 
@@ -247,8 +247,17 @@ nomination is needed. Continue m10 and the live inbox while these waits remain.
 
 ## Independent renewable-flow follow-through — 2026-10-25T02:38Z
 
-[w6/046](../../046.md) now ships the controlled, green scope-upgrade fix in
+[w6/046](../../done/046.md) now ships the controlled, green scope-upgrade fix in
 37f5a25b6 and is parked on verified access to the existing deployment plus a
 supported native refresh runtime. Its source work was performed independently
 of Docker review. Hosted rollout and actual native refresh are still unproved;
 this neither reopens t015 nor changes the platform publication gates above.
+
+## Renewable native follow-up complete — 2026-10-26T08:18:07Z
+
+[046](../../done/046.md) now has actual retained-grant scheduled renewal/reload,
+restored 44 tools, exact JWT scope/pin andnine-call query/one-preview/unchanged-state
+acceptance. Source `cd20fa75f` is deployed healthy and remote CI passes. Its
+runtime is stopped with grant/store retained. This clears the independent
+native follow-up; it does not close t017's actual Docker catalog review/import
+or any other platform's public/native DoD.
