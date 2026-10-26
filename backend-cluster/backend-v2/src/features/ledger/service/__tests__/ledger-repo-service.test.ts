@@ -1,5 +1,6 @@
 import { LedgerRepoService } from "../ledger-repo-service";
 import { FavaApiError } from "@/foundation/fava";
+import { OperationNotAllowedError } from "@/shared/errors";
 import { authorizeLedger } from "@/features/ledger/utils/authorize-ledger";
 import type { Identity } from "@/server/api/identity";
 
@@ -781,6 +782,90 @@ describe("LedgerRepoService", () => {
         ]);
         await expect(attemptDelete("d/second.bean")).rejects.toThrow(
           /still included by d\/inc\.bean/,
+        );
+        expect(mockChangeLedgerFiles).not.toHaveBeenCalled();
+      });
+
+      // w23/m4/t006: one dangling delete vetoes the whole batch, and the
+      // message reports every stranded file sorted, not just the first.
+      it("refuses a batch with two dangling deletes naming both, sorted", async () => {
+        dirWith([
+          { path: "main.bean", type: "file" },
+          { path: "second.bean", type: "file" },
+          { path: "third.bean", type: "file" },
+        ]);
+        contentsWith([
+          {
+            path: "main.bean",
+            content: 'include "second.bean"\ninclude "third.bean"\n',
+          },
+          { path: "second.bean", content: "; doomed\n" },
+          { path: "third.bean", content: "; doomed\n" },
+        ]);
+        await expect(
+          service.changeFiles({
+            ledgerId: LEDGER_ID,
+            identity: IDENTITY,
+            operations: [
+              { operation: "delete", path: "third.bean" },
+              { operation: "delete", path: "second.bean" },
+            ],
+            message: "delete files",
+          }),
+        ).rejects.toThrow(
+          "second.bean is still included by main.bean; " +
+            "third.bean is still included by main.bean; remove the include",
+        );
+        expect(mockChangeLedgerFiles).not.toHaveBeenCalled();
+      });
+
+      // w23/m4/t006: the documented escape path — drop the include in one
+      // commit, delete in the next — works because the guard reads the
+      // current tree on every call.
+      it("allows dropping the include first and deleting in a later call", async () => {
+        dirWith([
+          { path: "main.bean", type: "file" },
+          { path: "second.bean", type: "file" },
+        ]);
+        contentsWith([
+          { path: "main.bean", content: 'include "second.bean"\n' },
+          { path: "second.bean", content: "; doomed\n" },
+        ]);
+        mockChangeLedgerFiles.mockResolvedValue({ data: { success: true } });
+        await service.changeFiles({
+          ledgerId: LEDGER_ID,
+          identity: IDENTITY,
+          operations: [
+            {
+              operation: "update",
+              path: "main.bean",
+              content: "; no more include\n",
+              sha: "s1",
+            },
+          ],
+          message: "drop include",
+        });
+        // The second call sees the committed tree: the include is gone.
+        contentsWith([
+          { path: "main.bean", content: "; no more include\n" },
+          { path: "second.bean", content: "; doomed\n" },
+        ]);
+        await attemptDelete("second.bean");
+        expect(mockChangeLedgerFiles).toHaveBeenCalledTimes(2);
+      });
+
+      // w23/m4/t006: when the guard cannot list the tree it fails closed —
+      // a delete never commits on an unread tree — with the guard's
+      // operation label, not a bare Fava error.
+      it("translates a guard list failure instead of deleting blind", async () => {
+        mockGetLedgerDirContent.mockResolvedValue({
+          data: { success: false },
+        });
+        await expect(attemptDelete("second.bean")).rejects.toThrow(
+          OperationNotAllowedError,
+        );
+        await expect(attemptDelete("second.bean")).rejects.toThrow(
+          /list ledger files for delete guard/,
         );
         expect(mockChangeLedgerFiles).not.toHaveBeenCalled();
       });
