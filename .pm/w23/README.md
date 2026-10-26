@@ -20,6 +20,7 @@
 - [093](./093.md) — append refusal hint claims "valid Beancount" when the errors include parse errors (rescoped 2026-10-26: the dry-run premise was wrong, previews report errors by design)
 - [094](./094.md) — typed entry insert has `price` but no `cost`: agents cannot record lot costs except as raw text
 - [095](./095.md) — five mutation tools have no `dry_run`: rename, typed add, and all three entry-source writes
+- [096](./096.md) — bank tool arguments mix `snake_case` and `camelCase` with no alias
 - [082](./blocked/082.md) — `createPullRequest` fails on production: Gitea 500 while creating the `pr-patch-*` branch, on MCP and REST alike — **blocked:** needs the Gitea server-log cause for one failing branch create (owner), then a production rerun
 - [080](./blocked/080.md) — `/api-gateway/mcp` accepts any `Origin` (the MCP transport spec says a bad `Origin` MUST get 403); owner picks validate vs document — **blocked:** owner picks 403-on-foreign-Origin vs documented non-validation
 - [075](./blocked/075.md) — typed BQL results return NULL as `""` (undocumented), so a missing payee or price reads as an empty string — **blocked:** documented as `""` (option a shipped); owner picks `null` on REST/MCP, `null` everywhere, or keeping `""`
