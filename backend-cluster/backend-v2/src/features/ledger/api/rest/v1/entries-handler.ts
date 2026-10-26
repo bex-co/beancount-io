@@ -14,6 +14,7 @@ import {
   POSTING_TOTAL_PRICE_DESCRIPTION,
 } from "@/features/ledger/utils/entry-field-descriptions";
 import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
+import { MAX_BULK_ENTRIES } from "@/features/ledger/utils/bulk-entries-cap";
 import {
   ALLOW_INVALID_NAMES,
   DRY_RUN_NAMES,
@@ -187,9 +188,14 @@ const entrySchema = z.discriminatedUnion("type", [
 
 export const entriesBodySchema = z
   .strictObject({
-    entries: z.array(entrySchema).openapi({
-      description: "Directives to append, committed all-or-nothing",
-    }),
+    entries: z
+      .array(entrySchema)
+      .max(MAX_BULK_ENTRIES, {
+        message: `at most ${MAX_BULK_ENTRIES} entries per call; split into several calls`,
+      })
+      .openapi({
+        description: `Directives to append, committed all-or-nothing; at most ${MAX_BULK_ENTRIES} per call`,
+      }),
     allowInvalid: nullToUndefined(z.boolean()).optional().openapi({
       description:
         "Record entries deliberately even when they are unbalanced (UNBALANCED) or would add bean-check errors such as a second open for an open account (VALIDATION_FAILED), instead of refusing them",

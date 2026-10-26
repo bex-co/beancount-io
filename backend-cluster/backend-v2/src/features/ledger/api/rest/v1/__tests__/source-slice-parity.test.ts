@@ -10,6 +10,7 @@ import { HealthResolver } from "@/features/healthz/api/health-resolver";
 import { LedgerJournalService } from "@/features/ledger/service/ledger-journal-service";
 import { createHash } from "node:crypto";
 import { BadUserInputError } from "@/shared/errors";
+import { MAX_BULK_ENTRIES } from "@/features/ledger/utils/bulk-entries-cap";
 import { FavaApiError } from "@/foundation/fava/api-client";
 import {
   AuthorizationService,
@@ -1011,6 +1012,56 @@ describe.each(["rest", "gql", "mcp"])(
           await f.close();
         }
       });
+    });
+  },
+);
+
+describe.each(["rest", "gql", "mcp"])(
+  "over-cap batch deletes via %s",
+  (surface) => {
+    // w23/103: one batch delete carries at most MAX_BULK_ENTRIES entries;
+    // the refusal names the cap and tells the caller to chunk.
+    it("refuses 1001 entries and deletes nothing", async () => {
+      const f = await fixture();
+      try {
+        const entries = Array.from(
+          { length: MAX_BULK_ENTRIES + 1 },
+          (_, i) => ({
+            entryHash: `entry${i}`,
+            sha256sum: hash(original),
+          }),
+        );
+        const result = await f.call(surface, "delete_many", { entries });
+        expect(result.success).toBe(false);
+        expect(f.journal.deleteMultiSourceSlices).not.toHaveBeenCalled();
+        if (surface === "rest") {
+          expect(result.result).toMatchObject({
+            ok: false,
+            error: {
+              code: "VALIDATION_FAILED",
+              message: expect.stringContaining("at most 1000 entries"),
+            },
+          });
+        } else if (surface === "gql") {
+          expect(
+            (result.errors ?? []).some(
+              (error) =>
+                String(error.message).includes("entries holds 1001 entries") &&
+                String(error.message).includes("may be deleted per call"),
+            ),
+          ).toBe(true);
+        } else {
+          expect(result.full).toMatchObject({
+            ok: false,
+            error: {
+              code: "BAD_USER_INPUT",
+              message: expect.stringContaining("at most 1000 entries"),
+            },
+          });
+        }
+      } finally {
+        await f.close();
+      }
     });
   },
 );

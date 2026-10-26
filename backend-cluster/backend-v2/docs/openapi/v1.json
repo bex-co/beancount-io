@@ -899,7 +899,8 @@
                 }
               ]
             },
-            "description": "Directives to append, committed all-or-nothing"
+            "maxItems": 1000,
+            "description": "Directives to append, committed all-or-nothing; at most 1000 per call"
           },
           "allowInvalid": {
             "type": "boolean",
@@ -11496,7 +11497,8 @@
                         "sha256sum"
                       ],
                       "additionalProperties": false
-                    }
+                    },
+                    "maxItems": 1000
                   },
                   "allowInvalid": {
                     "type": "boolean",

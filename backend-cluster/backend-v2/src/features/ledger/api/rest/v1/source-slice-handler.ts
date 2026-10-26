@@ -8,6 +8,7 @@ import {
   resolveFlagAlias,
 } from "@/features/ledger/utils/flag-alias";
 import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
+import { MAX_BULK_ENTRIES } from "@/features/ledger/utils/bulk-entries-cap";
 import { ledgerPathSchema, ledgerIdOf } from "./schemas";
 // Both spellings accepted (w23/m3/t001); handlers resolve to `entryHash`
 // before the service so the wire contract never sees the alias.
@@ -44,7 +45,9 @@ export const deleteSliceInput = sliceRef.extend({
 });
 export const deleteSlicesInput = z
   .object({
-    entries: z.array(sliceRef),
+    entries: z.array(sliceRef).max(MAX_BULK_ENTRIES, {
+      message: `at most ${MAX_BULK_ENTRIES} entries per call; split into several calls`,
+    }),
     allowInvalid,
     allow_invalid,
     dryRun,

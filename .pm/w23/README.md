@@ -23,7 +23,6 @@
 
 ## Inbox
 
-- [103](./103.md) — `addLedgerEntries` has no batch-size cap: 20,000 entries commit in one call
 - [104](./104.md) — map a stray 431 from the ledger hop to `BAD_USER_INPUT` (m5/t001 follow-up; QA confirmed 3 more 431 vectors 2026-10-26)
 - [108](./108.md) — CLI OpenAPI pin drifted behind the typed entry fields (m6/t005 follow-up; `make spec-sync && make codegen`)
 - [111](./111.md) — `listLedgerEntries` / journal returns `is_empty: false` alongside `total: 0` on filtered-to-zero results (ledger-level flag; should be result-level)
@@ -36,6 +35,7 @@
 - [118](./118.md) — `initialize` validation failures answer `-32603` with a raw zod dump instead of `-32602` + shaped `BAD_USER_INPUT` like every other method
 - [119](./119.md) — set-typed BQL cells render space-joined in text (`runBqlQuery`, GraphQL, stock) but comma-joined in structured (MCP structured, REST; dtype says `set`, value is a string)
 - [120](./120.md) — lifecycle mutations take no `dry_run` while every content mutation previews (m7 follow-up; `deleteLedger` destroys blind; no documented exclusion)
+- [121](./121.md) — CLI OpenAPI pin drifted behind the bulk-entries cap (w23/103 follow-up; `make spec-sync && make codegen`)
 - [082](./blocked/082.md) — `createPullRequest` fails on production: Gitea 500 while creating the `pr-patch-*` branch, on MCP and REST alike — **blocked:** needs the Gitea server-log cause for one failing branch create (owner), then a production rerun
 - [080](./blocked/080.md) — `/api-gateway/mcp` accepts any `Origin` (the MCP transport spec says a bad `Origin` MUST get 403); owner picks validate vs document — **blocked:** owner picks 403-on-foreign-Origin vs documented non-validation
 - [075](./blocked/075.md) — typed BQL results return NULL as `""` (undocumented), so a missing payee or price reads as an empty string — **blocked:** documented as `""` (option a shipped); owner picks `null` on REST/MCP, `null` everywhere, or keeping `""`

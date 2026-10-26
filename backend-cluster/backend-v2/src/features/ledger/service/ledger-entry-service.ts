@@ -15,6 +15,7 @@ import {
 import { logger } from "@/shared/logger";
 import { operationNotAllowedFromCause } from "@/features/ledger/utils/operation-not-allowed-from-cause";
 import { BadUserInputError, ValidationError } from "@/shared/errors";
+import { assertBulkEntriesSize } from "@/features/ledger/utils/bulk-entries-cap";
 import { resolveEntryFile } from "@/features/ledger/utils/entry-file-resolver";
 import { parseDirectiveDate } from "@/features/ledger/utils/directive-date";
 import { LEDGER_ENTRY_POINT } from "@/features/ledger/utils/ledger-entry-point";
@@ -300,6 +301,9 @@ export class LedgerEntryService implements ILedgerEntryService {
       AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE,
       { authorization: this.authorization },
     );
+    // GraphQL's entries argument arrives unchecked, so the schema maxItems
+    // alone would leave that surface uncapped (w23/103).
+    assertBulkEntriesSize(inputs, "added");
     return this.writer.writeBulkEntries(
       identity.userId,
       ledgerOwner,

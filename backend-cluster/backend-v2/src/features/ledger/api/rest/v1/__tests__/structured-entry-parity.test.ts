@@ -24,6 +24,7 @@ import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
 import type { McpRequestContext } from "@/features/ai-agent/api/mcp-context";
 import { FavaApiError } from "@/foundation/fava/api-client";
+import { MAX_BULK_ENTRIES } from "@/features/ledger/utils/bulk-entries-cap";
 
 const config = { api: { scopeEnforcement: "enforce" } } as AppConfig;
 const identity: Identity = {
@@ -1975,3 +1976,73 @@ describe.each(["rest", "gql", "mcp"])(
     });
   },
 );
+
+const overCapBatch = Array.from({ length: MAX_BULK_ENTRIES + 1 }, () => ({
+  type: "note",
+  entry: { date, account: "Assets:Cash", content: "bulk" },
+})) as unknown as LedgerEntryInput[];
+
+describe.each(["rest", "gql", "mcp"])(
+  "over-cap entry batches via %s",
+  (surface) => {
+    // w23/103: one call carries at most MAX_BULK_ENTRIES entries; the
+    // refusal names the cap and tells the caller to chunk.
+    it("refuses 1001 entries and writes nothing", async () => {
+      const f = await fixture();
+      try {
+        const result = await f.call(surface, overCapBatch);
+        expect(result.success).toBe(false);
+        expect(f.committed).toEqual([]);
+        expect(f.write).not.toHaveBeenCalled();
+        if (surface === "rest") {
+          // Schema refusals leave as VALIDATION_FAILED on REST — the REST
+          // dialect of the same refusal (validation-middleware).
+          expect(result.result).toMatchObject({
+            ok: false,
+            error: {
+              code: "VALIDATION_FAILED",
+              message: expect.stringContaining(
+                "at most 1000 entries per call; split into several calls",
+              ),
+            },
+          });
+        } else if (surface === "gql") {
+          expect(
+            (result.errors ?? []).some(
+              (error) =>
+                String(error.message).includes("entries holds 1001 entries") &&
+                String(error.message).includes("Split into several calls"),
+            ),
+          ).toBe(true);
+        } else {
+          expect(result.full).toMatchObject({
+            ok: false,
+            error: {
+              code: "BAD_USER_INPUT",
+              message: expect.stringContaining("at most 1000 entries"),
+            },
+          });
+        }
+      } finally {
+        await f.close();
+      }
+    });
+  },
+);
+
+// The cap boundary itself still commits: MAX_BULK_ENTRIES notes through
+// the schema max and the service assert on one surface.
+it("commits exactly 1000 entries on REST", async () => {
+  const f = await fixture();
+  try {
+    const batch = Array.from({ length: MAX_BULK_ENTRIES }, () => ({
+      type: "note",
+      entry: { date, account: "Assets:Cash", content: "bulk" },
+    })) as unknown as LedgerEntryInput[];
+    const result = await f.call("rest", batch);
+    expect(result.success).toBe(true);
+    expect(f.write).toHaveBeenCalled();
+  } finally {
+    await f.close();
+  }
+});

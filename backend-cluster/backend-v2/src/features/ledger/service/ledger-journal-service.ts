@@ -10,6 +10,7 @@ import {
   type AuthorizationAction,
 } from "@/server/api/authorization/authorization-contract";
 import { BadUserInputError } from "@/shared/errors";
+import { assertBulkEntriesSize } from "@/features/ledger/utils/bulk-entries-cap";
 import { directiveLimitExemptParams } from "@/features/ledger/operations/directive-limit-bypass";
 import { normalizeJournalKinds } from "@/features/ledger/utils/journal-kinds";
 import { assertAmountsFitEngineDecimal } from "@/features/ledger/utils/engine-decimal";
@@ -448,6 +449,10 @@ export class LedgerJournalService
       identity,
       AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE,
     );
+
+    // GraphQL's entries argument arrives unchecked, so the schema maxItems
+    // alone would leave that surface uncapped (w23/103).
+    assertBulkEntriesSize(entries, "deleted");
 
     const data = await unwrapFavaResponse(
       favaApiClient.journal.deleteMultiSourceSlices(ledgerOwner, ledgerName, {
