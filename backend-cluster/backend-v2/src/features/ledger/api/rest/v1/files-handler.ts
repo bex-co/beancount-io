@@ -1,6 +1,7 @@
 import { z } from "@/shared/zod-openapi-setup";
 import { NotFoundError } from "@/shared/errors";
 import { resolveCommitMessage } from "@/features/ledger/utils/commit-message-alias";
+import { DELETE_INCLUDE_GUARD_DESCRIPTION } from "@/features/ledger/utils/include-references";
 import { assertAmountsFitEngineDecimal } from "@/features/ledger/utils/engine-decimal";
 import { ledgerIdOf, ledgerPathSchema } from "./schemas";
 import { json } from "@/server/rest/v1-schemas";
@@ -189,7 +190,9 @@ export const FILE_ROUTES = [
     method: "delete",
     path: "/api-gateway/v1/ledgers/{owner}/{name}/files/{*path}",
     summary: "Delete a file",
-    description: "Removes the file and commits the deletion.",
+    description:
+      "Removes the file and commits the deletion. " +
+      DELETE_INCLUDE_GUARD_DESCRIPTION,
     params: filePathSchema,
     body: deleteBodySchema,
     responses: {

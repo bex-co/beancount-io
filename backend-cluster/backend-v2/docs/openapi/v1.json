@@ -9923,7 +9923,7 @@
       },
       "delete": {
         "summary": "Delete a file",
-        "description": "Removes the file and commits the deletion.",
+        "description": "Removes the file and commits the deletion. Deleting a file still `include`d by another ledger file is refused as `BAD_USER_INPUT` naming the includers; remove the include from the including file(s) first, then delete. An include counts when its target resolves to the deleted path the way the ledger loads it, relative to the directory of the file that declares it, and glob includes never count.",
         "tags": [
           "Ledger v1"
         ],

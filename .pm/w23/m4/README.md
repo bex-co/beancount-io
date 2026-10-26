@@ -8,7 +8,7 @@
 | ---- | ----- | --- | ---------- |
 | t001 | Guard the repo-service delete path ✅ | 60m | — |
 | t002 | Guard the workflow delete path ✅ | 45m | — |
-| t003 | Document the delete guard | 30m | t001, t002 |
+| t003 | Document the delete guard ✅ | 30m | t001, t002 |
 | t004 | Adoption surface | 20m | t003 |
 | t005 | Simplify | 30m | t004 |
 | t006 | Test coverage | 45m | t004 |

@@ -226,9 +226,15 @@ describe("MCP tool list", () => {
     // tools and `message`/`description` across the file tools: measured at
     // 107,718 bytes. Each alias carries one sentence naming the spelling's
     // home surface, which is the guidance the milestone exists to publish.
+    //
+    // 107 KB since w23/m4/t003 published the delete-guard rule on
+    // `deleteLedgerFiles`: measured at 108,640 bytes (baseline 108,286
+    // before the shared DELETE_INCLUDE_GUARD_DESCRIPTION). The description
+    // is the shared constant every surface publishes, so trimming it on
+    // MCP alone would fork the contract the parity tests pin.
     const { tools } = await listToolsRaw();
     const bytes = Buffer.byteLength(JSON.stringify(tools), "utf8");
-    expect(bytes).toBeLessThan(106 * 1024);
+    expect(bytes).toBeLessThan(107 * 1024);
   });
 
   it("exposes each operation as its own tool, never behind a selector argument", async () => {

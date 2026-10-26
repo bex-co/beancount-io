@@ -15,6 +15,37 @@ import {
   resolveIncludeTarget,
 } from "./include-target";
 
+/**
+ * The one delete-guard description every surface publishes (w23/m4/t003):
+ * the MCP `deleteLedgerFiles` tool (plus `editLedgerFiles`' delete line),
+ * the REST file DELETE, and the GraphQL `deleteLedgerFile` mutation.
+ * Surface-neutral by construction — no spelling names its home.
+ *
+ * Every sentence here is proven: the refusal on all three surfaces
+ * (`delete guard via %s` in rename-parity.test.ts), the resolved-path
+ * matching and the glob exemption in the repo-service tests
+ * (`deleting an included file` in ledger-repo-service.test.ts).
+ */
+export const DELETE_INCLUDE_GUARD_DESCRIPTION =
+  "Deleting a file still `include`d by another ledger file is refused as " +
+  "`BAD_USER_INPUT` naming the includers; remove the include from the " +
+  "including file(s) first, then delete. An include counts when its target " +
+  "resolves to the deleted path the way the ledger loads it, relative to " +
+  "the directory of the file that declares it, and glob includes never count.";
+
+/**
+ * The batch half of the delete guard, for callers that mix operations in
+ * one commit — the in-process `editLedgerFiles` dispatcher, whose `files[]`
+ * can drop an include line and delete the file together. The wire surfaces
+ * commit one operation per call (`deleteLedgerFiles` batches deletes only),
+ * so they publish the core description only and drop the include first in a
+ * separate call. Proven by `allows the delete when the same batch drops the
+ * include` in ledger-repo-service.test.ts.
+ */
+export const DELETE_INCLUDE_GUARD_BATCH_NOTE =
+  "A batch that drops the include lines and deletes the file in the same " +
+  "commit passes — the check runs over the projected tree.";
+
 export interface LedgerDirEntry {
   type?: string | null;
   path?: string | null;

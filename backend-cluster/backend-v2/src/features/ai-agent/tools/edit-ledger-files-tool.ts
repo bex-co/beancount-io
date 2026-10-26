@@ -22,6 +22,10 @@ import { unifiedDiff } from "@/shared/unified-diff";
 import { assertWritableText } from "@/shared/file-content";
 import { assertAmountsFitEngineDecimal } from "@/features/ledger/utils/engine-decimal";
 import { resolveCommitMessage } from "@/features/ledger/utils/commit-message-alias";
+import {
+  DELETE_INCLUDE_GUARD_BATCH_NOTE,
+  DELETE_INCLUDE_GUARD_DESCRIPTION,
+} from "@/features/ledger/utils/include-references";
 
 /** Commits one edit call makes before a lost race is the caller's (w23/017). */
 const MAX_COMMIT_ATTEMPTS = 3;
@@ -34,7 +38,9 @@ const description =
   "  update: str_replace on a text file — old_string must appear exactly once.\n" +
   "  Several operations on one path apply in order, each to the text the previous one produced.\n" +
   "  replace: overwrite entire text file — provide plain UTF-8 text content (NOT base64).\n" +
-  "  delete: remove a file.\n" +
+  "  delete: remove a file — refused when still `include`d by another file. " +
+    DELETE_INCLUDE_GUARD_BATCH_NOTE +
+    "\n" +
   "  Each new/resulting file is limited to 1 MiB of UTF-8 bytes, including dry runs.\n" +
   "  dry_run previews without committing: same refusal as the commit, plus a " +
   "unified diff per touched file and bean-check's verdict over the projected " +
@@ -562,7 +568,8 @@ export const LEDGER_FILE_OPERATIONS = {
   ),
   delete: fileOperation(
     z.object({ path: filePath, sha: baseSha }).strict(),
-    "Delete files in one atomic commit; pass each file's sha from readLedgerFiles to refuse the delete if it changed since.",
+    "Delete files in one atomic commit; pass each file's sha from readLedgerFiles to refuse the delete if it changed since. " +
+      DELETE_INCLUDE_GUARD_DESCRIPTION,
     (file) => ({ operation: "delete", ...file }),
   ),
 };

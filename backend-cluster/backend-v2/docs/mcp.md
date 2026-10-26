@@ -447,6 +447,14 @@ REST `DELETE`, GraphQL `deleteLedgerFile`) and renaming it away are refused as
 `BAD_USER_INPUT`; replace its content to rewrite it. A preview of any change
 that would leave the ledger without it reports that as a new error.
 
+Deleting any other file still `include`d by another ledger file is refused
+the same way on all three delete spellings, naming the includers: remove the
+include from the including file(s) first, then delete. An include counts the
+way the ledger loads it — its target resolves to the deleted path relative
+to the directory of the file that declares it — and glob includes never
+count. Unlike rename there is no rewrite flag: drop the include with
+`updateLedgerFiles` first, then delete.
+
 A file that is not valid UTF-8 (a Windows-1252 export, say) reads back from
 `readLedgerFiles` and REST `GET …/files/{path}` with `lossy: true`: its
 undecodable bytes show as U+FFFD, and GraphQL `getLedgerFile` returns the exact
@@ -1504,6 +1512,10 @@ required.
 
 This operation exposes GraphQL's existing contract: it has no caller-supplied
 SHA or preview flag. Repository conflicts remain errors.
+
+Deleting a still-included file is refused with the same include counting —
+there is no `updateIncludes` for delete, so drop the include first (see
+above).
 
 ### Update or delete entry source
 

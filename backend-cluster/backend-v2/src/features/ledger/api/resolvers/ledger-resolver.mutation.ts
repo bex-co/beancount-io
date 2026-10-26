@@ -3,6 +3,7 @@ import { Authenticated } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import { ILedgerWorkflow } from "@/features/ledger/workflow/ledger-workflow";
 import { resolveCommitMessage } from "@/features/ledger/utils/commit-message-alias";
+import { DELETE_INCLUDE_GUARD_DESCRIPTION } from "@/features/ledger/utils/include-references";
 
 /**
  * Fold the `description` alias into `message` (w23/m3/t002), dropping the
@@ -124,7 +125,9 @@ export class LedgerMutationResolver {
 
   @Authenticated()
   @Mutation(() => DeleteLedgerFileResponse, {
-    description: "Delete a file from a specific ledger",
+    description:
+      "Delete a file from a specific ledger. " +
+      DELETE_INCLUDE_GUARD_DESCRIPTION,
   })
   async deleteLedgerFile(
     @Arg("ledgerId", () => String) ledgerId: string,
