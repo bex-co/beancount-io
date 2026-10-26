@@ -23,7 +23,6 @@
 
 ## Inbox
 
-- [102](./102.md) — `commits?page=` past the int32 offset answers `INTERNAL_SERVER_ERROR` instead of an empty page
 - [103](./103.md) — `addLedgerEntries` has no batch-size cap: 20,000 entries commit in one call
 - [104](./104.md) — map a stray 431 from the ledger hop to `BAD_USER_INPUT` (m5/t001 follow-up; QA confirmed 3 more 431 vectors 2026-10-26)
 - [108](./108.md) — CLI OpenAPI pin drifted behind the typed entry fields (m6/t005 follow-up; `make spec-sync && make codegen`)

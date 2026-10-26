@@ -245,6 +245,15 @@ export class CommitsService implements ICommitsService {
       action: AUTHORIZATION_ACTIONS.LEDGER_REPOSITORY_READ,
       resource: ledgerResource(ledgerId),
     });
+    // Gitea computes the offset as (page - 1) * limit in int32: one past
+    // 2,147,483,647 overflows and the hop answers 500 (w23/102). No
+    // repository holds that many commits, so the request is past the end —
+    // answer the empty page the sibling paginations return instead of
+    // hopping. Positioned after authorization so an absurd page from a
+    // caller without read access is still refused as forbidden.
+    if ((page - 1) * limit > 2147483647) {
+      return [];
+    }
     const userId = identity?.userId;
     const { ledgerOwner: owner, ledgerName: repo } = parseLedgerId(ledgerId);
     try {

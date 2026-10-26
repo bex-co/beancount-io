@@ -144,6 +144,67 @@ describe("CommitsService.listCommits paging bounds", () => {
     ).rejects.toMatchObject({ category: "BAD_USER_INPUT" });
     expect(history).not.toHaveBeenCalled();
   });
+
+  // w23/102: Gitea computes (page - 1) * limit in int32 — one past
+  // 2,147,483,647 overflows and the hop 500s. Bisected on production:
+  // page=214748365 at limit=10 (offset 2,147,483,640) answers, one more
+  // page (offset 2,147,483,650) does not.
+  it.each([
+    { page: 214748366, limit: 10 },
+    { page: 42949674, limit: 50 },
+  ])(
+    "answers the empty page past the int32 offset without hopping (%j)",
+    async (paging) => {
+      const history = jest.fn();
+      const authorizeOrThrow = jest.fn().mockResolvedValue(undefined);
+      const service = new CommitsService(
+        {
+          getUserApiClient: jest.fn().mockResolvedValue({
+            repos: { repoGetAllCommits: history },
+          }),
+          getAnonymousApiClient: jest.fn(),
+        } as never,
+        { authorizeOrThrow } as never,
+      );
+      await expect(
+        service.listCommits({
+          identity: {
+            userId: "usr_1",
+            method: "session",
+            scopes: new Set(),
+          },
+          ledgerId: "alice/main",
+          ...paging,
+        }),
+      ).resolves.toEqual([]);
+      expect(authorizeOrThrow).toHaveBeenCalled();
+      expect(history).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([
+    { page: 214748365, limit: 10 },
+    { page: 42949673, limit: 50 },
+  ])("still hops at the largest in-range offset (%j)", async (paging) => {
+    const history = jest.fn().mockResolvedValue({ data: [] });
+    const service = new CommitsService(
+      {
+        getUserApiClient: jest.fn().mockResolvedValue({
+          repos: { repoGetAllCommits: history },
+        }),
+        getAnonymousApiClient: jest.fn(),
+      } as never,
+      { authorizeOrThrow: jest.fn().mockResolvedValue(undefined) } as never,
+    );
+    await expect(
+      service.listCommits({
+        identity: { userId: "usr_1", method: "session", scopes: new Set() },
+        ledgerId: "alice/main",
+        ...paging,
+      }),
+    ).resolves.toEqual([]);
+    expect(history).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe("CommitsService.listCommits unknown branches", () => {
