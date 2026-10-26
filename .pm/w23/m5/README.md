@@ -7,7 +7,7 @@
 | id | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
 | t001 | Reproduce and root-cause the query cliff ✅ | 45m | — |
-| t002 | Ledger accepts shell queries via POST | 60m | t001 |
+| t002 | Ledger accepts shell queries via POST ✅ | 60m | t001 |
 | t003 | Backend-v2 sends shell queries via POST | 60m | t001, t002 |
 | t004 | Document BQL size handling | 30m | t002, t003 |
 | t005 | Adoption surface | 20m | t004 |
