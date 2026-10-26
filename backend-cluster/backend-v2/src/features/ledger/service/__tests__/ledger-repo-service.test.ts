@@ -628,6 +628,9 @@ describe("LedgerRepoService", () => {
 
     it("leaves a delete alone — it carries no content to encode", async () => {
       mockChangeLedgerFiles.mockResolvedValue({ data: { success: true } });
+      mockGetLedgerDirContent.mockResolvedValue({
+        data: { success: true, data: [] },
+      });
       await service.changeFiles({
         ledgerId: LEDGER_ID,
         identity: IDENTITY,
@@ -642,6 +645,145 @@ describe("LedgerRepoService", () => {
           message: "delete file",
         },
       );
+    });
+
+    // w23/m4/t001: deleting a file still `include`d breaks the load the way
+    // rename refuses to — the delete refuses naming the includers, like
+    // rename does, instead of committing a dangling include.
+    describe("deleting an included file", () => {
+      const dirWith = (entries: { path: string; type: string }[]) => {
+        mockGetLedgerDirContent.mockResolvedValue({
+          data: { success: true, data: entries },
+        });
+      };
+      const contentsWith = (files: { path: string; content: string }[]) => {
+        mockGetLedgerFilesContent.mockResolvedValue({
+          data: {
+            success: true,
+            data: files.map(({ path, content }) => ({
+              path,
+              sha: "s1",
+              content,
+              encoding: null,
+            })),
+          },
+        });
+      };
+      const attemptDelete = (path: string, extra: object = {}) =>
+        service.changeFiles({
+          ledgerId: LEDGER_ID,
+          identity: IDENTITY,
+          operations: [{ operation: "delete", path, ...extra }],
+          message: "delete file",
+        });
+
+      it("refuses naming the file and its includers, without committing", async () => {
+        dirWith([
+          { path: "main.bean", type: "file" },
+          { path: "second.bean", type: "file" },
+        ]);
+        contentsWith([
+          {
+            path: "main.bean",
+            content: '2026-01-01 open Assets:Cash\ninclude "second.bean"\n',
+          },
+          { path: "second.bean", content: "; doomed\n" },
+        ]);
+        await expect(attemptDelete("second.bean")).rejects.toThrow(
+          /second\.bean is still included by main\.bean/,
+        );
+        expect(mockChangeLedgerFiles).not.toHaveBeenCalled();
+      });
+
+      it("refuses in a dry run exactly as the commit would", async () => {
+        dirWith([
+          { path: "main.bean", type: "file" },
+          { path: "second.bean", type: "file" },
+        ]);
+        contentsWith([
+          { path: "main.bean", content: 'include "second.bean"\n' },
+          { path: "second.bean", content: "; doomed\n" },
+        ]);
+        await expect(
+          service.changeFiles({
+            ledgerId: LEDGER_ID,
+            identity: IDENTITY,
+            operations: [{ operation: "delete", path: "second.bean" }],
+            message: "delete file",
+            dryRun: true,
+          }),
+        ).rejects.toThrow(/still included by main\.bean/);
+      });
+
+      it("allows the delete when the same batch drops the include", async () => {
+        dirWith([
+          { path: "main.bean", type: "file" },
+          { path: "second.bean", type: "file" },
+        ]);
+        contentsWith([
+          { path: "main.bean", content: 'include "second.bean"\n' },
+          { path: "second.bean", content: "; doomed\n" },
+        ]);
+        mockChangeLedgerFiles.mockResolvedValue({ data: { success: true } });
+        await service.changeFiles({
+          ledgerId: LEDGER_ID,
+          identity: IDENTITY,
+          operations: [
+            {
+              operation: "update",
+              path: "main.bean",
+              content: "; no more include\n",
+              sha: "s1",
+            },
+            { operation: "delete", path: "second.bean" },
+          ],
+          message: "delete file",
+        });
+        expect(mockChangeLedgerFiles).toHaveBeenCalledTimes(1);
+      });
+
+      it("allows deleting a file nothing includes", async () => {
+        dirWith([
+          { path: "main.bean", type: "file" },
+          { path: "other.bean", type: "file" },
+        ]);
+        contentsWith([
+          { path: "main.bean", content: 'include "other.bean"\n' },
+          { path: "other.bean", content: "; kept\n" },
+        ]);
+        mockChangeLedgerFiles.mockResolvedValue({ data: { success: true } });
+        await attemptDelete("lone.bean");
+        expect(mockChangeLedgerFiles).toHaveBeenCalledTimes(1);
+      });
+
+      it("ignores glob includes — a file leaving a glob match breaks no load", async () => {
+        dirWith([
+          { path: "main.bean", type: "file" },
+          { path: "second.bean", type: "file" },
+        ]);
+        contentsWith([
+          { path: "main.bean", content: 'include "q-inc/*.bean"\n' },
+          { path: "second.bean", content: "; doomed\n" },
+        ]);
+        mockChangeLedgerFiles.mockResolvedValue({ data: { success: true } });
+        await attemptDelete("q-inc/second.bean");
+        expect(mockChangeLedgerFiles).toHaveBeenCalledTimes(1);
+      });
+
+      it("matches includes on resolved paths, not include text", async () => {
+        dirWith([
+          { path: "d/inc.bean", type: "file" },
+          { path: "d/second.bean", type: "file" },
+        ]);
+        contentsWith([
+          { path: "d/inc.bean", content: 'include "second.bean"\n' },
+          { path: "d/second.bean", content: "; doomed\n" },
+        ]);
+        await expect(attemptDelete("d/second.bean")).rejects.toThrow(
+          /still included by d\/inc\.bean/,
+        );
+        expect(mockChangeLedgerFiles).not.toHaveBeenCalled();
+      });
     });
 
     it("round-trips text a caller read back through a write (w2/011)", async () => {

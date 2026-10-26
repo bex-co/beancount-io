@@ -47,7 +47,15 @@ async function fixture() {
     ledgerRepo: new LedgerRepoService(
       {
         getPublicApiClient: async () => ({
-          ledgers: { getLedgerFilesContent, changeLedgerFiles },
+          ledgers: {
+            getLedgerFilesContent,
+            changeLedgerFiles,
+            // The delete-include guard lists the tree (w23/m4/t001); this
+            // repository holds no includers.
+            getLedgerDirContent: async () => ({
+              data: { success: true, data: [] },
+            }),
+          },
         }),
       } as never,
       new AuthorizationService(

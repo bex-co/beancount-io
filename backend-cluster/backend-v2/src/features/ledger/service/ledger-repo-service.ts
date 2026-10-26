@@ -33,6 +33,13 @@ import {
   NotFoundError,
 } from "@/shared/errors";
 import { listDirectory } from "@/features/ledger/utils/directory-listing";
+import {
+  isGlobPattern,
+  isUrlTarget,
+  parseIncludeLine,
+  resolveIncludeTarget,
+} from "@/features/ledger/utils/include-target";
+import { scanLedgerBeanFiles } from "@/features/ledger/utils/include-references";
 
 type CommitUser = {
   login: string | null;
@@ -366,6 +373,108 @@ export class LedgerRepoService
     }
   }
 
+  /**
+   * Refuse to delete a file still `include`d by a surviving file, naming the
+   * includers — the delete half of the rename guard (w23/m4/t001). Includes
+   * match on resolved paths like rename's (w23/029); the check runs over the
+   * projected tree, so a batch that drops the include lines and deletes the
+   * file in one commit passes. Glob includes are ignored: a file leaving a
+   * glob's match breaks no load. Batches with no surviving delete skip the
+   * tree walk entirely.
+   */
+  private async assertDeletesKeepIncludes(
+    favaApiClient: Awaited<
+      ReturnType<
+        LedgerRepoService["favaClientFactory"]["getPublicApiClient"]
+      >
+    >,
+    ledgerOwner: string,
+    ledgerName: string,
+    operations: LedgerChangeFileOperation[],
+  ): Promise<void> {
+    // Net effect in batch order: a path the batch deletes and recreates
+    // survives, while create-then-delete ends gone.
+    const deleted = new Set<string>();
+    // Projected contents: batch text wins, so a batch that rewrites the
+    // includer alongside the delete passes.
+    const projected = new Map<string, string | null>();
+    for (const operation of operations) {
+      if (operation.operation === "delete") {
+        deleted.add(operation.path);
+        projected.set(operation.path, null);
+      } else {
+        deleted.delete(operation.path);
+        if (operation.content !== undefined && operation.content !== null)
+          projected.set(operation.path, operation.content);
+      }
+    }
+    if (deleted.size === 0) return;
+    const { beanFiles } = await scanLedgerBeanFiles((dir) =>
+      unwrapFavaResponse(
+        favaApiClient.ledgers.getLedgerDirContent(ledgerOwner, ledgerName, {
+          ...(dir === undefined ? {} : { dir_path: dir }),
+        }),
+        "list ledger files for delete guard",
+        (cause) =>
+          operationNotAllowedFromCause(
+            "list ledger files for delete guard",
+            cause,
+          ),
+      ),
+    );
+    const survivors = new Set(
+      beanFiles.filter((path) => !deleted.has(path)),
+    );
+    const contents = new Map<string, string>();
+    for (const [path, content] of projected) {
+      if (content !== null && survivors.has(path))
+        contents.set(path, content);
+    }
+    const toRead = [...survivors].filter((path) => !contents.has(path));
+    if (toRead.length > 0) {
+      const files = await unwrapFavaResponse(
+        favaApiClient.ledgers.getLedgerFilesContent(ledgerOwner, ledgerName, {
+          files: toRead,
+        }),
+        "read ledger files for delete guard",
+        (cause) =>
+          operationNotAllowedFromCause(
+            "read ledger files for delete guard",
+            cause,
+          ),
+      );
+      for (const file of files ?? []) {
+        contents.set(file.path, decodeFileContent(file).content);
+      }
+    }
+    const dangling = new Map<string, string[]>();
+    for (const [path, content] of contents) {
+      for (const line of content.split("\n")) {
+        const include = parseIncludeLine(line);
+        if (!include || isUrlTarget(include.target)) continue;
+        const resolved = resolveIncludeTarget(path, include.target);
+        if (isGlobPattern(resolved)) continue;
+        if (deleted.has(resolved)) {
+          const includers = dangling.get(resolved) ?? [];
+          if (!includers.includes(path)) includers.push(path);
+          dangling.set(resolved, includers);
+        }
+      }
+    }
+    if (dangling.size === 0) return;
+    const reports = [...dangling.entries()]
+      .sort(([a], [b]) => (a < b ? -1 : 1))
+      .map(
+        ([path, includers]) =>
+          `${path} is still included by ${includers.join(", ")}`,
+      );
+    throw new BadUserInputError(
+      `${reports.join("; ")}; remove the include from the including file(s) first, then delete`,
+      undefined,
+      "Edit the including file(s) to drop the include line(s), then resend the delete.",
+    );
+  }
+
   // Excluded from ILedgerRepoService: only composition injects this capability
   // into the append workflow. Generated merges retain all other write guards.
   async changeGeneratedFiles(params: FileChangesParams): Promise<void> {
@@ -415,6 +524,14 @@ export class LedgerRepoService
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
       identity.userId,
+    );
+    // Before the dry-run branch, so a preview refuses exactly what the
+    // commit would (w23/m4/t001).
+    await this.assertDeletesKeepIncludes(
+      favaApiClient,
+      ledgerOwner,
+      ledgerName,
+      operations,
     );
     if (dryRun) {
       // The commit refuses a `create` over a file that is already there, so

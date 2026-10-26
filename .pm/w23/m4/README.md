@@ -1,12 +1,12 @@
 # w23 · m4 — Guard deleting an included file
 
-**Worker:** worker1 **Goal:** deleting a file that is still `include`d is refused with guidance (or rewrites the includes in the same commit), like rename, on REST, GraphQL, and MCP alike **Status:** todo
+**Worker:** worker1 **Goal:** deleting a file that is still `include`d is refused with guidance (or rewrites the includes in the same commit), like rename, on REST, GraphQL, and MCP alike **Status:** in progress
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
-| t001 | Guard the repo-service delete path | 60m | — |
+| t001 | Guard the repo-service delete path ✅ | 60m | — |
 | t002 | Guard the workflow delete path | 45m | — |
 | t003 | Document the delete guard | 30m | t001, t002 |
 | t004 | Adoption surface | 20m | t003 |

@@ -120,6 +120,7 @@ import {
   parseIncludeLine,
   resolveIncludeTarget,
 } from "@/features/ledger/utils/include-target";
+import { scanLedgerBeanFiles } from "@/features/ledger/utils/include-references";
 
 const workflowLogger = logger.child({ module: "ledger-workflow" });
 
@@ -1106,32 +1107,18 @@ export class LedgerWorkflow implements ILedgerWorkflow {
 
     // Find every `.bean`/`.beancount` file whose `include` line still points
     // at oldPath, so the rename either refuses or rewrites them in the same
-    // commit instead of leaving a stale reference behind. This walks the whole
-    // tree rather than trusting the entry-point-reachable set: an orphan file
-    // nobody includes today breaks the day someone includes it.
-    const beanFiles: string[] = [];
-    const keptFiles: string[] = [];
-    const pendingDirs: (string | undefined)[] = [undefined];
-    while (pendingDirs.length > 0) {
-      const dir = pendingDirs.pop();
-      const entries = await unwrapFavaResponse(
+    // commit instead of leaving a stale reference behind.
+    const { beanFiles, allFiles } = await scanLedgerBeanFiles((dir) =>
+      unwrapFavaResponse(
         favaApiClient.ledgers.getLedgerDirContent(ledgerOwner, ledgerName, {
           ...(dir === undefined ? {} : { dir_path: dir }),
         }),
         "list ledger files for rename",
         (cause) =>
           operationNotAllowedFromCause("list ledger files for rename", cause),
-      );
-      for (const entry of entries ?? []) {
-        if (entry.type === "dir") {
-          pendingDirs.push(entry.path);
-          continue;
-        }
-        if (entry.path !== input.oldPath) keptFiles.push(entry.path);
-        if (entry.type === "file" && /\.(bean|beancount)$/.test(entry.path))
-          beanFiles.push(entry.path);
-      }
-    }
+      ),
+    );
+    const keptFiles = allFiles.filter((path) => path !== input.oldPath);
     // Nor be one a kept file's on macOS and Windows (w23/068). The file
     // renamed is gone, so changing only its own letter case is not a twin.
     await assertNoPortableTwin(input.newPath, listingOf(keptFiles));

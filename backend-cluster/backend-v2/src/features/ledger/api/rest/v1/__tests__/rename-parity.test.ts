@@ -8,6 +8,7 @@ import { graphql } from "graphql";
 import { LedgerMutationResolver } from "../../../resolvers/ledger-resolver.mutation";
 import { HealthResolver } from "@/features/healthz/api/health-resolver";
 import { LedgerWorkflow } from "@/features/ledger/workflow/ledger-workflow";
+import { LedgerRepoService } from "@/features/ledger/service/ledger-repo-service";
 import {
   AuthorizationService,
   SourceBackedRelationshipEvaluator,
@@ -186,11 +187,9 @@ async function fixture(
     authorization,
   );
   resolver = new LedgerMutationResolver(workflow);
-  const rest = await startV1TestServer(
-    { workflows: { ledger: workflow } } as unknown as AppLayers,
-    config,
-  );
-  rest.setIdentity(caller);
+  // The delete-guard parity below drives the real repo service through the
+  // same fake repository; rename never touches it.
+  const ledgerRepo = new LedgerRepoService(fava as never, authorization);
   const ledgerData = {
     getErrors: jest.fn(async () => {
       const batch =
@@ -200,11 +199,19 @@ async function fixture(
       return batch;
     }),
   };
+  const rest = await startV1TestServer(
+    {
+      workflows: { ledger: workflow },
+      services: { ledgerRepo, ledgerData },
+    } as unknown as AppLayers,
+    config,
+  );
+  rest.setIdentity(caller);
   const server = assembleMcpRegistry(
     {
       identity: caller,
       ledgerWorkflow: workflow,
-      services: { ledgerData },
+      services: { ledgerData, ledgerRepo },
     } as unknown as McpRequestContext,
     config,
   );
@@ -282,6 +289,30 @@ async function fixture(
         success: !result.isError,
         result: (result.structuredContent as { result?: unknown })?.result,
       };
+    },
+    deleteFile: async (surface: string, path: string) => {
+      if (surface === "rest") {
+        const response = await fetch(
+          `${rest.url}/api-gateway/v1/ledgers/alice/main/files/${path}`,
+          {
+            method: "DELETE",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({}),
+          },
+        );
+        return {
+          success: response.status === 200,
+          result: await response.json(),
+        };
+      }
+      const result = await client.callTool({
+        name: "deleteLedgerFiles",
+        arguments: {
+          description: "prune",
+          files: [{ path }],
+        },
+      });
+      return { success: !result.isError, result: result.structuredContent };
     },
     close: async () => {
       await client.close();
@@ -958,6 +989,44 @@ describe("dot-prefix normalization", () => {
       const outcome = await f.call("mcp", "../old.bean", "new.bean");
       expect(outcome.success).toBe(false);
       expect(f.change).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+});
+
+// w23/m4/t001: deleting a still-included file refuses naming the includers,
+// like rename — on both surfaces sharing the repo-service path. (GraphQL
+// delete goes through the workflow and is t002's path.)
+describe.each(["rest", "mcp"])("delete guard via %s", (surface) => {
+  const included = {
+    "main.bean": '; main\ninclude "second.bean"\n',
+    "second.bean": "; doomed\n",
+  };
+  it("refuses deleting a still-included file naming the includers", async () => {
+    const f = await fixture(identity, included);
+    try {
+      const outcome = await f.deleteFile(surface, "second.bean");
+      expect(outcome.success).toBe(false);
+      expect(JSON.stringify(outcome.result)).toContain(
+        "second.bean is still included by main.bean",
+      );
+      expect(f.files.has("second.bean")).toBe(true);
+      expect(f.change).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("deletes a file nothing includes", async () => {
+    const f = await fixture(identity, {
+      "main.bean": "; main\n",
+      "lone.bean": "; lone\n",
+    });
+    try {
+      const outcome = await f.deleteFile(surface, "lone.bean");
+      expect(outcome.success).toBe(true);
+      expect(f.files.has("lone.bean")).toBe(false);
     } finally {
       await f.close();
     }
