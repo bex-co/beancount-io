@@ -17,12 +17,14 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileBody:
         old_path (str):
         new_path (str):
         message (None | str | Unset):
+        description (None | str | Unset): Alias of message, as the MCP file tools spell it.
         update_includes (bool | None | Unset):
     """
 
     old_path: str
     new_path: str
     message: None | str | Unset = UNSET
+    description: None | str | Unset = UNSET
     update_includes: bool | None | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
@@ -35,6 +37,12 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileBody:
             message = UNSET
         else:
             message = self.message
+
+        description: None | str | Unset
+        if isinstance(self.description, Unset):
+            description = UNSET
+        else:
+            description = self.description
 
         update_includes: bool | None | Unset
         if isinstance(self.update_includes, Unset):
@@ -52,6 +60,8 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileBody:
         )
         if message is not UNSET:
             field_dict["message"] = message
+        if description is not UNSET:
+            field_dict["description"] = description
         if update_includes is not UNSET:
             field_dict["updateIncludes"] = update_includes
 
@@ -73,6 +83,15 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileBody:
 
         message = _parse_message(d.pop("message", UNSET))
 
+        def _parse_description(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        description = _parse_description(d.pop("description", UNSET))
+
         def _parse_update_includes(data: object) -> bool | None | Unset:
             if data is None:
                 return data
@@ -86,6 +105,7 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileBody:
             old_path=old_path,
             new_path=new_path,
             message=message,
+            description=description,
             update_includes=update_includes,
         )
 

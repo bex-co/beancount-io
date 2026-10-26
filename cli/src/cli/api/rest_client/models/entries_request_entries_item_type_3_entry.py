@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
+
+from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
     from ..models.entries_request_entries_item_type_3_entry_amount import EntriesRequestEntriesItemType3EntryAmount
@@ -19,11 +21,13 @@ class EntriesRequestEntriesItemType3Entry:
         date (str):  Example: 2026-08-23.
         account (str):
         amount (EntriesRequestEntriesItemType3EntryAmount):
+        tolerance (None | str | Unset): Explicit balance tolerance as a plain decimal
     """
 
     date: str
     account: str
     amount: EntriesRequestEntriesItemType3EntryAmount
+    tolerance: None | str | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         date = self.date
@@ -31,6 +35,12 @@ class EntriesRequestEntriesItemType3Entry:
         account = self.account
 
         amount = self.amount.to_dict()
+
+        tolerance: None | str | Unset
+        if isinstance(self.tolerance, Unset):
+            tolerance = UNSET
+        else:
+            tolerance = self.tolerance
 
         field_dict: dict[str, Any] = {}
 
@@ -41,6 +51,8 @@ class EntriesRequestEntriesItemType3Entry:
                 "amount": amount,
             }
         )
+        if tolerance is not UNSET:
+            field_dict["tolerance"] = tolerance
 
         return field_dict
 
@@ -57,10 +69,20 @@ class EntriesRequestEntriesItemType3Entry:
 
         amount = EntriesRequestEntriesItemType3EntryAmount.from_dict(d.pop("amount"))
 
+        def _parse_tolerance(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        tolerance = _parse_tolerance(d.pop("tolerance", UNSET))
+
         entries_request_entries_item_type_3_entry = cls(
             date=date,
             account=account,
             amount=amount,
+            tolerance=tolerance,
         )
 
         return entries_request_entries_item_type_3_entry

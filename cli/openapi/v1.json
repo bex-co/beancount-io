@@ -200,6 +200,10 @@
             "description": "Commit message; \"Create <path>\" or \"Update <path>\" when omitted or empty",
             "example": "Add January transactions"
           },
+          "description": {
+            "type": "string",
+            "description": "Alias of message, as the MCP file tools spell it."
+          },
           "sha": {
             "type": "string",
             "description": "Blob SHA the edit is based on. Send the SHA from a prior GET to update an existing file; omit it to create a new one."
@@ -215,6 +219,10 @@
         "properties": {
           "message": {
             "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "description": "Alias of message, as the MCP file tools spell it."
           },
           "sha": {
             "type": "string",
@@ -309,9 +317,60 @@
                                 ],
                                 "additionalProperties": false
                               },
+                              "cost": {
+                                "type": "object",
+                                "nullable": true,
+                                "properties": {
+                                  "number": {
+                                    "type": "string",
+                                    "description": "Decimal lot cost",
+                                    "example": "100"
+                                  },
+                                  "currency": {
+                                    "type": "string",
+                                    "example": "USD"
+                                  },
+                                  "date": {
+                                    "type": "string",
+                                    "nullable": true,
+                                    "example": "2026-08-23"
+                                  },
+                                  "label": {
+                                    "type": "string",
+                                    "nullable": true
+                                  }
+                                },
+                                "required": [
+                                  "number",
+                                  "currency"
+                                ],
+                                "additionalProperties": false,
+                                "description": "Lot basis `{number currency [, date] [, label]}`; needs units like price"
+                              },
                               "flag": {
                                 "type": "string",
                                 "nullable": true
+                              },
+                              "tags": {
+                                "type": "array",
+                                "nullable": true,
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "links": {
+                                "type": "array",
+                                "nullable": true,
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "meta": {
+                                "type": "object",
+                                "nullable": true,
+                                "additionalProperties": {
+                                  "type": "string"
+                                }
                               }
                             },
                             "required": [
@@ -380,6 +439,18 @@
                           "items": {
                             "type": "string"
                           }
+                        },
+                        "booking": {
+                          "type": "string",
+                          "nullable": true,
+                          "enum": [
+                            "STRICT",
+                            "FIFO",
+                            "LIFO",
+                            "NONE",
+                            null
+                          ],
+                          "description": "Booking method for the account"
                         }
                       },
                       "required": [
@@ -466,6 +537,11 @@
                             "currency"
                           ],
                           "additionalProperties": false
+                        },
+                        "tolerance": {
+                          "type": "string",
+                          "nullable": true,
+                          "description": "Explicit balance tolerance as a plain decimal"
                         }
                       },
                       "required": [
@@ -1299,7 +1375,7 @@
       "post": {
         "operationId": "createLedger",
         "summary": "Create a ledger",
-        "description": "Create a ledger for the authenticated user under existing administrative account authority and tier limits. STARTER (the default, including null) contains options and accounts without transactions or opening balances; SAMPLE contains demonstration transactions. Existing ledgers are unchanged. This is an account operation even for a ledger-pinned credential.",
+        "description": "Create a ledger for the authenticated user under existing administrative account authority and tier limits. STARTER (the default, including null) contains options and accounts without transactions or opening balances; SAMPLE contains demonstration transactions. Existing ledgers are unchanged. Refused with FORBIDDEN for a ledger-pinned credential: a created ledger would land outside the pin, where the creating credential could never see, use, or delete it.",
         "tags": [
           "Ledger v1"
         ],
@@ -4110,10 +4186,18 @@
                   "properties": {
                     "success": {
                       "type": "boolean"
+                    },
+                    "entryHashes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "The hash each committed entry now carries, in request order — what getEntryContext, the source-slice update and delete take. Empty when the hashes could not be resolved after the commit."
                     }
                   },
                   "required": [
-                    "success"
+                    "success",
+                    "entryHashes"
                   ]
                 }
               }
@@ -8058,7 +8142,7 @@
     "/api-gateway/v1/ledgers/{owner}/{name}/query": {
       "post": {
         "summary": "Run a BQL query",
-        "description": "Runs a Beancount Query Language statement against the ledger. `Accept: application/json` returns a typed table; `Accept: text/plain` returns the shell's own text rendering.",
+        "description": "Runs a Beancount Query Language statement against the ledger. `Accept: application/json` returns a typed table; `Accept: text/plain` returns the shell's own text rendering. The query travels in a POST body end to end, so long queries have no URL-length ceiling.",
         "tags": [
           "Ledger v1"
         ],
@@ -9907,7 +9991,7 @@
       },
       "delete": {
         "summary": "Delete a file",
-        "description": "Removes the file and commits the deletion.",
+        "description": "Removes the file and commits the deletion. Deleting a file still `include`d by another ledger file is refused as `BAD_USER_INPUT` naming the includers; remove the include from the including file(s) first, then delete. An include counts when its target resolves to the deleted path the way the ledger loads it, relative to the directory of the file that declares it, and glob includes never count.",
         "tags": [
           "Ledger v1"
         ],
@@ -10126,6 +10210,11 @@
                   "message": {
                     "type": "string",
                     "nullable": true
+                  },
+                  "description": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "Alias of message, as the MCP file tools spell it."
                   },
                   "updateIncludes": {
                     "type": "boolean",
@@ -10907,7 +10996,7 @@
     "/api-gateway/v1/ledgers/{owner}/{name}/entry-source/delete": {
       "post": {
         "summary": "Delete one entry source slice",
-        "description": "Modify entry source using the current sha256sum from entry context. Ledger content-write authority is checked before delegation. Stale source hashes are refused by the ledger service. An update returns the entry's new hash — the request's entryHash is stale after the commit. An update or delete that would add bean-check errors the ledger did not have — deleting an entry a balance assertion depends on, re-dating it past one — is refused with VALIDATION_FAILED, naming each new error in newLedgerErrors; errors the ledger already had never block, and `allowInvalid: true` commits anyway. An update that would take a free ledger past its directive limit is refused with RESOURCE_LIMIT_REACHED, naming the limit and the projected count; deletes always pass. No preview.",
+        "description": "Modify entry source using the current sha256sum from entry context. Ledger content-write authority is checked before delegation. Stale source hashes are refused by the ledger service. An update returns the entry's new hash — the request's entryHash is stale after the commit. An update or delete that would add bean-check errors the ledger did not have — deleting an entry a balance assertion depends on, re-dating it past one — is refused with VALIDATION_FAILED, naming each new error in newLedgerErrors; errors the ledger already had never block, and `allowInvalid: true` commits anyway. When the only new error is imbalance, the refusal is UNBALANCED with the residual instead. An update that would take a free ledger past its directive limit is refused with RESOURCE_LIMIT_REACHED, naming the limit and the projected count; deletes always pass. No preview.",
         "tags": [
           "Ledger v1"
         ],
@@ -10952,7 +11041,12 @@
                 "type": "object",
                 "properties": {
                   "entryHash": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "The entry's hash."
+                  },
+                  "entry_hash": {
+                    "type": "string",
+                    "description": "Alias of entryHash, as list output spells it."
                   },
                   "sha256sum": {
                     "type": "string"
@@ -10963,7 +11057,6 @@
                   }
                 },
                 "required": [
-                  "entryHash",
                   "sha256sum"
                 ],
                 "additionalProperties": false
@@ -11090,7 +11183,7 @@
     "/api-gateway/v1/ledgers/{owner}/{name}/entry-source/delete-many": {
       "post": {
         "summary": "Delete multiple entry source slices",
-        "description": "Modify entry source using the current sha256sum from entry context. Ledger content-write authority is checked before delegation. Stale source hashes are refused by the ledger service. An update returns the entry's new hash — the request's entryHash is stale after the commit. An update or delete that would add bean-check errors the ledger did not have — deleting an entry a balance assertion depends on, re-dating it past one — is refused with VALIDATION_FAILED, naming each new error in newLedgerErrors; errors the ledger already had never block, and `allowInvalid: true` commits anyway. An update that would take a free ledger past its directive limit is refused with RESOURCE_LIMIT_REACHED, naming the limit and the projected count; deletes always pass. No preview.",
+        "description": "Modify entry source using the current sha256sum from entry context. Ledger content-write authority is checked before delegation. Stale source hashes are refused by the ledger service. An update returns the entry's new hash — the request's entryHash is stale after the commit. An update or delete that would add bean-check errors the ledger did not have — deleting an entry a balance assertion depends on, re-dating it past one — is refused with VALIDATION_FAILED, naming each new error in newLedgerErrors; errors the ledger already had never block, and `allowInvalid: true` commits anyway. When the only new error is imbalance, the refusal is UNBALANCED with the residual instead. An update that would take a free ledger past its directive limit is refused with RESOURCE_LIMIT_REACHED, naming the limit and the projected count; deletes always pass. No preview.",
         "tags": [
           "Ledger v1"
         ],
@@ -11140,14 +11233,18 @@
                       "type": "object",
                       "properties": {
                         "entryHash": {
-                          "type": "string"
+                          "type": "string",
+                          "description": "The entry's hash."
+                        },
+                        "entry_hash": {
+                          "type": "string",
+                          "description": "Alias of entryHash, as list output spells it."
                         },
                         "sha256sum": {
                           "type": "string"
                         }
                       },
                       "required": [
-                        "entryHash",
                         "sha256sum"
                       ],
                       "additionalProperties": false
@@ -11285,7 +11382,7 @@
     "/api-gateway/v1/ledgers/{owner}/{name}/entry-source": {
       "put": {
         "summary": "Update an entry source slice",
-        "description": "Modify entry source using the current sha256sum from entry context. Ledger content-write authority is checked before delegation. Stale source hashes are refused by the ledger service. An update returns the entry's new hash — the request's entryHash is stale after the commit. An update or delete that would add bean-check errors the ledger did not have — deleting an entry a balance assertion depends on, re-dating it past one — is refused with VALIDATION_FAILED, naming each new error in newLedgerErrors; errors the ledger already had never block, and `allowInvalid: true` commits anyway. An update that would take a free ledger past its directive limit is refused with RESOURCE_LIMIT_REACHED, naming the limit and the projected count; deletes always pass. No preview.",
+        "description": "Modify entry source using the current sha256sum from entry context. Ledger content-write authority is checked before delegation. Stale source hashes are refused by the ledger service. An update returns the entry's new hash — the request's entryHash is stale after the commit. An update or delete that would add bean-check errors the ledger did not have — deleting an entry a balance assertion depends on, re-dating it past one — is refused with VALIDATION_FAILED, naming each new error in newLedgerErrors; errors the ledger already had never block, and `allowInvalid: true` commits anyway. When the only new error is imbalance, the refusal is UNBALANCED with the residual instead. An update that would take a free ledger past its directive limit is refused with RESOURCE_LIMIT_REACHED, naming the limit and the projected count; deletes always pass. No preview.",
         "tags": [
           "Ledger v1"
         ],
@@ -11330,7 +11427,12 @@
                 "type": "object",
                 "properties": {
                   "entryHash": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "The entry's hash."
+                  },
+                  "entry_hash": {
+                    "type": "string",
+                    "description": "Alias of entryHash, as list output spells it."
                   },
                   "sha256sum": {
                     "type": "string"
@@ -11344,7 +11446,6 @@
                   }
                 },
                 "required": [
-                  "entryHash",
                   "sha256sum",
                   "newContent"
                 ],
@@ -12809,11 +12910,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Fava filter expression",
+              "description": "Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or \"quoted\" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:\"Assets:Bank:Checking\"`, `date:\"2026\"` — there are no escape sequences.",
               "example": "#travel"
             },
             "required": false,
-            "description": "Fava filter expression",
+            "description": "Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or \"quoted\" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:\"Assets:Bank:Checking\"`, `date:\"2026\"` — there are no escape sequences.",
             "name": "filter",
             "in": "query"
           },
@@ -13949,11 +14050,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Fava filter expression",
+              "description": "Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or \"quoted\" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:\"Assets:Bank:Checking\"`, `date:\"2026\"` — there are no escape sequences.",
               "example": "#travel"
             },
             "required": false,
-            "description": "Fava filter expression",
+            "description": "Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or \"quoted\" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:\"Assets:Bank:Checking\"`, `date:\"2026\"` — there are no escape sequences.",
             "name": "filter",
             "in": "query"
           },
@@ -14127,11 +14228,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Fava filter expression",
+              "description": "Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or \"quoted\" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:\"Assets:Bank:Checking\"`, `date:\"2026\"` — there are no escape sequences.",
               "example": "#travel"
             },
             "required": false,
-            "description": "Fava filter expression",
+            "description": "Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or \"quoted\" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:\"Assets:Bank:Checking\"`, `date:\"2026\"` — there are no escape sequences.",
             "name": "filter",
             "in": "query"
           },
@@ -14172,6 +14273,556 @@
         "responses": {
           "200": {
             "description": "Get the trial balance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed validation against the documented schema",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credential, or a credential that no longer resolves",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "The action needs a paid plan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The credential lacks the permission this business action requires",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such ledger, or no access to it",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The change conflicts with the resource's current state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The server failed; the request may be retried",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "A dependency is unavailable; retry later",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api-gateway/v1/ledgers/{owner}/{name}/holdings": {
+      "get": {
+        "summary": "Get holdings",
+        "description": "Lots grouped by account or commodity — units, average cost, cost basis, market value — valued at today's quotes. `conversion` takes a currency or `units` (default: the operating currency when the ledger declares exactly one, else each group's held currency); `account` names a parent account or a regular expression. Costless cash and fully-sold groups are left out; groups without a quote value at cost and are named in `missing_prices`.",
+        "tags": [
+          "Ledger v1"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "apiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
+              "description": "Ledger owner's username",
+              "example": "alice"
+            },
+            "required": true,
+            "description": "Ledger owner's username",
+            "name": "owner",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
+              "description": "Ledger (repository) name",
+              "example": "main-ledger"
+            },
+            "required": true,
+            "description": "Ledger (repository) name",
+            "name": "name",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Restrict to one account and its children",
+              "example": "Assets:Bank:Checking"
+            },
+            "required": false,
+            "description": "Restrict to one account and its children",
+            "name": "account",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Convert money columns to this currency, or `units` for each group's held currency (default: the operating currency when the ledger declares exactly one)",
+              "example": "USD"
+            },
+            "required": false,
+            "description": "Convert money columns to this currency, or `units` for each group's held currency (default: the operating currency when the ledger declares exactly one)",
+            "name": "conversion",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "account",
+                "commodity"
+              ],
+              "default": "account",
+              "description": "Group lots by account or by commodity",
+              "example": "commodity"
+            },
+            "required": false,
+            "description": "Group lots by account or by commodity",
+            "name": "groupBy",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get holdings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed validation against the documented schema",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credential, or a credential that no longer resolves",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "The action needs a paid plan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The credential lacks the permission this business action requires",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such ledger, or no access to it",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The change conflicts with the resource's current state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The server failed; the request may be retried",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "A dependency is unavailable; retry later",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api-gateway/v1/ledgers/{owner}/{name}/register": {
+      "get": {
+        "summary": "Get one account's register",
+        "description": "One account's dated entries with a running balance, oldest first — each entry with the subtree postings behind it. `account` names a parent account or a regular expression resolving to one subtree; `conversion` takes a currency or `units` (default: the operating currency when the ledger declares exactly one, else each row's held currencies). A time window carries the opening balance forward.",
+        "tags": [
+          "Ledger v1"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "apiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
+              "description": "Ledger owner's username",
+              "example": "alice"
+            },
+            "required": true,
+            "description": "Ledger owner's username",
+            "name": "owner",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
+              "description": "Ledger (repository) name",
+              "example": "main-ledger"
+            },
+            "required": true,
+            "description": "Ledger (repository) name",
+            "name": "name",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "The account to list: a parent account or a regular expression",
+              "example": "Assets:Bank:Checking"
+            },
+            "required": true,
+            "description": "The account to list: a parent account or a regular expression",
+            "name": "account",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Fava time expression",
+              "example": "2026"
+            },
+            "required": false,
+            "description": "Fava time expression",
+            "name": "time",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Convert money columns to this currency, or `units` for each row's held currencies (default: the operating currency when the ledger declares exactly one)",
+              "example": "USD"
+            },
+            "required": false,
+            "description": "Convert money columns to this currency, or `units` for each row's held currencies (default: the operating currency when the ledger declares exactly one)",
+            "name": "conversion",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get one account's register",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed validation against the documented schema",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credential, or a credential that no longer resolves",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "The action needs a paid plan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The credential lacks the permission this business action requires",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such ledger, or no access to it",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The change conflicts with the resource's current state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The server failed; the request may be retried",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "A dependency is unavailable; retry later",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api-gateway/v1/ledgers/{owner}/{name}/capital-gains": {
+      "get": {
+        "summary": "Get realized capital gains",
+        "description": "One row per closed lot — quantity, proceeds, basis, gain — plus one-year bucket totals. A lot closes when a reducing posting carries booked cost and price; splits and own-account transfers carry no price and are left out. `fromDate`/`toDate` bound the sale date, `account` filters the posting account, and `time` scopes the window; all figures stay in their booked currencies.",
+        "tags": [
+          "Ledger v1"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "apiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
+              "description": "Ledger owner's username",
+              "example": "alice"
+            },
+            "required": true,
+            "description": "Ledger owner's username",
+            "name": "owner",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
+              "description": "Ledger (repository) name",
+              "example": "main-ledger"
+            },
+            "required": true,
+            "description": "Ledger (repository) name",
+            "name": "name",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Restrict to one account and its children",
+              "example": "Assets:Bank:Checking"
+            },
+            "required": false,
+            "description": "Restrict to one account and its children",
+            "name": "account",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Fava time expression",
+              "example": "2026"
+            },
+            "required": false,
+            "description": "Fava time expression",
+            "name": "time",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Sales on or after YYYY-MM-DD",
+              "example": "2024-01-01"
+            },
+            "required": false,
+            "description": "Sales on or after YYYY-MM-DD",
+            "name": "fromDate",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Sales on or before YYYY-MM-DD",
+              "example": "2024-12-31"
+            },
+            "required": false,
+            "description": "Sales on or before YYYY-MM-DD",
+            "name": "toDate",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get realized capital gains",
             "content": {
               "application/json": {
                 "schema": {
@@ -14327,11 +14978,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Fava filter expression",
+              "description": "Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or \"quoted\" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:\"Assets:Bank:Checking\"`, `date:\"2026\"` — there are no escape sequences.",
               "example": "#travel"
             },
             "required": false,
-            "description": "Fava filter expression",
+            "description": "Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or \"quoted\" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:\"Assets:Bank:Checking\"`, `date:\"2026\"` — there are no escape sequences.",
             "name": "filter",
             "in": "query"
           },
@@ -14553,11 +15204,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Fava filter expression",
+              "description": "Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or \"quoted\" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:\"Assets:Bank:Checking\"`, `date:\"2026\"` — there are no escape sequences.",
               "example": "#travel"
             },
             "required": false,
-            "description": "Fava filter expression",
+            "description": "Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or \"quoted\" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:\"Assets:Bank:Checking\"`, `date:\"2026\"` — there are no escape sequences.",
             "name": "filter",
             "in": "query"
           },
@@ -14764,11 +15415,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Fava filter expression",
+              "description": "Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or \"quoted\" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:\"Assets:Bank:Checking\"`, `date:\"2026\"` — there are no escape sequences.",
               "example": "#travel"
             },
             "required": false,
-            "description": "Fava filter expression",
+            "description": "Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or \"quoted\" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:\"Assets:Bank:Checking\"`, `date:\"2026\"` — there are no escape sequences.",
             "name": "filter",
             "in": "query"
           },
@@ -14942,11 +15593,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Fava filter expression",
+              "description": "Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or \"quoted\" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:\"Assets:Bank:Checking\"`, `date:\"2026\"` — there are no escape sequences.",
               "example": "#travel"
             },
             "required": false,
-            "description": "Fava filter expression",
+            "description": "Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or \"quoted\" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:\"Assets:Bank:Checking\"`, `date:\"2026\"` — there are no escape sequences.",
             "name": "filter",
             "in": "query"
           },
@@ -15120,11 +15771,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Fava filter expression",
+              "description": "Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or \"quoted\" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:\"Assets:Bank:Checking\"`, `date:\"2026\"` — there are no escape sequences.",
               "example": "#travel"
             },
             "required": false,
-            "description": "Fava filter expression",
+            "description": "Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or \"quoted\" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:\"Assets:Bank:Checking\"`, `date:\"2026\"` — there are no escape sequences.",
             "name": "filter",
             "in": "query"
           },
@@ -15755,9 +16406,19 @@
               "type": "string",
               "description": "The entry's hash"
             },
-            "required": true,
+            "required": false,
             "description": "The entry's hash",
             "name": "entryHash",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Alias of entryHash, as list output spells it."
+            },
+            "required": false,
+            "description": "Alias of entryHash, as list output spells it.",
+            "name": "entry_hash",
             "in": "query"
           }
         ],

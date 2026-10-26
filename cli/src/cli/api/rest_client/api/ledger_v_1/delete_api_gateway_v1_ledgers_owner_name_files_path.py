@@ -119,7 +119,11 @@ def sync_detailed(
 ) -> Response[FileCommitAck | V1Error]:
     """Delete a file
 
-     Removes the file and commits the deletion.
+     Removes the file and commits the deletion. Deleting a file still `include`d by another ledger file
+    is refused as `BAD_USER_INPUT` naming the includers; remove the include from the including file(s)
+    first, then delete. An include counts when its target resolves to the deleted path the way the
+    ledger loads it, relative to the directory of the file that declares it, and glob includes never
+    count.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -160,7 +164,11 @@ def sync(
 ) -> FileCommitAck | V1Error | None:
     """Delete a file
 
-     Removes the file and commits the deletion.
+     Removes the file and commits the deletion. Deleting a file still `include`d by another ledger file
+    is refused as `BAD_USER_INPUT` naming the includers; remove the include from the including file(s)
+    first, then delete. An include counts when its target resolves to the deleted path the way the
+    ledger loads it, relative to the directory of the file that declares it, and glob includes never
+    count.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -196,7 +204,11 @@ async def asyncio_detailed(
 ) -> Response[FileCommitAck | V1Error]:
     """Delete a file
 
-     Removes the file and commits the deletion.
+     Removes the file and commits the deletion. Deleting a file still `include`d by another ledger file
+    is refused as `BAD_USER_INPUT` naming the includers; remove the include from the including file(s)
+    first, then delete. An include counts when its target resolves to the deleted path the way the
+    ledger loads it, relative to the directory of the file that declares it, and glob includes never
+    count.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -235,7 +247,11 @@ async def asyncio(
 ) -> FileCommitAck | V1Error | None:
     """Delete a file
 
-     Removes the file and commits the deletion.
+     Removes the file and commits the deletion. Deleting a file still `include`d by another ledger file
+    is refused as `BAD_USER_INPUT` naming the includers; remove the include from the including file(s)
+    first, then delete. An include counts when its target resolves to the deleted path the way the
+    ledger loads it, relative to the directory of the file that declares it, and glob includes never
+    count.
 
     Args:
         owner (str): Ledger owner's username Example: alice.

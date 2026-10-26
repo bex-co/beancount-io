@@ -7,19 +7,22 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.v1_error import V1Error
-from ...types import UNSET, Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     owner: str,
     name: str,
     *,
-    entry_hash: str,
+    entryHash: str | Unset = UNSET,
+    entry_hash: str | Unset = UNSET,
 ) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
 
-    params["entryHash"] = entry_hash
+    params["entryHash"] = entryHash
+
+    params["entry_hash"] = entry_hash
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -105,7 +108,8 @@ def sync_detailed(
     name: str,
     *,
     client: AuthenticatedClient,
-    entry_hash: str,
+    entryHash: str | Unset = UNSET,
+    entry_hash: str | Unset = UNSET,
 ) -> Response[Any | V1Error]:
     """Get the source context around one entry
 
@@ -117,7 +121,8 @@ def sync_detailed(
     Args:
         owner (str): Ledger owner's username Example: alice.
         name (str): Ledger (repository) name Example: main-ledger.
-        entry_hash (str): The entry's hash
+        entryHash (str | Unset): The entry's hash
+        entry_hash (str | Unset): Alias of entryHash, as list output spells it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -130,6 +135,7 @@ def sync_detailed(
     kwargs = _get_kwargs(
         owner=owner,
         name=name,
+        entryHash=entryHash,
         entry_hash=entry_hash,
     )
 
@@ -145,7 +151,8 @@ def sync(
     name: str,
     *,
     client: AuthenticatedClient,
-    entry_hash: str,
+    entryHash: str | Unset = UNSET,
+    entry_hash: str | Unset = UNSET,
 ) -> Any | V1Error | None:
     """Get the source context around one entry
 
@@ -157,7 +164,8 @@ def sync(
     Args:
         owner (str): Ledger owner's username Example: alice.
         name (str): Ledger (repository) name Example: main-ledger.
-        entry_hash (str): The entry's hash
+        entryHash (str | Unset): The entry's hash
+        entry_hash (str | Unset): Alias of entryHash, as list output spells it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -171,6 +179,7 @@ def sync(
         owner=owner,
         name=name,
         client=client,
+        entryHash=entryHash,
         entry_hash=entry_hash,
     ).parsed
 
@@ -180,7 +189,8 @@ async def asyncio_detailed(
     name: str,
     *,
     client: AuthenticatedClient,
-    entry_hash: str,
+    entryHash: str | Unset = UNSET,
+    entry_hash: str | Unset = UNSET,
 ) -> Response[Any | V1Error]:
     """Get the source context around one entry
 
@@ -192,7 +202,8 @@ async def asyncio_detailed(
     Args:
         owner (str): Ledger owner's username Example: alice.
         name (str): Ledger (repository) name Example: main-ledger.
-        entry_hash (str): The entry's hash
+        entryHash (str | Unset): The entry's hash
+        entry_hash (str | Unset): Alias of entryHash, as list output spells it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -205,6 +216,7 @@ async def asyncio_detailed(
     kwargs = _get_kwargs(
         owner=owner,
         name=name,
+        entryHash=entryHash,
         entry_hash=entry_hash,
     )
 
@@ -218,7 +230,8 @@ async def asyncio(
     name: str,
     *,
     client: AuthenticatedClient,
-    entry_hash: str,
+    entryHash: str | Unset = UNSET,
+    entry_hash: str | Unset = UNSET,
 ) -> Any | V1Error | None:
     """Get the source context around one entry
 
@@ -230,7 +243,8 @@ async def asyncio(
     Args:
         owner (str): Ledger owner's username Example: alice.
         name (str): Ledger (repository) name Example: main-ledger.
-        entry_hash (str): The entry's hash
+        entryHash (str | Unset): The entry's hash
+        entry_hash (str | Unset): Alias of entryHash, as list output spells it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -245,6 +259,7 @@ async def asyncio(
             owner=owner,
             name=name,
             client=client,
+            entryHash=entryHash,
             entry_hash=entry_hash,
         )
     ).parsed

@@ -21,12 +21,14 @@ class FileWrite:
             .
         message (str | Unset): Commit message; "Create <path>" or "Update <path>" when omitted or empty Example: Add
             January transactions.
+        description (str | Unset): Alias of message, as the MCP file tools spell it.
         sha (str | Unset): Blob SHA the edit is based on. Send the SHA from a prior GET to update an existing file; omit
             it to create a new one.
     """
 
     content: str
     message: str | Unset = UNSET
+    description: str | Unset = UNSET
     sha: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -34,6 +36,8 @@ class FileWrite:
         content = self.content
 
         message = self.message
+
+        description = self.description
 
         sha = self.sha
 
@@ -46,6 +50,8 @@ class FileWrite:
         )
         if message is not UNSET:
             field_dict["message"] = message
+        if description is not UNSET:
+            field_dict["description"] = description
         if sha is not UNSET:
             field_dict["sha"] = sha
 
@@ -58,11 +64,14 @@ class FileWrite:
 
         message = d.pop("message", UNSET)
 
+        description = d.pop("description", UNSET)
+
         sha = d.pop("sha", UNSET)
 
         file_write = cls(
             content=content,
             message=message,
+            description=description,
             sha=sha,
         )
 

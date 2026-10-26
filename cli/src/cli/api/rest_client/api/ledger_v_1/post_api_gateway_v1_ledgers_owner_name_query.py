@@ -111,7 +111,8 @@ def sync_detailed(
     """Run a BQL query
 
      Runs a Beancount Query Language statement against the ledger. `Accept: application/json` returns a
-    typed table; `Accept: text/plain` returns the shell's own text rendering.
+    typed table; `Accept: text/plain` returns the shell's own text rendering. The query travels in a
+    POST body end to end, so long queries have no URL-length ceiling.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -149,7 +150,8 @@ def sync(
     """Run a BQL query
 
      Runs a Beancount Query Language statement against the ledger. `Accept: application/json` returns a
-    typed table; `Accept: text/plain` returns the shell's own text rendering.
+    typed table; `Accept: text/plain` returns the shell's own text rendering. The query travels in a
+    POST body end to end, so long queries have no URL-length ceiling.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -182,7 +184,8 @@ async def asyncio_detailed(
     """Run a BQL query
 
      Runs a Beancount Query Language statement against the ledger. `Accept: application/json` returns a
-    typed table; `Accept: text/plain` returns the shell's own text rendering.
+    typed table; `Accept: text/plain` returns the shell's own text rendering. The query travels in a
+    POST body end to end, so long queries have no URL-length ceiling.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -218,7 +221,8 @@ async def asyncio(
     """Run a BQL query
 
      Runs a Beancount Query Language statement against the ledger. `Accept: application/json` returns a
-    typed table; `Accept: text/plain` returns the shell's own text rendering.
+    typed table; `Accept: text/plain` returns the shell's own text rendering. The query travels in a
+    POST body end to end, so long queries have no URL-length ceiling.
 
     Args:
         owner (str): Ledger owner's username Example: alice.

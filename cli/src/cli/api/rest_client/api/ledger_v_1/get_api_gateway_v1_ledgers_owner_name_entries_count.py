@@ -124,7 +124,14 @@ def sync_detailed(
         name (str): Ledger (repository) name Example: main-ledger.
         account (str | Unset): Restrict to one account and its children Example:
             Assets:Bank:Checking.
-        filter_ (str | Unset): Fava filter expression Example: #travel.
+        filter_ (str | Unset): Fava advanced-filter expression. `#tag` and `^link` match exactly;
+            bare or "quoted" words match narration/payee (transactions) or comment (notes);
+            `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`,
+            `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100`
+            matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is
+            OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a
+            leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape
+            sequences. Example: #travel.
         time (str | Unset): Fava time expression Example: 2026.
 
     Raises:
@@ -168,7 +175,14 @@ def sync(
         name (str): Ledger (repository) name Example: main-ledger.
         account (str | Unset): Restrict to one account and its children Example:
             Assets:Bank:Checking.
-        filter_ (str | Unset): Fava filter expression Example: #travel.
+        filter_ (str | Unset): Fava advanced-filter expression. `#tag` and `^link` match exactly;
+            bare or "quoted" words match narration/payee (transactions) or comment (notes);
+            `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`,
+            `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100`
+            matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is
+            OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a
+            leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape
+            sequences. Example: #travel.
         time (str | Unset): Fava time expression Example: 2026.
 
     Raises:
@@ -207,7 +221,14 @@ async def asyncio_detailed(
         name (str): Ledger (repository) name Example: main-ledger.
         account (str | Unset): Restrict to one account and its children Example:
             Assets:Bank:Checking.
-        filter_ (str | Unset): Fava filter expression Example: #travel.
+        filter_ (str | Unset): Fava advanced-filter expression. `#tag` and `^link` match exactly;
+            bare or "quoted" words match narration/payee (transactions) or comment (notes);
+            `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`,
+            `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100`
+            matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is
+            OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a
+            leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape
+            sequences. Example: #travel.
         time (str | Unset): Fava time expression Example: 2026.
 
     Raises:
@@ -249,7 +270,14 @@ async def asyncio(
         name (str): Ledger (repository) name Example: main-ledger.
         account (str | Unset): Restrict to one account and its children Example:
             Assets:Bank:Checking.
-        filter_ (str | Unset): Fava filter expression Example: #travel.
+        filter_ (str | Unset): Fava advanced-filter expression. `#tag` and `^link` match exactly;
+            bare or "quoted" words match narration/payee (transactions) or comment (notes);
+            `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`,
+            `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100`
+            matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is
+            OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a
+            leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape
+            sequences. Example: #travel.
         time (str | Unset): Fava time expression Example: 2026.
 
     Raises:
