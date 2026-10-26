@@ -1,6 +1,6 @@
 # w21 · m4 — `bea report cash-flow`: where the money went, by period
 
-**Worker:** worker1 **Goal:** a native, offline cash-flow report with `--json` that reconciles to the change in cash balances **Status:** todo (t001-t007 done)
+**Worker:** worker1 **Goal:** a native, offline cash-flow report with `--json` that reconciles to the change in cash balances **Status:** done
 
 ## Tasks (in order)
 

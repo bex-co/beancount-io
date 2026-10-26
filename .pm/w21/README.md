@@ -7,7 +7,7 @@
 - [x] **m1** — [Entry edits and deletes refuse changes that would break the ledger](./done/m1/README.md) (7 tasks) ← from mobile QA 2026-10-20
 - [x] **m2** — [Readable-width caps for the remaining bespoke screens](./done/m2/README.md) (7 tasks) ← promoted from w21/1007, follow-up to w21/1005
 - [x] **m3** — [BQL cookbook: tested query recipes for humans and agents](./done/m3/README.md) (8 tasks) ← `/pm-brainstorm for w21` 2026-10-25, candidate 2
-- [ ] **m4** — [`bea report cash-flow`: where the money went, by period](./m4/README.md) (8 tasks) ← `/pm-brainstorm for w21` 2026-10-25, candidate 3
+- [x] **m4** — [`bea report cash-flow`: where the money went, by period](./done/m4/README.md) (8 tasks) ← `/pm-brainstorm for w21` 2026-10-25, candidate 3
 
 ## Dropped
 
