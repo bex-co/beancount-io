@@ -1,5 +1,6 @@
 import { z } from "@/shared/zod-openapi-setup";
 import { NotFoundError } from "@/shared/errors";
+import { resolveCommitMessage } from "@/features/ledger/utils/commit-message-alias";
 import { assertAmountsFitEngineDecimal } from "@/features/ledger/utils/engine-decimal";
 import { ledgerIdOf, ledgerPathSchema } from "./schemas";
 import { json } from "@/server/rest/v1-schemas";
@@ -32,6 +33,9 @@ const putBodySchema = z
         'Commit message; "Create <path>" or "Update <path>" when omitted or empty',
       example: "Add January transactions",
     }),
+    description: z.string().optional().openapi({
+      description: "Alias of message, as the MCP file tools spell it.",
+    }),
     sha: z.string().optional().openapi({
       description:
         "Blob SHA the edit is based on. Send the SHA from a prior GET to update an existing file; omit it to create a new one.",
@@ -45,6 +49,9 @@ const putBodySchema = z
 const deleteBodySchema = z
   .object({
     message: z.string().optional(),
+    description: z.string().optional().openapi({
+      description: "Alias of message, as the MCP file tools spell it.",
+    }),
     sha: z.string().optional().openapi({
       description: "Blob SHA of the file being deleted, from a prior GET",
     }),
@@ -171,7 +178,8 @@ export const FILE_ROUTES = [
         // An empty message is an omitted one, as the ledger service reads it
         // (w21/553); a write with no sha creates the file.
         message:
-          body.message || `${body.sha ? "Update" : "Create"} ${params.path}`,
+          resolveCommitMessage(body, { required: false }) ||
+          `${body.sha ? "Update" : "Create"} ${params.path}`,
       });
       return { ok: true as const, path: params.path };
     },
@@ -198,7 +206,9 @@ export const FILE_ROUTES = [
             ...(body.sha ? { sha: body.sha } : {}),
           },
         ],
-        message: body.message || `Delete ${params.path}`,
+        message:
+          resolveCommitMessage(body, { required: false }) ||
+          `Delete ${params.path}`,
       });
       return { ok: true as const, path: params.path };
     },

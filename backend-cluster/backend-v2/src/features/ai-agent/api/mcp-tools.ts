@@ -1,5 +1,6 @@
 import { entriesBodySchema } from "@/features/ledger/api/rest/v1/entries-handler";
 import { parseLedgerId } from "@/shared/str";
+import { resolveCommitMessage } from "@/features/ledger/utils/commit-message-alias";
 import {
   SOURCE_SLICE_OPERATION_OUTPUTS,
   SOURCE_SLICE_OPERATION_SCHEMAS,
@@ -610,12 +611,11 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
             identity: context.identity,
             ledgerId,
             input: {
-              ...args,
               // Models spell shell-style `./old.bean`; every other file
               // tool normalizes that here, before the strict validator.
               oldPath: normalizeAgentRepoPath(args.oldPath),
               newPath: normalizeAgentRepoPath(args.newPath),
-              message: args.message ?? undefined,
+              message: resolveCommitMessage(args, { required: false }),
               updateIncludes: args.updateIncludes ?? undefined,
             },
           }),

@@ -311,10 +311,15 @@ async function fixture(initial: Record<string, string> = {}) {
   const mcpEdit = async (
     operations: Record<string, unknown>[],
     dryRun = false,
+    messageKey: string | "both" = "description",
   ): Promise<Outcome> => {
     // One MCP tool per kind of change (ADR 019, 2026-10-18): every batch
     // here is a single kind, so the first operation names the tool.
     const kind = String(operations[0]?.operation);
+    const texts =
+      messageKey === "both"
+        ? { description: "Size contract edit", message: "A different text" }
+        : { [messageKey]: "Size contract edit" };
     const result = await client.callTool({
       name:
         kind === "create"
@@ -324,7 +329,7 @@ async function fixture(initial: Record<string, string> = {}) {
             : "updateLedgerFiles",
       arguments: {
         ledger: "alice/main",
-        description: "Size contract edit",
+        ...texts,
         files: operations.map(({ operation: _operation, ...file }) => file),
         dry_run: dryRun,
       },
@@ -349,20 +354,34 @@ async function fixture(initial: Record<string, string> = {}) {
       content: string,
       update = false,
       wrapBase64 = false,
+      messageKey: string | "both" = surface === "mcp"
+        ? "description"
+        : "message",
     ): Promise<Outcome> => {
       const path = update ? "existing.bean" : "new.bean";
       const sha = update ? files.get(path)?.sha : undefined;
       if (surface === "mcp")
-        return mcpEdit([
-          { operation: update ? "replace" : "create", path, content },
-        ]);
+        return mcpEdit(
+          [{ operation: update ? "replace" : "create", path, content }],
+          false,
+          messageKey,
+        );
+      const texts =
+        messageKey === "both"
+          ? ',message:"Size contract edit",description:"A different text"'
+          : `,${messageKey}:"Size contract edit"`;
       if (surface === "rest") {
         const result = await request(
           `/api-gateway/v1/ledgers/alice/main/files/${path}`,
           {
             content,
             sha,
-            message: "Size contract edit",
+            ...(messageKey === "both"
+              ? {
+                  message: "Size contract edit",
+                  description: "A different text",
+                }
+              : { [messageKey]: "Size contract edit" }),
           },
           "PUT",
         );
@@ -376,7 +395,7 @@ async function fixture(initial: Record<string, string> = {}) {
       const field = update ? "updateLedgerFile" : "createLedgerFile";
       const encoded = Buffer.from(content).toString("base64");
       const result = await request("/api-gateway/graphql", {
-        query: `mutation($path:String!,$content:String!${update ? ",$sha:String!" : ""}) { ${field}(ledgerId:"alice/main",path:$path,content:$content${update ? ",sha:$sha" : ""},message:"Size contract edit") { path content encoding size sha } }`,
+        query: `mutation($path:String!,$content:String!${update ? ",$sha:String!" : ""}) { ${field}(ledgerId:"alice/main",path:$path,content:$content${update ? ",sha:$sha" : ""}${texts}) { path content encoding size sha } }`,
         variables: {
           path,
           content: wrapBase64
@@ -550,6 +569,47 @@ describe.each<Surface>(["rest", "gql", "mcp"])(
       const f = await fixture({ "existing.bean": content });
       try {
         expect((await f.read(surface)) === content).toBe(true);
+        expect(f.commits).toHaveLength(0);
+      } finally {
+        await f.close();
+      }
+    });
+  },
+);
+
+// w23/m3/t002: the commit message travels as `description` on MCP and
+// `message` on REST/GraphQL; every surface accepts both spellings, and two
+// different texts refuse before repository work.
+describe.each<Surface>(["rest", "gql", "mcp"])(
+  "commit message spelling via %s",
+  (surface) => {
+    const alias = surface === "mcp" ? "message" : "description";
+    it(`accepts the ${alias} spelling`, async () => {
+      const f = await fixture();
+      try {
+        expect(
+          await f.write(surface, "; aliased\n", false, false, alias),
+        ).toMatchObject({ ok: true });
+        expect(f.commits).toEqual([
+          { message: "Size contract edit", paths: ["new.bean"] },
+        ]);
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("refuses two different texts before repository work", async () => {
+      const f = await fixture();
+      try {
+        const result = await f.write(
+          surface,
+          "; conflict\n",
+          false,
+          false,
+          "both",
+        );
+        expect(result.ok).toBe(false);
+        expect(f.files.size).toBe(0);
         expect(f.commits).toHaveLength(0);
       } finally {
         await f.close();

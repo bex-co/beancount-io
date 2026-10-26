@@ -315,6 +315,12 @@ export class CreateLedgerFileInput {
 
   @Field(() => String, { nullable: true })
   message?: string;
+
+  @Field(() => String, {
+    nullable: true,
+    description: "Alias of message, as the MCP file tools spell it.",
+  })
+  description?: string;
 }
 
 @ArgsType()
@@ -333,6 +339,12 @@ export class UpdateLedgerFileInput {
 
   @Field(() => String, { nullable: true })
   message?: string;
+
+  @Field(() => String, {
+    nullable: true,
+    description: "Alias of message, as the MCP file tools spell it.",
+  })
+  description?: string;
 }
 
 @ArgsType()
@@ -345,6 +357,12 @@ export class DeleteLedgerFileInput {
 
   @Field(() => String, { nullable: true })
   message?: string;
+
+  @Field(() => String, {
+    nullable: true,
+    description: "Alias of message, as the MCP file tools spell it.",
+  })
+  description?: string;
 }
 
 @ArgsType()
@@ -357,6 +375,12 @@ export class RenameLedgerFileInput {
 
   @Field(() => String, { nullable: true })
   message?: string;
+
+  @Field(() => String, {
+    nullable: true,
+    description: "Alias of message, as the MCP file tools spell it.",
+  })
+  description?: string;
 
   @Field(() => Boolean, { nullable: true })
   updateIncludes?: boolean;

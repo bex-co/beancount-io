@@ -2,6 +2,7 @@ import { Arg, Args, Ctx, Mutation, Resolver } from "type-graphql";
 import { Authenticated } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import { ILedgerWorkflow } from "@/features/ledger/workflow/ledger-workflow";
+import { resolveCommitMessage } from "@/features/ledger/utils/commit-message-alias";
 import type { CreateLedgerCommand } from "@/features/ledger/workflow/ledger-workflow.types";
 import {
   Ledger,
@@ -79,10 +80,17 @@ export class LedgerMutationResolver {
     @Args() input: CreateLedgerFileInput,
     @Ctx() ctx: IContext,
   ): Promise<LedgerFileContent> {
+    const { description, ...rest } = input;
     return this.workflow.createLedgerFile({
       identity: ctx.getCurrentIdentity(),
       ledgerId,
-      input,
+      input: {
+        ...rest,
+        message: resolveCommitMessage(
+          { description, message: input.message },
+          { required: false },
+        ),
+      },
       platform: ctx.platform,
     });
   }
@@ -96,10 +104,17 @@ export class LedgerMutationResolver {
     @Args() input: UpdateLedgerFileInput,
     @Ctx() ctx: IContext,
   ): Promise<LedgerFileContent> {
+    const { description, ...rest } = input;
     return this.workflow.updateLedgerFile({
       identity: ctx.getCurrentIdentity(),
       ledgerId,
-      input,
+      input: {
+        ...rest,
+        message: resolveCommitMessage(
+          { description, message: input.message },
+          { required: false },
+        ),
+      },
       platform: ctx.platform,
     });
   }
@@ -113,10 +128,17 @@ export class LedgerMutationResolver {
     @Args() input: DeleteLedgerFileInput,
     @Ctx() ctx: IContext,
   ): Promise<DeleteLedgerFileResponse> {
+    const { description, ...rest } = input;
     return this.workflow.deleteLedgerFile({
       identity: ctx.getCurrentIdentity(),
       ledgerId,
-      input,
+      input: {
+        ...rest,
+        message: resolveCommitMessage(
+          { description, message: input.message },
+          { required: false },
+        ),
+      },
     });
   }
 
@@ -129,10 +151,17 @@ export class LedgerMutationResolver {
     @Args() input: RenameLedgerFileInput,
     @Ctx() ctx: IContext,
   ): Promise<RenameLedgerFileResponse> {
+    const { description, ...rest } = input;
     return this.workflow.renameLedgerFile({
       identity: ctx.getCurrentIdentity(),
       ledgerId,
-      input,
+      input: {
+        ...rest,
+        message: resolveCommitMessage(
+          { description, message: input.message },
+          { required: false },
+        ),
+      },
     });
   }
 

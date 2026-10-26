@@ -220,8 +220,16 @@ async function fixture(
       oldPath: string,
       newPath: string,
       extra: Record<string, unknown> = {},
+      messageKey = "message",
     ) => {
-      const args = { oldPath, newPath, message: "Move café file", ...extra };
+      const { message: messageOverride, ...restExtra } = extra;
+      const args = {
+        oldPath,
+        newPath,
+        [messageKey]:
+          "message" in extra ? messageOverride : "Move café file",
+        ...restExtra,
+      };
       if (surface === "rest") {
         const response = await fetch(
           `${rest.url}/api-gateway/v1/ledgers/alice/main/rename-file`,
@@ -237,10 +245,24 @@ async function fixture(
         };
       }
       if (surface === "gql") {
+        // Declare whichever commit-message spellings this call carries, so
+        // the conflict case actually sends both.
+        const keys = ["message", "description"].filter((key) => key in args);
+        const defs = [
+          "$oldPath:String!",
+          "$newPath:String!",
+          ...keys.map((key) => `$${key}:String`),
+          "$updateIncludes:Boolean",
+        ].join(",");
+        const uses = [
+          "oldPath:$oldPath",
+          "newPath:$newPath",
+          ...keys.map((key) => `${key}:$${key}`),
+          "updateIncludes:$updateIncludes",
+        ].join(",");
         const result = await graphql({
           schema,
-          source:
-            'mutation($oldPath:String!,$newPath:String!,$message:String,$updateIncludes:Boolean) { renameLedgerFile(ledgerId:"alice/main",oldPath:$oldPath,newPath:$newPath,message:$message,updateIncludes:$updateIncludes) { oldPath newPath updatedIncludes } }',
+          source: `mutation(${defs}) { renameLedgerFile(ledgerId:"alice/main",${uses}) { oldPath newPath updatedIncludes } }`,
           variableValues: args,
           contextValue: { identity: caller, getCurrentIdentity: () => caller },
         });
@@ -444,6 +466,43 @@ describe.each(["rest", "gql", "mcp"])("rename via %s", (surface) => {
         "main",
         expect.objectContaining({ message: "Rename old.bean → new.bean" }),
       );
+    } finally {
+      await f.close();
+    }
+  });
+
+  // w23/m3/t002: the MCP file tools spell the commit message `description`,
+  // so rename accepts it too; two different texts refuse without renaming.
+  it("accepts description as the commit message", async () => {
+    const f = await fixture();
+    try {
+      const result = await f.call(
+        surface,
+        "old.bean",
+        "new.bean",
+        {},
+        "description",
+      );
+      expect(result.success).toBe(true);
+      expect(f.change).toHaveBeenCalledWith(
+        "alice",
+        "main",
+        expect.objectContaining({ message: "Move café file" }),
+      );
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("refuses conflicting description and message without renaming", async () => {
+    const f = await fixture();
+    try {
+      const result = await f.call(surface, "old.bean", "new.bean", {
+        description: "A different text",
+      });
+      expect(result.success).toBe(false);
+      expect(f.change).not.toHaveBeenCalled();
+      expect(f.files.has("new.bean")).toBe(false);
     } finally {
       await f.close();
     }

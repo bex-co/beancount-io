@@ -423,6 +423,45 @@ describe("v1 files", () => {
     );
   });
 
+  // w23/m3/t002: REST spells the commit message `message`, but the MCP file
+  // tools spell it `description` — both work on writes and deletes, while
+  // two different texts refuse.
+  it.each([
+    ["PUT", { content: "; new" }],
+    ["DELETE", {}],
+  ])(
+    "accepts description as the commit message on %s",
+    async (method, body) => {
+      server.setIdentity(writeToken);
+      const before = services.ledgerRepo.changeFiles.mock.calls.length;
+      const { status } = await call(method, `${LEDGER}/files/new.bean`, {
+        ...body,
+        description: "Aliased edit",
+      });
+      expect(status).toBe(200);
+      expect(
+        (
+          services.ledgerRepo.changeFiles.mock.calls as unknown as Array<
+            [{ message: string }]
+          >
+        )[before][0].message,
+      ).toBe("Aliased edit");
+    },
+  );
+
+  it("refuses conflicting description and message on a file write", async () => {
+    server.setIdentity(writeToken);
+    const before = services.ledgerRepo.changeFiles.mock.calls.length;
+    const { status, body } = await call("PUT", `${LEDGER}/files/new.bean`, {
+      content: "; new",
+      message: "One text",
+      description: "Another text",
+    });
+    expect(status).toBe(400);
+    expect(body).toMatchObject({ error: { code: "BAD_USER_INPUT" } });
+    expect(services.ledgerRepo.changeFiles.mock.calls.length).toBe(before);
+  });
+
   it("refuses a file write from a read-only token", async () => {
     server.setIdentity(readOnlyToken);
     services.ledgerRepo.changeFiles.mockRejectedValueOnce(

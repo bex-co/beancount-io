@@ -287,6 +287,34 @@ describe("one call to a file tool", () => {
       }
     },
   );
+
+  // w23/m3/t002: REST and GraphQL spell the commit message `message`, so the
+  // file tools accept it where they took only `description`.
+  it("deleteLedgerFiles commits under the message spelling", async () => {
+    const f = await fixture();
+    f.changeLedgerFiles.mockResolvedValue({
+      data: { success: true, data: {} },
+    });
+    try {
+      const result = await f.client.callTool({
+        name: "deleteLedgerFiles",
+        arguments: {
+          ledger: "alice/main",
+          message: "prune",
+          files: [{ path: "extra.bean" }],
+        },
+      });
+      expect(result.isError).toBeFalsy();
+      const [, , body] = f.changeLedgerFiles.mock.calls[0] as [
+        string,
+        string,
+        { message: string },
+      ];
+      expect(body.message).toBe("prune");
+    } finally {
+      await f.close();
+    }
+  });
 });
 
 /**

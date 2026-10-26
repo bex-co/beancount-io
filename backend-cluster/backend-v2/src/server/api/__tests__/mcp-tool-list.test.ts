@@ -221,9 +221,14 @@ describe("MCP tool list", () => {
     // measured at 106,896 bytes. The description is the shared
     // JOURNAL_FILTER_DESCRIPTION every surface publishes, so trimming it on
     // MCP alone would fork the contract the parity tests pin.
+    //
+    // 106 KB since w23/m3/t001–t002 aliased `entry_hash` on the four entry
+    // tools and `message`/`description` across the file tools: measured at
+    // 107,718 bytes. Each alias carries one sentence naming the spelling's
+    // home surface, which is the guidance the milestone exists to publish.
     const { tools } = await listToolsRaw();
     const bytes = Buffer.byteLength(JSON.stringify(tools), "utf8");
-    expect(bytes).toBeLessThan(105 * 1024);
+    expect(bytes).toBeLessThan(106 * 1024);
   });
 
   it("exposes each operation as its own tool, never behind a selector argument", async () => {

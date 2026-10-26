@@ -1,6 +1,7 @@
 import { z } from "@/shared/zod-openapi-setup";
 import { v1Route } from "@/server/rest/v1-route";
 import { json } from "@/server/rest/v1-schemas";
+import { resolveCommitMessage } from "@/features/ledger/utils/commit-message-alias";
 import { ledgerPathSchema, ledgerIdOf } from "./schemas";
 
 export const renameFileInput = z
@@ -8,6 +9,10 @@ export const renameFileInput = z
     oldPath: z.string(),
     newPath: z.string(),
     message: z.string().nullish(),
+    description: z
+      .string()
+      .nullish()
+      .describe("Alias of message, as the MCP file tools spell it."),
     updateIncludes: z.boolean().nullish(),
   })
   .strict();
@@ -31,8 +36,9 @@ export const renameFileRoute = v1Route({
       identity,
       ledgerId: ledgerIdOf(params),
       input: {
-        ...body,
-        message: body.message ?? undefined,
+        oldPath: body.oldPath,
+        newPath: body.newPath,
+        message: resolveCommitMessage(body, { required: false }),
         updateIncludes: body.updateIncludes ?? undefined,
       },
     }),

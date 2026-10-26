@@ -200,6 +200,10 @@
             "description": "Commit message; \"Create <path>\" or \"Update <path>\" when omitted or empty",
             "example": "Add January transactions"
           },
+          "description": {
+            "type": "string",
+            "description": "Alias of message, as the MCP file tools spell it."
+          },
           "sha": {
             "type": "string",
             "description": "Blob SHA the edit is based on. Send the SHA from a prior GET to update an existing file; omit it to create a new one."
@@ -215,6 +219,10 @@
         "properties": {
           "message": {
             "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "description": "Alias of message, as the MCP file tools spell it."
           },
           "sha": {
             "type": "string",
@@ -10134,6 +10142,11 @@
                   "message": {
                     "type": "string",
                     "nullable": true
+                  },
+                  "description": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "Alias of message, as the MCP file tools spell it."
                   },
                   "updateIncludes": {
                     "type": "boolean",

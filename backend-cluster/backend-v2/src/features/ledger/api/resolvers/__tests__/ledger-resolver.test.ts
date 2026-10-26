@@ -126,6 +126,22 @@ describe("Ledger resolvers (delegation)", () => {
       });
     });
 
+    // w23/m3/t002: the MCP spelling reaches the workflow as `message`, never
+    // as a stray `description` key.
+    it("deleteLedgerFile maps description to the workflow message", async () => {
+      const input = { path: "a.bean", sha: "s", description: "prune" };
+      await mutationResolver.deleteLedgerFile("o/l", input as never, ctx);
+      const call = workflow.deleteLedgerFile.mock.calls[0][0] as unknown as {
+        input: Record<string, unknown>;
+      };
+      expect(call.input).toEqual({
+        path: "a.bean",
+        sha: "s",
+        message: "prune",
+      });
+      expect(call.input).not.toHaveProperty("description");
+    });
+
     it("renameLedgerFile delegates", async () => {
       const input = { oldPath: "a", newPath: "b" };
       await mutationResolver.renameLedgerFile("o/l", input as never, ctx);

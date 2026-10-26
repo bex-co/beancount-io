@@ -21,6 +21,7 @@ import {
 import { unifiedDiff } from "@/shared/unified-diff";
 import { assertWritableText } from "@/shared/file-content";
 import { assertAmountsFitEngineDecimal } from "@/features/ledger/utils/engine-decimal";
+import { resolveCommitMessage } from "@/features/ledger/utils/commit-message-alias";
 
 /** Commits one edit call makes before a lost race is the caller's (w23/017). */
 const MAX_COMMIT_ATTEMPTS = 3;
@@ -87,9 +88,16 @@ const fileOpSchema = z.discriminatedUnion("operation", [
 export const editLedgerFilesInputSchema = z.object({
   description: z
     .string()
+    .optional()
     .describe(
       "One sentence describing what these changes do. Shown to the user for approval and used verbatim as the commit message.",
     ),
+  // Alias (w23/m3/t002): REST, GraphQL, and rename spell the commit message
+  // `message`; one of the two is required.
+  message: z
+    .string()
+    .optional()
+    .describe("Alias of description, as REST and GraphQL spell it."),
   files: z.array(fileOpSchema).min(1),
   dry_run: z
     .boolean()
@@ -266,7 +274,8 @@ export async function executeEditLedgerFiles(
   input: z.infer<typeof editLedgerFilesInputSchema>,
 ): Promise<EditLedgerFilesOutput> {
   const { services, identity, ledgerId } = ctx;
-  const { description, files, dry_run } = input;
+  const { files, dry_run } = input;
+  const description = resolveCommitMessage(input, { required: true });
 
   toolLogger.debug("Executing file operations", {
     description,
@@ -469,7 +478,7 @@ export function createEditLedgerFilesTool(ctx: ToolContext) {
     inputSchema: editLedgerFilesInputSchema,
     outputSchema: editLedgerFilesOutputSchema,
     needsApproval: true,
-    execute: async ({ description, files }) =>
+    execute: async ({ description, message, files }) =>
       executeEditLedgerFiles(
         {
           services: ctx.services,
@@ -478,6 +487,7 @@ export function createEditLedgerFilesTool(ctx: ToolContext) {
         },
         {
           description,
+          message,
           files,
           dry_run: false,
         },
@@ -506,6 +516,7 @@ function fileOperation<F extends z.ZodType>(
 ) {
   const schema = z.object({
     description: editLedgerFilesInputSchema.shape.description,
+    message: editLedgerFilesInputSchema.shape.message,
     files: z.array(file).min(1),
     dry_run: editLedgerFilesInputSchema.shape.dry_run,
   });
