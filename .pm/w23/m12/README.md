@@ -1,12 +1,12 @@
 # w23 · m12 — Refuse unknown keys on every REST GET query
 
-**Worker:** worker1 **Goal:** every REST GET query schema refuses undeclared keys with 400 instead of silently dropping the filter **Status:** todo
+**Worker:** worker1 **Goal:** every REST GET query schema refuses undeclared keys with 400 instead of silently dropping the filter **Status:** todo (t001 done)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
-| t001 | Audit and map every REST GET query schema | 30m | — |
+| t001 | Audit and map every REST GET query schema ✅ | 30m | — |
 | t002 | Strictify ledger GET query schemas | 45m | t001 |
 | t003 | Strictify non-ledger GET query schemas | 30m | t001 |
 | t004 | Per-route regression tests | 45m | t002, t003 |
