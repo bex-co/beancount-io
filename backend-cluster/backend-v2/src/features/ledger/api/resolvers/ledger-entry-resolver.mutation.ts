@@ -113,6 +113,15 @@ class LedgerPostingInput {
 
   @Field(() => String, { nullable: true })
   flag?: string;
+
+  @Field(() => [String], { nullable: true })
+  tags?: string[];
+
+  @Field(() => [String], { nullable: true })
+  links?: string[];
+
+  @Field(() => GraphQLJSONObject, { nullable: true })
+  meta?: Record<string, string>;
 }
 
 @InputType()

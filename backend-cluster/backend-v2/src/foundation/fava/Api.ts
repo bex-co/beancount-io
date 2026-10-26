@@ -2200,6 +2200,18 @@ export interface Posting {
    * Flag of the posting
    */
   flag?: string | null;
+  /**
+   * Tags
+   * Posting tags
+   * @uniqueItems true
+   */
+  tags?: string[];
+  /**
+   * Links
+   * Posting links
+   * @uniqueItems true
+   */
+  links?: string[];
 }
 
 /**

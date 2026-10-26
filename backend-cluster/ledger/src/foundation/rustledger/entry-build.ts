@@ -179,6 +179,14 @@ function toDirective(input: LedgerEntryInput): DirectiveJson {
               }
             : {}),
           ...(posting.flag ? { flag: posting.flag } : {}),
+          // Posting tags/links have no engine representation (PostingJson
+          // carries neither); they ride a render-side extension the
+          // sibling renderer reads back (w23/m6/t003). The built
+          // directive is render-intermediate only — projections
+          // bean-check the appended text, so the engine never sees it.
+          ...(posting.tags ? { tags: [...posting.tags] } : {}),
+          ...(posting.links ? { links: [...posting.links] } : {}),
+          ...(posting.meta ? { meta: { ...posting.meta } } : {}),
         })),
         ...(entry.meta ? { meta: { ...entry.meta } } : {}),
       };

@@ -513,4 +513,51 @@ describe("entryInputToText — Fava-exact serialization parity", () => {
     });
     expect(out).toContain(`10 HOOLI ${rendered}`);
   });
+
+  // w23/m6/t003: posting tags/links sort onto the posting line like the header.
+  it("renders posting tags and links sorted on the posting line", () => {
+    const out = entryInputToText({
+      type: "transaction",
+      entry: {
+        date: "2024-01-15",
+        flag: "*",
+        postings: [
+          {
+            units: { number: "10", currency: "USD" },
+            account: "Expenses:Food",
+            tags: ["zb", "ab"],
+            links: ["l1"],
+          },
+          {
+            units: { number: "-10", currency: "USD" },
+            account: "Assets:Cash",
+          },
+        ],
+      },
+    });
+    expect(out).toContain("10 USD #ab #zb ^l1");
+  });
+
+  // w23/m6/t003: posting metadata renders beneath its posting.
+  it("renders posting metadata beneath the posting", () => {
+    const out = entryInputToText({
+      type: "transaction",
+      entry: {
+        date: "2024-01-15",
+        flag: "*",
+        postings: [
+          {
+            units: { number: "10", currency: "USD" },
+            account: "Expenses:Food",
+            meta: { receipt: "r-1" },
+          },
+          {
+            units: { number: "-10", currency: "USD" },
+            account: "Assets:Cash",
+          },
+        ],
+      },
+    });
+    expect(out).toContain('receipt: "r-1"');
+  });
 });

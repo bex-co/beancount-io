@@ -350,6 +350,27 @@
                               "flag": {
                                 "type": "string",
                                 "nullable": true
+                              },
+                              "tags": {
+                                "type": "array",
+                                "nullable": true,
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "links": {
+                                "type": "array",
+                                "nullable": true,
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "meta": {
+                                "type": "object",
+                                "nullable": true,
+                                "additionalProperties": {
+                                  "type": "string"
+                                }
                               }
                             },
                             "required": [

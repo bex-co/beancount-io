@@ -12402,6 +12402,24 @@
             ],
             "title": "Flag",
             "description": "Flag of the posting"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": true,
+            "title": "Tags",
+            "description": "Posting tags"
+          },
+          "links": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": true,
+            "title": "Links",
+            "description": "Posting links"
           }
         },
         "type": "object",

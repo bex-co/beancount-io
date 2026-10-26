@@ -22,6 +22,9 @@ type PostingInput = {
   price?: AmountInput;
   cost?: CostInput;
   flag?: string;
+  tags?: string[];
+  links?: string[];
+  meta?: Record<string, string>;
 };
 
 type TransactionInput = {

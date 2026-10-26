@@ -908,6 +908,128 @@ describe.each(["rest", "gql", "mcp"])("elided postings via %s", (surface) => {
   });
 });
 
+describe.each(["rest", "gql", "mcp"])("posting meta via %s", (surface) => {
+  // w23/m6/t003: posting metadata, tags, and links commit on the wire row.
+  it("writes a posting with meta, tags, and links", async () => {
+    const batch = [
+      {
+        type: "transaction",
+        entry: {
+          date,
+          flag: "*",
+          narration: "annotated",
+          postings: [
+            {
+              account: "Expenses:Food",
+              units: { number: "10", currency: "USD" },
+              tags: ["receipt"],
+              links: ["order-1"],
+              meta: { receipt: "r-1" },
+            },
+            {
+              account: "Assets:Cash",
+              units: { number: "-10", currency: "USD" },
+            },
+          ],
+        },
+      },
+    ] as unknown as LedgerEntryInput[];
+    const f = await fixture();
+    try {
+      const result = await f.call(surface, batch);
+      expect(result.success).toBe(true);
+      expect(f.committed).toHaveLength(1);
+      const committed = f.committed[0] as {
+        item: { postings: Record<string, unknown>[] };
+      };
+      expect(committed.item.postings[0]).toMatchObject({
+        tags: ["receipt"],
+        links: ["order-1"],
+        meta: { receipt: "r-1" },
+      });
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("writes a posting with tags alone", async () => {
+    const batch = [
+      {
+        type: "transaction",
+        entry: {
+          date,
+          flag: "*",
+          narration: "tagged",
+          postings: [
+            {
+              account: "Expenses:Food",
+              units: { number: "10", currency: "USD" },
+              tags: ["receipt"],
+            },
+            {
+              account: "Assets:Cash",
+              units: { number: "-10", currency: "USD" },
+            },
+          ],
+        },
+      },
+    ] as unknown as LedgerEntryInput[];
+    const f = await fixture();
+    try {
+      const result = await f.call(surface, batch);
+      expect(result.success).toBe(true);
+      expect(f.committed).toHaveLength(1);
+      const committed = f.committed[0] as {
+        item: { postings: Record<string, unknown>[] };
+      };
+      expect(committed.item.postings[0]).toMatchObject({
+        tags: ["receipt"],
+      });
+      expect(committed.item.postings[0]?.links).toBeUndefined();
+      expect(committed.item.postings[0]?.meta).toBeUndefined();
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("leaves plain postings without meta, tags, or links keys", async () => {
+    const batch = [
+      {
+        type: "transaction",
+        entry: {
+          date,
+          flag: "*",
+          narration: "plain",
+          postings: [
+            {
+              account: "Expenses:Food",
+              units: { number: "10", currency: "USD" },
+            },
+            {
+              account: "Assets:Cash",
+              units: { number: "-10", currency: "USD" },
+            },
+          ],
+        },
+      },
+    ] as unknown as LedgerEntryInput[];
+    const f = await fixture();
+    try {
+      const result = await f.call(surface, batch);
+      expect(result.success).toBe(true);
+      expect(f.committed).toHaveLength(1);
+      const committed = f.committed[0] as {
+        item: { postings: Record<string, unknown>[] };
+      };
+      expect(committed.item.postings[0]?.tags).toBeUndefined();
+      expect(committed.item.postings[0]?.links).toBeUndefined();
+      expect(committed.item.postings[0]?.meta).toBeUndefined();
+    } finally {
+      await f.close();
+    }
+  });
+});
+
 describe.each(["rest", "gql", "mcp"])(
   "structured entries via %s",
   (surface) => {

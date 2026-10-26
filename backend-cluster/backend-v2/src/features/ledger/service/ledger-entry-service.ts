@@ -36,6 +36,9 @@ type PostingInput = {
   price?: AmountInput;
   cost?: CostInput;
   flag?: string;
+  tags?: string[];
+  links?: string[];
+  meta?: Record<string, string>;
 };
 
 type TransactionInput = {
@@ -491,6 +494,9 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
                 }
               : null,
             flag: posting.flag ?? undefined,
+            tags: posting.tags ?? undefined,
+            links: posting.links ?? undefined,
+            meta: posting.meta ?? undefined,
           })),
           tags: entry.tags ?? undefined,
           links: entry.links ?? undefined,

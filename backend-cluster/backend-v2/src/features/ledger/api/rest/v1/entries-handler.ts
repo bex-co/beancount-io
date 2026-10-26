@@ -44,6 +44,9 @@ const postingSchema = z.strictObject({
         "Lot basis `{number currency [, date] [, label]}`; needs units like price",
     }),
   flag: nullToUndefined(z.string()),
+  tags: nullToUndefined(z.array(z.string())),
+  links: nullToUndefined(z.array(z.string())),
+  meta: nullToUndefined(z.record(z.string(), z.string())),
 });
 
 /**
