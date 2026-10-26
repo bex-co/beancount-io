@@ -2,11 +2,11 @@ import { entriesBodySchema } from "@/features/ledger/api/rest/v1/entries-handler
 import { parseLedgerId } from "@/shared/str";
 import { resolveCommitMessage } from "@/features/ledger/utils/commit-message-alias";
 import { BQL_SIZE_DESCRIPTION } from "@/features/ledger/utils/bql-size-description";
-import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 import {
   SOURCE_SLICE_OPERATION_OUTPUTS,
   SOURCE_SLICE_OPERATION_SCHEMAS,
   SOURCE_SLICE_EXECUTORS,
+  dryRunInput,
   withoutDryRun,
 } from "./mcp-source-slices";
 import {
@@ -277,23 +277,11 @@ const EXTERNAL_ADMIN: ToolAnnotations = {
 // REST spells it dryRun (same split the append path ships; w23/m7/t002).
 const addLedgerEntriesInput = entriesBodySchema
   .omit({ dryRun: true })
-  .extend({
-    ledger: ledgerSelection,
-    dry_run: z
-      .boolean()
-      .optional()
-      .describe(PREVIEW_FLAG_DESCRIPTION),
-  })
+  .extend({ ledger: ledgerSelection, ...dryRunInput })
   .strict();
 const renameLedgerFileInput = renameFileInput
   .omit({ dryRun: true })
-  .extend({
-    ledger: ledgerSelection,
-    dry_run: z
-      .boolean()
-      .optional()
-      .describe(PREVIEW_FLAG_DESCRIPTION),
-  })
+  .extend({ ledger: ledgerSelection, ...dryRunInput })
   .strict();
 const insertReceiptTransactionInput = receiptInsertInput
   .extend({ ledger: ledgerSelection })

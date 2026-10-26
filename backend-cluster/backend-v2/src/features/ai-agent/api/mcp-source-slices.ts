@@ -28,7 +28,7 @@ import {
  * MCP keeps its file-tool snake-case spelling for the preview flag while
  * REST spells it dryRun (same split the add/append paths ship; w23/m7/t003).
  */
-const dryRunInput = {
+export const dryRunInput = {
   dry_run: z
     .boolean()
     .optional()

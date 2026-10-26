@@ -342,22 +342,31 @@ async function fixture(
   };
 }
 
+// MCP write results carry the write outcome (summary first, then wrote,
+// entryHashes, validation); REST and GraphQL keep the plain paths contract.
+// Every surface echoes the preview flag — dryRun, except MCP's dry_run —
+// with an empty preview on a commit, and a preview reports nothing written
+// (w23/m7/t004, shared w23/m7/t007).
+const withRenameOutcome = (
+  surface: string,
+  base: Record<string, unknown>,
+  summary: string,
+  preview: boolean,
+) =>
+  surface === "mcp"
+    ? {
+        ...base,
+        dry_run: preview,
+        summary,
+        wrote: preview ? [] : [{ path: base["newPath"] }],
+        entryHashes: [],
+        validation: { errorsBefore: 0, errorsAfter: 0, newErrors: [] },
+      }
+    : { ...base, dryRun: preview };
+
 describe.each(["rest", "gql", "mcp"])("rename via %s", (surface) => {
-  // MCP write results carry the write outcome (summary first, then wrote,
-  // entryHashes, validation); REST and GraphQL keep the plain paths contract.
-  // Every surface echoes the preview flag — dryRun, except MCP's dry_run —
-  // with an empty preview on a commit (w23/m7/t004).
   const withOutcome = (base: Record<string, unknown>, summary: string) =>
-    surface === "mcp"
-      ? {
-          ...base,
-          dry_run: false,
-          summary,
-          wrote: [{ path: base["newPath"] }],
-          entryHashes: [],
-          validation: { errorsBefore: 0, errorsAfter: 0, newErrors: [] },
-        }
-      : { ...base, dryRun: false };
+    withRenameOutcome(surface, base, summary, false);
   it.each([identity, { ...identity, ledgerScope: undefined }])(
     "moves the contents with the supplied message for %j",
     async (caller) => {
@@ -705,17 +714,7 @@ describe.each(["rest", "gql", "mcp"])("rename preview via %s", (surface) => {
   const withPreviewOutcome = (
     base: Record<string, unknown>,
     summary: string,
-  ) =>
-    surface === "mcp"
-      ? {
-          ...base,
-          dry_run: true,
-          summary,
-          wrote: [],
-          entryHashes: [],
-          validation: { errorsBefore: 0, errorsAfter: 0, newErrors: [] },
-        }
-      : { ...base, dryRun: true };
+  ) => withRenameOutcome(surface, base, summary, true);
   const contents = (f: { files: FixtureFiles }) =>
     [...f.files].map(([path, entry]) => [path, entry.content]);
 
