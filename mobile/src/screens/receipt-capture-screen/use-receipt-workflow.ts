@@ -10,7 +10,6 @@ import {
   parseErrorCode,
   isPermanentReceiptRefusal,
 } from "./receipt-utils";
-import { captureError } from "@/common/sentry/capture";
 import {
   abandonAttempt,
   createIdleGuard,
@@ -181,7 +180,6 @@ export const useReceiptWorkflow = (): ReceiptWorkflow => {
           // A key that failed to parse again may be gone from storage: the next
           // try uploads afresh.
           if (stored !== null) uploaded.current = null;
-          captureError(parseErr, { phase: "parse", ledgerId });
           throw new Error(parseErrorCode(parseErr));
         }
 
@@ -210,16 +208,6 @@ export const useReceiptWorkflow = (): ReceiptWorkflow => {
           : err instanceof Error
             ? err.message
             : "upload_failed";
-        // Parse-leg errors are already captured with their phase above; capture
-        // anything else (upload-URL mint, S3 PUT, network) here so the real
-        // cause is never swallowed — the screen only shows a generic message.
-        if (
-          msg !== "quota_exhausted" &&
-          msg !== "parse_failed" &&
-          msg !== "not_available"
-        ) {
-          captureError(err, { phase: "upload", code: msg });
-        }
         setPhase({ kind: "error", message: msg });
       }
     },

@@ -7,7 +7,6 @@ export const defaultServerUrl =
 
 export const config = {
   project: require("../package.json").name,
-  sentryDsn: "", // TODO
   serverUrl: defaultServerUrl,
   // Brand logos on transaction rows are proxied + cached through our
   // opengraph-image service, so the app has no direct third-party (logo.dev)

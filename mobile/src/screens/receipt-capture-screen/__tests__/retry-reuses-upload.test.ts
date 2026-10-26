@@ -103,7 +103,6 @@ vm.runInNewContext(
           parseErrorCode: () => "parse_failed",
           isPermanentReceiptRefusal: () => false,
         },
-        "@/common/sentry/capture": { captureError: () => undefined },
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         "./upload-guard": require("../upload-guard"),
       };

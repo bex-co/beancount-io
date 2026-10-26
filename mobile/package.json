@@ -38,7 +38,6 @@
     "@hookform/resolvers": "^5.1.1",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/datetimepicker": "9.1.0",
-    "@sentry/react-native": "~7.11.0",
     "ai": "^6.0.185",
     "apollo3-cache-persist": "^0.15.0",
     "buffer": "^6.0.3",

@@ -11,11 +11,6 @@ describe("config", () => {
       expect(config.project).toBe("mobile-beancount");
     });
 
-    it("has sentryDsn property", () => {
-      const { config } = require("../config");
-      expect(typeof config.sentryDsn).toBe("string");
-    });
-
     it("has serverUrl property", () => {
       const { config } = require("../config");
       expect(typeof config.serverUrl).toBe("string");
@@ -42,8 +37,15 @@ describe("config", () => {
       const { config } = require("../config");
       const keys = Object.keys(config);
       expect(keys.includes("project")).toBe(true);
-      expect(keys.includes("sentryDsn")).toBe(true);
       expect(keys.includes("serverUrl")).toBe(true);
+    });
+
+    it("carries no sentry configuration", () => {
+      // Sentry was removed (.pm w4/028): it was never initialised, so every
+      // captured error was silently dropped. A DSN reappearing here means
+      // the dead sink came back with it.
+      const { config } = require("../config");
+      expect("sentryDsn" in config).toBe(false);
     });
 
     it("carries no analytics configuration", () => {

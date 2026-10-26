@@ -11,7 +11,7 @@ React Native iOS/Android app for [Beancount.io](https://beancount.io/), built wi
 - **Forms**: React Hook Form + Zod
 - **Styling**: StyleSheet + custom theme system (light / dark / system)
 - **i18n**: `i18n-js` with 13 locales (en, zh, bg, ca, de, es, fa, fr, nl, pt, ru, sk, uk)
-- **Errors**: Sentry (`@sentry/react-native`)
+- **Errors**: no error-reporting SDK (Sentry removed, w4/028 — it was never initialised)
 - **Analytics**: none — the Mixpanel wrapper was retired (`.pm` `w3/001`); the app ships no event tracking
 - **TypeScript**: strict (`noImplicitAny`, `strictNullChecks`, `noUnusedLocals`, …); path alias `@/*` → `src/*`
 
@@ -111,7 +111,7 @@ Notes that keep costing time when forgotten:
   board decision (`.pm` `w3/001`), not a screen-level one.
 - **A missing native permission at runtime means a stale dev build**, not a code bug:
   the installed binary predates an `app.json` change. Rebuild the dev client
-  (`SENTRY_DISABLE_AUTO_UPLOAD=true npx expo run:ios`) or work around the screen.
+  (`npx expo run:ios`) or work around the screen.
 - **"Is this pre-existing?"** — stash the working tree (`git stash push -u -- src app`),
   screenshot, then pop. Metro hot-reloads both ways in seconds.
 - To catch a sub-second overlay, fire screenshots back-to-back with no sleep (~2/s) and
