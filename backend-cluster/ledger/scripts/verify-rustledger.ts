@@ -40,6 +40,7 @@ import {
 import { stripBqlBlockComments } from "@/features/ledger/service/bql-comments";
 import { stripBqlStatementTerminator } from "@/features/ledger/service/bql-terminator";
 import { unquoteBqlFromTables } from "@/features/ledger/service/bql-from-quotes";
+import { normalizeBqlQueryForEngine } from "@/features/ledger/service/ledger-shell-service";
 import { UNDECODABLE_SOURCE } from "@/foundation/rustledger/file-map-loader";
 import { filterDirectives } from "@/foundation/rustledger/directive-filter";
 import { assertEntryTokens } from "@/features/ledger/utils/entry-tokens";
@@ -1298,6 +1299,102 @@ async function main(): Promise<void> {
       JSON.stringify(unquotedEntries.rows),
     "normalized quoted FROM returns the unquoted query's rows",
   );
+
+  // Column fold (w23/116): the engine folds a column FROM only in the bare-`;`
+  // and `)`-terminated forms, while stock folds it in every form and tables
+  // the dual `accounts` in every form — so the shell pipeline re-earns the
+  // fold for bare-EOF columns, wraps with-clause columns in a folding
+  // subquery, and leaves duals and non-columns on the table/error path.
+  // Verify against the LIVE engine that (a) the split really is still there,
+  // and (b) the pipeline unifies each form with its native-fold rows.
+  const rawFoldWithClause = await queryLedgerFilesResult(
+    FILES,
+    "main.beancount",
+    "SELECT count(*) FROM payee LIMIT 1",
+  );
+  assert(
+    rawFoldWithClause.errors.some(
+      (e) =>
+        e.severity === "error" &&
+        /table 'payee' does not exist/.test(e.message),
+    ),
+    "engine still table-errors a with-clause column FROM (normalization is load-bearing)",
+  );
+  const nativeFold = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    "SELECT count(*) FROM payee;",
+  );
+  const pipelineFold = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    normalizeBqlQueryForEngine("SELECT count(*) FROM payee LIMIT 1;"),
+  );
+  assert(
+    JSON.stringify(pipelineFold.rows) === JSON.stringify(nativeFold.rows),
+    "pipelined with-clause column FROM returns the native-fold rows",
+  );
+  const pipelineBareEof = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    normalizeBqlQueryForEngine("SELECT count(*) FROM payee"),
+  );
+  assert(
+    JSON.stringify(pipelineBareEof.rows) === JSON.stringify(nativeFold.rows),
+    "pipelined bare-EOF column FROM returns the native-fold rows",
+  );
+  // A hidden-column projection resolves through the wrap's explicit inner.
+  const nativeHidden = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    "SELECT balance FROM narration;",
+  );
+  const pipelineHidden = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    normalizeBqlQueryForEngine("SELECT balance FROM narration LIMIT 5"),
+  );
+  assert(
+    JSON.stringify(pipelineHidden.rows) === JSON.stringify(nativeHidden.rows),
+    "pipelined hidden-column projection returns the native-fold rows",
+  );
+  // A star outer keeps the native star shape through the wrap.
+  const nativeStar = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    "SELECT * FROM narration;",
+  );
+  const pipelineStar = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    normalizeBqlQueryForEngine("SELECT * FROM narration LIMIT 5"),
+  );
+  assert(
+    JSON.stringify(pipelineStar.rows) === JSON.stringify(nativeStar.rows),
+    "pipelined star over a column FROM returns the native-fold rows",
+  );
+  // The dual stays table-shaped: the pipeline must not fold it.
+  const pipelineDual = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    normalizeBqlQueryForEngine("SELECT * FROM accounts LIMIT 1"),
+  );
+  assert(
+    pipelineDual.rows.length === 1 && "open" in pipelineDual.rows[0],
+    "pipelined dual FROM stays on the AccountsTable path",
+  );
+  // The excluded names error loudly on every pipelined form.
+  for (const name of ["balance", "cost", "units"]) {
+    const pipelinedExcluded = await queryLedgerFilesResult(
+      FILES,
+      "main.beancount",
+      normalizeBqlQueryForEngine(`SELECT count(*) FROM ${name} LIMIT 1;`),
+    );
+    assert(
+      pipelinedExcluded.errors.some((e) => e.severity === "error"),
+      `pipelined ${name} still errors (excluded from the fold set)`,
+    );
+  }
 
   const count = await countDirectives(
     "2024-01-01 open Assets:Cash USD\n2024-01-02 open Income:Z USD\n",

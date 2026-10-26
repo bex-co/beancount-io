@@ -16,8 +16,25 @@ import {
   queryResultToText,
 } from "./ledger-shell-mappers";
 import { stripBqlBlockComments } from "./bql-comments";
+import { foldBqlColumnFrom } from "./bql-from-fold";
 import { unquoteBqlFromTables } from "./bql-from-quotes";
 import { stripBqlStatementTerminator } from "./bql-terminator";
+
+/**
+ * The ONE BQL text pipeline — every shell mode normalizes through it, and
+ * `verify:rustledger` pins it against the live engine, so the order exists in
+ * exactly one place. Comments first (a `;` or `FROM` inside one is not
+ * syntax), then unquote (quoted names classify as their bare selves), then
+ * the terminator (a trailing `;` breaks bare-table resolution), then the
+ * fold last (it must see the unterminated query to re-earn or wrap the fold).
+ */
+export function normalizeBqlQueryForEngine(query: string): string {
+  return foldBqlColumnFrom(
+    stripBqlStatementTerminator(
+      unquoteBqlFromTables(stripBqlBlockComments(query)),
+    ),
+  );
+}
 
 /**
  * Compatibility DTO shared with existing dashboard/generated clients.
@@ -95,7 +112,7 @@ export class LedgerShellService implements ILedgerShellService {
     const result = await queryLedgerFilesResult(
       files,
       entryPoint,
-      stripBqlStatementTerminator(unquoteBqlFromTables(stripBqlBlockComments(query))),
+      normalizeBqlQueryForEngine(query),
     );
     assertQuerySucceeded(result);
     return queryResultToShellResult(result);
@@ -111,7 +128,7 @@ export class LedgerShellService implements ILedgerShellService {
     const result = await queryLedgerFilesResult(
       files,
       entryPoint,
-      stripBqlStatementTerminator(unquoteBqlFromTables(stripBqlBlockComments(query))),
+      normalizeBqlQueryForEngine(query),
     );
     assertQuerySucceeded(result);
     return { text: queryResultToText(result), rowCount: result.rows.length };

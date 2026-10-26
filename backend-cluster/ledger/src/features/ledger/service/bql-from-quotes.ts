@@ -26,6 +26,7 @@
  *   the other normalizers), and an unterminated quote ends the scan with the
  *   query unchanged from that point — the engine still reports it.
  */
+import { matchFromKeyword } from "./bql-scan";
 export function unquoteBqlFromTables(query: string): string {
   const out = query.split("");
   // `null` = outside a literal; otherwise the quote character that opened it.
@@ -58,24 +59,6 @@ export function unquoteBqlFromTables(query: string): string {
     i = rewrite.end;
   }
   return quote === null ? out.join("") : query;
-}
-
-/**
- * If `FROM` (any case) starts at `i` as a whole word, the index just past it;
- * else -1. `FROM` is a reserved word, so a whole-word hit outside a literal is
- * the clause keyword — never a column, alias, or function name.
- */
-function matchFromKeyword(chars: string[], i: number): number {
-  const prev = i > 0 ? (chars[i - 1] as string) : "";
-  if (prev !== "" && /[A-Za-z0-9_]/.test(prev)) return -1;
-  const word = chars
-    .slice(i, i + 4)
-    .join("")
-    .toUpperCase();
-  if (word !== "FROM") return -1;
-  const next = i + 4 < chars.length ? (chars[i + 4] as string) : "";
-  if (next !== "" && /[A-Za-z0-9_]/.test(next)) return -1;
-  return i + 4;
 }
 
 /**
