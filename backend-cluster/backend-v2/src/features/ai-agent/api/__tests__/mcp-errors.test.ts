@@ -60,6 +60,38 @@ describe("envelopeFromThrown", () => {
     );
   });
 
+  // w23/099: the fallback hint points at the refusing surface's
+  // catalog — tools/list on tools, resources/templates/list on
+  // resources, prompts/list on prompts.
+  it.each([
+    ["tool", undefined, "tools/list"],
+    ["resource", undefined, "resources/templates/list"],
+    ["prompt", undefined, "prompts/list"],
+  ] as const)("points the %s fallback at %s", (surface, template, catalog) => {
+    const envelope = envelopeFromThrown(
+      new BadUserInputError("limit: Too small"),
+      { surface, template },
+    );
+    expect(envelope.code).toBe("BAD_USER_INPUT");
+    expect(envelope.hint).toContain(catalog);
+  });
+
+  it("names the refusing template on a resource read", () => {
+    const envelope = envelopeFromThrown(
+      new BadUserInputError("limit: Too small"),
+      { surface: "resource", template: "ledgerJournal" },
+    );
+    expect(envelope.hint).toContain("`ledgerJournal`");
+  });
+
+  it("keeps the throw site's hint ahead of the surface fallback", () => {
+    const envelope = envelopeFromThrown(
+      new NotFoundError("Resource", "x", "Call `resources/templates/list`."),
+      { surface: "resource", template: "ledgerJournal" },
+    );
+    expect(envelope.hint).toBe("Call `resources/templates/list`.");
+  });
+
   it("names the next call for the refusals the audit actually hit", () => {
     // Thrown for real rather than reconstructed: the hint is the throw site's
     // to declare (w2/013), so a test that built its own error would prove

@@ -106,6 +106,7 @@ import {
   McpRequestFailure,
   renderErrorText,
   type McpErrorEnvelope,
+  type McpHintSurface,
 } from "@/features/ai-agent/api/mcp-errors";
 import { renderToolText } from "@/features/ai-agent/api/mcp-result-text";
 
@@ -975,14 +976,29 @@ function refuseMcpRequest(
   config: AppConfig,
 ): never {
   // The log keeps the unexpected error's own message; the caller gets the
-  // masked one in production (ADR 0007 D7).
-  const envelope = envelopeFromThrown(err);
+  // masked one in production (ADR 0007 D7). The meta already names which
+  // primitive refused, so the fallback hint points at its catalog: a
+  // resource-param refusal that named `tools/list` would send the agent
+  // to the wrong inventory (w23/099).
+  const surface: McpHintSurface =
+    typeof meta.resource === "string"
+      ? "resource"
+      : typeof meta.prompt === "string"
+        ? "prompt"
+        : "tool";
+  const options = {
+    surface,
+    ...(typeof meta.resource === "string" ? { template: meta.resource } : {}),
+  } as const;
+  const envelope = envelopeFromThrown(err, options);
   mcpLogger.error(logMessage, {
     ...meta,
     code: envelope.code,
     error: envelope.message,
   });
-  throw new McpRequestFailure(envelopeFromThrown(err, maskingFor(config)));
+  throw new McpRequestFailure(
+    envelopeFromThrown(err, { ...maskingFor(config), ...options }),
+  );
 }
 
 /**

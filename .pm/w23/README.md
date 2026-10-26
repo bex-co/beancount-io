@@ -22,7 +22,6 @@
 
 ## Inbox
 
-- [099](./099.md) — resource param-validation errors hint at `tools/list` instead of the resource templates
 - [100](./100.md) — the temp-asset object key has three spellings: `receiptObjectKey`, `objectKey`, `s3ObjectKey`
 - [101](./101.md) — `renameLedgerFile` takes `message` where its file-write siblings take `description`
 - [102](./102.md) — `commits?page=` past the int32 offset answers `INTERNAL_SERVER_ERROR` instead of an empty page

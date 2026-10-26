@@ -69,6 +69,12 @@ export function jsonRpcCodeFor(code: string): number {
 }
 
 /**
+ * Which MCP primitive refused: the catalog a fallback hint points at
+ * differs by surface (w23/099).
+ */
+export type McpHintSurface = "tool" | "resource" | "prompt";
+
+/**
  * The fallback hint per category: what to do when the message itself does not
  * name something more specific.
  */
@@ -188,6 +194,47 @@ const MASKED_MESSAGE = "Internal server error";
  */
 export interface EnvelopeOptions {
   readonly maskUnexpected?: boolean;
+  /**
+   * Which primitive refused; picks the catalog the fallback hint points
+   * at. Tools by default — the only surface that had a fallback before.
+   */
+  readonly surface?: McpHintSurface;
+  /**
+   * The resource template that refused (its descriptor name), named in
+   * the resource fallback so the agent opens the right template.
+   */
+  readonly template?: string;
+}
+
+/**
+ * The category fallback for the refusing surface. Only the two
+ * validation categories name a catalog; every other fallback already
+ * reads the same on tools, resources, and prompts.
+ */
+function fallbackHintFor(
+  category: ErrorCategory,
+  options: EnvelopeOptions,
+): string {
+  const fallback = CATEGORY_HINTS[category];
+  if (options.surface === "resource") {
+    if (category === ErrorCategory.BAD_USER_INPUT)
+      return (
+        "Fix the named parameter and call again; `resources/templates/list` " +
+        `publishes ${options.template ? `the \`${options.template}\` template's` : "each resource's"} parameters.`
+      );
+    if (category === ErrorCategory.VALIDATION_FAILED)
+      return (
+        "Fix the named field and call again; `resources/templates/list` " +
+        `publishes ${options.template ? `the \`${options.template}\` template's` : "each resource's"} parameters.`
+      );
+  }
+  if (options.surface === "prompt") {
+    if (category === ErrorCategory.BAD_USER_INPUT)
+      return "Fix the named argument and call again; `prompts/list` publishes each prompt's arguments.";
+    if (category === ErrorCategory.VALIDATION_FAILED)
+      return "Fix the named field and call again; `prompts/list` publishes each prompt's arguments.";
+  }
+  return fallback;
 }
 
 /** The mask applies in production only, exactly as on REST and GraphQL. */
@@ -217,7 +264,7 @@ export function envelopeFromThrown(
       | undefined;
     // The throw site's own hint wins; the category fallback is what a
     // refusal that has nothing more specific to say still carries (w2/013).
-    const fallbackHint = CATEGORY_HINTS[error.category];
+    const fallbackHint = fallbackHintFor(error.category, options);
     let hint =
       typeof metadata?.hint === "string" ? metadata.hint : fallbackHint;
     let message = error.message;
@@ -243,14 +290,14 @@ export function envelopeFromThrown(
     return {
       code: ErrorCategory.BAD_USER_INPUT,
       message: compacted,
-      hint: CATEGORY_HINTS[ErrorCategory.BAD_USER_INPUT],
+      hint: fallbackHintFor(ErrorCategory.BAD_USER_INPUT, options),
     };
   }
   const category = categoryForMessage(raw);
   return {
     code: category,
     message: unexpectedMessage(category, raw, options),
-    hint: CATEGORY_HINTS[category],
+    hint: fallbackHintFor(category, options),
   };
 }
 

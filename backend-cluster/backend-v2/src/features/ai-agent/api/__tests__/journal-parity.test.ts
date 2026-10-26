@@ -3,6 +3,7 @@ jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
 jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import type { McpError } from "@modelcontextprotocol/sdk/types.js";
 import { buildSchema } from "type-graphql";
 import { graphql } from "graphql";
 import { LedgerJournalQueryResolver } from "@/features/ledger/api/resolvers/ledger-journal-resolver.query";
@@ -340,6 +341,29 @@ describe("journal adapter contracts", () => {
         "limit must be an integer from 1 to 1000",
       );
       expect(f.journal.plaintextJournal).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+
+  // w23/099: a resource-param refusal points at the template catalog,
+  // not tools/list — there is no tool on a resource read.
+  it("points a resource-param refusal at the template catalog", async () => {
+    const f = await fixture();
+    try {
+      const error = await f
+        .mcp("journal?limit=0")
+        .then(() => undefined)
+        .catch((caught: unknown) => caught as McpError);
+      expect(error?.data).toMatchObject({
+        code: "BAD_USER_INPUT",
+        message: expect.stringContaining("limit"),
+      });
+      const hint = (error?.data as { hint: string }).hint;
+      expect(hint).toContain("resources/templates/list");
+      expect(hint).toContain("`ledgerJournal`");
+      expect(hint).not.toContain("tools/list");
+      expect(f.journal.getJournal).not.toHaveBeenCalled();
     } finally {
       await f.close();
     }
