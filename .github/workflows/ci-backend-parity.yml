@@ -41,3 +41,8 @@ jobs:
       # The published v1 contract must match the committed snapshot.
       - run: yarn generate-v1-openapi
       - run: git diff --exit-code docs/openapi/v1.json
+      # The CLI ships a pinned copy of this contract: when the regen above
+      # moves the spec, the same change must re-pin it and regenerate the
+      # CLI client (from cli/: make spec-sync && make codegen), or CI (cli)
+      # fails its spec-check on main.
+      - run: diff -q docs/openapi/v1.json ../../cli/openapi/v1.json
