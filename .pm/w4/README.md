@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1098** — [Run only the requested BQL bookmark on startup](./1098.md)
+
 - **1097** — [Preserve commodity histories when refreshing prices](./1097.md)
 
 - **1096** — [Disable the Files upload chooser until hydration](./1096.md)
