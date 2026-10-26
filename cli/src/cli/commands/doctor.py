@@ -11,7 +11,7 @@ import subprocess
 import sys
 import unicodedata
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any
 
 import typer
 from typer.core import TyperGroup
@@ -71,7 +71,7 @@ doctor_app = typer.Typer(
     name="doctor",
     cls=_DoctorGroup,
     help=(
-        "Beancount diagnostics (delegates to bean-doctor). Operations take the ledger file as a "
+        "Beancount diagnostics (bean-doctor, guidance). Operations take the ledger file as a "
         "positional argument; --file, BEA_FILE, and ./main.bean do not apply."
     ),
     no_args_is_help=True,
@@ -876,6 +876,52 @@ def _register(op: str) -> None:
 
 for _op in _OPS:
     _register(_op)
+
+
+#: What beancount-init writes as the whole of a new CLAUDE.md: a one-line
+#: import of the ledger's real instruction file. A CLAUDE.md "points at"
+#: AGENTS.md when any line is exactly this import.
+_CLAUDE_IMPORT_LINE = "@AGENTS.md"
+
+
+def _claude_points_at_agents(claude: Path) -> bool:
+    """Whether CLAUDE.md imports the ledger's AGENTS.md (unreadable means no)."""
+    try:
+        text = claude.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return False
+    return any(line.strip() == _CLAUDE_IMPORT_LINE for line in text.splitlines())
+
+
+@doctor_app.command("guidance")
+def doctor_guidance(
+    ledger: Annotated[str, typer.Argument(help="Ledger file; its directory is checked for agent guidance files.")],
+) -> None:
+    """Check a ledger's AGENTS.md and CLAUDE.md."""
+    _refuse_directory_ledger("guidance", [ledger])
+    if not Path(ledger).is_file():
+        raise UsageError(f"Ledger file '{ledger}' does not exist.")
+    directory = Path(ledger).parent
+    agents = directory / "AGENTS.md"
+    claude = directory / "CLAUDE.md"
+    findings: list[str] = []
+    if not agents.is_file():
+        findings.append(
+            f"warning: {agents} is missing, so a coding agent cannot read this ledger's conventions. "
+            "Add one — the beancount-init skill writes it from a template."
+        )
+    if claude.is_file() and not _claude_points_at_agents(claude):
+        findings.append(
+            f"warning: {claude} does not import AGENTS.md, so Claude Code reads different instructions "
+            "than other agents. Add a line containing exactly @AGENTS.md."
+        )
+    # Warn only: the check never creates or changes files, and always exits 0.
+    output.utf8_stdout()
+    if findings:
+        for finding in findings:
+            typer.echo(finding)
+        return
+    typer.echo(f"agent guidance OK in {directory}")
 
 
 @doctor_app.command(

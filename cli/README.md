@@ -122,7 +122,7 @@ for your first month end to end, follow the
 | `bea check` | Validate the complete ledger |
 | `bea format [PATH…]` | Format to stdout (safe default); `--in-place` / `-i` rewrites, `-o` writes elsewhere |
 | `bea query [BQL]` | Run a query or start the interactive BQL shell |
-| `bea doctor OP` | Beancount's eleven diagnostic operations |
+| `bea doctor OP` | Beancount's eleven diagnostic operations, plus the agent-guidance check |
 | `bea example` | Generate an example ledger history |
 | `bea treeify` | Render an account column in any text as a tree |
 | `bea report TYPE` | Overview, income statement, balance sheet, trial balance, holdings, register, capital gains, or cash flow |

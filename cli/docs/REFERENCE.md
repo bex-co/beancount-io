@@ -1262,6 +1262,18 @@ Options:
   --help  Show this message and exit.
 ```
 
+### `bea doctor guidance`
+
+Check a ledger's AGENTS.md and CLAUDE.md.
+
+```text
+Usage: bea doctor guidance [OPTIONS] {ledger}
+```
+
+| Argument | Type | Required | Help |
+| --- | --- | --- | --- |
+| `ledger` | str | yes | Ledger file; its directory is checked for agent guidance files. |
+
 ### `bea doctor dump-lexer`
 
 Alias for bean-doctor lex.

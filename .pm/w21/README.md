@@ -15,7 +15,6 @@
 
 ## Inbox
 
-- [1011](./1011.md) — `bea doctor` warns when a ledger has no `AGENTS.md` or a `CLAUDE.md` that does not point at it
 - [1012](./1012.md) — Link the BQL cookbook from `bea query --help` and the CLI README (after w21/m3)
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window
 - [065](./blocked/065.md) — One early-year entry (e.g. 0050) makes the balance sheet 23,718 monthly points (3 MB) and the app stalls — **blocked:** needs an approach decision (per-pill fetch vs server downsample) and a simulator profile of the stall
