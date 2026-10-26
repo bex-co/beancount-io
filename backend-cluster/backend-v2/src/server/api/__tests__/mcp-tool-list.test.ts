@@ -215,9 +215,15 @@ describe("MCP tool list", () => {
     // 104 KB since w3/m53 (ADR021) added the 44th tool, previewLedgerSetup,
     // and the setup specification on createLedger: measured at 100,992 bytes
     // across 44 tools after trimming the setup schema's descriptions.
+    //
+    // 105 KB since w23/m2/t004 documented the journal filter language on the
+    // `listLedgerEntries` filter property (syntax, fields, quoting rules):
+    // measured at 106,896 bytes. The description is the shared
+    // JOURNAL_FILTER_DESCRIPTION every surface publishes, so trimming it on
+    // MCP alone would fork the contract the parity tests pin.
     const { tools } = await listToolsRaw();
     const bytes = Buffer.byteLength(JSON.stringify(tools), "utf8");
-    expect(bytes).toBeLessThan(104 * 1024);
+    expect(bytes).toBeLessThan(105 * 1024);
   });
 
   it("exposes each operation as its own tool, never behind a selector argument", async () => {

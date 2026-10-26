@@ -12,6 +12,7 @@ import { AllowAnonymous } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import { GraphQLJSONObject } from "graphql-scalars";
 import type { ILedgerJournalService } from "@/features/ledger/service/ledger-journal-service";
+import { JOURNAL_FILTER_DESCRIPTION } from "@/features/ledger/utils/journal-filter-description";
 
 @ObjectType()
 class JournalResponse {
@@ -62,7 +63,10 @@ class JournalQueryInput {
   @Field(() => String, { nullable: true })
   account?: string;
 
-  @Field(() => String, { nullable: true })
+  @Field(() => String, {
+    nullable: true,
+    description: JOURNAL_FILTER_DESCRIPTION,
+  })
   filter?: string;
 
   @Field(() => String, { nullable: true })
@@ -135,7 +139,10 @@ class PlaintextJournalQueryInput {
   @Field(() => String, { nullable: true })
   account?: string;
 
-  @Field(() => String, { nullable: true })
+  @Field(() => String, {
+    nullable: true,
+    description: JOURNAL_FILTER_DESCRIPTION,
+  })
   filter?: string;
 
   @Field(() => String, { nullable: true })
@@ -163,7 +170,10 @@ class AccountJournalQueryInput {
   })
   filterAccount?: string;
 
-  @Field(() => String, { nullable: true })
+  @Field(() => String, {
+    nullable: true,
+    description: JOURNAL_FILTER_DESCRIPTION,
+  })
   filter?: string;
 
   @Field(() => String, { nullable: true })

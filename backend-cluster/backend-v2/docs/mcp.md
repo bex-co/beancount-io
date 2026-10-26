@@ -738,6 +738,17 @@ spelling `addLedgerEntries` takes) selects the same entries as `"Transaction"`.
 takes `cleared`, `pending`, and `other`; `documentSubtypes` takes `discovered`
 and `linked`; `customSubtypes` takes `budget`. Any other value is refused with
 `BAD_USER_INPUT` on every surface, rather than matching nothing.
+The `filter` argument is a Fava advanced-filter expression, identical on REST,
+GraphQL, MCP tools, and MCP resources. `#tag` and `^link` match exactly; bare
+or `"quoted"` words match narration/payee (transactions) or comment (notes);
+`field:value` looks up `account` (posting accounts included), `tag`, `link`,
+`payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts
+and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to
+postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group.
+Quote values holding a colon or space — `account:"Assets:Bank:Checking"` —
+there are no escape sequences. An unparseable filter is refused with
+`BAD_USER_INPUT` naming the fix (quote the value, drop a stray `#`/`^` after a
+colon), never silently treated as match-all or match-none.
 Plaintext journal returns `{ "content": "...", "total": N, "truncated": … }`
 and takes `limit` (1–1,000 entries) and `offset`. Every page keeps the
 ledger's option header, so each one loads on its own; `total` counts the

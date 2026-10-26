@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { bankAccountQuery } from "@/features/ledger/api/rest/v1/banks-handler";
+import { JOURNAL_FILTER_DESCRIPTION } from "@/features/ledger/utils/journal-filter-description";
 import { JOURNAL_KINDS } from "@/features/ledger/utils/journal-kinds";
 import { logger } from "@/shared/logger";
 import type { ToolContext } from "../tools/types";
@@ -91,10 +92,7 @@ export const listLedgerEntriesDescription =
 
 export const listLedgerEntriesInput = z.object({
   account: z.string().optional().describe("Account filter, e.g. Assets:Bank."),
-  filter: z
-    .string()
-    .optional()
-    .describe("Filter expression: payee, narration, tag, or link."),
+  filter: z.string().optional().describe(JOURNAL_FILTER_DESCRIPTION),
   time: z.string().optional().describe("Time expression, e.g. 2026-08."),
   // The published schema lists the kinds; matching ignores case, so the
   // service, not the schema, refuses an unknown one (w23/006).

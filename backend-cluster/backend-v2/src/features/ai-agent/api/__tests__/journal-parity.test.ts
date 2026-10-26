@@ -580,6 +580,59 @@ describe("listLedgerEntries tool", () => {
 });
 
 /**
+ * w23/m2/t004. Every `filter` form the shared description and `docs/mcp.md`
+ * document reaches the journal service byte-identical from all four surfaces
+ * (MCP tool, REST, MCP resource, GraphQL). What each form *matches* is proven
+ * by the ledger evaluator's own tests; here only the pass-through is in scope.
+ */
+describe("documented filter examples", () => {
+  it.each([
+    "#travel",
+    "^receipt",
+    "Salary",
+    '"Salary"',
+    "account:Checking",
+    'account:"Assets:Bank:Checking"',
+    "tag:trip",
+    "link:receipt",
+    "payee:Store",
+    "narration:ramen",
+    "date:2026",
+    "amount>100",
+    ">100",
+    "any(account:Expenses)",
+    "all(account:Assets)",
+    "-#travel",
+    "#a,#b",
+    "(#a #b)",
+  ])("passes %p through every surface untouched", async (filter) => {
+    const f = await fixture();
+    try {
+      f.journal.getJournal.mockClear();
+      const params = { filter };
+      const path = `journal?${encode(params)}`;
+      const tool = await f.tool(params);
+      expect(tool.isError).toBeFalsy();
+      const rest = await f.rest(path);
+      expect(rest.status).toBe(200);
+      await f.mcp(path);
+      const gql = await f.gql(
+        `getLedgerJournal(ledgerId: "alice/main", query: { ${gqlInput(params)} }) { total data is_empty }`,
+      );
+      expect(gql.errors).toBeUndefined();
+      expect(f.journal.getJournal).toHaveBeenCalledTimes(4);
+      for (const call of f.journal.getJournal.mock.calls) {
+        expect(call[2]).toMatchObject({ filter });
+      }
+      const [first, ...others] = f.journal.getJournal.mock.calls;
+      for (const call of others) expect(call).toEqual(first);
+    } finally {
+      await f.close();
+    }
+  });
+});
+
+/**
  * w23/006. The ledger service filters kinds by exact match, so the lowercase
  * spelling `addLedgerEntries` takes — `"transaction"` — and any typo came back
  * as an empty success. Every surface now matches case-insensitively and

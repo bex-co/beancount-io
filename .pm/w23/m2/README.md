@@ -9,7 +9,7 @@
 | t001 | Match account: against transaction postings ✅ | 45m | — |
 | t002 | Match tag: and link: against entry tags/links ✅ | 45m | — |
 | t003 | Accept quoted values with colons ✅ | 30m | — |
-| t004 | Document the filter language | 30m | t001, t002, t003 |
+| t004 | Document the filter language ✅ | 30m | t001, t002, t003 |
 | t005 | Adoption surface | 20m | t004 |
 | t006 | Simplify | 30m | t005 |
 | t007 | Test coverage | 45m | t005 |

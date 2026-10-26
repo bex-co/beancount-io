@@ -1,4 +1,5 @@
 import { z } from "@/shared/zod-openapi-setup";
+import { JOURNAL_FILTER_DESCRIPTION } from "@/features/ledger/utils/journal-filter-description";
 import { createLedgerId } from "@/shared/str";
 import {
   LEDGER_OWNER_PATTERN,
@@ -45,7 +46,7 @@ export const filterQuerySchema = z.object({
     example: "Assets:Bank:Checking",
   }),
   filter: z.string().optional().openapi({
-    description: "Fava filter expression",
+    description: JOURNAL_FILTER_DESCRIPTION,
     example: "#travel",
   }),
   time: z.string().optional().openapi({
