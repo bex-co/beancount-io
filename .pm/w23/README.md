@@ -24,6 +24,7 @@
 - [097](./097.md) — the two universal write flags disagree: `dry_run` vs `allowInvalid`
 - [098](./098.md) — `account-journal` takes `filter_account`/`with_children` where every other resource param is camelCase
 - [099](./099.md) — resource param-validation errors hint at `tools/list` instead of the resource templates
+- [100](./100.md) — the temp-asset object key has three spellings: `receiptObjectKey`, `objectKey`, `s3ObjectKey`
 - [082](./blocked/082.md) — `createPullRequest` fails on production: Gitea 500 while creating the `pr-patch-*` branch, on MCP and REST alike — **blocked:** needs the Gitea server-log cause for one failing branch create (owner), then a production rerun
 - [080](./blocked/080.md) — `/api-gateway/mcp` accepts any `Origin` (the MCP transport spec says a bad `Origin` MUST get 403); owner picks validate vs document — **blocked:** owner picks 403-on-foreign-Origin vs documented non-validation
 - [075](./blocked/075.md) — typed BQL results return NULL as `""` (undocumented), so a missing payee or price reads as an empty string — **blocked:** documented as `""` (option a shipped); owner picks `null` on REST/MCP, `null` everywhere, or keeping `""`
