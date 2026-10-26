@@ -275,6 +275,25 @@ describe("envelopeFromThrown", () => {
     });
   });
 
+  // w23/104: a stray ledger 431 (unbounded value forwarded to a GET past
+  // Node's 16 KiB header budget) fell into the default branch and read as
+  // a retryable server fault.
+  it("tells an overlong ledger URL to shorten, not to retry", () => {
+    const domain = favaApiErrorToDomainError(
+      new FavaApiError("Request Header Fields Too Large", 431, {
+        success: false,
+        error: "request URL too long",
+      }),
+      "get ledger journal entries",
+    );
+    expect(domain).toBeInstanceOf(BadUserInputError);
+    expect(envelopeFromThrown(domain)).toMatchObject({
+      code: "BAD_USER_INPUT",
+      message:
+        "the request URL exceeded the ledger's length limit; shorten the value or split it into smaller requests",
+    });
+  });
+
   it("carries retryAfter for a rate-limit refusal", () => {
     const envelope = envelopeFromThrown(new RateLimitedError(42));
     expect(envelope.code).toBe("RATE_LIMITED");

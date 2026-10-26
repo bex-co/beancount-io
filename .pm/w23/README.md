@@ -23,7 +23,6 @@
 
 ## Inbox
 
-- [104](./104.md) — map a stray 431 from the ledger hop to `BAD_USER_INPUT` (m5/t001 follow-up; QA confirmed 3 more 431 vectors 2026-10-26)
 - [108](./108.md) — CLI OpenAPI pin drifted behind the typed entry fields (m6/t005 follow-up; `make spec-sync && make codegen`)
 - [111](./111.md) — `listLedgerEntries` / journal returns `is_empty: false` alongside `total: 0` on filtered-to-zero results (ledger-level flag; should be result-level)
 - [112](./112.md) — REST bank queries silently drop unknown keys instead of refusing them (m8/t005 follow-up; `.strict()` on `bankAccountQuery`)

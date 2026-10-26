@@ -177,6 +177,13 @@ export function favaApiErrorToDomainError(
       return new BadUserInputError(
         "the change is too large to validate in one request; split it into smaller batches",
       );
+    // Node's 16 KiB maxHeaderSize answers 431 when an unbounded value
+    // forwarded to a ledger GET grows the URL past it (w23/104). The value
+    // is the caller's to shorten, not a server fault to retry.
+    case 431:
+      return new BadUserInputError(
+        "the request URL exceeded the ledger's length limit; shorten the value or split it into smaller requests",
+      );
     case 429:
       return new RateLimitedError();
     case 502:
