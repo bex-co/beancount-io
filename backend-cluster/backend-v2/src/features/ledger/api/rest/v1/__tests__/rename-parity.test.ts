@@ -121,6 +121,15 @@ async function fixture(
     getPublicApiClient: async () => ({
       ledgers: {
         changeLedgerFiles: change,
+        deleteLedgerFile: async (
+          _o: string,
+          _n: string,
+          options: { path: string },
+        ) => {
+          if (!files.has(options.path)) throw new Error("Fixture missing file");
+          files.delete(options.path);
+          return envelope({});
+        },
         getLedgerFile: async (
           _o: string,
           _n: string,
@@ -304,6 +313,15 @@ async function fixture(
           success: response.status === 200,
           result: await response.json(),
         };
+      }
+      if (surface === "gql") {
+        const result = await graphql({
+          schema,
+          source: `mutation($path:String!,$sha:String!) { deleteLedgerFile(ledgerId:"alice/main",path:$path,sha:$sha) { path } }`,
+          variableValues: { path, sha: files.get(path)?.sha ?? "sha-x" },
+          contextValue: { identity: caller, getCurrentIdentity: () => caller },
+        });
+        return { success: !result.errors, result };
       }
       const result = await client.callTool({
         name: "deleteLedgerFiles",
@@ -995,10 +1013,9 @@ describe("dot-prefix normalization", () => {
   });
 });
 
-// w23/m4/t001: deleting a still-included file refuses naming the includers,
-// like rename — on both surfaces sharing the repo-service path. (GraphQL
-// delete goes through the workflow and is t002's path.)
-describe.each(["rest", "mcp"])("delete guard via %s", (surface) => {
+// w23/m4/t001–t002: deleting a still-included file refuses naming the
+// includers, like rename — on every surface.
+describe.each(["rest", "mcp", "gql"])("delete guard via %s", (surface) => {
   const included = {
     "main.bean": '; main\ninclude "second.bean"\n',
     "second.bean": "; doomed\n",

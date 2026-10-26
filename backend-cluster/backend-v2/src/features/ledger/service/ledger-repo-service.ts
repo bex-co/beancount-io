@@ -34,12 +34,9 @@ import {
 } from "@/shared/errors";
 import { listDirectory } from "@/features/ledger/utils/directory-listing";
 import {
-  isGlobPattern,
-  isUrlTarget,
-  parseIncludeLine,
-  resolveIncludeTarget,
-} from "@/features/ledger/utils/include-target";
-import { scanLedgerBeanFiles } from "@/features/ledger/utils/include-references";
+  findDanglingDeleteIncluders,
+  refuseDanglingDeletes,
+} from "@/features/ledger/utils/include-references";
 
 type CommitUser = {
   login: string | null;
@@ -409,70 +406,35 @@ export class LedgerRepoService
       }
     }
     if (deleted.size === 0) return;
-    const { beanFiles } = await scanLedgerBeanFiles((dir) =>
-      unwrapFavaResponse(
-        favaApiClient.ledgers.getLedgerDirContent(ledgerOwner, ledgerName, {
-          ...(dir === undefined ? {} : { dir_path: dir }),
-        }),
-        "list ledger files for delete guard",
-        (cause) =>
-          operationNotAllowedFromCause(
-            "list ledger files for delete guard",
-            cause,
-          ),
-      ),
-    );
-    const survivors = new Set(
-      beanFiles.filter((path) => !deleted.has(path)),
-    );
-    const contents = new Map<string, string>();
-    for (const [path, content] of projected) {
-      if (content !== null && survivors.has(path))
-        contents.set(path, content);
-    }
-    const toRead = [...survivors].filter((path) => !contents.has(path));
-    if (toRead.length > 0) {
-      const files = await unwrapFavaResponse(
-        favaApiClient.ledgers.getLedgerFilesContent(ledgerOwner, ledgerName, {
-          files: toRead,
-        }),
-        "read ledger files for delete guard",
-        (cause) =>
-          operationNotAllowedFromCause(
-            "read ledger files for delete guard",
-            cause,
-          ),
-      );
-      for (const file of files ?? []) {
-        contents.set(file.path, decodeFileContent(file).content);
-      }
-    }
-    const dangling = new Map<string, string[]>();
-    for (const [path, content] of contents) {
-      for (const line of content.split("\n")) {
-        const include = parseIncludeLine(line);
-        if (!include || isUrlTarget(include.target)) continue;
-        const resolved = resolveIncludeTarget(path, include.target);
-        if (isGlobPattern(resolved)) continue;
-        if (deleted.has(resolved)) {
-          const includers = dangling.get(resolved) ?? [];
-          if (!includers.includes(path)) includers.push(path);
-          dangling.set(resolved, includers);
-        }
-      }
-    }
-    if (dangling.size === 0) return;
-    const reports = [...dangling.entries()]
-      .sort(([a], [b]) => (a < b ? -1 : 1))
-      .map(
-        ([path, includers]) =>
-          `${path} is still included by ${includers.join(", ")}`,
-      );
-    throw new BadUserInputError(
-      `${reports.join("; ")}; remove the include from the including file(s) first, then delete`,
-      undefined,
-      "Edit the including file(s) to drop the include line(s), then resend the delete.",
-    );
+    const dangling = await findDanglingDeleteIncluders({
+      listDir: (dir) =>
+        unwrapFavaResponse(
+          favaApiClient.ledgers.getLedgerDirContent(ledgerOwner, ledgerName, {
+            ...(dir === undefined ? {} : { dir_path: dir }),
+          }),
+          "list ledger files for delete guard",
+          (cause) =>
+            operationNotAllowedFromCause(
+              "list ledger files for delete guard",
+              cause,
+            ),
+        ),
+      readFiles: (paths) =>
+        unwrapFavaResponse(
+          favaApiClient.ledgers.getLedgerFilesContent(ledgerOwner, ledgerName, {
+            files: paths,
+          }),
+          "read ledger files for delete guard",
+          (cause) =>
+            operationNotAllowedFromCause(
+              "read ledger files for delete guard",
+              cause,
+            ),
+        ),
+      deletedPaths: deleted,
+      overlays: projected,
+    });
+    refuseDanglingDeletes(dangling);
   }
 
   // Excluded from ILedgerRepoService: only composition injects this capability

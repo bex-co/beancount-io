@@ -120,7 +120,11 @@ import {
   parseIncludeLine,
   resolveIncludeTarget,
 } from "@/features/ledger/utils/include-target";
-import { scanLedgerBeanFiles } from "@/features/ledger/utils/include-references";
+import {
+  findDanglingDeleteIncluders,
+  refuseDanglingDeletes,
+  scanLedgerBeanFiles,
+} from "@/features/ledger/utils/include-references";
 
 const workflowLogger = logger.child({ module: "ledger-workflow" });
 
@@ -1037,6 +1041,43 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
       userId,
+    );
+    // The same guard as the repo-service path (w23/m4/t002): deleting a
+    // still-included file refuses naming the includers.
+    refuseDanglingDeletes(
+      await findDanglingDeleteIncluders({
+        listDir: (dir) =>
+          unwrapFavaResponse(
+            favaApiClient.ledgers.getLedgerDirContent(
+              ledgerOwner,
+              ledgerName,
+              {
+                ...(dir === undefined ? {} : { dir_path: dir }),
+              },
+            ),
+            "list ledger files for delete guard",
+            (cause) =>
+              operationNotAllowedFromCause(
+                "list ledger files for delete guard",
+                cause,
+              ),
+          ),
+        readFiles: (paths) =>
+          unwrapFavaResponse(
+            favaApiClient.ledgers.getLedgerFilesContent(
+              ledgerOwner,
+              ledgerName,
+              { files: paths },
+            ),
+            "read ledger files for delete guard",
+            (cause) =>
+              operationNotAllowedFromCause(
+                "read ledger files for delete guard",
+                cause,
+              ),
+          ),
+        deletedPaths: [input.path],
+      }),
     );
     await unwrapFavaResponse(
       favaApiClient.ledgers.deleteLedgerFile(

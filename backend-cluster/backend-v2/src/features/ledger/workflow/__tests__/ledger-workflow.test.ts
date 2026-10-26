@@ -1670,6 +1670,9 @@ describe("LedgerWorkflow", () => {
       mockFavaApiClient.ledgers.deleteLedgerFile.mockResolvedValue({
         data: { success: true },
       });
+      mockFavaApiClient.ledgers.getLedgerDirContent.mockResolvedValue({
+        data: { success: true, data: [] },
+      });
 
       const result = await workflow.deleteLedgerFile({
         identity: IDENTITY,
@@ -1687,6 +1690,44 @@ describe("LedgerWorkflow", () => {
         { path: "accounts.bean", sha: "abc123", message: "Delete accounts" },
       );
       expect(result.path).toBe("accounts.bean");
+    });
+
+    // w23/m4/t002: the workflow path guards includes exactly like the
+    // repo-service path — same scan, same message.
+    it("should refuse deleting a still-included file naming the includers", async () => {
+      mockFavaApiClient.ledgers.getLedgerDirContent.mockResolvedValue({
+        data: {
+          success: true,
+          data: [
+            { type: "file", path: "main.bean" },
+            { type: "file", path: "second.bean" },
+          ],
+        },
+      });
+      mockFavaApiClient.ledgers.getLedgerFilesContent.mockResolvedValue({
+        data: {
+          success: true,
+          data: [
+            {
+              path: "main.bean",
+              sha: "s1",
+              content: 'include "second.bean"\n',
+              encoding: null,
+            },
+          ],
+        },
+      });
+
+      await expect(
+        workflow.deleteLedgerFile({
+          identity: IDENTITY,
+          ledgerId,
+          input: { path: "second.bean", sha: "abc123" },
+        }),
+      ).rejects.toThrow(/second\.bean is still included by main\.bean/);
+      expect(
+        mockFavaApiClient.ledgers.deleteLedgerFile,
+      ).not.toHaveBeenCalled();
     });
 
     it("should throw error when path is empty", async () => {
@@ -1712,6 +1753,9 @@ describe("LedgerWorkflow", () => {
     it("should throw error when delete file fails", async () => {
       mockFavaApiClient.ledgers.deleteLedgerFile.mockResolvedValue({
         data: { success: false },
+      });
+      mockFavaApiClient.ledgers.getLedgerDirContent.mockResolvedValue({
+        data: { success: true, data: [] },
       });
 
       await expect(

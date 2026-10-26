@@ -6,6 +6,14 @@
  * file nobody includes today breaks the day someone includes it. This walk is
  * extracted verbatim from the rename guard so the two cannot drift.
  */
+import { decodeFileContent } from "@/shared/file-content";
+import { BadUserInputError } from "@/shared/errors";
+import {
+  isGlobPattern,
+  isUrlTarget,
+  parseIncludeLine,
+  resolveIncludeTarget,
+} from "./include-target";
 
 export interface LedgerDirEntry {
   type?: string | null;
@@ -50,4 +58,87 @@ export async function scanLedgerBeanFiles(
     }
   }
   return { beanFiles, allFiles };
+}
+
+export interface LedgerFileContent {
+  path: string;
+  content?: string | null;
+  encoding?: string | null;
+}
+
+/**
+ * The files a delete would strand: for each deleted path, the surviving
+ * `.bean`/`.beancount` files whose `include` lines still resolve to it
+ * (w23/m4/t001–t002). Includes match on resolved paths like rename's
+ * (w23/029). `overlays` carry projected batch contents (null for a path the
+ * batch deletes), so a batch that drops the include lines alongside the
+ * delete finds nothing. Glob includes are ignored: a file leaving a glob's
+ * match breaks no load. Both delete paths — the repo service's batches and
+ * the workflow's single-file delete — share this scan and the refusal below,
+ * so their messages cannot drift.
+ */
+export async function findDanglingDeleteIncluders(opts: {
+  listDir: (
+    dir?: string,
+  ) => Promise<ReadonlyArray<LedgerDirEntry> | null | undefined>;
+  readFiles: (
+    paths: string[],
+  ) => Promise<ReadonlyArray<LedgerFileContent> | null | undefined>;
+  deletedPaths: ReadonlySet<string> | ReadonlyArray<string>;
+  overlays?: ReadonlyMap<string, string | null>;
+}): Promise<Map<string, string[]>> {
+  const deleted = new Set(opts.deletedPaths);
+  const overlays = opts.overlays ?? new Map<string, string | null>();
+  const { beanFiles } = await scanLedgerBeanFiles(opts.listDir);
+  const survivors = new Set(
+    beanFiles.filter((path) => !deleted.has(path)),
+  );
+  const contents = new Map<string, string>();
+  for (const [path, content] of overlays) {
+    if (content !== null && survivors.has(path))
+      contents.set(path, content);
+  }
+  const toRead = [...survivors].filter((path) => !contents.has(path));
+  if (toRead.length > 0) {
+    const files = await opts.readFiles(toRead);
+    for (const file of files ?? []) {
+      contents.set(file.path, decodeFileContent(file).content);
+    }
+  }
+  const dangling = new Map<string, string[]>();
+  for (const [path, content] of contents) {
+    for (const line of content.split("\n")) {
+      const include = parseIncludeLine(line);
+      if (!include || isUrlTarget(include.target)) continue;
+      const resolved = resolveIncludeTarget(path, include.target);
+      if (isGlobPattern(resolved)) continue;
+      if (deleted.has(resolved)) {
+        const includers = dangling.get(resolved) ?? [];
+        if (!includers.includes(path)) includers.push(path);
+        dangling.set(resolved, includers);
+      }
+    }
+  }
+  return dangling;
+}
+
+/**
+ * Refuse a delete that {@link findDanglingDeleteIncluders} flagged, naming
+ * every stranded file and its includers. Silent when nothing dangles.
+ */
+export function refuseDanglingDeletes(
+  dangling: ReadonlyMap<string, string[]>,
+): void {
+  if (dangling.size === 0) return;
+  const reports = [...dangling.entries()]
+    .sort(([a], [b]) => (a < b ? -1 : 1))
+    .map(
+      ([path, includers]) =>
+        `${path} is still included by ${includers.join(", ")}`,
+    );
+  throw new BadUserInputError(
+    `${reports.join("; ")}; remove the include from the including file(s) first, then delete`,
+    undefined,
+    "Edit the including file(s) to drop the include line(s), then resend the delete.",
+  );
 }
