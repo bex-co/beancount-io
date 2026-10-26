@@ -1477,6 +1477,14 @@ returned URL with the supplied MIME type. Then use the object key in an ingestio
 operation or read `beancount://temp-assets/download-url{?objectKey,s3ObjectKey,receiptObjectKey}` to obtain a
 `downloadUrl` and its `expiresIn`.
 
+The upload URL mints the canonical spelling, `objectKey`. The parse
+operations historically spell it `s3ObjectKey` and the insert path
+`receiptObjectKey`; every spelling works at every key input on MCP, REST,
+and GraphQL alike — a key pasted from another tool need not be respelled.
+Passing two spellings with two different keys is refused with
+`BAD_USER_INPUT` rather than guessed; omitting the key is refused as
+missing.
+
 The existing policy requires read capability for both operations, including URL
 creation. Neither requires a ledger target. Keys are bound to the authenticated
 user; foreign, permanent, and malformed references receive a concealed denial.
@@ -1491,7 +1499,7 @@ directories forbid an app to display subscription plans or promote upgrades
 
 ### Parse uploaded statements
 
-Call `parseFile` with `s3ObjectKey` and `fileFormat` after uploading a file.
+Call `parseFile` with `s3ObjectKey` — or `objectKey` or `receiptObjectKey`, as at every key input — and `fileFormat` after uploading a file.
 It returns `rows`, each containing `date`, `payee`, `description`, and numeric
 `amount`, matching GraphQL's file parser. It preserves the caller-supplied format
 and uses the stored MIME type. No ledger selector is needed, including for an
@@ -1516,8 +1524,8 @@ same contract at
 
 ### Parse receipts and recommend accounts
 
-`parseReceipt` accepts `objectKey` (GraphQL/REST's `s3ObjectKey`) and optional
-`ledger: "owner/name"`. Only pinned credentials can omit the ledger. The upload
+`parseReceipt` accepts `objectKey` — `s3ObjectKey` and `receiptObjectKey`
+work too, as at every key input — and optional `ledger: "owner/name"`. Only pinned credentials can omit the ledger. The upload
 must be a caller-owned temporary image or PDF, and the caller must retain read
 access to the selected ledger's contents and assets. Existing read-capability
 policy is preserved.
@@ -1532,7 +1540,8 @@ insert a transaction and offers no preview.
 ### Insert receipt transactions
 
 `insertReceiptTransaction` promotes a confirmed receipt into the ledger:
-`receiptObjectKey` names the caller-owned temporary upload, and `input` carries
+`receiptObjectKey` (or `objectKey` or `s3ObjectKey`, as at every key input)
+names the caller-owned temporary upload, and `input` carries
 `date`, `payee`, `description`, an arbitrary-count `postings` array of
 `{account, amountNumber, amountCurrency}` string-decimal legs, and
 `documentAccount`. Optional `ledger` follows the standard selection contract.
