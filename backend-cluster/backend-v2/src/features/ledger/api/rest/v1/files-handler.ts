@@ -3,6 +3,11 @@ import { NotFoundError } from "@/shared/errors";
 import { resolveCommitMessage } from "@/features/ledger/utils/commit-message-alias";
 import { DELETE_INCLUDE_GUARD_DESCRIPTION } from "@/features/ledger/utils/include-references";
 import { assertAmountsFitEngineDecimal } from "@/features/ledger/utils/engine-decimal";
+import {
+  DRY_RUN_NAMES,
+  resolveFlagAlias,
+} from "@/features/ledger/utils/flag-alias";
+import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 import { ledgerIdOf, ledgerPathSchema } from "./schemas";
 import { json } from "@/server/rest/v1-schemas";
 import { v1Route } from "@/server/rest/v1-route";
@@ -21,6 +26,17 @@ const listQuerySchema = z.object({
     example: "2026",
   }),
 }).strict();
+
+const dryRunBody = {
+  dryRun: z.boolean().optional().openapi({
+    description: PREVIEW_FLAG_DESCRIPTION,
+  }),
+  // Twin (w23/m9/t002): MCP spells it dry_run.
+  dry_run: z
+    .boolean()
+    .optional()
+    .openapi({ description: "Alias of dryRun, as MCP spells it." }),
+};
 
 const putBodySchema = z
   .object({
@@ -41,6 +57,7 @@ const putBodySchema = z
       description:
         "Blob SHA the edit is based on. Send the SHA from a prior GET to update an existing file; omit it to create a new one.",
     }),
+    ...dryRunBody,
   })
   .openapi("FileWrite", {
     description:
@@ -56,6 +73,7 @@ const deleteBodySchema = z
     sha: z.string().optional().openapi({
       description: "Blob SHA of the file being deleted, from a prior GET",
     }),
+    ...dryRunBody,
   })
   .openapi("FileDelete", { description: "Delete one ledger file" });
 
@@ -78,9 +96,17 @@ const dirEntrySchema = z
   });
 
 const commitAckSchema = z
-  .object({ ok: z.literal(true), path: z.string() })
+  .object({
+    ok: z.literal(true),
+    path: z.string(),
+    dryRun: z.boolean().openapi({
+      description:
+        "True when this was a preview: the checks ran and nothing was committed.",
+    }),
+  })
   .openapi("FileCommitAck", {
-    description: "Acknowledgement that a file change was committed",
+    description:
+      "Acknowledgement that a file change was committed — or, on a dry run, that it would be",
   });
 
 const fileSchema = z
@@ -156,7 +182,7 @@ export const FILE_ROUTES = [
     path: "/api-gateway/v1/ledgers/{owner}/{name}/files/{*path}",
     summary: "Create or replace a file",
     description:
-      "Writes at most 1 MiB (1,048,576 UTF-8 bytes) and commits it. Include the `sha` from a prior GET to replace an existing file; omit it to create a new one. The complete JSON request is separately limited to 2 MiB.",
+      "Writes at most 1 MiB (1,048,576 UTF-8 bytes) and commits it. Include the `sha` from a prior GET to replace an existing file; omit it to create a new one. The complete JSON request is separately limited to 2 MiB. `dryRun` previews without committing: same checks, no commit.",
     params: filePathSchema,
     body: putBodySchema,
     responses: {
@@ -165,6 +191,10 @@ export const FILE_ROUTES = [
     handler: async ({ layers }, { identity, params, body }) => {
       // The whole content is new text on a create-or-replace PUT (w23/081).
       assertAmountsFitEngineDecimal(body.content);
+      const dryRun = resolveFlagAlias(
+        { primary: body.dry_run, legacy: body.dryRun },
+        DRY_RUN_NAMES,
+      );
       await layers.services.ledgerRepo.changeFiles({
         ledgerId: ledgerIdOf(params),
         identity,
@@ -181,8 +211,9 @@ export const FILE_ROUTES = [
         message:
           resolveCommitMessage(body, { required: false }) ||
           `${body.sha ? "Update" : "Create"} ${params.path}`,
+        dryRun,
       });
-      return { ok: true as const, path: params.path };
+      return { ok: true as const, path: params.path, dryRun };
     },
   }),
 
@@ -192,13 +223,18 @@ export const FILE_ROUTES = [
     summary: "Delete a file",
     description:
       "Removes the file and commits the deletion. " +
-      DELETE_INCLUDE_GUARD_DESCRIPTION,
+      DELETE_INCLUDE_GUARD_DESCRIPTION +
+      " `dryRun` previews without committing: same checks, no commit.",
     params: filePathSchema,
     body: deleteBodySchema,
     responses: {
       200: json("The deletion was committed", commitAckSchema),
     },
     handler: async ({ layers }, { identity, params, body }) => {
+      const dryRun = resolveFlagAlias(
+        { primary: body.dry_run, legacy: body.dryRun },
+        DRY_RUN_NAMES,
+      );
       await layers.services.ledgerRepo.changeFiles({
         ledgerId: ledgerIdOf(params),
         identity,
@@ -212,8 +248,9 @@ export const FILE_ROUTES = [
         message:
           resolveCommitMessage(body, { required: false }) ||
           `Delete ${params.path}`,
+        dryRun,
       });
-      return { ok: true as const, path: params.path };
+      return { ok: true as const, path: params.path, dryRun };
     },
   }),
 ] as const;

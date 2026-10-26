@@ -412,6 +412,51 @@ describe("v1 files", () => {
     );
   });
 
+  // w23/114: REST file writes preview like their MCP twins — both flag
+  // spellings thread through to changeFiles, and the ack echoes dryRun.
+  it.each([
+    ["PUT", { content: "; new" }],
+    ["DELETE", {}],
+  ])("%s threads either preview spelling and echoes dryRun", async (method, extra) => {
+    server.setIdentity(writeToken);
+    const before = services.ledgerRepo.changeFiles.mock.calls.length;
+    for (const flag of [{ dryRun: true }, { dry_run: true }]) {
+      const { status, body } = await call(
+        method,
+        `${LEDGER}/files/preview.bean`,
+        { ...extra, ...flag },
+      );
+      expect(status).toBe(200);
+      expect(body).toMatchObject({ ok: true, path: "preview.bean", dryRun: true });
+    }
+    const calls = services.ledgerRepo.changeFiles.mock.calls.slice(
+      before,
+    ) as unknown as Array<[{ dryRun: boolean }]>;
+    expect(calls).toHaveLength(2);
+    for (const [params] of calls) expect(params.dryRun).toBe(true);
+  });
+
+  it("commits with dryRun false echoed when no flag is sent", async () => {
+    server.setIdentity(writeToken);
+    const { status, body } = await call("PUT", `${LEDGER}/files/plain.bean`, {
+      content: "; new",
+    });
+    expect(status).toBe(200);
+    expect(body).toMatchObject({ ok: true, dryRun: false });
+  });
+
+  it("refuses conflicting preview flags on file writes", async () => {
+    server.setIdentity(writeToken);
+    const before = services.ledgerRepo.changeFiles.mock.calls.length;
+    const { status } = await call("PUT", `${LEDGER}/files/plain.bean`, {
+      content: "; new",
+      dryRun: true,
+      dry_run: false,
+    });
+    expect(status).toBe(400);
+    expect(services.ledgerRepo.changeFiles.mock.calls.length).toBe(before);
+  });
+
   it("deletes a file", async () => {
     server.setIdentity(writeToken);
     const { status } = await call("DELETE", `${LEDGER}/files/old.bean`, {});

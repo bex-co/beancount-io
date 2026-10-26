@@ -24,7 +24,6 @@
 
 ## Inbox
 
-- [114](./114.md) — REST file writes take no `dryRun` while MCP previews them (m9/t001 follow-up; flags exist only on MCP)
 - [115](./115.md) — quoted `FROM "<table>"` names are silently ignored (any quoted name returns postings scope, even nonexistent tables; w23/109's quoted bypass is unsafe)
 - [116](./116.md) — with-clause `FROM` resolves table-first where stock resolves column-first (`FROM accounts`: bare 34, +LIMIT 12, +WHERE errors; stock 34 in all forms)
 - [117](./117.md) — `prompts/get` silently ignores unknown string args while tools refuse unknown keys (unknown number args refused, then ignored-in-spirit; full-surface strictness map)
@@ -32,6 +31,7 @@
 - [119](./119.md) — set-typed BQL cells render space-joined in text (`runBqlQuery`, GraphQL, stock) but comma-joined in structured (MCP structured, REST; dtype says `set`, value is a string)
 - [120](./120.md) — lifecycle mutations take no `dry_run` while every content mutation previews (m7 follow-up; `deleteLedger` destroys blind; no documented exclusion)
 - [122](./122.md) — non-`count` aggregates over an empty set return a `str`-typed empty string (`sum`/`min`/`max`/`avg`/`first` → `""`; `count(*)` → `0` correct; stock yields zero rows — 022)
+- [123](./123.md) — CLI OpenAPI pin drifted behind the file-write preview flag (w23/114 follow-up; `make spec-sync && make codegen`)
 - [082](./blocked/082.md) — `createPullRequest` fails on production: Gitea 500 while creating the `pr-patch-*` branch, on MCP and REST alike — **blocked:** needs the Gitea server-log cause for one failing branch create (owner), then a production rerun
 - [080](./blocked/080.md) — `/api-gateway/mcp` accepts any `Origin` (the MCP transport spec says a bad `Origin` MUST get 403); owner picks validate vs document — **blocked:** owner picks 403-on-foreign-Origin vs documented non-validation
 - [075](./blocked/075.md) — typed BQL results return NULL as `""` (undocumented), so a missing payee or price reads as an empty string — **blocked:** documented as `""` (option a shipped); owner picks `null` on REST/MCP, `null` everywhere, or keeping `""`

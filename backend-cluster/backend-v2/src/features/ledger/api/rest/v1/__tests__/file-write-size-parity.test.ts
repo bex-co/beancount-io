@@ -484,7 +484,11 @@ describe.each<Surface>(["rest", "gql", "mcp"])(
             validation: { errorsBefore: 0, errorsAfter: 0, newErrors: [] },
           });
         } else {
-          expect(result.data).toEqual({ ok: true, path: "new.bean" });
+          expect(result.data).toEqual({
+            ok: true,
+            path: "new.bean",
+            dryRun: false,
+          });
         }
       } finally {
         await f.close();

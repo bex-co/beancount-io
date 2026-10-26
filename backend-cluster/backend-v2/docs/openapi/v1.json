@@ -179,13 +179,18 @@
           },
           "path": {
             "type": "string"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "description": "True when this was a preview: the checks ran and nothing was committed."
           }
         },
         "required": [
           "ok",
-          "path"
+          "path",
+          "dryRun"
         ],
-        "description": "Acknowledgement that a file change was committed"
+        "description": "Acknowledgement that a file change was committed — or, on a dry run, that it would be"
       },
       "FileWrite": {
         "type": "object",
@@ -207,6 +212,14 @@
           "sha": {
             "type": "string",
             "description": "Blob SHA the edit is based on. Send the SHA from a prior GET to update an existing file; omit it to create a new one."
+          },
+          "dryRun": {
+            "type": "boolean",
+            "description": "Run every check and return the preview without committing"
+          },
+          "dry_run": {
+            "type": "boolean",
+            "description": "Alias of dryRun, as MCP spells it."
           }
         },
         "required": [
@@ -227,6 +240,14 @@
           "sha": {
             "type": "string",
             "description": "Blob SHA of the file being deleted, from a prior GET"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "description": "Run every check and return the preview without committing"
+          },
+          "dry_run": {
+            "type": "boolean",
+            "description": "Alias of dryRun, as MCP spells it."
           }
         },
         "description": "Delete one ledger file"
@@ -9980,7 +10001,7 @@
       },
       "put": {
         "summary": "Create or replace a file",
-        "description": "Writes at most 1 MiB (1,048,576 UTF-8 bytes) and commits it. Include the `sha` from a prior GET to replace an existing file; omit it to create a new one. The complete JSON request is separately limited to 2 MiB.",
+        "description": "Writes at most 1 MiB (1,048,576 UTF-8 bytes) and commits it. Include the `sha` from a prior GET to replace an existing file; omit it to create a new one. The complete JSON request is separately limited to 2 MiB. `dryRun` previews without committing: same checks, no commit.",
         "tags": [
           "Ledger v1"
         ],
@@ -10144,7 +10165,7 @@
       },
       "delete": {
         "summary": "Delete a file",
-        "description": "Removes the file and commits the deletion. Deleting a file still `include`d by another ledger file is refused as `BAD_USER_INPUT` naming the includers; remove the include from the including file(s) first, then delete. An include counts when its target resolves to the deleted path the way the ledger loads it, relative to the directory of the file that declares it, and glob includes never count.",
+        "description": "Removes the file and commits the deletion. Deleting a file still `include`d by another ledger file is refused as `BAD_USER_INPUT` naming the includers; remove the include from the including file(s) first, then delete. An include counts when its target resolves to the deleted path the way the ledger loads it, relative to the directory of the file that declares it, and glob includes never count. `dryRun` previews without committing: same checks, no commit.",
         "tags": [
           "Ledger v1"
         ],
