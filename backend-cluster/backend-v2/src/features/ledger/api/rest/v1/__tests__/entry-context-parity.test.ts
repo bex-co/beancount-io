@@ -122,10 +122,14 @@ async function fixture() {
   const [a, b] = InMemoryTransport.createLinkedPair();
   await Promise.all([client.connect(a), server.connect(b)]);
   return {
-    generatedFrom: async (surface: string, entryHash: string) => {
+    generatedFrom: async (
+      surface: string,
+      entryHash: string,
+      key = "entryHash",
+    ) => {
       if (surface === "rest") {
         const response = await fetch(
-          `${rest.url}/api-gateway/v1/ledgers/alice/main/entry-context?entryHash=${entryHash}`,
+          `${rest.url}/api-gateway/v1/ledgers/alice/main/entry-context?${key}=${entryHash}`,
         );
         expect(response.status).toBe(200);
         const body = await response.json();
@@ -134,7 +138,7 @@ async function fixture() {
       if (surface === "gql") {
         const response = await graphql({
           schema,
-          source: `query { getLedgerEntryContext(ledgerId:"alice/main",entryHash:"${entryHash}") { generated_from slice } }`,
+          source: `query { getLedgerEntryContext(ledgerId:"alice/main",${key}:"${entryHash}") { generated_from slice } }`,
           contextValue: { identity, getCurrentIdentity: () => identity },
         });
         expect(response.errors).toBeUndefined();
@@ -146,40 +150,7 @@ async function fixture() {
       }
       const response = await client.callTool({
         name: "getEntryContext",
-        arguments: { entryHash },
-      });
-      expect(response.isError).toBeFalsy();
-      const content = response.structuredContent as {
-        result?: { generated_from?: string | null };
-      };
-      return content.result?.generated_from;
-    },
-    /** The snake spelling of `generatedFrom`, one key renamed per surface. */
-    generatedFromSnake: async (surface: string, entryHash: string) => {
-      if (surface === "rest") {
-        const response = await fetch(
-          `${rest.url}/api-gateway/v1/ledgers/alice/main/entry-context?entry_hash=${entryHash}`,
-        );
-        expect(response.status).toBe(200);
-        const body = await response.json();
-        return (body.data ?? body).generated_from;
-      }
-      if (surface === "gql") {
-        const response = await graphql({
-          schema,
-          source: `query { getLedgerEntryContext(ledgerId:"alice/main",entry_hash:"${entryHash}") { generated_from slice } }`,
-          contextValue: { identity, getCurrentIdentity: () => identity },
-        });
-        expect(response.errors).toBeUndefined();
-        return (
-          response.data as {
-            getLedgerEntryContext: { generated_from: string | null };
-          }
-        ).getLedgerEntryContext.generated_from;
-      }
-      const response = await client.callTool({
-        name: "getEntryContext",
-        arguments: { entry_hash: entryHash },
+        arguments: { [key]: entryHash },
       });
       expect(response.isError).toBeFalsy();
       const content = response.structuredContent as {
@@ -257,7 +228,7 @@ describe.each(["rest", "gql", "mcp"])("entry context via %s", (surface) => {
   it("accepts the entry_hash spelling list output uses", async () => {
     const f = await fixture();
     try {
-      expect(await f.generatedFromSnake(surface, "copy")).toBe(
+      expect(await f.generatedFrom(surface, "copy", "entry_hash")).toBe(
         "template-hash",
       );
     } finally {

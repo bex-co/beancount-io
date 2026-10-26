@@ -10,7 +10,7 @@
 | t002 | Accept one commit-message name on file tools ✅ | 45m | — |
 | t003 | Document the naming rule ✅ | 30m | t001, t002 |
 | t004 | Adoption surface ✅ | 20m | t003 |
-| t005 | Simplify | 30m | t004 |
+| t005 | Simplify ✅ | 30m | t004 |
 | t006 | Test coverage | 45m | t004 |
 | t007 | Closeout | 15m | t005, t006 |
 
