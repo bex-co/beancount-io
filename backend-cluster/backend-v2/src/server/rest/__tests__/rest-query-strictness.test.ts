@@ -108,3 +108,44 @@ it.each(routes)("refuses ?bogus_param=1 on %s", async (_name, path) => {
     },
   });
 });
+
+// w23/m12/t007: the two documented exceptions stay lenient — pinning them
+// so a future strict sweep does not "fix" them.
+describe("documented lenient queries", () => {
+  const getAccounts = jest.fn(async () => ["Assets:Cash"]);
+  let loose: V1TestServer;
+  beforeAll(async () => {
+    loose = await startV1TestServer(
+      {
+        services: { ledgerAccount: { getAccounts } },
+      } as unknown as AppLayers,
+      { api: { scopeEnforcement: "enforce" } } as AppConfig,
+    );
+    loose.setIdentity(sessionIdentity);
+  });
+  afterAll(async () => loose.close());
+
+  it("accounts drops junk and lists all accounts", async () => {
+    const response = await fetch(
+      `${loose.url}/api-gateway/v1/ledgers/alice/main/accounts?bogus_param=1`,
+    );
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual(["Assets:Cash"]);
+    expect(getAccounts).toHaveBeenCalledWith(
+      "alice",
+      "main",
+      undefined,
+      expect.anything(),
+    );
+  });
+
+  it("feature-flags drops junk and answers the flags", async () => {
+    const response = await fetch(
+      `${loose.url}/api-gateway/v1/feature-flags?bogus_param=1`,
+    );
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      spendingReportSubscription: false,
+    });
+  });
+});
