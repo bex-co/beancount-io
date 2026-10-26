@@ -162,6 +162,10 @@ Usage: bea query [OPTIONS] [query_string]
 | `--no-errors, -q` | flag |  | Hide ledger load errors |
 | `--spreadsheet-safe` | flag |  | With --format csv, prefix text cells starting with = + - @ tab or CR with ' so spreadsheets do not run them as formulas |
 
+```text
+BQL cookbook (tested recipes): https://github.com/bex-co/beancount-io/blob/main/docs/skills/bql-cookbook.md
+```
+
 ### `bea price`
 
 Inspect managed price includes, or fetch bean-price quotes.

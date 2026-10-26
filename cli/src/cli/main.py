@@ -504,7 +504,13 @@ app.command("import", cls=SingleValueCommand, rich_help_panel=_LOCAL_PANEL)(impo
 app.add_typer(ingest_app, name="ingest", rich_help_panel=_LOCAL_PANEL)
 # `format -o a -o b` wrote `b` alone with exit 0 (w5/512); `ask --into` names a write destination too.
 app.command("format", cls=SingleValueCommand, rich_help_panel=_LOCAL_PANEL)(format_beans)
-app.command("query", cls=SingleValueCommand, rich_help_panel=_LOCAL_PANEL)(query)
+app.command(
+    "query",
+    cls=SingleValueCommand,
+    rich_help_panel=_LOCAL_PANEL,
+    epilog="BQL cookbook (tested recipes): "
+    "https://github.com/bex-co/beancount-io/blob/main/docs/skills/bql-cookbook.md",
+)(query)
 app.command(
     "price",
     cls=PriceCommand,
