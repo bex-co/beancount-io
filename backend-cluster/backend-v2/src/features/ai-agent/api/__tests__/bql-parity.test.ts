@@ -33,16 +33,16 @@ async function fixture(
   textResult: ShellTextResult = { text: "" },
 ) {
   const authorizeOrThrow = jest.fn().mockResolvedValue(undefined);
-  const queryShell = jest
+  const queryShellPost = jest
     .fn()
     .mockResolvedValue({ data: { success: true, data: { result } } });
-  const queryShellText = jest
+  const queryShellTextPost = jest
     .fn()
     .mockResolvedValue({ data: { success: true, data: textResult } });
   const service = new LedgerShellService(
     {
       getPublicApiClient: async () => ({
-        shell: { queryShell, queryShellText },
+        shell: { queryShellPost, queryShellTextPost },
       }),
     } as unknown as IFavaClientFactory,
     { authorizeOrThrow } as unknown as IAuthorizationService,
@@ -77,8 +77,8 @@ async function fixture(
   return {
     client,
     authorizeOrThrow,
-    queryShell,
-    queryShellText,
+    queryShellPost,
+    queryShellTextPost,
     rest: (queryValue: unknown = query) =>
       restQuery(queryValue, "application/json"),
     restText: (queryValue: unknown = query) =>
@@ -171,8 +171,8 @@ describe("structured BQL across actual adapters", () => {
             truncated: false,
           },
         });
-        expect(f.queryShell).toHaveBeenCalledTimes(3);
-        for (const call of f.queryShell.mock.calls)
+        expect(f.queryShellPost).toHaveBeenCalledTimes(3);
+        for (const call of f.queryShellPost.mock.calls)
           expect(call).toEqual(["alice", "main", { query }]);
         expect(f.authorizeOrThrow).toHaveBeenCalledTimes(3);
       } finally {
@@ -180,6 +180,41 @@ describe("structured BQL across actual adapters", () => {
       }
     },
   );
+
+  // w23/m5/t003: a 60 KB query — past the GET parser cliff that 431'd as a
+  // 500 — travels intact to the POST hop on every surface, with identical
+  // results.
+  it("runs a 60 KB structured query identically on REST, GraphQL, and MCP", async () => {
+    const longQuery = `SELECT '${"A".repeat(60_000)}'`;
+    const table = { types: [], rows: [] as unknown[][], t: "table" };
+    const expected = { resultType: "table", table };
+    const f = await fixture(table);
+    try {
+      const rest = await f.rest(longQuery);
+      expect(rest.status).toBe(200);
+      expect(await rest.json()).toEqual(expected);
+      const gql = await f.gql(
+        "table { types { name dtype } rows t }",
+        longQuery,
+      );
+      expect(gql.errors).toBeUndefined();
+      expect(gql.data?.queryShell).toEqual(expected);
+      const mcp = await f.client.callTool({
+        name: "runBqlQueryStructured",
+        arguments: { query: longQuery },
+      });
+      expect(mcp.isError).not.toBe(true);
+      expect(mcp.structuredContent).toEqual({
+        ok: true,
+        result: { ...expected, rowCount: 0, truncated: false },
+      });
+      expect(f.queryShellPost).toHaveBeenCalledTimes(3);
+      for (const call of f.queryShellPost.mock.calls)
+        expect(call).toEqual(["alice", "main", { query: longQuery }]);
+    } finally {
+      await f.close();
+    }
+  });
 
   it.each([42, null])(
     "refuses a query of the wrong type (%s) on every surface before domain work",
@@ -204,7 +239,7 @@ describe("structured BQL across actual adapters", () => {
           error: { code: "BAD_USER_INPUT" },
         });
         expect(f.authorizeOrThrow).not.toHaveBeenCalled();
-        expect(f.queryShell).not.toHaveBeenCalled();
+        expect(f.queryShellPost).not.toHaveBeenCalled();
         const textRest = await f.restText(queryValue);
         expect(textRest.status).toBe(400);
         expect(await textRest.json()).toMatchObject({
@@ -221,7 +256,7 @@ describe("structured BQL across actual adapters", () => {
           error: { code: "BAD_USER_INPUT" },
         });
         expect(f.authorizeOrThrow).not.toHaveBeenCalled();
-        expect(f.queryShellText).not.toHaveBeenCalled();
+        expect(f.queryShellTextPost).not.toHaveBeenCalled();
       } finally {
         await f.close();
       }
@@ -244,7 +279,7 @@ describe("structured BQL across actual adapters", () => {
           })
         ).isError,
       ).toBe(true);
-      expect(f.queryShell).not.toHaveBeenCalled();
+      expect(f.queryShellPost).not.toHaveBeenCalled();
       const deniedTextRest = await f.restText();
       expect(deniedTextRest.status).toBe(403);
       await deniedTextRest.text();
@@ -258,7 +293,7 @@ describe("structured BQL across actual adapters", () => {
         ok: false,
         error: { code: "FORBIDDEN" },
       });
-      expect(f.queryShellText).not.toHaveBeenCalled();
+      expect(f.queryShellTextPost).not.toHaveBeenCalled();
     } finally {
       await f.close();
     }
@@ -451,8 +486,8 @@ describe("canonical BQL text counts through the actual service and adapters", ()
         expect(mcp.content).toEqual([{ type: "text", text: summary }]);
         // The count belongs to this text response; obtaining it must never
         // execute a second, typed query that could read another ledger revision.
-        expect(f.queryShellText).toHaveBeenCalledTimes(1);
-        expect(f.queryShell).not.toHaveBeenCalled();
+        expect(f.queryShellTextPost).toHaveBeenCalledTimes(1);
+        expect(f.queryShellPost).not.toHaveBeenCalled();
 
         const restText = await f.restText(bql);
         expect(restText.status).toBe(200);
@@ -481,11 +516,11 @@ describe("canonical BQL text counts through the actual service and adapters", ()
             truncated: false,
           },
         });
-        expect(f.queryShellText).toHaveBeenCalledTimes(3);
-        expect(f.queryShell).toHaveBeenCalledTimes(3);
+        expect(f.queryShellTextPost).toHaveBeenCalledTimes(3);
+        expect(f.queryShellPost).toHaveBeenCalledTimes(3);
         for (const call of [
-          ...f.queryShellText.mock.calls,
-          ...f.queryShell.mock.calls,
+          ...f.queryShellTextPost.mock.calls,
+          ...f.queryShellPost.mock.calls,
         ])
           expect(call).toEqual(["alice", "main", { query: bql }]);
         expect(f.authorizeOrThrow).toHaveBeenCalledTimes(6);
@@ -494,6 +529,34 @@ describe("canonical BQL text counts through the actual service and adapters", ()
       }
     },
   );
+
+  // w23/m5/t003: the text twin travels the same POST hop with the full
+  // query, past the GET parser cliff.
+  it("runs a 60 KB text query identically on REST, GraphQL, and MCP", async () => {
+    const longQuery = `SELECT '${"B".repeat(60_000)}'`;
+    const text = "ok\n";
+    const table = { types: [], rows: [] as unknown[][] };
+    const f = await fixture(table, { text, rowCount: 0 });
+    try {
+      const mcp = await f.client.callTool({
+        name: "runBqlQuery",
+        arguments: { query: longQuery },
+      });
+      expect(mcp.isError).not.toBe(true);
+      expect(mcp.structuredContent).toEqual({ ok: true, result: text });
+      const restText = await f.restText(longQuery);
+      expect(restText.status).toBe(200);
+      expect(await restText.text()).toBe(text);
+      const gqlText = await f.gqlText(longQuery);
+      expect(gqlText.errors).toBeUndefined();
+      expect(gqlText.data?.queryShellText).toEqual({ text });
+      expect(f.queryShellTextPost).toHaveBeenCalledTimes(3);
+      for (const call of f.queryShellTextPost.mock.calls)
+        expect(call).toEqual(["alice", "main", { query: longQuery }]);
+    } finally {
+      await f.close();
+    }
+  });
 
   // w23/010: MCP's text is cut at the same 1,000-row ceiling (plus header
   // lines) and says so; REST and GraphQL text keep every row.
@@ -535,8 +598,8 @@ describe("canonical BQL text counts through the actual service and adapters", ()
           text: `1005 rows (output truncated; the last line says where — add LIMIT or a narrower WHERE)\n${capped.result.trimEnd()}`,
         },
       ]);
-      expect(f.queryShellText).toHaveBeenCalledTimes(1);
-      expect(f.queryShell).not.toHaveBeenCalled();
+      expect(f.queryShellTextPost).toHaveBeenCalledTimes(1);
+      expect(f.queryShellPost).not.toHaveBeenCalled();
       const restText = await f.restText(bql);
       expect(restText.status).toBe(200);
       expect(await restText.text()).toBe(text);
@@ -561,8 +624,8 @@ describe("canonical BQL text counts through the actual service and adapters", ()
           truncated: true,
         },
       });
-      expect(f.queryShellText).toHaveBeenCalledTimes(3);
-      expect(f.queryShell).toHaveBeenCalledTimes(3);
+      expect(f.queryShellTextPost).toHaveBeenCalledTimes(3);
+      expect(f.queryShellPost).toHaveBeenCalledTimes(3);
     } finally {
       await f.close();
     }
@@ -588,12 +651,12 @@ describe("canonical BQL text counts through the actual service and adapters", ()
             text: `BQL result — row count unavailable\n${text.replace(/\s+$/, "")}`,
           },
         ]);
-        expect(f.queryShellText).toHaveBeenCalledTimes(1);
-        expect(f.queryShell).not.toHaveBeenCalled();
+        expect(f.queryShellTextPost).toHaveBeenCalledTimes(1);
+        expect(f.queryShellPost).not.toHaveBeenCalled();
         const raw = await f.restText(bql);
         expect(await raw.text()).toBe(text);
         expect((await f.gqlText(bql)).data?.queryShellText).toEqual({ text });
-        expect(f.queryShellText).toHaveBeenCalledTimes(3);
+        expect(f.queryShellTextPost).toHaveBeenCalledTimes(3);
       } finally {
         await f.close();
       }
@@ -612,7 +675,7 @@ describe("canonical BQL text counts through the actual service and adapters", ()
     const firstResponse = {
       data: { success: true, data: { text: first.text, rowCount: 1 } },
     };
-    f.queryShellText.mockImplementation(
+    f.queryShellTextPost.mockImplementation(
       (_owner: string, _name: string, args: { query: string }) =>
         args.query === first.query
           ? held
@@ -645,8 +708,8 @@ describe("canonical BQL text counts through the actual service and adapters", ()
       expect(second.content).toEqual([
         { type: "text", text: "3 rows\nv\n-\nA\nB\nC" },
       ]);
-      expect(f.queryShellText).toHaveBeenCalledTimes(2);
-      expect(f.queryShell).not.toHaveBeenCalled();
+      expect(f.queryShellTextPost).toHaveBeenCalledTimes(2);
+      expect(f.queryShellPost).not.toHaveBeenCalled();
     } finally {
       releaseFirst(firstResponse);
       await pending.catch(() => undefined);
@@ -657,7 +720,7 @@ describe("canonical BQL text counts through the actual service and adapters", ()
   it("query failures remain coded failures rather than zero-row success summaries", async () => {
     const f = await fixture({ contents: "must not read" });
     const failure = new BadUserInputError("Invalid BQL query", "query");
-    f.queryShellText.mockRejectedValue(failure);
+    f.queryShellTextPost.mockRejectedValue(failure);
     try {
       const rest = await f.restText();
       expect(rest.status).toBe(400);
@@ -676,8 +739,8 @@ describe("canonical BQL text counts through the actual service and adapters", ()
         ok: false,
         error: { code: "BAD_USER_INPUT" },
       });
-      expect(f.queryShellText).toHaveBeenCalledTimes(3);
-      expect(f.queryShell).not.toHaveBeenCalled();
+      expect(f.queryShellTextPost).toHaveBeenCalledTimes(3);
+      expect(f.queryShellPost).not.toHaveBeenCalled();
     } finally {
       await f.close();
     }

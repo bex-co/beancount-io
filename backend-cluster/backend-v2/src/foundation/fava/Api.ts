@@ -3635,6 +3635,12 @@ export interface SuccessResponseProjectedEntryIds {
   data: ProjectedEntryIds;
 }
 
+/** ShellQueryBody */
+export interface ShellQueryBody {
+  /** Query */
+  query: string;
+}
+
 export type QueryParamsType = Record<string | number, any>;
 export type ResponseFormat = keyof Omit<Body, "body" | "bodyUsed">;
 
@@ -5848,6 +5854,31 @@ export class Api<
       }),
 
     /**
+     * @description Query the shell with the query in the JSON body, for queries too long for a URL.
+     *
+     * @tags shell
+     * @name QueryShellPost
+     * @summary Query Shell via POST
+     * @request POST:/shell/{owner}/{repo_name}/query
+     * @secure
+     */
+    queryShellPost: (
+      owner: string,
+      repoName: string,
+      data: ShellQueryBody,
+      params: RequestParams = {},
+    ) =>
+      this.request<SuccessResponseQueryResult, ErrorResponse>({
+        path: `/shell/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/query`,
+        method: "POST",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
      * @description Query the shell and return plain text output.
      *
      * @tags shell
@@ -5870,6 +5901,31 @@ export class Api<
         method: "GET",
         query: query,
         secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Query the shell with the query in the JSON body and return plain text output.
+     *
+     * @tags shell
+     * @name QueryShellTextPost
+     * @summary Query Shell Text via POST
+     * @request POST:/shell/{owner}/{repo_name}/query-text
+     * @secure
+     */
+    queryShellTextPost: (
+      owner: string,
+      repoName: string,
+      data: ShellQueryBody,
+      params: RequestParams = {},
+    ) =>
+      this.request<SuccessResponseQueryTextResult, ErrorResponse>({
+        path: `/shell/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/query-text`,
+        method: "POST",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
         format: "json",
         ...params,
       }),

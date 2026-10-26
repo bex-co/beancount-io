@@ -144,7 +144,7 @@ async function fixture(caller = identity, appId?: string) {
           }),
       },
       reports: { getLedgerAccountLastEntries: async () => envelope([]) },
-      shell: { queryShell: async () => envelope({ result: { rows: [] } }) },
+      shell: { queryShellPost: async () => envelope({ result: { rows: [] } }) },
     }),
   };
   const service = new LLMService(

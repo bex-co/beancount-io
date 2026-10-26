@@ -166,7 +166,7 @@ describe("account-entries", () => {
   describe("getAccountEntryCounts", () => {
     it("should return a map of account to count", async () => {
       const shellClient = {
-        queryShell: jest.fn().mockResolvedValue({
+        queryShellPost: jest.fn().mockResolvedValue({
           data: {
             data: {
               result: {
@@ -192,7 +192,7 @@ describe("account-entries", () => {
 
     it("should use the correct BQL query", async () => {
       const shellClient = {
-        queryShell: jest.fn().mockResolvedValue({
+        queryShellPost: jest.fn().mockResolvedValue({
           data: {
             data: {
               result: { rows: [] },
@@ -204,14 +204,14 @@ describe("account-entries", () => {
 
       await getAccountEntryCounts(mockClient, owner, repoName);
 
-      expect(shellClient.queryShell).toHaveBeenCalledWith(owner, repoName, {
+      expect(shellClient.queryShellPost).toHaveBeenCalledWith(owner, repoName, {
         query: "SELECT account, count(account) ORDER BY account",
       });
     });
 
     it("should return empty map when result has no rows field", async () => {
       const shellClient = {
-        queryShell: jest.fn().mockResolvedValue({
+        queryShellPost: jest.fn().mockResolvedValue({
           data: {
             data: {
               result: { columns: [] },
@@ -228,7 +228,7 @@ describe("account-entries", () => {
 
     it("should return empty map when result is null", async () => {
       const shellClient = {
-        queryShell: jest.fn().mockResolvedValue({
+        queryShellPost: jest.fn().mockResolvedValue({
           data: { data: { result: null } },
         }),
       };
@@ -241,7 +241,7 @@ describe("account-entries", () => {
 
     it("should convert account and count to correct types", async () => {
       const shellClient = {
-        queryShell: jest.fn().mockResolvedValue({
+        queryShellPost: jest.fn().mockResolvedValue({
           data: {
             data: {
               result: {

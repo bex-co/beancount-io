@@ -60,7 +60,7 @@ export class LedgerShellService
     );
 
     const queryResult = await unwrapFavaResponse(
-      favaApiClient.shell.queryShell(ledgerOwner, ledgerName, { query }),
+      favaApiClient.shell.queryShellPost(ledgerOwner, ledgerName, { query }),
       "execute shell query",
     );
     const result = queryResult.result;
@@ -106,7 +106,9 @@ export class LedgerShellService
     );
 
     const data = await unwrapFavaResponse(
-      favaApiClient.shell.queryShellText(ledgerOwner, ledgerName, { query }),
+      favaApiClient.shell.queryShellTextPost(ledgerOwner, ledgerName, {
+        query,
+      }),
       "execute shell query",
     );
     return {

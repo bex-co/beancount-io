@@ -867,7 +867,7 @@ export class PlaidSyncService implements IPlaidSyncService {
     const list = [...wanted.keys()].map((id) => `'${id}'`).join(", ");
     let rows: unknown[][] = [];
     try {
-      const response = await client.shell.queryShell(owner, repo, {
+      const response = await client.shell.queryShellPost(owner, repo, {
         query: `SELECT DISTINCT meta('import-id') WHERE meta('import-id') IN (${list})`,
       });
       const result = response.data?.data?.result;

@@ -202,7 +202,7 @@ export class LedgerFinanceService
       options?.operating_currency ?? [],
     );
     const queryResult = await unwrapFavaResponse(
-      favaApiClient.shell.queryShell(ledgerOwner, ledgerName, {
+      favaApiClient.shell.queryShellPost(ledgerOwner, ledgerName, {
         query: holdingsDetailQuery(target),
       }),
       "get ledger holdings",

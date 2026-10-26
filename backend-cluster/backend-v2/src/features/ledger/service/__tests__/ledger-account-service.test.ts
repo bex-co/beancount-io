@@ -22,7 +22,7 @@ const mockFavaApiClient = {
     getJournal: mockGetJournal,
   },
   shell: {
-    queryShell: mockQueryShell,
+    queryShellPost: mockQueryShell,
   },
 };
 

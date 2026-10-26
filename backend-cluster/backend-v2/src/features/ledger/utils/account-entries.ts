@@ -80,7 +80,7 @@ export async function getAccountEntryCounts(
   owner: string,
   repoName: string,
 ): Promise<Map<string, number>> {
-  const response = await client.shell.queryShell(owner, repoName, {
+  const response = await client.shell.queryShellPost(owner, repoName, {
     query: "SELECT account, count(account) ORDER BY account",
   });
 

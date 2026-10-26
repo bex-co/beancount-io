@@ -27,7 +27,7 @@ describe("cross-surface parity: MCP runBqlQuery vs GraphQL queryShellText", () =
     const favaClientFactory = {
       getAdminClient: () => ({ ledgers: { getLedger: mockGetLedger } }),
       getPublicApiClient: async () => ({
-        shell: { queryShellText: mockQueryShellText },
+        shell: { queryShellTextPost: mockQueryShellText },
       }),
     };
     return new LedgerShellService(

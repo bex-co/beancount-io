@@ -68,7 +68,7 @@ const mockFavaApiClient = {
   reports: { getLedgerAccounts: jest.fn() },
   entries: { addBulkEntries: jest.fn() },
   ledgers: { getLedgerFile: jest.fn() },
-  shell: { queryShell: jest.fn() },
+  shell: { queryShellPost: jest.fn() },
 };
 
 const mockGetLedger = jest.fn();
@@ -648,7 +648,7 @@ describe("PlaidSyncService", () => {
       });
 
       it("is refused without writing, naming its import-id", async () => {
-        mockFavaApiClient.shell.queryShell.mockResolvedValue({
+        mockFavaApiClient.shell.queryShellPost.mockResolvedValue({
           data: { data: { result: { rows: [["plaid:tx_1"]] } } },
         });
 
@@ -663,7 +663,7 @@ describe("PlaidSyncService", () => {
           "Transaction tx_1 is already in the ledger (import-id plaid:tx_1)",
         );
 
-        expect(mockFavaApiClient.shell.queryShell).toHaveBeenCalledWith(
+        expect(mockFavaApiClient.shell.queryShellPost).toHaveBeenCalledWith(
           ledgerOwner,
           ledgerName,
           { query: expect.stringContaining("'plaid:tx_1'") },
@@ -672,7 +672,7 @@ describe("PlaidSyncService", () => {
       });
 
       it("is refused by a dry run too", async () => {
-        mockFavaApiClient.shell.queryShell.mockResolvedValue({
+        mockFavaApiClient.shell.queryShellPost.mockResolvedValue({
           data: { data: { result: { rows: [["plaid:tx_1"]] } } },
         });
 
@@ -689,7 +689,7 @@ describe("PlaidSyncService", () => {
       });
 
       it("lets a batch the ledger does not hold through", async () => {
-        mockFavaApiClient.shell.queryShell.mockResolvedValue({
+        mockFavaApiClient.shell.queryShellPost.mockResolvedValue({
           data: { data: { result: { rows: [] } } },
         });
 
@@ -705,7 +705,7 @@ describe("PlaidSyncService", () => {
       });
 
       it("does not block the import when the lookup fails", async () => {
-        mockFavaApiClient.shell.queryShell.mockRejectedValue(
+        mockFavaApiClient.shell.queryShellPost.mockRejectedValue(
           new Error("ledger unavailable"),
         );
 

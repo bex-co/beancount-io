@@ -62,7 +62,7 @@ describe("MCP per-call authorization: mid-session revocation", () => {
         },
       }),
       getPublicApiClient: async () => ({
-        shell: { queryShellText: mockQueryShellText },
+        shell: { queryShellTextPost: mockQueryShellText },
       }),
     };
 

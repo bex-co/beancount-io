@@ -16,7 +16,7 @@ const mockReports = {
   getLedgerPostingsPerAccount: jest.fn(),
 };
 const mockShell = {
-  queryShell: jest.fn(),
+  queryShellPost: jest.fn(),
 };
 const mockJournal = {
   getJournal: jest.fn(),
@@ -86,7 +86,7 @@ describe("LedgerFinanceService.getHoldings", () => {
   ];
 
   it("authorizes as a reports read and composes groups", async () => {
-    mockShell.queryShell.mockResolvedValue(ok(table(holdingsRows())));
+    mockShell.queryShellPost.mockResolvedValue(ok(table(holdingsRows())));
 
     const result = await service.getHoldings({
       ledgerId: LEDGER_ID,
@@ -109,7 +109,7 @@ describe("LedgerFinanceService.getHoldings", () => {
     });
     expect(result.valuation).toBe("complete");
     // No conversion leg without a target.
-    expect(mockShell.queryShell).toHaveBeenCalledWith(
+    expect(mockShell.queryShellPost).toHaveBeenCalledWith(
       "testowner",
       "testledger",
       { query: expect.not.stringContaining("conv_rate") },
@@ -117,7 +117,7 @@ describe("LedgerFinanceService.getHoldings", () => {
   });
 
   it("defaults conversion to one operating currency", async () => {
-    mockShell.queryShell.mockResolvedValue(ok(table(holdingsRows())));
+    mockShell.queryShellPost.mockResolvedValue(ok(table(holdingsRows())));
 
     const result = await service.getHoldings({
       ledgerId: LEDGER_ID,
@@ -126,7 +126,7 @@ describe("LedgerFinanceService.getHoldings", () => {
 
     // The target is resolved before any row is seen, so the leg is always
     // quoted; USD-held lots skip it per row.
-    expect(mockShell.queryShell).toHaveBeenCalledWith(
+    expect(mockShell.queryShellPost).toHaveBeenCalledWith(
       "testowner",
       "testledger",
       { query: expect.stringContaining('getprice(cost_currency, "USD"') },
@@ -135,7 +135,7 @@ describe("LedgerFinanceService.getHoldings", () => {
   });
 
   it("quotes an explicit target through the conversion leg", async () => {
-    mockShell.queryShell.mockResolvedValue(ok(table(holdingsRows())));
+    mockShell.queryShellPost.mockResolvedValue(ok(table(holdingsRows())));
 
     const result = await service.getHoldings({
       ledgerId: LEDGER_ID,
@@ -143,7 +143,7 @@ describe("LedgerFinanceService.getHoldings", () => {
       conversion: "EUR",
     });
 
-    expect(mockShell.queryShell).toHaveBeenCalledWith(
+    expect(mockShell.queryShellPost).toHaveBeenCalledWith(
       "testowner",
       "testledger",
       { query: expect.stringContaining('getprice(cost_currency, "EUR"') },
@@ -155,7 +155,7 @@ describe("LedgerFinanceService.getHoldings", () => {
   });
 
   it("passes account and grouping through to the composer", async () => {
-    mockShell.queryShell.mockResolvedValue(ok(table(holdingsRows())));
+    mockShell.queryShellPost.mockResolvedValue(ok(table(holdingsRows())));
 
     const result = await service.getHoldings({
       ledgerId: LEDGER_ID,
@@ -170,7 +170,7 @@ describe("LedgerFinanceService.getHoldings", () => {
   });
 
   it("refuses a non-table shell answer", async () => {
-    mockShell.queryShell.mockResolvedValue(ok({ result: { contents: "empty\n" } }));
+    mockShell.queryShellPost.mockResolvedValue(ok({ result: { contents: "empty\n" } }));
 
     await expect(
       service.getHoldings({ ledgerId: LEDGER_ID, identity: IDENTITY }),
