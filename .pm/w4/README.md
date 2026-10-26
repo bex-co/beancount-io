@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1096** — [Disable the Files upload chooser until hydration](./1096.md)
+
 - **1095** — [Keep the Version History cursor in sync after Refresh](./1095.md)
 
 - **1094** — [Hydrate legacy file links before handing off to the file route](./1094.md)
