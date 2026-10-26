@@ -308,6 +308,40 @@ describe("filterDirectives — AdvancedFilter parity", () => {
     expect(filterDirectives(entries, { filter: "link:missing" })).toEqual([]);
   });
 
+  // w23/m2/t007: `tag:`/`link:` see the tags/links the parse restored on
+  // notes, like `#tag`/`^link` do (w21/655).
+  it("matches tag: and link: against a note's restored tags and links", () => {
+    const note = {
+      type: "note",
+      date: "2024-02-01",
+      account: "Assets:Cash",
+      comment: "dispute filed",
+      tags: ["dispute", "trip"],
+      links: ["case-42"],
+    } as DirectiveJson;
+    expect(filterDirectives([note], { filter: "tag:trip" })).toEqual([note]);
+    expect(filterDirectives([note], { filter: "link:case-42" })).toEqual([note]);
+    expect(filterDirectives([note], { filter: "tag:other" })).toEqual([]);
+  });
+
+  // w23/m2/t007: the singular keys apply a per-member Match
+  // (case-insensitive substring regex), so anchors bind to one tag — unlike
+  // the plural `tags:`, which sees the joined "a, b" list (w21/640).
+  it("matches tag: per member, so anchors bind to one tag", () => {
+    const txn = {
+      type: "transaction",
+      date: "2024-05-01",
+      flag: "*",
+      narration: "groceries",
+      tags: ["trip", "japan2026"],
+      links: [],
+      postings: [],
+    } as DirectiveJson;
+    expect(filterDirectives([txn], { filter: "tag:rip" })).toEqual([txn]);
+    expect(filterDirectives([txn], { filter: 'tag:"^trip$"' })).toEqual([txn]);
+    expect(filterDirectives([txn], { filter: 'tag:"^rip$"' })).toEqual([]);
+  });
+
   // w23/m2/t002: a sigil after the colon is a syntax slip, not a bare
   // "Expected STRING, got TAG" lexer error.
   it("hints at the bare name when a sigil follows tag: or link:", () => {
