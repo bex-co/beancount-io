@@ -53,4 +53,4 @@ export const filterQuerySchema = z.object({
     description: "Fava time expression",
     example: "2026",
   }),
-});
+}).strict();

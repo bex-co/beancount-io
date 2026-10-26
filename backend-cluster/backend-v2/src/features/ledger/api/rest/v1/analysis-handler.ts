@@ -151,7 +151,7 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
         description: "Group lots by account or by commodity",
         example: "commodity",
       }),
-    }),
+    }).strict(),
     uriPath: "",
     fetch: (s, { ledgerId, identity, query }) =>
       s.ledgerFinance.getHoldings({
@@ -177,7 +177,7 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
           "Convert money columns to this currency, or `units` for each row's held currencies (default: the operating currency when the ledger declares exactly one)",
         example: "USD",
       }),
-    }),
+    }).strict(),
     uriPath: "/{account}",
     fetch: (s, { ledgerId, identity, query }) =>
       s.ledgerFinance.getRegister({
@@ -205,7 +205,7 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
         description: "Sales on or before YYYY-MM-DD",
         example: "2024-12-31",
       }),
-    }),
+    }).strict(),
     uriPath: "",
     fetch: (s, { ledgerId, identity, query }) =>
       s.ledgerFinance.getCapitalGains({
@@ -316,7 +316,7 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
       "For every transaction by a payee, query the journal or BQL instead.",
     query: z.object({
       payee: z.string().openapi({ description: "The payee to look up" }),
-    }),
+    }).strict(),
     uriPath: "/{payee}",
     fetch: (s, { ledgerId, identity, query }) =>
       s.ledgerData.getPayeeTransactions({
@@ -341,7 +341,7 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
           "The exact narration to look up. Supply it explicitly; an empty string is valid.",
         example: "",
       }),
-    }),
+    }).strict(),
     uriPath: "",
     uriPathAliases: ["/{narration}"],
     fetch: (s, { ledgerId, identity, query }) =>
@@ -361,7 +361,7 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
       "first few when categorising a new transaction for this payee.",
     query: z.object({
       payee: z.string().openapi({ description: "The payee to look up" }),
-    }),
+    }).strict(),
     uriPath: "/{payee}",
     fetch: (s, { ledgerId, identity, query }) =>
       s.ledgerData.getPayeeAccounts({
@@ -384,7 +384,7 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
         .string()
         .optional()
         .openapi({ description: "Alias of entryHash, as list output spells it." }),
-    }),
+    }).strict(),
     uriPath: "/{entryHash}",
     fetch: (s, { ledgerId, identity, query }) =>
       s.ledgerJournal.getContext({
@@ -398,7 +398,7 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
     summary: "List open/close directives per account",
     description:
       "Each account's open and close directives — which accounts are usable on a given date.",
-    query: z.object({}),
+    query: z.object({}).strict(),
     uriPath: "",
     fetch: (s, { ledgerId, identity }) => {
       const [owner, name] = ledgerId.split("/");

@@ -39,7 +39,7 @@ export const shapeQuery = z.object({
       "summary returns totals and non-zero accounts in one currency; fava returns the full chart payload.",
     example: "summary",
   }),
-});
+}).strict();
 
 export const statementQuerySchema = z.object({
   account: z.string().optional(),
@@ -57,7 +57,7 @@ export const statementQuerySchema = z.object({
     description: "Bucket the period: day, week, month, quarter, year",
     example: "month",
   }),
-});
+}).strict();
 
 /** The statements' query contract, on both surfaces. */
 export const statementReadQuery = statementQuerySchema.extend(shapeQuery.shape);

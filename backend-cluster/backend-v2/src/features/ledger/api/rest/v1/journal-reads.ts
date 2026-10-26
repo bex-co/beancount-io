@@ -13,6 +13,7 @@ import {
 import type { ServiceLayer } from "@/foundation/composition";
 import type { Identity } from "@/server/api/identity";
 
+// Strict (w23/m12/t002): unknown keys are mistyped filters, not unfiltered reads.
 const filters = z.object({
   account: z.string().optional(),
   filter: z.string().optional(),
@@ -25,7 +26,7 @@ const filters = z.object({
         "and `close` carry the epoch date and appear in every window, so a single-day " +
         "journal still lists them. Use directiveTypes to ask for transactions alone.",
     ),
-});
+}).strict();
 
 /**
  * Which directive kinds to return.
@@ -186,7 +187,7 @@ export const JOURNAL_READS = [
     segment: "source-files",
     name: "ledgerSourceFiles",
     summary: "List the ledger's source files",
-    query: z.object({}),
+    query: z.object({}).strict(),
     fetch: (services: Services, { ledgerId, identity }: ReadParams) =>
       services.ledgerData.getSourceFiles({ ledgerId, identity }),
   },

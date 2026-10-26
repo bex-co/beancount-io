@@ -30,7 +30,7 @@ export const COMMIT_READS = [
     name: "latestLedgerCommit",
     segment: "latest-commit",
     summary: "Read the latest commit on a ledger branch",
-    query: z.object({ branchName: z.string().default("main") }),
+    query: z.object({ branchName: z.string().default("main") }).strict(),
     fetch: (services: Services, { identity, ledgerId, query }: Params) =>
       services.ledgerRepo.getLatestCommit({
         identity,
@@ -51,7 +51,7 @@ export const COMMIT_READS = [
         .min(1)
         .max(MAX_COMMITS_PAGE_SIZE)
         .default(30),
-    }),
+    }).strict(),
     fetch: (services: Services, { identity, ledgerId, query }: Params) =>
       services.commits.listCommits({
         identity,
@@ -65,7 +65,7 @@ export const COMMIT_READS = [
     name: "ledgerCommitDetails",
     segment: "commit-details",
     summary: "Read commit metadata, parents, file statistics, and unified diff",
-    query: z.object({ sha: z.string() }),
+    query: z.object({ sha: z.string() }).strict(),
     fetch: (services: Services, { identity, ledgerId, query }: Params) =>
       services.commits.getCommitDetails({
         identity,

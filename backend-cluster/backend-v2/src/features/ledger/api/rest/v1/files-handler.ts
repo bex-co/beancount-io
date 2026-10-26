@@ -20,7 +20,7 @@ const listQuerySchema = z.object({
     description: "Directory to list, relative to the repository root",
     example: "2026",
   }),
-});
+}).strict();
 
 const putBodySchema = z
   .object({
