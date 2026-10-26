@@ -1,14 +1,14 @@
 # w23 · m8 — Unify bank-tool parameter naming
 
-**Worker:** worker1 **Goal:** agents drive bank sync/import without retry loops: every MCP bank tool accepts the camelCase id spelling REST/GraphQL use, and import/discard converge on one batch name **Status:** todo
+**Worker:** worker1 **Goal:** agents drive bank sync/import without retry loops: every MCP bank tool accepts the camelCase id spelling REST/GraphQL use **Status:** todo
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
-| t001 | Reproduce + map the bank naming splits | 30m | — |
-| t002 | MCP camelCase id aliases end to end | 60m | t001 |
-| t003 | Converge transactions vs transaction_ids | 60m | t002 |
+| t001 | Reproduce + map the bank naming splits ✅ | 30m | — |
+| t002 | MCP top-level id aliases end to end | 60m | t001 |
+| t003 | MCP nested bank aliases end to end | 45m | t002 |
 | t004 | Document bank naming | 30m | t003 |
 | t005 | Adoption surface | 20m | t004 |
 | t006 | Simplify | 30m | t005 |
@@ -18,7 +18,7 @@
 ## Definition of done
 
 - Every MCP bank tool accepts the camelCase id spelling REST and GraphQL use (`itemId`, `accountId`, `transactionIds`), aliasing its snake_case spelling; two different ids in one call refuse rather than guess.
-- `importStagedBankTransactions` and `discardStagedBankTransactions` converge on one batch-argument name (plus alias) on MCP, REST, and GraphQL alike.
+- The nested bank spellings alias too: the submit-item `transaction_id`/`target_account`/`source_account` triple and `map_account.ledger_account`, each with the same conflict refusal. (`transactions` vs `transactionIds` deliberately do NOT converge: full booking items vs bare id lists — t001.)
 - Parity tests prove both spellings and the conflict refusal on all three surfaces; bank docs name the aliases; OpenAPI regen with no drift; package gates green.
 
 ## Source + Goal linkage
