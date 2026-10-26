@@ -36,7 +36,7 @@
 - Hermes has an exercised suite setup/update route using the same source inventory, with its native policy restrictions explicitly retained and no force-install or scanner bypass. An unavailable upstream route remains open with its unblock condition rather than being called delivered.
 - Existing Claude Code and Codex suite installs remain valid. Legacy standalone ClawHub listings are retired without deleting historical evidence or existing local copies; current online install/update guidance targets the suite.
 - Suite-first public documentation agrees with exact exercised commands and host limits; meaningful regression tests and owning-package checks pass.
-- Other owned channel configuration presents the customer suite coherently; stale third-party indexes have actual refresh/read-back evidence rather than a claim that a source-only change updated them.
+- Other owned channel configuration presents the customer suite coherently; affected third-party catalogs have verified current customer-suite records or a verified consolidated replacement through supported publication. Preserve inaccessible historical rows and unavailable intake limits explicitly; a source-only change or accepted request is not a published result.
 - Standing closing tasks are complete; /pm moves all tasks and this milestone into their done locations with consistent links and statuses.
 
 ## Source + Goal linkage
@@ -49,6 +49,25 @@
 ## Out of scope
 
 - New accounting behavior, reworking skill descriptions/routing, MCP marketplace submissions, permanently deleting release history, new credentials, paid platform fees, and unsolicited upstream outreach.
+
+## Current catalog handling — owner direction, 2026-10-26 UTC
+
+For every similar skill-catalog case, use supported direct publication of one
+complete customer suite when old entries cannot be edited. Do not send support
+emails or wait for email authorization. Earlier email drafts remain historical
+and unsent. t012 retains the accepted skills.rest suite request and SkillsMP's
+missing supported publication route; the latter requires platform intake or
+an actual source-index refresh, not further publisher approval. Existing
+pending submissions are not repeatedly uploaded. Hermes admission remains a
+separate host-policy requirement.
+
+The [new customer-only Pack](https://www.skills.sh/p/CTUrAfLQdDvNeNv2) is
+created from source suite 0.4.2. Its native delivery remains under t012:
+1.5.23 installs thirteen entries but only 59/61 files; current 1.7.4 fails
+discovery. Preserve the single published Pack and complete-source inventory;
+wait for supported delivery/client recovery, then verify all 61 hashes.
+[Current channel actions and exact evidence](../../../../docs/skills/catalog-corrections/consolidated-submissions-20261026.json)
+distinguish publication from usable installation. No email gate remains.
 
 ## Hermes admission finding — 2026-10-22 UTC
 
@@ -128,9 +147,9 @@ the old email draft is unsent. SkillsMP/Hermes gates and the full DoD remain.
 Direct collection readback under t012 still has 27 entries (eight customer and
 nineteen internal) and the old ask source; a failed public search does not
 clear those findings. Supported owner intake/edit remains unestablished,
-with private capabilities untested. A specific public-source correction
-email is prepared for the official contact and awaits explicit authorization.
-**Unblock:** authorized request or a supplied owner route, service correction,
-then worker verification of customer-only suite scope and current paths.
+with private capabilities untested. The earlier prepared email is superseded
+by the later owner direction to publish consolidated sets directly.
+**Unblock:** supported suite intake or actual source-index correction, then
+worker verification of customer-only suite scope and current paths.
 No message or submission is claimed; skills.rest's accepted form and Hermes
 remain separate pending gates.

@@ -88,8 +88,9 @@ Beancount.io
 
 The historical draft contains only public repository and catalog information
 and remains unsent. The owner's latest instruction authorized the overall
-form resubmission, not this email. Any later support email requires its own
-explicit authorization. Current work waits on public readback of the accepted
-form rather than another email decision. SkillsMP remains independently pending.
+form resubmission, not this email. The later 2026-10-26 owner decision selects
+direct consolidated publication for all similar uneditable-catalog cases;
+do not send this historical draft or wait for email authorization. Current work
+waits on public readback of the accepted form. SkillsMP remains independently pending.
 The dashboard-QA entry's first ingestion remains unattributed; this new
 receipt does not reconstruct its original submission or scan history.

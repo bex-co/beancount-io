@@ -231,15 +231,29 @@ The owner requested the same consolidation audit beyond ClawHub. Separate
 workflow folders remain inside the product; owned publication and current
 installation guidance target the complete suite.
 
+**Owner policy, 2026-10-26 UTC:** apply the following to every current and
+future skill catalog with the same scattered or stale-entry problem. Update
+the existing suite when supported; if its records cannot be edited, submit
+or publish one consolidated customer set through the platform's supported
+intake. Use only the thirteen canonical `skills/` workflows, preserve their
+references and MIT-0 license, and exclude repository development tools.
+Do not replace this work with support emails or an email-authorization wait.
+Retain the real entry URL, payload, status, UTC check time and next trigger.
+An already accepted identical suite request stays pending rather than being
+submitted repeatedly. If no supported publishing intake is available, record
+that exact platform dependency and continue other channels; do not call an
+unsubmitted set published or claim that old records were deleted.
+
 | Channel | Observed state | Action and verification |
 | --- | --- | --- |
 | Claude Code plugin | One `beancount-io` marketplace entry at 0.4.0, declaring all thirteen workflows. | Already a suite; retain the shared version and inventory gate. |
 | Codex plugin | One `beancount-io` entry at the same 0.4.0 version and canonical source tree. | Already a suite; no separate per-skill publication found in the repository's release configuration. |
 | Git/link installer | One checkout supplies the complete source inventory to both clients. | Retain it for local source edits; current guidance prefers the plugin for one versioned managed install. |
 | `npx skills` / skills.sh | Before the update, the repository page mixed 29 rows: ten customer workflows and nineteen contributor tools. At 00:40 UTC, the public page shows all thirteen customer workflows under **Beancount.io suite**, followed by nineteen **Repository development** entries. | Root `skills.sh.json` and its inventory gate are shipped. One documented maintainer install triggers the supported configuration sync; the public read-back verifies both groups and all three previously missing customer entries. Install and repeated whole-suite refresh from the explicit customer `skills/` URL pass for both agents, with telemetry disabled in QA. |
+| skills.sh consolidated Pack | [One customer suite](https://www.skills.sh/p/CTUrAfLQdDvNeNv2) created 2026-10-26 UTC with thirteen customer workflows from source suite 0.4.2. | [Publication and native checks](catalog-corrections/consolidated-submissions-20261026.json) retain the single Pack and its exact archive. Native delivery is incomplete: 1.5.23 omits two references; current 1.7.4 fails discovery. This is a published collection, not a passing installation route or a fix for old indexed records. |
 | `gh skill` | A Git-repository install route; no separate Beancount.io per-skill publishing job or release inventory was found. | Preserve the earlier whole-suite commands and pin behavior. Document the preview-command prerequisite: the default local 2.74.0 lacks `gh skill`; this audit does not claim a new native rehearsal of the earlier 2.96.0 controls. |
 | skills.rest | Last public readback, 2026-10-25: 27 indexed skills including internal tooling, old customer paths and generated selectors. | Owner explicitly requested one additional overall-suite submission. [2026-10-26 form receipt and complete fields](catalog-corrections/skills-rest-submission-20261026.json) retain one accepted action for only the customer root, a single-suite request and internal-record exclusion/deindexing. Native plugin support and live cleanup are unverified; read back after the 24-hour window, with no automatic resubmission. |
-| SkillsMP | Actual direct collection readback, 2026-10-26: 27 entries, eight customer and nineteen internal; ask still points to the removed source path. Public search is unavailable. | [Fresh evidence and route limits](catalog-corrections/skillsmp-recheck-20261026.json) retain current scope without inferring cleanup from search failure. [A customer-suite correction request](catalog-corrections/skillsmp.md) is prepared for the official contact, awaiting explicit email authorization. No form/submission/edit route established; private publisher capabilities remain unknown. |
+| SkillsMP | Actual direct collection readback, 2026-10-26: 27 entries, eight customer and nineteen internal; ask still points to the removed source path. Public search is unavailable. | [Fresh evidence and route limits](catalog-corrections/skillsmp-recheck-20261026.json) retain current scope without inferring cleanup from search failure. [Current owner direction](catalog-corrections/skillsmp.md) selects direct suite publication; the historical email draft is superseded. No supported suite intake is established; private publisher capabilities remain unknown. No user approval is pending. |
 
 The [skills.sh customization contract](https://www.skills.sh/docs/customize)
 supports grouping, not hiding or deleting old per-skill catalog entries. Its
@@ -249,12 +263,10 @@ that documented sync; the [public repository page](https://www.skills.sh/bex-co/
 is verified at 00:40 UTC with all thirteen customer entries and a separate
 nineteen-entry contributor group. There are no manual telemetry events or
 replays. The [Packs contract](https://www.skills.sh/docs/packs) additionally
-offers unlisted collections. The audit reached its owner builder, but GitHub
-connection did not persist and archive upload required additional local-file
-access. No Pack was published. Creating another distribution channel is not
-required to update the existing repository collection, so this follow-through
-uses the owned grouping and whole-suite source rather than expanding file
-access or advertising an unverified Pack link.
+offers unlisted collections. The earlier audit reached its owner builder but
+did not publish a Pack. The later owner-directed consolidated publication
+below creates one through the supported archive uploader. A new Pack does not
+delete historical repository index rows or update another platform's catalog.
 
 Skills CLI **1.5.23** installs and repeats the explicit customer-root command for
 both Claude Code and Codex with **13/13** customer directories and a matching
@@ -272,6 +284,40 @@ and [company page](https://skills.rest/company/bex-co) remain the read-back
 controls. [SkillsMP's discovery contract](https://skillsmp.com/agent-skills#how-can-my-skill-be-discovered)
 does not promise an update schedule. Third-party stale pages are not reported as
 fixed merely because the source repository and its install instructions changed.
+
+### Consolidated publication across affected catalogs — 2026-10-26 UTC
+
+The owner's direct-publication policy is applied across the existing channel
+inventory in [one current record](catalog-corrections/consolidated-submissions-20261026.json).
+The existing ClawHub and client-plugin entries are already suites. Git-copy
+channels already select the complete customer subtree. skills.rest's accepted
+overall-suite form remains pending its stated readback window; no identical
+request is repeated. SkillsMP has no established supported suite intake and
+retains that platform dependency, with no email or publisher decision pending.
+
+The new [Beancount.io customer suite Pack](https://www.skills.sh/p/CTUrAfLQdDvNeNv2)
+is actually created, with all thirteen customer entries and no development
+skills. Its uploaded archive contains the 48 canonical skill/reference files
+and thirteen copies of the canonical MIT-0 license. It is a source-0.4.2
+snapshot, not an automatic mirror of future Git commits. Packs are unlisted;
+their URL permits installation without sign-in. No new registry release or
+change to the verified ClawHub 0.4.0 artifact is implied.
+
+Native installation remains unresolved. An isolated, telemetry-disabled
+Skills CLI 1.5.23 installation exposes all thirteen entries to both agent
+destinations but downloads only 59 of 61 files: close's `close-checklist.md`
+and options' `stock-plus-option.md` are missing. Every downloaded byte matches
+the uploaded source. The Pack's close detail still reports three stored files,
+so deleting or rewriting those references is not a repair. Current CLI 1.7.4,
+verified through npm metadata, fails discovery on both the displayed install
+URL and canonical page URL. A separate anonymous index probe returns HTTP 429;
+it does not prove the cause of every missing download or discovery failure.
+
+**Next:** after the platform's delivery/rate condition clears or a supported
+client fix is available, verify one complete native download against all 61
+hashes and both agent destinations. Edit this existing Pack for future source
+updates; do not create duplicate Packs or email support. The current install
+guide continues to use the verified plugin and whole-customer-source routes.
 
 ### Post-window index read-back — 2026-10-24 UTC
 
@@ -295,7 +341,10 @@ record was established by this check. These remaining service-controlled
 indexes keep w6/m6.5/t012 open; the owned suite and verified skills.sh grouping
 remain complete.
 
-### skills.rest correction prepared — 2026-10-25 UTC
+### Historical skills.rest correction draft — 2026-10-25 UTC
+
+This email path is superseded by the accepted overall-suite submission below
+and the later owner policy above. It is not a current authorization request.
 
 Actual browser readback at23:31:14UTC still shows27skills in the
 [organization index](https://skills.rest/company/bex-co), including repository
@@ -363,12 +412,14 @@ The matching-name GitHub project inspected is a search client, not an establishe
 catalog-data contribution route. Private publisher management is untested, so
 self-service modification is unestablished rather than declared impossible.
 
-The [official support request draft](catalog-corrections/skillsmp.md) asks to
-refresh only `skills/`, exclude/deindex internal records, retain one customer
-suite/collection and supply any required submit/claim/update route. Specific
-email authorization is requested; no request is sent. The existing collection
-is not a submitted native plugin. This remains under t012, independently of
-the accepted skills.rest form's 24-hour window and Hermes admission.
+The [historical support draft](catalog-corrections/skillsmp.md) is superseded
+by the owner's direct-publication policy. No message is sent and no email
+authorization remains pending. A supported intake for one customer-only suite
+must become available before it can be submitted on SkillsMP; the public
+GitHub discovery contract alone supplies neither a receipt nor an update
+schedule. The existing collection is not a submitted native plugin. This
+remains under t012, independently of the accepted skills.rest form's 24-hour
+window and Hermes admission.
 
 ## Primary contracts
 

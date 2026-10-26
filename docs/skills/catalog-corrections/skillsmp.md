@@ -1,8 +1,15 @@
-# SkillsMP customer collection correction — draft, not sent
+# SkillsMP customer suite — publication route pending
 
 **Owner:** w6/m6.5/t012. **Last checked:** 2026-10-26T01:46:19Z.
-**Status:** existing collection is mixed and stale;
-supported submission/edit route remains unestablished. No request sent.
+**Status:** existing collection is mixed and stale; no supported suite
+submission route is established. No SkillsMP submission or email sent.
+
+**Owner decision, 2026-10-26 UTC:** when existing records cannot be edited,
+publish or submit one consolidated customer skill set through the platform's
+supported intake instead of emailing support. This applies to every similar
+catalog case. The email draft below is superseded and must not be sent; no
+email authorization is pending. For SkillsMP, the remaining dependency is an
+available supported publication route, not another publisher decision.
 
 [Exact counts, observed source link and route investigation](skillsmp-recheck-20261026.json)
 retain the current boundaries separately from the draft below.
@@ -32,7 +39,7 @@ A matching-name GitHub repository, `yan-labs/skillsmp`, is a search CLI/library,
 not an established catalog-data contribution route. This investigation does
 not prove that all self-service management is impossible.
 
-## Proposed email
+## Historical email draft — superseded, not sent
 
 **To:** [support@skillsmp.com](mailto:support@skillsmp.com), listed on the
 [official About page](https://skillsmp.com/about).
@@ -74,8 +81,8 @@ Beancount.io
 ---
 
 This draft contains only public source, product and catalog information.
-It has not been sent. Explicit authorization to send this recipient/request
-has not been received; authorization for a different platform does not cover
-it. No new account, API key, paid subscription, QA credential, ledger content,
+It has not been sent and is no longer an action item. The owner selected
+direct consolidated publication for this and all similar cases. No new
+account, API key, paid subscription, QA credential, ledger content,
 catalog PR or individual internal-skill submission is part of this request.
 Live correction and supported suite publication remain unverified.

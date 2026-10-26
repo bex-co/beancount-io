@@ -1,0 +1,184 @@
+{
+  "owner": "w6/m6.5/t012",
+  "lastCheckedAtUTC": "2026-10-26T02:17:39Z",
+  "ownerPolicy": {
+    "scope": "Every current and future skill catalog suffering from uneditable scattered/stale skill records.",
+    "fallback": "Submit or publish one consolidated customer skill set through supported intake instead of emailing support.",
+    "source": "https://github.com/bex-co/beancount-io/tree/main/skills",
+    "exclude": [
+      ".agents/skills/**",
+      ".claude/skills/**"
+    ],
+    "emailDraftsSuperseded": true,
+    "emailAuthorizationPending": false,
+    "repeatIdenticalAcceptedPendingRequests": false,
+    "noAvailableIntake": "Record the exact platform dependency and continue other catalogs; do not invent a submission receipt."
+  },
+  "channelAuditBasis": "Existing canonical distribution guide, owned source/manifests and retained publication evidence reviewed; only the Pack and SkillsMP direct collection were newly inspected in the browser this turn. Historical publication timestamps are not advanced.",
+  "channels": [
+    {
+      "channel": "ClawHub",
+      "status": "already_one_suite",
+      "entry": "https://clawhub.ai/plugins/@puncsky/beancount-io",
+      "action": "Preserve the verified public 0.4.0 suite and retired standalone listings. No new dispatch or upload for this audit."
+    },
+    {
+      "channel": "Claude Code plugin",
+      "status": "already_one_suite",
+      "entry": "https://github.com/bex-co/beancount-io/blob/main/.claude-plugin/marketplace.json",
+      "action": "Preserve the one-entry shared-version manifest; current source version is 0.4.2. No new per-skill publication."
+    },
+    {
+      "channel": "Codex plugin",
+      "status": "already_one_suite",
+      "entry": "https://github.com/bex-co/beancount-io/blob/main/.agents/plugins/marketplace.json",
+      "action": "Preserve the one-entry shared-version manifest; current source version is 0.4.2. No new per-skill publication."
+    },
+    {
+      "channel": "Git/link installer",
+      "status": "already_whole_customer_suite",
+      "entry": "https://github.com/bex-co/beancount-io/blob/main/docs/skills/installation.md",
+      "action": "Preserve the exercised explicit customer-subtree installer; no separate registry release."
+    },
+    {
+      "channel": "gh skill",
+      "status": "whole_repository_install_channel",
+      "entry": "https://github.com/bex-co/beancount-io/blob/main/docs/skills/installation.md#gh-skill",
+      "action": "Retain existing pinned whole-suite instructions and preview-version limit. No new native gh skill rehearsal claimed."
+    },
+    {
+      "channel": "skills.sh repository index",
+      "status": "existing_customer_group_separate_from_development",
+      "entry": "https://www.skills.sh/bex-co/beancount-io",
+      "action": "Preserve shipped customer-first grouping; publish the separate consolidated Pack below. The Pack does not delete historical repository index rows."
+    },
+    {
+      "channel": "skills.sh consolidated Pack",
+      "status": "published_native_delivery_incomplete",
+      "entry": "https://www.skills.sh/p/CTUrAfLQdDvNeNv2",
+      "action": "One Pack is created with thirteen customer workflows. Retain it and verify complete native delivery after recovery; no duplicate Pack."
+    },
+    {
+      "channel": "skills.rest",
+      "status": "overall_suite_request_accepted_awaiting_readback",
+      "entry": "https://skills.rest/contribute",
+      "receipt": "skills-rest-submission-20261026.json",
+      "acceptedAtUTC": "2026-10-26T00:24:54Z",
+      "nextManualReadbackNotBeforeUTC": "2026-10-27T00:24:54Z",
+      "action": "Keep the accepted consolidated request, exact payload and pending readback. No further identical submission or support email."
+    },
+    {
+      "channel": "SkillsMP",
+      "status": "supported_suite_intake_unestablished",
+      "entry": "https://skillsmp.com/creators/bex-co/beancount-io",
+      "evidence": "skillsmp-recheck-20261026.json",
+      "action": "Direct collection remains mixed at 27 entries. Use supported consolidated publication if intake becomes available; historical email superseded. No new publisher decision pending."
+    },
+    {
+      "channel": "Hermes",
+      "status": "separate_existing_host_admission_gate",
+      "entry": "https://github.com/bex-co/beancount-io/blob/main/docs/skills/suite-distribution.md",
+      "action": "Retain t005 metadata/init-policy gates. No standalone republishing, scanner bypass or claim that catalog consolidation clears admission."
+    }
+  ],
+  "pack": {
+    "status": "published_native_delivery_incomplete",
+    "url": "https://www.skills.sh/p/CTUrAfLQdDvNeNv2",
+    "displayedInstallUrl": "https://skills.sh/p/CTUrAfLQdDvNeNv2",
+    "intakeUrl": "https://www.skills.sh/packs/create",
+    "contract": "https://www.skills.sh/docs/packs",
+    "name": "Beancount.io customer suite",
+    "description": "All 13 Beancount.io customer ledger workflows in one install. MIT-0; source suite 0.4.2; requires bea 0.3.1+. Source: https://github.com/bex-co/beancount-io/tree/main/skills . Setup: https://github.com/bex-co/beancount-io/blob/main/docs/skills/installation.md",
+    "publicationConfirmedAtUTC": "2026-10-26T02:07:47Z",
+    "deduplication": "Owner collection showed no existing Packs after routine existing sign-in refresh. Exactly one Pack was created.",
+    "createButtonClicks": 2,
+    "firstClickResult": "Client validation rejected a description over 280 characters; no Pack created by this click.",
+    "acceptedDescriptionCharacters": 259,
+    "acceptedCreationCount": 1,
+    "uiConfirmedCustomerSkillCount": 13,
+    "skills": [
+      "beancount-accruals",
+      "beancount-add",
+      "beancount-ask",
+      "beancount-close",
+      "beancount-import",
+      "beancount-importer-author",
+      "beancount-init",
+      "beancount-migrate",
+      "beancount-options",
+      "beancount-property",
+      "beancount-reconcile",
+      "beancount-roll-forward",
+      "beancount-trade"
+    ],
+    "internalSkillsIncluded": false,
+    "sourceSuiteVersion": "0.4.2",
+    "sourceCommit": "f0f5744cc693037a5aa7a638678a378fd1aad8dd",
+    "uploadedArchive": "beancount-io-0.4.2.zip",
+    "archiveSha256": "5f1fa5b526f9bebbec69f256bcda9ef3a2d9096cec2312a3832f8cfd873059ef",
+    "archiveBytes": 161144,
+    "authoredFiles": 48,
+    "canonicalMit0LicenseCopies": 13,
+    "totalUploadedFiles": 61,
+    "sourceByteVerification": "All 48 authored skill/reference files match canonical customer sources; thirteen license copies match skills/LICENSE. Artifact secret scan passes.",
+    "visibility": "Unlisted; anyone with the URL can view/install according to the official contract. This is a public-source snapshot, not an automatic GitHub mirror.",
+    "nativeChecks": {
+      "scope": "Isolated project directories; no global agent profile, authentication cookie or model call. DISABLE_TELEMETRY=1 and SKILLS_NO_TELEMETRY=1.",
+      "cli1523": {
+        "version": "1.5.23",
+        "exitCode": 0,
+        "result": "incomplete_file_delivery",
+        "agents": {
+          "codex": {
+            "skillCount": 13,
+            "expectedFileCount": 61,
+            "actualFileCount": 59,
+            "missing": [
+              "beancount-close/references/close-checklist.md",
+              "beancount-options/references/stock-plus-option.md"
+            ],
+            "changed": [],
+            "extra": []
+          },
+          "claude-code": {
+            "skillCount": 13,
+            "expectedFileCount": 61,
+            "actualFileCount": 59,
+            "missing": [
+              "beancount-close/references/close-checklist.md",
+              "beancount-options/references/stock-plus-option.md"
+            ],
+            "changed": [],
+            "extra": []
+          }
+        },
+        "all59DownloadedFileHashesMatchUpload": true,
+        "missingFiles": [
+          "beancount-close/references/close-checklist.md",
+          "beancount-options/references/stock-plus-option.md"
+        ],
+        "uiControl": "Published close detail reports three stored files, including the reference in its SKILL.md text."
+      },
+      "currentCliVersion": {
+        "npmMetadataCheckedAtUTC": "2026-10-26T02:14:24Z",
+        "version": "1.7.4"
+      },
+      "cli174": {
+        "displayedUrlExitCode": 1,
+        "canonicalUrlExitCode": 1,
+        "result": "No well-known skills found; direct-download fallback rejects URL as invalid SKILL.md/archive. No complete installation verified."
+      },
+      "diagnostic": "Separate anonymous probe of the documented legacy well-known index returned HTTP 429. This does not establish the cause of each missing file or discovery failure; no rate-limit bypass or header spoofing attempted.",
+      "complete61FileInstallationVerified": false,
+      "managedUpdateVerified": false
+    },
+    "next": {
+      "manualCheckNotBeforeUTC": "2026-10-27T02:17:39Z",
+      "earlierTrigger": "Actual delivery recovery or a supported client fix, with the rate condition cleared.",
+      "action": "One bounded isolated native installation; compare all 61 files and thirteen skills for both agent destinations. Edit the existing Pack for future source refreshes instead of creating another Pack.",
+      "owner": "Platform/client recovery, then repository worker verification; no publisher input or email pending."
+    }
+  },
+  "privacy": "Only public customer source and canonical MIT-0 text uploaded. No internal skill, eval fixture, credential, private account identity or ledger data included. No support email, paid action, new account, catalog PR or ClawHub upload performed.",
+  "limits": "Pack publication does not prove complete native delivery, delete old index records, publish a SkillsMP plugin, clear skills.rest review, change the historical ClawHub release or clear Hermes host policy. No recurring automation created."
+}

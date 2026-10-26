@@ -1,7 +1,7 @@
 {
   "owner": "w6/m6.5/t012",
   "checkedAtUTC": "2026-10-26T01:46:19Z",
-  "state": "Existing repository collection is mixed/stale; supported owner correction route unestablished; specific email draft not sent.",
+  "state": "Existing repository collection is mixed/stale; direct consolidated publication selected; supported suite intake unestablished; historical email draft superseded and unsent.",
   "collection": {
     "url": "https://skillsmp.com/creators/bex-co/beancount-io",
     "actualBrowserLoaded": true,
@@ -107,12 +107,30 @@
     "recipient": "support@skillsmp.com",
     "draft": "skillsmp.md",
     "purpose": "Correct existing collection to one customer suite from skills/; exclude/deindex internal tools; update old paths and establish supported intake/claim/update plus suite capability.",
-    "authorization": "Specific recipient/request authorization requested; no reply recorded in this evidence.",
+    "authorization": "Superseded by owner direct-publication direction; no email authorization remains pending and this draft must not be sent.",
     "sent": false,
     "submissionReceipt": null,
-    "contentBoundary": "Public repository, source, install and catalog data only."
+    "contentBoundary": "Public repository, source, install and catalog data only.",
+    "status": "historical_unsent_draft_superseded"
   },
-  "unblock": "Publisher authorizes the reviewed email, then worker sends it once and retains the real receipt; or the service provides a supported owner correction route. SkillsMP processes the existing collection and worker verifies customer-only scope, current paths and actual suite/collection support.",
+  "unblock": "SkillsMP provides a supported intake for one customer-only suite, or its GitHub index actually refreshes the canonical customer source; worker submits through an available supported route and verifies the actual result. No email or further publisher decision is pending.",
   "otherChannels": "The separate skills.rest overall submission is already accepted and remains in its own 24-hour readback window. Hermes remains independent.",
-  "performedMutations": "No SkillsMP submission, email, account creation, API key, paid action, catalog PR, index edit or internal-skill upload."
+  "performedMutations": "No SkillsMP submission, email, account creation, API key, paid action, catalog PR, index edit or internal-skill upload.",
+  "ownerDecision": {
+    "recordedAtUTC": "2026-10-26T02:14:24Z",
+    "appliesTo": "All current and future skill catalogs with the same uneditable scattered/stale listing problem.",
+    "action": "Submit or publish one complete customer suite through supported intake instead of emailing support.",
+    "emailDraftSuperseded": true,
+    "emailAuthorizationPending": false,
+    "repeatedIdenticalPendingSubmissionsAuthorized": false
+  },
+  "consolidatedPublication": {
+    "canonicalSource": "https://github.com/bex-co/beancount-io/tree/main/skills",
+    "supportedSkillsMpIntake": null,
+    "submitted": false,
+    "receipt": null,
+    "lastDirectCollectionCheckUTC": "2026-10-26T02:03:06Z",
+    "actualCollectionStillMixed": true,
+    "limit": "No supported suite publication route established; private management untested. The separate skills.sh Pack is not a SkillsMP publication."
+  }
 }
