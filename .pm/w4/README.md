@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1110** — [Return Update Budget to its refreshed card after saving](./1110.md)
+
 - **1109** — [Keep long Budget headers inside their cards](./1109.md)
 
 - **1108** — [Enable Accounts filter actions when they can handle input](./1108.md)
