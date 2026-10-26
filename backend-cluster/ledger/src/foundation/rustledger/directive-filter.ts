@@ -23,7 +23,7 @@ import { utcDate } from "./utc-date";
  *    transaction postings (see `keyPredicate`), where Fava sees only
  *    directives that have an `account` attribute; and the singular
  *    `tag:`/`link:` keys member-match entry tags/links (see
- *    `tagMemberPredicate`), where Fava has no such entry attribute and
+ *    `memberPredicate`), where Fava has no such entry attribute and
  *    the keys silently match nothing.
  *  - TimeFilter (date range only) — keep entries whose date is inside the parsed
  *    `[begin, end)` range. See the note below on Fava's summarization gap.
@@ -599,34 +599,13 @@ class FilterParser {
       case "KEY": {
         const opToken = this.next();
         if (opToken.type === "EQ_OP") {
-          const upcoming = this.peek();
-          const upcomingType = upcoming?.type as
-            | TokenType
-            | "TAG"
-            | undefined;
-          if (
-            upcoming !== undefined &&
-            (upcomingType === "TAG" || upcomingType === "LINK")
-          ) {
-            const sigil = upcomingType === "TAG" ? "#" : "^";
-            throw new AdvancedFilterParseError(
-              `Unexpected ${sigil}${upcoming.value} after "${token.value}:" — ` +
-                `write ${token.value}:${upcoming.value} or a bare ` +
-                `${sigil}${upcoming.value} term`,
-            );
-          }
-          // A value starting with a digit lexes as NUMBER, which a `key:`
-          // lookup cannot take — point at quoting (w23/m2/t005).
-          if (upcoming !== undefined && upcomingType === "NUMBER") {
-            throw new AdvancedFilterParseError(
-              `Unexpected ${upcoming.value} after "${token.value}:" — ` +
-                `quote values starting with a digit, e.g. ${token.value}:"${upcoming.value}"`,
-            );
-          }
+          this.throwForMistakableValue(token.value);
           const valueToken = this.expect("STRING");
-          if (token.value === "tag") return tagMemberPredicate(valueToken.value);
+          if (token.value === "tag") {
+            return memberPredicate("tags", valueToken.value);
+          }
           if (token.value === "link") {
-            return linkMemberPredicate(valueToken.value);
+            return memberPredicate("links", valueToken.value);
           }
           return keyPredicate(token.value, makeMatcher(valueToken.value));
         }
@@ -658,6 +637,34 @@ class FilterParser {
     }
     return token;
   }
+
+  /**
+   * Refuse a `key:` value that lexed as something a lookup cannot take, naming
+   * the fix: a `#tag`/`^link` after the colon (w23/m2/t002) or a value starting
+   * with a digit, which lexes as NUMBER (w23/m2/t005). Anything else falls
+   * through to the generic `expect("STRING")` refusal.
+   */
+  private throwForMistakableValue(key: string): void {
+    const upcoming = this.peek();
+    const upcomingType = upcoming?.type as TokenType | "TAG" | undefined;
+    if (
+      upcoming !== undefined &&
+      (upcomingType === "TAG" || upcomingType === "LINK")
+    ) {
+      const sigil = upcomingType === "TAG" ? "#" : "^";
+      throw new AdvancedFilterParseError(
+        `Unexpected ${sigil}${upcoming.value} after "${key}:" — ` +
+          `write ${key}:${upcoming.value} or a bare ` +
+          `${sigil}${upcoming.value} term`,
+      );
+    }
+    if (upcoming !== undefined && upcomingType === "NUMBER") {
+      throw new AdvancedFilterParseError(
+        `Unexpected ${upcoming.value} after "${key}:" — ` +
+          `quote values starting with a digit, e.g. ${key}:"${upcoming.value}"`,
+      );
+    }
+  }
 }
 
 // Fava `Match.__call__(obj)` stringifies via `str(obj)`; our values are already
@@ -687,20 +694,17 @@ function makeAmountMatcher(op: string, rawValue: string): FilterValueMatcher {
   };
 }
 
-/** Tags carried by a directive (transactions, documents, restored notes). */
-function directiveTags(directive: DirectiveJson): string[] {
-  if (directive.type === "transaction") return directive.tags;
+/**
+ * Tags or links carried by a directive (transactions, documents, restored
+ * notes) — the one carrier rule behind `#tag`, `^link`, `tag:`, and `link:`.
+ */
+function directiveStringList(
+  directive: DirectiveJson,
+  field: "tags" | "links",
+): string[] {
+  if (directive.type === "transaction") return directive[field];
   if (directive.type === "document" || directive.type === "note") {
-    return (directive as SourceSyntax).tags ?? [];
-  }
-  return [];
-}
-
-/** Links carried by a directive (transactions, documents, restored notes). */
-function directiveLinks(directive: DirectiveJson): string[] {
-  if (directive.type === "transaction") return directive.links;
-  if (directive.type === "document" || directive.type === "note") {
-    return (directive as SourceSyntax).links ?? [];
+    return (directive as SourceSyntax)[field] ?? [];
   }
   return [];
 }
@@ -709,14 +713,14 @@ function directiveLinks(directive: DirectiveJson): string[] {
 function tagPredicate(tag: string): EntryPredicate {
   return (target): boolean => {
     if (target.kind !== "directive") return false;
-    return directiveTags(target.directive).includes(tag);
+    return directiveStringList(target.directive, "tags").includes(tag);
   };
 }
 
 function linkPredicate(link: string): EntryPredicate {
   return (target): boolean => {
     if (target.kind !== "directive") return false;
-    return directiveLinks(target.directive).includes(link);
+    return directiveStringList(target.directive, "links").includes(link);
   };
 }
 
@@ -728,19 +732,13 @@ function linkPredicate(link: string): EntryPredicate {
  * wire, so matching is entry-level only. The plural `tags:`/`links:` keep
  * Fava's joined-list form, which the mobile search relies on (w21/640).
  */
-function tagMemberPredicate(value: string): EntryPredicate {
+function memberPredicate(field: "tags" | "links", value: string): EntryPredicate {
   const match = makeMatcher(value);
   return (target): boolean => {
     if (target.kind !== "directive") return false;
-    return directiveTags(target.directive).some((tag) => match(tag));
-  };
-}
-
-function linkMemberPredicate(value: string): EntryPredicate {
-  const match = makeMatcher(value);
-  return (target): boolean => {
-    if (target.kind !== "directive") return false;
-    return directiveLinks(target.directive).some((link) => match(link));
+    return directiveStringList(target.directive, field).some((entry) =>
+      match(entry),
+    );
   };
 }
 
