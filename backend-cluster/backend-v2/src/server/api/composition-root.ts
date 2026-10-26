@@ -881,8 +881,12 @@ export function assembleMcpRegistry(
         );
       }
       const descriptor = MCP_PROMPTS.find((prompt) => prompt.name === name)!;
+      // Strict like tools and resources: a misspelled argument must refuse
+      // with the unknown key named, not render with the intent silently
+      // dropped (w23/117).
       const parsed = z
         .object(descriptor.argsSchema)
+        .strict()
         .safeParse(request.params.arguments ?? {});
       if (!parsed.success) {
         return refuseMcpRequest(

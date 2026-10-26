@@ -141,6 +141,14 @@ describe("MCP outer request parameters over SDK dispatch (w6/001)", () => {
       field: "month",
     },
     {
+      method: "prompts/get",
+      params: {
+        name: "close-month",
+        arguments: { month: "2026-08", bogus: "x" },
+      },
+      field: "bogus",
+    },
+    {
       method: "tools/call",
       params: {
         name: "runBqlQuery",
@@ -199,6 +207,28 @@ describe("MCP outer request parameters over SDK dispatch (w6/001)", () => {
       });
       expect(f.queryShellText).toHaveBeenCalledTimes(1);
       expect(f.listLedgers).not.toHaveBeenCalled();
+    });
+  });
+
+  it("an unknown prompt argument refuses in the tools dialect (w23/117)", async () => {
+    await withClient(async (f) => {
+      const error = await f.client
+        .request(
+          request("prompts/get", {
+            name: "close-month",
+            arguments: { month: "2026-08", bogus: "x" },
+          }),
+          ResultSchema,
+        )
+        .catch((caught: unknown) => caught);
+      expect(error).toBeInstanceOf(McpError);
+      expect((error as McpError).code).toBe(-32602);
+      expect((error as McpError).data).toMatchObject({
+        code: "BAD_USER_INPUT",
+        message: 'Unrecognized key: "bogus"',
+        hint: expect.any(String),
+      });
+      expect(f.domainAccess).not.toHaveBeenCalled();
     });
   });
 
