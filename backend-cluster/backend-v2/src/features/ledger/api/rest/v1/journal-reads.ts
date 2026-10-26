@@ -1,7 +1,10 @@
 import { z } from "@/shared/zod-openapi-setup";
 import { booleanQuery } from "@/server/rest/v1-schemas";
 import { JOURNAL_KINDS } from "@/features/ledger/utils/journal-kinds";
-import { resolveFilterAccount } from "@/features/ledger/utils/query-param-alias";
+import {
+  resolveFilterAccount,
+  resolveWithChildren,
+} from "@/features/ledger/utils/query-param-alias";
 import {
   PLAINTEXT_PAGE_MAX,
   type JournalQueryParams,
@@ -99,6 +102,10 @@ const accountJournalQuery = filters.extend({
   limit: z.coerce.number().int().min(1).max(1000).optional(),
   offset: z.coerce.number().int().min(0).optional(),
   with_children: booleanQuery,
+  // Twin (w23/m10/t003): the camel spelling, accepted on every surface.
+  withChildren: booleanQuery.openapi({
+    description: "Alias of with_children.",
+  }),
   conversion: z.string().optional(),
   // Same optional display selectors as the main journal read.
   directiveTypes: directiveTypesQuery(jsonStringArrayQuery.optional()),
@@ -145,11 +152,18 @@ export const JOURNAL_READS = [
     summary: "Read account entries with changes and running balances",
     query: accountJournalQuery,
     fetch: (services: Services, { ledgerId, identity, query }: ReadParams) => {
-      const { filter_account, filterAccount, ...rest } =
-        query as typeof query & {
-          filter_account?: string;
-          filterAccount?: string;
-        };
+      const {
+        filter_account,
+        filterAccount,
+        with_children,
+        withChildren,
+        ...rest
+      } = query as typeof query & {
+        filter_account?: string;
+        filterAccount?: string;
+        with_children?: boolean;
+        withChildren?: boolean;
+      };
       return services.ledgerJournal.getAccountJournal({
         ledgerId,
         identity,
@@ -159,6 +173,10 @@ export const JOURNAL_READS = [
           filterAccount: resolveFilterAccount({
             primary: filter_account,
             legacy: filterAccount,
+          }),
+          with_children: resolveWithChildren({
+            primary: with_children,
+            legacy: withChildren,
           }),
         },
       });

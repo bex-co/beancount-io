@@ -398,6 +398,57 @@ describe("journal adapter contracts", () => {
     }
   });
 
+  // w23/m10/t003: the withChildren twin — the twin spelling on all
+  // three surfaces — excludes children everywhere.
+  it("accepts the withChildren twin on every surface", async () => {
+    const f = await fixture();
+    try {
+      const rest = await f.rest(
+        "account-journal?account=Assets:Bank&withChildren=false",
+      );
+      expect(rest.status).toBe(200);
+      const body = await rest.json();
+      expect(
+        await f.mcp("account-journal?account=Assets:Bank&withChildren=false"),
+      ).toEqual(body);
+      const gql = await f.gql(
+        'getLedgerAccountJournal(ledgerId: "alice/main", query: { account: "Assets:Bank", withChildren: false }) { items { entry change balance } total account with_children }',
+      );
+      expect(gql.errors).toBeUndefined();
+      expect(gql.data?.getLedgerAccountJournal).toEqual(body);
+      expect(f.journal.getAccountJournal).toHaveBeenCalledTimes(3);
+      for (const call of f.journal.getAccountJournal.mock.calls)
+        expect(call[2]).toMatchObject({ with_children: false });
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("refuses one true and one false children param on every surface", async () => {
+    const f = await fixture();
+    try {
+      expect(
+        (
+          await f.rest(
+            "account-journal?account=Assets:Bank&with_children=true&withChildren=false",
+          )
+        ).status,
+      ).toBe(400);
+      await expect(
+        f.mcp(
+          "account-journal?account=Assets:Bank&with_children=true&withChildren=false",
+        ),
+      ).rejects.toThrow(/with_children.*withChildren/);
+      const gql = await f.gql(
+        'getLedgerAccountJournal(ledgerId: "alice/main", query: { account: "Assets:Bank", with_children: true, withChildren: false }) { total }',
+      );
+      expect(gql.errors?.[0]?.message).toContain("with_children");
+      expect(f.journal.getAccountJournal).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+
   it("reads source files using the canonical file action", async () => {
     const f = await fixture();
     try {

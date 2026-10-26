@@ -24,6 +24,24 @@ export function resolveFilterAccount(values: {
   return resolvePair(values, FILTER_ACCOUNT_NAMES, "accounts");
 }
 
+const WITH_CHILDREN_NAMES = {
+  primary: "with_children",
+  legacy: "withChildren",
+} as const;
+
+/**
+ * The children-param twin (w23/m10/t003). Tristate, unlike the m9
+ * write flags: both missing stays missing so each layer's default
+ * (true, at the service) applies — resolving to false would exclude
+ * children the caller never asked to exclude.
+ */
+export function resolveWithChildren(values: {
+  primary?: boolean | null;
+  legacy?: boolean | null;
+}): boolean | undefined {
+  return resolvePair(values, WITH_CHILDREN_NAMES, "values");
+}
+
 function resolvePair<T>(
   values: { primary?: T | null; legacy?: T | null },
   names: { primary: string; legacy: string },

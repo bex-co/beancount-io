@@ -8929,6 +8929,20 @@
           },
           {
             "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "description": "Alias of with_children."
+            },
+            "required": false,
+            "description": "Alias of with_children.",
+            "name": "withChildren",
+            "in": "query"
+          },
+          {
+            "schema": {
               "type": "string"
             },
             "required": false,

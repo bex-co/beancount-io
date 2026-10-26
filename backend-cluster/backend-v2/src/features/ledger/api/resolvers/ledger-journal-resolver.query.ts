@@ -14,7 +14,10 @@ import { GraphQLJSONObject } from "graphql-scalars";
 import type { ILedgerJournalService } from "@/features/ledger/service/ledger-journal-service";
 import { JOURNAL_FILTER_DESCRIPTION } from "@/features/ledger/utils/journal-filter-description";
 import { resolveEntryHash } from "@/features/ledger/utils/entry-hash-alias";
-import { resolveFilterAccount } from "@/features/ledger/utils/query-param-alias";
+import {
+  resolveFilterAccount,
+  resolveWithChildren,
+} from "@/features/ledger/utils/query-param-alias";
 
 @ObjectType()
 class JournalResponse {
@@ -194,8 +197,18 @@ class AccountJournalQueryInput {
   @Field(() => Number, { nullable: true, defaultValue: 0 })
   offset?: number;
 
-  @Field(() => Boolean, { nullable: true, defaultValue: true })
+  // No defaultValue (w23/m10/t003): a defaulted `true` would
+  // split-conflict with any explicit `withChildren: false`. The service
+  // already defaults missing to true.
+  @Field(() => Boolean, { nullable: true })
   with_children?: boolean;
+
+  // Twin (w23/m10/t003): the camel spelling, accepted on every surface.
+  @Field(() => Boolean, {
+    nullable: true,
+    description: "Alias of with_children.",
+  })
+  withChildren?: boolean;
 
   @Field(() => String, { nullable: true, defaultValue: "at_cost" })
   conversion?: string;
@@ -282,7 +295,7 @@ export class LedgerJournalQueryResolver {
     @Arg("query", () => AccountJournalQueryInput)
     queryInput: AccountJournalQueryInput,
   ): Promise<AccountJournalResponse> {
-    const { filter_account, ...rest } = queryInput;
+    const { filter_account, withChildren, ...rest } = queryInput;
     return this.journalService.getAccountJournal({
       ledgerId,
       identity: ctx.identity,
@@ -291,6 +304,10 @@ export class LedgerJournalQueryResolver {
         filterAccount: resolveFilterAccount({
           primary: filter_account,
           legacy: queryInput.filterAccount,
+        }),
+        with_children: resolveWithChildren({
+          primary: rest.with_children,
+          legacy: withChildren,
         }),
       },
     });
