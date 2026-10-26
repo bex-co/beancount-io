@@ -362,6 +362,31 @@ describe("filterDirectives — AdvancedFilter parity", () => {
     }
   });
 
+  // w23/m2/t005: a value starting with a digit lexes as NUMBER, which a
+  // `key:` lookup cannot take — the refusal must point at quoting.
+  // Quoted, the same value matches (dates, numeric names).
+  it("hints at quoting when a colon value starts with a digit", () => {
+    const dated = {
+      type: "transaction",
+      date: "2026-01-02",
+      flag: "*",
+      payee: "9lives",
+      narration: "cat food",
+      tags: [],
+      links: [],
+      postings: [],
+    } as DirectiveJson;
+    expect(
+      filterDirectives([dated], { filter: 'date:"2026"' }),
+    ).toEqual([dated]);
+    expect(
+      filterDirectives([dated], { filter: 'payee:"9lives"' }),
+    ).toEqual([dated]);
+    expect(() =>
+      filterDirectives(DIRECTIVES, { filter: "date:2026" }),
+    ).toThrow(/date:"2026"/);
+  });
+
   it("accepts Unicode unquoted filter words", () => {
     const unicode: DirectiveJson[] = [
       {

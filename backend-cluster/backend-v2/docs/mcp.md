@@ -745,10 +745,11 @@ or `"quoted"` words match narration/payee (transactions) or comment (notes);
 `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts
 and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to
 postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group.
-Quote values holding a colon or space — `account:"Assets:Bank:Checking"` —
-there are no escape sequences. An unparseable filter is refused with
-`BAD_USER_INPUT` naming the fix (quote the value, drop a stray `#`/`^` after a
-colon), never silently treated as match-all or match-none.
+Quote values holding a colon, a space, or a leading digit —
+`account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape
+sequences. An unparseable filter is refused with `BAD_USER_INPUT` naming the
+fix (quote the value, drop a stray `#`/`^` after a colon), never silently
+treated as match-all or match-none.
 Plaintext journal returns `{ "content": "...", "total": N, "truncated": … }`
 and takes `limit` (1–1,000 entries) and `offset`. Every page keeps the
 ledger's option header, so each one loads on its own; `total` counts the

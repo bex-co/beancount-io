@@ -615,6 +615,14 @@ class FilterParser {
                 `${sigil}${upcoming.value} term`,
             );
           }
+          // A value starting with a digit lexes as NUMBER, which a `key:`
+          // lookup cannot take — point at quoting (w23/m2/t005).
+          if (upcoming !== undefined && upcomingType === "NUMBER") {
+            throw new AdvancedFilterParseError(
+              `Unexpected ${upcoming.value} after "${token.value}:" — ` +
+                `quote values starting with a digit, e.g. ${token.value}:"${upcoming.value}"`,
+            );
+          }
           const valueToken = this.expect("STRING");
           if (token.value === "tag") return tagMemberPredicate(valueToken.value);
           if (token.value === "link") {

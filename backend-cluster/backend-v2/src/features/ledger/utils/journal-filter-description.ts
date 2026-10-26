@@ -14,5 +14,6 @@ export const JOURNAL_FILTER_DESCRIPTION =
   "`payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts " +
   "and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to " +
   "postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. " +
-  'Quote values holding a colon or space — `account:"Assets:Bank:Checking"` — ' +
+  "Quote values holding a colon, a space, or a leading digit — " +
+  '`account:"Assets:Bank:Checking"`, `date:"2026"` — ' +
   "there are no escape sequences.";

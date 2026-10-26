@@ -597,7 +597,7 @@ describe("documented filter examples", () => {
     "link:receipt",
     "payee:Store",
     "narration:ramen",
-    "date:2026",
+    'date:"2026"',
     "amount>100",
     ">100",
     "any(account:Expenses)",
