@@ -4,7 +4,7 @@
 
 ## Milestones
 
-- [ ] **m1** — [Fence concurrent same-entry updates](./m1/README.md) (7 tasks) ← promoted from `w23/085` 2026-10-25
+- [x] **m1** — [Fence concurrent same-entry updates](./done/m1/README.md) (7 tasks) ← promoted from `w23/085` 2026-10-25
 
 ## Dropped
 

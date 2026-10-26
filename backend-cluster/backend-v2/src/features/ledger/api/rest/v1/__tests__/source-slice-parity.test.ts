@@ -455,6 +455,58 @@ describe.each(["rest", "gql", "mcp"])(
   },
 );
 
+// A race lost at the ledger (409, w23/m1) must read CONFLICT on every
+// surface — the code whose retry loop is re-read + resend — never a silent
+// success and never FORBIDDEN.
+describe.each(["rest", "gql", "mcp"])(
+  "a source edit that loses its race via %s",
+  (surface) => {
+    it.each(["update", "delete", "delete_many"] as Operation[])(
+      "reports a ledger 409 on %s as CONFLICT",
+      async (operation) => {
+        const f = await fixture();
+        const key =
+          operation === "update"
+            ? "updateSourceSlice"
+            : operation === "delete"
+              ? "deleteSourceSlice"
+              : "deleteMultiSourceSlices";
+        f.journal[key].mockRejectedValueOnce(
+          new FavaApiError(
+            "Entry conflict: it has changed since it was loaded; refresh and retry",
+            409,
+            { error: "Entry conflict" },
+          ),
+        );
+        const before = [...f.slices];
+        try {
+          const result = await f.call(surface, operation, args(operation));
+          expect(result.success).toBe(false);
+          expect([...f.slices]).toEqual(before);
+          if (surface === "rest") {
+            expect(result.result).toMatchObject({
+              ok: false,
+              error: { code: "CONFLICT" },
+            });
+          } else if (surface === "gql") {
+            const refusal = result.errors?.[0]?.originalError as
+              | { category?: string }
+              | undefined;
+            expect(refusal?.category).toBe("CONFLICT");
+          } else {
+            expect(result.full).toMatchObject({
+              ok: false,
+              error: { code: "CONFLICT" },
+            });
+          }
+        } finally {
+          await f.close();
+        }
+      },
+    );
+  },
+);
+
 // A commit-step failure at the ledger (Gitea 5xx, w23/m1) must read
 // retryable on every surface — SERVICE_UNAVAILABLE, never FORBIDDEN for an
 // authorized credential, and never a silent success.
