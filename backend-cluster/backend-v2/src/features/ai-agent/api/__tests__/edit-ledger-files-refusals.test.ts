@@ -149,6 +149,35 @@ async function fixture() {
   };
 }
 
+describe("previewing a create under the dryRun twin", () => {
+  // w23/m9/t007: the per-kind file tools publish the twin too — a
+  // preview through it diffs without committing.
+  it("previews a new file without committing it", async () => {
+    const f = await fixture();
+    try {
+      const result = await f.client.callTool({
+        name: "createLedgerFiles",
+        arguments: {
+          ledger: "alice/main",
+          description: "add a file",
+          dryRun: true,
+          files: [{ path: "new.bean", content: "; new\n" }],
+        },
+      });
+      expect(result.isError).not.toBe(true);
+      const { result: out } = result.structuredContent as {
+        result: { dry_run: boolean; diff: { path: string }[] };
+      };
+      expect(out.dry_run).toBe(true);
+      expect(out.diff).toHaveLength(1);
+      expect(out.diff[0]?.path).toBe("new.bean");
+      expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+});
+
 describe("previewing a create over an existing file", () => {
   it("is refused as a conflict that names the file and the way to overwrite it", async () => {
     const f = await fixture();

@@ -260,28 +260,81 @@ describe("bank import on MCP", () => {
     });
 
     // w23/m9/t002: the dryRun twin reaches the service like dry_run.
-    it("passes the dryRun twin through", async () => {
+    // w23/m9/t007: every op resolves it — each carries its own call.
+    it.each([
+      ["sync", "syncBankTransactions", { item_id: "pitm_1" }],
+      [
+        "discard",
+        "discardStagedBankTransactions",
+        { transaction_ids: ["ptxn_1"] },
+      ],
+      ["reconcile", "reconcileBankAccounts", { item_id: "pitm_1" }],
+      ["unlink", "unlinkBankConnection", { item_id: "pitm_1" }],
+    ])("%s passes the dryRun twin through", async (_op, tool, args) => {
       const services = fakeServices();
-      await call(services, "unlinkBankConnection", {
-        item_id: "pitm_1",
+      await call(services, tool, { ...args, dryRun: true });
+
+      const mocks = [
+        services.plaidSync.syncItemTransactions,
+        services.plaidSync.deleteTransactions,
+        services.plaidItem.reconcileItemAccounts,
+        services.plaidItem.unlinkItem,
+      ];
+      const called = mocks.find((m) => m.mock.calls.length > 0);
+      expect(called).toBeDefined();
+      expect(called!.mock.calls[0]!.at(-1)).toBe(true);
+    });
+
+    it("submit passes the dryRun twin through", async () => {
+      const services = fakeServices();
+      await call(services, "importStagedBankTransactions", {
+        transactions: [
+          { transactionId: "tx_1", targetAccount: "Expenses:Food" },
+        ],
         dryRun: true,
       });
 
-      expect(services.plaidItem.unlinkItem.mock.calls[0]!.at(-1)).toBe(true);
+      expect(
+        services.plaidSync.submitTransactionsToLedger.mock.calls[0]?.[5],
+      ).toBe(true);
     });
 
-    it("refuses one true and one false preview flag", async () => {
-      const services = fakeServices();
-      const result = await call(services, "unlinkBankConnection", {
-        item_id: "pitm_1",
-        dry_run: true,
-        dryRun: false,
-      });
+    it.each([
+      ["syncBankTransactions", { item_id: "pitm_1" }],
+      [
+        "importStagedBankTransactions",
+        {
+          transactions: [
+            { transactionId: "tx_1", targetAccount: "Expenses:Food" },
+          ],
+        },
+      ],
+      ["discardStagedBankTransactions", { transaction_ids: ["ptxn_1"] }],
+      ["reconcileBankAccounts", { item_id: "pitm_1" }],
+      ["unlinkBankConnection", { item_id: "pitm_1" }],
+    ])(
+      "refuses one true and one false preview flag on %s",
+      async (tool, args) => {
+        const services = fakeServices();
+        const result = await call(services, tool, {
+          ...args,
+          dry_run: true,
+          dryRun: false,
+        });
 
-      expect(result.isError).toBe(true);
-      expect(JSON.stringify(result.content)).toContain("dry_run");
-      expect(services.plaidItem.unlinkItem).not.toHaveBeenCalled();
-    });
+        expect(result.isError).toBe(true);
+        expect(JSON.stringify(result.content)).toContain("dry_run");
+        for (const mock of [
+          services.plaidSync.syncItemTransactions,
+          services.plaidSync.submitTransactionsToLedger,
+          services.plaidSync.deleteTransactions,
+          services.plaidItem.reconcileItemAccounts,
+          services.plaidItem.unlinkItem,
+        ]) {
+          expect(mock).not.toHaveBeenCalled();
+        }
+      },
+    );
   });
 
   describe.each([

@@ -10,6 +10,9 @@ import {
 const sync = jest.fn(async (..._args: unknown[]) => ({ success: true }));
 const change = jest.fn(async () => ({ success: true }));
 const submit = jest.fn(async () => ({ success: true, entries: [] }));
+const discard = jest.fn(async (..._args: unknown[]) => ({ success: true }));
+const reconcile = jest.fn(async (..._args: unknown[]) => ({ success: true }));
+const unlink = jest.fn(async (..._args: unknown[]) => ({ success: true }));
 const unsynced = jest.fn(async () => []);
 let server: V1TestServer;
 const ledger = "/api-gateway/v1/ledgers/alice/main";
@@ -21,8 +24,11 @@ beforeAll(async () => {
         plaidSync: {
           syncItemTransactions: sync,
           submitTransactionsToLedger: submit,
+          deleteTransactions: discard,
         },
         plaidItem: {
+          reconcileItemAccounts: reconcile,
+          unlinkItem: unlink,
           refreshItemStatus: change,
           updateAccountMapping: change,
           updateAccountCurrency: change,
@@ -75,6 +81,54 @@ it.each(["dry_run=true&dryRun=false", "dry_run=false&dryRun=true"])(
   },
 );
 
+// w23/m9/t007: every preview route resolves the twin, not just sync —
+// each handler carries its own resolve call.
+it.each([
+  {
+    name: "submit",
+    method: "POST",
+    path: "/bank-transactions/submit",
+    body: {
+      transactions: [{ transactionId: "ptxn_1", targetAccount: "Assets:Cash" }],
+    },
+    service: () => submit,
+  },
+  {
+    name: "discard",
+    method: "DELETE",
+    path: "/bank-transactions",
+    body: { transactionIds: ["ptxn_1"] },
+    service: () => discard,
+  },
+  {
+    name: "reconcile",
+    method: "POST",
+    path: "/banks/item/reconcile",
+    body: undefined,
+    service: () => reconcile,
+  },
+  {
+    name: "unlink",
+    method: "DELETE",
+    path: "/banks/item",
+    body: undefined,
+    service: () => unlink,
+  },
+])(
+  "resolves the dryRun twin on the $name route",
+  async ({ path, method, body, service }) => {
+    const response = await fetch(`${server.url}${ledger}${path}?dryRun=true`, {
+      method,
+      headers: { "content-type": "application/json" },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+    expect(response.status).toBe(200);
+    const mock = service();
+    expect(mock).toHaveBeenCalledTimes(1);
+    expect(mock.mock.calls[0]?.at(-1)).toBe(true);
+  },
+);
+
 it.each(["0", "1", "yes", "", "true&dry_run=false"])(
   "refuses malformed preview value %s before invoking sync",
   async (value) => {
@@ -122,18 +176,20 @@ describe.each([
     },
   );
 
-  it.each(["", "?dry_run=false", "?dryRun=false"])(
-    "still executes with query %s",
-    async (query) => {
-      const response = await fetch(`${server.url}${ledger}${path}${query}`, {
-        method,
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      expect(response.status).toBe(200);
-      expect(change).toHaveBeenCalledTimes(1);
-    },
-  );
+  it.each([
+    "",
+    "?dry_run=false",
+    "?dryRun=false",
+    "?dry_run=false&dryRun=false",
+  ])("still executes with query %s", async (query) => {
+    const response = await fetch(`${server.url}${ledger}${path}${query}`, {
+      method,
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    expect(response.status).toBe(200);
+    expect(change).toHaveBeenCalledTimes(1);
+  });
 });
 
 // w23/m8/t005: REST takes the camelCase spelling only — the snake_case

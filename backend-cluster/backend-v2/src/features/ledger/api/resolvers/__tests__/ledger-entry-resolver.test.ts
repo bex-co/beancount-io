@@ -88,4 +88,60 @@ describe("LedgerEntryMutationResolver", () => {
       ),
     ).rejects.toThrow("ledger write failed");
   });
+
+  // w23/m9/t007: GraphQL nullable args arrive as explicit null when set
+  // to null — that reads as missing, not as a conflicting false.
+  it("treats explicit null flags as missing", async () => {
+    await resolver.bulkEntries(
+      "owner/my-ledger",
+      [
+        {
+          type: LedgerEntryType.COMMODITY,
+          commodity: { date: "2024-01-01", currency: "USD" },
+        },
+      ],
+      mockContext,
+      null as unknown as undefined,
+      null as unknown as undefined,
+      null as unknown as undefined,
+      null as unknown as undefined,
+    );
+
+    expect(mockLedgerEntryService.addBulkEntries).toHaveBeenCalledWith(
+      IDENTITY,
+      "owner",
+      "my-ledger",
+      [{ type: "commodity", entry: { date: "2024-01-01", currency: "USD" } }],
+      "web",
+      false,
+      false,
+    );
+  });
+
+  it("previews when the twin is true and the native is null", async () => {
+    await resolver.bulkEntries(
+      "owner/my-ledger",
+      [
+        {
+          type: LedgerEntryType.COMMODITY,
+          commodity: { date: "2024-01-01", currency: "USD" },
+        },
+      ],
+      mockContext,
+      undefined,
+      undefined,
+      null as unknown as undefined,
+      true,
+    );
+
+    expect(mockLedgerEntryService.addBulkEntries).toHaveBeenCalledWith(
+      IDENTITY,
+      "owner",
+      "my-ledger",
+      [{ type: "commodity", entry: { date: "2024-01-01", currency: "USD" } }],
+      "web",
+      false,
+      true,
+    );
+  });
 });

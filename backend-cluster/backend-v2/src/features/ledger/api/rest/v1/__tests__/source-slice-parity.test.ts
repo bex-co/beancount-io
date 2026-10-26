@@ -487,6 +487,27 @@ describe.each(["rest", "gql", "mcp"])("source edits via %s", (surface) => {
         await f.close();
       }
     });
+    // w23/m9/t007: agreement is not a conflict — both true previews.
+    it("accepts both preview spellings when they agree", async () => {
+      const f = await fixture();
+      const before = [...f.slices];
+      try {
+        const result = await f.call(surface, operation, {
+          ...args(operation),
+          dry_run: true,
+          dryRun: true,
+        });
+        expect(result.success).toBe(true);
+        expect([...f.slices]).toEqual(before);
+        const called = Object.values(f.journal).filter(
+          (call) => call.mock.calls.length > 0,
+        );
+        expect(called).toHaveLength(1);
+        expect(called[0].mock.calls[0][2]).toMatchObject({ dryRun: true });
+      } finally {
+        await f.close();
+      }
+    });
   });
 });
 
@@ -965,6 +986,27 @@ describe.each(["rest", "gql", "mcp"])(
           });
           expect(result.success).toBe(false);
           expect([...f.slices]).toEqual(before);
+        } finally {
+          await f.close();
+        }
+      });
+
+      // w23/m9/t007: agreement is not a conflict — both true commits.
+      it("commits when both errors spellings agree", async () => {
+        const f = await fixture();
+        f.state.breaks = true;
+        try {
+          const result = await f.call(surface, operation, {
+            ...args(operation),
+            allowInvalid: true,
+            allow_invalid: true,
+          });
+          expect(result.success).toBe(true);
+          if (operation === "update") {
+            expect(f.slices.get("entry1")).toBe("; replacement café\n");
+          } else {
+            expect(f.slices.has("entry1")).toBe(false);
+          }
         } finally {
           await f.close();
         }
