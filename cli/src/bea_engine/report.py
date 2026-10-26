@@ -1001,19 +1001,9 @@ def _cash_flow(filtered: Any, bounds: tuple[date | None, date | None], ledger_er
             continue
         sections[role].append({"account": account, "amounts": amounts, "role_source": source})
 
-    totals: dict[str, dict[str, Decimal]] = {activity: {} for activity in _CASH_FLOW_ACTIVITIES}
-    for activity, rows in sections.items():
-        for row in rows:
-            for currency, total in row["amounts"].items():
-                totals[activity][currency] = totals[activity].get(currency, Decimal(0)) + total
-    net_change: dict[str, Decimal] = {}
-    for activity_totals in totals.values():
-        for currency, total in activity_totals.items():
-            net_change[currency] = net_change.get(currency, Decimal(0)) + total
-    closing_total: dict[str, Decimal] = {}
-    for account_amounts in closing.values():
-        for currency, total in account_amounts.items():
-            closing_total[currency] = closing_total.get(currency, Decimal(0)) + total
+    totals = {activity: _sum_amounts(row["amounts"] for row in rows) for activity, rows in sections.items()}
+    net_change = _sum_amounts(totals.values())
+    closing_total = _sum_amounts(closing.values())
     opening = {
         currency: closing_total.get(currency, Decimal(0)) - net_change.get(currency, Decimal(0))
         for currency in set(closing_total) | set(net_change)
@@ -1047,6 +1037,15 @@ def _cash_flow(filtered: Any, bounds: tuple[date | None, date | None], ledger_er
         ],
         "invalid_role_values": invalid_role_values,
     }
+
+
+def _sum_amounts(maps: Iterable[Mapping[str, Decimal]]) -> dict[str, Decimal]:
+    """Add per-currency maps, keeping zero keys (unlike inventory `add`)."""
+    totals: dict[str, Decimal] = {}
+    for amounts in maps:
+        for currency, total in amounts.items():
+            totals[currency] = totals.get(currency, Decimal(0)) + total
+    return totals
 
 
 def _jsonable_role_value(value: Any) -> Any:

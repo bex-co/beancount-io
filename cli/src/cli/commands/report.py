@@ -615,7 +615,7 @@ def cash_flow(
     to_date: CashFlowToOpt = None,
     allow_errors: AllowErrorsOpt = False,
 ) -> None:
-    """Where the money went: operating, investing, and financing flows."""
+    """Operating, investing, and financing flows."""
     file, data = _ask(
         "cash-flow",
         conversion=None,

@@ -1002,7 +1002,7 @@ Usage: bea report capital-gains [OPTIONS]
 
 ### `bea report cash-flow`
 
-Where the money went: operating, investing, and financing flows.
+Operating, investing, and financing flows.
 
 ```text
 Usage: bea report cash-flow [OPTIONS]
