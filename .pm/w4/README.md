@@ -22,8 +22,6 @@
 
 - **1099** — [Keep Accounts search unavailable until it can retain typing](./1099.md)
 
-- **1098** — [Run only the requested BQL bookmark on startup](./1098.md)
-
 - **1031** — Use actual lot cost currencies in Net Worth valuation disclosures (45–60m dashboard after dependency, A2/A3) ← dashboard QA; residual of m26 ([note](./blocked/1031.md)) — **blocked:** approved lot-specific valuation read
 
 

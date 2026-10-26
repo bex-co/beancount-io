@@ -53,6 +53,15 @@ export default function LedgerQueryPage() {
   );
   const isDarkTheme = useIsDarkTheme();
   const { history, addQuery, removeQuery } = useQueryHistory();
+  // The URL's query is the one startup runs. Until it heads the history, no
+  // other stored card opens itself on mount, since opening an unread card
+  // runs it (w4/1098).
+  const [startupQuery, setStartupQuery] = useState(
+    () => urlQuery?.trim() || null,
+  );
+  if (startupQuery !== null && history[0] === startupQuery) {
+    setStartupQuery(null);
+  }
 
   // Cache for query results
   const [resultsCache, setResultsCache] = useState<
@@ -409,7 +418,10 @@ export default function LedgerQueryPage() {
                   result={cached?.data || null}
                   error={cached?.error}
                   loading={executingQueries.has(query)}
-                  isInitiallyOpen={index === 0}
+                  isInitiallyOpen={
+                    index === 0 &&
+                    (startupQuery === null || query === startupQuery)
+                  }
                   onExecute={handleExecuteFromHistory}
                   onDelete={handleDeleteQuery}
                 />
