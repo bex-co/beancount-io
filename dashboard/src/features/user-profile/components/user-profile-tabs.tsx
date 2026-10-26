@@ -23,7 +23,7 @@ import type {
   GetUserFollowingQuery,
   GetUserStarredReposQuery,
 } from "@/graphql/definitions";
-import { useNavigate } from "@tanstack/react-router";
+import { useHydrated, useNavigate } from "@tanstack/react-router";
 
 interface UserProfileTabsProps {
   username: string;
@@ -112,6 +112,9 @@ export function UserProfileTabs({
   const navigate = useNavigate({ from: "/ledger/$username" });
   const [activeTab, setActiveTab] = useState(initialTab);
   const strip = useRef<HTMLDivElement>(null);
+  // Tabs select from client state; an activation before hydration attaches
+  // their handlers is dropped, so they wait until they can respond (w4/1107).
+  const hydrated = useHydrated();
 
   // Update URL when tab changes
   const handleTabChange = (newTab: string) => {
@@ -208,6 +211,7 @@ export function UserProfileTabs({
         >
           <TabsTrigger
             value="overview"
+            disabled={!hydrated}
             className="gap-2 whitespace-nowrap px-3 py-4 text-sm sm:px-4"
           >
             <BookOpen aria-hidden="true" className="size-4" />
@@ -215,6 +219,7 @@ export function UserProfileTabs({
           </TabsTrigger>
           <TabsTrigger
             value="starred"
+            disabled={!hydrated}
             className="gap-2 whitespace-nowrap px-3 py-4 text-sm sm:px-4"
           >
             <Star aria-hidden="true" className="size-4" />
@@ -222,6 +227,7 @@ export function UserProfileTabs({
           </TabsTrigger>
           <TabsTrigger
             value="following"
+            disabled={!hydrated}
             className="gap-2 whitespace-nowrap px-3 py-4 text-sm sm:px-4"
           >
             {t("userProfile.tabs.following")} ({followingCount})
@@ -229,6 +235,7 @@ export function UserProfileTabs({
 
           <TabsTrigger
             value="followers"
+            disabled={!hydrated}
             className="gap-2 whitespace-nowrap px-3 py-4 text-sm sm:px-4"
           >
             <Users aria-hidden="true" className="size-4" />
