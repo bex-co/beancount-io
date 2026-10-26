@@ -1,7 +1,7 @@
 {
   "owner": "w6/046",
-  "lastCheckedAtUTC": "2026-10-26T07:35:10Z",
-  "status": "source_fix_validated_rollout_pending",
+  "lastCheckedAtUTC": "2026-10-26T07:40:36Z",
+  "status": "deployed_retained_grant_native_recovery_in_flight",
   "finding": "The unmodified Docker Gateway successfully rotates access/refresh credentials and reloads, but its refreshed access token is opaque UserInfo rather than the MCP-audience JWT. Initialization is refused and advertised capabilities are removed.",
   "native": {
     "gatewayVersion": "0.44.1",
@@ -71,7 +71,7 @@
     },
     "initialFullRun": "Default4GB heap exhausted before reporting a suite result; failure log retained. Full configured rerun passes."
   },
-  "next": "Ship verified source, roll out the existing hosted service, then resume the unmodified native CE scheduler with its retained grant. Actual post-expiry query/preview and unchanged-state acceptance remains required; source tests alone do not close046.",
+  "next": "Observe the already-running native CE scheduler across08:17:55.56880575UTC using retained credentials; require automatic rotation/reload, tools restored, query/one-preview and unchanged state. No reauthorization or manual refresh.",
   "privacy": "No credential values, fingerprints, client IDs, private infrastructure or ledger contents published. Existing grants/stores retained. No vendor patch, fake expiry, manual token refresh, new backend stack or scope expansion.",
   "activeNativeRecovery": {
     "startedAtUTC": "2026-10-26T07:30:09.439Z",
@@ -82,5 +82,21 @@
     "reauthorized": false,
     "manualRefresh": false,
     "limitation": "A short preparation attempt observed the log before the provider-start line was flushed and ended on its observer assertion. Preserved separately; bounded wait for the actual scheduler line is now used. No credential changed."
+  },
+  "sourceCommit": "cd20fa75f0de064142a7089a47e9961f3b97d2c5",
+  "rollout": {
+    "verifiedAtUTC": "2026-10-26T07:40:36Z",
+    "sourceRevision": "cd20fa75f0de064142a7089a47e9961f3b97d2c5",
+    "existingServiceReused": true,
+    "newStackCreated": false,
+    "status": "Deploy live / SUCCESS",
+    "commandsExitCodes": [
+      0,
+      0,
+      0
+    ],
+    "backendHealthy": true,
+    "ledgerHealthy": true,
+    "evidence": "Existing signed-in deployment control shows the public source revision and completed healthy rollout. Private UI screenshot retained locally."
   }
 }

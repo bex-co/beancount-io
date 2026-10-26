@@ -3,20 +3,19 @@
 **Worker:** worker1 — general-purpose adoption worker; accepts the next highest-impact milestone across packages, topics, and A1/A2/A3 rather than owning a permanent specialty.
 
 
-## Latest native Docker follow-through — 2026-10-26T07:18:12Z
+## Latest native Docker follow-through — 2026-10-26T07:40:36Z
 
-[046 remains live](046.md). The supported SecretService path saves rotated
-access/refresh credentials and the native Gateway attempts reload across the
-original real expiry. Reload initialization is Unauthorized: the new access
-token is opaque UserInfo rather than the MCP-audience JWT. No server preview
-executes. Three real-provider regressions reproduce this first-party resource
-selection bug; the minimal repair passes the full118-test OAuth suite and
-retains scope, ledger-pin and cross-audience boundaries. Full backend checks,
-source shipping, existing-service rollout and native acceptance continue.
-[Actual expiry result](../../backend-cluster/backend-v2/docs/marketplace-submissions/docker/secretservice-preflight-20261026.json)
-and [source repair](../../backend-cluster/backend-v2/docs/marketplace-submissions/docker/refresh-resource-repair-20261026.json)
-retain the earlier interrupted observer attempt separately. No new grant or
-publisher input is needed. Docker PR review remains independent.
+[046 remains live](046.md). Actual SecretService rotation/save/reload exposed
+an opaque refreshed access token. The minimal first-party resource repair
+ships in `cd20fa75f` after398suites/7,463tests, typecheck, lint and unchanged
+OpenAPI pass; the existing service is deployed healthy at that exact revision.
+The SAME retained grant/keyring and unmodified native CE scheduler now run
+across next actual expiry **2026-10-26T08:17:55.56880575Z**. Worker verifies
+automatic rotation/reload, restored tools, query/one-preview and unchanged state.
+[Actual earlier expiry result](../../backend-cluster/backend-v2/docs/marketplace-submissions/docker/secretservice-preflight-20261026.json)
+and [deployed repair/current acceptance](../../backend-cluster/backend-v2/docs/marketplace-submissions/docker/refresh-resource-repair-20261026.json)
+retain earlier failures separately. No new grant, publisher input or further
+deployment is pending. Docker PR review remains independent.
 
 ## Current listing follow-through plan — 2026-10-25 UTC
 
@@ -28,7 +27,7 @@ Source: the owner's request to complete all remaining actions from the17-target 
 | Supported browser control | [044](done/044.md) — actual read-only reconnect/retest, then supported update if still required | Resolved2026-10-25T00:10:54Z: actual supported browser/page access succeeds; keep original sessions and approvals. |
 | Credentials through review/monitoring | [045done](done/045.md) — verified retained-key bounds, renewal ownership, dates and private routes | Docker expires end 2026-10-31UTC, assess by10-29; Glama expires end 2026-11-23UTC, assess by11-20. No automation or secret on board. |
 | Glama complete + Smithery intake | [m8/t003 done](blocked/m8/done/t003.md) health/metadata; [t009 done](blocked/m8/done/t009.md) native; [t002](blocked/m8/t002.md) Smithery intake | Glama after-day health note w2/088 is archived with bounded actual evidence. Smithery direct-directory request sent with authorized Gmail confirmation2026-10-25T23:08:09Z; await supported intake/curated-inclusion response, then worker acceptance. No publisher input now; Glama remains complete. |
-| Docker current native session | [m9/t015](blocked/m9/done/t015.md) current-access repair done; [046](046.md) live renewable OAuth acceptance | Actual SecretService rotation/save/reload attempt is observed; opaque refreshed access token fails MCP initialization. First-party missing-resource refresh repair passes118 OAuth tests; worker owns full gates, rollout and native post-expiry acceptance. Prior pass-helper failure stays historical; no publisher input now. |
+| Docker current native session | [m9/t015](blocked/m9/done/t015.md) current-access repair done; [046](046.md) live renewable OAuth acceptance | Actual SecretService rotation/save/reload attempt is observed; opaque refreshed access token fails MCP initialization. First-party missing-resource refresh repair cd20fa75f passes398suites/7,463tests and is deployed healthy; worker owns the already-running retained-grant native acceptance through08:17:55UTC. Prior pass-helper failure stays historical; no publisher input now. |
 | Developer review/public/native | [m9/t004](blocked/m9/t004.md) Cline; [t016](blocked/m9/t016.md) official Cursor; [t017](blocked/m9/t017.md) Docker; [t018](blocked/m9/t018.md) approved GitHub/VS Code | Follow existing records independently. Public listing and native installation remain required after receipts/approval. |
 | Already-public directory native paths | [m10/t010](blocked/m10/done/t010.md) MCPServers.org; [t011](blocked/m10/done/t011.md) LobeHub accounting/live metadata | Both native acceptance tasks are complete. MCPMarket review and LobeHub crawler deployment correction remain independent external gates. |
 | LobeHub deployment/search correctness | [m10/t012](blocked/m10/t012.md) — supported crawler correction and actual name search | Start supported-route investigation now; platform-only changes get their exact unblock condition. |

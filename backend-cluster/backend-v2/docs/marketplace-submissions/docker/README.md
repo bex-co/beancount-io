@@ -410,3 +410,17 @@ pass afterward, including scope narrowing, ledger pins and audience rejection.
 Full backend checks, source ship, existing-service rollout and retained-grant
 native acceptance continue under046. The earlier observer timeout and original
 pass-helper failure remain separately recorded. No new approval or token export.
+
+## Resource repair deployed; native recovery running — 2026-10-26T07:40:36Z
+
+`cd20fa75f` ships the minimal refresh-resource repair after398backend suites,
+7,463tests, typecheck, targeted lint and unchanged OpenAPI pass. The existing
+service reports Deploy live/SUCCESS, all three commands exit0, and backend and
+ledger health checks pass. The logs identify the same public source revision.
+
+The same grant/keyring remains in use. An unmodified native CE scheduler is
+already running from07:30:09UTC across its retained credential's actual expiry
+**08:17:55.56880575UTC**. Initial tools are absent with the earlier opaque access;
+after automatic refresh/reload, require restored tools and native query/one
+preview/unchanged-state controls. No new authorization, fake expiry or manual
+refresh is used. [Current rollout and acceptance boundary](./refresh-resource-repair-20261026.json).

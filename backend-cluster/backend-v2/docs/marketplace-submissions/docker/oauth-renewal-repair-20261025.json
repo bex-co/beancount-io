@@ -68,7 +68,7 @@
     ],
     "accessTokenTTLSeconds": 3600
   },
-  "next": "Ship and roll out the reproduced missing-resource refresh repair, then verify retained-grant native scheduled renewal and post-expiry query/preview/unchanged state. No additional publisher input or new grant is needed.",
+  "next": "The missing-resource refresh repair cd20fa75f is deployed healthy. Continue the already-running retained-grant native scheduler through08:17:55UTC and verify actual renewal/reload/query/one-preview/unchanged state.",
   "privacy": "No access/refresh token, cookie, code/state URL, private infrastructure, account identity or raw ledger contents. No retained grant or reviewer key is revoked.",
   "sourceCommit": "37f5a25b6",
   "rollout": {
@@ -235,9 +235,9 @@
   },
   "checkedAtUTC": "2026-10-25T22:09:56Z",
   "secretserviceFollowup": {
-    "lastCheckedAtUTC": "2026-10-26T07:20:39Z",
+    "lastCheckedAtUTC": "2026-10-26T07:40:36Z",
     "evidence": "secretservice-preflight-20261026.json",
-    "status": "Actual access/refresh rotation and save succeed; reload fails MCP initialize because access is opaque UserInfo. New first-party refresh-resource repair passes118 OAuth tests; full checks and rollout continue.",
+    "status": "SecretService rotation/save/reload exposed the opaque refresh-resource bug. Repair cd20fa75f is shipped, full398suites/7463tests pass, and existing service rollout is healthy. Retained-grant native recovery observation runs through08:17:55UTC.",
     "authorizationListener": "The earlier timeout is superseded by one successful confirmed request for the same registered client.",
     "sourceRepair": "refresh-resource-repair-20261026.json"
   }
