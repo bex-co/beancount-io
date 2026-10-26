@@ -13,6 +13,7 @@ import type {
   ILedgerReceiptWorkflow,
   InsertReceiptInput,
 } from "@/features/ledger/workflow/ledger-receipt-workflow";
+import { resolveObjectKey } from "@/features/ledger/utils/object-key-alias";
 
 @InputType()
 class ReceiptPostingInput {
@@ -67,14 +68,29 @@ export class LedgerReceiptMutationResolver {
   })
   async insertReceiptTransaction(
     @Arg("ledgerId", () => String) ledgerId: string,
-    @Arg("receiptObjectKey", () => String) receiptObjectKey: string,
+    @Arg("receiptObjectKey", () => String, { nullable: true })
+    receiptObjectKey: string | undefined,
     @Arg("input", () => InsertReceiptTransactionInput)
     input: InsertReceiptTransactionInput,
+    @Arg("objectKey", () => String, {
+      nullable: true,
+      description: "Alias of receiptObjectKey, as the upload URL spells it.",
+    })
+    objectKey: string | undefined,
+    @Arg("s3ObjectKey", () => String, {
+      nullable: true,
+      description: "Alias of receiptObjectKey, as the parse routes spell it.",
+    })
+    s3ObjectKey: string | undefined,
     @Ctx() ctx: IContext,
   ): Promise<InsertReceiptResult> {
     const result = await this.receiptWorkflow.insertReceiptTransaction({
       ledgerId,
-      receiptObjectKey,
+      receiptObjectKey: resolveObjectKey({
+        objectKey,
+        s3ObjectKey,
+        receiptObjectKey,
+      }),
       input,
       identity: ctx.getCurrentIdentity(),
     });

@@ -155,10 +155,12 @@ async function fixture(caller = identity) {
     gql: (
       vars: Record<string, unknown> = { receiptObjectKey, input },
       selection = "success",
+      keyArg = "receiptObjectKey:$receiptObjectKey",
+      keyVar = "$receiptObjectKey:String!",
     ) =>
       graphql({
         schema,
-        source: `mutation($ledgerId:String!,$receiptObjectKey:String!,$input:InsertReceiptTransactionInput!) { insertReceiptTransaction(ledgerId:$ledgerId,receiptObjectKey:$receiptObjectKey,input:$input) { ${selection} } }`,
+        source: `mutation($ledgerId:String!,${keyVar},$input:InsertReceiptTransactionInput!) { insertReceiptTransaction(ledgerId:$ledgerId,${keyArg},input:$input) { ${selection} } }`,
         variableValues: { ledgerId: "alice/main", ...vars },
         contextValue: { identity: caller, getCurrentIdentity: () => caller },
       }),
@@ -565,6 +567,107 @@ it("rejects malformed input before any effect", async () => {
       input: { ...input, postings: "not-a-list" },
     });
     expect(invalid.isError).toBe(true);
+    expect(f.copy).not.toHaveBeenCalled();
+    expect(f.write).not.toHaveBeenCalled();
+  } finally {
+    await f.close();
+  }
+});
+
+// w23/m11/t003: every key spelling works at every insert input.
+it.each(["objectKey", "s3ObjectKey"])(
+  "accepts the %s insert twin on every surface",
+  async (twin) => {
+    const f = await fixture();
+    const args = { [twin]: receiptObjectKey, input };
+    try {
+      const r = await f.rest(args);
+      expect(r.status).toBe(200);
+      expect(await r.json()).toEqual({ success: true, entryHashes: [] });
+      const g = await f.gql(
+        { key: receiptObjectKey, input },
+        "success",
+        `${twin}:$key`,
+        "$key:String!",
+      );
+      expect(g.errors).toBeUndefined();
+      expect(g.data!.insertReceiptTransaction).toEqual({ success: true });
+      const m = await f.mcp(args);
+      expect(m.isError).not.toBe(true);
+      expect(f.copy).toHaveBeenCalledTimes(3);
+      expect(f.copy).toHaveBeenCalledWith({
+        objectKey: receiptObjectKey,
+        scope: "repo_42",
+      });
+      expect(f.write).toHaveBeenCalledTimes(6);
+      expect(f.deleteTemp).toHaveBeenCalledTimes(3);
+    } finally {
+      await f.close();
+    }
+  },
+);
+
+it("refuses two different insert keys as bad input on every surface", async () => {
+  const f = await fixture();
+  const other = "tmp/usr_alice/other.pdf";
+  try {
+    const r = await f.rest({
+      receiptObjectKey,
+      objectKey: other,
+      input,
+    });
+    expect(r.status).toBe(400);
+    expect(await r.json()).toMatchObject({
+      error: { code: "BAD_USER_INPUT" },
+    });
+    const g = await f.gql(
+      { receiptObjectKey, other, input },
+      "success",
+      "receiptObjectKey:$receiptObjectKey,s3ObjectKey:$other",
+      "$receiptObjectKey:String!,$other:String!",
+    );
+    expect(g.errors?.[0].originalError).toMatchObject({
+      category: "BAD_USER_INPUT",
+    });
+    const m = await f.mcp({
+      receiptObjectKey,
+      objectKey: other,
+      input,
+    });
+    expect(m.isError).toBe(true);
+    expect(m.structuredContent).toMatchObject({
+      error: { code: "BAD_USER_INPUT" },
+    });
+    expect(f.copy).not.toHaveBeenCalled();
+    expect(f.write).not.toHaveBeenCalled();
+    expect(f.deleteTemp).not.toHaveBeenCalled();
+  } finally {
+    await f.close();
+  }
+});
+
+it("refuses a missing insert key as bad input on every surface", async () => {
+  const f = await fixture();
+  try {
+    const r = await f.rest({ input });
+    expect(r.status).toBe(400);
+    expect(await r.json()).toMatchObject({
+      error: { code: "BAD_USER_INPUT" },
+    });
+    const g = await f.gql(
+      { input },
+      "success",
+      "receiptObjectKey:$missing",
+      "$missing:String",
+    );
+    expect(g.errors?.[0].originalError).toMatchObject({
+      category: "BAD_USER_INPUT",
+    });
+    const m = await f.mcp({ input });
+    expect(m.isError).toBe(true);
+    expect(m.structuredContent).toMatchObject({
+      error: { code: "BAD_USER_INPUT" },
+    });
     expect(f.copy).not.toHaveBeenCalled();
     expect(f.write).not.toHaveBeenCalled();
   } finally {

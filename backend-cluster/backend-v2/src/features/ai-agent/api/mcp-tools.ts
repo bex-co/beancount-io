@@ -504,7 +504,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
           context.ledgerReceiptWorkflow.insertReceiptTransaction({
             identity: context.identity,
             ledgerId,
-            receiptObjectKey: args.receiptObjectKey,
+            receiptObjectKey: resolveObjectKey(args),
             input: args.input,
           }),
       );

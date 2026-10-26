@@ -4,6 +4,7 @@ import { logger } from "@/shared/logger";
 import type { ToolContext } from "./types";
 import { toolOutputSchema } from "./types";
 import { runToolSafely } from "../utils/run-tool";
+import { resolveObjectKey } from "@/features/ledger/utils/object-key-alias";
 
 const toolLogger = logger.child({ module: "tool:insert-receipt-transaction" });
 
@@ -15,9 +16,19 @@ const description =
 const insertReceiptTransactionInputSchema = z.object({
   receiptObjectKey: z
     .string()
+    .optional()
     .describe(
       "S3 object key of the receipt file (starts with tmp/) — the same objectKey that was parsed for this receipt",
     ),
+  // Twins (w23/m11/t003): every key spelling works at every input.
+  objectKey: z
+    .string()
+    .optional()
+    .describe("Alias of receiptObjectKey, as the upload URL spells it."),
+  s3ObjectKey: z
+    .string()
+    .optional()
+    .describe("Alias of receiptObjectKey, as the parse routes spell it."),
   date: z
     .string()
     .nullable()
@@ -79,7 +90,7 @@ async function executeInsertReceiptTransaction(
     execute: async () => {
       const result = await ledgerReceiptWorkflow.insertReceiptTransaction({
         ledgerId,
-        receiptObjectKey: input.receiptObjectKey,
+        receiptObjectKey: resolveObjectKey(input),
         input: {
           date,
           payee: input.payee,

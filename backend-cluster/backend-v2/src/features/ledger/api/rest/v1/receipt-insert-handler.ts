@@ -2,6 +2,7 @@ import { z } from "@/shared/zod-openapi-setup";
 import { v1Route } from "@/server/rest/v1-route";
 import { json } from "@/server/rest/v1-schemas";
 import { ledgerPathSchema, ledgerIdOf } from "./schemas";
+import { resolveObjectKey } from "@/features/ledger/utils/object-key-alias";
 
 const receiptPostingSchema = z
   .object({
@@ -15,7 +16,17 @@ export const receiptInsertInput = z
   .object({
     receiptObjectKey: z
       .string()
+      .optional()
       .describe("Caller-owned temporary object key (starts with tmp/)"),
+    // Twins (w23/m11/t003): every key spelling works at every input.
+    objectKey: z
+      .string()
+      .optional()
+      .describe("Alias of receiptObjectKey, as the upload URL spells it."),
+    s3ObjectKey: z
+      .string()
+      .optional()
+      .describe("Alias of receiptObjectKey, as the parse routes spell it."),
     input: z
       .object({
         date: z.string(),
@@ -52,7 +63,7 @@ export const receiptInsertRoute = v1Route({
     const result =
       await layers.workflows.ledgerReceipt.insertReceiptTransaction({
         ledgerId: ledgerIdOf(params),
-        receiptObjectKey: body.receiptObjectKey,
+        receiptObjectKey: resolveObjectKey(body),
         input: body.input,
         identity,
       });

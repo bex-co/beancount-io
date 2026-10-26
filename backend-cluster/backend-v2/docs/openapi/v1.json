@@ -4237,6 +4237,14 @@
                     "type": "string",
                     "description": "Caller-owned temporary object key (starts with tmp/)"
                   },
+                  "objectKey": {
+                    "type": "string",
+                    "description": "Alias of receiptObjectKey, as the upload URL spells it."
+                  },
+                  "s3ObjectKey": {
+                    "type": "string",
+                    "description": "Alias of receiptObjectKey, as the parse routes spell it."
+                  },
                   "input": {
                     "type": "object",
                     "properties": {
@@ -4289,7 +4297,6 @@
                   }
                 },
                 "required": [
-                  "receiptObjectKey",
                   "input"
                 ],
                 "additionalProperties": false
