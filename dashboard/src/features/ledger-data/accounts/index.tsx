@@ -2,6 +2,7 @@ import { useState, useMemo, useRef, useContext } from "react";
 import { useTranslations } from "@/common/hooks/use-translations";
 import {
   Link,
+  useHydrated,
   useParams,
   useNavigate,
   useSearch,
@@ -380,6 +381,10 @@ export default function LedgerAccountsPage() {
   const [closeTarget, setCloseTarget] = useState<AccountDirective | null>(null);
   const openAccountTriggerRef = useRef<HTMLAnchorElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
+  // Typing before hydration attaches onChange is wiped when React takes over
+  // the controlled field, so it waits until it can keep what is typed
+  // (w4/1099, as Gallery does).
+  const hydrated = useHydrated();
   const rowActionReturnFocusRef = useRef<HTMLElement | null>(null);
   const clearCache = useApolloCacheClear();
   const client = useApolloClient();
@@ -511,6 +516,7 @@ export default function LedgerAccountsPage() {
               placeholder={t("page.accounts.searchAccounts")}
               value={searchInput.value}
               onChange={(e) => setSearch(e.target.value)}
+              disabled={!hydrated}
               className="bg-background pl-9 pr-9"
             />
             {search && (

@@ -7,6 +7,7 @@ let actionSearch: { action?: "open-account" } = {};
 let canWrite = true;
 
 vi.mock("@tanstack/react-router", () => ({
+  useHydrated: () => true,
   useParams: () => ({ ledgerOwner: "alice", ledgerName: "books" }),
   useSearch: () => actionSearch,
   useNavigate: () => mockNavigate,

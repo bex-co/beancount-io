@@ -37,6 +37,7 @@ const { state, succeed } = vi.hoisted(() => ({
 }));
 
 vi.mock("@tanstack/react-router", () => ({
+  useHydrated: () => true,
   useParams: () => ({ ledgerOwner: "alice", ledgerName: "books" }),
   useSearch: () => ({}),
   useNavigate: () => vi.fn(),
