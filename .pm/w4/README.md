@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1101** — [Enable Filters only when its sheet can open](./1101.md)
+
 - **1100** — [Retain early Create File filename typing](./1100.md)
 
 - **1099** — [Keep Accounts search unavailable until it can retain typing](./1099.md)
