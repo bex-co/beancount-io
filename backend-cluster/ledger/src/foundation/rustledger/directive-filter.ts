@@ -19,9 +19,12 @@ import { utcDate } from "./utc-date";
  *  - AdvancedFilter — the tag/link/string/key DSL, parsed with the same grammar
  *    (`#tag`, `^link`, bare/`"quoted"` strings, `key:str`, `key<op>num`,
  *    `<op>num`, `any(...)`, `all(...)`, `-` negation, `,` OR, juxtaposition AND,
- *    and parentheses). One deliberate deviation: bare `account:` also scans
+ *    and parentheses). Two deliberate deviations: bare `account:` also scans
  *    transaction postings (see `keyPredicate`), where Fava sees only
- *    directives that have an `account` attribute.
+ *    directives that have an `account` attribute; and the singular
+ *    `tag:`/`link:` keys member-match entry tags/links (see
+ *    `tagMemberPredicate`), where Fava has no such entry attribute and
+ *    the keys silently match nothing.
  *  - TimeFilter (date range only) — keep entries whose date is inside the parsed
  *    `[begin, end)` range. See the note below on Fava's summarization gap.
  *
@@ -581,7 +584,27 @@ class FilterParser {
       case "KEY": {
         const opToken = this.next();
         if (opToken.type === "EQ_OP") {
+          const upcoming = this.peek();
+          const upcomingType = upcoming?.type as
+            | TokenType
+            | "TAG"
+            | undefined;
+          if (
+            upcoming !== undefined &&
+            (upcomingType === "TAG" || upcomingType === "LINK")
+          ) {
+            const sigil = upcomingType === "TAG" ? "#" : "^";
+            throw new AdvancedFilterParseError(
+              `Unexpected ${sigil}${upcoming.value} after "${token.value}:" — ` +
+                `write ${token.value}:${upcoming.value} or a bare ` +
+                `${sigil}${upcoming.value} term`,
+            );
+          }
           const valueToken = this.expect("STRING");
+          if (token.value === "tag") return tagMemberPredicate(valueToken.value);
+          if (token.value === "link") {
+            return linkMemberPredicate(valueToken.value);
+          }
           return keyPredicate(token.value, makeMatcher(valueToken.value));
         }
         if (opToken.type === "CMP_OP") {
@@ -641,28 +664,60 @@ function makeAmountMatcher(op: string, rawValue: string): FilterValueMatcher {
   };
 }
 
+/** Tags carried by a directive (transactions, documents, restored notes). */
+function directiveTags(directive: DirectiveJson): string[] {
+  if (directive.type === "transaction") return directive.tags;
+  if (directive.type === "document" || directive.type === "note") {
+    return (directive as SourceSyntax).tags ?? [];
+  }
+  return [];
+}
+
+/** Links carried by a directive (transactions, documents, restored notes). */
+function directiveLinks(directive: DirectiveJson): string[] {
+  if (directive.type === "transaction") return directive.links;
+  if (directive.type === "document" || directive.type === "note") {
+    return (directive as SourceSyntax).links ?? [];
+  }
+  return [];
+}
+
 /** Match every directive type that carries tags (transactions and documents). */
 function tagPredicate(tag: string): EntryPredicate {
   return (target): boolean => {
     if (target.kind !== "directive") return false;
-    const directive = target.directive;
-    if (directive.type === "transaction") return directive.tags.includes(tag);
-    if (directive.type === "document" || directive.type === "note") {
-      return ((directive as SourceSyntax).tags ?? []).includes(tag);
-    }
-    return false;
+    return directiveTags(target.directive).includes(tag);
   };
 }
 
 function linkPredicate(link: string): EntryPredicate {
   return (target): boolean => {
     if (target.kind !== "directive") return false;
-    const directive = target.directive;
-    if (directive.type === "transaction") return directive.links.includes(link);
-    if (directive.type === "document" || directive.type === "note") {
-      return ((directive as SourceSyntax).links ?? []).includes(link);
-    }
-    return false;
+    return directiveLinks(target.directive).includes(link);
+  };
+}
+
+/**
+ * Member-match for the singular `tag:`/`link:` keys (w23/m2 deviation —
+ * Fava has no such entry attributes, so the keys silently matched nothing).
+ * The value is a per-member `Match` (case-insensitive substring regex),
+ * applied to the entry's tags/links. Postings carry no tags/links on the
+ * wire, so matching is entry-level only. The plural `tags:`/`links:` keep
+ * Fava's joined-list form, which the mobile search relies on (w21/640).
+ */
+function tagMemberPredicate(value: string): EntryPredicate {
+  const match = makeMatcher(value);
+  return (target): boolean => {
+    if (target.kind !== "directive") return false;
+    return directiveTags(target.directive).some((tag) => match(tag));
+  };
+}
+
+function linkMemberPredicate(value: string): EntryPredicate {
+  const match = makeMatcher(value);
+  return (target): boolean => {
+    if (target.kind !== "directive") return false;
+    return directiveLinks(target.directive).some((link) => match(link));
   };
 }
 

@@ -270,6 +270,55 @@ describe("filterDirectives — AdvancedFilter parity", () => {
     expect(filterDirectives([txn, open], { filter: "account:Nope" })).toEqual([]);
   });
 
+  // w23/m2/t002: Fava has no `tag`/`link` attribute on entries, so the
+  // singular keys silently matched nothing; here they member-match each
+  // entry's tags/links (case-insensitive, per member). Posting shapes carry
+  // no tags/links, so matching is entry-level only.
+  it("matches tag: and link: against entry tags and links", () => {
+    const txn = {
+      type: "transaction",
+      date: "2024-05-01",
+      flag: "*",
+      payee: "",
+      narration: "groceries",
+      tags: ["qafilt", "Trip"],
+      links: ["qal1nk"],
+      postings: [],
+    } as DirectiveJson;
+    const document = {
+      type: "document",
+      date: "2024-04-01",
+      account: "Expenses:Food",
+      path: "receipts/r1.pdf",
+      tags: ["receipt"],
+      links: ["invoice-1"],
+    } as DirectiveJson;
+    const entries = [txn, document];
+    expect(filterDirectives(entries, { filter: "tag:qafilt" })).toEqual([txn]);
+    expect(filterDirectives(entries, { filter: "tag:QAFILT" })).toEqual([txn]);
+    expect(filterDirectives(entries, { filter: "tag:trip" })).toEqual([txn]);
+    expect(filterDirectives(entries, { filter: "tag:receipt" })).toEqual([
+      document,
+    ]);
+    expect(filterDirectives(entries, { filter: "link:qal1nk" })).toEqual([txn]);
+    expect(filterDirectives(entries, { filter: "link:invoice-1" })).toEqual([
+      document,
+    ]);
+    expect(filterDirectives(entries, { filter: "tag:missing" })).toEqual([]);
+    expect(filterDirectives(entries, { filter: "link:missing" })).toEqual([]);
+  });
+
+  // w23/m2/t002: a sigil after the colon is a syntax slip, not a bare
+  // "Expected STRING, got TAG" lexer error.
+  it("hints at the bare name when a sigil follows tag: or link:", () => {
+    expect(() => filterDirectives(DIRECTIVES, { filter: "tag:#qafilt" })).toThrow(
+      /tag:qafilt/,
+    );
+    expect(() =>
+      filterDirectives(DIRECTIVES, { filter: "link:^qal1nk" }),
+    ).toThrow(/link:qal1nk/);
+  });
+
   it("accepts Unicode unquoted filter words", () => {
     const unicode: DirectiveJson[] = [
       {
