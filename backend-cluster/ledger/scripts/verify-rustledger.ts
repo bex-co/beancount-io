@@ -39,6 +39,7 @@ import {
 } from "@/features/ledger/service/ledger-shell-mappers";
 import { stripBqlBlockComments } from "@/features/ledger/service/bql-comments";
 import { stripBqlStatementTerminator } from "@/features/ledger/service/bql-terminator";
+import { unquoteBqlFromTables } from "@/features/ledger/service/bql-from-quotes";
 import { UNDECODABLE_SOURCE } from "@/foundation/rustledger/file-map-loader";
 import { filterDirectives } from "@/foundation/rustledger/directive-filter";
 import { assertEntryTokens } from "@/features/ledger/utils/entry-tokens";
@@ -1256,6 +1257,46 @@ async function main(): Promise<void> {
     JSON.stringify(normalizedTerminated.rows) ===
       JSON.stringify(unterminatedCount.rows),
     "normalized ;-terminated query returns the unterminated query's rows",
+  );
+
+  // Quoted FROM (w23/115): the engine silently ignores a quoted FROM name and
+  // runs in default postings scope, so the shell service unquotes
+  // valid-identifier FROM names first. Verify against the LIVE engine that (a)
+  // the raw quoted query really does still return postings rows (the entries
+  // count differs, so the confusion is observable), and (b) the normalized
+  // query returns exactly the unquoted query's rows.
+  const rawQuoted = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    'SELECT count(*) FROM "entries" LIMIT 1',
+  );
+  const postingsCount = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    "SELECT count(*) FROM postings LIMIT 1",
+  );
+  assert(
+    JSON.stringify(rawQuoted.rows) === JSON.stringify(postingsCount.rows),
+    "engine still runs a raw quoted FROM in postings scope (normalization is load-bearing)",
+  );
+  const unquotedEntries = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    "SELECT count(*) FROM entries LIMIT 1",
+  );
+  assert(
+    JSON.stringify(rawQuoted.rows) !== JSON.stringify(unquotedEntries.rows),
+    "entries and postings counts differ, so the quoted/unquoted confusion is observable",
+  );
+  const normalizedQuoted = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    unquoteBqlFromTables('SELECT count(*) FROM "entries" LIMIT 1'),
+  );
+  assert(
+    JSON.stringify(normalizedQuoted.rows) ===
+      JSON.stringify(unquotedEntries.rows),
+    "normalized quoted FROM returns the unquoted query's rows",
   );
 
   const count = await countDirectives(

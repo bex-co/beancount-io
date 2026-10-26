@@ -16,6 +16,7 @@ import {
   queryResultToText,
 } from "./ledger-shell-mappers";
 import { stripBqlBlockComments } from "./bql-comments";
+import { unquoteBqlFromTables } from "./bql-from-quotes";
 import { stripBqlStatementTerminator } from "./bql-terminator";
 
 /**
@@ -94,7 +95,7 @@ export class LedgerShellService implements ILedgerShellService {
     const result = await queryLedgerFilesResult(
       files,
       entryPoint,
-      stripBqlStatementTerminator(stripBqlBlockComments(query)),
+      stripBqlStatementTerminator(unquoteBqlFromTables(stripBqlBlockComments(query))),
     );
     assertQuerySucceeded(result);
     return queryResultToShellResult(result);
@@ -110,7 +111,7 @@ export class LedgerShellService implements ILedgerShellService {
     const result = await queryLedgerFilesResult(
       files,
       entryPoint,
-      stripBqlStatementTerminator(stripBqlBlockComments(query)),
+      stripBqlStatementTerminator(unquoteBqlFromTables(stripBqlBlockComments(query))),
     );
     assertQuerySucceeded(result);
     return { text: queryResultToText(result), rowCount: result.rows.length };
