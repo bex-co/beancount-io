@@ -455,6 +455,56 @@ describe.each(["rest", "gql", "mcp"])(
   },
 );
 
+// A commit-step failure at the ledger (Gitea 5xx, w23/m1) must read
+// retryable on every surface — SERVICE_UNAVAILABLE, never FORBIDDEN for an
+// authorized credential, and never a silent success.
+describe.each(["rest", "gql", "mcp"])(
+  "a source edit whose commit fails at the ledger via %s",
+  (surface) => {
+    it.each(["update", "delete", "delete_many"] as Operation[])(
+      "reports a ledger 503 on %s as SERVICE_UNAVAILABLE",
+      async (operation) => {
+        const f = await fixture();
+        const key =
+          operation === "update"
+            ? "updateSourceSlice"
+            : operation === "delete"
+              ? "deleteSourceSlice"
+              : "deleteMultiSourceSlices";
+        f.journal[key].mockRejectedValueOnce(
+          new FavaApiError("Gitea is temporarily unavailable", 503, {
+            error: "Gitea is temporarily unavailable",
+          }),
+        );
+        const before = [...f.slices];
+        try {
+          const result = await f.call(surface, operation, args(operation));
+          expect(result.success).toBe(false);
+          expect([...f.slices]).toEqual(before);
+          if (surface === "rest") {
+            expect(result.result).toMatchObject({
+              ok: false,
+              error: { code: "SERVICE_UNAVAILABLE" },
+            });
+          } else if (surface === "gql") {
+            const refusal = result.errors?.[0]?.originalError as
+              | { category?: string }
+              | undefined;
+            expect(refusal?.category).toBe("SERVICE_UNAVAILABLE");
+          } else {
+            expect(result.full).toMatchObject({
+              ok: false,
+              error: { code: "SERVICE_UNAVAILABLE" },
+            });
+          }
+        } finally {
+          await f.close();
+        }
+      },
+    );
+  },
+);
+
 // The ledger service refuses an edit or delete that would add a bean-check
 // error (w21/m1). Every surface must refuse it as structured adds are refused
 // (w0/m2) — VALIDATION_FAILED naming the new error in newLedgerErrors — change

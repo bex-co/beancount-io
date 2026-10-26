@@ -225,6 +225,43 @@ describe("overlapped updates on identical twins", () => {
     expect(remote.text).toContain(txn("Lunch"));
   });
 
+  it("refuses a multi-delete when one target's twin set changed", async () => {
+    const remote = { text: MAIN_TWO };
+    const svc = riggedService(remote);
+    const frozen = { "main.bean": MAIN_TWO };
+    let calls = 0;
+    loadMock.mockImplementation(async () => {
+      calls += 1;
+      return {
+        files: calls === 2 ? frozen : { "main.bean": remote.text },
+        entryPoint: "main.bean",
+        repoPaths: ["main.bean"],
+        managedPrices: [],
+        managedPricePaths: [],
+      };
+    });
+    findMock.mockImplementation(async () => located(txn("Lunch"), 3, 0));
+    const sha = sliceSha256(txn("Lunch"));
+    await svc.updateSourceSlice({
+      ledgerId: "alice/main",
+      userId: "user-1",
+      entryHash: ENTRY_ID,
+      sha256sum: sha,
+      newContent: txn("Raced"),
+    });
+    // All-or-nothing: the stale twin count refuses the batch before any
+    // block is deleted.
+    await expect(
+      svc.deleteMultiSourceSlices({
+        ledgerId: "alice/main",
+        userId: "user-1",
+        entries: [{ entryHash: ENTRY_ID, sha256sum: sha }],
+      }),
+    ).rejects.toBeInstanceOf(ConflictError);
+    expect(remote.text).toContain(txn("Raced"));
+    expect(remote.text).toContain(txn("Lunch"));
+  });
+
   it("refuses a delete whose twin set changed since it was located", async () => {
     const remote = { text: MAIN_TWO };
     const svc = riggedService(remote);
