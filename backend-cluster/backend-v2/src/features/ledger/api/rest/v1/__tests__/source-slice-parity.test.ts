@@ -450,19 +450,37 @@ describe.each(["rest", "gql", "mcp"])("source edits via %s", (surface) => {
         await f.close();
       }
     });
-    it("refuses unexpected preview or branch arguments", async () => {
+    it("accepts the other surface's preview spelling", async () => {
+      const f = await fixture();
+      const before = [...f.slices];
+      try {
+        const result = await f.call(surface, operation, {
+          ...args(operation),
+          // w23/m9/t002: the twin spelling previews exactly like the
+          // native one — MCP's dry_run on REST/GraphQL, their dryRun
+          // on MCP.
+          ...(surface === "mcp" ? { dryRun: true } : { dry_run: true }),
+        });
+        expect(result.success).toBe(true);
+        expect([...f.slices]).toEqual(before);
+        const called = Object.values(f.journal).filter(
+          (call) => call.mock.calls.length > 0,
+        );
+        expect(called).toHaveLength(1);
+        expect(called[0].mock.calls[0][2]).toMatchObject({ dryRun: true });
+      } finally {
+        await f.close();
+      }
+    });
+    it("refuses one true and one false preview flag", async () => {
       const f = await fixture();
       try {
-        expect(
-          (
-            await f.call(surface, operation, {
-              ...args(operation),
-              // MCP spells the preview flag dry_run, REST and GraphQL
-              // dryRun; each surface refuses the other's spelling (w23/m7).
-              ...(surface === "mcp" ? { dryRun: true } : { dry_run: true }),
-            })
-          ).success,
-        ).toBe(false);
+        const result = await f.call(surface, operation, {
+          ...args(operation),
+          dry_run: true,
+          dryRun: false,
+        });
+        expect(result.success).toBe(false);
         for (const call of Object.values(f.journal))
           expect(call).not.toHaveBeenCalled();
       } finally {
@@ -475,123 +493,130 @@ describe.each(["rest", "gql", "mcp"])("source edits via %s", (surface) => {
 // A preview (w23/m7/t003) resolves the slice and runs every check, threads
 // the flag past the ledger hop, reports what it WOULD change, and writes
 // nothing: no slice touched, no files echoed, no hashes minted.
-describe.each(["rest", "gql", "mcp"])("source-slice preview via %s", (surface) => {
-  const previewArgs = (operation: Operation): Record<string, unknown> => ({
-    ...(args(operation) as Record<string, unknown>),
-    ...(surface === "mcp" ? { dry_run: true } : { dryRun: true }),
-  });
-  const journalKey = (operation: Operation) =>
-    operation === "update"
-      ? "updateSourceSlice"
-      : operation === "delete"
-        ? "deleteSourceSlice"
-        : "deleteMultiSourceSlices";
-  const replacement = "; replacement café\n";
-  describe.each(Object.keys(operations) as Operation[])("%s", (operation) => {
-    it("previews without writing, threading dryRun past the hop", async () => {
+describe.each(["rest", "gql", "mcp"])(
+  "source-slice preview via %s",
+  (surface) => {
+    const previewArgs = (operation: Operation): Record<string, unknown> => ({
+      ...(args(operation) as Record<string, unknown>),
+      ...(surface === "mcp" ? { dry_run: true } : { dryRun: true }),
+    });
+    const journalKey = (operation: Operation) =>
+      operation === "update"
+        ? "updateSourceSlice"
+        : operation === "delete"
+          ? "deleteSourceSlice"
+          : "deleteMultiSourceSlices";
+    const replacement = "; replacement café\n";
+    describe.each(Object.keys(operations) as Operation[])("%s", (operation) => {
+      it("previews without writing, threading dryRun past the hop", async () => {
+        const f = await fixture();
+        const before = [...f.slices];
+        try {
+          const result = await f.call(
+            surface,
+            operation,
+            previewArgs(operation),
+          );
+          expect(result.success).toBe(true);
+          expect([...f.slices]).toEqual(before);
+          // The hop body is the third call argument on every op; the
+          // generated client passes a fourth config argument on some.
+          const hop = f.journal[journalKey(operation)];
+          expect(hop).toHaveBeenCalledTimes(1);
+          expect(hop.mock.calls[0][2]).toMatchObject({ dryRun: true });
+          const emptyValidation = {
+            errorsBefore: 0,
+            errorsAfter: 0,
+            newErrors: [],
+          };
+          if (operation === "update") {
+            const would = {
+              message: "Would update entry entry1",
+              entryHash: "entry1-updated",
+              newSha256sum: hash(replacement),
+              newEntryHash: "entry1-updated",
+              ...(surface === "mcp" ? { dry_run: true } : { dryRun: true }),
+              preview: [{ path: "2026/imports.bean", text: replacement }],
+            };
+            expect(result.result).toEqual(
+              surface === "mcp"
+                ? {
+                    ...would,
+                    summary:
+                      "Would update entry entry1 (new hash entry1-updated). No new bean-check errors.",
+                    wrote: [],
+                    entryHashes: ["entry1-updated"],
+                    validation: emptyValidation,
+                  }
+                : would,
+            );
+          } else if (operation === "delete_many") {
+            const would = {
+              message: "Would delete 2 entries: entry1, entry2",
+              deletedCount: 2,
+              ...(surface === "mcp" ? { dry_run: true } : { dryRun: true }),
+              preview: [
+                { path: "main.bean", text: original },
+                { path: "main.bean", text: "; second\n" },
+              ],
+            };
+            expect(result.result).toEqual(
+              surface === "mcp"
+                ? {
+                    ...would,
+                    summary:
+                      "Would delete 2 entries. No new bean-check errors.",
+                    wrote: [],
+                    entryHashes: ["entry1", "entry2"],
+                    validation: emptyValidation,
+                  }
+                : would,
+            );
+          } else {
+            const would = {
+              message: "Would delete entry entry1",
+              entryHash: "entry1",
+              ...(surface === "mcp" ? { dry_run: true } : { dryRun: true }),
+              preview: [{ path: "main.bean", text: original }],
+            };
+            expect(result.result).toEqual(
+              surface === "mcp"
+                ? {
+                    ...would,
+                    summary:
+                      "Would delete entry entry1. No new bean-check errors.",
+                    wrote: [],
+                    entryHashes: ["entry1"],
+                    validation: emptyValidation,
+                  }
+                : would,
+            );
+          }
+        } finally {
+          await f.close();
+        }
+      });
+    });
+    // The same checks as a commit: an empty replacement is refused by the
+    // service guard before the hop, even as a preview.
+    it("still refuses an empty replacement on a preview", async () => {
       const f = await fixture();
       const before = [...f.slices];
       try {
-        const result = await f.call(surface, operation, previewArgs(operation));
-        expect(result.success).toBe(true);
+        const result = await f.call(surface, "update", {
+          ...previewArgs("update"),
+          newContent: "  \n",
+        });
+        expect(result.success).toBe(false);
         expect([...f.slices]).toEqual(before);
-        // The hop body is the third call argument on every op; the
-        // generated client passes a fourth config argument on some.
-        const hop = f.journal[journalKey(operation)];
-        expect(hop).toHaveBeenCalledTimes(1);
-        expect(hop.mock.calls[0][2]).toMatchObject({ dryRun: true });
-        const emptyValidation = {
-          errorsBefore: 0,
-          errorsAfter: 0,
-          newErrors: [],
-        };
-        if (operation === "update") {
-          const would = {
-            message: "Would update entry entry1",
-            entryHash: "entry1-updated",
-            newSha256sum: hash(replacement),
-            newEntryHash: "entry1-updated",
-            ...(surface === "mcp" ? { dry_run: true } : { dryRun: true }),
-            preview: [{ path: "2026/imports.bean", text: replacement }],
-          };
-          expect(result.result).toEqual(
-            surface === "mcp"
-              ? {
-                  ...would,
-                  summary:
-                    "Would update entry entry1 (new hash entry1-updated). No new bean-check errors.",
-                  wrote: [],
-                  entryHashes: ["entry1-updated"],
-                  validation: emptyValidation,
-                }
-              : would,
-          );
-        } else if (operation === "delete_many") {
-          const would = {
-            message: "Would delete 2 entries: entry1, entry2",
-            deletedCount: 2,
-            ...(surface === "mcp" ? { dry_run: true } : { dryRun: true }),
-            preview: [
-              { path: "main.bean", text: original },
-              { path: "main.bean", text: "; second\n" },
-            ],
-          };
-          expect(result.result).toEqual(
-            surface === "mcp"
-              ? {
-                  ...would,
-                  summary:
-                    "Would delete 2 entries. No new bean-check errors.",
-                  wrote: [],
-                  entryHashes: ["entry1", "entry2"],
-                  validation: emptyValidation,
-                }
-              : would,
-          );
-        } else {
-          const would = {
-            message: "Would delete entry entry1",
-            entryHash: "entry1",
-            ...(surface === "mcp" ? { dry_run: true } : { dryRun: true }),
-            preview: [{ path: "main.bean", text: original }],
-          };
-          expect(result.result).toEqual(
-            surface === "mcp"
-              ? {
-                  ...would,
-                  summary:
-                    "Would delete entry entry1. No new bean-check errors.",
-                  wrote: [],
-                  entryHashes: ["entry1"],
-                  validation: emptyValidation,
-                }
-              : would,
-          );
-        }
+        for (const call of Object.values(f.journal))
+          expect(call).not.toHaveBeenCalled();
       } finally {
         await f.close();
       }
     });
-  });
-  // The same checks as a commit: an empty replacement is refused by the
-  // service guard before the hop, even as a preview.
-  it("still refuses an empty replacement on a preview", async () => {
-    const f = await fixture();
-    const before = [...f.slices];
-    try {
-      const result = await f.call(surface, "update", {
-        ...previewArgs("update"),
-        newContent: "  \n",
-      });
-      expect(result.success).toBe(false);
-      expect([...f.slices]).toEqual(before);
-      for (const call of Object.values(f.journal))
-        expect(call).not.toHaveBeenCalled();
-    } finally {
-      await f.close();
-    }
-  });
-});
+  },
+);
 
 // w23/m3/t001: list output spells the hash `entry_hash`, so every entry tool
 // accepts that spelling on every surface; two different hashes refuse rather

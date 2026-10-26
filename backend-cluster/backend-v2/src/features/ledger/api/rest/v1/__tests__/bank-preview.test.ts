@@ -38,9 +38,14 @@ afterAll(async () => server.close());
 beforeEach(() => jest.clearAllMocks());
 
 it.each([
-  ["", undefined],
+  // w23/m9/t002: an omitted flag resolves to false; either spelling, or
+  // both agreeing, previews the same way.
+  ["", false],
   ["?dry_run=false", false],
   ["?dry_run=true", true],
+  ["?dryRun=false", false],
+  ["?dryRun=true", true],
+  ["?dry_run=true&dryRun=true", true],
 ])(
   "parses the sync preview query %s without truthiness coercion",
   async (query, expected) => {
@@ -53,6 +58,20 @@ it.each([
     expect(response.status).toBe(200);
     expect(sync).toHaveBeenCalledTimes(1);
     expect(sync.mock.calls[0]?.at(-1)).toBe(expected);
+  },
+);
+
+it.each(["dry_run=true&dryRun=false", "dry_run=false&dryRun=true"])(
+  "refuses a split preview query %s instead of guessing",
+  async (query) => {
+    const response = await fetch(
+      `${server.url}${ledger}/banks/item/sync?${query}`,
+      {
+        method: "POST",
+      },
+    );
+    expect(response.status).toBe(400);
+    expect(sync).not.toHaveBeenCalled();
   },
 );
 
@@ -86,22 +105,24 @@ describe.each([
   it.each(["query", "body"])(
     "rejects a preview in the %s before any write",
     async (location) => {
-      const response = await fetch(
-        `${server.url}${ledger}${path}${location === "query" ? "?dry_run=true" : ""}`,
-        {
+      // w23/m9/t002: both flag spellings are rejected when true.
+      const queries =
+        location === "query" ? ["?dry_run=true", "?dryRun=true"] : [""];
+      for (const query of queries) {
+        const response = await fetch(`${server.url}${ledger}${path}${query}`, {
           method,
           headers: { "content-type": "application/json" },
           body: JSON.stringify(
             location === "body" ? { ...body, dry_run: true } : body,
           ),
-        },
-      );
-      expect(response.status).toBe(400);
-      expect(change).not.toHaveBeenCalled();
+        });
+        expect(response.status).toBe(400);
+        expect(change).not.toHaveBeenCalled();
+      }
     },
   );
 
-  it.each(["", "?dry_run=false"])(
+  it.each(["", "?dry_run=false", "?dryRun=false"])(
     "still executes with query %s",
     async (query) => {
       const response = await fetch(`${server.url}${ledger}${path}${query}`, {
@@ -149,9 +170,7 @@ describe("REST bank spelling", () => {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        transactions: [
-          { transactionId: "t1", targetAccount: "Expenses:Food" },
-        ],
+        transactions: [{ transactionId: "t1", targetAccount: "Expenses:Food" }],
       }),
     });
     expect(ok.status).toBe(200);

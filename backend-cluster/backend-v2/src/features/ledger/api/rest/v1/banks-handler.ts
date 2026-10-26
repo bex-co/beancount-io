@@ -3,6 +3,10 @@ import { ledgerIdOf, ledgerPathSchema } from "./schemas";
 import { booleanQuery } from "@/server/rest/v1-schemas";
 import { v1Route } from "@/server/rest/v1-route";
 import { UnauthenticatedError } from "@/shared/errors";
+import {
+  DRY_RUN_NAMES,
+  resolveFlagAlias,
+} from "@/features/ledger/utils/flag-alias";
 import type { Identity } from "@/server/api/identity";
 
 /**
@@ -40,9 +44,16 @@ const dryRunQuery = z.object({
     description:
       "Validate and report what would change, without changing anything.",
   }),
+  // Alias (w23/m9/t002): request bodies spell it `dryRun`.
+  dryRun: booleanQuery.openapi({
+    description: "Alias of dry_run, as request bodies spell it.",
+  }),
 });
 const noPreviewQuery = z
-  .object({ dry_run: z.literal("false").optional() })
+  .object({
+    dry_run: z.literal("false").optional(),
+    dryRun: z.literal("false").optional(),
+  })
   .strict();
 const json = (description: string) => ({
   description,
@@ -191,7 +202,10 @@ export const BANK_ROUTES = [
         params.itemId,
         "manual",
         ledgerIdOf(params),
-        query.dry_run,
+        resolveFlagAlias(
+          { primary: query.dry_run, legacy: query.dryRun },
+          DRY_RUN_NAMES,
+        ),
       ),
   }),
   v1Route({
@@ -230,7 +244,10 @@ export const BANK_ROUTES = [
         name,
         body.transactions,
         body.filename,
-        query.dry_run,
+        resolveFlagAlias(
+          { primary: query.dry_run, legacy: query.dryRun },
+          DRY_RUN_NAMES,
+        ),
       );
     },
   }),
@@ -251,7 +268,10 @@ export const BANK_ROUTES = [
         callerOf(identity),
         ledgerIdOf(params),
         body.transactionIds,
-        query.dry_run,
+        resolveFlagAlias(
+          { primary: query.dry_run, legacy: query.dryRun },
+          DRY_RUN_NAMES,
+        ),
       ),
   }),
   v1Route({
@@ -268,7 +288,10 @@ export const BANK_ROUTES = [
         callerOf(identity),
         params.itemId,
         ledgerIdOf(params),
-        query.dry_run,
+        resolveFlagAlias(
+          { primary: query.dry_run, legacy: query.dryRun },
+          DRY_RUN_NAMES,
+        ),
       ),
   }),
   v1Route({
@@ -285,7 +308,10 @@ export const BANK_ROUTES = [
         callerOf(identity),
         params.itemId,
         ledgerIdOf(params),
-        query.dry_run,
+        resolveFlagAlias(
+          { primary: query.dry_run, legacy: query.dryRun },
+          DRY_RUN_NAMES,
+        ),
       ),
   }),
   v1Route({

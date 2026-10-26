@@ -248,9 +248,14 @@ describe("MCP tool list", () => {
     // camelCase: measured at 112,847 bytes. The aliases are typed-API
     // surface the parity tests pin, so trimming them on MCP alone would
     // fork the contract.
+    //
+    // 112 KB since w23/m9/t002 twinned the preview flag as dryRun on the
+    // fifteen write tools: measured at 114,071 bytes. Each twin carries
+    // one sentence naming the spelling's home surface, which is the
+    // guidance the milestone exists to publish.
     const { tools } = await listToolsRaw();
     const bytes = Buffer.byteLength(JSON.stringify(tools), "utf8");
-    expect(bytes).toBeLessThan(111 * 1024);
+    expect(bytes).toBeLessThan(112 * 1024);
   });
 
   // w23/m7/t006: every mutation preview flag is advertised where agents
@@ -271,6 +276,10 @@ describe("MCP tool list", () => {
       | undefined;
     expect(input?.properties?.dry_run?.description).toBe(
       PREVIEW_FLAG_DESCRIPTION,
+    );
+    // w23/m9/t002: the dryRun twin is advertised alongside, naming home.
+    expect(input?.properties?.dryRun?.description).toBe(
+      "Alias of dry_run, as REST and GraphQL spell it.",
     );
     const output = tool?.outputSchema as
       | {

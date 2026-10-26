@@ -12,6 +12,10 @@ import {
   resolveOptionalBankIdAlias,
 } from "./bank-id-alias";
 import {
+  DRY_RUN_NAMES,
+  resolveFlagAlias,
+} from "@/features/ledger/utils/flag-alias";
+import {
   readBeanCheckErrors,
   summarizeWrite,
   toWriteValidation,
@@ -39,6 +43,11 @@ const dryRunField = z
   .describe(
     "Validate and report what would change, without changing anything.",
   );
+
+const dryRunAliasField = z
+  .boolean()
+  .optional()
+  .describe("Alias of dry_run, as REST and GraphQL spell it.");
 
 /**
  * The bank-import payload is service-defined per operation, so the schema
@@ -201,24 +210,26 @@ const submitInput = z.object({
     .optional()
     .describe("Which ledger file to append to. Must exist."),
   dry_run: dryRunField,
+  dryRun: dryRunAliasField,
 });
 
 export const BANK_OPERATIONS = {
   sync: bankOperation(
     "sync",
     "import",
-    z.object({ ...itemIdFields, dry_run: dryRunField }),
+    z.object({
+      ...itemIdFields,
+      dry_run: dryRunField,
+      dryRun: dryRunAliasField,
+    }),
     "Pull new transactions from a linked bank into staging; nothing is written to the ledger. dry_run reports what would be pulled.",
-    ({ services, identity, ledgerId }, { itemId, item_id, dry_run }) =>
+    ({ services, identity, ledgerId }, { itemId, item_id, dry_run, dryRun }) =>
       services.plaidSync.syncItemTransactions(
         identity,
-        resolveBankIdAlias(
-          { primary: itemId, legacy: item_id },
-          ITEM_ID_NAMES,
-        ),
+        resolveBankIdAlias({ primary: itemId, legacy: item_id }, ITEM_ID_NAMES),
         "manual",
         ledgerId,
-        dry_run ?? false,
+        resolveFlagAlias({ primary: dry_run, legacy: dryRun }, DRY_RUN_NAMES),
       ),
   ),
   submit: bankOperation(
@@ -231,11 +242,15 @@ export const BANK_OPERATIONS = {
   discard: bankOperation(
     "discard",
     "import",
-    z.object({ ...transactionIdsFields, dry_run: dryRunField }),
+    z.object({
+      ...transactionIdsFields,
+      dry_run: dryRunField,
+      dryRun: dryRunAliasField,
+    }),
     "Remove staged bank transactions so they are never imported. dry_run reports what would be removed.",
     (
       { services, identity, ledgerId },
-      { transactionIds, transaction_ids, dry_run },
+      { transactionIds, transaction_ids, dry_run, dryRun },
     ) =>
       services.plaidSync.deleteTransactions(
         identity,
@@ -244,23 +259,24 @@ export const BANK_OPERATIONS = {
           { primary: transactionIds, legacy: transaction_ids },
           TRANSACTION_IDS_NAMES,
         ),
-        dry_run ?? false,
+        resolveFlagAlias({ primary: dry_run, legacy: dryRun }, DRY_RUN_NAMES),
       ),
   ),
   reconcile: bankOperation(
     "reconcile",
     "connection",
-    z.object({ ...itemIdFields, dry_run: dryRunField }),
+    z.object({
+      ...itemIdFields,
+      dry_run: dryRunField,
+      dryRun: dryRunAliasField,
+    }),
     "Re-read which accounts a linked bank shares; accounts the bank no longer shares can be deleted along with their staged transactions. dry_run reports the changes without applying them.",
-    ({ services, identity, ledgerId }, { itemId, item_id, dry_run }) =>
+    ({ services, identity, ledgerId }, { itemId, item_id, dry_run, dryRun }) =>
       services.plaidItem.reconcileItemAccounts(
         identity,
-        resolveBankIdAlias(
-          { primary: itemId, legacy: item_id },
-          ITEM_ID_NAMES,
-        ),
+        resolveBankIdAlias({ primary: itemId, legacy: item_id }, ITEM_ID_NAMES),
         ledgerId,
-        dry_run ?? false,
+        resolveFlagAlias({ primary: dry_run, legacy: dryRun }, DRY_RUN_NAMES),
       ),
   ),
   map_account: bankOperation(
@@ -319,27 +335,25 @@ export const BANK_OPERATIONS = {
     ({ services, identity, ledgerId }, { itemId, item_id }) =>
       services.plaidItem.refreshItemStatus(
         identity,
-        resolveBankIdAlias(
-          { primary: itemId, legacy: item_id },
-          ITEM_ID_NAMES,
-        ),
+        resolveBankIdAlias({ primary: itemId, legacy: item_id }, ITEM_ID_NAMES),
         ledgerId,
       ),
   ),
   unlink: bankOperation(
     "unlink",
     "connection",
-    z.object({ ...itemIdFields, dry_run: dryRunField }),
+    z.object({
+      ...itemIdFields,
+      dry_run: dryRunField,
+      dryRun: dryRunAliasField,
+    }),
     "Sever a linked bank connection. Linking a new bank happens in a browser through the bank's own widget, not here. dry_run reports what would be removed.",
-    ({ services, identity, ledgerId }, { itemId, item_id, dry_run }) =>
+    ({ services, identity, ledgerId }, { itemId, item_id, dry_run, dryRun }) =>
       services.plaidItem.unlinkItem(
         identity,
-        resolveBankIdAlias(
-          { primary: itemId, legacy: item_id },
-          ITEM_ID_NAMES,
-        ),
+        resolveBankIdAlias({ primary: itemId, legacy: item_id }, ITEM_ID_NAMES),
         ledgerId,
-        dry_run ?? false,
+        resolveFlagAlias({ primary: dry_run, legacy: dryRun }, DRY_RUN_NAMES),
       ),
   ),
 };
@@ -351,9 +365,13 @@ export const BANK_OPERATIONS = {
  */
 async function submitTransactions(
   { services, identity, ledgerId }: BankCtx,
-  { transactions, filename, dry_run }: z.output<typeof submitInput>,
+  { transactions, filename, dry_run, dryRun }: z.output<typeof submitInput>,
 ) {
   const [owner, name] = ledgerId.split("/");
+  const preview = resolveFlagAlias(
+    { primary: dry_run, legacy: dryRun },
+    DRY_RUN_NAMES,
+  );
   const submit = () =>
     services.plaidSync.submitTransactionsToLedger(
       identity,
@@ -374,9 +392,9 @@ async function submitTransactions(
         ),
       })),
       filename,
-      dry_run ?? false,
+      preview,
     );
-  if (dry_run) {
+  if (preview) {
     const errorsBefore = await readBeanCheckErrors(
       services,
       identity,

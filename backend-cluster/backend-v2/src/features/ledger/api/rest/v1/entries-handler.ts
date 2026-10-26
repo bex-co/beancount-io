@@ -14,6 +14,10 @@ import {
   POSTING_TOTAL_PRICE_DESCRIPTION,
 } from "@/features/ledger/utils/entry-field-descriptions";
 import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
+import {
+  DRY_RUN_NAMES,
+  resolveFlagAlias,
+} from "@/features/ledger/utils/flag-alias";
 
 /**
  * REST/MCP null tolerance: an explicit null on an optional field means the
@@ -185,17 +189,17 @@ export const entriesBodySchema = z
     entries: z.array(entrySchema).openapi({
       description: "Directives to append, committed all-or-nothing",
     }),
-    allowInvalid: nullToUndefined(z.boolean())
-      .optional()
-      .openapi({
-        description:
-          "Record entries deliberately even when they are unbalanced (UNBALANCED) or would add bean-check errors such as a second open for an open account (VALIDATION_FAILED), instead of refusing them",
-      }),
-    dryRun: nullToUndefined(z.boolean())
-      .optional()
-      .openapi({
-        description: PREVIEW_FLAG_DESCRIPTION,
-      }),
+    allowInvalid: nullToUndefined(z.boolean()).optional().openapi({
+      description:
+        "Record entries deliberately even when they are unbalanced (UNBALANCED) or would add bean-check errors such as a second open for an open account (VALIDATION_FAILED), instead of refusing them",
+    }),
+    dryRun: nullToUndefined(z.boolean()).optional().openapi({
+      description: PREVIEW_FLAG_DESCRIPTION,
+    }),
+    // Twin (w23/m9/t002): MCP spells it `dry_run`.
+    dry_run: nullToUndefined(z.boolean()).optional().openapi({
+      description: "Alias of dryRun, as MCP spells it.",
+    }),
   })
   .openapi("EntriesRequest", {
     description: "One or more directives to add to the ledger",
@@ -220,18 +224,18 @@ const directiveTextBodySchema = z
       description:
         "Target file. Omitted, each directive routes to the file the ledger's own options assign it.",
     }),
-    dryRun: nullToUndefined(z.boolean())
-      .optional()
-      .openapi({
-        description:
-          "Run every check and return the diff and projected errors without committing",
-      }),
-    allowInvalid: nullToUndefined(z.boolean())
-      .optional()
-      .openapi({
-        description:
-          "Commit even when the text introduces new bean-check errors, instead of refusing with UNBALANCED or VALIDATION_FAILED",
-      }),
+    dryRun: nullToUndefined(z.boolean()).optional().openapi({
+      description:
+        "Run every check and return the diff and projected errors without committing",
+    }),
+    // Twin (w23/m9/t002): MCP spells it `dry_run`.
+    dry_run: nullToUndefined(z.boolean()).optional().openapi({
+      description: "Alias of dryRun, as MCP spells it.",
+    }),
+    allowInvalid: nullToUndefined(z.boolean()).optional().openapi({
+      description:
+        "Commit even when the text introduces new bean-check errors, instead of refusing with UNBALANCED or VALIDATION_FAILED",
+    }),
   })
   .openapi("DirectiveTextRequest", {
     description: "Beancount directive text to append to the ledger",
@@ -309,7 +313,10 @@ export const ENTRY_ROUTES = [
         // drift apart.
         "web",
         body.allowInvalid ?? false,
-        body.dryRun ?? false,
+        resolveFlagAlias(
+          { primary: body.dry_run, legacy: body.dryRun },
+          DRY_RUN_NAMES,
+        ),
       );
       // The service also reports which files the batch landed in for MCP's
       // write outcome; v1 adds only the hashes (w23/060).
@@ -342,7 +349,10 @@ export const ENTRY_ROUTES = [
         {
           text: body.text,
           path: body.path,
-          dryRun: body.dryRun ?? false,
+          dryRun: resolveFlagAlias(
+            { primary: body.dry_run, legacy: body.dryRun },
+            DRY_RUN_NAMES,
+          ),
           allowInvalid: body.allowInvalid ?? false,
         },
       ),

@@ -242,6 +242,8 @@ async function fixture(caller = identity) {
     text: string;
     path?: string;
     dryRun?: boolean;
+    // w23/m9/t002: the twin spelling, sent only by the spelling tests.
+    dry_run?: boolean;
     allowInvalid?: boolean;
   };
   return {
@@ -250,7 +252,12 @@ async function fixture(caller = identity) {
     changeLedgerFiles,
     checkProjectedErrors,
     getProjectedEntryIds,
-    call: async (surface: "rest" | "gql" | "mcp", args: Args) => {
+    call: async (
+      surface: "rest" | "gql" | "mcp",
+      args: Args,
+      // The spelling tests send the flag untouched.
+      raw = false,
+    ) => {
       if (surface === "rest") {
         const response = await fetch(
           `${rest.url}/api-gateway/v1/ledgers/alice/main/directives/text`,
@@ -268,7 +275,7 @@ async function fixture(caller = identity) {
       if (surface === "gql") {
         const result = await graphql({
           schema,
-          source: `mutation { appendLedgerText(ledgerId: "alice/main", text: ${JSON.stringify(args.text)}${args.path ? `, path: ${JSON.stringify(args.path)}` : ""}${args.dryRun ? ", dryRun: true" : ""}${args.allowInvalid ? ", allowInvalid: true" : ""}) { success message dryRun count wrote { path line } entryHashes diff { path diff } errorsBefore errorsAfter newErrors { message } appendedUnsorted } }`,
+          source: `mutation { appendLedgerText(ledgerId: "alice/main", text: ${JSON.stringify(args.text)}${args.path ? `, path: ${JSON.stringify(args.path)}` : ""}${args.dryRun !== undefined ? `, dryRun: ${args.dryRun}` : ""}${args.dry_run !== undefined ? `, dry_run: ${args.dry_run}` : ""}${args.allowInvalid ? ", allowInvalid: true" : ""}) { success message dryRun count wrote { path line } entryHashes diff { path diff } errorsBefore errorsAfter newErrors { message } appendedUnsorted } }`,
           contextValue: {
             identity: caller,
             getCurrentIdentity: () => caller,
@@ -287,7 +294,14 @@ async function fixture(caller = identity) {
         arguments: {
           text: args.text,
           ...(args.path && { path: args.path }),
-          ...(args.dryRun && { dry_run: true }),
+          ...(raw
+            ? {
+                ...(args.dryRun !== undefined ? { dryRun: args.dryRun } : {}),
+                ...(args.dry_run !== undefined
+                  ? { dry_run: args.dry_run }
+                  : {}),
+              }
+            : { ...(args.dryRun && { dry_run: true }) }),
           ...(args.allowInvalid && { allowInvalid: true }),
         },
       });
@@ -543,6 +557,44 @@ describe("appending Beancount text through the real adapters", () => {
         expect(f.state.files.get("main.bean")).toBe(EXISTING);
         expect(data.entryHashes).toEqual([]);
         expect(f.getProjectedEntryIds).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
+  // w23/m9/t002: each surface accepts the other's spelling as a twin
+  // that previews without writing.
+  it.each(["rest", "gql", "mcp"] as const)(
+    "accepts the other surface's preview spelling via %s",
+    async (surface) => {
+      const f = await fixture();
+      try {
+        const twin = surface === "mcp" ? { dryRun: true } : { dry_run: true };
+        const result = await f.call(surface, { text: TXN, ...twin }, true);
+        expect(result.ok).toBe(true);
+        const data = result.ok ? (result.data as Record<string, never>) : {};
+        expect(data.dryRun ?? data.dry_run).toBe(true);
+        expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+        expect(f.state.files.get("main.bean")).toBe(EXISTING);
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
+  it.each(["rest", "gql", "mcp"] as const)(
+    "refuses one true and one false preview flag via %s",
+    async (surface) => {
+      const f = await fixture();
+      try {
+        const result = await f.call(
+          surface,
+          { text: TXN, dry_run: true, dryRun: false },
+          true,
+        );
+        expect(result.ok).toBe(false);
+        expect(f.changeLedgerFiles).not.toHaveBeenCalled();
       } finally {
         await f.close();
       }

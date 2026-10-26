@@ -29,6 +29,10 @@ import {
   POSTING_TOTAL_PRICE_DESCRIPTION,
 } from "@/features/ledger/utils/entry-field-descriptions";
 import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
+import {
+  DRY_RUN_NAMES,
+  resolveFlagAlias,
+} from "@/features/ledger/utils/flag-alias";
 
 enum BudgetInterval {
   DAILY = "daily",
@@ -505,10 +509,14 @@ export class LedgerEntryMutationResolver {
     allowInvalid?: boolean,
     @Arg("dryRun", () => Boolean, {
       nullable: true,
-      description:
-        PREVIEW_FLAG_DESCRIPTION,
+      description: PREVIEW_FLAG_DESCRIPTION,
     })
     dryRun?: boolean,
+    @Arg("dry_run", () => Boolean, {
+      nullable: true,
+      description: "Alias of dryRun, as MCP spells it.",
+    })
+    dry_run?: boolean,
   ): Promise<AddLedgerEntryResponse> {
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const result = await this.ledgerEntry.addBulkEntries(
@@ -518,7 +526,7 @@ export class LedgerEntryMutationResolver {
       entries.map(toServiceEntry),
       ctx.platform,
       allowInvalid ?? false,
-      dryRun ?? false,
+      resolveFlagAlias({ primary: dry_run, legacy: dryRun }, DRY_RUN_NAMES),
     );
     return {
       ...result,
@@ -552,10 +560,14 @@ export class LedgerEntryMutationResolver {
         "Run every check and return the diff and projected errors without committing",
     })
     dryRun?: boolean,
+    @Arg("dry_run", () => Boolean, {
+      nullable: true,
+      description: "Alias of dryRun, as MCP spells it.",
+    })
+    dry_run?: boolean,
     @Arg("allowInvalid", () => Boolean, {
       nullable: true,
-      description:
-        "Commit even when the text introduces new bean-check errors",
+      description: "Commit even when the text introduces new bean-check errors",
     })
     allowInvalid?: boolean,
   ): Promise<AppendDirectiveTextResponse> {
@@ -567,7 +579,10 @@ export class LedgerEntryMutationResolver {
       {
         text,
         path: path ?? undefined,
-        dryRun: dryRun ?? false,
+        dryRun: resolveFlagAlias(
+          { primary: dry_run, legacy: dryRun },
+          DRY_RUN_NAMES,
+        ),
         allowInvalid: allowInvalid ?? false,
       },
     );

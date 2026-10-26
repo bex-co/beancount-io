@@ -52,7 +52,8 @@ export enum LedgerOpeningState {
 
 registerEnumType(LedgerOpeningState, {
   name: "LedgerOpeningState",
-  description: "Whether an account's opening balance is unknown, zero, or known",
+  description:
+    "Whether an account's opening balance is unknown, zero, or known",
 });
 
 @InputType()
@@ -388,10 +389,15 @@ export class RenameLedgerFileInput {
 
   @Field(() => Boolean, {
     nullable: true,
-    description:
-      PREVIEW_FLAG_DESCRIPTION,
+    description: PREVIEW_FLAG_DESCRIPTION,
   })
   dryRun?: boolean;
+
+  @Field(() => Boolean, {
+    nullable: true,
+    description: "Alias of dryRun, as MCP spells it.",
+  })
+  dry_run?: boolean;
 }
 
 @ArgsType()

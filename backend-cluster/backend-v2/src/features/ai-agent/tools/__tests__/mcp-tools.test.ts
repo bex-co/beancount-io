@@ -800,6 +800,65 @@ describe("executeEditLedgerFiles", () => {
     expect((result as { error: string }).error).not.toContain("commit failed");
   });
 
+  // w23/m9/t002: the dryRun twin previews like dry_run.
+  it("update (str_replace): previews under the dryRun twin spelling", async () => {
+    const ledgerRepo = {
+      getFilesContent: jest
+        .fn()
+        .mockResolvedValue([
+          { path: "main.bean", content: "abc", sha: "sha1" },
+        ]),
+      changeFiles: jest.fn(),
+    };
+    const result = await executeEditLedgerFiles(
+      {
+        services: { ledgerRepo } as any,
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+      },
+      {
+        description: "edit",
+        files: [
+          {
+            operation: "update",
+            path: "main.bean",
+            old_string: "zzz",
+            new_string: "y",
+          },
+        ],
+        dryRun: true,
+      },
+    );
+    expect(result).toMatchObject({
+      ok: false,
+      error: expect.stringMatching(/^preview refused: /),
+    });
+    expect(ledgerRepo.changeFiles).not.toHaveBeenCalled();
+  });
+
+  it("refuses one true and one false preview flag", async () => {
+    const ledgerRepo = {
+      getFilesContent: jest.fn(),
+      changeFiles: jest.fn(),
+    };
+    await expect(
+      executeEditLedgerFiles(
+        {
+          services: { ledgerRepo } as any,
+          identity: IDENTITY,
+          ledgerId: LEDGER_ID,
+        },
+        {
+          description: "edit",
+          files: [{ operation: "create", path: "new.bean", content: "hi" }],
+          dry_run: true,
+          dryRun: false,
+        },
+      ),
+    ).rejects.toThrow(/dry_run.*dryRun/);
+    expect(ledgerRepo.changeFiles).not.toHaveBeenCalled();
+  });
+
   it("update (str_replace): rejects an ambiguous match (appears more than once)", async () => {
     const ledgerRepo = {
       getFilesContent: jest

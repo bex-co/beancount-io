@@ -13,6 +13,10 @@ import { IContext } from "@/server/graphql/context";
 import type { ILedgerJournalService } from "@/features/ledger/service/ledger-journal-service";
 import { resolveEntryHash } from "@/features/ledger/utils/entry-hash-alias";
 import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
+import {
+  DRY_RUN_NAMES,
+  resolveFlagAlias,
+} from "@/features/ledger/utils/flag-alias";
 
 @InputType()
 class DeleteSourceSliceInput {
@@ -37,10 +41,15 @@ class DeleteSourceSliceInput {
 
   @Field(() => Boolean, {
     nullable: true,
-    description:
-      PREVIEW_FLAG_DESCRIPTION,
+    description: PREVIEW_FLAG_DESCRIPTION,
   })
   dryRun?: boolean;
+
+  @Field(() => Boolean, {
+    nullable: true,
+    description: "Alias of dryRun, as MCP spells it.",
+  })
+  dry_run?: boolean;
 }
 
 @ObjectType()
@@ -98,10 +107,15 @@ class DeleteMultiSourceSlicesInput {
 
   @Field(() => Boolean, {
     nullable: true,
-    description:
-      PREVIEW_FLAG_DESCRIPTION,
+    description: PREVIEW_FLAG_DESCRIPTION,
   })
   dryRun?: boolean;
+
+  @Field(() => Boolean, {
+    nullable: true,
+    description: "Alias of dryRun, as MCP spells it.",
+  })
+  dry_run?: boolean;
 }
 
 @ObjectType()
@@ -147,10 +161,15 @@ class UpdateSourceSliceInput {
 
   @Field(() => Boolean, {
     nullable: true,
-    description:
-      PREVIEW_FLAG_DESCRIPTION,
+    description: PREVIEW_FLAG_DESCRIPTION,
   })
   dryRun?: boolean;
+
+  @Field(() => Boolean, {
+    nullable: true,
+    description: "Alias of dryRun, as MCP spells it.",
+  })
+  dry_run?: boolean;
 }
 
 @ObjectType()
@@ -198,7 +217,10 @@ export class LedgerJournalMutationResolver {
       entryHash: resolveEntryHash(input),
       sha256sum: input.sha256sum,
       allowInvalid: input.allowInvalid ?? false,
-      dryRun: input.dryRun ?? false,
+      dryRun: resolveFlagAlias(
+        { primary: input.dry_run, legacy: input.dryRun },
+        DRY_RUN_NAMES,
+      ),
     });
     return { ...result, preview: result.preview ?? [] };
   }
@@ -222,7 +244,10 @@ export class LedgerJournalMutationResolver {
         sha256sum: e.sha256sum,
       })),
       allowInvalid: input.allowInvalid ?? false,
-      dryRun: input.dryRun ?? false,
+      dryRun: resolveFlagAlias(
+        { primary: input.dry_run, legacy: input.dryRun },
+        DRY_RUN_NAMES,
+      ),
     });
     return { ...result, preview: result.preview ?? [] };
   }
@@ -244,7 +269,10 @@ export class LedgerJournalMutationResolver {
       newContent: input.newContent,
       platform: ctx.platform,
       allowInvalid: input.allowInvalid ?? false,
-      dryRun: input.dryRun ?? false,
+      dryRun: resolveFlagAlias(
+        { primary: input.dry_run, legacy: input.dryRun },
+        DRY_RUN_NAMES,
+      ),
     });
     return { ...result, preview: result.preview ?? [] };
   }

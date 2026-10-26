@@ -148,8 +148,20 @@ describe("Ledger resolvers (delegation)", () => {
       expect(workflow.renameLedgerFile).toHaveBeenCalledWith({
         identity: IDENTITY,
         ledgerId: "o/l",
-        input,
+        // w23/m9/t002: the resolver folds the dry_run twin into dryRun,
+        // off when both are missing.
+        input: { ...input, dryRun: false },
       });
+    });
+
+    it("renameLedgerFile folds the dry_run twin into dryRun", async () => {
+      const input = { oldPath: "a", newPath: "b", dry_run: true };
+      await mutationResolver.renameLedgerFile("o/l", input as never, ctx);
+      const call = workflow.renameLedgerFile.mock.calls[0][0] as unknown as {
+        input: Record<string, unknown>;
+      };
+      expect(call.input).toMatchObject({ dryRun: true });
+      expect(call.input).not.toHaveProperty("dry_run");
     });
 
     it("starLedger / unstarLedger delegate", async () => {

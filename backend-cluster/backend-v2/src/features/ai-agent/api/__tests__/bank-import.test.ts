@@ -258,6 +258,30 @@ describe("bank import on MCP", () => {
 
       expect(services.plaidItem.unlinkItem.mock.calls[0]!.at(-1)).toBe(false);
     });
+
+    // w23/m9/t002: the dryRun twin reaches the service like dry_run.
+    it("passes the dryRun twin through", async () => {
+      const services = fakeServices();
+      await call(services, "unlinkBankConnection", {
+        item_id: "pitm_1",
+        dryRun: true,
+      });
+
+      expect(services.plaidItem.unlinkItem.mock.calls[0]!.at(-1)).toBe(true);
+    });
+
+    it("refuses one true and one false preview flag", async () => {
+      const services = fakeServices();
+      const result = await call(services, "unlinkBankConnection", {
+        item_id: "pitm_1",
+        dry_run: true,
+        dryRun: false,
+      });
+
+      expect(result.isError).toBe(true);
+      expect(JSON.stringify(result.content)).toContain("dry_run");
+      expect(services.plaidItem.unlinkItem).not.toHaveBeenCalled();
+    });
   });
 
   describe.each([

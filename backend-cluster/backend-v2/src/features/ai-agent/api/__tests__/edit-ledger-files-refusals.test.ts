@@ -844,7 +844,9 @@ describe("an old_string that matches more than once", () => {
  * argument the tool does not declare, on every tool.
  */
 describe("an argument the tool does not declare", () => {
-  it.each(["dryrun", "dryRun", "bogus"])(
+  // w23/m9/t002: dryRun is the declared preview twin now, so only the
+  // true typos stay in this list.
+  it.each(["dryrun", "bogus"])(
     "refuses %s on createLedgerFiles instead of committing",
     async (typo) => {
       const f = await fixture();

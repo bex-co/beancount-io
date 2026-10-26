@@ -10,6 +10,10 @@ import type { LedgerChangeFileOperation } from "@/foundation/fava/Api";
 import type { ToolContext } from "./types";
 import { toolOutputSchema, withWriteOutcome } from "./types";
 import { runToolSafely } from "../utils/run-tool";
+import {
+  DRY_RUN_NAMES,
+  resolveFlagAlias,
+} from "@/features/ledger/utils/flag-alias";
 import { normalizeAgentRepoPath } from "./agent-repo-path";
 import {
   readBeanCheckErrors,
@@ -39,8 +43,8 @@ const description =
   "  Several operations on one path apply in order, each to the text the previous one produced.\n" +
   "  replace: overwrite entire text file — provide plain UTF-8 text content (NOT base64).\n" +
   "  delete: remove a file — refused when still `include`d by another file. " +
-    DELETE_INCLUDE_GUARD_BATCH_NOTE +
-    "\n" +
+  DELETE_INCLUDE_GUARD_BATCH_NOTE +
+  "\n" +
   "  Each new/resulting file is limited to 1 MiB of UTF-8 bytes, including dry runs.\n" +
   "  dry_run previews without committing: same refusal as the commit, plus a " +
   "unified diff per touched file and bean-check's verdict over the projected " +
@@ -108,10 +112,14 @@ export const editLedgerFilesInputSchema = z.object({
   dry_run: z
     .boolean()
     .optional()
-    .default(false)
     .describe(
       "If true, validates all operations and returns a preview without committing.",
     ),
+  // Alias (w23/m9/t002): REST bodies and GraphQL spell it `dryRun`.
+  dryRun: z
+    .boolean()
+    .optional()
+    .describe("Alias of dry_run, as REST and GraphQL spell it."),
 });
 
 type FileOperation = z.infer<typeof fileOpSchema>;
@@ -280,13 +288,17 @@ export async function executeEditLedgerFiles(
   input: z.infer<typeof editLedgerFilesInputSchema>,
 ): Promise<EditLedgerFilesOutput> {
   const { services, identity, ledgerId } = ctx;
-  const { files, dry_run } = input;
+  const { files, dry_run, dryRun } = input;
+  const preview = resolveFlagAlias(
+    { primary: dry_run, legacy: dryRun },
+    DRY_RUN_NAMES,
+  );
   const description = resolveCommitMessage(input, { required: true });
 
   toolLogger.debug("Executing file operations", {
     description,
     fileCount: files.length,
-    dry_run,
+    dry_run: preview,
   });
 
   return runToolSafely({
@@ -295,7 +307,7 @@ export async function executeEditLedgerFiles(
     level: "error",
     // A preview commits nothing, so its refusal must not say a commit failed.
     formatError: (msg) =>
-      `${dry_run ? "preview refused" : "commit failed"}: ${msg}`,
+      `${preview ? "preview refused" : "commit failed"}: ${msg}`,
     execute: async (): Promise<EditLedgerFilesResult> => {
       const normalizedFiles = files.map((file) => ({
         ...file,
@@ -371,7 +383,7 @@ export async function executeEditLedgerFiles(
         return {
           diff: [],
           summary: "No changes — nothing committed",
-          dry_run,
+          dry_run: preview,
           count: 0,
           operations: [],
           wrote: [],
@@ -380,7 +392,7 @@ export async function executeEditLedgerFiles(
         };
       }
 
-      if (dry_run) {
+      if (preview) {
         // The preview must refuse exactly what the commit would: the service
         // runs the same write authorization and path validation, then stops
         // before the repository call. Without this, a create-only preview
@@ -525,6 +537,7 @@ function fileOperation<F extends z.ZodType>(
     message: editLedgerFilesInputSchema.shape.message,
     files: z.array(file).min(1),
     dry_run: editLedgerFilesInputSchema.shape.dry_run,
+    dryRun: editLedgerFilesInputSchema.shape.dryRun,
   });
   return {
     schema: schema as z.ZodObject,

@@ -9,6 +9,10 @@ import {
 } from "../api/mcp-context";
 import { toolOutputSchema, withWriteOutcome } from "./types";
 import { runToolSafely } from "../utils/run-tool";
+import {
+  DRY_RUN_NAMES,
+  resolveFlagAlias,
+} from "@/features/ledger/utils/flag-alias";
 import { summarizeWrite } from "./write-validation";
 
 const toolLogger = logger.child({ module: "tool:append-ledger-text" });
@@ -27,7 +31,8 @@ export const appendLedgerTextDescription =
  * The tool's input, built from the REST body so the two dialects of one
  * capability cannot drift (w2/m28:t005). `dry_run` keeps MCP's existing
  * snake-case spelling — it is what the file-edit tools already publish, and an
- * agent using both should not have to remember which one is which.
+ * agent using both should not have to remember which one is which — with a
+ * `dryRun` twin for callers pasting from REST or GraphQL (w23/m9/t002).
  */
 export const appendLedgerTextInputSchema = z
   .object({
@@ -35,7 +40,11 @@ export const appendLedgerTextInputSchema = z
       .string()
       .describe('e.g. `2026-01-02 * "Cafe" ""` plus indented postings.'),
     path: z.string().optional().describe("Target file; omit to auto-route."),
-    dry_run: z.boolean().optional().default(false),
+    dry_run: z.boolean().optional(),
+    dryRun: z
+      .boolean()
+      .optional()
+      .describe("Alias of dry_run, as REST and GraphQL spell it."),
     allowInvalid: z.boolean().optional().default(false),
     ledger: ledgerSelection,
   })
@@ -73,7 +82,10 @@ export async function executeAppendLedgerText(
         {
           text: args.text,
           path: args.path,
-          dryRun: args.dry_run,
+          dryRun: resolveFlagAlias(
+            { primary: args.dry_run, legacy: args.dryRun },
+            DRY_RUN_NAMES,
+          ),
           allowInvalid: args.allowInvalid,
         },
       );

@@ -2,6 +2,10 @@ import { z } from "@/shared/zod-openapi-setup";
 import { v1Route } from "@/server/rest/v1-route";
 import { json } from "@/server/rest/v1-schemas";
 import { resolveEntryHash } from "@/features/ledger/utils/entry-hash-alias";
+import {
+  DRY_RUN_NAMES,
+  resolveFlagAlias,
+} from "@/features/ledger/utils/flag-alias";
 import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 import { ledgerPathSchema, ledgerIdOf } from "./schemas";
 // Both spellings accepted (w23/m3/t001); handlers resolve to `entryHash`
@@ -22,13 +26,24 @@ const allowInvalid = z
   .describe(
     "Commit even when the write would add bean-check errors (VALIDATION_FAILED with newLedgerErrors), instead of refusing it.",
   );
-const dryRun = z
+const dryRun = z.boolean().optional().describe(PREVIEW_FLAG_DESCRIPTION);
+// Twin (w23/m9/t002): MCP spells it `dry_run`.
+const dry_run = z
   .boolean()
   .optional()
-  .describe(PREVIEW_FLAG_DESCRIPTION);
-export const deleteSliceInput = sliceRef.extend({ allowInvalid, dryRun });
+  .describe("Alias of dryRun, as MCP spells it.");
+export const deleteSliceInput = sliceRef.extend({
+  allowInvalid,
+  dryRun,
+  dry_run,
+});
 export const deleteSlicesInput = z
-  .object({ entries: z.array(sliceRef), allowInvalid, dryRun })
+  .object({
+    entries: z.array(sliceRef),
+    allowInvalid,
+    dryRun,
+    dry_run,
+  })
   .strict();
 export const updateSliceInput = deleteSliceInput.extend({
   newContent: z.string(),
@@ -83,7 +98,10 @@ export const SOURCE_SLICE_ROUTES = [
           entryHash: resolveEntryHash(body),
           sha256sum: body.sha256sum,
           allowInvalid: body.allowInvalid,
-          dryRun: body.dryRun,
+          dryRun: resolveFlagAlias(
+            { primary: body.dry_run, legacy: body.dryRun },
+            DRY_RUN_NAMES,
+          ),
         })
         .then(withoutFiles),
   }),
@@ -106,7 +124,10 @@ export const SOURCE_SLICE_ROUTES = [
             sha256sum: entry.sha256sum,
           })),
           allowInvalid: body.allowInvalid,
-          dryRun: body.dryRun,
+          dryRun: resolveFlagAlias(
+            { primary: body.dry_run, legacy: body.dryRun },
+            DRY_RUN_NAMES,
+          ),
         })
         .then(withoutFiles),
   }),
@@ -130,7 +151,10 @@ export const SOURCE_SLICE_ROUTES = [
           sha256sum: body.sha256sum,
           newContent: body.newContent,
           allowInvalid: body.allowInvalid,
-          dryRun: body.dryRun,
+          dryRun: resolveFlagAlias(
+            { primary: body.dry_run, legacy: body.dryRun },
+            DRY_RUN_NAMES,
+          ),
         })
         .then(withoutFiles),
   }),

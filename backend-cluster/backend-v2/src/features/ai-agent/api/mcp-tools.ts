@@ -1,6 +1,10 @@
 import { entriesBodySchema } from "@/features/ledger/api/rest/v1/entries-handler";
 import { parseLedgerId } from "@/shared/str";
 import { resolveCommitMessage } from "@/features/ledger/utils/commit-message-alias";
+import {
+  DRY_RUN_NAMES,
+  resolveFlagAlias,
+} from "@/features/ledger/utils/flag-alias";
 import { BQL_SIZE_DESCRIPTION } from "@/features/ledger/utils/bql-size-description";
 import {
   SOURCE_SLICE_OPERATION_OUTPUTS,
@@ -274,7 +278,8 @@ const EXTERNAL_ADMIN: ToolAnnotations = {
 // One schema object per ledger-targeted tool, shared by `inputSchema` and the
 // handler's parse so the advertised and executed contracts cannot drift.
 // MCP keeps its file-tool snake-case spelling for the preview flag while
-// REST spells it dryRun (same split the append path ships; w23/m7/t002).
+// REST spells it dryRun (same split the append path ships; w23/m7/t002),
+// with a dryRun twin on each side (w23/m9/t002).
 const addLedgerEntriesInput = entriesBodySchema
   .omit({ dryRun: true })
   .extend({ ledger: ledgerSelection, ...dryRunInput })
@@ -398,8 +403,13 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
       ),
     ),
     execute: async (context, input) => {
-      const { ledger, entries, allowInvalid, dry_run } =
-        addLedgerEntriesInput.parse(input);
+      const {
+        ledger,
+        entries,
+        allowInvalid,
+        dry_run,
+        dryRun: dryRunFlag,
+      } = addLedgerEntriesInput.parse(input);
       const ledgerId = resolveMcpLedger(context, ledger);
       const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
       // No hand-built refusal here: an `UnbalancedTransactionError` carries
@@ -419,7 +429,10 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
             entries,
             "web",
             allowInvalid ?? false,
-            dry_run ?? false,
+            resolveFlagAlias(
+              { primary: dry_run, legacy: dryRunFlag },
+              DRY_RUN_NAMES,
+            ),
           ),
       );
       // The service spells the echo dryRun; MCP publishes dry_run (w23/m7/t002).
@@ -639,7 +652,10 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
               newPath: normalizeAgentRepoPath(args.newPath),
               message: resolveCommitMessage(args, { required: false }),
               updateIncludes: args.updateIncludes ?? undefined,
-              dryRun: args.dry_run,
+              dryRun: resolveFlagAlias(
+                { primary: args.dry_run, legacy: args.dryRun },
+                DRY_RUN_NAMES,
+              ),
             },
           }),
       );

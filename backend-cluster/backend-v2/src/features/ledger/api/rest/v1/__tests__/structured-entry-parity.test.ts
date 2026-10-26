@@ -276,7 +276,11 @@ async function fixture(
     call: async (
       surface: string,
       batch = entries,
-      opts: { allowInvalid?: boolean; dryRun?: boolean; dry_run?: boolean } = {},
+      opts: {
+        allowInvalid?: boolean;
+        dryRun?: boolean;
+        dry_run?: boolean;
+      } = {},
       // The spelling test sends the other surface's flag untouched.
       raw = false,
     ) => {
@@ -302,12 +306,14 @@ async function fixture(
           [type]: type === "budget" ? { ...entry, interval: "MONTHLY" } : entry,
         }));
         // Preview selections ride a wider mutation so the shared selections
-        // every existing test pins stay untouched (w23/m7/t002).
-        const previewing = opts.dryRun === true;
+        // every existing test pins stay untouched (w23/m7/t002). The wide
+        // mutation declares both flag spellings (w23/m9/t002); a missing
+        // variable arrives undefined, which resolves as flag off.
+        const previewing = opts.dryRun === true || opts.dry_run === true;
         const response = await graphql({
           schema,
           source: previewing
-            ? 'mutation($entries:[AddEntryInput!]!,$allowInvalid:Boolean,$dryRun:Boolean) { bulkEntries(ledgerId:"alice/main",entries:$entries,allowInvalid:$allowInvalid,dryRun:$dryRun) { success message dryRun entryHashes preview { path text } } }'
+            ? 'mutation($entries:[AddEntryInput!]!,$allowInvalid:Boolean,$dryRun:Boolean,$dry_run:Boolean) { bulkEntries(ledgerId:"alice/main",entries:$entries,allowInvalid:$allowInvalid,dryRun:$dryRun,dry_run:$dry_run) { success message dryRun entryHashes preview { path text } } }'
             : 'mutation($entries:[AddEntryInput!]!,$allowInvalid:Boolean) { bulkEntries(ledgerId:"alice/main",entries:$entries,allowInvalid:$allowInvalid) { success message entryHashes } }',
           variableValues: { entries: input, ...opts },
           contextValue: {
@@ -322,8 +328,8 @@ async function fixture(
           errors: response.errors,
         };
       }
-      // MCP spells the preview flag dry_run; the camel twin would be an
-      // unrecognized key under the strict tool input (w23/m7/t002).
+      // MCP spells the preview flag dry_run; the camel twin rides
+      // along only when the spelling test sends it raw (w23/m9/t002).
       const { dryRun: _stripped, ...mcpOpts } = opts;
       const sent = raw ? opts : mcpOpts;
       const response = await client.callTool({
@@ -820,12 +826,8 @@ describe.each(["rest", "gql", "mcp"])("elided postings via %s", (surface) => {
       expect(result.success).toBe(false);
       expect(f.write).not.toHaveBeenCalled();
       expect(f.committed).toEqual([]);
-      const text = JSON.stringify(
-        "errors" in result ? result.errors : result,
-      );
-      expect(text).toContain(
-        "entry 0: postings[0].price needs units",
-      );
+      const text = JSON.stringify("errors" in result ? result.errors : result);
+      expect(text).toContain("entry 0: postings[0].price needs units");
       expect(text).toContain("can't carry a price");
     } finally {
       await f.close();
@@ -948,9 +950,7 @@ describe.each(["rest", "gql", "mcp"])("elided postings via %s", (surface) => {
       expect(result.success).toBe(false);
       expect(f.write).not.toHaveBeenCalled();
       expect(f.committed).toEqual([]);
-      const text = JSON.stringify(
-        "errors" in result ? result.errors : result,
-      );
+      const text = JSON.stringify("errors" in result ? result.errors : result);
       expect(text).toContain("entry 0: postings[0].cost needs units");
       expect(text).toContain("can't carry a cost");
     } finally {
@@ -1081,233 +1081,239 @@ describe.each(["rest", "gql", "mcp"])("posting meta via %s", (surface) => {
   });
 });
 
-describe.each(["rest", "gql", "mcp"])("booking and tolerance via %s", (surface) => {
-  // w23/m6/t009: booking commits on the open wire row.
-  it("writes an open with a booking method", async () => {
-    const batch = [
-      {
-        type: "open",
-        entry: {
-          date,
-          account: "Assets:Broker",
-          currencies: ["HOOLI"],
-          booking: "FIFO",
+describe.each(["rest", "gql", "mcp"])(
+  "booking and tolerance via %s",
+  (surface) => {
+    // w23/m6/t009: booking commits on the open wire row.
+    it("writes an open with a booking method", async () => {
+      const batch = [
+        {
+          type: "open",
+          entry: {
+            date,
+            account: "Assets:Broker",
+            currencies: ["HOOLI"],
+            booking: "FIFO",
+          },
         },
-      },
-    ] as unknown as LedgerEntryInput[];
-    const f = await fixture();
-    try {
-      const result = await f.call(surface, batch);
-      expect(result.success).toBe(true);
-      expect(f.committed).toHaveLength(1);
-      expect(f.committed[0]).toMatchObject({
-        item: { booking: "FIFO" },
-      });
-    } finally {
-      await f.close();
-    }
-  });
+      ] as unknown as LedgerEntryInput[];
+      const f = await fixture();
+      try {
+        const result = await f.call(surface, batch);
+        expect(result.success).toBe(true);
+        expect(f.committed).toHaveLength(1);
+        expect(f.committed[0]).toMatchObject({
+          item: { booking: "FIFO" },
+        });
+      } finally {
+        await f.close();
+      }
+    });
 
-  // w23/m6/t009: tolerance commits on the balance wire row.
-  it("writes a balance with a tolerance", async () => {
-    const batch = [
-      {
-        type: "balance",
-        entry: {
-          date,
-          account: "Assets:Cash",
-          amount: { number: "100", currency: "USD" },
-          tolerance: "0.01",
+    // w23/m6/t009: tolerance commits on the balance wire row.
+    it("writes a balance with a tolerance", async () => {
+      const batch = [
+        {
+          type: "balance",
+          entry: {
+            date,
+            account: "Assets:Cash",
+            amount: { number: "100", currency: "USD" },
+            tolerance: "0.01",
+          },
         },
-      },
-    ] as unknown as LedgerEntryInput[];
-    const f = await fixture();
-    try {
-      const result = await f.call(surface, batch);
-      expect(result.success).toBe(true);
-      expect(f.committed).toHaveLength(1);
-      expect(f.committed[0]).toMatchObject({
-        item: { tolerance: "0.01" },
-      });
-    } finally {
-      await f.close();
-    }
-  });
+      ] as unknown as LedgerEntryInput[];
+      const f = await fixture();
+      try {
+        const result = await f.call(surface, batch);
+        expect(result.success).toBe(true);
+        expect(f.committed).toHaveLength(1);
+        expect(f.committed[0]).toMatchObject({
+          item: { tolerance: "0.01" },
+        });
+      } finally {
+        await f.close();
+      }
+    });
 
-  // w23/m6/t009: the booking enum refuses unknown methods on every surface.
-  it("refuses an unknown booking method before committing", async () => {
-    const batch = [
-      {
-        type: "open",
-        entry: {
-          date,
-          account: "Assets:Broker",
-          currencies: ["HOOLI"],
-          booking: "AVERAGE",
+    // w23/m6/t009: the booking enum refuses unknown methods on every surface.
+    it("refuses an unknown booking method before committing", async () => {
+      const batch = [
+        {
+          type: "open",
+          entry: {
+            date,
+            account: "Assets:Broker",
+            currencies: ["HOOLI"],
+            booking: "AVERAGE",
+          },
         },
-      },
-    ] as unknown as LedgerEntryInput[];
-    const f = await fixture();
-    try {
-      const result = await f.call(surface, batch);
-      expect(result.success).toBe(false);
-      expect(f.write).not.toHaveBeenCalled();
-      expect(f.committed).toEqual([]);
-    } finally {
-      await f.close();
-    }
-  });
-});
+      ] as unknown as LedgerEntryInput[];
+      const f = await fixture();
+      try {
+        const result = await f.call(surface, batch);
+        expect(result.success).toBe(false);
+        expect(f.write).not.toHaveBeenCalled();
+        expect(f.committed).toEqual([]);
+      } finally {
+        await f.close();
+      }
+    });
+  },
+);
 
-describe.each(["rest", "gql", "mcp"])("total price and pad via %s", (surface) => {
-  // w23/m6/t010: a total price commits on the posting wire row.
-  it("writes a posting with a total price", async () => {
-    const batch = [
-      {
-        type: "transaction",
-        entry: {
-          date,
-          flag: "*",
-          narration: "buy",
-          postings: [
-            {
-              account: "Assets:Broker",
-              units: { number: "10", currency: "HOOLI" },
-              totalPrice: { number: "1000", currency: "USD" },
-            },
-            {
-              account: "Assets:Cash",
-              units: { number: "-1000", currency: "USD" },
-            },
-          ],
+describe.each(["rest", "gql", "mcp"])(
+  "total price and pad via %s",
+  (surface) => {
+    // w23/m6/t010: a total price commits on the posting wire row.
+    it("writes a posting with a total price", async () => {
+      const batch = [
+        {
+          type: "transaction",
+          entry: {
+            date,
+            flag: "*",
+            narration: "buy",
+            postings: [
+              {
+                account: "Assets:Broker",
+                units: { number: "10", currency: "HOOLI" },
+                totalPrice: { number: "1000", currency: "USD" },
+              },
+              {
+                account: "Assets:Cash",
+                units: { number: "-1000", currency: "USD" },
+              },
+            ],
+          },
         },
-      },
-    ] as unknown as LedgerEntryInput[];
-    const f = await fixture();
-    try {
-      const result = await f.call(surface, batch);
-      expect(result.success).toBe(true);
-      expect(f.committed).toHaveLength(1);
-      const committed = f.committed[0] as {
-        item: { postings: Record<string, unknown>[] };
-      };
-      expect(committed.item.postings[0]).toMatchObject({
-        totalPrice: { number: "1000", currency: "USD" },
-      });
-    } finally {
-      await f.close();
-    }
-  });
+      ] as unknown as LedgerEntryInput[];
+      const f = await fixture();
+      try {
+        const result = await f.call(surface, batch);
+        expect(result.success).toBe(true);
+        expect(f.committed).toHaveLength(1);
+        const committed = f.committed[0] as {
+          item: { postings: Record<string, unknown>[] };
+        };
+        expect(committed.item.postings[0]).toMatchObject({
+          totalPrice: { number: "1000", currency: "USD" },
+        });
+      } finally {
+        await f.close();
+      }
+    });
 
-  // w23/m6/t010: pad commits as its own wire row.
-  it("writes a pad entry", async () => {
-    const batch = [
-      {
-        type: "pad",
-        entry: {
-          date,
-          account: "Assets:Cash",
-          sourceAccount: "Equity:Opening-Balances",
+    // w23/m6/t010: pad commits as its own wire row.
+    it("writes a pad entry", async () => {
+      const batch = [
+        {
+          type: "pad",
+          entry: {
+            date,
+            account: "Assets:Cash",
+            sourceAccount: "Equity:Opening-Balances",
+          },
         },
-      },
-    ] as unknown as LedgerEntryInput[];
-    const f = await fixture();
-    try {
-      const result = await f.call(surface, batch);
-      expect(result.success).toBe(true);
-      expect(f.committed).toHaveLength(1);
-      expect(f.committed[0]).toMatchObject({
-        type: "pad",
-        item: {
-          account: "Assets:Cash",
-          sourceAccount: "Equity:Opening-Balances",
-        },
-      });
-    } finally {
-      await f.close();
-    }
-  });
+      ] as unknown as LedgerEntryInput[];
+      const f = await fixture();
+      try {
+        const result = await f.call(surface, batch);
+        expect(result.success).toBe(true);
+        expect(f.committed).toHaveLength(1);
+        expect(f.committed[0]).toMatchObject({
+          type: "pad",
+          item: {
+            account: "Assets:Cash",
+            sourceAccount: "Equity:Opening-Balances",
+          },
+        });
+      } finally {
+        await f.close();
+      }
+    });
 
-  // w23/m6/t010: price and totalPrice exclude each other on every surface.
-  it("refuses a posting with both price and total price", async () => {
-    const batch = [
-      {
-        type: "transaction",
-        entry: {
-          date,
-          flag: "*",
-          narration: "buy",
-          postings: [
-            {
-              account: "Assets:Broker",
-              units: { number: "10", currency: "HOOLI" },
-              price: { number: "100", currency: "USD" },
-              totalPrice: { number: "1000", currency: "USD" },
-            },
-            {
-              account: "Assets:Cash",
-              units: { number: "-1000", currency: "USD" },
-            },
-          ],
+    // w23/m6/t010: price and totalPrice exclude each other on every surface.
+    it("refuses a posting with both price and total price", async () => {
+      const batch = [
+        {
+          type: "transaction",
+          entry: {
+            date,
+            flag: "*",
+            narration: "buy",
+            postings: [
+              {
+                account: "Assets:Broker",
+                units: { number: "10", currency: "HOOLI" },
+                price: { number: "100", currency: "USD" },
+                totalPrice: { number: "1000", currency: "USD" },
+              },
+              {
+                account: "Assets:Cash",
+                units: { number: "-1000", currency: "USD" },
+              },
+            ],
+          },
         },
-      },
-    ] as unknown as LedgerEntryInput[];
-    const f = await fixture();
-    try {
-      const result = await f.call(surface, batch);
-      expect(result.success).toBe(false);
-      expect(f.write).not.toHaveBeenCalled();
-      expect(f.committed).toEqual([]);
-      const text = JSON.stringify(
-        "errors" in result ? result.errors : result,
-      );
-      expect(text).toContain("entry 0: postings[0].totalPrice excludes price");
-      expect(text).toContain("can't carry both");
-    } finally {
-      await f.close();
-    }
-  });
+      ] as unknown as LedgerEntryInput[];
+      const f = await fixture();
+      try {
+        const result = await f.call(surface, batch);
+        expect(result.success).toBe(false);
+        expect(f.write).not.toHaveBeenCalled();
+        expect(f.committed).toEqual([]);
+        const text = JSON.stringify(
+          "errors" in result ? result.errors : result,
+        );
+        expect(text).toContain(
+          "entry 0: postings[0].totalPrice excludes price",
+        );
+        expect(text).toContain("can't carry both");
+      } finally {
+        await f.close();
+      }
+    });
 
-  // w23/m6/t007: a total price needs units, like every other price.
-  it("refuses a total price without units before committing", async () => {
-    const batch = [
-      {
-        type: "transaction",
-        entry: {
-          date,
-          flag: "*",
-          narration: "buy",
-          postings: [
-            {
-              account: "Assets:Broker",
-              totalPrice: { number: "1000", currency: "USD" },
-            },
-            {
-              account: "Assets:Cash",
-              units: { number: "-1000", currency: "USD" },
-            },
-          ],
+    // w23/m6/t007: a total price needs units, like every other price.
+    it("refuses a total price without units before committing", async () => {
+      const batch = [
+        {
+          type: "transaction",
+          entry: {
+            date,
+            flag: "*",
+            narration: "buy",
+            postings: [
+              {
+                account: "Assets:Broker",
+                totalPrice: { number: "1000", currency: "USD" },
+              },
+              {
+                account: "Assets:Cash",
+                units: { number: "-1000", currency: "USD" },
+              },
+            ],
+          },
         },
-      },
-    ] as unknown as LedgerEntryInput[];
-    const f = await fixture();
-    try {
-      const result = await f.call(surface, batch);
-      expect(result.success).toBe(false);
-      expect(f.write).not.toHaveBeenCalled();
-      expect(f.committed).toEqual([]);
-      const text = JSON.stringify(
-        "errors" in result ? result.errors : result,
-      );
-      expect(text).toContain(
-        "entry 0: postings[0].totalPrice needs units",
-      );
-      expect(text).toContain("can't carry a total price");
-    } finally {
-      await f.close();
-    }
-  });
-});
+      ] as unknown as LedgerEntryInput[];
+      const f = await fixture();
+      try {
+        const result = await f.call(surface, batch);
+        expect(result.success).toBe(false);
+        expect(f.write).not.toHaveBeenCalled();
+        expect(f.committed).toEqual([]);
+        const text = JSON.stringify(
+          "errors" in result ? result.errors : result,
+        );
+        expect(text).toContain("entry 0: postings[0].totalPrice needs units");
+        expect(text).toContain("can't carry a total price");
+      } finally {
+        await f.close();
+      }
+    });
+  },
+);
 
 describe.each(["rest", "gql", "mcp"])("typed add preview via %s", (surface) => {
   // MCP spells the preview flag dry_run; REST and GraphQL dryRun (w23/m7/t002).
@@ -1468,9 +1474,7 @@ describe.each(["rest", "gql", "mcp"])("typed add preview via %s", (surface) => {
       const result = await f.call(surface, batch, previewOpts());
       expect(result.success).toBe(true);
       const body = result.result as Record<string, unknown>;
-      const text = String(
-        surface === "mcp" ? body.summary : body.message,
-      );
+      const text = String(surface === "mcp" ? body.summary : body.message);
       expect(text).toContain("Would add 1 entry");
       expect(text).not.toContain("Added 1 entry");
     } finally {
@@ -1478,39 +1482,58 @@ describe.each(["rest", "gql", "mcp"])("typed add preview via %s", (surface) => {
     }
   });
 
-  // w23/m7/t008: MCP spells the flag dry_run, REST and GraphQL dryRun;
-  // each surface refuses the other's spelling before the writer runs.
-  it("refuses the other surface's preview spelling", async () => {
+  // w23/m9/t002: MCP spells the flag dry_run, REST and GraphQL dryRun;
+  // each surface accepts the other's spelling as a twin that previews
+  // without writing.
+  it("accepts the other surface's preview spelling", async () => {
     const f = await fixture();
     try {
-      if (surface === "gql") {
-        // Flat args, not an input object: an unknown argument fails
-        // GraphQL validation itself.
-        const result = await graphql({
-          schema,
-          source: `mutation { bulkEntries(ledgerId:"alice/main",entries:[],dry_run:true) { success } }`,
-          contextValue: {
-            identity,
-            getCurrentIdentity: () => identity,
-            platform: "web",
-          },
-        });
-        expect(result.errors?.length).toBeGreaterThan(0);
-      } else {
-        const batch = [
-          {
-            type: "open",
-            entry: { date, account: "Assets:New", currencies: ["USD"] },
-          },
-        ] as unknown as LedgerEntryInput[];
-        const result = await f.call(
-          surface,
-          batch,
-          surface === "mcp" ? { dryRun: true } : { dry_run: true },
-          true,
-        );
-        expect(result.success).toBe(false);
-      }
+      const batch = [
+        {
+          type: "open",
+          entry: { date, account: "Assets:New", currencies: ["USD"] },
+        },
+      ] as unknown as LedgerEntryInput[];
+      const result = await f.call(
+        surface,
+        batch,
+        surface === "mcp" ? { dryRun: true } : { dry_run: true },
+        true,
+      );
+      expect(result.success).toBe(true);
+      const body = result.result as Record<string, unknown>;
+      expect(body.dryRun ?? body.dry_run).toBe(true);
+      // The preview threads past the hop with the flag on, committing nothing.
+      expect(f.write).toHaveBeenCalledTimes(1);
+      expect(f.write).toHaveBeenCalledWith(
+        "alice",
+        "main",
+        expect.objectContaining({ dryRun: true }),
+        expect.anything(),
+      );
+      expect(f.committed).toEqual([]);
+    } finally {
+      await f.close();
+    }
+  });
+
+  // w23/m9/t002: one true and one false is refused before the writer runs.
+  it("refuses one true and one false preview flag", async () => {
+    const f = await fixture();
+    try {
+      const batch = [
+        {
+          type: "open",
+          entry: { date, account: "Assets:New", currencies: ["USD"] },
+        },
+      ] as unknown as LedgerEntryInput[];
+      const result = await f.call(
+        surface,
+        batch,
+        { dry_run: true, dryRun: false },
+        true,
+      );
+      expect(result.success).toBe(false);
       expect(f.committed).toEqual([]);
       expect(f.write).not.toHaveBeenCalled();
     } finally {

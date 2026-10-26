@@ -8,6 +8,10 @@ import {
   updateSliceResult,
 } from "@/features/ledger/api/rest/v1/source-slice-handler";
 import { resolveEntryHash } from "@/features/ledger/utils/entry-hash-alias";
+import {
+  DRY_RUN_NAMES,
+  resolveFlagAlias,
+} from "@/features/ledger/utils/flag-alias";
 import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 import {
   mcpOutputSchema,
@@ -29,10 +33,11 @@ import {
  * REST spells it dryRun (same split the add/append paths ship; w23/m7/t003).
  */
 export const dryRunInput = {
-  dry_run: z
+  dry_run: z.boolean().optional().describe(PREVIEW_FLAG_DESCRIPTION),
+  dryRun: z
     .boolean()
     .optional()
-    .describe(PREVIEW_FLAG_DESCRIPTION),
+    .describe("Alias of dry_run, as REST and GraphQL spell it."),
 } as const;
 
 /** One MCP tool per entry-source operation (ADR 019, 2026-10-18; w1/m38). */
@@ -133,7 +138,10 @@ export const SOURCE_SLICE_EXECUTORS = {
           sha256sum: args.sha256sum,
           newContent: args.newContent,
           allowInvalid: args.allowInvalid,
-          dryRun: args.dry_run,
+          dryRun: resolveFlagAlias(
+            { primary: args.dry_run, legacy: args.dryRun },
+            DRY_RUN_NAMES,
+          ),
         }),
       // The service returns the new hash in `entryHash` too, so the old one
       // comes from the request (w23/007).
@@ -159,7 +167,10 @@ export const SOURCE_SLICE_EXECUTORS = {
           entryHash,
           sha256sum: args.sha256sum,
           allowInvalid: args.allowInvalid,
-          dryRun: args.dry_run,
+          dryRun: resolveFlagAlias(
+            { primary: args.dry_run, legacy: args.dryRun },
+            DRY_RUN_NAMES,
+          ),
         }),
       (written) =>
         written.dryRun
@@ -169,7 +180,7 @@ export const SOURCE_SLICE_EXECUTORS = {
     );
   },
   delete_many: (context: McpRequestContext, input: unknown) => {
-    const { ledger, entries, allowInvalid, dry_run } =
+    const { ledger, entries, allowInvalid, dry_run, dryRun } =
       SOURCE_SLICE_OPERATION_SCHEMAS.delete_many.parse(input);
     const ledgerId = resolveMcpLedger(context, ledger);
     const resolved = entries.map((entry) => ({
@@ -185,7 +196,10 @@ export const SOURCE_SLICE_EXECUTORS = {
           ledgerId,
           entries: resolved,
           allowInvalid,
-          dryRun: dry_run,
+          dryRun: resolveFlagAlias(
+            { primary: dry_run, legacy: dryRun },
+            DRY_RUN_NAMES,
+          ),
         }),
       (written) => {
         const noun = written.deletedCount === 1 ? "entry" : "entries";

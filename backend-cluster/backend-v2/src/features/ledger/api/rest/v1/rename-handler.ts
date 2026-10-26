@@ -2,6 +2,10 @@ import { z } from "@/shared/zod-openapi-setup";
 import { v1Route } from "@/server/rest/v1-route";
 import { json } from "@/server/rest/v1-schemas";
 import { resolveCommitMessage } from "@/features/ledger/utils/commit-message-alias";
+import {
+  DRY_RUN_NAMES,
+  resolveFlagAlias,
+} from "@/features/ledger/utils/flag-alias";
 import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 import { ledgerPathSchema, ledgerIdOf } from "./schemas";
 
@@ -15,10 +19,12 @@ export const renameFileInput = z
       .nullish()
       .describe("Alias of message, as the MCP file tools spell it."),
     updateIncludes: z.boolean().nullish(),
-    dryRun: z
+    dryRun: z.boolean().optional().describe(PREVIEW_FLAG_DESCRIPTION),
+    // Twin (w23/m9/t002): MCP spells it `dry_run`.
+    dry_run: z
       .boolean()
       .optional()
-      .describe(PREVIEW_FLAG_DESCRIPTION),
+      .describe("Alias of dryRun, as MCP spells it."),
   })
   .strict();
 const previewFile = z.object({ path: z.string(), text: z.string() });
@@ -51,7 +57,10 @@ export const renameFileRoute = v1Route({
         newPath: body.newPath,
         message: resolveCommitMessage(body, { required: false }),
         updateIncludes: body.updateIncludes ?? undefined,
-        dryRun: body.dryRun,
+        dryRun: resolveFlagAlias(
+          { primary: body.dry_run, legacy: body.dryRun },
+          DRY_RUN_NAMES,
+        ),
       },
     }),
 });
