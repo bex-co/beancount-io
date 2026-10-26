@@ -20,6 +20,7 @@ class PutApiGatewayV1LedgersOwnerNameEntrySourceBody:
         entry_hash (str | Unset): Alias of entryHash, as list output spells it.
         allow_invalid (bool | Unset): Commit even when the write would add bean-check errors (VALIDATION_FAILED with
             newLedgerErrors), instead of refusing it.
+        dry_run (bool | Unset): Run every check and return the preview without committing.
     """
 
     sha256sum: str
@@ -27,6 +28,7 @@ class PutApiGatewayV1LedgersOwnerNameEntrySourceBody:
     entryHash: str | Unset = UNSET
     entry_hash: str | Unset = UNSET
     allow_invalid: bool | Unset = UNSET
+    dry_run: bool | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         sha256sum = self.sha256sum
@@ -38,6 +40,8 @@ class PutApiGatewayV1LedgersOwnerNameEntrySourceBody:
         entry_hash = self.entry_hash
 
         allow_invalid = self.allow_invalid
+
+        dry_run = self.dry_run
 
         field_dict: dict[str, Any] = {}
 
@@ -53,6 +57,8 @@ class PutApiGatewayV1LedgersOwnerNameEntrySourceBody:
             field_dict["entry_hash"] = entry_hash
         if allow_invalid is not UNSET:
             field_dict["allowInvalid"] = allow_invalid
+        if dry_run is not UNSET:
+            field_dict["dryRun"] = dry_run
 
         return field_dict
 
@@ -69,12 +75,15 @@ class PutApiGatewayV1LedgersOwnerNameEntrySourceBody:
 
         allow_invalid = d.pop("allowInvalid", UNSET)
 
+        dry_run = d.pop("dryRun", UNSET)
+
         put_api_gateway_v1_ledgers_owner_name_entry_source_body = cls(
             sha256sum=sha256sum,
             new_content=new_content,
             entryHash=entryHash,
             entry_hash=entry_hash,
             allow_invalid=allow_invalid,
+            dry_run=dry_run,
         )
 
         return put_api_gateway_v1_ledgers_owner_name_entry_source_body

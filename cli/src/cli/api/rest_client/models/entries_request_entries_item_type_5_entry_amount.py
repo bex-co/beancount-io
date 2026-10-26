@@ -5,11 +5,11 @@ from typing import Any, TypeVar
 
 from attrs import define as _attrs_define
 
-T = TypeVar("T", bound="EntriesRequestEntriesItemType7EntryAmount")
+T = TypeVar("T", bound="EntriesRequestEntriesItemType5EntryAmount")
 
 
 @_attrs_define
-class EntriesRequestEntriesItemType7EntryAmount:
+class EntriesRequestEntriesItemType5EntryAmount:
     """
     Attributes:
         number (str): Decimal amount Example: 42.50.
@@ -42,9 +42,9 @@ class EntriesRequestEntriesItemType7EntryAmount:
 
         currency = d.pop("currency")
 
-        entries_request_entries_item_type_7_entry_amount = cls(
+        entries_request_entries_item_type_5_entry_amount = cls(
             number=number,
             currency=currency,
         )
 
-        return entries_request_entries_item_type_7_entry_amount
+        return entries_request_entries_item_type_5_entry_amount

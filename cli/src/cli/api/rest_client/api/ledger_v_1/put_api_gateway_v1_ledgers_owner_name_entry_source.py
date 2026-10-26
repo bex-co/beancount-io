@@ -128,7 +128,8 @@ def sync_detailed(
     error in newLedgerErrors; errors the ledger already had never block, and `allowInvalid: true`
     commits anyway. When the only new error is imbalance, the refusal is UNBALANCED with the residual
     instead. An update that would take a free ledger past its directive limit is refused with
-    RESOURCE_LIMIT_REACHED, naming the limit and the projected count; deletes always pass. No preview.
+    RESOURCE_LIMIT_REACHED, naming the limit and the projected count; deletes always pass. `dryRun`
+    previews without committing: same checks, per-file affected text, no hashes.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -173,7 +174,8 @@ def sync(
     error in newLedgerErrors; errors the ledger already had never block, and `allowInvalid: true`
     commits anyway. When the only new error is imbalance, the refusal is UNBALANCED with the residual
     instead. An update that would take a free ledger past its directive limit is refused with
-    RESOURCE_LIMIT_REACHED, naming the limit and the projected count; deletes always pass. No preview.
+    RESOURCE_LIMIT_REACHED, naming the limit and the projected count; deletes always pass. `dryRun`
+    previews without committing: same checks, per-file affected text, no hashes.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -213,7 +215,8 @@ async def asyncio_detailed(
     error in newLedgerErrors; errors the ledger already had never block, and `allowInvalid: true`
     commits anyway. When the only new error is imbalance, the refusal is UNBALANCED with the residual
     instead. An update that would take a free ledger past its directive limit is refused with
-    RESOURCE_LIMIT_REACHED, naming the limit and the projected count; deletes always pass. No preview.
+    RESOURCE_LIMIT_REACHED, naming the limit and the projected count; deletes always pass. `dryRun`
+    previews without committing: same checks, per-file affected text, no hashes.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -256,7 +259,8 @@ async def asyncio(
     error in newLedgerErrors; errors the ledger already had never block, and `allowInvalid: true`
     commits anyway. When the only new error is imbalance, the refusal is UNBALANCED with the residual
     instead. An update that would take a free ledger past its directive limit is refused with
-    RESOURCE_LIMIT_REACHED, naming the limit and the projected count; deletes always pass. No preview.
+    RESOURCE_LIMIT_REACHED, naming the limit and the projected count; deletes always pass. `dryRun`
+    previews without committing: same checks, per-file affected text, no hashes.
 
     Args:
         owner (str): Ledger owner's username Example: alice.

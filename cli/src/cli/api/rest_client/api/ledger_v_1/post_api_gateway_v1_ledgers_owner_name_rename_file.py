@@ -122,8 +122,9 @@ def sync_detailed(
 
      Move oldPath to newPath preserving content in one atomic commit (defaults to `Rename oldPath →
     newPath`). Refuses when oldPath is still `include`d unless updateIncludes rewrites those lines in
-    the same commit. Both paths must be safe repository-relative paths. No client SHA or preview
-    argument is supported by this operation.
+    the same commit. Both paths must be safe repository-relative paths. No client SHA is supported by
+    this operation. `dryRun` previews without committing: same checks, the move plus rewritten include
+    lines, no commit.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -162,8 +163,9 @@ def sync(
 
      Move oldPath to newPath preserving content in one atomic commit (defaults to `Rename oldPath →
     newPath`). Refuses when oldPath is still `include`d unless updateIncludes rewrites those lines in
-    the same commit. Both paths must be safe repository-relative paths. No client SHA or preview
-    argument is supported by this operation.
+    the same commit. Both paths must be safe repository-relative paths. No client SHA is supported by
+    this operation. `dryRun` previews without committing: same checks, the move plus rewritten include
+    lines, no commit.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -197,8 +199,9 @@ async def asyncio_detailed(
 
      Move oldPath to newPath preserving content in one atomic commit (defaults to `Rename oldPath →
     newPath`). Refuses when oldPath is still `include`d unless updateIncludes rewrites those lines in
-    the same commit. Both paths must be safe repository-relative paths. No client SHA or preview
-    argument is supported by this operation.
+    the same commit. Both paths must be safe repository-relative paths. No client SHA is supported by
+    this operation. `dryRun` previews without committing: same checks, the move plus rewritten include
+    lines, no commit.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -235,8 +238,9 @@ async def asyncio(
 
      Move oldPath to newPath preserving content in one atomic commit (defaults to `Rename oldPath →
     newPath`). Refuses when oldPath is still `include`d unless updateIncludes rewrites those lines in
-    the same commit. Both paths must be safe repository-relative paths. No client SHA or preview
-    argument is supported by this operation.
+    the same commit. Both paths must be safe repository-relative paths. No client SHA is supported by
+    this operation. `dryRun` previews without committing: same checks, the move plus rewritten include
+    lines, no commit.
 
     Args:
         owner (str): Ledger owner's username Example: alice.

@@ -13,28 +13,23 @@ class EntriesRequestEntriesItemType6Entry:
     """
     Attributes:
         date (str):  Example: 2026-08-23.
-        account (str):
-        content (str):
+        currency (str):
     """
 
     date: str
-    account: str
-    content: str
+    currency: str
 
     def to_dict(self) -> dict[str, Any]:
         date = self.date
 
-        account = self.account
-
-        content = self.content
+        currency = self.currency
 
         field_dict: dict[str, Any] = {}
 
         field_dict.update(
             {
                 "date": date,
-                "account": account,
-                "content": content,
+                "currency": currency,
             }
         )
 
@@ -45,14 +40,11 @@ class EntriesRequestEntriesItemType6Entry:
         d = dict(src_dict)
         date = d.pop("date")
 
-        account = d.pop("account")
-
-        content = d.pop("content")
+        currency = d.pop("currency")
 
         entries_request_entries_item_type_6_entry = cls(
             date=date,
-            account=account,
-            content=content,
+            currency=currency,
         )
 
         return entries_request_entries_item_type_6_entry

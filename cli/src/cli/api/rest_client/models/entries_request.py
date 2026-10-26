@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from ..models.entries_request_entries_item_type_7 import EntriesRequestEntriesItemType7
     from ..models.entries_request_entries_item_type_8 import EntriesRequestEntriesItemType8
     from ..models.entries_request_entries_item_type_9 import EntriesRequestEntriesItemType9
+    from ..models.entries_request_entries_item_type_10 import EntriesRequestEntriesItemType10
 
 
 T = TypeVar("T", bound="EntriesRequest")
@@ -28,18 +29,21 @@ class EntriesRequest:
     """One or more directives to add to the ledger
 
     Attributes:
-        entries (list[EntriesRequestEntriesItemType0 | EntriesRequestEntriesItemType1 | EntriesRequestEntriesItemType2 |
-            EntriesRequestEntriesItemType3 | EntriesRequestEntriesItemType4 | EntriesRequestEntriesItemType5 |
-            EntriesRequestEntriesItemType6 | EntriesRequestEntriesItemType7 | EntriesRequestEntriesItemType8 |
-            EntriesRequestEntriesItemType9]): Directives to append, committed all-or-nothing
+        entries (list[EntriesRequestEntriesItemType0 | EntriesRequestEntriesItemType1 | EntriesRequestEntriesItemType10
+            | EntriesRequestEntriesItemType2 | EntriesRequestEntriesItemType3 | EntriesRequestEntriesItemType4 |
+            EntriesRequestEntriesItemType5 | EntriesRequestEntriesItemType6 | EntriesRequestEntriesItemType7 |
+            EntriesRequestEntriesItemType8 | EntriesRequestEntriesItemType9]): Directives to append, committed all-or-
+            nothing
         allow_invalid (bool | None | Unset): Record entries deliberately even when they are unbalanced (UNBALANCED) or
             would add bean-check errors such as a second open for an open account (VALIDATION_FAILED), instead of refusing
             them
+        dry_run (bool | None | Unset): Run every check and return the preview without committing
     """
 
     entries: list[
         EntriesRequestEntriesItemType0
         | EntriesRequestEntriesItemType1
+        | EntriesRequestEntriesItemType10
         | EntriesRequestEntriesItemType2
         | EntriesRequestEntriesItemType3
         | EntriesRequestEntriesItemType4
@@ -50,6 +54,7 @@ class EntriesRequest:
         | EntriesRequestEntriesItemType9
     ]
     allow_invalid: bool | None | Unset = UNSET
+    dry_run: bool | None | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.entries_request_entries_item_type_0 import EntriesRequestEntriesItemType0  # noqa: PLC0415
@@ -61,6 +66,7 @@ class EntriesRequest:
         from ..models.entries_request_entries_item_type_6 import EntriesRequestEntriesItemType6  # noqa: PLC0415
         from ..models.entries_request_entries_item_type_7 import EntriesRequestEntriesItemType7  # noqa: PLC0415
         from ..models.entries_request_entries_item_type_8 import EntriesRequestEntriesItemType8  # noqa: PLC0415
+        from ..models.entries_request_entries_item_type_9 import EntriesRequestEntriesItemType9  # noqa: PLC0415
 
         entries = []
         for entries_item_data in self.entries:
@@ -83,6 +89,8 @@ class EntriesRequest:
                 entries_item = entries_item_data.to_dict()
             elif isinstance(entries_item_data, EntriesRequestEntriesItemType8):
                 entries_item = entries_item_data.to_dict()
+            elif isinstance(entries_item_data, EntriesRequestEntriesItemType9):
+                entries_item = entries_item_data.to_dict()
             else:
                 entries_item = entries_item_data.to_dict()
 
@@ -94,6 +102,12 @@ class EntriesRequest:
         else:
             allow_invalid = self.allow_invalid
 
+        dry_run: bool | None | Unset
+        if isinstance(self.dry_run, Unset):
+            dry_run = UNSET
+        else:
+            dry_run = self.dry_run
+
         field_dict: dict[str, Any] = {}
 
         field_dict.update(
@@ -103,6 +117,8 @@ class EntriesRequest:
         )
         if allow_invalid is not UNSET:
             field_dict["allowInvalid"] = allow_invalid
+        if dry_run is not UNSET:
+            field_dict["dryRun"] = dry_run
 
         return field_dict
 
@@ -118,6 +134,7 @@ class EntriesRequest:
         from ..models.entries_request_entries_item_type_7 import EntriesRequestEntriesItemType7  # noqa: PLC0415
         from ..models.entries_request_entries_item_type_8 import EntriesRequestEntriesItemType8  # noqa: PLC0415
         from ..models.entries_request_entries_item_type_9 import EntriesRequestEntriesItemType9  # noqa: PLC0415
+        from ..models.entries_request_entries_item_type_10 import EntriesRequestEntriesItemType10  # noqa: PLC0415
 
         d = dict(src_dict)
         entries = []
@@ -129,6 +146,7 @@ class EntriesRequest:
             ) -> (
                 EntriesRequestEntriesItemType0
                 | EntriesRequestEntriesItemType1
+                | EntriesRequestEntriesItemType10
                 | EntriesRequestEntriesItemType2
                 | EntriesRequestEntriesItemType3
                 | EntriesRequestEntriesItemType4
@@ -210,11 +228,19 @@ class EntriesRequest:
                     return entries_item_type_8
                 except (TypeError, ValueError, AttributeError, KeyError):
                     pass
+                try:
+                    if not isinstance(data, dict):
+                        raise TypeError()
+                    entries_item_type_9 = EntriesRequestEntriesItemType9.from_dict(data)
+
+                    return entries_item_type_9
+                except (TypeError, ValueError, AttributeError, KeyError):
+                    pass
                 if not isinstance(data, dict):
                     raise TypeError()
-                entries_item_type_9 = EntriesRequestEntriesItemType9.from_dict(data)
+                entries_item_type_10 = EntriesRequestEntriesItemType10.from_dict(data)
 
-                return entries_item_type_9
+                return entries_item_type_10
 
             entries_item = _parse_entries_item(entries_item_data)
 
@@ -229,9 +255,19 @@ class EntriesRequest:
 
         allow_invalid = _parse_allow_invalid(d.pop("allowInvalid", UNSET))
 
+        def _parse_dry_run(data: object) -> bool | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(bool | None | Unset, data)
+
+        dry_run = _parse_dry_run(d.pop("dryRun", UNSET))
+
         entries_request = cls(
             entries=entries,
             allow_invalid=allow_invalid,
+            dry_run=dry_run,
         )
 
         return entries_request

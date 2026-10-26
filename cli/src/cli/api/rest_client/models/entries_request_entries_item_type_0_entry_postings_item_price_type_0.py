@@ -10,7 +10,8 @@ T = TypeVar("T", bound="EntriesRequestEntriesItemType0EntryPostingsItemPriceType
 
 @_attrs_define
 class EntriesRequestEntriesItemType0EntryPostingsItemPriceType0:
-    """
+    """Per-unit price (`@` annotation); exclusive with the total price
+
     Attributes:
         number (str): Decimal amount Example: 42.50.
         currency (str):  Example: USD.

@@ -19,6 +19,7 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileBody:
         message (None | str | Unset):
         description (None | str | Unset): Alias of message, as the MCP file tools spell it.
         update_includes (bool | None | Unset):
+        dry_run (bool | Unset): Run every check and return the preview without committing.
     """
 
     old_path: str
@@ -26,6 +27,7 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileBody:
     message: None | str | Unset = UNSET
     description: None | str | Unset = UNSET
     update_includes: bool | None | Unset = UNSET
+    dry_run: bool | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         old_path = self.old_path
@@ -50,6 +52,8 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileBody:
         else:
             update_includes = self.update_includes
 
+        dry_run = self.dry_run
+
         field_dict: dict[str, Any] = {}
 
         field_dict.update(
@@ -64,6 +68,8 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileBody:
             field_dict["description"] = description
         if update_includes is not UNSET:
             field_dict["updateIncludes"] = update_includes
+        if dry_run is not UNSET:
+            field_dict["dryRun"] = dry_run
 
         return field_dict
 
@@ -101,12 +107,15 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileBody:
 
         update_includes = _parse_update_includes(d.pop("updateIncludes", UNSET))
 
+        dry_run = d.pop("dryRun", UNSET)
+
         post_api_gateway_v1_ledgers_owner_name_rename_file_body = cls(
             old_path=old_path,
             new_path=new_path,
             message=message,
             description=description,
             update_includes=update_includes,
+            dry_run=dry_run,
         )
 
         return post_api_gateway_v1_ledgers_owner_name_rename_file_body

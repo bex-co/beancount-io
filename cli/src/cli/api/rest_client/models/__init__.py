@@ -61,6 +61,9 @@ from .entries_request_entries_item_type_0_entry_postings_item_meta_type_0 import
 from .entries_request_entries_item_type_0_entry_postings_item_price_type_0 import (
     EntriesRequestEntriesItemType0EntryPostingsItemPriceType0,
 )
+from .entries_request_entries_item_type_0_entry_postings_item_total_price_type_0 import (
+    EntriesRequestEntriesItemType0EntryPostingsItemTotalPriceType0,
+)
 from .entries_request_entries_item_type_0_entry_postings_item_units_type_0 import (
     EntriesRequestEntriesItemType0EntryPostingsItemUnitsType0,
 )
@@ -80,7 +83,6 @@ from .entries_request_entries_item_type_2_entry import EntriesRequestEntriesItem
 from .entries_request_entries_item_type_2_type import EntriesRequestEntriesItemType2Type
 from .entries_request_entries_item_type_3 import EntriesRequestEntriesItemType3
 from .entries_request_entries_item_type_3_entry import EntriesRequestEntriesItemType3Entry
-from .entries_request_entries_item_type_3_entry_amount import EntriesRequestEntriesItemType3EntryAmount
 from .entries_request_entries_item_type_3_type import EntriesRequestEntriesItemType3Type
 from .entries_request_entries_item_type_4 import EntriesRequestEntriesItemType4
 from .entries_request_entries_item_type_4_entry import EntriesRequestEntriesItemType4Entry
@@ -88,21 +90,25 @@ from .entries_request_entries_item_type_4_entry_amount import EntriesRequestEntr
 from .entries_request_entries_item_type_4_type import EntriesRequestEntriesItemType4Type
 from .entries_request_entries_item_type_5 import EntriesRequestEntriesItemType5
 from .entries_request_entries_item_type_5_entry import EntriesRequestEntriesItemType5Entry
+from .entries_request_entries_item_type_5_entry_amount import EntriesRequestEntriesItemType5EntryAmount
 from .entries_request_entries_item_type_5_type import EntriesRequestEntriesItemType5Type
 from .entries_request_entries_item_type_6 import EntriesRequestEntriesItemType6
 from .entries_request_entries_item_type_6_entry import EntriesRequestEntriesItemType6Entry
 from .entries_request_entries_item_type_6_type import EntriesRequestEntriesItemType6Type
 from .entries_request_entries_item_type_7 import EntriesRequestEntriesItemType7
 from .entries_request_entries_item_type_7_entry import EntriesRequestEntriesItemType7Entry
-from .entries_request_entries_item_type_7_entry_amount import EntriesRequestEntriesItemType7EntryAmount
-from .entries_request_entries_item_type_7_entry_interval import EntriesRequestEntriesItemType7EntryInterval
 from .entries_request_entries_item_type_7_type import EntriesRequestEntriesItemType7Type
 from .entries_request_entries_item_type_8 import EntriesRequestEntriesItemType8
 from .entries_request_entries_item_type_8_entry import EntriesRequestEntriesItemType8Entry
+from .entries_request_entries_item_type_8_entry_amount import EntriesRequestEntriesItemType8EntryAmount
+from .entries_request_entries_item_type_8_entry_interval import EntriesRequestEntriesItemType8EntryInterval
 from .entries_request_entries_item_type_8_type import EntriesRequestEntriesItemType8Type
 from .entries_request_entries_item_type_9 import EntriesRequestEntriesItemType9
 from .entries_request_entries_item_type_9_entry import EntriesRequestEntriesItemType9Entry
 from .entries_request_entries_item_type_9_type import EntriesRequestEntriesItemType9Type
+from .entries_request_entries_item_type_10 import EntriesRequestEntriesItemType10
+from .entries_request_entries_item_type_10_entry import EntriesRequestEntriesItemType10Entry
+from .entries_request_entries_item_type_10_type import EntriesRequestEntriesItemType10Type
 from .file_commit_ack import FileCommitAck
 from .file_delete import FileDelete
 from .file_write import FileWrite
@@ -243,6 +249,9 @@ from .post_api_gateway_v1_ledgers_owner_name_directives_text_response_200_wrote_
 from .post_api_gateway_v1_ledgers_owner_name_entries_response_200 import (
     PostApiGatewayV1LedgersOwnerNameEntriesResponse200,
 )
+from .post_api_gateway_v1_ledgers_owner_name_entries_response_200_preview_item import (
+    PostApiGatewayV1LedgersOwnerNameEntriesResponse200PreviewItem,
+)
 from .post_api_gateway_v1_ledgers_owner_name_entry_source_delete_body import (
     PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteBody,
 )
@@ -255,8 +264,14 @@ from .post_api_gateway_v1_ledgers_owner_name_entry_source_delete_many_body_entri
 from .post_api_gateway_v1_ledgers_owner_name_entry_source_delete_many_response_200 import (
     PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteManyResponse200,
 )
+from .post_api_gateway_v1_ledgers_owner_name_entry_source_delete_many_response_200_preview_item import (
+    PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteManyResponse200PreviewItem,
+)
 from .post_api_gateway_v1_ledgers_owner_name_entry_source_delete_response_200 import (
     PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteResponse200,
+)
+from .post_api_gateway_v1_ledgers_owner_name_entry_source_delete_response_200_preview_item import (
+    PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteResponse200PreviewItem,
 )
 from .post_api_gateway_v1_ledgers_owner_name_import_insert_receipt_body import (
     PostApiGatewayV1LedgersOwnerNameImportInsertReceiptBody,
@@ -309,6 +324,9 @@ from .post_api_gateway_v1_ledgers_owner_name_pull_requests_response_200 import (
 from .post_api_gateway_v1_ledgers_owner_name_rename_file_body import PostApiGatewayV1LedgersOwnerNameRenameFileBody
 from .post_api_gateway_v1_ledgers_owner_name_rename_file_response_200 import (
     PostApiGatewayV1LedgersOwnerNameRenameFileResponse200,
+)
+from .post_api_gateway_v1_ledgers_owner_name_rename_file_response_200_preview_item import (
+    PostApiGatewayV1LedgersOwnerNameRenameFileResponse200PreviewItem,
 )
 from .post_api_gateway_v1_legacy_entries_body import PostApiGatewayV1LegacyEntriesBody
 from .post_api_gateway_v1_legacy_entries_body_entries_input_item import (
@@ -364,6 +382,9 @@ from .put_api_gateway_v1_ledgers_owner_name_collaborators_collaborator_response_
 from .put_api_gateway_v1_ledgers_owner_name_entry_source_body import PutApiGatewayV1LedgersOwnerNameEntrySourceBody
 from .put_api_gateway_v1_ledgers_owner_name_entry_source_response_200 import (
     PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200,
+)
+from .put_api_gateway_v1_ledgers_owner_name_entry_source_response_200_preview_item import (
+    PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200PreviewItem,
 )
 from .put_api_gateway_v1_ledgers_owner_name_star_body import PutApiGatewayV1LedgersOwnerNameStarBody
 from .put_api_gateway_v1_ledgers_owner_name_star_response_200 import PutApiGatewayV1LedgersOwnerNameStarResponse200
@@ -428,9 +449,13 @@ __all__ = (
     "EntriesRequestEntriesItemType0EntryPostingsItemCostType0",
     "EntriesRequestEntriesItemType0EntryPostingsItemMetaType0",
     "EntriesRequestEntriesItemType0EntryPostingsItemPriceType0",
+    "EntriesRequestEntriesItemType0EntryPostingsItemTotalPriceType0",
     "EntriesRequestEntriesItemType0EntryPostingsItemUnitsType0",
     "EntriesRequestEntriesItemType0Type",
     "EntriesRequestEntriesItemType1",
+    "EntriesRequestEntriesItemType10",
+    "EntriesRequestEntriesItemType10Entry",
+    "EntriesRequestEntriesItemType10Type",
     "EntriesRequestEntriesItemType1Entry",
     "EntriesRequestEntriesItemType1EntryBookingType1",
     "EntriesRequestEntriesItemType1EntryBookingType2Type1",
@@ -441,7 +466,6 @@ __all__ = (
     "EntriesRequestEntriesItemType2Type",
     "EntriesRequestEntriesItemType3",
     "EntriesRequestEntriesItemType3Entry",
-    "EntriesRequestEntriesItemType3EntryAmount",
     "EntriesRequestEntriesItemType3Type",
     "EntriesRequestEntriesItemType4",
     "EntriesRequestEntriesItemType4Entry",
@@ -449,17 +473,18 @@ __all__ = (
     "EntriesRequestEntriesItemType4Type",
     "EntriesRequestEntriesItemType5",
     "EntriesRequestEntriesItemType5Entry",
+    "EntriesRequestEntriesItemType5EntryAmount",
     "EntriesRequestEntriesItemType5Type",
     "EntriesRequestEntriesItemType6",
     "EntriesRequestEntriesItemType6Entry",
     "EntriesRequestEntriesItemType6Type",
     "EntriesRequestEntriesItemType7",
     "EntriesRequestEntriesItemType7Entry",
-    "EntriesRequestEntriesItemType7EntryAmount",
-    "EntriesRequestEntriesItemType7EntryInterval",
     "EntriesRequestEntriesItemType7Type",
     "EntriesRequestEntriesItemType8",
     "EntriesRequestEntriesItemType8Entry",
+    "EntriesRequestEntriesItemType8EntryAmount",
+    "EntriesRequestEntriesItemType8EntryInterval",
     "EntriesRequestEntriesItemType8Type",
     "EntriesRequestEntriesItemType9",
     "EntriesRequestEntriesItemType9Entry",
@@ -536,11 +561,14 @@ __all__ = (
     "PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200NewErrorsItem",
     "PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200WroteItem",
     "PostApiGatewayV1LedgersOwnerNameEntriesResponse200",
+    "PostApiGatewayV1LedgersOwnerNameEntriesResponse200PreviewItem",
     "PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteBody",
     "PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteManyBody",
     "PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteManyBodyEntriesItem",
     "PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteManyResponse200",
+    "PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteManyResponse200PreviewItem",
     "PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteResponse200",
+    "PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteResponse200PreviewItem",
     "PostApiGatewayV1LedgersOwnerNameImportInsertReceiptBody",
     "PostApiGatewayV1LedgersOwnerNameImportInsertReceiptBodyInput",
     "PostApiGatewayV1LedgersOwnerNameImportInsertReceiptBodyInputPostingsItem",
@@ -561,6 +589,7 @@ __all__ = (
     "PostApiGatewayV1LedgersOwnerNamePullRequestsResponse200",
     "PostApiGatewayV1LedgersOwnerNameRenameFileBody",
     "PostApiGatewayV1LedgersOwnerNameRenameFileResponse200",
+    "PostApiGatewayV1LedgersOwnerNameRenameFileResponse200PreviewItem",
     "PostApiGatewayV1LegacyEntriesBody",
     "PostApiGatewayV1LegacyEntriesBodyEntriesInputItem",
     "PostApiGatewayV1LegacyEntriesBodyEntriesInputItemMeta",
@@ -590,6 +619,7 @@ __all__ = (
     "PutApiGatewayV1LedgersOwnerNameCollaboratorsCollaboratorResponse200",
     "PutApiGatewayV1LedgersOwnerNameEntrySourceBody",
     "PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200",
+    "PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200PreviewItem",
     "PutApiGatewayV1LedgersOwnerNameStarBody",
     "PutApiGatewayV1LedgersOwnerNameStarResponse200",
     "SearchLedgersArchived",

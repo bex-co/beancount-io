@@ -1,10 +1,16 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
+
+if TYPE_CHECKING:
+    from ..models.put_api_gateway_v1_ledgers_owner_name_entry_source_response_200_preview_item import (
+        PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200PreviewItem,
+    )
+
 
 T = TypeVar("T", bound="PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200")
 
@@ -14,14 +20,19 @@ class PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200:
     """
     Attributes:
         message (str):
+        dry_run (bool):
         entry_hash (str):
+        preview (list[PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200PreviewItem]): Per-file affected text;
+            populated on dry runs only.
         new_sha_256_sum (str):
         new_entry_hash (str): The entry's public ID after the commit, re-read post-commit — use it for the next edit,
             not the request's entryHash.
     """
 
     message: str
+    dry_run: bool
     entry_hash: str
+    preview: list[PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200PreviewItem]
     new_sha_256_sum: str
     new_entry_hash: str
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -29,7 +40,14 @@ class PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200:
     def to_dict(self) -> dict[str, Any]:
         message = self.message
 
+        dry_run = self.dry_run
+
         entry_hash = self.entry_hash
+
+        preview = []
+        for preview_item_data in self.preview:
+            preview_item = preview_item_data.to_dict()
+            preview.append(preview_item)
 
         new_sha_256_sum = self.new_sha_256_sum
 
@@ -40,7 +58,9 @@ class PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200:
         field_dict.update(
             {
                 "message": message,
+                "dryRun": dry_run,
                 "entryHash": entry_hash,
+                "preview": preview,
                 "newSha256sum": new_sha_256_sum,
                 "newEntryHash": new_entry_hash,
             }
@@ -50,10 +70,23 @@ class PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.put_api_gateway_v1_ledgers_owner_name_entry_source_response_200_preview_item import (
+            PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200PreviewItem,  # noqa: PLC0415
+        )
+
         d = dict(src_dict)
         message = d.pop("message")
 
+        dry_run = d.pop("dryRun")
+
         entry_hash = d.pop("entryHash")
+
+        preview = []
+        _preview = d.pop("preview")
+        for preview_item_data in _preview:
+            preview_item = PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200PreviewItem.from_dict(preview_item_data)
+
+            preview.append(preview_item)
 
         new_sha_256_sum = d.pop("newSha256sum")
 
@@ -61,7 +94,9 @@ class PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200:
 
         put_api_gateway_v1_ledgers_owner_name_entry_source_response_200 = cls(
             message=message,
+            dry_run=dry_run,
             entry_hash=entry_hash,
+            preview=preview,
             new_sha_256_sum=new_sha_256_sum,
             new_entry_hash=new_entry_hash,
         )

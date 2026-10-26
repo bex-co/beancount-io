@@ -2,7 +2,7 @@ from enum import StrEnum
 
 
 class EntriesRequestEntriesItemType5Type(StrEnum):
-    COMMODITY = "commodity"
+    PRICE = "price"
 
     def __str__(self) -> str:
         return str(self.value)

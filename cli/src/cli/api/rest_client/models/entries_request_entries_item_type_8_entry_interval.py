@@ -1,7 +1,7 @@
 from enum import StrEnum
 
 
-class EntriesRequestEntriesItemType7EntryInterval(StrEnum):
+class EntriesRequestEntriesItemType8EntryInterval(StrEnum):
     DAILY = "daily"
     MONTHLY = "monthly"
     QUARTERLY = "quarterly"

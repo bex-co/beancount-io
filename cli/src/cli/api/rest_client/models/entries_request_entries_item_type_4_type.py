@@ -2,7 +2,7 @@ from enum import StrEnum
 
 
 class EntriesRequestEntriesItemType4Type(StrEnum):
-    PRICE = "price"
+    BALANCE = "balance"
 
     def __str__(self) -> str:
         return str(self.value)

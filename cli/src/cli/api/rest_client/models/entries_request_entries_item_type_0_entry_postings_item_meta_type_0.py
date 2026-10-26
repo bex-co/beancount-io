@@ -11,6 +11,8 @@ T = TypeVar("T", bound="EntriesRequestEntriesItemType0EntryPostingsItemMetaType0
 
 @_attrs_define
 class EntriesRequestEntriesItemType0EntryPostingsItemMetaType0:
+    """Posting metadata, written beneath the posting"""
+
     additional_properties: dict[str, str] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
