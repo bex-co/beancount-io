@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- **1106** — [Keep Budget period tables open when changing time spans](./1106.md)
+
 - **1105** — [Gate report view selectors until they can respond](./1105.md)
 
 - **1104** — [Navigate to a surviving folder after deleting its last file](./1104.md)
