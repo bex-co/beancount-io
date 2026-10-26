@@ -33,7 +33,6 @@
 - [118](./118.md) — `initialize` validation failures answer `-32603` with a raw zod dump instead of `-32602` + shaped `BAD_USER_INPUT` like every other method
 - [119](./119.md) — set-typed BQL cells render space-joined in text (`runBqlQuery`, GraphQL, stock) but comma-joined in structured (MCP structured, REST; dtype says `set`, value is a string)
 - [120](./120.md) — lifecycle mutations take no `dry_run` while every content mutation previews (m7 follow-up; `deleteLedger` destroys blind; no documented exclusion)
-- [121](./121.md) — CLI OpenAPI pin drifted behind the bulk-entries cap (w23/103 follow-up; `make spec-sync && make codegen`)
 - [122](./122.md) — non-`count` aggregates over an empty set return a `str`-typed empty string (`sum`/`min`/`max`/`avg`/`first` → `""`; `count(*)` → `0` correct; stock yields zero rows — 022)
 - [082](./blocked/082.md) — `createPullRequest` fails on production: Gitea 500 while creating the `pr-patch-*` branch, on MCP and REST alike — **blocked:** needs the Gitea server-log cause for one failing branch create (owner), then a production rerun
 - [080](./blocked/080.md) — `/api-gateway/mcp` accepts any `Origin` (the MCP transport spec says a bad `Origin` MUST get 403); owner picks validate vs document — **blocked:** owner picks 403-on-foreign-Origin vs documented non-validation

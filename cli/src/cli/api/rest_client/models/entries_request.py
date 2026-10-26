@@ -33,7 +33,7 @@ class EntriesRequest:
             | EntriesRequestEntriesItemType2 | EntriesRequestEntriesItemType3 | EntriesRequestEntriesItemType4 |
             EntriesRequestEntriesItemType5 | EntriesRequestEntriesItemType6 | EntriesRequestEntriesItemType7 |
             EntriesRequestEntriesItemType8 | EntriesRequestEntriesItemType9]): Directives to append, committed all-or-
-            nothing
+            nothing; at most 1000 per call
         allowInvalid (bool | None | Unset): Record entries deliberately even when they are unbalanced (UNBALANCED) or
             would add bean-check errors such as a second open for an open account (VALIDATION_FAILED), instead of refusing
             them
