@@ -11,7 +11,7 @@
 | t003 | Entry-source update/delete preview end to end ✅ | 60m | t002 |
 | t004 | Rename preview end to end ✅ | 60m | t003 |
 | t005 | Document write previews ✅ | 30m | t004 |
-| t006 | Adoption surface | 20m | t005 |
+| t006 | Adoption surface ✅ | 20m | t005 |
 | t007 | Simplify | 30m | t006 |
 | t008 | Test coverage | 45m | t006 |
 | t009 | Closeout | 15m | t007, t008 |

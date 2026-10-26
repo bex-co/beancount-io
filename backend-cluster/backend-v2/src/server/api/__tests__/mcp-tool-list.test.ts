@@ -18,6 +18,7 @@ import {
   STEERING_WORDING,
 } from "@/features/ai-agent/api/__tests__/directory-wording";
 import { mcpToolSecuritySchemes } from "../op-class";
+import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 
 /**
  * The lean, use-ordered tool list (w2/m27:t005).
@@ -245,6 +246,36 @@ describe("MCP tool list", () => {
     const { tools } = await listToolsRaw();
     const bytes = Buffer.byteLength(JSON.stringify(tools), "utf8");
     expect(bytes).toBeLessThan(110 * 1024);
+  });
+
+  // w23/m7/t006: every mutation preview flag is advertised where agents
+  // look — tools/list — not just accepted when sent. Both hosts read the
+  // same listing, so this pins the instructions Claude Code and Codex see.
+  it.each([
+    "addLedgerEntries",
+    "updateEntrySource",
+    "deleteEntrySource",
+    "deleteEntrySources",
+    "renameLedgerFile",
+  ])("advertises the dry_run preview flag on %s", async (name) => {
+    const { tools } = await listToolsRaw();
+    const tool = tools.find((entry) => entry.name === name);
+    expect(tool?.description).toContain("dry_run previews without committing");
+    const input = tool?.inputSchema as
+      | { properties?: Record<string, { description?: string }> }
+      | undefined;
+    expect(input?.properties?.dry_run?.description).toBe(
+      PREVIEW_FLAG_DESCRIPTION,
+    );
+    const output = tool?.outputSchema as
+      | {
+          properties?: Record<string, { properties?: Record<string, unknown> }>;
+        }
+      | undefined;
+    // The echo and the preview the flag returns.
+    expect(
+      Object.keys(output?.properties?.result?.properties ?? {}),
+    ).toEqual(expect.arrayContaining(["dry_run", "preview"]));
   });
 
   it("exposes each operation as its own tool, never behind a selector argument", async () => {
