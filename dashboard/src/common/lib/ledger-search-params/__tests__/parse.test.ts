@@ -23,6 +23,16 @@ describe("normalizeLedgerSearchValue", () => {
     );
   });
 
+  it("keeps percent text inside a typed expression literal (w4/1093)", () => {
+    const literal = `payee:"E%2EB%2E's Beer and Wine"`;
+    expect(normalizeLedgerSearchValue(literal)).toBe(literal);
+    expect(normalizeLedgerSearchValue("Assets:US:%41")).toBe("Assets:US:%41");
+    // A whole-value legacy encoding of the same expression still decodes once.
+    expect(normalizeLedgerSearchValue(encodeURIComponent(literal))).toBe(
+      literal,
+    );
+  });
+
   it("recovers from malformed percent encodings", () => {
     expect(normalizeLedgerSearchValue("payee:%ZZ")).toBe("payee:%ZZ");
     expect(normalizeLedgerSearchValue("100%")).toBe("100%");
@@ -76,6 +86,19 @@ describe("parseLedgerFilterSearch / schema", () => {
     expect(ledgerFilterSearchSchema.parse({ time: "2016" })).toEqual({
       time: 2016,
     });
+  });
+
+  it("keeps a literal percent filter through schema, patch and reparse (w4/1093)", () => {
+    const filter = `payee:"E%2EB%2E's Beer and Wine"`;
+    const validated = ledgerFilterSearchSchema.parse({ filter });
+    expect(validated.filter).toBe(filter);
+    const patched = applyLedgerFilterSearch(
+      { q: "x" },
+      { account: "", filter, time: "2016" },
+    );
+    expect(
+      parseLedgerFilterSearch(ledgerFilterSearchSchema.parse(patched)),
+    ).toMatchObject({ filter, time: "2016" });
   });
 
   it("preserves unrelated keys when applying or clearing filters", () => {

@@ -25,12 +25,16 @@ export function normalizeLedgerSearchValue(value: unknown): string {
 }
 
 /**
- * URLSearchParams (and the router) already decode once. Apply at most one more
- * decode when the value still looks percent-encoded so double-encoded legacy
- * links keep working, without crashing on bare `%` characters.
+ * URLSearchParams (and the router) already decode once. A legacy link that
+ * encoded the whole value a second time still looks like `encodeURIComponent`
+ * output after that — every character is one it leaves alone or a `%XX`
+ * escape — so decode that once more. Anything else is a value the reader typed
+ * or a canonical link carried, and percent text inside it is literal: a
+ * quoted `payee:"E%2EB%2E"` must not become a regex dot (w4/1093). A
+ * malformed encoding never throws; it keeps the value.
  */
 function maybeUndoExtraEncoding(value: string): string {
-  if (!/%[0-9A-Fa-f]{2}/.test(value)) {
+  if (!/%[0-9A-Fa-f]{2}/.test(value) || !/^[\w.!~*'()%+-]*$/.test(value)) {
     return value;
   }
 
