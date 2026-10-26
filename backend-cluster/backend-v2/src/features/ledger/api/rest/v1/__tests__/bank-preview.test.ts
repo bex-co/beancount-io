@@ -9,6 +9,8 @@ import {
 
 const sync = jest.fn(async (..._args: unknown[]) => ({ success: true }));
 const change = jest.fn(async () => ({ success: true }));
+const submit = jest.fn(async () => ({ success: true, entries: [] }));
+const unsynced = jest.fn(async () => []);
 let server: V1TestServer;
 const ledger = "/api-gateway/v1/ledgers/alice/main";
 
@@ -16,11 +18,15 @@ beforeAll(async () => {
   server = await startV1TestServer(
     {
       services: {
-        plaidSync: { syncItemTransactions: sync },
+        plaidSync: {
+          syncItemTransactions: sync,
+          submitTransactionsToLedger: submit,
+        },
         plaidItem: {
           refreshItemStatus: change,
           updateAccountMapping: change,
           updateAccountCurrency: change,
+          getUnsyncedTransactions: unsynced,
         },
       },
     } as unknown as AppLayers,
@@ -107,4 +113,86 @@ describe.each([
       expect(change).toHaveBeenCalledTimes(1);
     },
   );
+});
+
+// w23/m8/t005: REST takes the camelCase spelling only — the snake_case
+// aliases are MCP-only (docs/mcp.md bank import workflow). Strict bodies
+// refuse the snake keys; the lenient account query drops them (see below).
+// Each case first proves the camelCase call works, so the snake case cannot
+// pass vacuously.
+describe("REST bank spelling", () => {
+  it("refuses a snake_case mapping body", async () => {
+    const ok = await fetch(
+      `${server.url}${ledger}/bank-accounts/account/mapping`,
+      {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ ledgerAccount: "Assets:Checking" }),
+      },
+    );
+    expect(ok.status).toBe(200);
+    expect(change).toHaveBeenCalledTimes(1);
+    const refused = await fetch(
+      `${server.url}${ledger}/bank-accounts/account/mapping`,
+      {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ ledger_account: "Assets:Checking" }),
+      },
+    );
+    expect(refused.status).toBe(400);
+    expect(change).toHaveBeenCalledTimes(1);
+  });
+
+  it("refuses snake_case submit items", async () => {
+    const ok = await fetch(`${server.url}${ledger}/bank-transactions/submit`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        transactions: [
+          { transactionId: "t1", targetAccount: "Expenses:Food" },
+        ],
+      }),
+    });
+    expect(ok.status).toBe(200);
+    expect(submit).toHaveBeenCalledTimes(1);
+    const refused = await fetch(
+      `${server.url}${ledger}/bank-transactions/submit`,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          transactions: [
+            { transaction_id: "t1", target_account: "Expenses:Food" },
+          ],
+        }),
+      },
+    );
+    expect(refused.status).toBe(400);
+    expect(submit).toHaveBeenCalledTimes(1);
+  });
+
+  // Unlike the strict bodies above, the account query is lenient: an
+  // unknown key is dropped and the call runs unfiltered. MCP strictifies
+  // this same schema, so only REST behaves this way (follow-up note).
+  it("ignores a snake_case staged query instead of filtering", async () => {
+    const ok = await fetch(
+      `${server.url}${ledger}/bank-transactions/unsynced?accountId=acc_1`,
+    );
+    expect(ok.status).toBe(200);
+    expect(unsynced).toHaveBeenLastCalledWith(
+      expect.anything(),
+      "acc_1",
+      expect.anything(),
+    );
+    const unfiltered = await fetch(
+      `${server.url}${ledger}/bank-transactions/unsynced?account_id=acc_1`,
+    );
+    expect(unfiltered.status).toBe(200);
+    expect(unsynced).toHaveBeenLastCalledWith(
+      expect.anything(),
+      undefined,
+      expect.anything(),
+    );
+  });
 });
