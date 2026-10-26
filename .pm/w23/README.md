@@ -28,6 +28,7 @@
 - [102](./102.md) — `commits?page=` past the int32 offset answers `INTERNAL_SERVER_ERROR` instead of an empty page
 - [103](./103.md) — `addLedgerEntries` has no batch-size cap: 20,000 entries commit in one call
 - [104](./104.md) — map a stray 431 from the ledger hop to `BAD_USER_INPUT` (m5/t001 follow-up; QA confirmed 3 more 431 vectors 2026-10-26)
+- [108](./108.md) — CLI OpenAPI pin drifted behind the typed entry fields (m6/t005 follow-up; `make spec-sync && make codegen`)
 - [082](./blocked/082.md) — `createPullRequest` fails on production: Gitea 500 while creating the `pr-patch-*` branch, on MCP and REST alike — **blocked:** needs the Gitea server-log cause for one failing branch create (owner), then a production rerun
 - [080](./blocked/080.md) — `/api-gateway/mcp` accepts any `Origin` (the MCP transport spec says a bad `Origin` MUST get 403); owner picks validate vs document — **blocked:** owner picks 403-on-foreign-Origin vs documented non-validation
 - [075](./blocked/075.md) — typed BQL results return NULL as `""` (undocumented), so a missing payee or price reads as an empty string — **blocked:** documented as `""` (option a shipped); owner picks `null` on REST/MCP, `null` everywhere, or keeping `""`
