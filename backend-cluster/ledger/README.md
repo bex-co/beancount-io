@@ -74,6 +74,12 @@ price, `SELECT NULL` or `1/0` reads `""`, the same as an empty value. Use
 `null` instead is a contract change on all three surfaces, still undecided
 (w23/075).
 
+Set-typed cells (tags, links, `other_accounts`, …) render identically in text
+and structured results: members sorted and double-space-joined, the way stock
+beanquery prints a set. An empty set reads `""`. The dtype still says `set`
+while the value is a string; returning real JSON arrays is a three-surface
+contract change, still undecided (w23/119).
+
 REST, GraphQL and MCP share this query producer and its limitations. Reliable
 expression types independent of aliases, including empty or entirely null
 columns, require a supported engine schema. The service does not reconstruct

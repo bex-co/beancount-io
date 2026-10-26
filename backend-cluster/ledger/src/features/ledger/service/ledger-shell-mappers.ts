@@ -171,8 +171,13 @@ function dtypeFromColumnName(name: string): string {
  *   still show a `<number> <currency>` line).
  * - `Position` (`{ units, cost? }`) → its string form (fava `PositionColumn` →
  *   `str`), e.g. `"2 GLD {205.78 USD}"`.
- * - arrays (tags/links) and any other object → their string form (fava
- *   `SetColumn`/`ObjectColumn` → `str`).
+ * - string arrays (set-typed columns: tags/links/other_accounts/...) → the
+ *   same sorted double-space rendering the text table uses (w23/119), so one
+ *   cell reads one way on every surface. The dtype still says `set` while the
+ *   value is a string, and an empty set reads `""` — returning real arrays is
+ *   a three-surface contract change, still undecided.
+ * - non-string arrays and any other object → their string form (fava
+ *   `ObjectColumn` → `str`).
  */
 function toShellCell(cell: CellValue): ShellCell {
   // The pre-migration backend-v2 adapter converted Fava's nullable cells to an
@@ -185,7 +190,7 @@ function toShellCell(cell: CellValue): ShellCell {
   ) {
     return cell;
   }
-  if (Array.isArray(cell)) return formatCellValue(cell);
+  if (Array.isArray(cell)) return formatArrayCell(cell);
   if (isInventoryCell(cell)) {
     return unitsToCurrencyMap(cell.positions.map((position) => position.units));
   }
@@ -216,11 +221,23 @@ export function queryResultToShellResult(
   };
 }
 
-function formatTextCell(cell: CellValue): string {
-  if (typeof cell === "boolean") return cell ? "TRUE" : "FALSE";
-  if (Array.isArray(cell) && cell.every((item) => typeof item === "string")) {
+/**
+ * One array cell, one string, in both renderers (w23/119). A set-typed cell —
+ * every member a string — sorts its members and double-space-joins them, the
+ * way stock beanquery prints a set, so text and structured agree; an empty set
+ * reads `""`, the same as an empty value or NULL. Anything else (mixed arrays
+ * hold numbers or objects, never set members) keeps fava's comma-joined form.
+ */
+function formatArrayCell(cell: CellValue[]): string {
+  if (cell.every((item) => typeof item === "string")) {
     return [...cell].sort().join("  ");
   }
+  return formatCellValue(cell);
+}
+
+function formatTextCell(cell: CellValue): string {
+  if (typeof cell === "boolean") return cell ? "TRUE" : "FALSE";
+  if (Array.isArray(cell)) return formatArrayCell(cell);
   return formatCellValue(cell);
 }
 
