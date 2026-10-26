@@ -6,6 +6,7 @@ import {
   SOURCE_SLICE_OPERATION_OUTPUTS,
   SOURCE_SLICE_OPERATION_SCHEMAS,
   SOURCE_SLICE_EXECUTORS,
+  withoutDryRun,
 } from "./mcp-source-slices";
 import {
   renameFileInput,
@@ -283,9 +284,16 @@ const addLedgerEntriesInput = entriesBodySchema
       .describe("Run every check and return the preview without committing"),
   })
   .strict();
-const renameLedgerFileInput = renameFileInput.extend({
-  ledger: ledgerSelection,
-});
+const renameLedgerFileInput = renameFileInput
+  .omit({ dryRun: true })
+  .extend({
+    ledger: ledgerSelection,
+    dry_run: z
+      .boolean()
+      .optional()
+      .describe("Run every check and return the preview without committing"),
+  })
+  .strict();
 const insertReceiptTransactionInput = receiptInsertInput
   .extend({ ledger: ledgerSelection })
   .strict();
@@ -614,10 +622,15 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     title: "Rename Ledger File",
     annotations: IDEMPOTENT_WRITE,
     description:
-      "Move oldPath to newPath preserving content in one atomic commit. Refuses when oldPath is still `include`d unless updateIncludes rewrites those lines in the same commit. Pinned credentials can omit ledger.",
+      "Move oldPath to newPath preserving content in one atomic commit. Refuses when oldPath is still `include`d unless updateIncludes rewrites those lines in the same commit. Pinned credentials can omit ledger. dry_run previews without committing.",
     inputSchema: renameLedgerFileInput,
     outputSchema: mcpOutputSchema(
-      toolOutputSchema(withWriteOutcome(renameFileResult.shape)),
+      toolOutputSchema(
+        withWriteOutcome({
+          ...withoutDryRun(renameFileResult.shape),
+          dry_run: z.boolean(),
+        }),
+      ),
     ),
     execute: async (context, input) => {
       const { ledger, ...args } = renameLedgerFileInput.parse(input);
@@ -637,22 +650,26 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
               newPath: normalizeAgentRepoPath(args.newPath),
               message: resolveCommitMessage(args, { required: false }),
               updateIncludes: args.updateIncludes ?? undefined,
+              dryRun: args.dry_run,
             },
           }),
       );
+      // The workflow spells the echo dryRun; MCP publishes dry_run (w23/m7/t004).
+      const { dryRun, ...result } = written;
       const moved =
         written.updatedIncludes.length > 0
-          ? ` (updated includes: ${written.updatedIncludes.join(", ")})`
+          ? ` (${dryRun ? "would update includes" : "updated includes"}: ${written.updatedIncludes.join(", ")})`
           : "";
       return {
         ok: true,
         result: {
           summary: summarizeWrite(
-            `Renamed ${written.oldPath} → ${written.newPath}${moved}`,
+            `${dryRun ? "Would rename" : "Renamed"} ${written.oldPath} → ${written.newPath}${moved}`,
             validation,
           ),
-          ...written,
-          wrote: [{ path: written.newPath }],
+          ...result,
+          dry_run: dryRun,
+          wrote: dryRun ? [] : [{ path: written.newPath }],
           entryHashes: [],
           validation,
         },

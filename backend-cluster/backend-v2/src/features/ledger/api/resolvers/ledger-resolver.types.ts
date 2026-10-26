@@ -384,6 +384,13 @@ export class RenameLedgerFileInput {
 
   @Field(() => Boolean, { nullable: true })
   updateIncludes?: boolean;
+
+  @Field(() => Boolean, {
+    nullable: true,
+    description:
+      "Run every check and return the preview without committing",
+  })
+  dryRun?: boolean;
 }
 
 @ArgsType()
@@ -474,7 +481,22 @@ export class DeleteLedgerFileResponse {
 }
 
 @ObjectType()
+export class RenamePreviewFile {
+  @Field(() => String)
+  path: string;
+
+  @Field(() => String)
+  text: string;
+}
+
+@ObjectType()
 export class RenameLedgerFileResponse {
+  @Field(() => String)
+  message: string;
+
+  @Field(() => Boolean)
+  dryRun: boolean;
+
   @Field(() => String)
   newPath: string;
 
@@ -483,6 +505,11 @@ export class RenameLedgerFileResponse {
 
   @Field(() => [String])
   updatedIncludes: string[];
+
+  @Field(() => [RenamePreviewFile], {
+    description: "Per-file rewritten include lines; populated on dry runs only",
+  })
+  preview: RenamePreviewFile[];
 }
 
 @ObjectType()

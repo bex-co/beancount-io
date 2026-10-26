@@ -10226,7 +10226,7 @@
     "/api-gateway/v1/ledgers/{owner}/{name}/rename-file": {
       "post": {
         "summary": "Rename a ledger file",
-        "description": "Move oldPath to newPath preserving content in one atomic commit (defaults to `Rename oldPath → newPath`). Refuses when oldPath is still `include`d unless updateIncludes rewrites those lines in the same commit. Both paths must be safe repository-relative paths. No client SHA or preview argument is supported by this operation.",
+        "description": "Move oldPath to newPath preserving content in one atomic commit (defaults to `Rename oldPath → newPath`). Refuses when oldPath is still `include`d unless updateIncludes rewrites those lines in the same commit. Both paths must be safe repository-relative paths. No client SHA is supported by this operation. `dryRun` previews without committing: same checks, the move plus rewritten include lines, no commit.",
         "tags": [
           "Ledger v1"
         ],
@@ -10288,6 +10288,10 @@
                   "updateIncludes": {
                     "type": "boolean",
                     "nullable": true
+                  },
+                  "dryRun": {
+                    "type": "boolean",
+                    "description": "Run every check and return the preview without committing."
                   }
                 },
                 "required": [
@@ -10307,6 +10311,12 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "dryRun": {
+                      "type": "boolean"
+                    },
                     "oldPath": {
                       "type": "string"
                     },
@@ -10318,12 +10328,34 @@
                       "items": {
                         "type": "string"
                       }
+                    },
+                    "preview": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "text": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "text"
+                        ]
+                      },
+                      "description": "Per-file rewritten include lines; populated on dry runs only."
                     }
                   },
                   "required": [
+                    "message",
+                    "dryRun",
                     "oldPath",
                     "newPath",
-                    "updatedIncludes"
+                    "updatedIncludes",
+                    "preview"
                   ]
                 }
               }

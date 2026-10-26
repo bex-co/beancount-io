@@ -48,7 +48,7 @@ export const SOURCE_SLICE_OPERATION_SCHEMAS = {
 } as const;
 
 const dryRunOutput = { dry_run: z.boolean() } as const;
-const withoutDryRun = <T extends { dryRun: unknown }>(shape: T) => {
+export const withoutDryRun = <T extends { dryRun: unknown }>(shape: T) => {
   const { dryRun: _camel, ...rest } = shape;
   return rest;
 };

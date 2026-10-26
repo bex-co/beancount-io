@@ -65,6 +65,7 @@ export interface RenameLedgerFileCommand {
   oldPath: string;
   message?: string;
   updateIncludes?: boolean;
+  dryRun?: boolean;
 }
 
 export interface ListLedgersParams {
@@ -155,6 +156,10 @@ export interface RenameLedgerFileResult {
   newPath: string;
   oldPath: string;
   updatedIncludes: string[];
+  message: string;
+  dryRun: boolean;
+  /** The rewritten include lines per file; populated on dry runs only. */
+  preview: { path: string; text: string }[];
 }
 
 export interface StarLedgerResult {

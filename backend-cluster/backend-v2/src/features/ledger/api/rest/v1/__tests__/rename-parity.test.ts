@@ -269,16 +269,18 @@ async function fixture(
           "$newPath:String!",
           ...keys.map((key) => `$${key}:String`),
           "$updateIncludes:Boolean",
+          "$dryRun:Boolean",
         ].join(",");
         const uses = [
           "oldPath:$oldPath",
           "newPath:$newPath",
           ...keys.map((key) => `${key}:$${key}`),
           "updateIncludes:$updateIncludes",
+          "dryRun:$dryRun",
         ].join(",");
         const result = await graphql({
           schema,
-          source: `mutation(${defs}) { renameLedgerFile(ledgerId:"alice/main",${uses}) { oldPath newPath updatedIncludes } }`,
+          source: `mutation(${defs}) { renameLedgerFile(ledgerId:"alice/main",${uses}) { message dryRun oldPath newPath updatedIncludes preview { path text } } }`,
           variableValues: args,
           contextValue: { identity: caller, getCurrentIdentity: () => caller },
         });
@@ -343,16 +345,19 @@ async function fixture(
 describe.each(["rest", "gql", "mcp"])("rename via %s", (surface) => {
   // MCP write results carry the write outcome (summary first, then wrote,
   // entryHashes, validation); REST and GraphQL keep the plain paths contract.
+  // Every surface echoes the preview flag — dryRun, except MCP's dry_run —
+  // with an empty preview on a commit (w23/m7/t004).
   const withOutcome = (base: Record<string, unknown>, summary: string) =>
     surface === "mcp"
       ? {
           ...base,
+          dry_run: false,
           summary,
           wrote: [{ path: base["newPath"] }],
           entryHashes: [],
           validation: { errorsBefore: 0, errorsAfter: 0, newErrors: [] },
         }
-      : base;
+      : { ...base, dryRun: false };
   it.each([identity, { ...identity, ledgerScope: undefined }])(
     "moves the contents with the supplied message for %j",
     async (caller) => {
@@ -362,9 +367,11 @@ describe.each(["rest", "gql", "mcp"])("rename via %s", (surface) => {
           success: true,
           result: withOutcome(
             {
+              message: "Renamed old.bean → folder/new.bean",
               oldPath: "old.bean",
               newPath: "folder/new.bean",
               updatedIncludes: [],
+              preview: [],
             },
             "Renamed old.bean → folder/new.bean. No new bean-check errors.",
           ),
@@ -503,9 +510,11 @@ describe.each(["rest", "gql", "mcp"])("rename via %s", (surface) => {
         success: true,
         result: withOutcome(
           {
+            message: "Renamed old.bean → new.bean",
             oldPath: "old.bean",
             newPath: "new.bean",
             updatedIncludes: [],
+            preview: [],
           },
           "Renamed old.bean → new.bean. No new bean-check errors.",
         ),
@@ -583,9 +592,11 @@ describe.each(["rest", "gql", "mcp"])("rename via %s", (surface) => {
         success: true,
         result: withOutcome(
           {
+            message: "Renamed old.bean → new.bean",
             oldPath: "old.bean",
             newPath: "new.bean",
             updatedIncludes: ["main.bean"],
+            preview: [],
           },
           "Renamed old.bean → new.bean (updated includes: main.bean). No new bean-check errors.",
         ),
@@ -633,9 +644,12 @@ describe.each(["rest", "gql", "mcp"])("rename via %s", (surface) => {
           result: {
             summary:
               "Renamed old.bean → folder/new.bean. 1 new bean-check error: Failed to read file folder/new.bean (main.bean:1)",
+            message: "Renamed old.bean → folder/new.bean",
             oldPath: "old.bean",
             newPath: "folder/new.bean",
             updatedIncludes: [],
+            preview: [],
+            dry_run: false,
             wrote: [{ path: "folder/new.bean" }],
             entryHashes: [],
             validation: {
@@ -675,6 +689,208 @@ describe.each(["rest", "gql", "mcp"])("rename via %s", (surface) => {
       expect((await f.call(surface, "old.bean", "new.bean")).success).toBe(
         false,
       );
+      expect(f.change).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+});
+
+// A preview (w23/m7/t004) runs every check the commit runs, names the move
+// plus the include rewrites, and commits nothing: no files changed, no
+// commit recorded, nothing reported as written.
+describe.each(["rest", "gql", "mcp"])("rename preview via %s", (surface) => {
+  const previewFlag =
+    surface === "mcp" ? { dry_run: true } : { dryRun: true };
+  const withPreviewOutcome = (
+    base: Record<string, unknown>,
+    summary: string,
+  ) =>
+    surface === "mcp"
+      ? {
+          ...base,
+          dry_run: true,
+          summary,
+          wrote: [],
+          entryHashes: [],
+          validation: { errorsBefore: 0, errorsAfter: 0, newErrors: [] },
+        }
+      : { ...base, dryRun: true };
+  const contents = (f: { files: FixtureFiles }) =>
+    [...f.files].map(([path, entry]) => [path, entry.content]);
+
+  it("previews a move without committing it", async () => {
+    const f = await fixture();
+    const before = contents(f);
+    try {
+      expect(
+        await f.call(surface, "old.bean", "folder/new.bean", previewFlag),
+      ).toEqual({
+        success: true,
+        result: withPreviewOutcome(
+          {
+            message: "Would rename old.bean → folder/new.bean",
+            oldPath: "old.bean",
+            newPath: "folder/new.bean",
+            updatedIncludes: [],
+            preview: [],
+          },
+          "Would rename old.bean → folder/new.bean. No new bean-check errors.",
+        ),
+      });
+      expect(contents(f)).toEqual(before);
+      expect(f.change).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("previews include rewrites without committing them", async () => {
+    const f = await fixture(identity, {
+      "main.bean": 'include "old.bean"\n',
+      "old.bean": "; Café\n",
+    });
+    const before = contents(f);
+    try {
+      expect(
+        await f.call(surface, "old.bean", "new.bean", {
+          ...previewFlag,
+          updateIncludes: true,
+        }),
+      ).toEqual({
+        success: true,
+        result: withPreviewOutcome(
+          {
+            message: "Would rename old.bean → new.bean",
+            oldPath: "old.bean",
+            newPath: "new.bean",
+            updatedIncludes: ["main.bean"],
+            preview: [{ path: "main.bean", text: 'include "new.bean"' }],
+          },
+          "Would rename old.bean → new.bean (would update includes: main.bean). No new bean-check errors.",
+        ),
+      });
+      expect(contents(f)).toEqual(before);
+      expect(f.files.get("main.bean")?.content).toBe('include "old.bean"\n');
+      expect(f.change).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("previews the moved file's own rewritten includes", async () => {
+    const f = await fixture(identity, {
+      "d/x.bean": "; x\n",
+      "d/inc.bean": '; mine\ninclude "x.bean" ; sibling\ninclude "/d/x.bean"\n',
+    });
+    const before = contents(f);
+    try {
+      expect(
+        await f.call(surface, "d/inc.bean", "e/inc.bean", {
+          ...previewFlag,
+          updateIncludes: true,
+        }),
+      ).toEqual({
+        success: true,
+        result: withPreviewOutcome(
+          {
+            message: "Would rename d/inc.bean → e/inc.bean",
+            oldPath: "d/inc.bean",
+            newPath: "e/inc.bean",
+            updatedIncludes: ["e/inc.bean"],
+            preview: [
+              {
+                path: "e/inc.bean",
+                text: 'include "../d/x.bean" ; sibling',
+              },
+            ],
+          },
+          "Would rename d/inc.bean → e/inc.bean (would update includes: e/inc.bean). No new bean-check errors.",
+        ),
+      });
+      expect(contents(f)).toEqual(before);
+      expect(f.change).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("refuses a still-included rename on a preview", async () => {
+    const f = await fixture(identity, {
+      "main.bean": 'include "old.bean"\n',
+      "old.bean": "; Café\n",
+    });
+    const before = contents(f);
+    try {
+      const result = await f.call(
+        surface,
+        "old.bean",
+        "new.bean",
+        previewFlag,
+      );
+      expect(result.success).toBe(false);
+      expect(contents(f)).toEqual(before);
+      expect(f.change).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("refuses a missing source on a preview", async () => {
+    const f = await fixture();
+    try {
+      const result = await f.call(
+        surface,
+        "ghost.bean",
+        "new.bean",
+        previewFlag,
+      );
+      expect(result.success).toBe(false);
+      expect(f.change).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("refuses an occupied target on a preview", async () => {
+    const f = await fixture();
+    const before = contents(f);
+    try {
+      const result = await f.call(
+        surface,
+        "old.bean",
+        "occupied.bean",
+        previewFlag,
+      );
+      expect(result.success).toBe(false);
+      expect(contents(f)).toEqual(before);
+      expect(f.change).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("refuses the other surface's preview spelling", async () => {
+    const f = await fixture();
+    try {
+      if (surface === "gql") {
+        // Flat args, not an input object: an unknown argument fails
+        // GraphQL validation itself.
+        const result = await graphql({
+          schema,
+          source: `mutation { renameLedgerFile(ledgerId:"alice/main",oldPath:"old.bean",newPath:"new.bean",dry_run:true) { oldPath } }`,
+          contextValue: { identity, getCurrentIdentity: () => identity },
+        });
+        expect(result.errors?.length).toBeGreaterThan(0);
+      } else {
+        const result = await f.call(
+          surface,
+          "old.bean",
+          "new.bean",
+          surface === "mcp" ? { dryRun: true } : { dry_run: true },
+        );
+        expect(result.success).toBe(false);
+      }
       expect(f.change).not.toHaveBeenCalled();
     } finally {
       await f.close();

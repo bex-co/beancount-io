@@ -1205,12 +1205,13 @@ export class LedgerWorkflow implements ILedgerWorkflow {
       );
     }
 
-    const movedContent = this.movedIncludesContent(
+    const moved = this.movedIncludesContent(
       oldFile,
       input.oldPath,
       input.newPath,
       input.updateIncludes === true,
     );
+    const movedContent = moved?.content;
     const preservedContent =
       movedContent ??
       (oldFile.encoding === "base64" && oldFile.content
@@ -1229,19 +1230,27 @@ export class LedgerWorkflow implements ILedgerWorkflow {
       },
     ];
     const updatedIncludes: string[] = movedContent ? [input.newPath] : [];
+    // The preview names the same rewrites in the same order: the moved
+    // file's own lines first, then each includer's.
+    const preview: { path: string; text: string }[] =
+      movedContent && moved
+        ? [{ path: input.newPath, text: moved.lines.join("\n") }]
+        : [];
     for (const including of includingFiles) {
       // A rewrite re-encodes the whole including file (w23/030).
       assertWritableText(including, "updateIncludes");
+      const newLines: string[] = [];
       const rewritten = including.content
         .split("\n")
         .map((line) => {
           const include = namesOldPath(including.path, line);
-          return include
-            ? formatIncludeLine(
-                include,
-                includeTargetFor(including.path, input.newPath, include.target),
-              )
-            : line;
+          if (!include) return line;
+          const replacement = formatIncludeLine(
+            include,
+            includeTargetFor(including.path, input.newPath, include.target),
+          );
+          newLines.push(replacement);
+          return replacement;
         })
         .join("\n");
       if (rewritten === including.content) continue;
@@ -1252,41 +1261,51 @@ export class LedgerWorkflow implements ILedgerWorkflow {
         sha: including.sha,
       });
       updatedIncludes.push(including.path);
+      preview.push({ path: including.path, text: newLines.join("\n") });
     }
 
+    const dryRun = input.dryRun === true;
     const changeOptions: LedgerChangeFilesOptions = {
       files,
       message: input.message ?? `Rename ${input.oldPath} → ${input.newPath}`,
     };
-    await unwrapFavaResponse(
-      favaApiClient.ledgers.changeLedgerFiles(
-        ledgerOwner,
-        ledgerName,
-        changeOptions,
-      ),
-      "rename ledger file",
-      (cause) => operationNotAllowedFromCause("rename ledger file", cause),
-    );
+    if (!dryRun) {
+      await unwrapFavaResponse(
+        favaApiClient.ledgers.changeLedgerFiles(
+          ledgerOwner,
+          ledgerName,
+          changeOptions,
+        ),
+        "rename ledger file",
+        (cause) => operationNotAllowedFromCause("rename ledger file", cause),
+      );
+    }
 
     return {
       newPath: input.newPath,
       oldPath: input.oldPath,
       updatedIncludes,
+      message: dryRun
+        ? `Would rename ${input.oldPath} → ${input.newPath}`
+        : `Renamed ${input.oldPath} → ${input.newPath}`,
+      dryRun,
+      preview: dryRun ? preview : [],
     };
   }
 
   /**
    * The moved file's own relative includes resolve from its new folder, so a
    * move to another one pointed them at files that are not there (w23/056).
-   * Returns the file's content with them rewritten, as base64, or `undefined`
-   * when the move changes none of them and the bytes move as they are.
+   * Returns the file's content with them rewritten, as base64, plus the
+   * rewritten lines for the preview — or `undefined` when the move changes
+   * none of them and the bytes move as they are.
    */
   private movedIncludesContent(
     file: { content?: string | null; encoding?: string | null },
     oldPath: string,
     newPath: string,
     updateIncludes: boolean,
-  ): string | undefined {
+  ): { content: string; lines: string[] } | undefined {
     if (
       !/\.(bean|beancount)$/.test(oldPath) ||
       posix.dirname(oldPath) === posix.dirname(newPath)
@@ -1296,6 +1315,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     const decoded = decodeFileContent(file);
     const moved: string[] = [];
     const globs: string[] = [];
+    const lines: string[] = [];
     const rewritten = decoded.content.split("\n").map((line) => {
       const include = parseIncludeLine(line);
       if (!include || isUrlTarget(include.target)) return line;
@@ -1306,10 +1326,12 @@ export class LedgerWorkflow implements ILedgerWorkflow {
         return line;
       }
       moved.push(include.target);
-      return formatIncludeLine(
+      const replacement = formatIncludeLine(
         include,
         includeTargetFor(newPath, before, include.target),
       );
+      lines.push(replacement);
+      return replacement;
     });
     if (globs.length > 0) {
       throw new BadUserInputError(
@@ -1333,7 +1355,10 @@ export class LedgerWorkflow implements ILedgerWorkflow {
       { path: oldPath, lossy: decoded.lossy },
       "updateIncludes",
     );
-    return Buffer.from(rewritten.join("\n"), "utf-8").toString("base64");
+    return {
+      content: Buffer.from(rewritten.join("\n"), "utf-8").toString("base64"),
+      lines,
+    };
   }
 
   async starLedger({
