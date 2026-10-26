@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1053 — Refuse unsupported OFX correction records](./1053.md) — major CLI import gap: REPLACE/DELETE become new payments; bank/card, three adapter routes and completed OFX controls, checked 2026-10-26.
+
 - [1052 — Name implied-price winners from the same import](./1052.md) — minor CLI advisory follow-up to903: imported FX makes1.25 defeat recorded1.20 silently; both orders/human/JSON and original903 controls, checked 2026-10-26.
 
 - [1051 — Release planning-rejected batch-update targets](./1051.md) — minor CLI partial-write gap: rejected retarget reserves its entry and blocks a later valid row; native, CSV/JSON/stdin and accepted-noop controls, checked 2026-10-26.
