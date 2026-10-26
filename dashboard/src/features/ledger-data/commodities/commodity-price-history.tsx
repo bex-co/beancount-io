@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useId } from "react";
 import { Button } from "@/common/components/ui/button";
 import {
   Table,
@@ -13,13 +13,21 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { Amount } from "@/common/components/amount";
 import { commodityPairLabel } from "./commodity-pair-label";
 
+/**
+ * A pair's dated prices behind a disclosure. Whether it is open belongs to
+ * the Commodities page, above the loading branch that replaces these cards
+ * while a refresh reads, so an opened history stays open (w4/1097).
+ */
 export function CommodityPriceHistory({
   commodity,
+  open,
+  onOpenChange,
 }: {
   commodity: CommodityPairWithPrices;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }) {
   const { t } = useTranslations();
-  const [open, setOpen] = useState(false);
   const tableId = useId();
   const pairLabel = commodityPairLabel(commodity);
 
@@ -35,7 +43,7 @@ export function CommodityPriceHistory({
         className="h-auto max-w-full min-h-8 py-1.5 text-left break-words whitespace-normal"
         aria-expanded={open}
         aria-controls={tableId}
-        onClick={() => setOpen((value) => !value)}
+        onClick={() => onOpenChange(!open)}
       >
         {open
           ? t("page.commodities.hidePriceHistory", { pair: pairLabel })

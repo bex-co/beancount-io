@@ -1,7 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { CommodityPriceHistory } from "../commodity-price-history";
+import { useState } from "react";
+import { CommodityPriceHistory as ControlledHistory } from "../commodity-price-history";
 import type { CommodityPairWithPrices } from "@/graphql/definitions";
 
 vi.mock("@/common/hooks/use-translations", () => ({
@@ -42,6 +43,22 @@ const cusdc: CommodityPairWithPrices = {
     { __typename: "PricePoint", date: "2025-01-03", value: "0.0230" },
   ],
 };
+
+/** The page owns the open state; here a local owner stands in for it. */
+function CommodityPriceHistory({
+  commodity,
+}: {
+  commodity: CommodityPairWithPrices;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <ControlledHistory
+      commodity={commodity}
+      open={open}
+      onOpenChange={setOpen}
+    />
+  );
+}
 
 describe("CommodityPriceHistory", () => {
   it("lets keyboard users open dated prices for a pair", async () => {

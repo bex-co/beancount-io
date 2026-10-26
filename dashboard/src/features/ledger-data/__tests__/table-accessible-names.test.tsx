@@ -15,11 +15,28 @@ import userEvent from "@testing-library/user-event";
 import * as apolloClient from "@apollo/client/react";
 import { BudgetChartCard } from "../budget/budget-chart-card";
 import { groupBudgetEntries } from "../budget/budget-utils";
-import { CommodityPriceHistory } from "../commodities/commodity-price-history";
+import { CommodityPriceHistory as ControlledHistory } from "../commodities/commodity-price-history";
 import { BeancountOptionsSection } from "../settings/beancount-options-section";
 import { FavaOptionsSection } from "../settings/fava-options-section";
 import type { BudgetEntry } from "../budget/types";
 import type { CommodityPairWithPrices } from "@/graphql/definitions";
+import { useState } from "react";
+
+/** The Commodities page owns the open state; a local owner stands in here. */
+function CommodityPriceHistory({
+  commodity,
+}: {
+  commodity: CommodityPairWithPrices;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <ControlledHistory
+      commodity={commodity}
+      open={open}
+      onOpenChange={setOpen}
+    />
+  );
+}
 
 vi.mock("@apollo/client/react", () => ({ useQuery: vi.fn() }));
 vi.mock("@/common/components/react-echarts", () => ({

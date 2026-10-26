@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@/common/components/ui/card";
 import { TrendingUp } from "lucide-react";
+import { useState } from "react";
 import { ReactECharts } from "@/common/components/react-echarts";
 import { defaultSplitLine } from "@/common/components/react-echarts/utils";
 import type { EChartsOption, TooltipComponentOption } from "echarts";
@@ -146,6 +147,11 @@ function CommodityChart({ commodity }: { commodity: CommodityPairWithPrices }) {
  * Commodities page component
  * This page shows commodity information and prices
  */
+/** A pair's identity on this page; the same pair keeps its disclosure. */
+function pairKey(commodity: CommodityPairWithPrices) {
+  return `${commodity.base}/${commodity.quote}`;
+}
+
 export default function LedgerCommoditiesPage() {
   const { t } = useTranslations();
   const { ledgerOwner, ledgerName } = useParams({
@@ -167,6 +173,25 @@ export default function LedgerCommoditiesPage() {
   });
 
   const commodities = data?.getLedgerCommodities;
+  // Opened price histories, per ledger and pair. Held here because QueryView
+  // replaces the cards while a same-ledger refresh reads (w4/1097).
+  const [openHistories, setOpenHistories] = useState<{
+    ledgerId: string;
+    pairs: ReadonlySet<string>;
+  }>({ ledgerId, pairs: new Set() });
+  const openPairs =
+    openHistories.ledgerId === ledgerId
+      ? openHistories.pairs
+      : new Set<string>();
+  const setHistoryOpen = (pair: string, open: boolean) =>
+    setOpenHistories((previous) => {
+      const pairs = new Set(
+        previous.ledgerId === ledgerId ? previous.pairs : undefined,
+      );
+      if (open) pairs.add(pair);
+      else pairs.delete(pair);
+      return { ledgerId, pairs };
+    });
 
   return (
     <div className="space-y-4">
@@ -227,7 +252,13 @@ export default function LedgerCommoditiesPage() {
                 </CardHeader>
                 <CardContent>
                   <CommodityChart commodity={commodity} />
-                  <CommodityPriceHistory commodity={commodity} />
+                  <CommodityPriceHistory
+                    commodity={commodity}
+                    open={openPairs.has(pairKey(commodity))}
+                    onOpenChange={(open) =>
+                      setHistoryOpen(pairKey(commodity), open)
+                    }
+                  />
                 </CardContent>
               </Card>
             ))}
