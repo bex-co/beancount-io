@@ -16,6 +16,7 @@ import {
   queryResultToText,
 } from "./ledger-shell-mappers";
 import { stripBqlBlockComments } from "./bql-comments";
+import { stripBqlStatementTerminator } from "./bql-terminator";
 
 /**
  * Compatibility DTO shared with existing dashboard/generated clients.
@@ -93,7 +94,7 @@ export class LedgerShellService implements ILedgerShellService {
     const result = await queryLedgerFilesResult(
       files,
       entryPoint,
-      stripBqlBlockComments(query),
+      stripBqlStatementTerminator(stripBqlBlockComments(query)),
     );
     assertQuerySucceeded(result);
     return queryResultToShellResult(result);
@@ -109,7 +110,7 @@ export class LedgerShellService implements ILedgerShellService {
     const result = await queryLedgerFilesResult(
       files,
       entryPoint,
-      stripBqlBlockComments(query),
+      stripBqlStatementTerminator(stripBqlBlockComments(query)),
     );
     assertQuerySucceeded(result);
     return { text: queryResultToText(result), rowCount: result.rows.length };

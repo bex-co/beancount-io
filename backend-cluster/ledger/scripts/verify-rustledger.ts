@@ -38,6 +38,7 @@ import {
   queryResultToText,
 } from "@/features/ledger/service/ledger-shell-mappers";
 import { stripBqlBlockComments } from "@/features/ledger/service/bql-comments";
+import { stripBqlStatementTerminator } from "@/features/ledger/service/bql-terminator";
 import { UNDECODABLE_SOURCE } from "@/foundation/rustledger/file-map-loader";
 import { filterDirectives } from "@/foundation/rustledger/directive-filter";
 import { assertEntryTokens } from "@/features/ledger/utils/entry-tokens";
@@ -1221,6 +1222,40 @@ async function main(): Promise<void> {
   assert(
     quotedComment.rows[0].kept === "/* literal */",
     "comment syntax inside a string literal survives normalization byte-for-byte",
+  );
+
+  // Statement terminator (w23/109): the engine resolves `FROM <table>;` —
+  // a bare table name with no further clause, `;`-terminated — as a column
+  // reference while the unterminated form resolves the table, so the shell
+  // service neutralizes a trailing `;` first. Verify against the LIVE engine
+  // that (a) the raw terminated query really does still fail there, and (b)
+  // the normalized query returns exactly the unterminated query's rows.
+  const rawTerminated = await queryLedgerFilesResult(
+    FILES,
+    "main.beancount",
+    "SELECT count(*) FROM postings;",
+  );
+  assert(
+    rawTerminated.errors.some(
+      (e) =>
+        e.severity === "error" && /column 'postings' not found/.test(e.message),
+    ),
+    "engine still mis-resolves a bare ;-terminated FROM as a column (normalization is load-bearing)",
+  );
+  const unterminatedCount = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    "SELECT count(*) FROM postings",
+  );
+  const normalizedTerminated = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    stripBqlStatementTerminator("SELECT count(*) FROM postings;"),
+  );
+  assert(
+    JSON.stringify(normalizedTerminated.rows) ===
+      JSON.stringify(unterminatedCount.rows),
+    "normalized ;-terminated query returns the unterminated query's rows",
   );
 
   const count = await countDirectives(
