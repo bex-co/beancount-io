@@ -10960,7 +10960,12 @@
                 "type": "object",
                 "properties": {
                   "entryHash": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "The entry's hash."
+                  },
+                  "entry_hash": {
+                    "type": "string",
+                    "description": "Alias of entryHash, as list output spells it."
                   },
                   "sha256sum": {
                     "type": "string"
@@ -10971,7 +10976,6 @@
                   }
                 },
                 "required": [
-                  "entryHash",
                   "sha256sum"
                 ],
                 "additionalProperties": false
@@ -11148,14 +11152,18 @@
                       "type": "object",
                       "properties": {
                         "entryHash": {
-                          "type": "string"
+                          "type": "string",
+                          "description": "The entry's hash."
+                        },
+                        "entry_hash": {
+                          "type": "string",
+                          "description": "Alias of entryHash, as list output spells it."
                         },
                         "sha256sum": {
                           "type": "string"
                         }
                       },
                       "required": [
-                        "entryHash",
                         "sha256sum"
                       ],
                       "additionalProperties": false
@@ -11338,7 +11346,12 @@
                 "type": "object",
                 "properties": {
                   "entryHash": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "The entry's hash."
+                  },
+                  "entry_hash": {
+                    "type": "string",
+                    "description": "Alias of entryHash, as list output spells it."
                   },
                   "sha256sum": {
                     "type": "string"
@@ -11352,7 +11365,6 @@
                   }
                 },
                 "required": [
-                  "entryHash",
                   "sha256sum",
                   "newContent"
                 ],
@@ -16313,9 +16325,19 @@
               "type": "string",
               "description": "The entry's hash"
             },
-            "required": true,
+            "required": false,
             "description": "The entry's hash",
             "name": "entryHash",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Alias of entryHash, as list output spells it."
+            },
+            "required": false,
+            "description": "Alias of entryHash, as list output spells it.",
+            "name": "entry_hash",
             "in": "query"
           }
         ],

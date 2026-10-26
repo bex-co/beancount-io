@@ -13,6 +13,7 @@ import { IContext } from "@/server/graphql/context";
 import { GraphQLJSONObject } from "graphql-scalars";
 import type { ILedgerJournalService } from "@/features/ledger/service/ledger-journal-service";
 import { JOURNAL_FILTER_DESCRIPTION } from "@/features/ledger/utils/journal-filter-description";
+import { resolveEntryHash } from "@/features/ledger/utils/entry-hash-alias";
 
 @ObjectType()
 class JournalResponse {
@@ -231,13 +232,18 @@ export class LedgerJournalQueryResolver {
   })
   async getLedgerEntryContext(
     @Arg("ledgerId", () => String) ledgerId: string,
-    @Arg("entryHash", () => String) entryHash: string,
     @Ctx() ctx: IContext,
+    @Arg("entryHash", () => String, { nullable: true }) entryHash?: string,
+    @Arg("entry_hash", () => String, {
+      nullable: true,
+      description: "Alias of entryHash, as list output spells it.",
+    })
+    entry_hash?: string,
   ): Promise<EntryContext> {
     return this.journalService.getContext({
       ledgerId,
       identity: ctx.identity,
-      entryHash,
+      entryHash: resolveEntryHash({ entryHash, entry_hash }),
     });
   }
 

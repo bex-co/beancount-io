@@ -11,11 +11,18 @@ import {
 import { Authenticated } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import type { ILedgerJournalService } from "@/features/ledger/service/ledger-journal-service";
+import { resolveEntryHash } from "@/features/ledger/utils/entry-hash-alias";
 
 @InputType()
 class DeleteSourceSliceInput {
-  @Field(() => String)
-  entryHash: string;
+  @Field(() => String, { nullable: true })
+  entryHash?: string;
+
+  @Field(() => String, {
+    nullable: true,
+    description: "Alias of entryHash, as list output spells it.",
+  })
+  entry_hash?: string;
 
   @Field(() => String)
   sha256sum: string;
@@ -39,8 +46,14 @@ class DeleteSourceSliceResponse {
 
 @InputType()
 class DeleteMultiSourceSliceItemInput {
-  @Field(() => String)
-  entryHash: string;
+  @Field(() => String, { nullable: true })
+  entryHash?: string;
+
+  @Field(() => String, {
+    nullable: true,
+    description: "Alias of entryHash, as list output spells it.",
+  })
+  entry_hash?: string;
 
   @Field(() => String)
   sha256sum: string;
@@ -70,8 +83,14 @@ class DeleteMultiSourceSlicesResponse {
 
 @InputType()
 class UpdateSourceSliceInput {
-  @Field(() => String)
-  entryHash: string;
+  @Field(() => String, { nullable: true })
+  entryHash?: string;
+
+  @Field(() => String, {
+    nullable: true,
+    description: "Alias of entryHash, as list output spells it.",
+  })
+  entry_hash?: string;
 
   @Field(() => String)
   sha256sum: string;
@@ -121,7 +140,7 @@ export class LedgerJournalMutationResolver {
     return this.journalService.deleteSourceSlice({
       ledgerId,
       identity: ctx.getCurrentIdentity(),
-      entryHash: input.entryHash,
+      entryHash: resolveEntryHash(input),
       sha256sum: input.sha256sum,
       allowInvalid: input.allowInvalid ?? false,
     });
@@ -142,7 +161,7 @@ export class LedgerJournalMutationResolver {
       ledgerId,
       identity: ctx.getCurrentIdentity(),
       entries: input.entries.map((e) => ({
-        entryHash: e.entryHash,
+        entryHash: resolveEntryHash(e),
         sha256sum: e.sha256sum,
       })),
       allowInvalid: input.allowInvalid ?? false,
@@ -161,7 +180,7 @@ export class LedgerJournalMutationResolver {
     return this.journalService.updateSourceSlice({
       ledgerId,
       identity: ctx.getCurrentIdentity(),
-      entryHash: input.entryHash,
+      entryHash: resolveEntryHash(input),
       sha256sum: input.sha256sum,
       newContent: input.newContent,
       platform: ctx.platform,

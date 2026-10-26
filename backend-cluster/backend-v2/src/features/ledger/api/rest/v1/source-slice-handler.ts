@@ -1,9 +1,19 @@
 import { z } from "@/shared/zod-openapi-setup";
 import { v1Route } from "@/server/rest/v1-route";
 import { json } from "@/server/rest/v1-schemas";
+import { resolveEntryHash } from "@/features/ledger/utils/entry-hash-alias";
 import { ledgerPathSchema, ledgerIdOf } from "./schemas";
+// Both spellings accepted (w23/m3/t001); handlers resolve to `entryHash`
+// before the service so the wire contract never sees the alias.
 const sliceRef = z
-  .object({ entryHash: z.string(), sha256sum: z.string() })
+  .object({
+    entryHash: z.string().optional().describe("The entry's hash."),
+    entry_hash: z
+      .string()
+      .optional()
+      .describe("Alias of entryHash, as list output spells it."),
+    sha256sum: z.string(),
+  })
   .strict();
 const allowInvalid = z
   .boolean()
@@ -53,7 +63,13 @@ export const SOURCE_SLICE_ROUTES = [
     responses: { 200: json("Deleted entry", deleteSliceResult) },
     handler: ({ layers }, { identity, params, body }) =>
       layers.services.ledgerJournal
-        .deleteSourceSlice({ identity, ledgerId: ledgerIdOf(params), ...body })
+        .deleteSourceSlice({
+          identity,
+          ledgerId: ledgerIdOf(params),
+          entryHash: resolveEntryHash(body),
+          sha256sum: body.sha256sum,
+          allowInvalid: body.allowInvalid,
+        })
         .then(withoutFiles),
   }),
   v1Route({
@@ -70,7 +86,11 @@ export const SOURCE_SLICE_ROUTES = [
         .deleteMultiSourceSlices({
           identity,
           ledgerId: ledgerIdOf(params),
-          ...body,
+          entries: body.entries.map((entry) => ({
+            entryHash: resolveEntryHash(entry),
+            sha256sum: entry.sha256sum,
+          })),
+          allowInvalid: body.allowInvalid,
         })
         .then(withoutFiles),
   }),
@@ -87,7 +107,14 @@ export const SOURCE_SLICE_ROUTES = [
     },
     handler: ({ layers }, { identity, params, body }) =>
       layers.services.ledgerJournal
-        .updateSourceSlice({ identity, ledgerId: ledgerIdOf(params), ...body })
+        .updateSourceSlice({
+          identity,
+          ledgerId: ledgerIdOf(params),
+          entryHash: resolveEntryHash(body),
+          sha256sum: body.sha256sum,
+          newContent: body.newContent,
+          allowInvalid: body.allowInvalid,
+        })
         .then(withoutFiles),
   }),
 ];

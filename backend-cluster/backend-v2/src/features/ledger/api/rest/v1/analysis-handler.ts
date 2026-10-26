@@ -4,6 +4,7 @@ import {
   summarizeOverview,
 } from "@/features/ledger/utils/report-summaries";
 import { z } from "@/shared/zod-openapi-setup";
+import { resolveEntryHash } from "@/features/ledger/utils/entry-hash-alias";
 import {
   ledgerIdOf,
   ledgerPathSchema,
@@ -375,14 +376,21 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
     description:
       "The ledger text surrounding a directive, addressed by its hash — what to read before editing it. A result with `generated_from` is a copy a plugin or a pad generated from that source entry: it shares the source's slice and sha256sum, so editing or deleting it would change the source and every other copy.",
     query: z.object({
-      entryHash: z.string().openapi({ description: "The entry's hash" }),
+      entryHash: z
+        .string()
+        .optional()
+        .openapi({ description: "The entry's hash" }),
+      entry_hash: z
+        .string()
+        .optional()
+        .openapi({ description: "Alias of entryHash, as list output spells it." }),
     }),
     uriPath: "/{entryHash}",
     fetch: (s, { ledgerId, identity, query }) =>
       s.ledgerJournal.getContext({
         ledgerId,
         identity,
-        entryHash: query.entryHash ?? "",
+        entryHash: resolveEntryHash(query),
       }),
   },
   {

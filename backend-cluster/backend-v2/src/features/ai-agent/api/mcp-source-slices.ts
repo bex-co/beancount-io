@@ -6,6 +6,7 @@ import {
   deleteSlicesResult,
   updateSliceResult,
 } from "@/features/ledger/api/rest/v1/source-slice-handler";
+import { resolveEntryHash } from "@/features/ledger/utils/entry-hash-alias";
 import {
   mcpOutputSchema,
   toolOutputSchema,
@@ -78,6 +79,7 @@ export const SOURCE_SLICE_EXECUTORS = {
     const { ledger, ...args } =
       SOURCE_SLICE_OPERATION_SCHEMAS.update.parse(input);
     const ledgerId = resolveMcpLedger(context, ledger);
+    const entryHash = resolveEntryHash(args);
     return validated(
       context,
       ledgerId,
@@ -85,12 +87,15 @@ export const SOURCE_SLICE_EXECUTORS = {
         context.services.ledgerJournal.updateSourceSlice({
           identity: context.identity,
           ledgerId,
-          ...args,
+          entryHash,
+          sha256sum: args.sha256sum,
+          newContent: args.newContent,
+          allowInvalid: args.allowInvalid,
         }),
       // The service returns the new hash in `entryHash` too, so the old one
       // comes from the request (w23/007).
       (written) =>
-        `Updated entry ${args.entryHash} (new hash ${written.newEntryHash})`,
+        `Updated entry ${entryHash} (new hash ${written.newEntryHash})`,
       (written) => [written.newEntryHash],
     );
   },
@@ -98,6 +103,7 @@ export const SOURCE_SLICE_EXECUTORS = {
     const { ledger, ...args } =
       SOURCE_SLICE_OPERATION_SCHEMAS.delete.parse(input);
     const ledgerId = resolveMcpLedger(context, ledger);
+    const entryHash = resolveEntryHash(args);
     return validated(
       context,
       ledgerId,
@@ -105,7 +111,9 @@ export const SOURCE_SLICE_EXECUTORS = {
         context.services.ledgerJournal.deleteSourceSlice({
           identity: context.identity,
           ledgerId,
-          ...args,
+          entryHash,
+          sha256sum: args.sha256sum,
+          allowInvalid: args.allowInvalid,
         }),
       (written) => `Deleted entry ${written.entryHash}`,
       (written) => [written.entryHash],
@@ -115,6 +123,10 @@ export const SOURCE_SLICE_EXECUTORS = {
     const { ledger, entries, allowInvalid } =
       SOURCE_SLICE_OPERATION_SCHEMAS.delete_many.parse(input);
     const ledgerId = resolveMcpLedger(context, ledger);
+    const resolved = entries.map((entry) => ({
+      entryHash: resolveEntryHash(entry),
+      sha256sum: entry.sha256sum,
+    }));
     return validated(
       context,
       ledgerId,
@@ -122,13 +134,13 @@ export const SOURCE_SLICE_EXECUTORS = {
         context.services.ledgerJournal.deleteMultiSourceSlices({
           identity: context.identity,
           ledgerId,
-          entries,
+          entries: resolved,
           allowInvalid,
         }),
       (written) =>
         `Deleted ${written.deletedCount} ${written.deletedCount === 1 ? "entry" : "entries"}`,
       // A hash sent twice deletes one entry; it is reported once (w23/042).
-      () => [...new Set(entries.map((entry) => entry.entryHash))],
+      () => [...new Set(resolved.map((entry) => entry.entryHash))],
     );
   },
 };

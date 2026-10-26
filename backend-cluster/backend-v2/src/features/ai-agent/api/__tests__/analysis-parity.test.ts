@@ -90,6 +90,9 @@ const SAMPLE_QUERY: Record<string, string> = {
   payee: "Whole Foods",
   narration: "groceries",
   entryHash: "abc123",
+  // The entry_hash alias (w23/m3/t001) agrees with entryHash here: the
+  // harness sends every schema key, and two different hashes refuse.
+  entry_hash: "abc123",
   accountName: "Expenses:Groceries",
   groupBy: "commodity",
   fromDate: "2024-01-01",

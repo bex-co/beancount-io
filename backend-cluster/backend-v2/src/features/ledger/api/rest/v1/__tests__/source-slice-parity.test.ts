@@ -409,6 +409,51 @@ describe.each(["rest", "gql", "mcp"])("source edits via %s", (surface) => {
   });
 });
 
+// w23/m3/t001: list output spells the hash `entry_hash`, so every entry tool
+// accepts that spelling on every surface; two different hashes refuse rather
+// than guess.
+describe.each(["rest", "gql", "mcp"])("entry_hash alias via %s", (surface) => {
+  const snake = (operation: Operation): Record<string, unknown> => {
+    const input = args(operation) as Record<string, unknown>;
+    if (operation === "delete_many") {
+      return {
+        entries: (input.entries as Array<Record<string, unknown>>).map(
+          ({ entryHash, ...rest }) => ({ ...rest, entry_hash: entryHash }),
+        ),
+      };
+    }
+    const { entryHash, ...rest } = input;
+    return { ...rest, entry_hash: entryHash };
+  };
+  describe.each(Object.keys(operations) as Operation[])("%s", (operation) => {
+    it("accepts the snake spelling list output uses", async () => {
+      const f = await fixture();
+      try {
+        const result = await f.call(surface, operation, snake(operation));
+        expect(result.success).toBe(true);
+      } finally {
+        await f.close();
+      }
+    });
+  });
+  it("refuses two different hashes without touching the ledger", async () => {
+    const f = await fixture();
+    const before = [...f.slices];
+    try {
+      const conflict = {
+        ...args("delete"),
+        entry_hash: "another-entry",
+      };
+      expect((await f.call(surface, "delete", conflict)).success).toBe(false);
+      expect([...f.slices]).toEqual(before);
+      for (const call of Object.values(f.journal))
+        expect(call).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+});
+
 // The ledger service refuses a source-slice update past the directive limit at
 // its commit boundary (w0/m6); every surface must refuse it the same way, with
 // the limit and the projected count, and change nothing.

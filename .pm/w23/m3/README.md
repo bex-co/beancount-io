@@ -1,12 +1,12 @@
 # w23 · m3 — Unify mutation-tool parameter naming
 
-**Worker:** worker1 **Goal:** agents can paste `entry_hash` from list output straight into entry mutations, and reuse one commit-message argument across file tools, on REST, GraphQL, and MCP alike **Status:** todo
+**Worker:** worker1 **Goal:** agents can paste `entry_hash` from list output straight into entry mutations, and reuse one commit-message argument across file tools, on REST, GraphQL, and MCP alike **Status:** in progress
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
-| t001 | Accept entry_hash alongside entryHash | 45m | — |
+| t001 | Accept entry_hash alongside entryHash ✅ | 45m | — |
 | t002 | Accept one commit-message name on file tools | 45m | — |
 | t003 | Document the naming rule | 30m | t001, t002 |
 | t004 | Adoption surface | 20m | t003 |

@@ -154,6 +154,39 @@ async function fixture() {
       };
       return content.result?.generated_from;
     },
+    /** The snake spelling of `generatedFrom`, one key renamed per surface. */
+    generatedFromSnake: async (surface: string, entryHash: string) => {
+      if (surface === "rest") {
+        const response = await fetch(
+          `${rest.url}/api-gateway/v1/ledgers/alice/main/entry-context?entry_hash=${entryHash}`,
+        );
+        expect(response.status).toBe(200);
+        const body = await response.json();
+        return (body.data ?? body).generated_from;
+      }
+      if (surface === "gql") {
+        const response = await graphql({
+          schema,
+          source: `query { getLedgerEntryContext(ledgerId:"alice/main",entry_hash:"${entryHash}") { generated_from slice } }`,
+          contextValue: { identity, getCurrentIdentity: () => identity },
+        });
+        expect(response.errors).toBeUndefined();
+        return (
+          response.data as {
+            getLedgerEntryContext: { generated_from: string | null };
+          }
+        ).getLedgerEntryContext.generated_from;
+      }
+      const response = await client.callTool({
+        name: "getEntryContext",
+        arguments: { entry_hash: entryHash },
+      });
+      expect(response.isError).toBeFalsy();
+      const content = response.structuredContent as {
+        result?: { generated_from?: string | null };
+      };
+      return content.result?.generated_from;
+    },
     /** Each surface's refusal message for an entry hash. */
     refusal: async (surface: string, entryHash: string) => {
       if (surface === "rest") {
@@ -212,6 +245,20 @@ describe.each(["rest", "gql", "mcp"])("entry context via %s", (surface) => {
     try {
       expect(await f.refusal(surface, "stale")).toBe(
         "Entry with ID 'stale' not found",
+      );
+    } finally {
+      await f.close();
+    }
+  });
+
+  // w23/m3/t001: the note's repro — the `entry_hash` spelling list output
+  // uses works where `entryHash` did. (The MCP resource twin shares the
+  // REST query schema and fetch, so it inherits the alias.)
+  it("accepts the entry_hash spelling list output uses", async () => {
+    const f = await fixture();
+    try {
+      expect(await f.generatedFromSnake(surface, "copy")).toBe(
+        "template-hash",
       );
     } finally {
       await f.close();

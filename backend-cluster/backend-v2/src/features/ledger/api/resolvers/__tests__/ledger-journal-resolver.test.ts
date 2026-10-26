@@ -3,7 +3,7 @@ import { LedgerJournalQueryResolver } from "../ledger-journal-resolver.query";
 import { LedgerJournalMutationResolver } from "../ledger-journal-resolver.mutation";
 import { IContext } from "@/server/graphql/context";
 import type { Identity } from "@/server/api/identity";
-import { InternalServerError } from "@/shared/errors";
+import { BadUserInputError, InternalServerError } from "@/shared/errors";
 import {
   DirectiveType,
   TransactionSubtype,
@@ -140,8 +140,8 @@ describe("LedgerJournalResolver", () => {
 
       const result = await queryResolver.getLedgerEntryContext(
         "testuser/testrepo",
-        "test-hash",
         mockContext as IContext,
+        "test-hash",
       );
 
       expect(mockJournalService.getContext).toHaveBeenCalledWith({
@@ -160,10 +160,37 @@ describe("LedgerJournalResolver", () => {
       await expect(
         queryResolver.getLedgerEntryContext(
           "testuser/testrepo",
-          "test-hash",
           mockContext as IContext,
+          "test-hash",
         ),
       ).rejects.toThrow(InternalServerError);
+    });
+
+    // w23/m3/t001: the snake spelling list output uses works too; two
+    // different hashes refuse instead of guessing.
+    it("should accept entry_hash and refuse conflicting duplicates", async () => {
+      mockJournalService.getContext.mockResolvedValue({});
+
+      await queryResolver.getLedgerEntryContext(
+        "testuser/testrepo",
+        mockContext as IContext,
+        undefined,
+        "test-hash",
+      );
+      expect(mockJournalService.getContext).toHaveBeenCalledWith({
+        ledgerId: "testuser/testrepo",
+        identity: IDENTITY,
+        entryHash: "test-hash",
+      });
+
+      await expect(
+        queryResolver.getLedgerEntryContext(
+          "testuser/testrepo",
+          mockContext as IContext,
+          "hash-a",
+          "hash-b",
+        ),
+      ).rejects.toThrow(BadUserInputError);
     });
   });
 

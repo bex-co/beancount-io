@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { logger } from "@/shared/logger";
 import { parseLedgerId } from "@/shared/str";
+import { resolveEntryHash } from "@/features/ledger/utils/entry-hash-alias";
 import type { ToolContext } from "./types";
 import type { McpRequestContext } from "../api/mcp-context";
 import { toolOutputSchema } from "./types";
@@ -173,14 +174,18 @@ export const getEntryContextDescription =
   "Read the source context around one entry, addressed by the entry_hash listLedgerEntries returns; updateEntrySource and deleteEntrySource take the same hash and this result's sha256sum. Same data as the entry-context resource. A result with `generated_from` is a copy a plugin or a pad generated from that source entry (amortize_over, forecast, padding): it shares the source's slice and sha256sum, so editing or deleting it would change the source and every other copy; address the `generated_from` entry instead.";
 
 export const getEntryContextInputSchema = z.object({
-  entryHash: z.string().describe("The entry's hash."),
+  entryHash: z.string().optional().describe("The entry's hash."),
+  entry_hash: z
+    .string()
+    .optional()
+    .describe("Alias of entryHash, as list output spells it."),
 });
 
 export const getEntryContextOutputSchema = toolOutputSchema(z.unknown());
 
 export async function executeGetEntryContext(
   ctx: Pick<ToolContext, "services" | "identity" | "ledgerId">,
-  input: { entryHash: string },
+  input: { entryHash?: string; entry_hash?: string },
 ): Promise<z.infer<typeof getEntryContextOutputSchema>> {
   const { services, identity, ledgerId } = ctx;
   return runToolSafely({
@@ -192,7 +197,7 @@ export async function executeGetEntryContext(
       services.ledgerJournal.getContext({
         ledgerId,
         identity,
-        entryHash: input.entryHash,
+        entryHash: resolveEntryHash(input),
       }),
   });
 }
