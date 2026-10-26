@@ -1,6 +1,6 @@
 # w6 · m9 — Reach developer marketplaces and galleries
 
-**Worker:** worker1 **Goal:** Developers discover and connect the hosted MCP server through the supported Docker, Cursor, Cline, and GitHub/VS Code galleries. **Status:** blocked (9 tasks done; current Docker native repair complete; platform publication gates remain; renewable OAuth source fix is shipped; w6/046 retains separate deployment/runtime gates)
+**Worker:** worker1 **Goal:** Developers discover and connect the hosted MCP server through the supported Docker, Cursor, Cline, and GitHub/VS Code galleries. **Status:** blocked (9 tasks done; current Docker native repair complete; platform publication gates remain; renewable OAuth source fix is shipped; w6/046 retains actual-expiry acceptance, with SecretService preflight passed and new-client grant confirmation pending)
 
 **Implementation estimate:** ~4½h, excluding external review queues and the standing closing tasks.
 

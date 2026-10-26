@@ -346,3 +346,32 @@ The0.44.2 release changes no relevant OAuth code. Keep retained grants; do not
 seed a legacy credential or patch a vendor binary to manufacture acceptance.
 The [evidence packet](./oauth-renewal-repair-20261025.json) preserves the exact
 partial success and failure. Docker listing review remains independently pending.
+
+
+## Supported SecretService alternative prepared — 2026-10-26T05:17:24Z
+
+The official credential-secretservice 0.9.12 binary matches release checksums.
+In an isolated non-root client-only Linux runtime, absent-entry deletion
+returns zero twice and a synthetic store/get/erase roundtrip passes, with
+network disabled and no OAuth credential used. This is a supported alternative
+to the pass-helper cleanup error; no vendor binary or old store is patched.
+
+The fresh native Gateway 0.44.1 profile/catalog and private D-Bus/keyring are
+ready. Native public-client DCR registration succeeds; the new helper contains
+one client-metadata entry and zero OAuth-token entries. The authorization page
+is prepared for exactly the existing synthetic evaluation ledger, with global
+ledger access unselected. Creating this new client grant requires browser
+action-time confirmation, which has been requested; Approve access is not
+clicked. Actual expiry, rotation/reload and post-expiry accounting are unproved.
+[Exact source, preflight and grant boundary](./secretservice-preflight-20261026.json)
+retain the current result separately from the earlier actual pass failure.
+
+The original PR #6042 is independently OPEN/REVIEW_REQUIRED with zero reviews
+and comments. Both original workflow runs still conclude action_required,
+requiring Docker maintainer approval. The new helper does not clear that review
+gate. No submission, comment, reminder, reviewer-key rotation or deploy repeats.
+
+Observed at05:22:09UTC: the unapproved authorization listener has exited on callback timeout;
+zero OAuth tokens are stored. After confirmation, renew the request for the
+same registered client and inspect the fresh ledger boundary before approval.
+Do not click the expired interaction or infer a grant/test result from it.

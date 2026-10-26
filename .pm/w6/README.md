@@ -2,6 +2,18 @@
 
 **Worker:** worker1 — general-purpose adoption worker; accepts the next highest-impact milestone across packages, topics, and A1/A2/A3 rather than owning a permanent specialty.
 
+
+## Latest native Docker follow-through — 2026-10-26T05:17:24Z
+
+[046's official SecretService alternative](../../backend-cluster/backend-v2/docs/marketplace-submissions/docker/secretservice-preflight-20261026.json)
+passes absent-entry deletion and synthetic store/get/erase preflight. Its fresh
+native runtime and single-synthetic-ledger consent page are prepared; zero
+OAuth-token entries and no full real-expiry result are observed. The new client
+grant awaits required browser action-time confirmation, then worker runs
+actual-expiry/native accounting acceptance. Existing Docker PR #6042 separately
+remains REVIEW_REQUIRED with two action_required workflow runs. No email,
+duplicate submission, backend rollout or reviewer-key rotation is involved.
+
 ## Current listing follow-through plan — 2026-10-25 UTC
 
 Source: the owner's request to complete all remaining actions from the17-target listing review in w6. The table links actual shipped receipts/native observations and the remaining owners/gates; dated snapshots below retain their historical queue states.
