@@ -268,6 +268,25 @@ describe("bulk entries refuse amounts that are not decimals (w3/641)", () => {
     expect(committed).toEqual([]);
   });
 
+  // w23/m6/t009: a balance tolerance gets the same up-front decimal refusal.
+  it("refuses a tolerance that is not a decimal, naming the field", async () => {
+    const response = await post([
+      {
+        type: "balance",
+        item: {
+          date: "2026-09-07",
+          account: "Assets:Cash",
+          amount: { number: "100", currency: "USD" },
+          tolerance: "abc",
+        },
+      },
+    ]);
+    const body = (await response.json()) as Record<string, any>;
+    expect(response.status).toBe(400);
+    expect(body.error).toBe('entry 0: tolerance "abc" is not a decimal number');
+    expect(committed).toEqual([]);
+  });
+
   it.each([
     ["-3.21", "3.21"],
     ["1e-7", "-1e-7"],

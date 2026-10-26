@@ -52,9 +52,18 @@ type BalanceInput = {
   date: string;
   account: string;
   amount: AmountInput;
+  tolerance?: string;
 };
 
-type OpenInput = { date: string; account: string; currencies: string[] };
+/** The booking methods beancount parses on `open` (w23/m6/t009). */
+type BookingMethod = "STRICT" | "FIFO" | "LIFO" | "NONE";
+
+type OpenInput = {
+  date: string;
+  account: string;
+  currencies: string[];
+  booking?: BookingMethod;
+};
 
 type CloseInput = { date: string; account: string };
 

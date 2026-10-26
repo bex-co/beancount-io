@@ -267,6 +267,11 @@ export interface Balance {
   amount: Amount;
   /** Difference between expected and actual balance amounts */
   diff_amount?: Amount | null;
+  /**
+   * Tolerance
+   * Explicit balance tolerance as a plain decimal
+   */
+  tolerance?: string;
 }
 
 /**
@@ -2111,6 +2116,11 @@ export interface Open {
    * Valid currencies for the account
    */
   currencies: string[];
+  /**
+   * Booking
+   * Booking method for the account
+   */
+  booking?: "STRICT" | "FIFO" | "LIFO" | "NONE";
 }
 
 /**

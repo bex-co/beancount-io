@@ -560,4 +560,35 @@ describe("entryInputToText — Fava-exact serialization parity", () => {
     });
     expect(out).toContain('receipt: "r-1"');
   });
+
+  // w23/m6/t009: booking renders quoted on the open line, as beancount parses.
+  it("renders booking on an open directive", () => {
+    const out = entryInputToText({
+      type: "open",
+      entry: {
+        date: "2024-01-15",
+        account: "Assets:Broker",
+        currencies: ["HOOLI"],
+        booking: "FIFO",
+      },
+    });
+    expect(out).toContain('open Assets:Broker');
+    expect(out).toContain('"FIFO"');
+  });
+
+  // w23/m6/t009: tolerance renders number-first, the spelling beancount
+  // parses (currency-first is a syntax error). The double space after `~`
+  // is fava's align output, byte-verified against to_string above.
+  it("renders tolerance on a balance directive", () => {
+    const out = entryInputToText({
+      type: "balance",
+      entry: {
+        date: "2024-01-15",
+        account: "Assets:Cash",
+        amount: { number: "100", currency: "USD" },
+        tolerance: "0.01",
+      },
+    });
+    expect(out).toContain("100 ~  0.01 USD");
+  });
 });

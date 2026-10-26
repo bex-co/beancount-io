@@ -1030,6 +1030,84 @@ describe.each(["rest", "gql", "mcp"])("posting meta via %s", (surface) => {
   });
 });
 
+describe.each(["rest", "gql", "mcp"])("booking and tolerance via %s", (surface) => {
+  // w23/m6/t009: booking commits on the open wire row.
+  it("writes an open with a booking method", async () => {
+    const batch = [
+      {
+        type: "open",
+        entry: {
+          date,
+          account: "Assets:Broker",
+          currencies: ["HOOLI"],
+          booking: "FIFO",
+        },
+      },
+    ] as unknown as LedgerEntryInput[];
+    const f = await fixture();
+    try {
+      const result = await f.call(surface, batch);
+      expect(result.success).toBe(true);
+      expect(f.committed).toHaveLength(1);
+      expect(f.committed[0]).toMatchObject({
+        item: { booking: "FIFO" },
+      });
+    } finally {
+      await f.close();
+    }
+  });
+
+  // w23/m6/t009: tolerance commits on the balance wire row.
+  it("writes a balance with a tolerance", async () => {
+    const batch = [
+      {
+        type: "balance",
+        entry: {
+          date,
+          account: "Assets:Cash",
+          amount: { number: "100", currency: "USD" },
+          tolerance: "0.01",
+        },
+      },
+    ] as unknown as LedgerEntryInput[];
+    const f = await fixture();
+    try {
+      const result = await f.call(surface, batch);
+      expect(result.success).toBe(true);
+      expect(f.committed).toHaveLength(1);
+      expect(f.committed[0]).toMatchObject({
+        item: { tolerance: "0.01" },
+      });
+    } finally {
+      await f.close();
+    }
+  });
+
+  // w23/m6/t009: the booking enum refuses unknown methods on every surface.
+  it("refuses an unknown booking method before committing", async () => {
+    const batch = [
+      {
+        type: "open",
+        entry: {
+          date,
+          account: "Assets:Broker",
+          currencies: ["HOOLI"],
+          booking: "AVERAGE",
+        },
+      },
+    ] as unknown as LedgerEntryInput[];
+    const f = await fixture();
+    try {
+      const result = await f.call(surface, batch);
+      expect(result.success).toBe(false);
+      expect(f.write).not.toHaveBeenCalled();
+      expect(f.committed).toEqual([]);
+    } finally {
+      await f.close();
+    }
+  });
+});
+
 describe.each(["rest", "gql", "mcp"])(
   "structured entries via %s",
   (surface) => {
@@ -1204,6 +1282,20 @@ describe.each(["rest", "gql", "mcp"])(
           },
         } as unknown as LedgerEntryInput,
         'entry 0: amount.number "1.000,00" is not a decimal number',
+      ],
+      // w23/m6/t009: tolerance rides the same decimal refusal.
+      [
+        "a balance tolerance",
+        {
+          type: "balance",
+          entry: {
+            date,
+            account: "Assets:Cash",
+            amount: { number: "100", currency: "USD" },
+            tolerance: "abc",
+          },
+        } as LedgerEntryInput,
+        'entry 0: tolerance "abc" is not a decimal number',
       ],
     ];
 

@@ -225,6 +225,9 @@ function toDirective(input: LedgerEntryInput): DirectiveJson {
           number: toBeancountNumber(input.entry.amount.number),
           currency: input.entry.amount.currency,
         },
+        ...(input.entry.tolerance
+          ? { tolerance: toBeancountNumber(input.entry.tolerance) }
+          : {}),
       };
     case "open":
       return {
@@ -232,6 +235,7 @@ function toDirective(input: LedgerEntryInput): DirectiveJson {
         date: input.entry.date,
         account: input.entry.account,
         currencies: input.entry.currencies ?? [],
+        ...(input.entry.booking ? { booking: input.entry.booking } : {}),
       };
     case "close":
       return {

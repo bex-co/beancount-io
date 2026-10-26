@@ -19,6 +19,10 @@ const amountSchema = z.strictObject({
 
 const dateSchema = z.string().openapi({ example: "2026-08-23" });
 
+const bookingSchema = z
+  .enum(["STRICT", "FIFO", "LIFO", "NONE"])
+  .openapi({ description: "Booking method for the account" });
+
 const costSchema = z.strictObject({
   number: z
     .string()
@@ -78,6 +82,7 @@ const entrySchema = z.discriminatedUnion("type", [
       date: dateSchema,
       account: z.string(),
       currencies: z.array(z.string()),
+      booking: nullToUndefined(bookingSchema),
     }),
   }),
   z.strictObject({
@@ -90,6 +95,9 @@ const entrySchema = z.discriminatedUnion("type", [
       date: dateSchema,
       account: z.string(),
       amount: amountSchema,
+      tolerance: nullToUndefined(z.string()).optional().openapi({
+        description: "Explicit balance tolerance as a plain decimal",
+      }),
     }),
   }),
   z.strictObject({

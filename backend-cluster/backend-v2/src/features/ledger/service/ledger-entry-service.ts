@@ -58,9 +58,22 @@ type PriceInput = { date: string; currency: string; amount: AmountInput };
 
 type NoteInput = { date: string; content: string; account: string };
 
-type BalanceInput = { date: string; account: string; amount: AmountInput };
+type BalanceInput = {
+  date: string;
+  account: string;
+  amount: AmountInput;
+  tolerance?: string;
+};
 
-type OpenInput = { date: string; account: string; currencies: string[] };
+/** The booking methods beancount parses on `open`; tracks the IDL enum. */
+type BookingMethod = NonNullable<Open["booking"]>;
+
+type OpenInput = {
+  date: string;
+  account: string;
+  currencies: string[];
+  booking?: BookingMethod;
+};
 
 type CloseInput = { date: string; account: string };
 
@@ -114,8 +127,14 @@ function entryAmounts(
           ? [[`postings[${index}].cost.number`, posting.cost.number] as const]
           : []),
       ]);
-    case "price":
     case "balance":
+      return [
+        ["amount.number", input.entry.amount?.number],
+        ...(input.entry.tolerance !== undefined
+          ? [["tolerance", input.entry.tolerance] as const]
+          : []),
+      ];
+    case "price":
     case "budget":
       return [["amount.number", input.entry.amount?.number]];
     default:
@@ -536,6 +555,7 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
           date: input.entry.date,
           account: input.entry.account,
           amount: input.entry.amount,
+          tolerance: input.entry.tolerance ?? undefined,
         };
         return { type: "balance", item, filename };
       }
@@ -544,6 +564,7 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
           date: input.entry.date,
           account: input.entry.account,
           currencies: input.entry.currencies,
+          booking: input.entry.booking ?? undefined,
         };
         return { type: "open", item, filename };
       }

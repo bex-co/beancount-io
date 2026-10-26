@@ -7924,6 +7924,11 @@
               }
             ],
             "description": "Difference between expected and actual balance amounts"
+          },
+          "tolerance": {
+            "type": "string",
+            "title": "Tolerance",
+            "description": "Explicit balance tolerance as a plain decimal"
           }
         },
         "type": "object",
@@ -12164,6 +12169,17 @@
             "type": "array",
             "title": "Currencies",
             "description": "Valid currencies for the account"
+          },
+          "booking": {
+            "enum": [
+              "STRICT",
+              "FIFO",
+              "LIFO",
+              "NONE"
+            ],
+            "type": "string",
+            "title": "Booking",
+            "description": "Booking method for the account"
           }
         },
         "type": "object",

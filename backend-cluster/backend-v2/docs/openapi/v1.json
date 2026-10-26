@@ -439,6 +439,18 @@
                           "items": {
                             "type": "string"
                           }
+                        },
+                        "booking": {
+                          "type": "string",
+                          "nullable": true,
+                          "enum": [
+                            "STRICT",
+                            "FIFO",
+                            "LIFO",
+                            "NONE",
+                            null
+                          ],
+                          "description": "Booking method for the account"
                         }
                       },
                       "required": [
@@ -525,6 +537,11 @@
                             "currency"
                           ],
                           "additionalProperties": false
+                        },
+                        "tolerance": {
+                          "type": "string",
+                          "nullable": true,
+                          "description": "Explicit balance tolerance as a plain decimal"
                         }
                       },
                       "required": [

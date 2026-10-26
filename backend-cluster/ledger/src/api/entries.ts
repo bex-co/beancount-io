@@ -148,7 +148,8 @@ function toEngineInput(row: BulkEntryWire): LedgerEntryInput {
 /**
  * Every amount a wire row carries, with the field path a refusal names.
  * Transactions carry posting units, prices, and costs; balance, price and
- * budget an `amount`; custom values may carry a number or an amount.
+ * budget an `amount`; balance may carry a bare-decimal `tolerance`; custom
+ * values may carry a number or an amount.
  */
 function rowNumbers(row: BulkEntryWire): Array<[string, unknown]> {
   const item = (row.item ?? {}) as Record<string, unknown>;
@@ -166,6 +167,10 @@ function rowNumbers(row: BulkEntryWire): Array<[string, unknown]> {
     });
   }
   add("amount.number", item.amount);
+  // A balance tolerance is a bare decimal, not an amount object (w23/m6/t009).
+  if (item.tolerance !== undefined) {
+    numbers.push(["tolerance", item.tolerance]);
+  }
   if (Array.isArray(item.values)) {
     item.values.forEach((value: Record<string, unknown>, index) => {
       if (value?.kind === "number") {

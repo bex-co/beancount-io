@@ -49,6 +49,18 @@ registerEnumType(LedgerEntryType, {
   description: "Discriminator selecting which entry payload to add",
 });
 
+enum BookingMethod {
+  STRICT = "STRICT",
+  FIFO = "FIFO",
+  LIFO = "LIFO",
+  NONE = "NONE",
+}
+
+registerEnumType(BookingMethod, {
+  name: "BookingMethod",
+  description: "Booking method for the account",
+});
+
 /** What a write created, for a follow-up read, edit or delete (w23/060). */
 const ENTRY_HASHES_DESCRIPTION =
   "The hash each committed entry now carries, in request order, for getLedgerEntryContext and the source-slice update and delete; empty on a dry run, or when it could not be resolved after the commit";
@@ -194,6 +206,12 @@ class LedgerBalanceInput {
 
   @Field(() => LedgerAmountInput)
   amount: LedgerAmountInput;
+
+  @Field(() => String, {
+    nullable: true,
+    description: "Explicit balance tolerance as a plain decimal",
+  })
+  tolerance?: string;
 }
 
 @InputType()
@@ -206,6 +224,9 @@ class LedgerOpenInput {
 
   @Field(() => [String])
   currencies: string[];
+
+  @Field(() => BookingMethod, { nullable: true })
+  booking?: BookingMethod;
 }
 
 @InputType()
