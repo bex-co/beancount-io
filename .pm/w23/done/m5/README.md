@@ -1,6 +1,6 @@
 # w23 · m5 — Handle oversize BQL queries
 
-**Worker:** worker1 **Goal:** a BQL query that fails as `INTERNAL_SERVER_ERROR` at ~16 KB URL-encoded either works or refuses actionably, identically on REST, GraphQL, and MCP **Status:** todo
+**Worker:** worker1 **Goal:** a BQL query that fails as `INTERNAL_SERVER_ERROR` at ~16 KB URL-encoded either works or refuses actionably, identically on REST, GraphQL, and MCP **Status:** done
 
 ## Tasks (in order)
 
@@ -13,7 +13,7 @@
 | t005 | Adoption surface ✅ | 20m | t004 |
 | t006 | Simplify ✅ | 30m | t005 |
 | t007 | Test coverage ✅ | 45m | t005 |
-| t008 | Closeout | 15m | t006, t007 |
+| t008 | Closeout ✅ | 15m | t006, t007 |
 
 ## Definition of done
 
