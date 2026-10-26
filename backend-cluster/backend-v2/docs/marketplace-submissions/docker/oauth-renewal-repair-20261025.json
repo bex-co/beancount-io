@@ -68,7 +68,7 @@
     ],
     "accessTokenTTLSeconds": 3600
   },
-  "next": "Complete the separately prepared synthetic-only SecretService client authorization after its required action-time confirmation, then prove actual native rotation and post-expiry accounting/one-preview/unchanged-state acceptance. Keep the prior pass-helper failure as historical runtime evidence.",
+  "next": "Observe the currently running SecretService native test through its actual original expiry, then verify automatic rotation/reload plus one dry-run and unchanged ledger state. No publisher input, new grant, deployment or manual refresh is pending.",
   "privacy": "No access/refresh token, cookie, code/state URL, private infrastructure, account identity or raw ledger contents. No retained grant or reviewer key is revoked.",
   "sourceCommit": "37f5a25b6",
   "rollout": {
@@ -235,9 +235,9 @@
   },
   "checkedAtUTC": "2026-10-25T22:09:56Z",
   "secretserviceFollowup": {
-    "lastCheckedAtUTC": "2026-10-26T05:22:09Z",
+    "lastCheckedAtUTC": "2026-10-26T06:26:12Z",
     "evidence": "secretservice-preflight-20261026.json",
-    "status": "Supported alternative helper absent-entry preflight passes; fresh native runtime and synthetic-only grant page prepared; action-time confirmation pending, no new OAuth token or real-expiry acceptance yet.",
-    "authorizationListener": "Initial unapproved request times out with zero OAuth tokens; restart the same registered client request only when ready to complete the confirmed grant."
+    "status": "Publisher confirms; same-client native callback succeeds with exit 0 and access+refresh. Four initial controls and CE scheduler pass; real-expiry acceptance is running, original expiry 2026-10-26T07:18:05.161089714Z.",
+    "authorizationListener": "The earlier timeout is superseded by one successful confirmed request for the same registered client."
   }
 }

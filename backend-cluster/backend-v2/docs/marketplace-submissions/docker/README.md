@@ -253,7 +253,7 @@ retained grant is replaced/revoked.
 The source repair is shipped in **37f5a25b6**. At2026-10-25T02:38Z its rollout
 is **unverified**, following loss of the existing deployment browser connection;
 the available CLI/strict SSH checks do not provide a verified alternate route.
-[w6/046](../../../../../.pm/w6/blocked/046.md) is parked with exact access and
+[w6/046](../../../../../.pm/w6/046.md) is parked with exact access and
 normal-runtime/expiry conditions. Inspect deployment history before retrying
 the rollout. Controlled refresh tests are complete; deployed native callback,
 refresh capability and actual scheduled refresh are still pending.
@@ -375,3 +375,21 @@ Observed at05:22:09UTC: the unapproved authorization listener has exited on call
 zero OAuth tokens are stored. After confirmation, renew the request for the
 same registered client and inspect the fresh ledger boundary before approval.
 Do not click the expired interaction or infer a grant/test result from it.
+
+
+## Confirmed native grant and actual-expiry test — 2026-10-26T06:26:12Z
+
+The publisher confirms the scoped test. The same registered client completes
+one fresh synthetic-only consent; native authorize exits zero with securely
+stored access+refresh and no error. Four initial ledger/read-state controls
+pass, and the unmodified CE provider loop runs. Original token expiry is
+**2026-10-26T07:18:05.161089714Z**. The [current record](./secretservice-preflight-20261026.json)
+retains the successful callback and in-flight boundary; automatic rotation,
+connection reload and post-expiry accounting are not yet claimed.
+
+The [live 046 note](../../../../../.pm/w6/046.md) is owned by the worker while
+this bounded observation runs. It then requires exactly one dry-run plus
+unchanged commit, entry counts, file hash, cash and zero persisted marker.
+No further publisher input, token export, grant revocation, manual refresh,
+new deployment or duplicate submission is needed. Earlier timeout and pass
+failures remain historical evidence. Listing review remains separate.
