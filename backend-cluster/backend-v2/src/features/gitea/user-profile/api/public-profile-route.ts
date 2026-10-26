@@ -2,7 +2,7 @@ import { z } from "@/shared/zod-openapi-setup";
 import { anonymousV1Route } from "@/server/rest/v1-route";
 import { json } from "@/server/rest/v1-schemas";
 
-export const publicProfileQuery = z.object({ username: z.string() });
+export const publicProfileQuery = z.object({ username: z.string() }).strict();
 const optionalText = z.string().nullable().optional();
 const publicProfile = z.object({
   profile: z.object({

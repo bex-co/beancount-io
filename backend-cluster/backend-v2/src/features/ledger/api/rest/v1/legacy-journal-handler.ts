@@ -17,7 +17,7 @@ const legacyJournalQuery = z.object({
   sortBy: z.string().optional(),
   sortOrder: z.string().optional(),
   groupBy: z.string().optional(),
-});
+}).strict();
 
 export const LEGACY_JOURNAL_ROUTES = [
   v1Route({

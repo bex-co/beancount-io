@@ -16,7 +16,7 @@ const legacyMetadataQuery = z.object({
     .describe(
       "Defaults to the credential pin or the caller's first ledger, matching legacy ledgerMeta",
     ),
-});
+}).strict();
 
 export const LEGACY_METADATA_ROUTES = [
   v1Route({

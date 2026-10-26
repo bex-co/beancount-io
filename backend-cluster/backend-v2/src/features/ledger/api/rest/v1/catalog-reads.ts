@@ -5,7 +5,7 @@ import type { ILedgerWorkflow } from "@/features/ledger/workflow/ledger-workflow
 import type { Identity } from "@/server/api/identity";
 
 const numberQuery = z.coerce.number().optional();
-const listQuery = z.object({ page: numberQuery, limit: numberQuery });
+const listQuery = z.object({ page: numberQuery, limit: numberQuery }).strict();
 // The same bounds as every other catalog list; the workflow holds GraphQL to
 // them too (w23/019).
 const idQuery = z.coerce.number().int().min(1).optional();

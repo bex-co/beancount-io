@@ -8,7 +8,7 @@ export const feedQuery = z.object({
   limit: z.coerce.number().int().min(1).max(FEED_PAGE_MAX).default(10),
   source: z.string().optional(),
   locale: z.string().optional(),
-});
+}).strict();
 
 export const feedRoute = v1Route({
   method: "get",

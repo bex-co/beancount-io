@@ -15,7 +15,7 @@ export const paginationSchema = z.object({
     description: "Page size, at most 100",
     example: 20,
   }),
-});
+}).strict();
 
 /** A boolean carried as a query-string literal, decoded the same everywhere. */
 export const booleanQuery = z

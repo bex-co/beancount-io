@@ -11,7 +11,7 @@ import { json } from "@/server/rest/v1-schemas";
 
 export const userProfileQuery = z.object({
   userId: z.string().nullable().optional(),
-});
+}).strict();
 const profileSchema = z
   .object({
     id: z.string(),
