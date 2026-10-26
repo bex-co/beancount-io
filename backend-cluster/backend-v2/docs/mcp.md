@@ -1084,6 +1084,10 @@ first N of M lines (B of T bytes) …]` line. The lead line then reads
 `LIMIT` or a narrower `WHERE`, or use `runBqlQueryStructured`, to see the rest.
 REST and GraphQL `queryShellText` return the full text.
 
+There is no query-length ceiling to write around: the query travels in a
+POST body end to end, so bulk `OR` chains and long literals run as written
+on every surface.
+
 When an older ledger service omits count metadata, or reports an unknown count,
 the text begins `BQL result — row count unavailable` and preserves the readable
 result. `runBqlQueryStructured` returns a table with column metadata instead: its `rowCount` counts

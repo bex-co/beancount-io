@@ -5,6 +5,7 @@ import type { ToolContext } from "./types";
 import { toolOutputSchema } from "./types";
 import { runToolSafely } from "../utils/run-tool";
 import { BQL_ROW_COUNT, BQL_TRUNCATED } from "./bql-result-metadata";
+import { BQL_SIZE_DESCRIPTION } from "@/features/ledger/utils/bql-size-description";
 
 const toolLogger = logger.child({ module: "tool:bql-query" });
 
@@ -15,6 +16,8 @@ export const description =
   "balance, position, tags, links, meta. " +
   "An unaggregated query returns one row per posting, not per transaction, so LIMIT 5 can span 3 transactions; GROUP BY and DISTINCT return one row per group or value. LIMIT bounds the returned rows. " +
   "Output past 1,000 lines or 100 KB is cut and ends with a truncation line; add LIMIT or a narrower WHERE to see the rest. " +
+  BQL_SIZE_DESCRIPTION +
+  " " +
   "Reference: https://beancount.github.io/docs/beancount_query_language/";
 
 export const bqlQueryInputSchema = z.object({

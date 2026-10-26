@@ -11,6 +11,7 @@ import { AllowAnonymous } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import { GraphQLJSON } from "graphql-scalars";
 import type { ILedgerShellService } from "@/features/ledger/service/ledger-shell-service";
+import { BQL_SIZE_DESCRIPTION } from "@/features/ledger/utils/bql-size-description";
 
 // Type for row cells - can be string, number, boolean, null or object
 type RowCell = string | number | boolean | null | Record<string, unknown>;
@@ -80,7 +81,7 @@ export class LedgerShellQueryResolver {
 
   @AllowAnonymous()
   @Query(() => QueryResult, {
-    description: "Execute a shell query on a ledger",
+    description: "Execute a shell query on a ledger. " + BQL_SIZE_DESCRIPTION,
     nullable: true,
   })
   public async queryShell(
@@ -97,7 +98,8 @@ export class LedgerShellQueryResolver {
   @AllowAnonymous()
   @Query(() => QueryShellTextResult, {
     description:
-      "Execute a shell query on a ledger and return plain text output",
+      "Execute a shell query on a ledger and return plain text output. " +
+      BQL_SIZE_DESCRIPTION,
     nullable: true,
   })
   public async queryShellText(

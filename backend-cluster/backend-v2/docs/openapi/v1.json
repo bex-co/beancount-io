@@ -8074,7 +8074,7 @@
     "/api-gateway/v1/ledgers/{owner}/{name}/query": {
       "post": {
         "summary": "Run a BQL query",
-        "description": "Runs a Beancount Query Language statement against the ledger. `Accept: application/json` returns a typed table; `Accept: text/plain` returns the shell's own text rendering.",
+        "description": "Runs a Beancount Query Language statement against the ledger. `Accept: application/json` returns a typed table; `Accept: text/plain` returns the shell's own text rendering. The query travels in a POST body end to end, so long queries have no URL-length ceiling.",
         "tags": [
           "Ledger v1"
         ],

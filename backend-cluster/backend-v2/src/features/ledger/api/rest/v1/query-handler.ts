@@ -1,6 +1,7 @@
 import { z } from "@/shared/zod-openapi-setup";
 import { ledgerIdOf, ledgerPathSchema } from "./schemas";
 import { v1Route } from "@/server/rest/v1-route";
+import { BQL_SIZE_DESCRIPTION } from "@/features/ledger/utils/bql-size-description";
 
 const queryBodySchema = z
   .object({
@@ -35,7 +36,8 @@ export const QUERY_ROUTES = [
     path: "/api-gateway/v1/ledgers/{owner}/{name}/query",
     summary: "Run a BQL query",
     description:
-      "Runs a Beancount Query Language statement against the ledger. `Accept: application/json` returns a typed table; `Accept: text/plain` returns the shell's own text rendering.",
+      "Runs a Beancount Query Language statement against the ledger. `Accept: application/json` returns a typed table; `Accept: text/plain` returns the shell's own text rendering. " +
+      BQL_SIZE_DESCRIPTION,
     params: ledgerPathSchema,
     body: queryBodySchema,
     responses: {

@@ -1,6 +1,7 @@
 import { entriesBodySchema } from "@/features/ledger/api/rest/v1/entries-handler";
 import { parseLedgerId } from "@/shared/str";
 import { resolveCommitMessage } from "@/features/ledger/utils/commit-message-alias";
+import { BQL_SIZE_DESCRIPTION } from "@/features/ledger/utils/bql-size-description";
 import {
   SOURCE_SLICE_OPERATION_OUTPUTS,
   SOURCE_SLICE_OPERATION_SCHEMAS,
@@ -296,7 +297,8 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     title: "Run BQL with Typed Results",
     annotations: READ_ONLY,
     description:
-      "Execute BQL and return the typed table (column names, types, and rows) or structured text result. Uses the same query contract as REST JSON and GraphQL queryShell.",
+      "Execute BQL and return the typed table (column names, types, and rows) or structured text result. Uses the same query contract as REST JSON and GraphQL queryShell. " +
+      BQL_SIZE_DESCRIPTION,
     inputSchema: bqlQueryInputSchema.extend({ ledger: ledgerSelection }),
     outputSchema: mcpOutputSchema(structuredBqlOutputSchema),
     execute: withLedger(executeStructuredBqlQuery),
