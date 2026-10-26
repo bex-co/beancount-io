@@ -273,14 +273,14 @@ the principal inputs; inspect the schema before constructing a call.
 | `checkLedger`                | `{}`; bean-check errors with file and line, entry counts, and the latest commit, in one call. Call after any write.                                                       | Read       |
 | `getLedgerContext`           | Optional `payeeLimit`; attributes, open accounts, currencies, payees, years, and source files with counts.                                                                | Read       |
 | `listLedgerEntries`          | Optional `account`, `filter`, `time`, `directiveTypes`, `limit`, `offset`; journal entries with the `entry_hash` other tools take.                                        | Read       |
-| `getEntryContext`            | `entryHash` from `listLedgerEntries`; the source context around one entry — read before editing it. `generated_from` names the source of a plugin or pad copy.            | Read       |
+| `getEntryContext`            | `entryHash` or `entry_hash` from `listLedgerEntries`; the source context around one entry — read before editing it. `generated_from` names the source of a plugin or pad copy. | Read       |
 | `listLedgerFiles`            | Optional `dir_path`; lists one directory level, directories first. A `dir_path` that does not exist, or names a file, is `NOT_FOUND`.                                    | Read       |
 | `readLedgerFiles`            | `files: [{ path, start_line?, end_line? }]`; returns text and line-range metadata.                                                                                        | Read       |
 | `appendLedgerText`           | `text`, optional `path`, `dry_run`, `allowInvalid`; appends Beancount directive text, routed by type and date and inserted in date order.                                 | Write      |
 | `refreshManagedPrices`       | Optional `ledger`; re-fetches every managed price include (`include "https://beancount.io/prices/BTC-USD"`) now and returns each source's status. Never edits the ledger. | Write      |
-| `createLedgerFiles`          | `description`, `files: [{ path, content }]`, optional `dry_run`; creates new files in one commit.                                                                         | Write      |
-| `updateLedgerFiles`          | `description`, `files: [{ path, old_string, new_string } | { path, content }]`, optional `dry_run`; replaces exact text or whole files in one commit.                     | Write      |
-| `deleteLedgerFiles`          | `description`, `files: [{ path }]`, optional `dry_run`; deletes files in one commit.                                                                                      | Write      |
+| `createLedgerFiles`          | `description` or `message`, `files: [{ path, content }]`, optional `dry_run`; creates new files in one commit.                                                             | Write      |
+| `updateLedgerFiles`          | `description` or `message`, `files: [{ path, old_string, new_string } | { path, content }]`, optional `dry_run`; replaces exact text or whole files in one commit.         | Write      |
+| `deleteLedgerFiles`          | `description` or `message`, `files: [{ path }]`, optional `dry_run`; deletes files in one commit.                                                                          | Write      |
 | `syncBankTransactions`       | `item_id`, optional `dry_run`; pulls new transactions from a linked bank into staging.                                                                                    | Write      |
 | `importStagedBankTransactions` | `transactions: [{ transaction_id, target_account, source_account? }]`, optional `filename`, `dry_run`; writes staged transactions into the ledger.                     | Write      |
 | `discardStagedBankTransactions` | `transaction_ids`, optional `dry_run`; removes staged transactions.                                                                                                  | Write      |
@@ -415,6 +415,18 @@ One tool per kind of change, each batching its files into one commit:
 | `createLedgerFiles` | `path`, `content`: a new file's text.                                                                              |
 | `updateLedgerFiles` | `path` with either `old_string`, `new_string` (an exact replacement; the old text must occur once) or `content` (the complete replacement text) and an optional `sha`. |
 | `deleteLedgerFiles` | `path` and an optional `sha`.                                                                                      |
+
+The commit message travels as `description` on these three tools and as
+`message` on REST, GraphQL, and `renameLedgerFile` — and every one of the
+four accepts both spellings, so one argument pastes across all of them.
+Two different texts in one call are refused with `BAD_USER_INPUT` rather
+than guessed. The three file tools require one of the two on MCP; rename,
+REST, and GraphQL leave both optional and default per operation
+(`Create/Update/Delete <path>`, `Rename a → b`). `addLedgerEntries`,
+`appendLedgerText`, and the
+entry-source tools take neither: they compose the message from the
+operation and its content (`Added N …`), so a caller message would
+duplicate what the server counts.
 
 `readLedgerFiles` returns each file's blob `sha`. Pass it back on a `content`
 rewrite or a delete: if another writer committed since you read the file, the
@@ -1470,11 +1482,12 @@ with current content and asset write access; unowned temporary keys are
 concealed as not found. The result is `{success}`. No preview; a failed entry
 write keeps the temporary upload for retry.
 
-`renameLedgerFile` accepts `oldPath`, `newPath`, optional `message`, optional
-`updateIncludes`, and optional `ledger`. Pinned credentials may omit the
-ledger; unpinned callers must select it. The protected workflow validates both
-repository-relative paths and moves the file preserving its content in one
-atomic commit (default message `Rename oldPath → newPath`). When `oldPath`
+`renameLedgerFile` accepts `oldPath`, `newPath`, optional `message` (or
+`description`), optional `updateIncludes`, and optional `ledger`. Pinned
+credentials may omit the ledger; unpinned callers must select it. The
+protected workflow validates both repository-relative paths and moves the
+file preserving its content in one atomic commit (default message
+`Rename oldPath → newPath`). When `oldPath`
 is still `include`d, the rename is refused unless `updateIncludes: true`
 rewrites those lines in the same commit. An include counts when its target
 resolves to `oldPath` the way the ledger loads it, relative to the directory of
@@ -1506,6 +1519,12 @@ Three tools reach the existing journal service:
   `entryHash`.
 - `deleteEntrySources`: `entries: [{entryHash, sha256sum}]`; returns `message`
   and `deletedCount`.
+
+Every `entryHash` above also accepts the `entry_hash` spelling list output
+uses, on REST, GraphQL, and MCP alike — paste the hash straight from
+`listLedgerEntries` into `getEntryContext`, `updateEntrySource`,
+`deleteEntrySource`, or `deleteEntrySources`. Passing both spellings with two
+different hashes is refused with `BAD_USER_INPUT` rather than guessed.
 
 Use the current source checksum returned by entry context. Each tool accepts
 only its own arguments and optional `ledger`; a pinned credential may omit the

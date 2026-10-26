@@ -171,7 +171,7 @@ export async function executeGetLedgerContext(
 // --- getEntryContext ------------------------------------------------------
 
 export const getEntryContextDescription =
-  "Read the source context around one entry, addressed by the entry_hash listLedgerEntries returns; updateEntrySource and deleteEntrySource take the same hash and this result's sha256sum. Same data as the entry-context resource. A result with `generated_from` is a copy a plugin or a pad generated from that source entry (amortize_over, forecast, padding): it shares the source's slice and sha256sum, so editing or deleting it would change the source and every other copy; address the `generated_from` entry instead.";
+  "Read the source context around one entry, addressed by the entry_hash listLedgerEntries returns (as entryHash or entry_hash); updateEntrySource and deleteEntrySource take the same hash and this result's sha256sum. Same data as the entry-context resource. A result with `generated_from` is a copy a plugin or a pad generated from that source entry (amortize_over, forecast, padding): it shares the source's slice and sha256sum, so editing or deleting it would change the source and every other copy; address the `generated_from` entry instead.";
 
 export const getEntryContextInputSchema = z.object({
   entryHash: z.string().optional().describe("The entry's hash."),
