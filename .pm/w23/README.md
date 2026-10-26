@@ -7,6 +7,7 @@
 - [x] **m1** — [Fence concurrent same-entry updates](./done/m1/README.md) (7 tasks) ← promoted from `w23/085` 2026-10-25
 - [x] **m2** — [Fix the journal filter mini-language](./done/m2/README.md) (8 tasks) ← promoted from `w23/089` 2026-10-26
 - [x] **m3** — [Unify mutation-tool parameter naming](./done/m3/README.md) (7 tasks) ← promoted from `w23/090` 2026-10-26
+- [ ] **m4** — [Guard deleting an included file](./m4/README.md) (7 tasks) ← promoted from `w23/091` 2026-10-26
 
 ## Dropped
 
@@ -15,7 +16,6 @@
 
 ## Inbox
 
-- [091](./091.md) — `deleteLedgerFiles` deletes a still-`include`d file and breaks the ledger; rename refuses the same thing
 - [092](./092.md) — BQL queries over ~10 KB fail with `INTERNAL_SERVER_ERROR` instead of a documented limit refusal
 - [093](./093.md) — append refusal hint claims "valid Beancount" when the errors include parse errors (rescoped 2026-10-26: the dry-run premise was wrong, previews report errors by design)
 - [094](./094.md) — typed entry insert has `price` but no `cost`: agents cannot record lot costs except as raw text
