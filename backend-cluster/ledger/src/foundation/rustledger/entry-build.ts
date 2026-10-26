@@ -163,6 +163,21 @@ function toDirective(input: LedgerEntryInput): DirectiveJson {
                 },
               }
             : {}),
+          // A typed cost is always a simple per-unit lot (`{100 USD [,
+          // date] [, "label"]}`); total/compound costs stay raw-text-only.
+          ...(posting.cost
+            ? {
+                cost: {
+                  number: {
+                    kind: "per_unit",
+                    value: toBeancountNumber(posting.cost.number),
+                  },
+                  currency: posting.cost.currency,
+                  ...(posting.cost.date ? { date: posting.cost.date } : {}),
+                  ...(posting.cost.label ? { label: posting.cost.label } : {}),
+                },
+              }
+            : {}),
           ...(posting.flag ? { flag: posting.flag } : {}),
         })),
         ...(entry.meta ? { meta: { ...entry.meta } } : {}),

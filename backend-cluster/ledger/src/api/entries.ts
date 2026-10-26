@@ -125,8 +125,8 @@ async function assertEntriesAreRead(
  * client-side in backend-v2, which sends explicit filenames here).
  *
  * Known input gaps vs the full Python union (documented, engine-side):
- * posting `cost`/`meta` and `custom`/`document` items are not renderable by
- * the engine's `entryInputToText`; backend-v2 never sends them on this wire.
+ * posting `meta` and `custom`/`document` items are not mapped by
+ * `toDirective` yet; backend-v2 never sends them on this wire.
  */
 interface BulkEntryWire {
   type: string;
@@ -147,8 +147,8 @@ function toEngineInput(row: BulkEntryWire): LedgerEntryInput {
 
 /**
  * Every amount a wire row carries, with the field path a refusal names.
- * Transactions carry posting units and prices; balance, price and budget an
- * `amount`; custom values may carry a number or an amount.
+ * Transactions carry posting units, prices, and costs; balance, price and
+ * budget an `amount`; custom values may carry a number or an amount.
  */
 function rowNumbers(row: BulkEntryWire): Array<[string, unknown]> {
   const item = (row.item ?? {}) as Record<string, unknown>;
@@ -162,6 +162,7 @@ function rowNumbers(row: BulkEntryWire): Array<[string, unknown]> {
     item.postings.forEach((posting: Record<string, unknown>, index) => {
       add(`postings[${index}].units.number`, posting?.units);
       add(`postings[${index}].price.number`, posting?.price);
+      add(`postings[${index}].cost.number`, posting?.cost);
     });
   }
   add("amount.number", item.amount);

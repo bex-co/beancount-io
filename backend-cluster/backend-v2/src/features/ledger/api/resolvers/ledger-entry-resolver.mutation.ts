@@ -75,6 +75,21 @@ class LedgerAmountInput {
 }
 
 @InputType()
+class LedgerCostInput {
+  @Field(() => String)
+  number: string;
+
+  @Field(() => String)
+  currency: string;
+
+  @Field(() => String, { nullable: true })
+  date?: string;
+
+  @Field(() => String, { nullable: true })
+  label?: string;
+}
+
+@InputType()
 class LedgerPostingInput {
   @Field(() => LedgerAmountInput, {
     nullable: true,
@@ -88,6 +103,13 @@ class LedgerPostingInput {
 
   @Field(() => LedgerAmountInput, { nullable: true })
   price?: LedgerAmountInput;
+
+  @Field(() => LedgerCostInput, {
+    nullable: true,
+    description:
+      "Lot basis `{number currency [, date] [, label]}`; needs units like price",
+  })
+  cost?: LedgerCostInput;
 
   @Field(() => String, { nullable: true })
   flag?: string;

@@ -700,7 +700,7 @@ export interface Cost {
    * Date of the cost
    * @format date
    */
-  date: string;
+  date?: string;
   /**
    * Label
    * Label of the cost

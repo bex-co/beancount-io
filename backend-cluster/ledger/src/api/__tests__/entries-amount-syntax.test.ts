@@ -210,6 +210,36 @@ describe("bulk entries refuse amounts that are not decimals (w3/641)", () => {
     },
   );
 
+  // w23/m6/t002: cost numbers get the same up-front decimal refusal.
+  it("refuses a cost number that is not a decimal, naming the field", async () => {
+    const response = await post([
+      {
+        type: "transaction",
+        item: {
+          date: "2026-10-17",
+          flag: "*",
+          postings: [
+            {
+              account: "Assets:Broker",
+              units: { number: "10", currency: "HOOLI" },
+              cost: { number: "abc", currency: "USD" },
+            },
+            {
+              account: "Assets:Cash",
+              units: { number: "-1000", currency: "USD" },
+            },
+          ],
+        },
+      },
+    ]);
+    const body = (await response.json()) as Record<string, any>;
+    expect(response.status).toBe(400);
+    expect(body.error).toBe(
+      'entry 0: postings[0].cost.number "abc" is not a decimal number',
+    );
+    expect(committed).toEqual([]);
+  });
+
   it.each([
     [
       "balance",

@@ -5,6 +5,13 @@
 
 type AmountInput = { number: string; currency: string };
 
+/**
+ * Lot basis `{number currency [, date] [, "label"]}`. Date and label stay
+ * optional the way beancount parses them — `{100 USD}` is a dateless cost,
+ * never defaulted (a defaulted date would change booking meaning).
+ */
+type CostInput = AmountInput & { date?: string; label?: string };
+
 type PostingInput = {
   /**
    * Omitted on at most one posting per transaction: the amount is interpolated
@@ -13,6 +20,7 @@ type PostingInput = {
   units?: AmountInput | null;
   account: string;
   price?: AmountInput;
+  cost?: CostInput;
   flag?: string;
 };
 

@@ -27,11 +27,14 @@ import { AUTHORIZATION_ACTIONS } from "@/server/api/authorization/authorization-
 
 type AmountInput = { number: string; currency: string };
 
+type CostInput = AmountInput & { date?: string; label?: string };
+
 type PostingInput = {
   /** Omitted on at most one posting per transaction; written elided. */
   units?: AmountInput;
   account: string;
   price?: AmountInput;
+  cost?: CostInput;
   flag?: string;
 };
 
@@ -103,6 +106,9 @@ function entryAmounts(
           : []),
         ...(posting.price
           ? [[`postings[${index}].price.number`, posting.price.number] as const]
+          : []),
+        ...(posting.cost
+          ? [[`postings[${index}].cost.number`, posting.cost.number] as const]
           : []),
       ]);
     case "price":
@@ -327,6 +333,13 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
             `entry ${index}: postings[${postingIndex}].price needs units; a posting without an amount can't carry a price`,
           );
         }
+        const hasCost =
+          posting.cost !== undefined && posting.cost !== null;
+        if (hasCost && !hasUnits) {
+          throw new BadUserInputError(
+            `entry ${index}: postings[${postingIndex}].cost needs units; a posting without an amount can't carry a cost`,
+          );
+        }
       });
     });
     // A malformed amount was a 500 in the ledger, reported as "service
@@ -467,6 +480,14 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
               ? {
                   number: posting.price.number,
                   currency: posting.price.currency,
+                }
+              : null,
+            cost: posting.cost
+              ? {
+                  number: posting.cost.number,
+                  currency: posting.cost.currency,
+                  ...(posting.cost.date ? { date: posting.cost.date } : {}),
+                  ...(posting.cost.label ? { label: posting.cost.label } : {}),
                 }
               : null,
             flag: posting.flag ?? undefined,

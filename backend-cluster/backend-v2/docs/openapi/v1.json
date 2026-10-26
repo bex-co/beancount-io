@@ -317,6 +317,36 @@
                                 ],
                                 "additionalProperties": false
                               },
+                              "cost": {
+                                "type": "object",
+                                "nullable": true,
+                                "properties": {
+                                  "number": {
+                                    "type": "string",
+                                    "description": "Decimal lot cost",
+                                    "example": "100"
+                                  },
+                                  "currency": {
+                                    "type": "string",
+                                    "example": "USD"
+                                  },
+                                  "date": {
+                                    "type": "string",
+                                    "nullable": true,
+                                    "example": "2026-08-23"
+                                  },
+                                  "label": {
+                                    "type": "string",
+                                    "nullable": true
+                                  }
+                                },
+                                "required": [
+                                  "number",
+                                  "currency"
+                                ],
+                                "additionalProperties": false,
+                                "description": "Lot basis `{number currency [, date] [, label]}`; needs units like price"
+                              },
                               "flag": {
                                 "type": "string",
                                 "nullable": true

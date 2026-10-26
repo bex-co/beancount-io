@@ -780,6 +780,132 @@ describe.each(["rest", "gql", "mcp"])("elided postings via %s", (surface) => {
       await f.close();
     }
   });
+
+  // w23/m6/t002: the note's repro — a dateless cost commits, with no date
+  // defaulted onto the wire (a defaulted date would change booking meaning).
+  it("writes a posting with a dateless cost", async () => {
+    const batch = [
+      {
+        type: "transaction",
+        entry: {
+          date,
+          flag: "*",
+          narration: "lot",
+          postings: [
+            {
+              account: "Assets:Broker",
+              units: { number: "10", currency: "HOOLI" },
+              cost: { number: "100", currency: "USD" },
+            },
+            {
+              account: "Assets:Cash",
+              units: { number: "-1000", currency: "USD" },
+            },
+          ],
+        },
+      },
+    ] as unknown as LedgerEntryInput[];
+    const f = await fixture();
+    try {
+      const result = await f.call(surface, batch);
+      expect(result.success).toBe(true);
+      expect(f.committed).toHaveLength(1);
+      const committed = f.committed[0] as {
+        item: { postings: Record<string, unknown>[] };
+      };
+      expect(committed.item.postings[0]).toMatchObject({
+        cost: { number: "100", currency: "USD" },
+      });
+      expect(committed.item.postings[0]?.cost).not.toHaveProperty("date");
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("writes a cost with date and label", async () => {
+    const batch = [
+      {
+        type: "transaction",
+        entry: {
+          date,
+          flag: "*",
+          narration: "lot",
+          postings: [
+            {
+              account: "Assets:Broker",
+              units: { number: "10", currency: "HOOLI" },
+              cost: {
+                number: "100",
+                currency: "USD",
+                date: "2024-01-15",
+                label: "lot-a",
+              },
+            },
+            {
+              account: "Assets:Cash",
+              units: { number: "-1000", currency: "USD" },
+            },
+          ],
+        },
+      },
+    ] as unknown as LedgerEntryInput[];
+    const f = await fixture();
+    try {
+      const result = await f.call(surface, batch);
+      expect(result.success).toBe(true);
+      expect(f.committed).toHaveLength(1);
+      const committed = f.committed[0] as {
+        item: { postings: Record<string, unknown>[] };
+      };
+      expect(committed.item.postings[0]).toMatchObject({
+        cost: {
+          number: "100",
+          currency: "USD",
+          date: "2024-01-15",
+          label: "lot-a",
+        },
+      });
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("refuses a cost without units before committing", async () => {
+    const batch = [
+      {
+        type: "transaction",
+        entry: {
+          date,
+          flag: "*",
+          narration: "lot",
+          postings: [
+            {
+              account: "Assets:Broker",
+              cost: { number: "100", currency: "USD" },
+            },
+            {
+              account: "Assets:Cash",
+              units: { number: "-1000", currency: "USD" },
+            },
+          ],
+        },
+      },
+    ] as unknown as LedgerEntryInput[];
+    const f = await fixture();
+    try {
+      const result = await f.call(surface, batch);
+      expect(result.success).toBe(false);
+      expect(f.write).not.toHaveBeenCalled();
+      expect(f.committed).toEqual([]);
+      const text = JSON.stringify(
+        "errors" in result ? result.errors : result,
+      );
+      expect(text).toContain("entry 0: postings[0].cost needs units");
+      expect(text).toContain("can't carry a cost");
+    } finally {
+      await f.close();
+    }
+  });
 });
 
 describe.each(["rest", "gql", "mcp"])(

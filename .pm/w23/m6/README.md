@@ -7,7 +7,7 @@
 | id | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
 | t001 | Spike — map each gap to its layers ✅ | 30m | — |
-| t002 | Posting cost end to end | 60m | t001 |
+| t002 | Posting cost end to end ✅ | 60m | t001 |
 | t003 | Posting meta, tags, and links end to end | 45m | t002 |
 | t009 | Open booking and balance tolerance end to end | 60m | t003 |
 | t010 | Total price and pad end to end | 60m | t009 |

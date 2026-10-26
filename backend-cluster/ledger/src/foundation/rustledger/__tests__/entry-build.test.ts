@@ -483,4 +483,34 @@ describe("entryInputToText — Fava-exact serialization parity", () => {
     });
     expect(out).toContain("1.2300 USD");
   });
+
+  // w23/m6/t002: a typed cost renders as the lot beancount parses.
+  it.each([
+    [
+      "dated and labelled",
+      { number: "100", currency: "USD", date: "2024-01-15", label: "lot-a" },
+      '{100 USD, 2024-01-15, "lot-a"}',
+    ],
+    ["dateless", { number: "100", currency: "USD" }, "{100 USD}"],
+  ])("renders a %s cost", (_label, cost, rendered) => {
+    const out = entryInputToText({
+      type: "transaction",
+      entry: {
+        date: "2024-01-15",
+        flag: "*",
+        postings: [
+          {
+            units: { number: "10", currency: "HOOLI" },
+            account: "Assets:Broker",
+            cost,
+          },
+          {
+            units: { number: "-1000", currency: "USD" },
+            account: "Assets:Cash",
+          },
+        ],
+      },
+    });
+    expect(out).toContain(`10 HOOLI ${rendered}`);
+  });
 });

@@ -17,6 +17,17 @@ const amountSchema = z.strictObject({
   currency: z.string().openapi({ example: "USD" }),
 });
 
+const dateSchema = z.string().openapi({ example: "2026-08-23" });
+
+const costSchema = z.strictObject({
+  number: z
+    .string()
+    .openapi({ description: "Decimal lot cost", example: "100" }),
+  currency: z.string().openapi({ example: "USD" }),
+  date: nullToUndefined(dateSchema),
+  label: nullToUndefined(z.string()),
+});
+
 const postingSchema = z.strictObject({
   account: z.string().openapi({ example: "Assets:Bank:Checking" }),
   // Omitted on at most one posting per transaction: the amount is interpolated
@@ -26,10 +37,14 @@ const postingSchema = z.strictObject({
       "Posting amount; omit on at most one posting per transaction to elide it",
   }),
   price: nullToUndefined(amountSchema),
+  cost: nullToUndefined(costSchema)
+    .optional()
+    .openapi({
+      description:
+        "Lot basis `{number currency [, date] [, label]}`; needs units like price",
+    }),
   flag: nullToUndefined(z.string()),
 });
-
-const dateSchema = z.string().openapi({ example: "2026-08-23" });
 
 /**
  * The directive shapes, one per Beancount directive v1 can insert. Mirrors the

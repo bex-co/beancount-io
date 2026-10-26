@@ -8983,8 +8983,7 @@
         "type": "object",
         "required": [
           "number",
-          "currency",
-          "date"
+          "currency"
         ],
         "title": "Cost",
         "description": "A cost (basically an amount with date and label)."
