@@ -14,7 +14,6 @@
 ## Inbox
 
 - [082](./blocked/082.md) — `createPullRequest` fails on production: Gitea 500 while creating the `pr-patch-*` branch, on MCP and REST alike — **blocked:** needs the Gitea server-log cause for one failing branch create (owner), then a production rerun
-- [086](./086.md) — a pinned credential can create ledgers it can never see, touch, or delete (pin trap + litter)
 - [087](./087.md) — same unbalanced transaction is `UNBALANCED` on add but `VALIDATION_FAILED` on update (both surfaces)
 - [089](./089.md) — journal `filter` fields `tag:`/`link:` never match and `account:` misses transaction postings
 - [080](./blocked/080.md) — `/api-gateway/mcp` accepts any `Origin` (the MCP transport spec says a bad `Origin` MUST get 403); owner picks validate vs document — **blocked:** owner picks 403-on-foreign-Origin vs documented non-validation

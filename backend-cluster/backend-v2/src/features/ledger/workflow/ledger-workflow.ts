@@ -75,6 +75,7 @@ import {
   ConflictError,
   DomainError,
   ErrorCategory,
+  ForbiddenError,
   InternalServerError,
   NotFoundError,
   ValidationError,
@@ -566,6 +567,15 @@ export class LedgerWorkflow implements ILedgerWorkflow {
       action: AUTHORIZATION_ACTIONS.LEDGER_CREATE,
       resource: userResource(identity.userId),
     });
+    // A created ledger lands outside the pin, so a pinned credential could
+    // never see, use, or delete what it created — refuse instead (w23/086).
+    if (identity.ledgerScope !== undefined) {
+      throw new ForbiddenError(
+        `Ledger creation is not allowed for a credential pinned to ${identity.ledgerScope}`,
+        "ledger",
+        "Use a credential without a ledger pin to create ledgers.",
+      );
+    }
     const userId = identity.userId;
     assertDescriptionLength(input.description);
     if (input.setup && input.template) {

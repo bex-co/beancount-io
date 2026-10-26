@@ -25,7 +25,7 @@ export class LedgerMutationResolver {
   @Authenticated()
   @Mutation(() => Ledger, {
     description:
-      "Create a new ledger for the current user. STARTER (the default, including null) contains options and accounts without transactions or opening balances; SAMPLE contains demonstration transactions. Existing ledgers are unchanged.",
+      "Create a new ledger for the current user. STARTER (the default, including null) contains options and accounts without transactions or opening balances; SAMPLE contains demonstration transactions. Existing ledgers are unchanged. Refused with FORBIDDEN for a ledger-pinned credential: use a credential without a pin.",
   })
   async createLedger(
     @Args() input: CreateLedgerInput,

@@ -207,7 +207,10 @@ the [authorization service](../src/server/api/authorization/authorization-servic
 Ledger tools accept an optional `ledger` argument (`owner/name`). A pinned
 credential defaults to its pin and cannot select another ledger. An unpinned
 credential must select a ledger explicitly. Resource URIs select the ledger
-with `owner/name` under the same restriction. Account tools need no ledger.
+with `owner/name` under the same restriction. Account tools need no ledger —
+except creation: `createLedger` is refused with `FORBIDDEN` for a pinned
+credential, because a created ledger would land outside the pin, where the
+creating credential could never see, use, or delete it.
 The OAuth consent page offers a single-ledger restriction or explicit account-wide
 access, including ledgers accessible in the future and account operations allowed
 by the requested scopes. Neither choice is selected automatically. Account-wide

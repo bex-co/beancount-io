@@ -151,7 +151,7 @@ export const LEDGER_LIFECYCLE_ROUTES = [
     operationId: "createLedger",
     summary: "Create a ledger",
     description:
-      "Create a ledger for the authenticated user under existing administrative account authority and tier limits. STARTER (the default, including null) contains options and accounts without transactions or opening balances; SAMPLE contains demonstration transactions. Existing ledgers are unchanged. This is an account operation even for a ledger-pinned credential.",
+      "Create a ledger for the authenticated user under existing administrative account authority and tier limits. STARTER (the default, including null) contains options and accounts without transactions or opening balances; SAMPLE contains demonstration transactions. Existing ledgers are unchanged. Refused with FORBIDDEN for a ledger-pinned credential: a created ledger would land outside the pin, where the creating credential could never see, use, or delete it.",
     body: ledgerCreateInput,
     responses: { 200: json("Created ledger", ledgerResultSchema) },
     handler: async ({ layers }, { identity, body, ctx }) =>

@@ -771,7 +771,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     // Open world: `private: false` publishes the ledger to anyone (w1/174).
     annotations: { ...APPEND, openWorldHint: true },
     description:
-      "Create a ledger owned by the authenticated user. Requires name; accepts description, private, template (STARTER default, including null: options and accounts without transactions; SAMPLE: demonstration transactions), a setup specification (mutually exclusive with template), and a requestId for idempotent retries.",
+      "Create a ledger owned by the authenticated user. Requires name; accepts description, private, template (STARTER default, including null: options and accounts without transactions; SAMPLE: demonstration transactions), a setup specification (mutually exclusive with template), and a requestId for idempotent retries. Refused with FORBIDDEN for a ledger-pinned credential: use a credential without a pin.",
     inputSchema: LIFECYCLE_OPERATION_SCHEMAS.create,
     outputSchema: lifecycleToolOutput,
     execute: LIFECYCLE_EXECUTORS.create,

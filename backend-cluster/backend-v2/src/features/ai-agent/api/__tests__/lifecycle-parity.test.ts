@@ -1143,15 +1143,20 @@ describe("ledger lifecycle through actual adapters and workflow", () => {
     },
   );
   it.each(surfaces)(
-    "keeps account creation distinct from pinned-ledger changes via %s",
+    "refuses ledger creation on a pinned credential via %s",
     async (surface) => {
+      // w23/086 reverses the old "account operation even when pinned" rule:
+      // a created ledger lands outside the pin, so the creating credential
+      // could never see, use, or delete it — permanent litter, plus a spam
+      // vector for a leaked pinned key.
       const f = await fixture({ ...identity, ledgerScope: "other/books" });
       try {
-        expect(
-          (await f.call(surface, "create", { name: "account-new" })).failed,
-        ).toBe(false);
+        const refused = await f.call(surface, "create", { name: "no-litter" });
+        expect(refused.failed).toBe(true);
+        expect(JSON.stringify(refused)).toContain("other/books");
         for (const operation of ["update", "delete"] as const)
           expect((await f.call(surface, operation)).failed).toBe(true);
+        expect(f.create).not.toHaveBeenCalled();
         expect(f.update).not.toHaveBeenCalled();
         expect(f.remove).not.toHaveBeenCalled();
         expect(f.removeItem).not.toHaveBeenCalled();
