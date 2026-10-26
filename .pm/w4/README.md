@@ -176,7 +176,7 @@
 
 - [x] **m35** — [Keep form fields usable when suggestions fail](./done/m35/README.md) (6 tasks) ← dashboard QA, 2026-10-20; minor, four form suggestion wrappers.
 
-- [ ] **m34** — [Resolve multiline entry sources without splitting quoted strings](./blocked/m34/README.md) (6 tasks) ← dashboard QA, 2026-10-20; minor, ledger source resolution. — **blocked:** fix shipped in `a0fa2e619`; awaiting deployed dashboard reopen check
+- [x] **m34** — [Resolve multiline entry sources without splitting quoted strings](./done/m34/README.md) (6 tasks) ← dashboard QA, 2026-10-20; minor, ledger source resolution.
 
 - [x] **m33** — [Keep New Entry drafts safe during submission](./done/m33/README.md) (6 tasks) ← dashboard QA, 2026-10-20; major, pending edits and late completion.
 

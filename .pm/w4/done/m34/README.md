@@ -1,6 +1,6 @@
 # w4 · m34 — Resolve multiline entry sources without splitting quoted strings
 
-**Worker:** worker1 **Goal:** Every valid source-backed multiline Note can be opened through its current Journal identity, with its entire source span and neighboring bytes intact. **Status:** blocked (t001, t002, t004, t005 done; t003 needs a deployed live check)
+**Worker:** worker1 **Goal:** Every valid source-backed multiline Note can be opened through its current Journal identity, with its entire source span and neighboring bytes intact. **Status:** done
 
 **Severity:** minor (valid entries cannot be opened for source editing). **Estimate:** 150m across six tasks; implementation owned by ledger.
 
@@ -67,14 +67,18 @@ Live REST/MCP, other directive types, source mutations on multiline entries, oth
 
 ## Definition of done
 
-- [ ] Fresh current identities resolve complete multiline Note sources with unindented, blank and date-like internal lines.
-- [ ] Marker probes never alter literal values or create phantom source directives.
-- [ ] Source update/delete preserve adjacent bytes and optimistic concurrency contracts.
-- [ ] Single-line, indented, escaped-string, duplicate-entry, include and provenance controls still work.
-- [ ] Eligible REST/GraphQL/MCP outcomes agree; meaningful real-engine regressions and package checks pass.
-- [ ] Dashboard reopening is verified with disposable fixtures restored, and completed tasks/archive links agree.
+- [x] Fresh current identities resolve complete multiline Note sources with unindented, blank and date-like internal lines.
+- [x] Marker probes never alter literal values or create phantom source directives.
+- [x] Source update/delete preserve adjacent bytes and optimistic concurrency contracts.
+- [x] Single-line, indented, escaped-string, duplicate-entry, include and provenance controls still work.
+- [x] Eligible REST/GraphQL/MCP outcomes agree; meaningful real-engine regressions and package checks pass.
+- [x] Dashboard reopening is verified with disposable fixtures restored, and completed tasks/archive links agree.
 
-## Blocked
+## Resolved
+
+**Closed 2026-10-26** — the deploy landed and t003's live dashboard reopen passed (see [t003](./done/t003.md)); t006 closeout archived this milestone.
+
+### Previously blocked
 
 **Blocked 2026-10-20** — t003's live dashboard reopen (and therefore t006 Closeout) cannot run here.
 
