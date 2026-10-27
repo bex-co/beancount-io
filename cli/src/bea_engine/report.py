@@ -1002,19 +1002,27 @@ def _cash_flow(filtered: Any, bounds: tuple[date | None, date | None], ledger_er
     prices = filtered.ledger.prices
 
     start, end = bounds
-    _, period_end = filtered.period
+    first, period_end = filtered.period
+    if start is not None:
+        first = start if first is None else max(first, start)
     cutoff = period_end
     if end is not None:
         bound_end = None if end == date.max else end + timedelta(days=1)
         cutoff = bound_end if cutoff is None or bound_end is None else min(cutoff, bound_end)
 
+    # Flows read the loaded transactions, not `filtered.entries`: a `--time`
+    # filter clamps those for the balance reports, summarizing everything
+    # before the period into `<summarize>` transactions dated the day before
+    # it. Counted as activity, that carried-in cash read as current financing
+    # and a quiet month as one full of inflows (w5/1048). The window is the
+    # half-open [first, cutoff) — the period intersected with the bounds.
     flow_books: dict[str, CounterInventory] = {}
-    for entry in filtered.entries:
+    for entry in filtered.ledger.all_entries:
         if not isinstance(entry, Transaction):
             continue
-        if start is not None and entry.date < start:
+        if first is not None and entry.date < first:
             continue
-        if end is not None and entry.date > end:
+        if cutoff is not None and entry.date >= cutoff:
             continue
         for posting in entry.postings:
             if posting.units is None or posting.units.number is None:
