@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1057 — Honor declared cash membership outside the Assets root](./1057.md) — major CLI cash-flow omission: explicit cash Overdraft−250 disappears, closing1100 instead of850 and invented opening250; matched roles/native/legacy controls, checked2026-10-26.
+
 - [1056 — Preserve same-day posting order in parent registers](./1056.md) — minor CLI row-order bug: account grouping changes payment/assertion running balances; native, EUR, renamed-root, leaf and endpoint controls, checked2026-10-26.
 
 - [1055 — Keep known-zero running values in Register](./1055.md) — trivial CLI display follow-up to908: zero quote/cost becomes an empty balance; ordinary quantities, native/BQL and full original tree controls, checked 2026-10-26.
