@@ -22,7 +22,9 @@ import codecs
 import difflib
 import os
 import re
+import unicodedata
 from dataclasses import dataclass
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
@@ -86,12 +88,19 @@ def _metadata_values(entry: Any, key: str) -> list[str]:
     """The entry's values for a metadata key, as the id forms compare them.
 
     A `ref` may be typed — a date, a decimal — where an import-id is always a
-    string, so both compare as strings.
+    string, so both compare as strings. A decimal also answers to the
+    fixed-point text listings print, since `str()` reads `0.00000001` as
+    `1E-8` and the id copied from `bea list` found nothing (w5/1030).
     """
     value = (entry.meta or {}).get(key)
     if value is None:
         return []
-    return [value if isinstance(value, str) else str(value)]
+    if isinstance(value, str):
+        return [value]
+    forms = [str(value)]
+    if isinstance(value, Decimal) and format(value, "f") not in forms:
+        forms.append(format(value, "f"))
+    return forms
 
 
 def _where(entry: Any) -> str:
@@ -141,8 +150,11 @@ def locate_transaction(entries: list[Any], id_text: str) -> Any:
         raise protocol.UsageError(
             f"No transaction at {path}:{lineno}; the line holds no transaction of this ledger. Nothing was written."
         )
+    # The loader reads metadata as NFC, so a decomposed id copied from the
+    # file is compared in that form too (w5/1030).
+    wanted = unicodedata.normalize("NFC", id_text)
     for key in ("import-id", "ref"):
-        matches = [entry for entry in on_disk if id_text in _metadata_values(entry, key)]
+        matches = [entry for entry in on_disk if wanted in _metadata_values(entry, key)]
         if len(matches) > 1:
             raise _ambiguous(id_text, key, matches)
         if matches:

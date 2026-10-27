@@ -104,7 +104,6 @@
 
 - [1031 — Preserve bank identity in OFX routing](./1031.md) — major CLI gap: account memory and the multi-account guard omit bank IDs, routing distinct banks’ payments to one ledger account; native-valid, repeated 2026-10-25.
 
-- [1030 — Resolve canonical metadata IDs in Update](./1030.md) — minor CLI lookup gaps: fixed-point small decimals and decomposed Unicode refs fail while native/composed alternatives resolve; original numeric and single/batch Unicode controls checked 2026-10-25.
 
 
 
