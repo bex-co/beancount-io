@@ -106,8 +106,6 @@ services:
       # Production passes this via a secret manager. Development deliberately
       # omits it so backend-v2 generates an ephemeral signing key.
       OAUTH_JWKS: ${OAUTH_JWKS:-}
-      APP_LINKS_APPLE_TEAM_ID: ${APP_LINKS_APPLE_TEAM_ID:-}
-      APP_LINKS_ANDROID_SHA256: ${APP_LINKS_ANDROID_SHA256:-}
       # Official MCP Registry domain proof. Unset → /.well-known/mcp-registry-auth 404.
       MCP_REGISTRY_AUTH_PROOF: ${MCP_REGISTRY_AUTH_PROOF:-}
       # Data stores (service-name addressing inside the compose network).

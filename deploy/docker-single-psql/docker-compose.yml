@@ -143,8 +143,6 @@ services:
       # Generate per `backend-cluster/backend-v2/README.md`.
       OAUTH_JWKS: ${OAUTH_JWKS:-}
       # Native app-link vouchers. Unset → /.well-known AASA and assetlinks 404.
-      APP_LINKS_APPLE_TEAM_ID: ${APP_LINKS_APPLE_TEAM_ID:-}
-      APP_LINKS_ANDROID_SHA256: ${APP_LINKS_ANDROID_SHA256:-}
       # Official MCP Registry domain proof. Unset → /.well-known/mcp-registry-auth 404.
       MCP_REGISTRY_AUTH_PROOF: ${MCP_REGISTRY_AUTH_PROOF:-}
       AUTH_JWT_EXP_MINUTES: ${AUTH_JWT_EXP_MINUTES:-525600}
