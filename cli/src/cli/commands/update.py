@@ -16,6 +16,7 @@ from typing import Annotated, Any
 import typer
 
 from cli import context, output
+from cli.amounts import json_float_default
 from cli.completion import fixed_values
 from cli.errors import UsageError
 from cli.rows import parse_json, read_text
@@ -55,7 +56,10 @@ def _update(
         argv.append("--apply")
     if allow_errors:
         argv.append("--allow-errors")
-    data = launch.helper_json(argv, stdin=json.dumps(request), writes=apply)
+    # The shared JSON reader keeps a decimal as a typed marker; sent as `add`
+    # sends it, so one malformed `1.25` cell is that row's refusal rather than
+    # a serializer crash that loses the whole batch (w5/1028).
+    data = launch.helper_json(argv, stdin=json.dumps(request, default=json_float_default), writes=apply)
     root = data.pop("root", None)
     return (Path(root) if root else file), data
 
