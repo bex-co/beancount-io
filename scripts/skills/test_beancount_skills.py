@@ -1888,6 +1888,56 @@ class TestBeaRecipes(unittest.TestCase):
         self.assertEqual(owed, [["Liabilities:Payroll:IncomeTax", "-1100.00"],
                                 ["Liabilities:Payroll:SocialSecurity", "-992.00"]])
 
+    def test_processor_payout_ties_to_its_rows_and_empties_clearing(self):
+        self.ledger.write_text(
+            'option "operating_currency" "USD"\n'
+            "2026-01-01 open Assets:Checking USD\n"
+            "2026-01-01 open Assets:Clearing:Stripe USD\n"
+            "2026-01-01 open Income:Sales USD\n"
+            "2026-01-01 open Expenses:Fees USD\n"
+            "2026-01-01 open Liabilities:SalesTax USD\n"
+            'include "transactions/2026.bean"\n'
+        )
+        # Two sales and a refund make one 157.28 payout.
+        tie = self.recipe("payout-tie", rows_net="(96.80 + 77.38 + -16.90)", payout_total="157.28")
+        self.assertEqual(tie["rows"], [["157.28", "0.00"]])
+        short = self.recipe("payout-tie", rows_net="(96.80 + 77.38)", payout_total="157.28")
+        self.assertEqual(short["rows"], [["174.18", "-16.90"]])
+
+        def sale(day, ident, gross, fee, tax, net):
+            postings = [
+                {"account": "Assets:Clearing:Stripe", "units": {"number": net, "currency": "USD"}},
+                {"account": "Expenses:Fees", "units": {"number": fee, "currency": "USD"}},
+                {"account": "Income:Sales", "units": {"number": f"-{gross}", "currency": "USD"}},
+            ]
+            if tax:
+                postings.append({"account": "Liabilities:SalesTax", "units": {"number": f"-{tax}", "currency": "USD"}})
+            return {"date": day, "flag": "*", "payee": "Stripe", "narration": f"Charge {ident}",
+                    "meta": {"import-id": f"stripe:{ident}"}, "postings": postings}
+
+        self.batch([
+            sale("2026-10-01", "txn_a", "100.00", "3.20", "", "96.80"),
+            # An 80.00 charge with 1.50 stated tax: 78.50 income, 1.50 tax, 2.62 fee, 77.38 net.
+            sale("2026-10-02", "txn_b", "78.50", "2.62", "1.50", "77.38"),
+            {"date": "2026-10-03", "flag": "*", "payee": "Stripe", "narration": "Refund txn_a part",
+             "meta": {"import-id": "stripe:txn_r"},
+             "postings": [
+                 {"account": "Income:Sales", "units": {"number": "16.90", "currency": "USD"}},
+                 {"account": "Assets:Clearing:Stripe", "units": {"number": "-16.90", "currency": "USD"}}]},
+            {"date": "2026-10-05", "flag": "*", "payee": "Stripe", "narration": "Payout po_1",
+             "meta": {"import-id": "stripe:po_1"},
+             "postings": [
+                 {"account": "Assets:Clearing:Stripe", "units": {"number": "-157.28", "currency": "USD"}},
+                 {"account": "Assets:Checking", "units": {"number": "157.28", "currency": "USD"}}]},
+            # A sale after the payout stays in transit.
+            sale("2026-10-06", "txn_c", "50.00", "1.75", "", "48.25"),
+        ])
+        self.recipe("batch")
+        self.recipe("check")
+        self.values["clearing"] = "Assets:Clearing:Stripe"
+        self.assertEqual(self.recipe("clearing-balance", as_of="2026-10-06")["rows"], [["0.00"]])
+        self.assertEqual(self.recipe("clearing-balance", as_of="2026-10-07")["rows"], [["48.25"]])
+
     def test_profit_by_client_counts_split_parts_once_and_ties_to_the_period(self):
         self.ledger.write_text(
             'option "operating_currency" "USD"\n'
