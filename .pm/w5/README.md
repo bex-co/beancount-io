@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1063 — Keep funded-close checks where check_drained is ineffective](./1063.md) — minor shared CLI guard/advisory gap: missing child assertion or passing aggregatezero hides own100USD; original888DoD passes, checked2026-10-27.
+
 - [1062 — Judge regenerated descendant closes at their new dates](./1062.md) — minor CLI date-effect gap: direct funded-close refusal and native-import advisory both skip a December31→February1 child; original910/913outcomes pass, checked2026-10-27.
 
 - [1061 — Refuse unsupported OFX currency overrides](./1061.md) — major CLI amount error: unconverted10EUR becomes10USD instead of12USD; bank/card, three routes, converted controls and original feature proof, checked2026-10-26.
