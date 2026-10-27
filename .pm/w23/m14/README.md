@@ -1,12 +1,12 @@
 # w23 · m14 — Render NULL cells honestly in BQL results
 
-**Worker:** worker1 **Goal:** NULL cells render as null with their natural dtype on every surface; strict-vs-lenient NULL builtins triaged **Status:** todo
+**Worker:** worker1 **Goal:** NULL cells render as null with their natural dtype on every surface; strict-vs-lenient NULL builtins triaged **Status:** todo (t001 done)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
-| t001 | Reproduce + map the NULL rendering gaps | 30m | — |
+| t001 | Reproduce + map the NULL rendering gaps — **DONE** | 30m | — |
 | t002 | Null-cell rendering end to end | 60m | t001 |
 | t003 | Dtype propagation for null/empty columns | 45m | t002 |
 | t004 | Strict-camp verdicts, adapt or upstream-file | 45m | t003 |
