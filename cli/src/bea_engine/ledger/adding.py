@@ -350,6 +350,10 @@ def _drained_currencies(entries: list[Any], account: str, date: datetime.date) -
         for entry in entries
         if isinstance(entry, Close) and entry.date == date
     }
+    if date == datetime.date.max:
+        # No day after the calendar's last one, so no assertion can cover it;
+        # computing it raised OverflowError on a valid close (w5/1070).
+        return set()
     after = date + datetime.timedelta(days=1)
     return {
         entry.amount.currency
