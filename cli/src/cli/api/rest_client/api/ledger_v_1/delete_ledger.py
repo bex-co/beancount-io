@@ -6,15 +6,19 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.delete_ledger_body import DeleteLedgerBody
 from ...models.delete_ledger_response_200 import DeleteLedgerResponse200
 from ...models.v1_error import V1Error
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     owner: str,
     name: str,
+    *,
+    body: DeleteLedgerBody | Unset = UNSET,
 ) -> dict[str, Any]:
+    headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "delete",
@@ -24,6 +28,12 @@ def _get_kwargs(
         ),
     }
 
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
+
+    headers["Content-Type"] = "application/json"
+
+    _kwargs["headers"] = headers
     return _kwargs
 
 
@@ -102,15 +112,18 @@ def sync_detailed(
     name: str,
     *,
     client: AuthenticatedClient,
+    body: DeleteLedgerBody | Unset = UNSET,
 ) -> Response[DeleteLedgerResponse200 | V1Error]:
     """Delete a ledger
 
      Delete the repository and perform the existing linked-bank cleanup. Requires current administrative
-    authority and respects the credential pin. Applies immediately; no preview.
+    authority and respects the credential pin. Pass dryRun to preview the destroy summary without
+    destroying anything.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
         name (str): Ledger (repository) name Example: main-ledger.
+        body (DeleteLedgerBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -123,6 +136,7 @@ def sync_detailed(
     kwargs = _get_kwargs(
         owner=owner,
         name=name,
+        body=body,
     )
 
     response = client.get_httpx_client().request(
@@ -137,15 +151,18 @@ def sync(
     name: str,
     *,
     client: AuthenticatedClient,
+    body: DeleteLedgerBody | Unset = UNSET,
 ) -> DeleteLedgerResponse200 | V1Error | None:
     """Delete a ledger
 
      Delete the repository and perform the existing linked-bank cleanup. Requires current administrative
-    authority and respects the credential pin. Applies immediately; no preview.
+    authority and respects the credential pin. Pass dryRun to preview the destroy summary without
+    destroying anything.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
         name (str): Ledger (repository) name Example: main-ledger.
+        body (DeleteLedgerBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -159,6 +176,7 @@ def sync(
         owner=owner,
         name=name,
         client=client,
+        body=body,
     ).parsed
 
 
@@ -167,15 +185,18 @@ async def asyncio_detailed(
     name: str,
     *,
     client: AuthenticatedClient,
+    body: DeleteLedgerBody | Unset = UNSET,
 ) -> Response[DeleteLedgerResponse200 | V1Error]:
     """Delete a ledger
 
      Delete the repository and perform the existing linked-bank cleanup. Requires current administrative
-    authority and respects the credential pin. Applies immediately; no preview.
+    authority and respects the credential pin. Pass dryRun to preview the destroy summary without
+    destroying anything.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
         name (str): Ledger (repository) name Example: main-ledger.
+        body (DeleteLedgerBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -188,6 +209,7 @@ async def asyncio_detailed(
     kwargs = _get_kwargs(
         owner=owner,
         name=name,
+        body=body,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -200,15 +222,18 @@ async def asyncio(
     name: str,
     *,
     client: AuthenticatedClient,
+    body: DeleteLedgerBody | Unset = UNSET,
 ) -> DeleteLedgerResponse200 | V1Error | None:
     """Delete a ledger
 
      Delete the repository and perform the existing linked-bank cleanup. Requires current administrative
-    authority and respects the credential pin. Applies immediately; no preview.
+    authority and respects the credential pin. Pass dryRun to preview the destroy summary without
+    destroying anything.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
         name (str): Ledger (repository) name Example: main-ledger.
+        body (DeleteLedgerBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -223,5 +248,6 @@ async def asyncio(
             owner=owner,
             name=name,
             client=client,
+            body=body,
         )
     ).parsed

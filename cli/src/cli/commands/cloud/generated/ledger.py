@@ -80,7 +80,7 @@ def register_ledger_commands(ledger_app: typer.Typer) -> None:
     @ledger_app.command(
         "delete",
         cls=SingleValueCommand,
-        help="Delete a ledger.\n\nDelete the repository and perform the existing linked-bank cleanup. Requires current administrative authority and respects the credential pin. Applies immediately; no preview.",
+        help="Delete a ledger.\n\nDelete the repository and perform the existing linked-bank cleanup. Requires current administrative authority and respects the credential pin. Pass dryRun to preview the destroy summary without destroying anything.",
     )
     def ledger_delete(
         full_name: Annotated[str, typer.Argument(help="Ledger full name (e.g. username/my-ledger)")],

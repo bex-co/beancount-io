@@ -47,6 +47,71 @@
       }
     },
     "schemas": {
+      "LedgerUpdatePreview": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "description": "Current and new name, when renaming."
+          },
+          "description": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string",
+                "nullable": true
+              },
+              "to": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "description": "Current and new description, when changing it."
+          },
+          "private": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "boolean"
+              },
+              "to": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "description": "Current and new visibility, when changing it."
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "What deserves a second look — a rename's URL change, a flip to public."
+          }
+        },
+        "required": [
+          "warnings"
+        ],
+        "description": "The rendered current→new diff; present only on updateLedger previews."
+      },
       "V1Error": {
         "type": "object",
         "properties": {
@@ -85,6 +150,98 @@
           "error"
         ],
         "description": "Standard v1 error body"
+      },
+      "LedgerDeletePreview": {
+        "type": "object",
+        "properties": {
+          "ledgerId": {
+            "type": "string",
+            "description": "The ledger that would be destroyed."
+          },
+          "name": {
+            "type": "string",
+            "description": "Its current name."
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "description": "Its current description, null when unset."
+          },
+          "private": {
+            "type": "boolean",
+            "description": "Its current visibility."
+          },
+          "empty": {
+            "type": "boolean",
+            "description": "Whether it holds any content."
+          },
+          "size": {
+            "type": "number",
+            "description": "Its current size in bytes."
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "What makes the irreversibility unmissable: permanent deletion and linked-bank cleanup."
+          }
+        },
+        "required": [
+          "ledgerId",
+          "name",
+          "description",
+          "private",
+          "empty",
+          "size",
+          "warnings"
+        ],
+        "description": "The destroy summary; present only on deleteLedger previews."
+      },
+      "CollaboratorPreview": {
+        "type": "object",
+        "properties": {
+          "collaborator": {
+            "type": "string",
+            "description": "Whose access would change."
+          },
+          "current": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "read",
+              "write",
+              "admin",
+              null
+            ],
+            "description": "Their current access, null when no grant could be confirmed."
+          },
+          "requested": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "read",
+              "write",
+              "admin",
+              null
+            ],
+            "description": "The access the call asks for, null for removals and the repository default."
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "What would happen, in plain words."
+          }
+        },
+        "required": [
+          "collaborator",
+          "current",
+          "requested",
+          "warnings"
+        ],
+        "description": "The rendered would-be access change; present only on previews."
       },
       "BqlQuery": {
         "type": "object",
@@ -179,13 +336,18 @@
           },
           "path": {
             "type": "string"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "description": "True when this was a preview: the checks ran and nothing was committed."
           }
         },
         "required": [
           "ok",
-          "path"
+          "path",
+          "dryRun"
         ],
-        "description": "Acknowledgement that a file change was committed"
+        "description": "Acknowledgement that a file change was committed — or, on a dry run, that it would be"
       },
       "FileWrite": {
         "type": "object",
@@ -207,6 +369,14 @@
           "sha": {
             "type": "string",
             "description": "Blob SHA the edit is based on. Send the SHA from a prior GET to update an existing file; omit it to create a new one."
+          },
+          "dryRun": {
+            "type": "boolean",
+            "description": "Run every check and return the preview without committing"
+          },
+          "dry_run": {
+            "type": "boolean",
+            "description": "Alias of dryRun, as MCP spells it."
           }
         },
         "required": [
@@ -227,6 +397,14 @@
           "sha": {
             "type": "string",
             "description": "Blob SHA of the file being deleted, from a prior GET"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "description": "Run every check and return the preview without committing"
+          },
+          "dry_run": {
+            "type": "boolean",
+            "description": "Alias of dryRun, as MCP spells it."
           }
         },
         "description": "Delete one ledger file"
@@ -461,9 +639,11 @@
                         },
                         "currencies": {
                           "type": "array",
+                          "nullable": true,
                           "items": {
                             "type": "string"
-                          }
+                          },
+                          "description": "Valid currencies for the account; omit for a bare open line"
                         },
                         "booking": {
                           "type": "string",
@@ -480,8 +660,7 @@
                       },
                       "required": [
                         "date",
-                        "account",
-                        "currencies"
+                        "account"
                       ],
                       "additionalProperties": false
                     }
@@ -1351,6 +1530,13 @@
                       },
                       "isStarred": {
                         "type": "boolean"
+                      },
+                      "dryRun": {
+                        "type": "boolean",
+                        "description": "True when this is an updateLedger preview: the checks ran and nothing was committed. Reads and creates omit it."
+                      },
+                      "preview": {
+                        "$ref": "#/components/schemas/LedgerUpdatePreview"
                       }
                     },
                     "required": [
@@ -1666,6 +1852,13 @@
                     },
                     "isStarred": {
                       "type": "boolean"
+                    },
+                    "dryRun": {
+                      "type": "boolean",
+                      "description": "True when this is an updateLedger preview: the checks ran and nothing was committed. Reads and creates omit it."
+                    },
+                    "preview": {
+                      "$ref": "#/components/schemas/LedgerUpdatePreview"
                     }
                   },
                   "required": [
@@ -1878,6 +2071,13 @@
                       },
                       "isStarred": {
                         "type": "boolean"
+                      },
+                      "dryRun": {
+                        "type": "boolean",
+                        "description": "True when this is an updateLedger preview: the checks ran and nothing was committed. Reads and creates omit it."
+                      },
+                      "preview": {
+                        "$ref": "#/components/schemas/LedgerUpdatePreview"
                       }
                     },
                     "required": [
@@ -2254,6 +2454,13 @@
                       },
                       "isStarred": {
                         "type": "boolean"
+                      },
+                      "dryRun": {
+                        "type": "boolean",
+                        "description": "True when this is an updateLedger preview: the checks ran and nothing was committed. Reads and creates omit it."
+                      },
+                      "preview": {
+                        "$ref": "#/components/schemas/LedgerUpdatePreview"
                       }
                     },
                     "required": [
@@ -2471,6 +2678,13 @@
                     },
                     "isStarred": {
                       "type": "boolean"
+                    },
+                    "dryRun": {
+                      "type": "boolean",
+                      "description": "True when this is an updateLedger preview: the checks ran and nothing was committed. Reads and creates omit it."
+                    },
+                    "preview": {
+                      "$ref": "#/components/schemas/LedgerUpdatePreview"
                     }
                   },
                   "required": [
@@ -2584,7 +2798,7 @@
       "put": {
         "operationId": "updateLedger",
         "summary": "Update a ledger",
-        "description": "Update ledger name, description, or visibility. Requires current administrative authority over the addressed ledger and respects the credential pin.",
+        "description": "Update ledger name, description, or visibility. Requires current administrative authority over the addressed ledger and respects the credential pin. Pass dryRun to preview the current→new diff without committing.",
         "tags": [
           "Ledger v1"
         ],
@@ -2645,6 +2859,16 @@
                     "type": "boolean",
                     "nullable": true,
                     "description": "true makes the ledger visible only to its owner and collaborators; false makes it public, readable by anyone; omitted leaves it as it is."
+                  },
+                  "dryRun": {
+                    "type": "boolean",
+                    "nullable": true,
+                    "description": "Run every check and return the preview without committing"
+                  },
+                  "dry_run": {
+                    "type": "boolean",
+                    "nullable": true,
+                    "description": "Alias of dryRun, as MCP spells it."
                   }
                 },
                 "additionalProperties": false
@@ -2715,6 +2939,13 @@
                     },
                     "isStarred": {
                       "type": "boolean"
+                    },
+                    "dryRun": {
+                      "type": "boolean",
+                      "description": "True when this is an updateLedger preview: the checks ran and nothing was committed. Reads and creates omit it."
+                    },
+                    "preview": {
+                      "$ref": "#/components/schemas/LedgerUpdatePreview"
                     }
                   },
                   "required": [
@@ -2828,7 +3059,7 @@
       "delete": {
         "operationId": "deleteLedger",
         "summary": "Delete a ledger",
-        "description": "Delete the repository and perform the existing linked-bank cleanup. Requires current administrative authority and respects the credential pin. Applies immediately; no preview.",
+        "description": "Delete the repository and perform the existing linked-bank cleanup. Requires current administrative authority and respects the credential pin. Pass dryRun to preview the destroy summary without destroying anything.",
         "tags": [
           "Ledger v1"
         ],
@@ -2866,6 +3097,28 @@
             "in": "path"
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "dryRun": {
+                    "type": "boolean",
+                    "nullable": true,
+                    "description": "Run every check and return the preview without committing"
+                  },
+                  "dry_run": {
+                    "type": "boolean",
+                    "nullable": true,
+                    "description": "Alias of dryRun, as MCP spells it."
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Deleted ledger identifier",
@@ -2876,6 +3129,13 @@
                   "properties": {
                     "ledgerId": {
                       "type": "string"
+                    },
+                    "dryRun": {
+                      "type": "boolean",
+                      "description": "True when this is a deleteLedger preview: the checks ran and nothing was destroyed. Commits echo false."
+                    },
+                    "preview": {
+                      "$ref": "#/components/schemas/LedgerDeletePreview"
                     }
                   },
                   "required": [
@@ -6742,7 +7002,7 @@
     "/api-gateway/v1/ledgers/{owner}/{name}/collaborators/{collaborator}": {
       "put": {
         "summary": "Add or update a ledger collaborator",
-        "description": "Requires ledger.admin and current permission to change collaborators. Existing collaborator limits apply. An omitted or null permission uses the repository service's default.",
+        "description": "Requires ledger.admin and current permission to change collaborators. Existing collaborator limits apply. An omitted or null permission uses the repository service's default. Pass dryRun to preview the would-be grant without granting anything.",
         "tags": [
           "Ledger v1"
         ],
@@ -6804,6 +7064,16 @@
                       "admin",
                       null
                     ]
+                  },
+                  "dryRun": {
+                    "type": "boolean",
+                    "nullable": true,
+                    "description": "Run every check and return the preview without committing"
+                  },
+                  "dry_run": {
+                    "type": "boolean",
+                    "nullable": true,
+                    "description": "Alias of dryRun, as MCP spells it."
                   }
                 },
                 "additionalProperties": false
@@ -6824,6 +7094,13 @@
                     },
                     "message": {
                       "type": "string"
+                    },
+                    "dryRun": {
+                      "type": "boolean",
+                      "description": "True when this is a collaborator mutation preview: the checks ran and nothing changed. Commits echo false."
+                    },
+                    "preview": {
+                      "$ref": "#/components/schemas/CollaboratorPreview"
                     }
                   },
                   "required": [
@@ -6927,7 +7204,7 @@
       },
       "delete": {
         "summary": "Delete a ledger collaborator",
-        "description": "Requires ledger.admin and current permission to change collaborators.",
+        "description": "Requires ledger.admin and current permission to change collaborators. Pass dryRun to preview the would-be revocation without revoking anything.",
         "tags": [
           "Ledger v1"
         ],
@@ -6974,6 +7251,28 @@
             "in": "path"
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "dryRun": {
+                    "type": "boolean",
+                    "nullable": true,
+                    "description": "Run every check and return the preview without committing"
+                  },
+                  "dry_run": {
+                    "type": "boolean",
+                    "nullable": true,
+                    "description": "Alias of dryRun, as MCP spells it."
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Membership removal result",
@@ -6987,6 +7286,13 @@
                     },
                     "message": {
                       "type": "string"
+                    },
+                    "dryRun": {
+                      "type": "boolean",
+                      "description": "True when this is a collaborator mutation preview: the checks ran and nothing changed. Commits echo false."
+                    },
+                    "preview": {
+                      "$ref": "#/components/schemas/CollaboratorPreview"
                     }
                   },
                   "required": [
@@ -7092,7 +7398,7 @@
     "/api-gateway/v1/ledgers/{owner}/{name}/leave": {
       "post": {
         "summary": "Leave a ledger",
-        "description": "Requires ledger.admin and the current leave relationship. Removes only the authenticated caller from the ledger.",
+        "description": "Requires ledger.admin and the current leave relationship. Removes only the authenticated caller from the ledger. Pass dryRun to preview the would-be self-removal without leaving.",
         "tags": [
           "Ledger v1"
         ],
@@ -7135,7 +7441,18 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "properties": {},
+                "properties": {
+                  "dryRun": {
+                    "type": "boolean",
+                    "nullable": true,
+                    "description": "Run every check and return the preview without committing"
+                  },
+                  "dry_run": {
+                    "type": "boolean",
+                    "nullable": true,
+                    "description": "Alias of dryRun, as MCP spells it."
+                  }
+                },
                 "additionalProperties": false
               }
             }
@@ -7154,6 +7471,13 @@
                     },
                     "message": {
                       "type": "string"
+                    },
+                    "dryRun": {
+                      "type": "boolean",
+                      "description": "True when this is a collaborator mutation preview: the checks ran and nothing changed. Commits echo false."
+                    },
+                    "preview": {
+                      "$ref": "#/components/schemas/CollaboratorPreview"
                     }
                   },
                   "required": [
@@ -9980,7 +10304,7 @@
       },
       "put": {
         "summary": "Create or replace a file",
-        "description": "Writes at most 1 MiB (1,048,576 UTF-8 bytes) and commits it. Include the `sha` from a prior GET to replace an existing file; omit it to create a new one. The complete JSON request is separately limited to 2 MiB.",
+        "description": "Writes at most 1 MiB (1,048,576 UTF-8 bytes) and commits it. Include the `sha` from a prior GET to replace an existing file; omit it to create a new one. The complete JSON request is separately limited to 2 MiB. `dryRun` previews without committing: same checks, no commit.",
         "tags": [
           "Ledger v1"
         ],
@@ -10144,7 +10468,7 @@
       },
       "delete": {
         "summary": "Delete a file",
-        "description": "Removes the file and commits the deletion. Deleting a file still `include`d by another ledger file is refused as `BAD_USER_INPUT` naming the includers; remove the include from the including file(s) first, then delete. An include counts when its target resolves to the deleted path the way the ledger loads it, relative to the directory of the file that declares it, and glob includes never count.",
+        "description": "Removes the file and commits the deletion. Deleting a file still `include`d by another ledger file is refused as `BAD_USER_INPUT` naming the includers; remove the include from the including file(s) first, then delete. An include counts when its target resolves to the deleted path the way the ledger loads it, relative to the directory of the file that declares it, and glob includes never count. `dryRun` previews without committing: same checks, no commit.",
         "tags": [
           "Ledger v1"
         ],

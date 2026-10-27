@@ -117,7 +117,8 @@ def sync_detailed(
     """Update a ledger
 
      Update ledger name, description, or visibility. Requires current administrative authority over the
-    addressed ledger and respects the credential pin.
+    addressed ledger and respects the credential pin. Pass dryRun to preview the current→new diff
+    without committing.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -155,7 +156,8 @@ def sync(
     """Update a ledger
 
      Update ledger name, description, or visibility. Requires current administrative authority over the
-    addressed ledger and respects the credential pin.
+    addressed ledger and respects the credential pin. Pass dryRun to preview the current→new diff
+    without committing.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -188,7 +190,8 @@ async def asyncio_detailed(
     """Update a ledger
 
      Update ledger name, description, or visibility. Requires current administrative authority over the
-    addressed ledger and respects the credential pin.
+    addressed ledger and respects the credential pin. Pass dryRun to preview the current→new diff
+    without committing.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -224,7 +227,8 @@ async def asyncio(
     """Update a ledger
 
      Update ledger name, description, or visibility. Requires current administrative authority over the
-    addressed ledger and respects the credential pin.
+    addressed ledger and respects the credential pin. Pass dryRun to preview the current→new diff
+    without committing.
 
     Args:
         owner (str): Ledger owner's username Example: alice.

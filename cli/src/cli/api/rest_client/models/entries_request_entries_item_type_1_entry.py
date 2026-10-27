@@ -25,14 +25,14 @@ class EntriesRequestEntriesItemType1Entry:
     Attributes:
         date (str):  Example: 2026-08-23.
         account (str):
-        currencies (list[str]):
+        currencies (list[str] | None | Unset): Valid currencies for the account; omit for a bare open line
         booking (EntriesRequestEntriesItemType1EntryBookingType1 | EntriesRequestEntriesItemType1EntryBookingType2Type1
             | EntriesRequestEntriesItemType1EntryBookingType3Type1 | None | Unset): Booking method for the account
     """
 
     date: str
     account: str
-    currencies: list[str]
+    currencies: list[str] | None | Unset = UNSET
     booking: (
         EntriesRequestEntriesItemType1EntryBookingType1
         | EntriesRequestEntriesItemType1EntryBookingType2Type1
@@ -46,7 +46,14 @@ class EntriesRequestEntriesItemType1Entry:
 
         account = self.account
 
-        currencies = self.currencies
+        currencies: list[str] | None | Unset
+        if isinstance(self.currencies, Unset):
+            currencies = UNSET
+        elif isinstance(self.currencies, list):
+            currencies = self.currencies
+
+        else:
+            currencies = self.currencies
 
         booking: None | str | Unset
         if isinstance(self.booking, Unset):
@@ -66,9 +73,10 @@ class EntriesRequestEntriesItemType1Entry:
             {
                 "date": date,
                 "account": account,
-                "currencies": currencies,
             }
         )
+        if currencies is not UNSET:
+            field_dict["currencies"] = currencies
         if booking is not UNSET:
             field_dict["booking"] = booking
 
@@ -81,7 +89,22 @@ class EntriesRequestEntriesItemType1Entry:
 
         account = d.pop("account")
 
-        currencies = cast(list[str], d.pop("currencies"))
+        def _parse_currencies(data: object) -> list[str] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                currencies_type_0 = cast(list[str], data)
+
+                return currencies_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[str] | None | Unset, data)
+
+        currencies = _parse_currencies(d.pop("currencies", UNSET))
 
         def _parse_booking(
             data: object,

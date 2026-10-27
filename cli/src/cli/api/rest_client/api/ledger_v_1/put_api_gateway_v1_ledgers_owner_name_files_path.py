@@ -121,7 +121,7 @@ def sync_detailed(
 
      Writes at most 1 MiB (1,048,576 UTF-8 bytes) and commits it. Include the `sha` from a prior GET to
     replace an existing file; omit it to create a new one. The complete JSON request is separately
-    limited to 2 MiB.
+    limited to 2 MiB. `dryRun` previews without committing: same checks, no commit.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -164,7 +164,7 @@ def sync(
 
      Writes at most 1 MiB (1,048,576 UTF-8 bytes) and commits it. Include the `sha` from a prior GET to
     replace an existing file; omit it to create a new one. The complete JSON request is separately
-    limited to 2 MiB.
+    limited to 2 MiB. `dryRun` previews without committing: same checks, no commit.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -202,7 +202,7 @@ async def asyncio_detailed(
 
      Writes at most 1 MiB (1,048,576 UTF-8 bytes) and commits it. Include the `sha` from a prior GET to
     replace an existing file; omit it to create a new one. The complete JSON request is separately
-    limited to 2 MiB.
+    limited to 2 MiB. `dryRun` previews without committing: same checks, no commit.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -243,7 +243,7 @@ async def asyncio(
 
      Writes at most 1 MiB (1,048,576 UTF-8 bytes) and commits it. Include the `sha` from a prior GET to
     replace an existing file; omit it to create a new one. The complete JSON request is separately
-    limited to 2 MiB.
+    limited to 2 MiB. `dryRun` previews without committing: same checks, no commit.
 
     Args:
         owner (str): Ledger owner's username Example: alice.

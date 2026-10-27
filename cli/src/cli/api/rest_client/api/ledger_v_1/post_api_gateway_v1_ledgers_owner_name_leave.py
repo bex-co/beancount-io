@@ -119,7 +119,7 @@ def sync_detailed(
     """Leave a ledger
 
      Requires ledger.admin and the current leave relationship. Removes only the authenticated caller from
-    the ledger.
+    the ledger. Pass dryRun to preview the would-be self-removal without leaving.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -157,7 +157,7 @@ def sync(
     """Leave a ledger
 
      Requires ledger.admin and the current leave relationship. Removes only the authenticated caller from
-    the ledger.
+    the ledger. Pass dryRun to preview the would-be self-removal without leaving.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -190,7 +190,7 @@ async def asyncio_detailed(
     """Leave a ledger
 
      Requires ledger.admin and the current leave relationship. Removes only the authenticated caller from
-    the ledger.
+    the ledger. Pass dryRun to preview the would-be self-removal without leaving.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -226,7 +226,7 @@ async def asyncio(
     """Leave a ledger
 
      Requires ledger.admin and the current leave relationship. Removes only the authenticated caller from
-    the ledger.
+    the ledger. Pass dryRun to preview the would-be self-removal without leaving.
 
     Args:
         owner (str): Ledger owner's username Example: alice.

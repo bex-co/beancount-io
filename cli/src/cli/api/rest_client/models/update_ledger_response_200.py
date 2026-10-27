@@ -9,6 +9,7 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
+    from ..models.ledger_update_preview import LedgerUpdatePreview
     from ..models.update_ledger_response_200_permissions import UpdateLedgerResponse200Permissions
 
 
@@ -32,6 +33,9 @@ class UpdateLedgerResponse200:
         description (None | str | Unset):
         permissions (UpdateLedgerResponse200Permissions | Unset):
         is_starred (bool | Unset):
+        dry_run (bool | Unset): True when this is an updateLedger preview: the checks ran and nothing was committed.
+            Reads and creates omit it.
+        preview (LedgerUpdatePreview | Unset): The rendered current→new diff; present only on updateLedger previews.
     """
 
     id: str
@@ -47,6 +51,8 @@ class UpdateLedgerResponse200:
     description: None | str | Unset = UNSET
     permissions: UpdateLedgerResponse200Permissions | Unset = UNSET
     is_starred: bool | Unset = UNSET
+    dry_run: bool | Unset = UNSET
+    preview: LedgerUpdatePreview | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -82,6 +88,12 @@ class UpdateLedgerResponse200:
 
         is_starred = self.is_starred
 
+        dry_run = self.dry_run
+
+        preview: dict[str, Any] | Unset = UNSET
+        if not isinstance(self.preview, Unset):
+            preview = self.preview.to_dict()
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -104,11 +116,16 @@ class UpdateLedgerResponse200:
             field_dict["permissions"] = permissions
         if is_starred is not UNSET:
             field_dict["isStarred"] = is_starred
+        if dry_run is not UNSET:
+            field_dict["dryRun"] = dry_run
+        if preview is not UNSET:
+            field_dict["preview"] = preview
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.ledger_update_preview import LedgerUpdatePreview  # noqa: PLC0415
         from ..models.update_ledger_response_200_permissions import UpdateLedgerResponse200Permissions  # noqa: PLC0415
 
         d = dict(src_dict)
@@ -150,6 +167,15 @@ class UpdateLedgerResponse200:
 
         is_starred = d.pop("isStarred", UNSET)
 
+        dry_run = d.pop("dryRun", UNSET)
+
+        _preview = d.pop("preview", UNSET)
+        preview: LedgerUpdatePreview | Unset
+        if isinstance(_preview, Unset):
+            preview = UNSET
+        else:
+            preview = LedgerUpdatePreview.from_dict(_preview)
+
         update_ledger_response_200 = cls(
             id=id,
             name=name,
@@ -164,6 +190,8 @@ class UpdateLedgerResponse200:
             description=description,
             permissions=permissions,
             is_starred=is_starred,
+            dry_run=dry_run,
+            preview=preview,
         )
 
         update_ledger_response_200.additional_properties = d

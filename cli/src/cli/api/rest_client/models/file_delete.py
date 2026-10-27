@@ -19,11 +19,15 @@ class FileDelete:
         message (str | Unset):
         description (str | Unset): Alias of message, as the MCP file tools spell it.
         sha (str | Unset): Blob SHA of the file being deleted, from a prior GET
+        dryRun (bool | Unset): Run every check and return the preview without committing
+        dry_run (bool | Unset): Alias of dryRun, as MCP spells it.
     """
 
     message: str | Unset = UNSET
     description: str | Unset = UNSET
     sha: str | Unset = UNSET
+    dryRun: bool | Unset = UNSET
+    dry_run: bool | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -32,6 +36,10 @@ class FileDelete:
         description = self.description
 
         sha = self.sha
+
+        dryRun = self.dryRun
+
+        dry_run = self.dry_run
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -42,6 +50,10 @@ class FileDelete:
             field_dict["description"] = description
         if sha is not UNSET:
             field_dict["sha"] = sha
+        if dryRun is not UNSET:
+            field_dict["dryRun"] = dryRun
+        if dry_run is not UNSET:
+            field_dict["dry_run"] = dry_run
 
         return field_dict
 
@@ -54,10 +66,16 @@ class FileDelete:
 
         sha = d.pop("sha", UNSET)
 
+        dryRun = d.pop("dryRun", UNSET)
+
+        dry_run = d.pop("dry_run", UNSET)
+
         file_delete = cls(
             message=message,
             description=description,
             sha=sha,
+            dryRun=dryRun,
+            dry_run=dry_run,
         )
 
         file_delete.additional_properties = d

@@ -26,6 +26,8 @@ class PutApiGatewayV1LedgersOwnerNameCollaboratorsCollaboratorBody:
         permission (None | PutApiGatewayV1LedgersOwnerNameCollaboratorsCollaboratorBodyPermissionType1 |
             PutApiGatewayV1LedgersOwnerNameCollaboratorsCollaboratorBodyPermissionType2Type1 |
             PutApiGatewayV1LedgersOwnerNameCollaboratorsCollaboratorBodyPermissionType3Type1 | Unset):
+        dryRun (bool | None | Unset): Run every check and return the preview without committing
+        dry_run (bool | None | Unset): Alias of dryRun, as MCP spells it.
     """
 
     permission: (
@@ -35,6 +37,8 @@ class PutApiGatewayV1LedgersOwnerNameCollaboratorsCollaboratorBody:
         | PutApiGatewayV1LedgersOwnerNameCollaboratorsCollaboratorBodyPermissionType3Type1
         | Unset
     ) = UNSET
+    dryRun: bool | None | Unset = UNSET
+    dry_run: bool | None | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         permission: None | str | Unset
@@ -53,11 +57,27 @@ class PutApiGatewayV1LedgersOwnerNameCollaboratorsCollaboratorBody:
         else:
             permission = self.permission
 
+        dryRun: bool | None | Unset
+        if isinstance(self.dryRun, Unset):
+            dryRun = UNSET
+        else:
+            dryRun = self.dryRun
+
+        dry_run: bool | None | Unset
+        if isinstance(self.dry_run, Unset):
+            dry_run = UNSET
+        else:
+            dry_run = self.dry_run
+
         field_dict: dict[str, Any] = {}
 
         field_dict.update({})
         if permission is not UNSET:
             field_dict["permission"] = permission
+        if dryRun is not UNSET:
+            field_dict["dryRun"] = dryRun
+        if dry_run is not UNSET:
+            field_dict["dry_run"] = dry_run
 
         return field_dict
 
@@ -117,8 +137,28 @@ class PutApiGatewayV1LedgersOwnerNameCollaboratorsCollaboratorBody:
 
         permission = _parse_permission(d.pop("permission", UNSET))
 
+        def _parse_dryRun(data: object) -> bool | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(bool | None | Unset, data)
+
+        dryRun = _parse_dryRun(d.pop("dryRun", UNSET))
+
+        def _parse_dry_run(data: object) -> bool | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(bool | None | Unset, data)
+
+        dry_run = _parse_dry_run(d.pop("dry_run", UNSET))
+
         put_api_gateway_v1_ledgers_owner_name_collaborators_collaborator_body = cls(
             permission=permission,
+            dryRun=dryRun,
+            dry_run=dry_run,
         )
 
         return put_api_gateway_v1_ledgers_owner_name_collaborators_collaborator_body

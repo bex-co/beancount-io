@@ -124,7 +124,8 @@ def sync_detailed(
     """Add or update a ledger collaborator
 
      Requires ledger.admin and current permission to change collaborators. Existing collaborator limits
-    apply. An omitted or null permission uses the repository service's default.
+    apply. An omitted or null permission uses the repository service's default. Pass dryRun to preview
+    the would-be grant without granting anything.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -165,7 +166,8 @@ def sync(
     """Add or update a ledger collaborator
 
      Requires ledger.admin and current permission to change collaborators. Existing collaborator limits
-    apply. An omitted or null permission uses the repository service's default.
+    apply. An omitted or null permission uses the repository service's default. Pass dryRun to preview
+    the would-be grant without granting anything.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -201,7 +203,8 @@ async def asyncio_detailed(
     """Add or update a ledger collaborator
 
      Requires ledger.admin and current permission to change collaborators. Existing collaborator limits
-    apply. An omitted or null permission uses the repository service's default.
+    apply. An omitted or null permission uses the repository service's default. Pass dryRun to preview
+    the would-be grant without granting anything.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -240,7 +243,8 @@ async def asyncio(
     """Add or update a ledger collaborator
 
      Requires ledger.admin and current permission to change collaborators. Existing collaborator limits
-    apply. An omitted or null permission uses the repository service's default.
+    apply. An omitted or null permission uses the repository service's default. Pass dryRun to preview
+    the would-be grant without granting anything.
 
     Args:
         owner (str): Ledger owner's username Example: alice.

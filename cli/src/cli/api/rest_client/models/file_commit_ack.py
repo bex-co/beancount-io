@@ -11,15 +11,17 @@ T = TypeVar("T", bound="FileCommitAck")
 
 @_attrs_define
 class FileCommitAck:
-    """Acknowledgement that a file change was committed
+    """Acknowledgement that a file change was committed — or, on a dry run, that it would be
 
     Attributes:
         ok (bool):
         path (str):
+        dry_run (bool): True when this was a preview: the checks ran and nothing was committed.
     """
 
     ok: bool
     path: str
+    dry_run: bool
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -27,12 +29,15 @@ class FileCommitAck:
 
         path = self.path
 
+        dry_run = self.dry_run
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
                 "ok": ok,
                 "path": path,
+                "dryRun": dry_run,
             }
         )
 
@@ -45,9 +50,12 @@ class FileCommitAck:
 
         path = d.pop("path")
 
+        dry_run = d.pop("dryRun")
+
         file_commit_ack = cls(
             ok=ok,
             path=path,
+            dry_run=dry_run,
         )
 
         file_commit_ack.additional_properties = d

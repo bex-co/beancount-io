@@ -6,18 +6,24 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.delete_api_gateway_v1_ledgers_owner_name_collaborators_collaborator_body import (
+    DeleteApiGatewayV1LedgersOwnerNameCollaboratorsCollaboratorBody,
+)
 from ...models.delete_api_gateway_v1_ledgers_owner_name_collaborators_collaborator_response_200 import (
     DeleteApiGatewayV1LedgersOwnerNameCollaboratorsCollaboratorResponse200,
 )
 from ...models.v1_error import V1Error
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     owner: str,
     name: str,
     collaborator: str,
+    *,
+    body: DeleteApiGatewayV1LedgersOwnerNameCollaboratorsCollaboratorBody | Unset = UNSET,
 ) -> dict[str, Any]:
+    headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "delete",
@@ -28,6 +34,12 @@ def _get_kwargs(
         ),
     }
 
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
+
+    headers["Content-Type"] = "application/json"
+
+    _kwargs["headers"] = headers
     return _kwargs
 
 
@@ -107,15 +119,18 @@ def sync_detailed(
     collaborator: str,
     *,
     client: AuthenticatedClient,
+    body: DeleteApiGatewayV1LedgersOwnerNameCollaboratorsCollaboratorBody | Unset = UNSET,
 ) -> Response[DeleteApiGatewayV1LedgersOwnerNameCollaboratorsCollaboratorResponse200 | V1Error]:
     """Delete a ledger collaborator
 
-     Requires ledger.admin and current permission to change collaborators.
+     Requires ledger.admin and current permission to change collaborators. Pass dryRun to preview the
+    would-be revocation without revoking anything.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
         name (str): Ledger (repository) name Example: main-ledger.
         collaborator (str):
+        body (DeleteApiGatewayV1LedgersOwnerNameCollaboratorsCollaboratorBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -129,6 +144,7 @@ def sync_detailed(
         owner=owner,
         name=name,
         collaborator=collaborator,
+        body=body,
     )
 
     response = client.get_httpx_client().request(
@@ -144,15 +160,18 @@ def sync(
     collaborator: str,
     *,
     client: AuthenticatedClient,
+    body: DeleteApiGatewayV1LedgersOwnerNameCollaboratorsCollaboratorBody | Unset = UNSET,
 ) -> DeleteApiGatewayV1LedgersOwnerNameCollaboratorsCollaboratorResponse200 | V1Error | None:
     """Delete a ledger collaborator
 
-     Requires ledger.admin and current permission to change collaborators.
+     Requires ledger.admin and current permission to change collaborators. Pass dryRun to preview the
+    would-be revocation without revoking anything.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
         name (str): Ledger (repository) name Example: main-ledger.
         collaborator (str):
+        body (DeleteApiGatewayV1LedgersOwnerNameCollaboratorsCollaboratorBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -167,6 +186,7 @@ def sync(
         name=name,
         collaborator=collaborator,
         client=client,
+        body=body,
     ).parsed
 
 
@@ -176,15 +196,18 @@ async def asyncio_detailed(
     collaborator: str,
     *,
     client: AuthenticatedClient,
+    body: DeleteApiGatewayV1LedgersOwnerNameCollaboratorsCollaboratorBody | Unset = UNSET,
 ) -> Response[DeleteApiGatewayV1LedgersOwnerNameCollaboratorsCollaboratorResponse200 | V1Error]:
     """Delete a ledger collaborator
 
-     Requires ledger.admin and current permission to change collaborators.
+     Requires ledger.admin and current permission to change collaborators. Pass dryRun to preview the
+    would-be revocation without revoking anything.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
         name (str): Ledger (repository) name Example: main-ledger.
         collaborator (str):
+        body (DeleteApiGatewayV1LedgersOwnerNameCollaboratorsCollaboratorBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -198,6 +221,7 @@ async def asyncio_detailed(
         owner=owner,
         name=name,
         collaborator=collaborator,
+        body=body,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -211,15 +235,18 @@ async def asyncio(
     collaborator: str,
     *,
     client: AuthenticatedClient,
+    body: DeleteApiGatewayV1LedgersOwnerNameCollaboratorsCollaboratorBody | Unset = UNSET,
 ) -> DeleteApiGatewayV1LedgersOwnerNameCollaboratorsCollaboratorResponse200 | V1Error | None:
     """Delete a ledger collaborator
 
-     Requires ledger.admin and current permission to change collaborators.
+     Requires ledger.admin and current permission to change collaborators. Pass dryRun to preview the
+    would-be revocation without revoking anything.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
         name (str): Ledger (repository) name Example: main-ledger.
         collaborator (str):
+        body (DeleteApiGatewayV1LedgersOwnerNameCollaboratorsCollaboratorBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -235,5 +262,6 @@ async def asyncio(
             name=name,
             collaborator=collaborator,
             client=client,
+            body=body,
         )
     ).parsed

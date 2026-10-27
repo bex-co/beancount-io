@@ -10,6 +10,7 @@ from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
     from ..models.accessible_ledgers_response_200_item_permissions import AccessibleLedgersResponse200ItemPermissions
+    from ..models.ledger_update_preview import LedgerUpdatePreview
 
 
 T = TypeVar("T", bound="AccessibleLedgersResponse200Item")
@@ -32,6 +33,9 @@ class AccessibleLedgersResponse200Item:
         description (None | str | Unset):
         permissions (AccessibleLedgersResponse200ItemPermissions | Unset):
         is_starred (bool | Unset):
+        dry_run (bool | Unset): True when this is an updateLedger preview: the checks ran and nothing was committed.
+            Reads and creates omit it.
+        preview (LedgerUpdatePreview | Unset): The rendered current→new diff; present only on updateLedger previews.
     """
 
     id: str
@@ -47,6 +51,8 @@ class AccessibleLedgersResponse200Item:
     description: None | str | Unset = UNSET
     permissions: AccessibleLedgersResponse200ItemPermissions | Unset = UNSET
     is_starred: bool | Unset = UNSET
+    dry_run: bool | Unset = UNSET
+    preview: LedgerUpdatePreview | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -82,6 +88,12 @@ class AccessibleLedgersResponse200Item:
 
         is_starred = self.is_starred
 
+        dry_run = self.dry_run
+
+        preview: dict[str, Any] | Unset = UNSET
+        if not isinstance(self.preview, Unset):
+            preview = self.preview.to_dict()
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -104,6 +116,10 @@ class AccessibleLedgersResponse200Item:
             field_dict["permissions"] = permissions
         if is_starred is not UNSET:
             field_dict["isStarred"] = is_starred
+        if dry_run is not UNSET:
+            field_dict["dryRun"] = dry_run
+        if preview is not UNSET:
+            field_dict["preview"] = preview
 
         return field_dict
 
@@ -112,6 +128,7 @@ class AccessibleLedgersResponse200Item:
         from ..models.accessible_ledgers_response_200_item_permissions import (
             AccessibleLedgersResponse200ItemPermissions,  # noqa: PLC0415
         )
+        from ..models.ledger_update_preview import LedgerUpdatePreview  # noqa: PLC0415
 
         d = dict(src_dict)
         id = d.pop("id")
@@ -152,6 +169,15 @@ class AccessibleLedgersResponse200Item:
 
         is_starred = d.pop("isStarred", UNSET)
 
+        dry_run = d.pop("dryRun", UNSET)
+
+        _preview = d.pop("preview", UNSET)
+        preview: LedgerUpdatePreview | Unset
+        if isinstance(_preview, Unset):
+            preview = UNSET
+        else:
+            preview = LedgerUpdatePreview.from_dict(_preview)
+
         accessible_ledgers_response_200_item = cls(
             id=id,
             name=name,
@@ -166,6 +192,8 @@ class AccessibleLedgersResponse200Item:
             description=description,
             permissions=permissions,
             is_starred=is_starred,
+            dry_run=dry_run,
+            preview=preview,
         )
 
         accessible_ledgers_response_200_item.additional_properties = d
