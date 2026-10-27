@@ -1722,6 +1722,48 @@ class TestBeaRecipes(unittest.TestCase):
         rows = self.recipe("bill-open")["rows"]
         self.assertEqual([(r[0], r[2]) for r in rows], [("bolt-printing:7781", "-250.00"), ("ink-co:7781", "-80.00")])
 
+    def test_collected_tax_for_a_period_and_its_remittance(self):
+        self.ledger.write_text(
+            'option "operating_currency" "USD"\n'
+            "2026-01-01 open Assets:Checking USD\n"
+            "2026-01-01 open Assets:AccountsReceivable USD\n"
+            "2026-01-01 open Liabilities:SalesTax USD\n"
+            "2026-01-01 open Income:Services USD\n"
+            'include "transactions/2026.bean"\n'
+        )
+        self.batch([
+            {"date": "2026-07-10", "flag": "*", "payee": "Acme", "narration": "Invoice INV-040",
+             "links": ["inv-040"], "meta": {"invoice": "INV-040"},
+             "postings": [
+                 {"account": "Assets:AccountsReceivable", "units": {"number": "1080.00", "currency": "USD"}},
+                 {"account": "Income:Services", "units": {"number": "-1000.00", "currency": "USD"}},
+                 {"account": "Liabilities:SalesTax", "units": {"number": "-80.00", "currency": "USD"}}]},
+            # Collected after the quarter ends: owed later, not in this period.
+            {"date": "2026-10-02", "flag": "*", "payee": "Globex", "narration": "Invoice INV-041",
+             "links": ["inv-041"], "meta": {"invoice": "INV-041"},
+             "postings": [
+                 {"account": "Assets:AccountsReceivable", "units": {"number": "216.00", "currency": "USD"}},
+                 {"account": "Income:Services", "units": {"number": "-200.00", "currency": "USD"}},
+                 {"account": "Liabilities:SalesTax", "units": {"number": "-16.00", "currency": "USD"}}]},
+        ])
+        self.recipe("batch")
+        self.values.update(tax_account="Liabilities:SalesTax", start="2026-07-01", end="2026-10-01")
+        self.assertEqual(self.recipe("tax-period")["rows"], [["-80.00"]])
+        self.assertEqual(self.recipe("tax-owed")["rows"], [["-80.00"]])
+        # The filed Q3 remittance clears the quarter; Q4's collection stays owed.
+        self.batch([
+            {"date": "2026-10-20", "flag": "*", "payee": "State Revenue", "narration": "Q3 remittance",
+             "postings": [
+                 {"account": "Liabilities:SalesTax", "units": {"number": "80.00", "currency": "USD"}},
+                 {"account": "Assets:Checking", "units": {"number": "-80.00", "currency": "USD"}}]},
+        ])
+        self.recipe("batch")
+        self.recipe("check")
+        self.assertEqual(self.recipe("tax-period")["rows"], [["-80.00"]])
+        self.assertEqual(self.recipe("tax-owed", end="2026-11-01")["rows"], [["-16.00"]])
+        # Q4 holds both a collection and the Q3 remittance: only the collection counts.
+        self.assertEqual(self.recipe("tax-period", start="2026-10-01", end="2027-01-01")["rows"], [["-16.00"]])
+
     def test_profit_by_client_counts_split_parts_once_and_ties_to_the_period(self):
         self.ledger.write_text(
             'option "operating_currency" "USD"\n'
