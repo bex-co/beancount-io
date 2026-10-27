@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1067 — Deduplicate signed-zero Amount metadata in statement notes](./1067.md) — minor CLI repeat-import gap: unchanged annotations grow while the refund imports once; 48 fresh profiles, 484 CLI commands and 140 native loads; full completed 1023 controls pass, checked 2026-10-27.
+
 
 
 
