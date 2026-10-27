@@ -1374,7 +1374,16 @@ def _strptime(value: str, date_format: str) -> datetime:
     """
     parsed = datetime.strptime(value, date_format)
     directives = date_format.replace("%%", "")
-    if "%j" not in directives or ("%Y" not in directives and "%y" not in directives):
+    if "%Y" not in directives and "%y" not in directives:
+        return parsed
+    # A calendar week and weekday are read against the stated year, and an
+    # impossible pair rolled out of it: `2021-W53-1` under `%Y-W%W-%w` became
+    # 2022-01-03 and `2021-W00-0` under `%U` 2020-12-27 (w5/1022). A month or
+    # day of the year, when present, decides the date instead.
+    weekly = ("%U" in directives or "%W" in directives) and not any(
+        code in directives for code in ("%j", "%m", "%b", "%B", "%d")
+    )
+    if "%j" not in directives and not weekly:
         return parsed
     pattern = ""
     position = 0
@@ -1393,7 +1402,7 @@ def _strptime(value: str, date_format: str) -> datetime:
             pattern += r"\s*" if character.isspace() else re.escape(character)
             position += 1
     match = re.fullmatch(pattern, value.strip(), re.IGNORECASE)
-    if match is None or match.groupdict().get("ordinal") is None:
+    if match is None or (not weekly and match.groupdict().get("ordinal") is None):
         return parsed
     year = match.groupdict().get("year")
     short = match.groupdict().get("short")
@@ -1402,6 +1411,10 @@ def _strptime(value: str, date_format: str) -> datetime:
     elif short is not None:
         full = 1900 + int(short) if int(short) >= 69 else 2000 + int(short)
     else:
+        return parsed
+    if weekly:
+        if parsed.year != full:
+            raise ValueError(f"that week and weekday fall in {parsed.year}, not {full}")
         return parsed
     if int(match.group("ordinal")) > (366 if calendar.isleap(full) else 365):
         raise ValueError(f"day {match.group('ordinal')} does not exist in {full}")
