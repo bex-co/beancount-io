@@ -19,7 +19,7 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from cli.commands.import_ import _ofx_acctids
+from cli.commands.import_ import _ofx_identities
 from cli.main import app
 from tests.conftest import render_ofx, write_ofx
 
@@ -532,4 +532,4 @@ def test_ofx_memory_key_sees_mixed_case_acctids(tmp_path: Path) -> None:
     text = render_ofx([], acctid="CHK-9").replace("</BANKMSGSRSV1>", f"<STMTTRNRS>{block}</STMTTRNRS>\n</BANKMSGSRSV1>")
     source = tmp_path / "mixed.ofx"
     source.write_text(text.replace("<ACCTID>CHK-10", "<acctid>CHK-10"))
-    assert _ofx_acctids(source) == ["CHK-9", "CHK-10"]
+    assert _ofx_identities(source) == [("111000025", "CHK-9"), ("111000025", "CHK-10")]

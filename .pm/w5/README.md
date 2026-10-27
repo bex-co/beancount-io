@@ -100,7 +100,6 @@
 
 
 
-- [1031 — Preserve bank identity in OFX routing](./1031.md) — major CLI gap: account memory and the multi-account guard omit bank IDs, routing distinct banks’ payments to one ledger account; native-valid, repeated 2026-10-25.
 
 
 

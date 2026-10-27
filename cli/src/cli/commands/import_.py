@@ -294,12 +294,16 @@ _NOT_CSV = re.compile(r"!(?:Type|Account|Option)\b|OFXHEADER:|<\?xml|<OFX>", re.
 _OFX_SUFFIXES = (".ofx", ".qfx")
 _OFX_MARKERS = re.compile(rb"OFXHEADER:|<OFX[\s>]", re.IGNORECASE)
 
-#: Account ids as the engine's multi-account scan reads them: upstream
-#: `find_acctids`' pattern over the raw text, case-insensitive (the soup
-#: parser lowercases tags, so a mixed-case account still parses),
-#: whitespace stripped by the caller. The memory key matches the engine's
-#: view on purpose.
-_ACCTID = re.compile(rb"<ACCTID>([^<]*)", re.IGNORECASE)
+#: The tags that make up an OFX source-account identity, as the engine's
+#: single-account scan reads them: every `<ACCTID>` (upstream `find_acctids`'
+#: pattern, case-insensitive because the soup parser lowercases tags, so a
+#: mixed-case account still parses) and the `<BANKID>` of its account
+#: aggregate. Two banks can issue the same account number, so the number
+#: alone is not the account (w5/1031). Card statements carry no BANKID. The
+#: memory key matches the engine's view on purpose.
+_OFX_ACCOUNT_TAGS = re.compile(
+    rb"<(/?)(BANKACCTFROM|BANKACCTTO|CCACCTFROM|CCACCTTO|BANKID|ACCTID)>([^<]*)", re.IGNORECASE
+)
 
 
 def _looks_like_ofx(source: Path) -> bool:
@@ -314,15 +318,44 @@ def _looks_like_ofx(source: Path) -> bool:
     return _OFX_MARKERS.search(head) is not None
 
 
-def _ofx_acctids(source: Path) -> list[str]:
-    """The file's distinct account ids, in order, for the memory key."""
+#: An OFX source account: (BANKID or None for a card statement, ACCTID).
+OfxIdentity = tuple[str | None, str]
+
+
+def _ofx_identities(source: Path) -> list[OfxIdentity]:
+    """The file's distinct source-account identities, in order, for the memory key.
+
+    Each `<ACCTID>` pairs with the `<BANKID>` read since its account
+    aggregate opened (the spec orders BANKID first); an aggregate boundary
+    or a consumed ACCTID clears it, so one statement's bank never leaks
+    into the next. Empty account ids are dropped, as before.
+    """
     try:
         raw = source.read_bytes()
     except OSError:
         return []
-    return list(
-        dict.fromkeys(match.group(1).decode("ascii", errors="replace").strip() for match in _ACCTID.finditer(raw))
-    )
+    identities: list[OfxIdentity] = []
+    bankid: str | None = None
+    for match in _OFX_ACCOUNT_TAGS.finditer(raw):
+        tag = match.group(2).upper()
+        value = match.group(3).decode("ascii", errors="replace").strip()
+        if tag not in (b"BANKID", b"ACCTID"):
+            bankid = None
+        elif match.group(1):
+            continue  # OFX 2's `</BANKID>` closes the element, not the aggregate.
+        elif tag == b"BANKID":
+            bankid = value or None
+        else:
+            if value:
+                identities.append((bankid, value))
+            bankid = None
+    return list(dict.fromkeys(identities))
+
+
+def _ofx_label(identity: OfxIdentity) -> str:
+    """How a source account is named to the user: the number, and its bank when known."""
+    bankid, acctid = identity
+    return acctid if bankid is None else f"{acctid} at bank {bankid}"
 
 
 _SEPARATOR_NAMES = {",": "comma", ";": "semicolon", "\t": "tab", "|": "pipe"}
@@ -603,15 +636,43 @@ def _find_csv_entry(file: Path, headers: list[str] | None, account: str) -> dict
     return None
 
 
-def _find_ofx_entry(file: Path, acctid: str) -> dict[str, Any] | None:
-    """The remembered entry for an OFX account id, without side effects."""
+def _entry_identity(entry: dict[str, Any]) -> OfxIdentity | None:
+    """A remembered entry's source account, or None for a legacy entry that cannot prove its bank.
+
+    Entries written before w5/1031 hold only the account number. Two banks
+    can issue the same number, and the entry does not say whether it came
+    from a bank or a card statement, so it matches no statement: the next
+    import of that number asks for `--account` once and re-keys the memory.
+    """
+    if "bankid" not in entry:
+        return None
+    bankid = entry["bankid"]
+    if bankid is not None and not isinstance(bankid, str):
+        return None
+    return (bankid, entry["acctid"])
+
+
+def _find_ofx_entry(file: Path, identity: OfxIdentity) -> dict[str, Any] | None:
+    """The remembered entry for an OFX source account, without side effects."""
     record = _ofx_record(file, reading=True)
     if not _is_record(record):
         return None
     for entry in _stored_ofx_accounts(record):
-        if entry.get("acctid") == acctid:
+        if _entry_identity(entry) == identity:
             return entry
     return None
+
+
+def _unproven_ofx_entries(file: Path, identity: OfxIdentity) -> list[dict[str, Any]]:
+    """Remembered entries under this account number that are not this source account."""
+    record = _ofx_record(file, reading=True)
+    if not _is_record(record):
+        return []
+    return [
+        entry
+        for entry in _stored_ofx_accounts(record)
+        if entry["acctid"] == identity[1] and _entry_identity(entry) != identity
+    ]
 
 
 def _entry_skip(entry: dict[str, Any]) -> int | None:
@@ -747,20 +808,35 @@ def _recall_csv(
 
 
 def _recall_ofx(file: Path, source: Path, account: str | None = None, *, notes: list[str]) -> dict[str, Any] | None:
-    """A remembered `--ofx` run for this root ledger and OFX account id, if any.
+    """A remembered `--ofx` run for this root ledger and OFX source account, if any.
 
-    Returns the stored entry only when the file names exactly one account id
-    and the memory holds it — and, when `--account` was typed, only when it
-    names the same account. A typed account that differs recalls nothing: it
-    wins for this run and the memory is updated after. An unreadable
-    remembered `--rules` path degrades to an unruled import, announced in
-    `notes`, as the CSV recall does.
+    Returns the stored entry only when the file names exactly one source
+    account (bank id and account id) and the memory holds it — and, when
+    `--account` was typed, only when it names the same account. A typed
+    account that differs recalls nothing: it wins for this run and the
+    memory is updated after. An entry for the same account number at
+    another bank, or a legacy one that cannot prove its bank, recalls
+    nothing and is named in `notes` (w5/1031). An unreadable remembered
+    `--rules` path degrades to an unruled import, announced in `notes`, as
+    the CSV recall does.
     """
-    acctids = [acctid for acctid in _ofx_acctids(source) if acctid]
-    if len(acctids) != 1:
+    identities = _ofx_identities(source)
+    if len(identities) != 1:
         return None
-    entry = _find_ofx_entry(file, acctids[0])
+    entry = _find_ofx_entry(file, identities[0])
     if entry is None:
+        if account is None:
+            for other in _unproven_ofx_entries(file, identities[0]):
+                other_identity = _entry_identity(other)
+                whose = (
+                    f"{_ofx_label(other_identity)}, a different bank"
+                    if other_identity is not None
+                    else f"{other['acctid']}, saved before bea recorded the bank, so it may be another bank's"
+                )
+                notes.append(
+                    f"Not reusing {other['account']}: it is remembered for account {whose}. "
+                    f"{source.name} is account {_ofx_label(identities[0])}; name its ledger account with --account."
+                )
         return None
     if account is not None and not _same_account(entry.get("account"), account):
         return None
@@ -856,14 +932,18 @@ def _remember_csv(
 
 
 def _remember_ofx(file: Path, spec: dict[str, Any], notes: list[str]) -> bool:
-    """Persist a resolved OFX account id, replacing the entry for its id.
+    """Persist a resolved OFX source account, replacing the entry for that account.
 
-    A failed save is named in `notes` as well as on stderr, so the JSON
-    envelope of the import that succeeded says its settings were not kept.
+    Another bank's entry under the same account number is kept (w5/1031); a
+    legacy entry for the number, which cannot prove its bank, is replaced
+    by this explicitly chosen one. A failed save is named in `notes` as well
+    as on stderr, so the JSON envelope of the import that succeeded says its
+    settings were not kept.
     """
     acctid = spec.get("acctid")
     if not acctid:
         return False
+    identity = _entry_identity(spec)
     record = _ofx_record(file)
     try:
         record.parent.mkdir(parents=True, exist_ok=True)
@@ -872,7 +952,11 @@ def _remember_ofx(file: Path, spec: dict[str, Any], notes: list[str]) -> bool:
         # sits beside the directory, which holds nothing but records.
         with exclusive_lock(record.parent.with_name(f"{record.parent.name}.lock")):
             stored = _stored_ofx_accounts(_ofx_record(file, reading=True))
-            accounts = [entry for entry in stored if entry.get("acctid") != acctid]
+            accounts = [
+                entry
+                for entry in stored
+                if not (entry["acctid"] == acctid and _entry_identity(entry) in (identity, None))
+            ]
             atomic_write(record, json.dumps({"accounts": [*accounts, spec]}))
         return True
     except OSError as exc:
@@ -1059,7 +1143,7 @@ def import_entries(
     ofx_to_remember: dict[str, Any] | None = None
     ofx_mode = ofx
     ofx_origin = "--ofx"
-    ofx_acctid: str | None = None
+    ofx_identity: OfxIdentity | None = None
     ofx_recalled: dict[str, Any] | None = None
     # The sign this run chose for its own file, applied to the stored entry
     # under the record lock: the map in `csv_to_remember` predates it (w5/886).
@@ -1275,8 +1359,8 @@ def import_entries(
             ofx_mode = True
             ofx_origin = "detected --ofx"
     if ofx_mode:
-        found_acctids = [acctid for acctid in _ofx_acctids(source) if acctid]
-        ofx_acctid = found_acctids[0] if len(found_acctids) == 1 else None
+        found_identities = _ofx_identities(source)
+        ofx_identity = found_identities[0] if len(found_identities) == 1 else None
         if not ofx:
             ofx_recalled = _recall_ofx(file, source, csv_account, notes=recall_notes)
             if ofx_recalled is not None:
@@ -1756,7 +1840,7 @@ def import_entries(
         if csv_rules_arg is not None:
             argv += ["--rules", str(csv_rules_arg)]
         if not remembered_run:
-            prior = _find_ofx_entry(file, ofx_acctid) if ofx_acctid is not None else None
+            prior = _find_ofx_entry(file, ofx_identity) if ofx_identity is not None else None
             if prior is not None:
                 ofx_discarded: list[str] = []
                 if isinstance(prior.get("rules"), str) and csv_rules_arg is None:
@@ -1781,9 +1865,12 @@ def import_entries(
                 stored_rules = carried if isinstance(carried, str) and not is_descriptor_path(carried) else None
             else:
                 stored_rules = str(csv_rules_arg) if csv_rules_arg is not None else None
-            if ofx_acctid is not None:
+            if ofx_identity is not None:
                 ofx_to_remember = {
-                    "acctid": ofx_acctid,
+                    "acctid": ofx_identity[1],
+                    # Always present, None for a card statement: an entry
+                    # without the key is a legacy one (`_entry_identity`).
+                    "bankid": ofx_identity[0],
                     "account": csv_run_account,
                     "rules": stored_rules,
                     "default_account": default_account,

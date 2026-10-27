@@ -10,8 +10,10 @@ semantics.
 
 Only bank and credit-card statements import this way: the upstream
 example reads `STMTRS` blocks, so a file holding nothing else is refused
-with a pointer at `--config`, as is a file mixing several `ACCTID`
-values (upstream matches one account per importer). Ledger balances are
+with a pointer at `--config`, as is a file mixing several source accounts
+(upstream matches one account per importer). A source account is its
+`ACCTID` together with the `BANKID` of its account aggregate: two banks
+can issue the same account number (w5/1031). Ledger balances are
 ignored entirely in v1 — no `Balance` directive is emitted, and
 `LEDGERBAL` is not even parsed.
 """
@@ -31,9 +33,40 @@ from bea_engine.protocol import UsageError
 
 OFX_SUFFIXES = (".ofx", ".qfx")
 
-#: Upstream `find_acctids`' pattern, case-insensitive: the multi-account
+#: Upstream `find_acctids`' `<ACCTID>` pattern plus the `<BANKID>` and
+#: account-aggregate tags around it, case-insensitive: the multi-account
 #: refusal must see the same statements the lowercasing soup parser will.
-_ACCTID = re.compile(r"<ACCTID>([^<]*)", re.IGNORECASE)
+#: The frontend's memory key (`cli.commands.import_._ofx_identities`) reads
+#: the same identity; the two scans are kept identical by hand (ADR014).
+_ACCOUNT_TAGS = re.compile(r"<(/?)(BANKACCTFROM|BANKACCTTO|CCACCTFROM|CCACCTTO|BANKID|ACCTID)>([^<]*)", re.IGNORECASE)
+
+
+def _source_accounts(text: str) -> list[tuple[str | None, str]]:
+    """The distinct (BANKID or None, ACCTID) source accounts in the text, in order.
+
+    Each `<ACCTID>` pairs with the `<BANKID>` read since its account
+    aggregate opened; an aggregate boundary or a consumed ACCTID clears it.
+    Card statements carry no BANKID. Values are read raw, newlines
+    included, so `1` and `1\n` are stripped to one id; an empty ACCTID is
+    no account.
+    """
+    accounts: list[tuple[str | None, str]] = []
+    bankid: str | None = None
+    for match in _ACCOUNT_TAGS.finditer(text):
+        tag = match.group(2).upper()
+        value = match.group(3).strip()
+        if tag not in ("BANKID", "ACCTID"):
+            bankid = None
+        elif match.group(1):
+            continue  # OFX 2's `</BANKID>` closes the element, not the aggregate.
+        elif tag == "BANKID":
+            bankid = value or None
+        else:
+            if value:
+                accounts.append((bankid, value))
+            bankid = None
+    return list(dict.fromkeys(accounts))
+
 
 # Mirrors `cli.engine.launch.require_feature`'s message for direct engine
 # callers; the frontend cannot be imported from here (ADR014), so the two
@@ -161,14 +194,19 @@ class OfxImporter:
         # Upstream's `find_acctids` matches `<ACCTID>` case-sensitively, but
         # the soup parser lowercases tags, so a mixed-case second account
         # would parse yet escape the refusal. Scan case-insensitively so the
-        # refusal sees every statement the parser will. Values are yielded
-        # raw, newlines included, so `1` and `1\n` still need the strip.
-        acctids = list(dict.fromkeys(match.group(1).strip() for match in _ACCTID.finditer(text)))
-        if len(acctids) > 1:
-            joined = ", ".join(acctids)
+        # refusal sees every statement the parser will. Two banks' statements
+        # under one account number are two accounts too (w5/1031); one
+        # account's statements in several currencies are not.
+        accounts = _source_accounts(text)
+        if len(accounts) > 1:
+            numbers = [acctid for _bankid, acctid in accounts]
+            reused = len(set(numbers)) < len(numbers)
+            joined = ", ".join(
+                f"{acctid} at bank {bankid}" if reused and bankid is not None else acctid for bankid, acctid in accounts
+            )
             raise UsageError(
-                f"{source} holds transactions for {len(acctids)} accounts ({joined}); import one "
-                "account per run with --config and one importer per ACCTID."
+                f"{source} holds transactions for {len(accounts)} accounts ({joined}); import one "
+                "account per run with --config and one importer per account."
             )
         try:
             from bs4 import BeautifulSoup, FeatureNotFound, XMLParsedAsHTMLWarning
