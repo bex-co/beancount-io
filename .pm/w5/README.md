@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1070 — Keep maximum-date funded closes out of tomorrow arithmetic](./1070.md) — minor CLI calendar-end regression: funded direct closes lose recovery advice and native imports fail at 9999-12-31; 82 fresh profiles, 579 CLI commands and 301 native loads; full completed 1063/888 acceptance passes, checked 2026-10-27.
+
 - [1069 — Count only statement source accounts in OFX imports](./1069.md) — major CLI import gap: standard transfer recipient metadata falsely adds a source account; 33 fresh profiles, 467 CLI commands and 90 native loads; full completed 1031 acceptance passes, checked 2026-10-27.
 
 - [1068 — Refuse non-conserving priced FX Cash Flow statements](./1068.md) — major CLI reporting gap: currency exchanges invent opening cash; 36 fresh profiles, 387 CLI commands and 92 native loads; original feature FX assertion disproven by actual cash, checked 2026-10-27.
