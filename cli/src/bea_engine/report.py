@@ -826,6 +826,11 @@ def _capital_gains(filtered: Any, bounds: tuple[date | None, date | None], ledge
             # crashed the multiplication (w5/1043).
             if price is None or not isinstance(price.number, Decimal):
                 continue
+            # A partial read keeps a posting whose price currency the parser
+            # refused against its cost; its gain would subtract 100 USD from
+            # 150 EUR and call the difference USD (w5/1046).
+            if price.currency != cost.currency:
+                continue
             if (start is not None and entry.date < start) or (end is not None and entry.date > end):
                 continue
             if matches is not None and not matches(posting.account):
@@ -839,8 +844,6 @@ def _capital_gains(filtered: Any, bounds: tuple[date | None, date | None], ledge
                 basis = {"number": quantity * price.number, "currency": price.currency}
             acquired = cost.date
             held = (entry.date - acquired).days if acquired is not None else None
-            # Cost and price currencies always match: the loader refuses a
-            # mixed posting before any report sees it (w22/m4/t001).
             gain = {"number": proceeds["number"] - basis["number"], "currency": cost.currency}
             rows.append(
                 {

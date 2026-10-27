@@ -76,7 +76,6 @@
 
 - [1047 — Retarget inferred postings beside compact comments](./1047.md) — minor CLI update gap: source-account mismatches skip requested categories while other edits succeed; 80-book compact-comment/plugin, bare/explicit single/batch and native controls, checked 2026-10-25.
 
-- [1046 — Keep currencies compatible in partial realized gains](./1046.md) — minor CLI arithmetic gap: allow-errors subtracts100USD from150EUR and calls it50USD; explicit-cost native/parser and same-currency controls pass, checked 2026-10-25.
 
 
 

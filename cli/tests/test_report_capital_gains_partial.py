@@ -59,3 +59,39 @@ def test_a_zero_price_sale_is_still_a_realized_loss(tmp_path: Path) -> None:
     assert code == 0, out
     gains = [row["gain"]["number"] for row in json.loads(out)["data"]["rows"]]
     assert gains == ["25", "-100"]
+
+
+MIXED = """option "operating_currency" "USD"
+2026-01-01 open Assets:Cash USD
+2026-01-01 open Assets:Euro EUR
+2026-01-01 open Assets:Stock HOOL
+2026-01-01 open Income:Gains USD
+2026-01-01 open Equity:Opening USD
+2026-01-01 * "Capital"
+  Assets:Cash 1000 USD
+  Equity:Opening -1000 USD
+2026-01-02 * "Buy two"
+  Assets:Stock 2 HOOL {{100 USD}}
+  Assets:Cash -200 USD
+2026-01-03 * "Completed sale"
+  Assets:Stock -1 HOOL {{100 USD}} @ 125 USD
+  Assets:Cash 125 USD
+  Income:Gains -25 USD
+2026-01-04 price EUR 1.20 USD
+2026-01-04 * "Last entry"
+  Assets:Stock -1 HOOL {{100 USD}} {symbol} 150 EUR
+  Assets:Euro 150 EUR @ 1.20 USD
+  Income:Gains -80 USD
+"""
+
+
+@pytest.mark.parametrize("symbol", ["@", "@@"], ids=["per-unit", "total"])
+def test_a_reduction_priced_in_another_currency_is_left_out(tmp_path: Path, symbol: str) -> None:
+    """A partial read subtracted a 100 USD basis from 150 EUR and called it 50 USD (w5/1046)."""
+    ledger = write_ledger(tmp_path, MIXED.format(symbol=symbol))
+    proc = bea(["--file", str(ledger), "--json", "report", "capital-gains", "--allow-errors"], tmp_path)
+
+    assert proc.returncode == 0, proc.stderr
+    data = json.loads(proc.stdout)["data"]
+    assert [(row["sold"], row["gain"]["number"]) for row in data["rows"]] == [("2026-01-03", "25")]
+    assert data["totals"]["one_year_or_less"] == {"USD": "25"}
