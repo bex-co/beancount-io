@@ -958,7 +958,27 @@ def _transactions(file: Path, request: dict[str, Any], *, apply: bool, allow_err
                 raise protocol.ConflictError(
                     f"The ledger changed during the operation: {target}. Nothing was written; retry."
                 ) from None
-            ledger_write.require_writable(target)
+            try:
+                ledger_write.require_writable(target)
+            except protocol.AuthError as exc:
+                if not written_rows:
+                    raise
+                # An earlier file is already replaced: "nothing was written"
+                # was false, and the answer named no row (w5/1040).
+                unwritten = sorted(
+                    plan.index for plan in plans if plan.index not in written_rows and plan.index not in rejected_rows
+                )
+                raise protocol.AuthError(
+                    f"Ledger file is read-only or not writable: {target}. {len(written_rows)} of {len(rows)} rows "
+                    f"were already written (rows {', '.join(str(i + 1) for i in sorted(written_rows))}); rows "
+                    f"{', '.join(str(i + 1) for i in unwritten)} were not. Change its permissions and retry them.",
+                    result={
+                        "written": len(written_rows),
+                        "written_rows": sorted(written_rows),
+                        "unwritten_rows": unwritten,
+                        "rejected_rows": rejected_rows,
+                    },
+                ) from exc
             new_text = ("\ufeff" if marks[target] else "") + combined
             with ledger_write.candidate_file(target, new_text) as candidate:
                 try:

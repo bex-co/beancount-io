@@ -87,7 +87,6 @@
 
 - [1041 — Preserve Unicode numeric-suffix transaction IDs](./1041.md) — minor CLI lookup crash: valid superscript/circled string IDs raise ValueError and abort a batch; both metadata keys, exact ASCII neighbors and file-line controls checked 2026-10-25.
 
-- [1040 — Report completed batch edits before a read-only include](./1040.md) — minor CLI outcome gap: first include changes, second refuses3 saying nothing was written with no result; human/JSON, mapping order and formatter controls checked 2026-10-25.
 
 
 
