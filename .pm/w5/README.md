@@ -129,7 +129,6 @@
 
 - [1015 — Preserve types in declared non-transaction metadata](./1015.md) — reopened minor CLI gap: metadata copies that swap booleans and numbers are misclassified as written; full original field/currency/string-metadata and new type controls pass, checked 2026-10-24.
 
-- [943 — Keep numeric importer IDs stable after serialization](./943.md) — reopened major CLI gap: numeric IDs lose their lookup key, include repeats and corrections write again; original and three-policy controls pass, checked 2026-10-24.
 
 
 - [994 — Complete native acquisition-cost inference](./994.md) — reopened major CLI gap: native weights, signed stated/inferred parts, authored total prices, unfinished inference and independent groups break replies or trade identity. Added controls checked 2026-10-24.

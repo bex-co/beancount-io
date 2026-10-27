@@ -49,8 +49,25 @@ SPELLINGS = [
     ("import-id", "'0'"),
     ("import-id", "7"),
     ("bank_id", "0"),
+    # Numbers the ledger spells differently once written (w5/943, reopened).
+    ("import-id", "Decimal('1E+3')"),
+    ("import-id", "Decimal('-0.00')"),
+    ("import-id", "'1E+3'"),
+    ("import-id", "'-0.00'"),
+    ("bank_id", "Decimal('1E+3')"),
 ]
-IDS = ["int-zero", "decimal-zero", "string-zero", "seven", "bank-id-zero"]
+IDS = [
+    "int-zero",
+    "decimal-zero",
+    "string-zero",
+    "seven",
+    "bank-id-zero",
+    "exponent",
+    "negative-zero",
+    "string-exponent",
+    "string-negative-zero",
+    "bank-id-exponent",
+]
 
 
 def _books(tmp_path: Path, key: str, value: str) -> None:

@@ -1968,6 +1968,12 @@ def _identities(entry: Any, account: str, keys: list[str]) -> list[tuple[str, st
     """
 
     def nfc(value: Any) -> str:
+        # A number is keyed as the ledger reads it back: written fixed-point,
+        # `Decimal('1E+3')` reloads as 1000 and `-0.00` as 0.00, so the
+        # unchanged row searched for a key the ledger no longer held and a
+        # changed amount under its own ID was written as new (w5/943).
+        if isinstance(value, Decimal) and value.is_finite():
+            return format(value.copy_abs() if value.is_zero() else value, "f")
         return unicodedata.normalize("NFC", str(value))
 
     meta = entry.meta or {}
