@@ -1619,9 +1619,13 @@ class CsvImporter:
         # typo: a foreign-currency export that names its commodity nowhere used
         # to be importable only by editing the bank's own file.
         constant = wanted.get("currency")
+        # Nor is it the amount column a header happens to be named after: an
+        # amount column `EUR` holding `-€12.50` was read as its own currency,
+        # so the advice to pass `currency=EUR` could not be followed (w5/1021).
+        amounts = {wanted.get(role) for role in ("amount", "debit", "credit")}
         if (
             constant is not None
-            and counts[constant] == 0
+            and (counts[constant] == 0 or constant in amounts)
             and is_commodity(constant)
             and _lookalike_header(constant, headers) is None
         ):
@@ -1809,7 +1813,11 @@ class CsvImporter:
             self._check_columns(source, headers, category_header)
             materialized = list(records)
             amount_columns = [columns[field] for field in ("amount", "debit", "credit") if field in columns]
-            blank_headers = {column for column in columns.values() if column != self._constant_currency}
+            blank_headers = {
+                column
+                for role, column in columns.items()
+                if not (role == "currency" and column == self._constant_currency)
+            }
             if category_header is not None:
                 blank_headers.add(category_header)
             # Number the data rows once, up front, and hand both numbers down.
