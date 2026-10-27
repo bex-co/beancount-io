@@ -26,13 +26,13 @@
       "channel": "Claude Code plugin",
       "status": "already_one_suite",
       "entry": "https://github.com/bex-co/beancount-io/blob/main/.claude-plugin/marketplace.json",
-      "action": "Preserve the one-entry shared-version manifest; current source version is 0.4.2. No new per-skill publication."
+      "action": "Preserve the one-entry shared-version manifest; current main source version is 0.4.3, observed during the later Pack verification. This does not republish or change the Pack 0.4.2 snapshot or the historical ClawHub 0.4.0 release."
     },
     {
       "channel": "Codex plugin",
       "status": "already_one_suite",
       "entry": "https://github.com/bex-co/beancount-io/blob/main/.agents/plugins/marketplace.json",
-      "action": "Preserve the one-entry shared-version manifest; current source version is 0.4.2. No new per-skill publication."
+      "action": "Preserve the one-entry shared-version manifest; current main source version is 0.4.3, observed during the later Pack verification. This does not republish or change the Pack 0.4.2 snapshot or the historical ClawHub 0.4.0 release."
     },
     {
       "channel": "Git/link installer",
@@ -56,9 +56,9 @@
       "channel": "skills.sh consolidated Pack",
       "status": "published_native_delivery_incomplete",
       "entry": "https://www.skills.sh/p/CTUrAfLQdDvNeNv2",
-      "action": "One Pack remains published; 1.7.4 exits0 but delivers59/61files to both agents. Controlled429 reproduces silent omission. Wait for a supported complete delivery path, then verify all61 hashes; no duplicate publication or email.",
-      "lastCheckedAtUTC": "2026-10-26T07:08:07Z",
-      "evidence": "skills-sh-partial-install-20261026.json"
+      "action": "One due-window 1.7.4 install again exits0 but delivers59/61files to both agents; now options calendars-and-diagonals.md and rolling.md are absent. All downloaded hashes match. Preserve the single editable Pack; await a supported complete delivery path, no duplicate upload or email.",
+      "lastCheckedAtUTC": "2026-10-27T07:11:46.614104+00:00",
+      "evidence": "pack-native-recheck-20261027.json"
     },
     {
       "channel": "skills.rest",
@@ -209,19 +209,27 @@
         "evidence": "skills-sh-partial-install-20261026.json",
         "completeInstallVerified": false
       },
-      "controlled429Case": "Unmodified1.7.4 installs SKILL.md but silently omits a declared reference returning429; nativeexit0/Done. Local fixture is stopped, no telemetry or credential."
+      "controlled429Case": "Unmodified1.7.4 installs SKILL.md but silently omits a declared reference returning429; nativeexit0/Done. Local fixture is stopped, no telemetry or credential.",
+      "latestProductionNativeRecheck": {
+        "observedAtUTC": "2026-10-27T07:11:46.614104+00:00",
+        "cliVersion": "1.7.4",
+        "nativeExitCode": 0,
+        "completeInstallVerified": false,
+        "evidence": "pack-native-recheck-20261027.json"
+      }
     },
     "next": {
-      "manualCheckNotBeforeUTC": "2026-10-27T07:08:07Z",
+      "manualCheckNotBeforeUTC": "2026-10-29T07:11:46Z",
       "earlierTrigger": "Relevant supported client/delivery fix or actual demonstrated recovery; preserve Retry-After and full-file validation.",
       "action": "One bounded isolated native installation; compare all 61 files and thirteen skills for both agent destinations. Edit the existing Pack for future source refreshes instead of creating another Pack.",
       "owner": "Platform/client recovery, then repository worker verification; no publisher input or email pending."
     },
-    "lastCheckedAtUTC": "2026-10-26T07:08:07Z"
+    "lastCheckedAtUTC": "2026-10-27T07:11:46.614104+00:00",
+    "sourceVersionBoundary": "The current Git plugin manifests are 0.4.3; this published Pack remains the original explicitly identified 0.4.2 snapshot. Native hashes are compared with its exact uploaded archive, not later mutable main."
   },
   "privacy": "Only public customer source and canonical MIT-0 text uploaded. No internal skill, eval fixture, credential, private account identity or ledger data included. No support email, paid action, new account, catalog PR or ClawHub upload performed.",
   "limits": "Pack publication does not prove complete native delivery, delete old index records, publish a SkillsMP plugin, clear skills.rest review, change the historical ClawHub release or clear Hermes host policy. No recurring automation created.",
-  "lastUpdatedAtUTC": "2026-10-27T07:00:22Z",
+  "lastUpdatedAtUTC": "2026-10-27T07:11:46.614104+00:00",
   "deliveryRouteFollowup": {
     "recordedAtUTC": "2026-10-26T20:19:06Z",
     "evidence": "delivery-route-followup-20261026.json",

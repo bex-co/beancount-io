@@ -1,0 +1,87 @@
+{
+  "owner": "w6/m6.5/t012",
+  "startedAtUTC": "2026-10-27T07:11:41.812212+00:00",
+  "observedAtUTC": "2026-10-27T07:11:46.614104+00:00",
+  "entry": "https://www.skills.sh/p/CTUrAfLQdDvNeNv2",
+  "cliVersion": "1.7.4",
+  "cliSHA256": "b7d92e2a619e8982d38390572750efb8c2ec81cdf23c33aed2fa426d080a1e4e",
+  "nodeVersion": "v22.23.4",
+  "sourceSuiteVersion": "0.4.2",
+  "sourceCommit": "f0f5744cc693037a5aa7a638678a378fd1aad8dd",
+  "uploadedArchiveSHA256": "5f1fa5b526f9bebbec69f256bcda9ef3a2d9096cec2312a3832f8cfd873059ef",
+  "nativeExitCode": 0,
+  "timedOut": false,
+  "agents": {
+    "codex": {
+      "skillCount": 13,
+      "skills": [
+        "beancount-accruals",
+        "beancount-add",
+        "beancount-ask",
+        "beancount-close",
+        "beancount-import",
+        "beancount-importer-author",
+        "beancount-init",
+        "beancount-migrate",
+        "beancount-options",
+        "beancount-property",
+        "beancount-reconcile",
+        "beancount-roll-forward",
+        "beancount-trade"
+      ],
+      "expectedFileCount": 61,
+      "actualFileCount": 59,
+      "missing": [
+        "beancount-options/references/calendars-and-diagonals.md",
+        "beancount-options/references/rolling.md"
+      ],
+      "extra": [],
+      "changed": [],
+      "allDownloadedHashesMatch": true
+    },
+    "claude-code": {
+      "skillCount": 13,
+      "skills": [
+        "beancount-accruals",
+        "beancount-add",
+        "beancount-ask",
+        "beancount-close",
+        "beancount-import",
+        "beancount-importer-author",
+        "beancount-init",
+        "beancount-migrate",
+        "beancount-options",
+        "beancount-property",
+        "beancount-reconcile",
+        "beancount-roll-forward",
+        "beancount-trade"
+      ],
+      "expectedFileCount": 61,
+      "actualFileCount": 59,
+      "missing": [
+        "beancount-options/references/calendars-and-diagonals.md",
+        "beancount-options/references/rolling.md"
+      ],
+      "extra": [],
+      "changed": [],
+      "allDownloadedHashesMatch": true
+    }
+  },
+  "completeInstallVerified": false,
+  "telemetryDisabled": true,
+  "hostPatched": false,
+  "productionAttempts": 1,
+  "scope": "One bounded project-local native install after the recorded 24-hour manual window; no global profile, credential, model call, republishing or missing-file fetch retry.",
+  "npmLatestObservedBeforeInstall": "1.7.4",
+  "nodeRuntime": "Official Node 22.23.4",
+  "comparison": "All 61 expected file paths/hashes from the exact original uploaded 0.4.2 archive; no source revision substitution.",
+  "lastFailurePairNowPresent": true,
+  "limit": "No per-file production HTTP response status captured. Different omissions and the earlier localhost429 reproduction do not prove the cause of every production failure.",
+  "next": {
+    "owner": "Skills CLI/platform delivery, then repository worker",
+    "condition": "Supported complete delivery/client path, then all61 file hashes and thirteen customer skills on both destinations. Existing Pack remains single and editable.",
+    "manualRecheckNotBeforeUTC": "2026-10-29T07:11:46Z",
+    "earlierTrigger": "Relevant actual client/platform fix or independently demonstrated delivery recovery. No unchanged retry loop.",
+    "publisherInputNeeded": false
+  }
+}

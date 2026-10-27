@@ -264,7 +264,7 @@ unsubmitted set published or claim that old records were deleted.
 | Codex plugin | One `beancount-io` entry at the same 0.4.0 version and canonical source tree. | Already a suite; no separate per-skill publication found in the repository's release configuration. |
 | Git/link installer | One checkout supplies the complete source inventory to both clients. | Retain it for local source edits; current guidance prefers the plugin for one versioned managed install. |
 | `npx skills` / skills.sh | Before the update, the repository page mixed 29 rows: ten customer workflows and nineteen contributor tools. At 00:40 UTC, the public page shows all thirteen customer workflows under **Beancount.io suite**, followed by nineteen **Repository development** entries. | Root `skills.sh.json` and its inventory gate are shipped. One documented maintainer install triggers the supported configuration sync; the public read-back verifies both groups and all three previously missing customer entries. Install and repeated whole-suite refresh from the explicit customer `skills/` URL pass for both agents, with telemetry disabled in QA. |
-| skills.sh consolidated Pack | [One customer suite](https://www.skills.sh/p/CTUrAfLQdDvNeNv2) created 2026-10-26 UTC with thirteen customer workflows from source suite 0.4.2. | [Publication and native checks](catalog-corrections/consolidated-submissions-20261026.json) retain the single Pack and its exact archive. The latest production 1.7.4 check exits successfully but delivers only 59/61 files to both agents. Owner editing is available; the selector workaround fails the local control below. Complete native delivery remains open. |
+| skills.sh consolidated Pack | [One customer suite](https://www.skills.sh/p/CTUrAfLQdDvNeNv2) created 2026-10-26 UTC with thirteen customer workflows from source suite 0.4.2. | [Current native check, 2026-10-27](catalog-corrections/pack-native-recheck-20261027.json) again exits0 but delivers59/61files to both agents, with a different missing pair. [Publication/history](catalog-corrections/consolidated-submissions-20261026.json) retains the single editable Pack and exact archive. Complete native delivery remains open. |
 | `gh skill` | A Git-repository install route; no separate Beancount.io per-skill publishing job or release inventory was found. | Preserve the earlier whole-suite commands and pin behavior. Document the preview-command prerequisite: the default local 2.74.0 lacks `gh skill`; this audit does not claim a new native rehearsal of the earlier 2.96.0 controls. |
 | skills.rest | Actual post-window readback, 2026-10-27: all27 repository entries remain eight customer/nineteen internal, with old ask source and generated selector. | [Accepted customer-suite request](catalog-corrections/skills-rest-submission-20261026.json) and [post-window evidence](catalog-corrections/skills-rest-post-window-20261027.json) remain distinct. Existing repository aggregation is mixed, not the requested customer-only suite. Native plugin support and processing status remain unknown. Next manual readback2026-10-29UTC or actual feedback/capability change; no repeated submission or email. |
 | SkillsMP | Actual direct collection readback, 2026-10-26: 27 entries, eight customer and nineteen internal; ask still points to the removed source path. Public search is unavailable. | [Fresh evidence and route limits](catalog-corrections/skillsmp-recheck-20261026.json) retain current scope without inferring cleanup from search failure. [Current owner direction](catalog-corrections/skillsmp.md) selects direct suite publication; the historical email draft is superseded. No supported suite intake is established; private publisher capabilities remain unknown. No user approval is pending. |
@@ -492,3 +492,16 @@ complete-delivery fix, or perform the next bounded native recheck on/after
 its readback window at 2026-10-27T00:24:54Z.
 [Current UI findings and native control](catalog-corrections/delivery-route-followup-20261026.json)
 retain the request observations, exact client hash and remaining owners.
+
+### Due-window Pack recheck — 2026-10-27T07:11:46Z
+
+After the recorded24-hour window, one isolated native installation with the
+still-current unmodified1.7.4 CLI again exits0 with13skills but59/61files on
+both agents. This time `beancount-options/references/calendars-and-diagonals.md`
+and `beancount-options/references/rolling.md` are absent. All received hashes
+match the original uploaded0.4.2 archive; the previous missing pair is present.
+[Exact actual result and boundaries](catalog-corrections/pack-native-recheck-20261027.json)
+retain both destinations. No individual production failure status or cause is
+inferred. No retry, republishing, telemetry, model call or global profile change
+occurs. Preserve the existing Pack; next bounded manual check is on/after
+2026-10-29T07:11:46Z, or an actual supported client/delivery change earlier.

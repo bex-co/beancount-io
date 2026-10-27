@@ -96,5 +96,10 @@
     "emailPending": false,
     "republishRequired": false
   },
-  "boundaries": "One consolidated Pack is retained. No new publication, account, permission, email, telemetry event or customer skill change. The working versioned plugin/source installation routes remain separate."
+  "boundaries": "One consolidated Pack is retained. No new publication, account, permission, email, telemetry event or customer skill change. The working versioned plugin/source installation routes remain separate.",
+  "laterProductionRecheck": {
+    "observedAtUTC": "2026-10-27T07:11:46.614104+00:00",
+    "evidence": "pack-native-recheck-20261027.json",
+    "state": "Still59/61files on both agents; changed missing pair, nativeexit0, all downloaded hashes match. This later observation does not alter earlier per-file status limits."
+  }
 }
