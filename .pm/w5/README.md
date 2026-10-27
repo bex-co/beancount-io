@@ -55,7 +55,6 @@
 - [1058 — Report the unchanged ledger’s errors after a refused write](./1058.md) — minor CLI follow-up to461: rejected backdated add/bulk/import drops the real warning or reports hypothetical92 instead of100; native and full original controls, checked2026-10-26.
 
 
-- [1056 — Preserve same-day posting order in parent registers](./1056.md) — minor CLI row-order bug: account grouping changes payment/assertion running balances; native, EUR, renamed-root, leaf and endpoint controls, checked2026-10-26.
 
 
 

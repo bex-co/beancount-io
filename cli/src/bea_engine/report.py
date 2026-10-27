@@ -662,7 +662,8 @@ def _register(filtered: Any, conversion: str, allow_errors: bool, ledger_errors:
     # keeps whole transactions that touch a matched account, so a child-only
     # transaction was gone before the root's subtree was collected, and
     # `^Assets:Bank$` listed only the parent's own postings (w5/1034).
-    by_account = group_entries_by_account(filtered.ledger.get_filtered(time=filtered.time).entries)
+    period_entries = filtered.ledger.get_filtered(time=filtered.time).entries
+    by_account = group_entries_by_account(period_entries)
     active = sorted(
         name
         for name, rows in by_account.items()
@@ -685,12 +686,22 @@ def _register(filtered: Any, conversion: str, allow_errors: bool, ledger_errors:
     # The pattern selects the root; the register shows the whole subtree, so a
     # regex that matches a parent but not its children still ends at the total.
     wanted = {name for name in by_account if root is not None and (name == root or name.startswith(root + ":"))}
-    ordered: list[tuple[Any, str]] = [(row, name) for name in by_account for row in by_account[name] if name in wanted]
+    # In the loaded order, each transaction's postings in theirs: grouped by
+    # account and then sorted by date, same-day rows came out in account-name
+    # order and the running balance passed through amounts the parent never
+    # held (w5/1056).
+    from fava.beans import abc
 
-    def _row_date(row: Any) -> Any:
-        return row.transaction.date if isinstance(row, TransactionPosting) else row.date
-
-    ordered.sort(key=lambda item: _row_date(item[0]))
+    ordered: list[tuple[Any, str]] = []
+    for entry in period_entries:
+        if isinstance(entry, abc.Transaction):
+            ordered += [
+                (TransactionPosting(entry, posting), posting.account)
+                for posting in entry.postings
+                if posting.account in wanted
+            ]
+        elif isinstance(entry, Balance) and entry.account in wanted:
+            ordered.append((entry, entry.account))
     rows: list[dict[str, Any]] = []
     running = CounterInventory()
     balances: list[tuple[date | None, Mapping[str, Decimal]]] = []
