@@ -8,8 +8,8 @@
     {
       "name": "beancount-io",
       "source": "./skills",
-      "description": "Skills for working with local Beancount ledgers through a coding agent: init, add, trade, property, import, importer-author, reconcile, migrate, ask, roll-forward, accruals, close, options. Needs `bea` 0.3.1 or later for checks, queries, and writes.",
-      "version": "0.4.6",
+      "description": "Skills for working with local Beancount ledgers through a coding agent: init, add, trade, property, import, importer-author, reconcile, migrate, ask, roll-forward, accruals, invoices, close, options. Needs `bea` 0.3.1 or later for checks, queries, and writes.",
+      "version": "0.4.7",
       "license": "MIT-0",
       "homepage": "https://github.com/bex-co/beancount-io/tree/main/skills",
       "repository": "https://github.com/bex-co/beancount-io",
@@ -26,6 +26,7 @@
         "./beancount-import",
         "./beancount-importer-author",
         "./beancount-init",
+        "./beancount-invoices",
         "./beancount-migrate",
         "./beancount-options",
         "./beancount-property",

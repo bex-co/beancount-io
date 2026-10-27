@@ -1083,6 +1083,35 @@
         "beancount-roll-forward"
       ],
       "why": "Per-project income and expense totals; read-only."
+    },
+    {
+      "id": "invoices-issue",
+      "prompt": "Invoice Acme Corp for 3,000 USD of consulting, invoice INV-031 dated today, due in 30 days. Record it in my ledger.",
+      "expected": "beancount-invoices",
+      "confusable": [
+        "beancount-add",
+        "beancount-accruals"
+      ],
+      "why": "Issuing a client invoice creates a receivable tracked by document."
+    },
+    {
+      "id": "invoices-apply-payment",
+      "prompt": "Acme paid 1,200 of invoice INV-031 today into checking. Record the payment in my books.",
+      "expected": "beancount-invoices",
+      "confusable": [
+        "beancount-add",
+        "beancount-import"
+      ],
+      "why": "A payment applied to an open invoice reduces that document's receivable."
+    },
+    {
+      "id": "add-contractor-payment-no-invoice",
+      "prompt": "I paid my contractor Dana 500 USD from checking yesterday for design work. Add it to my ledger.",
+      "expected": "beancount-add",
+      "confusable": [
+        "beancount-invoices"
+      ],
+      "why": "A one-off payment with no document to track is an everyday entry."
     }
   ]
 }

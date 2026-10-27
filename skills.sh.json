@@ -13,6 +13,7 @@
         "beancount-import",
         "beancount-importer-author",
         "beancount-init",
+        "beancount-invoices",
         "beancount-migrate",
         "beancount-options",
         "beancount-property",

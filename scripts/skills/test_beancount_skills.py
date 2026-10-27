@@ -164,6 +164,7 @@ class TestInstall(Workspace):
                 "beancount-import",
                 "beancount-importer-author",
                 "beancount-init",
+                "beancount-invoices",
                 "beancount-migrate",
                 "beancount-options",
                 "beancount-property",
@@ -1632,6 +1633,62 @@ class TestBeaRecipes(unittest.TestCase):
         self.assertEqual(candidates, {"SAFEWAY": 3, "NETFLIX.COM": 2})
         history = self.query_recipe("merchant-history", **{"'NETFLIX'": "'NETFLIX.COM'"})
         self.assertEqual([row[0] for row in history], ["2026-01-12", "2026-02-12"])
+
+    def test_invoice_open_balances_follow_partial_and_multi_document_payments(self):
+        self.ledger.write_text(
+            'option "operating_currency" "USD"\n'
+            "2026-01-01 open Assets:Checking USD\n"
+            "2026-01-01 open Assets:AccountsReceivable USD\n"
+            "2026-01-01 open Income:Services USD\n"
+            "2026-01-01 open Expenses:Fees USD\n"
+            'include "transactions/2026.bean"\n'
+        )
+        self.values["receivable"] = "Assets:AccountsReceivable"
+        # Issue one invoice through the one-off recipe with its identity and link.
+        tokens = shlex.split(self.block("transaction"))
+        self.values.update(entry_date="2026-10-01", payee="Acme Corp", narration="Invoice INV-031",
+                           posting_1="Assets:AccountsReceivable 3000.00 USD", posting_2="Income:Services")
+        args = [Template(token).substitute(self.values) for token in tokens[1:]]
+        args += ["--meta", "invoice:INV-031", "--meta", "client:acme", "--link", "inv-031"]
+        issued = subprocess.run([*self.bea, *args], cwd=self.root, env=self.env,
+                                capture_output=True, text=True, timeout=90)
+        self.assertEqual(issued.returncode, 0, issued.stderr)
+        # A second invoice, a partial payment, then one processor payment that
+        # settles both with its fee kept apart.
+        self.batch([
+            {"date": "2026-10-03", "flag": "*", "payee": "Globex", "narration": "Invoice INV-032",
+             "links": ["inv-032"], "meta": {"invoice": "INV-032", "client": "globex"},
+             "postings": [
+                 {"account": "Assets:AccountsReceivable", "units": {"number": "500.00", "currency": "USD"}},
+                 {"account": "Income:Services", "units": {"number": "-500.00", "currency": "USD"}}]},
+            {"date": "2026-10-10", "flag": "*", "payee": "Acme Corp", "narration": "Partial payment",
+             "links": ["inv-031"], "meta": {"invoice": "INV-031"},
+             "postings": [
+                 {"account": "Assets:AccountsReceivable", "units": {"number": "-1200.00", "currency": "USD"}},
+                 {"account": "Assets:Checking", "units": {"number": "1200.00", "currency": "USD"}}]},
+        ])
+        self.recipe("batch")
+        open_rows = self.recipe("invoice-open")["rows"]
+        self.assertEqual([(r[0], r[2]) for r in open_rows], [("INV-031", "1800.00"), ("INV-032", "500.00")])
+        history = self.recipe("invoice-postings", invoice="INV-031")["rows"]
+        self.assertEqual([(r[0], r[3]) for r in history], [("2026-10-01", "3000.00"), ("2026-10-10", "-1200.00")])
+        self.batch([
+            {"date": "2026-10-12", "flag": "*", "payee": "Stripe", "narration": "Payment",
+             "links": ["inv-031", "inv-032"],
+             "postings": [
+                 {"account": "Assets:AccountsReceivable", "units": {"number": "-1800.00", "currency": "USD"},
+                  "meta": {"invoice": "INV-031"}},
+                 {"account": "Assets:AccountsReceivable", "units": {"number": "-500.00", "currency": "USD"},
+                  "meta": {"invoice": "INV-032"}},
+                 {"account": "Expenses:Fees", "units": {"number": "67.00", "currency": "USD"}},
+                 {"account": "Assets:Checking", "units": {"number": "2233.00", "currency": "USD"}}]},
+        ])
+        self.recipe("batch")
+        self.recipe("check")
+        self.assertEqual(self.recipe("invoice-open")["rows"], [])
+        # Nothing open, and the account itself agrees.
+        balances = {row[0]: row[1] for row in self.query_recipe("account-balances")}
+        self.assertEqual(balances["Assets:AccountsReceivable"], [])
 
     def test_profit_by_client_counts_split_parts_once_and_ties_to_the_period(self):
         self.ledger.write_text(
