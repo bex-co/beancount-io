@@ -704,3 +704,39 @@ def test_a_bom_beside_another_declared_charset_is_refused(
 
     assert refused.returncode == 2, refused.stdout
     assert "byte-order mark" in json.loads(refused.stdout)["error"]["message"]
+
+
+# A bank correction record (w5/1053): built as an ordinary row, a REPLACE was
+# booked as another payment and a DELETE as a zero one.
+CORRECTION_XML = """<?xml version="1.0" encoding="UTF-8"?><OFX><BANKMSGSRSV1><STMTTRNRS><STMTRS><CURDEF>USD</CURDEF>\
+<BANKACCTFROM><BANKID>000000000</BANKID><ACCTID>QA-1</ACCTID><ACCTTYPE>CHECKING</ACCTTYPE></BANKACCTFROM>\
+<BANKTRANLIST><DTSTART>20260801</DTSTART><DTEND>20260810</DTEND>{rows}</BANKTRANLIST></STMTRS></STMTTRNRS>\
+</BANKMSGSRSV1></OFX>"""
+ORDINARY_ROW = (
+    "<STMTTRN><TRNTYPE>DEBIT</TRNTYPE><DTPOSTED>20260802</DTPOSTED><TRNAMT>-5.00</TRNAMT><FITID>NEW-0</FITID>"
+    "<NAME>Snack</NAME></STMTTRN>"
+)
+CORRECTION_ROW = (
+    "<STMTTRN><TRNTYPE>DEBIT</TRNTYPE><DTPOSTED>20260803</DTPOSTED><TRNAMT>-12.00</TRNAMT><FITID>NEW-1</FITID>"
+    "<CORRECTFITID>OLD-1</CORRECTFITID><CORRECTACTION>{action}</CORRECTACTION><NAME>Coffee</NAME></STMTTRN>"
+)
+
+
+@pytest.mark.parametrize("action", ["REPLACE", "DELETE"])
+@pytest.mark.parametrize("mixed", [False, True], ids=["alone", "after-ordinary-row"])
+def test_ofx_correction_records_are_refused_before_any_write(
+    tmp_path: Path, ofx_engine: Callable[..., subprocess.CompletedProcess[str]], action: str, mixed: bool
+) -> None:
+    ledger = _ledger(tmp_path)
+    before = ledger.read_bytes()
+    rows = (ORDINARY_ROW if mixed else "") + CORRECTION_ROW.format(action=action)
+    source = tmp_path / "statement.ofx"
+    source.write_text(CORRECTION_XML.format(rows=rows))
+    run = ["import", "--file", str(ledger), "--source", str(source), "--ofx", "--account", "Assets:Checking"]
+
+    for flags in ([], ["--apply"]):
+        refused = ofx_engine(*run, *flags)
+        assert refused.returncode == 2, refused.stdout
+        message = json.loads(refused.stdout)["error"]["message"]
+        assert f"{action} of FITID OLD-1" in message and "NEW-1" in message
+    assert ledger.read_bytes() == before

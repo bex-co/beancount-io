@@ -472,7 +472,11 @@ one gets an `ofx:sha256:` content-hash import-id and a preview note saying so.
 A file mixing several account ids is refused — import one account per run, or
 use `--config` with one importer per account — as is a file holding no bank
 or credit-card transactions: investment statements need a Python importer.
-Ledger balances are ignored: no `Balance` directive is emitted.
+Ledger balances are ignored: no `Balance` directive is emitted. A bank
+correction record — a row carrying `CORRECTACTION` (`REPLACE` or `DELETE`) and
+the `CORRECTFITID` it corrects — is refused before anything is written, naming
+the row: bea does not apply corrections, so reconcile it by hand or drop it from
+the file and import the rest.
 
 Synthetic samples live beside the other examples: [checking.ofx](examples/checking.ofx)
 (a checking account), [credit-card.qfx](examples/credit-card.qfx) (a credit card),

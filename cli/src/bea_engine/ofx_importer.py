@@ -237,6 +237,19 @@ class OfxImporter:
                 row += 1
                 _drop_empty_tags(stmttrn)
                 fitid = _tag_text(stmttrn, "fitid")
+                # A correction replaces or deletes a transaction the bank sent
+                # before; built as an ordinary row it became another payment
+                # (a 10 USD charge corrected to 12 booked 22), and a deletion
+                # a zero one (w5/1053). Refused before anything is written.
+                action = _tag_text(stmttrn, "correctaction")
+                corrected = _tag_text(stmttrn, "correctfitid")
+                if action or corrected:
+                    raise UsageError(
+                        f"{source}: transaction {row} (FITID {fitid or '(none)'}) is a bank correction "
+                        f"({action or 'CORRECTACTION missing'} of FITID {corrected or '(none)'}), which bea import "
+                        "does not apply. Reconcile it by hand (`bea update` or edit the original entry), or remove it "
+                        "from the file and import the rest. Nothing was written."
+                    )
                 if not fitid:
                     self.missing_fitids.append(row)
                 base = self._build_row(source, row, upstream, stmttrn, currency)
