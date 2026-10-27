@@ -231,7 +231,7 @@ class _Orderable:
         self.column = column
 
     def _comparable(self) -> Any:
-        return str(self.value) if self.column.mixed else self.value
+        return str(self.value) if self.column.mixed else _null_aware(self.value)
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, _Orderable):
@@ -248,6 +248,20 @@ class _Orderable:
             return bool(self._comparable() < other._comparable())
         except TypeError:
             return str(self.value) < str(other.value)
+
+
+def _null_aware(value: Any) -> Any:
+    """A plain tuple's fields with each None ordered first, as a NULL cell is.
+
+    A Cost compares field by field, and an inferred lot's has no date: native
+    comparison raised on `None < date`, the text fallback took over for just
+    those pairs, and the three costs ordered A < B < C < A, so source order
+    picked the result (w5/965). A type with its own order, such as Amount,
+    keeps it.
+    """
+    if isinstance(value, tuple) and type(value).__lt__ is tuple.__lt__:
+        return tuple((False, 0) if field is None else (True, _null_aware(field)) for field in value)
+    return value
 
 
 def _null_safe_ordering() -> None:

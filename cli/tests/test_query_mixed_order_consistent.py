@@ -103,3 +103,48 @@ def test_multiple_keys_keep_independent_directions(tmp_path: Path) -> None:
     )
 
     assert ordered == ["b", "c", "a"]
+
+
+STOCK_HEAD = """2024-01-01 open Assets:Cash USD
+2024-01-01 open Assets:Stock HOOL
+2024-01-01 open Equity:Opening USD
+2024-01-01 * "Capital"
+  Assets:Cash 100.00 USD
+  Equity:Opening -100.00 USD
+"""
+# A's quantity is inferred, so its cost has no date; the numbers are equal
+# but spelled differently, which is what decided the text fallback.
+LOTS = {
+    "A": '2024-01-05 * "A"\n  Assets:Stock HOOL {2.0 USD}\n  Assets:Cash -4.00 USD\n',
+    "B": '2024-01-05 * "B"\n  Assets:Stock 2 HOOL {2.00 USD, 2024-01-01}\n  Assets:Cash -4.00 USD\n',
+    "C": '2024-01-05 * "C"\n  Assets:Stock 2 HOOL {2 USD, 2024-01-02}\n  Assets:Cash -4.00 USD\n',
+}
+COSTS = {
+    "two": '2024-01-05 * "two"\n  Assets:Stock 1 HOOL {2 USD}\n  Assets:Cash -2 USD\n',
+    "ten": '2024-01-05 * "ten"\n  Assets:Stock 1 HOOL {10 USD}\n  Assets:Cash -10 USD\n',
+    "eleven": '2024-01-05 * "eleven"\n  Assets:Stock 1 HOOL {11 USD}\n  Assets:Cash -11 USD\n',
+}
+
+
+def _costs(tmp_path: Path, rows: list[str], direction: str = "", limit: str = "") -> list[str]:
+    (tmp_path / "main.bean").write_text(STOCK_HEAD + "".join(rows))
+    select = f"SELECT narration WHERE account = 'Assets:Stock' ORDER BY position.cost {direction} {limit}"
+    result = _bea(tmp_path, "query", select)
+    assert result.returncode == 0, result.stderr
+    return [str(row[0]) for row in json.loads(result.stdout)["data"]["rows"]]
+
+
+@pytest.mark.parametrize("order", ["".join(p) for p in itertools.permutations("ABC")])
+def test_a_dateless_cost_orders_the_same_in_every_source_order(tmp_path: Path, order: str) -> None:
+    rows = [LOTS[key] for key in order]
+
+    assert _costs(tmp_path, rows) == ["A", "B", "C"]
+    assert _costs(tmp_path, rows, "DESC") == ["C", "B", "A"]
+    assert _costs(tmp_path, rows, limit="LIMIT 1") == ["A"]
+
+
+def test_costs_still_order_numerically(tmp_path: Path) -> None:
+    rows = [COSTS["ten"], COSTS["eleven"], COSTS["two"]]
+
+    assert _costs(tmp_path, rows) == ["two", "ten", "eleven"]
+    assert _costs(tmp_path, rows, "DESC") == ["eleven", "ten", "two"]
