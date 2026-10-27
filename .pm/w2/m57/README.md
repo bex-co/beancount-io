@@ -1,6 +1,6 @@
 # w2 · m57 — Record a payroll run from the provider's summary
 
-**Worker:** worker2 **Goal:** a business records each payroll run exactly as its provider's summary prints it — gross wages, each withholding and employer tax to its liability, net pay out of the bank — records the remittances that clear those liabilities, and answers quarter totals for its accountant from booked postings. **Status:** todo (t001–t002 done)
+**Worker:** worker2 **Goal:** a business records each payroll run exactly as its provider's summary prints it — gross wages, each withholding and employer tax to its liability, net pay out of the bank — records the remittances that clear those liabilities, and answers quarter totals for its accountant from booked postings. **Status:** todo (t001–t003 done)
 
 ## Tasks (in order)
 
@@ -8,7 +8,7 @@
 | ---- | ----- | --- | ---------- |
 | [t001](./done/t001.md) | Decide placement and the payroll liability model, verified on `bea` — **DONE** | 45m | w2/m55/t001 |
 | [t002](./done/t002.md) | Record a payroll run from the provider's printed summary — **DONE** | 60m | t001 |
-| t003 | Record remittances and report quarter totals | 60m | t002 |
+| [t003](./done/t003.md) | Record remittances and report quarter totals — **DONE** | 60m | t002 |
 | t004 | Write evals, fixtures, and routing entries | 45m | t002, t003 |
 | t005 | Run the evals and routing set on both clients | 45m | t004 |
 | t006 | Adoption surface | 30m | t005 |

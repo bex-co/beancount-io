@@ -212,6 +212,28 @@ GROUP BY side ORDER BY side
 
 Ledgers with no such metadata answer with one unattributed row per side; say the ledger records no client or project rather than reporting it as one client.
 
+## 11. Payroll totals for a quarter
+
+For an accountant's quarterly payroll figures, from runs `beancount-add` recorded (its Recording payroll section). Movement per payroll account over the quarter — wages and employer taxes as expense, and each payroll liability's net change (withheld less remitted):
+
+<!-- recipe: payroll-quarter -->
+```sql
+SELECT account, sum(number) AS movement
+WHERE account ~ '^(Expenses:Payroll|Liabilities:Payroll):' AND date >= 2026-07-01 AND date < 2026-10-01
+GROUP BY account ORDER BY account
+```
+
+What was withheld or accrued in the quarter, before remittances (negative while owed):
+
+<!-- recipe: payroll-withheld -->
+```sql
+SELECT account, sum(number) AS withheld
+WHERE account ~ '^Liabilities:Payroll:' AND number < 0 AND date >= 2026-07-01 AND date < 2026-10-01
+GROUP BY account ORDER BY account
+```
+
+A liability whose movement is not zero over a quarter still owes (or was over-remitted by) that amount; say so beside the totals. These are the ledger's figures, not a filing: forms and amounts due are the user's or their accountant's.
+
 ## Fava pointers
 
 Top expenses / burn → Income Statement (filtered by time); net worth → Balance Sheet / Net Worth chart; holdings → Holdings; per-payee history → Journal with `payee:"NETFLIX"` filter; account balances → Trial Balance. Give the user the Fava path when they want to browse rather than ask again.

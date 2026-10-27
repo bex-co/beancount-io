@@ -1840,6 +1840,54 @@ class TestBeaRecipes(unittest.TestCase):
         self.recipe("check")
         self.assertIn('payroll: "2026-07-15"', self.target.read_text())
 
+    def test_payroll_remittance_and_quarter_totals_tie_to_account_movements(self):
+        self.ledger.write_text(
+            'option "operating_currency" "USD"\n'
+            "2026-01-01 open Assets:Checking USD\n"
+            "2026-01-01 open Expenses:Payroll:Wages USD\n"
+            "2026-01-01 open Expenses:Payroll:EmployerTaxes USD\n"
+            "2026-01-01 open Liabilities:Payroll:IncomeTax USD\n"
+            "2026-01-01 open Liabilities:Payroll:SocialSecurity USD\n"
+            "2026-01-01 open Equity:OpeningBalances USD\n"
+            '2026-01-01 * "Opening"\n  Assets:Checking 50000.00 USD\n  Equity:OpeningBalances\n'
+            'include "transactions/2026.bean"\n'
+        )
+
+        def run(day):
+            return {
+                "date": day, "flag": "*", "payee": "Gusto", "narration": f"Payroll {day}",
+                "meta": {"payroll": day},
+                "postings": [
+                    {"account": "Expenses:Payroll:Wages", "units": {"number": "8000.00", "currency": "USD"}},
+                    {"account": "Expenses:Payroll:EmployerTaxes", "units": {"number": "496.00", "currency": "USD"}},
+                    {"account": "Liabilities:Payroll:IncomeTax", "units": {"number": "-1100.00", "currency": "USD"}},
+                    {"account": "Liabilities:Payroll:SocialSecurity", "units": {"number": "-992.00", "currency": "USD"}},
+                    {"account": "Assets:Checking", "units": {"number": "-6404.00", "currency": "USD"}}]}
+
+        self.batch([
+            run("2026-07-15"), run("2026-08-15"),
+            # A remittance inside the quarter clears July's run only.
+            {"date": "2026-08-10", "flag": "*", "payee": "Tax authority", "narration": "July deposit",
+             "postings": [
+                 {"account": "Liabilities:Payroll:IncomeTax", "units": {"number": "1100.00", "currency": "USD"}},
+                 {"account": "Liabilities:Payroll:SocialSecurity", "units": {"number": "992.00", "currency": "USD"}},
+                 {"account": "Assets:Checking", "units": {"number": "-2092.00", "currency": "USD"}}]},
+        ])
+        self.recipe("batch")
+        self.recipe("check")
+        quarter = {"2026-07-01": "2026-07-01", "2026-10-01": "2026-10-01"}
+        movement = {row[0]: row[1] for row in self.query_recipe("payroll-quarter", **quarter)}
+        self.assertEqual(movement, {
+            "Expenses:Payroll:EmployerTaxes": "992.00", "Expenses:Payroll:Wages": "16000.00",
+            "Liabilities:Payroll:IncomeTax": "-1100.00", "Liabilities:Payroll:SocialSecurity": "-992.00"})
+        withheld = {row[0]: row[1] for row in self.query_recipe("payroll-withheld", **quarter)}
+        self.assertEqual(withheld, {"Liabilities:Payroll:IncomeTax": "-2200.00",
+                                    "Liabilities:Payroll:SocialSecurity": "-1984.00"})
+        # The add skill's read: what is still owed as of the quarter's end.
+        owed = self.recipe("payroll-liabilities", as_of="2026-10-01")["rows"]
+        self.assertEqual(owed, [["Liabilities:Payroll:IncomeTax", "-1100.00"],
+                                ["Liabilities:Payroll:SocialSecurity", "-992.00"]])
+
     def test_profit_by_client_counts_split_parts_once_and_ties_to_the_period(self):
         self.ledger.write_text(
             'option "operating_currency" "USD"\n'
