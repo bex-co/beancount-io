@@ -479,6 +479,26 @@ _LITERAL_STRING_HINT = (
 # The spellings of "match every row" a rules file may use on purpose.
 _EXPLICIT_CATCH_ALL = frozenset({".*", "^.*", ".*$", "^.*$"})
 
+# Optional attribution a rule copies onto the rows it matches: the suite's
+# client/project keys (docs/adrs/ADR025-skills-business-books.md).
+RULE_META_KEYS = ("client", "project")
+
+
+def _rule_meta(index: int, raw: dict[str, Any]) -> tuple[tuple[str, str], ...]:
+    """A rule's `client`/`project` values, validated like the text they become."""
+    pairs: list[tuple[str, str]] = []
+    for key in RULE_META_KEYS:
+        if key not in raw:
+            continue
+        value = raw[key]
+        if not isinstance(value, str) or not value.strip():
+            raise UsageError(f"Rule {index + 1} {key} must be a non-empty string; got {value!r}.")
+        control = next((character for character in value if character < " " or character == "\x7f"), None)
+        if control is not None:
+            raise UsageError(f"Rule {index + 1} {key} {value!r} contains the control character {control!r}.")
+        pairs.append((key, unicodedata.normalize("NFC", value.strip())))
+    return tuple(pairs)
+
 
 @dataclass(frozen=True)
 class CsvRule:
@@ -487,6 +507,7 @@ class CsvRule:
     pattern: str
     account: str
     expression: re.Pattern[str] = field(compare=False)
+    meta: tuple[tuple[str, str], ...] = ()
 
     @staticmethod
     def compile(index: int, raw: Any, roots: Collection[str] | None = None) -> CsvRule:
@@ -533,7 +554,7 @@ class CsvRule:
             account = parse_account(account, roots)
         except UsageError as exc:
             raise UsageError(f"Rule {index + 1}: {exc}") from None
-        return CsvRule(pattern=match, account=account, expression=expression)
+        return CsvRule(pattern=match, account=account, expression=expression, meta=_rule_meta(index, raw))
 
 
 def split_spec(spec: str) -> list[str]:
@@ -702,11 +723,11 @@ def _refuse_unknown_rule_keys(path: Path, raw: dict[str, Any]) -> None:
     for index, entry in enumerate(raw.get("rule") or []):
         if not isinstance(entry, dict):
             continue
-        extra = sorted(set(entry) - {"match", "account"})
+        extra = sorted(set(entry) - {"match", "account", *RULE_META_KEYS})
         if extra:
             raise UsageError(
                 f"Rules file {path}: rule {index + 1} has unknown key {extra[0]!r}; each rule holds only "
-                "match and account."
+                "match and account, and optionally client and project."
             )
 
 
@@ -1904,9 +1925,10 @@ class CsvImporter:
                 # payee would be printed into every entry the mapping writes.
                 payee = self._cell(row, where, "payee") or None
                 narration = self._cell(row, where, "narration")
-                counter, flag, rule = self._categorize(row, where, payee, narration, category_header)
+                counter, flag, rule, attribution = self._categorize(row, where, payee, narration, category_header)
                 meta = new_metadata(filepath, line)
                 meta["_csv_rule"] = rule
+                meta.update(attribution)
                 native_id = self._cell(row, where, "id")
                 if native_id:
                     meta["bank_id"] = native_id
@@ -1924,8 +1946,8 @@ class CsvImporter:
         payee: str | None,
         narration: str,
         category_header: str | None,
-    ) -> tuple[str, str, str]:
-        """Counter account, flag, and rule name: rules beat the category column.
+    ) -> tuple[str, str, str, tuple[tuple[str, str], ...]]:
+        """Counter account, flag, rule name, and the rule's attribution: rules beat the category column.
 
         Rules match payee, narration, then the category label, so a label the
         preview suggests categorizing with --rules is actually matchable.
@@ -1934,7 +1956,7 @@ class CsvImporter:
         category_text = row.get(category_header, "").strip() if category_header is not None else ""
         matched = match_rule(self._rules, payee or "", narration, category_text)
         if matched is not None:
-            return matched.account, "*", matched.pattern
+            return matched.account, "*", matched.pattern, matched.meta
         if category_header is not None:
             if category_header not in row:
                 raise UsageError(f"{where}: the CSV lacks category column {category_header!r}.")
@@ -1945,12 +1967,12 @@ class CsvImporter:
                 # Posted against itself the row cancels out, so it queues for
                 # review like a label that is no account (w5/468).
                 self.source_categories += 1
-                return self._default_account, "!", "unmatched"
+                return self._default_account, "!", "unmatched", ()
             if category and self._names_account(category):
-                return category, "*", category
+                return category, "*", category, ()
             if category:
                 # A card export's own label ("Groceries", "Food & Drink") is
                 # not an account, and written verbatim it is a syntax error on
                 # every row. The row queues for review instead.
                 self.rejected_categories[category] += 1
-        return self._default_account, "!", "unmatched"
+        return self._default_account, "!", "unmatched", ()

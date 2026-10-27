@@ -215,6 +215,8 @@ class OfxImporter:
                 # The preview loop's rule column pops this key, as it does for
                 # CSV rows; the name is historical, the channel is no-code.
                 meta["_csv_rule"] = matched.pattern if matched is not None else "unmatched"
+                if matched is not None:
+                    meta.update(matched.meta)
                 rows.append(
                     base._replace(meta=meta, flag=flag, postings=[source_posting, counter]),
                 )

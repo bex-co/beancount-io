@@ -1,6 +1,6 @@
 # w2 · m55 — Business-books conventions, and profit by client or project
 
-**Worker:** worker2 **Goal:** one decision record fixes the names and identities every business procedure shares — receivables, payables, collected tax, payroll liabilities, owner equity, invoice identity, and the client/project key — and the suite then records and reports that key, so "profit by client?" is a shown query instead of one income account per client. **Status:** todo (t001–t002 done)
+**Worker:** worker2 **Goal:** one decision record fixes the names and identities every business procedure shares — receivables, payables, collected tax, payroll liabilities, owner equity, invoice identity, and the client/project key — and the suite then records and reports that key, so "profit by client?" is a shown query instead of one income account per client. **Status:** todo (t001–t003 done)
 
 ## Tasks (in order)
 
@@ -8,7 +8,7 @@
 | ---- | ----- | --- | ---------- |
 | [t001](./done/t001.md) | Write the business-books conventions decision record — **DONE** | 75m | — |
 | [t002](./done/t002.md) | Propose the client/project key when entries are recorded — **DONE** | 60m | t001 |
-| t003 | Let `bea import` rules set the client/project key | 75m | t001 |
+| [t003](./done/t003.md) | Let `bea import` rules set the client/project key — **DONE** | 75m | t001 |
 | t004 | Report profit by client or project in beancount-ask | 60m | t001 |
 | t005 | Write evals, fixtures, and routing entries | 60m | t002, t003, t004 |
 | t006 | Run the evals and routing set on both clients | 45m | t005 |

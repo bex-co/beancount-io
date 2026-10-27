@@ -69,6 +69,26 @@ _LITERAL_STRING_HINT = (
 # The spellings of "match every row" a rules file may use on purpose.
 _EXPLICIT_CATCH_ALL = frozenset({".*", "^.*", ".*$", "^.*$"})
 
+# Optional attribution a rule copies onto the rows it matches: the suite's
+# client/project keys (docs/adrs/ADR025-skills-business-books.md).
+RULE_META_KEYS = ("client", "project")
+
+
+def _rule_meta(index: int, raw: dict[str, Any]) -> tuple[tuple[str, str], ...]:
+    """A rule's `client`/`project` values, validated like the text they become."""
+    pairs: list[tuple[str, str]] = []
+    for key in RULE_META_KEYS:
+        if key not in raw:
+            continue
+        value = raw[key]
+        if not isinstance(value, str) or not value.strip():
+            raise UsageError(f"Rule {index + 1} {key} must be a non-empty string; got {value!r}.")
+        control = next((character for character in value if character < " " or character == "\x7f"), None)
+        if control is not None:
+            raise UsageError(f"Rule {index + 1} {key} {value!r} contains the control character {control!r}.")
+        pairs.append((key, unicodedata.normalize("NFC", value.strip())))
+    return tuple(pairs)
+
 
 @dataclass(frozen=True)
 class CsvRule:
@@ -77,6 +97,7 @@ class CsvRule:
     pattern: str
     account: str
     expression: re.Pattern[str] = field(compare=False)
+    meta: tuple[tuple[str, str], ...] = ()
 
     @staticmethod
     def compile(index: int, raw: Any) -> CsvRule:
@@ -113,7 +134,7 @@ class CsvRule:
                 f"Rule {index + 1} pattern {match!r} matches empty text, so it would categorize every row; "
                 "drop the empty alternative (such as a trailing |), or write .* for an explicit catch-all."
             )
-        return CsvRule(pattern=match, account=account, expression=expression)
+        return CsvRule(pattern=match, account=account, expression=expression, meta=_rule_meta(index, raw))
 
 
 def split_spec(spec: str) -> list[str]:
@@ -374,11 +395,11 @@ def _refuse_unknown_rule_keys(path: Path, raw: dict[str, Any]) -> None:
     for index, entry in enumerate(raw.get("rule") or []):
         if not isinstance(entry, dict):
             continue
-        extra = sorted(set(entry) - {"match", "account"})
+        extra = sorted(set(entry) - {"match", "account", *RULE_META_KEYS})
         if extra:
             raise UsageError(
                 f"Rules file {path}: rule {index + 1} has unknown key {extra[0]!r}; each rule holds only "
-                "match and account."
+                "match and account, and optionally client and project."
             )
 
 

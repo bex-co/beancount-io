@@ -312,6 +312,35 @@ def test_ofx_rules_categorize_and_default_catches_the_rest(
     assert fallback.startswith("2026-08-05 ! ") and "Expenses:Food" in fallback
 
 
+def test_ofx_rule_attribution_rides_on_matched_rows(
+    tmp_path: Path, ofx_engine: Callable[..., subprocess.CompletedProcess[str]]
+) -> None:
+    """A rule's `client`/`project` reach OFX rows it matches, as for CSV (w2/m55/t003)."""
+    ledger = _ledger(tmp_path)
+    source = _ofx(tmp_path, OFX_CHECKING_ROWS, name="card.qfx")
+    rules = tmp_path / "rules.toml"
+    rules.write_text('[[rule]]\nmatch = "PEETS"\naccount = "Expenses:Food"\nclient = "acme"\n')
+    preview = _answer(
+        ofx_engine(
+            "import",
+            "--file",
+            str(ledger),
+            "--source",
+            str(source),
+            "--ofx",
+            "--account",
+            "Assets:Checking",
+            "--rules",
+            str(rules),
+            "--default-account",
+            "Expenses:Food",
+        )
+    )
+    matched, fallback = (row["entry"] for row in preview["rows"])
+    assert 'client: "acme"' in matched
+    assert "client:" not in fallback
+
+
 def test_ofx_multi_acctid_file_is_refused(
     tmp_path: Path, ofx_engine: Callable[..., subprocess.CompletedProcess[str]]
 ) -> None:

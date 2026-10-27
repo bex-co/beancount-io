@@ -33,7 +33,7 @@ RULES = {
     ),
     "unknown-rule-key": (
         '[[rule]]\nmatch = "diner"\naccount = "Expenses:Dining"\nfield = "narration"\n',
-        "rule 1 has unknown key 'field'; each rule holds only match and account.",
+        "rule 1 has unknown key 'field'; each rule holds only match and account, and optionally client and project.",
     ),
 }
 

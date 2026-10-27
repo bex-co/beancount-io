@@ -335,6 +335,9 @@ suite's minimum version no longer needs it.
 - **Staged opens under `nounused` (0.3.1).** `add open --allow-errors` is
   refused like any new error, so the two-step above cannot run; later
   releases stage the open.
+- **Rule attribution (0.3.1).** A `--rules` entry's `client` and `project`
+  keys arrive in the release after 0.3.1; 0.3.1 refuses them as unknown keys,
+  so attributed CSV rows go through the `batch` recipe there.
 - **`add close` (0.3.1).** It writes a close even when the account still
   holds a balance, without a warning. Later releases refuse that close
   (naming the balance) unless `--force` is passed.
