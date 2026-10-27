@@ -1948,6 +1948,37 @@ class TestBeaRecipes(unittest.TestCase):
         self.assertEqual(self.recipe("clearing-balance", as_of="2026-10-06")["rows"], [["0.00"]])
         self.assertEqual(self.recipe("clearing-balance", as_of="2026-10-07")["rows"], [["48.25"]])
 
+    def test_bank_deposit_meets_the_payout_transfer_in_the_duplicate_window(self):
+        self.ledger.write_text(
+            'option "operating_currency" "USD"\n'
+            "2026-01-01 open Assets:Checking USD\n"
+            "2026-01-01 open Assets:Clearing:Stripe USD\n"
+            "2026-01-01 open Income:Sales USD\n"
+            'include "transactions/2026.bean"\n'
+        )
+        self.batch([
+            {"date": "2026-10-01", "flag": "*", "payee": "Stripe", "narration": "Charge txn_a",
+             "meta": {"import-id": "stripe:txn_a"},
+             "postings": [
+                 {"account": "Assets:Clearing:Stripe", "units": {"number": "157.28", "currency": "USD"}},
+                 {"account": "Income:Sales", "units": {"number": "-157.28", "currency": "USD"}}]},
+            {"date": "2026-10-05", "flag": "*", "payee": "Stripe", "narration": "Payout po_1",
+             "meta": {"import-id": "stripe:po_1"},
+             "postings": [
+                 {"account": "Assets:Clearing:Stripe", "units": {"number": "-157.28", "currency": "USD"}},
+                 {"account": "Assets:Checking", "units": {"number": "157.28", "currency": "USD"}}]},
+        ])
+        self.recipe("batch")
+        # The bank export later shows "STRIPE TRANSFER" +157.28 on 10-07: the
+        # import's ±3-day read on checking finds the payout's counter posting.
+        rows = self.recipe("duplicate-window", window_start="2026-10-04", window_end="2026-10-10")["rows"]
+        self.assertEqual([(r[0], r[4]) for r in rows], [("2026-10-05", "stripe:po_1")])
+        # Skipping that deposit leaves revenue booked once and clearing settled.
+        self.values["clearing"] = "Assets:Clearing:Stripe"
+        self.assertEqual(self.recipe("clearing-balance", as_of="2026-10-08")["rows"], [["0.00"]])
+        balances = {row[0]: row[1] for row in self.query_recipe("account-balances")}
+        self.assertEqual(balances["Assets:Checking"][0]["units"]["number"], "157.28")
+
     def test_profit_by_client_counts_split_parts_once_and_ties_to_the_period(self):
         self.ledger.write_text(
             'option "operating_currency" "USD"\n'
