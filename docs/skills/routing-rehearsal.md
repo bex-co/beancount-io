@@ -461,3 +461,10 @@ Fourteen skills. New prompts: `invoices-issue`, `invoices-apply-payment`, `invoi
 
 - **Claude Code 2.1.289 (`claude-opus-5-5[1m]`)**, suite at `6421f036a`: **124/124** routed as labeled over the full set, including every new prompt and near-miss.
 - **Codex 0.163.0:** not run — `gpt-6.1-sol` returns `model_not_found` for this ChatGPT account and `gpt-6-luna` is at its usage limit (see the w2/m55 entry).
+
+## Payroll prompts (w2/m57) — 2026-10-27
+
+Three prompts: `add-payroll-run`, `add-payroll-tax-deposit`, `ask-payroll-quarter`. No skill description changed, so only they were run.
+
+- **Claude Code 2.1.289 (`claude-opus-5-5[1m]`)**, suite at `ca3a12575`: 3/3 routed as labeled.
+- **Codex 0.163.0:** not run (see the w2/m55 entry).

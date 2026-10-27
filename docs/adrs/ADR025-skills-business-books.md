@@ -77,7 +77,7 @@ Placement follows [ADR020](./ADR020-skills-accounting-workflow-candidates.md)'s 
 | --- | --- | --- |
 | The client/project keys and per-key profit | Shared suite convention; `beancount-add` and `beancount-import` propose keys; `beancount-ask` reports | [w2/m55](../../.pm/w2/blocked/m55/README.md) |
 | Invoices, bills, collected tax, payment application, aging | A new skill, `beancount-invoices` | [w2/m56](../../.pm/w2/blocked/m56/README.md) |
-| Payroll runs and remittances | Decided by the milestone's routing probe: a procedure in an existing skill unless its trigger and evals stand apart | [w2/m57](../../.pm/w2/m57/README.md) |
+| Payroll runs and remittances | Decided by the milestone's routing probe: a procedure in an existing skill unless its trigger and evals stand apart | [w2/m57](../../.pm/w2/blocked/m57/README.md) |
 | Processor payout exports | `beancount-import` reference, in the broker-activity mapper pattern | [w2/m58](../../.pm/w2/m58/README.md) |
 | The accountant's page at month end | A section of `beancount-close`, shown only when business accounts exist | [w2/m59](../../.pm/w2/m59/README.md) |
 
