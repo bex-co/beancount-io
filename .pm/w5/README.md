@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1062 — Refuse funded descendants whose generated close moves earlier](./1062.md) — minor CLI close-policy gap: December31 becomes February1 with100USD retained; original910DoD still passes, checked2026-10-27.
+
 - [1061 — Refuse unsupported OFX currency overrides](./1061.md) — major CLI amount error: unconverted10EUR becomes10USD instead of12USD; bank/card, three routes, converted controls and original feature proof, checked2026-10-26.
 
 - [1060 — Resolve literal stored-query names before trimming terminators](./1060.md) — minor CLI follow-up to237: a listed suffix-semicolon name runs another query and replaces exports; native, quoted/terminator and original controls, checked2026-10-26.
