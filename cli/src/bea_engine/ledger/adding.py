@@ -326,8 +326,22 @@ def _held_through(entries: list[Any], account: str, date: datetime.date) -> dict
         for posting in entry.postings:
             if posting.account == account and posting.units is not None and posting.units.number is not None:
                 currency = posting.units.currency
-                held[currency] = held.get(currency, Decimal(0)) + posting.units.number
+                held[currency] = _added(held.get(currency), posting.units.number)
     return {currency: number for currency, number in held.items() if number != 0}
+
+
+def _added(held: Decimal | None, number: Decimal) -> Decimal:
+    """`held + number` as Beancount's inventory adds: a first value or a zero is taken as is.
+
+    `0 + x` rounds a 29-digit token quantity to the context's 28 digits, so a
+    wallet a whole-token return emptied read as +2e-18 SHIB and was refused a
+    close, while one holding -2e-18 read as empty (w5/1073).
+    """
+    if held is None or not held:
+        return number
+    if not number:
+        return held
+    return held + number
 
 
 def _drained_currencies(entries: list[Any], account: str, date: datetime.date) -> set[str]:
@@ -388,10 +402,10 @@ def _stranded_lots(entries: list[Any], account: str, date: datetime.date) -> lis
             cost: Any = posting.cost
             key = None if cost is None else (cost.number, cost.currency, cost.date, getattr(cost, "label", None))
             slot = (posting.units.currency, key)
-            lots[slot] = lots.get(slot, Decimal(0)) + posting.units.number
+            lots[slot] = _added(lots.get(slot), posting.units.number)
     by_currency: dict[str, Decimal] = {}
     for (currency, _), number in lots.items():
-        by_currency[currency] = by_currency.get(currency, Decimal(0)) + number
+        by_currency[currency] = _added(by_currency.get(currency), number)
     stranded = []
     for (currency, key), number in sorted(lots.items(), key=lambda item: (item[0][0], str(item[0][1]))):
         if number == 0 or by_currency[currency] != 0:

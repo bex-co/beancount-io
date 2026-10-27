@@ -40,7 +40,6 @@
 
 - [1074 — Preserve native unit quantities when Holdings groups lots](./1074.md) — minor CLI aggregation: first-value rounding changes token quantities with account names and invents units in a zero-net lot group; 78 profiles, 595 CLI calls, 156 native loads; original holdings/quote/inventory acceptance passes, checked 2026-10-27.
 
-- [1073 — Preserve native balances in funded-close checks](./1073.md) — minor CLI retirement: premature rounding invents funds, hides a real balance and suppresses offset cost lots in close/import checks; 89 profiles, 716 CLI calls, 302 native loads; full funded/lot-label/dateless/batch/max-date controls pass, checked 2026-10-27.
 
 
 
