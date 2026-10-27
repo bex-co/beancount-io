@@ -1,0 +1,25 @@
+option "operating_currency" "USD"
+
+2026-01-01 open Assets:Checking USD
+2026-01-01 open Expenses:Hosting USD
+2026-01-01 open Expenses:Food USD
+2026-01-01 open Income:Services USD
+2026-01-01 open Equity:OpeningBalances USD
+
+2026-01-01 * "Opening balance"
+  Assets:Checking  5000.00 USD
+  Equity:OpeningBalances
+
+2026-08-20 * "Acme Hosting" "Server"
+  client: "acme"
+  Expenses:Hosting   40.00 USD
+  Assets:Checking
+
+2026-09-20 * "Acme Hosting" "Server"
+  client: "acme"
+  Expenses:Hosting   40.00 USD
+  Assets:Checking
+
+2026-09-22 * "Corner Cafe" "Coffee"
+  Expenses:Food   5.25 USD
+  Assets:Checking

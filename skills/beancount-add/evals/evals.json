@@ -201,6 +201,35 @@
         "After confirmation, working developer bean-check validates the original root, the proposed temporary copy and the changed real root",
         "Exactly one 12.34 USD meal is added with the approved legs; earlier entries remain unchanged and the final root passes the real checker"
       ]
+    },
+    {
+      "id": 15,
+      "name": "client-key-from-attributed-history",
+      "prompt": "I paid Acme Hosting $40.00 from checking on 2026-10-20 for the server. Add it to ./ledger.beancount.",
+      "expected_output": "Proposes one 2026-10-20 transaction: Expenses:Hosting 40.00 USD and Assets:Checking -40.00 USD, carrying client: \"acme\" cited to the two prior Acme Hosting entries that carry it (the dimension-prior read). Runs the already-recorded read. Writes nothing before a yes; after a yes writes through bea with the key as transaction metadata and the root check passes.",
+      "files": [
+        "evals/files/eval15_ledger.beancount"
+      ],
+      "expectations": [
+        "The proposal carries client: \"acme\" and cites the two prior attributed Acme Hosting entries",
+        "The expense posts to Expenses:Hosting from history",
+        "Nothing is written before an explicit yes",
+        "After a yes the written entry carries client: \"acme\" and bea check passes"
+      ]
+    },
+    {
+      "id": 16,
+      "name": "no-client-key-without-attributed-history",
+      "prompt": "Add a $6.10 coffee at Corner Cafe paid from checking on 2026-10-21 to ./ledger.beancount.",
+      "expected_output": "Proposes Expenses:Food 6.10 USD against Assets:Checking -6.10 USD from the prior Corner Cafe entry, with no client or project key: Corner Cafe's history carries none, so none is proposed or invented. Asks yes/no before writing.",
+      "files": [
+        "evals/files/eval15_ledger.beancount"
+      ],
+      "expectations": [
+        "No client: or project: key is proposed or written",
+        "The proposal does not borrow Acme's client from another payee",
+        "Nothing is written before an explicit yes"
+      ]
     }
   ],
   "notes": "Evals13/14 are two-turn controls: supply TOOLING.md with respectively unavailable tool bindings or working existing developer bean-query/bean-check and absent bea, then send follow_up_prompt only after observing the initial proposal. Tool wrappers are an isolated availability fixture, not a bea engine failure. The dated native rehearsal retains exact prompts, bindings, tool-call logs and ledger snapshots."

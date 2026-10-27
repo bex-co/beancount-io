@@ -1065,6 +1065,24 @@
         "beancount-import"
       ],
       "why": "Generic PDF manipulation/OCR belongs to a PDF helper, with no ledger workflow."
+    },
+    {
+      "id": "ask-profit-by-client",
+      "prompt": "What was my profit by client last month?",
+      "expected": "beancount-ask",
+      "confusable": [
+        "beancount-close"
+      ],
+      "why": "A read-only report by the client metadata key."
+    },
+    {
+      "id": "ask-project-lost-money",
+      "prompt": "Which of my projects lost money this quarter according to my books?",
+      "expected": "beancount-ask",
+      "confusable": [
+        "beancount-roll-forward"
+      ],
+      "why": "Per-project income and expense totals; read-only."
     }
   ]
 }

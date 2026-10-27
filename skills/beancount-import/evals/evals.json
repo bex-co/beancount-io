@@ -324,6 +324,22 @@
         "The staking ETH is booked at the stated value against staking income, not zero cost",
         "Nothing is written before confirmation"
       ]
+    },
+    {
+      "id": 21,
+      "name": "client-key-suggested-in-review",
+      "prompt": "Import ./export.csv (my checking account export, money out is negative) into ./ledger.beancount.",
+      "expected_output": "Stages both rows into Assets:Checking. The review table suggests Expenses:Hosting with client acme for ACME HOSTING, cited to the two prior attributed Acme Hosting entries, and Expenses:Food with no client for CORNER CAFE. Nothing is written before a yes; written rows carry the key only where it was reviewed (through a rule's client key, or the normalized batch path where bea refuses rule keys), and the root check passes.",
+      "files": [
+        "evals/files/eval21_ledger.beancount",
+        "evals/files/eval21_export.csv"
+      ],
+      "expectations": [
+        "The ACME HOSTING row shows client acme in the review table with its source",
+        "The CORNER CAFE row carries no client",
+        "Nothing is written before an explicit yes",
+        "After a yes only the ACME HOSTING entry carries client: \"acme\" and bea check passes"
+      ]
     }
   ]
 }

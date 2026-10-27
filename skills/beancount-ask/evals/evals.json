@@ -263,6 +263,22 @@
         "No third10 interaction term is added and no unsupported product-mix or causal explanation is invented.",
         "Threshold/delta/percentage are correct and supported by shown queries/calculation; ledger bytes stay unchanged."
       ]
+    },
+    {
+      "id": 19,
+      "name": "profit-by-client-june",
+      "prompt": "What was my profit by client in June 2026? Use ./ledger.beancount.",
+      "expected_output": "Runs the dimension-pnl recipe for 2026-06-01 to 2026-07-01 and its tie-out, shows both queries, and reports acme 2,600.00 profit (3,000.00 income, 400.00 expenses), globex 1,140.00 (1,200.00 income, 60.00 of the split Figma charge), and 40.00 of unattributed expenses, which together tie to 4,200.00 income and 500.00 expenses. Reads only; never computes a figure in prose without a query behind it.",
+      "files": [
+        "evals/files/eval19_ledger.beancount"
+      ],
+      "expectations": [
+        "acme profit 2,600.00 and globex profit 1,140.00 are reported, each from the executed query",
+        "The 40.00 unattributed expense is shown, not dropped or assigned to a client",
+        "The split Figma charge counts 60.00 for globex and 40.00 unattributed",
+        "The tie-out to 4,200.00 income and 500.00 expenses is shown",
+        "The ledger is not modified"
+      ]
     }
   ]
 }

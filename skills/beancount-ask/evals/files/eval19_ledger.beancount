@@ -1,0 +1,32 @@
+option "operating_currency" "USD"
+
+2026-01-01 open Assets:Checking USD
+2026-01-01 open Income:Services USD
+2026-01-01 open Expenses:Software USD
+2026-01-01 open Expenses:Hosting USD
+2026-01-01 open Equity:OpeningBalances USD
+
+2026-01-01 * "Opening balance"
+  Assets:Checking  2000.00 USD
+  Equity:OpeningBalances
+
+2026-06-02 * "Acme" "Invoice June"
+  client: "acme"
+  Assets:Checking   3000.00 USD
+  Income:Services  -3000.00 USD
+
+2026-06-04 * "Globex" "Invoice June"
+  client: "globex"
+  Assets:Checking   1200.00 USD
+  Income:Services  -1200.00 USD
+
+2026-06-10 * "Acme Hosting" "Server"
+  client: "acme"
+  Expenses:Hosting   400.00 USD
+  Assets:Checking
+
+2026-06-15 * "Figma" "Seats"
+  Expenses:Software   60.00 USD
+    client: "globex"
+  Expenses:Software   40.00 USD
+  Assets:Checking  -100.00 USD
