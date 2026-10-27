@@ -5,7 +5,8 @@ fields with whitespace-bounded patterns. A payee or narration continuing onto
 another line took a new tag inside the unfinished string, and a narration
 replacement spliced quotes into it (w5/1026); the narration slot followed the
 loaded payee, which a plugin may fill or drop, rather than the strings the
-header writes (w5/1026).
+header writes (w5/1026). A flag change replaced the whole run of text glued to
+the old flag, deleting adjacent strings, tags and links (w5/1039).
 
 Every case drives the real CLI, single and batch, and checks the file's exact
 bytes and the fields the ledger loads.
@@ -124,7 +125,15 @@ def _queried(tmp_path: Path) -> dict[str, list[Any]]:
     return {row[0]: row[1:] for row in data["rows"] if row[0] is not None}
 
 
-def _apply_and_verify(tmp_path: Path, transport: str, rows: list[dict[str, Any]], source: str, expected: str) -> None:
+def _apply_and_verify(
+    tmp_path: Path,
+    transport: str,
+    rows: list[dict[str, Any]],
+    source: str,
+    expected: str,
+    *,
+    written: int | None = None,
+) -> None:
     """Preview writes nothing, apply writes exactly `expected`, a repeat writes nothing."""
     book = tmp_path / "main.bean"
     book.write_text(source)
@@ -132,7 +141,7 @@ def _apply_and_verify(tmp_path: Path, transport: str, rows: list[dict[str, Any]]
     assert preview["written"] == 0
     assert book.read_text() == source
     applied = _update(tmp_path, transport, rows, apply=True)
-    assert applied["written"] == len(rows)
+    assert applied["written"] == (len(rows) if written is None else written)
     assert book.read_text() == expected
     assert _data(_bea(tmp_path, "check"))["valid"] is True
     repeat = _update(tmp_path, transport, rows, apply=True)
@@ -282,4 +291,79 @@ def test_narration_slot_follows_the_written_header_not_the_plugin_payee(
     rows = _data(_bea(tmp_path, "list", "transaction", "--search", "Reviewed lunch"))
     assert [(row["payee"], row["narration"], row["tags"], row["links"]) for row in rows] == [
         (loaded_payee, "Reviewed lunch", ["source"], ["receipt"])
+    ]
+
+
+def _compact_book(header: str) -> str:
+    return (
+        PREFIX
+        + header
+        + "  ; keep header comment\n"
+        + '  ref: "T1"\n  memo: "Keep café"\n  Assets:Cash -10 USD\n  Expenses:Food 10 USD\n'
+        + NEIGHBOUR
+    )
+
+
+@pytest.mark.parametrize("transport", ["single", "batch"])
+@pytest.mark.parametrize(
+    ("header", "flag", "after", "loaded"),
+    [
+        ('2026-01-02 !"Coffee"', "*", '2026-01-02 *"Coffee"', (None, "Coffee", [], [])),
+        (
+            '2026-01-02 !"Merchant" "Coffee" #written ^receipt',
+            "*",
+            '2026-01-02 *"Merchant" "Coffee" #written ^receipt',
+            ("Merchant", "Coffee", ["written"], ["receipt"]),
+        ),
+        (
+            '2026-01-02 !"Merchant""Coffee" #written ^receipt',
+            "*",
+            '2026-01-02 *"Merchant""Coffee" #written ^receipt',
+            ("Merchant", "Coffee", ["written"], ["receipt"]),
+        ),
+        ('2026-01-02 txn"Coffee" #written', "!", '2026-01-02 !"Coffee" #written', (None, "Coffee", ["written"], [])),
+        ('2026-01-02!"Coffee"', "*", '2026-01-02*"Coffee"', (None, "Coffee", [], [])),
+        ("2026-01-02 !#review ^receipt", "*", "2026-01-02 *#review ^receipt", (None, "", ["review"], ["receipt"])),
+        ("2026-01-02 !#review^receipt", "*", "2026-01-02 *#review^receipt", (None, "", ["review"], ["receipt"])),
+        ("2026-01-02 !^receipt #review", "*", "2026-01-02 *^receipt #review", (None, "", ["review"], ["receipt"])),
+        # A capital letter is a flag only with whitespace after it.
+        ('2026-01-02 !"Coffee"#review', "P", '2026-01-02 P "Coffee"#review', (None, "Coffee", ["review"], [])),
+        # Controls: a spaced header, and a flag that already matches.
+        (
+            '2026-01-02 ! "Merchant" "Coffee" #written ^receipt',
+            "*",
+            '2026-01-02 * "Merchant" "Coffee" #written ^receipt',
+            ("Merchant", "Coffee", ["written"], ["receipt"]),
+        ),
+        (
+            '2026-01-02 !"Merchant""Coffee" #written ^receipt',
+            "!",
+            '2026-01-02 !"Merchant""Coffee" #written ^receipt',
+            ("Merchant", "Coffee", ["written"], ["receipt"]),
+        ),
+    ],
+    ids=[
+        "one",
+        "payee",
+        "joined",
+        "txn",
+        "no-date-space",
+        "tag-flag",
+        "both-glued",
+        "link-flag",
+        "capital",
+        "normal",
+        "same-flag",
+    ],
+)
+def test_flag_change_keeps_every_adjacent_token(
+    tmp_path: Path, transport: str, header: str, flag: str, after: str, loaded: tuple[Any, ...]
+) -> None:
+    source = _compact_book(header)
+    expected = _compact_book(after)
+    _apply_and_verify(tmp_path, transport, [{"id": "T1", "flag": flag}], source, expected, written=int(header != after))
+    rows = _data(_bea(tmp_path, "list", "transaction", "--flag", flag, "--on-disk"))
+    found = [row for row in rows if row["date"] == "2026-01-02"]
+    assert [(row["flag"], row["payee"], row["narration"], row["tags"], row["links"], row["meta"]) for row in found] == [
+        (flag, *loaded, {"ref": "T1", "memo": "Keep café"})
     ]
