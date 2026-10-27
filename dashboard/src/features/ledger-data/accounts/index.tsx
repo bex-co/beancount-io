@@ -383,7 +383,8 @@ export default function LedgerAccountsPage() {
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   // Typing before hydration attaches onChange is wiped when React takes over
   // the controlled field, so it waits until it can keep what is typed
-  // (w4/1099, as Gallery does).
+  // (w4/1099, as Gallery does). The type pills and header Clear share the
+  // gate: a click before onClick attaches is otherwise lost (w4/1108).
   const hydrated = useHydrated();
   const rowActionReturnFocusRef = useRef<HTMLElement | null>(null);
   const clearCache = useApolloCacheClear();
@@ -526,6 +527,7 @@ export default function LedgerAccountsPage() {
                 size="icon-sm"
                 className="absolute right-0.5 top-1/2 -translate-y-1/2 text-muted-foreground"
                 aria-label={t("common.clearInput")}
+                disabled={!hydrated}
                 onClick={() => {
                   setSearch("");
                   searchInputRef.current?.focus();
@@ -556,6 +558,7 @@ export default function LedgerAccountsPage() {
                         : "border-transparent text-muted-foreground",
                     )}
                     aria-pressed={isActive}
+                    disabled={!hydrated}
                     onClick={() => setTypeFilter(accountType)}
                   >
                     {accountType === ACCOUNT_TYPE_ALL
