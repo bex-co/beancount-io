@@ -2050,8 +2050,8 @@ module or package that sits beside a ledger file setting it is copied to the
 same relative place too, with any module or package under those directories
 that the plugin imports, so the snapshot's `plugin` lines still resolve. A
 package travels whole — its data files, such as a `settings.json` read through
-`importlib.resources`, as well as its modules — leaving only bytecode caches
-behind; a package entry that cannot be copied as a plain file (a linked
+`importlib.resources`, and its directories, empty ones included, as well as
+its modules — leaving only bytecode caches behind; a package entry that cannot be copied as a plain file (a linked
 directory, a named pipe, a file this user cannot read) refuses the export
 naming it. A plugin installed elsewhere is not copied, while a module or
 package file outside the ledger tree refuses the export naming it. An

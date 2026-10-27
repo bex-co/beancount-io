@@ -147,3 +147,57 @@ def test_a_package_directory_that_cannot_be_listed_is_refused(tmp_path: Path) ->
     assert f"{data}, a directory this user cannot list" in stderr
     assert files == set()
     assert not (tmp_path / "exp").exists()
+
+
+LISTS_RULES = """import json
+from importlib.resources import files
+
+__plugins__ = ["run"]
+
+def run(entries, options):
+    for rule in files(__package__).joinpath("{rules}").iterdir():
+        if rule.name.endswith(".json"):
+            json.loads(rule.read_text())
+    return entries, []
+"""
+
+
+@pytest.mark.parametrize("helper", [False, True])
+@pytest.mark.parametrize("marker", [False, True])
+def test_an_empty_package_directory_travels(tmp_path: Path, helper: bool, marker: bool) -> None:
+    """A required empty resource directory was left out, so the snapshot failed `check` (w5/868)."""
+    books = tmp_path / "books"
+    rules = "data/rules" if helper else "rules"
+    (books / "rulepkg" / rules / "__pycache__").mkdir(parents=True)
+    (books / "rulepkg" / "__init__.py").write_text(LISTS_RULES.format(rules=rules))
+    if marker:
+        (books / "rulepkg" / rules / "README.txt").write_text("No active rules.\n")
+    if helper:
+        (books / "entry.py").write_text('from rulepkg import run\n__plugins__ = ["run"]\n')
+    (books / "main.bean").write_text(LEDGER.format(plugin="entry" if helper else "rulepkg"))
+
+    code, stderr, files = _export(tmp_path, books)
+
+    assert code == 0, stderr
+    assert files == {"main.bean", "rulepkg/__init__.py"} | ({"entry.py"} if helper else set()) | (
+        {f"rulepkg/{rules}/README.txt"} if marker else set()
+    )
+    assert (tmp_path / "exp" / "rulepkg" / rules).is_dir()
+    assert not (tmp_path / "exp" / "rulepkg" / rules / "__pycache__").exists()
+    check = _bea(tmp_path, "-f", str(tmp_path / "exp" / "main.bean"), "check")
+    assert check.returncode == 0, check.stderr
+
+
+def test_a_file_where_an_empty_package_directory_goes_is_refused(tmp_path: Path) -> None:
+    books = tmp_path / "books"
+    (books / "rulepkg" / "rules").mkdir(parents=True)
+    (books / "rulepkg" / "__init__.py").write_text(LISTS_RULES.format(rules="rules"))
+    (books / "main.bean").write_text(LEDGER.format(plugin="rulepkg"))
+    (tmp_path / "exp" / "rulepkg").mkdir(parents=True)
+    (tmp_path / "exp" / "rulepkg" / "rules").write_text("in the way\n")
+
+    exported = _bea(tmp_path, "-f", str(books / "main.bean"), "price", "export", "-o", str(tmp_path / "exp"), "--force")
+
+    assert exported.returncode == 2, exported.stderr
+    assert "where the export needs a directory" in exported.stderr
+    assert not (tmp_path / "exp" / "main.bean").exists()

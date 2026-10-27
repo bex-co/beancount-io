@@ -1882,7 +1882,8 @@ def export_portable(
     # link no path comparison can see — would be written straight through
     # into the books, so identity is compared, not spelling.
     attachments = _export_attachments(loaded, snapshot, destinations, target, home)
-    attachments.update(_export_plugin_modules(loaded, snapshot, target))
+    modules, package_directories = _export_plugin_modules(loaded, snapshot, target)
+    attachments.update(modules)
     # One file in two roles (an include that is also a document, or that sits
     # inside a copied plugin package) is one planned copy, and the ledger's own
     # carries the rewritten includes; planned twice it collided with itself
@@ -1939,6 +1940,12 @@ def export_portable(
     # `include "txns/*.bean"` made a directory the glob then read as an
     # include, and every later load failed on it (w5/814).
     directories = {parent for dest in planned for parent in dest.parents if parent.is_relative_to(target)}
+    directories |= {
+        directory
+        for package_directory in package_directories
+        for directory in (package_directory, *package_directory.parents)
+        if directory.is_relative_to(target)
+    }
     for directory in sorted(directories):
         claimed_by = None if directory.exists() else claim(directory.resolve())
         if claimed_by is not None:
@@ -1957,7 +1964,7 @@ def export_portable(
             "export left at that path instead. Restore the file or remove the include. Nothing was written."
         )
     # And an export writes inside the directory it was given, or nowhere.
-    for dest in planned:
+    for dest in [*planned, *package_directories]:
         if not dest.resolve().is_relative_to(resolved_target):
             raise UsageError(f"Cannot export: {dest} would land outside {target}. Nothing was written.")
     # The directories the plan needs are part of the plan. A regular file at
@@ -1973,6 +1980,15 @@ def export_portable(
                 f"Cannot export into {target}: {blocker} is in the way of {dest}, where the export needs {needs}. "
                 "Move it or choose another directory; --force does not remove it. Nothing was written."
             )
+    for directory in package_directories:
+        if directory.is_dir():
+            continue
+        blocker = directory if directory.exists() or directory.is_symlink() else _destination_blocker(directory)
+        if blocker is not None:
+            raise UsageError(
+                f"Cannot export into {target}: {blocker} is in the way of {directory}, where the export needs a "
+                "directory. Move it or choose another directory; --force does not remove it. Nothing was written."
+            )
     # The plan is checked against itself as well as the disk: one planned file
     # standing where another needs a directory (an included file named
     # `_shared` beside an include from outside the tree) is on no disk yet, so
@@ -1980,8 +1996,12 @@ def export_portable(
     # Folded like the equal destinations above: a file `_SHARED` is in the way
     # of the `_shared/` directory on a case-insensitive volume (w5/867).
     files = {_name_key(dest): dest for dest in planned}
-    for dest in planned:
-        inside = next((files[key] for parent in dest.parents if (key := _name_key(parent)) in files), None)
+    # An empty package directory needs its own name free as well.
+    required = [(dest, dest.parents) for dest in planned] + [
+        (dest, (dest, *dest.parents)) for dest in package_directories
+    ]
+    for dest, directories_needed in required:
+        inside = next((files[key] for parent in directories_needed if (key := _name_key(parent)) in files), None)
         if inside is not None:
             raise UsageError(
                 f"Cannot export into {target}: the export would write {inside} as a file and {dest} inside it. "
@@ -2004,7 +2024,7 @@ def export_portable(
     # the first `mkdir`, with exit 1 as if the ledger had failed validation; it
     # is the filesystem refusing (exit 3), said before anything is written
     # (w5/279).
-    for dest in planned:
+    for dest in [*planned, *package_directories]:
         if dest.is_file() and not os.access(dest, os.W_OK):
             raise AuthError(
                 f"Cannot export into {target}: {dest} is read-only and cannot be replaced. Nothing was written."
@@ -2048,6 +2068,11 @@ def export_portable(
                 dest = feed_files[source.url]
                 content = _export_feed_text(source, at).encode("utf-8")
                 staged.append((dest, *_stage_export(dest, content, root_mode, created, copies)))
+            for directory in package_directories:
+                absent = [path for path in [directory, *directory.parents] if not path.exists()]
+                for path in reversed(absent):
+                    path.mkdir(mode=0o700)
+                    created.append(path)
             from bea_engine import stopping
 
             with stopping.committing():
@@ -2204,7 +2229,9 @@ def _unresolved_includes(snapshot: LedgerSnapshot) -> list[str]:
     return found
 
 
-def _export_plugin_modules(loaded: LoadedLedger, snapshot: LedgerSnapshot, target: Path) -> dict[Path, Path]:
+def _export_plugin_modules(
+    loaded: LoadedLedger, snapshot: LedgerSnapshot, target: Path
+) -> tuple[dict[Path, Path], list[Path]]:
     """Where each plugin module that lives beside the ledger goes in the export.
 
     `option "insert_pythonpath"` puts the setting file's directory on the
@@ -2219,15 +2246,17 @@ def _export_plugin_modules(loaded: LoadedLedger, snapshot: LedgerSnapshot, targe
     outside the ledger tree cannot travel, so the export refuses naming it;
     a plugin installed elsewhere is not the export's to carry. Keyed by
     destination like the document attachments, so the same collision and
-    overwrite rules apply.
+    overwrite rules apply. Alongside, the package directories with no file to
+    carry them, which the export creates empty.
     """
     from bea_engine.protocol import UsageError
 
     homes = list(dict.fromkeys(Path(entry).resolve() for entry in loaded.options.get("pythonpath") or ()))
     if not homes:
-        return {}
+        return {}, []
     home = snapshot.root.parent.resolve()
     modules: dict[Path, Path] = {}
+    directories: list[Path] = []
     plugins = [str(name) for name, _config in loaded.options.get("plugin") or []]
     wanted = {name.split(".", 1)[0] for name in plugins} | _sibling_imports(homes, loaded, snapshot)
     for top in sorted(wanted):
@@ -2255,18 +2284,23 @@ def _export_plugin_modules(loaded: LoadedLedger, snapshot: LedgerSnapshot, targe
             # decides containment and what bytes travel.
             try:
                 source.resolve().relative_to(home)
-                modules[target / source.relative_to(home)] = source
+                dest = target / source.relative_to(home)
+                if source.is_dir():
+                    directories.append(dest)
+                else:
+                    modules[dest] = source
             except ValueError:
                 raise UsageError(
                     f"Cannot export: plugin module {top!r} loads from {source}, outside the ledger tree, "
                     "so the snapshot could not load it. Keep the module beside the root ledger so it "
                     "travels with the export. Nothing was written."
                 ) from None
-    return modules
+    return modules, directories
 
 
 def _package_files(package: Path, top: str) -> list[Path]:
-    """Every file a local plugin package carries, its resources as well as its modules.
+    """Every file a local plugin package carries, its resources as well as its modules,
+    and each of its directories that holds no file.
 
     Only the `.py` files travelled, so a package reading its own
     `settings.json` through `importlib.resources` exported with exit 0 and the
@@ -2293,6 +2327,12 @@ def _package_files(package: Path, top: str) -> list[Path]:
         for name in subdirectories:
             if os.path.islink(os.path.join(directory, name)):
                 raise refuse(Path(directory, name), "a linked directory the export does not follow")
+        # A directory holding nothing but bytecode or nothing at all still
+        # belongs to the package: a plugin listing its empty `rules/` failed
+        # in a snapshot that left it out (w5/868). Its path stands for it.
+        if not subdirectories and not [name for name in names if not name.endswith((".pyc", ".pyo"))]:
+            files.append(Path(directory))
+            continue
         for name in sorted(names):
             path = Path(directory, name)
             if path.suffix in {".pyc", ".pyo"}:

@@ -168,7 +168,6 @@ The 27 findings from the MCP QA auth sweep against the hosted endpoint (023–05
 
 - [1016 — Preserve omitted price currencies in native importer entries](./1016.md) — minor CLI gap: native-valid `@ 5` / `@@ 10` sources fail before preview when the printer emits a MISSING class token; explicit-currency controls pass.
 
-- [868 — Preserve package resource directories in portable exports](./868.md) — reopened trivial CLI gap: a required empty resource directory disappears from a successful fresh export; direct/helper and original resource controls checked 2026-10-24.
 
 - [1017 — Keep export artifacts outside copied plugin resources](./1017.md) — major CLI gap: a fresh export puts a feed or relocated local include inside a plugin package, changing valid net worth from 1,800 to 1,850 USD; both paths and allocation controls checked 2026-10-24.
 
