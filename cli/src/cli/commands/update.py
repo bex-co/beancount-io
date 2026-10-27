@@ -177,6 +177,15 @@ def _rows_from_csv(text: str, name: str) -> list[dict[str, str]]:
             f"'{name}' (from --from) has unknown column {', '.join(repr(h) for h in unknown)}; "
             f"use {', '.join(_CSV_COLUMNS)}."
         )
+    # A repeated column kept only its last cell, so a second `id` picked
+    # another transaction and a second `account` another category (w5/1027),
+    # where the same repeat in JSON is refused.
+    repeated = [header for header in dict.fromkeys(headers) if headers.count(header) > 1]
+    if repeated:
+        raise UsageError(
+            f"'{name}' (from --from) repeats column {', '.join(repr(h) for h in repeated)}; "
+            "give each column once. Nothing was written."
+        )
     if "id" not in headers:
         raise UsageError(f"'{name}' (from --from) needs an 'id' column; use {', '.join(_CSV_COLUMNS)}.")
     mapped = []

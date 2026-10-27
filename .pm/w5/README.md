@@ -110,7 +110,6 @@
 
 - [1028 — Preserve decimal markers in batch-update requests](./1028.md) — minor CLI regression: a malformed decimal row aborts every valid update before per-row validation; previous behavior and Add controls pass, checked 2026-10-25.
 
-- [1027 — Reject duplicate batch-update CSV columns](./1027.md) — minor CLI gap: repeated id/account/flag headers silently choose the last cell and apply; unique mappings and JSON-duplicate/unknown-column refusals pass, checked 2026-10-25.
 
 
 
