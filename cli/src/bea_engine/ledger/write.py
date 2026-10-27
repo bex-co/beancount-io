@@ -1636,19 +1636,25 @@ def book_units(entries: list[Any], account: str, currency: str, date: datetime.d
     from beancount.core.data import Transaction
 
     prefix = f"{account}:"
-    return sum(
-        (
-            posting.units.number
-            for entry in entries
-            if isinstance(entry, Transaction) and entry.date < date
-            for posting in entry.postings
-            if (posting.account == account or posting.account.startswith(prefix))
-            and posting.units is not None
-            and posting.units.currency == currency
-            and posting.units.number is not None
-        ),
-        Decimal(0),
-    )
+    total: Decimal | None = None
+    for entry in entries:
+        if not isinstance(entry, Transaction) or entry.date >= date:
+            continue
+        for posting in entry.postings:
+            if (
+                (posting.account == account or posting.account.startswith(prefix))
+                and posting.units is not None
+                and posting.units.currency == currency
+                and posting.units.number is not None
+            ):
+                number = posting.units.number
+                # The first amount as booked: `0 + x` rounded a 29-digit token
+                # receipt before the return that leaves its residue (w5/1075).
+                if total is None or not total:
+                    total = number
+                elif number:
+                    total += number
+    return total if total is not None else Decimal(0)
 
 
 def credit_root(account: str, options: dict[str, Any]) -> str | None:

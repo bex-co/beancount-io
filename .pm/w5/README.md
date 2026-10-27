@@ -36,7 +36,6 @@
 
 ## Inbox
 
-- [1075 — Preserve native book units when deciding and reporting padding](./1075.md) — minor CLI reconciliation: rounding refuses a matching padded assertion and misreports the amount of a correct native adjustment; 59 profiles, 229 CLI calls, 190 native loads; full matching/sign/shape/conflict/used-pad/import controls pass, checked 2026-10-27.
 
 
 
