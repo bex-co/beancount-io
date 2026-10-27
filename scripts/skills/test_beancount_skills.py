@@ -1808,6 +1808,38 @@ class TestBeaRecipes(unittest.TestCase):
         self.assertEqual(self.recipe("bill-terms")["rows"], [["bolt-printing:7781", "2026-11-15", -19]])
         self.assertEqual(self.recipe("document-balance", account="Liabilities:AccountsPayable")["rows"], [["-450.00"]])
 
+    def test_payroll_run_ties_printed_figures_and_books_liabilities(self):
+        self.ledger.write_text(
+            'option "operating_currency" "USD"\n'
+            "2026-01-01 open Assets:Checking USD\n"
+            "2026-01-01 open Expenses:Payroll:Wages USD\n"
+            "2026-01-01 open Expenses:Payroll:EmployerTaxes USD\n"
+            "2026-01-01 open Liabilities:Payroll:IncomeTax USD\n"
+            "2026-01-01 open Liabilities:Payroll:SocialSecurity USD\n"
+            "2026-01-01 open Equity:OpeningBalances USD\n"
+            '2026-01-01 * "Opening"\n  Assets:Checking 20000.00 USD\n  Equity:OpeningBalances\n'
+            'include "transactions/2026.bean"\n'
+        )
+        tie = self.recipe("payroll-tie", gross="8000.00", withholdings="(1100.00 + 496.00)", net="6404.00")
+        self.assertEqual(tie["rows"], [["6404.00", "0.00"]])
+        # A misread net stops the proposal with the gap shown.
+        gap = self.recipe("payroll-tie", gross="8000.00", withholdings="(1100.00 + 496.00)", net="6400.00")
+        self.assertEqual(gap["rows"], [["6404.00", "-4.00"]])
+        self.batch([{
+            "date": "2026-07-15", "flag": "*", "payee": "Gusto", "narration": "Payroll 2026-07-15",
+            "meta": {"payroll": "2026-07-15"},
+            "postings": [
+                {"account": "Expenses:Payroll:Wages", "units": {"number": "8000.00", "currency": "USD"}},
+                {"account": "Expenses:Payroll:EmployerTaxes", "units": {"number": "496.00", "currency": "USD"}},
+                {"account": "Liabilities:Payroll:IncomeTax", "units": {"number": "-1100.00", "currency": "USD"}},
+                {"account": "Liabilities:Payroll:SocialSecurity", "units": {"number": "-992.00", "currency": "USD"}},
+                {"account": "Assets:Checking", "units": {"number": "-6404.00", "currency": "USD"}},
+            ],
+        }])
+        self.recipe("batch")
+        self.recipe("check")
+        self.assertIn('payroll: "2026-07-15"', self.target.read_text())
+
     def test_profit_by_client_counts_split_parts_once_and_ties_to_the_period(self):
         self.ledger.write_text(
             'option "operating_currency" "USD"\n'

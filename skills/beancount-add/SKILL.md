@@ -45,7 +45,7 @@ Write every approved directive through `bea add`: the shared `transaction`, `ope
 
 ## Scope
 
-**Does:** one or a few entries the user describes in words or pastes as receipt text: transactions (purchases, bills, income, refunds, transfers between the user's own accounts, split purchases), opening an account, closing an account, a price, a note. Appends them to an existing file the root ledger includes.
+**Does:** one or a few entries the user describes in words or pastes as receipt text: transactions (purchases, bills, income, refunds, transfers between the user's own accounts, split purchases), opening an account, closing an account, a price, a note, and a payroll run or payroll-tax remittance from the provider's printed figures (Recording payroll below). Appends them to an existing file the root ledger includes.
 
 **Does not:** read bank or card export files (`beancount-import`), reconcile against a statement (`beancount-reconcile`), migrate app history (`beancount-migrate`), record options lifecycle events (`beancount-options`), record investment trades, dividends, splits, or vests (`beancount-trade`), close a period (`beancount-close`), or edit, move, or delete existing entries — report the existing entry and let the user change it. Never invent an account the user did not ask for.
 
@@ -163,11 +163,43 @@ Holdings valuation (beancount-ask's holdings recipes) reads the latest `price` p
 
 A fetched or managed price that disagrees with an authored one for the same date follows the `price` recipe's duplicate/`--force` rule — the user's say-so, never a silent overwrite.
 
+## Recording payroll
+
+A business that pays staff through a payroll provider records each run from the provider's printed summary, the suite's Business books convention ([ADR025](https://github.com/bex-co/beancount-io/blob/main/docs/adrs/ADR025-skills-business-books.md)). Receiving a paycheck is an ordinary transaction, not this; paying a contractor with no withholding is too.
+
+**Inputs, as printed:** the pay date, gross wages, each employee withholding line (income tax, social security, health insurance, retirement…), each employer tax line, net pay, and the account it left from. Every figure comes from the summary; a figure it does not print is asked for, never computed from wages, rates, or tables.
+
+**Gate (engine arithmetic, quoted):** printed gross minus the printed withholdings must equal the printed net — `$gross`, `$withholdings` (a parenthesized sum of the withholding lines), `$net` as decimal literals:
+
+<!-- recipe: payroll-tie -->
+```sh
+bea --file "$ledger" --json --no-input query "SELECT $gross - $withholdings AS computed_net, $net - ($gross - $withholdings) AS gap LIMIT 1"
+```
+
+A nonzero `gap` stops the proposal: show the printed figures and the gap, and ask — a misread line, a deduction the summary lists elsewhere, or a reimbursement. Never adjust a figure to make it tie.
+
+**The entry** (one per run, `payroll: "<pay date>"` metadata):
+
+- `Expenses:Payroll:Wages` at the gross, and `Expenses:Payroll:EmployerTaxes` at the employer taxes (or the ledger's own payroll expense accounts).
+- One `Liabilities:Payroll:<Item>` posting per withholding and employer-tax line, named as the summary prints it — negative, owed until remitted. Withholding and the matching employer line for the same tax (social security, medicare) may share one liability when the provider remits them together; say which.
+- The paying account at the net pay.
+
+Missing payroll accounts are proposed as `open`s in the same proposal. Check for the run already being recorded: an entry with the same `payroll:` date, or the same net on the paying account within ±3 days (the `already-recorded` recipe). Write it with the `batch` recipe (its `meta` carries `payroll:`), then the root check.
+
+**Remittance:** a payment to the tax authority clears the liabilities it covers, each at the amount the deposit confirmation or return states, against the paying account. Read each liability's balance first; a remittance larger than a liability's balance, or one that leaves a balance the user did not expect, is shown and asked about — never spread across liabilities by guess.
+
+<!-- recipe: payroll-liabilities -->
+```sh
+bea --file "$ledger" --json --no-input query "SELECT account, sum(number) AS owed WHERE account ~ '^Liabilities:Payroll:' AND date < $as_of GROUP BY account ORDER BY account"
+```
+
+Quarter totals for an accountant are a read: beancount-ask's `payroll-quarter` recipe in its `references/bql-recipes.md`.
+
 ## What NOT to do
 
 - Don't write anything without an explicit yes.
 - Don't invent accounts; existing ones, the user's explicit new account, or `Expenses:Uncategorized` only.
-- Don't guess amounts, signs, or past dates.
+- Don't guess amounts, signs, or past dates, and don't compute payroll withholdings or taxes.
 - Don't enter a possible duplicate, or skip one, without the user's decision.
 - Don't close an account that still holds a balance.
 - Don't edit, move, or delete existing entries, and don't touch `option`, `plugin`, or `include` directives.
