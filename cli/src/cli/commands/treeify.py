@@ -51,13 +51,28 @@ _FILLER = "\uf8ff"
 
 
 def _clusters(text: str) -> list[str]:
-    """The text as base characters, each with the zero-width marks that follow it."""
+    """The text as base characters, each with the zero-width marks that follow it.
+
+    A mark after an account's `:` belongs to the component it begins, not to
+    the separator: folded into the `:`, it hid that separator from treeify, and
+    `Assets:Bank:` + U+0301 `Cafe` became one `Bank:́Cafe` branch (w5/1059). It
+    leads the next character's cluster instead.
+    """
     parts: list[str] = []
+    leading = ""
     for char in text:
-        if parts and output._columns(char) == 0 and char != "\n":
-            parts[-1] += char
-        else:
-            parts.append(char)
+        if output._columns(char) == 0 and char != "\n":
+            if leading or (parts and parts[-1] == ":"):
+                leading += char
+            elif parts:
+                parts[-1] += char
+            else:
+                parts.append(char)
+            continue
+        parts.append(leading + char)
+        leading = ""
+    if leading:
+        parts.append(leading)
     return parts
 
 
