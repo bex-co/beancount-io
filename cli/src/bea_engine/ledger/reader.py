@@ -239,7 +239,9 @@ def _field_declared(name: str, held: Any, stated: Any) -> bool:
     states, zero included, must be held. Allowed currencies are a set, and no
     list and an empty one both leave the account unrestricted. Of the
     metadata, the keys the line writes must hold their values, beside the
-    loader's location bookkeeping and any key a plugin adds of its own.
+    loader's location bookkeeping and any key a plugin adds of its own. A
+    value keeps its type: `FALSE` equals `0` to Python, so a copy turning
+    one into the other passed as the line's own (w5/1015).
     """
     if name in {"booking", "tolerance"}:
         return stated is None or held == stated
@@ -248,7 +250,7 @@ def _field_declared(name: str, held: Any, stated: Any) -> bool:
     if name == "meta":
         held = held or {}
         return all(
-            key in held and held[key] == value
+            key in held and held[key] == value and isinstance(held[key], bool) == isinstance(value, bool)
             for key, value in (stated or {}).items()
             if key not in {"filename", "lineno"} and not key.startswith("__")
         )

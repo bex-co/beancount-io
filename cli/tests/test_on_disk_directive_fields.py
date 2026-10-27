@@ -121,3 +121,52 @@ def test_a_copy_changing_stated_metadata_is_not_on_disk(tmp_path: Path, mode: st
     assert len(_rows(tmp_path, "note", "Assets:Cash")) == 2
     (written,) = _rows(tmp_path, "note", "Assets:Cash", "--on-disk")
     assert written["meta"]["receipt_id"] == "R1"
+
+
+TYPED = """from decimal import Decimal as D
+from beancount.core.data import Event, Note, Price
+__plugins__ = ('derive',)
+def derive(entries, options, swap):
+    before, after = swap.split('>')
+    value = {'FALSE': False, 'TRUE': True, '0': D('0'), '1': D('1')}[after]
+    out = []
+    for e in entries:
+        out.append(e)
+        if isinstance(e, (Event, Note, Price)):
+            out.append(e._replace(meta={**e.meta, 'approved': value}))
+    return out, []
+"""
+
+
+@pytest.mark.parametrize("swap", ["FALSE>0", "TRUE>1", "0>FALSE", "1>TRUE"])
+@pytest.mark.parametrize(
+    ("kind", "account", "line"),
+    [
+        ("note", "Assets:Cash", '2024-02-01 note Assets:Cash "Annotation"'),
+        ("event", None, '2024-02-01 event "location" "Home"'),
+        ("price", None, "2024-02-01 price HOOL 10 USD"),
+    ],
+    ids=["note", "event", "price"],
+)
+def test_a_copy_changing_a_metadata_type_is_not_on_disk(
+    tmp_path: Path, swap: str, kind: str, account: str | None, line: str
+) -> None:
+    # FALSE == 0 and TRUE == 1 to Python; the line states one type only.
+    stated = swap.split(">")[0]
+    (tmp_path / "qa_typed.py").write_text(TYPED)
+    (tmp_path / "main.bean").write_text(
+        f'option "insert_pythonpath" "TRUE"\nplugin "qa_typed" "{swap}"\n'
+        f"2024-01-01 open Assets:Cash USD\n2024-01-01 commodity HOOL\n{line}\n  approved: {stated}\n"
+    )
+
+    def listed(*flags: str) -> dict:
+        filters = ("--account", account) if account else ()
+        result = _bea(tmp_path, "list", kind, *filters, *flags)
+        assert result.returncode == 0, result.stderr or result.stdout
+        return json.loads(result.stdout)  # type: ignore[no-any-return]
+
+    assert len(listed()["data"]) == 2
+    (written,) = listed("--on-disk")["data"]
+    assert listed("--on-disk", "--limit", "1")["truncated"] is False
+    held = written["meta"]["approved"]
+    assert held == ({"kind": "number", "value": stated} if stated in {"0", "1"} else stated == "TRUE")

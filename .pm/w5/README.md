@@ -128,7 +128,6 @@
 
 - [1020 — Preserve native semantics of generated-looking references](./1020.md) — major CLI gap: native aliases matching the hash grammar silently skip corrected amounts and payments from separate custom namespaces; genuine generated-ID controls pass, checked 2026-10-24. Automatic/configured OFX bank/card callers rechecked 2026-10-25.
 
-- [1015 — Preserve types in declared non-transaction metadata](./1015.md) — reopened minor CLI gap: metadata copies that swap booleans and numbers are misclassified as written; full original field/currency/string-metadata and new type controls pass, checked 2026-10-24.
 
 
 
