@@ -1690,6 +1690,38 @@ class TestBeaRecipes(unittest.TestCase):
         balances = {row[0]: row[1] for row in self.query_recipe("account-balances")}
         self.assertEqual(balances["Assets:AccountsReceivable"], [])
 
+    def test_bill_open_balances_follow_partial_payments(self):
+        self.ledger.write_text(
+            'option "operating_currency" "USD"\n'
+            "2026-01-01 open Assets:Checking USD\n"
+            "2026-01-01 open Liabilities:AccountsPayable USD\n"
+            "2026-01-01 open Expenses:Printing USD\n"
+            'include "transactions/2026.bean"\n'
+        )
+        self.values["payable"] = "Liabilities:AccountsPayable"
+        self.batch([
+            {"date": "2026-10-14", "flag": "*", "payee": "Bolt Printing", "narration": "Bill 7781",
+             "links": ["bill-bolt-printing-7781"], "meta": {"bill": "bolt-printing:7781"},
+             "postings": [
+                 {"account": "Expenses:Printing", "units": {"number": "450.00", "currency": "USD"}},
+                 {"account": "Liabilities:AccountsPayable", "units": {"number": "-450.00", "currency": "USD"}}]},
+            # Another supplier reusing the same number is a different bill.
+            {"date": "2026-10-15", "flag": "*", "payee": "Ink Co", "narration": "Bill 7781",
+             "links": ["bill-ink-co-7781"], "meta": {"bill": "ink-co:7781"},
+             "postings": [
+                 {"account": "Expenses:Printing", "units": {"number": "80.00", "currency": "USD"}},
+                 {"account": "Liabilities:AccountsPayable", "units": {"number": "-80.00", "currency": "USD"}}]},
+            {"date": "2026-10-20", "flag": "*", "payee": "Bolt Printing", "narration": "Part payment",
+             "links": ["bill-bolt-printing-7781"], "meta": {"bill": "bolt-printing:7781"},
+             "postings": [
+                 {"account": "Liabilities:AccountsPayable", "units": {"number": "200.00", "currency": "USD"}},
+                 {"account": "Assets:Checking", "units": {"number": "-200.00", "currency": "USD"}}]},
+        ])
+        self.recipe("batch")
+        self.recipe("check")
+        rows = self.recipe("bill-open")["rows"]
+        self.assertEqual([(r[0], r[2]) for r in rows], [("bolt-printing:7781", "-250.00"), ("ink-co:7781", "-80.00")])
+
     def test_profit_by_client_counts_split_parts_once_and_ties_to_the_period(self):
         self.ledger.write_text(
             'option "operating_currency" "USD"\n'

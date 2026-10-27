@@ -50,13 +50,14 @@ The suite's Business books convention ([ADR025](https://github.com/bex-co/beanco
 - `Assets:AccountsReceivable` holds what clients owe. Each invoice is identified by `invoice: "<number as printed>"`; the issuing entry also carries `client:` and, when the document states one, `due:` (a date).
 - Every entry that touches an invoice carries the link `^inv-<number>` (lowercased) so the document's history reads as one thread.
 - An entry about one document carries `invoice:` on the transaction. A payment that settles several documents has one receivable posting per document, each with its own `invoice:`.
-- A document's open balance is the sum of the receivable postings carrying its identity: the `invoice-open` recipe below. Payments carry no `client:`, so never group the open balance by client; read the client from the issuing entry.
+- `Liabilities:AccountsPayable` holds what the business owes suppliers. Each bill is identified by `bill: "<supplier>:<number as printed>"` (a supplier's number is unique only for that supplier); the receiving entry carries `due:` when the bill states one, and every entry that touches it carries `^bill-<supplier>-<number>` (lowercased, spaces as hyphens).
+- A document's open balance is the sum of the receivable (or payable) postings carrying its identity: the `invoice-open` and `bill-open` recipes below. Payments carry no `client:`, so never group the open balance by client; read the client from the issuing entry.
 
-Use the ledger's own accounts first. When it has no receivable account, propose `open Assets:AccountsReceivable` in the same proposal; when a fee needs an account, use the ledger's fees account, else propose `Expenses:Fees`. Never invent any other account.
+Use the ledger's own accounts first. When it has no receivable or payable account, propose `open Assets:AccountsReceivable` or `open Liabilities:AccountsPayable` in the same proposal; when a fee needs an account, use the ledger's fees account, else propose `Expenses:Fees`. Never invent any other account.
 
 ## Scope
 
-**Does:** an invoice issued (the receivable against income, with any tax leg its document states), payments applied to open invoices (partial, several invoices at once, and a processor's gross, fee, and net), appended to an existing file the root ledger includes.
+**Does:** an invoice issued (the receivable against income, with any tax leg its document states), payments applied to open invoices (partial, several invoices at once, and a processor's gross, fee, and net), a supplier bill received (the payable against its expense) and paid in full or in part, appended to an existing file the root ledger includes.
 
 **Does not:** record purchases or income with no document to track (`beancount-add`), read bank or processor export files (`beancount-import`), draft period-end accrual schedules (`beancount-accruals`), render, number, send, or chase invoices, look up or determine a tax rate, give tax advice, or edit, move, or delete existing entries.
 
@@ -75,7 +76,12 @@ Find the root ledger with the suite's discovery convention (`fd -e beancount -e 
 bea --file "$ledger" --json --no-input query "SELECT any_meta('invoice') AS invoice, min(date) AS first, sum(number) AS open WHERE account = '$receivable' GROUP BY invoice HAVING sum(number) != 0 ORDER BY invoice"
 ```
 
-A row whose `invoice` is empty is receivable money no document explains; report it, never assign it to an invoice.
+A row whose `invoice` is empty is receivable money no document explains; report it, never assign it to an invoice. Bind `payable` (`Liabilities:AccountsPayable` unless the ledger names its own) and read open bills the same way; an open bill's balance is negative, the amount still owed:
+
+<!-- recipe: bill-open -->
+```sh
+bea --file "$ledger" --json --no-input query "SELECT any_meta('bill') AS bill, min(date) AS first, sum(number) AS open WHERE account = '$payable' GROUP BY bill HAVING sum(number) != 0 ORDER BY bill"
+```
 
 ### 2. Parse
 
@@ -95,6 +101,10 @@ bea --file "$ledger" --json --no-input query "SELECT date, payee, narration, num
 - A processor payment: the receivable is credited at the gross the invoice was paid in full or in part, the processor's fee goes to the fees account as its own leg, and the cash account receives the net. All three figures come from the processor's statement or the user; the proposal shows gross − fee = net.
 - One payment that settles several invoices is one entry with one receivable posting per invoice, each carrying its `invoice:`, and every invoice's link.
 
+**Receiving a supplier bill.** Inputs: supplier, bill number as printed, bill date, due date when stated, each line's amount and expense account (from the supplier's history in this ledger, else asked), and any tax the bill states as a separate line. A `bill:` identity that already has postings is shown and asked about, never recorded twice. The payable is the bill's total and each line is its own expense posting.
+
+**Paying a bill.** Inputs: the date, the amount paid and from which account, and which bills it pays. The payable posting for each bill is the amount paid against it, at most its open balance; a part payment leaves the rest owed and says so. A payment that matches no open bill, or exceeds the bills named, is asked about.
+
 ### 3. Propose
 
 Show, then ask. **Never write before an explicit yes.** The user's original request is not that yes.
@@ -102,7 +112,7 @@ Show, then ask. **Never write before an explicit yes.** The user's original requ
 1. **Target file** — one explicit path.
 2. **New `open` directives** — only those the user approves in this proposal.
 3. **The entries** — formatted exactly as they will appear, with their `invoice:`, `client:`, `due:` metadata and links.
-4. **Open balances** — each affected invoice before and after this entry, from `invoice-postings`.
+4. **Open balances** — each affected invoice or bill before and after this entry, from `invoice-postings` or `bill-open`.
 5. A clear **yes/no**. On a partial correction, revise and show the whole proposal again.
 
 ```
@@ -137,5 +147,6 @@ Read `invoice-postings` again and report each affected invoice's open balance fr
 - Don't write anything without an explicit yes.
 - Don't book a client payment to income when an invoice for it is open; apply it to the invoice.
 - Don't merge a processor's fee into revenue, or apply more to an invoice than it has open.
-- Don't issue a number that already has postings, or invent a number, amount, date, or tax figure.
+- Don't issue or record a document whose identity already has postings, or invent a number, amount, date, or tax figure.
+- Don't pay more against a bill than it has open.
 - Don't edit, move, or delete existing entries, and don't touch `option`, `plugin`, or `include` directives.
