@@ -17,6 +17,7 @@
 - [x] **m11** — [Unify the temp-asset object-key spellings](./done/m11/README.md) (8 tasks) ← promoted from `w23/100` 2026-10-26
 - [x] **m12** — [Refuse unknown keys on every REST GET query](./done/m12/README.md) (8 tasks) ← promoted from `w23/113` 2026-10-26
 - [x] **m13** — [Preview lifecycle mutations with dry_run](./done/m13/README.md) (9 tasks) ← promoted from `w23/120` 2026-10-26
+- [ ] **m14** — [Render NULL cells honestly in BQL results](./m14/README.md) (8 tasks) ← promoted from `w23/122` 2026-10-27
 
 ## Dropped
 
