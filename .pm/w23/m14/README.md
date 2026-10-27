@@ -28,3 +28,7 @@
 - **Goal linkage:** A1 (agent-native accounting) — agents summing filtered postings get `""`/`str` instead of NULL/numeric, breaking numeric downstream code; honest nulls keep agent pipelines typed.
 - **Expected outcome:** an agent can filter, aggregate, and group without defending against empty strings where NULLs belong, on every surface.
 - **Why now:** w23/122's six probe iterations map the whole defect space at once (value, dtype, strictness); fixing the value without the dtype (or vice versa) would leave half the probes red. Adoption surface included — the milestone ships agent-facing query rendering.
+
+## Blocked
+
+- **t002** (2026-10-27): null-cell rendering is w23/075's option (b) — a published-contract change the owner has not approved. **Unblock:** the owner picks (b1)/(b2)/(b3) per `w23/blocked/075.md`; repo owner clears it. t003–t008 defer behind t002 in `depends_on` order.
