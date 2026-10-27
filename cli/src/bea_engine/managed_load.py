@@ -1882,7 +1882,7 @@ def export_portable(
     # link no path comparison can see — would be written straight through
     # into the books, so identity is compared, not spelling.
     attachments = _export_attachments(loaded, snapshot, destinations, target, home)
-    modules, package_directories = _export_plugin_modules(loaded, snapshot, target)
+    modules, package_directories, packages = _export_plugin_modules(loaded, snapshot, target)
     attachments.update(modules)
     # One file in two roles (an include that is also a document, or that sits
     # inside a copied plugin package) is one planned copy, and the ledger's own
@@ -2018,6 +2018,25 @@ def export_portable(
         raise UsageError(
             f"Cannot export into {target}: it already holds {first}, which the export would overwrite{more}. "
             "Choose an empty or dedicated directory, or pass --force to overwrite. Nothing was written."
+        )
+    # A refresh copies a package's current files over an earlier copy, and a
+    # resource since removed from the source stayed behind, still read by the
+    # snapshot's plugin: a retired fee rule kept booking (w5/929). Unrelated
+    # files elsewhere in the output are not the export's to judge.
+    planned_names = {_name_key(dest) for dest in planned}
+    stale = sorted(
+        path
+        for package in packages
+        if package.is_dir()
+        for path in _package_members(package)
+        if _name_key(path) not in planned_names
+    )
+    if stale:
+        more = f" ({len(stale)} files in all)" if len(stale) > 1 else ""
+        raise UsageError(
+            f"Cannot export into {target}: {stale[0]} is left from an earlier copy of a plugin package and is no "
+            f"longer in the source{more}; the refreshed snapshot's plugin would still read it. Remove it or choose "
+            "a fresh output directory. Nothing was written."
         )
     # Whether the filesystem will take the plan is part of the plan too. A
     # read-only directory surfaced as a raw `PermissionError: [Errno 13]` from
@@ -2231,7 +2250,7 @@ def _unresolved_includes(snapshot: LedgerSnapshot) -> list[str]:
 
 def _export_plugin_modules(
     loaded: LoadedLedger, snapshot: LedgerSnapshot, target: Path
-) -> tuple[dict[Path, Path], list[Path]]:
+) -> tuple[dict[Path, Path], list[Path], list[Path]]:
     """Where each plugin module that lives beside the ledger goes in the export.
 
     `option "insert_pythonpath"` puts the setting file's directory on the
@@ -2247,16 +2266,18 @@ def _export_plugin_modules(
     a plugin installed elsewhere is not the export's to carry. Keyed by
     destination like the document attachments, so the same collision and
     overwrite rules apply. Alongside, the package directories with no file to
-    carry them, which the export creates empty.
+    carry them, which the export creates empty, and where each copied package
+    lands, so a refresh can see what an earlier copy left there.
     """
     from bea_engine.protocol import UsageError
 
     homes = list(dict.fromkeys(Path(entry).resolve() for entry in loaded.options.get("pythonpath") or ()))
     if not homes:
-        return {}, []
+        return {}, [], []
     home = snapshot.root.parent.resolve()
     modules: dict[Path, Path] = {}
     directories: list[Path] = []
+    packages: list[Path] = []
     plugins = [str(name) for name, _config in loaded.options.get("plugin") or []]
     wanted = {name.split(".", 1)[0] for name in plugins} | _sibling_imports(homes, loaded, snapshot)
     for top in sorted(wanted):
@@ -2275,10 +2296,13 @@ def _export_plugin_modules(
         if holder is not None:
             package = holder / top
             sources = _package_files(package, top) if package.is_dir() else [holder / f"{top}.py"]
+            roots = [package] if package.is_dir() else []
         elif portions:
             sources = [path for portion in portions for path in _package_files(portion / top, top)]
+            roots = [portion / top for portion in portions]
         else:
             continue
+        packages += [target / root.relative_to(home) for root in roots if root.resolve().is_relative_to(home)]
         for source in sources:
             # The copy keeps the spelling the import finds; the resolved file
             # decides containment and what bytes travel.
@@ -2295,7 +2319,7 @@ def _export_plugin_modules(
                     "so the snapshot could not load it. Keep the module beside the root ledger so it "
                     "travels with the export. Nothing was written."
                 ) from None
-    return modules, directories
+    return modules, directories, packages
 
 
 def _package_files(package: Path, top: str) -> list[Path]:
@@ -2347,6 +2371,17 @@ def _package_files(package: Path, top: str) -> list[Path]:
                 raise refuse(path, "which this user cannot read")
             files.append(path)
     return files
+
+
+def _package_members(package: Path) -> list[Path]:
+    """The files an exported package copy holds, bytecode caches aside."""
+    return [
+        Path(directory, name)
+        for directory, subdirectories, names in os.walk(package)
+        if "__pycache__" not in Path(directory).relative_to(package).parts
+        for name in names
+        if not name.endswith((".pyc", ".pyo"))
+    ]
 
 
 def _sibling_imports(homes: list[Path], loaded: LoadedLedger, snapshot: LedgerSnapshot) -> set[str]:

@@ -150,3 +150,80 @@ def test_an_installed_global_plugin_still_exports(tmp_path: Path) -> None:
     exported = _bea(tmp_path, "-f", str(books / "main.bean"), "price", "export", "-o", str(tmp_path / "snap"))
 
     assert exported.returncode == 0, exported.stderr
+
+
+FEE_ROOT = """option "operating_currency" "USD"
+option "insert_pythonpath" "TRUE"
+plugin "qa_fee_rules"
+2024-01-01 open Assets:Cash USD
+2024-01-01 open Expenses:Fees USD
+2024-01-01 open Equity:Opening USD
+2024-01-01 * "Capital"
+  Assets:Cash 1000.00 USD
+  Equity:Opening -1000.00 USD
+"""
+FEE_PLUGIN = """import json
+from datetime import timedelta
+from decimal import Decimal as D
+from importlib.resources import files
+from beancount.core import amount, data
+__plugins__ = ("fees",)
+
+def fees(entries, options):
+    rules = files(__package__).joinpath("rules")
+    fee = sum((D(json.loads(p.read_text())["fee"]) for p in rules.iterdir() if p.name.endswith(".json")), D(0))
+    out = list(entries)
+    for e in entries:
+        if isinstance(e, data.Transaction) and e.narration == "Capital":
+            out.append(data.Transaction(data.new_metadata("<fees>", 0), e.date + timedelta(days=1), "*", None,
+                "Bank fees", frozenset(), frozenset(), [
+                data.Posting("Assets:Cash", amount.Amount(-fee, "USD"), None, None, None, None),
+                data.Posting("Expenses:Fees", amount.Amount(fee, "USD"), None, None, None, None)]))
+    return out, []
+"""
+
+
+def _fee_books(tmp_path: Path) -> tuple[Path, Path]:
+    books = tmp_path / "books"
+    rules = books / "qa_fee_rules" / "rules"
+    rules.mkdir(parents=True)
+    (books / "main.bean").write_text(FEE_ROOT)
+    (books / "qa_fee_rules" / "__init__.py").write_text(FEE_PLUGIN)
+    (rules / "old.json").write_text('{"fee": "2.00"}\n')
+    (rules / "current.json").write_text('{"fee": "3.00"}\n')
+    snap = tmp_path / "snapshot"
+    assert _bea(tmp_path, "-f", str(books / "main.bean"), "price", "export", "-o", str(snap)).returncode == 0
+    (snap / "keep.txt").write_text("Unrelated note.\n")
+    return books, snap
+
+
+@pytest.mark.parametrize("retire", ["remove", "rename"])
+def test_a_resource_retired_from_the_source_package_is_not_left_active(tmp_path: Path, retire: str) -> None:
+    books, snap = _fee_books(tmp_path)
+    old = books / "qa_fee_rules" / "rules" / "old.json"
+    if retire == "remove":
+        old.unlink()
+    else:
+        old.rename(old.with_name("retired.txt"))
+    before = _tree(snap)
+
+    refreshed = _bea(tmp_path, "-f", str(books / "main.bean"), "price", "export", "-o", str(snap), "--force")
+
+    assert refreshed.returncode == 2, refreshed.stdout
+    assert str(snap / "qa_fee_rules" / "rules" / "old.json") in refreshed.stderr
+    assert "fresh output directory" in refreshed.stderr and "Nothing was written" in refreshed.stderr
+    assert _tree(snap) == before
+    fresh = tmp_path / "fresh"
+    assert _bea(tmp_path, "-f", str(books / "main.bean"), "price", "export", "-o", str(fresh)).returncode == 0
+    assert _cash(tmp_path, fresh / "main.bean") == _cash(tmp_path, books / "main.bean") == [["997.00"]]
+
+
+def test_a_changed_resource_still_refreshes_the_snapshot(tmp_path: Path) -> None:
+    books, snap = _fee_books(tmp_path)
+    (books / "qa_fee_rules" / "rules" / "old.json").write_text('{"fee": "4.00"}\n')
+
+    refreshed = _bea(tmp_path, "-f", str(books / "main.bean"), "price", "export", "-o", str(snap), "--force")
+
+    assert refreshed.returncode == 0, refreshed.stderr
+    assert _cash(tmp_path, snap / "main.bean") == _cash(tmp_path, books / "main.bean")
+    assert (snap / "keep.txt").read_text() == "Unrelated note.\n"

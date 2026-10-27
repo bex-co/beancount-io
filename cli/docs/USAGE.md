@@ -2063,7 +2063,10 @@ allowlisted) refuses it unless `--allow-errors` writes it as a
 export would write refuses it with exit 2, naming the collision and writing
 nothing, and `--force` is the opt-in that overwrites — which is what
 re-exporting into a previous snapshot needs. Under `--json` the answer's
-`overwritten` list names every path `--force` replaced.
+`overwritten` list names every path `--force` replaced. A file an earlier
+copy left inside a copied plugin package that the source package no longer
+holds — a retired resource the plugin would still read — refuses the refresh
+naming it (exit 2, nothing written): remove it or export to a fresh directory.
 
 ```bash
 bea price export                    # <ledger>-export/ beside the ledger
