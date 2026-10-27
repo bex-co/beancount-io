@@ -1,0 +1,12 @@
+option "operating_currency" "USD"
+
+2026-01-01 open Assets:Checking USD
+2026-01-01 open Assets:Clearing:Stripe USD
+2026-01-01 open Income:Sales USD
+2026-01-01 open Expenses:Fees USD
+2026-01-01 open Liabilities:SalesTax USD
+2026-01-01 open Equity:OpeningBalances USD
+
+2026-01-01 * "Opening balance"
+  Assets:Checking  1000.00 USD
+  Equity:OpeningBalances

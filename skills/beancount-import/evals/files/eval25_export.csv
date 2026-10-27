@@ -1,0 +1,4 @@
+id,Created (UTC),Type,Description,Amount,Fee,Net,Transfer
+txn_a,2026-10-01 10:00,charge,Order 1001,100.00,3.20,96.80,po_1
+dp_1,2026-10-02 12:00,dispute,Chargeback Order 0990,-50.00,15.00,-65.00,po_1
+po_1,2026-10-05 00:00,payout,STRIPE PAYOUT,-31.80,0.00,-31.80,po_1

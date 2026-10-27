@@ -1178,6 +1178,16 @@
         "beancount-add"
       ],
       "why": "A read-only quarter total."
+    },
+    {
+      "id": "import-stripe-payouts",
+      "prompt": "Import my Stripe payouts export from ./stripe-balance.csv into my ledger.",
+      "expected": "beancount-import",
+      "confusable": [
+        "beancount-invoices",
+        "beancount-reconcile"
+      ],
+      "why": "A processor export is a file import, booked gross with fees and payouts through clearing."
     }
   ]
 }

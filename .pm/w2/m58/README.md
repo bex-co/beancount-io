@@ -1,6 +1,6 @@
 # w2 · m58 — Import payment-processor payouts as gross, fees, tax, and net
 
-**Worker:** worker2 **Goal:** `beancount-import` reads a Stripe- or Shopify-style payout export into entries that keep gross sales, processor fees, collected tax, refunds, and the net payout separate, and ties each payout to its bank deposit without double-booking. **Status:** todo (t001–t002 done)
+**Worker:** worker2 **Goal:** `beancount-import` reads a Stripe- or Shopify-style payout export into entries that keep gross sales, processor fees, collected tax, refunds, and the net payout separate, and ties each payout to its bank deposit without double-booking. **Status:** todo (t001–t003 done)
 
 ## Tasks (in order)
 
@@ -8,7 +8,7 @@
 | ---- | ----- | --- | ---------- |
 | [t001](./done/t001.md) | Write the payout reference in the broker-activity pattern — **DONE** | 75m | w2/m55/t001, w2/m56/t002 |
 | [t002](./done/t002.md) | Tie each payout to its bank deposit without double-booking — **DONE** | 45m | t001 |
-| t003 | Write evals, fixtures, and routing entries | 45m | t001, t002 |
+| [t003](./done/t003.md) | Write evals, fixtures, and routing entries — **DONE** | 45m | t001, t002 |
 | t004 | Run the evals and routing set on both clients | 45m | t003 |
 | t005 | Adoption surface | 30m | t004 |
 | t006 | Simplify | 15m | t005 |

@@ -355,6 +355,68 @@
         "The 500.00 deposit is asked about, not applied silently to INV-032",
         "Nothing is written before an explicit yes"
       ]
+    },
+    {
+      "id": 23,
+      "name": "stripe-payout-gross-fee-net",
+      "prompt": "Import ./export.csv, my Stripe balance export, into ./ledger.beancount. Payouts go to my checking account.",
+      "expected_output": "Follows references/payouts.md: proposes a payout-csv mapping (charge=sale, refund=refund, payout=payout) for confirmation, runs payout-tie for po_1 (96.80 + 77.38 \u2212 16.90 = 157.28, gap 0.00), and proposes each charge gross to Income:Sales with its fee to Expenses:Fees and net to Assets:Clearing:Stripe, the refund through clearing, and the payout moving 157.28 from clearing to Assets:Checking, each with a stripe: import-id. Nothing is written before a yes; after it the clearing account is 0.00 and the root check passes.",
+      "files": [
+        "evals/files/eval23_ledger.beancount",
+        "evals/files/eval23_export.csv"
+      ],
+      "expectations": [
+        "Charges book gross 100.00 and 80.00 to income with 3.20 and 2.62 to fees",
+        "payout-tie shows gap 0.00 before staging",
+        "The payout moves 157.28 from Assets:Clearing:Stripe to Assets:Checking",
+        "Each row carries a stripe: import-id",
+        "Nothing is written before an explicit yes"
+      ]
+    },
+    {
+      "id": 24,
+      "name": "stripe-payout-does-not-tie",
+      "prompt": "Import ./export.csv, my Stripe balance export, into ./ledger.beancount. Payouts go to my checking account.",
+      "expected_output": "payout-tie for po_1 shows 174.18 from its rows against the 157.28 payout, a -16.90 gap (a row outside the export, such as a refund). The skill stops that payout, shows the rows and the gap, and asks; nothing for po_1 is written and no balancing row is invented.",
+      "files": [
+        "evals/files/eval24_ledger.beancount",
+        "evals/files/eval24_export.csv"
+      ],
+      "expectations": [
+        "The -16.90 gap is shown from the engine's arithmetic",
+        "No balancing row is added",
+        "Nothing for po_1 is written"
+      ]
+    },
+    {
+      "id": 25,
+      "name": "stripe-unmapped-type-is-asked",
+      "prompt": "Import ./export.csv, my Stripe balance export, into ./ledger.beancount. Payouts go to my checking account.",
+      "expected_output": "The dispute row's type has no mapping, so the skill shows it with the export's wording and asks which account the 50.00 chargeback and 15.00 dispute fee belong to; it does not fold it into a sale or stage the payout until the row is decided.",
+      "files": [
+        "evals/files/eval25_ledger.beancount",
+        "evals/files/eval25_export.csv"
+      ],
+      "expectations": [
+        "The dispute row is shown and asked about",
+        "It is not treated as a sale or refund by guess",
+        "Nothing is written before the row is decided and the user says yes"
+      ]
+    },
+    {
+      "id": 26,
+      "name": "bank-deposit-is-the-payouts-other-side",
+      "prompt": "Import ./export.csv (my checking account export, money in is positive) into ./ledger.beancount.",
+      "expected_output": "The 96.80 STRIPE TRANSFER on 2026-10-07 is shown as a suspected duplicate of the 2026-10-05 payout transfer already booked from the Stripe export (Layer 2b, stripe:po_1); the usual answer is skip, so the sale is not counted again. The CORNER CAFE row imports normally. Nothing is written before a yes.",
+      "files": [
+        "evals/files/eval26_ledger.beancount",
+        "evals/files/eval26_export.csv"
+      ],
+      "expectations": [
+        "The 96.80 deposit is presented as the payout's other side, not as new income",
+        "Skipping it leaves Income:Sales at the single 100.00 sale",
+        "Nothing is written before an explicit yes"
+      ]
     }
   ]
 }
