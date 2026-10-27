@@ -524,7 +524,9 @@ If multiple importers recognize the export, select one with `--importer NAME`.
 Importers that share a name, such as two instances of one class configured for
 different accounts, are listed as `NAME#1`, `NAME#2` in `CONFIG` order with the
 account each files under; pass that selector, or give each importer a distinct
-`name`.
+`name`. A declared name keeps priority, so a selector another importer already
+declares as its name is skipped: beside an importer named `bank#1`, two `bank`
+importers are listed as `bank#2` and `bank#3`.
 An unknown name lists the available importer names; a recognized name whose
 importer rejects the file reports that separately.
 `--importer` names a Python importer only: on a run that resolves to the column

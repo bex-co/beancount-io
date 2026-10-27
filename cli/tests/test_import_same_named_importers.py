@@ -46,6 +46,9 @@ IMPORTER = textwrap.dedent("""
         @property
         def name(self): return "bank-" + self.acct.rsplit(":", 1)[1].lower()
 
+    class Literal(Bank):
+        name = "Bank#1"
+
     class Card(Bank):
         def identify(self, filepath): return filepath.endswith(".card")
 
@@ -54,6 +57,7 @@ IMPORTER = textwrap.dedent("""
 
 SAME = 'Bank("Assets:Checking"), Bank("Assets:Savings"), Card("Assets:Checking")'
 DISTINCT = 'Named("Assets:Checking"), Named("Assets:Savings")'
+COLLIDING = 'Bank("Assets:Checking"), Bank("Assets:Savings"), Literal("Assets:Broker")'
 
 
 def _bea(tmp_path: Path, *args: str) -> subprocess.CompletedProcess[str]:
@@ -137,3 +141,19 @@ def test_distinctly_named_importers_are_unchanged(tmp_path: Path) -> None:
     applied = _bea(tmp_path, *args, "--importer", "bank-savings", "--apply")
     assert applied.returncode == 0, applied.stderr
     assert "Assets:Savings  -5.25 USD" in ledger.read_text(encoding="utf-8")
+
+
+def test_a_generated_selector_skips_a_name_another_importer_declares(tmp_path: Path) -> None:
+    # A third importer declared as `Bank#1` keeps that name; the listed
+    # selector for Checking must not be one that chooses it.
+    ledger, args = _books(tmp_path, COLLIDING)
+
+    refused = _bea(tmp_path, "--json", *args, "--importer", "Bank")
+    assert refused.returncode == 2
+    assert json.loads(refused.stderr)["error"]["details"] == ["Bank#2 (Assets:Checking)", "Bank#3 (Assets:Savings)"]
+
+    for selector, account in (("Bank#2", "Assets:Checking"), ("Bank#3", "Assets:Savings"), ("Bank#1", "Assets:Broker")):
+        preview = _bea(tmp_path, "--json", *args, "--importer", selector)
+        assert preview.returncode == 0, preview.stderr
+        assert json.loads(preview.stdout)["data"]["account"] == account
+    assert ledger.read_text(encoding="utf-8") == LEDGER

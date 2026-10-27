@@ -1443,11 +1443,23 @@ def _selectors(configured: Sequence[Any]) -> list[str]:
     names = [_name(importer) for importer in configured]
     for position, importer in enumerate(configured, start=1):
         _require_interface(importer, position)
+    # A declared name wins over a generated selector, so a selector another
+    # importer already declares is skipped: `bank#1` listed beside the Cash
+    # importer chose a third importer declared as `bank#1` (w5/226).
+    taken = set(names)
     seen: dict[str, int] = {}
     selectors = []
     for name in names:
-        seen[name] = seen.get(name, 0) + 1
-        selectors.append(name if names.count(name) == 1 else f"{name}#{seen[name]}")
+        if names.count(name) == 1:
+            selectors.append(name)
+            continue
+        while True:
+            seen[name] = seen.get(name, 0) + 1
+            selector = f"{name}#{seen[name]}"
+            if selector not in taken:
+                break
+        taken.add(selector)
+        selectors.append(selector)
     return selectors
 
 
