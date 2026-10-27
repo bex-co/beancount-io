@@ -3012,14 +3012,26 @@ def validate_candidate(
         else:
             message = "The change would leave the ledger invalid; nothing was written."
         # The errors the flag tolerated travel with the refusal, so a `--json`
-        # caller still learns the ledger was already broken (w5/461).
-        tolerated_records = [record for index, record in enumerate(records) if index not in set(blocking)]
+        # caller still learns the ledger was already broken (w5/461). Nothing
+        # was written, so they are the ledger's as it stands: read from the
+        # proposal, an assertion the rejected row would have moved said 92
+        # where the books hold 100, or vanished (w5/1058).
+        current = [
+            _ErrorRecord(
+                getattr(error, "message", str(error)),
+                format_error(error, ledger_file=file),
+                (error.source or {}).get("lineno"),
+                [],
+                Path((error.source or {}).get("filename", str(file))),
+            )
+            for error in before_errors or []
+        ]
         raise CandidateRejected(
             message,
             details=_collapse_repeats([records[index] for index in blocking]),
             locations=[locations[index] for index in blocking],
             records=[records[index] for index in blocking],
-            ledger_errors=_collapse_repeats(tolerated_records),
+            ledger_errors=_collapse_repeats(current),
         )
     messages = [*messages, *_average_inheritance_warnings(entries, options, filenames, original_lines)]
     return messages
