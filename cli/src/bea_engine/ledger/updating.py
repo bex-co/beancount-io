@@ -921,6 +921,10 @@ def _transactions(file: Path, request: dict[str, Any], *, apply: bool, allow_err
         )
         for directory in dict.fromkeys(path.parent for path in snapshot.contents):
             ledger_write.sweep_abandoned_candidates(directory)
+        # The loop below re-reads every file before each write; the answer's
+        # diffs compare against the files as they were, or each earlier file's
+        # rows reported an empty diff once it had been written (w5/1029).
+        before_texts, before_lines = dict(file_texts), dict(file_lines)
         written_rows: list[int] = []
         warnings: list[str] = []
         for target in sorted(valid):
@@ -969,12 +973,12 @@ def _transactions(file: Path, request: dict[str, Any], *, apply: bool, allow_err
             written_rows.extend(plan.index for plan in file_plans)
             for plan in file_plans:
                 warnings.extend(_notes(plan.entry, options, plan.changes, snapshot))
-        row_payload = _row_payload(rows, plans, reasons, file_texts, file_lines)
+        row_payload = _row_payload(rows, plans, reasons, before_texts, before_lines)
         unchanged_rows = [row["row"] - 1 for row in row_payload if row["status"] == "unchanged"]
         diffs = "".join(
             _file_diff(
-                file_texts[target],
-                _combined_text(file_lines[target], _merge_edits(valid[target])),
+                before_texts[target],
+                _combined_text(before_lines[target], _merge_edits(valid[target])),
                 target,
             )
             for target in sorted(valid)
