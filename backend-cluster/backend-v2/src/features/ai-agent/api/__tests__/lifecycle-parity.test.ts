@@ -1040,7 +1040,18 @@ describe("ledger lifecycle through actual adapters and workflow", () => {
       try {
         const r = await f.call(surface, "delete");
         expect(r.failed).toBe(false);
-        expect(r.data).toEqual({ ledgerId: "alice/main" });
+        // w23/m13/t003: commits echo the flag — dryRun on REST, dry_run on
+        // MCP; this file's GraphQL selection predates the echo.
+        expect(r.data).toEqual(
+          surface === "gql"
+            ? { ledgerId: "alice/main" }
+            : {
+                ledgerId: "alice/main",
+                ...(surface === "mcp"
+                  ? { dry_run: false }
+                  : { dryRun: false }),
+              },
+        );
         expect(f.records.size).toBe(0);
         expect(f.bankRows()).toEqual([]);
         expect(f.events).toEqual([
@@ -1202,7 +1213,14 @@ describe("ledger lifecycle through actual adapters and workflow", () => {
         { operation: "create", name: "new", ledger: "alice/main" },
         { operation: "update", ledger: "alice/main", template: "SAMPLE" },
         { operation: "delete", ledger: "alice/main", name: "other" },
-        { operation: "delete", ledger: "alice/main", dry_run: true },
+        // w23/m13/t003: delete + dry_run is a valid preview now (covered in
+        // delete-preview-parity); conflicting twins are still incompatible.
+        {
+          operation: "delete",
+          ledger: "alice/main",
+          dryRun: true,
+          dry_run: false,
+        },
       ])
         expect((await f.client.callTool(perOperation(args))).isError).toBe(
           true,

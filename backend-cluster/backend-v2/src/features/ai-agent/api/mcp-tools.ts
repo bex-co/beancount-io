@@ -52,6 +52,7 @@ import {
   LIFECYCLE_OPERATION_SCHEMAS,
   lifecycleToolOutput,
   updateLedgerToolOutput,
+  deleteLedgerToolOutput,
   previewToolOutput,
   LIFECYCLE_EXECUTORS,
 } from "./mcp-lifecycle";
@@ -850,9 +851,10 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     name: "deleteLedger",
     title: "Delete Ledger",
     annotations: DESTRUCTIVE,
-    description: "Permanently delete a ledger, including its history.",
+    description:
+      "Permanently delete a ledger, including its history; dry_run previews without committing, rendering the destroy summary.",
     inputSchema: LIFECYCLE_OPERATION_SCHEMAS.delete,
-    outputSchema: lifecycleToolOutput,
+    outputSchema: deleteLedgerToolOutput,
     execute: LIFECYCLE_EXECUTORS.delete,
   },
   {

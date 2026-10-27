@@ -168,8 +168,35 @@ export interface LedgerFileData {
   lastAuthorDate?: string;
 }
 
+export interface DeleteLedgerCommand {
+  /** Preview the deletion without destroying anything (w23/m13/t003). */
+  dryRun?: boolean | null;
+}
+
+/**
+ * What a deleteLedger preview renders (w23/m13/t003): the ledger that would
+ * be destroyed plus the warnings that make the irreversibility unmissable.
+ * Absent on committed deletes. Counts are deliberately absent — identity +
+ * irreversibility is the decision-relevant content, and every count would be
+ * another cross-service read with its own failure modes (t001 allowed
+ * "counts or equivalent").
+ */
+export interface LedgerDeletePreview {
+  ledgerId: string;
+  name: string;
+  description: string | null;
+  private: boolean;
+  empty: boolean;
+  size: number;
+  warnings: string[];
+}
+
 export interface DeleteLedgerResult {
   ledgerId: string;
+  /** True when this is a deleteLedger preview; commits echo false. */
+  dryRun?: boolean;
+  /** The destroy summary; present only on deleteLedger previews. */
+  preview?: LedgerDeletePreview;
 }
 
 export interface DeleteLedgerFileResult {

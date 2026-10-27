@@ -145,7 +145,51 @@ export const ledgerUpdateInput = z
     }),
   })
   .strict();
-export const ledgerDeleteInput = z.object({}).strict();
+export const ledgerDeleteInput = z
+  .object({
+    dryRun: nullToUndefined(z.boolean()).optional().openapi({
+      description: PREVIEW_FLAG_DESCRIPTION,
+    }),
+    // Twin (w23/m9/t002): MCP spells it dry_run.
+    dry_run: nullToUndefined(z.boolean()).optional().openapi({
+      description: "Alias of dryRun, as MCP spells it.",
+    }),
+  })
+  .strict();
+const ledgerDeletePreviewSchema = z
+  .object({
+    ledgerId: z.string().openapi({
+      description: "The ledger that would be destroyed.",
+    }),
+    name: z.string().openapi({ description: "Its current name." }),
+    description: z.string().nullable().openapi({
+      description: "Its current description, null when unset.",
+    }),
+    private: z.boolean().openapi({ description: "Its current visibility." }),
+    empty: z.boolean().openapi({
+      description: "Whether it holds any content.",
+    }),
+    size: z.number().openapi({ description: "Its current size in bytes." }),
+    warnings: z.array(z.string()).openapi({
+      description:
+        "What makes the irreversibility unmissable: permanent deletion and linked-bank cleanup.",
+    }),
+  })
+  .openapi("LedgerDeletePreview", {
+    description:
+      "The destroy summary a deleteLedger preview renders; present only on previews.",
+  });
+export const ledgerDeleteResultSchema = z.object({
+  ledgerId: z.string(),
+  dryRun: z.boolean().optional().openapi({
+    description:
+      "True when this is a deleteLedger preview: the checks ran and nothing was destroyed. Commits echo false.",
+  }),
+  preview: ledgerDeletePreviewSchema.optional().openapi({
+    description:
+      "The destroy summary; present only on deleteLedger previews.",
+  }),
+});
 const ledgerUpdatePreviewSchema = z
   .object({
     name: z
@@ -261,18 +305,27 @@ export const LEDGER_LIFECYCLE_ROUTES = [
     operationId: "deleteLedger",
     summary: "Delete a ledger",
     description:
-      "Delete the repository and perform the existing linked-bank cleanup. Requires current administrative authority and respects the credential pin. Applies immediately; no preview.",
+      "Delete the repository and perform the existing linked-bank cleanup. Requires current administrative authority and respects the credential pin. Pass dryRun to preview the destroy summary without destroying anything.",
     params: ledgerPathSchema,
+    body: ledgerDeleteInput,
     responses: {
-      200: json(
-        "Deleted ledger identifier",
-        z.object({ ledgerId: z.string() }),
-      ),
+      200: json("Deleted ledger identifier", ledgerDeleteResultSchema),
     },
-    handler: async ({ layers }, { identity, params }) =>
-      layers.workflows.ledger.deleteLedger({
+    handler: async ({ layers }, { identity, params, body }) => {
+      // The workflow sees its own contract only: the twins fold into dryRun
+      // and the alias key is dropped (w23/m9/t002).
+      const { dry_run, ...rest } = body;
+      return layers.workflows.ledger.deleteLedger({
         identity,
         ledgerId: ledgerIdOf(params),
-      }),
+        input: {
+          ...rest,
+          dryRun: resolveFlagAlias(
+            { primary: dry_run, legacy: rest.dryRun },
+            DRY_RUN_NAMES,
+          ),
+        },
+      });
+    },
   }),
 ];

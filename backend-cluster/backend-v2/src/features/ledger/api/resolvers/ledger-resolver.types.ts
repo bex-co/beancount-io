@@ -546,10 +546,63 @@ export class GetLedgerDirContentArgs {
   dirPath?: string | null;
 }
 
+@ArgsType()
+export class DeleteLedgerInput {
+  @Field(() => Boolean, {
+    nullable: true,
+    description: PREVIEW_FLAG_DESCRIPTION,
+  })
+  dryRun?: boolean;
+
+  @Field(() => Boolean, {
+    nullable: true,
+    description: "Alias of dryRun, as MCP spells it.",
+  })
+  dry_run?: boolean;
+}
+
+@ObjectType()
+export class LedgerDeletePreview {
+  @Field(() => String)
+  ledgerId: string;
+
+  @Field(() => String)
+  name: string;
+
+  @Field(() => String, { nullable: true })
+  description: string | null;
+
+  @Field(() => Boolean)
+  private: boolean;
+
+  @Field(() => Boolean)
+  empty: boolean;
+
+  @Field(() => Number)
+  size: number;
+
+  @Field(() => [String])
+  warnings: string[];
+}
+
 @ObjectType()
 export class DeleteLedgerResponse {
   @Field(() => String)
   ledgerId: string;
+
+  @Field(() => Boolean, {
+    nullable: true,
+    description:
+      "True when this is a deleteLedger preview: the checks ran and nothing was destroyed. Commits echo false.",
+  })
+  dryRun?: boolean;
+
+  @Field(() => LedgerDeletePreview, {
+    nullable: true,
+    description:
+      "The destroy summary; present only on deleteLedger previews.",
+  })
+  preview?: LedgerDeletePreview;
 }
 
 @ObjectType()

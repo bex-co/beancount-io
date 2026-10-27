@@ -928,6 +928,9 @@ describe("LedgerWorkflow", () => {
         LEDGER_REPO_ID,
       );
       expect(result.ledgerId).toBe(ledgerId);
+      // w23/m13/t003: commits echo the flag off with no preview.
+      expect(result.dryRun).toBe(false);
+      expect(result.preview).toBeUndefined();
     });
 
     it("should throw error when delete fails", async () => {
@@ -939,6 +942,46 @@ describe("LedgerWorkflow", () => {
       await expect(
         workflow.deleteLedger({ identity: IDENTITY, ledgerId }),
       ).rejects.toThrow(InternalServerError);
+    });
+
+    it("renders the destroy summary and destroys nothing on a preview", async () => {
+      mockGetLedgerSuccess();
+
+      const result = await workflow.deleteLedger({
+        identity: IDENTITY,
+        ledgerId,
+        input: { dryRun: true },
+      });
+
+      expect(mockFavaApiClient.ledgers.deleteLedger).not.toHaveBeenCalled();
+      expect(db.transaction).not.toHaveBeenCalled();
+      expect(models.plaidItem.deleteByLedgerRepoId).not.toHaveBeenCalled();
+      expect(result.dryRun).toBe(true);
+      expect(result.preview).toMatchObject({
+        ledgerId,
+        name: "test-ledger",
+        description: null,
+        private: false,
+        empty: false,
+        size: 0,
+      });
+      expect(result.preview?.warnings).toEqual([
+        `This would permanently delete ${ledgerId}, including its full history. This cannot be undone.`,
+        "Any linked bank connections would be revoked and their synced items removed.",
+      ]);
+    });
+
+    it("requires destroy authority before reading anything to preview", async () => {
+      authorization.authorizeOrThrow.mockRejectedValueOnce(new Error("denied"));
+      await expect(
+        workflow.deleteLedger({
+          identity: IDENTITY,
+          ledgerId,
+          input: { dryRun: true },
+        }),
+      ).rejects.toThrow("denied");
+      expect(mockFavaApiClient.ledgers.getLedger).not.toHaveBeenCalled();
+      expect(mockFavaApiClient.ledgers.deleteLedger).not.toHaveBeenCalled();
     });
 
     it("should revoke and delete local Plaid items scoped to the ledger before deleting the repo", async () => {

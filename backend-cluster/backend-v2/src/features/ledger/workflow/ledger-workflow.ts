@@ -58,7 +58,9 @@ import {
   LedgerUpdatePreview,
   LedgerWithDirectiveCountData,
   LedgerFileData,
+  DeleteLedgerCommand,
   DeleteLedgerResult,
+  LedgerDeletePreview,
   DeleteLedgerFileResult,
   RenameLedgerFileResult,
   StarLedgerResult,
@@ -235,6 +237,7 @@ export interface ILedgerWorkflow {
   deleteLedger(params: {
     identity: Identity;
     ledgerId: string;
+    input?: DeleteLedgerCommand;
   }): Promise<DeleteLedgerResult>;
   createLedgerFile(params: {
     identity: Identity;
@@ -873,15 +876,37 @@ export class LedgerWorkflow implements ILedgerWorkflow {
   async deleteLedger({
     identity,
     ledgerId,
+    input,
   }: {
     identity: Identity;
     ledgerId: string;
+    input?: DeleteLedgerCommand;
   }): Promise<DeleteLedgerResult> {
     await this.authorization.authorizeOrThrow({
       principal: identity,
       action: AUTHORIZATION_ACTIONS.LEDGER_ADMINISTRATION_DELETE,
       resource: ledgerResource(ledgerId),
     });
+    // The preview reads the ledger that would be destroyed and renders the
+    // summary; nothing below the preview branch runs — no revocation, no
+    // Plaid cleanup, no delete (w23/m13/t003). Authorization stays the
+    // commit's: previewing a destroy requires destroy authority.
+    if (input?.dryRun === true) {
+      const current = await this.getLedger({ ledgerId, identity });
+      const preview: LedgerDeletePreview = {
+        ledgerId,
+        name: current.name,
+        description: current.description ?? null,
+        private: current.private,
+        empty: current.empty,
+        size: current.size,
+        warnings: [
+          `This would permanently delete ${ledgerId}, including its full history. This cannot be undone.`,
+          "Any linked bank connections would be revoked and their synced items removed.",
+        ],
+      };
+      return { ledgerId, dryRun: true, preview };
+    }
     const userId = identity.userId;
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
@@ -914,7 +939,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
       );
     });
 
-    return { ledgerId };
+    return { ledgerId, dryRun: false };
   }
 
   private async resolveLedgerRepoId(

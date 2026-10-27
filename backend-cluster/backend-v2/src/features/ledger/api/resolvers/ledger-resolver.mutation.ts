@@ -54,6 +54,7 @@ import {
   UpdateLedgerFileInput,
   DeleteLedgerFileInput,
   RenameLedgerFileInput,
+  DeleteLedgerInput,
   DeleteLedgerResponse,
   DeleteLedgerFileResponse,
   RenameLedgerFileResponse,
@@ -104,11 +105,13 @@ export class LedgerMutationResolver {
   })
   async deleteLedger(
     @Arg("ledgerId", () => String) ledgerId: string,
+    @Args() input: DeleteLedgerInput,
     @Ctx() ctx: IContext,
   ): Promise<DeleteLedgerResponse> {
     return this.workflow.deleteLedger({
       identity: ctx.getCurrentIdentity(),
       ledgerId,
+      input: withResolvedPreview(input),
     });
   }
 

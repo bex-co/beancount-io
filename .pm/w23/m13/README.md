@@ -1,6 +1,6 @@
 # w23 · m13 — Preview lifecycle mutations with dry_run
 
-**Worker:** worker1 **Goal:** updateLedger and deleteLedger preview on REST, GraphQL, and MCP like every content mutation; collaborator/star ops preview or carry a documented exclusion **Status:** todo (t001–t002 done)
+**Worker:** worker1 **Goal:** updateLedger and deleteLedger preview on REST, GraphQL, and MCP like every content mutation; collaborator/star ops preview or carry a documented exclusion **Status:** todo (t001–t003 done)
 
 ## Tasks (in order)
 
@@ -8,7 +8,7 @@
 | ---- | ----- | --- | ---------- |
 | t001 | Reproduce + map the lifecycle preview gaps — **DONE** | 30m | — |
 | t002 | updateLedger preview end to end — **DONE** | 60m | t001 |
-| t003 | deleteLedger preview end to end | 60m | t002 |
+| t003 | deleteLedger preview end to end — **DONE** | 60m | t002 |
 | t004 | Collaborator/star preview-or-exclusion end to end | 45m | t003 |
 | t005 | Document lifecycle previews | 30m | t004 |
 | t006 | Adoption surface | 20m | t005 |
