@@ -962,8 +962,13 @@ def _run_stored(shell: Any, arg: str) -> None:
     known = ", ".join(sorted(shell.queries)) or "(none)"
     # A name works exactly as `.run` lists it: `this month's food` is one
     # stored query, not an unterminated shell quote (w5/237).
-    name = cleaned
+    # The listed name first, as written: `Cash report;` is a name of its own,
+    # and trimming its `;` as a terminator ran `Cash report` instead (w5/1060).
+    name = arg.strip(" \t")
     query = shell.queries.get(name)
+    if query is None:
+        name = cleaned
+        query = shell.queries.get(name)
     if query is None:
         try:
             parts = shlex.split(cleaned)
