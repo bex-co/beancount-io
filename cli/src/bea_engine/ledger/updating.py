@@ -420,7 +420,18 @@ def plan_lines(
             # Only the account token is swapped; indentation, flags, amounts
             # and alignment stay byte-identical. Metadata lines can never
             # match: their first token ends with a colon, which no account does.
-            for number in range(start - 1, min(end, len(lines))):
+            # Nor can a line inside a multiline memo, narration or metadata
+            # string that happens to start with the account: only the lines
+            # the postings were parsed from are candidates (w5/1025).
+            span = range(start - 1, min(end, len(lines)))
+            source = (entry.meta or {}).get("filename")
+            posted = {
+                lineno - 1
+                for posting in entry.postings
+                if (posting.meta or {}).get("filename") == source
+                and isinstance(lineno := (posting.meta or {}).get("lineno"), int)
+            }
+            for number in sorted(posted & set(span)) if posted else span:
                 matched = _POSTING_LINE.match(lines[number])
                 if matched is None or matched.group(3) != old or matched.group(3).endswith(":"):
                     continue

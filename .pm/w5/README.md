@@ -116,7 +116,6 @@
 
 - [1026 — Plan updates from written transaction headers](./1026.md) — minor CLI header gap: multiline spans and plugin-derived payee presence misplace requested tags/narration; original controls plus single/batch raw/native fields, checked 2026-10-26.
 
-- [1025 — Preserve multiline strings during account updates](./1025.md) — minor CLI gap: retargeting changes literal memo, narration and posting metadata along with the real posting; plain/prose/flag-only/other-entry controls pass, checked 2026-10-25.
 
 
 
