@@ -165,7 +165,6 @@ The 27 findings from the MCP QA auth sweep against the hosted endpoint (023–05
 
 
 
-- [1017 — Keep export artifacts outside copied plugin resources](./1017.md) — major CLI gap: a fresh export puts a feed or relocated local include inside a plugin package, changing valid net worth from 1,800 to 1,850 USD; both paths and allocation controls checked 2026-10-24.
 
 - [1018 — Preserve dateless lots in listed-quantity replay](./1018.md) — minor CLI gap: resolving inferred quantities in JSON invents acquisition dates and makes a valid three-trade replay ambiguous; null-number, dated and single-add-reply controls pass.
 

@@ -2039,7 +2039,10 @@ file takes the root ledger's — and directories the export creates are `0700`.
 An existing output directory must be readable and searchable as well as
 writable; a refused permission exits 3 naming the directory.
 When the ledger includes a file of its own
-named `prices`, the feeds go in `prices-managed/` instead. A feed never
+named `prices`, or copies a plugin package of that name, the feeds go in
+`prices-managed/` instead; likewise an include from outside the ledger's
+directory, copied to `_shared/`, goes to `_shared-files/` beside a plugin
+package named `_shared`, so neither becomes a resource of a copied package. A feed never
 replaces a file the ledger already keeps under that name: it lands at
 `<ALIAS>-managed.beancount` instead, and names that differ only by letter case
 count as the same name, since they are one file on a case-insensitive volume.

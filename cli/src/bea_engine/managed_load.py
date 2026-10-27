@@ -1840,15 +1840,24 @@ def export_portable(
             destinations[path] = target / path.resolve().relative_to(home)
         except ValueError:
             external_paths.append(path)
+    # Where the copied plugin packages land is planned first: a relocated
+    # include or a generated feed placed inside one becomes one more package
+    # resource, and a plugin enumerating its resources read it, changing the
+    # snapshot's prices (w5/1017). Their directories are reserved below.
+    modules, package_directories, packages = _export_plugin_modules(loaded, snapshot, target)
+    package_names = {_name_key(package) for package in packages}
     # Reserve every in-tree name before allocating relocated copies, whatever
     # order the includes use. The resulting snapshot must survive moving to a
     # case- or normalization-insensitive volume, like managed-feed names do.
     owned = {_name_key(dest) for dest in destinations.values()}
+    shared = target / "_shared"
+    while _name_key(shared) in package_names:
+        shared = target / f"{shared.name}-files"
     external = 0
     for path in external_paths:
         while True:
             external += 1
-            candidate = target / "_shared" / f"{external:02d}-{path.name}"
+            candidate = shared / f"{external:02d}-{path.name}"
             if _name_key(candidate) not in owned:
                 break
         destinations[path] = candidate
@@ -1864,7 +1873,7 @@ def export_portable(
     # The directory moves for the same reason. An included file literally named
     # `prices` is copied to `prices`, where the feeds wanted a directory: the
     # copy was written, then `mkdir` died on a raw `FileExistsError` (w5/191).
-    feed_dir = _free_feed_directory(target, taken)
+    feed_dir = _free_feed_directory(target, taken | set(packages))
     feed_files: dict[str, Path] = {}
     for source in loaded.sources:
         feed_files[source.url] = _free_feed_path(feed_dir, source.alias, taken)
@@ -1882,7 +1891,6 @@ def export_portable(
     # link no path comparison can see — would be written straight through
     # into the books, so identity is compared, not spelling.
     attachments = _export_attachments(loaded, snapshot, destinations, target, home)
-    modules, package_directories, packages = _export_plugin_modules(loaded, snapshot, target)
     attachments.update(modules)
     # One file in two roles (an include that is also a document, or that sits
     # inside a copied plugin package) is one planned copy, and the ledger's own

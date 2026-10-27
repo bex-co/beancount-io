@@ -104,3 +104,25 @@ def test_a_copied_file_where_another_copy_needs_a_directory_refuses_before_any_w
         assert "Nothing was written" in message
         assert "FileExistsError" not in message
         assert not out.exists()
+
+
+def test_the_feed_directory_moves_off_a_copied_plugin_package(feed_server: str, tmp_path: Path) -> None:
+    """A feed written into a plugin package named `prices` became one of its resources (w5/1017)."""
+    ledger = _books(tmp_path, feed_server)
+    (ledger.parent / "prices").mkdir()
+    (ledger.parent / "prices" / "__init__.py").write_text(
+        '__plugins__ = ("run",)\ndef run(entries, options):\n    return entries, []\n'
+    )
+    (ledger.parent / "prices" / "local.beancount").write_text(MANUAL)
+    ledger.write_text('option "insert_pythonpath" "TRUE"\nplugin "prices"\n' + ledger.read_text())
+    out = ledger.parent / "main-export"
+
+    exported = _export(tmp_path, feed_server, ledger)
+
+    assert exported.returncode == 0, exported.stderr or exported.stdout
+    assert _files(out) == {
+        "main.bean",
+        "prices/__init__.py",
+        "prices/local.beancount",
+        "prices-managed/BTC-USD.beancount",
+    }
