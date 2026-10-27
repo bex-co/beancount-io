@@ -195,7 +195,7 @@ def _balances(
         # Emptiness is the account's inventory, not its value in this
         # conversion: 10 EUR against -10 USD is worth 0 USD at par and still
         # held (w5/947).
-        closed -= _holding_accounts(FinancialStatementsModule().trial_balance(filtered, "units"), closed)
+        closed -= _holding_accounts(filtered.entries, closed)
         matches = _substring_match(accounts)
         pruned = {name: _prune_tree(tree, matches, closed) for name, tree in sections.items()}
     # Valuation covers only the accounts being shown: an unrelated unpriced
@@ -460,8 +460,11 @@ def _holdings(
     account tree aggregates postings into per-account costed inventories, each
     lot is valued through the ledger's price map at the period end, and a
     currency conversion re-expresses the money columns through one more quote.
-    Lots without cost are cash, not holdings, and groups netting to zero units
-    are fully sold — both are left out (w22/m3/t001).
+    Lots without cost are cash, not holdings, and a group none of whose lots
+    is still held is fully sold — both are left out (w22/m3/t001). Net units
+    are not that test: +2 HOOL long and -2 HOOL short net to 0 HOOL while both
+    lots, and their -40 USD of basis, are still held (w5/947); such a group
+    has no average cost.
     """
     from fava.core.tree import Tree
 
@@ -490,8 +493,6 @@ def _holdings(
     groups = []
     missing: list[tuple[str, str]] = []
     for key, (units, basis, accounts) in sorted(lots.items()):
-        if units == 0:
-            continue
         commodity, held = key[-2], key[-1]
         quote_date, price = prices.get_price_point((commodity, held), end)
         market = units * price if price is not None else basis
@@ -507,12 +508,12 @@ def _holdings(
                 currency = target
             else:
                 missing.append((held, target))
-        average = basis / units
+        average = basis / units if units else None
         group: dict[str, Any] = {"account": key[0]} if group_by == "account" else {"accounts": sorted(accounts)}
         group |= {
             "commodity": commodity,
             "units": {"number": units, "currency": commodity},
-            "average_cost": {"number": average, "currency": currency},
+            "average_cost": {"number": average, "currency": currency} if average is not None else None,
             "cost_basis": {"number": basis, "currency": currency},
             "market_value": {"number": market, "currency": currency},
             "price": {"number": price, "currency": currency} if price is not None else None,
@@ -1905,19 +1906,23 @@ def _prune_sections(sections: dict[str, Any], account: str | None, roots: Sequen
     return {name: _prune_tree(tree, matches) for name, tree in sections.items()}
 
 
-def _holding_accounts(units: Any, among: set[str]) -> set[str]:
-    """Which of these accounts hold any commodity in the trial balance, valued in units."""
-    held: set[str] = set()
+def _holding_accounts(entries: Any, among: set[str]) -> set[str]:
+    """Which of these accounts still hold a position in the entries' own inventories.
 
-    def walk(node: Any) -> None:
-        if node.account in among and any(number for _, number in node.balance.items()):
-            held.add(node.account)
-        for child in node.children:
-            walk(child)
+    Summed units forget what tells lots apart: +2 HOOL bought as `Long` and
+    -2 HOOL as `Short` net to 0 HOOL, yet both lots are still held, and the
+    closed account vanished from a filtered balance (w5/947).
+    """
+    from beancount.core.data import Transaction
+    from beancount.core.inventory import Inventory
 
-    for name in ("assets", "liabilities", "equity", "income", "expenses"):
-        walk(getattr(units, f"{name}_hierarchy"))
-    return held
+    inventories: dict[str, Any] = {}
+    for entry in entries:
+        if isinstance(entry, Transaction):
+            for posting in entry.postings:
+                if posting.account in among:
+                    inventories.setdefault(posting.account, Inventory()).add_position(posting)
+    return {account for account, inventory in inventories.items() if not inventory.is_empty()}
 
 
 def _prune_tree(node: Any, matches: Callable[[str], bool], closed: set[str] | None = None) -> Any | None:

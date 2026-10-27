@@ -85,3 +85,48 @@ def test_a_genuinely_empty_closed_account_stays_excluded(tmp_path: Path, convers
     data = _balance(tmp_path, EMPTY, "Mixed", conversion)
 
     assert data["account_filter_empty"] is True
+
+
+OFFSET = """option "operating_currency" "USD"
+2024-01-01 open Assets:Stock HOOL "NONE"
+2024-01-01 open Assets:Cash USD
+2024-01-01 open Equity:Opening USD
+2024-01-01 commodity HOOL
+2024-01-01 * "Capital"
+  Assets:Cash 1000 USD
+  Equity:Opening -1000 USD
+2024-01-02 * "Offsetting lots"
+  Assets:Stock 2 HOOL {{100 USD, 2024-01-02, "Long"}}
+  Assets:Stock -2 HOOL {{{short} USD, 2024-01-02, "Short"}}
+  Assets:Cash {cash} USD
+2024-01-31 price HOOL 150 USD
+{drain}2024-02-01 close Assets:Stock
+"""
+
+
+def _offset(short: int, *, drained: bool = False) -> str:
+    cash = 2 * (short - 100)
+    drain = (
+        '2024-01-31 * "Flatten both lots"\n'
+        '  Assets:Stock -2 HOOL {100 USD, 2024-01-02, "Long"}\n'
+        f'  Assets:Stock 2 HOOL {{{short} USD, 2024-01-02, "Short"}}\n'
+        f"  Assets:Cash {-cash} USD\n"
+    )
+    return OFFSET.format(short=short, cash=cash, drain=drain if drained else "")
+
+
+@pytest.mark.parametrize("conversion", ["units", "at_cost", "USD", "at_value"])
+@pytest.mark.parametrize("short", [100, 120])
+def test_a_closed_account_holding_offsetting_lots_is_still_matched(tmp_path: Path, conversion: str, short: int) -> None:
+    # Net units are 0 HOOL, but the long and short lots are both still held.
+    data = _balance(tmp_path, _offset(short), "Stock", conversion)
+
+    assert data["account_filter_empty"] is False
+    assert data["assets"] is not None
+
+
+@pytest.mark.parametrize("conversion", ["units", "at_cost"])
+def test_a_closed_account_whose_offsetting_lots_were_drained_stays_excluded(tmp_path: Path, conversion: str) -> None:
+    data = _balance(tmp_path, _offset(120, drained=True), "Stock", conversion)
+
+    assert data["account_filter_empty"] is True

@@ -1800,7 +1800,9 @@ so the rows tie to the booked gain postings. All but `trial-balance`,
 
 `holdings` lists every non-cash position with units, average cost, cost
 basis, and market value, grouped by account or — with `--group-by commodity`
-— by commodity across accounts; `--account / -a` narrows the positions.
+— by commodity across accounts; `--account / -a` narrows the positions. A
+group stays while any of its lots is held, even when long and short lots net
+to zero units; such a group has no average cost (`null` under `--json`).
 `register` takes the account as a positional argument instead of `--account`
 and lists one subtree's dated postings oldest first with the running balance,
 so its last row is the trial-balance total. A market value from a stale
