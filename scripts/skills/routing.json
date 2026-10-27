@@ -1112,6 +1112,43 @@
         "beancount-invoices"
       ],
       "why": "A one-off payment with no document to track is an everyday entry."
+    },
+    {
+      "id": "invoices-record-bill",
+      "prompt": "Record this supplier bill: Bolt Printing invoice 7781, 450 USD for brochures, due November 15.",
+      "expected": "beancount-invoices",
+      "confusable": [
+        "beancount-add"
+      ],
+      "why": "A supplier bill creates a payable tracked by document."
+    },
+    {
+      "id": "invoices-aging",
+      "prompt": "Which clients still owe me money, and how overdue are they?",
+      "expected": "beancount-invoices",
+      "confusable": [
+        "beancount-ask"
+      ],
+      "why": "Open-invoice aging is the invoices skill's read."
+    },
+    {
+      "id": "invoices-tax-remittance",
+      "prompt": "I filed my Q3 sales tax return and paid the 1,240 USD due from checking. Record the remittance.",
+      "expected": "beancount-invoices",
+      "confusable": [
+        "beancount-add",
+        "beancount-accruals"
+      ],
+      "why": "A remittance clears collected sales tax."
+    },
+    {
+      "id": "accruals-not-invoices",
+      "prompt": "Accrue this month's share of the 12,000 USD annual software contract we prepaid in January.",
+      "expected": "beancount-accruals",
+      "confusable": [
+        "beancount-invoices"
+      ],
+      "why": "A period-end schedule, not a document lifecycle."
     }
   ]
 }

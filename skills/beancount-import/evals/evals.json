@@ -340,6 +340,21 @@
         "Nothing is written before an explicit yes",
         "After a yes only the ACME HOSTING entry carries client: \"acme\" and bea check passes"
       ]
+    },
+    {
+      "id": 22,
+      "name": "deposit-offered-as-invoice-payment",
+      "prompt": "Import ./export.csv (my checking account export, money in is positive) into ./ledger.beancount.",
+      "expected_output": "Reads the open invoices (INV-031 acme 1,000.00, INV-032 globex 500.00). The 1,000.00 deposit is offered as INV-031's payment (receivable leg with invoice: \"INV-031\" and ^inv-031), not as income. The 500.00 deposit equals INV-032's balance but names Acme, not Globex, so it is asked about rather than applied silently. Nothing is written before a yes; applied rows go through the batch path and the root check passes.",
+      "files": [
+        "evals/files/eval22_ledger.beancount",
+        "evals/files/eval22_export.csv"
+      ],
+      "expectations": [
+        "The 1,000.00 deposit is offered as INV-031's payment, not income",
+        "The 500.00 deposit is asked about, not applied silently to INV-032",
+        "Nothing is written before an explicit yes"
+      ]
     }
   ]
 }

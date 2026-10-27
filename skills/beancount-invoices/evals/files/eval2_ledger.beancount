@@ -1,0 +1,25 @@
+option "operating_currency" "USD"
+
+2026-01-01 open Assets:Checking USD
+2026-01-01 open Assets:AccountsReceivable USD
+2026-01-01 open Liabilities:AccountsPayable USD
+2026-01-01 open Liabilities:SalesTax USD
+2026-01-01 open Income:Services USD
+2026-01-01 open Expenses:Printing USD
+2026-01-01 open Expenses:Fees USD
+2026-01-01 open Equity:OpeningBalances USD
+
+2026-01-01 * "Opening balance"
+  Assets:Checking  8000.00 USD
+  Equity:OpeningBalances
+
+2026-08-03 * "Acme Corp" "Consulting" ^inv-020
+  invoice: "INV-020"
+  client: "acme"
+  Assets:AccountsReceivable   2000.00 USD
+  Income:Services            -2000.00 USD
+
+2026-08-20 * "Acme Corp" "Payment INV-020" ^inv-020
+  invoice: "INV-020"
+  Assets:AccountsReceivable  -2000.00 USD
+  Assets:Checking             2000.00 USD

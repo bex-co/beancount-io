@@ -1,0 +1,34 @@
+option "operating_currency" "USD"
+
+2026-01-01 open Assets:Checking USD
+2026-01-01 open Assets:AccountsReceivable USD
+2026-01-01 open Liabilities:AccountsPayable USD
+2026-01-01 open Liabilities:SalesTax USD
+2026-01-01 open Income:Services USD
+2026-01-01 open Expenses:Printing USD
+2026-01-01 open Expenses:Fees USD
+2026-01-01 open Equity:OpeningBalances USD
+
+2026-01-01 * "Opening balance"
+  Assets:Checking  8000.00 USD
+  Equity:OpeningBalances
+
+2026-09-15 * "Acme Corp" "Invoice INV-031" ^inv-031
+  invoice: "INV-031"
+  client: "acme"
+  due: "2026-10-15"
+  Assets:AccountsReceivable   1000.00 USD
+  Income:Services            -1000.00 USD
+
+2026-10-01 * "Globex" "Invoice INV-032" ^inv-032
+  invoice: "INV-032"
+  client: "globex"
+  due: "2026-10-31"
+  Assets:AccountsReceivable    500.00 USD
+  Income:Services             -500.00 USD
+
+2026-10-14 * "Bolt Printing" "Bill 7781" ^bill-bolt-printing-7781
+  bill: "bolt-printing:7781"
+  due: "2026-11-15"
+  Expenses:Printing            450.00 USD
+  Liabilities:AccountsPayable -450.00 USD

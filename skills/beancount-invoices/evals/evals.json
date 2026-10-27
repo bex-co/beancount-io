@@ -1,0 +1,123 @@
+{
+  "skill_name": "beancount-invoices",
+  "evals": [
+    {
+      "id": 1,
+      "name": "partial-payment-leaves-remainder",
+      "prompt": "Acme Corp paid 400 USD toward invoice INV-031 into checking on 2026-10-20. Record it in ./ledger.beancount.",
+      "expected_output": "Reads INV-031's postings (1,000.00 open) and proposes Assets:AccountsReceivable -400.00 with invoice: \"INV-031\" and ^inv-031 against Assets:Checking 400.00, showing INV-031 open 1,000.00 \u2192 600.00. Nothing is written before a yes; afterwards the root check passes and INV-031 reads 600.00 open.",
+      "files": [
+        "evals/files/eval1_ledger.beancount"
+      ],
+      "expectations": [
+        "The receivable posting is -400.00 with invoice: \"INV-031\" and the ^inv-031 link",
+        "The proposal shows 1,000.00 open before and 600.00 after",
+        "The payment is not booked to income",
+        "Nothing is written before an explicit yes",
+        "After a yes bea check passes and INV-031 has 600.00 open"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "processor-payment-keeps-fee-apart",
+      "prompt": "Stripe paid out invoice INV-031 in full on 2026-10-22: 1,000.00 gross, 29.30 fee, 970.70 landed in checking. Book it in ./ledger.beancount.",
+      "expected_output": "Proposes one entry: Assets:AccountsReceivable -1000.00 (invoice: \"INV-031\", ^inv-031), Expenses:Fees 29.30, Assets:Checking 970.70, showing gross \u2212 fee = net and INV-031 open 1,000.00 \u2192 0.00. Written only after a yes; root check passes.",
+      "files": [
+        "evals/files/eval1_ledger.beancount"
+      ],
+      "expectations": [
+        "The receivable is credited the 1,000.00 gross for INV-031",
+        "The 29.30 fee posts to Expenses:Fees, not netted into income",
+        "Checking receives 970.70",
+        "Nothing is written before an explicit yes"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "unmatched-payment-is-asked",
+      "prompt": "A 777.00 USD payment from Initech arrived in checking on 2026-10-23. Record it against their invoice in ./ledger.beancount.",
+      "expected_output": "No open invoice matches Initech or 777.00 (open: INV-031 1,000.00 acme, INV-032 500.00 globex). The skill says so and asks which invoice it pays or whether it is something else; it proposes no entry and writes nothing.",
+      "files": [
+        "evals/files/eval1_ledger.beancount"
+      ],
+      "expectations": [
+        "The open invoices are read and none matches",
+        "The skill asks rather than applying the payment to an invoice or to income",
+        "Nothing is written"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "bill-part-payment",
+      "prompt": "I paid Bolt Printing 200 USD from checking on 2026-10-25 toward bill 7781. Record it in ./ledger.beancount.",
+      "expected_output": "Proposes Liabilities:AccountsPayable 200.00 with bill: \"bolt-printing:7781\" and the ^bill-bolt-printing-7781 link against Assets:Checking -200.00, showing the bill owed 450.00 \u2192 250.00. Written after a yes; root check passes.",
+      "files": [
+        "evals/files/eval1_ledger.beancount"
+      ],
+      "expectations": [
+        "The payable posting is +200.00 carrying bill: \"bolt-printing:7781\"",
+        "The proposal shows 450.00 owed before and 250.00 after",
+        "Nothing is written before an explicit yes"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "invoice-with-stated-tax",
+      "prompt": "Invoice Initech for 1,000 USD of consulting plus 80 USD sales tax, invoice INV-033 dated 2026-10-26, due 2026-11-25. Record it in ./ledger.beancount.",
+      "expected_output": "Checks INV-033 is unused, then proposes Assets:AccountsReceivable 1080.00, Income:Services -1000.00, Liabilities:SalesTax -80.00, with invoice: \"INV-033\", client, due: \"2026-11-25\", and ^inv-033. Written after a yes; root check passes.",
+      "files": [
+        "evals/files/eval1_ledger.beancount"
+      ],
+      "expectations": [
+        "The receivable is 1,080.00 and the 80.00 tax is its own Liabilities:SalesTax leg",
+        "The entry carries invoice:, client:, due: and the ^inv-033 link",
+        "No tax rate is looked up",
+        "Nothing is written before an explicit yes"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "tax-without-a-figure-is-asked",
+      "prompt": "Invoice Initech 1,000 USD for consulting plus sales tax, invoice INV-034 dated 2026-10-26. Record it in ./ledger.beancount.",
+      "expected_output": "The request says tax applies but gives no amount or rate, so the skill asks for the figure from the invoice; it neither looks up a rate nor writes the invoice without the tax.",
+      "files": [
+        "evals/files/eval1_ledger.beancount"
+      ],
+      "expectations": [
+        "The skill asks for the tax amount or rate",
+        "No rate is looked up or assumed",
+        "Nothing is written before the figure is supplied"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "aging-ties-to-balance",
+      "prompt": "Which clients owe me money as of 2026-10-27, and how overdue are they? Use ./ledger.beancount.",
+      "expected_output": "Runs invoice-aging and invoice-terms with today 2026-10-27: INV-031 acme 1,000.00, due 2026-10-15, 12 days past due; INV-032 globex 500.00, due 2026-10-31, not yet due (-4). The open amounts tie to the 1,500.00 receivable balance from document-balance. Read-only.",
+      "files": [
+        "evals/files/eval1_ledger.beancount"
+      ],
+      "expectations": [
+        "INV-031 is 12 days past due and INV-032 is not yet due",
+        "Each figure comes from an executed query",
+        "The 1,500.00 receivable tie-out is shown",
+        "The ledger is not modified"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "duplicate-number-is-asked",
+      "prompt": "Invoice Acme Corp for 2,000 USD of consulting, invoice INV-020, dated 2026-10-26. Record it in ./ledger.beancount.",
+      "expected_output": "INV-020 already has postings (issued and paid in August), so the skill shows them and asks whether this is a different number or the same invoice; it does not issue INV-020 twice.",
+      "files": [
+        "evals/files/eval2_ledger.beancount"
+      ],
+      "expectations": [
+        "The existing INV-020 postings are found and shown",
+        "The skill asks instead of issuing the number again",
+        "Nothing is written"
+      ]
+    }
+  ],
+  "notes": "Synthetic fixtures only. Invoice identity, links, and recipes follow ADR025 and the skill's SKILL.md."
+}
