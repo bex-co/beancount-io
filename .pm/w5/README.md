@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1065 — Refuse stale empty rule directories in refreshed snapshots](./1065.md) — major CLI residual: retired directory keeps10-unit fee despite source-identical files, Cash970 vs980; root/included USD/EUR and full completed929 controls checked2026-10-27.
+
 - [1064 — Check fullwidth pound and won currency signs](./1064.md) — major CLI residual: ￡/￦ amounts become USD with clean checks; all seven layouts reproduce, completed924 full policy stays green, checked2026-10-27.
 
 - [1063 — Keep funded-close checks where check_drained is ineffective](./1063.md) — minor shared CLI guard/advisory gap: missing child assertion or passing aggregatezero hides own100USD; original888DoD passes, checked2026-10-27.
