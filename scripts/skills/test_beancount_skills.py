@@ -1764,6 +1764,50 @@ class TestBeaRecipes(unittest.TestCase):
         # Q4 holds both a collection and the Q3 remittance: only the collection counts.
         self.assertEqual(self.recipe("tax-period", start="2026-10-01", end="2027-01-01")["rows"], [["-16.00"]])
 
+    def test_aging_reads_terms_from_the_issuing_posting_and_ties_to_the_balance(self):
+        self.ledger.write_text(
+            'option "operating_currency" "USD"\n'
+            "2026-01-01 open Assets:Checking USD\n"
+            "2026-01-01 open Assets:AccountsReceivable USD\n"
+            "2026-01-01 open Liabilities:AccountsPayable USD\n"
+            "2026-01-01 open Income:Services USD\n"
+            "2026-01-01 open Expenses:Printing USD\n"
+            'include "transactions/2026.bean"\n'
+        )
+        self.batch([
+            {"date": "2026-09-01", "flag": "*", "payee": "Acme", "narration": "Invoice INV-050",
+             "links": ["inv-050"], "meta": {"invoice": "INV-050", "client": "acme", "due": "2026-10-01"},
+             "postings": [
+                 {"account": "Assets:AccountsReceivable", "units": {"number": "900.00", "currency": "USD"}},
+                 {"account": "Income:Services", "units": {"number": "-900.00", "currency": "USD"}}]},
+            # No stated terms: aged by days outstanding only.
+            {"date": "2026-10-20", "flag": "*", "payee": "Globex", "narration": "Invoice INV-051",
+             "links": ["inv-051"], "meta": {"invoice": "INV-051", "client": "globex"},
+             "postings": [
+                 {"account": "Assets:AccountsReceivable", "units": {"number": "300.00", "currency": "USD"}},
+                 {"account": "Income:Services", "units": {"number": "-300.00", "currency": "USD"}}]},
+            {"date": "2026-10-05", "flag": "*", "payee": "Acme", "narration": "Part payment",
+             "links": ["inv-050"], "meta": {"invoice": "INV-050"},
+             "postings": [
+                 {"account": "Assets:AccountsReceivable", "units": {"number": "-400.00", "currency": "USD"}},
+                 {"account": "Assets:Checking", "units": {"number": "400.00", "currency": "USD"}}]},
+            {"date": "2026-10-14", "flag": "*", "payee": "Bolt Printing", "narration": "Bill 7781",
+             "links": ["bill-bolt-printing-7781"], "meta": {"bill": "bolt-printing:7781", "due": "2026-11-15"},
+             "postings": [
+                 {"account": "Expenses:Printing", "units": {"number": "450.00", "currency": "USD"}},
+                 {"account": "Liabilities:AccountsPayable", "units": {"number": "-450.00", "currency": "USD"}}]},
+        ])
+        self.recipe("batch")
+        self.values.update(today="2026-10-27", receivable="Assets:AccountsReceivable",
+                           payable="Liabilities:AccountsPayable")
+        aging = self.recipe("invoice-aging")["rows"]
+        self.assertEqual(aging, [["INV-050", "2026-09-01", 56, "500.00"], ["INV-051", "2026-10-20", 7, "300.00"]])
+        terms = self.recipe("invoice-terms")["rows"]
+        self.assertEqual(terms, [["INV-050", "acme", "2026-10-01", 26], ["INV-051", "globex", None, None]])
+        self.assertEqual(self.recipe("document-balance", account="Assets:AccountsReceivable")["rows"], [["800.00"]])
+        self.assertEqual(self.recipe("bill-terms")["rows"], [["bolt-printing:7781", "2026-11-15", -19]])
+        self.assertEqual(self.recipe("document-balance", account="Liabilities:AccountsPayable")["rows"], [["-450.00"]])
+
     def test_profit_by_client_counts_split_parts_once_and_ties_to_the_period(self):
         self.ledger.write_text(
             'option "operating_currency" "USD"\n'

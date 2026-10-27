@@ -58,7 +58,7 @@ Use the ledger's own accounts first. When it has no receivable or payable accoun
 
 ## Scope
 
-**Does:** an invoice issued (the receivable against income, with any tax leg its document states), payments applied to open invoices (partial, several invoices at once, and a processor's gross, fee, and net), a supplier bill received (the payable against its expense) and paid in full or in part, and collected tax remitted for a filing period, appended to an existing file the root ledger includes.
+**Does:** an invoice issued (the receivable against income, with any tax leg its document states), payments applied to open invoices (partial, several invoices at once, and a processor's gross, fee, and net), a supplier bill received (the payable against its expense) and paid in full or in part, and collected tax remitted for a filing period, appended to an existing file the root ledger includes. Also answers, read-only, who owes what and how overdue (Aging below).
 
 **Does not:** record purchases or income with no document to track (`beancount-add`), read bank or processor export files (`beancount-import`), draft period-end accrual schedules (`beancount-accruals`), render, number, send, or chase invoices, look up or determine a tax rate, give tax advice, or edit, move, or delete existing entries.
 
@@ -158,6 +158,36 @@ bea --file "$ledger" --json --no-input check
 ```
 
 Read `invoice-postings` again and report each affected invoice's open balance from it. Each command validates its own write and refuses an entry that would break the ledger; when a later command fails, report which earlier ones succeeded and read the ledger before retrying — `bea add` does not deduplicate. Never report success without a passing check.
+
+## Aging: who owes what, and how overdue
+
+A read-only answer; nothing is proposed or written. Bind `today` to today's date (stated in the answer) and `account` to the receivable (or, for "whom do I owe", the payable). Read each open document's age from its first posting, then its terms from the issuing posting — the client and due date live there, not on payments:
+
+<!-- recipe: invoice-aging -->
+```sh
+bea --file "$ledger" --json --no-input query "SELECT any_meta('invoice') AS invoice, min(date) AS issued, $today - min(date) AS days_outstanding, sum(number) AS open WHERE account = '$receivable' GROUP BY invoice HAVING sum(number) != 0 ORDER BY issued"
+```
+
+<!-- recipe: invoice-terms -->
+```sh
+bea --file "$ledger" --json --no-input query "SELECT any_meta('invoice') AS invoice, any_meta('client') AS client, any_meta('due') AS due, $today - any_meta('due') AS days_past_due WHERE account = '$receivable' AND number > 0 ORDER BY invoice"
+```
+
+For bills, `bill-open` gives the open amounts and the receiving posting (`number < 0` on the payable) holds the due date:
+
+<!-- recipe: bill-terms -->
+```sh
+bea --file "$ledger" --json --no-input query "SELECT any_meta('bill') AS bill, any_meta('due') AS due, $today - any_meta('due') AS days_past_due WHERE account = '$payable' AND number < 0 ORDER BY bill"
+```
+
+Present only documents the open read returns, joined to their terms, oldest first: document, client or supplier, issued, due, days past due (negative is not yet due), and open amount. A document with no due date shows its days outstanding only; never assume terms. Then tie out: the open amounts must sum to the account's balance from this read, quoted beside them; a difference is receivable or payable money no document explains, reported as such.
+
+<!-- recipe: document-balance -->
+```sh
+bea --file "$ledger" --json --no-input query "SELECT sum(number) AS balance WHERE account = '$account'"
+```
+
+Aging runs on local `bea`; Beancount.io's hosted queries do not yet subtract dates.
 
 ## What NOT to do
 
