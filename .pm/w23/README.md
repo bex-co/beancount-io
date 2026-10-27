@@ -33,6 +33,7 @@
 - [119](./119.md) — set-typed BQL cells render space-joined in text (`runBqlQuery`, GraphQL, stock) but comma-joined in structured (MCP structured, REST; dtype says `set`, value is a string)
 - [124](./124.md) — unquoted `FROM accounts` resolves table-first on MCP (12) vs column-first on stock (34); w23/116's Resolved 'stock is table-first' premise disproven (0.2.0 + master source, direct execution)
 - [125](./125.md) — `FROM <column>` fold gaps: `filename`/`lineno`/`meta` silently 0 (engine can't fold), `type`/`weight`/`other_accounts` + 5 more error where the engine folds or empties (pin covers 2 of 19 members)
+- [127](./127.md) — `SELECT * AS x` collapses star: 1 declared col vs 31 cells per row, text drops 30 values (stock ParseErrors)
 - [082](./blocked/082.md) — `createPullRequest` fails on production: Gitea 500 while creating the `pr-patch-*` branch, on MCP and REST alike — **blocked:** needs the Gitea server-log cause for one failing branch create (owner), then a production rerun
 - [080](./blocked/080.md) — `/api-gateway/mcp` accepts any `Origin` (the MCP transport spec says a bad `Origin` MUST get 403); owner picks validate vs document — **blocked:** owner picks 403-on-foreign-Origin vs documented non-validation
 - [075](./blocked/075.md) — typed BQL results return NULL as `""` (undocumented), so a missing payee or price reads as an empty string — **blocked:** documented as `""` (option a shipped); owner picks `null` on REST/MCP, `null` everywhere, or keeping `""`
