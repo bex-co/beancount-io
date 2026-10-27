@@ -457,9 +457,11 @@ bea --file books/main.bean import statement.ofx --account Assets:Checking
 bea --file books/main.bean import statement.ofx --apply
 ```
 
-The first import previews every row; the account is remembered per OFX account
-id, so `--apply` re-runs flag-free, as does next month's export from the same
-account. `--rules` match the statement text (merchant name, memo, and type
+The first import previews every row; the account is remembered per OFX bank
+and account id (`BANKID` with `ACCTID`; a card statement has no bank), so
+`--apply` re-runs flag-free, as does next month's export from the same
+account. A mapping remembered for the same account number at another bank is
+not reused, and one saved before bea recorded the bank needs `--account` once. `--rules` match the statement text (merchant name, memo, and type
 joined with ` / `), `--default-account` catches the rest, and unmatched rows
 post to `<expenses root>:Uncategorized` with flag `!` for the review queue —
 the same mapping the CSV path uses. Pass `--ofx` to force the OFX path, for
