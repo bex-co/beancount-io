@@ -1039,6 +1039,7 @@ def _cash_flow(filtered: Any, bounds: tuple[date | None, date | None], ledger_er
     # half-open [first, cutoff) — the period intersected with the bounds.
     flow_books: dict[str, CounterInventory] = {}
     split: list[tuple[Any, list[str], list[str]]] = []
+    priced: list[Any] = []
     for entry in filtered.ledger.all_entries:
         if not isinstance(entry, Transaction):
             continue
@@ -1063,6 +1064,11 @@ def _cash_flow(filtered: Any, bounds: tuple[date | None, date | None], ledger_er
             dropped = sorted({account for account in legs if not matches(account)})
             if kept and dropped:
                 split.append((entry, kept, dropped))
+        if any(
+            posting.price is not None and posting.units is not None and posting.price.currency != posting.units.currency
+            for posting in entry.postings
+        ):
+            priced.append(entry)
         for posting in entry.postings:
             if posting.units is None or posting.units.number is None:
                 continue
@@ -1106,6 +1112,29 @@ def _cash_flow(filtered: Any, bounds: tuple[date | None, date | None], ledger_er
 
     totals = {activity: _sum_amounts(row["amounts"] for row in rows) for activity, rows in sections.items()}
     net_change = _sum_amounts(totals.values())
+    # The rows explain the cash only when every transaction conserves each
+    # currency at cost. A priced exchange (`100 EUR @ 1.10 USD`) balances by
+    # its price weight instead, so its legs vanished from the rows or became
+    # an invented foreign opening balance (w5/1068): checked against the cash
+    # accounts' own movement, and refused rather than published.
+    moved = _sum_amounts(flows[account] for account in flows if account in members)
+    unexplained = sorted(
+        currency
+        for currency in set(moved) | set(net_change)
+        if moved.get(currency, Decimal(0)) != net_change.get(currency, Decimal(0))
+    )
+    if unexplained:
+        examples = ", ".join(
+            f"{_where_entry(entry)} ({entry.narration or entry.payee or 'transaction'})" for entry in priced[:5]
+        )
+        raise protocol.UsageError(
+            "Cash Flow cannot reconcile this period: "
+            + (f"priced currency exchanges ({examples}) " if priced else "some transactions ")
+            + f"move cash in {', '.join(unexplained)} by a price, not by cost, so the activity rows would not "
+            "explain the cash accounts' actual change. The report reads every amount at cost; narrow the period "
+            "to exclude them, or read the balance sheet.",
+            ledger_errors=ledger_errors,
+        )
     closing_total = _sum_amounts(closing.values())
     opening = {
         currency: closing_total.get(currency, Decimal(0)) - net_change.get(currency, Decimal(0))
@@ -1143,6 +1172,11 @@ def _cash_flow(filtered: Any, bounds: tuple[date | None, date | None], ledger_er
 
 
 _SPLIT_EXAMPLES = 5
+
+
+def _where_entry(entry: Any) -> str:
+    meta = entry.meta or {}
+    return f"{entry.date} at {Path(str(meta.get('filename', '?'))).name}:{meta.get('lineno', '?')}"
 
 
 def _refuse_split_cash_flow(

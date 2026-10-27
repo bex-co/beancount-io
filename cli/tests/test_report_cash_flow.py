@@ -8,6 +8,7 @@ they moved; each currency reconciles on its own.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
@@ -128,16 +129,20 @@ def test_transfers_between_cash_accounts_never_appear(tmp_path: Path) -> None:
     assert "Liabilities:Card" not in rows
 
 
-def test_multi_currency_reconciles_per_currency(tmp_path: Path) -> None:
-    data = _cash_flow(write_ledger(tmp_path, FX))
-    operating = {row["account"]: row["amounts"] for row in data["sections"]["operating"]}
-    assert operating == {
-        "Expenses:Food": {"EUR": "-300"},
-        "Income:Salary": {"USD": "3000.00"},
-    }
-    assert data["net_change"] == {"USD": "3000.00", "EUR": "-300"}
-    assert data["closing"] == {"USD": "2670.00"}
-    assert data["opening"] == {"USD": "-330.00", "EUR": "300"}
+def test_a_priced_exchange_is_refused_rather_than_misreconciled(tmp_path: Path) -> None:
+    # Cash really opens at zero and closes at 2670 USD; reading the 300 EUR
+    # hotel at cost left -330 USD +300 EUR as an invented opening (w5/1068).
+    proc = engine(["report", "--file", str(write_ledger(tmp_path, FX)), "--kind", "cash-flow"], tmp_path)
+    assert proc.returncode == 2, proc.stdout
+    message = json.loads(proc.stdout)["error"]["message"]
+    assert "cannot reconcile" in message and "Paris hotel" in message
+
+
+def test_a_window_without_the_exchange_still_reports(tmp_path: Path) -> None:
+    data = _cash_flow(write_ledger(tmp_path, FX), "--to-date", "2026-02-05")
+    assert data["net_change"] == {"USD": "3000.00"}
+    assert data["opening"] == {"USD": "0"} or data["opening"] == {"USD": "0.00"}
+    assert data["closing"] == {"USD": "3000.00"}
 
 
 def test_empty_period_has_no_rows_and_matching_bottom_lines(tmp_path: Path) -> None:

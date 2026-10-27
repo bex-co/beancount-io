@@ -1839,6 +1839,10 @@ window whole: a filter that keeps a cash leg but drops the income that paid it,
 or one side of a transfer between cash accounts, is refused (exit **2**, even
 with `--allow-errors`) naming the transactions and the accounts the filter
 would also need. Drop `--account`, or widen it to a balanced filter.
+A priced currency exchange in the window (`100 EUR @ 1.10 USD`) balances by
+its price, not by cost, so the rows cannot explain the cash it moves: such a
+period is refused the same way, naming the transactions; choose a window
+without them or read the balance sheet.
 Cash accounts are the Assets accounts named like cash (`Cash`, `Checking`,
 `Savings`, `Bank`) and their children, plus any account whose `open` declares
 `cash-flow-role: "cash"` — under any root, so an overdraft declared cash counts
