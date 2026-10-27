@@ -838,8 +838,11 @@ command with an output destination follows.
 `bea query PRINT -f beancount` (or `SELECT entry`) preserves negative custom
 values as separate values, decimal precision, and complete cost specifications.
 Existing multiline text stays intact. A padding transaction Beancount derived
-from a `pad` is left out when that `pad` is in the same result, so the export
-of a valid ledger passes `bea check`; selected without its `pad`, it is printed.
+from a `pad` is left out when that `pad` and the balance assertion that called
+for it are both in the same result, so the export of a valid ledger passes
+`bea check`; any other padding transaction is printed, so a date cutoff that
+keeps a pad but drops one currency's assertion keeps that currency's amount,
+and a `pad` none of whose padding the export derives again is left out.
 For the same reason the export starts with the `option` lines its validity
 rests on, wherever the ledger changes them from Beancount's defaults: renamed
 roots (`name_assets` …), `account_rounding`, `booking_method`,

@@ -1803,7 +1803,7 @@ def _export_root_changes(rows: Any, options: Mapping[str, Any]) -> tuple[list[st
 
 def _render_beancount(rows: Any, out: TextIO, file: Path, options: Mapping[str, Any]) -> None:
     """Use the writer's syntax fixes with upstream's grouping and exact precision."""
-    from beancount.core.data import Commodity, Document, Pad, Transaction
+    from beancount.core.data import Balance, Commodity, Document, Pad, Transaction
     from beancount.core.display_context import DisplayContext
 
     from bea_engine.ledger.writer import DirectivePrinter
@@ -1811,16 +1811,30 @@ def _render_beancount(rows: Any, out: TextIO, file: Path, options: Mapping[str, 
     # Like upstream's Beancount renderer, a fresh display context retains each
     # number's natural precision instead of rounding to a result-column width.
     printer = DirectivePrinter(DisplayContext())  # type: ignore[no-untyped-call]
-    # Beancount synthesizes a `P` transaction at each used pad's own location.
-    # Printed beside the pad that produced it, the reloaded export books the
-    # padding twice over and reports that pad unused, so the export of a valid
-    # ledger failed `check` (w5/085). The pad derives it again on reload; a
-    # padding transaction selected without its pad is still printed.
+    # Beancount synthesizes a `P` transaction at each used pad's own location,
+    # one per currency, its postings carrying the location of the balance
+    # assertion that called for it. Printed beside the pad that produced it,
+    # the reloaded export books the padding twice over and reports that pad
+    # unused, so the export of a valid ledger failed `check` (w5/085). One the
+    # pad derives again on reload, from its pad and assertion both in the
+    # result, is left out. Any other is printed: a cutoff that keeps the pad
+    # but drops one currency's assertion must keep that currency's amount, and
+    # a pad none of whose padding is derived again is left out instead, so it
+    # is not reported unused.
     pads = {_source_location(entry) for (entry,) in rows if isinstance(entry, Pad)}
+    balances = {_source_location(entry) for (entry,) in rows if isinstance(entry, Balance)}
+    derived: set[tuple[Any, Any]] = set()
+    printed: set[tuple[Any, Any]] = set()
+    kept = []
+    for (entry,) in rows:
+        if isinstance(entry, Transaction) and entry.flag == "P" and _source_location(entry) in pads:
+            if entry.postings and _source_location(entry.postings[0]) in balances:
+                derived.add(_source_location(entry))
+                continue
+            printed.add(_source_location(entry))
+        kept.append((entry,))
     rows = [
-        (entry,)
-        for (entry,) in rows
-        if not (isinstance(entry, Transaction) and entry.flag == "P" and _source_location(entry) in pads)
+        (entry,) for (entry,) in kept if not (isinstance(entry, Pad) and _source_location(entry) in printed - derived)
     ]
     switches, restore = _export_root_changes(rows, options)
     # Only ahead of rows: an empty result is an empty file, as an empty
