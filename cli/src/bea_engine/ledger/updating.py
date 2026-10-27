@@ -52,7 +52,10 @@ def parse_location(id_text: str) -> tuple[Path, int] | None:
     metadata, not a location.
     """
     path_text, separator, line_text = id_text.rpartition(":")
-    if not separator or not path_text or not line_text.isdigit():
+    # `isdecimal`, not `isdigit`: a superscript `²` or circled `②` is a digit
+    # `int()` cannot read, and an id such as `statement:²` crashed the lookup
+    # (w5/1041); it is metadata to match, not a line number.
+    if not separator or not path_text or not line_text.isdecimal():
         return None
     lineno = int(line_text)
     if lineno < 1:
