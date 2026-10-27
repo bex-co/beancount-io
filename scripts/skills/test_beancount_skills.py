@@ -1840,6 +1840,16 @@ class TestBeaRecipes(unittest.TestCase):
         self.recipe("check")
         self.assertIn('payroll: "2026-07-15"', self.target.read_text())
 
+    def test_payroll_tie_answers_before_the_ledger_has_any_posting(self):
+        # A business's first payroll run may come before any other entry.
+        self.ledger.write_text(
+            'option "operating_currency" "USD"\n'
+            "2026-01-01 open Assets:Checking USD\n"
+            "2026-01-01 open Expenses:Payroll:Wages USD\n"
+        )
+        tie = self.recipe("payroll-tie", gross="8000.00", withholdings="(1100.00 + 496.00)", net="6404.00")
+        self.assertEqual(tie["rows"], [["6404.00", "0.00"]])
+
     def test_payroll_remittance_and_quarter_totals_tie_to_account_movements(self):
         self.ledger.write_text(
             'option "operating_currency" "USD"\n'

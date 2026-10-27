@@ -173,7 +173,7 @@ A business that pays staff through a payroll provider records each run from the 
 
 <!-- recipe: payroll-tie -->
 ```sh
-bea --file "$ledger" --json --no-input query "SELECT $gross - $withholdings AS computed_net, $net - ($gross - $withholdings) AS gap LIMIT 1"
+bea --file "$ledger" --json --no-input query "SELECT $gross - $withholdings AS computed_net, $net - ($gross - $withholdings) AS gap FROM #accounts LIMIT 1"
 ```
 
 A nonzero `gap` stops the proposal: show the printed figures and the gap, and ask — a misread line, a deduction the summary lists elsewhere, or a reimbursement. Never adjust a figure to make it tie.
