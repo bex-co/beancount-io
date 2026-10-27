@@ -82,7 +82,6 @@
 
 - [1043 — Skip unresolved-price reductions in partial gains](./1043.md) — minor CLI report crash: allow-errors still multiplies a Decimal by MISSING; complete gains/date-slice/zero-price controls checked 2026-10-25.
 
-- [1042 — Insert narration before compact header tags and links](./1042.md) — minor CLI planner gap: valid bare headers receive a string after an existing tag/link and refuse; single/batch, spaced and tag-addition controls checked 2026-10-25.
 
 - [1041 — Preserve Unicode numeric-suffix transaction IDs](./1041.md) — minor CLI lookup crash: valid superscript/circled string IDs raise ValueError and abort a batch; both metadata keys, exact ASCII neighbors and file-line controls checked 2026-10-25.
 

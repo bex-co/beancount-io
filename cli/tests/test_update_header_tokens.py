@@ -6,7 +6,9 @@ another line took a new tag inside the unfinished string, and a narration
 replacement spliced quotes into it (w5/1026); the narration slot followed the
 loaded payee, which a plugin may fill or drop, rather than the strings the
 header writes (w5/1026). A flag change replaced the whole run of text glued to
-the old flag, deleting adjacent strings, tags and links (w5/1039).
+the old flag, deleting adjacent strings, tags and links (w5/1039). A narration
+added to a bare header whose first tag or link touches the flag landed after
+that token, where the grammar allows no string (w5/1042).
 
 Every case drives the real CLI, single and batch, and checks the file's exact
 bytes and the fields the ledger loads.
@@ -366,4 +368,80 @@ def test_flag_change_keeps_every_adjacent_token(
     found = [row for row in rows if row["date"] == "2026-01-02"]
     assert [(row["flag"], row["payee"], row["narration"], row["tags"], row["links"], row["meta"]) for row in found] == [
         (flag, *loaded, {"ref": "T1", "memo": "Keep café"})
+    ]
+
+
+GOOD = """\
+2026-01-02 ! "Good"
+  ref: "G1"
+  Assets:Cash -10 USD
+  Expenses:Food 10 USD
+"""
+
+
+def _bare_book(header: str, *, good_flag: str = "!") -> str:
+    return (
+        PREFIX
+        + GOOD.replace("2026-01-02 !", f"2026-01-02 {good_flag}")
+        + f"2026-01-03 {header} ; keep this comment\n"
+        + '  ref: "T1"\n  memo: "Keep this memo"\n  Assets:Cash -5 USD\n  Expenses:Food 5 USD\n'
+        + NEIGHBOUR
+    )
+
+
+BARE_FORMS = {
+    "tag-flag": "!#review ^receipt",
+    "both-glued": "!#review^receipt",
+    "link-flag": "!^receipt #review",
+    "spaced": "! #review ^receipt",
+    "tail-glued": "! #review^receipt",
+}
+
+
+def _bare_fields(tmp_path: Path, *filters: str) -> list[tuple[Any, ...]]:
+    """T1's loaded header fields, as the listing filtered by `filters` shows them."""
+    rows = _data(_bea(tmp_path, "list", "transaction", "--on-disk", *filters))
+    return [
+        (row["flag"], row["payee"], row["narration"], row["tags"], row["links"], row["meta"])
+        for row in rows
+        if row["meta"].get("ref") == "T1"
+    ]
+
+
+@pytest.mark.parametrize("transport", ["single", "batch"])
+@pytest.mark.parametrize(
+    ("form", "after"),
+    [
+        ("tag-flag", '! "Coffee" #review ^receipt'),
+        ("both-glued", '! "Coffee" #review^receipt'),
+        ("link-flag", '! "Coffee" ^receipt #review'),
+        ("spaced", '! "Coffee" #review ^receipt'),
+        ("tail-glued", '! "Coffee" #review^receipt'),
+    ],
+)
+def test_narration_goes_before_every_tag_and_link_of_a_bare_header(
+    tmp_path: Path, transport: str, form: str, after: str
+) -> None:
+    rows = [{"id": "T1", "narration": "Coffee"}]
+    good_flag = "!"
+    if transport == "batch":
+        # The batch carries a separate valid row too; both must write.
+        rows.insert(0, {"id": "G1", "flag": "*"})
+        good_flag = "*"
+    source = _bare_book(BARE_FORMS[form])
+    expected = _bare_book(after, good_flag=good_flag)
+    _apply_and_verify(tmp_path, transport, rows, source, expected)
+    assert _bare_fields(tmp_path, "--search", "Coffee") == [
+        ("!", None, "Coffee", ["review"], ["receipt"], {"ref": "T1", "memo": "Keep this memo"})
+    ]
+
+
+@pytest.mark.parametrize("transport", ["single", "batch"])
+@pytest.mark.parametrize("form", list(BARE_FORMS))
+def test_tag_added_to_a_bare_header_keeps_its_tokens(tmp_path: Path, transport: str, form: str) -> None:
+    source = _bare_book(BARE_FORMS[form])
+    expected = _bare_book(f"{BARE_FORMS[form]} #classified")
+    _apply_and_verify(tmp_path, transport, [{"id": "T1", "tags": ["classified"]}], source, expected)
+    assert _bare_fields(tmp_path, "--tag", "classified") == [
+        ("!", None, "", ["classified", "review"], ["receipt"], {"ref": "T1", "memo": "Keep this memo"})
     ]
