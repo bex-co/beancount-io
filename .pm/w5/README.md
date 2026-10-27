@@ -42,7 +42,6 @@
 
 - [1073 — Preserve native balances in funded-close checks](./1073.md) — minor CLI retirement: premature rounding invents funds, hides a real balance and suppresses offset cost lots in close/import checks; 89 profiles, 716 CLI calls, 302 native loads; full funded/lot-label/dateless/batch/max-date controls pass, checked 2026-10-27.
 
-- [1072 — Preserve native precision when Cash Flow merges cash accounts](./1072.md) — minor CLI aggregation: an exactly balanced token book depends on posting order, and quiet cash totals lose native units; 38 profiles, 440 CLI calls, 80 native loads; completed 1054/m4 acceptance passes, checked 2026-10-27.
 
 
 

@@ -1229,11 +1229,16 @@ def _refuse_split_cash_flow(
 
 
 def _sum_amounts(maps: Iterable[Mapping[str, Decimal]]) -> dict[str, Decimal]:
-    """Add per-currency maps, keeping zero keys (unlike inventory `add`)."""
+    """Add per-currency maps, keeping zero keys (unlike inventory `add`).
+
+    A first amount is taken as given: `0 + x` rounds a 29-digit token amount
+    to the context's 28 digits, which made merged cash disagree with its own
+    accounts (w5/1072).
+    """
     totals: dict[str, Decimal] = {}
     for amounts in maps:
         for currency, total in amounts.items():
-            totals[currency] = totals.get(currency, Decimal(0)) + total
+            totals[currency] = totals[currency] + total if currency in totals else total
     return totals
 
 
