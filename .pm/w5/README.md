@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1077 — Accept native rounding across repeated purchases in Cash Flow](./1077.md) — major CLI reporting: two ordinary purchases refuse together while each day works; 62 fresh profiles, 814 CLI calls, 200 native loads; full original rounding/example/FX/feature controls pass, checked 2026-10-27.
+
 - [1076 — Preserve exact native magnitudes when clipping a closed lot's quantity](./1076.md) — minor CLI Capital Gains: rounding abs overstates a long close or partial short cover by two smallest token units; 58 fresh profiles, 506 CLI calls, 136 native loads; full original reduction/FX and dated-portfolio controls pass, checked 2026-10-27.
 
 
