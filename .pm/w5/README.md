@@ -60,7 +60,6 @@
 
 - [1055 — Keep known-zero report values](./1055.md) — trivial CLI display: Register plus per-unit net-worth totals/stock series lose typed zero; USD/EUR, interval/native and original908/506 controls, extended2026-10-26.
 
-- [1054 — Keep native unit residuals in reports](./1054.md) — minor CLI precision gap: an early inventory zero-add rounds tokens before a later return; native/BQL, five report paths and boundary/zero controls, checked 2026-10-26.
 
 
 

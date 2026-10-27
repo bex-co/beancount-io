@@ -49,7 +49,13 @@ class SimpleCounterInventory(dict[str, Decimal]):
 
     def add(self, key: str, number: Decimal) -> None:
         """Add a number to key."""
-        new_num = number + self.get(key, ZERO)
+        # Beancount.io change: no arithmetic for a first position or a zero,
+        # as Beancount's own inventory does; `0 + x` rounds a 29-digit token
+        # quantity to the context's 28 digits before any real sum (w5/1054).
+        if not number:
+            return
+        held = self.get(key)
+        new_num = number if held is None else number + held
         if new_num == ZERO:
             self.pop(key, None)
         else:
@@ -113,7 +119,13 @@ class CounterInventory(dict[InventoryKey, Decimal]):
 
     def add(self, key: InventoryKey, number: Decimal) -> None:
         """Add a number to key."""
-        new_num = number + self.get(key, ZERO)
+        # Beancount.io change: no arithmetic for a first position or a zero,
+        # as Beancount's own inventory does; `0 + x` rounds a 29-digit token
+        # quantity to the context's 28 digits before any real sum (w5/1054).
+        if not number:
+            return
+        held = self.get(key)
+        new_num = number if held is None else number + held
         if new_num == ZERO:
             self.pop(key, None)
         else:
@@ -179,7 +191,12 @@ class CounterInventory(dict[InventoryKey, Decimal]):
         else:
             self_get = self.get
             for key, num in counter.items():
-                new_num = num + self_get(key, ZERO)
+                held = self_get(key)
+                if held is None:
+                    # Beancount.io change: copied, not added to zero (w5/1054).
+                    self[key] = num
+                    continue
+                new_num = num + held
                 if new_num == ZERO:
                     self.pop(key, None)
                 else:
