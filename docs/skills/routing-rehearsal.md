@@ -468,3 +468,10 @@ Three prompts: `add-payroll-run`, `add-payroll-tax-deposit`, `ask-payroll-quarte
 
 - **Claude Code 2.1.289 (`claude-opus-5-5[1m]`)**, suite at `ca3a12575`: 3/3 routed as labeled.
 - **Codex 0.163.0:** not run (see the w2/m55 entry).
+
+## Payout prompt (w2/m58) — 2026-10-27
+
+One prompt, `import-stripe-payouts`; no skill description changed.
+
+- **Claude Code 2.1.289 (`claude-opus-5-5[1m]`)**, suite at `63561758f`: 1/1 routed to `beancount-import`.
+- **Codex 0.163.0:** not run (see the w2/m55 entry).
