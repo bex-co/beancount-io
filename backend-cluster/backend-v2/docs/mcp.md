@@ -303,6 +303,12 @@ the principal inputs; inspect the schema before constructing a call.
 | `unlinkBankConnection`       | `itemId`, optional `dry_run`; severs a linked bank.                                                                                                                       | Admin      |
 | `listBankConnections`        | `{}`; linked bank connections (`item_id`) and their accounts (`account_id`, mapping) — the `banks` and `bank-accounts` resources as a tool.                               | Admin      |
 | `listStagedBankTransactions` | Optional `accountId`; transactions staged for import, with the ids `importStagedBankTransactions` and `discardStagedBankTransactions` take — the `bank-transactions/unsynced` resource as a tool.          | Read       |
+| `updateLedger`           | `name`, `description`, `private`, optional `dry_run`; renames a ledger or changes its description or visibility. A preview returns the current→new diff, with a flip to public called out. Commits echo `dry_run: false`. | Admin      |
+| `deleteLedger`           | Optional `dry_run`; permanently deletes a ledger, including its history and linked-bank cleanup. A preview returns the destroy summary — identity, emptiness, size, and warnings. Commits echo `dry_run: false`. | Admin      |
+| `setLedgerCollaborator`  | `collaborator`, optional `permission` (read, write, or admin; omitted uses the repository default), `dry_run`; grants or changes access. A preview returns the would-be grant, current→requested. Commits echo `dry_run: false`. | Admin      |
+| `removeLedgerCollaborator` | `collaborator`, optional `dry_run`; revokes access. A preview returns the would-be revocation. Commits echo `dry_run: false`. | Admin      |
+| `leaveLedger`            | Optional `dry_run`; removes the caller's own access. A preview returns the would-be self-removal. Commits echo `dry_run: false`.                                                              | Admin      |
+| `setLedgerStar`          | `starred`; stars or unstars a ledger for the caller. No `dry_run`: starring is an instantly reversible personal toggle, so there is nothing worth previewing.                                  | Write      |
 
 The implementation is listed in
 [`mcp-tools.ts`](../src/features/ai-agent/api/mcp-tools.ts).
@@ -339,17 +345,42 @@ rather than guessed; omitting both leaves the flag off.
 | Preview | `dry_run`, or `dryRun` | bodies take `dryRun`, bank queries take `dry_run`; each accepts the other | `dryRun`, or `dry_run` |
 | Commit despite errors | `allowInvalid`, or `allow_invalid` | `allowInvalid`, or `allow_invalid` | `allowInvalid`, or `allow_invalid` |
 
-The preview flag is offered on fourteen listed tools: the entry,
-file, slice, and rename writes plus the five bank tools that move
-state (`sync`, `import`, `discard`, `reconcile`, `unlink`). The three
-config-only bank tools (`mapBankAccount`, `setBankAccountCurrency`,
-`refreshBankConnection`) publish no preview argument. The matching
-REST surface is the six write bodies, the five bank-query routes, and
-— accepting `false` and refusing `true` — the three config routes;
-GraphQL offers it on the six write mutations. The errors flag is
-offered where a write can add bean-check errors: the entry and slice
-writes on all three surfaces. File, bank, and rename writes take no
-errors flag.
+The preview flag is offered on nineteen listed tools: the entry,
+file, slice, and rename writes, the five bank tools that move
+state (`sync`, `import`, `discard`, `reconcile`, `unlink`), and the
+five lifecycle mutations (`updateLedger`, `deleteLedger`,
+`setLedgerCollaborator`, `removeLedgerCollaborator`, `leaveLedger`).
+The three config-only bank tools (`mapBankAccount`,
+`setBankAccountCurrency`, `refreshBankConnection`) publish no preview
+argument, and neither does `setLedgerStar` — starring is an instantly
+reversible personal toggle, so there is nothing worth previewing.
+The matching REST surface is the six write bodies, the five
+bank-query routes, the five lifecycle bodies (ledger update and
+delete, collaborator set and remove, leave) — bodies take `dryRun`
+and each accepts the other spelling — and, accepting `false` and
+refusing `true`, the three config routes; the star routes refuse the
+key outright. GraphQL offers it on the six write mutations and the
+five lifecycle mutations. The errors flag is offered where a write
+can add bean-check errors: the entry and slice writes on all three
+surfaces. File, bank, rename, and lifecycle writes take no errors
+flag.
+
+#### Lifecycle preview shapes
+
+A lifecycle preview runs the commit's checks under the commit's
+authority and changes nothing; a commit echoes the flag off
+(`dry_run: false`) with no preview. `updateLedger` renders the
+current→new diff over the provided fields only, with a flip to
+public called out. `deleteLedger` renders the destroy summary —
+identity, emptiness, size, and warnings covering permanence and
+linked-bank cleanup. `setLedgerCollaborator` renders the would-be
+grant, current→requested, under the same plan-limit check the commit
+enforces, and says when the name may not belong to a known user.
+`removeLedgerCollaborator` and `leaveLedger` render the would-be
+revocation and self-removal, saying plainly when no current access
+could be confirmed. `setLedgerStar` takes no flag (above).
+`createLedger` keeps its separate `previewLedgerSetup` tool rather
+than the flag — the older precedent this milestone did not revisit.
 
 ### Tools renamed on 2026-10-18
 
