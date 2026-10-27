@@ -279,6 +279,21 @@
         "The tie-out to 4,200.00 income and 500.00 expenses is shown",
         "The ledger is not modified"
       ]
+    },
+    {
+      "id": 20,
+      "name": "payroll-quarter-for-accountant",
+      "prompt": "What were my total wages and payroll taxes for Q3 2026, for my accountant? Use ./ledger.beancount.",
+      "expected_output": "Runs payroll-quarter and payroll-withheld for 2026-07-01 to 2026-10-01: wages 16,000.00, employer taxes 1,224.00, withheld 2,200.00 income tax, 1,984.00 social security, 464.00 medicare; the August deposit cleared August's run, so 1,100.00 / 992.00 / 232.00 (September's run) are still owed at quarter end. Shows the queries; read-only; no filing advice.",
+      "files": [
+        "evals/files/eval20_ledger.beancount"
+      ],
+      "expectations": [
+        "Wages 16,000.00 and employer taxes 1,224.00 come from executed queries",
+        "Withheld amounts are reported separately from remittances",
+        "The 2,324.00 still owed at quarter end is stated",
+        "The ledger is not modified"
+      ]
     }
   ]
 }

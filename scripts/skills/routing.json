@@ -1149,6 +1149,35 @@
         "beancount-invoices"
       ],
       "why": "A period-end schedule, not a document lifecycle."
+    },
+    {
+      "id": "add-payroll-run",
+      "prompt": "Record this payroll run from my Gusto summary for October 15: gross 8,000, withholdings 1,712, employer taxes 612, net pay 6,288 from checking.",
+      "expected": "beancount-add",
+      "confusable": [
+        "beancount-invoices",
+        "beancount-accruals"
+      ],
+      "why": "A payroll run is booked from the provider's printed figures by beancount-add."
+    },
+    {
+      "id": "add-payroll-tax-deposit",
+      "prompt": "We paid the quarterly payroll taxes today: 5,200 from checking to the tax authority. Record it in the books.",
+      "expected": "beancount-add",
+      "confusable": [
+        "beancount-invoices"
+      ],
+      "why": "A payroll-tax deposit clears payroll liabilities; collected sales tax is the invoices skill's."
+    },
+    {
+      "id": "ask-payroll-quarter",
+      "prompt": "What were my total wages and payroll taxes for Q3 for my accountant?",
+      "expected": "beancount-ask",
+      "confusable": [
+        "beancount-close",
+        "beancount-add"
+      ],
+      "why": "A read-only quarter total."
     }
   ]
 }

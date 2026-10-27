@@ -230,6 +230,64 @@
         "The proposal does not borrow Acme's client from another payee",
         "Nothing is written before an explicit yes"
       ]
+    },
+    {
+      "id": 17,
+      "name": "payroll-run-from-summary",
+      "prompt": "Record this payroll run from my Gusto summary in ./ledger.beancount: pay date 2026-10-15, gross wages 8,000.00, employee income tax withheld 1,100.00, employee social security 496.00, employee medicare 116.00, employer social security 496.00, employer medicare 116.00, net pay 6,288.00 from checking.",
+      "expected_output": "Runs the payroll-tie gate (8,000.00 \u2212 1,712.00 = 6,288.00, gap 0.00) and the duplicate checks (no 2026-10-15 run), then proposes Expenses:Payroll:Wages 8,000.00, Expenses:Payroll:EmployerTaxes 612.00, Liabilities:Payroll:IncomeTax -1,100.00, Liabilities:Payroll:SocialSecurity -992.00, Liabilities:Payroll:Medicare -232.00, Assets:Checking -6,288.00 with payroll: \"2026-10-15\". Written through the batch only after a yes; root check passes.",
+      "files": [
+        "evals/files/eval17_ledger.beancount"
+      ],
+      "expectations": [
+        "The payroll-tie gate is run and shows gap 0.00",
+        "Each withholding and employer tax lands in its Liabilities:Payroll account from the printed figures",
+        "Nothing is computed from rates or tables",
+        "Nothing is written before an explicit yes",
+        "After a yes the entry carries payroll: \"2026-10-15\" and bea check passes"
+      ]
+    },
+    {
+      "id": 18,
+      "name": "payroll-summary-does-not-tie",
+      "prompt": "Record payroll for 2026-10-15 from my provider summary in ./ledger.beancount: gross 8,000.00, income tax withheld 1,100.00, social security 496.00, medicare 116.00, net pay 6,300.00 from checking. Employer taxes 612.00.",
+      "expected_output": "The payroll-tie gate shows computed net 6,288.00 against the printed 6,300.00, a 12.00 gap. The skill stops, shows the figures and the gap, and asks which figure is misread; it proposes no entry and writes nothing.",
+      "files": [
+        "evals/files/eval17_ledger.beancount"
+      ],
+      "expectations": [
+        "The 12.00 gap is shown from the engine's arithmetic",
+        "No figure is adjusted to make the run tie",
+        "Nothing is written"
+      ]
+    },
+    {
+      "id": 19,
+      "name": "payroll-missing-figure-is-asked",
+      "prompt": "We ran payroll today, 2026-10-15: 8,000 gross and 6,288 net out of checking. Record it in ./ledger.beancount.",
+      "expected_output": "The withholding and employer-tax lines are missing, so the skill asks for them as printed on the provider summary; it does not compute withholdings from rates or book the 1,712 difference to one account. Nothing is written.",
+      "files": [
+        "evals/files/eval17_ledger.beancount"
+      ],
+      "expectations": [
+        "The skill asks for the printed withholding and employer-tax lines",
+        "No withholding or employer tax is computed or assumed",
+        "Nothing is written"
+      ]
+    },
+    {
+      "id": 20,
+      "name": "payroll-remittance-clears-liabilities",
+      "prompt": "We deposited the September payroll taxes today, 2026-10-10: 2,324.00 from checking (income tax 1,100.00, social security 992.00, medicare 232.00). Record it in ./ledger.beancount.",
+      "expected_output": "Reads payroll-liabilities (1,100.00 / 992.00 / 232.00 owed) and proposes debits clearing each to 0.00 against Assets:Checking -2,324.00. Written only after a yes; root check passes.",
+      "files": [
+        "evals/files/eval17_ledger.beancount"
+      ],
+      "expectations": [
+        "The liabilities owed are read before proposing",
+        "Each liability is cleared by its stated amount, ending at 0.00",
+        "Nothing is written before an explicit yes"
+      ]
     }
   ],
   "notes": "Evals13/14 are two-turn controls: supply TOOLING.md with respectively unavailable tool bindings or working existing developer bean-query/bean-check and absent bea, then send follow_up_prompt only after observing the initial proposal. Tool wrappers are an isolated availability fixture, not a bea engine failure. The dated native rehearsal retains exact prompts, bindings, tool-call logs and ledger snapshots."

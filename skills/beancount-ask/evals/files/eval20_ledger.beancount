@@ -1,0 +1,38 @@
+option "operating_currency" "USD"
+
+2026-01-01 open Assets:Checking USD
+2026-01-01 open Expenses:Payroll:Wages USD
+2026-01-01 open Expenses:Payroll:EmployerTaxes USD
+2026-01-01 open Liabilities:Payroll:IncomeTax USD
+2026-01-01 open Liabilities:Payroll:SocialSecurity USD
+2026-01-01 open Liabilities:Payroll:Medicare USD
+2026-01-01 open Income:Salary USD
+2026-01-01 open Equity:OpeningBalances USD
+
+2026-01-01 * "Opening balance"
+  Assets:Checking  60000.00 USD
+  Equity:OpeningBalances
+
+2026-09-15 * "Gusto" "Payroll 2026-09-15"
+  payroll: "2026-09-15"
+  Expenses:Payroll:Wages               8000.00 USD
+  Expenses:Payroll:EmployerTaxes        612.00 USD
+  Liabilities:Payroll:IncomeTax       -1100.00 USD
+  Liabilities:Payroll:SocialSecurity   -992.00 USD
+  Liabilities:Payroll:Medicare         -232.00 USD
+  Assets:Checking                     -6288.00 USD
+
+2026-08-15 * "Gusto" "Payroll 2026-08-15"
+  payroll: "2026-08-15"
+  Expenses:Payroll:Wages               8000.00 USD
+  Expenses:Payroll:EmployerTaxes        612.00 USD
+  Liabilities:Payroll:IncomeTax       -1100.00 USD
+  Liabilities:Payroll:SocialSecurity   -992.00 USD
+  Liabilities:Payroll:Medicare         -232.00 USD
+  Assets:Checking                     -6288.00 USD
+
+2026-09-10 * "Tax authority" "August payroll deposit"
+  Liabilities:Payroll:IncomeTax        1100.00 USD
+  Liabilities:Payroll:SocialSecurity    992.00 USD
+  Liabilities:Payroll:Medicare          232.00 USD
+  Assets:Checking                     -2324.00 USD
