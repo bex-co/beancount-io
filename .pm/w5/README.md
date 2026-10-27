@@ -92,7 +92,6 @@
 
 - [1038 — Retarget decomposed Unicode posting accounts](./1038.md) — minor CLI missed category edit: normalized read names never match raw NFD tokens; explicit and bare-queue updates can clear the flag while leaving9.99 in the old category, single/batch and native/NFC controls checked 2026-10-25.
 
-- [1037 — Preserve exact CSV transaction references](./1037.md) — major CLI wrong-row update: quoted IDs lose line breaks or edge whitespace and select another transaction; 20USD Taxi categorized instead of 10USD Coffee, JSON/native controls pass, checked 2026-10-25.
 
 
 

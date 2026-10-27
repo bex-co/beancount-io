@@ -9,6 +9,7 @@ previews a diff first and writes only with `--apply`, like `bea import`.
 from __future__ import annotations
 
 import csv
+import io
 import json
 from pathlib import Path
 from typing import Annotated, Any
@@ -168,7 +169,10 @@ def _rows_from_csv(text: str, name: str) -> list[dict[str, str]]:
     header cannot silently drop a column of changes.
     """
     try:
-        parsed = list(csv.reader(text.splitlines()))
+        # A quoted reference may hold a line break; split into physical lines
+        # first, `statement\n2026` lost it and selected `statement2026`
+        # (w5/1037).
+        parsed = list(csv.reader(io.StringIO(text, newline="")))
     except csv.Error as exc:
         raise UsageError(f"Invalid CSV in '{name}' (from --from): {exc}") from exc
     rows = [row for row in parsed if row and any(cell.strip() for cell in row)]
@@ -197,7 +201,13 @@ def _rows_from_csv(text: str, name: str) -> list[dict[str, str]]:
         if len(row) > len(headers):
             raise UsageError(f"'{name}' (from --from) row {number} has more values than headers; fix it and retry.")
         padded = [*row, *[""] * (len(headers) - len(row))]
-        entry = {header: cell.strip() for header, cell in zip(headers, padded, strict=True) if cell.strip()}
+        # The id is matched exactly, so it keeps the spaces and line breaks
+        # it was given; the other cells name accounts and flags, which have none.
+        entry = {
+            header: cell if header == "id" else cell.strip()
+            for header, cell in zip(headers, padded, strict=True)
+            if cell.strip()
+        }
         mapped.append(entry)
     if not mapped:
         raise UsageError(f"'{name}' (from --from) holds no rows.")
