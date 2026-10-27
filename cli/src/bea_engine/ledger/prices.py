@@ -159,9 +159,9 @@ def unused_quote_advisories(
     order every read sees it: it decides the day with the rule above, so a
     generated reciprocal, a same-direction quote that sorts later (an included
     file's line number beats the root's) and a quote the ledger already wrote
-    all count. `existing` names the winner at its real location. A quote that
-    loses to another row of the same import has no location yet and is left
-    to that import.
+    all count. `existing` names the winner at its real location; a quote
+    implied by another row of the same import has none yet and is described
+    as that import's.
     """
     from beancount.core.data import Price
 
@@ -188,6 +188,29 @@ def unused_quote_advisories(
         if winner is None and reverse:
             winner = reverse[-1]
         if winner is None:
+            # The winner is a quote another row of this import implies — an
+            # FX transaction under `implicit_prices` — which has no written
+            # location yet; it went unnamed, and the import said nothing
+            # (w5/1052).
+            incoming = [
+                item
+                for item in candidate
+                if isinstance(item, Price)
+                and item.date == day
+                and item.amount.number is not None
+                and {item.currency, item.amount.currency} == {base, quote}
+                and entry_generated(item, "price")
+            ]
+            implying = next(
+                (item for item in reversed(incoming) if (item.currency, item.amount.currency) == (base, quote)),
+                incoming[-1] if incoming else None,
+            )
+            if implying is not None:
+                advisories.append(
+                    f"A transaction this import writes implies a {day.isoformat()} price of "
+                    f"{format(implying.amount.number, 'f')} {implying.amount.currency} for {implying.currency}; "
+                    "every read values the pair by it, so the new quote is never used."
+                )
             continue
         implied = "implied " if entry_generated(winner, "price") else ""
         advisories.append(
