@@ -515,7 +515,10 @@ def plan_lines(
             }
             for number in sorted(posted & set(span)) if posted else span:
                 matched = _POSTING_LINE.match(lines[number])
-                if matched is None or matched.group(3) != old or matched.group(3).endswith(":"):
+                # The loader reads the account in NFC; a decomposed `Café` in
+                # the file is that same account (w5/1038).
+                token = matched.group(3) if matched is not None else ""
+                if matched is None or unicodedata.normalize("NFC", token) != old or token.endswith(":"):
                     continue
                 planned[number] = f"{matched.group(1)}{matched.group(2)}{new}{matched.group(4)}"
     return planned
