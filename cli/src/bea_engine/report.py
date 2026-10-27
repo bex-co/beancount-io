@@ -861,7 +861,7 @@ def _capital_gains(filtered: Any, bounds: tuple[date | None, date | None], ledge
         bucket[currency] = bucket.get(currency, Decimal(0)) + row["gain"]["number"]
     # No quotes are read — every figure comes from booked postings — so
     # valuation is trivially complete; the keys stay for the shared heading.
-    metadata = _metadata(filtered, "units", ledger_errors) | {
+    metadata = _bounded(_metadata(filtered, "units", ledger_errors), bounds) | {
         "valuation": "complete",
         "missing_prices": [],
         "missing_price_dates": [],
@@ -1052,7 +1052,7 @@ def _cash_flow(filtered: Any, bounds: tuple[date | None, date | None], ledger_er
     # No quotes are read — at_cost converts lots from booked costs, and
     # cost-less positions stay in their own units — so valuation is trivially
     # complete; the keys stay for the shared heading.
-    metadata = _metadata(filtered, "at_cost", ledger_errors) | {
+    metadata = _bounded(_metadata(filtered, "at_cost", ledger_errors), bounds) | {
         "valuation": "complete",
         "missing_prices": [],
         "missing_price_dates": [],
@@ -1346,6 +1346,34 @@ def _interval(value: str) -> Any:
     from fava.util.date import INTERVALS as FAVA_INTERVALS
 
     return FAVA_INTERVALS[value]
+
+
+def _bounded(metadata: dict[str, Any], bounds: tuple[date | None, date | None]) -> dict[str, Any]:
+    """The report's period narrowed to its `--from-date / --to-date` window.
+
+    The bounds filtered the rows but the heading and `period` still described
+    the whole ledger, so an empty selected day read `No sales.` under months
+    that held sales (w5/1036). The window is intersected with the period the
+    time filter chose, and stated as `bounds` too.
+    """
+    start, end = bounds
+    if start is None and end is None:
+        return metadata
+    period = metadata["period"]
+    first, after = period["start"], period["end_exclusive"]
+    if start is not None:
+        first = max(first, start) if first is not None else start
+    if end is not None:
+        after = min(after, end + timedelta(days=1)) if after is not None else end + timedelta(days=1)
+    if first is not None and after is not None and first >= after:
+        # A window with no dated activity at all is stated as asked.
+        first = start or first
+        after = end + timedelta(days=1) if end is not None else first + timedelta(days=1)
+    return metadata | {
+        "period": {"start": first, "end_exclusive": after},
+        "as_of": after - timedelta(days=1) if after is not None else None,
+        "bounds": {"from_date": start, "to_date": end},
+    }
 
 
 def _metadata(filtered: Any, conversion: str, ledger_errors: list[str], interval: str | None = None) -> dict[str, Any]:
