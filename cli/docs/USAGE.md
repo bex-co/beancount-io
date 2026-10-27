@@ -1839,6 +1839,11 @@ window whole: a filter that keeps a cash leg but drops the income that paid it,
 or one side of a transfer between cash accounts, is refused (exit **2**, even
 with `--allow-errors`) naming the transactions and the accounts the filter
 would also need. Drop `--account`, or widen it to a balanced filter.
+Cash accounts are the Assets accounts named like cash (`Cash`, `Checking`,
+`Savings`, `Bank`) and their children, plus any account whose `open` declares
+`cash-flow-role: "cash"` — under any root, so an overdraft declared cash counts
+its negative balance in opening and closing cash. A declared operating,
+investing or financing role takes an account out of cash and into that section.
 
 ```bash
 bea report income-statement --time 2026 --interval quarterly

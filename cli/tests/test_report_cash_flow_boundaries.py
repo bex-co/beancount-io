@@ -321,3 +321,99 @@ def test_a_quiet_window_keeps_the_filtered_position(tmp_path: Path, account: str
     assert data["net_change"] == {}
     assert _amounts(data["opening"]) == _amounts(data["closing"]) == {"USD": Decimal(1550 if account is None else 1350)}
     _assert_actual(tmp_path, ledger, data, cash, "2024-03-01", "2024-04-01")
+
+
+RENAMED = (
+    'option "name_assets" "Activos"\noption "name_liabilities" "Pasivos"\noption "name_equity" "Capital"\n'
+    'option "name_income" "Ingresos"\noption "name_expenses" "Gastos"\n'
+)
+
+
+def _overdraft_book(root: str, role: str | None, renamed: bool) -> tuple[str, str, str]:
+    """A cash account and an overdraft holding -250, under the given root and declared role (w5/1057)."""
+    names = ["Activos", "Pasivos", "Capital", "Ingresos", "Gastos"] if renamed else None
+    assets, liabilities, equity, income, expenses = names or ["Assets", "Liabilities", "Equity", "Income", "Expenses"]
+    cash = f"{assets}:Cash"
+    overdraft = f"{assets if root == 'Assets' else liabilities}:Overdraft"
+    declared = f'  cash-flow-role: "{role}"\n' if role is not None else ""
+    text = (
+        (RENAMED if renamed else "")
+        + f"""option "operating_currency" "USD"
+2024-01-01 open {cash} USD
+2024-01-01 open {overdraft} USD
+{declared}2024-01-01 open {income}:Salary USD
+2024-01-01 open {expenses}:Food USD
+2024-01-01 open {equity}:Opening USD
+2024-01-01 * "Capital and overdraft"
+  {cash}         1000 USD
+  {overdraft}    -200 USD
+  {equity}:Opening -800 USD
+2024-01-02 * "Overdraft charge"
+  {overdraft}     -50 USD
+  {expenses}:Food   50 USD
+2024-01-03 * "Salary"
+  {cash}          100 USD
+  {income}:Salary -100 USD
+"""
+    )
+    return text, cash, overdraft
+
+
+WINDOW = ("--time", "2024-01-02 - 2024-01-31", "--from-date", "2024-01-02", "--to-date", "2024-01-31")
+
+
+@pytest.mark.parametrize("renamed", [False, True], ids=["standard", "renamed"])
+@pytest.mark.parametrize(
+    ("root", "role", "member", "invalid"),
+    [
+        ("Liabilities", "cash", True, False),
+        ("Assets", "cash", True, False),
+        ("Liabilities", "financing", False, False),
+        ("Liabilities", None, False, False),
+        ("Liabilities", "Cash", False, True),
+    ],
+    ids=["liability-cash", "asset-cash", "liability-financing", "liability-unset", "liability-invalid"],
+)
+def test_declared_cash_membership_holds_under_any_root(
+    tmp_path: Path, root: str, role: str | None, member: bool, invalid: bool, renamed: bool
+) -> None:
+    text, cash, overdraft = _overdraft_book(root, role, renamed)
+    ledger = write_ledger(tmp_path, text)
+    members = [cash, overdraft] if member else [cash]
+    whole = _cash_flow(tmp_path, ledger)
+    window = _cash_flow(tmp_path, ledger, *WINDOW)
+    for data in (whole, window):
+        assert data["cash_accounts"] == [
+            {"account": cash, "balance": {"USD": "1100"}, "role_source": "heuristic"},
+            *([{"account": overdraft, "balance": {"USD": "-250"}, "role_source": "declared"}] if member else []),
+        ]
+        rows = {row["account"]: row for section in data["sections"].values() for row in section}
+        # A declared cash member is never a row; anything else explains its change.
+        assert (overdraft in rows) is not member
+        assert data["invalid_role_values"] == ([{"account": overdraft, "value": "Cash"}] if invalid else [])
+    _assert_actual(tmp_path, ledger, whole, members, None, "2024-01-04")
+    _assert_actual(tmp_path, ledger, window, members, "2024-01-02", "2024-02-01")
+    if member:
+        assert (_amounts(whole["opening"]), _amounts(whole["closing"])) == ({}, {"USD": Decimal(850)})
+        assert _amounts(window["opening"]) == {"USD": Decimal(800)}
+        assert _amounts(window["net_change"]) == {"USD": Decimal(50)}
+        assert _amounts(window["closing"]) == {"USD": Decimal(850)}
+    else:
+        assert (_amounts(window["opening"]), _amounts(window["closing"])) == (
+            {"USD": Decimal(1000)},
+            {"USD": Decimal(1100)},
+        )
+        assert _amounts(window["net_change"]) == {"USD": Decimal(100)}
+
+
+def test_declared_liability_cash_reads_in_human_output(tmp_path: Path) -> None:
+    text, _, _ = _overdraft_book("Liabilities", "cash", renamed=False)
+    ledger = write_ledger(tmp_path, text)
+    human = _human(tmp_path, ledger, *WINDOW)
+    assert "Opening cash:        800 USD" in human
+    assert "Net change in cash:  50 USD" in human
+    assert "Closing cash:        850 USD" in human
+    assert "Cash accounts: Assets:Cash, Liabilities:Overdraft" in human
+    whole = _human(tmp_path, ledger)
+    assert "Opening cash:        0 USD" in whole
+    assert "Closing cash:        850 USD" in whole

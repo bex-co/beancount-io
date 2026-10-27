@@ -949,11 +949,15 @@ def _cash_accounts(opens: Mapping[str, Any], root_types: Mapping[str, str]) -> d
 
     A declared role decides its own account; otherwise a cash-matching
     ancestor's membership carries down, else the account's own name decides.
-    Only Assets-rooted accounts can be cash. Returns account -> source.
+    The name patterns only ever match Assets, but a declared `cash` is
+    trusted under any of the five roots — an overdraft declared cash was
+    left out of both the cash set and the rows, inventing an opening
+    (w5/1057). Accounts outside the five roots stay out. Returns
+    account -> source.
     """
     members: dict[str, str] = {}
     for account in sorted(opens):
-        if root_types.get(account.split(":", 1)[0]) != "Assets":
+        if root_types.get(account.split(":", 1)[0]) is None:
             continue
         parts = account.split(":")
         source: str | None = None
