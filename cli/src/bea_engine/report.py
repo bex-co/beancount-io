@@ -650,22 +650,28 @@ def _register(filtered: Any, conversion: str, allow_errors: bool, ledger_errors:
             ledger_errors=ledger_errors,
         )
     matches = _report_filter_match(filtered.account, filtered.ledger.root_accounts)
-    by_account = group_entries_by_account(filtered.entries)
+    # The rows come from the period's entries before the account filter: it
+    # keeps whole transactions that touch a matched account, so a child-only
+    # transaction was gone before the root's subtree was collected, and
+    # `^Assets:Bank$` listed only the parent's own postings (w5/1034).
+    by_account = group_entries_by_account(filtered.ledger.get_filtered(time=filtered.time).entries)
     active = sorted(
         name
         for name, rows in by_account.items()
         if matches(name) and any(isinstance(row, TransactionPosting) or isinstance(row, Balance) for row in rows)
     )
+    # A matched parent counts as a root even with no posting of its own.
+    matched = sorted(name for name in by_account if matches(name))
     # A pattern that literally names an account path selects it — including a
     # parent with no postings of its own — while a true regex only resolves
     # when its matched accounts collapse under one of themselves. Regex
     # metacharacters can never spell a real account path, so the literal test
     # cannot mistake one for the other.
-    root = _register_root(filtered.account, active)
+    root = _register_root(filtered.account, active or matched, matched)
     if active and root is None:
-        matched = ", ".join(active)
+        several = ", ".join(active)
         raise protocol.UsageError(
-            f"Register needs one account; {filtered.account!r} matches several: {matched}. Name one account to list.",
+            f"Register needs one account; {filtered.account!r} matches several: {several}. Name one account to list.",
             ledger_errors=ledger_errors,
         )
     # The pattern selects the root; the register shows the whole subtree, so a
@@ -729,17 +735,24 @@ def _register(filtered: Any, conversion: str, allow_errors: bool, ledger_errors:
     }
 
 
-def _register_root(pattern: str, active: list[str]) -> str | None:
-    """The one subtree `pattern` names, or None when it spans several."""
+def _register_root(pattern: str, active: list[str], matched: list[str]) -> str | None:
+    """The one subtree `pattern` names, or None when it spans several.
+
+    Its root is the outermost matched account holding every active one, so a
+    parent the pattern names but whose period holds only its children's
+    postings is still the root (w5/1034).
+    """
     if active:
         candidate = ":".join(active[0].split(":")[: len(pattern.split(":"))])
-        if candidate.lower() == pattern.lower() and all(
+        # Folded as account filters fold them, so a Turkish `İzmir` parent
+        # typed in lowercase is the one parent, not a false ambiguity (w5/1034).
+        if fold_account(candidate) == fold_account(pattern) and all(
             name == candidate or name.startswith(candidate + ":") for name in active
         ):
             return candidate
-        roots = [name for name in active if all(other == name or other.startswith(name + ":") for other in active)]
-        if len(roots) == 1:
-            return roots[0]
+        roots = [name for name in matched if all(other == name or other.startswith(name + ":") for other in active)]
+        if roots:
+            return min(roots, key=lambda name: name.count(":"))
     return None
 
 

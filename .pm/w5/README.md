@@ -96,7 +96,6 @@
 
 - [1035 — Classify actual short-position reductions in Capital Gains](./1035.md) — major CLI reporting gap: positive covers and costed EUR payable settlements disappear; negative openings become sales; native/long/receivable controls, checked 2026-10-26.
 
-- [1034 — Collect the whole resolved register subtree](./1034.md) — minor CLI selection gap: anchored parents lose child postings, and Turkish lowercase parents falsely appear ambiguous; literal/full-subtree and locale/native controls pass, checked 2026-10-25.
 
 
 
