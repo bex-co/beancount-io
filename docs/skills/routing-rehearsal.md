@@ -454,3 +454,10 @@ Two prompts added for profit by client or project, both labeled `beancount-ask`;
 
 - **Claude Code 2.1.289 (`claude-opus-5-5[1m]`)**, suite at `2ee412e8c`: 2/2 routed to `beancount-ask` (`ask-profit-by-client`, `ask-project-lost-money`).
 - **Codex 0.163.0:** not run. `gpt-6.1-sol` (and the configured default) returns `model_not_found` for this ChatGPT account, and `gpt-6-luna` returns the account usage-limit error.
+
+## `beancount-invoices` added (w2/m56) — 2026-10-27
+
+Fourteen skills. New prompts: `invoices-issue`, `invoices-apply-payment`, `invoices-record-bill`, `invoices-aging`, `invoices-tax-remittance`, and near-misses `add-contractor-payment-no-invoice` and `accruals-not-invoices`.
+
+- **Claude Code 2.1.289 (`claude-opus-5-5[1m]`)**, suite at `6421f036a`: **124/124** routed as labeled over the full set, including every new prompt and near-miss.
+- **Codex 0.163.0:** not run — `gpt-6.1-sol` returns `model_not_found` for this ChatGPT account and `gpt-6-luna` is at its usage limit (see the w2/m55 entry).
