@@ -666,14 +666,17 @@ def _plan_rows(
                 "merge them into one row.",
             )
             continue
-        seen[key] = index
+        target = Path(key[0])
         try:
             summary = _summarize(entry, options, changes)
+            edits = plan_lines(file_lines[target], entries, options, entry, changes)
         except protocol.UsageError as exc:
             refuse(index, _row_reason(index, exc))
             continue
-        target = Path(key[0])
-        edits = plan_lines(file_lines[target], entries, options, entry, changes)
+        # Only a row that plans claims its entry: a rejected one reserved it,
+        # and the valid row after it was refused as "already targeted"
+        # (w5/1051).
+        seen[key] = index
         plans.append(
             _RowPlan(
                 index=index, changes=changes, entry=entry, target=target, lineno=key[1], edits=edits, summary=summary
