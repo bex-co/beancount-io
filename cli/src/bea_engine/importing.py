@@ -910,7 +910,7 @@ def answer(
     closes = [item for item in included if isinstance(item, Close)]
     closed_before = {entry.account for entry in existing if isinstance(entry, Close)}
 
-    def inspect(candidate: list[Any]) -> None:
+    def inspect(candidate: list[Any], _staged: dict[Path, Path]) -> None:
         advisories.extend(unused_quote_advisories(candidate, existing, wanted))
         advisories.extend(_funded_close_advisories(candidate, options, closed_before))
 

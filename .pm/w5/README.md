@@ -166,7 +166,6 @@ The 27 findings from the MCP QA auth sweep against the hosted endpoint (023–05
 
 
 
-- [1018 — Preserve dateless lots in listed-quantity replay](./1018.md) — minor CLI gap: resolving inferred quantities in JSON invents acquisition dates and makes a valid three-trade replay ambiguous; null-number, dated and single-add-reply controls pass.
 
 - [1019 — Preserve one-letter currency token boundaries](./1019.md) — minor CLI gap: costs and account currency lists lose required spacing, blocking writes and producing invalid PRINT exports; token-order, price and normal-format controls pass.
 

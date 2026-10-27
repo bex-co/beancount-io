@@ -1105,7 +1105,16 @@ postings. Under `--json`, `postings` always stays the complete entry
 adds a `matching_postings` array holding exactly the postings the filter
 selected, in entry order; without `--account` the key is absent.
 `bea add transactions` ignores it on input, so a filtered listing can be fed
-straight back in. `--details`
+straight back in. A lot posting whose ledger line leaves its quantity to
+interpolation (`Assets:Broker HOOL {5 USD}` beside an explicit cash leg)
+lists the booked quantity with `"inferred": true` in its `units`; the key is
+absent everywhere else. It matters because booking dates a stated quantity's
+lot with the transaction date but leaves an interpolated one undated, so two
+such purchases form one lot a later partial sale reduces. `bea add
+transactions` writes a posting marked `inferred` number-less again, keeping
+that lot, and refuses the row (`Row N, postings.<i>.units`) when the stated
+number is not what booking then interpolates; drop the key to write the
+number as stated instead. `--details`
 labels its output as transactions rendered in Beancount syntax and shows every
 posting and its metadata, including inferred amounts. Amounts on opposite sides
 are not combined into a zero total.
@@ -1634,7 +1643,9 @@ parts you left open — so it can be fed straight back to
 `bea add transactions`. In bulk input a `cost` with a `number_total` and a `null`
 `number` is that total cost, and `units` with a `null` `number` leaves the
 number for booking to interpolate, as the `--posting` spelling does
-(`HOOL {100 USD}`); only one posting per row may leave its number open, and
+(`HOOL {100 USD}`), and so does a `units` marked `"inferred": true` as
+`list transaction` reports one, after checking its stated number against the
+interpolation; only one posting per row may leave its number open, and
 the `amount` shorthand cannot spell one — use structured `units`. JSON
 remains useful for batches and metadata.
 Open `Assets:Brokerage` in AAPL and `Assets:Cash` in USD before applying this purchase:

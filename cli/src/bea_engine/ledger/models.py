@@ -134,11 +134,27 @@ class Units(BaseModel):
     null says the number was left open — and the currency with it: the flag
     path defaults the currency before answering, so an answer never leaves
     that open. Prices and every other amount keep a required number.
+
+    `inferred` says the ledger line leaves this number to interpolation even
+    though a listing reports the booked figure. It matters for a lot: native
+    booking gives a stated quantity the transaction's date as its cost date,
+    but an interpolated one keeps an unknown date, so two such purchases
+    share one lot a partial sale can reduce. Replayed with explicit numbers
+    they became two dated lots and the sale ambiguous (w5/1018). Bulk input
+    with `inferred` writes the posting number-less again and refuses a row
+    whose stated number differs from what booking then interpolates. Excluded
+    from dumps; only a listing opts back in, for the postings it marks.
     """
 
     model_config = ConfigDict(extra="forbid")
     number: AmountNumber | None
     currency: Commodity
+    inferred: bool = Field(default=False, exclude=True)
+
+    @property
+    def left_open(self) -> bool:
+        """Whether the written posting leaves its number for booking to interpolate."""
+        return self.number is None or self.inferred
 
 
 class Cost(BaseModel):

@@ -42,10 +42,17 @@ def _row(item: Any) -> dict[str, Any]:
     consumer of these models — `add`, bulk input — never sees the key.
     Listings opt back in for the rows a plugin synthesized, which keeps a
     plugin-free ledger's answer byte-identical.
+
+    A transaction's units opt in to `inferred` the same way: only a lot whose
+    number the ledger line leaves to booking carries it, so bulk input can
+    write that line number-less again (w5/1018).
     """
     data: dict[str, Any] = item.model_dump(mode="json")
     if item.generated:
         data["generated"] = True
+    for posting, row in zip(getattr(item, "postings", ()), data.get("postings") or (), strict=False):
+        if posting.units is not None and posting.units.inferred:
+            row["units"]["inferred"] = True
     return data
 
 

@@ -2335,13 +2335,14 @@ def validate_candidate(
     pad_from: bool = False,
     pad_date_explicit: bool = False,
     operating_defaults: dict[int, list[str] | None] | None = None,
-    inspect: Callable[[list[Any]], None] | None = None,
+    inspect: Callable[[list[Any], dict[Path, Path]], None] | None = None,
 ) -> list[str]:
     """Refuse a candidate that fails validation, naming what it would break.
 
     `inspect` is handed the candidate's loaded entries, in the order every
     read sees them, so a caller can judge the write against the ledger as it
-    would stand (which price wins a day) without loading it a second time.
+    would stand (which price wins a day) without loading it a second time,
+    with each staged copy's path mapped to the file it stands for.
 
     `--allow-errors` tolerates errors the ledger already had — a failing
     balance assertion stays failing — but nothing the write itself introduces:
@@ -2407,7 +2408,7 @@ def validate_candidate(
             "most 28 significant digits. Nothing was written."
         ) from exc
     if inspect is not None:
-        inspect(entries)
+        inspect(entries, filenames)
     type_errors = managed_load.data_type_errors(entries, options)
     errors = [*errors, *type_errors]
     original_line_counts = {path: len(lines) for path, lines in original_lines.items()}
@@ -4216,7 +4217,7 @@ def validate_append(
     snapshot: LedgerSnapshot | None = None,
     one_entry_each: bool = True,
     stages_pad: bool = False,
-    inspect: Callable[[list[Any]], None] | None = None,
+    inspect: Callable[[list[Any], dict[Path, Path]], None] | None = None,
 ) -> list[str]:
     """Validate the append without writing; returns the errors `allow_errors` tolerated.
 

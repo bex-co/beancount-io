@@ -1152,7 +1152,7 @@ def _price(
         allow_errors=allow_errors,
         into=into,
         snapshot=snapshot,
-        inspect=lambda candidate: advisories.extend(
+        inspect=lambda candidate, _staged: advisories.extend(
             unused_quote_advisories(candidate, entries, [(directive.date, currency, amount_currency, number)])
         ),
     )
@@ -1404,8 +1404,8 @@ _ONE_ELIDED = "Only one posting may omit its amount; supply amounts for the othe
 
 
 def _amountless_postings(directive: Any) -> int:
-    """Postings whose number booking must infer: no units, or units with a null number (w5/801)."""
-    return sum(1 for posting in directive.postings if posting.units is None or posting.units.number is None)
+    """Postings whose number booking must infer: no units, or a null or `inferred` number (w5/801, w5/1018)."""
+    return sum(1 for posting in directive.postings if posting.units is None or posting.units.left_open)
 
 
 def _directive_infers_zero(directive: Any) -> bool:
@@ -1945,6 +1945,12 @@ def _transactions(
         else:
             kept.append((index, directive))
     valid = kept
+    misstated = _misstated_inferences(file, valid, allow_errors=allow_errors, into=into)
+    if misstated:
+        for index in misstated:
+            rejected.extend(misstated[index])
+            rejected_rows.append(index)
+        valid = [(index, directive) for index, directive in valid if index not in misstated]
 
     if rejected and not partial:
         # `--partial` only helps when some row passed; with none, the advice
@@ -2432,15 +2438,7 @@ def _partitioned_rows(
         content = write.appended_content(original, texts)
     except (OSError, UnicodeDecodeError):
         return {}, True
-    # Blocks are appended one after another, each after one separating line;
-    # walking back from the end gives every block's line span.
-    spans: list[tuple[int, int]] = []
-    end = content.count("\n")
-    for text in reversed(texts):
-        size = text.rstrip().count("\n") + 1  # the lexer's line count: `\n` only (w1/136)
-        spans.append((end - size + 1, end))
-        end -= size + 1
-    spans.reverse()
+    spans = _appended_spans(content, texts)
     rows: dict[int, list[int]] = {}
     unplaced = False
     for position, (source, lineno) in enumerate(locations):
@@ -2453,6 +2451,92 @@ def _partitioned_rows(
             continue
         rows.setdefault(hits[0], []).append(position)
     return rows, unplaced
+
+
+def _appended_spans(content: str, texts: list[str]) -> list[tuple[int, int]]:
+    """Each text's first and last line in `content`, the target with `texts` appended."""
+    # Blocks are appended one after another, each after one separating line;
+    # walking back from the end gives every block's line span.
+    spans: list[tuple[int, int]] = []
+    end = content.count("\n")
+    for text in reversed(texts):
+        size = text.rstrip().count("\n") + 1  # the lexer's line count: `\n` only (w1/136)
+        spans.append((end - size + 1, end))
+        end -= size + 1
+    spans.reverse()
+    return spans
+
+
+def _misstated_inferences(
+    file: Path, rows: list[tuple[int, Any]], *, allow_errors: bool, into: Path | None
+) -> dict[int, list[str]]:
+    """Rows whose `inferred` units state a number booking does not interpolate, with their details (w5/1018).
+
+    Such a posting is written number-less, so the number it states would be
+    silently dropped: an edited listing must not book something else. The
+    batch is loaded once, as it would stand, and each marked posting is read
+    back from its own line. One that does not book (the batch is refused for
+    that) stands aside; ledger validation reports it.
+    """
+    from beancount.core.data import Transaction
+    from beancount.parser import parser
+
+    texts = [writer.format_transaction(directive) for _, directive in rows]
+    # (row position, posting index, line in the rendered text) for each stated inference.
+    marked: list[tuple[int, int, int]] = []
+    for position, (_, directive) in enumerate(rows):
+        stated = [
+            n
+            for n, posting in enumerate(directive.postings)
+            if posting.units is not None and posting.units.inferred and posting.units.number is not None
+        ]
+        if not stated:
+            continue
+        parsed, _, _ = parser.parse_string(texts[position])
+        if len(parsed) != 1 or not isinstance(parsed[0], Transaction):
+            continue
+        lines = [int((posting.meta or {}).get("lineno") or 0) for posting in parsed[0].postings]
+        if len(lines) == len(directive.postings):
+            marked.extend((position, n, lines[n]) for n in stated)
+    if not marked:
+        return {}
+    target = write.destination(file, into)
+    try:
+        original = target.read_bytes() if target.exists() else b""
+        spans = _appended_spans(write.appended_content(original, texts), texts)
+    except (OSError, UnicodeDecodeError):
+        return {}  # The batch validation names what is wrong with the file.
+    booked: dict[int, Any] = {}
+
+    def collect(entries: list[Any], staged: dict[Path, Path]) -> None:
+        for entry in entries:
+            if not isinstance(entry, Transaction):
+                continue
+            path = Path(entry.meta.get("filename", ""))
+            if staged.get(path, path).resolve() != target:
+                continue
+            for posting in entry.postings:
+                line = (posting.meta or {}).get("lineno")
+                if isinstance(line, int) and posting.units is not None:
+                    booked[line] = posting.units
+
+    try:
+        write.validate_append(file, texts, allow_errors=allow_errors, into=into, inspect=collect)
+    except protocol.LedgerError:
+        pass  # Judged again, and reported, by the batch validation.
+    problems: dict[int, list[str]] = {}
+    for position, n, line in marked:
+        index, directive = rows[position]
+        units = booked.get(spans[position][0] + line - 1)
+        stated = directive.postings[n].units
+        if units is None or not isinstance(units.number, Decimal) or units.number == stated.number:
+            continue
+        problems.setdefault(index, []).append(
+            f"Row {index + 1}, postings.{n}.units: states {_plain(stated.number)} {stated.currency} "
+            f"as inferred, but booking infers {_plain(units.number)} {units.currency} from the other postings. "
+            'Give the inferred number, or drop "inferred" to write the stated one.'
+        )
+    return problems
 
 
 def _refused_with_placed(

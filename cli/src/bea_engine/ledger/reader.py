@@ -529,8 +529,46 @@ def _to_amount(bc_amount: Any) -> Amount:
     return Amount(number=Decimal(str(bc_amount.number)), currency=bc_amount.currency)
 
 
-def _to_units(bc_amount: Any) -> Units:
-    return Units(number=Decimal(str(bc_amount.number)), currency=bc_amount.currency)
+def _number_left_open(posting: Any) -> bool:
+    """Whether the ledger line a lot posting was read from leaves its units number to booking (w5/1018).
+
+    Booking interpolates such a number without dating the lot, so a listing
+    has to say so for a replay to keep that lot: the booked posting itself
+    carries no trace of it. Asked only of a lot without a date, since booking
+    dates every stated augmentation; a reduction of an undated lot is asked
+    too, and its line states the number.
+    """
+    meta = posting.meta or {}
+    filename = meta.get("filename")
+    lineno = meta.get("lineno")
+    if not filename or not isinstance(lineno, int) or isinstance(lineno, bool) or lineno < 1:
+        return False
+    lines = _source_lines(str(filename))
+    if lines is None or lineno > len(lines):
+        return False
+    return _line_leaves_number_open(lines[lineno - 1], unicodedata.normalize("NFC", posting.account))
+
+
+@cache
+def _line_leaves_number_open(line: str, account: str) -> bool:
+    """Whether `line` parses as a posting to `account` whose units have no number."""
+    from beancount.core.amount import Amount as BcAmount
+    from beancount.core.number import MISSING
+    from beancount.parser import parser
+
+    if not line[:1].isspace():
+        return False  # A plugin's posting can point at its transaction's own line.
+    entries, _, _ = parser.parse_string(f"2000-01-01 *\n{line}\n")
+    if len(entries) != 1 or not isinstance(entries[0], Transaction) or len(entries[0].postings) != 1:
+        return False
+    (parsed,) = entries[0].postings
+    # The parser leaves an absent number MISSING, which the typed fields hide.
+    units: Any = parsed.units
+    return (
+        unicodedata.normalize("NFC", parsed.account) == account
+        and isinstance(units, BcAmount)
+        and getattr(units, "number", None) is MISSING
+    )
 
 
 def metadata_to_json(meta: dict[str, Any] | None) -> dict[str, Any]:
@@ -564,10 +602,14 @@ def _to_transaction(entry: Any, shared: frozenset[tuple[str, int]] = frozenset()
                 label=p.cost.label,
             )
         price = _to_amount(p.price) if p.price is not None else None
+        units = None
+        if p.units is not None:
+            inferred = cost is not None and cost.date is None and _number_left_open(p)
+            units = Units(number=Decimal(str(p.units.number)), currency=p.units.currency, inferred=inferred)
         postings.append(
             Posting(
                 account=p.account,
-                units=_to_units(p.units) if p.units is not None else None,
+                units=units,
                 cost=cost,
                 price=price,
                 flag=p.flag,
