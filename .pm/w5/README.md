@@ -163,7 +163,6 @@
 
 The 27 findings from the MCP QA auth sweep against the hosted endpoint (023–054, less the five under [Dropped](#dropped)) were fixed in `backend-cluster/backend-v2` and closed on 2026-10-02 and 2026-10-03; each note under [`done/`](./done/) records what shipped and in which commit. None has been re-observed against the hosted endpoint yet — the fixes reach it with the next backend deploy.
 
-- [1016 — Preserve omitted price currencies in native importer entries](./1016.md) — minor CLI gap: native-valid `@ 5` / `@@ 10` sources fail before preview when the printer emits a MISSING class token; explicit-currency controls pass.
 
 
 - [1017 — Keep export artifacts outside copied plugin resources](./1017.md) — major CLI gap: a fresh export puts a feed or relocated local include inside a plugin package, changing valid net worth from 1,800 to 1,850 USD; both paths and allocation controls checked 2026-10-24.

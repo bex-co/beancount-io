@@ -116,6 +116,16 @@ class DirectivePrinter(EntryPrinter):
         return str(super().__call__(entry))  # type: ignore[no-untyped-call]
 
     def render_posting_strings(self, posting: Any) -> tuple[str, str, str]:
+        price = posting.price
+        if price is not None and price is not MISSING and getattr(price, "currency", None) is MISSING:
+            # So is a stated price whose currency the transaction determines:
+            # a native importer's `2 HOOL @ 5` printed the sentinel class and
+            # the row was refused (w5/1016). Left bare, it is inferred again.
+            marker = "\u0000price"
+            flag_account, position_str, weight_str = self.render_posting_strings(
+                posting._replace(price=BcAmount(price.number, marker))
+            )
+            return flag_account, position_str.replace(f" {marker}", "", 1), weight_str.replace(f" {marker}", "")
         units = posting.units
         if units is not None and units is not MISSING and getattr(units, "currency", None) is MISSING:
             # A stated number with its currency left to interpolation: upstream
