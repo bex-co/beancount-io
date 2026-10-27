@@ -447,3 +447,10 @@ The accepted source ships at `703fe36ca`; [complete skillsCI](https://github.com
 passes. The separately qualified native results support the six prerequisite
 closures and protected0.3.7 submission, without claiming public promotion or
 current-content host installation before those observations exist.
+
+## Client/project prompts (w2/m55) — 2026-10-27
+
+Two prompts added for profit by client or project, both labeled `beancount-ask`; no skill description changed, so only they were run.
+
+- **Claude Code 2.1.289 (`claude-opus-5-5[1m]`)**, suite at `2ee412e8c`: 2/2 routed to `beancount-ask` (`ask-profit-by-client`, `ask-project-lost-money`).
+- **Codex 0.163.0:** not run. `gpt-6.1-sol` (and the configured default) returns `model_not_found` for this ChatGPT account, and `gpt-6-luna` returns the account usage-limit error.

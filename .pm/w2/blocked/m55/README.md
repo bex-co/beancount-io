@@ -1,6 +1,6 @@
 # w2 · m55 — Business-books conventions, and profit by client or project
 
-**Worker:** worker2 **Goal:** one decision record fixes the names and identities every business procedure shares — receivables, payables, collected tax, payroll liabilities, owner equity, invoice identity, and the client/project key — and the suite then records and reports that key, so "profit by client?" is a shown query instead of one income account per client. **Status:** todo (t001–t005 done)
+**Worker:** worker2 **Goal:** one decision record fixes the names and identities every business procedure shares — receivables, payables, collected tax, payroll liabilities, owner equity, invoice identity, and the client/project key — and the suite then records and reports that key, so "profit by client?" is a shown query instead of one income account per client. **Status:** blocked (t001–t005 done; t006 blocked)
 
 ## Tasks (in order)
 
@@ -17,6 +17,10 @@
 | t009 | Test coverage | 45m | t007, t008 |
 | t010 | Closeout | 15m | t009 |
 
+## Blocked
+
+- **t006 onward (2026-10-27)** — t001–t005 are shipped, and t006's Claude Code half passes (the four new evals and 2/2 routing; evidence in [t006](./t006.md)). t006's acceptance requires Codex too, which cannot run here: the account rejects `gpt-6.1-sol` (`model_not_found`) and `gpt-6-luna` is at its usage limit. t007–t010 wait behind t006. **Unblock:** Codex runs with a supported model again (usage returns, or the operator configures a model this account accepts); then run add evals 15–16, import eval 21, ask eval 19, and the two routing prompts on Codex, close t006, and start t007. **Who can clear it:** the operator (Codex account and model).
+
 ## Definition of done
 
 - A business-books decision record exists under `docs/adrs/`. It records each convention with its reason, matches the catalog's `freelance@1` and `business@1` names or names the preset version change required, and lists the non-goals with proposed `DO_NOT_DO.md` lines for the owner.
@@ -27,7 +31,7 @@
 
 ## Source + Goal linkage
 
-- **Source:** small-business owner review of the skill suite (five-person services LLC: client invoices, contractors, a payroll provider, quarterly tax remittances), triaged 2026-10-21 — items 1 and 3; the shared decision record was the triage's first recommendation. Verified on `main`: no skill proposes a client/project dimension, no ask recipe sums by tag or metadata, and `bea import` rules accept only `match` and `account` (`cli/src/bea_engine/csv_mapper.py`). [ADR021](../../../docs/adrs/ADR021-backend-v2-ledger-creation-experience.md)'s `freelance@1` preset already asks "Review income and costs by client or project?" and promises allocation labels without an account per client, with no convention behind it yet.
+- **Source:** small-business owner review of the skill suite (five-person services LLC: client invoices, contractors, a payroll provider, quarterly tax remittances), triaged 2026-10-21 — items 1 and 3; the shared decision record was the triage's first recommendation. Verified on `main`: no skill proposes a client/project dimension, no ask recipe sums by tag or metadata, and `bea import` rules accept only `match` and `account` (`cli/src/bea_engine/csv_mapper.py`). [ADR021](../../../../docs/adrs/ADR021-backend-v2-ledger-creation-experience.md)'s `freelance@1` preset already asks "Review income and costs by client or project?" and promises allocation labels without an account per client, with no convention behind it yet.
 - **Goal linkage:** **A1 — Agent-native accounting:** an agent keeping a business's books answers the question owners ask monthly from the ledger itself.
 - **Expected outcome:** a services business sees profit per client or project as a shown, re-runnable query without exploding its chart of accounts. Signals: eval pass rate on both clients; ask invocations for client/project questions.
 - **Why now:** m56–m59 all depend on t001's names; settling them once prevents the naming drift the 2026-10-20 prompt audit had to repair (`Equity:Opening-Balances` against `Equity:OpeningBalances`, `214ca2403`). The dimension is the cheapest business gap and needs no new skill. Adoption surface is included because skills, a CLI rule key, and ask recipes change.
