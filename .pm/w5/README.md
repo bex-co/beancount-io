@@ -44,7 +44,7 @@
 
 - [1056 — Preserve same-day posting order in parent registers](./1056.md) — minor CLI row-order bug: account grouping changes payment/assertion running balances; native, EUR, renamed-root, leaf and endpoint controls, checked2026-10-26.
 
-- [1055 — Keep known-zero running values in Register](./1055.md) — trivial CLI display follow-up to908: zero quote/cost becomes an empty balance; ordinary quantities, native/BQL and full original tree controls, checked 2026-10-26.
+- [1055 — Keep known-zero report values](./1055.md) — trivial CLI display: Register plus per-unit net-worth totals/stock series lose typed zero; USD/EUR, interval/native and original908/506 controls, extended2026-10-26.
 
 - [1054 — Keep native unit residuals in reports](./1054.md) — minor CLI precision gap: an early inventory zero-add rounds tokens before a later return; native/BQL, five report paths and boundary/zero controls, checked 2026-10-26.
 
