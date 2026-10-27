@@ -51,6 +51,7 @@ import {
 import {
   LIFECYCLE_OPERATION_SCHEMAS,
   lifecycleToolOutput,
+  updateLedgerToolOutput,
   previewToolOutput,
   LIFECYCLE_EXECUTORS,
 } from "./mcp-lifecycle";
@@ -840,9 +841,9 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     // Open world: `private: false` publishes the ledger to anyone (w1/174).
     annotations: { ...IDEMPOTENT_DESTRUCTIVE, openWorldHint: true },
     description:
-      "Change a ledger's name, description, or privacy; omitted fields stay as they are.",
+      "Change a ledger's name, description, or privacy; omitted fields stay as they are; dry_run previews without committing, rendering the current→new diff.",
     inputSchema: LIFECYCLE_OPERATION_SCHEMAS.update,
-    outputSchema: lifecycleToolOutput,
+    outputSchema: updateLedgerToolOutput,
     execute: LIFECYCLE_EXECUTORS.update,
   },
   {

@@ -333,6 +333,98 @@ describe("LedgerWorkflow", () => {
         expect.any(Object),
       );
     });
+
+    it("echoes dryRun:false and no preview on a commit", async () => {
+      mockFavaApiClient.ledgers.updateLedger.mockResolvedValue({
+        data: {
+          success: true,
+          data: {
+            id: 3,
+            name: "test-ledger",
+            full_name: "testuser/test-ledger",
+            description: "New description",
+            private: true,
+            empty: false,
+            size: 100,
+            created_at: "2024-01-01T00:00:00Z",
+            updated_at: "2024-01-02T00:00:00Z",
+          },
+        },
+      });
+
+      const result = await workflow.updateLedger({
+        identity: IDENTITY,
+        ledgerId,
+        input: { description: "New description" },
+      });
+
+      expect(result.dryRun).toBe(false);
+      expect(result.preview).toBeUndefined();
+    });
+  });
+
+  describe("updateLedger preview (w23/m13/t002)", () => {
+    const ledgerId = "testuser/test-ledger";
+    const currentLedger = {
+      id: 1,
+      name: "test-ledger",
+      full_name: "testuser/test-ledger",
+      description: "Old description",
+      private: true,
+      empty: false,
+      size: 100,
+      created_at: "2024-01-01T00:00:00Z",
+      updated_at: "2024-01-01T00:00:00Z",
+    };
+
+    beforeEach(() => {
+      mockFavaApiClient.ledgers.getLedger.mockResolvedValue({
+        data: { success: true, data: currentLedger },
+      });
+    });
+
+    it("renders the current→new diff and commits nothing", async () => {
+      const result = await workflow.updateLedger({
+        identity: IDENTITY,
+        ledgerId,
+        input: { name: "renamed", private: true, dryRun: true },
+      });
+
+      expect(mockFavaApiClient.ledgers.updateLedger).not.toHaveBeenCalled();
+      expect(result.dryRun).toBe(true);
+      expect(result.name).toBe("test-ledger");
+      expect(result.preview).toMatchObject({
+        name: { from: "test-ledger", to: "renamed" },
+        private: { from: true, to: true },
+      });
+      expect(result.preview?.description).toBeUndefined();
+    });
+
+    it("warns unmissably on a flip to public", async () => {
+      const result = await workflow.updateLedger({
+        identity: IDENTITY,
+        ledgerId,
+        input: { private: false, dryRun: true },
+      });
+
+      expect(result.preview?.private).toEqual({ from: true, to: false });
+      expect(result.preview?.warnings).toEqual([
+        "This would make the ledger public, readable by anyone.",
+      ]);
+    });
+
+    it("authorizes before reading anything, like the commit", async () => {
+      authorization.authorizeOrThrow.mockRejectedValueOnce(new Error("denied"));
+      await expect(
+        workflow.updateLedger({
+          identity: IDENTITY,
+          ledgerId,
+          input: { name: "renamed", dryRun: true },
+        }),
+      ).rejects.toThrow("denied");
+      expect(mockFavaApiClient.ledgers.getLedger).not.toHaveBeenCalled();
+      expect(mockFavaApiClient.ledgers.updateLedger).not.toHaveBeenCalled();
+    });
   });
 
   describe("createLedger", () => {

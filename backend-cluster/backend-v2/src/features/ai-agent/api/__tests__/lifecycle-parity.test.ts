@@ -878,7 +878,18 @@ describe("ledger lifecycle through actual adapters and workflow", () => {
           private: false,
         });
         expect(result.failed).toBe(false);
-        expect(result.data).toEqual(expected("renamed", "", false));
+        // w23/m13/t002: commits echo the flag — dryRun on REST, dry_run on
+        // MCP; this file's GraphQL selection predates the echo.
+        expect(result.data).toEqual(
+          surface === "gql"
+            ? expected("renamed", "", false)
+            : {
+                ...expected("renamed", "", false),
+                ...(surface === "mcp"
+                  ? { dry_run: false }
+                  : { dryRun: false }),
+              },
+        );
         expect(f.records.has("alice/main")).toBe(false);
         expect(f.records.get("alice/renamed")?.private).toBe(false);
         expect(f.authorize.mock.calls.map(([v]) => v.action)).toEqual([

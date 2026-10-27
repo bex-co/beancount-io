@@ -37,6 +37,26 @@ export interface UpdateLedgerCommand {
   name?: string | null;
   description?: string | null;
   private?: boolean | null;
+  /** Preview the update without committing it (w23/m13/t002). */
+  dryRun?: boolean | null;
+}
+
+/** One field's current→new values in an updateLedger preview. */
+interface LedgerUpdateFieldPreview<T> {
+  from: T;
+  to: T;
+}
+
+/**
+ * What an updateLedger preview renders (w23/m13/t002): only provided fields
+ * appear, and `warnings` names what deserves a second look — currently a
+ * privacy flip to public. Absent on committed updates.
+ */
+export interface LedgerUpdatePreview {
+  name?: LedgerUpdateFieldPreview<string>;
+  description?: { from: string | null; to: string };
+  private?: LedgerUpdateFieldPreview<boolean>;
+  warnings: string[];
 }
 
 export interface CreateLedgerFileCommand {
@@ -123,6 +143,10 @@ export interface LedgerData {
   permissions?: LedgerPermissionData;
   description?: string | null;
   isStarred?: boolean;
+  /** True when this is an updateLedger preview; reads and creates omit it. */
+  dryRun?: boolean;
+  /** The rendered diff; present only on updateLedger previews. */
+  preview?: LedgerUpdatePreview;
 }
 
 export interface LedgerWithDirectiveCountData extends LedgerData {

@@ -94,7 +94,7 @@ export class LedgerMutationResolver {
     return this.workflow.updateLedger({
       identity: ctx.getCurrentIdentity(),
       ledgerId,
-      input,
+      input: withResolvedPreview(input),
     });
   }
 

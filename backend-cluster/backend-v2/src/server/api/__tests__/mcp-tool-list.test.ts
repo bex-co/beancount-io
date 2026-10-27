@@ -258,9 +258,14 @@ describe("MCP tool list", () => {
     // parse tools: measured at 114,778 bytes. Each twin carries one
     // sentence naming the spelling's home surface, which is the guidance
     // the milestone exists to publish.
+    //
+    // 115 KB since w23/m13/t002 gave updateLedger the m7 preview dialect:
+    // measured at 117,221 bytes. The input twins plus updateLedger's own
+    // output (the ledger shape echoing dry_run with the rendered preview)
+    // are the guidance agents need to preview before committing.
     const { tools } = await listToolsRaw();
     const bytes = Buffer.byteLength(JSON.stringify(tools), "utf8");
-    expect(bytes).toBeLessThan(113 * 1024);
+    expect(bytes).toBeLessThan(115 * 1024);
   });
 
   // w23/m7/t006: every mutation preview flag is advertised where agents
@@ -272,6 +277,8 @@ describe("MCP tool list", () => {
     "deleteEntrySource",
     "deleteEntrySources",
     "renameLedgerFile",
+    // w23/m13/t002: lifecycle previews join the same dialect.
+    "updateLedger",
   ])("advertises the dry_run preview flag on %s", async (name) => {
     const { tools } = await listToolsRaw();
     const tool = tools.find((entry) => entry.name === name);

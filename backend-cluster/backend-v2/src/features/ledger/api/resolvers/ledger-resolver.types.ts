@@ -154,6 +154,51 @@ export class Permission {
 }
 
 @ObjectType()
+export class LedgerUpdateStringChange {
+  @Field(() => String)
+  from: string;
+
+  @Field(() => String)
+  to: string;
+}
+
+@ObjectType()
+export class LedgerUpdateNullableStringChange {
+  @Field(() => String, { nullable: true })
+  from: string | null;
+
+  @Field(() => String)
+  to: string;
+}
+
+@ObjectType()
+export class LedgerUpdateBooleanChange {
+  @Field(() => Boolean)
+  from: boolean;
+
+  @Field(() => Boolean)
+  to: boolean;
+}
+
+@ObjectType()
+export class LedgerUpdatePreview {
+  @Field(() => LedgerUpdateStringChange, { nullable: true })
+  name?: LedgerUpdateStringChange;
+
+  @Field(() => LedgerUpdateNullableStringChange, { nullable: true })
+  description?: LedgerUpdateNullableStringChange;
+
+  @Field(() => LedgerUpdateBooleanChange, {
+    nullable: true,
+    description: "Current and new visibility, when changing it.",
+  })
+  private?: LedgerUpdateBooleanChange;
+
+  @Field(() => [String])
+  warnings: string[];
+}
+
+@ObjectType()
 export class Ledger {
   @Field(() => String)
   id: string;
@@ -193,6 +238,20 @@ export class Ledger {
 
   @Field(() => Boolean, { nullable: true })
   isStarred?: boolean;
+
+  @Field(() => Boolean, {
+    nullable: true,
+    description:
+      "True when this is an updateLedger preview: the checks ran and nothing was committed. Reads and creates omit it.",
+  })
+  dryRun?: boolean;
+
+  @Field(() => LedgerUpdatePreview, {
+    nullable: true,
+    description:
+      "The rendered current→new diff; present only on updateLedger previews.",
+  })
+  preview?: LedgerUpdatePreview;
 }
 
 @ObjectType()
@@ -302,6 +361,18 @@ export class UpdateLedgerInput {
       "true makes the ledger visible only to its owner and collaborators; false makes it public, readable by anyone; omitted leaves it as it is.",
   })
   private?: boolean;
+
+  @Field(() => Boolean, {
+    nullable: true,
+    description: PREVIEW_FLAG_DESCRIPTION,
+  })
+  dryRun?: boolean;
+
+  @Field(() => Boolean, {
+    nullable: true,
+    description: "Alias of dryRun, as MCP spells it.",
+  })
+  dry_run?: boolean;
 }
 
 @ArgsType()

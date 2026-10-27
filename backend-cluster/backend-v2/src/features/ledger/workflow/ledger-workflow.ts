@@ -55,6 +55,7 @@ import {
   GetLedgerFileParams,
   GetLedgerDirContentParams,
   LedgerData,
+  LedgerUpdatePreview,
   LedgerWithDirectiveCountData,
   LedgerFileData,
   DeleteLedgerResult,
@@ -145,6 +146,41 @@ function assertDescriptionLength(description: string | null | undefined) {
       "description",
     );
   }
+}
+
+/**
+ * Render an updateLedger preview from the current settings and the caller's
+ * input (w23/m13/t002). Only provided (non-null) fields appear — nulls pass
+ * through to the commit path unchanged, and the preview renders effective
+ * changes only. A privacy flip to public is called out in `warnings`, because
+ * that is the one update whose blast radius exceeds the ledger itself.
+ */
+function previewLedgerUpdate(
+  current: LedgerData,
+  input: UpdateLedgerCommand,
+): LedgerUpdatePreview {
+  const preview: LedgerUpdatePreview = { warnings: [] };
+  if (input.name != null) {
+    preview.name = { from: current.name, to: input.name };
+    preview.warnings.push(
+      `Renaming to ${input.name} changes the ledger's full name and URLs; update pins and links.`,
+    );
+  }
+  if (input.description != null) {
+    preview.description = {
+      from: current.description ?? null,
+      to: input.description,
+    };
+  }
+  if (typeof input.private === "boolean") {
+    preview.private = { from: current.private, to: input.private };
+    if (current.private && !input.private) {
+      preview.warnings.push(
+        "This would make the ledger public, readable by anyone.",
+      );
+    }
+  }
+  return preview;
 }
 
 /**
@@ -800,6 +836,15 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     });
     const userId = identity.userId;
     assertDescriptionLength(input.description);
+    const dryRun = input.dryRun === true;
+    if (dryRun) {
+      // The preview reads the current settings through the same getter the
+      // reads use and renders the diff; the PUT below never runs (w23/m13/t002).
+      // Authorization stays the commit's: previewing admin changes requires
+      // admin, exactly as committing them does.
+      const current = await this.getLedger({ ledgerId, identity });
+      return { ...current, dryRun: true, preview: previewLedgerUpdate(current, input) };
+    }
     const ledgerUpdate: LedgerUpdate = {
       name: input.name,
       description: input.description,
@@ -819,7 +864,10 @@ export class LedgerWorkflow implements ILedgerWorkflow {
       throw new InternalServerError("Failed to update ledger");
     }
 
-    return mapToLedger(data as FavaLedgerPublic, this.config.gitea);
+    return {
+      ...mapToLedger(data as FavaLedgerPublic, this.config.gitea),
+      dryRun: false,
+    };
   }
 
   async deleteLedger({

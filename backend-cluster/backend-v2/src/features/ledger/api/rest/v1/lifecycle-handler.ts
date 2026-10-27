@@ -13,6 +13,18 @@ import { v1Route } from "@/server/rest/v1-route";
 import { json } from "@/server/rest/v1-schemas";
 import { ledgerPathSchema, ledgerIdOf } from "./schemas";
 import {
+  DRY_RUN_NAMES,
+  resolveFlagAlias,
+} from "@/features/ledger/utils/flag-alias";
+import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
+
+/**
+ * REST null tolerance: an explicit null on an optional field means the
+ * same as omitting it, normalized once here so every field spells it alike.
+ */
+const nullToUndefined = <Schema extends z.ZodTypeAny>(schema: Schema) =>
+  schema.nullish().transform((value) => value ?? undefined);
+import {
   NEW_LEDGER_NAME_PATTERN,
   newLedgerNameRule,
 } from "@/shared/ledger-slug";
@@ -124,9 +136,39 @@ export const ledgerUpdateInput = z
       .describe(
         "true makes the ledger visible only to its owner and collaborators; false makes it public, readable by anyone; omitted leaves it as it is.",
       ),
+    dryRun: nullToUndefined(z.boolean()).optional().openapi({
+      description: PREVIEW_FLAG_DESCRIPTION,
+    }),
+    // Twin (w23/m9/t002): MCP spells it dry_run.
+    dry_run: nullToUndefined(z.boolean()).optional().openapi({
+      description: "Alias of dryRun, as MCP spells it.",
+    }),
   })
   .strict();
 export const ledgerDeleteInput = z.object({}).strict();
+const ledgerUpdatePreviewSchema = z
+  .object({
+    name: z
+      .object({ from: z.string(), to: z.string() })
+      .optional()
+      .openapi({ description: "Current and new name, when renaming." }),
+    description: z
+      .object({ from: z.string().nullable(), to: z.string() })
+      .optional()
+      .openapi({ description: "Current and new description, when changing it." }),
+    private: z
+      .object({ from: z.boolean(), to: z.boolean() })
+      .optional()
+      .openapi({ description: "Current and new visibility, when changing it." }),
+    warnings: z.array(z.string()).openapi({
+      description:
+        "What deserves a second look — a rename's URL change, a flip to public.",
+    }),
+  })
+  .openapi("LedgerUpdatePreview", {
+    description:
+      "The current→new diff an updateLedger preview renders; only provided fields appear.",
+  });
 export const ledgerResultSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -143,6 +185,14 @@ export const ledgerResultSchema = z.object({
     .object({ admin: z.boolean(), pull: z.boolean(), push: z.boolean() })
     .optional(),
   isStarred: z.boolean().optional(),
+  dryRun: z.boolean().optional().openapi({
+    description:
+      "True when this is an updateLedger preview: the checks ran and nothing was committed. Reads and creates omit it.",
+  }),
+  preview: ledgerUpdatePreviewSchema.optional().openapi({
+    description:
+      "The rendered current→new diff; present only on updateLedger previews.",
+  }),
 });
 export const LEDGER_LIFECYCLE_ROUTES = [
   v1Route({
@@ -184,16 +234,26 @@ export const LEDGER_LIFECYCLE_ROUTES = [
     operationId: "updateLedger",
     summary: "Update a ledger",
     description:
-      "Update ledger name, description, or visibility. Requires current administrative authority over the addressed ledger and respects the credential pin.",
+      "Update ledger name, description, or visibility. Requires current administrative authority over the addressed ledger and respects the credential pin. Pass dryRun to preview the current→new diff without committing.",
     params: ledgerPathSchema,
     body: ledgerUpdateInput,
     responses: { 200: json("Updated ledger", ledgerResultSchema) },
-    handler: async ({ layers }, { identity, params, body }) =>
-      layers.workflows.ledger.updateLedger({
+    handler: async ({ layers }, { identity, params, body }) => {
+      // The workflow sees its own contract only: the twins fold into dryRun
+      // and the alias key is dropped (w23/m9/t002).
+      const { dry_run, ...rest } = body;
+      return layers.workflows.ledger.updateLedger({
         identity,
         ledgerId: ledgerIdOf(params),
-        input: body,
-      }),
+        input: {
+          ...rest,
+          dryRun: resolveFlagAlias(
+            { primary: dry_run, legacy: rest.dryRun },
+            DRY_RUN_NAMES,
+          ),
+        },
+      });
+    },
   }),
   v1Route({
     method: "delete",

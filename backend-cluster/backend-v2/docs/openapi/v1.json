@@ -47,6 +47,71 @@
       }
     },
     "schemas": {
+      "LedgerUpdatePreview": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "description": "Current and new name, when renaming."
+          },
+          "description": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string",
+                "nullable": true
+              },
+              "to": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "description": "Current and new description, when changing it."
+          },
+          "private": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "boolean"
+              },
+              "to": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "description": "Current and new visibility, when changing it."
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "What deserves a second look — a rename's URL change, a flip to public."
+          }
+        },
+        "required": [
+          "warnings"
+        ],
+        "description": "The rendered current→new diff; present only on updateLedger previews."
+      },
       "V1Error": {
         "type": "object",
         "properties": {
@@ -1373,6 +1438,13 @@
                       },
                       "isStarred": {
                         "type": "boolean"
+                      },
+                      "dryRun": {
+                        "type": "boolean",
+                        "description": "True when this is an updateLedger preview: the checks ran and nothing was committed. Reads and creates omit it."
+                      },
+                      "preview": {
+                        "$ref": "#/components/schemas/LedgerUpdatePreview"
                       }
                     },
                     "required": [
@@ -1688,6 +1760,13 @@
                     },
                     "isStarred": {
                       "type": "boolean"
+                    },
+                    "dryRun": {
+                      "type": "boolean",
+                      "description": "True when this is an updateLedger preview: the checks ran and nothing was committed. Reads and creates omit it."
+                    },
+                    "preview": {
+                      "$ref": "#/components/schemas/LedgerUpdatePreview"
                     }
                   },
                   "required": [
@@ -1900,6 +1979,13 @@
                       },
                       "isStarred": {
                         "type": "boolean"
+                      },
+                      "dryRun": {
+                        "type": "boolean",
+                        "description": "True when this is an updateLedger preview: the checks ran and nothing was committed. Reads and creates omit it."
+                      },
+                      "preview": {
+                        "$ref": "#/components/schemas/LedgerUpdatePreview"
                       }
                     },
                     "required": [
@@ -2276,6 +2362,13 @@
                       },
                       "isStarred": {
                         "type": "boolean"
+                      },
+                      "dryRun": {
+                        "type": "boolean",
+                        "description": "True when this is an updateLedger preview: the checks ran and nothing was committed. Reads and creates omit it."
+                      },
+                      "preview": {
+                        "$ref": "#/components/schemas/LedgerUpdatePreview"
                       }
                     },
                     "required": [
@@ -2493,6 +2586,13 @@
                     },
                     "isStarred": {
                       "type": "boolean"
+                    },
+                    "dryRun": {
+                      "type": "boolean",
+                      "description": "True when this is an updateLedger preview: the checks ran and nothing was committed. Reads and creates omit it."
+                    },
+                    "preview": {
+                      "$ref": "#/components/schemas/LedgerUpdatePreview"
                     }
                   },
                   "required": [
@@ -2606,7 +2706,7 @@
       "put": {
         "operationId": "updateLedger",
         "summary": "Update a ledger",
-        "description": "Update ledger name, description, or visibility. Requires current administrative authority over the addressed ledger and respects the credential pin.",
+        "description": "Update ledger name, description, or visibility. Requires current administrative authority over the addressed ledger and respects the credential pin. Pass dryRun to preview the current→new diff without committing.",
         "tags": [
           "Ledger v1"
         ],
@@ -2667,6 +2767,16 @@
                     "type": "boolean",
                     "nullable": true,
                     "description": "true makes the ledger visible only to its owner and collaborators; false makes it public, readable by anyone; omitted leaves it as it is."
+                  },
+                  "dryRun": {
+                    "type": "boolean",
+                    "nullable": true,
+                    "description": "Run every check and return the preview without committing"
+                  },
+                  "dry_run": {
+                    "type": "boolean",
+                    "nullable": true,
+                    "description": "Alias of dryRun, as MCP spells it."
                   }
                 },
                 "additionalProperties": false
@@ -2737,6 +2847,13 @@
                     },
                     "isStarred": {
                       "type": "boolean"
+                    },
+                    "dryRun": {
+                      "type": "boolean",
+                      "description": "True when this is an updateLedger preview: the checks ran and nothing was committed. Reads and creates omit it."
+                    },
+                    "preview": {
+                      "$ref": "#/components/schemas/LedgerUpdatePreview"
                     }
                   },
                   "required": [
