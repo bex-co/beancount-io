@@ -66,13 +66,13 @@
 
 ## Dropped
 
+- ~~**098**~~ — `business@1`'s acceptance scenario expects an account the preset never opens — dropped 2026-10-27: duplicate of [097](./blocked/097.md), whose `business@2` scope now carries this finding (PRFAQ001 A.3 requires a loans group the preset lacks) and its proposed scenario test
 - ~~**m32**~~ — What's new on /ledger: localized changelog releases with unread flags — dropped 2026-09-21: the plan was written before implementation changed the design, and three of its done criteria no longer describe anything we want — a three-item blog rail, a ledger-shell header entry, and advancing the read watermark merely by leaving the page. What shipped instead is smaller: `/ledger` is two sections, What's new over Activity, with the blog dropped from the dashboard entirely (it publishes ~20 posts a day and none carry a `beancount` tag, so no collapsing made it worth the space), and the read position kept per device in local storage. The backend gained a `CHANGELOG` feed source with per-locale fetch, English fallback, and blog de-duplication, and no persistence. Re-file if the remaining ideas are wanted; the shipped work is in git history.
 - ~~**m33**~~ — What's new everywhere: ledger-shell entry point and cross-device seen state — dropped 2026-09-21: the server-side changelog watermark was removed before shipping. Its only unique benefit was a mobile unread indicator, and the mobile home feed cannot load at all because `USER_SOCIAL_FEED_READ` is session-only while the app authenticates with OAuth (policy predates this work, `f07b3f79`). The dashboard now tracks its reading position in local storage, so no `users` column, migration, mutation, or authorization action is needed. The ledger-shell entry point was also built and removed: an icon-only control with an unread dot was judged not worth the header space.
 
 ## Inbox
 
 - [097 — Business presets lack loans, payroll and sales-tax liabilities, and owner draws](./blocked/097.md) — **blocked:** a `business@2` preset version and public API enum change; the owner decides its content
-- [098 — `business@1`'s acceptance scenario expects an account the preset never opens](./098.md) — likely hit by w3/m53/t005 conformance
 - [099 — Inventory lots and cost of goods sold for product sellers](./blocked/099.md) — **blocked:** validated product-seller demand (owner decision)
 - [080 — Decide whether the suite keeps its no-`bea` developer fallback](./blocked/080.md) (owner decision) — **blocked:** the owner picks keep, read-only, or require-`bea`
 - [083 — Codex cannot find beancount-init's `bea-cli.md` in a linked install, so the shared command contract goes unread](./blocked/083.md) — **blocked:** fix shipped; the Codex probe rerun waits for Codex usage
