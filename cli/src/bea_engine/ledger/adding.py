@@ -330,42 +330,37 @@ def _held_through(entries: list[Any], account: str, date: datetime.date) -> dict
     return {currency: number for currency, number in held.items() if number != 0}
 
 
-def _drained_checks(entries: list[Any], options: Any, account: str, date: datetime.date) -> set[str]:
-    """The currencies `check_drained` will assert zero for on closing `account` at `date`.
+def _drained_currencies(entries: list[Any], account: str, date: datetime.date) -> set[str]:
+    """The currencies of `account` that a failing `check_drained` assertion already refuses, closing on `date`.
 
-    The plugin covers balance-sheet accounts only, and skips a currency the
-    ledger already asserts on the close date, whatever that assertion says; an
-    Income or Expenses balance, or one a statement assertion hides, is not
-    its to refuse.
+    Judged on the ledger as it would load, not on the plugin being listed: the
+    plugin asserts zero the day after each close it sees, so one loaded before
+    `close_tree` never sees a generated close, and an assertion counts the
+    account's whole subtree, so an offsetting child can make a funded account's
+    pass (w5/1063). Only an assertion validation will fail refuses the close,
+    with the plugin's own hint (w5/888); its own assertion or an ancestor's
+    covers the account, since either counts what it holds. The plugin's
+    assertion carries the location of the close it follows, which tells it
+    from an explicit one.
     """
-    from beancount.core import account_types
-    from beancount.core.data import Balance
-    from beancount.parser import options as beancount_options
+    from beancount.core.data import Balance, Close
 
-    if not account_types.is_balance_sheet_account(
-        account,
-        beancount_options.get_account_types(options),  # type: ignore[no-untyped-call]
-    ):
-        return set()
-    asserted = {
+    closes = {
+        (entry.account, entry.meta.get("filename"), entry.meta.get("lineno"))
+        for entry in entries
+        if isinstance(entry, Close) and entry.date == date
+    }
+    after = date + datetime.timedelta(days=1)
+    return {
         entry.amount.currency
         for entry in entries
-        if isinstance(entry, Balance) and entry.account == account and entry.date == date
+        if isinstance(entry, Balance)
+        and entry.date == after
+        and entry.diff_amount is not None
+        and entry.amount.number == 0
+        and (entry.account == account or account.startswith(f"{entry.account}:"))
+        and (entry.account, entry.meta.get("filename"), entry.meta.get("lineno")) in closes
     }
-    return _plugin_currencies(entries, account) - asserted
-
-
-def _plugin_currencies(entries: list[Any], account: str) -> set[str]:
-    """Every currency the account has posted or declared, as the plugin accumulates them."""
-    from beancount.core.data import Open, Transaction
-
-    seen: set[str] = set()
-    for entry in entries:
-        if isinstance(entry, Transaction):
-            seen |= {p.units.currency for p in entry.postings if p.account == account and p.units is not None}
-        elif isinstance(entry, Open) and entry.account == account and entry.currencies:
-            seen |= set(entry.currencies)
-    return seen
 
 
 def _stranded_lots(entries: list[Any], account: str, date: datetime.date) -> list[str]:
@@ -411,18 +406,17 @@ def _stranded_lots(entries: list[Any], account: str, date: datetime.date) -> lis
     return stranded
 
 
-def _remaining_balance(
-    entries: list[Any], options: Any, account: str, date: datetime.date
-) -> tuple[dict[str, Decimal], list[str]]:
+def _remaining_balance(entries: list[Any], account: str, date: datetime.date) -> tuple[dict[str, Decimal], list[str]]:
     """What `account` still holds at the end of `date`, as units and as stranded lots.
 
-    Units a loaded `check_drained` will assert zero are left to it, with its own
-    hint (w5/888); lots that cancel in units but not at cost, which no units
-    check can see, are named separately (w5/909).
+    `entries` is the ledger with the close loaded. Units a failing
+    `check_drained` assertion refuses are left to it, with its own hint
+    (w5/888, w5/1063); lots that cancel in units but not at cost, which no
+    units check can see, are named separately (w5/909).
     """
     held = _held_through(entries, account, date)
-    if held and any(str(name).endswith("check_drained") for name, _ in options.get("plugin") or ()):
-        covered = _drained_checks(entries, options, account, date)
+    if held:
+        covered = _drained_currencies(entries, account, date)
         held = {currency: number for currency, number in held.items() if currency not in covered}
     return held, [] if held else _stranded_lots(entries, account, date)
 
@@ -451,10 +445,10 @@ def _moved_closes(before: list[Any], after: list[Any]) -> list[Any]:
 
 
 def _funded_close_refusal(
-    entries: list[Any], options: Any, account: str, date: datetime.date, closing: str
+    entries: list[Any], account: str, date: datetime.date, closing: str
 ) -> protocol.LedgerError | None:
     """Why closing `account` on `date` must not go ahead unforced, when `closing` is the close requested."""
-    held, stranded = _remaining_balance(entries, options, account, date)
+    held, stranded = _remaining_balance(entries, account, date)
     own = account == closing
     day = date.isoformat()
     if stranded:
@@ -488,30 +482,27 @@ def _close(
     directive = CloseDirective(date=_date(request), account=parse_account(_text(request, "account"), roots))
     snapshot = write.LedgerSnapshot.capture(file)
     snapshot.require_target(write.destination(file, into), into=into)
-    entries, _errors, options = managed_load.load_file(file, snapshot=snapshot, check_types=True)
+    entries, _errors, _options = managed_load.load_file(file, snapshot=snapshot, check_types=True)
     if request.get("force"):
         # Write against the ledger this decision read (w5/115).
         return _appended(file, directive, allow_errors=allow_errors, into=into, snapshot=snapshot)
-    # A close over a balance strands it: later postings to the account are
-    # refused and reports keep counting it (w2/092). A ledger that loads
-    # check_drained refuses it in validation already, with its own hint, but
-    # only for what the plugin really checks (w5/888).
-    refusal = _funded_close_refusal(entries, options, directive.account, directive.date, directive.account)
-    if refusal is not None:
-        raise refusal
 
-    # The accounts the close_tree plugin closes with this one are closed by the
-    # same write, so they are judged the same way (w5/910), each at the date
-    # the ledger as it would stand closes it: a descendant whose generated
-    # close this write moves earlier is closed by it too (w5/1062).
+    # A close over a balance strands it: later postings to the account are
+    # refused and reports keep counting it (w2/092). What a failing
+    # check_drained assertion refuses is left to validation, with its own hint
+    # (w5/888), judged on the ledger as it would stand (w5/1063). The accounts
+    # the close_tree plugin closes with this one are closed by the same write,
+    # so they are judged the same way (w5/910), each at the date the ledger as
+    # it would stand closes it: a descendant whose generated close this write
+    # moves earlier is closed by it too (w5/1062).
     def judge(candidate: list[Any], _staged: dict[Path, Path]) -> None:
         moved = sorted(
             (close.account, close.date)
             for close in _moved_closes(entries, candidate)
             if close.account != directive.account
         )
-        for account, date in moved:
-            refusal = _funded_close_refusal(candidate, options, account, date, directive.account)
+        for account, date in [(directive.account, directive.date), *moved]:
+            refusal = _funded_close_refusal(candidate, account, date, directive.account)
             if refusal is not None:
                 raise refusal
 

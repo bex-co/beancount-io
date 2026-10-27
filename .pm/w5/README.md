@@ -43,7 +43,6 @@
 
 
 
-- [1063 — Keep funded-close checks where check_drained is ineffective](./1063.md) — minor shared CLI guard/advisory gap: missing child assertion or passing aggregatezero hides own100USD; original888DoD passes, checked2026-10-27.
 
 
 

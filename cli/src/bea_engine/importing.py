@@ -911,7 +911,7 @@ def answer(
 
     def inspect(candidate: list[Any], _staged: dict[Path, Path]) -> None:
         advisories.extend(unused_quote_advisories(candidate, existing, wanted))
-        advisories.extend(_funded_close_advisories(candidate, options, existing))
+        advisories.extend(_funded_close_advisories(candidate, existing))
 
     try:
         validation_warnings = ledger_write.validate_append(
@@ -1091,7 +1091,7 @@ def answer(
     return preview
 
 
-def _funded_close_advisories(candidate: list[Any], options: Any, existing: list[Any]) -> list[str]:
+def _funded_close_advisories(candidate: list[Any], existing: list[Any]) -> list[str]:
     """A warning for each account the import newly closes while it still holds money once the whole batch is booked.
 
     Native validation accepts a funded close, and later postings to the account
@@ -1109,7 +1109,7 @@ def _funded_close_advisories(candidate: list[Any], options: Any, existing: list[
 
     advisories = []
     for close in _moved_closes(existing, candidate):
-        held, stranded = _remaining_balance(candidate, options, close.account, close.date)
+        held, stranded = _remaining_balance(candidate, close.account, close.date)
         left = [f"{_plain(number)} {currency}" for currency, number in sorted(held.items())] or stranded
         if left:
             advisories.append(
