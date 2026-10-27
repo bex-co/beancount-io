@@ -265,7 +265,11 @@ def _overview(
     liabilities = trees[1].balance_children if trees[1] is not None else empty
     income = trees[2].balance_children if trees[2] is not None else empty
     expenses = trees[3].balance_children if trees[3] is not None else empty
-    worth = _headline(_sum(assets, liabilities), conversion)
+    # Zero-filled like the trees: assets worth a known 0 USD are a net worth
+    # of 0 USD, not an empty one (w5/1055).
+    from fava.core.tree import zero_filled
+
+    worth = _headline(zero_filled(_sum(assets, liabilities), [assets, liabilities]), conversion)
     return metadata | {
         "display_precision": _display_precision(filtered),
         "totals": {
@@ -395,7 +399,11 @@ def _balance_sheet(
     empty = type(data.assets_hierarchy.balance_children)()
     assets = trees[0].balance_children if trees[0] is not None else empty
     liabilities = trees[1].balance_children if trees[1] is not None else empty
-    worth = _headline(_sum(assets, liabilities), conversion)
+    # Zero-filled like the trees: assets worth a known 0 USD are a net worth
+    # of 0 USD, not an empty one (w5/1055).
+    from fava.core.tree import zero_filled
+
+    worth = _headline(zero_filled(_sum(assets, liabilities), [assets, liabilities]), conversion)
     # `at_cost` leaves cost-less holdings (foreign cash) in their own units, so
     # an "adjustment" across unlike commodities was just the FX trade, claimed
     # as reconciled (w5/505): only a single-commodity view reconciles.
@@ -640,9 +648,9 @@ def _register(filtered: Any, conversion: str, allow_errors: bool, ledger_errors:
     """
     from beancount.core.data import Balance
 
-    from fava.core.conversion import cost_or_value
     from fava.core.group_entries import TransactionPosting, group_entries_by_account
     from fava.core.inventory import CounterInventory
+    from fava.core.tree import _converted
 
     if not filtered.account:
         raise protocol.UsageError(
@@ -721,7 +729,8 @@ def _register(filtered: Any, conversion: str, allow_errors: bool, ledger_errors:
             )
         else:
             continue
-        balance = _balance_map(cost_or_value(running, conversion, prices, filtered.end_date))
+        # A running position worth exactly zero is `0 USD`, not empty (w5/1055).
+        balance = _balance_map(_converted(running, conversion, prices, filtered.end_date))
         rows[-1]["balance"] = balance
         balances.append((filtered.end_date, balance))
     if not rows:

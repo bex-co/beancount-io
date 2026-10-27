@@ -14,7 +14,7 @@ from ..beans.helpers import slice_entry_dates
 from ..core.conversion import cost_or_value
 from ..core.filters import account_predicate
 from ..core.inventory import CounterInventory
-from ..core.tree import Tree
+from ..core.tree import Tree, _converted
 from ..util import listify
 
 
@@ -293,9 +293,11 @@ class ChartModule:
                     if is_child_account(posting.account) and in_scope(posting.account):
                         inventory.add_position(posting)
                 txn = next(transactions, None)
+            # Beancount.io change: a holding worth exactly zero keeps its
+            # currency at zero, as the trees do (w5/1055).
             yield DateAndBalance(
                 date_range.end_inclusive,
-                cost_or_value(
+                _converted(
                     inventory,
                     conversion,
                     prices,
@@ -401,9 +403,10 @@ class ChartModule:
                     if _under_roots(posting.account, types) and in_scope(posting.account):
                         inventory.add_position(posting)
                 txn = next(transactions, None)
+            # Beancount.io change: net worth that is a known zero says so (w5/1055).
             yield DateAndBalance(
                 date_range.end_inclusive,
-                cost_or_value(
+                _converted(
                     inventory,
                     conversion,
                     prices,
