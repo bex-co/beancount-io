@@ -167,7 +167,6 @@ The 27 findings from the MCP QA auth sweep against the hosted endpoint (023–05
 
 
 
-- [1019 — Preserve one-letter currency token boundaries](./1019.md) — minor CLI gap: costs and account currency lists lose required spacing, blocking writes and producing invalid PRINT exports; token-order, price and normal-format controls pass.
 
 ## Blocked inbox
 

@@ -96,6 +96,12 @@ class DirectivePrinter(EntryPrinter):
         }.get(type(entry), ())
         if fields:
             entry = entry._replace(**{field: escape_string(getattr(entry, field)) for field in fields})
+        if isinstance(entry, Open) and entry.currencies:
+            # A one-letter currency needs a space before a comma (w5/1019).
+            last = len(entry.currencies) - 1
+            entry = entry._replace(
+                currencies=[f"{c} " if len(c) == 1 and i < last else c for i, c in enumerate(entry.currencies)]
+            )
         if isinstance(entry, Custom):
             entry = entry._replace(
                 values=[
@@ -116,6 +122,10 @@ class DirectivePrinter(EntryPrinter):
         return str(super().__call__(entry))  # type: ignore[no-untyped-call]
 
     def render_posting_strings(self, posting: Any) -> tuple[str, str, str]:
+        flag_account, position_str, weight_str = self._posting_strings(posting)
+        return flag_account, _separate_one_letter_currencies(position_str), weight_str
+
+    def _posting_strings(self, posting: Any) -> tuple[str, str, str]:
         price = posting.price
         if price is not None and price is not MISSING and getattr(price, "currency", None) is MISSING:
             # So is a stated price whose currency the transaction determines:
@@ -210,6 +220,27 @@ def _custom_value(value: Any) -> Any:
     if isinstance(value, Decimal):
         return _CustomValueDecimal(_unsigned_zero(value))
     return value
+
+
+_QUOTED = re.compile(r'"(?:[^"\\]|\\.)*"')
+_ONE_LETTER_BEFORE_PUNCTUATION = re.compile(r"(?<=[\s{])([A-Z])(?=[,}])")
+
+
+def _separate_one_letter_currencies(text: str) -> str:
+    """`{5 X, 2024-01-02}` with the space Beancount needs after a one-letter currency.
+
+    Its lexer reads `X,` and `X}` as one invalid token, so a valid `{5 X }`
+    or `{5 X , 2024-01-02, "A"}` printed without the space was refused on
+    write and broke `PRINT` exports (w5/1019). Quoted labels stay as written.
+    """
+    pieces = []
+    position = 0
+    for quoted in _QUOTED.finditer(text):
+        pieces.append(_ONE_LETTER_BEFORE_PUNCTUATION.sub(r"\1 ", text[position : quoted.start()]))
+        pieces.append(quoted.group())
+        position = quoted.end()
+    pieces.append(_ONE_LETTER_BEFORE_PUNCTUATION.sub(r"\1 ", text[position:]))
+    return "".join(pieces)
 
 
 def _cost_spec_text(cost: Any, dformat: Any) -> str:
