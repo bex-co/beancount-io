@@ -38,6 +38,9 @@ class Imp:
         elif spec["mode"] == "tolerance":
             out.append(data.Balance(meta, day, "Assets:Cash", Amount(Decimal("0.00"), "USD"),
                                     Decimal(spec["zero"]), None))
+        elif spec["mode"] == "amount-note":
+            meta["rate"] = Amount(Decimal(spec["zero"]), "USD")
+            out.append(data.Note(meta, day, "Assets:Cash", "Statement", frozenset(), frozenset()))
         else:
             meta["fee"] = Decimal(spec["zero"])
             out.append(data.Note(meta, day, "Assets:Cash", "Statement", frozenset(), frozenset()))
@@ -59,7 +62,7 @@ def _run(tmp_path: Path, spec: dict[str, object]) -> dict[str, object]:
     return json.loads(result.stdout)["data"]  # type: ignore[no-any-return]
 
 
-@pytest.mark.parametrize("mode", ["balance", "tolerance", "note"])
+@pytest.mark.parametrize("mode", ["balance", "tolerance", "note", "amount-note"])
 @pytest.mark.parametrize("zero", ["-0.00", "0.00"], ids=["negative", "positive"])
 def test_an_unchanged_signed_zero_directive_repeats_as_a_duplicate(tmp_path: Path, mode: str, zero: str) -> None:
     (tmp_path / "main.bean").write_text(LEDGER)

@@ -1923,7 +1923,10 @@ def _directive_key(entry: Any, base: Path | None = None) -> str:
     def unsigned(value: Any) -> Any:
         # The parser drops a zero's sign, so `-0.00` written comes back `0.00`
         # and an unchanged balance, tolerance or note conflicted with, or was
-        # appended beside, its own copy (w5/1023). Its precision still counts.
+        # appended beside, its own copy (w5/1023), an Amount's number too
+        # (w5/1067). Its precision still counts.
+        if isinstance(value, Amount) and isinstance(value.number, Decimal):
+            return Amount(unsigned(value.number), value.currency)
         return value.copy_abs() if isinstance(value, Decimal) and value.is_zero() else value
 
     meta = getattr(entry, "meta", None)
