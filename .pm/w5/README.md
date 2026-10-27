@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1066 — Preserve dateless lots in Beancount query exports](./1066.md) — minor CLI export gap: PRINT invents acquisition dates and can write an invalid strict-booking copy; 31 fresh profiles, 198 CLI commands and 91 native loads; completed 1018 controls pass, checked 2026-10-27.
+
 - [1065 — Refuse stale empty rule directories in refreshed snapshots](./1065.md) — major CLI residual: retired directory keeps10-unit fee despite source-identical files, Cash970 vs980; root/included USD/EUR and full completed929 controls checked2026-10-27.
 
 - [1064 — Check fullwidth pound and won currency signs](./1064.md) — major CLI residual: ￡/￦ amounts become USD with clean checks; all seven layouts reproduce, completed924 full policy stays green, checked2026-10-27.
