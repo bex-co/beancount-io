@@ -38,5 +38,25 @@
   "next": "PulseMCP resumes/auto-ingests the already active registry record or exposes a supported correction/intake route; worker verifies public canonical metadata and actual native setup. Manual follow-up2026-11-01UTC or earlier actual reopening/import event.",
   "operatorInputNeededNow": false,
   "submissionSentToPulseMCP": false,
-  "privacy": "Public registry/directory/notice metadata only. No login, credential, payment, private account or raw ledger contents."
+  "privacy": "Public registry/directory/notice metadata only. No login, credential, payment, private account or raw ledger contents.",
+  "routeFollowup20261027": {
+    "recordedAtUTC": "2026-10-27T07:08:43Z",
+    "observationWindowUTC": {
+      "from": "2026-10-27T06:55:25Z",
+      "through": "2026-10-27T07:08:43Z"
+    },
+    "trigger": "Owner requested continuation of unsubmitted work.",
+    "url": "https://www.pulsemcp.com/submit",
+    "actualBrowserRead": true,
+    "heading": "Apologies, submissions and changes are temporarily paused",
+    "finding": "Official page still pauses both new server/client submissions and changes, with no reopening date. It names Official MCP Registry publication as the interim action and promises ingestion once back.",
+    "noticeDisplayedUpdatedDate": "September 3, 2026",
+    "interimRegistryPublicationAlreadyRecorded": true,
+    "freshRegistryOrPublicQueryPerformed": false,
+    "historicalQueryAndRegistryTimestampsPreserved": true,
+    "newSubmissionPerformed": false,
+    "newEmailOrPr": false,
+    "operatorInputNeeded": false,
+    "unblock": "Platform reopens supported intake/correction or imports the existing registry record, then worker verifies public/native availability. Preserve next manual review November1 or an actual earlier change."
+  }
 }
