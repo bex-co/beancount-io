@@ -343,3 +343,30 @@ def test_card_statement_without_a_bank_is_remembered_and_recalled(book: Book) ->
     recalled = book.imports(second)
     assert recalled.returncode == 0, recalled.stderr
     assert book.balances()["Liabilities:Card"] == "-15.00"
+
+
+def _transfer_statement(bankid: str, acctid: str, fitid: str, amount: str, posted: str) -> str:
+    """A bank statement whose one row is a transfer carrying its recipient's account."""
+    return _bank_statement(bankid, acctid, fitid, amount, posted).replace(
+        "<NAME>Food</STMTTRN>",
+        "<NAME>Food<BANKACCTTO><BANKID>222000118<ACCTID>99999999<ACCTTYPE>SAVINGS</BANKACCTTO></STMTTRN>",
+    )
+
+
+def test_a_transfer_recipient_is_not_a_second_source_account(book: Book) -> None:
+    """A recipient `BANKACCTTO` was counted as another source and refused the file (w5/1069)."""
+    first = _bank_file(
+        book.root / "first.ofx", _transfer_statement("111000025", "00012345", "T1", "-30.00", "20240102")
+    )
+    applied = book.imports(first, "--account", "Assets:Checking", *FOOD)
+    assert applied.returncode == 0, applied.stderr
+    assert [(r["bankid"], r["acctid"]) for r in book.records()] == [("111000025", "00012345")]
+
+    second = _bank_file(
+        book.root / "second.ofx", _transfer_statement("111000025", "00012345", "T2", "-5.00", "20240105")
+    )
+    recalled = book.imports(second, *FOOD)
+    assert recalled.returncode == 0, recalled.stderr
+    assert book.balances()["Assets:Checking"] == "65.00"
+    repeat = book.bea("import", str(second), *FOOD, "--apply", json_output=True)
+    assert json.loads(repeat.stdout)["data"]["written"] == 0

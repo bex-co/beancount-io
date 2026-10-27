@@ -336,11 +336,17 @@ def _ofx_identities(source: Path) -> list[OfxIdentity]:
         return []
     identities: list[OfxIdentity] = []
     bankid: str | None = None
+    # A transfer's recipient aggregate is not a source account (w5/1069);
+    # the engine's `_source_accounts` skips it the same way.
+    recipient = False
     for match in _OFX_ACCOUNT_TAGS.finditer(raw):
         tag = match.group(2).upper()
         value = match.group(3).decode("ascii", errors="replace").strip()
         if tag not in (b"BANKID", b"ACCTID"):
             bankid = None
+            recipient = tag.endswith(b"ACCTTO") and not match.group(1)
+        elif recipient:
+            continue
         elif match.group(1):
             continue  # OFX 2's `</BANKID>` closes the element, not the aggregate.
         elif tag == b"BANKID":

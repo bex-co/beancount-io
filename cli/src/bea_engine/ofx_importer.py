@@ -52,11 +52,17 @@ def _source_accounts(text: str) -> list[tuple[str | None, str]]:
     """
     accounts: list[tuple[str | None, str]] = []
     bankid: str | None = None
+    # A transfer's `BANKACCTTO`/`CCACCTTO` names the recipient, not a second
+    # source: counted, it refused a single-account statement (w5/1069).
+    recipient = False
     for match in _ACCOUNT_TAGS.finditer(text):
         tag = match.group(2).upper()
         value = match.group(3).strip()
         if tag not in ("BANKID", "ACCTID"):
             bankid = None
+            recipient = tag.endswith("ACCTTO") and not match.group(1)
+        elif recipient:
+            continue
         elif match.group(1):
             continue  # OFX 2's `</BANKID>` closes the element, not the aggregate.
         elif tag == "BANKID":
