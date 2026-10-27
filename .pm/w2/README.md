@@ -58,6 +58,11 @@
 - [ ] **m52** — [Record crypto-native events: swaps, staking, and network fees](./blocked/m52/README.md) (8 tasks) ← user walkthrough as a personal investor (real estate, crypto, stocks, daily spending), 2026-10-19 — extends m45's trade procedures — **blocked:** t001–t003 shipped; t004 passes on Claude Code (evals 4/4, routing 102/103) and waits for Codex usage (resets 2026-11-17); t005 onward wait behind it
 - [ ] **m53** — [Onboard an investor household, and prove it with a first-year journey](./blocked/m53/README.md) (7 tasks) ← user walkthrough as a personal investor (real estate, crypto, stocks, daily spending), 2026-10-19 — integration proof for m49–m52, sequenced last — **blocked:** journey passes end to end on Claude Code (all 8 checkpoints); the Codex rehearsal waits for Codex usage (resets 2026-11-17); t004 onward wait behind t003
 - [ ] **m54** — [A purchase ends on a confirmation that celebrates it, and analytics counts it in the browser](./blocked/m54/README.md) (11 tasks) ← user decisions 2026-10-20 after post-payment research: land on the dashboard confirmation, client-side GA4 `purchase`, confetti; supersedes w1/m39/t003's open half, w1/m39/t016 and w1/178 — **blocked:** t001–t010 shipped; the production check waits for a backend-then-dashboard deploy
+- [ ] **m55** — [Business-books conventions, and profit by client or project](./m55/README.md) (10 tasks) ← small-business owner review of the skill suite, triaged 2026-10-21 (items 1 and 3) — sets the names m56–m59 use
+- [ ] **m56** — [Invoice clients and pay bills, with collected tax and an aging you can trust](./m56/README.md) (12 tasks) ← same review (items 2 and 5) — sequenced after m55/t001
+- [ ] **m57** — [Record a payroll run from the provider's summary](./m57/README.md) (9 tasks) ← same review (item 4) — sequenced after m55/t001
+- [ ] **m58** — [Import payment-processor payouts as gross, fees, tax, and net](./m58/README.md) (8 tasks) ← same review (item 6, payout half) — sequenced after m56/t002
+- [ ] **m59** — [Close the books for a business: agings, liabilities, and owner equity](./m59/README.md) (7 tasks) ← same review (item 7) — sequenced last, after m56, m57, w2/m48, and w3/m58
 
 ## Dropped
 
@@ -66,6 +71,9 @@
 
 ## Inbox
 
+- [097 — Business presets lack payroll and sales-tax liabilities and owner draws](./097.md) — `business@2` input once m55/t001 fixes the names
+- [098 — `business@1`'s acceptance scenario expects an account the preset never opens](./098.md) — likely hit by w3/m53/t005 conformance
+- [099 — Inventory lots and cost of goods sold for product sellers](./blocked/099.md) — **blocked:** validated product-seller demand (owner decision)
 - [080 — Decide whether the suite keeps its no-`bea` developer fallback](./blocked/080.md) (owner decision) — **blocked:** the owner picks keep, read-only, or require-`bea`
 - [083 — Codex cannot find beancount-init's `bea-cli.md` in a linked install, so the shared command contract goes unread](./blocked/083.md) — **blocked:** fix shipped; the Codex probe rerun waits for Codex usage
 - [084 — Say plainly where ledger data goes, and how the suite relates to upstream Beancount](./blocked/084.md) — **blocked:** the "Your data" draft is written in the note; the owner approves the affiliation wording
