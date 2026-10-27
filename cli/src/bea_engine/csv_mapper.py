@@ -1616,13 +1616,13 @@ class CsvImporter:
             return None
         return _dot_ambiguity_note(examples, currency)
 
-    def _cell(self, row: dict[str, str], where: str, field: str) -> str:
+    def _cell(self, row: dict[str, str], where: str, field: str, *, exact: bool = False) -> str:
         column = self._mapping.column(field)
         if column is None:
             return ""
         if column not in row:
             raise UsageError(f"{where}: the mapping names column {column!r} for {field}, which the CSV lacks.")
-        return row[column].strip()
+        return row[column] if exact else row[column].strip()
 
     def _check_columns(self, source: Path, headers: list[str], category_header: str | None) -> None:
         """Every column this run reads must exist exactly once, or a row could silently take the wrong cell."""
@@ -1957,8 +1957,11 @@ class CsvImporter:
                 meta = new_metadata(filepath, line)
                 meta["_csv_rule"] = rule
                 meta.update(attribution)
-                native_id = self._cell(row, where, "id")
-                if native_id:
+                # A bank's reference is matched exactly, so ` payment-2026`
+                # stays distinct from `payment-2026`; trimmed, the second
+                # payment was skipped as the first one's duplicate (w5/1045).
+                native_id = self._cell(row, where, "id", exact=True)
+                if native_id.strip():
                     meta["bank_id"] = native_id
                 postings = [
                     Posting(self._account, Amount(number, currency), None, None, None, None),
