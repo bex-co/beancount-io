@@ -1040,6 +1040,7 @@ def _cash_flow(filtered: Any, bounds: tuple[date | None, date | None], ledger_er
     flow_books: dict[str, CounterInventory] = {}
     split: list[tuple[Any, list[str], list[str]]] = []
     priced: list[Any] = []
+    residuals: list[dict[str, Decimal]] = []
     for entry in filtered.ledger.all_entries:
         if not isinstance(entry, Transaction):
             continue
@@ -1064,19 +1065,28 @@ def _cash_flow(filtered: Any, bounds: tuple[date | None, date | None], ledger_er
             dropped = sorted({account for account in legs if not matches(account)})
             if kept and dropped:
                 split.append((entry, kept, dropped))
-        if any(
+        is_priced = any(
             posting.price is not None and posting.units is not None and posting.price.currency != posting.units.currency
             for posting in entry.postings
-        ):
+        )
+        if is_priced:
             priced.append(entry)
+        own = CounterInventory()
         for posting in entry.postings:
             if posting.units is None or posting.units.number is None:
                 continue
             if matches is not None and not matches(posting.account):
                 continue
+            if not is_priced:
+                own.add_position(posting)  # type: ignore[arg-type]
             # Fava's inventory reads units/cost duck-typed; beancount postings
             # flow through the same call in interval_totals at runtime.
             flow_books.setdefault(posting.account, CounterInventory()).add_position(posting)  # type: ignore[arg-type]
+        # What a price-free transaction leaves at cost is the rounding its
+        # own tolerance accepted (a {{1000.00 USD}} lot over three shares
+        # weighs 999.99…), not a basis mismatch (w5/1071).
+        if not is_priced:
+            residuals.append(_balance_map(cost_or_value(own, "at_cost", prices)))
     if split:
         _refuse_split_cash_flow(filtered.account, split, ledger_errors)
     flows = {account: _balance_map(cost_or_value(book, "at_cost", prices)) for account, book in flow_books.items()}
@@ -1118,27 +1128,33 @@ def _cash_flow(filtered: Any, bounds: tuple[date | None, date | None], ledger_er
     # an invented foreign opening balance (w5/1068): checked against the cash
     # accounts' own movement, and refused rather than published.
     moved = _sum_amounts(flows[account] for account in flows if account in members)
+    rounding = {currency: total for currency, total in _sum_amounts(residuals).items() if total}
     unexplained = sorted(
         currency
-        for currency in set(moved) | set(net_change)
-        if moved.get(currency, Decimal(0)) != net_change.get(currency, Decimal(0))
+        for currency in set(moved) | set(net_change) | set(rounding)
+        if moved.get(currency, Decimal(0)) - net_change.get(currency, Decimal(0)) != rounding.get(currency, Decimal(0))
     )
     if unexplained:
         examples = ", ".join(
             f"{_where_entry(entry)} ({entry.narration or entry.payee or 'transaction'})" for entry in priced[:5]
         )
+        cause = (
+            f"priced currency exchanges ({examples}) move cash in {', '.join(unexplained)} by a price, not by cost"
+            if priced
+            else f"its transactions do not conserve {', '.join(unexplained)} at cost"
+        )
         raise protocol.UsageError(
-            "Cash Flow cannot reconcile this period: "
-            + (f"priced currency exchanges ({examples}) " if priced else "some transactions ")
-            + f"move cash in {', '.join(unexplained)} by a price, not by cost, so the activity rows would not "
-            "explain the cash accounts' actual change. The report reads every amount at cost; narrow the period "
-            "to exclude them, or read the balance sheet.",
+            f"Cash Flow cannot reconcile this period: {cause}, so the activity rows would not explain the cash "
+            "accounts' actual change. The report reads every amount at cost; narrow the period to exclude them, "
+            "or read the balance sheet.",
             ledger_errors=ledger_errors,
         )
     closing_total = _sum_amounts(closing.values())
+    # Opening cash is what the cash accounts held, closing less their own
+    # movement; the rows plus any accepted rounding residual explain that move.
     opening = {
-        currency: closing_total.get(currency, Decimal(0)) - net_change.get(currency, Decimal(0))
-        for currency in set(closing_total) | set(net_change)
+        currency: closing_total.get(currency, Decimal(0)) - moved.get(currency, Decimal(0))
+        for currency in set(closing_total) | set(moved) | set(net_change)
     }
     invalid_role_values = [
         {"account": account, "value": _jsonable_role_value(value)}
@@ -1161,6 +1177,7 @@ def _cash_flow(filtered: Any, bounds: tuple[date | None, date | None], ledger_er
         "totals": totals,
         "net_change": net_change,
         "opening": opening,
+        "rounding_residual": rounding,
         "closing": closing_total,
         "cash_accounts": [
             {"account": account, "balance": closing.get(account, {}), "role_source": members[account]}

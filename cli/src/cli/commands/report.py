@@ -665,6 +665,9 @@ def cash_flow(
         if sections[activity]:
             typer.echo(f"  {f'Total {activity}:':<20} {_amounts(totals[activity], conversion, precision)}")
     typer.echo(f"  {'Net change in cash:':<20} {_amounts(data['net_change'], conversion, precision)}")
+    if data.get("rounding_residual"):
+        # Cost rounding the ledger's own tolerances accepted (w5/1071).
+        typer.echo(f"  {'Rounding residual:':<20} {_amounts(data['rounding_residual'], conversion, precision)}")
     typer.echo(f"  {'Opening cash:':<20} {_amounts(data['opening'], conversion, precision)}")
     typer.echo(f"  {'Closing cash:':<20} {_amounts(data['closing'], conversion, precision)}")
     cash_accounts = [entry["account"] for entry in data["cash_accounts"]]
