@@ -1,4 +1,4 @@
-"""Lari, tenge, tugrik, manat and guarani symbols contradict the wrong account (w5/924).
+"""Single-commodity currency signs contradict the wrong account (w5/924).
 
 They were stripped like any currency sign and not read, so `-₾4.50` on a USD
 account was booked as `-4.50 USD`, exit 0, where `€` is refused.
@@ -13,7 +13,19 @@ import pytest
 
 from tests.test_import_source_facts import _bea, _written
 
-SYMBOLS = {"₾": "GEL", "₸": "KZT", "₮": "MNT", "₼": "AZN", "₲": "PYG"}
+SYMBOLS = {
+    "₾": "GEL",
+    "₸": "KZT",
+    "₮": "MNT",
+    "₼": "AZN",
+    "₲": "PYG",
+    "₿": "BTC",
+    "₭": "LAK",
+    "៛": "KHR",
+    "֏": "AMD",
+    "؋": "AFN",
+    "₵": "GHS",
+}
 BASE = ["import", "bank.csv", "--default-account", "Expenses:Food"]
 
 
@@ -60,3 +72,12 @@ def test_the_matching_account_imports_in_its_own_currency(tmp_path: Path, symbol
     assert _written(applied) == 1
     assert f"-4.50 {code}" in (tmp_path / "main.bean").read_text()
     assert _bea(tmp_path, "check").returncode == 0
+
+
+def test_the_cedi_sign_also_accepts_the_former_cedi(tmp_path: Path) -> None:
+    _books(tmp_path, "₵", "GHC")
+
+    applied = _bea(tmp_path, *BASE, "--account", "Assets:Local", "--csv", _mapping("amount"), "--apply")
+
+    assert _written(applied) == 1
+    assert "-4.50 GHC" in (tmp_path / "main.bean").read_text()

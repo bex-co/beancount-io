@@ -137,8 +137,9 @@ column before the preview, and nothing is written. A cell
 carrying a symbol that names exactly one commodity (`€`, `₹`, …) and
 contradicts the resolved currency is refused naming the row and the symbol,
 rather than relabelled; `$` and `¥` name several commodities each and are
-accepted as before, and `£` (GBP, GIP, FKP, SHP, EGP) and `₩` (KRW, KPW)
-are accepted when the row posts in one of the commodities they name.
+accepted as before, and `£` (GBP, GIP, FKP, SHP, EGP), `₩` (KRW, KPW) and
+`₵` (GHS, GHC) are accepted when the row posts in one of the commodities they
+name.
 `--account` names the source account and
 is required. The file may start with a BOM and with blank lines before the
 header (error line numbers still count them); when title lines push the header

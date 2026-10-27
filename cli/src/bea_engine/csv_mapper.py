@@ -138,6 +138,13 @@ _SYMBOL_CURRENCIES: dict[str, tuple[str, ...]] = {
     "₮": ("MNT",),
     "₼": ("AZN",),
     "₲": ("PYG",),
+    "₿": ("BTC",),
+    "₭": ("LAK",),
+    "៛": ("KHR",),
+    "֏": ("AMD",),
+    "؋": ("AFN",),
+    # The cedi sign names the current GHS and the 1979–2007 GHC (w5/924).
+    "₵": ("GHS", "GHC"),
 }
 
 
