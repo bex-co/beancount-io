@@ -51,5 +51,46 @@
   "unblock": "Email authorization and sending are complete. Smithery/Arcade supplies a supported direct-directory submission/claim route or curated inclusion; worker follows the same request and verifies actual ownership/public/native acceptance. No new publisher action is required now.",
   "nextManualDateUTC": "2026-10-31",
   "limits": "Exactly one authorized public-metadata email sent. No QA credentials, ledger contents, account password, broader GitHub grant, paid route, duplicate removed wizard, public issue or PR. Gmail send confirmation does not prove recipient delivery/read, accepted submission or publication.",
-  "sourceCheckedAtUTC": "2026-10-25T22:13:11Z"
+  "sourceCheckedAtUTC": "2026-10-25T22:13:11Z",
+  "lastCheckedAtUTC": "2026-10-27T07:03:39Z",
+  "currentFormFollowup": {
+    "checkedAtUTC": "2026-10-27T07:03:39Z",
+    "trigger": "Owner explicitly requested continuation of unsubmitted work; current homepage exposes /servers/new through Publish > MCP.",
+    "operationUrl": "https://smithery.ai/servers/new",
+    "authentication": "Routine Google sign-in to the existing Smithery publisher account; no new account, legal agreement, expanded permission or QA credential.",
+    "deduplication": {
+      "publicQuery": "https://smithery.ai/servers?q=beancount",
+      "publicQueryLimit": "Semantic query advertises 100 results; not treated as exhaustive directory absence.",
+      "ownerQuery": "https://smithery.ai/servers?q=beancount%20owner%3Ame",
+      "ownerQueryResult": "0 servers found / No servers found"
+    },
+    "enteredFields": {
+      "namespace": "puncsky",
+      "serverId": "beancount-io",
+      "serverUrl": "https://beancount.io/api-gateway/mcp"
+    },
+    "connectionParametersAdded": 0,
+    "observedUiPath": [
+      "Publish an MCP Server",
+      "Continue clicked once",
+      "Configure connection settings",
+      "Skip clicked once"
+    ],
+    "reportedFailure": {
+      "uiReportedStatus": 403,
+      "message": "Updating servers has been removed. Contact support@smithery.ai.",
+      "networkResponseIndependentlyCaptured": false
+    },
+    "successfulSubmissionReceipt": null,
+    "publicationVerified": false,
+    "retryAfterFailure": false,
+    "legacyProxyLimit": "The form previews a run.tools gateway, which the official transition notice retires on October31. This is not an established surviving direct-directory intake.",
+    "existingRequestReplyCheck": {
+      "scope": "Existing signed-in mailbox, in:anywhere including spam, sender smithery.ai or arcade.dev, Beancount/direct-MCP-directory terms, last7days.",
+      "result": "No messages matched your search.",
+      "limit": "Only this bounded query in the existing mailbox; no claim about every possible correspondent or other accounts.",
+      "newMessageSent": false
+    },
+    "evidencePrivacy": "Actual failure screenshot stays in ignored package scratch; no account email, auth URL/session state or credential committed."
+  }
 }
