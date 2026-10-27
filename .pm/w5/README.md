@@ -134,7 +134,6 @@
 
 - [994 — Complete native acquisition-cost inference](./994.md) — reopened major CLI gap: native weights, signed stated/inferred parts, authored total prices, unfinished inference and independent groups break replies or trade identity. Added controls checked 2026-10-24.
 - [995 — Resolve inferred posting prices before import decisions](./995.md) — reopened major CLI gap: known weights, repeating/independent price groups and balanced foreign-currency fees skip trades; inferred-zero restatements conflict. Controls checked 2026-10-24.
-- [980 — Preserve trade dependencies in same-day bulk ordering](./980.md) — reopened major CLI gap: bookable labeled transfer chains and stated-cost stock splits are refused; partial add omits a required transfer or sale. Original acceptance and nearby controls rechecked 2026-10-24.
 
 
 

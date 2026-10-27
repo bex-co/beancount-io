@@ -2153,6 +2153,12 @@ def _built_booking_order(
     the rows already placed goes next, so a row waits only for what it needs.
     Earlier dates are placed first. Only reached when no whole-batch order
     tried above validates, and costs a validation per placement.
+
+    A row that books first can still strand the rest: a transfer B→C ahead of
+    its purchase opens an unlabelled short in B that the A→B transfer then
+    cannot fill, and a sale ahead of its split opens a short the split cannot
+    reduce (w5/980). So a dead end backs up and tries the next row that books
+    there, within a bounded number of validations.
     """
     from collections import defaultdict
 
@@ -2169,15 +2175,31 @@ def _built_booking_order(
             return _only_balance_failures(exc)
         return True
 
+    budget = 0
+
+    def extend(placed: list[tuple[int, Any]], remaining: list[tuple[int, Any]]) -> list[tuple[int, Any]] | None:
+        nonlocal budget
+        if not remaining:
+            return placed
+        for row in remaining:
+            if budget <= 0:
+                return None
+            budget -= 1
+            if books([*placed, row]):
+                found = extend([*placed, row], [other for other in remaining if other is not row])
+                if found is not None:
+                    return found
+        return None
+
     placed: list[tuple[int, Any]] = []
     for date in sorted(by_date):
-        remaining = list(by_date[date])
-        while remaining:
-            chosen = next((row for row in remaining if books([*placed, row])), None)
-            if chosen is None:
-                return None
-            placed.append(chosen)
-            remaining.remove(chosen)
+        rows = by_date[date]
+        # Enough for the row-by-row pass, n(n+1)/2 validations, with room to back up.
+        budget = len(rows) ** 2 + 64
+        found = extend(placed, rows)
+        if found is None:
+            return None
+        placed = found
     return placed
 
 

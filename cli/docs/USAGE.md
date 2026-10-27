@@ -1593,7 +1593,10 @@ books one date's entries in file order, so within a date a row selling a
 commodity at cost that another row buys at cost into the same account that day
 is written after that day's other rows — a broker export listing a same-day
 sale first still books it against the purchase; rows otherwise keep their input
-order. Partial
+order. When that order does not book, a same-day order is built row by row,
+backing up when an early row (a transfer or sale that opens a short) would
+strand the rest, so a newest-first custody chain or a split listed after its
+sale still books whole. Partial
 recovery tries rows in input order and validates each accepted subset. Rows
 the failure names are dropped first; what remains is scanned forward, keeping
 every leading run that loads and refusing the row that breaks it, judging the
