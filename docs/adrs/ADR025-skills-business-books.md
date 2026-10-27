@@ -37,7 +37,7 @@ Procedures use the ledger's own existing accounts first: the suite's categorizat
 | --- | --- | --- |
 | Money clients owe | `Assets:AccountsReceivable` | `freelance@1`, `business@1` |
 | Money owed to suppliers | `Liabilities:AccountsPayable` | `business@1` |
-| Collected sales tax or VAT | `Liabilities:SalesTax`; with more than one registration, `Liabilities:SalesTax:<Registration>` named as the user's filings name it | New; input to `business@2` ([w2/097](../../.pm/w2/097.md)) |
+| Collected sales tax or VAT | `Liabilities:SalesTax`; with more than one registration, `Liabilities:SalesTax:<Registration>` named as the user's filings name it | New; input to `business@2` ([w2/097](../../.pm/w2/blocked/097.md)) |
 | Payroll withholdings and employer taxes owed | `Liabilities:Payroll:<Item>`, one per line the provider's summary prints | New; input to `business@2` |
 | Payroll cost | `Expenses:Payroll:Wages`, `Expenses:Payroll:EmployerTaxes` | New |
 | Money a payment processor holds before payout | `Assets:Clearing:<Processor>` | New |
@@ -101,5 +101,5 @@ Proposed for `.pm/DO_NOT_DO.md`, pending the owner's decision:
 
 - Every business procedure shares one set of names and identities, so receivables, aging, collected tax, and the close page compose without a translation layer. A ledger that already uses other names keeps them: procedures read the ledger's accounts before proposing any of these.
 - A payment that spans several documents must go through the batch recipe, because only batch postings carry their own metadata. A future native posting-metadata option would lift that without changing the convention.
-- The catalog needs a new preset version to open collected-tax and payroll liabilities and a draws account for `business@1` users ([w2/097](../../.pm/w2/097.md)). Until then, procedures propose those opens at first use.
+- The catalog needs a new preset version to open collected-tax and payroll liabilities and a draws account for `business@1` users ([w2/097](../../.pm/w2/blocked/097.md)). Until then, procedures propose those opens at first use.
 - Aging works on local `bea` only until hosted queries support date subtraction ([w6/blocked/017](../../.pm/w6/blocked/017.md)).

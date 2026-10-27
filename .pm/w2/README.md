@@ -71,7 +71,7 @@
 
 ## Inbox
 
-- [097 — Business presets lack payroll and sales-tax liabilities and owner draws](./097.md) — `business@2` input once m55/t001 fixes the names
+- [097 — Business presets lack loans, payroll and sales-tax liabilities, and owner draws](./blocked/097.md) — **blocked:** a `business@2` preset version and public API enum change; the owner decides its content
 - [098 — `business@1`'s acceptance scenario expects an account the preset never opens](./098.md) — likely hit by w3/m53/t005 conformance
 - [099 — Inventory lots and cost of goods sold for product sellers](./blocked/099.md) — **blocked:** validated product-seller demand (owner decision)
 - [080 — Decide whether the suite keeps its no-`bea` developer fallback](./blocked/080.md) (owner decision) — **blocked:** the owner picks keep, read-only, or require-`bea`
