@@ -804,49 +804,6 @@ def _require_custom_roundtrip(values: list[_ValueType], text: str) -> None:
         )
 
 
-def with_inferred_prices(postings: list[Any]) -> list[Any]:
-    """The postings with a price that the file leaves to booking (`@ USD`, `@@ USD`) filled in.
-
-    Import hashed and compared the omitted price as no price, so two purchases
-    at different cash prices shared an identity and the second was skipped
-    (w5/995). The price is solved when the other legs are all explicit amounts
-    in its currency and it is the only open price; anything else is left as
-    written. The written text is never changed.
-    """
-    from beancount.core.amount import Amount as BcAmount
-    from beancount.core.number import MISSING
-
-    open_prices = [
-        index
-        for index, posting in enumerate(postings)
-        if posting.price is not None and posting.price.number is MISSING and posting.cost is None
-    ]
-    if len(open_prices) != 1:
-        return postings
-    index = open_prices[0]
-    posting = postings[index]
-    units = posting.units
-    currency = posting.price.currency
-    count = getattr(units, "number", None)
-    if not isinstance(count, Decimal) or not count or not isinstance(currency, str):
-        return postings
-    others = Decimal(0)
-    for other_index, other in enumerate(postings):
-        if other_index == index:
-            continue
-        number = getattr(other.units, "number", None)
-        if not isinstance(number, Decimal) or getattr(other.units, "currency", None) != currency:
-            return postings
-        if other.cost is not None or other.price is not None:
-            return postings
-        others += number
-    solved = abs(others / count)
-    if not solved or others * count > 0 or solved * abs(count) != abs(others):
-        return postings
-    price = BcAmount(solved, currency)
-    return [*postings[:index], posting._replace(price=price), *postings[index + 1 :]]
-
-
 def _open_cost(posting: Any, *, plain: bool) -> bool:
     """Whether a posting's cost leaves a number or its currency for booking to infer.
 
@@ -872,8 +829,33 @@ def _open_cost(posting: Any, *, plain: bool) -> bool:
     return currency is MISSING and isinstance(per, Decimal) and total is None
 
 
-def with_inferred_cost_parts(postings: list[Any], *, plain: bool = True) -> list[Any]:
-    """The postings with the cost number or currency the file leaves to booking filled in.
+def _open_price(posting: Any) -> bool:
+    """Whether a posting at no cost leaves its price number to booking (`@ USD`, `@@ USD`)."""
+    price = posting.price
+    count = getattr(posting.units, "number", None)
+    return (
+        posting.cost is None
+        and price is not None
+        and price.number is MISSING
+        and isinstance(price.currency, str)
+        and isinstance(count, Decimal)
+        and bool(count)
+    )
+
+
+def _incomplete(posting: Any) -> bool:
+    """Whether booking would have to interpolate a number on this posting."""
+    cost, price = posting.cost, posting.price
+    return (
+        posting.units is MISSING
+        or getattr(posting.units, "number", None) is MISSING
+        or (isinstance(cost, CostSpec) and MISSING in (cost.number_per, cost.number_total))
+        or (price is not None and price.number is MISSING)
+    )
+
+
+def with_inferred_parts(postings: list[Any], *, plain: bool = True) -> list[Any]:
+    """The postings with the cost part, cost currency or price the file leaves to booking filled in.
 
     `{# 0.50 USD}` and `{5 # USD}` leave a per-unit or total part for booking
     to infer. An answer that reported the open part as null did not replay: bulk
@@ -881,21 +863,29 @@ def with_inferred_cost_parts(postings: list[Any], *, plain: bool = True) -> list
     cost with the open part taken as zero, so two trades at different cash
     prices shared a lot and an id (w5/950). With `plain`, import's `{USD}` and
     `{10}` acquisitions are completed too, so their cash tells them apart and a
-    zero they book is a known zero rather than an open wildcard (w5/994).
+    zero they book is a known zero rather than an open wildcard (w5/994); so
+    are `@ USD` and `@@ USD` prices, which import hashed and compared as no
+    price at all (w5/995).
 
     Booking itself does the completing: the postings are grouped by weight
-    currency as booking groups them, and each group with one open cost is
-    interpolated by Beancount. A reconstruction of the other postings' weights
+    currency as booking groups them, and each group with one open number is
+    interpolated by Beancount. Reconstructing the other postings' weights
     weighed `{{10 USD}}` on three units as 10 instead of the 3 x 10/3 booking
     holds, turned a negative total part positive, weighed an authored `@@`
     total rather than the parsed unit price, refused a negative inferred part
     whose final cost is positive, and gave up on a second, independent
-    currency group (w5/994). A group booking cannot complete, or that would not
-    balance once completed, is left as written. A compound part that solves to
-    zero stays unstated. The written text is never changed: this is for
-    answers and comparisons.
+    currency group (w5/994); for prices it also ignored known costs, prices
+    and balanced other-currency legs, refused a quotient that does not multiply
+    back (1 / 3) and a zero (w5/995). A group booking cannot complete, or that
+    would not balance once completed, is left as written. A compound part that
+    solves to zero stays unstated. The written text is never changed: this is
+    for answers and comparisons.
     """
-    candidates = [index for index, posting in enumerate(postings) if _open_cost(posting, plain=plain)]
+    candidates = [
+        index
+        for index, posting in enumerate(postings)
+        if _open_cost(posting, plain=plain) or (plain and _open_price(posting))
+    ]
     if not candidates:
         return postings
     from types import SimpleNamespace
@@ -920,11 +910,7 @@ def with_inferred_cost_parts(postings: list[Any], *, plain: bool = True) -> list
         if len(opened) != 1:
             continue
         position = opened[0]
-        if any(
-            isinstance(other.cost, CostSpec) and MISSING in (other.cost.number_per, other.cost.number_total)
-            for spot, other in enumerate(group)
-            if spot != position
-        ):
+        if any(_incomplete(other) for spot, other in enumerate(group) if spot != position):
             continue
         booked, failures, _ = booking_full.interpolate_group(list(group), {}, currency, {})
         if failures or len(booked) != len(group):
@@ -932,25 +918,35 @@ def with_inferred_cost_parts(postings: list[Any], *, plain: bool = True) -> list
         tolerances = interpolate.infer_tolerances(booked, options.OPTIONS_DEFAULTS)
         if not interpolate.compute_residual(booked).is_small(tolerances):
             continue
-        spec = group[position].cost
-        if MISSING in (spec.number_per, spec.number_total):
-            # The part as interpolation solves it, from the weight booking
-            # holds for the others; it must reproduce the cost booking holds.
-            residual = interpolate.compute_residual(
-                booking_full.convert_costspec_to_cost(other) for spot, other in enumerate(group) if spot != position
-            )
-            weight = -next(iter(residual)).units.number if not residual.is_empty() else Decimal(0)
-            count = group[position].units.number
-            if spec.number_per is MISSING:
-                part = "number_per"
-                spec = spec._replace(number_per=(weight - (spec.number_total or Decimal(0))) / count)
-            else:
-                part = "number_total"
-                spec = spec._replace(number_total=weight - spec.number_per * count)
-            if booking_full.convert_costspec_to_cost(group[position]._replace(cost=spec)).cost != booked[position].cost:
-                continue
-            if spec.number_total is not None and not getattr(spec, part):
-                continue
+        posting = group[position]
         index = indexes[position]
+        if not _incomplete(posting):
+            # Only the cost currency was open; grouping resolved it.
+            completed[index] = postings[index]._replace(cost=posting.cost)
+            continue
+        # The number as interpolation solves it, from the weight booking holds
+        # for the others; it must reproduce what booking holds for this posting.
+        residual = interpolate.compute_residual(
+            booking_full.convert_costspec_to_cost(other) for spot, other in enumerate(group) if spot != position
+        )
+        weight = -next(iter(residual)).units.number if not residual.is_empty() else Decimal(0)
+        count = posting.units.number
+        if posting.price is not None and posting.price.number is MISSING:
+            price = BcAmount(abs(weight / count), posting.price.currency)
+            if booked[position].price != price:
+                continue
+            completed[index] = postings[index]._replace(price=price)
+            continue
+        spec = posting.cost
+        if spec.number_per is MISSING:
+            part = "number_per"
+            spec = spec._replace(number_per=(weight - (spec.number_total or Decimal(0))) / count)
+        else:
+            part = "number_total"
+            spec = spec._replace(number_total=weight - spec.number_per * count)
+        if booking_full.convert_costspec_to_cost(posting._replace(cost=spec)).cost != booked[position].cost:
+            continue
+        if spec.number_total is not None and not getattr(spec, part):
+            continue
         completed[index] = postings[index]._replace(cost=spec)
     return completed

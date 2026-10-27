@@ -45,8 +45,7 @@ from bea_engine.ledger.writer import (
     held_short_lots,
     nfc_entry_accounts,
     normalize_entry_strings,
-    with_inferred_cost_parts,
-    with_inferred_prices,
+    with_inferred_parts,
 )
 from bea_engine.paths import expand_path
 from bea_engine.protocol import ConflictError, EngineError, LedgerError, UsageError, capturing
@@ -1566,9 +1565,9 @@ def _source_postings(entry: Any, account: str) -> list[Any]:
     # A cost whose per-unit or total part booking infers is compared at the
     # lot it books, not with the open part taken as zero (w5/950); so is a
     # `{USD}` or `{10}` acquisition, whose number or currency booking infers
-    # (w5/994). An id written before that is spelled with those costs open.
-    postings = entry.postings if _OPEN_COSTS.get() else with_inferred_cost_parts(entry.postings)
-    completed = with_inferred_prices(postings)
+    # (w5/994), and an `@ USD` or `@@ USD` price (w5/995). An id written
+    # before that is spelled with all of them open.
+    completed = entry.postings if _OPEN_INFERENCE.get() else with_inferred_parts(entry.postings)
     if completed is not entry.postings:
         entry = entry._replace(postings=completed)
     return [p for p in _source_legs(entry, account) if _has_explicit_units(p)]
@@ -3043,8 +3042,9 @@ _EMPTY_LABEL_HIDDEN: ContextVar[bool] = ContextVar("empty_label_hidden", default
 _RAW_LABELS: ContextVar[bool] = ContextVar("raw_labels", default=False)
 #: Computes a compound cost in the order ids were written with before Beancount's own (w5/1003).
 _FORMER_COMPOUND: ContextVar[bool] = ContextVar("former_compound", default=False)
-#: Leaves open the cost parts booking infers, as ids written before booking completed them were (w5/994).
-_OPEN_COSTS: ContextVar[bool] = ContextVar("open_costs", default=False)
+#: Leaves open the cost parts and prices booking infers, as ids written before booking completed them were
+#: (w5/994, w5/995).
+_OPEN_INFERENCE: ContextVar[bool] = ContextVar("open_inference", default=False)
 
 
 def _exactly_normalized(number: Decimal) -> Decimal:
@@ -3357,7 +3357,7 @@ def _hash_import_ids(
     former_compound = spelled_with_former_compound()
     both_older = spelled_with_older_lot_spellings(_RAW_LABELS, _FORMER_COMPOUND)
     unlabelled_compound = spelled_with_older_lot_spellings(_EMPTY_LABEL_HIDDEN, _FORMER_COMPOUND)
-    open_costs = spelled_with_older_lot_spellings(_OPEN_COSTS)
+    open_costs = spelled_with_older_lot_spellings(_OPEN_INFERENCE)
 
     single_base = _hash_base(date, exact, description, nfc_account)
     seen[single_base] = seen.get(single_base, 0) + 1
@@ -3414,9 +3414,10 @@ def _hash_import_ids(
         seen[empty_compound_counter] = seen.get(empty_compound_counter, 0) + 1
         older.append(_digest_import_id(empty_compound_base, seen[empty_compound_counter]))
     if open_costs != exact:
-        # Written before a `{USD}`, `{10}` or open compound part was completed
-        # as booking completes it: lookup-only and lot-gated like every older
-        # spelling, so a trade at another cash price never matches (w5/994).
+        # Written before a `{USD}`, `{10}`, open compound part or `@ USD` price
+        # was completed as booking completes it: lookup-only and lot-gated like
+        # every older spelling, so a trade at another cash price never matches
+        # (w5/994, w5/995).
         open_base = _hash_base(date, open_costs, description, nfc_account)
         open_counter = f"opencosts\0{open_base}"
         seen[open_counter] = seen.get(open_counter, 0) + 1

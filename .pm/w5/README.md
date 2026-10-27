@@ -102,7 +102,6 @@
 
 
 
-- [995 — Resolve inferred posting prices before import decisions](./995.md) — reopened major CLI gap: known weights, repeating/independent price groups and balanced foreign-currency fees skip trades; inferred-zero restatements conflict. Controls checked 2026-10-24.
 
 
 

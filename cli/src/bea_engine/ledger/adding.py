@@ -1415,7 +1415,7 @@ def _transaction(
     # once this function returns, and a value it could not encode used to fail
     # with the directive already appended, so every retry appended another copy.
     answered = entry._replace(
-        postings=writer.with_inferred_cost_parts(entry.postings, plain=False), meta=metadata_to_json(entry.meta)
+        postings=writer.with_inferred_parts(entry.postings, plain=False), meta=metadata_to_json(entry.meta)
     )
     directive = protocol.jsonable(answered)
     # A `@@` total is reported as the bulk schema's `price_total`, not as the
