@@ -1830,6 +1830,15 @@ splits and transfers carry no price and stay out. A closed lot is whatever a
 priced posting actually reduced, long or short: covering a short (or settling
 a costed foreign-currency payable) reports the opening cost as proceeds and
 the cover price as basis, and opening a short realizes nothing.
+`cash-flow` is a direct-method statement at cost: operating, investing and
+financing rows explain the change in cash and cash equivalents over `--time`
+intersected with `--from-date / --to-date` (both inclusive), and cash held
+before that window is opening cash, never a flow. `--account` narrows the rows
+and the cash accounts together, so it has to keep each transaction in the
+window whole: a filter that keeps a cash leg but drops the income that paid it,
+or one side of a transfer between cash accounts, is refused (exit **2**, even
+with `--allow-errors`) naming the transactions and the accounts the filter
+would also need. Drop `--account`, or widen it to a balanced filter.
 
 ```bash
 bea report income-statement --time 2026 --interval quarterly

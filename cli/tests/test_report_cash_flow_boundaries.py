@@ -15,6 +15,8 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 from tests.report_helpers import bea, write_ledger
 
 
@@ -219,3 +221,103 @@ def test_maximum_end_date_on_an_undated_ledger_stays_empty(tmp_path: Path) -> No
     data = _cash_flow(tmp_path, ledger, "--to-date", "9999-12-31")
     assert data["period"] == {"start": None, "end_exclusive": None}
     assert (data["opening"], data["net_change"], data["closing"]) == ({}, {}, {})
+
+
+# Checking and Savings are cash; Bond is an investing asset (w5/1050).
+FILTERED = """\
+option "operating_currency" "USD"
+2024-01-01 open Assets:Checking USD
+2024-01-01 open Assets:Savings USD
+2024-01-01 open Assets:Bond USD
+2024-01-01 open Income:Salary USD
+2024-01-01 open Expenses:Food USD
+2024-01-01 open Liabilities:Loan USD
+2024-01-01 open Equity:Opening USD
+2024-01-02 * "Capital"
+  Assets:Checking  1000 USD
+  Equity:Opening  -1000 USD
+2024-02-01 * "Salary"
+  Assets:Checking  300 USD
+  Income:Salary   -300 USD
+2024-02-02 * "Food"
+  Assets:Checking  -50 USD
+  Expenses:Food     50 USD
+2024-02-03 * "Save"
+  Assets:Checking  -200 USD
+  Assets:Savings    200 USD
+2024-02-04 * "Borrow"
+  Assets:Checking   400 USD
+  Liabilities:Loan -400 USD
+2024-02-05 * "Bond"
+  Assets:Checking  -100 USD
+  Assets:Bond       100 USD
+"""
+
+FEBRUARY = ("--time", "2024-02", "--from-date", "2024-02-01", "--to-date", "2024-02-29")
+CASH = ["Assets:Checking", "Assets:Savings"]
+
+
+@pytest.mark.parametrize(
+    ("account", "missing"),
+    [
+        ("Assets:Checking", "Assets:Bond, Assets:Savings, Expenses:Food, Income:Salary, Liabilities:Loan"),
+        ("Assets", "Expenses:Food, Income:Salary, Liabilities:Loan"),
+        ("Income:Salary", "Assets:Checking"),
+        ("(?:Checking|Salary|Food|Loan|Bond)$", "Assets:Savings"),
+    ],
+    ids=["checking", "assets", "salary-only", "omit-savings"],
+)
+@pytest.mark.parametrize("allow_errors", [False, True], ids=["strict", "allow-errors"])
+def test_a_filter_that_splits_transactions_is_refused(
+    tmp_path: Path, account: str, missing: str, allow_errors: bool
+) -> None:
+    ledger = write_ledger(tmp_path, FILTERED)
+    extra = ["--allow-errors"] if allow_errors else []
+    args = ["--file", str(ledger), "report", "cash-flow", *FEBRUARY, "--account", account, *extra]
+    proc = _bea(tmp_path, "--json", *args)
+    assert proc.returncode == 2, proc.stdout
+    # No statement at all: the refusal is the whole answer.
+    assert proc.stdout == ""
+    error = json.loads(proc.stderr)["error"]
+    assert error["category"] == "usage"
+    assert f"--account {account!r}" in error["message"]
+    assert error["details"][-1] == (
+        f"Remove --account to report every cash account, or pass a filter that also matches {missing}, "
+        "so each transaction it selects is kept whole."
+    )
+    human = _bea(tmp_path, *args)
+    assert human.returncode == 2
+    assert human.stdout == ""
+    assert f"Cash flow cannot be narrowed by --account {account!r}" in human.stderr
+    assert "Opening cash" not in human.stderr
+
+
+def test_a_filter_keeping_whole_transactions_reports_actual_cash(tmp_path: Path) -> None:
+    ledger = write_ledger(tmp_path, FILTERED)
+    unfiltered = _cash_flow(tmp_path, ledger, *FEBRUARY)
+    data = _cash_flow(tmp_path, ledger, *FEBRUARY, "--account", "(?:Assets|Liabilities|Income|Expenses):")
+    assert _amounts(data["opening"]) == {"USD": Decimal(1000)}
+    assert _amounts(data["net_change"]) == {"USD": Decimal(550)}
+    assert _amounts(data["closing"]) == {"USD": Decimal(1550)}
+    _assert_actual(tmp_path, ledger, data, CASH, "2024-02-01", "2024-03-01")
+    assert data["sections"] == unfiltered["sections"]
+    assert data["cash_accounts"] == unfiltered["cash_accounts"]
+    human = _human(tmp_path, ledger, *FEBRUARY, "--account", "(?:Assets|Liabilities|Income|Expenses):")
+    assert "Opening cash:        1,000 USD" in human
+    assert "Net change in cash:  550 USD" in human
+    assert "Closing cash:        1,550 USD" in human
+
+
+def test_a_filter_matching_nothing_stays_empty(tmp_path: Path) -> None:
+    ledger = write_ledger(tmp_path, FILTERED)
+    data = _cash_flow(tmp_path, ledger, *FEBRUARY, "--account", "UnmatchedAccount")
+    assert (data["opening"], data["net_change"], data["closing"], data["cash_accounts"]) == ({}, {}, {}, [])
+
+
+@pytest.mark.parametrize(("account", "cash"), [(None, CASH), ("Assets:Checking", ["Assets:Checking"])])
+def test_a_quiet_window_keeps_the_filtered_position(tmp_path: Path, account: str | None, cash: list[str]) -> None:
+    ledger = write_ledger(tmp_path, FILTERED)
+    data = _cash_flow(tmp_path, ledger, "--time", "2024-03", *(["--account", account] if account else []))
+    assert data["net_change"] == {}
+    assert _amounts(data["opening"]) == _amounts(data["closing"]) == {"USD": Decimal(1550 if account is None else 1350)}
+    _assert_actual(tmp_path, ledger, data, cash, "2024-03-01", "2024-04-01")

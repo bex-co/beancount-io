@@ -981,8 +981,10 @@ def _cash_flow(filtered: Any, bounds: tuple[date | None, date | None], ledger_er
     `--time` intersected with the inclusive `--from-date`/`--to-date`
     bounds; closing covers cash postings before its exclusive end; opening
     is closing minus net change, the double-entry identity the dashboard
-    statement is built on. `--account` narrows rows and the CCE set together
-    so the statement still reconciles. Accounts outside the five roots are
+    statement is built on. `--account` narrows rows and the CCE set together,
+    and is refused when it keeps only some legs of a transaction in the
+    window, which would leave that identity solving for an invented
+    opening. Accounts outside the five roots are
     excluded from rows and surface via the shared unrooted-accounts note.
     Membership — not the direct role — gates rows, so an inherited-cash
     leaf is never double-counted.
@@ -1021,6 +1023,7 @@ def _cash_flow(filtered: Any, bounds: tuple[date | None, date | None], ledger_er
     # and a quiet month as one full of inflows (w5/1048). The window is the
     # half-open [first, cutoff) — the period intersected with the bounds.
     flow_books: dict[str, CounterInventory] = {}
+    split: list[tuple[Any, list[str], list[str]]] = []
     for entry in filtered.ledger.all_entries:
         if not isinstance(entry, Transaction):
             continue
@@ -1028,6 +1031,23 @@ def _cash_flow(filtered: Any, bounds: tuple[date | None, date | None], ledger_er
             continue
         if cutoff is not None and entry.date >= cutoff:
             continue
+        if matches is not None:
+            # Every leg the statement reads — a cash member or a rooted
+            # account that becomes a row — must be kept or left out together.
+            legs = [
+                posting.account
+                for posting in entry.postings
+                if posting.units is not None
+                and posting.units.number is not None
+                and (
+                    posting.account in members
+                    or root_types.get(posting.account.split(":", 1)[0]) in _CASH_FLOW_ACTIVITY_BY_ROOT
+                )
+            ]
+            kept = sorted({account for account in legs if matches(account)})
+            dropped = sorted({account for account in legs if not matches(account)})
+            if kept and dropped:
+                split.append((entry, kept, dropped))
         for posting in entry.postings:
             if posting.units is None or posting.units.number is None:
                 continue
@@ -1036,6 +1056,8 @@ def _cash_flow(filtered: Any, bounds: tuple[date | None, date | None], ledger_er
             # Fava's inventory reads units/cost duck-typed; beancount postings
             # flow through the same call in interval_totals at runtime.
             flow_books.setdefault(posting.account, CounterInventory()).add_position(posting)  # type: ignore[arg-type]
+    if split:
+        _refuse_split_cash_flow(filtered.account, split, ledger_errors)
     flows = {account: _balance_map(cost_or_value(book, "at_cost", prices)) for account, book in flow_books.items()}
 
     closing_books: dict[str, CounterInventory] = {}
@@ -1103,6 +1125,41 @@ def _cash_flow(filtered: Any, bounds: tuple[date | None, date | None], ledger_er
         ],
         "invalid_role_values": invalid_role_values,
     }
+
+
+_SPLIT_EXAMPLES = 5
+
+
+def _refuse_split_cash_flow(
+    account: str, split: list[tuple[Any, list[str], list[str]]], ledger_errors: list[str]
+) -> None:
+    """Refuse an `--account` statement that keeps only some legs of a transaction (w5/1050).
+
+    The filter is per posting, so it can keep a cash leg and drop the income
+    that paid it, or keep one side of a transfer. The rows then no longer
+    explain the cash the kept accounts moved, and the opening derived from
+    them is invented. That is a property of the filter, not of the ledger,
+    so `--allow-errors` does not report it anyway.
+    """
+    details = [
+        f"{entry.date.isoformat()} {entry.narration or entry.payee or 'transaction'!r}: keeps "
+        f"{', '.join(kept)} but leaves out {', '.join(dropped)}"
+        for entry, kept, dropped in split[:_SPLIT_EXAMPLES]
+    ]
+    if len(split) > _SPLIT_EXAMPLES:
+        details.append(f"... and {len(split) - _SPLIT_EXAMPLES} more.")
+    missing = sorted({name for _, _, dropped in split for name in dropped})
+    details.append(
+        "Remove --account to report every cash account, or pass a filter that also matches "
+        f"{', '.join(missing)}, so each transaction it selects is kept whole."
+    )
+    raise protocol.UsageError(
+        f"Cash flow cannot be narrowed by --account {account!r}: the filter keeps only some legs of "
+        f"{len(split)} transaction(s) in the period, so its opening cash and net change would not be "
+        "the cash those accounts actually moved.",
+        details=details,
+        ledger_errors=ledger_errors,
+    )
 
 
 def _sum_amounts(maps: Iterable[Mapping[str, Decimal]]) -> dict[str, Decimal]:

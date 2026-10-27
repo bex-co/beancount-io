@@ -53,6 +53,15 @@ AccountOpt = Annotated[
 ]
 FromDateOpt = Annotated[str | None, typer.Option("--from-date", help="Capital-gains sales on or after YYYY-MM-DD.")]
 ToDateOpt = Annotated[str | None, typer.Option("--to-date", help="Capital-gains sales on or before YYYY-MM-DD.")]
+CashFlowAccountOpt = Annotated[
+    str | None,
+    typer.Option(
+        "--account",
+        "-a",
+        help="Account filter: a parent account or a regular expression. Refused (exit 2) when it keeps only some "
+        "legs of a transaction in the period, since the cash it moved would no longer match the rows.",
+    ),
+]
 CashFlowFromOpt = Annotated[str | None, typer.Option("--from-date", help="Cash-flow entries on or after YYYY-MM-DD.")]
 CashFlowToOpt = Annotated[str | None, typer.Option("--to-date", help="Cash-flow entries on or before YYYY-MM-DD.")]
 IntervalOpt = Annotated[ReportInterval, typer.Option("--interval", "-i", help="Reporting interval")]
@@ -610,7 +619,7 @@ def _held(row: dict[str, Any]) -> str:
 @report_app.command("cash-flow", cls=SingleValueCommand)
 def cash_flow(
     time: TimeOpt = None,
-    account: AccountOpt = None,
+    account: CashFlowAccountOpt = None,
     from_date: CashFlowFromOpt = None,
     to_date: CashFlowToOpt = None,
     allow_errors: AllowErrorsOpt = False,

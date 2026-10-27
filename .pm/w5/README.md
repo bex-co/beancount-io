@@ -63,7 +63,6 @@
 
 
 
-- [1050 — Keep filtered Cash Flow tied to actual cash movement](./1050.md) — major CLI report gap: partial account filters fabricate opening/change despite correct closing; native boundary balances, balanced/quiet controls and completed m4 fixtures, checked 2026-10-26.
 
 
 

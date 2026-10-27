@@ -91,6 +91,8 @@ def test_cash_flow_help_documents_every_option(tmp_path: Path) -> None:
     for flag in ("--time", "--account", "--from-date", "--to-date", "--allow-errors"):
         assert flag in proc.stdout
     assert "Cash-flow entries on or after YYYY-MM-DD." in proc.stdout
+    # A filter that splits a transaction is refused, not reported (w5/1050).
+    assert "only some" in proc.stdout and "legs of a transaction" in proc.stdout
     assert "--conversion" not in proc.stdout
 
 
