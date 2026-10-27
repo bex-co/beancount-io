@@ -75,6 +75,8 @@ interface BudgetChartCardProps {
   primaryCurrency: string;
   time?: string;
   onDelete: (group: BudgetGroup, opener: HTMLElement | null) => void;
+  /** A saved Update write; the page returns focus across its refresh. */
+  onUpdateSuccess?: (submitted: { account: string; currency: string }) => void;
 }
 
 const chartStyle = { height: "260px", width: "100%" };
@@ -86,6 +88,7 @@ export function BudgetChartCard({
   primaryCurrency,
   time,
   onDelete,
+  onUpdateSuccess,
 }: BudgetChartCardProps) {
   const titleId = useId();
   const currencyId = useId();
@@ -411,6 +414,7 @@ export function BudgetChartCard({
             <AddBudgetDialog
               open={isAddOpen}
               onOpenChange={setIsAddOpen}
+              onSuccess={onUpdateSuccess}
               ledgerId={ledgerId}
               lockedAccount={group.account}
               defaultInterval={currentInterval}
@@ -420,6 +424,7 @@ export function BudgetChartCard({
                   variant="outline"
                   size="sm"
                   className="shrink-0"
+                  data-budget-update={`${group.account}::${group.currency}`}
                   aria-label={t("page.budget.budgetUpdateForAccount", {
                     account: group.account,
                     currency: displayCurrency,

@@ -70,7 +70,7 @@ interface AddBudgetDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   ledgerId: string;
-  onSuccess?: () => void;
+  onSuccess?: (submitted: { account: string; currency: string }) => void;
   lockedAccount?: string;
   lockedInterval?: BudgetInterval;
   defaultInterval?: BudgetInterval;
@@ -174,7 +174,7 @@ export function AddBudgetDialog({
       });
 
       if (result.data?.bulkEntries.success) {
-        onSuccess?.();
+        onSuccess?.({ account: data.account, currency: data.currency });
         if (opening.current === submittedFrom) onOpenChange(false);
         // The budget is saved; reading the list again is a separate step.
         // Awaited inside the mutation, a failed read reported the saved

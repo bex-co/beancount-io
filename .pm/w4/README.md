@@ -4,8 +4,6 @@
 
 ## Inbox
 
-- **1110** — [Return Update Budget to its refreshed card after saving](./1110.md)
-
 - **1031** — Use actual lot cost currencies in Net Worth valuation disclosures (45–60m dashboard after dependency, A2/A3) ← dashboard QA; residual of m26 ([note](./blocked/1031.md)) — **blocked:** approved lot-specific valuation read
 
 

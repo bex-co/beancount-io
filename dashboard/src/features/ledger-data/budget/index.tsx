@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useHydrated, useParams } from "@tanstack/react-router";
 import { format, subYears } from "date-fns";
 import { BudgetInterval } from "@/graphql/definitions";
@@ -175,12 +175,46 @@ export default function LedgerBudgetPage() {
     }
   }, [selectedTimeSpan, rollingRange]);
 
+  // A saved card Update refreshes this list, and QueryView replaces the
+  // cards (and the dialog's own trigger) with its skeleton meanwhile, so
+  // nobody is left to receive the dialog's focus restore (w4/1110). The
+  // page — the stable owner — remembers the submitted budget and, once
+  // the refresh settles, returns focus to its replacement Update action.
+  const pendingUpdateFocusRef = useRef<{
+    ledgerId: string;
+    account: string;
+    currency: string;
+  } | null>(null);
+  const rememberUpdateFocus = (submitted: {
+    account: string;
+    currency: string;
+  }) => {
+    pendingUpdateFocusRef.current = { ledgerId, ...submitted };
+  };
+
   const { entries, loading, error, retry } = useBudgetEntries(ledgerId);
 
   const budgetGroups = useMemo(
     () => (entries ? groupBudgetEntries(entries) : null),
     [entries],
   );
+
+  useEffect(() => {
+    const pending = pendingUpdateFocusRef.current;
+    if (!pending || pending.ledgerId !== ledgerId || loading) return;
+    const frame = requestAnimationFrame(() => {
+      pendingUpdateFocusRef.current = null;
+      // Focus the user deliberately moved (a later opening, a new target)
+      // is theirs; only a position lost to the replacement is restored.
+      const active = document.activeElement;
+      if (active && active !== document.body && active.isConnected) return;
+      const replacement = document.querySelector<HTMLElement>(
+        `[data-budget-update="${CSS.escape(`${pending.account}::${pending.currency}`)}"]`,
+      );
+      (replacement ?? headerAddRef.current ?? searchInputRef.current)?.focus();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [loading, error, budgetGroups, ledgerId]);
 
   const filteredGroups = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -320,6 +354,7 @@ export default function LedgerBudgetPage() {
                   primaryCurrency={primaryCurrency}
                   time={timeFilter}
                   onDelete={openDeleteBudget}
+                  onUpdateSuccess={rememberUpdateFocus}
                 />
               ))}
             </div>
