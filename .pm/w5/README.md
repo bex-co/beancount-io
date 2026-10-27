@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1059 — Preserve treeify separators before leading combining marks](./1059.md) — trivial CLI display follow-up to939: valid final account marks merge parent/leaf branches; money/native/explicit-pattern and full original controls pass, checked2026-10-26.
+
 - [1058 — Report the unchanged ledger’s errors after a refused write](./1058.md) — minor CLI follow-up to461: rejected backdated add/bulk/import drops the real warning or reports hypothetical92 instead of100; native and full original controls, checked2026-10-26.
 
 - [1057 — Honor declared cash membership outside the Assets root](./1057.md) — major CLI cash-flow omission: explicit cash Overdraft−250 disappears, closing1100 instead of850 and invented opening250; matched roles/native/legacy controls, checked2026-10-26.
