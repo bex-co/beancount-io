@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1068 — Refuse non-conserving priced FX Cash Flow statements](./1068.md) — major CLI reporting gap: currency exchanges invent opening cash; 36 fresh profiles, 387 CLI commands and 92 native loads; original feature FX assertion disproven by actual cash, checked 2026-10-27.
+
 - [1067 — Deduplicate signed-zero Amount metadata in statement notes](./1067.md) — minor CLI repeat-import gap: unchanged annotations grow while the refund imports once; 48 fresh profiles, 484 CLI commands and 140 native loads; full completed 1023 controls pass, checked 2026-10-27.
 
 
