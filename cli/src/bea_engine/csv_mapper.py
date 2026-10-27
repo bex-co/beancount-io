@@ -123,6 +123,9 @@ def _is_currency_symbol(text: str) -> bool:
 _SYMBOL_CURRENCIES: dict[str, tuple[str, ...]] = {
     "€": ("EUR",),
     "£": ("GBP", "GIP", "FKP", "SHP", "EGP"),
+    # The fullwidth forms name the same commodities (w5/1064).
+    "￡": ("GBP", "GIP", "FKP", "SHP", "EGP"),
+    "￦": ("KRW", "KPW"),
     "₹": ("INR",),
     "₽": ("RUB",),
     "₩": ("KRW", "KPW"),
