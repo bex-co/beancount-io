@@ -207,8 +207,10 @@ def test_holdings_ledger_quote_has_no_source(feed_server: _FeedServer, tmp_path:
 
 
 def test_holdings_stale_conversion_leg_taints_the_value(feed_server: _FeedServer, tmp_path: Path) -> None:
-    server = feed_server.serve({"/prices/VTI-USD": STALE_FEED, "/prices/EUR-USD": FX_FEED})
-    ledger = _write(tmp_path, _fx_ledger(server))
+    server = feed_server.serve({"/prices/EUR-USD": FX_FEED})
+    # No VTI quote in USD, so the value goes through the EUR leg; with one, the
+    # direct quote would value the lot instead (w5/1033).
+    ledger = _write(tmp_path, _fx_ledger(server).replace(f'include "{server}/prices/VTI-USD"\n', ""))
     proc = _bea(tmp_path, server, "--file", str(ledger), "report", "holdings")
     assert proc.returncode == 0, proc.stderr
     assert "1,650.00 USD (stale)" in proc.stdout
@@ -235,3 +237,12 @@ def test_register_carries_source_provenance(feed_server: _FeedServer, tmp_path: 
     text = _bea(tmp_path, server, "--file", str(ledger), "report", "register", "Assets")
     assert text.returncode == 0, text.stderr
     assert "Price source VTI-USD: stale" in text.stderr
+
+
+def test_holdings_prefers_a_direct_feed_over_the_cost_currency_route(feed_server: _FeedServer, tmp_path: Path) -> None:
+    server = feed_server.serve({"/prices/VTI-USD": STALE_FEED, "/prices/EUR-USD": FX_FEED})
+    ledger = _write(tmp_path, _fx_ledger(server))
+    as_json = _bea(tmp_path, server, "--file", str(ledger), "--json", "report", "holdings")
+    (group,) = json.loads(as_json.stdout)["data"]["groups"]
+    assert group["market_value"] == {"number": "1700.00", "currency": "USD"}
+    assert group["price_source"]["alias"] == "VTI-USD"

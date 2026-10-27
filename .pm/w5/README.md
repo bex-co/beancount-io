@@ -98,7 +98,6 @@
 
 - [1034 — Collect the whole resolved register subtree](./1034.md) — minor CLI selection gap: anchored parents lose child postings, and Turkish lowercase parents falsely appear ambiguous; literal/full-subtree and locale/native controls pass, checked 2026-10-25.
 
-- [1033 — Use the requested currency quote in Holdings](./1033.md) — major CLI valuation gap: a current direct USD quote is ignored for an older cost-currency quote or a false missing-price refusal; native/report controls pass, checked 2026-10-25.
 
 
 - [1031 — Preserve bank identity in OFX routing](./1031.md) — major CLI gap: account memory and the multi-account guard omit bank IDs, routing distinct banks’ payments to one ledger account; native-valid, repeated 2026-10-25.

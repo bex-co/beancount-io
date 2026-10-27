@@ -494,20 +494,33 @@ def _holdings(
     missing: list[tuple[str, str]] = []
     for key, (units, basis, accounts) in sorted(lots.items()):
         commodity, held = key[-2], key[-1]
-        quote_date, price = prices.get_price_point((commodity, held), end)
-        market = units * price if price is not None else basis
-        if price is None:
-            missing.append((commodity, held))
-        currency = held
-        leg_date = None
+        quoted: tuple[str, str | None] = (commodity, held)
+        direct_date, direct = (None, None)
+        leg_date, rate = (None, None)
         if target is not None and target != held:
             leg_date, rate = prices.get_price_point((held, target), end)
-            if rate is not None:
-                basis, market = basis * rate, market * rate
-                price = price * rate if price is not None else None
-                currency = target
-            else:
-                missing.append((held, target))
+            direct_date, direct = prices.get_price_point((commodity, target), end)
+        if direct is not None and rate is not None:
+            # A quote in the requested currency values the lot directly, as
+            # Beancount's own conversion does; routed through the cost
+            # currency, an older EUR quote valued 300 USD of shares at 250, or
+            # its absence refused the report (w5/1033). The basis still
+            # converts through the cost currency.
+            quote_date, price, quoted = direct_date, direct, (commodity, target)
+            basis, market, currency = basis * rate, units * direct, target
+        else:
+            quote_date, price = prices.get_price_point((commodity, held), end)
+            market = units * price if price is not None else basis
+            if price is None:
+                missing.append((commodity, held))
+            currency = held
+            if target is not None and target != held:
+                if rate is not None:
+                    basis, market = basis * rate, market * rate
+                    price = price * rate if price is not None else None
+                    currency = target
+                else:
+                    missing.append((held, target))
         average = basis / units if units else None
         group: dict[str, Any] = {"account": key[0]} if group_by == "account" else {"accounts": sorted(accounts)}
         group |= {
@@ -518,7 +531,7 @@ def _holdings(
             "market_value": {"number": market, "currency": currency},
             "price": {"number": price, "currency": currency} if price is not None else None,
             "price_date": quote_date,
-            "price_source": _quote_source(sources, commodity, held, quote_date),
+            "price_source": _quote_source(sources, *quoted, quote_date),
             "conversion_source": (_quote_source(sources, held, target, leg_date) if leg_date is not None else None),
         }
         groups.append(group)
