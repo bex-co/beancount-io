@@ -62,7 +62,7 @@
 - [ ] **m56** — [Invoice clients and pay bills, with collected tax and an aging you can trust](./blocked/m56/README.md) (12 tasks) ← same review (items 2 and 5) — sequenced after m55/t001 — **blocked:** t001–t007 shipped (beancount-invoices live); t008 passes on Claude Code and waits for a Codex model this account accepts
 - [ ] **m57** — [Record a payroll run from the provider's summary](./blocked/m57/README.md) (9 tasks) ← same review (item 4) — sequenced after m55/t001 — **blocked:** t001–t004 shipped; t005 passes on one client and waits for a Codex model this account accepts
 - [ ] **m58** — [Import payment-processor payouts as gross, fees, tax, and net](./blocked/m58/README.md) (8 tasks) ← same review (item 6, payout half) — sequenced after m56/t002 — **blocked:** t001–t003 shipped; t004 passes on one client and waits for a Codex model this account accepts
-- [ ] **m59** — [Close the books for a business: agings, liabilities, and owner equity](./m59/README.md) (7 tasks) ← same review (item 7) — sequenced last, after m56, m57, w2/m48, and w3/m58
+- [ ] **m59** — [Close the books for a business: agings, liabilities, and owner equity](./blocked/m59/README.md) (7 tasks) ← same review (item 7) — sequenced last, after m56, m57, w2/m48, and w3/m58 — **blocked:** t001 waits on w2/m48's closeout (Codex) and w3/m58's
 
 ## Dropped
 

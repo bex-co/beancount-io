@@ -1,6 +1,6 @@
 # w2 · m59 — Close the books for a business: agings, liabilities, and owner equity
 
-**Worker:** worker2 **Goal:** when a ledger has business accounts, `beancount-close` adds the page an accountant asks for — receivable and payable aging, collected-tax and payroll liability balances, owner contributions and draws for the period — each tied to booked balances, while a personal close stays exactly as it is. **Status:** todo
+**Worker:** worker2 **Goal:** when a ledger has business accounts, `beancount-close` adds the page an accountant asks for — receivable and payable aging, collected-tax and payroll liability balances, owner contributions and draws for the period — each tied to booked balances, while a personal close stays exactly as it is. **Status:** blocked (dependencies)
 
 ## Tasks (in order)
 
@@ -14,6 +14,10 @@
 | t006 | Test coverage | 45m | t004, t005 |
 | t007 | Closeout | 15m | t006 |
 
+## Blocked
+
+- **t001 onward (2026-10-27)** — t001 depends on [w2/m48](../m48/README.md)/t008 (close review state) and [w3/m58](../../../w3/m58/README.md)/t006 (the reconciliation exception register), and both change the close report this milestone extends. w2/m48 is blocked on its Codex eval rerun, and w3/m58's first task waits on w2/m48's closeout. The other two dependencies are met: invoice and bill aging (w2/m56/t006) and payroll quarter totals (w2/m57/t003) have shipped. **Unblock:** w2/m48 closes (Codex runs again) and w3/m58 closes; then start t001. **Who can clear it:** the operator (Codex account and model) for w2/m48; w3's worker for w3/m58.
+
 ## Definition of done
 
 - The business section appears only when the ledger has receivable, payable, collected-tax, payroll-liability, or owner-equity accounts.
@@ -26,4 +30,4 @@
 - **Source:** small-business owner review of the skill suite (five-person services LLC: client invoices, contractors, a payroll provider, quarterly tax remittances), triaged 2026-10-21 — item 7.
 - **Goal linkage:** **A1 — Agent-native accounting:** the month-end package a small business hands its accountant comes out of the same agent-kept close.
 - **Expected outcome:** an owner closes a month and has the agings and liability balances the accountant asks for, tied to the books. Signals: eval pass rate on both clients; close invocations on business ledgers.
-- **Why now:** last in the sequence: it reports what [m56](../blocked/m56/README.md) and [m57](../blocked/m57/README.md) book, and it changes the close report after [w2/m48](../blocked/m48/README.md) and [w3/m58](../../w3/m58/README.md) do, so the report is not rewritten three ways at once. Adoption surface is included because close's customer output changes.
+- **Why now:** last in the sequence: it reports what [m56](../m56/README.md) and [m57](../m57/README.md) book, and it changes the close report after [w2/m48](../m48/README.md) and [w3/m58](../../../w3/m58/README.md) do, so the report is not rewritten three ways at once. Adoption surface is included because close's customer output changes.
