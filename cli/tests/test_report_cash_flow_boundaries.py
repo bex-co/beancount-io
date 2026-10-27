@@ -178,3 +178,44 @@ def test_time_period_human_figures_are_the_actual_cash(tmp_path: Path) -> None:
     assert "No cash flows in this period." in april
     assert "Opening cash:        270 EUR  1,500 USD" in april
     assert "Closing cash:        270 EUR  1,500 USD" in april
+
+
+def test_maximum_end_date_keeps_closing_cash(tmp_path: Path) -> None:
+    """`--to-date 9999-12-31` restricts nothing; it must not empty the closing (w5/1049)."""
+    ledger = write_ledger(tmp_path, PRIOR_CASH)
+    february = ("--time", "2024-02", "--from-date", "2024-02-01")
+    whole: tuple[str, ...] = ()
+    for window, first, after, closing in (
+        (february, "2024-02-01", "2024-03-01", {"USD": Decimal(1300), "EUR": Decimal(250)}),
+        (whole, None, None, {"USD": Decimal(1500), "EUR": Decimal(270)}),
+    ):
+        data = _cash_flow(tmp_path, ledger, *window, "--to-date", "9999-12-31")
+        assert _amounts(data["closing"]) == closing, window
+        assert data["cash_accounts"] == [
+            {
+                "account": "Assets:Cash",
+                "balance": {currency: str(number) for currency, number in closing.items()},
+                "role_source": "heuristic",
+            }
+        ]
+        _assert_actual(tmp_path, ledger, data, ["Assets:Cash"], first, after)
+        # The same statement as no end bound, and as the day before the limit.
+        for control in (
+            _cash_flow(tmp_path, ledger, *window),
+            _cash_flow(tmp_path, ledger, *window, "--to-date", "9999-12-30"),
+        ):
+            assert data["period"] == control["period"], window
+            assert data["as_of"] == control["as_of"], window
+            assert data["sections"] == control["sections"], window
+            for key in ("net_change", "opening", "closing"):
+                assert _amounts(data[key]) == _amounts(control[key]), (window, key)
+        human = _human(tmp_path, ledger, *window, "--to-date", "9999-12-31")
+        assert human == _human(tmp_path, ledger, *window, "--to-date", "9999-12-30")
+        assert f"Closing cash:        {closing['EUR']} EUR  {closing['USD']:,} USD" in human
+
+
+def test_maximum_end_date_on_an_undated_ledger_stays_empty(tmp_path: Path) -> None:
+    ledger = write_ledger(tmp_path, 'option "operating_currency" "USD"\n2024-01-01 open Assets:Cash USD\n')
+    data = _cash_flow(tmp_path, ledger, "--to-date", "9999-12-31")
+    assert data["period"] == {"start": None, "end_exclusive": None}
+    assert (data["opening"], data["net_change"], data["closing"]) == ({}, {}, {})

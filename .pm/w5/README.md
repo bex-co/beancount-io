@@ -65,7 +65,6 @@
 
 - [1050 — Keep filtered Cash Flow tied to actual cash movement](./1050.md) — major CLI report gap: partial account filters fabricate opening/change despite correct closing; native boundary balances, balanced/quiet controls and completed m4 fixtures, checked 2026-10-26.
 
-- [1049 — Preserve cash balances with a maximum end date](./1049.md) — minor CLI boundary gap: redundant valid9999-12-31 empties closing cash while flows stay correct; adjacent-date/unbounded and native controls, checked 2026-10-25.
 
 
 

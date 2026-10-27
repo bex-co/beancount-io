@@ -1006,9 +1006,13 @@ def _cash_flow(filtered: Any, bounds: tuple[date | None, date | None], ledger_er
     if start is not None:
         first = start if first is None else max(first, start)
     cutoff = period_end
-    if end is not None:
-        bound_end = None if end == date.max else end + timedelta(days=1)
-        cutoff = bound_end if cutoff is None or bound_end is None else min(cutoff, bound_end)
+    # The calendar's last day has no exclusive end after it, and as an
+    # inclusive bound it restricts nothing: it must not replace the period's
+    # own finite end with "none", which skipped every closing posting
+    # (w5/1049). A cutoff still None means no end at all, not no history.
+    if end is not None and end != date.max:
+        bound_end = end + timedelta(days=1)
+        cutoff = bound_end if cutoff is None else min(cutoff, bound_end)
 
     # Flows read the loaded transactions, not `filtered.entries`: a `--time`
     # filter clamps those for the balance reports, summarizing everything
@@ -1035,19 +1039,18 @@ def _cash_flow(filtered: Any, bounds: tuple[date | None, date | None], ledger_er
     flows = {account: _balance_map(cost_or_value(book, "at_cost", prices)) for account, book in flow_books.items()}
 
     closing_books: dict[str, CounterInventory] = {}
-    if cutoff is not None:
-        for entry in filtered.ledger.all_entries:
-            if not isinstance(entry, Transaction) or entry.date >= cutoff:
+    for entry in filtered.ledger.all_entries:
+        if not isinstance(entry, Transaction) or (cutoff is not None and entry.date >= cutoff):
+            continue
+        for posting in entry.postings:
+            if posting.units is None or posting.units.number is None:
                 continue
-            for posting in entry.postings:
-                if posting.units is None or posting.units.number is None:
-                    continue
-                if posting.account not in members:
-                    continue
-                if matches is not None and not matches(posting.account):
-                    continue
-                # Same duck-typed call as the flows loop above.
-                closing_books.setdefault(posting.account, CounterInventory()).add_position(posting)  # type: ignore[arg-type]
+            if posting.account not in members:
+                continue
+            if matches is not None and not matches(posting.account):
+                continue
+            # Same duck-typed call as the flows loop above.
+            closing_books.setdefault(posting.account, CounterInventory()).add_position(posting)  # type: ignore[arg-type]
     closing = {account: _balance_map(cost_or_value(book, "at_cost", prices)) for account, book in closing_books.items()}
 
     sections: dict[str, list[dict[str, Any]]] = {activity: [] for activity in _CASH_FLOW_ACTIVITIES}
@@ -1390,12 +1393,14 @@ def _bounded(metadata: dict[str, Any], bounds: tuple[date | None, date | None]) 
     first, after = period["start"], period["end_exclusive"]
     if start is not None:
         first = max(first, start) if first is not None else start
-    if end is not None:
+    # The calendar's last day restricts nothing and has no day after it to
+    # end on, so as a to-date it leaves the period's end alone (w5/1049).
+    if end is not None and end != date.max:
         after = min(after, end + timedelta(days=1)) if after is not None else end + timedelta(days=1)
     if first is not None and after is not None and first >= after:
         # A window with no dated activity at all is stated as asked.
         first = start or first
-        after = end + timedelta(days=1) if end is not None else first + timedelta(days=1)
+        after = end + timedelta(days=1) if end is not None and end != date.max else first + timedelta(days=1)
     return metadata | {
         "period": {"start": first, "end_exclusive": after},
         "as_of": after - timedelta(days=1) if after is not None else None,

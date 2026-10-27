@@ -52,8 +52,10 @@ def _report(tmp_path: Path, kind: str, *args: str, as_json: bool = True) -> obje
         (["--from-date", "2024-01-15"], "2024-01-15", "2024-01-31"),
         (["--to-date", "2024-01-15"], "2024-01-01", "2024-01-15"),
         (["--time", "2024-01-10 - 2024-01-31", "--to-date", "2024-01-20"], "2024-01-10", "2024-01-20"),
+        # The calendar's last day bounds nothing and has no day after it (w5/1049).
+        (["--to-date", "9999-12-31"], "2024-01-01", "2024-01-31"),
     ],
-    ids=["populated-day", "quiet-day", "from-only", "to-only", "time-intersection"],
+    ids=["populated-day", "quiet-day", "from-only", "to-only", "time-intersection", "maximum-to"],
 )
 def test_the_window_is_the_reported_period(tmp_path: Path, kind: str, args: list[str], first: str, last: str) -> None:
     data = _report(tmp_path, kind, *args)
