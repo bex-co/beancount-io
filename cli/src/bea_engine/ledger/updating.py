@@ -413,7 +413,9 @@ def holding_account(options: dict[str, Any]) -> str:
     return f"{ledger_roots(options)[-1]}:Uncategorized"
 
 
-_POSTING_LINE = re.compile(r"^(\s+)((?:[*!&#?%]\s*|[A-Z]\s+)?)(\S+)(.*)$")
+# The account ends at whitespace or at a comment's `;`, which may touch it:
+# `Expenses:Uncategorized; note` is that account (w5/1047).
+_POSTING_LINE = re.compile(r"^(\s+)((?:[*!&#?%]\s*|[A-Z]\s+)?)([^\s;]+)(.*)$")
 
 
 def _retarget_accounts(entry: Any, options: dict[str, Any], changes: _Changes) -> tuple[str, str]:
@@ -516,6 +518,7 @@ def plan_lines(
                 if (posting.meta or {}).get("filename") == source
                 and isinstance(lineno := (posting.meta or {}).get("lineno"), int)
             }
+            retargeted = False
             for number in sorted(posted & set(span)) if posted else span:
                 matched = _POSTING_LINE.match(lines[number])
                 # The loader reads the account in NFC; a decomposed `Café` in
@@ -524,6 +527,14 @@ def plan_lines(
                 if matched is None or unicodedata.normalize("NFC", token) != old or token.endswith(":"):
                     continue
                 planned[number] = f"{matched.group(1)}{matched.group(2)}{new}{matched.group(4)}"
+                retargeted = True
+            if not retargeted:
+                # A requested retarget that edits no posting line must not
+                # pass as written, or as a no-op beside a header edit.
+                raise protocol.UsageError(
+                    f"Cannot retarget {old} at {_where(entry)}: no posting line of the entry names it in the file. "
+                    "Nothing was written."
+                )
     return planned
 
 
