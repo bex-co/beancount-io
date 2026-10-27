@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1071 — Accept native cost-rounding residuals in Cash Flow](./1071.md) — minor CLI regression: native-valid fractional-cost purchases and tolerated rounding are refused as priced FX; 46 profiles, 518 CLI calls, 140 native loads; full completed 1068 and original cash-flow acceptance pass, checked 2026-10-27.
+
 
 
 
