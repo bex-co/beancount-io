@@ -36,7 +36,6 @@
 
 ## Inbox
 
-- [1066 — Preserve dateless lots in Beancount query exports](./1066.md) — minor CLI export gap: PRINT invents acquisition dates and can write an invalid strict-booking copy; 31 fresh profiles, 198 CLI commands and 91 native loads; completed 1018 controls pass, checked 2026-10-27.
 
 
 

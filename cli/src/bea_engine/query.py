@@ -1855,6 +1855,10 @@ def _render_beancount(rows: Any, out: TextIO, file: Path, options: Mapping[str, 
     rows = [
         (entry,) for (entry,) in kept if not (isinstance(entry, Pad) and _source_location(entry) in printed - derived)
     ]
+    # An undated lot whose quantity the source left to booking is printed the
+    # same way, number-less: stated, the reload dated each acquisition and a
+    # later partial sale became ambiguous (w5/1066).
+    rows = [(_with_inferred_units(entry) if isinstance(entry, Transaction) else entry,) for (entry,) in rows]
     switches, restore = _export_root_changes(rows, options)
     # Only ahead of rows: an empty result is an empty file, as an empty
     # `SELECT -o` writes, not a lone `option` line (w5/854).
@@ -1878,6 +1882,28 @@ def _render_beancount(rows: Any, out: TextIO, file: Path, options: Mapping[str, 
         out.write(printer(entry))
     if restore:
         out.write("\n" + restore)
+
+
+def _with_inferred_units(entry: Any) -> Any:
+    """The transaction with each source-inferred, undated lot quantity left open again."""
+    from beancount.core.amount import Amount
+    from beancount.core.number import MISSING
+    from beancount.core.position import Cost, CostSpec
+
+    from bea_engine.ledger.reader import _number_left_open
+
+    # Printed as the source wrote it: a cost spec, since a booked cost with no
+    # units number has no weight to compute.
+    postings = [
+        posting._replace(
+            units=Amount(MISSING, posting.units.currency),
+            cost=CostSpec(posting.cost.number, None, posting.cost.currency, None, posting.cost.label, False),
+        )
+        if isinstance(posting.cost, Cost) and posting.cost.date is None and _number_left_open(posting)
+        else posting
+        for posting in entry.postings
+    ]
+    return entry._replace(postings=postings) if postings != list(entry.postings) else entry
 
 
 def _portable_document_path(filename: str, file: Path) -> str:
