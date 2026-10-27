@@ -207,6 +207,7 @@ Categorizing the other leg of a missing entry:
 - Look at how the same or a similar payee was categorized before in this ledger. If there's a confident prior, reuse that account.
 - If there's no confident match, post the other leg to `Expenses:Uncategorized` (open it if needed) and **say so** — flag it for the user to refine. **Never invent a plausible-looking account name.**
 - Keep the target-account posting exactly equal to the statement amount; the reconciliation depends on it.
+- When the ledger tracks invoices (open receivable balances from beancount-invoices' `invoice-open` recipe in its SKILL.md), an inflow equal to one open invoice's balance is offered as that invoice's payment instead of income: the other leg is the receivable with the invoice's `invoice:` and link, shown beside the invoice it would clear, and written only with the row's yes. An inflow equal to the sum of several open invoices, or matching two equally, is asked about. A deposit smaller than an invoice's balance is offered as a part payment only when the user names the invoice. Never apply a payment silently.
 
 Example proposal:
 

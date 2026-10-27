@@ -1,6 +1,6 @@
 # w2 · m56 — Invoice clients and pay bills, with collected tax and an aging you can trust
 
-**Worker:** worker2 **Goal:** a customer skill records an invoice issued (receivable against income, with the tax leg the user's document states), each payment applied to it — including a payment processor's gross, fee, and net — supplier bills and their payments, and the remittance that clears collected tax, proposed first and written after a yes; it answers "who owes me, and how overdue" from booked postings. **Status:** todo (t001–t004 done)
+**Worker:** worker2 **Goal:** a customer skill records an invoice issued (receivable against income, with the tax leg the user's document states), each payment applied to it — including a payment processor's gross, fee, and net — supplier bills and their payments, and the remittance that clears collected tax, proposed first and written after a yes; it answers "who owes me, and how overdue" from booked postings. **Status:** todo (t001–t005 done)
 
 ## Tasks (in order)
 
@@ -10,7 +10,7 @@
 | [t002](./done/t002.md) | Issue an invoice and apply its payments — **DONE** | 75m | t001 |
 | [t003](./done/t003.md) | Receive and pay a supplier bill — **DONE** | 45m | t001 |
 | [t004](./done/t004.md) | Record collected sales tax and its remittance — **DONE** | 60m | t002 |
-| t005 | Apply payments found in imports and statements | 45m | t002 |
+| [t005](./done/t005.md) | Apply payments found in imports and statements — **DONE** | 45m | t002 |
 | t006 | Report open invoices, bills, and their aging | 60m | t002, t003 |
 | t007 | Write evals, fixtures, and routing entries | 60m | t002, t003, t004, t005, t006 |
 | t008 | Run the evals and routing set on both clients | 45m | t007 |

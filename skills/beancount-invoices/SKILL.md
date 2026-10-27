@@ -95,6 +95,8 @@ Reduce the request to documents and amounts. Ask for anything missing; never inv
 bea --file "$ledger" --json --no-input query "SELECT date, payee, narration, number, currency, filename WHERE account = '$receivable' AND any_meta('invoice') = '$invoice' ORDER BY date"
 ```
 
+A deposit that `beancount-import` or `beancount-reconcile` stages may already be offered as an invoice's payment (their categorization rules); applying it there follows the same rules as here.
+
 **Applying a payment.** Inputs: the date, the amount received and into which account, and which invoices it pays (named by the user, or the one open invoice whose balance equals the amount, shown as a suggestion). Read each invoice's postings with `invoice-postings`:
 
 - The receivable posting for each invoice is the amount applied to it, at most its open balance. Less than the balance leaves the rest open and says so.
