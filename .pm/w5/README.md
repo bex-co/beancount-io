@@ -100,7 +100,6 @@
 
 - [1033 — Use the requested currency quote in Holdings](./1033.md) — major CLI valuation gap: a current direct USD quote is ignored for an older cost-currency quote or a false missing-price refusal; native/report controls pass, checked 2026-10-25.
 
-- [1032 — Accept UTF-8 BOMs in OFX XML exports](./1032.md) — minor CLI input gap: valid BOM bank/card files fail before parsing through automatic, forced and configured import; plain controls pass, checked 2026-10-25.
 
 - [1031 — Preserve bank identity in OFX routing](./1031.md) — major CLI gap: account memory and the multi-account guard omit bank IDs, routing distinct banks’ payments to one ledger account; native-valid, repeated 2026-10-25.
 

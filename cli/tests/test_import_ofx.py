@@ -10,6 +10,7 @@ skip when the overlay cannot be built (offline). Tests that never reach
 
 from __future__ import annotations
 
+import codecs
 import json
 import os
 import subprocess
@@ -662,3 +663,44 @@ def test_ofx_empty_statement_has_no_brokerage_hint(
     )
     assert error["message"].endswith("holds no bank or credit-card transactions to import.")
     assert "Brokerage" not in error["message"]
+
+
+# A UTF-8 byte-order mark before an XML prolog (w5/1032): the header scan
+# decoded it as ASCII and refused a valid export as "cannot read its header".
+BOM_XML = """<?xml version="1.0" encoding="UTF-8"?><OFX><BANKMSGSRSV1><STMTTRNRS><STMTRS><CURDEF>USD</CURDEF>\
+<BANKACCTFROM><BANKID>000000000</BANKID><ACCTID>QA-1</ACCTID><ACCTTYPE>CHECKING</ACCTTYPE></BANKACCTFROM>\
+<BANKTRANLIST><DTSTART>20260801</DTSTART><DTEND>20260810</DTEND><STMTTRN><TRNTYPE>DEBIT</TRNTYPE>\
+<DTPOSTED>20260803</DTPOSTED><TRNAMT>-42.50</TRNAMT><FITID>TXN-001</FITID><NAME>Café</NAME></STMTTRN>\
+</BANKTRANLIST></STMTRS></STMTTRNRS></BANKMSGSRSV1></OFX>"""
+
+
+@pytest.mark.parametrize("signed", [True, False], ids=["bom", "plain"])
+def test_an_xml_export_imports_with_or_without_a_bom(
+    tmp_path: Path, ofx_engine: Callable[..., subprocess.CompletedProcess[str]], signed: bool
+) -> None:
+    ledger = _ledger(tmp_path)
+    source = tmp_path / "statement.ofx"
+    source.write_bytes((codecs.BOM_UTF8 if signed else b"") + BOM_XML.encode("utf-8"))
+    run = ["import", "--file", str(ledger), "--source", str(source), "--ofx", "--account", "Assets:Checking"]
+
+    preview = _answer(ofx_engine(*run))
+    assert [row["status"] for row in preview["rows"]] == ["new"]
+    (row,) = preview["rows"]
+    assert 'fitid: "TXN-001"' in row["entry"] and "Café" in row["entry"] and "-42.50 USD" in row["entry"]
+    assert _answer(ofx_engine(*run, "--apply"))["written"] == 1
+    assert _answer(ofx_engine(*run, "--apply"))["written"] == 0
+
+
+def test_a_bom_beside_another_declared_charset_is_refused(
+    tmp_path: Path, ofx_engine: Callable[..., subprocess.CompletedProcess[str]]
+) -> None:
+    ledger = _ledger(tmp_path)
+    source = tmp_path / "statement.ofx"
+    source.write_bytes(codecs.BOM_UTF8 + BOM_XML.replace('encoding="UTF-8"', 'encoding="ISO-8859-1"').encode("utf-8"))
+
+    refused = ofx_engine(
+        "import", "--file", str(ledger), "--source", str(source), "--ofx", "--account", "Assets:Checking"
+    )
+
+    assert refused.returncode == 2, refused.stdout
+    assert "byte-order mark" in json.loads(refused.stdout)["error"]["message"]

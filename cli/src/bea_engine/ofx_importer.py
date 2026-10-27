@@ -18,6 +18,7 @@ ignored entirely in v1 — no `Balance` directive is emitted, and
 
 from __future__ import annotations
 
+import codecs
 import re
 import unicodedata
 import warnings
@@ -64,7 +65,10 @@ def _decode_ofx(source: Path) -> str:
     tag; OFX 2.x declares it in the XML prolog, defaulting to UTF-8.
     """
     raw = source.read_bytes()
-    head, sep, _ = raw.partition(b"<")
+    # One leading UTF-8 signature, as some exporters write before the XML
+    # prolog: read as part of the ASCII header it refused the file (w5/1032).
+    signed = raw.startswith(codecs.BOM_UTF8)
+    head, sep, _ = raw[len(codecs.BOM_UTF8) if signed else 0 :].partition(b"<")
     if not sep:
         raise UsageError(f"{source} is not an OFX file: no OFX header or XML prolog found.")
     try:
@@ -79,6 +83,13 @@ def _decode_ofx(source: Path) -> str:
     codec = _OFX_CHARSETS.get(declared)
     if codec is None:
         raise UsageError(f"{source} declares OFX CHARSET {declared!r}, which bea cannot decode; re-export as UTF-8.")
+    if signed and codec not in ("utf-8-sig", "ascii"):
+        raise UsageError(
+            f"{source} starts with a UTF-8 byte-order mark but declares OFX CHARSET {declared}; "
+            "re-export it in one encoding."
+        )
+    if signed:
+        codec = "utf-8-sig"
     try:
         return raw.decode(codec)
     except UnicodeDecodeError as exc:
