@@ -38,7 +38,6 @@
 
 - [1075 — Preserve native book units when deciding and reporting padding](./1075.md) — minor CLI reconciliation: rounding refuses a matching padded assertion and misreports the amount of a correct native adjustment; 59 profiles, 229 CLI calls, 190 native loads; full matching/sign/shape/conflict/used-pad/import controls pass, checked 2026-10-27.
 
-- [1074 — Preserve native unit quantities when Holdings groups lots](./1074.md) — minor CLI aggregation: first-value rounding changes token quantities with account names and invents units in a zero-net lot group; 78 profiles, 595 CLI calls, 156 native loads; original holdings/quote/inventory acceptance passes, checked 2026-10-27.
 
 
 

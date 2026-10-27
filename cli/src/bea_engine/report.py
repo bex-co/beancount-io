@@ -494,7 +494,12 @@ def _holdings(
             key: tuple[str, ...] = (
                 (name, commodity, cost.currency) if group_by == "account" else (commodity, cost.currency)
             )
-            found = lots.setdefault(key, [Decimal(0), Decimal(0), set()])
+            found = lots.get(key)
+            if found is None:
+                # The first lot as booked: `0 + x` rounded a 29-digit token
+                # quantity to 28 digits before any real sum (w5/1074).
+                lots[key] = [number, number * cost.number, {name}]
+                continue
             found[0] += number
             found[1] += number * cost.number
             found[2].add(name)
