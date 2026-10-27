@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1073 — Preserve native balances in funded-close checks](./1073.md) — minor CLI retirement: premature rounding both invents funds in an empty wallet and hides a real balance from close/import checks; 55 profiles, 350 CLI calls, 174 native loads; original funded/lot/batch-order/max-date controls pass, checked 2026-10-27.
+
 - [1072 — Preserve native precision when Cash Flow merges cash accounts](./1072.md) — minor CLI aggregation: an exactly balanced token book depends on posting order, and quiet cash totals lose native units; 38 profiles, 440 CLI calls, 80 native loads; completed 1054/m4 acceptance passes, checked 2026-10-27.
 
 - [1071 — Accept native cost-rounding residuals in Cash Flow](./1071.md) — major CLI regression: native-valid fractional costs block monthly/yearly Cash Flow even on built-in example books; 48 profiles, 536 CLI calls, 142 native loads; full completed 1068 and original acceptance pass, checked 2026-10-27.
