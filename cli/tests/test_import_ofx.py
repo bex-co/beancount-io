@@ -740,3 +740,47 @@ def test_ofx_correction_records_are_refused_before_any_write(
         message = json.loads(refused.stdout)["error"]["message"]
         assert f"{action} of FITID OLD-1" in message and "NEW-1" in message
     assert ledger.read_bytes() == before
+
+
+# A row-level CURRENCY override (w5/1061): the amount is in CURSYM at CURRATE,
+# which the upstream builder ignored, booking 10 EUR as 10 USD.
+FOREIGN_ROW = (
+    "<STMTTRN><TRNTYPE>DEBIT</TRNTYPE><DTPOSTED>20260803</DTPOSTED><TRNAMT>-10.00</TRNAMT><FITID>FX-001</FITID>"
+    "<NAME>Cafe</NAME><{tag}><CURRATE>1.20</CURRATE><CURSYM>EUR</CURSYM></{tag}></STMTTRN>"
+)
+
+
+@pytest.mark.parametrize("mixed", [False, True], ids=["alone", "after-ordinary-row"])
+def test_ofx_an_unconverted_currency_override_is_refused(
+    tmp_path: Path, ofx_engine: Callable[..., subprocess.CompletedProcess[str]], mixed: bool
+) -> None:
+    ledger = _ledger(tmp_path)
+    before = ledger.read_bytes()
+    source = tmp_path / "statement.ofx"
+    rows = (ORDINARY_ROW if mixed else "") + FOREIGN_ROW.format(tag="CURRENCY")
+    source.write_text(CORRECTION_XML.format(rows=rows))
+    run = ["import", "--file", str(ledger), "--source", str(source), "--ofx", "--account", "Assets:Checking"]
+
+    for flags in ([], ["--apply"]):
+        refused = ofx_engine(*run, *flags)
+        assert refused.returncode == 2, refused.stdout
+        message = json.loads(refused.stdout)["error"]["message"]
+        assert "FX-001" in message and "EUR" in message and "1.20" in message
+    assert ledger.read_bytes() == before
+
+
+def test_ofx_an_already_converted_origcurrency_row_imports(
+    tmp_path: Path, ofx_engine: Callable[..., subprocess.CompletedProcess[str]]
+) -> None:
+    ledger = _ledger(tmp_path)
+    source = tmp_path / "statement.ofx"
+    source.write_text(CORRECTION_XML.format(rows=FOREIGN_ROW.format(tag="ORIGCURRENCY").replace("-10.00", "-12.00")))
+
+    applied = _answer(
+        ofx_engine(
+            "import", "--file", str(ledger), "--source", str(source), "--ofx", "--account", "Assets:Checking", "--apply"
+        )
+    )
+
+    assert applied["written"] == 1
+    assert "-12.00 USD" in ledger.read_text()

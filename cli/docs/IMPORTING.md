@@ -476,7 +476,10 @@ Ledger balances are ignored: no `Balance` directive is emitted. A bank
 correction record — a row carrying `CORRECTACTION` (`REPLACE` or `DELETE`) and
 the `CORRECTFITID` it corrects — is refused before anything is written, naming
 the row: bea does not apply corrections, so reconcile it by hand or drop it from
-the file and import the rest.
+the file and import the rest. So is a row whose own `CURRENCY` aggregate states
+its amount in another currency at a `CURRATE`: bea does not convert it, and
+would otherwise book it in the statement's currency. A row carrying
+`ORIGCURRENCY` (an amount already converted) imports as usual.
 
 Synthetic samples live beside the other examples: [checking.ofx](examples/checking.ofx)
 (a checking account), [credit-card.qfx](examples/credit-card.qfx) (a credit card),

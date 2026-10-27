@@ -250,6 +250,20 @@ class OfxImporter:
                         "does not apply. Reconcile it by hand (`bea update` or edit the original entry), or remove it "
                         "from the file and import the rest. Nothing was written."
                     )
+                # A row-level CURRENCY says the amount is in another currency
+                # at CURRATE; the upstream builder ignores it and booked 10 EUR
+                # as 10 USD (w5/1061). ORIGCURRENCY (already converted) is fine.
+                override = stmttrn.find("currency")
+                if override is not None:
+                    symbol = _tag_text(override, "cursym")
+                    if symbol and symbol.upper() != currency:
+                        rate = _tag_text(override, "currate")
+                        raise UsageError(
+                            f"{source}: transaction {row} (FITID {fitid or '(none)'}) states its amount in "
+                            f"{symbol} at {rate or 'an unstated rate'} {currency} per {symbol}, which bea import "
+                            f"does not convert; it would be booked as {currency}. Convert it in the file or record it "
+                            "by hand, and import the rest. Nothing was written."
+                        )
                 if not fitid:
                     self.missing_fitids.append(row)
                 base = self._build_row(source, row, upstream, stmttrn, currency)
