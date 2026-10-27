@@ -1,8 +1,25 @@
 # skills.rest correction — overall-suite request accepted
 
-**Owner:** w6/m6.5/t012. **Last checked:** 2026-10-26T00:24:54Z, actual form success.
-**Status:** owner-requested overall-suite resubmission accepted; public indexing,
-internal-record cleanup and single-plugin/collection support remain unverified.
+**Owner:** w6/m6.5/t012. **Last checked:** 2026-10-27T07:00:22Z, actual post-window public readback.
+**Status:** overall-suite request accepted; its advertised window has elapsed,
+but public customer-only indexing and cleanup still fail verification.
+
+## Post-window result — 2026-10-27 UTC
+
+The company page still advertises27skills in one repository. Expanding the
+repository's complete list verifies eight customer and nineteen internal entries,
+with five customer workflows missing. The existing repository aggregate is not
+the requested customer-only suite: its displayed install command selects the
+whole repository. Ask retains its removed source path and generated selector;
+dashboard QA remains public and included. The
+[actual readback and all27 entry links](skills-rest-post-window-20261027.json)
+preserve these findings separately from the accepted receipt.
+
+No additional form or support email is sent. Processing status and native
+plugin support remain unknown. The platform must correct the accepted scope
+or expose a supported edit/suite intake, then the worker verifies the result.
+Next manual readback is2026-10-29UTC, or actual feedback/capability/publication
+earlier; no publisher decision is pending.
 
 ## Latest form submission
 
@@ -46,8 +63,8 @@ recorded above.
 
 ## Earlier email draft — not sent
 
-This is the historical 2026-10-25 draft, not the current next action. Refresh its
-dated claims before any future use; the new form window has not elapsed.
+This is the historical 2026-10-25 draft, not the current next action. The
+subsequent owner policy supersedes email.
 
 **To:** [support@skills.rest](mailto:support@skills.rest)
 

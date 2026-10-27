@@ -141,5 +141,31 @@
     },
     "evidence": "delivery-route-followup-20261026.json",
     "state": "Refresh labels advanced, but collection remains 8 customer + 19 internal. Ask source stale; displayed CLI selector valid. Sign-in page inspected, private publisher capability still unknown."
+  },
+  "unsubmittedRouteAudit20261027": {
+    "checkedAtUTC": "2026-10-27T07:03:39Z",
+    "collectionUrl": "https://skillsmp.com/creators/bex-co/beancount-io",
+    "actualBrowserRead": true,
+    "result": "All 27 collection entries still visible: 8 customer and 19 internal. Displayed refresh remains October 26 at 11:37, timezone unspecified.",
+    "publicContracts": [
+      {
+        "url": "https://skillsmp.com/agent-skills",
+        "finding": "Public GitHub SKILL.md discovery; neither inclusion nor a fixed update schedule is guaranteed."
+      },
+      {
+        "url": "https://skillsmp.com/about",
+        "finding": "Public source discovery/classification and search API; no supported suite publisher intake established."
+      },
+      {
+        "url": "https://skillsmp.com/pricing",
+        "finding": "Published plans concern website/API/MCP search and public metadata export, not a verified publisher/collection submission feature."
+      }
+    ],
+    "authenticatedPublisherUiInspected": false,
+    "privatePublisherCapability": "Unknown; no claim that self-service editing is impossible.",
+    "newAccount": false,
+    "submitted": false,
+    "emailSent": false,
+    "unblock": "A supported customer-suite intake or a real customer-only source-index correction, followed by worker verification. No permission request for speculative account creation."
   }
 }

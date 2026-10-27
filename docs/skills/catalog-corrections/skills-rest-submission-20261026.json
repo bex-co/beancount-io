@@ -93,5 +93,11 @@
     "owner": "skills.rest processes the request; repository worker verifies the public result. No new publisher input is required for this submitted form."
   },
   "historicalBoundary": "Earlier canonical-root refresh acceptance is retained separately. The first ingestion of the internal QA listing remains unattributed; this receipt does not reconstruct that history.",
-  "privacy": "Only public source/catalog/install URLs and scope instructions transmitted. Optional contact left blank. No credential, private account identifier, ledger data, support email, new login, or individual internal-skill submission."
+  "privacy": "Only public source/catalog/install URLs and scope instructions transmitted. Optional contact left blank. No credential, private account identifier, ledger data, support email, new login, or individual internal-skill submission.",
+  "postWindowReadback": {
+    "checkedAtUTC": "2026-10-27T07:00:22Z",
+    "evidence": "skills-rest-post-window-20261027.json",
+    "result": "post_window_public_result_still_mixed_and_stale",
+    "newSubmissionPerformed": false
+  }
 }

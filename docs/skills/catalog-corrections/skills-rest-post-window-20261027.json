@@ -1,0 +1,173 @@
+{
+  "owner": "w6/m6.5/t012",
+  "checkedAtUTC": "2026-10-27T07:00:22Z",
+  "observationWindowUTC": {
+    "from": "2026-10-27T06:56:50Z",
+    "through": "2026-10-27T07:00:22Z"
+  },
+  "status": "post_window_public_result_still_mixed_and_stale",
+  "acceptedRequest": "skills-rest-submission-20261026.json",
+  "acceptedAtUTC": "2026-10-26T00:24:54Z",
+  "advertisedWindowEndedUTC": "2026-10-27T00:24:54Z",
+  "company": {
+    "url": "https://skills.rest/company/bex-co",
+    "advertisedIndexedSkills": 27,
+    "repositories": 1
+  },
+  "repository": {
+    "url": "https://skills.rest/repo/bex-co/beancount-io",
+    "showAllClickedOnce": true,
+    "uniqueObservedSkillCount": 27,
+    "customerCount": 8,
+    "internalCount": 19,
+    "entries": [
+      {
+        "name": "beancount-importer-author",
+        "url": "https://skills.rest/skill/beancount-importer-author-bex-co"
+      },
+      {
+        "name": "loopx",
+        "url": "https://skills.rest/skill/loopx-bex-co"
+      },
+      {
+        "name": "routine-flaky-test-fixer",
+        "url": "https://skills.rest/skill/routine-flaky-test-fixer-bex-co"
+      },
+      {
+        "name": "beancount-init",
+        "url": "https://skills.rest/skill/beancount-init-bex-co"
+      },
+      {
+        "name": "routine-logic-bugfixer",
+        "url": "https://skills.rest/skill/routine-logic-bugfixer-bex-co"
+      },
+      {
+        "name": "beancount-reconcile",
+        "url": "https://skills.rest/skill/beancount-reconcile-bex-co"
+      },
+      {
+        "name": "routine-useless-test-pruner",
+        "url": "https://skills.rest/skill/routine-useless-test-pruner-bex-co"
+      },
+      {
+        "name": "routine-abstraction-police",
+        "url": "https://skills.rest/skill/routine-abstraction-police-bex-co"
+      },
+      {
+        "name": "routine-shipped-feature-inliner",
+        "url": "https://skills.rest/skill/routine-shipped-feature-inliner-bex-co"
+      },
+      {
+        "name": "routine-logic-simplifier",
+        "url": "https://skills.rest/skill/routine-logic-simplifier-bex-co"
+      },
+      {
+        "name": "routine-dead-code-removal",
+        "url": "https://skills.rest/skill/routine-dead-code-removal-bex-co"
+      },
+      {
+        "name": "beancount-import",
+        "url": "https://skills.rest/skill/beancount-import-bex-co"
+      },
+      {
+        "name": "beancount-migrate",
+        "url": "https://skills.rest/skill/beancount-migrate-bex-co"
+      },
+      {
+        "name": "mobile-release",
+        "url": "https://skills.rest/skill/mobile-release-bex-co"
+      },
+      {
+        "name": "beancount-ask",
+        "url": "https://skills.rest/skill/beancount-ask-bex-co"
+      },
+      {
+        "name": "qa-find-bugs-cli",
+        "url": "https://skills.rest/skill/qa-find-bugs-cli-bex-co"
+      },
+      {
+        "name": "routine-dup-unifier",
+        "url": "https://skills.rest/skill/routine-dup-unifier-bex-co"
+      },
+      {
+        "name": "beancount-close",
+        "url": "https://skills.rest/skill/beancount-close-bex-co"
+      },
+      {
+        "name": "pm",
+        "url": "https://skills.rest/skill/pm-bex-co"
+      },
+      {
+        "name": "routine-abstraction-improver",
+        "url": "https://skills.rest/skill/routine-abstraction-improver-bex-co"
+      },
+      {
+        "name": "mermaid",
+        "url": "https://skills.rest/skill/mermaid-bex-co"
+      },
+      {
+        "name": "pm-brainstorm",
+        "url": "https://skills.rest/skill/pm-brainstorm-bex-co"
+      },
+      {
+        "name": "beancount-options",
+        "url": "https://skills.rest/skill/beancount-options-bex-co"
+      },
+      {
+        "name": "ship",
+        "url": "https://skills.rest/skill/ship-bex-co"
+      },
+      {
+        "name": "qa-find-bugs-dashboard",
+        "url": "https://skills.rest/skill/qa-find-bugs-dashboard-bex-co"
+      },
+      {
+        "name": "qa-find-bugs-mobile",
+        "url": "https://skills.rest/skill/qa-find-bugs-mobile-bex-co"
+      },
+      {
+        "name": "qa-find-bugs-mcp",
+        "url": "https://skills.rest/skill/qa-find-bugs-mcp-bex-co"
+      }
+    ],
+    "missingCustomerSkills": [
+      "beancount-accruals",
+      "beancount-add",
+      "beancount-property",
+      "beancount-roll-forward",
+      "beancount-trade"
+    ],
+    "displayedInstallCommand": "npx skills add bex-co/beancount-io --all -g -y",
+    "limit": "Existing repository aggregate includes internal development workflows. It is not the requested customer-only suite or proof of native plugin publication. Command was observed, not executed."
+  },
+  "ask": {
+    "installCommands": [],
+    "sourceLinks": [
+      "https://github.com/bex-co/beancount-io/tree/main/skills/.claude/skills/beancount-ask"
+    ],
+    "url": "https://skills.rest/skill/beancount-ask-bex-co"
+  },
+  "internalQa": {
+    "url": "https://skills.rest/skill/qa-find-bugs-dashboard-bex-co",
+    "headingObserved": "qa-find-bugs-dashboard",
+    "sourceUrl": "https://github.com/bex-co/beancount-io/tree/main/.agents/skills/qa-find-bugs-dashboard",
+    "stillPublic": true
+  },
+  "actualPublicAcceptance": {
+    "customerOnlyCollection": false,
+    "internalRecordsExcluded": false,
+    "canonicalAskSource": false,
+    "canonicalAskSelector": false,
+    "nativePluginPublicationVerified": false
+  },
+  "limit": "The advertised window elapsed and actual public pages remain incorrect. No queue processing status, request rejection, first-ingestion cause or absence of all private management features is inferred. The accepted request remains retained, not silently converted to a successful plugin release.",
+  "actions": {
+    "newSubmitClicks": 0,
+    "emailSent": false,
+    "newAccount": false,
+    "newPublication": false
+  },
+  "unblock": "skills.rest corrects the already submitted customer-only scope, source links/selectors and internal exclusions, or exposes a supported existing-request edit/suite intake; worker verifies the actual result. No owner decision or email is pending.",
+  "nextManualReadbackUTC": "2026-10-29",
+  "earlierTrigger": "Actual processing feedback, supported intake/edit capability or observed corrected publication."
+}

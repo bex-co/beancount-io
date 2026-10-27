@@ -62,12 +62,14 @@
     },
     {
       "channel": "skills.rest",
-      "status": "overall_suite_request_accepted_awaiting_readback",
+      "status": "accepted_request_post_window_public_cleanup_unverified",
       "entry": "https://skills.rest/contribute",
       "receipt": "skills-rest-submission-20261026.json",
       "acceptedAtUTC": "2026-10-26T00:24:54Z",
-      "nextManualReadbackNotBeforeUTC": "2026-10-27T00:24:54Z",
-      "action": "Keep the accepted consolidated request, exact payload and pending readback. No further identical submission or support email."
+      "nextManualReadbackNotBeforeUTC": "2026-10-29T00:00:00Z",
+      "action": "Actual post-window readback still shows 8 customer + 19 internal entries, stale ask source and selector. Existing repository aggregate recommends the whole mixed repository. Retain the accepted customer-only request; no new identical submission or email.",
+      "lastCheckedAtUTC": "2026-10-27T07:00:22Z",
+      "postWindowEvidence": "skills-rest-post-window-20261027.json"
     },
     {
       "channel": "SkillsMP",
@@ -219,7 +221,7 @@
   },
   "privacy": "Only public customer source and canonical MIT-0 text uploaded. No internal skill, eval fixture, credential, private account identity or ledger data included. No support email, paid action, new account, catalog PR or ClawHub upload performed.",
   "limits": "Pack publication does not prove complete native delivery, delete old index records, publish a SkillsMP plugin, clear skills.rest review, change the historical ClawHub release or clear Hermes host policy. No recurring automation created.",
-  "lastUpdatedAtUTC": "2026-10-26T20:19:06Z",
+  "lastUpdatedAtUTC": "2026-10-27T07:00:22Z",
   "deliveryRouteFollowup": {
     "recordedAtUTC": "2026-10-26T20:19:06Z",
     "evidence": "delivery-route-followup-20261026.json",
