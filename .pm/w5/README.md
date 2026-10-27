@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1074 — Preserve native unit quantities when Holdings groups lots](./1074.md) — minor CLI aggregation: first-value rounding changes token quantities with account names and invents units in a zero-net lot group; 78 profiles, 595 CLI calls, 156 native loads; original holdings/quote/inventory acceptance passes, checked 2026-10-27.
+
 - [1073 — Preserve native balances in funded-close checks](./1073.md) — minor CLI retirement: premature rounding invents funds, hides a real balance and suppresses offset cost lots in close/import checks; 89 profiles, 716 CLI calls, 302 native loads; full funded/lot-label/dateless/batch/max-date controls pass, checked 2026-10-27.
 
 - [1072 — Preserve native precision when Cash Flow merges cash accounts](./1072.md) — minor CLI aggregation: an exactly balanced token book depends on posting order, and quiet cash totals lose native units; 38 profiles, 440 CLI calls, 80 native loads; completed 1054/m4 acceptance passes, checked 2026-10-27.
