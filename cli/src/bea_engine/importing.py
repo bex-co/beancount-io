@@ -1978,14 +1978,28 @@ def _identities(entry: Any, account: str, keys: list[str]) -> list[tuple[str, st
 
     meta = entry.meta or {}
     identities = []
+    # The `import-id` a bank reference is written under (`bank:<ref>`) is that
+    # reference, not a content hash, even when the reference itself reads
+    # `sha256:0123…`: keyed by its spelling, it proved the row unchanged and a
+    # corrected amount was skipped, or matched another namespace's reference
+    # (w5/1020). So such an alias is keyed only as the native ID it names, and
+    # one in a configured native namespace whose own key a cleanup removed is
+    # keyed as that native ID too.
+    native_kinds = {_IDENTITY_KINDS.get(key, key) for key in keys}
+    alias = _native_import_id(meta, keys)
     for key in ["import-id", *keys]:
         value = meta.get(key)
         if value in (None, ""):
             continue
         if key == "import-id":
-            identities.append((account, "import-id", nfc(value)))
-        else:
-            identities.append((account, "bank", f"{_IDENTITY_KINDS.get(key, key)}:{nfc(value)}"))
+            text = nfc(value)
+            hashlike = _GENERATED_ID.fullmatch(text) is not None
+            if not (hashlike and alias is not None and text == nfc(alias)):
+                identities.append((account, "import-id", text))
+            if hashlike and text.partition(":")[0] in native_kinds and (account, "bank", text) not in identities:
+                identities.append((account, "bank", text))
+        elif (account, "bank", text := f"{_IDENTITY_KINDS.get(key, key)}:{nfc(value)}") not in identities:
+            identities.append((account, "bank", text))
     if meta.get("import-id-2") not in (None, ""):
         identities.append((account, "import-id", nfc(meta["import-id-2"])))
     if meta.get("bea_import_id"):
@@ -1993,7 +2007,9 @@ def _identities(entry: Any, account: str, keys: list[str]) -> list[tuple[str, st
     # beancount-migrate writes the same digest under its source's prefix
     # (`monarch:sha256:…`), so a later bank import of that row must find it.
     for value in (meta.get("import-id"), meta.get("import-id-2")):
-        if (match := _GENERATED_ID.fullmatch(str(value or ""))) is not None:
+        if (match := _GENERATED_ID.fullmatch(str(value or ""))) is not None and not (
+            alias is not None and value == meta.get("import-id") and nfc(value) == nfc(alias)
+        ):
             identities.append((account, "digest", match.group(1)))
     return identities
 
