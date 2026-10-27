@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1054 — Keep native unit residuals in reports](./1054.md) — minor CLI precision gap: an early inventory zero-add rounds tokens before a later return; native/BQL, five report paths and boundary/zero controls, checked 2026-10-26.
+
 - [1053 — Refuse unsupported OFX correction records](./1053.md) — major CLI import gap: REPLACE/DELETE become new payments; bank/card, three adapter routes and completed OFX controls, checked 2026-10-26.
 
 - [1052 — Name implied-price winners from the same import](./1052.md) — minor CLI advisory follow-up to903: imported FX makes1.25 defeat recorded1.20 silently; both orders/human/JSON and original903 controls, checked 2026-10-26.
