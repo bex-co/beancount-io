@@ -80,10 +80,16 @@ Reduce the request to directives. Pasted receipt or statement text comes from a 
 - **Date:** the date the user gives; "today", "Friday", or "last Tuesday" resolve against today's date, and the resolved date is stated in the proposal.
 - **Amounts and signs:** ledger signs, not statement signs. Money leaving an asset is negative on that asset; a card purchase is negative on the card's `Liabilities:` account; income is negative on its `Income:` account; an expense is positive. A refund reverses the purchase's signs. Use the operating currency only when the user gives none, and say so.
 - **Accounts:** map the user's words to accounts from the open-accounts read ("the Amex" → `Liabilities:CreditCard:Amex`). Ambiguous → ask. The category leg comes from the payee's history in this ledger; with no confident prior, use `Expenses:Uncategorized` (propose its `open` if missing) and flag it. Propose a new account only when the user asks for one, with its `open` in the same proposal.
+- **Client and project:** when the request names a client or project, or the payee's earlier entries carry `client:` or `project:` metadata (the suite's Business books convention), read them with the `dimension-prior` recipe. Propose a value when the payee's entries that carry the key all agree, citing the count; ask when they disagree; when none carries it, add no key unless the user names one. Never invent a value. A split purchase may give each posting its own.
 - **Splits and receipts:** one transaction, one posting per category; the parts must sum to the amount paid, or ask about the difference (tax, tip, a discount).
 - **Transfers between the user's own accounts:** two postings, no expense or income leg.
 
 Ask for anything missing. Never guess an amount, an account, or the date of a past event.
+
+<!-- recipe: dimension-prior -->
+```sh
+bea --file "$ledger" --json --no-input query "SELECT any_meta('client') AS client, any_meta('project') AS project, count(id) AS postings WHERE coalesce(payee, narration) = '$payee' AND account ~ '^(Income|Expenses):' GROUP BY client, project ORDER BY postings DESC"
+```
 
 **A request to change an existing entry is not part of this workflow, even in the same message.** This skill only adds entries, and every write waits for the confirmation in step 4. When a request also asks to edit, move, or delete an entry already in the ledger (a payee rename, a wrong amount, a duplicate), do not make that change before the yes, after it, or as part of the proposal. Find the entry, show its file and line, say that this workflow leaves existing entries to the user, and propose only the new entries.
 
@@ -116,7 +122,7 @@ Show, then ask. **Never write before an explicit yes.** The user's original requ
 
 1. **Target file** — one explicit path per directive kind.
 2. **New `open` directives** — only those the user asked for, or `Expenses:Uncategorized` when a leg needs it.
-3. **The entries** — formatted exactly as they will appear, with each fallback category flagged. New entries only; a requested edit to an existing entry is listed as left to the user, with its file and line.
+3. **The entries** — formatted exactly as they will appear, with each fallback category flagged and each proposed client or project key cited to its source. New entries only; a requested edit to an existing entry is listed as left to the user, with its file and line.
 4. **Check results** — possible duplicates, a remaining balance before a close.
 5. A clear **yes/no**. On a partial correction, revise and show the whole proposal again.
 
@@ -137,7 +143,7 @@ Add this transaction to ./transactions/2026.beancount? (yes/no)
 After the yes, use the recipes in beancount-init's `references/bea-cli.md`, each with `--file "$ledger"` and `--into`:
 
 1. Approved opens with the `open` recipe (the staged two-step when the ledger refuses an unused account).
-2. One transaction with the `transaction` recipe, repeating `--posting` per leg; several with the `batch` recipe.
+2. One transaction with the `transaction` recipe, repeating `--posting` per leg and adding `--meta 'client:<value>'` or `--meta 'project:<value>'` for an approved key; several transactions, or a split whose postings carry different keys, with the `batch` recipe (a posting's `meta`).
 3. A close, price, or note with its recipe.
 4. The root check:
 

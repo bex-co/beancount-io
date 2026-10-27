@@ -191,7 +191,10 @@ For one approved transaction, pass each leg as a native posting and repeat
 `--posting` per leg; at most one leg may omit its amount so `bea` balances
 it. Set `entry_date`, `payee`, `narration`, and the postings, for example
 `posting_1` = `Expenses:Dining 12.50 USD` and `posting_2` = `Assets:Checking`.
-Several transactions at once use the `batch` recipe instead.
+Several transactions at once use the `batch` recipe instead. Approved
+transaction metadata, such as the `client:` and `project:` keys, goes on as a
+repeated `--meta 'key:value'`; metadata on one posting needs the `batch`
+recipe, whose postings take a `meta` object.
 
 <!-- recipe: transaction -->
 ```sh

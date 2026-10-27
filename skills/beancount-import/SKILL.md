@@ -164,6 +164,7 @@ Categorize each candidate's counter-account from the ledger's own history. **Rea
 - The candidate set is **exactly the accounts already opened in the ledger**. Never invent an account, however plausible.
 - Confident prior for the payee → reuse it, cite it as the reason. No confident prior → `Expenses:Uncategorized` (propose its `open` if missing) and flag for refinement.
 - Every suggestion carries a confidence (high / medium / low) and a one-line reason, shown in the review table.
+- When the ledger attributes entries by client or project, the suggestion carries that key too, from the same history (`references/categorization.md`).
 
 ### 6. Confirm
 

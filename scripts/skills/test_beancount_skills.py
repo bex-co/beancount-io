@@ -1097,6 +1097,46 @@ class TestBeaRecipes(unittest.TestCase):
         self.assertEqual(len(destination), 1)
         self.assertTrue(destination[0][0].endswith(self.values["target"]))
 
+    def test_client_and_project_keys_are_read_from_payee_history_and_written_as_metadata(self):
+        with self.target.open("a", encoding="utf-8") as books:
+            books.write(
+                '2026-04-02 * "Pizzeria" "Team lunch"\n  client: "acme"\n'
+                "  Expenses:Dining 30.00 USD\n  Assets:Checking\n"
+                '2026-04-09 * "Pizzeria" "Team lunch"\n  client: "acme"\n'
+                "  Expenses:Dining 20.00 USD\n  Assets:Checking\n"
+                '2026-04-16 * "Pizzeria" "Dinner"\n  Expenses:Dining 10.00 USD\n  Assets:Checking\n'
+                '2026-04-20 * "Cafe" "Coffee"\n  client: "globex"\n  Expenses:Dining 4.00 USD\n  Assets:Checking\n'
+            )
+        # Only the payee's own income/expense postings count, grouped by value,
+        # with its unattributed entry as its own row; the other payee's never.
+        rows = self.recipe("dimension-prior", payee="Pizzeria")["rows"]
+        self.assertEqual(rows, [["acme", None, 2], [None, None, 1]])
+        # The approved key rides on the one-off recipe as transaction metadata.
+        tokens = shlex.split(self.block("transaction"))
+        self.values.update(entry_date="2026-05-07", payee="Pizzeria", narration="Team lunch",
+                           posting_1="Expenses:Dining 12.50 USD", posting_2="Assets:Checking")
+        args = [Template(token).substitute(self.values) for token in tokens[1:]] + ["--meta", "client:acme"]
+        written = subprocess.run([*self.bea, *args], cwd=self.root, env=self.env,
+                                 capture_output=True, text=True, timeout=90)
+        self.assertEqual(written.returncode, 0, written.stderr)
+        self.assertIn('client: "acme"', self.target.read_text())
+        # A split whose postings belong to different projects goes through the batch.
+        self.batch([{
+            "date": "2026-05-08", "flag": "*", "payee": "Figma", "narration": "Seats",
+            "postings": [
+                {"account": "Expenses:Dining", "units": {"number": "30.00", "currency": "USD"},
+                 "meta": {"project": "site"}},
+                {"account": "Expenses:Dining", "units": {"number": "20.00", "currency": "USD"},
+                 "meta": {"project": "internal"}},
+                {"account": "Assets:Checking", "units": {"number": "-50.00", "currency": "USD"}},
+            ],
+        }])
+        self.recipe("batch")
+        self.recipe("check")
+        rows = self.recipe("dimension-prior", payee="Figma")["rows"]
+        self.assertEqual(sorted(rows, key=str), sorted([[None, "site", 1], [None, "internal", 1]], key=str))
+        self.assertEqual(self.recipe("dimension-prior", payee="Pizzeria")["rows"][0], ["acme", None, 3])
+
     def test_one_off_write_outside_the_included_files_is_refused_and_creates_nothing(self):
         orphan = self.books / "transactions" / "orphan.bean"
         orphan.write_text("; not included by the root\n")

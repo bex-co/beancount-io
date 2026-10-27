@@ -25,6 +25,10 @@ The ledger is the source of every suggestion: each run learns from what the user
 - **Directional sanity check**: an inflow on an asset account suggesting an `Expenses:` counter-account (or an outflow suggesting `Income:`) is almost always wrong — a refund is the exception. When history says `Expenses:` for an inflow (refund pattern), keep it but say "refund?" in the reason; otherwise fall back to low confidence.
 - **Transfers**: if the description matches another open asset/liability account's institution (e.g. "PAYMENT TO AMEX", "TRANSFER TO SAVINGS") and such an account exists, suggest the transfer counter-account (medium unless priors confirm). Write the source posting first, as `bea import` does. Warn the user that when they later import the *other* account's export, the mirrored row will surface as a suspected duplicate of this transfer (dedup.md Layer 2b; `bea import` reports it as a possible duplicate), however that bank words it — skip it there rather than double-booking the transfer.
 
+## Client and project
+
+When the source account's history attributes entries with `client:` or `project:` metadata (the suite's Business books convention), suggest a candidate's value from the same matches that suggest its account: a value every attributed match agrees on is proposed with its count, disagreeing matches are shown as a question, and no attributed match means no key. Never invent a value, and show it in the review table beside the account. The `bea import --csv` rules cannot set a key yet (`references/bea-import.md`), so a CSV import whose rows the user wants attributed takes the normalized batch path, with the key in each transaction's `meta`.
+
 ## What the user sees
 
 Every review-table row: suggested account, confidence, and a one-line reason (`"6 prior TRADER JOES entries"`, `"1 prior only"`, `"inconsistent priors: Household ×3, Books ×2"`, `"no prior match — refine"`). The reason is the audit trail — never present a suggestion the user can't see the basis of.
