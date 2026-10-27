@@ -124,6 +124,20 @@ class Amount(BaseModel):
     currency: Commodity
 
 
+class PostingPrice(BaseModel):
+    """A posting's per-unit price; a loaded one may not have resolved its number.
+
+    `@ USD` leaves the number to interpolation, and a ledger read with errors
+    keeps Beancount's MISSING sentinel there: converting it raised a bare
+    ConversionSyntax that blocked every partial listing (w5/1044). A read
+    reports it as null; a write must still state the number.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+    number: AmountNumber | None
+    currency: Commodity
+
+
 class Units(BaseModel):
     """A posting's units, whose number Beancount interpolates when left null.
 
@@ -193,7 +207,7 @@ class Posting(BaseModel):
     account: str
     units: Units | None = None
     cost: Cost | None = None
-    price: Amount | None = None
+    price: PostingPrice | None = None
     price_total: Amount | None = None
     flag: Flag | None = None
     meta: dict[str, Any] = Field(default_factory=dict)
@@ -243,6 +257,13 @@ class Posting(BaseModel):
                 )
         value |= fragment
         return value
+
+    @model_validator(mode="after")
+    def price_needs_a_number(self, info: ValidationInfo) -> Posting:
+        context = info.context
+        if isinstance(context, dict) and context.get("write_input") and self.price and self.price.number is None:
+            raise ValueError('price needs a "number"; give the per-unit price, or use price_total.')
+        return self
 
     @model_validator(mode="after")
     def cost_needs_units(self, info: ValidationInfo) -> Posting:

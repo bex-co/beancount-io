@@ -134,8 +134,9 @@ def _posting_amount(posting: dict[str, Any]) -> str:
     text = _amount(posting["units"])
     if posting.get("cost"):
         text += f" {_cost(posting['cost'])}"
-    if posting.get("price"):
-        text += f" @ {_amount(posting['price'])}"
+    if price := posting.get("price"):
+        # An unresolved `@ USD` in a partial read has no number (w5/1044).
+        text += f" @ {_amount(price)}" if price["number"] is not None else f" @ {price['currency']}"
     return text
 
 

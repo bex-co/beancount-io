@@ -46,6 +46,7 @@ from bea_engine.ledger.models import (
     OpenDirective,
     PadDirective,
     Posting,
+    PostingPrice,
     PriceDirective,
     SourceLocation,
     TransactionHeader,
@@ -601,7 +602,12 @@ def _to_transaction(entry: Any, shared: frozenset[tuple[str, int]] = frozenset()
                 date=p.cost.date,
                 label=p.cost.label,
             )
-        price = _to_amount(p.price) if p.price is not None else None
+        price = None
+        if p.price is not None:
+            number = p.price.number
+            price = PostingPrice(
+                number=Decimal(str(number)) if isinstance(number, Decimal) else None, currency=p.price.currency
+            )
         units = None
         if p.units is not None:
             inferred = cost is not None and cost.date is None and _number_left_open(p)

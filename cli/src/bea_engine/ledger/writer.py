@@ -533,7 +533,12 @@ def format_transaction(directive: TransactionHeader, *, loaded: bool = False) ->
     for p in directive.postings:
         # The schema forbids price and price_total together; a total travels
         # as a stash because a Beancount Posting cannot hold one.
-        price = BcAmount(p.price.number, p.price.currency) if p.price else None
+        # A loaded `@ USD` whose number never resolved prints as written.
+        price = (
+            BcAmount(p.price.number if p.price.number is not None else MISSING, p.price.currency)  # type: ignore[arg-type]
+            if p.price
+            else None
+        )
         meta = ledger_write.metadata_for_write(p.meta)
         if p.price_total is not None:
             price = None
