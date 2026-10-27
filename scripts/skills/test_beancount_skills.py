@@ -1633,6 +1633,38 @@ class TestBeaRecipes(unittest.TestCase):
         history = self.query_recipe("merchant-history", **{"'NETFLIX'": "'NETFLIX.COM'"})
         self.assertEqual([row[0] for row in history], ["2026-01-12", "2026-02-12"])
 
+    def test_profit_by_client_counts_split_parts_once_and_ties_to_the_period(self):
+        self.ledger.write_text(
+            'option "operating_currency" "USD"\n'
+            "2026-01-01 open Assets:Checking USD\n"
+            "2026-01-01 open Income:Services USD\n"
+            "2026-01-01 open Expenses:Software USD\n"
+            '2026-06-02 * "Acme" "Invoice"\n  client: "acme"\n'
+            "  Assets:Checking 1000.00 USD\n  Income:Services -1000.00 USD\n"
+            '2026-06-03 * "Globex" "Invoice"\n  client: "globex"\n'
+            "  Assets:Checking 400.00 USD\n  Income:Services -400.00 USD\n"
+            # One charge split across a client and the business's own overhead.
+            '2026-06-05 * "Figma" "Seats"\n  Expenses:Software 30.00 USD\n    client: "acme"\n'
+            "  Expenses:Software 20.00 USD\n  Assets:Checking -50.00 USD\n"
+            # Outside the period, so neither read counts it.
+            '2026-07-01 * "Acme" "Invoice"\n  client: "acme"\n'
+            "  Assets:Checking 9.00 USD\n  Income:Services -9.00 USD\n"
+        )
+
+        def amount(total):
+            (position,) = total
+            return Decimal(position["units"]["number"])
+
+        rows = {(row[0], row[1]): amount(row[2]) for row in self.query_recipe("dimension-pnl")}
+        self.assertEqual(rows, {
+            ("acme", "Expenses"): Decimal("30.00"), ("acme", "Income"): Decimal("-1000.00"),
+            ("globex", "Income"): Decimal("-400.00"), (None, "Expenses"): Decimal("20.00"),
+        })
+        totals = {row[0]: amount(row[1]) for row in self.query_recipe("dimension-pnl-tie-out")}
+        for side, total in totals.items():
+            self.assertEqual(sum(v for (_, s), v in rows.items() if s == side), total)
+        self.assertEqual(totals, {"Expenses": Decimal("50.00"), "Income": Decimal("-1400.00")})
+
     def test_period_end_balances_ignore_entries_after_the_period(self):
         self.ledger.write_text(
             'option "operating_currency" "USD"\n'

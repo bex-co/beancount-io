@@ -190,6 +190,28 @@ Rules the prose must obey:
 - **Drivers need postings**: a claimed cause ("the jump is the BEST BUY purchase on 2026-05-28") cites its posting rows. Anything without posting evidence is labelled a **hypothesis**, and when the postings do not support an explanation the answer is **unresolved** — a posting's narration describes what was bought, never why.
 - **Bridges only with inputs**: a price/volume-style split is produced only when the ledger actually holds the quantities and prices it needs, and its components must sum to the actual delta; otherwise report the account/payee movement explanation and stop.
 
+## 10. Profit by client or project
+
+When entries carry the suite's `client:` or `project:` metadata (the Business books convention), report by it with `any_meta`, which reads a posting's own key first and the transaction's otherwise, so a split expense counts each part once under its own value. Income accumulates negative, so a key's profit is the negated sum of its two rows. Swap `'client'` for `'project'` to report by project.
+
+<!-- recipe: dimension-pnl -->
+```sql
+SELECT any_meta('client') AS client, root(account, 1) AS side, sum(weight) AS total
+WHERE account ~ '^(Income|Expenses):' AND date >= 2026-06-01 AND date < 2026-07-01
+GROUP BY client, side ORDER BY client, side
+```
+
+Always show the empty-key rows as **unattributed**, never drop them. The per-key totals plus the unattributed rows must equal the period's totals from this tie-out; quote both outputs:
+
+<!-- recipe: dimension-pnl-tie-out -->
+```sql
+SELECT root(account, 1) AS side, sum(weight) AS total
+WHERE account ~ '^(Income|Expenses):' AND date >= 2026-06-01 AND date < 2026-07-01
+GROUP BY side ORDER BY side
+```
+
+Ledgers with no such metadata answer with one unattributed row per side; say the ledger records no client or project rather than reporting it as one client.
+
 ## Fava pointers
 
 Top expenses / burn → Income Statement (filtered by time); net worth → Balance Sheet / Net Worth chart; holdings → Holdings; per-payee history → Journal with `payee:"NETFLIX"` filter; account balances → Trial Balance. Give the user the Fava path when they want to browse rather than ask again.
