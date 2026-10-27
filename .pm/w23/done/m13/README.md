@@ -1,6 +1,6 @@
 # w23 · m13 — Preview lifecycle mutations with dry_run
 
-**Worker:** worker1 **Goal:** updateLedger and deleteLedger preview on REST, GraphQL, and MCP like every content mutation; collaborator/star ops preview or carry a documented exclusion **Status:** todo (t001–t008 done)
+**Worker:** worker1 **Goal:** updateLedger and deleteLedger preview on REST, GraphQL, and MCP like every content mutation; collaborator/star ops preview or carry a documented exclusion **Status:** done
 
 ## Tasks (in order)
 
@@ -14,7 +14,7 @@
 | t006 | Adoption surface — **DONE** | 20m | t005 |
 | t007 | Simplify — **DONE** | 30m | t006 |
 | t008 | Test coverage — **DONE** | 45m | t006 |
-| t009 | Closeout | 15m | t007, t008 |
+| t009 | Closeout — **DONE** | 15m | t007, t008 |
 
 ## Definition of done
 
