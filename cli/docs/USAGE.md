@@ -1826,7 +1826,10 @@ source behind its quotes in `price_source` / `conversion_source`.
 quantity, proceeds, basis, and gain — with `--from-date / --to-date`
 bounding the sales (both ends inclusive). Rows bucket into held one year or
 less vs more than one year, a bare day count with no tax rules attached;
-splits and transfers carry no price and stay out.
+splits and transfers carry no price and stay out. A closed lot is whatever a
+priced posting actually reduced, long or short: covering a short (or settling
+a costed foreign-currency payable) reports the opening cost as proceeds and
+the cover price as basis, and opening a short realizes nothing.
 
 ```bash
 bea report income-statement --time 2026 --interval quarterly

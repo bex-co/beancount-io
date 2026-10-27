@@ -787,45 +787,54 @@ def _capital_gains(filtered: Any, bounds: tuple[date | None, date | None], ledge
     attached (w22/m4/t001).
     """
     from beancount.core.data import Transaction
+    from beancount.core.inventory import Inventory
     from beancount.core.position import Cost
 
     matches = _report_filter_match(filtered.account, filtered.ledger.root_accounts) if filtered.account else None
     start, end = bounds
     rows: list[dict[str, Any]] = []
+    # A reduction is a posting that shrinks a lot the account already holds,
+    # in either direction: a sale out of a long lot, or a cover (a payment
+    # settling a costed payable) into a short one. Reading only negative
+    # postings dropped every cover and reported each short opening as a sale
+    # (w5/1035), so the lots are tracked from the first entry, whatever the
+    # date bounds, and only what a posting actually closed is reported.
+    held_lots: dict[str, Any] = {}
     for entry in filtered.entries:
         if not isinstance(entry, Transaction):
-            continue
-        if start is not None and entry.date < start:
-            continue
-        if end is not None and entry.date > end:
             continue
         for posting in entry.postings:
             units = posting.units
             cost = posting.cost
+            if units is None or units.number is None or not isinstance(cost, Cost) or cost.number is None:
+                continue
+            lots = held_lots.setdefault(posting.account, Inventory())
+            existing = lots.get((units.currency, cost))
+            before = existing.units.number if existing is not None else Decimal(0)
+            lots.add_position(posting)
+            if before == 0 or (before > 0) == (units.number > 0):
+                continue
             price = posting.price
-            # A booked sale: negative units with a resolved cost and price.
-            # Anything less (an unmatched cost spec, an incomplete posting)
-            # is not a lot the books closed.
-            if (
-                units is None
-                or units.number is None
-                or units.number >= 0
-                or not isinstance(cost, Cost)
-                or cost.number is None
-                or price is None
-                or price.number is None
-            ):
+            # Splits and own-account transfers reduce without a price: they
+            # are movements, not sales.
+            if price is None or price.number is None:
+                continue
+            if (start is not None and entry.date < start) or (end is not None and entry.date > end):
                 continue
             if matches is not None and not matches(posting.account):
                 continue
-            quantity = -units.number
-            proceeds = quantity * price.number
-            basis = quantity * cost.number
+            quantity = min(abs(before), abs(units.number))
+            if before > 0:
+                proceeds = {"number": quantity * price.number, "currency": price.currency}
+                basis = {"number": quantity * cost.number, "currency": cost.currency}
+            else:
+                proceeds = {"number": quantity * cost.number, "currency": cost.currency}
+                basis = {"number": quantity * price.number, "currency": price.currency}
             acquired = cost.date
             held = (entry.date - acquired).days if acquired is not None else None
             # Cost and price currencies always match: the loader refuses a
             # mixed posting before any report sees it (w22/m4/t001).
-            gain = {"number": proceeds - basis, "currency": cost.currency}
+            gain = {"number": proceeds["number"] - basis["number"], "currency": cost.currency}
             rows.append(
                 {
                     "account": posting.account,
@@ -835,8 +844,8 @@ def _capital_gains(filtered: Any, bounds: tuple[date | None, date | None], ledge
                     "held_days": held,
                     "long_held": (held > 365) if held is not None else None,
                     "quantity": {"number": quantity, "currency": units.currency},
-                    "proceeds": {"number": proceeds, "currency": price.currency},
-                    "basis": {"number": basis, "currency": cost.currency},
+                    "proceeds": proceeds,
+                    "basis": basis,
                     "gain": gain,
                 }
             )

@@ -94,7 +94,6 @@
 
 - [1036 — State date bounds in Capital Gains and Cash Flow](./1036.md) — minor CLI metadata gap: correct bounded money keeps full-book or broader-time headings without effective bounds; original/native and exact-window controls pass, checked 2026-10-25.
 
-- [1035 — Classify actual short-position reductions in Capital Gains](./1035.md) — major CLI reporting gap: positive covers and costed EUR payable settlements disappear; negative openings become sales; native/long/receivable controls, checked 2026-10-26.
 
 
 
