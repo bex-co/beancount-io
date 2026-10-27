@@ -516,9 +516,16 @@ def _append(
     into: Path | None = None,
     snapshot: ledger_write.LedgerSnapshot | None = None,
     stages_pad: bool = False,
+    validated: list[str] | None = None,
 ) -> list[str]:
     return ledger_write.append(
-        file_path, list(texts), allow_errors=allow_errors, into=into, snapshot=snapshot, stages_pad=stages_pad
+        file_path,
+        list(texts),
+        allow_errors=allow_errors,
+        into=into,
+        snapshot=snapshot,
+        stages_pad=stages_pad,
+        validated=validated,
     )
 
 
@@ -637,9 +644,12 @@ def write_close(
     allow_errors: bool = False,
     into: Path | None = None,
     snapshot: ledger_write.LedgerSnapshot | None = None,
+    validated: list[str] | None = None,
 ) -> list[str]:
     entry = Close(meta={}, date=directive.date, account=directive.account)
-    return _append(file_path, format_entry(entry), allow_errors=allow_errors, into=into, snapshot=snapshot)
+    return _append(
+        file_path, format_entry(entry), allow_errors=allow_errors, into=into, snapshot=snapshot, validated=validated
+    )
 
 
 def write_balance(

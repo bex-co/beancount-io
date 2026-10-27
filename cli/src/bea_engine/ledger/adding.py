@@ -276,16 +276,21 @@ def _appended(
     allow_errors: bool,
     into: Path | None,
     snapshot: write.LedgerSnapshot | None = None,
+    validated: list[str] | None = None,
 ) -> dict[str, Any]:
     """Append one model-shaped directive; which writer to call follows from its type.
 
-    `snapshot` is the ledger a caller already decided against (balance only):
-    the write then conflicts if the ledger changed since that decision.
+    `snapshot` is the ledger a caller already decided against (balance and
+    close): the write then conflicts if the ledger changed since that decision.
+    `validated` is what `validate_append` already answered for the directive
+    against that snapshot (close only), so the candidate is not loaded again.
     """
     from bea_engine.ledger.reader import metadata_to_json
 
     name = type(directive).__name__.removesuffix("Directive").lower()
-    decided = {} if snapshot is None else {"snapshot": snapshot}
+    decided: dict[str, Any] = {} if snapshot is None else {"snapshot": snapshot}
+    if validated is not None:
+        decided["validated"] = validated
     warnings = getattr(writer, f"write_{name}")(file, directive, allow_errors=allow_errors, into=into, **decided)
     written = directive.model_dump(mode="json")
     # Metadata holds Beancount values, and a plain JSON dump would flatten a
@@ -422,21 +427,60 @@ def _remaining_balance(
     return held, [] if held else _stranded_lots(entries, account, date)
 
 
-def _closed_with(entries: list[Any], options: Any, account: str) -> list[str]:
-    """The descendants a loaded `close_tree` plugin closes along with `account`: opened and not yet closed."""
-    from beancount.core.data import Close, Open
+def _moved_closes(before: list[Any], after: list[Any]) -> list[Any]:
+    """The closes in `after` that take effect only with the write: new ones, or earlier than in `before`.
 
-    if not any(str(name).endswith("close_tree") for name, _ in options.get("plugin") or ()):
-        return []
-    prefix = f"{account}:"
-    opened = {entry.account for entry in entries if isinstance(entry, Open) and entry.account.startswith(prefix)}
-    closed = {entry.account for entry in entries if isinstance(entry, Close)}
-    return sorted(opened - closed)
+    The close_tree plugin regenerates every descendant's close from the
+    explicit closes on each load, so a new close over an empty ancestor can
+    move a funded descendant's generated close from a later date to its own.
+    An account already closed before is therefore not enough to call its close
+    unchanged; its effective date is (w5/1062). A close that keeps its date,
+    explicit or generated, is not the write's doing.
+    """
+    from beancount.core.data import Close
+
+    closed: dict[str, datetime.date] = {}
+    for entry in before:
+        if isinstance(entry, Close):
+            closed[entry.account] = min(entry.date, closed.get(entry.account, entry.date))
+    return [
+        entry
+        for entry in after
+        if isinstance(entry, Close) and (entry.account not in closed or entry.date < closed[entry.account])
+    ]
+
+
+def _funded_close_refusal(
+    entries: list[Any], options: Any, account: str, date: datetime.date, closing: str
+) -> protocol.LedgerError | None:
+    """Why closing `account` on `date` must not go ahead unforced, when `closing` is the close requested."""
+    held, stranded = _remaining_balance(entries, options, account, date)
+    own = account == closing
+    day = date.isoformat()
+    if stranded:
+        subject = f"{account} still holds {', '.join(stranded)} on {day}: the units cancel but the lots do not."
+        remedy = (
+            f"Close those lots with a transaction posting each one's cost, dated on or before {day}, then "
+            f"close {closing}, or pass --force to close {'it' if own else 'them'} with them."
+        )
+    elif held:
+        amounts = ", ".join(f"{_plain(number)} {currency}" for currency, number in sorted(held.items()))
+        subject = f"{account} still holds {amounts} on {day}"
+        subject += "." if own else f", and the close_tree plugin closes it with {closing}."
+        remedy = (
+            f"Move that balance out of {account} with a transaction dated on or before {day}, then close "
+            f"{'it' if own else closing}, or pass --force to close {'it' if own else 'them'} with the balance."
+        )
+    else:
+        return None
+    return protocol.LedgerError(f"{subject} {remedy} Nothing was written.")
 
 
 def _close(
     file: Path, request: dict[str, Any], *, into: Path | None, allow_errors: bool, strict_read: bool
 ) -> dict[str, Any]:
+    from beancount.core.data import Close
+
     from bea_engine import managed_load
     from bea_engine.ledger.models import CloseDirective
 
@@ -445,37 +489,38 @@ def _close(
     snapshot = write.LedgerSnapshot.capture(file)
     snapshot.require_target(write.destination(file, into), into=into)
     entries, _errors, options = managed_load.load_file(file, snapshot=snapshot, check_types=True)
+    if request.get("force"):
+        # Write against the ledger this decision read (w5/115).
+        return _appended(file, directive, allow_errors=allow_errors, into=into, snapshot=snapshot)
     # A close over a balance strands it: later postings to the account are
     # refused and reports keep counting it (w2/092). A ledger that loads
     # check_drained refuses it in validation already, with its own hint, but
-    # only for what the plugin really checks (w5/888). The accounts the
-    # close_tree plugin closes with this one are closed by the same write, so
-    # they are judged the same way (w5/910).
-    if not request.get("force"):
-        day = directive.date.isoformat()
-        for account in [directive.account, *_closed_with(entries, options, directive.account)]:
-            held, stranded = _remaining_balance(entries, options, account, directive.date)
-            own = account == directive.account
-            if stranded:
-                subject = f"{account} still holds {', '.join(stranded)} on {day}: the units cancel but the lots do not."
-                remedy = (
-                    f"Close those lots with a transaction posting each one's cost, dated on or before {day}, then "
-                    f"close {directive.account}, or pass --force to close {'it' if own else 'them'} with them."
-                )
-            elif held:
-                amounts = ", ".join(f"{_plain(number)} {currency}" for currency, number in sorted(held.items()))
-                subject = f"{account} still holds {amounts} on {day}"
-                subject += "." if own else f", and the close_tree plugin closes it with {directive.account}."
-                remedy = (
-                    f"Move that balance out of {account} with a transaction dated on or before {day}, then close "
-                    f"{'it' if own else directive.account}, or pass --force to close {'it' if own else 'them'} with "
-                    "the balance."
-                )
-            else:
-                continue
-            raise protocol.LedgerError(f"{subject} {remedy} Nothing was written.")
-    # Write against the ledger this decision read (w5/115).
-    return _appended(file, directive, allow_errors=allow_errors, into=into, snapshot=snapshot)
+    # only for what the plugin really checks (w5/888).
+    refusal = _funded_close_refusal(entries, options, directive.account, directive.date, directive.account)
+    if refusal is not None:
+        raise refusal
+
+    # The accounts the close_tree plugin closes with this one are closed by the
+    # same write, so they are judged the same way (w5/910), each at the date
+    # the ledger as it would stand closes it: a descendant whose generated
+    # close this write moves earlier is closed by it too (w5/1062).
+    def judge(candidate: list[Any], _staged: dict[Path, Path]) -> None:
+        moved = sorted(
+            (close.account, close.date)
+            for close in _moved_closes(entries, candidate)
+            if close.account != directive.account
+        )
+        for account, date in moved:
+            refusal = _funded_close_refusal(candidate, options, account, date, directive.account)
+            if refusal is not None:
+                raise refusal
+
+    text = writer.format_entry(Close(meta={}, date=directive.date, account=directive.account))
+    validated = write.validate_append(
+        file, [text], allow_errors=allow_errors, into=into, snapshot=snapshot, inspect=judge
+    )
+    # Write against the ledger this decision read (w5/115), without loading it again.
+    return _appended(file, directive, allow_errors=allow_errors, into=into, snapshot=snapshot, validated=validated)
 
 
 # --------------------------------------------------------------------------- #
