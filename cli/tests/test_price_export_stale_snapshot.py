@@ -227,3 +227,47 @@ def test_a_changed_resource_still_refreshes_the_snapshot(tmp_path: Path) -> None
     assert refreshed.returncode == 0, refreshed.stderr
     assert _cash(tmp_path, snap / "main.bean") == _cash(tmp_path, books / "main.bean")
     assert (snap / "keep.txt").read_text() == "Unrelated note.\n"
+
+
+SWITCH_PLUGIN = """from datetime import timedelta
+from decimal import Decimal as D
+from importlib.resources import files
+from beancount.core import amount, data
+__plugins__ = ("fees",)
+
+def fees(entries, options):
+    active = files(__package__).joinpath("active")
+    if not active.joinpath("fee-on").is_dir():
+        return entries, []
+    out = list(entries)
+    for e in entries:
+        if isinstance(e, data.Transaction) and e.narration == "Capital":
+            out.append(data.Transaction(data.new_metadata("<fees>", 0), e.date + timedelta(days=1), "*", None,
+                "Bank fees", frozenset(), frozenset(), [
+                data.Posting("Assets:Cash", amount.Amount(D("-10"), "USD"), None, None, None, None),
+                data.Posting("Expenses:Fees", amount.Amount(D("10"), "USD"), None, None, None, None)]))
+    return out, []
+"""
+
+
+@pytest.mark.parametrize("retire", ["remove", "rename"])
+def test_an_empty_directory_retired_from_the_source_package_is_refused(tmp_path: Path, retire: str) -> None:
+    """A removed empty `active/fee-on/` stayed in the copy and kept its fee on (w5/1065)."""
+    books = tmp_path / "books"
+    switch = books / "qa_fee_rules" / "active" / "fee-on"
+    switch.mkdir(parents=True)
+    (books / "main.bean").write_text(FEE_ROOT)
+    (books / "qa_fee_rules" / "__init__.py").write_text(SWITCH_PLUGIN)
+    snap = tmp_path / "snapshot"
+    assert _bea(tmp_path, "-f", str(books / "main.bean"), "price", "export", "-o", str(snap)).returncode == 0
+    if retire == "remove":
+        switch.rmdir()
+    else:
+        switch.rename(switch.with_name("fee-off"))
+    before = sorted(str(p.relative_to(snap)) for p in snap.rglob("*") if "__pycache__" not in p.parts)
+
+    refreshed = _bea(tmp_path, "-f", str(books / "main.bean"), "price", "export", "-o", str(snap), "--force")
+
+    assert refreshed.returncode == 2, refreshed.stdout
+    assert str(snap / "qa_fee_rules" / "active" / "fee-on") in refreshed.stderr
+    assert sorted(str(p.relative_to(snap)) for p in snap.rglob("*") if "__pycache__" not in p.parts) == before

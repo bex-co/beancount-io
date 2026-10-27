@@ -2032,6 +2032,16 @@ def export_portable(
     # snapshot's plugin: a retired fee rule kept booking (w5/929). Unrelated
     # files elsewhere in the output are not the export's to judge.
     planned_names = {_name_key(dest) for dest in planned}
+    # Directories too: an empty `rules/fee-on/` the source has since removed
+    # stayed in the copy, and a plugin enabling rules by directory still
+    # booked its fee (w5/1065). Every directory a planned file or planned
+    # empty directory needs is current.
+    planned_names |= {
+        _name_key(directory)
+        for dest in [*planned, *package_directories]
+        for directory in (dest, *dest.parents)
+        if directory.is_relative_to(target)
+    }
     stale = sorted(
         path
         for package in packages
@@ -2040,7 +2050,7 @@ def export_portable(
         if _name_key(path) not in planned_names
     )
     if stale:
-        more = f" ({len(stale)} files in all)" if len(stale) > 1 else ""
+        more = f" ({len(stale)} entries in all)" if len(stale) > 1 else ""
         raise UsageError(
             f"Cannot export into {target}: {stale[0]} is left from an earlier copy of a plugin package and is no "
             f"longer in the source{more}; the refreshed snapshot's plugin would still read it. Remove it or choose "
@@ -2382,12 +2392,12 @@ def _package_files(package: Path, top: str) -> list[Path]:
 
 
 def _package_members(package: Path) -> list[Path]:
-    """The files an exported package copy holds, bytecode caches aside."""
+    """The files and directories an exported package copy holds, bytecode caches aside."""
     return [
         Path(directory, name)
         for directory, subdirectories, names in os.walk(package)
         if "__pycache__" not in Path(directory).relative_to(package).parts
-        for name in names
+        for name in [*names, *(sub for sub in subdirectories if sub != "__pycache__")]
         if not name.endswith((".pyc", ".pyo"))
     ]
 

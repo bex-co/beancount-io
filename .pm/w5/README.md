@@ -38,7 +38,6 @@
 
 - [1066 — Preserve dateless lots in Beancount query exports](./1066.md) — minor CLI export gap: PRINT invents acquisition dates and can write an invalid strict-booking copy; 31 fresh profiles, 198 CLI commands and 91 native loads; completed 1018 controls pass, checked 2026-10-27.
 
-- [1065 — Refuse stale empty rule directories in refreshed snapshots](./1065.md) — major CLI residual: retired directory keeps10-unit fee despite source-identical files, Cash970 vs980; root/included USD/EUR and full completed929 controls checked2026-10-27.
 
 
 - [1063 — Keep funded-close checks where check_drained is ineffective](./1063.md) — minor shared CLI guard/advisory gap: missing child assertion or passing aggregatezero hides own100USD; original888DoD passes, checked2026-10-27.
