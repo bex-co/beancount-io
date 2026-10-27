@@ -82,7 +82,6 @@
 
 - [1044 — Return partial transactions with unresolved posting prices](./1044.md) — minor CLI read crash: MISSING price becomes Decimal class text and breaks JSON/table/details despite allow-errors; native/partial controls checked 2026-10-25.
 
-- [1043 — Skip unresolved-price reductions in partial gains](./1043.md) — minor CLI report crash: allow-errors still multiplies a Decimal by MISSING; complete gains/date-slice/zero-price controls checked 2026-10-25.
 
 
 

@@ -806,7 +806,12 @@ def _capital_gains(filtered: Any, bounds: tuple[date | None, date | None], ledge
         for posting in entry.postings:
             units = posting.units
             cost = posting.cost
-            if units is None or units.number is None or not isinstance(cost, Cost) or cost.number is None:
+            if (
+                units is None
+                or not isinstance(units.number, Decimal)
+                or not isinstance(cost, Cost)
+                or not isinstance(cost.number, Decimal)
+            ):
                 continue
             lots = held_lots.setdefault(posting.account, Inventory())
             existing = lots.get((units.currency, cost))
@@ -816,8 +821,10 @@ def _capital_gains(filtered: Any, bounds: tuple[date | None, date | None], ledge
                 continue
             price = posting.price
             # Splits and own-account transfers reduce without a price: they
-            # are movements, not sales.
-            if price is None or price.number is None:
+            # are movements, not sales. Nor does an unfinished `@ USD` in a
+            # partial read, whose number is the parser's MISSING sentinel and
+            # crashed the multiplication (w5/1043).
+            if price is None or not isinstance(price.number, Decimal):
                 continue
             if (start is not None and entry.date < start) or (end is not None and entry.date > end):
                 continue
