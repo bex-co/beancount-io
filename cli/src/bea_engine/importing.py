@@ -1920,11 +1920,23 @@ def _directive_key(entry: Any, base: Path | None = None) -> str:
     the importer's spelling resolved against the destination file (`base`) the
     same lexical way (w5/917).
     """
-    from beancount.core.data import Document, Open
+    from beancount.core.amount import Amount
+    from beancount.core.data import Balance, Document, Open
+
+    def unsigned(value: Any) -> Any:
+        # The parser drops a zero's sign, so `-0.00` written comes back `0.00`
+        # and an unchanged balance, tolerance or note conflicted with, or was
+        # appended beside, its own copy (w5/1023). Its precision still counts.
+        return value.copy_abs() if isinstance(value, Decimal) and value.is_zero() else value
 
     meta = getattr(entry, "meta", None)
     if meta:
-        entry = entry._replace(meta={key: meta[key] for key in sorted(meta)})
+        entry = entry._replace(meta={key: unsigned(meta[key]) for key in sorted(meta)})
+    if isinstance(entry, Balance):
+        amount = entry.amount
+        if isinstance(amount, Amount):
+            amount = Amount(unsigned(amount.number), amount.currency)
+        entry = entry._replace(amount=amount, tolerance=unsigned(entry.tolerance))
     if isinstance(entry, Open) and entry.currencies:
         entry = entry._replace(currencies=sorted(set(entry.currencies)))
     if isinstance(entry, Document) and base is not None:
