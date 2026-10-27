@@ -11,19 +11,8 @@ import {
 } from "@/features/ledger/setup/build-ledger";
 import { v1Route } from "@/server/rest/v1-route";
 import { json } from "@/server/rest/v1-schemas";
-import { ledgerPathSchema, ledgerIdOf } from "./schemas";
-import {
-  DRY_RUN_NAMES,
-  resolveFlagAlias,
-} from "@/features/ledger/utils/flag-alias";
-import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
-
-/**
- * REST null tolerance: an explicit null on an optional field means the
- * same as omitting it, normalized once here so every field spells it alike.
- */
-const nullToUndefined = <Schema extends z.ZodTypeAny>(schema: Schema) =>
-  schema.nullish().transform((value) => value ?? undefined);
+import { ledgerPathSchema, ledgerIdOf, dryRunBody } from "./schemas";
+import { withResolvedPreview } from "@/features/ledger/utils/flag-alias";
 import {
   NEW_LEDGER_NAME_PATTERN,
   newLedgerNameRule,
@@ -136,24 +125,12 @@ export const ledgerUpdateInput = z
       .describe(
         "true makes the ledger visible only to its owner and collaborators; false makes it public, readable by anyone; omitted leaves it as it is.",
       ),
-    dryRun: nullToUndefined(z.boolean()).optional().openapi({
-      description: PREVIEW_FLAG_DESCRIPTION,
-    }),
-    // Twin (w23/m9/t002): MCP spells it dry_run.
-    dry_run: nullToUndefined(z.boolean()).optional().openapi({
-      description: "Alias of dryRun, as MCP spells it.",
-    }),
+    ...dryRunBody,
   })
   .strict();
 export const ledgerDeleteInput = z
   .object({
-    dryRun: nullToUndefined(z.boolean()).optional().openapi({
-      description: PREVIEW_FLAG_DESCRIPTION,
-    }),
-    // Twin (w23/m9/t002): MCP spells it dry_run.
-    dry_run: nullToUndefined(z.boolean()).optional().openapi({
-      description: "Alias of dryRun, as MCP spells it.",
-    }),
+    ...dryRunBody,
   })
   .strict();
 const ledgerDeletePreviewSchema = z
@@ -283,19 +260,10 @@ export const LEDGER_LIFECYCLE_ROUTES = [
     body: ledgerUpdateInput,
     responses: { 200: json("Updated ledger", ledgerResultSchema) },
     handler: async ({ layers }, { identity, params, body }) => {
-      // The workflow sees its own contract only: the twins fold into dryRun
-      // and the alias key is dropped (w23/m9/t002).
-      const { dry_run, ...rest } = body;
       return layers.workflows.ledger.updateLedger({
         identity,
         ledgerId: ledgerIdOf(params),
-        input: {
-          ...rest,
-          dryRun: resolveFlagAlias(
-            { primary: dry_run, legacy: rest.dryRun },
-            DRY_RUN_NAMES,
-          ),
-        },
+        input: withResolvedPreview(body),
       });
     },
   }),
@@ -312,19 +280,10 @@ export const LEDGER_LIFECYCLE_ROUTES = [
       200: json("Deleted ledger identifier", ledgerDeleteResultSchema),
     },
     handler: async ({ layers }, { identity, params, body }) => {
-      // The workflow sees its own contract only: the twins fold into dryRun
-      // and the alias key is dropped (w23/m9/t002).
-      const { dry_run, ...rest } = body;
       return layers.workflows.ledger.deleteLedger({
         identity,
         ledgerId: ledgerIdOf(params),
-        input: {
-          ...rest,
-          dryRun: resolveFlagAlias(
-            { primary: dry_run, legacy: rest.dryRun },
-            DRY_RUN_NAMES,
-          ),
-        },
+        input: withResolvedPreview(body),
       });
     },
   }),

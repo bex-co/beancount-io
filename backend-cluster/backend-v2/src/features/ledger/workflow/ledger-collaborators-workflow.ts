@@ -598,16 +598,15 @@ export class LedgerCollaboratorsWorkflow implements ILedgerCollaboratorsWorkflow
     const { identity, ledgerId, input } = params;
     await this.authorizeLeave(identity, ledgerId);
     const userId = identity.userId;
-    const { favaUser } = await this.favaClientFactory.getApiContext(userId);
 
     // The preview renders the would-be self-removal under leave authority;
     // nothing below the preview branch runs — the grant stays (w23/m13/t004).
     if (input?.dryRun === true) {
       const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
-      const favaApiClient = await this.favaClientFactory.getPublicApiClient(
-        ledgerId,
-        userId,
-      );
+      const [{ favaUser }, favaApiClient] = await Promise.all([
+        this.favaClientFactory.getApiContext(userId),
+        this.favaClientFactory.getPublicApiClient(ledgerId, userId),
+      ]);
       const current = await this.readCurrentPermission(
         favaApiClient,
         ledgerOwner,
@@ -632,6 +631,7 @@ export class LedgerCollaboratorsWorkflow implements ILedgerCollaboratorsWorkflow
       };
     }
 
+    const { favaUser } = await this.favaClientFactory.getApiContext(userId);
     const favaAdminApiClient = this.favaClientFactory.getAdminClient();
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
 

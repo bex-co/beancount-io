@@ -38,6 +38,23 @@ export function resolveFlagAlias(
 }
 
 /**
+ * The workflow's preview input from one parsed body: the twins fold into a
+ * single `dryRun`, the alias key dropped (w23/m13/t007). REST and MCP
+ * handlers pass their whole body; both spellings keep working alike.
+ */
+export function previewFlagInput(body: {
+  dry_run?: boolean | null;
+  dryRun?: boolean | null;
+}): { dryRun: boolean } {
+  return {
+    dryRun: resolveFlagAlias(
+      { primary: body.dry_run, legacy: body.dryRun },
+      DRY_RUN_NAMES,
+    ),
+  };
+}
+
+/**
  * Fold the `dry_run` alias into `dryRun` (w23/m9/t002), dropping the alias
  * key so the workflow sees its own contract only.
  */

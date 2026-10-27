@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 import type { ServiceLayer } from "@/foundation/composition";
 import type { ILLMService } from "@/features/llm/service/llm-service";
 import type { ILedgerReceiptWorkflow } from "@/features/ledger/workflow/ledger-receipt-workflow";
@@ -216,4 +217,29 @@ export function mcpOutputSchema(
     result: success.shape.result.optional(),
     error: mcpErrorSchema.optional(),
   });
+}
+
+/**
+ * The m7 preview flag twins as MCP words them (w23/m9/t002): `dry_run` is
+ * primary here, `dryRun` the alias — the reverse of REST's wording, which
+ * each tool's `.extend` overrides.
+ */
+export const mcpDryRunTwins = {
+  dry_run: z.boolean().optional().describe(PREVIEW_FLAG_DESCRIPTION),
+  dryRun: z
+    .boolean()
+    .optional()
+    .describe("Alias of dry_run, as REST and GraphQL spell it."),
+};
+
+/**
+ * Reword one workflow result into the MCP preview dialect (w23/m13/t007):
+ * the output echoes `dry_run`, not the workflow's `dryRun`, like every m7
+ * content preview — one preview dialect on MCP, not one per tool family.
+ */
+export function withMcpDryRunEcho<T extends { dryRun?: boolean }>(
+  result: T,
+): Omit<T, "dryRun"> & { dry_run?: boolean } {
+  const { dryRun: echoed, ...rest } = result;
+  return { ...rest, dry_run: echoed };
 }

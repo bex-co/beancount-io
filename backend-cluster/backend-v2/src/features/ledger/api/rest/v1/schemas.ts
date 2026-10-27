@@ -1,5 +1,6 @@
 import { z } from "@/shared/zod-openapi-setup";
 import { JOURNAL_FILTER_DESCRIPTION } from "@/features/ledger/utils/journal-filter-description";
+import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 import { createLedgerId } from "@/shared/str";
 import {
   LEDGER_OWNER_PATTERN,
@@ -38,6 +39,27 @@ export type LedgerPath = z.infer<typeof ledgerPathSchema>;
 /** `owner/name` from the path, in the form the service layer takes. */
 export const ledgerIdOf = (params: LedgerPath): string =>
   createLedgerId(params.owner, params.name);
+
+/**
+ * REST null tolerance: an explicit null on an optional field means the
+ * same as omitting it, normalized once here so every field spells it alike.
+ */
+const nullToUndefined = <Schema extends z.ZodTypeAny>(schema: Schema) =>
+  schema.nullish().transform((value) => value ?? undefined);
+
+/**
+ * The m7 preview flag twins, spread into each previewable mutation input:
+ * `dryRun` is primary on REST, `dry_run` the alias MCP pastes in.
+ */
+export const dryRunBody = {
+  dryRun: nullToUndefined(z.boolean()).optional().openapi({
+    description: PREVIEW_FLAG_DESCRIPTION,
+  }),
+  // Twin (w23/m9/t002): MCP spells it dry_run.
+  dry_run: nullToUndefined(z.boolean()).optional().openapi({
+    description: "Alias of dryRun, as MCP spells it.",
+  }),
+};
 
 /** Fava's own narrowing expressions, as `/journal` already publishes them. */
 export const filterQuerySchema = z.object({

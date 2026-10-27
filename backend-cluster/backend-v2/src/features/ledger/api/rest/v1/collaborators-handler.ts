@@ -2,30 +2,8 @@ import { z } from "@/shared/zod-openapi-setup";
 import { HOST_PAGE_MAX } from "@/shared/host-page";
 import { v1Route } from "@/server/rest/v1-route";
 import { json } from "@/server/rest/v1-schemas";
-import { ledgerPathSchema, ledgerIdOf } from "./schemas";
-import {
-  DRY_RUN_NAMES,
-  resolveFlagAlias,
-} from "@/features/ledger/utils/flag-alias";
-import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
-
-/**
- * REST null tolerance: an explicit null on an optional field means the
- * same as omitting it, normalized once here so every field spells it alike.
- */
-const nullToUndefined = <Schema extends z.ZodTypeAny>(schema: Schema) =>
-  schema.nullish().transform((value) => value ?? undefined);
-
-/** The m7 preview flag twins, spread into each collaborator mutation input. */
-const dryRunBody = {
-  dryRun: nullToUndefined(z.boolean()).optional().openapi({
-    description: PREVIEW_FLAG_DESCRIPTION,
-  }),
-  // Twin (w23/m9/t002): MCP spells it dry_run.
-  dry_run: nullToUndefined(z.boolean()).optional().openapi({
-    description: "Alias of dryRun, as MCP spells it.",
-  }),
-};
+import { ledgerPathSchema, ledgerIdOf, dryRunBody } from "./schemas";
+import { previewFlagInput } from "@/features/ledger/utils/flag-alias";
 
 const userSchema = z.object({
   id: z.number().optional(),
@@ -156,20 +134,12 @@ export const COLLABORATOR_ROUTES = [
       200: json("Membership update result", collaboratorResultSchema),
     },
     handler: async ({ layers }, { identity, params, body }) => {
-      // The workflow sees its own contract only: the twins fold into dryRun
-      // and the alias key is dropped (w23/m9/t002).
-      const { dry_run, dryRun, ...rest } = body;
       return layers.workflows.ledgerCollaborators.addOrUpdateCollaborator({
         identity,
         ledgerId: ledgerIdOf(params),
         collaborator: params.collaborator,
-        permission: rest.permission ?? undefined,
-        input: {
-          dryRun: resolveFlagAlias(
-            { primary: dry_run, legacy: dryRun },
-            DRY_RUN_NAMES,
-          ),
-        },
+        permission: body.permission ?? undefined,
+        input: previewFlagInput(body),
       });
     },
   }),
@@ -185,19 +155,11 @@ export const COLLABORATOR_ROUTES = [
       200: json("Membership removal result", collaboratorResultSchema),
     },
     handler: async ({ layers }, { identity, params, body }) => {
-      // The workflow sees its own contract only: the twins fold into dryRun
-      // and the alias key is dropped (w23/m9/t002).
-      const { dry_run, dryRun } = body;
       return layers.workflows.ledgerCollaborators.deleteCollaborator({
         identity,
         ledgerId: ledgerIdOf(params),
         collaborator: params.collaborator,
-        input: {
-          dryRun: resolveFlagAlias(
-            { primary: dry_run, legacy: dryRun },
-            DRY_RUN_NAMES,
-          ),
-        },
+        input: previewFlagInput(body),
       });
     },
   }),
@@ -211,18 +173,10 @@ export const COLLABORATOR_ROUTES = [
     body: collaboratorLeaveInput,
     responses: { 200: json("Self-removal result", collaboratorResultSchema) },
     handler: async ({ layers }, { identity, params, body }) => {
-      // The workflow sees its own contract only: the twins fold into dryRun
-      // and the alias key is dropped (w23/m9/t002).
-      const { dry_run, dryRun } = body;
       return layers.workflows.ledgerCollaborators.leaveLedger({
         identity,
         ledgerId: ledgerIdOf(params),
-        input: {
-          dryRun: resolveFlagAlias(
-            { primary: dry_run, legacy: dryRun },
-            DRY_RUN_NAMES,
-          ),
-        },
+        input: previewFlagInput(body),
       });
     },
   }),

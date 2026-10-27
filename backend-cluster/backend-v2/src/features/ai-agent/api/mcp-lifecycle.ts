@@ -8,17 +8,18 @@ import {
   ledgerPreviewResultSchema,
   ledgerResultSchema,
 } from "@/features/ledger/api/rest/v1/lifecycle-handler";
-import {
-  DRY_RUN_NAMES,
-  resolveFlagAlias,
-} from "@/features/ledger/utils/flag-alias";
-import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
+import { withResolvedPreview } from "@/features/ledger/utils/flag-alias";
 import {
   type McpRequestContext,
   ledgerSelection,
   resolveMcpLedger,
 } from "./mcp-context";
-import { mcpOutputSchema, toolOutputSchema } from "../tools/types";
+import {
+  mcpOutputSchema,
+  toolOutputSchema,
+  mcpDryRunTwins,
+  withMcpDryRunEcho,
+} from "../tools/types";
 /**
  * One MCP tool per lifecycle operation (ADR 019, 2026-10-18; w1/m38), each
  * taking exactly REST's input for that operation plus the ledger target.
@@ -28,23 +29,11 @@ export const LIFECYCLE_OPERATION_SCHEMAS = {
   preview: ledgerPreviewInput,
   update: ledgerUpdateInput.extend({
     ledger: ledgerSelection,
-    // MCP-worded twins (w23/m9/t002): dry_run is primary here, dryRun the
-    // alias — the reverse of REST's wording, which this overrides.
-    dry_run: z.boolean().optional().describe(PREVIEW_FLAG_DESCRIPTION),
-    dryRun: z
-      .boolean()
-      .optional()
-      .describe("Alias of dry_run, as REST and GraphQL spell it."),
+    ...mcpDryRunTwins,
   }),
   delete: ledgerDeleteInput.extend({
     ledger: ledgerSelection,
-    // MCP-worded twins (w23/m9/t002): dry_run is primary here, dryRun the
-    // alias — the reverse of REST's wording, which this overrides.
-    dry_run: z.boolean().optional().describe(PREVIEW_FLAG_DESCRIPTION),
-    dryRun: z
-      .boolean()
-      .optional()
-      .describe("Alias of dry_run, as REST and GraphQL spell it."),
+    ...mcpDryRunTwins,
   }),
 } as const;
 export const lifecycleToolOutput = mcpOutputSchema(
@@ -99,38 +88,23 @@ export const LIFECYCLE_EXECUTORS = {
     }),
   }),
   update: async (context: McpRequestContext, input: unknown) => {
-    const { ledger, dry_run, dryRun, ...payload } =
+    const { ledger, ...rest } =
       LIFECYCLE_OPERATION_SCHEMAS.update.parse(input);
     const result = await context.ledgerWorkflow.updateLedger({
       identity: context.identity,
       ledgerId: resolveMcpLedger(context, ledger),
-      input: {
-        ...payload,
-        dryRun: resolveFlagAlias(
-          { primary: dry_run, legacy: dryRun },
-          DRY_RUN_NAMES,
-        ),
-      },
+      input: withResolvedPreview(rest),
     });
-    // The MCP output echoes dry_run, not the workflow's dryRun (w23/m13/t002).
-    const { dryRun: echoed, ...rest } = result;
-    return { ok: true, result: { ...rest, dry_run: echoed } };
+    return { ok: true, result: withMcpDryRunEcho(result) };
   },
   delete: async (context: McpRequestContext, input: unknown) => {
-    const { ledger, dry_run, dryRun } =
+    const { ledger, ...rest } =
       LIFECYCLE_OPERATION_SCHEMAS.delete.parse(input);
     const result = await context.ledgerWorkflow.deleteLedger({
       identity: context.identity,
       ledgerId: resolveMcpLedger(context, ledger),
-      input: {
-        dryRun: resolveFlagAlias(
-          { primary: dry_run, legacy: dryRun },
-          DRY_RUN_NAMES,
-        ),
-      },
+      input: withResolvedPreview(rest),
     });
-    // The MCP output echoes dry_run, not the workflow's dryRun (w23/m13/t003).
-    const { dryRun: echoed, ...rest } = result;
-    return { ok: true, result: { ...rest, dry_run: echoed } };
+    return { ok: true, result: withMcpDryRunEcho(result) };
   },
 };
