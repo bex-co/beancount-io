@@ -694,7 +694,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     title: "Star or Unstar a Ledger",
     annotations: IDEMPOTENT_WRITE,
     description:
-      "Set starred:true to star a ledger or false to unstar it for the authenticated user. ledger selects owner/name and defaults to the credential pin.",
+      "Set starred:true to star a ledger or false to unstar it for the authenticated user. ledger selects owner/name and defaults to the credential pin. No dry_run: starring is an instantly reversible personal toggle, so there is nothing worth previewing.",
     inputSchema: ledgerStarInput,
     outputSchema: ledgerStarOutput,
     execute: executeLedgerStar,
@@ -862,7 +862,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     title: "Add or Update Ledger Collaborator",
     annotations: IDEMPOTENT_DESTRUCTIVE,
     description:
-      "Add a collaborator to a ledger, or change an existing collaborator's permission (read, write, or admin).",
+      "Add a collaborator to a ledger, or change an existing collaborator's permission (read, write, or admin); dry_run previews without committing, rendering the would-be grant.",
     inputSchema: COLLABORATOR_OPERATION_SCHEMAS.update,
     outputSchema: collaboratorToolOutput,
     execute: COLLABORATOR_EXECUTORS.update,
@@ -871,7 +871,8 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     name: "removeLedgerCollaborator",
     title: "Remove Ledger Collaborator",
     annotations: DESTRUCTIVE,
-    description: "Remove a collaborator's access to a ledger.",
+    description:
+      "Remove a collaborator's access to a ledger; dry_run previews without committing, rendering the would-be revocation.",
     inputSchema: COLLABORATOR_OPERATION_SCHEMAS.delete,
     outputSchema: collaboratorToolOutput,
     execute: COLLABORATOR_EXECUTORS.delete,
@@ -881,7 +882,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     title: "Leave Ledger",
     annotations: DESTRUCTIVE,
     description:
-      "Remove the authenticated user's own access to a ledger they collaborate on.",
+      "Remove the authenticated user's own access to a ledger they collaborate on; dry_run previews without committing, rendering the would-be self-removal.",
     inputSchema: COLLABORATOR_OPERATION_SCHEMAS.leave,
     outputSchema: collaboratorToolOutput,
     execute: COLLABORATOR_EXECUTORS.leave,

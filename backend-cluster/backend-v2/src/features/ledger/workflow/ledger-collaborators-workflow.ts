@@ -104,19 +104,40 @@ export type CollaboratorPermissionData = {
   };
 };
 
+/**
+ * What a collaborator mutation preview renders (w23/m13/t004): whose access
+ * would change, from what to what. `current` is null when they hold no
+ * grant; `requested` is null for removals.
+ */
+type CollaboratorPreview = {
+  collaborator: string;
+  current: "read" | "write" | "admin" | null;
+  requested: "read" | "write" | "admin" | null;
+  warnings: string[];
+};
+
+export type CollaboratorMutationResult = {
+  success: boolean;
+  message?: string;
+  dryRun?: boolean;
+  preview?: CollaboratorPreview;
+};
+
 export interface ILedgerCollaboratorsWorkflow {
   addOrUpdateCollaborator(params: {
     identity: Identity;
     ledgerId: string;
     collaborator: string;
     permission?: "read" | "write" | "admin";
-  }): Promise<{ success: boolean; message?: string }>;
+    input?: { dryRun?: boolean };
+  }): Promise<CollaboratorMutationResult>;
 
   deleteCollaborator(params: {
     identity: Identity;
     ledgerId: string;
     collaborator: string;
-  }): Promise<{ success: boolean; message?: string }>;
+    input?: { dryRun?: boolean };
+  }): Promise<CollaboratorMutationResult>;
 
   listCollaborators(params: {
     identity: Identity;
@@ -134,8 +155,13 @@ export interface ILedgerCollaboratorsWorkflow {
   leaveLedger(params: {
     identity: Identity;
     ledgerId: string;
-  }): Promise<{ success: boolean; message?: string }>;
+    input?: { dryRun?: boolean };
+  }): Promise<CollaboratorMutationResult>;
 }
+
+type FavaPublicClient = Awaited<
+  ReturnType<IFavaClientFactory["getPublicApiClient"]>
+>;
 
 export class LedgerCollaboratorsWorkflow implements ILedgerCollaboratorsWorkflow {
   constructor(
@@ -145,6 +171,86 @@ export class LedgerCollaboratorsWorkflow implements ILedgerCollaboratorsWorkflow
     private readonly models: Pick<IModels, "user">,
     private readonly db: DbExecutor,
   ) {}
+
+  /**
+   * Every collaborator on the ledger, for the limit check and for previews
+   * to tell a new grant from a permission change. A list that cannot be
+   * read refuses the change rather than skipping the limit.
+   */
+  private async listAllMembers(
+    favaApiClient: FavaPublicClient,
+    ledgerOwner: string,
+    ledgerName: string,
+  ) {
+    return readGiteaPages((query) =>
+      unwrapFavaResponse(
+        favaApiClient.collaborators.listLedgerCollaborators(
+          ledgerOwner,
+          ledgerName,
+          query,
+        ),
+        "list collaborators",
+      ),
+    );
+  }
+
+  /**
+   * Best-effort current permission for a preview (w23/m13/t004): the value
+   * when the host answers with one, null when it cannot say — an unknown
+   * user, a non-collaborator, or an unreadable grant all read as "no
+   * confirmed access", and the preview's warnings say so. A preview never
+   * fails on this read; the commit's own checks still apply when it runs.
+   */
+  private async readCurrentPermission(
+    favaApiClient: FavaPublicClient,
+    ledgerOwner: string,
+    ledgerName: string,
+    collaborator: string,
+  ): Promise<"read" | "write" | "admin" | null> {
+    let response;
+    try {
+      response =
+        await favaApiClient.collaborators.getLedgerCollaboratorPermission(
+          ledgerOwner,
+          ledgerName,
+          collaborator,
+        );
+    } catch {
+      return null;
+    }
+    const value = response.data?.success
+      ? response.data.data?.permission
+      : undefined;
+    return value === "read" || value === "write" || value === "admin"
+      ? value
+      : null;
+  }
+
+  /**
+   * The leave authorization with its concealed-denial translation, shared
+   * by the commit and the preview: previewing a leave requires leave
+   * authority, and gets the same real reason when it is missing.
+   */
+  private async authorizeLeave(
+    identity: Identity,
+    ledgerId: string,
+  ): Promise<void> {
+    try {
+      await this.authorization.authorizeOrThrow({
+        principal: identity,
+        action: AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_LEAVE,
+        resource: ledgerResource(ledgerId),
+      });
+    } catch (error) {
+      if (
+        error instanceof DomainError &&
+        error.category === ErrorCategory.NOT_FOUND
+      ) {
+        await this.refuseUnleavable(identity, ledgerId);
+      }
+      throw error;
+    }
+  }
 
   /**
    * The collaborator limit is the ledger owner's plan, whoever adds the
@@ -172,8 +278,9 @@ export class LedgerCollaboratorsWorkflow implements ILedgerCollaboratorsWorkflow
     ledgerId: string;
     collaborator: string;
     permission?: "read" | "write" | "admin";
-  }): Promise<{ success: boolean; message?: string }> {
-    const { identity, ledgerId, collaborator, permission } = params;
+    input?: { dryRun?: boolean };
+  }): Promise<CollaboratorMutationResult> {
+    const { identity, ledgerId, collaborator, permission, input } = params;
     assertCollaboratorName(collaborator);
     await this.authorization.authorizeOrThrow({
       principal: identity,
@@ -189,35 +296,51 @@ export class LedgerCollaboratorsWorkflow implements ILedgerCollaboratorsWorkflow
     ]);
     const { maxCollaboratorsPerLedger: max } = getTierLimits(ownerTier);
 
-    if (max !== -1) {
-      // A list that cannot be read refuses the change rather than skipping
-      // the limit.
-      const existing = await readGiteaPages((query) =>
-        unwrapFavaResponse(
-          favaApiClient.collaborators.listLedgerCollaborators(
+    // Gitea logins are case-insensitive.
+    const is = (login: string | null | undefined, name: string) =>
+      login?.toLowerCase() === name.toLowerCase();
+    const existing =
+      max !== -1
+        ? await this.listAllMembers(favaApiClient, ledgerOwner, ledgerName)
+        : [];
+    const isNew =
+      max === -1 || !existing.some((c) => is(c.login, collaborator));
+
+    // The preview renders the would-be grant — new or changed — under the
+    // commit's authority, and runs the same limit check, so "would grant"
+    // never promises what the commit would refuse (w23/m13/t004). Nothing
+    // below the preview branch runs: no grant, no write of any kind.
+    if (input?.dryRun === true) {
+      const current = isNew
+        ? null
+        : await this.readCurrentPermission(
+            favaApiClient,
             ledgerOwner,
             ledgerName,
-            query,
-          ),
-          "list collaborators",
-        ),
-      );
-      // Gitea logins are case-insensitive.
-      const is = (login: string | null | undefined, name: string) =>
-        login?.toLowerCase() === name.toLowerCase();
-      const isNew = !existing.some((c) => is(c.login, collaborator));
-      const count = existing.filter((c) => !is(c.login, ledgerOwner)).length;
-
-      // Changing an existing collaborator's permission never counts.
-      if (isNew && count >= max) {
-        throw new ResourceLimitReachedError(
-          "Collaborator",
-          max,
-          count,
-          `This ledger's owner is on the ${TIER_DISPLAY_NAMES[ownerTier]} plan, which allows ${max} ${max === 1 ? "collaborator" : "collaborators"} per ledger, and it already has ${count}. The ledger owner can upgrade for more.`,
-        );
-      }
+            collaborator,
+          );
+      const requested = permission ?? null;
+      const warnings = isNew
+        ? [
+            `This would add ${collaborator} to ${ledgerId} with ${requested ?? "the repository default"} access.`,
+            `If ${collaborator} names no known user, applying this would fail.`,
+          ]
+        : [
+            current === null
+              ? `This would grant ${collaborator} ${requested ?? "default"} access to ${ledgerId}, but their current access could not be confirmed.`
+              : `This would change ${collaborator}'s access to ${ledgerId} from ${current} to ${requested ?? current}.`,
+          ];
+      this.assertWithinLimit(ownerTier, max, existing, ledgerOwner, isNew);
+      return {
+        success: true,
+        message: "Preview only; no changes were made.",
+        dryRun: true,
+        preview: { collaborator, current, requested, warnings },
+      };
     }
+
+    // Changing an existing collaborator's permission never counts.
+    this.assertWithinLimit(ownerTier, max, existing, ledgerOwner, isNew);
 
     let response;
     try {
@@ -236,18 +359,46 @@ export class LedgerCollaboratorsWorkflow implements ILedgerCollaboratorsWorkflow
       return {
         success: true,
         message: "Collaborator added/updated successfully",
+        dryRun: false,
       };
     }
 
     throw new InternalServerError("Failed to add/update collaborator");
   }
 
+  /**
+   * The collaborator limit both the commit and the set preview enforce: a
+   * new grant at the cap refuses, whatever the path. Unlimited plans
+   * (`max === -1`) skip the list entirely, as before.
+   */
+  private assertWithinLimit(
+    ownerTier: Parameters<typeof getTierLimits>[0],
+    max: number,
+    existing: readonly { login?: string | null }[],
+    ledgerOwner: string,
+    isNew: boolean,
+  ): void {
+    if (max === -1) return;
+    const is = (login: string | null | undefined, name: string) =>
+      login?.toLowerCase() === name.toLowerCase();
+    const count = existing.filter((c) => !is(c.login, ledgerOwner)).length;
+    if (isNew && count >= max) {
+      throw new ResourceLimitReachedError(
+        "Collaborator",
+        max,
+        count,
+        `This ledger's owner is on the ${TIER_DISPLAY_NAMES[ownerTier]} plan, which allows ${max} ${max === 1 ? "collaborator" : "collaborators"} per ledger, and it already has ${count}. The ledger owner can upgrade for more.`,
+      );
+    }
+  }
+
   async deleteCollaborator(params: {
     identity: Identity;
     ledgerId: string;
     collaborator: string;
-  }): Promise<{ success: boolean; message?: string }> {
-    const { identity, ledgerId, collaborator } = params;
+    input?: { dryRun?: boolean };
+  }): Promise<CollaboratorMutationResult> {
+    const { identity, ledgerId, collaborator, input } = params;
     assertCollaboratorName(collaborator);
     await this.authorization.authorizeOrThrow({
       principal: identity,
@@ -262,6 +413,29 @@ export class LedgerCollaboratorsWorkflow implements ILedgerCollaboratorsWorkflow
       userId,
     );
 
+    // The preview renders the would-be revocation under the commit's
+    // authority; nothing below the preview branch runs — no revocation,
+    // no write of any kind (w23/m13/t004).
+    if (input?.dryRun === true) {
+      const current = await this.readCurrentPermission(
+        favaApiClient,
+        ledgerOwner,
+        ledgerName,
+        collaborator,
+      );
+      const warnings = [
+        current === null
+          ? `This would revoke ${collaborator}'s access to ${ledgerId}, but no current access could be confirmed — the removal may fail if they hold no grant.`
+          : `This would revoke ${collaborator}'s ${current} access to ${ledgerId}.`,
+      ];
+      return {
+        success: true,
+        message: "Preview only; no changes were made.",
+        dryRun: true,
+        preview: { collaborator, current, requested: null, warnings },
+      };
+    }
+
     let response;
     try {
       response = await favaApiClient.collaborators.deleteLedgerCollaborator(
@@ -274,7 +448,11 @@ export class LedgerCollaboratorsWorkflow implements ILedgerCollaboratorsWorkflow
     }
 
     if (response.data?.success) {
-      return { success: true, message: "Collaborator deleted successfully" };
+      return {
+        success: true,
+        message: "Collaborator deleted successfully",
+        dryRun: false,
+      };
     }
 
     throw new InternalServerError("Failed to delete collaborator");
@@ -415,25 +593,45 @@ export class LedgerCollaboratorsWorkflow implements ILedgerCollaboratorsWorkflow
   async leaveLedger(params: {
     identity: Identity;
     ledgerId: string;
-  }): Promise<{ success: boolean; message?: string }> {
-    const { identity, ledgerId } = params;
-    try {
-      await this.authorization.authorizeOrThrow({
-        principal: identity,
-        action: AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_LEAVE,
-        resource: ledgerResource(ledgerId),
-      });
-    } catch (error) {
-      if (
-        error instanceof DomainError &&
-        error.category === ErrorCategory.NOT_FOUND
-      ) {
-        await this.refuseUnleavable(identity, ledgerId);
-      }
-      throw error;
-    }
+    input?: { dryRun?: boolean };
+  }): Promise<CollaboratorMutationResult> {
+    const { identity, ledgerId, input } = params;
+    await this.authorizeLeave(identity, ledgerId);
     const userId = identity.userId;
     const { favaUser } = await this.favaClientFactory.getApiContext(userId);
+
+    // The preview renders the would-be self-removal under leave authority;
+    // nothing below the preview branch runs — the grant stays (w23/m13/t004).
+    if (input?.dryRun === true) {
+      const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
+      const favaApiClient = await this.favaClientFactory.getPublicApiClient(
+        ledgerId,
+        userId,
+      );
+      const current = await this.readCurrentPermission(
+        favaApiClient,
+        ledgerOwner,
+        ledgerName,
+        favaUser.username,
+      );
+      const warnings = [
+        current === null
+          ? `This would remove your (${favaUser.username}) access to ${ledgerId}, but no current access could be confirmed.`
+          : `This would remove your (${favaUser.username}) ${current} access to ${ledgerId}.`,
+      ];
+      return {
+        success: true,
+        message: "Preview only; no changes were made.",
+        dryRun: true,
+        preview: {
+          collaborator: favaUser.username,
+          current,
+          requested: null,
+          warnings,
+        },
+      };
+    }
+
     const favaAdminApiClient = this.favaClientFactory.getAdminClient();
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
 
@@ -448,6 +646,7 @@ export class LedgerCollaboratorsWorkflow implements ILedgerCollaboratorsWorkflow
       return {
         success: true,
         message: "Removed self from repository successfully",
+        dryRun: false,
       };
     }
 

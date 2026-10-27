@@ -3,6 +3,29 @@ import { HOST_PAGE_MAX } from "@/shared/host-page";
 import { v1Route } from "@/server/rest/v1-route";
 import { json } from "@/server/rest/v1-schemas";
 import { ledgerPathSchema, ledgerIdOf } from "./schemas";
+import {
+  DRY_RUN_NAMES,
+  resolveFlagAlias,
+} from "@/features/ledger/utils/flag-alias";
+import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
+
+/**
+ * REST null tolerance: an explicit null on an optional field means the
+ * same as omitting it, normalized once here so every field spells it alike.
+ */
+const nullToUndefined = <Schema extends z.ZodTypeAny>(schema: Schema) =>
+  schema.nullish().transform((value) => value ?? undefined);
+
+/** The m7 preview flag twins, spread into each collaborator mutation input. */
+const dryRunBody = {
+  dryRun: nullToUndefined(z.boolean()).optional().openapi({
+    description: PREVIEW_FLAG_DESCRIPTION,
+  }),
+  // Twin (w23/m9/t002): MCP spells it dry_run.
+  dry_run: nullToUndefined(z.boolean()).optional().openapi({
+    description: "Alias of dryRun, as MCP spells it.",
+  }),
+};
 
 const userSchema = z.object({
   id: z.number().optional(),
@@ -23,9 +46,38 @@ const collaboratorPermissionSchema = z.object({
   roleName: z.string().optional(),
   user: userSchema.optional(),
 });
+const collaboratorPreviewSchema = z
+  .object({
+    collaborator: z.string().openapi({
+      description: "Whose access would change.",
+    }),
+    current: permissionSchema.nullable().openapi({
+      description:
+        "Their current access, null when no grant could be confirmed.",
+    }),
+    requested: permissionSchema.nullable().openapi({
+      description:
+        "The access the call asks for, null for removals and the repository default.",
+    }),
+    warnings: z.array(z.string()).openapi({
+      description: "What would happen, in plain words.",
+    }),
+  })
+  .openapi("CollaboratorPreview", {
+    description:
+      "The would-be access change a collaborator mutation preview renders; present only on previews.",
+  });
 export const collaboratorResultSchema = z.object({
   success: z.boolean(),
   message: z.string().optional(),
+  dryRun: z.boolean().optional().openapi({
+    description:
+      "True when this is a collaborator mutation preview: the checks ran and nothing changed. Commits echo false.",
+  }),
+  preview: collaboratorPreviewSchema.optional().openapi({
+    description:
+      "The rendered would-be access change; present only on previews.",
+  }),
 });
 export const collaboratorListQuery = z
   .object({
@@ -41,12 +93,13 @@ export const collaboratorUpdateInput = z
   .object({
     collaborator: collaboratorName,
     permission: permissionSchema.nullish(),
+    ...dryRunBody,
   })
   .strict();
 export const collaboratorDeleteInput = z
-  .object({ collaborator: collaboratorName })
+  .object({ collaborator: collaboratorName, ...dryRunBody })
   .strict();
-export const collaboratorLeaveInput = z.object({}).strict();
+export const collaboratorLeaveInput = z.object({ ...dryRunBody }).strict();
 const collaboratorPath = ledgerPathSchema.extend({
   collaborator: collaboratorName,
 });
@@ -96,50 +149,81 @@ export const COLLABORATOR_ROUTES = [
     path: "/api-gateway/v1/ledgers/{owner}/{name}/collaborators/{collaborator}",
     summary: "Add or update a ledger collaborator",
     description:
-      "Requires ledger.admin and current permission to change collaborators. Existing collaborator limits apply. An omitted or null permission uses the repository service's default.",
+      "Requires ledger.admin and current permission to change collaborators. Existing collaborator limits apply. An omitted or null permission uses the repository service's default. Pass dryRun to preview the would-be grant without granting anything.",
     params: collaboratorPath,
     body: collaboratorUpdateInput.omit({ collaborator: true }),
     responses: {
       200: json("Membership update result", collaboratorResultSchema),
     },
-    handler: async ({ layers }, { identity, params, body }) =>
-      layers.workflows.ledgerCollaborators.addOrUpdateCollaborator({
+    handler: async ({ layers }, { identity, params, body }) => {
+      // The workflow sees its own contract only: the twins fold into dryRun
+      // and the alias key is dropped (w23/m9/t002).
+      const { dry_run, dryRun, ...rest } = body;
+      return layers.workflows.ledgerCollaborators.addOrUpdateCollaborator({
         identity,
         ledgerId: ledgerIdOf(params),
         collaborator: params.collaborator,
-        permission: body.permission ?? undefined,
-      }),
+        permission: rest.permission ?? undefined,
+        input: {
+          dryRun: resolveFlagAlias(
+            { primary: dry_run, legacy: dryRun },
+            DRY_RUN_NAMES,
+          ),
+        },
+      });
+    },
   }),
   v1Route({
     method: "delete",
     path: "/api-gateway/v1/ledgers/{owner}/{name}/collaborators/{collaborator}",
     summary: "Delete a ledger collaborator",
     description:
-      "Requires ledger.admin and current permission to change collaborators.",
+      "Requires ledger.admin and current permission to change collaborators. Pass dryRun to preview the would-be revocation without revoking anything.",
     params: collaboratorPath,
+    body: collaboratorDeleteInput.omit({ collaborator: true }),
     responses: {
       200: json("Membership removal result", collaboratorResultSchema),
     },
-    handler: async ({ layers }, { identity, params }) =>
-      layers.workflows.ledgerCollaborators.deleteCollaborator({
+    handler: async ({ layers }, { identity, params, body }) => {
+      // The workflow sees its own contract only: the twins fold into dryRun
+      // and the alias key is dropped (w23/m9/t002).
+      const { dry_run, dryRun } = body;
+      return layers.workflows.ledgerCollaborators.deleteCollaborator({
         identity,
         ledgerId: ledgerIdOf(params),
         collaborator: params.collaborator,
-      }),
+        input: {
+          dryRun: resolveFlagAlias(
+            { primary: dry_run, legacy: dryRun },
+            DRY_RUN_NAMES,
+          ),
+        },
+      });
+    },
   }),
   v1Route({
     method: "post",
     path: "/api-gateway/v1/ledgers/{owner}/{name}/leave",
     summary: "Leave a ledger",
     description:
-      "Requires ledger.admin and the current leave relationship. Removes only the authenticated caller from the ledger.",
+      "Requires ledger.admin and the current leave relationship. Removes only the authenticated caller from the ledger. Pass dryRun to preview the would-be self-removal without leaving.",
     params: ledgerPathSchema,
     body: collaboratorLeaveInput,
     responses: { 200: json("Self-removal result", collaboratorResultSchema) },
-    handler: async ({ layers }, { identity, params }) =>
-      layers.workflows.ledgerCollaborators.leaveLedger({
+    handler: async ({ layers }, { identity, params, body }) => {
+      // The workflow sees its own contract only: the twins fold into dryRun
+      // and the alias key is dropped (w23/m9/t002).
+      const { dry_run, dryRun } = body;
+      return layers.workflows.ledgerCollaborators.leaveLedger({
         identity,
         ledgerId: ledgerIdOf(params),
-      }),
+        input: {
+          dryRun: resolveFlagAlias(
+            { primary: dry_run, legacy: dryRun },
+            DRY_RUN_NAMES,
+          ),
+        },
+      });
+    },
   }),
 ];

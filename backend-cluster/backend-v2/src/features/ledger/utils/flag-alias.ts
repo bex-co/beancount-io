@@ -36,3 +36,22 @@ export function resolveFlagAlias(
   }
   return primary ?? legacy ?? false;
 }
+
+/**
+ * Fold the `dry_run` alias into `dryRun` (w23/m9/t002), dropping the alias
+ * key so the workflow sees its own contract only.
+ */
+export function withResolvedPreview<
+  T extends { dryRun?: boolean | null; dry_run?: boolean | null },
+>(input: T): Omit<T, "dry_run"> & { dryRun: boolean } {
+  const { dry_run, ...rest } = input;
+  return {
+    ...rest,
+    // The workflow reads `dryRun === true`, so false and missing agree;
+    // the resolver also reads explicit null as missing.
+    dryRun: resolveFlagAlias(
+      { primary: dry_run, legacy: rest.dryRun },
+      DRY_RUN_NAMES,
+    ),
+  };
+}

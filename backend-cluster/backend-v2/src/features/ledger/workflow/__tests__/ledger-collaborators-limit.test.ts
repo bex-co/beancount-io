@@ -178,4 +178,23 @@ describe("collaborator limit (PRFAQ005 question 21 item 6)", () => {
       expect.objectContaining({ userId: "usr_admin" }),
     );
   });
+
+  it("refuses a set preview at the cap like the commit, so would-grant never overpromises", async () => {
+    collaborators(1); // owner on Free: 1 per ledger, already has 1
+
+    const refusal = workflow.addOrUpdateCollaborator({
+      identity,
+      ledgerId,
+      collaborator: "newcomer",
+      permission: "write",
+      input: { dryRun: true },
+    });
+
+    await expect(refusal).rejects.toBeInstanceOf(ResourceLimitReachedError);
+    await expect(refusal).rejects.toMatchObject({
+      category: "RESOURCE_LIMIT_REACHED",
+      metadata: { resource: "Collaborator", limit: 1, current: 1 },
+    });
+    expect(addOrUpdateLedgerCollaborator).not.toHaveBeenCalled();
+  });
 });

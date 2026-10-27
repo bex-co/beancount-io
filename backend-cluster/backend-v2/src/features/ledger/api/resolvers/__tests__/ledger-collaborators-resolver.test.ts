@@ -198,8 +198,27 @@ describe("LedgerCollaboratorsResolver", () => {
         ledgerId,
         collaborator,
         permission: "write",
+        // w23/m13/t004: the resolver folds the dry_run twin into dryRun,
+        // off when both are missing.
+        input: { dryRun: false },
       });
       expect(result).toEqual(expected);
+    });
+
+    it("folds the dry_run twin into dryRun", async () => {
+      mockCollaboratorsWorkflow.addOrUpdateCollaborator.mockResolvedValue({
+        success: true,
+      });
+
+      await mutationResolver.addOrUpdateLedgerCollaborator(
+        { ledgerId, collaborator, dry_run: true },
+        mockContext,
+      );
+
+      const call = mockCollaboratorsWorkflow.addOrUpdateCollaborator.mock
+        .calls[0][0] as unknown as { input: Record<string, unknown> };
+      expect(call.input).toMatchObject({ dryRun: true });
+      expect(call.input).not.toHaveProperty("dry_run");
     });
 
     it("should pass undefined permission when not provided", async () => {
@@ -220,6 +239,7 @@ describe("LedgerCollaboratorsResolver", () => {
         ledgerId,
         collaborator,
         permission: undefined,
+        input: { dryRun: false },
       });
     });
 
@@ -258,9 +278,26 @@ describe("LedgerCollaboratorsResolver", () => {
           identity,
           ledgerId,
           collaborator,
+          input: { dryRun: false },
         },
       );
       expect(result).toEqual(expected);
+    });
+
+    it("folds the dry_run twin into dryRun", async () => {
+      mockCollaboratorsWorkflow.deleteCollaborator.mockResolvedValue({
+        success: true,
+      });
+
+      await mutationResolver.deleteLedgerCollaborator(
+        { ledgerId, collaborator, dry_run: true },
+        mockContext,
+      );
+
+      const call = mockCollaboratorsWorkflow.deleteCollaborator.mock
+        .calls[0][0] as unknown as { input: Record<string, unknown> };
+      expect(call.input).toMatchObject({ dryRun: true });
+      expect(call.input).not.toHaveProperty("dry_run");
     });
 
     it("should propagate errors thrown by the workflow", async () => {
@@ -295,8 +332,26 @@ describe("LedgerCollaboratorsResolver", () => {
       expect(mockCollaboratorsWorkflow.leaveLedger).toHaveBeenCalledWith({
         identity,
         ledgerId,
+        input: { dryRun: false },
       });
       expect(result).toEqual(expected);
+    });
+
+    it("folds the dry_run twin into dryRun", async () => {
+      mockCollaboratorsWorkflow.leaveLedger.mockResolvedValue({
+        success: true,
+      });
+
+      await mutationResolver.leaveLedger(
+        { ledgerId, dry_run: true },
+        mockContext,
+      );
+
+      const call = mockCollaboratorsWorkflow.leaveLedger.mock.calls[0][0] as unknown as {
+        input: Record<string, unknown>;
+      };
+      expect(call.input).toMatchObject({ dryRun: true });
+      expect(call.input).not.toHaveProperty("dry_run");
     });
 
     it("should propagate errors thrown by the workflow", async () => {

@@ -554,11 +554,18 @@ describe("collaborators through actual adapters, workflow, PDP, and relationship
     async (surface) => {
       const f = await fixture();
       try {
+        // w23/m13/t004: commits echo the flag — dryRun on REST, dry_run on
+        // MCP; this file's GraphQL selection predates the echo.
         expect(await f.write(surface, "update", "new+member", "read")).toEqual({
           failed: false,
           data: {
             success: true,
             message: "Collaborator added/updated successfully",
+            ...(surface === "gql"
+              ? {}
+              : surface === "mcp"
+                ? { dry_run: false }
+                : { dryRun: false }),
           },
         });
         expect(f.members.get("new+member")).toBe("read");
@@ -568,7 +575,15 @@ describe("collaborators through actual adapters, workflow, PDP, and relationship
         expect(f.members.get("new+member")).toBe("admin");
         expect(await f.write(surface, "delete", "bob")).toEqual({
           failed: false,
-          data: { success: true, message: "Collaborator deleted successfully" },
+          data: {
+            success: true,
+            message: "Collaborator deleted successfully",
+            ...(surface === "gql"
+              ? {}
+              : surface === "mcp"
+                ? { dry_run: false }
+                : { dryRun: false }),
+          },
         });
         expect(f.members.has("bob")).toBe(false);
         expect(f.authorize.mock.calls.map(([input]) => input.action)).toEqual([
@@ -965,11 +980,18 @@ describe("collaborators through actual adapters, workflow, PDP, and relationship
     async (surface) => {
       const f = await fixture(token("bob"));
       try {
+        // w23/m13/t004: commits echo the flag — dryRun on REST, dry_run on
+        // MCP; this file's GraphQL selection predates the echo.
         expect(await f.write(surface, "leave")).toEqual({
           failed: false,
           data: {
             success: true,
             message: "Removed self from repository successfully",
+            ...(surface === "gql"
+              ? {}
+              : surface === "mcp"
+                ? { dry_run: false }
+                : { dryRun: false }),
           },
         });
         expect(f.members.has("bob")).toBe(false);
@@ -1008,7 +1030,7 @@ describe("collaborators through actual adapters, workflow, PDP, and relationship
       }
     },
   );
-  it("rejects unknown operations, missing branch inputs, other-ledger targets, and unsupported previews without mutation", async () => {
+  it("rejects unknown operations, missing branch inputs, other-ledger targets, and conflicting preview twins without mutation", async () => {
     const f = await fixture(token("alice", "ledger.admin", "alice/main"));
     try {
       for (const args of [
@@ -1018,7 +1040,14 @@ describe("collaborators through actual adapters, workflow, PDP, and relationship
         { operation: "leave", collaborator: "bob" },
         { operation: "delete", collaborator: "bob", permission: "admin" },
         { operation: "leave", ledger: "other/main" },
-        { operation: "update", collaborator: "bob", dry_run: true },
+        // w23/m13/t004: dry_run alone is a valid preview now (covered in
+        // collaborator-preview-parity); conflicting twins are still refused.
+        {
+          operation: "update",
+          collaborator: "bob",
+          dryRun: true,
+          dry_run: false,
+        },
       ]) {
         const result = await f.client.callTool(perOperation(args));
         expect(result.isError).toBe(true);
@@ -1027,7 +1056,8 @@ describe("collaborators through actual adapters, workflow, PDP, and relationship
         (
           await f.request("collaborators/bob", "PUT", {
             permission: "write",
-            dry_run: true,
+            dryRun: true,
+            dry_run: false,
           })
         ).status,
       ).toBe(400);

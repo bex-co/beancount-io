@@ -198,6 +198,51 @@
         ],
         "description": "The destroy summary; present only on deleteLedger previews."
       },
+      "CollaboratorPreview": {
+        "type": "object",
+        "properties": {
+          "collaborator": {
+            "type": "string",
+            "description": "Whose access would change."
+          },
+          "current": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "read",
+              "write",
+              "admin",
+              null
+            ],
+            "description": "Their current access, null when no grant could be confirmed."
+          },
+          "requested": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "read",
+              "write",
+              "admin",
+              null
+            ],
+            "description": "The access the call asks for, null for removals and the repository default."
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "What would happen, in plain words."
+          }
+        },
+        "required": [
+          "collaborator",
+          "current",
+          "requested",
+          "warnings"
+        ],
+        "description": "The rendered would-be access change; present only on previews."
+      },
       "BqlQuery": {
         "type": "object",
         "properties": {
@@ -6957,7 +7002,7 @@
     "/api-gateway/v1/ledgers/{owner}/{name}/collaborators/{collaborator}": {
       "put": {
         "summary": "Add or update a ledger collaborator",
-        "description": "Requires ledger.admin and current permission to change collaborators. Existing collaborator limits apply. An omitted or null permission uses the repository service's default.",
+        "description": "Requires ledger.admin and current permission to change collaborators. Existing collaborator limits apply. An omitted or null permission uses the repository service's default. Pass dryRun to preview the would-be grant without granting anything.",
         "tags": [
           "Ledger v1"
         ],
@@ -7019,6 +7064,16 @@
                       "admin",
                       null
                     ]
+                  },
+                  "dryRun": {
+                    "type": "boolean",
+                    "nullable": true,
+                    "description": "Run every check and return the preview without committing"
+                  },
+                  "dry_run": {
+                    "type": "boolean",
+                    "nullable": true,
+                    "description": "Alias of dryRun, as MCP spells it."
                   }
                 },
                 "additionalProperties": false
@@ -7039,6 +7094,13 @@
                     },
                     "message": {
                       "type": "string"
+                    },
+                    "dryRun": {
+                      "type": "boolean",
+                      "description": "True when this is a collaborator mutation preview: the checks ran and nothing changed. Commits echo false."
+                    },
+                    "preview": {
+                      "$ref": "#/components/schemas/CollaboratorPreview"
                     }
                   },
                   "required": [
@@ -7142,7 +7204,7 @@
       },
       "delete": {
         "summary": "Delete a ledger collaborator",
-        "description": "Requires ledger.admin and current permission to change collaborators.",
+        "description": "Requires ledger.admin and current permission to change collaborators. Pass dryRun to preview the would-be revocation without revoking anything.",
         "tags": [
           "Ledger v1"
         ],
@@ -7189,6 +7251,28 @@
             "in": "path"
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "dryRun": {
+                    "type": "boolean",
+                    "nullable": true,
+                    "description": "Run every check and return the preview without committing"
+                  },
+                  "dry_run": {
+                    "type": "boolean",
+                    "nullable": true,
+                    "description": "Alias of dryRun, as MCP spells it."
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Membership removal result",
@@ -7202,6 +7286,13 @@
                     },
                     "message": {
                       "type": "string"
+                    },
+                    "dryRun": {
+                      "type": "boolean",
+                      "description": "True when this is a collaborator mutation preview: the checks ran and nothing changed. Commits echo false."
+                    },
+                    "preview": {
+                      "$ref": "#/components/schemas/CollaboratorPreview"
                     }
                   },
                   "required": [
@@ -7307,7 +7398,7 @@
     "/api-gateway/v1/ledgers/{owner}/{name}/leave": {
       "post": {
         "summary": "Leave a ledger",
-        "description": "Requires ledger.admin and the current leave relationship. Removes only the authenticated caller from the ledger.",
+        "description": "Requires ledger.admin and the current leave relationship. Removes only the authenticated caller from the ledger. Pass dryRun to preview the would-be self-removal without leaving.",
         "tags": [
           "Ledger v1"
         ],
@@ -7350,7 +7441,18 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "properties": {},
+                "properties": {
+                  "dryRun": {
+                    "type": "boolean",
+                    "nullable": true,
+                    "description": "Run every check and return the preview without committing"
+                  },
+                  "dry_run": {
+                    "type": "boolean",
+                    "nullable": true,
+                    "description": "Alias of dryRun, as MCP spells it."
+                  }
+                },
                 "additionalProperties": false
               }
             }
@@ -7369,6 +7471,13 @@
                     },
                     "message": {
                       "type": "string"
+                    },
+                    "dryRun": {
+                      "type": "boolean",
+                      "description": "True when this is a collaborator mutation preview: the checks ran and nothing changed. Commits echo false."
+                    },
+                    "preview": {
+                      "$ref": "#/components/schemas/CollaboratorPreview"
                     }
                   },
                   "required": [

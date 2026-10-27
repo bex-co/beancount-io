@@ -15,6 +15,7 @@ import {
 } from "@/server/api/authorization";
 import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
 import { assembleMcpRegistry } from "@/server/api/composition-root";
+import { MCP_TOOLS } from "../mcp-tools";
 import { startV1TestServer } from "@/server/rest/__tests__/v1-test-server";
 import type { Identity } from "@/server/api/identity";
 import type { AppConfig } from "@/config/config";
@@ -165,6 +166,8 @@ async function fixture(caller = identity) {
     write,
     repoGet,
     client,
+    url: rest.url,
+    schema,
     call: async (
       surface: (typeof surfaces)[number],
       starred: boolean,
@@ -335,6 +338,46 @@ describe("ledger star changes through actual transports and live relationship ch
       }
     },
   );
+  it("names the preview exclusion and its rationale in the MCP tool description", async () => {
+    // w23/m13/t004: setLedgerStar is excluded from previews — an instantly
+    // reversible personal toggle with nothing worth previewing. The MCP
+    // refusal of dry_run is pinned below; REST states "No preview." and
+    // refuses the key; GraphQL offers no flag at all.
+    const tool = MCP_TOOLS.find((t) => t.name === "setLedgerStar");
+    expect(tool?.description).toContain("No dry_run");
+    expect(tool?.description).toContain("instantly reversible personal toggle");
+  });
+
+  it("refuses the preview flag on REST and offers none on GraphQL or MCP", async () => {
+    const f = await fixture();
+    try {
+      for (const method of ["PUT", "DELETE"]) {
+        const r = await fetch(`${f.url}/api-gateway/v1/ledgers/ada/books/star`, {
+          method,
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ dryRun: true }),
+        });
+        expect(r.status).toBe(400);
+      }
+      expect(f.write).not.toHaveBeenCalled();
+      for (const method of ["starLedger", "unstarLedger"]) {
+        const r = await graphql({
+          schema: f.schema,
+          source: `mutation{${method}(ledgerId:"ada/books",dryRun:true){success}}`,
+          contextValue: { identity, getCurrentIdentity: () => identity },
+        });
+        expect(r.errors?.length).toBeGreaterThan(0);
+      }
+      const tools = await f.client.listTools();
+      const input = tools.tools.find((t) => t.name === "setLedgerStar")
+        ?.inputSchema as unknown as { properties?: Record<string, unknown> };
+      expect(input.properties).not.toHaveProperty("dry_run");
+      expect(input.properties).not.toHaveProperty("dryRun");
+    } finally {
+      await f.close();
+    }
+  });
+
   it("defaults MCP to the pin and rejects unknown preview arguments", async () => {
     const f = await fixture();
     try {

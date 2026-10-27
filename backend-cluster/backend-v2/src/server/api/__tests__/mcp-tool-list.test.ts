@@ -263,9 +263,13 @@ describe("MCP tool list", () => {
     // measured at 117,221 bytes. The input twins plus updateLedger's own
     // output (the ledger shape echoing dry_run with the rendered preview)
     // are the guidance agents need to preview before committing.
+    //
+    // 116 KB since w23/m13/t004 gave the three collaborator tools the same
+    // dialect: measured at 118,721 bytes. Same guidance, three more tools,
+    // plus the star exclusion rationale.
     const { tools } = await listToolsRaw();
     const bytes = Buffer.byteLength(JSON.stringify(tools), "utf8");
-    expect(bytes).toBeLessThan(115 * 1024);
+    expect(bytes).toBeLessThan(116 * 1024);
   });
 
   // w23/m7/t006: every mutation preview flag is advertised where agents

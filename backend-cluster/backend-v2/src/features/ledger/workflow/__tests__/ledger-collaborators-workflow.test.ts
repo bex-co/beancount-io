@@ -156,6 +156,8 @@ describe("LedgerCollaboratorsWorkflow authorization", () => {
       {
         success: true,
         message: "Removed self from repository successfully",
+        // w23/m13/t004: commits echo the flag off with no preview.
+        dryRun: false,
       },
     );
     expect(deleteLedgerCollaborator).toHaveBeenCalledWith(
@@ -276,4 +278,171 @@ describe("LedgerCollaboratorsWorkflow authorization", () => {
       }),
     ).rejects.toThrow("team is full");
   });
+
+  it("echoes dryRun:false and no preview on a set commit", async () => {
+    const result = await workflow.addOrUpdateCollaborator({
+      identity,
+      ledgerId,
+      collaborator: "newbie",
+      permission: "read",
+    });
+
+    expect(result.dryRun).toBe(false);
+    expect(result.preview).toBeUndefined();
+  });
+
+  it("echoes dryRun:false and no preview on a remove commit", async () => {
+    const result = await workflow.deleteCollaborator({
+      identity,
+      ledgerId,
+      collaborator: "reader",
+    });
+
+    expect(result.dryRun).toBe(false);
+    expect(result.preview).toBeUndefined();
+  });
+
+  it("renders a new grant and grants nothing on a set preview", async () => {
+    const result = await workflow.addOrUpdateCollaborator({
+      identity,
+      ledgerId,
+      collaborator: "newbie",
+      permission: "read",
+      input: { dryRun: true },
+    });
+
+    expect(addOrUpdateLedgerCollaborator).not.toHaveBeenCalled();
+    expect(result.dryRun).toBe(true);
+    expect(result.preview).toMatchObject({
+      collaborator: "newbie",
+      current: null,
+      requested: "read",
+    });
+    expect(result.preview?.warnings).toEqual([
+      "This would add newbie to owner/main with read access.",
+      "If newbie names no known user, applying this would fail.",
+    ]);
+  });
+
+  it("renders a permission change on a set preview for a member", async () => {
+    listLedgerCollaborators.mockResolvedValueOnce({
+      data: { success: true, data: [{ login: "reader" }] },
+    });
+
+    const result = await workflow.addOrUpdateCollaborator({
+      identity,
+      ledgerId,
+      collaborator: "reader",
+      permission: "admin",
+      input: { dryRun: true },
+    });
+
+    expect(addOrUpdateLedgerCollaborator).not.toHaveBeenCalled();
+    expect(result.preview).toMatchObject({
+      collaborator: "reader",
+      current: "write",
+      requested: "admin",
+    });
+    expect(result.preview?.warnings).toEqual([
+      "This would change reader's access to owner/main from write to admin.",
+    ]);
+  });
+
+  it("renders the revocation and revokes nothing on a remove preview", async () => {
+    const result = await workflow.deleteCollaborator({
+      identity,
+      ledgerId,
+      collaborator: "reader",
+      input: { dryRun: true },
+    });
+
+    expect(deleteLedgerCollaborator).not.toHaveBeenCalled();
+    expect(result.dryRun).toBe(true);
+    expect(result.preview).toMatchObject({
+      collaborator: "reader",
+      current: "write",
+      requested: null,
+    });
+    expect(result.preview?.warnings).toEqual([
+      "This would revoke reader's write access to owner/main.",
+    ]);
+  });
+
+  it("says so when a remove preview cannot confirm current access", async () => {
+    getLedgerCollaboratorPermission.mockRejectedValueOnce(
+      new Error("upstream down"),
+    );
+
+    const result = await workflow.deleteCollaborator({
+      identity,
+      ledgerId,
+      collaborator: "reader",
+      input: { dryRun: true },
+    });
+
+    expect(deleteLedgerCollaborator).not.toHaveBeenCalled();
+    expect(result.preview?.current).toBeNull();
+    expect(result.preview?.warnings).toEqual([
+      "This would revoke reader's access to owner/main, but no current access could be confirmed — the removal may fail if they hold no grant.",
+    ]);
+  });
+
+  it("renders the self-removal and stays put on a leave preview", async () => {
+    const result = await workflow.leaveLedger({
+      identity,
+      ledgerId,
+      input: { dryRun: true },
+    });
+
+    expect(deleteLedgerCollaborator).not.toHaveBeenCalled();
+    expect(result.dryRun).toBe(true);
+    expect(result.preview).toMatchObject({
+      collaborator: "admin",
+      current: "write",
+      requested: null,
+    });
+    expect(result.preview?.warnings).toEqual([
+      "This would remove your (admin) write access to owner/main.",
+    ]);
+  });
+
+  it.each([
+    [
+      "set",
+      () =>
+        workflow.addOrUpdateCollaborator({
+          identity,
+          ledgerId,
+          collaborator: "newbie",
+          permission: "read",
+          input: { dryRun: true },
+        }),
+    ],
+    [
+      "remove",
+      () =>
+        workflow.deleteCollaborator({
+          identity,
+          ledgerId,
+          collaborator: "reader",
+          input: { dryRun: true },
+        }),
+    ],
+    [
+      "leave",
+      () => workflow.leaveLedger({ identity, ledgerId, input: { dryRun: true } }),
+    ],
+  ] as const)(
+    "authorizes before reading anything on a %s preview, like the commit",
+    async (_op, invoke) => {
+      authorizeOrThrow.mockRejectedValueOnce(new Error("denied"));
+      await expect(invoke()).rejects.toThrow("denied");
+      expect(getPublicApiClient).not.toHaveBeenCalled();
+      expect(getApiContext).not.toHaveBeenCalled();
+      expect(listLedgerCollaborators).not.toHaveBeenCalled();
+      expect(getLedgerCollaboratorPermission).not.toHaveBeenCalled();
+      expect(addOrUpdateLedgerCollaborator).not.toHaveBeenCalled();
+      expect(deleteLedgerCollaborator).not.toHaveBeenCalled();
+    },
+  );
 });

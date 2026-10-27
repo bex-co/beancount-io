@@ -3,30 +3,8 @@ import { Authenticated } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import { ILedgerWorkflow } from "@/features/ledger/workflow/ledger-workflow";
 import { resolveCommitMessage } from "@/features/ledger/utils/commit-message-alias";
-import {
-  DRY_RUN_NAMES,
-  resolveFlagAlias,
-} from "@/features/ledger/utils/flag-alias";
+import { withResolvedPreview } from "@/features/ledger/utils/flag-alias";
 import { DELETE_INCLUDE_GUARD_DESCRIPTION } from "@/features/ledger/utils/include-references";
-
-/**
- * Fold the `dry_run` alias into `dryRun` (w23/m9/t002), dropping the alias
- * key so the workflow sees its own contract only.
- */
-function withResolvedPreview<
-  T extends { dryRun?: boolean | null; dry_run?: boolean | null },
->(input: T): Omit<T, "dry_run"> & { dryRun: boolean } {
-  const { dry_run, ...rest } = input;
-  return {
-    ...rest,
-    // The workflow reads `dryRun === true`, so false and missing agree;
-    // the resolver also reads explicit null as missing.
-    dryRun: resolveFlagAlias(
-      { primary: dry_run, legacy: rest.dryRun },
-      DRY_RUN_NAMES,
-    ),
-  };
-}
 
 /**
  * Fold the `description` alias into `message` (w23/m3/t002), dropping the
