@@ -7,6 +7,8 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { buildSchema } from "type-graphql";
 import { graphql } from "graphql";
 import { LedgerCollaboratorsMutationResolver } from "../../../resolvers/ledger-collaborators-resolver.mutation";
+import { FavaApiError } from "@/foundation/fava";
+import { ForbiddenError } from "@/shared/errors";
 import { HealthResolver } from "@/features/healthz/api/health-resolver";
 import { LedgerCollaboratorsWorkflow } from "@/features/ledger/workflow/ledger-collaborators-workflow";
 import { getUserTier } from "@/features/stripe/operations/get-user-tier";
@@ -104,9 +106,8 @@ async function fixture() {
       favaUser: { username: id.slice(4) },
     }),
   };
-  const authorization = {
-    authorizeOrThrow: jest.fn(async () => ({ allowed: true })),
-  };
+  const authorizeOrThrow = jest.fn(async () => ({ allowed: true }));
+  const authorization = { authorizeOrThrow };
   const models = {
     user: { getUserByUsername: jest.fn(async () => null) },
   };
@@ -210,6 +211,9 @@ async function fixture() {
     members,
     updateSpy,
     removeSpy,
+    listSpy,
+    permissionSpy,
+    authorizeOrThrow,
     call,
     close: async () => {
       await client.close();
@@ -451,6 +455,237 @@ it("rest agrees when both twins are true", async () => {
     expect(success).toBe(true);
     expect(f.updateSpy).not.toHaveBeenCalled();
     expect(result).toMatchObject({ dryRun: true });
+  } finally {
+    await f.close();
+  }
+});
+
+it("gql accepts the dry_run alias alone on a set preview", async () => {
+  const f = await fixture();
+  try {
+    const { success, result } = await f.call("gql", "set", {
+      collaborator: "newbie",
+      permission: "read",
+      dry_run: true,
+    });
+    expect(success).toBe(true);
+    expect(f.updateSpy).not.toHaveBeenCalled();
+    expect(result).toMatchObject({
+      dryRun: true,
+      preview: { collaborator: "newbie", current: null, requested: "read" },
+    });
+  } finally {
+    await f.close();
+  }
+});
+
+it("mcp accepts the dryRun alias alone on a set preview", async () => {
+  const f = await fixture();
+  try {
+    const { success, result } = await f.call("mcp", "set", {
+      collaborator: "newbie",
+      permission: "read",
+      dryRun: true,
+    });
+    expect(success).toBe(true);
+    expect(f.updateSpy).not.toHaveBeenCalled();
+    expect(result).toMatchObject({
+      dry_run: true,
+      preview: { collaborator: "newbie", current: null, requested: "read" },
+    });
+  } finally {
+    await f.close();
+  }
+});
+
+it("rest refuses a set preview for an unknown ledger without granting", async () => {
+  const f = await fixture();
+  try {
+    f.listSpy.mockRejectedValueOnce(
+      new FavaApiError("Not Found", 404, { success: false, error: "Not Found" }),
+    );
+    const { success, status } = await f.call("rest", "set", {
+      collaborator: "newbie",
+      permission: "read",
+      dryRun: true,
+    });
+    expect(success).toBe(false);
+    expect(status).toBe(404);
+    expect(f.updateSpy).not.toHaveBeenCalled();
+  } finally {
+    await f.close();
+  }
+});
+
+it("rest refuses an unauthorized set preview without reading or granting", async () => {
+  const f = await fixture();
+  try {
+    f.authorizeOrThrow.mockRejectedValueOnce(
+      new ForbiddenError("no collaborator access"),
+    );
+    const { success, status } = await f.call("rest", "set", {
+      collaborator: "newbie",
+      permission: "read",
+      dryRun: true,
+    });
+    expect(success).toBe(false);
+    expect(status).toBe(403);
+    expect(f.listSpy).not.toHaveBeenCalled();
+    expect(f.updateSpy).not.toHaveBeenCalled();
+  } finally {
+    await f.close();
+  }
+});
+
+it("gql accepts the dry_run alias alone on a remove preview", async () => {
+  const f = await fixture();
+  try {
+    const { success, result } = await f.call("gql", "remove", {
+      collaborator: "carol",
+      dry_run: true,
+    });
+    expect(success).toBe(true);
+    expect(f.removeSpy).not.toHaveBeenCalled();
+    expect(result).toMatchObject({
+      dryRun: true,
+      preview: { collaborator: "carol", current: "read", requested: null },
+    });
+  } finally {
+    await f.close();
+  }
+});
+
+it("mcp accepts the dryRun alias alone on a remove preview", async () => {
+  const f = await fixture();
+  try {
+    const { success, result } = await f.call("mcp", "remove", {
+      collaborator: "carol",
+      dryRun: true,
+    });
+    expect(success).toBe(true);
+    expect(f.removeSpy).not.toHaveBeenCalled();
+    expect(result).toMatchObject({
+      dry_run: true,
+      preview: { collaborator: "carol", current: "read", requested: null },
+    });
+  } finally {
+    await f.close();
+  }
+});
+
+it("rest renders a degraded remove preview when current access cannot be confirmed", async () => {
+  const f = await fixture();
+  try {
+    f.permissionSpy.mockRejectedValueOnce(
+      new FavaApiError("Not Found", 404, { success: false, error: "Not Found" }),
+    );
+    const { success, result } = await f.call("rest", "remove", {
+      collaborator: "carol",
+      dryRun: true,
+    });
+    expect(success).toBe(true);
+    expect(f.removeSpy).not.toHaveBeenCalled();
+    expect(result).toMatchObject({
+      dryRun: true,
+      preview: { collaborator: "carol", current: null, requested: null },
+    });
+    expect((result?.preview as { warnings: string[] }).warnings).toEqual([
+      "This would revoke carol's access to alice/main, but no current access could be confirmed — the removal may fail if they hold no grant.",
+    ]);
+  } finally {
+    await f.close();
+  }
+});
+
+it("rest refuses an unauthorized remove preview without reading or revoking", async () => {
+  const f = await fixture();
+  try {
+    f.authorizeOrThrow.mockRejectedValueOnce(
+      new ForbiddenError("no collaborator access"),
+    );
+    const { success, status } = await f.call("rest", "remove", {
+      collaborator: "carol",
+      dryRun: true,
+    });
+    expect(success).toBe(false);
+    expect(status).toBe(403);
+    expect(f.permissionSpy).not.toHaveBeenCalled();
+    expect(f.removeSpy).not.toHaveBeenCalled();
+  } finally {
+    await f.close();
+  }
+});
+
+it("gql accepts the dry_run alias alone on a leave preview", async () => {
+  const f = await fixture();
+  try {
+    const { success, result } = await f.call("gql", "leave", {
+      dry_run: true,
+    });
+    expect(success).toBe(true);
+    expect(f.removeSpy).not.toHaveBeenCalled();
+    expect(result).toMatchObject({
+      dryRun: true,
+      preview: { collaborator: "bob", current: "admin", requested: null },
+    });
+  } finally {
+    await f.close();
+  }
+});
+
+it("mcp accepts the dryRun alias alone on a leave preview", async () => {
+  const f = await fixture();
+  try {
+    const { success, result } = await f.call("mcp", "leave", {
+      dryRun: true,
+    });
+    expect(success).toBe(true);
+    expect(f.removeSpy).not.toHaveBeenCalled();
+    expect(result).toMatchObject({
+      dry_run: true,
+      preview: { collaborator: "bob", current: "admin", requested: null },
+    });
+  } finally {
+    await f.close();
+  }
+});
+
+it("rest renders a degraded leave preview when current access cannot be confirmed", async () => {
+  const f = await fixture();
+  try {
+    f.permissionSpy.mockRejectedValueOnce(
+      new FavaApiError("Not Found", 404, { success: false, error: "Not Found" }),
+    );
+    const { success, result } = await f.call("rest", "leave", {
+      dryRun: true,
+    });
+    expect(success).toBe(true);
+    expect(f.removeSpy).not.toHaveBeenCalled();
+    expect(result).toMatchObject({
+      dryRun: true,
+      preview: { collaborator: "bob", current: null, requested: null },
+    });
+    expect((result?.preview as { warnings: string[] }).warnings).toEqual([
+      "This would remove your (bob) access to alice/main, but no current access could be confirmed.",
+    ]);
+  } finally {
+    await f.close();
+  }
+});
+
+it("rest refuses an unauthorized leave preview without reading or leaving", async () => {
+  const f = await fixture();
+  try {
+    f.authorizeOrThrow.mockRejectedValueOnce(
+      new ForbiddenError("no leave access"),
+    );
+    const { success, status } = await f.call("rest", "leave", {
+      dryRun: true,
+    });
+    expect(success).toBe(false);
+    expect(status).toBe(403);
+    expect(f.permissionSpy).not.toHaveBeenCalled();
+    expect(f.removeSpy).not.toHaveBeenCalled();
   } finally {
     await f.close();
   }

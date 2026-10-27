@@ -6,6 +6,8 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { buildSchema } from "type-graphql";
 import { graphql } from "graphql";
 import { LedgerMutationResolver } from "../../../resolvers/ledger-resolver.mutation";
+import { FavaApiError } from "@/foundation/fava";
+import { ForbiddenError } from "@/shared/errors";
 import { HealthResolver } from "@/features/healthz/api/health-resolver";
 import { LedgerWorkflow } from "@/features/ledger/workflow/ledger-workflow";
 import { assembleMcpRegistry } from "@/server/api/composition-root";
@@ -53,17 +55,17 @@ const CURRENT = {
 async function fixture() {
   const envelope = (data: unknown) => ({ data: { success: true, data } });
   const deleteSpy = jest.fn(async () => envelope({}));
+  const getSpy = jest.fn(async () => envelope({ ...CURRENT }));
   const fava = {
     getPublicApiClient: async () => ({
       ledgers: {
-        getLedger: async () => envelope({ ...CURRENT }),
+        getLedger: getSpy,
         deleteLedger: deleteSpy,
       },
     }),
   };
-  const authorization = {
-    authorizeOrThrow: jest.fn(async () => ({ allowed: true })),
-  };
+  const authorizeOrThrow = jest.fn(async () => ({ allowed: true }));
+  const authorization = { authorizeOrThrow };
   const models = {
     plaidItem: {
       getByLedgerRepoId: jest.fn(async () => []),
@@ -147,6 +149,8 @@ async function fixture() {
 
   return {
     deleteSpy,
+    getSpy,
+    authorizeOrThrow,
     call,
     close: async () => {
       await client.close();
@@ -237,6 +241,69 @@ it("rest agrees when both twins are true", async () => {
     expect(success).toBe(true);
     expect(f.deleteSpy).not.toHaveBeenCalled();
     expect(result).toMatchObject({ dryRun: true });
+  } finally {
+    await f.close();
+  }
+});
+
+it("gql accepts the dry_run alias alone", async () => {
+  const f = await fixture();
+  try {
+    const { success, result } = await f.call("gql", { dry_run: true });
+    expect(success).toBe(true);
+    expect(f.deleteSpy).not.toHaveBeenCalled();
+    expect(result).toMatchObject({
+      ledgerId: "alice/main",
+      dryRun: true,
+      preview: { ledgerId: "alice/main", name: "main" },
+    });
+  } finally {
+    await f.close();
+  }
+});
+
+it("mcp accepts the dryRun alias alone", async () => {
+  const f = await fixture();
+  try {
+    const { success, result } = await f.call("mcp", { dryRun: true });
+    expect(success).toBe(true);
+    expect(f.deleteSpy).not.toHaveBeenCalled();
+    expect(result).toMatchObject({
+      ledgerId: "alice/main",
+      dry_run: true,
+      preview: { ledgerId: "alice/main", name: "main" },
+    });
+  } finally {
+    await f.close();
+  }
+});
+
+it("rest refuses a preview for an unknown ledger without destroying", async () => {
+  const f = await fixture();
+  try {
+    f.getSpy.mockRejectedValueOnce(
+      new FavaApiError("Not Found", 404, { success: false, error: "Not Found" }),
+    );
+    const { success, status } = await f.call("rest", { dryRun: true });
+    expect(success).toBe(false);
+    expect(status).toBe(404);
+    expect(f.deleteSpy).not.toHaveBeenCalled();
+  } finally {
+    await f.close();
+  }
+});
+
+it("rest refuses an unauthorized preview without reading or destroying", async () => {
+  const f = await fixture();
+  try {
+    f.authorizeOrThrow.mockRejectedValueOnce(
+      new ForbiddenError("no delete access"),
+    );
+    const { success, status } = await f.call("rest", { dryRun: true });
+    expect(success).toBe(false);
+    expect(status).toBe(403);
+    expect(f.getSpy).not.toHaveBeenCalled();
+    expect(f.deleteSpy).not.toHaveBeenCalled();
   } finally {
     await f.close();
   }
