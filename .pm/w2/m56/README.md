@@ -1,12 +1,12 @@
 # w2 · m56 — Invoice clients and pay bills, with collected tax and an aging you can trust
 
-**Worker:** worker2 **Goal:** a customer skill records an invoice issued (receivable against income, with the tax leg the user's document states), each payment applied to it — including a payment processor's gross, fee, and net — supplier bills and their payments, and the remittance that clears collected tax, proposed first and written after a yes; it answers "who owes me, and how overdue" from booked postings. **Status:** todo
+**Worker:** worker2 **Goal:** a customer skill records an invoice issued (receivable against income, with the tax leg the user's document states), each payment applied to it — including a payment processor's gross, fee, and net — supplier bills and their payments, and the remittance that clears collected tax, proposed first and written after a yes; it answers "who owes me, and how overdue" from booked postings. **Status:** todo (t001 done)
 
 ## Tasks (in order)
 
 | id   | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
-| t001 | Decide placement and the invoice model, verified on `bea` | 45m | w2/m55/t001 |
+| [t001](./done/t001.md) | Decide placement and the invoice model, verified on `bea` — **DONE** | 45m | w2/m55/t001 |
 | t002 | Issue an invoice and apply its payments | 75m | t001 |
 | t003 | Receive and pay a supplier bill | 45m | t001 |
 | t004 | Record collected sales tax and its remittance | 60m | t002 |
@@ -31,7 +31,9 @@
 
 ## Decisions
 
-- _Recorded by t001._
+- **Placement (t001, 2026-10-27): a new top-level skill, `beancount-invoices`.** It meets ADR020's test: a distinct trigger (issuing, paying, and chasing invoices and bills), a distinct input contract (invoice or bill number, client or supplier, issue and due dates, lines, stated tax), a distinct deliverable (open documents and an aging that ties to the receivable and payable balances), and its own eval set (t007). Routing probe at `13924a551` (Claude Code 2.1.289, `claude-opus-5-5[1m]`, suite linked in a scratch workspace): "Invoice Acme Corp for 3,000…", "Acme paid 1,200 of invoice INV-031…", and "Record this supplier bill…" all opened `beancount-add`, which has no receivable model; "Which clients still owe me money…" opened `beancount-ask`. That is the gap that justified `beancount-property`.
+- **Model (t001), per [ADR025](../../../docs/adrs/ADR025-skills-business-books.md):** `invoice:` / `bill: "<supplier>:<number>"` identity, `client:` and an optional `due:` on the issuing entry, a `^inv-<number>` / `^bill-<supplier>-<number>` link on every entry that touches the document, and per-posting identity when one payment settles several documents. Verified with `bea` 0.3.1 (checkout) through one validated batch on a synthetic ledger: invoice 3,000 + 240 stated tax (receivable 3,240), a second invoice of 500, a 1,200 partial payment, one processor payment of 2,466.04 net clearing 2,040 and 500 with a 73.96 fee, a 450 bill with a 200 partial payment, and a 240 tax remittance. The root check passed; the receivable ended at 0.00, the payable at -250.00 for `bolt-printing:7781`, collected tax at 0.00; as of 2026-10-11 the open invoices were INV-031 2,040.00 and INV-032 500.00.
+- **Aging groups by document identity only.** Grouping by `client` as well split each document into an issue row and a payment row (payments carry no `client:`), so paid invoices looked open. The aging reads `any_meta('invoice')` (or `'bill'`) alone, then takes the client, issue date, and due date from the issuing posting (`number > 0` on the receivable).
 
 ## Source + Goal linkage
 
