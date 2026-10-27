@@ -386,7 +386,10 @@ export function BudgetChartCard({
   return (
     <Card className="gap-0 overflow-hidden">
       <CardHeader className="border-b bg-muted/15 pb-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        {/* min-w-0: as CardHeader's grid item this may shrink below the
+            long account name's intrinsic width, so the title's truncate
+            can engage inside the card (w4/1109). */}
+        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 space-y-1.5">
             <CardTitle id={titleId} className="truncate font-mono text-base">
               {group.account}
