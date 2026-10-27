@@ -79,6 +79,19 @@ function mcpManifest(config: AppConfig) {
 const IOS_BUNDLE_ID = "io.beancount.ios";
 const ANDROID_PACKAGE = "io.beancount.android";
 
+/**
+ * Beancount.io's own app identity, public by design: both files are fetched
+ * anonymously by Apple and Google. They are not configuration — only the
+ * official apps exist, and they only claim beancount.io (`associatedDomains`
+ * and the verified intent filter in `mobile/app.json`), so a self-hosted
+ * domain serving the same files associates nothing.
+ */
+const APPLE_TEAM_ID = "PTLM7BZQMM";
+/** Play App Signing key certificate, as Play Console's Deep links page shows. */
+const ANDROID_SHA256_FINGERPRINTS = [
+  "3C:7A:97:CF:EA:DE:C4:36:2C:65:DC:A8:09:36:03:7C:CF:3D:63:1F:D7:E7:EA:87:6F:41:6E:98:96:66:71:51", // gitleaks:allow
+] as const;
+
 function appleAppSiteAssociation(teamId: string) {
   return {
     applinks: {
@@ -125,28 +138,16 @@ export function setWellKnownRoutes(router: Router, config: AppConfig): void {
     ctx.body = manifest;
   });
 
-  // Unset env → 404 so a self-host without a native build does not advertise
-  // Beancount.io's app IDs on its own domain.
   router.get("/.well-known/apple-app-site-association", (ctx) => {
-    const teamId = config.appLinks.appleTeamId;
-    if (!teamId) {
-      ctx.status = 404;
-      return;
-    }
     ctx.type = "application/json";
     ctx.set("Cache-Control", "public, max-age=3600");
-    ctx.body = appleAppSiteAssociation(teamId);
+    ctx.body = appleAppSiteAssociation(APPLE_TEAM_ID);
   });
 
   router.get("/.well-known/assetlinks.json", (ctx) => {
-    const fingerprints = config.appLinks.androidSha256Fingerprints;
-    if (fingerprints.length === 0) {
-      ctx.status = 404;
-      return;
-    }
     ctx.type = "application/json";
     ctx.set("Cache-Control", "public, max-age=3600");
-    ctx.body = assetLinks(fingerprints);
+    ctx.body = assetLinks(ANDROID_SHA256_FINGERPRINTS);
   });
 
   // Domain proof the official MCP Registry verifies a publish against.

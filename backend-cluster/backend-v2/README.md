@@ -268,17 +268,17 @@ which is true there.
 
 ### Native app links
 
-Optional. When set, this server answers:
+This server always answers:
 
 - `GET /.well-known/apple-app-site-association` — Apple Universal Links for
-  `io.beancount.ios` on `/ledger/*` (`APP_LINKS_APPLE_TEAM_ID`)
+  `io.beancount.ios` (team `PTLM7BZQMM`) on `/ledger/*`
 - `GET /.well-known/assetlinks.json` — Android App Links for
-  `io.beancount.android` (`APP_LINKS_ANDROID_SHA256`, comma-separated SHA-256
-  fingerprints of the Play App Signing certificate)
+  `io.beancount.android`, with the Play App Signing certificate's SHA-256
 
-Unset either variable and its route returns 404, so a self-host without a
-store build does not advertise Beancount.io's apps. Beancount.io production
-uses `APP_LINKS_APPLE_TEAM_ID=PTLM7BZQMM`.
+Both identify Beancount.io's official apps and are hard-coded in
+`src/features/well-known/api/well-known-route.ts`; there is nothing to
+configure. The apps only claim `beancount.io`, so serving the same files on a
+self-hosted domain associates nothing.
 
 ### OpenAI apps domain proof
 

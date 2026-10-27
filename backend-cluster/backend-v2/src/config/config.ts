@@ -60,13 +60,6 @@ interface DashboardConfig {
  * `/.well-known/assetlinks.json`. Unset when a self-host has no native build —
  * those routes then 404 rather than advertising someone else's app.
  */
-interface AppLinksConfig {
-  /** Apple Developer Team ID (e.g. Beancount.io production: `PTLM7BZQMM`). */
-  appleTeamId: string | null;
-  /** Play App Signing SHA-256 fingerprints, comma-separated in env. */
-  androidSha256Fingerprints: readonly string[];
-}
-
 /**
  * Domain proof for the official MCP Registry (registry.modelcontextprotocol.io):
  * the public record a `mcp-publisher login http` signature is verified against,
@@ -215,7 +208,6 @@ export interface AppConfig {
   jwt: JwtConfig;
   favaApi: FavaAPIConfig;
   dashboard: DashboardConfig;
-  appLinks: AppLinksConfig;
   mcpRegistry: McpRegistryConfig;
   gitea: GiteaConfig;
   blockeden: BlockEdenConfig;
@@ -384,13 +376,6 @@ export const config: AppConfig = {
   },
   dashboard: {
     url: dashboardUrl,
-  },
-  appLinks: {
-    appleTeamId: process.env.APP_LINKS_APPLE_TEAM_ID?.trim() || null,
-    androidSha256Fingerprints: (process.env.APP_LINKS_ANDROID_SHA256 ?? "")
-      .split(",")
-      .map((value) => value.trim())
-      .filter(Boolean),
   },
   mcpRegistry: {
     authProof: getMcpRegistryAuthProof(process.env.MCP_REGISTRY_AUTH_PROOF),

@@ -19,12 +19,6 @@ const MCP_REGISTRY_AUTH_PROOF =
 const config = {
   dashboard: { url: "https://beancount.io" },
   oauth: { issuer: "https://beancount.io" },
-  appLinks: {
-    appleTeamId: "PTLM7BZQMM",
-    androidSha256Fingerprints: [
-      "AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99",
-    ],
-  },
   mcpRegistry: { authProof: MCP_REGISTRY_AUTH_PROOF },
 } as unknown as AppConfig;
 
@@ -39,15 +33,15 @@ const REGISTRY_LISTING_PATH = path.resolve(
 );
 
 // A self-hosted deployment: none of Beancount.io's own proofs apply to it.
-const unsetAppLinksConfig = {
+const selfHostedConfig = {
   ...config,
   dashboard: { url: "https://books.example.com" },
-  appLinks: {
-    appleTeamId: null,
-    androidSha256Fingerprints: [],
-  },
   mcpRegistry: { authProof: null },
 } as unknown as AppConfig;
+
+/** Play App Signing key certificate of the official Android app. */
+const ANDROID_FINGERPRINT =
+  "3C:7A:97:CF:EA:DE:C4:36:2C:65:DC:A8:09:36:03:7C:CF:3D:63:1F:D7:E7:EA:87:6F:41:6E:98:96:66:71:51"; // gitleaks:allow
 describe("well-known routes", () => {
   let server: http.Server;
   let origin: string;
@@ -268,23 +262,21 @@ describe("well-known routes", () => {
         target: {
           namespace: "android_app",
           package_name: "io.beancount.android",
-          sha256_cert_fingerprints: [
-            "AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99",
-          ],
+          sha256_cert_fingerprints: [ANDROID_FINGERPRINT],
         },
       },
     ]);
   });
 });
 
-describe("well-known app-link routes without config", () => {
+describe("well-known routes on a self-hosted deployment", () => {
   let server: http.Server;
   let origin: string;
 
   beforeAll(async () => {
     const app = new Koa();
     const router = new Router();
-    setWellKnownRoutes(router, unsetAppLinksConfig);
+    setWellKnownRoutes(router, selfHostedConfig);
     app.use(router.routes());
     server = app.listen(0);
     await new Promise<void>((resolve) => server.once("listening", resolve));
@@ -301,16 +293,21 @@ describe("well-known app-link routes without config", () => {
     );
   });
 
-  it("returns 404 for AASA when the Apple team id is unset", async () => {
-    const response = await fetch(
+  // The official apps only claim beancount.io, so serving the same files on
+  // another domain associates nothing; there is nothing to configure.
+  it("serves the same app-link files without any configuration", async () => {
+    const aasa = await fetch(
       `${origin}/.well-known/apple-app-site-association`,
     );
-    expect(response.status).toBe(404);
-  });
-
-  it("returns 404 for assetlinks when no fingerprints are configured", async () => {
-    const response = await fetch(`${origin}/.well-known/assetlinks.json`);
-    expect(response.status).toBe(404);
+    expect(aasa.status).toBe(200);
+    expect(JSON.stringify(await aasa.json())).toContain(
+      "PTLM7BZQMM.io.beancount.ios",
+    );
+    const assetLinks = await fetch(`${origin}/.well-known/assetlinks.json`);
+    expect(assetLinks.status).toBe(200);
+    expect(JSON.stringify(await assetLinks.json())).toContain(
+      ANDROID_FINGERPRINT,
+    );
   });
 
   it("returns 404 for the MCP Registry proof when none is configured", async () => {
