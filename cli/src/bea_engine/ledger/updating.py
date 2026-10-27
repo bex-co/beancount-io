@@ -8,11 +8,12 @@ than guessed at, and `file:line` names the entry outright. Only entries written
 in a ledger file resolve: a plugin-synthesized row has no source lines to
 rewrite.
 
-A rewrite touches only the entry's own lines — its header line for a flag,
-narration or tags, its posting lines for an account retarget — and never adds
-or removes a line, so neighbours keep their bytes and their line numbers. The
-rewritten file is validated as a whole and installed through the same locked,
-atomic replace every other writer uses.
+A rewrite touches only the entry's own lines — its header for a flag,
+narration or tags, its posting lines for an account retarget — so neighbours
+keep their bytes. Only a narration that spanned lines, replaced by one-line
+text, removes the continuation lines it no longer needs. The rewritten file is
+validated as a whole and installed through the same locked, atomic replace
+every other writer uses.
 """
 
 from __future__ import annotations
@@ -262,23 +263,77 @@ def entry_span(entries: list[Any], entry: Any, line_count: int) -> tuple[int, in
     return start, min(following) - 1 if following else line_count
 
 
-_HEADER_FLAG = re.compile(r"^(\s*\d{4}[-/]\d+[-/]\d+\s*)(\S+)(.*)$")
-_QUOTED = re.compile(r'"(?:[^"\\]|\\.)*"')
-_TAG_LINK_TAIL = re.compile(r"(?:\s+[#^]\S+)+\s*$")
+_HEADER_DATE = re.compile(r"\d{4,}[-/]\d+[-/]\d+")
+_HEADER_STRING = re.compile(r'"(?:[^"\\]|\\.)*"', re.DOTALL)
+_HEADER_MARK = re.compile(r"[#^][A-Za-z0-9\-_/.]+")
+_TAG_CHARACTER = re.compile(r"[A-Za-z0-9\-_/.]")
 
 
-def _split_comment(line: str) -> tuple[str, str]:
-    """The header line without and with its trailing `;` comment, if any."""
-    from bea_engine.ledger.models import comment_start
+@dataclass
+class _Header:
+    """A transaction header's token spans, as offsets into its logical text.
 
-    at = comment_start(line)
-    if at is None:
-        return line, ""
-    return line[:at].rstrip(), line[at:]
+    The logical header runs from the date to the first line break outside a
+    string, so a payee or narration that continues onto later lines belongs
+    to it whole (w5/1026).
+    """
+
+    end: int
+    flag: tuple[int, int]
+    strings: list[tuple[int, int]]
+    marks: list[tuple[int, int]]
 
 
-def _outside_quotes(spans: list[re.Match[str]], position: int) -> bool:
-    return all(not (span.start() <= position < span.end()) for span in spans)
+def _skip_gap(text: str, at: int) -> int:
+    """The offset past the spaces, tabs and carriage returns the lexer ignores."""
+    while at < len(text) and text[at] in " \t\r":
+        at += 1
+    return at
+
+
+def _lex_header(text: str) -> _Header | None:
+    """The written header's spans, lexed as Beancount's lexer does, or None.
+
+    Tokens may touch without whitespace — `!"Merchant""Coffee"#tag^link` is
+    one flag, two strings, a tag and a link (w5/1039, w5/1042). `txn`, a
+    punctuation flag, or a capital letter followed by whitespace is the flag;
+    a `#` that starts a tag is a tag, not the flag.
+    """
+    date = _HEADER_DATE.match(text)
+    if date is None:
+        return None
+    at = _skip_gap(text, date.end())
+    if text.startswith("txn", at):
+        flag = (at, at + 3)
+    elif at < len(text) and (
+        text[at] in "*!&?%"
+        or (text[at] == "#" and _TAG_CHARACTER.match(text, at + 1) is None)
+        or ("A" <= text[at] <= "Z" and (at + 1 == len(text) or text[at + 1] in " \t\n"))
+    ):
+        flag = (at, at + 1)
+    else:
+        return None
+    strings: list[tuple[int, int]] = []
+    marks: list[tuple[int, int]] = []
+    at = flag[1]
+    while True:
+        at = _skip_gap(text, at)
+        if at == len(text) or text[at] == "\n":
+            break
+        if text[at] == ";":
+            newline = text.find("\n", at)
+            at = len(text) if newline < 0 else newline
+            break
+        token = _HEADER_STRING.match(text, at) if not marks else None
+        if token is not None:
+            strings.append(token.span())
+        else:
+            token = _HEADER_MARK.match(text, at)
+            if token is None:
+                return None
+            marks.append(token.span())
+        at = token.end()
+    return _Header(end=at, flag=flag, strings=strings, marks=marks)
 
 
 def _fresh_tags(entry: Any, changes: _Changes) -> list[str]:
@@ -286,53 +341,56 @@ def _fresh_tags(entry: Any, changes: _Changes) -> list[str]:
     return [tag for tag in dict.fromkeys(changes.tags or []) if tag not in set(entry.tags or ())]
 
 
-def _edit_header(line: str, entry: Any, changes: _Changes) -> str:
-    """The header line with the requested flag, narration and tags applied.
+def _edit_header(text: str, entry: Any, changes: _Changes) -> tuple[str, int]:
+    """The logical header with the requested flag, narration and tags applied.
 
-    Byte-identical when nothing about the header changes: an equal flag keeps
-    even the `txn` keyword's spelling, and comment spacing is never normalized
-    as a side effect.
+    `text` runs from the header's first line to the entry's end; the answer is
+    the rewritten header and the length of the original header it replaces.
+    Each edit splices one written token's span, so adjacent strings, tags,
+    links, comments and spacing keep their bytes: the flag swaps only the flag
+    token, the narration lands in the written narration slot — the second of
+    two strings, the only one of one, or right after the flag of a bare header,
+    ahead of every tag and link — and new tags follow the last tag or link,
+    outside every string. Byte-identical when nothing about the header
+    changes: an equal flag keeps even the `txn` keyword's spelling.
     """
+    header = _lex_header(text)
+    if header is None:  # pragma: no cover - the located entry parsed from these lines
+        raise protocol.UsageError(
+            f"Cannot update the entry at {_where(entry)}: its header line is no longer a transaction line. "
+            "Nothing was written."
+        )
+    original = text[: header.end]
+    flag_start, flag_end = header.flag
+    glued = flag_end < len(original) and original[flag_end] not in " \t\r\n"
+    # (start, end, replacement) in original offsets; at one offset, the
+    # earlier splice reads first.
+    splices: list[tuple[int, int, str]] = []
     if changes.flag is not None and changes.flag != entry.flag:
-        matched = _HEADER_FLAG.match(line)
-        if matched is None:  # pragma: no cover - the located entry parsed from this line
-            raise protocol.UsageError(
-                f"Cannot update the entry at {_where(entry)}: its header line is no longer a transaction line. "
-                "Nothing was written."
-            )
-        line = f"{matched.group(1)}{changes.flag}{matched.group(3)}"
-    body, comment = _split_comment(line)
-    before = body
-    spans = list(_QUOTED.finditer(body))
+        # A capital letter is only a flag when whitespace follows it.
+        spaced = changes.flag.isalpha() and glued and not (changes.has_narration and not header.strings)
+        splices.append((flag_start, flag_end, changes.flag + (" " if spaced else "")))
     if changes.has_narration:
         assert changes.narration is not None
         quoted = '"' + changes.narration.replace("\\", "\\\\").replace('"', '\\"') + '"'
-        # With a payee the narration is the second string; without one it is
-        # the only string, and a bare header grows one before its tags.
-        index = 1 if entry.payee is not None else 0
-        if index < len(spans):
-            span = spans[index]
-            body = body[: span.start()] + quoted + body[span.end() :]
-            spans = list(_QUOTED.finditer(body))
+        # The slot is the one the header writes — not the loaded payee's,
+        # which a plugin may have filled or dropped (w5/1026).
+        if header.strings:
+            start, end = header.strings[-1]
+            splices.append((start, end, quoted))
         else:
-            tail = _TAG_LINK_TAIL.search(body)
-            at = tail.start() if tail is not None and _outside_quotes(spans, tail.start()) else len(body)
-            body = body[:at].rstrip() + f" {quoted}" + body[at:]
-            spans = list(_QUOTED.finditer(body))
-    if changes.tags:
-        fresh = _fresh_tags(entry, changes)
-        if fresh:
-            tail = _TAG_LINK_TAIL.search(body)
-            if tail is not None and not _outside_quotes(spans, tail.start()):
-                tail = None
-            # After the existing tags, which a reviewer reads left to right;
-            # a narration, above, goes before them, where the grammar puts it.
-            at = tail.end() if tail is not None else len(body)
-            addition = "".join(f" #{tag}" for tag in fresh)
-            body = body[:at].rstrip() + addition + body[at:]
-    if body == before:
-        return line
-    return body + (f" {comment}" if comment else "")
+            splices.append((flag_end, flag_end, f" {quoted}" + (" " if glued else "")))
+    fresh = _fresh_tags(entry, changes) if changes.tags else []
+    if fresh:
+        # After the existing tags and links, which a reviewer reads left to right.
+        at = max(end for _, end in [header.flag, *header.strings, *header.marks])
+        splices.append((at, at, "".join(f" #{tag}" for tag in fresh)))
+    edited = original
+    for _, (start, end, replacement) in sorted(
+        enumerate(splices), key=lambda item: (item[1][0], item[0]), reverse=True
+    ):
+        edited = edited[:start] + replacement + edited[end:]
+    return edited, header.end
 
 
 def holding_account(options: dict[str, Any]) -> str:
@@ -401,19 +459,31 @@ def _summarize(entry: Any, options: dict[str, Any], changes: _Changes) -> list[s
 
 def plan_lines(
     lines: list[str], entries: list[Any], options: dict[str, Any], entry: Any, changes: _Changes
-) -> dict[int, str]:
+) -> dict[int, str | None]:
     """The entry's rewritten lines by 0-based index; every other line stays verbatim.
 
-    One row's plan, computed against the file as read: batch rows plan against
-    the same original and combine, which is sound because entry spans never
-    overlap and no edit adds or removes a line.
+    A `None` removes its line: a narration that spanned lines and is replaced
+    by one-line text leaves its continuation lines behind, so the header's
+    first line carries the whole new header and the rest go. Every other edit
+    keeps the line count. One row's plan, computed against the file as read:
+    batch rows plan against the same original and combine, which is sound
+    because entry spans never overlap and every index names an original line.
     """
     start, end = entry_span(entries, entry, len(lines))
-    planned: dict[int, str] = {}
+    planned: dict[int, str | None] = {}
     if changes.flag is not None or changes.has_narration or changes.tags:
-        rewritten = _edit_header(lines[start - 1], entry, changes)
-        if rewritten != lines[start - 1]:
+        text = "\n".join(lines[start - 1 : end])
+        rewritten, consumed = _edit_header(text, entry, changes)
+        old_lines = text[:consumed].split("\n")
+        new_lines = rewritten.split("\n")
+        if len(new_lines) == len(old_lines):
+            for offset, (old, new) in enumerate(zip(old_lines, new_lines, strict=True)):
+                if old != new:
+                    planned[start - 1 + offset] = new
+        else:
             planned[start - 1] = rewritten
+            for offset in range(1, len(old_lines)):
+                planned[start - 1 + offset] = None
     if changes.account is not None:
         old, new = _retarget_accounts(entry, options, changes)
         if old != new:
@@ -472,10 +542,7 @@ def plan_rewrite(
     planned = plan_lines(lines, entries, options, entry, changes)
     if not planned:
         return text, ""
-    edited = list(lines)
-    for number, rewritten in planned.items():
-        edited[number] = rewritten
-    new_text = "\n".join(edited)
+    new_text = _combined_text(lines, planned)
     return (("\ufeff" if bom else "") + new_text), _file_diff(text, new_text, target)
 
 
@@ -511,7 +578,7 @@ class _RowPlan:
     entry: Any
     target: Path
     lineno: int
-    edits: dict[int, str]
+    edits: dict[int, str | None]
     summary: list[str]
 
 
@@ -586,17 +653,17 @@ def _plan_rows(
     return plans, rejected, rejected_rows, reasons, schema_rejects
 
 
-def _merge_edits(plans: list[_RowPlan]) -> dict[int, str]:
+def _merge_edits(plans: list[_RowPlan]) -> dict[int, str | None]:
     """Every planned line rewrite, by 0-based index; spans never overlap, so none collide."""
     return {number: line for plan in plans for number, line in plan.edits.items()}
 
 
-def _combined_text(lines: list[str], edits: dict[int, str]) -> str:
-    """The file's lines with every planned rewrite applied."""
-    rewritten = list(lines)
+def _combined_text(lines: list[str], edits: dict[int, str | None]) -> str:
+    """The file's lines with every planned rewrite applied and every `None` line removed."""
+    rewritten: list[str | None] = list(lines)
     for number, new_line in edits.items():
         rewritten[number] = new_line
-    return "\n".join(rewritten)
+    return "\n".join(line for line in rewritten if line is not None)
 
 
 def _file_diff(text: str, new_text: str, target: Path) -> str:
@@ -858,7 +925,7 @@ def _transactions(file: Path, request: dict[str, Any], *, apply: bool, allow_err
         warnings: list[str] = []
         for target in sorted(valid):
             # Re-read the bytes each previous replace left: the next file's
-            # plan is unaffected (disjoint spans, no line added or removed),
+            # plan is unaffected (each file is written once, from its own lines),
             # but its validation and compare must run against the ledger as it
             # stands, with every earlier file's retargets already in it.
             snapshot = ledger_write.LedgerSnapshot.capture(file)

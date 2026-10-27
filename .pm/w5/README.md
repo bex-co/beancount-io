@@ -114,7 +114,6 @@
 
 - [1027 — Reject duplicate batch-update CSV columns](./1027.md) — minor CLI gap: repeated id/account/flag headers silently choose the last cell and apply; unique mappings and JSON-duplicate/unknown-column refusals pass, checked 2026-10-25.
 
-- [1026 — Plan updates from written transaction headers](./1026.md) — minor CLI header gap: multiline spans and plugin-derived payee presence misplace requested tags/narration; original controls plus single/batch raw/native fields, checked 2026-10-26.
 
 
 
