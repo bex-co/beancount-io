@@ -1,12 +1,12 @@
 # w2 · m57 — Record a payroll run from the provider's summary
 
-**Worker:** worker2 **Goal:** a business records each payroll run exactly as its provider's summary prints it — gross wages, each withholding and employer tax to its liability, net pay out of the bank — records the remittances that clear those liabilities, and answers quarter totals for its accountant from booked postings. **Status:** todo
+**Worker:** worker2 **Goal:** a business records each payroll run exactly as its provider's summary prints it — gross wages, each withholding and employer tax to its liability, net pay out of the bank — records the remittances that clear those liabilities, and answers quarter totals for its accountant from booked postings. **Status:** todo (t001 done)
 
 ## Tasks (in order)
 
 | id   | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
-| t001 | Decide placement and the payroll liability model, verified on `bea` | 45m | w2/m55/t001 |
+| [t001](./done/t001.md) | Decide placement and the payroll liability model, verified on `bea` — **DONE** | 45m | w2/m55/t001 |
 | t002 | Record a payroll run from the provider's printed summary | 60m | t001 |
 | t003 | Record remittances and report quarter totals | 60m | t002 |
 | t004 | Write evals, fixtures, and routing entries | 45m | t002, t003 |
@@ -25,7 +25,9 @@
 
 ## Decisions
 
-- _Recorded by t001._
+- **Placement (t001, 2026-10-27): a gated procedure in `beancount-add`, with quarter totals as a `beancount-ask` recipe — no new skill.** Routing probe at `622086cd7` (scratch workspace, suite linked, one client's `claude-opus-5-5[1m]`): "Record this payroll run from my Gusto summary…" and "We paid the quarterly payroll taxes…" opened `beancount-add`; "What were my total wages and payroll taxes for Q3…" opened `beancount-ask`. Both already route correctly, so the work is the missing procedure, not a new trigger. ADR020's test does not favor a separate skill: the run is one gated entry shape from a printed summary (like `beancount-property`'s mortgage split inside its owner), and a fifteenth description competing with `beancount-add` adds routing risk without a distinct deliverable.
+- **Model (t001), per [ADR025](../../../docs/adrs/ADR025-skills-business-books.md):** `Expenses:Payroll:Wages` and `Expenses:Payroll:EmployerTaxes`; one `Liabilities:Payroll:<Item>` per withholding or employer-tax line the provider prints; net pay out of the paying account; `payroll: "<pay date>"` metadata identifies the run. Verified with `bea` 0.3.1 (checkout) on a synthetic ledger: a run of 8,000 gross + 612 employer taxes = 2,324 to three liabilities + 6,288 net, and a quarterly deposit of 2,324 that cleared all three to 0.00; the root check passed and Q3 movements read per account.
+- **Figures only as printed.** The gates compare printed figures (gross − withholdings = net; the liabilities equal the printed withholdings plus employer taxes); a missing or non-tying figure is a question. Nothing is computed from wage rates or tax tables.
 
 ## Source + Goal linkage
 
