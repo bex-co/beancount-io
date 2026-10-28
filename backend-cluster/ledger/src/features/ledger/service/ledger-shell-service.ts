@@ -18,6 +18,7 @@ import {
 import { stripBqlBlockComments } from "./bql-comments";
 import { foldBqlColumnFrom } from "./bql-from-fold";
 import { rescueInnerTableFrom } from "./bql-from-inner-tables";
+import { routeIntegerLiterals } from "./bql-int-literals";
 import { unquoteBqlFromTables } from "./bql-from-quotes";
 import { stripBqlStatementTerminator } from "./bql-terminator";
 
@@ -27,15 +28,19 @@ import { stripBqlStatementTerminator } from "./bql-terminator";
  * exactly one place. Comments first (a `;` or `FROM` inside one is not
  * syntax), then unquote (quoted names classify as their bare selves), then
  * the terminator (a trailing `;` breaks bare-table resolution), then the
- * inner-table rescue (a `)`-terminated bare table resolves column-first),
- * then the fold last (it must see the unterminated query to re-earn or wrap
- * the fold, and its own generated `)`-inners rely on the native fold).
+ * integer routing (dead-zone literals join the decimal path and huge LIMITs
+ * cap before any stage reads magnitude), then the inner-table rescue (a
+ * `)`-terminated bare table resolves column-first), then the fold last (it
+ * must see the unterminated query to re-earn or wrap the fold, and its own
+ * generated `)`-inners rely on the native fold).
  */
 export function normalizeBqlQueryForEngine(query: string): string {
   return foldBqlColumnFrom(
     rescueInnerTableFrom(
-      stripBqlStatementTerminator(
-        unquoteBqlFromTables(stripBqlBlockComments(query)),
+      routeIntegerLiterals(
+        stripBqlStatementTerminator(
+          unquoteBqlFromTables(stripBqlBlockComments(query)),
+        ),
       ),
     ),
   );

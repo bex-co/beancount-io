@@ -1807,6 +1807,174 @@ async function main(): Promise<void> {
     "same-typed numeric comparison still answers through the guard",
   );
 
+  // Integer magnitudes (w23/133): the raw engine throws on dead-zone
+  // literals, silently truncates LIMIT past 2^32 to its low 32 bits,
+  // misreports past-MAX literals as a position-0 syntax error, and
+  // NULLs constant overflow — so the pipeline routes the dead zone
+  // through decimal() and caps huge LIMITs, and the query path refuses
+  // the rest. Stock oracle (beanquery 0.2.0, run 2026-10-28): dead-zone
+  // and MAX literals exact, MAX+5-5 exact, LIMIT 2^32 returns all rows.
+  let deadZoneThrew = "";
+  try {
+    await withLedger(FILES, "main.beancount", (ledger) =>
+      ledger.query("SELECT 9007199254740992"),
+    );
+  } catch (error) {
+    deadZoneThrew = String(error);
+  }
+  assert(
+    deadZoneThrew.includes("can't be represented as a JavaScript number"),
+    "raw engine still throws serializing a dead-zone literal (the rewrite is load-bearing)",
+  );
+  let intCallThrew = "";
+  try {
+    await withLedger(FILES, "main.beancount", (ledger) =>
+      ledger.query("SELECT int('9007199254740992')"),
+    );
+  } catch (error) {
+    intCallThrew = String(error);
+  }
+  assert(
+    intCallThrew.includes("can't be represented as a JavaScript number"),
+    "raw engine still throws serializing a dead-zone int() (the call rule is load-bearing)",
+  );
+  const rawTruncatedLimit = await withLedger(FILES, "main.beancount", (ledger) =>
+    ledger.query("SELECT * FROM postings LIMIT 4294967296"),
+  );
+  const rawPlusOneLimit = await withLedger(FILES, "main.beancount", (ledger) =>
+    ledger.query("SELECT * FROM postings LIMIT 4294967297"),
+  );
+  assert(
+    rawTruncatedLimit.rows.length === 0 &&
+      rawPlusOneLimit.rows.length === 1 &&
+      !rawTruncatedLimit.errors.some((e) => e.severity === "error"),
+    "raw engine still keeps only the low 32 LIMIT bits, silently (the cap is load-bearing)",
+  );
+  const rawPastMax = await withLedger(FILES, "main.beancount", (ledger) =>
+    ledger.query("SELECT 79228162514264337593543950336"),
+  );
+  assert(
+    rawPastMax.rows.length === 0 &&
+      rawPastMax.errors.some(
+        (e) =>
+          e.severity === "error" &&
+          e.message.includes("syntax error at position 0"),
+      ),
+    "raw engine still misreports a past-MAX literal as a position-0 syntax error (the refusal is load-bearing)",
+  );
+  const rawOverflowNull = await withLedger(FILES, "main.beancount", (ledger) =>
+    ledger.query("SELECT 79228162514264337593543950335 + 5 - 5"),
+  );
+  assert(
+    JSON.stringify(rawOverflowNull.rows) === "[[null],[null],[null],[null]]" &&
+      !rawOverflowNull.errors.some((e) => e.severity === "error"),
+    "raw engine still NULLs transient constant overflow (the refusal is load-bearing)",
+  );
+  const rescuedDeadZone = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    normalizeBqlQueryForEngine("SELECT 9007199254740992"),
+  );
+  assert(
+    JSON.stringify(rescuedDeadZone.rows) ===
+      `[{"decimal('9007199254740992')":"9007199254740992"},{"decimal('9007199254740992')":"9007199254740992"},{"decimal('9007199254740992')":"9007199254740992"},{"decimal('9007199254740992')":"9007199254740992"}]`,
+    "pipelined dead-zone literal answers its exact digits",
+  );
+  const rescuedIntCall = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    normalizeBqlQueryForEngine("SELECT int('9007199254740992')"),
+  );
+  assert(
+    JSON.stringify(rescuedIntCall.rows) ===
+      JSON.stringify(rescuedDeadZone.rows),
+    "pipelined dead-zone int() answers the same exact digits",
+  );
+  const rewrittenPredicate = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    normalizeBqlQueryForEngine(
+      "SELECT count(*) FROM postings WHERE number = 9007199254740992",
+    ),
+  );
+  assert(
+    JSON.stringify(rewrittenPredicate.rows) === `[{"count(*)":0}]`,
+    "rewritten dead-zone predicate still counts zero like the raw form",
+  );
+  const maxLiteral = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    normalizeBqlQueryForEngine("SELECT 79228162514264337593543950335"),
+  );
+  assert(
+    JSON.stringify(maxLiteral.rows) ===
+      `[{"79228162514264337593543950335":"79228162514264337593543950335"},{"79228162514264337593543950335":"79228162514264337593543950335"},{"79228162514264337593543950335":"79228162514264337593543950335"},{"79228162514264337593543950335":"79228162514264337593543950335"}]`,
+    "MAX literal still renders exactly through the pipeline",
+  );
+  const cappedLimit = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    normalizeBqlQueryForEngine("SELECT * FROM postings LIMIT 4294967296"),
+  );
+  const uncappedLimit = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    "SELECT * FROM postings",
+  );
+  assert(
+    cappedLimit.rows.length === 4 &&
+      JSON.stringify(cappedLimit.rows) === JSON.stringify(uncappedLimit.rows),
+    "pipelined LIMIT 2^32 answers every row like stock",
+  );
+  for (const [query, marker] of [
+    ["SELECT 79228162514264337593543950336", "79228162514264337593543950335"],
+    [
+      "SELECT 79228162514264337593543950335 + 5 - 5",
+      "overflows the maximum",
+    ],
+  ]) {
+    const refused = await queryLedgerFilesResult(
+      FILES,
+      "main.beancount",
+      normalizeBqlQueryForEngine(query),
+    );
+    assert(
+      refused.rows.length === 0 &&
+        refused.errors.some(
+          (e) => e.severity === "error" && e.message.includes(marker),
+        ),
+      `the query path refuses ${query} naming ${marker}`,
+    );
+  }
+  const unpipedLimit = await queryLedgerFilesResult(
+    FILES,
+    "main.beancount",
+    "SELECT * FROM postings LIMIT 4294967296",
+  );
+  assert(
+    unpipedLimit.rows.length === 0 &&
+      unpipedLimit.errors.some(
+        (e) => e.severity === "error" && e.message.includes("32-bit page"),
+      ),
+    "the guard refuses an unpipelined huge LIMIT (backstop behind the cap)",
+  );
+  const smallArithmetic = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    normalizeBqlQueryForEngine("SELECT 5 - 3"),
+  );
+  const smallLimit = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    normalizeBqlQueryForEngine("SELECT * FROM postings LIMIT 1"),
+  );
+  assert(
+    JSON.stringify(smallArithmetic.rows) ===
+      `[{"5 - 3":"2"},{"5 - 3":"2"},{"5 - 3":"2"},{"5 - 3":"2"}]` &&
+      smallLimit.rows.length === 1,
+    "small arithmetic and small LIMITs still answer through the pipeline",
+  );
+
   const count = await countDirectives(
     "2024-01-01 open Assets:Cash USD\n2024-01-02 open Income:Z USD\n",
   );
