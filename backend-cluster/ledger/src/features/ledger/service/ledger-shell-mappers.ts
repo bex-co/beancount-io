@@ -97,6 +97,23 @@ function classifyColumnDtype(
     return dtypeFromColumnName(normalizedName);
   }
   if (typeof sample === "string") {
+    // Expression-typed strings (w23/146): the engine names a column for
+    // its expression, so a string literal or string-function call reports
+    // `str` whatever the values look like — sniffing mistyped `'3000.00'`
+    // and `str(number)` as Decimal and `str(date)` as date. An alias hides
+    // the expression, so its map root is checked instead; a literal behind
+    // an alias keeps sniffing (its root is empty).
+    const aliasRoot = aliases.get(normalizedName);
+    if (aliasRoot !== undefined && STRING_FUNCTIONS.has(aliasRoot)) {
+      return "str";
+    }
+    if (normalizedName.startsWith("'") || normalizedName.startsWith('"')) {
+      return "str";
+    }
+    const call = /^([a-z_][\w$]*)\s*\(/u.exec(normalizedName);
+    if (call !== null && STRING_FUNCTIONS.has(call[1])) {
+      return "str";
+    }
     if (
       values.every((value) => typeof value === "string" && isIsoDate(value))
     ) {
@@ -147,6 +164,32 @@ const STRING_COLUMNS = new Set([
   "payee",
   "narration",
   "type",
+]);
+
+/**
+ * BQL functions returning strings (w23/146): stock beanquery 0.2.0's
+ * str-typed functions (`query_env.py`), each verified live against the
+ * engine — except `repr`, which rustledger does not implement.
+ */
+const STRING_FUNCTIONS = new Set([
+  "str",
+  "upper",
+  "lower",
+  "substr",
+  "subst",
+  "leaf",
+  "parent",
+  "root",
+  "weekday",
+  "quarter",
+  "currency",
+  "maxwidth",
+  "grep",
+  "grepn",
+  "splitcomp",
+  "joinstr",
+  "findfirst",
+  "account_sortkey",
 ]);
 
 function isIsoDate(value: string): boolean {

@@ -2105,6 +2105,33 @@ async function main(): Promise<void> {
     );
   }
 
+  // Expression-typed string dtypes (w23/146): a string literal or
+  // string-function call reports `str` whatever the values look like —
+  // value sniffing mistyped `'3000.00'` and `str(number)` as Decimal and
+  // `str(date)` as date. Bare engine columns keep sniffing.
+  for (const [query, expected] of [
+    ["SELECT '3000.00', 'abc' LIMIT 1", ["str", "str"]],
+    ["SELECT str(number) LIMIT 1", ["str"]],
+    ["SELECT upper(str(number)) LIMIT 1", ["str"]],
+    ["SELECT str(date) LIMIT 1", ["str"]],
+    ["SELECT str(number) AS s LIMIT 1", ["str"]],
+    ["SELECT number, date LIMIT 1", ["Decimal", "date"]],
+  ] as Array<[string, string[]]>) {
+    const shell = queryResultToShellResult(
+      await queryLedgerFilesResult(
+        FILES,
+        "main.beancount",
+        normalizeBqlQueryForEngine(query),
+      ),
+      extractSelectAliases(query),
+    );
+    assert(
+      JSON.stringify(shell.table?.types.map((type) => type.dtype)) ===
+        JSON.stringify(expected),
+      `${query} reports dtypes ${expected}`,
+    );
+  }
+
   // Text header widths (w23/138): columns size to the wider of header
   // and values, so a long name over narrow values renders in full.
   const narrowText = queryResultToText(
