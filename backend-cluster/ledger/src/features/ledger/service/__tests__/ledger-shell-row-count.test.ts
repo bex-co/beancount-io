@@ -70,19 +70,19 @@ const fixtures: {
     name: "a one-character separator does not add header rows",
     query: "SELECT 1 AS qa_count LIMIT 1",
     result: { columns: ["qa_count"], rows: [[1]], errors: [] },
-    text: "q\n-\n1\n",
+    text: "qa_count\n--------\n       1\n",
   },
   {
     name: "a count aggregate with a two-character separator is one row",
     query: "SELECT COUNT(*) AS qa_count",
     result: { columns: ["qa_count"], rows: [[34]], errors: [] },
-    text: "qa\n--\n34\n",
+    text: "qa_count\n--------\n      34\n",
   },
   {
     name: "an empty-string cell remains a row with its blank rendering",
     query: "SELECT '' AS qa_text LIMIT 1",
     result: { columns: ["qa_text"], rows: [[""]], errors: [] },
-    text: "q\n-\n \n",
+    text: "qa_text\n-------\n       \n",
   },
   {
     name: "ordinary decimal tables preserve alignment, signs and precision",
@@ -96,10 +96,10 @@ const fixtures: {
       errors: [],
     },
     text:
-      "   account     numbe\n" +
-      "-------------  -----\n" +
-      "Assets:Cash    12.50\n" +
-      "Expenses:Food  -2.5 \n",
+      "   account     number\n" +
+      "-------------  ------\n" +
+      "Assets:Cash     12.50\n" +
+      "Expenses:Food   -2.5 \n",
   },
   {
     name: "PRINT counts directives rather than their multiline posting text",
@@ -161,7 +161,7 @@ describe("LedgerShellService same-query text row metadata (w6/m1/t002)", () => {
 
     expect(response).toHaveProperty("rowCount", result.rows.length);
     expect(response).toHaveProperty("rowCount", 1005);
-    expect(response.text).toBe("v\n-\n" + "X\n".repeat(1005));
+    expect(response.text).toBe("value\n-----\n" + "X    \n".repeat(1005));
     expect(queryLedgerFilesResultMock).toHaveBeenCalledTimes(1);
     expect(loadFiles).toHaveBeenCalledTimes(1);
   });
@@ -206,7 +206,7 @@ describe("LedgerShellService same-query text row metadata (w6/m1/t002)", () => {
         ...params,
         query: "SELECT 1 AS value LIMIT 1",
       }),
-    ).resolves.toEqual({ text: "v\n-\n1\n", rowCount: 1 });
+    ).resolves.toEqual({ text: "value\n-----\n    1\n", rowCount: 1 });
     expect(queryLedgerFilesResultMock).toHaveBeenCalledTimes(1);
   });
 

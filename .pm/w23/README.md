@@ -27,7 +27,6 @@
 
 ## Inbox
 
-- [138](./138.md) — text renderer truncates column headers to the widest value (it.6111-6114)
 - [139](./139.md) — window functions fail on any explicit FROM as "subquery" (it.6146-6148)
 - [140](./140.md) — nested multi-word entry keys camel-only while top-level params dual-accept (`sourceAccount`, `totalPrice`; it.6373-6381)
 - [141](./141.md) — `readLedgerFiles` echoes `startLine`/`endLine` but refuses them as input (output camel, input snake)

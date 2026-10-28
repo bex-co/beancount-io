@@ -56,7 +56,7 @@ describe("LedgerShellService alias dtype attribution", () => {
       userId: undefined,
       query: "SELECT payee AS number FROM postings",
     });
-    expect(response.text).toBe("n\n-\n \n \n");
+    expect(response.text).toBe("number\n------\n      \n      \n");
   });
 
   it("keeps the name fallback for a bare column in queryShell", async () => {

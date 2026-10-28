@@ -2105,6 +2105,33 @@ async function main(): Promise<void> {
     );
   }
 
+  // Text header widths (w23/138): columns size to the wider of header
+  // and values, so a long name over narrow values renders in full.
+  const narrowText = queryResultToText(
+    await queryLedgerFilesResult(
+      FILES,
+      "main.beancount",
+      normalizeBqlQueryForEngine(
+        "SELECT cost_currency, number FROM postings LIMIT 1",
+      ),
+    ),
+  );
+  assert(
+    narrowText.split("\n")[0]?.includes("cost_currency") === true,
+    "text keeps the full cost_currency header over empty values",
+  );
+  const emptyText = queryResultToText(
+    await queryLedgerFilesResult(
+      FILES,
+      "main.beancount",
+      "SELECT payee FROM postings WHERE FALSE",
+    ),
+  );
+  assert(
+    emptyText === "",
+    "text still renders zero rows as the empty string",
+  );
+
   const count = await countDirectives(
     "2024-01-01 open Assets:Cash USD\n2024-01-02 open Income:Z USD\n",
   );

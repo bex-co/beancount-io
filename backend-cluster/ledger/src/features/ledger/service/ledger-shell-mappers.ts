@@ -290,9 +290,12 @@ function center(value: string, width: number): string {
 
 /**
  * Render a BQL result using beanquery 0.2's default text-table conventions:
- * empty result sets produce no text, headers are centered/truncated to the data
- * width, numeric columns are right-aligned, booleans are upper-case, and set
- * values use the renderer's two-space separator.
+ * empty result sets produce no text, headers are centered over columns
+ * sized to the wider of header and values (w23/138 — never cut to the
+ * data width), numeric columns are right-aligned, booleans are
+ * upper-case, and set values use the renderer's two-space separator.
+ * A newline inside a column name flattens to a space: values may span
+ * lines, but a header must stay on one.
  */
 export function queryResultToText(
   result: QueryResult,
@@ -300,6 +303,7 @@ export function queryResultToText(
 ): string {
   if (result.columns.length === 0 || result.rows.length === 0) return "";
 
+  const headers = result.columns.map((name) => name.replace(/\r\n|\r|\n/g, " "));
   const columns = result.columns.map((name, index) => {
     const dtype = classifyColumnDtype(result.rows, index, name, aliases);
     const rawValues = result.rows.map((row) => formatTextCell(row[index]));
@@ -309,6 +313,7 @@ export function queryResultToText(
       values,
       width: Math.max(
         1,
+        headers[index]?.length ?? 0,
         dtype === "date" ? 10 : 0,
         ...values.map((value) => value.length),
       ),
@@ -316,7 +321,7 @@ export function queryResultToText(
     };
   });
   const widths = columns.map((column) => column.width);
-  const header = result.columns
+  const header = headers
     .map((name, index) => center(name, widths[index]))
     .join("  ");
   const separator = widths.map((width) => "-".repeat(width)).join("  ");

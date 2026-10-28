@@ -76,7 +76,7 @@ describe("aliased all-NULL column dtypes", () => {
         nullResult("date", 1),
         extractSelectAliases("SELECT payee AS date FROM postings"),
       ),
-    ).toBe("d\n-\n \n");
+    ).toBe("date\n----\n    \n");
     expect(queryResultToText(nullResult("date", 1))).toBe(
       "   date   \n----------\n          \n",
     );
