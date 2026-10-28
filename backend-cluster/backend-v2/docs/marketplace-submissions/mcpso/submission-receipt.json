@@ -63,8 +63,13 @@
   "feePaid": false,
   "mcpsoWebsiteLoginUsed": false,
   "publication": "Not verified. The PR proposes a README entry for review; it does not populate or prove publication in the live database-backed directory.",
-  "next": "MCP.so maintainers review/merge or request corrections; worker handles actual feedback and verifies the public connector/advertised native path. Manual follow-up2026-10-27UTC if no earlier event; no recurring automation.",
+  "next": "MCP.so maintainers review/merge/import existing PR6071 or request corrections; worker verifies actual public/native acceptance. ManualOct31UTC or real feedback/publication earlier. No duplicate or payment.",
   "privacy": "Public source/endpoint/PR metadata only; no credentials, account email, tokens, cookies, private infrastructure or ledger contents.",
   "submissionOwner": "w6/041 (done)",
-  "publicationOwner": "w6/047"
+  "publicationOwner": "w6/047",
+  "latestReviewEvidence": "review-followup-20261028.json",
+  "latestReviewObservationWindowUTC": {
+    "from": "2026-10-28T07:32:00Z",
+    "through": "2026-10-28T07:52:04Z"
+  }
 }

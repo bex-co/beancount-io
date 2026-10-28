@@ -23,9 +23,21 @@ for this already-created GitHub submission.
 **Next:** maintainers review/merge or provide actionable feedback; the worker
 handles corrections and verifies actual public metadata and the advertised
 authenticated native path before reporting publication. Manual follow-up
-2026-10-27UTC if no earlier event; no automated monitor is created. [w6/041](../../../../../.pm/w6/done/041.md) archives the completed submission;
+2026-10-31UTC if no earlier event; no automated monitor is created. [w6/041](../../../../../.pm/w6/done/041.md) archives the completed submission;
 [w6/047](../../../../../.pm/w6/blocked/047.md) retains publication acceptance,
 with no spending decision pending.
+
+## Current review, public query and repository alias — 2026-10-28 UTC
+
+PR6071 remains OPEN/unmerged with zero reviews/comments. The actual public
+beancount query still shows only Beanquery MCP/vanto and Beancount MCP/StdioA;
+neither is the canonical hosted connector. The site's GitHub footer points to
+chatmcp/mcp-directory, which redirects to the SAME chatmcp/mcpso repository
+(id899309258), not another free intake. [Current evidence](./review-followup-20261028.json)
+records this investigated alternative and its limits. No duplicate PR, issue,
+comment, login or payment is made. Maintainer review/import remains external;
+next manualOct31UTC or actual feedback/publication earlier, then worker verifies
+public metadata and advertised native installation.
 
 ## Historical webpage-only preparation and fee assumption
 

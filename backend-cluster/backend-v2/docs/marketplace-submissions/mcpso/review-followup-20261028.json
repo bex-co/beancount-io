@@ -1,0 +1,53 @@
+{
+  "owner": "w6/047",
+  "status": "submitted",
+  "observationWindowUTC": {
+    "from": "2026-10-28T07:32:00Z",
+    "through": "2026-10-28T07:52:04Z"
+  },
+  "existingSubmission": {
+    "url": "https://github.com/chatmcp/mcpso/pull/6071",
+    "state": "open",
+    "updatedAtUTC": "2026-10-25T07:03:59Z",
+    "comments": 0,
+    "reviewComments": 0,
+    "headSHA": "f8f3431e9a1c799373131fc473d0c65c98277862",
+    "merged": false,
+    "mergedAtUTC": null,
+    "mergeableState": "clean",
+    "labels": [],
+    "reviews": []
+  },
+  "actualPublicNameQuery": {
+    "url": "https://mcp.so/search?q=beancount",
+    "resultCount": 2,
+    "results": [
+      {
+        "name": "Beanquery MCP",
+        "author": "vanto",
+        "path": "/servers/beanquery-mcp"
+      },
+      {
+        "name": "Beancount MCP",
+        "author": "StdioA",
+        "path": "/servers/beancount-mcp"
+      }
+    ],
+    "canonicalHostedConnectorObserved": false,
+    "limit": "Actual name query only; no private moderation-state or whole-catalog absence claim."
+  },
+  "officialFooterRepositoryCheck": {
+    "linkedUrl": "https://github.com/chatmcp/mcp-directory",
+    "resolvedUrl": "https://github.com/chatmcp/mcpso",
+    "sameRepositoryId": 899309258,
+    "newIntakeEstablished": false,
+    "finding": "The website footer alias redirects to the existing PR repository; it is not a separate free submission target."
+  },
+  "checksBoundary": "Current review readback does not fetch check runs; original receipt reported none. CLEAN mergeability is not review approval.",
+  "newPRIssueCommentOrReminder": false,
+  "websiteLoginOrPayment": false,
+  "publisherInputNeeded": false,
+  "unblock": "MCP.so maintainers review/merge/import PR6071 or supply feedback; worker verifies actual canonical public metadata and advertised native installation.",
+  "nextManualCheckUTC": "2026-10-31",
+  "earlierTrigger": "Actual review/merge/import/publication."
+}
