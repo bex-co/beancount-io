@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import contextlib
 import csv
+import errno
 import hashlib
 import importlib.util
 import io
@@ -114,7 +115,7 @@ class TestOldLayoutUpgrade(Workspace):
         before = snapshot(self.dest)
         code, _, err = run("verify", self.dest)
         self.assertEqual(code, 1)
-        self.assertEqual(err.count("links to the old skills/.claude/skills layout; repair with: python3"), len(skills.expected_skills()))
+        self.assertEqual(err.count(f"links to the old skills/.claude/skills layout; repair with: {skills.PYTHON} "), len(skills.expected_skills()))
         self.assertNotIn("link to missing", err)
         self.assertEqual(snapshot(self.dest), before)
 
@@ -252,6 +253,211 @@ class TestInstall(Workspace):
         self.assertEqual(code, 0)
         self.assertEqual((backups / "beancount-ask" / "SKILL.md").read_text(), "edited\n")
         self.assertTrue((self.dest / "beancount-ask").is_symlink())
+
+
+class TestLinkFailures(Workspace):
+    """Denied or interrupted link creation: a remedy, an explicit state, and no lost entries.
+
+    os.symlink is replaced so the failure is deterministic on any host; links
+    that do get created are real, so every assertion is about the filesystem.
+    Runs without bea: `python -m unittest test_beancount_skills.TestLinkFailures`.
+    """
+
+    real_symlink = staticmethod(os.symlink)
+
+    @staticmethod
+    def denied(target, link) -> OSError:
+        if os.name == "nt":
+            return OSError(None, "A required privilege is not held by the client", str(target), 1314, str(link))
+        return PermissionError(errno.EPERM, "Operation not permitted", str(link))
+
+    def inject(self, fail):
+        """Patch os.symlink: `fail(link)` returns an exception to raise, or None to really link."""
+
+        def symlink(target, link, target_is_directory=False):
+            error = fail(Path(link))
+            if error is not None:
+                raise error
+            self.real_symlink(target, link, target_is_directory)
+
+        patcher = mock.patch.object(skills.os, "symlink", symlink)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def link_first(self, count: int) -> list[str]:
+        names = skills.expected_skills()[:count]
+        for name in names:
+            (self.dest / name).symlink_to(SUITE / name, target_is_directory=True)
+        return names
+
+    def test_denied_link_names_the_remedy_removes_new_directories_and_continues(self):
+        fresh = self.root / "new home ü" / "agent dir" / "skills"
+        self.inject(lambda link: self.denied(SUITE, link) if fresh in link.parents else None)
+        before = snapshot(self.dest)
+
+        code, out, err = run("install", fresh, self.dest)
+
+        self.assertEqual(code, 1)
+        self.assertNotIn("Traceback", err)
+        first = skills.expected_skills()[0]
+        if os.name == "nt":
+            self.assertIn(f"FAIL {fresh / first}: this account may not create symbolic links", err)
+            self.assertIn("turn on Developer Mode", err)
+            self.assertIn('"Create symbolic links" right', err)
+            self.assertIn("not elevated", err)
+            self.assertIn(f'python "{skills.SCRIPT}" install "{fresh}"', err)
+        else:
+            self.assertIn(f"FAIL {fresh / first}: permission denied", err)
+        self.assertIn(f"Not installed in {fresh}: no suite link is installed there", err)
+        self.assertFalse(os.path.lexists(self.root / "new home ü"), "directories this run created are removed")
+        for path in (fresh, fresh.parent, fresh.parent.parent):
+            self.assertIn(f"removed {path}, which this run had created", err)
+        # The next destination still ran and installed.
+        self.assertIn(f"OK {len(skills.expected_skills())} customer skills complete in {self.dest}", out)
+        self.assertEqual(run("verify", self.dest)[0], 0)
+        self.assertEqual(self.sentinel.read_text(), before["find-skills/SKILL.md"])
+
+    def test_denied_first_link_in_an_existing_directory_changes_nothing(self):
+        self.inject(lambda link: self.denied(SUITE, link))
+        before = snapshot(self.root)
+
+        code, _, err = run("install", self.dest)
+
+        self.assertEqual(code, 1)
+        self.assertNotIn("Traceback", err)
+        self.assertIn(f"Not installed in {self.dest}: nothing was changed", err)
+        self.assertEqual(snapshot(self.root), before)
+
+    def test_access_denied_names_the_directory_not_the_symlink_privilege(self):
+        self.inject(lambda link: PermissionError(errno.EACCES, "Permission denied", str(link)))
+
+        code, _, err = run("install", self.dest)
+
+        self.assertEqual(code, 1)
+        self.assertIn(f"FAIL {self.dest / skills.expected_skills()[0]}: permission denied", err)
+        self.assertIn(f"make {self.dest} writable by this account", err)
+        self.assertNotIn("Developer Mode", err)
+        self.assertIn(f"Not installed in {self.dest}: nothing was changed", err)
+
+    def test_mid_install_failure_removes_only_this_runs_links(self):
+        self.dest.mkdir(parents=True, exist_ok=True)
+        existing = self.link_first(3)
+        notes = self.dest / "notes ü.txt"
+        notes.write_text("mine\n", encoding="utf-8")
+        new = skills.expected_skills()[3:5]
+        failing = skills.expected_skills()[5]
+        self.inject(lambda link: OSError(errno.EIO, "Input/output error", str(link)) if link.name == failing else None)
+        before = snapshot(self.dest)
+
+        code, out, err = run("install", self.dest)
+
+        self.assertEqual(code, 1)
+        self.assertNotIn("Traceback", err)
+        self.assertIn(f"FAIL {self.dest / failing}: could not be created", err)
+        self.assertEqual(out.count("kept   "), 3)
+        self.assertEqual(out.count("linked "), 2, "the links made before the failure were reported")
+        for name in new:
+            self.assertIn(f"removed {self.dest / name}, which this run had linked", err)
+        self.assertIn(f"Not installed in {self.dest}: the 3 suite links that were already there were kept", err)
+        self.assertEqual(snapshot(self.dest), before, "only this run's links are gone")
+        for name in existing:
+            self.assertTrue(skills.is_linked(self.dest / name), name)
+
+    def test_entries_replaced_after_linking_are_left_in_place(self):
+        self.dest.mkdir(parents=True, exist_ok=True)
+        self.link_first(1)
+        names = skills.expected_skills()
+        mine, theirs, owned = (self.dest / name for name in names[1:4])
+        elsewhere = self.root / "elsewhere"
+        elsewhere.mkdir()
+
+        def fail(link):
+            if link.name != names[4]:
+                return None
+            # Something else replaces two of this run's links before it rolls back.
+            mine.unlink()
+            mine.mkdir()
+            (mine / "SKILL.md").write_text("user's own\n")
+            theirs.unlink()
+            self.real_symlink(elsewhere, theirs, True)
+            return self.denied(SUITE, link)
+
+        self.inject(fail)
+
+        code, _, err = run("install", self.dest)
+
+        self.assertEqual(code, 1)
+        self.assertNotIn("Traceback", err)
+        self.assertEqual((mine / "SKILL.md").read_text(), "user's own\n")
+        self.assertEqual(theirs.resolve(), elsewhere.resolve())
+        self.assertFalse(os.path.lexists(owned), "the link still owned by this run is removed")
+        self.assertTrue(skills.is_linked(self.dest / names[0]), "the pre-existing link is kept")
+        self.assertIn(f"left {mine} in place: it was replaced after this run linked it", err)
+        self.assertIn(f"left {theirs} in place: it was replaced after this run linked it", err)
+        self.assertIn(f"removed {owned}, which this run had linked", err)
+        self.assertTrue(self.sentinel.is_file())
+
+    def test_denied_relink_restores_the_old_layout_link(self):
+        self.dest.mkdir(parents=True, exist_ok=True)
+        name = skills.expected_skills()[0]
+        (self.dest / name).symlink_to(skills.OLD_LAYOUT / name, target_is_directory=True)
+        self.inject(lambda link: self.denied(SUITE, link))
+        before = snapshot(self.dest)
+
+        code, _, err = run("install", self.dest)
+
+        self.assertEqual(code, 1)
+        self.assertNotIn("Traceback", err)
+        self.assertEqual(snapshot(self.dest), before)
+        self.assertTrue(skills.is_old_layout_link(self.dest / name))
+
+    def test_printed_remedies_fit_the_platform_shell(self):
+        spaced = self.root / "home dir ü" / "skills"
+        spaced.mkdir(parents=True)
+        shutil.copytree(SUITE / "beancount-ask", spaced / "beancount-ask")
+        with mock.patch.object(skills.Path, "home", return_value=self.root / "home dir ü"):
+            code, _, conflict = run("install", spaced)
+        self.assertEqual(code, 1)
+        self.assertIn("Nothing was changed", conflict)
+        code, _, incomplete = run("verify", spaced)
+        self.assertEqual(code, 1)
+        backups = self.root / "home dir ü" / "beancount-skill-backups"
+        if os.name == "nt":
+            self.assertNotIn("&&", conflict)
+            self.assertIn(f'  New-Item -ItemType Directory -Force "{backups}" | Out-Null\n', conflict)
+            self.assertIn(f'  Move-Item "{spaced}\\<name>" "{backups}\\"\n', conflict)
+            self.assertIn(f'Repair with: python "{skills.SCRIPT}" install "{spaced}"', incomplete)
+            self.assertNotIn("python3", incomplete)
+        else:
+            self.assertIn(f"  mkdir -p {shlex.quote(str(backups))} && mv {shlex.quote(str(spaced))}/<name>", conflict)
+            self.assertIn(f"Repair with: python3 {shlex.quote(str(skills.SCRIPT))} install {shlex.quote(str(spaced))}", incomplete)
+
+    @unittest.skipUnless(os.name == "nt" and shutil.which("powershell"), "Windows PowerShell only")
+    def test_printed_windows_remedies_run_in_windows_powershell(self):
+        spaced = self.root / "home dir ü" / "skills"
+        spaced.mkdir(parents=True)
+        shutil.copytree(SUITE / "beancount-ask", spaced / "beancount-ask")
+        (spaced / "beancount-ask" / "SKILL.md").write_text("edited\n")
+        with mock.patch.object(skills.Path, "home", return_value=self.root / "home dir ü"):
+            _, _, conflict = run("install", spaced)
+        move = "; ".join(
+            line.strip().replace("<name>", "beancount-ask")
+            for line in conflict.splitlines()
+            if line.startswith(("  New-Item", "  Move-Item"))
+        )
+        _, _, incomplete = run("verify", spaced)
+        repair = re.search(r"Repair with: (.+?) \(after", incomplete).group(1)
+        script = self.root / "remedy.ps1"
+        # UTF-8 with BOM, so Windows PowerShell 5.1 reads the non-ASCII paths.
+        script.write_text(f"$ErrorActionPreference = 'Stop'\n{move}\n& {repair}\nexit $LASTEXITCODE\n", encoding="utf-8-sig")
+        result = subprocess.run(
+            ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script)],
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        backup = self.root / "home dir ü" / "beancount-skill-backups" / "beancount-ask" / "SKILL.md"
+        self.assertEqual(backup.read_text(), "edited\n")
+        self.assertEqual(run("verify", spaced)[0], 0)
 
 
 class TestVerify(Workspace):

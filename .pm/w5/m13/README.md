@@ -1,6 +1,6 @@
 # w5 · m13 — Install the ledger skills and reach a first query on native Windows
 
-**Worker:** worker1 **Goal:** a native Windows user installs the eight customer ledger skills, maintains that installation, and reaches a verified first answer through either agent **Status:** in progress (unblocked 2026-10-28; t001 done)
+**Worker:** worker1 **Goal:** a native Windows user installs the eight customer ledger skills, maintains that installation, and reaches a verified first answer through either agent **Status:** in progress (unblocked 2026-10-28; t001–t002 done)
 
 **Estimate:** 3h30m implementation; 5h30m including standing closing tasks (8 tasks). Priority 2 in the approved proposal; no hard dependency on m12.
 
@@ -13,7 +13,7 @@
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
 | t001 | Rehearse native installation and document PowerShell prerequisites — **DONE** | 45m | — |
-| t002 | Make installer link failures actionable and preserve existing state | 60m | w5/m13/t001 |
+| t002 | Make installer link failures actionable and preserve existing state — **DONE** | 60m | w5/m13/t001 |
 | t003 | Add the native Windows installer lifecycle CI job | 45m | w5/m13/t002 |
 | t004 | Verify discovery and the first query through both native Windows agents | 60m | w5/m13/t003 |
 | t005 | Adoption surface | 30m | w5/m13/t004 |

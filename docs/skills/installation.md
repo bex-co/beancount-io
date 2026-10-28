@@ -38,7 +38,7 @@ SKILLS_SRC="${XDG_DATA_HOME:-$HOME/.local/share}/beancount-io"
 python3 "$SKILLS_SRC/scripts/skills/beancount-skills.py" install ~/.claude/skills ~/.agents/skills
 ```
 
-For each directory, `install` creates one link per skill (`beancount-ask -> $SKILLS_SRC/skills/beancount-ask`, and so on), prints the source revision, and runs `verify`. It leaves every other entry in the directory alone. Both agents follow symlinked skill folders.
+For each directory, `install` creates one link per skill (`beancount-ask -> $SKILLS_SRC/skills/beancount-ask`, and so on), prints the source revision, and runs `verify`. It leaves every other entry in the directory alone. Both agents follow symlinked skill folders. If a link cannot be created, for example because permission is denied, `install` prints a `FAIL` line with a remedy and exits with a nonzero code. It removes the links and empty directories that the same run created and keeps everything that was already there. Then it moves on to the next directory.
 
 Links for a single workspace are absolute paths on your machine. Keep them out of a shared ledger repository, for example by adding `.claude/skills/beancount-*` and `.agents/skills/beancount-*` to its `.gitignore`.
 
@@ -272,10 +272,12 @@ commands above there.
   ```
 
   `directory symlinks: allowed` means you can continue. `WinError 1314` means
-  the permission is missing. Until it is fixed, `install` stops with a Python
-  traceback ending in that error and links nothing. It may leave behind an
-  empty skill directory that it created. Turning on Developer Mode took effect
-  in the rehearsal without signing out or restarting.
+  the permission is missing. Until it is fixed, `install` prints a `FAIL` line
+  for each skill directory with this remedy, and exits with a nonzero code. It
+  removes any links and empty directories that the same run created, keeps
+  everything that was already there, says what state it left, and goes on to
+  the next directory. Turning on Developer Mode took effect in the rehearsal
+  without signing out or restarting. Open a new PowerShell window afterwards.
 
 Quote every path. Paths with spaces and non-ASCII characters work as long as
 they are quoted. Windows PowerShell 5.1 has no `&&`, so run commands one at a
@@ -327,7 +329,7 @@ git -C "$SKILLS_SRC" stash pop
 ### Existing copies and name conflicts
 
 Move a conflicting entry out of the skill directory, then run `install` again.
-The installer's own hint is written for macOS/Linux shells:
+On Windows the installer prints its hint in this PowerShell form:
 
 ```powershell
 New-Item -ItemType Directory -Force "$HOME\beancount-skill-backups" | Out-Null

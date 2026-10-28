@@ -26,6 +26,7 @@ import filecmp
 import json
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -43,6 +44,19 @@ OLD_LAYOUT = SOURCE_DIR / ".claude" / "skills"
 URL = re.compile(r"https?://\S+")
 REFERENCE = re.compile(r"(?<![\w./-])(?:references/)?([a-z0-9][a-z0-9-]*\.md)\b")
 SIBLING = re.compile(r"(?<![\w-])beancount-[a-z]+(?:-[a-z]+)*")
+WINDOWS = os.name == "nt"
+# Printed remedies must run as shown: Windows PowerShell 5.1 has no `&&`, and
+# `python3` there is often the Microsoft Store stub.
+PYTHON = "python" if WINDOWS else "python3"
+ERROR_PRIVILEGE_NOT_HELD = 1314
+
+
+def quote(path: Path | str) -> str:
+    return f'"{path}"' if WINDOWS else shlex.quote(str(path))
+
+
+def rerun(command: str, dest: Path) -> str:
+    return f"{PYTHON} {quote(SCRIPT)} {command} {quote(dest)}"
 
 
 def expected_skills() -> list[str]:
@@ -123,7 +137,7 @@ def verify(dest: Path) -> int:
         skill_md = entry / "SKILL.md"
         if is_old_layout_link(entry):
             problems.append(
-                f"{name}: links to the old skills/.claude/skills layout; repair with: python3 {SCRIPT} install {dest}"
+                f"{name}: links to the old skills/.claude/skills layout; repair with: {rerun('install', dest)}"
             )
         elif not entry.exists():
             detail = f"link to missing {os.readlink(entry)}" if entry.is_symlink() else "not installed"
@@ -155,7 +169,7 @@ def verify(dest: Path) -> int:
         print(f"FAIL {problem}", file=sys.stderr)
     if problems:
         print(
-            f"Incomplete suite in {dest}. Repair with: python3 {SCRIPT} install {dest}"
+            f"Incomplete suite in {dest}. Repair with: {rerun('install', dest)}"
             " (after moving any conflicting copies aside)",
             file=sys.stderr,
         )
@@ -246,28 +260,122 @@ def install(dest: Path) -> int:
         for conflict in conflicts:
             print(f"CONFLICT {conflict}", file=sys.stderr)
         backups = Path.home() / "beancount-skill-backups"
+        if WINDOWS:
+            move = (
+                f'  New-Item -ItemType Directory -Force "{backups}" | Out-Null\n'
+                f'  Move-Item "{dest}\\<name>" "{backups}\\"\n'
+            )
+        else:
+            move = f"  mkdir -p {quote(backups)} && mv {quote(dest)}/<name> {quote(backups)}/\n"
         print(
             f"Nothing was changed in {dest}. To keep an existing entry, move it out of the"
             f" skills directory (a renamed copy left inside still loads as a skill):\n"
-            f"  mkdir -p {backups} && mv {dest}/<name> {backups}/\n"
-            f"then run install again.",
+            f"{move}then run install again.",
             file=sys.stderr,
         )
         return 1
 
-    dest.mkdir(parents=True, exist_ok=True)
-    for entry in entries:
-        if is_linked(entry):
-            print(f"kept   {entry}")
-        elif is_old_layout_link(entry):
-            entry.unlink()
-            entry.symlink_to(SOURCE_DIR / entry.name, target_is_directory=True)
-            print(f"relinked {entry} -> {SOURCE_DIR / entry.name} (moved from skills/.claude/skills)")
-        else:
-            entry.symlink_to(SOURCE_DIR / entry.name, target_is_directory=True)
-            print(f"linked {entry} -> {SOURCE_DIR / entry.name}")
+    # Directories this invocation creates, deepest first, so that a failed run
+    # can remove them again. Directories that already existed are never removed.
+    made: list[Path] = []
+    missing = dest
+    while not os.path.lexists(missing):
+        made.append(missing)
+        missing = missing.parent
+    created: list[Path] = []
+    relinked = 0
+    entry = dest
+    try:
+        dest.mkdir(parents=True, exist_ok=True)
+        for entry in entries:
+            if is_linked(entry):
+                print(f"kept   {entry}")
+            elif is_old_layout_link(entry):
+                relink(entry)
+                relinked += 1
+                print(f"relinked {entry} -> {SOURCE_DIR / entry.name} (moved from skills/.claude/skills)")
+            else:
+                link(entry)
+                created.append(entry)
+                print(f"linked {entry} -> {SOURCE_DIR / entry.name}")
+    except OSError as error:
+        report_failed_install(dest, entry, error, roll_back(created, made), relinked)
+        return 1
     report_source()
     return verify(dest)
+
+
+def link(entry: Path) -> None:
+    os.symlink(SOURCE_DIR / entry.name, entry, target_is_directory=True)
+
+
+def relink(entry: Path) -> None:
+    """Point an old-layout link at the current layout, restoring it if the new link fails."""
+    aside = entry.with_name(f".{entry.name}.relinking")
+    os.replace(entry, aside)
+    try:
+        link(entry)
+    except OSError:
+        os.replace(aside, entry)
+        raise
+    aside.unlink()
+
+
+def roll_back(created: list[Path], made: list[Path]) -> list[str]:
+    """Undo only this invocation's changes: its links that still point into this
+    checkout, then the directories it created, while they are empty."""
+    undone = []
+    for entry in reversed(created):
+        if not is_linked(entry):
+            undone.append(f"left {entry} in place: it was replaced after this run linked it")
+            continue
+        try:
+            entry.unlink()
+        except OSError as error:
+            undone.append(f"could not remove {entry}, which this run linked ({error}); remove it by hand")
+            continue
+        undone.append(f"removed {entry}, which this run had linked")
+    for path in made:
+        try:
+            path.rmdir()
+        except OSError:
+            undone.append(f"left {path} in place: this run created it, but it is not empty")
+            break
+        undone.append(f"removed {path}, which this run had created")
+    return undone
+
+
+def report_failed_install(dest: Path, entry: Path, error: OSError, undone: list[str], relinked: int) -> None:
+    if getattr(error, "winerror", None) == ERROR_PRIVILEGE_NOT_HELD:
+        print(
+            f"FAIL {entry}: this account may not create symbolic links ({error.strerror}).\n"
+            "  Remedy: turn on Developer Mode (Settings > System > For developers), or use an account\n"
+            '  that holds the "Create symbolic links" right. Then open a new PowerShell window that is\n'
+            "  not elevated (running as administrator is not the recommended fix) and run:\n"
+            f"  {rerun('install', dest)}",
+            file=sys.stderr,
+        )
+    elif isinstance(error, PermissionError):
+        print(
+            f"FAIL {entry}: permission denied ({error.strerror}).\n"
+            f"  Remedy: make {dest} writable by this account, or choose a skills directory you own\n"
+            "  on a file system that supports symbolic links, then run:\n"
+            f"  {rerun('install', dest)}",
+            file=sys.stderr,
+        )
+    else:
+        print(f"FAIL {entry}: could not be created ({error}).\n  Fix the cause, then run: {rerun('install', dest)}", file=sys.stderr)
+    for line in undone:
+        print(f"  {line}", file=sys.stderr)
+    linked = sum(1 for name in expected_skills() if is_linked(dest / name))
+    if not undone and not linked:
+        state = "nothing was changed"
+    elif linked:
+        moved = f", {relinked} of them moved from skills/.claude/skills" if relinked else ""
+        state = f"the {linked} suite links that were already there were kept{moved}"
+    else:
+        state = "no suite link is installed there"
+    print(f"Not installed in {dest}: {state}; other entries there were not touched.", file=sys.stderr)
 
 
 def report_source() -> None:
