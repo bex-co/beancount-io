@@ -33,3 +33,5 @@
 - **Adoption surface:** included — the milestone ships agent-facing documentation (tool description + `docs/mcp.md`) that must be accurate on every surface.
 
 **Prod re-verified it.6369:** `journal?filter=tag:#foo` → `Unexpected #foo after "tag:" — write tag:foo or a bare #foo term` (syntax hint, not a bare lexer error). m2's hint holds live.
+
+**Prod re-verified it.6370:** `journal?filter=account:Expenses` → 17 entries, all genuinely Expenses-touching (6 `open Expenses:…` + 11 txns with Expenses postings, zero false positives); `account:ZzzNoSuch` → empty. `account:` scans postings + opens correctly.
