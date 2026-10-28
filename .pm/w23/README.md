@@ -44,7 +44,7 @@
 - [140](./140.md) — nested multi-word entry keys camel-only while top-level params dual-accept (`sourceAccount`, `totalPrice`; it.6373-6381)
 - [141](./141.md) — `readLedgerFiles` echoes `startLine`/`endLine` but refuses them as input (output camel, input snake)
 - [142](./142.md) — `source-files` resource description promises subtype filters the surface refuses (no query params)
-- [143](./143.md) — temp-asset + bank `NOT_FOUND`s carry the generic ledgers/files/entries hint (neither family lives there)
+- [143](./143.md) — temp-asset + bank + branch `NOT_FOUND`s carry the generic ledgers/files/entries hint (none live there)
 - [144](./144.md) — `holdings` echoes `group_by` but refuses it as input (output snake, input camel; 141-class)
 - [082](./blocked/082.md) — `createPullRequest` fails on production: Gitea 500 while creating the `pr-patch-*` branch, on MCP and REST alike — **blocked:** needs the Gitea server-log cause for one failing branch create (owner), then a production rerun
 - [080](./blocked/080.md) — `/api-gateway/mcp` accepts any `Origin` (the MCP transport spec says a bad `Origin` MUST get 403); owner picks validate vs document — **blocked:** owner picks 403-on-foreign-Origin vs documented non-validation
