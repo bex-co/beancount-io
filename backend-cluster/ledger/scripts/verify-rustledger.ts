@@ -1897,6 +1897,48 @@ async function main(): Promise<void> {
     "scalar str() still stringifies",
   );
 
+  // Quoted identifiers (w23/157): stock resolves `"name"` to the column
+  // while the raw engine reads a string literal, so the query path
+  // refuses quoted known-columns before the query runs — and unknown
+  // quoted names still fall back to literals on both sides.
+  const rawQuotedColumn = await withLedger(FILES, "main.beancount", (ledger) =>
+    ledger.query('SELECT "narration" LIMIT 1'),
+  );
+  assert(
+    JSON.stringify(rawQuotedColumn.rows) === `[["narration"]]` &&
+      !rawQuotedColumn.errors.some((e) => e.severity === "error"),
+    "raw engine still reads a quoted column as a literal (the guard is load-bearing)",
+  );
+  for (const query of [
+    'SELECT "narration" LIMIT 1',
+    'SELECT "date" FROM entries LIMIT 1',
+    'SELECT count(*) AS n WHERE "account" = \'Assets:Cash\'',
+  ]) {
+    const guardedQuoted = await queryLedgerFilesResult(
+      FILES,
+      "main.beancount",
+      query,
+    );
+    assert(
+      guardedQuoted.rows.length === 0 &&
+        guardedQuoted.errors.some(
+          (e) =>
+            e.severity === "error" &&
+            e.message.includes("Quoted identifiers are not supported"),
+        ),
+      `the query path refuses ${query}`,
+    );
+  }
+  const quotedFallback = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    'SELECT "nonexistent" LIMIT 1',
+  );
+  assert(
+    JSON.stringify(quotedFallback.rows) === `[{"\\"nonexistent\\"":"nonexistent"}]`,
+    "unknown quoted names still fall back to literals through the guard",
+  );
+
   // Inventory GROUP BY (w23/129): the raw engine collapses GROUP BY balance
   // into one group while DISTINCT finds each value, so the query path
   // refuses the named and ordinal forms — and scalar grouping still answers.

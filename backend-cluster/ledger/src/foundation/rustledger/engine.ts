@@ -82,6 +82,7 @@ import { windowFromError } from "./window-from-guard";
 import { atValueError } from "./at-value-guard";
 import { starAliasError } from "./star-alias-guard";
 import { idColumnError } from "./id-column-guard";
+import { quotedColumnError } from "./quoted-column-guard";
 import { compositeComparisonError } from "./composite-comparison-guard";
 import { inventoryGroupByError } from "./inventory-group-by-guard";
 import { groupByCoverageError } from "./group-by-coverage-guard";
@@ -1033,6 +1034,7 @@ export async function queryLedgerFilesResultInProcess(
           atValueError(query) ??
           starAliasError(query) ??
           idColumnError(query) ??
+          quotedColumnError(query) ??
           compositeComparisonError(query) ??
           inventoryGroupByError(query) ??
           groupByCoverageError(query) ??
