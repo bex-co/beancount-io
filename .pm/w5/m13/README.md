@@ -1,12 +1,16 @@
 # w5 · m13 — Install the ledger skills and reach a first query on native Windows
 
-**Worker:** worker1 **Goal:** a native Windows user installs the eight customer ledger skills, maintains that installation, and reaches a verified first answer through either agent **Status:** in progress (unblocked 2026-10-28; t001–t002 done)
+**Worker:** worker1 **Goal:** a native Windows user installs the eight customer ledger skills, maintains that installation, and reaches a verified first answer through either agent **Status:** in progress (unblocked 2026-10-28; t001–t002 done; t003 awaiting a GitHub runner run)
 
 **Estimate:** 3h30m implementation; 5h30m including standing closing tasks (8 tasks). Priority 2 in the approved proposal; no hard dependency on m12.
 
 ## Unblocked
 
 **Blocked 2026-09-29 → unblocked 2026-10-28.** It was parked because the only execution host was macOS. A native Windows 11 Pro workspace (build 26300, arm64) with Windows PowerShell 5.1, Python and Git is now available, and its symlink configuration is observable: a non-elevated `os.symlink` is refused with `WinError 1314` (Developer Mode off, `SeCreateSymbolicLinkPrivilege` not held). That clears the first prerequisite for t001–t003. The same day, with the user's approval, Developer Mode was turned on through a user-confirmed elevated prompt (the agent session stayed non-elevated), so t001 recorded both the denied and the allowed case; see [the Windows rehearsal](../../../docs/skills/windows-rehearsal.md). Codex CLI 0.165.0 and Claude Code are installed and signed in on the host for t004; published bea is still to be installed there.
+
+## Blocked
+
+- **t003** (blocked in place 2026-10-28): the Windows installer job is implemented and passes locally on native Windows, but neither CI (skills) job has run on GitHub runners because nothing has been pushed. **Unblock:** the maintainer pushes and both jobs pass. t004 proceeds meanwhile: it depends on t003's documented commands and installer, which are final; only the runner confirmation is outstanding.
 
 ## Tasks (in order)
 
