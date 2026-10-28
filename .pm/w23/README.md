@@ -50,6 +50,7 @@
 - [153](./153.md) — ledger projects numeric `id`s where stock projects hash hex strings (silent value + type change)
 - [154](./154.md) — BQL `+` refuses string concatenation stock performs (`'a'+'b'` → `ab`)
 - [155](./155.md) — BQL `str()` refuses composite inputs stock stringifies (position, inventory, set)
+- [156](./156.md) — report `conversion` silently ignores unresolvable targets (`BOGUS`/unpriced → USD figures, no error)
 - [082](./blocked/082.md) — `createPullRequest` fails on production: Gitea 500 while creating the `pr-patch-*` branch, on MCP and REST alike — **blocked:** needs the Gitea server-log cause for one failing branch create (owner), then a production rerun
 - [080](./blocked/080.md) — `/api-gateway/mcp` accepts any `Origin` (the MCP transport spec says a bad `Origin` MUST get 403); owner picks validate vs document — **blocked:** owner picks 403-on-foreign-Origin vs documented non-validation
 - [075](./blocked/075.md) — typed BQL results return NULL as `""` (undocumented), so a missing payee or price reads as an empty string — **blocked:** documented as `""` (option a shipped); owner picks `null` on REST/MCP, `null` everywhere, or keeping `""`
