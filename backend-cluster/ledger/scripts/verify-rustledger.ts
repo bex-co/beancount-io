@@ -1723,6 +1723,46 @@ async function main(): Promise<void> {
     "scalar grouping still answers through the guard",
   );
 
+  // GROUP-BY coverage (w23/131): the raw engine reports each group's
+  // first-row value for bare non-grouped columns while stock refuses, so
+  // the query path refuses — and covered grouping still answers.
+  const rawUncovered = await withLedger(FILES, "main.beancount", (ledger) =>
+    ledger.query("SELECT account, date, count(*) FROM postings GROUP BY account"),
+  );
+  const checkingDates = await withLedger(FILES, "main.beancount", (ledger) =>
+    ledger.query(
+      "SELECT DISTINCT date FROM postings WHERE account = 'Assets:Checking'",
+    ),
+  );
+  assert(
+    rawUncovered.rows.length === 3 &&
+      checkingDates.rows.length === 2 &&
+      !rawUncovered.errors.some((e) => e.severity === "error"),
+    "raw engine still reports first-row dates for bare grouped columns (the guard is load-bearing)",
+  );
+  const guardedUncovered = await queryLedgerFilesResult(
+    FILES,
+    "main.beancount",
+    "SELECT account, date, count(*) FROM postings GROUP BY account",
+  );
+  assert(
+    guardedUncovered.rows.length === 0 &&
+      guardedUncovered.errors.some(
+        (e) =>
+          e.severity === "error" && e.message.includes('Bare column "date"'),
+      ),
+    "the query path refuses the uncovered bare column and names it",
+  );
+  const coveredGroup = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    "SELECT account, count(*) FROM postings GROUP BY account",
+  );
+  assert(
+    coveredGroup.rows.length === 3,
+    "covered grouping still answers through the guard",
+  );
+
   const count = await countDirectives(
     "2024-01-01 open Assets:Cash USD\n2024-01-02 open Income:Z USD\n",
   );

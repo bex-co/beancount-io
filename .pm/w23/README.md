@@ -27,7 +27,6 @@
 
 ## Inbox
 
-- [131](./131.md) — GROUP BY accepts bare non-grouped columns, silently reports first row's value (it.4594)
 - [132](./132.md) — mixed-type `=`/`!=` never coerces: `date`/`number` vs string silently filters everything out (it.4986)
 - [133](./133.md) — integer dead zone 2^53..i64::MAX, silent overflow NULL, bogus position-0 error past Decimal::MAX (it.5227-5235)
 - [134](./134.md) — structured `dtype` lies for all-NULL aliased columns via alias-name fallback (it.5371-5377)
