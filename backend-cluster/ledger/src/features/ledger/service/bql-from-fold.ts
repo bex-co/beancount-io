@@ -13,8 +13,12 @@ import { matchFromKeyword, matchSelectKeyword } from "./bql-scan";
  *
  * This set is the empirically fold-shaped names: each folds on stock's
  * with-clause form (rows, or stock's silent empty-fold) AND folds on our
- * `;`/`(`, so routing every form through the fold matches stock. Deliberately
- * excluded, with what they do instead:
+ * `;`/`(`, so routing every form through the fold matches stock — except the
+ * seven empty-shape members (`cost_currency`, `cost_date`, `cost_label`,
+ * `cost_number`, `links`, `posting_flag`, `price`), where our engine counts
+ * the empty fold as `[[0]]` while stock returns no rows (known [0]-vs-[]
+ * shape, w23/blocked/022 class). Deliberately excluded, with what they do
+ * instead:
  *
  * - `accounts` — dual: stock tables it in every form, so it stays on the
  *   table path (the terminator already routes its bare-`;` form there).
@@ -22,32 +26,45 @@ import { matchFromKeyword, matchSelectKeyword } from "./bql-scan";
  *   every row the filter keeps. Excluded, so every form errors loudly.
  * - `cost`, `units` — not stock columns at all (stock errors with a
  *   did-you-mean); excluded, so every form errors loudly.
+ * - `filename`, `lineno`, `meta` — stock folds them, but our engine yields
+ *   0 natively even on the bare-`;` path (source locations and meta are not
+ *   tracked through the engine, w23/blocked/022 class), so they sat in this
+ *   set returning silent `[[0]]`. Excluded (w23/125), so every form errors
+ *   loudly instead of miscounting.
+ * - `id`, `location` — same native-zero gap (stock folds, engine yields 0);
+ *   never in the set, loud on every path already.
  * - `transaction`, keywords (`open`/`close`/`clear`), tables, and anything
  *   else — never folded here; untouched, loud on every path already.
  *
  * Case-sensitive: columns are (w23/blocked/022), so `PAYEE` is not `payee`.
  * Pinned against the live engine by `verify:rustledger`, which fails loudly
- * if a set member stops folding or a table starts.
+ * if a set member stops folding or a table starts, and asserts every
+ * member's native count against the stock oracle (w23/125).
  */
 const FOLD_COLUMNS: ReadonlySet<string> = new Set([
   "account",
+  "cost_currency",
   "cost_date",
+  "cost_label",
+  "cost_number",
   "currency",
   "date",
   "day",
   "description",
   "entry",
-  "filename",
   "flag",
-  "lineno",
-  "meta",
+  "links",
   "month",
   "narration",
   "number",
+  "other_accounts",
   "payee",
   "position",
+  "posting_flag",
   "price",
   "tags",
+  "type",
+  "weight",
   "year",
 ]);
 
@@ -72,19 +89,29 @@ const INNER_COLUMNS = [
   "accounts",
   "balance",
   "cost",
+  "cost_currency",
   "cost_date",
+  "cost_label",
+  "cost_number",
   "currency",
   "day",
   "description",
   "entry",
   "filename",
+  "id",
   "lineno",
+  "links",
+  "location",
   "meta",
   "month",
   "number",
+  "other_accounts",
+  "posting_flag",
   "price",
   "tags",
+  "type",
   "units",
+  "weight",
   "year",
 ].join(", ");
 

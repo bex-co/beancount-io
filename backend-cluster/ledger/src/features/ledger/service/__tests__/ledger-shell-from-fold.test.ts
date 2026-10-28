@@ -23,7 +23,7 @@ const SUCCESS: QueryResult = {
 } as unknown as QueryResult;
 
 const INNER =
-  "date, flag, payee, narration, account, position, accounts, balance, cost, cost_date, currency, day, description, entry, filename, lineno, meta, month, number, price, tags, units, year";
+  "date, flag, payee, narration, account, position, accounts, balance, cost, cost_currency, cost_date, cost_label, cost_number, currency, day, description, entry, filename, id, lineno, links, location, meta, month, number, other_accounts, posting_flag, price, tags, type, units, weight, year";
 
 function makeService() {
   const giteaClientFactory = { getPublicApiClient: jest.fn(async () => ({})) };

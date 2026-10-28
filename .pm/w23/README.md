@@ -27,7 +27,6 @@
 
 ## Inbox
 
-- [125](./125.md) — `FROM <column>` fold gaps: `filename`/`lineno`/`meta` silently 0 (engine can't fold), `type`/`weight`/`other_accounts` + 5 more error where the engine folds or empties (pin covers 2 of 19 members)
 - [127](./127.md) — `SELECT * AS x` collapses star: 1 declared col vs 31 cells per row, text drops 30 values (stock ParseErrors)
 - [128](./128.md) — set equality constant-False on MCP (`tags = tags` → False; stock refuses) (it.3936)
 - [129](./129.md) — GROUP BY inventory collapses to 1 group of 34 (DISTINCT finds 15; stock refuses) (it.3960)

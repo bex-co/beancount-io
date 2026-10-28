@@ -1,7 +1,7 @@
 import { foldBqlColumnFrom } from "../bql-from-fold";
 
 const INNER =
-  "date, flag, payee, narration, account, position, accounts, balance, cost, cost_date, currency, day, description, entry, filename, lineno, meta, month, number, price, tags, units, year";
+  "date, flag, payee, narration, account, position, accounts, balance, cost, cost_currency, cost_date, cost_label, cost_number, currency, day, description, entry, filename, id, lineno, links, location, meta, month, number, other_accounts, posting_flag, price, tags, type, units, weight, year";
 
 describe("foldBqlColumnFrom", () => {
   it("inserts a terminator after a bare-EOF fold name", () => {
@@ -62,6 +62,12 @@ describe("foldBqlColumnFrom", () => {
     "cost",
     "units",
     "transaction",
+    // Engine yields 0 natively while stock folds: loud, not silent [[0]] (w23/125).
+    "filename",
+    "lineno",
+    "meta",
+    "location",
+    "id",
     // Tables and keywords: never folded.
     "entries",
     "postings",
@@ -81,23 +87,28 @@ describe("foldBqlColumnFrom", () => {
 
   it.each([
     "account",
+    "cost_currency",
     "cost_date",
+    "cost_label",
+    "cost_number",
     "currency",
     "date",
     "day",
     "description",
     "entry",
-    "filename",
     "flag",
-    "lineno",
-    "meta",
+    "links",
     "month",
     "narration",
     "number",
+    "other_accounts",
     "payee",
     "position",
+    "posting_flag",
     "price",
     "tags",
+    "type",
+    "weight",
     "year",
   ])("folds %s", (name) => {
     expect(foldBqlColumnFrom(`SELECT count(*) FROM ${name}`)).toBe(
@@ -125,6 +136,12 @@ describe("foldBqlColumnFrom", () => {
   it("leaves a quoted name for the unquote stage", () => {
     const query = 'SELECT count(*) FROM "payee" LIMIT 1';
     expect(foldBqlColumnFrom(query)).toBe(query);
+  });
+
+  it("exposes a new inner column to hidden projections through the wrap", () => {
+    expect(foldBqlColumnFrom("SELECT type FROM narration LIMIT 1")).toBe(
+      `SELECT type FROM (SELECT ${INNER} FROM narration) LIMIT 1`,
+    );
   });
 
   it("wraps an inner with-clause fold and reads its own owner", () => {

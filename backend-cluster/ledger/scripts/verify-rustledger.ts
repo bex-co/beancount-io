@@ -1373,6 +1373,65 @@ async function main(): Promise<void> {
     JSON.stringify(pipelineStar.rows) === JSON.stringify(nativeStar.rows),
     "pipelined star over a column FROM returns the native-fold rows",
   );
+  // Per-member fold pin (w23/125): every FOLD_COLUMNS member's pipelined
+  // with-clause form returns its native-fold rows, and the native count
+  // matches the stock beanquery 0.2.0 oracle on this fixture (4 postings;
+  // oracle run 2026-10-28, see the note). The six "empty" members count
+  // [[0]] where stock returns no rows (known [0]-vs-[] shape, 022 class);
+  // the pin asserts the divergence explicitly so either side moving trips
+  // it with direction instead of silently agreeing.
+  const FOLD_ORACLE: Record<string, number | "empty"> = {
+    account: 4,
+    cost_currency: "empty",
+    cost_date: "empty",
+    cost_label: "empty",
+    cost_number: "empty",
+    currency: 4,
+    date: 4,
+    day: 4,
+    description: 4,
+    entry: 4,
+    flag: 4,
+    links: 2,
+    month: 4,
+    narration: 4,
+    number: 4,
+    other_accounts: 4,
+    payee: 4,
+    position: 4,
+    posting_flag: "empty",
+    price: "empty",
+    tags: 2,
+    type: 4,
+    weight: 4,
+    year: 4,
+  };
+  for (const [name, expected] of Object.entries(FOLD_ORACLE)) {
+    const nativeMember = await queryLedgerFiles(
+      FILES,
+      "main.beancount",
+      `SELECT count(*) FROM ${name};`,
+    );
+    const pipelinedMember = await queryLedgerFiles(
+      FILES,
+      "main.beancount",
+      normalizeBqlQueryForEngine(`SELECT count(*) FROM ${name} LIMIT 1;`),
+    );
+    assert(
+      JSON.stringify(pipelinedMember.rows) ===
+        JSON.stringify(nativeMember.rows),
+      `pipelined ${name} returns the native-fold rows`,
+    );
+    // Rows here are records ({ "count(*)": n }); the [0]-vs-[] comment
+    // above uses the raw [[0]] spelling for the engine shape.
+    const expectedRows = [{ "count(*)": expected === "empty" ? 0 : expected }];
+    assert(
+      JSON.stringify(nativeMember.rows) === JSON.stringify(expectedRows),
+      expected === "empty"
+        ? `native ${name} still counts the empty fold as [[0]] (stock: no rows)`
+        : `native ${name} matches the stock count ${expected}`,
+    );
+  }
   // The dual stays table-shaped: the pipeline must not fold it.
   const pipelineDual = await queryLedgerFiles(
     FILES,
@@ -1383,8 +1442,19 @@ async function main(): Promise<void> {
     pipelineDual.rows.length === 1 && "open" in pipelineDual.rows[0],
     "pipelined dual FROM stays on the AccountsTable path",
   );
-  // The excluded names error loudly on every pipelined form.
-  for (const name of ["balance", "cost", "units"]) {
+  // The excluded names error loudly on every pipelined form — including
+  // filename/lineno/meta, which the engine folds to a silent 0 natively
+  // (w23/125), and location/id, which share the native-zero gap.
+  for (const name of [
+    "balance",
+    "cost",
+    "units",
+    "filename",
+    "lineno",
+    "meta",
+    "location",
+    "id",
+  ]) {
     const pipelinedExcluded = await queryLedgerFilesResult(
       FILES,
       "main.beancount",
