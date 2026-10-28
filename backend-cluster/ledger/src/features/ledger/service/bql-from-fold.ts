@@ -41,7 +41,7 @@ import { matchFromKeyword, matchSelectKeyword } from "./bql-scan";
  * if a set member stops folding or a table starts, and asserts every
  * member's native count against the stock oracle (w23/125).
  */
-const FOLD_COLUMNS: ReadonlySet<string> = new Set([
+export const FOLD_COLUMNS: ReadonlySet<string> = new Set([
   "account",
   "cost_currency",
   "cost_date",

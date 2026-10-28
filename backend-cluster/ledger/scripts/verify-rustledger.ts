@@ -1466,6 +1466,138 @@ async function main(): Promise<void> {
     );
   }
 
+  // Inner bare tables (w23/130): the raw engine resolves a `)`-terminated
+  // inner FROM column-first — real tables error, unknown names misdiagnose
+  // — while bare-EOF and with-clause names take the table path, so the
+  // pipeline rescues the inner form with an identity WHERE true. Fold
+  // columns and the dual keep their native `)` resolution.
+  const rawInnerTable = await queryLedgerFilesResult(
+    FILES,
+    "main.beancount",
+    "SELECT count(*) FROM (SELECT * FROM postings)",
+  );
+  assert(
+    rawInnerTable.errors.some(
+      (e) =>
+        e.severity === "error" &&
+        /column 'postings' not found/.test(e.message),
+    ),
+    "engine still resolves inner bare FROM column-first (normalization is load-bearing)",
+  );
+  const nativeWhereTrue = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    "SELECT count(*) FROM postings WHERE true",
+  );
+  const nativeTableCount = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    "SELECT count(*) FROM postings LIMIT 1",
+  );
+  assert(
+    JSON.stringify(nativeWhereTrue.rows) ===
+      JSON.stringify(nativeTableCount.rows),
+    "WHERE true is an identity on the native table path",
+  );
+  for (const table of ["postings", "entries"]) {
+    const nativeTop = await queryLedgerFiles(
+      FILES,
+      "main.beancount",
+      `SELECT count(*) FROM ${table} LIMIT 1`,
+    );
+    const pipelinedInner = await queryLedgerFiles(
+      FILES,
+      "main.beancount",
+      normalizeBqlQueryForEngine(
+        `SELECT count(*) FROM (SELECT * FROM ${table})`,
+      ),
+    );
+    assert(
+      JSON.stringify(pipelinedInner.rows) === JSON.stringify(nativeTop.rows),
+      `pipelined inner bare ${table} returns the top-level table rows`,
+    );
+  }
+  const pipelinedDepth2 = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    normalizeBqlQueryForEngine(
+      "SELECT count(*) FROM (SELECT * FROM (SELECT * FROM postings))",
+    ),
+  );
+  assert(
+    JSON.stringify(pipelinedDepth2.rows) ===
+      JSON.stringify(nativeTableCount.rows),
+    "pipelined depth-2 inner table returns the top-level table rows",
+  );
+  // Quoted inner names join the same rescue: raw, the engine runs them in
+  // default postings scope (the w23/115 accident in inner position).
+  const rawQuotedInner = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    'SELECT count(*) FROM (SELECT * FROM "entries")',
+  );
+  const nativeEntriesCount = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    "SELECT count(*) FROM entries LIMIT 1",
+  );
+  assert(
+    JSON.stringify(rawQuotedInner.rows) ===
+      JSON.stringify(nativeTableCount.rows) &&
+      JSON.stringify(rawQuotedInner.rows) !==
+        JSON.stringify(nativeEntriesCount.rows),
+    "raw quoted inner table still runs in postings scope (unquoting past `)` is load-bearing)",
+  );
+  const pipelinedQuotedInner = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    normalizeBqlQueryForEngine('SELECT count(*) FROM (SELECT * FROM "entries")'),
+  );
+  assert(
+    JSON.stringify(pipelinedQuotedInner.rows) ===
+      JSON.stringify(nativeEntriesCount.rows),
+    "pipelined quoted inner table returns the entries rows",
+  );
+  // The rescue must not disturb the names the `)` path resolves correctly.
+  const nativePayeeFold = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    "SELECT count(*) FROM payee;",
+  );
+  const pipelinedInnerFold = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    normalizeBqlQueryForEngine("SELECT count(*) FROM (SELECT * FROM payee)"),
+  );
+  assert(
+    JSON.stringify(pipelinedInnerFold.rows) ===
+      JSON.stringify(nativePayeeFold.rows),
+    "pipelined inner fold column keeps the native fold rows",
+  );
+  const pipelinedInnerDual = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    normalizeBqlQueryForEngine("SELECT count(*) FROM (SELECT * FROM accounts)"),
+  );
+  assert(
+    JSON.stringify(pipelinedInnerDual.rows) ===
+      JSON.stringify(nativeTableCount.rows),
+    "pipelined inner dual keeps the fold rows (revisit if w23/124 lands table-first)",
+  );
+  const pipelinedInnerUnknown = await queryLedgerFilesResult(
+    FILES,
+    "main.beancount",
+    normalizeBqlQueryForEngine("SELECT count(*) FROM (SELECT * FROM nosuch)"),
+  );
+  assert(
+    pipelinedInnerUnknown.errors.some(
+      (e) =>
+        e.severity === "error" &&
+        /table 'nosuch' does not exist/.test(e.message),
+    ),
+    "pipelined inner unknown table names the table problem, not a column",
+  );
+
   // Star alias (w23/127): the raw engine accepts `SELECT * AS x` and answers
   // it mismatched — one declared column over star-width rows — while stock
   // ParseErrors, so the query path refuses it before it runs.

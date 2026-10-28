@@ -73,4 +73,10 @@ describe("unquoteBqlFromTables", () => {
       "SELECT count(*) FROM  entries ;",
     );
   });
+
+  it("rewrites before a closing paren (inner tables, w23/130)", () => {
+    expect(
+      unquoteBqlFromTables('SELECT count(*) FROM (SELECT * FROM "entries")'),
+    ).toBe("SELECT count(*) FROM (SELECT * FROM  entries )");
+  });
 });

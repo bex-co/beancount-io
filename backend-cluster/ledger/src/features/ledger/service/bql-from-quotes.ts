@@ -16,9 +16,11 @@
  *
  * - Only a `"` immediately after `FROM` + whitespace is touched, and only
  *   when the quoted text is a valid bare identifier (`[A-Za-z_][A-Za-z0-9_]*`)
- *   followed by a table-position continuation (end, whitespace, `;`, `,`).
- *   Anything else is left for the engine — unquoting `"entries x"` into
- *   `FROM entries x` would silently re-scope to `entries`, worse than today.
+ *   followed by a table-position continuation (end, whitespace, `;`, `,`,
+ *   `)` — the paren covers inner `FROM "<table>")`, which the engine would
+ *   otherwise run in default postings scope (w23/130)). Anything else is
+ *   left for the engine — unquoting `"entries x"` into `FROM entries x`
+ *   would silently re-scope to `entries`, worse than today.
  * - Single-quoted names (`FROM 'entries'`) are left alone: those are string
  *   literals, not quoted identifiers, and re-scoping them is stock's error to
  *   define, not ours.
@@ -82,6 +84,6 @@ function matchQuotedFromName(
   const name = chars.slice(nameStart, j).join("");
   if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) return undefined;
   const after = j + 1 < chars.length ? (chars[j + 1] as string) : "";
-  if (after !== "" && !/[\s;,]/.test(after)) return undefined;
+  if (after !== "" && !/[\s;,)]/.test(after)) return undefined;
   return { openQuote, end: j + 1 };
 }
