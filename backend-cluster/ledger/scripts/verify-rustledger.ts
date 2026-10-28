@@ -2622,6 +2622,14 @@ async function main(): Promise<void> {
       ["Amount", "Inventory"],
     ],
     ["SELECT cost WHERE FALSE", ["Amount"]],
+    // w23/170: `meta` is object-typed on both tables at every endpoint —
+    // postings serves it pre-stringified, entries as the dict. This
+    // fixture carries no custom metadata, so LIMIT 1 pins the blank
+    // cells ("" string vs {} dict).
+    ["SELECT meta FROM postings LIMIT 1", ["object"]],
+    ["SELECT meta FROM postings WHERE FALSE", ["object"]],
+    ["SELECT meta FROM entries LIMIT 1", ["object"]],
+    ["SELECT meta FROM entries WHERE FALSE", ["object"]],
   ] as Array<[string, string[]]>) {
     const shell = queryResultToShellResult(
       await queryLedgerFilesResult(

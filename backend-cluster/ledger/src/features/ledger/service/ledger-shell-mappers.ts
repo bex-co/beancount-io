@@ -124,6 +124,14 @@ function classifyColumnDtype(
     if (call !== null && STRING_FUNCTIONS.has(call[1])) {
       return "str";
     }
+    // Postings serves `meta` pre-stringified (`k: "v"`) where entries
+    // serves the dict, so the name — not the sample — carries the type
+    // (w23/170). Aliases shadowing the name keep sniffing (w23/134).
+    const metaSourced =
+      normalizedName === "meta"
+        ? aliasRoot === undefined || aliasRoot === normalizedName
+        : aliasRoot === "meta";
+    if (metaSourced) return "object";
     if (
       values.every((value) => typeof value === "string" && isIsoDate(value))
     ) {
@@ -190,6 +198,10 @@ const AMOUNT_COLUMNS = new Set([
 // `account_balance` is MCP-only (no stock column); its valued shape is a
 // currency-keyed map, so the empty endpoint is Inventory (w23/169).
 const INVENTORY_COLUMNS = new Set(["balance", "account_balance"]);
+// Object-typed bare columns (w23/170): `meta` is a dict on stock and on
+// entries, while postings serves it pre-stringified — one `object` rule
+// for every endpoint. Siblings `entry`/`open`/`close` are w23/195.
+const OBJECT_COLUMNS = new Set(["meta"]);
 const POSITION_COLUMNS = new Set(["position"]);
 const STRING_COLUMNS = new Set([
   "account",
@@ -220,6 +232,7 @@ function dtypeFromColumnName(name: string): string {
   if (INVENTORY_COLUMNS.has(name)) return "Inventory";
   if (POSITION_COLUMNS.has(name)) return "Position";
   if (AMOUNT_COLUMNS.has(name)) return "Amount";
+  if (OBJECT_COLUMNS.has(name)) return "object";
   return "str";
 }
 

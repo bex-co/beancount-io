@@ -138,6 +138,20 @@ query-side spelling for the summary entry — refusing the scope would
 steal its correct suffix rows — so the scope stays suffix-only until the
 engine synthesizes the entry (w23/blocked/022).
 
+## BQL `meta` dialects
+
+The `meta` column reports dtype `object` on both tables at every
+endpoint — valued, blank, and empty — matching stock's dict (w23/170).
+But the two tables serialize the same content differently: postings
+serves pre-stringified `k: "v"` cells (comma-joined, engine-rendered)
+while entries serves the dict, which the shell renders as `k=v`. The
+split lives in the engine's cell shapes, so only the engine can unify
+the serialization; parsing its undocumented string form back into
+dicts would be guessing. Neither table carries filename/lineno (the
+w23/016 upstream gap: no source-location surface is populated) — custom
+keys flow on both. Engine unification is tracked upstream
+(w23/blocked/022).
+
 ## Getting started
 
 Requires Node.js 20.19+, 22.13+, or 24+ and a running Gitea instance. See
