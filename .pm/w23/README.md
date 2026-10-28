@@ -23,14 +23,10 @@
 
 - ~~**046**~~ — social follower/following/starred lists answer an unknown user with an empty success — dropped 2026-10-21: documented behavior (`backend-cluster/backend-v2/docs/mcp.md`, social reads: "returns an empty page on upstream failure, so an empty result does not establish that the user has no followers or stars")
 - ~~**088**~~ — `appendLedgerText` ignores its documented `pushtag`/`pushmeta` handling — dropped 2026-10-25: invalid probes; dated push/pop is a syntax error in real beancount too (verified on PyPI beancount 3.2.3), and undated push/pop applies tags, consumes the lines, and refuses unbalanced pops naming the line, exactly as documented
+- ~~**126**~~ — `meta` dict cells render as blank `str` on every surface — dropped 2026-10-27: dup of `w23/blocked/022.md` line-59 coverage (engine yields null for meta cells; parity triple + entry control recorded there)
 
 ## Inbox
 
-- [115](./115.md) — quoted `FROM "<table>"` names are silently ignored (any quoted name returns postings scope, even nonexistent tables; w23/109's quoted bypass is unsafe)
-- [116](./116.md) — with-clause `FROM` resolves table-first where stock resolves column-first (`FROM accounts`: bare 34, +LIMIT 12, +WHERE errors; stock 34 in all forms)
-- [117](./117.md) — `prompts/get` silently ignores unknown string args while tools refuse unknown keys (unknown number args refused, then ignored-in-spirit; full-surface strictness map)
-- [118](./118.md) — `initialize` validation failures answer `-32603` with a raw zod dump instead of `-32602` + shaped `BAD_USER_INPUT` like every other method
-- [119](./119.md) — set-typed BQL cells render space-joined in text (`runBqlQuery`, GraphQL, stock) but comma-joined in structured (MCP structured, REST; dtype says `set`, value is a string)
 - [124](./124.md) — unquoted `FROM accounts` resolves table-first on MCP (12) vs column-first on stock (34); w23/116's Resolved 'stock is table-first' premise disproven (0.2.0 + master source, direct execution)
 - [125](./125.md) — `FROM <column>` fold gaps: `filename`/`lineno`/`meta` silently 0 (engine can't fold), `type`/`weight`/`other_accounts` + 5 more error where the engine folds or empties (pin covers 2 of 19 members)
 - [127](./127.md) — `SELECT * AS x` collapses star: 1 declared col vs 31 cells per row, text drops 30 values (stock ParseErrors)
