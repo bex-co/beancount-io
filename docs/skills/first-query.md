@@ -24,7 +24,7 @@ Start `claude` or `codex` in `~/beancount-first-query` and ask:
 
 > What were my biggest expenses in June 2026? Ledger is ./ledger.beancount.
 
-Or run it without an interactive session. These commands allow only reads and the `bea` query:
+Or run it without an interactive session. These commands allow only reads and the `bea` query (on Windows, use the [Windows variants](installation.md#agents-on-windows)):
 
 ```sh
 claude -p "What were my biggest expenses in June 2026? Ledger is ./ledger.beancount." \
@@ -63,11 +63,13 @@ shasum -a 256 -c ledger.sha256   # ledger.beancount: OK
 
 ## Tested with
 
-On 2026-09-14 on macOS, Claude Code 2.1.270 (workspace install) and Codex 0.154.0 (user and workspace installs, `--sandbox read-only`) each listed exactly these eight skills and returned the figures above through `beancount-ask`. The ledger checksum was unchanged. Not yet tested: Claude Code with a user-level install, Linux, and Windows.
+On 2026-09-14 on macOS, Claude Code 2.1.270 (workspace install) and Codex 0.154.0 (user and workspace installs, `--sandbox read-only`) each listed exactly these eight skills and returned the figures above through `beancount-ask`. The ledger checksum was unchanged. Not yet tested: Claude Code with a user-level install, and Linux.
 
 On 2026-10-20 on macOS, standalone ClawHub `beancount-ask@1.0.0` also returned these figures through real OpenClaw 2026.10.5 and Hermes v0.22.2 agent turns using published `bea` 0.3.1 and `gpt-6.1-sol`. Both agents showed the command they executed and preserved the ledger checksum. OpenClaw used its explicitly selected embedded runtime; Hermes used its `openai-codex` provider. See the [registry rehearsal](clawhub-rehearsal.md#real-host-turns--2026-10-20) for the tested setup and remaining host compatibility limits.
 
 Workspace discovery was also rechecked on 2026-10-20 with the current eleven-skill suite: Claude Code 2.1.304's startup catalog and Codex 0.163.0's `skills/list` both expose all eleven linked source skills. Codex's loaded descriptions match the source. These are discovery checks, separate from the dated query rehearsals above.
+
+On 2026-10-28 on native Windows 11 (ARM64, Windows PowerShell 5.1), Claude Code 2.1.312 and Codex 0.165.0 with a workspace install each listed the suite's fourteen skills. Each returned the figures above through `beancount-ask` and published `bea` 0.3.1, installed with `uv tool install`. The ledger checksum was unchanged. Three corrections were needed: a manual one-time engine install, because `bea` 0.3.1's own install failed on that host; `"PowerShell(bea:*)"` and `--add-dir` for Claude Code; and `-c 'windows.sandbox="unelevated"'` for Codex `--sandbox read-only`. See [bea on Windows](installation.md#bea-on-windows), [Agents on Windows](installation.md#agents-on-windows) and the [Windows rehearsal](windows-rehearsal.md#agent-discovery-and-first-query-t004). User-level installs on Windows and WSL were not tested.
 
 ## Continue through a first month
 

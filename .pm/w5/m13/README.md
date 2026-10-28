@@ -1,6 +1,6 @@
 # w5 · m13 — Install the ledger skills and reach a first query on native Windows
 
-**Worker:** worker1 **Goal:** a native Windows user installs the eight customer ledger skills, maintains that installation, and reaches a verified first answer through either agent **Status:** in progress (unblocked 2026-10-28; t001–t002 done; t003 awaiting a GitHub runner run)
+**Worker:** worker1 **Goal:** a native Windows user installs the eight customer ledger skills, maintains that installation, and reaches a verified first answer through either agent **Status:** in progress (unblocked 2026-10-28; t001, t002, t004 done; t003 awaiting a GitHub runner run)
 
 **Estimate:** 3h30m implementation; 5h30m including standing closing tasks (8 tasks). Priority 2 in the approved proposal; no hard dependency on m12.
 
@@ -12,6 +12,8 @@
 
 - **t003** (blocked in place 2026-10-28): the Windows installer job is implemented and passes locally on native Windows, but neither CI (skills) job has run on GitHub runners because nothing has been pushed. **Unblock:** the maintainer pushes and both jobs pass. t004 proceeds meanwhile: it depends on t003's documented commands and installer, which are final; only the runner confirmation is outstanding.
 
+**Skill count.** The suite grew from eight to fourteen customer skills after this milestone was approved; t004 verified discovery of all fourteen, and the definition of done applies to the whole suite.
+
 ## Tasks (in order)
 
 | id | title | est | depends_on |
@@ -19,7 +21,7 @@
 | t001 | Rehearse native installation and document PowerShell prerequisites — **DONE** | 45m | — |
 | t002 | Make installer link failures actionable and preserve existing state — **DONE** | 60m | w5/m13/t001 |
 | t003 | Add the native Windows installer lifecycle CI job | 45m | w5/m13/t002 |
-| t004 | Verify discovery and the first query through both native Windows agents | 60m | w5/m13/t003 |
+| t004 | Verify discovery and the first query through both native Windows agents — **DONE** | 60m | w5/m13/t003 |
 | t005 | Adoption surface | 30m | w5/m13/t004 |
 | t006 | Simplify | 30m | w5/m13/t005 |
 | t007 | Test coverage | 45m | w5/m13/t005, w5/m13/t006 |

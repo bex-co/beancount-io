@@ -2,7 +2,7 @@
 
 Install the fourteen `beancount-*` ledger skills for Claude Code, Codex, or both, from any directory. You keep one Git checkout of the skills and link it into each agent's skill directory. Updating the checkout updates every agent, and the helper script never touches skills it did not install. [OpenClaw and Hermes Agent](#openclaw-and-hermes-agent) have the suite route and host limits described below, including migration from the retired standalone listings.
 
-Rehearsed on macOS with Claude Code and Codex (see [tested with](first-query.md#tested-with)). Linux uses the same commands but has not been rehearsed. On native Windows, the [PowerShell steps](#windows-powershell) were rehearsed with Windows PowerShell 5.1 (agent discovery there is still being verified). WSL is not covered.
+Rehearsed on macOS with Claude Code and Codex (see [tested with](first-query.md#tested-with)). Linux uses the same commands but has not been rehearsed. On native Windows, the [PowerShell steps](#windows-powershell) were rehearsed with Windows PowerShell 5.1. Claude Code and Codex there discovered a workspace install and answered the first query, with the [Windows-specific corrections](#agents-on-windows) listed in that section. WSL is not covered.
 
 ## Prerequisites
 
@@ -253,8 +253,11 @@ section's blocks as written in Windows PowerShell 5.1 on a hosted Windows
 runner, using a local copy of the suite in place of the clone URL. That is
 evidence for the installer, not for agent discovery.
 
-**Still being verified:** whether Claude Code and Codex on native Windows
-discover the linked skills and answer the [first query](first-query.md).
+On 2026-10-28, Claude Code 2.1.312 and Codex 0.165.0 on the same host each
+listed all fourteen skills from a workspace install and answered the
+[first query](first-query.md) through `beancount-ask` and published `bea`
+0.3.1, with the corrections in [bea on Windows](#bea-on-windows) and
+[Agents on Windows](#agents-on-windows). User-scope discovery on Windows,
 PowerShell 7, Microsoft Store Python, and the account right without Developer
 Mode have not been tried. WSL is a separate Linux environment: use the
 commands above there.
@@ -297,7 +300,7 @@ python "$SKILLS_SRC/scripts/skills/beancount-skills.py" install "$HOME\.claude\s
 
 Omit the directory for an agent you do not use. For one ledger workspace, use
 `"<workspace>\.claude\skills"` and `"<workspace>\.agents\skills"` instead
-(not yet rehearsed on Windows). Git
+(rehearsed with both agents). Git
 progress output appears as red `NativeCommandError` text if you redirect it
 (`2>&1`, `*>`). Check `$LASTEXITCODE`, which is `0` on success.
 
@@ -309,6 +312,61 @@ python "$SKILLS_SRC/scripts/skills/beancount-skills.py" verify "$HOME\.claude\sk
 ```
 
 Then ask each agent, as in [step 3](#3-confirm-the-agents-see-them).
+
+### bea on Windows
+
+Install `bea` with `uv tool install beancount-io`. The first command that needs
+the ledger engine installs it with uv, so uv must be on `PATH` (or `BEA_UV`
+must name it). A `bea` installed with `pip` on a machine without uv stops with
+`The Beancount engine needs uv to install`.
+
+On the rehearsal host, `bea` 0.3.1's one-time engine install failed with
+`[WinError 5] Access is denied: '…\engine\0.3.1.partial.<pid>' -> '…\engine\0.3.1'`.
+Windows kept the newly built environment locked for about 30 seconds, and
+`bea` does not retry the final rename. Retrying `bea` fails the same way. If
+you see this error, delete the leftover `0.3.1.partial.*` folders in
+`$HOME\.local\share\bea\engine`, then build the engine with the same uv
+commands and wait before renaming it:
+
+```powershell
+$engine = Join-Path $HOME '.local\share\bea\engine\0.3.1'
+$lock = Join-Path (uv tool dir) 'beancount-io\Lib\site-packages\cli\engine-requirements.lock'
+uv venv --relocatable --python 3.12 "$engine.manual"
+uv pip install --python "$engine.manual\Scripts\python.exe" --require-hashes --only-binary :all: -r "$lock"
+Start-Sleep -Seconds 60
+Rename-Item "$engine.manual" '0.3.1'
+bea engine status
+```
+
+`bea engine status` should then report `Provisioned: yes`. This block is
+specific to `bea` 0.3.1 and its default engine location.
+
+### Agents on Windows
+
+These differences from the macOS commands were needed on the rehearsal host:
+
+- **Claude Code** runs `bea` through its PowerShell tool as well as Bash, so
+  allow both. With a workspace install, the skill links point outside the
+  workspace. Add the checkout's `skills` folder with `--add-dir` so Claude Code
+  can read each skill's `references`:
+
+  ```powershell
+  claude -p "What were my biggest expenses in June 2026? Ledger is ./ledger.beancount." --allowedTools "Skill" "Read" "Bash(bea:*)" "PowerShell(bea:*)" --add-dir "$SKILLS_SRC\skills"
+  ```
+
+- **Codex** with `--sandbox read-only` rejected every command
+  (`blocked by policy`) until a Windows sandbox was selected. The unelevated
+  sandbox needs no administrator setup:
+
+  ```powershell
+  codex exec --sandbox read-only -c 'windows.sandbox="unelevated"' "What were my biggest expenses in June 2026? Ledger is ./ledger.beancount."
+  ```
+
+  To make that permanent, set `sandbox = "unelevated"` under `[windows]` in
+  `~\.codex\config.toml`. See the
+  [Codex Windows sandbox](https://learn.chatgpt.com/docs/windows/windows-sandbox)
+  documentation for the elevated option. Only the unelevated sandbox was
+  rehearsed.
 
 ### Update
 
