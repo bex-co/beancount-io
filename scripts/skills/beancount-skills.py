@@ -78,6 +78,19 @@ def frontmatter(path: Path) -> dict[str, str]:
     return meta
 
 
+def link_target(path: Path) -> str:
+    """Where PATH links, as users write it.
+
+    On Windows, os.readlink reports an absolute target in its `\\\\?\\` form
+    (`\\\\?\\C:\\...`, `\\\\?\\UNC\\server\\share\\...`); printed paths drop it."""
+    target = os.readlink(path)
+    if WINDOWS:
+        if target.startswith("\\\\?\\UNC\\"):
+            return "\\\\" + target[8:]
+        target = target.removeprefix("\\\\?\\")
+    return target
+
+
 def is_linked(entry: Path) -> bool:
     return entry.is_symlink() and entry.resolve() == (SOURCE_DIR / entry.name).resolve()
 
@@ -101,7 +114,7 @@ def destination_problem(dest: Path) -> str | None:
         where = "" if path == dest else f"{dest}: "
         if path.is_symlink():
             state = " (target missing)" if not path.exists() else ", not a directory"
-            return f"{where}{path} links to {os.readlink(path)}{state}"
+            return f"{where}{path} links to {link_target(path)}{state}"
         return f"{where}{path} is a file, not a directory"
     return None
 
@@ -140,7 +153,7 @@ def verify(dest: Path) -> int:
                 f"{name}: links to the old skills/.claude/skills layout; repair with: {rerun('install', dest)}"
             )
         elif not entry.exists():
-            detail = f"link to missing {os.readlink(entry)}" if entry.is_symlink() else "not installed"
+            detail = f"link to missing {link_target(entry)}" if entry.is_symlink() else "not installed"
             problems.append(f"{name}: {detail}")
         elif not skill_md.is_file():
             problems.append(f"{name}: SKILL.md is missing")
@@ -198,7 +211,7 @@ def missing_references(
     missing_siblings: dict[str, str] = {}
     documents = [root / "SKILL.md", *sorted((root / "references").glob("*.md"))]
     for document in documents:
-        where = document.relative_to(dest)
+        where = document.relative_to(dest).as_posix()
         for lineno, line in enumerate(document.read_text(encoding="utf-8").splitlines(), 1):
             line = URL.sub("", line)
             siblings = list(dict.fromkeys(s for s in SIBLING.findall(line) if s in names and s != name))
@@ -222,7 +235,7 @@ def missing_references(
 def describe_conflict(entry: Path) -> str:
     if entry.is_symlink():
         state = "" if entry.exists() else " (target missing)"
-        return f"{entry} links to {os.readlink(entry)}{state}, not this checkout"
+        return f"{entry} links to {link_target(entry)}{state}, not this checkout"
     if not entry.is_dir():
         return f"{entry} is a file"
     changes = tree_changes(SOURCE_DIR / entry.name, entry)
@@ -238,9 +251,9 @@ def tree_changes(source: Path, copy: Path) -> list[str]:
     pending = [(comparison, Path())]
     while pending:
         current, prefix = pending.pop()
-        changes += [f"modified {prefix / f}" for f in current.diff_files]
-        changes += [f"added {prefix / f}" for f in current.right_only]
-        changes += [f"missing {prefix / f}" for f in current.left_only]
+        changes += [f"modified {(prefix / f).as_posix()}" for f in current.diff_files]
+        changes += [f"added {(prefix / f).as_posix()}" for f in current.right_only]
+        changes += [f"missing {(prefix / f).as_posix()}" for f in current.left_only]
         pending += [(sub, prefix / sub_name) for sub_name, sub in current.subdirs.items()]
     return sorted(changes)
 

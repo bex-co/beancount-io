@@ -3,6 +3,8 @@
 
 Stdlib unittest only (the skills CI has no pytest): run with
 `python3 scripts/skills/test_beancount_skills.py` from the repository root.
+Add `--installer` to run only the installer lifecycle, which needs neither
+`bea` nor network access (the Windows CI job runs it that way).
 Tests install the real suite into temporary destinations and assert file
 effects; the Git tests rehearse the documented clone and update commands.
 """
@@ -23,6 +25,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import textwrap
 import unittest
 from collections import Counter, defaultdict
 from datetime import datetime
@@ -38,6 +41,9 @@ DOCS = SCRIPTS_DIR.parents[1] / "docs" / "skills"
 INSTALL_DOC = DOCS / "installation.md"
 FIRST_QUERY_DOC = DOCS / "first-query.md"
 FIXTURE = SUITE / "beancount-ask" / "evals" / "files" / "eval1_ledger.beancount"
+# Skip reasons for tests that cannot apply on this OS start with this; under
+# `--installer`, any other skip fails the run (see installer_tests).
+NOT_THIS_PLATFORM = "not this platform: "
 
 
 def load(name: str, filename: str):
@@ -432,7 +438,7 @@ class TestLinkFailures(Workspace):
             self.assertIn(f"  mkdir -p {shlex.quote(str(backups))} && mv {shlex.quote(str(spaced))}/<name>", conflict)
             self.assertIn(f"Repair with: python3 {shlex.quote(str(skills.SCRIPT))} install {shlex.quote(str(spaced))}", incomplete)
 
-    @unittest.skipUnless(os.name == "nt" and shutil.which("powershell"), "Windows PowerShell only")
+    @unittest.skipUnless(os.name == "nt", NOT_THIS_PLATFORM + "Windows PowerShell only")
     def test_printed_windows_remedies_run_in_windows_powershell(self):
         spaced = self.root / "home dir ü" / "skills"
         spaced.mkdir(parents=True)
@@ -477,7 +483,9 @@ class TestVerify(Workspace):
         cached = self.root / "home/.codex/plugins/cache/beancount-io/beancount-io/0.1.0/skills/beancount-ask/SKILL.md"
         cached.parent.mkdir(parents=True)
         cached.write_text("x")
-        with mock.patch.dict(os.environ, {"HOME": str(self.root / "home")}):
+        # Path.home() reads HOME on POSIX and USERPROFILE on Windows.
+        home = str(self.root / "home")
+        with mock.patch.dict(os.environ, {"HOME": home, "USERPROFILE": home}):
             code, out, err = run("verify", self.dest)
         self.assertEqual((code, err), (0, ""))
         self.assertIn("note: the beancount-io plugin also provides this suite to Codex", out)
@@ -724,6 +732,10 @@ class TestSuiteBundle(Workspace):
         self.assertEqual(snapshot(out), before)
 
 
+@unittest.skipIf(
+    os.name == "nt",
+    NOT_THIS_PLATFORM + "ClawHub publication runs on Ubuntu only, and the fake clawhub is a POSIX script",
+)
 class TestClawHubWorkflow(Workspace):
     def release(self, mode="publish", scenario="missing", **changes):
         folder = self.root / "suite"
@@ -916,6 +928,10 @@ class TestGitUpdatePath(Workspace):
         (self.origin / rel).write_text(text)
         self.git_ok(self.origin, "commit", "-qam", f"update {rel}")
 
+    @unittest.skipIf(
+        os.name == "nt",
+        NOT_THIS_PLATFORM + "rehearses the macOS/Linux `sh` upgrade block (TestOldLayoutUpgrade covers the relink)",
+    )
     def test_the_documented_upgrade_relinks_an_install_from_the_old_layout(self):
         doc = INSTALL_DOC.read_text(encoding="utf-8")
         upgrade = re.search(r"<!-- upgrade -->\n```sh\n(.*?)\n```", doc, re.DOTALL)
@@ -1007,6 +1023,192 @@ class TestGitUpdatePath(Workspace):
         self.assertIn("linked", result.stdout)
         self.assertIn(f"OK {len(skills.expected_skills()) + 1} customer skills complete", result.stdout)
         self.assertTrue((self.dest / "beancount-budget").is_symlink())
+
+
+def windows_guide_block(needle: str) -> str:
+    """The one ```powershell block of the guide's Windows section that contains NEEDLE."""
+    doc = INSTALL_DOC.read_text(encoding="utf-8")
+    start = doc.index("\n## Windows (PowerShell)\n")
+    end = doc.find("\n## ", start + 1)
+    section = doc[start : end if end >= 0 else len(doc)]
+    blocks = [textwrap.dedent(block) for block in re.findall(r"^ *```powershell\n(.*?)\n *```", section, re.M | re.S)]
+    found = [block for block in blocks if needle in block]
+    if len(found) != 1:
+        raise AssertionError(f"installation.md's Windows section must have one powershell block with {needle!r}")
+    return found[0]
+
+
+@unittest.skipUnless(os.name == "nt", NOT_THIS_PLATFORM + "runs the guide's Windows PowerShell blocks")
+class TestWindowsPowerShellGuide(unittest.TestCase):
+    """The guide's Windows (PowerShell) blocks, run as written in Windows PowerShell 5.1.
+
+    Only the clone URL changes, to a local origin holding this checkout's suite,
+    so no network is needed. USERPROFILE, HOME and LOCALAPPDATA point into the
+    run's directory, whose names contain spaces and non-ASCII characters; the
+    real profile is never touched. Link creation must be allowed: the guide's
+    probe fails the test rather than skipping it. TestLinkFailures covers the
+    denied and interrupted paths on any host. This is installer evidence only,
+    not proof that an agent discovers the skills.
+    """
+
+    URL = "https://github.com/bex-co/beancount-io.git"
+
+    def setUp(self):
+        temporary = scratch_dir()
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.home = self.root / "home dir ü"
+        self.src = self.root / "Local App Data é" / "beancount-io"
+        self.dests = [self.home / ".claude" / "skills", self.home / ".agents" / "skills"]
+        self.names = skills.expected_skills()
+        self.env = {
+            **os.environ,
+            "USERPROFILE": str(self.home),
+            "HOME": str(self.home),
+            "LOCALAPPDATA": str(self.src.parent),
+            "PYTHONIOENCODING": "utf-8",
+            "GIT_AUTHOR_NAME": "Test", "GIT_AUTHOR_EMAIL": "test@example.com",
+            "GIT_COMMITTER_NAME": "Test", "GIT_COMMITTER_EMAIL": "test@example.com",
+        }
+        self.origin = self.root / "origin"
+        for name in self.names:
+            shutil.copytree(SUITE / name, self.origin / "skills" / name)
+        (self.origin / "scripts" / "skills").mkdir(parents=True)
+        shutil.copy2(SCRIPTS_DIR / "beancount-skills.py", self.origin / "scripts" / "skills")
+        (self.origin / "docs" / "skills").mkdir(parents=True)
+        shutil.copy2(INSTALL_DOC, self.origin / "docs" / "skills")
+        for args in (("init", "-q", "-b", "main"), ("add", "."), ("commit", "-qm", "suite"),
+                     ("config", "uploadpack.allowFilter", "true")):
+            self.git(self.origin, *args)
+        # Unrelated entries that every step must leave byte-identical.
+        self.seeded = {}
+        for dest in self.dests:
+            for path, text in ((dest / "my-own-skill" / "SKILL.md", "---\nname: my-own-skill\ndescription: mine\n---\n"),
+                               (dest / "notes ü.txt", "mine ü\n")):
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(text, encoding="utf-8")
+                self.seeded[path] = path.read_bytes()
+
+    def git(self, cwd: Path, *args: str) -> str:
+        result = subprocess.run(
+            ["git", "-c", f"core.hooksPath={self.root / 'empty-hooks'}", *args],
+            cwd=cwd, env=self.env, capture_output=True, text=True, encoding="utf-8",
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return result.stdout
+
+    def commit_upstream(self, rel: str, addition: str) -> None:
+        path = self.origin / rel
+        path.write_text(path.read_text(encoding="utf-8") + addition, encoding="utf-8")
+        self.git(self.origin, "commit", "-qam", f"update {rel}")
+
+    def powershell(self, block: str) -> tuple[list[int], str]:
+        """Run BLOCK line by line in one Windows PowerShell session; each line's exit code and the output."""
+        lines = [line for line in block.splitlines() if line.strip()]
+        body = ["$ErrorActionPreference = 'Continue'", "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8"]
+        for line in lines:
+            body += ["$global:LASTEXITCODE = 0", line, 'Write-Output "@@exit $LASTEXITCODE"']
+        script = self.root / "step.ps1"
+        # UTF-8 with BOM, so Windows PowerShell 5.1 reads the script as UTF-8.
+        script.write_text("\n".join(body) + "\n", encoding="utf-8-sig")
+        result = subprocess.run(
+            ["powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", str(script)],
+            env=self.env, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=300,
+        )
+        output = result.stdout + result.stderr
+        codes = [int(code) for code in re.findall(r"^@@exit (-?\d+)\s*$", result.stdout, re.M)]
+        self.assertEqual(len(codes), len(lines), output)
+        return codes, output
+
+    def assert_linked(self, name: str) -> None:
+        for dest in self.dests:
+            entry = dest / name
+            self.assertTrue(entry.is_symlink(), entry)
+            self.assertEqual(entry.resolve(), (self.src / "skills" / name).resolve())
+
+    def test_documented_lifecycle_with_spaces_and_unicode_paths(self):
+        count = len(self.names)
+        set_src = windows_guide_block("verify").splitlines()[0]
+        self.assertIn("$SKILLS_SRC = ", set_src)
+
+        codes, out = self.powershell(windows_guide_block("os.symlink"))
+        self.assertEqual(codes, [0], out)
+        self.assertIn("directory symlinks: allowed", out)
+
+        get = windows_guide_block("git clone")
+        self.assertIn(self.URL, get)
+        codes, out = self.powershell(get.replace(self.URL, self.origin.as_uri()))
+        self.assertEqual(codes, [0] * len(codes), out)
+        self.assertEqual(out.count("linked "), 2 * count, out)
+        self.assertEqual(out.count(f"OK {count} customer skills complete"), 2, out)
+        for name in self.names:
+            self.assert_linked(name)
+
+        codes, out = self.powershell(windows_guide_block("verify"))
+        self.assertEqual(codes, [0, 0], out)
+        self.assertEqual(out.count(f"OK {count} customer skills complete"), 2, out)
+
+        # An upstream change reaches every agent directory through one update;
+        # the repeated install keeps every link.
+        update = windows_guide_block("pull --ff-only\npython ")
+        self.commit_upstream("skills/beancount-ask/SKILL.md", "\nUpstream update ü.\n")
+        codes, out = self.powershell(update)
+        self.assertEqual(codes, [0] * len(codes), out)
+        self.assertEqual(out.count("kept   "), 2 * count, out)
+        for dest in self.dests:
+            self.assertIn("Upstream update ü.", (dest / "beancount-ask" / "SKILL.md").read_text(encoding="utf-8"))
+
+        # A local edit shows through every link at once, blocks a plain pull of
+        # an upstream change to the same file, and survives the stash sequence.
+        init = self.src / "skills" / "beancount-init" / "SKILL.md"
+        original = init.read_text(encoding="utf-8")
+        init.write_text(original.replace("\n---\n", "\n---\n\nMy local note ü.\n", 1), encoding="utf-8")
+        for dest in self.dests:
+            self.assertIn("My local note ü.", (dest / "beancount-init" / "SKILL.md").read_text(encoding="utf-8"))
+        self.commit_upstream("skills/beancount-init/SKILL.md", "\nUpstream init change.\n")
+        codes, out = self.powershell(update)
+        self.assertNotEqual(codes[2], 0, out)
+        self.assertIn("would be overwritten", out)
+        self.assertEqual(codes[3], 0, out)
+        self.assertIn("local changes in the source checkout", out)
+        codes, out = self.powershell(set_src + "\n" + windows_guide_block("stash pop"))
+        self.assertEqual(codes, [0] * len(codes), out)
+        for dest in self.dests:
+            text = (dest / "beancount-init" / "SKILL.md").read_text(encoding="utf-8")
+            self.assertIn("My local note ü.", text)
+            self.assertIn("Upstream init change.", text)
+        self.assertEqual(self.git(self.src, "stash", "list"), "")
+        self.git(self.src, "checkout", "--", "skills")
+
+        # A locally edited copy blocks install without changes; the guide's
+        # move keeps it, and install then links the skill again.
+        copy = self.dests[0] / "beancount-ask"
+        copy.unlink()
+        shutil.copytree(self.src / "skills" / "beancount-ask", copy)
+        (copy / "SKILL.md").write_text("edited copy ü\n", encoding="utf-8")
+        copy_files = {p.relative_to(copy): p.read_bytes() for p in copy.rglob("*") if p.is_file()}
+        codes, out = self.powershell(update)
+        self.assertEqual(codes[-1], 1, out)
+        self.assertIn(f"CONFLICT {copy} is a copy with local changes: modified SKILL.md", out)
+        self.assertIn("Nothing was changed", out)
+        self.assertEqual({p.relative_to(copy): p.read_bytes() for p in copy.rglob("*") if p.is_file()}, copy_files)
+        codes, out = self.powershell(windows_guide_block("Move-Item"))
+        self.assertEqual(codes, [0, 0], out)
+        backup = self.home / "beancount-skill-backups" / "beancount-ask"
+        self.assertEqual({p.relative_to(backup): p.read_bytes() for p in backup.rglob("*") if p.is_file()}, copy_files)
+        codes, out = self.powershell(update)
+        self.assertEqual(codes[-1], 0, out)
+        self.assert_linked("beancount-ask")
+
+        codes, out = self.powershell(windows_guide_block("uninstall"))
+        self.assertEqual(codes, [0] * len(codes), out)
+        self.assertEqual(out.count("removed "), 2 * count, out)
+        self.assertFalse(self.src.exists(), "the guide's last step deletes the checkout")
+        self.assertEqual([p for p in self.home.rglob("*") if p.is_symlink()], [])
+        for dest in self.dests:
+            self.assertEqual(sorted(p.name for p in dest.iterdir()), ["my-own-skill", "notes ü.txt"])
+        self.assertEqual({path: path.read_bytes() for path in self.seeded}, self.seeded)
+        self.assertEqual({p.relative_to(backup): p.read_bytes() for p in backup.rglob("*") if p.is_file()}, copy_files)
 
 
 def june_expenses(ledger: Path) -> dict[str, Decimal]:
@@ -2666,7 +2868,27 @@ def load_tests(loader, tests, pattern):
     return tests
 
 
+INSTALLER_TESTS = (
+    TestOldLayoutUpgrade, TestInstall, TestLinkFailures, TestVerify, TestUninstall, TestGitUpdatePath,
+    TestWindowsPowerShellGuide,
+)
+
+
+def installer_tests() -> int:
+    """Run the installer lifecycle only. A skip without a NOT_THIS_PLATFORM reason
+    fails the run, so a missing tool cannot quietly drop coverage."""
+    loader = unittest.defaultTestLoader
+    suite = unittest.TestSuite(loader.loadTestsFromTestCase(case) for case in INSTALLER_TESTS)
+    result = unittest.TextTestRunner(verbosity=2).run(suite)
+    unexpected = [(test, reason) for test, reason in result.skipped if not reason.startswith(NOT_THIS_PLATFORM)]
+    for test, reason in unexpected:
+        print(f"FAIL {test.id()} was skipped: {reason}", file=sys.stderr)
+    return 0 if result.wasSuccessful() and not unexpected else 1
+
+
 if __name__ == "__main__":
+    if sys.argv[1:] == ["--installer"]:
+        sys.exit(installer_tests())
     runner = unittest.TextTestRunner(verbosity=2)
     result = runner.run(unittest.defaultTestLoader.loadTestsFromModule(sys.modules[__name__]))
     sys.exit(0 if result.wasSuccessful() else 1)

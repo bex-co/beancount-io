@@ -248,7 +248,10 @@ The commands in this section were run as written on native Windows 11 (build
 for Windows 2.56. The run covered a symlink-denied account and, after
 Developer Mode was turned on, a non-elevated account allowed to create links.
 Paths contained spaces and non-ASCII characters. See the
-[Windows rehearsal](windows-rehearsal.md).
+[Windows rehearsal](windows-rehearsal.md). The skills CI also runs this
+section's blocks as written in Windows PowerShell 5.1 on a hosted Windows
+runner, using a local copy of the suite in place of the clone URL. That is
+evidence for the installer, not for agent discovery.
 
 **Still being verified:** whether Claude Code and Codex on native Windows
 discover the linked skills and answer the [first query](first-query.md).

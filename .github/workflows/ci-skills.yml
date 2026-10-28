@@ -70,3 +70,42 @@ jobs:
           PATH="$RUNNER_TEMP/published-bea/bin:$PATH" SKILLS_BEA=published python3 -m unittest -v test_beancount_skills.TestBeaRecipes
       - name: Run development QA helper tests
         run: node --test .agents/skills/qa-shared/scripts/qa-login.test.mjs .agents/skills/qa-shared/scripts/qa-mcp.test.mjs
+
+  installer-windows:
+    # Installer evidence on native Windows, not proof that an agent discovers
+    # the skills (that takes real agent sessions). No bea, secrets, network
+    # clone, or model calls: the structural checks and bea recipes stay in the
+    # Ubuntu job above.
+    name: installer (Windows)
+    runs-on: windows-latest
+    defaults:
+      run:
+        # Windows PowerShell 5.1, the shell installation.md documents.
+        shell: powershell
+    steps:
+      # No core.symlinks setting is needed: this job reads no committed link
+      # (.claude/skills belongs to the Ubuntu gate) and creates its own.
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Record the host
+        # Hosted Windows runners run as an administrator with UAC disabled, so
+        # link creation should be allowed. The lifecycle test runs the guide's
+        # symlink check and fails, rather than skips, if it is not.
+        run: |
+          [Environment]::OSVersion.VersionString
+          "PowerShell $($PSVersionTable.PSVersion)"
+          python --version
+          git --version
+          $principal = [Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
+          "elevated: $($principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))"
+      - name: Run the installer lifecycle tests
+        # The guide's Windows PowerShell blocks as written (setup, install,
+        # repeat install, update visibility, local edits, verify, conflict
+        # recovery, removal) under paths with spaces and non-ASCII characters,
+        # plus denied and interrupted link creation, injected so the runner's
+        # own link permission cannot skip it. Any skip that is not a platform
+        # skip fails the run.
+        working-directory: scripts/skills
+        run: python test_beancount_skills.py --installer

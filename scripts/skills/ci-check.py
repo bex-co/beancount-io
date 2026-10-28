@@ -131,7 +131,8 @@ def check_checkout_paths() -> None:
         fail(f"{install_doc.relative_to(REPO_ROOT)}: no `sparse-checkout set` command to check guide paths against")
     fetched = sparse.group(1).split()
     files = repo_files(*fetched)
-    present = {*files, *(str(parent) for path in files for parent in Path(path).parents)}
+    # `git ls-files` paths and guide paths use `/` on every platform.
+    present = {*files, *(parent.as_posix() for path in files for parent in Path(path).parents)}
     guides = [*sorted(CUSTOMER_DOCS.glob("*.md")), SKILLS_ROOT / "README.md", SKILLS_ROOT / "AGENTS.md"]
     for guide in guides:
         rel = guide.relative_to(REPO_ROOT)
