@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1084 — Preserve undated lots in opening-summary Beancount exports](./1084.md) — minor CLI query export: generated opening lots acquire a date, breaking later sales or changing lot identity; 41 fresh profiles, 265 CLI commands and 119 native operations; checked 2026-10-28.
+
 - [1083 — Expand forecast markers in existing multiline narrations](./1083.md) — minor CLI forecast parser: valid LF/CRLF template silently keeps one of three occurrences; 24 fresh profiles, 152 CLI invocations and 74 native operations with recovery controls; checked 2026-10-27.
 
 - [1082 — Distinguish invalid decimal text from query precision failures](./1082.md) — minor CLI query diagnostics: blank/comma CSV amounts get false 28-digit advice; 24 fresh profiles, 118 CLI invocations, 74 native queries and four prompt sessions with reload/export/recovery controls; checked 2026-10-27.
