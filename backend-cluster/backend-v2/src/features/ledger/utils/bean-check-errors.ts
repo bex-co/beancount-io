@@ -120,3 +120,38 @@ export function toWriteValidation(
     newErrors: diffBeanCheckErrors(before, after),
   };
 }
+
+/**
+ * A structured write's projection check, as the ledger reports it: the error
+ * counts before and after plus the errors the write adds. Always computed —
+ * `allowInvalid` suppresses only the refusal (w23/161). A preview's ground
+ * truth: nothing was committed, so no post-write read can see what the write
+ * would break.
+ */
+export interface ReportedProjection {
+  readonly errorsBefore: number;
+  readonly errorsAfter: number;
+  readonly newErrors: BeanCheckError[];
+}
+
+/**
+ * Shape the ledger's `errors_before`/`errors_after`/`new_errors` triple. A
+ * ledger service older than the report answers without the fields; the
+ * report then reads clean rather than failing the write.
+ */
+export function toReportedProjection(data: {
+  errors_before?: number | null;
+  errors_after?: number | null;
+  new_errors?: readonly {
+    message: string;
+    source?: { filename: string; lineno: number } | null;
+    code?: string | null;
+    severity?: string | null;
+  }[] | null;
+}): ReportedProjection {
+  return {
+    errorsBefore: data.errors_before ?? 0,
+    errorsAfter: data.errors_after ?? 0,
+    newErrors: toBeanCheckErrors(data.new_errors ?? []),
+  };
+}

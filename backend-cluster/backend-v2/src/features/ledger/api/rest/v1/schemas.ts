@@ -61,6 +61,23 @@ export const dryRunBody = {
   }),
 };
 
+/**
+ * The ledger's projection check for a structured write, flat as the append
+ * result publishes it: the error counts before and after plus the errors
+ * the write adds. Always computed — `allowInvalid` suppresses only the
+ * refusal (w23/161).
+ */
+export const writeProjectionShape = {
+  errorsBefore: z.number().int(),
+  errorsAfter: z.number().int(),
+  newErrors: z.array(
+    z.strictObject({
+      message: z.string(),
+      source: z.string().optional(),
+    }),
+  ),
+};
+
 /** Fava's own narrowing expressions, as `/journal` already publishes them. */
 export const filterQuerySchema = z.object({
   account: z.string().optional().openapi({

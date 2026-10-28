@@ -10,7 +10,11 @@ import { entryInputToText, isDecimalNumber } from "@/foundation/rustledger";
 import type { LedgerEntryInput } from "@/foundation/ledger-api-types/ledger-entry-input";
 import { BadUserInputError, UnbalancedTransactionError } from "@/shared/errors";
 import { ledgerIdOf, servicesForRequest } from "./service-context";
-import { refuseNewLedgerErrors } from "@/features/ledger/utils/new-ledger-errors";
+import {
+  countLedgerErrors,
+  projectNewLedgerErrors,
+  refuseProjectedErrors,
+} from "@/features/ledger/utils/new-ledger-errors";
 import {
   checkTransactionBalance,
   scanInferredToleranceDefaults,
@@ -401,18 +405,19 @@ export function setEntriesHandler(router: Router): void {
         // (w0/m2). A second `open` for an open account, or a balance against
         // an unopened one, used to be committed and only surfaced later as a
         // ledger error. `allowInvalid` records such entries deliberately.
+        // The check always runs: the flag suppresses only the refusal, and
+        // the projection is reported on the response either way (w23/161).
+        const after = await data.checkProjectedErrors({
+          ledgerId,
+          userId: undefined,
+          overlays: updates,
+          enforceInputLimits: false,
+        });
+        const projection = await projectNewLedgerErrors(after, () =>
+          data.getErrors({ ledgerId, userId: undefined }),
+        );
         if (!allowInvalid) {
-          const after = await data.checkProjectedErrors({
-            ledgerId,
-            userId: undefined,
-            overlays: updates,
-            enforceInputLimits: false,
-          });
-          await refuseNewLedgerErrors(
-            after,
-            () => data.getErrors({ ledgerId, userId: undefined }),
-            "add",
-          );
+          refuseProjectedErrors(projection, "add");
           // A parse error already in the file (an unclosed quote) can swallow
           // what is written after it, and the same message at another line
           // counts as nothing new: look for the entries themselves (w21/682).
@@ -435,6 +440,9 @@ export function setEntriesHandler(router: Router): void {
             entry_hashes: [],
             included_files: included,
             preview,
+            errors_before: projection.errorsBefore,
+            errors_after: projection.errorsAfter,
+            new_errors: projection.newErrors,
           });
           return;
         }
@@ -460,10 +468,23 @@ export function setEntriesHandler(router: Router): void {
             ranges,
           ),
           included_files: included,
+          errors_before: projection.errorsBefore,
+          errors_after: projection.errorsAfter,
+          new_errors: projection.newErrors,
         });
         return;
       }
-      ctx.body = successResponse({ entry_hashes: [], included_files: [] });
+      // An empty batch changes nothing: the projection is today's errors,
+      // before and after, with nothing new.
+      const current = await data.getErrors({ ledgerId, userId: undefined });
+      const currentCount = countLedgerErrors(current);
+      ctx.body = successResponse({
+        entry_hashes: [],
+        included_files: [],
+        errors_before: currentCount,
+        errors_after: currentCount,
+        new_errors: [],
+      });
     },
   );
 }

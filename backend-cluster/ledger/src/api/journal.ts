@@ -114,7 +114,7 @@ export function setJournalHandler(router: Router): void {
     );
   });
 
-  // operationId: updateSourceSlice — wire {message, entry_hash, new_entry_hash, new_sha256sum, files};
+  // operationId: updateSourceSlice — wire {message, entry_hash, new_entry_hash, new_sha256sum, files, errors_before, errors_after, new_errors};
   // entry_hash is the entry's NEW content-derived identity after the edit;
   // new_entry_hash repeats it explicitly for clients keying off a named field.
   router.put(`${base}/source-slice`, authMiddleware, async (ctx) => {
@@ -145,11 +145,14 @@ export function setJournalHandler(router: Router): void {
       new_entry_hash: result.newEntryHash,
       new_sha256sum: result.newSha256sum,
       files: result.files,
+      errors_before: result.validation.errorsBefore,
+      errors_after: result.validation.errorsAfter,
+      new_errors: result.validation.newErrors,
       ...(dryRun ? { preview: result.preview } : {}),
     });
   });
 
-  // operationId: deleteSourceSlice — wire {message, entry_hash, files}
+  // operationId: deleteSourceSlice — wire {message, entry_hash, files, errors_before, errors_after, new_errors}
   router.delete(`${base}/source-slice`, authMiddleware, async (ctx) => {
     const { journal } = servicesForRequest(ctx);
     const body = (ctx.request.body ?? {}) as {
@@ -174,11 +177,14 @@ export function setJournalHandler(router: Router): void {
         : `Deleted entry ${body.entry_hash}`,
       entry_hash: result.entryHash,
       files: result.files,
+      errors_before: result.validation.errorsBefore,
+      errors_after: result.validation.errorsAfter,
+      new_errors: result.validation.newErrors,
       ...(dryRun ? { preview: result.preview } : {}),
     });
   });
 
-  // operationId: deleteMultiSourceSlices — wire {message, deleted_hashes, files}
+  // operationId: deleteMultiSourceSlices — wire {message, deleted_hashes, files, errors_before, errors_after, new_errors}
   // `files` names each file the write rewrote, once (w23/042).
   router.delete(`${base}/source-slices`, authMiddleware, async (ctx) => {
     const { journal } = servicesForRequest(ctx);
@@ -206,6 +212,9 @@ export function setJournalHandler(router: Router): void {
         : `Deleted ${count} entries: ${result.deletedHashes.join(", ")}`,
       deleted_hashes: result.deletedHashes,
       files: result.files,
+      errors_before: result.validation.errorsBefore,
+      errors_after: result.validation.errorsAfter,
+      new_errors: result.validation.newErrors,
       ...(dryRun ? { preview: result.preview } : {}),
     });
   });

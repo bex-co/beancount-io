@@ -26,6 +26,10 @@ import type { Identity } from "@/server/api/identity";
 import { authorizeLedger } from "@/features/ledger/utils/authorize-ledger";
 import type { IAuthorizationService } from "@/server/api/authorization";
 import { AUTHORIZATION_ACTIONS } from "@/server/api/authorization/authorization-contract";
+import {
+  toReportedProjection,
+  type ReportedProjection,
+} from "@/features/ledger/utils/bean-check-errors";
 
 type AmountInput = { number: string; currency: string };
 
@@ -312,6 +316,11 @@ export type AddBulkEntriesResult = {
    * like the append preview's diff (w23/m7/t002).
    */
   preview?: Array<{ path: string; text: string }>;
+  /**
+   * The ledger's projection check for the batch, always reported — even
+   * under `allowInvalid`, which suppresses only the refusal (w23/161).
+   */
+  validation: ReportedProjection;
 };
 
 type BulkEntries = EntryAddBulkEntriesRequest["entries"];
@@ -609,15 +618,16 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
       }
     }
 
-    const { entryHashes, includedFiles, preview } = await this.addEntries(
-      favaApiClient,
-      ledgerOwner,
-      ledgerName,
-      entries,
-      platform,
-      allowInvalid,
-      dryRun,
-    );
+    const { entryHashes, includedFiles, preview, validation } =
+      await this.addEntries(
+        favaApiClient,
+        ledgerOwner,
+        ledgerName,
+        entries,
+        platform,
+        allowInvalid,
+        dryRun,
+      );
 
     const noun = inputs.length === 1 ? "entry" : "entries";
     // A routed file nothing included is included from the entry point in the
@@ -637,6 +647,7 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
       entryHashes,
       ...(includedFiles.length > 0 && { includedFiles }),
       ...(dryRun && { preview }),
+      validation,
     };
   }
 
@@ -920,6 +931,7 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
     entryHashes: string[];
     includedFiles: string[];
     preview: Array<{ path: string; text: string }>;
+    validation: ReportedProjection;
   }> {
     const written = await unwrapFavaResponse(
       favaApiClient.entries.addBulkEntries(
@@ -940,6 +952,11 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
         path: file.path,
         text: file.text,
       })),
+      validation: toReportedProjection({
+        errors_before: result?.errors_before,
+        errors_after: result?.errors_after,
+        new_errors: result?.new_errors,
+      }),
     };
   }
 }

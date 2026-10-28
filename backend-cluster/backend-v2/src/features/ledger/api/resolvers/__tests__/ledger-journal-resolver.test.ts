@@ -357,6 +357,7 @@ describe("LedgerJournalResolver", () => {
         message: "Deleted",
         entryHash: "test-entry-hash",
         dryRun: false,
+        validation: { errorsBefore: 0, errorsAfter: 0, newErrors: [] },
       };
       mockJournalService.deleteSourceSlice.mockResolvedValue(expected);
 
@@ -374,7 +375,13 @@ describe("LedgerJournalResolver", () => {
         allowInvalid: false,
         dryRun: false,
       });
-      expect(result).toEqual({ ...expected, preview: [] });
+      expect(result).toEqual({
+        ...expected,
+        preview: [],
+        errorsBefore: 0,
+        errorsAfter: 0,
+        newErrors: [],
+      });
     });
 
     it("should propagate errors thrown by the service", async () => {
@@ -398,6 +405,7 @@ describe("LedgerJournalResolver", () => {
         message: "Deleted 2 entries",
         deletedHashes: ["hash-1", "hash-2"],
         dryRun: false,
+        validation: { errorsBefore: 0, errorsAfter: 0, newErrors: [] },
       };
       mockJournalService.deleteMultiSourceSlices.mockResolvedValue(expected);
 
@@ -423,7 +431,13 @@ describe("LedgerJournalResolver", () => {
         allowInvalid: false,
         dryRun: false,
       });
-      expect(result).toEqual({ ...expected, preview: [] });
+      expect(result).toEqual({
+        ...expected,
+        preview: [],
+        errorsBefore: 0,
+        errorsAfter: 0,
+        newErrors: [],
+      });
     });
 
     it("should propagate errors thrown by the service", async () => {
@@ -448,6 +462,7 @@ describe("LedgerJournalResolver", () => {
         entryHash: "test-entry-hash",
         newSha256sum: "new-sha",
         dryRun: false,
+        validation: { errorsBefore: 0, errorsAfter: 0, newErrors: [] },
       };
       mockJournalService.updateSourceSlice.mockResolvedValue(expected);
 
@@ -471,7 +486,13 @@ describe("LedgerJournalResolver", () => {
         allowInvalid: false,
         dryRun: false,
       });
-      expect(result).toEqual({ ...expected, preview: [] });
+      expect(result).toEqual({
+        ...expected,
+        preview: [],
+        errorsBefore: 0,
+        errorsAfter: 0,
+        newErrors: [],
+      });
     });
 
     it("should propagate errors thrown by the service", async () => {

@@ -949,6 +949,21 @@ export interface DeleteMultiSourceSlicesResponse {
    * Per-file affected text on a dry run; absent on a commit.
    */
   preview?: SourceSlicePreviewFile[];
+  /**
+   * Errors Before
+   * Bean-check errors the ledger had before the write; warnings excluded.
+   */
+  errors_before: number;
+  /**
+   * Errors After
+   * Bean-check errors the projection has after the write; warnings excluded.
+   */
+  errors_after: number;
+  /**
+   * New Errors
+   * Errors the write adds to the ledger; empty when it adds none. Reported even when allowInvalid suppresses the refusal.
+   */
+  new_errors: BeancountErrorPublic[];
 }
 
 /**
@@ -1000,6 +1015,21 @@ export interface DeleteSourceSliceResponse {
    * Per-file affected text on a dry run; absent on a commit.
    */
   preview?: SourceSlicePreviewFile[];
+  /**
+   * Errors Before
+   * Bean-check errors the ledger had before the write; warnings excluded.
+   */
+  errors_before: number;
+  /**
+   * Errors After
+   * Bean-check errors the projection has after the write; warnings excluded.
+   */
+  errors_after: number;
+  /**
+   * New Errors
+   * Errors the write adds to the ledger; empty when it adds none. Reported even when allowInvalid suppresses the refusal.
+   */
+  new_errors: BeancountErrorPublic[];
 }
 
 /**
@@ -3285,6 +3315,21 @@ export interface UpdateSourceSliceResponse {
    * Per-file affected text on a dry run; absent on a commit.
    */
   preview?: SourceSlicePreviewFile[];
+  /**
+   * Errors Before
+   * Bean-check errors the ledger had before the write; warnings excluded.
+   */
+  errors_before: number;
+  /**
+   * Errors After
+   * Bean-check errors the projection has after the write; warnings excluded.
+   */
+  errors_after: number;
+  /**
+   * New Errors
+   * Errors the write adds to the ledger; empty when it adds none. Reported even when allowInvalid suppresses the refusal.
+   */
+  new_errors: BeancountErrorPublic[];
 }
 
 /**
@@ -3640,6 +3685,21 @@ export interface EntryAddBulkEntriesResult {
    * Per-file entry text on a dry run; absent on a commit.
    */
   preview?: BulkEntriesPreviewFile[];
+  /**
+   * Errors Before
+   * Bean-check errors the ledger had before the write; warnings excluded.
+   */
+  errors_before: number;
+  /**
+   * Errors After
+   * Bean-check errors the projection has after the write; warnings excluded.
+   */
+  errors_after: number;
+  /**
+   * New Errors
+   * Errors the write adds to the ledger; empty when it adds none. Reported even when allowInvalid suppresses the refusal.
+   */
+  new_errors: BeancountErrorPublic[];
 }
 
 /** SuccessResponse[EntryAddBulkEntriesResult] */

@@ -93,6 +93,24 @@ async function fixture(caller = identity) {
     if (text === undefined || hash(text) !== ref.sha256sum)
       throw new BadUserInputError("Stale source fixture");
   }
+  // The ledger service's reported projection (w23/161): the triple rides
+  // every write envelope, naming the would-be error when the write adds one.
+  const BALANCE_MESSAGE =
+    "Balance failed for Assets:Cash: expected 49.75 USD, got 73.25 USD";
+  function projected(body: { allowInvalid?: boolean }) {
+    return state.breaks && body.allowInvalid === true
+      ? {
+          errors_before: 0,
+          errors_after: 1,
+          new_errors: [
+            {
+              message: BALANCE_MESSAGE,
+              source: { filename: "main.bean", lineno: 84 },
+            },
+          ],
+        }
+      : { errors_before: 0, errors_after: 0, new_errors: [] };
+  }
   // The ledger service's pre-commit projection (w21/m1): an edit or delete
   // that adds a bean-check error is refused unless the caller allows it.
   function refuseBreaking(
@@ -119,6 +137,7 @@ async function fixture(caller = identity) {
         preview: [
           { path: "main.bean", text: slices.get(ref.entry_hash) ?? "" },
         ],
+        ...projected(ref),
       });
     }
     slices.delete(ref.entry_hash);
@@ -126,6 +145,7 @@ async function fixture(caller = identity) {
       message: "Deleted",
       entry_hash: ref.entry_hash,
       files: ["main.bean"],
+      ...projected(ref),
     });
   });
   const deleteMultiSourceSlices = jest.fn(
@@ -146,6 +166,7 @@ async function fixture(caller = identity) {
             path: "main.bean",
             text: slices.get(ref.entry_hash) ?? "",
           })),
+          ...projected(body),
         });
       }
       body.entries.forEach((ref) => slices.delete(ref.entry_hash));
@@ -154,6 +175,7 @@ async function fixture(caller = identity) {
         deleted_hashes: body.entries.map((ref) => ref.entry_hash),
         // Each rewritten file once, as the ledger service reports them.
         files: ["main.bean", "2026/imports.bean"],
+        ...projected(body),
       });
     },
   );
@@ -180,6 +202,7 @@ async function fixture(caller = identity) {
           new_entry_hash: "entry1-updated",
           files: ["2026/imports.bean"],
           preview: [{ path: "2026/imports.bean", text: body.new_content }],
+          ...projected(body),
         });
       }
       slices.set(body.entry_hash, body.new_content);
@@ -192,6 +215,7 @@ async function fixture(caller = identity) {
         new_sha256sum: hash(body.new_content),
         new_entry_hash: "entry1-updated",
         files: ["2026/imports.bean"],
+        ...projected(body),
       });
     },
   );
@@ -279,7 +303,7 @@ async function fixture(caller = identity) {
         // bulkEntries fixture (w23/m7/t002).
         const fields =
           input.dryRun === true
-            ? `${spec.fields} dryRun preview { path text }`
+            ? `${spec.fields} dryRun preview { path text } errorsBefore errorsAfter newErrors { message source }`
             : spec.fields;
         const response = await graphql({
           schema,
@@ -377,7 +401,7 @@ describe.each(["rest", "gql", "mcp"])("source edits via %s", (surface) => {
                     validation: emptyValidation,
                   }
                 : surface === "rest"
-                  ? { ...updated, dryRun: false, preview: [] }
+                  ? { ...updated, dryRun: false, preview: [], ...emptyValidation }
                   : updated,
             );
           } else if (operation === "delete_many") {
@@ -398,7 +422,7 @@ describe.each(["rest", "gql", "mcp"])("source edits via %s", (surface) => {
                     validation: emptyValidation,
                   }
                 : surface === "rest"
-                  ? { ...deleted, dryRun: false, preview: [] }
+                  ? { ...deleted, dryRun: false, preview: [], ...emptyValidation }
                   : deleted,
             );
           } else {
@@ -416,7 +440,7 @@ describe.each(["rest", "gql", "mcp"])("source edits via %s", (surface) => {
                     validation: emptyValidation,
                   }
                 : surface === "rest"
-                  ? { ...deleted, dryRun: false, preview: [] }
+                  ? { ...deleted, dryRun: false, preview: [], ...emptyValidation }
                   : deleted,
             );
           }
@@ -570,7 +594,7 @@ describe.each(["rest", "gql", "mcp"])(
                     entryHashes: ["entry1-updated"],
                     validation: emptyValidation,
                   }
-                : would,
+                : { ...would, ...emptyValidation },
             );
           } else if (operation === "delete_many") {
             const would = {
@@ -592,7 +616,7 @@ describe.each(["rest", "gql", "mcp"])(
                     entryHashes: ["entry1", "entry2"],
                     validation: emptyValidation,
                   }
-                : would,
+                : { ...would, ...emptyValidation },
             );
           } else {
             const would = {
@@ -611,7 +635,7 @@ describe.each(["rest", "gql", "mcp"])(
                     entryHashes: ["entry1"],
                     validation: emptyValidation,
                   }
-                : would,
+                : { ...would, ...emptyValidation },
             );
           }
         } finally {
@@ -637,6 +661,58 @@ describe.each(["rest", "gql", "mcp"])(
         await f.close();
       }
     });
+  },
+);
+
+// w23/161: a forced breaking preview reports the would-be errors instead of
+// diffing a no-op write — the flag suppresses only the refusal.
+describe.each(["rest", "gql", "mcp"])(
+  "forced breaking preview via %s",
+  (surface) => {
+    const previewArgs = (operation: Operation): Record<string, unknown> => ({
+      ...(args(operation) as Record<string, unknown>),
+      ...(surface === "mcp" ? { dry_run: true } : { dryRun: true }),
+    });
+    describe.each(Object.keys(operations) as Operation[])(
+      "%s",
+      (operation) => {
+        it("reports the would-be errors without writing", async () => {
+          const f = await fixture();
+          f.state.breaks = true;
+          const before = [...f.slices];
+          try {
+            const result = await f.call(surface, operation, {
+              ...previewArgs(operation),
+              allowInvalid: true,
+            });
+            expect(result.success).toBe(true);
+            expect([...f.slices]).toEqual(before);
+            const body = result.result as Record<string, any>;
+            const breaking = {
+              errorsBefore: 0,
+              errorsAfter: 1,
+              newErrors: [
+                {
+                  message:
+                    "Balance failed for Assets:Cash: expected 49.75 USD, got 73.25 USD",
+                  source: "main.bean:84",
+                },
+              ],
+            };
+            if (surface === "mcp") {
+              expect(body.validation).toEqual(breaking);
+              expect(body.summary).toContain(
+                "1 new bean-check error: Balance failed for Assets:Cash: expected 49.75 USD, got 73.25 USD (main.bean:84)",
+              );
+            } else {
+              expect(body).toMatchObject(breaking);
+            }
+          } finally {
+            await f.close();
+          }
+        });
+      },
+    );
   },
 );
 

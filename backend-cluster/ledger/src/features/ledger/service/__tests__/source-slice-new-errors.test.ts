@@ -255,6 +255,40 @@ describe("source-slice writes that would break the ledger", () => {
     expect(files["main.bean"]).not.toContain("FARMERS MARKET");
   });
 
+  // w23/161: allowInvalid suppresses only the refusal. The forced write
+  // reports the projection it overrode.
+  it("reports the projection on a forced breaking edit", async () => {
+    const updated = await redateFarmers(true);
+    expect(updated.validation.errorsBefore).toBe(0);
+    expect(updated.validation.errorsAfter).toBe(1);
+    expect(updated.validation.newErrors).toEqual([
+      expect.objectContaining({
+        message:
+          "Balance failed for Assets:Cash: expected 49.75 USD, got 73.25 USD",
+        source: { filename: "main.bean", lineno: expect.any(Number) },
+      }),
+    ]);
+  });
+
+  it("reports the projection on a forced breaking delete", async () => {
+    const deleted = await deleteFarmers(true);
+    expect(deleted.validation.errorsBefore).toBe(0);
+    expect(deleted.validation.errorsAfter).toBe(1);
+    expect(deleted.validation.newErrors).toHaveLength(1);
+  });
+
+  it("reports the projection on a forced breaking multi-delete", async () => {
+    const deleted = await service().deleteMultiSourceSlices({
+      ledgerId: LEDGER_ID,
+      userId: "user-1",
+      entries: [{ entryHash: "farmers", sha256sum: sliceSha256(FARMERS) }],
+      allowInvalid: true,
+    });
+    expect(deleted.validation.errorsBefore).toBe(0);
+    expect(deleted.validation.errorsAfter).toBe(1);
+    expect(deleted.validation.newErrors).toHaveLength(1);
+  });
+
   it("checks the entry's checksum before projecting anything", async () => {
     await expect(
       service().deleteSourceSlice({
@@ -337,6 +371,10 @@ describe("source-slice previews that would break the ledger", () => {
     expect(updated.preview).toEqual([
       { path: "main.bean", text: expect.stringContaining("2026-08-30") },
     ]);
+    // w23/161: the breaking preview names what it would add.
+    expect(updated.validation.errorsBefore).toBe(0);
+    expect(updated.validation.errorsAfter).toBe(1);
+    expect(updated.validation.newErrors).toHaveLength(1);
     expect(commitMock).not.toHaveBeenCalled();
     expect(files["main.bean"]).toBe(before);
   });

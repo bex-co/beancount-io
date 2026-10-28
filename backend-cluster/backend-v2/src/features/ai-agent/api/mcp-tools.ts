@@ -119,6 +119,7 @@ import {
   summarizeWrite,
   withPostWriteValidation,
 } from "../tools/write-validation";
+import type { WriteValidation } from "@/features/ledger/utils/bean-check-errors";
 import { BANK_OPERATIONS } from "../tools/bank-import-tool";
 import { normalizeAgentRepoPath } from "../tools/agent-repo-path";
 import { LEDGER_ENTRY_POINT } from "@/features/ledger/utils/ledger-entry-point";
@@ -422,29 +423,49 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
       // throw into exactly that envelope (w2/m28:t003). Catching it to
       // rebuild the same object by hand was the last tool speaking its own
       // error dialect.
-      const outcome = await withPostWriteValidation(
-        context.services,
-        context.identity,
-        ledgerId,
-        () =>
-          context.ledgerEntryService.addBulkEntries(
-            context.identity,
-            ledgerOwner,
-            ledgerName,
-            entries,
-            "web",
-            resolveFlagAlias(
-              { primary: allow_invalid, legacy: allowInvalid },
-              ALLOW_INVALID_NAMES,
-            ),
-            resolveFlagAlias(
-              { primary: dry_run, legacy: dryRunFlag },
-              DRY_RUN_NAMES,
-            ),
+      const dryPreview =
+        resolveFlagAlias(
+          { primary: dry_run, legacy: dryRunFlag },
+          DRY_RUN_NAMES,
+        ) === true;
+      const write = () =>
+        context.ledgerEntryService.addBulkEntries(
+          context.identity,
+          ledgerOwner,
+          ledgerName,
+          entries,
+          "web",
+          resolveFlagAlias(
+            { primary: allow_invalid, legacy: allowInvalid },
+            ALLOW_INVALID_NAMES,
           ),
-      );
+          dryPreview,
+        );
+      // A preview commits nothing, so no post-write read can see what the
+      // write would break: its verdict is the ledger's projection (w23/161).
+      // A commit is re-checked after it lands, as before.
+      let committed: Awaited<ReturnType<typeof write>>;
+      let validation: WriteValidation;
+      if (dryPreview) {
+        committed = await write();
+        validation = committed.validation;
+      } else {
+        const outcome = await withPostWriteValidation(
+          context.services,
+          context.identity,
+          ledgerId,
+          write,
+        );
+        committed = outcome.written;
+        validation = outcome.validation;
+      }
       // The service spells the echo dryRun; MCP publishes dry_run (w23/m7/t002).
-      const { includedFiles = [], dryRun, ...written } = outcome.written;
+      const {
+        includedFiles = [],
+        dryRun,
+        validation: _projection,
+        ...written
+      } = committed;
       const files = written.files ?? [];
       const noun = entries.length === 1 ? "entry" : "entries";
       // The entry point gained an include for a routed file (w23/062).
@@ -461,14 +482,14 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
         result: {
           summary: summarizeWrite(
             `${verb} ${entries.length} ${noun}${files.length > 0 ? ` to ${files.join(", ")}` : ""}${included}`,
-            outcome.validation,
+            validation,
           ),
           ...written,
           dry_run: dryRun,
           preview: written.preview ?? [],
           wrote: touched.map((path) => ({ path })),
           entryHashes: written.entryHashes ?? [],
-          validation: outcome.validation,
+          validation,
         },
       };
     },

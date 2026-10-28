@@ -11,6 +11,10 @@ import {
 } from "@/server/api/authorization/authorization-contract";
 import { BadUserInputError } from "@/shared/errors";
 import { assertBulkEntriesSize } from "@/features/ledger/utils/bulk-entries-cap";
+import {
+  toReportedProjection,
+  type ReportedProjection,
+} from "@/features/ledger/utils/bean-check-errors";
 import { directiveLimitExemptParams } from "@/features/ledger/operations/directive-limit-bypass";
 import { normalizeJournalKinds } from "@/features/ledger/utils/journal-kinds";
 import { assertAmountsFitEngineDecimal } from "@/features/ledger/utils/engine-decimal";
@@ -113,13 +117,20 @@ type TouchedFiles = { files: string[] };
 /** The affected block per file: stored replacement on update, removed slice on delete. */
 type SlicePreview = Array<{ path: string; text: string }>;
 
+/**
+ * The ledger's projection check for the write, always reported — even under
+ * `allowInvalid`, which suppresses only the refusal (w23/161).
+ */
+type ReportedWrite = { validation: ReportedProjection };
+
 export type DeleteSliceResult = {
   message: string;
   dryRun: boolean;
   entryHash: string;
   /** Per-file affected text; populated on dry runs only (w23/m7/t003). */
   preview?: SlicePreview;
-} & TouchedFiles;
+} & TouchedFiles &
+  ReportedWrite;
 
 export type DeleteMultiSlicesResult = {
   message: string;
@@ -128,18 +139,20 @@ export type DeleteMultiSlicesResult = {
   deletedCount: number;
   /** Per-file affected text; populated on dry runs only (w23/m7/t003). */
   preview?: SlicePreview;
-} & TouchedFiles;
+} & TouchedFiles &
+  ReportedWrite;
 
-export type UpdateSliceResult = TouchedFiles & {
-  message: string;
-  dryRun: boolean;
-  entryHash: string;
-  /** Per-file affected text; populated on dry runs only (w23/m7/t003). */
-  preview?: SlicePreview;
-  newSha256sum: string;
-  /** The entry's public ID after the commit, re-read post-commit (w2/m26). */
-  newEntryHash: string;
-};
+export type UpdateSliceResult = TouchedFiles &
+  ReportedWrite & {
+    message: string;
+    dryRun: boolean;
+    entryHash: string;
+    /** Per-file affected text; populated on dry runs only (w23/m7/t003). */
+    preview?: SlicePreview;
+    newSha256sum: string;
+    /** The entry's public ID after the commit, re-read post-commit (w2/m26). */
+    newEntryHash: string;
+  };
 
 export type JournalQueryParams = {
   account?: string;
@@ -433,6 +446,7 @@ export class LedgerJournalService
         path: file.path,
         text: file.text,
       })),
+      validation: toReportedProjection(data),
     };
   }
 
@@ -474,6 +488,7 @@ export class LedgerJournalService
         path: file.path,
         text: file.text,
       })),
+      validation: toReportedProjection(data),
     };
   }
 
@@ -542,6 +557,7 @@ export class LedgerJournalService
         path: file.path,
         text: file.text,
       })),
+      validation: toReportedProjection(data),
     };
   }
 }

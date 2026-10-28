@@ -1,5 +1,5 @@
 import { z } from "@/shared/zod-openapi-setup";
-import { ledgerPathSchema } from "./schemas";
+import { ledgerPathSchema, writeProjectionShape } from "./schemas";
 import { json } from "@/server/rest/v1-schemas";
 import { v1Route } from "@/server/rest/v1-route";
 import {
@@ -350,6 +350,7 @@ export const ENTRY_ROUTES = [
           preview: z.array(
             z.strictObject({ path: z.string(), text: z.string() }),
           ),
+          ...writeProjectionShape,
         }),
       ),
     },
@@ -383,6 +384,9 @@ export const ENTRY_ROUTES = [
         entryHashes: result.entryHashes ?? [],
         dryRun: result.dryRun,
         preview: result.preview ?? [],
+        errorsBefore: result.validation.errorsBefore,
+        errorsAfter: result.validation.errorsAfter,
+        newErrors: result.validation.newErrors,
       };
     },
   }),

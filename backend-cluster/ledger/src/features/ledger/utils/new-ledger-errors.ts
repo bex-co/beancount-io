@@ -66,18 +66,64 @@ export function newLedgerErrors(
 }
 
 /**
- * Refuse a write whose projection (`after`) has errors the ledger did not
- * have. Every structured write — add, edit, delete — goes through here (w0/m2,
- * w21/m1). `before` is read only when the projection has errors at all: a
- * clean projection adds nothing, and today's errors cost a second parse.
+ * What a write's projection check found: the ledger's error count before and
+ * after, plus the errors the write would introduce. Computed for every
+ * structured write and returned on the response; `allowInvalid` suppresses
+ * only the refusal, never the detection (w23/161). Counts exclude warnings,
+ * as the diff does.
+ */
+export type ProjectedLedgerErrors = {
+  errorsBefore: number;
+  errorsAfter: number;
+  newErrors: BeancountErrorPublic[];
+};
+
+const isError = (error: BeancountErrorPublic): boolean =>
+  error.severity !== "warning";
+
+/** Errors bean-check fails on: the engine's warnings are not errors (w21/188). */
+export const countLedgerErrors = (
+  errors: readonly BeancountErrorPublic[],
+): number => errors.filter(isError).length;
+
+/**
+ * Diff a write's projection (`after`) against the ledger it would land on.
+ * `before` is always read: the counts are reported on the response whether
+ * the write is refused, committed, or previewed.
+ */
+export async function projectNewLedgerErrors(
+  after: readonly BeancountErrorPublic[],
+  before: () => Promise<readonly BeancountErrorPublic[]>,
+): Promise<ProjectedLedgerErrors> {
+  const beforeErrors = await before();
+  return {
+    errorsBefore: countLedgerErrors(beforeErrors),
+    errorsAfter: countLedgerErrors(after),
+    newErrors: newLedgerErrors(beforeErrors, after),
+  };
+}
+
+/**
+ * Refuse a write whose projection has errors the ledger did not have. Every
+ * structured write — add, edit, delete — goes through here (w0/m2, w21/m1).
  */
 export async function refuseNewLedgerErrors(
   after: readonly BeancountErrorPublic[],
   before: () => Promise<readonly BeancountErrorPublic[]>,
   action: LedgerWriteAction,
 ): Promise<void> {
-  if (after.every((error) => error.severity === "warning")) return;
-  const introduced = newLedgerErrors(await before(), after);
+  refuseProjectedErrors(await projectNewLedgerErrors(after, before), action);
+}
+
+/**
+ * The refusal half of the write gate, over an already-computed projection:
+ * callers that report the projection refuse from it instead of diffing twice.
+ */
+export function refuseProjectedErrors(
+  projection: ProjectedLedgerErrors,
+  action: LedgerWriteAction,
+): void {
+  const introduced = projection.newErrors;
   if (introduced.length === 0) return;
   const [only] = introduced;
   if (introduced.length === 1 && only !== undefined) {

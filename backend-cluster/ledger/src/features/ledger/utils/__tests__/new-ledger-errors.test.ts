@@ -1,5 +1,9 @@
 import type { BeancountErrorPublic } from "@/foundation/ledger-api-types";
-import { newLedgerErrors, refuseNewLedgerErrors } from "../new-ledger-errors";
+import {
+  newLedgerErrors,
+  projectNewLedgerErrors,
+  refuseNewLedgerErrors,
+} from "../new-ledger-errors";
 import {
   NewLedgerErrorsError,
   UnbalancedTransactionError,
@@ -158,6 +162,31 @@ describe("newLedgerErrors after an edit or delete", () => {
   });
 });
 
+describe("projectNewLedgerErrors", () => {
+  it("reports counts and the diff without refusing", async () => {
+    const known = at("Balance failed for Assets:Cash", "main.bean", 4);
+    const added = at(
+      "Duplicate open directive for Assets:Cash",
+      "main.bean",
+      12,
+    );
+    await expect(
+      projectNewLedgerErrors([known, added], async () => [known]),
+    ).resolves.toEqual({ errorsBefore: 1, errorsAfter: 2, newErrors: [added] });
+  });
+
+  it("excludes warnings from the counts as from the diff", async () => {
+    const warning = {
+      message: "Transaction has only one posting",
+      source: { filename: "main.bean", lineno: 90 },
+      severity: "warning" as const,
+    };
+    await expect(
+      projectNewLedgerErrors([warning], async () => [warning]),
+    ).resolves.toEqual({ errorsBefore: 0, errorsAfter: 0, newErrors: [] });
+  });
+});
+
 describe("refuseNewLedgerErrors", () => {
   const balance = at(
     "Balance failed for Assets:Cash: expected 49.75 USD, got 73.25 USD",
@@ -165,10 +194,12 @@ describe("refuseNewLedgerErrors", () => {
     84,
   );
 
-  it("never reads today's errors for a clean projection", async () => {
+  it("reads today's errors even for a clean projection", async () => {
+    // The counts are reported on the response whether the write is refused,
+    // committed, or previewed, so the laziness had to go (w23/161).
     const before = jest.fn(async () => []);
     await refuseNewLedgerErrors([], before, "delete");
-    expect(before).not.toHaveBeenCalled();
+    expect(before).toHaveBeenCalled();
   });
 
   it("refuses an introduced error, naming the write", async () => {
@@ -272,7 +303,8 @@ describe("warnings and the write gate", () => {
     await expect(
       refuseNewLedgerErrors([warning], before, "add" as never),
     ).resolves.toBeUndefined();
-    expect(before).not.toHaveBeenCalled();
+    // Read for the reported counts, not for a refusal (w23/161).
+    expect(before).toHaveBeenCalled();
   });
 
   it("still refuses a real new error beside a warning", async () => {

@@ -111,6 +111,15 @@ class AddLedgerEntryResponse {
     description: "Per-file entry text; populated on dry runs only",
   })
   preview: EntryPreviewFile[];
+
+  @Field(() => Number)
+  errorsBefore: number;
+
+  @Field(() => Number)
+  errorsAfter: number;
+
+  @Field(() => [DirectiveTextError])
+  newErrors: DirectiveTextError[];
 }
 
 @InputType()
@@ -564,6 +573,9 @@ export class LedgerEntryMutationResolver {
       ...result,
       entryHashes: result.entryHashes ?? [],
       preview: result.preview ?? [],
+      errorsBefore: result.validation.errorsBefore,
+      errorsAfter: result.validation.errorsAfter,
+      newErrors: result.validation.newErrors,
     };
   }
 

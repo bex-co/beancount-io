@@ -9391,12 +9391,33 @@
             "type": "array",
             "title": "Preview",
             "description": "Per-file affected text on a dry run; absent on a commit."
+          },
+          "errors_before": {
+            "type": "integer",
+            "title": "Errors Before",
+            "description": "Bean-check errors the ledger had before the write; warnings excluded."
+          },
+          "errors_after": {
+            "type": "integer",
+            "title": "Errors After",
+            "description": "Bean-check errors the projection has after the write; warnings excluded."
+          },
+          "new_errors": {
+            "items": {
+              "$ref": "#/components/schemas/BeancountErrorPublic"
+            },
+            "type": "array",
+            "title": "New Errors",
+            "description": "Errors the write adds to the ledger; empty when it adds none. Reported even when allowInvalid suppresses the refusal."
           }
         },
         "type": "object",
         "required": [
           "message",
-          "deleted_hashes"
+          "deleted_hashes",
+          "errors_before",
+          "errors_after",
+          "new_errors"
         ],
         "title": "DeleteMultiSourceSlicesResponse",
         "description": "Response schema for deleting multiple source slices."
@@ -9458,12 +9479,33 @@
             "type": "array",
             "title": "Preview",
             "description": "Per-file affected text on a dry run; absent on a commit."
+          },
+          "errors_before": {
+            "type": "integer",
+            "title": "Errors Before",
+            "description": "Bean-check errors the ledger had before the write; warnings excluded."
+          },
+          "errors_after": {
+            "type": "integer",
+            "title": "Errors After",
+            "description": "Bean-check errors the projection has after the write; warnings excluded."
+          },
+          "new_errors": {
+            "items": {
+              "$ref": "#/components/schemas/BeancountErrorPublic"
+            },
+            "type": "array",
+            "title": "New Errors",
+            "description": "Errors the write adds to the ledger; empty when it adds none. Reported even when allowInvalid suppresses the refusal."
           }
         },
         "type": "object",
         "required": [
           "message",
-          "entry_hash"
+          "entry_hash",
+          "errors_before",
+          "errors_after",
+          "new_errors"
         ],
         "title": "DeleteSourceSliceResponse",
         "description": "Response schema for deleting a source slice."
@@ -14423,6 +14465,24 @@
             "type": "array",
             "title": "Preview",
             "description": "Per-file affected text on a dry run; absent on a commit."
+          },
+          "errors_before": {
+            "type": "integer",
+            "title": "Errors Before",
+            "description": "Bean-check errors the ledger had before the write; warnings excluded."
+          },
+          "errors_after": {
+            "type": "integer",
+            "title": "Errors After",
+            "description": "Bean-check errors the projection has after the write; warnings excluded."
+          },
+          "new_errors": {
+            "items": {
+              "$ref": "#/components/schemas/BeancountErrorPublic"
+            },
+            "type": "array",
+            "title": "New Errors",
+            "description": "Errors the write adds to the ledger; empty when it adds none. Reported even when allowInvalid suppresses the refusal."
           }
         },
         "type": "object",
@@ -14430,7 +14490,10 @@
           "message",
           "entry_hash",
           "new_sha256sum",
-          "new_entry_hash"
+          "new_entry_hash",
+          "errors_before",
+          "errors_after",
+          "new_errors"
         ],
         "title": "UpdateSourceSliceResponse",
         "description": "Response schema for updating a source slice."
@@ -15305,12 +15368,33 @@
             "type": "array",
             "title": "Preview",
             "description": "Per-file entry text on a dry run; absent on a commit."
+          },
+          "errors_before": {
+            "type": "integer",
+            "title": "Errors Before",
+            "description": "Bean-check errors the ledger had before the write; warnings excluded."
+          },
+          "errors_after": {
+            "type": "integer",
+            "title": "Errors After",
+            "description": "Bean-check errors the projection has after the write; warnings excluded."
+          },
+          "new_errors": {
+            "items": {
+              "$ref": "#/components/schemas/BeancountErrorPublic"
+            },
+            "type": "array",
+            "title": "New Errors",
+            "description": "Errors the write adds to the ledger; empty when it adds none. Reported even when allowInvalid suppresses the refusal."
           }
         },
         "type": "object",
         "required": [
           "entry_hashes",
-          "included_files"
+          "included_files",
+          "errors_before",
+          "errors_after",
+          "new_errors"
         ],
         "title": "EntryAddBulkEntriesResult"
       },

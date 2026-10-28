@@ -22,7 +22,10 @@ describe("LedgerEntryMutationResolver", () => {
     jest.clearAllMocks();
 
     mockLedgerEntryService = {
-      addBulkEntries: jest.fn().mockResolvedValue({ success: true }),
+      addBulkEntries: jest.fn().mockResolvedValue({
+        success: true,
+        validation: { errorsBefore: 0, errorsAfter: 0, newErrors: [] },
+      }),
     };
 
     mockContext = {

@@ -161,8 +161,9 @@ describe("bulk entries refuse a write that adds ledger errors", () => {
     const response = await post({ entries: [open("Assets:Savings")] });
     expect(response.status).toBe(200);
     expect(committed).toHaveLength(1);
-    // A clean projection needs no second parse of today's ledger.
-    expect(baselineReads).toBe(0);
+    // The baseline is read for the reported counts even when the projection
+    // is clean (w23/161).
+    expect(baselineReads).toBe(1);
   });
 
   it("does not blame the write for errors the ledger already had", async () => {
@@ -175,5 +176,68 @@ describe("bulk entries refuse a write that adds ledger errors", () => {
     const response = await post({ entries: [open("Assets:Savings")] });
     expect(response.status).toBe(200);
     expect(committed).toHaveLength(1);
+  });
+
+  // w23/161: allowInvalid suppresses only the refusal. The projection is
+  // checked and reported either way — a forced write names what it adds.
+  it("reports the projection on a forced commit", async () => {
+    const response = await post({
+      entries: [open("Assets:Cash")],
+      allowInvalid: true,
+    });
+    const body = (await response.json()) as Record<string, any>;
+    expect(response.status).toBe(200);
+    expect(committed).toHaveLength(1);
+    expect(body.data.errors_before).toBe(0);
+    expect(body.data.errors_after).toBe(1);
+    expect(body.data.new_errors).toEqual([
+      {
+        message: "Duplicate open directive for Assets:Cash",
+        source: { filename: "main.bean", lineno: 4 },
+      },
+    ]);
+  });
+
+  it("reports the would-be errors on a forced dry run", async () => {
+    const response = await post({
+      entries: [open("Assets:Cash")],
+      allowInvalid: true,
+      dryRun: true,
+    });
+    const body = (await response.json()) as Record<string, any>;
+    expect(response.status).toBe(200);
+    expect(committed).toEqual([]);
+    expect(body.data.errors_before).toBe(0);
+    expect(body.data.errors_after).toBe(1);
+    expect(body.data.new_errors).toEqual([
+      {
+        message: "Duplicate open directive for Assets:Cash",
+        source: { filename: "main.bean", lineno: 4 },
+      },
+    ]);
+  });
+
+  it("refuses breaking entries on a dry run without the flag", async () => {
+    const response = await post({
+      entries: [open("Assets:Cash")],
+      dryRun: true,
+    });
+    const body = (await response.json()) as Record<string, any>;
+    expect(response.status).toBe(400);
+    expect(body.code).toBe("NEW_LEDGER_ERRORS");
+    expect(committed).toEqual([]);
+  });
+
+  it("reports a clean projection on a clean dry run", async () => {
+    const response = await post({
+      entries: [open("Assets:Savings")],
+      dryRun: true,
+    });
+    const body = (await response.json()) as Record<string, any>;
+    expect(response.status).toBe(200);
+    expect(committed).toEqual([]);
+    expect(body.data.errors_before).toBe(0);
+    expect(body.data.errors_after).toBe(0);
+    expect(body.data.new_errors).toEqual([]);
   });
 });

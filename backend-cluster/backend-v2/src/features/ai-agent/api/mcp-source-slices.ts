@@ -23,6 +23,10 @@ import {
   summarizeWrite,
   withPostWriteValidation,
 } from "../tools/write-validation";
+import type {
+  ReportedProjection,
+  WriteValidation,
+} from "@/features/ledger/utils/bean-check-errors";
 import {
   resolveMcpLedger,
   ledgerSelection,
@@ -59,13 +63,30 @@ export const withoutDryRun = <T extends { dryRun: unknown }>(shape: T) => {
   const { dryRun: _camel, ...rest } = shape;
   return rest;
 };
+/**
+ * MCP publishes the verdict nested under `validation`, not flat as REST
+ * does — strip the flat triple from the adopted REST shape (w23/161).
+ */
+const withoutFlatProjection = <
+  T extends { errorsBefore: unknown; errorsAfter: unknown; newErrors: unknown },
+>(
+  shape: T,
+) => {
+  const {
+    errorsBefore: _before,
+    errorsAfter: _after,
+    newErrors: _new,
+    ...rest
+  } = shape;
+  return rest;
+};;
 
 /** Each tool publishes only its own result shape, not the union of all three. */
 export const SOURCE_SLICE_OPERATION_OUTPUTS = {
   update: mcpOutputSchema(
     toolOutputSchema(
       withWriteOutcome({
-        ...withoutDryRun(updateSliceResult.shape),
+        ...withoutFlatProjection(withoutDryRun(updateSliceResult.shape)),
         ...dryRunOutput,
       }),
     ),
@@ -73,7 +94,7 @@ export const SOURCE_SLICE_OPERATION_OUTPUTS = {
   delete: mcpOutputSchema(
     toolOutputSchema(
       withWriteOutcome({
-        ...withoutDryRun(deleteSliceResult.shape),
+        ...withoutFlatProjection(withoutDryRun(deleteSliceResult.shape)),
         ...dryRunOutput,
       }),
     ),
@@ -81,7 +102,7 @@ export const SOURCE_SLICE_OPERATION_OUTPUTS = {
   delete_many: mcpOutputSchema(
     toolOutputSchema(
       withWriteOutcome({
-        ...withoutDryRun(deleteSlicesResult.shape),
+        ...withoutFlatProjection(withoutDryRun(deleteSlicesResult.shape)),
         ...dryRunOutput,
       }),
     ),
@@ -90,28 +111,45 @@ export const SOURCE_SLICE_OPERATION_OUTPUTS = {
 /**
  * Runs one entry-source write, then reports it the way every write tool does:
  * a summary, the result, the touched entry hashes, and bean-check's verdict.
+ * A preview commits nothing, so no post-write read can see what the write
+ * would break: its verdict is the ledger's projection, not a diff of a
+ * no-op write (w23/161). A commit is re-checked after it lands, as before.
  */
-function validated<T extends { files: string[]; dryRun: boolean }>(
+function validated<
+  T extends {
+    files: string[];
+    dryRun: boolean;
+    validation: ReportedProjection;
+  },
+>(
   context: McpRequestContext,
   ledgerId: string,
+  dryRun: boolean,
   write: () => Promise<T>,
   summarize: (written: T) => string,
   hashes: (written: T) => string[],
 ) {
-  return withPostWriteValidation(
-    context.services,
-    context.identity,
-    ledgerId,
-    write,
-  ).then(({ written, validation }) => {
+  const run = async (): Promise<{ written: T; validation: WriteValidation }> =>
+    dryRun
+      ? write().then((written) => ({
+          written,
+          validation: written.validation,
+        }))
+      : withPostWriteValidation(
+          context.services,
+          context.identity,
+          ledgerId,
+          write,
+        );
+  return run().then(({ written, validation }) => {
     // The service spells the echo dryRun; MCP publishes dry_run (w23/m7/t003).
-    const { files, dryRun, ...result } = written;
+    const { files, dryRun: echoed, validation: _projection, ...result } = written;
     return {
       ok: true as const,
       result: {
         summary: summarizeWrite(summarize(written), validation),
         ...result,
-        dry_run: dryRun,
+        dry_run: echoed,
         // The files the ledger rewrote; this was always empty (w23/042).
         wrote: [...new Set(files)].map((path) => ({ path })),
         entryHashes: hashes(written),
@@ -128,9 +166,15 @@ export const SOURCE_SLICE_EXECUTORS = {
       SOURCE_SLICE_OPERATION_SCHEMAS.update.parse(input);
     const ledgerId = resolveMcpLedger(context, ledger);
     const entryHash = resolveEntryHash(args);
+    const dryRun =
+      resolveFlagAlias(
+        { primary: args.dry_run, legacy: args.dryRun },
+        DRY_RUN_NAMES,
+      ) === true;
     return validated(
       context,
       ledgerId,
+      dryRun,
       () =>
         context.services.ledgerJournal.updateSourceSlice({
           identity: context.identity,
@@ -142,10 +186,7 @@ export const SOURCE_SLICE_EXECUTORS = {
             { primary: args.allow_invalid, legacy: args.allowInvalid },
             ALLOW_INVALID_NAMES,
           ),
-          dryRun: resolveFlagAlias(
-            { primary: args.dry_run, legacy: args.dryRun },
-            DRY_RUN_NAMES,
-          ),
+          dryRun,
         }),
       // The service returns the new hash in `entryHash` too, so the old one
       // comes from the request (w23/007).
@@ -161,9 +202,15 @@ export const SOURCE_SLICE_EXECUTORS = {
       SOURCE_SLICE_OPERATION_SCHEMAS.delete.parse(input);
     const ledgerId = resolveMcpLedger(context, ledger);
     const entryHash = resolveEntryHash(args);
+    const dryRun =
+      resolveFlagAlias(
+        { primary: args.dry_run, legacy: args.dryRun },
+        DRY_RUN_NAMES,
+      ) === true;
     return validated(
       context,
       ledgerId,
+      dryRun,
       () =>
         context.services.ledgerJournal.deleteSourceSlice({
           identity: context.identity,
@@ -174,10 +221,7 @@ export const SOURCE_SLICE_EXECUTORS = {
             { primary: args.allow_invalid, legacy: args.allowInvalid },
             ALLOW_INVALID_NAMES,
           ),
-          dryRun: resolveFlagAlias(
-            { primary: args.dry_run, legacy: args.dryRun },
-            DRY_RUN_NAMES,
-          ),
+          dryRun,
         }),
       (written) =>
         written.dryRun
@@ -194,9 +238,13 @@ export const SOURCE_SLICE_EXECUTORS = {
       entryHash: resolveEntryHash(entry),
       sha256sum: entry.sha256sum,
     }));
+    const dryPreview =
+      resolveFlagAlias({ primary: dry_run, legacy: dryRun }, DRY_RUN_NAMES) ===
+      true;
     return validated(
       context,
       ledgerId,
+      dryPreview,
       () =>
         context.services.ledgerJournal.deleteMultiSourceSlices({
           identity: context.identity,
@@ -206,10 +254,7 @@ export const SOURCE_SLICE_EXECUTORS = {
             { primary: allow_invalid, legacy: allowInvalid },
             ALLOW_INVALID_NAMES,
           ),
-          dryRun: resolveFlagAlias(
-            { primary: dry_run, legacy: dryRun },
-            DRY_RUN_NAMES,
-          ),
+          dryRun: dryPreview,
         }),
       (written) => {
         const noun = written.deletedCount === 1 ? "entry" : "entries";

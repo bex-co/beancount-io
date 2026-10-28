@@ -9,7 +9,8 @@ import {
 } from "@/features/ledger/utils/flag-alias";
 import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 import { MAX_BULK_ENTRIES } from "@/features/ledger/utils/bulk-entries-cap";
-import { ledgerPathSchema, ledgerIdOf } from "./schemas";
+import type { ReportedProjection } from "@/features/ledger/utils/bean-check-errors";
+import { ledgerPathSchema, ledgerIdOf, writeProjectionShape } from "./schemas";
 // Both spellings accepted (w23/m3/t001); handlers resolve to `entryHash`
 // before the service so the wire contract never sees the alias.
 const sliceRef = z
@@ -57,11 +58,21 @@ export const deleteSlicesInput = z
 export const updateSliceInput = deleteSliceInput.extend({
   newContent: z.string(),
 });
-/** `files` is MCP's write outcome (`wrote`); REST keeps its documented shape. */
-const withoutFiles = <T extends { files: string[] }>({
+/**
+ * `files` is MCP's write outcome (`wrote`); REST keeps its documented shape.
+ * The service's nested projection flattens onto the response, as the append
+ * result publishes it (w23/161).
+ */
+const forRest = <T extends { files: string[]; validation: ReportedProjection }>({
   files: _files,
+  validation,
   ...result
-}: T) => result;
+}: T) => ({
+  ...result,
+  errorsBefore: validation.errorsBefore,
+  errorsAfter: validation.errorsAfter,
+  newErrors: validation.newErrors,
+});
 const previewFile = z.object({ path: z.string(), text: z.string() });
 export const deleteSliceResult = z.object({
   message: z.string(),
@@ -70,6 +81,7 @@ export const deleteSliceResult = z.object({
   preview: z
     .array(previewFile)
     .describe("Per-file affected text; populated on dry runs only."),
+  ...writeProjectionShape,
 });
 export const deleteSlicesResult = z.object({
   message: z.string(),
@@ -78,6 +90,7 @@ export const deleteSlicesResult = z.object({
   preview: z
     .array(previewFile)
     .describe("Per-file affected text; populated on dry runs only."),
+  ...writeProjectionShape,
 });
 export const updateSliceResult = deleteSliceResult.extend({
   newSha256sum: z.string(),
@@ -115,7 +128,7 @@ export const SOURCE_SLICE_ROUTES = [
             DRY_RUN_NAMES,
           ),
         })
-        .then(withoutFiles),
+        .then(forRest),
   }),
   v1Route({
     method: "post",
@@ -144,7 +157,7 @@ export const SOURCE_SLICE_ROUTES = [
             DRY_RUN_NAMES,
           ),
         })
-        .then(withoutFiles),
+        .then(forRest),
   }),
   v1Route({
     method: "put",
@@ -174,6 +187,6 @@ export const SOURCE_SLICE_ROUTES = [
             DRY_RUN_NAMES,
           ),
         })
-        .then(withoutFiles),
+        .then(forRest),
   }),
 ];

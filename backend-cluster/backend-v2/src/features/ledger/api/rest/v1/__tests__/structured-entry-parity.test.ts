@@ -138,6 +138,22 @@ async function fixture(
           details: { residual: "5 USD", entry: 0 },
         },
       );
+    // The ledger service's reported projection (w23/161): the triple rides
+    // every write envelope, naming the would-be error when the write adds
+    // one — even when allowInvalid suppresses the refusal below.
+    const projected =
+      state.wouldBreak && body.allowInvalid === true
+        ? {
+            errors_before: 0,
+            errors_after: 1,
+            new_errors: [
+              {
+                message: "Duplicate open directive for Assets:Cash",
+                source: { filename: "main.bean", lineno: 74 },
+              },
+            ],
+          }
+        : { errors_before: 0, errors_after: 0, new_errors: [] };
     // The ledger service's pre-commit check (w0/m2): entries that would add
     // bean-check errors are refused unless the caller records them anyway.
     if (state.wouldBreak && body.allowInvalid !== true) {
@@ -176,6 +192,7 @@ async function fixture(
           path,
           text: lines.join("\n"),
         })),
+        ...projected,
       });
     }
     committed.push(...body.entries);
@@ -185,6 +202,7 @@ async function fixture(
         (_entry: unknown, index: number) => `hash-${index}`,
       ),
       included_files: state.includedFiles,
+      ...projected,
     });
   });
   const createFile = jest.fn();
@@ -315,7 +333,7 @@ async function fixture(
         const response = await graphql({
           schema,
           source: previewing
-            ? 'mutation($entries:[AddEntryInput!]!,$allowInvalid:Boolean,$allow_invalid:Boolean,$dryRun:Boolean,$dry_run:Boolean) { bulkEntries(ledgerId:"alice/main",entries:$entries,allowInvalid:$allowInvalid,allow_invalid:$allow_invalid,dryRun:$dryRun,dry_run:$dry_run) { success message dryRun entryHashes preview { path text } } }'
+            ? 'mutation($entries:[AddEntryInput!]!,$allowInvalid:Boolean,$allow_invalid:Boolean,$dryRun:Boolean,$dry_run:Boolean) { bulkEntries(ledgerId:"alice/main",entries:$entries,allowInvalid:$allowInvalid,allow_invalid:$allow_invalid,dryRun:$dryRun,dry_run:$dry_run) { success message dryRun entryHashes preview { path text } errorsBefore errorsAfter newErrors { message source } } }'
             : 'mutation($entries:[AddEntryInput!]!,$allowInvalid:Boolean,$allow_invalid:Boolean) { bulkEntries(ledgerId:"alice/main",entries:$entries,allowInvalid:$allowInvalid,allow_invalid:$allow_invalid) { success message entryHashes } }',
           variableValues: { entries: input, ...opts },
           contextValue: {
@@ -400,6 +418,9 @@ it.each([identity, { ...identity, ledgerScope: undefined }])(
                     dryRun: false,
                     entryHashes,
                     preview: [],
+                    errorsBefore: 0,
+                    errorsAfter: 0,
+                    newErrors: [],
                   }
                 : {
                     success: true,
@@ -1622,6 +1643,42 @@ describe.each(["rest", "gql", "mcp"])("typed add preview via %s", (surface) => {
             newLedgerErrors: named,
           },
         });
+      }
+    } finally {
+      await f.close();
+    }
+  });
+
+  // w23/161: a forced breaking preview reports the would-be errors instead
+  // of diffing a no-op write — the flag suppresses only the refusal.
+  it("reports the would-be errors on a forced breaking dry run", async () => {
+    const f = await fixture();
+    f.state.wouldBreak = true;
+    try {
+      const result = await f.call(surface, duplicateOpenBatch, {
+        ...previewOpts(),
+        allowInvalid: true,
+      });
+      expect(result.success).toBe(true);
+      expect(f.committed).toEqual([]);
+      const body = result.result as Record<string, any>;
+      const breaking = {
+        errorsBefore: 0,
+        errorsAfter: 1,
+        newErrors: [
+          {
+            message: "Duplicate open directive for Assets:Cash",
+            source: "main.bean:74",
+          },
+        ],
+      };
+      if (surface === "mcp") {
+        expect(body.validation).toEqual(breaking);
+        expect(body.summary).toContain(
+          "1 new bean-check error: Duplicate open directive for Assets:Cash (main.bean:74)",
+        );
+      } else {
+        expect(body).toMatchObject(breaking);
       }
     } finally {
       await f.close();

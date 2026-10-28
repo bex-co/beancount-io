@@ -69,6 +69,16 @@ class SlicePreviewFile {
   text: string;
 }
 
+/** A bean-check error the write adds, as the append result publishes it. */
+@ObjectType()
+class SliceWriteError {
+  @Field(() => String)
+  message: string;
+
+  @Field(() => String, { nullable: true })
+  source?: string;
+}
+
 @ObjectType()
 class DeleteSourceSliceResponse {
   @Field(() => String)
@@ -84,6 +94,15 @@ class DeleteSourceSliceResponse {
     description: "Per-file affected text; populated on dry runs only",
   })
   preview: SlicePreviewFile[];
+
+  @Field(() => Number)
+  errorsBefore: number;
+
+  @Field(() => Number)
+  errorsAfter: number;
+
+  @Field(() => [SliceWriteError])
+  newErrors: SliceWriteError[];
 }
 
 @InputType()
@@ -148,6 +167,15 @@ class DeleteMultiSourceSlicesResponse {
     description: "Per-file affected text; populated on dry runs only",
   })
   preview: SlicePreviewFile[];
+
+  @Field(() => Number)
+  errorsBefore: number;
+
+  @Field(() => Number)
+  errorsAfter: number;
+
+  @Field(() => [SliceWriteError])
+  newErrors: SliceWriteError[];
 }
 
 @InputType()
@@ -218,6 +246,15 @@ class UpdateSourceSliceResponse {
     description: "Per-file affected text; populated on dry runs only",
   })
   preview: SlicePreviewFile[];
+
+  @Field(() => Number)
+  errorsBefore: number;
+
+  @Field(() => Number)
+  errorsAfter: number;
+
+  @Field(() => [SliceWriteError])
+  newErrors: SliceWriteError[];
 }
 
 @Resolver()
@@ -247,7 +284,13 @@ export class LedgerJournalMutationResolver {
         DRY_RUN_NAMES,
       ),
     });
-    return { ...result, preview: result.preview ?? [] };
+    return {
+      ...result,
+      preview: result.preview ?? [],
+      errorsBefore: result.validation.errorsBefore,
+      errorsAfter: result.validation.errorsAfter,
+      newErrors: result.validation.newErrors,
+    };
   }
 
   @Authenticated()
@@ -277,7 +320,13 @@ export class LedgerJournalMutationResolver {
         DRY_RUN_NAMES,
       ),
     });
-    return { ...result, preview: result.preview ?? [] };
+    return {
+      ...result,
+      preview: result.preview ?? [],
+      errorsBefore: result.validation.errorsBefore,
+      errorsAfter: result.validation.errorsAfter,
+      newErrors: result.validation.newErrors,
+    };
   }
 
   @Authenticated()
@@ -305,6 +354,12 @@ export class LedgerJournalMutationResolver {
         DRY_RUN_NAMES,
       ),
     });
-    return { ...result, preview: result.preview ?? [] };
+    return {
+      ...result,
+      preview: result.preview ?? [],
+      errorsBefore: result.validation.errorsBefore,
+      errorsAfter: result.validation.errorsAfter,
+      newErrors: result.validation.newErrors,
+    };
   }
 }

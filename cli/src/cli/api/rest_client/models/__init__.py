@@ -262,6 +262,9 @@ from .post_api_gateway_v1_ledgers_owner_name_directives_text_response_200_wrote_
 from .post_api_gateway_v1_ledgers_owner_name_entries_response_200 import (
     PostApiGatewayV1LedgersOwnerNameEntriesResponse200,
 )
+from .post_api_gateway_v1_ledgers_owner_name_entries_response_200_new_errors_item import (
+    PostApiGatewayV1LedgersOwnerNameEntriesResponse200NewErrorsItem,
+)
 from .post_api_gateway_v1_ledgers_owner_name_entries_response_200_preview_item import (
     PostApiGatewayV1LedgersOwnerNameEntriesResponse200PreviewItem,
 )
@@ -277,11 +280,17 @@ from .post_api_gateway_v1_ledgers_owner_name_entry_source_delete_many_body_entri
 from .post_api_gateway_v1_ledgers_owner_name_entry_source_delete_many_response_200 import (
     PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteManyResponse200,
 )
+from .post_api_gateway_v1_ledgers_owner_name_entry_source_delete_many_response_200_new_errors_item import (
+    PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteManyResponse200NewErrorsItem,
+)
 from .post_api_gateway_v1_ledgers_owner_name_entry_source_delete_many_response_200_preview_item import (
     PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteManyResponse200PreviewItem,
 )
 from .post_api_gateway_v1_ledgers_owner_name_entry_source_delete_response_200 import (
     PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteResponse200,
+)
+from .post_api_gateway_v1_ledgers_owner_name_entry_source_delete_response_200_new_errors_item import (
+    PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteResponse200NewErrorsItem,
 )
 from .post_api_gateway_v1_ledgers_owner_name_entry_source_delete_response_200_preview_item import (
     PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteResponse200PreviewItem,
@@ -396,6 +405,9 @@ from .put_api_gateway_v1_ledgers_owner_name_collaborators_collaborator_response_
 from .put_api_gateway_v1_ledgers_owner_name_entry_source_body import PutApiGatewayV1LedgersOwnerNameEntrySourceBody
 from .put_api_gateway_v1_ledgers_owner_name_entry_source_response_200 import (
     PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200,
+)
+from .put_api_gateway_v1_ledgers_owner_name_entry_source_response_200_new_errors_item import (
+    PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200NewErrorsItem,
 )
 from .put_api_gateway_v1_ledgers_owner_name_entry_source_response_200_preview_item import (
     PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200PreviewItem,
@@ -588,13 +600,16 @@ __all__ = (
     "PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200NewErrorsItem",
     "PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200WroteItem",
     "PostApiGatewayV1LedgersOwnerNameEntriesResponse200",
+    "PostApiGatewayV1LedgersOwnerNameEntriesResponse200NewErrorsItem",
     "PostApiGatewayV1LedgersOwnerNameEntriesResponse200PreviewItem",
     "PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteBody",
     "PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteManyBody",
     "PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteManyBodyEntriesItem",
     "PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteManyResponse200",
+    "PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteManyResponse200NewErrorsItem",
     "PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteManyResponse200PreviewItem",
     "PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteResponse200",
+    "PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteResponse200NewErrorsItem",
     "PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteResponse200PreviewItem",
     "PostApiGatewayV1LedgersOwnerNameImportInsertReceiptBody",
     "PostApiGatewayV1LedgersOwnerNameImportInsertReceiptBodyInput",
@@ -647,6 +662,7 @@ __all__ = (
     "PutApiGatewayV1LedgersOwnerNameCollaboratorsCollaboratorResponse200",
     "PutApiGatewayV1LedgersOwnerNameEntrySourceBody",
     "PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200",
+    "PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200NewErrorsItem",
     "PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200PreviewItem",
     "PutApiGatewayV1LedgersOwnerNameStarBody",
     "PutApiGatewayV1LedgersOwnerNameStarResponse200",

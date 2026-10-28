@@ -8,6 +8,9 @@ from attrs import define as _attrs_define
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
+    from ..models.post_api_gateway_v1_ledgers_owner_name_entries_response_200_new_errors_item import (
+        PostApiGatewayV1LedgersOwnerNameEntriesResponse200NewErrorsItem,
+    )
     from ..models.post_api_gateway_v1_ledgers_owner_name_entries_response_200_preview_item import (
         PostApiGatewayV1LedgersOwnerNameEntriesResponse200PreviewItem,
     )
@@ -26,6 +29,9 @@ class PostApiGatewayV1LedgersOwnerNameEntriesResponse200:
             commit.
         dry_run (bool):
         preview (list[PostApiGatewayV1LedgersOwnerNameEntriesResponse200PreviewItem]):
+        errors_before (int):
+        errors_after (int):
+        new_errors (list[PostApiGatewayV1LedgersOwnerNameEntriesResponse200NewErrorsItem]):
         message (None | str | Unset):
     """
 
@@ -33,6 +39,9 @@ class PostApiGatewayV1LedgersOwnerNameEntriesResponse200:
     entry_hashes: list[str]
     dry_run: bool
     preview: list[PostApiGatewayV1LedgersOwnerNameEntriesResponse200PreviewItem]
+    errors_before: int
+    errors_after: int
+    new_errors: list[PostApiGatewayV1LedgersOwnerNameEntriesResponse200NewErrorsItem]
     message: None | str | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
@@ -46,6 +55,15 @@ class PostApiGatewayV1LedgersOwnerNameEntriesResponse200:
         for preview_item_data in self.preview:
             preview_item = preview_item_data.to_dict()
             preview.append(preview_item)
+
+        errors_before = self.errors_before
+
+        errors_after = self.errors_after
+
+        new_errors = []
+        for new_errors_item_data in self.new_errors:
+            new_errors_item = new_errors_item_data.to_dict()
+            new_errors.append(new_errors_item)
 
         message: None | str | Unset
         if isinstance(self.message, Unset):
@@ -61,6 +79,9 @@ class PostApiGatewayV1LedgersOwnerNameEntriesResponse200:
                 "entryHashes": entry_hashes,
                 "dryRun": dry_run,
                 "preview": preview,
+                "errorsBefore": errors_before,
+                "errorsAfter": errors_after,
+                "newErrors": new_errors,
             }
         )
         if message is not UNSET:
@@ -70,6 +91,9 @@ class PostApiGatewayV1LedgersOwnerNameEntriesResponse200:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.post_api_gateway_v1_ledgers_owner_name_entries_response_200_new_errors_item import (
+            PostApiGatewayV1LedgersOwnerNameEntriesResponse200NewErrorsItem,  # noqa: PLC0415
+        )
         from ..models.post_api_gateway_v1_ledgers_owner_name_entries_response_200_preview_item import (
             PostApiGatewayV1LedgersOwnerNameEntriesResponse200PreviewItem,  # noqa: PLC0415
         )
@@ -88,6 +112,19 @@ class PostApiGatewayV1LedgersOwnerNameEntriesResponse200:
 
             preview.append(preview_item)
 
+        errors_before = d.pop("errorsBefore")
+
+        errors_after = d.pop("errorsAfter")
+
+        new_errors = []
+        _new_errors = d.pop("newErrors")
+        for new_errors_item_data in _new_errors:
+            new_errors_item = PostApiGatewayV1LedgersOwnerNameEntriesResponse200NewErrorsItem.from_dict(
+                new_errors_item_data
+            )
+
+            new_errors.append(new_errors_item)
+
         def _parse_message(data: object) -> None | str | Unset:
             if data is None:
                 return data
@@ -102,6 +139,9 @@ class PostApiGatewayV1LedgersOwnerNameEntriesResponse200:
             entry_hashes=entry_hashes,
             dry_run=dry_run,
             preview=preview,
+            errors_before=errors_before,
+            errors_after=errors_after,
+            new_errors=new_errors,
             message=message,
         )
 

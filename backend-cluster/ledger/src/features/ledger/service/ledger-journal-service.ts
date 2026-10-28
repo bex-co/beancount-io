@@ -75,7 +75,11 @@ import {
 import type { DirectiveLimitOptions } from "@/core/directive-limit";
 import { entryCommitMessage } from "@/features/ledger/utils/commit-message";
 import { toBeancountErrorsPublic } from "@/features/ledger/service/ledger-data-mappers";
-import { refuseNewLedgerErrors } from "@/features/ledger/utils/new-ledger-errors";
+import {
+  projectNewLedgerErrors,
+  refuseProjectedErrors,
+  type ProjectedLedgerErrors,
+} from "@/features/ledger/utils/new-ledger-errors";
 import type { CacheHelper } from "@/shared/cache";
 import { logger } from "@/shared/logger";
 
@@ -392,30 +396,39 @@ type TouchedFiles = { files: string[] };
 /** The affected block per file: stored replacement on update, removed slice on delete. */
 type SlicePreview = Array<{ path: string; text: string }>;
 
+/**
+ * The projection check's verdict, always computed and reported — even under
+ * `allowInvalid`, which suppresses only the refusal (w23/161).
+ */
+type ReportedProjection = { validation: ProjectedLedgerErrors };
+
 export type DeleteSliceResult = {
   message: string;
   entryHash: string;
   preview: SlicePreview;
-} & TouchedFiles;
+} & TouchedFiles &
+  ReportedProjection;
 
 export type DeleteMultiSlicesResult = {
   message: string;
   deletedHashes: string[];
   preview: SlicePreview;
-} & TouchedFiles;
+} & TouchedFiles &
+  ReportedProjection;
 
-export type UpdateSliceResult = TouchedFiles & {
-  message: string;
-  entryHash: string;
-  preview: SlicePreview;
-  newSha256sum: string;
-  /**
-   * The entry's public ID after the commit, re-read from the fresh
-   * post-commit parse — the input `entryHash` is stale the moment the commit
-   * lands, and following it up would 404 (w2/m26).
-   */
-  newEntryHash: string;
-};
+export type UpdateSliceResult = TouchedFiles &
+  ReportedProjection & {
+    message: string;
+    entryHash: string;
+    preview: SlicePreview;
+    newSha256sum: string;
+    /**
+     * The entry's public ID after the commit, re-read from the fresh
+     * post-commit parse — the input `entryHash` is stale the moment the commit
+     * lands, and following it up would 404 (w2/m26).
+     */
+    newEntryHash: string;
+  };
 
 export type JournalQueryParams = {
   account?: string;
@@ -591,19 +604,20 @@ export class LedgerJournalService implements ILedgerJournalService {
   }
 
   /**
-   * Refuse a source-slice write that would leave the ledger with bean-check
-   * errors it did not have, as structured adds are refused (w0/m2, w21/m1).
-   * The transforms run over the loaded files, so nothing is committed; the
-   * commit re-applies them to fresh content under CAS. Errors the ledger
-   * already had never block.
+   * Check a source-slice write's projection against the loaded files, and
+   * refuse it when it would leave the ledger with bean-check errors it did
+   * not have, as structured adds are refused (w0/m2, w21/m1). The transforms
+   * run over the loaded files, so nothing is committed; the commit
+   * re-applies them to fresh content under CAS. Errors the ledger already
+   * had never block. The check always runs: `allowInvalid` suppresses only
+   * the refusal, and the projection is reported on the response (w23/161).
    */
-  private async assertNoNewErrors(
+  private async projectWriteErrors(
     loaded: LoadedLedgerWithManagedPrices,
     transforms: Map<string, LedgerFileTransform>,
     action: LedgerWriteAction,
     allowInvalid: boolean | undefined,
-  ): Promise<void> {
-    if (allowInvalid) return;
+  ): Promise<ProjectedLedgerErrors> {
     const { files, entryPoint, repoPaths } = loaded;
     const projected: FileMap = { ...files };
     for (const [path, transform] of transforms) {
@@ -613,11 +627,12 @@ export class LedgerJournalService implements ILedgerJournalService {
       toBeancountErrorsPublic(
         (await parseLedgerFiles(fileMap, entryPoint, { repoPaths })).errors,
       );
-    await refuseNewLedgerErrors(
+    const projection = await projectNewLedgerErrors(
       await errorsOf(projected),
       () => errorsOf(files),
-      action,
     );
+    if (!allowInvalid) refuseProjectedErrors(projection, action);
+    return projection;
   }
 
   /**
@@ -1033,7 +1048,12 @@ export class LedgerJournalService implements ILedgerJournalService {
         ]),
       ],
     ]);
-    await this.assertNoNewErrors(loaded, transforms, "delete", allowInvalid);
+    const validation = await this.projectWriteErrors(
+      loaded,
+      transforms,
+      "delete",
+      allowInvalid,
+    );
     if (!dryRun) {
       await this.commitTransforms(
         ledgerId,
@@ -1047,6 +1067,7 @@ export class LedgerJournalService implements ILedgerJournalService {
       entryHash,
       files: [found.file],
       preview: [{ path: found.file, text: found.slice }],
+      validation,
     };
   }
 
@@ -1118,7 +1139,12 @@ export class LedgerJournalService implements ILedgerJournalService {
       ),
     );
 
-    await this.assertNoNewErrors(loaded, transforms, "delete", allowInvalid);
+    const validation = await this.projectWriteErrors(
+      loaded,
+      transforms,
+      "delete",
+      allowInvalid,
+    );
     if (!dryRun) {
       await this.commitTransforms(ledgerId, userId, transforms, "Delete entries");
     }
@@ -1129,6 +1155,7 @@ export class LedgerJournalService implements ILedgerJournalService {
       deletedHashes,
       files: [...byFile.keys()],
       preview,
+      validation,
     };
   }
 
@@ -1193,7 +1220,12 @@ export class LedgerJournalService implements ILedgerJournalService {
     ]);
     // The projection also reports to `applied`; the commit's run overwrites it.
     // On a dry run the projection's report is the preview's ground truth.
-    await this.assertNoNewErrors(loaded, transforms, "update", allowInvalid);
+    const validation = await this.projectWriteErrors(
+      loaded,
+      transforms,
+      "update",
+      allowInvalid,
+    );
     if (!dryRun) {
       await this.commitTransforms(
         ledgerId,
@@ -1244,6 +1276,7 @@ export class LedgerJournalService implements ILedgerJournalService {
           text: applied.current?.stored ?? newContent,
         },
       ],
+      validation,
     };
   }
 

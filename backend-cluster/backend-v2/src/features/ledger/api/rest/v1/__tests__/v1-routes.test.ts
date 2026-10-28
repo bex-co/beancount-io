@@ -49,7 +49,12 @@ const services = {
     ]),
     changeFiles: jest.fn(async () => undefined),
   },
-  ledgerEntry: { addBulkEntries: jest.fn(async () => ({ success: true })) },
+  ledgerEntry: {
+    addBulkEntries: jest.fn(async () => ({
+      success: true,
+      validation: { errorsBefore: 0, errorsAfter: 0, newErrors: [] },
+    })),
+  },
 };
 
 const workflows = {

@@ -10970,13 +10970,40 @@
                         ],
                         "additionalProperties": false
                       }
+                    },
+                    "errorsBefore": {
+                      "type": "integer"
+                    },
+                    "errorsAfter": {
+                      "type": "integer"
+                    },
+                    "newErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string"
+                          },
+                          "source": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ],
+                        "additionalProperties": false
+                      }
                     }
                   },
                   "required": [
                     "success",
                     "entryHashes",
                     "dryRun",
-                    "preview"
+                    "preview",
+                    "errorsBefore",
+                    "errorsAfter",
+                    "newErrors"
                   ],
                   "additionalProperties": false
                 }
@@ -11659,13 +11686,40 @@
                         ]
                       },
                       "description": "Per-file affected text; populated on dry runs only."
+                    },
+                    "errorsBefore": {
+                      "type": "integer"
+                    },
+                    "errorsAfter": {
+                      "type": "integer"
+                    },
+                    "newErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string"
+                          },
+                          "source": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ],
+                        "additionalProperties": false
+                      }
                     }
                   },
                   "required": [
                     "message",
                     "dryRun",
                     "entryHash",
-                    "preview"
+                    "preview",
+                    "errorsBefore",
+                    "errorsAfter",
+                    "newErrors"
                   ]
                 }
               }
@@ -11895,13 +11949,40 @@
                         ]
                       },
                       "description": "Per-file affected text; populated on dry runs only."
+                    },
+                    "errorsBefore": {
+                      "type": "integer"
+                    },
+                    "errorsAfter": {
+                      "type": "integer"
+                    },
+                    "newErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string"
+                          },
+                          "source": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ],
+                        "additionalProperties": false
+                      }
                     }
                   },
                   "required": [
                     "message",
                     "dryRun",
                     "deletedCount",
-                    "preview"
+                    "preview",
+                    "errorsBefore",
+                    "errorsAfter",
+                    "newErrors"
                   ]
                 }
               }
@@ -12123,6 +12204,30 @@
                       },
                       "description": "Per-file affected text; populated on dry runs only."
                     },
+                    "errorsBefore": {
+                      "type": "integer"
+                    },
+                    "errorsAfter": {
+                      "type": "integer"
+                    },
+                    "newErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string"
+                          },
+                          "source": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
                     "newSha256sum": {
                       "type": "string"
                     },
@@ -12136,6 +12241,9 @@
                     "dryRun",
                     "entryHash",
                     "preview",
+                    "errorsBefore",
+                    "errorsAfter",
+                    "newErrors",
                     "newSha256sum",
                     "newEntryHash"
                   ]
