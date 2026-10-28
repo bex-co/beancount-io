@@ -52,6 +52,8 @@ type ConversionParams = {
   conversion?: string;
   interval?: string;
 };
+// The trial balance is hierarchy-only: no `interval` (w23/159).
+type TrialBalanceParams = Omit<ConversionParams, "interval">;
 
 export interface ILedgerFinanceService {
   getOverview(params: BaseParams & ConversionParams): Promise<OverviewPublic>;
@@ -65,7 +67,7 @@ export interface ILedgerFinanceService {
   ): Promise<BalanceSheetDataPublic>;
 
   getTrialBalance(
-    params: BaseParams & ConversionParams,
+    params: BaseParams & TrialBalanceParams,
   ): Promise<TrialBalanceDataPublic>;
 
   getHoldings(params: HoldingsParams): Promise<HoldingsResult>;
@@ -168,7 +170,7 @@ export class LedgerFinanceService
   }
 
   async getTrialBalance(
-    params: BaseParams & ConversionParams,
+    params: BaseParams & TrialBalanceParams,
   ): Promise<TrialBalanceDataPublic> {
     const { ledgerId, identity, ...rest } = params;
     const { favaApiClient, ledgerOwner, ledgerName } = await this.getClient(

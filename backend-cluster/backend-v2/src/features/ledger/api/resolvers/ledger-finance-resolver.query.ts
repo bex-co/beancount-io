@@ -14,7 +14,11 @@ import { filterNullish } from "@/shared/tools";
 import { BadUserInputError } from "@/shared/errors";
 import { resolveGroupBy } from "@/features/ledger/utils/query-param-alias";
 import { GraphQLJSONObject } from "graphql-scalars";
-import { DateAndBalance, ConversionArgs } from "./ledger-report-resolver.types";
+import {
+  DateAndBalance,
+  ConversionArgs,
+  TrialBalanceArgs,
+} from "./ledger-report-resolver.types";
 import type { ILedgerFinanceService } from "@/features/ledger/service/ledger-finance-service";
 
 interface ApiTreeNode {
@@ -547,7 +551,7 @@ export class LedgerFinanceQueryResolver {
   })
   async getLedgerTrialBalance(
     @Arg("ledgerId", () => String) ledgerId: string,
-    @Args() args: ConversionArgs,
+    @Args() args: TrialBalanceArgs,
     @Ctx() ctx: IContext,
   ): Promise<TrialBalanceData> {
     const data = await this.financeService.getTrialBalance({

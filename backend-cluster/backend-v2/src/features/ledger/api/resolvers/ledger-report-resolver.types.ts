@@ -27,6 +27,13 @@ export class ConversionArgs extends BaseQueryArgs {
   interval?: string;
 }
 
+// The trial balance is hierarchy-only: no `interval` (w23/159).
+@ArgsType()
+export class TrialBalanceArgs extends BaseQueryArgs {
+  @Field(() => String, { nullable: true })
+  conversion?: string;
+}
+
 @ObjectType()
 export class DateAndBalance {
   @Field(() => String)

@@ -46,6 +46,11 @@ const conversionQuery = filterQuery.extend({
   }),
 });
 
+// The trial balance is hierarchy-only: no `interval` (w23/159). An
+// advertised grouping there would be accepted and ignored; the strict
+// query refuses one outright.
+const trialBalanceQuery = conversionQuery.omit({ interval: true });
+
 /**
  * The services this family reaches, and no more.
  *
@@ -127,7 +132,7 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
     summary: "Get the trial balance",
     description:
       "Every account's debit and credit totals — the statement that proves the books balance.",
-    query: conversionQuery,
+    query: trialBalanceQuery,
     uriPath: "",
     fetch: (s, { ledgerId, identity, query }) =>
       s.ledgerFinance.getTrialBalance({

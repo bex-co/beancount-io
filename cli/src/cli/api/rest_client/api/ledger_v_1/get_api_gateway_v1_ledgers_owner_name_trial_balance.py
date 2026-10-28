@@ -17,7 +17,6 @@ def _get_kwargs(
     account: str | Unset = UNSET,
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
-    interval: str | Unset = UNSET,
     conversion: str | Unset = UNSET,
 ) -> dict[str, Any]:
 
@@ -28,8 +27,6 @@ def _get_kwargs(
     params["filter"] = filter_
 
     params["time"] = time
-
-    params["interval"] = interval
 
     params["conversion"] = conversion
 
@@ -120,7 +117,6 @@ def sync_detailed(
     account: str | Unset = UNSET,
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
-    interval: str | Unset = UNSET,
     conversion: str | Unset = UNSET,
 ) -> Response[Any | V1Error]:
     """Get the trial balance
@@ -141,8 +137,6 @@ def sync_detailed(
             leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape
             sequences. Example: #travel.
         time (str | Unset): Fava time expression Example: 2026.
-        interval (str | Unset): Period grouping: day, week, month, quarter, or year Example:
-            month.
         conversion (str | Unset): Convert postings to this currency before totalling Example: USD.
 
     Raises:
@@ -159,7 +153,6 @@ def sync_detailed(
         account=account,
         filter_=filter_,
         time=time,
-        interval=interval,
         conversion=conversion,
     )
 
@@ -178,7 +171,6 @@ def sync(
     account: str | Unset = UNSET,
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
-    interval: str | Unset = UNSET,
     conversion: str | Unset = UNSET,
 ) -> Any | V1Error | None:
     """Get the trial balance
@@ -199,8 +191,6 @@ def sync(
             leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape
             sequences. Example: #travel.
         time (str | Unset): Fava time expression Example: 2026.
-        interval (str | Unset): Period grouping: day, week, month, quarter, or year Example:
-            month.
         conversion (str | Unset): Convert postings to this currency before totalling Example: USD.
 
     Raises:
@@ -218,7 +208,6 @@ def sync(
         account=account,
         filter_=filter_,
         time=time,
-        interval=interval,
         conversion=conversion,
     ).parsed
 
@@ -231,7 +220,6 @@ async def asyncio_detailed(
     account: str | Unset = UNSET,
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
-    interval: str | Unset = UNSET,
     conversion: str | Unset = UNSET,
 ) -> Response[Any | V1Error]:
     """Get the trial balance
@@ -252,8 +240,6 @@ async def asyncio_detailed(
             leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape
             sequences. Example: #travel.
         time (str | Unset): Fava time expression Example: 2026.
-        interval (str | Unset): Period grouping: day, week, month, quarter, or year Example:
-            month.
         conversion (str | Unset): Convert postings to this currency before totalling Example: USD.
 
     Raises:
@@ -270,7 +256,6 @@ async def asyncio_detailed(
         account=account,
         filter_=filter_,
         time=time,
-        interval=interval,
         conversion=conversion,
     )
 
@@ -287,7 +272,6 @@ async def asyncio(
     account: str | Unset = UNSET,
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
-    interval: str | Unset = UNSET,
     conversion: str | Unset = UNSET,
 ) -> Any | V1Error | None:
     """Get the trial balance
@@ -308,8 +292,6 @@ async def asyncio(
             leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape
             sequences. Example: #travel.
         time (str | Unset): Fava time expression Example: 2026.
-        interval (str | Unset): Period grouping: day, week, month, quarter, or year Example:
-            month.
         conversion (str | Unset): Convert postings to this currency before totalling Example: USD.
 
     Raises:
@@ -328,7 +310,6 @@ async def asyncio(
             account=account,
             filter_=filter_,
             time=time,
-            interval=interval,
             conversion=conversion,
         )
     ).parsed

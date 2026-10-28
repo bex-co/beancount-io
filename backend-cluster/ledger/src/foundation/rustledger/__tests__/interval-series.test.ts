@@ -582,12 +582,20 @@ describe("interval name case", () => {
     ).toEqual([2, 5, 14, 57, 389]);
   });
 
-  it.each(["fortnightly", "constructor", "toString", "__proto__"])(
-    "falls back to monthly for the unknown name %s",
+  // w23/159: unknown names refuse instead of falling back to monthly
+  // (`interval=BOGUS` used to answer monthly buckets, no error).
+  it.each(["BOGUS", "fortnightly", "constructor", "toString", "__proto__"])(
+    "refuses the unknown name %s",
     (name) => {
-      expect(ends(name)).toEqual(ends("month"));
+      expect(() => ends(name)).toThrow(
+        `Unsupported interval "${name}": pass day, week, month, quarter, or year`,
+      );
     },
   );
+
+  it('treats "" as unset (monthly), the dashboard\'s unset spelling', () => {
+    expect(ends("")).toEqual(ends("month"));
+  });
 
   const spend = (date: string, amount: string): DirectiveJson => ({
     type: "transaction",

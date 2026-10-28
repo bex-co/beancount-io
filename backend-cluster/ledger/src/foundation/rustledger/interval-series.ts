@@ -1,4 +1,5 @@
 import type { DirectiveJson } from "@rustledger/wasm";
+import { BadUserInputError } from "@/shared/errors";
 import type { PriceMap } from "./price-map";
 import { LotInventory, parseConversion } from "./lot-inventory";
 import { utcDate } from "./utc-date";
@@ -120,12 +121,18 @@ function resolveInterval(key: IntervalKey): Interval {
   // Interval keys come from request params, so any string can arrive. Fava
   // lowercases a name before choosing (`fava/util/date.py`), which makes
   // `Daily` the daily interval rather than an unknown one (w6/012). Only own
-  // keys count — `constructor` is not an interval — and anything else keeps
-  // the monthly fallback.
+  // keys count — `constructor` is not an interval — and anything else refuses
+  // (w23/159): the old monthly fallback answered `interval=BOGUS` with monthly
+  // buckets, no error. `""` still means unset (the dashboard's unset spelling,
+  // as for `time`), resolving to the monthly default.
   const name = String(key).toLowerCase();
-  return Object.hasOwn(INTERVAL_ALIASES, name)
-    ? INTERVAL_ALIASES[name as IntervalKey]
-    : INTERVALS.month;
+  if (name === "") return INTERVALS.month;
+  if (!Object.hasOwn(INTERVAL_ALIASES, name)) {
+    throw new BadUserInputError(
+      `Unsupported interval "${String(key)}": pass day, week, month, quarter, or year (each also accepts its -ly spelling).`,
+    );
+  }
+  return INTERVAL_ALIASES[name as IntervalKey];
 }
 
 export interface DateRange {

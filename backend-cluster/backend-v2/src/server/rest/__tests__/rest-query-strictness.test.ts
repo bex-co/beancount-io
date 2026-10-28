@@ -109,6 +109,20 @@ it.each(routes)("refuses ?bogus_param=1 on %s", async (_name, path) => {
   });
 });
 
+// w23/159: the trial balance is hierarchy-only, so its query drops
+// `interval` — an advertised grouping there would be accepted and ignored.
+it("refuses ?interval=month on trial-balance", async () => {
+  const response = await fetch(`${server.url}${LEDGER}/trial-balance?interval=month`);
+  expect(response.status).toBe(400);
+  expect(await response.json()).toMatchObject({
+    ok: false,
+    error: {
+      code: "VALIDATION_FAILED",
+      message: expect.stringContaining("interval"),
+    },
+  });
+});
+
 // w23/m12/t007: the two documented exceptions stay lenient — pinning them
 // so a future strict sweep does not "fix" them.
 describe("documented lenient queries", () => {

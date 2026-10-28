@@ -14907,17 +14907,6 @@
           {
             "schema": {
               "type": "string",
-              "description": "Period grouping: day, week, month, quarter, or year",
-              "example": "month"
-            },
-            "required": false,
-            "description": "Period grouping: day, week, month, quarter, or year",
-            "name": "interval",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "string",
               "description": "Convert postings to this currency before totalling",
               "example": "USD"
             },
