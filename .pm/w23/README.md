@@ -53,6 +53,7 @@
 - [157](./157.md) — double-quoted identifiers silently become string literals outside FROM (`"account"` → `account`)
 - [158](./158.md) — journal `time` passes all Opens through regardless of month (`2026-08` → 9 rows + 12 January Opens)
 - [159](./159.md) — report `interval` ignored on four surfaces, unvalidated on the fifth (`month`≡default, `BOGUS`≡`month`)
+- [160](./160.md) — decimal literals past Decimal precision silently round to fit (`...334.9`→MAX; stock exact)
 - [082](./blocked/082.md) — `createPullRequest` fails on production: Gitea 500 while creating the `pr-patch-*` branch, on MCP and REST alike — **blocked:** needs the Gitea server-log cause for one failing branch create (owner), then a production rerun
 - [080](./blocked/080.md) — `/api-gateway/mcp` accepts any `Origin` (the MCP transport spec says a bad `Origin` MUST get 403); owner picks validate vs document — **blocked:** owner picks 403-on-foreign-Origin vs documented non-validation
 - [075](./blocked/075.md) — typed BQL results return NULL as `""` (undocumented), so a missing payee or price reads as an empty string — **blocked:** documented as `""` (option a shipped); owner picks `null` on REST/MCP, `null` everywhere, or keeping `""`
