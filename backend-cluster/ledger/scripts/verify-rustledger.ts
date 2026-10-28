@@ -1502,6 +1502,51 @@ async function main(): Promise<void> {
     "the bare SELECT * x form stays loud",
   );
 
+  // Composite equality (w23/128): the raw engine answers composite `=` / `!=`
+  // constant-False / constant-True while stock refuses, so the query path
+  // refuses before it runs — and scalar comparisons still answer.
+  const rawCompositeEq = await withLedger(FILES, "main.beancount", (ledger) =>
+    ledger.query("SELECT tags = tags AS e FROM postings LIMIT 1"),
+  );
+  assert(
+    JSON.stringify(rawCompositeEq.rows) === "[[false]]" &&
+      !rawCompositeEq.errors.some((e) => e.severity === "error"),
+    "raw engine still answers tags = tags constant-False (the guard is load-bearing)",
+  );
+  for (const comparison of [
+    "tags = tags",
+    "tags != tags",
+    "position = position",
+    "balance = balance",
+    "cost(position) = cost(position)",
+    "meta = meta",
+    "entry = entry",
+  ]) {
+    const guardedComposite = await queryLedgerFilesResult(
+      FILES,
+      "main.beancount",
+      `SELECT ${comparison} AS e FROM postings LIMIT 1`,
+    );
+    assert(
+      guardedComposite.rows.length === 0 &&
+        guardedComposite.errors.some(
+          (e) =>
+            e.severity === "error" &&
+            e.message.includes("composite BQL values"),
+        ),
+      `the query path refuses ${comparison}`,
+    );
+  }
+  const scalarEq = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    "SELECT payee = payee AS e FROM postings LIMIT 1",
+  );
+  assert(
+    JSON.stringify(scalarEq.rows) === `[{"e":true}]`,
+    "scalar self-equality still answers through the guard",
+  );
+
   const count = await countDirectives(
     "2024-01-01 open Assets:Cash USD\n2024-01-02 open Income:Z USD\n",
   );

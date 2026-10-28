@@ -78,6 +78,7 @@ import { reportUndecodableSources } from "./undecodable-sources";
 import { collapsedCostOfSumError } from "./cost-of-sum-guard";
 import { atValueError } from "./at-value-guard";
 import { starAliasError } from "./star-alias-guard";
+import { compositeComparisonError } from "./composite-comparison-guard";
 import { OPTION_LINE_RE } from "./beancount-options";
 import { directiveToText } from "./journal-serialize";
 import {
@@ -1018,7 +1019,10 @@ export async function queryLedgerFilesResultInProcess(
         }
       }
       try {
-        const refused = atValueError(query) ?? starAliasError(query);
+        const refused =
+          atValueError(query) ??
+          starAliasError(query) ??
+          compositeComparisonError(query);
         if (refused !== undefined) return refused;
         const result = ledger.query(query);
         return (

@@ -27,7 +27,6 @@
 
 ## Inbox
 
-- [128](./128.md) — set equality constant-False on MCP (`tags = tags` → False; stock refuses) (it.3936)
 - [129](./129.md) — GROUP BY inventory collapses to 1 group of 34 (DISTINCT finds 15; stock refuses) (it.3960)
 - [130](./130.md) — inner bare-`FROM <table>` resolves column-first: real tables error, `accounts` folds (it.4207)
 - [131](./131.md) — GROUP BY accepts bare non-grouped columns, silently reports first row's value (it.4594)
