@@ -549,6 +549,35 @@ describe("executeEditLedgerFiles", () => {
       expect(repo.remote()).toBe("; 0\n; b\n");
     });
 
+    // w23/147: a stale file sha refuses with a file-sha hint, not the
+    // entry-hash fallback — an entry hash cannot satisfy a file check.
+    it("hints the file re-read on a stale sha", async () => {
+      const ledgerRepo = {
+        getFilesContent: jest.fn(async () => [
+          { path: "main.bean", content: "; a\n", sha: "sha-new" },
+        ]),
+        changeFiles: jest.fn(),
+      };
+      const result = await edit(
+        {
+          ledgerRepo,
+          ledgerData: { getErrors: jest.fn().mockResolvedValue([]) },
+        },
+        {
+          operation: "replace",
+          path: "main.bean",
+          content: "; z\n",
+          sha: "sha-stale",
+        },
+      );
+      expect(result).toMatchObject({
+        ok: false,
+        errorCode: "CONFLICT",
+        errorHint: expect.stringContaining("`readLedgerFiles`"),
+      });
+      expect(ledgerRepo.changeFiles).not.toHaveBeenCalled();
+    });
+
     it("gives the conflict back after three lost commits", async () => {
       const ledgerRepo = {
         getFilesContent: jest.fn(async () => [

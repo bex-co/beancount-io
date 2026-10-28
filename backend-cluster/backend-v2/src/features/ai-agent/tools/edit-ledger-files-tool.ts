@@ -227,6 +227,12 @@ function foldOperations(
       throw new ConflictError(
         "File",
         `${f.path} changed since you read it; re-read it and retry`,
+        // Without one, MCP falls back to the CONFLICT category's hint,
+        // which names an entry-hash lookup that cannot satisfy a file
+        // version check (w23/147).
+        {
+          hint: "Re-read the file's current `sha` with `readLedgerFiles` and retry with that `sha`.",
+        },
       );
     const create = state?.create ?? false;
     if (f.operation === "replace") {

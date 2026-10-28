@@ -28,7 +28,6 @@
 ## Inbox
 
 
-- [147](./147.md) — file-write `CONFLICT` hints the entry lookup instead of the file `sha` (008 did creation only)
 - [148](./148.md) — `account-directives` counts postings under an open/close description (`entryCount: 9` where 1 open, 0 closes exist)
 - [149](./149.md) — file writes COMMIT bean-check-invalid content (no validation gate; entry writes refuse) [major]
 - [150](./150.md) — journal subtype filters pass non-family directives through and `total` counts them (`pending` → 13 rows, 0 transactions)
