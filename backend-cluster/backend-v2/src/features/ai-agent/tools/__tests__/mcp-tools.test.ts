@@ -1325,6 +1325,21 @@ describe("MCP tool annotations", () => {
     }
   });
 
+  // w23/149: file writes commit-invalid until the owner gates them; the
+  // tools say so, so no surface stays silent about it.
+  it("says on every file tool that writes commit-invalid", () => {
+    const byName = new Map(MCP_TOOLS.map((tool) => [tool.name, tool]));
+    for (const name of [
+      "createLedgerFiles",
+      "updateLedgerFiles",
+      "deleteLedgerFiles",
+    ]) {
+      expect(byName.get(name)?.description).toContain(
+        "commit even when they introduce new bean-check errors",
+      );
+    }
+  });
+
   it("never mixes a lookup and a state change in one tool", () => {
     // Claude's review rejects a single tool that accepts both safe and unsafe
     // operations (ADR 019, 2026-10-09 amendment); `manageApiKeys`' `list`

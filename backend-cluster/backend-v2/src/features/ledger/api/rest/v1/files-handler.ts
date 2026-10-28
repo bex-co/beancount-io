@@ -182,7 +182,7 @@ export const FILE_ROUTES = [
     path: "/api-gateway/v1/ledgers/{owner}/{name}/files/{*path}",
     summary: "Create or replace a file",
     description:
-      "Writes at most 1 MiB (1,048,576 UTF-8 bytes) and commits it. Include the `sha` from a prior GET to replace an existing file; omit it to create a new one. The complete JSON request is separately limited to 2 MiB. `dryRun` previews without committing: same checks, no commit.",
+      "Writes at most 1 MiB (1,048,576 UTF-8 bytes) and commits it. Include the `sha` from a prior GET to replace an existing file; omit it to create a new one. The complete JSON request is separately limited to 2 MiB. `dryRun` previews without committing: same checks, no commit. Unlike entry writes, file writes commit even when they introduce new bean-check errors; this response carries no validation verdict, so re-read the `errors` list afterwards.",
     params: filePathSchema,
     body: putBodySchema,
     responses: {
@@ -224,7 +224,8 @@ export const FILE_ROUTES = [
     description:
       "Removes the file and commits the deletion. " +
       DELETE_INCLUDE_GUARD_DESCRIPTION +
-      " `dryRun` previews without committing: same checks, no commit.",
+      " `dryRun` previews without committing: same checks, no commit. " +
+      "Unlike entry writes, file writes commit even when they introduce new bean-check errors; this response carries no validation verdict, so re-read the `errors` list afterwards.",
     params: filePathSchema,
     body: deleteBodySchema,
     responses: {

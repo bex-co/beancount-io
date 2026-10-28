@@ -36,6 +36,11 @@ const MAX_COMMIT_ATTEMPTS = 3;
 
 const toolLogger = logger.child({ module: "tool:edit-ledger-files" });
 
+// w23/149: file writes commit-invalid until the owner gates them — the
+// sentence rides every file tool so no surface stays silent about it.
+const COMMIT_INVALID_NOTE =
+  " Unlike entry writes, file writes commit even when they introduce new bean-check errors; the result reports them under `validation.newErrors` instead of refusing.";
+
 const description =
   "Create, update, replace, or delete files in a single atomic commit.\n" +
   "  create: new text file — provide plain UTF-8 text content (NOT base64).\n" +
@@ -49,7 +54,8 @@ const description =
   "  dry_run previews without committing: same refusal as the commit, plus a " +
   "unified diff per touched file and bean-check's verdict over the projected " +
   "contents — approve only what the preview shows, then send the identical " +
-  "files with dry_run false.";
+  "files with dry_run false." +
+  COMMIT_INVALID_NOTE;
 
 const filePath = z.string().describe("File path relative to ledger root");
 const oldString = z
@@ -547,7 +553,7 @@ function fileOperation<F extends z.ZodType>(
   });
   return {
     schema: schema as z.ZodObject,
-    description: description + PREVIEW_NOTE,
+    description: description + PREVIEW_NOTE + COMMIT_INVALID_NOTE,
     outputSchema: editLedgerFilesOutputSchema,
     execute: (
       ctx: Pick<ToolContext, "services" | "identity" | "ledgerId">,
