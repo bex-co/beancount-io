@@ -108,6 +108,20 @@ here there is no spelling for those renderings (w23/155). The refusal
 already names the whitelist, so no service rewrite applies. Engine
 overloads are tracked upstream (w23/blocked/022).
 
+## BQL date arithmetic
+
+Stock beanquery shifts dates by day counts (`date + 7`, `7 + date`,
+`date - 7`) and counts days (`date - date`), but the pinned engine adds
+numbers only and refuses every date pair. There is no operator spelling
+to rewrite to, so spell the shift with `date_add(date, days)` and the day
+count with `date_diff(first, second)` — both answer on this engine. The
+refusal names the limitation and the workaround
+(`Date arithmetic with + and - is not supported …`, w23/165) instead of
+the engine's generic numeric hint. Date comparisons are unaffected
+(`WHERE date > 2026-06-01` works), and so are the pairs stock refuses
+too (`7 - date`, `date + date`, `-date`). Engine overloads are tracked
+upstream (w23/blocked/022).
+
 ## Getting started
 
 Requires Node.js 20.19+, 22.13+, or 24+ and a running Gitea instance. See

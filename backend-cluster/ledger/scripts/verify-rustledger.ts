@@ -1905,6 +1905,70 @@ async function main(): Promise<void> {
     "numeric addition still answers through the guard",
   );
 
+  // Date arithmetic (w23/165): stock shifts dates by day counts while the
+  // raw engine refuses with the generic numeric error and offers no
+  // operator spelling, so the query path refuses with a message naming
+  // the limitation and the date_add/date_diff workaround — and the
+  // workaround itself answers. `+date + 7` would otherwise die in the
+  // engine's missing-unary-plus syntax error (it.3730); `-date + 7`
+  // keeps the generic refusal (stock refuses neg too).
+  const rawDateArith = await withLedger(FILES, "main.beancount", (ledger) =>
+    ledger.query("SELECT date + 7 LIMIT 1"),
+  );
+  assert(
+    rawDateArith.rows.length === 0 &&
+      rawDateArith.errors.some(
+        (e) =>
+          e.severity === "error" &&
+          /arithmetic requires numeric values/.test(e.message),
+      ),
+    "raw engine still refuses date + int with the generic numeric error (the guard renames it)",
+  );
+  for (const query of [
+    "SELECT date + 7 LIMIT 1",
+    "SELECT 7 + date LIMIT 1",
+    "SELECT date - date LIMIT 1",
+    "SELECT +date + 7 LIMIT 1",
+    "SELECT date + /* inline */ 7 LIMIT 1",
+  ]) {
+    const guardedDateArith = await queryLedgerFilesResult(
+      FILES,
+      "main.beancount",
+      query,
+    );
+    assert(
+      guardedDateArith.rows.length === 0 &&
+        guardedDateArith.errors.some(
+          (e) =>
+            e.severity === "error" &&
+            e.message.includes("Date arithmetic with + and -"),
+        ),
+      `the query path refuses with the date-arithmetic message: ${query}`,
+    );
+  }
+  const negDateKept = await queryLedgerFilesResult(
+    FILES,
+    "main.beancount",
+    "SELECT -date + 7 LIMIT 1",
+  );
+  assert(
+    negDateKept.rows.length === 0 &&
+      negDateKept.errors.some((e) => e.severity === "error") &&
+      !negDateKept.errors.some((e) =>
+        e.message.includes("Date arithmetic with + and -"),
+      ),
+    "neg(date) keeps the generic refusal instead of the date-arithmetic message",
+  );
+  const workaroundAnswers = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    "SELECT date_diff(date, date) AS s LIMIT 1",
+  );
+  assert(
+    JSON.stringify(workaroundAnswers.rows) === `[{"s":0}]`,
+    "the date_diff workaround answers through the guard",
+  );
+
   // str() input domain (w23/155, doc-minimum pins): stock stringifies
   // positions, inventories, and sets while the engine refuses with its
   // whitelist error — and scalar inputs still stringify. These pins

@@ -55,7 +55,7 @@ import type { QueryResult } from "@rustledger/wasm";
  */
 type ScalarClass = "str" | "date" | "bool" | "number";
 
-const DATE_COLUMNS = new Set(["date", "cost_date"]);
+export const DATE_COLUMNS = new Set(["date", "cost_date"]);
 const NUMBER_COLUMNS = new Set([
   "number",
   "cost_number",
