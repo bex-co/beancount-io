@@ -14,6 +14,17 @@ only warning is the absence of hooks, which this MCP-only package does not use.
 The index contains one MCP-only plugin and does not publish the development or
 customer skill trees. Format validation does not establish marketplace acceptance.
 
+## Current official review/public check — 2026-10-28 UTC
+
+The actual official gallery's search field is filled with beancount and shows
+**No results found**. The publish URL displays its generic application form;
+it exposes no existing private review status. A bounded seven-day vendor-mail
+search identifies no relevant directory feedback. These observations do not
+replace the accepted Oct24receipt or constitute rejection. [Current evidence](./review-followup-20261028.json)
+records the exact controls and limits. No form, agreement, grant or native
+rehearsal is repeated. Next: real feedback/publication, otherwise manualOct31UTC;
+then verify the official advertised install path independently of cursor.directory.
+
 ## Separate publication records
 
 | Destination | State / next action |

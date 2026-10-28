@@ -1,0 +1,34 @@
+{
+  "owner": "w6/m9/t016",
+  "status": "submitted",
+  "observationWindowUTC": {
+    "from": "2026-10-28T07:32:00Z",
+    "through": "2026-10-28T07:52:04Z"
+  },
+  "existingReceipt": "submission-receipt.json",
+  "actualBrowserObservations": {
+    "publishUrl": "https://cursor.com/marketplace/publish",
+    "publishPage": "Generic Become a plugin publisher application form, not an application-specific review screen.",
+    "publicGallery": "https://cursor.com/marketplace",
+    "searchControl": "Search plugins, automations, and agent templates",
+    "typedQuery": "beancount",
+    "result": "No results found",
+    "limit": "Actual typed name query only; does not expose private review state or prove absence under every identifier."
+  },
+  "boundedFeedbackSearch": {
+    "scope": "Existing publisher mailbox; seven-day query constrained to Cursor/Anthropic/Claude/Smithery/Arcade senders and beancount/bex-co terms.",
+    "relevantDirectoryReviewFeedbackIdentified": false,
+    "limit": "No claim about every sender, mailbox or private dashboard; unrelated messages not opened and nothing sent."
+  },
+  "submittedAtUTC": "2026-10-24T00:36:38Z",
+  "applicationSpecificManageUrl": null,
+  "reviewApproved": false,
+  "publicationVerified": false,
+  "newApplicationSubmitted": false,
+  "termsAcceptedAgain": false,
+  "nativeOrGrantRepeated": false,
+  "publisherInputNeeded": false,
+  "unblock": "Cursor supplies actionable feedback or publishes the existing application; worker verifies the official public/native install path.",
+  "nextManualCheckUTC": "2026-10-31",
+  "earlierTrigger": "Actual feedback or publication."
+}
