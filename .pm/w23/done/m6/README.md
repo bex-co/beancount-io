@@ -44,3 +44,5 @@
 **Prod re-verified it.6377:** posting `meta: {qakey: "qaval"}` dry_run previews the meta line indented under the posting with no new bean-check errors. Posting meta holds live.
 
 **Prod re-verified it.6378:** posting `links: ["qal1nk"]` dry_run previews `5 USD ^qal1nk`. Posting links hold live.
+
+**Prod re-verified it.6379:** posting `totalPrice: {number, currency}` dry_run passes schema (reaches bean-check; failed only on the probe's EUR-in-Cash currency constraint). All eight m6 fields now hold live: cost, totalPrice, tags, links, meta, booking, tolerance, pad.
