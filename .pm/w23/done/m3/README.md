@@ -28,3 +28,5 @@
 - **Expected outcome:** one naming rule per split, accepted on every surface, documented where agents read.
 - **Why now:** same agent-facing consistency area as m2; the fix is contained in backend-v2 schemas plus docs.
 - **Adoption surface:** included — the milestone ships agent-facing schema descriptions and `docs/mcp.md` wording that must be accurate on every surface.
+
+**Prod re-verified it.6367:** `addLedgerEntries` with camelCase `dryRun: true` returns the dry-run preview (`Would add 1 entry`, `wrote: []`). The parameter alias holds live.
