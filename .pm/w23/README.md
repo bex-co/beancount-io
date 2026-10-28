@@ -47,6 +47,7 @@
 - [143](./143.md) — temp-asset + bank + branch `NOT_FOUND`s carry the generic ledgers/files/entries hint (none live there)
 - [144](./144.md) — `holdings` echoes `group_by` but refuses it as input (output snake, input camel; 141-class)
 - [145](./145.md) — `docs/mcp.md` contradicts itself on pinned-credential creation (shipped refusal vs stale permission)
+- [146](./146.md) — value-shape dtype sniffing mistypes strings on full input (`'3000.00'`→Decimal, `str(date)`→date)
 - [082](./blocked/082.md) — `createPullRequest` fails on production: Gitea 500 while creating the `pr-patch-*` branch, on MCP and REST alike — **blocked:** needs the Gitea server-log cause for one failing branch create (owner), then a production rerun
 - [080](./blocked/080.md) — `/api-gateway/mcp` accepts any `Origin` (the MCP transport spec says a bad `Origin` MUST get 403); owner picks validate vs document — **blocked:** owner picks 403-on-foreign-Origin vs documented non-validation
 - [075](./blocked/075.md) — typed BQL results return NULL as `""` (undocumented), so a missing payee or price reads as an empty string — **blocked:** documented as `""` (option a shipped); owner picks `null` on REST/MCP, `null` everywhere, or keeping `""`
