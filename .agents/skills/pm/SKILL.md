@@ -102,10 +102,10 @@ Show the intended moves before mutating if the user passed `DRY_RUN=1`.
 
 Park work that cannot proceed, with its blocker on record. Refuse without a reason. Blocking is not dropping: the work is still wanted, so nothing is deleted, no number is retired, and the workstream checkbox stays unchecked.
 
-1. Confirm the target is in the open tree and read it, so the record can name what is stuck.
+1. Resolve the target ID to its current path in the open or `blocked/` tree and read it, so the record can name what is stuck. An already blocked target is an update in place, not another move; never block completed history under `done/`.
 2. Write the block **into the item**: a `## Blocked` section for a milestone or task (a note gets a `**Blocked <YYYY-MM-DD>** — …` paragraph) stating what is blocked, the exact blocker, an **Unblock:** condition that would clear it, and who can clear it when that is not this repository — a deploy, a credential, a store review, a decision only the user can make. Record any partial work already shipped, so the next worker knows where the baseline is.
-3. Move it: a milestone to `wN/blocked/mN/`, an inbox note to `wN/blocked/NNN.md`. A **task does not move** — its `id` must match its path — so set its frontmatter `status: blocked` and put the reason in its milestone's `## Blocked` section. When every open task in a milestone is blocked, block the milestone itself.
-4. In the workstream `README.md`: keep the milestone's `- [ ]` line (blocked work is still pending), retarget its link to `./blocked/mN/README.md`, and append `— **blocked:** <one line>`.
+3. Move it if not already parked: a milestone to `wN/blocked/mN/`, an inbox note to `wN/blocked/NNN.md`. A **task does not move** — its `id` must match its path — so set its frontmatter `status: blocked` and put the reason in its milestone's `## Blocked` section. When every open task in a milestone is blocked, block the milestone itself. When updating an existing block, retain earlier evidence and append dated confirmed decisions and their rationale; state the remaining condition, who can clear it, and the next verification step. A decision does not clear an outstanding deployment or verification requirement.
+4. In the workstream `README.md`: keep the milestone's `- [ ]` line (blocked work is still pending), retarget its link to `./blocked/mN/README.md`, and append or update `— **blocked:** <one line>` without duplicating it.
 5. **Verify the exit condition before returning:** the item sits under `blocked/` (or the task reads `status: blocked`), the blocker and its **Unblock:** condition are written down, and every link that pointed at the old path still resolves.
 
 Show the intended moves before mutating if the user passed `DRY_RUN=1`.
@@ -115,7 +115,7 @@ Show the intended moves before mutating if the user passed `DRY_RUN=1`.
 The reverse, once the unblock condition is actually met — verify it against the repository first, and say what cleared it.
 
 1. Move the item back to `wN/mN/` or `wN/NNN.md`, or set the blocked task's `status:` back to `todo`.
-2. Replace the `## Blocked` section (or the note's blocked paragraph) with a one-line record of what cleared it and when. Keep the history; do not erase that it was blocked.
+2. Replace the `## Blocked` section (or the note's blocked paragraph) with a one-line record of what cleared it and when. Keep the history, including confirmed decisions and their rationale so the next worker can act on them; do not erase that it was blocked.
 3. Restore the workstream `README.md` link and drop the `— **blocked:** …` suffix.
 4. **Verify the exit condition before returning:** the `blocked/` path no longer exists, the item is live again, and its links resolve.
 

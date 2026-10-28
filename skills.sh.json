@@ -44,7 +44,8 @@
         "routine-logic-simplifier",
         "routine-shipped-feature-inliner",
         "routine-useless-test-pruner",
-        "ship"
+        "ship",
+        "unblock"
       ]
     }
   ]
