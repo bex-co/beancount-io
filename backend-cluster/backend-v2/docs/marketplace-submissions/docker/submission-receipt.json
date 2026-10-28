@@ -3,14 +3,14 @@
   "state": "submitted; open and unmerged; Docker review pending",
   "submissionUrl": "https://github.com/docker/mcp-registry/pull/6042",
   "submittedAtUTC": "2026-10-24T01:18:20Z",
-  "lastCheckedAtUTC": "2026-10-24T19:52:18Z",
+  "lastCheckedAtUTC": "2026-10-28T07:36:00Z",
   "baseCommit": "49b643ce3fc73e6ee80bb962719b6e2990e3d397",
   "headCommit": "5a30305e179493b3d5502f2d38821fedb99491d9",
   "changedFiles": 3,
   "additions": 39,
   "deletions": 0,
   "mergeable": true,
-  "upstreamChecks": "No checks reported at last observation; not claimed green",
+  "upstreamChecks": "Existing runs40049180641/40049180736 remain action_required in the Oct28read; maintainer approval/execution required.",
   "nativeQAAtUTC": "2026-10-24T01:04:04.596Z",
   "gatewayVersion": "v0.44.1",
   "oauthScopes": [
@@ -50,15 +50,33 @@
   "nextAction": "Follow actual Docker review/CI and catalog publication, then verify public discovery and native installation under w6/m9/t006. Arrange private renewal only if review needs access after2026-10-31UTC; do not duplicate submission.",
   "reviewerAccessProgress": "reviewer-access-progress.json",
   "latestReviewReadback": {
-    "observedAtUTC": "2026-10-24T19:52:18Z",
-    "source": "Actual PR update response",
+    "observationWindowUTC": {
+      "from": "2026-10-28T07:32:00Z",
+      "through": "2026-10-28T07:36:00Z"
+    },
     "state": "open",
     "merged": false,
-    "mergeable": true,
-    "changedFiles": 3,
-    "additions": 39,
-    "deletions": 0,
-    "commentsAndChecksLastReadAtUTC": "2026-10-24T07:10:37Z"
+    "reviews": 0,
+    "comments": 0,
+    "reviewComments": 0,
+    "mergeableState": "blocked",
+    "workflowRuns": [
+      {
+        "url": "https://github.com/docker/mcp-registry/actions/runs/40049180641",
+        "id": 40049180641,
+        "status": "completed",
+        "conclusion": "action_required",
+        "updatedAtUTC": "2026-10-24T01:18:23Z"
+      },
+      {
+        "url": "https://github.com/docker/mcp-registry/actions/runs/40049180736",
+        "id": 40049180736,
+        "status": "completed",
+        "conclusion": "action_required",
+        "updatedAtUTC": "2026-10-24T01:18:23Z"
+      }
+    ],
+    "evidence": "review-followup-20261028.json"
   },
   "previousReviewReadback": {
     "observedAtUTC": "2026-10-24T07:10:37Z",
@@ -75,5 +93,16 @@
   },
   "privateReviewerAccessSubmitted": true,
   "privateReviewerReceiptObservedAtUTC": "2026-10-24T19:51:56Z",
-  "publicCredentialChecklistComplete": true
+  "publicCredentialChecklistComplete": true,
+  "historicalReviewReadback20261024": {
+    "observedAtUTC": "2026-10-24T19:52:18Z",
+    "source": "Actual PR update response",
+    "state": "open",
+    "merged": false,
+    "mergeable": true,
+    "changedFiles": 3,
+    "additions": 39,
+    "deletions": 0,
+    "commentsAndChecksLastReadAtUTC": "2026-10-24T07:10:37Z"
+  }
 }

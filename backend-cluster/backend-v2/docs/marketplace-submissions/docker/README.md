@@ -6,6 +6,17 @@ The entry connects to the hosted Beancount.io service at `https://beancount.io/a
 
 The entry uses Streamable HTTP, OAuth and dynamic tool discovery. `tools.json` is deliberately `[]`; its contents are discovered after the user authorizes the connection. `beancount-io.personal_access_token` and `BEANCOUNT_IO_PERSONAL_ACCESS_TOKEN` are Docker credential identifiers, not credentials or instructions to publish a key. The [MCP guide](../../mcp.md) explains scopes, the hosted-ledger boundary and confirmation requirements.
 
+## Current maintainer review gate — 2026-10-28 UTC
+
+PR6042 remains OPEN/unmerged with zero reviews/comments. Separate reads of the
+two existing workflow runs still report **action_required**; no new workflow
+execution or actionable failure is observed. [Current review evidence](./review-followup-20261028.json)
+keeps this distinct from [completed Oct26native expiry/renewal acceptance](./secretservice-native-acceptance-20261026.json).
+Docker maintainers must approve/run, review/merge/import; worker then verifies
+the published catalog installation. Next manual reviewOct31UTC or actual
+workflow/feedback/publication earlier. Reviewer-key assessment remains dueOct29,
+with current expiry endOct31; no key/grant or native run is repeated today.
+
 ## Verified preparation
 
 On 2026-10-21, the actual upstream Go commands passed against Docker MCP Registry revision `49b643ce3fc73e6ee80bb962719b6e2990e3d397`, using Go 1.26.4 and the existing Prettier 3.8.1. From a checkout of that upstream revision, copy this `servers/beancount-io/` directory into its `servers/`, then run:

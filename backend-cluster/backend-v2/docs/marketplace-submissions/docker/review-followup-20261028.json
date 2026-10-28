@@ -1,0 +1,50 @@
+{
+  "owner": "w6/m9/t017",
+  "status": "submitted",
+  "observationWindowUTC": {
+    "from": "2026-10-28T07:32:00Z",
+    "through": "2026-10-28T07:36:00Z"
+  },
+  "existingSubmission": {
+    "url": "https://github.com/docker/mcp-registry/pull/6042",
+    "state": "open",
+    "updatedAtUTC": "2026-10-24T19:52:18Z",
+    "comments": 0,
+    "reviewComments": 0,
+    "headSHA": "5a30305e179493b3d5502f2d38821fedb99491d9",
+    "merged": false,
+    "mergedAtUTC": null,
+    "mergeableState": "blocked",
+    "labels": [],
+    "reviews": [],
+    "workflowRuns": [
+      {
+        "url": "https://github.com/docker/mcp-registry/actions/runs/40049180641",
+        "id": 40049180641,
+        "status": "completed",
+        "conclusion": "action_required",
+        "updatedAtUTC": "2026-10-24T01:18:23Z"
+      },
+      {
+        "url": "https://github.com/docker/mcp-registry/actions/runs/40049180736",
+        "id": 40049180736,
+        "status": "completed",
+        "conclusion": "action_required",
+        "updatedAtUTC": "2026-10-24T01:18:23Z"
+      }
+    ]
+  },
+  "workflowFinding": "Both existing runs remain action_required. Maintainer approval/execution is external; no newly executed failure is available for the worker to repair. Job collections are not re-read this pass.",
+  "nativeBoundary": "046 completion and Oct26SecretService retained-grant expiry/rotation acceptance remain valid at their own recorded revision/time; no new native accounting or OAuth run.",
+  "nativeEvidence": "secretservice-native-acceptance-20261026.json",
+  "reviewerAccess": {
+    "assessByUTC": "2026-10-29",
+    "expiresEndUTC": "2026-10-31",
+    "newCredentialOrRenewalThisPass": false
+  },
+  "publisherInputNeeded": false,
+  "newPRCommentOrReminder": false,
+  "unblock": "Docker maintainers approve/run the existing workflows and review/merge/import PR6042; worker handles executed failures/feedback and verifies actual public/native catalog installation.",
+  "nextManualCheckUTC": "2026-10-31",
+  "earlierTrigger": "Actual workflow execution/review/merge/import. Reviewer-access assessment remains separately dueOct29."
+}
