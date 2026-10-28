@@ -1,18 +1,12 @@
 # w5 · m13 — Install the ledger skills and reach a first query on native Windows
 
-**Worker:** worker1 **Goal:** a native Windows user installs the eight customer ledger skills, maintains that installation, and reaches a verified first answer through either agent **Status:** blocked
+**Worker:** worker1 **Goal:** a native Windows user installs the eight customer ledger skills, maintains that installation, and reaches a verified first answer through either agent **Status:** todo (unblocked 2026-10-28)
 
 **Estimate:** 3h30m implementation; 5h30m including standing closing tasks (8 tasks). Priority 2 in the approved proposal; no hard dependency on m12.
 
-## Blocked
+## Unblocked
 
-**Blocked 2026-09-29** — The available execution host is macOS 26.5.1 (arm64), and no accessible native Windows host has been provided to this session. t001 requires observed PowerShell installation and both allowed/denied symlink behavior on a named native Windows environment. The current installation and first-query guides explicitly leave Windows untested; this is missing platform evidence, not a reproduced Windows defect. No installer repair or Windows implementation was started, and no partial code needs recovery.
-
-**Owner:** the user or workstation operator who can provide access to a native Windows host.
-
-**Unblock:** provide usable access to a native Windows workspace for the t001 baseline, with PowerShell, Python, Git, and an observable symlink-permission configuration. Do not automatically enable Developer Mode, elevate the agent, or change machine policy. t004 additionally requires authenticated native Claude Code and Codex plus published bea; those credentials stay outside the repository. Host access clears the first prerequisite so t001–t003 can proceed even if client authentication still needs arranging for t004.
-
-**Deferred dependents:** t002 requires t001; t003 requires t002; t004 requires t003; t005 requires t004; t006 requires t005; t007 requires t005/t006; t008 requires t006/t007. Thus all eight pending tasks are currently blocked directly or transitively. Native installer CI or WSL cannot replace the specified live native-client acceptance. No test or acceptance requirement has been waived.
+**Blocked 2026-09-29 → unblocked 2026-10-28.** It was parked because the only execution host was macOS. A native Windows 11 Pro workspace (build 26300, arm64) with Windows PowerShell 5.1, Python and Git is now available, and its symlink configuration is observable: a non-elevated `os.symlink` is refused with `WinError 1314` (Developer Mode off, `SeCreateSymbolicLinkPrivilege` not held). That clears the first prerequisite for t001–t003. t004 still needs authenticated native Claude Code and Codex plus published bea, and the allowed-link half of t001 needs a host where non-elevated links are permitted; neither has been waived.
 
 ## Tasks (in order)
 
@@ -39,7 +33,7 @@
 
 ## Source + Goal linkage
 
-- **Source:** `/pm-brainstorm for w5`, both proposals approved with `$pm for all for w5` on 2026-09-28. Builds on [w5/m3's installed-suite baseline](../../done/m3/README.md), the [installation guide](../../../../docs/skills/installation.md), and [the current installer](../../../../scripts/skills/beancount-skills.py). Platform references: [Codex native Windows](https://learn.chatgpt.com/docs/windows/windows-sandbox), [Claude Code setup](https://code.claude.com/docs/en/setup#set-up-on-windows), and [Python symlink prerequisites](https://docs.python.org/3/library/os.html#os.symlink).
+- **Source:** `/pm-brainstorm for w5`, both proposals approved with `$pm for all for w5` on 2026-09-28. Builds on [w5/m3's installed-suite baseline](../done/m3/README.md), the [installation guide](../../../docs/skills/installation.md), and [the current installer](../../../scripts/skills/beancount-skills.py). Platform references: [Codex native Windows](https://learn.chatgpt.com/docs/windows/windows-sandbox), [Claude Code setup](https://code.claude.com/docs/en/setup#set-up-on-windows), and [Python symlink prerequisites](https://docs.python.org/3/library/os.html#os.symlink).
 - **Goal linkage:** **A2 — Frictionless onboarding** and **A3 — Community & distribution**. Native Windows users can install the existing customer suite and obtain their first verified ledger answer through documented commands.
 - **Expected outcome:** Both native Windows agents discover all eight installed skills and answer the existing synthetic first-query example correctly. Record installation success, time to first query, and manual corrections as rehearsal signals; preserve the installer lifecycle in Windows CI.
 - **Why now:** Published CLI installation checks already cover Windows, while the customer-skills installation and first-query guides explicitly leave it uncovered. w5 has capacity and this extends the shipped installer instead of inventing a new distribution system.
