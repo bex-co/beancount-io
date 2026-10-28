@@ -42,3 +42,5 @@
 **Prod re-verified it.6376:** posting `tags: ["qatag"]` dry_run passes schema — bean-check evaluated the rendered txn (failed only on a later balance assertion my probe amount disturbs). Posting tags hold live.
 
 **Prod re-verified it.6377:** posting `meta: {qakey: "qaval"}` dry_run previews the meta line indented under the posting with no new bean-check errors. Posting meta holds live.
+
+**Prod re-verified it.6378:** posting `links: ["qal1nk"]` dry_run previews `5 USD ^qal1nk`. Posting links hold live.
