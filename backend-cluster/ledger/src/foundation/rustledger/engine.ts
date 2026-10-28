@@ -78,6 +78,7 @@ import { reportUndecodableSources } from "./undecodable-sources";
 import { collapsedCostOfSumError } from "./cost-of-sum-guard";
 import { unresolvedNameError } from "./unresolved-name-guard";
 import { integerOverflowError } from "./integer-overflow-guard";
+import { windowFromError } from "./window-from-guard";
 import { atValueError } from "./at-value-guard";
 import { starAliasError } from "./star-alias-guard";
 import { compositeComparisonError } from "./composite-comparison-guard";
@@ -1026,6 +1027,7 @@ export async function queryLedgerFilesResultInProcess(
       try {
         const refused =
           integerOverflowError(query) ??
+          windowFromError(query) ??
           atValueError(query) ??
           starAliasError(query) ??
           compositeComparisonError(query) ??

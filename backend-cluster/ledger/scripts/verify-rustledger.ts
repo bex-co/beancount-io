@@ -2132,6 +2132,109 @@ async function main(): Promise<void> {
     "text still renders zero rows as the empty string",
   );
 
+  // Windows over named FROM (w23/139): the raw engine numbers windows
+  // only in its default postings scope, failing named tables with a
+  // bogus subquery error — so the pipeline drops `FROM postings` under
+  // top-level windows (bare and postings agree row-for-row), and the
+  // query path refuses the rest with the actual cause.
+  const rawNamedWindow = await withLedger(FILES, "main.beancount", (ledger) =>
+    ledger.query("SELECT row_number() OVER () FROM postings LIMIT 3"),
+  );
+  const rawBareWindow = await withLedger(FILES, "main.beancount", (ledger) =>
+    ledger.query("SELECT row_number() OVER () LIMIT 3"),
+  );
+  assert(
+    rawNamedWindow.rows.length === 0 &&
+      rawNamedWindow.errors.some(
+        (e) =>
+          e.severity === "error" &&
+          e.message.includes("not supported in subquery expressions"),
+      ) &&
+      JSON.stringify(rawBareWindow.rows) === "[[1],[2],[3]]",
+    "raw engine still fails named windows as subqueries while bare numbers (the rescue is load-bearing)",
+  );
+  const rawBareScope = await withLedger(FILES, "main.beancount", (ledger) =>
+    ledger.query("SELECT payee FROM postings LIMIT 5"),
+  );
+  const rawNamedScope = await withLedger(FILES, "main.beancount", (ledger) =>
+    ledger.query("SELECT payee LIMIT 5"),
+  );
+  assert(
+    JSON.stringify(rawBareScope.rows) === JSON.stringify(rawNamedScope.rows),
+    "raw bare and postings scopes still agree row-for-row (the rescue's identity)",
+  );
+  const rawUnimplemented = await withLedger(FILES, "main.beancount", (ledger) =>
+    ledger.query("SELECT sum(number) OVER () LIMIT 1"),
+  );
+  assert(
+    rawUnimplemented.errors.some(
+      (e) =>
+        e.severity === "error" &&
+        e.message.includes("Window function 'sum' not yet implemented"),
+    ),
+    "raw engine still reports unimplemented windows by name (the guard's set is current)",
+  );
+  const rescuedWindow = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    normalizeBqlQueryForEngine(
+      "SELECT row_number() OVER () FROM postings LIMIT 3",
+    ),
+  );
+  const rescuedOrdered = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    normalizeBqlQueryForEngine(
+      "SELECT payee, row_number() OVER (ORDER BY payee) FROM postings LIMIT 3",
+    ),
+  );
+  const rescuedQuoted = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    normalizeBqlQueryForEngine(
+      'SELECT row_number() OVER () FROM "postings" LIMIT 2',
+    ),
+  );
+  assert(
+    JSON.stringify(rescuedWindow.rows) ===
+      `[{"row_number":1},{"row_number":2},{"row_number":3}]` &&
+      JSON.stringify(rescuedOrdered.rows) ===
+        `[{"payee":"Employer","row_number":1},{"payee":"Employer","row_number":2},{"payee":"Store","row_number":3}]` &&
+      rescuedQuoted.rows.length === 2,
+    "pipelined postings windows number like the bare form",
+  );
+  for (const [query, marker] of [
+    [
+      "SELECT row_number() OVER () FROM entries LIMIT 3",
+      "cannot evaluate over FROM entries",
+    ],
+    [
+      "SELECT row_number() OVER () FROM (SELECT payee FROM postings LIMIT 5)",
+      "cannot evaluate over a derived table",
+    ],
+    [
+      "SELECT flag, row_number() OVER () FROM postings GROUP BY flag LIMIT 5",
+      "not supported with GROUP BY",
+    ],
+    [
+      "SELECT sum(number) OVER () FROM postings LIMIT 1",
+      "Window function 'sum' is not implemented",
+    ],
+  ]) {
+    const refused = await queryLedgerFilesResult(
+      FILES,
+      "main.beancount",
+      normalizeBqlQueryForEngine(query),
+    );
+    assert(
+      refused.rows.length === 0 &&
+        refused.errors.some(
+          (e) => e.severity === "error" && e.message.includes(marker),
+        ),
+      `the query path refuses ${query} naming the cause`,
+    );
+  }
+
   const count = await countDirectives(
     "2024-01-01 open Assets:Cash USD\n2024-01-02 open Income:Z USD\n",
   );

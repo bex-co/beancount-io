@@ -18,6 +18,7 @@ import {
 import { stripBqlBlockComments } from "./bql-comments";
 import { extractSelectAliases } from "./bql-select-aliases";
 import { foldBqlColumnFrom } from "./bql-from-fold";
+import { dropPostingsFromForWindows } from "./bql-from-windows";
 import { rescueInnerTableFrom } from "./bql-from-inner-tables";
 import { routeIntegerLiterals } from "./bql-int-literals";
 import { unquoteBqlFromTables } from "./bql-from-quotes";
@@ -28,6 +29,8 @@ import { stripBqlStatementTerminator } from "./bql-terminator";
  * `verify:rustledger` pins it against the live engine, so the order exists in
  * exactly one place. Comments first (a `;` or `FROM` inside one is not
  * syntax), then unquote (quoted names classify as their bare selves), then
+ * the window rescue (a top-level window over `FROM postings` drops to the
+ * bare form the engine numbers, before any stage reads the FROM), then
  * the terminator (a trailing `;` breaks bare-table resolution), then the
  * integer routing (dead-zone literals join the decimal path and huge LIMITs
  * cap before any stage reads magnitude), then the inner-table rescue (a
@@ -40,7 +43,9 @@ export function normalizeBqlQueryForEngine(query: string): string {
     rescueInnerTableFrom(
       routeIntegerLiterals(
         stripBqlStatementTerminator(
-          unquoteBqlFromTables(stripBqlBlockComments(query)),
+          dropPostingsFromForWindows(
+            unquoteBqlFromTables(stripBqlBlockComments(query)),
+          ),
         ),
       ),
     ),
