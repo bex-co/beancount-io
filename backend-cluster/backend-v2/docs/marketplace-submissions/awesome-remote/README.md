@@ -1,7 +1,7 @@
 # Awesome Remote MCP Servers submission
 
 Submitted **2026-10-23T20:52:08Z** as [PR #2753](https://github.com/punkpeye/awesome-remote-mcp-servers/pull/2753).
-Last verified **2026-10-24T02:47:50Z**: open, unmerged and mergeable, with
+Historically verified **2026-10-24T02:47:50Z**: open, unmerged and mergeable, with
 one publisher follow-up and no maintainer response. The fresh
 [Check Submission job](https://github.com/punkpeye/awesome-remote-mcp-servers/actions/runs/40055474068/job/120757394614)
 passes in7seconds after the documented Agent-review opt-in; the post-merge
@@ -18,6 +18,16 @@ return 200. These are reachability/auth-discovery checks, not an authenticated
 accounting journey or a repaired Glama health profile. The system Python TLS
 stack failed negotiation in an earlier control; current Node 24.16.0 passes
 without disabling certificate verification. Details: [receipt.json](./receipt.json).
+
+## Current review/waiver follow-through — 2026-10-28 UTC
+
+The same PR remains OPEN/unmerged, with zero reviews/review comments and one
+existing publisher waiver comment. Labels remain endpoint-ok and has-connector.
+No maintainer response or accepted waiver is observed. [Actual current readback](./review-followup-20261028.json)
+does not refresh the older check-run success timestamps. No account engagement,
+repeat comment, reminder or PR is created. Maintainers own the waiver/review/merge
+decision; worker handles real feedback and verifies the merged entry/setup links.
+Next manualOct31UTC or actual response/review/CI change/merge earlier.
 
 ## Remaining review and merge gate
 
