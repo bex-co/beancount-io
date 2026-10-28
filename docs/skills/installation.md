@@ -1,8 +1,8 @@
 # Install the Beancount skills
 
-Install the thirteen `beancount-*` ledger skills for Claude Code, Codex, or both, from any directory. You keep one Git checkout of the skills and link it into each agent's skill directory. Updating the checkout updates every agent, and the helper script never touches skills it did not install. [OpenClaw and Hermes Agent](#openclaw-and-hermes-agent) have the suite route and host limits described below, including migration from the retired standalone listings.
+Install the fourteen `beancount-*` ledger skills for Claude Code, Codex, or both, from any directory. You keep one Git checkout of the skills and link it into each agent's skill directory. Updating the checkout updates every agent, and the helper script never touches skills it did not install. [OpenClaw and Hermes Agent](#openclaw-and-hermes-agent) have the suite route and host limits described below, including migration from the retired standalone listings.
 
-Rehearsed on macOS with Claude Code and Codex (see [tested with](first-query.md#tested-with)). Linux uses the same commands but has not been rehearsed. Windows is not covered.
+Rehearsed on macOS with Claude Code and Codex (see [tested with](first-query.md#tested-with)). Linux uses the same commands but has not been rehearsed. On native Windows, the [PowerShell steps](#windows-powershell) were rehearsed with Windows PowerShell 5.1 (agent discovery there is still being verified). WSL is not covered.
 
 ## Prerequisites
 
@@ -50,7 +50,7 @@ Check the files first. `verify` only reads, and it exits nonzero with one line p
 python3 "$SKILLS_SRC/scripts/skills/beancount-skills.py" verify ~/.claude/skills ~/.agents/skills
 ```
 
-Then ask each agent from your ledger directory. Both should name the same thirteen skills listed in the [skills catalog](../../skills/README.md).
+Then ask each agent from your ledger directory. Both should name the same fourteen skills listed in the [skills catalog](../../skills/README.md).
 
 ```sh
 claude -p "List the names of the skills available to you that start with beancount-, one per line, nothing else."
@@ -240,3 +240,109 @@ rm -rf "$SKILLS_SRC"
 ```
 
 `uninstall` removes only the links that point into this checkout. It reports anything else with a suite skill's name as kept, and it never touches other skills, agent settings, or ledgers. Check the `status` output for edits you want to keep before deleting the checkout.
+
+## Windows (PowerShell)
+
+The commands in this section were run as written on native Windows 11 (build
+26300, ARM64) in Windows PowerShell 5.1, with python.org Python 3.12 and Git
+for Windows 2.56. The run covered a symlink-denied account and, after
+Developer Mode was turned on, a non-elevated account allowed to create links.
+Paths contained spaces and non-ASCII characters. See the
+[Windows rehearsal](windows-rehearsal.md).
+
+**Still being verified:** whether Claude Code and Codex on native Windows
+discover the linked skills and answer the [first query](first-query.md).
+PowerShell 7, Microsoft Store Python, and the account right without Developer
+Mode have not been tried. WSL is a separate Linux environment: use the
+commands above there.
+
+### Prerequisites on Windows
+
+- Git for Windows and Python 3 from python.org. Use `python` (or `py -3`), not
+  `python3`. On a default Windows install, `python3` can be the Microsoft Store
+  alias, which only prints "Python was not found".
+- **Permission to create symbolic links without elevation.** The installer
+  links each skill directory into place. Either turn on Developer Mode
+  (Settings → System → For developers), or use an account that holds the
+  "Create symbolic links" right (`SeCreateSymbolicLinkPrivilege`). Do not run
+  the installer from an elevated window instead. Check before installing:
+
+  ```powershell
+  python -c "import os,tempfile; d=tempfile.TemporaryDirectory(); t=os.path.join(d.name,'t'); os.mkdir(t); os.symlink(t, os.path.join(d.name,'link'), True); print('directory symlinks: allowed')"
+  ```
+
+  `directory symlinks: allowed` means you can continue. `WinError 1314` means
+  the permission is missing. Until it is fixed, `install` stops with a Python
+  traceback ending in that error and links nothing. It may leave behind an
+  empty skill directory that it created. Turning on Developer Mode took effect
+  in the rehearsal without signing out or restarting.
+
+Quote every path. Paths with spaces and non-ASCII characters work as long as
+they are quoted. Windows PowerShell 5.1 has no `&&`, so run commands one at a
+time.
+
+### Get the skills and link them
+
+```powershell
+$SKILLS_SRC = Join-Path $env:LOCALAPPDATA 'beancount-io'
+git clone --depth 1 --filter=blob:none --sparse https://github.com/bex-co/beancount-io.git "$SKILLS_SRC"
+git -C "$SKILLS_SRC" sparse-checkout set skills scripts/skills docs/skills
+python "$SKILLS_SRC/scripts/skills/beancount-skills.py" install "$HOME\.claude\skills" "$HOME\.agents\skills"
+```
+
+Omit the directory for an agent you do not use. For one ledger workspace, use
+`"<workspace>\.claude\skills"` and `"<workspace>\.agents\skills"` instead
+(not yet rehearsed on Windows). Git
+progress output appears as red `NativeCommandError` text if you redirect it
+(`2>&1`, `*>`). Check `$LASTEXITCODE`, which is `0` on success.
+
+### Verify
+
+```powershell
+$SKILLS_SRC = Join-Path $env:LOCALAPPDATA 'beancount-io'
+python "$SKILLS_SRC/scripts/skills/beancount-skills.py" verify "$HOME\.claude\skills" "$HOME\.agents\skills"
+```
+
+Then ask each agent, as in [step 3](#3-confirm-the-agents-see-them).
+
+### Update
+
+```powershell
+$SKILLS_SRC = Join-Path $env:LOCALAPPDATA 'beancount-io'
+git -C "$SKILLS_SRC" status --short skills
+git -C "$SKILLS_SRC" pull --ff-only
+python "$SKILLS_SRC/scripts/skills/beancount-skills.py" install "$HOME\.claude\skills" "$HOME\.agents\skills"
+```
+
+Edits to the checkout show up immediately through every link. To keep local
+edits when an update touches them, run these one at a time and stop if any of
+them fails:
+
+```powershell
+git -C "$SKILLS_SRC" stash
+git -C "$SKILLS_SRC" pull --ff-only
+git -C "$SKILLS_SRC" stash pop
+```
+
+### Existing copies and name conflicts
+
+Move a conflicting entry out of the skill directory, then run `install` again.
+The installer's own hint is written for macOS/Linux shells:
+
+```powershell
+New-Item -ItemType Directory -Force "$HOME\beancount-skill-backups" | Out-Null
+Move-Item "$HOME\.claude\skills\beancount-ask" "$HOME\beancount-skill-backups\"
+```
+
+### Remove
+
+```powershell
+$SKILLS_SRC = Join-Path $env:LOCALAPPDATA 'beancount-io'
+python "$SKILLS_SRC/scripts/skills/beancount-skills.py" uninstall "$HOME\.claude\skills" "$HOME\.agents\skills"
+git -C "$SKILLS_SRC" status --short skills
+Remove-Item -Recurse -Force "$SKILLS_SRC"
+```
+
+Remove the links with `uninstall`. It removes only links into this checkout
+and keeps everything else. Delete the checkout only after `uninstall`
+succeeds, and after checking `status` for edits you want to keep.

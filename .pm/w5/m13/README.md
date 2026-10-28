@@ -1,18 +1,18 @@
 # w5 · m13 — Install the ledger skills and reach a first query on native Windows
 
-**Worker:** worker1 **Goal:** a native Windows user installs the eight customer ledger skills, maintains that installation, and reaches a verified first answer through either agent **Status:** todo (unblocked 2026-10-28)
+**Worker:** worker1 **Goal:** a native Windows user installs the eight customer ledger skills, maintains that installation, and reaches a verified first answer through either agent **Status:** in progress (unblocked 2026-10-28; t001 done)
 
 **Estimate:** 3h30m implementation; 5h30m including standing closing tasks (8 tasks). Priority 2 in the approved proposal; no hard dependency on m12.
 
 ## Unblocked
 
-**Blocked 2026-09-29 → unblocked 2026-10-28.** It was parked because the only execution host was macOS. A native Windows 11 Pro workspace (build 26300, arm64) with Windows PowerShell 5.1, Python and Git is now available, and its symlink configuration is observable: a non-elevated `os.symlink` is refused with `WinError 1314` (Developer Mode off, `SeCreateSymbolicLinkPrivilege` not held). That clears the first prerequisite for t001–t003. t004 still needs authenticated native Claude Code and Codex plus published bea, and the allowed-link half of t001 needs a host where non-elevated links are permitted; neither has been waived.
+**Blocked 2026-09-29 → unblocked 2026-10-28.** It was parked because the only execution host was macOS. A native Windows 11 Pro workspace (build 26300, arm64) with Windows PowerShell 5.1, Python and Git is now available, and its symlink configuration is observable: a non-elevated `os.symlink` is refused with `WinError 1314` (Developer Mode off, `SeCreateSymbolicLinkPrivilege` not held). That clears the first prerequisite for t001–t003. The same day, with the user's approval, Developer Mode was turned on through a user-confirmed elevated prompt (the agent session stayed non-elevated), so t001 recorded both the denied and the allowed case; see [the Windows rehearsal](../../../docs/skills/windows-rehearsal.md). Codex CLI 0.165.0 and Claude Code are installed and signed in on the host for t004; published bea is still to be installed there.
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| t001 | Rehearse native installation and document PowerShell prerequisites | 45m | — |
+| t001 | Rehearse native installation and document PowerShell prerequisites — **DONE** | 45m | — |
 | t002 | Make installer link failures actionable and preserve existing state | 60m | w5/m13/t001 |
 | t003 | Add the native Windows installer lifecycle CI job | 45m | w5/m13/t002 |
 | t004 | Verify discovery and the first query through both native Windows agents | 60m | w5/m13/t003 |
