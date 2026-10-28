@@ -69,4 +69,17 @@ describe("LedgerShellService alias dtype attribution", () => {
       { name: "number", dtype: "Decimal" },
     ]);
   });
+
+  // w23/162: aliases extract from whitespace-folded text, so a NEL-separated
+  // alias attributes like its spaced self instead of falling to the name rule.
+  it("attributes an alias past folded whitespace in queryShell", async () => {
+    const response = await makeService().queryShell({
+      ledgerId: "open_ledger/example",
+      userId: undefined,
+      query: "SELECT payee AS\x85number FROM postings",
+    });
+    expect(response.table!.types).toEqual([
+      { name: "number", dtype: "unknown" },
+    ]);
+  });
 });

@@ -41,7 +41,7 @@
 - [x] [159](./done/159.md) — report `interval` ignored on four surfaces, unvalidated on the fifth (`month`≡default, `BOGUS`≡`month`)
 - [x] [160](./done/160.md) — decimal literals past Decimal precision silently round to fit (`...334.9`→MAX; stock exact)
 - [x] [161](./done/161.md) — `allowInvalid:true` suppresses error detection, not just refusal (`errorsAfter: 0` for invalid content)
-- [162](./162.md) — BQL rejects Unicode whitespace stock accepts (NBSP/VTAB/EMSP), bogus position-0 error
+- [x] [162](./done/162.md) — BQL rejects Unicode whitespace stock accepts (NBSP/VTAB/EMSP), bogus position-0 error
 - [163](./163.md) — typed balance pre-check ignores `cost`/`totalPrice`, refuses stock-valid transactions (`@` passes, `{}`/`@@` cannot)
 - [164](./164.md) — statically type SELECT expressions for empty/all-NULL dtypes (literals/columns/functions/operators; kills the `row_number` phantom)
 - [165](./165.md) — BQL refuses date arithmetic stock supports (`date ± int` day shifts, `date − date` day count)

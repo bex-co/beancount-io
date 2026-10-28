@@ -38,6 +38,7 @@ import {
   queryResultToText,
 } from "@/features/ledger/service/ledger-shell-mappers";
 import { stripBqlBlockComments } from "@/features/ledger/service/bql-comments";
+import { foldBqlWhitespace } from "@/features/ledger/service/bql-whitespace";
 import { extractSelectAliases } from "@/features/ledger/service/bql-select-aliases";
 import { stripBqlStatementTerminator } from "@/features/ledger/service/bql-terminator";
 import { unquoteBqlFromTables } from "@/features/ledger/service/bql-from-quotes";
@@ -1273,6 +1274,47 @@ async function main(): Promise<void> {
     JSON.stringify(normalizedCommentTail.rows) ===
       JSON.stringify(unterminatedCount.rows),
     "normalized ;-terminated query with a trailing comment returns the unterminated query's rows",
+  );
+
+  // Unicode whitespace (w23/162): stock beanquery separates tokens on Python
+  // `\s` while the engine only skips ASCII space/tab/CR/LF, so the shell
+  // service folds the rest to spaces first. Verify against the LIVE engine
+  // that (a) the raw NBSP/VTAB/EM SP queries really do still fail there, and
+  // (b) the folded queries return exactly the ASCII query's rows.
+  const SPACED_COUNT = "SELECT count(*) AS n FROM postings";
+  const spacedCount = await queryLedgerFiles(FILES, "main.beancount", SPACED_COUNT);
+  for (const [name, ch] of [
+    ["NBSP", "\xa0"],
+    ["VTAB", "\x0b"],
+    ["EM SP", "\u2003"],
+  ] as Array<[string, string]>) {
+    const raw = await queryLedgerFilesResult(
+      FILES,
+      "main.beancount",
+      `SELECT${ch}count(*)${ch}AS${ch}n${ch}FROM${ch}postings`,
+    );
+    assert(
+      raw.errors.some((e) => e.severity === "error"),
+      `engine still rejects a raw ${name}-separated query (normalization is load-bearing)`,
+    );
+    const folded = await queryLedgerFiles(
+      FILES,
+      "main.beancount",
+      foldBqlWhitespace(`SELECT${ch}count(*)${ch}AS${ch}n${ch}FROM${ch}postings`),
+    );
+    assert(
+      JSON.stringify(folded.rows) === JSON.stringify(spacedCount.rows),
+      `folded ${name}-separated query returns the ASCII query's rows`,
+    );
+  }
+  const foldedKept = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    foldBqlWhitespace('SELECT "a\xa0b" AS kept LIMIT 1'),
+  );
+  assert(
+    (foldedKept.rows[0] as { kept: string }).kept === "a\xa0b",
+    "NBSP inside a string literal survives folding byte-for-byte",
   );
 
   // Quoted FROM (w23/115): the engine silently ignores a quoted FROM name and
