@@ -31,3 +31,5 @@
 - **Expected outcome:** journal search by account/tag/link works as documented; agents can discover the syntax from the tool description and docs.
 - **Why now:** silent wrong-empty results corrupt agent conclusions ("no tagged entries", "no activity"); the fix is contained in one evaluator plus docs.
 - **Adoption surface:** included — the milestone ships agent-facing documentation (tool description + `docs/mcp.md`) that must be accurate on every surface.
+
+**Prod re-verified it.6369:** `journal?filter=tag:#foo` → `Unexpected #foo after "tag:" — write tag:foo or a bare #foo term` (syntax hint, not a bare lexer error). m2's hint holds live.
