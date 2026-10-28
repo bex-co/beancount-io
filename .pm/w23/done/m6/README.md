@@ -32,3 +32,5 @@
 - **Adoption surface:** included — the milestone ships agent-facing entry fields and tool wording that must hold on every surface.
 
 **Prod re-verified it.6371:** `addLedgerEntries` dry_run with a posting `cost: {number, currency, date}` passes schema validation — both attempts reached bean-check (unopened-account / currency-constraint errors naming the ledger problem), never `Unrecognized key`. m6's core gap holds live.
+
+**Prod re-verified it.6372:** balance `tolerance: "0.01"` (bare-decimal string) dry_run previews `2026-08-30 balance Assets:Cash 49.75 ~ 0.01 USD` with no new bean-check errors. Object and `0.01 USD` forms are refused with field-level messages. Tolerance holds live.
