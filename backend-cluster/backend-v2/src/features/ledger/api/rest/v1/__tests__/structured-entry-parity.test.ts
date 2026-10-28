@@ -632,6 +632,121 @@ describe.each(["rest", "gql", "mcp"])(
   },
 );
 
+// w23/140: pad's source and posting's total price dual-accept snake_case,
+// folded to camelCase by the service — one rule, every surface.
+const snakePadBatch = [
+  {
+    type: "pad",
+    entry: {
+      date,
+      account: "Assets:Cash",
+      source_account: "Equity:Opening-Balances",
+    },
+  },
+] as unknown as LedgerEntryInput[];
+
+const snakeTotalBatch = [
+  {
+    type: "transaction",
+    entry: {
+      date,
+      flag: "*",
+      postings: [
+        { account: "Assets:Cash", units: amount, total_price: amount },
+        {
+          account: "Expenses:Food",
+          units: { number: "-123.45", currency: "USD" },
+        },
+      ],
+    },
+  },
+] as unknown as LedgerEntryInput[];
+
+const splitPadBatch = [
+  {
+    type: "pad",
+    entry: {
+      date,
+      account: "Assets:Cash",
+      sourceAccount: "Equity:A",
+      source_account: "Equity:B",
+    },
+  },
+] as unknown as LedgerEntryInput[];
+
+describe.each(["rest", "gql", "mcp"])("nested key twins via %s", (surface) => {
+  it("commits a snake_case pad as its camel canonical", async () => {
+    const f = await fixture();
+    try {
+      const result = await f.call(surface, snakePadBatch);
+      expect(result.success).toBe(true);
+      expect(f.committed).toHaveLength(1);
+      expect(f.committed[0]).toMatchObject({
+        type: "pad",
+        item: { sourceAccount: "Equity:Opening-Balances" },
+      });
+      expect(
+        "source_account" in (f.committed[0] as { item: object }).item,
+      ).toBe(false);
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("commits a snake_case total price as its camel canonical", async () => {
+    const f = await fixture();
+    try {
+      const result = await f.call(surface, snakeTotalBatch);
+      expect(result.success).toBe(true);
+      expect(f.committed).toHaveLength(1);
+      const postings = (
+        f.committed[0] as { item: { postings: Record<string, unknown>[] } }
+      ).item.postings;
+      expect(postings[0]).toMatchObject({ totalPrice: amount });
+      expect("total_price" in (postings[0] as object)).toBe(false);
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("refuses a split pad pair without writing", async () => {
+    const f = await fixture();
+    try {
+      const result = await f.call(surface, splitPadBatch);
+      expect(result.success).toBe(false);
+      expect(f.committed).toEqual([]);
+      expect(f.write).not.toHaveBeenCalled();
+      const message =
+        "pass one source account, not sourceAccount and source_account with different values.";
+      if (surface === "rest") {
+        expect(result.result).toMatchObject({
+          ok: false,
+          error: {
+            code: "BAD_USER_INPUT",
+            message: expect.stringContaining(message),
+          },
+        });
+      } else if (surface === "gql") {
+        expect(
+          (result.errors ?? []).some((error) =>
+            String(error.message).includes(message),
+          ),
+        ).toBe(true);
+      } else {
+        expect(result.full).toMatchObject({
+          ok: false,
+          error: {
+            code: "BAD_USER_INPUT",
+            message: expect.stringContaining(message),
+          },
+        });
+      }
+    } finally {
+      await f.close();
+    }
+  });
+});
+
 // A second `open` for an account the ledger already opens: the ledger service
 // refuses it before committing, and every surface must say so the same way
 // (w0/m2). The refusal's source is the ledger client, so this proves the

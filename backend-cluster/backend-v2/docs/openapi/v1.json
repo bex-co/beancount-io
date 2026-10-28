@@ -497,25 +497,10 @@
                                 "description": "Per-unit price (`@` annotation); exclusive with the total price"
                               },
                               "totalPrice": {
-                                "type": "object",
-                                "nullable": true,
-                                "properties": {
-                                  "number": {
-                                    "type": "string",
-                                    "description": "Decimal amount",
-                                    "example": "42.50"
-                                  },
-                                  "currency": {
-                                    "type": "string",
-                                    "example": "USD"
-                                  }
-                                },
-                                "required": [
-                                  "number",
-                                  "currency"
-                                ],
-                                "additionalProperties": false,
-                                "description": "Total price (`@@`); exclusive with the per-unit price"
+                                "$ref": "#/components/schemas/PostingTotalPrice"
+                              },
+                              "total_price": {
+                                "$ref": "#/components/schemas/PostingTotalPrice"
                               },
                               "cost": {
                                 "type": "object",
@@ -725,14 +710,19 @@
                         },
                         "sourceAccount": {
                           "type": "string",
+                          "nullable": true,
                           "description": "Account to pad from",
                           "example": "Equity:Opening-Balances"
+                        },
+                        "source_account": {
+                          "type": "string",
+                          "nullable": true,
+                          "description": "Alias of sourceAccount. One of the two is required."
                         }
                       },
                       "required": [
                         "date",
-                        "account",
-                        "sourceAccount"
+                        "account"
                       ],
                       "additionalProperties": false
                     }
@@ -1107,6 +1097,27 @@
         ],
         "additionalProperties": false,
         "description": "One or more directives to add to the ledger"
+      },
+      "PostingTotalPrice": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "number": {
+            "type": "string",
+            "description": "Decimal amount",
+            "example": "42.50"
+          },
+          "currency": {
+            "type": "string",
+            "example": "USD"
+          }
+        },
+        "required": [
+          "number",
+          "currency"
+        ],
+        "additionalProperties": false,
+        "description": "Total price (`@@`); exclusive with the per-unit price"
       },
       "DirectiveTextRequest": {
         "type": "object",

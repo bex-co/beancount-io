@@ -61,9 +61,22 @@ const postingSchema = z.strictObject({
   price: nullToUndefined(amountSchema)
     .optional()
     .openapi({ description: POSTING_PRICE_DESCRIPTION }),
+  // Both twins register under one component name with one description:
+  // two inline amount objects here collapse to one model name in the CLI
+  // client generator, which drops the endpoint, and differing descriptions
+  // wrap the twin in an allOf the generator also rejects (w23/140). The
+  // GraphQL schema keeps the explicit alias note.
   totalPrice: nullToUndefined(amountSchema)
     .optional()
-    .openapi({ description: POSTING_TOTAL_PRICE_DESCRIPTION }),
+    .openapi("PostingTotalPrice", {
+      description: POSTING_TOTAL_PRICE_DESCRIPTION,
+    }),
+  // Twin (w23/140): the service folds both spellings, refusing a split pair.
+  total_price: nullToUndefined(amountSchema)
+    .optional()
+    .openapi("PostingTotalPrice", {
+      description: POSTING_TOTAL_PRICE_DESCRIPTION,
+    }),
   cost: nullToUndefined(costSchema)
     .optional()
     .openapi({ description: POSTING_COST_DESCRIPTION }),
@@ -124,9 +137,14 @@ const entrySchema = z.discriminatedUnion("type", [
     entry: z.strictObject({
       date: dateSchema,
       account: z.string(),
-      sourceAccount: z.string().openapi({
+      sourceAccount: nullToUndefined(z.string()).optional().openapi({
         description: PAD_SOURCE_DESCRIPTION,
         example: "Equity:Opening-Balances",
+      }),
+      // Twin (w23/140): one of the two spellings is required; the service
+      // folds both, refusing a split pair.
+      source_account: nullToUndefined(z.string()).optional().openapi({
+        description: "Alias of sourceAccount. One of the two is required.",
       }),
     }),
   }),

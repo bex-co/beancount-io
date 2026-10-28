@@ -765,6 +765,236 @@ describe("LedgerEntryService", () => {
       expect(mockAddBulkEntries).toHaveBeenCalledTimes(1);
     });
 
+    describe("nested key twins (w23/140)", () => {
+      it("accepts a pad carrying source_account only", async () => {
+        await service.addBulkEntries(
+          IDENTITY,
+          "testuser",
+          "test-ledger",
+          [
+            {
+              type: "pad",
+              entry: {
+                date: "2026-03-04",
+                account: "Assets:Cash",
+                source_account: "Equity:Opening-Balances",
+              },
+            },
+          ],
+          "web",
+        );
+
+        const item = firstItem().item;
+        expect(item.sourceAccount).toBe("Equity:Opening-Balances");
+        expect("source_account" in item).toBe(false);
+      });
+
+      it("refuses a pad with two different sources instead of guessing", async () => {
+        await expect(
+          service.addBulkEntries(
+            IDENTITY,
+            "testuser",
+            "test-ledger",
+            [
+              {
+                type: "pad",
+                entry: {
+                  date: "2026-03-04",
+                  account: "Assets:Cash",
+                  sourceAccount: "Equity:A",
+                  source_account: "Equity:B",
+                },
+              },
+            ],
+            "web",
+          ),
+        ).rejects.toThrow(
+          "entry 0: pass one source account, not sourceAccount and source_account with different values.",
+        );
+        expect(mockAddBulkEntries).not.toHaveBeenCalled();
+      });
+
+      it("refuses a pad carrying neither spelling", async () => {
+        await expect(
+          service.addBulkEntries(
+            IDENTITY,
+            "testuser",
+            "test-ledger",
+            [
+              {
+                type: "pad",
+                entry: { date: "2026-03-04", account: "Assets:Cash" },
+              },
+            ],
+            "web",
+          ),
+        ).rejects.toThrow(
+          "entry 0: sourceAccount is required — source_account works too.",
+        );
+        expect(mockAddBulkEntries).not.toHaveBeenCalled();
+      });
+
+      it("accepts identical pad twins and an explicit null as missing", async () => {
+        await service.addBulkEntries(
+          IDENTITY,
+          "testuser",
+          "test-ledger",
+          [
+            {
+              type: "pad",
+              entry: {
+                date: "2026-03-04",
+                account: "Assets:Cash",
+                sourceAccount: "Equity:Opening-Balances",
+                source_account: "Equity:Opening-Balances",
+              },
+            },
+            {
+              type: "pad",
+              entry: {
+                date: "2026-03-05",
+                account: "Assets:Bank",
+                // GraphQL nullable fields arrive as explicit null when set
+                // to null; that means missing, like the top-level twins.
+                sourceAccount: null as unknown as string,
+                source_account: "Equity:Opening-Balances",
+              },
+            },
+          ],
+          "web",
+        );
+
+        const items = committedEntries().map(
+          (entry: { item: { sourceAccount: string } }) => entry.item,
+        );
+        expect(
+          items.map(
+            (item: { sourceAccount: string }) => item.sourceAccount,
+          ),
+        ).toEqual([
+          "Equity:Opening-Balances",
+          "Equity:Opening-Balances",
+        ]);
+      });
+
+      const pricedPostings = (posting: Record<string, unknown>) => [
+        {
+          units: { number: "10", currency: "USD" },
+          account: "Assets:Cash",
+          ...posting,
+        },
+        { units: { number: "-10", currency: "USD" }, account: "Expenses:Food" },
+      ];
+
+      it("accepts a posting carrying total_price only", async () => {
+        await service.addBulkEntries(
+          IDENTITY,
+          "testuser",
+          "test-ledger",
+          [
+            {
+              type: "transaction",
+              entry: {
+                date: "2026-03-04",
+                flag: "*",
+                postings: pricedPostings({
+                  total_price: { number: "10", currency: "USD" },
+                }),
+              },
+            },
+          ],
+          "web",
+        );
+
+        const posting = firstItem().item.postings[0];
+        expect(posting.totalPrice).toEqual({ number: "10", currency: "USD" });
+        expect("total_price" in posting).toBe(false);
+      });
+
+      it("refuses a posting with two different total prices", async () => {
+        await expect(
+          service.addBulkEntries(
+            IDENTITY,
+            "testuser",
+            "test-ledger",
+            [
+              {
+                type: "transaction",
+                entry: {
+                  date: "2026-03-04",
+                  flag: "*",
+                  postings: pricedPostings({
+                    totalPrice: { number: "10", currency: "USD" },
+                    total_price: { number: "11", currency: "USD" },
+                  }),
+                },
+              },
+            ],
+            "web",
+          ),
+        ).rejects.toThrow(
+          "entry 0: pass one postings[0] total price, not totalPrice and total_price with different values.",
+        );
+        expect(mockAddBulkEntries).not.toHaveBeenCalled();
+      });
+
+      it("refuses total-price twins that differ as text even when equal as numbers", async () => {
+        // `10` and `10.0` render different directive text, so they are
+        // different values — accepting either silently would guess the file.
+        await expect(
+          service.addBulkEntries(
+            IDENTITY,
+            "testuser",
+            "test-ledger",
+            [
+              {
+                type: "transaction",
+                entry: {
+                  date: "2026-03-04",
+                  flag: "*",
+                  postings: pricedPostings({
+                    totalPrice: { number: "10", currency: "USD" },
+                    total_price: { number: "10.0", currency: "USD" },
+                  }),
+                },
+              },
+            ],
+            "web",
+          ),
+        ).rejects.toThrow(
+          "entry 0: pass one postings[0] total price, not totalPrice and total_price with different values.",
+        );
+        expect(mockAddBulkEntries).not.toHaveBeenCalled();
+      });
+
+      it("accepts identical total-price twins", async () => {
+        await service.addBulkEntries(
+          IDENTITY,
+          "testuser",
+          "test-ledger",
+          [
+            {
+              type: "transaction",
+              entry: {
+                date: "2026-03-04",
+                flag: "*",
+                postings: pricedPostings({
+                  totalPrice: { number: "10", currency: "USD" },
+                  total_price: { number: "10", currency: "USD" },
+                }),
+              },
+            },
+          ],
+          "web",
+        );
+
+        expect(firstItem().item.postings[0].totalPrice).toEqual({
+          number: "10",
+          currency: "USD",
+        });
+      });
+    });
+
     it("skips file creation when the target file already exists", async () => {
       await service.addBulkEntries(
         IDENTITY,

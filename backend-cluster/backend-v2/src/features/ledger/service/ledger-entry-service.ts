@@ -42,6 +42,8 @@ type PostingInput = {
   links?: string[];
   meta?: Record<string, string>;
   totalPrice?: AmountInput;
+  /** Twin (w23/140): alias of totalPrice; folded before the writer runs. */
+  total_price?: AmountInput;
 };
 
 type TransactionInput = {
@@ -80,7 +82,17 @@ type OpenInput = {
 
 type CloseInput = { date: string; account: string };
 
-type PadInput = { date: string; account: string; sourceAccount: string };
+type PadInput = {
+  date: string;
+  account: string;
+  /**
+   * Optional only so its `source_account` twin can stand in (w23/140); the
+   * fold refuses a pad carrying neither, so the writer still sees one.
+   */
+  sourceAccount?: string;
+  /** Twin (w23/140): alias of sourceAccount; folded before the writer runs. */
+  source_account?: string;
+};
 
 type DocumentInput = {
   date: string;
@@ -118,6 +130,91 @@ const DECIMAL_NUMBER = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/;
 /** An optional field counts as set unless it is null or undefined. */
 function isPresent(value: unknown): boolean {
   return value !== undefined && value !== null;
+}
+
+/**
+ * Fold one nested twin-key pair into its camelCase canonical (w23/140),
+ * following the top-level twin rules: null counts as missing (flag-alias),
+ * identical twins merge, and two different values are refused rather than
+ * guessed (object-key-alias). Amount twins compare as text — `10` and
+ * `10.0` render different directive text, so they are different values.
+ */
+function resolveEntryKeyTwin<T>(options: {
+  where: string;
+  field: string;
+  camelName: string;
+  snakeName: string;
+  camel?: T | null;
+  snake?: T | null;
+  isEqual: (a: T, b: T) => boolean;
+}): T | undefined {
+  const { where, field, camelName, snakeName, isEqual } = options;
+  const camel = options.camel ?? undefined;
+  const snake = options.snake ?? undefined;
+  if (camel !== undefined && snake !== undefined && !isEqual(camel, snake)) {
+    throw new BadUserInputError(
+      `${where}: pass one ${field}, not ${camelName} and ${snakeName} with different values.`,
+    );
+  }
+  return camel ?? snake;
+}
+
+/** Amount twins match only as identical text (see resolveEntryKeyTwin). */
+function amountsEqual(a: AmountInput, b: AmountInput): boolean {
+  return a.number === b.number && a.currency === b.currency;
+}
+
+/**
+ * Fold every nested twin key a batch carries (w23/140): pad
+ * `source_account` and posting `total_price` into their camelCase
+ * canonicals, dropping the alias keys. One fold point for REST, GraphQL,
+ * MCP and the receipt workflow, so the four cannot disagree; entries
+ * without twins pass through untouched.
+ */
+function normalizeEntryKeyTwins(
+  inputs: LedgerEntryInput[],
+): CanonicalLedgerEntryInput[] {
+  return inputs.map((input, index) => {
+    if (input.type === "pad") {
+      const { date, account, sourceAccount, source_account } = input.entry;
+      const source = resolveEntryKeyTwin({
+        where: `entry ${index}`,
+        field: "source account",
+        camelName: "sourceAccount",
+        snakeName: "source_account",
+        camel: sourceAccount,
+        snake: source_account,
+        isEqual: (a, b) => a === b,
+      });
+      if (source === undefined) {
+        throw new BadUserInputError(
+          `entry ${index}: sourceAccount is required — source_account works too.`,
+        );
+      }
+      return { type: "pad", entry: { date, account, sourceAccount: source } };
+    }
+    if (input.type === "transaction") {
+      const postings = input.entry.postings.map((posting, postingIndex) => {
+        if (!isPresent(posting.total_price)) return posting;
+        const totalPrice = resolveEntryKeyTwin({
+          where: `entry ${index}`,
+          field: `postings[${postingIndex}] total price`,
+          camelName: "totalPrice",
+          snakeName: "total_price",
+          camel: posting.totalPrice,
+          snake: posting.total_price,
+          isEqual: amountsEqual,
+        });
+        const { total_price: _dropped, ...rest } = posting;
+        return totalPrice === undefined ? rest : { ...rest, totalPrice };
+      });
+      if (postings.every((posting, i) => posting === input.entry.postings[i])) {
+        return input;
+      }
+      return { type: "transaction", entry: { ...input.entry, postings } };
+    }
+    return input;
+  });
 }
 
 /** Every amount an entry carries, with the field path a refusal names. */
@@ -172,6 +269,25 @@ export type LedgerEntryInput =
   | { type: "budget"; entry: BudgetInput }
   | { type: "document"; entry: DocumentInput }
   | { type: "event"; entry: EventInput };
+
+/**
+ * What the twin fold hands the writer (w23/140): alias keys gone, the pad
+ * source present. Canonical entries still satisfy `LedgerEntryInput`, so
+ * helpers typed on the loose union keep working below.
+ */
+type CanonicalPostingInput = Omit<PostingInput, "total_price">;
+type CanonicalTransactionInput = Omit<TransactionInput, "postings"> & {
+  postings: CanonicalPostingInput[];
+};
+type CanonicalPadInput = {
+  date: string;
+  account: string;
+  sourceAccount: string;
+};
+type CanonicalLedgerEntryInput =
+  | Exclude<LedgerEntryInput, { type: "pad" } | { type: "transaction" }>
+  | { type: "pad"; entry: CanonicalPadInput }
+  | { type: "transaction"; entry: CanonicalTransactionInput };
 
 // Atomic on the ledger side (all-or-nothing commit) — no partial counts to report.
 // `files` names the distinct ledger files the batch landed in, so MCP write
@@ -356,11 +472,13 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
     userId: string,
     ledgerOwner: string,
     ledgerName: string,
-    inputs: LedgerEntryInput[],
+    rawInputs: LedgerEntryInput[],
     platform: "web" | "mobile",
     allowInvalid = false,
     dryRun = false,
   ): Promise<AddBulkEntriesResult> {
+    // Nested twins fold here, before any validation or build reads them.
+    const inputs = normalizeEntryKeyTwins(rawInputs);
     const ledgerId = `${ledgerOwner}/${ledgerName}`;
     // At most one posting per transaction may omit its amount; the ledger
     // enforces this again at the trust boundary, but refusing here names the
@@ -523,7 +641,7 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
   }
 
   private buildEntry(
-    input: LedgerEntryInput,
+    input: CanonicalLedgerEntryInput,
     filename: string | undefined,
   ): BulkEntry {
     switch (input.type) {

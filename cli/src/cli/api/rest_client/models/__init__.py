@@ -72,9 +72,6 @@ from .entries_request_entries_item_type_0_entry_postings_item_meta_type_0 import
 from .entries_request_entries_item_type_0_entry_postings_item_price_type_0 import (
     EntriesRequestEntriesItemType0EntryPostingsItemPriceType0,
 )
-from .entries_request_entries_item_type_0_entry_postings_item_total_price_type_0 import (
-    EntriesRequestEntriesItemType0EntryPostingsItemTotalPriceType0,
-)
 from .entries_request_entries_item_type_0_entry_postings_item_units_type_0 import (
     EntriesRequestEntriesItemType0EntryPostingsItemUnitsType0,
 )
@@ -359,6 +356,7 @@ from .post_api_gateway_v1_public_keys_body import PostApiGatewayV1PublicKeysBody
 from .post_api_gateway_v1_public_keys_response_200 import PostApiGatewayV1PublicKeysResponse200
 from .post_api_gateway_v1_temp_assets_upload_url_body import PostApiGatewayV1TempAssetsUploadUrlBody
 from .post_api_gateway_v1_temp_assets_upload_url_response_200 import PostApiGatewayV1TempAssetsUploadUrlResponse200
+from .posting_total_price_type_0 import PostingTotalPriceType0
 from .preview_ledger_setup_body import PreviewLedgerSetupBody
 from .preview_ledger_setup_body_setup import PreviewLedgerSetupBodySetup
 from .preview_ledger_setup_body_setup_accounts_item import PreviewLedgerSetupBodySetupAccountsItem
@@ -474,7 +472,6 @@ __all__ = (
     "EntriesRequestEntriesItemType0EntryPostingsItemCostType0",
     "EntriesRequestEntriesItemType0EntryPostingsItemMetaType0",
     "EntriesRequestEntriesItemType0EntryPostingsItemPriceType0",
-    "EntriesRequestEntriesItemType0EntryPostingsItemTotalPriceType0",
     "EntriesRequestEntriesItemType0EntryPostingsItemUnitsType0",
     "EntriesRequestEntriesItemType0Type",
     "EntriesRequestEntriesItemType1",
@@ -629,6 +626,7 @@ __all__ = (
     "PostApiGatewayV1PublicKeysResponse200",
     "PostApiGatewayV1TempAssetsUploadUrlBody",
     "PostApiGatewayV1TempAssetsUploadUrlResponse200",
+    "PostingTotalPriceType0",
     "PreviewLedgerSetupBody",
     "PreviewLedgerSetupBodySetup",
     "PreviewLedgerSetupBodySetupAccountsItem",

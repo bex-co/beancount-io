@@ -5,11 +5,11 @@ from typing import Any, TypeVar
 
 from attrs import define as _attrs_define
 
-T = TypeVar("T", bound="EntriesRequestEntriesItemType0EntryPostingsItemTotalPriceType0")
+T = TypeVar("T", bound="PostingTotalPriceType0")
 
 
 @_attrs_define
-class EntriesRequestEntriesItemType0EntryPostingsItemTotalPriceType0:
+class PostingTotalPriceType0:
     """Total price (`@@`); exclusive with the per-unit price
 
     Attributes:
@@ -43,9 +43,9 @@ class EntriesRequestEntriesItemType0EntryPostingsItemTotalPriceType0:
 
         currency = d.pop("currency")
 
-        entries_request_entries_item_type_0_entry_postings_item_total_price_type_0 = cls(
+        posting_total_price_type_0 = cls(
             number=number,
             currency=currency,
         )
 
-        return entries_request_entries_item_type_0_entry_postings_item_total_price_type_0
+        return posting_total_price_type_0

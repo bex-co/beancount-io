@@ -17,12 +17,10 @@ if TYPE_CHECKING:
     from ..models.entries_request_entries_item_type_0_entry_postings_item_price_type_0 import (
         EntriesRequestEntriesItemType0EntryPostingsItemPriceType0,
     )
-    from ..models.entries_request_entries_item_type_0_entry_postings_item_total_price_type_0 import (
-        EntriesRequestEntriesItemType0EntryPostingsItemTotalPriceType0,
-    )
     from ..models.entries_request_entries_item_type_0_entry_postings_item_units_type_0 import (
         EntriesRequestEntriesItemType0EntryPostingsItemUnitsType0,
     )
+    from ..models.posting_total_price_type_0 import PostingTotalPriceType0
 
 
 T = TypeVar("T", bound="EntriesRequestEntriesItemType0EntryPostingsItem")
@@ -37,8 +35,8 @@ class EntriesRequestEntriesItemType0EntryPostingsItem:
             most one posting per transaction to elide it
         price (EntriesRequestEntriesItemType0EntryPostingsItemPriceType0 | None | Unset): Per-unit price (`@`
             annotation); exclusive with the total price
-        total_price (EntriesRequestEntriesItemType0EntryPostingsItemTotalPriceType0 | None | Unset): Total price (`@@`);
-            exclusive with the per-unit price
+        totalPrice (None | PostingTotalPriceType0 | Unset): Total price (`@@`); exclusive with the per-unit price
+        total_price (None | PostingTotalPriceType0 | Unset): Total price (`@@`); exclusive with the per-unit price
         cost (EntriesRequestEntriesItemType0EntryPostingsItemCostType0 | None | Unset): Lot basis `{number currency [,
             date] [, label]}`; needs units like price
         flag (None | str | Unset):
@@ -51,7 +49,8 @@ class EntriesRequestEntriesItemType0EntryPostingsItem:
     account: str
     units: EntriesRequestEntriesItemType0EntryPostingsItemUnitsType0 | None | Unset = UNSET
     price: EntriesRequestEntriesItemType0EntryPostingsItemPriceType0 | None | Unset = UNSET
-    total_price: EntriesRequestEntriesItemType0EntryPostingsItemTotalPriceType0 | None | Unset = UNSET
+    totalPrice: None | PostingTotalPriceType0 | Unset = UNSET
+    total_price: None | PostingTotalPriceType0 | Unset = UNSET
     cost: EntriesRequestEntriesItemType0EntryPostingsItemCostType0 | None | Unset = UNSET
     flag: None | str | Unset = UNSET
     tags: list[str] | None | Unset = UNSET
@@ -68,12 +67,10 @@ class EntriesRequestEntriesItemType0EntryPostingsItem:
         from ..models.entries_request_entries_item_type_0_entry_postings_item_price_type_0 import (
             EntriesRequestEntriesItemType0EntryPostingsItemPriceType0,  # noqa: PLC0415
         )
-        from ..models.entries_request_entries_item_type_0_entry_postings_item_total_price_type_0 import (
-            EntriesRequestEntriesItemType0EntryPostingsItemTotalPriceType0,  # noqa: PLC0415
-        )
         from ..models.entries_request_entries_item_type_0_entry_postings_item_units_type_0 import (
             EntriesRequestEntriesItemType0EntryPostingsItemUnitsType0,  # noqa: PLC0415
         )
+        from ..models.posting_total_price_type_0 import PostingTotalPriceType0  # noqa: PLC0415
 
         account = self.account
 
@@ -93,10 +90,18 @@ class EntriesRequestEntriesItemType0EntryPostingsItem:
         else:
             price = self.price
 
+        totalPrice: dict[str, Any] | None | Unset
+        if isinstance(self.totalPrice, Unset):
+            totalPrice = UNSET
+        elif isinstance(self.totalPrice, PostingTotalPriceType0):
+            totalPrice = self.totalPrice.to_dict()
+        else:
+            totalPrice = self.totalPrice
+
         total_price: dict[str, Any] | None | Unset
         if isinstance(self.total_price, Unset):
             total_price = UNSET
-        elif isinstance(self.total_price, EntriesRequestEntriesItemType0EntryPostingsItemTotalPriceType0):
+        elif isinstance(self.total_price, PostingTotalPriceType0):
             total_price = self.total_price.to_dict()
         else:
             total_price = self.total_price
@@ -152,8 +157,10 @@ class EntriesRequestEntriesItemType0EntryPostingsItem:
             field_dict["units"] = units
         if price is not UNSET:
             field_dict["price"] = price
+        if totalPrice is not UNSET:
+            field_dict["totalPrice"] = totalPrice
         if total_price is not UNSET:
-            field_dict["totalPrice"] = total_price
+            field_dict["total_price"] = total_price
         if cost is not UNSET:
             field_dict["cost"] = cost
         if flag is not UNSET:
@@ -178,12 +185,10 @@ class EntriesRequestEntriesItemType0EntryPostingsItem:
         from ..models.entries_request_entries_item_type_0_entry_postings_item_price_type_0 import (
             EntriesRequestEntriesItemType0EntryPostingsItemPriceType0,  # noqa: PLC0415
         )
-        from ..models.entries_request_entries_item_type_0_entry_postings_item_total_price_type_0 import (
-            EntriesRequestEntriesItemType0EntryPostingsItemTotalPriceType0,  # noqa: PLC0415
-        )
         from ..models.entries_request_entries_item_type_0_entry_postings_item_units_type_0 import (
             EntriesRequestEntriesItemType0EntryPostingsItemUnitsType0,  # noqa: PLC0415
         )
+        from ..models.posting_total_price_type_0 import PostingTotalPriceType0  # noqa: PLC0415
 
         d = dict(src_dict)
         account = d.pop("account")
@@ -222,9 +227,7 @@ class EntriesRequestEntriesItemType0EntryPostingsItem:
 
         price = _parse_price(d.pop("price", UNSET))
 
-        def _parse_total_price(
-            data: object,
-        ) -> EntriesRequestEntriesItemType0EntryPostingsItemTotalPriceType0 | None | Unset:
+        def _parse_totalPrice(data: object) -> None | PostingTotalPriceType0 | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -232,14 +235,31 @@ class EntriesRequestEntriesItemType0EntryPostingsItem:
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                total_price_type_0 = EntriesRequestEntriesItemType0EntryPostingsItemTotalPriceType0.from_dict(data)
+                componentsschemas_posting_total_price_type_0 = PostingTotalPriceType0.from_dict(data)
 
-                return total_price_type_0
+                return componentsschemas_posting_total_price_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(EntriesRequestEntriesItemType0EntryPostingsItemTotalPriceType0 | None | Unset, data)
+            return cast(None | PostingTotalPriceType0 | Unset, data)
 
-        total_price = _parse_total_price(d.pop("totalPrice", UNSET))
+        totalPrice = _parse_totalPrice(d.pop("totalPrice", UNSET))
+
+        def _parse_total_price(data: object) -> None | PostingTotalPriceType0 | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                componentsschemas_posting_total_price_type_0 = PostingTotalPriceType0.from_dict(data)
+
+                return componentsschemas_posting_total_price_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(None | PostingTotalPriceType0 | Unset, data)
+
+        total_price = _parse_total_price(d.pop("total_price", UNSET))
 
         def _parse_cost(data: object) -> EntriesRequestEntriesItemType0EntryPostingsItemCostType0 | None | Unset:
             if data is None:
@@ -322,6 +342,7 @@ class EntriesRequestEntriesItemType0EntryPostingsItem:
             account=account,
             units=units,
             price=price,
+            totalPrice=totalPrice,
             total_price=total_price,
             cost=cost,
             flag=flag,

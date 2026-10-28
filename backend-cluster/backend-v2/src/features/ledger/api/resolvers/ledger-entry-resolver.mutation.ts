@@ -161,6 +161,13 @@ class LedgerPostingInput {
   })
   totalPrice?: LedgerAmountInput;
 
+  // Twin (w23/140): the service folds both spellings, refusing a split pair.
+  @Field(() => LedgerAmountInput, {
+    nullable: true,
+    description: "Alias of totalPrice.",
+  })
+  total_price?: LedgerAmountInput;
+
   @Field(() => LedgerCostInput, {
     nullable: true,
     description: POSTING_COST_DESCRIPTION,
@@ -305,8 +312,19 @@ class LedgerPadInput {
   @Field(() => String)
   account: string;
 
-  @Field(() => String, { description: PAD_SOURCE_DESCRIPTION })
-  sourceAccount: string;
+  @Field(() => String, {
+    nullable: true,
+    description: PAD_SOURCE_DESCRIPTION,
+  })
+  sourceAccount?: string;
+
+  // Twin (w23/140): one of the two spellings is required; the service folds
+  // both, refusing a split pair.
+  @Field(() => String, {
+    nullable: true,
+    description: "Alias of sourceAccount. One of the two is required.",
+  })
+  source_account?: string;
 }
 
 @InputType()
