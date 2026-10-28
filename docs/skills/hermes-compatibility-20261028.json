@@ -1,0 +1,121 @@
+{
+  "owner": "w6/m6.5/t005",
+  "relatedInitOwner": "w6/039",
+  "observedThroughUTC": "2026-10-28T07:44:26.364565Z",
+  "status": "blocked",
+  "stable": {
+    "tag": "v0.22.5",
+    "commit": "bf0203a794a07aac3ff764972ab9087baa4e4f4e",
+    "publishedAtUTC": "2026-10-23T05:28:45Z",
+    "url": "https://github.com/NousResearch/hermes-agent/releases/tag/v0.22.5"
+  },
+  "priorComparison": "hermes-compatibility-20261026.json",
+  "main": {
+    "commit": "ee7e0f517232fb619c72e49d7e648436bddc598e",
+    "url": "https://github.com/NousResearch/hermes-agent/tree/ee7e0f517232fb619c72e49d7e648436bddc598e",
+    "limit": "Read-only pinned public source comparison; not execution or adoption of unreleased host code."
+  },
+  "files": [
+    {
+      "path": "tools/skills_guard.py",
+      "oldGitBlobSHA": "4258d3a8a146a39edd4b5ab47a6fadb18e28a3aa",
+      "currentGitBlobSHA": "4258d3a8a146a39edd4b5ab47a6fadb18e28a3aa",
+      "unchanged": true,
+      "url": "https://github.com/NousResearch/hermes-agent/blob/ee7e0f517232fb619c72e49d7e648436bddc598e/tools/skills_guard.py"
+    },
+    {
+      "path": "tools/plugin_guard.py",
+      "oldGitBlobSHA": "bb1a334d75d34923ceb1900e0805804e4fff9d7c",
+      "currentGitBlobSHA": "bb1a334d75d34923ceb1900e0805804e4fff9d7c",
+      "unchanged": true,
+      "url": "https://github.com/NousResearch/hermes-agent/blob/ee7e0f517232fb619c72e49d7e648436bddc598e/tools/plugin_guard.py"
+    },
+    {
+      "path": "tools/plugin_guard_context.py",
+      "oldGitBlobSHA": "32b535c09d9b350afeed0197ee7bcd1ce92c86a7",
+      "currentGitBlobSHA": "32b535c09d9b350afeed0197ee7bcd1ce92c86a7",
+      "unchanged": true,
+      "url": "https://github.com/NousResearch/hermes-agent/blob/ee7e0f517232fb619c72e49d7e648436bddc598e/tools/plugin_guard_context.py"
+    },
+    {
+      "path": "hermes_cli/agent_plugins.py",
+      "oldGitBlobSHA": "64205785b0447a0b7917ad4359ac308877efcc09",
+      "currentGitBlobSHA": "64205785b0447a0b7917ad4359ac308877efcc09",
+      "unchanged": true,
+      "url": "https://github.com/NousResearch/hermes-agent/blob/ee7e0f517232fb619c72e49d7e648436bddc598e/hermes_cli/agent_plugins.py"
+    },
+    {
+      "path": "hermes_cli/plugins_manifest.py",
+      "oldGitBlobSHA": "8153f476a4182959bf255092459e71ca57eec623",
+      "currentGitBlobSHA": "8153f476a4182959bf255092459e71ca57eec623",
+      "unchanged": true,
+      "url": "https://github.com/NousResearch/hermes-agent/blob/ee7e0f517232fb619c72e49d7e648436bddc598e/hermes_cli/plugins_manifest.py"
+    },
+    {
+      "path": "hermes_cli/plugins_admission.py",
+      "oldGitBlobSHA": "6ba8f3c36171c552afc1e5bff076aab02c022e36",
+      "currentGitBlobSHA": "6ba8f3c36171c552afc1e5bff076aab02c022e36",
+      "unchanged": true,
+      "url": "https://github.com/NousResearch/hermes-agent/blob/ee7e0f517232fb619c72e49d7e648436bddc598e/hermes_cli/plugins_admission.py"
+    },
+    {
+      "path": "hermes_cli/plugin_validate.py",
+      "oldGitBlobSHA": "c6e609e9fb2b855882cdb8907d5029873ded7c2a",
+      "currentGitBlobSHA": "a63fd2233a878e17e782f384916cded40d6bcf5f",
+      "unchanged": false,
+      "url": "https://github.com/NousResearch/hermes-agent/blob/ee7e0f517232fb619c72e49d7e648436bddc598e/hermes_cli/plugin_validate.py",
+      "changeAssessment": "Pins repo PYTHONPATH and uses python -P for the validation probe; portable metadata/admission/guard contract unchanged."
+    },
+    {
+      "path": "hermes_cli/plugins_cmd_install.py",
+      "oldGitBlobSHA": "e0062e36a7c484bc392bd70c7bf739b68774182b",
+      "currentGitBlobSHA": "e0062e36a7c484bc392bd70c7bf739b68774182b",
+      "unchanged": true,
+      "url": "https://github.com/NousResearch/hermes-agent/blob/ee7e0f517232fb619c72e49d7e648436bddc598e/hermes_cli/plugins_cmd_install.py"
+    },
+    {
+      "path": "hermes_cli/skills_hub.py",
+      "oldGitBlobSHA": "9da626af276c6afe48e4ee132a5651576e9dac6c",
+      "currentGitBlobSHA": "9da626af276c6afe48e4ee132a5651576e9dac6c",
+      "unchanged": true,
+      "url": "https://github.com/NousResearch/hermes-agent/blob/ee7e0f517232fb619c72e49d7e648436bddc598e/hermes_cli/skills_hub.py"
+    },
+    {
+      "path": "tools/skills_hub.py",
+      "oldGitBlobSHA": "6f1dff8ad040947348563ff86f2de57a16cc0cff",
+      "currentGitBlobSHA": "eb7441be119754aba139d2346fbeb528b1c2bb54",
+      "unchanged": false,
+      "url": "https://github.com/NousResearch/hermes-agent/blob/ee7e0f517232fb619c72e49d7e648436bddc598e/tools/skills_hub.py",
+      "changeAssessment": "Adds installed-identifier lookup and ClawHub catalog aliases for owner-qualified slugs; not complete-suite ingestion."
+    },
+    {
+      "path": "tools/skills_hub_search.py",
+      "oldGitBlobSHA": "fabdf931e58352fbdfc5d7dea6be22d05fcc1809",
+      "currentGitBlobSHA": "fabdf931e58352fbdfc5d7dea6be22d05fcc1809",
+      "unchanged": true,
+      "url": "https://github.com/NousResearch/hermes-agent/blob/ee7e0f517232fb619c72e49d7e648436bddc598e/tools/skills_hub_search.py"
+    },
+    {
+      "path": "tools/skills_hub_clawhub.py",
+      "oldGitBlobSHA": "ce59608ffbde441b33ec0bde265a8e8099d43501",
+      "currentGitBlobSHA": "040e7aacfc01854234d2ce5cca4061a31321eaef",
+      "unchanged": false,
+      "url": "https://github.com/NousResearch/hermes-agent/blob/ee7e0f517232fb619c72e49d7e648436bddc598e/tools/skills_hub_clawhub.py",
+      "changeAssessment": "Adds catalog_identifier normalization for existing ClawHub ids; not a policy or portable metadata change."
+    }
+  ],
+  "summary": {
+    "checkedFiles": 12,
+    "unchanged": 9,
+    "changed": 3,
+    "coreSkillPluginGuardsMetadataParserAdmissionInstallerUnchanged": true,
+    "compatibleReleasedSuitePathEstablished": false,
+    "nativeInstallOrScannerRepeated": false,
+    "newNativeSuccessOrRefusalClaimed": false
+  },
+  "scope": "040standalone discovery was dropped after owner-selected retirement; alias helpers do not revive standalone releases or make that old cohort a suite prerequisite. Complete13-workflow metadata/init admission stays required.",
+  "unblock": "Hermes ships supported compatible nested portable metadata and a scanner-approved path retaining intended consent-gated init instruction-file creation; worker then reruns native complete-suite install/discovery/update without force.",
+  "nextTrigger": "Relevant supported release or actual policy/metadata/admission change; unchanged aliases or diagnostics alone do not trigger another install.",
+  "publisherInputNeeded": false,
+  "privacy": "Public release/source/blob metadata and worker assessment only; no credentials, private account data or local ledgers."
+}

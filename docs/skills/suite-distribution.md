@@ -147,14 +147,18 @@ verified content bundle and ZIP routes remain independent of that host limitatio
 
 ## Hermes admission limits
 
-**Latest source check, 2026-10-26T04:52:58Z:** stable
+**Latest source check, 2026-10-28 UTC:** stable
 [v0.22.5](https://github.com/NousResearch/hermes-agent/releases/tag/v0.22.5)
-still retains the prior portable metadata check, skill/plugin guards and
-admission implementation. The inspected main changes do not establish a
-compatible path. [Twelve-file comparison and native-test limits](hermes-compatibility-20261026.json)
-retain the exact Git blobs and next trigger. No new native rejection or
-successful install is claimed from this source comparison; the actual older
-rehearsal below remains the runtime evidence. No publisher input is pending.
+remains unchanged. Against the Oct26main comparison, inspected main
+ee7e0f517232fb619c72e49d7e648436bddc598e changes three of twelve files:
+validation probe import isolation and ClawHub installed-id/catalog aliases.
+The metadata parser, admission/installer and three guards are unchanged;
+these changes do not establish complete-suite admission or init-policy support.
+[Exact twelve-file hashes, change assessment and limits](hermes-compatibility-20261028.json)
+preserve the [prior comparison](hermes-compatibility-20261026.json).
+No new native install/scanner is run; the older rehearsal below remains the
+runtime evidence. Retired standalone040is not revived by alias improvements.
+No publisher input is pending; rerun only after a relevant supported change.
 
 Hermes **v0.22.4**, official commit
 `4d04303818b61bf3aa09278af48356315515965b`, supports portable Agent Plugins v1
