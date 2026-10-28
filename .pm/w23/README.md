@@ -29,7 +29,7 @@
 
 
 - [149](./blocked/149.md) — file writes COMMIT bean-check-invalid content (no validation gate; entry writes refuse) [major] — **blocked:** commit-invalid documented on all surfaces; owner picks entry-style gate (→ milestone) vs documented behavior
-- [150](./150.md) — journal subtype filters pass non-family directives through and `total` counts them (`pending` → 13 rows, 0 transactions)
+- [150](./blocked/150.md) — journal subtype filters pass non-family directives through and `total` counts them (`pending` → 13 rows, 0 transactions) — **blocked:** family-scoping documented on all surfaces; owner picks narrow-to-matches, split counts, or documented passthrough
 - [151](./151.md) — BQL refuses post-`;` tails stock drops (strictness is right; trailing `--` comments swept up)
 - [152](./152.md) — same-type composite equality escapes 128's guard on bare `weight`/`amount`/`other_accounts`/`accounts` (constant-False; stock refuses)
 - [153](./153.md) — ledger projects numeric `id`s where stock projects hash hex strings (silent value + type change)

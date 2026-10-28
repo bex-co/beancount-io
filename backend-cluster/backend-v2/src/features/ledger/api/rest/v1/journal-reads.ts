@@ -70,14 +70,35 @@ export const jsonStringArrayQuery = jsonQuery(
   "JSON-encoded string array, including [] for an empty filter list",
 );
 
+/**
+ * Subtype filters narrow only their own directive family and pass every
+ * other family through (engine parity — w23/150). One described schema
+ * per family, shared by the journal and account-journal reads.
+ */
+const transactionSubtypesQuery = jsonStringArrayQuery
+  .optional()
+  .describe(
+    "JSON-encoded transaction flag filter, e.g. [\"cleared\"]: narrows transactions only — other directive families pass through. Combine with directiveTypes to restrict the families returned.",
+  );
+const documentSubtypesQuery = jsonStringArrayQuery
+  .optional()
+  .describe(
+    "JSON-encoded document subtype filter: narrows documents only — other directive families pass through. Combine with directiveTypes to restrict the families returned.",
+  );
+const customSubtypesQuery = jsonStringArrayQuery
+  .optional()
+  .describe(
+    "JSON-encoded custom-directive subtype filter: narrows custom directives only — other families pass through. Combine with directiveTypes to restrict the families returned.",
+  );
+
 const journalQuerySchema = filters.extend({
   limit: z.coerce.number().int().min(1).max(1000).optional(),
   offset: z.coerce.number().int().min(0).optional(),
   // The journal service normalizes and validates these for every surface.
   directiveTypes: directiveTypesQuery(jsonStringArrayQuery.optional()),
-  transactionSubtypes: jsonStringArrayQuery.optional(),
-  documentSubtypes: jsonStringArrayQuery.optional(),
-  customSubtypes: jsonStringArrayQuery.optional(),
+  transactionSubtypes: transactionSubtypesQuery,
+  documentSubtypes: documentSubtypesQuery,
+  customSubtypes: customSubtypesQuery,
 });
 const plaintextJournalQuery = filters.extend({
   limit: z.coerce
@@ -110,9 +131,9 @@ const accountJournalQuery = filters.extend({
   conversion: z.string().optional(),
   // Same optional display selectors as the main journal read.
   directiveTypes: directiveTypesQuery(jsonStringArrayQuery.optional()),
-  transactionSubtypes: jsonStringArrayQuery.optional(),
-  documentSubtypes: jsonStringArrayQuery.optional(),
-  customSubtypes: jsonStringArrayQuery.optional(),
+  transactionSubtypes: transactionSubtypesQuery,
+  documentSubtypes: documentSubtypesQuery,
+  customSubtypes: customSubtypesQuery,
 });
 
 type ReadParams = {

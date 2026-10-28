@@ -8861,30 +8861,30 @@
           {
             "schema": {
               "type": "string",
-              "description": "JSON-encoded string array, including [] for an empty filter list"
+              "description": "JSON-encoded transaction flag filter, e.g. [\"cleared\"]: narrows transactions only — other directive families pass through. Combine with directiveTypes to restrict the families returned."
             },
             "required": false,
-            "description": "JSON-encoded string array, including [] for an empty filter list",
+            "description": "JSON-encoded transaction flag filter, e.g. [\"cleared\"]: narrows transactions only — other directive families pass through. Combine with directiveTypes to restrict the families returned.",
             "name": "transactionSubtypes",
             "in": "query"
           },
           {
             "schema": {
               "type": "string",
-              "description": "JSON-encoded string array, including [] for an empty filter list"
+              "description": "JSON-encoded document subtype filter: narrows documents only — other directive families pass through. Combine with directiveTypes to restrict the families returned."
             },
             "required": false,
-            "description": "JSON-encoded string array, including [] for an empty filter list",
+            "description": "JSON-encoded document subtype filter: narrows documents only — other directive families pass through. Combine with directiveTypes to restrict the families returned.",
             "name": "documentSubtypes",
             "in": "query"
           },
           {
             "schema": {
               "type": "string",
-              "description": "JSON-encoded string array, including [] for an empty filter list"
+              "description": "JSON-encoded custom-directive subtype filter: narrows custom directives only — other families pass through. Combine with directiveTypes to restrict the families returned."
             },
             "required": false,
-            "description": "JSON-encoded string array, including [] for an empty filter list",
+            "description": "JSON-encoded custom-directive subtype filter: narrows custom directives only — other families pass through. Combine with directiveTypes to restrict the families returned.",
             "name": "customSubtypes",
             "in": "query"
           }
@@ -9337,30 +9337,30 @@
           {
             "schema": {
               "type": "string",
-              "description": "JSON-encoded string array, including [] for an empty filter list"
+              "description": "JSON-encoded transaction flag filter, e.g. [\"cleared\"]: narrows transactions only — other directive families pass through. Combine with directiveTypes to restrict the families returned."
             },
             "required": false,
-            "description": "JSON-encoded string array, including [] for an empty filter list",
+            "description": "JSON-encoded transaction flag filter, e.g. [\"cleared\"]: narrows transactions only — other directive families pass through. Combine with directiveTypes to restrict the families returned.",
             "name": "transactionSubtypes",
             "in": "query"
           },
           {
             "schema": {
               "type": "string",
-              "description": "JSON-encoded string array, including [] for an empty filter list"
+              "description": "JSON-encoded document subtype filter: narrows documents only — other directive families pass through. Combine with directiveTypes to restrict the families returned."
             },
             "required": false,
-            "description": "JSON-encoded string array, including [] for an empty filter list",
+            "description": "JSON-encoded document subtype filter: narrows documents only — other directive families pass through. Combine with directiveTypes to restrict the families returned.",
             "name": "documentSubtypes",
             "in": "query"
           },
           {
             "schema": {
               "type": "string",
-              "description": "JSON-encoded string array, including [] for an empty filter list"
+              "description": "JSON-encoded custom-directive subtype filter: narrows custom directives only — other families pass through. Combine with directiveTypes to restrict the families returned."
             },
             "required": false,
-            "description": "JSON-encoded string array, including [] for an empty filter list",
+            "description": "JSON-encoded custom-directive subtype filter: narrows custom directives only — other families pass through. Combine with directiveTypes to restrict the families returned.",
             "name": "customSubtypes",
             "in": "query"
           }

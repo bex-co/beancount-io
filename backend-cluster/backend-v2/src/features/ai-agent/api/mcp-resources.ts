@@ -684,7 +684,7 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
       name: read.name,
       title: read.summary,
       description: takesSubtypeFilters
-        ? `${read.summary}. Subtype filters are JSON-encoded string arrays.`
+        ? `${read.summary}. Subtype filters are JSON-encoded string arrays. Each narrows only its own directive family and passes other families through — combine with directiveTypes to restrict the families returned.`
         : read.summary,
       mimeType: "application/json",
       uriTemplate: `${RESOURCE_SCHEME}://{owner}/{name}/${read.segment}`,

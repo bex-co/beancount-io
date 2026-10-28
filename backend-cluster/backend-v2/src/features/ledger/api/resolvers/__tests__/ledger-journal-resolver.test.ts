@@ -1,4 +1,5 @@
 import "reflect-metadata";
+import { getMetadataStorage } from "type-graphql";
 import { LedgerJournalQueryResolver } from "../ledger-journal-resolver.query";
 import { LedgerJournalMutationResolver } from "../ledger-journal-resolver.mutation";
 import { IContext } from "@/server/graphql/context";
@@ -486,5 +487,23 @@ describe("LedgerJournalResolver", () => {
         ),
       ).rejects.toThrow(InternalServerError);
     });
+  });
+
+  // w23/150: subtype filters narrow only their own family — the args say
+  // so, matching the REST/MCP descriptions.
+  it("documents family-scoping on every subtype arg", () => {
+    const metadata = getMetadataStorage();
+    const found = metadata.fields.filter((field) =>
+      [
+        "transactionSubtypes",
+        "documentSubtypes",
+        "customSubtypes",
+      ].includes(field.name),
+    );
+    // Both journal query inputs carry all three args.
+    expect(found).toHaveLength(6);
+    for (const field of found) {
+      expect(field.description).toContain("pass through");
+    }
   });
 });

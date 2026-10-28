@@ -200,12 +200,15 @@ def sync_detailed(
             ["Transaction"]: any of Transaction, Balance, Commodity, Close, Custom, Document, Event,
             Note, Open, Pad, Price, in any case. Omitted, every kind is returned — including the
             epoch-dated `open`/`close` directives that fall inside any time window.
-        transaction_subtypes (str | Unset): JSON-encoded string array, including [] for an empty
-            filter list
-        document_subtypes (str | Unset): JSON-encoded string array, including [] for an empty
-            filter list
-        custom_subtypes (str | Unset): JSON-encoded string array, including [] for an empty filter
-            list
+        transaction_subtypes (str | Unset): JSON-encoded transaction flag filter, e.g.
+            ["cleared"]: narrows transactions only — other directive families pass through. Combine
+            with directiveTypes to restrict the families returned.
+        document_subtypes (str | Unset): JSON-encoded document subtype filter: narrows documents
+            only — other directive families pass through. Combine with directiveTypes to restrict the
+            families returned.
+        custom_subtypes (str | Unset): JSON-encoded custom-directive subtype filter: narrows
+            custom directives only — other families pass through. Combine with directiveTypes to
+            restrict the families returned.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -286,12 +289,15 @@ def sync(
             ["Transaction"]: any of Transaction, Balance, Commodity, Close, Custom, Document, Event,
             Note, Open, Pad, Price, in any case. Omitted, every kind is returned — including the
             epoch-dated `open`/`close` directives that fall inside any time window.
-        transaction_subtypes (str | Unset): JSON-encoded string array, including [] for an empty
-            filter list
-        document_subtypes (str | Unset): JSON-encoded string array, including [] for an empty
-            filter list
-        custom_subtypes (str | Unset): JSON-encoded string array, including [] for an empty filter
-            list
+        transaction_subtypes (str | Unset): JSON-encoded transaction flag filter, e.g.
+            ["cleared"]: narrows transactions only — other directive families pass through. Combine
+            with directiveTypes to restrict the families returned.
+        document_subtypes (str | Unset): JSON-encoded document subtype filter: narrows documents
+            only — other directive families pass through. Combine with directiveTypes to restrict the
+            families returned.
+        custom_subtypes (str | Unset): JSON-encoded custom-directive subtype filter: narrows
+            custom directives only — other families pass through. Combine with directiveTypes to
+            restrict the families returned.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -367,12 +373,15 @@ async def asyncio_detailed(
             ["Transaction"]: any of Transaction, Balance, Commodity, Close, Custom, Document, Event,
             Note, Open, Pad, Price, in any case. Omitted, every kind is returned — including the
             epoch-dated `open`/`close` directives that fall inside any time window.
-        transaction_subtypes (str | Unset): JSON-encoded string array, including [] for an empty
-            filter list
-        document_subtypes (str | Unset): JSON-encoded string array, including [] for an empty
-            filter list
-        custom_subtypes (str | Unset): JSON-encoded string array, including [] for an empty filter
-            list
+        transaction_subtypes (str | Unset): JSON-encoded transaction flag filter, e.g.
+            ["cleared"]: narrows transactions only — other directive families pass through. Combine
+            with directiveTypes to restrict the families returned.
+        document_subtypes (str | Unset): JSON-encoded document subtype filter: narrows documents
+            only — other directive families pass through. Combine with directiveTypes to restrict the
+            families returned.
+        custom_subtypes (str | Unset): JSON-encoded custom-directive subtype filter: narrows
+            custom directives only — other families pass through. Combine with directiveTypes to
+            restrict the families returned.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -451,12 +460,15 @@ async def asyncio(
             ["Transaction"]: any of Transaction, Balance, Commodity, Close, Custom, Document, Event,
             Note, Open, Pad, Price, in any case. Omitted, every kind is returned — including the
             epoch-dated `open`/`close` directives that fall inside any time window.
-        transaction_subtypes (str | Unset): JSON-encoded string array, including [] for an empty
-            filter list
-        document_subtypes (str | Unset): JSON-encoded string array, including [] for an empty
-            filter list
-        custom_subtypes (str | Unset): JSON-encoded string array, including [] for an empty filter
-            list
+        transaction_subtypes (str | Unset): JSON-encoded transaction flag filter, e.g.
+            ["cleared"]: narrows transactions only — other directive families pass through. Combine
+            with directiveTypes to restrict the families returned.
+        document_subtypes (str | Unset): JSON-encoded document subtype filter: narrows documents
+            only — other directive families pass through. Combine with directiveTypes to restrict the
+            families returned.
+        custom_subtypes (str | Unset): JSON-encoded custom-directive subtype filter: narrows
+            custom directives only — other families pass through. Combine with directiveTypes to
+            restrict the families returned.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

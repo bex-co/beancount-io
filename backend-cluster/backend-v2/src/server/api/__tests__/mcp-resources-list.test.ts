@@ -148,6 +148,30 @@ describe("journal template descriptions (w23/142)", () => {
           "Subtype filters are JSON-encoded string arrays.",
         ),
       ).toBe(takesSubtypes);
+      // w23/150: where the subtype sentence rides, the family-scoping
+      // sentence rides with it — bare filters mislead (13 passthrough
+      // rows for zero pending transactions).
+      expect(
+        resource?.description.includes("passes other families through"),
+      ).toBe(takesSubtypes);
+    }
+  });
+
+  it("documents family-scoping on every subtype query param", () => {
+    const SUBTYPE_KEYS = new Set([
+      "transactionSubtypes",
+      "documentSubtypes",
+      "customSubtypes",
+    ]);
+    for (const read of JOURNAL_READS) {
+      for (const [key, schema] of Object.entries(read.query.shape)) {
+        if (!SUBTYPE_KEYS.has(key)) continue;
+        const described = schema as { description?: unknown };
+        expect(typeof described.description).toBe("string");
+        expect(described.description as string).toContain(
+          "pass through",
+        );
+      }
     }
   });
 

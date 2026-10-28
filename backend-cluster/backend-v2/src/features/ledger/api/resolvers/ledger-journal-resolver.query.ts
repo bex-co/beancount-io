@@ -86,13 +86,28 @@ class JournalQueryInput {
   @Field(() => [String], { nullable: true })
   directiveTypes?: string[];
 
-  @Field(() => [String], { nullable: true })
+  // w23/150: narrows transactions only — other families pass through.
+  @Field(() => [String], {
+    nullable: true,
+    description:
+      "Transaction flag filter: narrows transactions only — other directive families pass through. Combine with directiveTypes to restrict the families returned.",
+  })
   transactionSubtypes?: string[];
 
-  @Field(() => [String], { nullable: true })
+  // w23/150: narrows documents only — other families pass through.
+  @Field(() => [String], {
+    nullable: true,
+    description:
+      "Document subtype filter: narrows documents only — other directive families pass through. Combine with directiveTypes to restrict the families returned.",
+  })
   documentSubtypes?: string[];
 
-  @Field(() => [String], { nullable: true })
+  // w23/150: narrows custom directives only — other families pass through.
+  @Field(() => [String], {
+    nullable: true,
+    description:
+      "Custom-directive subtype filter: narrows custom directives only — other families pass through. Combine with directiveTypes to restrict the families returned.",
+  })
   customSubtypes?: string[];
 }
 
@@ -216,13 +231,28 @@ class AccountJournalQueryInput {
   @Field(() => [String], { nullable: true })
   directiveTypes?: string[];
 
-  @Field(() => [String], { nullable: true })
+  // w23/150: narrows transactions only — other families pass through.
+  @Field(() => [String], {
+    nullable: true,
+    description:
+      "Transaction flag filter: narrows transactions only — other directive families pass through. Combine with directiveTypes to restrict the families returned.",
+  })
   transactionSubtypes?: string[];
 
-  @Field(() => [String], { nullable: true })
+  // w23/150: narrows documents only — other families pass through.
+  @Field(() => [String], {
+    nullable: true,
+    description:
+      "Document subtype filter: narrows documents only — other directive families pass through. Combine with directiveTypes to restrict the families returned.",
+  })
   documentSubtypes?: string[];
 
-  @Field(() => [String], { nullable: true })
+  // w23/150: narrows custom directives only — other families pass through.
+  @Field(() => [String], {
+    nullable: true,
+    description:
+      "Custom-directive subtype filter: narrows custom directives only — other families pass through. Combine with directiveTypes to restrict the families returned.",
+  })
   customSubtypes?: string[];
 }
 
