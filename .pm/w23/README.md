@@ -58,6 +58,7 @@
 - [174](./174.md) — `allowInvalid` commits syntactically unparseable text on the typed path (cost.date unvalidated); all three surfaces
 - [175](./175.md) — bank-submit nested keys camel-only on REST/GraphQL while the MCP bank tool dual-accepts (w23/140 followup)
 - [176](./176.md) — BQL column/alias references case-sensitive on the engine; stock case-insensitive (tables + functions agree)
+- [177](./177.md) — string literals behind aliases still sniff dtypes (w23/146 followup)
 - [082](./blocked/082.md) — `createPullRequest` fails on production: Gitea 500 while creating the `pr-patch-*` branch, on MCP and REST alike — **blocked:** needs the Gitea server-log cause for one failing branch create (owner), then a production rerun
 - [080](./blocked/080.md) — `/api-gateway/mcp` accepts any `Origin` (the MCP transport spec says a bad `Origin` MUST get 403); owner picks validate vs document — **blocked:** owner picks 403-on-foreign-Origin vs documented non-validation
 - [075](./blocked/075.md) — typed BQL results return NULL as `""` (undocumented), so a missing payee or price reads as an empty string — **blocked:** documented as `""` (option a shipped); owner picks `null` on REST/MCP, `null` everywhere, or keeping `""`
