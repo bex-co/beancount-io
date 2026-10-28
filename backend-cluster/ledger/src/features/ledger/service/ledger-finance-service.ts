@@ -13,6 +13,7 @@ import {
   clampDirectives,
   balanceSheetCap,
   closeCurrentEarnings,
+  collectLedgerCommodities,
   deriveReportAccounts,
   filterDirectivesAsync,
   formatFiscalYearEnd,
@@ -80,6 +81,7 @@ export class LedgerFinanceService implements ILedgerFinanceService {
       valuationDate,
       window,
       operatingCurrency,
+      allCommodities,
       roots,
     } = await this.loadReportDirectives(ledgerId, userId, {
       account,
@@ -90,6 +92,7 @@ export class LedgerFinanceService implements ILedgerFinanceService {
       conversion,
       rawDirectives,
       operatingCurrency,
+      allCommodities,
     );
     const key = (interval ?? "month") as IntervalKey;
     const cumulative = (prefixes: string[]) =>
@@ -147,6 +150,7 @@ export class LedgerFinanceService implements ILedgerFinanceService {
       valuationDate,
       window,
       operatingCurrency,
+      allCommodities,
       roots,
     } = await this.loadReportDirectives(ledgerId, userId, {
       account,
@@ -157,6 +161,7 @@ export class LedgerFinanceService implements ILedgerFinanceService {
       conversion,
       rawDirectives,
       operatingCurrency,
+      allCommodities,
     );
     const key = (interval ?? "month") as IntervalKey;
     const netProfit = intervalTotals(
@@ -214,6 +219,7 @@ export class LedgerFinanceService implements ILedgerFinanceService {
       valuationDate,
       window,
       operatingCurrency,
+      allCommodities,
       roots,
       clamp,
       unrealizedAccount,
@@ -226,6 +232,7 @@ export class LedgerFinanceService implements ILedgerFinanceService {
       conversion,
       rawDirectives,
       operatingCurrency,
+      allCommodities,
     );
     // Conversions and unrealized gains, as Fava's `Tree.cap` adds them, on
     // the clamped stream and the whole one alike (w21/710).
@@ -290,6 +297,7 @@ export class LedgerFinanceService implements ILedgerFinanceService {
       priceMap,
       valuationDate,
       operatingCurrency,
+      allCommodities,
       roots,
     } = await this.loadReportDirectives(ledgerId, userId, {
       account,
@@ -303,6 +311,7 @@ export class LedgerFinanceService implements ILedgerFinanceService {
       conversion,
       rawDirectives,
       operatingCurrency,
+      allCommodities,
     );
     return {
       income_hierarchy_data: accountHierarchy(
@@ -402,6 +411,8 @@ export class LedgerFinanceService implements ILedgerFinanceService {
     directives: DirectiveJson[];
     priceMap: PriceMap;
     operatingCurrency: string;
+    /** Every commodity in the FULL snapshot (w23/156 conversion check). */
+    allCommodities: Set<string>;
     roots: ReportAccounts["roots"];
     clamp: ReportAccounts["clamp"];
     /** Fava's `unrealized` option: the Equity child unrealized gains go to. */
@@ -428,6 +439,9 @@ export class LedgerFinanceService implements ILedgerFinanceService {
     // for at-cost valuation. Build the price map once from the unfiltered
     // snapshot and thread it through.
     const priceMap = buildPriceMap(directives);
+    // Conversion targets validate against the FULL snapshot's commodities
+    // (w23/156) — like the price map, a filter must not hide a currency.
+    const allCommodities = collectLedgerCommodities(directives);
     try {
       // Apply account + advanced filters first (Fava's filter order), leaving
       // the time filter for the clamp so we can also capture its date window.
@@ -443,6 +457,7 @@ export class LedgerFinanceService implements ILedgerFinanceService {
           directives: filtered,
           priceMap,
           operatingCurrency,
+          allCommodities,
           roots,
           clamp,
           unrealizedAccount,
@@ -465,6 +480,7 @@ export class LedgerFinanceService implements ILedgerFinanceService {
         directives: clamped,
         priceMap,
         operatingCurrency,
+        allCommodities,
         roots,
         clamp,
         unrealizedAccount,

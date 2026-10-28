@@ -10,6 +10,7 @@ import {
 import {
   accountHierarchy,
   buildPriceMap,
+  collectLedgerCommodities,
   deriveBeancountOptions,
   parseBcioOptions,
   parseFavaOptions,
@@ -365,6 +366,7 @@ export function setReportsHandler(router: Router): void {
       conversion,
       snapshot.directives,
       snapshot.options.operating_currencies?.[0] ?? "USD",
+      collectLedgerCommodities(snapshot.directives),
     );
     const tree = accountHierarchy(
       snapshot.directives,

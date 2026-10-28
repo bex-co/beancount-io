@@ -43,6 +43,7 @@ import {
   parseDateRange,
   parseFavaOptions,
   parseLedgerFiles,
+  collectLedgerCommodities,
   resolveConversion,
   resolveEntryIdsAtSources,
   TimeFilterParseError,
@@ -838,6 +839,7 @@ export class LedgerDataService implements ILedgerDataService {
       conversion,
       directives,
       options.operating_currencies?.[0] ?? "USD",
+      collectLedgerCommodities(fullDirectives),
     );
     const key = (interval ?? "month") as IntervalKey;
     const strip = (rows: { date: string; balance: Record<string, string> }[]) =>
@@ -906,6 +908,7 @@ export class LedgerDataService implements ILedgerDataService {
       conversion,
       directives,
       options.operating_currencies?.[0] ?? "USD",
+      collectLedgerCommodities(fullDirectives),
     );
     const key = (interval ?? "month") as IntervalKey;
     return intervalTotals(
