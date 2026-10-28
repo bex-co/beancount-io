@@ -8,7 +8,11 @@ jest.mock("@ai-sdk/harness-acp", () => ({
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { assembleMcpRegistry } from "../composition-root";
-import { listLedgerResources } from "@/features/ai-agent/api/mcp-resources";
+import {
+  MCP_RESOURCES,
+  listLedgerResources,
+} from "@/features/ai-agent/api/mcp-resources";
+import { JOURNAL_READS } from "@/features/ledger/api/rest/v1/journal-reads";
 import type { McpRequestContext } from "@/features/ai-agent/api/mcp-context";
 import type { AppConfig } from "@/config/config";
 import type { Identity } from "../identity";
@@ -121,6 +125,42 @@ describe("resources/list over the wire", () => {
       new Error("denied"),
     );
     await expect(listUris(ctx)).resolves.toEqual([]);
+  });
+});
+
+describe("journal template descriptions (w23/142)", () => {
+  it("promises subtype filters exactly where the template takes them", () => {
+    const SUBTYPE_KEYS = new Set([
+      "directiveTypes",
+      "transactionSubtypes",
+      "documentSubtypes",
+      "customSubtypes",
+    ]);
+    expect(JOURNAL_READS.length).toBeGreaterThan(0);
+    for (const read of JOURNAL_READS) {
+      const resource = MCP_RESOURCES.find((entry) => entry.name === read.name);
+      expect(resource).toBeDefined();
+      const takesSubtypes = Object.keys(read.query.shape).some((key) =>
+        SUBTYPE_KEYS.has(key),
+      );
+      expect(
+        resource?.description.includes(
+          "Subtype filters are JSON-encoded string arrays.",
+        ),
+      ).toBe(takesSubtypes);
+    }
+  });
+
+  it("leaves the filterless reads' summaries bare", () => {
+    const byName = new Map(
+      MCP_RESOURCES.map((entry) => [entry.name, entry.description]),
+    );
+    expect(byName.get("ledgerSourceFiles")).toBe(
+      "List the ledger's source files",
+    );
+    expect(byName.get("ledgerPlaintextJournal")).toBe(
+      "Read Beancount journal text with account, time, and expression filters",
+    );
   });
 });
 

@@ -398,6 +398,19 @@ const bankResources: readonly McpResourceDescriptor[] = [
   },
 ];
 
+/**
+ * Query keys that make a journal read a subtype-filtered read (w23/142).
+ * A template promises the subtype sentence exactly when its query takes
+ * one of these; `journal` and `account-journal` do, `plaintext-journal`
+ * (paging without subtypes) and `source-files` (no params) do not.
+ */
+const SUBTYPE_QUERY_KEYS = [
+  "directiveTypes",
+  "transactionSubtypes",
+  "documentSubtypes",
+  "customSubtypes",
+] as const;
+
 /** The resource fragment: every template this feature contributes to the registry. */
 export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
   {
@@ -660,11 +673,19 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
       },
     }),
   ),
-  ...JOURNAL_READS.map(
-    (read): McpResourceDescriptor => ({
+  ...JOURNAL_READS.map((read): McpResourceDescriptor => {
+    // The subtype sentence rides only reads whose query takes one (w23/142):
+    // source-files takes no params and plaintext-journal takes paging
+    // without subtypes, so the unconditional sentence lied on both.
+    const takesSubtypeFilters = SUBTYPE_QUERY_KEYS.some(
+      (key) => key in read.query.shape,
+    );
+    return {
       name: read.name,
       title: read.summary,
-      description: `${read.summary}. Subtype filters are JSON-encoded string arrays.`,
+      description: takesSubtypeFilters
+        ? `${read.summary}. Subtype filters are JSON-encoded string arrays.`
+        : read.summary,
       mimeType: "application/json",
       uriTemplate: `${RESOURCE_SCHEME}://{owner}/{name}/${read.segment}`,
       // The one journal read enumerated in `resources/list` (w2/m27:t004):
@@ -685,8 +706,8 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
         });
         return JSON.stringify(result);
       },
-    }),
-  ),
+    };
+  }),
   ...(["income-statement", "balance-sheet"] as const).map(
     (statement): McpResourceDescriptor => ({
       name:

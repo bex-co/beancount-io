@@ -28,7 +28,6 @@
 ## Inbox
 
 
-- [142](./142.md) — `source-files` resource description promises subtype filters the surface refuses (no query params)
 - [143](./143.md) — temp-asset + bank + branch `NOT_FOUND`s carry the generic ledgers/files/entries hint (none live there)
 - [144](./144.md) — `holdings` echoes `group_by` but refuses it as input (output snake, input camel; 141-class)
 - [145](./145.md) — `docs/mcp.md` contradicts itself on pinned-credential creation (shipped refusal vs stale permission)
