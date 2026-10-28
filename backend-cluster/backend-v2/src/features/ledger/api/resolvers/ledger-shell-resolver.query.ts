@@ -3,6 +3,7 @@ import {
   ArgsType,
   Ctx,
   Field,
+  Int,
   ObjectType,
   Query,
   Resolver,
@@ -52,6 +53,13 @@ class QueryResultText {
 class QueryShellTextResult {
   @Field(() => String)
   text: string;
+
+  // The whole result's row count beside the text (w23/168): without it a
+  // zero-row result is a bare `""`, indistinguishable from nothing. MCP
+  // leads its text block with the same count; the service already
+  // returned it here, but the schema dropped it.
+  @Field(() => Int, { nullable: true })
+  rowCount?: number | null;
 }
 
 @ObjectType()

@@ -94,7 +94,7 @@ async function fixture(
       graphql({
         schema,
         source:
-          'query($query: String!) { queryShellText(ledgerId: "alice/main", query: $query) { text } }',
+          'query($query: String!) { queryShellText(ledgerId: "alice/main", query: $query) { text rowCount } }',
         variableValues: { query: queryValue },
         contextValue: { identity: pinnedReadToken },
       }),
@@ -495,7 +495,10 @@ describe("canonical BQL text counts through the actual service and adapters", ()
         expect(await restText.text()).toBe(text);
         const gqlText = await f.gqlText(bql);
         expect(gqlText.errors).toBeUndefined();
-        expect(gqlText.data?.queryShellText).toEqual({ text });
+        expect(gqlText.data?.queryShellText).toEqual({
+          text,
+          rowCount: table.rows.length,
+        });
 
         const expected = { resultType: "table", table };
         const rest = await f.rest(bql);
@@ -549,10 +552,28 @@ describe("canonical BQL text counts through the actual service and adapters", ()
       expect(await restText.text()).toBe(text);
       const gqlText = await f.gqlText(longQuery);
       expect(gqlText.errors).toBeUndefined();
-      expect(gqlText.data?.queryShellText).toEqual({ text });
+      expect(gqlText.data?.queryShellText).toEqual({ text, rowCount: 0 });
       expect(f.queryShellTextPost).toHaveBeenCalledTimes(3);
       for (const call of f.queryShellTextPost.mock.calls)
         expect(call).toEqual(["alice", "main", { query: longQuery }]);
+    } finally {
+      await f.close();
+    }
+  });
+
+  // w23/168: a zero-row result is a bare `""` on the shared renderer, so
+  // GraphQL text carries the whole result's row count beside it — the
+  // same count MCP leads its text block with.
+  it("exposes rowCount beside empty GraphQL text", async () => {
+    const table: CanonicalTable = {
+      types: [{ name: "payee", dtype: "str" }],
+      rows: [],
+    };
+    const f = await fixture(table, { text: "", rowCount: 0 });
+    try {
+      const gqlText = await f.gqlText("SELECT payee WHERE FALSE LIMIT 5");
+      expect(gqlText.errors).toBeUndefined();
+      expect(gqlText.data?.queryShellText).toEqual({ text: "", rowCount: 0 });
     } finally {
       await f.close();
     }
@@ -603,7 +624,10 @@ describe("canonical BQL text counts through the actual service and adapters", ()
       const restText = await f.restText(bql);
       expect(restText.status).toBe(200);
       expect(await restText.text()).toBe(text);
-      expect((await f.gqlText(bql)).data?.queryShellText).toEqual({ text });
+      expect((await f.gqlText(bql)).data?.queryShellText).toEqual({
+        text,
+        rowCount: 1005,
+      });
       const restTyped = await f.rest(bql);
       expect(restTyped.status).toBe(200);
       expect(await restTyped.json()).toEqual({ resultType: "table", table });
@@ -655,7 +679,10 @@ describe("canonical BQL text counts through the actual service and adapters", ()
         expect(f.queryShellPost).not.toHaveBeenCalled();
         const raw = await f.restText(bql);
         expect(await raw.text()).toBe(text);
-        expect((await f.gqlText(bql)).data?.queryShellText).toEqual({ text });
+        expect((await f.gqlText(bql)).data?.queryShellText).toEqual({
+          text,
+          rowCount: null,
+        });
         expect(f.queryShellTextPost).toHaveBeenCalledTimes(3);
       } finally {
         await f.close();

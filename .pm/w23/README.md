@@ -47,7 +47,7 @@
 - [x] [165](./done/165.md) — BQL refuses date arithmetic stock supports (`date ± int` day shifts, `date − date` day count)
 - [x] [166](./done/166.md) — mid-period `FROM OPEN ON` drops stock's opening-summary rows (26/36, 0/12; CLOSE ON clean)
 - [x] [167](./done/167.md) — bare `price` flips Amount→`str` on all-NULL/empty (no Amount name rule; 136/164 cover neither)
-- [168](./168.md) — text results render zero rows as the empty string (no headers, no marker; empty-marker decision)
+- [x] [168](./done/168.md) — text results render zero rows as the empty string (no headers, no marker; empty-marker decision)
 - [169](./169.md) — `weight`/`account_balance` dtypes flip on empty (wrong-family rule / missing rule; stock says Amount)
 - [170](./170.md) — BQL `meta` splits by table (`k: v`/`str` postings vs `k=v`/`object` entries; stock one dict)
 - [171](./171.md) — typed posting tags/links render stock-invalid beancount; backend check blind, reads blank (m6 "holds live" disproven)

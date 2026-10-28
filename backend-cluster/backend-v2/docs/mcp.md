@@ -1182,6 +1182,16 @@ first N of M lines (B of T bytes) …]` line. The lead line then reads
 `LIMIT` or a narrower `WHERE`, or use `runBqlQueryStructured`, to see the rest.
 REST and GraphQL `queryShellText` return the full text.
 
+A zero-row result renders as the empty string on every surface — no
+headers, no marker — which is what stock beanquery prints (nothing), so
+the shared renderer keeps it as the established empty marker rather
+than inventing headers (w23/168). The count travels beside the text
+instead: MCP's text block leads with `0 rows`, GraphQL `queryShellText`
+exposes the same count as `rowCount`, and REST clients read it from the
+JSON table's rows (REST `text/plain` is the raw rendering). Errors throw
+rather than rendering empty, so `""` with `rowCount: 0` unambiguously
+means zero rows.
+
 There is no query-length ceiling to write around: the query travels in a
 POST body end to end, so bulk `OR` chains and long literals run as written
 on every surface.

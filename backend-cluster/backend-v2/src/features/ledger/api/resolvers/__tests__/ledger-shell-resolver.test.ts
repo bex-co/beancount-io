@@ -102,6 +102,15 @@ describe("LedgerShellResolver", () => {
       expect(result).toEqual(expected);
     });
 
+    it("should pass the row count through beside the text", async () => {
+      const expected = { text: "", rowCount: 0 };
+      mockShellService.queryShellText.mockResolvedValue(expected);
+
+      const result = await resolver.queryShellText(args, mockContext);
+
+      expect(result).toEqual(expected);
+    });
+
     it("should propagate errors thrown by the service", async () => {
       mockShellService.queryShellText.mockRejectedValue(
         new InternalServerError("Failed to execute shell query"),
