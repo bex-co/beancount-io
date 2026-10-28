@@ -10,9 +10,25 @@ screen or restored original-account access.
 The current status-information request is satisfied. No further publisher
 action is needed for Claude now. Claude reviewers own the remaining review;
 the worker follows actual feedback, a decision/publication event, or a manual
-check on2026-10-27UTC, then verifies approved public/native availability. That
+check on2026-10-31UTC, then verifies approved public/native availability. That
 manual date is an internal check trigger, not a vendor estimate or recurring
 monitor. Reuse the existing application below; no duplicate is created.
+
+## Current bounded access/public check — 2026-10-28 UTC
+
+The exact existing management URL again says **That submission wasn’t found in
+this organization.** Current session access does not expose the original review;
+no account identity is published or session changed. The actual public directory
+search for beancount returns24semantic results, all extracted, without an
+observed canonical Beancount.io entry. This is not zero search results or a
+private review decision. A bounded seven-day vendor-mail query identifies no
+relevant directory feedback. [Current evidence and24public result URLs](./review-followup-20261028.json)
+retain scope and freshness. Publisher-reported in_review remains the baseline.
+
+Next: actual feedback/decision/publication, otherwise manualOct31UTC. No user
+input is needed now, and no duplicate application or native grant is created.
+Original submitting-organization access is required only if real later feedback
+calls for a management action; do not infer rejection from this access message.
 
 ## Historical submission and direct-access observations
 
