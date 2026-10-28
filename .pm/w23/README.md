@@ -66,6 +66,7 @@
 - [188](./188.md) — double-quoted identifiers outside FROM parse as string literals (silent wrong results)
 - [189](./189.md) — GROUP-BY coverage guard false-fires on PIVOT BY (blocks a query stock runs)
 - [190](./190.md) — engine accepts fractional `@@` stock refuses (per-unit division dust; w23/163 followup)
+- [191](./191.md) — BQL `BETWEEN` refuses strings the ordering operators accept
 - [193](./193.md) — mixed-comparison guard false-fires on parenthesized comparisons
 - [082](./blocked/082.md) — `createPullRequest` fails on production: Gitea 500 while creating the `pr-patch-*` branch, on MCP and REST alike — **blocked:** needs the Gitea server-log cause for one failing branch create (owner), then a production rerun
 - [080](./blocked/080.md) — `/api-gateway/mcp` accepts any `Origin` (the MCP transport spec says a bad `Origin` MUST get 403); owner picks validate vs document — **blocked:** owner picks 403-on-foreign-Origin vs documented non-validation
