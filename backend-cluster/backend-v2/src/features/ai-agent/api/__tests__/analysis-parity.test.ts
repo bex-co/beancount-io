@@ -95,6 +95,9 @@ const SAMPLE_QUERY: Record<string, string> = {
   entry_hash: "abc123",
   accountName: "Expenses:Groceries",
   groupBy: "commodity",
+  // The group_by alias (w23/144) agrees with groupBy here: the harness
+  // sends every schema key, and two different groupings refuse.
+  group_by: "commodity",
   fromDate: "2024-01-01",
   toDate: "2024-12-31",
   // This suite's property is that both surfaces resolve through the same
@@ -287,6 +290,36 @@ describe("report reads wire their queries", () => {
       identity: undefined,
       groupBy: "account",
     });
+  });
+
+  // w23/144: the holdings read echoes group_by, so the shared REST/MCP
+  // seam accepts it as an alias of groupBy.
+  it("holdings folds the echoed group_by spelling", async () => {
+    const services = fakeServices();
+    await read("holdings").fetch(services as never, {
+      ledgerId: LEDGER,
+      identity: undefined,
+      query: { group_by: "commodity" },
+    });
+    expect(services.ledgerFinance.getHoldings).toHaveBeenCalledWith({
+      ledgerId: LEDGER,
+      identity: undefined,
+      groupBy: "commodity",
+    });
+  });
+
+  it("holdings refuses a split grouping pair", async () => {
+    const services = fakeServices();
+    // The fold throws before the fetch reaches the service, so the
+    // refusal is synchronous, not a rejected promise.
+    expect(() =>
+      read("holdings").fetch(services as never, {
+        ledgerId: LEDGER,
+        identity: undefined,
+        query: { groupBy: "account", group_by: "commodity" },
+      }),
+    ).toThrow("Pass group_by or groupBy, not two different groupings.");
+    expect(services.ledgerFinance.getHoldings).not.toHaveBeenCalled();
   });
 
   it("register passes its filters and guards a bypassed account", async () => {

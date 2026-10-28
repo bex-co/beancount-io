@@ -42,6 +42,23 @@ export function resolveWithChildren(values: {
   return resolvePair(values, WITH_CHILDREN_NAMES, "values");
 }
 
+const GROUP_BY_NAMES = {
+  primary: "group_by",
+  legacy: "groupBy",
+} as const;
+
+/**
+ * The holdings grouping twin (w23/144): the read echoes `group_by` but
+ * took `groupBy`, so pasting the echo died in strict validation. Both
+ * missing stays missing — each layer defaults to account.
+ */
+export function resolveGroupBy(values: {
+  primary?: string | null;
+  legacy?: string | null;
+}): string | undefined {
+  return resolvePair(values, GROUP_BY_NAMES, "groupings");
+}
+
 function resolvePair<T>(
   values: { primary?: T | null; legacy?: T | null },
   names: { primary: string; legacy: string },

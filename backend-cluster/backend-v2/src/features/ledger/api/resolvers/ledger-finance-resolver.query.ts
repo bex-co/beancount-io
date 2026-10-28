@@ -12,6 +12,7 @@ import { AllowAnonymous } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import { filterNullish } from "@/shared/tools";
 import { BadUserInputError } from "@/shared/errors";
+import { resolveGroupBy } from "@/features/ledger/utils/query-param-alias";
 import { GraphQLJSONObject } from "graphql-scalars";
 import { DateAndBalance, ConversionArgs } from "./ledger-report-resolver.types";
 import type { ILedgerFinanceService } from "@/features/ledger/service/ledger-finance-service";
@@ -172,8 +173,17 @@ class HoldingsArgs {
   @Field(() => String, { nullable: true })
   conversion?: string;
 
-  @Field(() => String, { defaultValue: "account" })
+  // No defaultValue: a defaulted groupBy would false-split against an
+  // explicit group_by, so the default applies after the fold (w23/144).
+  @Field(() => String, { nullable: true })
   groupBy?: string;
+
+  // Twin (w23/144): the read echoes group_by.
+  @Field(() => String, {
+    nullable: true,
+    description: "Alias of groupBy, as the read echoes it.",
+  })
+  group_by?: string;
 }
 
 @ObjectType()
@@ -570,13 +580,14 @@ export class LedgerFinanceQueryResolver {
     @Args() args: HoldingsArgs,
     @Ctx() ctx: IContext,
   ): Promise<HoldingsData> {
-    if (
-      args.groupBy !== undefined &&
-      args.groupBy !== "account" &&
-      args.groupBy !== "commodity"
-    ) {
+    const groupBy =
+      resolveGroupBy({
+        primary: args.group_by,
+        legacy: args.groupBy,
+      }) ?? "account";
+    if (groupBy !== "account" && groupBy !== "commodity") {
       throw new BadUserInputError(
-        `Unsupported groupBy "${args.groupBy}": pass "account" or "commodity".`,
+        `Unsupported groupBy "${groupBy}": pass "account" or "commodity".`,
       );
     }
     const data = await this.financeService.getHoldings({
@@ -585,7 +596,7 @@ export class LedgerFinanceQueryResolver {
       ...filterNullish({
         account: args.account,
         conversion: args.conversion,
-        groupBy: args.groupBy,
+        groupBy,
       }),
     });
     return {

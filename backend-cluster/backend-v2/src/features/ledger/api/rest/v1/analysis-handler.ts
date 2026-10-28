@@ -5,6 +5,7 @@ import {
 } from "@/features/ledger/utils/report-summaries";
 import { z } from "@/shared/zod-openapi-setup";
 import { resolveEntryHash } from "@/features/ledger/utils/entry-hash-alias";
+import { resolveGroupBy } from "@/features/ledger/utils/query-param-alias";
 import {
   ledgerIdOf,
   ledgerPathSchema,
@@ -147,19 +148,30 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
           "Convert money columns to this currency, or `units` for each group's held currency (default: the operating currency when the ledger declares exactly one)",
         example: "USD",
       }),
-      groupBy: z.enum(["account", "commodity"]).default("account").openapi({
+      groupBy: z.enum(["account", "commodity"]).optional().openapi({
         description: "Group lots by account or by commodity",
         example: "commodity",
       }),
+      // Twin (w23/144): the read echoes group_by; no default on either
+      // spelling, so a defaulted groupBy cannot masquerade as an explicit
+      // one and false-split against group_by.
+      group_by: z.enum(["account", "commodity"]).optional().openapi({
+        description: "Alias of groupBy, as the read echoes it.",
+      }),
     }).strict(),
     uriPath: "",
-    fetch: (s, { ledgerId, identity, query }) =>
-      s.ledgerFinance.getHoldings({
+    fetch: (s, { ledgerId, identity, query }) => {
+      const { group_by, ...rest } = query;
+      return s.ledgerFinance.getHoldings({
         ledgerId,
         identity,
-        ...query,
-        groupBy: (query.groupBy ?? "account") as "account" | "commodity",
-      }),
+        ...rest,
+        groupBy: (resolveGroupBy({
+          primary: group_by,
+          legacy: query.groupBy,
+        }) ?? "account") as "account" | "commodity",
+      });
+    },
   },
   {
     segment: "register",

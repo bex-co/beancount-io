@@ -19,8 +19,8 @@ def _get_kwargs(
     *,
     account: str | Unset = UNSET,
     conversion: str | Unset = UNSET,
-    group_by: GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy
-    | Unset = GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy.ACCOUNT,
+    groupBy: GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy | Unset = UNSET,
+    group_by: GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy | Unset = UNSET,
 ) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
@@ -29,11 +29,17 @@ def _get_kwargs(
 
     params["conversion"] = conversion
 
+    json_groupBy: str | Unset = UNSET
+    if not isinstance(groupBy, Unset):
+        json_groupBy = groupBy.value
+
+    params["groupBy"] = json_groupBy
+
     json_group_by: str | Unset = UNSET
     if not isinstance(group_by, Unset):
         json_group_by = group_by.value
 
-    params["groupBy"] = json_group_by
+    params["group_by"] = json_group_by
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -121,8 +127,8 @@ def sync_detailed(
     client: AuthenticatedClient,
     account: str | Unset = UNSET,
     conversion: str | Unset = UNSET,
-    group_by: GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy
-    | Unset = GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy.ACCOUNT,
+    groupBy: GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy | Unset = UNSET,
+    group_by: GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy | Unset = UNSET,
 ) -> Response[Any | V1Error]:
     """Get holdings
 
@@ -140,9 +146,10 @@ def sync_detailed(
         conversion (str | Unset): Convert money columns to this currency, or `units` for each
             group's held currency (default: the operating currency when the ledger declares exactly
             one) Example: USD.
-        group_by (GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy | Unset): Group lots by account
-            or by commodity Default: GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy.ACCOUNT. Example:
-            commodity.
+        groupBy (GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy | Unset): Group lots by account or
+            by commodity Example: commodity.
+        group_by (GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy | Unset): Alias of groupBy, as
+            the read echoes it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -157,6 +164,7 @@ def sync_detailed(
         name=name,
         account=account,
         conversion=conversion,
+        groupBy=groupBy,
         group_by=group_by,
     )
 
@@ -174,8 +182,8 @@ def sync(
     client: AuthenticatedClient,
     account: str | Unset = UNSET,
     conversion: str | Unset = UNSET,
-    group_by: GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy
-    | Unset = GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy.ACCOUNT,
+    groupBy: GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy | Unset = UNSET,
+    group_by: GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy | Unset = UNSET,
 ) -> Any | V1Error | None:
     """Get holdings
 
@@ -193,9 +201,10 @@ def sync(
         conversion (str | Unset): Convert money columns to this currency, or `units` for each
             group's held currency (default: the operating currency when the ledger declares exactly
             one) Example: USD.
-        group_by (GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy | Unset): Group lots by account
-            or by commodity Default: GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy.ACCOUNT. Example:
-            commodity.
+        groupBy (GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy | Unset): Group lots by account or
+            by commodity Example: commodity.
+        group_by (GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy | Unset): Alias of groupBy, as
+            the read echoes it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -211,6 +220,7 @@ def sync(
         client=client,
         account=account,
         conversion=conversion,
+        groupBy=groupBy,
         group_by=group_by,
     ).parsed
 
@@ -222,8 +232,8 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
     account: str | Unset = UNSET,
     conversion: str | Unset = UNSET,
-    group_by: GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy
-    | Unset = GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy.ACCOUNT,
+    groupBy: GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy | Unset = UNSET,
+    group_by: GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy | Unset = UNSET,
 ) -> Response[Any | V1Error]:
     """Get holdings
 
@@ -241,9 +251,10 @@ async def asyncio_detailed(
         conversion (str | Unset): Convert money columns to this currency, or `units` for each
             group's held currency (default: the operating currency when the ledger declares exactly
             one) Example: USD.
-        group_by (GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy | Unset): Group lots by account
-            or by commodity Default: GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy.ACCOUNT. Example:
-            commodity.
+        groupBy (GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy | Unset): Group lots by account or
+            by commodity Example: commodity.
+        group_by (GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy | Unset): Alias of groupBy, as
+            the read echoes it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -258,6 +269,7 @@ async def asyncio_detailed(
         name=name,
         account=account,
         conversion=conversion,
+        groupBy=groupBy,
         group_by=group_by,
     )
 
@@ -273,8 +285,8 @@ async def asyncio(
     client: AuthenticatedClient,
     account: str | Unset = UNSET,
     conversion: str | Unset = UNSET,
-    group_by: GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy
-    | Unset = GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy.ACCOUNT,
+    groupBy: GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy | Unset = UNSET,
+    group_by: GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy | Unset = UNSET,
 ) -> Any | V1Error | None:
     """Get holdings
 
@@ -292,9 +304,10 @@ async def asyncio(
         conversion (str | Unset): Convert money columns to this currency, or `units` for each
             group's held currency (default: the operating currency when the ledger declares exactly
             one) Example: USD.
-        group_by (GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy | Unset): Group lots by account
-            or by commodity Default: GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy.ACCOUNT. Example:
-            commodity.
+        groupBy (GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy | Unset): Group lots by account or
+            by commodity Example: commodity.
+        group_by (GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy | Unset): Alias of groupBy, as
+            the read echoes it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -311,6 +324,7 @@ async def asyncio(
             client=client,
             account=account,
             conversion=conversion,
+            groupBy=groupBy,
             group_by=group_by,
         )
     ).parsed

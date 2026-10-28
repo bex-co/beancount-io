@@ -299,6 +299,35 @@ describe("LedgerFinanceQueryResolver", () => {
       expect(mockFinanceService.getHoldings).not.toHaveBeenCalled();
     });
 
+    // w23/144: the read echoes group_by, so GraphQL accepts it as an
+    // alias of groupBy, like the REST/MCP seam.
+    it("should fold the echoed group_by spelling", async () => {
+      mockFinanceService.getHoldings.mockResolvedValue(holdings);
+
+      await resolver.getLedgerHoldings(
+        ledgerId,
+        { group_by: "commodity" },
+        mockContext,
+      );
+
+      expect(mockFinanceService.getHoldings).toHaveBeenCalledWith(
+        expect.objectContaining({ groupBy: "commodity" }),
+      );
+    });
+
+    it("should refuse a split grouping pair", async () => {
+      await expect(
+        resolver.getLedgerHoldings(
+          ledgerId,
+          { groupBy: "account", group_by: "commodity" },
+          mockContext,
+        ),
+      ).rejects.toThrow(
+        "Pass group_by or groupBy, not two different groupings.",
+      );
+      expect(mockFinanceService.getHoldings).not.toHaveBeenCalled();
+    });
+
     it("should propagate errors thrown by the service", async () => {
       mockFinanceService.getHoldings.mockRejectedValue(
         new InternalServerError("get ledger holdings"),

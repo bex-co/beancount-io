@@ -1,6 +1,7 @@
 import { BadUserInputError } from "@/shared/errors";
 import {
   resolveFilterAccount,
+  resolveGroupBy,
   resolveWithChildren,
 } from "../query-param-alias";
 
@@ -67,5 +68,33 @@ describe("resolveWithChildren", () => {
     expect(() => resolveWithChildren({ primary: false, legacy: true })).toThrow(
       /with_children.*withChildren/,
     );
+  });
+});
+
+// w23/144: the holdings grouping twin — the read echoes group_by.
+describe("resolveGroupBy", () => {
+  it("accepts either spelling", () => {
+    expect(resolveGroupBy({ primary: "commodity" })).toBe("commodity");
+    expect(resolveGroupBy({ legacy: "commodity" })).toBe("commodity");
+  });
+
+  it("stays missing when both spellings are missing", () => {
+    expect(resolveGroupBy({})).toBeUndefined();
+    expect(resolveGroupBy({ primary: null, legacy: null })).toBeUndefined();
+  });
+
+  it("accepts both spellings when they agree", () => {
+    expect(
+      resolveGroupBy({ primary: "account", legacy: "account" }),
+    ).toBe("account");
+  });
+
+  it("refuses two different groupings instead of guessing", () => {
+    expect(() =>
+      resolveGroupBy({ primary: "commodity", legacy: "account" }),
+    ).toThrow(BadUserInputError);
+    expect(() =>
+      resolveGroupBy({ primary: "commodity", legacy: "account" }),
+    ).toThrow(/group_by.*groupBy.*two different groupings/);
   });
 });

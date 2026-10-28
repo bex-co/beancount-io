@@ -15100,13 +15100,26 @@
                 "account",
                 "commodity"
               ],
-              "default": "account",
               "description": "Group lots by account or by commodity",
               "example": "commodity"
             },
             "required": false,
             "description": "Group lots by account or by commodity",
             "name": "groupBy",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "account",
+                "commodity"
+              ],
+              "description": "Alias of groupBy, as the read echoes it."
+            },
+            "required": false,
+            "description": "Alias of groupBy, as the read echoes it.",
+            "name": "group_by",
             "in": "query"
           }
         ],
