@@ -27,7 +27,6 @@
 
 ## Inbox
 
-- [124](./124.md) — unquoted `FROM accounts` resolves table-first on MCP (12) vs column-first on stock (34); w23/116's Resolved 'stock is table-first' premise disproven (0.2.0 + master source, direct execution)
 - [125](./125.md) — `FROM <column>` fold gaps: `filename`/`lineno`/`meta` silently 0 (engine can't fold), `type`/`weight`/`other_accounts` + 5 more error where the engine folds or empties (pin covers 2 of 19 members)
 - [127](./127.md) — `SELECT * AS x` collapses star: 1 declared col vs 31 cells per row, text drops 30 values (stock ParseErrors)
 - [128](./128.md) — set equality constant-False on MCP (`tags = tags` → False; stock refuses) (it.3936)
@@ -52,3 +51,4 @@
 - [059](./blocked/059.md) — every product-created ledger ships `auto_accounts`, so a misspelt account is silently opened — **blocked:** owner picks drop-plugin (which also limits AI categorization to existing accounts) vs report-new-accounts
 - [022](./blocked/022.md) — report rustledger BQL gaps upstream (`cost(sum(position))`, `neg`/`filter_currency`, `meta('lineno')`, `AT value`, `BALANCES FROM`) — **blocked:** filing in an external tracker needs the user's approval
 - [026](./blocked/026.md) — streaming archive route for MCP OAuth clients over 8 MiB (option 1 from 023) — **blocked:** an ADR 0007 trust-boundary decision for the owner
+- [124](./blocked/124.md) — unquoted `FROM accounts` resolves table-first on MCP (12) vs column-first on stock (34) — **blocked:** owner picks ledger stock-parity (fold) vs table-first-everywhere (CLI w3/247 agreement)
