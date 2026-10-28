@@ -1763,6 +1763,50 @@ async function main(): Promise<void> {
     "covered grouping still answers through the guard",
   );
 
+  // Mixed-type comparison (w23/132): the raw engine filters everything out
+  // instead of coercing, while the typed form matches and stock refuses,
+  // so the query path refuses the mixed =/!=/IN forms — and same-typed
+  // comparisons still answer.
+  const rawMixedEq = await withLedger(FILES, "main.beancount", (ledger) =>
+    ledger.query("SELECT count(*) FROM postings WHERE date = '2024-01-15'"),
+  );
+  const rawTypedEq = await withLedger(FILES, "main.beancount", (ledger) =>
+    ledger.query("SELECT count(*) FROM postings WHERE date = 2024-01-15"),
+  );
+  assert(
+    JSON.stringify(rawMixedEq.rows) === "[[0]]" &&
+      JSON.stringify(rawTypedEq.rows) === "[[2]]" &&
+      !rawMixedEq.errors.some((e) => e.severity === "error"),
+    "raw engine still filters out mixed-type equality (the guard is load-bearing)",
+  );
+  for (const [query, marker] of [
+    ["SELECT count(*) FROM postings WHERE date = '2024-01-15'", "Mixed-type comparison"],
+    ["SELECT count(*) FROM postings WHERE number = '3000'", "Mixed-type comparison"],
+    ["SELECT count(*) FROM postings WHERE date IN ('2024-01-15')", "IN compares"],
+  ]) {
+    const guardedMixed = await queryLedgerFilesResult(
+      FILES,
+      "main.beancount",
+      query,
+    );
+    assert(
+      guardedMixed.rows.length === 0 &&
+        guardedMixed.errors.some(
+          (e) => e.severity === "error" && e.message.includes(marker),
+        ),
+      `the query path refuses ${query.slice(query.indexOf("WHERE"))}`,
+    );
+  }
+  const typedEq = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    "SELECT count(*) FROM postings WHERE number = 3000",
+  );
+  assert(
+    JSON.stringify(typedEq.rows) === `[{"count(*)":1}]`,
+    "same-typed numeric comparison still answers through the guard",
+  );
+
   const count = await countDirectives(
     "2024-01-01 open Assets:Cash USD\n2024-01-02 open Income:Z USD\n",
   );

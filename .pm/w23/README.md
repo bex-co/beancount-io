@@ -27,7 +27,6 @@
 
 ## Inbox
 
-- [132](./132.md) — mixed-type `=`/`!=` never coerces: `date`/`number` vs string silently filters everything out (it.4986)
 - [133](./133.md) — integer dead zone 2^53..i64::MAX, silent overflow NULL, bogus position-0 error past Decimal::MAX (it.5227-5235)
 - [134](./134.md) — structured `dtype` lies for all-NULL aliased columns via alias-name fallback (it.5371-5377)
 - [135](./135.md) — empty input masks unknown-function/column errors, fabricates `str` dtype (it.5710-5712)
