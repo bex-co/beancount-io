@@ -24,6 +24,10 @@ export type BalancePosting = {
   units?: { number: string; currency: string } | null;
   /** A per-unit price (`@`): the posting weighs units × price, in its currency. */
   price?: { number: string; currency: string } | null;
+  /** A cost spec (`{}`): the posting weighs units × cost, in its currency. */
+  cost?: { number: string; currency: string } | null;
+  /** A total price (`@@`): the posting weighs it at face value, in its currency. */
+  totalPrice?: { number: string; currency: string } | null;
 };
 
 export type BalanceFailure =
@@ -153,8 +157,22 @@ export function checkTransactionBalance(
     const { number, currency } = posting.units;
     const amount = decimal(number);
     const price = posting.price ? decimal(posting.price.number) : undefined;
-    if (!amount.isFinite() || (price !== undefined && !price.isFinite())) {
-      const bad = amount.isFinite() ? posting.price! : posting.units;
+    const cost = posting.cost ? decimal(posting.cost.number) : undefined;
+    const total =
+      posting.totalPrice ? decimal(posting.totalPrice.number) : undefined;
+    if (
+      !amount.isFinite() ||
+      (price !== undefined && !price.isFinite()) ||
+      (cost !== undefined && !cost.isFinite()) ||
+      (total !== undefined && !total.isFinite())
+    ) {
+      const bad = !amount.isFinite()
+        ? posting.units
+        : price !== undefined && !price.isFinite()
+          ? posting.price!
+          : cost !== undefined && !cost.isFinite()
+            ? posting.cost!
+            : posting.totalPrice!;
       return {
         ok: false,
         value: {
@@ -165,13 +183,28 @@ export function checkTransactionBalance(
       };
     }
     const places = impliedDecimals(number);
-    // A priced posting weighs units × price, in the price's currency, as
-    // Beancount balances it (w21/647); it was summed in its own currency.
-    const weightCurrency = posting.price ? posting.price.currency : currency;
-    const weight = price === undefined ? amount : amount.times(price);
-    const weightPlaces = posting.price
-      ? places + impliedDecimals(posting.price.number)
-      : places;
+    // Stock's get_weight precedence (w21/647 did price; w23/163 cost and
+    // total): a cost posting weighs units × cost in the cost's currency, a
+    // total-price posting weighs its face value, a priced posting units ×
+    // price. Cost wins over a co-present price, as Beancount balances it.
+    let weightCurrency = currency;
+    let weight = amount;
+    let weightPlaces = places;
+    if (posting.price && price !== undefined) {
+      weightCurrency = posting.price.currency;
+      weight = amount.times(price);
+      weightPlaces = places + impliedDecimals(posting.price.number);
+    }
+    if (posting.totalPrice && total !== undefined) {
+      weightCurrency = posting.totalPrice.currency;
+      weight = total;
+      weightPlaces = impliedDecimals(posting.totalPrice.number);
+    }
+    if (posting.cost && cost !== undefined) {
+      weightCurrency = posting.cost.currency;
+      weight = amount.times(cost);
+      weightPlaces = places + impliedDecimals(posting.cost.number);
+    }
     sums.set(
       weightCurrency,
       (sums.get(weightCurrency) ?? new BigNumber(0)).plus(weight),

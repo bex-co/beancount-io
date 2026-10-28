@@ -738,6 +738,69 @@ describe("bulk entries dry run", () => {
     );
   });
 
+  // w23/163: a cost posting weighs units × cost — the pre-check used to sum
+  // raw units and refuse stock-valid cost transactions as UNBALANCED.
+  it("balances a cost posting by its weight", async () => {
+    const costed = (cost: string) => ({
+      type: "transaction",
+      item: {
+        date: "2026-08-30",
+        flag: "*",
+        narration: "cost",
+        postings: [
+          {
+            account: "Assets:Cash",
+            units: { number: "-20", currency: "USD" },
+          },
+          {
+            account: "Expenses:Food",
+            units: { number: "10", currency: "USD" },
+            cost: { number: cost, currency: "USD" },
+          },
+        ],
+      },
+    });
+    expect(
+      (await post({ entries: [costed("2")], dryRun: true })).status,
+    ).toBe(200);
+    const refused = await post({ entries: [costed("3")], dryRun: true });
+    expect(refused.status).toBe(400);
+    expect(((await refused.json()) as { code: string }).code).toBe(
+      "UNBALANCED",
+    );
+  });
+
+  // w23/163: a total-price posting weighs its face value.
+  it("balances a total-price posting by its face value", async () => {
+    const totaled = (total: string) => ({
+      type: "transaction",
+      item: {
+        date: "2026-08-30",
+        flag: "*",
+        narration: "total",
+        postings: [
+          {
+            account: "Assets:Cash",
+            units: { number: "-20", currency: "USD" },
+          },
+          {
+            account: "Expenses:Food",
+            units: { number: "10", currency: "USD" },
+            totalPrice: { number: total, currency: "USD" },
+          },
+        ],
+      },
+    });
+    expect(
+      (await post({ entries: [totaled("20")], dryRun: true })).status,
+    ).toBe(200);
+    const refused = await post({ entries: [totaled("21")], dryRun: true });
+    expect(refused.status).toBe(400);
+    expect(((await refused.json()) as { code: string }).code).toBe(
+      "UNBALANCED",
+    );
+  });
+
   it("checks against an empty file when the routed target does not exist yet", async () => {
     const response = await post({
       entries: [{ ...txn("2.00"), filename: "txns/2026.bean" }],

@@ -6,6 +6,7 @@ import {
 import { entryInputToText } from "@/foundation/rustledger/entry-build";
 
 const usd = (number: string) => ({ number, currency: "USD" });
+const hool = (number: string) => ({ number, currency: "HOOL" });
 const posting = (account: string, number?: string) => ({
   account,
   ...(number === undefined ? {} : { units: usd(number) }),
@@ -131,6 +132,90 @@ describe("checkTransactionBalance", () => {
       checkTransactionBalance([exchange("1.10")[1]!, posting("Assets:Cash")])
         .ok,
     ).toBe(true);
+  });
+
+  // w23/163: a cost posting weighs units × cost in the cost's currency, as
+  // stock's get_weight balances it — the pre-check used to sum raw units.
+  it("weighs a cost posting as units × cost, in the cost's currency", () => {
+    const costed = (cost: string) => [
+      posting("Assets:Cash", "-20"),
+      {
+        account: "Expenses:Food",
+        units: usd("10"),
+        cost: usd(cost),
+      },
+    ];
+    expect(checkTransactionBalance(costed("2")).ok).toBe(true);
+    const check = checkTransactionBalance(costed("2.5"));
+    expect(check).toMatchObject({
+      ok: false,
+      value: {
+        kind: "unbalanced",
+        message: "Transaction does not balance: residual 5.0 USD",
+      },
+    });
+    expect(
+      checkTransactionBalance([costed("2")[1]!, posting("Assets:Cash")]).ok,
+    ).toBe(true);
+  });
+
+  // w23/163: a total-price posting weighs its face value — no multiplication,
+  // the total already is units × per-unit.
+  it("weighs a total-price posting at face value, in its currency", () => {
+    const totaled = (total: string) => [
+      posting("Assets:Cash", "-20"),
+      {
+        account: "Expenses:Food",
+        units: usd("10"),
+        totalPrice: usd(total),
+      },
+    ];
+    expect(checkTransactionBalance(totaled("20")).ok).toBe(true);
+    expect(checkTransactionBalance(totaled("20.5"))).toMatchObject({
+      ok: false,
+      value: {
+        kind: "unbalanced",
+        message: "Transaction does not balance: residual 0.5 USD",
+      },
+    });
+  });
+
+  // w23/163: cost wins over a co-present price, as stock's get_weight does —
+  // `{100 USD} @ 999 USD` against -1000 USD balances in stock.
+  it("weighs cost over price when a posting carries both", () => {
+    expect(
+      checkTransactionBalance([
+        posting("Assets:Cash", "-1000"),
+        {
+          account: "Assets:Stock",
+          units: hool("10"),
+          cost: usd("100"),
+          price: usd("999"),
+        },
+      ]).ok,
+    ).toBe(true);
+  });
+
+  // w23/163: tolerance stays units-keyed — stock's infer_tolerance_from_cost
+  // defaults to False, so a cost leg's decimals never widen the residual's
+  // tolerance. 10 HOOL {100.00 USD} against -999.999 USD refuses in stock.
+  it("infers tolerance from units, not cost, for a cost posting", () => {
+    expect(
+      checkTransactionBalance([
+        posting("Assets:Cash", "-999.999"),
+        {
+          account: "Assets:Stock",
+          units: hool("10"),
+          cost: usd("100.00"),
+        },
+      ]),
+    ).toMatchObject({
+      ok: false,
+      value: {
+        kind: "unbalanced",
+        message: "Transaction does not balance: residual 0.001 USD",
+      },
+    });
   });
 
   it("names a residual with its sign, as the engines do", () => {
