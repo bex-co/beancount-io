@@ -38,6 +38,7 @@ import {
   queryResultToText,
 } from "@/features/ledger/service/ledger-shell-mappers";
 import { stripBqlBlockComments } from "@/features/ledger/service/bql-comments";
+import { extractSelectAliases } from "@/features/ledger/service/bql-select-aliases";
 import { stripBqlStatementTerminator } from "@/features/ledger/service/bql-terminator";
 import { unquoteBqlFromTables } from "@/features/ledger/service/bql-from-quotes";
 import { normalizeBqlQueryForEngine } from "@/features/ledger/service/ledger-shell-service";
@@ -1974,6 +1975,38 @@ async function main(): Promise<void> {
       smallLimit.rows.length === 1,
     "small arithmetic and small LIMITs still answer through the pipeline",
   );
+
+  // Aliased all-NULL dtypes (w23/134): the name fallback reports the
+  // alias's lookalike type, so the shell attributes dtypes with the
+  // query's own SELECT aliases and reports `unknown` for an alias over
+  // another expression. Bare columns keep the name rule.
+  for (const [query, name, expected] of [
+    ["SELECT payee AS number FROM postings WHERE FALSE", "number", "unknown"],
+    ["SELECT cost_currency AS number FROM postings LIMIT 1", "number", "unknown"],
+    [
+      "SELECT upper(payee) AS number FROM postings WHERE FALSE",
+      "number",
+      "unknown",
+    ],
+    ["SELECT NULL AS number LIMIT 1", "number", "unknown"],
+    ["SELECT payee AS xyz FROM postings WHERE FALSE", "xyz", "unknown"],
+    ["SELECT number FROM postings WHERE FALSE", "number", "Decimal"],
+    ["SELECT payee AS payee FROM postings WHERE FALSE", "payee", "str"],
+  ]) {
+    const shell = queryResultToShellResult(
+      await queryLedgerFilesResult(
+        FILES,
+        "main.beancount",
+        normalizeBqlQueryForEngine(query),
+      ),
+      extractSelectAliases(query),
+    );
+    assert(
+      JSON.stringify(shell.table?.types) ===
+        JSON.stringify([{ name, dtype: expected }]),
+      `${query} reports dtype ${expected}`,
+    );
+  }
 
   const count = await countDirectives(
     "2024-01-01 open Assets:Cash USD\n2024-01-02 open Income:Z USD\n",

@@ -16,6 +16,7 @@ import {
   queryResultToText,
 } from "./ledger-shell-mappers";
 import { stripBqlBlockComments } from "./bql-comments";
+import { extractSelectAliases } from "./bql-select-aliases";
 import { foldBqlColumnFrom } from "./bql-from-fold";
 import { rescueInnerTableFrom } from "./bql-from-inner-tables";
 import { routeIntegerLiterals } from "./bql-int-literals";
@@ -125,7 +126,7 @@ export class LedgerShellService implements ILedgerShellService {
       normalizeBqlQueryForEngine(query),
     );
     assertQuerySucceeded(result);
-    return queryResultToShellResult(result);
+    return queryResultToShellResult(result, extractSelectAliases(query));
   }
 
   async queryShellText(params: {
@@ -141,7 +142,10 @@ export class LedgerShellService implements ILedgerShellService {
       normalizeBqlQueryForEngine(query),
     );
     assertQuerySucceeded(result);
-    return { text: queryResultToText(result), rowCount: result.rows.length };
+    return {
+      text: queryResultToText(result, extractSelectAliases(query)),
+      rowCount: result.rows.length,
+    };
   }
 }
 

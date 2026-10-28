@@ -27,7 +27,6 @@
 
 ## Inbox
 
-- [134](./134.md) — structured `dtype` lies for all-NULL aliased columns via alias-name fallback (it.5371-5377)
 - [135](./135.md) — empty input masks unknown-function/column errors, fabricates `str` dtype (it.5710-5712)
 - [136](./136.md) — computed-value dtypes flip to `str` on empty input (it.5722-5725)
 - [137](./137.md) — ledger `permissions` ignore credential scopes; `FORBIDDEN` hints point at the lying field (it.6059-6061)

@@ -73,12 +73,17 @@ function unitsToCurrencyMap(units: AmountValue[]): CurrencyMap {
  * Beanquery-style dtype for a column. rustledger does not expose cursor schema,
  * so use the full non-null column plus the canonical BQL column name. Looking at
  * every row avoids first-row null mistakes; the name fallback preserves types
- * for empty result sets on the standard entries schema.
+ * for empty result sets on the standard entries schema — except when the name
+ * is an alias for another expression (w23/134), which reports `unknown`
+ * instead of the lookalike's type.
  */
+const EMPTY_ALIASES: ReadonlyMap<string, string> = new Map();
+
 function classifyColumnDtype(
   rows: CellValue[][],
   columnIndex: number,
   columnName = "",
+  aliases: ReadonlyMap<string, string> = EMPTY_ALIASES,
 ): string {
   const values = rows
     .map((row) => row[columnIndex])
@@ -86,7 +91,11 @@ function classifyColumnDtype(
   const sample = values[0];
   const normalizedName = columnName.toLowerCase();
 
-  if (sample === undefined) return dtypeFromColumnName(normalizedName);
+  if (sample === undefined) {
+    const root = aliases.get(normalizedName);
+    if (root !== undefined && root !== normalizedName) return "unknown";
+    return dtypeFromColumnName(normalizedName);
+  }
   if (typeof sample === "string") {
     if (
       values.every((value) => typeof value === "string" && isIsoDate(value))
@@ -207,13 +216,14 @@ function toShellCell(cell: CellValue): ShellCell {
  */
 export function queryResultToShellResult(
   result: QueryResult,
+  aliases: ReadonlyMap<string, string> = EMPTY_ALIASES,
 ): ShellQueryResult {
   return {
     resultType: "table",
     table: {
       types: result.columns.map((name, index) => ({
         name,
-        dtype: classifyColumnDtype(result.rows, index, name),
+        dtype: classifyColumnDtype(result.rows, index, name, aliases),
       })),
       rows: result.rows.map((row) => row.map((cell) => toShellCell(cell))),
       t: "table",
@@ -284,11 +294,14 @@ function center(value: string, width: number): string {
  * width, numeric columns are right-aligned, booleans are upper-case, and set
  * values use the renderer's two-space separator.
  */
-export function queryResultToText(result: QueryResult): string {
+export function queryResultToText(
+  result: QueryResult,
+  aliases: ReadonlyMap<string, string> = EMPTY_ALIASES,
+): string {
   if (result.columns.length === 0 || result.rows.length === 0) return "";
 
   const columns = result.columns.map((name, index) => {
-    const dtype = classifyColumnDtype(result.rows, index, name);
+    const dtype = classifyColumnDtype(result.rows, index, name, aliases);
     const rawValues = result.rows.map((row) => formatTextCell(row[index]));
     const values =
       dtype === "Decimal" ? alignDecimalColumn(rawValues) : rawValues;
