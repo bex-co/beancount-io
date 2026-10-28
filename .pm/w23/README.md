@@ -48,6 +48,7 @@
 - [151](./151.md) — BQL refuses post-`;` tails stock drops (strictness is right; trailing `--` comments swept up)
 - [152](./152.md) — same-type composite equality escapes 128's guard on bare `weight`/`amount`/`other_accounts`/`accounts` (constant-False; stock refuses)
 - [153](./153.md) — ledger projects numeric `id`s where stock projects hash hex strings (silent value + type change)
+- [154](./154.md) — BQL `+` refuses string concatenation stock performs (`'a'+'b'` → `ab`)
 - [082](./blocked/082.md) — `createPullRequest` fails on production: Gitea 500 while creating the `pr-patch-*` branch, on MCP and REST alike — **blocked:** needs the Gitea server-log cause for one failing branch create (owner), then a production rerun
 - [080](./blocked/080.md) — `/api-gateway/mcp` accepts any `Origin` (the MCP transport spec says a bad `Origin` MUST get 403); owner picks validate vs document — **blocked:** owner picks 403-on-foreign-Origin vs documented non-validation
 - [075](./blocked/075.md) — typed BQL results return NULL as `""` (undocumented), so a missing payee or price reads as an empty string — **blocked:** documented as `""` (option a shipped); owner picks `null` on REST/MCP, `null` everywhere, or keeping `""`
