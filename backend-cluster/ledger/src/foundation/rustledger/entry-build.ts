@@ -5,6 +5,7 @@ import type {
   LedgerEntryInput,
 } from "@/foundation/ledger-api-types/ledger-entry-input";
 import { directiveToText } from "@/foundation/rustledger/journal-serialize";
+import { BadUserInputError } from "@/shared/errors";
 
 /**
  * Render a structured `LedgerEntryInput` to the exact beancount text the Python
@@ -132,6 +133,25 @@ function toDirective(input: LedgerEntryInput): DirectiveJson {
   switch (input.type) {
     case "transaction": {
       const { entry } = input;
+      // Posting tags/links have no beancount slot: the grammar puts
+      // `#tag`/`^link` on transaction headers (and note/document lines),
+      // never on postings, so rendering them there commits stock-invalid
+      // bytes the backend checker waves through (w23/171). Refuse them
+      // here, at the trust boundary every typed path funnels through —
+      // backend-v2 refuses earlier with the same message, on every
+      // surface at once. Empty lists are a no-op and pass.
+      entry.postings.forEach((posting, postingIndex) => {
+        if (posting.tags !== undefined && posting.tags.length > 0) {
+          throw new BadUserInputError(
+            `postings[${postingIndex}].tags refused; beancount postings have no tag slot, put tags on the transaction instead`,
+          );
+        }
+        if (posting.links !== undefined && posting.links.length > 0) {
+          throw new BadUserInputError(
+            `postings[${postingIndex}].links refused; beancount postings have no link slot, put links on the transaction instead`,
+          );
+        }
+      });
       return {
         type: "transaction",
         date: entry.date,
@@ -179,17 +199,10 @@ function toDirective(input: LedgerEntryInput): DirectiveJson {
               }
             : {}),
           ...(posting.flag ? { flag: posting.flag } : {}),
-          // Posting tags/links have no engine representation (PostingJson
-          // carries neither); they ride a render-side extension the
-          // sibling renderer reads back (w23/m6/t003). The built
-          // directive is render-intermediate only — projections
-          // bean-check the appended text, so the engine never sees it.
-          ...(posting.tags ? { tags: [...posting.tags] } : {}),
-          ...(posting.links ? { links: [...posting.links] } : {}),
           ...(posting.meta ? { meta: { ...posting.meta } } : {}),
           // Total price has no engine representation (price is a bare
-          // per-unit AmountValue); it rides the same render-side extension
-          // as posting tags (w23/m6/t010).
+          // per-unit AmountValue); it rides a render-side extension the
+          // sibling renderer reads back (w23/m6/t010).
           ...(posting.totalPrice
             ? {
                 totalPrice: {

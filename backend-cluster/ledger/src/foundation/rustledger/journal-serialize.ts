@@ -757,18 +757,13 @@ function renderTransaction(
   const widthPosition = Math.max(1, width);
 
   directive.postings.forEach((posting, index) => {
-    // Posting tags/links ride a render-side extension: PostingJson carries
-    // neither, so toDirective spreads them onto the built object for the
-    // renderer alone (w23/m6/t003). Sorted like the transaction header.
-    const ext = posting as PostingJson & { tags?: string[]; links?: string[] };
-    const extras = [
-      ...[...(ext.tags ?? [])].sort().map((tag) => `#${tag}`),
-      ...[...(ext.links ?? [])].sort().map((link) => `^${link}`),
-    ];
+    // No tags/links suffix: beancount postings have no tag slot, and the
+    // render-side extension that faked one committed stock-invalid bytes
+    // (w23/171) — typed inputs refuse them in toDirective instead.
     const line = `${INDENT}${padEnd(accounts[index], widthAccount)}  ${padEnd(
       aligned[index],
       widthPosition,
-    )}${extras.length > 0 ? ` ${extras.join(" ")}` : ""}`;
+    )}`;
     out += `${line.replace(/\s+$/, "")}\n`;
     out += renderMetadata(posting.meta, "    ", options);
   });

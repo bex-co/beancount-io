@@ -14,10 +14,10 @@ export const POSTING_TOTAL_PRICE_DESCRIPTION =
   "Total price (`@@`); exclusive with the per-unit price";
 
 export const POSTING_TAGS_DESCRIPTION =
-  "Posting tags (`#tag`), sorted onto the posting line";
+  "Refused: beancount postings have no tag slot; put tags on the transaction instead";
 
 export const POSTING_LINKS_DESCRIPTION =
-  "Posting links (`^link`), sorted onto the posting line";
+  "Refused: beancount postings have no link slot; put links on the transaction instead";
 
 export const POSTING_META_DESCRIPTION =
   "Posting metadata, written beneath the posting";

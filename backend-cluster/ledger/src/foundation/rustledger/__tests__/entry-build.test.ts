@@ -548,8 +548,61 @@ describe("entryInputToText — Fava-exact serialization parity", () => {
     expect(out).toContain('{100 USD, "a\\"b\\\\c"}');
   });
 
-  // w23/m6/t003: posting tags/links sort onto the posting line like the header.
-  it("renders posting tags and links sorted on the posting line", () => {
+  // w23/171: posting tags/links have no beancount slot — the m6 suffix
+  // rendered stock-invalid bytes the checker waved through, so typed
+  // inputs refuse them instead of rendering.
+  it.each([
+    ["tags", { tags: ["ab"] }],
+    ["links", { links: ["l1"] }],
+  ])("refuses posting %s", (_name, extra) => {
+    expect(() =>
+      entryInputToText({
+        type: "transaction",
+        entry: {
+          date: "2024-01-15",
+          flag: "*",
+          postings: [
+            {
+              units: { number: "10", currency: "USD" },
+              account: "Expenses:Food",
+              ...extra,
+            },
+            {
+              units: { number: "-10", currency: "USD" },
+              account: "Assets:Cash",
+            },
+          ],
+        },
+      }),
+    ).toThrow(/postings\[0\]\.(tags|links) refused/);
+  });
+
+  it("points refused posting tags at the transaction", () => {
+    expect(() =>
+      entryInputToText({
+        type: "transaction",
+        entry: {
+          date: "2024-01-15",
+          flag: "*",
+          postings: [
+            {
+              units: { number: "10", currency: "USD" },
+              account: "Expenses:Food",
+              tags: ["ab"],
+            },
+            {
+              units: { number: "-10", currency: "USD" },
+              account: "Assets:Cash",
+            },
+          ],
+        },
+      }),
+    ).toThrow(
+      "postings[0].tags refused; beancount postings have no tag slot, put tags on the transaction instead",
+    );
+  });
+
+  it("passes empty posting tags/links as a no-op", () => {
     const out = entryInputToText({
       type: "transaction",
       entry: {
@@ -559,8 +612,8 @@ describe("entryInputToText — Fava-exact serialization parity", () => {
           {
             units: { number: "10", currency: "USD" },
             account: "Expenses:Food",
-            tags: ["zb", "ab"],
-            links: ["l1"],
+            tags: [],
+            links: [],
           },
           {
             units: { number: "-10", currency: "USD" },
@@ -569,7 +622,8 @@ describe("entryInputToText — Fava-exact serialization parity", () => {
         ],
       },
     });
-    expect(out).toContain("10 USD #ab #zb ^l1");
+    expect(out).not.toContain("#");
+    expect(out).not.toContain("^");
   });
 
   // w23/m6/t003: posting metadata renders beneath its posting.

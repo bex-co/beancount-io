@@ -1148,8 +1148,10 @@ describe.each(["rest", "gql", "mcp"])("elided postings via %s", (surface) => {
 });
 
 describe.each(["rest", "gql", "mcp"])("posting meta via %s", (surface) => {
-  // w23/m6/t003: posting metadata, tags, and links commit on the wire row.
-  it("writes a posting with meta, tags, and links", async () => {
+  // w23/m6/t003: posting metadata commits on the wire row. Tags and
+  // links committed here too until w23/171 proved the render
+  // stock-invalid — now they refuse before committing (next tests).
+  it("writes a posting with meta", async () => {
     const batch = [
       {
         type: "transaction",
@@ -1161,8 +1163,6 @@ describe.each(["rest", "gql", "mcp"])("posting meta via %s", (surface) => {
             {
               account: "Expenses:Food",
               units: { number: "10", currency: "USD" },
-              tags: ["receipt"],
-              links: ["order-1"],
               meta: { receipt: "r-1" },
             },
             {
@@ -1182,16 +1182,19 @@ describe.each(["rest", "gql", "mcp"])("posting meta via %s", (surface) => {
         item: { postings: Record<string, unknown>[] };
       };
       expect(committed.item.postings[0]).toMatchObject({
-        tags: ["receipt"],
-        links: ["order-1"],
         meta: { receipt: "r-1" },
       });
+      expect(committed.item.postings[0]?.tags).toBeUndefined();
+      expect(committed.item.postings[0]?.links).toBeUndefined();
     } finally {
       await f.close();
     }
   });
 
-  it("writes a posting with tags alone", async () => {
+  it.each([
+    ["tags", { tags: ["receipt"] }, "no tag slot"],
+    ["links", { links: ["order-1"] }, "no link slot"],
+  ])("refuses posting %s before committing", async (_name, extra, slot) => {
     const batch = [
       {
         type: "transaction",
@@ -1203,7 +1206,7 @@ describe.each(["rest", "gql", "mcp"])("posting meta via %s", (surface) => {
             {
               account: "Expenses:Food",
               units: { number: "10", currency: "USD" },
-              tags: ["receipt"],
+              ...extra,
             },
             {
               account: "Assets:Cash",
@@ -1216,16 +1219,13 @@ describe.each(["rest", "gql", "mcp"])("posting meta via %s", (surface) => {
     const f = await fixture();
     try {
       const result = await f.call(surface, batch);
-      expect(result.success).toBe(true);
-      expect(f.committed).toHaveLength(1);
-      const committed = f.committed[0] as {
-        item: { postings: Record<string, unknown>[] };
-      };
-      expect(committed.item.postings[0]).toMatchObject({
-        tags: ["receipt"],
-      });
-      expect(committed.item.postings[0]?.links).toBeUndefined();
-      expect(committed.item.postings[0]?.meta).toBeUndefined();
+      expect(result.success).toBe(false);
+      expect(f.write).not.toHaveBeenCalled();
+      expect(f.committed).toEqual([]);
+      const text = JSON.stringify("errors" in result ? result.errors : result);
+      expect(text).toContain("postings[0]");
+      expect(text).toContain("refused");
+      expect(text).toContain(slot as string);
     } finally {
       await f.close();
     }

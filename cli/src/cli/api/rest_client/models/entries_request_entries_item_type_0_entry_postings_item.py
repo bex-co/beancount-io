@@ -40,8 +40,10 @@ class EntriesRequestEntriesItemType0EntryPostingsItem:
         cost (EntriesRequestEntriesItemType0EntryPostingsItemCostType0 | None | Unset): Lot basis `{number currency [,
             date] [, label]}`; needs units like price
         flag (None | str | Unset):
-        tags (list[str] | None | Unset): Posting tags (`#tag`), sorted onto the posting line
-        links (list[str] | None | Unset): Posting links (`^link`), sorted onto the posting line
+        tags (list[str] | None | Unset): Refused: beancount postings have no tag slot; put tags on the transaction
+            instead
+        links (list[str] | None | Unset): Refused: beancount postings have no link slot; put links on the transaction
+            instead
         meta (EntriesRequestEntriesItemType0EntryPostingsItemMetaType0 | None | Unset): Posting metadata, written
             beneath the posting
     """

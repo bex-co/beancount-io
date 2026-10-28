@@ -532,6 +532,21 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
             `entry ${index}: postings[${postingIndex}].totalPrice excludes price; a posting can't carry both`,
           );
         }
+        // Posting tags/links have no beancount slot — rendering them
+        // commits stock-invalid bytes the checker waves through — so
+        // refuse them here, on every surface at once, like the price
+        // checks above (w23/171). The ledger refuses again at the trust
+        // boundary. Empty lists are a no-op and pass.
+        if (posting.tags !== undefined && posting.tags.length > 0) {
+          throw new BadUserInputError(
+            `entry ${index}: postings[${postingIndex}].tags refused; beancount postings have no tag slot, put tags on the transaction instead`,
+          );
+        }
+        if (posting.links !== undefined && posting.links.length > 0) {
+          throw new BadUserInputError(
+            `entry ${index}: postings[${postingIndex}].links refused; beancount postings have no link slot, put links on the transaction instead`,
+          );
+        }
       });
     });
     // A malformed amount was a 500 in the ledger, reported as "service

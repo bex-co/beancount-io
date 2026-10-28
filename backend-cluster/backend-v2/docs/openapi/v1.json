@@ -542,7 +542,7 @@
                                 "items": {
                                   "type": "string"
                                 },
-                                "description": "Posting tags (`#tag`), sorted onto the posting line"
+                                "description": "Refused: beancount postings have no tag slot; put tags on the transaction instead"
                               },
                               "links": {
                                 "type": "array",
@@ -550,7 +550,7 @@
                                 "items": {
                                   "type": "string"
                                 },
-                                "description": "Posting links (`^link`), sorted onto the posting line"
+                                "description": "Refused: beancount postings have no link slot; put links on the transaction instead"
                               },
                               "meta": {
                                 "type": "object",
