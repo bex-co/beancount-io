@@ -154,15 +154,16 @@ def sync_detailed(
         account (str | Unset):
         filter_ (str | Unset):
         time (str | Unset): Fava time expression: a day (2026-09-05), month (2026-09), year, or
-            range. It bounds transactions only — undated structural directives such as `open` and
-            `close` carry the epoch date and appear in every window, so a single-day journal still
-            lists them. Use directiveTypes to ask for transactions alone.
+            range. The window clamps by Fava's TimeFilter: pre-window `open` directives are preserved
+            as report context (with their real dates) and appear in every window, and `total` counts
+            them — so a single-day journal still lists them. Use directiveTypes to ask for
+            transactions alone.
         limit (int | Unset):
         offset (int | None | Unset):
         directive_types (str | Unset): JSON-encoded directive kinds to include, e.g.
             ["Transaction"]: any of Transaction, Balance, Commodity, Close, Custom, Document, Event,
-            Note, Open, Pad, Price, in any case. Omitted, every kind is returned — including the
-            epoch-dated `open`/`close` directives that fall inside any time window.
+            Note, Open, Pad, Price, in any case. Omitted, every kind is returned — including pre-
+            window `open` directives, which the time clamp preserves as context in every window.
         transaction_subtypes (str | Unset): JSON-encoded transaction flag filter, e.g.
             ["cleared"]: narrows transactions only — other directive families pass through. Combine
             with directiveTypes to restrict the families returned.
@@ -227,15 +228,16 @@ def sync(
         account (str | Unset):
         filter_ (str | Unset):
         time (str | Unset): Fava time expression: a day (2026-09-05), month (2026-09), year, or
-            range. It bounds transactions only — undated structural directives such as `open` and
-            `close` carry the epoch date and appear in every window, so a single-day journal still
-            lists them. Use directiveTypes to ask for transactions alone.
+            range. The window clamps by Fava's TimeFilter: pre-window `open` directives are preserved
+            as report context (with their real dates) and appear in every window, and `total` counts
+            them — so a single-day journal still lists them. Use directiveTypes to ask for
+            transactions alone.
         limit (int | Unset):
         offset (int | None | Unset):
         directive_types (str | Unset): JSON-encoded directive kinds to include, e.g.
             ["Transaction"]: any of Transaction, Balance, Commodity, Close, Custom, Document, Event,
-            Note, Open, Pad, Price, in any case. Omitted, every kind is returned — including the
-            epoch-dated `open`/`close` directives that fall inside any time window.
+            Note, Open, Pad, Price, in any case. Omitted, every kind is returned — including pre-
+            window `open` directives, which the time clamp preserves as context in every window.
         transaction_subtypes (str | Unset): JSON-encoded transaction flag filter, e.g.
             ["cleared"]: narrows transactions only — other directive families pass through. Combine
             with directiveTypes to restrict the families returned.
@@ -295,15 +297,16 @@ async def asyncio_detailed(
         account (str | Unset):
         filter_ (str | Unset):
         time (str | Unset): Fava time expression: a day (2026-09-05), month (2026-09), year, or
-            range. It bounds transactions only — undated structural directives such as `open` and
-            `close` carry the epoch date and appear in every window, so a single-day journal still
-            lists them. Use directiveTypes to ask for transactions alone.
+            range. The window clamps by Fava's TimeFilter: pre-window `open` directives are preserved
+            as report context (with their real dates) and appear in every window, and `total` counts
+            them — so a single-day journal still lists them. Use directiveTypes to ask for
+            transactions alone.
         limit (int | Unset):
         offset (int | None | Unset):
         directive_types (str | Unset): JSON-encoded directive kinds to include, e.g.
             ["Transaction"]: any of Transaction, Balance, Commodity, Close, Custom, Document, Event,
-            Note, Open, Pad, Price, in any case. Omitted, every kind is returned — including the
-            epoch-dated `open`/`close` directives that fall inside any time window.
+            Note, Open, Pad, Price, in any case. Omitted, every kind is returned — including pre-
+            window `open` directives, which the time clamp preserves as context in every window.
         transaction_subtypes (str | Unset): JSON-encoded transaction flag filter, e.g.
             ["cleared"]: narrows transactions only — other directive families pass through. Combine
             with directiveTypes to restrict the families returned.
@@ -366,15 +369,16 @@ async def asyncio(
         account (str | Unset):
         filter_ (str | Unset):
         time (str | Unset): Fava time expression: a day (2026-09-05), month (2026-09), year, or
-            range. It bounds transactions only — undated structural directives such as `open` and
-            `close` carry the epoch date and appear in every window, so a single-day journal still
-            lists them. Use directiveTypes to ask for transactions alone.
+            range. The window clamps by Fava's TimeFilter: pre-window `open` directives are preserved
+            as report context (with their real dates) and appear in every window, and `total` counts
+            them — so a single-day journal still lists them. Use directiveTypes to ask for
+            transactions alone.
         limit (int | Unset):
         offset (int | None | Unset):
         directive_types (str | Unset): JSON-encoded directive kinds to include, e.g.
             ["Transaction"]: any of Transaction, Balance, Commodity, Close, Custom, Document, Event,
-            Note, Open, Pad, Price, in any case. Omitted, every kind is returned — including the
-            epoch-dated `open`/`close` directives that fall inside any time window.
+            Note, Open, Pad, Price, in any case. Omitted, every kind is returned — including pre-
+            window `open` directives, which the time clamp preserves as context in every window.
         transaction_subtypes (str | Unset): JSON-encoded transaction flag filter, e.g.
             ["cleared"]: narrows transactions only — other directive families pass through. Combine
             with directiveTypes to restrict the families returned.

@@ -37,7 +37,7 @@
 - [x] [155](./done/155.md) — BQL `str()` refuses composite inputs stock stringifies (position, inventory, set)
 - [x] [156](./done/156.md) — report `conversion` silently ignores unresolvable targets (`BOGUS`/unpriced → USD figures, no error)
 - [x] [157](./done/157.md) — double-quoted identifiers silently become string literals outside FROM (`"account"` → `account`)
-- [158](./158.md) — journal `time` passes all Opens through regardless of month (`2026-08` → 9 rows + 12 January Opens)
+- [158](./blocked/158.md) — journal `time` passes all Opens through regardless of month (`2026-08` → 9 rows + 12 January Opens) — **blocked:** open-preservation documented on all surfaces; owner picks Fava-divergent exclusion or documented parity
 - [159](./159.md) — report `interval` ignored on four surfaces, unvalidated on the fifth (`month`≡default, `BOGUS`≡`month`)
 - [160](./160.md) — decimal literals past Decimal precision silently round to fit (`...334.9`→MAX; stock exact)
 - [161](./161.md) — `allowInvalid:true` suppresses error detection, not just refusal (`errorsAfter: 0` for invalid content)

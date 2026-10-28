@@ -8821,10 +8821,10 @@
           {
             "schema": {
               "type": "string",
-              "description": "Fava time expression: a day (2026-09-05), month (2026-09), year, or range. It bounds transactions only — undated structural directives such as `open` and `close` carry the epoch date and appear in every window, so a single-day journal still lists them. Use directiveTypes to ask for transactions alone."
+              "description": "Fava time expression: a day (2026-09-05), month (2026-09), year, or range. The window clamps by Fava's TimeFilter: pre-window `open` directives are preserved as report context (with their real dates) and appear in every window, and `total` counts them — so a single-day journal still lists them. Use directiveTypes to ask for transactions alone."
             },
             "required": false,
-            "description": "Fava time expression: a day (2026-09-05), month (2026-09), year, or range. It bounds transactions only — undated structural directives such as `open` and `close` carry the epoch date and appear in every window, so a single-day journal still lists them. Use directiveTypes to ask for transactions alone.",
+            "description": "Fava time expression: a day (2026-09-05), month (2026-09), year, or range. The window clamps by Fava's TimeFilter: pre-window `open` directives are preserved as report context (with their real dates) and appear in every window, and `total` counts them — so a single-day journal still lists them. Use directiveTypes to ask for transactions alone.",
             "name": "time",
             "in": "query"
           },
@@ -8851,10 +8851,10 @@
           {
             "schema": {
               "type": "string",
-              "description": "JSON-encoded directive kinds to include, e.g. [\"Transaction\"]: any of Transaction, Balance, Commodity, Close, Custom, Document, Event, Note, Open, Pad, Price, in any case. Omitted, every kind is returned — including the epoch-dated `open`/`close` directives that fall inside any time window."
+              "description": "JSON-encoded directive kinds to include, e.g. [\"Transaction\"]: any of Transaction, Balance, Commodity, Close, Custom, Document, Event, Note, Open, Pad, Price, in any case. Omitted, every kind is returned — including pre-window `open` directives, which the time clamp preserves as context in every window."
             },
             "required": false,
-            "description": "JSON-encoded directive kinds to include, e.g. [\"Transaction\"]: any of Transaction, Balance, Commodity, Close, Custom, Document, Event, Note, Open, Pad, Price, in any case. Omitted, every kind is returned — including the epoch-dated `open`/`close` directives that fall inside any time window.",
+            "description": "JSON-encoded directive kinds to include, e.g. [\"Transaction\"]: any of Transaction, Balance, Commodity, Close, Custom, Document, Event, Note, Open, Pad, Price, in any case. Omitted, every kind is returned — including pre-window `open` directives, which the time clamp preserves as context in every window.",
             "name": "directiveTypes",
             "in": "query"
           },
@@ -9052,10 +9052,10 @@
           {
             "schema": {
               "type": "string",
-              "description": "Fava time expression: a day (2026-09-05), month (2026-09), year, or range. It bounds transactions only — undated structural directives such as `open` and `close` carry the epoch date and appear in every window, so a single-day journal still lists them. Use directiveTypes to ask for transactions alone."
+              "description": "Fava time expression: a day (2026-09-05), month (2026-09), year, or range. The window clamps by Fava's TimeFilter: pre-window `open` directives are preserved as report context (with their real dates) and appear in every window, and `total` counts them — so a single-day journal still lists them. Use directiveTypes to ask for transactions alone."
             },
             "required": false,
-            "description": "Fava time expression: a day (2026-09-05), month (2026-09), year, or range. It bounds transactions only — undated structural directives such as `open` and `close` carry the epoch date and appear in every window, so a single-day journal still lists them. Use directiveTypes to ask for transactions alone.",
+            "description": "Fava time expression: a day (2026-09-05), month (2026-09), year, or range. The window clamps by Fava's TimeFilter: pre-window `open` directives are preserved as report context (with their real dates) and appear in every window, and `total` counts them — so a single-day journal still lists them. Use directiveTypes to ask for transactions alone.",
             "name": "time",
             "in": "query"
           },
@@ -9245,10 +9245,10 @@
           {
             "schema": {
               "type": "string",
-              "description": "Fava time expression: a day (2026-09-05), month (2026-09), year, or range. It bounds transactions only — undated structural directives such as `open` and `close` carry the epoch date and appear in every window, so a single-day journal still lists them. Use directiveTypes to ask for transactions alone."
+              "description": "Fava time expression: a day (2026-09-05), month (2026-09), year, or range. The window clamps by Fava's TimeFilter: pre-window `open` directives are preserved as report context (with their real dates) and appear in every window, and `total` counts them — so a single-day journal still lists them. Use directiveTypes to ask for transactions alone."
             },
             "required": false,
-            "description": "Fava time expression: a day (2026-09-05), month (2026-09), year, or range. It bounds transactions only — undated structural directives such as `open` and `close` carry the epoch date and appear in every window, so a single-day journal still lists them. Use directiveTypes to ask for transactions alone.",
+            "description": "Fava time expression: a day (2026-09-05), month (2026-09), year, or range. The window clamps by Fava's TimeFilter: pre-window `open` directives are preserved as report context (with their real dates) and appear in every window, and `total` counts them — so a single-day journal still lists them. Use directiveTypes to ask for transactions alone.",
             "name": "time",
             "in": "query"
           },
@@ -9327,10 +9327,10 @@
           {
             "schema": {
               "type": "string",
-              "description": "JSON-encoded directive kinds to include, e.g. [\"Transaction\"]: any of Transaction, Balance, Commodity, Close, Custom, Document, Event, Note, Open, Pad, Price, in any case. Omitted, every kind is returned — including the epoch-dated `open`/`close` directives that fall inside any time window."
+              "description": "JSON-encoded directive kinds to include, e.g. [\"Transaction\"]: any of Transaction, Balance, Commodity, Close, Custom, Document, Event, Note, Open, Pad, Price, in any case. Omitted, every kind is returned — including pre-window `open` directives, which the time clamp preserves as context in every window."
             },
             "required": false,
-            "description": "JSON-encoded directive kinds to include, e.g. [\"Transaction\"]: any of Transaction, Balance, Commodity, Close, Custom, Document, Event, Note, Open, Pad, Price, in any case. Omitted, every kind is returned — including the epoch-dated `open`/`close` directives that fall inside any time window.",
+            "description": "JSON-encoded directive kinds to include, e.g. [\"Transaction\"]: any of Transaction, Balance, Commodity, Close, Custom, Document, Event, Note, Open, Pad, Price, in any case. Omitted, every kind is returned — including pre-window `open` directives, which the time clamp preserves as context in every window.",
             "name": "directiveTypes",
             "in": "query"
           },

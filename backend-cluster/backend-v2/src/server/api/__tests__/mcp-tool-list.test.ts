@@ -272,9 +272,13 @@ describe("MCP tool list", () => {
     // 118,989 bytes. The source_account/total_price aliases plus their
     // descriptions are the guidance snake_case callers need to stop dying
     // in strict validation.
+    //
+    // 118 KB since w23/158 documented the time clamp's open preservation:
+    // measured at 119,811 bytes. The preserved-opens sentence is the
+    // guidance agents need to stop reading `total` as in-window rows.
     const { tools } = await listToolsRaw();
     const bytes = Buffer.byteLength(JSON.stringify(tools), "utf8");
-    expect(bytes).toBeLessThan(117 * 1024);
+    expect(bytes).toBeLessThan(118 * 1024);
   });
 
   // w23/m7/t006: every mutation preview flag is advertised where agents

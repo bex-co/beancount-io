@@ -74,7 +74,11 @@ class JournalQueryInput {
   })
   filter?: string;
 
-  @Field(() => String, { nullable: true })
+  @Field(() => String, {
+    nullable: true,
+    description:
+      "Fava time expression, e.g. 2026-08. Pre-window `open` directives are preserved as context and counted in total.",
+  })
   time?: string;
 
   @Field(() => Number, { nullable: true, defaultValue: 20 })
@@ -203,7 +207,11 @@ class AccountJournalQueryInput {
   })
   filter?: string;
 
-  @Field(() => String, { nullable: true })
+  @Field(() => String, {
+    nullable: true,
+    description:
+      "Fava time expression, e.g. 2026-08. Pre-window `open` directives are preserved as context and counted in total.",
+  })
   time?: string;
 
   @Field(() => Number, { nullable: true, defaultValue: 20 })

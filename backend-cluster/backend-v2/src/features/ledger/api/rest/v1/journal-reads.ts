@@ -22,26 +22,28 @@ const filters = z.object({
     .optional()
     .describe(
       "Fava time expression: a day (2026-09-05), month (2026-09), year, or range. " +
-        "It bounds transactions only — undated structural directives such as `open` " +
-        "and `close` carry the epoch date and appear in every window, so a single-day " +
-        "journal still lists them. Use directiveTypes to ask for transactions alone.",
+        "The window clamps by Fava's TimeFilter: pre-window `open` directives are " +
+        "preserved as report context (with their real dates) and appear in every " +
+        "window, and `total` counts them — so a single-day journal still lists " +
+        "them. Use directiveTypes to ask for transactions alone.",
     ),
 }).strict();
 
 /**
  * Which directive kinds to return.
  *
- * Documented rather than defaulted (w2/010): the epoch-dated `open` directives
- * a single-day `time` window returns surprised the field audit, but narrowing
- * the default here would change what REST, GraphQL, and MCP all return for an
- * unchanged request. The caller asks for what it wants; this says how.
+ * Documented rather than defaulted (w2/010): the pre-window `open`
+ * directives a single-day `time` window preserves surprised the field
+ * audit, but narrowing the default here would change what REST, GraphQL,
+ * and MCP all return for an unchanged request. The caller asks for what
+ * it wants; this says how.
  */
 const directiveTypesQuery = (schema: z.ZodTypeAny) =>
   schema.describe(
     'JSON-encoded directive kinds to include, e.g. ["Transaction"]: any of ' +
       `${JOURNAL_KINDS.directiveTypes.join(", ")}, in any case. ` +
-      "Omitted, every kind is returned — including the epoch-dated `open`/`close` " +
-      "directives that fall inside any time window.",
+      "Omitted, every kind is returned — including pre-window `open` " +
+      "directives, which the time clamp preserves as context in every window.",
   );
 /** A query parameter carrying a JSON document, decoded once then validated. */
 export function jsonQuery<Schema extends z.ZodTypeAny>(

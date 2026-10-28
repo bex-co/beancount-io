@@ -138,9 +138,10 @@ def sync_detailed(
         account (str | Unset):
         filter_ (str | Unset):
         time (str | Unset): Fava time expression: a day (2026-09-05), month (2026-09), year, or
-            range. It bounds transactions only — undated structural directives such as `open` and
-            `close` carry the epoch date and appear in every window, so a single-day journal still
-            lists them. Use directiveTypes to ask for transactions alone.
+            range. The window clamps by Fava's TimeFilter: pre-window `open` directives are preserved
+            as report context (with their real dates) and appear in every window, and `total` counts
+            them — so a single-day journal still lists them. Use directiveTypes to ask for
+            transactions alone.
         limit (int | Unset): Entries per page. Omitted, REST and GraphQL return every entry; MCP
             returns 200.
         offset (int | None | Unset):
@@ -191,9 +192,10 @@ def sync(
         account (str | Unset):
         filter_ (str | Unset):
         time (str | Unset): Fava time expression: a day (2026-09-05), month (2026-09), year, or
-            range. It bounds transactions only — undated structural directives such as `open` and
-            `close` carry the epoch date and appear in every window, so a single-day journal still
-            lists them. Use directiveTypes to ask for transactions alone.
+            range. The window clamps by Fava's TimeFilter: pre-window `open` directives are preserved
+            as report context (with their real dates) and appear in every window, and `total` counts
+            them — so a single-day journal still lists them. Use directiveTypes to ask for
+            transactions alone.
         limit (int | Unset): Entries per page. Omitted, REST and GraphQL return every entry; MCP
             returns 200.
         offset (int | None | Unset):
@@ -239,9 +241,10 @@ async def asyncio_detailed(
         account (str | Unset):
         filter_ (str | Unset):
         time (str | Unset): Fava time expression: a day (2026-09-05), month (2026-09), year, or
-            range. It bounds transactions only — undated structural directives such as `open` and
-            `close` carry the epoch date and appear in every window, so a single-day journal still
-            lists them. Use directiveTypes to ask for transactions alone.
+            range. The window clamps by Fava's TimeFilter: pre-window `open` directives are preserved
+            as report context (with their real dates) and appear in every window, and `total` counts
+            them — so a single-day journal still lists them. Use directiveTypes to ask for
+            transactions alone.
         limit (int | Unset): Entries per page. Omitted, REST and GraphQL return every entry; MCP
             returns 200.
         offset (int | None | Unset):
@@ -290,9 +293,10 @@ async def asyncio(
         account (str | Unset):
         filter_ (str | Unset):
         time (str | Unset): Fava time expression: a day (2026-09-05), month (2026-09), year, or
-            range. It bounds transactions only — undated structural directives such as `open` and
-            `close` carry the epoch date and appear in every window, so a single-day journal still
-            lists them. Use directiveTypes to ask for transactions alone.
+            range. The window clamps by Fava's TimeFilter: pre-window `open` directives are preserved
+            as report context (with their real dates) and appear in every window, and `total` counts
+            them — so a single-day journal still lists them. Use directiveTypes to ask for
+            transactions alone.
         limit (int | Unset): Entries per page. Omitted, REST and GraphQL return every entry; MCP
             returns 200.
         offset (int | None | Unset):
