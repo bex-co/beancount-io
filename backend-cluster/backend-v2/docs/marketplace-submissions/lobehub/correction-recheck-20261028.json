@@ -1,0 +1,74 @@
+{
+  "owner": "w6/m10/t012",
+  "recordedAtUTC": "2026-10-28T07:49:32Z",
+  "observationWindowUTC": {
+    "from": "2026-10-28T07:32:38Z",
+    "through": "2026-10-28T07:49:32Z"
+  },
+  "status": "published_needs_correction",
+  "listing": "https://lobehub.com/mcp/beancount-io?activeTab=deployment",
+  "actualPublicBrowserObservation": {
+    "version": "1.0.0",
+    "claimed": true,
+    "displayedDate": "Oct 27, 2026",
+    "displayedDateTimezone": null,
+    "tools": 44,
+    "resources": 64,
+    "prompts": 4,
+    "deploymentOptions": 2,
+    "correctHttpUrl": "https://beancount.io/api-gateway/mcp",
+    "incorrectStdioCommand": "bea --no-input init books --currency USD --date 2026-08-01 --opening-balance \"Assets:Checking 1000\"",
+    "incorrectOptionStillRecommended": true,
+    "serviceClassification": "Hybrid Service",
+    "invalidRecipeExecuted": false
+  },
+  "supportedRouteAudit": {
+    "cli": {
+      "version": "0.0.44",
+      "metadataUrl": "https://registry.npmjs.org/@lobehub/market-cli/latest",
+      "integrity": "sha512-dTiVRmGLrKuLXk3SfuNpdFAhcvDj+pUpXJU4GZx1NF+w++PbBrwmkZdP9N3Qh6ZAzDAmqKg/7mDvUp9iDXEIgg=="
+    },
+    "sdk": {
+      "version": "0.45.0",
+      "metadataUrl": "https://registry.npmjs.org/@lobehub/market-sdk/0.45.0",
+      "integrity": "sha512-epCZPNxMJsZ2vCCFlOSDyUN7ZHXcrUFuWDyEa4wywHHXBCA/VkD5MolR8tQiaaMHKm/jK2+Ru3CZrjlgmSTp3g=="
+    },
+    "officialNpmTarballIntegrityVerified": true,
+    "ownerPublishFields": [
+      "author",
+      "authorUrl",
+      "category",
+      "cloudEndpoint",
+      "description",
+      "homepage",
+      "icon",
+      "localizations",
+      "name",
+      "prompts",
+      "resources",
+      "tags",
+      "tools",
+      "version"
+    ],
+    "ownerMethod": "userPublish.publishPluginVersion",
+    "finding": "New CLI0.0.44/SDK0.45.0 retains the owner cloudEndpoint/capability/localization contract, with no deployment-option reset/removal field. Deployment-specific editing/deletion is exposed by the administrative service; it is not used. No supported owner repair route established.",
+    "scopeLimit": "Published SDK type/source audit, not a claim about every private administrative capability. No new owner update is attempted on an unchanged unsupported contract.",
+    "cliOrSdkExecuted": false,
+    "newProjectDependencyAdded": false
+  },
+  "requestFollowup": {
+    "url": "https://github.com/lobehub/lobehub/issues/18706",
+    "state": "open",
+    "updatedAtUTC": "2026-10-25T01:45:51Z",
+    "comments": 2,
+    "newResponseSincePriorRecordedCheck": false,
+    "existingExactRequest": "https://github.com/lobehub/lobehub/issues/18706#issuecomment-6392098911",
+    "newCommentSent": false
+  },
+  "nativeBoundary": "Earlier native acceptance remains historical; no fresh native accounting call, grant, publication, owner metadata change or version bump. Public name search is not repeated by this deployment check.",
+  "unblock": "LobeHub removes the generated stdio option or supplies supported owner correction/reset; worker verifies HTTP-only instructions/derived classification while preserving owned1.0.0 metadata and native baseline.",
+  "nextManualCheckUTC": "2026-10-31",
+  "earlierTrigger": "Actual maintainer reply/public correction or a supported owner API change.",
+  "publisherInputNeeded": false,
+  "privacy": "Public source, SDK contracts and listing/issue metadata only; no credential, account email, private source or ledger data."
+}
