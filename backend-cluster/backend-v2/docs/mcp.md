@@ -731,8 +731,9 @@ authority and apply changes immediately. Creation can be previewed first with
   characters — the name the ledger is stored under. A name the service would
   store differently (`x-`, `-x`, `a--b`) is refused, naming the form to use
   (w23/064); the same rule applies to `updateLedger`'s `name`. Creation
-  uses the authenticated account and accepts no `ledger` selector; the existing
-  account policy also permits creation with a ledger-pinned admin credential.
+  uses the authenticated account and accepts no `ledger` selector; a
+  ledger-pinned credential is refused with `FORBIDDEN` — use a credential
+  without a ledger pin to create ledgers.
 - `createLedger` also accepts `requestId` (1–200 characters) for safe retries.
   Repeating a creation with the same `requestId` and the same inputs returns
   the ledger the first call created instead of creating a second one; reusing

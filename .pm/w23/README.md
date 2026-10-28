@@ -28,7 +28,6 @@
 ## Inbox
 
 
-- [145](./145.md) — `docs/mcp.md` contradicts itself on pinned-credential creation (shipped refusal vs stale permission)
 - [146](./146.md) — value-shape dtype sniffing mistypes strings on full input (`'3000.00'`→Decimal, `str(date)`→date)
 - [147](./147.md) — file-write `CONFLICT` hints the entry lookup instead of the file `sha` (008 did creation only)
 - [148](./148.md) — `account-directives` counts postings under an open/close description (`entryCount: 9` where 1 open, 0 closes exist)
