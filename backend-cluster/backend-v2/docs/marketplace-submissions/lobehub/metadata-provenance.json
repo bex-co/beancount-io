@@ -1,35 +1,46 @@
 {
   "target": "beancount-io@1.0.0 on LobeHub",
   "endpoint": "https://beancount.io/api-gateway/mcp",
-  "lastRefreshedAtUTC": "2026-10-25T01:36:05.291Z",
+  "lastRefreshedAtUTC": "2026-10-28T08:00:58.840Z",
   "tools": {
     "count": 44,
-    "nativeLobeHubUI": true,
-    "nativeGroups": {
-      "readOnly": 9,
-      "create": 22,
-      "update": 7,
-      "delete": 6
+    "source": {
+      "observedAtUTC": "2026-10-28T08:00:58.840Z",
+      "endpoint": "https://beancount.io/api-gateway/mcp",
+      "methods": [
+        "tools/list",
+        "resources/templates/list",
+        "prompts/list"
+      ],
+      "counts": {
+        "tools": 44,
+        "genericResourceTemplates": 67,
+        "prompts": 4
+      },
+      "addedResourceTemplates": [
+        "ledgerCapitalGains",
+        "ledgerHoldings",
+        "ledgerRegister"
+      ],
+      "concreteResourcesEnumerated": false,
+      "resourceReads": 0,
+      "accountingCalls": 0
     },
-    "definitionSource": "Independent canonical MCP SDK discovery using the existing synthetic-only QA control credential; separate from native LobeHub UI",
-    "observedAtUTC": "2026-10-25T01:36:05.291Z"
+    "nativeLobeHubUI": false,
+    "nativeBoundary": "Earlier native44-tool acceptance remains dated separately; no new native run."
   },
   "resources": {
-    "count": 64,
+    "count": 67,
     "shape": "Generic MCP resource templates; no concrete account/ledger/file URIs",
-    "source": "Independent canonical MCP SDK discovery using the existing synthetic-only QA control credential; separate from native LobeHub UI",
-    "observedAtUTC": "2026-10-25T01:36:05.291Z",
-    "freshDiscoveryThisPass": true,
+    "observedAtUTC": "2026-10-28T08:00:58.840Z",
     "nativeLobeHubEnumeration": false
   },
   "prompts": {
     "count": 4,
-    "source": "Independent canonical MCP SDK discovery using the existing synthetic-only QA control credential; separate from native LobeHub UI",
-    "observedAtUTC": "2026-10-25T01:36:05.291Z",
-    "freshWireDiscovery": true,
+    "observedAtUTC": "2026-10-28T08:00:58.840Z",
     "nativeLobeHubEnumeration": false
   },
-  "manifestSHA256": "3e0cade33f51086bbbc912ad3c8a28dee41dabfb58e8c16fcfa7105546b7d538",
+  "manifestSHA256": "d6d5b8980042eb6ad960d6f0d3d749e854a69a6fe22ac2bbe87741843330bbef",
   "normalizedPublishedFieldsMatchByName": true,
   "ownerRepublishRequired": false,
   "deploymentBoundary": "Owner cloudEndpoint pins the preferred HTTP URL. Official owner API retains crawler-derived extra deployment options; unsupported fields are not invented to erase them.",
@@ -58,5 +69,43 @@
     },
     "manifestSHA256": "3e0cade33f51086bbbc912ad3c8a28dee41dabfb58e8c16fcfa7105546b7d538",
     "deploymentBoundary": "Owner cloudEndpoint pins the preferred HTTP URL. Official owner API retains crawler-derived extra deployment options; unsupported fields are not invented to erase them."
-  }
+  },
+  "historicalCapture20261025": {
+    "target": "beancount-io@1.0.0 on LobeHub",
+    "endpoint": "https://beancount.io/api-gateway/mcp",
+    "lastRefreshedAtUTC": "2026-10-25T01:36:05.291Z",
+    "tools": {
+      "count": 44,
+      "nativeLobeHubUI": true,
+      "nativeGroups": {
+        "readOnly": 9,
+        "create": 22,
+        "update": 7,
+        "delete": 6
+      },
+      "definitionSource": "Independent canonical MCP SDK discovery using the existing synthetic-only QA control credential; separate from native LobeHub UI",
+      "observedAtUTC": "2026-10-25T01:36:05.291Z"
+    },
+    "resources": {
+      "count": 64,
+      "shape": "Generic MCP resource templates; no concrete account/ledger/file URIs",
+      "source": "Independent canonical MCP SDK discovery using the existing synthetic-only QA control credential; separate from native LobeHub UI",
+      "observedAtUTC": "2026-10-25T01:36:05.291Z",
+      "freshDiscoveryThisPass": true,
+      "nativeLobeHubEnumeration": false
+    },
+    "prompts": {
+      "count": 4,
+      "source": "Independent canonical MCP SDK discovery using the existing synthetic-only QA control credential; separate from native LobeHub UI",
+      "observedAtUTC": "2026-10-25T01:36:05.291Z",
+      "freshWireDiscovery": true,
+      "nativeLobeHubEnumeration": false
+    },
+    "manifestSHA256": "3e0cade33f51086bbbc912ad3c8a28dee41dabfb58e8c16fcfa7105546b7d538",
+    "normalizedPublishedFieldsMatchByName": true,
+    "ownerRepublishRequired": false,
+    "deploymentBoundary": "Owner cloudEndpoint pins the preferred HTTP URL. Official owner API retains crawler-derived extra deployment options; unsupported fields are not invented to erase them."
+  },
+  "publishedCapabilityArraysExactlyMatch": true,
+  "currentEvidence": "metadata-refresh-20261028.json"
 }

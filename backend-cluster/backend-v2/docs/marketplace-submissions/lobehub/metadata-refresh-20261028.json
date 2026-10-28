@@ -1,0 +1,89 @@
+{
+  "owner": "w6/m10/t012",
+  "status": "published_needs_correction",
+  "recordedAtUTC": "2026-10-28T08:17:58.573353Z",
+  "listing": "https://lobehub.com/mcp/beancount-io",
+  "sourceDiscovery": {
+    "observedAtUTC": "2026-10-28T08:00:58.840Z",
+    "endpoint": "https://beancount.io/api-gateway/mcp",
+    "methods": [
+      "tools/list",
+      "resources/templates/list",
+      "prompts/list"
+    ],
+    "counts": {
+      "tools": 44,
+      "genericResourceTemplates": 67,
+      "prompts": 4
+    },
+    "addedResourceTemplates": [
+      "ledgerCapitalGains",
+      "ledgerHoldings",
+      "ledgerRegister"
+    ],
+    "concreteResourcesEnumerated": false,
+    "resourceReads": 0,
+    "accountingCalls": 0
+  },
+  "ownerUpdate": {
+    "cliVersion": "0.0.44",
+    "sdkVersion": "0.45.0",
+    "attempts": 1,
+    "exitCode": 0,
+    "receipt": "Updated beancount-io@1.0.0 (merged into the existing version)",
+    "identifier": "beancount-io",
+    "version": "1.0.0",
+    "updatedAtUTC": "2026-10-28T08:08:47.345Z",
+    "newListingCreated": false,
+    "existingUserAuthorizationReused": true,
+    "manifestSHA256": "d6d5b8980042eb6ad960d6f0d3d749e854a69a6fe22ac2bbe87741843330bbef",
+    "changedFields": [
+      "tools",
+      "resources",
+      "prompts"
+    ],
+    "mcpSdkSchemasPassed": true,
+    "payloadSecretScanPassed": true
+  },
+  "publishedReadback": {
+    "observedAtUTC": "2026-10-28T08:12:04.354Z",
+    "source": "Official SDK plugins.getPluginDetail and plugins.getPluginManifest, explicit en-US/version1.0.0, existing user authorization",
+    "baseURL": "https://market.lobehub.com",
+    "counts": {
+      "tools": 44,
+      "genericResourceTemplates": 67,
+      "prompts": 4
+    },
+    "allCapabilityArraysExactlyEqualSubmittedPayload": true,
+    "correctHttpUrl": "https://beancount.io/api-gateway/mcp",
+    "connectionType": "hybrid",
+    "crawlerStdioOptionStillPresent": true
+  },
+  "actualPublicWebObservation": {
+    "observedAtUTC": "2026-10-28T08:16:17.616746Z",
+    "url": "https://lobehub.com/mcp/beancount-io?activeTab=deployment",
+    "counts": {
+      "tools": 44,
+      "resources": 64,
+      "prompts": 4
+    },
+    "version": "1.0.0",
+    "displayedDate": "Oct 27, 2026",
+    "serviceClassification": "Hybrid Service",
+    "incorrectRecommendedStdioStillPresent": true,
+    "finding": "Public webpage still displays the older64-resource snapshot. Published API readback is67; webpage propagation is not yet verified.",
+    "timestampBasis": "Screenshot saved after the DOM observation; capture-time upper bound."
+  },
+  "boundaries": {
+    "newGrant": false,
+    "credentialScopeChange": false,
+    "nativeAccountingRehearsalRepeated": false,
+    "invalidStdioRecipeExecuted": false,
+    "administrativeAPIUsed": false,
+    "additionalCorrectionMessageSent": false
+  },
+  "unblock": "LobeHub removes invalid generated stdio or exposes supported owner correction/reset; worker verifies HTTP-only public instructions/classification and refreshed public metadata.",
+  "nextManualCheckUTC": "2026-10-31",
+  "earlierTrigger": "Actual maintainer reply, public correction/metadata propagation or supported owner API change.",
+  "privacy": "Only generic public service definitions, schema checks and sanitized receipt/readback metadata; no concrete account/ledger/file URIs, account identity or credential."
+}

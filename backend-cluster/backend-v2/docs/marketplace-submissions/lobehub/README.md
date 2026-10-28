@@ -10,7 +10,20 @@ At the actual Beancount consent, select only the synthetic QA ledger and leave A
 
 ## Current capability provenance
 
-Fresh independent canonical MCP SDK discovery at2026-10-25T01:36:05.291Z verifies44tools/64generic resource templates/4prompts. The normalized published definitions match by name; template order alone differs, so no repeat owner update is needed. Native LobeHub actually syncs/displays44tools; its Connector UI does not expose resource/template/prompt enumeration. [Full provenance](./metadata-provenance.json) preserves the older Cline/Docker/source capture separately. These checks add no ADR019 fixture-qualified host claim.
+Fresh independent canonical MCP SDK discovery at2026-10-28T08:00:58.840Z
+finds44tools/67generic resource templates/4prompts. The three added templates
+are ledgerCapitalGains, ledgerHoldings and ledgerRegister. One supported owner
+update merges current public definitions into the same beancount-io@1.0.0;
+o listing/version/grant is created. Official detail/manifest readback at08:12UTC
+matches all submitted arrays exactly, including updated tool schemas/annotations.
+MCP schemas and payload secret scan pass. No concrete resources, resource reads
+or accounting calls are used. [Refresh evidence](./metadata-refresh-20261028.json)
+and [provenance](./metadata-provenance.json) retain prior observations.
+
+The public webpage still displays44/64/4 at08:16UTC despite API44/67/4;
+webpage propagation remains unverified. The recommended invalid stdio option
+and Hybrid classification also remain. Earlier native44-tool accounting and
+search acceptance keep their own dates; neither is repeated or inferred here.
 
 ## Current crawler correction request — 2026-10-25 UTC
 
