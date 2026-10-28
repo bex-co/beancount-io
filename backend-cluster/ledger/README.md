@@ -122,6 +122,22 @@ the engine's generic numeric hint. Date comparisons are unaffected
 too (`7 - date`, `date + date`, `-date`). Engine overloads are tracked
 upstream (w23/blocked/022).
 
+## BQL `FROM OPEN ON` is suffix-only
+
+Stock's `FROM OPEN ON <date>` returns the postings from `<date>` onward
+plus a synthetic opening-balances entry dated `<date>−1` (opening legs
+per balance account offset to `Equity:Opening-Balances`, plus an
+`Equity:Earnings:Previous` leg), but the pinned engine evaluates the
+scope as a plain date-suffix filter with no summary synthesis. Counts
+over mid-period OPEN scopes miss the summary block, and per-account
+`GROUP BY` sums miss its legs (summary-only groups are absent entirely);
+the ungrouped `sum(position)` still nets to zero on both, since the
+missing block balances. Combined `OPEN ON … CLOSE ON` ranges share the
+gap; the `CLOSE ON` mirror agrees row-for-row (w23/166). There is no
+query-side spelling for the summary entry — refusing the scope would
+steal its correct suffix rows — so the scope stays suffix-only until the
+engine synthesizes the entry (w23/blocked/022).
+
 ## Getting started
 
 Requires Node.js 20.19+, 22.13+, or 24+ and a running Gitea instance. See

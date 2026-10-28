@@ -45,7 +45,7 @@
 - [x] [163](./done/163.md) — typed balance pre-check ignores `cost`/`totalPrice`, refuses stock-valid transactions (`@` passes, `{}`/`@@` cannot)
 - [x] [164](./done/164.md) — statically type SELECT expressions for empty/all-NULL dtypes (literals/columns/functions/operators; kills the `row_number` phantom)
 - [x] [165](./done/165.md) — BQL refuses date arithmetic stock supports (`date ± int` day shifts, `date − date` day count)
-- [166](./166.md) — mid-period `FROM OPEN ON` drops stock's opening-summary rows (26/36, 0/12; CLOSE ON clean)
+- [x] [166](./done/166.md) — mid-period `FROM OPEN ON` drops stock's opening-summary rows (26/36, 0/12; CLOSE ON clean)
 - [167](./167.md) — bare `price` flips Amount→`str` on all-NULL/empty (no Amount name rule; 136/164 cover neither)
 - [168](./168.md) — text results render zero rows as the empty string (no headers, no marker; empty-marker decision)
 - [169](./169.md) — `weight`/`account_balance` dtypes flip on empty (wrong-family rule / missing rule; stock says Amount)

@@ -1969,6 +1969,82 @@ async function main(): Promise<void> {
     "the date_diff workaround answers through the guard",
   );
 
+  // OPEN-scope summarization (w23/166, doc-minimum pins): stock's
+  // `FROM OPEN ON <date>` leads with a synthetic opening-balances entry
+  // dated `<date>−1`, while the engine evaluates a plain suffix filter.
+  // On this fixture (`OPEN ON 2024-01-18`) that is 2 suffix rows vs
+  // stock's 6 (4 summary postings dated 2024-01-17); grouped sums miss
+  // the summary legs while the ungrouped total still nets to zero, and
+  // the CLOSE ON mirror agrees. These pins keep the README's
+  // suffix-only claim honest; when the engine synthesizes the entry,
+  // delete them and update the doc.
+  const openCount = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    "SELECT count(*) AS n FROM OPEN ON 2024-01-18",
+  );
+  assert(
+    JSON.stringify(openCount.rows) === `[{"n":2}]`,
+    "OPEN ON mid-period counts suffix rows only (stock adds 4 summary postings)",
+  );
+  const openFirstRow = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    "SELECT date FROM OPEN ON 2024-01-18 ORDER BY date LIMIT 1",
+  );
+  assert(
+    JSON.stringify(openFirstRow.rows) === `[{"date":"2024-01-20"}]`,
+    "no summary block leads OPEN ON rows (stock's first row is 2024-01-17)",
+  );
+  const openFull = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    "SELECT count(*) AS n FROM OPEN ON 2024-01-01",
+  );
+  assert(
+    JSON.stringify(openFull.rows) === `[{"n":4}]`,
+    "OPEN ON at the period start agrees (no pre-activity to summarize)",
+  );
+  const closeCount = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    "SELECT count(*) AS n FROM CLOSE ON 2024-01-18",
+  );
+  assert(
+    JSON.stringify(closeCount.rows) === `[{"n":2}]`,
+    "CLOSE ON agrees with stock (the gap is OPEN-summarization only)",
+  );
+  const openGrouped = await withLedger(FILES, "main.beancount", (ledger) =>
+    ledger.query(
+      "SELECT account, sum(position) AS s FROM OPEN ON 2024-01-18 GROUP BY account ORDER BY account",
+    ),
+  );
+  const openAccounts = openGrouped.rows.map(
+    (row) => (row as [string, unknown])[0],
+  );
+  assert(
+    JSON.stringify(openAccounts) ===
+      JSON.stringify(["Assets:Checking", "Expenses:Food"]),
+    "grouped OPEN sums miss the summary-only groups (stock adds Equity:Earnings:Previous and Equity:Opening-Balances)",
+  );
+  assert(
+    JSON.stringify(
+      ((openGrouped.rows[0] as [string, unknown])[1] as { positions: Array<{ units: { number: string } }> }).positions[0]
+        ?.units.number,
+    ) === `"-50.00"`,
+    "grouped OPEN Checking sums the suffix only (stock 2950.00 with the summary leg)",
+  );
+  const openTotal = await withLedger(FILES, "main.beancount", (ledger) =>
+    ledger.query("SELECT sum(position) AS s FROM OPEN ON 2024-01-18"),
+  );
+  assert(
+    JSON.stringify(
+      ((openTotal.rows[0] as [unknown])[0] as { positions: Array<{ units: { number: string } }> }).positions[0]
+        ?.units.number,
+    ) === `"0.00"`,
+    "ungrouped OPEN sum still nets to zero (stock renders the same total blank)",
+  );
+
   // str() input domain (w23/155, doc-minimum pins): stock stringifies
   // positions, inventories, and sets while the engine refuses with its
   // whitelist error — and scalar inputs still stringify. These pins
