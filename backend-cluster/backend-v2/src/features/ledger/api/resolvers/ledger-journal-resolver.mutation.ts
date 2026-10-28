@@ -21,7 +21,11 @@ import {
 
 @InputType()
 class DeleteSourceSliceInput {
-  @Field(() => String, { nullable: true })
+  @Field(() => String, {
+    nullable: true,
+    description:
+      "The entry's hash. One of entryHash/entry_hash is required.",
+  })
   entryHash?: string;
 
   @Field(() => String, {
@@ -107,7 +111,11 @@ class DeleteSourceSliceResponse {
 
 @InputType()
 class DeleteMultiSourceSliceItemInput {
-  @Field(() => String, { nullable: true })
+  @Field(() => String, {
+    nullable: true,
+    description:
+      "The entry's hash. One of entryHash/entry_hash is required.",
+  })
   entryHash?: string;
 
   @Field(() => String, {
@@ -180,7 +188,11 @@ class DeleteMultiSourceSlicesResponse {
 
 @InputType()
 class UpdateSourceSliceInput {
-  @Field(() => String, { nullable: true })
+  @Field(() => String, {
+    nullable: true,
+    description:
+      "The entry's hash. One of entryHash/entry_hash is required.",
+  })
   entryHash?: string;
 
   @Field(() => String, {

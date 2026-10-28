@@ -11617,7 +11617,7 @@
                 "properties": {
                   "entryHash": {
                     "type": "string",
-                    "description": "The entry's hash."
+                    "description": "The entry's hash. One of entryHash/entry_hash is required."
                   },
                   "entry_hash": {
                     "type": "string",
@@ -11872,7 +11872,7 @@
                       "properties": {
                         "entryHash": {
                           "type": "string",
-                          "description": "The entry's hash."
+                          "description": "The entry's hash. One of entryHash/entry_hash is required."
                         },
                         "entry_hash": {
                           "type": "string",
@@ -12130,7 +12130,7 @@
                 "properties": {
                   "entryHash": {
                     "type": "string",
-                    "description": "The entry's hash."
+                    "description": "The entry's hash. One of entryHash/entry_hash is required."
                   },
                   "entry_hash": {
                     "type": "string",

@@ -15,7 +15,7 @@ class PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteManyBodyEntriesItem:
     """
     Attributes:
         sha256sum (str):
-        entryHash (str | Unset): The entry's hash.
+        entryHash (str | Unset): The entry's hash. One of entryHash/entry_hash is required.
         entry_hash (str | Unset): Alias of entryHash, as list output spells it.
     """
 

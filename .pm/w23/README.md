@@ -51,7 +51,7 @@
 - [x] [169](./done/169.md) — `weight`/`account_balance` dtypes flip on empty (wrong-family rule / missing rule; stock says Amount)
 - [x] [170](./done/170.md) — BQL `meta` splits by table (`k: v`/`str` postings vs `k=v`/`object` entries; stock one dict)
 - [x] [171](./done/171.md) — typed posting tags/links render stock-invalid beancount; backend check blind, reads blank (m6 "holds live" disproven)
-- [172](./172.md) — entry-source tools mark `entryHash` optional but refuse calls without it, on MCP, REST, and GraphQL alike
+- [172](./blocked/172.md) — entry-source tools mark `entryHash` optional but refuse calls without it, on MCP, REST, and GraphQL alike — **blocked:** one-identifier rule documented on all schemas; owner picks required-entryHash (breaks alias-only) or documented leniency
 - [173](./173.md) — MCP-only required-ness lies, bank-id (8 tools) and file-message (3 tools) aliases: schema optional, runtime required
 - [174](./174.md) — `allowInvalid` commits syntactically unparseable text on the typed path (cost.date unvalidated); all three surfaces
 - [175](./175.md) — bank-submit nested keys camel-only on REST/GraphQL while the MCP bank tool dual-accepts (w23/140 followup)

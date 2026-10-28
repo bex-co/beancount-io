@@ -12,10 +12,16 @@ import { MAX_BULK_ENTRIES } from "@/features/ledger/utils/bulk-entries-cap";
 import type { ReportedProjection } from "@/features/ledger/utils/bean-check-errors";
 import { ledgerPathSchema, ledgerIdOf, writeProjectionShape } from "./schemas";
 // Both spellings accepted (w23/m3/t001); handlers resolve to `entryHash`
-// before the service so the wire contract never sees the alias.
+// before the service so the wire contract never sees the alias. The
+// description (not `required`) carries the one-identifier rule:
+// requiring `entryHash` itself would break the snake-case alias the
+// m3 contract guarantees on every surface (w23/172, blocked).
 const sliceRef = z
   .object({
-    entryHash: z.string().optional().describe("The entry's hash."),
+    entryHash: z
+      .string()
+      .optional()
+      .describe("The entry's hash. One of entryHash/entry_hash is required."),
     entry_hash: z
       .string()
       .optional()
