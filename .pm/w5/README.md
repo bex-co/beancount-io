@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1088 — Preserve inferred lot quantities in transaction details](./1088.md) — minor CLI details export: inferred quantities become dated lots, breaking a partial sale or changing acquisition dates; 56 profiles, 346 CLI calls and 144 native checks; checked 2026-10-28.
+
 - [1087 — Ignore unposted rows when recalling CSV date formats](./1087.md) — minor CLI import: ignored authorizations falsely reject a saved date format and suggest moving posted dates; 46 profiles, 322 CLI calls and 66 native loads; checked 2026-10-28.
 
 - [1086 — Preserve inferred quantities in multiline lot postings](./1086.md) — minor CLI reader/export: a valid first snapshot loses its inference markers and the next export fails booking; 15 fresh profiles plus full original acceptance, 288 CLI calls and 112 native loads; checked 2026-10-28.
