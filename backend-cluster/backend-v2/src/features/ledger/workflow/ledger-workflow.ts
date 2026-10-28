@@ -97,7 +97,12 @@ import { filterNullish } from "@/shared/tools";
 import { processBatch } from "@/shared/batch-processor";
 import { logger } from "@/shared/logger";
 import { GITEA_PAGE_SIZE, readGiteaPages } from "@/shared/gitea-pages";
-import { systemIdentity, type Identity } from "@/server/api/identity";
+import {
+  effectiveCapabilities,
+  systemIdentity,
+  type Identity,
+  type OperationClass,
+} from "@/server/api/identity";
 import {
   AUTHORIZATION_ACTIONS,
   anonymousPrincipal,
@@ -742,6 +747,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
           ledgerCreate,
           userId,
           platform,
+          capabilities: effectiveCapabilities(identity),
         });
       } catch (error) {
         // A refused or failed attempt is finished, not in progress: release
@@ -868,7 +874,11 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     }
 
     return {
-      ...mapToLedger(data as FavaLedgerPublic, this.config.gitea),
+      ...mapToLedger(
+        data as FavaLedgerPublic,
+        this.config.gitea,
+        effectiveCapabilities(identity),
+      ),
       dryRun: false,
     };
   }
@@ -1557,13 +1567,14 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     const userId = identity.userId;
     const { favaApiClient } =
       await this.favaClientFactory.getApiContext(userId);
+    const capabilities = effectiveCapabilities(identity);
     return readCatalog(async (query) => {
       const data = await unwrapFavaResponse(
         favaApiClient.ledgers.listLedgers(query),
         "list ledgers",
       );
       return data.map((ledger) =>
-        mapToLedger(ledger as FavaLedgerPublic, this.config.gitea),
+        mapToLedger(ledger as FavaLedgerPublic, this.config.gitea, capabilities),
       );
     }, args);
   }
@@ -1587,6 +1598,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
       favaApiClient,
       favaUser.username,
       args,
+      effectiveCapabilities(identity),
     );
     return restrictToPin(identity, ledgers);
   }
@@ -1595,6 +1607,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     favaApiClient: FavaApiClient,
     username: string,
     args: ListLedgersParams,
+    capabilities?: ReadonlySet<OperationClass>,
   ): Promise<LedgerData[]> {
     return readCatalog(async (query) => {
       const data = await unwrapFavaResponse(
@@ -1602,7 +1615,11 @@ export class LedgerWorkflow implements ILedgerWorkflow {
         "list ledgers",
       );
       return data.map((ledger) =>
-        mapToLedger(ledger as FavaLedgerPublic, this.config.gitea),
+        mapToLedger(
+          ledger as FavaLedgerPublic,
+          this.config.gitea,
+          capabilities,
+        ),
       );
     }, args);
   }
@@ -1624,6 +1641,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
       favaApiClient,
       favaUser.username,
       {},
+      effectiveCapabilities(identity),
     );
 
     // Empty ledgers have nothing to parse — skip the Fava call entirely.
@@ -1710,8 +1728,9 @@ export class LedgerWorkflow implements ILedgerWorkflow {
       return [];
     }
 
+    const capabilities = effectiveCapabilities(identity);
     const ledgers = results.data.map((ledger) =>
-      mapToLedger(ledger as FavaLedgerPublic, this.config.gitea),
+      mapToLedger(ledger as FavaLedgerPublic, this.config.gitea, capabilities),
     );
     return restrictToPin(identity, ledgers);
   }
@@ -1739,7 +1758,11 @@ export class LedgerWorkflow implements ILedgerWorkflow {
       "get ledger",
     );
 
-    const ledger = mapToLedger(data as FavaLedgerPublic, this.config.gitea);
+    const ledger = mapToLedger(
+      data as FavaLedgerPublic,
+      this.config.gitea,
+      identity === undefined ? undefined : effectiveCapabilities(identity),
+    );
     // Public reads use an anonymous Gitea client. Strip permissions defensively
     // so a future upstream behavior change cannot expose an elevated view.
     if (!userId) {

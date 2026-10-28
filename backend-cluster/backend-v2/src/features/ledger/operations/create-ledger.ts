@@ -6,6 +6,7 @@ import {
   unwrapFavaResponse,
 } from "@/foundation/fava";
 import { generateGiteaUrl } from "@/shared/gitea-utils";
+import type { OperationClass } from "@/server/api/identity";
 import { Ledger } from "@/features/ledger/api/resolvers/ledger-resolver.types";
 import { AppConfig } from "@/config/config";
 import type { IModels } from "@/foundation/models";
@@ -49,6 +50,7 @@ export type CreateLedgerParams = {
   ledgerCreate: LedgerCreate;
   userId: string;
   platform?: "web" | "mobile";
+  capabilities?: ReadonlySet<OperationClass>;
 };
 
 /**
@@ -66,6 +68,7 @@ export async function createLedger({
   ledgerCreate,
   userId,
   platform = "web",
+  capabilities,
 }: CreateLedgerParams): Promise<Ledger> {
   const user = await models.user.getById(postgresDb, userId);
   if (!user) {
@@ -117,6 +120,6 @@ export async function createLedger({
     createdAt: data.created_at,
     updatedAt: data.updated_at,
     description: data.description,
-    permissions: mapFavaPermission(data.permissions),
+    permissions: mapFavaPermission(data.permissions, capabilities),
   };
 }

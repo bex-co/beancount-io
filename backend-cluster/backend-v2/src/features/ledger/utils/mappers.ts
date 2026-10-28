@@ -1,4 +1,5 @@
 import { type AppConfig } from "@/config/config";
+import type { OperationClass } from "@/server/api/identity";
 import {
   FavaLedgerPublic,
   mapFavaPermission,
@@ -46,6 +47,7 @@ export function mapToLedgerFileContent(
 export function mapToLedger(
   ledger: FavaLedgerPublic,
   gitea: AppConfig["gitea"],
+  capabilities?: ReadonlySet<OperationClass>,
 ): LedgerData {
   const giteaUrl = generateGiteaUrl(gitea, ledger.full_name);
   return {
@@ -59,7 +61,7 @@ export function mapToLedger(
     createdAt: ledger.created_at,
     updatedAt: ledger.updated_at,
     size: ledger.size,
-    permissions: mapFavaPermission(ledger.permissions),
+    permissions: mapFavaPermission(ledger.permissions, capabilities),
     description: ledger.description,
   };
 }

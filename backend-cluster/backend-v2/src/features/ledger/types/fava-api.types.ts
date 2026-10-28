@@ -8,6 +8,8 @@
  * Source of truth: beancount-ledger-v2/src/foundation/ledger-api-types/index.ts
  */
 
+import type { OperationClass } from "@/server/api/identity";
+
 /**
  * Permission object returned by the Beancount-Ledger API
  * Matches: beancount-ledger-v2/src/foundation/ledger-api-types/index.ts::PermissionPublic
@@ -85,18 +87,30 @@ export function isFavaSuccessResponse<T>(
  * Used by resolvers to transform API responses
  *
  * @param permission - The permission object from Fava API (may be null/undefined)
+ * @param capabilities - The caller's effective operation capabilities, when
+ * known: the answer is the credential's authority (w23/137), the repo rights
+ * intersected with what the credential may do (pull/read, push/write,
+ * admin/admin). Without it the repo rights pass through for callers with no
+ * credential to intersect (system paths) — metadata surfaces always pass it.
  * @returns GraphQL-compatible permission object with boolean fields, or undefined
  */
 export function mapFavaPermission(
   permission: FavaPermission | null | undefined,
+  capabilities?: ReadonlySet<OperationClass>,
 ): { admin: boolean; pull: boolean; push: boolean } | undefined {
   if (!permission) {
     return undefined;
   }
 
-  return {
+  const repo = {
     admin: permission.admin ?? false,
     pull: permission.pull ?? false,
     push: permission.push ?? false,
+  };
+  if (capabilities === undefined) return repo;
+  return {
+    admin: repo.admin && capabilities.has("admin"),
+    pull: repo.pull && capabilities.has("read"),
+    push: repo.push && capabilities.has("write"),
   };
 }

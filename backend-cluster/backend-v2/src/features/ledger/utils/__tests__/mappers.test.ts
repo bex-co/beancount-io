@@ -1,5 +1,6 @@
 import { mapToLedgerFileContent, mapToLedger } from "../mappers";
 import { FavaLedgerPublic } from "@/features/ledger/types/fava-api.types";
+import type { OperationClass } from "@/server/api/identity";
 import { LedgerFileContentPublic } from "@/foundation/fava/Api";
 import { type AppConfig } from "@/config/config";
 
@@ -234,6 +235,75 @@ describe("ledger mappers", () => {
       // Decoding should give us back "owner/id-test"
       expect(result.id).toBeDefined();
       expect(result.id.length).toBeGreaterThan(0);
+    });
+
+    // w23/137: permissions answer the caller's authority — repo rights
+    // intersected with credential capabilities — not raw repo access.
+    it.each([
+      [["read"], { admin: false, pull: true, push: false }],
+      [["read", "write"], { admin: false, pull: true, push: true }],
+      [["read", "write", "admin"], { admin: true, pull: true, push: true }],
+      [[], { admin: false, pull: false, push: false }],
+    ] as Array<[OperationClass[], object]>)(
+      "intersects repo rights with %p capabilities",
+      (caps, expected) => {
+      const apiLedger: FavaLedgerPublic = {
+        id: 6,
+        name: "caps-test",
+        description: null,
+        full_name: "owner/caps-test",
+        empty: false,
+        private: true,
+        size: 0,
+        created_at: "2024-01-01T00:00:00Z",
+        updated_at: "2024-01-01T00:00:00Z",
+        permissions: { admin: true, pull: true, push: true },
+      };
+      expect(
+        mapToLedger(apiLedger, mockGitea, new Set(caps)).permissions,
+      ).toEqual(expected);
+    });
+
+    it("keeps repo rights when no capabilities are passed", () => {
+      const apiLedger: FavaLedgerPublic = {
+        id: 7,
+        name: "nocaps-test",
+        description: null,
+        full_name: "owner/nocaps-test",
+        empty: false,
+        private: true,
+        size: 0,
+        created_at: "2024-01-01T00:00:00Z",
+        updated_at: "2024-01-01T00:00:00Z",
+        permissions: { admin: true, pull: true, push: true },
+      };
+      expect(mapToLedger(apiLedger, mockGitea).permissions).toEqual({
+        admin: true,
+        pull: true,
+        push: true,
+      });
+    });
+
+    it("never widens repo rights the credential lacks the repo for", () => {
+      const apiLedger: FavaLedgerPublic = {
+        id: 8,
+        name: "nowrite-test",
+        description: null,
+        full_name: "owner/nowrite-test",
+        empty: false,
+        private: true,
+        size: 0,
+        created_at: "2024-01-01T00:00:00Z",
+        updated_at: "2024-01-01T00:00:00Z",
+        permissions: { admin: false, pull: true, push: false },
+      };
+      expect(
+        mapToLedger(
+          apiLedger,
+          mockGitea,
+          new Set(["read", "write", "admin"] as const),
+        ).permissions,
+      ).toEqual({ admin: false, pull: true, push: false });
     });
   });
 });

@@ -240,7 +240,7 @@ export function identityAssuranceIsValid(identity: Identity): boolean {
   return identity.assurance.type === expected;
 }
 
-function effectiveCapabilities(
+export function effectiveCapabilities(
   identity: Identity,
 ): ReadonlySet<OperationClass> {
   if (identity.capabilities) return identity.capabilities;
