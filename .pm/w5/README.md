@@ -36,6 +36,12 @@
 
 ## Inbox
 
+- [1112 — Give customer skills shell-neutral instructions for native Windows agents](./1112.md) — minor skills portability: `fd`/`head`, `command -v`, `python3`, `&&` and `make` in eight skills; found by w5/m13/t005, 2026-10-28.
+
+- [1113 — Correct the stale "shared suite version" claim for the ClawHub package](./1113.md) — minor skills docs: ClawHub ships 0.4.0 with thirteen skills while the suite manifests are 0.4.19 with fourteen; found by w5/m13/t005, 2026-10-28.
+
+- [1114 — Document converting an existing Windows clone to real symlinks](./1114.md) — minor contributor docs: only the re-clone path is documented; found by w5/m13/t005, 2026-10-28.
+
 - [1111 — Retry the engine publish rename on Windows and sweep stale partial engines](./1111.md) — major CLI first use on native Windows: `bea 0.3.1` engine publish fails with WinError 5 while the new venv is still locked, and failed `.partial.<pid>` engines are never swept; found by w5/m13/t004, 2026-10-28.
 
 - [1091 — Show proposed balance tolerances in import conflict diagnostics](./1091.md) — minor CLI review: tolerance-only conflicts hide the proposed assertion; 14 fresh profiles plus two exact public reproductions; refusals and ledger bytes stay correct; checked 2026-10-28.
