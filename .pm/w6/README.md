@@ -3,6 +3,17 @@
 **Worker:** worker1 — general-purpose adoption worker; accepts the next highest-impact milestone across packages, topics, and A1/A2/A3 rather than owning a permanent specialty.
 
 
+## Current engine prerequisite audit — 2026-10-28 UTC
+
+Actual npm latest read07:36:52UTC and separate GitHub release read still show
+WASM0.24.0 with unchanged integrity. [m2/t001](blocked/m2/t001.md) records the
+current installed producer declaration and the concurrent `eab5cfdba` shell
+expression-typing improvement: it does not add producer types, and empty
+expression-hiding aliases remain unknown. m2's original contract and nineteen
+separate engine-release/semantic gates remain open. No package upgrade,
+unreleased engine adoption or repeated native probe is inferred. Each item
+still needs its own actual acceptance after a compatible supported release.
+
 ## Latest native Docker outcome — 2026-10-26T08:18:07Z
 
 [046 is complete](done/046.md). Repair `cd20fa75f` is deployed healthy; the
