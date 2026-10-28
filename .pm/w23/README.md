@@ -64,6 +64,7 @@
 - [186](./186.md) — 2-arg `joinstr(set, sep)` appends `sep` as a trailing element instead of joining with it
 - [187](./187.md) — past-i64 GROUP/ORDER BY ordinals silently degrade to constants (w23/133 followup)
 - [188](./188.md) — double-quoted identifiers outside FROM parse as string literals (silent wrong results)
+- [189](./189.md) — GROUP-BY coverage guard false-fires on PIVOT BY (blocks a query stock runs)
 - [082](./blocked/082.md) — `createPullRequest` fails on production: Gitea 500 while creating the `pr-patch-*` branch, on MCP and REST alike — **blocked:** needs the Gitea server-log cause for one failing branch create (owner), then a production rerun
 - [080](./blocked/080.md) — `/api-gateway/mcp` accepts any `Origin` (the MCP transport spec says a bad `Origin` MUST get 403); owner picks validate vs document — **blocked:** owner picks 403-on-foreign-Origin vs documented non-validation
 - [075](./blocked/075.md) — typed BQL results return NULL as `""` (undocumented), so a missing payee or price reads as an empty string — **blocked:** documented as `""` (option a shipped); owner picks `null` on REST/MCP, `null` everywhere, or keeping `""`
