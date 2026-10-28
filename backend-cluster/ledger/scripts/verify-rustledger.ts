@@ -1668,6 +1668,12 @@ async function main(): Promise<void> {
     "cost(position) = cost(position)",
     "meta = meta",
     "entry = entry",
+    // Bare amount/set columns (w23/152): same silent-False root.
+    "weight = weight",
+    "weight != weight",
+    "price = price",
+    "other_accounts = other_accounts",
+    "accounts = accounts",
   ]) {
     const guardedComposite = await queryLedgerFilesResult(
       FILES,
@@ -1684,6 +1690,19 @@ async function main(): Promise<void> {
       `the query path refuses ${comparison}`,
     );
   }
+  const guardedEntriesAccounts = await queryLedgerFilesResult(
+    FILES,
+    "main.beancount",
+    "SELECT accounts = accounts AS e FROM entries LIMIT 1",
+  );
+  assert(
+    guardedEntriesAccounts.rows.length === 0 &&
+      guardedEntriesAccounts.errors.some(
+        (e) =>
+          e.severity === "error" && e.message.includes("composite BQL values"),
+      ),
+    "the query path refuses accounts = accounts on entries (w23/152)",
+  );
   const scalarEq = await queryLedgerFiles(
     FILES,
     "main.beancount",
@@ -1692,6 +1711,67 @@ async function main(): Promise<void> {
   assert(
     JSON.stringify(scalarEq.rows) === `[{"e":true}]`,
     "scalar self-equality still answers through the guard",
+  );
+
+  // Bare amount equality (w23/152): `amount` lives on balances/prices,
+  // which FILES leaves empty, so these pins carry local fixtures. The
+  // raw engine answers constant-False while stock refuses
+  // (`equal(amount, amount)` not supported), and the query path refuses.
+  const balanceFiles = {
+    "main.beancount": `2024-01-01 open Assets:Cash USD
+2024-01-01 open Equity:Opening USD
+2024-01-02 pad Assets:Cash Equity:Opening
+2024-01-03 balance Assets:Cash 100 USD
+`,
+  };
+  const rawBalanceAmount = await withLedger(
+    balanceFiles,
+    "main.beancount",
+    (ledger) => ledger.query("SELECT amount = amount AS e FROM balances LIMIT 1"),
+  );
+  assert(
+    JSON.stringify(rawBalanceAmount.rows) === "[[false]]" &&
+      !rawBalanceAmount.errors.some((e) => e.severity === "error"),
+    "raw engine still answers amount = amount on balances constant-False (the guard is load-bearing)",
+  );
+  const guardedBalanceAmount = await queryLedgerFilesResult(
+    balanceFiles,
+    "main.beancount",
+    "SELECT amount = amount AS e FROM balances LIMIT 1",
+  );
+  assert(
+    guardedBalanceAmount.rows.length === 0 &&
+      guardedBalanceAmount.errors.some(
+        (e) =>
+          e.severity === "error" && e.message.includes("composite BQL values"),
+      ),
+    "the query path refuses amount = amount on balances",
+  );
+  const priceFiles = {
+    "main.beancount": `2024-01-01 open Assets:Cash USD
+2024-02-01 price USD 1.10 EUR
+`,
+  };
+  const rawPriceAmount = await withLedger(priceFiles, "main.beancount", (ledger) =>
+    ledger.query("SELECT amount = amount AS e FROM prices LIMIT 1"),
+  );
+  assert(
+    JSON.stringify(rawPriceAmount.rows) === "[[false]]" &&
+      !rawPriceAmount.errors.some((e) => e.severity === "error"),
+    "raw engine still answers amount = amount on prices constant-False (the guard is load-bearing)",
+  );
+  const guardedPriceAmount = await queryLedgerFilesResult(
+    priceFiles,
+    "main.beancount",
+    "SELECT amount = amount AS e FROM prices LIMIT 1",
+  );
+  assert(
+    guardedPriceAmount.rows.length === 0 &&
+      guardedPriceAmount.errors.some(
+        (e) =>
+          e.severity === "error" && e.message.includes("composite BQL values"),
+      ),
+    "the query path refuses amount = amount on prices",
   );
 
   // Inventory GROUP BY (w23/129): the raw engine collapses GROUP BY balance

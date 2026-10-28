@@ -1,27 +1,33 @@
 import type { QueryResult } from "@rustledger/wasm";
 
 /**
- * `=` / `!=` on composite BQL values (w23/128).
+ * `=` / `!=` on composite BQL values (w23/128, extended w23/152).
  *
  * rustledger 0.24.0 evaluates same-type composite equality but always
  * answers it wrong: `tags = tags`, `position = position`,
- * `balance = balance`, `cost(x) = cost(x)`, `meta = meta`, and
- * `entry = entry` read constant-False (constant-True for `!=`) — even
- * `x = x` on the same row — while stock beanquery refuses the comparison
- * at compile time (`operator "equal(set, set)" not supported`). Stock
- * refuses when EITHER side is composite, so the guard fires on either
- * side too. Inequalities need no guard: the engine already answers them
- * with a loud type error.
+ * `balance = balance`, `cost(x) = cost(x)`, `meta = meta`,
+ * `entry = entry`, `weight = weight`, `price = price`,
+ * `amount = amount`, `other_accounts = other_accounts`, and
+ * `accounts = accounts` read constant-False (constant-True for `!=`,
+ * NULL for costless `price`) — even `x = x` on the same row — while
+ * stock beanquery refuses the comparison at compile time
+ * (`operator "equal(set, set)" not supported`). Stock refuses when
+ * EITHER side is composite, so the guard fires on either side too.
+ * Inequalities need no guard: the engine already answers them with a
+ * loud type error.
  *
  * Operand heads resolve syntactically, which bounds the guard:
  *
  * - Bare or dotted composite columns (`tags`, `links`, `position`,
- *   `balance`, `meta`, `entry`) — every same-named column on all ten
- *   stock tables is composite, verified against beanquery 0.2.0. A name
- *   shadowed by an `AS <name>` alias anywhere in the query is skipped,
- *   since the alias may retype it; subquery aliases the guard cannot see
- *   through stay a false negative (the status quo), never a false
- *   positive.
+ *   `balance`, `meta`, `entry`, `weight`, `price`, `amount`,
+ *   `other_accounts`, `accounts`) — every same-named column on every
+ *   stock table carrying it is composite, verified against beanquery
+ *   0.2.0 (`weight`/`price`/`other_accounts` postings-only amounts and
+ *   sets; `amount` on balances/prices; `accounts` on
+ *   entries/postings/transactions). A name shadowed by an `AS <name>`
+ *   alias anywhere in the query is skipped, since the alias may retype
+ *   it; subquery aliases the guard cannot see through stay a false
+ *   negative (the status quo), never a false positive.
  * - `cost(` / `value(` calls, which always return amounts.
  * - `sum` / `min` / `max` / `first` / `last` over a composite argument
  *   (one nesting level: a composite column or a `cost(`/`value(` call).
@@ -41,6 +47,11 @@ const COMPOSITE_COLUMNS = [
   "balance",
   "meta",
   "entry",
+  "weight",
+  "price",
+  "amount",
+  "other_accounts",
+  "accounts",
 ] as const;
 const COMPOSITE_FUNCTIONS = ["cost", "value"] as const;
 const COMPOSITE_AGGREGATES = ["sum", "min", "max", "first", "last"] as const;

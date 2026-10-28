@@ -23,6 +23,18 @@ describe("compositeComparisonError", () => {
     // Dotted and lowercase spellings.
     "SELECT p.tags = p.tags AS e FROM postings p LIMIT 1",
     "select meta != meta from postings",
+    // w23/152: bare amount/set columns stock also refuses.
+    "SELECT weight = weight AS e FROM postings LIMIT 1",
+    "SELECT weight != weight AS e FROM postings LIMIT 1",
+    "SELECT price = price AS e FROM postings LIMIT 1",
+    "SELECT price != price AS e FROM postings LIMIT 1",
+    "SELECT amount = amount AS e FROM prices LIMIT 1",
+    "SELECT amount != amount AS e FROM balances LIMIT 1",
+    "SELECT other_accounts = other_accounts AS e FROM postings LIMIT 1",
+    "SELECT other_accounts != other_accounts AS e FROM postings LIMIT 1",
+    "SELECT accounts = accounts AS e FROM postings LIMIT 1",
+    "SELECT accounts = accounts AS e FROM entries LIMIT 1",
+    "SELECT weight = 'x' AS e FROM postings LIMIT 1",
   ])("refuses %p", (query) => {
     const refused = compositeComparisonError(query);
     expect(refused?.rows).toEqual([]);
@@ -51,6 +63,11 @@ describe("compositeComparisonError", () => {
     "SELECT tags < tags AS e FROM postings LIMIT 1",
     // Substring names are not the columns.
     "SELECT stages = stages AS e FROM postings LIMIT 1",
+    // w23/152: word boundaries hold for the new names on both sides.
+    "SELECT weight_class = weight_class AS e FROM postings LIMIT 1",
+    "SELECT unit_price = unit_price AS e FROM postings LIMIT 1",
+    // An AS alias may retype a new name too; the guard stays out.
+    "SELECT 1 AS weight FROM postings WHERE weight = 1",
     "SELECT * FROM postings LIMIT 1",
     // Non-SELECT statements are out of scope.
     "CHECK tags = tags",
