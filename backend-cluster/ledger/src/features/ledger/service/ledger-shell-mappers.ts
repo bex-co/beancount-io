@@ -174,14 +174,22 @@ const DECIMAL_COLUMNS = new Set([
   "cost_number",
   "price_number",
   "tolerance",
-  "weight",
 ]);
-// Amount-typed bare columns per stock's registry (w23/167): `price` on
-// postings, `amount` on prices/balances, `discrepancy` on balances.
-// `weight` stays Decimal — w23/169 owns its family decision.
-const AMOUNT_COLUMNS = new Set(["price", "amount", "discrepancy"]);
 const SET_COLUMNS = new Set(["tags", "links", "other_accounts", "accounts"]);
-const INVENTORY_COLUMNS = new Set(["balance"]);
+// Amount-typed bare columns (w23/167 + w23/169): `price`/`weight` on
+// postings per stock's registry, `amount` on prices/balances,
+// `discrepancy` on balances, and MCP-only `cost` (default scope) per its
+// valued Amount shape — stock has no `cost` column (it.990).
+const AMOUNT_COLUMNS = new Set([
+  "price",
+  "weight",
+  "amount",
+  "discrepancy",
+  "cost",
+]);
+// `account_balance` is MCP-only (no stock column); its valued shape is a
+// currency-keyed map, so the empty endpoint is Inventory (w23/169).
+const INVENTORY_COLUMNS = new Set(["balance", "account_balance"]);
 const POSITION_COLUMNS = new Set(["position"]);
 const STRING_COLUMNS = new Set([
   "account",

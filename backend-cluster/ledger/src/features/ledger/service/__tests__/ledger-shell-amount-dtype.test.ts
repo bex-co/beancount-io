@@ -77,3 +77,50 @@ describe("amount column dtypes without values", () => {
     ).toEqual(["Amount"]);
   });
 });
+
+/**
+ * w23/169: `weight` was the wrong family (Decimal, contradicting its
+ * Amount values and stock's registry) and MCP-only `cost` /
+ * `account_balance` had no rule at all (str, contradicting Amount /
+ * Inventory values). All three now match their valued endpoints.
+ */
+describe("weight/cost/account_balance dtypes without values", () => {
+  function shellResult(names: string[], rows: unknown[][]): QueryResult {
+    return {
+      columns: names,
+      rows,
+      errors: [],
+    } as unknown as QueryResult;
+  }
+
+  function dtypes(query: string, names: string[], rows: unknown[][]): string[] {
+    const table = queryResultToShellResult(
+      shellResult(names, rows),
+      extractSelectAliases(query),
+    ).table!;
+    return table.types.map((type) => type.dtype);
+  }
+
+  it("keeps Amount/Inventory on zero rows", () => {
+    expect(
+      dtypes(
+        "SELECT weight, account_balance FROM postings WHERE FALSE",
+        ["weight", "account_balance"],
+        [],
+      ),
+    ).toEqual(["Amount", "Inventory"]);
+    expect(dtypes("SELECT cost WHERE FALSE", ["cost"], [])).toEqual([
+      "Amount",
+    ]);
+  });
+
+  it("keeps Amount/Inventory on all-NULL cells", () => {
+    expect(
+      dtypes(
+        "SELECT weight, account_balance FROM postings LIMIT 1",
+        ["weight", "account_balance"],
+        [[null, null]],
+      ),
+    ).toEqual(["Amount", "Inventory"]);
+  });
+});

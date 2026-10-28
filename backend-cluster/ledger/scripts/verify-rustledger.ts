@@ -2615,6 +2615,13 @@ async function main(): Promise<void> {
       "SELECT amount, tolerance, discrepancy FROM balances WHERE FALSE",
       ["Amount", "Decimal", "Amount"],
     ],
+    // w23/169: `weight` was Decimal-ruled against Amount values;
+    // MCP-only `cost` (default scope) and `account_balance` had no rule.
+    [
+      "SELECT weight, account_balance FROM postings WHERE FALSE",
+      ["Amount", "Inventory"],
+    ],
+    ["SELECT cost WHERE FALSE", ["Amount"]],
   ] as Array<[string, string[]]>) {
     const shell = queryResultToShellResult(
       await queryLedgerFilesResult(
