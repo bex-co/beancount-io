@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1082 — Distinguish invalid decimal text from query precision failures](./1082.md) — minor CLI query diagnostics: blank/comma CSV amounts get false 28-digit advice; 24 fresh profiles, 116 CLI invocations, 72 native queries and original diagnostic/prompt controls; checked 2026-10-27.
+
 - [1081 — Validate cumulative include edits in batch-update previews](./1081.md) — minor CLI review queue: split-file preview reports both edits ready before a predictable partial refusal; 28 new profiles plus original review/diff controls, 266 CLI calls and 131 native loads; checked 2026-10-27.
 
 - [1080 — Explain the pinned Beangulp reverse-extraction limitation](./1080.md) — minor CLI help/docs: 0.2.0 ignores both reverse flags; 4 independent cases, 32 CLI calls, native controls and verified custom-sort workaround; first-party forwarding works, checked 2026-10-27.
