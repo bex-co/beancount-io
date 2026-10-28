@@ -76,6 +76,7 @@ import { explainUnknownPlugins } from "./plugin-typos";
 import { parseableFiles } from "./parseable-files";
 import { reportUndecodableSources } from "./undecodable-sources";
 import { collapsedCostOfSumError } from "./cost-of-sum-guard";
+import { unresolvedNameError } from "./unresolved-name-guard";
 import { integerOverflowError } from "./integer-overflow-guard";
 import { atValueError } from "./at-value-guard";
 import { starAliasError } from "./star-alias-guard";
@@ -1036,7 +1037,9 @@ export async function queryLedgerFilesResultInProcess(
         return (
           collapsedCostOfSumError(query, result, (probe) =>
             ledger.query(probe),
-          ) ?? result
+          ) ??
+          unresolvedNameError(query, result, (probe) => ledger.query(probe)) ??
+          result
         );
       } catch (error) {
         if (isUnsupportedIntegerResultError(error)) {

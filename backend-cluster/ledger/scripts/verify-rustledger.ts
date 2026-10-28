@@ -2008,6 +2008,76 @@ async function main(): Promise<void> {
     );
   }
 
+  // Masked unknown names (w23/135): the raw engine resolves value-clause
+  // names lazily, so empty input masks unknown functions/columns with a
+  // clean empty result — the query path re-runs empties with every
+  // WHERE widened to OR TRUE and adopts name-shaped failures.
+  const rawMasked = await withLedger(FILES, "main.beancount", (ledger) =>
+    ledger.query("SELECT nosuchfn(payee) FROM postings WHERE FALSE LIMIT 1"),
+  );
+  assert(
+    rawMasked.rows.length === 0 &&
+      !rawMasked.errors.some((e) => e.severity === "error"),
+    "raw engine still masks unknown names over empty input (the probe is load-bearing)",
+  );
+  for (const [query, marker] of [
+    [
+      "SELECT nosuchfn(payee) FROM postings WHERE FALSE LIMIT 1",
+      "no function matches",
+    ],
+    [
+      "SELECT nosuchcol FROM postings WHERE FALSE LIMIT 1",
+      "not found",
+    ],
+    ["SELECT count(nosuchcol) FROM postings WHERE FALSE", "not found"],
+    [
+      "SELECT payee FROM postings WHERE FALSE ORDER BY nosuchfn(payee)",
+      "no function matches",
+    ],
+    [
+      "SELECT count(*) FROM postings WHERE FALSE GROUP BY nosuchfn(flag)",
+      "no function matches",
+    ],
+    [
+      "SELECT flag FROM postings WHERE FALSE GROUP BY flag HAVING nosuchfn(flag) = 1",
+      "no function matches",
+    ],
+    [
+      "SELECT * FROM (SELECT payee FROM postings WHERE FALSE LIMIT 5) WHERE nosuchfn(payee)",
+      "no function matches",
+    ],
+  ]) {
+    const unmasked = await queryLedgerFilesResult(
+      FILES,
+      "main.beancount",
+      query,
+    );
+    assert(
+      unmasked.rows.length === 0 &&
+        unmasked.errors.some(
+          (e) => e.severity === "error" && e.message.includes(marker),
+        ),
+      `the query path unmasks ${query}`,
+    );
+  }
+  const goodEmpty = await queryLedgerFilesResult(
+    FILES,
+    "main.beancount",
+    "SELECT payee FROM postings WHERE FALSE LIMIT 1",
+  );
+  const goodEmptyCount = await queryLedgerFilesResult(
+    FILES,
+    "main.beancount",
+    "SELECT count(*) FROM postings WHERE FALSE",
+  );
+  assert(
+    goodEmpty.rows.length === 0 &&
+      !goodEmpty.errors.some((e) => e.severity === "error") &&
+      JSON.stringify(goodEmptyCount.rows) === "[[0]]" &&
+      !goodEmptyCount.errors.some((e) => e.severity === "error"),
+    "genuinely empty results stay clean through the probe",
+  );
+
   const count = await countDirectives(
     "2024-01-01 open Assets:Cash USD\n2024-01-02 open Income:Z USD\n",
   );

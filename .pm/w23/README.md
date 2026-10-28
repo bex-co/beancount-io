@@ -27,7 +27,6 @@
 
 ## Inbox
 
-- [135](./135.md) — empty input masks unknown-function/column errors, fabricates `str` dtype (it.5710-5712)
 - [136](./136.md) — computed-value dtypes flip to `str` on empty input (it.5722-5725)
 - [137](./137.md) — ledger `permissions` ignore credential scopes; `FORBIDDEN` hints point at the lying field (it.6059-6061)
 - [138](./138.md) — text renderer truncates column headers to the widest value (it.6111-6114)
