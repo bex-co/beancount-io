@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1089 — Review inferred-cost corrections on labelled and short openings](./1089.md) — major CLI import: a changed native opening cost is silently skipped under a bank ID for labelled/short positions; 62 profiles, 430 CLI calls and 204 native loads; checked 2026-10-28.
+
 - [1088 — Preserve inferred lot quantities in transaction details](./1088.md) — minor CLI details export: inferred quantities become dated lots, breaking a partial sale or changing acquisition dates; 56 profiles, 346 CLI calls and 144 native checks; checked 2026-10-28.
 
 - [1087 — Ignore unposted rows when recalling CSV date formats](./1087.md) — minor CLI import: ignored authorizations falsely reject a saved date format and suggest moving posted dates; 46 profiles, 322 CLI calls and 66 native loads; checked 2026-10-28.
