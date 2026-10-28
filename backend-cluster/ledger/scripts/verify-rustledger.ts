@@ -2206,6 +2206,59 @@ async function main(): Promise<void> {
       `the query path refuses ${query} naming ${marker}`,
     );
   }
+
+  // Decimal precision (w23/160): the raw engine silently half-up rounds
+  // literals whose mantissa exceeds MAX, and zeroes fractions past the
+  // 28-place scale — stock renders both exactly — so the query path
+  // refuses them. Trailing-zero mantissas that fit still answer exactly.
+  const rawRoundedDecimal = await withLedger(FILES, "main.beancount", (ledger) =>
+    ledger.query("SELECT 79228162514264337593543950334.9 LIMIT 1"),
+  );
+  assert(
+    JSON.stringify(rawRoundedDecimal.rows) ===
+      `[["79228162514264337593543950335"]]` &&
+      !rawRoundedDecimal.errors.some((e) => e.severity === "error"),
+    "raw engine still rounds an over-precision decimal to MAX, silently (the refusal is load-bearing)",
+  );
+  const rawZeroedScale = await withLedger(FILES, "main.beancount", (ledger) =>
+    ledger.query("SELECT 0.00000000000000000000000000001 LIMIT 1"),
+  );
+  assert(
+    JSON.stringify(rawZeroedScale.rows) ===
+      `[["0.0000000000000000000000000000"]]` &&
+      !rawZeroedScale.errors.some((e) => e.severity === "error"),
+    "raw engine still zeroes a 29-place fraction, silently (the refusal is load-bearing)",
+  );
+  for (const query of [
+    "SELECT 79228162514264337593543950334.9",
+    "SELECT 0.00000000000000000000000000001",
+    "SELECT count(*) FROM postings WHERE number = 79228162514264337593543950334.9",
+  ]) {
+    const refusedPrecision = await queryLedgerFilesResult(
+      FILES,
+      "main.beancount",
+      normalizeBqlQueryForEngine(query),
+    );
+    assert(
+      refusedPrecision.rows.length === 0 &&
+        refusedPrecision.errors.some(
+          (e) =>
+            e.severity === "error" &&
+            e.message.includes("decimal precision"),
+        ),
+      `the query path refuses ${query} naming decimal precision`,
+    );
+  }
+  const exactMantissa = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    normalizeBqlQueryForEngine("SELECT 7922816251426433759354395033.50 LIMIT 1"),
+  );
+  assert(
+    JSON.stringify(exactMantissa.rows) ===
+      `[{"7922816251426433759354395033.5":"7922816251426433759354395033.5"}]`,
+    "a trailing-zero mantissa that fits still answers exactly",
+  );
   const unpipedLimit = await queryLedgerFilesResult(
     FILES,
     "main.beancount",

@@ -1,7 +1,8 @@
 import type { QueryResult } from "@rustledger/wasm";
 
 /**
- * Out-of-range integer literals and constant integer overflow (w23/133).
+ * Out-of-range integer literals and constant integer overflow (w23/133),
+ * plus decimal literals past the engine's precision (w23/160).
  *
  * rustledger 0.24.0 computes in Decimal (max
  * 79228162514264337593543950335) with two silent edges: literals past
@@ -12,7 +13,7 @@ import type { QueryResult } from "@rustledger/wasm";
  * computes every cell exactly. Both refuse here before the query runs,
  * with the range instead of a position-0 riddle.
  *
- * Three rules, all syntactic and abstaining on doubt:
+ * Four rules, all syntactic and abstaining on doubt:
  *
  * - A `LIMIT <n>` numeral at or past 2^32 refuses. The engine parses
  *   LIMIT as i64 (past i64::MAX the numeral token-rejects) and
@@ -22,6 +23,14 @@ import type { QueryResult } from "@rustledger/wasm";
  *   engine, so this fires only for unpipelined callers.
  * - A bare integer or decimal literal whose magnitude exceeds
  *   Decimal::MAX refuses.
+ * - A decimal literal the engine cannot hold exactly refuses
+ *   (w23/160): the mantissa (point removed, leading zeros stripped,
+ *   then trailing zeros stripped — the engine normalizes scale
+ *   before the boundary bites, verified live) exceeding Decimal::MAX
+ *   silently half-up rounds, as does a nonzero fraction past 28
+ *   places (rust_decimal's max scale zeroes it). Stock renders every
+ *   such literal exactly. The rule is mantissa-vs-MAX, not digit
+ *   count: a 29-digit mantissa below MAX stays exact.
  * - A `+`/`-`/`*` run over pure integer literals that BigInt-evaluates
  *   past ±Decimal::MAX at any intermediate refuses, in standard
  *   precedence. Runs with `/`, `%`, dots, identifiers, or invalid
@@ -29,6 +38,8 @@ import type { QueryResult } from "@rustledger/wasm";
  *   are unprobed); bare `YYYY-MM-DD` dates scan as runs but always
  *   evaluate in range, so they can never fire.
  *
+ * Dot-led/dot-trailing decimals (`.5`, `5.`) abstain: the engine
+ * syntax-errors those loudly already (its message is w23/162's).
  * Non-constant overflow (columns, aggregates) stays silent-NULL with
  * no engine signal to catch — that half is upstream-only and tracked
  * separately. Remove once the engine reports range and overflow; the
@@ -36,6 +47,8 @@ import type { QueryResult } from "@rustledger/wasm";
  */
 const DECIMAL_MAX = "79228162514264337593543950335";
 const U32 = "4294967296";
+/** rust_decimal holds at most 28 places past the point. */
+const MAX_SCALE = 28;
 const LIMIT_NUMERAL = /\blimit\s+(\d+)(?![\w.])/gi;
 const INT_LITERAL = /(?<![\w.$])\d+(?![\w.$])/g;
 const DECIMAL_LITERAL = /(?<![\w.$])\d+\.\d+(?![\w.$])/g;
@@ -64,6 +77,14 @@ export function integerOverflowError(query: string): QueryResult | undefined {
       (stripZeros(intPart) === DECIMAL_MAX && /[1-9]/.test(fracPart))
     ) {
       return rangeError(`decimal literal ${m[0]} exceeds the maximum`);
+    }
+    // w23/160: in-range but unholdable — the mantissa rounds or the
+    // fraction runs past the 28-place scale, both silently.
+    if (
+      magnitudeExceedsMax(stripTrailingZeros(stripZeros(intPart + fracPart))) ||
+      stripTrailingZeros(fracPart).length > MAX_SCALE
+    ) {
+      return precisionError(m[0] as string);
     }
   }
   // Redundant parens group operands without changing them; calls and
@@ -113,6 +134,27 @@ function rangeError(detail: string): QueryResult {
   };
 }
 
+function precisionError(literal: string): QueryResult {
+  return {
+    columns: [],
+    rows: [],
+    errors: [
+      {
+        message: `Decimal literal ${literal} is past this query engine's decimal precision: it would silently round to fit, while stock renders it exactly. Use fewer significant digits or split the computation.`,
+        code: null,
+        phase: "query",
+        hint: "Rewrite the literal with fewer significant digits so the engine holds it exactly.",
+        file: null,
+        line: null,
+        column: null,
+        end_line: null,
+        end_column: null,
+        severity: "error",
+      },
+    ],
+  };
+}
+
 function limitError(digits: string): QueryResult {
   return {
     columns: [],
@@ -150,6 +192,11 @@ function magnitudeExceedsMax(digits: string): boolean {
 
 function stripZeros(digits: string): string {
   return digits.replace(/^0+(?=\d)/, "");
+}
+
+/** Drop insignificant trailing zeros (`503350` → `50335`). */
+function stripTrailingZeros(digits: string): string {
+  return digits.replace(/0+$/, "");
 }
 
 /**
