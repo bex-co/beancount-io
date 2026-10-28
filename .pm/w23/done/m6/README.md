@@ -30,3 +30,5 @@
 - **Expected outcome:** the typed path expresses lots, booking methods, tolerances, and pads, with the cost-vs-price distinction documented where agents read it.
 - **Why now:** the note's audit found all six gaps in one pass on the same schema files; fixing them together keeps the renderer and parity tests coherent.
 - **Adoption surface:** included — the milestone ships agent-facing entry fields and tool wording that must hold on every surface.
+
+**Prod re-verified it.6371:** `addLedgerEntries` dry_run with a posting `cost: {number, currency, date}` passes schema validation — both attempts reached bean-check (unopened-account / currency-constraint errors naming the ledger problem), never `Unrecognized key`. m6's core gap holds live.
