@@ -1,6 +1,9 @@
 import { executeBqlQuery } from "../bql-query-tool";
 import { executeListLedgerFiles } from "../list-ledger-files-tool";
-import { executeReadLedgerFiles } from "../read-ledger-files-tool";
+import {
+  executeReadLedgerFiles,
+  readLedgerFilesInputSchema,
+} from "../read-ledger-files-tool";
 import { executeEditLedgerFiles } from "../edit-ledger-files-tool";
 import { MCP_TOOLS } from "../../api/mcp-tools";
 import { VERB_TABLE } from "@/server/api/op-class";
@@ -261,6 +264,81 @@ describe("executeReadLedgerFiles", () => {
         totalLines: 4,
       });
     }
+  });
+
+  // w23/141: the result echoes startLine/endLine, so pasting the echo back
+  // as input must work — the camelCase twins fold into the snake_case
+  // canonicals, and a split pair is refused rather than guessed.
+  it("advertises the echoed startLine/endLine spellings as input", () => {
+    expect(() =>
+      readLedgerFilesInputSchema.parse({
+        files: [{ path: "main.bean", startLine: 2, endLine: 3 }],
+      }),
+    ).not.toThrow();
+  });
+
+  it("slices identically when the range arrives in the echoed spelling", async () => {
+    const ledgerRepo = serviceReturning("line1\nline2\nline3\nline4");
+    const result = await executeReadLedgerFiles(
+      {
+        services: { ledgerRepo } as any,
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+      },
+      { files: [{ path: "main.bean", startLine: 2, endLine: 3 }] },
+    );
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.result[0]).toMatchObject({
+        startLine: 2,
+        endLine: 3,
+        content: "line2\nline3",
+        totalLines: 4,
+      });
+    }
+  });
+
+  it("accepts identical twins and refuses a split pair before reading", async () => {
+    const ledgerRepo = serviceReturning("line1\nline2\nline3\nline4");
+    const ctx = {
+      services: { ledgerRepo } as any,
+      identity: IDENTITY,
+      ledgerId: LEDGER_ID,
+    };
+    const same = await executeReadLedgerFiles(ctx, {
+      files: [{ path: "main.bean", start_line: 2, startLine: 2, end_line: 3 }],
+    });
+    expect(same.ok).toBe(true);
+
+    const split = await executeReadLedgerFiles(ctx, {
+      files: [{ path: "main.bean", start_line: 2, startLine: 4 }],
+    });
+    expect(split).toMatchObject({
+      ok: false,
+      errorCode: "BAD_USER_INPUT",
+      error: expect.stringContaining(
+        "main.bean: pass start_line or startLine, not two different start lines.",
+      ),
+    });
+    expect(ledgerRepo.getFilesContent).toHaveBeenCalledTimes(1);
+  });
+
+  it("refuses a reversed range across mixed spellings", async () => {
+    const ledgerRepo = serviceReturning("line1\nline2\nline3");
+    const result = await executeReadLedgerFiles(
+      {
+        services: { ledgerRepo } as any,
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+      },
+      { files: [{ path: "main.bean", startLine: 10, end_line: 9 }] },
+    );
+    expect(result).toMatchObject({
+      ok: false,
+      errorCode: "BAD_USER_INPUT",
+      error: expect.stringContaining("start_line 10 is after end_line 9"),
+    });
+    expect(ledgerRepo.getFilesContent).not.toHaveBeenCalled();
   });
 
   // w23/005: a trailing newline ends the last line; it is not a line of its

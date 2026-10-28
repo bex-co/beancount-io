@@ -28,7 +28,6 @@
 ## Inbox
 
 
-- [141](./141.md) — `readLedgerFiles` echoes `startLine`/`endLine` but refuses them as input (output camel, input snake)
 - [142](./142.md) — `source-files` resource description promises subtype filters the surface refuses (no query params)
 - [143](./143.md) — temp-asset + bank + branch `NOT_FOUND`s carry the generic ledgers/files/entries hint (none live there)
 - [144](./144.md) — `holdings` echoes `group_by` but refuses it as input (output snake, input camel; 141-class)

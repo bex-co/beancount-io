@@ -28,12 +28,27 @@ export const readLedgerFilesInputSchema = z.object({
           .min(1)
           .optional()
           .describe("First line to return (1-based). Default: 1"),
+        // Twin (w23/141): the result echoes startLine, so pasting the echo
+        // back must work; same checks as the canonical spelling.
+        startLine: z
+          .number()
+          .int()
+          .min(1)
+          .optional()
+          .describe("Alias of start_line, as the result echoes it."),
         end_line: z
           .number()
           .int()
           .min(1)
           .optional()
           .describe("Last line to return (inclusive). Default: end of file"),
+        // Twin (w23/141): same as startLine.
+        endLine: z
+          .number()
+          .int()
+          .min(1)
+          .optional()
+          .describe("Alias of end_line, as the result echoes it."),
       }),
     )
     .min(1)
@@ -67,9 +82,49 @@ export const readLedgerFilesOutputSchema = toolOutputSchema(
 );
 export type ReadLedgerFilesOutput = z.infer<typeof readLedgerFilesOutputSchema>;
 
+const START_LINE_NAMES = {
+  snake: "start_line",
+  camel: "startLine",
+  what: "start lines",
+} as const;
+const END_LINE_NAMES = {
+  snake: "end_line",
+  camel: "endLine",
+  what: "end lines",
+} as const;
+
+/**
+ * Fold one line-range twin pair into its snake_case canonical (w23/141),
+ * following the bank-id twin rule: identical twins merge, two different
+ * values are refused rather than guessed.
+ */
+function resolveLineRangeTwin(
+  path: string,
+  values: { snake?: number; camel?: number },
+  names: { snake: string; camel: string; what: string },
+): number | undefined {
+  const { snake, camel } = values;
+  if (snake !== undefined && camel !== undefined && snake !== camel) {
+    throw new BadUserInputError(
+      `${path}: pass ${names.snake} or ${names.camel}, not two different ${names.what}.`,
+      names.snake,
+      `Pass one ${names.what} under either spelling.`,
+    );
+  }
+  return snake ?? camel;
+}
+
 export async function executeReadLedgerFiles(
   ctx: Pick<ToolContext, "services" | "identity" | "ledgerId">,
-  input: { files: { path: string; start_line?: number; end_line?: number }[] },
+  input: {
+    files: {
+      path: string;
+      start_line?: number;
+      end_line?: number;
+      startLine?: number;
+      endLine?: number;
+    }[];
+  },
 ): Promise<ReadLedgerFilesOutput> {
   const { services, identity, ledgerId } = ctx;
   toolLogger.debug("Reading ledger files", { count: input.files.length });
@@ -77,10 +132,22 @@ export async function executeReadLedgerFiles(
     logger: toolLogger,
     message: "Failed to read files",
     execute: async (): Promise<ReadLedgerFileSection[]> => {
-      const requestedFiles = input.files.map((file) => ({
-        ...file,
-        path: normalizeAgentRepoPath(file.path),
-      }));
+      const requestedFiles = input.files.map((file) => {
+        const path = normalizeAgentRepoPath(file.path);
+        return {
+          path,
+          start_line: resolveLineRangeTwin(
+            path,
+            { snake: file.start_line, camel: file.startLine },
+            START_LINE_NAMES,
+          ),
+          end_line: resolveLineRangeTwin(
+            path,
+            { snake: file.end_line, camel: file.endLine },
+            END_LINE_NAMES,
+          ),
+        };
+      });
       // A reversed range is wrong whatever the file holds, so it is refused
       // before anything is read.
       for (const { path, start_line, end_line } of requestedFiles) {

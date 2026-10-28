@@ -13,7 +13,8 @@ import type { McpRequestContext } from "../mcp-context";
  * were still dropped, so `readLedgerFiles` with `startLine` returned the
  * whole file and a misspelt account imported against the default account.
  * (`sourceAccount` was the original example; w23/m8/t003 made it a real
- * alias, so the case uses a still-unknown key.)
+ * alias, so the case uses a still-unknown key. `startLine`/`endLine` were
+ * the read example; w23/141 made them real aliases too, same treatment.)
  */
 const identity: Identity = {
   userId: "usr_alice",
@@ -51,8 +52,9 @@ describe("an unknown key inside a tool argument", () => {
   it.each([
     [
       "readLedgerFiles",
-      { files: [{ path: "main.bean", startLine: 2, endLine: 3 }] },
-      'files.0: Unrecognized keys: "startLine", "endLine"',
+      // A misspelling of the `startLine` twin (w23/141).
+      { files: [{ path: "main.bean", startLien: 2 }] },
+      'files.0: Unrecognized key: "startLien"',
     ],
     [
       "importStagedBankTransactions",
@@ -87,6 +89,28 @@ describe("an unknown key inside a tool argument", () => {
     try {
       const result = await f.call("readLedgerFiles", {
         files: [{ path: "main.bean", start_line: 2, end_line: 3 }],
+      });
+      expect(result.isError).toBeFalsy();
+      expect(
+        (result.structuredContent as { result: { content: string }[] })
+          .result[0],
+      ).toMatchObject({
+        content: "; two\n; three\n",
+        startLine: 2,
+        endLine: 3,
+      });
+    } finally {
+      await f.close();
+    }
+  });
+
+  // w23/141: the echoed spelling now works end to end through the strict
+  // boundary, not just at the executor.
+  it("accepts the echoed camelCase spelling", async () => {
+    const f = await fixture();
+    try {
+      const result = await f.call("readLedgerFiles", {
+        files: [{ path: "main.bean", startLine: 2, endLine: 3 }],
       });
       expect(result.isError).toBeFalsy();
       expect(
