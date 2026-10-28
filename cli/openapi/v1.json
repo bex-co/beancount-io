@@ -17199,7 +17199,7 @@
     "/api-gateway/v1/ledgers/{owner}/{name}/account-directives": {
       "get": {
         "summary": "List open/close directives per account",
-        "description": "Each account's open and close directives — which accounts are usable on a given date.",
+        "description": "Each account's open and close directives — which accounts are usable on a given date. `entryCount` counts the account's postings, not its directives.",
         "tags": [
           "Ledger v1"
         ],

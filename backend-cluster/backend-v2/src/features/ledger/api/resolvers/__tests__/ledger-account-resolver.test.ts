@@ -1,4 +1,5 @@
 import "reflect-metadata";
+import { getMetadataStorage } from "type-graphql";
 import { LedgerAccountQueryResolver } from "../ledger-account-resolver.query";
 import type { ILedgerAccountService } from "@/features/ledger/service/ledger-account-service";
 import type { IContext } from "@/server/graphql/context";
@@ -129,6 +130,16 @@ describe("LedgerAccountQueryResolver", () => {
       );
 
       expect(result).toEqual(withMeta);
+    });
+
+    // w23/148: the field reads like a directive count; the schema says
+    // postings, matching the REST/MCP description.
+    it("documents entryCount as postings, not directives", () => {
+      const metadata = getMetadataStorage();
+      const entryCount = metadata.fields.find(
+        (field) => field.name === "entryCount",
+      );
+      expect(entryCount?.description).toContain("Postings on this account");
     });
   });
 });

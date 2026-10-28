@@ -99,7 +99,8 @@ def sync_detailed(
 ) -> Response[Any | V1Error]:
     """List open/close directives per account
 
-     Each account's open and close directives — which accounts are usable on a given date.
+     Each account's open and close directives — which accounts are usable on a given date. `entryCount`
+    counts the account's postings, not its directives.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -133,7 +134,8 @@ def sync(
 ) -> Any | V1Error | None:
     """List open/close directives per account
 
-     Each account's open and close directives — which accounts are usable on a given date.
+     Each account's open and close directives — which accounts are usable on a given date. `entryCount`
+    counts the account's postings, not its directives.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -162,7 +164,8 @@ async def asyncio_detailed(
 ) -> Response[Any | V1Error]:
     """List open/close directives per account
 
-     Each account's open and close directives — which accounts are usable on a given date.
+     Each account's open and close directives — which accounts are usable on a given date. `entryCount`
+    counts the account's postings, not its directives.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -194,7 +197,8 @@ async def asyncio(
 ) -> Any | V1Error | None:
     """List open/close directives per account
 
-     Each account's open and close directives — which accounts are usable on a given date.
+     Each account's open and close directives — which accounts are usable on a given date. `entryCount`
+    counts the account's postings, not its directives.
 
     Args:
         owner (str): Ledger owner's username Example: alice.

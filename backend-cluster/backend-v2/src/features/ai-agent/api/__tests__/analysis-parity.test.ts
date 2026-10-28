@@ -139,6 +139,17 @@ describe("ledger analysis reads", () => {
     expect(ANALYSIS_READS).toHaveLength(16);
   });
 
+  // w23/148: entryCount counts postings, so the shared REST/MCP
+  // description says so — the bare "open and close directives" text
+  // misled readers into a directive count.
+  it("account-directives describes entryCount as postings", () => {
+    const read = ANALYSIS_READS.find(
+      (entry) => entry.segment === "account-directives",
+    );
+    expect(read?.description).toContain("`entryCount` counts");
+    expect(read?.description).toContain("postings, not its directives");
+  });
+
   it.each(ANALYSIS_READS)(
     "$segment resolves through the same service call on both surfaces",
     async (read) => {

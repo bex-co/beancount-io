@@ -19,7 +19,10 @@ class LedgerAccountItem {
   @Field(() => GraphQLJSONObject, { nullable: true })
   balance?: Record<string, string>;
 
-  @Field(() => Number)
+  // w23/148: the name reads like a directive count; it is postings.
+  @Field(() => Number, {
+    description: "Postings on this account — not a directive count",
+  })
   entryCount: number;
 
   @Field(() => String)
