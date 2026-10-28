@@ -1261,6 +1261,20 @@ async function main(): Promise<void> {
     "normalized ;-terminated query returns the unterminated query's rows",
   );
 
+  // Trailing comments (w23/151): the normalizer accepts whitespace plus
+  // comments past the final `;`, so verify against the LIVE engine that
+  // the normalized comment-tailed query returns the unterminated rows.
+  const normalizedCommentTail = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    stripBqlStatementTerminator("SELECT count(*) FROM postings; -- total"),
+  );
+  assert(
+    JSON.stringify(normalizedCommentTail.rows) ===
+      JSON.stringify(unterminatedCount.rows),
+    "normalized ;-terminated query with a trailing comment returns the unterminated query's rows",
+  );
+
   // Quoted FROM (w23/115): the engine silently ignores a quoted FROM name and
   // runs in default postings scope, so the shell service unquotes
   // valid-identifier FROM names first. Verify against the LIVE engine that (a)

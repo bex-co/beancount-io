@@ -52,4 +52,39 @@ describe("stripBqlStatementTerminator", () => {
   it("neutralizes a lone semicolon to whitespace", () => {
     expect(stripBqlStatementTerminator(";")).toBe(" ");
   });
+
+  // w23/151: trailing comments ride along, keeping length — the tail past
+  // the last unquoted `;` may hold `--` and `/* */` besides whitespace.
+  it.each([
+    ["SELECT 1; -- trailing", "SELECT 1" + " ".repeat(13)],
+    ["SELECT 1;-- trailing", "SELECT 1 " + " ".repeat(11)],
+    ["SELECT 1; -- one\n-- two", "SELECT 1 " + " ".repeat(7) + "\n" + " ".repeat(6)],
+    ["SELECT 1; /* trailing */", "SELECT 1" + " ".repeat(16)],
+    ["SELECT 1; -- don't", "SELECT 1" + " ".repeat(10)],
+    ["SELECT 1; -- foo; bar", "SELECT 1" + " ".repeat(13)],
+  ])("neutralizes a terminator with a trailing comment: %s", (query, expected) => {
+    const out = stripBqlStatementTerminator(query);
+    expect(out).toBe(expected);
+    expect(out.length).toBe(query.length);
+  });
+
+  // w23/151: the load-bearing half — a second statement, garbage, or a
+  // bare `--x` still returns unchanged for the engine to refuse loudly.
+  it.each([
+    "SELECT 1; SELECT 2",
+    "SELECT 1; GARBAGE!!!",
+    "SELECT 1; --x",
+    "SELECT 1; -- ok\nSELECT 2",
+    "SELECT 1; /* unterminated",
+  ])("leaves a non-comment tail for the engine: %s", (query) => {
+    expect(stripBqlStatementTerminator(query)).toBe(query);
+  });
+
+  it("neutralizes only the final semicolon before a trailing comment", () => {
+    // The mid-query `;` still reaches the engine, so the second
+    // statement refuses loudly (w23/151).
+    expect(stripBqlStatementTerminator("SELECT 1; SELECT 2; -- trailing")).toBe(
+      "SELECT 1; SELECT 2" + " ".repeat(13),
+    );
+  });
 });

@@ -89,4 +89,37 @@ describe("LedgerShellService statement-terminator normalization", () => {
       "SELECT count(*) FROM postings",
     );
   });
+
+  // w23/151: a trailing `--` comment rides along — the engine sees the
+  // terminator and the comment both neutralized — in both shell modes.
+  it.each(["queryShell", "queryShellText"] as const)(
+    "accepts a trailing comment after the terminator in %s",
+    async (mode) => {
+      await makeService()[mode]({
+        ledgerId: "open_ledger/example",
+        userId: undefined,
+        query: "SELECT count(*) FROM postings; -- total",
+      });
+      expect(queryLedgerFilesResult).toHaveBeenCalledWith(
+        expect.anything(),
+        "main.beancount",
+        `SELECT count(*) FROM postings${" ".repeat(10)}`,
+      );
+    },
+  );
+
+  // w23/151: a second statement past the terminator is NOT neutralized —
+  // the engine sees the raw text and refuses it.
+  it("passes a post-terminator second statement through raw", async () => {
+    await makeService().queryShell({
+      ledgerId: "open_ledger/example",
+      userId: undefined,
+      query: "SELECT count(*) FROM postings; SELECT 1",
+    });
+    expect(queryLedgerFilesResult).toHaveBeenCalledWith(
+      expect.anything(),
+      "main.beancount",
+      "SELECT count(*) FROM postings; SELECT 1",
+    );
+  });
 });
