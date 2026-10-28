@@ -2602,6 +2602,35 @@ async function main(): Promise<void> {
     );
   }
 
+  // Amount-column dtypes without values (w23/167): `price`
+  // (postings), `amount` (prices/balances), and `discrepancy`
+  // (balances) report `Amount` on zero rows and all-NULL cells, and
+  // `tolerance` (balances) reports `Decimal` — per stock's registry.
+  // This fixture carries no @ prices, so bare `price` is all-NULL.
+  for (const [query, expected] of [
+    ["SELECT price FROM postings WHERE FALSE", ["Amount"]],
+    ["SELECT price, cost_number FROM postings LIMIT 1", ["Amount", "Decimal"]],
+    ["SELECT amount FROM prices WHERE FALSE", ["Amount"]],
+    [
+      "SELECT amount, tolerance, discrepancy FROM balances WHERE FALSE",
+      ["Amount", "Decimal", "Amount"],
+    ],
+  ] as Array<[string, string[]]>) {
+    const shell = queryResultToShellResult(
+      await queryLedgerFilesResult(
+        FILES,
+        "main.beancount",
+        normalizeBqlQueryForEngine(query),
+      ),
+      extractSelectAliases(query),
+    );
+    assert(
+      JSON.stringify(shell.table?.types.map((type) => type.dtype)) ===
+        JSON.stringify(expected),
+      `${query} keeps dtypes ${expected}`,
+    );
+  }
+
   // Expression-typed string dtypes (w23/146): a string literal or
   // string-function call reports `str` whatever the values look like —
   // value sniffing mistyped `'3000.00'` and `str(number)` as Decimal and
