@@ -2078,6 +2078,33 @@ async function main(): Promise<void> {
     "genuinely empty results stay clean through the probe",
   );
 
+  // Derived-column dtypes on empty results (w23/136 core): `id` and the
+  // account-set columns keep their schema dtype with zero rows, like
+  // stored columns — while aliases shadowing those names stay `unknown`
+  // through the w23/134 layer.
+  for (const [query, expected] of [
+    [
+      "SELECT id, other_accounts, number FROM postings WHERE FALSE",
+      ["int", "set", "Decimal"],
+    ],
+    ["SELECT id, accounts FROM entries WHERE FALSE", ["int", "set"]],
+    ["SELECT payee AS id FROM postings WHERE FALSE", ["unknown"]],
+  ] as Array<[string, string[]]>) {
+    const shell = queryResultToShellResult(
+      await queryLedgerFilesResult(
+        FILES,
+        "main.beancount",
+        normalizeBqlQueryForEngine(query),
+      ),
+      extractSelectAliases(query),
+    );
+    assert(
+      JSON.stringify(shell.table?.types.map((type) => type.dtype)) ===
+        JSON.stringify(expected),
+      `${query} keeps dtypes ${expected}`,
+    );
+  }
+
   const count = await countDirectives(
     "2024-01-01 open Assets:Cash USD\n2024-01-02 open Income:Z USD\n",
   );

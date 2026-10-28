@@ -27,7 +27,6 @@
 
 ## Inbox
 
-- [136](./136.md) — computed-value dtypes flip to `str` on empty input (it.5722-5725)
 - [137](./137.md) — ledger `permissions` ignore credential scopes; `FORBIDDEN` hints point at the lying field (it.6059-6061)
 - [138](./138.md) — text renderer truncates column headers to the widest value (it.6111-6114)
 - [139](./139.md) — window functions fail on any explicit FROM as "subquery" (it.6146-6148)

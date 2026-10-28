@@ -130,14 +130,14 @@ function classifyColumnDtype(
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/u;
 const DECIMAL_RE = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/u;
 const DATE_COLUMNS = new Set(["date", "open_date", "close_date"]);
-const INT_COLUMNS = new Set(["count", "year", "month", "day"]);
+const INT_COLUMNS = new Set(["count", "year", "month", "day", "id"]);
 const DECIMAL_COLUMNS = new Set([
   "number",
   "cost_number",
   "price_number",
   "weight",
 ]);
-const SET_COLUMNS = new Set(["tags", "links"]);
+const SET_COLUMNS = new Set(["tags", "links", "other_accounts", "accounts"]);
 const INVENTORY_COLUMNS = new Set(["balance"]);
 const POSITION_COLUMNS = new Set(["position"]);
 const STRING_COLUMNS = new Set([
