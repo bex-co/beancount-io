@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1080 — Explain the pinned Beangulp reverse-extraction limitation](./1080.md) — minor CLI help/docs: 0.2.0 ignores both reverse flags; 4 independent cases, 32 CLI calls, native controls and verified custom-sort workaround; first-party forwarding works, checked 2026-10-27.
+
 - [1079 — Let identical heuristic orders reach the same-day booking planner](./1079.md) — major CLI bulk add: reversed partial short covers, splits and custody chains skip the existing planner; 50 new profiles plus full original ordering controls, 2254 CLI calls and 522 native inventories; checked 2026-10-27.
 
 - [1078 — Accept native rounding for costed postings with prices in Cash Flow](./1078.md) — major CLI reporting: one cost-weighted purchase or sale is misclassified as priced FX; 24 new profiles plus full unchanged-source rounding/example/FX controls, 942 CLI calls and 232 native loads; checked 2026-10-27.
