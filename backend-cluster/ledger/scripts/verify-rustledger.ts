@@ -1466,6 +1466,42 @@ async function main(): Promise<void> {
     );
   }
 
+  // Star alias (w23/127): the raw engine accepts `SELECT * AS x` and answers
+  // it mismatched — one declared column over star-width rows — while stock
+  // ParseErrors, so the query path refuses it before it runs.
+  const rawStarAlias = await withLedger(FILES, "main.beancount", (ledger) =>
+    ledger.query("SELECT * AS x FROM postings LIMIT 2"),
+  );
+  assert(
+    rawStarAlias.columns.length === 1 &&
+      rawStarAlias.rows.every((row) => row.length > 1) &&
+      !rawStarAlias.errors.some((e) => e.severity === "error"),
+    "raw engine still answers SELECT * AS x mismatched (the guard is load-bearing)",
+  );
+  const guardedStarAlias = await queryLedgerFilesResult(
+    FILES,
+    "main.beancount",
+    "SELECT * AS x FROM postings LIMIT 2",
+  );
+  assert(
+    guardedStarAlias.rows.length === 0 &&
+      guardedStarAlias.errors.some(
+        (e) =>
+          e.severity === "error" &&
+          e.message.includes("SELECT * AS <alias>"),
+      ),
+    "the query path refuses SELECT * AS x and names the alias",
+  );
+  const bareStarAlias = await queryLedgerFilesResult(
+    FILES,
+    "main.beancount",
+    "SELECT * x FROM postings LIMIT 1",
+  );
+  assert(
+    bareStarAlias.errors.some((e) => e.severity === "error"),
+    "the bare SELECT * x form stays loud",
+  );
+
   const count = await countDirectives(
     "2024-01-01 open Assets:Cash USD\n2024-01-02 open Income:Z USD\n",
   );
