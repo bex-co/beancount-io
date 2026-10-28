@@ -43,6 +43,7 @@
 - [134](./134.md) — structured `dtype` lies for all-NULL aliased columns via alias-name fallback (it.5371-5377)
 - [135](./135.md) — empty input masks unknown-function/column errors, fabricates `str` dtype (it.5710-5712)
 - [136](./136.md) — computed-value dtypes flip to `str` on empty input (it.5722-5725)
+- [137](./137.md) — ledger `permissions` ignore credential scopes; `FORBIDDEN` hints point at the lying field (it.6059-6061)
 - [082](./blocked/082.md) — `createPullRequest` fails on production: Gitea 500 while creating the `pr-patch-*` branch, on MCP and REST alike — **blocked:** needs the Gitea server-log cause for one failing branch create (owner), then a production rerun
 - [080](./blocked/080.md) — `/api-gateway/mcp` accepts any `Origin` (the MCP transport spec says a bad `Origin` MUST get 403); owner picks validate vs document — **blocked:** owner picks 403-on-foreign-Origin vs documented non-validation
 - [075](./blocked/075.md) — typed BQL results return NULL as `""` (undocumented), so a missing payee or price reads as an empty string — **blocked:** documented as `""` (option a shipped); owner picks `null` on REST/MCP, `null` everywhere, or keeping `""`
