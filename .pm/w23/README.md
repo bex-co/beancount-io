@@ -33,7 +33,7 @@
 - [x] [151](./done/151.md) — BQL refuses post-`;` tails stock drops (strictness is right; trailing `--` comments swept up)
 - [x] [152](./done/152.md) — same-type composite equality escapes 128's guard on bare `weight`/`amount`/`other_accounts`/`accounts` (constant-False; stock refuses)
 - [x] [153](./done/153.md) — ledger projects numeric `id`s where stock projects hash hex strings (silent value + type change)
-- [154](./154.md) — BQL `+` refuses string concatenation stock performs (`'a'+'b'` → `ab`)
+- [x] [154](./done/154.md) — BQL `+` refuses string concatenation stock performs (`'a'+'b'` → `ab`)
 - [155](./155.md) — BQL `str()` refuses composite inputs stock stringifies (position, inventory, set)
 - [156](./156.md) — report `conversion` silently ignores unresolvable targets (`BOGUS`/unpriced → USD figures, no error)
 - [157](./157.md) — double-quoted identifiers silently become string literals outside FROM (`"account"` → `account`)

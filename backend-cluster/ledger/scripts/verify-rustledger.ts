@@ -1818,6 +1818,51 @@ async function main(): Promise<void> {
     "id-free filtered queries still answer through the guard",
   );
 
+  // String concatenation (w23/154): stock concatenates str + str while
+  // the raw engine refuses with a generic numeric error and offers no
+  // concat-capable spelling, so the query path refuses with a message
+  // naming the limitation — and numeric addition still answers.
+  const rawConcat = await withLedger(FILES, "main.beancount", (ledger) =>
+    ledger.query("SELECT 'a' + 'b' AS s LIMIT 1"),
+  );
+  assert(
+    rawConcat.rows.length === 0 &&
+      rawConcat.errors.some(
+        (e) =>
+          e.severity === "error" &&
+          /arithmetic requires numeric values/.test(e.message),
+      ),
+    "raw engine still refuses str + str with the generic numeric error (the guard renames it)",
+  );
+  for (const query of [
+    "SELECT 'a' + 'b' AS s LIMIT 1",
+    "SELECT payee + '!' AS s FROM postings LIMIT 1",
+  ]) {
+    const guardedConcat = await queryLedgerFilesResult(
+      FILES,
+      "main.beancount",
+      query,
+    );
+    assert(
+      guardedConcat.rows.length === 0 &&
+        guardedConcat.errors.some(
+          (e) =>
+            e.severity === "error" &&
+            e.message.includes("String concatenation with +"),
+        ),
+      `the query path refuses with the concat message: ${query}`,
+    );
+  }
+  const stillAdds = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    "SELECT 1 + 2 AS s LIMIT 1",
+  );
+  assert(
+    JSON.stringify(stillAdds.rows) === `[{"s":"3"}]`,
+    "numeric addition still answers through the guard",
+  );
+
   // Inventory GROUP BY (w23/129): the raw engine collapses GROUP BY balance
   // into one group while DISTINCT finds each value, so the query path
   // refuses the named and ordinal forms — and scalar grouping still answers.

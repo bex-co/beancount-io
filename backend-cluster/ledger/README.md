@@ -85,6 +85,18 @@ expression types independent of aliases, including empty or entirely null
 columns, require a supported engine schema. The service does not reconstruct
 that schema by parsing user queries or coercing values.
 
+## BQL string concatenation
+
+Stock beanquery concatenates strings with `+` (`'a' + 'b'` → `ab`), but the
+pinned engine only adds numbers and refuses str `+` str. There is no
+`concat()` spelling on either side and no engine spelling to rewrite to
+(`||` is a syntax error, `concat()` is unknown, `joinstr` joins with a
+`", "` separator), so BQL here has no string-concat spelling at all:
+concatenate outside the query. The refusal names the limitation
+(`String concatenation with + is not supported …`, w23/154) instead of the
+engine's generic numeric hint. Engine support is tracked upstream
+(w23/blocked/022).
+
 ## Getting started
 
 Requires Node.js 20.19+, 22.13+, or 24+ and a running Gitea instance. See

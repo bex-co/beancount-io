@@ -65,7 +65,7 @@ const NUMBER_COLUMNS = new Set([
   "day",
   "lineno",
 ]);
-const STR_COLUMNS = new Set([
+export const STR_COLUMNS = new Set([
   "type",
   "id",
   "filename",
@@ -98,7 +98,7 @@ const COMPOSITE_COLUMNS = new Set([
   "open",
   "close",
 ]);
-const STR_FUNCTIONS = new Set([
+export const STR_FUNCTIONS = new Set([
   "account_sortkey",
   "commodity",
   "currency",

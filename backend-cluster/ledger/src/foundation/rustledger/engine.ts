@@ -85,6 +85,7 @@ import { idColumnError } from "./id-column-guard";
 import { compositeComparisonError } from "./composite-comparison-guard";
 import { inventoryGroupByError } from "./inventory-group-by-guard";
 import { groupByCoverageError } from "./group-by-coverage-guard";
+import { stringConcatError } from "./string-concat-guard";
 import { mixedComparisonError } from "./mixed-comparison-guard";
 import { OPTION_LINE_RE } from "./beancount-options";
 import { directiveToText } from "./journal-serialize";
@@ -1035,6 +1036,7 @@ export async function queryLedgerFilesResultInProcess(
           compositeComparisonError(query) ??
           inventoryGroupByError(query) ??
           groupByCoverageError(query) ??
+          stringConcatError(query) ??
           mixedComparisonError(query);
         if (refused !== undefined) return refused;
         const result = ledger.query(query);
