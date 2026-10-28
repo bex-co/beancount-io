@@ -27,3 +27,5 @@
 - **Expected outcome:** delete refuses or rewrites with guidance, matching rename, on every surface.
 - **Why now:** one removal path guards includes and the other does not; the rename guard (w23/029, w23/056) is the template.
 - **Adoption surface:** included — the milestone ships agent-facing refusal guidance and `docs/mcp.md` wording that must be accurate on every surface.
+
+**Prod recheck it.6368:** not testable on the QA ledger — `listLedgerFiles` shows only `main.bean` (no included files exist to delete). The guard needs a multi-file ledger or owner deploy-history confirm.
