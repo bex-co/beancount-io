@@ -12,6 +12,8 @@ Rehearsed on macOS with Claude Code and Codex (see [tested with](first-query.md#
 
 ## 1. Get the skills
 
+On native Windows, use the [Windows (PowerShell)](#windows-powershell) section for the link installer (install, verify, update, conflicts and removal) instead of the `sh` blocks.
+
 Fetch only the `skills/` directory of this repository into a stable location:
 
 ```sh
@@ -71,7 +73,7 @@ Next: get a first answer from a sample ledger with the [first-query walkthrough]
 
 ## Install from a standard channel instead
 
-For one versioned install and update, use the [Beancount.io plugin](#plugin-both-clients) on Claude Code/Codex or the [suite package](#one-suite-release) on OpenClaw. The Git channels below also install the whole suite, but copy individual workflow directories rather than installing a versioned plugin. Confirm all thirteen skills with the client listing in step 3 and the [first-query walkthrough](first-query.md). Skills hand off to siblings and share one command contract, so install them together. These channels read this repository; their per-skill catalog pages are not separate releases maintained by Beancount.io.
+For one versioned install and update, use the [Beancount.io plugin](#plugin-both-clients) on Claude Code/Codex or the [suite package](#one-suite-release) on OpenClaw. The Git channels below also install the whole suite, but copy individual workflow directories rather than installing a versioned plugin. Confirm all fourteen skills with the client listing in step 3 and the [first-query walkthrough](first-query.md). Skills hand off to siblings and share one command contract, so install them together. These channels read this repository; their per-skill catalog pages are not separate releases maintained by Beancount.io.
 
 ### `npx skills` (skills.sh)
 
@@ -115,7 +117,7 @@ codex plugin add beancount-io@beancount-io
 codex plugin remove beancount-io@beancount-io     # remove
 ```
 
-Both manifests carry one shared suite version; a client delivers a new copy only when that version changes, and every shipped skill change bumps it. Confirm with each client's skill listing (step 3): the thirteen skills appear under the `beancount-io:` namespace.
+Both manifests carry one shared suite version; a client delivers a new copy only when that version changes, and every shipped skill change bumps it. Confirm with each client's skill listing (step 3): the fourteen skills appear under the `beancount-io:` namespace.
 
 ### Hermes and raw GitHub folders
 
@@ -211,6 +213,8 @@ python3 "$SKILLS_SRC/scripts/skills/beancount-skills.py" install ~/.claude/skill
 ```
 
 `install` replaces each old link that points into this checkout with a link to `skills/<name>` (`relinked … (moved from skills/.claude/skills)`), then runs `verify`. A link into a different checkout is left alone and reported as a conflict. List your workspace skill directories too if you installed into any.
+
+This upgrade does not apply to the [Windows steps](#windows-powershell). They were first published on 2026-10-28 and have always linked the current `skills/<name>` layout.
 
 ### Local edits
 
@@ -351,6 +355,7 @@ These differences from the macOS commands were needed on the rehearsal host:
   can read each skill's `references`:
 
   ```powershell
+  $SKILLS_SRC = Join-Path $env:LOCALAPPDATA 'beancount-io'
   claude -p "What were my biggest expenses in June 2026? Ledger is ./ledger.beancount." --allowedTools "Skill" "Read" "Bash(bea:*)" "PowerShell(bea:*)" --add-dir "$SKILLS_SRC\skills"
   ```
 
@@ -367,6 +372,15 @@ These differences from the macOS commands were needed on the rehearsal host:
   [Codex Windows sandbox](https://learn.chatgpt.com/docs/windows/windows-sandbox)
   documentation for the elevated option. Only the unelevated sandbox was
   rehearsed.
+
+Only these non-interactive commands were rehearsed. For an interactive
+session, start `claude` with the same `--add-dir` and allow `bea` when it asks,
+or start `codex` with the same `-c` option (or the `config.toml` setting).
+Discovery needed no extra flags in either client: the
+[step 3](#3-confirm-the-agents-see-them) listing prompts worked as written. In
+the first query, both clients chose `beancount-ask` on their own from the
+prompt. Explicit invocation is the same as on macOS: `/beancount-ask` in Claude
+Code and `$beancount-ask` in Codex.
 
 ### Update
 
@@ -401,11 +415,12 @@ Move-Item "$HOME\.claude\skills\beancount-ask" "$HOME\beancount-skill-backups\"
 
 ```powershell
 $SKILLS_SRC = Join-Path $env:LOCALAPPDATA 'beancount-io'
-python "$SKILLS_SRC/scripts/skills/beancount-skills.py" uninstall "$HOME\.claude\skills" "$HOME\.agents\skills"
 git -C "$SKILLS_SRC" status --short skills
-Remove-Item -Recurse -Force "$SKILLS_SRC"
+python "$SKILLS_SRC/scripts/skills/beancount-skills.py" uninstall "$HOME\.claude\skills" "$HOME\.agents\skills"
+if ($LASTEXITCODE -eq 0) { Remove-Item -Recurse -Force "$SKILLS_SRC" }
 ```
 
-Remove the links with `uninstall`. It removes only links into this checkout
-and keeps everything else. Delete the checkout only after `uninstall`
-succeeds, and after checking `status` for edits you want to keep.
+Run `status` first and save any edits you want to keep (see
+[Local edits](#local-edits)) before you run the last two lines. `uninstall`
+removes only links into this checkout and keeps everything else. The last line
+deletes the checkout only if `uninstall` succeeded.

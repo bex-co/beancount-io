@@ -9,6 +9,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+WINDOWS_LINK_HINT = (
+    " (on Windows, clone with `git -c core.symlinks=true clone` from an account that can create symbolic links; see skills/AGENTS.md)"
+)
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 SETTINGS = REPO_ROOT / ".claude/settings.json"
@@ -85,11 +89,11 @@ def main() -> int:
     shared_skills = REPO_ROOT / ".claude/skills"
     expected_target = "../.agents/skills"
     if not shared_skills.is_symlink():
-        errors.append(".claude/skills must be a relative symlink")
-    elif os.readlink(shared_skills) != expected_target:
-        errors.append(
-            f".claude/skills points to {os.readlink(shared_skills)!r}, expected {expected_target!r}"
-        )
+        errors.append(".claude/skills must be a relative symlink" + (WINDOWS_LINK_HINT if os.name == "nt" else ""))
+    # Git for Windows writes the link target with backslashes; elsewhere the
+    # target must match byte for byte.
+    elif (target := os.readlink(shared_skills).replace(os.sep, "/")) != expected_target:
+        errors.append(f".claude/skills points to {target!r}, expected {expected_target!r}")
     elif shared_skills.resolve() != (REPO_ROOT / ".agents/skills").resolve():
         errors.append(".claude/skills does not resolve to .agents/skills")
 

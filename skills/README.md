@@ -1,6 +1,6 @@
 # Beancount Skills
 
-Skills for Beancount users working with a ledger through a coding agent. The thirteen workflows below support Claude Code and Codex; their source files live in [`skills/`](.).
+Skills for Beancount users working with a ledger through a coding agent. The fourteen workflows below support Claude Code and Codex; their source files live in [`skills/`](.).
 
 The skills work on ledger files on your machine. A hosted ledger stops the local workflow. You can separately request a Beancount.io MCP workflow for a named ledger, or a local clone; the skills do not invoke remote tools or clone a ledger merely because a server is connected.
 
@@ -21,12 +21,13 @@ The suite shares [command recipes](beancount-init/references/bea-cli.md) that se
 | [beancount-ask](beancount-ask/SKILL.md) | Answer ledger questions with reproducible queries. |
 | [beancount-roll-forward](beancount-roll-forward/SKILL.md) | Explain one balance-sheet account's movement over a period, opening to closing. |
 | [beancount-accruals](beancount-accruals/SKILL.md) | Prepare supported accrual drafts for a period from a stated schedule. |
+| [beancount-invoices](beancount-invoices/SKILL.md) | Record invoices you issue and bills you receive, apply payments to them, and see who owes what and how overdue. |
 | [beancount-close](beancount-close/SKILL.md) | Reconcile and close an accounting period. |
 | [beancount-options](beancount-options/SKILL.md) | Record options trades and lifecycle events. |
 
 ## Install
 
-For one versioned suite, use the [Beancount.io plugin for Claude Code/Codex](../docs/skills/installation.md#plugin-both-clients) or the [OpenClaw suite package](../docs/skills/installation.md#one-suite-release). The thirteen source folders are the workflows inside that suite. Git-copy channels install them together from the explicit customer directory; third-party per-skill pages do not define separate Beancount.io releases.
+For one versioned suite, use the [Beancount.io plugin for Claude Code/Codex](../docs/skills/installation.md#plugin-both-clients) or the [OpenClaw suite package](../docs/skills/installation.md#one-suite-release). The fourteen source folders are the workflows inside the plugin; the published OpenClaw package (suite 0.4.0) predates `beancount-invoices` and carries the other thirteen. Git-copy channels install them together from the explicit customer directory; third-party per-skill pages do not define separate Beancount.io releases.
 
 For a Git checkout, install the whole suite: migration and month-end close depend on sibling workflows, and each skill's `references/` and fixtures belong with its `SKILL.md`. One Git checkout serves Claude Code (`~/.claude/skills`) and Codex (`~/.agents/skills`):
 
@@ -36,6 +37,8 @@ git clone --depth 1 --filter=blob:none --sparse https://github.com/bex-co/beanco
 git -C "$SKILLS_SRC" sparse-checkout set skills scripts/skills docs/skills
 python3 "$SKILLS_SRC/scripts/skills/beancount-skills.py" install ~/.claude/skills ~/.agents/skills
 ```
+
+On native Windows, use the guide's [Windows PowerShell steps](../docs/skills/installation.md#windows-powershell) instead: they need permission to create symbolic links (Developer Mode), and Claude Code and Codex each need client-specific flags there, listed under [Agents on Windows](../docs/skills/installation.md#agents-on-windows).
 
 - [Installation guide](../docs/skills/installation.md): workspace-only installs, discovery checks, `verify`, updates, local edits and name conflicts, and removal. Installed before 2026-10-19? Follow its [one-time upgrade](../docs/skills/installation.md#upgrading-from-the-old-layout). Prefer a standard channel? The guide also covers [`npx skills`, `gh skill`, and the `beancount-io` plugin for both clients](../docs/skills/installation.md#install-from-a-standard-channel-instead) (Hermes cannot install the whole suite yet — the guide says why), with choosing and switching between methods.
 - [OpenClaw and Hermes Agent](../docs/skills/installation.md#openclaw-and-hermes-agent): install the unified `@puncsky/beancount-io` suite on OpenClaw, migrate existing standalone copies, and check the actual Hermes limits. The thirteen old standalone listings are retired. See the [suite distribution record](../docs/skills/suite-distribution.md) for publication and native-host verification; the [registry rehearsal](../docs/skills/clawhub-rehearsal.md) preserves the earlier standalone results.

@@ -1107,7 +1107,10 @@ class TestWindowsPowerShellGuide(unittest.TestCase):
         lines = [line for line in block.splitlines() if line.strip()]
         body = ["$ErrorActionPreference = 'Continue'", "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8"]
         for line in lines:
-            body += ["$global:LASTEXITCODE = 0", line, 'Write-Output "@@exit $LASTEXITCODE"']
+            # Reset so a cmdlet line reports 0, except where the line reads the
+            # previous line's code, as the guide's guarded Remove-Item does.
+            reset = [] if "$LASTEXITCODE" in line else ["$global:LASTEXITCODE = 0"]
+            body += [*reset, line, 'Write-Output "@@exit $LASTEXITCODE"']
         script = self.root / "step.ps1"
         # UTF-8 with BOM, so Windows PowerShell 5.1 reads the script as UTF-8.
         script.write_text("\n".join(body) + "\n", encoding="utf-8-sig")
@@ -1209,6 +1212,17 @@ class TestWindowsPowerShellGuide(unittest.TestCase):
             self.assertEqual(sorted(p.name for p in dest.iterdir()), ["my-own-skill", "notes ü.txt"])
         self.assertEqual({path: path.read_bytes() for path in self.seeded}, self.seeded)
         self.assertEqual({p.relative_to(backup): p.read_bytes() for p in backup.rglob("*") if p.is_file()}, copy_files)
+
+    def test_remove_keeps_the_checkout_when_uninstall_fails(self):
+        get = windows_guide_block("git clone").replace(self.URL, self.origin.as_uri())
+        codes, out = self.powershell(get)
+        self.assertEqual(codes, [0] * len(codes), out)
+        (self.src / "scripts" / "skills" / "beancount-skills.py").write_text("raise SystemExit(3)\n", encoding="utf-8")
+        codes, out = self.powershell(windows_guide_block("uninstall"))
+        self.assertEqual(codes[-2:], [3, 3], out)
+        self.assertTrue(self.src.is_dir(), "a failed uninstall must not delete the checkout")
+        for name in self.names:
+            self.assert_linked(name)
 
 
 def june_expenses(ledger: Path) -> dict[str, Decimal]:

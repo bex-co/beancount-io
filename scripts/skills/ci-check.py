@@ -94,7 +94,11 @@ def check_symlinks() -> None:
     claude_skills = REPO_ROOT / ".claude" / "skills"
     expected = Path("../.agents/skills")
     if not claude_skills.is_symlink() or claude_skills.readlink() != expected:
-        fail(".claude/skills must be a relative symlink to ../.agents/skills")
+        hint = "" if os.name != "nt" else (
+            " (on Windows, clone with `git -c core.symlinks=true clone` from an account"
+            " that can create symbolic links; see skills/AGENTS.md)"
+        )
+        fail(".claude/skills must be a relative symlink to ../.agents/skills" + hint)
 
 
 def repo_files(*paths: str) -> list[str]:

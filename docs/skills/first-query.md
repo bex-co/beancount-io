@@ -4,7 +4,7 @@ Get your first answer from a coding agent using a small synthetic ledger that sh
 
 ## 1. Install and verify
 
-Follow [Install the Beancount skills](installation.md) through step 3. You need `bea` on your `PATH` and the suite linked into Claude Code (`~/.claude/skills`), Codex (`~/.agents/skills`), or both.
+Follow [Install the Beancount skills](installation.md) through step 3. You need `bea` on your `PATH` and the suite linked into Claude Code (`~/.claude/skills`), Codex (`~/.agents/skills`), or both. On native Windows, follow the guide's [Windows (PowerShell)](installation.md#windows-powershell) section instead, including [bea on Windows](installation.md#bea-on-windows).
 
 ## 2. Create a workspace with the sample ledger
 
@@ -15,6 +15,20 @@ git init -q
 cp "$SKILLS_SRC/skills/beancount-ask/evals/files/eval1_ledger.beancount" ledger.beancount
 shasum -a 256 ledger.beancount > ledger.sha256
 ```
+
+On native Windows, in Windows PowerShell:
+
+```powershell
+$SKILLS_SRC = Join-Path $env:LOCALAPPDATA 'beancount-io'
+$WS = Join-Path $HOME 'beancount-first-query'
+New-Item -ItemType Directory -Force "$WS" | Out-Null
+Set-Location "$WS"
+git init -q
+Copy-Item "$SKILLS_SRC/skills/beancount-ask/evals/files/eval1_ledger.beancount" ledger.beancount
+(Get-FileHash ledger.beancount -Algorithm SHA256).Hash | Set-Content ledger.sha256
+```
+
+The Windows rehearsal linked the suite into the workspace itself, the only scope where both agents were tried on Windows. To do the same, run `python "$SKILLS_SRC/scripts/skills/beancount-skills.py" install "$WS\.claude\skills" "$WS\.agents\skills"` there, and `uninstall` with the same directories when you are done.
 
 The ledger covers April–June 2026: salary, groceries, gas, a streaming subscription, savings transfers, and credit-card payments. Codex expects a Git repository, so the workspace gets one.
 
@@ -54,12 +68,19 @@ Confirm the ledger is byte-for-byte unchanged:
 shasum -a 256 -c ledger.sha256   # ledger.beancount: OK
 ```
 
+In Windows PowerShell, this prints `True`:
+
+```powershell
+(Get-FileHash ledger.beancount -Algorithm SHA256).Hash -eq (Get-Content ledger.sha256)
+```
+
 ## If something goes wrong
 
 - **The agent doesn't use the skill or says it has none:** run `verify` from [the installation guide](installation.md#3-confirm-the-agents-see-them), then start a new session.
 - **`bea: command not found`:** install `bea` as described in the [prerequisites](installation.md#prerequisites), then open a new terminal.
 - **The agent asks permission to run `bea`:** allow it. The query only reads the ledger.
-- **Different numbers:** make sure you asked about June 2026 and that `shasum -a 256 -c ledger.sha256` reports `OK`.
+- **Different numbers:** make sure you asked about June 2026 and that the checksum check in step 4 passes.
+- **On Windows, Claude Code is denied `bea` or cannot read the skill's references, or Codex reports `blocked by policy`:** use the flags in [Agents on Windows](installation.md#agents-on-windows).
 
 ## Tested with
 
