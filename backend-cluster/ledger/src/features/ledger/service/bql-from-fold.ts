@@ -74,8 +74,11 @@ export const FOLD_COLUMNS: ReadonlySet<string> = new Set([
  * The inner query must expose what the outer query may project — including
  * the columns `SELECT *` hides (`balance`, `cost`, …) — or a hidden-column
  * projection would fail wrapped while working bare. `transaction` is not
- * projectable (the engine rejects it in both spots) and stays out. Order:
- * the engine's `SELECT *` order first, then the hidden columns
+ * projectable (the engine rejects it in both spots) and stays out; `id`
+ * stays out too (w23/153) — any outer `id` projection refuses at the id
+ * guard before the engine runs, so the inner list never needs to expose
+ * it, and listing it would trip that guard on every wrapped query.
+ * Order: the engine's `SELECT *` order first, then the hidden columns
  * alphabetically; the order is unobservable (a star outer keeps a star
  * inner, and anything else names its columns).
  */
@@ -98,7 +101,6 @@ const INNER_COLUMNS = [
   "description",
   "entry",
   "filename",
-  "id",
   "lineno",
   "links",
   "location",

@@ -1774,6 +1774,50 @@ async function main(): Promise<void> {
     "the query path refuses amount = amount on prices",
   );
 
+  // Ordinal ids (w23/153): the raw engine projects positional ordinals
+  // for `id` while stock projects stable content hashes, so the query
+  // path refuses any `id` mention before it runs.
+  const rawId = await withLedger(FILES, "main.beancount", (ledger) =>
+    ledger.query("SELECT id FROM postings LIMIT 1"),
+  );
+  assert(
+    JSON.stringify(rawId.rows) === "[[3]]" &&
+      typeof rawId.rows[0]?.[0] === "number" &&
+      !rawId.errors.some((e) => e.severity === "error"),
+    "raw engine still projects a numeric ordinal for id (the guard is load-bearing)",
+  );
+  for (const query of [
+    "SELECT id FROM postings LIMIT 1",
+    "SELECT id FROM entries LIMIT 1",
+    "SELECT count(*) FROM postings WHERE id = 'abc'",
+    "SELECT count(*) FROM postings WHERE id = 3",
+    "SELECT id = id AS e FROM postings LIMIT 1",
+  ]) {
+    const guardedId = await queryLedgerFilesResult(
+      FILES,
+      "main.beancount",
+      query,
+    );
+    assert(
+      guardedId.rows.length === 0 &&
+        guardedId.errors.some(
+          (e) =>
+            e.severity === "error" &&
+            e.message.includes("positional ordinals"),
+        ),
+      `the query path refuses ${query}`,
+    );
+  }
+  const idFreeWhere = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    "SELECT count(*) FROM postings WHERE payee = 'Store'",
+  );
+  assert(
+    JSON.stringify(idFreeWhere.rows) === `[{"count(*)":2}]`,
+    "id-free filtered queries still answer through the guard",
+  );
+
   // Inventory GROUP BY (w23/129): the raw engine collapses GROUP BY balance
   // into one group while DISTINCT finds each value, so the query path
   // refuses the named and ordinal forms — and scalar grouping still answers.
@@ -2172,16 +2216,19 @@ async function main(): Promise<void> {
     "genuinely empty results stay clean through the probe",
   );
 
-  // Derived-column dtypes on empty results (w23/136 core): `id` and the
+  // Derived-column dtypes on empty results (w23/136 core): the
   // account-set columns keep their schema dtype with zero rows, like
   // stored columns — while aliases shadowing those names stay `unknown`
-  // through the w23/134 layer.
+  // through the w23/134 layer. Bare `id` left these pins in w23/153:
+  // the column now refuses before it runs (ordinals vs stock hashes),
+  // so it can no longer carry an empty-result dtype affidavit; the
+  // shadowed-`id` pin stays, doubling as the 153 shadow carve-out.
   for (const [query, expected] of [
     [
-      "SELECT id, other_accounts, number FROM postings WHERE FALSE",
-      ["int", "set", "Decimal"],
+      "SELECT other_accounts, number FROM postings WHERE FALSE",
+      ["set", "Decimal"],
     ],
-    ["SELECT id, accounts FROM entries WHERE FALSE", ["int", "set"]],
+    ["SELECT accounts FROM entries WHERE FALSE", ["set"]],
     ["SELECT payee AS id FROM postings WHERE FALSE", ["unknown"]],
   ] as Array<[string, string[]]>) {
     const shell = queryResultToShellResult(

@@ -1,7 +1,9 @@
 import { foldBqlColumnFrom } from "../bql-from-fold";
 
+// w23/153: `id` stays out of the wrap's inner list (the id guard would
+// trip on every wrapped query, and outer `id` refuses before running).
 const INNER =
-  "date, flag, payee, narration, account, position, accounts, balance, cost, cost_currency, cost_date, cost_label, cost_number, currency, day, description, entry, filename, id, lineno, links, location, meta, month, number, other_accounts, posting_flag, price, tags, type, units, weight, year";
+  "date, flag, payee, narration, account, position, accounts, balance, cost, cost_currency, cost_date, cost_label, cost_number, currency, day, description, entry, filename, lineno, links, location, meta, month, number, other_accounts, posting_flag, price, tags, type, units, weight, year";
 
 describe("foldBqlColumnFrom", () => {
   it("inserts a terminator after a bare-EOF fold name", () => {

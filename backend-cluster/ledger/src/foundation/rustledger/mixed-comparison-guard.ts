@@ -21,7 +21,9 @@ import type { QueryResult } from "@rustledger/wasm";
  *   coerces correctly), str (every other scalar column), and composite
  *   (sets, positions, amounts, inventories, metadata, entries,
  *   directives). `id` types as stock says (str) even though the engine
- *   projects numbers — that mistyping is a separate, unfiled gap.
+ *   projects numbers — that mistyping refuses earlier, in w23/153's
+ *   `id-column-guard`, so this entry only survives as defense in depth
+ *   where the id guard does not scan.
  * - Literals: quoted text is str, digits are number (one tower),
  *   `YYYY-MM-DD` is date (stock's exact token — anything looser, like
  *   `2024-1-1`, reads as int arithmetic, exactly as stock reads it),
