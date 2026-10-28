@@ -28,7 +28,6 @@
 ## Inbox
 
 
-- [143](./143.md) — temp-asset + bank + branch `NOT_FOUND`s carry the generic ledgers/files/entries hint (none live there)
 - [144](./144.md) — `holdings` echoes `group_by` but refuses it as input (output snake, input camel; 141-class)
 - [145](./145.md) — `docs/mcp.md` contradicts itself on pinned-credential creation (shipped refusal vs stale permission)
 - [146](./146.md) — value-shape dtype sniffing mistypes strings on full input (`'3000.00'`→Decimal, `str(date)`→date)

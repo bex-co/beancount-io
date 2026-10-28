@@ -115,6 +115,26 @@ describe("unwrapFavaResponse", () => {
         hint: expect.stringContaining("listLedgerEntries"),
       },
     ],
+    // w23/143: branch and PR misses name their own next step instead of
+    // the ledgers/files/entries fallback.
+    [
+      "Branch with ID 'master' not found",
+      "Branch with ID 'master' not found",
+      {
+        resource: "Branch",
+        id: "master",
+        hint: expect.stringContaining("`main` is the default"),
+      },
+    ],
+    [
+      "Pull request with ID '999' not found",
+      "Pull request with ID '999' not found",
+      {
+        resource: "Pull request",
+        id: "999",
+        hint: expect.stringContaining("per-ledger"),
+      },
+    ],
     [
       "Ledger entry point with ID 'alice/main:main.bean' not found",
       "Ledger entry point with ID 'alice/main:main.bean' not found",

@@ -33,17 +33,23 @@ const RESOURCE_LIMIT_MESSAGE =
  * not found" told an agent holding a stale entry hash that its ledger was gone.
  * Gitea's generic wording names nothing and keeps the old message.
  */
+/**
+ * Tailored next steps for upstream misses that name their resource (w23/047
+ * established `Entry`; w23/143 adds `Branch` and `Pull request`). Anything
+ * else keeps the category fallback.
+ */
+const UPSTREAM_NOT_FOUND_HINTS: Record<string, string> = {
+  Entry:
+    "Entry hashes change when an entry is edited or an identical twin is deleted; read fresh ones with `listLedgerEntries`.",
+  Branch: "Pass a branch that exists on this ledger; `main` is the default.",
+  "Pull request": "Re-check the prNumber: pull request numbers are per-ledger.",
+};
+
 function notFoundFromUpstream(message: string): NotFoundError {
   const named = /^(.+?) with ID '(.*)' not found$/s.exec(message);
   if (named) {
     const [, resource, id] = named;
-    return new NotFoundError(
-      resource,
-      id,
-      resource === "Entry"
-        ? "Entry hashes change when an entry is edited or an identical twin is deleted; read fresh ones with `listLedgerEntries`."
-        : undefined,
-    );
+    return new NotFoundError(resource, id, UPSTREAM_NOT_FOUND_HINTS[resource]);
   }
   const informative =
     message.trim() !== "" &&

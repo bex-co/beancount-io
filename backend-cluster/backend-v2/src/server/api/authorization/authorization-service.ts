@@ -63,6 +63,16 @@ type AuditClass = "read" | "write" | "admin";
 export const API_KEY_NOT_FOUND_HINT =
   "Pass a key id (`akey_…`) that belongs to this account, not the key itself. Listing your API keys shows their ids.";
 
+/**
+ * Temp-asset misses stay uniform across foreign/malformed/missing keys
+ * (w23/066) — the hint re-points without distinguishing (w23/143).
+ */
+export const TEMP_ASSET_NOT_FOUND_HINT =
+  "Re-check the objectKey from `generateTempAssetUploadUrl`: keys belong to the uploading user and expire.";
+
+export const BANK_CONNECTION_NOT_FOUND_HINT =
+  "Confirm the connection's item id with `listBankConnections`.";
+
 interface DenialConcealment {
   readonly reasons: readonly AuthorizationDenyReason[];
   readonly resourceTypes?: readonly AuthorizationResourceType[];
@@ -191,6 +201,7 @@ const BANK_CONNECTION_CONCEALMENT: DenialConcealment = {
   reasons: ["relationship_denied", "unknown_resource"],
   category: ErrorCategory.NOT_FOUND,
   message: "Bank connection not found",
+  hint: BANK_CONNECTION_NOT_FOUND_HINT,
 };
 
 const ledgerContentReadRequirement = (): ActionRequirement => ({
@@ -215,6 +226,7 @@ const TEMP_ASSET_NOT_FOUND: DenialConcealment = {
   resourceTypes: ["temp_asset"],
   category: ErrorCategory.NOT_FOUND,
   message: "Temporary asset not found",
+  hint: TEMP_ASSET_NOT_FOUND_HINT,
 };
 
 /** Helpers for declaring exact single- and multi-resource requirements. */

@@ -6,10 +6,12 @@ import {
   apiKeyResource,
   anonymousPrincipal,
   AUTHORIZATION_ACTIONS,
+  BANK_CONNECTION_NOT_FOUND_HINT,
   bankConnectionResource,
   authorizationActionAcceptsDelegatedCredential,
   AuthorizationDeniedError,
   AuthorizationService,
+  TEMP_ASSET_NOT_FOUND_HINT,
   ledgerResource,
   LEDGER_RELATIONSHIPS,
   TEMP_ASSET_RELATIONSHIPS,
@@ -1434,6 +1436,41 @@ describe("AuthorizationService", () => {
     await expect(denied).rejects.toMatchObject({
       category: ErrorCategory.FORBIDDEN,
       message: 'This operation requires the "ledger.admin" scope',
+    });
+  });
+
+  // w23/143: the concealed temp-asset denial names the key re-check, not
+  // the ledgers/files/entries fallback — one concealment covers the
+  // resource and the parse/insert tools alike.
+  it("conceals a foreign temp-asset key as not found with a re-check hint", async () => {
+    const service = new AuthorizationService({ check: async () => false });
+    const denied = service.authorizeOrThrow({
+      principal: identity("oauth", "usr_alice", ["ledger.read"]),
+      action: AUTHORIZATION_ACTIONS.ASSISTED_RECEIPT_PARSE,
+      resource: [
+        tempAssetResource("tmp/usr_bob/receipt.pdf"),
+        ledgerResource("alice/main"),
+      ],
+    });
+    await expect(denied).rejects.toMatchObject({
+      category: ErrorCategory.NOT_FOUND,
+      message: "Temporary asset not found",
+      metadata: { hint: TEMP_ASSET_NOT_FOUND_HINT },
+    });
+  });
+
+  // w23/143: the concealed bank denial points at the connection listing.
+  it("conceals an unknown bank connection as not found with a listing hint", async () => {
+    const service = new AuthorizationService({ check: async () => false });
+    const denied = service.authorizeOrThrow({
+      principal: identity("oauth", "usr_alice", ["ledger.admin"]),
+      action: AUTHORIZATION_ACTIONS.BANK_ACCOUNTS_READ,
+      resource: bankConnectionResource("alice/main", "pitm_bogus"),
+    });
+    await expect(denied).rejects.toMatchObject({
+      category: ErrorCategory.NOT_FOUND,
+      message: "Bank connection not found",
+      metadata: { hint: BANK_CONNECTION_NOT_FOUND_HINT },
     });
   });
 
