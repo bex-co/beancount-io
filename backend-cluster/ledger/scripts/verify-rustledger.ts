@@ -1547,6 +1547,50 @@ async function main(): Promise<void> {
     "scalar self-equality still answers through the guard",
   );
 
+  // Inventory GROUP BY (w23/129): the raw engine collapses GROUP BY balance
+  // into one group while DISTINCT finds each value, so the query path
+  // refuses the named and ordinal forms — and scalar grouping still answers.
+  const rawInventoryGroup = await withLedger(FILES, "main.beancount", (ledger) =>
+    ledger.query("SELECT balance, count(*) FROM postings GROUP BY balance"),
+  );
+  const distinctBalances = await withLedger(FILES, "main.beancount", (ledger) =>
+    ledger.query("SELECT DISTINCT balance FROM postings"),
+  );
+  assert(
+    rawInventoryGroup.rows.length === 1 &&
+      distinctBalances.rows.length > 1 &&
+      !rawInventoryGroup.errors.some((e) => e.severity === "error"),
+    "raw engine still collapses GROUP BY balance (the guard is load-bearing)",
+  );
+  for (const query of [
+    "SELECT balance, count(*) FROM postings GROUP BY balance",
+    "SELECT balance, count(*) FROM postings GROUP BY 1",
+  ]) {
+    const guardedGroup = await queryLedgerFilesResult(
+      FILES,
+      "main.beancount",
+      query,
+    );
+    assert(
+      guardedGroup.rows.length === 0 &&
+        guardedGroup.errors.some(
+          (e) =>
+            e.severity === "error" &&
+            e.message.includes("inventory column balance"),
+        ),
+      `the query path refuses ${query.slice(query.indexOf("GROUP"))}`,
+    );
+  }
+  const scalarGroup = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    "SELECT payee, count(*) FROM postings GROUP BY payee",
+  );
+  assert(
+    scalarGroup.rows.length === 2,
+    "scalar grouping still answers through the guard",
+  );
+
   const count = await countDirectives(
     "2024-01-01 open Assets:Cash USD\n2024-01-02 open Income:Z USD\n",
   );

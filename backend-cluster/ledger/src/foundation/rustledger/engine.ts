@@ -79,6 +79,7 @@ import { collapsedCostOfSumError } from "./cost-of-sum-guard";
 import { atValueError } from "./at-value-guard";
 import { starAliasError } from "./star-alias-guard";
 import { compositeComparisonError } from "./composite-comparison-guard";
+import { inventoryGroupByError } from "./inventory-group-by-guard";
 import { OPTION_LINE_RE } from "./beancount-options";
 import { directiveToText } from "./journal-serialize";
 import {
@@ -1022,7 +1023,8 @@ export async function queryLedgerFilesResultInProcess(
         const refused =
           atValueError(query) ??
           starAliasError(query) ??
-          compositeComparisonError(query);
+          compositeComparisonError(query) ??
+          inventoryGroupByError(query);
         if (refused !== undefined) return refused;
         const result = ledger.query(query);
         return (
