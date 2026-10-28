@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1083 — Expand forecast markers in existing multiline narrations](./1083.md) — minor CLI forecast parser: valid LF/CRLF template silently keeps one of three occurrences; 24 fresh profiles, 152 CLI invocations and 74 native operations with recovery controls; checked 2026-10-27.
+
 - [1082 — Distinguish invalid decimal text from query precision failures](./1082.md) — minor CLI query diagnostics: blank/comma CSV amounts get false 28-digit advice; 24 fresh profiles, 118 CLI invocations, 74 native queries and four prompt sessions with reload/export/recovery controls; checked 2026-10-27.
 
 - [1081 — Validate cumulative include edits in batch-update previews](./1081.md) — minor CLI review queue: split-file preview reports both edits ready before a predictable partial refusal; 28 new profiles plus original review/diff controls, 266 CLI calls and 131 native loads; checked 2026-10-27.
