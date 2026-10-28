@@ -46,3 +46,5 @@
 **Prod re-verified it.6378:** posting `links: ["qal1nk"]` dry_run previews `5 USD ^qal1nk`. Posting links hold live.
 
 **Prod re-verified it.6379:** posting `totalPrice: {number, currency}` dry_run passes schema (reaches bean-check; failed only on the probe's EUR-in-Cash currency constraint). All eight m6 fields now hold live: cost, totalPrice, tags, links, meta, booking, tolerance, pad.
+
+**Correction, worker1 it.178-179 (see w23/171):** the it.6376/6378 "hold live" claims for posting tags/links are disproven — those re-verifies were dry_run-only and never committed, stock-checked, or read back. Live, the renderer emits trailing `#tag`/`^link` after the amount (a position beancount's grammar has no slot for; stock rejects both candidate positions), the backend check waves it through ("No new bean-check errors"), and every read comes back blank. Tags/links do NOT hold; they corrupt. The other six fields re-audited clean: cost/`@@` render valid (balancer refusal is w23/163), meta verified live (w23/170 evidence), booking/pad/tolerance renders verified stock-valid. Lesson recorded in 171: dry-only re-verify cannot promote a field to "holds live".
