@@ -97,6 +97,17 @@ concatenate outside the query. The refusal names the limitation
 engine's generic numeric hint. Engine support is tracked upstream
 (w23/blocked/022).
 
+## BQL `str()` input domain
+
+Stock beanquery stringifies every value, but the pinned engine's `str()`
+accepts only strings, integers, numbers, booleans, dates, and amounts —
+positions, inventories, and sets refuse with
+`type error: STR expects a string, integer, number, boolean, date, or amount`.
+Stock would render those as `3000.00 USD`, `(3000.00 USD)`, and set text;
+here there is no spelling for those renderings (w23/155). The refusal
+already names the whitelist, so no service rewrite applies. Engine
+overloads are tracked upstream (w23/blocked/022).
+
 ## Getting started
 
 Requires Node.js 20.19+, 22.13+, or 24+ and a running Gitea instance. See

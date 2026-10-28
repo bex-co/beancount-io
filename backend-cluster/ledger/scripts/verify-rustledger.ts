@@ -1863,6 +1863,40 @@ async function main(): Promise<void> {
     "numeric addition still answers through the guard",
   );
 
+  // str() input domain (w23/155, doc-minimum pins): stock stringifies
+  // positions, inventories, and sets while the engine refuses with its
+  // whitelist error — and scalar inputs still stringify. These pins
+  // keep the README's no-rewrite claim honest; when the engine grows
+  // the overloads, delete them and update the doc.
+  for (const query of [
+    "SELECT str(position) AS s LIMIT 1",
+    "SELECT str(balance) AS s LIMIT 1",
+    "SELECT str(tags) AS s LIMIT 1",
+  ]) {
+    const refused = await queryLedgerFilesResult(
+      FILES,
+      "main.beancount",
+      query,
+    );
+    assert(
+      refused.rows.length === 0 &&
+        refused.errors.some(
+          (e) =>
+            e.severity === "error" && /STR expects /.test(e.message),
+        ),
+      `the engine still refuses composite str() input: ${query}`,
+    );
+  }
+  const strScalar = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    "SELECT str(number) AS s LIMIT 1",
+  );
+  assert(
+    JSON.stringify(strScalar.rows) === `[{"s":"3000.00"}]`,
+    "scalar str() still stringifies",
+  );
+
   // Inventory GROUP BY (w23/129): the raw engine collapses GROUP BY balance
   // into one group while DISTINCT finds each value, so the query path
   // refuses the named and ordinal forms — and scalar grouping still answers.
