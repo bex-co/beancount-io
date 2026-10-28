@@ -30,3 +30,5 @@
 - **Adoption surface:** included — the milestone ships agent-facing schema descriptions and `docs/mcp.md` wording that must be accurate on every surface.
 
 **Prod re-verified it.6367:** `addLedgerEntries` with camelCase `dryRun: true` returns the dry-run preview (`Would add 1 entry`, `wrote: []`). The parameter alias holds live.
+
+**Prod re-verified it.6382:** `getEntryContext` with snake `entry_hash` (pasted from list output) returns the entry context. t001's alias holds live.
