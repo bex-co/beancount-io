@@ -67,6 +67,7 @@
 - [189](./189.md) — GROUP-BY coverage guard false-fires on PIVOT BY (blocks a query stock runs)
 - [190](./190.md) — engine accepts fractional `@@` stock refuses (per-unit division dust; w23/163 followup)
 - [191](./191.md) — BQL refuses dot-decimal literals stock accepts (`.5`, `5.`, `-.5`)
+- [192](./192.md) — calendar-impossible bare date literals silently evaluate as arithmetic
 - [082](./blocked/082.md) — `createPullRequest` fails on production: Gitea 500 while creating the `pr-patch-*` branch, on MCP and REST alike — **blocked:** needs the Gitea server-log cause for one failing branch create (owner), then a production rerun
 - [080](./blocked/080.md) — `/api-gateway/mcp` accepts any `Origin` (the MCP transport spec says a bad `Origin` MUST get 403); owner picks validate vs document — **blocked:** owner picks 403-on-foreign-Origin vs documented non-validation
 - [075](./blocked/075.md) — typed BQL results return NULL as `""` (undocumented), so a missing payee or price reads as an empty string — **blocked:** documented as `""` (option a shipped); owner picks `null` on REST/MCP, `null` everywhere, or keeping `""`
