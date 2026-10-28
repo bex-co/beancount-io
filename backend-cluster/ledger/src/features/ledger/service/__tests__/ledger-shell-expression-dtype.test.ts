@@ -106,3 +106,141 @@ describe("expression string dtypes on full input", () => {
     ).toEqual(["Decimal"]);
   });
 });
+
+/**
+ * w23/164: static expression dtypes on empty and all-NULL input. The engine
+ * names a column for its expression, so with no values to sniff, the typer
+ * reports the static type — literals, calls, and operators — while bare
+ * columns keep the name rule, aliases keep `unknown`, and anything
+ * unparseable reports `unknown` instead of a name-based guess.
+ */
+describe("expression dtypes on empty input", () => {
+  function emptyResult(columns: string[], rows: unknown[][]): QueryResult {
+    return { columns, rows, errors: [] } as unknown as QueryResult;
+  }
+
+  function emptyDtypes(
+    query: string,
+    columns: string[],
+    rows: unknown[][] = [],
+  ): string[] {
+    const table = queryResultToShellResult(
+      emptyResult(columns, rows),
+      extractSelectAliases(query),
+    ).table!;
+    return table.types.map((type) => type.dtype);
+  }
+
+  it("types calls, operators, and aggregates statically", () => {
+    expect(
+      emptyDtypes("SELECT upper(payee), number + 1, year(date) WHERE FALSE", [
+        "upper(payee)",
+        "number + 1",
+        "year(date)",
+      ]),
+    ).toEqual(["str", "Decimal", "int"]);
+    expect(
+      emptyDtypes("SELECT count(*), sum(number), min(date), max(payee) WHERE FALSE", [
+        "count(*)",
+        "sum(number)",
+        "min(date)",
+        "max(payee)",
+      ]),
+    ).toEqual(["int", "Decimal", "date", "str"]);
+  });
+
+  it("types literals as their unfiltered selves", () => {
+    expect(
+      emptyDtypes("SELECT 1, 'a', 1.5, TRUE, NULL WHERE FALSE", [
+        "1",
+        "'a'",
+        "1.5",
+        "true",
+        "NULL",
+      ]),
+    ).toEqual(["int", "str", "Decimal", "bool", "str"]);
+  });
+
+  it("treats all-NULL input like empty input", () => {
+    const query = "SELECT upper(payee), number + 1, year(date) LIMIT 3";
+    const columns = ["upper(payee)", "number + 1", "year(date)"];
+    expect(
+      emptyDtypes(query, columns, [
+        [null, null, null],
+        [null, null, null],
+      ]),
+    ).toEqual(["str", "Decimal", "int"]);
+  });
+
+  it("types the bare window names as int, not Decimal", () => {
+    // The engine names window columns as bare words (`row_number`), which
+    // the old `endsWith("_number")` guess mistyped as Decimal (it.6157).
+    expect(
+      emptyDtypes("SELECT row_number() OVER () LIMIT 0", ["row_number"]),
+    ).toEqual(["int"]);
+    expect(emptyDtypes("SELECT rank() OVER () LIMIT 0", ["rank"])).toEqual([
+      "int",
+    ]);
+    expect(
+      emptyDtypes("SELECT dense_rank() OVER () LIMIT 0", ["dense_rank"]),
+    ).toEqual(["int"]);
+  });
+
+  it("keeps aliases unknown, including over typable expressions", () => {
+    expect(
+      emptyDtypes("SELECT number + 1 AS n WHERE FALSE", ["n"]),
+    ).toEqual(["unknown"]);
+    expect(emptyDtypes("SELECT NULL AS x WHERE FALSE", ["x"])).toEqual([
+      "unknown",
+    ]);
+  });
+
+  it("keeps bare stored and derived columns on the name rule", () => {
+    expect(
+      emptyDtypes(
+        "SELECT number, payee, date, cost_number, price_number, count, cost_date, balance, position, tags WHERE FALSE",
+        [
+          "number",
+          "payee",
+          "date",
+          "cost_number",
+          "price_number",
+          "count",
+          "cost_date",
+          "balance",
+          "position",
+          "tags",
+        ],
+      ),
+    ).toEqual([
+      "Decimal",
+      "str",
+      "date",
+      "Decimal",
+      "Decimal",
+      "int",
+      "date",
+      "Inventory",
+      "Position",
+      "set",
+    ]);
+  });
+
+  it("reports unknown for untypable calls instead of guessing", () => {
+    // `cost(position)` has values of Amount shape; `str` was confidently
+    // wrong, and the composite outtype is input-dependent.
+    expect(
+      emptyDtypes("SELECT cost(position) WHERE FALSE", ["cost(position)"]),
+    ).toEqual(["unknown"]);
+  });
+
+  it("types bool operators as bool", () => {
+    expect(
+      emptyDtypes("SELECT 1 = 1, 1 IN (1, 2), NOT TRUE WHERE FALSE", [
+        "1 = 1",
+        "1 IN (1, 2)",
+        "NOT true",
+      ]),
+    ).toEqual(["bool", "bool", "bool"]);
+  });
+});

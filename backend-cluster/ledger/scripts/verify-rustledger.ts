@@ -2697,6 +2697,34 @@ async function main(): Promise<void> {
     "queryResultToText renders the real query as text",
   );
 
+  // Static expression dtypes on empty input (w23/164): with no values to
+  // sniff, the typer reports the static type from the engine's own column
+  // names — end to end against the LIVE engine, not mocked columns.
+  for (const [query, dtypes] of [
+    [
+      "SELECT upper(payee), number + 1, year(date) WHERE FALSE",
+      ["str", "Decimal", "int"],
+    ],
+    [
+      "SELECT 1, 'a', 1.5, TRUE, NULL WHERE FALSE",
+      ["int", "str", "Decimal", "bool", "str"],
+    ],
+    ["SELECT row_number() OVER () LIMIT 0", ["int"]],
+  ] as Array<[string, string[]]>) {
+    const empty = await withLedger(FILES, "main.beancount", (ledger) =>
+      ledger.query(query),
+    );
+    const emptyShell = queryResultToShellResult(
+      empty,
+      extractSelectAliases(query),
+    );
+    assert(
+      JSON.stringify(emptyShell.table?.types.map((type) => type.dtype)) ===
+        JSON.stringify(dtypes),
+      `empty ${query} reports [${dtypes.join(", ")}]`,
+    );
+  }
+
   // Trial-balance account hierarchy (units mode, single-currency USD).
   const assetsTree = accountHierarchy(
     directives,

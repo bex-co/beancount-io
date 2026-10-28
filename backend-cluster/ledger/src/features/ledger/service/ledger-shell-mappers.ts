@@ -2,6 +2,10 @@ import type { AmountValue, CellValue, QueryResult } from "@rustledger/wasm";
 import BigNumber from "bignumber.js";
 import { formatCellValue } from "@/foundation/rustledger";
 import type { ShellQueryResult } from "./ledger-shell-types";
+import {
+  STRING_FUNCTIONS,
+  typeOfSelectExpression,
+} from "./bql-expression-typer";
 
 type ShellCell = string | number | boolean | Record<string, unknown>;
 
@@ -94,7 +98,13 @@ function classifyColumnDtype(
   if (sample === undefined) {
     const root = aliases.get(normalizedName);
     if (root !== undefined && root !== normalizedName) return "unknown";
-    return dtypeFromColumnName(normalizedName);
+    // The engine names the column for its expression, so type the text:
+    // literals, calls, and operators report their static type, bare columns
+    // fall back to the name rule inside, and anything unparseable reports
+    // `unknown` rather than a confidently wrong name-based guess (w23/164).
+    return (
+      typeOfSelectExpression(columnName, dtypeFromColumnName) ?? "unknown"
+    );
   }
   if (typeof sample === "string") {
     // Expression-typed strings (w23/146): the engine names a column for
@@ -147,7 +157,18 @@ function classifyColumnDtype(
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/u;
 const DECIMAL_RE = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/u;
 const DATE_COLUMNS = new Set(["date", "open_date", "close_date"]);
-const INT_COLUMNS = new Set(["count", "year", "month", "day", "id"]);
+const INT_COLUMNS = new Set([
+  "count",
+  "year",
+  "month",
+  "day",
+  "id",
+  // Implemented window calls, which the engine names as bare words with int
+  // values — never via a `endsWith("_number")` guess (w23/164).
+  "row_number",
+  "rank",
+  "dense_rank",
+]);
 const DECIMAL_COLUMNS = new Set([
   "number",
   "cost_number",
@@ -166,32 +187,6 @@ const STRING_COLUMNS = new Set([
   "type",
 ]);
 
-/**
- * BQL functions returning strings (w23/146): stock beanquery 0.2.0's
- * str-typed functions (`query_env.py`), each verified live against the
- * engine — except `repr`, which rustledger does not implement.
- */
-const STRING_FUNCTIONS = new Set([
-  "str",
-  "upper",
-  "lower",
-  "substr",
-  "subst",
-  "leaf",
-  "parent",
-  "root",
-  "weekday",
-  "quarter",
-  "currency",
-  "maxwidth",
-  "grep",
-  "grepn",
-  "splitcomp",
-  "joinstr",
-  "findfirst",
-  "account_sortkey",
-]);
-
 function isIsoDate(value: string): boolean {
   return ISO_DATE_RE.test(value);
 }
@@ -202,8 +197,12 @@ function isDecimalString(value: string): boolean {
 
 function dtypeFromColumnName(name: string): string {
   if (DATE_COLUMNS.has(name) || name.endsWith("_date")) return "date";
-  if (INT_COLUMNS.has(name) || name.startsWith("count")) return "int";
-  if (DECIMAL_COLUMNS.has(name) || name.endsWith("_number")) return "Decimal";
+  // No `startsWith("count")`/`endsWith("_number")` guesses: `count`,
+  // `cost_number`, and `price_number` are explicit above, `count(*)` resolves
+  // through the call typer, and the bare window names are explicit ints —
+  // the guesses only ever fired on phantoms (w23/164).
+  if (INT_COLUMNS.has(name)) return "int";
+  if (DECIMAL_COLUMNS.has(name)) return "Decimal";
   if (SET_COLUMNS.has(name)) return "set";
   if (INVENTORY_COLUMNS.has(name)) return "Inventory";
   if (POSITION_COLUMNS.has(name)) return "Position";

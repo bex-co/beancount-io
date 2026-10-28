@@ -119,7 +119,7 @@ export const STR_FUNCTIONS = new Set([
   "substr",
   "upper",
 ]);
-const INT_FUNCTIONS = new Set([
+export const INT_FUNCTIONS = new Set([
   "count",
   "date_diff",
   "date_part",
@@ -129,15 +129,15 @@ const INT_FUNCTIONS = new Set([
   "month",
   "year",
 ]);
-const DECIMAL_FUNCTIONS = new Set([
+export const DECIMAL_FUNCTIONS = new Set([
   "decimal",
   "getprice",
   "number",
   "round",
   "safediv",
 ]);
-const BOOL_FUNCTIONS = new Set(["bool", "empty", "has_account"]);
-const DATE_FUNCTIONS = new Set([
+export const BOOL_FUNCTIONS = new Set(["bool", "empty", "has_account"]);
+export const DATE_FUNCTIONS = new Set([
   "close_date",
   "date",
   "date_add",
@@ -159,7 +159,7 @@ const COMPOSITE_FUNCTIONS = new Set([
   "only",
   "position_value",
 ]);
-const PASSTHROUGH_FUNCTIONS = new Set(["sum", "min", "max", "first", "last"]);
+export const PASSTHROUGH_FUNCTIONS = new Set(["sum", "min", "max", "first", "last"]);
 
 const ALIAS_DEF = /\bas\s+([A-Za-z_]\w*)/gi;
 const IN_LIST =
