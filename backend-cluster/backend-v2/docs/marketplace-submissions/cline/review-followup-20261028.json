@@ -1,0 +1,41 @@
+{
+  "owner": "w6/m9/t004",
+  "status": "submitted",
+  "reviewObservationWindowUTC": {
+    "from": "2026-10-28T07:32:00Z",
+    "through": "2026-10-28T07:36:00Z"
+  },
+  "existingSubmission": {
+    "url": "https://github.com/cline/mcp-marketplace/issues/3230",
+    "state": "open",
+    "updatedAtUTC": "2026-10-24T01:43:48Z",
+    "comments": 0,
+    "reviewComments": null,
+    "headSHA": null,
+    "merged": null,
+    "mergedAtUTC": null,
+    "mergeableState": null,
+    "labels": []
+  },
+  "actualCatalogFetch": {
+    "url": "https://cline.github.io/marketplace/catalog.json",
+    "observedAtUTC": "2026-10-28T07:36:52.131593Z",
+    "httpStatus": 200,
+    "generatedAtUTC": "2026-09-18T20:15:28.359Z",
+    "counts": {
+      "total": 203,
+      "mcps": 149,
+      "plugins": 16,
+      "skills": 38
+    },
+    "sha256": "187ebe2b130e25f261a805cc5930a19e275ece2c34ab21bd9df966a566b9848c",
+    "checkedAllEntries": true,
+    "canonicalNameIdentityEndpointRepositoryMatches": 0
+  },
+  "nativeBoundary": "Prior CLI/SDK/Agent acceptance retains its own date and limits; no new extension/native/OAuth/accounting test.",
+  "newSubmissionOrComment": false,
+  "publisherInputNeeded": false,
+  "unblock": "Cline reviewers supply actionable feedback or publish the existing issue; worker verifies actual catalog discovery and advertised native install.",
+  "nextManualCheckUTC": "2026-10-31",
+  "earlierTrigger": "Actual maintainer feedback, closure or catalog publication."
+}

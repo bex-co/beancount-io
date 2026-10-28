@@ -4,7 +4,7 @@
   "issueNumber": 3230,
   "url": "https://github.com/cline/mcp-marketplace/issues/3230",
   "submittedAtUTC": "2026-10-24T01:43:48Z",
-  "lastCheckedAtUTC": "2026-10-24T19:58:05Z",
+  "lastCheckedAtUTC": "2026-10-28T07:36:52.131593Z",
   "state": "open",
   "comments": 0,
   "labels": [],
@@ -18,11 +18,15 @@
   "nextAction": "Follow existing issue for reviewer feedback and actual public catalog publication; do not duplicate.",
   "submissionNote": "Initial explicit-label attempt was rejected for label permissions and created no issue. After an empty all-states duplicate search, normal issue creation without labels succeeded. No repository permission or label was modified.",
   "latestReviewReadback": {
-    "observedAtUTC": "2026-10-24T19:58:05Z",
-    "previousCheckedAtUTC": "2026-10-24T07:10:37Z",
+    "observationWindowUTC": {
+      "from": "2026-10-28T07:32:00Z",
+      "through": "2026-10-28T07:36:00Z"
+    },
     "state": "open",
     "conversationComments": 0,
     "maintainerFeedbackObserved": false,
+    "catalogPublicationVerified": false,
+    "evidence": "review-followup-20261028.json",
     "duplicateSubmissionSent": false
   },
   "previousReviewReadback": {
@@ -32,5 +36,14 @@
     "conversationComments": 0,
     "maintainerFeedbackObserved": false,
     "duplicateSubmissionSent": false
-  }
+  },
+  "historicalReviewReadback20261024": {
+    "observedAtUTC": "2026-10-24T19:58:05Z",
+    "previousCheckedAtUTC": "2026-10-24T07:10:37Z",
+    "state": "open",
+    "conversationComments": 0,
+    "maintainerFeedbackObserved": false,
+    "duplicateSubmissionSent": false
+  },
+  "nextManualCheckUTC": "2026-10-31"
 }

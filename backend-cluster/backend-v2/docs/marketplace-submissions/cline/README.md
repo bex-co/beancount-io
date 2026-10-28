@@ -3,6 +3,18 @@
 Connect Cline to a hosted Beancount.io ledger through Streamable HTTP and OAuth.
 Canonical registry identity: `io.beancount/beancount`.
 
+## Current review and actual catalog — 2026-10-28 UTC
+
+The existing issue3230 remains OPEN with zero comments/labels and no observed
+maintainer feedback. An actual07:36UTC fetch of the tagged client's official
+catalog returns200,203entries/149MCPservers (generatedSep18). Its SHA256 is
+unchanged; all203entries contain zero canonical name/identity/endpoint/repository
+matches. [Current evidence](./review-followup-20261028.json) keeps this feed
+observation separate from the earlier native CLI/SDK/Agent acceptance and the
+extension-rendering limits. No new native run, grant or submission is needed.
+Next: actual reviewer feedback/catalog publication, otherwise manualOct31UTC;
+then verify the advertised install path. Search/feed absence is not a rejection.
+
 ## Install and connect
 
 1. In Cline 4.1.25, choose **Customize → MCP → Installed**. Choose **Add Remote
