@@ -87,6 +87,7 @@ import { compositeComparisonError } from "./composite-comparison-guard";
 import { inventoryGroupByError } from "./inventory-group-by-guard";
 import { valueTargetError } from "./value-target-guard";
 import { joinstrArityError } from "./joinstr-arity-guard";
+import { ordinalRangeError } from "./ordinal-range-guard";
 import { collectLedgerCommodities } from "./cost-valuation";
 import { groupByCoverageError } from "./group-by-coverage-guard";
 import { stringConcatError } from "./string-concat-guard";
@@ -1034,6 +1035,7 @@ export async function queryLedgerFilesResultInProcess(
       try {
         const refused =
           integerOverflowError(query) ??
+          ordinalRangeError(query) ??
           windowFromError(query) ??
           atValueError(query) ??
           starAliasError(query) ??

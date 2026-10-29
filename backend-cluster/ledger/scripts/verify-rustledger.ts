@@ -2254,6 +2254,45 @@ async function main(): Promise<void> {
       !oneArgJoinstr.errors.some((e) => e.severity === "error"),
     "one-argument joinstr still answers through the guard",
   );
+  // Key-list ordinals (w23/187): past i64::MAX the raw engine constant-folds
+  // GROUP/ORDER BY ordinals into silent answers and reads PIVOT BY 0 as
+  // column 1, so the query path refuses them while real ordinals answer.
+  const rawOrdinal = await withLedger(FILES, "main.beancount", (ledger) =>
+    ledger.query("SELECT flag ORDER BY 9223372036854775808 LIMIT 1"),
+  );
+  assert(
+    rawOrdinal.rows.length === 1 &&
+      !rawOrdinal.errors.some((e) => e.severity === "error"),
+    "raw engine still answers a past-i64 ORDER BY ordinal (the guard is load-bearing)",
+  );
+  for (const query of [
+    "SELECT flag ORDER BY 9223372036854775808 LIMIT 1",
+    "SELECT COUNT(*) GROUP BY 99999999999999999999999",
+    "SELECT flag, payee, COUNT(*) GROUP BY 1, 2 PIVOT BY 0, 2",
+  ]) {
+    const refusedOrdinal = await queryLedgerFilesResult(
+      FILES,
+      "main.beancount",
+      query,
+    );
+    assert(
+      refusedOrdinal.rows.length === 0 &&
+        refusedOrdinal.errors.some(
+          (e) => e.severity === "error" && e.message.includes("column index"),
+        ),
+      `the query path refuses ${query.slice(query.search(/GROUP|ORDER/))}`,
+    );
+  }
+  const realOrdinal = await queryLedgerFilesResult(
+    FILES,
+    "main.beancount",
+    "SELECT payee, COUNT(*) GROUP BY 1 ORDER BY 2 DESC",
+  );
+  assert(
+    realOrdinal.rows.length > 0 &&
+      !realOrdinal.errors.some((e) => e.severity === "error"),
+    "in-range ordinals still answer through the guard",
+  );
   const scalarGroup = await queryLedgerFiles(
     FILES,
     "main.beancount",
