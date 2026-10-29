@@ -1,6 +1,6 @@
 # w6 · m9 — Reach developer marketplaces and galleries
 
-**Worker:** worker1 **Goal:** Developers discover and connect the hosted MCP server through the supported Docker, Cursor, Cline, and GitHub/VS Code galleries. **Status:** blocked (9 tasks done; current/native renewable OAuth follow-up 046 complete; remaining actual platform review/publication gates and dependent closing tasks remain)
+**Worker:** worker1 **Goal:** Developers discover and connect the hosted MCP server through the supported Docker, Cursor, Cline, and GitHub/VS Code galleries. **Status:** blocked (9 tasks done; current/native renewable OAuth follow-up 046 complete; remaining platform review/publication and native verification gates plus dependent closing tasks remain)
 
 **Implementation estimate:** ~4½h, excluding external review queues and the standing closing tasks.
 
@@ -261,3 +261,14 @@ acceptance. Source `cd20fa75f` is deployed healthy and remote CI passes. Its
 runtime is stopped with grant/store retained. This clears the independent
 native follow-up; it does not close t017's actual Docker catalog review/import
 or any other platform's public/native DoD.
+
+## Current GitHub outcome — 2026-10-29 UTC
+
+[t018](t018.md) now verifies actual curated/default-feed publication and native
+VS Code1.143.0 gallery discovery/installation, including persisted canonical
+HTTP/gallery/version configuration. GitHub approval/publication no longer
+blocks this item. The remaining gate is actual native OAuth/default+fallback
+port/query/preview/unchanged-state acceptance after the existing Chrome browser
+connection is restored. No new nomination, manual-config substitution or grant
+approval is claimed. Independent Cursor/Cline/Docker review gates and all
+aggregate/standing closing criteria remain open; milestone stays blocked.

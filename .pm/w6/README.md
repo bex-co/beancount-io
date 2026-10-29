@@ -3,6 +3,17 @@
 **Worker:** worker1 — general-purpose adoption worker; accepts the next highest-impact milestone across packages, topics, and A1/A2/A3 rather than owning a permanent specialty.
 
 
+## Latest GitHub outcome — 2026-10-29 UTC
+
+Actual curated/default-gallery name and identity queries now return the
+canonical hosted connector. Native VS Code1.143.0 finds and installs the real
+Gallery entry in the retained QA profile; persisted HTTP/gallery/version
+configuration matches. [t018](blocked/m9/t018.md) keeps the completed public/
+install evidence and remaining native OAuth/default+fallback-port/query/preview
+acceptance. Browser connection is currently unavailable and reconnect is
+requested; GitHub review/publication is no longer the blocker. No duplicate
+nomination, grant approval, credential copy or revocation occurs.
+
 ## Current engine prerequisite audit — 2026-10-28 UTC
 
 Actual npm latest read07:36:52UTC and separate GitHub release read still show

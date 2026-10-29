@@ -1,0 +1,151 @@
+{
+  "owner": "w6/m9/t018",
+  "status": "published_native_verification_pending",
+  "recordedAtUTC": "2026-10-29T03:17:00.650200+00:00",
+  "publicQueries": [
+    {
+      "query": {
+        "name": "github_name",
+        "url": "https://api.mcp.github.com/v0.1/servers?limit=100&version=latest&search=beancount",
+        "observedAtUTC": "2026-10-29T02:34:41.104398+00:00",
+        "httpStatus": 200,
+        "sha256": "3bab82ce82060f26815b3d6b41b0b1b3663106e5361447f5a63f4a8fda55c39a",
+        "recordCount": 1,
+        "metadata": {
+          "count": 1,
+          "per_page": 100,
+          "total": 1,
+          "total_pages": 1
+        }
+      },
+      "server": {
+        "name": "io.beancount/beancount",
+        "title": "Beancount.io",
+        "version": "1.0.0",
+        "description": "Query, edit, and reconcile a hosted Beancount ledger: BQL, reports, files, and bank imports.",
+        "remotes": [
+          {
+            "type": "streamable-http",
+            "url": "https://beancount.io/api-gateway/mcp"
+          }
+        ],
+        "repository": {
+          "id": "300529232",
+          "source": "github",
+          "subfolder": "backend-cluster/backend-v2",
+          "url": "https://github.com/bex-co/beancount-io"
+        },
+        "websiteUrl": "https://github.com/bex-co/beancount-io/blob/main/backend-cluster/backend-v2/docs/mcp.md"
+      },
+      "registryMetadata": {
+        "io.modelcontextprotocol.registry/official": {
+          "isLatest": true,
+          "publishedAt": "2026-10-05T22:32:08Z",
+          "status": "active",
+          "updatedAt": "2026-10-29T02:15:04Z"
+        }
+      }
+    },
+    {
+      "query": {
+        "name": "github_identity",
+        "url": "https://api.mcp.github.com/v0.1/servers?limit=100&version=latest&search=io.beancount%2Fbeancount",
+        "observedAtUTC": "2026-10-29T02:34:40.993294+00:00",
+        "httpStatus": 200,
+        "sha256": "3bab82ce82060f26815b3d6b41b0b1b3663106e5361447f5a63f4a8fda55c39a",
+        "recordCount": 1,
+        "metadata": {
+          "count": 1,
+          "per_page": 100,
+          "total": 1,
+          "total_pages": 1
+        }
+      },
+      "server": {
+        "name": "io.beancount/beancount",
+        "title": "Beancount.io",
+        "version": "1.0.0",
+        "description": "Query, edit, and reconcile a hosted Beancount ledger: BQL, reports, files, and bank imports.",
+        "remotes": [
+          {
+            "type": "streamable-http",
+            "url": "https://beancount.io/api-gateway/mcp"
+          }
+        ],
+        "repository": {
+          "id": "300529232",
+          "source": "github",
+          "subfolder": "backend-cluster/backend-v2",
+          "url": "https://github.com/bex-co/beancount-io"
+        },
+        "websiteUrl": "https://github.com/bex-co/beancount-io/blob/main/backend-cluster/backend-v2/docs/mcp.md"
+      },
+      "registryMetadata": {
+        "io.modelcontextprotocol.registry/official": {
+          "isLatest": true,
+          "publishedAt": "2026-10-05T22:32:08Z",
+          "status": "active",
+          "updatedAt": "2026-10-29T02:15:04Z"
+        }
+      }
+    }
+  ],
+  "publicBrowserObservation": {
+    "url": "https://github.com/mcp?search=beancount",
+    "observedBeforeBrowserConnectionLoss": true,
+    "resultCount": 1,
+    "title": "Beancount.io",
+    "by": "bex-co",
+    "detailURL": "https://github.com/mcp/io.beancount/beancount",
+    "installButtonObserved": true
+  },
+  "timestampBoundary": "First actual curated discovery is the Oct29query observation. The imported registry publishedAt field retains its older Oct5meaning; it is not asserted as the first curated-publication date.",
+  "native": {
+    "applicationVersion": "1.143.0",
+    "profile": "Existing w6 marketplace QA",
+    "actualTypedQuery": "@mcp beancount",
+    "matchingResults": 1,
+    "installedFromThatNativeGalleryResult": true,
+    "displayedIdentity": "io.beancount/beancount",
+    "displayedVersion": "1.0.0",
+    "uninstallAndDisableControlsObserved": true,
+    "savedConfiguration": {
+      "type": "http",
+      "url": "https://beancount.io/api-gateway/mcp",
+      "gallery": "https://api.mcp.github.com",
+      "version": "1.0.0"
+    },
+    "secretFieldsPresent": false,
+    "screenshotSHA256": "a72747cd9e2241e168c41ad4aae268c0ccc8eb17c581b14bdee2b69ccbbcba2d",
+    "screenshotCapturedAtUTC": "2026-10-29T02:53:36.751458+00:00",
+    "automaticOAuthPromptObserved": "Authenticating to 'beancount.io': Complete the authentication in the browser window that has opened.",
+    "nativeListServersDisplay": "Running; does not prove authentication/discovery success.",
+    "nativeOAuthSuccessVerified": false,
+    "fallbackPortVerified": false,
+    "nativeAccountingQueryVerified": false,
+    "nativeWritePreviewVerified": false,
+    "independentUnchangedStateAcceptanceComplete": false,
+    "savedConfigurationReadAtUTC": "2026-10-29T03:17:00.650200+00:00"
+  },
+  "currentBlocker": {
+    "kind": "Browser connection unavailable for the actual native OAuth callback/consent.",
+    "observedAvailableBrowserCount": 0,
+    "documentedChromeOpenAttempt": "Browser is not available: chrome",
+    "nativeControl": "Transient failures recover after fresh state; actual app/profile installation remains accessible.",
+    "publisherAction": "Restore existing Chrome browser-extension connection; a request is already pending, without repeated permission or duplicate installation.",
+    "nextWorkerStep": "Resume the same supported native host OAuth against only the existing synthetic QA ledger, verify default/fallback-port behavior, tool discovery, known query, one dry_run and independent unchanged state. Reuse retained authorization where available."
+  },
+  "scope": {
+    "curatorReviewAlreadyApproved": true,
+    "publicationNowVerified": true,
+    "newNominationOrMessageSent": false,
+    "manualMcpConfigSubstitutedForGallery": false,
+    "credentialsCopied": false,
+    "grantsRevoked": false,
+    "accountingWritesCommitted": false,
+    "newDeployment": false,
+    "newGrantApprovedByWorker": false
+  },
+  "relatedNativeOwner": "w1/m34/t003",
+  "privacy": "Public registry/listing metadata and the installed URL-only configuration only; no account identity, credential store, native authorization URL, token, private mail or ledger content."
+}

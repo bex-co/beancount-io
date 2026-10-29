@@ -1,4 +1,33 @@
-# GitHub curated approval; public discovery pending
+# GitHub published connector and native VS Code installation
+
+
+## Current publication and native installation — 2026-10-29 UTC
+
+Both actual public default-gallery queries now return exactly one canonical
+io.beancount/beancount@1.0.0 entry with the hosted Streamable HTTP endpoint.
+The real GitHub webpage also displays one Beancount.io result and Install.
+The [direct public install entry](https://github.com/mcp/io.beancount/beancount)
+is now verified independently of the earlier curator approval.
+
+In official VS Code1.143.0, the retained w6marketplaceQA profile's actual
+@mcp beancount query finds the entry. Clicking that native Install succeeds;
+the page exposes Uninstall/Disable and identity/version1.0.0. The profile's
+persisted mcp.json contains type:http, the canonical URL, gallery:
+https://api.mcp.github.com and version1.0.0, with no headers/env/inputs/command.
+No prepared manual configuration substitutes for this Gallery installation.
+[Exact API, native installation and configuration evidence](publication-native-install-20261029.json)
+keeps observation times and the imported older registry publication date separate.
+
+The native host automatically opens OAuth and requests completion in the
+browser. No OAuth success, tool discovery, accounting query, dry-run preview
+or fallback-port acceptance is verified. Chrome browser control becomes
+unavailable; native control recovers after a fresh state read. Restore that
+existing browser connection and resume this SAME installation, with only the
+synthetic QA ledger and retained authorization where available. Shared native
+fallback ownership remains w1/m34/t003. No duplicate nomination, grant approval,
+credential copy or revocation is performed. Taskt018 stays open for native acceptance.
+
+## Historical approval and preparation — 2026-10-24 UTC
 
 Updated 2026-10-24 UTC; original dated observations below retain their limits. [GitHub's documented inclusion route](https://github.blog/ai-and-ml/generative-ai/how-to-find-install-and-manage-mcp-servers-with-the-github-mcp-registry/) asks publishers with an existing official-registry record to contact `partnerships@github.com`.
 `nomination-email.md` records the public-safe request actually sent on
