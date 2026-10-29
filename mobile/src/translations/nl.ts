@@ -519,7 +519,7 @@ export const nl: Translations = {
   deleteSuccess: "Transactie verwijderd",
   deleteFailed: "Verwijderen van transactie mislukt",
   deleteTransactionChanged:
-    "Deze transactie is elders gewijzigd. Ze is opnieuw geladen; probeer haar opnieuw te verwijderen.",
+    "Deze transactie is elders gewijzigd. Ga terug en open haar opnieuw om haar te verwijderen.",
   editSuccess: "Transactie opgeslagen",
   editFailed: "Opslaan van transactie mislukt",
   editTransactionEmpty:

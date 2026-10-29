@@ -527,7 +527,7 @@ export const pt: Translations = {
   deleteSuccess: "Transação excluída",
   deleteFailed: "Falha ao excluir a transação",
   deleteTransactionChanged:
-    "Esta transação foi alterada noutro local. Foi recarregada; tente eliminá-la novamente.",
+    "Esta transação foi alterada noutro local. Volte atrás e abra-a novamente para a eliminar.",
   editSuccess: "Transação salva",
   editFailed: "Falha ao salvar a transação",
   editTransactionEmpty:

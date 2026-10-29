@@ -529,7 +529,7 @@ export const es: Translations = {
   deleteSuccess: "Transacción eliminada",
   deleteFailed: "Error al eliminar la transacción",
   deleteTransactionChanged:
-    "Esta transacción se cambió en otro lugar. Se ha vuelto a cargar; intenta eliminarla de nuevo.",
+    "Esta transacción se cambió en otro lugar. Vuelve atrás y ábrela de nuevo para eliminarla.",
   editSuccess: "Transacción guardada",
   editFailed: "Error al guardar la transacción",
   editTransactionEmpty:

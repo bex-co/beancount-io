@@ -537,7 +537,7 @@ export const en = {
   deleteSuccess: "Transaction deleted",
   deleteFailed: "Failed to delete transaction",
   deleteTransactionChanged:
-    "This transaction was changed elsewhere. It has been reloaded; try deleting it again.",
+    "This transaction was changed elsewhere. Go back and open it again to delete it.",
   editSuccess: "Transaction saved",
   editFailed: "Failed to save transaction",
   editTransactionEmpty:

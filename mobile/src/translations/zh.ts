@@ -464,7 +464,7 @@ export const zh: Translations = {
   deleteSuccess: "交易已删除",
   deleteFailed: "删除交易失败",
   deleteTransactionChanged:
-    "此交易已在别处被更改，已重新加载；请再次尝试删除。",
+    "此交易已在别处被更改。请返回并重新打开它，再删除。",
   editSuccess: "交易已保存",
   editFailed: "保存交易失败",
   editTransactionEmpty:

@@ -527,7 +527,7 @@ export const sk: Translations = {
   deleteSuccess: "Transakcia odstránená",
   deleteFailed: "Transakciu sa nepodarilo odstrániť",
   deleteTransactionChanged:
-    "Táto transakcia bola zmenená inde. Bola znova načítaná; skúste ju vymazať znova.",
+    "Táto transakcia bola zmenená inde. Vráťte sa späť a otvorte ju znova, aby ste ju vymazali.",
   editSuccess: "Transakcia uložená",
   editFailed: "Transakciu sa nepodarilo uložiť",
   editTransactionEmpty:

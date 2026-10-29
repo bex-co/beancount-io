@@ -13,6 +13,7 @@ import {
   runLedgerWrite,
   type LedgerWriteSpec,
 } from "../../../common/ledger-write";
+import { en } from "../../../translations/en";
 import { classifyStaleDelete, deleteTransaction } from "../delete-transaction";
 
 const BALANCE_FAILED =
@@ -272,6 +273,15 @@ describe("deleting an entry that changed elsewhere", () => {
       true,
     );
     expect(source.includes('changed:t("deleteTransactionChanged")')).toBe(true);
+  });
+});
+
+// w21/694: after a conflicting delete the screen reads "changed or removed" and
+// has no Delete, so the alert must not tell the user to try deleting again.
+describe("the changed-elsewhere delete alert", () => {
+  it("sends the user back to reopen the entry, not to retry", () => {
+    expect(/try deleting/i.test(en.deleteTransactionChanged)).toBe(false);
+    expect(/open it again/i.test(en.deleteTransactionChanged)).toBe(true);
   });
 });
 

@@ -529,7 +529,7 @@ export const fr: Translations = {
   deleteSuccess: "Transaction supprimée",
   deleteFailed: "Échec de la suppression de la transaction",
   deleteTransactionChanged:
-    "Cette transaction a été modifiée ailleurs. Elle a été rechargée ; essayez de la supprimer à nouveau.",
+    "Cette transaction a été modifiée ailleurs. Revenez en arrière et rouvrez-la pour la supprimer.",
   editSuccess: "Transaction enregistrée",
   editFailed: "Échec de l'enregistrement de la transaction",
   editTransactionEmpty:

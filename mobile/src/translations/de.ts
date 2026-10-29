@@ -532,7 +532,7 @@ export const de: Translations = {
   deleteSuccess: "Transaktion gelöscht",
   deleteFailed: "Transaktion konnte nicht gelöscht werden",
   deleteTransactionChanged:
-    "Diese Transaktion wurde an anderer Stelle geändert. Sie wurde neu geladen; versuchen Sie, sie erneut zu löschen.",
+    "Diese Transaktion wurde an anderer Stelle geändert. Gehen Sie zurück und öffnen Sie sie erneut, um sie zu löschen.",
   editSuccess: "Transaktion gespeichert",
   editFailed: "Transaktion konnte nicht gespeichert werden",
   editTransactionEmpty:
