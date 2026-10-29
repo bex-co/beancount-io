@@ -1500,6 +1500,24 @@ async function main(): Promise<void> {
     !validTolerance.errors.some((e) => e.code === "TOLERANCE"),
     "the valid balance tolerance spelling stays clean",
   );
+  // w23/199: a run of trailing terminators is empty statements stock
+  // tolerates; every `;` has to go or the bare `FROM postings` tail resolves
+  // as a column.
+  for (const query of [
+    "SELECT payee FROM postings;;",
+    "SELECT payee FROM postings; ;",
+  ]) {
+    const runTerminators = await queryLedgerFilesResult(
+      FILES,
+      "main.beancount",
+      normalizeBqlQueryForEngine(query),
+    );
+    assert(
+      runTerminators.rows.length > 0 &&
+        !runTerminators.errors.some((e) => e.severity === "error"),
+      `a trailing run of terminators answers: ${query}`,
+    );
+  }
   const pipelineBareEof = await queryLedgerFiles(
     FILES,
     "main.beancount",

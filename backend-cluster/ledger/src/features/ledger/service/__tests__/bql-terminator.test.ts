@@ -9,9 +9,7 @@ describe("stripBqlStatementTerminator", () => {
   });
 
   it("strips a terminator followed by trailing whitespace", () => {
-    expect(stripBqlStatementTerminator("SELECT 1;  \n")).toBe(
-      "SELECT 1   \n",
-    );
+    expect(stripBqlStatementTerminator("SELECT 1;  \n")).toBe("SELECT 1   \n");
   });
 
   it("returns a semicolon-less query unchanged", () => {
@@ -27,6 +25,29 @@ describe("stripBqlStatementTerminator", () => {
   it("strips only the final semicolon of a multi-statement query", () => {
     expect(stripBqlStatementTerminator("SELECT 1; SELECT 2;")).toBe(
       "SELECT 1; SELECT 2 ",
+    );
+  });
+
+  it.each([
+    ["SELECT payee FROM postings;;", "SELECT payee FROM postings  "],
+    ["SELECT payee FROM postings ;;", "SELECT payee FROM postings   "],
+    ["SELECT payee FROM postings; ;", "SELECT payee FROM postings   "],
+    ["SELECT payee FROM postings;;;", "SELECT payee FROM postings   "],
+    ["SELECT 1; /* gap */ ;", "SELECT 1" + " ".repeat(13)],
+    ["SELECT 1; SELECT 2;;", "SELECT 1; SELECT 2  "],
+  ])(
+    "neutralizes a run of trailing terminators, keeping length: %p (w23/199)",
+    (query, expected) => {
+      const out = stripBqlStatementTerminator(query);
+      expect(out).toBe(expected);
+      expect(out.length).toBe(query.length);
+    },
+  );
+
+  it("keeps a real statement between terminators", () => {
+    const query = "SELECT 1; SELECT 2 FROM postings;; ";
+    expect(stripBqlStatementTerminator(query)).toBe(
+      "SELECT 1; SELECT 2 FROM postings   ",
     );
   });
 
@@ -58,15 +79,21 @@ describe("stripBqlStatementTerminator", () => {
   it.each([
     ["SELECT 1; -- trailing", "SELECT 1" + " ".repeat(13)],
     ["SELECT 1;-- trailing", "SELECT 1 " + " ".repeat(11)],
-    ["SELECT 1; -- one\n-- two", "SELECT 1 " + " ".repeat(7) + "\n" + " ".repeat(6)],
+    [
+      "SELECT 1; -- one\n-- two",
+      "SELECT 1 " + " ".repeat(7) + "\n" + " ".repeat(6),
+    ],
     ["SELECT 1; /* trailing */", "SELECT 1" + " ".repeat(16)],
     ["SELECT 1; -- don't", "SELECT 1" + " ".repeat(10)],
     ["SELECT 1; -- foo; bar", "SELECT 1" + " ".repeat(13)],
-  ])("neutralizes a terminator with a trailing comment: %s", (query, expected) => {
-    const out = stripBqlStatementTerminator(query);
-    expect(out).toBe(expected);
-    expect(out.length).toBe(query.length);
-  });
+  ])(
+    "neutralizes a terminator with a trailing comment: %s",
+    (query, expected) => {
+      const out = stripBqlStatementTerminator(query);
+      expect(out).toBe(expected);
+      expect(out.length).toBe(query.length);
+    },
+  );
 
   // w23/151: the load-bearing half — a second statement, garbage, or a
   // bare `--x` still returns unchanged for the engine to refuse loudly.

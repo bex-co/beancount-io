@@ -31,6 +31,7 @@ export function stripBqlStatementTerminator(query: string): string {
   // quote inside one is comment text, not syntax.
   let quote: string | undefined;
   let lastUnquotedSemicolon = -1;
+  const semicolons: number[] = [];
   for (let i = 0; i < query.length; i += 1) {
     const ch = query[i];
     if (quote !== undefined) {
@@ -53,15 +54,55 @@ export function stripBqlStatementTerminator(query: string): string {
       i = end;
       continue;
     }
-    if (ch === ";") lastUnquotedSemicolon = i;
+    if (ch === ";") {
+      lastUnquotedSemicolon = i;
+      semicolons.push(i);
+    }
   }
 
   if (lastUnquotedSemicolon === -1 || quote !== undefined) return query;
   // Only a *trailing* terminator is neutralized: the tail past the last
   // unquoted `;` must hold nothing but whitespace and comments. Anything
   // else means it sits mid-query — a second statement or garbage.
+  const tail = blankTail(query, lastUnquotedSemicolon + 1, query.length);
+  if (tail === undefined) return query;
+  // A run of terminators (`;;`, `; ;`) is empty statements, which stock
+  // silently tolerates; each one has to go, since a `;` left behind breaks
+  // bare-table resolution as the last one did (w23/199). Walk back while the
+  // gap to the next terminator is blank.
+  let first = semicolons.length - 1;
+  while (
+    first > 0 &&
+    blankTail(
+      query,
+      (semicolons[first - 1] as number) + 1,
+      semicolons[first] as number,
+    ) !== undefined
+  ) {
+    first -= 1;
+  }
+  let out = query.slice(0, semicolons[first] as number);
+  for (let k = first; k < semicolons.length; k += 1) {
+    const from = (semicolons[k] as number) + 1;
+    const to =
+      k + 1 < semicolons.length ? (semicolons[k + 1] as number) : query.length;
+    out += " " + (blankTail(query, from, to) as string);
+  }
+  return out;
+}
+
+/**
+ * The text between `from` and `to` with comments blanked to spaces, or
+ * `undefined` when anything but whitespace and comments is in it. Line
+ * breaks inside block comments are kept so line numbers hold.
+ */
+function blankTail(
+  query: string,
+  from: number,
+  to: number,
+): string | undefined {
   let tail = "";
-  for (let i = lastUnquotedSemicolon + 1; i < query.length; ) {
+  for (let i = from; i < to;) {
     const ch = query[i] as string;
     if (/\s/.test(ch)) {
       tail += ch;
@@ -70,23 +111,23 @@ export function stripBqlStatementTerminator(query: string): string {
     }
     if (isLineCommentOpen(query, i)) {
       const end = query.indexOf("\n", i + 2);
-      const stop = end === -1 ? query.length : end;
+      const stop = end === -1 || end > to ? to : end;
       tail += " ".repeat(stop - i);
       i = stop;
       continue;
     }
     if (ch === "/" && query[i + 1] === "*") {
       const close = query.indexOf("*/", i + 2);
-      if (close === -1) return query;
+      if (close === -1 || close + 2 > to) return undefined;
       for (let j = i; j < close + 2; j += 1) {
         tail += query[j] === "\n" ? "\n" : " ";
       }
       i = close + 2;
       continue;
     }
-    return query;
+    return undefined;
   }
-  return query.slice(0, lastUnquotedSemicolon) + " " + tail;
+  return tail;
 }
 
 /**
