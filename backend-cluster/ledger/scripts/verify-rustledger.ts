@@ -2861,6 +2861,12 @@ async function main(): Promise<void> {
     ["SELECT meta FROM postings WHERE FALSE", ["object"]],
     ["SELECT meta FROM entries LIMIT 1", ["object"]],
     ["SELECT meta FROM entries WHERE FALSE", ["object"]],
+    // w23/195: `entry` is the postings Transaction object; `open`/`close`
+    // are the accounts table's dates (MCP serves dates, not structures).
+    ["SELECT entry FROM postings LIMIT 1", ["object"]],
+    ["SELECT entry FROM postings WHERE FALSE", ["object"]],
+    ["SELECT open, close FROM accounts LIMIT 1", ["date", "date"]],
+    ["SELECT open, close FROM accounts WHERE FALSE", ["date", "date"]],
   ] as Array<[string, string[]]>) {
     const shell = queryResultToShellResult(
       await queryLedgerFilesResult(

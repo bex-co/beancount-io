@@ -166,7 +166,16 @@ function classifyColumnDtype(
 
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/u;
 const DECIMAL_RE = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/u;
-const DATE_COLUMNS = new Set(["date", "open_date", "close_date"]);
+// `open`/`close` are the accounts table's date columns (MCP serves dates, not
+// stock's Open/Close structures), so they flip date->str on empty like
+// `date` does (w23/195).
+const DATE_COLUMNS = new Set([
+  "date",
+  "open_date",
+  "close_date",
+  "open",
+  "close",
+]);
 const INT_COLUMNS = new Set([
   "count",
   "year",
@@ -202,8 +211,8 @@ const AMOUNT_COLUMNS = new Set([
 const INVENTORY_COLUMNS = new Set(["balance", "account_balance"]);
 // Object-typed bare columns (w23/170): `meta` is a dict on stock and on
 // entries, while postings serves it pre-stringified — one `object` rule
-// for every endpoint. Siblings `entry`/`open`/`close` are w23/195.
-const OBJECT_COLUMNS = new Set(["meta"]);
+// for every endpoint. `entry` is the postings Transaction object (w23/195).
+const OBJECT_COLUMNS = new Set(["meta", "entry"]);
 const POSITION_COLUMNS = new Set(["position"]);
 const STRING_COLUMNS = new Set([
   "account",
