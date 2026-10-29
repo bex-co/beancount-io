@@ -15,9 +15,12 @@ T = TypeVar("T", bound="BankTransactionSubmissionTransactionsItem")
 class BankTransactionSubmissionTransactionsItem:
     """
     Attributes:
-        transaction_id (str):
-        target_account (str): The ledger account to book this against Example: Expenses:Groceries.
-        source_account (str | Unset):
+        transaction_id (str): The staged row's `transactionId`. camelCase only here; the MCP bank tool also accepts
+            `transaction_id`.
+        target_account (str): The ledger account to book this against. camelCase only here; the MCP bank tool also
+            accepts `target_account`. Example: Expenses:Groceries.
+        source_account (str | Unset): Overrides the source account normally derived from the mapping. camelCase only
+            here; the MCP bank tool also accepts `source_account`.
     """
 
     transaction_id: str

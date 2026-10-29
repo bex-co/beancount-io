@@ -1168,15 +1168,17 @@
               "type": "object",
               "properties": {
                 "transactionId": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "The staged row's `transactionId`. camelCase only here; the MCP bank tool also accepts `transaction_id`."
                 },
                 "targetAccount": {
                   "type": "string",
-                  "description": "The ledger account to book this against",
+                  "description": "The ledger account to book this against. camelCase only here; the MCP bank tool also accepts `target_account`.",
                   "example": "Expenses:Groceries"
                 },
                 "sourceAccount": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "Overrides the source account normally derived from the mapping. camelCase only here; the MCP bank tool also accepts `source_account`."
                 }
               },
               "required": [

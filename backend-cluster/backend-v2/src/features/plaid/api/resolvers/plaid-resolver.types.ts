@@ -248,16 +248,22 @@ export class PlaidDeleteResult {
 // Submit Input
 @InputType()
 export class PlaidTransactionSubmitInput {
-  @Field(() => String)
+  @Field(() => String, {
+    description:
+      "The staged row's transactionId. camelCase only here; the MCP bank tool also accepts transaction_id.",
+  })
   transactionId: string;
 
-  @Field(() => String)
+  @Field(() => String, {
+    description:
+      "The ledger account to book this against. camelCase only here; the MCP bank tool also accepts target_account.",
+  })
   targetAccount: string;
 
   @Field(() => String, {
     nullable: true,
     description:
-      "Overrides the source account normally derived from the Plaid account's mapping",
+      "Overrides the source account normally derived from the Plaid account's mapping. camelCase only here; the MCP bank tool also accepts source_account.",
   })
   sourceAccount?: string;
 }
