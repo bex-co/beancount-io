@@ -509,3 +509,22 @@ retain both destinations. No individual production failure status or cause is
 inferred. No retry, republishing, telemetry, model call or global profile change
 occurs. Preserve the existing Pack; next bounded manual check is on/after
 2026-10-29T07:11:46Z, or an actual supported client/delivery change earlier.
+
+## Current catalog readback — 2026-10-29 UTC
+
+[Actual complete skills.rest/SkillsMP reads](catalog-corrections/catalog-recheck-20261029.json)
+still show27mixed records each:8customer workflows and19internal tools.
+Both ask detail pages retain the removed source layout; skills.rest also
+retains the generated selector. SkillsMP displays an Oct26catalog refresh,
+which does not establish the requested customer-suite correction.
+Five original customer workflows remain absent. Current Git additionally
+contains beancount-invoices (14customer workflows); the earlier13-workflow
+request and uploaded0.4.2Pack retain their historical inventories. No repeated
+submission, catalog email or new artifact publication is made.
+
+The Skills CLI remains1.7.4; Pack's next native manual not-before is
+Oct29T07:11:46UTC and has not elapsed in this02:xxUTC check. The prior
+59/61-file result remains open; no fresh native success or failure is claimed.
+Index follow-through is actual correction/feedback/capability or manualNov1UTC;
+native delivery keeps its independent earlier trigger. No new publisher input
+is required.

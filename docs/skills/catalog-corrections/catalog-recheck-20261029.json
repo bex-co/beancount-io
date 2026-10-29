@@ -1,0 +1,423 @@
+{
+  "owner": "w6/m6.5/t012",
+  "recordedAtUTC": "2026-10-29T02:38:49.425239+00:00",
+  "status": "blocked",
+  "inventoryBoundary": {
+    "acceptedRequestCustomerInventory": [
+      "beancount-accruals",
+      "beancount-add",
+      "beancount-ask",
+      "beancount-close",
+      "beancount-import",
+      "beancount-importer-author",
+      "beancount-init",
+      "beancount-migrate",
+      "beancount-options",
+      "beancount-property",
+      "beancount-reconcile",
+      "beancount-roll-forward",
+      "beancount-trade"
+    ],
+    "currentGitCustomerInventory": [
+      "beancount-accruals",
+      "beancount-add",
+      "beancount-ask",
+      "beancount-close",
+      "beancount-import",
+      "beancount-importer-author",
+      "beancount-init",
+      "beancount-invoices",
+      "beancount-migrate",
+      "beancount-options",
+      "beancount-property",
+      "beancount-reconcile",
+      "beancount-roll-forward",
+      "beancount-trade"
+    ],
+    "currentGitAdditionalCustomerWorkflows": [
+      "beancount-invoices"
+    ],
+    "finding": "The retained accepted13-workflow request and uploaded Pack are historical versioned contracts. Current Git also contains beancount-invoices; no new artifact upload/release or request is inferred from this source growth."
+  },
+  "skillsRest": {
+    "acceptedRequest": "skills-rest-submission-20261026.json",
+    "existingRequestReused": true,
+    "actualCollection": {
+      "observedAtUTC": "2026-10-29T02:35:19.400Z",
+      "url": "https://skills.rest/repo/bex-co/beancount-io",
+      "entries": [
+        {
+          "name": "beancount-importer-author",
+          "url": "https://skills.rest/skill/beancount-importer-author-bex-co"
+        },
+        {
+          "name": "loopx",
+          "url": "https://skills.rest/skill/loopx-bex-co"
+        },
+        {
+          "name": "routine-flaky-test-fixer",
+          "url": "https://skills.rest/skill/routine-flaky-test-fixer-bex-co"
+        },
+        {
+          "name": "beancount-init",
+          "url": "https://skills.rest/skill/beancount-init-bex-co"
+        },
+        {
+          "name": "routine-logic-bugfixer",
+          "url": "https://skills.rest/skill/routine-logic-bugfixer-bex-co"
+        },
+        {
+          "name": "beancount-reconcile",
+          "url": "https://skills.rest/skill/beancount-reconcile-bex-co"
+        },
+        {
+          "name": "routine-useless-test-pruner",
+          "url": "https://skills.rest/skill/routine-useless-test-pruner-bex-co"
+        },
+        {
+          "name": "routine-abstraction-police",
+          "url": "https://skills.rest/skill/routine-abstraction-police-bex-co"
+        },
+        {
+          "name": "routine-shipped-feature-inliner",
+          "url": "https://skills.rest/skill/routine-shipped-feature-inliner-bex-co"
+        },
+        {
+          "name": "routine-logic-simplifier",
+          "url": "https://skills.rest/skill/routine-logic-simplifier-bex-co"
+        },
+        {
+          "name": "routine-dead-code-removal",
+          "url": "https://skills.rest/skill/routine-dead-code-removal-bex-co"
+        },
+        {
+          "name": "beancount-import",
+          "url": "https://skills.rest/skill/beancount-import-bex-co"
+        },
+        {
+          "name": "beancount-migrate",
+          "url": "https://skills.rest/skill/beancount-migrate-bex-co"
+        },
+        {
+          "name": "mobile-release",
+          "url": "https://skills.rest/skill/mobile-release-bex-co"
+        },
+        {
+          "name": "beancount-ask",
+          "url": "https://skills.rest/skill/beancount-ask-bex-co"
+        },
+        {
+          "name": "qa-find-bugs-cli",
+          "url": "https://skills.rest/skill/qa-find-bugs-cli-bex-co"
+        },
+        {
+          "name": "routine-dup-unifier",
+          "url": "https://skills.rest/skill/routine-dup-unifier-bex-co"
+        },
+        {
+          "name": "beancount-close",
+          "url": "https://skills.rest/skill/beancount-close-bex-co"
+        },
+        {
+          "name": "pm",
+          "url": "https://skills.rest/skill/pm-bex-co"
+        },
+        {
+          "name": "routine-abstraction-improver",
+          "url": "https://skills.rest/skill/routine-abstraction-improver-bex-co"
+        },
+        {
+          "name": "mermaid",
+          "url": "https://skills.rest/skill/mermaid-bex-co"
+        },
+        {
+          "name": "pm-brainstorm",
+          "url": "https://skills.rest/skill/pm-brainstorm-bex-co"
+        },
+        {
+          "name": "beancount-options",
+          "url": "https://skills.rest/skill/beancount-options-bex-co"
+        },
+        {
+          "name": "ship",
+          "url": "https://skills.rest/skill/ship-bex-co"
+        },
+        {
+          "name": "qa-find-bugs-dashboard",
+          "url": "https://skills.rest/skill/qa-find-bugs-dashboard-bex-co"
+        },
+        {
+          "name": "qa-find-bugs-mobile",
+          "url": "https://skills.rest/skill/qa-find-bugs-mobile-bex-co"
+        },
+        {
+          "name": "qa-find-bugs-mcp",
+          "url": "https://skills.rest/skill/qa-find-bugs-mcp-bex-co"
+        }
+      ],
+      "customerEntries": [
+        "beancount-importer-author",
+        "beancount-init",
+        "beancount-reconcile",
+        "beancount-import",
+        "beancount-migrate",
+        "beancount-ask",
+        "beancount-close",
+        "beancount-options"
+      ],
+      "internalEntries": [
+        "loopx",
+        "routine-flaky-test-fixer",
+        "routine-logic-bugfixer",
+        "routine-useless-test-pruner",
+        "routine-abstraction-police",
+        "routine-shipped-feature-inliner",
+        "routine-logic-simplifier",
+        "routine-dead-code-removal",
+        "mobile-release",
+        "qa-find-bugs-cli",
+        "routine-dup-unifier",
+        "pm",
+        "routine-abstraction-improver",
+        "mermaid",
+        "pm-brainstorm",
+        "ship",
+        "qa-find-bugs-dashboard",
+        "qa-find-bugs-mobile",
+        "qa-find-bugs-mcp"
+      ],
+      "missingOriginalCustomerEntries": [
+        "beancount-accruals",
+        "beancount-add",
+        "beancount-property",
+        "beancount-roll-forward",
+        "beancount-trade"
+      ],
+      "missingCurrentGitCustomerEntries": [
+        "beancount-accruals",
+        "beancount-add",
+        "beancount-invoices",
+        "beancount-property",
+        "beancount-roll-forward",
+        "beancount-trade"
+      ]
+    },
+    "actualAsk": {
+      "observedAtUTC": "2026-10-29T02:35:30.123Z",
+      "url": "https://skills.rest/skill/beancount-ask-bex-co",
+      "sourceUrl": "https://github.com/bex-co/beancount-io/tree/main/skills/.claude/skills/beancount-ask",
+      "installCommand": "npx skills add https://github.com/bex-co/beancount-io --skill beancount-ask-bex-co"
+    },
+    "customerOnlyCollectionVerified": false,
+    "internalRecordsExcluded": false,
+    "sourceSelectorCorrected": false
+  },
+  "skillsMP": {
+    "actualCollection": {
+      "observedAtUTC": "2026-10-29T02:36:00.791Z",
+      "url": "https://skillsmp.com/creators/bex-co/beancount-io",
+      "entries": [
+        {
+          "name": "beancount-import",
+          "url": "https://skillsmp.com/creators/bex-co/beancount-io/skills-claude-skills-beancount-import"
+        },
+        {
+          "name": "beancount-init",
+          "url": "https://skillsmp.com/creators/bex-co/beancount-io/skills-claude-skills-beancount-init"
+        },
+        {
+          "name": "beancount-reconcile",
+          "url": "https://skillsmp.com/creators/bex-co/beancount-io/skills-claude-skills-beancount-reconcile"
+        },
+        {
+          "name": "beancount-ask",
+          "url": "https://skillsmp.com/creators/bex-co/beancount-io/skills-claude-skills-beancount-ask"
+        },
+        {
+          "name": "beancount-close",
+          "url": "https://skillsmp.com/creators/bex-co/beancount-io/skills-claude-skills-beancount-close"
+        },
+        {
+          "name": "beancount-importer-author",
+          "url": "https://skillsmp.com/creators/bex-co/beancount-io/skills-claude-skills-beancount-importer-author"
+        },
+        {
+          "name": "beancount-migrate",
+          "url": "https://skillsmp.com/creators/bex-co/beancount-io/skills-claude-skills-beancount-migrate"
+        },
+        {
+          "name": "beancount-options",
+          "url": "https://skillsmp.com/creators/bex-co/beancount-io/skills-claude-skills-beancount-options"
+        },
+        {
+          "name": "qa-find-bugs-mcp",
+          "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-qa-find-bugs-mcp"
+        },
+        {
+          "name": "loopx",
+          "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-loopx"
+        },
+        {
+          "name": "mermaid",
+          "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-mermaid"
+        },
+        {
+          "name": "pm",
+          "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-pm"
+        },
+        {
+          "name": "routine-flaky-test-fixer",
+          "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-routine-flaky-test-fixer"
+        },
+        {
+          "name": "ship",
+          "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-ship"
+        },
+        {
+          "name": "pm-brainstorm",
+          "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-pm-brainstorm"
+        },
+        {
+          "name": "qa-find-bugs-cli",
+          "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-qa-find-bugs-cli"
+        },
+        {
+          "name": "qa-find-bugs-mobile",
+          "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-qa-find-bugs-mobile"
+        },
+        {
+          "name": "mobile-release",
+          "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-mobile-release"
+        },
+        {
+          "name": "qa-find-bugs-dashboard",
+          "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-qa-find-bugs-dashboard"
+        },
+        {
+          "name": "routine-abstraction-improver",
+          "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-routine-abstraction-improver"
+        },
+        {
+          "name": "routine-abstraction-police",
+          "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-routine-abstraction-police"
+        },
+        {
+          "name": "routine-dead-code-removal",
+          "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-routine-dead-code-removal"
+        },
+        {
+          "name": "routine-logic-bugfixer",
+          "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-routine-logic-bugfixer"
+        },
+        {
+          "name": "routine-shipped-feature-inliner",
+          "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-routine-shipped-feature-inliner"
+        },
+        {
+          "name": "routine-dup-unifier",
+          "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-routine-dup-unifier"
+        },
+        {
+          "name": "routine-logic-simplifier",
+          "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-routine-logic-simplifier"
+        },
+        {
+          "name": "routine-useless-test-pruner",
+          "url": "https://skillsmp.com/creators/bex-co/beancount-io/agents-skills-routine-useless-test-pruner"
+        }
+      ],
+      "sourceAndCatalogDisplayTimes": [
+        "October 17, 2026 at 14:03",
+        "October 26, 2026 at 11:37"
+      ],
+      "customerEntries": [
+        "beancount-import",
+        "beancount-init",
+        "beancount-reconcile",
+        "beancount-ask",
+        "beancount-close",
+        "beancount-importer-author",
+        "beancount-migrate",
+        "beancount-options"
+      ],
+      "internalEntries": [
+        "qa-find-bugs-mcp",
+        "loopx",
+        "mermaid",
+        "pm",
+        "routine-flaky-test-fixer",
+        "ship",
+        "pm-brainstorm",
+        "qa-find-bugs-cli",
+        "qa-find-bugs-mobile",
+        "mobile-release",
+        "qa-find-bugs-dashboard",
+        "routine-abstraction-improver",
+        "routine-abstraction-police",
+        "routine-dead-code-removal",
+        "routine-logic-bugfixer",
+        "routine-shipped-feature-inliner",
+        "routine-dup-unifier",
+        "routine-logic-simplifier",
+        "routine-useless-test-pruner"
+      ],
+      "missingOriginalCustomerEntries": [
+        "beancount-accruals",
+        "beancount-add",
+        "beancount-property",
+        "beancount-roll-forward",
+        "beancount-trade"
+      ],
+      "missingCurrentGitCustomerEntries": [
+        "beancount-accruals",
+        "beancount-add",
+        "beancount-invoices",
+        "beancount-property",
+        "beancount-roll-forward",
+        "beancount-trade"
+      ]
+    },
+    "actualAsk": {
+      "observedAtUTC": "2026-10-29T02:36:21.623Z",
+      "heading": "beancount-ask",
+      "links": [
+        {
+          "text": "View GitHub Repository",
+          "url": "https://github.com/bex-co/beancount-io/tree/main/skills/.claude/skills/beancount-ask"
+        }
+      ],
+      "url": "https://skillsmp.com/creators/bex-co/beancount-io/skills-claude-skills-beancount-ask"
+    },
+    "displayedTimesTimezone": null,
+    "finding": "Displayed refresh date advances toOct26, but all27records still comprise8customer/19internal entries, with old ask source layout. A newer refresh label is not customer-suite correction.",
+    "securityVerification": "Ordinary verification completes without intervention; no CAPTCHA or bypass.",
+    "privatePublisherCapabilityReassessed": false
+  },
+  "pack": {
+    "clientMetadata": {
+      "name": "skills_cli",
+      "url": "https://registry.npmjs.org/skills/latest",
+      "observedAtUTC": "2026-10-29T02:34:40.504681+00:00",
+      "httpStatus": 200,
+      "sha256": "8f2956573a2c1f5d160647e3c5932c8ab7146def418fa72211d25bafc2bba3d0",
+      "version": "1.7.4",
+      "integrity": "sha512-lHZJksE8UImNAr+LL6unqq7jERjdFw5EJasm17srycwL7rXHGdCmgu1L1ttLxUO9i3rdH+QQig+px0icHqLmRw=="
+    },
+    "nativeRetestThisPass": false,
+    "reason": "Same production1.7.4; manual not-before2026-10-29T07:11:46Z has not elapsed during this02:xxUTC pass.",
+    "currentNativeEvidence": "pack-native-recheck-20261027.json",
+    "completeInstallVerified": false
+  },
+  "actions": {
+    "newSubmission": false,
+    "newPublication": false,
+    "emailSent": false,
+    "accountCreated": false,
+    "internalSkillUploaded": false
+  },
+  "unblock": "Index services provide the corrected customer-only canonical suite or supported existing-request/suite intake; Pack delivers all61original uploaded hashes to both agents through a supported client. Worker verifies actual results.",
+  "nextIndexManualReadbackUTC": "2026-11-01",
+  "packNativeManualNotBeforeUTC": "2026-10-29T07:11:46Z",
+  "earlierTrigger": "Real correction/feedback/supported intake or relevant delivery/client fix.",
+  "publisherInputNeeded": false
+}
