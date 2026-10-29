@@ -646,12 +646,14 @@ shows the same read URI for Codex and Claude Code, including report-only equity
 closing and account-filter scope.
 
 The [Beancount.io MCP guide](./docs/mcp.md) explains setup, OAuth and API-key
-permissions, how requests reach the ledger, all 43 tools and 64 resource
-templates, the four accounting prompts and how Claude Code and Codex use them,
+permissions, how requests reach the ledger, the tool and resource-template
+catalogs, the accounting prompts and how Claude Code and Codex use them,
 the result envelope and its failure codes, writing directives as
 Beancount text, file-edit previews, bank imports, protocol examples, and
 deployment diagnostics. It also documents the limits of the conformance check
 and current client-facing differences from REST.
+Use `tools/list`, `resources/templates/list`, and `prompts/list` against the
+deployed endpoint for the current catalog.
 
 To see how real coding agents cope with the surface, [MCP agent journeys](./docs/mcp-agent-eval.md)
 runs three onboarding tasks through Claude Code and Codex, checks the answers
