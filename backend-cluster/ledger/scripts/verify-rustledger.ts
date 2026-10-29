@@ -1518,6 +1518,31 @@ async function main(): Promise<void> {
       `a trailing run of terminators answers: ${query}`,
     );
   }
+  // w23/200: a running balance that nets to zero is blank in the text table,
+  // matching the empty structured cell, not an invented `0 USD`.
+  const zeroBalanceFiles = {
+    "main.beancount": [
+      "2026-01-01 open Assets:Cash USD",
+      "2026-01-01 open Equity:O",
+      '2026-01-02 * "in"',
+      "  Assets:Cash 5 USD",
+      "  Equity:O -5 USD",
+      '2026-01-03 * "out"',
+      "  Assets:Cash -5 USD",
+      "  Equity:O 5 USD",
+      "",
+    ].join("\n"),
+  };
+  const zeroBalance = await queryLedgerFilesResult(
+    zeroBalanceFiles,
+    "main.beancount",
+    "SELECT account, balance FROM postings",
+  );
+  const zeroBalanceText = queryResultToText(zeroBalance);
+  assert(
+    zeroBalanceText.includes("5 USD") && !zeroBalanceText.includes("0 USD"),
+    "a zero-net running balance is blank in the text table",
+  );
   const pipelineBareEof = await queryLedgerFiles(
     FILES,
     "main.beancount",

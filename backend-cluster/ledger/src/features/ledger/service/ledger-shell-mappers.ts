@@ -328,7 +328,27 @@ function formatArrayCell(cell: CellValue[]): string {
 function formatTextCell(cell: CellValue): string {
   if (typeof cell === "boolean") return cell ? "TRUE" : "FALSE";
   if (Array.isArray(cell)) return formatArrayCell(cell);
+  if (isInventoryCell(cell)) return formatInventoryText(cell);
   return formatCellValue(cell);
+}
+
+/**
+ * An inventory in the text table, with the structured cell's zero rule: a
+ * currency whose positions net to zero is not held, so an all-zero running
+ * balance is blank like the `{}` the structured result and stock show, not an
+ * invented `0 USD` (w23/200). Positions of currencies that remain print as
+ * the engine wrote them.
+ */
+function formatInventoryText(cell: {
+  positions: { units: AmountValue }[];
+}): string {
+  const held = new Set(
+    Object.keys(unitsToCurrencyMap(cell.positions.map((p) => p.units))),
+  );
+  const positions = cell.positions.filter((position) =>
+    held.has(position.units.currency),
+  );
+  return positions.length === 0 ? "" : formatCellValue({ positions });
 }
 
 function alignDecimalColumn(values: string[]): string[] {
