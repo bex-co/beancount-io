@@ -1,7 +1,7 @@
 # Hosted MCP marketplace submissions
 
 Updated **2026-10-29 UTC**. This is the single current operational inventory for
-all 17 MCP distribution targets. Platform packets retain receipts, dated history,
+all 18 MCP distribution targets. Platform packets retain receipts, dated history,
 native evidence and privacy limits. Reuse each existing application/listing;
 a submission, approval, publication and native connection are separate outcomes.
 
@@ -15,7 +15,8 @@ automations; actual feedback/publication/failure can trigger work earlier.
 
 Status baseline: 6 public entries (including LobeHub needing correction and GitHub
 with native acceptance pending), 6 submitted, 2 in review, 2 not submitted because
-intake is blocked or paused, and 1 source-backed no-marketplace target. `published` requires an
+intake is blocked or paused, 1 source-backed no-marketplace target, and 1 newly
+planned contribution to the general list. `published` requires an
 observed public record; it alone does not qualify an ADR019 supported host.
 
 The operation column links actual manage/intake/install/PR/issue locations.
@@ -43,6 +44,7 @@ baselines kept completed. Shared browser recovery is [044 done](../../../.pm/w6/
 | PulseMCP | `paused` | 2026-10-27 — actual official intake only; complete query/registry readback retains2026-10-25T07:34:40Z | [Official paused intake/instructions](https://www.pulsemcp.com/submit); [last complete name query](https://www.pulsemcp.com/servers?q=beancount); [existing active registry record](https://registry.modelcontextprotocol.io/v0.1/servers/io.beancount%2Fbeancount/versions/latest) | [042](../../../.pm/w6/blocked/042.md); PulseMCP ingestion/intake owner, then worker | [Current route and retained prerequisite evidence](./marketplace-submissions/pulsemcp/intake-recheck-20261025.json): actual official page still pauses new listings/changes, no reopening date. Its interim official-registry step is already satisfied in the retained active/latest1.0.0 record. No new query, direct submission or canonical publication is inferred from this notice check. | No user action now. On automatic import/reopening/supported correction route or manual2026-11-01UTC, verify actual public metadata and native path. No duplicate registry release, speculative PR or new outreach. |
 | Windsurf / legacy Cascade | `no_marketplace` | 2026-10-21 — vendor documentation | No supported marketplace submission entry established | Worker / route-opening maintenance; [m9/t001 completed research baseline](../../../.pm/w6/blocked/m9/done/t001.md) | [Vendor evidence](https://docs.windsurf.com/windsurf/cascade/mcp) records no legacy Cascade marketplace/one-click install; the docs redirect to Devin Desktop. Manual remote config is separate from a listing. | Trigger: vendor opens a supported listing/marketplace route. Re-establish product eligibility then. No phantom submission; Devin Local is a separate product decision. |
 | Awesome Remote MCP Servers | `submitted` | 2026-10-28T07:32–07:36UTC — existing PR, comments and reviews only | [Existing PR2753](https://github.com/punkpeye/awesome-remote-mcp-servers/pull/2753); [single waiver request](https://github.com/punkpeye/awesome-remote-mcp-servers/pull/2753#issuecomment-6378906070) | [m11/t003](../../../.pm/w6/blocked/m11/t003.md); list maintainers | [Current review](./marketplace-submissions/awesome-remote/review-followup-20261028.json): OPEN/unmerged, zero reviews/review comments, one existing waiver comment, endpoint-ok/has-connector. No maintainer waiver decision/response. Earlier successful checks keep their own timestamps; no fresh CI/publication inferred. | On actual waiver/review/CI/merge change or manual2026-10-31UTC, handle feedback and verify merged entry/setup links. No publisher input, repeated request/PR or account-engagement change. |
+| Awesome MCP Servers — general list | `planned` | 2026-10-29 — current contribution scope, complete README and focused PR deduplication only | [Contribution guide](https://github.com/punkpeye/awesome-mcp-servers/blob/main/CONTRIBUTING.md); [upstream contribution entry](https://github.com/punkpeye/awesome-mcp-servers/compare); no Beancount PR receipt yet | [048](../../../.pm/w6/048.md); worker, then list maintainers | [Scope/dedup assessment](./marketplace-submissions/awesome-main/intake-assessment-20261029.json): public installable source required; hosted-only URLs are directed to the separate remote list. No canonical README match; zero canonical-repository PR matches; the one name-search result has a different repository. Existing full-stack self-hosting is an eligibility candidate, not yet accepted proof. | Worker verifies supported public self-hostable-source eligibility and current dedup/format, submits one accurate Finance & Fintech entry, then handles review and verifies merge/setup links. Independent of PR2753 and other platform reviews. No duplicate remote submission, invented package/stdio command, second test deployment, payment or account-engagement change. |
 
 Maintain the affected row's status, actual check time, owner and next action
 together, and append new observations to its packet. Keep existing receipts;

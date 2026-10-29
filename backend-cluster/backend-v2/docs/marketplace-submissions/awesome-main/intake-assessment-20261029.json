@@ -1,0 +1,56 @@
+{
+  "target": "punkpeye/awesome-mcp-servers",
+  "status": "planned",
+  "observedDateUTC": "2026-10-29",
+  "assessmentCompletedAtUTC": "2026-10-29T23:39:21Z",
+  "owner": "w6/048",
+  "source": "Owner-requested ten-channel PM reconciliation; completed baselines excluded and existing applications retained.",
+  "upstream": {
+    "repository": "https://github.com/punkpeye/awesome-mcp-servers",
+    "defaultBranch": "main",
+    "archived": false,
+    "readme": "https://github.com/punkpeye/awesome-mcp-servers/blob/main/README.md",
+    "contributionGuide": "https://github.com/punkpeye/awesome-mcp-servers/blob/main/CONTRIBUTING.md",
+    "scopeObserved": "Public GitHub server source that users can install and run. Hosted-only URLs are directed to the separate awesome-remote-mcp-servers repository.",
+    "formatObserved": "One concise server line, repository link, relevant category and alphabetical placement; the contribution guide offers a documented automated-agent review title option."
+  },
+  "deduplication": {
+    "completeReadmeReadThroughContentsAPI": true,
+    "beancountNameMatch": false,
+    "canonicalRepositoryMatch": false,
+    "canonicalHostedEndpointMatch": false,
+    "focusedBeancountPRSearch": {
+      "query": "repo:punkpeye/awesome-mcp-servers is:pull-request beancount",
+      "total": 1,
+      "unrelatedResult": "https://github.com/punkpeye/awesome-mcp-servers/pull/12242",
+      "actualDiffInspected": true,
+      "reasonNotCanonical": "Adds CPUtester5465/countbean-plugin, not bex-co/beancount-io."
+    },
+    "focusedCanonicalRepositoryPRSearch": {
+      "query": "repo:punkpeye/awesome-mcp-servers is:pull-request \"bex-co/beancount-io\"",
+      "total": 0
+    },
+    "limits": "These current README and focused PR checks do not exhaust every possible alias or issue. Repeat the final dedup check immediately before contributing."
+  },
+  "eligibility": {
+    "candidatePublicSource": "https://github.com/bex-co/beancount-io/tree/main/backend-cluster/backend-v2",
+    "existingSelfHostingGuide": "https://github.com/bex-co/beancount-io/blob/main/deploy/docker/README.md",
+    "existingMcpGuide": "https://github.com/bex-co/beancount-io/blob/main/backend-cluster/backend-v2/docs/mcp.md",
+    "acceptanceVerified": false,
+    "nextStep": "Establish that the existing supported full-stack self-hosting route satisfies the current installable-source requirement, then prepare one accurate entry. Do not invent a standalone package or deploy a second stack merely for listing QA."
+  },
+  "separateExistingRemoteContribution": {
+    "url": "https://github.com/punkpeye/awesome-remote-mcp-servers/pull/2753",
+    "owner": "w6/m11/t003",
+    "sameTarget": false,
+    "changedOrResubmitted": false,
+    "freshReviewCheckClaimed": false
+  },
+  "submission": {
+    "submitted": false,
+    "receipt": null,
+    "prOpenedThisPlanningPass": false,
+    "publisherAccountOrGrantChange": false
+  },
+  "boundary": "This pass arranges the work and records public primary-source scope/dedup evidence. It does not claim main-list eligibility approval, submission, merge, live installation, current traffic/star metrics, or refreshed status for the other channels."
+}

@@ -21,7 +21,7 @@
 - Existing ChatGPT and Claude submissions are reused, required supported feedback is addressed, and both have actual approved public entries with verified native synthetic OAuth/query/preview paths.
 - The remote-only community list has an accurate merged canonical entry and working setup links, without a duplicate contribution.
 - The shared tracker retains actual submit/manage links, status, UTC last checked at, receipts/evidence and next actions. Publisher-confirmed submission, inspected review state and public publication remain distinct.
-- All 17 tracker rows retain the execution owner below. Existing m8/m9/m10 and 047/042 publication gates remain open until their own acceptance holds; completing this milestone alone does not mean every w6 submission is finished.
+- All 18 tracker rows retain the execution owner below. Existing m8/m9/m10, 047/042 and independent note 048 retain their own publication gates; completing this milestone alone does not mean every w6 submission is finished.
 - All standing closing tasks pass and mandatory archive moves are complete. Pending review, unavailable account access or unpaid fees are not completion.
 
 ## Source + Goal linkage
@@ -46,6 +46,7 @@ The [m9/t011](../m9/done/t011.md) official Cursor application is submitted with 
 | ChatGPT / OpenAI | Publisher-reported in review, received2026-10-25T05:13:44Z; estimated completion2026-11-03 | [m11/t001](t001.md), OpenAI review then public/native verification; no user action now |
 | Claude | Publisher-reported in review, received2026-10-25T05:34:59Z; no supplied completion estimate | [m11/t002](t002.md), Claude review then public/native verification; no user action now |
 | Awesome Remote MCP Servers | [m11/t003](t003.md) | Same task retains upstream receipt, review and merged entry |
+| Awesome MCP Servers — general list | New independent [048](../../048.md), owner request 2026-10-29 | Verify public installable-source eligibility, submit one canonical contribution and verify merge/setup links; separate from remote-only PR2753 and independent of this milestone's reviews |
 | Glama | Ownership, retained synthetic monitor and after-day follow-up [w2/088 done](../../../w2/done/088.md); canonical metadata [m8/t003 done](../m8/done/t003.md) | [m8/t009 native done](../m8/done/t009.md); final [m8/t004](../m8/t004.md) still depends on Smithery. Healthy/44tools; monitor renewal assessment2026-11-20UTC, expiry end11-23UTC; no duplicate listing |
 | Smithery | [m8/t002](../m8/t002.md) | Removed legacy intake remains blocked; platform/publisher must provide a working supported replacement route |
 | MCPServers.org | Canonical public listing verified; original Free $0 receipt retained | [m10/t001](../m10/done/t001.md) done; [m10/t010](../m10/done/t010.md) retains directory-advertised native checks |

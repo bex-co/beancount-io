@@ -2,6 +2,32 @@
 
 **Worker:** worker1 — general-purpose adoption worker; accepts the next highest-impact milestone across packages, topics, and A1/A2/A3 rather than owning a permanent specialty.
 
+## Requested ten-channel deduplication — 2026-10-29 UTC
+
+The owner's ten named MCP integration targets map to four completed baselines,
+five existing follow-through owners, and one new independent contribution.
+Existing statuses below retain their recorded evidence/check times in the
+[canonical tracker](../../backend-cluster/backend-v2/docs/mcp-marketplaces.md);
+this PM pass does not claim another external review of those nine channels.
+
+| Requested target | Filtered outcome / retained owner |
+| --- | --- |
+| registry.modelcontextprotocol.io | Completed publication; retain [w2/m36](../w2/done/m36/README.md) and the release workflow. No duplicate publish. |
+| mcpmarket.com | Existing accepted free submission; [m10/t002](blocked/m10/t002.md) owns moderation, hosted metadata and public verification. |
+| mcpservers.org | Completed public/native baseline; [m10/t010 done](blocked/m10/done/t010.md). No repeat submission. |
+| mcp.so | Existing PR6071; [047](blocked/047.md) owns review/import/public verification. No payment or duplicate PR. |
+| smithery.ai | [m8/t002](blocked/m8/t002.md) owns the existing request and supported-intake gate; no accepted listing receipt yet. |
+| hub.docker.com/mcp | Existing PR6042 and completed native baseline; [m9/t017](blocked/m9/t017.md) owns maintainer review/import/public install. |
+| lobehub.com/mcp | Published/native baseline retained; [m10/t012](blocked/m10/t012.md) owns public definition propagation and invalid stdio deployment correction. |
+| glama.ai | Completed claim, healthy-day and native baseline; [m8/t009 done](blocked/m8/done/t009.md). Routine monitor maintenance stays with its existing owner. |
+| cursor.directory | Completed community publication/native baseline; [m9/t003 done](blocked/m9/done/t003.md). Official Cursor is a different, already-owned application. |
+| punkpeye/awesome-mcp-servers | New [048](048.md): verify public installable/self-hostable-source eligibility, submit once and verify the merged canonical entry. Separate from the existing remote-only list PR2753. |
+
+048 is a sub-hour contribution, not a new milestone, and does not wait for
+another platform's review. The operational inventory now has 18 targets. Reuse
+Official Registry metadata wherever actual import is supported; registry
+publication alone does not establish another directory's inclusion.
+
 
 ## Latest GitHub outcome — 2026-10-29 UTC
 
@@ -62,7 +88,7 @@ Source: the owner's request to complete all remaining actions from the17-target 
 
 **Execution order:** tracker/browser/native prerequisites and045 credential coordination are complete;046 renewable native acceptance is now complete too. Follow actual review, publication, compatible host/client or supported engine-artifact changes independently. Aggregate verification and standing closing tasks retain their full DoDs; one blocked platform never ends the w6 loop while another actionable item remains.
 
-**Current board:** 61 pending leaves remain, all blocked or transitively dependent; no live inbox/milestone leaf is actionable.046 is archived under done/. Obsolete standalone discovery 040 is dropped below; milestone task counts are unchanged. Historical snapshots retain their earlier queue states.
+**Current board:** 62 pending leaves: the 61 previously parked or dependency-gated leaves plus independent actionable [048](048.md), added by the owner's ten-channel request. 046 is archived under done/. Obsolete standalone discovery 040 is dropped below; milestone task counts are unchanged. Historical snapshots retain their earlier queue states.
 
 ## Historical work and blocker triage — 2026-10-24 UTC
 
@@ -292,6 +318,7 @@ Prioritize the major correctness findings (PRINT/FROM/JOURNAL, authored location
 
 ## Inbox
 
+- [048](048.md) — Qualify and contribute the self-hostable public MCP source to punkpeye/awesome-mcp-servers, then verify merge/setup links (A3/A1; 45–60m). New independent target; do not duplicate the existing remote-only PR2753 or repeat completed marketplace submissions.
 
 - [047](blocked/047.md) — MCP.so publication follow-through — submission041 is archived with actual PR6071 receipt; **blocked:** maintainer review/import, live listing and advertised native verification. No fee or website-login decision pending.
 - [042](blocked/042.md) — PulseMCP — **blocked:** official interim registry step already met (active1.0.0); await platform auto-import or supported reopening/correction, then public/native verification. No user action now.
