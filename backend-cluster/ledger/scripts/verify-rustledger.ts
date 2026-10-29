@@ -2186,6 +2186,40 @@ async function main(): Promise<void> {
       ),
     "the query path refuses GROUP BY account_balance",
   );
+  // value(position, 'CCY') target (w23/184): the raw engine ignores a target
+  // it cannot resolve and returns units, so the query path refuses a literal
+  // target the ledger does not name — and a named one still answers.
+  const bogusValue = await queryLedgerFilesResult(
+    FILES,
+    "main.beancount",
+    "SELECT value(position, 'BOGUS') FROM postings",
+  );
+  assert(
+    bogusValue.rows.length === 0 &&
+      bogusValue.errors.some(
+        (e) =>
+          e.severity === "error" && e.message.includes('value() target "BOGUS"'),
+      ),
+    "the query path refuses an unknown value() target",
+  );
+  const rawBogusValue = await withLedger(FILES, "main.beancount", (ledger) =>
+    ledger.query("SELECT value(position, 'BOGUS') FROM postings"),
+  );
+  assert(
+    rawBogusValue.rows.length > 0 &&
+      !rawBogusValue.errors.some((e) => e.severity === "error"),
+    "raw engine still ignores an unknown value() target (the guard is load-bearing)",
+  );
+  const knownValue = await queryLedgerFilesResult(
+    FILES,
+    "main.beancount",
+    "SELECT value(position, 'USD') FROM postings",
+  );
+  assert(
+    knownValue.rows.length > 0 &&
+      !knownValue.errors.some((e) => e.severity === "error"),
+    "a ledger-named value() target still answers through the guard",
+  );
   const scalarGroup = await queryLedgerFiles(
     FILES,
     "main.beancount",

@@ -85,6 +85,8 @@ import { idColumnError } from "./id-column-guard";
 import { quotedColumnError } from "./quoted-column-guard";
 import { compositeComparisonError } from "./composite-comparison-guard";
 import { inventoryGroupByError } from "./inventory-group-by-guard";
+import { valueTargetError } from "./value-target-guard";
+import { collectLedgerCommodities } from "./cost-valuation";
 import { groupByCoverageError } from "./group-by-coverage-guard";
 import { stringConcatError } from "./string-concat-guard";
 import { dateArithmeticError } from "./date-arithmetic-guard";
@@ -1038,6 +1040,7 @@ export async function queryLedgerFilesResultInProcess(
           quotedColumnError(query) ??
           compositeComparisonError(query) ??
           inventoryGroupByError(query) ??
+          valueTargetError(query, () => ledgerCommodities(ledger)) ??
           groupByCoverageError(query) ??
           stringConcatError(query) ??
           dateArithmeticError(query) ??
@@ -1061,6 +1064,20 @@ export async function queryLedgerFilesResultInProcess(
       }
     },
   );
+}
+
+/** Every currency the loaded ledger names, plus its operating currencies (w23/184). */
+function ledgerCommodities(ledger: {
+  getDirectives(): unknown;
+  getOptions(): { operating_currencies?: string[] };
+}): Set<string> {
+  const known = collectLedgerCommodities(
+    ledger.getDirectives() as DirectiveJson[],
+  );
+  for (const currency of ledger.getOptions().operating_currencies ?? []) {
+    known.add(currency);
+  }
+  return known;
 }
 
 /**
