@@ -1,6 +1,6 @@
 # w23 · m14 — Render NULL cells honestly in BQL results
 
-**Worker:** worker1 **Goal:** NULL cells render as null with their natural dtype on every surface; strict-vs-lenient NULL builtins triaged **Status:** todo (t001–t006 done)
+**Worker:** worker1 **Goal:** NULL cells render as null with their natural dtype on every surface; strict-vs-lenient NULL builtins triaged **Status:** done
 
 ## Tasks (in order)
 
@@ -12,12 +12,12 @@
 | t004 | Strict-camp verdicts, adapt or upstream-file — **DONE** | 45m | t003 |
 | t005 | Adoption surface — **DONE** | 20m | t004 |
 | t006 | Simplify — **DONE** | 30m | t005 |
-| t007 | Test coverage | 45m | t005 |
-| t008 | Closeout | 15m | t006, t007 |
+| t007 | Test coverage — **DONE** | 45m | t005 |
+| t008 | Closeout — **DONE** | 15m | t006, t007 |
 
 ## Definition of done
 
-- NULL cells render as null (not `""`) with the expression's natural dtype on REST, GraphQL, MCP text + structured, and dashboard tables; empty-set non-`count` aggregates read NULL with a numeric dtype.
+- NULL cells render as null (not `""`) with the expression's natural dtype on REST and MCP text + structured — GraphQL and the dashboard keep `""` by the owner's w23/075 option (b1) decision of 2026-10-28; empty-set non-`count` aggregates read NULL with a numeric dtype.
 - The one-row-vs-zero-row empty-aggregate split stays with `w23/blocked/022`; this milestone owns cell content only.
 - Every strict-camp builtin (`substr`/`subst`/`date`/`weekday`) is adapted or upstream-filed with its rationale recorded; no strict/lenient inconsistency left untriaged.
 - Package gates green in every touched package.
