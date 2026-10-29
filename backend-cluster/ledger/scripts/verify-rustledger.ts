@@ -1391,6 +1391,22 @@ async function main(): Promise<void> {
     JSON.stringify(pipelineFold.rows) === JSON.stringify(nativeFold.rows),
     "pipelined with-clause column FROM returns the native-fold rows",
   );
+  // w23/176: stock resolves identifiers case-insensitively; the engine only
+  // tables and functions, so the pipeline folds column names to lowercase.
+  const upperColumn = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    normalizeBqlQueryForEngine("SELECT count(*) WHERE PAYEE IS NOT NULL"),
+  );
+  const lowerColumn = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    "SELECT count(*) WHERE payee IS NOT NULL",
+  );
+  assert(
+    JSON.stringify(upperColumn.rows) === JSON.stringify(lowerColumn.rows),
+    "pipelined upper-case column names return the lowercase query's rows",
+  );
   const pipelineBareEof = await queryLedgerFiles(
     FILES,
     "main.beancount",
