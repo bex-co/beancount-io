@@ -23,6 +23,7 @@ import { rescueInnerTableFrom } from "./bql-from-inner-tables";
 import { routeIntegerLiterals } from "./bql-int-literals";
 import { unquoteBqlFromTables } from "./bql-from-quotes";
 import { stripBqlStatementTerminator } from "./bql-terminator";
+import { unquoteBqlAliases } from "./bql-alias-quotes";
 import { foldBqlIdentifierCase } from "./bql-identifier-case";
 import { foldBqlWhitespace } from "./bql-whitespace";
 
@@ -31,8 +32,9 @@ import { foldBqlWhitespace } from "./bql-whitespace";
  * `verify:rustledger` pins it against the live engine, so the order exists in
  * exactly one place. Whitespace first (every later stage — and the engine's
  * own ASCII-only tokenizer — sees plain gaps), then comments (a `;` or `FROM`
- * inside one is not syntax), then identifier case (columns and aliases
- * resolve exactly in the engine, case-insensitively in stock), then unquote (quoted names classify as their
+ * inside one is not syntax), then quoted aliases (`AS "p"` is `AS p`), then
+ * identifier case (columns and aliases resolve exactly in the engine,
+ * case-insensitively in stock), then unquote (quoted names classify as their
  * bare selves), then the window rescue (a top-level window over `FROM
  * postings` drops to the bare form the engine numbers, before any stage reads
  * the FROM), then the terminator (a trailing `;` breaks bare-table
@@ -50,7 +52,9 @@ export function normalizeBqlQueryForEngine(query: string): string {
           dropPostingsFromForWindows(
             unquoteBqlFromTables(
               foldBqlIdentifierCase(
-                stripBqlBlockComments(foldBqlWhitespace(query)),
+                unquoteBqlAliases(
+                  stripBqlBlockComments(foldBqlWhitespace(query)),
+                ),
               ),
             ),
           ),

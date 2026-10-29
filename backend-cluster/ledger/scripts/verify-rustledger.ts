@@ -1407,6 +1407,25 @@ async function main(): Promise<void> {
     JSON.stringify(upperColumn.rows) === JSON.stringify(lowerColumn.rows),
     "pipelined upper-case column names return the lowercase query's rows",
   );
+  // w23/188: stock takes a quoted alias, the engine's alias rule only a bare
+  // name, so the pipeline unquotes `AS "p"` and the column answers as `p`.
+  const rawQuotedAlias = await withLedger(FILES, "main.beancount", (ledger) =>
+    ledger.query('SELECT payee AS "p" FROM postings LIMIT 1'),
+  );
+  assert(
+    rawQuotedAlias.errors.some((e) => e.severity === "error"),
+    "raw engine still refuses a quoted alias (normalization is load-bearing)",
+  );
+  const pipelinedQuotedAlias = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    normalizeBqlQueryForEngine('SELECT payee AS "p" FROM postings LIMIT 1'),
+  );
+  assert(
+    pipelinedQuotedAlias.columns[0] === "p" &&
+      pipelinedQuotedAlias.rows.length === 1,
+    "pipelined quoted alias answers under the bare alias name",
+  );
   const pipelineBareEof = await queryLedgerFiles(
     FILES,
     "main.beancount",
