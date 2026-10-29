@@ -2,6 +2,7 @@ import type { AmountValue, CellValue, QueryResult } from "@rustledger/wasm";
 import BigNumber from "bignumber.js";
 import { formatCellValue } from "@/foundation/rustledger";
 import type { ShellQueryResult } from "./ledger-shell-types";
+import { STRING_LITERAL_ROOT } from "./bql-select-aliases";
 import {
   STRING_FUNCTIONS,
   typeOfSelectExpression,
@@ -102,19 +103,20 @@ function classifyColumnDtype(
     // literals, calls, and operators report their static type, bare columns
     // fall back to the name rule inside, and anything unparseable reports
     // `unknown` rather than a confidently wrong name-based guess (w23/164).
-    return (
-      typeOfSelectExpression(columnName, dtypeFromColumnName) ?? "unknown"
-    );
+    return typeOfSelectExpression(columnName, dtypeFromColumnName) ?? "unknown";
   }
   if (typeof sample === "string") {
     // Expression-typed strings (w23/146): the engine names a column for
     // its expression, so a string literal or string-function call reports
     // `str` whatever the values look like — sniffing mistyped `'3000.00'`
     // and `str(number)` as Decimal and `str(date)` as date. An alias hides
-    // the expression, so its map root is checked instead; a literal behind
-    // an alias keeps sniffing (its root is empty).
+    // the expression, so its map root is checked instead: a string-function
+    // call, or a string-literal head (w23/177).
     const aliasRoot = aliases.get(normalizedName);
-    if (aliasRoot !== undefined && STRING_FUNCTIONS.has(aliasRoot)) {
+    if (
+      aliasRoot !== undefined &&
+      (aliasRoot === STRING_LITERAL_ROOT || STRING_FUNCTIONS.has(aliasRoot))
+    ) {
       return "str";
     }
     if (normalizedName.startsWith("'") || normalizedName.startsWith('"')) {
@@ -372,7 +374,9 @@ export function queryResultToText(
 ): string {
   if (result.columns.length === 0 || result.rows.length === 0) return "";
 
-  const headers = result.columns.map((name) => name.replace(/\r\n|\r|\n/g, " "));
+  const headers = result.columns.map((name) =>
+    name.replace(/\r\n|\r|\n/g, " "),
+  );
   const columns = result.columns.map((name, index) => {
     const dtype = classifyColumnDtype(result.rows, index, name, aliases);
     const rawValues = result.rows.map((row) => formatTextCell(row[index]));

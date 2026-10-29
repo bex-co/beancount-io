@@ -24,11 +24,11 @@ describe("extractSelectAliases", () => {
       [["x", "a"]],
     ],
     ["SELECT payee AS p FROM postings GROUP BY p ORDER BY p LIMIT 1", [["p", "payee"]]],
-    ["SELECT 'a, b' AS s FROM postings", [["s", ""]]],
-    ["SELECT 'number' AS number FROM postings", [["number", ""]]],
+    ["SELECT 'a, b' AS s FROM postings", [["s", "'"]]],
+    ["SELECT 'number' AS number FROM postings", [["number", "'"]]],
     ["SELECT payee AS p /* FROM nowhere */ FROM postings", [["p", "payee"]]],
     ["SELECT /* AS q */ payee AS p FROM postings", [["p", "payee"]]],
-    ["SELECT 'AS x' AS s FROM postings", [["s", ""]]],
+    ["SELECT 'AS x' AS s FROM postings", [["s", "'"]]],
   ])("extracts %p", (query, expected) => {
     expect([...extractSelectAliases(query)]).toEqual(expected);
   });

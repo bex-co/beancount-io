@@ -20,6 +20,14 @@
  * aliases keep the last root — positional attribution would break on
  * `SELECT *` expansion, and the common cases are all exact.
  */
+/**
+ * The root recorded for an item that opens with a string literal (w23/177):
+ * not an identifier, so it can never equal a column name, but distinct from
+ * the empty root of numeric and NULL/TRUE/FALSE heads, so the mapper can
+ * report such an alias `str` instead of sniffing its values.
+ */
+export const STRING_LITERAL_ROOT = "'";
+
 const AS_WORD = /\bas\b/iy;
 const GAP = /\s*/y;
 const IDENT = /[A-Za-z_][\w$]*/y;
@@ -46,7 +54,11 @@ function topLevelSelectList(query: string): string | undefined {
   let selectIndex = -1;
   for (let i = 0; i < tokens.length; i += 1) {
     const token = tokens[i] as Token;
-    if (token.depth === 0 && token.kind === "word" && isKeyword(token, "select")) {
+    if (
+      token.depth === 0 &&
+      token.kind === "word" &&
+      isKeyword(token, "select")
+    ) {
       selectIndex = i;
       break;
     }
@@ -245,7 +257,8 @@ function stripLeadingComments(text: string): string {
  * First identifier of an item head past DISTINCT/ALL, parens, and `-` —
  * or "" when the head is a literal (a literal's content is not an
  * identifier: `'number' AS number` over zero rows must not inherit the
- * Decimal name rule).
+ * Decimal name rule). A string-literal head reports {@link STRING_LITERAL_ROOT}
+ * so its type survives the alias; other literals report "".
  */
 function sourceRoot(head: string): string {
   let text = stripLeadingComments(head);
@@ -256,7 +269,7 @@ function sourceRoot(head: string): string {
   }
   if (/^(?:null|true|false)\b/i.test(text)) return "";
   const first = text[0] as string | undefined;
-  if (first === "'" || first === '"') return "";
+  if (first === "'" || first === '"') return STRING_LITERAL_ROOT;
   IDENT.lastIndex = 0;
   const ident = IDENT.exec(text);
   return ident !== null && ident.index === 0 ? ident[0].toLowerCase() : "";

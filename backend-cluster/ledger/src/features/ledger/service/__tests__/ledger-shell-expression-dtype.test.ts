@@ -14,7 +14,11 @@ describe("expression string dtypes on full input", () => {
     return { columns, rows, errors: [] } as unknown as QueryResult;
   }
 
-  function dtypes(query: string, columns: string[], rows: string[][]): string[] {
+  function dtypes(
+    query: string,
+    columns: string[],
+    rows: string[][],
+  ): string[] {
     const table = queryResultToShellResult(
       fullResult(columns, rows),
       extractSelectAliases(query),
@@ -35,17 +39,40 @@ describe("expression string dtypes on full input", () => {
     ).toEqual(["str", "str", "str", "str"]);
   });
 
+  it("reports str for string literals behind an alias (w23/177)", () => {
+    expect(
+      dtypes(
+        "SELECT '3000.00' AS x, '2024-01-15' AS d, 'abc' AS s LIMIT 1",
+        ["x", "d", "s"],
+        [["3000.00", "2024-01-15", "abc"]],
+      ),
+    ).toEqual(["str", "str", "str"]);
+  });
+
+  it("still sniffs a numeric-literal alias and a bare-column alias", () => {
+    expect(
+      dtypes(
+        "SELECT 3000.00 AS n, number AS amt LIMIT 1",
+        ["n", "amt"],
+        [["3000.00", "12.50"]],
+      ),
+    ).toEqual(["Decimal", "Decimal"]);
+  });
+
   it("reports str for string-function calls whatever the values look like", () => {
     expect(
-      dtypes("SELECT str(number) LIMIT 2", ["str(number)"], [
-        ["3000.00"],
-        ["-3000.00"],
-      ]),
+      dtypes(
+        "SELECT str(number) LIMIT 2",
+        ["str(number)"],
+        [["3000.00"], ["-3000.00"]],
+      ),
     ).toEqual(["str"]);
     expect(
-      dtypes("SELECT upper(str(number)) LIMIT 1", ["upper(str(number))"], [
-        ["3000.00"],
-      ]),
+      dtypes(
+        "SELECT upper(str(number)) LIMIT 1",
+        ["upper(str(number))"],
+        [["3000.00"]],
+      ),
     ).toEqual(["str"]);
     expect(
       dtypes("SELECT str(date) LIMIT 1", ["str(date)"], [["2024-01-15"]]),
@@ -54,9 +81,11 @@ describe("expression string dtypes on full input", () => {
       dtypes("SELECT STR(number) LIMIT 1", ["STR(number)"], [["3000.00"]]),
     ).toEqual(["str"]);
     expect(
-      dtypes("SELECT lower(narration) LIMIT 1", ["lower(narration)"], [
-        ["salary"],
-      ]),
+      dtypes(
+        "SELECT lower(narration) LIMIT 1",
+        ["lower(narration)"],
+        [["salary"]],
+      ),
     ).toEqual(["str"]);
     // Decimal-looking values under a call name still report str — the
     // rule decides, not the sniff.
@@ -66,27 +95,33 @@ describe("expression string dtypes on full input", () => {
   });
 
   it("reports str for an alias over a string-function call", () => {
-    expect(dtypes("SELECT str(number) AS s LIMIT 1", ["s"], [["3000.00"]])).toEqual(
-      ["str"],
-    );
+    expect(
+      dtypes("SELECT str(number) AS s LIMIT 1", ["s"], [["3000.00"]]),
+    ).toEqual(["str"]);
   });
 
   it("keeps sniffing bare columns and non-string functions", () => {
     expect(
-      dtypes("SELECT number, date, narration LIMIT 1", ["number", "date", "narration"], [
-        ["3000.00", "2024-01-15", "Salary"],
-      ]),
+      dtypes(
+        "SELECT number, date, narration LIMIT 1",
+        ["number", "date", "narration"],
+        [["3000.00", "2024-01-15", "Salary"]],
+      ),
     ).toEqual(["Decimal", "date", "str"]);
     // date() returns a date; decimal() returns decimals as strings.
     expect(
-      dtypes("SELECT date(narration) LIMIT 1", ["date(narration)"], [
-        ["2024-01-15"],
-      ]),
+      dtypes(
+        "SELECT date(narration) LIMIT 1",
+        ["date(narration)"],
+        [["2024-01-15"]],
+      ),
     ).toEqual(["date"]);
     expect(
-      dtypes("SELECT decimal(narration) LIMIT 1", ["decimal(narration)"], [
-        ["3000.00"],
-      ]),
+      dtypes(
+        "SELECT decimal(narration) LIMIT 1",
+        ["decimal(narration)"],
+        [["3000.00"]],
+      ),
     ).toEqual(["Decimal"]);
   });
 
@@ -140,12 +175,10 @@ describe("expression dtypes on empty input", () => {
       ]),
     ).toEqual(["str", "Decimal", "int"]);
     expect(
-      emptyDtypes("SELECT count(*), sum(number), min(date), max(payee) WHERE FALSE", [
-        "count(*)",
-        "sum(number)",
-        "min(date)",
-        "max(payee)",
-      ]),
+      emptyDtypes(
+        "SELECT count(*), sum(number), min(date), max(payee) WHERE FALSE",
+        ["count(*)", "sum(number)", "min(date)", "max(payee)"],
+      ),
     ).toEqual(["int", "Decimal", "date", "str"]);
   });
 
@@ -187,9 +220,9 @@ describe("expression dtypes on empty input", () => {
   });
 
   it("keeps aliases unknown, including over typable expressions", () => {
-    expect(
-      emptyDtypes("SELECT number + 1 AS n WHERE FALSE", ["n"]),
-    ).toEqual(["unknown"]);
+    expect(emptyDtypes("SELECT number + 1 AS n WHERE FALSE", ["n"])).toEqual([
+      "unknown",
+    ]);
     expect(emptyDtypes("SELECT NULL AS x WHERE FALSE", ["x"])).toEqual([
       "unknown",
     ]);
