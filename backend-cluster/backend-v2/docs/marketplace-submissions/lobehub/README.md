@@ -2,6 +2,34 @@
 
 Current outcome **2026-10-25T01:41:31Z**: the [canonical listing](https://lobehub.com/mcp/beancount-io) remains claimed/published at1.0.0. Actual native OAuth,44-tool sync, five-call accounting and one dry-run preview pass. Cash49.75USD, commit/counts and independent file hash are unchanged. [Native evidence and exact visibility limits](./native-rehearsal-20261025.json). Public name search now returns the canonical entry first among5results. The crawler stdio defect remains m10/t012; publication and native connection do not close that task.
 
+## Current definition update; public effectiveness pending — 2026-10-29 UTC
+
+Fresh hosted generic-only SDK discovery still has44tools/67templates/4prompts,
+but10tools and7templates have changed since Oct28. The reviewed
+[lhm.plugin.json](lhm.plugin.json) now records this submitted current candidate.
+One official owner update reports merged into the existing1.0.0; the owned
+parent record advances to03:24:43UTC and remains published. No new identifier,
+version, grant or native run is introduced. MCP schemas and payload secret scan pass.
+
+Public effectiveness is NOT verified. Anonymous, owner-session and standard
+HTTP-revalidation reads still return the prior capability definitions, despite
+unchanged44/67/4counts. Counts do not prove schema equality. The supported CLI
+really reads/sends the entire candidate; owner language fields cannot update
+capability schemas. [Exact attempt, structural comparisons and limits](metadata-refresh-20261029.json)
+retain all timestamps. A cache/queue/ignored-write cause is not established;
+no repeated owner upload, localization mutation or private admin action is used.
+
+LobeHub must expose the submitted public definitions or supply a supported
+owner repair/refresh route. Internal manual readback isOct30T03:24:44UTC or
+actual propagation/feedback earlier; it is not a vendor SLA. The invalid
+recommended stdio/hybrid option also remains in public API data, under its
+existing correction request/manualOct31 gate. The existing Chrome extension connection is subsequently restored through
+its native toolbar control, without a new extension or permission. Actual
+webpage readback now shows44/67/4and115features at1.0.0, with the invalid stdio
+option and Hybrid classification retained. This confirms the prior67-template
+count propagation; today's17definition changes remain unverified in the public
+API. No accounting call, concrete resource read or fresh native acceptance is claimed.
+
 ## Current native connection recipe
 
 Use [Settings → Connectors](https://app.lobehub.com/settings/connector). Reuse an existing beancount-io Connector with **Edit**, or use **Add Custom Connector** for a first install. The actual modal currently says Skill Settings / Add Custom MCP Skill. Choose Streamable HTTP, beancount-io, the canonical endpoint and OAuth. Leave **both Client ID and Client Secret empty** for automatic DCR. An old auto-filled ID with the redacted blank Edit secret is not a complete reusable client configuration: the actual attempt fails client authentication. Clearing both through this supported UI branch restores the same connector, with callback success:true/synced:true. No prior grant or Connector is deleted.

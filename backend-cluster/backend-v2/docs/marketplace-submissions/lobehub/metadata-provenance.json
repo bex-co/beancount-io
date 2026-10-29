@@ -1,47 +1,26 @@
 {
   "target": "beancount-io@1.0.0 on LobeHub",
   "endpoint": "https://beancount.io/api-gateway/mcp",
-  "lastRefreshedAtUTC": "2026-10-28T08:00:58.840Z",
+  "lastRefreshedAtUTC": "2026-10-29T03:22:58.830Z",
   "tools": {
     "count": 44,
-    "source": {
-      "observedAtUTC": "2026-10-28T08:00:58.840Z",
-      "endpoint": "https://beancount.io/api-gateway/mcp",
-      "methods": [
-        "tools/list",
-        "resources/templates/list",
-        "prompts/list"
-      ],
-      "counts": {
-        "tools": 44,
-        "genericResourceTemplates": 67,
-        "prompts": 4
-      },
-      "addedResourceTemplates": [
-        "ledgerCapitalGains",
-        "ledgerHoldings",
-        "ledgerRegister"
-      ],
-      "concreteResourcesEnumerated": false,
-      "resourceReads": 0,
-      "accountingCalls": 0
-    },
-    "nativeLobeHubUI": false,
-    "nativeBoundary": "Earlier native44-tool acceptance remains dated separately; no new native run."
+    "definitionSource": "Current authenticated canonical MCP SDK discovery; generic definitions only.",
+    "observedAtUTC": "2026-10-29T03:22:58.830Z",
+    "nativeLobeHubUIObservedThisPass": false
   },
   "resources": {
     "count": 67,
-    "shape": "Generic MCP resource templates; no concrete account/ledger/file URIs",
-    "observedAtUTC": "2026-10-28T08:00:58.840Z",
+    "shape": "Generic templates; no concrete account/ledger/file URIs.",
+    "observedAtUTC": "2026-10-29T03:22:58.830Z",
     "nativeLobeHubEnumeration": false
   },
   "prompts": {
     "count": 4,
-    "observedAtUTC": "2026-10-28T08:00:58.840Z",
+    "observedAtUTC": "2026-10-29T03:22:58.830Z",
     "nativeLobeHubEnumeration": false
   },
-  "manifestSHA256": "d6d5b8980042eb6ad960d6f0d3d749e854a69a6fe22ac2bbe87741843330bbef",
-  "normalizedPublishedFieldsMatchByName": true,
+  "manifestSHA256": "fb26218a0c732d1a875e785e508dc4ab40a8b5ea8b647732ea3fb2a5facf403f",
+  "normalizedPublishedFieldsMatchByName": false,
   "ownerRepublishRequired": false,
   "deploymentBoundary": "Owner cloudEndpoint pins the preferred HTTP URL. Official owner API retains crawler-derived extra deployment options; unsupported fields are not invented to erase them.",
   "historicalCapture20261024": {
@@ -106,6 +85,58 @@
     "ownerRepublishRequired": false,
     "deploymentBoundary": "Owner cloudEndpoint pins the preferred HTTP URL. Official owner API retains crawler-derived extra deployment options; unsupported fields are not invented to erase them."
   },
-  "publishedCapabilityArraysExactlyMatch": true,
-  "currentEvidence": "metadata-refresh-20261028.json"
+  "publishedCapabilityArraysExactlyMatch": false,
+  "currentEvidence": "metadata-refresh-20261029.json",
+  "historicalCapture20261028": {
+    "target": "beancount-io@1.0.0 on LobeHub",
+    "endpoint": "https://beancount.io/api-gateway/mcp",
+    "lastRefreshedAtUTC": "2026-10-28T08:00:58.840Z",
+    "tools": {
+      "count": 44,
+      "source": {
+        "observedAtUTC": "2026-10-28T08:00:58.840Z",
+        "endpoint": "https://beancount.io/api-gateway/mcp",
+        "methods": [
+          "tools/list",
+          "resources/templates/list",
+          "prompts/list"
+        ],
+        "counts": {
+          "tools": 44,
+          "genericResourceTemplates": 67,
+          "prompts": 4
+        },
+        "addedResourceTemplates": [
+          "ledgerCapitalGains",
+          "ledgerHoldings",
+          "ledgerRegister"
+        ],
+        "concreteResourcesEnumerated": false,
+        "resourceReads": 0,
+        "accountingCalls": 0
+      },
+      "nativeLobeHubUI": false,
+      "nativeBoundary": "Earlier native44-tool acceptance remains dated separately; no new native run."
+    },
+    "resources": {
+      "count": 67,
+      "shape": "Generic MCP resource templates; no concrete account/ledger/file URIs",
+      "observedAtUTC": "2026-10-28T08:00:58.840Z",
+      "nativeLobeHubEnumeration": false
+    },
+    "prompts": {
+      "count": 4,
+      "observedAtUTC": "2026-10-28T08:00:58.840Z",
+      "nativeLobeHubEnumeration": false
+    },
+    "manifestSHA256": "d6d5b8980042eb6ad960d6f0d3d749e854a69a6fe22ac2bbe87741843330bbef",
+    "normalizedPublishedFieldsMatchByName": true,
+    "ownerRepublishRequired": false,
+    "deploymentBoundary": "Owner cloudEndpoint pins the preferred HTTP URL. Official owner API retains crawler-derived extra deployment options; unsupported fields are not invented to erase them.",
+    "publishedCapabilityArraysExactlyMatch": true,
+    "currentEvidence": "metadata-refresh-20261028.json"
+  },
+  "ownerUpdateAccepted": true,
+  "publicationVerificationPending": true,
+  "anonymousPublishedReadbackAtUTC": "2026-10-29T03:24:53.794Z"
 }

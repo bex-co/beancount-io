@@ -682,7 +682,7 @@
             "type": "string"
           },
           "time": {
-            "description": "Time expression, e.g. 2026-08.",
+            "description": "Time expression, e.g. 2026-08. Pre-window `open` directives are preserved as context and counted in total.",
             "type": "string"
           },
           "directiveTypes": {
@@ -953,8 +953,20 @@
                   "minimum": 1,
                   "maximum": 9007199254740991
                 },
+                "startLine": {
+                  "description": "Alias of start_line, as the result echoes it.",
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                },
                 "end_line": {
                   "description": "Last line to return (inclusive). Default: end of file",
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                },
+                "endLine": {
+                  "description": "Alias of end_line, as the result echoes it.",
                   "type": "integer",
                   "minimum": 1,
                   "maximum": 9007199254740991
@@ -1183,6 +1195,29 @@
                                 ]
                               },
                               "totalPrice": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "number": {
+                                        "type": "string"
+                                      },
+                                      "currency": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "number",
+                                      "currency"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "total_price": {
                                 "anyOf": [
                                   {
                                     "type": "object",
@@ -1470,13 +1505,29 @@
                           "type": "string"
                         },
                         "sourceAccount": {
-                          "type": "string"
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "source_account": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
                         "date",
-                        "account",
-                        "sourceAccount"
+                        "account"
                       ],
                       "additionalProperties": false
                     }
@@ -2854,7 +2905,7 @@
     {
       "name": "createLedgerFiles",
       "title": "Create Ledger Files",
-      "description": "Create new text files in one atomic commit; each file gets plain UTF-8 content. Each new/resulting file is limited to 1 MiB of UTF-8 bytes, including dry runs. dry_run previews without committing: the same refusal as the commit, plus a unified diff per touched file and bean-check's verdict over the projected contents.",
+      "description": "Create new text files in one atomic commit; each file gets plain UTF-8 content. Each new/resulting file is limited to 1 MiB of UTF-8 bytes, including dry runs. dry_run previews without committing: the same refusal as the commit, plus a unified diff per touched file and bean-check's verdict over the projected contents. Unlike entry writes, file writes commit even when they introduce new bean-check errors; the result reports them under `validation.newErrors` instead of refusing.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -3110,7 +3161,7 @@
     {
       "name": "updateLedgerFiles",
       "title": "Update Ledger Files",
-      "description": "Change existing text files in one atomic commit: per file, either replace an exact text (old_string must appear exactly once) with new_string, or overwrite the whole file with content (pass its sha from readLedgerFiles to refuse it if the file changed since). Several items for one file apply in order, each to the text the previous one produced. Each new/resulting file is limited to 1 MiB of UTF-8 bytes, including dry runs. dry_run previews without committing: the same refusal as the commit, plus a unified diff per touched file and bean-check's verdict over the projected contents.",
+      "description": "Change existing text files in one atomic commit: per file, either replace an exact text (old_string must appear exactly once) with new_string, or overwrite the whole file with content (pass its sha from readLedgerFiles to refuse it if the file changed since). Several items for one file apply in order, each to the text the previous one produced. Each new/resulting file is limited to 1 MiB of UTF-8 bytes, including dry runs. dry_run previews without committing: the same refusal as the commit, plus a unified diff per touched file and bean-check's verdict over the projected contents. Unlike entry writes, file writes commit even when they introduce new bean-check errors; the result reports them under `validation.newErrors` instead of refusing.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -3398,7 +3449,7 @@
     {
       "name": "deleteLedgerFiles",
       "title": "Delete Ledger Files",
-      "description": "Delete files in one atomic commit; pass each file's sha from readLedgerFiles to refuse the delete if it changed since. Deleting a file still `include`d by another ledger file is refused as `BAD_USER_INPUT` naming the includers; remove the include from the including file(s) first, then delete. An include counts when its target resolves to the deleted path the way the ledger loads it, relative to the directory of the file that declares it, and glob includes never count. Each new/resulting file is limited to 1 MiB of UTF-8 bytes, including dry runs. dry_run previews without committing: the same refusal as the commit, plus a unified diff per touched file and bean-check's verdict over the projected contents.",
+      "description": "Delete files in one atomic commit; pass each file's sha from readLedgerFiles to refuse the delete if it changed since. Deleting a file still `include`d by another ledger file is refused as `BAD_USER_INPUT` naming the includers; remove the include from the including file(s) first, then delete. An include counts when its target resolves to the deleted path the way the ledger loads it, relative to the directory of the file that declares it, and glob includes never count. Each new/resulting file is limited to 1 MiB of UTF-8 bytes, including dry runs. dry_run previews without committing: the same refusal as the commit, plus a unified diff per touched file and bean-check's verdict over the projected contents. Unlike entry writes, file writes commit even when they introduce new bean-check errors; the result reports them under `validation.newErrors` instead of refusing.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -4623,7 +4674,7 @@
     {
       "name": "setLedgerStar",
       "title": "Star or Unstar a Ledger",
-      "description": "Set starred:true to star a ledger or false to unstar it for the authenticated user. ledger selects owner/name and defaults to the credential pin.",
+      "description": "Set starred:true to star a ledger or false to unstar it for the authenticated user. ledger selects owner/name and defaults to the credential pin. No dry_run: starring is an instantly reversible personal toggle, so there is nothing worth previewing.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -7384,7 +7435,7 @@
     {
       "name": "setLedgerCollaborator",
       "title": "Add or Update Ledger Collaborator",
-      "description": "Add a collaborator to a ledger, or change an existing collaborator's permission (read, write, or admin).",
+      "description": "Add a collaborator to a ledger, or change an existing collaborator's permission (read, write, or admin); dry_run previews without committing, rendering the would-be grant.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -7407,6 +7458,14 @@
                 "type": "null"
               }
             ]
+          },
+          "dryRun": {
+            "description": "Alias of dry_run, as REST and GraphQL spell it.",
+            "type": "boolean"
+          },
+          "dry_run": {
+            "description": "Run every check and return the preview without committing",
+            "type": "boolean"
           },
           "ledger": {
             "description": "Target ledger as owner/name. Required for an unpinned credential; defaults to the credential's ledger restriction.",
@@ -7433,6 +7492,60 @@
               },
               "message": {
                 "type": "string"
+              },
+              "preview": {
+                "type": "object",
+                "properties": {
+                  "collaborator": {
+                    "type": "string"
+                  },
+                  "current": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "read",
+                          "write",
+                          "admin"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "requested": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "read",
+                          "write",
+                          "admin"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "warnings": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "collaborator",
+                  "current",
+                  "requested",
+                  "warnings"
+                ],
+                "additionalProperties": false
+              },
+              "dry_run": {
+                "type": "boolean"
               }
             },
             "required": [
@@ -7494,13 +7607,21 @@
     {
       "name": "removeLedgerCollaborator",
       "title": "Remove Ledger Collaborator",
-      "description": "Remove a collaborator's access to a ledger.",
+      "description": "Remove a collaborator's access to a ledger; dry_run previews without committing, rendering the would-be revocation.",
       "inputSchema": {
         "type": "object",
         "properties": {
           "collaborator": {
             "type": "string",
             "minLength": 1
+          },
+          "dryRun": {
+            "description": "Alias of dry_run, as REST and GraphQL spell it.",
+            "type": "boolean"
+          },
+          "dry_run": {
+            "description": "Run every check and return the preview without committing",
+            "type": "boolean"
           },
           "ledger": {
             "description": "Target ledger as owner/name. Required for an unpinned credential; defaults to the credential's ledger restriction.",
@@ -7527,6 +7648,60 @@
               },
               "message": {
                 "type": "string"
+              },
+              "preview": {
+                "type": "object",
+                "properties": {
+                  "collaborator": {
+                    "type": "string"
+                  },
+                  "current": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "read",
+                          "write",
+                          "admin"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "requested": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "read",
+                          "write",
+                          "admin"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "warnings": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "collaborator",
+                  "current",
+                  "requested",
+                  "warnings"
+                ],
+                "additionalProperties": false
+              },
+              "dry_run": {
+                "type": "boolean"
               }
             },
             "required": [
@@ -7588,10 +7763,18 @@
     {
       "name": "leaveLedger",
       "title": "Leave Ledger",
-      "description": "Remove the authenticated user's own access to a ledger they collaborate on.",
+      "description": "Remove the authenticated user's own access to a ledger they collaborate on; dry_run previews without committing, rendering the would-be self-removal.",
       "inputSchema": {
         "type": "object",
         "properties": {
+          "dryRun": {
+            "description": "Alias of dry_run, as REST and GraphQL spell it.",
+            "type": "boolean"
+          },
+          "dry_run": {
+            "description": "Run every check and return the preview without committing",
+            "type": "boolean"
+          },
           "ledger": {
             "description": "Target ledger as owner/name. Required for an unpinned credential; defaults to the credential's ledger restriction.",
             "type": "string"
@@ -7614,6 +7797,60 @@
               },
               "message": {
                 "type": "string"
+              },
+              "preview": {
+                "type": "object",
+                "properties": {
+                  "collaborator": {
+                    "type": "string"
+                  },
+                  "current": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "read",
+                          "write",
+                          "admin"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "requested": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "read",
+                          "write",
+                          "admin"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "warnings": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "collaborator",
+                  "current",
+                  "requested",
+                  "warnings"
+                ],
+                "additionalProperties": false
+              },
+              "dry_run": {
+                "type": "boolean"
               }
             },
             "required": [
@@ -7811,28 +8048,28 @@
       "name": "ledgerJournal",
       "title": "Read the journal with pagination and all subtype filters",
       "uriTemplate": "beancount://{owner}/{name}/journal{?account,filter,time,limit,offset,directiveTypes,transactionSubtypes,documentSubtypes,customSubtypes}",
-      "description": "Read the journal with pagination and all subtype filters. Subtype filters are JSON-encoded string arrays.",
+      "description": "Read the journal with pagination and all subtype filters. Subtype filters are JSON-encoded string arrays. Each narrows only its own directive family and passes other families through \u2014 combine with directiveTypes to restrict the families returned.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerPlaintextJournal",
       "title": "Read Beancount journal text with account, time, and expression filters",
       "uriTemplate": "beancount://{owner}/{name}/plaintext-journal{?account,filter,time,limit,offset}",
-      "description": "Read Beancount journal text with account, time, and expression filters. Subtype filters are JSON-encoded string arrays.",
+      "description": "Read Beancount journal text with account, time, and expression filters",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerAccountJournal",
       "title": "Read account entries with changes and running balances",
       "uriTemplate": "beancount://{owner}/{name}/account-journal{?account,filter,time,filter_account,filterAccount,limit,offset,with_children,withChildren,conversion,directiveTypes,transactionSubtypes,documentSubtypes,customSubtypes}",
-      "description": "Read account entries with changes and running balances. Subtype filters are JSON-encoded string arrays.",
+      "description": "Read account entries with changes and running balances. Subtype filters are JSON-encoded string arrays. Each narrows only its own directive family and passes other families through \u2014 combine with directiveTypes to restrict the families returned.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerSourceFiles",
       "title": "List the ledger's source files",
       "uriTemplate": "beancount://{owner}/{name}/source-files",
-      "description": "List the ledger's source files. Subtype filters are JSON-encoded string arrays.",
+      "description": "List the ledger's source files",
       "mimeType": "application/json"
     },
     {
@@ -7985,14 +8222,14 @@
     {
       "name": "ledgerTrialBalance",
       "title": "Get the trial balance",
-      "uriTemplate": "beancount://{owner}/{name}/trial-balance{?account,filter,time,interval,conversion}",
+      "uriTemplate": "beancount://{owner}/{name}/trial-balance{?account,filter,time,conversion}",
       "description": "Every account's debit and credit totals \u2014 the statement that proves the books balance.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerHoldings",
       "title": "Get holdings",
-      "uriTemplate": "beancount://{owner}/{name}/holdings{?account,conversion,groupBy}",
+      "uriTemplate": "beancount://{owner}/{name}/holdings{?account,conversion,groupBy,group_by}",
       "description": "Lots grouped by account or commodity \u2014 units, average cost, cost basis, market value \u2014 valued at today's quotes. `conversion` takes a currency or `units` (default: the operating currency when the ledger declares exactly one, else each group's held currency); `account` names a parent account or a regular expression. Costless cash and fully-sold groups are left out; groups without a quote value at cost and are named in `missing_prices`.",
       "mimeType": "application/json"
     },
@@ -8077,7 +8314,7 @@
       "name": "ledgerAccountDirectives",
       "title": "List open/close directives per account",
       "uriTemplate": "beancount://{owner}/{name}/account-directives",
-      "description": "Each account's open and close directives \u2014 which accounts are usable on a given date.",
+      "description": "Each account's open and close directives \u2014 which accounts are usable on a given date. `entryCount` counts the account's postings, not its directives.",
       "mimeType": "application/json"
     },
     {
