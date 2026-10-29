@@ -60,9 +60,24 @@ describe("renderToolText", () => {
   ] as const)("uses canonical rows for a %s", (_name, payload, rowCount) => {
     const result = bqlResult(payload, rowCount);
     expect(renderToolText("runBqlQuery", result)).toBe(
-      `${rowCount} ${rowCount === 1 ? "row" : "rows"}\n${payload.replace(/\s+$/, "")}`,
+      `${rowCount} ${rowCount === 1 ? "row" : "rows"}\n${payload.replace(/\n$/, "")}`,
     );
     expect(result.result).toBe(payload);
+  });
+
+  it("keeps trailing all-blank row lines so the lines match the claimed count (w23/194)", () => {
+    // Three rows of blank payees: the header said 3 rows and `trimEnd()` left none.
+    const blanks = "payee\n-----\n     \n     \n     \n";
+    const text = renderToolText("runBqlQuery", bqlResult(blanks, 3));
+    expect(text).toBe("3 rows\npayee\n-----\n     \n     \n     ");
+    expect(text.split("\n").slice(3)).toHaveLength(3);
+    // Interior blank rows were already kept; trailing ones now match.
+    const mixed = "payee\n-----\n     \nACME \n     \n";
+    expect(
+      renderToolText("runBqlQuery", bqlResult(mixed, 3)).split("\n").slice(3),
+    ).toEqual(["     ", "ACME ", "     "]);
+    // A table of nothing but whitespace is still just the count.
+    expect(renderToolText("runBqlQuery", bqlResult("  \n", 0))).toBe("0 rows");
   });
 
   it("keeps the full text result count beyond the structured tool's ceiling", () => {

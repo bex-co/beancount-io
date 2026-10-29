@@ -72,7 +72,10 @@ function renderBqlTable(
   const summary = truncated
     ? `${count} (output truncated; the last line says where — add LIMIT or a narrower WHERE)`
     : count;
-  const readable = table.trimEnd();
+  // Strip only the final line terminator: a row of blank cells renders as a
+  // whitespace-only line, so `trimEnd()` ate trailing data rows and left the
+  // count claiming rows the text never showed (w23/194).
+  const readable = table.trim() === "" ? "" : table.replace(/\n$/, "");
   return readable ? `${summary}\n${readable}` : summary;
 }
 
