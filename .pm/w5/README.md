@@ -44,7 +44,7 @@
 
 - [1111 — Retry the engine publish rename on Windows and sweep stale partial engines](./1111.md) — major CLI first use on native Windows: `bea 0.3.1` engine publish fails with WinError 5 while the new venv is still locked, and failed `.partial.<pid>` engines are never swept; found by w5/m13/t004, 2026-10-28.
 
-- [1115 — Return update diffs on physical ledger lines](./1115.md) — minor CLI review: quoted Unicode separators make single/batch update hunks fail patch validation; 20 fresh primary cases plus preserved multi-include controls; ledger writes and money remain correct; checked 2026-10-29.
+- [1115 — Return update diffs that apply to the ledger](./1115.md) — minor CLI review: Unicode separators and absent final LF produce invalid single/batch patches; fresh affected cases and passing controls, exact ledger writes/native money preserved; checked 2026-10-29.
 
 - [1091 — Show proposed balance tolerances in import conflict diagnostics](./1091.md) — minor CLI review: tolerance-only conflicts hide the proposed assertion; 14 fresh profiles plus two exact public reproductions; refusals and ledger bytes stay correct; checked 2026-10-28.
 
