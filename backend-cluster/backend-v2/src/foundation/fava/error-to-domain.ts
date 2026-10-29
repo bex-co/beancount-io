@@ -24,6 +24,8 @@ const UNBALANCED = "UNBALANCED";
  * errors (w0/m2), the structured twin of the text-append refusal.
  */
 const NEW_LEDGER_ERRORS = "NEW_LEDGER_ERRORS";
+/** The ledger service's wording for a file write whose `sha` went stale. */
+const LEDGER_FILE_CONFLICT = /^Ledger file conflict:/i;
 const RESOURCE_LIMIT_MESSAGE =
   /^(.*?) limit reached\. Maximum: (\d+), Current: (\d+)\./i;
 
@@ -175,6 +177,14 @@ export function favaApiErrorToDomainError(
     case 404:
       return notFoundFromUpstream(error.body?.error || "");
     case 409:
+      // A stale file `sha` (Gitea's version check, mapped by the ledger
+      // service as `Ledger file conflict`). Without a hint the category
+      // fallback names an entry `sha256sum`, which cannot satisfy it (w23/178).
+      if (LEDGER_FILE_CONFLICT.test(message)) {
+        return new ConflictError("Ledger resource", message, {
+          hint: "Re-read the file to get its current `sha`, then retry the write with that `sha`.",
+        });
+      }
       return new ConflictError("Ledger resource", message);
     // The ledger service refused the body: a batch inside this API's own caps
     // can outgrow it re-encoded. As a 5xx it read as "dependency down, retry"

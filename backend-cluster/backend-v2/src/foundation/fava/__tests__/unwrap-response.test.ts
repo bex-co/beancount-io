@@ -227,6 +227,38 @@ describe("unwrapFavaResponse", () => {
     });
   });
 
+  it("gives a stale file sha its own re-read hint, not the entry fallback (w23/178)", async () => {
+    const error =
+      "Ledger file conflict: it changed since it was loaded; refresh and retry";
+    const response = Promise.reject(
+      new FavaApiError("conflict", 409, { success: false, error }),
+    );
+
+    await expect(
+      unwrapFavaResponse(response, "update ledger file"),
+    ).rejects.toMatchObject({
+      category: "CONFLICT",
+      message: expect.stringContaining(error),
+      metadata: { hint: expect.stringContaining("current `sha`") },
+    });
+  });
+
+  it("leaves other 409s on the category fallback (w23/178)", async () => {
+    const response = Promise.reject(
+      new FavaApiError("conflict", 409, {
+        success: false,
+        error: "Entry conflict: it has changed since it was loaded",
+      }),
+    );
+
+    const caught = await unwrapFavaResponse(response, "update entry").catch(
+      (e: unknown) => e,
+    );
+    expect((caught as { metadata?: { hint?: string } }).metadata?.hint).toBe(
+      undefined,
+    );
+  });
+
   it("calls makeError with the underlying cause when the request itself rejects", async () => {
     const cause = new Error("pre-receive hook rejected the push");
     const response = Promise.reject(cause);
