@@ -36,15 +36,43 @@ import type { QueryResult } from "@rustledger/wasm";
 const GROUP_BY = /\bgroup\s+by\b/i;
 const KEY_LIST_END = /\b(?:having|order\s+by|limit|offset)\b|\)|;/i;
 const ORDINAL = /\b(\d+)\b/g;
-const SELECT_ITEM = /\bselect\b([\s\S]*?)(?:\bfrom\b|\bgroup\s+by\b|\bhaving\b|\border\s+by\b|\blimit\b|;|$)/i;
+const SELECT_ITEM =
+  /\bselect\b([\s\S]*?)(?:\bfrom\b|\bgroup\s+by\b|\bhaving\b|\border\s+by\b|\blimit\b|;|$)/i;
 const CALL_PARENS = /([A-Za-z_]\w*)(\s*\([^()]*\))/g;
 // Keywords are never callees: without this, `BY (balance)` and
 // `FROM (SELECT …)` read as calls and the strip eats the key list.
 const CALL_KEYWORDS = new Set([
-  "select", "from", "where", "group", "by", "order", "having", "limit",
-  "offset", "distinct", "all", "as", "and", "or", "not", "in", "is",
-  "null", "asc", "desc", "join", "on", "union", "case", "when", "then",
-  "else", "end", "exists", "between", "like",
+  "select",
+  "from",
+  "where",
+  "group",
+  "by",
+  "order",
+  "having",
+  "limit",
+  "offset",
+  "distinct",
+  "all",
+  "as",
+  "and",
+  "or",
+  "not",
+  "in",
+  "is",
+  "null",
+  "asc",
+  "desc",
+  "join",
+  "on",
+  "union",
+  "case",
+  "when",
+  "then",
+  "else",
+  "end",
+  "exists",
+  "between",
+  "like",
 ]);
 
 function stripCallsOnce(text: string): string {
@@ -53,7 +81,16 @@ function stripCallsOnce(text: string): string {
   );
 }
 const ALIAS_DEF = /\bas\s+([A-Za-z_]\w*)/gi;
-const BARE_BALANCE = /(?<![\w])(?:[A-Za-z_]\w*\.)?balance\b(?!\s*\()(?!\.)/i;
+// The inventory-typed columns: postings' `balance` and the MCP-only
+// `account_balance` sibling, which collapses identically (w23/179).
+const INVENTORY_COLUMNS = ["balance", "account_balance"] as const;
+const bareColumn = (column: string) =>
+  new RegExp(
+    `(?<![\\w])(?:[A-Za-z_]\\w*\\.)?${column}\\b(?!\\s*\\()(?!\\.)`,
+    "i",
+  );
+const exactColumn = (column: string) =>
+  new RegExp(`^(?:[A-Za-z_]\\w*\\.)?${column}$`, "i");
 
 /** The query error for an inventory `GROUP BY`, or `undefined`. */
 export function inventoryGroupByError(query: string): QueryResult | undefined {
@@ -63,31 +100,37 @@ export function inventoryGroupByError(query: string): QueryResult | undefined {
   const stripped = stripCallsOnce(stripCallsOnce(stripCallsOnce(unquoted)));
   if (!GROUP_BY.test(stripped)) return undefined;
   const shadowed = new Set(
-    [...stripped.matchAll(ALIAS_DEF)].map((m) => (m[1] as string).toLowerCase()),
+    [...stripped.matchAll(ALIAS_DEF)].map((m) =>
+      (m[1] as string).toLowerCase(),
+    ),
   );
   const keyLists = [...stripped.matchAll(/\bgroup\s+by\b/gi)].map((m) => {
     const rest = stripped.slice((m.index as number) + m[0].length);
     const end = rest.search(KEY_LIST_END);
     return end === -1 ? rest : rest.slice(0, end);
   });
-  const named =
-    !shadowed.has("balance") &&
-    keyLists.some((list) => BARE_BALANCE.test(list));
-  const ordinal =
-    !/[()]/.test(stripped) &&
-    (stripped.match(/\bselect\b/gi) ?? []).length === 1 &&
-    keyLists.some((list) => ordinalHitsBalance(stripped, list));
-  if (!named && !ordinal) return undefined;
+  const noParens = !/[()]/.test(stripped);
+  const singleSelect = (stripped.match(/\bselect\b/gi) ?? []).length === 1;
+  const column = INVENTORY_COLUMNS.find((name) => {
+    const named =
+      !shadowed.has(name) &&
+      keyLists.some((list) => bareColumn(name).test(list));
+    const ordinal =
+      noParens &&
+      singleSelect &&
+      keyLists.some((list) => ordinalHitsColumn(stripped, list, name));
+    return named || ordinal;
+  });
+  if (column === undefined) return undefined;
   return {
     columns: [],
     rows: [],
     errors: [
       {
-        message:
-          "Grouping by the inventory column balance is not supported by this query engine: it would collapse every row into one group. List distinct inventories with SELECT DISTINCT balance, or group by a scalar column such as account, instead.",
+        message: `Grouping by the inventory column ${column} is not supported by this query engine: it would collapse every row into one group. List distinct inventories with SELECT DISTINCT ${column}, or group by a scalar column such as account, instead.`,
         code: null,
         phase: "query",
-        hint: "Replace GROUP BY balance with SELECT DISTINCT balance or a scalar group key.",
+        hint: `Replace GROUP BY ${column} with SELECT DISTINCT ${column} or a scalar group key.`,
         file: null,
         line: null,
         column: null,
@@ -99,8 +142,12 @@ export function inventoryGroupByError(query: string): QueryResult | undefined {
   };
 }
 
-/** Whether an ordinal in a GROUP BY key list resolves to bare `balance`. */
-function ordinalHitsBalance(stripped: string, keyList: string): boolean {
+/** Whether an ordinal in a GROUP BY key list resolves to the bare column. */
+function ordinalHitsColumn(
+  stripped: string,
+  keyList: string,
+  column: string,
+): boolean {
   const ordinals = [...keyList.matchAll(ORDINAL)].map((m) =>
     Number.parseInt(m[1] as string, 10),
   );
@@ -109,8 +156,6 @@ function ordinalHitsBalance(stripped: string, keyList: string): boolean {
   return ordinals.some((n) => {
     // Exact match only: an aliased or computed item abstains.
     const item = items[n - 1]?.trim().replace(/^(?:distinct|all)\s+/i, "");
-    return (
-      item !== undefined && /^(?:[A-Za-z_]\w*\.)?balance$/i.test(item)
-    );
+    return item !== undefined && exactColumn(column).test(item);
   });
 }

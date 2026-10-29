@@ -28,6 +28,30 @@ describe("inventoryGroupByError", () => {
   });
 
   it.each([
+    "SELECT account_balance, count(*) FROM postings GROUP BY account_balance",
+    "select account_balance, count(*) from postings group by account_balance",
+    "SELECT payee, count(*) FROM postings GROUP BY payee, account_balance",
+    "SELECT p.account_balance, count(*) FROM postings p GROUP BY p.account_balance",
+    "SELECT account_balance, count(*) FROM postings GROUP BY 1",
+    "SELECT payee, account_balance, count(*) FROM postings GROUP BY 2",
+  ])("refuses the account_balance sibling %p (w23/179)", (query) => {
+    expect(inventoryGroupByError(query)?.errors[0]).toMatchObject({
+      severity: "error",
+      message: expect.stringContaining("inventory column account_balance"),
+      hint: expect.stringContaining("SELECT DISTINCT account_balance"),
+    });
+  });
+
+  it.each([
+    "SELECT account_balance, count(*) FROM postings GROUP BY payee",
+    "SELECT payee AS account_balance, count(*) FROM postings GROUP BY account_balance",
+    "SELECT str(account_balance), count(*) FROM postings GROUP BY str(account_balance)",
+    "SELECT narration WHERE narration = 'GROUP BY account_balance'",
+  ])("leaves account_balance query %p alone", (query) => {
+    expect(inventoryGroupByError(query)).toBeUndefined();
+  });
+
+  it.each([
     // position and tags group correctly; never refused.
     "SELECT position, count(*) FROM postings GROUP BY position",
     "SELECT tags, count(*) FROM postings GROUP BY tags",

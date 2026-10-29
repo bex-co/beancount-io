@@ -2171,6 +2171,21 @@ async function main(): Promise<void> {
       `the query path refuses ${query.slice(query.indexOf("GROUP"))}`,
     );
   }
+  // The MCP-only `account_balance` sibling refuses the same way (w23/179).
+  const guardedAccountBalance = await queryLedgerFilesResult(
+    FILES,
+    "main.beancount",
+    "SELECT account_balance, count(*) FROM postings GROUP BY account_balance",
+  );
+  assert(
+    guardedAccountBalance.rows.length === 0 &&
+      guardedAccountBalance.errors.some(
+        (e) =>
+          e.severity === "error" &&
+          e.message.includes("inventory column account_balance"),
+      ),
+    "the query path refuses GROUP BY account_balance",
+  );
   const scalarGroup = await queryLedgerFiles(
     FILES,
     "main.beancount",
