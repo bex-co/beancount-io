@@ -1546,6 +1546,48 @@ async function main(): Promise<void> {
     zeroBalanceText.includes("5 USD") && !zeroBalanceText.includes("0 USD"),
     "a zero-net running balance is blank in the text table",
   );
+  // w23/m14/t007: through the real engine and mapper, a payee-less posting is
+  // a null cell (not ""), a null GROUP BY key stays null beside real keys, and
+  // an aggregate over no matches is null with its numeric dtype.
+  const nullEdgeFiles = {
+    "main.beancount": [
+      "2026-01-01 open Assets:Cash USD",
+      "2026-01-01 open Equity:O",
+      '2026-01-02 * "Cafe" "x"',
+      "  Assets:Cash 5 USD",
+      "  Equity:O",
+      '2026-01-03 * "no payee"',
+      "  Assets:Cash 1 USD",
+      "  Equity:O",
+      "",
+    ].join("\n"),
+  };
+  const nullShell = async (query: string) =>
+    queryResultToShellResult(
+      await queryLedgerFilesResult(
+        nullEdgeFiles,
+        "main.beancount",
+        normalizeBqlQueryForEngine(query),
+      ),
+      extractSelectAliases(query),
+      extractSelectAliasHeads(query),
+    ).table!;
+  const payees = await nullShell(
+    "SELECT payee, count(*) AS n FROM postings GROUP BY payee ORDER BY n",
+  );
+  assert(
+    payees.rows.some((row) => row[0] === null) &&
+      payees.rows.some((row) => row[0] === "Cafe") &&
+      !payees.rows.some((row) => row[0] === ""),
+    "a NULL payee is a null cell and a null GROUP BY key, never an empty string",
+  );
+  const noMatch = await nullShell(
+    "SELECT sum(number) AS total FROM postings WHERE payee = 'nobody'",
+  );
+  assert(
+    noMatch.types[0]?.dtype === "Decimal" && noMatch.rows[0]?.[0] === null,
+    "an aggregate over no matches is null with its numeric dtype",
+  );
   const pipelineBareEof = await queryLedgerFiles(
     FILES,
     "main.beancount",
