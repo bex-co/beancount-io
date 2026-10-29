@@ -1,5 +1,6 @@
 import CurrencyIcons from "currency-icons";
 import { isolateRtlSymbol } from "./bidi";
+import { currencyAfterNumber, localizeAmount } from "./number-locale";
 
 // The ledger's operating currencies come from `useLedgerMeta` (scoped to the
 // selected ledger). The first entry is the ledger's primary operating currency
@@ -40,13 +41,18 @@ export const labelRowAmount = (
   body: string,
   currency: string,
   operatingCurrency?: string,
-): string =>
-  currency === "USD" &&
-  (operatingCurrency === undefined ||
-    operatingCurrency === "USD" ||
-    getCurrencySymbol(operatingCurrency) !== "$")
-    ? `$${body}`
-    : `${body} ${currency}`;
+): string => {
+  const written = localizeAmount(body);
+  if (
+    currency === "USD" &&
+    (operatingCurrency === undefined ||
+      operatingCurrency === "USD" ||
+      getCurrencySymbol(operatingCurrency) !== "$")
+  ) {
+    return currencyAfterNumber() ? `${written} $` : `$${written}`;
+  }
+  return `${written} ${currency}`;
+};
 
 /**
  * The currency a ledger's headline figures read in: its first operating

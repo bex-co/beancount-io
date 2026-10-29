@@ -14,6 +14,7 @@ import { pt } from "@/translations/pt";
 import { ru } from "@/translations/ru";
 import { sk } from "@/translations/sk";
 import { uk } from "@/translations/uk";
+import { setNumberLocale } from "@/common/number-locale";
 import { registerPluralizers } from "@/common/plural";
 
 /**
@@ -54,5 +55,8 @@ registerPluralizers(i18n, SUPPORTED_LOCALES);
 export const setLocale = (locale: string) => {
   i18n.locale = locale;
 };
+
+// Full amounts follow the app language, as the chart ticks do (w21/882).
+i18n.onChange(() => setNumberLocale(i18n.locale));
 
 i18n.locale = getLocale();

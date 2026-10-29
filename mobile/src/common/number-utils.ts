@@ -4,6 +4,7 @@ import {
   isFiatCurrency,
 } from "./currency-util";
 import { localizeDigits } from "./date-format";
+import { currencyAfterNumber, localizeAmount } from "./number-locale";
 import { absDecimal, parseDecimal, roundDecimal } from "./decimal-number";
 
 const SHORT_NUMBER_SUFFIXES = [
@@ -28,8 +29,8 @@ type CompactStyle = {
  * English "K/M/B" read wrong elsewhere: German "B" is no abbreviation and
  * German *Billion* is 10¹² (w21/177). Hand-kept rather than
  * `Intl.NumberFormat`'s compact notation, which Hermes on iOS cannot be
- * relied on for. Compact values never appear in a `.bean` file, so unlike
- * full amounts (w3/189) they follow the language.
+ * relied on for. Full amounts follow the language too (`number-locale.ts`,
+ * w21/882, reversing w3/189), so a tick and the amount beside it agree.
  */
 const COMPACT_STYLES: Record<string, CompactStyle> = {
   en: {
@@ -147,8 +148,8 @@ export const shortNumber = (number: number | string, locale = "en"): string => {
         ? fractionDigits(shortNum)
         : shortNum.toFixed(1)
       ).replace(".", style.decimal);
-  // Persian ticks use Persian digits, as the dates beside them do (w21/884);
-  // full amounts stay Latin (w3/189).
+  // Persian ticks use Persian digits, as the dates beside them do (w21/884),
+  // and so do full amounts (w21/882).
   const written =
     locale.split(/[-_]/)[0] === "fa" ? localizeDigits(digits, locale) : digits;
   return sign + written + style.suffixes[tier];
@@ -218,7 +219,7 @@ export const formatExactUnits = (
   const amount = fraction === undefined ? grouped : `${grouped}.${fraction}`;
   const shownZero = !/[1-9]/.test(amount);
   const prefix = sign === "-" && !shownZero ? "-" : includePlus ? "+" : "";
-  return `${prefix}${amount} ${currency}`;
+  return `${prefix}${localizeAmount(amount)} ${currency}`;
 };
 
 /**
@@ -227,7 +228,7 @@ export const formatExactUnits = (
  * commodity passes its recorded scale. Always non-negative — the sign is the
  * caller's concern. Hermes-safe (no `toLocaleString` reliance).
  */
-export const groupThousands = (value: number, digits = 2): string => {
+const groupEnglish = (value: number, digits = 2): string => {
   const safe = Number.isFinite(value) ? Math.abs(value) : 0;
   const fixed = fixedDigits(
     safe,
@@ -238,6 +239,10 @@ export const groupThousands = (value: number, digits = 2): string => {
   return decimals === undefined ? grouped : `${grouped}.${decimals}`;
 };
 
+/** `groupEnglish` written in the app language (w21/882). */
+export const groupThousands = (value: number, digits = 2): string =>
+  localizeAmount(groupEnglish(value, digits));
+
 // Sign prefix + grouped absolute amount, shared by the money and units
 // formatters. The sign is always a prefix; only what labels the amount differs.
 const signedAmount = (
@@ -246,7 +251,7 @@ const signedAmount = (
   digits = 2,
 ): { sign: string; amount: string } => {
   const normalized = Number.isFinite(value) ? value : 0;
-  const amount = groupThousands(normalized, digits);
+  const amount = groupEnglish(normalized, digits);
   // The sign of what is shown, not of the raw float: a residue such as
   // -3.55e-15 rounds to 0.00 and must not read "-$0.00" (w21/055).
   const shownZero = !/[1-9]/.test(amount);
@@ -268,7 +273,7 @@ export const formatUnits = (
   includePlus = false,
 ): string => {
   const { sign, amount } = signedAmount(value, includePlus, scale);
-  return `${sign}${amount} ${currency}`;
+  return `${sign}${localizeAmount(amount)} ${currency}`;
 };
 
 /**
@@ -282,7 +287,9 @@ export const formatSignedMoney = (
   includePlus = false,
 ): string => {
   const { sign, amount } = signedAmount(value, includePlus);
-  return `${sign}${symbol}${amount}`;
+  return currencyAfterNumber()
+    ? `${sign}${localizeAmount(amount)} ${symbol}`
+    : `${sign}${symbol}${localizeAmount(amount)}`;
 };
 
 // Wrap a sign + absolute amount in its currency: a known symbol prefixes (right
@@ -293,11 +300,12 @@ const annotateCurrency = (
   sign: string,
   absAmount: string,
   currency: string,
+  after = currencyAfterNumber(),
+  written = localizeAmount(absAmount),
 ): string => {
   const symbol = getCurrencySymbol(currency);
-  return symbol
-    ? `${sign}${symbol}${absAmount}`
-    : `${sign}${absAmount} ${currency}`;
+  if (!symbol) return `${sign}${written} ${currency}`;
+  return after ? `${sign}${written} ${symbol}` : `${sign}${symbol}${written}`;
 };
 
 /**
@@ -402,7 +410,7 @@ export const formatMoneyWithCurrency = (
   const number = Number(value);
   return annotateCurrency(
     "",
-    groupThousands(number, moneyDigits(number, currency, minScale)),
+    groupEnglish(number, moneyDigits(number, currency, minScale)),
     currency,
   );
 };
@@ -455,7 +463,7 @@ export const formatSignedMoneyWithCode = (
     includePlus,
     Math.max(currencyMinorUnits(currency), minScale),
   );
-  return `${sign}${amount} ${currency}`;
+  return `${sign}${localizeAmount(amount)} ${currency}`;
 };
 
 /**
@@ -476,7 +484,7 @@ export const formatShortMoneyWithCurrency = (
   const text =
     symbol && compactStyle(locale).currencyAfter
       ? `${sign}${amount} ${symbol}`
-      : annotateCurrency(sign, amount, currency);
+      : annotateCurrency(sign, amount, currency, false, amount);
   return isolateLeadingNumber(text);
 };
 
