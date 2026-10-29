@@ -27,7 +27,6 @@
 
 ## Inbox
 
-
 - [149](./blocked/149.md) — file writes COMMIT bean-check-invalid content (no validation gate; entry writes refuse) [major] — **blocked:** commit-invalid documented on all surfaces; owner picks entry-style gate (→ milestone) vs documented behavior
 - [150](./blocked/150.md) — journal subtype filters pass non-family directives through and `total` counts them (`pending` → 13 rows, 0 transactions) — **blocked:** family-scoping documented on all surfaces; owner picks narrow-to-matches, split counts, or documented passthrough
 - [x] [151](./done/151.md) — BQL refuses post-`;` tails stock drops (strictness is right; trailing `--` comments swept up)
@@ -51,20 +50,20 @@
 - [x] [169](./done/169.md) — `weight`/`account_balance` dtypes flip on empty (wrong-family rule / missing rule; stock says Amount)
 - [x] [170](./done/170.md) — BQL `meta` splits by table (`k: v`/`str` postings vs `k=v`/`object` entries; stock one dict)
 - [x] [171](./done/171.md) — typed posting tags/links render stock-invalid beancount; backend check blind, reads blank (m6 "holds live" disproven)
-- [172](./blocked/172.md) — entry-source tools mark `entryHash` optional but refuse calls without it, on MCP, REST, and GraphQL alike — **blocked:** one-identifier rule documented on all schemas; owner picks required-entryHash (breaks alias-only) or documented leniency
-- [173](./blocked/173.md) — MCP-only required-ness lies, bank-id (8 tools) and file-message (3 tools) aliases: schema optional, runtime required — **blocked:** same owner decision as 172; owner picks require-primary, anyOf-required (client-compat risk), or documented leniency
-- [175](./blocked/175.md) — bank-submit nested keys camel-only on REST/GraphQL while the MCP bank tool dual-accepts (w23/140 followup) — **blocked:** same owner decision as 172/173; twins make REST/GraphQL required-ness lie (and loosen generated client types) vs documented camel-only
+
+- [173](./173.md) — MCP-only required-ness lies, bank-id (8 tools) and file-message (3 tools) aliases: schema optional, runtime required
+- [175](./175.md) — bank-submit nested keys camel-only on REST/GraphQL while the MCP bank tool dual-accepts (w23/140 followup)
 - [180](./blocked/180.md) — known-but-unpriced report `conversion` still degrades to units silently (w23/156 followup) — **blocked:** owner picks refuse vs holdings-style disclosure (both change a published contract)
-- [190](./blocked/190.md) — engine accepts fractional `@@` stock refuses (per-unit division dust; w23/163 followup) — **blocked:** upstream engine gap; owner approves external filing (with 022/197) or documents the face-value divergence
-- [196](./blocked/196.md) — BQL `balances.discrepancy` never populates (blank on failing balances; stock reports the diff) — **blocked:** owner picks upstream filing (with 022/190/197) or a service-side enrichment design (rows lack the keys to join the validator diff)
-- [198](./blocked/198.md) — entries tags/links are empty sets on MCP but NULL on stock (13 rows flip IS NULL) — **blocked:** engine row-model choice (empty sets vs NULL); owner documents the divergence or approves upstream filing
-- [201](./blocked/201.md) — number()/currency() of an empty inventory invent 0.00 / the operating currency; get()/weight()/sum() blank — **blocked:** engine overload semantics with no stock oracle; owner documents, files upstream, or approves a local guard
+- [190](./blocked/190.md) — engine accepts fractional `@@` stock refuses (per-unit division dust; w23/163 followup) — **blocked:** upstream filing approved 2026-10-28; waiting for someone with tracker access to file the batch
+- [196](./blocked/196.md) — BQL `balances.discrepancy` never populates (blank on failing balances; stock reports the diff) — **blocked:** upstream filing approved 2026-10-28; waiting for someone with tracker access to file the batch
+- [198](./blocked/198.md) — entries tags/links are empty sets on MCP but NULL on stock (13 rows flip IS NULL) — **blocked:** upstream filing approved 2026-10-28; waiting for someone with tracker access to file the batch
+- [201](./blocked/201.md) — number()/currency() of an empty inventory invent 0.00 / the operating currency; get()/weight()/sum() blank — **blocked:** upstream filing approved 2026-10-28; waiting for someone with tracker access to file the batch
 - [082](./blocked/082.md) — `createPullRequest` fails on production: Gitea 500 while creating the `pr-patch-*` branch, on MCP and REST alike — **blocked:** needs the Gitea server-log cause for one failing branch create (owner), then a production rerun
 - [080](./blocked/080.md) — `/api-gateway/mcp` accepts any `Origin` (the MCP transport spec says a bad `Origin` MUST get 403); owner picks validate vs document — **blocked:** owner picks 403-on-foreign-Origin vs documented non-validation
-- [075](./blocked/075.md) — typed BQL results return NULL as `""` (undocumented), so a missing payee or price reads as an empty string — **blocked:** documented as `""` (option a shipped); owner picks `null` on REST/MCP, `null` everywhere, or keeping `""`
+- [075](./075.md) — typed BQL results return NULL as `""` (undocumented), so a missing payee or price reads as an empty string
 - [072](./blocked/072.md) — concurrent writes (append, add entries, exact-text edits) still lose with `SERVICE_UNAVAILABLE` on production after w23/017; the production lost-race signature differs — **blocked:** needs one losing call's host status and body from the production ledger-service log (owner), then a post-deploy rerun
 - [065](./blocked/065.md) — a ledger-pinned credential keeps the old name after a rename — **blocked:** owner picks repository-ID pins, canonical-name pins, or an accurate refusal (credential trust boundary)
 - [059](./blocked/059.md) — every product-created ledger ships `auto_accounts`, so a misspelt account is silently opened — **blocked:** owner picks drop-plugin (which also limits AI categorization to existing accounts) vs report-new-accounts
-- [022](./blocked/022.md) — report rustledger BQL gaps upstream (`cost(sum(position))`, `neg`/`filter_currency`, `meta('lineno')`, `AT value`, `BALANCES FROM`) — **blocked:** filing in an external tracker needs the user's approval
+- [022](./blocked/022.md) — report rustledger BQL gaps upstream (`cost(sum(position))`, `neg`/`filter_currency`, `meta('lineno')`, `AT value`, `BALANCES FROM`) — **blocked:** upstream filing approved 2026-10-28; waiting for someone with tracker access to file the batch
 - [026](./blocked/026.md) — streaming archive route for MCP OAuth clients over 8 MiB (option 1 from 023) — **blocked:** an ADR 0007 trust-boundary decision for the owner
 - [124](./blocked/124.md) — unquoted `FROM accounts` resolves table-first on MCP (12) vs column-first on stock (34) — **blocked:** owner picks ledger stock-parity (fold) vs table-first-everywhere (CLI w3/247 agreement)

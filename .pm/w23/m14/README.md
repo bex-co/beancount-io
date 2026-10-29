@@ -29,6 +29,6 @@
 - **Expected outcome:** an agent can filter, aggregate, and group without defending against empty strings where NULLs belong, on every surface.
 - **Why now:** w23/122's six probe iterations map the whole defect space at once (value, dtype, strictness); fixing the value without the dtype (or vice versa) would leave half the probes red. Adoption surface included — the milestone ships agent-facing query rendering.
 
-## Blocked
+## Unblocked
 
-- **t002** (2026-10-27): null-cell rendering is w23/075's option (b) — a published-contract change the owner has not approved. **Unblock:** the owner picks (b1)/(b2)/(b3) per `w23/blocked/075.md`; repo owner clears it. t003–t008 defer behind t002 in `depends_on` order.
+- **t002** (2026-10-28): the owner chose w23/075 option (b1) — `null` on REST and MCP structured results, `""` kept on GraphQL `queryShell`. t002 is `todo`; t003–t008 follow in `depends_on` order. (Earlier block, 2026-10-27: null-cell rendering was a published-contract change the owner had not approved.)
