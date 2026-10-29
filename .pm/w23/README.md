@@ -51,7 +51,6 @@
 - [x] [170](./done/170.md) — BQL `meta` splits by table (`k: v`/`str` postings vs `k=v`/`object` entries; stock one dict)
 - [x] [171](./done/171.md) — typed posting tags/links render stock-invalid beancount; backend check blind, reads blank (m6 "holds live" disproven)
 
-- [175](./175.md) — bank-submit nested keys camel-only on REST/GraphQL while the MCP bank tool dual-accepts (w23/140 followup)
 - [180](./blocked/180.md) — known-but-unpriced report `conversion` still degrades to units silently (w23/156 followup) — **blocked:** owner picks refuse vs holdings-style disclosure (both change a published contract)
 - [190](./blocked/190.md) — engine accepts fractional `@@` stock refuses (per-unit division dust; w23/163 followup) — **blocked:** upstream filing approved 2026-10-28; waiting for someone with tracker access to file the batch
 - [196](./blocked/196.md) — BQL `balances.discrepancy` never populates (blank on failing balances; stock reports the diff) — **blocked:** upstream filing approved 2026-10-28; waiting for someone with tracker access to file the batch
