@@ -38,7 +38,7 @@ import type { QueryResult } from "@rustledger/wasm";
  */
 const AGGREGATES = ["count", "sum", "min", "max", "first", "last"] as const;
 const GROUP_BY = /\bgroup\s+by\b/i;
-const KEY_LIST_END = /\b(?:having|order\s+by|limit|offset)\b|\)|;/i;
+const LIST_END_WORD = /^(?:having|order\s+by|pivot\s+by|limit|offset)\b/i;
 const SELECT_SPAN =
   /\bselect\b([\s\S]*?)(?:\bfrom\b|\bwhere\b|\bgroup\s+by\b|\bhaving\b|\border\s+by\b|\blimit\b|\boffset\b|;|$)/i;
 const PLAIN_PARENS = /\([^()]*\)/g;
@@ -64,15 +64,12 @@ export function groupByCoverageError(query: string): QueryResult | undefined {
     stripped = next;
   }
   if ((stripped.match(/\bselect\b/gi) ?? []).length !== 1) return undefined;
-  const keyLists = [...stripped.matchAll(/\bgroup\s+by\b/gi)].map((m) => {
-    const rest = stripped.slice((m.index as number) + m[0].length);
-    const end = rest.search(KEY_LIST_END);
-    return end === -1 ? rest : rest.slice(0, end);
-  });
-  const items = splitTopLevel(
-    SELECT_SPAN.exec(stripped)?.[1] ?? "",
-  ).map((item, index) =>
-    index === 0 ? item.replace(/^(?:distinct|all)\s+/i, "") : item,
+  const keyLists = [...stripped.matchAll(/\bgroup\s+by\b/gi)].map((m) =>
+    keyListText(stripped, (m.index as number) + m[0].length),
+  );
+  const items = splitTopLevel(SELECT_SPAN.exec(stripped)?.[1] ?? "").map(
+    (item, index) =>
+      index === 0 ? item.replace(/^(?:distinct|all)\s+/i, "") : item,
   );
   const uncovered = items.filter(
     (item, index) => isBareColumn(item) && !isCovered(item, index, keyLists),
@@ -81,12 +78,13 @@ export function groupByCoverageError(query: string): QueryResult | undefined {
   const exprs = uncovered.map((item) => splitAlias(item).expr);
   const names = exprs.map((expr) => `"${expr}"`).join(", ");
   const firsts = exprs.map((expr) => `first(${expr})`).join(", ");
+  const plural = exprs.length > 1;
   return {
     columns: [],
     rows: [],
     errors: [
       {
-        message: `Bare column ${names} is not grouped and not aggregated: this query engine would silently report each group's first-row value. Add ${names} to GROUP BY, aggregate it, or name the pick explicitly with ${firsts}.`,
+        message: `Bare column${plural ? "s" : ""} ${names} ${plural ? "are" : "is"} not grouped and not aggregated: this query engine would silently report each group's first-row value. Add ${names} to GROUP BY, aggregate it, or name the pick explicitly with ${firsts}.`,
         code: null,
         phase: "query",
         hint: `Group by ${names}, aggregate it, or wrap it in first().`,
@@ -99,6 +97,34 @@ export function groupByCoverageError(query: string): QueryResult | undefined {
       },
     ],
   };
+}
+
+/**
+ * The GROUP BY key list starting at `from`: up to the first clause word
+ * (HAVING/ORDER BY/PIVOT BY/LIMIT/OFFSET), `;`, or unbalanced `)` at paren
+ * depth 0. Parens inside a key (`month(date)`) belong to the key, so a
+ * function key never truncates the keys after it (w23/189).
+ */
+function keyListText(text: string, from: number): string {
+  let depth = 0;
+  for (let i = from; i < text.length; i += 1) {
+    const ch = text[i] as string;
+    if (ch === "(") depth += 1;
+    else if (ch === ")") {
+      if (depth === 0) return text.slice(from, i);
+      depth -= 1;
+    } else if (depth === 0 && ch === ";") {
+      return text.slice(from, i);
+    } else if (
+      depth === 0 &&
+      /\w/.test(ch) &&
+      !/\w/.test(text[i - 1] ?? " ") &&
+      LIST_END_WORD.test(text.slice(i))
+    ) {
+      return text.slice(from, i);
+    }
+  }
+  return text.slice(from);
 }
 
 /** Split on commas outside any paren level. */

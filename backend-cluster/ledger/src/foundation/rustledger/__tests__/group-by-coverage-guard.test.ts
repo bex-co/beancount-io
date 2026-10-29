@@ -29,6 +29,16 @@ describe("groupByCoverageError", () => {
       "SELECT account, date, payee, count(*) FROM postings GROUP BY account",
     );
     expect(refused?.errors[0]?.message).toContain('"date", "payee"');
+    // Two columns read plural (w23/189).
+    expect(refused?.errors[0]?.message).toContain("columns");
+    expect(refused?.errors[0]?.message).toContain("are not grouped");
+  });
+
+  it("keeps refusing a truly uncovered column after a function key", () => {
+    const refused = groupByCoverageError(
+      "SELECT month(date), narration, payee, count(*) GROUP BY month(date), narration",
+    );
+    expect(refused?.errors[0]?.message).toContain('Bare column "payee" is not');
   });
 
   it.each([
@@ -56,6 +66,13 @@ describe("groupByCoverageError", () => {
     // Nested grouping abstains (multi-level pairing is out of scope).
     "SELECT date FROM (SELECT account, count(*) FROM postings GROUP BY account)",
     "SELECT * FROM (SELECT account, date, count(*) FROM postings GROUP BY account)",
+    // PIVOT BY is not part of the GROUP BY key list (w23/189).
+    "SELECT account, date, sum(position) GROUP BY account, date PIVOT BY date, account LIMIT 1",
+    "SELECT payee AS p, flag AS f, COUNT(*) GROUP BY p, f PIVOT BY f, p",
+    // A function key's parens belong to the key, not the end of the list.
+    "SELECT month(date), narration, COUNT(*) GROUP BY month(date), narration LIMIT 1",
+    "SELECT year(date), upper(payee), narration, COUNT(*) GROUP BY year(date), upper(payee), narration",
+    "SELECT month(date), narration, payee, COUNT(*) GROUP BY month(date), narration, payee",
     // No grouping at all.
     "SELECT account, date FROM postings",
   ])("leaves %p alone", (query) => {

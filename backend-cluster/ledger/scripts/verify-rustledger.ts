@@ -2312,6 +2312,25 @@ async function main(): Promise<void> {
       !realOrdinal.errors.some((e) => e.severity === "error"),
     "in-range ordinals still answer through the guard",
   );
+  // GROUP-BY coverage on PIVOT BY and function keys (w23/189): the key list
+  // ends at the clause word and keeps a function key's parens, so a grouped
+  // column after `month(date)` or before `PIVOT BY` is never called bare.
+  for (const query of [
+    "SELECT month(date), narration, COUNT(*) FROM postings GROUP BY month(date), narration LIMIT 1",
+    "SELECT payee, flag, COUNT(*) FROM postings GROUP BY payee, flag PIVOT BY flag, payee",
+  ]) {
+    const covered = await queryLedgerFilesResult(
+      FILES,
+      "main.beancount",
+      query,
+    );
+    assert(
+      !covered.errors.some(
+        (e) => e.severity === "error" && e.message.includes("Bare column"),
+      ),
+      `a grouped column is not called bare: ${query.slice(query.indexOf("GROUP"))}`,
+    );
+  }
   const scalarGroup = await queryLedgerFiles(
     FILES,
     "main.beancount",
