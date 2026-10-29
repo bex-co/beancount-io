@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1091 — Show proposed balance tolerances in import conflict diagnostics](./1091.md) — minor CLI review: tolerance-only conflicts hide the proposed assertion; 14 fresh profiles plus two exact public reproductions; refusals and ledger bytes stay correct; checked 2026-10-28.
+
 - [1090 — Preserve precise interpolation in Beancount query exports](./1090.md) — minor CLI query export: an omitted precision policy loses 0.001 transferred shares, silently or against an exact balance; 66 profiles, 492 CLI calls and 228 native loads; checked 2026-10-28.
 
 - [1089 — Review inferred-cost corrections on labelled and short openings](./1089.md) — major CLI import: incomplete opening costs silently skip bank-ID corrections and distinct generated-ID trades; 82 profiles, 610 CLI calls and 264 native loads; checked 2026-10-28.
