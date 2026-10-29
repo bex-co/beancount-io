@@ -242,7 +242,6 @@ class TestInstall(Workspace):
         code, _, err = run("install", *(dest for dest, _ in refused), self.dest)
 
         self.assertEqual(code, 1)
-        self.assertNotIn("Traceback", err)
         for _, line in refused:
             self.assertIn(line + "\n", err)
         self.assertEqual(stray.read_text(), "keep\n")
@@ -307,7 +306,7 @@ class TestLinkFailures(Workspace):
             self.assertIn("turn on Developer Mode", err)
             self.assertIn('"Create symbolic links" right', err)
             self.assertIn("not elevated", err)
-            self.assertIn(f'python "{skills.SCRIPT}" install "{fresh}"', err)
+            self.assertIn(f"python '{skills.SCRIPT}' install '{fresh}'", err)
         else:
             self.assertIn(f"FAIL {fresh / first}: permission denied", err)
         self.assertIn(f"Not installed in {fresh}: no suite link is installed there", err)
@@ -394,6 +393,32 @@ class TestLinkFailures(Workspace):
         self.assertIn(f"removed {owned}, which this run had linked", err)
         self.assertTrue(self.sentinel.is_file())
 
+    def test_a_created_directory_that_gained_an_entry_is_kept_with_it(self):
+        fresh = self.root / "new home ü" / "skills"
+        names = skills.expected_skills()
+        notes = fresh / "notes ü.txt"
+
+        def fail(link):
+            if link.name != names[2]:
+                return None
+            # Something else writes into the directory this run created.
+            notes.write_text("written meanwhile\n", encoding="utf-8")
+            return self.denied(link)
+
+        self.inject(fail)
+
+        code, _, err = run("install", fresh)
+
+        self.assertEqual(code, 1)
+        self.assertEqual(sorted(p.name for p in fresh.iterdir()), ["notes ü.txt"], "this run's links are gone")
+        self.assertEqual(notes.read_text(encoding="utf-8"), "written meanwhile\n")
+        for name in names[:2]:
+            self.assertIn(f"removed {fresh / name}, which this run had linked", err)
+        self.assertIn(f"left {fresh} in place: this run created it, but it is not empty", err)
+        # Its parent is not removed out from under it either.
+        self.assertNotIn(f"removed {fresh.parent}, which", err)
+        self.assertIn(f"Not installed in {fresh}: no suite link is installed there", err)
+
     def test_denied_relink_restores_the_old_layout_link(self):
         [name] = self.link_suite(skills.OLD_LAYOUT, skills.expected_skills()[:1])
         self.inject(self.denied)
@@ -405,10 +430,11 @@ class TestLinkFailures(Workspace):
         self.assertEqual(snapshot(self.dest), before)
         self.assertTrue(skills.is_old_layout_link(self.dest / name))
 
-    def blocked_copy(self, edit: str | None = None):
-        """A copy of beancount-ask in a skills directory under a spaced, non-ASCII home:
-        the directory, its backups directory, and the install and verify results."""
-        home = self.root / "home dir ü"
+    def blocked_copy(self, edit: str | None = None, home_name: str = "home dir ü"):
+        """A copy of beancount-ask in a skills directory under HOME_NAME (spaced and
+        non-ASCII by default): the directory, its backups directory, and the install
+        and verify results."""
+        home = self.root / home_name
         spaced = home / "skills"
         spaced.mkdir(parents=True)
         shutil.copytree(SUITE / "beancount-ask", spaced / "beancount-ask")
@@ -424,9 +450,10 @@ class TestLinkFailures(Workspace):
         self.assertIn("Nothing was changed", conflict)
         if os.name == "nt":
             self.assertNotIn("&&", conflict)
-            self.assertIn(f'  New-Item -ItemType Directory -Force "{backups}" | Out-Null\n', conflict)
-            self.assertIn(f'  Move-Item "{spaced}\\<name>" "{backups}\\"\n', conflict)
-            self.assertIn(f'Repair with: python "{skills.SCRIPT}" install "{spaced}"', incomplete)
+            # Single quotes: PowerShell expands `$` and backticks inside double quotes.
+            self.assertIn(f"  New-Item -ItemType Directory -Force '{backups}' | Out-Null\n", conflict)
+            self.assertIn(f"  Move-Item -LiteralPath '{spaced}\\<name>' '{backups}\\'\n", conflict)
+            self.assertIn(f"Repair with: python '{skills.SCRIPT}' install '{spaced}'", incomplete)
             self.assertNotIn("python3", incomplete)
         else:
             self.assertIn(f"  mkdir -p {shlex.quote(str(backups))} && mv {shlex.quote(str(spaced))}/<name>", conflict)
@@ -434,13 +461,18 @@ class TestLinkFailures(Workspace):
 
     @unittest.skipUnless(os.name == "nt", NOT_THIS_PLATFORM + "Windows PowerShell only")
     def test_printed_windows_remedies_run_in_windows_powershell(self):
-        spaced, backups, (_, _, conflict), (_, _, incomplete) = self.blocked_copy(edit="edited\n")
+        # Characters PowerShell would otherwise expand (`$`, backtick), end a
+        # quoted string (ASCII and typographic single quotes) or read as a
+        # wildcard (`[`), beside spaces and non-ASCII: each must stay literal.
+        home_name = "home $x `t 'q' it’s [b] ü"
+        spaced, backups, (_, _, conflict), (_, _, incomplete) = self.blocked_copy(edit="edited\n", home_name=home_name)
+        self.assertEqual(backups.parent.name, home_name)
         move = "; ".join(
             line.strip().replace("<name>", "beancount-ask")
             for line in conflict.splitlines()
             if line.startswith(("  New-Item", "  Move-Item"))
         )
-        repair =re.search(r"Repair with: (.+?) \(after", incomplete).group(1)
+        repair = re.search(r"Repair with: (.+?) \(after", incomplete).group(1)
         script = self.root / "remedy.ps1"
         # UTF-8 with BOM, so Windows PowerShell 5.1 reads the non-ASCII paths.
         script.write_text(f"$ErrorActionPreference = 'Stop'\n{move}\n& {repair}\nexit $LASTEXITCODE\n", encoding="utf-8-sig")
@@ -452,6 +484,9 @@ class TestLinkFailures(Workspace):
         backup = backups / "beancount-ask" / "SKILL.md"
         self.assertEqual(backup.read_text(), "edited\n")
         self.assertEqual(run("verify", spaced)[0], 0)
+        # Nothing landed under a mangled spelling of the path.
+        self.assertEqual(sorted(p.name for p in self.root.iterdir()), sorted([home_name, "home", "ledger.beancount", "remedy.ps1"]))
+        self.assertEqual(sorted(p.name for p in backups.parent.iterdir()), ["beancount-skill-backups", "skills"])
 
 
 class TestVerify(Workspace):

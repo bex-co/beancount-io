@@ -157,7 +157,14 @@ script path and destinations were quoted. Exit codes come from
 Since then, the installer reports and rolls back denied and interrupted runs,
 which `TestLinkFailures` in `scripts/skills/test_beancount_skills.py` covers
 with a mocked `os.symlink`, and the [third run](#agent-discovery-and-first-query) covered
-workspace-scope discovery.
+workspace-scope discovery. The printed conflict and repair remedies now use
+PowerShell commands with single-quoted literal paths (`Move-Item -LiteralPath`,
+`python '…\beancount-skills.py' install '<dest>'`), because double quotes
+expand `$` and backticks. On this host,
+`TestLinkFailures.test_printed_windows_remedies_run_in_windows_powershell` runs
+them as printed in `powershell.exe` under a home named
+``home $x `t 'q' it’s [b] ü``: the edited copy is moved, the suite verifies,
+and nothing is created under another spelling of the path.
 
 ### Elapsed time
 

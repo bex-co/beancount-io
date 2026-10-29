@@ -52,7 +52,12 @@ ERROR_PRIVILEGE_NOT_HELD = 1314
 
 
 def quote(path: Path | str) -> str:
-    return f'"{path}"' if WINDOWS else shlex.quote(str(path))
+    """PATH as one literal shell word: PowerShell single quotes on Windows, where
+    `$` and backticks expand inside double quotes. PowerShell also ends a
+    single-quoted string at a typographic single quote; doubling escapes each."""
+    if WINDOWS:
+        return "'" + re.sub("(['\u2018\u2019\u201a\u201b])", r"\1\1", str(path)) + "'"
+    return shlex.quote(str(path))
 
 
 def rerun(command: str, dest: Path) -> str:
@@ -276,7 +281,8 @@ def install(dest: Path) -> int:
         if WINDOWS:
             move = (
                 f"  New-Item -ItemType Directory -Force {quote(backups)} | Out-Null\n"
-                f"  Move-Item {quote(dest / '<name>')} {quote(str(backups) + os.sep)}\n"
+                # -LiteralPath: a `[` in the path is not a wildcard.
+                f"  Move-Item -LiteralPath {quote(dest / '<name>')} {quote(str(backups) + os.sep)}\n"
             )
         else:
             move = f"  mkdir -p {quote(backups)} && mv {quote(dest)}/<name> {quote(backups)}/\n"

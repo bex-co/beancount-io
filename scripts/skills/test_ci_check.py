@@ -16,7 +16,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from unittest import mock
 
 SCRIPTS_DIR = Path(__file__).resolve().parent
@@ -72,11 +72,9 @@ class TestSkillTrees(unittest.TestCase):
         with contextlib.redirect_stdout(output):
             ci_check.check_symlinks()
             ci_check.check_skill_md()
-        self.assertIn("OK frontmatter .agents/skills/ship/SKILL.md", output.getvalue())
-        self.assertIn(
-            "OK frontmatter skills/beancount-ask/SKILL.md",
-            output.getvalue(),
-        )
+        # ci-check prints repository paths in the platform's own spelling.
+        self.assertIn(f"OK frontmatter {Path('.agents/skills/ship/SKILL.md')}\n", output.getvalue())
+        self.assertIn(f"OK frontmatter {Path('skills/beancount-ask/SKILL.md')}\n", output.getvalue())
 
     def test_old_shared_customer_symlink_is_rejected(self):
         self.development.rename(self.development.with_name("old-skills"))
@@ -119,8 +117,7 @@ class TestSkillTrees(unittest.TestCase):
         error = io.StringIO()
         with contextlib.redirect_stderr(error), self.assertRaises(SystemExit):
             ci_check.check_skill_md()
-        self.assertIn(".agents/skills/ship/SKILL.md", error.getvalue())
-        self.assertIn("missing 'description'", error.getvalue())
+        self.assertIn(f"FAIL: {Path('.agents/skills/ship/SKILL.md')}: frontmatter missing 'description'", error.getvalue())
 
     def check_frontmatter(self, frontmatter: str) -> str:
         """Run the SKILL.md check on beancount-ask with FRONTMATTER; return stderr ('' when it passes)."""
@@ -211,6 +208,72 @@ class TestSkillTrees(unittest.TestCase):
         with contextlib.redirect_stderr(error), self.assertRaises(SystemExit):
             ci_check.check_evals()
         self.assertIn("referenced file missing: missing.csv", error.getvalue())
+
+
+class TestCheckoutPaths(unittest.TestCase):
+    """check_checkout_paths: guide paths under $SKILLS_SRC must be in the sparse checkout."""
+
+    FILES = ["scripts/skills/beancount-skills.py", "skills/beancount-ask/references/bea-cli.md", "skills/README.md"]
+
+    def setUp(self):
+        scratch = SCRIPTS_DIR / "tmp"
+        scratch.mkdir(exist_ok=True)
+        temporary = tempfile.TemporaryDirectory(dir=scratch)
+        self.addCleanup(temporary.cleanup)
+        self.repo = Path(temporary.name)
+        docs = self.repo / "docs" / "skills"
+        docs.mkdir(parents=True)
+        (self.repo / "skills").mkdir()
+        (self.repo / "skills/README.md").write_text("")
+        (self.repo / "skills/AGENTS.md").write_text("")
+        self.guide = docs / "installation.md"
+        patches = mock.patch.multiple(
+            ci_check,
+            REPO_ROOT=self.repo,
+            SKILLS_ROOT=self.repo / "skills",
+            CUSTOMER_DOCS=docs,
+            # `git ls-files` output: `/`-separated on every platform.
+            repo_files=mock.Mock(return_value=self.FILES),
+        )
+        patches.start()
+        self.addCleanup(patches.stop)
+
+    def check(self, cited: str, path_type=Path) -> tuple[bool, str]:
+        """Run the check on a guide citing CITED with ci-check's Path set to PATH_TYPE: (passed, output)."""
+        self.guide.write_text(
+            'git -C "$SKILLS_SRC" sparse-checkout set skills scripts/skills docs/skills\n'
+            f'python3 "$SKILLS_SRC/scripts/skills/beancount-skills.py" install\nSee $SKILLS_SRC/{cited}.\n'
+        )
+        output = io.StringIO()
+        with (
+            mock.patch.object(ci_check, "Path", path_type),
+            contextlib.redirect_stdout(output),
+            contextlib.redirect_stderr(output),
+        ):
+            try:
+                ci_check.check_checkout_paths()
+            except SystemExit:
+                return False, output.getvalue()
+        return True, output.getvalue()
+
+    def test_a_cited_directory_passes_under_windows_path_separators(self):
+        # A directory exists only as a parent of fetched files; on Windows its
+        # parents spell `\`, which must still match the guide's `/`.
+        for path_type in (Path, PureWindowsPath):
+            with self.subTest(path_type=path_type.__name__):
+                passed, output = self.check("skills/beancount-ask/references", path_type)
+                self.assertTrue(passed, output)
+                self.assertIn("OK checkout paths in customer guides", output)
+
+    def test_a_path_outside_the_checkout_fails_under_either_separator(self):
+        for path_type in (Path, PureWindowsPath):
+            with self.subTest(path_type=path_type.__name__):
+                passed, output = self.check("skills/beancount-gone", path_type)
+                self.assertFalse(passed)
+                self.assertIn(
+                    f"{Path('docs/skills/installation.md')}:3: $SKILLS_SRC/skills/beancount-gone is not in the customer's checkout",
+                    output,
+                )
 
 
 class TestPluginManifests(unittest.TestCase):
