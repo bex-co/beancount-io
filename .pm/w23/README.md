@@ -53,7 +53,7 @@
 - [x] [171](./done/171.md) — typed posting tags/links render stock-invalid beancount; backend check blind, reads blank (m6 "holds live" disproven)
 - [172](./blocked/172.md) — entry-source tools mark `entryHash` optional but refuse calls without it, on MCP, REST, and GraphQL alike — **blocked:** one-identifier rule documented on all schemas; owner picks required-entryHash (breaks alias-only) or documented leniency
 - [173](./blocked/173.md) — MCP-only required-ness lies, bank-id (8 tools) and file-message (3 tools) aliases: schema optional, runtime required — **blocked:** same owner decision as 172; owner picks require-primary, anyOf-required (client-compat risk), or documented leniency
-- [175](./175.md) — bank-submit nested keys camel-only on REST/GraphQL while the MCP bank tool dual-accepts (w23/140 followup)
+- [175](./blocked/175.md) — bank-submit nested keys camel-only on REST/GraphQL while the MCP bank tool dual-accepts (w23/140 followup) — **blocked:** same owner decision as 172/173; twins make REST/GraphQL required-ness lie (and loosen generated client types) vs documented camel-only
 - [176](./176.md) — BQL column/alias references case-sensitive on the engine; stock case-insensitive (tables + functions agree)
 - [177](./177.md) — string literals behind aliases still sniff dtypes (w23/146 followup)
 - [178](./178.md) — REST stale-`sha` conflicts keep the generic entry hint (w23/147 followup)
