@@ -32,7 +32,7 @@
     "comments": 0,
     "reportedChecks": 0
   },
-  "nextAction": "Follow existing Docker approval/review/public catalog under w6/m9/t017. Assess reviewer access by2026-10-29UTC against its end2026-10-31UTC expiry; if still needed, obtain the supported secure private update path and renew within the existing boundary. Native OAuth046 is separate.",
+  "nextAction": "Docker approves/runs and reviews existing PR6042. Current restricted reviewer key remains Active/never used and expires endOct31UTC. Reassess byOct30 or actual review/private renewal request; obtain a supported secure update route if longer access is needed, without duplicate form, orphan key or public secret.",
   "history": [
     {
       "checkedAtUTC": "2026-10-24T01:50:07Z",
@@ -79,5 +79,13 @@
     "deliveryBoundary": "Coordinate through the accepted private review channel. Do not duplicate the accepted form/PR or publish a key in a public comment; a public route request may contain only the PR reference.",
     "verification": "Confirm saved bounds and expiry, then actual reviewer acceptance/use when observable. Keep old retained grants; no automatic rotation or test-end revocation.",
     "performedThisChange": "Coordination and read-only metadata only; no renewal claimed."
+  },
+  "latestAccessAssessment": {
+    "evidence": "reviewer-access-assessment-20261029.json",
+    "recordedAtUTC": "2026-10-29T02:47:40.671058+00:00",
+    "currentWindowValid": true,
+    "renewalPerformed": false,
+    "secureUpdateRouteVerified": false,
+    "nextAssessmentByUTC": "2026-10-30"
   }
 }

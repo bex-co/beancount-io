@@ -456,3 +456,20 @@ scheduled rotation. Earlier failed attempts remain historical; the pass-helper
 defect is not claimed fixed. Official Docker gallery publication/install remains
 under maintainer review. Source CI passes398 suites/7,480 tests and Secret scan.
 The owned client runtime is stopped; the keyring volume and all grants remain.
+
+## Due reviewer-access assessment — 2026-10-29 UTC
+
+Actual first-party saved metadata still shows the retained Docker reviewer
+credential Active, read/write without admin and pinned to the same synthetic
+ledger. It is Never used and retains the Oct31expiry; no plaintext token or
+runtime success is inferred. [Current assessment](./reviewer-access-assessment-20261029.json)
+records that PR6042/comments and both existing runs remain unchanged/open/
+action_required. Current-window access remains valid; access after expiry is
+not arranged. No longer review window or supported secure response-edit route
+is observed. Browser control becomes unavailable after the successful metadata
+read, so no new private-form/mailbox check is claimed.
+
+Reassess byOct30UTC or actual reviewer/private renewal request. If longer
+access is required, obtain Docker's supported secure update route through the
+accepted channel before bounded replacement. No orphan key, public credential,
+duplicate form, new grant, expiry extension or revocation is performed.

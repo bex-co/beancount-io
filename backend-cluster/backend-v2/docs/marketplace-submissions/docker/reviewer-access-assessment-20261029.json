@@ -1,0 +1,67 @@
+{
+  "owner": "w6/m9/t017",
+  "recordedAtUTC": "2026-10-29T02:47:40.671058+00:00",
+  "status": "submitted",
+  "actualReviewCheckAtUTC": "2026-10-29T02:40:58Z",
+  "review": {
+    "url": "https://github.com/docker/mcp-registry/pull/6042",
+    "state": "open",
+    "merged": false,
+    "conversationComments": 0,
+    "reviewComments": 0,
+    "updatedAtUTC": "2026-10-24T19:52:18Z",
+    "workflowRuns": [
+      {
+        "id": 40049180641,
+        "status": "completed",
+        "conclusion": "action_required"
+      },
+      {
+        "id": 40049180736,
+        "status": "completed",
+        "conclusion": "action_required"
+      }
+    ],
+    "limit": "PR/comments and existing run metadata only; no fresh review collection or workflow job reads."
+  },
+  "actualReviewerMetadata": {
+    "source": "https://beancount.io/settings/api-keys",
+    "observationWindowUTC": {
+      "from": "2026-10-29T02:40:58Z",
+      "through": "2026-10-29T02:47:40.671058+00:00"
+    },
+    "state": "Active",
+    "scopes": [
+      "ledger.read",
+      "ledger.write"
+    ],
+    "ledgerAdmin": false,
+    "samePreviouslyApprovedSyntheticLedger": true,
+    "lastUsedDisplay": "Never used",
+    "expiryDisplay": "Oct 31, 2026, 04:59 PM",
+    "retainedPreviouslyVerifiedUTCEndOfDate": "2026-10-31",
+    "limit": "Actual saved metadata, not a reviewer runtime/use test. New absolute expiry precision is not inferred from a minute-resolution display."
+  },
+  "assessment": {
+    "currentAuthorizedWindowValid": true,
+    "reviewStillPending": true,
+    "longerReviewWindowRequested": false,
+    "secureResponseEditOrRenewalRouteVerified": false,
+    "accessBeyondOctober31Arranged": false,
+    "nextAssessmentByUTC": "2026-10-30",
+    "condition": "If review needs access beyond the retained expiry, Docker supplies a supported secure update route through the existing accepted review channel; worker then arranges bounded renewal and verifies saved bounds/use. No overlapping orphan key or public credential."
+  },
+  "browserBoundary": "The current metadata observation succeeds. Browser connection then becomes unavailable; no fresh private-form/edit-route or mailbox inspection is claimed. Native application control remains available.",
+  "actions": {
+    "newKey": false,
+    "expiryExtended": false,
+    "credentialValueRetrieved": false,
+    "grantRevoked": false,
+    "privateFormResubmitted": false,
+    "messageSent": false,
+    "nativeOAuthRepeated": false
+  },
+  "nativeEvidence": "secretservice-native-acceptance-20261026.json",
+  "unblock": "Docker maintainers approve/run workflows and review/merge/import; worker verifies actual public/native installation. Longer reviewer access separately needs the supported secure delivery route before renewal.",
+  "publisherInputNeededNow": false
+}
