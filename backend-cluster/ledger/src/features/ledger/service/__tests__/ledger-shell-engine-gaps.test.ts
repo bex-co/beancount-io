@@ -92,6 +92,22 @@ describe("refusals for BQL forms this engine does not accept", () => {
     expect(message).toContain("SELECT account, sum(position) FROM");
   });
 
+  it.each([
+    "Query execution error: type error: DATE: argument must be a string or date",
+    "Query execution error: type error: WEEKDAY expects a date",
+    "Query execution error: type error: SUBSTR expects (string, int, [int])",
+    "Query execution error: type error: SUBST expects (pattern, replacement, string)",
+    "Query execution error: type error: STARTSWITH expects two strings",
+    "Query execution error: type error: MAXWIDTH: first argument must be a string",
+  ])(
+    "names the NULL-filter workaround after the strict-camp refusal %p (w23/m14/t004)",
+    async (engineMessage) => {
+      const message = await refusal(engineMessage);
+      expect(message).toContain(engineMessage);
+      expect(message).toContain("WHERE payee IS NOT NULL");
+    },
+  );
+
   it("leaves any other refusal as the engine wrote it", async () => {
     expect(await refusal("syntax error at SELEKT")).toBe(
       "Invalid BQL query: syntax error at SELEKT",

@@ -224,6 +224,15 @@ const ENGINE_GAPS: ReadonlyArray<{ match: RegExp; supported: string }> = [
       "BALANCES with a FROM window fails on this engine when the window sells a lot bought before it: sum the window's postings with SELECT account, sum(position) FROM <the same filter> GROUP BY account.",
   },
   {
+    // The strict camp (w23/m14/t004): these builtins error on a NULL argument
+    // where `upper`, `year`, `month`, and `day` read NULL as NULL, as stock
+    // does. A NULL payee, narration, or date makes the whole query fail.
+    match:
+      /DATE: argument must be a string or date|WEEKDAY expects a date|SUBSTR expects \(string|SUBST expects \(pattern|STARTSWITH expects two strings|MAXWIDTH: first argument must be a string/,
+    supported:
+      "This engine rejects a NULL argument here, where stock (and upper, year, month, day) pass NULL through, so one NULL payee, narration, or date fails the whole query. Drop the NULL rows first (WHERE payee IS NOT NULL), or apply the function after aggregating.",
+  },
+  {
     match: /FILTER_CURRENCY expects \(inventory, string\)/,
     supported:
       "This engine filters an inventory, not a position: use filter_currency(sum(position), 'USD').",

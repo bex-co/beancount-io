@@ -4712,6 +4712,47 @@ async function main(): Promise<void> {
     "the windowed sum the lot-error hint names runs",
   );
 
+  // The strict camp (w23/m14/t004): the engine still errors on a NULL argument
+  // to these builtins where its siblings pass NULL through, and the
+  // workaround the hint names runs.
+  const strictNullFiles = {
+    "main.bean": [
+      "2026-01-01 open Assets:Cash USD",
+      "2026-01-01 open Equity:O",
+      '2026-01-02 * "Cafe" "x"',
+      "  Assets:Cash 5 USD",
+      "  Equity:O",
+      '2026-01-03 * "no payee"',
+      "  Assets:Cash 1 USD",
+      "  Equity:O",
+      "",
+    ].join("\n"),
+  };
+  for (const call of [
+    "substr(payee, 0, 2)",
+    "startswith(payee, 'C')",
+    "maxwidth(payee, 5)",
+    "subst('a', 'b', payee)",
+  ]) {
+    const strict = await queryLedgerFilesResult(
+      strictNullFiles,
+      "main.bean",
+      `SELECT ${call} FROM postings`,
+    );
+    assert(
+      strict.errors.some((e) => e.severity === "error"),
+      `the engine still errors on a NULL payee in ${call}`,
+    );
+    const filtered = await queryLedgerFilesResult(
+      strictNullFiles,
+      "main.bean",
+      `SELECT ${call} FROM postings WHERE payee IS NOT NULL`,
+    );
+    assert(
+      filtered.errors.length === 0 && filtered.rows.length > 0,
+      `${call} runs once the NULL rows are filtered out`,
+    );
+  }
   // w21/648: the entries precheck balances a transaction as the engine does,
   // on the cases where Beancount and rustledger agree.
   const toleranceCases: Array<[string, string[]]> = [
