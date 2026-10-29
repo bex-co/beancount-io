@@ -54,7 +54,7 @@
 - [172](./blocked/172.md) — entry-source tools mark `entryHash` optional but refuse calls without it, on MCP, REST, and GraphQL alike — **blocked:** one-identifier rule documented on all schemas; owner picks required-entryHash (breaks alias-only) or documented leniency
 - [173](./blocked/173.md) — MCP-only required-ness lies, bank-id (8 tools) and file-message (3 tools) aliases: schema optional, runtime required — **blocked:** same owner decision as 172; owner picks require-primary, anyOf-required (client-compat risk), or documented leniency
 - [175](./blocked/175.md) — bank-submit nested keys camel-only on REST/GraphQL while the MCP bank tool dual-accepts (w23/140 followup) — **blocked:** same owner decision as 172/173; twins make REST/GraphQL required-ness lie (and loosen generated client types) vs documented camel-only
-- [180](./180.md) — known-but-unpriced report `conversion` still degrades to units silently (w23/156 followup)
+- [180](./blocked/180.md) — known-but-unpriced report `conversion` still degrades to units silently (w23/156 followup) — **blocked:** owner picks refuse vs holdings-style disclosure (both change a published contract)
 - [184](./184.md) — BQL `value(pos, target)` silently ignores the target (`BOGUS`/`usd`/unpriced → units)
 - [186](./186.md) — 2-arg `joinstr(set, sep)` appends `sep` as a trailing element instead of joining with it
 - [187](./187.md) — past-i64 GROUP/ORDER BY ordinals silently degrade to constants (w23/133 followup)
