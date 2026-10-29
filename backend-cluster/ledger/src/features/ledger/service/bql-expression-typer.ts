@@ -64,7 +64,8 @@ export const STRING_FUNCTIONS = new Set([
 
 const INT_RE = /^[+-]?\d+$/;
 const DECIMAL_RE = /^[+-]?(?:\d+\.\d*|\.\d+)$/;
-const IDENT_RE = /^[A-Za-z_][\w$]*(\.[A-Za-z_][\w$]*)*$/;
+/** One (optionally dotted) identifier: a bare column reference. */
+export const IDENT_RE = /^[A-Za-z_][\w$]*(\.[A-Za-z_][\w$]*)*$/;
 const CALL_HEAD_RE = /^([A-Za-z_][\w$]*)\s*\(/;
 const MAX_DEPTH = 50;
 
@@ -179,7 +180,9 @@ function matchClose(expr: string, open: number): number {
 }
 
 /** The text is exactly one call: its head and raw argument text. */
-function parseCall(expr: string): { head: string; argsText: string } | undefined {
+function parseCall(
+  expr: string,
+): { head: string; argsText: string } | undefined {
   const head = CALL_HEAD_RE.exec(expr);
   if (head?.[1] === undefined) return undefined;
   const open = expr.indexOf("(", head[1].length);
@@ -289,7 +292,8 @@ function splitArithmetic(
     if (ch === ")") depth = Math.max(0, depth - 1);
     if (depth === 0 && ops.includes(ch)) {
       const unary =
-        (ch === "+" || ch === "-") && (prevSigil === "" || "+-*/%(".includes(prevSigil));
+        (ch === "+" || ch === "-") &&
+        (prevSigil === "" || "+-*/%(".includes(prevSigil));
       if (!unary) {
         terms.push(current);
         joins.push(ch);
@@ -321,7 +325,8 @@ function combineArithmetic(
     dtype === "int" || dtype === "Decimal";
   const widen = (): string =>
     left === "Decimal" || right === "Decimal" ? "Decimal" : "int";
-  if (op === "/") return numeric(left) && numeric(right) ? "Decimal" : undefined;
+  if (op === "/")
+    return numeric(left) && numeric(right) ? "Decimal" : undefined;
   if (op === "*" || op === "%") {
     return numeric(left) && numeric(right) ? widen() : undefined;
   }

@@ -32,35 +32,40 @@ const AS_WORD = /\bas\b/iy;
 const GAP = /\s*/y;
 const IDENT = /[A-Za-z_][\w$]*/y;
 
-export function extractSelectAliases(query: string): Map<string, string> {
-  const out = new Map<string, string>();
-  const list = topLevelSelectList(query);
-  if (list === undefined) return out;
-  for (const item of splitTopLevel(list)) {
-    const aliased = splitAlias(item);
-    if (aliased === undefined) continue;
-    out.set(aliased.alias.toLowerCase(), sourceRoot(aliased.head));
-  }
-  return out;
-}
+export type SelectAliasInfo = {
+  /** Alias → source root (the map `extractSelectAliases` returns). */
+  roots: Map<string, string>;
+  /** Alias → SELECT-item head text, for typing a computed head (w23/m14/t003). */
+  heads: Map<string, string>;
+};
 
 /**
- * Each top-level alias's SELECT-item head text, keyed by lowercased alias
- * (w23/m14/t003). The root map above says only what an alias is *rooted* in;
- * a computed head such as `sum(number)` or `year(date)` also has a static type
- * the mapper can report on an empty result instead of `unknown`. Duplicate
- * aliases keep the last head, like the root map.
+ * Both alias maps from one scan of the SELECT list, keyed by lowercased alias.
+ * The root says what an alias is *rooted* in; a computed head such as
+ * `sum(number)` or `year(date)` also has a static type the mapper can report
+ * on an empty result instead of `unknown`. Duplicate aliases keep the last.
  */
-export function extractSelectAliasHeads(query: string): Map<string, string> {
-  const out = new Map<string, string>();
+export function extractSelectAliasInfo(query: string): SelectAliasInfo {
+  const roots = new Map<string, string>();
+  const heads = new Map<string, string>();
   const list = topLevelSelectList(query);
-  if (list === undefined) return out;
+  if (list === undefined) return { roots, heads };
   for (const item of splitTopLevel(list)) {
     const aliased = splitAlias(item);
     if (aliased === undefined) continue;
-    out.set(aliased.alias.toLowerCase(), stripLeadingComments(aliased.head));
+    const alias = aliased.alias.toLowerCase();
+    roots.set(alias, sourceRoot(aliased.head));
+    heads.set(alias, stripLeadingComments(aliased.head));
   }
-  return out;
+  return { roots, heads };
+}
+
+export function extractSelectAliases(query: string): Map<string, string> {
+  return extractSelectAliasInfo(query).roots;
+}
+
+export function extractSelectAliasHeads(query: string): Map<string, string> {
+  return extractSelectAliasInfo(query).heads;
 }
 
 /**

@@ -16,10 +16,7 @@ import {
   queryResultToText,
 } from "./ledger-shell-mappers";
 import { stripBqlBlockComments } from "./bql-comments";
-import {
-  extractSelectAliasHeads,
-  extractSelectAliases,
-} from "./bql-select-aliases";
+import { extractSelectAliasInfo } from "./bql-select-aliases";
 import { foldBqlColumnFrom } from "./bql-from-fold";
 import { dropPostingsFromForWindows } from "./bql-from-windows";
 import { rescueInnerTableFrom } from "./bql-from-inner-tables";
@@ -152,12 +149,8 @@ export class LedgerShellService implements ILedgerShellService {
     assertQuerySucceeded(result);
     // Aliases extract from whitespace-folded text: the scan's gaps are ASCII
     // (w23/162), while the full pipeline's rewrites would hide the list.
-    const folded = foldBqlWhitespace(query);
-    return queryResultToShellResult(
-      result,
-      extractSelectAliases(folded),
-      extractSelectAliasHeads(folded),
-    );
+    const { roots, heads } = extractSelectAliasInfo(foldBqlWhitespace(query));
+    return queryResultToShellResult(result, roots, heads);
   }
 
   async queryShellText(params: {
@@ -173,12 +166,9 @@ export class LedgerShellService implements ILedgerShellService {
       normalizeBqlQueryForEngine(query),
     );
     assertQuerySucceeded(result);
+    const { roots, heads } = extractSelectAliasInfo(foldBqlWhitespace(query));
     return {
-      text: queryResultToText(
-        result,
-        extractSelectAliases(foldBqlWhitespace(query)),
-        extractSelectAliasHeads(foldBqlWhitespace(query)),
-      ),
+      text: queryResultToText(result, roots, heads),
       rowCount: result.rows.length,
     };
   }

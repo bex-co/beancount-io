@@ -4,6 +4,7 @@ import { formatCellValue } from "@/foundation/rustledger";
 import type { ShellQueryResult } from "./ledger-shell-types";
 import { STRING_LITERAL_ROOT } from "./bql-select-aliases";
 import {
+  IDENT_RE,
   STRING_FUNCTIONS,
   typeOfSelectExpression,
 } from "./bql-expression-typer";
@@ -83,8 +84,6 @@ function unitsToCurrencyMap(units: AmountValue[]): CurrencyMap {
  * instead of the lookalike's type.
  */
 const EMPTY_ALIASES: ReadonlyMap<string, string> = new Map();
-/** A SELECT-item head that is one (optionally dotted) identifier. */
-const BARE_HEAD = /^[A-Za-z_][\w$]*(?:\.[A-Za-z_][\w$]*)?$/;
 
 function classifyColumnDtype(
   rows: CellValue[][],
@@ -107,10 +106,9 @@ function classifyColumnDtype(
       // own. A bare-column head keeps `unknown`: the alias may shadow a
       // lookalike name (w23/134).
       const head = heads.get(normalizedName);
-      if (head !== undefined && !BARE_HEAD.test(head)) {
-        return typeOfSelectExpression(head, dtypeFromColumnName) ?? "unknown";
-      }
-      return "unknown";
+      return head !== undefined && !IDENT_RE.test(head)
+        ? (typeOfSelectExpression(head, dtypeFromColumnName) ?? "unknown")
+        : "unknown";
     }
     // The engine names the column for its expression, so type the text:
     // literals, calls, and operators report their static type, bare columns

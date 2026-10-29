@@ -75,7 +75,7 @@ export class LedgerShellService
           })),
           // A NULL stays null here (w23/075 b1): REST and MCP structured rows
           // carry it, and GraphQL's resolver turns it back into `""`.
-          rows: result.rows.map((row) => row.map((cell) => cell ?? null)),
+          rows: result.rows,
           t: result.t,
         },
       };
