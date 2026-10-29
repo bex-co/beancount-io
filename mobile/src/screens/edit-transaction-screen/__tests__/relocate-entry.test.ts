@@ -183,7 +183,7 @@ describe("finding a changed entry again", () => {
     );
     expect(
       reload.includes(
-        "constmoved=awaitrelocateEntry();if(moved){entryHashRef.current=moved.entryHash;context=moved.context;}}if(!context){setHasUnsavedChanges(false);setEntryGone(true);",
+        'constmoved=awaitrelocateEntry();if(moved){entryHashRef.current=moved.entryHash;context=moved.context;}}if(!context||reloadOutcome(shaRef.current,context.sha256sum)==="changed-or-removed"){setHasUnsavedChanges(false);setEntryGone(true);',
       ),
     ).toBe(true);
     expect(

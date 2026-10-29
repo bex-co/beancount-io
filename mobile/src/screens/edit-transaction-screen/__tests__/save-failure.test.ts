@@ -119,10 +119,12 @@ describe("Edit Transaction save-failure wiring", () => {
     "utf8",
   );
 
-  it("reports a conflict with editConflict and offers Reload", () => {
+  // w21/693: a plain Reload after a conflict could only adopt another slice
+  // under the ID, so the alert offers Copy & Reload, which keeps the text.
+  it("reports a conflict with editConflict and offers Copy & Reload only", () => {
     expect(source.includes("selectOutcomeFailure(outcome, i18n, {")).toBe(true);
     expect(source.includes('setSaveError(t("editConflict"))')).toBe(true);
-    expect(source.includes("onPress: () => void handleReload()")).toBe(true);
+    expect(source.includes("onPress: () => void handleReload()")).toBe(false);
   });
 
   // w21/817: Keep Editing could never save and Reload dropped the draft.

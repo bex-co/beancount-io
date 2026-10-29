@@ -57,6 +57,7 @@ import {
   resetRevisionTracker,
 } from "@/components/code-editor/revision-tracker";
 import { applySavedIdentity, resolveSaveExit } from "./save-exit";
+import { reloadOutcome } from "./reload-outcome";
 import { saveToastMessage, selectOutcomeFailure } from "./save-failure";
 import { isEntryGone } from "@/screens/transaction-detail-screen/selectors/select-entry-gone";
 import {
@@ -294,7 +295,10 @@ export const EditTransactionScreen = (): JSX.Element => {
         context = moved.context;
       }
     }
-    if (!context) {
+    if (
+      !context ||
+      reloadOutcome(shaRef.current, context.sha256sum) === "changed-or-removed"
+    ) {
       setHasUnsavedChanges(false);
       setEntryGone(true);
       void invalidateLedgerData(client, "entries");
@@ -483,11 +487,6 @@ export const EditTransactionScreen = (): JSX.Element => {
               {
                 text: t("ledgerEditorCopyReload"),
                 onPress: () => void copyThenReload(content),
-              },
-              {
-                text: t("ledgerEditorReload"),
-                style: "destructive",
-                onPress: () => void handleReload(),
               },
             ]);
           } else {
