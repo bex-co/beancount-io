@@ -2373,6 +2373,19 @@ async function main(): Promise<void> {
       `a grouped column is not called bare: ${query.slice(query.indexOf("GROUP"))}`,
     );
   }
+  // A parenthesized predicate compared to a bool is bool = bool (w23/193): the
+  // mixed-comparison guard keeps the group instead of stripping it into a
+  // phantom `2 = TRUE`, so the engine answers.
+  const boolPredicate = await queryLedgerFilesResult(
+    FILES,
+    "main.beancount",
+    "SELECT (1 < 2) = TRUE AS e FROM postings LIMIT 1",
+  );
+  assert(
+    boolPredicate.rows.length === 1 &&
+      !boolPredicate.errors.some((e) => e.severity === "error"),
+    "a parenthesized predicate compared to a bool is not called mixed",
+  );
   const scalarGroup = await queryLedgerFiles(
     FILES,
     "main.beancount",

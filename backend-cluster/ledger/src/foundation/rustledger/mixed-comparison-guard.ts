@@ -159,13 +159,22 @@ const COMPOSITE_FUNCTIONS = new Set([
   "only",
   "position_value",
 ]);
-export const PASSTHROUGH_FUNCTIONS = new Set(["sum", "min", "max", "first", "last"]);
+export const PASSTHROUGH_FUNCTIONS = new Set([
+  "sum",
+  "min",
+  "max",
+  "first",
+  "last",
+]);
 
 const ALIAS_DEF = /\bas\s+([A-Za-z_]\w*)/gi;
 const IN_LIST =
   /\b((?:\d{4}-\d{2}-\d{2}|\w[\w.]*(?:\s*\([^()]*\))?))\s+(not\s+)?in\s*\(([^()]*)\)/gi;
 
 type OperandClass = ScalarClass | "composite" | "null" | "unknown";
+
+/** A paren group holding any of these is a predicate, not a bare operand. */
+const PREDICATE_OPERATOR = /[<>=!~]|\b(?:and|or|not|in|is|like|between)\b/i;
 
 /** The query error for a mixed-type comparison, or `undefined`. */
 export function mixedComparisonError(query: string): QueryResult | undefined {
@@ -174,7 +183,9 @@ export function mixedComparisonError(query: string): QueryResult | undefined {
     .replace(/\/\*[\s\S]*?\*\//g, " ")
     .replace(/'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"/g, "''");
   const shadowed = new Set(
-    [...unquoted.matchAll(ALIAS_DEF)].map((m) => (m[1] as string).toLowerCase()),
+    [...unquoted.matchAll(ALIAS_DEF)].map((m) =>
+      (m[1] as string).toLowerCase(),
+    ),
   );
   const classify = (text: string): OperandClass =>
     classifyOperand(text, shadowed);
@@ -194,13 +205,17 @@ export function mixedComparisonError(query: string): QueryResult | undefined {
     }
   }
   // Redundant parens group an operand without changing it; calls and
-  // subqueries keep theirs.
+  // subqueries keep theirs, and so does a group that holds a predicate:
+  // `(1 < 2) = TRUE` compares two bools, but stripping would leave the
+  // phantom `2 = TRUE` (w23/193).
   let stripped = unquoted;
   for (let pass = 0; pass < 3; pass += 1) {
     const next = stripped.replace(
       /(?<![A-Za-z_\w])\(([^()]*)\)/g,
       (group, inner: string) =>
-        /\bselect\b/i.test(inner) ? group : ` ${inner} `,
+        /\bselect\b/i.test(inner) || PREDICATE_OPERATOR.test(inner)
+          ? group
+          : ` ${inner} `,
     );
     if (next === stripped) break;
     stripped = next;
@@ -255,11 +270,17 @@ function classifyOperand(text: string, shadowed: Set<string>): OperandClass {
   if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return "date";
   if (/^(?:true|false)$/i.test(trimmed)) return "bool";
   if (/^null$/i.test(trimmed)) return "null";
-  if (/^[+-]?(?:\d+(?:\.\d+)?|\.\d+)(?:\s*[-+*/%]\s*[+-]?(?:\d+(?:\.\d+)?|\.\d+))*$/.test(trimmed)) {
+  if (
+    /^[+-]?(?:\d+(?:\.\d+)?|\.\d+)(?:\s*[-+*/%]\s*[+-]?(?:\d+(?:\.\d+)?|\.\d+))*$/.test(
+      trimmed,
+    )
+  ) {
     return "number";
   }
   const call = /^([A-Za-z_]\w*)\s*\(([\s\S]*)\)$/.exec(trimmed);
-  const head = (call ? call[1] : trimmed.split(".").pop() as string).toLowerCase();
+  const head = (
+    call ? call[1] : (trimmed.split(".").pop() as string)
+  ).toLowerCase();
   if (shadowed.has(head)) return "unknown";
   if (call) {
     const args = (call[2] as string).trim();

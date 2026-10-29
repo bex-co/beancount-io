@@ -71,9 +71,22 @@ describe("mixedComparisonError", () => {
     // Unknown shapes abstain (engine is loud or correct on each).
     "SELECT meta('x') = 1 AS e FROM postings LIMIT 1",
     "SELECT (payee = 'x') = (narration = 'y') AS e FROM postings LIMIT 1",
+    // A parenthesized predicate is a bool operand, not a stripped group (w23/193).
+    "SELECT (1 < 2) = TRUE AS e FROM postings LIMIT 1",
+    "SELECT (number > 5 AND number < 9) = FALSE AS e FROM postings LIMIT 1",
+    "SELECT TRUE = (1 < 2) AS e FROM postings LIMIT 1",
+    "SELECT count(*) FROM postings WHERE (date > 2026-01-01) != TRUE",
     "SELECT nosuchcol = 'x' AS e FROM postings LIMIT 1",
     "SELECT * FROM postings LIMIT 1",
   ])("leaves %p alone", (query) => {
     expect(mixedComparisonError(query)).toBeUndefined();
+  });
+
+  it("still refuses a real mixed comparison beside a parenthesized predicate", () => {
+    expect(
+      mixedComparisonError(
+        "SELECT count(*) FROM postings WHERE (number > 5) AND date = 3000",
+      )?.errors[0]?.message,
+    ).toContain("date compared to number");
   });
 });
