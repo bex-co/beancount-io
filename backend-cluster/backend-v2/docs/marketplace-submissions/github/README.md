@@ -44,6 +44,14 @@ owner remains w1/m34/t003. No duplicate nomination, token copy, simulated
 callback, forced logout or revocation is used. Taskt018 retains this exact
 remaining gate; browser reconnection and accounting are no longer blockers.
 
+A further supported **MCP:Add Server → HTTP → Add to Current Agent Session**
+probe gives a separate local QA identifier the same canonical endpoint. Its
+actual named native tool returns Cash49.75USD while33418is held, but still
+reuses retained app authentication and opens no callback. This auxiliary
+manual connection does not replace the verified Gallery install. Local
+trusted-server management is inspected and cancelled unchanged; no new
+preview/grant or credential change occurs, and the second listener is stopped.
+
 ## Historical approval and preparation — 2026-10-24 UTC
 
 Updated 2026-10-24 UTC; original dated observations below retain their limits. [GitHub's documented inclusion route](https://github.blog/ai-and-ml/generative-ai/how-to-find-install-and-manage-mcp-servers-with-the-github-mcp-registry/) asks publishers with an existing official-registry record to contact `partnerships@github.com`.

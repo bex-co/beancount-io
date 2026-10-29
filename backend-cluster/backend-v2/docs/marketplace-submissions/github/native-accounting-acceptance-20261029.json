@@ -111,7 +111,18 @@
     "ownedPortListenerStopped": true,
     "scratchDataRetained": true,
     "existingNativeProfilesAndGrantsRetained": true,
-    "unblock": "Native UI access that can target the isolated official client, or a supported reauthentication route preserving existing grants. Then perform actual browser authorization/callback with33418occupied and verify native discovery/read. Coordinate w1/m34/t003; no token copying, forced logout/revocation, or simulated callback."
+    "unblock": "Native UI access that can target the isolated official client, or a supported reauthentication route preserving existing grants. Then perform actual browser authorization/callback with33418occupied and verify native discovery/read. Coordinate w1/m34/t003; no token copying, forced logout/revocation, or simulated callback.",
+    "additionalSupportedRoute": {
+      "observedAtUTCMinute": "2026-10-29T04:06Z",
+      "route": "Actual MCP:Add Server -> HTTP -> canonical hosted endpoint -> unique QA identifier -> Add to Current Agent Session in the temporary native profile.",
+      "purpose": "Auxiliary fresh-authentication probe only; the original Gallery installation remains the publication/native-install evidence.",
+      "result": "That named current-session QA connection completes the synthetic Cash read at49.75USD by reusing retained application authentication. No fresh callback opens, despite33418being held.",
+      "nativeTrustedServerManagement": "Read-only inspection; cancelled without checkbox/trust changes.",
+      "writePreviewsAdded": 0,
+      "grantOrCredentialChange": false,
+      "manualQAConnectionRetained": true,
+      "ownedSecondListenerStopped": true
+    }
   },
   "scope": {
     "newNominationOrMessage": false,
@@ -121,5 +132,6 @@
     "unrelatedUserWindowModifiedOrClosed": false
   },
   "privacy": "Public metadata and synthetic result/equality flags only. No account identity, concrete resource URI, native authorization URL/code/state, credentials, private ledger commit or file digest, or mailbox content.",
-  "officialHostVerificationGuide": "https://code.visualstudio.com/docs/agent-customization/mcp-servers#verify-the-first-tool-call"
+  "officialHostVerificationGuide": "https://code.visualstudio.com/docs/agent-customization/mcp-servers#verify-the-first-tool-call",
+  "lastCheckedAtUTC": "2026-10-29T04:08:37.549417+00:00"
 }
