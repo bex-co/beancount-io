@@ -1091,6 +1091,53 @@ describe("LedgerEntryService", () => {
   });
 
   /** w4/m38: early-year dates keep their year in source and routing. */
+  describe("cost date (w23/174)", () => {
+    const withCostDate = (date: string) =>
+      service.addBulkEntries(
+        IDENTITY,
+        "testuser",
+        "test-ledger",
+        [
+          {
+            type: "transaction",
+            entry: {
+              date: "2026-01-02",
+              flag: "*",
+              narration: "Buy",
+              postings: [
+                {
+                  account: "Assets:Cash",
+                  units: { number: "10", currency: "AAPL" },
+                  cost: { number: "1.00", currency: "USD", date },
+                },
+                { account: "Expenses:Food" },
+              ],
+            },
+          },
+        ],
+        "web",
+        true,
+      );
+
+    it("refuses a non-date before anything is written, even with allowInvalid", async () => {
+      await expect(withCostDate("yesterday")).rejects.toThrow(
+        /entry 0: postings\[0\]\.cost\.date "yesterday" is not a calendar date/,
+      );
+      expect(mockAddBulkEntries).not.toHaveBeenCalled();
+    });
+
+    it("refuses an off-calendar date", async () => {
+      await expect(withCostDate("2026-02-30")).rejects.toThrow(
+        /not a calendar date/,
+      );
+    });
+
+    it("accepts a real calendar date", async () => {
+      await withCostDate("2026-01-01");
+      expect(mockAddBulkEntries).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe("early-year dates", () => {
     const routedOpen = async (date: string) => {
       mockGetLedgerBcioOptions.mockResolvedValue({

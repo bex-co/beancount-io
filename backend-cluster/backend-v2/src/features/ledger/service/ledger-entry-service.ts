@@ -519,6 +519,15 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
             `entry ${index}: postings[${postingIndex}].cost needs units; a posting without an amount can't carry a cost`,
           );
         }
+        // The cost date is rendered raw into `{…, date}`, so a non-date
+        // ("yesterday") would commit text no parser loads — worse under
+        // `allowInvalid`, which bypasses the parse error (w23/174).
+        if (posting.cost?.date !== undefined) {
+          parseDirectiveDate(
+            posting.cost.date,
+            `entry ${index}: postings[${postingIndex}].cost.date`,
+          );
+        }
         // A total price is still a price: it needs units, and it excludes
         // the per-unit price (w23/m6/t010).
         const hasTotalPrice = isPresent(posting.totalPrice);
