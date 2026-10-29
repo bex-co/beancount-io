@@ -482,7 +482,7 @@ describe("canonical BQL text counts through the actual service and adapters", ()
         const summary =
           table.rows.length === 0
             ? "0 rows"
-            : `${table.rows.length} ${table.rows.length === 1 ? "row" : "rows"}\n${text.replace(/\s+$/, "")}`;
+            : `${table.rows.length} ${table.rows.length === 1 ? "row" : "rows"}\n${text.replace(/\n$/, "")}`;
         expect(mcp.content).toEqual([{ type: "text", text: summary }]);
         // The count belongs to this text response; obtaining it must never
         // execute a second, typed query that could read another ledger revision.
