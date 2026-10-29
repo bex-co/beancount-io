@@ -1,3 +1,4 @@
+import { JOURNAL_KINDS } from "@/features/ledger/utils/journal-kinds";
 import "reflect-metadata";
 jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
 jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
@@ -854,7 +855,8 @@ describe("journal directive kinds", () => {
       const path = `journal?${encode(loose)}`;
       expect((await f.rest(path)).status).toBe(200);
       await f.mcp(path);
-      const tool = await f.tool({ directiveTypes: loose.directiveTypes });
+      // The tool takes the same kinds and subtypes as its siblings (w23/202).
+      const tool = await f.tool(loose);
       expect(tool.isError).toBeFalsy();
       const gql = await f.gql(
         `getLedgerJournal(ledgerId: "alice/main", query: { ${gqlInput(loose)} }) { total }`,
@@ -864,11 +866,7 @@ describe("journal directive kinds", () => {
         ([, , params]) => params,
       );
       expect(forwarded).toHaveLength(4);
-      for (const params of [forwarded[0], forwarded[1], forwarded[3]])
-        expect(params).toMatchObject(canonical);
-      expect(forwarded[2]).toMatchObject({
-        directive_types: canonical.directive_types,
-      });
+      for (const params of forwarded) expect(params).toMatchObject(canonical);
 
       const accountPath = `account-journal?${encode({ account: "Assets:Bank", ...loose })}`;
       expect((await f.rest(accountPath)).status).toBe(200);
@@ -916,11 +914,9 @@ describe("journal directive kinds", () => {
           code: "BAD_USER_INPUT",
           field,
         });
-        if ("directiveTypes" in params) {
-          const tool = await f.tool(params);
-          expect(tool.isError).toBe(true);
-          expect(JSON.stringify(tool.content)).toContain("BAD_USER_INPUT");
-        }
+        const tool = await f.tool(params);
+        expect(tool.isError).toBe(true);
+        expect(JSON.stringify(tool.content)).toContain("BAD_USER_INPUT");
         expect(f.journal.getJournal).not.toHaveBeenCalled();
         expect(f.journal.getAccountJournal).not.toHaveBeenCalled();
         expect(f.authorize).not.toHaveBeenCalled();
@@ -960,8 +956,23 @@ describe("journal directive kinds", () => {
       const { tools } = await client.listTools();
       const schema = tools.find(({ name }) => name === "listLedgerEntries")
         ?.inputSchema as unknown as {
-        properties: { directiveTypes: { items: { enum?: string[] } } };
+        properties: {
+          directiveTypes: { items: { enum?: string[] } };
+          transactionSubtypes: { items: { enum?: string[] } };
+          documentSubtypes: { items: { enum?: string[] } };
+          customSubtypes: { items: { enum?: string[] } };
+        };
       };
+      // The subtype filters are published with their allowed values too (w23/202).
+      expect(schema.properties.transactionSubtypes.items.enum).toEqual([
+        ...JOURNAL_KINDS.transactionSubtypes,
+      ]);
+      expect(schema.properties.documentSubtypes.items.enum).toEqual([
+        ...JOURNAL_KINDS.documentSubtypes,
+      ]);
+      expect(schema.properties.customSubtypes.items.enum).toEqual([
+        ...JOURNAL_KINDS.customSubtypes,
+      ]);
       expect(schema.properties.directiveTypes.items.enum).toEqual([
         "Transaction",
         "Balance",

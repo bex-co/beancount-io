@@ -89,7 +89,7 @@ export async function executeListStagedBankTransactions(
  * BQL's `id` is a directive index, and file reads have no entries.
  */
 export const listLedgerEntriesDescription =
-  "List journal entries, each with the entry_hash getEntryContext, updateEntrySource, and deleteEntrySource take. Narrows by account, filter, time, and directiveTypes; pages with limit and offset; total counts every match. Same data as the journal resource.";
+  "List journal entries, each with the entry_hash getEntryContext, updateEntrySource, and deleteEntrySource take. Narrows by account, filter, time, directiveTypes, and the transactionSubtypes, documentSubtypes, and customSubtypes filters (each narrows only its own directive family); pages with limit and offset; total counts every match. Same data as the journal resource.";
 
 export const listLedgerEntriesInput = z.object({
   account: z.string().optional().describe("Account filter, e.g. Assets:Bank."),
@@ -107,6 +107,27 @@ export const listLedgerEntriesInput = z.object({
     .optional()
     .describe(
       'Directive types to include, e.g. ["Transaction"]; case does not matter.',
+    ),
+  // Subtype filters, as on the journal resource and REST (w23/202): each
+  // narrows only its own directive family and passes the others through, so
+  // pair them with directiveTypes to restrict the families returned.
+  transactionSubtypes: z
+    .array(z.string().meta({ enum: [...JOURNAL_KINDS.transactionSubtypes] }))
+    .optional()
+    .describe(
+      'Transaction flag filter, e.g. ["cleared"]: narrows transactions only, other directive families pass through; case does not matter.',
+    ),
+  documentSubtypes: z
+    .array(z.string().meta({ enum: [...JOURNAL_KINDS.documentSubtypes] }))
+    .optional()
+    .describe(
+      "Document subtype filter: narrows documents only, other directive families pass through; case does not matter.",
+    ),
+  customSubtypes: z
+    .array(z.string().meta({ enum: [...JOURNAL_KINDS.customSubtypes] }))
+    .optional()
+    .describe(
+      "Custom-directive subtype filter: narrows custom directives only, other directive families pass through; case does not matter.",
     ),
   limit: z
     .number()
