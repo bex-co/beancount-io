@@ -1468,6 +1468,38 @@ async function main(): Promise<void> {
       pipelinedBetween.rows.length === 1,
     "pipelined string BETWEEN returns the ordering pair's rows",
   );
+  // w23/197: the engine's grammar also accepts the stock-invalid mid-currency
+  // tolerance, so the snapshot reports it at its line while the valid
+  // spelling stays clean.
+  const toleranceLedger = (balanceLine: string): Record<string, string> => ({
+    "main.beancount": [
+      "2026-01-01 open Assets:Cash USD",
+      "2026-01-01 open Equity:O",
+      '2026-01-02 * "x"',
+      "  Assets:Cash 49.75 USD",
+      "  Equity:O",
+      balanceLine,
+      "",
+    ].join("\n"),
+  });
+  const invalidTolerance = await parseLedgerFiles(
+    toleranceLedger("2026-08-30 balance Assets:Cash 49.75 USD ~ 0.05 USD"),
+    "main.beancount",
+  );
+  assert(
+    invalidTolerance.errors.some(
+      (e) => e.code === "TOLERANCE" && e.line === 6 && e.severity === "error",
+    ),
+    "the mid-currency balance tolerance is reported at its line",
+  );
+  const validTolerance = await parseLedgerFiles(
+    toleranceLedger("2026-08-30 balance Assets:Cash 49.75 ~ 0.05 USD"),
+    "main.beancount",
+  );
+  assert(
+    !validTolerance.errors.some((e) => e.code === "TOLERANCE"),
+    "the valid balance tolerance spelling stays clean",
+  );
   const pipelineBareEof = await queryLedgerFiles(
     FILES,
     "main.beancount",

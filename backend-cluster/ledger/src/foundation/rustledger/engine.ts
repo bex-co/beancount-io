@@ -57,6 +57,7 @@ import { coherentCostErrors } from "./coherent-cost";
 import { sellGainsErrors } from "./sell-gains";
 import { reconcileLeafOnlyErrors } from "./leafonly";
 import { duplicateEntryErrors, locateDuplicateErrors } from "./noduplicates";
+import { midCurrencyToleranceErrors } from "./balance-tolerance-syntax";
 import { reconcileNounusedErrors } from "./nounused";
 import { reconcileOneCommodityErrors } from "./one-commodity";
 import { reconcileUniquePriceErrors } from "./unique-prices";
@@ -801,6 +802,7 @@ async function parseLedgerFilesUncached(
   errors = reconcileLeafOnlyErrors(errors, directives, files, entryPoint);
   errors = locateDuplicateErrors(errors, files, entryPoint);
   errors = [...errors, ...duplicateEntryErrors(files, entryPoint)];
+  errors = [...errors, ...midCurrencyToleranceErrors(files, entryPoint)];
   errors = [...errors, ...coherentCostErrors(directives, files, entryPoint)];
   errors = [...errors, ...sellGainsErrors(directives, files, entryPoint)];
   // The engine validates before its plugins add close_tree's closes, and its
