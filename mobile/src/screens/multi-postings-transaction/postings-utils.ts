@@ -90,6 +90,16 @@ export function typedAmountInput(input: string, rowNegative: boolean): string {
   return signedAmountInput(absolute, rowNegative);
 }
 
+/**
+ * The sign a row's empty amount field starts with. The first row is the source
+ * (the bank or card the money leaves), so digits typed there are an outflow:
+ * the decimal pad has no minus key, and a plain 4.50 booked Checking +4.50 and
+ * Groceries −4.50, a refund (w21/518). The sign toggle still flips it.
+ */
+export function emptyRowStartsNegative(index: number): boolean {
+  return index === 0;
+}
+
 const MAX_AMOUNT_DIGITS = 28;
 
 export function parseExactAmount(input: string, minorUnits = 2): string | null {

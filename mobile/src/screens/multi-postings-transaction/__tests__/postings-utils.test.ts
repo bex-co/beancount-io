@@ -2,6 +2,7 @@ import {
   addPosting,
   buildEntryInput,
   createInitialPostings,
+  emptyRowStartsNegative,
   createRootForPosting,
   createPrefilledPostings,
   defaultPostingAccounts,
@@ -1333,4 +1334,28 @@ test("parseExactAmount accepts 28 digits and refuses more", () => {
   expect(parseExactAmount(`${nines(27)}.99`)).toBe(null);
   expect(parseExactAmount(`0.${"0".repeat(30)}1`)).toBe(null);
   expect(parseExactAmount(`0.${"0".repeat(26)}1`)).toBe(`0.${"0".repeat(26)}1`);
+});
+
+// w21/518: digits typed on a new transaction's first row were a refund into the
+// bank, because the decimal pad has no minus key.
+describe("the first row's empty amount field", () => {
+  it("starts negative, so a plain purchase takes no extra tap", () => {
+    const start = createInitialPostings(
+      "Assets:Bank:Checking",
+      "Expenses:Food",
+    );
+    const typed = typedAmountInput("4.50", emptyRowStartsNegative(0));
+    const [bank, food] = updatePostingAmount(start, 0, typed);
+    expect(bank.amount).toBe("-4.50");
+    expect(food.amount).toBe("4.50");
+  });
+
+  it("leaves other rows positive", () => {
+    expect(emptyRowStartsNegative(1)).toBe(false);
+    expect(typedAmountInput("4.50", emptyRowStartsNegative(1))).toBe("4.50");
+  });
+
+  it("still takes a typed plus as a refund", () => {
+    expect(typedAmountInput("+4.50", emptyRowStartsNegative(0))).toBe("4.50");
+  });
 });

@@ -65,6 +65,7 @@ import {
   addPosting,
   buildEntryInput,
   createInitialPostings,
+  emptyRowStartsNegative,
   createRootForPosting,
   createPrefilledPostings,
   defaultPostingAccounts,
@@ -335,7 +336,7 @@ const PostingRow = ({
 
   // The sign chosen while the field is empty: clearing a negative amount
   // stores nothing, and the next digits are negative again (w21/728).
-  const emptyNegative = useRef(false);
+  const emptyNegative = useRef(emptyRowStartsNegative(index));
   const shownNegative = absValue === "" ? emptyNegative.current : isNegative;
 
   const handleAbsValueChange = (input: string) => {
