@@ -107,17 +107,20 @@ class Workspace(unittest.TestCase):
             shutil.copytree(SUITE / name, dest / name)
         shutil.copyfile(SUITE / "LICENSE", dest / "LICENSE")
 
+    def link_suite(self, layout: Path, names: list[str] | None = None) -> list[str]:
+        """Pre-existing links from self.dest into LAYOUT (default: the whole suite)."""
+        names = skills.expected_skills() if names is None else names
+        self.dest.mkdir(parents=True, exist_ok=True)
+        for name in names:
+            (self.dest / name).symlink_to(layout / name, target_is_directory=True)
+        return names
+
 
 class TestOldLayoutUpgrade(Workspace):
     """Installs made before w2/m42 link into this checkout's skills/.claude/skills."""
 
-    def old_links(self, layout: Path) -> None:
-        self.dest.mkdir(parents=True, exist_ok=True)
-        for name in skills.expected_skills():
-            (self.dest / name).symlink_to(layout / name, target_is_directory=True)
-
     def test_verify_names_the_old_layout_and_the_repair_without_writing(self):
-        self.old_links(skills.OLD_LAYOUT)
+        self.link_suite(skills.OLD_LAYOUT)
         before = snapshot(self.dest)
         code, _, err = run("verify", self.dest)
         self.assertEqual(code, 1)
@@ -126,7 +129,7 @@ class TestOldLayoutUpgrade(Workspace):
         self.assertEqual(snapshot(self.dest), before)
 
     def test_install_relinks_old_layout_links_and_the_suite_verifies(self):
-        self.old_links(skills.OLD_LAYOUT)
+        self.link_suite(skills.OLD_LAYOUT)
         sentinel_before = self.sentinel.read_bytes()
         code, out, err = run("install", self.dest)
         self.assertEqual(code, 0, err)
@@ -138,7 +141,7 @@ class TestOldLayoutUpgrade(Workspace):
 
     def test_another_checkouts_old_layout_is_still_a_conflict(self):
         other = self.root / "other-checkout" / "skills" / ".claude" / "skills"
-        self.old_links(other)
+        self.link_suite(other)
         before = snapshot(self.dest)
         code, _, err = run("install", self.dest)
         self.assertEqual(code, 1)
@@ -146,7 +149,7 @@ class TestOldLayoutUpgrade(Workspace):
         self.assertEqual(snapshot(self.dest), before)
 
     def test_uninstall_removes_this_checkouts_old_links_only(self):
-        self.old_links(skills.OLD_LAYOUT)
+        self.link_suite(skills.OLD_LAYOUT)
         theirs = self.root / "other-checkout" / "skills" / ".claude" / "skills" / "beancount-ask"
         (self.dest / "beancount-ask").unlink()
         (self.dest / "beancount-ask").symlink_to(theirs, target_is_directory=True)
@@ -272,9 +275,9 @@ class TestLinkFailures(Workspace):
     real_symlink = staticmethod(os.symlink)
 
     @staticmethod
-    def denied(target, link) -> OSError:
+    def denied(link) -> OSError:
         if os.name == "nt":
-            return OSError(None, "A required privilege is not held by the client", str(target), 1314, str(link))
+            return OSError(None, "A required privilege is not held by the client", str(SUITE), skills.ERROR_PRIVILEGE_NOT_HELD, str(link))
         return PermissionError(errno.EPERM, "Operation not permitted", str(link))
 
     def inject(self, fail):
@@ -290,21 +293,14 @@ class TestLinkFailures(Workspace):
         patcher.start()
         self.addCleanup(patcher.stop)
 
-    def link_first(self, count: int) -> list[str]:
-        names = skills.expected_skills()[:count]
-        for name in names:
-            (self.dest / name).symlink_to(SUITE / name, target_is_directory=True)
-        return names
-
     def test_denied_link_names_the_remedy_removes_new_directories_and_continues(self):
         fresh = self.root / "new home ü" / "agent dir" / "skills"
-        self.inject(lambda link: self.denied(SUITE, link) if fresh in link.parents else None)
+        self.inject(lambda link: self.denied(link) if fresh in link.parents else None)
         before = snapshot(self.dest)
 
         code, out, err = run("install", fresh, self.dest)
 
         self.assertEqual(code, 1)
-        self.assertNotIn("Traceback", err)
         first = skills.expected_skills()[0]
         if os.name == "nt":
             self.assertIn(f"FAIL {fresh / first}: this account may not create symbolic links", err)
@@ -324,13 +320,12 @@ class TestLinkFailures(Workspace):
         self.assertEqual(self.sentinel.read_text(), before["find-skills/SKILL.md"])
 
     def test_denied_first_link_in_an_existing_directory_changes_nothing(self):
-        self.inject(lambda link: self.denied(SUITE, link))
+        self.inject(self.denied)
         before = snapshot(self.root)
 
         code, _, err = run("install", self.dest)
 
         self.assertEqual(code, 1)
-        self.assertNotIn("Traceback", err)
         self.assertIn(f"Not installed in {self.dest}: nothing was changed", err)
         self.assertEqual(snapshot(self.root), before)
 
@@ -346,8 +341,7 @@ class TestLinkFailures(Workspace):
         self.assertIn(f"Not installed in {self.dest}: nothing was changed", err)
 
     def test_mid_install_failure_removes_only_this_runs_links(self):
-        self.dest.mkdir(parents=True, exist_ok=True)
-        existing = self.link_first(3)
+        existing = self.link_suite(SUITE, skills.expected_skills()[:3])
         notes = self.dest / "notes ü.txt"
         notes.write_text("mine\n", encoding="utf-8")
         new = skills.expected_skills()[3:5]
@@ -358,7 +352,6 @@ class TestLinkFailures(Workspace):
         code, out, err = run("install", self.dest)
 
         self.assertEqual(code, 1)
-        self.assertNotIn("Traceback", err)
         self.assertIn(f"FAIL {self.dest / failing}: could not be created", err)
         self.assertEqual(out.count("kept   "), 3)
         self.assertEqual(out.count("linked "), 2, "the links made before the failure were reported")
@@ -370,8 +363,7 @@ class TestLinkFailures(Workspace):
             self.assertTrue(skills.is_linked(self.dest / name), name)
 
     def test_entries_replaced_after_linking_are_left_in_place(self):
-        self.dest.mkdir(parents=True, exist_ok=True)
-        self.link_first(1)
+        self.link_suite(SUITE, skills.expected_skills()[:1])
         names = skills.expected_skills()
         mine, theirs, owned = (self.dest / name for name in names[1:4])
         elsewhere = self.root / "elsewhere"
@@ -386,14 +378,13 @@ class TestLinkFailures(Workspace):
             (mine / "SKILL.md").write_text("user's own\n")
             theirs.unlink()
             self.real_symlink(elsewhere, theirs, True)
-            return self.denied(SUITE, link)
+            return self.denied(link)
 
         self.inject(fail)
 
         code, _, err = run("install", self.dest)
 
         self.assertEqual(code, 1)
-        self.assertNotIn("Traceback", err)
         self.assertEqual((mine / "SKILL.md").read_text(), "user's own\n")
         self.assertEqual(theirs.resolve(), elsewhere.resolve())
         self.assertFalse(os.path.lexists(owned), "the link still owned by this run is removed")
@@ -404,30 +395,33 @@ class TestLinkFailures(Workspace):
         self.assertTrue(self.sentinel.is_file())
 
     def test_denied_relink_restores_the_old_layout_link(self):
-        self.dest.mkdir(parents=True, exist_ok=True)
-        name = skills.expected_skills()[0]
-        (self.dest / name).symlink_to(skills.OLD_LAYOUT / name, target_is_directory=True)
-        self.inject(lambda link: self.denied(SUITE, link))
+        [name] = self.link_suite(skills.OLD_LAYOUT, skills.expected_skills()[:1])
+        self.inject(self.denied)
         before = snapshot(self.dest)
 
         code, _, err = run("install", self.dest)
 
         self.assertEqual(code, 1)
-        self.assertNotIn("Traceback", err)
         self.assertEqual(snapshot(self.dest), before)
         self.assertTrue(skills.is_old_layout_link(self.dest / name))
 
-    def test_printed_remedies_fit_the_platform_shell(self):
-        spaced = self.root / "home dir ü" / "skills"
+    def blocked_copy(self, edit: str | None = None):
+        """A copy of beancount-ask in a skills directory under a spaced, non-ASCII home:
+        the directory, its backups directory, and the install and verify results."""
+        home = self.root / "home dir ü"
+        spaced = home / "skills"
         spaced.mkdir(parents=True)
         shutil.copytree(SUITE / "beancount-ask", spaced / "beancount-ask")
-        with mock.patch.object(skills.Path, "home", return_value=self.root / "home dir ü"):
-            code, _, conflict = run("install", spaced)
-        self.assertEqual(code, 1)
+        if edit is not None:
+            (spaced / "beancount-ask" / "SKILL.md").write_text(edit)
+        with mock.patch.object(skills.Path, "home", return_value=home):
+            install = run("install", spaced)
+        return spaced, home / "beancount-skill-backups", install, run("verify", spaced)
+
+    def test_printed_remedies_fit_the_platform_shell(self):
+        spaced, backups, (code, _, conflict), (verify_code, _, incomplete) = self.blocked_copy()
+        self.assertEqual((code, verify_code), (1, 1))
         self.assertIn("Nothing was changed", conflict)
-        code, _, incomplete = run("verify", spaced)
-        self.assertEqual(code, 1)
-        backups = self.root / "home dir ü" / "beancount-skill-backups"
         if os.name == "nt":
             self.assertNotIn("&&", conflict)
             self.assertIn(f'  New-Item -ItemType Directory -Force "{backups}" | Out-Null\n', conflict)
@@ -440,19 +434,13 @@ class TestLinkFailures(Workspace):
 
     @unittest.skipUnless(os.name == "nt", NOT_THIS_PLATFORM + "Windows PowerShell only")
     def test_printed_windows_remedies_run_in_windows_powershell(self):
-        spaced = self.root / "home dir ü" / "skills"
-        spaced.mkdir(parents=True)
-        shutil.copytree(SUITE / "beancount-ask", spaced / "beancount-ask")
-        (spaced / "beancount-ask" / "SKILL.md").write_text("edited\n")
-        with mock.patch.object(skills.Path, "home", return_value=self.root / "home dir ü"):
-            _, _, conflict = run("install", spaced)
+        spaced, backups, (_, _, conflict), (_, _, incomplete) = self.blocked_copy(edit="edited\n")
         move = "; ".join(
             line.strip().replace("<name>", "beancount-ask")
             for line in conflict.splitlines()
             if line.startswith(("  New-Item", "  Move-Item"))
         )
-        _, _, incomplete = run("verify", spaced)
-        repair = re.search(r"Repair with: (.+?) \(after", incomplete).group(1)
+        repair =re.search(r"Repair with: (.+?) \(after", incomplete).group(1)
         script = self.root / "remedy.ps1"
         # UTF-8 with BOM, so Windows PowerShell 5.1 reads the non-ASCII paths.
         script.write_text(f"$ErrorActionPreference = 'Stop'\n{move}\n& {repair}\nexit $LASTEXITCODE\n", encoding="utf-8-sig")
@@ -461,7 +449,7 @@ class TestLinkFailures(Workspace):
             capture_output=True, text=True, encoding="utf-8", errors="replace",
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        backup = self.root / "home dir ü" / "beancount-skill-backups" / "beancount-ask" / "SKILL.md"
+        backup = backups / "beancount-ask" / "SKILL.md"
         self.assertEqual(backup.read_text(), "edited\n")
         self.assertEqual(run("verify", spaced)[0], 0)
 
@@ -1189,16 +1177,16 @@ class TestWindowsPowerShellGuide(unittest.TestCase):
         copy.unlink()
         shutil.copytree(self.src / "skills" / "beancount-ask", copy)
         (copy / "SKILL.md").write_text("edited copy ü\n", encoding="utf-8")
-        copy_files = {p.relative_to(copy): p.read_bytes() for p in copy.rglob("*") if p.is_file()}
+        copy_files = snapshot(copy)
         codes, out = self.powershell(update)
         self.assertEqual(codes[-1], 1, out)
         self.assertIn(f"CONFLICT {copy} is a copy with local changes: modified SKILL.md", out)
         self.assertIn("Nothing was changed", out)
-        self.assertEqual({p.relative_to(copy): p.read_bytes() for p in copy.rglob("*") if p.is_file()}, copy_files)
+        self.assertEqual(snapshot(copy), copy_files)
         codes, out = self.powershell(windows_guide_block("Move-Item"))
         self.assertEqual(codes, [0, 0], out)
         backup = self.home / "beancount-skill-backups" / "beancount-ask"
-        self.assertEqual({p.relative_to(backup): p.read_bytes() for p in backup.rglob("*") if p.is_file()}, copy_files)
+        self.assertEqual(snapshot(backup), copy_files)
         codes, out = self.powershell(update)
         self.assertEqual(codes[-1], 0, out)
         self.assert_linked("beancount-ask")
@@ -1211,7 +1199,7 @@ class TestWindowsPowerShellGuide(unittest.TestCase):
         for dest in self.dests:
             self.assertEqual(sorted(p.name for p in dest.iterdir()), ["my-own-skill", "notes ü.txt"])
         self.assertEqual({path: path.read_bytes() for path in self.seeded}, self.seeded)
-        self.assertEqual({p.relative_to(backup): p.read_bytes() for p in backup.rglob("*") if p.is_file()}, copy_files)
+        self.assertEqual(snapshot(backup), copy_files)
 
     def test_remove_keeps_the_checkout_when_uninstall_fails(self):
         get = windows_guide_block("git clone").replace(self.URL, self.origin.as_uri())

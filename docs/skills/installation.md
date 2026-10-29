@@ -282,12 +282,11 @@ commands above there.
   ```
 
   `directory symlinks: allowed` means you can continue. `WinError 1314` means
-  the permission is missing. Until it is fixed, `install` prints a `FAIL` line
-  for each skill directory with this remedy, and exits with a nonzero code. It
-  removes any links and empty directories that the same run created, keeps
-  everything that was already there, says what state it left, and goes on to
-  the next directory. Turning on Developer Mode took effect in the rehearsal
-  without signing out or restarting. Open a new PowerShell window afterwards.
+  the permission is missing. Until it is fixed, `install` fails with this
+  remedy and undoes only its own changes, as described in
+  [step 2](#2-link-them-into-your-agents). Turning on Developer Mode took
+  effect in the rehearsal without signing out or restarting. Open a new
+  PowerShell window afterwards.
 
 Quote every path. Paths with spaces and non-ASCII characters work as long as
 they are quoted. Windows PowerShell 5.1 has no `&&`, so run commands one at a

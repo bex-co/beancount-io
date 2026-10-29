@@ -6,7 +6,7 @@ native Windows through Windows PowerShell 5.1. It is evidence for the
 the same host. In phase 1, link creation was denied. Phase 2 ran after
 Developer Mode was turned on and used a non-elevated account that could create
 links. A third run, on the same host, covers
-[agent discovery and the first query](#agent-discovery-and-first-query-t004)
+[agent discovery and the first query](#agent-discovery-and-first-query)
 through Claude Code and Codex. Every path here is synthetic or uses `<user>` in
 place of the real account name. WSL was not used, and nothing here is WSL evidence.
 
@@ -31,7 +31,7 @@ place of the real account name. WSL was not used, and nothing here is WSL eviden
 - `bea` was not on `PATH`. That does not affect installation; `verify` prints a
   note about it.
 - Agents: none were run in this phase. Discovery through Claude Code and Codex
-  is task t004.
+  is covered by the [third run](#agent-discovery-and-first-query).
 
 ## Installation scope
 
@@ -144,19 +144,20 @@ script path and destinations were quoted. Exit codes come from
   links when a run is denied, for example after a new skill was added upstream
   of a permitted install. A denied run there would print `kept` lines and then
   the traceback. Earlier links would survive and the new one would be missing,
-  with no explanation. This could not be built without link permission, so it
-  belongs in t002's tests (mocked `os.symlink`).
+  with no explanation. This could not be built without link permission.
 - **Mid-run failure after a successful link.** If a link fails after others on
   the same run succeeded (on another host or for another cause), the run is
-  left partly installed without cleanup or explanation. The code path
-  (`install`, lines 258–268) supports this; it was not observed.
-- **`Remove-Item -Recurse` through a directory symlink.** In Windows PowerShell
-  5.1 this may delete the link target's contents, in this case the shared
-  checkout. That is why the drafted guide removes links only with `uninstall`.
-  Phase 2 refuted this on build 5.1.26100.9711 (see below).
-- **Codex discovery on Windows.** Codex is assumed to read
-  `%USERPROFILE%\.agents\skills` and follow directory symlinks there; Claude
-  Code is assumed to follow them in `%USERPROFILE%\.claude\skills`. That is t004.
+  left partly installed without cleanup or explanation. It was not observed.
+- **`Remove-Item -Recurse` through a directory symlink** may delete the link
+  target's contents, in this case the shared checkout. Phase 2 refuted this
+  (see below).
+- **Agent discovery on Windows** through these links was not tried in this
+  phase.
+
+Since then, the installer reports and rolls back denied and interrupted runs,
+which `TestLinkFailures` in `scripts/skills/test_beancount_skills.py` covers
+with a mocked `os.symlink`, and the [third run](#agent-discovery-and-first-query) covered
+workspace-scope discovery.
 
 ### Elapsed time
 
@@ -225,9 +226,9 @@ hashes were recorded. The exit code is `$LASTEXITCODE` after each line.
 
 ### Not verified (hypotheses or open)
 
-- Agent discovery: Claude Code reading `%USERPROFILE%\.claude\skills` and Codex
-  reading `%USERPROFILE%\.agents\skills` through these links, and the first
-  query. That is task t004.
+- User-scope agent discovery (`%USERPROFILE%\.claude\skills`,
+  `%USERPROFILE%\.agents\skills`). The [third run](#agent-discovery-and-first-query) covered
+  workspace scope only.
 - A Git update that actually touches a locally edited file. In phase 2 the pull
   was already up to date, so `stash`/`pop` ran without a real merge. Phase 1
   showed that a real fast-forward works on a shallow sparse clone, but without
@@ -235,8 +236,6 @@ hashes were recorded. The exit code is `$LASTEXITCODE` after each line.
 - An account holding `SeCreateSymbolicLinkPrivilege` without Developer Mode;
   PowerShell 7; Microsoft Store Python; workspace scope inside a real ledger
   repository; OneDrive-redirected profiles; older `Remove-Item` builds.
-- A denied run in the middle of an install that already has some links
-  (phase 1 hypotheses). These still need t002's mocked tests.
 
 ### Elapsed time (phase 2)
 
@@ -247,13 +246,12 @@ install blocks took 10.4 s.
 
 - Both phases used one host and one account, with Windows PowerShell 5.1 only.
 - Phases 1 and 2 ran no agent sessions. Discovery and the first query are
-  covered only by the [t004 run](#agent-discovery-and-first-query-t004), with
+  covered only by the [third run](#agent-discovery-and-first-query), with
   its own limitations.
 - Phase 2 used stand-in profile directories by overriding `USERPROFILE` and
   `LOCALAPPDATA`. The real profile's skill directories were never touched.
-- WSL was not used and is not native evidence.
 
-## Agent discovery and first query (t004)
+## Agent discovery and first query
 
 On 2026-10-28, from about 09:45 to 10:30 UTC, published `bea`, the linked
 suite, real Claude Code and Codex sessions, and the
@@ -306,9 +304,6 @@ run from the workspace with no extra flags:
 | --- | --- | --- |
 | Claude Code | 9.2 s | Exactly `beancount-accruals`, `-add`, `-ask`, `-close`, `-import`, `-importer-author`, `-init`, `-invoices`, `-migrate`, `-options`, `-property`, `-reconcile`, `-roll-forward`, `-trade`. The session's startup skill catalog lists the same fourteen. The repository's own development skills did not leak in from the enclosing checkout. |
 | Codex | 30.6 s | The same fourteen names, with no tool calls. They came from the session's skill catalog. |
-
-The milestone text says eight skills. The suite has fourteen, and fourteen is
-what both clients listed.
 
 ### First query
 
@@ -409,7 +404,7 @@ discovery 9.2 s and query 62–78 s, Codex discovery 30.6 s and query 74.6 s.
   intervention 1 remain in `%APPDATA%\Python\Python312\site-packages`; only
   `beancount-io` itself was uninstalled there.
 
-### Limitations (t004)
+### Limitations (third run)
 
 - One host and account, Windows 11 ARM64, Windows PowerShell 5.1. Each prompt
   ran once per invocation, so this is not evidence of model reliability.
@@ -421,4 +416,3 @@ discovery 9.2 s and query 62–78 s, Codex discovery 30.6 s and query 74.6 s.
   this machine's real-time scanning (`codex doctor` flagged Microsoft Defender
   as active), and it was not tested elsewhere. The CLI fix belongs to the
   `cli/` package and a new `bea` release.
-- WSL was not used and is not native evidence.

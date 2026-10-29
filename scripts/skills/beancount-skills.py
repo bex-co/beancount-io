@@ -275,8 +275,8 @@ def install(dest: Path) -> int:
         backups = Path.home() / "beancount-skill-backups"
         if WINDOWS:
             move = (
-                f'  New-Item -ItemType Directory -Force "{backups}" | Out-Null\n'
-                f'  Move-Item "{dest}\\<name>" "{backups}\\"\n'
+                f"  New-Item -ItemType Directory -Force {quote(backups)} | Out-Null\n"
+                f"  Move-Item {quote(dest / '<name>')} {quote(str(backups) + os.sep)}\n"
             )
         else:
             move = f"  mkdir -p {quote(backups)} && mv {quote(dest)}/<name> {quote(backups)}/\n"
@@ -346,8 +346,8 @@ def roll_back(created: list[Path], made: list[Path]) -> list[str]:
             entry.unlink()
         except OSError as error:
             undone.append(f"could not remove {entry}, which this run linked ({error}); remove it by hand")
-            continue
-        undone.append(f"removed {entry}, which this run had linked")
+        else:
+            undone.append(f"removed {entry}, which this run had linked")
     for path in made:
         try:
             path.rmdir()
@@ -360,34 +360,32 @@ def roll_back(created: list[Path], made: list[Path]) -> list[str]:
 
 def report_failed_install(dest: Path, entry: Path, error: OSError, undone: list[str], relinked: int) -> None:
     if getattr(error, "winerror", None) == ERROR_PRIVILEGE_NOT_HELD:
-        print(
-            f"FAIL {entry}: this account may not create symbolic links ({error.strerror}).\n"
+        cause = f"this account may not create symbolic links ({error.strerror})"
+        remedy = (
             "  Remedy: turn on Developer Mode (Settings > System > For developers), or use an account\n"
             '  that holds the "Create symbolic links" right. Then open a new PowerShell window that is\n'
-            "  not elevated (running as administrator is not the recommended fix) and run:\n"
-            f"  {rerun('install', dest)}",
-            file=sys.stderr,
+            "  not elevated (running as administrator is not the recommended fix) and run:\n  "
         )
     elif isinstance(error, PermissionError):
-        print(
-            f"FAIL {entry}: permission denied ({error.strerror}).\n"
+        cause = f"permission denied ({error.strerror})"
+        remedy = (
             f"  Remedy: make {dest} writable by this account, or choose a skills directory you own\n"
-            "  on a file system that supports symbolic links, then run:\n"
-            f"  {rerun('install', dest)}",
-            file=sys.stderr,
+            "  on a file system that supports symbolic links, then run:\n  "
         )
     else:
-        print(f"FAIL {entry}: could not be created ({error}).\n  Fix the cause, then run: {rerun('install', dest)}", file=sys.stderr)
+        cause = f"could not be created ({error})"
+        remedy = "  Fix the cause, then run: "
+    print(f"FAIL {entry}: {cause}.\n{remedy}{rerun('install', dest)}", file=sys.stderr)
     for line in undone:
         print(f"  {line}", file=sys.stderr)
     linked = sum(1 for name in expected_skills() if is_linked(dest / name))
-    if not undone and not linked:
-        state = "nothing was changed"
-    elif linked:
+    if linked:
         moved = f", {relinked} of them moved from skills/.claude/skills" if relinked else ""
         state = f"the {linked} suite links that were already there were kept{moved}"
-    else:
+    elif undone:
         state = "no suite link is installed there"
+    else:
+        state = "nothing was changed"
     print(f"Not installed in {dest}: {state}; other entries there were not touched.", file=sys.stderr)
 
 

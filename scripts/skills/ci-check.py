@@ -31,6 +31,10 @@ SKILLS_DIR = SKILLS_ROOT
 REPO_ROOT = SKILLS_ROOT.parent
 DEV_SKILLS_DIR = REPO_ROOT / ".agents" / "skills"
 CLI_PROJECT = REPO_ROOT / "cli"
+# Same text as scripts/check-agent-guidance.py, which checks the same link.
+WINDOWS_LINK_HINT = (
+    " (on Windows, clone with `git -c core.symlinks=true clone` from an account that can create symbolic links; see skills/AGENTS.md)"
+)
 
 # Ledger fixtures that must fail bean-check (failure-mode evals).
 EXPECTED_BEAN_CHECK_FAILURES = {
@@ -94,11 +98,7 @@ def check_symlinks() -> None:
     claude_skills = REPO_ROOT / ".claude" / "skills"
     expected = Path("../.agents/skills")
     if not claude_skills.is_symlink() or claude_skills.readlink() != expected:
-        hint = "" if os.name != "nt" else (
-            " (on Windows, clone with `git -c core.symlinks=true clone` from an account"
-            " that can create symbolic links; see skills/AGENTS.md)"
-        )
-        fail(".claude/skills must be a relative symlink to ../.agents/skills" + hint)
+        fail(".claude/skills must be a relative symlink to ../.agents/skills" + (WINDOWS_LINK_HINT if os.name == "nt" else ""))
 
 
 def repo_files(*paths: str) -> list[str]:
