@@ -1,0 +1,125 @@
+{
+  "owner": "w6/m9/t018",
+  "relatedNativeOwner": "w1/m34/t003",
+  "status": "retained_session_accounting_passed_fresh_callback_pending",
+  "recordedAtUTC": "2026-10-29T04:03:08.296152+00:00",
+  "host": {
+    "application": "Official Visual Studio Code",
+    "version": "1.143.0",
+    "installation": "Actual native Gallery result io.beancount/beancount@1.0.0",
+    "endpoint": "https://beancount.io/api-gateway/mcp",
+    "manualConfigurationSubstitution": false,
+    "initialInstallationEvidence": "publication-native-install-20261029.json"
+  },
+  "browserRecovery": {
+    "complete": true,
+    "method": "Opened the already installed Chrome extension through its existing native toolbar control; browser control returned.",
+    "extensionInstalledOrPermissionsExpanded": false,
+    "publisherReconnectRequestStillRequired": false
+  },
+  "nativeAuthentication": {
+    "retainedAccountReused": true,
+    "selection": "Actual native MCP account picker; existing MCP account selected.",
+    "clientMetadataURLObservedInNativeProviderUI": "https://vscode.dev/oauth/client-metadata.json",
+    "freshBrowserAuthorizationCallbackObserved": false,
+    "rawTokensOrCredentialStoresRead": false,
+    "newGrantApprovedByWorker": false,
+    "boundary": "Authenticated native accounting calls prove this retained session works. They do not establish a fresh browser consent/callback, exact grant scope/pin, default port or fallback-port success."
+  },
+  "nativeDiscovery": {
+    "observedAtUTC": "2026-10-29T03:45:26.268Z",
+    "tools": 44,
+    "resourceBrowserUsed": true,
+    "genericResourceTemplateCountInitiallyDisplayed": 67,
+    "concreteResourceURIsPublished": false
+  },
+  "actualNativeAccounting": {
+    "firstCopilotRequest": "Host required authentication; no accounting calls were made by that request.",
+    "afterAccountSelection": {
+      "completedAtUTCMinute": "2026-10-29T03:49Z",
+      "timestampPrecision": "minute from the actual native chat completion display",
+      "read": {
+        "tool": "runBqlQueryStructured",
+        "query": "SELECT sum(position) AS cash WHERE account = 'Assets:Cash'",
+        "actualToolOutputExpandedAndRead": true,
+        "ok": true,
+        "rowCount": 1,
+        "currency": "USD",
+        "value": "49.75",
+        "truncated": false
+      },
+      "preview": {
+        "tool": "addLedgerEntries",
+        "calls": 1,
+        "displayedInputDryRun": true,
+        "approval": "Allow Once for the displayed synthetic-only payload; no persistent auto-approval set.",
+        "hostRecordedCompletionWithThatInput": true,
+        "displayedResult": {
+          "success": true,
+          "dry_run": true,
+          "files": [],
+          "entryHashes": [],
+          "wrote": [],
+          "previewEntries": 1,
+          "validation": {
+            "errorsBefore": 0,
+            "errorsAfter": 0,
+            "newErrors": []
+          }
+        },
+        "resultVisibility": "Actual host completion/input and rendered preview JSON were read. A separate raw preview transport envelope was not exported."
+      }
+    },
+    "syntheticResourceRead": "Native resource browser opened the dedicated synthetic balance sheet successfully; cash matched49.75USD.",
+    "additionalTemporaryProfileRead": {
+      "observedAtUTCMinute": "2026-10-29T03:55Z",
+      "value": "49.75 USD",
+      "result": "Native Copilot completed the same read-only query using shared retained application-level authentication. No second preview was requested."
+    },
+    "realLedgerTargetsUsed": false,
+    "accountingWritesCommitted": false
+  },
+  "independentReadControls": {
+    "source": "Separate read-only SDK session, independent of native host results",
+    "beforeAtUTC": "2026-10-29T03:47:25.002Z",
+    "afterAtUTC": "2026-10-29T03:51:28.300Z",
+    "unchanged": {
+      "errors": true,
+      "entriesCount": true,
+      "commit": true,
+      "fileSHA256": true,
+      "cash": true
+    },
+    "persistedBeanCheckErrors": 0,
+    "transactionCountBeforeAndAfter": 16,
+    "openCountBeforeAndAfter": 12,
+    "balanceDirectiveCountBeforeAndAfter": 1,
+    "cashBeforeAndAfter": "49.75 USD",
+    "privateLedgerCommitAndFileDigestPublished": false
+  },
+  "freshCallbackAndFallback": {
+    "defaultPort": 33418,
+    "ownedLoopbackListenerHeldDuringAttempt": true,
+    "temporaryNativeProfileCreatedThroughUI": true,
+    "temporaryProfileStillReusedApplicationAccount": true,
+    "isolatedVendorClientLaunchAttemptedThroughNativeTerminal": true,
+    "initialLaunchFailure": "Owned user-data path exceeded macOS UNIX socket103-character limit. Shortening the package-local scratch path allowed the isolated vendor process to start.",
+    "shortPathIsolatedRuntimeStarted": true,
+    "remainingBlocker": "Supported native control resolves the existing Code instance by bundle ID/path; it does not expose per-instance/window selection on this macOS surface. Fresh binding and a reset still select the retained Temp1window, not the isolated instance. No fresh callback was observed.",
+    "passed": false,
+    "ownedIsolatedRuntimeStopped": true,
+    "ownedPortListenerStopped": true,
+    "scratchDataRetained": true,
+    "existingNativeProfilesAndGrantsRetained": true,
+    "unblock": "Native UI access that can target the isolated official client, or a supported reauthentication route preserving existing grants. Then perform actual browser authorization/callback with33418occupied and verify native discovery/read. Coordinate w1/m34/t003; no token copying, forced logout/revocation, or simulated callback."
+  },
+  "scope": {
+    "newNominationOrMessage": false,
+    "newDeployment": false,
+    "credentialsCopied": false,
+    "grantsRevoked": false,
+    "unrelatedUserWindowModifiedOrClosed": false
+  },
+  "privacy": "Public metadata and synthetic result/equality flags only. No account identity, concrete resource URI, native authorization URL/code/state, credentials, private ledger commit or file digest, or mailbox content.",
+  "officialHostVerificationGuide": "https://code.visualstudio.com/docs/agent-customization/mcp-servers#verify-the-first-tool-call"
+}

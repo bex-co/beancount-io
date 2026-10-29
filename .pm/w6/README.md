@@ -5,14 +5,17 @@
 
 ## Latest GitHub outcome — 2026-10-29 UTC
 
-Actual curated/default-gallery name and identity queries now return the
-canonical hosted connector. Native VS Code1.143.0 finds and installs the real
-Gallery entry in the retained QA profile; persisted HTTP/gallery/version
-configuration matches. [t018](blocked/m9/t018.md) keeps the completed public/
-install evidence and remaining native OAuth/default+fallback-port/query/preview
-acceptance. Browser connection is currently unavailable and reconnect is
-requested; GitHub review/publication is no longer the blocker. No duplicate
-nomination, grant approval, credential copy or revocation occurs.
+Actual curated/default-gallery publication and native Gallery install are
+verified. [t018](blocked/m9/t018.md) now also records retained-session native
+44-tool discovery, Cash49.75USD, one dry-run preview and independent unchanged
+commit/file/counts/Cash/errors. Browser recovery is complete without publisher
+input. A fresh browser/default/fallback callback remains: temporary Profiles
+reuse app authentication; an isolated official client launches, but current
+native control cannot target that separate instance. Supported instance access
+or grant-preserving fresh authentication clears the remaining native gate with
+shared w1/m34/t003. Owned runtime/listener stop; all profiles/grants and scratch
+state remain. No duplicate nomination, grant approval, credential copy or
+revocation occurs.
 
 ## Current engine prerequisite audit — 2026-10-28 UTC
 

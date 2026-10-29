@@ -18,14 +18,31 @@ No prepared manual configuration substitutes for this Gallery installation.
 [Exact API, native installation and configuration evidence](publication-native-install-20261029.json)
 keeps observation times and the imported older registry publication date separate.
 
-The native host automatically opens OAuth and requests completion in the
-browser. No OAuth success, tool discovery, accounting query, dry-run preview
-or fallback-port acceptance is verified. Chrome browser control becomes
-unavailable; native control recovers after a fresh state read. Restore that
-existing browser connection and resume this SAME installation, with only the
-synthetic QA ledger and retained authorization where available. Shared native
-fallback ownership remains w1/m34/t003. No duplicate nomination, grant approval,
-credential copy or revocation is performed. Taskt018 stays open for native acceptance.
+Chrome control is restored by opening the already installed extension through
+its native toolbar. The retained native MCP account is selected in the host's
+actual account picker. Restart discovers44 tools, the native resource browser
+reads the synthetic balance sheet, and Copilot completes the typed Cash BQL
+with49.75USD plus exactly one `dry_run:true` preview approved with **Allow Once**.
+The host records both calls complete; displayed preview reports `wrote:[]` and
+zero new validation errors. Independent before/after reads confirm the same
+ledger commit, file digest, entry counts, Cash and zero bean-check errors.
+[Native results and their visibility limits](native-accounting-acceptance-20261029.json)
+separate actual tool output from rendered preview JSON and retain the first
+request's authentication refusal. No production accounting write occurs.
+
+A fresh browser/default/fallback-port callback is still unverified. Holding33418
+while reusing the account does not force a new callback; a UI-created temporary
+Profile also shares application authentication. An isolated official client
+starts after shortening its package-local scratch path to fit macOS IPC, but
+the supported native controller repeatedly binds the retained Code instance
+rather than exposing per-instance selection. The owned isolated runtime and
+listener are stopped; scratch data, native profiles and all grants remain.
+**Unblock:** target the isolated native client through supported UI control, or
+use a supported fresh-authentication route preserving existing grants; then
+observe the real callback with33418occupied and native discovery/read. Shared
+owner remains w1/m34/t003. No duplicate nomination, token copy, simulated
+callback, forced logout or revocation is used. Taskt018 retains this exact
+remaining gate; browser reconnection and accounting are no longer blockers.
 
 ## Historical approval and preparation — 2026-10-24 UTC
 

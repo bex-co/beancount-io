@@ -147,5 +147,12 @@
     "newGrantApprovedByWorker": false
   },
   "relatedNativeOwner": "w1/m34/t003",
-  "privacy": "Public registry/listing metadata and the installed URL-only configuration only; no account identity, credential store, native authorization URL, token, private mail or ledger content."
+  "privacy": "Public registry/listing metadata and the installed URL-only configuration only; no account identity, credential store, native authorization URL, token, private mail or ledger content.",
+  "latestFollowup": {
+    "recordedAtUTC": "2026-10-29T04:03:08.296152+00:00",
+    "evidence": "native-accounting-acceptance-20261029.json",
+    "browserRecoveryComplete": true,
+    "retainedNativeSessionAccountingPassed": true,
+    "freshBrowserCallbackAndFallbackVerified": false
+  }
 }

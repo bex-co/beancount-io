@@ -1,6 +1,6 @@
 {
   "target": "GitHub curated MCP gallery / downstream VS Code discovery",
-  "state": "published; actual curated public/default feed and native gallery install verified; native OAuth/accounting/fallback acceptance pending",
+  "state": "published; actual native accounting and unchanged-state checks pass with retained session; fresh browser/default/fallback callback pending",
   "submissionEntry": "mailto:partnerships@github.com",
   "recipient": "partnerships@github.com",
   "subject": "Beancount.io hosted MCP \u2014 GitHub MCP Registry inclusion",
@@ -14,9 +14,9 @@
   "officialRegistryCheck": "2026-10-23T20:28:29Z: active latest version 1.0.0 with canonical endpoint",
   "curatedSearchCheck": "2026-10-23T20:28:31Z: canonical-identity default gallery API search returned HTTP 200 and zero records",
   "dedup": "Focused pre-send mailbox query for recipient and Beancount returned no matching messages",
-  "boundary": "Authenticated recipient review approval is observed; actual public GitHub/VS Code gallery publication and native install/OAuth/query/preview remain unverified.",
-  "nextAction": "No further nomination/curation request. Restore existing Chrome browser connection, resume the same native VS Code QA installation OAuth, then default/fallback-port discovery/query/one-preview/unchanged-state acceptance under w6/m9/t018 and shared w1/m34/t003.",
-  "lastCheckedAtUTC": "2026-10-29T03:17:00.650200+00:00",
+  "boundary": "Curator approval, actual public Gallery/install, native discovery, synthetic accounting and independent unchanged-state checks are observed. A fresh browser authorization/callback and fallback-port acceptance remain unverified.",
+  "nextAction": "No further nomination/curation request. Browser recovery is complete. Obtain supported native access to the isolated official client, or grant-preserving reauthentication, then complete the fresh callback/fallback-port check with shared w1/m34/t003.",
+  "lastCheckedAtUTC": "2026-10-29T04:03:08.296152+00:00",
   "recipientAcknowledgment": {
     "observedAtUTC": "2026-10-24T02:38:28Z",
     "receivedAtUTC": "2026-10-23T20:30Z",
@@ -91,5 +91,6 @@
     "privacy": "No mailbox/account identifier, private thread URL, ticket number or raw mail body published."
   },
   "historicalState20261028": "approved; GitHub curator review accepted; public gallery publication pending",
-  "latestPublicationEvidence": "publication-native-install-20261029.json"
+  "latestPublicationEvidence": "publication-native-install-20261029.json",
+  "latestNativeEvidence": "native-accounting-acceptance-20261029.json"
 }

@@ -264,11 +264,14 @@ or any other platform's public/native DoD.
 
 ## Current GitHub outcome — 2026-10-29 UTC
 
-[t018](t018.md) now verifies actual curated/default-feed publication and native
-VS Code1.143.0 gallery discovery/installation, including persisted canonical
-HTTP/gallery/version configuration. GitHub approval/publication no longer
-blocks this item. The remaining gate is actual native OAuth/default+fallback
-port/query/preview/unchanged-state acceptance after the existing Chrome browser
-connection is restored. No new nomination, manual-config substitution or grant
-approval is claimed. Independent Cursor/Cline/Docker review gates and all
-aggregate/standing closing criteria remain open; milestone stays blocked.
+[t018](t018.md) verifies actual publication, native Gallery install and now
+retained-session native accounting:44 tools, Cash49.75USD, exactly one dry-run
+preview and independent unchanged commit/file/counts/Cash/errors. Browser
+recovery is complete without publisher input. Its remaining gate is a fresh
+browser/default/fallback callback: temporary Profiles share app authentication;
+a short-path isolated official client launches, but native control cannot
+select that separate instance. Owned runtime/listener stop with scratch,
+profiles and grants retained. **Unblock:** supported isolated-instance UI access
+or grant-preserving fresh authentication, then actual callback with33418occupied
+and native discovery/read with w1/m34/t003. Independent Cursor/Cline/Docker
+review gates and aggregate/standing closing criteria remain open.
