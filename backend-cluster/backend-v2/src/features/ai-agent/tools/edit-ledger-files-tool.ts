@@ -113,7 +113,9 @@ export const editLedgerFilesInputSchema = z.object({
   message: z
     .string()
     .optional()
-    .describe("Alias of description, as REST and GraphQL spell it."),
+    .describe(
+      "Alias of description, as REST and GraphQL spell it; one is required.",
+    ),
   files: z.array(fileOpSchema).min(1),
   dry_run: z
     .boolean()

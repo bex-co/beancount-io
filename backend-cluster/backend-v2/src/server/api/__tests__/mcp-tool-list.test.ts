@@ -276,9 +276,40 @@ describe("MCP tool list", () => {
     // 118 KB since w23/158 documented the time clamp's open preservation:
     // measured at 119,811 bytes. The preserved-opens sentence is the
     // guidance agents need to stop reading `total` as in-window rows.
+    //
+    // 119 KB since w23/173 stated the one-of rule on the eight bank tools'
+    // and three file tools' alias pairs: measured at 120,961 bytes. "one is
+    // required" on the alias field is the guidance agents need, since the
+    // schema keeps both spellings optional (the owner chose documentation
+    // over a required-ness change, w23/172).
     const { tools } = await listToolsRaw();
     const bytes = Buffer.byteLength(JSON.stringify(tools), "utf8");
-    expect(bytes).toBeLessThan(118 * 1024);
+    expect(bytes).toBeLessThan(119 * 1024);
+  });
+
+  // w23/173: the schema keeps both spellings of an alias pair optional (the
+  // owner chose documentation over a required-ness change, w23/172), so the
+  // listing itself has to say that one of them is required.
+  it.each([
+    ["syncBankTransactions", "item_id"],
+    ["reconcileBankAccounts", "item_id"],
+    ["refreshBankConnection", "item_id"],
+    ["unlinkBankConnection", "item_id"],
+    ["mapBankAccount", "account_id"],
+    ["mapBankAccount", "ledger_account"],
+    ["setBankAccountCurrency", "account_id"],
+    ["discardStagedBankTransactions", "transaction_ids"],
+    ["createLedgerFiles", "message"],
+    ["updateLedgerFiles", "message"],
+    ["deleteLedgerFiles", "message"],
+  ])("says one of the pair is required on %s.%s", async (name, alias) => {
+    const { tools } = await listToolsRaw();
+    const input = tools.find((entry) => entry.name === name)?.inputSchema as
+      | { properties?: Record<string, { description?: string }> }
+      | undefined;
+    expect(input?.properties?.[alias]?.description).toContain(
+      "one is required",
+    );
   });
 
   // w23/m7/t006: every mutation preview flag is advertised where agents

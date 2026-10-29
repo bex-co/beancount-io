@@ -111,7 +111,7 @@ function bankOperation<S extends z.ZodObject>(
 // id before the service so it never sees the alias.
 const itemIdFields = {
   itemId: z.string().optional().describe("The linked bank's id."),
-  item_id: z.string().optional().describe("Alias of itemId."),
+  item_id: z.string().optional().describe("Alias of itemId; one is required."),
 };
 const ITEM_ID_NAMES = {
   primary: "itemId",
@@ -120,7 +120,10 @@ const ITEM_ID_NAMES = {
 } as const;
 const accountIdFields = {
   accountId: z.string().optional().describe("The linked bank account's id."),
-  account_id: z.string().optional().describe("Alias of accountId."),
+  account_id: z
+    .string()
+    .optional()
+    .describe("Alias of accountId; one is required."),
 };
 const ACCOUNT_ID_NAMES = {
   primary: "accountId",
@@ -139,7 +142,7 @@ const transactionIdsFields = {
     .array(z.string())
     .min(1)
     .optional()
-    .describe("Alias of transactionIds."),
+    .describe("Alias of transactionIds; one is required."),
 };
 const TRANSACTION_IDS_NAMES = {
   primary: "transactionIds",
@@ -182,7 +185,7 @@ const submitInput = z.object({
         transaction_id: z
           .string()
           .optional()
-          .describe("Alias of transactionId."),
+          .describe("Alias of transactionId; one is required."),
         targetAccount: z
           .string()
           .optional()
@@ -190,7 +193,7 @@ const submitInput = z.object({
         target_account: z
           .string()
           .optional()
-          .describe("Alias of targetAccount."),
+          .describe("Alias of targetAccount; one is required."),
         sourceAccount: z
           .string()
           .optional()
@@ -288,7 +291,10 @@ export const BANK_OPERATIONS = {
         .string()
         .optional()
         .describe("The ledger account to map it to."),
-      ledger_account: z.string().optional().describe("Alias of ledgerAccount."),
+      ledger_account: z
+        .string()
+        .optional()
+        .describe("Alias of ledgerAccount; one is required."),
     }),
     "Point a linked bank account at a ledger account; replaces any existing mapping.",
     (
