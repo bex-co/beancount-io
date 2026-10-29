@@ -181,6 +181,52 @@ describe("structured BQL across actual adapters", () => {
     },
   );
 
+  // w23/075 option b1: a NULL cell is `null` on REST and MCP structured rows,
+  // while GraphQL keeps the empty string its generated clients were built on.
+  it("carries a NULL cell as null on REST and MCP and as an empty string on GraphQL", async () => {
+    const result = {
+      types: [
+        { name: "payee", dtype: "str" },
+        { name: "sum(number)", dtype: "Decimal" },
+      ],
+      rows: [
+        [null, null],
+        ["", "12.50"],
+      ],
+      t: "table",
+    };
+    const f = await fixture(result);
+    try {
+      const rest = await (await f.rest()).json();
+      expect(rest.table.rows).toEqual([
+        [null, null],
+        ["", "12.50"],
+      ]);
+      const gql = await f.gql("table { rows }");
+      expect(gql.errors).toBeUndefined();
+      expect(
+        (gql.data?.queryShell as { table: { rows: unknown[][] } }).table.rows,
+      ).toEqual([
+        ["", ""],
+        ["", "12.50"],
+      ]);
+      const mcp = await f.client.callTool({
+        name: "runBqlQueryStructured",
+        arguments: { query },
+      });
+      expect(mcp.isError).not.toBe(true);
+      expect(
+        (mcp.structuredContent as { result: { table: { rows: unknown[][] } } })
+          .result.table.rows,
+      ).toEqual([
+        [null, null],
+        ["", "12.50"],
+      ]);
+    } finally {
+      await f.close();
+    }
+  });
+
   // w23/m5/t003: a 60 KB query — past the GET parser cliff that 431'd as a
   // 500 — travels intact to the POST hop on every surface, with identical
   // results.

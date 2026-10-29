@@ -8,7 +8,7 @@ import {
   typeOfSelectExpression,
 } from "./bql-expression-typer";
 
-type ShellCell = string | number | boolean | Record<string, unknown>;
+type ShellCell = string | number | boolean | null | Record<string, unknown>;
 
 /**
  * A fava `SimpleCounterInventory` — `{ currency: number }` — the shape the
@@ -269,9 +269,11 @@ function dtypeFromColumnName(name: string): string {
  *   `ObjectColumn` → `str`).
  */
 function toShellCell(cell: CellValue): ShellCell {
-  // The pre-migration backend-v2 adapter converted Fava's nullable cells to an
-  // empty string before exposing them through GraphQL.
-  if (cell === null || cell === undefined) return "";
+  // A NULL stays null (w23/075 option b1): REST and MCP structured results
+  // carry it, so a missing payee reads differently from an empty one. GraphQL
+  // `queryShell` keeps the pre-migration `""` for its generated clients; that
+  // conversion lives in backend-v2's resolver, not here.
+  if (cell === null || cell === undefined) return null;
   if (
     typeof cell === "string" ||
     typeof cell === "number" ||

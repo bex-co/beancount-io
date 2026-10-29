@@ -11,11 +11,30 @@ import {
 import { AllowAnonymous } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import { GraphQLJSON } from "graphql-scalars";
-import type { ILedgerShellService } from "@/features/ledger/service/ledger-shell-service";
+import type {
+  ILedgerShellService,
+  ShellQueryResult,
+} from "@/features/ledger/service/ledger-shell-service";
 import { BQL_SIZE_DESCRIPTION } from "@/features/ledger/utils/bql-size-description";
 
 // Type for row cells - can be string, number, boolean, null or object
 type RowCell = string | number | boolean | null | Record<string, unknown>;
+
+/**
+ * GraphQL keeps the empty string for a NULL cell (w23/075 b1): the generated
+ * dashboard and mobile clients were built against it, while REST and MCP
+ * structured results carry a real `null`.
+ */
+function withBlankNullCells(result: ShellQueryResult): ShellQueryResult {
+  if (!result.table) return result;
+  return {
+    ...result,
+    table: {
+      ...result.table,
+      rows: result.table.rows.map((row) => row.map((cell) => cell ?? "")),
+    },
+  };
+}
 
 @ObjectType()
 class QueryColumn {
@@ -96,11 +115,12 @@ export class LedgerShellQueryResolver {
     @Args() args: ShellQueryArgs,
     @Ctx() ctx: IContext,
   ): Promise<QueryResult | null> {
-    return this.shellService.queryShell({
+    const result = await this.shellService.queryShell({
       ledgerId: args.ledgerId,
       identity: ctx.identity,
       query: args.query,
     });
+    return withBlankNullCells(result);
   }
 
   @AllowAnonymous()

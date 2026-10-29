@@ -79,7 +79,7 @@ export type ShellQueryResult = {
   resultType: "table" | "text";
   table?: {
     types: { name: string; dtype: string }[];
-    rows: (string | number | boolean | Record<string, unknown>)[][];
+    rows: (string | number | boolean | null | Record<string, unknown>)[][];
     t?: string;
   };
   text?: {

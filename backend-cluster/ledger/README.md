@@ -66,13 +66,15 @@ Numeric `1.25 AS account` can conversely be labelled `str`. Consumers should
 not coerce an identifier to a number solely from this inferred label. Scalar
 text and decimal strings retain their values and precision.
 
-NULL cells are returned as an empty string, as the backend-v2 adapter returned
-Fava's before the migration (`toShellCell` in
-`src/features/ledger/service/ledger-shell-mappers.ts`). So a missing payee or
-price, `SELECT NULL` or `1/0` reads `""`, the same as an empty value. Use
-`IS NULL` in the query to tell them apart (`WHERE payee IS NULL`). Emitting
-`null` instead is a contract change on all three surfaces, still undecided
-(w23/075).
+NULL cells stay `null` in the shell result (`toShellCell` in
+`src/features/ledger/service/ledger-shell-mappers.ts`), so a missing payee or
+price, `SELECT NULL`, or a `sum` over an empty filter reads `null`, while an
+empty string stays `""`. REST JSON and MCP `runBqlQueryStructured` return the
+`null`; GraphQL `queryShell` keeps its pre-migration `""` for a NULL cell
+(backend-v2's resolver converts it) so the generated dashboard and mobile
+clients are unchanged (w23/075 option b1). The text table prints a NULL as a
+blank. Use `IS NULL` in the query to tell a missing value from an empty string
+on GraphQL (`WHERE payee IS NULL`).
 
 Set-typed cells (tags, links, `other_accounts`, …) render identically in text
 and structured results: members sorted and double-space-joined, the way stock
