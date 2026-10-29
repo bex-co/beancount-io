@@ -56,7 +56,6 @@
 - [175](./blocked/175.md) — bank-submit nested keys camel-only on REST/GraphQL while the MCP bank tool dual-accepts (w23/140 followup) — **blocked:** same owner decision as 172/173; twins make REST/GraphQL required-ness lie (and loosen generated client types) vs documented camel-only
 - [180](./blocked/180.md) — known-but-unpriced report `conversion` still degrades to units silently (w23/156 followup) — **blocked:** owner picks refuse vs holdings-style disclosure (both change a published contract)
 - [190](./blocked/190.md) — engine accepts fractional `@@` stock refuses (per-unit division dust; w23/163 followup) — **blocked:** upstream engine gap; owner approves external filing (with 022/197) or documents the face-value divergence
-- [191](./191.md) — BQL `BETWEEN` refuses strings the ordering operators accept
 - [193](./193.md) — mixed-comparison guard false-fires on parenthesized comparisons
 - [194](./194.md) — `runBqlQuery` text drops trailing all-blank row lines (`trimEnd` eats data rows)
 - [195](./195.md) — bare `entry`/`open`/`close` flip object→`str` without values (no object name rule; filed from 167's audit)
