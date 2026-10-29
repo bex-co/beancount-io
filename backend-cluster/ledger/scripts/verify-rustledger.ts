@@ -39,7 +39,10 @@ import {
 } from "@/features/ledger/service/ledger-shell-mappers";
 import { stripBqlBlockComments } from "@/features/ledger/service/bql-comments";
 import { foldBqlWhitespace } from "@/features/ledger/service/bql-whitespace";
-import { extractSelectAliases } from "@/features/ledger/service/bql-select-aliases";
+import {
+  extractSelectAliasHeads,
+  extractSelectAliases,
+} from "@/features/ledger/service/bql-select-aliases";
 import { stripBqlStatementTerminator } from "@/features/ledger/service/bql-terminator";
 import { unquoteBqlFromTables } from "@/features/ledger/service/bql-from-quotes";
 import { normalizeBqlQueryForEngine } from "@/features/ledger/service/ledger-shell-service";
@@ -2900,6 +2903,7 @@ async function main(): Promise<void> {
         normalizeBqlQueryForEngine(query),
       ),
       extractSelectAliases(query),
+      extractSelectAliasHeads(query),
     );
     assert(
       JSON.stringify(shell.table?.types.map((type) => type.dtype)) ===
@@ -2938,6 +2942,9 @@ async function main(): Promise<void> {
     ["SELECT meta FROM entries WHERE FALSE", ["object"]],
     // w23/195: `entry` is the postings Transaction object; `open`/`close`
     // are the accounts table's dates (MCP serves dates, not structures).
+    // w23/m14/t003: an aliased computed head keeps its static type.
+    ["SELECT sum(number) AS total FROM postings WHERE FALSE", ["Decimal"]],
+    ["SELECT year(date) AS y, count(*) AS n FROM postings WHERE FALSE", ["int", "int"]],
     ["SELECT entry FROM postings LIMIT 1", ["object"]],
     ["SELECT entry FROM postings WHERE FALSE", ["object"]],
     ["SELECT open, close FROM accounts LIMIT 1", ["date", "date"]],
@@ -2950,6 +2957,7 @@ async function main(): Promise<void> {
         normalizeBqlQueryForEngine(query),
       ),
       extractSelectAliases(query),
+      extractSelectAliasHeads(query),
     );
     assert(
       JSON.stringify(shell.table?.types.map((type) => type.dtype)) ===

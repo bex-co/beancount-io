@@ -83,12 +83,15 @@ function unitsToCurrencyMap(units: AmountValue[]): CurrencyMap {
  * instead of the lookalike's type.
  */
 const EMPTY_ALIASES: ReadonlyMap<string, string> = new Map();
+/** A SELECT-item head that is one (optionally dotted) identifier. */
+const BARE_HEAD = /^[A-Za-z_][\w$]*(?:\.[A-Za-z_][\w$]*)?$/;
 
 function classifyColumnDtype(
   rows: CellValue[][],
   columnIndex: number,
   columnName = "",
   aliases: ReadonlyMap<string, string> = EMPTY_ALIASES,
+  heads: ReadonlyMap<string, string> = EMPTY_ALIASES,
 ): string {
   const values = rows
     .map((row) => row[columnIndex])
@@ -98,7 +101,17 @@ function classifyColumnDtype(
 
   if (sample === undefined) {
     const root = aliases.get(normalizedName);
-    if (root !== undefined && root !== normalizedName) return "unknown";
+    if (root !== undefined && root !== normalizedName) {
+      // An alias hides the expression, so its name says nothing — but a
+      // computed head (`sum(number)`, `year(date)`) has a static type of its
+      // own. A bare-column head keeps `unknown`: the alias may shadow a
+      // lookalike name (w23/134).
+      const head = heads.get(normalizedName);
+      if (head !== undefined && !BARE_HEAD.test(head)) {
+        return typeOfSelectExpression(head, dtypeFromColumnName) ?? "unknown";
+      }
+      return "unknown";
+    }
     // The engine names the column for its expression, so type the text:
     // literals, calls, and operators report their static type, bare columns
     // fall back to the name rule inside, and anything unparseable reports
@@ -299,13 +312,14 @@ function toShellCell(cell: CellValue): ShellCell {
 export function queryResultToShellResult(
   result: QueryResult,
   aliases: ReadonlyMap<string, string> = EMPTY_ALIASES,
+  heads: ReadonlyMap<string, string> = EMPTY_ALIASES,
 ): ShellQueryResult {
   return {
     resultType: "table",
     table: {
       types: result.columns.map((name, index) => ({
         name,
-        dtype: classifyColumnDtype(result.rows, index, name, aliases),
+        dtype: classifyColumnDtype(result.rows, index, name, aliases, heads),
       })),
       rows: result.rows.map((row) => row.map((cell) => toShellCell(cell))),
       t: "table",
@@ -402,6 +416,7 @@ function center(value: string, width: number): string {
 export function queryResultToText(
   result: QueryResult,
   aliases: ReadonlyMap<string, string> = EMPTY_ALIASES,
+  heads: ReadonlyMap<string, string> = EMPTY_ALIASES,
 ): string {
   if (result.columns.length === 0 || result.rows.length === 0) return "";
 
@@ -409,7 +424,7 @@ export function queryResultToText(
     name.replace(/\r\n|\r|\n/g, " "),
   );
   const columns = result.columns.map((name, index) => {
-    const dtype = classifyColumnDtype(result.rows, index, name, aliases);
+    const dtype = classifyColumnDtype(result.rows, index, name, aliases, heads);
     const rawValues = result.rows.map((row) => formatTextCell(row[index]));
     const values =
       dtype === "Decimal" ? alignDecimalColumn(rawValues) : rawValues;

@@ -45,6 +45,25 @@ export function extractSelectAliases(query: string): Map<string, string> {
 }
 
 /**
+ * Each top-level alias's SELECT-item head text, keyed by lowercased alias
+ * (w23/m14/t003). The root map above says only what an alias is *rooted* in;
+ * a computed head such as `sum(number)` or `year(date)` also has a static type
+ * the mapper can report on an empty result instead of `unknown`. Duplicate
+ * aliases keep the last head, like the root map.
+ */
+export function extractSelectAliasHeads(query: string): Map<string, string> {
+  const out = new Map<string, string>();
+  const list = topLevelSelectList(query);
+  if (list === undefined) return out;
+  for (const item of splitTopLevel(list)) {
+    const aliased = splitAlias(item);
+    if (aliased === undefined) continue;
+    out.set(aliased.alias.toLowerCase(), stripLeadingComments(aliased.head));
+  }
+  return out;
+}
+
+/**
  * The top-level SELECT list: between the first depth-0 SELECT and the
  * first depth-0 clause word after it (FROM/WHERE/GROUP/ORDER/LIMIT/
  * HAVING/PIVOT) or the end of the query for a FROM-less select.
