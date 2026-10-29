@@ -2220,6 +2220,40 @@ async function main(): Promise<void> {
       !knownValue.errors.some((e) => e.severity === "error"),
     "a ledger-named value() target still answers through the guard",
   );
+  // joinstr arity (w23/186): the raw engine appends the extra arguments to the
+  // joined list, so the query path refuses them and the one-argument form
+  // still answers.
+  const rawJoinstr = await withLedger(FILES, "main.beancount", (ledger) =>
+    ledger.query("SELECT joinstr(tags, ',') FROM postings LIMIT 1"),
+  );
+  assert(
+    rawJoinstr.rows.length === 1 &&
+      !rawJoinstr.errors.some((e) => e.severity === "error"),
+    "raw engine still accepts a two-argument joinstr (the guard is load-bearing)",
+  );
+  const guardedJoinstr = await queryLedgerFilesResult(
+    FILES,
+    "main.beancount",
+    "SELECT joinstr(tags, ',') FROM postings LIMIT 1",
+  );
+  assert(
+    guardedJoinstr.rows.length === 0 &&
+      guardedJoinstr.errors.some(
+        (e) =>
+          e.severity === "error" && e.message.includes("joinstr takes one"),
+      ),
+    "the query path refuses a two-argument joinstr",
+  );
+  const oneArgJoinstr = await queryLedgerFilesResult(
+    FILES,
+    "main.beancount",
+    "SELECT joinstr(tags) FROM postings LIMIT 1",
+  );
+  assert(
+    oneArgJoinstr.rows.length === 1 &&
+      !oneArgJoinstr.errors.some((e) => e.severity === "error"),
+    "one-argument joinstr still answers through the guard",
+  );
   const scalarGroup = await queryLedgerFiles(
     FILES,
     "main.beancount",

@@ -86,6 +86,7 @@ import { quotedColumnError } from "./quoted-column-guard";
 import { compositeComparisonError } from "./composite-comparison-guard";
 import { inventoryGroupByError } from "./inventory-group-by-guard";
 import { valueTargetError } from "./value-target-guard";
+import { joinstrArityError } from "./joinstr-arity-guard";
 import { collectLedgerCommodities } from "./cost-valuation";
 import { groupByCoverageError } from "./group-by-coverage-guard";
 import { stringConcatError } from "./string-concat-guard";
@@ -1041,6 +1042,7 @@ export async function queryLedgerFilesResultInProcess(
           compositeComparisonError(query) ??
           inventoryGroupByError(query) ??
           valueTargetError(query, () => ledgerCommodities(ledger)) ??
+          joinstrArityError(query) ??
           groupByCoverageError(query) ??
           stringConcatError(query) ??
           dateArithmeticError(query) ??

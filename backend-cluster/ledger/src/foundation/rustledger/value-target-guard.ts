@@ -1,4 +1,5 @@
 import type { QueryResult } from "@rustledger/wasm";
+import { callArgSpans } from "./bql-call-args";
 
 /**
  * The currency target of the two-argument `value(position, 'CCY')`
@@ -20,53 +21,19 @@ import type { QueryResult } from "@rustledger/wasm";
  * says `value(x, 'y')` is not a call. Remove once the engine refuses the
  * target itself; the live check in `scripts/verify-rustledger.ts` shows when.
  */
-const VALUE_CALL = /(?<![\w.$])value\s*\(/gi;
 const LITERAL = /^(?:'([^']*)'|"([^"]*)")$/;
 
 /** Literal currency targets of every two-argument `value(…)` call, in order. */
 export function valueCurrencyTargets(query: string): string[] {
-  // Blank string contents so call names and commas inside them never parse,
-  // keeping offsets: the literals are read back from the original text.
-  const blanked = query.replace(
-    /'[^']*'|"[^"]*"/g,
-    (m) => m[0] + " ".repeat(m.length - 2) + m[0],
-  );
   const targets: string[] = [];
-  for (const match of blanked.matchAll(VALUE_CALL)) {
-    const open = (match.index as number) + match[0].length;
-    const args = splitArgs(blanked, open);
-    if (args === undefined || args.length !== 2) continue;
+  for (const args of callArgSpans(query, "value")) {
+    if (args.length !== 2) continue;
     const second = query.slice(args[1].start, args[1].end).trim();
     const literal = LITERAL.exec(second);
     const code = literal?.[1] ?? literal?.[2];
     if (code !== undefined) targets.push(code);
   }
   return targets;
-}
-
-/** Top-level argument spans of the call whose `(` just precedes `open`. */
-function splitArgs(
-  text: string,
-  open: number,
-): { start: number; end: number }[] | undefined {
-  const spans: { start: number; end: number }[] = [];
-  let depth = 1;
-  let start = open;
-  for (let i = open; i < text.length; i += 1) {
-    const ch = text[i];
-    if (ch === "(") depth += 1;
-    else if (ch === ")") {
-      depth -= 1;
-      if (depth === 0) {
-        spans.push({ start, end: i });
-        return spans;
-      }
-    } else if (ch === "," && depth === 1) {
-      spans.push({ start, end: i });
-      start = i + 1;
-    }
-  }
-  return undefined;
 }
 
 /**
