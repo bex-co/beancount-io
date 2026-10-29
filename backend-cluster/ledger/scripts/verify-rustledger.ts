@@ -1426,6 +1426,48 @@ async function main(): Promise<void> {
       pipelinedQuotedAlias.rows.length === 1,
     "pipelined quoted alias answers under the bare alias name",
   );
+  // w23/191: the engine refuses string BETWEEN once a NULL meets the bounds
+  // (a payee-less transaction) but evaluates the ordering pair, so the
+  // pipeline rewrites it and both spellings return the same rows.
+  const betweenFiles = {
+    "main.beancount": [
+      "2026-01-01 open Assets:Cash USD",
+      "2026-01-01 open Equity:O",
+      '2026-01-02 * "Apple" "x"',
+      "  Assets:Cash 100 USD",
+      "  Equity:O",
+      '2026-01-03 * "no payee"',
+      "  Assets:Cash 5 USD",
+      "  Equity:O",
+      "",
+    ].join("\n"),
+  };
+  const betweenQuery =
+    "SELECT count(*) FROM postings WHERE payee BETWEEN 'A' AND 'M'";
+  const rawStringBetween = await withLedger(
+    betweenFiles,
+    "main.beancount",
+    (ledger) => ledger.query(betweenQuery),
+  );
+  assert(
+    rawStringBetween.errors.some((e) => e.severity === "error"),
+    "raw engine still refuses string BETWEEN (normalization is load-bearing)",
+  );
+  const pipelinedBetween = await queryLedgerFiles(
+    betweenFiles,
+    "main.beancount",
+    normalizeBqlQueryForEngine(betweenQuery),
+  );
+  const orderingPair = await queryLedgerFiles(
+    betweenFiles,
+    "main.beancount",
+    "SELECT count(*) FROM postings WHERE (payee >= 'A' AND payee <= 'M')",
+  );
+  assert(
+    JSON.stringify(pipelinedBetween.rows) === JSON.stringify(orderingPair.rows) &&
+      pipelinedBetween.rows.length === 1,
+    "pipelined string BETWEEN returns the ordering pair's rows",
+  );
   const pipelineBareEof = await queryLedgerFiles(
     FILES,
     "main.beancount",
