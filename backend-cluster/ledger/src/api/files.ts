@@ -53,6 +53,33 @@ export function toFileContentPublic(
 }
 
 /** Largest blob served inline once Gitea's own contents limit is passed. */
+/**
+ * The most paths the repository host answers in one batched file-contents
+ * request. It returns at most this many entries and says nothing about the
+ * rest, which read as missing files (w23/205), so a longer list goes out in
+ * chunks.
+ */
+const FILE_CONTENTS_BATCH = 30;
+
+/** The files of a batched lookup that exist, in the order they were named. */
+export async function getFileContentsChunked(
+  client: Pick<GiteaClient, "repos">,
+  owner: string,
+  repo: string,
+  files: readonly string[],
+): Promise<ContentsResponse[]> {
+  const present: ContentsResponse[] = [];
+  for (let at = 0; at < files.length; at += FILE_CONTENTS_BATCH) {
+    const res = await client.repos.repoGetFileContentsPost(owner, repo, {
+      files: files.slice(at, at + FILE_CONTENTS_BATCH),
+    });
+    for (const item of (res.data ?? []) as Array<ContentsResponse | null>) {
+      if (item !== null) present.push(item);
+    }
+  }
+  return present;
+}
+
 export const MAX_LARGE_FILE_BYTES = 32 * 1024 * 1024;
 
 type GiteaClient = ReturnType<typeof giteaClientForRequest>;
@@ -262,14 +289,11 @@ export function setFilesHandler(router: Router): void {
       files.forEach((path, index) =>
         assertSafeRepoPath(path, `files[${index}]`),
       );
-      const res = await client.repos.repoGetFileContentsPost(
+      const present = await getFileContentsChunked(
+        client,
         ctx.params.owner,
         ctx.params.repo_name,
-        { files },
-      );
-      const items = (res.data ?? []) as Array<ContentsResponse | null>;
-      const present = items.filter(
-        (item): item is ContentsResponse => item !== null,
+        files,
       );
       const filled: ContentsResponse[] = [];
       for (const item of present) {

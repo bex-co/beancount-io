@@ -1,4 +1,8 @@
-import { MAX_LARGE_FILE_BYTES, withLargeContent } from "@/api/files";
+import {
+  getFileContentsChunked,
+  MAX_LARGE_FILE_BYTES,
+  withLargeContent,
+} from "@/api/files";
 import {
   Api as GiteaApi,
   type ContentsResponse,
@@ -62,5 +66,60 @@ describe("withLargeContent (w21/343)", () => {
     await expect(
       withLargeContent(client as never, "a", "b", large()),
     ).rejects.toThrow();
+  });
+});
+
+describe("getFileContentsChunked (w23/205)", () => {
+  // The host answers at most 30 entries per batched request and drops the rest.
+  const host = (existing: ReadonlySet<string>) => {
+    const calls: string[][] = [];
+    const client = {
+      repos: {
+        repoGetFileContentsPost: async (
+          _owner: string,
+          _repo: string,
+          { files }: { files: string[] },
+        ) => {
+          calls.push(files);
+          return {
+            data: files
+              .slice(0, 30)
+              .filter((path) => existing.has(path))
+              .map((path) => ({ path })),
+          };
+        },
+      },
+    };
+    return { client: client as never, calls };
+  };
+  const names = (count: number) =>
+    Array.from({ length: count }, (_, i) => `d/f${i}.bean`);
+
+  it.each([30, 31, 60, 95])(
+    "returns all %i existing files in order",
+    async (n) => {
+      const files = names(n);
+      const { client, calls } = host(new Set(files));
+      const out = await getFileContentsChunked(client, "a", "b", files);
+      expect(out.map((item) => item.path)).toEqual(files);
+      expect(Math.max(...calls.map((c) => c.length))).toBeLessThanOrEqual(30);
+    },
+  );
+
+  it("still omits a path that is really missing from the middle", async () => {
+    const files = names(60);
+    const { client } = host(
+      new Set(files.filter((path) => path !== "d/f45.bean")),
+    );
+    const out = await getFileContentsChunked(client, "a", "b", files);
+    expect(out.map((item) => item.path)).toEqual(
+      files.filter((path) => path !== "d/f45.bean"),
+    );
+  });
+
+  it("makes no request for no files", async () => {
+    const { client, calls } = host(new Set());
+    expect(await getFileContentsChunked(client, "a", "b", [])).toEqual([]);
+    expect(calls).toEqual([]);
   });
 });
