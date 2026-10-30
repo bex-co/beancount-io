@@ -98,7 +98,6 @@
 
 
 
-- [265 — Keep financial text and private paths out of GA4 automatic events](./blocked/265.md) — major; dashboard QA, 2026-10-20. — **blocked:** production Site search and history page-view settings saved OFF with owner approval on 2026-10-28; signed-in public-example control passes, anonymous/private-ledger acceptance remains for a QA worker
 
 ## Milestones
 
