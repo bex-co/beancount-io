@@ -80,7 +80,7 @@ export type ProjectedFileOverlay = {
   content: string | null;
 };
 
-/** Bounds for a projected check: parsing is CPU-heavy, dry runs are many. */
+/** Bounds for a check: parsing is CPU-heavy, dry runs are many. */
 const MAX_PROJECTED_FILES = 50;
 export const MAX_PROJECTED_BYTES = 5_000_000;
 type FilterParams = { account?: string; filter?: string; time?: string };
@@ -551,13 +551,11 @@ export class LedgerDataService implements ILedgerDataService {
     repoPaths: string[];
   }> {
     const { ledgerId, userId, overlays, enforceInputLimits = true } = params;
-    if (
-      !Array.isArray(overlays) ||
-      (enforceInputLimits && overlays.length > MAX_PROJECTED_FILES)
-    ) {
-      throw new BadUserInputError(
-        `at most ${MAX_PROJECTED_FILES} files may be projected at once`,
-      );
+    // No file-count cap here: the commit accepts any number of files, so a
+    // preview that refused more would contradict it (w23/206). What bounds the
+    // parse is the byte cap below.
+    if (!Array.isArray(overlays)) {
+      throw new BadUserInputError("files must be a list of paths and contents");
     }
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const client = await this.giteaClientFactory.getPublicApiClient(

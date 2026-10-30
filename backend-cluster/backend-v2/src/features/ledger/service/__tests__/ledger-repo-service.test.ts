@@ -577,6 +577,25 @@ describe("LedgerRepoService", () => {
       expect(mockChangeLedgerFiles).not.toHaveBeenCalled();
     });
 
+    it("lists a folder once however many new files share it (w23/206)", async () => {
+      mockGetLedgerDirContent.mockResolvedValue({
+        data: { success: true, data: [] },
+      });
+      await service.changeFiles({
+        ledgerId: LEDGER_ID,
+        identity: IDENTITY,
+        operations: Array.from({ length: 40 }, (_, i) => ({
+          operation: "create" as const,
+          path: `bulk/f${i}.bean`,
+          content: "Zm9v",
+        })),
+        message: "bulk",
+        dryRun: true,
+      });
+      // The root and `bulk` are each listed once, not once per file.
+      expect(mockGetLedgerDirContent.mock.calls.length).toBeLessThanOrEqual(2);
+    });
+
     it("refuses an unsafe path on a dry run exactly like the commit", async () => {
       await expect(
         service.changeFiles({

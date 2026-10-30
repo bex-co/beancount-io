@@ -361,18 +361,29 @@ export class LedgerRepoService
       ledgerId,
       identity.userId,
     );
+    // One lookup per folder, however many new files share it (w23/206).
+    const listings = new Map<string, ReturnType<typeof listFolder>>();
+    const listFolder = async (dir: string | undefined) =>
+      (
+        await unwrapFavaResponse(
+          favaApiClient.ledgers.getLedgerDirContent(ledgerOwner, ledgerName, {
+            ...(dir === undefined ? {} : { dir_path: dir }),
+          }),
+          "check new file path",
+        )
+      ).filter((entry) => !deleted.has(entry.path));
+    const list = (dir: string | undefined) => {
+      const key = dir ?? "";
+      let listing = listings.get(key);
+      if (!listing) {
+        listing = listFolder(dir);
+        listings.set(key, listing);
+      }
+      return listing;
+    };
     for (const path of creates) {
       // A file the batch deletes no longer blocks a folder of that name.
-      await assertNoPortableTwin(path, async (dir) =>
-        (
-          await unwrapFavaResponse(
-            favaApiClient.ledgers.getLedgerDirContent(ledgerOwner, ledgerName, {
-              ...(dir === undefined ? {} : { dir_path: dir }),
-            }),
-            "check new file path",
-          )
-        ).filter((entry) => !deleted.has(entry.path)),
-      );
+      await assertNoPortableTwin(path, list);
     }
   }
 

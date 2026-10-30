@@ -148,16 +148,28 @@ describe("checkProjectedErrors", () => {
       }),
     ).rejects.toThrow();
     expect(parseMock).not.toHaveBeenCalled();
+    // The byte cap bounds the parse; the file count is not capped (w23/206).
     await expect(
       service().checkProjectedErrors({
         ledgerId: "alice/main",
         userId: "user-1",
-        overlays: Array.from({ length: 51 }, (_, i) => ({
-          path: `f${i}.bean`,
-          content: b64("x"),
+        overlays: [{ path: "big.bean", content: b64("x".repeat(5_000_001)) }],
+      }),
+    ).rejects.toThrow(/exceed/);
+  });
+
+  it("previews more than 50 files, as the commit accepts them", async () => {
+    await expect(
+      service().checkProjectedErrors({
+        ledgerId: "alice/main",
+        userId: "user-1",
+        overlays: Array.from({ length: 120 }, (_, i) => ({
+          path: `many/f${i}.bean`,
+          content: b64("; x\n"),
         })),
       }),
-    ).rejects.toThrow(/at most 50/);
+    ).resolves.toEqual([]);
+    expect(Object.keys(parseMock.mock.calls[0][0])).toHaveLength(121);
   });
 
   it("refuses to project onto a managed price feed's virtual file", async () => {
