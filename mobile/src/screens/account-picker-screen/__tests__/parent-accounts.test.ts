@@ -57,7 +57,7 @@ describe("withParentAccounts", () => {
     // `pickerAccounts`.
     expect(
       screen.includes(
-        "pickerAccounts(type,opened,entryDate??getFormatDate(newDate()),closeDates,)",
+        "pickerAccounts(type,opened,entryDate??getFormatDate(newDate()),closeDates,budgetRoots,)",
       ),
     ).toBe(true);
   });

@@ -280,17 +280,23 @@ export function withParentAccounts(accounts: readonly string[]): string[] {
  * the server rolls children up by prefix, and a budget's account need not be
  * opened itself, so `Expenses:Food` was reachable only through a spurious
  * `open` (w21/396), and so are the roots (w21/876). A posting gets only
- * accounts open on its date.
+ * accounts open on its date. A budget is offered only the ledger's Income and
+ * Expenses roots (`budgetRoots`): on a card or a savings account the sign runs
+ * the other way and the verdict read backwards (w21/304).
  */
 export function pickerAccounts(
   type: string,
   opened: readonly string[],
   onDate: string,
   closeDates: CloseDates,
+  budgetRoots: readonly string[] = ["Income", "Expenses"],
 ): string[] {
   if (type === "filter") return withParentAccounts(opened);
-  const open = openOn(opened, onDate, closeDates);
-  if (type !== "budget") return open;
+  const allOpen = openOn(opened, onDate, closeDates);
+  if (type !== "budget") return allOpen;
+  const open = allOpen.filter((account) =>
+    budgetRoots.includes(account.split(":")[0]!),
+  );
   // And the roots themselves, each ahead of its accounts: "Total monthly
   // spending" budgets Expenses whole, and the server rolls its children up by
   // prefix (w21/876).

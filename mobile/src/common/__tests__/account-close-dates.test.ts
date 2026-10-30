@@ -70,7 +70,7 @@ describe("the account picker", () => {
       source
         .replace(/\s+/g, "")
         .includes(
-          "pickerAccounts(type,opened,entryDate??getFormatDate(newDate()),closeDates,)",
+          "pickerAccounts(type,opened,entryDate??getFormatDate(newDate()),closeDates,budgetRoots,)",
         ),
     ).toBe(true);
     // `pickerAccounts` keeps the filter list whole and dates the posting pickers.
@@ -87,7 +87,7 @@ describe("the account picker", () => {
       ),
     ).toBe(true);
     expect(
-      sections.includes("const open = openOn(opened, onDate, closeDates);"),
+      sections.includes("const allOpen = openOn(opened, onDate, closeDates);"),
     ).toBe(true);
   });
 });

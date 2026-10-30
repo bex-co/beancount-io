@@ -331,6 +331,11 @@ function AccountPickerScreenComponent(): JSX.Element {
   // the filter keeps closed accounts, whose history is still searchable.
   const closeDates = useAccountCloseDates(ledgerId);
   const opened = accountOrderFor(type) === "from" ? assets : expenses;
+  const roots = useLedgerRootNames();
+  const budgetRoots = useMemo(
+    () => [roots.income ?? "Income", roots.expenses ?? "Expenses"],
+    [roots.income, roots.expenses],
+  );
   const accounts = useMemo(
     () =>
       pickerAccounts(
@@ -338,8 +343,9 @@ function AccountPickerScreenComponent(): JSX.Element {
         opened,
         entryDate ?? getFormatDate(new Date()),
         closeDates,
+        budgetRoots,
       ),
-    [type, opened, entryDate, closeDates],
+    [type, opened, entryDate, closeDates, budgetRoots],
   );
 
   // Grouped once: the chips are its titles, and the browse list is a slice of
@@ -517,7 +523,6 @@ function AccountPickerScreenComponent(): JSX.Element {
   // active (a no-match search yields zero sections — see `picker-sections`),
   // and only for a collaborator who may actually create the account.
   const trimmedQuery = query.trim();
-  const roots = useLedgerRootNames();
   // Destination pickers are choosing where money went, so suggest the
   // Expenses root for a rootless query; source pickers suggest Assets.
   const createFallbackRoot =

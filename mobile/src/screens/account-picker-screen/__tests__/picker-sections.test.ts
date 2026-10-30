@@ -527,6 +527,36 @@ describe("pickerAccounts for a budget", () => {
     expect(list.filter((account) => account === "Expenses").length).toBe(1);
   });
 
+  // w21/304: on a card or a savings account the sign runs the other way, so a
+  // budget there read backwards.
+  it("offers only the Income and Expenses roots", () => {
+    const mixed = [
+      ...open,
+      "Liabilities:CreditCard",
+      "Assets:Savings",
+      "Equity:Opening",
+    ];
+    const list = pickerAccounts("budget", mixed, "2026-10-20", none);
+    expect(list.some((a) => /^(Liabilities|Assets|Equity)/.test(a))).toBe(
+      false,
+    );
+    expect(list.includes("Expenses:Food")).toBe(true);
+    expect(list.includes("Income:Salary")).toBe(true);
+  });
+
+  it("follows a ledger's renamed roots", () => {
+    const list = pickerAccounts(
+      "budget",
+      ["Gastos:Comida", "Ingresos:Sueldo", "Pasivos:Tarjeta"],
+      "2026-10-20",
+      none,
+      ["Ingresos", "Gastos"],
+    );
+    expect(list.includes("Gastos:Comida")).toBe(true);
+    expect(list.includes("Ingresos:Sueldo")).toBe(true);
+    expect(list.includes("Pasivos:Tarjeta")).toBe(false);
+  });
+
   it("offers a posting no root", () => {
     expect(pickerAccounts("from", open, "2026-10-20", none)).toEqual(open);
     expect(
