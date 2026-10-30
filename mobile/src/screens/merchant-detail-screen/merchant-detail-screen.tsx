@@ -1,3 +1,4 @@
+import { useLoadedDepth } from "@/common/loaded-depth";
 import { merchantDateRangeText } from "./selectors/merchant-date-range";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLedgerRootNames } from "@/common/hooks/use-ledger-root-names";
@@ -451,67 +452,82 @@ function MerchantDetailBody({
     filter: journalFilter || undefined,
   });
 
-  const loadMore = useCallback(async () => {
-    if (isLoadingMore || !hasMore || journalLoading || !ledgerId) {
-      return;
-    }
-    const requestedFor = listKeyRef.current;
-    // An entry added elsewhere shifted the pages; reload from the top, where
-    // it now sits (w21/035).
-    let listMoved = false;
-    let gained = false;
-    try {
-      await fetchMore({
-        variables: {
-          ledgerId,
-          query: {
-            offset: rawEntries.length,
-            limit: PAGE_SIZE,
-            directiveTypes: DIRECTIVE_TYPES,
-            filter: journalFilter || undefined,
+  const loadMore = useCallback(
+    async (limit = PAGE_SIZE) => {
+      if (isLoadingMore || !hasMore || journalLoading || !ledgerId) {
+        return;
+      }
+      const requestedFor = listKeyRef.current;
+      // An entry added elsewhere shifted the pages; reload from the top, where
+      // it now sits (w21/035).
+      let listMoved = false;
+      let gained = false;
+      try {
+        await fetchMore({
+          variables: {
+            ledgerId,
+            query: {
+              offset: rawEntries.length,
+              limit,
+              directiveTypes: DIRECTIVE_TYPES,
+              filter: journalFilter || undefined,
+            },
           },
-        },
-        updateQuery: (prev, { fetchMoreResult }) => {
-          // Requested for a list no longer shown (w21/116).
-          if (listKeyRef.current !== requestedFor) return prev;
-          if (!fetchMoreResult?.getLedgerJournal?.data) {
-            return prev;
-          }
-          const { data, overlapped } = mergeJournalPage(
-            prev.getLedgerJournal.data || [],
-            fetchMoreResult.getLedgerJournal.data,
-            {
-              loaded: prev.getLedgerJournal.total,
-              page: fetchMoreResult.getLedgerJournal.total,
-            },
-          );
-          listMoved = overlapped;
-          gained = data.length > (prev.getLedgerJournal.data || []).length;
-          return {
-            ...prev,
-            getLedgerJournal: {
-              ...prev.getLedgerJournal,
-              data,
-              total: fetchMoreResult.getLedgerJournal.total,
-            },
-          };
-        },
-      });
-      if (!gained && !listMoved) stalledAtRef.current = rawEntries.length;
-      if (listMoved) void refetchJournal().catch(() => undefined);
-    } catch (err) {
-      console.error("Error loading more merchant transactions:", err);
-    }
-  }, [
-    isLoadingMore,
-    hasMore,
-    journalLoading,
-    ledgerId,
-    rawEntries.length,
-    fetchMore,
-    refetchJournal,
-    journalFilter,
-  ]);
+          updateQuery: (prev, { fetchMoreResult }) => {
+            // Requested for a list no longer shown (w21/116).
+            if (listKeyRef.current !== requestedFor) return prev;
+            if (!fetchMoreResult?.getLedgerJournal?.data) {
+              return prev;
+            }
+            const { data, overlapped } = mergeJournalPage(
+              prev.getLedgerJournal.data || [],
+              fetchMoreResult.getLedgerJournal.data,
+              {
+                loaded: prev.getLedgerJournal.total,
+                page: fetchMoreResult.getLedgerJournal.total,
+              },
+            );
+            listMoved = overlapped;
+            gained = data.length > (prev.getLedgerJournal.data || []).length;
+            return {
+              ...prev,
+              getLedgerJournal: {
+                ...prev.getLedgerJournal,
+                data,
+                total: fetchMoreResult.getLedgerJournal.total,
+              },
+            };
+          },
+        });
+        if (!gained && !listMoved) stalledAtRef.current = rawEntries.length;
+        if (listMoved) void refetchJournal().catch(() => undefined);
+      } catch (err) {
+        console.error("Error loading more merchant transactions:", err);
+      }
+    },
+    [
+      isLoadingMore,
+      hasMore,
+      journalLoading,
+      ledgerId,
+      rawEntries.length,
+      fetchMore,
+      refetchJournal,
+      journalFilter,
+    ],
+  );
+
+  // A foreground refresh or a write re-runs page one; the rows the reader had
+  // scrolled to come back (w21/526).
+  const forgetDepth = useLoadedDepth(
+    {
+      listKey: listKeyRef.current,
+      count: rawEntries.length,
+      total,
+      networkStatus,
+    },
+    (limit) => void loadMore(limit),
+  );
 
   // Free-text pages are noisy; keep filling until we have a screenful of
   // exact matches or the window is exhausted.
@@ -528,6 +544,7 @@ function MerchantDetailBody({
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
+    forgetDepth();
     stalledAtRef.current = null;
     try {
       await Promise.all([
@@ -539,7 +556,7 @@ function MerchantDetailBody({
     } finally {
       setIsRefreshing(false);
     }
-  }, [refetchMeta, refetchTotals, refetchWeights, refetchJournal]);
+  }, [forgetDepth, refetchMeta, refetchTotals, refetchWeights, refetchJournal]);
 
   const onRetry = useCallback(() => {
     void onRefresh();
@@ -767,7 +784,7 @@ function MerchantDetailBody({
             </View>
           ) : null
         }
-        onEndReached={loadMore}
+        onEndReached={() => void loadMore()}
         onEndReachedThreshold={0.4}
         refreshControl={
           <ThemedRefreshControl

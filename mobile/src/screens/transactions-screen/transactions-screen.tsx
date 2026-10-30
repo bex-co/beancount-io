@@ -1,3 +1,4 @@
+import { useLoadedDepth } from "@/common/loaded-depth";
 import { useApolloClient } from "@apollo/client";
 import {
   LEDGER_ERROR_QUERIES,
@@ -215,7 +216,7 @@ const TransactionList = () => {
   const loadMoreFailed = loadMoreFailedFor === listKey;
 
   const loadMore = useCallback(
-    async (retry = false) => {
+    async (retry = false, limit = PAGE_SIZE) => {
       if (isLoadingMore || !hasMore || loading || !ledgerId) return;
       if (loadMoreFailed && !retry) return;
       const requestedFor = listKeyRef.current;
@@ -230,7 +231,7 @@ const TransactionList = () => {
             ledgerId,
             query: {
               offset: transactions.length,
-              limit: PAGE_SIZE,
+              limit,
               directiveTypes: DIRECTIVE_TYPES,
               filter,
               ...filterQuery,
@@ -279,10 +280,19 @@ const TransactionList = () => {
     ],
   );
 
+  // A foreground refresh or a write re-runs page one; the rows the reader had
+  // scrolled to come back and a stale paging failure is cleared (w21/526).
+  const forgetDepth = useLoadedDepth(
+    { listKey, count: transactions.length, total, networkStatus },
+    (limit) => void loadMore(true, limit),
+    () => setLoadMoreFailedFor(null),
+  );
+
   const client = useApolloClient();
   const onRefresh = async () => {
     try {
       setIsRefreshing(true);
+      forgetDepth();
       // The bell's errors follow the pull without holding up the list (w21/839).
       void refetchNamedQueries(client, LEDGER_ERROR_QUERIES);
       await refetch();

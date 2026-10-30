@@ -1,3 +1,4 @@
+import { useLoadedDepth } from "@/common/loaded-depth";
 import { contentPadding } from "@/common/screen-util";
 import { isUnitsHeldAtCost } from "@/common/balance-display";
 import { useGuest } from "@/common/guest/guest-context";
@@ -368,7 +369,7 @@ const AccountDetailScreenImpl = ({
   listKeyRef.current = listKey;
 
   const loadMore = useCallback(
-    async (retry = false) => {
+    async (retry = false, limit = ACCOUNT_JOURNAL_PAGE_SIZE) => {
       if (isLoadingMore || !hasMore || journalLoading || !ledgerId) {
         return;
       }
@@ -382,7 +383,7 @@ const AccountDetailScreenImpl = ({
             ledgerId,
             query: {
               account,
-              limit: ACCOUNT_JOURNAL_PAGE_SIZE,
+              limit,
               offset: items.length,
               with_children: true,
               conversion: journalConversion,
@@ -441,9 +442,18 @@ const AccountDetailScreenImpl = ({
     ],
   );
 
+  // A foreground refresh or a write re-runs page one; the rows the reader had
+  // scrolled to come back and a stale paging failure is cleared (w21/526).
+  const forgetDepth = useLoadedDepth(
+    { listKey, count: items.length, total, networkStatus },
+    (limit) => void loadMore(true, limit),
+    () => setLoadMoreFailedFor(null),
+  );
+
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = async () => {
     setRefreshing(true);
+    forgetDepth();
     setLastJournalPage(null);
     try {
       await Promise.all([
