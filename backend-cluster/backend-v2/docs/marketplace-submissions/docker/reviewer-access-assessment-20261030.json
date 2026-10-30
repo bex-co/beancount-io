@@ -1,0 +1,66 @@
+{
+  "owner": "w6/m9/t017",
+  "assessmentCompletedAtUTC": "2026-10-30T00:22:28Z",
+  "status": "submitted",
+  "review": {
+    "url": "https://github.com/docker/mcp-registry/pull/6042",
+    "state": "OPEN",
+    "mergedAtUTC": null,
+    "updatedAtUTC": "2026-10-24T19:52:18Z",
+    "headCommit": "5a30305e179493b3d5502f2d38821fedb99491d9",
+    "reviews": 0,
+    "conversationComments": 0,
+    "graphQLCheckRollup": [],
+    "workflowRuns": [
+      {
+        "id": 40049180641,
+        "status": "completed",
+        "conclusion": "action_required",
+        "updatedAtUTC": "2026-10-24T01:18:23Z"
+      },
+      {
+        "id": 40049180736,
+        "status": "completed",
+        "conclusion": "action_required",
+        "updatedAtUTC": "2026-10-24T01:18:23Z"
+      }
+    ],
+    "limit": "Actual existing PR/reviews/comments and run metadata. No job collection, public catalog or native runtime reread."
+  },
+  "reviewerAccess": {
+    "lastActualMetadata": "reviewer-access-assessment-20261029.json",
+    "freshMetadataReadSucceeded": false,
+    "retainedLastObservation": "Active, original synthetic pin/read-write/no-admin, Never used, expiry end2026-10-31UTC. These facts retain the Oct29 observation window.",
+    "currentValidityIndependentlyReverified": false,
+    "longerWindowRequestedInObservedPR": false,
+    "privateMailRequestIndependentlyChecked": false,
+    "supportedSecureResponseEditRouteVerified": false,
+    "accessBeyondExpiryArranged": false
+  },
+  "browserBoundary": {
+    "selectedBrowserBecameUnavailable": true,
+    "freshBrowserInventory": [],
+    "privateFormOrMailboxReadClaimed": false,
+    "workaroundOrBrowserStateExtractionUsed": false
+  },
+  "next": {
+    "condition": "Docker approves/runs workflows and reviews/merges/imports. If review requires access beyond Oct31, use a supported secure update route before bounded renewal; inspect actual saved metadata and request when browser access is available.",
+    "owners": [
+      "Docker maintainers for workflow/review/private secure route",
+      "repository worker for review feedback, private bounds and final public/native verification"
+    ],
+    "nextAssessmentByUTC": "2026-10-31",
+    "earlierTrigger": "Actual reviewer access request/failure, review/workflow event or restored supported browser access.",
+    "publisherInputNeededNow": false
+  },
+  "actions": {
+    "newKey": false,
+    "expiryExtended": false,
+    "credentialRetrieved": false,
+    "grantRevoked": false,
+    "privateFormResubmitted": false,
+    "messageSent": false,
+    "nativeOAuthRepeated": false
+  },
+  "limits": "Unchanged public PR review is not proof of absent private reviewer mail. No current private-key validity, expiry extension, secure delivery or new native acceptance is claimed."
+}

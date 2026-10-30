@@ -17,6 +17,21 @@ the published catalog installation. Next manual reviewOct31UTC or actual
 workflow/feedback/publication earlier. Reviewer-key assessment remains dueOct29,
 with current expiry endOct31; no key/grant or native run is repeated today.
 
+## Reviewer-access follow-through — 2026-10-30 UTC
+
+[Due assessment](./reviewer-access-assessment-20261030.json) confirms PR6042
+still OPEN/unmerged with zero reviews/comments; both existing runs remain
+`action_required`. No longer window is requested in the observed PR. The browser
+becomes unavailable and its fresh inventory is empty, so private form/mailbox
+and key metadata are not refreshed. The actual Oct29 metadata keeps its own date;
+current validity or absence of private reviewer mail is not inferred.
+
+Docker workflow approval/review/import and the supported private update route
+remain external gates. Reassess byOct31UTC or actual request/failure/restored
+supported browser earlier, before arranging any necessary bounded renewal.
+No new key, expiry expansion, credential retrieval, grant revocation, duplicate
+form or outreach occurs. Native Oct26 acceptance remains separate and complete.
+
 ## Verified preparation
 
 On 2026-10-21, the actual upstream Go commands passed against Docker MCP Registry revision `49b643ce3fc73e6ee80bb962719b6e2990e3d397`, using Go 1.26.4 and the existing Prettier 3.8.1. From a checkout of that upstream revision, copy this `servers/beancount-io/` directory into its `servers/`, then run:
