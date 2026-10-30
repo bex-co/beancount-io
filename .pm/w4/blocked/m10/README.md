@@ -36,6 +36,8 @@
 
 **Blocked again 2026-10-30 via `/pm block w4/m10`:** t003 policies shipped in `da74f015e7` and were verified/archived in `dbb03904ef`; t005's complete contributor guide shipped in `96575b46d7`. No independent open task remains. t001 still needs explicit authorization for the two proposed labels (`skills`, `self-host`) and their actual automatic-application verification; t004 still needs reviewed/authorized public issue drafts and issue176 labeling, plus t001. t006/t007/t009 are marked blocked transitively, with no claim that their closing work is complete. The latest instruction to ship and run `/loopx w4` did not answer the pending label/disposition questions or authorize public issue publication. **Who:** repository owner for those decisions; worker for the subsequent implementation and acceptance. **Unblock:** the relevant owner decision is supplied and a remaining task becomes actionable; restore the milestone while preserving unrelated blocked children. All four completed tasks and their evidence remain under `done/`.
 
+**Independent follow-up 2026-10-30 via `/loopx w4`:** after t003 supplied the native security policy, t001's chooser config gained its planned **Report a security vulnerability** contact link, with the approved security email in its description. The local community-files check passes; no label or public issue change is included. The milestone remains blocked on the same label/public-issue owner inputs, with the t003-dependent repository link work finished.
+
 ## Definition of done
 
 - GitHub's community profile for the repository shows description, README, code of conduct, contributing guide, license, security policy, issue templates, and pull request template all present.
