@@ -13,7 +13,7 @@ Customer-facing `beancount-*` ledger skills belong in [`skills/<name>/`](../skil
 | `mermaid` | Draw and syntax-check architecture and dependency diagrams. |
 | `pm` | Maintain the public `.pm` board; canonical board conventions and the only workflow that writes board state (create, close, drop). |
 | `pm-brainstorm` | Propose roadmap milestones and tasks as text for `/pm` to materialize. |
-| `unblock` | Explain a worker queue's blockers in Chinese, guide quick decisions or focused discussion, and record decisions and verified resolutions through `/pm`. |
+| `unblock` | Guide the owner in Chinese through concrete actions and decisions that let a worker resume, using quick choices or focused discussion and recording outcomes through `/pm`. |
 | `loopx` | Drain a workstream item by item — triage every pending milestone, task, and inbox note, then work and ship it, close it as already done, block it with an unblock condition, or delete it as invalid. |
 | `ship` | Rebase, commit, and push the current `main` branch. |
 | `mobile-release` | Prepare and publish mobile store releases and localized listings. |

@@ -1,6 +1,6 @@
 ---
 name: unblock
-description: Help a reader unblock a .pm worker queue in Chinese. Use for /unblock wN or requests to explain and work through a queue's blockers, using quick decision rounds for simple choices and focused conversation for complex ones. Record confirmed decisions and restore eligible work through /pm; leave implementation to the worker.
+description: Guide the owner in Chinese through concrete actions and decisions that unblock a .pm worker queue. Use for /unblock wN or requests to help a worker move forward. Recommend what the owner can do next, use a wizard for quick choices or focused discussion for complex tradeoffs, and record outcomes through /pm; leave implementation to the worker.
 metadata: {"internal": true}
 ---
 
@@ -8,9 +8,11 @@ metadata: {"internal": true}
 
 Usage: `/unblock <wN>` (for example, `/unblock w4`).
 
-Explain the situation and the shortest practical path to resuming work in **plain Chinese**, even when the board is in English. Optimize for the reader's understanding and effort: investigate discoverable facts yourself, batch easy decisions, and give complex tradeoffs room for conversation. This is an interactive coordination skill; it does not implement code, deploy changes, operate external settings, send messages to others, ship, or start `/loopx`.
+Help the reader answer **“我现在做什么，能让 worker 继续？”** in plain Chinese, even when the board is in English. The deliverable is a practical way forward and a conversation that helps the reader take it. Success means the reader can make an informed choice, perform a concrete action, or hand a specific request to the right person. Investigating and cleaning stale records supports that outcome; a blocker inventory or status survey alone does not fulfill the command.
 
-## 1. Find the actual blockers
+Investigate discoverable facts yourself, batch easy decisions, and give complex tradeoffs room for conversation. This is an interactive coordination skill; it does not implement code, deploy changes, operate external settings, send messages to others, ship, or start `/loopx`.
+
+## 1. Prepare in the background
 
 - Read [the `/pm` canon](../pm/SKILL.md) and `.pm/DO_NOT_DO.md`. `/pm` owns board conventions and is the **only** workflow that writes `.pm/`; use it for every board update below rather than introducing another writer or format.
 - Parse `$ARGUMENTS` as one workstream. Accept `w4`, literal `<w4>`, and `.pm/w4` (optionally with a trailing slash), all resolving to `.pm/w4`. Do not interpolate unvalidated arguments into shell commands. If absent, ask which queue; if malformed or nonexistent, explain briefly and show available workstreams. Do not create one, guess a substitute, or scan all queues' contents.
@@ -19,13 +21,23 @@ Explain the situation and the shortest practical path to resuming work in **plai
 - For each blocked item, establish its stable ID and actual path, intended outcome, exact blocker, who can clear it, written **Unblock:** condition, remaining work, and relevant evidence. Follow only the linked dependencies needed to understand it, including other queues when necessary; do not turn this into a repository-wide audit.
 - Verify targeted claims against current code, records, or available read-only sources before asking the reader to investigate. Distinguish **已确认**, **记录所述，尚未核实**, and **待决定**. Missing access or deployment evidence is an unknown, not proof of success. If the condition or responsible person is missing, say so and propose a concrete condition to confirm.
 
+Keep this investigation proportional to the next useful owner action. Once there is enough evidence to recommend a path, start helping the reader; do not delay for an exhaustive audit of unrelated groups. Clear verified stale items through `/pm` as below and mention those results briefly. Board housekeeping must not become the main user-facing output.
+
 If there are no current blocked items, say so in Chinese and stop. Report relevant record inconsistencies separately without manufacturing decisions or editing the board.
 
-## 2. Explain enough to make the next decision
+## 2. Recommend what the reader can do
 
 Group items sharing the same underlying blocker into one discussion, while retaining each item's own conditions. Prioritize decisions that release useful work quickly and prerequisites that unlock other decisions. Do not ask downstream questions before their prerequisite is settled.
 
-Open with a short orientation: blocked work items, distinct blocker groups, and the most useful first action. For a milestone, count the milestone once in this overview and mention separately blocked children only when their conditions differ. A small table helps when there are several groups; skip it for one item.
+Lead with the **recommended next owner action**, why it is worth doing first, and exactly which work it would release. Prefer useful work released for little owner effort, while accounting for urgency and prerequisites. Give a brief map of the other choices only if it helps the reader choose where to spend their time; counts and a full blocker table are optional background, not the default opening.
+
+Turn the selected blocker into a doable intervention:
+
+- **A decision:** explain the feasible choices, recommend one with its main tradeoff, and ask the reader to choose. Explain what that answer lets the worker start; do not make the reader design the solution from scratch.
+- **An external setting or access:** explain what the change achieves, give the exact page/control or access request from current documentation, and say which small confirmation the reader should return. Offer to walk through the steps in this chat. When the reader cannot act, help identify the owner and draft a short handoff they can send; do not send it yourself.
+- **A manual check:** give a bounded checklist with the screens or journey, expected result, and what to report. Explain what the worker will verify or repair afterward; “do an accessibility audit” is not enough guidance.
+- **A technical dependency:** explain the missing capability through a concrete example, compare feasible ways to supply it, and help the reader settle the scope or owner. Separate the decision that lets upstream work begin from the deployed evidence needed to release the downstream item.
+- **An unproven or obsolete candidate:** explain whether further investigation is worth the owner's effort and recommend a next step. If retirement or deferral would change the wanted scope, discuss that choice explicitly rather than leaving the reader with “find a new reproducer.”
 
 Explain each group using the following information, without forcing a long template onto a simple choice:
 
@@ -36,19 +48,19 @@ Explain each group using the following information, without forcing a long templ
 
 Use familiar words, explain necessary terms once, and describe consequences before implementation details. Avoid dumping task files, commit histories, or a wall of questions. Never ask for passwords, keys, or private ledger data. For an external action, give the responsible person concrete steps from the relevant documentation and the smallest non-sensitive confirmation or evidence needed; do not claim the action was performed.
 
-For example: “代码部分已经完成，现在还需要有 GA4 编辑权限的人关闭两个自动采集选项，并验证页面查询和文件路径不再上报。完成设置和验证后，这条记录才能关闭。” A decision to do this is not evidence that the setting changed.
+For example: “建议先处理 GA4：代码侧已完成，你能帮上的一步是用有编辑权限的账号，进入数据流的增强型衡量设置，关闭 Site search 和历史页面浏览自动采集。我可以带你逐步操作；设置后只需告诉我已改哪些选项，后续再按现有清单核对采集内容。设置和验证都完成，这条就能关闭。” A decision to do this is not evidence that the setting changed. By contrast, merely asking “已处理／未处理／不确定？” and then repeating that it remains blocked does not help the reader act.
 
 ## 3. Choose the conversation shape
 
 ### Quick decisions
 
-Use a short wizard for independent, well-understood choices with concise consequences. Ask at most **three questions per round**, fewer when fewer are needed. Each question should stand on its own: decision, meaningful options, recommended option when justified, and the main tradeoff. Offer “暂不决定” when deferral is meaningful; support free-text answers and requests for more context.
+Use a short wizard for independent, well-understood choices with concise consequences. Ask at most **three questions per round**, fewer when fewer are needed. Each question should advance an intervention: decision, meaningful options, recommended option when justified, main tradeoff, and what the worker can do with the answer. Ask about existing completion or access only when that answer changes the next step, and pair it with an actionable route. Do not spend the first round merely collecting statuses across unrelated blockers. Offer “暂不决定” when deferral is meaningful; support free-text answers and requests for more context.
 
 Prefer the host's structured question tool when available in the active mode; otherwise use numbered questions and options in chat. Wait for actual answers before dependent updates. A preselected recommendation, silence, or an unanswered question is not a decision. Record clear answers, leave skipped items blocked, and avoid asking for a second confirmation unless the reply is ambiguous or new consequences change the choice.
 
 ### Complex situations
 
-Use a focused conversation in the **current chat** when choices depend on one another, the goal is unclear, or tradeoffs need explanation. Summarize the situation, why it matters, the feasible alternatives and your recommendation; then ask the single most useful question. Address concerns and narrow the decision before moving on. Do not squeeze a complex situation into arbitrary yes/no choices or automatically create another chat.
+Use a focused conversation in the **current chat** when choices depend on one another, the goal is unclear, or tradeoffs need explanation. Summarize the situation, why it matters, the feasible alternatives and your recommendation; then ask the single most useful question. Explain enough for the reader to answer without researching the implementation. Address concerns and narrow the decision before moving on. Do not squeeze a complex situation into arbitrary yes/no choices or automatically create another chat.
 
 For a mixed queue, handle independent easy decisions first, then take complex groups one at a time. Allow the reader to reorder or skip. If they want to continue elsewhere, provide a short Chinese handoff with facts, open question, relevant links, and what would let the worker resume.
 
@@ -64,7 +76,7 @@ Invocation authorizes the `/pm` board updates needed to record explicit answers 
 
 Re-read affected records after `/pm` updates to verify the applicable move/status/link exit conditions. Preserve public-board privacy: write only non-sensitive decisions and evidence, not raw conversation, credentials, private URLs, or private-repository details. Do not commit or push as part of this command.
 
-End each completed pass with a concise Chinese handoff: **已解除／已完成**, **仍在等待什么、由谁处理**, and **worker 接下来可以做什么** with item IDs. Distinguish decisions merely recorded from blockers actually cleared. If actionable work exists, provide the relevant `/loopx wN` invocation as a next step without launching it.
+After an answer, help the reader take the next step or move to the next useful decision. While a choice is pending, keep the conversation centered on that choice; do not replace it with a final audit summary saying nothing was unblocked. End a completed or explicitly deferred pass with a concise Chinese handoff: what the reader chose or can do next, **已解除／已完成**, **仍在等待什么、由谁处理**, and **worker 接下来可以做什么** with item IDs. Distinguish decisions merely recorded from blockers actually cleared. If actionable work exists, provide the relevant `/loopx wN` invocation as a next step without launching it.
 
 ## Arguments
 

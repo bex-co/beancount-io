@@ -98,7 +98,7 @@
 
 
 
-- [265 — Keep financial text and private paths out of GA4 automatic events](./blocked/265.md) — major; dashboard QA, 2026-10-20; stream-editor completion dependency. — **blocked:** checklist shipped in `181e7a996`; needs a GA4 Editor to turn off Site search / history page views
+- [265 — Keep financial text and private paths out of GA4 automatic events](./blocked/265.md) — major; dashboard QA, 2026-10-20. — **blocked:** production Site search and history page-view settings saved OFF with owner approval on 2026-10-28; signed-in public-example control passes, anonymous/private-ledger acceptance remains for a QA worker
 
 ## Milestones
 
@@ -198,7 +198,7 @@
 - [x] **m7** — Screen-reader pass on the mobile core journeys (9 tasks) ← from `/pm-brainstorm for w4` 2026-09-08; user approved all four
 - [x] **m8** — [Localized Google Play listing from the canonical metadata](./done/m8/README.md) (8 tasks) ← from `/pm-brainstorm for w4` 2026-09-08; user approved all four
 - ~~**m9**~~ — `bea price fetch` through upstream bean-price — dropped 2026-10-26 by user decision: superseded by w1/m20's `bea price` passthrough (ADR014) and w1/m29's managed price includes (`include "https://beancount.io/prices/BTC-USD"`, ADR015/ADR018), which already keep valuations current on hosted and CLI without writing fetched quotes back into the ledger.
-- [ ] **m10** — [GitHub contributor front door: issue and PR templates, security policy, code of conduct, seeded good first issues](./blocked/m10/README.md) (9 tasks) — **blocked:** forms, PR template, and CI check shipped; needs the security reporting channel, approval for labels/contributor issues, and signed-in issue-chooser verification; issue176 already has the maintainer reply. ← from `/pm-brainstorm for w4` 2026-09-10; user handed items 1, 6, 7 to `/pm` 2026-09-11
+- [ ] **m10** — [GitHub contributor front door: issue and PR templates, security policy, code of conduct, seeded good first issues](./m10/README.md) (9 tasks) — **next: t003**, reporting channels confirmed (`security@beancount.io` for vulnerabilities; `hello@beancount.io` for conduct complaints); t001/t004 remain blocked on missing labels and public-issue inputs; signed-in owner chooser observed 2026-10-30. Forms, PR template and CI check shipped; issue176 already has the maintainer reply. ← from `/pm-brainstorm for w4` 2026-09-10; user handed items 1, 6, 7 to `/pm` 2026-09-11
 - [x] **m11** — [Mobile says what a converted balance means: units for commodities, labelled cost basis, disclosed omissions](./done/m11/README.md) (9 tasks) ← promoted w4/016 with w4/027 folded in; user approved `/pm-brainstorm for w4` item 2 and its display rule, 2026-09-15
 - [x] **m12** — [Make mobile's `lint:deadcode` see unused GraphQL documents and test-only modules](./done/m12/README.md) (7 tasks) ← promoted w4/025; user approved `/pm-brainstorm for w4` item 4 and its allowlist recommendation, 2026-09-15
 
@@ -254,4 +254,5 @@ Blocked milestones live under `blocked/` with their reason and unblock condition
 
 ## Blocked inbox follow-up
 
+- [ ] [002 — Complete manual accessibility verification](./blocked/002.md) — blocked on Accessibility Inspector checks of the ten m7 screens in light/dark and a physical-device VoiceOver read/write walkthrough; automated labels and guardrails do not replace these observations.
 - [ ] [096 — Verify protected-route login history](./blocked/096.md) — blocked on a current protected-query trigger and native-toolbar Back reproduction; original Import/History triggers retired, automated traversal alone is insufficient.

@@ -4,7 +4,7 @@
     {
       "id": 1,
       "prompt": "Use /unblock <w4> on this synthetic board. w4/blocked/001.md waits only for the owner to choose Simplified Chinese or English for a help page; 002.md waits only for a seven-day or thirty-day default report range; 003.md waits only for a short or detailed example; 004.md waits only for CSV or JSON as the initial export example. Each has remaining implementation work, and none depends on another. The host has a structured question tool. After your first round, my answers are: use Simplified Chinese, skip the report range, and explain the example choice more before I decide.",
-      "expected_output": "Explains the four blockers briefly in Chinese and asks no more than three independent questions in the first wizard round, with meaningful options and recommendations. Uses /pm to record the explicit Simplified Chinese decision and unblock only 001 with its rationale preserved. Leaves 002 blocked, discusses the example tradeoff instead of treating it as answered, and does not assume an answer for 004 or launch implementation. Reports what can actually resume.",
+      "expected_output": "Leads with the quick decisions the owner can make to release help-page work, rather than a blocker count or completion-status survey. Asks no more than three independent questions in the first wizard round, with meaningful options, recommendations and what the answers let the worker implement. Uses /pm to record the explicit Simplified Chinese decision and unblock only 001 with its rationale preserved. Leaves 002 blocked, discusses the example tradeoff instead of treating it as answered, and does not assume an answer for 004 or launch implementation. Reports what can actually resume.",
       "files": []
     },
     {
@@ -59,6 +59,18 @@
       "id": 10,
       "prompt": "Use /unblock w4. w4/blocked/m7 has two open children: t001 waits only for the owner's choice of help-page audience, and t002 waits for an external store review. t002 depends on t001. I choose beginners for t001; the store review is still pending. Existing completed child files must stay in done/. A second independent note also awaits the same audience decision but has no other blocker.",
       "expected_output": "Asks the shared audience question once, preserves the explicit beginners choice, and uses /pm for updates. Clears decision-only blocks individually while retaining the store-review blocker and completed history. Does not mark t002 ready or the entire milestone unblocked. Verifies paths, IDs, statuses and dependency-aware actionability before saying which worker work can resume; if the milestone remains parked, states that limitation instead of promising the child is available to /loopx. Handles the independent note according to its own condition.",
+      "files": []
+    },
+    {
+      "id": 11,
+      "prompt": "Use /unblock w4. The board has five groups: missing GitHub security/conduct reporting contacts, GA4 automatic search/history telemetry settings, manual mobile accessibility acceptance, a missing per-lot valuation read, and an old login-history candidate whose original triggers disappeared. Current code and records have already established these facts. I want to understand how I can help the worker move, not receive an inspection report. None of the owner actions is confirmed done.",
+      "expected_output": "Recommends a concrete owner intervention and explains its value, the specific steps or meaningful choice, and which work can proceed afterward. For example, guides the owner through the GA4 controls using the existing documented checklist and explains the subsequent validation, or helps select real reporting channels so the documentation can proceed. Offers a short action-oriented choice or begins one focused walkthrough. Does not lead with five blocker statuses, ask three unrelated done/not-done surveys, or end with 'nothing unblocked; provide evidence' without helping the reader take the next step. Keeps evidence requirements for actual closure and uses /pm only for verified outcomes or explicit decisions.",
+      "files": []
+    },
+    {
+      "id": 12,
+      "prompt": "Use /unblock w4. Item 1031 awaits a deployed per-lot valuation read; no implementation has started. I say: I don't understand the architecture, but tell me what decision I can make to help. The repository can either add a stable read with the actual valuation basis per holding/lot or investigate a scoped BQL position read. Both need cross-surface parity and downstream checks.",
+      "expected_output": "Uses a simple example to explain why aggregate balances lose the actual cost/quote currency, compares the stable read with the query approach in terms of correctness, effort and ongoing cost, and recommends a justified path. Asks an understandable scope or ownership decision that lets the producer work begin. Explains that this can advance upstream work while the dashboard item remains blocked until its own read/deployment conditions hold. Does not ask the reader to supply a complete API design, merely restate 'needs backend data', or treat the owner's choice as a deployed contract.",
       "files": []
     }
   ]
