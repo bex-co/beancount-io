@@ -1,0 +1,20 @@
+{
+  "target": "Muse Connector Platform",
+  "status": "planned",
+  "observedDateUTC": "2026-10-30",
+  "assessmentCompletedAtUTC": "2026-10-30T01:01:47Z",
+  "owner": "w6/m12/t001 then t002",
+  "operation": "https://platform.muse.ai/submission",
+  "anonymousOperationResult": "Redirects to https://platform.muse.ai/login?return_to=/submission",
+  "officialLanding": "https://platform.muse.ai/",
+  "officialGuidelines": "https://platform.muse.ai/docs",
+  "scope": "Reviewed hosted connector for Muse app directory, not Muse Code or an unrelated community index.",
+  "routeFacts": "Official guidelines cover connector intake, tool permissions, reviewer testing and directory discovery.",
+  "existingRepositoryEvidence": "ADR019 contains older unverified Muse reporting; no Muse submission packet/receipt or w6 listing task is found in the targeted board/tracker search.",
+  "nextAction": "Inspect original publisher applications, deduplicate, prepare canonical hosted-service payload and private synthetic reviewer instructions, then submit once and retain the actual receipt. t002 follows review/public/native acceptance.",
+  "externalSubmissionMade": false,
+  "authenticatedAccountOrTermsInspected": false,
+  "nativeAcceptanceRun": false,
+  "limits": "Public official-page routing only; login, private application absence, review eligibility and native protocol compatibility are unverified.",
+  "externalObservationPrecision": "date-only, public primary-source reads in this PM pass; completion time is not a new authenticated status read"
+}

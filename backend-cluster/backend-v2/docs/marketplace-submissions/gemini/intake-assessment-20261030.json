@@ -1,0 +1,40 @@
+{
+  "target": "Gemini Apps via Connected Apps Platform",
+  "status": "planned",
+  "observedDateUTC": "2026-10-30",
+  "assessmentCompletedAtUTC": "2026-10-30T01:01:47Z",
+  "owners": [
+    "w6/m12/t003",
+    "w6/m12/t004",
+    "w6/m12/t005"
+  ],
+  "operation": "https://connected.google.com/",
+  "previewAccessEntry": "https://connected.google.com/console/help/?apply=",
+  "previewAccessObservation": "Official overview Apply for preview resolves here; web reader sees an unrendered application shell, not an accepted application.",
+  "nativeDeveloperMode": "https://gemini.google.com/devmode",
+  "sources": {
+    "overview": "https://developers.google.com/connected-apps/",
+    "prerequisites": "https://developers.google.com/connected-apps/gpc/prerequisites",
+    "registerTestPublish": "https://developers.google.com/connected-apps/gpc/perform-the-steps",
+    "oauth": "https://developers.google.com/connected-apps/mcp/oauth",
+    "nativeTesting": "https://developers.google.com/connected-apps/mcp/dev-mode/usage"
+  },
+  "routeFacts": {
+    "listingSurface": "Gemini Apps, selected in Connected Console product availability.",
+    "domainProofPath": "/.well-known/google-connected-apps",
+    "reviewStages": "Registration and tester preview, accepted review, approval, then explicit publish; these are distinct.",
+    "authCaution": "Older OAuth guidance and newer console registration text differ on client registration details. Verify actual supported console flow; preserve existing auth policy and refresh rotation."
+  },
+  "existingRepositoryEvidence": "No matching Connected Apps implementation/receipt is found in the targeted backend/docs/w6 search. Actual developer console access and original private registrations remain unknown.",
+  "relatedButSeparate": {
+    "geminiCliGallery": "https://geminicli.com/extensions/",
+    "cliReleasing": "https://geminicli.com/docs/extensions/releasing/",
+    "scope": "CLI topic/manifest indexing is a different channel, not a substitute for Gemini Apps. Existing w2/087 concerns local skill-suite mirror/directory distribution; it is not a prerequisite for this hosted-MCP target."
+  },
+  "nextAction": "Inspect current console/access, deduplicate, complete actual domain/user-auth/tool setup, verify native registered preview, submit one review and publish after actual approval.",
+  "externalSubmissionMade": false,
+  "authenticatedAccountOrTermsInspected": false,
+  "nativeAcceptanceRun": false,
+  "limits": "Public official instructions and operation-link resolution only; account eligibility, portal availability, domain proof, accepted submission and publication are unverified.",
+  "externalObservationPrecision": "date-only, public primary-source reads in this PM pass; completion time is not a new authenticated status read"
+}

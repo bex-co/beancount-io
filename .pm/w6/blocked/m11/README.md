@@ -21,7 +21,7 @@
 - Existing ChatGPT and Claude submissions are reused, required supported feedback is addressed, and both have actual approved public entries with verified native synthetic OAuth/query/preview paths.
 - The remote-only community list has an accurate merged canonical entry and working setup links, without a duplicate contribution.
 - The shared tracker retains actual submit/manage links, status, UTC last checked at, receipts/evidence and next actions. Publisher-confirmed submission, inspected review state and public publication remain distinct.
-- All 18 tracker rows retain the execution owner below. Existing m8/m9/m10, 047/042 and independent note 048 retain their own publication gates; completing this milestone alone does not mean every w6 submission is finished.
+- All 20 tracker rows retain the execution owner below. Existing m8/m9/m10, m12, 047/042 and independent note 048 retain their own publication gates; completing this milestone alone does not mean every w6 submission is finished.
 - All standing closing tasks pass and mandatory archive moves are complete. Pending review, unavailable account access or unpaid fees are not completion.
 
 ## Source + Goal linkage
@@ -38,6 +38,8 @@ The [m9/t011](../m9/done/t011.md) official Cursor application is submitted with 
 
 | Inventory target | Submission / receipt owner | Review, public verification or retained gate |
 | --- | --- | --- |
+| Muse | [m12/t001](../../m12/t001.md), planned intake | [m12/t002](../../m12/t002.md) review/public/native acceptance; independent of this milestone |
+| Gemini Apps / Connected Apps Platform | [m12/t003](../../m12/t003.md) console/domain/auth; [t004](../../m12/t004.md) preview/review receipt | [m12/t005](../../m12/t005.md) approval/publish/public/native; CLI Gallery is separate |
 | Cursor — official | [m9/t011](../m9/done/t011.md) | [m9/t003](../m9/done/t003.md) done; [m9/t016](../m9/t016.md) official review/public/native |
 | Docker | [m9/t012](../m9/done/t012.md) | [m9/t002](../m9/done/t002.md) submission/private reviewer access complete; [m9/t017](../m9/t017.md) actual review/publication; [m9/t015](../m9/done/t015.md) current OAuth repair |
 | Cline | [m9/t013](../m9/done/t013.md) | [m9/t004](../m9/t004.md), m9/t006 |

@@ -2,6 +2,17 @@
 
 **Worker:** worker1 — general-purpose adoption worker; accepts the next highest-impact milestone across packages, topics, and A1/A2/A3 rather than owning a permanent specialty.
 
+## Muse and Gemini Apps listing work — 2026-10-30 UTC
+
+Owner-requested [m12](m12/README.md) adds two independent hosted-MCP app
+integrations. Muse's actual submission entry and Google's Connected Console /
+preview entry are verified from current first-party pages. [The current tracker](../../backend-cluster/backend-v2/docs/mcp-marketplaces.md)
+now has20targets, with both additions planned, not submitted. Gemini Apps is the
+Connected Apps target; the CLI Gallery and local-skill mirror are separate.
+t001 (Muse intake) and t003 (Gemini console/domain/auth setup) can start without
+waiting for the other branch or any earlier directory's review. Complete
+reviewable preparation before escalating a concrete indispensable gate.
+
 ## Requested ten-channel deduplication — 2026-10-29 UTC
 
 The owner's ten named MCP integration targets map to four completed baselines,
@@ -88,7 +99,7 @@ Source: the owner's request to complete all remaining actions from the17-target 
 
 **Execution order:** tracker/browser/native prerequisites and045 credential coordination are complete;046 renewable native acceptance is now complete too. Follow actual review, publication, compatible host/client or supported engine-artifact changes independently. Aggregate verification and standing closing tasks retain their full DoDs; one blocked platform never ends the w6 loop while another actionable item remains.
 
-**Current board:** 62 pending leaves: the 61 previously parked or dependency-gated leaves plus [048](blocked/048.md), now submitted as PR18050 and parked for Glama source review/score and maintainer merge. Due blocked-item checks remain eligible independently. 046 is archived under done/. Obsolete standalone discovery 040 is dropped below; milestone task counts are unchanged. Historical snapshots retain their earlier queue states.
+**Current board:** 71 pending leaves: 62 previously parked/dependency-gated leaves plus9 live [m12](m12/README.md) tasks for Muse/Gemini. Two independent branches start at t001 and t003; standing closing tasks wait for their concrete prerequisites. 046 is archived under done/ and 040 remains dropped. Historical snapshots keep their original counts.
 
 ## Historical work and blocker triage — 2026-10-24 UTC
 
@@ -288,6 +299,8 @@ These are existing blocked findings prepared for an upstream hand-off; no issue,
 Prioritize the major correctness findings (PRINT/FROM/JOURNAL, authored locations, and quoted-column values), then type provenance and guard/regex compatibility. Coordinate one dependency upgrade for whichever fixes the published artifact actually contains, regenerate the ledger lockfile with Yarn, and verify each finding separately. Source-only fixes, unrelated releases, and adapter query rewrites do not meet the written unblock conditions. Hosted verification follows the normal deployment separately.
 
 ## Milestones
+
+- [ ] **m12** — [Publish the hosted MCP connector on Muse and Gemini Apps](m12/README.md) (9 tasks; A3/A1/A2) ← explicit owner request2026-10-30. **Next:** independent t001 Muse intake and t003 Gemini Connected Console/domain/auth; actual accepted receipts, public availability and native accounting remain required.
 
 - [ ] **m11** — [Complete app-directory and remote-community distribution](blocked/m11/README.md) (7 tasks; A3/A1) ← explicit all-inventory submission request 2026-10-23. **Blocked:** t001 publisher-reported in review, estimate2026-11-03 and no user action now; t002 publisher-reported in review, no supplied estimate and no user action now; t003 PR #2753 is submitted and green but unmerged, with the existing waiver request and maintainer review/merge gate. Exact application/receipt links retained.
 
