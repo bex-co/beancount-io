@@ -33,6 +33,31 @@ const Amount = BigNumber.clone({
   ROUNDING_MODE: BigNumber.ROUND_HALF_EVEN,
 });
 
+/**
+ * The `from → to` currency legs a report valued without a price path: the
+ * amount stayed in its own currency (or its units) because neither a direct
+ * price nor a cost-currency two-hop reached the conversion target. Opt-in on
+ * {@link LotInventory.reduceScaled}, so a caller that does not ask values
+ * exactly as before (w23/m16). Legs accumulate across dates and accounts: one
+ * unpriced point makes the whole report partial.
+ */
+export class MissingPriceLegs {
+  private readonly legs = new Map<string, { from: string; to: string }>();
+
+  add(from: string, to: string): void {
+    this.legs.set(`${from}\0${to}`, { from, to });
+  }
+
+  /** Sorted by `from` then `to`, so a report lists them stably. */
+  toArray(): { from: string; to: string }[] {
+    const order = (left: string, right: string) =>
+      left < right ? -1 : left > right ? 1 : 0;
+    return [...this.legs.values()].sort(
+      (a, b) => order(a.from, b.from) || order(a.to, b.to),
+    );
+  }
+}
+
 /** A held position lot: net units in `currency`, at an optional per-unit cost. */
 interface Lot {
   number: BigNumber;
@@ -235,6 +260,7 @@ export class LotInventory {
     conversion: Conversion,
     priceMap: PriceMap,
     date: string | undefined,
+    missing?: MissingPriceLegs,
   ): Map<string, { value: BigNumber; scale: number }> {
     let out = new Map<string, { value: BigNumber; scale: number }>();
     // First pass — value each lot (cost-aware) into targets[0] (or the sole
@@ -269,6 +295,16 @@ export class LotInventory {
           } else addScaledInto(next, currency, value, scale);
         });
         out = next;
+      }
+      // Whatever is still in another currency found no price path to any
+      // target; a net-zero amount shows nothing, so it discloses nothing.
+      if (missing) {
+        const to = conversion.targets.join(",");
+        out.forEach(({ value }, currency) => {
+          if (!conversion.targets.includes(currency) && !value.isZero()) {
+            missing.add(currency, to);
+          }
+        });
       }
     }
     return out;
