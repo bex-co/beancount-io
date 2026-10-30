@@ -918,6 +918,16 @@ statement's `period` gives `to`, the statement's last day, and `time`, the
 selection as requested. `from` is `null` because chart buckets carry only
 their end dates.
 
+When an explicit currency `conversion` did not reach everything, the summary
+also carries `missingPrices`: one `{from, to}` leg per currency that stayed
+unconverted because the ledger has no price path to `to` — the same shape holdings
+returns. `?conversion=EUR` on a ledger that only has USD prices answers in `USD`
+with `missingPrices: [{"from": "USD", "to": "EUR"}]` rather than passing for a
+EUR report. The field is present only then; it is absent for `units`, `at_cost`,
+`at_value`, an omitted conversion, and a fully converted report. The raw
+`shape=fava` payloads and GraphQL return the chart data unchanged: their
+currency-keyed balances already show which currencies were not converted.
+
 Income-statement and overview summaries use the currency observed in their
 reported balances. When those maps contain no currency, valuation strategies
 (`units`, `at_cost`, `at_value`) use the USD fallback; an explicit currency such

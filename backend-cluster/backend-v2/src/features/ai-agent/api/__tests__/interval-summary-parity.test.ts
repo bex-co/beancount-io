@@ -251,6 +251,7 @@ describe("interval summaries through actual report adapters", () => {
     currency: string;
     total: number;
     byAccount: { account: string; balance: number }[];
+    missingPrices?: { from: string; to: string }[];
   }[] = [
     {
       name: "non-USD transfer",
@@ -347,6 +348,8 @@ describe("interval summaries through actual report adapters", () => {
       conversion: "JPY",
       currency: "EUR",
       total: 0,
+      // JPY was asked for and nothing carries it: say which currency stayed.
+      missingPrices: [{ from: "EUR", to: "JPY" }],
       byAccount: [
         { account: "Assets:Bank:EUR:Checking", balance: -10 },
         { account: "Assets:Bank:EUR:Savings", balance: 10 },
@@ -379,6 +382,7 @@ describe("interval summaries through actual report adapters", () => {
     try {
       await expectSummary(f, query, {
         currency: entry.currency,
+        ...(entry.missingPrices ? { missingPrices: entry.missingPrices } : {}),
         intervals: [
           { period: march, total: entry.total, byAccount: entry.byAccount },
         ],

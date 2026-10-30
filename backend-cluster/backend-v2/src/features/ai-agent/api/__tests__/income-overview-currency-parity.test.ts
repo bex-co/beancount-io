@@ -33,6 +33,11 @@ const scope = {
 };
 const conversions = [undefined, "units", "at_cost", "at_value", "EUR"];
 const families = ["income", "overview"] as const;
+// An explicit EUR nothing carries leaves the MUSD unconverted, and says so.
+const unconverted = (conversion: string | undefined) =>
+  conversion === "EUR"
+    ? { missingPrices: [{ from: "MUSD", to: "EUR" }] }
+    : {};
 type Family = (typeof families)[number];
 
 function payloads(income?: number, expenses?: number) {
@@ -284,11 +289,13 @@ describe("observed income and overview currency controls", () => {
             income,
             expenses,
             net,
+            ...unconverted(conversion),
             byAccount,
           });
           expect(await f.read("overview", conversion)).toEqual({
             currency: "MUSD",
             netWorth: net,
+            ...unconverted(conversion),
             series: [{ date, netWorth: net }],
           });
           for (const report of Object.values(f.reports)) {

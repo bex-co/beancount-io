@@ -43,6 +43,16 @@ import type {
  */
 type OtherCurrencies = Readonly<Record<string, number>>;
 
+/**
+ * A currency the requested conversion could not reach: its amounts stayed
+ * in `from` because the ledger has no price path to `to` (w23/m16). The
+ * shape holdings uses for `missing_prices`.
+ */
+interface MissingPrice {
+  readonly from: string;
+  readonly to: string;
+}
+
 /** One account and what it holds, in the summary's currency. */
 export interface AccountBalance {
   readonly account: string;
@@ -64,6 +74,8 @@ export interface BalanceSheetSummary {
   readonly valuation: "units" | "cost" | "latest-price";
   /** What `netWorth` leaves out, per other currency. */
   readonly otherCurrencies?: OtherCurrencies;
+  /** Present only when the requested conversion did not reach everything. */
+  readonly missingPrices?: readonly MissingPrice[];
   readonly assets: number;
   readonly liabilities: number;
   readonly equity: number;
@@ -95,6 +107,8 @@ export interface IncomeStatementSummary {
   readonly net: number;
   /** What `net` leaves out, per other currency. */
   readonly otherCurrencies?: OtherCurrencies;
+  /** Present only when the requested conversion did not reach everything. */
+  readonly missingPrices?: readonly MissingPrice[];
   readonly byAccount: readonly AccountBalance[];
 }
 
@@ -103,6 +117,8 @@ export interface OverviewSummary {
   readonly netWorth: number;
   /** What the latest `netWorth` leaves out, per other currency. */
   readonly otherCurrencies?: OtherCurrencies;
+  /** Present only when the requested conversion did not reach everything. */
+  readonly missingPrices?: readonly MissingPrice[];
   readonly series: readonly { date: string; netWorth: number }[];
 }
 
@@ -123,6 +139,8 @@ interface IntervalTotal {
  */
 export interface IntervalTotalsSummary {
   readonly currency: string;
+  /** Present only when the requested conversion did not reach everything. */
+  readonly missingPrices?: readonly MissingPrice[];
   readonly intervals: readonly IntervalTotal[];
 }
 
@@ -194,6 +212,36 @@ function otherCurrencies(
     ? { otherCurrencies: Object.fromEntries(entries) }
     : {};
 }
+
+/**
+ * `{ missingPrices }` for an explicit currency conversion that left money
+ * elsewhere: every other currency the summary reports, plus the summary's own
+ * currency when the data never reached the requested one (a USD-only ledger
+ * asked for EUR states USD with no hint otherwise). Nothing for a strategy
+ * (`units`, `at_cost`, `at_value`), an omitted conversion, or a fully
+ * converted report. `others` are the currencies left out of the headline.
+ */
+function missingPrices(
+  requested: string | undefined,
+  currency: string,
+  others: readonly string[],
+): { missingPrices?: MissingPrice[] } {
+  if (!requested) return {};
+  const from = new Set(others);
+  if (currency !== requested) from.add(currency);
+  from.delete(requested);
+  return from.size > 0
+    ? {
+        missingPrices: [...from]
+          .sort((a, b) => a.localeCompare(b))
+          .map((code) => ({ from: code, to: requested })),
+      }
+    : {};
+}
+
+/** The currencies an `otherCurrencies` result names. */
+const namesOf = (result: { otherCurrencies?: OtherCurrencies }): string[] =>
+  Object.keys(result.otherCurrencies ?? {});
 
 /** A hierarchy root's own and children's balances, which sum to its total. */
 function rootBalances(
@@ -319,6 +367,13 @@ export function summarizeBalanceSheet(
   const liabilities = total(data.liabilities_hierarchy_data, currency);
   const equity = total(data.equity_hierarchy_data, currency);
   const requested = requestedCurrency(conversion);
+  const others = otherCurrencies(
+    [
+      ...rootBalances(data.assets_hierarchy_data),
+      ...rootBalances(data.liabilities_hierarchy_data),
+    ],
+    currency,
+  );
   return {
     asOf: lastDate(data.net_worth_data),
     currency,
@@ -328,13 +383,8 @@ export function summarizeBalanceSheet(
         : conversion === "at_cost"
           ? "cost"
           : "latest-price",
-    ...otherCurrencies(
-      [
-        ...rootBalances(data.assets_hierarchy_data),
-        ...rootBalances(data.liabilities_hierarchy_data),
-      ],
-      currency,
-    ),
+    ...others,
+    ...missingPrices(requested, currency, namesOf(others)),
     assets,
     liabilities,
     equity,
@@ -365,6 +415,14 @@ export function summarizeIncomeStatement(
   );
   const income = total(data.income_hierarchy_data, currency);
   const expenses = total(data.expenses_hierarchy_data, currency);
+  const others = otherCurrencies(
+    [
+      ...rootBalances(data.income_hierarchy_data),
+      ...rootBalances(data.expenses_hierarchy_data),
+    ],
+    currency,
+    -1,
+  );
   return {
     period: {
       from: null,
@@ -377,14 +435,8 @@ export function summarizeIncomeStatement(
     // Beancount signs income negative and expenses positive, so the profit is
     // their sum — not their difference, which would double the loss.
     net: -sum(income, expenses),
-    ...otherCurrencies(
-      [
-        ...rootBalances(data.income_hierarchy_data),
-        ...rootBalances(data.expenses_hierarchy_data),
-      ],
-      currency,
-      -1,
-    ),
+    ...others,
+    ...missingPrices(requestedCurrency(conversion), currency, namesOf(others)),
     byAccount: [
       ...flattenHierarchy(data.income_hierarchy_data, currency),
       ...flattenHierarchy(data.expenses_hierarchy_data, currency),
@@ -404,10 +456,15 @@ export function summarizeOverview(
     date: point.date,
     netWorth: amount(point.balance, currency),
   }));
+  const others = otherCurrencies(
+    [data.net_worth_data.at(-1)?.balance],
+    currency,
+  );
   return {
     currency,
     netWorth: series.length > 0 ? series[series.length - 1].netWorth : 0,
-    ...otherCurrencies([data.net_worth_data.at(-1)?.balance], currency),
+    ...others,
+    ...missingPrices(requestedCurrency(conversion), currency, namesOf(others)),
     series,
   };
 }
@@ -424,12 +481,21 @@ export function summarizeIntervalTotals(
     ),
     requestedCurrency(conversion),
   );
+  const rows = data.map((point) => ({
+    point,
+    others: otherCurrencies([point.balance], currency),
+  }));
   return {
     currency,
-    intervals: data.map((point) => ({
+    ...missingPrices(
+      requestedCurrency(conversion),
+      currency,
+      rows.flatMap(({ others }) => namesOf(others)),
+    ),
+    intervals: rows.map(({ point, others }) => ({
       period: point.date,
       total: amount(point.balance, currency),
-      ...otherCurrencies([point.balance], currency),
+      ...others,
       byAccount: Object.entries(point.account_balances ?? {})
         .map(([account, balance]) => ({
           account,

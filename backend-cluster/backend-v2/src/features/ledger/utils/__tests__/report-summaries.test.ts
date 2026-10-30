@@ -203,9 +203,11 @@ describe("summarizeBalanceSheet", () => {
     it("reports the accounts' currency, not one the request names but nothing carries", () => {
       // EUR was asked for but nothing carries it, so nothing was converted:
       // the totals are units, not EUR prices (w23/050).
-      expect(summarizeBalanceSheet(transfer("USD"), "EUR")).toEqual(
-        summary("USD", "units"),
-      );
+      // ...and it says so: the USD stayed USD for want of a EUR price.
+      expect(summarizeBalanceSheet(transfer("USD"), "EUR")).toEqual({
+        ...summary("USD", "units"),
+        missingPrices: [{ from: "USD", to: "EUR" }],
+      });
     });
 
     it("reads a non-USD ledger's currency from its accounts", () => {
@@ -706,6 +708,7 @@ describe("summarizeIntervalTotals", () => {
   it("ignores an unsupported explicit currency and keeps the frequency policy", () => {
     expect(summarizeIntervalTotals([mixed], "JPY")).toEqual({
       currency: "EUR",
+      missingPrices: [{ from: "EUR", to: "JPY" }],
       intervals: [expectedMarch],
     });
   });
@@ -715,6 +718,7 @@ describe("summarizeIntervalTotals", () => {
       summarizeIntervalTotals([{ ...mixed, balance: { USD: "0" } }], "EUR"),
     ).toEqual({
       currency: "USD",
+      missingPrices: [{ from: "USD", to: "EUR" }],
       intervals: [
         {
           period: "2026-03-31",
@@ -817,6 +821,47 @@ describe("what the stated currency leaves out", () => {
       otherCurrencies: { ITOT: 10, VACHR: 40 },
     });
   });
+
+  // w23/m16: an explicit currency conversion that left money elsewhere names
+  // the legs that had no price path, beside the amounts otherCurrencies gives.
+  it("names the legs a currency conversion could not reach", () => {
+    expect(summarizeBalanceSheet(portfolio, "EUR")).toMatchObject({
+      missingPrices: [
+        { from: "ITOT", to: "EUR" },
+        { from: "USD", to: "EUR" },
+        { from: "VACHR", to: "EUR" },
+      ],
+    });
+  });
+
+  it("names only the unpriced leg when the requested currency is carried", () => {
+    const priced = {
+      ...portfolio,
+      assets_hierarchy_data: node(
+        "Assets",
+        {},
+        [
+          node("Assets:Cash", { EUR: "800" }),
+          node("Assets:Vacation", { VACHR: "40" }),
+        ],
+        { EUR: "800", VACHR: "40" },
+      ),
+      liabilities_hierarchy_data: node("Liabilities", {}, [], {}),
+    };
+    expect(summarizeBalanceSheet(priced, "EUR")).toMatchObject({
+      currency: "EUR",
+      missingPrices: [{ from: "VACHR", to: "EUR" }],
+    });
+  });
+
+  it.each([undefined, "units", "at_cost", "at_value"])(
+    "names no legs under conversion=%s",
+    (conversion) => {
+      expect(summarizeBalanceSheet(portfolio, conversion)).not.toHaveProperty(
+        "missingPrices",
+      );
+    },
+  );
 
   it("omits the field when the stated currency carries everything", () => {
     const allUsd = {
