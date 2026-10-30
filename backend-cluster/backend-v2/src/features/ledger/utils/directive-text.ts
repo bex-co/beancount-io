@@ -343,7 +343,11 @@ export function insertDirectives(
   // Applied newest-first would shift the offsets of the ones after it, so
   // each insertion recomputes against the file as it now stands.
   for (const directive of directives) {
-    const block = directive.text.split("\n");
+    // A later directive's text carries the blank line that separated it from
+    // the one before; the prefix below is the only separator, so drop them.
+    const lines = directive.text.split("\n");
+    const first = lines.findIndex((line) => !isBlank(line));
+    const block = first > 0 ? lines.slice(first) : lines;
     const at = sorted ? placeUnderHeading(working, directive) : working.length;
     // `at > 0` already implies the file is non-empty and that `working[at-1]`
     // exists, so this is the whole condition.
@@ -354,9 +358,7 @@ export function insertDirectives(
     for (const earlier of inserted) {
       if (earlier.line > at) earlier.line += prefix.length + block.length;
     }
-    // A later directive's text carries the blank line that separated it.
-    const head = block.findIndex((line) => !isBlank(line));
-    inserted.push({ line: at + prefix.length + Math.max(head, 0) + 1 });
+    inserted.push({ line: at + prefix.length + 1 });
   }
 
   const content = `${working.join("\n").replace(/\n+$/, "")}\n`;

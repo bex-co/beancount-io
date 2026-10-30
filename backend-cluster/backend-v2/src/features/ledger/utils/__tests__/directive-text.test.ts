@@ -257,6 +257,50 @@ describe("insertDirectives", () => {
     );
   });
 
+  describe("several directives in one call", () => {
+    const pair = (gap: string) =>
+      parseDirectiveText(
+        `${txn("2026-10-01", "one")}\n${gap}${txn("2026-10-02", "two")}`,
+      );
+    const blankRuns = (content: string) =>
+      [...content.matchAll(/\n(\n*)(?=\d{4}-)/g)].map((m) => m[1].length);
+
+    it.each(["", "\n", "\n\n\n"])(
+      "separates them with exactly one blank line (gap %j)",
+      (gap) => {
+        const { content, inserted } = insertDirectives(existing, pair(gap));
+        expect(content).not.toMatch(/\n\n\n/);
+        const lines = content.split("\n");
+        expect(lines[inserted[0].line - 1]).toBe('2026-10-01 * "one" "note"');
+        expect(lines[inserted[1].line - 1]).toBe('2026-10-02 * "two" "note"');
+        expect(blankRuns(content).every((n) => n === 1)).toBe(true);
+      },
+    );
+
+    it("threads an out-of-order pair mid-file with single separators", () => {
+      const { content, inserted } = insertDirectives(
+        existing,
+        parseDirectiveText(
+          `${txn("2026-02-05", "Feb")}\n\n${txn("2026-02-01", "Early")}`,
+        ),
+      );
+      expect(content).not.toMatch(/\n\n\n/);
+      const lines = content.split("\n");
+      expect(lines[inserted[0].line - 1]).toBe('2026-02-05 * "Feb" "note"');
+      expect(lines[inserted[1].line - 1]).toBe('2026-02-01 * "Early" "note"');
+    });
+
+    it("accepts CRLF text", () => {
+      const { content } = insertDirectives(
+        existing,
+        parseDirectiveText(
+          `${txn("2026-10-01", "one")}\r\n\r\n${txn("2026-10-02", "two")}`,
+        ),
+      );
+      expect(content).not.toMatch(/\n\n\n/);
+    });
+  });
+
   it("keeps a threaded directive's postings with it", () => {
     const [directive] = parseDirectiveText(txn("2026-02-05", "Feb"));
     const { content } = insertDirectives(existing, [directive]);
