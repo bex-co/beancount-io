@@ -19,6 +19,7 @@
 - [x] **m13** — [Preview lifecycle mutations with dry_run](./done/m13/README.md) (9 tasks) ← promoted from `w23/120` 2026-10-26
 - [x] **m14** — [Render NULL cells honestly in BQL results](./done/m14/README.md) (8 tasks) ← promoted from `w23/122` 2026-10-27
 - [x] **m15** — [Gate file writes on new bean-check errors](./done/m15/README.md) (7 tasks) ← promoted from `w23/149` 2026-10-30
+- [ ] **m16** — [Disclose unpriced report conversions](./m16/README.md) (8 tasks) ← promoted from `w23/180` 2026-10-30
 
 ## Dropped
 
@@ -49,7 +50,6 @@
 - [x] [170](./done/170.md) — BQL `meta` splits by table (`k: v`/`str` postings vs `k=v`/`object` entries; stock one dict)
 - [x] [171](./done/171.md) — typed posting tags/links render stock-invalid beancount; backend check blind, reads blank (m6 "holds live" disproven)
 
-- [180](./180.md) — known-but-unpriced report `conversion` still degrades to units silently (w23/156 followup) — owner chose holdings-style disclosure (2026-10-30)
 - [190](./blocked/190.md) — engine accepts fractional `@@` stock refuses (per-unit division dust; w23/163 followup) — **blocked:** upstream filing approved 2026-10-28; waiting for someone with tracker access to file the batch
 - [196](./blocked/196.md) — BQL `balances.discrepancy` never populates (blank on failing balances; stock reports the diff) — **blocked:** upstream filing approved 2026-10-28; waiting for someone with tracker access to file the batch
 - [198](./blocked/198.md) — entries tags/links are empty sets on MCP but NULL on stock (13 rows flip IS NULL) — **blocked:** upstream filing approved 2026-10-28; waiting for someone with tracker access to file the batch
