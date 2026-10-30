@@ -624,6 +624,10 @@ export const de: Translations = {
   ledgerCreateFileSuccess: "{{name}} angelegt",
   ledgerCreateFileSuccessIn: "{{name}} in {{ledger}} erstellt",
   ledgerCreateFileFailed: "Datei konnte nicht angelegt werden",
+  ledgerCreateFileInclude:
+    "Zu main.bean hinzufügen, damit die Buchungen zählen",
+  ledgerCreateFileIncludeFailed:
+    "{{name}} wurde angelegt, konnte aber nicht zu main.bean hinzugefügt werden. Die Buchungen zählen erst, wenn die Datei eingebunden ist.",
   ledgerFileNameExists: "Eine Datei namens {{name}} existiert bereits",
   ledgerFolderNameExists: "Ein Ordner namens {{name}} existiert bereits",
   ledgerFileNameExtension:

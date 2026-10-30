@@ -545,6 +545,9 @@ export const zh: Translations = {
   ledgerCreateFileSuccess: "已创建 {{name}}",
   ledgerCreateFileSuccessIn: "已在 {{ledger}} 中创建 {{name}}",
   ledgerCreateFileFailed: "新建文件失败",
+  ledgerCreateFileInclude: "加入 main.bean，使其中的记录被计入",
+  ledgerCreateFileIncludeFailed:
+    "已创建 {{name}}，但未能加入 main.bean。加入之前，其中的记录不会被计入。",
   ledgerFileNameExists: "名为 {{name}} 的文件已存在",
   ledgerFolderNameExists: "名为 {{name}} 的文件夹已存在",
   ledgerFileNameExtension: "请使用 .bean 或 .beancount 文件名",

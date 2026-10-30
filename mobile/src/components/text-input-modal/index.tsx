@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Switch,
 } from "react-native";
 import { InlineError } from "@/components/inline-error";
 import Animated, {
@@ -110,6 +111,18 @@ const getStyles = (theme: ColorTheme) =>
       fontSize: 16,
       fontWeight: "600",
     },
+    toggleRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      paddingHorizontal: 20,
+      paddingBottom: 16,
+    },
+    toggleLabel: {
+      flex: 1,
+      fontSize: 14,
+      color: theme.text01,
+    },
     inputError: {
       marginTop: 8,
       fontSize: 13,
@@ -140,6 +153,12 @@ type TextInputModalProps = {
   validateInput?: (text: string) => boolean | string;
   /** The caller is checking the input against the server: Confirm waits. */
   busy?: boolean;
+  /** An on/off choice under the field, owned by the caller. */
+  toggle?: {
+    label: string;
+    value: boolean;
+    onValueChange: (value: boolean) => void;
+  };
 };
 
 export const TextInputModal: React.FC<TextInputModalProps> = ({
@@ -154,6 +173,7 @@ export const TextInputModal: React.FC<TextInputModalProps> = ({
   destructive = false,
   validateInput,
   busy = false,
+  toggle,
 }) => {
   const theme = useTheme().colorTheme;
   // Translated defaults, never English ones (w21/178).
@@ -263,6 +283,16 @@ export const TextInputModal: React.FC<TextInputModalProps> = ({
                   />
                 ) : null}
               </View>
+              {toggle ? (
+                <View style={styles.toggleRow}>
+                  <Text style={styles.toggleLabel}>{toggle.label}</Text>
+                  <Switch
+                    value={toggle.value}
+                    onValueChange={toggle.onValueChange}
+                    accessibilityLabel={toggle.label}
+                  />
+                </View>
+              ) : null}
             </ScrollView>
             <View style={styles.buttonContainer}>
               <TouchableOpacity

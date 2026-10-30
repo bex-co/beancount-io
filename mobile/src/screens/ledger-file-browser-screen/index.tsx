@@ -42,10 +42,12 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { useToast } from "@/common/hooks/use-toast";
 import {
   GetLedgerDirContentDocument,
+  GetLedgerFileDocument,
   type GetLedgerDirContentQuery,
   useCreateLedgerFileMutation,
   useDeleteLedgerFileMutation,
   useGetLedgerDirContentQuery,
+  useUpdateLedgerFileMutation,
 } from "@/generated-graphql/graphql";
 import { LoadingTile } from "@/components/loading-tile";
 import { FadeInView } from "@/components/crossfade";
@@ -57,7 +59,16 @@ import { invalidateLedgerData } from "@/common/apollo/invalidate-ledger";
 import { haptics } from "@/common/haptics";
 import { settleWithin } from "@/common/settle-within";
 import { CONNECTION_TIMEOUT_MS } from "@/common/oauth/discovery";
-import { encodeLedgerFileContent } from "@/common/ledger-file-content";
+import {
+  decodeLedgerFileContent,
+  encodeLedgerFileContent,
+  isLosslessLedgerFileContent,
+} from "@/common/ledger-file-content";
+import {
+  canIncludeNewFile,
+  ENTRY_POINT,
+  withIncludeLine,
+} from "./include-new-file";
 import { isOpenableTextEntry } from "@/common/ledger-file-types";
 import {
   buildLedgerFilePath,
@@ -434,10 +445,15 @@ export function LedgerFileBrowserScreen(): JSX.Element {
   const [createModalVisible, setCreateModalVisible] = useState(false);
   // Names into other folders found to exist already, shown as "already exists".
   const [knownExisting, setKnownExisting] = useState<string[]>([]);
+  // Whether the new file is added to main.bean, which the ledger reads from:
+  // a file nothing includes never counts (w21/588). On each time the dialog
+  // opens.
+  const [includeNew, setIncludeNew] = useState(true);
   const openCreateDialog = useCallback(() => {
     setKnownExisting([]);
+    setIncludeNew(true);
     setCreateModalVisible(true);
-  }, [setKnownExisting, setCreateModalVisible]);
+  }, [setKnownExisting, setIncludeNew, setCreateModalVisible]);
   const [deletingPath, setDeletingPath] = useState<string | null>(null);
   const isHere = useIsHere();
   const createInFlightRef = useRef(false);
@@ -485,6 +501,7 @@ export function LedgerFileBrowserScreen(): JSX.Element {
   const [createLedgerFile, { loading: creating }] =
     useCreateLedgerFileMutation();
   const [deleteLedgerFile] = useDeleteLedgerFileMutation();
+  const [updateLedgerFile] = useUpdateLedgerFileMutation();
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -537,6 +554,44 @@ export function LedgerFileBrowserScreen(): JSX.Element {
       }
     },
     [entries, knownExisting, t],
+  );
+
+  // Adds `include "<path>"` to the entry point. True once it is there (also
+  // when it already was), false when it could not be written; never throws.
+  const includeInEntryPoint = useCallback(
+    async (path: string): Promise<boolean> => {
+      try {
+        const read = await client.query({
+          query: GetLedgerFileDocument,
+          variables: { ledgerId, path: ENTRY_POINT },
+          fetchPolicy: "network-only",
+        });
+        const file = read.data?.getLedgerFile;
+        if (!file) return false;
+        const raw = file.content ?? "";
+        // A file that is not valid UTF-8 would be rewritten with replacement
+        // characters (w21/042): leave it alone.
+        if (!isLosslessLedgerFileContent(raw, file.encoding)) return false;
+        const next = withIncludeLine(
+          decodeLedgerFileContent(raw, file.encoding),
+          path,
+        );
+        if (next === null) return true;
+        await updateLedgerFile({
+          variables: {
+            ledgerId,
+            path: ENTRY_POINT,
+            content: encodeLedgerFileContent(next),
+            sha: file.sha,
+            message: `include ${path}`,
+          },
+        });
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    [client, ledgerId, updateLedgerFile],
   );
 
   const handleCreate = useCallback(
@@ -608,6 +663,12 @@ export function LedgerFileBrowserScreen(): JSX.Element {
           },
         });
         const createdPath = result.data?.createLedgerFile.path ?? filePath;
+        // The entry point is written after the file exists, so a failure here
+        // leaves a created file, and says so.
+        const wantsInclude = includeNew && canIncludeNewFile(createdPath);
+        const included = wantsInclude
+          ? await includeInEntryPoint(createdPath)
+          : null;
         haptics.success();
         // The editor opens the *selected* ledger's file. Switched, or left,
         // during the create, the file exists in the ledger it was made in
@@ -615,14 +676,18 @@ export function LedgerFileBrowserScreen(): JSX.Element {
         // of the same name (w21/196): say where, and open nothing.
         const stayedHere = ledgerVar() === ledgerId && isHere();
         toast.showToast({
-          message: stayedHere
-            ? t("ledgerCreateFileSuccess", { name: filename })
-            : t("ledgerCreateFileSuccessIn", {
-                name: filename,
-                ledger: ledgerId,
-              }),
-          type: "success",
+          message:
+            included === false
+              ? t("ledgerCreateFileIncludeFailed", { name: filename })
+              : stayedHere
+                ? t("ledgerCreateFileSuccess", { name: filename })
+                : t("ledgerCreateFileSuccessIn", {
+                    name: filename,
+                    ledger: ledgerId,
+                  }),
+          type: included === false ? "error" : "success",
         });
+        if (included) void invalidateLedgerData(client, "entries");
         // Not awaited: the user is on their way into the editor, and the
         // listing behind them repaints as soon as the refetch lands.
         void invalidateLedgerData(client, "file");
@@ -672,6 +737,8 @@ export function LedgerFileBrowserScreen(): JSX.Element {
       isHere,
       canWrite,
       createLedgerFile,
+      includeNew,
+      includeInEntryPoint,
       currentPath,
       entries,
       knownExisting,
@@ -928,6 +995,11 @@ export function LedgerFileBrowserScreen(): JSX.Element {
         cancelButtonText={t("cancel")}
         validateInput={validateNewFilename}
         busy={lookingUp}
+        toggle={{
+          label: t("ledgerCreateFileInclude"),
+          value: includeNew,
+          onValueChange: setIncludeNew,
+        }}
         onConfirm={(input) => void handleCreate(input)}
         onCancel={cancelCreate}
       />

@@ -624,6 +624,10 @@ export const sk: Translations = {
   ledgerCreateFileSuccess: "{{name}} vytvorený",
   ledgerCreateFileSuccessIn: "{{name}} bol vytvorený v {{ledger}}",
   ledgerCreateFileFailed: "Súbor sa nepodarilo vytvoriť",
+  ledgerCreateFileInclude:
+    "Pridať do main.bean, aby sa jeho záznamy započítali",
+  ledgerCreateFileIncludeFailed:
+    "{{name}} bol vytvorený, no nepodarilo sa ho pridať do main.bean. Jeho záznamy sa nezapočítajú, kým nebude zahrnutý.",
   ledgerFileNameExists: "Súbor s názvom {{name}} už existuje",
   ledgerFolderNameExists: "Priečinok s názvom {{name}} už existuje",
   ledgerFileNameExtension: "Použite názov s príponou .bean alebo .beancount",

@@ -627,6 +627,9 @@ export const en = {
   ledgerCreateFileSuccess: "Created {{name}}",
   ledgerCreateFileSuccessIn: "Created {{name}} in {{ledger}}",
   ledgerCreateFileFailed: "Failed to create file",
+  ledgerCreateFileInclude: "Add to main.bean so its entries count",
+  ledgerCreateFileIncludeFailed:
+    "Created {{name}}, but couldn't add it to main.bean. Its entries won't count until it is included.",
   ledgerFileNameExists: "A file named {{name}} already exists",
   ledgerFolderNameExists: "A folder named {{name}} already exists",
   ledgerFileNameExtension: "Use a .bean or .beancount name",

@@ -600,6 +600,10 @@ export const fa: Translations = {
   ledgerCreateFileSuccess: "{{name}} ساخته شد",
   ledgerCreateFileSuccessIn: "{{name}} در {{ledger}} ایجاد شد",
   ledgerCreateFileFailed: "ساخت فایل ناموفق بود",
+  ledgerCreateFileInclude:
+    "به main.bean اضافه شود تا تراکنش‌های آن محاسبه شوند",
+  ledgerCreateFileIncludeFailed:
+    "{{name}} ایجاد شد، اما به main.bean اضافه نشد. تا زمانی که گنجانده نشود، تراکنش‌های آن محاسبه نمی‌شوند.",
   ledgerFileNameExists: "فایلی با نام {{name}} از قبل وجود دارد",
   ledgerFolderNameExists: "پوشه‌ای با نام {{name}} از قبل وجود دارد",
   ledgerFileNameExtension:

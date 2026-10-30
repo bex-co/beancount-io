@@ -621,6 +621,10 @@ export const pt: Translations = {
   ledgerCreateFileSuccess: "{{name}} criado",
   ledgerCreateFileSuccessIn: "{{name}} criado em {{ledger}}",
   ledgerCreateFileFailed: "Falha ao criar o arquivo",
+  ledgerCreateFileInclude:
+    "Adicionar a main.bean para que os lançamentos contem",
+  ledgerCreateFileIncludeFailed:
+    "{{name}} foi criado, mas não foi possível adicioná-lo a main.bean. Os lançamentos não contarão até que seja incluído.",
   ledgerFileNameExists: "Já existe um arquivo chamado {{name}}",
   ledgerFolderNameExists: "Já existe uma pasta chamada {{name}}",
   ledgerFileNameExtension: "Use um nome .bean ou .beancount",
