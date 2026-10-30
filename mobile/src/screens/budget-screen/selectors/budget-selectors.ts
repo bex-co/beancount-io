@@ -591,11 +591,17 @@ export function budgetForIntervalExact(
     windowStart !== undefined && windowStart > periodStart
       ? windowStart
       : periodStart;
-  // A budget is compared with actuals, which cannot run past today: a period
-  // still in progress is budgeted only up to `asOf`, and one not yet begun has
-  // no budget. Otherwise a window without an end (all time) set a full month's
-  // target against a partial month's spending.
-  let end = asOf !== undefined && asOf < intervalEnd ? asOf : intervalEnd;
+  // The period in progress is judged against its full target, as the web
+  // dashboard does, not prorated to today: the same ledger then gives the same
+  // verdict in both apps (w21/994). A period not yet begun has no budget.
+  // Nor does a budget dated after today: it is not in effect yet.
+  if (
+    asOf !== undefined &&
+    (asOf < start || (ordered[0] && ordered[0].date > asOf))
+  ) {
+    return "0";
+  }
+  let end = intervalEnd;
   // A budget on a closed account ends with it: nothing after its close date is
   // budgeted (w21/398).
   if (endsOn !== undefined && endsOn < end) end = endsOn;

@@ -319,15 +319,17 @@ describe("the Home panel against the Budget screen", () => {
     periodEnd: "2026-10-31",
   });
 
-  it("budgets a month in progress only up to today", () => {
+  it("budgets a month in progress at its full target, as the dashboard does (w21/994)", () => {
     const [row] = selectBudgetPanelRows(
       [october("Expenses:QaBudFood", "300 USD", 250)],
       3,
       today,
     );
-    expect(row.budget.toFixed(2)).toBe("203.23");
-    expect(row.favorable).toBe(false);
-    expect(Math.round(row.progressPercent)).toBe(123);
+    // The Oct 21 pair from w21/076: 250 against 300 is below target in both
+    // apps, not red on mobile and green on the web.
+    expect(row.budget.toFixed(2)).toBe("300.00");
+    expect(row.favorable).toBe(true);
+    expect(Math.round(row.progressPercent)).toBe(83);
   });
 
   it("ranks an overspent 0 budget first, with a full meter and no percent", () => {

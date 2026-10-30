@@ -37,8 +37,9 @@ describe("a window's clipped first period", () => {
     ).toBe(40);
   });
 
-  it("clips a window whose only period is also the current one", () => {
-    // 2 January: the first week is both clipped and in progress.
+  it("clips a window's start but not its end when the only period is also the current one", () => {
+    // 2 January: the first week is clipped at its start and in progress, so it
+    // is budgeted from the 1st through its end: 4 days of 10 (w21/994).
     expect(
       calculateBudgetForInterval(
         "2026-01-04",
@@ -47,7 +48,7 @@ describe("a window's clipped first period", () => {
         "2026-01-02",
         "2026-01-01",
       ),
-    ).toBe(20);
+    ).toBe(40);
   });
 
   it("leaves full periods and all time unchanged", () => {

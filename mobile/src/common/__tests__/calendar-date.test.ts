@@ -67,7 +67,7 @@ describe("ledger dates written for years 0001–0099", () => {
     expect(getFormatDate(localDate(2026, 9, 21))).toBe("2026-10-21");
   });
 
-  it("prorates a budget in year 0050 exactly as in 2050", () => {
+  it("budgets a month in year 0050 exactly as in 2050", () => {
     const prorate = (year: string) =>
       budget.budgetForInterval(
         `${year}-10-31`,
@@ -83,6 +83,6 @@ describe("ledger dates written for years 0001–0099", () => {
         `${year}-10-20`,
       );
     expect(prorate("0050")).toBe(prorate("2050"));
-    expect(Math.round(prorate("0050") * 100) / 100).toBe(322.58);
+    expect(Math.round(prorate("0050") * 100) / 100).toBe(500);
   });
 });

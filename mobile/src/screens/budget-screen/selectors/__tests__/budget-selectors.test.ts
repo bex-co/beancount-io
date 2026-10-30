@@ -148,7 +148,7 @@ describe("calculateBudgetForInterval", () => {
   // period, in today's cadence: a Monthly set Oct 21, then Yearly, covered the
   // whole year.
   it("back-fills the first budget to its own period's start when the cadence changes", () => {
-    // Monthly → Yearly: Oct 1–21 at 300/31, then Oct 22–23 at 3600/365.
+    // Monthly → Yearly: Oct 1–21 at 300/31, then Oct 22 on at 3600/365.
     expect(
       calculateBudgetForInterval(
         "2026-12-31",
@@ -159,7 +159,7 @@ describe("calculateBudgetForInterval", () => {
         ],
         "2026-10-23",
       ),
-    ).toBe(222.95);
+    ).toBe(903.5);
     // Monthly → Quarterly: Nov 1–21 at 300/30, not from Q4's Oct 1.
     expect(
       calculateBudgetForInterval(
@@ -171,7 +171,7 @@ describe("calculateBudgetForInterval", () => {
         ],
         "2026-11-23",
       ),
-    ).toBe(229.57);
+    ).toBe(601.3);
     // Weekly → Monthly: from Monday Oct 19 at 70/7, not from Oct 1.
     expect(
       calculateBudgetForInterval(
@@ -183,7 +183,7 @@ describe("calculateBudgetForInterval", () => {
         ],
         "2026-10-23",
       ),
-    ).toBe(49.35);
+    ).toBe(126.77);
   });
 
   // w21/622: Add then Update the same day (500, then 300) left the 500 covering
@@ -197,7 +197,7 @@ describe("calculateBudgetForInterval", () => {
     expect(calculateBudgetForInterval("2025-01-31", "monthly", history)).toBe(
       300,
     );
-    // Prorated to a mid-month day, it is still the correction's rate.
+    // Judged on a mid-month day, the period is still its full target (w21/994).
     expect(
       calculateBudgetForInterval(
         "2025-01-31",
@@ -205,7 +205,7 @@ describe("calculateBudgetForInterval", () => {
         history,
         "2025-01-16",
       ),
-    ).toBe(Math.round(((300 * 16) / 31) * 100) / 100);
+    ).toBe(300);
   });
 
   it("still starts a later-dated directive on its own date", () => {
@@ -255,17 +255,17 @@ describe("calculateBudgetForInterval", () => {
     );
   });
 
-  it("budgets a period no further than asOf, the last day actuals can cover", () => {
+  it("budgets the period in progress in full, whatever day it is judged on (w21/994)", () => {
     const single = [historyEntry("2026-01-01", "monthly", "122 USD")];
     const revised = [
       historyEntry("2026-01-01", "monthly", "100 USD"),
       historyEntry("2026-06-01", "monthly", "122 USD"),
     ];
 
-    // September reported as a whole period, on the 13th: 13 × 122/30.
+    // September reported as a whole period, on the 13th: the full target.
     expect(
       calculateBudgetForInterval("2026-09-30", "monthly", single, "2026-09-13"),
-    ).toBe(52.87);
+    ).toBe(122);
     expect(
       calculateBudgetForInterval(
         "2026-09-30",
@@ -273,7 +273,7 @@ describe("calculateBudgetForInterval", () => {
         revised,
         "2026-09-13",
       ),
-    ).toBe(52.87);
+    ).toBe(122);
     // Not begun yet: no budget. Already finished: the whole target.
     expect(
       calculateBudgetForInterval("2026-10-31", "monthly", single, "2026-09-13"),
@@ -333,15 +333,15 @@ describe("groupBudgetEntries with two targets on one date", () => {
     ]);
   });
 
-  it("prorates the later target, not the older one", () => {
+  it("budgets the later target, not the older one", () => {
     const [group] = groupBudgetEntries(journal, "2026-10-20");
-    const prorated = budgetForInterval(
+    const budgeted = budgetForInterval(
       "2026-10-31",
       "monthly",
       prepareBudgetHistory(group.budgetHistory),
       "2026-10-20",
     );
-    expect(Math.round(prorated * 100) / 100).toBe(322.58);
+    expect(budgeted).toBe(500);
   });
 
   it("returns to the older target once the later one is deleted", () => {

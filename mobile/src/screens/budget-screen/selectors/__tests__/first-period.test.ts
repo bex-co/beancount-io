@@ -36,14 +36,15 @@ const group = (
 describe("a budget set during its first period", () => {
   it("budgets monthly from the period's start, not from the day it was set", () => {
     const g = group("monthly", "500 USD");
-    // Through today, as the screen budgets a period in progress: 21 of 31 days.
+    // The period in progress is judged against its full target, not prorated
+    // to today (w21/994).
     const budget = calculateBudgetForInterval(
       "2026-10-31",
       "monthly",
       g.budgetHistory,
       TODAY,
     );
-    expect(Math.abs(budget - (500 * 21) / 31) < 0.01).toBe(true);
+    expect(budget).toBe(500);
     const stats = selectBudgetCardStats(
       g,
       [{ date: "2026-10-31", actual: 300, budget }],
@@ -51,7 +52,7 @@ describe("a budget set during its first period", () => {
     );
     expect(stats.status).toBe("below");
     expect(stats.favorable).toBe(true);
-    expect(Math.round(stats.progressPercent ?? 0)).toBe(89);
+    expect(Math.round(stats.progressPercent ?? 0)).toBe(60);
   });
 
   it("covers a whole past period the same way", () => {
@@ -72,7 +73,7 @@ describe("a budget set during its first period", () => {
       group("weekly", "70 USD").budgetHistory,
       TODAY,
     );
-    expect(weekly > 20 && weekly < 70).toBe(true);
+    expect(weekly).toBe(70);
     const stats = selectBudgetCardStats(
       group("weekly", "70 USD"),
       [{ date: "2026-10-25", actual: 20, budget: weekly }],
@@ -85,8 +86,7 @@ describe("a budget set during its first period", () => {
       group("quarterly", "900 USD").budgetHistory,
       TODAY,
     );
-    // 21 of the quarter's 92 days: about 205.
-    expect(quarterly > 150 && quarterly < 300).toBe(true);
+    expect(quarterly).toBe(900);
     expect(
       selectBudgetCardStats(
         group("quarterly", "900 USD"),
@@ -110,7 +110,7 @@ describe("a budget set during its first period", () => {
     );
     expect(row!.noBudget).toBe(false);
     expect(row!.status).toBe("below");
-    expect(Math.round(row!.progressPercent)).toBe(89);
+    expect(Math.round(row!.progressPercent)).toBe(60);
   });
 
   it("leaves a budget not yet started unjudged, with its start date", () => {
@@ -148,4 +148,29 @@ describe("a budget set during its first period", () => {
     );
     expect(stats.status).toBe("above");
   });
+});
+
+// w21/994: the period in progress is judged against its full target, as the web
+// dashboard does. The same fixture runs in the dashboard's budget-headline
+// tests, so one ledger gives one verdict in both apps.
+describe("the verdict on a month in progress", () => {
+  const history = [entry("2026-01-01", "monthly", "310 USD")];
+  const cases = [
+    { today: "2026-10-24", spent: 200, target: 310, variance: -110 },
+    { today: "2026-10-01", spent: 200, target: 310, variance: -110 },
+    { today: "2026-10-31", spent: 320, target: 310, variance: 10 },
+  ];
+
+  for (const { today, spent, target, variance } of cases) {
+    it(`judges ${spent} against the whole ${target} on ${today}`, () => {
+      const budget = calculateBudgetForInterval(
+        "2026-10-31",
+        "monthly",
+        history,
+        today,
+      );
+      expect(budget).toBe(target);
+      expect(spent - budget).toBe(variance);
+    });
+  }
 });

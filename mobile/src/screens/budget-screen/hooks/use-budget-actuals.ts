@@ -54,8 +54,8 @@ export function budgetTotalsVariables({
 }
 
 /**
- * Per-interval actuals for one budget group, paired with the prorated budget
- * for each period. `getLedgerIntervalTotals` rolls sub-accounts into the parent
+ * Per-interval actuals for one budget group, paired with the budget
+ * for each period (the period in progress at its full target, w21/994). `getLedgerIntervalTotals` rolls sub-accounts into the parent
  * server-side, matching fava (and the dashboard): actuals include children,
  * budgets bind to the exact account.
  */

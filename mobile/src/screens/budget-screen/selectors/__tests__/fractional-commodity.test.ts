@@ -39,12 +39,11 @@ describe("a budget in a fractional commodity", () => {
     expect(budgetScale(undefined)).toBe(2);
   });
 
-  it("prorates to today without rounding it to nothing", () => {
+  it("prorates a window ending mid-month without rounding it to nothing", () => {
     const budget = calculateBudgetForInterval(
-      "2026-10-31",
+      "2026-10-21",
       "monthly",
       btc("0.003 BTC", "monthly", "2026-01-01"),
-      "2026-10-21",
     );
     expect(Math.abs(budget - (0.003 * 21) / 31) < 1e-6).toBe(true);
     expect(budget > 0).toBe(true);
@@ -149,29 +148,19 @@ describe("a commodity budget's status at the precision it is shown", () => {
   });
 });
 
-// w21/805: 100 KWD prorated to 23 days of October is 74.1935, rounded to
+// w21/805 (a window ending on the 23rd now, w21/994): 100 KWD prorated to 23 days of October is 74.1935, rounded to
 // cents 74.19, so 74.193 spent read a red "Above target".
 describe("a three-decimal currency's budget", () => {
   const kwd = btc("100 KWD", "monthly", "2026-01-01");
 
   it("keeps its third decimal when prorated", () => {
-    const budget = calculateBudgetForInterval(
-      "2026-10-31",
-      "monthly",
-      kwd,
-      "2026-10-23",
-    );
+    const budget = calculateBudgetForInterval("2026-10-23", "monthly", kwd);
     expect(Math.abs(budget - (100 * 23) / 31) < 1e-6).toBe(true);
     expect(budget).not.toBe(74.19);
   });
 
   it("is not above target for 74.193 spent", () => {
-    const budget = calculateBudgetForInterval(
-      "2026-10-31",
-      "monthly",
-      kwd,
-      "2026-10-23",
-    );
+    const budget = calculateBudgetForInterval("2026-10-23", "monthly", kwd);
     const stats = selectBudgetCardStats(
       {
         account: "Expenses:Rent",
@@ -188,10 +177,9 @@ describe("a three-decimal currency's budget", () => {
     // Cents and yen prorate as before.
     expect(
       calculateBudgetForInterval(
-        "2026-10-31",
+        "2026-10-23",
         "monthly",
         btc("100 USD", "monthly", "2026-01-01"),
-        "2026-10-23",
       ),
     ).toBe(74.19);
   });
@@ -202,10 +190,9 @@ describe("a three-decimal currency's budget", () => {
 describe("a whole-unit commodity budget prorated mid-month", () => {
   it("keeps the digits the status is judged at", () => {
     const budget = calculateBudgetForInterval(
-      "2026-10-31",
+      "2026-10-23",
       "monthly",
       btc("1 BTC", "monthly", "2026-01-01"),
-      "2026-10-23",
     );
     expect(Math.abs(budget - 23 / 31) < 1e-8).toBe(true);
     // 0.7419 spent is under 0.741935, so it is not above target.
@@ -213,19 +200,14 @@ describe("a whole-unit commodity budget prorated mid-month", () => {
   });
 
   it("still rounds a fiat budget to its minor unit", () => {
-    const budget = calculateBudgetForInterval(
-      "2026-10-31",
-      "monthly",
-      [
-        {
-          date: "2026-01-01",
-          interval: "monthly",
-          amount: "100 USD",
-          entry_hash: "h",
-        },
-      ],
-      "2026-10-23",
-    );
+    const budget = calculateBudgetForInterval("2026-10-23", "monthly", [
+      {
+        date: "2026-01-01",
+        interval: "monthly",
+        amount: "100 USD",
+        entry_hash: "h",
+      },
+    ]);
     expect(budget).toBe(74.19);
   });
 });

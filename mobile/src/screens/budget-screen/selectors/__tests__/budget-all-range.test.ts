@@ -95,7 +95,7 @@ describe("periodsBetween", () => {
 });
 
 describe("Budget card on ALL", () => {
-  it("reports the prorated current period, as YTD does", () => {
+  it("reports the current period against its full target, as YTD does", () => {
     const history = prepareBudgetHistory(groceries.budgetHistory);
     const point = (date: string, actual: number) => ({
       date,
@@ -109,8 +109,8 @@ describe("Budget card on ALL", () => {
       ),
     ];
     const stats = selectBudgetCardStats(groceries, series);
-    // October prorated to the 20th: 300 × 20/31.
-    expect(stats.budget).toBe(193.55);
+    // October in full, not prorated to the 20th (w21/994).
+    expect(stats.budget).toBe(300);
     expect(stats.actual).toBe(0);
   });
 

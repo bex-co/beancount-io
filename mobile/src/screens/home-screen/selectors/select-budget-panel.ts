@@ -73,7 +73,8 @@ export type BudgetPanelRow = {
 };
 
 /**
- * @param asOf - Today. A period still in progress is budgeted only up to it,
+ * @param asOf - Today. A period still in progress is judged against its full
+ *   target, as the web dashboard does (w21/994), and one not begun has none,
  *   as the Budget screen does, so the row and the screen agree (w21/076).
  */
 export function selectBudgetPanelRows(
@@ -118,10 +119,9 @@ export function selectBudgetPanelRows(
     );
     const spent = stats.actual ?? 0;
     const noBudget = stats.budget <= 0;
-    // Whether the period has run its course. A target prorated to today is
-    // behind for most of a month for an income that arrives once (an unpaid
-    // salary), which is no miss until the period is over (w21/377). Unknown
-    // when no day is given.
+    // Whether the period has run its course. An income that arrives once (an
+    // unpaid salary) is behind its target for most of a month, which is no miss
+    // until the period is over (w21/377). Unknown when no day is given.
     const over = asOf === undefined || periodEnd <= asOf;
     if (stats.startsOn !== null) {
       return {

@@ -2,7 +2,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import * as apolloClient from "@apollo/client/react";
 import { BudgetChartCard } from "../budget-chart-card";
-import { budgetHeadlinePeriod, groupBudgetEntries } from "../budget-utils";
+import {
+  budgetHeadlinePeriod,
+  budgetVariance,
+  calculateBudgetForInterval,
+  groupBudgetEntries,
+} from "../budget-utils";
 import type { BudgetEntry } from "../types";
 
 vi.mock("@apollo/client/react", () => ({ useQuery: vi.fn() }));
@@ -35,6 +40,52 @@ function monthEnds(first: string, last: string): string[] {
     if (month > 12) [year, month] = [year + 1, 1];
   }
 }
+
+// w21/994: both apps judge the period in progress against its full target. The
+// same fixture runs in mobile's budget-selectors tests (`sharedVerdictFixture`).
+describe("the headline verdict of a month in progress", () => {
+  it.each([
+    {
+      today: "2026-10-24",
+      spent: "200",
+      target: "310.00",
+      variance: "-110.00",
+    },
+    {
+      today: "2026-10-01",
+      spent: "200",
+      target: "310.00",
+      variance: "-110.00",
+    },
+    { today: "2026-10-31", spent: "320", target: "310.00", variance: "10.00" },
+  ])(
+    "judges $spent against the whole $target on $today",
+    ({ today, spent, target, variance }) => {
+      const history = [
+        {
+          date: "2026-01-01",
+          interval: "monthly",
+          amount: "310 USD",
+          entry_hash: "h",
+        },
+      ];
+      const headline = budgetHeadlinePeriod(
+        monthEnds("2026-01", "2026-12"),
+        "monthly",
+        today,
+        false,
+      );
+      const budget = calculateBudgetForInterval(
+        headline!.end,
+        "monthly",
+        history,
+        2,
+      );
+      expect(budget).toBe(target);
+      expect(budgetVariance(spent, budget)).toBe(variance);
+    },
+  );
+});
 
 describe("budgetHeadlinePeriod", () => {
   it("headlines the current month of a calendar year, not December", () => {
