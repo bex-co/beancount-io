@@ -71,7 +71,7 @@ const ledgerSetupInput = z
             openingState: z.enum(["unknown", "zero", "known"]).optional(),
             amount: z
               .string()
-              .regex(/^-?\d+(\.\d+)?$/)
+              .regex(/^[+-]?\d+(\.\d+)?$/)
               .optional(),
           })
           .strict(),

@@ -1788,7 +1788,7 @@
                             },
                             "amount": {
                               "type": "string",
-                              "pattern": "^-?\\d+(\\.\\d+)?$"
+                              "pattern": "^[+-]?\\d+(\\.\\d+)?$"
                             }
                           },
                           "required": [
@@ -5964,7 +5964,7 @@
                             },
                             "amount": {
                               "type": "string",
-                              "pattern": "^-?\\d+(\\.\\d+)?$"
+                              "pattern": "^[+-]?\\d+(\\.\\d+)?$"
                             }
                           },
                           "required": [

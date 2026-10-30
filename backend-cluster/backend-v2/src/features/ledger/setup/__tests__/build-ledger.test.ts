@@ -230,6 +230,56 @@ describe("buildLedgerFiles (w3/m53/t002)", () => {
     expect(main).not.toContain("--30.50");
   });
 
+  // w21/549: an explicit sign is the ledger's own, so a card in credit can be
+  // stated; an unsigned positive keeps meaning "owed" for older clients.
+  describe("a liability opening with an explicit sign", () => {
+    const main = (amount: string) =>
+      previewLedgerSetup(
+        {
+          preset: "personal@1",
+          operatingCurrency: "USD",
+          historyStart: "2026-02-01",
+          accounts: [
+            { name: "Liabilities:CreditCard", openingState: "known", amount },
+          ],
+        },
+        "2026-01-01",
+      ).files["main.bean"];
+
+    it("writes +50 as 50 in credit, with the counter posting balancing it", () => {
+      const text = main("+50");
+      expect(text).toContain("  Liabilities:CreditCard 50 USD");
+      expect(text).toContain("  Equity:OpeningBalances -50 USD");
+      expect(text).toContain(
+        "2026-02-01 balance Liabilities:CreditCard 50 USD",
+      );
+      expect(text).not.toContain("+50");
+      expect(text).not.toContain("-+");
+    });
+
+    it("writes -500 and an unsigned 500 as the same debt", () => {
+      for (const amount of ["-500", "500"]) {
+        const text = main(amount);
+        expect(text).toContain("  Liabilities:CreditCard -500 USD");
+        expect(text).toContain("  Equity:OpeningBalances 500 USD");
+      }
+    });
+
+    it("leaves a signed amount on an asset as its own sign", () => {
+      const text = previewLedgerSetup(
+        {
+          preset: "personal@1",
+          historyStart: "2026-02-01",
+          accounts: [
+            { name: "Assets:Cash", openingState: "known", amount: "+100" },
+          ],
+        },
+        "2026-01-01",
+      ).files["main.bean"];
+      expect(text).toContain("  Assets:Cash 100 USD");
+    });
+  });
+
   // w21/552: GraphQL passes a client's explicit null through; REST and MCP never
   // carry one.
   it("takes an explicit null on a nullable field as omitted", () => {

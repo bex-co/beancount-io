@@ -68,6 +68,39 @@ describe("setup surfaces (w3/m53/t008)", () => {
     ).not.toThrow();
   });
 
+  // w21/549: a signed opening amount means the same on every surface.
+  it("accepts an explicit plus sign on REST, MCP and the builder (w21/549)", () => {
+    const setup = {
+      ...SETUP,
+      accounts: [
+        {
+          name: "Liabilities:CreditCard",
+          openingState: "known" as const,
+          amount: "+50",
+        },
+      ],
+    };
+    const viaRest = ledgerCreateInput.parse({ name: "household", setup });
+    const viaMcp = LIFECYCLE_OPERATION_SCHEMAS.create.parse({
+      name: "household",
+      setup,
+    });
+    expect(viaMcp.setup).toEqual(viaRest.setup);
+    // GraphQL reaches only the builder, which takes the same text.
+    expect(previewLedgerSetup(setup).files["main.bean"]).toContain(
+      "balance Liabilities:CreditCard 50 EUR",
+    );
+    expect(() =>
+      ledgerCreateInput.parse({
+        name: "household",
+        setup: {
+          ...SETUP,
+          accounts: [{ ...setup.accounts[0], amount: "++50" }],
+        },
+      }),
+    ).toThrow();
+  });
+
   it("MCP preview returns the builder result and create passes setup through", async () => {
     const calls: unknown[] = [];
     const context = {

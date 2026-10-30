@@ -31,7 +31,7 @@ export const SETUP_TITLE_MAX = 200;
 export const CREATE_REQUEST_ID_MAX = 200;
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-const AMOUNT_PATTERN = /^-?\d+(\.\d+)?$/;
+const AMOUNT_PATTERN = /^[+-]?\d+(\.\d+)?$/;
 const OPENING_EQUITY = "Equity:OpeningBalances";
 /**
  * An account a new ledger can open: one of Beancount's five default roots,
@@ -96,13 +96,16 @@ function isCalendarDate(value: string): boolean {
 }
 
 /**
- * The ledger's sign for an opening amount. A customer states what a credit
- * card or loan is owed as a positive number, and ADR021 stores what they owe
- * as the negative posting; written verbatim, a 500 card balance raised net
- * worth by 500 (w21/104). An explicit negative is already the ledger's sign
- * and stays as written; every other account keeps its amount.
+ * The ledger's sign for an opening amount. An explicit sign, `-` or `+`, is the
+ * ledger's own and is written as given (`+50` on a card is 50 in credit). An
+ * unsigned positive on a liability keeps the legacy reading: a customer states
+ * what a credit card or loan is owed as a positive number, and ADR021 stores
+ * what they owe as the negative posting; written verbatim, a 500 card balance
+ * raised net worth by 500 (w21/104), and saved app builds and agents still send
+ * it unsigned. Every other account keeps its amount (w21/549).
  */
 function ledgerOpeningAmount(account: string, amount: string): string {
+  if (amount.startsWith("+")) return amount.slice(1);
   const owed =
     account.startsWith("Liabilities:") &&
     !amount.startsWith("-") &&
