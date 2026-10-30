@@ -89,7 +89,7 @@ import {
 } from "./postings-utils";
 import { isTransactionDraftDirty, TransactionDraft } from "./draft-dirty";
 import { inlineSaveError } from "./inline-save-error";
-import { seedPostingsFromPayee } from "./payee-seed";
+import { NO_PAYEE_HISTORY, seedPostingsFromPayee } from "./payee-seed";
 import { useTwoPostingSuggestions } from "@/screens/add-transaction-screen/hooks/use-two-posting-suggestions";
 import { useIsHere } from "@/common/hooks/use-is-here";
 import { useRouteParams } from "@/common/hooks/use-route-params";
@@ -570,30 +570,35 @@ const MultiPostingsTransactionScreenComponent = () => {
 
   // A picked payee brings its usual accounts while the postings are still as
   // the form opened (w21/023). A receipt's parsed accounts are kept.
-  const [seedPayee, setSeedPayee] = useState("");
+  // Null once handled; "" is a cleared payee, which drops the last fill too
+  // (w21/922).
+  const [seedPayee, setSeedPayee] = useState<string | null>(null);
   const { closeDates, settled: closeDatesSettled } =
     useAccountCloseDatesState(ledgerId);
   const payeeHistory = useTwoPostingSuggestions({
     ledgerId: ledgerId ?? "",
-    payee: seedPayee,
+    payee: seedPayee ?? "",
   });
   // The accounts the last payee fill produced: picking another payee replaces
   // them unless the user changed one (w21/411).
   const lastPayeeSeedRef = useRef<string[] | null>(null);
   useEffect(() => {
-    if (!seedPayee || payeeHistory.loading) return;
+    if (seedPayee === null || (seedPayee && payeeHistory.loading)) return;
     const seededPostings = seedPostingsFromPayee(
       postings,
       initialDraft.postings,
-      payeeHistory,
+      seedPayee ? payeeHistory : NO_PAYEE_HISTORY,
       (account) => isOpenOn(account, date, closeDates),
       lastPayeeSeedRef.current,
     );
     if (seededPostings) {
-      lastPayeeSeedRef.current = seededPostings.map((p) => p.account);
+      const filled = seedPayee ? payeeHistory.from.autoFill : null;
+      lastPayeeSeedRef.current = filled
+        ? seededPostings.map((p) => p.account)
+        : null;
       setPostings(seededPostings);
     }
-    setSeedPayee("");
+    setSeedPayee(null);
   }, [
     seedPayee,
     payeeHistory,

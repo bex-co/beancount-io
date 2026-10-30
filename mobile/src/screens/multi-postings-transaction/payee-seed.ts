@@ -37,15 +37,26 @@ const unchangedSinceSeed = (
   current.length === lastSeed.length &&
   current.every((posting, index) => posting.account === lastSeed[index]);
 
+/** What a payee with no history, or no payee at all, offers. */
+export const NO_PAYEE_HISTORY: PayeeHistory = {
+  from: { autoFill: null },
+  to: { autoFill: null },
+};
+
 /**
- * The postings to show once a known payee is picked: its usual source and
- * target accounts, so a repeat entry needs no account picks — what the keypad
- * flow did before multi-posting became the default (w21/023). Null leaves the
- * postings alone: the user already changed them, the form holds a split, or
- * the payee has no two-posting history on both sides. Amounts are never
+ * The postings to show once a payee is picked: its usual source and target
+ * accounts, so a repeat entry needs no account picks — what the keypad flow
+ * did before multi-posting became the default (w21/023). Amounts are never
  * touched. A usual account closed by the entry's date is not filled in — its
  * side keeps the form's default, so the save is not refused for a paid-off
- * card (w21/045) — and when both are closed nothing changes.
+ * card (w21/045).
+ *
+ * Null leaves the postings alone: the user already changed them, or the form
+ * holds a split. When no fill can be made (the payee is new or cleared, has no
+ * two-posting history on both sides, or both its accounts are closed), accounts
+ * that are still the previous payee's fill go back to the form's opening
+ * accounts rather than saving against that payee's card and category
+ * (w21/922); an account the user edited since is kept.
  */
 export function seedPostingsFromPayee(
   current: readonly Posting[],
@@ -55,14 +66,28 @@ export function seedPostingsFromPayee(
   /** The accounts the previous payee fill produced, if there was one. */
   lastSeed?: readonly string[] | null,
 ): Posting[] | null {
+  const isUntouched = untouched(current, initial);
+  if (!isUntouched && !unchangedSinceSeed(current, lastSeed)) return null;
+  const seeded = fill(current, history, isOpen);
+  if (seeded) return seeded;
+  // Nothing to fill: an earlier fill's accounts do not outlive its payee.
+  if (isUntouched || current.length !== initial.length) return null;
+  return current.map((posting, index) => ({
+    ...posting,
+    account: initial[index]!.account,
+  }));
+}
+
+function fill(
+  current: readonly Posting[],
+  history: PayeeHistory,
+  isOpen: (account: string) => boolean,
+): Posting[] | null {
   const from = history.from.autoFill;
   const to = history.to.autoFill;
   // Never fill the same account on both sides: a self-transfer saves with no
   // warning (w21/412).
-  if (!from || !to || from === to) return null;
-  if (!untouched(current, initial) && !unchangedSinceSeed(current, lastSeed)) {
-    return null;
-  }
+  if (!from || !to || from === to || current.length !== 2) return null;
   const fromOpen = isOpen(from);
   const toOpen = isOpen(to);
   if (!fromOpen && !toOpen) return null;

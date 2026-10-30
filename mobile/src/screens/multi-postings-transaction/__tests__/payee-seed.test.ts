@@ -6,7 +6,7 @@ import {
   updatePostingAccount,
   updatePostingAmount,
 } from "../postings-utils";
-import { seedPostingsFromPayee } from "../payee-seed";
+import { NO_PAYEE_HISTORY, seedPostingsFromPayee } from "../payee-seed";
 
 // Picking a known payee in New Transaction left the default accounts, so every
 // repeat entry needed two account picks; the keypad flow it replaced used to
@@ -132,23 +132,26 @@ describe("seedPostingsFromPayee: closed usual accounts", () => {
         (account) => account !== "Liabilities:OldVisa",
       ),
     ).toBe(null);
-    // The same, after another payee filled the form.
+    // The same, after another payee filled the form: the earlier fill goes
+    // back to the opening accounts rather than staying (w21/922).
     const filled = createInitialPostings(
       "Assets:Bank:Checking",
       "Liabilities:Visa",
     );
     expect(
-      seedPostingsFromPayee(
-        filled,
-        initial,
-        {
-          from: { autoFill: "Liabilities:Visa" },
-          to: { autoFill: "Expenses:OldHobby" },
-        },
-        (account) => account !== "Expenses:OldHobby",
-        ["Assets:Bank:Checking", "Liabilities:Visa"],
+      accounts(
+        seedPostingsFromPayee(
+          filled,
+          initial,
+          {
+            from: { autoFill: "Liabilities:Visa" },
+            to: { autoFill: "Expenses:OldHobby" },
+          },
+          (account) => account !== "Expenses:OldHobby",
+          ["Assets:Bank:Checking", "Liabilities:Visa"],
+        ),
       ),
-    ).toBe(null);
+    ).toEqual(accounts(initial));
   });
 
   it("changes nothing when both usual accounts are closed", () => {
@@ -232,7 +235,7 @@ describe("picking a second payee", () => {
     expect(src.includes("lastPayeeSeedRef.current,);")).toBe(true);
     expect(
       src.includes(
-        "lastPayeeSeedRef.current=seededPostings.map((p)=>p.account);",
+        "lastPayeeSeedRef.current=filled?seededPostings.map((p)=>p.account):null;",
       ),
     ).toBe(true);
   });
@@ -300,5 +303,101 @@ describe("a payee's usual pair", () => {
         to: { autoFill: "Assets:PayPal" },
       }),
     ).toBe(null);
+  });
+});
+
+// w21/922: a payee with no history, or a cleared one, kept the previous payee's
+// card and category, and the entry saved against them.
+describe("a payee with nothing to fill", () => {
+  const initial = opened();
+  const filled = () => {
+    const seeded = seedPostingsFromPayee(
+      initial,
+      initial,
+      history("TRADER JOES"),
+    )!;
+    return { seeded, lastSeed: accounts(seeded)! };
+  };
+
+  it("puts the opening accounts back for a payee with no history", () => {
+    const { seeded, lastSeed } = filled();
+    const next = seedPostingsFromPayee(
+      seeded,
+      initial,
+      history("Corner Deli"),
+      undefined,
+      lastSeed,
+    );
+    expect(accounts(next)).toEqual(accounts(initial));
+  });
+
+  it("puts them back when the payee is cleared", () => {
+    const { seeded, lastSeed } = filled();
+    expect(
+      accounts(
+        seedPostingsFromPayee(
+          seeded,
+          initial,
+          NO_PAYEE_HISTORY,
+          undefined,
+          lastSeed,
+        ),
+      ),
+    ).toEqual(accounts(initial));
+  });
+
+  it("keeps the amounts typed since the fill", () => {
+    const { seeded, lastSeed } = filled();
+    const typed = updatePostingAmount(seeded, 0, "-9.00");
+    const next = seedPostingsFromPayee(
+      typed,
+      initial,
+      NO_PAYEE_HISTORY,
+      undefined,
+      lastSeed,
+    )!;
+    expect(accounts(next)).toEqual(accounts(initial));
+    expect(next[0]!.amount).toBe(typed[0]!.amount);
+  });
+
+  it("keeps an account the user edited after the fill", () => {
+    const { seeded, lastSeed } = filled();
+    const edited = updatePostingAccount(seeded, 1, "Expenses:Gifts");
+    expect(
+      seedPostingsFromPayee(
+        edited,
+        initial,
+        history("Corner Deli"),
+        undefined,
+        lastSeed,
+      ),
+    ).toBe(null);
+  });
+
+  it("changes nothing on a form that was never filled", () => {
+    expect(
+      seedPostingsFromPayee(initial, initial, history("Corner Deli")),
+    ).toBe(null);
+    expect(
+      seedPostingsFromPayee(
+        initial,
+        initial,
+        NO_PAYEE_HISTORY,
+        undefined,
+        null,
+      ),
+    ).toBe(null);
+  });
+
+  it("also resets when the payee's usual accounts are both closed", () => {
+    const { seeded, lastSeed } = filled();
+    const next = seedPostingsFromPayee(
+      seeded,
+      initial,
+      history("CITY BUS"),
+      () => false,
+      lastSeed,
+    );
+    expect(accounts(next)).toEqual(accounts(initial));
   });
 });
