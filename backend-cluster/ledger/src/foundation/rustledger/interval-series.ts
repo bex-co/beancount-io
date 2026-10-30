@@ -1,11 +1,7 @@
 import type { DirectiveJson } from "@rustledger/wasm";
 import { BadUserInputError } from "@/shared/errors";
 import type { PriceMap } from "./price-map";
-import {
-  LotInventory,
-  parseConversion,
-  type MissingPriceLegs,
-} from "./lot-inventory";
+import { LotInventory, parseConversion } from "./lot-inventory";
 import { utcDate } from "./utc-date";
 
 export interface DateBalance {
@@ -226,13 +222,11 @@ function valueRecord(
   target: string,
   priceMap: PriceMap,
   date: string,
-  missing?: MissingPriceLegs,
 ): Record<string, string> {
   const converted = inventory.reduceScaled(
     parseConversion(target),
     priceMap,
     date,
-    missing,
   );
   const out: Record<string, string> = {};
   // Plain decimals at the written scale: `toString()` sent `5e-7` and
@@ -307,7 +301,6 @@ export function intervalTotals(
   target: string,
   priceMap: PriceMap,
   window?: IntervalWindow,
-  missing?: MissingPriceLegs,
 ): DateBalanceWithAccounts[] {
   // A flow total ends at the last transaction: a price dated after it adds an
   // empty month, which moved Reports' anchor onto it (w21/889). Balance series
@@ -355,18 +348,11 @@ export function intervalTotals(
         target,
         priceMap,
         range.endInclusive,
-        missing,
       );
     });
     return {
       date: range.endInclusive,
-      balance: valueRecord(
-        total,
-        target,
-        priceMap,
-        range.endInclusive,
-        missing,
-      ),
+      balance: valueRecord(total, target, priceMap, range.endInclusive),
       account_balances,
     };
   });
@@ -396,7 +382,6 @@ export function accountBalanceSeries(
   target: string,
   priceMap: PriceMap,
   window?: IntervalWindow,
-  missing?: MissingPriceLegs,
 ): DateBalance[] {
   const ranges = seriesRanges(directives, key, window);
   if (ranges.length === 0) return [];
@@ -419,13 +404,7 @@ export function accountBalanceSeries(
     }
     return {
       date: range.endInclusive,
-      balance: valueRecord(
-        inventory,
-        target,
-        priceMap,
-        range.endInclusive,
-        missing,
-      ),
+      balance: valueRecord(inventory, target, priceMap, range.endInclusive),
     };
   });
 }

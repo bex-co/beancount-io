@@ -1,11 +1,7 @@
 import BigNumber from "bignumber.js";
 import type { DirectiveJson } from "@rustledger/wasm";
 import type { PriceMap } from "./price-map";
-import {
-  LotInventory,
-  parseConversion,
-  type MissingPriceLegs,
-} from "./lot-inventory";
+import { LotInventory, parseConversion } from "./lot-inventory";
 
 const Amount = BigNumber.clone({
   DECIMAL_PLACES: 28,
@@ -138,13 +134,11 @@ function serialiseInventory(
   target: string,
   priceMap: PriceMap,
   date: string | undefined,
-  missing?: MissingPriceLegs,
 ): Record<string, string> {
   const converted = balance.reduceScaled(
     parseConversion(target),
     priceMap,
     date,
-    missing,
   );
   const out: Record<string, string> = {};
   // Plain decimals at the written scale: `toString()` sent `5e-7` and
@@ -162,7 +156,6 @@ function serialiseSubtree(
   target: string,
   priceMap: PriceMap,
   date: string | undefined,
-  missing?: MissingPriceLegs,
 ): AccountTreeNode {
   const node = nodes.get(account) ?? {
     account,
@@ -173,18 +166,15 @@ function serialiseSubtree(
   };
   const children = [...node.children]
     .sort(compareCodePoints)
-    .map((child) =>
-      serialiseSubtree(nodes, child, target, priceMap, date, missing),
-    );
+    .map((child) => serialiseSubtree(nodes, child, target, priceMap, date));
   return {
     account,
-    balance: serialiseInventory(node.balance, target, priceMap, date, missing),
+    balance: serialiseInventory(node.balance, target, priceMap, date),
     balance_children: serialiseInventory(
       node.balanceChildren,
       target,
       priceMap,
       date,
-      missing,
     ),
     children,
     has_txns: node.hasTxns,
@@ -204,7 +194,6 @@ export function accountHierarchy(
   target: string,
   priceMap: PriceMap,
   date?: string,
-  missing?: MissingPriceLegs,
 ): AccountTreeNode {
   return serialiseSubtree(
     buildAccountTree(directives),
@@ -212,7 +201,6 @@ export function accountHierarchy(
     target,
     priceMap,
     date,
-    missing,
   );
 }
 
