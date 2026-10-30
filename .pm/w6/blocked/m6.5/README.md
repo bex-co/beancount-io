@@ -173,3 +173,11 @@ Pack, now missing a different pair. All downloaded hashes match. No complete
 install or per-file HTTP cause is inferred. Platform/client delivery remains
 required; next native manual check not before2026-11-01T00:19:21Z or actual
 recovery/fix earlier. Other index/Hermes gates retain separate evidence.
+
+### Current Hermes source gate — 2026-10-30 UTC
+
+[t005](t005.md) records stablev0.22.5 and six changed target files on pinned main.
+The actual changes add other trusted sources, plugin scanner v12 distinctions,
+config keys and reviewed-commit installation; portable nested metadata and
+retained init admission remain incompatible. No unreleased/native install is
+run or claimed. Supported compatible host policy/metadata remains required.

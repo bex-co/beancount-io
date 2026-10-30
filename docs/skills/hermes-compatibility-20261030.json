@@ -1,0 +1,126 @@
+{
+  "owner": "w6/m6.5/t005",
+  "relatedInitOwner": "w6/039",
+  "assessmentCompletedAtUTC": "2026-10-30T00:26:07Z",
+  "status": "blocked",
+  "stable": {
+    "tag": "v0.22.5",
+    "commit": "bf0203a794a07aac3ff764972ab9087baa4e4f4e",
+    "publishedAtUTC": "2026-10-23T05:28:45Z",
+    "url": "https://github.com/NousResearch/hermes-agent/releases/tag/v0.22.5"
+  },
+  "main": {
+    "commit": "088f657ecf77674c7b8e2ededf4e3576d82e042c",
+    "url": "https://github.com/NousResearch/hermes-agent/tree/088f657ecf77674c7b8e2ededf4e3576d82e042c"
+  },
+  "priorComparison": "hermes-compatibility-20261028.json",
+  "files": [
+    {
+      "path": "hermes_cli/agent_plugins.py",
+      "previousGitBlobSHA": "64205785b0447a0b7917ad4359ac308877efcc09",
+      "currentGitBlobSHA": "6cece2b262168d1ddb6d146057b9224fd72d3d9b",
+      "unchanged": false,
+      "url": "https://github.com/NousResearch/hermes-agent/blob/088f657ecf77674c7b8e2ededf4e3576d82e042c/hermes_cli/agent_plugins.py",
+      "sourceChangeAssessment": "Adds Hermes config extension helper; actual portable skill frontmatter still requires metadata values to be strings."
+    },
+    {
+      "path": "hermes_cli/plugin_validate.py",
+      "previousGitBlobSHA": "a63fd2233a878e17e782f384916cded40d6bcf5f",
+      "currentGitBlobSHA": "a63fd2233a878e17e782f384916cded40d6bcf5f",
+      "unchanged": true,
+      "url": "https://github.com/NousResearch/hermes-agent/blob/088f657ecf77674c7b8e2ededf4e3576d82e042c/hermes_cli/plugin_validate.py"
+    },
+    {
+      "path": "hermes_cli/plugins_admission.py",
+      "previousGitBlobSHA": "6ba8f3c36171c552afc1e5bff076aab02c022e36",
+      "currentGitBlobSHA": "6ba8f3c36171c552afc1e5bff076aab02c022e36",
+      "unchanged": true,
+      "url": "https://github.com/NousResearch/hermes-agent/blob/088f657ecf77674c7b8e2ededf4e3576d82e042c/hermes_cli/plugins_admission.py"
+    },
+    {
+      "path": "hermes_cli/plugins_cmd_install.py",
+      "previousGitBlobSHA": "e0062e36a7c484bc392bd70c7bf739b68774182b",
+      "currentGitBlobSHA": "1ec9c0f203c5df6beba92e18324a273aea395bb4",
+      "unchanged": false,
+      "url": "https://github.com/NousResearch/hermes-agent/blob/088f657ecf77674c7b8e2ededf4e3576d82e042c/hermes_cli/plugins_cmd_install.py",
+      "sourceChangeAssessment": "Pins installation to the commit reviewed in the dialog and rejects moved sources; no matching metadata/init policy relaxation."
+    },
+    {
+      "path": "hermes_cli/plugins_manifest.py",
+      "previousGitBlobSHA": "8153f476a4182959bf255092459e71ca57eec623",
+      "currentGitBlobSHA": "22ecbc213b62c869847f60d34f586204d2c98fdf",
+      "unchanged": false,
+      "url": "https://github.com/NousResearch/hermes-agent/blob/088f657ecf77674c7b8e2ededf4e3576d82e042c/hermes_cli/plugins_manifest.py",
+      "sourceChangeAssessment": "Adds config_keys validation/extension mapping, without permitting nested portable skill metadata."
+    },
+    {
+      "path": "hermes_cli/skills_hub.py",
+      "previousGitBlobSHA": "9da626af276c6afe48e4ee132a5651576e9dac6c",
+      "currentGitBlobSHA": "9da626af276c6afe48e4ee132a5651576e9dac6c",
+      "unchanged": true,
+      "url": "https://github.com/NousResearch/hermes-agent/blob/088f657ecf77674c7b8e2ededf4e3576d82e042c/hermes_cli/skills_hub.py"
+    },
+    {
+      "path": "tools/plugin_guard.py",
+      "previousGitBlobSHA": "bb1a334d75d34923ceb1900e0805804e4fff9d7c",
+      "currentGitBlobSHA": "545dd13a347c484117b30dfaaa1c81cbbc35fc73",
+      "unchanged": false,
+      "url": "https://github.com/NousResearch/hermes-agent/blob/088f657ecf77674c7b8e2ededf4e3576d82e042c/tools/plugin_guard.py",
+      "sourceChangeAssessment": "Plugin scanner advances v11 to v12 for tracked bytecode, benign proc reads and public client-key distinctions; no init instruction-file admission change."
+    },
+    {
+      "path": "tools/plugin_guard_context.py",
+      "previousGitBlobSHA": "32b535c09d9b350afeed0197ee7bcd1ce92c86a7",
+      "currentGitBlobSHA": "98d6aef32754dd266b816a89b02ff0b8a5e2a982",
+      "unchanged": false,
+      "url": "https://github.com/NousResearch/hermes-agent/blob/088f657ecf77674c7b8e2ededf4e3576d82e042c/tools/plugin_guard_context.py",
+      "sourceChangeAssessment": "Supports benign proc read/public-by-design client-key distinctions, unrelated to the retained init workflow."
+    },
+    {
+      "path": "tools/skills_guard.py",
+      "previousGitBlobSHA": "4258d3a8a146a39edd4b5ab47a6fadb18e28a3aa",
+      "currentGitBlobSHA": "c8a4f15dc45ae3a1c2357acd5753fed375745b42",
+      "unchanged": false,
+      "url": "https://github.com/NousResearch/hermes-agent/blob/088f657ecf77674c7b8e2ededf4e3576d82e042c/tools/skills_guard.py",
+      "sourceChangeAssessment": "Only expands trusted repositories; Beancount repository is not added. Skill scanner v10 and retained init-pattern policy remain unchanged."
+    },
+    {
+      "path": "tools/skills_hub.py",
+      "previousGitBlobSHA": "eb7441be119754aba139d2346fbeb528b1c2bb54",
+      "currentGitBlobSHA": "eb7441be119754aba139d2346fbeb528b1c2bb54",
+      "unchanged": true,
+      "url": "https://github.com/NousResearch/hermes-agent/blob/088f657ecf77674c7b8e2ededf4e3576d82e042c/tools/skills_hub.py"
+    },
+    {
+      "path": "tools/skills_hub_clawhub.py",
+      "previousGitBlobSHA": "040e7aacfc01854234d2ce5cca4061a31321eaef",
+      "currentGitBlobSHA": "040e7aacfc01854234d2ce5cca4061a31321eaef",
+      "unchanged": true,
+      "url": "https://github.com/NousResearch/hermes-agent/blob/088f657ecf77674c7b8e2ededf4e3576d82e042c/tools/skills_hub_clawhub.py"
+    },
+    {
+      "path": "tools/skills_hub_search.py",
+      "previousGitBlobSHA": "fabdf931e58352fbdfc5d7dea6be22d05fcc1809",
+      "currentGitBlobSHA": "fabdf931e58352fbdfc5d7dea6be22d05fcc1809",
+      "unchanged": true,
+      "url": "https://github.com/NousResearch/hermes-agent/blob/088f657ecf77674c7b8e2ededf4e3576d82e042c/tools/skills_hub_search.py"
+    }
+  ],
+  "summary": {
+    "checkedPinnedTreeFiles": 12,
+    "unchanged": 6,
+    "changedAndDirectSourceRead": 6,
+    "stableReleaseUnchanged": true,
+    "skillScannerVersionOnInspectedMain": "skills-guard-v10",
+    "pluginScannerVersionOnInspectedMain": "plugin-guard-v12",
+    "nestedPortableSkillMetadataStillRejectedBySource": true,
+    "retainedInitPolicyCompatiblePathEstablished": false,
+    "nativeInstallOrScannerRepeated": false,
+    "unreleasedCodeExecutedOrAdopted": false
+  },
+  "methodAndLimits": "Pinned recursive Git tree is not truncated. Compare endpoint returns only its first300 files across646commits; six changed target files are independently read through pinned contents and compared with the prior twelve-file source snapshot. This scoped source assessment does not claim an exhaustive upstream change review or new native success/refusal.",
+  "unblock": "A supported compatible portable metadata and init-policy route; worker then verifies complete-suite install/discovery/update without force. No workflow removal, obfuscation, scanner weakening or retired standalone republishing.",
+  "nextTrigger": "Relevant supported release or actual compatible policy/metadata/admission change, rather than unchanged installation retries.",
+  "publisherInputNeeded": false,
+  "privacy": "Public releases, source files/blob identifiers and assessment only. No account details, credentials or private ledger data."
+}

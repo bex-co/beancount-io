@@ -545,3 +545,15 @@ Platform/client complete delivery remains required before closure. Next manual
 check not before2026-11-01T00:19:21Z, or relevant actual fix/recovery earlier;
 no unchanged retry loop, missing-file patch, duplicate Pack or support email.
 Independent index conditions retain their own check dates and next triggers.
+
+### Current Hermes compatibility source check — 2026-10-30 UTC
+
+Stable remainsv0.22.5. The [pinned twelve-file audit](hermes-compatibility-20261030.json)
+finds six actual main-source changes, including plugin scanner v12. These cover
+bytecode/proc/public-client-key distinctions, other trusted repositories,
+config keys and reviewed-commit installation. The portable metadata string-map
+rule and our retained init-policy admission remain incompatible. No unreleased
+code is adopted or executed; no native install/refusal is repeated. Wait for a
+supported compatible metadata/policy path, then verify the complete suite's
+native install/discovery/update without force. The retired standalone path is
+not restored, and no publisher input is pending for this source assessment.
