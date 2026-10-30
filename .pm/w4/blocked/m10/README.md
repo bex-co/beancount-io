@@ -1,6 +1,6 @@
 # w4 · m10 — GitHub contributor front door: issue and PR templates, security policy, code of conduct, seeded good first issues
 
-**Worker:** worker1 **Goal:** a first-time reporter opens an issue through a form that captures the package, version, and reproduction the maintainers need, a first-time contributor finds a sized task and a PR template that names the checks to run, and the repository's community profile is complete **Status:** todo — t005 done; t001/t004 blocked and closing tasks deferred (t002, t003, t005, t008 done; t001 forms shipped, labels pending)
+**Worker:** worker1 **Goal:** a first-time reporter opens an issue through a form that captures the package, version, and reproduction the maintainers need, a first-time contributor finds a sized task and a PR template that names the checks to run, and the repository's community profile is complete **Status:** blocked — t001/t004 await owner inputs; t006/t007/t009 defer transitively (t002, t003, t005, t008 done; t001 forms shipped, labels pending)
 
 ## Tasks (in order)
 
@@ -11,10 +11,10 @@
 | t003 | SECURITY.md with the reporting channel and gitleaks policy, CODE_OF_CONDUCT.md, both linked from CONTRIBUTING and README — **DONE** | 30m | — |
 | t004 | Seed good first issues from the board's open sub-hour QA notes and label issue 176 against the price and self-host work — **BLOCKED** | 45m | t001 |
 | t005 | Contributing guide: first-PR walkthrough per package, complete layout table, and where to ask — **DONE**                  | 30m | t003       |
-| t006 | Adoption surface                                                                                                          | 20m | t002, t004, t005 |
-| t007 | Simplify                                                                                                                  | 20m | t006       |
+| t006 | Adoption surface — **BLOCKED**                                                                                             | 20m | t002, t004, t005 |
+| t007 | Simplify — **BLOCKED**                                                                                                     | 20m | t006       |
 | t008 | Test coverage — **DONE**                                                                                                  | 40m | t006       |
-| t009 | Closeout                                                                                                                  | 15m | t007, t008 |
+| t009 | Closeout — **BLOCKED**                                                                                                     | 15m | t007, t008 |
 
 ## Blocked
 
@@ -24,7 +24,7 @@
 2. **Labels (t001).** Approve creating the missing `skills` and `self-host` labels that two forms apply, then confirm the resulting automatic labels. The signed-in owner chooser was verified on 2026-10-30: all four forms and both contact links are present; the blank option is explicitly maintainers-only. See t001 for the current observation and its limits.
 3. **Public issues (t004).** Approve filing at least five `good first issue`s from current board notes and labeling issue176. The maintainer already answered the community request and closed it; no duplicate reply is required.
 
-**Remaining child-task unblock conditions:** authorize and create the missing labels, then verify automatic application for t001; review and authorize concrete public contributor issues/issue176 labeling for t004. The signed-in owner chooser observation is complete, with the maintainer-only blank-option caveat recorded in t001. Reporting contacts are settled, so the milestone returns to `.pm/w4/m10/` for independent t003 → t005 work while t001/t004 remain `status: blocked`. t006/t007/t009 still depend on the remaining work; the milestone is not complete and its checkbox stays unchecked until closeout.
+**Remaining child-task unblock conditions:** authorize and create the missing labels, then verify automatic application for t001; review and authorize concrete public contributor issues/issue176 labeling for t004. The signed-in owner chooser observation is complete, with the maintainer-only blank-option caveat recorded in t001. The independent t003 → t005 branch is now finished; t006 depends on blocked t004, t007 depends on t006, and t009 depends on t007. The milestone therefore returns to `blocked/` until an owner input lets a remaining task proceed. Unblocking one task must retain the other task's unmet conditions; the milestone is not complete and its checkbox stays unchecked until closeout.
 
 **Rechecked 2026-10-10 by `/loopx w4`:** GitHub's read-only API reports private vulnerability reporting disabled, no `skills` or `self-host` labels, no open `good first issue`s, and issue176 closed with no labels. The maintainer's [2026-09-12 reply](https://github.com/bex-co/beancount-io/issues/176#issuecomment-5644470503) addresses live prices, operating currencies and shared-database deployment; the [2026-09-17 follow-up](https://github.com/bex-co/beancount-io/issues/176#issuecomment-5707657060) links the shipped public live-price example. The old reply blocker is therefore cleared, independently of m9's remaining local-first scope decision. No GitHub setting, label, issue or comment was changed during this audit. The milestone stays blocked on the owner decisions and remaining observation above.
 
@@ -33,6 +33,8 @@
 **Owner decision 2026-10-29, recorded via `/pm block w4/m10`:** security vulnerabilities go to `security@beancount.io`. This resolves the security-channel decision and gives the worker the real address for the security-policy portion of t003. No mail was sent, mailbox configuration or delivery verified, or GitHub setting changed. The conduct-reporting channel, labels/public-issue inputs and chooser verification remain outstanding, so the milestone remains blocked. Next owner decision: whether the security mailbox also receives conduct complaints or a different private contact should be named.
 
 **Partial resumption 2026-10-29 via `/pm`:** the owner selected `hello@beancount.io` for conduct complaints, completing the reporting-channel decisions. Restore the milestone to the open queue so t003 (no dependencies) can produce the two policies with their distinct real contacts, then t005 can update the contributing guide. Mark t001 and t004 blocked at task level with their existing unmet conditions, rather than letting those unrelated conditions hold up independent documentation. No document implementation, mail delivery test, label change or public issue publication is claimed here. Historical blocking records above remain as history; current task statuses and this resumption record govern what can start.
+
+**Blocked again 2026-10-30 via `/pm block w4/m10`:** t003 policies shipped in `da74f015e7` and were verified/archived in `dbb03904ef`; t005's complete contributor guide shipped in `96575b46d7`. No independent open task remains. t001 still needs explicit authorization for the two proposed labels (`skills`, `self-host`) and their actual automatic-application verification; t004 still needs reviewed/authorized public issue drafts and issue176 labeling, plus t001. t006/t007/t009 are marked blocked transitively, with no claim that their closing work is complete. The latest instruction to ship and run `/loopx w4` did not answer the pending label/disposition questions or authorize public issue publication. **Who:** repository owner for those decisions; worker for the subsequent implementation and acceptance. **Unblock:** the relevant owner decision is supplied and a remaining task becomes actionable; restore the milestone while preserving unrelated blocked children. All four completed tasks and their evidence remain under `done/`.
 
 ## Definition of done
 
