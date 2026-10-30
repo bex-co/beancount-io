@@ -52,11 +52,17 @@ describe("rescueInnerTableFrom", () => {
     "payee",
     "narration",
     "type",
-    // The dual folds, matching stock.
-    "accounts",
   ])("leaves inner bare %s alone", (name) => {
     const query = `SELECT count(*) FROM (SELECT * FROM ${name})`;
     expect(rescueInnerTableFrom(query)).toBe(query);
+  });
+
+  // The dual `accounts` is table-first everywhere (w23/124): rescued inside
+  // parentheses like any table, so it agrees with the outer forms.
+  it("rescues the dual `accounts` as a table", () => {
+    expect(
+      rescueInnerTableFrom("SELECT count(*) FROM (SELECT * FROM accounts)"),
+    ).toBe("SELECT count(*) FROM (SELECT * FROM accounts WHERE true)");
   });
 
   it.each([
@@ -71,12 +77,14 @@ describe("rescueInnerTableFrom", () => {
   });
 
   it("ignores FROM inside a string literal", () => {
-    const query = "SELECT * FROM (SELECT * WHERE narration = 'FROM postings)') LIMIT 1";
+    const query =
+      "SELECT * FROM (SELECT * WHERE narration = 'FROM postings)') LIMIT 1";
     expect(rescueInnerTableFrom(query)).toBe(query);
   });
 
   it("returns an unterminated literal unchanged", () => {
-    const query = "SELECT * FROM (SELECT * FROM postings WHERE narration = 'oops)";
+    const query =
+      "SELECT * FROM (SELECT * FROM postings WHERE narration = 'oops)";
     expect(rescueInnerTableFrom(query)).toBe(query);
   });
 });

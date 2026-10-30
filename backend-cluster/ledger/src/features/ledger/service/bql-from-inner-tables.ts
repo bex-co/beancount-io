@@ -21,10 +21,10 @@ import { matchFromKeyword } from "./bql-scan";
  *
  * - Fold columns pass through: the engine's `)`-fold is the native fold
  *   the whole w23/116 wrap relies on.
- * - The dual `accounts` passes through: it folds, matching stock's
- *   column-first order (w23/124's verified premise). If the owner picks
- *   table-first-everywhere there, revisit this exclusion — the live pin
- *   trips on the changed shape.
+ * - The dual `accounts` is rescued like any table: the owner chose
+ *   table-first everywhere (w23/124, 2026-10-30), so inner `FROM accounts)`
+ *   agrees with the outer forms and with `bea`. This deliberately differs from
+ *   released beanquery 0.2.0, which folds the unquoted name to postings.
  * - Quoted names pass through here: the unquote stage (which runs first
  *   and accepts `)` continuations) already routed them onto this path.
  * - Anything with a clause, anything inside a string literal, and
@@ -78,9 +78,8 @@ export function rescueInnerTableFrom(query: string): string {
 /**
  * If a rescuable bare table name follows the `FROM` ending at `fromEnd`,
  * the index just past the name; else undefined. Rescuable means a bare
- * identifier closed directly by `)` that is neither a fold column (the
- * native `)`-fold is correct) nor the dual `accounts` (folding is
- * stock-correct).
+ * identifier closed directly by `)` that is not a fold column (the native
+ * `)`-fold is correct).
  */
 function matchInnerBareTable(
   chars: string[],
@@ -93,7 +92,7 @@ function matchInnerBareTable(
   if (j === nameStart) return undefined;
   if (/[0-9]/.test(chars[nameStart] as string)) return undefined;
   const name = chars.slice(nameStart, j).join("");
-  if (FOLD_COLUMNS.has(name) || name === "accounts") return undefined;
+  if (FOLD_COLUMNS.has(name)) return undefined;
   const nameEnd = j;
   while (j < chars.length && /\s/.test(chars[j] as string)) j += 1;
   if (chars[j] !== ")") return undefined;

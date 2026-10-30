@@ -64,4 +64,3 @@
 - [059](./blocked/059.md) — every product-created ledger ships `auto_accounts`, so a misspelt account is silently opened — **blocked:** owner picks drop-plugin (which also limits AI categorization to existing accounts) vs report-new-accounts
 - [022](./blocked/022.md) — report rustledger BQL gaps upstream (`cost(sum(position))`, `neg`/`filter_currency`, `meta('lineno')`, `AT value`, `BALANCES FROM`) — **blocked:** upstream filing approved 2026-10-28; waiting for someone with tracker access to file the batch
 - [026](./blocked/026.md) — streaming archive route for MCP OAuth clients over 8 MiB (option 1 from 023) — **blocked:** an ADR 0007 trust-boundary decision for the owner
-- [ ] [124](./124.md) — unquoted `FROM accounts` resolves table-first on MCP (12) vs column-first on stock (34); owner chose table-first everywhere (2026-10-30), so the work is to correct the comments and pin the contract with a test

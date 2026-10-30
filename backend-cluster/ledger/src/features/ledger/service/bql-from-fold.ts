@@ -3,13 +3,12 @@ import { matchFromKeyword, matchSelectKeyword } from "./bql-scan";
 /**
  * Postings columns whose `FROM <name>` folds on every stock form (w23/116).
  *
- * Stock beanquery resolves an unquoted FROM name table-first, then folds it
- * as a postings column when it names a real column, else errors — identically
- * in every clause form. Our engine instead resolves by form: a bare
- * `;`-terminated or `)`-terminated name folds, while bare-EOF and with-clause
- * names resolve tables only. So `FROM payee;` folds here (as on stock) but
- * `FROM payee LIMIT 1` table-errors (stock folds), and `FROM accounts;`
- * folds here while stock tables it in every form.
+ * Stock beanquery 0.2.0 resolves an unquoted FROM name column-first, then
+ * falls back to a table, identically in every clause form (w23/124 verified
+ * this against its source and by execution). Our engine instead resolves by
+ * form: a bare `;`-terminated or `)`-terminated name folds, while bare-EOF and
+ * with-clause names resolve tables only. So `FROM payee;` folds here (as on
+ * stock) but `FROM payee LIMIT 1` table-errors (stock folds).
  *
  * This set is the empirically fold-shaped names: each folds on stock's
  * with-clause form (rows, or stock's silent empty-fold) AND folds on our
@@ -20,8 +19,13 @@ import { matchFromKeyword, matchSelectKeyword } from "./bql-scan";
  * shape, w23/blocked/022 class). Deliberately excluded, with what they do
  * instead:
  *
- * - `accounts` — dual: stock tables it in every form, so it stays on the
- *   table path (the terminator already routes its bare-`;` form there).
+ * - `accounts` — the one dual (a table and a postings column). Deliberately
+ *   table-first in every unquoted form, a decision of the owner (w23/124,
+ *   2026-10-30): the CLI's shipped contract (w3/247, w3/398, w5/560) already
+ *   resolves it to the table, and `bea`, MCP, REST and GraphQL stay
+ *   consistent. This is a known divergence from stock 0.2.0, which folds the
+ *   unquoted name to postings (34 rows where we return the 12 accounts);
+ *   quoted `FROM "accounts"` is the table on both.
  * - `balance` — stock crashes (`NotImplementedError`); our `;`-fold drops
  *   every row the filter keeps. Excluded, so every form errors loudly.
  * - `cost`, `units` — not stock columns at all (stock errors with a

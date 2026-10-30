@@ -1833,10 +1833,15 @@ async function main(): Promise<void> {
     "main.beancount",
     normalizeBqlQueryForEngine("SELECT count(*) FROM (SELECT * FROM accounts)"),
   );
+  const nativeAccountsTable = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    "SELECT count(*) FROM accounts LIMIT 1",
+  );
   assert(
     JSON.stringify(pipelinedInnerDual.rows) ===
-      JSON.stringify(nativeTableCount.rows),
-    "pipelined inner dual keeps the fold rows (revisit if w23/124 lands table-first)",
+      JSON.stringify(nativeAccountsTable.rows),
+    "pipelined inner dual resolves the table, like the outer forms (table-first, w23/124)",
   );
   const pipelinedInnerUnknown = await queryLedgerFilesResult(
     FILES,
