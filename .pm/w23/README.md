@@ -60,6 +60,8 @@
 - [065](./blocked/065.md) — a ledger-pinned credential keeps the old name after a rename — **blocked:** owner picks repository-ID pins, canonical-name pins, or an accurate refusal (credential trust boundary)
 - [ ] [203](./203.md) — multi-directive `appendLedgerText` / `directives/text` commits two blank lines between entries the caller separated with one (`insertDirectives` keeps the block's blank and adds its own)
 - [ ] [204](./204.md) — a file batch holding a path and one of its sub-paths commits "N changes" but silently drops a file (last write wins); the dry run approves it, and an existing file as parent is approved by the preview but refused by the commit
+- [ ] [205](./205.md) — `readLedgerFiles` / `updateLedgerFiles` / `deleteLedgerFiles` fail with a false `NOT_FOUND` naming the 31st path when a call names more than 30 existing files (batched file-contents lookup silently caps at 30)
+- [ ] [206](./206.md) — `createLedgerFiles` `dry_run` refuses batches over 50 files that the commit accepts, only after about 100 ms of lookup per file (150 files = 16 s to refuse)
 - [059](./blocked/059.md) — every product-created ledger ships `auto_accounts`, so a misspelt account is silently opened — **blocked:** owner picks drop-plugin (which also limits AI categorization to existing accounts) vs report-new-accounts
 - [022](./blocked/022.md) — report rustledger BQL gaps upstream (`cost(sum(position))`, `neg`/`filter_currency`, `meta('lineno')`, `AT value`, `BALANCES FROM`) — **blocked:** upstream filing approved 2026-10-28; waiting for someone with tracker access to file the batch
 - [026](./blocked/026.md) — streaming archive route for MCP OAuth clients over 8 MiB (option 1 from 023) — **blocked:** an ADR 0007 trust-boundary decision for the owner
