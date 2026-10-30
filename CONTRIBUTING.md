@@ -4,6 +4,10 @@ Thanks for your interest in improving [Beancount.io](https://beancount.io/). Thi
 repository is a monorepo of independent packages; read this guide and the root
 [`AGENTS.md`](./AGENTS.md) before opening a pull request.
 
+Participation follows our [code of conduct](./CODE_OF_CONDUCT.md). Report
+vulnerabilities privately using the [security policy](./SECURITY.md); conduct
+complaints use the separate contact in the code of conduct.
+
 ## Repository layout
 
 | Path         | Description                                       |
@@ -50,8 +54,9 @@ and pull request.
   gitleaks detect --no-git --source .
   ```
 
-If you believe a secret was ever committed, treat it as compromised: rotate it
-immediately and open an issue so maintainers can purge it from history.
+If you believe a secret was ever committed, treat it as compromised: rotate or
+revoke it immediately, then report the affected path and commit privately using
+the [security policy](./SECURITY.md). Do not copy the secret into an issue or email.
 
 ## License
 

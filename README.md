@@ -257,6 +257,8 @@ Every active package has path-filtered CI, and a repository-wide secret scan gat
 
 Contributions are welcome across product UI, accounting workflows, accessibility, translations, tests, Python tooling, and agent skills. Start with the [contributing guide](./CONTRIBUTING.md), browse [open issues](https://github.com/bex-co/beancount-io/issues) and the public [adoption roadmap](./.pm/README.md), and keep changes focused on one package when possible.
 
+Read our [code of conduct](./CODE_OF_CONDUCT.md) before participating. Report vulnerabilities privately through the [security policy](./SECURITY.md).
+
 If Beancount.io is the kind of open, programmable finance software you want to see more of, [star the repository](https://github.com/bex-co/beancount-io) and help more developers find it.
 
 ## Community
