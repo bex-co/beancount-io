@@ -1,0 +1,21 @@
+{
+  "target": "Glama Git source index",
+  "owner": "w6/048",
+  "repository": "https://github.com/bex-co/beancount-io",
+  "submittedName": "Beancount MCP",
+  "status": "in_review",
+  "receiptReceivedAtUTC": "2026-10-30T00:11Z",
+  "timestampPrecision": "minute",
+  "receiptSubject": "Your MCP server \"Beancount MCP\" is pending review on Glama",
+  "receiptSenderDomain": "glama.ai",
+  "confirmation": "Accepted source submission; Glama will email its review decision.",
+  "publicSourceRecord": "https://glama.ai/mcp/servers/bex-co/beancount-io",
+  "publicSourceRecordPublished": false,
+  "sourceScorePublished": false,
+  "formScope": "Runs from source; existing account login reused, one accepted submission after correcting a rejected URL-like name.",
+  "reviewFollowthrough": "After approval, follow actual supported source/Dockerfile/introspection instructions. Do not fabricate a badge from the separate hosted connector.",
+  "existingHostedConnector": "https://glama.ai/mcp/connectors/io.beancount/beancount",
+  "existingHostedClaimMonitoringAndNativeBaselineChanged": false,
+  "newDeploymentOrGrantCreated": false,
+  "privacy": "Receipt confirmed through the original authenticated mailbox; account, message IDs, private mailbox URLs and credentials omitted."
+}

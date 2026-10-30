@@ -171,7 +171,7 @@ Beancount.io is built for the agent era: your ledger is text an agent can read, 
 }
 ```
 
-Forty-three tools, one per operation (BQL queries, file reads and edits, entry and receipt insertion, statement parsing, bank import, and more), 64 URI-addressed resources, and four prompts (spending report, month-end close, reconciliation, import categorization — e.g. `/mcp__beancount__close-month` in Claude Code). File edits, directive appends, and bank imports preview with `dry_run`, every call re-authorizes, and failures return a machine code plus the next call to make. Per-host notes for Claude, Claude Code, ChatGPT, Cursor, Copilot, OpenClaw, and Hermes Agent: [MCP docs](./backend-cluster/backend-v2/docs/mcp.md); contract: [ADR 0007](./docs/adrs/ADR007-backend-v2-mcp-surface.md).
+Tools cover BQL queries, file reads and edits, entry and receipt insertion, statement parsing, bank import, and more. URI-addressed resources and accounting prompts support spending reports, month-end close, reconciliation and import categorization — e.g. `/mcp__beancount__close-month` in Claude Code. Use `tools/list`, `resources/templates/list`, and `prompts/list` against your deployment for its current catalog. File edits, directive appends, and bank imports preview with `dry_run`, every call re-authorizes, and failures return a machine code plus the next call to make. Per-host notes for Claude, Claude Code, ChatGPT, Cursor, Copilot, OpenClaw, and Hermes Agent: [MCP docs](./backend-cluster/backend-v2/docs/mcp.md); contract: [ADR 0007](./docs/adrs/ADR007-backend-v2-mcp-surface.md).
 
 </details>
 

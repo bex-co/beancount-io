@@ -52,5 +52,6 @@
     "prOpenedThisPlanningPass": false,
     "publisherAccountOrGrantChange": false
   },
-  "boundary": "This pass arranges the work and records public primary-source scope/dedup evidence. It does not claim main-list eligibility approval, submission, merge, live installation, current traffic/star metrics, or refreshed status for the other channels."
+  "boundary": "This pass arranges the work and records public primary-source scope/dedup evidence. It does not claim main-list eligibility approval, submission, merge, live installation, current traffic/star metrics, or refreshed status for the other channels.",
+  "subsequentExecutionEvidence": "submission-receipt-20261030.json"
 }

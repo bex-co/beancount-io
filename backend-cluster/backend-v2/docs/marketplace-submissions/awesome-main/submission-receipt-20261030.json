@@ -1,0 +1,59 @@
+{
+  "target": "punkpeye/awesome-mcp-servers",
+  "owner": "w6/048",
+  "status": "submitted",
+  "lastCheckedAtUTC": "2026-10-30T00:17:30Z",
+  "contribution": {
+    "url": "https://github.com/punkpeye/awesome-mcp-servers/pull/18050",
+    "createdAtUTC": "2026-10-30T00:17:12Z",
+    "state": "OPEN",
+    "mergedAtUTC": null,
+    "headCommit": "17f822329d705c7629ce4b7adcaed64d1976e7a2",
+    "changedFiles": [
+      {
+        "path": "README.md",
+        "additions": 1,
+        "deletions": 0
+      }
+    ],
+    "check": "Check Glama Link / check-submission SUCCESS at 2026-10-30T00:17:27Z",
+    "labels": [
+      "valid-name",
+      "has-emoji",
+      "missing-glama"
+    ],
+    "reviewRequest": "Documented automated-agent title suffix included; no maintainer decision received."
+  },
+  "eligibility": {
+    "publicSource": "https://github.com/bex-co/beancount-io/tree/main/backend-cluster/backend-v2",
+    "sourceRoute": "src/features/ai-agent/api/mcp-route.ts",
+    "transport": "Streamable HTTP at /api-gateway/mcp",
+    "selfHostingGuide": "https://github.com/bex-co/beancount-io/blob/main/deploy/docker/README.md",
+    "validation": "docker compose --env-file .env.example config --quiet",
+    "validationDirectory": "deploy/docker",
+    "validationExitCode": 0,
+    "standalonePackageOrStdioClaimed": false,
+    "newDeploymentStarted": false,
+    "maintainerEligibilityApprovalClaimed": false
+  },
+  "deduplication": {
+    "completeReadmeNoCanonicalMatch": true,
+    "focusedCanonicalRepositoryPullRequestSearchTotalBeforeSubmission": 0,
+    "unrelatedNameResultActualDiffInspected": true,
+    "remoteListPR2753ChangedOrDuplicated": false
+  },
+  "remainingGate": {
+    "upstreamComment": "https://github.com/punkpeye/awesome-mcp-servers/pull/18050#issuecomment-6511682962",
+    "requires": "Published Glama Git source record, working introspection/quality checks, then a real score badge and maintainer merge. A green workflow alone is insufficient.",
+    "glamaSourceReceipt": "glama-source-submission-20261030.json",
+    "sourceRecord": "https://glama.ai/mcp/servers/bex-co/beancount-io",
+    "sourceRecordPublished": false,
+    "sourceScoreClaimed": false,
+    "existingHostedConnectorChanged": false,
+    "owner": "Glama review/index and quality-check operators, then repository worker and upstream maintainers",
+    "nextManualCheckNotBeforeUTC": "2026-10-31T00:17:30Z",
+    "earlierTrigger": "Actual review/quality instructions, public source-record publication or actionable PR feedback."
+  },
+  "privacy": "Public project URLs and redacted receipt facts only; no mailbox URL, account email, private ledger identity, credentials or grant data.",
+  "limits": "No merged entry or fresh self-hosted runtime/native acceptance is claimed. Existing hosted QA retains its own timestamps. The GitHub connector returned 403 for PR creation; existing authenticated gh created this single contribution."
+}
