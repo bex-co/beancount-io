@@ -33,7 +33,6 @@
 - [602](./blocked/602.md) — Money flow doesn't pad a real currency held at cost ("+$100.5" under "+$100.50") (w21/506 over-reach) — **blocked:** a currency lot cannot be told from a fund ticker that is also an ISO code (BND) without declared-commodity data or an owner-approved heuristic
 - [608](./blocked/608.md) — Android: fields near the bottom stay under the keyboard (iOS-only keyboard avoidance under edge-to-edge) — **blocked:** needs an Android device check of the keyboard behavior
 - [315](./blocked/315.md) — In-app commits signed with Gitea username and real email (no full_name, no noreply) — **blocked:** needs the owner's noreply-address and published-history decisions, and a production backfill of existing Gitea users that can't be verified here
-- [674](./674.md) — Since w21/641, Home's net worth leaves out next month's entries while the Accounts tab includes them
 - [678](./678.md) — A sale whose lot doesn't match is still counted in every balance, so the books don't balance
 - [871](./blocked/871.md) — Mobile never attaches the scanned receipt image to the saved transaction (dashboard does) — **blocked:** needs an owner decision on how a scanned receipt is saved with its document (two-posting insertReceiptTransaction only, extend it, or write the document in the addEntries commit)
 - [857](./blocked/857.md) — The ledger runs amortize_over/forecast on the server's UTC date, not the user's — **blocked:** needs an owner-approved optional client date/time-zone input on every plugin-running read across REST, GraphQL and MCP, with the cache-key policy
@@ -41,3 +40,4 @@
 - [951](./blocked/951.md) — Expense accounts are valued at market on Accounts and account detail, but at cost everywhere else — **blocked:** owner confirms flows-at-cost covers Income/Expenses balances; needs a native priced-lot check
 - [977](./blocked/977.md) — LedgerPrices pulls every price date for every pair, and Apollo writes and reads them all on each mount — **blocked:** owner picks the API shape for bounding price dates across REST/GraphQL/MCP
 - [1013](./1013.md) — The Accounts tab breaks a long account name mid-word at the largest supported text size ("Bank:Mercury:Checkin" / "g")
+- [1014](./1014.md) — Home's headline still counts later entries of the current month, and the Accounts tab gives no hint that later entries exist (follow-up to w21/674)

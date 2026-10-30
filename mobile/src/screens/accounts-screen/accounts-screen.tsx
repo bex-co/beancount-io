@@ -29,6 +29,7 @@ import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import { useLedgerReadContext } from "@/common/hooks/use-ledger-read-context";
 import { useTrialBalance } from "@/screens/accounts-screen/hooks/use-trial-balance";
 import { useLedgerPrices } from "@/common/hooks/use-ledger-prices";
+import { throughToday } from "@/common/balance-util";
 import { useToday } from "@/common/hooks/use-today";
 import { useAccountCloseDatesState } from "@/common/hooks/use-account-close-dates";
 import { listedAccountsAsOf } from "@/common/account-close-dates";
@@ -97,12 +98,14 @@ const AccountsScreenImpl = (): JSX.Element => {
 
   // Commodity holdings are valued at market, as on Home, so they count toward
   // Assets rather than being dropped for lack of a cash balance.
+  const today = useToday();
+  const balanceTime = throughToday(today);
   const {
     data: accountData,
     loading: accountsLoading,
     refetch: accountsRefetch,
     error: accountsError,
-  } = useTrialBalance(ledgerId);
+  } = useTrialBalance(ledgerId, balanceTime);
   // The same trial balance in units: what a commodity account holds, which the
   // market read has already converted away (see `selectBalanceDisplay`).
   const {
@@ -110,10 +113,9 @@ const AccountsScreenImpl = (): JSX.Element => {
     loading: unitsLoading,
     refetch: unitsRefetch,
     error: unitsError,
-  } = useTrialBalance(ledgerId, undefined, "units");
+  } = useTrialBalance(ledgerId, balanceTime, "units");
 
   // Closed accounts the ledger emptied stay out of the tree (w21/099).
-  const today = useToday();
   const { closeDates, settled: closeDatesSettled } =
     useAccountCloseDatesState(ledgerId);
   const listed = useMemo(

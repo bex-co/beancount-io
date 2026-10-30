@@ -33,6 +33,14 @@ export const BALANCE_CONVERSION = "at_cost";
 export const VALUATION_CONVERSION = "at_value";
 
 /**
+ * The trial balance's `time` for balances counting entries through `today`: a
+ * range from the earliest year to the end of that day. Without it the read
+ * counts later-dated entries too, and the Accounts tab disagreed with Home's
+ * headline, which stops at today (w21/674).
+ */
+export const throughToday = (today: string): string => `0001 - ${today}`;
+
+/**
  * Resolve a single currency balance from a beancount `balance_children` /
  * `balance` map in the active currency, coercing string amounts to numbers and
  * treating missing/invalid values as 0. Shared by the account selectors so the

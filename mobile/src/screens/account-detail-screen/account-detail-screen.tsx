@@ -37,7 +37,7 @@ import {
   ACCOUNT_JOURNAL_PAGE_SIZE,
   useAccountJournal,
 } from "@/screens/accounts-screen/hooks/use-account-journal";
-import { BALANCE_CONVERSION } from "@/common/balance-util";
+import { BALANCE_CONVERSION, throughToday } from "@/common/balance-util";
 import { balanceNotes, valuationDetails } from "@/common/valuation";
 import { isolateAccountPath } from "@/common/bidi";
 import { ValuationSheet } from "@/components/valuation-sheet";
@@ -186,14 +186,14 @@ const AccountDetailScreenImpl = ({
   } = useLedgerPrices(ledgerId);
   // The Accounts tab's own market read — already cached, since that tab stays
   // mounted — so a commodity's value here is the figure its row shows.
+  const today = useToday();
   const {
     data: accountsData,
     loading: accountsLoading,
     refetch: accountsRefetch,
-  } = useTrialBalance(ledgerId);
+  } = useTrialBalance(ledgerId, throughToday(today));
   const valuationPending =
     (pricesLoading && !pricesData) || (accountsLoading && !accountsData);
-  const today = useToday();
   // The account's balance at the ledger's latest prices, as its Accounts row
   // reads it (w21/179).
   const currentBalance = useMemo(

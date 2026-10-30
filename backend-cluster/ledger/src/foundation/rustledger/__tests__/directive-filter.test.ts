@@ -665,6 +665,24 @@ describe("parseDateRange — util/date.parse_date parity", () => {
   });
 });
 
+// w21/674: the mobile balance surfaces count entries through today with
+// `0001 - <today>`, so a later-dated entry stays out of a balance read.
+describe("parseDateRange — a range through a day", () => {
+  it("ends after the named day and begins at the earliest year", () => {
+    expect(parseDateRange("0001 - 2026-10-22")).toEqual({
+      begin: "0001-01-01",
+      end: "2026-10-23",
+    });
+  });
+
+  it("carries across a month and year end", () => {
+    expect(parseDateRange("0001 - 2026-12-31")).toEqual({
+      begin: "0001-01-01",
+      end: "2027-01-01",
+    });
+  });
+});
+
 describe("filterDirectives — composition (account + filter + time)", () => {
   it("applies account, then filter, then time in order", () => {
     // #income transactions in 2024 touching Assets → only the Jan 2024 salary

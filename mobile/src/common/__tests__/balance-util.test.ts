@@ -1,4 +1,6 @@
-import { resolveCurrencyBalance } from "../balance-util";
+import fs from "fs";
+import path from "path";
+import { resolveCurrencyBalance, throughToday } from "../balance-util";
 
 describe("resolveCurrencyBalance", () => {
   it("returns 0 for null/undefined maps", () => {
@@ -39,5 +41,35 @@ describe("resolveCurrencyBalance", () => {
 
   it("passes through negative numbers", () => {
     expect(resolveCurrencyBalance({ USD: -250.25 }, "USD")).toBe(-250.25);
+  });
+});
+
+// w21/674: Home's net worth stopped at today while the Accounts tab counted
+// next month's entries: $17,108.51 against $15,608.51.
+describe("throughToday", () => {
+  it("is a range from the earliest year through the named day", () => {
+    expect(throughToday("2026-10-22")).toBe("0001 - 2026-10-22");
+  });
+
+  it("is what both balance surfaces read the trial balance with", () => {
+    const read = (...parts: string[]) =>
+      fs
+        .readFileSync(path.join(__dirname, "..", "..", ...parts), "utf8")
+        .replace(/\s+/g, "");
+    const accounts = read("screens", "accounts-screen", "accounts-screen.tsx");
+    expect(accounts.includes("useTrialBalance(ledgerId,balanceTime)")).toBe(
+      true,
+    );
+    expect(
+      accounts.includes('useTrialBalance(ledgerId,balanceTime,"units")'),
+    ).toBe(true);
+    const detail = read(
+      "screens",
+      "account-detail-screen",
+      "account-detail-screen.tsx",
+    );
+    expect(
+      detail.includes("useTrialBalance(ledgerId,throughToday(today))"),
+    ).toBe(true);
   });
 });
