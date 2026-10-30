@@ -67,11 +67,7 @@ The reader is deciding product behavior, not reading code. Board notes are writt
 
 ### Quick decisions
 
-<<<<<<< Updated upstream
-Use a short wizard for independent, well-understood choices with concise consequences. Ask at most **three questions per round**, fewer when fewer are needed. Each question should advance an intervention: decision, meaningful options, recommended option when justified, main tradeoff, and what the worker can do with the answer. Ask about existing completion or access only when that answer changes the next step, and pair it with an actionable route. Do not spend the first round merely collecting statuses across unrelated blockers. Offer “暂不决定” when deferral is meaningful; support free-text answers and requests for more context.
-=======
-Use a short wizard for independent, well-understood choices with concise consequences. Ask at most **three questions per round**, fewer when fewer are needed. Each question should stand on its own: decision, meaningful options, recommended option when justified, and the main tradeoff, phrased as described in "Phrasing a decision so the reader can answer it". Offer “暂不决定” when deferral is meaningful; support free-text answers and requests for more context.
->>>>>>> Stashed changes
+Use a short wizard for independent, well-understood choices with concise consequences. Ask at most **three questions per round**, fewer when fewer are needed. Each question should advance an intervention: decision, meaningful options, recommended option when justified, main tradeoff, and what the worker can do with the answer, each phrased as described in "Phrasing a decision so the reader can answer it". Ask about existing completion or access only when that answer changes the next step, and pair it with an actionable route. Do not spend the first round merely collecting statuses across unrelated blockers. Offer “暂不决定” when deferral is meaningful; support free-text answers and requests for more context.
 
 Prefer the host's structured question tool when available in the active mode; otherwise use numbered questions and options in chat. Wait for actual answers before dependent updates. A preselected recommendation, silence, or an unanswered question is not a decision. Record clear answers, leave skipped items blocked, and avoid asking for a second confirmation unless the reply is ambiguous or new consequences change the choice.
 
