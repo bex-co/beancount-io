@@ -1,0 +1,86 @@
+{
+  "owner": "w6/m6.5/t012",
+  "startedAtUTC": "2026-10-30T00:19:17.052825+00:00",
+  "observedAtUTC": "2026-10-30T00:19:21.347565+00:00",
+  "entry": "https://www.skills.sh/p/CTUrAfLQdDvNeNv2",
+  "cliVersion": "1.7.4",
+  "cliSHA256": "b7d92e2a619e8982d38390572750efb8c2ec81cdf23c33aed2fa426d080a1e4e",
+  "nodeVersion": "v22.23.4",
+  "sourceSuiteVersion": "0.4.2",
+  "sourceCommit": "f0f5744cc693037a5aa7a638678a378fd1aad8dd",
+  "uploadedArchiveSHA256": "5f1fa5b526f9bebbec69f256bcda9ef3a2d9096cec2312a3832f8cfd873059ef",
+  "nativeExitCode": 0,
+  "timedOut": false,
+  "agents": {
+    "codex": {
+      "skillCount": 13,
+      "skills": [
+        "beancount-accruals",
+        "beancount-add",
+        "beancount-ask",
+        "beancount-close",
+        "beancount-import",
+        "beancount-importer-author",
+        "beancount-init",
+        "beancount-migrate",
+        "beancount-options",
+        "beancount-property",
+        "beancount-reconcile",
+        "beancount-roll-forward",
+        "beancount-trade"
+      ],
+      "expectedFileCount": 61,
+      "actualFileCount": 59,
+      "missing": [
+        "beancount-accruals/references/schedule-contract.md",
+        "beancount-options/references/volatility-strategies.md"
+      ],
+      "extra": [],
+      "changed": [],
+      "allDownloadedHashesMatch": true
+    },
+    "claude-code": {
+      "skillCount": 13,
+      "skills": [
+        "beancount-accruals",
+        "beancount-add",
+        "beancount-ask",
+        "beancount-close",
+        "beancount-import",
+        "beancount-importer-author",
+        "beancount-init",
+        "beancount-migrate",
+        "beancount-options",
+        "beancount-property",
+        "beancount-reconcile",
+        "beancount-roll-forward",
+        "beancount-trade"
+      ],
+      "expectedFileCount": 61,
+      "actualFileCount": 59,
+      "missing": [
+        "beancount-accruals/references/schedule-contract.md",
+        "beancount-options/references/volatility-strategies.md"
+      ],
+      "extra": [],
+      "changed": [],
+      "allDownloadedHashesMatch": true
+    }
+  },
+  "completeInstallVerified": false,
+  "telemetryDisabled": true,
+  "hostPatched": false,
+  "productionAttempts": 1,
+  "scope": "One bounded project-local native install after the recorded 24-hour manual window; no global profile, credential, model call, republishing or missing-file fetch retry.",
+  "npmLatestObservedBeforeInstall": "1.7.4",
+  "comparison": "All61 path/hash expectations from the unchanged original uploaded0.4.2 archive; current source has14skills but is not substituted.",
+  "previousMissingPairNowPresent": true,
+  "limit": "No individual production HTTP statuses captured; omissions do not establish a specific failure cause. No second attempt or missing-file retry performed.",
+  "next": {
+    "owner": "Skills CLI/platform delivery, then repository worker",
+    "condition": "Supported complete delivery/client path, then all61 file hashes and13skills on both destinations. Preserve the single editable Pack.",
+    "manualRecheckNotBeforeUTC": "2026-11-01T00:19:21Z",
+    "earlierTrigger": "Relevant actual client/platform fix or independently demonstrated recovery.",
+    "publisherInputNeeded": false
+  }
+}

@@ -164,3 +164,12 @@ admission requirements. [Twelve-file comparison](../../../../docs/skills/hermes-
 retains exact source hashes and the native-test boundary. No unchanged native
 refusal is rerun or implied. The platform gate remains; no publisher input is
 pending and independent w6 work continues.
+
+### Current Pack native delivery — 2026-10-30T00:19:21Z
+
+[t012](t012.md) records one due-window production install: latest1.7.4 exits0
+but both agents still receive59/61files from the original thirteen-skill0.4.2
+Pack, now missing a different pair. All downloaded hashes match. No complete
+install or per-file HTTP cause is inferred. Platform/client delivery remains
+required; next native manual check not before2026-11-01T00:19:21Z or actual
+recovery/fix earlier. Other index/Hermes gates retain separate evidence.
