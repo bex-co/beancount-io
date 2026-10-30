@@ -39,20 +39,22 @@ function periodAt(series: ChartAccessibilitySeries, index: number): string {
 }
 
 /**
- * The plot's label: the heading, then the first and last points with their
- * values, and the low and high. Null with fewer than two points, where there is
+ * The plot's label: the heading, then the opening balance and the last point
+ * with their values, and the low and high. Null with fewer than two points, where there is
  * no curve to describe.
  */
 export function chartSummaryLabel(
   heading: string | undefined,
   series: ChartAccessibilitySeries,
 ): string | null {
-  const { numbers, format, translate } = series;
+  const { numbers, baseline, format, translate } = series;
   if (numbers.length < 2) return null;
   const last = numbers.length - 1;
   const summary = translate("chartSummary", {
     start: periodAt(series, 0),
-    startValue: format(numbers[0]!),
+    // The opening balance, as the change row and "since start" measure from
+    // it, so the sentence and the change agree (w21/542).
+    startValue: format(baseline),
     end: periodAt(series, last),
     endValue: format(numbers[last]!),
     low: format(Math.min(...numbers)),

@@ -55,7 +55,11 @@ import {
   describeChange,
   formatChangePercent,
 } from "./change-percent";
-import { computeDomain, type Domain } from "./line-chart-domain";
+import {
+  baselineInDomain,
+  computeDomain,
+  type Domain,
+} from "./line-chart-domain";
 import {
   CHART_STEP_REST_MS,
   chartPointText,
@@ -555,8 +559,8 @@ function InteractiveLineChart({
 
   // `openingY` is the period-opening balance the change row measures from,
   // projected through the same scale as the points. It may sit outside the
-  // plotted domain (an ALL window opens at zero), which is fine: it is only
-  // compared against, never drawn.
+  // plotted domain (an ALL window opens at zero); the dashed line is then
+  // left out.
   const { linePath, areaPath, pointXs, pointYs, openingY, lineLength } =
     useMemo(() => {
       const paths = buildPaths(numbers, computeDomain(numbers), geometry);
@@ -572,8 +576,13 @@ function InteractiveLineChart({
       };
     }, [numbers, geometry, baseline]);
 
-  // The dashed reference line stays on the first plotted point.
-  const baselineY = pointYs[0] ?? 0;
+  // The dashed reference line marks the opening balance the change row
+  // measures from, and only while that value lies inside the plotted range:
+  // the domain fits the points, so an opening outside it (an ALL window opens
+  // at zero) would be drawn off the plot, and the first point would disagree
+  // with the change row instead (w21/542).
+  const showBaseline = baselineInDomain(numbers, baseline);
+  const baselineY = openingY;
 
   // Entrance progress, 0 → 1. The stroke carries a dash as long as the whole
   // path, so animating the offset from that length down to zero walks the line
@@ -950,8 +959,8 @@ function InteractiveLineChart({
                 />
               )}
 
-              {/* Dashed baseline at the period-start value */}
-              {hasSeries && (
+              {/* Dashed baseline at the opening balance, when it is in range */}
+              {hasSeries && showBaseline && (
                 <Line
                   x1={PAD_X}
                   x2={chartWidth - PAD_X}

@@ -29,3 +29,15 @@ export function computeDomain(values: number[]): Domain {
   const pad = span * 0.1;
   return [middle - span / 2 - pad, middle + span / 2 + pad];
 }
+
+/**
+ * Whether the opening balance falls inside the domain the series is scaled to.
+ * The dashed start line is drawn only then: the domain fits the plotted
+ * points, so an opening outside it (an ALL window opens at zero) has no
+ * honest place on the plot (w21/542).
+ */
+export function baselineInDomain(values: number[], baseline: number): boolean {
+  if (values.length === 0) return false;
+  const [bottom, top] = computeDomain(values);
+  return baseline >= bottom && baseline <= top;
+}

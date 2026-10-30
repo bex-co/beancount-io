@@ -1,4 +1,4 @@
-import { computeDomain } from "../line-chart-domain";
+import { baselineInDomain, computeDomain } from "../line-chart-domain";
 
 /** How much of the plot's height the series' move takes. */
 const share = (values: number[]) => {
@@ -28,5 +28,27 @@ describe("computeDomain", () => {
   it("keeps an unmoved series centred, as before", () => {
     expect(computeDomain([5, 5])).toEqual([4.5, 5.5]);
     expect(computeDomain([0, 0])).toEqual([-1, 1]);
+  });
+});
+
+// w21/542: the dashed start line marks the opening balance only when the plot
+// can show it.
+describe("baselineInDomain", () => {
+  it("hides an opening far below a flat curve (10,000 opening, 15,000 flat)", () => {
+    expect(baselineInDomain([15000, 15000, 15000], 10000)).toBe(false);
+  });
+
+  it("hides an opening of zero under a balance far above it", () => {
+    expect(baselineInDomain([40000, 52000, 61000], 0)).toBe(false);
+  });
+
+  it("draws an opening within the plotted range", () => {
+    expect(baselineInDomain([1000, 1300, 1100], 1050)).toBe(true);
+    expect(baselineInDomain([1000, 1300, 1100], 1200)).toBe(true);
+    expect(baselineInDomain([1000, 1300, 1100], 900)).toBe(false);
+  });
+
+  it("draws nothing for an empty series", () => {
+    expect(baselineInDomain([], 0)).toBe(false);
   });
 });

@@ -34,9 +34,27 @@ const series: ChartAccessibilitySeries = {
 };
 
 describe("the chart's accessibility text", () => {
+  // w21/542: the opening balance, not the first plotted close, so "From" and
+  // "since start" agree (10,000 opening, 5,000 bonus, flat 15,000 curve).
+  it("starts the summary at the opening balance the change measures from", () => {
+    const flat: ChartAccessibilitySeries = {
+      ...series,
+      numbers: [15000, 15000, 15000],
+      baseline: 10000,
+    };
+    expect(
+      chartSummaryLabel(undefined, flat)?.startsWith(
+        "From Jan 2026, $10000.00",
+      ),
+    ).toBe(true);
+    expect(chartPointText(flat, 2)).toBe(
+      "Mar 2026, $15000.00, +$5000.00 (+50.00%) since start",
+    );
+  });
+
   it("summarises the range with its low and high", () => {
     expect(chartSummaryLabel("Net Worth", series)).toBe(
-      "Net Worth, From Jan 2026, $1000.00, to Mar 2026, $1100.00. Low $1000.00, high $1300.00.",
+      "Net Worth, From Jan 2026, $900.00, to Mar 2026, $1100.00. Low $1000.00, high $1300.00.",
     );
     expect(
       chartSummaryLabel(undefined, series)?.startsWith("From Jan 2026"),
