@@ -1,6 +1,6 @@
 # w23 · m15 — Gate file writes on new bean-check errors
 
-**Worker:** worker1 **Goal:** file writes refuse new bean-check errors like entry writes, with an explicit override **Status:** todo (t001–t004 done)
+**Worker:** worker1 **Goal:** file writes refuse new bean-check errors like entry writes, with an explicit override **Status:** done
 
 ## Tasks (in order)
 
@@ -10,9 +10,9 @@
 | t002 | REST PUT/DELETE file gate (allowInvalid) — **DONE** | 45m | t001 |
 | t003 | Flip the docs: file writes now refuse new errors — **DONE** | 30m | t002 |
 | t004 | Adoption surface — **DONE** | 20m | t003 |
-| t005 | Simplify | 30m | t004 |
-| t006 | Test coverage | 45m | t004 |
-| t007 | Closeout | 15m | t005, t006 |
+| t005 | Simplify — **DONE** | 30m | t004 |
+| t006 | Test coverage — **DONE** | 45m | t004 |
+| t007 | Closeout — **DONE** | 15m | t005, t006 |
 
 ## Definition of done
 
