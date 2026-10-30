@@ -108,3 +108,29 @@ Current dashboard `features/bql/lib/chart-utils.ts` deliberately gates automatic
 The inspected **installed** `@rustledger/wasm`0.24.0 declaration still exposes QueryResult columns/rows/errors without expression types. No latest-release lookup, dependency upgrade or reassessment of the upstream unblock condition was performed in this dashboard supplement. The existing blocked state and type-provenance repair boundary remain unchanged; no additional finding group is counted.
 
 Ignored evidence in `dashboard/tmp/qa-20261020/dashboard-loop/`: `bql-numeric-text-dashboard-complete-controls.json` contains both native cases, actual independent API types/rows, CSV checks and readonly chart options; `bql-numeric-text-reference-390.png` is the inspected element screenshot. Both contexts closed; original owned context only remains. Zero hosted writes, mutation attempts, route errors or page exceptions. An initial generic chart reader also matched Monaco canvases; final readback scopes `canvas[data-zr-dom-id]`, without a product-state override or chart dispatchAction. Other downstream identifier coercion and repaired behavior remain unverified. This extends the existing record and creates no duplicate W4 issue.
+
+## Published-contract and current mapper audit — 2026-10-30 UTC
+
+By00:25:11UTC actual npm latest metadata still reports0.24.0 with the same
+integrity recorded above; separate GitHub latest remains v0.24.0. The installed
+QueryResult declaration still contains only columns/rows/errors, no producer
+expression types. No package upgrade or unchanged native/API probe is run.
+
+Current main has advanced beyond the Oct28 snapshot: `bf8c80ca2` handles aliased
+string literals, `fec84861e` types aliased computed heads on empty results and
+`550889bec` unifies alias scanning. Actual mapper inspection shows computed
+head text can now supply a static type, while a bare-column head hidden by an
+alias still yields unknown on empty/all-null rows; non-empty strings still use
+value/name fallbacks. These independent improvements are retained. They do not
+supply the producer schema required by t001 or the general alias/null-first/
+zero-row contract. Their tests keep their owning change's evidence; no fresh
+runtime acceptance is claimed here. Earlier statements that every empty aliased
+expression is unknown are superseded for the supported computed-head cases.
+
+**Blocked/Unblock:** Rustledger publishes the supported per-column/tagged-cell
+contract preserving actual expression types across aliases/null-first/zero-row
+results; worker verifies the actual producer contract before dependent t002–t007.
+The unchanged artifact alone also clears none of the nineteen separate engine
+semantic notes. Each retains its own release prerequisite and native/API AC.
+No unreleased adoption, second parser, invented schema or upstream message is
+introduced by this audit; no publisher input is needed for this source check.

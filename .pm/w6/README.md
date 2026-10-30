@@ -43,16 +43,16 @@ shared w1/m34/t003. Owned runtime/listener stop; all profiles/grants and scratch
 state remain. No duplicate nomination, grant approval, credential copy or
 revocation occurs.
 
-## Current engine prerequisite audit — 2026-10-28 UTC
+## Current engine prerequisite audit — 2026-10-30 UTC
 
-Actual npm latest read07:36:52UTC and separate GitHub release read still show
-WASM0.24.0 with unchanged integrity. [m2/t001](blocked/m2/t001.md) records the
-current installed producer declaration and the concurrent `eab5cfdba` shell
-expression-typing improvement: it does not add producer types, and empty
-expression-hiding aliases remain unknown. m2's original contract and nineteen
-separate engine-release/semantic gates remain open. No package upgrade,
-unreleased engine adoption or repeated native probe is inferred. Each item
-still needs its own actual acceptance after a compatible supported release.
+Actual npm latest and GitHub release reads still show WASM0.24.0 with unchanged
+integrity. [m2/t001](blocked/m2/t001.md) records the installed producer declaration
+and current mapper improvements: aliased string literals and supported computed
+heads on empty results now type more accurately, but a bare-column alias can
+still be unknown and there is no producer expression schema. Independent fixes
+are retained; they do not satisfy m2's general contract. m2 and nineteen separate
+engine-release/semantic gates remain open. No upgrade, unreleased adoption or
+unchanged native/API repro is inferred; every item keeps its own acceptance.
 
 ## Latest native Docker outcome — 2026-10-26T08:18:07Z
 
