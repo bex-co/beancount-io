@@ -27,8 +27,7 @@
 
 ## Inbox
 
-- [149](./blocked/149.md) — file writes COMMIT bean-check-invalid content (no validation gate; entry writes refuse) [major] — **blocked:** commit-invalid documented on all surfaces; owner picks entry-style gate (→ milestone) vs documented behavior
-- [150](./blocked/150.md) — journal subtype filters pass non-family directives through and `total` counts them (`pending` → 13 rows, 0 transactions) — **blocked:** family-scoping documented on all surfaces; owner picks narrow-to-matches, split counts, or documented passthrough
+- [149](./149.md) — file writes COMMIT bean-check-invalid content (no validation gate; entry writes refuse) [major] — owner chose entry-style gate (2026-10-30); promote to a milestone
 - [x] [151](./done/151.md) — BQL refuses post-`;` tails stock drops (strictness is right; trailing `--` comments swept up)
 - [x] [152](./done/152.md) — same-type composite equality escapes 128's guard on bare `weight`/`amount`/`other_accounts`/`accounts` (constant-False; stock refuses)
 - [x] [153](./done/153.md) — ledger projects numeric `id`s where stock projects hash hex strings (silent value + type change)
@@ -36,7 +35,6 @@
 - [x] [155](./done/155.md) — BQL `str()` refuses composite inputs stock stringifies (position, inventory, set)
 - [x] [156](./done/156.md) — report `conversion` silently ignores unresolvable targets (`BOGUS`/unpriced → USD figures, no error)
 - [x] [157](./done/157.md) — double-quoted identifiers silently become string literals outside FROM (`"account"` → `account`)
-- [158](./blocked/158.md) — journal `time` passes all Opens through regardless of month (`2026-08` → 9 rows + 12 January Opens) — **blocked:** open-preservation documented on all surfaces; owner picks Fava-divergent exclusion or documented parity
 - [x] [159](./done/159.md) — report `interval` ignored on four surfaces, unvalidated on the fifth (`month`≡default, `BOGUS`≡`month`)
 - [x] [160](./done/160.md) — decimal literals past Decimal precision silently round to fit (`...334.9`→MAX; stock exact)
 - [x] [161](./done/161.md) — `allowInvalid:true` suppresses error detection, not just refusal (`errorsAfter: 0` for invalid content)
@@ -51,7 +49,7 @@
 - [x] [170](./done/170.md) — BQL `meta` splits by table (`k: v`/`str` postings vs `k=v`/`object` entries; stock one dict)
 - [x] [171](./done/171.md) — typed posting tags/links render stock-invalid beancount; backend check blind, reads blank (m6 "holds live" disproven)
 
-- [180](./blocked/180.md) — known-but-unpriced report `conversion` still degrades to units silently (w23/156 followup) — **blocked:** owner picks refuse vs holdings-style disclosure (both change a published contract)
+- [180](./180.md) — known-but-unpriced report `conversion` still degrades to units silently (w23/156 followup) — owner chose holdings-style disclosure (2026-10-30)
 - [190](./blocked/190.md) — engine accepts fractional `@@` stock refuses (per-unit division dust; w23/163 followup) — **blocked:** upstream filing approved 2026-10-28; waiting for someone with tracker access to file the batch
 - [196](./blocked/196.md) — BQL `balances.discrepancy` never populates (blank on failing balances; stock reports the diff) — **blocked:** upstream filing approved 2026-10-28; waiting for someone with tracker access to file the batch
 - [198](./blocked/198.md) — entries tags/links are empty sets on MCP but NULL on stock (13 rows flip IS NULL) — **blocked:** upstream filing approved 2026-10-28; waiting for someone with tracker access to file the batch
