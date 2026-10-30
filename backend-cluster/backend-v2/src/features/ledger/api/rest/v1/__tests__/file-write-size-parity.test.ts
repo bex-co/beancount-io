@@ -682,7 +682,8 @@ describe.each([false, true])(
             (dryRun ? original : expected),
         ).toBe(true);
         expect(f.commits).toHaveLength(dryRun ? 0 : 1);
-        expect(f.state.projected).toBe(dryRun ? 1 : 0);
+        // The commit projects too: it is gated on new bean-check errors.
+        expect(f.state.projected).toBe(1);
         if (dryRun) {
           expect(f.projectedFiles.get("existing.bean") === expected).toBe(true);
           expect(result.data!.diff).toEqual([

@@ -11,9 +11,11 @@ import type { ToolContext } from "./types";
 import { toolOutputSchema, withWriteOutcome } from "./types";
 import { runToolSafely } from "../utils/run-tool";
 import {
+  ALLOW_INVALID_NAMES,
   DRY_RUN_NAMES,
   resolveFlagAlias,
 } from "@/features/ledger/utils/flag-alias";
+import { assertFileWriteValid } from "@/features/ledger/utils/file-write-gate";
 import { normalizeAgentRepoPath } from "./agent-repo-path";
 import {
   readBeanCheckErrors,
@@ -36,10 +38,10 @@ const MAX_COMMIT_ATTEMPTS = 3;
 
 const toolLogger = logger.child({ module: "tool:edit-ledger-files" });
 
-// w23/149: file writes commit-invalid until the owner gates them — the
-// sentence rides every file tool so no surface stays silent about it.
-const COMMIT_INVALID_NOTE =
-  " Unlike entry writes, file writes commit even when they introduce new bean-check errors; the result reports them under `validation.newErrors` instead of refusing.";
+// w23/m15: like entry writes, a file write that adds bean-check errors the
+// ledger did not have is refused; the sentence rides every file tool.
+const NEW_ERRORS_GATE_NOTE =
+  " A change that adds bean-check errors is refused with VALIDATION_FAILED (dry_run too); allow_invalid commits it anyway, e.g. one step of a multi-step edit.";
 
 const description =
   "Create, update, replace, or delete files in a single atomic commit.\n" +
@@ -55,7 +57,7 @@ const description =
   "unified diff per touched file and bean-check's verdict over the projected " +
   "contents — approve only what the preview shows, then send the identical " +
   "files with dry_run false." +
-  COMMIT_INVALID_NOTE;
+  NEW_ERRORS_GATE_NOTE;
 
 const filePath = z.string().describe("File path relative to ledger root");
 const oldString = z
@@ -128,6 +130,12 @@ export const editLedgerFilesInputSchema = z.object({
     .boolean()
     .optional()
     .describe("Alias of dry_run, as REST and GraphQL spell it."),
+  allow_invalid: z
+    .boolean()
+    .optional()
+    .describe("Commit even if the change adds bean-check errors."),
+  // Alias: REST bodies and GraphQL spell it `allowInvalid`.
+  allowInvalid: z.boolean().optional().describe("Alias of allow_invalid."),
 });
 
 type FileOperation = z.infer<typeof fileOpSchema>;
@@ -307,6 +315,10 @@ export async function executeEditLedgerFiles(
     { primary: dry_run, legacy: dryRun },
     DRY_RUN_NAMES,
   );
+  const allowInvalid = resolveFlagAlias(
+    { primary: input.allow_invalid, legacy: input.allowInvalid },
+    ALLOW_INVALID_NAMES,
+  );
   const description = resolveCommitMessage(input, { required: true });
 
   toolLogger.debug("Executing file operations", {
@@ -435,7 +447,10 @@ export async function executeEditLedgerFiles(
             })),
           }),
         );
-        const validation = toWriteValidation(before, projectedErrors);
+        const validation = assertFileWriteValid(
+          toWriteValidation(before, projectedErrors),
+          allowInvalid,
+        );
         // `diff` leads the payload so the serialized text content is the
         // diff followed by the one-line summary.
         return {
@@ -452,6 +467,33 @@ export async function executeEditLedgerFiles(
           validation,
         };
       }
+
+      // The gate: the commit refuses what its own preview would (w23/m15).
+      // The service dry run first, so path, size and include refusals keep
+      // their own errors; then bean-check over the projected contents.
+      await services.ledgerRepo.changeFiles({
+        ledgerId,
+        identity,
+        operations,
+        message: description,
+        dryRun: true,
+      });
+      assertFileWriteValid(
+        toWriteValidation(
+          await readBeanCheckErrors(services, identity, ledgerId),
+          toBeanCheckErrors(
+            await services.ledgerRepo.checkProjectedFiles({
+              ledgerId,
+              identity,
+              overlays: [...projected].map(([path, content]) => ({
+                path,
+                content,
+              })),
+            }),
+          ),
+        ),
+        allowInvalid,
+      );
 
       const { validation } = await withPostWriteValidation(
         services,
@@ -552,10 +594,12 @@ function fileOperation<F extends z.ZodType>(
     files: z.array(file).min(1),
     dry_run: editLedgerFilesInputSchema.shape.dry_run,
     dryRun: editLedgerFilesInputSchema.shape.dryRun,
+    allow_invalid: editLedgerFilesInputSchema.shape.allow_invalid,
+    allowInvalid: editLedgerFilesInputSchema.shape.allowInvalid,
   });
   return {
     schema: schema as z.ZodObject,
-    description: description + PREVIEW_NOTE + COMMIT_INVALID_NOTE,
+    description: description + PREVIEW_NOTE + NEW_ERRORS_GATE_NOTE,
     outputSchema: editLedgerFilesOutputSchema,
     execute: (
       ctx: Pick<ToolContext, "services" | "identity" | "ledgerId">,

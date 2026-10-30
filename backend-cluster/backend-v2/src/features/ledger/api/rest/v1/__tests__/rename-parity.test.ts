@@ -126,6 +126,10 @@ async function fixture(
       },
     }),
     getPublicApiClient: async () => ({
+      // The file-write gate projects bean-check over the new contents.
+      reports: {
+        checkProjectedErrors: async () => envelope([]),
+      },
       ledgers: {
         changeLedgerFiles: change,
         deleteLedgerFile: async (

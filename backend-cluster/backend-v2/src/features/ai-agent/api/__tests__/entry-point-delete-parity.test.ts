@@ -47,6 +47,12 @@ async function fixture() {
     ledgerRepo: new LedgerRepoService(
       {
         getPublicApiClient: async () => ({
+          // The file-write gate projects bean-check over the new contents.
+          reports: {
+            checkProjectedErrors: async () => ({
+              data: { success: true, data: [] },
+            }),
+          },
           ledgers: {
             getLedgerFilesContent,
             changeLedgerFiles,

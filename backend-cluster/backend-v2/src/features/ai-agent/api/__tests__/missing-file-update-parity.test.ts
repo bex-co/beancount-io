@@ -45,6 +45,12 @@ async function fixture() {
   });
   const factory = {
     getPublicApiClient: async () => ({
+      // The file-write gate projects bean-check over the new contents.
+      reports: {
+        checkProjectedErrors: async () => ({
+          data: { success: true, data: [] },
+        }),
+      },
       ledgers: {
         changeLedgerFiles,
         updateLedgerFile,

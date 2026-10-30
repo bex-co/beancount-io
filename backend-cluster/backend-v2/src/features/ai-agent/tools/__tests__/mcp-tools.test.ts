@@ -479,15 +479,19 @@ describe("executeEditLedgerFiles", () => {
       let remote = "; a\n; b\n";
       let commits = 0;
       const ledgerRepo = {
+        checkProjectedFiles: jest.fn().mockResolvedValue([]),
         getFilesContent: jest.fn(async () => [
           { path: "race.bean", content: remote, sha: `sha-${remote}` },
         ]),
         changeFiles: jest.fn(
           async ({
             operations,
+            dryRun,
           }: {
             operations: Array<{ content?: string }>;
+            dryRun?: boolean;
           }) => {
+            if (dryRun) return;
             commits += 1;
             if (commits === 1) {
               remote = winner(remote);
@@ -521,7 +525,8 @@ describe("executeEditLedgerFiles", () => {
         new_string: "; 1\n",
       });
       expect(result.ok).toBe(true);
-      expect(repo.ledgerRepo.changeFiles).toHaveBeenCalledTimes(2);
+      // Gate dry run + the lost commit + the retried one.
+      expect(repo.ledgerRepo.changeFiles).toHaveBeenCalledTimes(3);
       expect(repo.remote()).toBe("; 0\n; 1\n");
     });
 
@@ -545,7 +550,8 @@ describe("executeEditLedgerFiles", () => {
         content: "; z\n",
       });
       expect(result).toMatchObject({ ok: false, errorCode: "CONFLICT" });
-      expect(repo.ledgerRepo.changeFiles).toHaveBeenCalledTimes(1);
+      // Gate dry run + the one lost commit, no retry.
+      expect(repo.ledgerRepo.changeFiles).toHaveBeenCalledTimes(2);
       expect(repo.remote()).toBe("; 0\n; b\n");
     });
 
@@ -580,10 +586,12 @@ describe("executeEditLedgerFiles", () => {
 
     it("gives the conflict back after three lost commits", async () => {
       const ledgerRepo = {
+        checkProjectedFiles: jest.fn().mockResolvedValue([]),
         getFilesContent: jest.fn(async () => [
           { path: "race.bean", content: "; a\n", sha: "sha" },
         ]),
-        changeFiles: jest.fn(async () => {
+        changeFiles: jest.fn(async ({ dryRun }: { dryRun?: boolean }) => {
+          if (dryRun) return;
           throw new ConflictError("Ledger resource", "concurrent write");
         }),
       };
@@ -600,7 +608,8 @@ describe("executeEditLedgerFiles", () => {
         },
       );
       expect(result).toMatchObject({ ok: false, errorCode: "CONFLICT" });
-      expect(ledgerRepo.changeFiles).toHaveBeenCalledTimes(3);
+      // One service dry run for the gate, then the three commit attempts.
+      expect(ledgerRepo.changeFiles).toHaveBeenCalledTimes(4);
     });
   });
 
@@ -619,6 +628,7 @@ describe("executeEditLedgerFiles", () => {
             })),
         ),
         changeFiles: jest.fn().mockResolvedValue(undefined),
+        checkProjectedFiles: jest.fn().mockResolvedValue([]),
       };
       const result = executeEditLedgerFiles(
         {
@@ -631,7 +641,8 @@ describe("executeEditLedgerFiles", () => {
       return { ledgerRepo, result };
     };
     const committed = (ledgerRepo: { changeFiles: jest.Mock }) =>
-      ledgerRepo.changeFiles.mock.calls[0]![0].operations;
+      ledgerRepo.changeFiles.mock.calls.find(([call]) => !call.dryRun)![0]
+        .operations;
 
     it("creates a new file with the edits that follow its creation", async () => {
       const { ledgerRepo, result } = run({}, [
@@ -704,6 +715,7 @@ describe("executeEditLedgerFiles", () => {
     const ledgerRepo = {
       getFilesContent: jest.fn(),
       changeFiles: jest.fn().mockResolvedValue(undefined),
+      checkProjectedFiles: jest.fn().mockResolvedValue([]),
     };
     const ledgerData = { getErrors: jest.fn().mockResolvedValue([]) };
     const result = await executeEditLedgerFiles(
@@ -750,10 +762,17 @@ describe("executeEditLedgerFiles", () => {
     const ledgerRepo = {
       getFilesContent: jest.fn(),
       changeFiles: jest.fn().mockResolvedValue(undefined),
+      checkProjectedFiles: jest.fn().mockResolvedValue([
+        {
+          message: "Transaction does not balance",
+          source: { filename: "new.bean", lineno: 1 },
+        },
+      ]),
     };
     const ledgerData = {
       getErrors: jest
         .fn()
+        .mockResolvedValueOnce([])
         .mockResolvedValueOnce([])
         .mockResolvedValueOnce([
           {
@@ -772,6 +791,7 @@ describe("executeEditLedgerFiles", () => {
         description: "add unbalanced file",
         files: [{ operation: "create", path: "new.bean", content: "hello" }],
         dry_run: false,
+        allow_invalid: true,
       },
     );
     expect(result).toEqual({
@@ -1100,6 +1120,7 @@ describe("executeEditLedgerFiles", () => {
           },
         ],
         dry_run: true,
+        allow_invalid: true,
       },
     );
     expect(result).toEqual({
@@ -1325,9 +1346,9 @@ describe("MCP tool annotations", () => {
     }
   });
 
-  // w23/149: file writes commit-invalid until the owner gates them; the
-  // tools say so, so no surface stays silent about it.
-  it("says on every file tool that writes commit-invalid", () => {
+  // w23/m15: file writes refuse new bean-check errors like entry writes;
+  // the tools say so and name the override.
+  it("says on every file tool that new bean-check errors are refused", () => {
     const byName = new Map(MCP_TOOLS.map((tool) => [tool.name, tool]));
     for (const name of [
       "createLedgerFiles",
@@ -1335,8 +1356,9 @@ describe("MCP tool annotations", () => {
       "deleteLedgerFiles",
     ]) {
       expect(byName.get(name)?.description).toContain(
-        "commit even when they introduce new bean-check errors",
+        "refused with VALIDATION_FAILED",
       );
+      expect(byName.get(name)?.description).toContain("allow_invalid");
     }
   });
 

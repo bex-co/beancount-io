@@ -150,7 +150,12 @@ export class ValidationError extends DomainError {
  * entries (w0/m2), or a source-slice edit or delete (w21/m1). The ledger
  * service names the last two in `details.action`.
  */
-export type NewLedgerErrorsWrite = "text" | "entries" | "update" | "delete";
+export type NewLedgerErrorsWrite =
+  | "text"
+  | "entries"
+  | "update"
+  | "delete"
+  | "files";
 
 const NEW_LEDGER_ERRORS_WORDING: Record<
   NewLedgerErrorsWrite,
@@ -176,6 +181,13 @@ const NEW_LEDGER_ERRORS_WORDING: Record<
     valid: "edit is valid Beancount",
     invalid: "edit is not valid Beancount",
     fix: "Change the edit, or pass `allowInvalid: true` to commit it anyway.",
+  },
+  files: {
+    field: "files",
+    subject: "this file change",
+    valid: "change is valid Beancount",
+    invalid: "change leaves text that is not valid Beancount",
+    fix: "Fix the file contents, or pass `allow_invalid: true` (REST: `allowInvalid`) to commit them anyway.",
   },
   delete: {
     field: "entry",
