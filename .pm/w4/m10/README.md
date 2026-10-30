@@ -1,6 +1,6 @@
 # w4 · m10 — GitHub contributor front door: issue and PR templates, security policy, code of conduct, seeded good first issues
 
-**Worker:** worker1 **Goal:** a first-time reporter opens an issue through a form that captures the package, version, and reproduction the maintainers need, a first-time contributor finds a sized task and a PR template that names the checks to run, and the repository's community profile is complete **Status:** todo — t003 ready; t001 and t004 blocked independently (t002, t008 done; t001 forms shipped, labels pending)
+**Worker:** worker1 **Goal:** a first-time reporter opens an issue through a form that captures the package, version, and reproduction the maintainers need, a first-time contributor finds a sized task and a PR template that names the checks to run, and the repository's community profile is complete **Status:** todo — t005 ready; t001 and t004 blocked independently (t002, t003, t008 done; t001 forms shipped, labels pending)
 
 ## Tasks (in order)
 
@@ -8,7 +8,7 @@
 | ---- | ------------------------------------------------------------------------------------------------------------------------- | --- | ---------- |
 | t001 | Issue forms: bug, feature, skill request, self-host help, each with a package picker and the checks to run — **BLOCKED**   | 40m | —          |
 | t002 | PR template with the package checks table, one-package rule, and secret-scan reminder — **DONE**                          | 20m | —          |
-| t003 | SECURITY.md with the reporting channel and gitleaks policy, CODE_OF_CONDUCT.md, both linked from CONTRIBUTING and README  | 30m | —          |
+| t003 | SECURITY.md with the reporting channel and gitleaks policy, CODE_OF_CONDUCT.md, both linked from CONTRIBUTING and README — **DONE** | 30m | — |
 | t004 | Seed good first issues from the board's open sub-hour QA notes and label issue 176 against the price and self-host work — **BLOCKED** | 45m | t001 |
 | t005 | Contributing guide: first-PR walkthrough per package, complete layout table, and where to ask                             | 30m | t003       |
 | t006 | Adoption surface                                                                                                          | 20m | t002, t004, t005 |
@@ -20,7 +20,7 @@
 
 **Blocked 2026-09-14 by `/loop-worker w4` after the in-repository work shipped.** `dbb1e763` added the four issue forms and chooser config (t001), the pull request template (t002), and the community-files validator with its path-filtered CI check (t008). All four forms render as issue-form previews on GitHub and `CI (community files)` passed. t008 was pulled ahead of its Adoption-surface dependency because the validator had to exist before the files it guards landed. Every remaining task needs a user decision or a user-approved change on GitHub:
 
-1. **Reporting channels — resolved (t003 ready).** The owner confirmed `security@beancount.io` for vulnerabilities and `hello@beancount.io` for conduct complaints on 2026-10-29. Use these in `SECURITY.md` and `CODE_OF_CONDUCT.md`, respectively. GitHub private vulnerability reporting is not required for the selected email route. t003 can start now, followed by t005; neither waits for the remaining label/public-issue decisions.
+1. **Reporting channels and policies — resolved (t003 done).** The owner confirmed `security@beancount.io` for vulnerabilities and `hello@beancount.io` for conduct complaints on 2026-10-29. The two policies and README/CONTRIBUTING links shipped in `da74f015e7`; native GitHub security-policy rendering and code-of-conduct recognition are verified. GitHub private vulnerability reporting is not required for the selected email route. t005 is now ready independently of the remaining label/public-issue decisions.
 2. **Labels (t001).** Approve creating the missing `skills` and `self-host` labels that two forms apply, then confirm the resulting automatic labels. The signed-in owner chooser was verified on 2026-10-30: all four forms and both contact links are present; the blank option is explicitly maintainers-only. See t001 for the current observation and its limits.
 3. **Public issues (t004).** Approve filing at least five `good first issue`s from current board notes and labeling issue176. The maintainer already answered the community request and closed it; no duplicate reply is required.
 
