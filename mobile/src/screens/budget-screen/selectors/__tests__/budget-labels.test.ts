@@ -43,9 +43,9 @@ describe("timeSpanToFilter", () => {
     );
   });
 
-  it("expresses the rolling window as an explicit range", () => {
+  it("expresses 1Y as twelve whole calendar months through today", () => {
     expect(timeSpanToFilter("last-12m", "2026-08-09")).toBe(
-      "2025-08-09 - 2026-08-09",
+      "2025-09-01 - 2026-08-09",
     );
   });
 });
@@ -202,24 +202,24 @@ describe("budgetChartSummary", () => {
   });
 });
 
-// w21/063: on 29 February the 1Y start was "2023-02-29", which the server
-// refuses, so the view failed all day.
-describe("timeSpanToFilter: leap day", () => {
-  it("clamps a leap day's start to 28 February", () => {
+// w21/646: 1Y is twelve whole calendar months, as Reports counts it, so there
+// is no day-of-month start to clamp (w21/063's leap-day failure cannot recur).
+describe("timeSpanToFilter: 1Y", () => {
+  it("starts on the first day of the month eleven months back", () => {
     expect(timeSpanToFilter("last-12m", "2024-02-29")).toBe(
-      "2023-02-28 - 2024-02-29",
+      "2023-03-01 - 2024-02-29",
+    );
+    expect(timeSpanToFilter("last-12m", "2026-10-21")).toBe(
+      "2025-11-01 - 2026-10-21",
+    );
+    expect(timeSpanToFilter("last-12m", "2027-03-01")).toBe(
+      "2026-04-01 - 2027-03-01",
     );
   });
 
-  it("keeps every other date as it is", () => {
-    expect(timeSpanToFilter("last-12m", "2026-10-21")).toBe(
-      "2025-10-21 - 2026-10-21",
-    );
-    expect(timeSpanToFilter("last-12m", "2025-02-28")).toBe(
-      "2024-02-28 - 2025-02-28",
-    );
-    expect(timeSpanToFilter("last-12m", "2027-03-01")).toBe(
-      "2026-03-01 - 2027-03-01",
+  it("crosses the year in January", () => {
+    expect(timeSpanToFilter("last-12m", "2026-01-15")).toBe(
+      "2025-02-01 - 2026-01-15",
     );
   });
 });

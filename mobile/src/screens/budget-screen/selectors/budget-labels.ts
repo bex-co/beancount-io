@@ -184,16 +184,17 @@ export function timeSpanToFilter(
       });
     }
     case "last-12m": {
-      // Same calendar date one year back through today, matching the
-      // dashboard's `subYears(now, 1) → now` window. A leap day clamps to
-      // 28 Feb: "2023-02-29" is no date, and the server refused the whole
-      // range every 29 February (w21/063).
-      const year = Number(today.slice(0, 4)) - 1;
-      const month = Number(today.slice(5, 7));
-      const lastDay = utcDate(year, month, 0).getUTCDate();
-      const day = Math.min(Number(today.slice(8, 10)), lastDay);
+      // Twelve whole calendar months through today, as Reports' 1Y counts
+      // them: this month and the eleven before it, so the pill names one
+      // window on every screen (w21/646).
+      const first = utcDate(
+        Number(today.slice(0, 4)),
+        Number(today.slice(5, 7)) - 12,
+        1,
+      );
+      const month = String(first.getUTCMonth() + 1).padStart(2, "0");
       return formatTimeFilter({
-        start: `${String(year).padStart(4, "0")}-${today.slice(5, 7)}-${String(day).padStart(2, "0")}`,
+        start: `${String(first.getUTCFullYear()).padStart(4, "0")}-${month}-01`,
         end: today,
       });
     }

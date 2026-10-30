@@ -34,13 +34,13 @@ describe("the today watcher", () => {
     const oneMonth = (day: string) =>
       toFilterQuery({ ...NO_FILTERS, range: "1M" }, new Date(`${day}T00:00:00`))
         .time;
-    expect(oneMonth(watcher.today())).toBe("2026-09-21 - 2026-10-21");
+    expect(oneMonth(watcher.today())).toBe("2026-10-01 - 2026-10-21");
     set(new Date(2026, 9, 22, 8, 0));
     watcher.onAppStateChange("background");
     expect(days).toEqual([]);
     watcher.onAppStateChange("active");
     expect(days).toEqual(["2026-10-22"]);
-    expect(oneMonth(watcher.today())).toBe("2026-09-22 - 2026-10-22");
+    expect(oneMonth(watcher.today())).toBe("2026-10-01 - 2026-10-22");
   });
 
   it("advances when the midnight timer fires, and only on a new day", () => {

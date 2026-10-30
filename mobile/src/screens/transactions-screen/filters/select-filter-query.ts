@@ -40,17 +40,13 @@ export type FilterQuery = {
   account?: string;
 };
 
-export const monthsBack = (today: Date, months: number): Date => {
-  const date = new Date(today.getTime());
-  const day = date.getDate();
-  date.setMonth(date.getMonth() - months);
-  // setMonth overflows when the target month is shorter (Mar 31 → Mar 3);
-  // clamp back to that month's last day.
-  if (date.getDate() !== day) {
-    date.setDate(0);
-  }
-  return date;
-};
+/**
+ * The first day of the calendar month `months - 1` months before `today`'s, as
+ * Reports, Home and Spending count a "1M" or "3M" range: whole calendar months
+ * through today. A pill label names one window on every screen (w21/646).
+ */
+export const calendarMonthsStart = (today: Date, months: number): Date =>
+  new Date(today.getFullYear(), today.getMonth() - (months - 1), 1, 12);
 
 /**
  * Whether the filter's custom window is serializable.
@@ -85,9 +81,9 @@ export const resolveDateRange = (
 
   switch (filters.range) {
     case "1M":
-      return { start: getFormatDate(monthsBack(today, 1)), end };
+      return { start: getFormatDate(calendarMonthsStart(today, 1)), end };
     case "3M":
-      return { start: getFormatDate(monthsBack(today, 3)), end };
+      return { start: getFormatDate(calendarMonthsStart(today, 3)), end };
     case "YTD":
       return { start: `${today.getFullYear()}-01-01`, end };
     case "custom":

@@ -8,19 +8,18 @@ const history = (interval: string, amount: string) => [
 ];
 
 describe("a window's clipped first period", () => {
-  it("budgets 1Y's first month for the days the window covers", () => {
+  it("budgets 1Y's first month whole: it starts on the 1st", () => {
     const start = timeWindowStart(timeSpanToFilter("last-12m", "2026-10-21"));
-    expect(start).toBe("2025-10-21");
-    // 310 × 11/31
+    expect(start).toBe("2025-11-01");
     expect(
       calculateBudgetForInterval(
-        "2025-10-31",
+        "2025-11-30",
         "monthly",
         history("monthly", "310 USD"),
         "2026-10-21",
         start,
       ),
-    ).toBe(110);
+    ).toBe(310);
   });
 
   it("budgets YTD's first week from Thursday 1 January", () => {

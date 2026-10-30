@@ -5,7 +5,7 @@ import {
   countActiveFilters,
   formatTimeFilter,
   isDateRangeValid,
-  monthsBack,
+  calendarMonthsStart,
   resolveDateRange,
   selectFiltersForLedger,
   toFilterQuery,
@@ -31,26 +31,37 @@ describe("resolveDateRange", () => {
     expect(resolveDateRange(NO_FILTERS, TODAY)).toBe(null);
   });
 
-  it("walks back one month for 1M", () => {
+  // w21/646: the label names the same window as on Reports: whole calendar
+  // months through today, not a rolling 30 or 90 days.
+  it("covers this calendar month for 1M", () => {
     expect(resolveDateRange(filters({ range: "1M" }), TODAY)).toEqual({
-      start: "2026-06-22",
+      start: "2026-07-01",
       end: "2026-07-22",
     });
   });
 
-  it("walks back three months for 3M", () => {
+  it("covers the last three calendar months for 3M", () => {
     expect(resolveDateRange(filters({ range: "3M" }), TODAY)).toEqual({
-      start: "2026-04-22",
+      start: "2026-05-01",
       end: "2026-07-22",
     });
   });
 
-  it("clamps to the last day when the earlier month is shorter", () => {
-    const march31 = new Date(2026, 2, 31, 12);
-    expect(resolveDateRange(filters({ range: "1M" }), march31)).toEqual({
-      start: "2026-02-28",
-      end: "2026-03-31",
-    });
+  it("keeps last month's days out of 1M (Food $60, not $100)", () => {
+    const oct22 = new Date(2026, 9, 22, 12);
+    expect(resolveDateRange(filters({ range: "1M" }), oct22)?.start).toBe(
+      "2026-10-01",
+    );
+    expect(resolveDateRange(filters({ range: "3M" }), oct22)?.start).toBe(
+      "2026-08-01",
+    );
+  });
+
+  it("crosses the year boundary", () => {
+    const feb = new Date(2026, 1, 10, 12);
+    expect(resolveDateRange(filters({ range: "3M" }), feb)?.start).toBe(
+      "2025-12-01",
+    );
   });
 
   it("starts YTD on January 1st", () => {
@@ -391,17 +402,16 @@ describe("transactionFiltersVar readers", () => {
   });
 });
 
-// w21/067: the Custom seed used an unclamped setMonth, so on 31 March "last
-// month through today" began on 3 March.
+// w21/067, w21/646: the Custom seed is the 1M pill's window, so 31 March seeds
+// 1 March (not 3 March from an unclamped setMonth).
 describe("the Custom range seed", () => {
-  it("clamps last month to its final day", () => {
+  it("starts on the first of the current month", () => {
     const seed = (y: number, m: number, d: number) =>
-      getFormatDate(monthsBack(new Date(y, m, d, 12), 1));
-    expect(seed(2026, 2, 31)).toBe("2026-02-28");
-    expect(seed(2026, 2, 29)).toBe("2026-02-28");
-    expect(seed(2026, 4, 31)).toBe("2026-04-30");
-    expect(seed(2026, 11, 31)).toBe("2026-11-30");
-    expect(seed(2026, 9, 21)).toBe("2026-09-21");
+      getFormatDate(calendarMonthsStart(new Date(y, m, d, 12), 1));
+    expect(seed(2026, 2, 31)).toBe("2026-03-01");
+    expect(seed(2026, 4, 31)).toBe("2026-05-01");
+    expect(seed(2026, 11, 31)).toBe("2026-12-01");
+    expect(seed(2026, 9, 1)).toBe("2026-10-01");
   });
 
   it("is what the filter screen seeds Custom with", () => {
@@ -417,9 +427,11 @@ describe("the Custom range seed", () => {
       "utf8",
     );
     expect(
-      source.includes(
-        "startDate: prev.startDate ?? getFormatDate(monthsBack(today, 1)),",
-      ),
+      source
+        .replace(/\s+/g, " ")
+        .includes(
+          "startDate: prev.startDate ?? getFormatDate(calendarMonthsStart(today, 1)),",
+        ),
     ).toBe(true);
     expect(source.includes("setMonth(")).toBe(false);
   });
