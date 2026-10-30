@@ -205,6 +205,10 @@ Three things blunt the remaining edge, none of which removes it: `editLedgerFile
 - **One endpoint per ledger** (`/api-gateway/mcp/{owner}/{name}`) — would keep the token-enforced property for every mode, since each path is its own RFC 8707 resource. Rejected for now because it multiplies endpoints, discovery documents, and audiences by the number of ledgers a user owns, and because a client would have to be reconfigured whenever a ledger is added. Worth revisiting if the unpinned mode proves too loose in practice.
 - **Making every tool take a required `ledger`** — would break every pinned credential in use and move the safety property from "cannot" to "should not" for all clients, not just the ones that opted in.
 
+### D12 — A present, untrusted `Origin` is refused with 403 (2026-10-30)
+
+The MCP transport spec says a server MUST answer `403` when `Origin` is present and invalid (DNS-rebinding defence). After the credential gate and before the method check, the route refuses such a request with a JSON-RPC error (`id: null`); requests with no `Origin` (native and server-side clients) are untouched, and an anonymous request still gets the `401` discovery hint first. The allow rule is the CORS middleware's own, shared through `isAllowedOrigin` so the two cannot drift: any `beancount.io` host (apex or subdomain) plus `localhost` / `127.0.0.1` on any port. That is wider than the single dashboard origin — a page on any sibling subdomain, such as the repository host, is trusted — and is deliberate for now; narrowing it is a change to that one function.
+
 ## Architecture
 
 ### Request lifecycle — every gate, in order

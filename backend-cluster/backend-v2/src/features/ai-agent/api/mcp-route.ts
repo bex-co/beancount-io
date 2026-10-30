@@ -11,6 +11,7 @@ import { logger } from "@/shared/logger";
 import { type AppLayers } from "@/foundation/composition";
 import type { AppConfig } from "@/config/config";
 import { OAUTH_CONFIG } from "@/features/oauth/data/config";
+import { isAllowedOrigin } from "@/server/api/allowed-origin";
 import { requestPlatform } from "@/server/api/request-platform";
 import type { McpRequestContext } from "./mcp-context";
 import { resolveIdentity } from "@/server/api/identity";
@@ -64,6 +65,21 @@ async function handleMcpRequest(
   });
   if (!identity || identity.method === "session") {
     refuseUnauthenticated(ctx, config);
+    return;
+  }
+
+  // The MCP transport spec: a present `Origin` that is not trusted MUST get
+  // 403 (DNS-rebinding defence). Requests without `Origin` (native and
+  // server-side clients) are untouched. This runs after the credential gate so
+  // an anonymous caller still gets the 401 discovery hint whatever it sends.
+  const origin = ctx.get("Origin");
+  if (origin && !isAllowedOrigin(origin)) {
+    ctx.status = 403;
+    ctx.body = {
+      jsonrpc: "2.0",
+      error: { code: -32000, message: "Forbidden: untrusted Origin" },
+      id: null,
+    };
     return;
   }
 

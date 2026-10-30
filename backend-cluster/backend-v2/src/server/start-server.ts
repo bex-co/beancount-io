@@ -1,6 +1,7 @@
 import "reflect-metadata";
 import "dotenv/config";
 
+import { isAllowedOrigin } from "@/server/api/allowed-origin";
 import { config, type AppConfig } from "@/config/config";
 import Koa from "koa";
 import Router from "@koa/router";
@@ -79,30 +80,9 @@ export async function startServer(): Promise<void> {
           return "*";
         }
 
-        try {
-          const url = new URL(origin);
-          const hostname = url.hostname;
-
-          // Allow any subdomain of beancount.io (production/staging)
-          if (
-            hostname === "beancount.io" ||
-            hostname.endsWith(".beancount.io")
-          ) {
-            return origin;
-          }
-
-          // Allow localhost for development (any port)
-          if (hostname === "localhost" || hostname === "127.0.0.1") {
-            return origin;
-          }
-
-          // Reject other origins by returning empty string
-          // This prevents the Access-Control-Allow-Origin header from being set
-          return "";
-        } catch {
-          // Invalid origin URL, reject by returning empty string
-          return "";
-        }
+        // A rejected origin gets an empty string, which keeps the
+        // Access-Control-Allow-Origin header from being set
+        return isAllowedOrigin(origin) ? origin : "";
       },
       credentials: true,
     }),
