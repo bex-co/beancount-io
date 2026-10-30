@@ -18,6 +18,7 @@
 - [x] **m12** — [Refuse unknown keys on every REST GET query](./done/m12/README.md) (8 tasks) ← promoted from `w23/113` 2026-10-26
 - [x] **m13** — [Preview lifecycle mutations with dry_run](./done/m13/README.md) (9 tasks) ← promoted from `w23/120` 2026-10-26
 - [x] **m14** — [Render NULL cells honestly in BQL results](./done/m14/README.md) (8 tasks) ← promoted from `w23/122` 2026-10-27
+- [ ] **m15** — [Gate file writes on new bean-check errors](./m15/README.md) (7 tasks) ← promoted from `w23/149` 2026-10-30
 
 ## Dropped
 
@@ -27,7 +28,6 @@
 
 ## Inbox
 
-- [149](./149.md) — file writes COMMIT bean-check-invalid content (no validation gate; entry writes refuse) [major] — owner chose entry-style gate (2026-10-30); promote to a milestone
 - [x] [151](./done/151.md) — BQL refuses post-`;` tails stock drops (strictness is right; trailing `--` comments swept up)
 - [x] [152](./done/152.md) — same-type composite equality escapes 128's guard on bare `weight`/`amount`/`other_accounts`/`accounts` (constant-False; stock refuses)
 - [x] [153](./done/153.md) — ledger projects numeric `id`s where stock projects hash hex strings (silent value + type change)
