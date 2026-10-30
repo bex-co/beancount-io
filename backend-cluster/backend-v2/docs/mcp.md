@@ -469,11 +469,14 @@ writing the whole file back — which is how entries end up at the bottom of
 `main.bean` out of order. Use the `…LedgerFiles` tools to restructure files and
 `updateEntrySource` to change a directive that already exists.
 
-Unlike entry writes, the `…LedgerFiles` tools commit even when they introduce
-new bean-check errors: the result reports them under `validation.newErrors`
-instead of refusing, and `dry_run` previews the same outcome without
-committing. Re-run `checkLedger` (REST: the `errors` list) after restructuring
-to confirm the ledger is still valid.
+Like entry writes, the `…LedgerFiles` tools refuse a change that would add
+bean-check errors the ledger did not have (`VALIDATION_FAILED`, naming each
+error), on `dry_run` as well as on the commit; errors the ledger already had
+never block. Pass `allow_invalid: true` (REST: `allowInvalid`) to commit it
+deliberately — for example one step of a multi-step restructuring that is only
+valid once the next step lands, or write the steps as one batch. The result
+still reports the errors under `validation.newErrors`. REST `PUT`/`DELETE
+…/files/{path}` behave the same.
 
 ### Reading and editing files
 
