@@ -1,6 +1,7 @@
 import { ConflictError, NotFoundError } from "@/shared/errors";
 import {
   assertNoPortableTwin,
+  assertNoPrefixAmong,
   assertNoTwinsAmong,
   listingOf,
   portablePathKey,
@@ -62,12 +63,12 @@ describe("listingOf", () => {
   it("lists a walked tree's files and the folders that hold them", async () => {
     const list = listingOf(files);
     expect(await list(undefined)).toEqual([
-      { path: "main.bean" },
-      { path: "txns" },
+      { path: "main.bean", type: "file" },
+      { path: "txns", type: "dir" },
     ]);
     expect(await list("txns")).toEqual([
-      { path: "txns/2026.bean" },
-      { path: "txns/q1" },
+      { path: "txns/2026.bean", type: "file" },
+      { path: "txns/q1", type: "dir" },
     ]);
     expect(await list("other")).toEqual([]);
   });
@@ -89,5 +90,42 @@ describe("assertNoTwinsAmong", () => {
     );
     expect(() => assertNoTwinsAmong(["a.bean", "b.bean"])).not.toThrow();
     expect(portablePathKey("Cafe\u0301\u200b.Bean")).toBe("caf\u00e9.bean");
+  });
+});
+
+describe("file versus folder (w23/204)", () => {
+  const kept = ["main.bean", "txns/2026.bean"];
+  const rejects = (path: string) => assertNoPortableTwin(path, listingOf(kept));
+
+  it("refuses a path beneath an existing file", async () => {
+    await expect(rejects("main.bean/x.bean")).rejects.toThrow(
+      "main.bean is a file, not a folder",
+    );
+  });
+
+  it("refuses a file at an existing folder's path", async () => {
+    await expect(rejects("txns")).rejects.toThrow("existing folder");
+  });
+
+  it("allows a file beside the folder and a file in it", async () => {
+    await expect(rejects("txns/2027.bean")).resolves.toBeUndefined();
+    await expect(rejects("other.bean")).resolves.toBeUndefined();
+  });
+});
+
+describe("assertNoPrefixAmong", () => {
+  it.each([
+    ["a.bean", "a.bean/child.bean"],
+    ["a.bean/child.bean", "a.bean"],
+    ["d/e", "d/e/f.bean"],
+    ["Reports", "reports/q3.bean"],
+  ])("refuses a batch holding %s and %s", (first, second) => {
+    expect(() => assertNoPrefixAmong([first, second])).toThrow(ConflictError);
+  });
+
+  it("allows siblings and a name that only shares a prefix of letters", () => {
+    expect(() =>
+      assertNoPrefixAmong(["a.bean", "a.bean2", "a/b.bean", "a/c.bean"]),
+    ).not.toThrow();
   });
 });

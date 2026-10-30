@@ -1,5 +1,6 @@
 import {
   assertNoPortableTwin,
+  assertNoPrefixAmong,
   assertNoTwinsAmong,
 } from "@/features/ledger/utils/portable-twin";
 import { parseLedgerId } from "@/shared/str";
@@ -354,19 +355,23 @@ export class LedgerRepoService
       .map((operation) => operation.path);
     if (creates.length === 0) return;
     assertNoTwinsAmong(creates);
+    assertNoPrefixAmong(creates);
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
       identity.userId,
     );
     for (const path of creates) {
-      await assertNoPortableTwin(path, (dir) =>
-        unwrapFavaResponse(
-          favaApiClient.ledgers.getLedgerDirContent(ledgerOwner, ledgerName, {
-            ...(dir === undefined ? {} : { dir_path: dir }),
-          }),
-          "check new file path",
-        ),
+      // A file the batch deletes no longer blocks a folder of that name.
+      await assertNoPortableTwin(path, async (dir) =>
+        (
+          await unwrapFavaResponse(
+            favaApiClient.ledgers.getLedgerDirContent(ledgerOwner, ledgerName, {
+              ...(dir === undefined ? {} : { dir_path: dir }),
+            }),
+            "check new file path",
+          )
+        ).filter((entry) => !deleted.has(entry.path)),
       );
     }
   }
@@ -382,9 +387,7 @@ export class LedgerRepoService
    */
   private async assertDeletesKeepIncludes(
     favaApiClient: Awaited<
-      ReturnType<
-        LedgerRepoService["favaClientFactory"]["getPublicApiClient"]
-      >
+      ReturnType<LedgerRepoService["favaClientFactory"]["getPublicApiClient"]>
     >,
     ledgerOwner: string,
     ledgerName: string,

@@ -12,7 +12,7 @@ export function portablePathKey(path: string): string {
   return path.normalize("NFC").replace(INVISIBLE, "").toLowerCase();
 }
 
-type DirectoryEntry = { path: string };
+type DirectoryEntry = { path: string; type?: "file" | "dir" };
 
 /**
  * Refuses a new file whose path differs from one the repository has only by
@@ -56,7 +56,24 @@ export async function assertNoPortableTwin(
         },
       );
     }
-    if (!entries.some((entry) => entry.path === wanted)) return;
+    const existing = entries.find((entry) => entry.path === wanted);
+    if (!existing) return;
+    // Git holds a path as a file or a folder, never both: the host refuses
+    // the commit (or a batch keeps only one), so say so before it is made.
+    if (depth < segments.length && existing.type === "file") {
+      throw new ConflictError(
+        "File",
+        `${path} cannot be created: ${wanted} is a file, not a folder`,
+        { hint: "Choose another path, or delete the file first." },
+      );
+    }
+    if (depth === segments.length && existing.type === "dir") {
+      throw new ConflictError(
+        "File",
+        `${path} cannot be created: it is an existing folder`,
+        { hint: "Choose another path, or delete the folder's files first." },
+      );
+    }
     dir = wanted;
   }
 }
@@ -76,7 +93,10 @@ export function listingOf(
       if (!file.startsWith(prefix)) continue;
       children.add(prefix + file.slice(prefix.length).split("/")[0]);
     }
-    return [...children].map((path) => ({ path }));
+    return [...children].map((path) => ({
+      path,
+      type: files.includes(path) ? ("file" as const) : ("dir" as const),
+    }));
   };
 }
 
@@ -92,5 +112,27 @@ export function assertNoTwinsAmong(paths: readonly string[]): void {
       });
     }
     seen.set(key, path);
+  }
+}
+
+/**
+ * Refuses a batch that creates a path and one beneath it (`a.bean` and
+ * `a.bean/b.bean`): git holds one or the other, and the commit used to keep
+ * whichever came last while reporting both as written.
+ */
+export function assertNoPrefixAmong(paths: readonly string[]): void {
+  const keys = new Map(paths.map((path) => [portablePathKey(path), path]));
+  for (const path of paths) {
+    const segments = portablePathKey(path).split("/");
+    for (let depth = 1; depth < segments.length; depth += 1) {
+      const parent = keys.get(segments.slice(0, depth).join("/"));
+      if (parent !== undefined) {
+        throw new ConflictError(
+          "File",
+          `${path} cannot be created beside ${parent}: ${parent} would be both a file and a folder`,
+          { hint: "Create only one of the two, or rename one of them." },
+        );
+      }
+    }
   }
 }
