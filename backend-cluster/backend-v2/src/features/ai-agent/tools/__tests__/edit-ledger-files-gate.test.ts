@@ -103,4 +103,64 @@ describe("file writes gate on new bean-check errors", () => {
     expect(await run({ dry_run: false })).toMatchObject({ ok: true });
     expect(commits()).toHaveLength(1);
   });
+
+  it("says the text does not parse when bean-check reports a syntax error", async () => {
+    const { run, commits } = setup({
+      projected: [
+        {
+          message: "unexpected input",
+          source: { filename: "main.bean", lineno: 1 },
+          code: "P0012",
+        },
+      ],
+    });
+    const result = await run({ dry_run: false });
+    expect(result).toMatchObject({
+      ok: false,
+      errorCode: "VALIDATION_FAILED",
+      errorHint: expect.stringContaining("not valid Beancount"),
+    });
+    expect(commits()).toHaveLength(0);
+  });
+
+  it("projects every touched file, deletions as null, and refuses the whole batch", async () => {
+    const ledgerRepo = {
+      getFilesContent: jest.fn().mockResolvedValue([
+        { path: "a.bean", content: "; a\n", sha: "sa" },
+        { path: "b.bean", content: "; b\n", sha: "sb" },
+      ]),
+      changeFiles: jest.fn().mockResolvedValue(undefined),
+      checkProjectedFiles: jest.fn().mockResolvedValue([BROKEN]),
+    };
+    const result = await executeEditLedgerFiles(
+      {
+        services: {
+          ledgerRepo,
+          ledgerData: { getErrors: jest.fn().mockResolvedValue([]) },
+        } as any,
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+      },
+      {
+        description: "tidy",
+        files: [
+          { operation: "replace", path: "a.bean", content: "; z\n" },
+          { operation: "delete", path: "b.bean" },
+        ],
+        dry_run: false,
+      } as any,
+    );
+    expect(result).toMatchObject({ ok: false, errorCode: "VALIDATION_FAILED" });
+    expect(ledgerRepo.checkProjectedFiles).toHaveBeenCalledWith(
+      expect.objectContaining({
+        overlays: [
+          { path: "a.bean", content: "; z\n" },
+          { path: "b.bean", content: null },
+        ],
+      }),
+    );
+    expect(
+      ledgerRepo.changeFiles.mock.calls.filter(([call]) => !call.dryRun),
+    ).toHaveLength(0);
+  });
 });

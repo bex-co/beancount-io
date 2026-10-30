@@ -3,9 +3,7 @@ import {
   UnbalancedTransactionError,
 } from "@/shared/errors";
 import {
-  LOAD_ERROR_CODE,
-  LOAD_PARSE_SUMMARY_PATTERN,
-  PARSE_ERROR_CODE,
+  hasParseError,
   UNBALANCED_ERROR_CODE,
   type BeanCheckError,
 } from "@/features/ledger/utils/bean-check-errors";
@@ -104,18 +102,10 @@ export function unbalancedOrValidationError(
       residual,
     );
   }
-  // The engine's code, not its prose (w2/013): a located syntax error is
-  // P0012, an unlocatable file keeps the LOAD summary. No code, fall back
-  // to the wording — the hint must not claim valid Beancount for text
-  // that does not parse (w23/093).
-  const hasParseError = newErrors.some((error) =>
-    error.code !== undefined
-      ? error.code === PARSE_ERROR_CODE ||
-        (error.code === LOAD_ERROR_CODE &&
-          LOAD_PARSE_SUMMARY_PATTERN.test(error.message))
-      : /parse error/i.test(error.message),
-  );
+  // No code, the wording decides — the hint must not claim valid Beancount
+  // for text that does not parse (w23/093).
+  const hasParse = hasParseError(newErrors);
   return new NewLedgerErrorsError("text", newErrors.length, detail, {
-    hasParseError,
+    hasParseError: hasParse,
   });
 }

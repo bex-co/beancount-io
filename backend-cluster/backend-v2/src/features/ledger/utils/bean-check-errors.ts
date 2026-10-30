@@ -36,7 +36,22 @@ export const PARSE_ERROR_CODE = "P0012";
 
 /** The engine's one-per-file syntax-error summary, with no file or line. */
 export const LOAD_ERROR_CODE = "LOAD";
-export const LOAD_PARSE_SUMMARY_PATTERN = /^parse errors in /;
+const LOAD_PARSE_SUMMARY_PATTERN = /^parse errors in /;
+
+/**
+ * Whether any of the errors is the text failing to parse. The engine's code,
+ * not its prose (w2/013): a located syntax error is `P0012`, an unlocatable
+ * file keeps the `LOAD` summary; with no code, fall back to the wording.
+ */
+export function hasParseError(errors: readonly BeanCheckError[]): boolean {
+  return errors.some((error) =>
+    error.code !== undefined
+      ? error.code === PARSE_ERROR_CODE ||
+        (error.code === LOAD_ERROR_CODE &&
+          LOAD_PARSE_SUMMARY_PATTERN.test(error.message))
+      : /parse error/i.test(error.message),
+  );
+}
 
 /** bean-check's verdict around a write. */
 export interface WriteValidation {
@@ -142,12 +157,14 @@ export interface ReportedProjection {
 export function toReportedProjection(data: {
   errors_before?: number | null;
   errors_after?: number | null;
-  new_errors?: readonly {
-    message: string;
-    source?: { filename: string; lineno: number } | null;
-    code?: string | null;
-    severity?: string | null;
-  }[] | null;
+  new_errors?:
+    | readonly {
+        message: string;
+        source?: { filename: string; lineno: number } | null;
+        code?: string | null;
+        severity?: string | null;
+      }[]
+    | null;
 }): ReportedProjection {
   return {
     errorsBefore: data.errors_before ?? 0,

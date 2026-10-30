@@ -2,9 +2,7 @@ import { NewLedgerErrorsError } from "@/shared/errors";
 import type { Identity } from "@/server/api/identity";
 import type { ILedgerRepoService } from "@/features/ledger/service/ledger-repo-service";
 import {
-  LOAD_ERROR_CODE,
-  LOAD_PARSE_SUMMARY_PATTERN,
-  PARSE_ERROR_CODE,
+  hasParseError,
   toBeanCheckErrors,
   toWriteValidation,
   type BeanCheckError,
@@ -31,15 +29,8 @@ function assertFileWriteValid(
       error.source ? `${error.message} (${error.source})` : error.message,
     )
     .join("; ");
-  const hasParseError = newErrors.some((error) =>
-    error.code !== undefined
-      ? error.code === PARSE_ERROR_CODE ||
-        (error.code === LOAD_ERROR_CODE &&
-          LOAD_PARSE_SUMMARY_PATTERN.test(error.message))
-      : /parse error/i.test(error.message),
-  );
   throw new NewLedgerErrorsError("files", newErrors.length, detail, {
-    hasParseError,
+    hasParseError: hasParseError(newErrors),
   });
 }
 
