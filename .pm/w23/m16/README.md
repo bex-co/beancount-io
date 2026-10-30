@@ -1,14 +1,14 @@
 # w23 · m16 — Disclose unpriced report conversions
 
-**Worker:** worker1 **Goal:** report conversions that fall back to cost or units say so, holdings-style, on every surface **Status:** todo
+**Worker:** worker1 **Goal:** summary reports that could not convert say so, holdings-style, on REST, MCP and GraphQL **Status:** todo
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
-| t001 | Collect unconverted legs during lot valuation | 45m | — |
-| t002 | Ledger reports carry valuation + missing_prices | 60m | t001 |
-| t003 | backend-v2: surface the disclosure on REST, GraphQL and MCP | 60m | t002 |
+| t001 | Derive missing-price legs from converted balances | 40m | — |
+| t002 | Summary shapes carry missingPrices (REST and MCP) | 50m | t001 |
+| t003 | GraphQL report types carry missingPrices | 40m | t002 |
 | t004 | Docs: report conversion disclosure | 20m | t003 |
 | t005 | Adoption surface | 20m | t004 |
 | t006 | Simplify | 30m | t005 |
@@ -17,8 +17,8 @@
 
 ## Definition of done
 
-- balance-sheet, income-statement, trial-balance, interval-totals, account-journal and the hierarchy responses carry `valuation` (`complete`|`partial`) and `missing_prices` (`{from,to}[]`) on REST, GraphQL and MCP; a known-but-unpriced `conversion` target answers `partial` with the legs, a fully priced one `complete`.
-- Report values are unchanged; the fields are additive.
+- The balance-sheet, income-statement, overview and interval-totals summaries (REST and the MCP resources) and the GraphQL balance sheet, income statement and overview carry missingPrices (a list of from/to legs, present only when non-empty): a conversion target the ledger has no price path for lists the currencies that were not converted, and a fully priced conversion omits it.
+- Report values are unchanged; the field is additive. Raw payloads (shape=fava, trial balance, account journal, hierarchy) are documented as already exposing the unconverted currencies through their currency-keyed balances.
 - OpenAPI snapshot, CLI client, docs and package gates are green.
 
 ## Source + Goal linkage
