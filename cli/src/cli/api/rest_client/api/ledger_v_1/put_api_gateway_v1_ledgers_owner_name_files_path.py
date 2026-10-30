@@ -121,9 +121,10 @@ def sync_detailed(
 
      Writes at most 1 MiB (1,048,576 UTF-8 bytes) and commits it. Include the `sha` from a prior GET to
     replace an existing file; omit it to create a new one. The complete JSON request is separately
-    limited to 2 MiB. `dryRun` previews without committing: same checks, no commit. Unlike entry writes,
-    file writes commit even when they introduce new bean-check errors; this response carries no
-    validation verdict, so re-read the `errors` list afterwards.
+    limited to 2 MiB. `dryRun` previews without committing: same checks, no commit. Like entry writes, a
+    change that would add bean-check errors the ledger did not have is refused with VALIDATION_FAILED
+    naming each (`dryRun` refuses it too); `allowInvalid` commits it deliberately, e.g. one step of a
+    multi-step edit. Errors the ledger already had never block.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -166,9 +167,10 @@ def sync(
 
      Writes at most 1 MiB (1,048,576 UTF-8 bytes) and commits it. Include the `sha` from a prior GET to
     replace an existing file; omit it to create a new one. The complete JSON request is separately
-    limited to 2 MiB. `dryRun` previews without committing: same checks, no commit. Unlike entry writes,
-    file writes commit even when they introduce new bean-check errors; this response carries no
-    validation verdict, so re-read the `errors` list afterwards.
+    limited to 2 MiB. `dryRun` previews without committing: same checks, no commit. Like entry writes, a
+    change that would add bean-check errors the ledger did not have is refused with VALIDATION_FAILED
+    naming each (`dryRun` refuses it too); `allowInvalid` commits it deliberately, e.g. one step of a
+    multi-step edit. Errors the ledger already had never block.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -206,9 +208,10 @@ async def asyncio_detailed(
 
      Writes at most 1 MiB (1,048,576 UTF-8 bytes) and commits it. Include the `sha` from a prior GET to
     replace an existing file; omit it to create a new one. The complete JSON request is separately
-    limited to 2 MiB. `dryRun` previews without committing: same checks, no commit. Unlike entry writes,
-    file writes commit even when they introduce new bean-check errors; this response carries no
-    validation verdict, so re-read the `errors` list afterwards.
+    limited to 2 MiB. `dryRun` previews without committing: same checks, no commit. Like entry writes, a
+    change that would add bean-check errors the ledger did not have is refused with VALIDATION_FAILED
+    naming each (`dryRun` refuses it too); `allowInvalid` commits it deliberately, e.g. one step of a
+    multi-step edit. Errors the ledger already had never block.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -249,9 +252,10 @@ async def asyncio(
 
      Writes at most 1 MiB (1,048,576 UTF-8 bytes) and commits it. Include the `sha` from a prior GET to
     replace an existing file; omit it to create a new one. The complete JSON request is separately
-    limited to 2 MiB. `dryRun` previews without committing: same checks, no commit. Unlike entry writes,
-    file writes commit even when they introduce new bean-check errors; this response carries no
-    validation verdict, so re-read the `errors` list afterwards.
+    limited to 2 MiB. `dryRun` previews without committing: same checks, no commit. Like entry writes, a
+    change that would add bean-check errors the ledger did not have is refused with VALIDATION_FAILED
+    naming each (`dryRun` refuses it too); `allowInvalid` commits it deliberately, e.g. one step of a
+    multi-step edit. Errors the ledger already had never block.
 
     Args:
         owner (str): Ledger owner's username Example: alice.

@@ -26,6 +26,9 @@ class FileWrite:
             it to create a new one.
         dryRun (bool | Unset): Run every check and return the preview without committing
         dry_run (bool | Unset): Alias of dryRun, as MCP spells it.
+        allowInvalid (bool | Unset): Commit even when the change adds bean-check errors (VALIDATION_FAILED), instead of
+            refusing.
+        allow_invalid (bool | Unset): Alias of allowInvalid, as MCP spells it.
     """
 
     content: str
@@ -34,6 +37,8 @@ class FileWrite:
     sha: str | Unset = UNSET
     dryRun: bool | Unset = UNSET
     dry_run: bool | Unset = UNSET
+    allowInvalid: bool | Unset = UNSET
+    allow_invalid: bool | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -48,6 +53,10 @@ class FileWrite:
         dryRun = self.dryRun
 
         dry_run = self.dry_run
+
+        allowInvalid = self.allowInvalid
+
+        allow_invalid = self.allow_invalid
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -66,6 +75,10 @@ class FileWrite:
             field_dict["dryRun"] = dryRun
         if dry_run is not UNSET:
             field_dict["dry_run"] = dry_run
+        if allowInvalid is not UNSET:
+            field_dict["allowInvalid"] = allowInvalid
+        if allow_invalid is not UNSET:
+            field_dict["allow_invalid"] = allow_invalid
 
         return field_dict
 
@@ -84,6 +97,10 @@ class FileWrite:
 
         dry_run = d.pop("dry_run", UNSET)
 
+        allowInvalid = d.pop("allowInvalid", UNSET)
+
+        allow_invalid = d.pop("allow_invalid", UNSET)
+
         file_write = cls(
             content=content,
             message=message,
@@ -91,6 +108,8 @@ class FileWrite:
             sha=sha,
             dryRun=dryRun,
             dry_run=dry_run,
+            allowInvalid=allowInvalid,
+            allow_invalid=allow_invalid,
         )
 
         file_write.additional_properties = d

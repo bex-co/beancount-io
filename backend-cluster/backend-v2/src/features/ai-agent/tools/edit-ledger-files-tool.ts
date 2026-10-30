@@ -15,12 +15,11 @@ import {
   DRY_RUN_NAMES,
   resolveFlagAlias,
 } from "@/features/ledger/utils/flag-alias";
-import { assertFileWriteValid } from "@/features/ledger/utils/file-write-gate";
+import { gateFileWrite } from "@/features/ledger/utils/file-write-gate";
 import { normalizeAgentRepoPath } from "./agent-repo-path";
 import {
   readBeanCheckErrors,
   summarizeWrite,
-  toBeanCheckErrors,
   toWriteValidation,
   withPostWriteValidation,
 } from "./write-validation";
@@ -383,6 +382,8 @@ export async function executeEditLedgerFiles(
         return { fileCache, ...foldOperations(fileCache, normalizedFiles) };
       };
       const { fileCache, operations, projected } = await prepare();
+      const overlays = () =>
+        [...projected].map(([path, content]) => ({ path, content }));
       // Only exact-text edits and creations are re-applied after a lost race:
       // a whole-file `replace` or a `delete` would silently overwrite or drop
       // the change that won, so those surface the conflict instead.
@@ -436,19 +437,11 @@ export async function executeEditLedgerFiles(
           path,
           diff: unifiedDiff(path, fileCache.get(path)?.content ?? null, after),
         }));
-        const before = await readBeanCheckErrors(services, identity, ledgerId);
-        const projectedErrors = toBeanCheckErrors(
-          await services.ledgerRepo.checkProjectedFiles({
-            ledgerId,
-            identity,
-            overlays: [...projected].map(([path, content]) => ({
-              path,
-              content,
-            })),
-          }),
-        );
-        const validation = assertFileWriteValid(
-          toWriteValidation(before, projectedErrors),
+        const validation = await gateFileWrite(
+          services,
+          identity,
+          ledgerId,
+          overlays(),
           allowInvalid,
         );
         // `diff` leads the payload so the serialized text content is the
@@ -478,20 +471,11 @@ export async function executeEditLedgerFiles(
         message: description,
         dryRun: true,
       });
-      assertFileWriteValid(
-        toWriteValidation(
-          await readBeanCheckErrors(services, identity, ledgerId),
-          toBeanCheckErrors(
-            await services.ledgerRepo.checkProjectedFiles({
-              ledgerId,
-              identity,
-              overlays: [...projected].map(([path, content]) => ({
-                path,
-                content,
-              })),
-            }),
-          ),
-        ),
+      await gateFileWrite(
+        services,
+        identity,
+        ledgerId,
+        overlays(),
         allowInvalid,
       );
 

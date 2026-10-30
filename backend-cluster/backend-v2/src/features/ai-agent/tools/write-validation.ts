@@ -15,7 +15,7 @@ type ValidationServices = Pick<ToolServices, "ledgerData">;
 
 // Re-exported so the tools keep one import for the whole validation vocabulary
 // while the shaping and diffing live beside the ledger they describe (w2/m28).
-export { toBeanCheckErrors, toWriteValidation };
+export { toWriteValidation };
 
 /**
  * The ledger's current bean-check errors through the same call the `errors`

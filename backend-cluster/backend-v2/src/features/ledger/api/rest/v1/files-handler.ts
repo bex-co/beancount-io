@@ -4,9 +4,11 @@ import { resolveCommitMessage } from "@/features/ledger/utils/commit-message-ali
 import { DELETE_INCLUDE_GUARD_DESCRIPTION } from "@/features/ledger/utils/include-references";
 import { assertAmountsFitEngineDecimal } from "@/features/ledger/utils/engine-decimal";
 import {
+  ALLOW_INVALID_NAMES,
   DRY_RUN_NAMES,
   resolveFlagAlias,
 } from "@/features/ledger/utils/flag-alias";
+import { gateFileWrite } from "@/features/ledger/utils/file-write-gate";
 import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 import { ledgerIdOf, ledgerPathSchema } from "./schemas";
 import { json } from "@/server/rest/v1-schemas";
@@ -20,12 +22,14 @@ const filePathSchema = ledgerPathSchema.extend({
   }),
 });
 
-const listQuerySchema = z.object({
-  dir: z.string().optional().openapi({
-    description: "Directory to list, relative to the repository root",
-    example: "2026",
-  }),
-}).strict();
+const listQuerySchema = z
+  .object({
+    dir: z.string().optional().openapi({
+      description: "Directory to list, relative to the repository root",
+      example: "2026",
+    }),
+  })
+  .strict();
 
 const dryRunBody = {
   dryRun: z.boolean().optional().openapi({
@@ -36,6 +40,20 @@ const dryRunBody = {
     .boolean()
     .optional()
     .openapi({ description: "Alias of dryRun, as MCP spells it." }),
+};
+
+// File writes refuse new bean-check errors like entry writes (w23/m15);
+// `allowInvalid` commits deliberately.
+const allowInvalidBody = {
+  allowInvalid: z.boolean().optional().openapi({
+    description:
+      "Commit even when the change adds bean-check errors (VALIDATION_FAILED), instead of refusing.",
+  }),
+  // Twin: MCP spells it allow_invalid.
+  allow_invalid: z
+    .boolean()
+    .optional()
+    .openapi({ description: "Alias of allowInvalid, as MCP spells it." }),
 };
 
 const putBodySchema = z
@@ -58,6 +76,7 @@ const putBodySchema = z
         "Blob SHA the edit is based on. Send the SHA from a prior GET to update an existing file; omit it to create a new one.",
     }),
     ...dryRunBody,
+    ...allowInvalidBody,
   })
   .openapi("FileWrite", {
     description:
@@ -74,6 +93,7 @@ const deleteBodySchema = z
       description: "Blob SHA of the file being deleted, from a prior GET",
     }),
     ...dryRunBody,
+    ...allowInvalidBody,
   })
   .openapi("FileDelete", { description: "Delete one ledger file" });
 
@@ -182,7 +202,7 @@ export const FILE_ROUTES = [
     path: "/api-gateway/v1/ledgers/{owner}/{name}/files/{*path}",
     summary: "Create or replace a file",
     description:
-      "Writes at most 1 MiB (1,048,576 UTF-8 bytes) and commits it. Include the `sha` from a prior GET to replace an existing file; omit it to create a new one. The complete JSON request is separately limited to 2 MiB. `dryRun` previews without committing: same checks, no commit. Unlike entry writes, file writes commit even when they introduce new bean-check errors; this response carries no validation verdict, so re-read the `errors` list afterwards.",
+      "Writes at most 1 MiB (1,048,576 UTF-8 bytes) and commits it. Include the `sha` from a prior GET to replace an existing file; omit it to create a new one. The complete JSON request is separately limited to 2 MiB. `dryRun` previews without committing: same checks, no commit. Like entry writes, a change that would add bean-check errors the ledger did not have is refused with VALIDATION_FAILED naming each (`dryRun` refuses it too); `allowInvalid` commits it deliberately, e.g. one step of a multi-step edit. Errors the ledger already had never block.",
     params: filePathSchema,
     body: putBodySchema,
     responses: {
@@ -195,12 +215,12 @@ export const FILE_ROUTES = [
         { primary: body.dry_run, legacy: body.dryRun },
         DRY_RUN_NAMES,
       );
-      await layers.services.ledgerRepo.changeFiles({
+      const write = {
         ledgerId: ledgerIdOf(params),
         identity,
         operations: [
           {
-            operation: body.sha ? "update" : "create",
+            operation: body.sha ? ("update" as const) : ("create" as const),
             path: params.path,
             content: body.content,
             ...(body.sha ? { sha: body.sha } : {}),
@@ -211,8 +231,21 @@ export const FILE_ROUTES = [
         message:
           resolveCommitMessage(body, { required: false }) ||
           `${body.sha ? "Update" : "Create"} ${params.path}`,
-        dryRun,
-      });
+      };
+      // The service's dry run first: authorization, path, size and create
+      // conflicts refuse before the gate, and a preview ends here (below).
+      await layers.services.ledgerRepo.changeFiles({ ...write, dryRun: true });
+      await gateFileWrite(
+        layers.services,
+        identity,
+        write.ledgerId,
+        [{ path: params.path, content: body.content }],
+        resolveFlagAlias(
+          { primary: body.allow_invalid, legacy: body.allowInvalid },
+          ALLOW_INVALID_NAMES,
+        ),
+      );
+      if (!dryRun) await layers.services.ledgerRepo.changeFiles(write);
       return { ok: true as const, path: params.path, dryRun };
     },
   }),
@@ -225,7 +258,7 @@ export const FILE_ROUTES = [
       "Removes the file and commits the deletion. " +
       DELETE_INCLUDE_GUARD_DESCRIPTION +
       " `dryRun` previews without committing: same checks, no commit. " +
-      "Unlike entry writes, file writes commit even when they introduce new bean-check errors; this response carries no validation verdict, so re-read the `errors` list afterwards.",
+      "Like entry writes, a change that would add bean-check errors the ledger did not have is refused with VALIDATION_FAILED naming each (`dryRun` refuses it too); `allowInvalid` commits it deliberately, e.g. one step of a multi-step edit. Errors the ledger already had never block.",
     params: filePathSchema,
     body: deleteBodySchema,
     responses: {
@@ -236,12 +269,12 @@ export const FILE_ROUTES = [
         { primary: body.dry_run, legacy: body.dryRun },
         DRY_RUN_NAMES,
       );
-      await layers.services.ledgerRepo.changeFiles({
+      const write = {
         ledgerId: ledgerIdOf(params),
         identity,
         operations: [
           {
-            operation: "delete",
+            operation: "delete" as const,
             path: params.path,
             ...(body.sha ? { sha: body.sha } : {}),
           },
@@ -249,8 +282,19 @@ export const FILE_ROUTES = [
         message:
           resolveCommitMessage(body, { required: false }) ||
           `Delete ${params.path}`,
-        dryRun,
-      });
+      };
+      await layers.services.ledgerRepo.changeFiles({ ...write, dryRun: true });
+      await gateFileWrite(
+        layers.services,
+        identity,
+        write.ledgerId,
+        [{ path: params.path, content: null }],
+        resolveFlagAlias(
+          { primary: body.allow_invalid, legacy: body.allowInvalid },
+          ALLOW_INVALID_NAMES,
+        ),
+      );
+      if (!dryRun) await layers.services.ledgerRepo.changeFiles(write);
       return { ok: true as const, path: params.path, dryRun };
     },
   }),

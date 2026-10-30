@@ -48,6 +48,8 @@ const services = {
       { path: "main.bean", content: "; ledger", sha: "sha123" },
     ]),
     changeFiles: jest.fn(async () => undefined),
+    // The file-write gate projects bean-check over the new contents.
+    checkProjectedFiles: jest.fn(async () => []),
   },
   ledgerEntry: {
     addBulkEntries: jest.fn(async () => ({
@@ -315,6 +317,21 @@ describe("v1 reads", () => {
   });
 });
 
+// Each file write first dry-runs through the service (authorization, path and
+// include refusals), then commits; the commits are the calls without dryRun.
+const fileCommits = () =>
+  (
+    services.ledgerRepo.changeFiles.mock.calls as unknown as Array<
+      [
+        {
+          dryRun?: boolean;
+          message: string;
+          operations: Array<Record<string, unknown>>;
+        },
+      ]
+    >
+  ).filter(([params]) => !params.dryRun);
+
 describe("v1 files", () => {
   it("lists a directory", async () => {
     const { status, body } = await call("GET", `${LEDGER}/files?dir=2026`);
@@ -355,10 +372,7 @@ describe("v1 files", () => {
       content: "; edited",
       sha: "sha123",
     });
-    const calls = services.ledgerRepo.changeFiles.mock
-      .calls as unknown as Array<
-      [{ operations: Array<Record<string, unknown>> }]
-    >;
+    const calls = fileCommits();
     expect(calls[0][0].operations[0]).toMatchObject({ operation: "create" });
     expect(calls[1][0].operations[0]).toMatchObject({
       operation: "update",
@@ -370,13 +384,8 @@ describe("v1 files", () => {
   // message, where GraphQL committed "Create <path>" and took "" as omitted.
   it("commits Create <path> for a new file and Update <path> for a replacement, and reads an empty message as omitted", async () => {
     server.setIdentity(writeToken);
-    const messageOf = (index: number) =>
-      (
-        services.ledgerRepo.changeFiles.mock.calls as unknown as Array<
-          [{ message: string }]
-        >
-      )[index][0].message;
-    const before = services.ledgerRepo.changeFiles.mock.calls.length;
+    const messageOf = (index: number) => fileCommits()[index][0].message;
+    const before = fileCommits().length;
     await call("PUT", `${LEDGER}/files/new.bean`, { content: "; new" });
     await call("PUT", `${LEDGER}/files/new.bean`, {
       content: "; new",
@@ -423,24 +432,31 @@ describe("v1 files", () => {
   it.each([
     ["PUT", { content: "; new" }],
     ["DELETE", {}],
-  ])("%s threads either preview spelling and echoes dryRun", async (method, extra) => {
-    server.setIdentity(writeToken);
-    const before = services.ledgerRepo.changeFiles.mock.calls.length;
-    for (const flag of [{ dryRun: true }, { dry_run: true }]) {
-      const { status, body } = await call(
-        method,
-        `${LEDGER}/files/preview.bean`,
-        { ...extra, ...flag },
-      );
-      expect(status).toBe(200);
-      expect(body).toMatchObject({ ok: true, path: "preview.bean", dryRun: true });
-    }
-    const calls = services.ledgerRepo.changeFiles.mock.calls.slice(
-      before,
-    ) as unknown as Array<[{ dryRun: boolean }]>;
-    expect(calls).toHaveLength(2);
-    for (const [params] of calls) expect(params.dryRun).toBe(true);
-  });
+  ])(
+    "%s threads either preview spelling and echoes dryRun",
+    async (method, extra) => {
+      server.setIdentity(writeToken);
+      const before = services.ledgerRepo.changeFiles.mock.calls.length;
+      for (const flag of [{ dryRun: true }, { dry_run: true }]) {
+        const { status, body } = await call(
+          method,
+          `${LEDGER}/files/preview.bean`,
+          { ...extra, ...flag },
+        );
+        expect(status).toBe(200);
+        expect(body).toMatchObject({
+          ok: true,
+          path: "preview.bean",
+          dryRun: true,
+        });
+      }
+      const calls = services.ledgerRepo.changeFiles.mock.calls.slice(
+        before,
+      ) as unknown as Array<[{ dryRun: boolean }]>;
+      expect(calls).toHaveLength(2);
+      for (const [params] of calls) expect(params.dryRun).toBe(true);
+    },
+  );
 
   it("commits with dryRun false echoed when no flag is sent", async () => {
     server.setIdentity(writeToken);
@@ -484,19 +500,13 @@ describe("v1 files", () => {
     "accepts description as the commit message on %s",
     async (method, body) => {
       server.setIdentity(writeToken);
-      const before = services.ledgerRepo.changeFiles.mock.calls.length;
+      const before = fileCommits().length;
       const { status } = await call(method, `${LEDGER}/files/new.bean`, {
         ...body,
         description: "Aliased edit",
       });
       expect(status).toBe(200);
-      expect(
-        (
-          services.ledgerRepo.changeFiles.mock.calls as unknown as Array<
-            [{ message: string }]
-          >
-        )[before][0].message,
-      ).toBe("Aliased edit");
+      expect(fileCommits()[before][0].message).toBe("Aliased edit");
     },
   );
 
