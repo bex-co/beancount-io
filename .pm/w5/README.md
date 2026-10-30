@@ -44,7 +44,7 @@
 
 - [1111 — Retry the engine publish rename on Windows and sweep stale partial engines](./1111.md) — major CLI first use on native Windows: `bea 0.3.1` engine publish fails with WinError 5 while the new venv is still locked, and failed `.partial.<pid>` engines are never swept; found by w5/m13/t004, 2026-10-28.
 
-- [1117 — Preserve known Holdings market quotes when basis FX is missing](./1117.md) — minor CLI valuation: a missing acquisition-basis rate hides a known 300 USD market quote behind 200 EUR; 12 fresh books, paired FX controls and complete closed-1033 matrix; checked 2026-10-29.
+- [1117 — Preserve known Holdings market quotes when basis FX is missing](./1117.md) — minor CLI valuation: missing acquisition-basis FX hides known positive, zero and negative USD quotes behind 200 EUR; 20 fresh books with paired FX controls; closed-1033 full matrix passes; checked 2026-10-29.
 
 - [1116 — Return import diffs that apply to the ledger](./1116.md) — minor CLI import review: quoted Unicode separators or no final LF yield invalid patches from its independent producer; 12 fresh books, valid writes/native balances and duplicate repeats; checked 2026-10-29.
 
