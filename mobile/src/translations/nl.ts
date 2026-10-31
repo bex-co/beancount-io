@@ -452,6 +452,7 @@ export const nl: Translations = {
   pending: "In afwachting",
   entryUpcoming: "Aankomend",
   entryForecast: "Prognose",
+  entryNotBooked: "Niet geboekt, telt niet mee",
   other: "Overige",
   budget: "Budget",
   metadata: "Metadata",

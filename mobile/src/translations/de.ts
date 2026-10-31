@@ -465,6 +465,7 @@ export const de: Translations = {
   pending: "Offen",
   entryUpcoming: "Bevorstehend",
   entryForecast: "Prognose",
+  entryNotBooked: "Nicht gebucht, nicht gezählt",
   other: "Sonstige",
   budget: "Budget",
   metadata: "Metadaten",

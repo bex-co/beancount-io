@@ -460,6 +460,7 @@ export const sk: Translations = {
   pending: "Čakajúce",
   entryUpcoming: "Nadchádzajúce",
   entryForecast: "Prognóza",
+  entryNotBooked: "Nezaúčtovaná, nezapočítava sa",
   other: "Ostatné",
   budget: "Rozpočet",
   metadata: "Metaúdaje",

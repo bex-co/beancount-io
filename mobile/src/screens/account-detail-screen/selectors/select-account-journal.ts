@@ -29,6 +29,8 @@ export type AccountJournalRow = {
   date: string;
   /** Transaction flag (e.g. "!" for pending), when present. */
   flag?: string;
+  /** True only when the ledger could not book the transaction (w21/678). */
+  notBooked?: true;
   /** Payee/narration text for brand-logo matching, when present. */
   payee?: string;
   /** Every posting the entry touches (account + amount); drives the row's icon,
@@ -537,6 +539,9 @@ export function selectAccountJournalRows(
       title: entryTitle(item.entry),
       date: asString(item.entry.date),
       flag: asString(item.entry.flag) || undefined,
+      ...((item.entry as Record<string, unknown>).not_booked === true
+        ? { notBooked: true as const }
+        : {}),
       payee: payeeOrNarration(item.entry) || undefined,
       postings: entryPostings(item.entry),
       directiveType: asString(item.entry.directive_type) || undefined,

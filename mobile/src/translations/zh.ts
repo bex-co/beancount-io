@@ -400,6 +400,7 @@ export const zh: Translations = {
   pending: "待确认",
   entryUpcoming: "即将到来",
   entryForecast: "预测",
+  entryNotBooked: "未入账，不计入余额",
   other: "其他",
   budget: "预算",
   metadata: "元数据",

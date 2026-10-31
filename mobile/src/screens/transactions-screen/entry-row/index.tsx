@@ -221,17 +221,21 @@ export const EntryRow: React.FC<EntryRowProps> = ({
             secondary: narration,
           })
         : narration;
-  const badge = isJournalTransaction(entry) ? entryFlagBadge(entry.flag) : null;
+  const badge = isJournalTransaction(entry)
+    ? entryFlagBadge(entry.flag, entry.not_booked === true)
+    : null;
   const badgeText =
     badge === null
       ? null
       : badge.kind === "pending"
         ? "!"
-        : badge.kind === "forecast"
-          ? t("entryForecast")
-          : badge.kind === "padding"
-            ? t("pad")
-            : badge.flag;
+        : badge.kind === "notBooked"
+          ? t("entryNotBooked")
+          : badge.kind === "forecast"
+            ? t("entryForecast")
+            : badge.kind === "padding"
+              ? t("pad")
+              : badge.flag;
   const flagLabel = badge?.kind === "pending" ? t("pending") : badgeText;
   // Brand text for the logo: payee/narration only (not the directive_type
   // fallback), so non-transactions match on their account instead.

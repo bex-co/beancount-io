@@ -7,6 +7,7 @@ const labels = {
   forecast: "Forecast",
   pad: "Pad",
   upcoming: "Upcoming",
+  notBooked: "Not booked",
 };
 const marks = (flag: string | undefined, date: string, today = "2026-10-23") =>
   selectHeroBadges({ flag, date }, today, labels).map(
@@ -38,6 +39,17 @@ describe("selectHeroBadges", () => {
     expect(marks("*", "2026-10-24")).toEqual(["neutral:Upcoming"]);
     expect(marks("*", "2026-10-23")).toEqual([]);
     expect(marks("*", "2026-10-24T00:00:00")).toEqual(["neutral:Upcoming"]);
+  });
+
+  // w21/678
+  it("warns that a transaction the ledger could not book is not counted", () => {
+    expect(
+      selectHeroBadges(
+        { flag: "*", date: "2026-10-01", not_booked: true },
+        "2026-10-23",
+        labels,
+      ).map((badge) => `${badge.tone}:${badge.text}`),
+    ).toEqual(["warning:Not booked"]);
   });
 
   it("is what the detail hero draws", () => {

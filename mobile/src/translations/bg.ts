@@ -450,6 +450,7 @@ export const bg: Translations = {
   pending: "Чакащи",
   entryUpcoming: "Предстоящо",
   entryForecast: "Прогноза",
+  entryNotBooked: "Не е осчетоводена, не се брои",
   other: "Други",
   budget: "Бюджет",
   metadata: "Метаданни",

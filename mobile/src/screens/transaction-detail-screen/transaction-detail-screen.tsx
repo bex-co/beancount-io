@@ -727,6 +727,7 @@ const TransactionDetailImpl = ({
     forecast: t("entryForecast"),
     pad: t("pad"),
     upcoming: t("entryUpcoming"),
+    notBooked: t("entryNotBooked"),
   });
   const formattedDate = formatLedgerDate(entry.date.slice(0, 10), locale);
   const iconPostings = entry.postings.map((posting) => ({

@@ -444,6 +444,7 @@ export const en = {
   pending: "Pending",
   entryUpcoming: "Upcoming",
   entryForecast: "Forecast",
+  entryNotBooked: "Not booked, not counted",
   other: "Other",
   budget: "Budget",
   metadata: "Metadata",

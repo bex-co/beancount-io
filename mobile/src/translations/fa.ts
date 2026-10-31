@@ -443,6 +443,7 @@ export const fa: Translations = {
   pending: "در انتظار",
   entryUpcoming: "آینده",
   entryForecast: "پیش‌بینی",
+  entryNotBooked: "ثبت نشده، محاسبه نمی‌شود",
   other: "سایر",
   budget: "بودجه",
   metadata: "فراداده",

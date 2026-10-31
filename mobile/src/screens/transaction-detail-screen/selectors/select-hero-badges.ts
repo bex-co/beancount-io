@@ -6,7 +6,7 @@ import {
 export type HeroBadge = {
   key: "flag" | "upcoming";
   text: string;
-  /** A pending entry warns; a forecast, a pad or a future date is noted. */
+  /** A pending or not-booked entry warns; a forecast, a pad or a future date is noted. */
   tone: "warning" | "neutral";
 };
 
@@ -17,17 +17,26 @@ export type HeroBadge = {
  * its "Forecast · Upcoming" row read as a booked transaction (w21/777).
  */
 export function selectHeroBadges(
-  entry: { flag?: string; date: string },
+  entry: { flag?: string; date: string; not_booked?: boolean },
   today: string,
-  labels: { pending: string; forecast: string; pad: string; upcoming: string },
+  labels: {
+    pending: string;
+    forecast: string;
+    pad: string;
+    upcoming: string;
+    notBooked: string;
+  },
 ): HeroBadge[] {
   const badges: HeroBadge[] = [];
-  const flag = entryFlagBadge(entry.flag);
+  const flag = entryFlagBadge(entry.flag, entry.not_booked === true);
   if (flag !== null) {
     badges.push({
       key: "flag",
       text: entryFlagBadgeText(flag, labels),
-      tone: flag.kind === "pending" ? "warning" : "neutral",
+      tone:
+        flag.kind === "pending" || flag.kind === "notBooked"
+          ? "warning"
+          : "neutral",
     });
   }
   const day = entry.date.slice(0, 10);

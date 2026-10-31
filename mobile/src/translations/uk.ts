@@ -456,6 +456,7 @@ export const uk: Translations = {
   pending: "Очікують",
   entryUpcoming: "Майбутнє",
   entryForecast: "Прогноз",
+  entryNotBooked: "Не проведена, не враховується",
   other: "Інші",
   budget: "Бюджет",
   metadata: "Метадані",

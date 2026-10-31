@@ -147,7 +147,7 @@ export function AccountEntryRow({
   // Pending warns; a forecast, a pad or another flag is noted, and a row
   // dated after today reads Upcoming, as on Transactions. Only "!" was
   // marked, so a planned grocery run read as money spent (w21/781).
-  const badge = entryFlagBadge(row.flag);
+  const badge = entryFlagBadge(row.flag, row.notBooked === true);
   const flagLabel =
     badge === null
       ? null
@@ -155,6 +155,7 @@ export function AccountEntryRow({
           pending: t("pending"),
           forecast: t("entryForecast"),
           pad: t("pad"),
+          notBooked: t("entryNotBooked"),
         });
   // A commodity account's rows read in its units, with what each change cost.
   const { units } = row;

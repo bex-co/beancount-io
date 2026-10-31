@@ -457,6 +457,7 @@ export const ru: Translations = {
   pending: "В ожидании",
   entryUpcoming: "Предстоит",
   entryForecast: "Прогноз",
+  entryNotBooked: "Не проведена, не учитывается",
   other: "Прочее",
   budget: "Бюджет",
   metadata: "Метаданные",
