@@ -34,6 +34,7 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { formatSignedMoneyWithCurrency } from "@/common/number-utils";
 import { formatHolding, type BalanceDisplay } from "@/common/balance-display";
 import { balanceNotes } from "@/common/valuation";
+import { breakableAccount } from "@/common/account-util";
 import { isolateAccountPath } from "@/common/bidi";
 import { AmountText } from "@/components/amount-text";
 import { HERO_AMOUNT_FIT } from "@/components/amount-text/hero-amount-fit";
@@ -379,7 +380,7 @@ const AccountTableRow = memo(function AccountTableRow({
                   : styles.stackedNameChild,
             ]}
           >
-            {label}
+            {breakableAccount(label)}
           </Text>
           {amountBlock}
         </View>

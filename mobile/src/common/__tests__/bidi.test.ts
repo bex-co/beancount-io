@@ -190,7 +190,7 @@ describe("isolateAccountPath", () => {
         "screens",
         "account-detail-screen",
         "account-detail-screen.tsx",
-      ).includes("{isolateAccountPath(account)}"),
+      ).includes("{isolateAccountPath(breakableAccount(account))}"),
     ).toBe(true);
     expect(
       read(

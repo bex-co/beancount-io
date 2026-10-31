@@ -68,3 +68,41 @@ describe("breakableAccount", () => {
     expect(breakableAccount("")).toBe("");
   });
 });
+
+// w21/1013: at the largest text size the Accounts tab's stacked row and the
+// account detail header drew an account as one unbroken token and split it
+// mid-word ("Bank:Mercury:Checkin" / "g").
+describe("breakableAccount on the stacked Accounts row and the detail header", () => {
+  const read = (...parts: string[]) =>
+    require("fs")
+      .readFileSync(
+        require("path").join(__dirname, "..", "..", ...parts),
+        "utf8",
+      )
+      .replace(/\s+/g, "");
+
+  it("breaks a long name only after a separator", () => {
+    expect(breakableAccount("Assets:Bank:Mercury:Checking")).toBe(
+      "Assets:\u200bBank:\u200bMercury:\u200bChecking",
+    );
+    expect(breakableAccount("Checking")).toBe("Checking");
+  });
+
+  it("is what the stacked Accounts row draws, not the wide row", () => {
+    const table = read("components", "account-table", "account-table.tsx");
+    expect(table.includes("{breakableAccount(label)}</Text>")).toBe(true);
+    // The wide row keeps its middle ellipsis on the unbroken label.
+    expect(table.includes('ellipsizeMode="middle"')).toBe(true);
+  });
+
+  it("is what the account detail header draws, bidi-isolated after the breaks", () => {
+    const detail = read(
+      "screens",
+      "account-detail-screen",
+      "account-detail-screen.tsx",
+    );
+    expect(
+      detail.includes("{isolateAccountPath(breakableAccount(account))}"),
+    ).toBe(true);
+  });
+});
