@@ -1,0 +1,65 @@
+{
+  "owner": "w6/m9/t017",
+  "observedAtUTC": "2026-10-31T09:11:17.617150+00:00",
+  "state": "submitted_maintainer_workflow_approval_required",
+  "pullRequest": {
+    "url": "https://github.com/docker/mcp-registry/pull/6042",
+    "state": "open",
+    "merged": false,
+    "head": "5a30305e179493b3d5502f2d38821fedb99491d9",
+    "reviews": 0,
+    "conversationComments": 0,
+    "reviewComments": 0,
+    "updatedAtUTC": "2026-10-24T19:52:18Z"
+  },
+  "existingWorkflowRuns": [
+    {
+      "id": 40049180641,
+      "status": "completed",
+      "conclusion": "action_required",
+      "updatedAtUTC": "2026-10-24T01:18:23Z"
+    },
+    {
+      "id": 40049180736,
+      "status": "completed",
+      "conclusion": "action_required",
+      "updatedAtUTC": "2026-10-24T01:18:23Z"
+    }
+  ],
+  "staticToolMetadata": {
+    "path": "servers/beancount-io/tools.json",
+    "actualValue": [],
+    "meaning": "No stored tool-annotation snapshot to update in this PR; actual tools are discovered from the authenticated hosted endpoint. New live annotations are independently verified in the OpenAI deployed packet."
+  },
+  "reviewerCredentialMetadata": {
+    "source": "Actual current first-party saved-token UI, read only",
+    "status": "Active",
+    "scope": [
+      "ledger.read",
+      "ledger.write"
+    ],
+    "admin": false,
+    "ledger": "Same authorized synthetic fixture; private identity omitted",
+    "lastUsed": "Never used",
+    "expiryDateUTC": "2026-10-31",
+    "renderedLocalExpiry": "Oct31 16:59 PDT; minute display precision",
+    "sourceExpiryBoundary": "Original end-of-Oct31UTC bound retained; no expansion",
+    "validityLimit": "Metadata observation, not a new credential redemption or proof of access after expiry"
+  },
+  "privateChannel": {
+    "currentOfficialForm": "https://forms.gle/6Lw3nsvu2d6nFg8e6",
+    "actualRead": "Blank intake form. The exact original receipt URL from scoped browser history redirects to that same blank form; no Edit response route is exposed. Nothing entered or resubmitted.",
+    "boundedMailboxSearch": "All folders sinceOct23; Docker/Forms receipt sender domains and beancount/6042/MCP terms; no messages matched.",
+    "limit": "No exhaustive mailbox absence or new contact/longer review-window request is inferred."
+  },
+  "priorNativeAcceptance": "Oct26 retained; not repeated or re-dated",
+  "browserAccessGate": "Cleared; actual private metadata and form reads now succeed",
+  "unblock": "Docker maintainers approve/run workflows and review/merge/import the same PR. If access is needed afterOct31, use a supported secure original-response/private update route and a confirmed bounded review window before renewal. Worker handles real feedback and verifies public/native installation.",
+  "nextAssessmentNotBeforeUTC": "2026-11-01T00:00:00Z",
+  "earlierTrigger": "Actual maintainer approval/feedback, reviewer request/access failure or supported secure update route",
+  "notPerformed": [
+    "No new key, expiry change, credential export or grant revocation",
+    "No duplicate form, PR, comment, email, workflow retry or native accounting retest"
+  ],
+  "privacy": "Key prefix/value, synthetic identity, private contact/mail/history details omitted."
+}

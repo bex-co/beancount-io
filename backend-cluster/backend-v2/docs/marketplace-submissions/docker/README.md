@@ -488,3 +488,17 @@ Reassess byOct30UTC or actual reviewer/private renewal request. If longer
 access is required, obtain Docker's supported secure update route through the
 accepted channel before bounded replacement. No orphan key, public credential,
 duplicate form, new grant, expiry extension or revocation is performed.
+
+## Due review/access assessment — 2026-10-31 UTC
+
+[Actual current evidence](reviewer-access-assessment-20261031.json) keeps the
+original PR OPEN and both workflows action_required. Current saved-key
+metadata confirms Active/read-write/no-admin/same synthetic pin/Never used,
+with original endOct31UTC expiry. Browser access is restored. The current
+private form and original receipt URL expose no edit route, and the bounded
+mail search finds no matching request. No credential or submission changes.
+
+Next assessmentNov1UTC or actual feedback/access request/new secure route
+earlier. Renewal beyond the original window requires the supported private
+update route and confirmed bounds; do not generate an orphan replacement or
+resubmit the blank form. Public/native acceptance remains owned by t017.
