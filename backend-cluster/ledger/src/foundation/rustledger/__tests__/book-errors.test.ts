@@ -1,5 +1,9 @@
 import type { BeancountError, DirectiveJson } from "@rustledger/wasm";
-import { locateBookErrors, unbookedTransactions } from "../book-errors";
+import {
+  locateBookErrors,
+  unbookedTransactions,
+  withoutUnbookedTransactions,
+} from "../book-errors";
 
 // w21/534: booking and interpolation errors had no file or line, so the app
 // could not open them. The messages are the engine's own for the note's
@@ -52,7 +56,7 @@ describe("locateBookErrors", () => {
     const located = locateBookErrors(
       [
         book(
-          "interpolation failed: cannot tell which currency the bare price on the Assets:QaBroker2 posting should be computed in; write the price currency (e.g. `@ 1.20 USD`) (2026-01-06, \"bare at at\")",
+          'interpolation failed: cannot tell which currency the bare price on the Assets:QaBroker2 posting should be computed in; write the price currency (e.g. `@ 1.20 USD`) (2026-01-06, "bare at at")',
         ),
         book(
           'interpolation failed: cannot infer currency for posting to account Expenses:X (2026-01-07, "Gap")',
@@ -93,7 +97,11 @@ describe("locateBookErrors", () => {
 
   it("leaves other errors and located ones as they were", () => {
     const other = { ...book("something"), code: "E1001" };
-    const located = { ...book('x (2026-01-05, "qa cost and elided")'), file: "main.bean", line: 99 };
+    const located = {
+      ...book('x (2026-01-05, "qa cost and elided")'),
+      file: "main.bean",
+      line: 99,
+    };
     expect(
       locateBookErrors([other, located], { "main.bean": main }, "main.bean"),
     ).toEqual([other, located]);
@@ -107,9 +115,7 @@ describe("unbookedTransactions", () => {
   const tx = (date: string, narration: string): DirectiveJson =>
     ({ type: "transaction", date, narration, postings: [] }) as never;
   const noLot = (date: string, narration: string) =>
-    book(
-      `No matching lot for VTI in Assets:Broker (${date}, "${narration}")`,
-    );
+    book(`No matching lot for VTI in Assets:Broker (${date}, "${narration}")`);
   const sell = tx("2026-03-01", "QA Sell");
   const buy = tx("2026-02-01", "QA Buy");
 
@@ -121,7 +127,7 @@ describe("unbookedTransactions", () => {
 
   it("ignores other error codes and directives that are not transactions", () => {
     const open = { type: "open", date: "2026-03-01" } as never as DirectiveJson;
-    const other = { ...book("x (2026-03-01, \"QA Sell\")"), code: "E1001" };
+    const other = { ...book('x (2026-03-01, "QA Sell")'), code: "E1001" };
     expect(unbookedTransactions([other], [open, sell])).toEqual([]);
     expect(
       unbookedTransactions([noLot("2026-03-01", "QA Sell")], [open]),
@@ -154,5 +160,65 @@ describe("unbookedTransactions", () => {
 
   it("finds nothing when no error names a transaction", () => {
     expect(unbookedTransactions([], [buy, sell])).toEqual([]);
+  });
+});
+
+describe("withoutUnbookedTransactions", () => {
+  const sale = book(
+    'No matching lot for VTI in Assets:Broker (2026-03-01, "QA Sell")',
+  );
+  const source = [
+    '2026-02-01 * "QA Buy"',
+    "  Assets:Broker  10 VTI {100.00 USD}",
+    '2026-03-01 * "QA Sell"',
+    '  note: "kept with its entry"',
+    "  Assets:Broker  -5 VTI {101.00 USD}",
+    "  Income:Gains",
+    "",
+    '2026-04-01 * "After"',
+    "  Assets:Cash  1 USD",
+  ];
+
+  it("blanks the transaction's lines and nothing else, line for line", () => {
+    const out = withoutUnbookedTransactions(
+      { "main.bean": source.join("\n") },
+      [sale],
+      "main.bean",
+    )!["main.bean"];
+    expect(out.split("\n")).toEqual([
+      source[0],
+      source[1],
+      "",
+      "",
+      "",
+      "",
+      "",
+      source[7],
+      source[8],
+    ]);
+  });
+
+  it("keeps a CRLF file's line breaks", () => {
+    const out = withoutUnbookedTransactions(
+      { "main.bean": source.join("\r\n") },
+      [sale],
+      "main.bean",
+    )!["main.bean"];
+    expect(out.split("\r\n")).toHaveLength(source.length);
+    expect(out).not.toContain("QA Sell");
+    expect(out).toContain("QA Buy");
+  });
+
+  it("changes nothing when no error can be placed on a transaction", () => {
+    expect(
+      withoutUnbookedTransactions(
+        { "main.bean": source.join("\n") },
+        [book('No matching lot (2030-01-01, "Nope")')],
+        "main.bean",
+      ),
+    ).toBeUndefined();
+    expect(
+      withoutUnbookedTransactions({ "main.bean": "" }, [], "main.bean"),
+    ).toBeUndefined();
   });
 });

@@ -58,7 +58,9 @@ export function locateBookErrors(
   entryPoint: string,
 ): BeancountError[] {
   const wanted = (error: BeancountError) =>
-    error.code === "BOOK" && !error.file ? BOOK_ENTRY.exec(error.message.trim()) : null;
+    error.code === "BOOK" && !error.file
+      ? BOOK_ENTRY.exec(error.message.trim())
+      : null;
   if (!errors.some(wanted)) return [...errors];
 
   const blocks = transactionLines(files, entryPoint);
@@ -81,7 +83,12 @@ export function locateBookErrors(
     const n = seen.get(key) ?? 0;
     seen.set(key, n + 1);
     const at = candidates[n];
-    return { ...error, file: at.file, line: at.line, column: error.column ?? 1 };
+    return {
+      ...error,
+      file: at.file,
+      line: at.line,
+      column: error.column ?? 1,
+    };
   });
 }
 
@@ -123,4 +130,56 @@ export function unbookedTransactions(
     const list = candidates.get(key);
     return list !== undefined && list.length === count ? list : [];
   });
+}
+
+/**
+ * `files` with the transactions the `BOOK` errors name blanked out, line for
+ * line, so BQL (which books the source itself) sees what Beancount sees: an
+ * entry that failed booking is not in the ledger (w21/678). Returns undefined
+ * when no error could be placed on a transaction, leaving the files as they
+ * are. Blank lines keep every other line number, and so every other error's
+ * place, where it was.
+ */
+export function withoutUnbookedTransactions(
+  files: Readonly<Record<string, string>>,
+  errors: readonly BeancountError[],
+  entryPoint: string,
+): Record<string, string> | undefined {
+  const located = locateBookErrors(errors, files, entryPoint).filter(
+    (error) =>
+      error.code === "BOOK" &&
+      error.file !== null &&
+      error.file !== undefined &&
+      typeof error.line === "number",
+  );
+  if (located.length === 0) return undefined;
+  const lines = new Map<string, Set<number>>();
+  for (const error of located) {
+    const set = lines.get(error.file!) ?? new Set<number>();
+    set.add(error.line!);
+    lines.set(error.file!, set);
+  }
+  const result: Record<string, string> = { ...files };
+  for (const [file, heads] of lines) {
+    const content = files[file];
+    if (content === undefined) continue;
+    const text = content.split(/(\r\n|\n|\r)/u);
+    // `split` keeps the separators at odd indexes: lines are the even ones.
+    let blanking = false;
+    for (let i = 0, line = 1; i < text.length; i += 2, line++) {
+      if (heads.has(line)) {
+        blanking = true;
+        text[i] = "";
+        continue;
+      }
+      // A transaction's postings and metadata are indented; anything else ends it.
+      if (blanking && /^[ \t]+\S/u.test(text[i])) {
+        text[i] = "";
+        continue;
+      }
+      blanking = false;
+    }
+    result[file] = text.join("");
+  }
+  return result;
 }

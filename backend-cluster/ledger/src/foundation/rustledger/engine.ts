@@ -64,7 +64,11 @@ import { midCurrencyToleranceErrors } from "./balance-tolerance-syntax";
 import { reconcileNounusedErrors } from "./nounused";
 import { reconcileOneCommodityErrors } from "./one-commodity";
 import { reconcileUniquePriceErrors } from "./unique-prices";
-import { locateBookErrors, unbookedTransactions } from "./book-errors";
+import {
+  locateBookErrors,
+  unbookedTransactions,
+  withoutUnbookedTransactions,
+} from "./book-errors";
 import {
   isRawPluginProcessing,
   locateOptionErrors,
@@ -1013,10 +1017,17 @@ export async function queryLedgerFilesResultInProcess(
         { omitPadDirectives: true },
       )
     : undefined;
-  const queryFiles = materialized?.files ?? strippedFiles;
+  const sanitizedFiles = materialized?.files ?? strippedFiles;
   const queryEntryPoint = needsMaterializedStream
     ? MATERIALIZED_ENTRY_POINT
     : entryPoint;
+  // A transaction the engine could not book is not in the ledger Beancount
+  // reads, so the query must not see it either (w21/678). Only a ledger that
+  // has a booking error parses twice, and the first parse stays cached.
+  const queryFiles = await withoutUnbookedSource(
+    sanitizedFiles,
+    queryEntryPoint,
+  );
   // Reuse a LIVE parsed ledger across queries on the same content: a query
   // needs the WASM object (the snapshot cache can't serve it), and re-running
   // Ledger.fromFiles per query is an expensive synchronous parse. Request-path
@@ -1092,6 +1103,34 @@ export async function queryLedgerFilesResultInProcess(
       }
     },
   );
+}
+
+/**
+ * `files` without the transactions that fail booking, or as given when none
+ * does. The probe parse is the one the query reuses when nothing is dropped.
+ */
+async function withoutUnbookedSource(
+  files: FileMap,
+  entryPoint: string,
+): Promise<FileMap> {
+  const key = buildSnapshotCacheKey({
+    files,
+    entryPoint,
+    effectiveToday: localTodayStr(),
+    repoPaths: undefined,
+    applyTsPlugins: undefined,
+    includeSourceDetails: undefined,
+  });
+  const bookErrors = await queryLedgerCache.withLedger(
+    key,
+    async () => {
+      const mod = await loadRustledger();
+      return mod.Ledger.fromFiles(parseableFiles(files, entryPoint), entryPoint);
+    },
+    (ledger) => ledger.getErrors().filter((error) => error.code === "BOOK"),
+  );
+  if (bookErrors.length === 0) return files;
+  return withoutUnbookedTransactions(files, bookErrors, entryPoint) ?? files;
 }
 
 /** Every currency the loaded ledger names, plus its operating currencies (w23/184). */
