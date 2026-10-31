@@ -1,6 +1,22 @@
 # Existing ChatGPT application review
 
-## Current publisher-reported review — 2026-10-25T05:13:44Z
+## Current owner-supplied not-approved feedback — 2026-10-31 UTC
+
+The owner supplies a not-approved decision requesting behavior-correct annotations,
+explicit booleans and per-tool explanations. This supersedes the older in-review/
+Nov3 estimate. [Public-safe triage](rejection-triage-20261031.json) distinguishes the
+actual current44-tool catalog (all four hints are boolean) from the unknown review
+snapshot. renameLedgerFile is one confirmed destructive:false mismatch because it
+deletes the old path and may rewrite includes; it is not a proven sole rejection cause.
+
+Existing m11/t008 audits/fixes/tests every current tool; t009 deploys/verifies actual
+wire values and prepares explanations; t010 rescans/resubmits the same application.
+t001 retains later review/public/native acceptance. Actual account/organization
+access is needed only when performing that dashboard stage. No duplicate app,
+unsolicited appeal or changed review status is inferred from source-only fixes.
+
+
+## Historical publisher-reported review — 2026-10-25T05:13:44Z
 
 The publisher reports that the existing application is **in review**, with
 **estimated completion2026-11-03**. This update is supplied directly by the

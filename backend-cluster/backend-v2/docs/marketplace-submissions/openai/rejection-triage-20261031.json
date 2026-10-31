@@ -1,0 +1,32 @@
+{
+  "owner": "w6/m11/t008",
+  "recordedDateUTC": "2026-10-31",
+  "feedbackSource": "Owner-provided review message in this conversation; original organization review screen not independently viewed.",
+  "reviewStatus": "not_approved",
+  "reportedIssue": "One or more annotation values do not match behavior; explicit true/false values and behavior-based justifications requested.",
+  "reviewerNamedTools": null,
+  "currentWireObservation": {
+    "atUTC": "2026-10-31T08:02:19.759734Z",
+    "url": "https://beancount.io/api-gateway/mcp",
+    "httpStatus": 200,
+    "tools": 44,
+    "allFourHintsExplicitBoolean": true,
+    "missingNullNonBooleanHints": 0,
+    "limit": "Current hosted catalog, not the stored reviewed snapshot."
+  },
+  "confirmedMismatch": {
+    "tool": "renameLedgerFile",
+    "advertisedDestructiveHint": false,
+    "actualBehavior": "Creates the new path, deletes the old path and can overwrite include directives.",
+    "soleRejectionCauseClaimed": false
+  },
+  "plan": [
+    "t008 audit/fix all tools and meaningful regression tests",
+    "t009 deploy, verify hosted wire and complete per-tool explanations",
+    "t010 rescan/resubmit same app",
+    "t001 follow actual review/public/native outcomes"
+  ],
+  "originalApplication": "https://platform.openai.com/plugins/manage/plugin_asdk_app_6ad4537f69288191816f3fc04b1ac11a",
+  "privacy": "No private mail/account identifiers, credentials or reviewer test data.",
+  "submissionOrAppealMade": false
+}
