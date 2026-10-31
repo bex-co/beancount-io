@@ -8,6 +8,7 @@
 - [x] **m2** — [Readable-width caps for the remaining bespoke screens](./done/m2/README.md) (7 tasks) ← promoted from w21/1007, follow-up to w21/1005
 - [x] **m3** — [BQL cookbook: tested query recipes for humans and agents](./done/m3/README.md) (8 tasks) ← `/pm-brainstorm for w21` 2026-10-25, candidate 2
 - [x] **m4** — [`bea report cash-flow`: where the money went, by period](./done/m4/README.md) (8 tasks) ← `/pm-brainstorm for w21` 2026-10-25, candidate 3
+- [ ] **m5** — [Entries that fail booking stay listed, marked, and out of every balance](./m5/README.md) (9 tasks) ← promoted from w21/678
 
 ## Dropped
 
@@ -33,7 +34,6 @@
 - [602](./blocked/602.md) — Money flow doesn't pad a real currency held at cost ("+$100.5" under "+$100.50") (w21/506 over-reach) — **blocked:** a currency lot cannot be told from a fund ticker that is also an ISO code (BND) without declared-commodity data or an owner-approved heuristic
 - [608](./blocked/608.md) — Android: fields near the bottom stay under the keyboard (iOS-only keyboard avoidance under edge-to-edge) — **blocked:** needs an Android device check of the keyboard behavior
 - [315](./blocked/315.md) — In-app commits signed with Gitea username and real email (no full_name, no noreply) — **blocked:** needs the owner's noreply-address and published-history decisions, and a production backfill of existing Gitea users that can't be verified here
-- [678](./678.md) — A sale whose lot doesn't match is still counted in every balance, so the books don't balance
 - [871](./blocked/871.md) — Mobile never attaches the scanned receipt image to the saved transaction (dashboard does) — **blocked:** needs an owner decision on how a scanned receipt is saved with its document (two-posting insertReceiptTransaction only, extend it, or write the document in the addEntries commit)
 - [857](./blocked/857.md) — The ledger runs amortize_over/forecast on the server's UTC date, not the user's — **blocked:** needs an owner-approved optional client date/time-zone input on every plugin-running read across REST, GraphQL and MCP, with the cache-key policy
 - [879](./blocked/879.md) — The receipt parse contract carries no currency, so a foreign receipt is always booked in the ledger's currency (split from w21/870) — **blocked:** needs an owner-approved `ReceiptParseResult` currency contract (parity, model prompt, both receipt forms) and an AI-quota evaluation
