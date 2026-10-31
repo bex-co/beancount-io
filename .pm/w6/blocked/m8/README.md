@@ -116,3 +116,11 @@ t002 now waits on Smithery/Arcade's supported intake or curated-inclusion
 response, then worker public/native verification. No further publisher
 authorization is pending, and no accepted listing submission is inferred.
 Keep this request and original DoD; do not send a duplicate inquiry.
+
+## Due Smithery transition check — 2026-10-31 UTC
+
+[Current official/bounded-mail observation](../../../../backend-cluster/backend-v2/docs/marketplace-submissions/smithery/transition-review-20261031.json)
+establishes no surviving supported intake or matching last7days reply. t002
+remains blocked on Smithery/Arcade direct-directory intake/claim or curated
+inclusion; worker resumes on actual feedback/changed route, otherwise manual
+not before2026-11-07UTC. No request or removed wizard is repeated.

@@ -1,0 +1,28 @@
+{
+  "owner": "w6/m8/t002",
+  "observedAtUTC": "2026-10-31T09:04:04.188751+00:00",
+  "state": "blocked_supported_direct_directory_intake",
+  "trigger": "Recorded2026-10-31 transition/manual review",
+  "sources": [
+    "https://smithery.ai/future",
+    "https://smithery.ai/docs/build/publish",
+    "https://smithery.ai/"
+  ],
+  "officialObservation": "Transition notice still retires proxy/account/API/CLI services onOct31 and retains a curated direct-URL directory. Publishing docs still describe gateway proxy publishing; no surviving replacement intake is established by these pages.",
+  "mailObservation": {
+    "type": "Existing authenticated mailbox; read-only",
+    "boundedSearch": "Last7days, all folders including spam, sender domains smithery.ai or arcade.dev",
+    "result": "No messages matched your search",
+    "limits": "Only this sender/date predicate; not an assertion about every mailbox/domain or recipient delivery."
+  },
+  "notRepeated": [
+    "No old403wizard submission",
+    "No CLI/API publication retry",
+    "No duplicate request, follow-up email, new grant or reviewer credential"
+  ],
+  "existingRequest": "Authorized direct-directory request sent2026-10-25; retained unchanged",
+  "unblock": "Smithery/Arcade replies with supported direct-directory intake/claim steps, accepts curated inclusion, or publishes a working supported route; worker then verifies actual publication/native acceptance.",
+  "nextManualCheckNotBeforeUTC": "2026-11-07T00:00:00Z",
+  "earlierTrigger": "Actual reply, changed official notice/intake or curated publication",
+  "boundary": "No accepted listing submission, successful scan or publication is established by this review."
+}
