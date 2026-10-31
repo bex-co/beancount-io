@@ -1,0 +1,67 @@
+{
+  "target": "punkpeye/awesome-mcp-servers / Glama Git source checks",
+  "owner": "w6/048",
+  "lastCheckedAtUTC": "2026-10-31T09:38:14Z",
+  "sourceRecord": {
+    "url": "https://glama.ai/mcp/servers/bex-co/beancount-io",
+    "publiclyAvailable": true,
+    "name": "Beancount MCP",
+    "approvalReceiptSubject": "Your MCP server \"Beancount MCP\" has been approved on Glama",
+    "approvalReceiptAtUTC": "2026-10-30T00:15Z",
+    "timestampPrecision": "minute",
+    "receiptSenderDomain": "glama.ai",
+    "claimURL": "https://glama.ai/mcp/servers/bex-co/beancount-io/admin",
+    "dockerfileURL": "https://glama.ai/mcp/servers/bex-co/beancount-io/admin/dockerfile",
+    "approvalInstructions": "Claim the record, then provide a Dockerfile through its Glama admin page for automated safety and quality checks. The Dockerfile need not be committed. Approval alone does not establish passing checks or search inclusion.",
+    "qualityScoreVerified": false,
+    "buildOrIntrospectionPassed": false,
+    "cachedREADME": "The public source record still renders the older 43-tool/64-resource text. Main already points to live discovery; no refreshed source crawl is claimed."
+  },
+  "organizationClaim": {
+    "officialInstructions": "https://glama.ai/blog/2025-07-08-what-is-glamajson",
+    "schema": "https://glama.ai/mcp/schemas/server.json",
+    "repositoryDeclaration": "glama.json",
+    "maintainers": [
+      "puncsky"
+    ],
+    "accountVerifiedThroughExistingGitHubCLI": true,
+    "authorizationStatus": "pending_action_time_confirmation",
+    "requestedScopes": [
+      "read:user",
+      "user:email",
+      "read:org"
+    ],
+    "codeWriteScopeRequested": false,
+    "authorizationGranted": false,
+    "nextAction": "After owner confirms the actual GitHub authorization, complete sign-in and the documented claim sync, inspect the supported Docker build configuration and logs, and supply an accurate supported source recipe. Preserve existing auth and full-stack boundaries."
+  },
+  "pullRequest": {
+    "url": "https://github.com/punkpeye/awesome-mcp-servers/pull/18050",
+    "state": "OPEN",
+    "mergedAtUTC": null,
+    "mergeable": true,
+    "headCommit": "17f822329d705c7629ce4b7adcaed64d1976e7a2",
+    "labels": [
+      "missing-glama",
+      "has-emoji",
+      "valid-name"
+    ],
+    "comments": 1,
+    "reviewComments": 0,
+    "earlierThisPassRead": "No reviews; existing check-submission SUCCESS at 2026-10-30T00:17:27Z and welcome SKIPPED. No new run.",
+    "badgeAdded": false,
+    "remainingGate": "Passing real Glama source quality/introspection, actual score badge on this same PR, then maintainer review/merge and setup-link verification."
+  },
+  "limits": {
+    "newBackendStackStarted": false,
+    "standaloneOrStdioWrapperInvented": false,
+    "existingHostedConnectorOrGrantChanged": false,
+    "duplicateSubmissionOrCommentSent": false,
+    "privilegedAdminAPICalled": false,
+    "credentialsPublished": false
+  },
+  "unblock": {
+    "owner": "Publisher for the exact new GitHub authorization; worker for supported claim/build follow-through; Glama for check execution; upstream maintainers for merge",
+    "trigger": "Actual confirmation, actionable source/build/review feedback or passing quality result. Do not retry the unchanged authorization gate or fabricate the badge."
+  }
+}
