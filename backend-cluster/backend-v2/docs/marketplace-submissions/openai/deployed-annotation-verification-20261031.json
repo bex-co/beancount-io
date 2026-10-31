@@ -1,0 +1,390 @@
+{
+  "owner": "w6/m11/t009",
+  "state": "deployed_verified_pending_original_app_rescan",
+  "sourceRevision": "d7e58ce06d24604681187f0d9cb7d8523ed4e97a",
+  "deployment": {
+    "path": "Existing managed production service; private control identity/URL omitted",
+    "startedAtUTC": "2026-10-31T08:42:00Z",
+    "displayedStartPrecision": "minute",
+    "observedHealthyBeforeUTC": "2026-10-31T08:44:25Z",
+    "result": "Deploy live / SUCCESS",
+    "commandsSucceeded": 3,
+    "backendHealthy": true,
+    "ledgerHealthy": true,
+    "secondStack": false
+  },
+  "wire": {
+    "endpoint": "https://beancount.io/api-gateway/mcp",
+    "responseCompletedAtUTC": "2026-10-31T08:44:26.292295+00:00",
+    "httpStatus": 200,
+    "tools": 44,
+    "booleanHints": 176,
+    "missingOrNullHints": 0,
+    "completeMatrixMatches": true,
+    "annotationsSHA256": "e950bbecb46029b9255c64b933ec9732641fd6b1dab8e173d0978d5a75a125f9",
+    "annotationsByTool": {
+      "runBqlQuery": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "runBqlQueryStructured": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "listLedgers": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "checkLedger": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "getLedgerContext": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "getEntryContext": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "listLedgerEntries": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "listLedgerFiles": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "readLedgerFiles": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "addLedgerEntries": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "appendLedgerText": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "insertReceiptTransaction": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "parseReceipt": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "parseFile": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "generateTempAssetUploadUrl": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "createLedgerFiles": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "updateLedgerFiles": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "deleteLedgerFiles": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "updateEntrySource": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "deleteEntrySource": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "deleteEntrySources": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "renameLedgerFile": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "setLedgerStar": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "refreshManagedPrices": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "syncBankTransactions": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "importStagedBankTransactions": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "discardStagedBankTransactions": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "reconcileBankAccounts": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "mapBankAccount": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "setBankAccountCurrency": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "refreshBankConnection": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "unlinkBankConnection": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "listBankConnections": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "listStagedBankTransactions": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "createPullRequest": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "mergePullRequest": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "rejectPullRequest": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "createLedger": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "previewLedgerSetup": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "updateLedger": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "deleteLedger": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "setLedgerCollaborator": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "removeLedgerCollaborator": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "leaveLedger": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      }
+    }
+  },
+  "conformance": {
+    "observedAtUTC": "2026-10-31T08:44:33.430Z",
+    "passed": 14,
+    "failed": 0,
+    "skipped": 2,
+    "checks": [
+      {
+        "id": "1 endpoint-401",
+        "outcome": "pass"
+      },
+      {
+        "id": "2 discovery-resolves",
+        "outcome": "pass"
+      },
+      {
+        "id": "3 method-refusal",
+        "outcome": "pass"
+      },
+      {
+        "id": "4 tools-list",
+        "outcome": "pass"
+      },
+      {
+        "id": "5 refusal-dialect",
+        "outcome": "skip"
+      },
+      {
+        "id": "6 error-masking",
+        "outcome": "pass"
+      },
+      {
+        "id": "7 advertised-path",
+        "outcome": "pass"
+      },
+      {
+        "id": "8 optional-userid",
+        "outcome": "pass"
+      },
+      {
+        "id": "9 discovery-workload",
+        "outcome": "pass"
+      },
+      {
+        "id": "10 result-shape",
+        "outcome": "skip"
+      },
+      {
+        "id": "11 pkce-s256",
+        "outcome": "pass"
+      },
+      {
+        "id": "12 iss-parameter",
+        "outcome": "pass"
+      },
+      {
+        "id": "13 registration-endpoint",
+        "outcome": "pass"
+      },
+      {
+        "id": "14 public-client-auth",
+        "outcome": "pass"
+      },
+      {
+        "id": "15 resource-matches",
+        "outcome": "pass"
+      },
+      {
+        "id": "16 cimd",
+        "outcome": "pass"
+      }
+    ],
+    "skipLimits": [
+      "Scope-refusal requires a separate existing read-only-only credential; none supplied.",
+      "Default-ledger result shape skipped because this credential requires explicit ledger selection; two explicit synthetic-ledger controls below pass."
+    ]
+  },
+  "readSmoke": {
+    "observedAtUTC": "2026-10-31T08:45:32.822318+00:00",
+    "fixture": "existing authorized synthetic accounting fixture; identity omitted",
+    "readOnly": true,
+    "calls": [
+      {
+        "tool": "checkLedger",
+        "httpStatus": 200,
+        "isError": false,
+        "structuredOK": true
+      },
+      {
+        "tool": "runBqlQueryStructured",
+        "httpStatus": 200,
+        "isError": false,
+        "structuredOK": true
+      }
+    ],
+    "actualWrites": 0
+  },
+  "reviewPacket": "resubmission-notes.md and complete tool-annotations.json",
+  "boundary": "Actual existing-service deployment and hosted discovery/read controls only; no platform rescan, accepted resubmission, approval, public listing or native ChatGPT accounting outcome is claimed. No accounting writes or grant revocations."
+}

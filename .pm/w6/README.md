@@ -109,7 +109,7 @@ Source: the owner's request to complete all remaining actions from the17-target 
 
 **Execution order:** tracker/browser/native prerequisites and045 credential coordination are complete;046 renewable native acceptance is now complete too. Follow actual review, publication, compatible host/client or supported engine-artifact changes independently. Aggregate verification and standing closing tasks retain their full DoDs; one blocked platform never ends the w6 loop while another actionable item remains.
 
-**Current board:** 73 pending leaves after completing m11/t008. m11/t009 and independent m12/t001,t003 are actionable; all other leaf states/dependencies retain their own evidence. Owner-supplied ChatGPT not-approved feedback supersedes the old Nov3 estimate. Historical snapshots retain prior counts and states.
+**Current board:** 72 pending leaves after completing m11/t008,t009. m11/t010 and independent m12/t001,t003 are actionable; all other leaf states/dependencies retain their own evidence. Owner-supplied ChatGPT not-approved feedback supersedes the old Nov3 estimate. Historical snapshots retain prior counts and states.
 
 ## Historical work and blocker triage — 2026-10-24 UTC
 

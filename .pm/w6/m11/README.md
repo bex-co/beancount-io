@@ -1,6 +1,6 @@
 # w6 · m11 — Complete app-directory and remote-community distribution
 
-**Worker:** worker1 **Goal:** Users discover the existing hosted connector through approved ChatGPT/Claude entries and an accurate remote-MCP community entry. **Status:** todo (t008 done; t009 deployment/live verification actionable; t001 awaits t010 resubmission; other reviews and closing dependencies remain)
+**Worker:** worker1 **Goal:** Users discover the existing hosted connector through approved ChatGPT/Claude entries and an accurate remote-MCP community entry. **Status:** todo (t008/t009 done; t010 original-app rescan/resubmit actionable; t001 awaits t010 resubmission; other reviews and closing dependencies remain)
 
 **Implementation estimate:** ~4h30m plus closing work, excluding external review latency. No recurring polling job is created.
 
@@ -12,7 +12,7 @@
 | [t002](t002.md) | Follow existing Claude connector application through review/publication — **BLOCKED: in review** | 45m | — |
 | [t003](t003.md) | Submit to Awesome Remote MCP Servers and verify merged entry — **BLOCKED: submitted, check passed** | 45m | — |
 | [t008](done/t008.md) | Audit/fix annotations and regression coverage — **DONE** | 60m | — |
-| [t009](t009.md) | Deploy and verify live annotations/explanations | 45m | t008 |
+| [t009](done/t009.md) | Deploy and verify live annotations/explanations — **DONE** | 45m | t008 |
 | [t010](t010.md) | Rescan/resubmit the original ChatGPT app | 30m | t009 |
 | [t004](t004.md) | Adoption surface | 30m | t001, t002, t003 |
 | [t005](t005.md) | Simplify | 30m | t004 |

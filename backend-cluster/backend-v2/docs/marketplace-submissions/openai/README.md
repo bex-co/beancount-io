@@ -1,6 +1,20 @@
 # Existing ChatGPT application review
 
-## Current owner-supplied not-approved feedback — 2026-10-31 UTC
+## Current deployed remediation — 2026-10-31 UTC
+
+The fix is shipped in `d7e58ce06` and deployed through the existing managed
+production service. [Actual hosted verification](deployed-annotation-verification-20261031.json)
+confirms all 44 tools/176 boolean hints match the complete review matrix.
+Conformance: 14 pass, 0 fail, 2 explicit credential/default-ledger skips; direct
+synthetic-ledger validation and structured BQL query both pass. No accounting
+write or grant revocation occurs.
+
+[Prepared reviewer text and dashboard steps](resubmission-notes.md) and the
+[complete per-tool explanations](tool-annotations.json) are ready. Task t010
+still owns the actual original-app rescan and accepted resubmission; deployment
+does not refresh the platform's stored snapshot or change its review state.
+
+## Owner-supplied not-approved feedback — 2026-10-31 UTC
 
 The owner supplies a not-approved decision requesting behavior-correct annotations,
 explicit booleans and per-tool explanations. This supersedes the older in-review/
