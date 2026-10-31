@@ -291,6 +291,32 @@ Ledger scope is settled in ADR 0007: [every credential reaches all the ledgers i
 
 ## Amendments
 
+### 2026-10-31 — Annotation review covers actual removal and public targets (w6/m11/t008)
+
+The owner supplies a not-approved annotation review. Current hosted 44-tool
+`tools/list` has explicit booleans for every hint; the reviewed platform snapshot
+and offending names remain unknown. Source/behavior inspection identifies four
+under-labelled destructive effects: rename deletes the old path and rewrites
+includes; receipt insertion deletes the temporary source after promotion;
+bank sync updates/removes staged rows; unstar removes a prior personal relationship.
+Each now advertises `destructiveHint:true`. Optional previews and reversibility
+do not change the tool's committed/removal capabilities.
+
+Public-capable ledger reads/writes, proposals and collaboration/lifecycle tools
+advertise `openWorldHint:true`, covering their allowed public-ledger targets.
+Private account catalogs, bank staging/mappings/currency, caller-only star state,
+temporary upload capabilities and pure setup previews remain closed-world. External
+bank/AI/feed processing stays explicit. This changes annotations/descriptions,
+not domain behavior, accepted inputs, permission checks, preview contracts or API
+parity eligibility.
+
+The complete [per-tool boolean and justification matrix](../../backend-cluster/backend-v2/docs/marketplace-submissions/openai/tool-annotations.json)
+is an independently reviewed contract pinned against actual wire `tools/list`.
+Behavioral rename coverage proves the old hint fails while the real source deletion
+and include overwrite occur; receipt/bank/star behavior suites retain their existing
+parity/side-effect coverage. Deployment, platform rescan, accepted resubmission and
+future approval remain distinct acceptance stages under w6/m11/t009, t010 and t001.
+
 ### 2026-10-18 — One MCP tool per operation (w1/m38)
 
 The OpenAI Plugins dashboard scanned the Beancount.io draft on 2026-10-18. Seven tools (`editLedgerFiles`, `editEntrySource`, `manageBankImport`, `manageBankConnection`, `managePullRequests`, `manageLedgers`, `manageLedgerCollaborators`) each received: "This tool appears to execute operations that are not individually exposed. Please expose each model-callable operation upfront as a separate tool with a clear description, input schema, and annotations." `manageLedgers` also received "This new tool definition needs further review before it can be published."

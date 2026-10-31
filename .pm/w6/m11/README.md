@@ -1,6 +1,6 @@
 # w6 · m11 — Complete app-directory and remote-community distribution
 
-**Worker:** worker1 **Goal:** Users discover the existing hosted connector through approved ChatGPT/Claude entries and an accurate remote-MCP community entry. **Status:** todo (t008 annotation remediation is actionable; t001 awaits resubmission, t002/t003 and closing tasks retain independent gates)
+**Worker:** worker1 **Goal:** Users discover the existing hosted connector through approved ChatGPT/Claude entries and an accurate remote-MCP community entry. **Status:** todo (t008 done; t009 deployment/live verification actionable; t001 awaits t010 resubmission; other reviews and closing dependencies remain)
 
 **Implementation estimate:** ~4h30m plus closing work, excluding external review latency. No recurring polling job is created.
 
@@ -11,7 +11,7 @@
 | [t001](t001.md) | Follow existing ChatGPT application through review/publication — **BLOCKED: not approved; t008–t010 remediation then review** | 45m | t010 |
 | [t002](t002.md) | Follow existing Claude connector application through review/publication — **BLOCKED: in review** | 45m | — |
 | [t003](t003.md) | Submit to Awesome Remote MCP Servers and verify merged entry — **BLOCKED: submitted, check passed** | 45m | — |
-| [t008](t008.md) | Audit/fix annotations and regression coverage | 60m | — |
+| [t008](done/t008.md) | Audit/fix annotations and regression coverage — **DONE** | 60m | — |
 | [t009](t009.md) | Deploy and verify live annotations/explanations | 45m | t008 |
 | [t010](t010.md) | Rescan/resubmit the original ChatGPT app | 30m | t009 |
 | [t004](t004.md) | Adoption surface | 30m | t001, t002, t003 |
@@ -72,7 +72,7 @@ The [m9/t011](../blocked/m9/done/t011.md) official Cursor application is submitt
 
 ## Blocked
 
-- **t001:** publisher reports **in review**, estimated completion**2026-11-03**, update received2026-10-25T05:13:44Z. This clears the current status-information request; original-organization UI access is not independently restored. **Unblock:** actual review feedback/decision/publication, or manual check on/after2026-11-03; worker then handles corrections and public/native verification. **Owners:** OpenAI reviewers, then worker. No publisher action is needed now; the estimated date is not guaranteed approval and no duplicate application is created.
+- **t001:** owner supplies not-approved annotation feedback on2026-10-31, superseding the former Nov3 estimate. t008 source audit/corrections/tests are complete; t009 deploys and verifies the live catalog, then t010 refreshes and resubmits the original application. **Unblock:** accepted original-app resubmission followed by actual review feedback/publication; worker handles supported corrections and public/native verification. **Owners:** worker, then OpenAI reviewers. Original submitting organization access may still be required at t010; no duplicate app or approval is inferred. The former publisher-reported in-review estimate is historical evidence only.
 
 - **t002:** publisher reports **in review**, update received2026-10-25T05:34:59Z; no completion estimate or requested changes supplied. The current status-information request is cleared, while original-account UI access is not independently restored. **Unblock:** actual review feedback/decision/publication, otherwise a manual check on2026-10-27UTC; worker then handles corrections and public/native verification. **Owners:** Claude reviewers, then worker. No user action now; manual date is internal, not a vendor promise or automation. No duplicate application.
 

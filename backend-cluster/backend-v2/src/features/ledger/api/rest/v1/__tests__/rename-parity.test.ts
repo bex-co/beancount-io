@@ -241,6 +241,7 @@ async function fixture(
     files,
     state,
     change,
+    listTools: () => client.listTools(),
     call: async (
       surface: string,
       oldPath: string,
@@ -1353,6 +1354,37 @@ describe.each(["rest", "mcp", "gql"])("delete guard via %s", (surface) => {
       const outcome = await f.deleteFile(surface, "lone.bean");
       expect(outcome.success).toBe(true);
       expect(f.files.has("lone.bean")).toBe(false);
+    } finally {
+      await f.close();
+    }
+  });
+});
+
+// w6/m11/t008: the advertised hint must cover the committed branch even
+// though the same tool also accepts a non-mutating dry_run.
+describe("rename annotation follows its real effects", () => {
+  it("declares the source deletion and include overwrite as destructive", async () => {
+    const f = await fixture(identity, {
+      "main.bean": 'include "old.bean"\n',
+      "old.bean": "; preserved contents\n",
+    });
+    try {
+      const { tools } = await f.listTools();
+      const advertised = tools.find((tool) => tool.name === "renameLedgerFile");
+      expect(
+        (
+          await f.call("mcp", "old.bean", "new.bean", {
+            updateIncludes: true,
+          })
+        ).success,
+      ).toBe(true);
+      expect(f.files.has("old.bean")).toBe(false);
+      expect(f.files.get("new.bean")?.content).toBe("; preserved contents\n");
+      expect(f.files.get("main.bean")?.content).toBe('include "new.bean"\n');
+      expect(advertised?.annotations).toMatchObject({
+        readOnlyHint: false,
+        destructiveHint: true,
+      });
     } finally {
       await f.close();
     }

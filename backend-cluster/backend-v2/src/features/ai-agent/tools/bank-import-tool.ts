@@ -225,7 +225,7 @@ export const BANK_OPERATIONS = {
       dry_run: dryRunField,
       dryRun: dryRunAliasField,
     }),
-    "Pull new transactions from a linked bank into staging; nothing is written to the ledger. dry_run reports what would be pulled.",
+    "Synchronize linked bank transactions into staging, adding, replacing or deleting staged rows. Never writes ledger entries. dry_run previews the changes.",
     ({ services, identity, ledgerId }, { itemId, item_id, dry_run, dryRun }) =>
       services.plaidSync.syncItemTransactions(
         identity,

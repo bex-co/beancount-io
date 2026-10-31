@@ -62,3 +62,21 @@ no account is logged out or switched. The expanded organization selector still o
 **Unblock:** original submitting account/organization access or actual review
 feedback, then worker handles supported corrections and public/native checks.
 Private identities and mailbox information remain outside tracked evidence.
+
+## Behavior-based annotation remediation — 2026-10-31 UTC
+
+[Complete review matrix](tool-annotations.json) contains all 44 tools, explicit
+booleans and an English justification for each hint. Four destructive labels are
+corrected: receipt insertion consumes the temporary upload, rename removes the
+old path/rewrites includes, bank sync modifies/deletes staged rows and unstar
+removes an existing personal relationship. Public-capable ledger tools cover
+public targets with openWorldHint:true; nine account/private-bank/upload/preview
+operations retain false. No domain behavior, scope, grant or preview contract changes.
+
+The regression tests fail under the old labels: four wire assertions reject
+non-destructive hints, and the real rename test proves source deletion/include
+overwrite before rejecting its old hint. The reviewed matrix is then pinned
+against wire tools/list so a newly introduced tool/hint change cannot silently
+leave the submission explanations stale. The source audit does not establish a
+changed production catalog, refreshed platform snapshot or accepted resubmission;
+t009 and t010 own those actual observations.

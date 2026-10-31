@@ -18,6 +18,7 @@ import {
   STEERING_WORDING,
 } from "@/features/ai-agent/api/__tests__/directory-wording";
 import { mcpToolSecuritySchemes } from "../op-class";
+import annotationReview from "../../../../docs/marketplace-submissions/openai/tool-annotations.json";
 import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 
 /**
@@ -343,9 +344,9 @@ describe("MCP tool list", () => {
         }
       | undefined;
     // The echo and the preview the flag returns.
-    expect(
-      Object.keys(output?.properties?.result?.properties ?? {}),
-    ).toEqual(expect.arrayContaining(["dry_run", "preview"]));
+    expect(Object.keys(output?.properties?.result?.properties ?? {})).toEqual(
+      expect.arrayContaining(["dry_run", "preview"]),
+    );
   });
 
   it("exposes each operation as its own tool, never behind a selector argument", async () => {
@@ -369,6 +370,52 @@ describe("MCP tool list", () => {
       expect(typeof tool.annotations?.idempotentHint).toBe("boolean");
       expect(typeof tool.annotations?.openWorldHint).toBe("boolean");
     }
+  });
+
+  it("keeps the complete reviewer annotation matrix equal to tools/list", async () => {
+    const { tools } = await listToolsRaw();
+    const hints = [
+      "readOnlyHint",
+      "destructiveHint",
+      "idempotentHint",
+      "openWorldHint",
+    ] as const;
+    // The reviewer contract is authored from the service effects, rather
+    // than generated from the descriptors. New tools and changed hints must
+    // receive the same complete review before their public snapshot changes.
+    const actual = Object.fromEntries(
+      tools.map((tool) => [
+        tool.name,
+        Object.fromEntries(
+          hints.map((hint) => [
+            hint,
+            (tool.annotations as Record<string, unknown>)?.[hint],
+          ]),
+        ),
+      ]),
+    );
+    expect(actual).toEqual(
+      Object.fromEntries(
+        annotationReview.tools.map((tool) => [tool.name, tool.annotations]),
+      ),
+    );
+  });
+
+  // Review semantics follow every allowed branch, including removal hidden
+  // behind a rename, receipt promotion, bank sync, or personal toggle.
+  it.each([
+    "renameLedgerFile",
+    "insertReceiptTransaction",
+    "syncBankTransactions",
+    "setLedgerStar",
+  ])("advertises destructive effects on %s", async (name) => {
+    const { tools } = await listToolsRaw();
+    expect(tools.find((tool) => tool.name === name)?.annotations).toMatchObject(
+      {
+        readOnlyHint: false,
+        destructiveHint: true,
+      },
+    );
   });
 
   it("serves no GraphQL/REST compat shim on MCP", async () => {

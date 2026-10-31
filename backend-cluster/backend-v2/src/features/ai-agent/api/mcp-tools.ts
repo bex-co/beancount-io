@@ -228,18 +228,20 @@ function operationTool(
  * (ADR 019, 2026-10-09 amendment), and the guard test enforces it. The
  * quota-consuming AI parsers are write class and never read-only.
  */
+// Ledger-targeted presets cover public ledgers too. Private-only account,
+// bank-staging and temporary-upload tools explicitly retain a closed world.
 const READ_ONLY: ToolAnnotations = {
   readOnlyHint: true,
   destructiveHint: false,
   idempotentHint: true,
-  openWorldHint: false,
+  openWorldHint: true,
 };
 /** A write that only adds state and never deletes it. */
 const APPEND: ToolAnnotations = {
   readOnlyHint: false,
   destructiveHint: false,
   idempotentHint: false,
-  openWorldHint: false,
+  openWorldHint: true,
 };
 /** A write that converges: repeating it leaves the same state. */
 const IDEMPOTENT_WRITE: ToolAnnotations = {
@@ -253,7 +255,7 @@ const DESTRUCTIVE: ToolAnnotations = {
   readOnlyHint: false,
   destructiveHint: true,
   idempotentHint: false,
-  openWorldHint: false,
+  openWorldHint: true,
 };
 /** A write that reaches an external service (AI quota, bank link). */
 const EXTERNAL_WRITE: ToolAnnotations = {
@@ -272,8 +274,8 @@ const EXTERNAL_IDEMPOTENT_WRITE: ToolAnnotations = {
   ...IDEMPOTENT_WRITE,
   openWorldHint: true,
 };
-/** A destructive admin write that reaches an external service. */
-const EXTERNAL_ADMIN: ToolAnnotations = {
+/** A destructive write that reaches an external service; hints grant no authority. */
+const EXTERNAL_DESTRUCTIVE: ToolAnnotations = {
   readOnlyHint: false,
   destructiveHint: true,
   idempotentHint: false,
@@ -325,7 +327,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     description: listLedgersDescription,
     inputSchema: listLedgersInputSchema,
     outputSchema: mcpOutputSchema(listLedgersOutputSchema),
-    annotations: READ_ONLY,
+    annotations: { ...READ_ONLY, openWorldHint: false },
     execute: async (context, input) =>
       executeListLedgers(context, listLedgersInputSchema.parse(input)),
   },
@@ -506,9 +508,9 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
   {
     name: "insertReceiptTransaction",
     title: "Insert Receipt Transaction",
-    annotations: APPEND,
+    annotations: DESTRUCTIVE,
     description:
-      "Promote the caller-owned temporary receipt named by receiptObjectKey into receipt storage and append the confirmed transaction. input carries date, payee, description, postings [{account,amountNumber,amountCurrency}], and documentAccount. ledger is required unless pinned. Applies immediately.",
+      "Promote the caller-owned temporary receipt named by receiptObjectKey, append the confirmed transaction, then delete the temporary upload. input carries date, payee, description, postings [{account,amountNumber,amountCurrency}], and documentAccount. ledger is required unless pinned. Applies immediately.",
     inputSchema: insertReceiptTransactionInput,
     // Shaped inline, not from `receiptInsertResult`: that schema grew an
     // `entryHashes` of its own (w23/083), which would collide with the
@@ -584,7 +586,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
   {
     name: "generateTempAssetUploadUrl",
     title: "Create Temporary Asset Upload URL",
-    annotations: APPEND,
+    annotations: { ...APPEND, openWorldHint: false },
     description:
       "Create a presigned PUT URL bound to the current user. Optional filename and mimeType preserve the upload metadata. Upload the bytes to uploadUrl before using objectKey in an ingestion workflow.",
     inputSchema: tempAssetUploadInput,
@@ -651,7 +653,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
   {
     name: "renameLedgerFile",
     title: "Rename Ledger File",
-    annotations: IDEMPOTENT_WRITE,
+    annotations: IDEMPOTENT_DESTRUCTIVE,
     description:
       "Move oldPath to newPath preserving content in one atomic commit. Refuses when oldPath is still `include`d unless updateIncludes rewrites those lines in the same commit. Pinned credentials can omit ledger. dry_run previews without committing.",
     inputSchema: renameLedgerFileInput,
@@ -713,9 +715,9 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
   {
     name: "setLedgerStar",
     title: "Star or Unstar a Ledger",
-    annotations: IDEMPOTENT_WRITE,
+    annotations: { ...IDEMPOTENT_DESTRUCTIVE, openWorldHint: false },
     description:
-      "Set starred:true to star a ledger or false to unstar it for the authenticated user. ledger selects owner/name and defaults to the credential pin. No dry_run: starring is an instantly reversible personal toggle, so there is nothing worth previewing.",
+      "Set starred:true to star a ledger or false to unstar it for the authenticated user. ledger selects owner/name and defaults to the credential pin. No dry_run: this personal preference applies immediately; false removes an existing star relationship.",
     inputSchema: ledgerStarInput,
     outputSchema: ledgerStarOutput,
     execute: executeLedgerStar,
@@ -738,7 +740,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     "syncBankTransactions",
     "Sync Bank Transactions",
     BANK_OPERATIONS.sync,
-    EXTERNAL_WRITE,
+    EXTERNAL_DESTRUCTIVE,
   ),
   operationTool(
     "importStagedBankTransactions",
@@ -750,25 +752,25 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     "discardStagedBankTransactions",
     "Discard Staged Bank Transactions",
     BANK_OPERATIONS.discard,
-    DESTRUCTIVE,
+    { ...DESTRUCTIVE, openWorldHint: false },
   ),
   operationTool(
     "reconcileBankAccounts",
     "Reconcile Linked Bank Accounts",
     BANK_OPERATIONS.reconcile,
-    EXTERNAL_ADMIN,
+    EXTERNAL_DESTRUCTIVE,
   ),
   operationTool(
     "mapBankAccount",
     "Map Bank Account To Ledger Account",
     BANK_OPERATIONS.map_account,
-    IDEMPOTENT_DESTRUCTIVE,
+    { ...IDEMPOTENT_DESTRUCTIVE, openWorldHint: false },
   ),
   operationTool(
     "setBankAccountCurrency",
     "Set Bank Account Currency",
     BANK_OPERATIONS.set_currency,
-    IDEMPOTENT_DESTRUCTIVE,
+    { ...IDEMPOTENT_DESTRUCTIVE, openWorldHint: false },
   ),
   operationTool(
     "refreshBankConnection",
@@ -780,14 +782,14 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     "unlinkBankConnection",
     "Unlink Bank Connection",
     BANK_OPERATIONS.unlink,
-    EXTERNAL_ADMIN,
+    EXTERNAL_DESTRUCTIVE,
   ),
   // The ids the bank tools above need, for hosts that only call tools (ADR 019
   // D7). The `banks` and `bank-accounts` resources carry the same data.
   {
     name: "listBankConnections",
     title: "List Linked Banks And Their Accounts",
-    annotations: READ_ONLY,
+    annotations: { ...READ_ONLY, openWorldHint: false },
     description: listBankConnectionsDescription,
     inputSchema: listBankConnectionsInput.extend({ ledger: ledgerSelection }),
     outputSchema: mcpOutputSchema(listBankConnectionsOutput),
@@ -796,7 +798,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
   {
     name: "listStagedBankTransactions",
     title: "List Bank Transactions Staged For Import",
-    annotations: READ_ONLY,
+    annotations: { ...READ_ONLY, openWorldHint: false },
     description: listStagedBankTransactionsDescription,
     inputSchema: listStagedBankTransactionsInput.extend({
       ledger: ledgerSelection,
@@ -840,7 +842,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     name: "createLedger",
     title: "Create Ledger",
     // Open world: `private: false` publishes the ledger to anyone (w1/174).
-    annotations: { ...APPEND, openWorldHint: true },
+    annotations: APPEND,
     description:
       "Create a ledger owned by the authenticated user. Requires name; accepts description, private, template (STARTER default, including null: options and accounts without transactions; SAMPLE: demonstration transactions), a setup specification (mutually exclusive with template), and a requestId for idempotent retries. Refused for ledger-pinned credentials.",
     inputSchema: LIFECYCLE_OPERATION_SCHEMAS.create,
@@ -850,7 +852,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
   {
     name: "previewLedgerSetup",
     title: "Preview Ledger Setup",
-    annotations: READ_ONLY,
+    annotations: { ...READ_ONLY, openWorldHint: false },
     description:
       "Preview a ledger setup (ADR021) without creating anything: returns the files, account list, and validation result the specification would produce. Accepts the same setup object as createLedger.",
     inputSchema: LIFECYCLE_OPERATION_SCHEMAS.preview,
@@ -861,7 +863,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     name: "updateLedger",
     title: "Update Ledger Settings",
     // Open world: `private: false` publishes the ledger to anyone (w1/174).
-    annotations: { ...IDEMPOTENT_DESTRUCTIVE, openWorldHint: true },
+    annotations: IDEMPOTENT_DESTRUCTIVE,
     description:
       "Change a ledger's name, description, or privacy; omitted fields stay as they are; dry_run previews without committing, rendering the current→new diff.",
     inputSchema: LIFECYCLE_OPERATION_SCHEMAS.update,

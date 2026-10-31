@@ -338,25 +338,28 @@ describe("ledger star changes through actual transports and live relationship ch
       }
     },
   );
-  it("names the preview exclusion and its rationale in the MCP tool description", async () => {
-    // w23/m13/t004: setLedgerStar is excluded from previews — an instantly
-    // reversible personal toggle with nothing worth previewing. The MCP
-    // refusal of dry_run is pinned below; REST states "No preview." and
-    // refuses the key; GraphQL offers no flag at all.
+  it("names the immediate personal-state change and preview exclusion", async () => {
+    // The exclusion is unchanged; reversibility is not evidence that the
+    // unstar branch is additive or non-destructive (w6/m11/t008).
     const tool = MCP_TOOLS.find((t) => t.name === "setLedgerStar");
     expect(tool?.description).toContain("No dry_run");
-    expect(tool?.description).toContain("instantly reversible personal toggle");
+    expect(tool?.description).toContain(
+      "false removes an existing star relationship",
+    );
   });
 
   it("refuses the preview flag on REST and offers none on GraphQL or MCP", async () => {
     const f = await fixture();
     try {
       for (const method of ["PUT", "DELETE"]) {
-        const r = await fetch(`${f.url}/api-gateway/v1/ledgers/ada/books/star`, {
-          method,
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ dryRun: true }),
-        });
+        const r = await fetch(
+          `${f.url}/api-gateway/v1/ledgers/ada/books/star`,
+          {
+            method,
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ dryRun: true }),
+          },
+        );
         expect(r.status).toBe(400);
       }
       expect(f.write).not.toHaveBeenCalled();

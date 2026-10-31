@@ -1,0 +1,1176 @@
+{
+  "owner": "w6/m11/t008",
+  "auditedDateUTC": "2026-10-31",
+  "state": "source_audited_not_deployed",
+  "baseCommit": "b1e2152f5",
+  "source": "https://developers.openai.com/plugins/plugin-guidelines#correct-annotation",
+  "rules": "Explicit booleans describe every permitted behavior. dry_run does not make a tool read-only when commit remains supported. Public ledger targets are covered; account-only/private-bank-only operations retain closed-world hints. Authorization and domain behavior are unchanged.",
+  "beforeWireObservedAtUTC": "2026-10-31T08:02:19.759734Z",
+  "reviewerSnapshotOrNamedOffendersKnown": false,
+  "changes": [
+    {
+      "name": "runBqlQuery",
+      "hints": {
+        "openWorldHint": {
+          "before": false,
+          "after": true
+        }
+      }
+    },
+    {
+      "name": "runBqlQueryStructured",
+      "hints": {
+        "openWorldHint": {
+          "before": false,
+          "after": true
+        }
+      }
+    },
+    {
+      "name": "checkLedger",
+      "hints": {
+        "openWorldHint": {
+          "before": false,
+          "after": true
+        }
+      }
+    },
+    {
+      "name": "getLedgerContext",
+      "hints": {
+        "openWorldHint": {
+          "before": false,
+          "after": true
+        }
+      }
+    },
+    {
+      "name": "getEntryContext",
+      "hints": {
+        "openWorldHint": {
+          "before": false,
+          "after": true
+        }
+      }
+    },
+    {
+      "name": "listLedgerEntries",
+      "hints": {
+        "openWorldHint": {
+          "before": false,
+          "after": true
+        }
+      }
+    },
+    {
+      "name": "listLedgerFiles",
+      "hints": {
+        "openWorldHint": {
+          "before": false,
+          "after": true
+        }
+      }
+    },
+    {
+      "name": "readLedgerFiles",
+      "hints": {
+        "openWorldHint": {
+          "before": false,
+          "after": true
+        }
+      }
+    },
+    {
+      "name": "addLedgerEntries",
+      "hints": {
+        "openWorldHint": {
+          "before": false,
+          "after": true
+        }
+      }
+    },
+    {
+      "name": "appendLedgerText",
+      "hints": {
+        "openWorldHint": {
+          "before": false,
+          "after": true
+        }
+      }
+    },
+    {
+      "name": "insertReceiptTransaction",
+      "hints": {
+        "destructiveHint": {
+          "before": false,
+          "after": true
+        },
+        "openWorldHint": {
+          "before": false,
+          "after": true
+        }
+      }
+    },
+    {
+      "name": "createLedgerFiles",
+      "hints": {
+        "openWorldHint": {
+          "before": false,
+          "after": true
+        }
+      }
+    },
+    {
+      "name": "updateLedgerFiles",
+      "hints": {
+        "openWorldHint": {
+          "before": false,
+          "after": true
+        }
+      }
+    },
+    {
+      "name": "deleteLedgerFiles",
+      "hints": {
+        "openWorldHint": {
+          "before": false,
+          "after": true
+        }
+      }
+    },
+    {
+      "name": "updateEntrySource",
+      "hints": {
+        "openWorldHint": {
+          "before": false,
+          "after": true
+        }
+      }
+    },
+    {
+      "name": "deleteEntrySource",
+      "hints": {
+        "openWorldHint": {
+          "before": false,
+          "after": true
+        }
+      }
+    },
+    {
+      "name": "deleteEntrySources",
+      "hints": {
+        "openWorldHint": {
+          "before": false,
+          "after": true
+        }
+      }
+    },
+    {
+      "name": "renameLedgerFile",
+      "hints": {
+        "destructiveHint": {
+          "before": false,
+          "after": true
+        },
+        "openWorldHint": {
+          "before": false,
+          "after": true
+        }
+      }
+    },
+    {
+      "name": "setLedgerStar",
+      "hints": {
+        "destructiveHint": {
+          "before": false,
+          "after": true
+        }
+      }
+    },
+    {
+      "name": "syncBankTransactions",
+      "hints": {
+        "destructiveHint": {
+          "before": false,
+          "after": true
+        }
+      }
+    },
+    {
+      "name": "importStagedBankTransactions",
+      "hints": {
+        "openWorldHint": {
+          "before": false,
+          "after": true
+        }
+      }
+    },
+    {
+      "name": "createPullRequest",
+      "hints": {
+        "openWorldHint": {
+          "before": false,
+          "after": true
+        }
+      }
+    },
+    {
+      "name": "mergePullRequest",
+      "hints": {
+        "openWorldHint": {
+          "before": false,
+          "after": true
+        }
+      }
+    },
+    {
+      "name": "rejectPullRequest",
+      "hints": {
+        "openWorldHint": {
+          "before": false,
+          "after": true
+        }
+      }
+    },
+    {
+      "name": "deleteLedger",
+      "hints": {
+        "openWorldHint": {
+          "before": false,
+          "after": true
+        }
+      }
+    },
+    {
+      "name": "setLedgerCollaborator",
+      "hints": {
+        "openWorldHint": {
+          "before": false,
+          "after": true
+        }
+      }
+    },
+    {
+      "name": "removeLedgerCollaborator",
+      "hints": {
+        "openWorldHint": {
+          "before": false,
+          "after": true
+        }
+      }
+    },
+    {
+      "name": "leaveLedger",
+      "hints": {
+        "openWorldHint": {
+          "before": false,
+          "after": true
+        }
+      }
+    }
+  ],
+  "tools": [
+    {
+      "name": "runBqlQuery",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Runs BQL and formats its result; it does not commit ledger changes or consume the AI parsing quota.",
+        "destructiveHint": "No ledger, relationship, source data or external domain state is mutated by this read/preview.",
+        "idempotentHint": "Repeating this read/computation introduces no domain mutation.",
+        "openWorldHint": "Can target a publicly visible ledger/repository; the static hint covers that allowed path as well as private targets."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts"
+      ]
+    },
+    {
+      "name": "runBqlQueryStructured",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Runs BQL and returns typed rows; it does not commit ledger changes or consume the AI parsing quota.",
+        "destructiveHint": "No ledger, relationship, source data or external domain state is mutated by this read/preview.",
+        "idempotentHint": "Repeating this read/computation introduces no domain mutation.",
+        "openWorldHint": "Can target a publicly visible ledger/repository; the static hint covers that allowed path as well as private targets."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts"
+      ]
+    },
+    {
+      "name": "listLedgers",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "justifications": {
+        "readOnlyHint": "Lists the authenticated account's accessible ledger metadata without modifying its memberships or ledgers.",
+        "destructiveHint": "No ledger, relationship, source data or external domain state is mutated by this read/preview.",
+        "idempotentHint": "Repeating this read/computation introduces no domain mutation.",
+        "openWorldHint": "Confined to the current account's accessible-ledger catalog; no public search or arbitrary destination is accepted."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts"
+      ]
+    },
+    {
+      "name": "checkLedger",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Computes existing ledger validation errors without committing any change.",
+        "destructiveHint": "No ledger, relationship, source data or external domain state is mutated by this read/preview.",
+        "idempotentHint": "Repeating this read/computation introduces no domain mutation.",
+        "openWorldHint": "Can target a publicly visible ledger/repository; the static hint covers that allowed path as well as private targets."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts"
+      ]
+    },
+    {
+      "name": "getLedgerContext",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Reads ledger files, accounts and context without changing ledger contents.",
+        "destructiveHint": "No ledger, relationship, source data or external domain state is mutated by this read/preview.",
+        "idempotentHint": "Repeating this read/computation introduces no domain mutation.",
+        "openWorldHint": "Can target a publicly visible ledger/repository; the static hint covers that allowed path as well as private targets."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts"
+      ]
+    },
+    {
+      "name": "getEntryContext",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Reads the selected entry and its surrounding source without changing it.",
+        "destructiveHint": "No ledger, relationship, source data or external domain state is mutated by this read/preview.",
+        "idempotentHint": "Repeating this read/computation introduces no domain mutation.",
+        "openWorldHint": "Can target a publicly visible ledger/repository; the static hint covers that allowed path as well as private targets."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts"
+      ]
+    },
+    {
+      "name": "listLedgerEntries",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Lists and filters existing journal entries without adding or deleting entries.",
+        "destructiveHint": "No ledger, relationship, source data or external domain state is mutated by this read/preview.",
+        "idempotentHint": "Repeating this read/computation introduces no domain mutation.",
+        "openWorldHint": "Can target a publicly visible ledger/repository; the static hint covers that allowed path as well as private targets."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts"
+      ]
+    },
+    {
+      "name": "listLedgerFiles",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Lists existing repository paths without creating, renaming or deleting files.",
+        "destructiveHint": "No ledger, relationship, source data or external domain state is mutated by this read/preview.",
+        "idempotentHint": "Repeating this read/computation introduces no domain mutation.",
+        "openWorldHint": "Can target a publicly visible ledger/repository; the static hint covers that allowed path as well as private targets."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts"
+      ]
+    },
+    {
+      "name": "readLedgerFiles",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Reads selected existing file contents without changing them.",
+        "destructiveHint": "No ledger, relationship, source data or external domain state is mutated by this read/preview.",
+        "idempotentHint": "Repeating this read/computation introduces no domain mutation.",
+        "openWorldHint": "Can target a publicly visible ledger/repository; the static hint covers that allowed path as well as private targets."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts"
+      ]
+    },
+    {
+      "name": "addLedgerEntries",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Appends directives and may add include lines in the selected ledger.",
+        "destructiveHint": "Only adds ledger directives/include references; it does not replace or remove existing entries.",
+        "idempotentHint": "Repeated calls can append duplicate directives; no general idempotency key is required.",
+        "openWorldHint": "Can target a publicly visible ledger/repository; the static hint covers that allowed path as well as private targets."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts"
+      ]
+    },
+    {
+      "name": "appendLedgerText",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Appends supplied directive text to the selected ledger.",
+        "destructiveHint": "Only appends text and needed include references; existing text is not replaced or deleted.",
+        "idempotentHint": "Repeated calls can append the same text again.",
+        "openWorldHint": "Can target a publicly visible ledger/repository; the static hint covers that allowed path as well as private targets."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts"
+      ]
+    },
+    {
+      "name": "insertReceiptTransaction",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Copies a caller-owned upload to receipt storage, appends an entry and consumes the temporary upload.",
+        "destructiveHint": "After successful entry commit it deletes the original temporary upload; preserving a permanent copy does not make that deletion additive.",
+        "idempotentHint": "No repeat-safe transaction guarantee: when the temporary cleanup fails, another call can append again.",
+        "openWorldHint": "Can target a publicly visible ledger/repository; the static hint covers that allowed path as well as private targets."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts",
+        "src/features/ledger/workflow/ledger-receipt-workflow.ts"
+      ]
+    },
+    {
+      "name": "parseReceipt",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Sends the caller-owned upload for extraction/account recommendations and consumes persisted AI quota.",
+        "destructiveHint": "It does not delete or overwrite ledger entries or the source upload; AI usage is disclosed as a stateful cost.",
+        "idempotentHint": "A repeated parse can consume additional AI quota and produce another model result.",
+        "openWorldHint": "Sends the selected upload for processing by configured external AI providers, beyond ledger-local execution."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts"
+      ]
+    },
+    {
+      "name": "parseFile",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Processes a caller-owned upload through AI and consumes persisted AI quota.",
+        "destructiveHint": "It returns parsed rows without deleting the upload or replacing/deleting ledger entries; quota consumption is disclosed.",
+        "idempotentHint": "A repeated parse can consume additional AI quota and produce another model result.",
+        "openWorldHint": "Sends selected upload contents to configured external AI processing providers."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts"
+      ]
+    },
+    {
+      "name": "generateTempAssetUploadUrl",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "justifications": {
+        "readOnlyHint": "Issues a new caller-bound presigned PUT capability and unique temporary object key.",
+        "destructiveHint": "The capability targets a fresh temporary key; this call does not overwrite/delete an existing object or commit an entry.",
+        "idempotentHint": "Each invocation issues a new temporary key and PUT capability.",
+        "openWorldHint": "Confined to the caller-owned service temporary-upload namespace; no arbitrary destination or public publication is accepted."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts",
+        "src/features/s3/service/asset-storage-service.ts"
+      ]
+    },
+    {
+      "name": "createLedgerFiles",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Commits new files to the selected ledger.",
+        "destructiveHint": "Creates new paths; an already existing target is refused rather than overwritten.",
+        "idempotentHint": "No general successful retry guarantee; existing targets are refused.",
+        "openWorldHint": "Can target a publicly visible ledger/repository; the static hint covers that allowed path as well as private targets."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts"
+      ]
+    },
+    {
+      "name": "updateLedgerFiles",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Commits replacements to existing ledger files.",
+        "destructiveHint": "Replaces existing file contents, even when a commit can later be reverted.",
+        "idempotentHint": "Repeating the same replacements converges to the requested file contents.",
+        "openWorldHint": "Can target a publicly visible ledger/repository; the static hint covers that allowed path as well as private targets."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts"
+      ]
+    },
+    {
+      "name": "deleteLedgerFiles",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Commits removal of selected ledger files.",
+        "destructiveHint": "Deletes existing paths and content; include guards limit but do not remove that destructive capability.",
+        "idempotentHint": "Repeated deletion cannot remove additional paths beyond the supplied targets; an already absent target may be refused.",
+        "openWorldHint": "Can target a publicly visible ledger/repository; the static hint covers that allowed path as well as private targets."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts"
+      ]
+    },
+    {
+      "name": "updateEntrySource",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Commits replacement source for an existing entry.",
+        "destructiveHint": "Overwrites existing entry text; optimistic hashes and optional previews do not change the committed branch's effect.",
+        "idempotentHint": "No general retry guarantee is offered for entry/hash-addressed edits; the addressed source/hash changes after commit.",
+        "openWorldHint": "Can target a publicly visible ledger/repository; the static hint covers that allowed path as well as private targets."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts"
+      ]
+    },
+    {
+      "name": "deleteEntrySource",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Commits removal of one selected entry's source.",
+        "destructiveHint": "Deletes an existing entry; optional dry_run is not the only accepted mode.",
+        "idempotentHint": "No general retry guarantee is offered for entry/hash-addressed deletion; the original target is consumed.",
+        "openWorldHint": "Can target a publicly visible ledger/repository; the static hint covers that allowed path as well as private targets."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts"
+      ]
+    },
+    {
+      "name": "deleteEntrySources",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Commits removal of several selected entry sources.",
+        "destructiveHint": "Deletes existing entries in the committed mode, regardless of preview support.",
+        "idempotentHint": "No general retry guarantee is offered for hash-addressed batch deletion; targets and file hashes change.",
+        "openWorldHint": "Can target a publicly visible ledger/repository; the static hint covers that allowed path as well as private targets."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts"
+      ]
+    },
+    {
+      "name": "renameLedgerFile",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Commits a new path and removal of the original, optionally rewriting include directives.",
+        "destructiveHint": "Deletes the old path and can overwrite includer contents; content preservation and a reversible commit do not make this additive.",
+        "idempotentHint": "The old source is consumed; repeating identical arguments cannot rename another file or repeat include rewrites, though it may return NOT_FOUND.",
+        "openWorldHint": "Can target a publicly visible ledger/repository; the static hint covers that allowed path as well as private targets."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts",
+        "src/features/ledger/workflow/ledger-workflow.ts"
+      ]
+    },
+    {
+      "name": "setLedgerStar",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "justifications": {
+        "readOnlyHint": "Sets or removes the caller's personal ledger-star relationship.",
+        "destructiveHint": "starred:false removes an existing star relationship; reversibility does not make removal additive. It never deletes the ledger.",
+        "idempotentHint": "Sets a requested boolean relationship state; repeating the same value has no additional domain effect.",
+        "openWorldHint": "Only changes the current user's private preference, even when the referenced ledger is public."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts",
+        "src/features/ledger/workflow/ledger-workflow.ts"
+      ]
+    },
+    {
+      "name": "refreshManagedPrices",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Fetches configured public price feeds and updates derived refresh/cache status.",
+        "destructiveHint": "Refreshes derived feed data/status only; it does not delete source configuration or replace authored ledger files/entries.",
+        "idempotentHint": "With unchanged feed data, refresh converges to the same derived price state; operational timestamps do not create extra ledger entries.",
+        "openWorldHint": "Fetches configured market-data feed origins, which are public/external sources."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts"
+      ]
+    },
+    {
+      "name": "syncBankTransactions",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Fetches provider changes, creates/modifies/removes staged rows and advances the stored sync cursor.",
+        "destructiveHint": "Applies modified provider rows and deletes removed staged transactions; it is not only an additive fetch.",
+        "idempotentHint": "Provider data, cursor and staged state may advance; a repeat is a new synchronization without a caller idempotency key.",
+        "openWorldHint": "Contacts the linked external bank provider and persists its returned changes."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts",
+        "src/features/ai-agent/tools/bank-import-tool.ts",
+        "src/features/plaid/service/plaid-sync-service.ts",
+        "src/features/plaid/service/plaid-item-service.ts"
+      ]
+    },
+    {
+      "name": "importStagedBankTransactions",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Appends selected staged rows as ledger entries and marks their source rows as synced.",
+        "destructiveHint": "Adds ledger entries and retains the source transaction records with import status; it does not replace/delete authored entries.",
+        "idempotentHint": "Successful import marks source rows synced; a general replay of arbitrary selected rows is not promised.",
+        "openWorldHint": "Can target a publicly visible ledger/repository; the static hint covers that allowed path as well as private targets."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts",
+        "src/features/ai-agent/tools/bank-import-tool.ts",
+        "src/features/plaid/service/plaid-sync-service.ts",
+        "src/features/plaid/service/plaid-item-service.ts"
+      ]
+    },
+    {
+      "name": "discardStagedBankTransactions",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "justifications": {
+        "readOnlyHint": "Removes selected rows from bank staging.",
+        "destructiveHint": "Deletes stored staged transaction records.",
+        "idempotentHint": "No general successful retry guarantee for an already consumed staged-id set.",
+        "openWorldHint": "Only changes caller-authorized private bank staging, never a public ledger or arbitrary outside destination."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts",
+        "src/features/ai-agent/tools/bank-import-tool.ts",
+        "src/features/plaid/service/plaid-sync-service.ts",
+        "src/features/plaid/service/plaid-item-service.ts"
+      ]
+    },
+    {
+      "name": "reconcileBankAccounts",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Reconciles stored bank accounts against the provider's current account set.",
+        "destructiveHint": "Can remove obsolete bank-account records and replace their associated state.",
+        "idempotentHint": "Reconciliation observes current provider state and can remove/change records again as it changes.",
+        "openWorldHint": "Reconciles against the linked external bank provider's account set."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts",
+        "src/features/ai-agent/tools/bank-import-tool.ts",
+        "src/features/plaid/service/plaid-sync-service.ts",
+        "src/features/plaid/service/plaid-item-service.ts"
+      ]
+    },
+    {
+      "name": "mapBankAccount",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "justifications": {
+        "readOnlyHint": "Sets a linked bank account's target ledger-account mapping.",
+        "destructiveHint": "Can overwrite an existing mapping, changing how later imports are classified.",
+        "idempotentHint": "Repeating the same mapping converges to that stored target.",
+        "openWorldHint": "Only sets an authorized account's private bank-to-ledger mapping; it does not publish ledger content."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts",
+        "src/features/ai-agent/tools/bank-import-tool.ts",
+        "src/features/plaid/service/plaid-sync-service.ts",
+        "src/features/plaid/service/plaid-item-service.ts"
+      ]
+    },
+    {
+      "name": "setBankAccountCurrency",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "justifications": {
+        "readOnlyHint": "Sets the stored currency for the selected bank account.",
+        "destructiveHint": "Can overwrite an existing currency choice used by subsequent imports.",
+        "idempotentHint": "Repeating the same currency converges to that stored value.",
+        "openWorldHint": "Only changes an authorized bank account's private currency metadata."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts",
+        "src/features/ai-agent/tools/bank-import-tool.ts",
+        "src/features/plaid/service/plaid-sync-service.ts",
+        "src/features/plaid/service/plaid-item-service.ts"
+      ]
+    },
+    {
+      "name": "refreshBankConnection",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Refreshes the existing provider link's derived status and errors.",
+        "destructiveHint": "Does not unlink the bank, revoke access or replace authored ledger content; it refreshes existing derived status only.",
+        "idempotentHint": "With unchanged provider state, refresh converges to the same connection status; it creates no new bank link.",
+        "openWorldHint": "Contacts the external provider for current connection status."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts",
+        "src/features/ai-agent/tools/bank-import-tool.ts",
+        "src/features/plaid/service/plaid-sync-service.ts",
+        "src/features/plaid/service/plaid-item-service.ts"
+      ]
+    },
+    {
+      "name": "unlinkBankConnection",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Removes the bank connection and its local related records and revokes provider access.",
+        "destructiveHint": "Revokes access and deletes connection/account data.",
+        "idempotentHint": "Revokes/consumes the original connection; no general successful replay guarantee is offered.",
+        "openWorldHint": "Revokes the existing connection at the external bank provider as well as changing local records."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts",
+        "src/features/ai-agent/tools/bank-import-tool.ts",
+        "src/features/plaid/service/plaid-sync-service.ts",
+        "src/features/plaid/service/plaid-item-service.ts"
+      ]
+    },
+    {
+      "name": "listBankConnections",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "justifications": {
+        "readOnlyHint": "Reads the caller-authorized existing bank links/accounts; it does not refresh, link or unlink a bank.",
+        "destructiveHint": "No ledger, relationship, source data or external domain state is mutated by this read/preview.",
+        "idempotentHint": "Repeating this read/computation introduces no domain mutation.",
+        "openWorldHint": "Only reads authorized private bank-link/account records; ledger visibility does not expose these records publicly."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts",
+        "src/features/ai-agent/tools/bank-import-tool.ts",
+        "src/features/plaid/service/plaid-sync-service.ts",
+        "src/features/plaid/service/plaid-item-service.ts"
+      ]
+    },
+    {
+      "name": "listStagedBankTransactions",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "justifications": {
+        "readOnlyHint": "Reads caller-authorized staged bank rows without fetching, importing or discarding them.",
+        "destructiveHint": "No ledger, relationship, source data or external domain state is mutated by this read/preview.",
+        "idempotentHint": "Repeating this read/computation introduces no domain mutation.",
+        "openWorldHint": "Only reads authorized private bank staging, not public ledger entries or arbitrary external endpoints."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts",
+        "src/features/ai-agent/tools/bank-import-tool.ts",
+        "src/features/plaid/service/plaid-sync-service.ts",
+        "src/features/plaid/service/plaid-item-service.ts"
+      ]
+    },
+    {
+      "name": "createPullRequest",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Creates a fresh proposal branch, its proposed files and a new pull request.",
+        "destructiveHint": "Changes are isolated to the newly created branch; the existing base branch and existing pull requests are not overwritten/closed.",
+        "idempotentHint": "Creates a fresh branch and proposal on each invocation.",
+        "openWorldHint": "Can target a publicly visible ledger/repository; the static hint covers that allowed path as well as private targets."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts",
+        "src/features/gitea/pull-request/service/pull-request-service.ts"
+      ]
+    },
+    {
+      "name": "mergePullRequest",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Merges proposed changes into the existing base branch.",
+        "destructiveHint": "Can overwrite or remove existing base-branch content as the proposal is applied.",
+        "idempotentHint": "No general replay guarantee for an already merged proposal; merging changes the addressed base/proposal state.",
+        "openWorldHint": "Can target a publicly visible ledger/repository; the static hint covers that allowed path as well as private targets."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts",
+        "src/features/gitea/pull-request/service/pull-request-service.ts"
+      ]
+    },
+    {
+      "name": "rejectPullRequest",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Closes the selected existing pull request without merging it.",
+        "destructiveHint": "Cancels/closes an existing proposal, changing its lifecycle state.",
+        "idempotentHint": "No general replay guarantee for an already closed proposal is offered.",
+        "openWorldHint": "Can target a publicly visible ledger/repository; the static hint covers that allowed path as well as private targets."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts",
+        "src/features/gitea/pull-request/service/pull-request-service.ts"
+      ]
+    },
+    {
+      "name": "createLedger",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Creates a new ledger and requested initial files.",
+        "destructiveHint": "Adds a new repository; existing ledgers are not overwritten or removed.",
+        "idempotentHint": "requestId is optional; calls without it are not guaranteed to deduplicate.",
+        "openWorldHint": "Can target a publicly visible ledger/repository; the static hint covers that allowed path as well as private targets."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts"
+      ]
+    },
+    {
+      "name": "previewLedgerSetup",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "justifications": {
+        "readOnlyHint": "Computes proposed setup files and validation in memory; it creates no ledger, file or job.",
+        "destructiveHint": "No ledger, relationship, source data or external domain state is mutated by this read/preview.",
+        "idempotentHint": "Repeating this read/computation introduces no domain mutation.",
+        "openWorldHint": "Pure setup computation over supplied structured parameters, without publication or external destination."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts"
+      ]
+    },
+    {
+      "name": "updateLedger",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Changes existing ledger metadata or privacy.",
+        "destructiveHint": "Can replace settings, rename the ledger or change its visibility; optional preview does not limit committed capabilities.",
+        "idempotentHint": "Repeating the requested settings converges to those values; rename validation may refuse stale identifiers.",
+        "openWorldHint": "Can target a publicly visible ledger/repository; the static hint covers that allowed path as well as private targets."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts"
+      ]
+    },
+    {
+      "name": "deleteLedger",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Permanently removes an existing ledger and its history.",
+        "destructiveHint": "Deletes the ledger, contents and history in committed mode.",
+        "idempotentHint": "Consumes the ledger and identifier; no successful replay guarantee is offered.",
+        "openWorldHint": "Can target a publicly visible ledger/repository; the static hint covers that allowed path as well as private targets."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts"
+      ]
+    },
+    {
+      "name": "setLedgerCollaborator",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Adds a collaborator or updates their stored permission.",
+        "destructiveHint": "Can replace/downgrade existing access; adding-only is not the sole accepted behavior.",
+        "idempotentHint": "Repeating the same collaborator permission converges to that grant.",
+        "openWorldHint": "Can target a publicly visible ledger/repository; the static hint covers that allowed path as well as private targets."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts",
+        "src/features/ledger/workflow/ledger-collaborators-workflow.ts"
+      ]
+    },
+    {
+      "name": "removeLedgerCollaborator",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Removes an existing collaborator's access.",
+        "destructiveHint": "Revokes the selected collaborator's permission in committed mode.",
+        "idempotentHint": "Consumes the existing grant; no general successful replay guarantee is offered.",
+        "openWorldHint": "Can target a publicly visible ledger/repository; the static hint covers that allowed path as well as private targets."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts",
+        "src/features/ledger/workflow/ledger-collaborators-workflow.ts"
+      ]
+    },
+    {
+      "name": "leaveLedger",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Removes the authenticated collaborator's own access.",
+        "destructiveHint": "Revokes the caller's existing access in committed mode.",
+        "idempotentHint": "Consumes the caller's existing grant; no general successful replay guarantee is offered.",
+        "openWorldHint": "Can target a publicly visible ledger/repository; the static hint covers that allowed path as well as private targets."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/server/api/authorization/source-backed-relationship-evaluator.ts",
+        "src/features/ledger/workflow/ledger-collaborators-workflow.ts"
+      ]
+    }
+  ],
+  "boundary": "Per-tool explanations for the original application; no deployed fix, platform rescan, accepted resubmission, approval or public/native publication is claimed.",
+  "sourceValidation": {
+    "dateUTC": "2026-10-31",
+    "oldHintsRegression": {
+      "failedTests": 5,
+      "scope": "four raw wire labels plus actual rename source deletion/include rewrite"
+    },
+    "focused": {
+      "suitesPassed": 6,
+      "testsPassed": 322
+    },
+    "complete": {
+      "suitesPassed": 412,
+      "testsPassed": 7830,
+      "snapshotsPassed": 1
+    },
+    "typecheck": "passed",
+    "build": "passed",
+    "deadcode": "passed using installed Knip binary; restored copied local bin links",
+    "targetedESLint": {
+      "errors": 0,
+      "warnings": 36
+    },
+    "v1OpenAPI": "regenerated; no tracked drift",
+    "liveDeploymentOrRescanClaimed": false
+  }
+}

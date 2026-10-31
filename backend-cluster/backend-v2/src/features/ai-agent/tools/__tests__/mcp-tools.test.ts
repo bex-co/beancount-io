@@ -1380,6 +1380,10 @@ describe("MCP tool annotations", () => {
       MCP_TOOLS.map((tool) => [tool.name, tool.annotations.destructiveHint]),
     );
     for (const name of [
+      "renameLedgerFile",
+      "insertReceiptTransaction",
+      "syncBankTransactions",
+      "setLedgerStar",
       "deleteLedger",
       "updateLedger",
       "setLedgerCollaborator",
@@ -1402,23 +1406,20 @@ describe("MCP tool annotations", () => {
     }
   });
 
-  it("gives each per-operation tool the hints ADR 019 decided on 2026-10-18", () => {
+  it("gives each per-operation tool the behavior-audited hints in ADR 019", () => {
     // The amendment's table: overwriting, deleting, merging, closing, and
     // revoking access are destructive; a tool that reaches the bank, or can
     // publish a ledger to anyone (w1/174), is open world. Directory reviewers check these against the behavior, so a hint
     // changes only with the decision.
     const decided: [string, { destructive: boolean; openWorld: boolean }][] = [
-      ["createLedgerFiles", { destructive: false, openWorld: false }],
-      ["updateLedgerFiles", { destructive: true, openWorld: false }],
-      ["deleteLedgerFiles", { destructive: true, openWorld: false }],
-      ["updateEntrySource", { destructive: true, openWorld: false }],
-      ["deleteEntrySource", { destructive: true, openWorld: false }],
-      ["deleteEntrySources", { destructive: true, openWorld: false }],
-      ["syncBankTransactions", { destructive: false, openWorld: true }],
-      [
-        "importStagedBankTransactions",
-        { destructive: false, openWorld: false },
-      ],
+      ["createLedgerFiles", { destructive: false, openWorld: true }],
+      ["updateLedgerFiles", { destructive: true, openWorld: true }],
+      ["deleteLedgerFiles", { destructive: true, openWorld: true }],
+      ["updateEntrySource", { destructive: true, openWorld: true }],
+      ["deleteEntrySource", { destructive: true, openWorld: true }],
+      ["deleteEntrySources", { destructive: true, openWorld: true }],
+      ["syncBankTransactions", { destructive: true, openWorld: true }],
+      ["importStagedBankTransactions", { destructive: false, openWorld: true }],
       [
         "discardStagedBankTransactions",
         { destructive: true, openWorld: false },
@@ -1428,15 +1429,15 @@ describe("MCP tool annotations", () => {
       ["setBankAccountCurrency", { destructive: true, openWorld: false }],
       ["refreshBankConnection", { destructive: false, openWorld: true }],
       ["unlinkBankConnection", { destructive: true, openWorld: true }],
-      ["createPullRequest", { destructive: false, openWorld: false }],
-      ["mergePullRequest", { destructive: true, openWorld: false }],
-      ["rejectPullRequest", { destructive: true, openWorld: false }],
+      ["createPullRequest", { destructive: false, openWorld: true }],
+      ["mergePullRequest", { destructive: true, openWorld: true }],
+      ["rejectPullRequest", { destructive: true, openWorld: true }],
       ["createLedger", { destructive: false, openWorld: true }],
       ["updateLedger", { destructive: true, openWorld: true }],
-      ["deleteLedger", { destructive: true, openWorld: false }],
-      ["setLedgerCollaborator", { destructive: true, openWorld: false }],
-      ["removeLedgerCollaborator", { destructive: true, openWorld: false }],
-      ["leaveLedger", { destructive: true, openWorld: false }],
+      ["deleteLedger", { destructive: true, openWorld: true }],
+      ["setLedgerCollaborator", { destructive: true, openWorld: true }],
+      ["removeLedgerCollaborator", { destructive: true, openWorld: true }],
+      ["leaveLedger", { destructive: true, openWorld: true }],
     ];
     const served = new Map(MCP_TOOLS.map((tool) => [tool.name, tool]));
     expect(
