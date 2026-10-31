@@ -1,0 +1,24 @@
+{
+  "owner": "w6/m11/t010",
+  "observedAtUTC": "2026-10-31T08:48:22Z",
+  "state": "blocked_original_submitting_organization_access",
+  "application": "https://platform.openai.com/plugins/manage/plugin_asdk_app_6ad4537f69288191816f3fc04b1ac11a",
+  "actualObservation": [
+    "Expired Platform session restored through its existing publisher Google sign-in.",
+    "Original application shows Plugin not found in this organization.",
+    "Expanded organization selector exposes only not available; no original publishing organization is accessible."
+  ],
+  "preparedAndVerified": [
+    "Source correction d7e58ce06 shipped and actually deployed healthy.",
+    "All44tools/176explicit booleans match the complete behavior/explanation matrix.",
+    "Prepared reviewer text and per-tool explanations shipped in3c56e6d59."
+  ],
+  "notPerformed": [
+    "No platform rescan action is available in this access state.",
+    "No accepted resubmission, approval or public/native result is claimed.",
+    "No duplicate application, new organization, permission expansion or unsolicited appeal."
+  ],
+  "unblock": "Publisher opens this same application under the original submitting account/organization; worker performs actual supported rescan, field review and one accepted resubmission.",
+  "continuation": "Independent w6/m12 Muse and Gemini work continues while the access request is pending.",
+  "privacy": "No private account identity, mailbox, credentials, OAuth callback or deployment-control identity is included."
+}

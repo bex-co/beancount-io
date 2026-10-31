@@ -1,5 +1,17 @@
 # Existing ChatGPT application review
 
+## Current original-app access gate — 2026-10-31T08:48:22Z
+
+[Actual dashboard observation](resubmission-access-20261031.json): existing login
+was restored, but the same application reports **Plugin not found in this
+organization**. Its organization selector offers only **not available**.
+No rescan or accepted resubmission occurs.
+
+**Unblock / owner:** publisher opens the original application under its original
+submitting account/organization. The worker then uses the already deployed fix
+and complete prepared packet to rescan, inspect the stored hints and resubmit
+once. The page is retained for this access step; independent w6 work continues.
+
 ## Current deployed remediation — 2026-10-31 UTC
 
 The fix is shipped in `d7e58ce06` and deployed through the existing managed
