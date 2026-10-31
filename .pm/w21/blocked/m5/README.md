@@ -1,6 +1,6 @@
 # w21 · m5 — Entries that fail booking stay listed, marked, and out of every balance
 
-**Worker:** worker1 **Goal:** a transaction the engine cannot book (for example a sale with no matching lot) is shown as "not booked" and counted nowhere, so balances sum to zero as Beancount's do **Status:** todo (t001–t008 done)
+**Worker:** worker1 **Goal:** a transaction the engine cannot book (for example a sale with no matching lot) is shown as "not booked" and counted nowhere, so balances sum to zero as Beancount's do **Status:** blocked (t001–t008 done; Closeout waits for the deploy)
 
 ## Tasks (in order)
 
@@ -41,3 +41,9 @@ On the fixture below, the trial balance matches `bean-query` (cash 4000.00, 10 V
 - **Why now:** it is a major-severity numeric disagreement with the reference tool, and the owner has decided the behavior.
 - **Parity:** REST, GraphQL and MCP together (t004).
 - **Adoption surface:** included — users and agents see balances and the marker.
+
+## Blocked
+
+**Blocked 2026-10-30** — t001–t008 are done and shipped (`81a21d44e`, `fd1f6a729`, `0087bcf65`, `7da1f4409`, `a027019f0`, `40f972991`, `1e9dc716d`), and every part of the definition of done is proven by tests and by a probe of the real engine. What is not known is the end state in the running system: the ledger service, then backend-v2, must be deployed before any app can show the marker, and the apps (mobile release, dashboard deploy) after that. A closed milestone must mean the observable end state is real, so Closeout (t009) waits for that.
+
+**Unblock:** the owner deploys the ledger service and backend-v2 at or after `1e9dc716d`, then confirms with the milestone's fixture on a throwaway ledger: the trial balance gives cash 4000.00 and the broker 10 VTI, the booking error is still listed, and the QA Sell entry carries `not_booked: true` in the journal and Entry Context. Who can clear it: the repository owner (deploy). Then run `/pm done w21/m5/t009`. The apps can ship before or after; they show nothing until the field arrives.

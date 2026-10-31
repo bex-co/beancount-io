@@ -8,7 +8,7 @@
 - [x] **m2** — [Readable-width caps for the remaining bespoke screens](./done/m2/README.md) (7 tasks) ← promoted from w21/1007, follow-up to w21/1005
 - [x] **m3** — [BQL cookbook: tested query recipes for humans and agents](./done/m3/README.md) (8 tasks) ← `/pm-brainstorm for w21` 2026-10-25, candidate 2
 - [x] **m4** — [`bea report cash-flow`: where the money went, by period](./done/m4/README.md) (8 tasks) ← `/pm-brainstorm for w21` 2026-10-25, candidate 3
-- [ ] **m5** — [Entries that fail booking stay listed, marked, and out of every balance](./m5/README.md) (9 tasks) ← promoted from w21/678
+- [ ] **m5** — [Entries that fail booking stay listed, marked, and out of every balance](./blocked/m5/README.md) (9 tasks) ← promoted from w21/678 — **blocked:** all code shipped; Closeout waits for the ledger and backend-v2 deploy
 
 ## Dropped
 
