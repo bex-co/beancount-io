@@ -61,3 +61,16 @@ no account is logged out or switched. The current browser identity still does no
 **Unblock:** original submitting account/organization access or actual review
 feedback, then worker handles supported corrections and public/native checks.
 Private identities and mailbox information remain outside tracked evidence.
+
+## Due access/public check — 2026-10-31 UTC
+
+[Actual current evidence](review-followup-20261031.json) retains the original
+organization-access message. Public name search returns26semantic results,
+all extracted without a canonical match; bounded vendor-mail search identifies
+no relevant directory feedback. No account switch, duplicate application or
+native grant/test occurs. The publisher's Oct25in_review report remains the
+status baseline, not a freshly inspected review screen.
+
+Next: actual review feedback/decision/publication, otherwise manualNov3UTC.
+No user input is needed solely for status; original-account access is needed
+only when a concrete management correction becomes necessary.

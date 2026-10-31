@@ -1,0 +1,145 @@
+{
+  "owner": "w6/m11/t002",
+  "status": "in_review",
+  "statusSource": {
+    "kind": "Publisher report",
+    "receivedAtUTC": "2026-10-25T05:34:59Z",
+    "estimatedCompletion": null
+  },
+  "existingApplication": {
+    "url": "https://claude.ai/directory/manage/beancount-io",
+    "currentAccessMessage": "That submission wasn\u2019t found in this organization.",
+    "originalOrganizationReviewIndependentlyViewed": false,
+    "limit": "The current session does not expose the submitting organization. This is not a rejection or absence from the original organization."
+  },
+  "actualPublicQuery": {
+    "url": "https://claude.ai/directory?q=beancount",
+    "typedQuery": "beancount",
+    "searchControl": "Search plugins & connectors",
+    "displayedResultCount": 26,
+    "extractedResultCount": 26,
+    "results": [
+      {
+        "name": "Apollo.io",
+        "url": "https://claude.ai/directory/apollo?from_search=beancount"
+      },
+      {
+        "name": "Crustdata",
+        "url": "https://claude.ai/directory/crustdata?from_search=beancount"
+      },
+      {
+        "name": "RocketReach",
+        "url": "https://claude.ai/directory/rocketreach?from_search=beancount"
+      },
+      {
+        "name": "BambooHR",
+        "url": "https://claude.ai/directory/bamboohr?from_search=beancount"
+      },
+      {
+        "name": "Crunchbase",
+        "url": "https://claude.ai/directory/crunchbase-mcp?from_search=beancount"
+      },
+      {
+        "name": "Remote",
+        "url": "https://claude.ai/directory/remote-com?from_search=beancount"
+      },
+      {
+        "name": "Shapes",
+        "url": "https://claude.ai/directory/shapes?from_search=beancount"
+      },
+      {
+        "name": "Cube Software",
+        "url": "https://claude.ai/directory/cube-software?from_search=beancount"
+      },
+      {
+        "name": "Aura",
+        "url": "https://claude.ai/directory/aura?from_search=beancount"
+      },
+      {
+        "name": "Headcount Labs",
+        "url": "https://claude.ai/directory/headcount-labs?from_search=beancount"
+      },
+      {
+        "name": "JobsPipe",
+        "url": "https://claude.ai/directory/jobspipe?from_search=beancount"
+      },
+      {
+        "name": "Reverse Contact",
+        "url": "https://claude.ai/directory/reverse-contact?from_search=beancount"
+      },
+      {
+        "name": "Reflect",
+        "url": "https://claude.ai/directory/reflect?from_search=beancount"
+      },
+      {
+        "name": "LeadingBI",
+        "url": "https://claude.ai/directory/leadingbi?from_search=beancount"
+      },
+      {
+        "name": "Octopus AI",
+        "url": "https://claude.ai/directory/octopus-ai?from_search=beancount"
+      },
+      {
+        "name": "Parallel",
+        "url": "https://claude.ai/directory/getparallel?from_search=beancount"
+      },
+      {
+        "name": "mcp.riveterhq.com",
+        "url": "https://claude.ai/directory/mcp-riveterhq-com?from_search=beancount"
+      },
+      {
+        "name": "Orgvue (EU)",
+        "url": "https://claude.ai/directory/orgvue-eu?from_search=beancount"
+      },
+      {
+        "name": "0Delta.ai",
+        "url": "https://claude.ai/directory/0delta-mcp?from_search=beancount"
+      },
+      {
+        "name": "A-Char",
+        "url": "https://claude.ai/directory/a-char?from_search=beancount"
+      },
+      {
+        "name": "Orgvue (US)",
+        "url": "https://claude.ai/directory/orgvue-us?from_search=beancount"
+      },
+      {
+        "name": "kbiz",
+        "url": "https://claude.ai/directory/kbiz?from_search=beancount"
+      },
+      {
+        "name": "DataWorth AI",
+        "url": "https://claude.ai/directory/dataworth-ai?from_search=beancount"
+      },
+      {
+        "name": "Vantage Events",
+        "url": "https://claude.ai/directory/vantage-events?from_search=beancount"
+      },
+      {
+        "name": "\u5c71\u6d77\u9ede\u9ede POS (Shanhaidiandian POS)",
+        "url": "https://claude.ai/directory/shanhaidiandian-pos?from_search=beancount"
+      },
+      {
+        "name": "Orgvue (AP)",
+        "url": "https://claude.ai/directory/orgvue-ap?from_search=beancount"
+      }
+    ],
+    "canonicalBeancountIoEntryObserved": false,
+    "limit": "Actual semantic query returns26other entries; not zero results, directory-wide absence or private review status."
+  },
+  "boundedFeedbackSearch": {
+    "relevantDirectoryReviewFeedbackIdentified": false,
+    "scope": "Existing publisher mailbox, all folders since2026-10-24, Anthropic/Claude sender domains plus beancount/directory/connector terms.",
+    "result": "Only unrelated account/product/login messages; none opened or sent.",
+    "limit": "No claim about every sender, mailbox or private review screen."
+  },
+  "accountLoggedOutOrSwitched": false,
+  "duplicateApplicationCreated": false,
+  "nativeOrGrantRepeated": false,
+  "publisherInputNeededNow": false,
+  "unblock": "Actual review feedback/decision/publication; worker applies supported corrections then verifies public/native directory path. Original submitting organization access is needed only for a concrete management action.",
+  "nextManualCheckUTC": "2026-11-03",
+  "earlierTrigger": "Actual feedback, changed decision or publication.",
+  "privacy": "Only public catalog result names/URLs and the generic organization-access message; no account identities, credentials or private mail contents.",
+  "observedAtUTC": "2026-10-31T09:23:07.306894+00:00"
+}
