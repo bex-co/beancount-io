@@ -1,0 +1,43 @@
+{
+  "owner": "w6/047",
+  "status": "submitted",
+  "existingSubmission": {
+    "url": "https://github.com/chatmcp/mcpso/pull/6071",
+    "state": "open",
+    "comments": 0,
+    "reviewComments": 0,
+    "headSHA": "f8f3431e9a1c799373131fc473d0c65c98277862",
+    "merged": false,
+    "mergedAtUTC": null,
+    "mergeableState": "MERGEABLE",
+    "labels": [],
+    "reviews": []
+  },
+  "actualPublicNameQuery": {
+    "url": "https://mcp.so/search?q=beancount",
+    "resultCount": 2,
+    "results": [
+      {
+        "name": "Beanquery MCP",
+        "author": "vanto",
+        "path": "/servers/beanquery-mcp"
+      },
+      {
+        "name": "Beancount MCP (Model Context Protocol) Server",
+        "author": "StdioA",
+        "path": "/servers/beancount-mcp"
+      }
+    ],
+    "canonicalHostedConnectorObserved": false,
+    "limit": "Actual name query only; no private moderation-state or whole-catalog absence claim."
+  },
+  "checksBoundary": "Actual current PR check rollup is empty; mergeability is not review approval.",
+  "newPRIssueCommentOrReminder": false,
+  "websiteLoginOrPayment": false,
+  "publisherInputNeeded": false,
+  "unblock": "MCP.so maintainers review/merge/import PR6071 or supply feedback; worker verifies actual canonical public metadata and advertised native installation.",
+  "nextManualCheckUTC": "2026-11-03",
+  "earlierTrigger": "Actual review/merge/import/publication.",
+  "priorFooterAliasEvidence": "review-followup-20261028.json; not re-read",
+  "observedAtUTC": "2026-10-31T09:29:15.044904+00:00"
+}
