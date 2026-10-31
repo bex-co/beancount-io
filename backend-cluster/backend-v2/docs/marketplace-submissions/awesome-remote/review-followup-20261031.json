@@ -1,0 +1,29 @@
+{
+  "owner": "w6/m11/t003",
+  "status": "submitted",
+  "existingSubmission": {
+    "url": "https://github.com/punkpeye/awesome-remote-mcp-servers/pull/2753",
+    "state": "open",
+    "comments": 1,
+    "reviewComments": 0,
+    "headSHA": "936aa053cea358e3204dab3d5747965fd0455caf",
+    "merged": false,
+    "mergedAtUTC": null,
+    "mergeableState": "MERGEABLE",
+    "labels": [
+      "endpoint-ok",
+      "has-connector"
+    ],
+    "reviews": []
+  },
+  "existingWaiverRequest": "https://github.com/punkpeye/awesome-remote-mcp-servers/pull/2753#issuecomment-6378906070",
+  "waiverAcceptedOrMaintainerResponseObserved": false,
+  "checksBoundary": "Actual current check rollup retains two check-submission SUCCESS records completedOct23T20:52:23Z andOct24T02:45:18Z, with two welcome SKIPPED records. No new run or success timestamp.",
+  "newPRCommentOrReminder": false,
+  "accountEngagementChanged": false,
+  "publisherInputNeeded": false,
+  "unblock": "Maintainers resolve the existing waiver/review/merge gate; worker handles actual feedback and verifies the merged canonical entry and setup links.",
+  "nextManualCheckUTC": "2026-11-03",
+  "earlierTrigger": "Actual waiver response, review, executed CI change or merge.",
+  "observedAtUTC": "2026-10-31T09:27:03.426639+00:00"
+}
