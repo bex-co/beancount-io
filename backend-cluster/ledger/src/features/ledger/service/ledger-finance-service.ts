@@ -18,6 +18,7 @@ import {
   filterDirectivesAsync,
   formatFiscalYearEnd,
   intervalTotals,
+  isUnbookedDirective,
   parseDateRange,
   parseFavaOptions,
   parseLedgerFiles,
@@ -445,10 +446,16 @@ export class LedgerFinanceService implements ILedgerFinanceService {
     try {
       // Apply account + advanced filters first (Fava's filter order), leaving
       // the time filter for the clamp so we can also capture its date window.
-      const filtered = await filterDirectivesAsync(directives, {
-        account: selectors.account,
-        filter: selectors.filter,
-      });
+      // A transaction the engine could not book is in no balance, as in
+      // Beancount, which drops it (w21/678). Prices and commodities above keep
+      // the full stream.
+      const filtered = await filterDirectivesAsync(
+        directives.filter((directive) => !isUnbookedDirective(directive)),
+        {
+          account: selectors.account,
+          filter: selectors.filter,
+        },
+      );
       // Fava applies the TimeFilter only when `time` is truthy (`if time:`); the
       // dashboard sends an empty string for "no time filter", so treat that (and
       // undefined) as no filter rather than trying to parse "".

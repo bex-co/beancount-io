@@ -2,6 +2,7 @@ import BigNumber from "bignumber.js";
 import type { DirectiveJson, PostingJson } from "@rustledger/wasm";
 import { perUnitFromTotalCost } from "./total-cost";
 import { divideWithPythonDecimalContext } from "./decimal-context";
+import { isUnbookedDirective } from "./plugins/provenance";
 
 /**
  * Account journal with per-entry change and running balance — a faithful port
@@ -505,11 +506,16 @@ export function accountJournalItems(
     let entryIsRelevant = false;
 
     if (directive.type === "transaction") {
+      // A transaction that failed booking is listed but moves no balance
+      // (w21/678).
+      const counted = !isUnbookedDirective(directive);
       directive.postings.forEach((posting) => {
         if (isRelevant(posting.account)) {
           entryIsRelevant = true;
-          balance.add(posting);
-          change.add(posting);
+          if (counted) {
+            balance.add(posting);
+            change.add(posting);
+          }
         }
       });
     } else if (nonPostingAccounts(directive).some(isRelevant)) {

@@ -36,6 +36,7 @@ import {
   formatFiscalYearEnd,
   getDirectiveSourceId,
   isGeneratedDirective,
+  isUnbookedDirective,
   hashEntry,
   parseDateRange,
   parseEntryId,
@@ -520,6 +521,20 @@ interface ILedgerJournalService {
   }): Promise<UpdateSliceResult>;
 }
 
+/** `extra` placed among the dated `entries`: after the others of its day. */
+function mergeByDate(
+  entries: readonly DirectiveJson[],
+  extra: readonly DirectiveJson[],
+): DirectiveJson[] {
+  const merged = [...entries];
+  for (const directive of extra) {
+    let at = merged.length;
+    while (at > 0 && merged[at - 1]!.date > directive.date) at--;
+    merged.splice(at, 0, directive);
+  }
+  return merged;
+}
+
 export class LedgerJournalService implements ILedgerJournalService {
   constructor(
     private readonly giteaClientFactory: IGiteaClientFactory,
@@ -681,7 +696,21 @@ export class LedgerJournalService implements ILedgerJournalService {
       if (!opts.time) return filtered;
       const range = parseDateRange(opts.time, opts.fiscalYearEnd);
       if (!range) throw new TimeFilterParseError(opts.time);
-      return clampDirectives(filtered, range.begin, range.end, opts.clamp);
+      // A transaction that failed booking is in no opening balance, but it is
+      // still listed where it falls in the window (w21/678).
+      const clamped = clampDirectives(
+        filtered.filter((directive) => !isUnbookedDirective(directive)),
+        range.begin,
+        range.end,
+        opts.clamp,
+      );
+      const listed = filtered.filter(
+        (directive) =>
+          isUnbookedDirective(directive) &&
+          directive.date >= range.begin &&
+          directive.date < range.end,
+      );
+      return listed.length === 0 ? clamped : mergeByDate(clamped, listed);
     } catch (error) {
       if (
         error instanceof TimeFilterParseError ||

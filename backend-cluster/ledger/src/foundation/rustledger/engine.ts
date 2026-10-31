@@ -21,16 +21,19 @@ import {
   captureDirectiveSourceIds,
   captureDirectiveSourceLocations,
   captureGeneratedDirectives,
+  captureUnbookedDirectives,
   collectLedgerPlugins,
   getDirectiveSourceId,
   getDirectiveSourceLocation,
   HANDLED_PLUGIN_NAMES,
   inheritDirectiveSourceId,
   markGeneratedDirective,
+  markUnbookedDirective,
   seedDirectiveSourceIds,
   restoreDirectiveSourceIds,
   restoreDirectiveSourceLocations,
   restoreGeneratedDirectives,
+  restoreUnbookedDirectives,
   localTodayStr,
   neutralizeIncludedOptionsAndPlugins,
   skippedPluginWarning,
@@ -61,7 +64,7 @@ import { midCurrencyToleranceErrors } from "./balance-tolerance-syntax";
 import { reconcileNounusedErrors } from "./nounused";
 import { reconcileOneCommodityErrors } from "./one-commodity";
 import { reconcileUniquePriceErrors } from "./unique-prices";
-import { locateBookErrors } from "./book-errors";
+import { locateBookErrors, unbookedTransactions } from "./book-errors";
 import {
   isRawPluginProcessing,
   locateOptionErrors,
@@ -164,6 +167,11 @@ export interface LedgerSnapshot {
   sourceLocations?: Array<DirectiveSourceLocation | null>;
   /** Which directives are generated copies, parallel to `directives`. */
   generated?: boolean[];
+  /**
+   * Which transactions failed booking, parallel to `directives`; present only
+   * when one did. Balance reads skip them (w21/678).
+   */
+  unbooked?: boolean[];
   /** Complete source index, built only for callers that explicitly request it. */
   sourceDetails?: Record<string, EntrySourceDetails>;
 }
@@ -559,6 +567,9 @@ export async function parseLedgerFiles(
     if (snapshot.generated !== undefined) {
       restoreGeneratedDirectives(snapshot.directives, snapshot.generated);
     }
+    if (snapshot.unbooked !== undefined) {
+      restoreUnbookedDirectives(snapshot.directives, snapshot.unbooked);
+    }
     return Object.freeze({
       ...snapshot,
       errors: Object.freeze(snapshot.errors) as BeancountError[],
@@ -572,6 +583,9 @@ export async function parseLedgerFiles(
         : {}),
       ...(snapshot.generated
         ? { generated: Object.freeze(snapshot.generated) as boolean[] }
+        : {}),
+      ...(snapshot.unbooked
+        ? { unbooked: Object.freeze(snapshot.unbooked) as boolean[] }
         : {}),
       ...(snapshot.sourceLocations
         ? {
@@ -885,6 +899,11 @@ async function parseLedgerFilesUncached(
   // The engine's meta is a hash map; show it as written (w21/778).
   orderMetaAsWritten(directives, files, entryPoint);
 
+  // The transactions the engine could not book stay in the stream (the journal
+  // and Entry Context open them) but are marked, so no balance counts them.
+  unbookedTransactions(errors, directives).forEach(markUnbookedDirective);
+  const unbookedMarks = captureUnbookedDirectives(directives);
+
   const capturedSourceIds = tracksSourceIds
     ? captureDirectiveSourceIds(directives)
     : undefined;
@@ -920,6 +939,9 @@ async function parseLedgerFilesUncached(
       : {}),
     ...(capturedGenerated !== undefined
       ? { generated: Object.freeze(capturedGenerated) as boolean[] }
+      : {}),
+    ...(unbookedMarks.includes(true)
+      ? { unbooked: Object.freeze(unbookedMarks) as boolean[] }
       : {}),
     ...(capturedLocations !== undefined
       ? {

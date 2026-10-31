@@ -1,4 +1,4 @@
-import type { BeancountError } from "@rustledger/wasm";
+import type { BeancountError, DirectiveJson } from "@rustledger/wasm";
 
 /**
  * Put booking and interpolation errors on the transaction they are about.
@@ -82,5 +82,45 @@ export function locateBookErrors(
     seen.set(key, n + 1);
     const at = candidates[n];
     return { ...error, file: at.file, line: at.line, column: error.column ?? 1 };
+  });
+}
+
+/**
+ * The transactions a `BOOK` error is about, found in the stream by the date and
+ * narration its message ends with. Beancount drops such an entry from its
+ * entries; the engine keeps it, half booked, so balances must be told which to
+ * skip (w21/678).
+ *
+ * Transactions sharing a date and narration cannot be told apart by the
+ * message alone, so a key is marked only when the transactions with it are
+ * exactly as many as the errors that name it: an unproven twin stays counted
+ * rather than a good entry being hidden.
+ */
+export function unbookedTransactions(
+  errors: readonly BeancountError[],
+  directives: readonly DirectiveJson[],
+): DirectiveJson[] {
+  const wanted = new Map<string, number>();
+  for (const error of errors) {
+    if (error.code !== "BOOK") continue;
+    const match = BOOK_ENTRY.exec(error.message.trim());
+    if (!match) continue;
+    const key = `${match[1]}\u0000${unescape(match[2])}`;
+    wanted.set(key, (wanted.get(key) ?? 0) + 1);
+  }
+  if (wanted.size === 0) return [];
+  const candidates = new Map<string, DirectiveJson[]>();
+  for (const directive of directives) {
+    if (directive.type !== "transaction") continue;
+    const narration = (directive as { narration?: string | null }).narration;
+    const key = `${directive.date}\u0000${narration ?? ""}`;
+    if (!wanted.has(key)) continue;
+    const list = candidates.get(key) ?? [];
+    list.push(directive);
+    candidates.set(key, list);
+  }
+  return [...wanted].flatMap(([key, count]) => {
+    const list = candidates.get(key);
+    return list !== undefined && list.length === count ? list : [];
   });
 }

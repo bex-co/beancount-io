@@ -1,5 +1,5 @@
-import type { BeancountError } from "@rustledger/wasm";
-import { locateBookErrors } from "../book-errors";
+import type { BeancountError, DirectiveJson } from "@rustledger/wasm";
+import { locateBookErrors, unbookedTransactions } from "../book-errors";
 
 // w21/534: booking and interpolation errors had no file or line, so the app
 // could not open them. The messages are the engine's own for the note's
@@ -97,5 +97,62 @@ describe("locateBookErrors", () => {
     expect(
       locateBookErrors([other, located], { "main.bean": main }, "main.bean"),
     ).toEqual([other, located]);
+  });
+});
+
+// w21/678: a sale that matches no lot is reported, yet the engine keeps it half
+// booked, and every balance counted it. These pick out the transactions a
+// `BOOK` error names so balances can skip them.
+describe("unbookedTransactions", () => {
+  const tx = (date: string, narration: string): DirectiveJson =>
+    ({ type: "transaction", date, narration, postings: [] }) as never;
+  const noLot = (date: string, narration: string) =>
+    book(
+      `No matching lot for VTI in Assets:Broker (${date}, "${narration}")`,
+    );
+  const sell = tx("2026-03-01", "QA Sell");
+  const buy = tx("2026-02-01", "QA Buy");
+
+  it("names the transaction a BOOK error ends with", () => {
+    expect(
+      unbookedTransactions([noLot("2026-03-01", "QA Sell")], [buy, sell]),
+    ).toEqual([sell]);
+  });
+
+  it("ignores other error codes and directives that are not transactions", () => {
+    const open = { type: "open", date: "2026-03-01" } as never as DirectiveJson;
+    const other = { ...book("x (2026-03-01, \"QA Sell\")"), code: "E1001" };
+    expect(unbookedTransactions([other], [open, sell])).toEqual([]);
+    expect(
+      unbookedTransactions([noLot("2026-03-01", "QA Sell")], [open]),
+    ).toEqual([]);
+  });
+
+  it("marks every twin when as many errors name them as there are twins", () => {
+    const twin = tx("2026-03-01", "QA Sell");
+    expect(
+      unbookedTransactions(
+        [noLot("2026-03-01", "QA Sell"), noLot("2026-03-01", "QA Sell")],
+        [sell, twin],
+      ),
+    ).toEqual([sell, twin]);
+  });
+
+  it("leaves twins alone when it cannot tell which one failed", () => {
+    const twin = tx("2026-03-01", "QA Sell");
+    expect(
+      unbookedTransactions([noLot("2026-03-01", "QA Sell")], [sell, twin]),
+    ).toEqual([]);
+  });
+
+  it("reads an escaped quote in the narration", () => {
+    const quoted = tx("2026-03-01", 'Say "hi"');
+    expect(
+      unbookedTransactions([noLot("2026-03-01", 'Say \\"hi\\"')], [quoted]),
+    ).toEqual([quoted]);
+  });
+
+  it("finds nothing when no error names a transaction", () => {
+    expect(unbookedTransactions([], [buy, sell])).toEqual([]);
   });
 });

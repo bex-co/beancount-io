@@ -24,6 +24,13 @@ const sourceLocations = new WeakMap<DirectiveJson, DirectiveSourceLocation>();
  * and is marked too (w21/738).
  */
 const generatedDirectives = new WeakSet<DirectiveJson>();
+/**
+ * Transactions the engine could not book (no matching lot, an amount it cannot
+ * interpolate). Beancount drops these from its entries; here they stay in the
+ * stream so the journal and Entry Context can still open them, and every
+ * balance read skips them (w21/678).
+ */
+const unbookedDirectives = new WeakSet<DirectiveJson>();
 
 /** Seed source IDs and optional locations on the raw pre-plugin stream. */
 export function seedDirectiveSourceIds(
@@ -61,6 +68,33 @@ export function markGeneratedDirective(output: DirectiveJson): void {
 /** Whether a directive is a copy a plugin or the pad pass generated. */
 export function isGeneratedDirective(directive: DirectiveJson): boolean {
   return generatedDirectives.has(directive);
+}
+
+/** Record that the engine reported a booking error for this transaction. */
+export function markUnbookedDirective(directive: DirectiveJson): void {
+  unbookedDirectives.add(directive);
+}
+
+/** Whether a transaction failed booking and is not part of any balance. */
+export function isUnbookedDirective(directive: DirectiveJson): boolean {
+  return unbookedDirectives.has(directive);
+}
+
+/** Serialize which directives failed booking, parallel to the input. */
+export function captureUnbookedDirectives(
+  directives: readonly DirectiveJson[],
+): boolean[] {
+  return directives.map((directive) => unbookedDirectives.has(directive));
+}
+
+/** Restore the not-booked marks on the fresh objects created by postMessage. */
+export function restoreUnbookedDirectives(
+  directives: readonly DirectiveJson[],
+  captured: readonly boolean[],
+): void {
+  directives.forEach((directive, index) => {
+    if (captured[index] === true) unbookedDirectives.add(directive);
+  });
 }
 
 /** Original pre-plugin entry ID for a directive, when it has source provenance. */
