@@ -40,4 +40,4 @@
 - [951](./blocked/951.md) — Expense accounts are valued at market on Accounts and account detail, but at cost everywhere else — **blocked:** owner confirms flows-at-cost covers Income/Expenses balances; needs a native priced-lot check
 - [977](./blocked/977.md) — LedgerPrices pulls every price date for every pair, and Apollo writes and reads them all on each mount — **blocked:** owner picks the API shape for bounding price dates across REST/GraphQL/MCP
 - [1013](./1013.md) — The Accounts tab breaks a long account name mid-word at the largest supported text size ("Bank:Mercury:Checkin" / "g")
-- [1014](./1014.md) — Home's headline still counts later entries of the current month, and the Accounts tab gives no hint that later entries exist (follow-up to w21/674)
+- [1014](./blocked/1014.md) — Home's headline still counts later entries of the current month, and the Accounts tab gives no hint that later entries exist (follow-up to w21/674) — **blocked:** the owner picks whether the monthly balance series itself stops at today (all clients) or only Home does, and whether a "later entries exist" hint is wanted
