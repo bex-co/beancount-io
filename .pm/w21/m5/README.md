@@ -1,6 +1,6 @@
 # w21 · m5 — Entries that fail booking stay listed, marked, and out of every balance
 
-**Worker:** worker1 **Goal:** a transaction the engine cannot book (for example a sale with no matching lot) is shown as "not booked" and counted nowhere, so balances sum to zero as Beancount's do **Status:** todo (t001–t003 done)
+**Worker:** worker1 **Goal:** a transaction the engine cannot book (for example a sale with no matching lot) is shown as "not booked" and counted nowhere, so balances sum to zero as Beancount's do **Status:** todo (t001–t004 done)
 
 ## Tasks (in order)
 
@@ -9,7 +9,7 @@
 | t001 | Mark transactions that failed booking in the ledger snapshot — **DONE** | 60m | — |
 | t002 | Balances skip not-booked transactions — **DONE** | 60m | t001 |
 | t003 | BQL skips not-booked transactions — **DONE** | 45m | t001 |
-| t004 | Carry the not-booked flag on REST, GraphQL and MCP | 60m | t002 |
+| t004 | Carry the not-booked flag on REST, GraphQL and MCP — **DONE** | 60m | t002 |
 | t005 | Show a "Not booked" marker in the mobile app and the dashboard | 60m | t004 |
 | t006 | Adoption surface | 20m | t005 |
 | t007 | Simplify | 20m | t006 |

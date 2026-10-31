@@ -30,6 +30,7 @@ import {
 } from "@/foundation/ledger-api-types";
 import BigNumber from "bignumber.js";
 import { hashEntry } from "./entry-hash";
+import { isUnbookedDirective } from "./plugins/provenance";
 import { endsInsideString, type SourceSyntax } from "./source-slice";
 import { perUnitFromTotalCostString } from "./total-cost";
 
@@ -366,6 +367,9 @@ export function serializeDirective(
         postings: directive.postings.map(serializePosting),
         tags: [...directive.tags],
         links: [...directive.links],
+        // Only when true, so every other response is byte-for-byte as before
+        // (w21/678).
+        ...(isUnbookedDirective(directive) ? { not_booked: true } : {}),
       };
     case "balance":
       return {

@@ -1889,6 +1889,11 @@ export interface JournalTransactionPublic {
    * @uniqueItems true
    */
   links?: string[];
+  /**
+   * Not Booked
+   * Present and true only when the engine could not book the transaction (for example a sale with no matching lot). It is listed so it can be opened and fixed, but no balance counts it.
+   */
+  not_booked?: boolean;
 }
 
 /**

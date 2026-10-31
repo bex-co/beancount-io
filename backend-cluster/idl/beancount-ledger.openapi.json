@@ -11466,6 +11466,11 @@
             "uniqueItems": true,
             "title": "Links",
             "description": "Entry links"
+          },
+          "not_booked": {
+            "type": "boolean",
+            "title": "Not Booked",
+            "description": "Present and true only when the engine could not book the transaction (for example a sale with no matching lot). It is listed so it can be opened and fixed, but no balance counts it."
           }
         },
         "type": "object",
