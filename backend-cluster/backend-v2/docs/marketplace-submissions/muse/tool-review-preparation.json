@@ -1,0 +1,364 @@
+{
+  "owner": "w6/m12/t001",
+  "preparedAtUTC": "2026-10-31T08:53:54.427357+00:00",
+  "state": "prepared_not_submitted",
+  "sourceRevision": "d7e58ce06",
+  "deployedAudit": "../openai/deployed-annotation-verification-20261031.json",
+  "readTools": 12,
+  "writeTools": 32,
+  "tools": [
+    {
+      "name": "runBqlQuery",
+      "proposedClass": "Read",
+      "reason": "Runs BQL and formats its result; it does not commit ledger changes or consume the AI parsing quota.",
+      "proposedApproval": "Host read policy; no automatic approval asserted",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "No ledger, relationship, source data or external domain state is mutated by this read/preview."
+    },
+    {
+      "name": "runBqlQueryStructured",
+      "proposedClass": "Read",
+      "reason": "Runs BQL and returns typed rows; it does not commit ledger changes or consume the AI parsing quota.",
+      "proposedApproval": "Host read policy; no automatic approval asserted",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "No ledger, relationship, source data or external domain state is mutated by this read/preview."
+    },
+    {
+      "name": "listLedgers",
+      "proposedClass": "Read",
+      "reason": "Lists the authenticated account's accessible ledger metadata without modifying its memberships or ledgers.",
+      "proposedApproval": "Host read policy; no automatic approval asserted",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "No ledger, relationship, source data or external domain state is mutated by this read/preview."
+    },
+    {
+      "name": "checkLedger",
+      "proposedClass": "Read",
+      "reason": "Computes existing ledger validation errors without committing any change.",
+      "proposedApproval": "Host read policy; no automatic approval asserted",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "No ledger, relationship, source data or external domain state is mutated by this read/preview."
+    },
+    {
+      "name": "getLedgerContext",
+      "proposedClass": "Read",
+      "reason": "Reads ledger files, accounts and context without changing ledger contents.",
+      "proposedApproval": "Host read policy; no automatic approval asserted",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "No ledger, relationship, source data or external domain state is mutated by this read/preview."
+    },
+    {
+      "name": "getEntryContext",
+      "proposedClass": "Read",
+      "reason": "Reads the selected entry and its surrounding source without changing it.",
+      "proposedApproval": "Host read policy; no automatic approval asserted",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "No ledger, relationship, source data or external domain state is mutated by this read/preview."
+    },
+    {
+      "name": "listLedgerEntries",
+      "proposedClass": "Read",
+      "reason": "Lists and filters existing journal entries without adding or deleting entries.",
+      "proposedApproval": "Host read policy; no automatic approval asserted",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "No ledger, relationship, source data or external domain state is mutated by this read/preview."
+    },
+    {
+      "name": "listLedgerFiles",
+      "proposedClass": "Read",
+      "reason": "Lists existing repository paths without creating, renaming or deleting files.",
+      "proposedApproval": "Host read policy; no automatic approval asserted",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "No ledger, relationship, source data or external domain state is mutated by this read/preview."
+    },
+    {
+      "name": "readLedgerFiles",
+      "proposedClass": "Read",
+      "reason": "Reads selected existing file contents without changing them.",
+      "proposedApproval": "Host read policy; no automatic approval asserted",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "No ledger, relationship, source data or external domain state is mutated by this read/preview."
+    },
+    {
+      "name": "addLedgerEntries",
+      "proposedClass": "Write",
+      "reason": "Appends directives and may add include lines in the selected ledger.",
+      "proposedApproval": "Request per-invocation approval during review",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "Only adds ledger directives/include references; it does not replace or remove existing entries."
+    },
+    {
+      "name": "appendLedgerText",
+      "proposedClass": "Write",
+      "reason": "Appends supplied directive text to the selected ledger.",
+      "proposedApproval": "Request per-invocation approval during review",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "Only appends text and needed include references; existing text is not replaced or deleted."
+    },
+    {
+      "name": "insertReceiptTransaction",
+      "proposedClass": "Write",
+      "reason": "Copies a caller-owned upload to receipt storage, appends an entry and consumes the temporary upload.",
+      "proposedApproval": "Request per-invocation approval during review",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "After successful entry commit it deletes the original temporary upload; preserving a permanent copy does not make that deletion additive."
+    },
+    {
+      "name": "parseReceipt",
+      "proposedClass": "Write",
+      "reason": "Sends the caller-owned upload for extraction/account recommendations and consumes persisted AI quota.",
+      "proposedApproval": "Request per-invocation approval during review",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "It does not delete or overwrite ledger entries or the source upload; AI usage is disclosed as a stateful cost."
+    },
+    {
+      "name": "parseFile",
+      "proposedClass": "Write",
+      "reason": "Processes a caller-owned upload through AI and consumes persisted AI quota.",
+      "proposedApproval": "Request per-invocation approval during review",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "It returns parsed rows without deleting the upload or replacing/deleting ledger entries; quota consumption is disclosed."
+    },
+    {
+      "name": "generateTempAssetUploadUrl",
+      "proposedClass": "Write",
+      "reason": "Issues a new caller-bound presigned PUT capability and unique temporary object key.",
+      "proposedApproval": "Request per-invocation approval during review",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "The capability targets a fresh temporary key; this call does not overwrite/delete an existing object or commit an entry."
+    },
+    {
+      "name": "createLedgerFiles",
+      "proposedClass": "Write",
+      "reason": "Commits new files to the selected ledger.",
+      "proposedApproval": "Request per-invocation approval during review",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "Creates new paths; an already existing target is refused rather than overwritten."
+    },
+    {
+      "name": "updateLedgerFiles",
+      "proposedClass": "Write",
+      "reason": "Commits replacements to existing ledger files.",
+      "proposedApproval": "Request per-invocation approval during review",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "Replaces existing file contents, even when a commit can later be reverted."
+    },
+    {
+      "name": "deleteLedgerFiles",
+      "proposedClass": "Write",
+      "reason": "Commits removal of selected ledger files.",
+      "proposedApproval": "Request per-invocation approval during review",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "Deletes existing paths and content; include guards limit but do not remove that destructive capability."
+    },
+    {
+      "name": "updateEntrySource",
+      "proposedClass": "Write",
+      "reason": "Commits replacement source for an existing entry.",
+      "proposedApproval": "Request per-invocation approval during review",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "Overwrites existing entry text; optimistic hashes and optional previews do not change the committed branch's effect."
+    },
+    {
+      "name": "deleteEntrySource",
+      "proposedClass": "Write",
+      "reason": "Commits removal of one selected entry's source.",
+      "proposedApproval": "Request per-invocation approval during review",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "Deletes an existing entry; optional dry_run is not the only accepted mode."
+    },
+    {
+      "name": "deleteEntrySources",
+      "proposedClass": "Write",
+      "reason": "Commits removal of several selected entry sources.",
+      "proposedApproval": "Request per-invocation approval during review",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "Deletes existing entries in the committed mode, regardless of preview support."
+    },
+    {
+      "name": "renameLedgerFile",
+      "proposedClass": "Write",
+      "reason": "Commits a new path and removal of the original, optionally rewriting include directives.",
+      "proposedApproval": "Request per-invocation approval during review",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "Deletes the old path and can overwrite includer contents; content preservation and a reversible commit do not make this additive."
+    },
+    {
+      "name": "setLedgerStar",
+      "proposedClass": "Write",
+      "reason": "Sets or removes the caller's personal ledger-star relationship.",
+      "proposedApproval": "Request per-invocation approval during review",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "starred:false removes an existing star relationship; reversibility does not make removal additive. It never deletes the ledger."
+    },
+    {
+      "name": "refreshManagedPrices",
+      "proposedClass": "Write",
+      "reason": "Fetches configured public price feeds and updates derived refresh/cache status.",
+      "proposedApproval": "Request per-invocation approval during review",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "Refreshes derived feed data/status only; it does not delete source configuration or replace authored ledger files/entries."
+    },
+    {
+      "name": "syncBankTransactions",
+      "proposedClass": "Write",
+      "reason": "Fetches provider changes, creates/modifies/removes staged rows and advances the stored sync cursor.",
+      "proposedApproval": "Request per-invocation approval during review",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "Applies modified provider rows and deletes removed staged transactions; it is not only an additive fetch."
+    },
+    {
+      "name": "importStagedBankTransactions",
+      "proposedClass": "Write",
+      "reason": "Appends selected staged rows as ledger entries and marks their source rows as synced.",
+      "proposedApproval": "Request per-invocation approval during review",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "Adds ledger entries and retains the source transaction records with import status; it does not replace/delete authored entries."
+    },
+    {
+      "name": "discardStagedBankTransactions",
+      "proposedClass": "Write",
+      "reason": "Removes selected rows from bank staging.",
+      "proposedApproval": "Request per-invocation approval during review",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "Deletes stored staged transaction records."
+    },
+    {
+      "name": "reconcileBankAccounts",
+      "proposedClass": "Write",
+      "reason": "Reconciles stored bank accounts against the provider's current account set.",
+      "proposedApproval": "Request per-invocation approval during review",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "Can remove obsolete bank-account records and replace their associated state."
+    },
+    {
+      "name": "mapBankAccount",
+      "proposedClass": "Write",
+      "reason": "Sets a linked bank account's target ledger-account mapping.",
+      "proposedApproval": "Request per-invocation approval during review",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "Can overwrite an existing mapping, changing how later imports are classified."
+    },
+    {
+      "name": "setBankAccountCurrency",
+      "proposedClass": "Write",
+      "reason": "Sets the stored currency for the selected bank account.",
+      "proposedApproval": "Request per-invocation approval during review",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "Can overwrite an existing currency choice used by subsequent imports."
+    },
+    {
+      "name": "refreshBankConnection",
+      "proposedClass": "Write",
+      "reason": "Refreshes the existing provider link's derived status and errors.",
+      "proposedApproval": "Request per-invocation approval during review",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "Does not unlink the bank, revoke access or replace authored ledger content; it refreshes existing derived status only."
+    },
+    {
+      "name": "unlinkBankConnection",
+      "proposedClass": "Write",
+      "reason": "Removes the bank connection and its local related records and revokes provider access.",
+      "proposedApproval": "Request per-invocation approval during review",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "Revokes access and deletes connection/account data."
+    },
+    {
+      "name": "listBankConnections",
+      "proposedClass": "Read",
+      "reason": "Reads the caller-authorized existing bank links/accounts; it does not refresh, link or unlink a bank.",
+      "proposedApproval": "Host read policy; no automatic approval asserted",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "No ledger, relationship, source data or external domain state is mutated by this read/preview."
+    },
+    {
+      "name": "listStagedBankTransactions",
+      "proposedClass": "Read",
+      "reason": "Reads caller-authorized staged bank rows without fetching, importing or discarding them.",
+      "proposedApproval": "Host read policy; no automatic approval asserted",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "No ledger, relationship, source data or external domain state is mutated by this read/preview."
+    },
+    {
+      "name": "createPullRequest",
+      "proposedClass": "Write",
+      "reason": "Creates a fresh proposal branch, its proposed files and a new pull request.",
+      "proposedApproval": "Request per-invocation approval during review",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "Changes are isolated to the newly created branch; the existing base branch and existing pull requests are not overwritten/closed."
+    },
+    {
+      "name": "mergePullRequest",
+      "proposedClass": "Write",
+      "reason": "Merges proposed changes into the existing base branch.",
+      "proposedApproval": "Request per-invocation approval during review",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "Can overwrite or remove existing base-branch content as the proposal is applied."
+    },
+    {
+      "name": "rejectPullRequest",
+      "proposedClass": "Write",
+      "reason": "Closes the selected existing pull request without merging it.",
+      "proposedApproval": "Request per-invocation approval during review",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "Cancels/closes an existing proposal, changing its lifecycle state."
+    },
+    {
+      "name": "createLedger",
+      "proposedClass": "Write",
+      "reason": "Creates a new ledger and requested initial files.",
+      "proposedApproval": "Request per-invocation approval during review",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "Adds a new repository; existing ledgers are not overwritten or removed."
+    },
+    {
+      "name": "previewLedgerSetup",
+      "proposedClass": "Read",
+      "reason": "Computes proposed setup files and validation in memory; it creates no ledger, file or job.",
+      "proposedApproval": "Host read policy; no automatic approval asserted",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "No ledger, relationship, source data or external domain state is mutated by this read/preview."
+    },
+    {
+      "name": "updateLedger",
+      "proposedClass": "Write",
+      "reason": "Changes existing ledger metadata or privacy.",
+      "proposedApproval": "Request per-invocation approval during review",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "Can replace settings, rename the ledger or change its visibility; optional preview does not limit committed capabilities."
+    },
+    {
+      "name": "deleteLedger",
+      "proposedClass": "Write",
+      "reason": "Permanently removes an existing ledger and its history.",
+      "proposedApproval": "Request per-invocation approval during review",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "Deletes the ledger, contents and history in committed mode."
+    },
+    {
+      "name": "setLedgerCollaborator",
+      "proposedClass": "Write",
+      "reason": "Adds a collaborator or updates their stored permission.",
+      "proposedApproval": "Request per-invocation approval during review",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "Can replace/downgrade existing access; adding-only is not the sole accepted behavior."
+    },
+    {
+      "name": "removeLedgerCollaborator",
+      "proposedClass": "Write",
+      "reason": "Removes an existing collaborator's access.",
+      "proposedApproval": "Request per-invocation approval during review",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "Revokes the selected collaborator's permission in committed mode."
+    },
+    {
+      "name": "leaveLedger",
+      "proposedClass": "Write",
+      "reason": "Removes the authenticated collaborator's own access.",
+      "proposedApproval": "Request per-invocation approval during review",
+      "formalMuseSensitiveDesignation": "Pending actual portal/reviewer classification",
+      "destructiveEffects": "Revokes the caller's existing access in committed mode."
+    }
+  ],
+  "boundary": "These are behavior-based preparation and approval recommendations, not accepted Muse tool scope or a configured approval policy."
+}

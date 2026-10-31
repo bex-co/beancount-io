@@ -1,6 +1,6 @@
 # w6 · m12 — Publish the hosted MCP connector on Muse and Gemini Apps
 
-**Worker:** worker1 **Goal:** People discover Beancount.io through Muse's connector directory and Gemini Apps' Connected Apps distribution, then connect their own hosted ledger and complete a verified accounting request. **Status:** todo
+**Worker:** worker1 **Goal:** People discover Beancount.io through Muse's connector directory and Gemini Apps' Connected Apps distribution, then connect their own hosted ledger and complete a verified accounting request. **Status:** todo (t001 blocked on actual publisher authenticator; t003 independent and actionable)
 
 **Implementation estimate:** about5h across9tasks, excluding platform access,
 review and rollout latency. Muse and Gemini are independent execution branches;
@@ -10,7 +10,7 @@ a blocked portal or review on one never prevents the other from progressing.
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| [t001](t001.md) | Prepare and submit the Muse connector | 45m | — |
+| [t001](t001.md) | Prepare and submit the Muse connector — **BLOCKED: publisher authenticator** | 45m | — |
 | [t002](t002.md) | Verify Muse review, public discovery and native accounting | 45m | t001 |
 | [t003](t003.md) | Onboard Gemini Connected Console and verify domain/authentication | 45m | — |
 | [t004](t004.md) | Verify Gemini preview and submit the connected app for review | 45m | t003 |
@@ -90,3 +90,14 @@ a blocked portal or review on one never prevents the other from progressing.
 - Do not add a standalone skill listing, duplicate application, paid placement,
   unsolicited status email or new dependency. Targeted required intake is the
   authorized distribution work; own-repository changes ship directly to main.
+
+## Blocked
+
+- **t001:** actual email login reaches the existing publisher's authenticator
+  challenge. Public/auth/tool/reviewer preparation is retained in the Muse
+  packet, with no submission claim. **Unblock / owner:** publisher completes
+  this existing challenge; worker inspects/deduplicates actual applications
+  and finishes/submits the canonical payload. t002 defers on t001.
+- **t003:** independent and actionable; no Muse dependency.
+- t004/t005 defer on t003 and later actual review; closing tasks keep the
+  original public/native dependencies.
