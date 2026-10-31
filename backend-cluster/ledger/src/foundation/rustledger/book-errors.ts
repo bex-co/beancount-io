@@ -22,6 +22,10 @@ type Block = { file: string; line: number };
 
 const unescape = (text: string): string => text.replace(/\\(.)/gu, "$1");
 
+/** What pairs a `BOOK` error with its transaction: the date and the narration. */
+const entryKey = (date: string, narration: string): string =>
+  `${date}\u0000${narration}`;
+
 /** Every transaction's first line, keyed by its date and last quoted string. */
 function transactionLines(
   files: Readonly<Record<string, string>>,
@@ -43,7 +47,7 @@ function transactionLines(
       const strings = [...text.matchAll(QUOTED)];
       const last = strings[strings.length - 1];
       if (!last) return;
-      const key = `${head[1]}\u0000${unescape(last[1])}`;
+      const key = entryKey(head[1], unescape(last[1]));
       const list = found.get(key) ?? [];
       list.push({ file, line: index + 1 });
       found.set(key, list);
@@ -65,7 +69,7 @@ export function locateBookErrors(
 
   const blocks = transactionLines(files, entryPoint);
   const keyOf = (match: RegExpExecArray) =>
-    `${match[1]}\u0000${unescape(match[2])}`;
+    entryKey(match[1], unescape(match[2]));
   const errorCounts = new Map<string, number>();
   for (const error of errors) {
     const match = wanted(error);
@@ -112,7 +116,7 @@ export function unbookedTransactions(
     if (error.code !== "BOOK") continue;
     const match = BOOK_ENTRY.exec(error.message.trim());
     if (!match) continue;
-    const key = `${match[1]}\u0000${unescape(match[2])}`;
+    const key = entryKey(match[1], unescape(match[2]));
     wanted.set(key, (wanted.get(key) ?? 0) + 1);
   }
   if (wanted.size === 0) return [];
@@ -120,7 +124,7 @@ export function unbookedTransactions(
   for (const directive of directives) {
     if (directive.type !== "transaction") continue;
     const narration = (directive as { narration?: string | null }).narration;
-    const key = `${directive.date}\u0000${narration ?? ""}`;
+    const key = entryKey(directive.date, narration ?? "");
     if (!wanted.has(key)) continue;
     const list = candidates.get(key) ?? [];
     list.push(directive);

@@ -1,6 +1,6 @@
 # w21 · m5 — Entries that fail booking stay listed, marked, and out of every balance
 
-**Worker:** worker1 **Goal:** a transaction the engine cannot book (for example a sale with no matching lot) is shown as "not booked" and counted nowhere, so balances sum to zero as Beancount's do **Status:** todo (t001–t006 done)
+**Worker:** worker1 **Goal:** a transaction the engine cannot book (for example a sale with no matching lot) is shown as "not booked" and counted nowhere, so balances sum to zero as Beancount's do **Status:** todo (t001–t008 done)
 
 ## Tasks (in order)
 
@@ -12,8 +12,8 @@
 | t004 | Carry the not-booked flag on REST, GraphQL and MCP — **DONE** | 60m | t002 |
 | t005 | Show a "Not booked" marker in the mobile app and the dashboard — **DONE** | 60m | t004 |
 | t006 | Adoption surface — **DONE** | 20m | t005 |
-| t007 | Simplify | 20m | t006 |
-| t008 | Test coverage | 30m | t006 |
+| t007 | Simplify — **DONE** | 20m | t006 |
+| t008 | Test coverage — **DONE** | 30m | t006 |
 | t009 | Closeout | 15m | t007, t008 |
 
 ## Definition of done

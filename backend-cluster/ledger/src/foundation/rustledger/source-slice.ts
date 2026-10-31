@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { isUnbookedDirective } from "./plugins/provenance";
 import BigNumber from "bignumber.js";
 import type { DirectiveJson, FileMap, PostingJson } from "@rustledger/wasm";
 import {
@@ -1076,6 +1077,8 @@ export function entryBalances(
   for (let i = 0; i < targetIndex; i += 1) {
     const prior = directives[i];
     if (prior.type !== "transaction") continue;
+    // A transaction that failed booking is in no balance (w21/678).
+    if (isUnbookedDirective(prior)) continue;
     prior.postings.forEach((posting) => {
       if (target.type === "balance") {
         // An assertion checks the account and every subaccount (w21/845).
@@ -1108,9 +1111,12 @@ export function entryBalances(
     return { before, after: null };
   }
 
-  target.postings.forEach((posting) => {
-    const inv = inventories.get(posting.account);
-    if (inv) inv.addPosting(posting);
-  });
+  // Nor does it move the balances it is shown against.
+  if (!isUnbookedDirective(target)) {
+    target.postings.forEach((posting) => {
+      const inv = inventories.get(posting.account);
+      if (inv) inv.addPosting(posting);
+    });
+  }
   return { before, after: snapshot() };
 }
