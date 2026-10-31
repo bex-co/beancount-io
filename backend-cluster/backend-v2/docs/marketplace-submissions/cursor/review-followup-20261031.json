@@ -1,0 +1,31 @@
+{
+  "owner": "w6/m9/t016",
+  "status": "submitted",
+  "existingReceipt": "submission-receipt.json",
+  "actualBrowserObservations": {
+    "publishUrl": "https://cursor.com/marketplace/publish",
+    "publishPage": "Actual current generic Become a plugin publisher form, prefilled individual account; no original application-specific review state. Not submitted again.",
+    "publicGallery": "https://cursor.com/marketplace",
+    "searchControl": "Search plugins, automations, and agent templates",
+    "typedQuery": "beancount",
+    "result": "No results found",
+    "limit": "Actual typed name query only; does not expose private review state or prove absence under every identifier."
+  },
+  "boundedFeedbackSearch": {
+    "scope": "Existing publisher mailbox, all folders since2026-10-23, Cursor/Anysphere sender domains and beancount/marketplace/plugin terms",
+    "result": "One unrelated promotional message; no relevant application feedback identified; message not opened",
+    "limit": "Only this sender/date/term predicate; not every possible sender, mailbox or private review screen."
+  },
+  "submittedAtUTC": "2026-10-24T00:36:38Z",
+  "applicationSpecificManageUrl": null,
+  "reviewApproved": false,
+  "publicationVerified": false,
+  "newApplicationSubmitted": false,
+  "termsAcceptedAgain": false,
+  "nativeOrGrantRepeated": false,
+  "publisherInputNeeded": false,
+  "unblock": "Cursor supplies actionable feedback or publishes the existing application; worker verifies the official public/native install path.",
+  "nextManualCheckUTC": "2026-11-03",
+  "earlierTrigger": "Actual feedback or publication.",
+  "observedAtUTC": "2026-10-31T09:07:35.687408+00:00"
+}
