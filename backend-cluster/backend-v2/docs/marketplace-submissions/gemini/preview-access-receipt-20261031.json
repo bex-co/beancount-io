@@ -1,0 +1,30 @@
+{
+  "owner": "w6/m12/t003",
+  "state": "preview_access_waitlist_submitted",
+  "observedAtUTC": "2026-10-31T09:00:19Z",
+  "entry": "https://connected.google.com/console/help/?apply=",
+  "actualIntake": "https://play.google.com/console/u/0/create-support-ticket?form=46",
+  "actualReceiptLocation": "Existing verified developer-account Home; private account-specific URL omitted",
+  "flow": [
+    "connected.google.com root returned404; the official preview link is available.",
+    "Official preview form asks whether a Play Developer account exists and whether the user is its administrator.",
+    "Read-only Play Console inspection verifies the existing Beancount Android publisher and current account-owner role. No permissions are changed.",
+    "Official entry directs administrators to the Play Console dedicated interest form46.",
+    "One Server-Side MCP / Gemini app application is submitted with canonical endpoint and accurate bookkeeping journeys.",
+    "Returned developer-account Home confirms the account has applied and only selected accounts will be contacted."
+  ],
+  "receiptText": "This account has applied for the Connected apps private preview. We'll let you know if your account is selected.",
+  "category": "Other; accounting/bookkeeping accurately described, not e-commerce inventory/fulfillment",
+  "submissionCount": 1,
+  "optionalDAUAndAudience": "Omitted rather than guessed",
+  "actualProgramLimit": "Limited selection for production publishing preview; no guaranteed response or timeline. The form says local Developer Mode testing is separate and does not require this application.",
+  "domainVerification": "No actual challenge issued; proof path not implemented speculatively.",
+  "oauthAndToolSync": "No registered console app/access yet. Existing hosted discovery supports user-delegated OAuth and audited hints, but Google registration/native sync is unverified.",
+  "nativeAcceptance": false,
+  "appReviewSubmitted": false,
+  "publicRelease": false,
+  "unblock": "Google selects this existing developer account for production publishing preview or opens broader supported self-serve access. Worker deduplicates registrations, handles any actual program agreement, obtains the real domain challenge and verifies delegated auth/tool sync.",
+  "nextManualCheckNotBeforeUTC": "2026-11-07T00:00:00Z",
+  "earlierTrigger": "Actual Google selection/access/feedback; no duplicate application or status inquiry.",
+  "privacy": "Private account/contact/role URLs, developer IDs and screenshots retained only locally; no credential, new grant or real ledger data is submitted."
+}

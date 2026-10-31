@@ -41,8 +41,8 @@ The [m9/t011](../m9/done/t011.md) official Cursor application is submitted with 
 
 | Inventory target | Submission / receipt owner | Review, public verification or retained gate |
 | --- | --- | --- |
-| Muse | [m12/t001](../../m12/t001.md), planned intake | [m12/t002](../../m12/t002.md) review/public/native acceptance; independent of this milestone |
-| Gemini Apps / Connected Apps Platform | [m12/t003](../../m12/t003.md) console/domain/auth; [t004](../../m12/t004.md) preview/review receipt | [m12/t005](../../m12/t005.md) approval/publish/public/native; CLI Gallery is separate |
+| Muse | [m12/t001](../m12/t001.md), planned intake | [m12/t002](../m12/t002.md) review/public/native acceptance; independent of this milestone |
+| Gemini Apps / Connected Apps Platform | [m12/t003](../m12/t003.md) console/domain/auth; [t004](../m12/t004.md) preview/review receipt | [m12/t005](../m12/t005.md) approval/publish/public/native; CLI Gallery is separate |
 | Cursor — official | [m9/t011](../m9/done/t011.md) | [m9/t003](../m9/done/t003.md) done; [m9/t016](../m9/t016.md) official review/public/native |
 | Docker | [m9/t012](../m9/done/t012.md) | [m9/t002](../m9/done/t002.md) submission/private reviewer access complete; [m9/t017](../m9/t017.md) actual review/publication; [m9/t015](../m9/done/t015.md) current OAuth repair |
 | Cline | [m9/t013](../m9/done/t013.md) | [m9/t004](../m9/t004.md), m9/t006 |

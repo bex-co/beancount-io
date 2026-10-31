@@ -1,0 +1,39 @@
+{
+  "owner": "w6/m12/t003",
+  "state": "submitted_preview_access_waitlist",
+  "operation": "https://play.google.com/console/u/0/create-support-ticket?form=46",
+  "entry": "https://connected.google.com/console/help/?apply=",
+  "organizationOrAppName": "Beancount.io (Stargately, Inc.)",
+  "category": "Other",
+  "categoryRationale": "Hosted double-entry accounting and bookkeeping. The current Small business finance journey examples focus on e-commerce inventory/fulfillment/sourcing, which are not this service's capabilities. No irreversible app category is selected by this waitlist form.",
+  "capabilitiesAndJourneys": "Beancount.io provides hosted plain-text double-entry accounting for individuals, bookkeepers and small businesses. Our live MCP service lets an authenticated user select an authorized ledger, ask BQL questions about balances and transactions, inspect reports and source files, validate the books, preview supported edits and record confirmed bookkeeping changes. Example journeys: find expense totals for a date range; explain a balance from the underlying entries; inspect staged linked-bank transactions and preview their import; validate and prepare a month-end accounting adjustment before committing it.\n\nThis is accounting/bookkeeping software, not an e-commerce catalog, lender, money-transfer service or trade-execution platform. It records accounting directives; it does not move money between financial accounts or place trade orders. We selected Other because the published Small business finance journey examples emphasize inventory, order fulfillment and supplier sourcing, which we do not claim to implement.\n\nThe endpoint is production-ready and reachable over public HTTPS using Streamable HTTP, with user-delegated OAuth, PKCE S256, resource/audience checks, read-only and write scopes, per-call ledger authorization and ledger pinning. The public endpoint requires authentication for tools; public does not mean anonymous financial-data access. Read and write tool annotations are explicit, and supported dry_run previews do not persist changes. Optional AI document parsing consumes quota and uses configured external providers; bank and price integrations also make external calls.\n\nThe existing service is discoverable in the official MCP Registry and published community connectors including Glama and LobeHub; actual synthetic OAuth/query/preview journeys have been verified in native clients. This is not a claim of an approved Gemini or ChatGPT app. We request Server-Side MCP access for Gemini app. The connector returns readable text and structured data; it does not provide MCP App iframe UI. Native registered Gemini testing, the actual Google domain challenge and tool synchronization will be completed after access is granted, before review and publication.\n\nProduct: https://beancount.io/\nEndpoint: https://beancount.io/api-gateway/mcp\nDocumentation: https://github.com/bex-co/beancount-io/blob/main/backend-cluster/backend-v2/docs/mcp.md\nPrivacy: https://beancount.io/privacy-policy\nTerms: https://beancount.io/terms-of-service\nSupport: https://github.com/bex-co/beancount-io/issues",
+  "integrationPaths": [
+    "Server-Side MCP"
+  ],
+  "googleProducts": [
+    "Gemini app"
+  ],
+  "endpoint": "https://beancount.io/api-gateway/mcp",
+  "serverExposure": "Public HTTPS endpoint; authenticated tool access",
+  "ui": "MCP only (text only)",
+  "targetAvailability": "Ready now",
+  "availabilityBoundary": "Existing MCP server is production-ready; Google registration, domain proof, native testing, review and publication remain pending access.",
+  "liveOnOtherLLMPlatforms": true,
+  "securityFunctionality": [
+    "Read-only scope requests",
+    "Write scope requests",
+    "OAuth 2.1",
+    "Published privacy policy",
+    "External scripts / calls"
+  ],
+  "notAttested": [
+    "Alignment with the Connected App Platform policy checkbox is not selected before program-specific verification."
+  ],
+  "optionalFieldsOmitted": [
+    "DAU size",
+    "Operating countries / audience"
+  ],
+  "developerAccount": "Existing Beancount Android publisher organization and current account-owner role verified read-only; private IDs/contact omitted.",
+  "registrationBoundary": "This form requests limited public-preview production publishing access. An accepted waitlist receipt is not a connected-app registration, review submission, domain verification or public release.",
+  "receiptObservedAtUTC": "2026-10-31T09:00:19Z"
+}

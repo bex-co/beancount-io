@@ -15,7 +15,7 @@ m12 and newly changed/due w6 conditions continue while access is pending.
 
 ## Muse and Gemini Apps listing work — 2026-10-30 UTC
 
-Owner-requested [m12](m12/README.md) adds two independent hosted-MCP app
+Owner-requested [m12](blocked/m12/README.md) adds two independent hosted-MCP app
 integrations. Muse's actual submission entry and Google's Connected Console /
 preview entry are verified from current first-party pages. [The current tracker](../../backend-cluster/backend-v2/docs/mcp-marketplaces.md)
 now has20targets, with both additions planned, not submitted. Gemini Apps is the
@@ -110,7 +110,7 @@ Source: the owner's request to complete all remaining actions from the17-target 
 
 **Execution order:** tracker/browser/native prerequisites and045 credential coordination are complete;046 renewable native acceptance is now complete too. Follow actual review, publication, compatible host/client or supported engine-artifact changes independently. Aggregate verification and standing closing tasks retain their full DoDs; one blocked platform never ends the w6 loop while another actionable item remains.
 
-**Current board:** 72 pending leaves after completing m11/t008,t009. m11/t010 is blocked on actual original-organization access; m12/t001 is blocked on actual publisher authenticator; independent m12/t003 is actionable; all other leaf states/dependencies retain their own evidence. Owner-supplied ChatGPT not-approved feedback supersedes the old Nov3 estimate. Historical snapshots retain prior counts and states.
+**Current board:** 72 pending leaves after completing m11/t008,t009. m11/t010 is blocked on actual original-organization access; m12/t001 is blocked on actual publisher authenticator; m12/t003 actual Google preview application is accepted and awaits selection; no live milestone implementation remains, while changed/due blocked conditions are being assessed; all other leaf states/dependencies retain their own evidence. Owner-supplied ChatGPT not-approved feedback supersedes the old Nov3 estimate. Historical snapshots retain prior counts and states.
 
 ## Historical work and blocker triage — 2026-10-24 UTC
 
@@ -311,7 +311,7 @@ Prioritize the major correctness findings (PRINT/FROM/JOURNAL, authored location
 
 ## Milestones
 
-- [ ] **m12** — [Publish the hosted MCP connector on Muse and Gemini Apps](m12/README.md) (9 tasks; A3/A1/A2) ← explicit owner request2026-10-30. **Next:** independent t001 Muse intake and t003 Gemini Connected Console/domain/auth; actual accepted receipts, public availability and native accounting remain required.
+- [ ] **m12** — [Publish the hosted MCP connector on Muse and Gemini Apps](blocked/m12/README.md) (9 tasks; A3/A1/A2) ← explicit owner request2026-10-30. **Next:** independent t001 Muse intake and t003 Gemini Connected Console/domain/auth; actual accepted receipts, public availability and native accounting remain required. — **blocked:** Muse publisher authenticator; Google production publishing preview request accepted, awaiting selection; registered review/public/native and closing tasks defer.
 
 - [ ] **m11** — [Complete app-directory and remote-community distribution](blocked/m11/README.md) (10 tasks; A3/A1) ← existing submission scope plus actual annotation rejection2026-10-31. **Next:** t008 full annotation audit/fix/tests, t009 deployed wire/explanations and t010 original-app rescan/resubmit. t001 retains later review/public/native; Claude/remote-list gates remain independent. — **blocked:** t010 original submitting organization access; source/deployed remediation done; independent review/public and closing gates retained.
 
