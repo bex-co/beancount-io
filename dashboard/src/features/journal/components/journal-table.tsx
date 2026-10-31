@@ -475,6 +475,11 @@ function JournalTableEntryRows({
         return (
           <>
             <JournalDescription directive={directive} />
+            {isTransaction && directive.not_booked === true ? (
+              <span className="mt-1 inline-block rounded-md bg-amber-500/10 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400">
+                {t("journal.notBooked")}
+              </span>
+            ) : null}
             {(hasCompactChange || hasCompactBalance) && (
               <dl className="mt-1 grid min-w-0 grid-cols-[auto_minmax(0,1fr)] gap-x-2 gap-y-1 px-1 text-xs sm:hidden">
                 {hasCompactChange && (

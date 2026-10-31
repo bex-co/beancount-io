@@ -224,6 +224,11 @@ const koJournal: Record<string, TranslationEntry> = {
     message: "F",
     description: "Short label shown in the journal flag column header",
   },
+  "journal.notBooked": {
+    message: "미기장, 잔액에 포함되지 않음",
+    description:
+      "Badge on a journal transaction the ledger could not book (for example a sale with no matching lot): it is listed so it can be fixed, but no balance counts it",
+  },
   "journal.accountJournalTable": {
     message: "계정 저널",
     description: "Accessible name for the account journal table",

@@ -274,3 +274,36 @@ describe("Journal entry control names", () => {
     },
   );
 });
+
+// w21/678: a transaction the ledger could not book is listed, marked, and says
+// it is not counted in balances.
+describe("Journal entry that failed booking", () => {
+  it.each([
+    ["en", "Not booked, not counted"],
+    ["de", "Nicht gebucht, nicht gezählt"],
+  ] as const)(
+    "%s marks it and leaves booked rows unmarked",
+    async (language, text) => {
+      const localization = createLocalization();
+      await localization.changeLanguage(language);
+      const broken = {
+        ...transaction("sell", "Broker", "QA Sell", 2),
+        not_booked: true,
+      };
+      render(
+        <LocalizationProvider localization={localization}>
+          <JournalTable
+            data={[broken, transaction("buy", "Broker", "QA Buy", 2)].map(
+              (directive) => ({ directive }),
+            )}
+            showMetadata={false}
+            showPostings={false}
+          />
+        </LocalizationProvider>,
+      );
+      expect(screen.getAllByText(text)).toHaveLength(1);
+      const row = screen.getByText(text).closest("tr")!;
+      expect(within(row).getByText(/QA Sell/)).toBeTruthy();
+    },
+  );
+});

@@ -244,6 +244,11 @@ const deJournal: Record<string, TranslationEntry> = {
     message: "F",
     description: "Short label shown in the journal flag column header",
   },
+  "journal.notBooked": {
+    message: "Nicht gebucht, nicht gezählt",
+    description:
+      "Badge on a journal transaction the ledger could not book (for example a sale with no matching lot): it is listed so it can be fixed, but no balance counts it",
+  },
   "journal.accountJournalTable": {
     message: "Kontenjournal",
     description: "Accessible name for the account journal table",

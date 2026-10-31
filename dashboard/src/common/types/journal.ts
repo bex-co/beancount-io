@@ -52,6 +52,8 @@ export interface JournalDirective {
 
 export interface JournalTransaction extends JournalDirective {
   flag: string;
+  /** True only when the ledger could not book it; no balance counts it. */
+  not_booked?: boolean;
   payee?: string | null;
   narration?: string | null;
   postings: JournalPosting[];

@@ -227,6 +227,11 @@ const zhJournal: Record<string, TranslationEntry> = {
     message: "F",
     description: "Short label shown in the journal flag column header",
   },
+  "journal.notBooked": {
+    message: "未入账，不计入余额",
+    description:
+      "Badge on a journal transaction the ledger could not book (for example a sale with no matching lot): it is listed so it can be fixed, but no balance counts it",
+  },
   "journal.accountJournalTable": {
     message: "账户流水",
     description: "Accessible name for the account journal table",

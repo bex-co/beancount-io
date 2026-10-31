@@ -273,6 +273,11 @@ const skJournal: Record<string, TranslationEntry> = {
     message: "F",
     description: "Short label shown in the journal flag column header",
   },
+  "journal.notBooked": {
+    message: "Nezaúčtovaná, nezapočítava sa",
+    description:
+      "Badge on a journal transaction the ledger could not book (for example a sale with no matching lot): it is listed so it can be fixed, but no balance counts it",
+  },
   "journal.accountJournalTable": {
     message: "Denník účtu",
     description: "Accessible name for the account journal table",
