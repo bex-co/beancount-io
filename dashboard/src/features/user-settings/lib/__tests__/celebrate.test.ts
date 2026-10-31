@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { mockConfetti } = vi.hoisted(() => ({ mockConfetti: vi.fn() }));
 vi.mock("canvas-confetti", () => ({ default: mockConfetti }));
@@ -13,6 +13,12 @@ function prefersReducedMotion(reduce: boolean) {
     removeEventListener: vi.fn(),
   }));
 }
+
+const originalMatchMedia = window.matchMedia;
+
+afterEach(() => {
+  window.matchMedia = originalMatchMedia;
+});
 
 beforeEach(() => {
   mockConfetti.mockClear();
@@ -42,6 +48,15 @@ describe("celebrate", () => {
   it("swallows a failure: a missing celebration never breaks the page", async () => {
     prefersReducedMotion(false);
     mockConfetti.mockRejectedValue(new Error("canvas unavailable"));
+
+    await celebrate();
+
+    expect(mockConfetti).toHaveBeenCalledTimes(1);
+  });
+
+  it("still bursts where the browser cannot report a motion preference", async () => {
+    // @ts-expect-error -- an older browser without matchMedia
+    window.matchMedia = undefined;
 
     await celebrate();
 

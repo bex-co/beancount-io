@@ -16,6 +16,9 @@ import {
 export const billingSearchSchema = z.object({
   checkout: searchEnum(["success", "canceled"] as const),
   session_id: searchString(),
+  // Stripe.js returning from a redirect-only bank approval of a plan change.
+  payment_intent: searchString(),
+  redirect_status: searchString(),
   return: searchString()
     .transform((path) => getSafeRedirectPath(path))
     .optional(),

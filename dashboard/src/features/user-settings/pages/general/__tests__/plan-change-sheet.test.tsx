@@ -2,6 +2,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { PlanChangeSheet } from "../plan-change-sheet";
+import {
+  rememberPendingApproval,
+  takePendingApproval,
+} from "@/features/user-settings/lib/approval-return";
 import { MOCK_TIER_QUOTAS } from "./subscription-test-utils";
 
 const {
@@ -490,6 +494,44 @@ describe("PlanChangeSheet", () => {
 
     const purchases = () =>
       mockTrack.mock.calls.filter(([event]) => event === "purchase");
+
+    it("remembers the change while the bank approves it, in case it redirects", async () => {
+      mockChangePlan.mockResolvedValue(
+        requiresAction({
+          clientSecret: "pi_redirect_secret_abc",
+          invoiceId: "in_redirect",
+          amountCharged: 95000,
+          currency: "usd",
+        }),
+      );
+      let remembered: unknown = null;
+      mockApproveBankPayment.mockImplementation(async () => {
+        remembered = takePendingApproval("pi_redirect");
+        rememberPendingApproval("pi_redirect_secret_abc", {
+          invoiceId: null,
+          amountCharged: null,
+          currency: null,
+          priceId: "price",
+          returnTo: null,
+        });
+        return "pending";
+      });
+      renderSheet({ returnTo: "/ledger" });
+
+      await confirm();
+
+      await screen.findByTestId("plan-change-action");
+      expect(remembered).toEqual(
+        expect.objectContaining({
+          invoiceId: "in_redirect",
+          amountCharged: 95000,
+          currency: "usd",
+          returnTo: "/ledger",
+        }),
+      );
+      // Settled in place: nothing is left to announce on a later visit.
+      expect(takePendingApproval("pi_redirect")).toBeNull();
+    });
 
     it("counts the approved charge as one purchase and celebrates it", async () => {
       mockChangePlan.mockResolvedValue(

@@ -2,11 +2,12 @@ import { track } from "@/common/analytics";
 import { planForPrice } from "../pages/general/stripe-config";
 import { majorUnits } from "../pages/general/use-money-format";
 
-const KEY_PREFIX = "beancount.purchase.";
+const PURCHASE_PREFIX = "beancount.purchase.";
+const CELEBRATION_PREFIX = "beancount.celebrated.";
 // A Checkout confirmation link is opened within minutes; one opened a day
 // later is a bookmark or another browser, whose purchase was already counted.
 const CHECKOUT_CONFIRMATION_WINDOW_MS = 24 * 60 * 60 * 1000;
-/** Ids recorded during this page load, for when storage is unavailable. */
+/** Keys claimed during this page load, for when storage is unavailable. */
 const recordedThisLoad = new Set<string>();
 
 export interface Purchase {
@@ -20,14 +21,13 @@ export interface Purchase {
 
 /**
  * Send GA4's `purchase` for a plan's invoice, once per browser, whatever it
- * charged. Returns true only the first time, so a caller that runs on page
- * load can celebrate exactly once. Without an invoice there is nothing to
- * deduplicate on, so nothing is sent.
+ * charged. Returns true only the first time. Without an invoice, its
+ * currency, or its amount there is nothing to report, so nothing is sent.
  */
 export function recordPurchase(purchase: Purchase): boolean {
   const { invoiceId, amount, currency, priceId } = purchase;
   if (!invoiceId || !currency || amount == null) return false;
-  if (!claim(invoiceId)) return false;
+  if (!claim(PURCHASE_PREFIX + invoiceId)) return false;
   const value = majorUnits(amount, currency);
   const plan = planForPrice(priceId);
   track("purchase", {
@@ -50,11 +50,19 @@ export function recordPurchase(purchase: Purchase): boolean {
   return true;
 }
 
-function claim(invoiceId: string): boolean {
-  if (recordedThisLoad.has(invoiceId)) return false;
-  recordedThisLoad.add(invoiceId);
+/**
+ * Whether this browser has not yet celebrated the invoice, claiming it if so,
+ * so a caller that runs on page load celebrates exactly once. Kept apart from
+ * `recordPurchase`: an invoice analytics cannot report still celebrates.
+ */
+export function claimCelebration(invoiceId: string): boolean {
+  return claim(CELEBRATION_PREFIX + invoiceId);
+}
+
+function claim(key: string): boolean {
+  if (recordedThisLoad.has(key)) return false;
+  recordedThisLoad.add(key);
   try {
-    const key = KEY_PREFIX + invoiceId;
     if (window.localStorage.getItem(key)) return false;
     window.localStorage.setItem(key, "1");
   } catch {

@@ -7,6 +7,8 @@ import { useReactNativeContext } from "@/common/providers/react-native-bridge-pr
 import { SubscriptionSection } from "../general/subscription-section";
 import { DEFAULT_BILLING_CYCLE } from "../general/stripe-config";
 import { takeReturnPath } from "@/features/user-settings/lib/billing-return";
+import { takePendingApproval } from "@/features/user-settings/lib/approval-return";
+import { announcePlanLanded } from "@/features/user-settings/lib/plan-landed";
 
 /**
  * Settings → Billing: the plan summary, the yearly offer, every plan, and the
@@ -34,6 +36,28 @@ export default function BillingSettingsPage() {
       replace: true,
     });
   }, [canceled, navigate, t]);
+  // A bank approval that left the page for a redirect: announce the change
+  // the sheet remembered, once, then drop Stripe's parameters.
+  const approvedIntent = search.payment_intent;
+  const approvalStatus = search.redirect_status;
+  const approvalHandled = useRef(false);
+  useEffect(() => {
+    if (!approvedIntent || !approvalStatus || approvalHandled.current) return;
+    approvalHandled.current = true;
+    const pending = takePendingApproval(approvedIntent);
+    if (pending && approvalStatus === "succeeded") {
+      announcePlanLanded(pending, t, pending.returnTo);
+    }
+    void navigate({
+      to: "/settings/billing",
+      search: (prev) => ({
+        ...prev,
+        payment_intent: undefined,
+        redirect_status: undefined,
+      }),
+      replace: true,
+    });
+  }, [approvedIntent, approvalStatus, navigate, t]);
   if (isReactNative) return <Navigate to="/settings/general" replace />;
   return (
     <>

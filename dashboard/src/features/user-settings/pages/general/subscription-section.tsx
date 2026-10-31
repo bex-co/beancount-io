@@ -48,6 +48,7 @@ import {
 } from "@/features/user-settings/lib/billing-return";
 import { celebrate } from "@/features/user-settings/lib/celebrate";
 import {
+  claimCelebration,
   isFreshCheckoutInvoice,
   recordPurchase,
 } from "@/features/user-settings/lib/purchase";
@@ -268,16 +269,14 @@ export function SubscriptionSection({
   const checkoutPriceId = currentPrice?.id;
   useEffect(() => {
     if (!checkoutInvoice || !checkoutPriceId) return;
-    if (
-      recordPurchase({
-        invoiceId: checkoutInvoice.id,
-        amount: checkoutInvoice.amountPaid,
-        currency: checkoutInvoice.currency,
-        priceId: checkoutPriceId,
-      })
-    ) {
-      void celebrate();
-    }
+    recordPurchase({
+      invoiceId: checkoutInvoice.id,
+      amount: checkoutInvoice.amountPaid,
+      currency: checkoutInvoice.currency,
+      priceId: checkoutPriceId,
+    });
+    // Celebrated even when analytics cannot report it.
+    if (claimCelebration(checkoutInvoice.id)) void celebrate();
   }, [checkoutInvoice, checkoutPriceId]);
   const planLabel = [
     t(planLabelKey(tier)),

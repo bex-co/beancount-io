@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { cyclePrice } from "@/features/user-settings/pages/general/stripe-config";
 
 const PREMIUM_YEARLY_PRICE_ID = cyclePrice("premium", "yearly").priceId;
@@ -32,6 +32,10 @@ function memoryStorage(): Storage {
     },
   };
 }
+
+// Transform the module graph once, so the first test's reload is not timed
+// against a cold cache.
+beforeAll(() => import("../purchase"));
 
 beforeEach(() => {
   mockTrack.mockClear();
@@ -139,6 +143,20 @@ describe("recordPurchase", () => {
       "purchase",
       expect.objectContaining({ value: 1500, currency: "JPY" }),
     );
+  });
+});
+
+describe("claimCelebration", () => {
+  it("celebrates an invoice once on this browser, across reloads", async () => {
+    expect((await load()).claimCelebration("in_first")).toBe(true);
+    expect((await load()).claimCelebration("in_first")).toBe(false);
+  });
+
+  it("is claimed apart from the purchase, so either can go first", async () => {
+    const { claimCelebration, recordPurchase } = await load();
+
+    expect(recordPurchase(purchase)).toBe(true);
+    expect(claimCelebration(purchase.invoiceId)).toBe(true);
   });
 });
 

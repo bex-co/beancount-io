@@ -16,6 +16,8 @@ import { createNoIndexHead } from "@/common/lib/seo/seo-helpers";
  *   (`getSafeRedirectPath`); anything else is dropped.
  * - `checkout=success|canceled&session_id=…` is Stripe Checkout coming back;
  *   a success shows the confirmation and opens no sheet.
+ * - `payment_intent=…&redirect_status=…` is a bank's redirect-only approval
+ *   of a plan change coming back; a success announces the change once.
  *
  * Values are read leniently (`billingSearchSchema`): an unknown plan or cycle
  * renders Billing without a sheet rather than failing the page.

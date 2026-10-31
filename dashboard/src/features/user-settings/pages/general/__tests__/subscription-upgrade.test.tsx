@@ -665,6 +665,7 @@ describe("Checkout return", () => {
     amountPaid: number;
     billingReason: string;
     created?: string;
+    currency?: string | null;
   }) {
     premiumSubscriber();
     const data = structuredClone(mockActiveSubscriptionData);
@@ -720,6 +721,20 @@ describe("Checkout return", () => {
         }),
       ],
     ]);
+    expect(mockCelebrate).toHaveBeenCalledTimes(1);
+  });
+
+  it("celebrates a Checkout whose invoice analytics cannot report", () => {
+    returnedWith({
+      id: "in_checkout_no_currency",
+      amountPaid: 1499,
+      billingReason: "subscription_create",
+      currency: null,
+    });
+
+    render(<SubscriptionSection checkoutReturned />);
+
+    expect(purchases()).toEqual([]);
     expect(mockCelebrate).toHaveBeenCalledTimes(1);
   });
 

@@ -9,8 +9,11 @@ import { ArrowUp, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/common/components/ui/button";
 import { track, type BillingSurface } from "@/common/analytics";
-import { celebrate } from "@/features/user-settings/lib/celebrate";
-import { recordPurchase } from "@/features/user-settings/lib/purchase";
+import { announcePlanLanded } from "@/features/user-settings/lib/plan-landed";
+import {
+  forgetPendingApproval,
+  rememberPendingApproval,
+} from "@/features/user-settings/lib/approval-return";
 import { planValue } from "@/common/lib/subscription/plan-change";
 import {
   Dialog,
@@ -244,39 +247,34 @@ export function PlanChangeSheet({
 
   /** A change took effect: count its invoice, celebrate, then close. */
   const landed = (charge: ChangeCharge, priceId: string) => {
-    recordPurchase({
-      invoiceId: charge.invoiceId,
-      amount: charge.amountCharged,
-      currency: charge.currency,
-      priceId,
-    });
-    void celebrate();
-    toast.success(
-      t("userSettings.subscriptionUpgraded"),
-      returnTo
-        ? {
-            action: {
-              label: t("userSettings.backToWork"),
-              // A full load, so every query reads the new plan's limits.
-              onClick: () => window.location.assign(returnTo),
-            },
-          }
-        : undefined,
-    );
+    announcePlanLanded({ ...charge, priceId }, t, returnTo);
     onClose();
   };
 
-  const approveInPlace = async (clientSecret: string) => {
+  const approveInPlace = async (
+    clientSecret: string,
+    charge: ChangeCharge,
+    priceId: string,
+  ) => {
     // Stripe draws the bank's challenge over the page, where a modal dialog
     // would trap focus and swallow the pointer, so the sheet steps aside.
     setOutcome({ type: "approving" });
     const waiting = toast.loading(t("userSettings.planChangeApproving"));
+    // A redirect-only bank method leaves the page; Billing lands it on return.
+    rememberPendingApproval(clientSecret, {
+      invoiceId: charge.invoiceId ?? null,
+      amountCharged: charge.amountCharged ?? null,
+      currency: charge.currency ?? null,
+      priceId,
+      returnTo: returnTo ?? null,
+    });
     try {
       return await approveBankPayment(
         clientSecret,
         new URL("/settings/billing", window.location.origin).href,
       );
     } finally {
+      forgetPendingApproval();
       toast.dismiss(waiting);
     }
   };
@@ -316,7 +314,11 @@ export function PlanChangeSheet({
       } else if (result?.status === "REQUIRES_ACTION") {
         if (params) track("payment_action_required", params);
         const approval = result.clientSecret
-          ? await approveInPlace(result.clientSecret)
+          ? await approveInPlace(
+              result.clientSecret,
+              result,
+              chosen.targetPriceId,
+            )
           : "unavailable";
         if (approval === "approved") {
           if (params) track("payment_action_completed", params);

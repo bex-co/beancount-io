@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import BillingSettingsPage from "../index";
+import { rememberPendingApproval } from "@/features/user-settings/lib/approval-return";
 
 const mockReactNative = vi.hoisted(() => ({ isReactNative: false }));
 
@@ -22,6 +23,10 @@ vi.mock("@/common/components/seo/page-seo", () => ({ PageSEO: () => null }));
 const mockTakeReturnPath = vi.hoisted(() => vi.fn(() => null));
 vi.mock("@/features/user-settings/lib/billing-return", () => ({
   takeReturnPath: mockTakeReturnPath,
+}));
+const mockAnnounce = vi.hoisted(() => vi.fn());
+vi.mock("@/features/user-settings/lib/plan-landed", () => ({
+  announcePlanLanded: mockAnnounce,
 }));
 const mockToast = vi.hoisted(() => ({ info: vi.fn() }));
 vi.mock("sonner", () => ({ toast: mockToast }));
@@ -63,6 +68,8 @@ describe("BillingSettingsPage", () => {
     mockToast.info.mockClear();
     mockNavigate.mockClear();
     mockTakeReturnPath.mockClear();
+    mockAnnounce.mockClear();
+    window.sessionStorage.clear();
   });
 
   it("says once that an abandoned Checkout charged nothing, then drops the flag", () => {
@@ -206,5 +213,85 @@ describe("BillingSettingsPage", () => {
     render(<BillingSettingsPage />);
     screen.getByRole("button", { name: "close sheet" }).click();
     expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  describe("a bank approval coming back from a redirect", () => {
+    const pending = {
+      invoiceId: "in_redirect",
+      amountCharged: 95000,
+      currency: "usd",
+      priceId: "price_growth_yearly",
+      returnTo: "/ledger/alice/books",
+    };
+    const returned = (
+      redirectStatus: string,
+      paymentIntent = "pi_redirect",
+    ) => {
+      mockSearch.value = {
+        payment_intent: paymentIntent,
+        redirect_status: redirectStatus,
+        from: "deep_link",
+      };
+    };
+    const droppedStripeParams = () => {
+      expect(mockNavigate).toHaveBeenCalledTimes(1);
+      const [{ search, replace }] = mockNavigate.mock.calls[0] as [
+        {
+          search: (prev: Record<string, unknown>) => Record<string, unknown>;
+          replace: boolean;
+        },
+      ];
+      expect(replace).toBe(true);
+      expect(search(mockSearch.value)).toEqual({
+        payment_intent: undefined,
+        redirect_status: undefined,
+        from: "deep_link",
+      });
+    };
+
+    it("announces the change the sheet remembered, once, and drops Stripe's parameters", () => {
+      rememberPendingApproval("pi_redirect_secret_abc", pending);
+      returned("succeeded");
+      try {
+        const { rerender } = render(<BillingSettingsPage />);
+        rerender(<BillingSettingsPage />);
+
+        expect(mockAnnounce).toHaveBeenCalledTimes(1);
+        expect(mockAnnounce).toHaveBeenCalledWith(
+          pending,
+          expect.any(Function),
+          "/ledger/alice/books",
+        );
+        droppedStripeParams();
+      } finally {
+        mockSearch.value = {};
+      }
+    });
+
+    it("announces nothing when the bank refused, but still drops the parameters", () => {
+      rememberPendingApproval("pi_redirect_secret_abc", pending);
+      returned("failed");
+      try {
+        render(<BillingSettingsPage />);
+
+        expect(mockAnnounce).not.toHaveBeenCalled();
+        droppedStripeParams();
+      } finally {
+        mockSearch.value = {};
+      }
+    });
+
+    it("announces nothing for a payment this tab did not start", () => {
+      rememberPendingApproval("pi_other_secret_abc", pending);
+      returned("succeeded");
+      try {
+        render(<BillingSettingsPage />);
+
+        expect(mockAnnounce).not.toHaveBeenCalled();
+        droppedStripeParams();
+      } finally {
+        mockSearch.value = {};
+      }
+    });
   });
 });
