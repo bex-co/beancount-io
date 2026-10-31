@@ -20,6 +20,7 @@
       "title": "Run Beancount Query (BQL)",
       "description": "Execute a BQL (Beancount Query Language) query against the user's ledger and return results. BQL: SELECT cols [WHERE expr] [GROUP BY] [ORDER BY] [LIMIT n] | JOURNAL | BALANCES. Columns: date, year, month, flag, payee, narration, account, number, currency, cost, change, balance, position, tags, links, meta. An unaggregated query returns one row per posting, not per transaction, so LIMIT 5 can span 3 transactions; GROUP BY and DISTINCT return one row per group or value. LIMIT bounds the returned rows. Output past 1,000 lines or 100 KB is cut and ends with a truncation line; add LIMIT or a narrower WHERE to see the rest. The query travels in a POST body end to end, so long queries have no URL-length ceiling. Reference: https://beancount.github.io/docs/beancount_query_language/",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "query": {
@@ -33,10 +34,30 @@
         },
         "required": [
           "query"
-        ],
-        "$schema": "http://json-schema.org/draft-07/schema#"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "title": "Run Beancount Query (BQL)"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.read"
+            ]
+          }
+        ]
       },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -72,35 +93,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Run Beancount Query (BQL)",
-        "readOnlyHint": true,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.read"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.read"
+          ]
+        }
+      ]
     },
     {
       "name": "runBqlQueryStructured",
       "title": "Run BQL with Typed Results",
       "description": "Execute BQL and return the typed table (column names, types, and rows) or structured text result. Uses the same query contract as REST JSON and GraphQL queryShell. The query travels in a POST body end to end, so long queries have no URL-length ceiling.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "query": {
@@ -114,10 +123,30 @@
         },
         "required": [
           "query"
-        ],
-        "$schema": "http://json-schema.org/draft-07/schema#"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "title": "Run BQL with Typed Results"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.read"
+            ]
+          }
+        ]
       },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -254,35 +283,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Run BQL with Typed Results",
-        "readOnlyHint": true,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.read"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.read"
+          ]
+        }
+      ]
     },
     {
       "name": "listLedgers",
       "title": "List Accessible Ledgers",
       "description": "List the ledgers this credential can reach \u2014 every one when `page` and `limit` are omitted. A pinned credential returns its one ledger; for an unpinned credential, ledger tools take one of these as `ledger: owner/name`.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "page": {
@@ -297,10 +314,30 @@
             "minimum": 1,
             "maximum": 100
           }
-        },
-        "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "title": "List Accessible Ledgers"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.read"
+            ]
+          }
+        ]
       },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -337,15 +374,37 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.read"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "checkLedger",
+      "title": "Check Ledger Validity",
+      "description": "Check one ledger's validity in one call: bean-check errors with file and line, entry counts per directive type, and the latest commit.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "ledger": {
+            "description": "Target ledger as owner/name. Required for an unpinned credential; defaults to the credential's ledger restriction.",
+            "type": "string"
+          }
+        }
+      },
       "annotations": {
-        "title": "List Accessible Ledgers",
         "readOnlyHint": true,
         "destructiveHint": false,
         "idempotentHint": true,
-        "openWorldHint": false
+        "openWorldHint": true,
+        "title": "Check Ledger Validity"
       },
       "execution": {
         "taskSupport": "forbidden"
@@ -359,23 +418,9 @@
             ]
           }
         ]
-      }
-    },
-    {
-      "name": "checkLedger",
-      "title": "Check Ledger Validity",
-      "description": "Check one ledger's validity in one call: bean-check errors with file and line, entry counts per directive type, and the latest commit.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "ledger": {
-            "description": "Target ledger as owner/name. Required for an unpinned credential; defaults to the credential's ledger restriction.",
-            "type": "string"
-          }
-        },
-        "$schema": "http://json-schema.org/draft-07/schema#"
       },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -428,15 +473,43 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.read"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "getLedgerContext",
+      "title": "Read Ledger Vocabulary",
+      "description": "Read a ledger's working vocabulary in one call: attributes, open accounts, currencies, payees, years, and source files. Counts accompany truncated lists so a large ledger does not flood context.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "payeeLimit": {
+            "description": "How many payees to return; defaults to 50.",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 500
+          },
+          "ledger": {
+            "description": "Target ledger as owner/name. Required for an unpinned credential; defaults to the credential's ledger restriction.",
+            "type": "string"
+          }
+        }
+      },
       "annotations": {
-        "title": "Check Ledger Validity",
         "readOnlyHint": true,
         "destructiveHint": false,
         "idempotentHint": true,
-        "openWorldHint": false
+        "openWorldHint": true,
+        "title": "Read Ledger Vocabulary"
       },
       "execution": {
         "taskSupport": "forbidden"
@@ -450,29 +523,9 @@
             ]
           }
         ]
-      }
-    },
-    {
-      "name": "getLedgerContext",
-      "title": "Read Ledger Vocabulary",
-      "description": "Read a ledger's working vocabulary in one call: attributes, open accounts, currencies, payees, years, and source files. Counts accompany truncated lists so a large ledger does not flood context.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "payeeLimit": {
-            "description": "How many payees to return; defaults to 50.",
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 500
-          },
-          "ledger": {
-            "description": "Target ledger as owner/name. Required for an unpinned credential; defaults to the credential's ledger restriction.",
-            "type": "string"
-          }
-        },
-        "$schema": "http://json-schema.org/draft-07/schema#"
       },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -562,35 +615,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Read Ledger Vocabulary",
-        "readOnlyHint": true,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.read"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.read"
+          ]
+        }
+      ]
     },
     {
       "name": "getEntryContext",
       "title": "Read Entry Source Context",
-      "description": "Read the source context around one entry, addressed by the entry_hash listLedgerEntries returns (as entryHash or entry_hash); updateEntrySource and deleteEntrySource take the same hash and this result's sha256sum. Same data as the entry-context resource. A result with `generated_from` is a copy a plugin or a pad generated from that source entry (amortize_over, forecast, padding): it shares the source's slice and sha256sum, so editing or deleting it would change the source and every other copy; address the `generated_from` entry instead.",
+      "description": "Read the source context around one entry, addressed by the entry_hash listLedgerEntries returns (as entryHash or entry_hash); updateEntrySource and deleteEntrySource take the same hash and this result's sha256sum. Same data as the entry-context resource. A result with `generated_from` is a copy a plugin or a pad generated from that source entry (amortize_over, forecast, padding): it shares the source's slice and sha256sum, so editing or deleting it would change the source and every other copy; address the `generated_from` entry instead. An entry with `not_booked: true` is a transaction the ledger could not book (for example a sale with no matching lot): it is listed so it can be opened and fixed, but no balance counts it.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "entryHash": {
@@ -605,10 +646,30 @@
             "description": "Target ledger as owner/name. Required for an unpinned credential; defaults to the credential's ledger restriction.",
             "type": "string"
           }
-        },
-        "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "title": "Read Entry Source Context"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.read"
+            ]
+          }
+        ]
       },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -642,35 +703,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Read Entry Source Context",
-        "readOnlyHint": true,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.read"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.read"
+          ]
+        }
+      ]
     },
     {
       "name": "listLedgerEntries",
       "title": "List Journal Entries",
-      "description": "List journal entries, each with the entry_hash getEntryContext, updateEntrySource, and deleteEntrySource take. Narrows by account, filter, time, and directiveTypes; pages with limit and offset; total counts every match. Same data as the journal resource.",
+      "description": "List journal entries, each with the entry_hash getEntryContext, updateEntrySource, and deleteEntrySource take. Narrows by account, filter, time, directiveTypes, and the transactionSubtypes, documentSubtypes, and customSubtypes filters (each narrows only its own directive family); pages with limit and offset; total counts every match. Same data as the journal resource.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "account": {
@@ -705,6 +754,39 @@
               ]
             }
           },
+          "transactionSubtypes": {
+            "description": "Transaction flag filter, e.g. [\"cleared\"]: narrows transactions only, other directive families pass through; case does not matter.",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "cleared",
+                "pending",
+                "other"
+              ]
+            }
+          },
+          "documentSubtypes": {
+            "description": "Document subtype filter: narrows documents only, other directive families pass through; case does not matter.",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "discovered",
+                "linked"
+              ]
+            }
+          },
+          "customSubtypes": {
+            "description": "Custom-directive subtype filter: narrows custom directives only, other directive families pass through; case does not matter.",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "budget"
+              ]
+            }
+          },
           "limit": {
             "description": "Page size, 1-1000; defaults to 20.",
             "type": "integer",
@@ -721,10 +803,30 @@
             "description": "Target ledger as owner/name. Required for an unpinned credential; defaults to the credential's ledger restriction.",
             "type": "string"
           }
-        },
-        "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "title": "List Journal Entries"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.read"
+            ]
+          }
+        ]
       },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -785,15 +887,41 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.read"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "listLedgerFiles",
+      "title": "List Ledger Files & Directories",
+      "description": "List files and directories in the ledger repo, one directory level at a time, directories first.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "dir_path": {
+            "description": "Directory path to list. Omit for root; '.' is also accepted.",
+            "type": "string"
+          },
+          "ledger": {
+            "description": "Target ledger as owner/name. Required for an unpinned credential; defaults to the credential's ledger restriction.",
+            "type": "string"
+          }
+        }
+      },
       "annotations": {
-        "title": "List Journal Entries",
         "readOnlyHint": true,
         "destructiveHint": false,
         "idempotentHint": true,
-        "openWorldHint": false
+        "openWorldHint": true,
+        "title": "List Ledger Files & Directories"
       },
       "execution": {
         "taskSupport": "forbidden"
@@ -807,27 +935,9 @@
             ]
           }
         ]
-      }
-    },
-    {
-      "name": "listLedgerFiles",
-      "title": "List Ledger Files & Directories",
-      "description": "List files and directories in the ledger repo, one directory level at a time, directories first.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "dir_path": {
-            "description": "Directory path to list. Omit for root; '.' is also accepted.",
-            "type": "string"
-          },
-          "ledger": {
-            "description": "Target ledger as owner/name. Required for an unpinned credential; defaults to the credential's ledger restriction.",
-            "type": "string"
-          }
-        },
-        "$schema": "http://json-schema.org/draft-07/schema#"
       },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -906,35 +1016,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "List Ledger Files & Directories",
-        "readOnlyHint": true,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.read"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.read"
+          ]
+        }
+      ]
     },
     {
       "name": "readLedgerFiles",
       "title": "Read Ledger File Contents",
       "description": "Read one or more beancount ledger files in a single call. `content` is raw text; the 1-based startLine/endLine it spans and the file's totalLines come alongside it, not in the text. Use start_line/end_line per file to limit tokens for large files. A file that is not valid UTF-8 comes back with `lossy: true`: its undecodable bytes read as U+FFFD, and edits to it are refused.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "files": {
@@ -985,10 +1083,30 @@
         },
         "required": [
           "files"
-        ],
-        "$schema": "http://json-schema.org/draft-07/schema#"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "title": "Read Ledger File Contents"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.read"
+            ]
+          }
+        ]
       },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -1068,35 +1186,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Read Ledger File Contents",
-        "readOnlyHint": true,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.read"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.read"
+          ]
+        }
+      ]
     },
     {
       "name": "addLedgerEntries",
       "title": "Add Structured Ledger Entries",
       "description": "Append entries [{type,entry}]. Supports transaction, commodity, price, note, balance, open, close, pad, budget, document, event; custom, query, option, and plugin are excluded, add them as raw text. Budget interval uses lowercase daily/weekly/monthly/quarterly/yearly. One posting per transaction may omit its amount and is written elided. An unbalanced transaction is refused with UNBALANCED, and entries that would add bean-check errors (a second open for an open account, a balance against an unopened account), or a budget for an account the ledger lacks, with VALIDATION_FAILED naming each error, unless allowInvalid records them deliberately. ledger is required unless pinned. The commit message is composed from the entries; there is no message argument. dry_run previews without committing.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "entries": {
@@ -1897,10 +2003,30 @@
         "required": [
           "entries"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "title": "Add Structured Ledger Entries"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.write"
+            ]
+          }
+        ]
+      },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -2064,35 +2190,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Add Structured Ledger Entries",
-        "readOnlyHint": false,
-        "destructiveHint": false,
-        "idempotentHint": false,
-        "openWorldHint": false
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.write"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.write"
+          ]
+        }
+      ]
     },
     {
       "name": "appendLedgerText",
       "title": "Append Beancount Directive Text",
       "description": "Append Beancount directive text as you would write it into a file; postings indented under their transaction. Routes each directive to its file by type and date (path overrides) and inserts it in date order. Max 50 directives. Non-directive text, and text introducing new bean-check errors (UNBALANCED when a transaction does not balance), are refused unless allowInvalid. dry_run returns the diff and projected errors without committing. Adds directives without rewriting files, unlike updateLedgerFiles. The commit message is composed from the appended text; there is no message argument. Syntax: https://beancount.github.io/docs/beancount_language_syntax/",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "text": {
@@ -2125,10 +2239,30 @@
         "required": [
           "text"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "title": "Append Beancount Directive Text"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.write"
+            ]
+          }
+        ]
+      },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -2294,35 +2428,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Append Beancount Directive Text",
-        "readOnlyHint": false,
-        "destructiveHint": false,
-        "idempotentHint": false,
-        "openWorldHint": false
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.write"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.write"
+          ]
+        }
+      ]
     },
     {
       "name": "insertReceiptTransaction",
       "title": "Insert Receipt Transaction",
-      "description": "Promote the caller-owned temporary receipt named by receiptObjectKey into receipt storage and append the confirmed transaction. input carries date, payee, description, postings [{account,amountNumber,amountCurrency}], and documentAccount. ledger is required unless pinned. Applies immediately.",
+      "description": "Promote the caller-owned temporary receipt named by receiptObjectKey, append the confirmed transaction, then delete the temporary upload. input carries date, payee, description, postings [{account,amountNumber,amountCurrency}], and documentAccount. ledger is required unless pinned. Applies immediately.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "receiptObjectKey": {
@@ -2395,10 +2517,30 @@
         "required": [
           "input"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "title": "Insert Receipt Transaction"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.write"
+            ]
+          }
+        ]
+      },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -2528,35 +2670,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Insert Receipt Transaction",
-        "readOnlyHint": false,
-        "destructiveHint": false,
-        "idempotentHint": false,
-        "openWorldHint": false
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.write"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.write"
+          ]
+        }
+      ]
     },
     {
       "name": "parseReceipt",
       "title": "Parse Receipt and Recommend Accounts",
       "description": "Parse the caller-owned temporary image/PDF named by objectKey and recommend accounts. Pinned credentials may omit ledger; others must select it. Consumes extraction and recommendation tokens, without inserting entries.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "objectKey": {
@@ -2576,10 +2706,30 @@
             "type": "string"
           }
         },
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "title": "Parse Receipt and Recommend Accounts"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.write"
+            ]
+          }
+        ]
+      },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -2649,35 +2799,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Parse Receipt and Recommend Accounts",
-        "readOnlyHint": false,
-        "destructiveHint": false,
-        "idempotentHint": false,
-        "openWorldHint": true
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.write"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.write"
+          ]
+        }
+      ]
     },
     {
       "name": "parseFile",
       "title": "Parse Uploaded File",
       "description": "Parse a caller-owned temporary upload into transaction rows. s3ObjectKey comes from the upload operation; fileFormat names the format (csv, pdf, xlsx, json, etc.). Consumes AI quota. Does not write ledger entries.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "s3ObjectKey": {
@@ -2698,10 +2836,30 @@
         "required": [
           "fileFormat"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "title": "Parse Uploaded File"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.write"
+            ]
+          }
+        ]
+      },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -2770,35 +2928,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Parse Uploaded File",
-        "readOnlyHint": false,
-        "destructiveHint": false,
-        "idempotentHint": false,
-        "openWorldHint": true
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.write"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.write"
+          ]
+        }
+      ]
     },
     {
       "name": "generateTempAssetUploadUrl",
       "title": "Create Temporary Asset Upload URL",
       "description": "Create a presigned PUT URL bound to the current user. Optional filename and mimeType preserve the upload metadata. Upload the bytes to uploadUrl before using objectKey in an ingestion workflow.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "filename": {
@@ -2822,10 +2968,30 @@
             ]
           }
         },
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "title": "Create Temporary Asset Upload URL"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.write"
+            ]
+          }
+        ]
+      },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -2878,35 +3044,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Create Temporary Asset Upload URL",
-        "readOnlyHint": false,
-        "destructiveHint": false,
-        "idempotentHint": false,
-        "openWorldHint": false
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.write"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.write"
+          ]
+        }
+      ]
     },
     {
       "name": "createLedgerFiles",
       "title": "Create Ledger Files",
-      "description": "Create new text files in one atomic commit; each file gets plain UTF-8 content. Each new/resulting file is limited to 1 MiB of UTF-8 bytes, including dry runs. dry_run previews without committing: the same refusal as the commit, plus a unified diff per touched file and bean-check's verdict over the projected contents. Unlike entry writes, file writes commit even when they introduce new bean-check errors; the result reports them under `validation.newErrors` instead of refusing.",
+      "description": "Create new text files in one atomic commit; each file gets plain UTF-8 content. Each new/resulting file is limited to 1 MiB of UTF-8 bytes, including dry runs. dry_run previews without committing: the same refusal as the commit, plus a unified diff per touched file and bean-check's verdict over the projected contents. A change that adds bean-check errors is refused with VALIDATION_FAILED (dry_run too); allow_invalid commits it anyway, e.g. one step of a multi-step edit.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "description": {
@@ -2914,7 +3068,7 @@
             "type": "string"
           },
           "message": {
-            "description": "Alias of description, as REST and GraphQL spell it.",
+            "description": "Alias of description, as REST and GraphQL spell it; one is required.",
             "type": "string"
           },
           "files": {
@@ -2947,6 +3101,14 @@
             "description": "Alias of dry_run, as REST and GraphQL spell it.",
             "type": "boolean"
           },
+          "allow_invalid": {
+            "description": "Commit even if the change adds bean-check errors.",
+            "type": "boolean"
+          },
+          "allowInvalid": {
+            "description": "Alias of allow_invalid.",
+            "type": "boolean"
+          },
           "ledger": {
             "description": "Target ledger as owner/name. Required for an unpinned credential; defaults to the credential's ledger restriction.",
             "type": "string"
@@ -2954,10 +3116,30 @@
         },
         "required": [
           "files"
-        ],
-        "$schema": "http://json-schema.org/draft-07/schema#"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "title": "Create Ledger Files"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.write"
+            ]
+          }
+        ]
       },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -3134,35 +3316,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Create Ledger Files",
-        "readOnlyHint": false,
-        "destructiveHint": false,
-        "idempotentHint": false,
-        "openWorldHint": false
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.write"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.write"
+          ]
+        }
+      ]
     },
     {
       "name": "updateLedgerFiles",
       "title": "Update Ledger Files",
-      "description": "Change existing text files in one atomic commit: per file, either replace an exact text (old_string must appear exactly once) with new_string, or overwrite the whole file with content (pass its sha from readLedgerFiles to refuse it if the file changed since). Several items for one file apply in order, each to the text the previous one produced. Each new/resulting file is limited to 1 MiB of UTF-8 bytes, including dry runs. dry_run previews without committing: the same refusal as the commit, plus a unified diff per touched file and bean-check's verdict over the projected contents. Unlike entry writes, file writes commit even when they introduce new bean-check errors; the result reports them under `validation.newErrors` instead of refusing.",
+      "description": "Change existing text files in one atomic commit: per file, either replace an exact text (old_string must appear exactly once) with new_string, or overwrite the whole file with content (pass its sha from readLedgerFiles to refuse it if the file changed since). Several items for one file apply in order, each to the text the previous one produced. Each new/resulting file is limited to 1 MiB of UTF-8 bytes, including dry runs. dry_run previews without committing: the same refusal as the commit, plus a unified diff per touched file and bean-check's verdict over the projected contents. A change that adds bean-check errors is refused with VALIDATION_FAILED (dry_run too); allow_invalid commits it anyway, e.g. one step of a multi-step edit.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "description": {
@@ -3170,7 +3340,7 @@
             "type": "string"
           },
           "message": {
-            "description": "Alias of description, as REST and GraphQL spell it.",
+            "description": "Alias of description, as REST and GraphQL spell it; one is required.",
             "type": "string"
           },
           "files": {
@@ -3235,6 +3405,14 @@
             "description": "Alias of dry_run, as REST and GraphQL spell it.",
             "type": "boolean"
           },
+          "allow_invalid": {
+            "description": "Commit even if the change adds bean-check errors.",
+            "type": "boolean"
+          },
+          "allowInvalid": {
+            "description": "Alias of allow_invalid.",
+            "type": "boolean"
+          },
           "ledger": {
             "description": "Target ledger as owner/name. Required for an unpinned credential; defaults to the credential's ledger restriction.",
             "type": "string"
@@ -3242,10 +3420,30 @@
         },
         "required": [
           "files"
-        ],
-        "$schema": "http://json-schema.org/draft-07/schema#"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "title": "Update Ledger Files"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.write"
+            ]
+          }
+        ]
       },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -3422,35 +3620,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Update Ledger Files",
-        "readOnlyHint": false,
-        "destructiveHint": true,
-        "idempotentHint": true,
-        "openWorldHint": false
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.write"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.write"
+          ]
+        }
+      ]
     },
     {
       "name": "deleteLedgerFiles",
       "title": "Delete Ledger Files",
-      "description": "Delete files in one atomic commit; pass each file's sha from readLedgerFiles to refuse the delete if it changed since. Deleting a file still `include`d by another ledger file is refused as `BAD_USER_INPUT` naming the includers; remove the include from the including file(s) first, then delete. An include counts when its target resolves to the deleted path the way the ledger loads it, relative to the directory of the file that declares it, and glob includes never count. Each new/resulting file is limited to 1 MiB of UTF-8 bytes, including dry runs. dry_run previews without committing: the same refusal as the commit, plus a unified diff per touched file and bean-check's verdict over the projected contents. Unlike entry writes, file writes commit even when they introduce new bean-check errors; the result reports them under `validation.newErrors` instead of refusing.",
+      "description": "Delete files in one atomic commit; pass each file's sha from readLedgerFiles to refuse the delete if it changed since. Deleting a file still `include`d by another ledger file is refused as `BAD_USER_INPUT` naming the includers; remove the include from the including file(s) first, then delete. An include counts when its target resolves to the deleted path the way the ledger loads it, relative to the directory of the file that declares it, and glob includes never count. Each new/resulting file is limited to 1 MiB of UTF-8 bytes, including dry runs. dry_run previews without committing: the same refusal as the commit, plus a unified diff per touched file and bean-check's verdict over the projected contents. A change that adds bean-check errors is refused with VALIDATION_FAILED (dry_run too); allow_invalid commits it anyway, e.g. one step of a multi-step edit.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "description": {
@@ -3458,7 +3644,7 @@
             "type": "string"
           },
           "message": {
-            "description": "Alias of description, as REST and GraphQL spell it.",
+            "description": "Alias of description, as REST and GraphQL spell it; one is required.",
             "type": "string"
           },
           "files": {
@@ -3490,6 +3676,14 @@
             "description": "Alias of dry_run, as REST and GraphQL spell it.",
             "type": "boolean"
           },
+          "allow_invalid": {
+            "description": "Commit even if the change adds bean-check errors.",
+            "type": "boolean"
+          },
+          "allowInvalid": {
+            "description": "Alias of allow_invalid.",
+            "type": "boolean"
+          },
           "ledger": {
             "description": "Target ledger as owner/name. Required for an unpinned credential; defaults to the credential's ledger restriction.",
             "type": "string"
@@ -3497,10 +3691,30 @@
         },
         "required": [
           "files"
-        ],
-        "$schema": "http://json-schema.org/draft-07/schema#"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "title": "Delete Ledger Files"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.write"
+            ]
+          }
+        ]
       },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -3677,39 +3891,27 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Delete Ledger Files",
-        "readOnlyHint": false,
-        "destructiveHint": true,
-        "idempotentHint": true,
-        "openWorldHint": false
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.write"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.write"
+          ]
+        }
+      ]
     },
     {
       "name": "updateEntrySource",
       "title": "Update Entry Source",
       "description": "Replace one entry's source text with newContent, addressed by the entry_hash listLedgerEntries returns (as entryHash or entry_hash) and sha256sum from getEntryContext. The commit message is composed from the operation; there is no message argument. Returns the entry's new hash as newEntryHash; the request's hash is stale after the commit. A replacement that would take a free ledger past its directive limit is RESOURCE_LIMIT_REACHED. A write that would add a bean-check error the ledger did not have is refused with VALIDATION_FAILED naming each new error \u2014 lone imbalance refuses as UNBALANCED with the residual; pass allowInvalid: true to commit it anyway. dry_run previews without committing.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "entryHash": {
-            "description": "The entry's hash.",
+            "description": "The entry's hash. One of entryHash/entry_hash is required.",
             "type": "string"
           },
           "entry_hash": {
@@ -3747,10 +3949,30 @@
           "sha256sum",
           "newContent"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "title": "Update Entry Source"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.write"
+            ]
+          }
+        ]
+      },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -3918,39 +4140,27 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Update Entry Source",
-        "readOnlyHint": false,
-        "destructiveHint": true,
-        "idempotentHint": false,
-        "openWorldHint": false
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.write"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.write"
+          ]
+        }
+      ]
     },
     {
       "name": "deleteEntrySource",
       "title": "Delete Entry Source",
       "description": "Delete one entry's source text, addressed by the entry_hash listLedgerEntries returns (as entryHash or entry_hash) and sha256sum from getEntryContext. The commit message is composed from the operation; there is no message argument. A write that would add a bean-check error the ledger did not have \u2014 deleting an entry a balance assertion depends on, re-dating it past one \u2014 is refused with VALIDATION_FAILED naming each new error; pass allowInvalid: true to commit it anyway. dry_run previews without committing.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "entryHash": {
-            "description": "The entry's hash.",
+            "description": "The entry's hash. One of entryHash/entry_hash is required.",
             "type": "string"
           },
           "entry_hash": {
@@ -3984,10 +4194,30 @@
         "required": [
           "sha256sum"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "title": "Delete Entry Source"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.write"
+            ]
+          }
+        ]
+      },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -4146,35 +4376,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Delete Entry Source",
-        "readOnlyHint": false,
-        "destructiveHint": true,
-        "idempotentHint": false,
-        "openWorldHint": false
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.write"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.write"
+          ]
+        }
+      ]
     },
     {
       "name": "deleteEntrySources",
       "title": "Delete Several Entry Sources",
       "description": "Delete several entries' source text in one commit; entries is a list of {entryHash or entry_hash, sha256sum} \u2014 the entry_hash listLedgerEntries returns under either spelling. The commit message is composed from the operation; there is no message argument. Returns the deleted count. A write that would add a bean-check error the ledger did not have \u2014 deleting an entry a balance assertion depends on, re-dating it past one \u2014 is refused with VALIDATION_FAILED naming each new error; pass allowInvalid: true to commit it anyway. dry_run previews without committing.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "entries": {
@@ -4184,7 +4402,7 @@
               "type": "object",
               "properties": {
                 "entryHash": {
-                  "description": "The entry's hash.",
+                  "description": "The entry's hash. One of entryHash/entry_hash is required.",
                   "type": "string"
                 },
                 "entry_hash": {
@@ -4225,10 +4443,30 @@
         "required": [
           "entries"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "title": "Delete Several Entry Sources"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.write"
+            ]
+          }
+        ]
+      },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -4389,35 +4627,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Delete Several Entry Sources",
-        "readOnlyHint": false,
-        "destructiveHint": true,
-        "idempotentHint": false,
-        "openWorldHint": false
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.write"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.write"
+          ]
+        }
+      ]
     },
     {
       "name": "renameLedgerFile",
       "title": "Rename Ledger File",
       "description": "Move oldPath to newPath preserving content in one atomic commit. Refuses when oldPath is still `include`d unless updateIncludes rewrites those lines in the same commit. Pinned credentials can omit ledger. dry_run previews without committing.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "oldPath": {
@@ -4474,10 +4700,30 @@
           "oldPath",
           "newPath"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "title": "Rename Ledger File"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.write"
+            ]
+          }
+        ]
+      },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -4647,35 +4893,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Rename Ledger File",
-        "readOnlyHint": false,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.write"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.write"
+          ]
+        }
+      ]
     },
     {
       "name": "setLedgerStar",
       "title": "Star or Unstar a Ledger",
-      "description": "Set starred:true to star a ledger or false to unstar it for the authenticated user. ledger selects owner/name and defaults to the credential pin. No dry_run: starring is an instantly reversible personal toggle, so there is nothing worth previewing.",
+      "description": "Set starred:true to star a ledger or false to unstar it for the authenticated user. ledger selects owner/name and defaults to the credential pin. No dry_run: this personal preference applies immediately; false removes an existing star relationship.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "starred": {
@@ -4689,10 +4923,30 @@
         "required": [
           "starred"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "title": "Star or Unstar a Ledger"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.write"
+            ]
+          }
+        ]
+      },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -4744,15 +4998,38 @@
         "required": [
           "ok"
         ],
+        "additionalProperties": false
+      },
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.write"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "refreshManagedPrices",
+      "title": "Refresh Managed Price Feeds",
+      "description": "Re-fetch the ledger's managed price feeds now and return each source's status (the ledgerManagedPrices records). Never edits the ledger. ledger is required unless pinned.",
+      "inputSchema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "ledger": {
+            "description": "Target ledger as owner/name. Required for an unpinned credential; defaults to the credential's ledger restriction.",
+            "type": "string"
+          }
+        },
         "additionalProperties": false
       },
       "annotations": {
-        "title": "Star or Unstar a Ledger",
         "readOnlyHint": false,
         "destructiveHint": false,
         "idempotentHint": true,
-        "openWorldHint": false
+        "openWorldHint": true,
+        "title": "Refresh Managed Price Feeds"
       },
       "execution": {
         "taskSupport": "forbidden"
@@ -4766,24 +5043,9 @@
             ]
           }
         ]
-      }
-    },
-    {
-      "name": "refreshManagedPrices",
-      "title": "Refresh Managed Price Feeds",
-      "description": "Re-fetch the ledger's managed price feeds now and return each source's status (the ledgerManagedPrices records). Never edits the ledger. ledger is required unless pinned.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "ledger": {
-            "description": "Target ledger as owner/name. Required for an unpinned credential; defaults to the credential's ledger restriction.",
-            "type": "string"
-          }
-        },
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "additionalProperties": false
       },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -4860,35 +5122,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Refresh Managed Price Feeds",
-        "readOnlyHint": false,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": true
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.write"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.write"
+          ]
+        }
+      ]
     },
     {
       "name": "syncBankTransactions",
       "title": "Sync Bank Transactions",
-      "description": "Pull new transactions from a linked bank into staging; nothing is written to the ledger. dry_run reports what would be pulled.",
+      "description": "Synchronize linked bank transactions into staging, adding, replacing or deleting staged rows. Never writes ledger entries. dry_run previews the changes.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "itemId": {
@@ -4896,7 +5146,7 @@
             "type": "string"
           },
           "item_id": {
-            "description": "Alias of itemId.",
+            "description": "Alias of itemId; one is required.",
             "type": "string"
           },
           "dry_run": {
@@ -4911,10 +5161,30 @@
             "description": "Target ledger as owner/name. Required for an unpinned credential; defaults to the credential's ledger restriction.",
             "type": "string"
           }
-        },
-        "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "title": "Sync Bank Transactions"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.write"
+            ]
+          }
+        ]
       },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -5031,35 +5301,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Sync Bank Transactions",
-        "readOnlyHint": false,
-        "destructiveHint": false,
-        "idempotentHint": false,
-        "openWorldHint": true
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.write"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.write"
+          ]
+        }
+      ]
     },
     {
       "name": "importStagedBankTransactions",
       "title": "Import Staged Bank Transactions",
       "description": "Write staged bank transactions into the ledger as directives, each booked against the given target account. dry_run returns the result and projected validation without committing.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "transactions": {
@@ -5073,7 +5331,7 @@
                   "type": "string"
                 },
                 "transaction_id": {
-                  "description": "Alias of transactionId.",
+                  "description": "Alias of transactionId; one is required.",
                   "type": "string"
                 },
                 "targetAccount": {
@@ -5081,7 +5339,7 @@
                   "type": "string"
                 },
                 "target_account": {
-                  "description": "Alias of targetAccount.",
+                  "description": "Alias of targetAccount; one is required.",
                   "type": "string"
                 },
                 "sourceAccount": {
@@ -5115,10 +5373,30 @@
         },
         "required": [
           "transactions"
-        ],
-        "$schema": "http://json-schema.org/draft-07/schema#"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "title": "Import Staged Bank Transactions"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.write"
+            ]
+          }
+        ]
       },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -5235,35 +5513,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Import Staged Bank Transactions",
-        "readOnlyHint": false,
-        "destructiveHint": false,
-        "idempotentHint": false,
-        "openWorldHint": false
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.write"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.write"
+          ]
+        }
+      ]
     },
     {
       "name": "discardStagedBankTransactions",
       "title": "Discard Staged Bank Transactions",
       "description": "Remove staged bank transactions so they are never imported. dry_run reports what would be removed.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "transactionIds": {
@@ -5275,7 +5541,7 @@
             }
           },
           "transaction_ids": {
-            "description": "Alias of transactionIds.",
+            "description": "Alias of transactionIds; one is required.",
             "minItems": 1,
             "type": "array",
             "items": {
@@ -5294,10 +5560,30 @@
             "description": "Target ledger as owner/name. Required for an unpinned credential; defaults to the credential's ledger restriction.",
             "type": "string"
           }
-        },
-        "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "title": "Discard Staged Bank Transactions"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.write"
+            ]
+          }
+        ]
       },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -5414,35 +5700,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Discard Staged Bank Transactions",
-        "readOnlyHint": false,
-        "destructiveHint": true,
-        "idempotentHint": false,
-        "openWorldHint": false
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.write"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.write"
+          ]
+        }
+      ]
     },
     {
       "name": "reconcileBankAccounts",
       "title": "Reconcile Linked Bank Accounts",
       "description": "Re-read which accounts a linked bank shares; accounts the bank no longer shares can be deleted along with their staged transactions. dry_run reports the changes without applying them.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "itemId": {
@@ -5450,7 +5724,7 @@
             "type": "string"
           },
           "item_id": {
-            "description": "Alias of itemId.",
+            "description": "Alias of itemId; one is required.",
             "type": "string"
           },
           "dry_run": {
@@ -5465,10 +5739,30 @@
             "description": "Target ledger as owner/name. Required for an unpinned credential; defaults to the credential's ledger restriction.",
             "type": "string"
           }
-        },
-        "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "title": "Reconcile Linked Bank Accounts"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.admin"
+            ]
+          }
+        ]
       },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -5502,35 +5796,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Reconcile Linked Bank Accounts",
-        "readOnlyHint": false,
-        "destructiveHint": true,
-        "idempotentHint": false,
-        "openWorldHint": true
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.admin"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.admin"
+          ]
+        }
+      ]
     },
     {
       "name": "mapBankAccount",
       "title": "Map Bank Account To Ledger Account",
       "description": "Point a linked bank account at a ledger account; replaces any existing mapping.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "accountId": {
@@ -5538,7 +5820,7 @@
             "type": "string"
           },
           "account_id": {
-            "description": "Alias of accountId.",
+            "description": "Alias of accountId; one is required.",
             "type": "string"
           },
           "ledgerAccount": {
@@ -5546,17 +5828,37 @@
             "type": "string"
           },
           "ledger_account": {
-            "description": "Alias of ledgerAccount.",
+            "description": "Alias of ledgerAccount; one is required.",
             "type": "string"
           },
           "ledger": {
             "description": "Target ledger as owner/name. Required for an unpinned credential; defaults to the credential's ledger restriction.",
             "type": "string"
           }
-        },
-        "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "title": "Map Bank Account To Ledger Account"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.admin"
+            ]
+          }
+        ]
       },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -5590,35 +5892,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Map Bank Account To Ledger Account",
-        "readOnlyHint": false,
-        "destructiveHint": true,
-        "idempotentHint": true,
-        "openWorldHint": false
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.admin"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.admin"
+          ]
+        }
+      ]
     },
     {
       "name": "setBankAccountCurrency",
       "title": "Set Bank Account Currency",
       "description": "Set a linked bank account's currency; replaces the current value.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "accountId": {
@@ -5626,7 +5916,7 @@
             "type": "string"
           },
           "account_id": {
-            "description": "Alias of accountId.",
+            "description": "Alias of accountId; one is required.",
             "type": "string"
           },
           "currency": {
@@ -5640,10 +5930,30 @@
         },
         "required": [
           "currency"
-        ],
-        "$schema": "http://json-schema.org/draft-07/schema#"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "title": "Set Bank Account Currency"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.admin"
+            ]
+          }
+        ]
       },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -5677,35 +5987,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Set Bank Account Currency",
-        "readOnlyHint": false,
-        "destructiveHint": true,
-        "idempotentHint": true,
-        "openWorldHint": false
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.admin"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.admin"
+          ]
+        }
+      ]
     },
     {
       "name": "refreshBankConnection",
       "title": "Refresh Bank Connection Status",
       "description": "Re-read a linked bank connection's health status from the bank.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "itemId": {
@@ -5713,17 +6011,37 @@
             "type": "string"
           },
           "item_id": {
-            "description": "Alias of itemId.",
+            "description": "Alias of itemId; one is required.",
             "type": "string"
           },
           "ledger": {
             "description": "Target ledger as owner/name. Required for an unpinned credential; defaults to the credential's ledger restriction.",
             "type": "string"
           }
-        },
-        "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "title": "Refresh Bank Connection Status"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.admin"
+            ]
+          }
+        ]
       },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -5757,35 +6075,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Refresh Bank Connection Status",
-        "readOnlyHint": false,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": true
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.admin"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.admin"
+          ]
+        }
+      ]
     },
     {
       "name": "unlinkBankConnection",
       "title": "Unlink Bank Connection",
       "description": "Sever a linked bank connection. Linking a new bank happens in a browser through the bank's own widget, not here. dry_run reports what would be removed.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "itemId": {
@@ -5793,7 +6099,7 @@
             "type": "string"
           },
           "item_id": {
-            "description": "Alias of itemId.",
+            "description": "Alias of itemId; one is required.",
             "type": "string"
           },
           "dry_run": {
@@ -5808,10 +6114,30 @@
             "description": "Target ledger as owner/name. Required for an unpinned credential; defaults to the credential's ledger restriction.",
             "type": "string"
           }
-        },
-        "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "title": "Unlink Bank Connection"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.admin"
+            ]
+          }
+        ]
       },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -5845,15 +6171,38 @@
         "required": [
           "ok"
         ],
+        "additionalProperties": false
+      },
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.admin"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "listBankConnections",
+      "title": "List Linked Banks And Their Accounts",
+      "description": "List linked bank connections (item_id) and their accounts (account_id), the ids the bank sync, import, and connection tools take.",
+      "inputSchema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "ledger": {
+            "description": "Target ledger as owner/name. Required for an unpinned credential; defaults to the credential's ledger restriction.",
+            "type": "string"
+          }
+        },
         "additionalProperties": false
       },
       "annotations": {
-        "title": "Unlink Bank Connection",
-        "readOnlyHint": false,
-        "destructiveHint": true,
-        "idempotentHint": false,
-        "openWorldHint": true
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "title": "List Linked Banks And Their Accounts"
       },
       "execution": {
         "taskSupport": "forbidden"
@@ -5867,24 +6216,9 @@
             ]
           }
         ]
-      }
-    },
-    {
-      "name": "listBankConnections",
-      "title": "List Linked Banks And Their Accounts",
-      "description": "List linked bank connections (item_id) and their accounts (account_id), the ids the bank sync, import, and connection tools take.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "ledger": {
-            "description": "Target ledger as owner/name. Required for an unpinned credential; defaults to the credential's ledger restriction.",
-            "type": "string"
-          }
-        },
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "additionalProperties": false
       },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -5935,35 +6269,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "List Linked Banks And Their Accounts",
-        "readOnlyHint": true,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.admin"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.admin"
+          ]
+        }
+      ]
     },
     {
       "name": "listStagedBankTransactions",
       "title": "List Bank Transactions Staged For Import",
       "description": "List bank transactions staged for import. Each row's `transactionId` \u2014 not its `id` \u2014 is what importStagedBankTransactions and discardStagedBankTransactions take; optional accountId filter.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "accountId": {
@@ -5974,10 +6296,30 @@
             "type": "string"
           }
         },
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "title": "List Bank Transactions Staged For Import"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.read"
+            ]
+          }
+        ]
+      },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -6014,35 +6356,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "List Bank Transactions Staged For Import",
-        "readOnlyHint": true,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.read"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.read"
+          ]
+        }
+      ]
     },
     {
       "name": "createPullRequest",
       "title": "Create Pull Request",
       "description": "Propose a set of file changes as a pull request. Requires title, description, clearCommitMessage, and changes [{path,content}]; an omitted baseBranch targets main. A repository server failure is SERVICE_UNAVAILABLE naming the failed step.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "title": {
@@ -6102,10 +6432,30 @@
           "clearCommitMessage",
           "changes"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "title": "Create Pull Request"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.write"
+            ]
+          }
+        ]
+      },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -6169,35 +6519,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Create Pull Request",
-        "readOnlyHint": false,
-        "destructiveHint": false,
-        "idempotentHint": false,
-        "openWorldHint": false
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.write"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.write"
+          ]
+        }
+      ]
     },
     {
       "name": "mergePullRequest",
       "title": "Merge Pull Request",
       "description": "Merge a pull request into its base branch; the merge applies immediately. A merge that would take a free ledger past its directive limit is RESOURCE_LIMIT_REACHED. A repository server failure is SERVICE_UNAVAILABLE naming the failed step.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ledger": {
@@ -6214,10 +6552,30 @@
         "required": [
           "prNumber"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "title": "Merge Pull Request"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.write"
+            ]
+          }
+        ]
+      },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -6281,35 +6639,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Merge Pull Request",
-        "readOnlyHint": false,
-        "destructiveHint": true,
-        "idempotentHint": false,
-        "openWorldHint": false
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.write"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.write"
+          ]
+        }
+      ]
     },
     {
       "name": "rejectPullRequest",
       "title": "Reject Pull Request",
       "description": "Reject a pull request by closing it without merging; applies immediately.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ledger": {
@@ -6326,10 +6672,30 @@
         "required": [
           "prNumber"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "title": "Reject Pull Request"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.write"
+            ]
+          }
+        ]
+      },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -6393,35 +6759,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Reject Pull Request",
-        "readOnlyHint": false,
-        "destructiveHint": true,
-        "idempotentHint": false,
-        "openWorldHint": false
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.write"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.write"
+          ]
+        }
+      ]
     },
     {
       "name": "createLedger",
       "title": "Create Ledger",
       "description": "Create a ledger owned by the authenticated user. Requires name; accepts description, private, template (STARTER default, including null: options and accounts without transactions; SAMPLE: demonstration transactions), a setup specification (mutually exclusive with template), and a requestId for idempotent retries. Refused for ledger-pinned credentials.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "name": {
@@ -6535,7 +6889,7 @@
                         },
                         "amount": {
                           "type": "string",
-                          "pattern": "^-?\\d+(\\.\\d+)?$"
+                          "pattern": "^[+-]?\\d+(\\.\\d+)?$"
                         }
                       },
                       "required": [
@@ -6571,10 +6925,30 @@
         "required": [
           "name"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "title": "Create Ledger"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.admin"
+            ]
+          }
+        ]
+      },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -6777,35 +7151,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Create Ledger",
-        "readOnlyHint": false,
-        "destructiveHint": false,
-        "idempotentHint": false,
-        "openWorldHint": true
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.admin"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.admin"
+          ]
+        }
+      ]
     },
     {
       "name": "previewLedgerSetup",
       "title": "Preview Ledger Setup",
       "description": "Preview a ledger setup (ADR021) without creating anything: returns the files, account list, and validation result the specification would produce. Accepts the same setup object as createLedger.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "setup": {
@@ -6873,7 +7235,7 @@
                     },
                     "amount": {
                       "type": "string",
-                      "pattern": "^-?\\d+(\\.\\d+)?$"
+                      "pattern": "^[+-]?\\d+(\\.\\d+)?$"
                     }
                   },
                   "required": [
@@ -6892,10 +7254,30 @@
         "required": [
           "setup"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "title": "Preview Ledger Setup"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.admin"
+            ]
+          }
+        ]
+      },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -6997,35 +7379,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Preview Ledger Setup",
-        "readOnlyHint": true,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.admin"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.admin"
+          ]
+        }
+      ]
     },
     {
       "name": "updateLedger",
       "title": "Update Ledger Settings",
       "description": "Change a ledger's name, description, or privacy; omitted fields stay as they are; dry_run previews without committing, rendering the current\u2192new diff.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "name": {
@@ -7077,10 +7447,30 @@
             "type": "string"
           }
         },
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "title": "Update Ledger Settings"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.admin"
+            ]
+          }
+        ]
+      },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -7267,35 +7657,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Update Ledger Settings",
-        "readOnlyHint": false,
-        "destructiveHint": true,
-        "idempotentHint": true,
-        "openWorldHint": true
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.admin"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.admin"
+          ]
+        }
+      ]
     },
     {
       "name": "deleteLedger",
       "title": "Delete Ledger",
       "description": "Permanently delete a ledger, including its history; dry_run previews without committing, rendering the destroy summary.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "dryRun": {
@@ -7311,10 +7689,30 @@
             "type": "string"
           }
         },
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "title": "Delete Ledger"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.admin"
+            ]
+          }
+        ]
+      },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -7408,35 +7806,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Delete Ledger",
-        "readOnlyHint": false,
-        "destructiveHint": true,
-        "idempotentHint": false,
-        "openWorldHint": false
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.admin"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.admin"
+          ]
+        }
+      ]
     },
     {
       "name": "setLedgerCollaborator",
       "title": "Add or Update Ledger Collaborator",
       "description": "Add a collaborator to a ledger, or change an existing collaborator's permission (read, write, or admin); dry_run previews without committing, rendering the would-be grant.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "collaborator": {
@@ -7475,10 +7861,30 @@
         "required": [
           "collaborator"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "title": "Add or Update Ledger Collaborator"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.admin"
+            ]
+          }
+        ]
+      },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -7580,35 +7986,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Add or Update Ledger Collaborator",
-        "readOnlyHint": false,
-        "destructiveHint": true,
-        "idempotentHint": true,
-        "openWorldHint": false
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.admin"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.admin"
+          ]
+        }
+      ]
     },
     {
       "name": "removeLedgerCollaborator",
       "title": "Remove Ledger Collaborator",
       "description": "Remove a collaborator's access to a ledger; dry_run previews without committing, rendering the would-be revocation.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "collaborator": {
@@ -7631,10 +8025,30 @@
         "required": [
           "collaborator"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "title": "Remove Ledger Collaborator"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.admin"
+            ]
+          }
+        ]
+      },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -7736,35 +8150,23 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Remove Ledger Collaborator",
-        "readOnlyHint": false,
-        "destructiveHint": true,
-        "idempotentHint": false,
-        "openWorldHint": false
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.admin"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.admin"
+          ]
+        }
+      ]
     },
     {
       "name": "leaveLedger",
       "title": "Leave Ledger",
       "description": "Remove the authenticated user's own access to a ledger they collaborate on; dry_run previews without committing, rendering the would-be self-removal.",
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "dryRun": {
@@ -7780,10 +8182,30 @@
             "type": "string"
           }
         },
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "title": "Leave Ledger"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "ledger.admin"
+            ]
+          }
+        ]
+      },
       "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
           "ok": {
@@ -7885,498 +8307,485 @@
         "required": [
           "ok"
         ],
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false
       },
-      "annotations": {
-        "title": "Leave Ledger",
-        "readOnlyHint": false,
-        "destructiveHint": true,
-        "idempotentHint": false,
-        "openWorldHint": false
-      },
-      "execution": {
-        "taskSupport": "forbidden"
-      },
-      "_meta": {
-        "securitySchemes": [
-          {
-            "type": "oauth2",
-            "scopes": [
-              "ledger.admin"
-            ]
-          }
-        ]
-      }
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "ledger.admin"
+          ]
+        }
+      ]
     }
   ],
   "resources": [
     {
       "name": "transactionCategorySuggestions",
-      "title": "Transaction Category Suggestions",
       "uriTemplate": "beancount://{owner}/{name}/import/suggest-categories{?transactions}",
+      "title": "Transaction Category Suggestions",
       "description": "Suggest a target account for each supplied transaction using the ledger's open accounts and recent history. transactions is a JSON-encoded array of {rowIndex, date, payee, description, amount}. Requires assisted-categorization authority and consumes AI quota.",
       "mimeType": "application/json"
     },
     {
       "name": "tempAssetDownloadUrl",
-      "title": "Temporary Asset Download URL",
       "uriTemplate": "beancount://temp-assets/download-url{?objectKey,s3ObjectKey,receiptObjectKey}",
+      "title": "Temporary Asset Download URL",
       "description": "Presign a download for an objectKey owned by the current user. Returns downloadUrl and expiresIn in seconds. Foreign, malformed, and permanent object keys are refused.",
       "mimeType": "application/json"
     },
     {
       "name": "publicUserProfile",
-      "title": "Public user profile",
       "uriTemplate": "beancount://social/profile{?username}",
+      "title": "Public user profile",
       "description": "Profile, activities, and repositories for username. Authenticated self-views retain existing private enrichment; other targets use the public view.",
       "mimeType": "application/json"
     },
     {
       "name": "userFollowers",
-      "title": "followers",
       "uriTemplate": "beancount://social/followers{?username,page,limit}",
+      "title": "followers",
       "description": "Public social discovery. page defaults to 1 and limit to 20; total is the page size. Upstream failure returns an empty page.",
       "mimeType": "application/json"
     },
     {
       "name": "userFollowing",
-      "title": "following",
       "uriTemplate": "beancount://social/following{?username,page,limit}",
+      "title": "following",
       "description": "Public social discovery. page defaults to 1 and limit to 20; total is the page size. Upstream failure returns an empty page.",
       "mimeType": "application/json"
     },
     {
       "name": "userStarredRepos",
-      "title": "starred-repositories",
       "uriTemplate": "beancount://social/starred-repositories{?username,page,limit}",
+      "title": "starred-repositories",
       "description": "Public social discovery. page defaults to 1 and limit to 20; total is the page size. Upstream failure returns an empty page.",
       "mimeType": "application/json"
     },
     {
       "name": "getFeed",
-      "title": "Your activity feed",
       "uriTemplate": "beancount://account/feed{?offset,limit,source,locale}",
+      "title": "Your activity feed",
       "description": "Read your merged blog, release, and ledger activity. Requires a session or account-wide OAuth credential with ledger.read.",
       "mimeType": "application/json"
     },
     {
       "name": "userProfile",
-      "title": "Your profile",
       "uriTemplate": "beancount://account/profile{?userId}",
+      "title": "Your profile",
       "description": "Read your account profile and limits. An explicit userId must be your own user ID.",
       "mimeType": "application/json"
     },
     {
       "name": "health",
-      "title": "Application health",
       "uriTemplate": "beancount://configuration/health",
+      "title": "Application health",
       "description": "Public application health probe; not a dependency readiness check.",
       "mimeType": "application/json"
     },
     {
       "name": "featureFlags",
-      "title": "Feature flags",
       "uriTemplate": "beancount://configuration/feature-flags{?userId}",
+      "title": "Feature flags",
       "description": "Public static feature configuration. The legacy userId does not affect the result.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerArchive",
-      "title": "Ledger Archive",
       "uriTemplate": "beancount://{owner}/{name}/archive/{archive}",
+      "title": "Ledger Archive",
       "description": "Download archive bytes as an MCP base64 blob, up to 8 MiB. `archive` is a Git reference and its format, `<ref>.zip` or `<ref>.tar.gz` (for example `main.zip`), as on REST. A larger archive is refused; read `beancount://{owner}/{name}/archive-download-url` for an HTTP URL that streams it at any size. Every call rechecks ledger read authority and spends the shared archive-download budget.",
       "mimeType": "application/octet-stream"
     },
     {
       "name": "ledgerAssetDownloadUrl",
-      "title": "Ledger Asset Download URL",
       "uriTemplate": "beancount://assets/download-url{?ledgerRepoId,filename}",
+      "title": "Ledger Asset Download URL",
       "description": "Issue a presigned asset URL after resolving ledgerRepoId and checking current file-read authority. filename is relative to the repository's asset directory. The service enforces any credential ledger pin.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerArchiveDownloadUrl",
-      "title": "Ledger Archive Download URL",
       "uriTemplate": "beancount://{owner}/{name}/archive-download-url",
+      "title": "Ledger Archive Download URL",
       "description": "Get the authenticated HTTP URL for main.zip. It is a REST endpoint: fetch it with a personal API key (x-api-key) or a signed-in browser session; an MCP OAuth token is scoped to the MCP endpoint and is refused there. No credential is embedded in the URL. This resource discovers a URL and does not deliver archive bytes.",
       "mimeType": "application/json"
     },
     {
       "name": "pullRequestDetails",
-      "title": "Pull Request Details",
       "uriTemplate": "beancount://{owner}/{name}/pull-request{?prNumber}",
+      "title": "Pull Request Details",
       "description": "Read pull request metadata, file statistics, and diff with current repository read authority.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerCollaborators",
-      "title": "Ledger Collaborators",
       "uriTemplate": "beancount://{owner}/{name}/collaborators{?page,limit}",
+      "title": "Ledger Collaborators",
       "description": "List ledger collaborators and permissions. Requires ledger.admin and current collaborator-inspection authority. Defaults to page 1, limit 10.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerCollaboratorPermission",
-      "title": "Ledger Collaborator Permission",
       "uriTemplate": "beancount://{owner}/{name}/collaborators/permission{?collaborator}",
+      "title": "Ledger Collaborator Permission",
       "description": "Read one collaborator's permission and user information. Requires collaborator username, ledger.admin, and current collaborator-inspection authority.",
       "mimeType": "application/json"
     },
     {
       "name": "latestLedgerCommit",
-      "title": "Read the latest commit on a ledger branch",
       "uriTemplate": "beancount://{owner}/{name}/latest-commit{?branchName}",
+      "title": "Read the latest commit on a ledger branch",
       "description": "Read the latest commit on a ledger branch",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerCommits",
-      "title": "List commits with branch and pagination controls",
       "uriTemplate": "beancount://{owner}/{name}/commits{?branch,page,limit}",
+      "title": "List commits with branch and pagination controls",
       "description": "List commits with branch and pagination controls",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerCommitDetails",
-      "title": "Read commit metadata, parents, file statistics, and unified diff",
       "uriTemplate": "beancount://{owner}/{name}/commit-details{?sha}",
+      "title": "Read commit metadata, parents, file statistics, and unified diff",
       "description": "Read commit metadata, parents, file statistics, and unified diff",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerJournal",
-      "title": "Read the journal with pagination and all subtype filters",
       "uriTemplate": "beancount://{owner}/{name}/journal{?account,filter,time,limit,offset,directiveTypes,transactionSubtypes,documentSubtypes,customSubtypes}",
+      "title": "Read the journal with pagination and all subtype filters",
       "description": "Read the journal with pagination and all subtype filters. Subtype filters are JSON-encoded string arrays. Each narrows only its own directive family and passes other families through \u2014 combine with directiveTypes to restrict the families returned.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerPlaintextJournal",
-      "title": "Read Beancount journal text with account, time, and expression filters",
       "uriTemplate": "beancount://{owner}/{name}/plaintext-journal{?account,filter,time,limit,offset}",
+      "title": "Read Beancount journal text with account, time, and expression filters",
       "description": "Read Beancount journal text with account, time, and expression filters",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerAccountJournal",
-      "title": "Read account entries with changes and running balances",
       "uriTemplate": "beancount://{owner}/{name}/account-journal{?account,filter,time,filter_account,filterAccount,limit,offset,with_children,withChildren,conversion,directiveTypes,transactionSubtypes,documentSubtypes,customSubtypes}",
+      "title": "Read account entries with changes and running balances",
       "description": "Read account entries with changes and running balances. Subtype filters are JSON-encoded string arrays. Each narrows only its own directive family and passes other families through \u2014 combine with directiveTypes to restrict the families returned.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerSourceFiles",
-      "title": "List the ledger's source files",
       "uriTemplate": "beancount://{owner}/{name}/source-files",
+      "title": "List the ledger's source files",
       "description": "List the ledger's source files",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerIncomeStatement",
-      "title": "Income Statement",
       "uriTemplate": "beancount://{owner}/{name}/statements/income-statement{?account,filter,time,conversion,interval,shape}",
+      "title": "Income Statement",
       "description": "Financial statement with account, filter, time, conversion, and interval parameters. Returns the same structured data as REST.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerBalanceSheet",
-      "title": "Balance Sheet",
       "uriTemplate": "beancount://{owner}/{name}/statements/balance-sheet{?account,filter,time,conversion,interval,shape}",
+      "title": "Balance Sheet",
       "description": "Balance sheet with report-only current earnings in equity and its interval series under the configured account names. Accepts account, filter, time, conversion, interval, and shape; returns the same structured data as REST.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerAccounts",
-      "title": "Ledger Accounts",
       "uriTemplate": "beancount://{owner}/{name}/accounts{?status}",
+      "title": "Ledger Accounts",
       "description": "Account names, optionally restricted to open or closed accounts.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerOptions",
-      "title": "Get the ledger's core options",
       "uriTemplate": "beancount://{owner}/{name}/options",
+      "title": "Get the ledger's core options",
       "description": "The effective Beancount options: title, the five account-root names, the current conversions and earnings accounts, comma rendering, and the operating currencies. Values are what the ledger resolves, defaults included, so a client need not parse option lines. `operatingCurrency` is what the ledger reports in; the currencies its postings use are a separate vocabulary read.",
       "mimeType": "application/json"
     },
     {
       "name": "accessibleLedgers",
-      "title": "List the caller's accessible ledgers, restricted to the credential's ledger pin when present",
       "uriTemplate": "beancount://catalog/ledgers{?page,limit}",
+      "title": "List the caller's accessible ledgers, restricted to the credential's ledger pin when present",
       "description": "List the caller's accessible ledgers, restricted to the credential's ledger pin when present",
       "mimeType": "application/json"
     },
     {
       "name": "ownedLedgers",
-      "title": "List the caller's owned ledgers",
       "uriTemplate": "beancount://catalog/ledgers/owned{?page,limit}",
+      "title": "List the caller's owned ledgers",
       "description": "List the caller's owned ledgers",
       "mimeType": "application/json"
     },
     {
       "name": "searchLedgers",
-      "title": "Search ledgers with ownership, visibility, sorting, and pagination filters",
       "uriTemplate": "beancount://catalog/ledgers/search{?page,limit,q,topic,includeDesc,uid,priorityOwnerId,teamId,starredBy,private,isPrivate,template,archived,mode,exclusive,sort,order}",
+      "title": "Search ledgers with ownership, visibility, sorting, and pagination filters",
       "description": "Search ledgers with ownership, visibility, sorting, and pagination filters",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerMetadata",
-      "title": "Ledger Metadata",
       "uriTemplate": "beancount://{owner}/{name}/metadata",
+      "title": "Ledger Metadata",
       "description": "Read ledger metadata, visibility, repository URLs, caller permissions, and whether the caller has starred it (isStarred).",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerPayees",
-      "title": "List payees used in the ledger",
       "uriTemplate": "beancount://{owner}/{name}/payees",
+      "title": "List payees used in the ledger",
       "description": "Every payee that appears on a transaction. The list a client should reconcile against before inventing a new payee string.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerNarrations",
-      "title": "List narrations used in the ledger",
       "uriTemplate": "beancount://{owner}/{name}/narrations",
+      "title": "List narrations used in the ledger",
       "description": "Every narration string that appears on a transaction.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerCurrencies",
-      "title": "List currencies used in the ledger",
       "uriTemplate": "beancount://{owner}/{name}/currencies",
+      "title": "List currencies used in the ledger",
       "description": "Every currency the ledger's postings are denominated in. Writing an entry in a currency absent from this list is usually a typo.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerTags",
-      "title": "List tags used in the ledger",
       "uriTemplate": "beancount://{owner}/{name}/tags",
+      "title": "List tags used in the ledger",
       "description": "Every `#tag` that appears on a directive.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerLinks",
-      "title": "List links used in the ledger",
       "uriTemplate": "beancount://{owner}/{name}/links",
+      "title": "List links used in the ledger",
       "description": "Every `^link` that appears on a directive.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerYears",
-      "title": "List years the ledger covers",
       "uriTemplate": "beancount://{owner}/{name}/years",
+      "title": "List years the ledger covers",
       "description": "Every year that has at least one directive \u2014 the ledger's span, without reading it.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerCommodities",
-      "title": "List commodities and their price pairs",
       "uriTemplate": "beancount://{owner}/{name}/commodities",
+      "title": "List commodities and their price pairs",
       "description": "Commodity pairs held in the ledger, with the prices recorded for them.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerManagedPrices",
-      "title": "List managed price sources and their freshness",
       "uriTemplate": "beancount://{owner}/{name}/managed-prices",
+      "title": "List managed price sources and their freshness",
       "description": "One record per managed price include (`include \"https://beancount.io/prices/BTC-USD\"`): the feed's commodity pair and source, the revision serving, when it was observed and fetched, when it next refreshes, and `freshness` \u2014 `recent` within ten minutes of the latest observation, `stale` beyond it, `unavailable` when no revision has validated (then `error` says why). Check it before trusting a valuation built on a managed feed. Empty when the ledger has no managed include.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerEvents",
-      "title": "List event directives",
       "uriTemplate": "beancount://{owner}/{name}/events{?account,filter,time}",
+      "title": "List event directives",
       "description": "Event directives in date order, with optional account, time, and Fava-expression filters.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerErrors",
-      "title": "List the ledger's parse and validation errors",
       "uriTemplate": "beancount://{owner}/{name}/errors",
+      "title": "List the ledger's parse and validation errors",
       "description": "What `bean-check` reports for this ledger. An empty list means the ledger is currently valid. The engine's warnings (a one-posting entry, closing an account with a balance) are not listed: `bean-check` does not fail on them.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerAttributes",
-      "title": "Get the ledger's attributes",
       "uriTemplate": "beancount://{owner}/{name}/attributes",
+      "title": "Get the ledger's attributes",
       "description": "Accounts, currencies, payees, and links as one document \u2014 the summary the other endpoints break out individually.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerOverview",
-      "title": "Get the ledger overview",
       "uriTemplate": "beancount://{owner}/{name}/overview{?account,filter,time,conversion,interval,shape}",
+      "title": "Get the ledger overview",
       "description": "Net worth now and over time. `shape=summary` (the default) returns the net-worth series in one currency; `shape=fava` returns the account hierarchies and income/expense series the dashboard charts.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerDocuments",
-      "title": "List ledger documents",
       "uriTemplate": "beancount://{owner}/{name}/documents{?account,filter,time}",
+      "title": "List ledger documents",
       "description": "Document directives with account, time, and Fava-expression filters.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerTrialBalance",
-      "title": "Get the trial balance",
       "uriTemplate": "beancount://{owner}/{name}/trial-balance{?account,filter,time,conversion}",
+      "title": "Get the trial balance",
       "description": "Every account's debit and credit totals \u2014 the statement that proves the books balance.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerHoldings",
-      "title": "Get holdings",
       "uriTemplate": "beancount://{owner}/{name}/holdings{?account,conversion,groupBy,group_by}",
+      "title": "Get holdings",
       "description": "Lots grouped by account or commodity \u2014 units, average cost, cost basis, market value \u2014 valued at today's quotes. `conversion` takes a currency or `units` (default: the operating currency when the ledger declares exactly one, else each group's held currency); `account` names a parent account or a regular expression. Costless cash and fully-sold groups are left out; groups without a quote value at cost and are named in `missing_prices`.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerRegister",
-      "title": "Get one account's register",
       "uriTemplate": "beancount://{owner}/{name}/register/{account}{?time,conversion}",
+      "title": "Get one account's register",
       "description": "One account's dated entries with a running balance, oldest first \u2014 each entry with the subtree postings behind it. `account` names a parent account or a regular expression resolving to one subtree; `conversion` takes a currency or `units` (default: the operating currency when the ledger declares exactly one, else each row's held currencies). A time window carries the opening balance forward.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerCapitalGains",
-      "title": "Get realized capital gains",
       "uriTemplate": "beancount://{owner}/{name}/capital-gains{?account,time,fromDate,toDate}",
+      "title": "Get realized capital gains",
       "description": "One row per closed lot \u2014 quantity, proceeds, basis, gain \u2014 plus one-year bucket totals. A lot closes when a reducing posting carries booked cost and price; splits and own-account transfers carry no price and are left out. `fromDate`/`toDate` bound the sale date, `account` filters the posting account, and `time` scopes the window; all figures stay in their booked currencies.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerIntervalTotals",
-      "title": "Get totals per interval",
       "uriTemplate": "beancount://{owner}/{name}/interval-totals{?account,filter,time,interval,conversion,accountName,shape}",
+      "title": "Get totals per interval",
       "description": "Balances grouped by period \u2014 the series behind a spending-over-time view, without the view. `shape=summary` (the default) states one currency and drops zero accounts; `shape=fava` returns the raw per-currency balances.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerAccountReport",
-      "title": "Get one account's report",
       "uriTemplate": "beancount://{owner}/{name}/account-report/{accountName}{?account,filter,time,interval,conversion}",
+      "title": "Get one account's report",
       "description": "Balances and changes for a single account over the selected period.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerAccountLastEntries",
-      "title": "List the latest entry per account",
       "uriTemplate": "beancount://{owner}/{name}/account-last-entries{?account,filter,time}",
+      "title": "List the latest entry per account",
       "description": "The most recent directive touching each account \u2014 how stale each part of the ledger is.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerEntriesCount",
-      "title": "Count entries per directive type",
       "uriTemplate": "beancount://{owner}/{name}/entries-count{?account,filter,time}",
+      "title": "Count entries per directive type",
       "description": "How many transactions, opens, balances, and so on the ledger holds.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerPostingsPerAccount",
-      "title": "Count postings per account",
       "uriTemplate": "beancount://{owner}/{name}/postings-per-account{?account,filter,time}",
+      "title": "Count postings per account",
       "description": "Posting counts for the filtered Statistics report stream. An account filter selects matching entries and counts every posting on those entries, including counterpart accounts. Time filters use the same clamped report stream as entries-count.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerPayeeTransactions",
-      "title": "Get a payee's most recent transaction",
       "uriTemplate": "beancount://{owner}/{name}/payee-transactions/{payee}",
+      "title": "Get a payee's most recent transaction",
       "description": "The single most recent transaction recorded against this payee, or null if there is none. This is Fava's autocomplete lookup \u2014 a template for the next entry, not a history. For every transaction by a payee, query the journal or BQL instead.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerNarrationTransactions",
-      "title": "Get a narration's most recent transaction",
       "uriTemplate": "beancount://{owner}/{name}/narration-transactions{?narration}",
+      "title": "Get a narration's most recent transaction",
       "description": "The single most recent transaction recorded against this narration string, or null if there is none. Fava's autocomplete lookup, like payee-transactions. An explicit empty narration is valid. In MCP, read `beancount://{owner}/{name}/narration-transactions?narration=` for empty text. Nonempty values also support the existing path alias `beancount://{owner}/{name}/narration-transactions/{narration}`; percent-encode the value once.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerPayeeAccounts",
-      "title": "Rank every account by this payee's history",
       "uriTemplate": "beancount://{owner}/{name}/payee-accounts/{payee}",
+      "title": "Rank every account by this payee's history",
       "description": "Every account in the ledger, re-sorted by how recently and often this payee was booked against it (exponential decay). Accounts the payee never touched are still present, at the back \u2014 the leading entries are the suggestion, not the whole list. Reach for the first few when categorising a new transaction for this payee.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerEntryContext",
-      "title": "Get the source context around one entry",
       "uriTemplate": "beancount://{owner}/{name}/entry-context/{entryHash}{?entry_hash}",
-      "description": "The ledger text surrounding a directive, addressed by its hash \u2014 what to read before editing it. A result with `generated_from` is a copy a plugin or a pad generated from that source entry: it shares the source's slice and sha256sum, so editing or deleting it would change the source and every other copy.",
+      "title": "Get the source context around one entry",
+      "description": "The ledger text surrounding a directive, addressed by its hash \u2014 what to read before editing it. A result with `generated_from` is a copy a plugin or a pad generated from that source entry: it shares the source's slice and sha256sum, so editing or deleting it would change the source and every other copy. An entry with `not_booked: true` is a transaction the ledger could not book (for example a sale with no matching lot): it is listed so it can be opened and fixed, but no balance counts it.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerAccountDirectives",
-      "title": "List open/close directives per account",
       "uriTemplate": "beancount://{owner}/{name}/account-directives",
+      "title": "List open/close directives per account",
       "description": "Each account's open and close directives \u2014 which accounts are usable on a given date. `entryCount` counts the account's postings, not its directives.",
       "mimeType": "application/json"
     },
     {
       "name": "bankList",
-      "title": "Linked Banks",
       "uriTemplate": "beancount://{owner}/{name}/banks",
+      "title": "Linked Banks",
       "description": "Every bank connection linked to this ledger.",
       "mimeType": "application/json"
     },
     {
       "name": "bank",
-      "title": "One Linked Bank",
       "uriTemplate": "beancount://{owner}/{name}/banks/{itemId}",
+      "title": "One Linked Bank",
       "description": "Status and institution details for a single bank connection.",
       "mimeType": "application/json"
     },
     {
       "name": "bankAccountsForItem",
-      "title": "A Bank's Accounts",
       "uriTemplate": "beancount://{owner}/{name}/banks/{itemId}/accounts",
+      "title": "A Bank's Accounts",
       "description": "The accounts one bank connection shares.",
       "mimeType": "application/json"
     },
     {
       "name": "bankAccounts",
-      "title": "All Bank Accounts",
       "uriTemplate": "beancount://{owner}/{name}/bank-accounts",
+      "title": "All Bank Accounts",
       "description": "Accounts across every linked bank, with their institution and ledger-account mapping.",
       "mimeType": "application/json"
     },
     {
       "name": "bankUnsyncedTransactions",
-      "title": "Transactions Not Yet In The Ledger",
       "uriTemplate": "beancount://{owner}/{name}/bank-transactions/unsynced{?accountId}",
+      "title": "Transactions Not Yet In The Ledger",
       "description": "Transactions pulled from a bank that have not been written into the ledger \u2014 what `importStagedBankTransactions` writes.",
       "mimeType": "application/json"
     },
     {
       "name": "bankSuggestedCategories",
-      "title": "Suggested Categories For Unsynced Transactions",
       "uriTemplate": "beancount://{owner}/{name}/bank-transactions/suggested-categories{?accountId}",
+      "title": "Suggested Categories For Unsynced Transactions",
       "description": "A ledger account suggested for each staged transaction, drawn from the ledger's own history. Requires ledger-content read, bank-connection read, and AI-use authority.",
       "mimeType": "application/json"
     },
     {
       "name": "bankSuggestedMapping",
-      "title": "Suggested Ledger Account Per Bank Account",
       "uriTemplate": "beancount://{owner}/{name}/banks/{itemId}/suggested-mapping",
+      "title": "Suggested Ledger Account Per Bank Account",
       "description": "Which ledger account each of a bank's accounts most likely corresponds to. Requires ledger-content read, bank-connection read, and AI-use authority.",
       "mimeType": "application/json"
     },
     {
       "name": "ledgerFile",
-      "title": "Ledger File Contents",
       "uriTemplate": "beancount://{owner}/{name}/files/{+path}",
+      "title": "Ledger File Contents",
       "description": "The text of one file in the ledger repository, addressed by its path. Reading it needs no tool call, so an agent can pull a file into context without spending a tool slot.",
       "mimeType": "text/plain"
     },
     {
       "name": "unknownResource",
-      "title": "Unknown Resource",
       "uriTemplate": "beancount://{+rest}",
+      "title": "Unknown Resource",
       "description": "Not a resource. Any `beancount://` URI matching no template above reads as NOT_FOUND with the grammar to use; `resources/templates/list` is the inventory.",
       "mimeType": "text/plain"
     }

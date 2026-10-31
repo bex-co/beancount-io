@@ -1,0 +1,158 @@
+{
+  "owner": "w6/m10/t012",
+  "recordedAtUTC": "2026-10-31T09:19:09.282150+00:00",
+  "state": "published_needs_correction",
+  "priorUpdatePropagation": {
+    "observedAtUTC": "2026-10-31T09:14:03.118Z",
+    "Oct29CandidateMatchesPublicByName": {
+      "tools": true,
+      "resources": true,
+      "prompts": true
+    },
+    "meaning": "The previously submitted10tool/7template corrections are now publicly effective, superseding the former unverified state."
+  },
+  "currentDiscovery": {
+    "endpoint": "https://beancount.io/api-gateway/mcp",
+    "sourceRevisionObservedInExistingRollout": "d7e58ce06",
+    "counts": {
+      "tools": 44,
+      "genericResourceTemplates": 67,
+      "prompts": 4
+    },
+    "concreteResourceEnumeration": false,
+    "resourceReads": 0,
+    "accountingCalls": 0,
+    "changedSinceCurrentPublic": {
+      "tools": 44,
+      "resourceTemplates": [
+        "ledgerEntryContext"
+      ],
+      "prompts": 0
+    },
+    "toolChanges": "Includes new top-level securitySchemes and current deployed schema/descriptions plus four destructive and public-boundary annotation corrections; no name/count change."
+  },
+  "supportedContractCheck": {
+    "inspectedLatestCli": "0.0.46",
+    "inspectedLatestSdk": "0.46.1",
+    "officialNpmTarballIntegrityVerified": true,
+    "ownerPublishFields": "Metadata, cloudEndpoint, tools/resources/prompts/localizations; no deployment-option removal/reset",
+    "deploymentEditing": "Still administrative API; not invoked",
+    "maintainerIssue": "https://github.com/lobehub/lobehub/issues/18706#issuecomment-6392098911",
+    "actualIssueComments": 2,
+    "newMaintainerResponse": false
+  },
+  "candidate": {
+    "file": "lhm.plugin.json",
+    "sha256": "e5b26b3125f0ea347bb76cae236af8ecb1c051aef7c38005315c78075475fc2d",
+    "matchesCurrentGenericDiscovery": true,
+    "mcpSchemasPassed": true,
+    "payloadSecretScanPassed": true
+  },
+  "ownerUpdate": {
+    "attempts": 1,
+    "cliUsed": "0.0.44 with existing SDK0.45.0/auth; same supported owner flow as inspected latest",
+    "exitCode": 0,
+    "receipt": "Updated beancount-io@1.0.0 (merged into the existing version)",
+    "identifier": "beancount-io",
+    "version": "1.0.0",
+    "newListingOrVersion": false,
+    "changedFields": [
+      "tools",
+      "resources",
+      "prompts"
+    ]
+  },
+  "publicReadback": {
+    "observedAtUTC": "2026-10-31T09:16:50.972Z",
+    "anonymous": true,
+    "credentialsRead": false,
+    "counts": {
+      "tools": 44,
+      "resources": 67,
+      "prompts": 4
+    },
+    "structuralMatches": {
+      "tools": {
+        "matchesNewCandidate": false,
+        "matchesPreviousPublic": true,
+        "changedRemaining": [
+          "addLedgerEntries",
+          "appendLedgerText",
+          "checkLedger",
+          "createLedger",
+          "createLedgerFiles",
+          "createPullRequest",
+          "deleteEntrySource",
+          "deleteEntrySources",
+          "deleteLedger",
+          "deleteLedgerFiles",
+          "discardStagedBankTransactions",
+          "generateTempAssetUploadUrl",
+          "getEntryContext",
+          "getLedgerContext",
+          "importStagedBankTransactions",
+          "insertReceiptTransaction",
+          "leaveLedger",
+          "listBankConnections",
+          "listLedgerEntries",
+          "listLedgerFiles",
+          "listLedgers",
+          "listStagedBankTransactions",
+          "mapBankAccount",
+          "mergePullRequest",
+          "parseFile",
+          "parseReceipt",
+          "previewLedgerSetup",
+          "readLedgerFiles",
+          "reconcileBankAccounts",
+          "refreshBankConnection",
+          "refreshManagedPrices",
+          "rejectPullRequest",
+          "removeLedgerCollaborator",
+          "renameLedgerFile",
+          "runBqlQuery",
+          "runBqlQueryStructured",
+          "setBankAccountCurrency",
+          "setLedgerCollaborator",
+          "setLedgerStar",
+          "syncBankTransactions",
+          "unlinkBankConnection",
+          "updateEntrySource",
+          "updateLedger",
+          "updateLedgerFiles"
+        ]
+      },
+      "resources": {
+        "matchesNewCandidate": false,
+        "matchesPreviousPublic": true,
+        "changedRemaining": [
+          "ledgerEntryContext"
+        ]
+      },
+      "prompts": {
+        "matchesNewCandidate": true,
+        "matchesPreviousPublic": true,
+        "changedRemaining": []
+      }
+    },
+    "meaning": "One supported update is accepted, but the immediate public tool/resource arrays still match the prior public snapshot. No persistence/cache/queue root cause is inferred."
+  },
+  "publicWebpage": {
+    "observedByUTC": "2026-10-31T09:19:09.282150+00:00",
+    "url": "https://lobehub.com/mcp/beancount-io?activeTab=deployment",
+    "version": "1.0.0",
+    "displayedDate": "Oct31,2026",
+    "counts": "44tools/67resources/4prompts;115features",
+    "actualInstructions": "HTTP canonical endpoint and recommended Manual/stdio bea --no-input init books recipe still both visible; Hybrid Service remains. Wrong command is not executed.",
+    "dateOrCountsDoNotProveSchemaEquality": true
+  },
+  "actionsNotPerformed": [
+    "No repeated unchanged upload, new version/listing, admin API or duplicate correction message",
+    "No new grant, native retest, accounting call or revocation"
+  ],
+  "unblock": "Platform exposes the newly submitted definitions; separately removes the invalid stdio option or supplies a supported owner reset. Worker verifies exact public schemas and HTTP-only instructions/classification.",
+  "nextMetadataReadbackNotBeforeUTC": "2026-11-01T09:16:51Z",
+  "nextCorrectionManualCheckUTC": "2026-11-03",
+  "earlierTrigger": "Actual propagation, maintainer feedback or supported owner-contract change",
+  "boundary": "Local manifest is the new accepted candidate; current complete public equality is not yet established. Prior native accounting retains its original observation and grants."
+}
