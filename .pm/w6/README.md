@@ -11,18 +11,20 @@ application is inaccessible in the current publishing organization.
 **Unblock / owner:** publisher opens its original submitting account/organization;
 worker performs the prepared rescan and one resubmission. Existing
 [m11](blocked/m11/README.md) is parked with independent review/public gates;
-m12 and newly changed/due w6 conditions continue while access is pending.
+Independent w6 work continued while access was pending; the complete Oct31
+queue reconciliation below records all remaining owners and triggers.
 
 ## Muse and Gemini Apps listing work — 2026-10-30 UTC
 
 Owner-requested [m12](blocked/m12/README.md) adds two independent hosted-MCP app
 integrations. Muse's actual submission entry and Google's Connected Console /
 preview entry are verified from current first-party pages. [The current tracker](../../backend-cluster/backend-v2/docs/mcp-marketplaces.md)
-now has20targets, with both additions planned, not submitted. Gemini Apps is the
-Connected Apps target; the CLI Gallery and local-skill mirror are separate.
-t001 (Muse intake) and t003 (Gemini console/domain/auth setup) can start without
-waiting for the other branch or any earlier directory's review. Complete
-reviewable preparation before escalating a concrete indispensable gate.
+now has20targets. Muse's complete public packet and44-tool preparation are ready,
+with actual login blocked on its publisher authenticator. Google accepted the
+one Connected Apps preview-access application; selection is pending, and no
+registered app or review submission is claimed. Gemini Apps is the Connected
+Apps target; the CLI Gallery and local-skill mirror remain separate. The two
+branches were executed independently and retain exact unblock conditions.
 
 ## Requested ten-channel deduplication — 2026-10-29 UTC
 
@@ -110,7 +112,57 @@ Source: the owner's request to complete all remaining actions from the17-target 
 
 **Execution order:** tracker/browser/native prerequisites and045 credential coordination are complete;046 renewable native acceptance is now complete too. Follow actual review, publication, compatible host/client or supported engine-artifact changes independently. Aggregate verification and standing closing tasks retain their full DoDs; one blocked platform never ends the w6 loop while another actionable item remains.
 
-**Current board:** 72 pending leaves after completing m11/t008,t009. m11/t010 is blocked on actual original-organization access; m12/t001 is blocked on actual publisher authenticator; m12/t003 actual Google preview application is accepted and awaits selection; no live milestone implementation remains, while changed/due blocked conditions are being assessed; all other leaf states/dependencies retain their own evidence. Owner-supplied ChatGPT not-approved feedback supersedes the old Nov3 estimate. Historical snapshots retain prior counts and states.
+**Current board:** 72 pending leaves after completing m11/t008,t009:38direct blocked roots and34dependent leaves. The Oct31full dependency/archive/evidence reconciliation finds no independent actionable leaf. All seven pending milestones and23inbox notes are parked under blocked/. Owner-supplied ChatGPT not-approved feedback supersedes the old Nov3estimate; source/deployed remediation is complete and the exact original-app access is still required for resubmission. Historical snapshots retain their prior counts and states.
+
+
+## Full queue reconciliation — 2026-10-31 UTC
+
+This is a board/evidence reconciliation, not a new observation timestamp for
+unchanged external platforms. Every pending leaf was included; all task IDs,
+dependencies and completed-task archive placements resolve. No independent
+implementation remains. Complete fixes/preparation are shipped; there is no
+unshipped partial code. Existing grants, profiles and synthetic-only limits stay
+with their original owners. No item closes from a receipt or green check alone.
+
+| Remaining root work | Exact unblock condition / owner / next trigger |
+| --- | --- |
+| [m2/t001](blocked/m2/t001.md) and19engine notes016–038 | Rustledger publishes each supported producer/semantic correction; worker adopts and runs exact native/API acceptance. Current stable artifact remains0.24.0 with unchanged integrity; a main commit is insufficient.20roots. |
+| [m6.5/t005](blocked/m6.5/t005.md), [039](blocked/039.md) | Hermes supplies compatible portable metadata and retained init-policy admission, then worker verifies full-suite native install/discovery/update without force. Stable remainsv0.22.5; no unchanged scanner retry.2roots. |
+| [m6.5/t012](blocked/m6.5/t012.md) | Index services correct the existing consolidated-suite scope/paths; Pack supplies all61files on both destinations. Next index manualNov1UTC; Pack not beforeNov1T00:19:21Z or demonstrated relevant recovery.1root. |
+| [m8/t002](blocked/m8/t002.md) | Smithery/Arcade supplies surviving direct-directory intake or curated inclusion for the existing request. Next manualNov7or actual reply/new route.1root. |
+| [m9/t004](blocked/m9/t004.md), [t016](blocked/m9/t016.md), [t017](blocked/m9/t017.md) | Cline/official Cursor/Docker reviewers handle existing submissions and publish/import; worker handles actionable corrections and verifies advertised installation. Cline/Cursor manualNov3; Docker access assessmentNov1or actual request/failure/secure update route. Do not renew a reviewer key without supported private delivery and a bounded window.3roots. |
+| [m9/t018](blocked/m9/t018.md) | Supported native control targets the isolated official VSCode instance, or permits grant-preserving fresh auth; worker verifies actual busy-default/fallback callback. Gallery/native accounting baseline remains complete; no credential copy, logout or simulated callback.1root. |
+| [m10/t002](blocked/m10/t002.md) | MCPMarket reviews/publishes the existing free submission; worker verifies hosted metadata/native path. Advertised windowNov18–Dec2or actual feedback earlier.1root. |
+| [m10/t012](blocked/m10/t012.md) | LobeHub exposes the accepted current definitions and corrects/removes invalid stdio or supports owner reset. New metadata read not beforeNov1T09:16:51Z; correction manualNov3or actual propagation/feedback.1root. |
+| [m11/t010](blocked/m11/t010.md) | Publisher opens the original ChatGPT application in its original submitting account/organization. Worker uses the deployed44-tool matrix for actual rescan and one resubmission; t001 retains later review/public/native.1root. |
+| [m11/t002](blocked/m11/t002.md), [t003](blocked/m11/t003.md) | Claude supplies feedback/decision/publication; Awesome Remote maintainers resolve the existing waiver/review/merge. Worker then performs actual public/native/setup checks. Next manualNov3or real change.2roots. |
+| [m12/t001](blocked/m12/t001.md) | Publisher completes Muse's actual authenticator challenge. Worker deduplicates applications, completes private required answers/actual final confirmation and submits once. First-party guidance and44-tool preparation are complete.1root. |
+| [m12/t003](blocked/m12/t003.md) | Google selects the existing account for Connected Apps preview or opens supported self-serve access; worker registers and verifies actual domain/auth/tool sync. One access request is accepted; no registered app or app-review receipt yet. ManualNov7or actual selection.1root. |
+| [042](blocked/042.md) | PulseMCP imports the already active registry record or opens supported intake/correction; worker verifies public/native result. ManualNov1or actual change.1root. |
+| [047](blocked/047.md) | MCP.so maintainers review/merge/import PR6071; worker verifies the canonical public entry. ManualNov3or actual feedback/publication.1root. |
+| [048](blocked/048.md) | Publisher confirms the actual new Glama GitHub read-access authorization. Worker completes organization claim and supported quality configuration; Glama passes real source checks; worker adds the actual badge to existing PR18050 and maintainers merge. Source approval/publication itself is already verified.1root. |
+
+The remaining34leaves defer directly or transitively to these38roots. Each
+implementation task and standing closing task retains its full acceptance and
+its existing dependency chain. Retired standalone040is not revived. No new
+submission, external reminder, grant or runtime repetition substitutes for an
+unmet condition. The user-input pages remain available for the three concrete
+access/authorization steps; all other current gates have platform or upstream
+owners.
+
+### Shipped outcomes in this run
+
+| Work | Shipped commits / actual result |
+| --- | --- |
+| Existing OpenAI rejection remediation | b1e2152f5 arranges m11; d7e58ce06 fixes behavior-based hints, all44explanations and regressions; 3c56e6d59 records actual healthy deployment/wire/conformance; 2c8ce0e03 records original-org access gate. Full412suites/7,830tests and type/build/dead-code gates pass; actual hosted176booleans match, conformance14pass/0fail/2explicit skips. |
+| Muse independent preparation | 175ef3b09 prepares actual intake/tool review and records authenticator gate; faf97174a corrects first-party ADR guidance. No accepted submission claimed. |
+| Gemini independent access request | b0cdc46b4 records one actual accepted Connected Apps preview-access application; app registration remains gated by Google selection. |
+| Due external review follow-through | a22f69f36 Smithery; 704f6816b Cline; 25925c5d2 official Cursor; a49b88760 Docker; 36ddca8fd Claude; 8c8c389dd Awesome Remote; d36950814 MCP.so. Existing receipts and exact owners/triggers retained; no duplicate outreach or invented review decision. |
+| LobeHub actual current-metadata update | 1387ba46b publishes one same-listing/version definition update. Oct29definitions now match publicly; newer submitted definitions are not yet publicly effective. Invalid stdio still needs platform correction. |
+| General source listing | d24766dd8 records actual Glama approval/public source, prepares schema-conforming root claim metadata and records the exact pending GitHub authorization. Existing PR18050 is still open; no fake badge. |
+
+Per-target current facts, original UTC observation times, evidence and operation
+links are in the [canonical tracker](../../backend-cluster/backend-v2/docs/mcp-marketplaces.md).
 
 ## Historical work and blocker triage — 2026-10-24 UTC
 
