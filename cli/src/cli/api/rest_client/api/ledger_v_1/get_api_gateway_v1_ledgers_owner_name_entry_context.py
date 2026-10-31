@@ -116,7 +116,8 @@ def sync_detailed(
      The ledger text surrounding a directive, addressed by its hash — what to read before editing it. A
     result with `generated_from` is a copy a plugin or a pad generated from that source entry: it shares
     the source's slice and sha256sum, so editing or deleting it would change the source and every other
-    copy.
+    copy. An entry with `not_booked: true` is a transaction the ledger could not book (for example a
+    sale with no matching lot): it is listed so it can be opened and fixed, but no balance counts it.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -159,7 +160,8 @@ def sync(
      The ledger text surrounding a directive, addressed by its hash — what to read before editing it. A
     result with `generated_from` is a copy a plugin or a pad generated from that source entry: it shares
     the source's slice and sha256sum, so editing or deleting it would change the source and every other
-    copy.
+    copy. An entry with `not_booked: true` is a transaction the ledger could not book (for example a
+    sale with no matching lot): it is listed so it can be opened and fixed, but no balance counts it.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -197,7 +199,8 @@ async def asyncio_detailed(
      The ledger text surrounding a directive, addressed by its hash — what to read before editing it. A
     result with `generated_from` is a copy a plugin or a pad generated from that source entry: it shares
     the source's slice and sha256sum, so editing or deleting it would change the source and every other
-    copy.
+    copy. An entry with `not_booked: true` is a transaction the ledger could not book (for example a
+    sale with no matching lot): it is listed so it can be opened and fixed, but no balance counts it.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -238,7 +241,8 @@ async def asyncio(
      The ledger text surrounding a directive, addressed by its hash — what to read before editing it. A
     result with `generated_from` is a copy a plugin or a pad generated from that source entry: it shares
     the source's slice and sha256sum, so editing or deleting it would change the source and every other
-    copy.
+    copy. An entry with `not_booked: true` is a transaction the ledger could not book (for example a
+    sale with no matching lot): it is listed so it can be opened and fixed, but no balance counts it.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
