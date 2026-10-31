@@ -25,8 +25,8 @@ a blocked portal or review on one never prevents the other from progressing.
 - **Muse:** the official [platform](https://platform.muse.ai/) links its actual
   [submission entry](https://platform.muse.ai/submission), currently redirecting
   the anonymous reader to login. [Published connector guidelines](https://platform.muse.ai/docs)
-  now describe intake, review and discovery. The prior ADR's third-party-only
-  account needs a dated update after verifying the actual supported flow.
+  now describe intake, review and discovery. ADR019 now includes a dated Oct31first-party intake amendment; callback/native
+  behavior remains unverified behind the actual publisher login gate.
 - **Gemini Apps:** Google's current [Connected Apps overview](https://developers.google.com/connected-apps/)
   links [preview access](https://connected.google.com/console/help/?apply=).
   The [Connected Console](https://connected.google.com/) owns registration,

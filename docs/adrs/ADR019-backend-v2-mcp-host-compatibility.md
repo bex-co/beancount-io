@@ -35,7 +35,7 @@ ADR 0007 made the endpoint reachable and ADR 0008 filled it. Neither asked the q
 | Muse Code (Meta) | OAuth 2.1 through `muse mcp login <server>`; registration method unpublished | Unpublished | Yes (`streamable_http`: URL and headers) | Tools (reported) |
 | Muse app and Muse Connector Platform (Meta) | Custom Connectors: Muse writes its own client, reportedly DCR with PKCE `S256`. Platform: the submission form offers "API keys", "OAuth with PKCE", "Other" | Unpublished | Offered by the platform form | Unpublished |
 
-Every OAuth host requires PKCE `S256` advertised in the authorization-server metadata, sends the RFC 8707 `resource` parameter, and follows the `401` + `resource_metadata` pointer that ADR 0007 D4 guarantees. The Muse rows are third-party reporting; Meta has published no connector specification (see [Meta Muse](#meta-muse--what-is-known-2026-09-25)).
+Every OAuth host requires PKCE `S256` advertised in the authorization-server metadata, sends the RFC 8707 `resource` parameter, and follows the `401` + `resource_metadata` pointer that ADR 0007 D4 guarantees. The initial Muse implementation details above are historical third-party reporting; current first-party intake guidance is recorded in the [October 31 amendment](#muse-first-party-intake-amendment--2026-10-31).
 
 Two specification facts frame the decisions. The [MCP authorization specification (2026-07-28)](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization/client-registration) now ranks client registration as pre-registration, then CIMD, then DCR; marks DCR **deprecated**; and says a client "MUST specify an appropriate `application_type`" during DCR, because omitting it "defaults to `"web"` under OIDC, which can conflict with native-style redirect URIs". Its [security considerations](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization/security-considerations) require the authorization server to "clearly display the redirect URI hostname during authorization", to warn for localhost-only redirect URIs, and to rotate refresh tokens for public clients.
 
@@ -192,6 +192,28 @@ Everything in this section is third-party reporting; Meta has published no conne
 - **Muse Code.** A terminal coding agent. Servers go in the `mcp_servers` block of its settings as `stdio` or `streamable_http` (URL and headers), and `muse mcp login` and `muse mcp logout` run OAuth 2.1.
 
 Stance: no Muse-specific code. A submission uses D1's URL, offers both paths — OAuth with PKCE, and API keys for paid plans — and names `/.well-known/oauth-protected-resource` as the starting point in its documentation. If Muse's redirect turns out to be a private-use scheme, D3 already covers it. Re-check this section when Meta publishes a specification.
+
+### Muse first-party intake amendment — 2026-10-31
+
+Meta now publishes [connector guidelines](https://platform.muse.ai/docs) and an
+[official submission entry](https://platform.muse.ai/submission). These supersede
+the older absence-of-guidance claim above; they do not establish an observed
+OAuth callback or native connection.
+
+The guidelines require documented tool effects and read/write classifications;
+reviewers determine sensitive writes, which need approval every time. OAuth
+should offer read-only access where possible. Financial-data reads are allowed;
+new money movement and trade-execution tools are not currently approved.
+Beancount's bookkeeping writes do not execute those financial transactions,
+but their submitted scope still requires review.
+
+Intake requires business verification, data-processing answers, terms and private
+test access. Actual existing-account login reaches an authenticator challenge.
+The [prepared packet](../../backend-cluster/backend-v2/docs/marketplace-submissions/muse/submission-packet.md)
+documents all44tools and synthetic review preparation; no submission receipt,
+agreed terms or native acceptance is claimed. The existing endpoint and auth
+boundaries stand. [w6/m12](../../.pm/w6/blocked/m12/README.md) owns submission and
+actual host verification after login, including any required private answers.
 
 ## The official MCP Registry listing
 
