@@ -1685,6 +1685,7 @@ def import_entries(
                     delimiter=csv_delimiter,
                     encoding=csv_encoding,
                     skip=csv_skip or 0,
+                    mapped_columns=mapping.columns,
                     # The remembered choice competes too: a custom format that
                     # still reads every date is not a mismatch (w5/911).
                     also=[recalled_date_format],

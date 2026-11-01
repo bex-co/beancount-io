@@ -885,6 +885,7 @@ def infer_date_format(
     encoding: str = "utf-8",
     skip: int = 0,
     also: Sequence[str] = (),
+    mapped_columns: dict[str, str] | None = None,
 ) -> tuple[str | None, bool]:
     """The one date format that parses this column, and whether others also did.
 
@@ -892,9 +893,12 @@ def infer_date_format(
     remembered from an earlier import: it competes like any other, so a column
     it still reads is not called a mismatch for another format's fitting too
     (w5/911).
+
+    `mapped_columns` lets the status column exclude pending and declined rows,
+    which the import skips, so an ignored authorization cannot vote (w5/1087).
     """
     date_format, ambiguous, _rejection = inspect_date_column(
-        source, column, delimiter=delimiter, encoding=encoding, skip=skip, also=also
+        source, column, delimiter=delimiter, encoding=encoding, skip=skip, also=also, mapped_columns=mapped_columns
     )
     return date_format, ambiguous
 
