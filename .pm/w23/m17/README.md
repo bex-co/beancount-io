@@ -1,6 +1,6 @@
 # w23 · m17 — Make createPullRequest work reliably
 
-**Worker:** worker1 **Goal:** `createPullRequest` opens a pull request on production through a path that does not depend on the failing standalone branch-create call **Status:** todo (t001–t005 done)
+**Worker:** worker1 **Goal:** `createPullRequest` opens a pull request on production through a path that does not depend on the failing standalone branch-create call **Status:** todo (t001–t006 done)
 
 ## Tasks (in order)
 
@@ -11,7 +11,7 @@
 | t003 | Open the pull request and clean up on every failure path — **DONE** | 30m | t002 |
 | t004 | Check REST, GraphQL and MCP parity and docs — **DONE** | 30m | t003 |
 | t005 | Adoption surface — **DONE** | 20m | t004 |
-| t006 | Simplify | 30m | t005 |
+| t006 | Simplify — **DONE** | 30m | t005 |
 | t007 | Test coverage | 45m | t005 |
 | t008 | Verify on production and close out | 20m | t006, t007 |
 
