@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 900" width="1280" height="900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" fill="#1f2328">
+  <title>ADR026 wireframe: MCP agents, REST, and GraphQL</title>
+  <rect width="1280" height="900" fill="#ffffff"/>
+  <text x="30" y="36" font-size="20" font-weight="600">MCP agents, REST, and GraphQL — ADR026 wireframes</text>
+  <text x="30" y="56" fill="#57606a">Servers never infer. Callers read the saved preference and send it explicitly · Green = saved preference · Illustrative payloads</text>
+
+  <!-- ============ MCP host chat ============ -->
+  <g transform="translate(30,80)">
+    <text x="0" y="0" font-size="14" font-weight="600">1 · MCP host (Claude, ChatGPT, Cursor…) — agent creates a ledger</text>
+    <rect x="0" y="12" width="600" height="790" rx="10" fill="#ffffff" stroke="#8c959f"/>
+    <rect x="0" y="12" width="600" height="34" rx="10" fill="#f6f8fa" stroke="#8c959f"/>
+    <text x="16" y="34" font-weight="600">Chat</text><text x="584" y="34" text-anchor="end" fill="#57606a" font-size="11">connector: Beancount.io</text>
+
+    <!-- user -->
+    <rect x="260" y="62" width="320" height="34" rx="14" fill="#1f2328"/>
+    <text x="276" y="84" fill="#ffffff">Set up a household ledger for me.</text>
+
+    <!-- tool: read profile -->
+    <rect x="20" y="110" width="560" height="96" rx="8" fill="#f6f8fa" stroke="#d0d7de"/>
+    <text x="34" y="132" font-weight="600">⚙ Read resource</text><text x="140" y="132" font-family="Menlo, monospace" font-size="11.5">beancount://account/profile</text>
+    <g xml:space="preserve" font-family="Menlo, monospace" font-size="11.5">
+      <text x="34" y="156">{ "username": "alice", "locale": "de",</text>
+      <text x="34" y="174">  <tspan fill="#2f8f4e" font-weight="700">"defaultCurrency": "EUR"</tspan>, "tier": "…", … }</text>
+    </g>
+    <text x="34" y="196" fill="#2f8f4e" font-size="11">saved by the customer on web or mobile — readable on REST, GraphQL, and MCP</text>
+    <circle cx="566" cy="132" r="10" fill="#bf8700"/><text x="566" y="136" fill="#fff" font-weight="700" text-anchor="middle">A</text>
+
+    <!-- tool: preview -->
+    <rect x="20" y="220" width="560" height="118" rx="8" fill="#f6f8fa" stroke="#d0d7de"/>
+    <text x="34" y="242" font-weight="600">⚙ previewLedgerSetup</text>
+    <g xml:space="preserve" font-family="Menlo, monospace" font-size="11.5">
+      <text x="34" y="264">{ "setup": { "preset": "personal@1", "title": "Household",</text>
+      <text x="34" y="282">             <tspan fill="#2f8f4e" font-weight="700">"operatingCurrency": "EUR"</tspan> } }</text>
+      <text x="34" y="306" fill="#57606a">→ valid · 12 accounts · operating_currency "EUR"</text>
+    </g>
+    <text x="34" y="328" fill="#57606a" font-size="11">nothing created yet</text>
+
+    <!-- assistant message -->
+    <rect x="20" y="352" width="420" height="78" rx="14" fill="#eaeef2"/>
+    <text x="36" y="376">I'll create <tspan font-weight="600">Household</tspan> (private) in <tspan font-weight="600">EUR</tspan>,</text>
+    <text x="36" y="396">your saved default currency, with the personal</text>
+    <text x="36" y="416">starter's 12 accounts. Create it?</text>
+    <circle cx="452" cy="372" r="10" fill="#bf8700"/><text x="452" y="376" fill="#fff" font-weight="700" text-anchor="middle">B</text>
+
+    <rect x="460" y="444" width="120" height="34" rx="14" fill="#1f2328"/>
+    <text x="520" y="466" fill="#ffffff" text-anchor="middle">Yes, go ahead</text>
+
+    <!-- tool: create -->
+    <rect x="20" y="492" width="560" height="140" rx="8" fill="#f6f8fa" stroke="#d0d7de"/>
+    <text x="34" y="514" font-weight="600">⚙ createLedger</text>
+    <g xml:space="preserve" font-family="Menlo, monospace" font-size="11.5">
+      <text x="34" y="536">{ "name": "household", "private": true,</text>
+      <text x="34" y="554">  "requestId": "7f3c…",</text>
+      <text x="34" y="572">  "setup": { "preset": "personal@1", "title": "Household",</text>
+      <text x="34" y="590">             <tspan fill="#2f8f4e" font-weight="700">"operatingCurrency": "EUR"</tspan> } }</text>
+      <text x="34" y="614" fill="#57606a">→ ok · alice/household</text>
+    </g>
+
+    <rect x="20" y="646" width="420" height="44" rx="14" fill="#eaeef2"/>
+    <text x="36" y="673">Done — <tspan font-weight="600">alice/household</tspan> is ready. Record a purchase?</text>
+
+    <rect x="20" y="706" width="560" height="82" rx="6" fill="#fff8e6" stroke="#bf8700"/>
+    <text x="32" y="726"><tspan font-weight="700" fill="#bf8700">A</tspan>  The agent reads the preference; the server does not apply it on the agent's behalf.</text>
+    <text x="32" y="744"><tspan font-weight="700" fill="#bf8700">B</tspan>  The agent names the source ("your saved default") and confirms before writing.</text>
+    <text x="32" y="762">   No preference stored → the agent asks, or states the USD default. It never</text>
+    <text x="32" y="780">   guesses from conversation language, IP, or the user's name.</text>
+  </g>
+
+  <!-- ============ REST ============ -->
+  <g transform="translate(660,80)">
+    <text x="0" y="0" font-size="14" font-weight="600">2 · REST (/api-gateway/v1)</text>
+    <rect x="0" y="12" width="590" height="356" rx="10" fill="#0d1117"/>
+    <g xml:space="preserve" font-family="Menlo, monospace" font-size="11.5" fill="#e6edf3">
+      <text x="16" y="38" fill="#8b949e"># read — returns the saved preferences</text>
+      <text x="16" y="58"><tspan fill="#7ee787">GET</tspan> /api-gateway/v1/user-profile</text>
+      <text x="16" y="78">200 { "locale": "de", <tspan fill="#56d364" font-weight="700">"defaultCurrency": "EUR"</tspan>, … }</text>
+
+      <text x="16" y="116" fill="#8b949e"># create without a currency — documented default</text>
+      <text x="16" y="136"><tspan fill="#7ee787">POST</tspan> /api-gateway/v1/ledgers</text>
+      <text x="16" y="156">{ "name": "scratch", "setup": { "preset": "personal@1" } }</text>
+      <text x="16" y="176">201 … operating_currency <tspan fill="#ffa657" font-weight="700">"USD"</tspan></text>
+      <text x="16" y="194" fill="#8b949e">    saved EUR is NOT applied — same request, same result</text>
+
+      <text x="16" y="232" fill="#8b949e"># create with an explicit currency</text>
+      <text x="16" y="252"><tspan fill="#7ee787">POST</tspan> /api-gateway/v1/ledgers</text>
+      <text x="16" y="272">{ "name": "household", "requestId": "7f3c…",</text>
+      <text x="16" y="290">  "setup": { "preset": "personal@1", "operatingCurrency": "EUR" } }</text>
+      <text x="16" y="310">201 … operating_currency "EUR"</text>
+
+      <text x="16" y="344" fill="#8b949e"># no REST profile write: documented exclusion kept</text>
+    </g>
+  </g>
+
+  <!-- ============ GraphQL ============ -->
+  <g transform="translate(660,470)">
+    <text x="0" y="0" font-size="14" font-weight="600">3 · GraphQL — the only profile write</text>
+    <rect x="0" y="12" width="590" height="250" rx="10" fill="#0d1117"/>
+    <g xml:space="preserve" font-family="Menlo, monospace" font-size="11.5" fill="#e6edf3">
+      <text x="16" y="38" fill="#8b949e"># read</text>
+      <text x="16" y="58"><tspan fill="#d2a8ff">query</tspan> { userProfile { locale <tspan fill="#56d364" font-weight="700">defaultCurrency</tspan> } }</text>
+
+      <text x="16" y="96" fill="#8b949e"># write — what web and mobile call on an explicit choice</text>
+      <text x="16" y="116"><tspan fill="#d2a8ff">mutation</tspan> {</text>
+      <text x="16" y="134">  updateProfile(locale: "de", <tspan fill="#56d364" font-weight="700">defaultCurrency: "EUR"</tspan>) {</text>
+      <text x="16" y="152">    locale defaultCurrency</text>
+      <text x="16" y="170">  }</text>
+      <text x="16" y="188">}</text>
+      <text x="16" y="216" fill="#8b949e"># defaultCurrency outside the supported ISO 4217 list</text>
+      <text x="16" y="234" fill="#8b949e"># is refused; existing ledgers are never rewritten</text>
+    </g>
+  </g>
+
+  <g transform="translate(660,750)">
+    <rect x="0" y="0" width="590" height="132" rx="8" fill="#fff8e6" stroke="#bf8700"/>
+    <text x="16" y="24" font-weight="600">Parity summary</text>
+    <text x="16" y="48" font-weight="600">Profile read</text><text x="190" y="48">REST ✓ · GraphQL ✓ · MCP ✓ (resource) — locale, defaultCurrency</text>
+    <text x="16" y="70" font-weight="600">Profile write</text><text x="190" y="70">GraphQL only (existing documented exclusion)</text>
+    <text x="16" y="92" font-weight="600">Ledger create / preview</text><text x="190" y="92">REST ✓ · GraphQL ✓ · MCP ✓ — currency as sent;</text>
+    <text x="190" y="110">omitted → USD, never the saved preference</text>
+  </g>
+</svg>

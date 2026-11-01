@@ -11,9 +11,9 @@
 
 Build the scope PRFAQ001 describes as one approved design. Where this record and PRFAQ001 differ, PRFAQ001 governs and this record is wrong.
 
-One versioned **setup specification** describes a new ledger: preset, title, operating currency, history start, answered or deferred capabilities, selected accounts, and opening records. A backend-owned pure builder turns that specification into Beancount files, and the Python CLI builds the same files from the same specification. Every hosted surface — REST, GraphQL, MCP — accepts the specification through the existing create operation, so no configuration is reachable from the dashboard alone.
+One versioned **setup specification** describes a new ledger: preset, modules (personal only), title, operating currency, history start, answered or deferred capabilities, selected accounts, and opening records. A backend-owned pure builder turns that specification into Beancount files, and the Python CLI builds the same files from the same specification. Every hosted surface — REST, GraphQL, MCP — accepts the specification through the existing create operation, so no configuration is reachable from the dashboard alone.
 
-The existing form already allows creation without typing once defaults load, so the new flow must keep that property: every stage has usable defaults, and a customer who accepts them reaches a valid private ledger without answering a question.
+The existing form already allows creation without typing once defaults load, so the new flow must keep that property: every step has usable defaults, and a customer who accepts them reaches a valid private ledger without answering a question.
 
 ## What exists today
 
@@ -47,9 +47,10 @@ The specification is the contract PRFAQ001 question 18 asks for. It is added to 
 | Field | Meaning | Default when omitted |
 | --- | --- | --- |
 | `preset` | Catalog ID with version, one of `personal@1`, `freelance@1`, `business@1`, `portfolio@1`, `rental@1`, `shared-expenses@1`, `community@1`, `blank@1` | The current Starter chart |
+| `modules` | Module IDs with version from PRFAQ001 Appendix A.9 — `investments@1`, `rental-property@1`, `side-business@1` — each at most once; `rental-property@1` takes an optional ASCII property name | None |
 | `title` | Human-readable title, any script; written as the Beancount `title` option | The preset's suggested title |
 | `operatingCurrency` | One code from the supported list below | `USD` |
-| `historyStart` | Date the books begin; used for `open` directives and the opening boundary | The creation date |
+| `historyStart` | Date the books begin; used for `open` directives and the opening boundary. Explicit callers set it; guided clients derive it from a known balance's **from** date and never ask for it | The creation date |
 | `capabilities` | Per optional question: `enabled`, `declined`, or `deferred` | `deferred` |
 | `accounts` | Selected first accounts: kind (bank, cash, card, other), name, currency, and an opening state of `unknown`, `zero`, or `known` with a signed amount | None |
 
@@ -57,6 +58,7 @@ Rules:
 
 - `setup` and `template` are mutually exclusive. `template: SAMPLE` with a `setup` object is rejected on every surface with the same validation error. Omitted or null `setup` keeps today's behavior, including the USD Starter.
 - An explicit value is validated and never silently replaced. An unknown preset, unsupported currency, impossible date, or account that the preset does not allow fails the request; nothing is created.
+- `modules` is accepted only with `preset: personal@1`. Any other preset with a non-empty `modules`, an unknown module, or a repeated one fails identically on every surface and creates nothing. Each module opens its own name-spaced account group, so the files do not depend on module order, and first accounts may name a module's accounts once it is selected.
 - `unknown`, `zero`, and `known` are distinct. `unknown` writes no posting and marks the account as unverified in portable ledger metadata; `zero` is a customer-confirmed starting point; `known` writes the opening transaction on the day before `historyStart` and a balance assertion on `historyStart`, as PRFAQ001 question 8 describes. A liability the customer says they owe is stored as the corresponding negative posting.
 - `setup` is creation-only. `ledgerUpdateInput` must omit it the way it omits `template`; later changes go through ordinary file and entry edits.
 
@@ -73,13 +75,13 @@ No shared currency list exists in the repository today. The canonical catalog (b
 - **Supported operating currencies:** the active ISO 4217 alphabetic codes. Hosted creation rejects any other value. `bea init` keeps accepting any syntactically valid Beancount currency symbol for callers that do not pass a preset, so existing scripts are unaffected.
 - **Region to currency:** one row per region whose CLDR territory data lists exactly one currency in current legal-tender use. Regions with none or several fall back to an editable `USD`.
 
-Suggestion precedence: an explicit selection in the active flow, then a supported native currency hint, then the mapped currency of an explicit browser or device region, then `USD`. Resolve once and preserve a correction across re-renders, starter switches, validation errors, back navigation, and OTP retries. Language alone never selects a currency: `en` without a region uses the fallback, and a Chinese interface does not imply CNY. Do not infer from IP address.
+Suggestion precedence, the saved account preference, and the time-zone conflict check are defined in [ADR026](./ADR026-backend-v2-locale-and-currency-defaults.md#currency-suggestion), which replaces the order first written here. Resolve once and preserve a correction across re-renders, starter switches, validation errors, back navigation, and OTP retries. Language alone never selects a currency: `en` without a region uses the fallback, and a Chinese interface does not imply CNY. Do not infer from IP address.
 
 `expo-localization` is already a mobile dependency and is read in [`translations/index.ts`](../../mobile/src/translations/index.ts) for language only; its currency and region fields supply the native hint. Display the code with its localized name. The selected code becomes the initial operating currency; it neither converts amounts nor prohibits other currencies, and changing the interface language never rewrites a ledger.
 
 ## Catalog and builder
 
-One canonical catalog defines, per preset version: account groups, the zero to two optional questions and their effect, category meanings, evidence requirements, first-result task, teaching examples, and the acceptance scenario in PRFAQ001 Appendix A, plus the two currency tables. Packages must not import each other, so each consumer — backend-v2, dashboard, mobile, CLI — holds a generated copy with a drift check. Conformance fixtures pair a specification with its expected files and report values, and both engines (the Python CLI and the hosted ledger service) must produce equivalent accounting results for every fixture before a preset is listed.
+One canonical catalog defines, per preset version and per module version: account groups, the zero to two optional questions and their effect, category meanings, evidence requirements, first-result task, teaching examples, and the acceptance scenario in PRFAQ001 Appendix A, plus the two currency tables. Packages must not import each other, so each consumer — backend-v2, dashboard, mobile, CLI — holds a generated copy with a drift check. Conformance fixtures pair a specification with its expected files and report values, and both engines (the Python CLI and the hosted ledger service) must produce equivalent accounting results for every fixture before a preset or module is listed. Modules need one fixture each plus one with all three together, not every combination, because their account groups are disjoint.
 
 In backend-v2 a pure builder replaces the two fixed file sets as the source of Starter content. Both the manual workflow and signup provisioning call it and keep their existing authorization, lock, and tier-limit paths. It does not mutate a shared template and never regenerates an existing ledger. A preset update creates a new version; existing account names and history never change because a preset changed.
 
@@ -100,7 +102,7 @@ Every capability below changes a customer-facing contract and follows the [requi
 Details:
 
 - **One workflow.** All three adapters delegate to `createLedger` and a new preview method on the same workflow, under the existing `LEDGER_CREATE` action, so preview and create have identical credential and relationship eligibility. Register the preview verb in `VERB_TABLE` in [`op-class.ts`](../../backend-cluster/backend-v2/src/server/api/op-class.ts) with all three bindings.
-- **Discovery.** Preset IDs and the capability states are enumerated in the schemas themselves, so OpenAPI, GraphQL introspection, and the MCP tool schema expose them without a catalog endpoint.
+- **Discovery.** Preset IDs, module IDs, and the capability states are enumerated in the schemas themselves, so OpenAPI, GraphQL introspection, and the MCP tool schema expose them without a catalog endpoint.
 - **Signup exception.** Signup is a session-only ceremony with no REST or MCP twin; that existing exemption is recorded in `op-class.ts` and is preserved, not widened. The default-ledger settings are therefore GraphQL-only by the documented credential policy, not by omission.
 - **Contracts.** Regenerate [`docs/openapi/v1.json`](../../backend-cluster/backend-v2/docs/openapi/v1.json), the dashboard and mobile GraphQL types, and the CLI's generated [REST client](../../cli/src/cli/api/rest_client/models/create_ledger_body.py). Add contract tests that drive the same specification through HTTP REST, GraphQL execution, and an MCP client and compare created files, defaults, and validation failures.
 
@@ -120,11 +122,17 @@ Clients may reach a backend that predates `setup`, as self-hosted stacks can. Al
 
 ## Dashboard flow
 
-The entry page offers **Start new books**, **Bring existing records**, and **Explore an example**; existing customers reach the same flow from **New ledger**. New books use three stages in the existing welcome and dialog containers:
+The entry page offers **Start new books**, **Bring existing records**, and **Explore an example**; existing customers reach the same flow from **New ledger**. New books use two steps in the existing welcome and dialog containers, with no separate review page:
 
-1. **Choose a starter.** The seven purposes and a visible **Start blank**, each with a one-sentence outcome. After selection, at most two optional questions from the catalog; each may be answered, declined, or deferred.
-2. **Set the basics.** Title, currency, and history start (**Start from a chosen date** or **Bring earlier history**).
-3. **First account, then review.** Add accounts or **Set up accounts later**; blank skips this. Review title, address, currency, start boundary, accounts, and privacy before **Create ledger**.
+1. **Choose a purpose.** The seven purposes and a visible **Start blank**, each with a one-sentence outcome; personal is preselected, and the purpose is a single choice. After selection, at most two optional questions from the catalog; each may be answered, declined, or deferred. Under personal, the **Also track in this ledger** list offers the three modules, each off by default with a live account preview; it counts as one of personal's two questions. A note beside the choice sends a company, a club, or money shared with others to its own ledger.
+2. **Details, then create.** One page:
+   - **Title and currency.** The flow never asks for a history start.
+   - **Optional first accounts.** Add accounts or **Set up accounts later**; blank skips this. A `known` opening balance carries an editable **from** date, defaulting to today: the balance before that day's transactions. The client sends the earliest such date as `historyStart`, so the opening posts the day before and the assertion checks the start of that date, and omits the field when no balance is known.
+   - **Summary and create.** A summary line beside **Create ledger** states visibility, currency, and account count, and expands to the `preview` result's account list. Choosing public shows an inline warning; nothing else interrupts creation.
+
+![Purpose step wireframes: web and mobile](../images/ADR021-wireframe-purpose.svg)
+
+Earlier history is not a creation stage. The importer's preview proposes moving the boundary to the earliest imported transaction, reviewing open dates and opening entries as one change. A transaction before the boundary offers the same move instead of surfacing the inactive-account error.
 
 Description, repository address, and file layout are expandable, not removed. Privacy stays visible and defaults to private. Back navigation and validation errors preserve every choice. After creation show one recommended next action with the others visible — **Record a transaction**, **Import records**, or **Verify a starting balance** — by extending the existing [empty-ledger setup](../../dashboard/src/features/reports/overview/components/empty-ledger-setup.tsx). Its visibility is driven by [`hasOverviewActivity`](../../dashboard/src/features/reports/overview/lib/overview-utils.ts), so opening balances would hide it; unfinished setup must stay reachable after activity appears.
 
@@ -136,8 +144,8 @@ Correct the Starter description in every locale and label the create action **Cr
 
 ## CLI
 
-- **`bea init`** gains `--preset`, `--title`, and a documented input file that expresses the full setup specification; the existing `--currency`, `--date`, and `--opening-balance` remain. Interactive use asks the same starter, title, currency, history, and first-account questions and skips those already answered by options. Calls without `--preset` keep today's `Personal ledger` chart, account names, exit categories, and signed opening-balance semantics. It stays local: no account, network request, or model call.
-- **`bea cloud ledger create`** gains `--preset`, `--title`, `--currency`, and `--date`, sent as `setup`, and sends a `requestId` on every create so `--clone` retries cannot duplicate a ledger. Without them the request is unchanged. `--from` is the local-to-hosted transfer in phase 3.
+- **`bea init`** gains `--preset`, a repeatable `--module` (with `--property-name` for the rental module), `--title`, and a documented input file that expresses the full setup specification; the existing `--currency`, `--date`, and `--opening-balance` remain. Interactive use asks the same starter, title, currency, history, and first-account questions and skips those already answered by options. Calls without `--preset` keep today's `Personal ledger` chart, account names, exit categories, and signed opening-balance semantics. It stays local: no account, network request, or model call.
+- **`bea cloud ledger create`** gains `--preset`, a repeatable `--module`, `--title`, `--currency`, and `--date`, sent as `setup`, and sends a `requestId` on every create so `--clone` retries cannot duplicate a ledger. Without them the request is unchanged. `--from` is the local-to-hosted transfer in phase 3.
 - Output reports the created path or address, preset and version, validation result, unresolved setup items, and the command for the next task, in human or JSON form.
 - Update the agent-facing [beancount-init skill](../../skills/beancount-init/SKILL.md) and tutorials with the release.
 
@@ -168,10 +176,10 @@ PRFAQ001 leaves these undecided. Do not settle them in implementation.
 4. **Signup starter.** Does automatic signup creation keep the current Starter chart, use `personal@1`, or offer a starter choice? Does it also collect a title?
 5. **Local-to-hosted transfer path.** `--from` could upload files through the API or create an empty ledger and push over SSH. [`.pm/DO_NOT_DO.md`](../../.pm/DO_NOT_DO.md) requires SSH-key setup for hosted-to-local workflows as a bot defense; does the same requirement apply in this direction? The answer decides whether a create-from-files capability is added to REST, GraphQL, and MCP, and its size limits.
 6. **Server-side resume.** PRFAQ001 asks that unfinished hosted setup be resumable across authentication. This design keeps the draft in the browser session only. Is a server-stored draft, resumable on another device, required?
-7. **Saved currency preference.** PRFAQ001 mentions "an explicit saved preference". No account-level currency preference exists today. Add one, or rely on the region hint?
+7. **Saved currency preference.** Settled 2026-10-26 by [ADR026](./ADR026-backend-v2-locale-and-currency-defaults.md#saved-currency-preference): add an account-level `defaultCurrency`, readable on every profile surface, used by clients as a suggestion and never applied to API creation.
 8. **Catalog content.** Labels, core categories, the optional questions, and later-prompt timing are to be refined by the research in PRFAQ001 question 20.
 9. **Catalog endpoint.** Is a readable catalog (descriptions, account previews) needed on the API for agents, beyond the enumerated IDs?
-10. **Plans and limits.** Is guided creation available on every plan, and how are ledger limits shown before the first stage?
+10. **Plans and limits.** Is guided creation available on every plan, and how are ledger limits shown before the first step?
 
 ## Risks
 
@@ -193,6 +201,7 @@ Implementation acceptance:
 6. A client pointed at a backend without `setup` reports the incompatibility and creates nothing unless the user chooses the defaults.
 7. Default-ledger signup persists its currency through OTP and creates privately; existing-user sign-in and unrelated authorization create no ledger.
 8. Existing ledgers' data, names, currencies, and visibility are unchanged; existing `bea init` and `bea cloud ledger create` invocations produce the same results as before.
-9. Template and starter descriptions match generated contents in every locale. Keyboard and screen-reader access, native large text, right-to-left, and narrow screens are verified on the actual screens before release.
+9. A personal ledger with any set of modules opens each module's group exactly once, independent of order, and meets Appendix A.9's acceptance scenario on both engines; a module with any other preset is refused on every surface.
+10. Template and starter descriptions match generated contents in every locale. Keyboard and screen-reader access, native large text, right-to-left, and narrow screens are verified on the actual screens before release.
 
 Outcome measurement and the research rounds follow PRFAQ001 questions 19 and 20.

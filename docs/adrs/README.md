@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-Status as of **2026-10-26**. Of the 22 ADRs, **11 are Done, 2 are Rejected, and 9 remain Proposed or Accepted with work or verification outstanding** (ADR 001 · Mobile billing was revived from Deferred on 2026-10-25).
+Status as of **2026-11-01**. Of the 23 ADRs, **11 are Done, 2 are Rejected, and 10 remain Proposed or Accepted with work or verification outstanding** (ADR 001 · Mobile billing was revived from Deferred on 2026-10-25).
 
 `Done` means the decision's implementation is present within its stated scope. Explicitly out-of-scope follow-ups do not prevent completion. Required work and deployment gates without completion evidence keep a record open. `Rejected` means the decision will not be built; any code that still reflects it is named in the row. `Deferred` means the design is shelved by owner decision and needs a new decision to revive. The rows below do not certify a production rollout.
 
@@ -30,5 +30,6 @@ Each ADR number is unique across all packages; a new record takes the next numbe
 | [023 · Dashboard cash-flow report](./ADR023-dashboard-cash-flow-report.md) | Done | [Report implementation](../../dashboard/src/features/reports/cash-flow/) and [export tests](../../dashboard/src/features/reports/export/__tests__/cash-flow-export.test.tsx) cover the statement, charts, account panel, and exports. |
 | [024 · CLI cash-flow report](./ADR024-cli-cash-flow-report.md) | Done | [Engine read](../../cli/src/bea_engine/report.py), [command](../../cli/src/cli/commands/report.py), and [fixture tests](../../cli/tests/test_report_cash_flow.py) shipped as [w21/m4](../../.pm/w21/done/m4/README.md); sections net to the cash change with transfers netting to zero. |
 | [025 · Business books in the skills](./ADR025-skills-business-books.md) | Proposed | Names, invoice and bill identity, the client/project keys, tax and payroll figure rules, placement, and non-goals for business books. Nothing is implemented: [w2/m55–m59](../../.pm/w2/README.md) build the procedures, and the two proposed `DO_NOT_DO.md` lines await the owner. |
+| [026 · Locale and currency defaults](./ADR026-backend-v2-locale-and-currency-defaults.md) | Proposed | Dashboard language detection still stops at URL, cookie, then `en` ([server detector](../../dashboard/src/i18n/detect-language/server.ts)); registration [hardcodes the account locale](../../backend-cluster/backend-v2/src/features/auth/service/auth-service.ts) to `en`; no `defaultCurrency` field, time-zone conflict check, or `bea init` locale hint exists. |
 
 Focused verification on 2026-09-27 passed: backend-v2 **554** tests, ledger **218**, dashboard **138**, and CLI **426** (**1,336 total**). The CLI run deselected eight optional-price and live-probe tests. These were existing tests; no production conformance run, store purchase flow, or paid model evaluation was performed.

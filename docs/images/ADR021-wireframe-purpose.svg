@@ -1,0 +1,163 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 900" width="1280" height="900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" fill="#1f2328">
+  <title>ADR021 wireframe: choose a purpose, with personal modules</title>
+  <rect width="1280" height="900" fill="#ffffff"/>
+  <text x="30" y="36" font-size="20" font-weight="600">Step 1 · Choose a purpose — ADR021 wireframes</text>
+  <text x="30" y="56" fill="#57606a">One purpose per ledger (single choice, personal preselected) · modules only under personal, off by default · Orange = annotation</text>
+
+  <!-- ================= Web ================= -->
+  <g transform="translate(30,80)">
+    <text x="0" y="0" font-size="14" font-weight="600">Web dashboard · New ledger</text>
+    <rect x="0" y="12" width="840" height="700" rx="8" fill="#ffffff" stroke="#8c959f"/>
+
+    <circle cx="30" cy="40" r="9" fill="#1f2328"/><text x="30" y="44" fill="#fff" text-anchor="middle" font-size="11">1</text>
+    <text x="46" y="44" font-weight="600">Purpose</text>
+    <line x1="106" y1="40" x2="146" y2="40" stroke="#d0d7de"/>
+    <circle cx="162" cy="40" r="9" fill="#d0d7de"/><text x="162" y="44" fill="#fff" text-anchor="middle" font-size="11">2</text>
+    <text x="178" y="44" fill="#57606a">Details</text>
+
+    <text x="20" y="84" font-size="18" font-weight="600">What will this ledger keep?</text>
+    <text x="20" y="104" fill="#57606a">A company, a club, or money shared with other people belongs in its own ledger. <tspan fill="#3b6fd8">Why?</tspan></text>
+    <circle cx="610" cy="100" r="10" fill="#bf8700"/><text x="610" y="104" fill="#fff" font-weight="700" text-anchor="middle">A</text>
+
+    <!-- cards: 4 x 2 -->
+    <g>
+      <rect x="20" y="120" width="190" height="84" rx="8" fill="#eef4ff" stroke="#3b6fd8" stroke-width="2"/>
+      <circle cx="190" cy="138" r="9" fill="#3b6fd8"/><text x="190" y="142" fill="#fff" text-anchor="middle" font-size="11">✓</text>
+      <text x="34" y="144" font-weight="600">Personal &amp; household</text>
+      <text x="34" y="166" fill="#57606a" font-size="11">Record a purchase and see</text>
+      <text x="34" y="182" fill="#57606a" font-size="11">money remaining.</text>
+
+      <rect x="222" y="120" width="190" height="84" rx="8" fill="#ffffff" stroke="#d0d7de"/>
+      <text x="236" y="144" font-weight="600">Freelance work only</text>
+      <text x="236" y="166" fill="#57606a" font-size="11">Customer income and what</text>
+      <text x="236" y="182" fill="#57606a" font-size="11">an unpaid customer owes.</text>
+
+      <rect x="424" y="120" width="190" height="84" rx="8" fill="#ffffff" stroke="#d0d7de"/>
+      <text x="438" y="144" font-weight="600">Small business</text>
+      <text x="438" y="166" fill="#57606a" font-size="11">Opening position; funding</text>
+      <text x="438" y="182" fill="#57606a" font-size="11">kept apart from revenue.</text>
+
+      <rect x="626" y="120" width="194" height="84" rx="8" fill="#ffffff" stroke="#d0d7de"/>
+      <text x="640" y="144" font-weight="600">Investment portfolio</text>
+      <text x="640" y="166" fill="#57606a" font-size="11">Units, acquisition records,</text>
+      <text x="640" y="182" fill="#57606a" font-size="11">and cash movement.</text>
+
+      <rect x="20" y="214" width="190" height="84" rx="8" fill="#ffffff" stroke="#d0d7de"/>
+      <text x="34" y="238" font-weight="600">Rental property</text>
+      <text x="34" y="260" fill="#57606a" font-size="11">Rent kept apart from a</text>
+      <text x="34" y="276" fill="#57606a" font-size="11">refundable deposit.</text>
+
+      <rect x="222" y="214" width="190" height="84" rx="8" fill="#ffffff" stroke="#d0d7de"/>
+      <text x="236" y="238" font-weight="600">Shared expenses</text>
+      <text x="236" y="260" fill="#57606a" font-size="11">Record an advance and see</text>
+      <text x="236" y="276" fill="#57606a" font-size="11">who owes whom.</text>
+
+      <rect x="424" y="214" width="190" height="84" rx="8" fill="#ffffff" stroke="#d0d7de"/>
+      <text x="438" y="238" font-weight="600">Community group</text>
+      <text x="438" y="260" fill="#57606a" font-size="11">Contributions, project</text>
+      <text x="438" y="276" fill="#57606a" font-size="11">spending, funds remaining.</text>
+
+      <rect x="626" y="214" width="194" height="84" rx="8" fill="#ffffff" stroke="#d0d7de" stroke-dasharray="5 4"/>
+      <text x="640" y="238" font-weight="600">Start blank</text>
+      <text x="640" y="260" fill="#57606a" font-size="11">No accounts; add your</text>
+      <text x="640" y="276" fill="#57606a" font-size="11">own structure.</text>
+    </g>
+
+    <!-- options under personal -->
+    <rect x="20" y="316" width="800" height="300" rx="8" fill="#f6f8fa" stroke="#d0d7de"/>
+    <text x="36" y="342" font-size="14" font-weight="600">Also track in this ledger</text>
+    <text x="216" y="342" fill="#57606a" font-size="11">optional · add more any time later</text>
+    <circle cx="804" cy="336" r="10" fill="#bf8700"/><text x="804" y="340" fill="#fff" font-weight="700" text-anchor="middle">B</text>
+
+    <!-- row: investments ON -->
+    <rect x="36" y="356" width="768" height="58" rx="6" fill="#ffffff" stroke="#3b6fd8"/>
+    <rect x="52" y="374" width="36" height="20" rx="10" fill="#3b6fd8"/><circle cx="78" cy="384" r="8" fill="#ffffff"/>
+    <text x="104" y="380" font-weight="600">Investments</text>
+    <text x="104" y="400" fill="#57606a" font-size="11">Brokerage cash and holdings, dividends, interest, capital gains — totals apart from everyday spending.</text>
+    <text x="790" y="380" text-anchor="end" fill="#3b6fd8" font-size="11">+5 accounts</text>
+
+    <!-- row: rental OFF -->
+    <rect x="36" y="422" width="768" height="58" rx="6" fill="#ffffff" stroke="#d0d7de"/>
+    <rect x="52" y="440" width="36" height="20" rx="10" fill="#d0d7de"/><circle cx="62" cy="450" r="8" fill="#ffffff"/>
+    <text x="104" y="446" font-weight="600">A rental property</text>
+    <text x="104" y="466" fill="#57606a" font-size="11">Rent, deposits, and repairs for each property; a mortgage is added when you record it.</text>
+
+    <!-- row: side business OFF -->
+    <rect x="36" y="488" width="768" height="58" rx="6" fill="#ffffff" stroke="#d0d7de"/>
+    <rect x="52" y="506" width="36" height="20" rx="10" fill="#d0d7de"/><circle cx="62" cy="516" r="8" fill="#ffffff"/>
+    <text x="104" y="512" font-weight="600">A side business</text>
+    <text x="104" y="532" fill="#57606a" font-size="11">Its own bank account, service income, and business costs — kept apart from household money.</text>
+
+    <!-- ownership question -->
+    <line x1="36" y1="562" x2="804" y2="562" stroke="#d0d7de"/>
+    <rect x="52" y="580" width="36" height="20" rx="10" fill="#d0d7de"/><circle cx="62" cy="590" r="8" fill="#ffffff"/>
+    <text x="104" y="586" font-weight="600">Track whose income or assets these are</text>
+    <text x="104" y="604" fill="#57606a" font-size="11">Asks member details the first time you use it. Does not grant access or set filing status.</text>
+    <circle cx="804" cy="590" r="10" fill="#bf8700"/><text x="804" y="594" fill="#fff" font-weight="700" text-anchor="middle">C</text>
+
+    <!-- footer -->
+    <text x="20" y="652">Personal &amp; household + Investments · <tspan font-weight="600">17 accounts</tspan></text>
+    <text x="20" y="672" fill="#3b6fd8" font-size="11">▸ Preview accounts</text>
+    <rect x="700" y="640" width="120" height="34" rx="4" fill="#1f2328"/>
+    <text x="760" y="662" text-anchor="middle" fill="#ffffff" font-weight="600">Continue</text>
+  </g>
+
+  <!-- ================= Mobile ================= -->
+  <g transform="translate(920,80)">
+    <text x="0" y="0" font-size="14" font-weight="600">Mobile app · New ledger</text>
+    <rect x="0" y="14" width="320" height="700" rx="36" fill="#ffffff" stroke="#1f2328" stroke-width="2"/>
+    <rect x="120" y="26" width="80" height="18" rx="9" fill="#1f2328"/>
+    <text x="30" y="70" font-size="12" font-weight="600">9:41</text>
+    <text x="20" y="104" fill="#3b6fd8" font-size="13">Cancel</text>
+    <text x="160" y="104" text-anchor="middle" font-weight="600" font-size="13">Purpose</text>
+    <text x="300" y="104" text-anchor="end" fill="#57606a">1 of 2</text>
+    <line x1="0" y1="116" x2="320" y2="116" stroke="#eaeef2"/>
+
+    <text x="20" y="144" font-size="16" font-weight="700">What will this ledger keep?</text>
+    <rect x="20" y="156" width="280" height="240" rx="10" fill="#f6f8fa"/>
+    <g font-size="12.5">
+      <circle cx="40" cy="180" r="7" fill="#ffffff" stroke="#3b6fd8" stroke-width="2"/><circle cx="40" cy="180" r="3.5" fill="#3b6fd8"/>
+      <text x="56" y="184" font-weight="600">Personal &amp; household</text>
+      <line x1="34" y1="194" x2="290" y2="194" stroke="#d0d7de"/>
+      <circle cx="40" cy="208" r="7" fill="#ffffff" stroke="#8c959f"/><text x="56" y="212">Freelance work only</text>
+      <line x1="34" y1="222" x2="290" y2="222" stroke="#d0d7de"/>
+      <circle cx="40" cy="236" r="7" fill="#ffffff" stroke="#8c959f"/><text x="56" y="240">Small business</text>
+      <line x1="34" y1="250" x2="290" y2="250" stroke="#d0d7de"/>
+      <circle cx="40" cy="264" r="7" fill="#ffffff" stroke="#8c959f"/><text x="56" y="268">Investment portfolio</text>
+      <line x1="34" y1="278" x2="290" y2="278" stroke="#d0d7de"/>
+      <circle cx="40" cy="292" r="7" fill="#ffffff" stroke="#8c959f"/><text x="56" y="296">Rental property</text>
+      <line x1="34" y1="306" x2="290" y2="306" stroke="#d0d7de"/>
+      <circle cx="40" cy="320" r="7" fill="#ffffff" stroke="#8c959f"/><text x="56" y="324">Shared expenses</text>
+      <line x1="34" y1="334" x2="290" y2="334" stroke="#d0d7de"/>
+      <circle cx="40" cy="348" r="7" fill="#ffffff" stroke="#8c959f"/><text x="56" y="352">Community group</text>
+      <line x1="34" y1="362" x2="290" y2="362" stroke="#d0d7de"/>
+      <circle cx="40" cy="376" r="7" fill="#ffffff" stroke="#8c959f"/><text x="56" y="380" fill="#57606a">Start blank</text>
+    </g>
+    <text x="20" y="414" fill="#57606a" font-size="11">Company, club, or shared money? Use its own ledger.</text>
+
+    <text x="20" y="444" fill="#57606a" font-size="12">ALSO TRACK IN THIS LEDGER</text>
+    <rect x="20" y="452" width="280" height="132" rx="10" fill="#f6f8fa"/>
+    <g font-size="12.5">
+      <text x="34" y="478">Investments</text>
+      <rect x="254" y="466" width="36" height="20" rx="10" fill="#3b6fd8"/><circle cx="280" cy="476" r="8" fill="#ffffff"/>
+      <line x1="34" y1="494" x2="290" y2="494" stroke="#d0d7de"/>
+      <text x="34" y="520">A rental property</text>
+      <rect x="254" y="508" width="36" height="20" rx="10" fill="#d0d7de"/><circle cx="264" cy="518" r="8" fill="#ffffff"/>
+      <line x1="34" y1="536" x2="290" y2="536" stroke="#d0d7de"/>
+      <text x="34" y="562">A side business</text>
+      <rect x="254" y="550" width="36" height="20" rx="10" fill="#d0d7de"/><circle cx="264" cy="560" r="8" fill="#ffffff"/>
+    </g>
+    <text x="20" y="604" fill="#57606a" font-size="11">17 accounts · <tspan fill="#3b6fd8">Preview ›</tspan></text>
+
+    <rect x="20" y="628" width="280" height="46" rx="12" fill="#1f2328"/>
+    <text x="160" y="657" text-anchor="middle" fill="#ffffff" font-weight="600">Continue</text>
+  </g>
+
+  <!-- Notes -->
+  <rect x="30" y="800" width="1220" height="84" rx="8" fill="#fff8e6" stroke="#bf8700"/>
+  <g font-size="12">
+    <text x="46" y="822"><tspan font-weight="700" fill="#bf8700">A</tspan>  The purpose names one set of books, so it is a single choice. Entity-level purposes (business, community, shared expenses) get their own ledger rather than a module.</text>
+    <text x="46" y="844"><tspan font-weight="700" fill="#bf8700">B</tspan>  Modules appear only under personal, start off, and each adds a name-spaced account group (PRFAQ001 A.9). The list counts as one of personal's two questions; module details wait for first use.</text>
+    <text x="46" y="866"><tspan font-weight="700" fill="#bf8700">C</tspan>  Personal's existing ownership question is the second. Accepting defaults: personal, no modules — Continue, then Create ledger on the details step.</text>
+  </g>
+</svg>

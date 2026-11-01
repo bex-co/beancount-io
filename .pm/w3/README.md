@@ -90,8 +90,11 @@
 
 - [ ] **m58** — [Reconciliation exception register in `beancount-reconcile`, summarized by `beancount-close`](./m58/README.md) (6 tasks) ← `/pm-brainstorm w3` 2026-10-20 candidate 6, from ADR020 P1 — sequenced after w2/m48 closeout
 
+- [ ] **m59** — [Ledger creation: personal modules in the setup specification, builder, and CLI](./m59/README.md) (8 tasks) ← PRFAQ001 §3–§5 + Appendix A.9 and ADR021, modules adopted 2026-10-27 — sequenced after m53, before the flow rework in 649
+
 ## Inbox
 
+- [649](./649.md) — Rework the shipped creation flow to the 2026-10-27 design: two steps, no review page or history start, personal modules, ADR026 currency suggestion (> 1h, promote after m59) ← PRFAQ001 §3 + ADR021 revision 2026-10-27
 - [648](./done/648.md) — Fix the web Starter copy promising an example transaction and rename the create button from Save (≤1h) ← `/pm-brainstorm w3` 2026-10-20 candidate 7, from ADR021 — **done** 2026-10-20 (`2f11faa72`)
 
 ## Dropped

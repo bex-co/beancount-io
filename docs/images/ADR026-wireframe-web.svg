@@ -1,0 +1,148 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 900" width="1280" height="900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', 'PingFang SC', Helvetica, Arial, sans-serif" font-size="12" fill="#1f2328">
+  <title>ADR026 wireframe: web dashboard</title>
+  <rect width="1280" height="900" fill="#ffffff"/>
+  <text x="30" y="36" font-size="20" font-weight="600">Web dashboard — ADR026 wireframes</text>
+  <text x="30" y="56" fill="#57606a">Blue = inferred suggestion with its source · Green = saved to the account · Orange = annotation</text>
+
+  <!-- ============ Panel 1: first visit ============ -->
+  <g transform="translate(30,80)">
+    <text x="0" y="0" font-size="14" font-weight="600">1 · First visit — language from Accept-Language</text>
+    <rect x="0" y="12" width="600" height="340" rx="8" fill="#ffffff" stroke="#8c959f"/>
+    <rect x="0" y="12" width="600" height="30" rx="8" fill="#f6f8fa" stroke="#8c959f"/>
+    <circle cx="16" cy="27" r="4" fill="#d0d7de"/><circle cx="30" cy="27" r="4" fill="#d0d7de"/><circle cx="44" cy="27" r="4" fill="#d0d7de"/>
+    <rect x="70" y="19" width="400" height="16" rx="8" fill="#ffffff" stroke="#d0d7de"/>
+    <text x="80" y="31" fill="#57606a" font-size="11">beancount.io/auth/welcome</text>
+    <text x="20" y="70" font-size="14" font-weight="600">Beancount.io</text>
+    <rect x="490" y="56" width="92" height="22" rx="4" fill="#eef4ff" stroke="#3b6fd8" stroke-width="1.5"/>
+    <text x="500" y="71" fill="#3b6fd8">日本語 ▾</text>
+    <line x1="0" y1="88" x2="600" y2="88" stroke="#d0d7de"/>
+    <text x="300" y="130" font-size="20" font-weight="600" text-anchor="middle">ようこそ</text>
+    <text x="300" y="154" fill="#57606a" text-anchor="middle">どのように始めますか？</text>
+    <rect x="60" y="176" width="150" height="80" rx="8" fill="#f6f8fa" stroke="#d0d7de"/>
+    <text x="135" y="212" text-anchor="middle" font-weight="600">新しい帳簿</text>
+    <text x="135" y="232" text-anchor="middle" fill="#57606a" font-size="11">Start new books</text>
+    <rect x="225" y="176" width="150" height="80" rx="8" fill="#f6f8fa" stroke="#d0d7de"/>
+    <text x="300" y="212" text-anchor="middle" font-weight="600">記録を持ち込む</text>
+    <text x="300" y="232" text-anchor="middle" fill="#57606a" font-size="11">Bring existing records</text>
+    <rect x="390" y="176" width="150" height="80" rx="8" fill="#f6f8fa" stroke="#d0d7de"/>
+    <text x="465" y="212" text-anchor="middle" font-weight="600">サンプルを見る</text>
+    <text x="465" y="232" text-anchor="middle" fill="#57606a" font-size="11">Explore an example</text>
+    <circle cx="590" cy="56" r="10" fill="#bf8700"/><text x="590" y="60" fill="#fff" font-weight="700" text-anchor="middle">A</text>
+    <rect x="20" y="276" width="560" height="62" rx="6" fill="#fff8e6" stroke="#bf8700"/>
+    <text x="32" y="296"><tspan font-weight="700" fill="#bf8700">A</tspan>  Accept-Language: ja,en;q=0.8 → Japanese. No ?lang, cookie, or saved locale yet.</text>
+    <text x="32" y="314">Nothing is written: a later browser-language change still applies until the</text>
+    <text x="32" y="330">customer picks a language from this menu (then cookie + account locale).</text>
+  </g>
+
+  <!-- ============ Panel 2: details ============ -->
+  <g transform="translate(650,80)">
+    <text x="0" y="0" font-size="14" font-weight="600">2 · New ledger › Details — the last step, no review page</text>
+    <rect x="0" y="12" width="600" height="340" rx="8" fill="#ffffff" stroke="#8c959f"/>
+    <circle cx="30" cy="38" r="9" fill="#2f8f4e"/><text x="30" y="42" fill="#fff" text-anchor="middle" font-size="11">✓</text>
+    <text x="46" y="42" fill="#57606a">Purpose: Personal</text>
+    <line x1="160" y1="38" x2="200" y2="38" stroke="#d0d7de"/>
+    <circle cx="216" cy="38" r="9" fill="#1f2328"/><text x="216" y="42" fill="#fff" text-anchor="middle" font-size="11">2</text>
+    <text x="232" y="42" font-weight="600">Details</text>
+
+    <text x="20" y="72" font-weight="600">Title</text>
+    <rect x="20" y="78" width="560" height="26" rx="4" fill="#ffffff" stroke="#d0d7de"/>
+    <text x="30" y="95">Household books</text>
+
+    <text x="20" y="126" font-weight="600">Currency for accounts and reports</text>
+    <rect x="20" y="132" width="90" height="28" rx="14" fill="#3b6fd8"/>
+    <text x="65" y="150" fill="#ffffff" text-anchor="middle" font-weight="600">✓ USD</text>
+    <rect x="118" y="132" width="90" height="28" rx="14" fill="#ffffff" stroke="#3b6fd8" stroke-width="1.5"/>
+    <text x="163" y="150" fill="#3b6fd8" text-anchor="middle" font-weight="600">CNY</text>
+    <rect x="216" y="132" width="90" height="28" rx="14" fill="#ffffff" stroke="#d0d7de"/>
+    <text x="261" y="150" text-anchor="middle" fill="#57606a">Other…</text>
+    <circle cx="324" cy="146" r="10" fill="#bf8700"/><text x="324" y="150" fill="#fff" font-weight="700" text-anchor="middle">B</text>
+    <text x="20" y="176" fill="#3b6fd8" font-size="11">USD — from your browser region (en-US) · CNY — from your time zone (Asia/Shanghai)</text>
+
+    <text x="20" y="202" font-weight="600">First account <tspan font-weight="400" fill="#57606a">(optional)</tspan></text>
+    <rect x="20" y="208" width="110" height="26" rx="4" fill="#ffffff" stroke="#d0d7de"/>
+    <text x="30" y="225">Cash</text><text x="120" y="225" text-anchor="end">▾</text>
+    <rect x="138" y="208" width="130" height="26" rx="4" fill="#ffffff" stroke="#d0d7de"/>
+    <text x="148" y="225">200.00</text><text x="258" y="225" text-anchor="end" fill="#57606a">USD</text>
+    <text x="278" y="225" fill="#57606a">from</text>
+    <rect x="308" y="208" width="100" height="26" rx="4" fill="#ffffff" stroke="#d0d7de"/>
+    <text x="318" y="225">Today</text><text x="398" y="225" text-anchor="end">▾</text>
+    <text x="20" y="254" fill="#3b6fd8" font-size="11">+ Add account</text>
+    <text x="110" y="254" fill="#3b6fd8" font-size="11">Set up accounts later</text>
+
+    <rect x="0" y="276" width="600" height="76" rx="0" fill="#f6f8fa"/>
+    <line x1="0" y1="276" x2="600" y2="276" stroke="#d0d7de"/>
+    <text x="20" y="300" font-weight="600">Will create</text>
+    <text x="20" y="320">🔒 Private · USD · 12 accounts</text>
+    <text x="20" y="338" fill="#3b6fd8" font-size="11">▸ Preview accounts</text>
+    <text x="140" y="338" fill="#3b6fd8" font-size="11">▸ Address, description, visibility</text>
+        <rect x="384" y="292" width="76" height="30" rx="4" fill="#ffffff" stroke="#d0d7de"/>
+    <text x="422" y="311" text-anchor="middle">Back</text>
+    <rect x="468" y="292" width="110" height="30" rx="4" fill="#1f2328"/>
+    <text x="523" y="311" text-anchor="middle" fill="#ffffff" font-weight="600">Create ledger</text>
+    <circle cx="364" cy="307" r="10" fill="#bf8700"/><text x="364" y="311" fill="#fff" font-weight="700" text-anchor="middle">C</text>
+  </g>
+
+  <!-- ============ Panel 3: after creation ============ -->
+  <g transform="translate(30,470)">
+    <text x="0" y="0" font-size="14" font-weight="600">3 · Right after creation — correct anything in place</text>
+    <rect x="0" y="12" width="600" height="340" rx="8" fill="#ffffff" stroke="#8c959f"/>
+    <rect x="20" y="28" width="560" height="40" rx="6" fill="#eefaf1" stroke="#2f8f4e"/>
+    <text x="34" y="53"><tspan fill="#2f8f4e" font-weight="600">✓ Household books created</tspan> · Private · USD · 12 accounts</text>
+    <text x="566" y="53" text-anchor="end" fill="#3b6fd8">Change ▾</text>
+    <circle cx="590" cy="30" r="10" fill="#bf8700"/><text x="590" y="34" fill="#fff" font-weight="700" text-anchor="middle">D</text>
+
+    <rect x="400" y="72" width="180" height="96" rx="6" fill="#ffffff" stroke="#d0d7de"/>
+    <text x="414" y="94">Rename</text>
+    <text x="414" y="118">Make public…</text>
+    <text x="414" y="142">Edit currency in file…</text>
+    <text x="414" y="160" fill="#57606a" font-size="11">first two: updateLedger</text>
+
+    <text x="20" y="100" font-size="15" font-weight="600">Next step</text>
+    <rect x="20" y="112" width="360" height="40" rx="6" fill="#1f2328"/>
+    <text x="200" y="137" fill="#ffffff" text-anchor="middle" font-weight="600">Record a purchase</text>
+    <text x="20" y="176" fill="#3b6fd8">Import records</text>
+    <text x="140" y="176" fill="#3b6fd8">Verify a starting balance</text>
+
+    <rect x="20" y="198" width="560" height="140" rx="6" fill="#fff8e6" stroke="#bf8700"/>
+    <text x="32" y="218"><tspan font-weight="700" fill="#bf8700">B</tspan>  Conflict: region USD stays preselected (no required answer); time-zone CNY is one</text>
+    <text x="32" y="234">    tap. Tapping it is a correction, so defaultCurrency = CNY via updateProfile.</text>
+    <text x="32" y="256"><tspan font-weight="700" fill="#bf8700">C</tspan>  The summary replaces the review page: visibility, currency, and account count sit</text>
+    <text x="32" y="272">    beside Create ledger. Choosing public shows an inline warning at that moment.</text>
+    <text x="32" y="294"><tspan font-weight="700" fill="#bf8700">D</tspan>  Every creation choice stays changeable, so mistakes are fixed after creation, not</text>
+    <text x="32" y="310">    guarded by an extra page. Accepting defaults: Continue → Create ledger, two taps.</text>
+    <text x="32" y="330" fill="#57606a" font-size="11">Agents keep their review: previewLedgerSetup plus a confirmation in the conversation.</text>
+  </g>
+
+  <!-- ============ Panel 4: settings ============ -->
+  <g transform="translate(650,470)">
+    <text x="0" y="0" font-size="14" font-weight="600">4 · Settings › General — saved preferences</text>
+    <rect x="0" y="12" width="600" height="340" rx="8" fill="#ffffff" stroke="#8c959f"/>
+    <rect x="0" y="12" width="150" height="340" rx="8" fill="#f6f8fa" stroke="#8c959f"/>
+    <text x="20" y="46" font-weight="600">General</text>
+    <text x="20" y="72" fill="#57606a">Profile</text>
+    <text x="20" y="96" fill="#57606a">SSH keys</text>
+    <text x="20" y="120" fill="#57606a">Billing</text>
+
+    <text x="170" y="46" font-size="16" font-weight="600">Appearance &amp; region</text>
+    <text x="170" y="80" font-weight="600">Language</text>
+    <rect x="170" y="88" width="250" height="28" rx="4" fill="#ffffff" stroke="#d0d7de"/>
+    <text x="180" y="106">日本語 (Japanese)</text><text x="408" y="106" text-anchor="end">▾</text>
+    <text x="430" y="106" fill="#2f8f4e" font-size="11">✓ saved to your account</text>
+
+    <text x="170" y="146" font-weight="600">Default currency for new ledgers</text>
+    <rect x="170" y="154" width="250" height="28" rx="4" fill="#ffffff" stroke="#d0d7de"/>
+    <text x="180" y="172">CNY — Chinese Yuan</text><text x="408" y="172" text-anchor="end">▾</text>
+    <text x="430" y="172" fill="#2f8f4e" font-size="11">✓ saved</text>
+    <text x="170" y="198" fill="#57606a" font-size="11">Only a suggestion when you create a ledger. Existing ledgers never change.</text>
+
+    <text x="170" y="230" font-weight="600">Number and date format</text>
+    <text x="170" y="250">1,234.56 · 2026/10/26</text>
+    <text x="320" y="250" fill="#3b6fd8" font-size="11">from your browser locale (ja-JP) — not saved</text>
+
+    <rect x="170" y="276" width="410" height="62" rx="6" fill="#fff8e6" stroke="#bf8700"/>
+    <text x="182" y="296" font-weight="700" fill="#bf8700">D</text>
+    <text x="198" y="296">Language and currency write through GraphQL</text>
+    <text x="198" y="312">updateProfile; formatting stays on the device.</text>
+    <text x="198" y="328" fill="#57606a">No starter, module, or account name is ever set here.</text>
+  </g>
+</svg>
