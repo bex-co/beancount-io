@@ -76,7 +76,6 @@
 
 - [1079 — Let identical heuristic orders reach the same-day booking planner](./1079.md) — major CLI bulk add: reversed partial short covers, splits and custody chains skip the existing planner; 50 new profiles plus full original ordering controls, 2254 CLI calls and 522 native inventories; checked 2026-10-27.
 
-- [1078 — Accept native rounding for costed postings with prices in Cash Flow](./1078.md) — major CLI reporting: one cost-weighted purchase or sale is misclassified as priced FX; 942 CLI calls and 232 native loads plus a four-profile / 12-CLI / four-native finite-cost confirmation; checked 2026-10-29.
 
 
 

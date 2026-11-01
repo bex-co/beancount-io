@@ -1079,8 +1079,14 @@ def _cash_flow(filtered: Any, bounds: tuple[date | None, date | None], ledger_er
             dropped = sorted({account for account in legs if not matches(account)})
             if kept and dropped:
                 split.append((entry, kept, dropped))
+        # A price on a costed posting does not set its weight (the booked cost
+        # does), so only a price-weighted leg makes this a currency exchange
+        # (w5/1078).
         is_priced = any(
-            posting.price is not None and posting.units is not None and posting.price.currency != posting.units.currency
+            posting.price is not None
+            and posting.cost is None
+            and posting.units is not None
+            and posting.price.currency != posting.units.currency
             for posting in entry.postings
         )
         if is_priced:
