@@ -22,7 +22,7 @@
 - [x] **m16** — [Disclose unpriced report conversions](./done/m16/README.md) (7 tasks) ← promoted from `w23/180` 2026-10-30
 - [ ] **m17** — [Make createPullRequest work reliably](./blocked/m17/README.md) (8 tasks) ← promoted from `w23/082` 2026-10-31 — **blocked:** t001–t007 shipped; t008 needs a production deploy of `32c6565db`, then a rerun of the original repro
 - [ ] **m18** — [Bind ledger pins to the repository ID](./blocked/m18/README.md) (9 tasks) ← promoted from `w23/065` 2026-11-01 — **blocked:** t001–t008 shipped; t009 needs a production deploy (with migration 0026), then a rerun of the rename repro
-- [ ] **m19** — [Fill balances.discrepancy from the validator](./m19/README.md) (8 tasks) ← promoted from `w23/196` 2026-11-01
+- [ ] **m19** — [Fill balances.discrepancy from the validator](./blocked/m19/README.md) (8 tasks) ← promoted from `w23/196` 2026-11-01 — **blocked:** t001–t007 shipped in `9b1d03ae8`; t008 needs a ledger-service deploy, then a rerun of the repro
 
 ## Dropped
 

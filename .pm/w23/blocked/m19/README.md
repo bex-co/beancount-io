@@ -1,18 +1,18 @@
 # w23 · m19 — Fill balances.discrepancy from the validator
 
-**Worker:** worker1 **Goal:** `SELECT account, discrepancy FROM balances` returns the difference for a failing balance assertion on REST, GraphQL and MCP, as stock does **Status:** todo
+**Worker:** worker1 **Goal:** `SELECT account, discrepancy FROM balances` returns the difference for a failing balance assertion on REST, GraphQL and MCP, as stock does **Status:** blocked (t001–t007 done)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
-| t001 | Recognize a balances query that selects discrepancy | 45m | — |
-| t002 | Fill discrepancy from the validator's balance diffs | 60m | t001 |
-| t003 | Refuse discrepancy where it cannot be right | 30m | t001 |
-| t004 | Parity and docs | 30m | t002, t003 |
-| t005 | Adoption surface | 20m | t004 |
-| t006 | Simplify | 30m | t005 |
-| t007 | Test coverage | 45m | t005 |
+| t001 | Recognize a balances query that selects discrepancy — **DONE** | 45m | — |
+| t002 | Fill discrepancy from the validator's balance diffs — **DONE** | 60m | t001 |
+| t003 | Refuse discrepancy where it cannot be right — **DONE** | 30m | t001 |
+| t004 | Parity and docs — **DONE** | 30m | t002, t003 |
+| t005 | Adoption surface — **DONE** | 20m | t004 |
+| t006 | Simplify — **DONE** | 30m | t005 |
+| t007 | Test coverage — **DONE** | 45m | t005 |
 | t008 | Verify on production and close out | 20m | t006, t007 |
 
 ## Definition of done
@@ -27,3 +27,9 @@
 - **Goal linkage:** A1 (agent-native accounting): an agent auditing balance health through BQL must see by how much an assertion fails, not a blank.
 - **Expected outcome:** a failing balance assertion is quantified in one query.
 - **Why now:** the dtype half shipped and the value stays blank; the triage's open question (how to key a row) is answered by adding the keys to the query, not guessing.
+
+## Blocked
+
+**Blocked 2026-11-01** — t001 to t007 shipped (`9b1d03ae8`). Only t008 remains, a production check: after the next ledger-service deploy, a failing balance assertion on a disposable QA ledger must read its difference through `SELECT account, discrepancy FROM balances` on REST, GraphQL and MCP. Not exercised against production.
+
+**Unblock:** the owner deploys the ledger service with `9b1d03ae8`; a worker then reruns the note's repro (commit a failing assertion on a disposable ledger, query, restore the file) and records the observed revision. Who can clear it: the repository owner (deploy), then a worker (rerun).
