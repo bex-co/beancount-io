@@ -168,9 +168,11 @@ def _with_short_lots[**P, R](function: Callable[P, R]) -> Callable[P, R]:
         token = _SHORT_LOT_LABELS.set(lambda _date: frozenset())
         opened = OPENED_ACCOUNTS.set(frozenset())
         batch = BATCH_SHORT_LABELS.set(None)
+        signs = _HELD_SIGNS.set({})
         try:
             return function(*args, **kwargs)
         finally:
+            _HELD_SIGNS.reset(signs)
             BATCH_SHORT_LABELS.reset(batch)
             OPENED_ACCOUNTS.reset(opened)
             _SHORT_LOT_LABELS.reset(token)
@@ -445,6 +447,7 @@ def answer(
                 logs,
             )
     keys = _effective_id_keys(id_keys, csv_id_mapped=csv_id_mapped)
+    _note_held_signs(existing, entries, Transaction)
     identities: dict[tuple[str, str, str], Any] = {}
     fingerprints: dict[tuple[Any, ...], list[Any]] = {}
     open_currencies = _open_currencies(existing, Open)
@@ -1561,13 +1564,54 @@ def _source_legs(entry: Any, account: str) -> list[Any]:
     return exact or [p for p in entry.postings if p.account.startswith(f"{account}:")]
 
 
+def _opens_a_lot(posting: Any) -> bool:
+    """Whether nothing held in the posting's account and commodity is in the other direction.
+
+    A labelled or negative cost with an open part may select a lot booking
+    reduces; with no such lot to reduce it can only open one, and its cash
+    determines the cost (w5/1089).
+    """
+    count = getattr(posting.units, "number", None)
+    held = _HELD_SIGNS.get(None)
+    if held is None or not isinstance(count, Decimal) or not count:
+        return False
+    return (-1 if count > 0 else 1) not in held.get((posting.account, posting.units.currency), ())
+
+
+def _note_held_signs(existing: Sequence[Any], entries: Sequence[Any], transaction: type[Any]) -> None:
+    """Record which directions the ledger's lots and this export's rows hold, per account and commodity."""
+    from beancount.core.inventory import Inventory
+
+    held = _HELD_SIGNS.get(None)
+    if held is None:
+        return
+    books: dict[str, Inventory] = {}
+    for entry in existing:
+        if not isinstance(entry, transaction):
+            continue
+        for posting in entry.postings:
+            if posting.units is not None and isinstance(posting.units.number, Decimal) and posting.cost is not None:
+                books.setdefault(posting.account, Inventory()).add_position(posting)
+    for account, inventory in books.items():
+        for position in inventory:
+            if position.cost is not None and position.units.number:
+                held.setdefault((account, position.units.currency), set()).add(1 if position.units.number > 0 else -1)
+    for entry in entries:
+        if not isinstance(entry, transaction):
+            continue
+        for posting in entry.postings:
+            number = getattr(posting.units, "number", None)
+            if posting.cost is not None and isinstance(number, Decimal) and number:
+                held.setdefault((posting.account, posting.units.currency), set()).add(1 if number > 0 else -1)
+
+
 def _source_postings(entry: Any, account: str) -> list[Any]:
     # A cost whose per-unit or total part booking infers is compared at the
     # lot it books, not with the open part taken as zero (w5/950); so is a
     # `{USD}` or `{10}` acquisition, whose number or currency booking infers
     # (w5/994), and an `@ USD` or `@@ USD` price (w5/995). An id written
     # before that is spelled with all of them open.
-    completed = entry.postings if _OPEN_INFERENCE.get() else with_inferred_parts(entry.postings)
+    completed = entry.postings if _OPEN_INFERENCE.get() else with_inferred_parts(entry.postings, opening=_opens_a_lot)
     if completed is not entry.postings:
         entry = entry._replace(postings=completed)
     return [p for p in _source_legs(entry, account) if _has_explicit_units(p)]
@@ -3045,6 +3089,10 @@ _FORMER_COMPOUND: ContextVar[bool] = ContextVar("former_compound", default=False
 #: Leaves open the cost parts and prices booking infers, as ids written before booking completed them were
 #: (w5/994, w5/995).
 _OPEN_INFERENCE: ContextVar[bool] = ContextVar("open_inference", default=False)
+#: The lot directions the ledger and this export hold per account and commodity, filled once the ledger is
+#: loaded: a labelled or negative cost with an open part is an opening only if no lot of the other direction
+#: exists for it to reduce (w5/1089).
+_HELD_SIGNS: ContextVar[dict[tuple[str, str], set[int]]] = ContextVar("held_signs")
 
 
 def _exactly_normalized(number: Decimal) -> Decimal:

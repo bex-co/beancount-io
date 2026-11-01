@@ -807,13 +807,14 @@ def _require_custom_roundtrip(values: list[_ValueType], text: str) -> None:
         )
 
 
-def _open_cost(posting: Any, *, plain: bool) -> bool:
+def _open_cost(posting: Any, *, plain: bool, opening: Callable[[Any], bool] | None = None) -> bool:
     """Whether a posting's cost leaves a number or its currency for booking to infer.
 
     A compound cost with one open part (`{# 0.50 USD}`, `{5 # USD}`) always
     qualifies. With `plain`, so do an acquisition's `{USD}` (no number) and
     `{10}` (no currency): positive, unlabelled units, since a negative or
-    labelled one may select a lot booking reduces rather than one it acquires.
+    labelled one may select a lot booking reduces rather than one it acquires,
+    unless `opening` says no lot of the other direction exists to reduce (w5/1089).
     """
     cost: Any = posting.cost
     count = getattr(posting.units, "number", None)
@@ -825,7 +826,9 @@ def _open_cost(posting: Any, *, plain: bool) -> bool:
     currency: Any = cost.currency
     if MISSING in (per, total) and isinstance(per if total is MISSING else total, Decimal):
         return isinstance(currency, str)
-    if not plain or count < 0 or cost.label is not None:
+    if not plain:
+        return False
+    if (count < 0 or cost.label is not None) and not (opening is not None and opening(posting)):
         return False
     if per is MISSING and total is None:
         return isinstance(currency, str)
@@ -857,7 +860,9 @@ def _incomplete(posting: Any) -> bool:
     )
 
 
-def with_inferred_parts(postings: list[Any], *, plain: bool = True) -> list[Any]:
+def with_inferred_parts(
+    postings: list[Any], *, plain: bool = True, opening: Callable[[Any], bool] | None = None
+) -> list[Any]:
     """The postings with the cost part, cost currency or price the file leaves to booking filled in.
 
     `{# 0.50 USD}` and `{5 # USD}` leave a per-unit or total part for booking
@@ -887,7 +892,7 @@ def with_inferred_parts(postings: list[Any], *, plain: bool = True) -> list[Any]
     candidates = [
         index
         for index, posting in enumerate(postings)
-        if _open_cost(posting, plain=plain) or (plain and _open_price(posting))
+        if _open_cost(posting, plain=plain, opening=opening) or (plain and _open_price(posting))
     ]
     if not candidates:
         return postings
