@@ -28,7 +28,7 @@ const PageViewTracker = () => {
   useEffect(() => {
     if (lastPatternRef.current === routePattern) return;
     lastPatternRef.current = routePattern;
-    trackPageView({ route_pattern: routePattern, page_title: document.title });
+    trackPageView({ route_pattern: routePattern });
     trackRouteView({ route_pattern: routePattern });
   }, [routePattern]);
 

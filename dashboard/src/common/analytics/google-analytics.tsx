@@ -32,14 +32,15 @@ export function GoogleAnalytics() {
 
   // Build the bootstrap inline so the measurement ID and flags are resolved at
   // build time per environment. The location and referrer are the browser's,
-  // reduced to origins before gtag can read them.
+  // reduced to origins before gtag can read them, and the title is fixed so
+  // gtag never reads a ledger name from document.title (w4/1118).
   const initScript = [
     "window.dataLayer = window.dataLayer || [];",
     "function gtag(){dataLayer.push(arguments);}",
     'gtag("js", new Date());',
     `gtag("config", ${JSON.stringify(gaMeasurementId)}, Object.assign(${JSON.stringify(
       configOptions,
-    )}, { page_location: location.origin + "/", page_referrer: document.referrer ? new URL(document.referrer).origin + "/" : "" }));`,
+    )}, { page_location: location.origin + "/", page_referrer: document.referrer ? new URL(document.referrer).origin + "/" : "", page_title: "Beancount.io" }));`,
   ].join("\n");
 
   return (

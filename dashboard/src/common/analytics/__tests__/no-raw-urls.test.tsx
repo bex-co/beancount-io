@@ -48,16 +48,45 @@ describe("what GA4 is told about the page", () => {
       send_page_view: false,
       page_location: `${window.location.origin}/`,
       page_referrer: `${window.location.origin}/`,
+      page_title: "Beancount.io",
     });
+  });
+
+  it("keeps a ledger name in the tab title out of every page title it reports", () => {
+    document.title = "Files - qa-private-ledger";
+    bootGtag();
+
+    trackPageView({
+      route_pattern: "/ledger/:ledgerOwner/:ledgerName/files/tree/:branch/*",
+    });
+
+    expect(dataLayerText()).not.toContain("qa-private-ledger");
+    // gtag reports `set` values as later events' page title (`dt`), so the
+    // pattern must replace document.title there, not just on the page_view.
+    const entries = window.dataLayer as IArguments[];
+    expect(entries).toContainEqual(
+      expect.objectContaining({
+        0: "set",
+        1: expect.objectContaining({
+          page_title: "/ledger/:ledgerOwner/:ledgerName/files/tree/:branch/*",
+        }),
+      }),
+    );
+    expect(entries).toContainEqual(
+      expect.objectContaining({
+        0: "event",
+        1: "page_view",
+        2: expect.objectContaining({
+          page_title: "/ledger/:ledgerOwner/:ledgerName/files/tree/:branch/*",
+        }),
+      }),
+    );
   });
 
   it("never carries a token from an auth route's URL or referrer", () => {
     bootGtag();
 
-    trackPageView({
-      route_pattern: "/auth/reset-password/",
-      page_title: "Reset",
-    });
+    trackPageView({ route_pattern: "/auth/reset-password/" });
     trackRouteView({ route_pattern: "/auth/reset-password/" });
 
     const text = dataLayerText();
