@@ -1,3 +1,4 @@
+import { ledgerPinClaims } from "@/features/oauth/utils/ledger-pin-claims";
 import { resolveLedgerPin } from "@/server/api/identity";
 import type { IncomingMessage } from "node:http";
 import Router from "@koa/router";
@@ -358,18 +359,11 @@ export function setOidcRoutes(
 
     // accountId is "userId:ledgerId" for MCP grants — split into a clean ledger_id
     // claim; identity grants have no ledger suffix, so this resolves to undefined.
-    extraTokenClaims: async (_ctx, token) => {
-      const accountId = "accountId" in token ? (token.accountId ?? "") : "";
-      const parts = accountId.split(":");
-      const ledgerId = parts.slice(1).join(":");
-      if (!ledgerId) return { ledger_id: undefined };
-      // The grant names the ledger as approved; the token also carries the
-      // repository it is, so a rename is followed and a recreated name is not
-      // (w23/065). A ledger that no longer exists gets no ID: the token then
-      // matches nothing, as a pin to a missing name always has.
-      const pin = await resolveLedgerPin({ name: ledgerId });
-      return { ledger_id: ledgerId, ledger_repo_id: pin?.repoId };
-    },
+    extraTokenClaims: (_ctx, token) =>
+      ledgerPinClaims(
+        "accountId" in token ? (token.accountId ?? "") : "",
+        resolveLedgerPin,
+      ),
 
     // Not extra metadata: listing `redirect_uris` runs the validator over it
     // for every client — DCR registrations, CIMD documents and stored clients.
