@@ -44,10 +44,10 @@ tables when checking your change.
 
 ## Your first pull request
 
-1. Find a small [open issue marked `good first issue`](https://github.com/bex-co/beancount-io/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22good%20first%20issue%22).
-   If none are available, choose another scoped open issue or use the
-   [issue forms](https://github.com/bex-co/beancount-io/issues/new/choose) to discuss
-   a small change. Agree on the intended behavior before starting substantial work.
+1. Choose a scoped [open issue](https://github.com/bex-co/beancount-io/issues), or
+   use the [issue forms](https://github.com/bex-co/beancount-io/issues/new/choose)
+   to describe the small change you want to make. Agree on the intended behavior
+   before starting substantial work.
 2. Pick the owning package from the table above and read its guide and rules.
    Follow that guide's setup steps, create a focused branch in your fork or
    checkout, and keep real credentials in ignored local configuration.
@@ -67,8 +67,9 @@ tables when checking your change.
 
 The [issue chooser](https://github.com/bex-co/beancount-io/issues/new/choose)
 routes bug reports, feature requests, agent-skill requests, and self-hosting help
-through forms. Maintainers triage by the affected package and the type of work;
-`good first issue` identifies work intended for newcomers. Include the package,
+through forms. Maintainers triage by the affected package and the type of work.
+Small defects found by maintainers' own QA are fixed directly from the adoption
+board rather than filed as separate issues. Include the package,
 version or commit, and a reproducible example when reporting a problem.
 
 The public [`.pm` adoption board](./.pm/README.md) records worker queues,

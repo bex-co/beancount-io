@@ -1,6 +1,6 @@
 # w4 · m10 — GitHub contributor front door: issue and PR templates, security policy, code of conduct
 
-**Worker:** worker1 **Goal:** a first-time reporter opens an issue through a form that captures the package, version, and reproduction the maintainers need, a first-time contributor finds a sized task and a PR template that names the checks to run, and the repository's community profile is complete **Status:** todo (t001, t002, t003, t005, t008 done; t004 dropped)
+**Worker:** worker1 **Goal:** a first-time reporter opens an issue through a form that captures the package, version, and reproduction the maintainers need, a first-time contributor finds a sized task and a PR template that names the checks to run, and the repository's community profile is complete **Status:** todo (t001, t002, t003, t005, t006, t008 done; t004 dropped)
 
 ## Tasks (in order)
 
@@ -10,7 +10,7 @@
 | t002 | PR template with the package checks table, one-package rule, and secret-scan reminder — **DONE**                          | 20m | —          |
 | t003 | SECURITY.md with the reporting channel and gitleaks policy, CODE_OF_CONDUCT.md, both linked from CONTRIBUTING and README — **DONE** | 30m | — |
 | t005 | Contributing guide: first-PR walkthrough per package, complete layout table, and where to ask — **DONE**                  | 30m | t003       |
-| t006 | Adoption surface                                                                                                          | 20m | t002, t005 |
+| t006 | Adoption surface — **DONE**                                                                                               | 20m | t002, t005 |
 | t007 | Simplify                                                                                                                  | 20m | t006       |
 | t008 | Test coverage — **DONE**                                                                                                  | 40m | t006       |
 | t009 | Closeout                                                                                                                  | 15m | t007, t008 |
