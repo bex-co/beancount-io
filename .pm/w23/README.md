@@ -21,6 +21,7 @@
 - [x] **m15** — [Gate file writes on new bean-check errors](./done/m15/README.md) (7 tasks) ← promoted from `w23/149` 2026-10-30
 - [x] **m16** — [Disclose unpriced report conversions](./done/m16/README.md) (7 tasks) ← promoted from `w23/180` 2026-10-30
 - [ ] **m17** — [Make createPullRequest work reliably](./blocked/m17/README.md) (8 tasks) ← promoted from `w23/082` 2026-10-31 — **blocked:** t001–t007 shipped; t008 needs a production deploy of `32c6565db`, then a rerun of the original repro
+- [ ] **m18** — [Bind ledger pins to the repository ID](./m18/README.md) (9 tasks) ← promoted from `w23/065` 2026-11-01
 
 ## Dropped
 
@@ -53,4 +54,3 @@
 
 - [196](./196.md) — BQL `balances.discrepancy` never populates (blank on failing balances; stock reports the diff) (owner chose service-side enrichment 2026-10-31)
 - [072](./072.md) — concurrent writes (append, add entries, exact-text edits) still lose with `SERVICE_UNAVAILABLE` on production after w23/017; the production lost-race signature differs (scope revised 2026-10-31: per-repo commit serialization plus failure logging; no production log needed to start)
-- [065](./065.md) — a ledger-pinned credential keeps the old name after a rename (owner chose repository-ID pins 2026-10-31)
