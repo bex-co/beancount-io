@@ -30,6 +30,7 @@
 
 ## Blocked
 
-**Blocked 2026-11-01** — t001 to t007 shipped (`9b1d03ae8`). Only t008 remains, a production check: after the next ledger-service deploy, a failing balance assertion on a disposable QA ledger must read its difference through `SELECT account, discrepancy FROM balances` on REST, GraphQL and MCP. Not exercised against production.
+**Re-blocked 2026-11-01** — the owner reported both services deployed, but the rerun could not start: production answers HTTP 401 `unauthorized` to the QA token in `./.env` (expired or revoked), so no authenticated call can be made. The deploy condition is met; the credential is the only blocker. **Unblock:** the owner mints a fresh short-lived read/write QA key (`bcio_…`) on the dedicated QA account, pinned to a synthetic ledger, and stores it as `QA_MCP_TOKEN` in the repo-root `./.env` (never on the board or in chat); a worker then reruns the production repro and records the observed revision. Who can clear it: the repository owner (credential), then a worker (rerun).
 
-**Unblock:** the owner deploys the ledger service with `9b1d03ae8`; a worker then reruns the note's repro (commit a failing assertion on a disposable ledger, query, restore the file) and records the observed revision. Who can clear it: the repository owner (deploy), then a worker (rerun).
+Earlier record: **Unblocked 2026-11-01** — the owner reported that ledger service is deployed with the latest `main` (carrying `9b1d03ae8`); revision not recorded. Only t008 remains: a worker reruns the production repro on a disposable QA ledger and records the observed revision and result. Earlier block, kept for history: **Blocked 2026-11-01** — t001 to t007 shipped (`9b1d03ae8`). Only t008 remains, a production check: after the next ledger-service deploy, a failing balance assertion on a disposable QA ledger must read its difference through `SELECT account, discrepancy FROM balances` on REST, GraphQL and MCP. Not exercised against production.
+

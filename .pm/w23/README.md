@@ -20,9 +20,9 @@
 - [x] **m14** — [Render NULL cells honestly in BQL results](./done/m14/README.md) (8 tasks) ← promoted from `w23/122` 2026-10-27
 - [x] **m15** — [Gate file writes on new bean-check errors](./done/m15/README.md) (7 tasks) ← promoted from `w23/149` 2026-10-30
 - [x] **m16** — [Disclose unpriced report conversions](./done/m16/README.md) (7 tasks) ← promoted from `w23/180` 2026-10-30
-- [ ] **m17** — [Make createPullRequest work reliably](./blocked/m17/README.md) (8 tasks) ← promoted from `w23/082` 2026-10-31 — **blocked:** t001–t007 shipped; t008 needs a production deploy of `32c6565db`, then a rerun of the original repro
-- [ ] **m18** — [Bind ledger pins to the repository ID](./blocked/m18/README.md) (9 tasks) ← promoted from `w23/065` 2026-11-01 — **blocked:** t001–t008 shipped; t009 needs a production deploy (with migration 0026), then a rerun of the rename repro
-- [ ] **m19** — [Fill balances.discrepancy from the validator](./blocked/m19/README.md) (8 tasks) ← promoted from `w23/196` 2026-11-01 — **blocked:** t001–t007 shipped in `9b1d03ae8`; t008 needs a ledger-service deploy, then a rerun of the repro
+- [ ] **m17** — [Make createPullRequest work reliably](./blocked/m17/README.md) (8 tasks) ← promoted from `w23/082` 2026-10-31 — **blocked:** t008 needs a fresh QA key (the `.env` token returns 401), then a rerun of the original repro against the deployed build
+- [ ] **m18** — [Bind ledger pins to the repository ID](./blocked/m18/README.md) (9 tasks) ← promoted from `w23/065` 2026-11-01 — **blocked:** t009 needs a fresh QA key (the `.env` token returns 401), then a rerun of the rename repro
+- [ ] **m19** — [Fill balances.discrepancy from the validator](./blocked/m19/README.md) (8 tasks) ← promoted from `w23/196` 2026-11-01 — **blocked:** t008 needs a fresh QA key (the `.env` token returns 401), then a rerun of the repro
 
 ## Dropped
 
@@ -53,4 +53,4 @@
 - [x] [170](./done/170.md) — BQL `meta` splits by table (`k: v`/`str` postings vs `k=v`/`object` entries; stock one dict)
 - [x] [171](./done/171.md) — typed posting tags/links render stock-invalid beancount; backend check blind, reads blank (m6 "holds live" disproven)
 
-- [072](./blocked/072.md) — concurrent writes (append, add entries, exact-text edits) still lose with `SERVICE_UNAVAILABLE` on production after w23/017; the production lost-race signature differs — **blocked:** fix shipped in `1f1513a8c`; needs a ledger-service deploy, then a rerun of the three-parallel table
+- [072](./blocked/072.md) — concurrent writes (append, add entries, exact-text edits) still lose with `SERVICE_UNAVAILABLE` on production after w23/017; the production lost-race signature differs — **blocked:** deployed per the owner; the rerun needs a fresh QA key (the `.env` token returns 401)
