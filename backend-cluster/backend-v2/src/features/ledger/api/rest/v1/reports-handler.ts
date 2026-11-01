@@ -50,7 +50,7 @@ export const statementQuerySchema = z.object({
   }),
   conversion: z.string().optional().openapi({
     description:
-      "Convert amounts to this currency (default: the ledger's operating currency)",
+      "Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency",
     example: "USD",
   }),
   interval: z.string().default("monthly").openapi({

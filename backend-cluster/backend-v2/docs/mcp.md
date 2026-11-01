@@ -918,7 +918,11 @@ stocks lists them there. The balance sheet adds `valuation`: `units`
 (positions unconverted), `cost` (booked cost), or `latest-price` (a currency
 conversion or `at_value`, priced at the ledger's most recent price). A
 conversion to a currency the ledger has no prices for converts nothing, so it
-reads `units` and reports in the currency the data does carry. `asOf` is the position cut-off, not the price date, so a
+reads `units` and reports in the currency the data does carry.
+`conversion=units_by_cost` reads `units` too: its balances are raw units keyed
+by cost currency — `VTI {EUR}` for units held at a EUR cost, `EUR {}` for units
+held without one — so a client can tell cash from a cost-basis holding in the
+same currency; read it with `shape=fava` to keep every key per account. `asOf` is the position cut-off, not the price date, so a
 historical window shows its positions at the latest recorded prices. `netWorth` is always
 `assets + liabilities`, on the same basis as `byAccount`. The income
 statement's `period` gives `to`, the statement's last day, and `time`, the
@@ -931,13 +935,13 @@ unconverted because the ledger has no price path to `to` — the same shape hold
 returns. `?conversion=EUR` on a ledger that only has USD prices answers in `USD`
 with `missingPrices: [{"from": "USD", "to": "EUR"}]` rather than passing for a
 EUR report. The field is present only then; it is absent for `units`, `at_cost`,
-`at_value`, an omitted conversion, and a fully converted report. The raw
+`at_value`, `units_by_cost`, an omitted conversion, and a fully converted report. The raw
 `shape=fava` payloads and GraphQL return the chart data unchanged: their
 currency-keyed balances already show which currencies were not converted.
 
 Income-statement and overview summaries use the currency observed in their
 reported balances. When those maps contain no currency, valuation strategies
-(`units`, `at_cost`, `at_value`) use the USD fallback; an explicit currency such
+(`units`, `at_cost`, `at_value`, `units_by_cost`) use the USD fallback; an explicit currency such
 as `EUR` remains the fallback requested.
 
 With `shape=fava`, statement and overview payloads retain the ledger service's

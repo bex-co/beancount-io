@@ -576,3 +576,60 @@ describe("closed balance-sheet earnings across adapters (w6/m5)", () => {
     }
   });
 });
+
+describe("units_by_cost balance sheet on every surface (w4/m58)", () => {
+  // The ledger keys raw units by cost currency: 500 EUR held as cash beside
+  // 10 VTI bought at a EUR cost.
+  const keyed = {
+    ...transfer("USD"),
+    net_worth_data: [
+      { date: "2026-03-31", balance: { "EUR {}": "500.00", "VTI {EUR}": "10" } },
+    ],
+    assets_hierarchy_data: {
+      ...root("Assets", [
+        leaf("Assets:Fund", { "EUR {}": "500.00", "VTI {EUR}": "10" }),
+      ]),
+      balance_children: { "EUR {}": "500.00", "VTI {EUR}": "10" },
+    },
+  };
+
+  it("summarises the keyed units as unconverted, with no missing price", async () => {
+    const f = await fixture(keyed);
+    try {
+      const result = await f.read({ conversion: "units_by_cost" });
+      expect(result).toMatchObject({
+        currency: "EUR {}",
+        valuation: "units",
+        otherCurrencies: { "VTI {EUR}": 10 },
+        byAccount: [{ account: "Assets:Fund", balance: 500 }],
+      });
+      expect(result).not.toHaveProperty("missingPrices");
+      for (const [, , query] of f.getLedgerBalanceSheet.mock.calls)
+        expect(query).toMatchObject({ conversion: "units_by_cost" });
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("returns the same keyed maps raw on REST, MCP and GraphQL", async () => {
+    const f = await fixture(keyed);
+    try {
+      const raw = await f.read({ conversion: "units_by_cost", shape: "fava" });
+      const fund = { "EUR {}": "500.00", "VTI {EUR}": "10" };
+      expect(raw.assets_hierarchy_data.children[0].balance).toEqual(fund);
+
+      const gql = await f.gql("units_by_cost");
+      expect(gql.errors).toBeUndefined();
+      const sheet = gql.data?.getLedgerBalanceSheet as {
+        netWorthData: { balance: unknown }[];
+        assetsHierarchyData: { children: { balance: unknown }[] };
+      };
+      expect(sheet.assetsHierarchyData.children[0].balance).toEqual(fund);
+      expect(sheet.netWorthData[0].balance).toEqual(
+        raw.net_worth_data[0].balance,
+      );
+    } finally {
+      await f.close();
+    }
+  });
+});

@@ -272,11 +272,14 @@ function currencyEvidence(
     : accounts();
 }
 
-/** A conversion strategy describes how to value postings, not their currency. */
+/**
+ * A conversion strategy describes how to value postings, not their currency.
+ * `units_by_cost` is raw units keyed by cost currency (`VTI {EUR}`, `EUR {}`;
+ * w4/m58), so its keys are positions, not a currency anything converted to.
+ */
+const STRATEGIES = new Set(["units", "at_cost", "at_value", "units_by_cost"]);
 function requestedCurrency(conversion?: string): string | undefined {
-  return conversion === "units" ||
-    conversion === "at_cost" ||
-    conversion === "at_value"
+  return conversion !== undefined && STRATEGIES.has(conversion)
     ? undefined
     : conversion;
 }
@@ -378,7 +381,9 @@ export function summarizeBalanceSheet(
     asOf: lastDate(data.net_worth_data),
     currency,
     valuation:
-      conversion === "units" || (requested && currency !== requested)
+      conversion === "units" ||
+      conversion === "units_by_cost" ||
+      (requested && currency !== requested)
         ? "units"
         : conversion === "at_cost"
           ? "cost"

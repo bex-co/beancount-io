@@ -20,7 +20,11 @@ export class BaseQueryArgs {
 export class ConversionArgs extends BaseQueryArgs {
   // No default: an omitted conversion values in the ledger's operating
   // currency, as on REST and MCP (w21/202).
-  @Field(() => String, { nullable: true })
+  @Field(() => String, {
+    nullable: true,
+    description:
+      "A currency code, `units`, `at_cost`, `at_value`, or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Omitted: the ledger's operating currency.",
+  })
   conversion?: string;
 
   @Field(() => String, { defaultValue: "monthly" })
@@ -30,7 +34,11 @@ export class ConversionArgs extends BaseQueryArgs {
 // The trial balance is hierarchy-only: no `interval` (w23/159).
 @ArgsType()
 export class TrialBalanceArgs extends BaseQueryArgs {
-  @Field(() => String, { nullable: true })
+  @Field(() => String, {
+    nullable: true,
+    description:
+      "A currency code, `units`, `at_cost`, `at_value`, or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Omitted: the ledger's operating currency.",
+  })
   conversion?: string;
 }
 
