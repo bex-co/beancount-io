@@ -1,6 +1,6 @@
 # w23 · m18 — Bind ledger pins to the repository ID
 
-**Worker:** worker1 **Goal:** a credential pinned to one ledger follows that ledger across a rename and never follows a recreated name **Status:** todo (t001–t005, t008 done)
+**Worker:** worker1 **Goal:** a credential pinned to one ledger follows that ledger across a rename and never follows a recreated name **Status:** blocked (t001–t008 done)
 
 ## Tasks (in order)
 
@@ -11,8 +11,8 @@
 | t003 | OAuth grants pin to the repository ID — **DONE** | 60m | t001 |
 | t004 | Say which name a pin uses — **DONE** | 30m | t002, t003 |
 | t005 | Docs and the ADR 0007 amendment — **DONE** | 30m | t004 |
-| t006 | Adoption surface | 20m | t005 |
-| t007 | Simplify | 30m | t006 |
+| t006 | Adoption surface — **DONE** | 20m | t005 |
+| t007 | Simplify — **DONE** | 30m | t006 |
 | t008 | Test coverage — **DONE** | 45m | t006 |
 | t009 | Verify on production and close out | 20m | t007, t008 |
 
@@ -29,3 +29,9 @@
 - **Goal linkage:** A1 (agent-native accounting): year-end renames such as `personal` to `personal-2025` must not strand every pinned agent credential.
 - **Expected outcome:** pinned agents keep working across renames and cannot be silently redirected to a different repository.
 - **Why now:** the credential trust boundary is decided; the pin still compares names as strings in five places.
+
+## Blocked
+
+**Blocked 2026-11-01** — t001 to t008 shipped (`96258e9f0`, `a201ae3fe`, `1a5bfebb7`, and the test/triage commits). Only t009 remains, and it is a production check: after the next deploy carries these commits, a pinned credential must keep addressing a renamed ledger by its new name. The deploy must also run migration `0026_api_key_pin_repo_id` (adds `api_keys.ledger_scope_repo_id`, nullable) before the new code serves.
+
+**Unblock:** the owner deploys backend-v2 with the migration; a worker then reruns the original repro on a disposable QA ledger (pinned token or key, rename the ledger, address it by the new name, and confirm the old name is refused) and records the observed revision. Who can clear it: the repository owner (deploy), then a worker (rerun).
