@@ -14,6 +14,12 @@ import {
   isGiteaWriteConflict,
 } from "@/features/gitea/utils/gitea-error";
 import {
+  logUnclassifiedWriteFailure,
+  probeFailedWrite,
+  type ProbedOperation,
+} from "@/features/gitea/utils/failed-write-probe";
+import { ConflictError } from "@/shared/errors";
+import {
   assertPortableRepoPath,
   assertSafeRepoPath,
   toSafeRepoUrlPath,
@@ -157,17 +163,22 @@ function isUnexplainedServerError(err: unknown): boolean {
 }
 
 /**
- * After a failed update: read each path. One that is gone is the answer
- * (NOT_FOUND); if every one exists, the original error stands.
+ * After a failed write that is not a recognized lost race: read the files it
+ * touched. One that is gone is the answer (NOT_FOUND, w21/468). Otherwise the
+ * content decides (w23/072): the intended bytes mean the write landed and only
+ * its answer was lost (`"landed"`, never rewritten); a file that moved on
+ * without them means another commit won, which is the 409 a caller re-reads
+ * and retries; anything else leaves the original error standing.
  */
-async function rethrowAsMissing(
+async function settleUnexplainedFailure(
   client: ReturnType<typeof giteaClientForRequest>,
   owner: string,
   repoName: string,
-  paths: readonly string[],
+  operations: readonly ProbedOperation[],
   original: unknown,
-): Promise<never> {
-  for (const path of paths) {
+): Promise<"landed"> {
+  for (const { operation, path } of operations) {
+    if (operation === "create") continue;
     try {
       await client.repos.repoGetContents(
         owner,
@@ -179,6 +190,40 @@ async function rethrowAsMissing(
         throw new NotFoundDetailError(`File ${path} does not exist`);
       }
     }
+  }
+  const outcome = await probeFailedWrite(operations, async (path) => {
+    try {
+      const res = await client.repos.repoGetContents(
+        owner,
+        repoName,
+        toSafeRepoUrlPath(path),
+      );
+      const data = res.data as ContentsResponse | ContentsResponse[] | null;
+      if (data === null || Array.isArray(data)) return null;
+      return {
+        sha: data.sha,
+        contentBase64:
+          typeof data.content === "string" && data.encoding === "base64"
+            ? data.content
+            : null,
+      };
+    } catch (probe) {
+      // A probe that cannot read decides nothing.
+      return is404(probe) ? null : { sha: undefined, contentBase64: null };
+    }
+  });
+  logUnclassifiedWriteFailure(original, {
+    owner,
+    repo: repoName,
+    outcome,
+    files: operations.map((operation) => operation.path),
+  });
+  if (outcome === "landed") return "landed";
+  if (outcome === "lost-race") {
+    throw new ConflictError(
+      "Ledger file",
+      "the ledger changed under a concurrent write; re-read it and retry",
+    );
   }
   throw original;
 }
@@ -201,7 +246,30 @@ export async function updateExistingFile(
     );
   } catch (err) {
     if (!isUnexplainedServerError(err)) throw err;
-    return rethrowAsMissing(client, owner, repoName, [path], err);
+    await settleUnexplainedFailure(
+      client,
+      owner,
+      repoName,
+      [
+        {
+          operation: "update",
+          path,
+          sha: options.sha,
+          contentBase64: options.content,
+        },
+      ],
+      err,
+    );
+    // The update landed and only its answer was lost: report what is there.
+    const landed = await client.repos.repoGetContents(
+      owner,
+      repoName,
+      safeUrlPath,
+    );
+    return {
+      ...landed,
+      data: { content: landed.data },
+    } as unknown as Awaited<ReturnType<typeof client.repos.repoUpdateFile>>;
   }
 }
 
@@ -230,10 +298,26 @@ export async function changeExistingFiles(
     if (!isUnexplainedServerError(err)) throw err;
     // A delete of a path that is gone fails the same way (w21/551): Gitea has no
     // 404 for it either.
-    const existing = operations
-      .filter((op) => op.operation === "update" || op.operation === "delete")
-      .map((op) => op.path);
-    await rethrowAsMissing(client, owner, repoName, existing, err);
+    await settleUnexplainedFailure(
+      client,
+      owner,
+      repoName,
+      operations.flatMap((op) =>
+        op.operation === "create" ||
+        op.operation === "update" ||
+        op.operation === "delete"
+          ? [
+              {
+                operation: op.operation,
+                path: op.path,
+                sha: op.sha ?? undefined,
+                contentBase64: op.content ?? undefined,
+              },
+            ]
+          : [],
+      ),
+      err,
+    );
   }
 }
 

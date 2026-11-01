@@ -68,6 +68,44 @@ describe("updateExistingFile", () => {
     await expect(update(client)).rejects.toMatchObject({ status: 500 });
   });
 
+  // w23/072: production's lost race arrives as a 500 no rule recognizes.
+  describe("a 500 nothing recognizes", () => {
+    const failing = (current: unknown) =>
+      clientAnswering(({ method }) =>
+        method === "PUT" ? json(500, { message: "" }) : json(200, current),
+      );
+    const file = (content: string, sha: string) => ({
+      name: "qa.txt",
+      path: "qa.txt",
+      type: "file",
+      sha,
+      content: Buffer.from(content).toString("base64"),
+      encoding: "base64",
+    });
+
+    it("is a 409 conflict when another commit changed the file", async () => {
+      const failure = await update(failing(file("theirs", "new"))).catch(
+        (error: unknown) => error,
+      );
+      expect(failure).toMatchObject({ category: "CONFLICT" });
+      expect((failure as Error).message).toMatch(/^Ledger file conflict:/);
+    });
+
+    it("reports success, without writing again, when the update had landed", async () => {
+      const calls: Call[] = [];
+      const client = clientAnswering(
+        ({ method }) =>
+          method === "PUT"
+            ? json(500, { message: "" })
+            : json(200, file("x", "new")),
+        calls,
+      );
+      const result = (await update(client)) as { data: { content: unknown } };
+      expect(result.data.content).toMatchObject({ sha: "new" });
+      expect(calls.filter((call) => call.method === "PUT")).toHaveLength(1);
+    });
+  });
+
   it("does not probe a stale sha, a lost race, or a success", async () => {
     const calls: Call[] = [];
     const stale = clientAnswering(
@@ -147,16 +185,10 @@ describe("changeExistingFiles", () => {
         : json(200, {});
     }, calls);
     const remove = () =>
-      changeExistingFiles(
-        client as never,
-        "alice",
-        "book",
-        { files: [] },
-        [
-          { operation: "create", path: "new.bean", content: "eA==" },
-          { operation: "delete", path: "nope.bean", sha: "any" },
-        ],
-      );
+      changeExistingFiles(client as never, "alice", "book", { files: [] }, [
+        { operation: "create", path: "new.bean", content: "eA==" },
+        { operation: "delete", path: "nope.bean", sha: "any" },
+      ]);
     await expect(remove()).rejects.toBeInstanceOf(NotFoundDetailError);
     await expect(remove()).rejects.toThrow("File nope.bean does not exist");
     expect(

@@ -2,9 +2,15 @@ import { BadUserInputError, ConflictError, DomainError } from "@/shared/errors";
 import { toSafeRepoUrlPath } from "@/shared/safe-repo-path";
 import { logger } from "@/shared/logger";
 import {
+  giteaErrorStatus,
   isGiteaNotFound,
   isGiteaWriteConflict,
 } from "@/features/gitea/utils/gitea-error";
+import {
+  logUnclassifiedWriteFailure,
+  probeFailedWrite,
+  type CurrentFile,
+} from "@/features/gitea/utils/failed-write-probe";
 import {
   readGiteaFileText,
   UndecodableTextError,
@@ -91,6 +97,35 @@ const MAX_ATTEMPTS = 5;
 
 /** U+FEFF, the byte-order mark a UTF-8 file may start with. */
 const BOM = "\uFEFF";
+
+/**
+ * What a file holds right now, as the failed-write probe compares it: the blob
+ * sha and the inline base64 content (`null` when Gitea did not inline it).
+ */
+async function readCurrentFile(
+  client: GiteaFileCommitClient,
+  owner: string,
+  repo: string,
+  path: string,
+): Promise<CurrentFile> {
+  try {
+    const res = await client.repos.repoGetContents(
+      owner,
+      repo,
+      toSafeRepoUrlPath(path),
+    );
+    const { content, encoding, sha } = res.data;
+    return {
+      sha,
+      contentBase64:
+        typeof content === "string" && encoding === "base64" ? content : null,
+    };
+  } catch (error) {
+    if (isGiteaNotFound(error)) return null;
+    // A probe that cannot read decides nothing; the original failure stands.
+    return { sha: undefined, contentBase64: null };
+  }
+}
 
 /**
  * Read a file's current content + blob SHA, or `null` when it does not exist
@@ -240,7 +275,32 @@ export async function commitLedgerFiles(
       return;
     } catch (error) {
       if (!isGiteaWriteConflict(error)) {
-        throw giteaWriteErrorFromCause("commit ledger files", error);
+        // An unrecognized server error may be a lost race the classifier does
+        // not know, or a commit that landed and lost its answer (w23/072).
+        // Content decides which: a landed commit is done, never rewritten.
+        const outcome =
+          (giteaErrorStatus(error) ?? 0) >= 500
+            ? await probeFailedWrite(
+                operations.map(({ operation, path, sha, content }) => ({
+                  operation,
+                  path,
+                  sha,
+                  contentBase64: content,
+                })),
+                (path) => readCurrentFile(client, owner, repo, path),
+              )
+            : "unchanged";
+        logUnclassifiedWriteFailure(error, {
+          owner,
+          repo,
+          attempt: attempt + 1,
+          outcome,
+          files: operations.map((operation) => operation.path),
+        });
+        if (outcome === "landed") return;
+        if (outcome !== "lost-race") {
+          throw giteaWriteErrorFromCause("commit ledger files", error);
+        }
       }
       log.warn("gitea write conflict; retrying with fresh content", {
         owner,

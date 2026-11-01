@@ -123,11 +123,118 @@ describe("a commit that loses the race for the branch ref", () => {
         client as never,
         "alice",
         "books",
-        new Map([["race.bean", (content: string | null) => `${content ?? ""}; b\n`]]),
+        new Map([
+          ["race.bean", (content: string | null) => `${content ?? ""}; b\n`],
+        ]),
         "edit",
         { directiveLimit: { exempt: true } },
       ),
     ).rejects.toBeInstanceOf(ServiceUnavailableError);
     expect(attempts).toBe(1);
+  });
+
+  // w23/072: production's loser answers with a status or text no rule knows.
+  // The file's content tells what happened, whatever the failure says.
+  describe("a commit that fails with a signature nothing recognizes", () => {
+    const UNKNOWN = Object.assign(new Error("HTTP 500"), {
+      status: 500,
+      error: { message: "" },
+    });
+
+    function remoteWith(
+      initial: string,
+      onCommit: (call: number, body: string) => string | void,
+    ) {
+      let remote = initial;
+      let calls = 0;
+      let shaCounter = 0;
+      const shas = new Map<string, string>();
+      const shaOf = (text: string) => {
+        if (!shas.has(text)) shas.set(text, `blob-${(shaCounter += 1)}`);
+        return shas.get(text)!;
+      };
+      const client = {
+        repos: {
+          repoGetContents: jest.fn(async () => ({
+            data: {
+              content: Buffer.from(remote).toString("base64"),
+              encoding: "base64",
+              sha: shaOf(remote),
+            },
+          })),
+          repoChangeFiles: jest.fn(
+            async (
+              _o: string,
+              _r: string,
+              body: { files: Array<{ content: string }> },
+            ) => {
+              calls += 1;
+              const sent = Buffer.from(
+                body.files[0]!.content,
+                "base64",
+              ).toString("utf8");
+              const next = onCommit(calls, sent);
+              if (next !== undefined) remote = next;
+              else remote = sent;
+              return undefined;
+            },
+          ),
+        },
+      };
+      return {
+        client,
+        calls: () => calls,
+        remote: () => remote,
+        setRemote: (text: string) => {
+          remote = text;
+        },
+      };
+    }
+
+    const append = (text: string) => (content: string | null) =>
+      `${content ?? ""}${text}`;
+    const run = (client: unknown, text: string) =>
+      commitLedgerFiles(
+        client as never,
+        "alice",
+        "books",
+        new Map([["race.bean", append(text)]]),
+        "edit",
+        { directiveLimit: { exempt: true } },
+      );
+
+    it("retries when another commit changed the file under it", async () => {
+      const fixture = remoteWith("; a\n", (call, sent) => {
+        if (call === 1) {
+          // The other writer's commit wins; this one is refused unexplained.
+          fixture.setRemote("; a\n; theirs\n");
+          throw UNKNOWN;
+        }
+        return sent;
+      });
+      await run(fixture.client, "; mine\n");
+      expect(fixture.calls()).toBe(2);
+      expect(fixture.remote()).toBe("; a\n; theirs\n; mine\n");
+    });
+
+    it("does not write again when the commit had landed and only its answer was lost", async () => {
+      const fixture = remoteWith("; a\n", (_call, sent) => {
+        fixture.setRemote(sent);
+        throw UNKNOWN;
+      });
+      await run(fixture.client, "; mine\n");
+      expect(fixture.calls()).toBe(1);
+      expect(fixture.remote()).toBe("; a\n; mine\n");
+    });
+
+    it("still reports a failure that left the file alone as retryable, once", async () => {
+      const fixture = remoteWith("; a\n", () => {
+        throw UNKNOWN;
+      });
+      await expect(run(fixture.client, "; mine\n")).rejects.toBeInstanceOf(
+        ServiceUnavailableError,
+      );
+      expect(fixture.calls()).toBe(1);
+    });
   });
 });
