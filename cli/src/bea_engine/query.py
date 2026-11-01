@@ -1751,6 +1751,7 @@ _EXPORTED_OPTIONS = (
     "plugin_processing_mode",
     "tolerance_multiplier",
     "infer_tolerance_from_cost",
+    "use_precise_interpolation",
 )
 
 

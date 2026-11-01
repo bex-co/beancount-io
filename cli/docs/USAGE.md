@@ -846,7 +846,7 @@ and a `pad` none of whose padding the export derives again is left out.
 For the same reason the export starts with the `option` lines its validity
 rests on, wherever the ledger changes them from Beancount's defaults: renamed
 roots (`name_assets` …), `account_rounding`, `booking_method`,
-`tolerance_multiplier`, `infer_tolerance_from_cost` and each
+`tolerance_multiplier`, `infer_tolerance_from_cost`, `use_precise_interpolation` and each
 `inferred_tolerance_default`. Other options and `plugin` lines are not carried.
 When included directives use default root names, the export switches `name_*`
 options around those directives without changing their result order, then

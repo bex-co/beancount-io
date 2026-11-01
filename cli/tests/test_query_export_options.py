@@ -111,3 +111,40 @@ def test_a_ledger_on_the_defaults_exports_no_options(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stderr
     assert "option" not in result.stdout
     assert result.stdout.startswith("2026-01-01 open Assets:Cash")
+
+
+PRECISE = """option "operating_currency" "USD"
+option "use_precise_interpolation" "TRUE"
+option "infer_tolerance_from_cost" "TRUE"
+2023-01-01 open Assets:Cash USD
+2023-01-01 open Assets:Source HOOL
+2023-01-01 open Assets:Fine HOOL
+2023-01-01 open Assets:Destination HOOL
+2023-01-01 open Equity:Opening USD
+2024-01-01 * "Capital"
+  Assets:Cash 1000.00 USD
+  Equity:Opening -1000.00 USD
+2024-01-02 * "Acquire"
+  Assets:Source 2.00 HOOL {10 USD}
+  Assets:Fine 0.010 HOOL {10 USD}
+  Assets:Cash -20.10 USD
+2024-02-01 * "Transfer"
+  Assets:Source -1.00 HOOL {10 USD, 2024-01-02}
+  Assets:Fine -0.001 HOOL {10 USD, 2024-01-02}
+  Assets:Destination HOOL {10 USD}
+2024-02-02 balance Assets:Destination 1.001 ~ 0 HOOL
+"""
+
+
+def test_precise_interpolation_survives_the_export(tmp_path: Path) -> None:
+    """Without the option, the reload recomputed the inferred transfer as 1.00 HOOL (w5/1090)."""
+    source = tmp_path / "main.bean"
+    source.write_text(PRECISE)
+    export = tmp_path / "export.bean"
+
+    assert _bea(tmp_path, "-f", str(source), "check").returncode == 0
+    exported = _bea(tmp_path, "-f", str(source), "query", "PRINT", "-f", "beancount", "-o", str(export))
+
+    assert exported.returncode == 0, exported.stderr
+    assert 'option "use_precise_interpolation" "TRUE"' in export.read_text()
+    assert _bea(tmp_path, "-f", str(export), "check").returncode == 0
