@@ -1,5 +1,6 @@
-import { ReactNode, useRef } from "react";
+import { ReactNode, useRef, useState } from "react";
 import { ScrollView, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { GestureDetector } from "react-native-gesture-handler";
 import Svg, { Line, Text as SvgText } from "react-native-svg";
 import { useTheme } from "@/common/theme";
@@ -7,6 +8,7 @@ import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { formatShortMoneyWithCurrency } from "@/common/number-utils";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useHorizontalSwipeOwnerGesture } from "@/common/horizontal-swipe-owner";
+import { hasClippedStart } from "./scroll-cue";
 import {
   AXIS_FONT_SIZE,
   ChartLegend,
@@ -63,6 +65,9 @@ export function ScrollableAxisChart({
   const swipeOwner = useHorizontalSwipeOwnerGesture();
   const scrollRef = useRef<ScrollView>(null);
   const zeroY = yScale(0);
+  const [viewportWidth, setViewportWidth] = useState(0);
+  const [offsetX, setOffsetX] = useState(0);
+  const clipped = hasClippedStart(plotWidth, viewportWidth, offsetX);
 
   return (
     // Owner marker: horizontal drags belong to the plot's scroller (and to the
@@ -90,14 +95,21 @@ export function ScrollableAxisChart({
             ref={scrollRef}
             horizontal
             showsHorizontalScrollIndicator={false}
+            onLayout={(event) =>
+              setViewportWidth(event.nativeEvent.layout.width)
+            }
+            onScroll={(event) => setOffsetX(event.nativeEvent.contentOffset.x)}
+            scrollEventThrottle={32}
             // Open long spans on the most recent periods. Fires once content is
             // measured (avoids the first-mount layout race) and again only when
             // the plot width changes (a new range/data), so it never yanks the
             // user back mid-scroll on unrelated re-renders. A no-op when it all
             // fits.
-            onContentSizeChange={() =>
-              scrollRef.current?.scrollToEnd({ animated: false })
-            }
+            onContentSizeChange={(width) => {
+              scrollRef.current?.scrollToEnd({ animated: false });
+              // The jump to the end may not report a scroll event.
+              setOffsetX(Math.max(0, width - viewportWidth));
+            }}
           >
             <Svg width={plotWidth} height={chartHeight}>
               {/* Y grid lines (span the whole plot) */}
@@ -127,6 +139,18 @@ export function ScrollableAxisChart({
               {children}
             </Svg>
           </ScrollView>
+
+          {/* Earlier columns are off-screen to the left: say so. */}
+          {clipped ? (
+            <View
+              pointerEvents="none"
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+              style={[styles.clipCue, { left: axisWidth, height: chartHeight }]}
+            >
+              <Ionicons name="chevron-back" size={16} color={theme.text01} />
+            </View>
+          ) : null}
         </View>
 
         <ChartLegend>{legend}</ChartLegend>

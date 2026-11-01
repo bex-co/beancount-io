@@ -40,6 +40,5 @@
 - [951](./blocked/951.md) — Expense accounts are valued at market on Accounts and account detail, but at cost everywhere else — **blocked:** owner confirms flows-at-cost covers Income/Expenses balances; needs a native priced-lot check
 - [977](./blocked/977.md) — LedgerPrices pulls every price date for every pair, and Apollo writes and reads them all on each mount — **blocked:** owner picks the API shape for bounding price dates across REST/GraphQL/MCP
 - [1014](./blocked/1014.md) — Home's headline still counts later entries of the current month, and the Accounts tab gives no hint that later entries exist (follow-up to w21/674) — **blocked:** ledger-service cap at today shipped; Home and dashboard checks wait for the ledger deploy
-- [1015](./1015.md) — Reports' income/expense chart gives no cue that long ranges scroll: YTD and 1Y open on April–October and look identical, so the earlier months seem not to exist
 - [1016](./1016.md) — The Account Picker lists an account's children apart from their parent: the Vanguard accounts are split across the list, so scanning for one institution means reading the whole Assets section
 - [1017](./1017.md) — In Persian, the period pills use Latin digits inside Persian labels ("1م", "3م", "6م", "1س") while every other number on the same screen is written in Persian digits

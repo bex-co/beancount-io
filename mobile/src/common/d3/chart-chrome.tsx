@@ -39,6 +39,16 @@ export const getChromeStyles = (theme: ColorTheme) =>
       flexDirection: "row",
       ...LTR_PLOT,
     },
+    // The scroll cue pinned to the plot's start edge (w21/1015).
+    clipCue: {
+      position: "absolute",
+      top: 0,
+      width: 18,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: theme.white,
+      opacity: 0.85,
+    },
     placeholder: {
       alignItems: "center",
       justifyContent: "center",
