@@ -54,4 +54,3 @@
 - [196](./196.md) — BQL `balances.discrepancy` never populates (blank on failing balances; stock reports the diff) (owner chose service-side enrichment 2026-10-31)
 - [072](./072.md) — concurrent writes (append, add entries, exact-text edits) still lose with `SERVICE_UNAVAILABLE` on production after w23/017; the production lost-race signature differs (scope revised 2026-10-31: per-repo commit serialization plus failure logging; no production log needed to start)
 - [065](./065.md) — a ledger-pinned credential keeps the old name after a rename (owner chose repository-ID pins 2026-10-31)
-- [059](./059.md) — every product-created ledger ships `auto_accounts`, so a misspelt account is silently opened (owner chose drop-plugin 2026-10-31)
