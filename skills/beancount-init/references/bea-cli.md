@@ -5,7 +5,7 @@ operations; the skill owns interpretation, review, and the user's confirmation.
 Recipes are shared capabilities, not permission to expand that skill's scope.
 Use only the recipes its current workflow needs. `--no-input` suppresses CLI
 prompts; the skill's proposal and conversational confirmation still apply.
-Check `command -v bea` and `bea --version` once. The suite needs `bea` 0.3.1
+Check that `bea` is on PATH (`command -v bea`; PowerShell `Get-Command bea`) and run `bea --version` once. The suite needs `bea` 0.3.1
 or later. If it is absent, suggest `brew install bex-co/tap/bea` or
 `uv tool install beancount-io`; if it is older, suggest `bea upgrade`. The
 explicit developer fallback is in beancount-init's `references/compatibility.md`.

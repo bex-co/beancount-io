@@ -36,7 +36,6 @@
 
 ## Inbox
 
-- [1112 — Give customer skills shell-neutral instructions for native Windows agents](./1112.md) — minor skills portability: `fd`/`head`, `command -v`, `python3`, `&&` and `make` in eight skills; found by w5/m13/t005, 2026-10-28.
 
 - [1113 — Correct the stale "shared suite version" claim for the ClawHub package](./1113.md) — minor skills docs: ClawHub ships 0.4.0 with thirteen skills while the suite manifests are 0.4.19 with fourteen; found by w5/m13/t005, 2026-10-28.
 

@@ -66,6 +66,7 @@ Before generating anything, learn the user's ledger. Look for beancount files in
 ```bash
 fd -e beancount -e bean . | head -20
 # fallback: find . -maxdepth 4 \( -name '*.beancount' -o -name '*.bean' \)
+# PowerShell: Get-ChildItem -Recurse -Include *.beancount,*.bean | Select-Object -First 20
 ```
 
 The "main" file is typically the one with `option`, `plugin`, or `include` directives at the top, or the largest file with `open` directives. Once found, scan it for:

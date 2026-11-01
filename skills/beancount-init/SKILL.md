@@ -69,7 +69,7 @@ user asked for Fava / `make start` / "bootstrap fava", otherwise ask once
 (default **no** when BEA is yes; default **yes** only when BEA is no and they
 still want a browser — otherwise they can install `bea` later).
 
-When FAVA is yes, verify `uv` with `command -v uv`. If missing, stop and tell
+When FAVA is yes, verify `uv` is on PATH (`command -v uv`; PowerShell `Get-Command uv`). If missing, stop and tell
 them to install it with their package manager (`brew install uv` on macOS),
 or follow the [official uv installation guide](https://docs.astral.sh/uv/getting-started/installation/).
 
@@ -164,7 +164,9 @@ python3 -c "import random; bad={50000,55555,60000,65000}; ps=[p for p in range(4
 ```
 
 Call the integer `PORT`. If `python3` is missing:
-`awk 'BEGIN{srand(); print 49152 + int(rand()*16384)}'`.
+`awk 'BEGIN{srand(); print 49152 + int(rand()*16384)}'`. On native Windows
+(PowerShell has neither), use `python` or `Get-Random -Minimum 49152 -Maximum 65536`,
+re-rolling a port in the excluded set.
 
 ### uv project + Fava
 
@@ -216,7 +218,7 @@ Print:
   `Makefile`, `.gitignore`, `pyproject.toml`, `uv.lock`, `.venv/` when FAVA
   ran).
 - When BEA validated: `bea check` passed.
-- When FAVA: the port and `make start` → `http://localhost:<PORT>`.
+- When FAVA: the port and `make start` (without `make`, e.g. native Windows, run `uv run fava main.bean -p <PORT>`) → `http://localhost:<PORT>`.
 - Next steps: record an entry (beancount-add), import a bank export
   (beancount-import), or ask a question (beancount-ask); when Step 3b ran,
   also: seed existing holdings (beancount-import's opening lots) or record

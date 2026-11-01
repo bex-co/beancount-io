@@ -53,7 +53,7 @@ Read beancount-init's `references/bea-cli.md` (from this skill's folder, `../bea
 
 Local ledger files only. For a ledger hosted on Beancount.io, stop this skill and offer a separately requested hosted workflow or local clone (beancount-init's `references/bea-cli.md`, Hosted ledgers).
 
-Find the root ledger with the suite's discovery convention (`fd -e beancount -e bean .`; the root has `option`/`include` directives) and confirm it when ambiguous. Bind it as `ledger` for the shared read recipes:
+Find the root ledger with the suite's discovery convention (`fd -e beancount -e bean .` (PowerShell: `Get-ChildItem -Recurse -Include *.beancount,*.bean`); the root has `option`/`include` directives) and confirm it when ambiguous. Bind it as `ledger` for the shared read recipes:
 
 ```sh
 bea --file "$ledger" --json --no-input query "$query"

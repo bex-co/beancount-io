@@ -70,7 +70,7 @@ Four phases, in order: **Discover → Parse → Propose → Write + Verify.**
 
 Local ledger files only. For a ledger hosted on Beancount.io, stop this skill and offer a separately requested hosted workflow or local clone (beancount-init's `references/bea-cli.md`, Hosted ledgers).
 
-Find the root ledger with the suite's discovery convention (`fd -e beancount -e bean .`; the root has `option`/`plugin`/`include` directives or the most `open`s; confirm when ambiguous) and bind it as `ledger`. Read the accounts open today and the destination file the same way `beancount-add` does (its `open-accounts` and `entry-destination` recipes in beancount-add's SKILL.md). Bind `receivable` to the receivable account (`Assets:AccountsReceivable` unless the ledger names its own) and read what is open:
+Find the root ledger with the suite's discovery convention (`fd -e beancount -e bean .` (PowerShell: `Get-ChildItem -Recurse -Include *.beancount,*.bean`); the root has `option`/`plugin`/`include` directives or the most `open`s; confirm when ambiguous) and bind it as `ledger`. Read the accounts open today and the destination file the same way `beancount-add` does (its `open-accounts` and `entry-destination` recipes in beancount-add's SKILL.md). Bind `receivable` to the receivable account (`Assets:AccountsReceivable` unless the ledger names its own) and read what is open:
 
 <!-- recipe: invoice-open -->
 ```sh

@@ -95,6 +95,7 @@ Find beancount files in the working directory:
 ```bash
 fd -e beancount -e bean . | head -20
 # fallback: find . -maxdepth 4 \( -name '*.beancount' -o -name '*.bean' \)
+# PowerShell: Get-ChildItem -Recurse -Include *.beancount,*.bean | Select-Object -First 20
 ```
 
 The "main" file has `option`/`plugin`/`include` directives at the top, or is the largest with `open` directives. Then establish:

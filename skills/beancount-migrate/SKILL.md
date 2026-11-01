@@ -114,5 +114,5 @@ Skipped: 2 rows (listed below, with reasons)
 Unmapped categories → Expenses:Uncategorized: "Misc" (14 rows), "Stuff" (3 rows)
 Balances: Assets:Bank:Checking ✓ ties to 3,412.55   Liabilities:CC:Amex ✓ ties to -210.40
 bea check: PASS
-Next steps: refine Expenses:Uncategorized rows; optional `make start` for Fava if scaffolded; use beancount-import for ongoing weekly imports.
+Next steps: refine Expenses:Uncategorized rows; optional `make start` (or `uv run fava main.bean -p <PORT>` without `make`) for Fava if scaffolded; use beancount-import for ongoing weekly imports.
 ```

@@ -57,7 +57,7 @@ Five phases, in order: **Discover → Parse → Check → Propose → Write + Ve
 
 Local ledger files only. For a ledger hosted on Beancount.io, stop this skill and offer a separately requested hosted workflow or local clone (beancount-init's `references/bea-cli.md`, Hosted ledgers).
 
-Find the root ledger with the suite's discovery convention (`fd -e beancount -e bean .`; the root has `option`/`plugin`/`include` directives or the most `open`s; confirm when ambiguous) and bind it as `ledger`. Then read the accounts that are open today:
+Find the root ledger with the suite's discovery convention (`fd -e beancount -e bean .` (PowerShell: `Get-ChildItem -Recurse -Include *.beancount,*.bean`); the root has `option`/`plugin`/`include` directives or the most `open`s; confirm when ambiguous) and bind it as `ledger`. Then read the accounts that are open today:
 
 <!-- recipe: open-accounts -->
 ```sh

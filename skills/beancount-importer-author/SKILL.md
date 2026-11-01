@@ -94,6 +94,7 @@ Rows that do not parse as the confirmed format — a `PENDING` or blank date, a 
 
 ```bash
 mkdir -p importers/tests/<source> && cp <sample> importers/tests/<source>/
+# PowerShell: New-Item -ItemType Directory -Force importers/tests/<source>; Copy-Item <sample> importers/tests/<source>/
 python importers/<source>.py generate importers/tests/<source>   # writes golden .beancount next to sample
 # eyeball the golden file WITH THE USER — dates, signs, payees, amounts against the sample
 python importers/<source>.py test importers/tests/<source>       # must be green
