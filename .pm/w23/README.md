@@ -53,4 +53,4 @@
 - [x] [171](./done/171.md) — typed posting tags/links render stock-invalid beancount; backend check blind, reads blank (m6 "holds live" disproven)
 
 - [196](./196.md) — BQL `balances.discrepancy` never populates (blank on failing balances; stock reports the diff) (owner chose service-side enrichment 2026-10-31)
-- [072](./072.md) — concurrent writes (append, add entries, exact-text edits) still lose with `SERVICE_UNAVAILABLE` on production after w23/017; the production lost-race signature differs (scope revised 2026-10-31: per-repo commit serialization plus failure logging; no production log needed to start)
+- [072](./blocked/072.md) — concurrent writes (append, add entries, exact-text edits) still lose with `SERVICE_UNAVAILABLE` on production after w23/017; the production lost-race signature differs — **blocked:** fix shipped in `1f1513a8c`; needs a ledger-service deploy, then a rerun of the three-parallel table
