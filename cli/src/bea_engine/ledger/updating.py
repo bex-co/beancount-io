@@ -574,7 +574,7 @@ def plan_rewrite(
     if not planned:
         return text, ""
     new_text = _combined_text(lines, planned)
-    return (("\ufeff" if bom else "") + new_text), _file_diff(text, new_text, target)
+    return (("\ufeff" if bom else "") + new_text), _file_diff(text, new_text, target, bom=bom)
 
 
 def _planned_answer(
@@ -700,11 +700,35 @@ def _combined_text(lines: list[str], edits: dict[int, str | None]) -> str:
     return "\n".join(line for line in rewritten if line is not None)
 
 
-def _file_diff(text: str, new_text: str, target: Path) -> str:
-    """One file's unified diff, in the shape the import preview answers."""
-    return "".join(
-        difflib.unified_diff(text.splitlines(True), new_text.splitlines(True), fromfile=str(target), tofile=str(target))
-    )
+def _physical_lines(text: str) -> list[str]:
+    """The lines of `text` as the lexer counts them: split at `\\n` alone, each keeping its terminator.
+
+    `str.splitlines` also breaks at U+2028, U+2029, form feeds and the like,
+    which are ordinary characters in a quoted memo and made the patch describe
+    lines the file does not have (w5/1115).
+    """
+    parts = text.split("\n")
+    lines = [f"{part}\n" for part in parts[:-1]]
+    if parts[-1]:
+        lines.append(parts[-1])
+    return lines
+
+
+def _file_diff(text: str, new_text: str, target: Path, *, bom: bool = False) -> str:
+    """One file's unified diff, in the shape the import preview answers.
+
+    The patch describes the file as it is on disk: its physical lines, the
+    byte-order mark on its first line, and `\\ No newline at end of file` after
+    a last line without a terminator (w5/1115).
+    """
+    if bom:
+        text, new_text = "\ufeff" + text, "\ufeff" + new_text
+    out = []
+    for line in difflib.unified_diff(
+        _physical_lines(text), _physical_lines(new_text), fromfile=str(target), tofile=str(target)
+    ):
+        out.append(line if line.endswith("\n") else f"{line}\n\\ No newline at end of file\n")
+    return "".join(out)
 
 
 def _validate_text(
@@ -842,6 +866,7 @@ def _row_payload(
     reasons: dict[int, str],
     file_texts: dict[Path, str],
     file_lines: dict[Path, list[str]],
+    marks: dict[Path, bool],
 ) -> list[dict[str, Any]]:
     """Every row's result, in input order: one JSON object per row."""
     by_index = {plan.index: plan for plan in plans}
@@ -875,7 +900,7 @@ def _row_payload(
                 "target": str(plan.target),
                 "lineno": plan.lineno,
                 "changes": plan.summary,
-                "diff": _file_diff(file_texts[plan.target], single, plan.target),
+                "diff": _file_diff(file_texts[plan.target], single, plan.target, bom=marks.get(plan.target, False)),
             }
         )
     return payload
@@ -970,7 +995,7 @@ def _transactions(file: Path, request: dict[str, Any], *, apply: bool, allow_err
     if not apply:
         entries, options = load()
         snapshot = ledger_write.LedgerSnapshot.capture(file)
-        file_texts, file_lines, _ = files(snapshot)
+        file_texts, file_lines, marks = files(snapshot)
         plans, rejected, rejected_rows, reasons, schema_rejects = _plan_rows(entries, options, rows, file_lines)
         valid = _validate_plans(
             plans, file_lines, snapshot, rejected, rejected_rows, reasons, allow_errors=allow_errors
@@ -980,6 +1005,7 @@ def _transactions(file: Path, request: dict[str, Any], *, apply: bool, allow_err
                 file_texts[target],
                 _combined_text(file_lines[target], _merge_edits(valid[target])),
                 target,
+                bom=marks.get(target, False),
             )
             for target in sorted(valid)
         )
@@ -987,7 +1013,7 @@ def _transactions(file: Path, request: dict[str, Any], *, apply: bool, allow_err
         for plan in plans:
             if plan.edits and plan.index not in reasons:
                 notes.extend(_notes(plan.entry, options, plan.changes, snapshot))
-        row_payload = _row_payload(rows, plans, reasons, file_texts, file_lines)
+        row_payload = _row_payload(rows, plans, reasons, file_texts, file_lines, marks)
         unchanged_rows = [row["row"] - 1 for row in row_payload if row["status"] == "unchanged"]
         return report(
             row_payload,
@@ -1012,7 +1038,7 @@ def _transactions(file: Path, request: dict[str, Any], *, apply: bool, allow_err
         # The loop below re-reads every file before each write; the answer's
         # diffs compare against the files as they were, or each earlier file's
         # rows reported an empty diff once it had been written (w5/1029).
-        before_texts, before_lines = dict(file_texts), dict(file_lines)
+        before_texts, before_lines, before_marks = dict(file_texts), dict(file_lines), dict(marks)
         written_rows: list[int] = []
         warnings: list[str] = []
         for target in sorted(valid):
@@ -1081,13 +1107,14 @@ def _transactions(file: Path, request: dict[str, Any], *, apply: bool, allow_err
             written_rows.extend(plan.index for plan in file_plans)
             for plan in file_plans:
                 warnings.extend(_notes(plan.entry, options, plan.changes, snapshot))
-        row_payload = _row_payload(rows, plans, reasons, before_texts, before_lines)
+        row_payload = _row_payload(rows, plans, reasons, before_texts, before_lines, before_marks)
         unchanged_rows = [row["row"] - 1 for row in row_payload if row["status"] == "unchanged"]
         diffs = "".join(
             _file_diff(
                 before_texts[target],
                 _combined_text(before_lines[target], _merge_edits(valid[target])),
                 target,
+                bom=before_marks.get(target, False),
             )
             for target in sorted(valid)
             if all(plan.index in written_rows for plan in valid[target])

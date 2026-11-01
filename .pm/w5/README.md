@@ -44,7 +44,6 @@
 
 - [1116 — Return import diffs that apply to the ledger](./1116.md) — minor CLI import review: quoted Unicode separators or no final LF yield invalid patches from its independent producer; 12 fresh books, valid writes/native balances and duplicate repeats; checked 2026-10-29.
 
-- [1115 — Return update diffs that apply to the ledger](./1115.md) — minor CLI review: Unicode separators, absent final LF and BOM-prefixed source produce invalid single/batch patches; fresh affected cases and passing controls, exact ledger writes/native money preserved; checked 2026-10-29.
 
 
 
