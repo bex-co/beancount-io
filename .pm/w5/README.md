@@ -37,7 +37,6 @@
 ## Inbox
 
 
-- [1113 — Correct the stale "shared suite version" claim for the ClawHub package](./1113.md) — minor skills docs: ClawHub ships 0.4.0 with thirteen skills while the suite manifests are 0.4.19 with fourteen; found by w5/m13/t005, 2026-10-28.
 
 - [1114 — Document converting an existing Windows clone to real symlinks](./1114.md) — minor contributor docs: only the re-clone path is documented; found by w5/m13/t005, 2026-10-28.
 

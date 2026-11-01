@@ -10,7 +10,7 @@ verification; [m6.5](../../.pm/w6/blocked/m6.5/README.md) owns this transition.
 
 ## Release status — 2026-10-22 UTC
 
-Suite **0.4.0** is public as
+The ClawHub suite package **0.4.0**, which does not yet carry `beancount-invoices` (the repository suite is at 0.4.19), is public as
 [`@puncsky/beancount-io`](https://clawhub.ai/plugins/@puncsky/beancount-io),
 from source `d493eb1c7b4e427a209b8378219f46fc4b71a4f0`. The original accepted
 attempt finalized after the client's bounded wait ended; ClawScan and
@@ -264,8 +264,8 @@ unsubmitted set published or claim that old records were deleted.
 
 | Channel | Observed state | Action and verification |
 | --- | --- | --- |
-| Claude Code plugin | One `beancount-io` marketplace entry at 0.4.0, declaring all thirteen workflows. | Already a suite; retain the shared version and inventory gate. |
-| Codex plugin | One `beancount-io` entry at the same 0.4.0 version and canonical source tree. | Already a suite; no separate per-skill publication found in the repository's release configuration. |
+| Claude Code plugin | One `beancount-io` marketplace entry (0.4.19 today; 0.4.0 when audited), declaring every customer workflow (fourteen today). | Already a suite; retain the shared version and inventory gate. |
+| Codex plugin | One `beancount-io` entry at the same version as the Claude Code plugin and the canonical source tree. | Already a suite; no separate per-skill publication found in the repository's release configuration. |
 | Git/link installer | One checkout supplies the complete source inventory to both clients. | Retain it for local source edits; current guidance prefers the plugin for one versioned managed install. |
 | `npx skills` / skills.sh | Before the update, the repository page mixed 29 rows: ten customer workflows and nineteen contributor tools. At 00:40 UTC, the public page shows all thirteen customer workflows under **Beancount.io suite**, followed by nineteen **Repository development** entries. | Root `skills.sh.json` and its inventory gate are shipped. One documented maintainer install triggers the supported configuration sync; the public read-back verifies both groups and all three previously missing customer entries. Install and repeated whole-suite refresh from the explicit customer `skills/` URL pass for both agents, with telemetry disabled in QA. |
 | skills.sh consolidated Pack | [One customer suite](https://www.skills.sh/p/CTUrAfLQdDvNeNv2) created 2026-10-26 UTC with thirteen customer workflows from source suite 0.4.2. | [Current native check, 2026-10-30](catalog-corrections/pack-native-recheck-20261030.json) again exits0 but delivers59/61files to both agents, with another missing pair. [Publication/history](catalog-corrections/consolidated-submissions-20261026.json) retains the single editable Pack and exact archive. Complete native delivery remains open. |
