@@ -10,7 +10,7 @@
 
 ## Checks
 
-- [ ] I ran the checks for the package I changed, as listed in the [Quality bar](https://github.com/bex-co/beancount-io#quality-bar)
+- [ ] I ran the checks for the package I changed, as listed in the Quality bar under [Run from source](https://github.com/bex-co/beancount-io#run-from-source)
 - [ ] No lockfile was edited by hand
 - [ ] `gitleaks dir . --redact` reports no secrets
 
