@@ -163,9 +163,10 @@ class TestEngineBatch:
         calls = 0
 
         def fail_fourth(candidate: Path, target: Path, **kwargs: Any) -> list[str]:
+            # Per-file (2), the second file beside the first (1), then the write loop: its second file is the 5th.
             nonlocal calls
             calls += 1
-            if calls == 4:
+            if calls == 5:
                 raise protocol.LedgerError("the second file no longer validates")
             return real_validate(candidate, target, **kwargs)
 

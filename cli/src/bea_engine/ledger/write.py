@@ -19,7 +19,7 @@ import sys
 import time
 import unicodedata
 from collections import Counter
-from collections.abc import Callable, Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from contextlib import ExitStack, contextmanager, nullcontext, suppress
 from dataclasses import dataclass, field, replace
 from decimal import Decimal, InvalidOperation
@@ -386,7 +386,9 @@ class LedgerSnapshot:
         return None if status is None else (status.st_dev, status.st_ino)
 
     @contextmanager
-    def staged(self, candidate: Path, target: Path) -> Iterator[tuple[Path, dict[Path, Path]]]:
+    def staged(
+        self, candidate: Path, target: Path, also: Mapping[Path, Path] | None = None
+    ) -> Iterator[tuple[Path, dict[Path, Path]]]:
         """Stage the changed file and its includers, each beside its source.
 
         Staging beside the source keeps documents and plugins at their paths.
@@ -401,14 +403,23 @@ class LedgerSnapshot:
         inode hid it from that check, and the candidate was validated beside
         a second copy of its own entries (w5/574). `duplicate_include_errors`
         restores the error the read reports for it.
+
+        `also` maps other files to the candidates standing in for them, so a
+        later file of a multi-file write is judged beside the earlier files'
+        edits, as the sequential apply sees it (w5/1081).
         """
         from bea_engine.managed_load import _duplicate_members
 
         duplicates = _duplicate_members(self)
+        replaced = {target: candidate, **(also or {})}
         with ExitStack() as stack:
-            paths = {path: stack.enter_context(candidate_file(path, "")) for path in self._includers(target)}
+            members = set().union(*(self._includers(path) for path in replaced))
+            paths = {path: stack.enter_context(candidate_file(path, "")) for path in members}
             for path, staged in paths.items():
-                content = candidate.read_bytes() if self._stands_for(path, target) else self.contents[path]
+                stand_in = next(
+                    (stood for original, stood in replaced.items() if self._stands_for(path, original)), None
+                )
+                content = stand_in.read_bytes() if stand_in is not None else self.contents[path]
                 for start, end, name in reversed(list(_includes(content))):
                     matches = self.patterns.get(str(path.parent / name), ())
                     if matches:
@@ -2342,8 +2353,11 @@ def validate_candidate(
     pad_date_explicit: bool = False,
     operating_defaults: dict[int, list[str] | None] | None = None,
     inspect: Callable[[list[Any], dict[Path, Path]], None] | None = None,
+    also: Mapping[Path, Path] | None = None,
 ) -> list[str]:
     """Refuse a candidate that fails validation, naming what it would break.
+
+    `also` stages other files' candidates beside this one (see `staged`).
 
     `inspect` is handed the candidate's loaded entries, in the order every
     read sees them, so a caller can judge the write against the ledger as it
@@ -2400,7 +2414,7 @@ def validate_candidate(
             # a missing original as zero lines so creation still works.
             original_lines = {file.resolve(): lexer_lines(file.read_bytes())} if file.exists() else {}
         else:
-            with snapshot.staged(candidate, file) as (root, filenames):
+            with snapshot.staged(candidate, file, also) as (root, filenames):
                 entries, errors, options = managed_load.load_file(root)
             errors = [*errors, *snapshot.duplicate_include_errors(file)]
             original_lines = {path.resolve(): lexer_lines(content) for path, content in snapshot.contents.items()}

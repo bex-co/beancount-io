@@ -23,6 +23,8 @@ import difflib
 import os
 import re
 import unicodedata
+from collections.abc import Mapping
+from contextlib import ExitStack
 from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
@@ -706,11 +708,26 @@ def _file_diff(text: str, new_text: str, target: Path) -> str:
 
 
 def _validate_text(
-    target: Path, snapshot: ledger_write.LedgerSnapshot, new_text: str, *, allow_errors: bool
+    target: Path,
+    snapshot: ledger_write.LedgerSnapshot,
+    new_text: str,
+    *,
+    allow_errors: bool,
+    earlier: Mapping[Path, str] | None = None,
 ) -> list[str]:
-    """The warnings for a candidate file content, raising what it would break."""
-    with ledger_write.candidate_file(target, new_text) as candidate:
-        return ledger_write.validate_candidate(candidate, target, allow_errors=allow_errors, snapshot=snapshot)
+    """The warnings for a candidate file content, raising what it would break.
+
+    `earlier` is the content of files that write first, so this one is judged
+    beside them as the sequential apply sees it (w5/1081).
+    """
+    with ExitStack() as stack:
+        stood = {
+            path: stack.enter_context(ledger_write.candidate_file(path, text)) for path, text in (earlier or {}).items()
+        }
+        candidate = stack.enter_context(ledger_write.candidate_file(target, new_text))
+        return ledger_write.validate_candidate(
+            candidate, target, allow_errors=allow_errors, snapshot=snapshot, also=stood
+        )
 
 
 def _validate_plans(
@@ -777,7 +794,46 @@ def _validate_plans(
                 valid[target] = survivors
         else:
             valid[target] = file_plans
-    return valid
+    return _validate_cumulatively(
+        valid, file_lines, snapshot, rejected, rejected_rows, reasons, allow_errors=allow_errors
+    )
+
+
+def _validate_cumulatively(
+    valid: dict[Path, list[_RowPlan]],
+    file_lines: dict[Path, list[str]],
+    snapshot: ledger_write.LedgerSnapshot,
+    rejected: list[str],
+    rejected_rows: list[int],
+    reasons: dict[int, str],
+    *,
+    allow_errors: bool,
+) -> dict[Path, list[_RowPlan]]:
+    """Judge each file beside the files written before it, as apply does.
+
+    Apply writes the files in order and validates each against the ledger the
+    earlier ones left, so two edits that pass alone but jointly break a rule
+    (`onecommodity`) reject the later file there. The preview now says so too,
+    instead of calling both ready (w5/1081).
+    """
+    kept: dict[Path, list[_RowPlan]] = {}
+    earlier: dict[Path, str] = {}
+    for target in sorted(valid):
+        combined = _combined_text(file_lines[target], _merge_edits(valid[target]))
+        if earlier:
+            try:
+                _validate_text(target, snapshot, combined, allow_errors=allow_errors, earlier=earlier)
+            except protocol.LedgerError as exc:
+                for plan in valid[target]:
+                    reason = _row_reason(plan.index, exc)
+                    rejected.append(reason)
+                    rejected_rows.append(plan.index)
+                    reasons[plan.index] = reason
+                rejected.extend(exc.details)
+                continue
+        kept[target] = valid[target]
+        earlier[target] = combined
+    return kept
 
 
 def _row_payload(
