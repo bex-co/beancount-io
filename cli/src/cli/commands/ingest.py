@@ -379,6 +379,14 @@ def extract(ctx: typer.Context, config: _CONFIG = None) -> None:
     """Extract raw entries from documents.
 
     The Beangulp extract step. This is not bea import --apply.
+
+    With the pinned Beangulp 0.2.0, --reverse (-r) is accepted but ignored:
+    entries are still written oldest first. bea forwards the flag unchanged.
+    For newest-first output, override sort in your importer:
+
+    \b
+    def sort(self, entries, reverse=False):
+        return super().sort(entries, reverse=True)
     """
     _forward("extract", ctx, config)
 

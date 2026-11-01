@@ -791,6 +791,20 @@ bea ingest extract --config ingest.py downloads/ -o extracted.bean
 bea ingest archive --config ingest.py downloads/ -o documents/ --dry-run
 ```
 
+Beangulp 0.2.0, the version the managed engine pins, accepts
+`bea ingest extract --reverse` (`-r`) and exits 0 but ignores it: entries are
+still serialized oldest first. `bea` forwards the flag unchanged, so this is
+upstream behavior, not a dropped argument. For newest-first output, set it in
+the importer instead, independent of the flag:
+
+```python norun
+def sort(self, entries, reverse=False):
+    return super().sort(entries, reverse=True)
+```
+
+With that override, a statement listing September 3, 1, 2 extracts as
+September 3, 2, 1. Revisit this note when the pinned Beangulp changes.
+
 `bea engine status` shows whether each optional feature is enabled. This does
 not alter the Homebrew/PyPI frontend environment. Add third-party importer
 packages the same way you would for any engine-side dependency once Beangulp is
