@@ -544,8 +544,8 @@ def _sweep_abandoned(root: Path) -> None:
 
 def _process_alive(pid: int) -> bool:
     if sys.platform == "win32":
-        # `os.kill` on Windows terminates rather than probes; assume alive.
-        return True
+        # `os.kill` on Windows terminates rather than probes.
+        return _windows_process_alive(pid)
     try:
         os.kill(pid, 0)
     except ProcessLookupError:
@@ -553,6 +553,43 @@ def _process_alive(pid: int) -> bool:
     except PermissionError:
         return True
     return True
+
+
+#: Windows constants for the liveness probe below.
+_PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+_STILL_ACTIVE = 259
+_ERROR_ACCESS_DENIED = 5
+_ERROR_INVALID_PARAMETER = 87
+
+
+def _windows_process_alive(pid: int, kernel32: Any = None) -> bool:
+    """Whether a process id is a running process, probed with `OpenProcess` (w5/1111).
+
+    A refused open means the process exists but is not ours to inspect; an
+    unknown id means it is gone. Anything unclear counts as alive, since a
+    wrongly kept scratch directory costs disk and a wrongly removed one costs
+    another build's work.
+    """
+    if kernel32 is None:
+        import ctypes
+        from ctypes import wintypes
+
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)  # type: ignore[attr-defined]
+        kernel32.OpenProcess.restype = wintypes.HANDLE
+    handle = kernel32.OpenProcess(_PROCESS_QUERY_LIMITED_INFORMATION, False, pid)
+    if not handle:
+        import ctypes
+
+        return bool(ctypes.get_last_error() != _ERROR_INVALID_PARAMETER)  # type: ignore[attr-defined]
+    try:
+        import ctypes
+
+        code = ctypes.c_ulong()
+        if not kernel32.GetExitCodeProcess(handle, ctypes.byref(code)):
+            return True
+        return code.value == _STILL_ACTIVE
+    finally:
+        kernel32.CloseHandle(handle)
 
 
 #: Written into every engine bea builds: what tells a later rebuild that the
@@ -589,6 +626,33 @@ def _refuse_foreign_root(root: Path) -> None:
     )
 
 
+#: Windows (Defender, the indexer) keeps a just-built environment open for up to about half a minute after
+#: `uv pip install` returns, and a rename of it fails until it lets go (w5/1111).
+_RENAME_ATTEMPTS = 12
+_RENAME_FIRST_DELAY = 0.5
+_RENAME_MAX_DELAY = 8.0
+_WINERROR_ACCESS_DENIED = 5
+_WINERROR_SHARING_VIOLATION = 32
+
+
+def _replace_patiently(source: Path, target: Path) -> None:
+    """`os.replace`, retried with backoff on Windows while a scanner still holds the files."""
+    delay = _RENAME_FIRST_DELAY
+    for attempt in range(_RENAME_ATTEMPTS):
+        try:
+            os.replace(source, target)
+            return
+        except OSError as exc:
+            transient = sys.platform == "win32" and (
+                isinstance(exc, PermissionError)
+                or getattr(exc, "winerror", None) in (_WINERROR_ACCESS_DENIED, _WINERROR_SHARING_VIOLATION)
+            )
+            if not transient or attempt == _RENAME_ATTEMPTS - 1:
+                raise
+            time.sleep(delay)
+            delay = min(delay * 2, _RENAME_MAX_DELAY)
+
+
 def _publish(partial: Path, root: Path) -> None:
     """Move a finished environment into place under the name commands look for."""
     try:
@@ -599,7 +663,7 @@ def _publish(partial: Path, root: Path) -> None:
             discarded = root.with_name(f"{root.name}.discarded.{os.getpid()}")
             os.replace(root, discarded)
             shutil.rmtree(discarded, ignore_errors=True)
-        os.replace(partial, root)
+        _replace_patiently(partial, root)
     except OSError as exc:
         raise EngineError(f"Could not move the finished engine into place at {root}: {exc.strerror or exc}.") from exc
 
