@@ -131,3 +131,39 @@ def test_the_answer_echoes_the_written_label(tmp_path: Path) -> None:
     entries, errors, _ = managed_load.load_file(ledger)
     assert errors == []
     assert entries[-1].postings[0].cost.label == echoed
+
+
+def test_a_sale_with_an_inferred_quantity_selects_its_newline_labelled_lot(tmp_path: Path) -> None:
+    """The quantity is left to booking, so the sign is unknown and the label must stay as typed (w5/1085)."""
+    path = tmp_path / "main.bean"
+    path.write_text(LEDGER.replace("lot\tA", "lot\\nA"), encoding="utf-8")
+    sale = {
+        "date": "2026-02-01",
+        "narration": "Sell inferred",
+        "postings": [
+            {
+                "account": "Assets:Brokerage",
+                "units": {"number": None, "currency": "HOOL"},
+                "cost": {"number": "40", "currency": "USD", "label": "lot\nA"},
+                "price": {"number": "50", "currency": "USD"},
+            },
+            {"account": "Assets:Checking", "amount": "500 USD"},
+            {"account": "Income:Gains", "amount": "-100 USD"},
+        ],
+    }
+
+    result = adding.answer(path, "transactions", {"rows": [sale]})
+
+    assert result["written"] == 1
+    entries, errors, _ = managed_load.load_file(path)
+    assert errors == []
+    held = [
+        (posting.units.number, posting.cost.label)
+        for entry in entries
+        if hasattr(entry, "postings")
+        for posting in entry.postings
+        if posting.account == "Assets:Brokerage"
+    ]
+    # The sale reduced the labelled long lot rather than opening a lot labelled "lot A".
+    assert sum(number for number, _ in held) == 0
+    assert {label for _, label in held} == {"lot\nA"}

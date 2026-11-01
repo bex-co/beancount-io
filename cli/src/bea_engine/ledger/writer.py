@@ -414,7 +414,10 @@ def normalize_entry_strings(entry: Any) -> Any:
         # ledger holds that short lot, which only the ledger can say (w5/925).
         # Asked only for a labelled positive posting: any other write never
         # reads the ledger for this.
-        reduction = known and (
+        # An inferred quantity has no sign yet, so the posting may be the sale
+        # selecting that lot: its label is kept as typed rather than risk
+        # selecting nothing and opening a short instead (w5/1085).
+        reduction = not known or (
             units.number < 0
             or (
                 units.number > 0
