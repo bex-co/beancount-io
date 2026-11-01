@@ -51,12 +51,12 @@
 - [x] [170](./done/170.md) — BQL `meta` splits by table (`k: v`/`str` postings vs `k=v`/`object` entries; stock one dict)
 - [x] [171](./done/171.md) — typed posting tags/links render stock-invalid beancount; backend check blind, reads blank (m6 "holds live" disproven)
 
-- [190](./blocked/190.md) — engine accepts fractional `@@` stock refuses (per-unit division dust; w23/163 followup) — **blocked:** upstream filing approved 2026-10-28; waiting for someone with tracker access to file the batch
-- [196](./blocked/196.md) — BQL `balances.discrepancy` never populates (blank on failing balances; stock reports the diff) — **blocked:** upstream filing approved 2026-10-28; waiting for someone with tracker access to file the batch
-- [198](./blocked/198.md) — entries tags/links are empty sets on MCP but NULL on stock (13 rows flip IS NULL) — **blocked:** upstream filing approved 2026-10-28; waiting for someone with tracker access to file the batch
-- [201](./blocked/201.md) — number()/currency() of an empty inventory invent 0.00 / the operating currency; get()/weight()/sum() blank — **blocked:** upstream filing approved 2026-10-28; waiting for someone with tracker access to file the batch
+- [190](./blocked/190.md) — engine accepts fractional `@@` stock refuses (per-unit division dust; w23/163 followup) — **blocked:** filed upstream 2026-10-31; waiting for an engine release after 0.24.0
+- [196](./blocked/196.md) — BQL `balances.discrepancy` never populates (blank on failing balances; stock reports the diff) — **blocked:** filed upstream 2026-10-31; waiting for an engine release after 0.24.0
+- [198](./blocked/198.md) — entries tags/links are empty sets on MCP but NULL on stock (13 rows flip IS NULL) — **blocked:** filed upstream 2026-10-31; waiting for an engine release after 0.24.0
+- [201](./blocked/201.md) — number()/currency() of an empty inventory invent 0.00 / the operating currency; get()/weight()/sum() blank — **blocked:** filed upstream 2026-10-31; waiting for an engine release after 0.24.0
 - [072](./072.md) — concurrent writes (append, add entries, exact-text edits) still lose with `SERVICE_UNAVAILABLE` on production after w23/017; the production lost-race signature differs (scope revised 2026-10-31: per-repo commit serialization plus failure logging; no production log needed to start)
 - [065](./065.md) — a ledger-pinned credential keeps the old name after a rename (owner chose repository-ID pins 2026-10-31)
 - [059](./059.md) — every product-created ledger ships `auto_accounts`, so a misspelt account is silently opened (owner chose drop-plugin 2026-10-31)
-- [022](./blocked/022.md) — report rustledger BQL gaps upstream (`cost(sum(position))`, `neg`/`filter_currency`, `meta('lineno')`, `AT value`, `BALANCES FROM`) — **blocked:** upstream filing approved 2026-10-28; waiting for someone with tracker access to file the batch
+- [022](./blocked/022.md) — report rustledger BQL gaps upstream (`cost(sum(position))`, `neg`/`filter_currency`, `meta('lineno')`, `AT value`, `BALANCES FROM`) — **blocked:** filed upstream 2026-10-31; waiting for an engine release after 0.24.0
 - [026](./026.md) — streaming archive route for MCP OAuth clients over 8 MiB (option 1 from 023; owner approved 2026-10-31)
