@@ -144,9 +144,10 @@ function CommitsWorkspace({
         // A request from an unmounted ledger must not merge into a later
         // visit's fresh first page, even when Apollo still completes it, and
         // one that started before a Refresh must not merge into the
-        // refreshed list.
+        // refreshed list. Apollo passes no previous result at all when the
+        // Refresh has already dropped the cached list.
         updateQuery: (previous, { fetchMoreResult }) => {
-          if (!active.current || previous.listCommits?.length !== base) {
+          if (!active.current || previous?.listCommits?.length !== base) {
             return previous;
           }
           const listCommits = Array.from(
