@@ -518,14 +518,23 @@ def _holdings(
         if target is not None and target != held:
             leg_date, rate = prices.get_price_point((held, target), end)
             direct_date, direct = prices.get_price_point((commodity, target), end)
-        if direct is not None and rate is not None:
+        # The currency the basis is in; the market value has its own below, since
+        # a direct quote in the requested currency needs no basis rate (w5/1117).
+        basis_currency = held
+        if direct is not None and target is not None:
             # A quote in the requested currency values the lot directly, as
             # Beancount's own conversion does; routed through the cost
             # currency, an older EUR quote valued 300 USD of shares at 250, or
             # its absence refused the report (w5/1033). The basis still
-            # converts through the cost currency.
+            # converts through the cost currency, and without that rate it
+            # stays in it beside the market value, with the rate reported
+            # missing.
             quote_date, price, quoted = direct_date, direct, (commodity, target)
-            basis, market, currency = basis * rate, units * direct, target
+            market, currency = units * direct, target
+            if rate is not None:
+                basis, basis_currency = basis * rate, target
+            else:
+                missing.append((held, target))
         else:
             quote_date, price = prices.get_price_point((commodity, held), end)
             market = units * price if price is not None else basis
@@ -539,13 +548,14 @@ def _holdings(
                     currency = target
                 else:
                     missing.append((held, target))
+            basis_currency = currency
         average = basis / units if units else None
         group: dict[str, Any] = {"account": key[0]} if group_by == "account" else {"accounts": sorted(accounts)}
         group |= {
             "commodity": commodity,
             "units": {"number": units, "currency": commodity},
-            "average_cost": {"number": average, "currency": currency} if average is not None else None,
-            "cost_basis": {"number": basis, "currency": currency},
+            "average_cost": {"number": average, "currency": basis_currency} if average is not None else None,
+            "cost_basis": {"number": basis, "currency": basis_currency},
             "market_value": {"number": market, "currency": currency},
             "price": {"number": price, "currency": currency} if price is not None else None,
             "price_date": quote_date,
