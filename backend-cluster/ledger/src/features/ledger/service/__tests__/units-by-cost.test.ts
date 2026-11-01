@@ -69,6 +69,7 @@ const ACCOUNTS = [
   "Assets:Crypto",
   "Assets:Margin",
   "Assets:Mixed",
+  "Assets:Sold",
   "Equity:Opening",
 ];
 
@@ -106,6 +107,15 @@ const DIRECTIVES: DirectiveJson[] = [
   transaction("2026-08-20", [
     atCost("Assets:Mixed", "3", "QAC", "12.00", "EUR"),
     units("Equity:Opening", "-36.00", "EUR"),
+  ]),
+  // A lot bought and fully sold nets to zero and must not be reported.
+  transaction("2026-05-01", [
+    atCost("Assets:Sold", "5", "XYZ", "1.00", "USD"),
+    units("Equity:Opening", "-5.00", "USD"),
+  ]),
+  transaction("2026-06-01", [
+    atCost("Assets:Sold", "-5", "XYZ", "1.00", "USD"),
+    units("Equity:Opening", "5.00", "USD"),
   ]),
   // Quotes change at_value but must not change units_by_cost.
   price("2026-07-15", "QAC", "20.00", "EUR"),
@@ -245,6 +255,47 @@ describe("units_by_cost on the balance reads (w4/m58)", () => {
       "EUR {}": "500.00",
       "VTI {EUR}": "10",
     });
+  });
+
+  it("drops a lot that nets to zero", async () => {
+    const report = await finance().getBalanceSheet({
+      ...params,
+      conversion: "units_by_cost",
+    });
+
+    expect(
+      node(report.assets_hierarchy_data, "Assets:Sold")?.balance ?? {},
+    ).toEqual({});
+    expect(
+      node(report.assets_hierarchy_data, "Assets")?.balance_children,
+    ).not.toHaveProperty("XYZ {USD}");
+  });
+
+  it("follows the account filter", async () => {
+    const report = await finance().getBalanceSheet({
+      ...params,
+      account: "Assets:Crypto",
+      conversion: "units_by_cost",
+    });
+
+    expect(
+      node(report.assets_hierarchy_data, "Assets")?.balance_children,
+    ).toEqual({ "BTC {USD}": "1", "ETH {BTC}": "40" });
+  });
+
+  it("keys each interval's change in interval totals", async () => {
+    const totals = await data().getIntervalTotals({
+      ...params,
+      accountName: "Assets:Mixed",
+      interval: "month",
+      time: "2026-07 - 2026-08",
+      conversion: "units_by_cost",
+    });
+
+    expect(totals.map(({ date, balance }) => ({ date, balance }))).toEqual([
+      { date: "2026-07-31", balance: { "QAC {EUR}": "1", "QAC {USD}": "2" } },
+      { date: "2026-08-31", balance: { "QAC {EUR}": "3" } },
+    ]);
   });
 
   it("leaves the existing conversions unchanged", async () => {
