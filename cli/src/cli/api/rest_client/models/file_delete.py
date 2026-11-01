@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -19,6 +19,9 @@ class FileDelete:
         message (str | Unset):
         description (str | Unset): Alias of message, as the MCP file tools spell it.
         sha (str | Unset): Blob SHA of the file being deleted, from a prior GET
+        removeIncludes (bool | None | Unset): Also drop the exact `include` lines of other ledger files that reach this
+            file, in the same commit. Without it, deleting an included file is refused. Glob includes are left as they are.
+        remove_includes (bool | None | Unset): Alias of removeIncludes, as MCP spells it.
         dryRun (bool | Unset): Run every check and return the preview without committing
         dry_run (bool | Unset): Alias of dryRun, as MCP spells it.
         allowInvalid (bool | Unset): Commit even when the change adds bean-check errors (VALIDATION_FAILED), instead of
@@ -29,6 +32,8 @@ class FileDelete:
     message: str | Unset = UNSET
     description: str | Unset = UNSET
     sha: str | Unset = UNSET
+    removeIncludes: bool | None | Unset = UNSET
+    remove_includes: bool | None | Unset = UNSET
     dryRun: bool | Unset = UNSET
     dry_run: bool | Unset = UNSET
     allowInvalid: bool | Unset = UNSET
@@ -41,6 +46,18 @@ class FileDelete:
         description = self.description
 
         sha = self.sha
+
+        removeIncludes: bool | None | Unset
+        if isinstance(self.removeIncludes, Unset):
+            removeIncludes = UNSET
+        else:
+            removeIncludes = self.removeIncludes
+
+        remove_includes: bool | None | Unset
+        if isinstance(self.remove_includes, Unset):
+            remove_includes = UNSET
+        else:
+            remove_includes = self.remove_includes
 
         dryRun = self.dryRun
 
@@ -59,6 +76,10 @@ class FileDelete:
             field_dict["description"] = description
         if sha is not UNSET:
             field_dict["sha"] = sha
+        if removeIncludes is not UNSET:
+            field_dict["removeIncludes"] = removeIncludes
+        if remove_includes is not UNSET:
+            field_dict["remove_includes"] = remove_includes
         if dryRun is not UNSET:
             field_dict["dryRun"] = dryRun
         if dry_run is not UNSET:
@@ -79,6 +100,24 @@ class FileDelete:
 
         sha = d.pop("sha", UNSET)
 
+        def _parse_removeIncludes(data: object) -> bool | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(bool | None | Unset, data)
+
+        removeIncludes = _parse_removeIncludes(d.pop("removeIncludes", UNSET))
+
+        def _parse_remove_includes(data: object) -> bool | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(bool | None | Unset, data)
+
+        remove_includes = _parse_remove_includes(d.pop("remove_includes", UNSET))
+
         dryRun = d.pop("dryRun", UNSET)
 
         dry_run = d.pop("dry_run", UNSET)
@@ -91,6 +130,8 @@ class FileDelete:
             message=message,
             description=description,
             sha=sha,
+            removeIncludes=removeIncludes,
+            remove_includes=remove_includes,
             dryRun=dryRun,
             dry_run=dry_run,
             allowInvalid=allowInvalid,

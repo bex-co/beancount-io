@@ -283,9 +283,14 @@ describe("MCP tool list", () => {
     // required" on the alias field is the guidance agents need, since the
     // schema keeps both spellings optional (the owner chose documentation
     // over a required-ness change, w23/172).
+    //
+    // 120 KB since w21/587 gave deleteLedgerFiles its opt-in
+    // `remove_includes` (and alias): measured at 121,990 bytes. Both flags
+    // plus the guard sentence naming them are how an agent learns it can
+    // drop an exact include and delete in one call.
     const { tools } = await listToolsRaw();
     const bytes = Buffer.byteLength(JSON.stringify(tools), "utf8");
-    expect(bytes).toBeLessThan(119 * 1024);
+    expect(bytes).toBeLessThan(120 * 1024);
   });
 
   // w23/173: the schema keeps both spellings of an alias pair optional (the

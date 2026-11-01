@@ -13,6 +13,7 @@ import { runToolSafely } from "../utils/run-tool";
 import {
   ALLOW_INVALID_NAMES,
   DRY_RUN_NAMES,
+  REMOVE_INCLUDES_NAMES,
   resolveFlagAlias,
 } from "@/features/ledger/utils/flag-alias";
 import { gateFileWrite } from "@/features/ledger/utils/file-write-gate";
@@ -30,6 +31,8 @@ import { resolveCommitMessage } from "@/features/ledger/utils/commit-message-ali
 import {
   DELETE_INCLUDE_GUARD_BATCH_NOTE,
   DELETE_INCLUDE_GUARD_DESCRIPTION,
+  planIncludeRemovals,
+  repoServiceFileAccess,
 } from "@/features/ledger/utils/include-references";
 
 /** Commits one edit call makes before a lost race is the caller's (w23/017). */
@@ -307,6 +310,7 @@ function foldOperations(
 export async function executeEditLedgerFiles(
   ctx: Pick<ToolContext, "services" | "identity" | "ledgerId">,
   input: z.infer<typeof editLedgerFilesInputSchema>,
+  options: { removeIncludes?: boolean } = {},
 ): Promise<EditLedgerFilesOutput> {
   const { services, identity, ledgerId } = ctx;
   const { files, dry_run, dryRun } = input;
@@ -346,6 +350,28 @@ export async function executeEditLedgerFiles(
           assertAmountsFitEngineDecimal(file.content);
         } else if (file.operation === "update") {
           assertAmountsFitEngineDecimal(file.new_string);
+        }
+      }
+      if (options.removeIncludes) {
+        // The deletes' exact include lines go in the same commit, as
+        // whole-file rewrites of each includer the batch does not change.
+        const deleted = normalizedFiles
+          .filter((f) => f.operation === "delete")
+          .map((f) => f.path);
+        const removals =
+          deleted.length === 0
+            ? []
+            : await planIncludeRemovals({
+                ...repoServiceFileAccess(
+                  services.ledgerRepo,
+                  ledgerId,
+                  identity,
+                ),
+                deletedPaths: deleted,
+              });
+        for (const { path, content } of removals) {
+          if (normalizedFiles.some((f) => f.path === path)) continue;
+          normalizedFiles.push({ operation: "replace", path, content });
         }
       }
       const pathsToFetch = [
@@ -571,8 +597,10 @@ function fileOperation<F extends z.ZodType>(
   file: F,
   description: string,
   toOperation: (file: z.output<F>) => FileOperation,
+  extra: z.ZodRawShape = {},
 ) {
   const schema = z.object({
+    ...extra,
     description: editLedgerFilesInputSchema.shape.description,
     message: editLedgerFilesInputSchema.shape.message,
     files: z.array(file).min(1),
@@ -589,11 +617,21 @@ function fileOperation<F extends z.ZodType>(
       ctx: Pick<ToolContext, "services" | "identity" | "ledgerId">,
       input: unknown,
     ) => {
-      const { files, ...rest } = schema.parse(input);
-      return executeEditLedgerFiles(ctx, {
-        ...rest,
-        files: files.map(toOperation),
-      });
+      const { files, remove_includes, removeIncludes, ...rest } =
+        schema.parse(input) as z.infer<typeof schema> & {
+          remove_includes?: boolean;
+          removeIncludes?: boolean;
+        };
+      return executeEditLedgerFiles(
+        ctx,
+        { ...rest, files: files.map(toOperation) },
+        {
+          removeIncludes: resolveFlagAlias(
+            { primary: remove_includes, legacy: removeIncludes },
+            REMOVE_INCLUDES_NAMES,
+          ),
+        },
+      );
     },
   };
 }
@@ -626,5 +664,17 @@ export const LEDGER_FILE_OPERATIONS = {
     "Delete files in one atomic commit; pass each file's sha from readLedgerFiles to refuse the delete if it changed since. " +
       DELETE_INCLUDE_GUARD_DESCRIPTION,
     (file) => ({ operation: "delete", ...file }),
+    {
+      remove_includes: z
+        .boolean()
+        .optional()
+        .describe(
+          "Also drop the exact `include` lines that reach the deleted files, in the same commit.",
+        ),
+      removeIncludes: z
+        .boolean()
+        .optional()
+        .describe("Alias of remove_includes."),
+    },
   ),
 };

@@ -436,6 +436,13 @@ export class DeleteLedgerFileInput {
     description: "Alias of message, as the MCP file tools spell it.",
   })
   description?: string;
+
+  @Field(() => Boolean, {
+    nullable: true,
+    description:
+      "Also drop the exact `include` lines of other ledger files that reach this file, in the same commit. Without it, deleting an included file is refused. Glob includes are left as they are.",
+  })
+  removeIncludes?: boolean;
 }
 
 @ArgsType()

@@ -314,14 +314,18 @@ async function fixture(
         result: (result.structuredContent as { result?: unknown })?.result,
       };
     },
-    deleteFile: async (surface: string, path: string) => {
+    deleteFile: async (
+      surface: string,
+      path: string,
+      removeIncludes?: boolean,
+    ) => {
       if (surface === "rest") {
         const response = await fetch(
           `${rest.url}/api-gateway/v1/ledgers/alice/main/files/${path}`,
           {
             method: "DELETE",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({}),
+            body: JSON.stringify(removeIncludes ? { removeIncludes } : {}),
           },
         );
         return {
@@ -332,8 +336,12 @@ async function fixture(
       if (surface === "gql") {
         const result = await graphql({
           schema,
-          source: `mutation($path:String!,$sha:String!) { deleteLedgerFile(ledgerId:"alice/main",path:$path,sha:$sha) { path } }`,
-          variableValues: { path, sha: files.get(path)?.sha ?? "sha-x" },
+          source: `mutation($path:String!,$sha:String!,$remove:Boolean) { deleteLedgerFile(ledgerId:"alice/main",path:$path,sha:$sha,removeIncludes:$remove) { path } }`,
+          variableValues: {
+            path,
+            sha: files.get(path)?.sha ?? "sha-x",
+            remove: removeIncludes,
+          },
           contextValue: { identity: caller, getCurrentIdentity: () => caller },
         });
         return { success: !result.errors, result };
@@ -343,6 +351,7 @@ async function fixture(
         arguments: {
           description: "prune",
           files: [{ path }],
+          ...(removeIncludes ? { remove_includes: true } : {}),
         },
       });
       return { success: !result.isError, result: result.structuredContent };
@@ -1340,6 +1349,43 @@ describe.each(["rest", "mcp", "gql"])("delete guard via %s", (surface) => {
       );
       expect(f.files.has("second.bean")).toBe(true);
       expect(f.change).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("removeIncludes drops the exact include line in the same commit", async () => {
+    const f = await fixture(identity, {
+      "main.bean":
+        '; main\ninclude "second.bean"\ninclude "books/*.bean"\ninclude "keep.bean"\n',
+      "second.bean": "; doomed\n",
+      "keep.bean": "; keep\n",
+    });
+    try {
+      const outcome = await f.deleteFile(surface, "second.bean", true);
+      expect(outcome.success).toBe(true);
+      expect(f.files.has("second.bean")).toBe(false);
+      // The glob and the other exact include stay; only the deleted file's goes.
+      expect(f.files.get("main.bean")?.content).toBe(
+        '; main\ninclude "books/*.bean"\ninclude "keep.bean"\n',
+      );
+      expect(f.change).toHaveBeenCalledTimes(1);
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("removeIncludes still deletes a file nothing includes", async () => {
+    const f = await fixture(identity, {
+      "main.bean": "; main\n",
+      "lone.bean": "; lone\n",
+    });
+    try {
+      expect((await f.deleteFile(surface, "lone.bean", true)).success).toBe(
+        true,
+      );
+      expect(f.files.has("lone.bean")).toBe(false);
+      expect(f.files.get("main.bean")?.content).toBe("; main\n");
     } finally {
       await f.close();
     }

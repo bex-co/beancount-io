@@ -1,16 +1,21 @@
 import { z } from "@/shared/zod-openapi-setup";
 import { NotFoundError } from "@/shared/errors";
 import { resolveCommitMessage } from "@/features/ledger/utils/commit-message-alias";
-import { DELETE_INCLUDE_GUARD_DESCRIPTION } from "@/features/ledger/utils/include-references";
+import {
+  DELETE_INCLUDE_GUARD_DESCRIPTION,
+  planIncludeRemovals,
+  repoServiceFileAccess,
+} from "@/features/ledger/utils/include-references";
 import { assertAmountsFitEngineDecimal } from "@/features/ledger/utils/engine-decimal";
 import {
   ALLOW_INVALID_NAMES,
   DRY_RUN_NAMES,
+  REMOVE_INCLUDES_NAMES,
   resolveFlagAlias,
 } from "@/features/ledger/utils/flag-alias";
 import { gateFileWrite } from "@/features/ledger/utils/file-write-gate";
 import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
-import { ledgerIdOf, ledgerPathSchema } from "./schemas";
+import { ledgerIdOf, ledgerPathSchema, removeIncludesBody } from "./schemas";
 import { json } from "@/server/rest/v1-schemas";
 import { v1Route } from "@/server/rest/v1-route";
 
@@ -92,6 +97,7 @@ const deleteBodySchema = z
     sha: z.string().optional().openapi({
       description: "Blob SHA of the file being deleted, from a prior GET",
     }),
+    ...removeIncludesBody,
     ...dryRunBody,
     ...allowInvalidBody,
   })
@@ -269,8 +275,22 @@ export const FILE_ROUTES = [
         { primary: body.dry_run, legacy: body.dryRun },
         DRY_RUN_NAMES,
       );
+      const ledgerId = ledgerIdOf(params);
+      const removals = resolveFlagAlias(
+        { primary: body.remove_includes, legacy: body.removeIncludes },
+        REMOVE_INCLUDES_NAMES,
+      )
+        ? await planIncludeRemovals({
+            ...repoServiceFileAccess(
+              layers.services.ledgerRepo,
+              ledgerId,
+              identity,
+            ),
+            deletedPaths: [params.path],
+          })
+        : [];
       const write = {
-        ledgerId: ledgerIdOf(params),
+        ledgerId,
         identity,
         operations: [
           {
@@ -278,6 +298,12 @@ export const FILE_ROUTES = [
             path: params.path,
             ...(body.sha ? { sha: body.sha } : {}),
           },
+          ...removals.map(({ path, content, sha }) => ({
+            operation: "update" as const,
+            path,
+            content,
+            ...(sha ? { sha } : {}),
+          })),
         ],
         message:
           resolveCommitMessage(body, { required: false }) ||
@@ -288,7 +314,10 @@ export const FILE_ROUTES = [
         layers.services,
         identity,
         write.ledgerId,
-        [{ path: params.path, content: null }],
+        [
+          { path: params.path, content: null },
+          ...removals.map(({ path, content }) => ({ path, content })),
+        ],
         resolveFlagAlias(
           { primary: body.allow_invalid, legacy: body.allowInvalid },
           ALLOW_INVALID_NAMES,

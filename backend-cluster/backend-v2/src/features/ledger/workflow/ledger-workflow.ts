@@ -131,6 +131,7 @@ import {
 import {
   deleteGuardFileAccess,
   findDanglingDeleteIncluders,
+  planIncludeRemovals,
   refuseDanglingDeletes,
   scanLedgerBeanFiles,
 } from "@/features/ledger/utils/include-references";
@@ -1126,11 +1127,43 @@ export class LedgerWorkflow implements ILedgerWorkflow {
       ledgerId,
       userId,
     );
+    const access = deleteGuardFileAccess(
+      favaApiClient,
+      ledgerOwner,
+      ledgerName,
+    );
+    if (input.removeIncludes) {
+      // The exact include lines go in the delete's own commit, rewritten by
+      // the planner the REST and MCP paths share.
+      const removals = await planIncludeRemovals({
+        ...access,
+        deletedPaths: [input.path],
+      });
+      if (removals.length > 0) {
+        await unwrapFavaResponse(
+          favaApiClient.ledgers.changeLedgerFiles(ledgerOwner, ledgerName, {
+            files: [
+              { operation: "delete", path: input.path, sha: input.sha },
+              ...removals.map(({ path, content, sha }) => ({
+                operation: "update" as const,
+                path,
+                content: Buffer.from(content, "utf-8").toString("base64"),
+                sha,
+              })),
+            ],
+            message: input.message ?? `Delete ${input.path}`,
+          }),
+          "delete ledger file",
+          (cause) => operationNotAllowedFromCause("delete ledger file", cause),
+        );
+        return { path: input.path };
+      }
+    }
     // The same guard as the repo-service path (w23/m4/t002): deleting a
     // still-included file refuses naming the includers.
     refuseDanglingDeletes(
       await findDanglingDeleteIncluders({
-        ...deleteGuardFileAccess(favaApiClient, ledgerOwner, ledgerName),
+        ...access,
         deletedPaths: [input.path],
       }),
     );

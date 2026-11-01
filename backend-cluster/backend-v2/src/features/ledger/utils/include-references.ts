@@ -7,7 +7,9 @@
  * extracted verbatim from the rename guard so the two cannot drift, and both
  * delete paths share the scan, the Fava reads, and the refusal below.
  */
-import { decodeFileContent } from "@/shared/file-content";
+import { assertWritableText, decodeFileContent } from "@/shared/file-content";
+import type { Identity } from "@/server/api/identity";
+import type { ILedgerRepoService } from "@/features/ledger/service/ledger-repo-service";
 import { BadUserInputError } from "@/shared/errors";
 import { type FavaApiClient, unwrapFavaResponse } from "@/foundation/fava";
 import { operationNotAllowedFromCause } from "./operation-not-allowed-from-cause";
@@ -34,7 +36,9 @@ export const DELETE_INCLUDE_GUARD_DESCRIPTION =
   "`BAD_USER_INPUT` naming the includers; remove the include from the " +
   "including file(s) first, then delete. An include counts when its target " +
   "resolves to the deleted path the way the ledger loads it, relative to " +
-  "the directory of the file that declares it, and glob includes never count.";
+  "the directory of the file that declares it, and glob includes never count. " +
+  "`removeIncludes` (alias `remove_includes`) drops those exact include " +
+  "lines in the same commit; globs stay.";
 
 /**
  * The batch half of the delete guard, for callers that mix operations in
@@ -98,6 +102,9 @@ export interface LedgerFileContent {
   path: string;
   content?: string | null;
   encoding?: string | null;
+  sha?: string | null;
+  /** Set when the reader already knows the text is not valid UTF-8. */
+  lossy?: boolean;
 }
 
 /**
@@ -196,6 +203,82 @@ export async function findDanglingDeleteIncluders(opts: {
     }
   }
   return dangling;
+}
+
+/** `content` without the exact `include` lines that resolve into `deleted`. */
+function stripIncludeLines(
+  includerPath: string,
+  content: string,
+  deleted: ReadonlySet<string>,
+): string {
+  return content
+    .split("\n")
+    .filter((line) => {
+      const include = parseIncludeLine(line);
+      if (!include || isUrlTarget(include.target)) return true;
+      const resolved = resolveIncludeTarget(includerPath, include.target);
+      return isGlobPattern(resolved) || !deleted.has(resolved);
+    })
+    .join("\n");
+}
+
+export interface IncludeRemoval {
+  path: string;
+  /** The includer's new plain UTF-8 text, the exact include lines dropped. */
+  content: string;
+  sha?: string;
+}
+
+/**
+ * The rewrites that let a delete go through (`removeIncludes`): each
+ * surviving file with an exact `include` of a deleted path, minus those
+ * lines. Glob includes are left alone — removing one would affect the other
+ * files it matches. Commit these with the delete in one batch.
+ */
+export async function planIncludeRemovals(opts: {
+  listDir: Parameters<typeof findDanglingDeleteIncluders>[0]["listDir"];
+  readFiles: Parameters<typeof findDanglingDeleteIncluders>[0]["readFiles"];
+  deletedPaths: ReadonlySet<string> | ReadonlyArray<string>;
+}): Promise<IncludeRemoval[]> {
+  const deleted = new Set(opts.deletedPaths);
+  const dangling = await findDanglingDeleteIncluders({
+    ...opts,
+    deletedPaths: deleted,
+  });
+  const includers = [...new Set([...dangling.values()].flat())].sort();
+  if (includers.length === 0) return [];
+  const files = await opts.readFiles(includers);
+  return (files ?? []).map((file) => {
+    const decoded = decodeFileContent(file);
+    // A rewrite re-encodes the whole including file (w23/030).
+    assertWritableText(
+      { path: file.path, lossy: decoded.lossy || file.lossy },
+      "removeIncludes",
+    );
+    return {
+      path: file.path,
+      content: stripIncludeLines(file.path, decoded.content, deleted),
+      ...(file.sha ? { sha: file.sha } : {}),
+    };
+  });
+}
+
+/** The tree reads {@link planIncludeRemovals} needs, over the repo service. */
+export function repoServiceFileAccess(
+  ledgerRepo: ILedgerRepoService,
+  ledgerId: string,
+  identity: Identity,
+): Pick<Parameters<typeof planIncludeRemovals>[0], "listDir" | "readFiles"> {
+  return {
+    listDir: (dir) =>
+      ledgerRepo.listDirContent({
+        ledgerId,
+        identity,
+        ...(dir === undefined ? {} : { dirPath: dir }),
+      }),
+    readFiles: (paths) =>
+      ledgerRepo.getFilesContent({ ledgerId, identity, paths }),
+  };
 }
 
 /**

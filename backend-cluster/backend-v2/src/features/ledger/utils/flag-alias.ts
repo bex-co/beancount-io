@@ -21,6 +21,12 @@ export const ALLOW_INVALID_NAMES = {
   legacy: "allowInvalid",
 } as const;
 
+/** The delete's opt-in to drop the exact `include` lines that reach it. */
+export const REMOVE_INCLUDES_NAMES = {
+  primary: "remove_includes",
+  legacy: "removeIncludes",
+} as const;
+
 export function resolveFlagAlias(
   values: { primary?: boolean | null; legacy?: boolean | null },
   names: { primary: string; legacy: string },

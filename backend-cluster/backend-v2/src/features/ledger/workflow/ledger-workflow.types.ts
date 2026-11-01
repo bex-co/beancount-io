@@ -78,6 +78,8 @@ export interface DeleteLedgerFileCommand {
   path: string;
   sha: string;
   message?: string;
+  /** Drop the exact `include` lines that reach the file, in the same commit. */
+  removeIncludes?: boolean | null;
 }
 
 export interface RenameLedgerFileCommand {

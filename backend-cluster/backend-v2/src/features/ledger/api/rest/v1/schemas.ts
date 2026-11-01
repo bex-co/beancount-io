@@ -61,6 +61,17 @@ export const dryRunBody = {
   }),
 };
 
+/** The delete's `removeIncludes` twins, spread into the file delete body. */
+export const removeIncludesBody = {
+  removeIncludes: nullToUndefined(z.boolean()).optional().openapi({
+    description:
+      "Also drop the exact `include` lines of other ledger files that reach this file, in the same commit. Without it, deleting an included file is refused. Glob includes are left as they are.",
+  }),
+  remove_includes: nullToUndefined(z.boolean()).optional().openapi({
+    description: "Alias of removeIncludes, as MCP spells it.",
+  }),
+};
+
 /**
  * The ledger's projection check for a structured write, flat as the append
  * result publishes it: the error counts before and after plus the errors

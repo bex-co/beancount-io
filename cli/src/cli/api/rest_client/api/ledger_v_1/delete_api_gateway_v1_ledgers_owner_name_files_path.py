@@ -123,10 +123,11 @@ def sync_detailed(
     is refused as `BAD_USER_INPUT` naming the includers; remove the include from the including file(s)
     first, then delete. An include counts when its target resolves to the deleted path the way the
     ledger loads it, relative to the directory of the file that declares it, and glob includes never
-    count. `dryRun` previews without committing: same checks, no commit. Like entry writes, a change
-    that would add bean-check errors the ledger did not have is refused with VALIDATION_FAILED naming
-    each (`dryRun` refuses it too); `allowInvalid` commits it deliberately, e.g. one step of a multi-
-    step edit. Errors the ledger already had never block.
+    count. `removeIncludes` (alias `remove_includes`) drops those exact include lines in the same
+    commit; globs stay. `dryRun` previews without committing: same checks, no commit. Like entry writes,
+    a change that would add bean-check errors the ledger did not have is refused with VALIDATION_FAILED
+    naming each (`dryRun` refuses it too); `allowInvalid` commits it deliberately, e.g. one step of a
+    multi-step edit. Errors the ledger already had never block.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -171,10 +172,11 @@ def sync(
     is refused as `BAD_USER_INPUT` naming the includers; remove the include from the including file(s)
     first, then delete. An include counts when its target resolves to the deleted path the way the
     ledger loads it, relative to the directory of the file that declares it, and glob includes never
-    count. `dryRun` previews without committing: same checks, no commit. Like entry writes, a change
-    that would add bean-check errors the ledger did not have is refused with VALIDATION_FAILED naming
-    each (`dryRun` refuses it too); `allowInvalid` commits it deliberately, e.g. one step of a multi-
-    step edit. Errors the ledger already had never block.
+    count. `removeIncludes` (alias `remove_includes`) drops those exact include lines in the same
+    commit; globs stay. `dryRun` previews without committing: same checks, no commit. Like entry writes,
+    a change that would add bean-check errors the ledger did not have is refused with VALIDATION_FAILED
+    naming each (`dryRun` refuses it too); `allowInvalid` commits it deliberately, e.g. one step of a
+    multi-step edit. Errors the ledger already had never block.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -214,10 +216,11 @@ async def asyncio_detailed(
     is refused as `BAD_USER_INPUT` naming the includers; remove the include from the including file(s)
     first, then delete. An include counts when its target resolves to the deleted path the way the
     ledger loads it, relative to the directory of the file that declares it, and glob includes never
-    count. `dryRun` previews without committing: same checks, no commit. Like entry writes, a change
-    that would add bean-check errors the ledger did not have is refused with VALIDATION_FAILED naming
-    each (`dryRun` refuses it too); `allowInvalid` commits it deliberately, e.g. one step of a multi-
-    step edit. Errors the ledger already had never block.
+    count. `removeIncludes` (alias `remove_includes`) drops those exact include lines in the same
+    commit; globs stay. `dryRun` previews without committing: same checks, no commit. Like entry writes,
+    a change that would add bean-check errors the ledger did not have is refused with VALIDATION_FAILED
+    naming each (`dryRun` refuses it too); `allowInvalid` commits it deliberately, e.g. one step of a
+    multi-step edit. Errors the ledger already had never block.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -260,10 +263,11 @@ async def asyncio(
     is refused as `BAD_USER_INPUT` naming the includers; remove the include from the including file(s)
     first, then delete. An include counts when its target resolves to the deleted path the way the
     ledger loads it, relative to the directory of the file that declares it, and glob includes never
-    count. `dryRun` previews without committing: same checks, no commit. Like entry writes, a change
-    that would add bean-check errors the ledger did not have is refused with VALIDATION_FAILED naming
-    each (`dryRun` refuses it too); `allowInvalid` commits it deliberately, e.g. one step of a multi-
-    step edit. Errors the ledger already had never block.
+    count. `removeIncludes` (alias `remove_includes`) drops those exact include lines in the same
+    commit; globs stay. `dryRun` previews without committing: same checks, no commit. Like entry writes,
+    a change that would add bean-check errors the ledger did not have is refused with VALIDATION_FAILED
+    naming each (`dryRun` refuses it too); `allowInvalid` commits it deliberately, e.g. one step of a
+    multi-step edit. Errors the ledger already had never block.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
