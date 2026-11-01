@@ -559,3 +559,15 @@ def test_end_to_end_via_plugin_directive() -> None:
         datetime.date(2014, 4, 8),
         datetime.date(2014, 5, 8),
     }
+
+
+@pytest.mark.parametrize("newline", ["\n", "\r\n"], ids=["lf", "crlf"])
+def test_marker_after_a_multiline_narration_expands(newline: str) -> None:
+    source = (
+        textwrap.dedent(OPENS)
+        + f'2024-01-05 # "Rent{newline}apartment [MONTHLY REPEAT 3 TIMES]"\n'
+        + "  Expenses:Rent  100.00 USD\n  Assets:Checking\n"
+    )
+    txns = _txns(_run(source))
+    assert [t.date for t in txns] == [datetime.date(2024, m, 5) for m in (1, 2, 3)]
+    assert all(t.narration == f"Rent{newline}apartment" for t in txns)

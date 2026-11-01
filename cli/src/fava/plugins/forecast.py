@@ -72,7 +72,9 @@ _MARKER = re.compile(
     r"(?:\s+SKIP\s+(?P<skip>[1-9]\d*)\s+TIMES?)?"
     r"(?:\s+REPEAT\s+(?P<repeat>[1-9]\d*)\s+TIMES?)?"
     r"(?:\s+UNTIL\s+(?P<until>[\d-]+))?"
-    r"\]"
+    r"\]",
+    # An existing multiline narration is valid input; its marker still counts.
+    re.DOTALL,
 )
 
 
