@@ -40,6 +40,7 @@ export {
   InternalServerError,
   ServiceUnavailableError,
   ResourceLimitReachedError,
+  BilledByStoreError,
   OperationNotAllowedError,
   PremiumRequiredError,
   UnbalancedTransactionError,

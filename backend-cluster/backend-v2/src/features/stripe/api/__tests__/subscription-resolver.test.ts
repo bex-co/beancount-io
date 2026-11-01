@@ -40,6 +40,7 @@ describe("SubscriptionResolver", () => {
     defaultCard: jest.Mock;
   };
   let mockModels: {
+    storeSubscription: { findByUserId: jest.Mock };
     user: {
       getById: jest.Mock;
     };
@@ -68,6 +69,7 @@ describe("SubscriptionResolver", () => {
     };
 
     mockModels = {
+      storeSubscription: { findByUserId: jest.fn().mockResolvedValue([]) },
       user: {
         getById: jest.fn(),
       },
@@ -93,7 +95,10 @@ describe("SubscriptionResolver", () => {
 
     const subscriptions = new SubscriptionService(
       mockStripeService as unknown as IStripeService,
-      mockModels as unknown as Pick<IModels, "paidCustomer" | "user">,
+      mockModels as unknown as Pick<
+        IModels,
+        "paidCustomer" | "user" | "storeSubscription"
+      >,
       {} as DbExecutor,
       new AuthorizationService({
         check: async ({ user, object }) => user === object,

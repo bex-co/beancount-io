@@ -159,7 +159,13 @@ export type NewLedgerErrorsWrite =
 
 const NEW_LEDGER_ERRORS_WORDING: Record<
   NewLedgerErrorsWrite,
-  { field: string; subject: string; valid: string; invalid: string; fix: string }
+  {
+    field: string;
+    subject: string;
+    valid: string;
+    invalid: string;
+    fix: string;
+  }
 > = {
   text: {
     field: "text",
@@ -389,6 +395,26 @@ export class PremiumRequiredError extends DomainError {
       ErrorCategory.PREMIUM_REQUIRED,
       message,
       feature ? { feature } : undefined,
+    );
+  }
+}
+
+/**
+ * Thrown when a Stripe plan action is refused because a store subscription
+ * will renew: an account has one renewing source (ADR 001 D5).
+ *
+ * Category: BILLED_BY_STORE (HTTP 409). `provider` lets a client name the
+ * store and say where the plan is managed.
+ *
+ * @example
+ * throw new BilledByStoreError("APP_STORE", "the App Store");
+ */
+export class BilledByStoreError extends DomainError {
+  constructor(provider: string, storeName: string) {
+    super(
+      ErrorCategory.BILLED_BY_STORE,
+      `This plan is billed through ${storeName}, so it is managed there.`,
+      { provider },
     );
   }
 }

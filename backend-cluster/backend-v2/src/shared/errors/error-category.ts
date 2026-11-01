@@ -49,6 +49,9 @@ export enum ErrorCategory {
 
   /** Premium subscription required to access this feature */
   PREMIUM_REQUIRED = "PREMIUM_REQUIRED",
+
+  /** A store bills this account's plan, so Stripe cannot change it (ADR 001) */
+  BILLED_BY_STORE = "BILLED_BY_STORE",
 }
 
 /**
@@ -73,4 +76,5 @@ export const CATEGORY_HTTP_STATUS: Record<ErrorCategory, number> = {
   [ErrorCategory.PREMIUM_REQUIRED]: 402,
   [ErrorCategory.UNBALANCED]: 400,
   [ErrorCategory.CONFIGURATION_ERROR]: 500,
+  [ErrorCategory.BILLED_BY_STORE]: 409,
 };

@@ -35,6 +35,7 @@ function setup(result: object) {
     { changePlan: jest.fn(async () => result), getStripeInstance } as never,
     {
       user: { getById: async () => ({ email: "subscriber@example.test" }) },
+      storeSubscription: { findByUserId: async () => [] },
     } as never,
     {} as never,
     { authorizeOrThrow: jest.fn(async () => undefined) } as never,

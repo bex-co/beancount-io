@@ -140,7 +140,7 @@ Both values are stored rather than derived, because notifications arrive carryin
 - **Billing source** is the source whose subscription will renew.
 - **One renewing source per account.** Every purchase entry point (Web Checkout and plan changes, the in-app plan sheet) is offered only when no other source is set to renew.
 - **Server-side guard.** Each Stripe verb that would create or change a subscription refuses with a typed `BILLED_BY_STORE` error while a store subscription will renew: `createSubscriptionSession`, `upgradeSubscription`, `previewPlanChange`, `changePlan`, and `resumeSubscription`. The UI hides these verbs too, but the server enforces the rule.
-- **Customer Portal.** `createStripePortalSession` opens Stripe's own pages, out of the guard's reach. While a store subscription will renew, the session uses a portal configuration that offers payment methods, invoices, and cancellation only, without plan changes or resume.
+- **Customer Portal.** It needs no guard. Every portal session passes the pinned `portalConfigurationId`, which offers payment methods, invoices, and billing details and disables subscription update and cancellation (PRFAQ005 question 17).
 - **Duplicates.** A store purchase cannot be refused after the fact, because the store has already taken payment. When a store purchase arrives while another source renews:
   - it is accepted, and the highest tier applies;
   - the account is flagged as having duplicate billing;
@@ -329,14 +329,14 @@ What a subscriber sees depends on three things: which source bills them (none, S
    - **Google Play:** Play's in-app messages, plus a banner that opens Play's subscriptions page. The Web shows the same link.
    - **Access during the problem:** a grace period keeps the plan; Google's account hold removes it (D4).
 8. **Refunds** go through the source: Apple's refund request, Google Play, or Stripe, where PRFAQ005 grants none. The plan ends at the refund time (D11), and every surface shows Free with a neutral note.
-9. **Paying twice** (D5). Every surface shows a banner naming both sources. Each surface offers the cancel action it is allowed to (the Customer Portal, Apple's sheet, or Play's page) and names the other source in text.
+9. **Paying twice** (D5). Every surface shows a banner naming both sources. Each surface offers the cancel action it is allowed to (cancelling in the Billing tab, Apple's sheet, or Play's page) and names the other source in text.
 10. **A purchase owned by another account** (D9). Restore names the other account by its masked email and offers support. Nothing moves silently.
 11. **Account deletion** (D10). Stripe and Google Play renewals are cancelled automatically. An Apple subscription cannot be, so the user is warned and offered Apple's sheet first.
 12. **Store price increases.** Both stores ask existing subscribers to accept a higher price, so the apps let those prompts show. A declined increase ends the plan at the end of the period, like a cancellation.
 
 ## Rollout Plan
 
-1. **Backend, with no visible change.** Add the D4 tables, store verification and notification endpoints (sandbox first), the merged `getUserTier`, the `BILLED_BY_STORE` guard and the restricted portal configuration, the extended `subscriptionStatus`, the limit errors' plan owner, and the new verbs with authz and parity entries. With no store rows, every user's tier is unchanged.
+1. **Backend, with no visible change.** Add the D4 tables, store verification and notification endpoints (sandbox first), the merged `getUserTier`, the `BILLED_BY_STORE` guard, the extended `subscriptionStatus`, the limit errors' plan owner, and the new verbs with authz and parity entries. With no store rows, every user's tier is unchanged.
 2. **Store setup.**
    - App Store Connect: the Paid Apps agreement and tax and banking details; one subscription group with the six products at the D6 levels, plus review screenshots and notes; notification URLs for production and sandbox.
    - Play Console: the payments profile; three subscriptions with two base plans each; the RTDN Pub/Sub topic; service-account permission to view financial data and manage orders and subscriptions; license testers.

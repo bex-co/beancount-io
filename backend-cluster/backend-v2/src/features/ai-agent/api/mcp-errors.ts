@@ -107,6 +107,8 @@ const CATEGORY_HINTS: Record<ErrorCategory, string> = {
     "The deployment is missing configuration this operation needs. Nothing about the request will fix it.",
   [ErrorCategory.PREMIUM_REQUIRED]:
     "This operation is not available for the account the credential belongs to.",
+  [ErrorCategory.BILLED_BY_STORE]:
+    "The account's plan is managed in the store that bills it.",
 };
 
 /**

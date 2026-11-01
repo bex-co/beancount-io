@@ -48,6 +48,7 @@ function makeDeps() {
   };
   const models = {
     user: { getById: jest.fn(async () => ({ email: "alice@example.com" })) },
+    storeSubscription: { findByUserId: jest.fn(async () => []) },
     paidCustomer: {
       findByUserIdWithActivePeriod: jest.fn(async () => ({
         currentPeriodEnd: new Date(Date.now() + 60_000),
@@ -67,7 +68,10 @@ function makeService(
   return {
     service: new SubscriptionService(
       deps.stripe as unknown as IStripeService,
-      deps.models as unknown as Pick<IModels, "paidCustomer" | "user">,
+      deps.models as unknown as Pick<
+        IModels,
+        "paidCustomer" | "user" | "storeSubscription"
+      >,
       {} as DbExecutor,
       authorization,
     ),

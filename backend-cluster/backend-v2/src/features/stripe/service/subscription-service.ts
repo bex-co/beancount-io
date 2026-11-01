@@ -15,6 +15,9 @@ import {
   type IAuthorizationService,
   userResource,
 } from "@/server/api/authorization";
+import { STORE_NAMES } from "@/features/store-billing/service/store-catalog";
+import { renewsFromStore } from "@/features/store-billing/service/store-subscription-grant";
+import { BilledByStoreError } from "@/shared/errors";
 import { logger } from "@/shared/logger";
 import { SUBSCRIPTION_CONFIG, TIER_LIMITS, SubscriptionTier } from "./stripe";
 import type { CancellationReason, IStripeService } from "./stripe-service";
@@ -232,7 +235,10 @@ function checkoutCancelUrl(
 export class SubscriptionService implements ISubscriptionService {
   constructor(
     private readonly stripe: IStripeService,
-    private readonly models: Pick<IModels, "paidCustomer" | "user">,
+    private readonly models: Pick<
+      IModels,
+      "paidCustomer" | "user" | "storeSubscription"
+    >,
     private readonly db: DbExecutor,
     private readonly authorization: IAuthorizationService,
     /** Without it, a scheduled change sends no confirmation email. */
@@ -279,6 +285,21 @@ export class SubscriptionService implements ISubscriptionService {
       action,
       resource: userResource(identity.userId),
     });
+  }
+
+  /** One renewing source per account: Stripe cannot sell over a store (D5). */
+  private async refuseWhileStoreRenews(userId: string): Promise<void> {
+    const subscriptions = await this.models.storeSubscription.findByUserId(
+      this.db,
+      userId,
+    );
+    const renewing = subscriptions.find(renewsFromStore);
+    if (renewing) {
+      throw new BilledByStoreError(
+        renewing.provider,
+        STORE_NAMES[renewing.provider],
+      );
+    }
   }
 
   public async allTierQuotas(): Promise<TierQuotaView[]> {
@@ -454,6 +475,7 @@ export class SubscriptionService implements ISubscriptionService {
       AUTHORIZATION_ACTIONS.USER_BILLING_CHECKOUT_CREATE,
     );
     const { userId } = identity;
+    await this.refuseWhileStoreRenews(userId);
 
     try {
       const clientConfig =
@@ -594,6 +616,7 @@ export class SubscriptionService implements ISubscriptionService {
       identity,
       AUTHORIZATION_ACTIONS.USER_BILLING_SUBSCRIPTION_RESUME,
     );
+    await this.refuseWhileStoreRenews(identity.userId);
     return this.stripe.resumeSubscription(
       subscriptionId,
       identity.userId,
@@ -610,6 +633,7 @@ export class SubscriptionService implements ISubscriptionService {
       identity,
       AUTHORIZATION_ACTIONS.USER_BILLING_SUBSCRIPTION_UPGRADE,
     );
+    await this.refuseWhileStoreRenews(identity.userId);
     return this.stripe.upgradeSubscription(identity.userId, clientId, priceId);
   }
 
@@ -622,6 +646,7 @@ export class SubscriptionService implements ISubscriptionService {
       identity,
       AUTHORIZATION_ACTIONS.USER_BILLING_PLAN_CHANGE_PREVIEW,
     );
+    await this.refuseWhileStoreRenews(identity.userId);
     return this.stripe.previewPlanChange(identity.userId, clientId, priceId);
   }
 
@@ -635,6 +660,7 @@ export class SubscriptionService implements ISubscriptionService {
       identity,
       AUTHORIZATION_ACTIONS.USER_BILLING_PLAN_CHANGE_APPLY,
     );
+    await this.refuseWhileStoreRenews(identity.userId);
     const { scheduledNotice, ...result } = await this.stripe.changePlan(
       identity.userId,
       clientId,

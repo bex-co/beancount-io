@@ -241,7 +241,10 @@ function statusService() {
   const stripe = { listSubscriptions: jest.fn(load) };
   const service = new SubscriptionService(
     stripe as any,
-    { paidCustomer: model } as any,
+    {
+      paidCustomer: model,
+      storeSubscription: { findByUserId: async () => [] },
+    } as any,
     db,
     new AuthorizationService({
       check: async ({ user, object }) => user === object,

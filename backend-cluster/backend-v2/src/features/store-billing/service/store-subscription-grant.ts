@@ -9,6 +9,12 @@ const GRANTING_STATUSES: ReadonlySet<StoreSubscriptionStatus> = new Set([
   StoreSubscriptionStatus.GRACE,
 ]);
 
+/** A held subscription still renews once its payment recovers. */
+const RENEWING_STATUSES: ReadonlySet<StoreSubscriptionStatus> = new Set([
+  ...GRANTING_STATUSES,
+  StoreSubscriptionStatus.ON_HOLD,
+]);
+
 /**
  * The tier a stored subscription grants at `now`, or null when it grants
  * nothing (ADR 001 D4). A row needs an owner, a granting status, access that
@@ -23,4 +29,26 @@ export function grantedTier(
   if (!GRANTING_STATUSES.has(status)) return null;
   if (accessEndsAt === null || now >= accessEndsAt) return null;
   return tier;
+}
+
+/** Whether the store will bill this subscription again (ADR 001 D5). */
+export function renewsFromStore(subscription: StoreSubscription): boolean {
+  return (
+    subscription.willRenew &&
+    subscription.replacedById === null &&
+    RENEWING_STATUSES.has(subscription.status)
+  );
+}
+
+/**
+ * Whether more than one subscription is set to renew, which a user pays for
+ * twice. A store cannot refuse a purchase after taking payment, so this is
+ * reported rather than prevented (D5).
+ */
+export function hasDuplicateBilling(
+  storeSubscriptions: StoreSubscription[],
+  renewingStripeSubscriptions: number,
+): boolean {
+  const renewingFromStores = storeSubscriptions.filter(renewsFromStore).length;
+  return renewingFromStores + renewingStripeSubscriptions > 1;
 }

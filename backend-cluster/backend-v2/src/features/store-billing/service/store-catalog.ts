@@ -12,6 +12,12 @@ import {
 } from "@/features/stripe/service/stripe";
 import { StoreProvider } from "../data/store-subscription-model";
 
+/** Each store as a sentence names it. */
+export const STORE_NAMES: Record<StoreProvider, string> = {
+  [StoreProvider.APP_STORE]: "the App Store",
+  [StoreProvider.GOOGLE_PLAY]: "Google Play",
+};
+
 export interface StorePlan {
   tier: SubscriptionTier;
   interval: BillingInterval;

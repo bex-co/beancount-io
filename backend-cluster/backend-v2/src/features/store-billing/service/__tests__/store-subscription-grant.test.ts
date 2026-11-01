@@ -5,7 +5,11 @@ import {
   type StoreSubscription,
   StoreSubscriptionStatus,
 } from "../../data/store-subscription-model";
-import { grantedTier } from "../store-subscription-grant";
+import {
+  grantedTier,
+  hasDuplicateBilling,
+  renewsFromStore,
+} from "../store-subscription-grant";
 
 const NOW = new Date("2026-11-01T12:00:00Z");
 const LATER = new Date("2026-12-01T12:00:00Z");
@@ -89,5 +93,56 @@ describe("grantedTier (ADR 001 D4)", () => {
 
   it("grants nothing for a product outside the catalog", () => {
     expect(grantedTier(subscription({ tier: null }), NOW)).toBeNull();
+  });
+});
+
+describe("renewsFromStore (ADR 001 D5)", () => {
+  it.each([
+    StoreSubscriptionStatus.ACTIVE,
+    StoreSubscriptionStatus.GRACE,
+    StoreSubscriptionStatus.ON_HOLD,
+  ])("counts a %s row set to renew", (status) => {
+    expect(renewsFromStore(subscription({ status }))).toBe(true);
+  });
+
+  it.each([
+    StoreSubscriptionStatus.PENDING,
+    StoreSubscriptionStatus.EXPIRED,
+    StoreSubscriptionStatus.REVOKED,
+    StoreSubscriptionStatus.UNKNOWN,
+  ])("does not count a %s row", (status) => {
+    expect(renewsFromStore(subscription({ status }))).toBe(false);
+  });
+
+  it("does not count a row with renewal turned off", () => {
+    expect(renewsFromStore(subscription({ willRenew: false }))).toBe(false);
+  });
+
+  it("does not count a row a newer purchase replaced", () => {
+    expect(renewsFromStore(subscription({ replacedById: "ssub_newer" }))).toBe(
+      false,
+    );
+  });
+});
+
+describe("hasDuplicateBilling (ADR 001 D5)", () => {
+  const renewing = subscription();
+  const ending = subscription({ willRenew: false });
+
+  it("flags a store and Stripe subscription that both renew", () => {
+    expect(hasDuplicateBilling([renewing], 1)).toBe(true);
+  });
+
+  it("flags two renewing store subscriptions", () => {
+    expect(hasDuplicateBilling([renewing, renewing], 0)).toBe(true);
+  });
+
+  it.each([
+    ["a store subscription alone", [renewing], 0],
+    ["a Stripe subscription alone", [], 1],
+    ["a store plan that is ending beside Stripe", [ending], 1],
+    ["neither source", [], 0],
+  ])("does not flag %s", (_, rows, stripeRenewals) => {
+    expect(hasDuplicateBilling(rows, stripeRenewals)).toBe(false);
   });
 });
