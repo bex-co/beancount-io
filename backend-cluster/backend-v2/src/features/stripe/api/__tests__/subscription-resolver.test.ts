@@ -313,6 +313,133 @@ describe("SubscriptionResolver", () => {
       },
     );
 
+    describe("billing (ADR 001 D13)", () => {
+      const billingQuery = `query { subscriptionStatus { billing {
+        source duplicateBilling
+        store {
+          provider productId tier interval status accessEndsAt willRenew
+          managementUrl scheduledChange { tier interval }
+        }
+      } } }`;
+      const accessEndsAt = new Date(Date.now() + 86_400_000);
+      const googlePlan = {
+        provider: "GOOGLE_PLAY",
+        productId: "growth",
+        basePlanId: "monthly",
+        tier: "GROWTH",
+        cycle: "month",
+        status: "ACTIVE",
+        userId: "user-123",
+        replacedById: null,
+        pendingProductId: "premium",
+        accessEndsAt,
+        willRenew: true,
+      };
+      const readBilling = async () => {
+        const result = await graphql({
+          schema: await graphqlSchema,
+          source: billingQuery,
+          contextValue: {
+            ...mockContext,
+            identity: mockContext.getCurrentIdentity(),
+          },
+        });
+        expect(result.errors).toBeUndefined();
+        return (result.data?.subscriptionStatus as { billing: unknown })
+          .billing;
+      };
+
+      it("reports no billing source for a free account", async () => {
+        mockStripeService.listSubscriptions.mockResolvedValue([]);
+
+        expect(await readBilling()).toEqual({
+          source: "NONE",
+          duplicateBilling: false,
+          store: null,
+        });
+      });
+
+      it("reports Stripe for a Stripe subscriber", async () => {
+        mockStripeService.listSubscriptions.mockResolvedValue([
+          liveSubscription("active"),
+        ]);
+
+        expect(await readBilling()).toEqual({
+          source: "STRIPE",
+          duplicateBilling: false,
+          store: null,
+        });
+      });
+
+      it("reports a store subscription and where it is managed", async () => {
+        mockStripeService.listSubscriptions.mockResolvedValue([]);
+        mockModels.storeSubscription.findByUserId.mockResolvedValue([
+          googlePlan,
+        ]);
+
+        expect(await readBilling()).toEqual({
+          source: "GOOGLE_PLAY",
+          duplicateBilling: false,
+          store: {
+            provider: "GOOGLE_PLAY",
+            productId: "growth",
+            tier: "GROWTH",
+            interval: "month",
+            status: "ACTIVE",
+            accessEndsAt: accessEndsAt.toISOString(),
+            willRenew: true,
+            managementUrl:
+              "https://play.google.com/store/account/subscriptions?sku=growth&package=io.beancount.android",
+            scheduledChange: { tier: "PREMIUM", interval: "month" },
+          },
+        });
+      });
+
+      it("flags an account billed by Stripe and a store at once", async () => {
+        mockStripeService.listSubscriptions.mockResolvedValue([
+          liveSubscription("active"),
+        ]);
+        mockModels.storeSubscription.findByUserId.mockResolvedValue([
+          googlePlan,
+        ]);
+
+        expect(await readBilling()).toMatchObject({
+          source: "GOOGLE_PLAY",
+          duplicateBilling: true,
+        });
+      });
+
+      it("does not count a Stripe plan set to end as renewing", async () => {
+        mockStripeService.listSubscriptions.mockResolvedValue([
+          liveSubscription("active", { cancel_at_period_end: true }),
+        ]);
+        mockModels.storeSubscription.findByUserId.mockResolvedValue([
+          googlePlan,
+        ]);
+
+        expect(await readBilling()).toMatchObject({
+          source: "GOOGLE_PLAY",
+          duplicateBilling: false,
+        });
+      });
+
+      it("keeps the active-only check off the store rows", async () => {
+        mockModels.paidCustomer.findByUserIdWithActivePeriod.mockResolvedValue(
+          null,
+        );
+        mockStripeService.listSubscriptions.mockResolvedValue([]);
+
+        await resolver.subscriptionStatus(
+          mockContext,
+          selecting("hasActiveSubscription"),
+        );
+
+        expect(
+          mockModels.storeSubscription.findByUserId,
+        ).not.toHaveBeenCalled();
+      });
+    });
+
     it("gives a past-due subscription's next payment attempt for the banner", async () => {
       const retry = Math.floor(Date.now() / 1000) + 3 * 86_400;
       mockStripeService.listSubscriptions.mockResolvedValue([
@@ -491,6 +618,7 @@ describe("SubscriptionResolver", () => {
       expect(result).toEqual({
         hasActiveSubscription: false,
         subscriptions: [],
+        billing: { source: "NONE", duplicateBilling: false, store: null },
       });
       expect(
         mockModels.paidCustomer.findByUserIdWithActivePeriod,

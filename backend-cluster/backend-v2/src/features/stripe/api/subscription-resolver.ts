@@ -23,6 +23,8 @@ import type {
 } from "@/features/stripe/service/plan-change";
 import type { PlanChangeStatus } from "@/features/stripe/operations/plan-change-apply";
 import type { CancellationReason } from "@/features/stripe/service/stripe-service";
+import { StoreProvider } from "@/features/store-billing/data/store-subscription-model";
+import type { BillingSource } from "@/features/store-billing/service/plan-billing";
 import type { IContext } from "@/server/graphql/context";
 import { AllowAnonymous, Authenticated } from "@/server/graphql/authenticated";
 
@@ -175,13 +177,102 @@ class Subscription {
   latestInvoice?: SubscriptionInvoice | null;
 }
 
+const BillingSourceValues = {
+  NONE: "NONE",
+  STRIPE: "STRIPE",
+  APP_STORE: StoreProvider.APP_STORE,
+  GOOGLE_PLAY: StoreProvider.GOOGLE_PLAY,
+} satisfies Record<string, BillingSource>;
+registerEnumType(BillingSourceValues, {
+  name: "BillingSource",
+  description: "Who bills a plan, which is also where it is managed.",
+});
+
+@ObjectType("StorePlan")
+class StorePlan {
+  @Field()
+  tier!: string;
+
+  @Field()
+  interval!: string;
+}
+
+@ObjectType("StoreSubscriptionSummary")
+class StoreSubscriptionSummary {
+  @Field(() => BillingSourceValues)
+  provider!: BillingSource;
+
+  @Field()
+  productId!: string;
+
+  @Field({
+    nullable: true,
+    description: "Absent for a product outside the catalog.",
+  })
+  tier?: string;
+
+  @Field({ nullable: true })
+  interval?: string;
+
+  @Field()
+  status!: string;
+
+  @Field(() => Date, {
+    nullable: true,
+    description: "When the paid or grace period ends.",
+  })
+  accessEndsAt!: Date | null;
+
+  @Field()
+  willRenew!: boolean;
+
+  @Field(() => StorePlan, {
+    nullable: true,
+    description: "The plan the store moves to at the next renewal.",
+  })
+  scheduledChange!: StorePlan | null;
+
+  @Field(() => String, {
+    nullable: true,
+    description:
+      "The web page that manages this plan. Apple has none, so App Store plans are managed on the device.",
+  })
+  managementUrl!: string | null;
+}
+
+@ObjectType("PlanBilling")
+class PlanBilling {
+  @Field(() => BillingSourceValues)
+  source!: BillingSource;
+
+  @Field({
+    description:
+      "More than one subscription is set to renew, so the account pays twice.",
+  })
+  duplicateBilling!: boolean;
+
+  @Field(() => StoreSubscriptionSummary, {
+    nullable: true,
+    description: "The account's live store subscription, when it has one.",
+  })
+  store!: StoreSubscriptionSummary | null;
+}
+
 @ObjectType("CustomerSubscriptionStatus")
 class CustomerSubscriptionStatus {
-  @Field()
+  @Field({
+    description:
+      "Whether Stripe holds a paid subscription. A store plan is reported under `billing`.",
+  })
   hasActiveSubscription!: boolean;
 
   @Field(() => [Subscription])
   subscriptions!: Subscription[];
+
+  @Field(() => PlanBilling, {
+    description: "Who bills the account's plan, whichever source that is.",
+  })
+  billing?: PlanBilling;
 }
 
 @ObjectType("SubscriptionActionResult")

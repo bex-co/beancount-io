@@ -15,6 +15,10 @@ import {
   type IAuthorizationService,
   userResource,
 } from "@/server/api/authorization";
+import {
+  type PlanBilling,
+  planBilling,
+} from "@/features/store-billing/service/plan-billing";
 import { STORE_NAMES } from "@/features/store-billing/service/store-catalog";
 import { renewsFromStore } from "@/features/store-billing/service/store-subscription-grant";
 import { BilledByStoreError } from "@/shared/errors";
@@ -96,8 +100,11 @@ interface SubscriptionInvoiceView {
 }
 
 export interface CustomerSubscriptionStatusView {
+  /** Stripe's own answer; a store plan is reported under `billing`. */
   hasActiveSubscription: boolean;
   subscriptions: SubscriptionView[];
+  /** Absent only when `hasActiveSubscription` was the sole field requested. */
+  billing?: PlanBilling;
 }
 
 export interface SubscriptionActionResultView {
@@ -461,7 +468,23 @@ export class SubscriptionService implements ISubscriptionService {
       return [];
     });
 
-    return { hasActiveSubscription, subscriptions };
+    const stripePlans = filteredSubscriptions.filter(
+      (subscription) =>
+        subscriptionTier(subscription) !== SubscriptionTier.FREE,
+    );
+    const billing = planBilling(
+      await this.models.storeSubscription.findByUserId(this.db, userId),
+      {
+        held: stripePlans.length,
+        renewing: stripePlans.filter(
+          (subscription) =>
+            !subscription.cancel_at_period_end && !subscription.cancel_at,
+        ).length,
+      },
+      new Date(),
+    );
+
+    return { hasActiveSubscription, subscriptions, billing };
   }
 
   public async createSubscriptionSession(

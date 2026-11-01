@@ -12,6 +12,9 @@ import {
 } from "@/features/stripe/service/stripe";
 import { StoreProvider } from "../data/store-subscription-model";
 
+/** The Android app, as Google Play identifies it. */
+export const GOOGLE_PLAY_PACKAGE = "io.beancount.android";
+
 /** Each store as a sentence names it. */
 export const STORE_NAMES: Record<StoreProvider, string> = {
   [StoreProvider.APP_STORE]: "the App Store",
