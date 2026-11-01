@@ -149,6 +149,76 @@ describe("intervalTotals (periodic flows)", () => {
   });
 });
 
+describe("accountBalanceSeries through today (w21/1014)", () => {
+  const tx = (
+    date: string,
+    amount: string,
+    counter: string,
+  ): DirectiveJson => ({
+    type: "transaction",
+    date,
+    flag: "*",
+    narration: date,
+    tags: [],
+    links: [],
+    postings: [
+      { account: "Assets:Bank", units: { number: amount, currency: "USD" } },
+      { account: counter, units: { number: `-${amount}`, currency: "USD" } },
+    ],
+  });
+  const ledger = [
+    tx("2026-09-01", "10000", "Equity:Opening"),
+    tx("2026-10-28", "-3000", "Expenses:Rent"),
+    tx("2026-11-15", "-500", "Expenses:Food"),
+  ];
+
+  it("leaves out entries later in the current month, but not in later months", () => {
+    const rows = accountBalanceSeries(
+      ledger,
+      "month",
+      ["Assets"],
+      "USD",
+      usdMap,
+      undefined,
+      "2026-10-22",
+    );
+    expect(rows).toEqual([
+      { date: "2026-09-30", balance: { USD: "10000" } },
+      { date: "2026-10-31", balance: { USD: "10000" } },
+      { date: "2026-11-30", balance: { USD: "6500" } },
+    ]);
+  });
+
+  it("counts the entry once today reaches its date", () => {
+    const rows = accountBalanceSeries(
+      ledger,
+      "month",
+      ["Assets"],
+      "USD",
+      usdMap,
+      undefined,
+      "2026-10-28",
+    );
+    expect(rows[1]).toEqual({ date: "2026-10-31", balance: { USD: "7000" } });
+  });
+
+  it("changes nothing for a ledger with no entries after today", () => {
+    const rows = accountBalanceSeries(
+      ledger.slice(0, 2),
+      "month",
+      ["Assets"],
+      "USD",
+      usdMap,
+      undefined,
+      "2026-12-31",
+    );
+    expect(rows.at(-1)).toEqual({
+      date: "2026-10-31",
+      balance: { USD: "7000" },
+    });
+  });
+});
+
 describe("accountBalanceSeries (cumulative stock)", () => {
   it("accumulates end-of-interval balances", () => {
     const rows = accountBalanceSeries(

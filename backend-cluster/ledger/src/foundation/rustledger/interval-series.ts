@@ -3,6 +3,7 @@ import { BadUserInputError } from "@/shared/errors";
 import type { PriceMap } from "./price-map";
 import { LotInventory, parseConversion } from "./lot-inventory";
 import { utcDate } from "./utc-date";
+import { localTodayStr } from "./plugins";
 
 export interface DateBalance {
   date: string;
@@ -374,6 +375,9 @@ export function intervalTotals(
  * market valuation, but the Accounts tab's tree counts them, and Home's
  * Liabilities read $0.00 over an Accounts root of -250 (w21/888; the CLI's
  * series stopped filtering them in w5/083).
+ *
+ * The interval that holds `today` (the server's local date by default)
+ * counts only entries dated through today, valued at today.
  */
 export function accountBalanceSeries(
   directives: DirectiveJson[],
@@ -382,6 +386,7 @@ export function accountBalanceSeries(
   target: string,
   priceMap: PriceMap,
   window?: IntervalWindow,
+  today = localTodayStr(),
 ): DateBalance[] {
   const ranges = seriesRanges(directives, key, window);
   if (ranges.length === 0) return [];
@@ -393,8 +398,8 @@ export function accountBalanceSeries(
     .sort((a, b) => a.date.localeCompare(b.date));
   const inventory = new LotInventory();
   let idx = 0;
-  return ranges.map((range) => {
-    while (idx < txns.length && txns[idx].date < range.end) {
+  const advanceTo = (before: string) => {
+    while (idx < txns.length && txns[idx].date < before) {
       txns[idx].postings.forEach((posting) => {
         if (posting.units && matchesAccountOrChild(posting.account, prefixes)) {
           inventory.addPosting(posting);
@@ -402,6 +407,22 @@ export function accountBalanceSeries(
       });
       idx += 1;
     }
+  };
+  const tomorrow = addDays(today, 1);
+  return ranges.map((range) => {
+    // The interval holding today reads through today, not its end: an entry
+    // dated later this month lands in the next day's balance, not this
+    // point's, so every client's "now" agrees (w21/1014).
+    if (range.begin <= today && tomorrow < range.end) {
+      advanceTo(tomorrow);
+      const point = {
+        date: range.endInclusive,
+        balance: valueRecord(inventory, target, priceMap, today),
+      };
+      advanceTo(range.end);
+      return point;
+    }
+    advanceTo(range.end);
     return {
       date: range.endInclusive,
       balance: valueRecord(inventory, target, priceMap, range.endInclusive),
