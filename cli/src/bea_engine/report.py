@@ -860,7 +860,11 @@ def _capital_gains(filtered: Any, bounds: tuple[date | None, date | None], ledge
                 continue
             if matches is not None and not matches(posting.account):
                 continue
-            quantity = min(abs(before), abs(units.number))
+            # `abs()` rounds to the 28-digit context; `copy_abs()` keeps the
+            # exact posted magnitudes so the clamp cannot overstate a close.
+            quantity = min(before.copy_abs(), units.number.copy_abs())
+            proceeds: dict[str, Any]
+            basis: dict[str, Any]
             if before > 0:
                 proceeds = {"number": quantity * price.number, "currency": price.currency}
                 basis = {"number": quantity * cost.number, "currency": cost.currency}

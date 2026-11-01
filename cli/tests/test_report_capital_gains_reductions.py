@@ -86,3 +86,33 @@ def test_settling_a_costed_payable_reports_its_exchange_loss(tmp_path: Path) -> 
     gains = [row["gain"]["number"] for row in data["rows"]]  # type: ignore[attr-defined]
     assert gains == ["-3.00", "-4.00"]
     assert data["totals"]["one_year_or_less"] == {"USD": "-7.00"}  # type: ignore[index]
+
+
+WIDE_SHORT = """option "operating_currency" "USD"
+2024-01-01 open Assets:Token TOKEN "NONE"
+2024-01-01 open Equity:Opening USD
+2024-01-01 open Assets:Cash USD
+2024-01-01 open Income:Gains USD
+2024-01-02 * "Open"
+  Assets:Token {opening} TOKEN {{0 USD, 2024-01-02}}
+  Equity:Opening 0 USD
+2024-01-03 * "Close"
+  Assets:Token {closing} TOKEN {{0 USD, 2024-01-02}} @ 0 USD
+  Assets:Cash 0 USD
+  Income:Gains 0 USD
+"""
+
+
+@pytest.mark.parametrize(
+    ("opening", "closing", "expected"),
+    [
+        # A partial cover leaves 2e-18 short; the 29-digit magnitude must not round up.
+        ("-12345678901.12345678901234568", "12345678901.123456789012345678", "12345678901.123456789012345678"),
+        # A sale crossing into a tiny short closes only the original long holding.
+        ("12345678901.123456789012345678", "-12345678901.12345678901234568", "12345678901.123456789012345678"),
+    ],
+)
+def test_clip_keeps_exact_native_magnitudes(tmp_path: Path, opening: str, closing: str, expected: str) -> None:
+    data = _gains(tmp_path, WIDE_SHORT.format(opening=opening, closing=closing))
+    (row,) = data["rows"]  # type: ignore[index]
+    assert Decimal(row["quantity"]["number"]) == Decimal(expected)
