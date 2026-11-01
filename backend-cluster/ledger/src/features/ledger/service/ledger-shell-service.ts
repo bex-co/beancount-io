@@ -2,6 +2,8 @@ import type { QueryResult } from "@rustledger/wasm";
 import { parseLedgerId } from "@/shared/str";
 import type { IGiteaClientFactory } from "@/foundation/clients/gitea-client-factory";
 import {
+  failedBalanceDiffs,
+  parseLedgerFiles,
   queryLedgerFilesResult,
   type LoadedLedger,
 } from "@/foundation/rustledger";
@@ -27,6 +29,11 @@ import { unquoteBqlAliases } from "./bql-alias-quotes";
 import { rewriteBqlStringBetween } from "./bql-string-between";
 import { foldBqlIdentifierCase } from "./bql-identifier-case";
 import { foldBqlWhitespace } from "./bql-whitespace";
+import {
+  applyDiscrepancy,
+  discrepancyKey,
+  planDiscrepancy,
+} from "./bql-balances-discrepancy";
 
 /**
  * The ONE BQL text pipeline — every shell mode normalizes through it, and
@@ -134,19 +141,50 @@ export class LedgerShellService implements ILedgerShellService {
     );
   }
 
+  /**
+   * Runs the query on the engine and answers `balances.discrepancy`, which the
+   * engine leaves NULL, from the validator's differences (w23/196).
+   */
+  private async runQuery(
+    ledgerId: string,
+    userId: string | undefined,
+    query: string,
+  ): Promise<QueryResult> {
+    const { files, entryPoint, repoPaths } = await this.loadLedger(
+      ledgerId,
+      userId,
+    );
+    const folded = foldBqlWhitespace(query);
+    const plan = planDiscrepancy(folded);
+    const result = await queryLedgerFilesResult(
+      files,
+      entryPoint,
+      normalizeBqlQueryForEngine(plan.kind === "fill" ? plan.query : query),
+    );
+    assertQuerySucceeded(result);
+    if (plan.kind !== "fill") return result;
+    const snapshot = await parseLedgerFiles(files, entryPoint, { repoPaths });
+    const diffs = new Map<string, { number: string; currency: string }>();
+    for (const [directive, diff] of failedBalanceDiffs(
+      snapshot.directives,
+      snapshot.errors,
+    )) {
+      const key =
+        directive.type === "balance"
+          ? discrepancyKey(directive.date, directive.account, directive.amount)
+          : undefined;
+      if (key !== undefined) diffs.set(key, diff);
+    }
+    return applyDiscrepancy(result, plan, diffs);
+  }
+
   async queryShell(params: {
     ledgerId: string;
     userId: string | undefined;
     query: string;
   }): Promise<ShellQueryResult> {
     const { ledgerId, userId, query } = params;
-    const { files, entryPoint } = await this.loadLedger(ledgerId, userId);
-    const result = await queryLedgerFilesResult(
-      files,
-      entryPoint,
-      normalizeBqlQueryForEngine(query),
-    );
-    assertQuerySucceeded(result);
+    const result = await this.runQuery(ledgerId, userId, query);
     // Aliases extract from whitespace-folded text: the scan's gaps are ASCII
     // (w23/162), while the full pipeline's rewrites would hide the list.
     const { roots, heads } = extractSelectAliasInfo(foldBqlWhitespace(query));
@@ -159,13 +197,7 @@ export class LedgerShellService implements ILedgerShellService {
     query: string;
   }): Promise<ShellTextResult> {
     const { ledgerId, userId, query } = params;
-    const { files, entryPoint } = await this.loadLedger(ledgerId, userId);
-    const result = await queryLedgerFilesResult(
-      files,
-      entryPoint,
-      normalizeBqlQueryForEngine(query),
-    );
-    assertQuerySucceeded(result);
+    const result = await this.runQuery(ledgerId, userId, query);
     const { roots, heads } = extractSelectAliasInfo(foldBqlWhitespace(query));
     return {
       text: queryResultToText(result, roots, heads),

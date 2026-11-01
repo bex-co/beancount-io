@@ -140,6 +140,25 @@ query-side spelling for the summary entry — refusing the scope would
 steal its correct suffix rows — so the scope stays suffix-only until the
 engine synthesizes the entry (w23/blocked/022).
 
+## BQL `balances.discrepancy`
+
+The pinned engine leaves `balances.discrepancy` NULL even for a failing
+assertion, where stock reports the difference. The shell fills it from the
+validator (the figure the journal already serves, `actual - expected`): when a
+query selects `discrepancy` (or `*`) from `balances` as a plain column, the
+`date`, `account` and `amount` of each row are added to the query as hidden
+columns, the failing assertions' differences are looked up by them, and the
+hidden columns are dropped again. A passing assertion stays NULL. The query is
+otherwise run as written, so `WHERE` on other columns, `ORDER BY` and `LIMIT`
+behave as usual.
+
+Where the engine would evaluate `discrepancy` over NULL and answer silently
+wrong — in `WHERE`, `ORDER BY`, `GROUP BY`, a function or aggregate, a
+computed column, or a `DISTINCT`/grouped query — the query is refused with the
+supported form (`SELECT date, account, amount, discrepancy FROM balances`).
+Reported upstream as rustledger/rustledger#2823; drop the enrichment when the
+engine fills the column (w23/m19).
+
 ## BQL `meta` dialects
 
 The `meta` column reports dtype `object` on both tables at every

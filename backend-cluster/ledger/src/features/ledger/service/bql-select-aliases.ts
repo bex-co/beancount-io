@@ -74,6 +74,45 @@ export function extractSelectAliasHeads(query: string): Map<string, string> {
  * HAVING/PIVOT) or the end of the query for a FROM-less select.
  */
 function topLevelSelectList(query: string): string | undefined {
+  const span = selectListSpan(query);
+  return span === undefined ? undefined : query.slice(span.start, span.end);
+}
+
+/** The words of a query outside strings and comments, with their paren depth. */
+export type QueryWord = {
+  text: string;
+  start: number;
+  end: number;
+  depth: number;
+};
+
+/**
+ * Where the top-level SELECT list sits in `query`, its items, and every word
+ * of the query outside strings and comments (w23/m19). `end` is where the
+ * first depth-0 clause word begins, so text can be appended to the list there.
+ */
+export function selectClauses(query: string):
+  | {
+      start: number;
+      end: number;
+      items: string[];
+      words: QueryWord[];
+    }
+  | undefined {
+  const span = selectListSpan(query);
+  if (span === undefined) return undefined;
+  return {
+    ...span,
+    items: splitTopLevel(query.slice(span.start, span.end)),
+    words: scan(query)
+      .filter((token) => token.kind === "word")
+      .map(({ text, start, end, depth }) => ({ text, start, end, depth })),
+  };
+}
+
+function selectListSpan(
+  query: string,
+): { start: number; end: number } | undefined {
   const tokens = scan(query);
   let selectIndex = -1;
   for (let i = 0; i < tokens.length; i += 1) {
@@ -97,8 +136,7 @@ function topLevelSelectList(query: string): string | undefined {
     end = token.start;
     break;
   }
-  const from = (tokens[selectIndex] as Token).end;
-  return query.slice(from, end);
+  return { start: (tokens[selectIndex] as Token).end, end };
 }
 
 type Token = {
