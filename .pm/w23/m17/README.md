@@ -1,13 +1,13 @@
 # w23 · m17 — Make createPullRequest work reliably
 
-**Worker:** worker1 **Goal:** `createPullRequest` opens a pull request on production through a path that does not depend on the failing standalone branch-create call **Status:** todo (t001 done)
+**Worker:** worker1 **Goal:** `createPullRequest` opens a pull request on production through a path that does not depend on the failing standalone branch-create call **Status:** todo (t001, t002 done)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
 | t001 | Reproduce the branch-create 500 locally and name the cause — **DONE** | 45m | — |
-| t002 | Create the branch and the commit in one repoChangeFiles call | 60m | t001 |
+| t002 | Create the branch and the commit in one repoChangeFiles call — **DONE** | 60m | t001 |
 | t003 | Open the pull request and clean up on every failure path | 30m | t002 |
 | t004 | Check REST, GraphQL and MCP parity and docs | 30m | t003 |
 | t005 | Adoption surface | 20m | t004 |

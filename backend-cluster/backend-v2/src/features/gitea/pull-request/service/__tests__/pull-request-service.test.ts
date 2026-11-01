@@ -22,6 +22,7 @@ type MockGiteaClient = {
     repoDownloadPullDiffOrPatch: jest.Mock;
     repoGetBranch: jest.Mock;
     repoCreateBranch: jest.Mock;
+    repoChangeFiles: jest.Mock;
     repoDeleteBranch: jest.Mock;
     repoGetContents: jest.Mock;
     repoGetContentsList: jest.Mock;
@@ -69,6 +70,7 @@ describe("PullRequestService", () => {
         repoDownloadPullDiffOrPatch: jest.fn().mockResolvedValue({ data: "" }),
         repoGetBranch: jest.fn(),
         repoCreateBranch: jest.fn(),
+        repoChangeFiles: jest.fn(),
         repoDeleteBranch: jest.fn().mockResolvedValue({ data: null }),
         repoGetContents: jest.fn(),
         repoGetContentsList: jest.fn().mockResolvedValue({ data: [] }),
@@ -111,13 +113,10 @@ describe("PullRequestService", () => {
           },
         }),
       );
-      mockClient.repos.repoCreateBranch.mockResolvedValue({
-        data: { name: "pr-patch-123-xyz" },
-      });
       // What the generated client throws for a path the branch lacks.
       mockClient.repos.repoGetContents.mockRejectedValue({ status: 404 });
-      mockClient.repos.repoCreateFile.mockResolvedValue({
-        data: { commit: { sha: "def456" } },
+      mockClient.repos.repoChangeFiles.mockResolvedValue({
+        data: { files: [] },
       });
       mockClient.repos.repoCompareDiff.mockResolvedValue({
         data: { total_commits: 1 },
@@ -146,13 +145,105 @@ describe("PullRequestService", () => {
       expect(result.prUrl).toBe("https://gitea.test/owner/repo/pulls/42");
       expect(result.baseBranch).toBe("main");
       expect(result.headBranch).toBe("pr-patch-123-xyz");
-      expect(mockClient.repos.repoCreateFile).toHaveBeenCalledWith(
+      // One request makes the branch and the commit; the standalone
+      // branch-create and per-file calls (w23/082) are never made.
+      expect(mockClient.repos.repoChangeFiles).toHaveBeenCalledTimes(1);
+      expect(mockClient.repos.repoChangeFiles).toHaveBeenCalledWith(
         owner,
         repo,
-        "test.txt",
-        expect.objectContaining({ message: "Add test file" }),
+        {
+          branch: "main",
+          new_branch: expect.stringMatching(/^pr-patch-\d+-/),
+          message: "Add test file",
+          files: [
+            {
+              operation: "create",
+              path: "test.txt",
+              content: Buffer.from("Hello World").toString("base64"),
+            },
+          ],
+        },
         { format: "json" },
       );
+      expect(mockClient.repos.repoCreateBranch).not.toHaveBeenCalled();
+      expect(mockClient.repos.repoCreateFile).not.toHaveBeenCalled();
+      expect(mockClient.repos.repoUpdateFile).not.toHaveBeenCalled();
+    });
+
+    it("commits creates and updates together, reading each path on the base branch", async () => {
+      mockSuccessfulCreate();
+      mockClient.repos.repoGetContents.mockImplementation(
+        async (_o: string, _r: string, path: string) => {
+          if (path === "old.bean") return { data: { sha: "old-sha" } };
+          throw { status: 404 };
+        },
+      );
+
+      await service.createPRFromPatch(identity, owner, repo, {
+        ...input,
+        changes: [
+          { path: "old.bean", content: "a" },
+          { path: "new.bean", content: "b" },
+        ],
+      });
+
+      expect(mockClient.repos.repoChangeFiles).toHaveBeenCalledTimes(1);
+      const body = mockClient.repos.repoChangeFiles.mock.calls[0][2];
+      expect(body.files).toEqual([
+        {
+          operation: "update",
+          path: "old.bean",
+          content: Buffer.from("a").toString("base64"),
+          sha: "old-sha",
+        },
+        {
+          operation: "create",
+          path: "new.bean",
+          content: Buffer.from("b").toString("base64"),
+        },
+      ]);
+      for (const call of mockClient.repos.repoGetContents.mock.calls) {
+        if (call[2] === "old.bean" || call[2] === "new.bean") {
+          expect(call[3]).toEqual({ ref: "main" });
+        }
+      }
+    });
+
+    it("sends a path named twice once, with the last content", async () => {
+      mockSuccessfulCreate();
+
+      await service.createPRFromPatch(identity, owner, repo, {
+        ...input,
+        changes: [
+          { path: "a.bean", content: "first" },
+          { path: "a.bean", content: "second" },
+        ],
+      });
+
+      const body = mockClient.repos.repoChangeFiles.mock.calls[0][2];
+      expect(body.files).toEqual([
+        {
+          operation: "create",
+          path: "a.bean",
+          content: Buffer.from("second").toString("base64"),
+        },
+      ]);
+    });
+
+    it("refuses two new files that differ only by letter case, before writing", async () => {
+      mockSuccessfulCreate();
+
+      await expect(
+        service.createPRFromPatch(identity, owner, repo, {
+          ...input,
+          changes: [
+            { path: "Main.bean", content: "a" },
+            { path: "main.bean", content: "b" },
+          ],
+        }),
+      ).rejects.toMatchObject({ category: "CONFLICT" });
+      expect(mockClient.repos.repoChangeFiles).not.toHaveBeenCalled();
+      expect(mockClient.repos.repoDeleteBranch).not.toHaveBeenCalled();
     });
 
     it("should route the created PR's actual refs through", async () => {
@@ -195,7 +286,7 @@ describe("PullRequestService", () => {
         .catch((error: unknown) => error);
       expect(failure).toMatchObject({ category: "NOT_FOUND" });
       expect((failure as Error).message).toContain("main");
-      expect(mockClient.repos.repoCreateBranch).not.toHaveBeenCalled();
+      expect(mockClient.repos.repoChangeFiles).not.toHaveBeenCalled();
     });
 
     it("does not relabel another base-branch failure as not found", async () => {
@@ -205,7 +296,7 @@ describe("PullRequestService", () => {
         .createPRFromPatch(identity, owner, repo, input)
         .catch((error: unknown) => error);
       expect(failure).not.toMatchObject({ category: "NOT_FOUND" });
-      expect(mockClient.repos.repoCreateBranch).not.toHaveBeenCalled();
+      expect(mockClient.repos.repoChangeFiles).not.toHaveBeenCalled();
     });
 
     it.each([
@@ -224,7 +315,7 @@ describe("PullRequestService", () => {
       await expect(
         service.createPRFromPatch(identity, owner, repo, badInput),
       ).rejects.toThrow(message);
-      expect(mockClient.repos.repoCreateBranch).not.toHaveBeenCalled();
+      expect(mockClient.repos.repoChangeFiles).not.toHaveBeenCalled();
     });
 
     it("should refuse a diff-less branch with the revisions to re-verify", async () => {
@@ -244,17 +335,16 @@ describe("PullRequestService", () => {
     // w21/567: the portable-name rule is for files a change creates; one
     // committed before it stays editable.
     describe("a legacy file name (w21/567)", () => {
-      const legacy = { ...input, changes: [{ path: "aux.bean", content: "x" }] };
+      const legacy = {
+        ...input,
+        changes: [{ path: "aux.bean", content: "x" }],
+      };
 
       it("opens a pull request that updates an existing aux.bean", async () => {
         mockSuccessfulCreate();
         mockClient.repos.repoGetContents.mockResolvedValue({
           data: { sha: "old-sha", path: "aux.bean" },
         });
-        mockClient.repos.repoUpdateFile.mockResolvedValue({
-          data: { commit: { sha: "def456" } },
-        });
-
         const result = await service.createPRFromPatch(
           identity,
           owner,
@@ -263,11 +353,12 @@ describe("PullRequestService", () => {
         );
 
         expect(result.prNumber).toBe(42);
-        expect(mockClient.repos.repoUpdateFile).toHaveBeenCalled();
-        expect(mockClient.repos.repoCreateFile).not.toHaveBeenCalled();
+        expect(
+          mockClient.repos.repoChangeFiles.mock.calls[0][2].files[0],
+        ).toMatchObject({ operation: "update", sha: "old-sha" });
       });
 
-      it("refuses one that would create aux.bean, and deletes its branch", async () => {
+      it("refuses one that would create aux.bean, before any branch exists", async () => {
         mockSuccessfulCreate();
 
         await expect(
@@ -276,8 +367,8 @@ describe("PullRequestService", () => {
           category: "BAD_USER_INPUT",
           message: expect.stringContaining("Windows device name"),
         });
-        expect(mockClient.repos.repoCreateFile).not.toHaveBeenCalled();
-        expect(mockClient.repos.repoDeleteBranch).toHaveBeenCalledTimes(1);
+        expect(mockClient.repos.repoChangeFiles).not.toHaveBeenCalled();
+        expect(mockClient.repos.repoDeleteBranch).not.toHaveBeenCalled();
       });
 
       it("still refuses an unsafe path before creating a branch", async () => {
@@ -289,7 +380,7 @@ describe("PullRequestService", () => {
             changes: [{ path: "../x.bean", content: "x" }],
           }),
         ).rejects.toMatchObject({ category: "BAD_USER_INPUT" });
-        expect(mockClient.repos.repoCreateBranch).not.toHaveBeenCalled();
+        expect(mockClient.repos.repoChangeFiles).not.toHaveBeenCalled();
       });
     });
 
@@ -303,7 +394,7 @@ describe("PullRequestService", () => {
         }),
       ).rejects.toMatchObject({ category: "BAD_USER_INPUT" });
       expect(mockClient.repos.repoGetBranch).not.toHaveBeenCalled();
-      expect(mockClient.repos.repoCreateBranch).not.toHaveBeenCalled();
+      expect(mockClient.repos.repoChangeFiles).not.toHaveBeenCalled();
     });
 
     it("deletes the branch it created when the diff turns out empty", async () => {
@@ -316,7 +407,7 @@ describe("PullRequestService", () => {
         service.createPRFromPatch(identity, owner, repo, input),
       ).rejects.toMatchObject({ category: "BAD_USER_INPUT" });
       const created =
-        mockClient.repos.repoCreateBranch.mock.calls[0][2].new_branch_name;
+        mockClient.repos.repoChangeFiles.mock.calls[0][2].new_branch;
       expect(mockClient.repos.repoDeleteBranch).toHaveBeenCalledTimes(1);
       expect(mockClient.repos.repoDeleteBranch).toHaveBeenCalledWith(
         owner,
@@ -351,7 +442,8 @@ describe("PullRequestService", () => {
       mockClient.repos.repoGetBranch.mockResolvedValue({
         data: { name: "main", commit: { id: "base-sha" } },
       });
-      mockClient.repos.repoCreateBranch.mockRejectedValue({ status: 500 });
+      mockClient.repos.repoGetContents.mockRejectedValue({ status: 404 });
+      mockClient.repos.repoChangeFiles.mockRejectedValue({ status: 500 });
 
       await expect(
         service.createPRFromPatch(identity, owner, repo, input),
@@ -371,8 +463,10 @@ describe("PullRequestService", () => {
       const hiddenFailure = { status: 500, error: { message: "", url: "x" } };
 
       it.each([
-        ["repoCreateBranch", /while creating branch pr-patch-/],
-        ["repoCreateFile", /while writing test\.txt/],
+        [
+          "repoChangeFiles",
+          /while committing the changes to new branch pr-patch-/,
+        ],
         ["repoCompareDiff", /while comparing pr-patch-\S+ with main/],
         ["repoCreatePullRequest", /while opening the pull request/],
       ] as const)(
@@ -398,21 +492,21 @@ describe("PullRequestService", () => {
           );
           // No pull request, so no branch is left behind either.
           expect(mockClient.repos.repoDeleteBranch.mock.calls.length).toBe(
-            method === "repoCreateBranch" ? 0 : 1,
+            method === "repoChangeFiles" ? 0 : 1,
           );
         },
       );
 
       it("keeps a text body Gitea sent instead of JSON", async () => {
         mockSuccessfulCreate();
-        mockClient.repos.repoCreateBranch.mockRejectedValue(
+        mockClient.repos.repoChangeFiles.mockRejectedValue(
           textFailure(500, "runtime error: invalid memory address"),
         );
 
         await expect(
           service.createPRFromPatch(identity, owner, repo, input),
         ).rejects.toThrow(
-          /Gitea 500 while creating branch \S+: runtime error: invalid memory address/,
+          /Gitea 500 while committing the changes to new branch \S+: runtime error: invalid memory address/,
         );
       });
 
@@ -438,13 +532,12 @@ describe("PullRequestService", () => {
         await expect(
           service.createPRFromPatch(identity, owner, repo, input),
         ).rejects.toThrow(/while reading test\.txt/);
-        expect(mockClient.repos.repoCreateFile).not.toHaveBeenCalled();
-        expect(mockClient.repos.repoUpdateFile).not.toHaveBeenCalled();
+        expect(mockClient.repos.repoChangeFiles).not.toHaveBeenCalled();
       });
 
       it("keeps a repository refusal a plain failure naming the step", async () => {
         mockSuccessfulCreate();
-        mockClient.repos.repoCreateFile.mockRejectedValue({
+        mockClient.repos.repoChangeFiles.mockRejectedValue({
           status: 422,
           error: { message: "repository file already exists" },
         });
@@ -453,8 +546,8 @@ describe("PullRequestService", () => {
           .createPRFromPatch(identity, owner, repo, input)
           .catch((error: unknown) => error);
         expect(failure).not.toHaveProperty("category");
-        expect((failure as Error).message).toBe(
-          "Gitea 422 while writing test.txt: repository file already exists",
+        expect((failure as Error).message).toMatch(
+          /^Gitea 422 while committing the changes to new branch pr-patch-\S+: repository file already exists$/,
         );
       });
     });
@@ -469,9 +562,8 @@ describe("PullRequestService", () => {
       // while mocks keep passing.
       for (const call of [
         mockClient.repos.repoGetBranch.mock.calls,
-        mockClient.repos.repoCreateBranch.mock.calls,
+        mockClient.repos.repoChangeFiles.mock.calls,
         mockClient.repos.repoGetContents.mock.calls,
-        mockClient.repos.repoCreateFile.mock.calls,
         mockClient.repos.repoCompareDiff.mock.calls,
         mockClient.repos.repoCreatePullRequest.mock.calls,
       ]) {

@@ -120,6 +120,32 @@ async function fixture(caller = identity, appConfig = config) {
         return { data: { name: input.new_branch_name } };
       },
     ),
+    repoChangeFiles: jest.fn(
+      async (
+        _o: string,
+        _n: string,
+        input: {
+          branch: string;
+          new_branch: string;
+          files: Array<{
+            operation: "create" | "update";
+            path: string;
+            content: string;
+            sha?: string;
+          }>;
+        },
+      ) => {
+        // One request: the branch and the commit land together or not at all.
+        const next = new Map(branches.get(input.branch));
+        for (const file of input.files) {
+          if (file.operation === "update" && file.sha !== "sha-original")
+            throw new Error("Stale SHA");
+          next.set(file.path, Buffer.from(file.content, "base64").toString());
+        }
+        branches.set(input.new_branch, next);
+        return { data: { files: [] } };
+      },
+    ),
     repoGetContents: jest.fn(
       async (
         _o: string,
@@ -490,7 +516,7 @@ describe("PR creation, inspection, and review through real adapters/workflow/ser
           changes: [changes[0], { path: "../escape.bean", content: "bad" }],
         });
         expect(r.failed).toBe(true);
-        expect(f.repos.repoCreateBranch).not.toHaveBeenCalled();
+        expect(f.repos.repoChangeFiles).not.toHaveBeenCalled();
         expect(f.branches.size).toBe(2);
       } finally {
         await f.close();
@@ -581,7 +607,7 @@ describe("PR creation, inspection, and review through real adapters/workflow/ser
           changes: [],
         });
         expect(empty.failed).toBe(true);
-        expect(f.repos.repoCreateBranch).not.toHaveBeenCalled();
+        expect(f.repos.repoChangeFiles).not.toHaveBeenCalled();
         // Changes that turn out identical to the base: the branch exists by
         // the time the empty diff is seen, and is removed again.
         f.repos.repoCompareDiff.mockResolvedValue({
@@ -593,7 +619,7 @@ describe("PR creation, inspection, and review through real adapters/workflow/ser
           changes,
         });
         expect(same.failed).toBe(true);
-        expect(f.repos.repoCreateBranch).toHaveBeenCalledTimes(1);
+        expect(f.repos.repoChangeFiles).toHaveBeenCalledTimes(1);
         expect([...f.branches.keys()]).toEqual(["main", "feature/base"]);
         expect(f.prs.size).toBe(0);
       } finally {
@@ -625,7 +651,7 @@ describe("PR creation, inspection, and review through real adapters/workflow/ser
         },
       });
       expect((await f.call("gql", "create", input)).failed).toBe(true);
-      expect(f.repos.repoCreateBranch).not.toHaveBeenCalled();
+      expect(f.repos.repoChangeFiles).not.toHaveBeenCalled();
       expect(f.branches.size).toBe(2);
     } finally {
       await f.close();
@@ -736,9 +762,7 @@ describe("PR creation, inspection, and review through real adapters/workflow/ser
       );
 
     it.each([
-      ["repoCreateBranch", "creating branch pr-patch-"],
-      ["repoUpdateFile", "writing main.bean"],
-      ["repoCreateFile", "writing café.bean"],
+      ["repoChangeFiles", "committing the changes to new branch pr-patch-"],
       ["repoCreatePullRequest", "opening the pull request"],
     ] as const)(
       "reports a 500 in %s as SERVICE_UNAVAILABLE",
@@ -784,14 +808,15 @@ describe("PR creation, inspection, and review through real adapters/workflow/ser
 
     it("keeps a repository refusal's step and reason on MCP in production", async () => {
       const f = await fixture(identity, prodConfig);
-      f.repos.repoUpdateFile.mockRejectedValue({
+      f.repos.repoChangeFiles.mockRejectedValue({
         status: 409,
         error: { message: "sha does not match" },
       });
       const refused = {
         success: false,
-        message:
-          "Failed to create PR: Gitea 409 while writing main.bean: sha does not match",
+        message: expect.stringMatching(
+          /^Failed to create PR: Gitea 409 while committing the changes to new branch pr-patch-\S+: sha does not match$/,
+        ),
       };
       try {
         expect((await f.call("rest", "create", input)).data).toEqual(refused);

@@ -2,10 +2,14 @@ import {
   assertPortableRepoPath,
   assertSafeRepoPath,
 } from "@/features/ledger/utils/safe-repo-path";
-import { assertNoPortableTwin } from "@/features/ledger/utils/portable-twin";
+import {
+  assertNoPortableTwin,
+  portablePathKey,
+} from "@/features/ledger/utils/portable-twin";
 import { logger } from "@/shared/logger";
 import {
   BadUserInputError,
+  ConflictError,
   DomainError,
   ErrorCategory,
   InternalServerError,
@@ -24,6 +28,7 @@ import type {
   Api as GiteaApi,
   ContentsResponse,
   ChangedFile,
+  ChangeFileOperation,
 } from "@/features/gitea/client/gitea-api";
 import type { PullRequestDetails, PRFileChange } from "./pull-request.types";
 import type { Identity } from "@/server/api/identity";
@@ -331,28 +336,17 @@ export class PullRequestService implements IPullRequestService {
       }
       const baseSha = baseBranchRef.data.commit?.id ?? "";
 
-      // 3. Create new branch from base
-      const createBranchResult = await step(
-        `creating branch ${headBranch}`,
-        () =>
-          client.repos.repoCreateBranch(
-            owner,
-            repo,
-            {
-              new_branch_name: headBranch,
-              old_ref_name: baseBranch,
-            },
-            { format: "json" },
-          ),
-      );
-
-      if (!createBranchResult.data) {
-        throw new Error(`Failed to create branch ${headBranch}`);
-      }
-      branchCreated = true;
-
-      // 4. Apply file changes to new branch
-      for (const change of input.changes) {
+      // 3. Decide, per path, whether the change creates a file or updates one
+      // the base branch has. A path named twice is one change: the last wins,
+      // as it did when each change was written in turn.
+      const changes = [
+        ...new Map(
+          input.changes.map((change) => [change.path, change]),
+        ).values(),
+      ];
+      const created: string[] = [];
+      const operations: ChangeFileOperation[] = [];
+      for (const change of changes) {
         // Only Gitea's 404 means the file is new; any other failure reading
         // it is this step's, not a reason to try creating a file that exists.
         const fileContents = await step(`reading ${change.path}`, () =>
@@ -361,9 +355,7 @@ export class PullRequestService implements IPullRequestService {
               owner,
               repo,
               change.path,
-              {
-                ref: headBranch,
-              },
+              { ref: baseBranch },
               { format: "json" },
             )
             .catch((error: unknown) => {
@@ -374,68 +366,78 @@ export class PullRequestService implements IPullRequestService {
         // Type assertion: repoGetContents returns ContentsResponse
         const fileSha = (fileContents?.data as ContentsResponse | undefined)
           ?.sha;
-
-        // Update or create file
         const content = Buffer.from(change.content).toString("base64");
-        // A new file's name has to be portable, and not be one the branch
-        // has already on macOS and Windows (w23/068), a file this request
-        // created included; the branch is deleted if not.
-        if (!fileSha) {
-          assertPortableRepoPath(change.path);
-          await assertNoPortableTwin(change.path, async (dir) => {
-            const listing = await step<{ data: unknown }>(
-              `listing ${dir ?? "/"}`,
-              () =>
-                dir === undefined
-                  ? client.repos.repoGetContentsList(
-                      owner,
-                      repo,
-                      { ref: headBranch },
-                      { format: "json" },
-                    )
-                  : client.repos.repoGetContents(
-                      owner,
-                      repo,
-                      dir,
-                      { ref: headBranch },
-                      { format: "json" },
-                    ),
-            );
-            return Array.isArray(listing.data)
-              ? (listing.data as ContentsResponse[]).flatMap((entry) =>
-                  entry.path ? [{ path: entry.path }] : [],
-                )
-              : [];
+        if (fileSha) {
+          operations.push({
+            operation: "update",
+            path: change.path,
+            content,
+            sha: fileSha,
           });
+          continue;
         }
-
-        await step(`writing ${change.path}`, () =>
-          fileSha
-            ? client.repos.repoUpdateFile(
-                owner,
-                repo,
-                change.path,
-                {
-                  content,
-                  sha: fileSha,
-                  branch: headBranch,
-                  message: clearCommitMessage,
-                },
-                { format: "json" },
-              )
-            : client.repos.repoCreateFile(
-                owner,
-                repo,
-                change.path,
-                {
-                  content,
-                  branch: headBranch,
-                  message: clearCommitMessage,
-                },
-                { format: "json" },
-              ),
+        // A new file's name has to be portable, and not be one the base
+        // branch has already on macOS and Windows (w23/068), nor one this
+        // request creates; nothing is written if it is not.
+        assertPortableRepoPath(change.path);
+        const sibling = created.find(
+          (path) => portablePathKey(path) === portablePathKey(change.path),
         );
+        if (sibling) {
+          throw new ConflictError(
+            "File",
+            `${change.path} already exists as ${sibling}`,
+            {
+              hint: "macOS and Windows keep one of two names like these. Choose another name, or edit the existing file.",
+            },
+          );
+        }
+        await assertNoPortableTwin(change.path, async (dir) => {
+          const listing = await step<{ data: unknown }>(
+            `listing ${dir ?? "/"}`,
+            () =>
+              dir === undefined
+                ? client.repos.repoGetContentsList(
+                    owner,
+                    repo,
+                    { ref: baseBranch },
+                    { format: "json" },
+                  )
+                : client.repos.repoGetContents(
+                    owner,
+                    repo,
+                    dir,
+                    { ref: baseBranch },
+                    { format: "json" },
+                  ),
+          );
+          return Array.isArray(listing.data)
+            ? (listing.data as ContentsResponse[]).flatMap((entry) =>
+                entry.path ? [{ path: entry.path }] : [],
+              )
+            : [];
+        });
+        created.push(change.path);
+        operations.push({ operation: "create", path: change.path, content });
       }
+
+      // 4. One request makes the branch and the commit together. The branch
+      // exists only if the commit landed, so a refusal leaves nothing behind,
+      // and no separate branch-create call can fail on its own.
+      await step(`committing the changes to new branch ${headBranch}`, () =>
+        client.repos.repoChangeFiles(
+          owner,
+          repo,
+          {
+            branch: baseBranch,
+            new_branch: headBranch,
+            message: clearCommitMessage,
+            files: operations,
+          },
+          { format: "json" },
+        ),
+      );
+      branchCreated = true;
 
       // 5. Verify the branch actually differs from base, unless the caller
       // takes responsibility with fastForward. The revisions travel in the
