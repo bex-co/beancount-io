@@ -71,7 +71,7 @@ The mobile plan exemptions end in the same app release that ships purchase. A pl
 
 - Ledger creation, entry writes, and assisted AI requests apply the owner's plan limits on every client. `requestPlatform` no longer affects plan limits.
 - Nothing already stored is locked, per PRFAQ005's rules. Existing ledgers keep working above the ledger limit, and entries can always be edited and deleted. Only creating a ledger, adding entries past 1,000 on Free, and AI requests past the month's allowance are refused.
-- Each refusal in the app opens the plan sheet (D14) instead of a dead-end error.
+- Each refusal in the app that a purchase would lift opens the plan sheet (D14) instead of a dead-end error. A collaborator stopped by the ledger owner's limit is told that only the owner can raise it.
 - Free mobile users above a Free limit lose the waiver. Release notes and the plan sheet say so.
 
 ### D3. Architecture: Stripe stays as it is; the stores become two more sources of the plan
@@ -87,6 +87,8 @@ effective tier = highestTier( Stripe tier (unchanged, live with cached fallback)
 
 - **Stripe.** The Stripe path, `paid_customers`, Checkout, the Customer Portal, plan changes, and billing email are not migrated or rewritten.
 - **Store reads.** Store state is read from Beancount's own tables, so a product request never waits on Apple or Google.
+- **The merge sits outside the Stripe fallback.** Today a non-transient Stripe error returns Free from inside `getUserTier`'s `try`. The store tiers are merged after the Stripe read and its fallback have finished, so a Stripe failure never hides a store plan, and a failed store read never hides a Stripe plan.
+- **The Stripe cache stays Stripe-only.** `paid_customers.period_tier` and `current_period_end`, written by `features/stripe/operations/refresh-subscription-periods.ts`, cache the Stripe tier alone. The merged tier is never written there; otherwise an expired store plan could outlive its `access_ends_at` as a cached Stripe tier during a Stripe outage.
 
 ![Mobile billing architecture: the app buys in the App Store or Google Play and sends the evidence to the backend; the store billing service verifies it and writes store subscriptions; getUserTier takes the highest tier from the store rows and Stripe, which is unchanged.](../images/adr001-mobile-billing-architecture.svg)
 
@@ -138,6 +140,7 @@ Both values are stored rather than derived, because notifications arrive carryin
 - **Billing source** is the source whose subscription will renew.
 - **One renewing source per account.** Every purchase entry point (Web Checkout and plan changes, the in-app plan sheet) is offered only when no other source is set to renew.
 - **Server-side guard.** Each Stripe verb that would create or change a subscription refuses with a typed `BILLED_BY_STORE` error while a store subscription will renew: `createSubscriptionSession`, `upgradeSubscription`, `previewPlanChange`, `changePlan`, and `resumeSubscription`. The UI hides these verbs too, but the server enforces the rule.
+- **Customer Portal.** `createStripePortalSession` opens Stripe's own pages, out of the guard's reach. While a store subscription will renew, the session uses a portal configuration that offers payment methods, invoices, and cancellation only, without plan changes or resume.
 - **Duplicates.** A store purchase cannot be refused after the fact, because the store has already taken payment. When a store purchase arrives while another source renews:
   - it is accepted, and the highest tier applies;
   - the account is flagged as having duplicate billing;
@@ -165,7 +168,7 @@ PRFAQ005's rule is that gains apply immediately and losses apply at the end of t
   The backend follows `linkedPurchaseToken` and marks the replaced row with `replaced_by_id`.
 
 - **Stripe.** Unchanged (PRFAQ005).
-- **Across sources.** There is no proration. To switch, the user turns off renewal at the current source, which lifts the one-renewing-source guard, then buys at the new one. During the overlap, the higher tier applies.
+- **Across sources.** There is no proration. To switch, the user turns off renewal at the current source, which lifts the one-renewing-source guard, then buys at the new one. During the overlap, the higher tier applies. D15 sets when the new source starts charging.
 
 ### D7. Purchase and lifecycle flows
 
@@ -177,6 +180,8 @@ PRFAQ005's rule is that gains apply immediately and losses apply at the end of t
 4. The backend verifies the JWS with Apple's App Store Server Library, checking bundle ID, environment, product, and token owner. When needed, it reads current state from the App Store Server API.
 5. The backend upserts the row in one transaction.
 6. The app finishes the transaction only after the backend accepts it. On the next launch, the app re-sends unfinished transactions.
+
+A purchase deferred by Ask to Buy grants nothing until the store completes it; the app shows it as waiting for approval.
 
 App Store Server Notifications V2 for renewals, renewal-preference changes, billing retry, grace, expiry, refund, and revocation go to one REST endpoint for both environments. The signed payload is verified before use.
 
@@ -208,7 +213,8 @@ A sandbox row and a production row never satisfy each other's uniqueness or clai
 - **Restore** re-sends the store's current entitlements (`Transaction.currentEntitlements` on iOS, `getAvailablePurchases` on Android) through `confirmStorePurchase`. The backend verifies each one; nothing is granted locally.
 - **Unclaimed purchases.** A purchase that arrives without a Beancount token is stored with `user_id` null. Examples are a purchase made before sign-in on that device, or a notification for a token the backend has not seen. The first signed-in account that presents it claims it.
 - **No silent transfers.** A purchase already owned by another account is never transferred silently. The app explains the conflict and offers support. Transfer rules for deleted and merged accounts are a release gate.
-- **Disabled at launch.** Family Sharing, App Store offer codes, and promoted in-app purchases are off. Each needs a claim path before it is enabled.
+- **Disabled at launch.** Family Sharing, App Store offer codes, and promoted in-app purchases are off. Each needs a claim path before it is enabled. Google Play's subscription pause is off too; a paused subscription that appears anyway maps to `ON_HOLD`.
+- **Another account's purchase.** When Restore finds a purchase owned by another Beancount account, the app names that account by its masked email and offers support.
 
 ### D10. Account deletion
 
@@ -230,7 +236,8 @@ A sandbox row and a production row never satisfy each other's uniqueness or clai
 
 ### D13. API surface and parity
 
-- **`Query.subscriptionStatus`** gains the billing source, store product and cycle, `will_renew`, any scheduled change, and a management destination suited to the provider. It keeps its existing GraphQL-only billing exemption.
+- **`Query.subscriptionStatus`** gains the billing source, store product and cycle, `will_renew`, any scheduled change, the duplicate-billing flag (D5), and a management destination suited to the provider. It keeps its existing GraphQL-only billing exemption.
+- **Limit errors** say whose plan set the limit: the requester's own, or the ledger owner's. The entry limit is the owner's (`features/ledger/operations/directive-limit-lookup.ts` resolves the ledger owner's tier), so a collaborator must not be offered a purchase. The field is the same on GraphQL, REST, and MCP, and each client writes its own copy from it (D14). The default message of `ResourceLimitReachedError` (`shared/errors/domain-errors.ts`) stops saying "Upgrade to Premium or a higher plan to continue".
 - **New verbs.** `Query.storeBillingIdentity` (Apple account token and Google obfuscated ID) and `Mutation.confirmStorePurchase` (provider plus signed transaction or purchase token; also used for restore and claim) are registered in `BILLING_VERBS` with:
   - new authorization actions, and a matching update to the OpenFGA model in `backend-cluster/backend-v2/authz/`;
   - a new recorded REST reason: store purchase evidence exists only inside the native app, whose API client is GraphQL;
@@ -239,36 +246,110 @@ A sandbox row and a production row never satisfy each other's uniqueness or clai
 - **The Stripe verbs** in D5 gain the `BILLED_BY_STORE` refusal.
 - **Leftovers.** When the store verbs land, the allowlisted mobile `SubscriptionStatus` document is rewritten for the extended fields. `CreateSubscriptionSession` and `CancelSubscription` are Stripe Checkout and cancellation, which the app never uses, so they are deleted.
 
-### D14. Mobile and Web user interface
+### D14. Entry points: what each subscriber can see and do, and where
+
+What a subscriber sees depends on three things: which source bills them (none, Stripe, the App Store, Google Play, or an Enterprise contract), which surface they are on, and whether the limit they hit belongs to their own plan or to the ledger owner's.
+
+**Rules**
+
+1. **One plan, visible everywhere.** Every surface shows the same plan, cycle, renewal or end date, and billing source.
+2. **Change it where you bought it.** Each billing source has one home surface for upgrade, downgrade, cancel, resume, and payment details. Other surfaces are read-only and say where the home is, as far as store rules allow.
+3. **Each surface sells only through its own channel.** The Web sells through Stripe, iOS through the App Store, and Android through Google Play. No surface sells while another source is set to renew (D5).
+4. **No purchase offer that would not lift the limit.** Collaborators at a ledger owner's limit and Enterprise accounts never see one.
+5. **No dead ends.** Every refusal says what still works, when an allowance resets, and where to act.
+6. **Store rules bind the apps, not the Web.** In v1 the apps never link to Web purchase or encourage it, on any storefront.
+
+**What each billing source can do on each surface**
+
+| Billing source | Web dashboard                                                                                                                                                       | iOS app                                                                                                            | Android app                                                                                               |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| None (Free)    | Buys through Stripe: pricing page, Billing tab, limit prompts                                                                                                       | Buys through the App Store: plan screen, limit sheet                                                               | Buys through Google Play: plan screen, limit sheet                                                        |
+| Stripe         | **Home.** PRFAQ005's flows: plan and cycle changes with a price preview, cancel and undo, resume, and the Customer Portal for cards and invoices                    | Read-only plan card                                                                                                | Read-only plan card                                                                                       |
+| App Store      | Read-only, with the device path to manage it (Settings → your name → Subscriptions on iPhone or iPad). Limit prompts say to upgrade in the iOS app. No Stripe flows | **Home.** Plan and cycle changes (D6); Apple's manage-subscriptions sheet for cancel, resume, and payment; Restore | Read-only: billed through the App Store and managed on iPhone or iPad                                     |
+| Google Play    | Read-only, with a link to Google Play's subscriptions page for cancel, resume, and payment. Plan changes happen in the Android app                                  | Read-only: billed through Google Play and managed on an Android device                                             | **Home.** Plan and cycle changes (D6); Play's subscriptions page for cancel, resume, and payment; Restore |
+| Enterprise     | Read-only, with "Contact us"                                                                                                                                        | Read-only                                                                                                          | Read-only                                                                                                 |
+
+**The plan card.** Settings in each app and the Billing tab on the Web show the same card, read from `subscriptionStatus` (D13): the plan and cycle; "Renews on…", "Ends on…", or "Changes to Premium on…"; and the billing source.
+
+**Limit refusals**
+
+| Who hits the limit                                  | What the surface shows                                                                                                                                      |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| An owner on Free                                    | The surface's own plan sheet, with the pricing page's rows and the store's prices                                                                           |
+| An owner on a paid plan, on the plan's home surface | The next tier, bought through that channel                                                                                                                  |
+| An owner on a paid plan, on another surface         | The Web says where to upgrade. The apps state the limit and the plan, with no call to buy elsewhere                                                         |
+| A collaborator at the ledger owner's entry limit    | No purchase offer: "This ledger's owner is on Free, which allows 1,000 entries. Only the owner can raise it."                                               |
+| Anyone over their AI allowance                      | The same as for an owner, because the allowance is the requester's own plan (`features/feature-usage/service/ai-cfo-usage-service.ts`), plus when it resets |
+
+**Copy rules**
+
+- **In the apps**, the billing source is stated in plain text: no link, URL, button, or price comparison, and no instruction to buy or manage outside the store. A store subscriber using the other platform's app is told which device manages the plan. Stripe subscribers find the management link in Stripe's receipts and on the Web.
+- **On the Web**, the home surface can be named and linked. Google Play has a subscriptions page to link to; Apple has none on the Web, so the dashboard gives the device path.
+- **Email.** Store subscribers get receipts from Apple or Google. Beancount does not send them the Stripe billing email.
+
+**Beancount web pages opened inside the app**
+
+- The app opens beancount.io pages in an in-app browser:
+  - the dashboard's commodities page, from the valuation sheet (`mobile/src/components/valuation-sheet/index.tsx`);
+  - the Help Center (`mobile/src/screens/setting/main-content.tsx`);
+  - posts from the home feed.
+- The dashboard hides billing only inside a React Native WebView (`dashboard/src/common/providers/react-native-bridge-provider/react-native-bridge.ts`), and an in-app browser is not one. So those pages can show the Billing tab, upgrade prompts, and Stripe Checkout inside the app, which guideline 3.1.1 forbids.
+- Every beancount.io page the app opens carries an app marker that the page keeps for the session. With the marker, the dashboard and the website hide pricing, billing, and upgrade prompts, as the dashboard already does in the WebView. This ships before the first store submission.
+- Sign-in and sign-up run on beancount.io in an in-app auth session (`mobile/src/common/oauth/start-authorization.ts`). The register page honors `?next=` (`dashboard/src/features/auth/pages/register/loader.ts`), and the pricing page's buttons send `next=/pricing`. A session started from the app never continues to pricing or Checkout.
+- The website's and Help Center's navigation is not in this repository. Whether they link to pricing must be checked before submission.
+
+**The purchase surface in the apps**
 
 - **Library.** The app uses `expo-iap`, which supports StoreKit 2, Play Billing subscription offers, and Play replacement modes. Adding it follows the repository's dependency approval. Purchase needs a development build; it does not run in Expo Go.
-- **Plan screen.** A plan screen in Settings, plus a plan sheet opened from every refused limit:
+- **Plan screen and sheet.** The plan screen lives in Settings. The plan sheet opens from every refused limit that a purchase would lift:
   - creating a ledger;
-  - adding an entry past 1,000;
+  - adding an entry past 1,000 to the user's own ledger;
   - Ask AI over the allowance;
   - receipt or import AI over the allowance.
 
-  The sheet compares the plans with the same rows as the pricing page and shows store prices. It also shows 3.1.2 disclosures (what each plan includes, price, period, auto-renewal), Terms and Privacy links, Restore Purchases, and Manage Subscription (StoreKit's sheet on iOS; Play's subscriptions page for the package on Android).
+  The sheet compares the plans with the same rows as the pricing page and shows store prices. It also shows 3.1.2 disclosures (what each plan includes, price, period, auto-renewal), Terms and Privacy links, Restore Purchases, and Manage Subscription (StoreKit's sheet on iOS; Play's subscriptions page for the package on Android). A store subscriber on the home platform sees the higher tiers and the other cycle; any other subscriber sees the plan card instead.
 
-- **Stripe-billed users in the app** see that their plan is billed through beancount.io and get no purchase button. Outside the US storefront, the app shows no link to Web purchase.
-- **Store-billed users on the Web dashboard** see which store bills them and how to manage it there; Stripe plan flows are not offered.
 - **Feature flag.** A server-side switch per provider in the public configuration (`readFeatureFlags`) can stop new purchases without removing verified access. The purchase surface is on in builds sent to review, because a hidden feature would violate guideline 2.3.1.
 - **Quality.** All strings go into the 13 locales. Screens are checked in light and dark themes and at large text sizes.
 
+### D15. Journeys and edge cases
+
+1. **A free user subscribes in the app.** They hit a limit, pick a plan in the sheet, and buy it. The backend confirms the purchase and the limit lifts at once. The Web then shows the plan with the App Store or Google Play as its source. A purchase awaiting Ask to Buy approval, or a pending Google purchase, shows as waiting and grants nothing.
+2. **A Stripe subscriber hits a limit in the app.** The app cannot upgrade them. It shows the limit and the plan, and nothing else in v1.
+3. **An App Store subscriber on the Web wants a higher tier.** The dashboard tells them to upgrade in the iOS app. Stripe Checkout is refused with `BILLED_BY_STORE` (D5).
+4. **Switching source**, for example a business that needs Stripe invoices. The user first turns off renewal at the current source.
+   - **Store to Stripe, same or lower tier.** The Stripe subscription starts with its first charge deferred to the store plan's `access_ends_at`, so the user never pays twice. The Web says: "Your App Store plan ends on Mar 3. This plan starts then."
+   - **Store to Stripe, higher tier.** The gain applies at once, so Stripe charges now. The Web warns about the overlap before Checkout.
+   - **Stripe to store.** Apple and Google charge at purchase, and Beancount cannot defer that. The app warns before purchase: "Your current plan stays until Jan 3, and the App Store charges today."
+5. **Cancel and resume.** These happen only on the home surface; other surfaces say where it is. Access lasts until the paid period ends, and every surface shows "Ends on…".
+6. **Downgrade.** This happens on the home surface. Every surface shows the scheduled change. The timing follows PRFAQ005 and D6.
+7. **Payment problems.**
+   - **Stripe:** the existing failed-renewal banner on the Web and Stripe's emails. The apps show the status read-only.
+   - **App Store:** Apple shows its own billing-issue message. The iOS app shows the status and opens Apple's manage-subscriptions sheet.
+   - **Google Play:** Play's in-app messages, plus a banner that opens Play's subscriptions page. The Web shows the same link.
+   - **Access during the problem:** a grace period keeps the plan; Google's account hold removes it (D4).
+8. **Refunds** go through the source: Apple's refund request, Google Play, or Stripe, where PRFAQ005 grants none. The plan ends at the refund time (D11), and every surface shows Free with a neutral note.
+9. **Paying twice** (D5). Every surface shows a banner naming both sources. Each surface offers the cancel action it is allowed to (the Customer Portal, Apple's sheet, or Play's page) and names the other source in text.
+10. **A purchase owned by another account** (D9). Restore names the other account by its masked email and offers support. Nothing moves silently.
+11. **Account deletion** (D10). Stripe and Google Play renewals are cancelled automatically. An Apple subscription cannot be, so the user is warned and offered Apple's sheet first.
+12. **Store price increases.** Both stores ask existing subscribers to accept a higher price, so the apps let those prompts show. A declined increase ends the plan at the end of the period, like a cancellation.
+
 ## Rollout Plan
 
-1. **Backend, with no visible change.** Add the D4 tables, store verification and notification endpoints (sandbox first), the merged `getUserTier`, the `BILLED_BY_STORE` guard, the extended `subscriptionStatus`, and the new verbs with authz and parity entries. With no store rows, every user's tier is unchanged.
+1. **Backend, with no visible change.** Add the D4 tables, store verification and notification endpoints (sandbox first), the merged `getUserTier`, the `BILLED_BY_STORE` guard and the restricted portal configuration, the extended `subscriptionStatus`, the limit errors' plan owner, and the new verbs with authz and parity entries. With no store rows, every user's tier is unchanged.
 2. **Store setup.**
    - App Store Connect: the Paid Apps agreement and tax and banking details; one subscription group with the six products at the D6 levels, plus review screenshots and notes; notification URLs for production and sandbox.
    - Play Console: the payments profile; three subscriptions with two base plans each; the RTDN Pub/Sub topic; service-account permission to view financial data and manage orders and subscriptions; license testers.
-3. **Mobile.** Add `expo-iap`, the plan screen and sheet, restore, management, and the deletion warning. Run sandbox and license-tester end-to-end tests against a staging backend.
-4. **Launch, in one app release on both platforms.** Remove the D2 exemptions and turn on purchase. Submit the six in-app purchases with the app version. Replace "no in-app purchases" in the App Store descriptions in all 14 locales and in the Play copy. Include a demo account in review notes. Use a staged rollout on Play.
+3. **Web.** Add the plan card and limit prompts for store subscribers, the duplicate-billing banner, and the app marker that hides pricing and billing on beancount.io pages opened from the app (D14). The marker ships before the first store submission.
+4. **Mobile.** Add `expo-iap`, the plan screen, card, and sheet, restore, management, and the deletion warning. Run sandbox and license-tester end-to-end tests against a staging backend.
+5. **Launch, in one app release on both platforms.** Remove the D2 exemptions and turn on purchase. Submit the six in-app purchases with the app version. Replace "no in-app purchases" in the App Store descriptions in all 14 locales and in the Play copy. Include a demo account in review notes. Use a staged rollout on Play.
 
 ## Reliability and Operations
 
 - Every handler is idempotent, and provider timestamps or a fresh read prevent stale events from overwriting newer state.
 - Purchase tokens, signed transactions, keys, and service credentials are never logged.
 - Metrics cover notification lag, verification and acknowledgement failures, unknown products, reconciliation mismatches, duplicate billing, and sandbox versus production counts.
+- Product metrics are counted on the server and in the store consoles, because the app has no analytics: confirmed purchases by surface, provider, and plan; duplicate billing and switch overlaps, with a target of no duplicates; refunds by source; and support tickets about where a plan is managed.
 - Support tooling can show a user's sources and normalized rows and can trigger reconciliation. It cannot grant a store plan.
 
 ## Testing Strategy
@@ -284,7 +365,10 @@ A sandbox row and a production row never satisfy each other's uniqueness or clai
   - duplicate and out-of-order notifications, and a missed notification fixed by reconciliation;
   - a cross-source duplicate;
   - account deletion with each source;
-  - each D2 limit refusal opening the plan sheet.
+  - each D2 limit refusal opening the plan sheet, and a collaborator at the owner's entry limit seeing no purchase offer;
+  - each billing source's plan card and actions on the Web, iOS, and Android matching the D14 table;
+  - each D15 journey, including both switch directions;
+  - beancount.io pages opened from the app showing no pricing, billing, or upgrade prompt, and a sign-up started in the app never reaching pricing.
 - Check the plan screens in light and dark themes, at large text sizes, and in every locale.
 
 ## Consequences
@@ -301,6 +385,9 @@ A sandbox row and a production row never satisfy each other's uniqueness or clai
 - Free users of the app lose the mobile waivers for new ledgers, entries past 1,000, and assisted AI past the allowance.
 - Beancount operates two store integrations: verification, notifications, acknowledgement, reconciliation, and their policy changes.
 - Plan state now lives in two shapes: Stripe through `paid_customers` and live reads, stores through `store_subscriptions`.
+- A subscriber can manage billing only on the plan's home surface. Stripe subscribers cannot manage it from the apps, and store subscribers cannot change it from the Web.
+- Store receipts are not business invoices, and outside the US the apps cannot say that the Web provides them. A business that needs invoices switches to Stripe (D15).
+- The app's own purchase funnel cannot be measured, because the app ships no analytics (`.pm` `w3/001`). Measuring it would need a board decision to bring analytics back.
 
 ## Alternatives Considered
 
@@ -321,13 +408,14 @@ A sandbox row and a production row never satisfy each other's uniqueness or clai
 
 Each item needs an owner before implementation starts. No production release happens until the ownership, duplicate-billing, refund and revocation, sandbox, and reconciliation paths pass end-to-end tests.
 
-- Store price points per storefront, and whether they differ from Web prices.
-- Whether any user who relied on the mobile waivers is grandfathered.
+- Store price points per storefront, and whether they differ from Web prices. Recommended: the US price point nearest the Web price (D1), absorbing the stores' commission.
+- Whether any user who relied on the mobile waivers is grandfathered. Recommended: announce the change in the release notes and give those accounts 30 days, keyed on the account rather than the header.
+- Whether a switch from a store to Stripe at the same or a lower tier defers the first Stripe charge to the store plan's end (recommended, D15) or charges at once.
 - Purchase-transfer rules between accounts, and handling for merged and deleted accounts.
 - Grace-period length in each store.
 - Retention period for notification payloads and billing audit data.
 - Support ownership and response targets for store billing.
-- Whether to link to Web purchase on the US storefront, as a separate decision.
+- Whether to link to Web purchase on the US storefront, as a separate decision. v1 shows no link on any storefront (D14).
 
 ## References
 
