@@ -122,3 +122,39 @@ def test_an_opening_export_of_dated_lots_still_works(tmp_path: Path) -> None:
 
     assert window.returncode == 0, window.stderr
     assert _bea(tmp_path, "-f", str(out), "check").returncode == 0
+
+
+MULTILINE_LABEL = r"""option "operating_currency" "USD"
+2023-01-01 open Assets:Cash USD
+2023-01-01 open Assets:Stock HOOL
+2023-01-01 open Equity:Opening USD
+2023-01-01 open Income:Gain USD
+2024-01-01 * "Capital"
+  Assets:Cash 1000.00 USD
+  Equity:Opening -1000.00 USD
+2024-01-02 * "Buy first"
+  Assets:Stock HOOL {5 USD, "First\nLot"}
+  Assets:Cash -10 USD
+2024-01-03 * "Buy again"
+  Assets:Stock HOOL {5 USD, "First\nLot"}
+  Assets:Cash -15 USD
+2024-02-01 * "Sell one"
+  Assets:Stock -1 HOOL {5 USD, "First\nLot"} @ 7 USD
+  Assets:Cash 7 USD
+  Income:Gain -2 USD
+"""
+
+
+def test_a_second_export_keeps_inferred_quantities_beside_a_newline_label(tmp_path: Path) -> None:
+    """The printer writes the label across lines; the reader must still see the quantity left open (w5/1086)."""
+    source = tmp_path / "main.bean"
+    source.write_text(MULTILINE_LABEL)
+    first, second = tmp_path / "first.bean", tmp_path / "second.bean"
+
+    assert _bea(tmp_path, "-f", str(source), "query", "PRINT", "-f", "beancount", "-o", str(first)).returncode == 0
+    assert _bea(tmp_path, "-f", str(first), "check").returncode == 0
+    again = _bea(tmp_path, "-f", str(first), "query", "PRINT", "-f", "beancount", "-o", str(second))
+
+    assert again.returncode == 0, again.stderr
+    assert _bea(tmp_path, "-f", str(second), "check").returncode == 0, second.read_text()
+    assert _lots(tmp_path, second) == _lots(tmp_path, source)

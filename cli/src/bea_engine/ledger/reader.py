@@ -96,6 +96,8 @@ _DATE_TOKEN = re.compile(r"^\s*(\d{4})[-/](\d+)[-/](\d+)\s*(\S+)")
 # straight into the payee string — or one capital letter, which the lexer
 # reads as a flag only when it stands alone (`P"x"` is a lexing error).
 _TXN_TOKEN = re.compile(r"txn|[*!&#?%]|[A-Z]\Z")
+#: How many physical lines a quoted string in a posting may run over before the reader stops looking.
+_MAX_STRING_LINES = 50
 
 
 @cache
@@ -547,7 +549,22 @@ def _number_left_open(posting: Any) -> bool:
     lines = _source_lines(str(filename))
     if lines is None or lineno > len(lines):
         return False
-    return _line_leaves_number_open(lines[lineno - 1], unicodedata.normalize("NFC", posting.account))
+    return _line_leaves_number_open(_posting_text(lines, lineno - 1), unicodedata.normalize("NFC", posting.account))
+
+
+def _posting_text(lines: Sequence[str], index: int) -> str:
+    """The posting that starts at `lines[index]`, through the lines a quoted string runs over.
+
+    A lot label holding a line break is written across physical lines (the
+    printer keeps the break), so the first line alone ends inside an open
+    quote and never parses as a posting (w5/1086).
+    """
+    text = lines[index]
+    for following in range(index + 1, min(len(lines), index + 1 + _MAX_STRING_LINES)):
+        if re.sub(r"\\.", "", text).count('"') % 2 == 0:
+            break
+        text = f"{text}\n{lines[following]}"
+    return text
 
 
 @cache
