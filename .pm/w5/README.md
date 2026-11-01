@@ -38,7 +38,6 @@
 
 
 
-- [1114 — Document converting an existing Windows clone to real symlinks](./1114.md) — minor contributor docs: only the re-clone path is documented; found by w5/m13/t005, 2026-10-28.
 
 
 - [1117 — Preserve known Holdings market quotes when basis FX is missing](./1117.md) — minor CLI valuation: missing basis FX hides known USD markets, including a zero-unit long/short group shown at 20 EUR instead of 0 USD; 32 fresh books with paired FX controls; closed-1033 matrix and 947 group retention preserved; checked 2026-10-31.
