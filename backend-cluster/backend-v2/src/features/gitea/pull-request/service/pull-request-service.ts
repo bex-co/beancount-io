@@ -686,6 +686,7 @@ export class PullRequestService implements IPullRequestService {
         verdict.limit,
         verdict.count,
         directiveLimitMergeRefusal(verdict.count, verdict.limit),
+        { limitOwner: "LEDGER_OWNER" },
       );
     }
   }

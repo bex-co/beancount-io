@@ -55,6 +55,7 @@ export async function runToolSafely<T>({
                 hint?: unknown;
                 retryAfter?: unknown;
                 newLedgerErrors?: unknown;
+                limitOwner?: unknown;
               }
             | undefined)
         : undefined;
@@ -69,6 +70,9 @@ export async function runToolSafely<T>({
       }),
       ...(typeof metadata?.newLedgerErrors === "string" && {
         newLedgerErrors: metadata.newLedgerErrors,
+      }),
+      ...(typeof metadata?.limitOwner === "string" && {
+        limitOwner: metadata.limitOwner,
       }),
     };
   }

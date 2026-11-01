@@ -55,6 +55,7 @@ describe("DirectiveLimitPreview", () => {
     expect(refusal).toBeInstanceOf(ResourceLimitReachedError);
     expect(refusal.message).toBe(directiveLimitMessage(1000, 1001));
     expect(refusal.message).toContain("approximately 1001");
+    expect(refusal.metadata.limitOwner).toBe("LEDGER_OWNER");
   });
 
   it("refuses a write that grows a ledger already over the limit", async () => {

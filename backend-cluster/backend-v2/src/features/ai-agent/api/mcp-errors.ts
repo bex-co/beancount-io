@@ -33,6 +33,11 @@ export interface McpErrorEnvelope {
    * them; present only on that `VALIDATION_FAILED` (w23/077).
    */
   readonly newLedgerErrors?: string;
+  /**
+   * Who can raise a limit: `REQUESTER` or `LEDGER_OWNER`. It names no plan, so
+   * it stays within the rule below that keeps plan wording off MCP.
+   */
+  readonly limitOwner?: string;
 }
 
 /**
@@ -262,7 +267,12 @@ export function envelopeFromThrown(
 ): McpErrorEnvelope {
   if (error instanceof DomainError) {
     const metadata = error.metadata as
-      | { hint?: unknown; retryAfter?: unknown; newLedgerErrors?: unknown }
+      | {
+          hint?: unknown;
+          retryAfter?: unknown;
+          newLedgerErrors?: unknown;
+          limitOwner?: unknown;
+        }
       | undefined;
     // The throw site's own hint wins; the category fallback is what a
     // refusal that has nothing more specific to say still carries (w2/013).
@@ -283,6 +293,9 @@ export function envelopeFromThrown(
       }),
       ...(typeof metadata?.newLedgerErrors === "string" && {
         newLedgerErrors: metadata.newLedgerErrors,
+      }),
+      ...(typeof metadata?.limitOwner === "string" && {
+        limitOwner: metadata.limitOwner,
       }),
     };
   }
@@ -325,7 +338,7 @@ function categoryForMessage(message: string): ErrorCategory {
  * hint alongside the message, and this reads them back.
  *
  * Splitting is one operation rather than two because the carrier fields
- * (`errorCode`, `errorHint`, `retryAfter`, `newLedgerErrors`) must not also
+ * (`errorCode`, `errorHint`, `retryAfter`, `newLedgerErrors`, `limitOwner`) must not also
  * travel on as loose fields — and a caller that had to remember to strip them
  * would eventually forget.
  */
@@ -344,6 +357,7 @@ export function splitToolFailure(
     errorHint,
     retryAfter,
     newLedgerErrors,
+    limitOwner,
     ...rest
   } = result as {
     ok?: unknown;
@@ -352,6 +366,7 @@ export function splitToolFailure(
     errorHint?: unknown;
     retryAfter?: unknown;
     newLedgerErrors?: unknown;
+    limitOwner?: unknown;
   } & Record<string, unknown>;
   const raw = typeof error === "string" ? error : "The tool failed.";
   // A failure with no category of its own came from something other than a
@@ -372,6 +387,7 @@ export function splitToolFailure(
             CATEGORY_HINTS[ErrorCategory.INTERNAL_SERVER_ERROR]),
       ...(typeof retryAfter === "number" && { retryAfter }),
       ...(typeof newLedgerErrors === "string" && { newLedgerErrors }),
+      ...(typeof limitOwner === "string" && { limitOwner }),
     },
     rest,
   };

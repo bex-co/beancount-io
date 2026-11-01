@@ -77,8 +77,11 @@ describe("operationNotAllowedFromCause", () => {
 
     expect(error).toBeInstanceOf(ResourceLimitReachedError);
     expect(error.message).toBe(
-      "directives limit reached. Maximum: 1000, Current: 1005. Upgrade to Premium or a higher plan to continue.",
+      "directives limit reached. Maximum: 1000, Current: 1005.",
     );
+    expect(error).toMatchObject({
+      metadata: { limitOwner: "LEDGER_OWNER" },
+    });
   });
 
   it("preserves an upstream authentication failure", () => {

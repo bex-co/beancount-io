@@ -88,7 +88,13 @@ describe("collaborator limit (PRFAQ005 question 21 item 6)", () => {
     await expect(refusal).rejects.toBeInstanceOf(ResourceLimitReachedError);
     await expect(refusal).rejects.toMatchObject({
       category: "RESOURCE_LIMIT_REACHED",
-      metadata: { resource: "Collaborator", limit: 1, current: 1 },
+      metadata: {
+        resource: "Collaborator",
+        limit: 1,
+        current: 1,
+        limitOwner: "LEDGER_OWNER",
+        tier: "FREE",
+      },
       message: expect.stringContaining(
         "owner is on the Free plan, which allows 1 collaborator per ledger, and it already has 1.",
       ),

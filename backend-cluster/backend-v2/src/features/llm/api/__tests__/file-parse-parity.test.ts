@@ -352,9 +352,21 @@ it("refuses exhausted quota before downloading or parsing", async () => {
     maxAllowed: 1000,
   });
   try {
-    expect((await f.rest()).status).toBe(403);
-    expect((await f.gql()).errors).toHaveLength(1);
-    expect((await f.mcp()).isError).toBe(true);
+    const r = await f.rest();
+    const g = await f.gql();
+    const m = await f.mcp();
+    expect(r.status).toBe(403);
+    expect((await r.json()).error.metadata.limitOwner).toBe("REQUESTER");
+    expect(g.errors).toHaveLength(1);
+    // This harness skips the server's `formatError`, which copies `metadata`
+    // into `extensions`; limit-owner-surfaces.test.ts covers that step.
+    expect(g.errors?.[0].originalError).toMatchObject({
+      metadata: { limitOwner: "REQUESTER" },
+    });
+    expect(m.isError).toBe(true);
+    expect(m.structuredContent).toMatchObject({
+      error: { limitOwner: "REQUESTER" },
+    });
     expect(f.metadata).not.toHaveBeenCalled();
     expect(f.download).not.toHaveBeenCalled();
     expect(extractTransactionsFromFile).not.toHaveBeenCalled();

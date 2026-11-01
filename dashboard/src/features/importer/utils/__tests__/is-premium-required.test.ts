@@ -16,6 +16,38 @@ describe("isPremiumRequired", () => {
       expect(isPremiumRequired(error)).toBe(true);
     });
 
+    it("should return true for a limit the requester's own plan set", () => {
+      const error = {
+        errors: [
+          {
+            message: "AI CFO Token limit reached. Maximum: 20000, Current: 1.",
+            extensions: {
+              code: "RESOURCE_LIMIT_REACHED",
+              limitOwner: "REQUESTER",
+            },
+          },
+        ],
+      };
+
+      expect(isPremiumRequired(error)).toBe(true);
+    });
+
+    it.each([
+      ["the ledger owner's plan", { limitOwner: "LEDGER_OWNER" }],
+      ["no plan", {}],
+    ])("should return false for a limit set by %s", (_, owner) => {
+      const error = {
+        errors: [
+          {
+            message: "Limit reached. Maximum: 10, Current: 11.",
+            extensions: { code: "RESOURCE_LIMIT_REACHED", ...owner },
+          },
+        ],
+      };
+
+      expect(isPremiumRequired(error)).toBe(false);
+    });
+
     it("should return true for PREMIUM_REQUIRED error code", () => {
       const error = {
         errors: [

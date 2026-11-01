@@ -59,6 +59,8 @@ const toolErrorSchema = z.object({
   retryAfter: z.number().optional(),
   /** The errors a refused write would introduce, as REST and GraphQL name them. */
   newLedgerErrors: z.string().optional(),
+  /** Whose plan set a limit, so an agent knows who can raise it. */
+  limitOwner: z.string().optional(),
 });
 export type ToolError = z.infer<typeof toolErrorSchema>;
 

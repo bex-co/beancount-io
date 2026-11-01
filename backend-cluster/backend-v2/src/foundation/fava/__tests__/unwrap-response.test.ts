@@ -6,6 +6,7 @@ import {
   InternalServerError,
   NotFoundError,
   RateLimitedError,
+  ResourceLimitReachedError,
   ServiceUnavailableError,
   UnauthenticatedError,
 } from "@/shared/errors";
@@ -155,6 +156,45 @@ describe("unwrapFavaResponse", () => {
     ).catch((error: unknown) => error);
     expect(caught).toBeInstanceOf(NotFoundError);
     expect(caught).toMatchObject({ category: "NOT_FOUND", message, metadata });
+  });
+
+  it("reports the ledger owner's plan for the ledger service's entry limit", async () => {
+    const response = Promise.reject(
+      new FavaApiError("over limit", 403, {
+        success: false,
+        code: "DIRECTIVE_LIMIT_EXCEEDED",
+        error: "This ledger is over its limit.",
+        details: { limit: 1000, current: 1001 },
+      }),
+    );
+
+    await expect(
+      unwrapFavaResponse(response, "write ledger"),
+    ).rejects.toMatchObject({
+      category: "RESOURCE_LIMIT_REACHED",
+      metadata: { limit: 1000, limitOwner: "LEDGER_OWNER" },
+    });
+  });
+
+  it("names no plan owner for a limit no plan sets", async () => {
+    const response = Promise.reject(
+      new FavaApiError(
+        "Ledger source file count limit reached. Maximum: 100, Current: 101.",
+        403,
+        {
+          success: false,
+          error:
+            "Ledger source file count limit reached. Maximum: 100, Current: 101.",
+        },
+      ),
+    );
+
+    const refusal = await unwrapFavaResponse(response, "read ledger").catch(
+      (error: ResourceLimitReachedError) => error,
+    );
+
+    expect(refusal).toHaveProperty("metadata");
+    expect(refusal).not.toHaveProperty("metadata.limitOwner");
   });
 
   it("maps the legacy resource-limit message to ResourceLimitReachedError", async () => {

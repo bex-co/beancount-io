@@ -49,9 +49,8 @@ const UNREADABLE = "Booking date|Counterparty|Value\n03.09.2026|Cafe|-4,50\n";
 const QUOTA_ERROR = {
   errors: [
     {
-      message:
-        "AI CFO Token limit reached. Maximum: 20000, Current: 21723. Upgrade to Premium or a higher plan to continue.",
-      extensions: { code: "RESOURCE_LIMIT_REACHED" },
+      message: "AI CFO Token limit reached. Maximum: 20000, Current: 21723.",
+      extensions: { code: "RESOURCE_LIMIT_REACHED", limitOwner: "REQUESTER" },
     },
   ],
 };

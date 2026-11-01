@@ -26,7 +26,10 @@ const PREMIUM_KEYWORDS = [
  * GraphQL error structure
  */
 interface GraphQLErrorObject {
-  errors: Array<{ message?: string; extensions?: { code?: string } }>;
+  errors: Array<{
+    message?: string;
+    extensions?: { code?: string; limitOwner?: string };
+  }>;
 }
 
 /**
@@ -72,6 +75,11 @@ export function isPremiumRequired(error: unknown): boolean {
           code as (typeof PREMIUM_ERROR_CODES)[number],
         )
       ) {
+        return true;
+      }
+      // The requester's own plan set the limit, so upgrading lifts it. A limit
+      // no plan sets carries no owner and no prompt (ADR 001 D13).
+      if (err.extensions?.limitOwner === "REQUESTER") {
         return true;
       }
     }

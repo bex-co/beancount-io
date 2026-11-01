@@ -5,7 +5,11 @@ import type {
   IFeatureUsageService,
   UsageCheckResult,
 } from "./feature-usage-service";
-import { RateLimitedError, ServiceUnavailableError } from "@/shared/errors";
+import {
+  type LimitOwner,
+  RateLimitedError,
+  ServiceUnavailableError,
+} from "@/shared/errors";
 import { logger } from "@/shared/logger";
 import type { Identity } from "@/server/api/identity";
 import {
@@ -78,6 +82,7 @@ export class AiCfoUsageService implements IAiCfoUsageService {
             currentCount: result.currentCount,
             maxAllowed: result.maxAllowed,
             billingMonth: result.billingMonth,
+            limitOwner: "REQUESTER" satisfies LimitOwner,
           },
         );
       }

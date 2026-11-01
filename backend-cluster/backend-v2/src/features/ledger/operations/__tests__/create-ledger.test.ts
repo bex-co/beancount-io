@@ -333,6 +333,8 @@ describe("createLedger operation", () => {
           resource: "Ledger",
           limit: 1,
           current: 1,
+          limitOwner: "REQUESTER",
+          tier: "FREE",
         });
         expect(domainError.category).toBe("RESOURCE_LIMIT_REACHED");
       }

@@ -63,6 +63,7 @@ export function createDirectiveLimitPreview(
           verdict.limit,
           projected,
           directiveLimitMessage(verdict.limit, projected),
+          { limitOwner: "LEDGER_OWNER" },
         );
       }
     },

@@ -79,6 +79,7 @@ function resourceLimitFromError(
       details.limit,
       details.current,
       error.body.error || undefined,
+      { limitOwner: "LEDGER_OWNER" },
     );
   }
 

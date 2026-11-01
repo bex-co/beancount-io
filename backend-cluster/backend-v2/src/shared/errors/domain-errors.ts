@@ -326,12 +326,25 @@ export class ServiceUnavailableError extends DomainError {
 }
 
 /**
- * Thrown when a user reaches their subscription tier's resource limits.
+ * Whose plan set a limit (ADR 001 D13), so a client offers a purchase only to
+ * someone it would help: the requester's own plan, or that of the ledger's
+ * owner, which a collaborator cannot raise. The ledger service cannot tell who
+ * asked, so a client compares the ledger's owner with the signed-in user.
+ *
+ * A limit without one is not a plan limit, such as a repository's size, and
+ * no purchase lifts it.
+ */
+export type LimitOwner = "REQUESTER" | "LEDGER_OWNER";
+
+/**
+ * Thrown when a user reaches a resource limit.
  *
  * Category: RESOURCE_LIMIT_REACHED (HTTP 403)
  *
  * @example
- * throw new ResourceLimitReachedError("Ledger", 5, 5);
+ * throw new ResourceLimitReachedError("Ledger", 5, 5, undefined, {
+ *   limitOwner: "REQUESTER",
+ * });
  */
 export class ResourceLimitReachedError extends DomainError {
   constructor(
@@ -347,12 +360,14 @@ export class ResourceLimitReachedError extends DomainError {
      * option.
      */
     message?: string,
+    /** For a plan limit: whose plan set it, and its tier when known here. */
+    plan?: { limitOwner: LimitOwner; tier?: string },
   ) {
     super(
       ErrorCategory.RESOURCE_LIMIT_REACHED,
       message ??
-        `${resource} limit reached. Maximum: ${limit}, Current: ${current}. Upgrade to Premium or a higher plan to continue.`,
-      { resource, limit, current },
+        `${resource} limit reached. Maximum: ${limit}, Current: ${current}.`,
+      { resource, limit, current, ...plan },
     );
   }
 }

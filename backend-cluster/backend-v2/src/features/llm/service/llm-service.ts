@@ -162,6 +162,8 @@ export class LLMService implements ILLMService {
         "AI CFO Token",
         usageCheck.maxAllowed,
         usageCheck.currentCount,
+        undefined,
+        { limitOwner: "REQUESTER" },
       );
     }
   }

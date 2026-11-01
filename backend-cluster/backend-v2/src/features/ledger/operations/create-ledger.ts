@@ -95,6 +95,7 @@ export async function createLedger({
           owned,
           // A downgrade can leave more than the limit, so state the limit.
           `Your ${TIER_DISPLAY_NAMES[tier]} plan allows ${maxLedgers} ${maxLedgers === 1 ? "ledger" : "ledgers"}, and you own ${owned}. Upgrade for more, or delete one you no longer need.`,
+          { limitOwner: "REQUESTER", tier },
         );
       }
     }

@@ -66,7 +66,12 @@ describe("mergePR and the directive limit", () => {
 
     await expect(refusal).rejects.toBeInstanceOf(ResourceLimitReachedError);
     await expect(refusal).rejects.toMatchObject({
-      metadata: { resource: "directives", limit: 100, current: 110 },
+      metadata: {
+        resource: "directives",
+        limit: 100,
+        current: 110,
+        limitOwner: "LEDGER_OWNER",
+      },
       message: expect.stringContaining("over the 100 the free plan allows"),
     });
     expect(repos.repoMergePullRequest).not.toHaveBeenCalled();

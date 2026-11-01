@@ -45,6 +45,25 @@ describe("AiCfoUsageService", () => {
     });
   });
 
+  describe("assertQuotaAvailable", () => {
+    it("says the spent allowance is the requester's own plan", async () => {
+      mockGetUserTier.mockResolvedValue(SubscriptionTier.FREE);
+      mockFeatureUsageService.checkUsage.mockResolvedValue({
+        allowed: false,
+        currentCount: 20_000,
+        maxAllowed: 20_000,
+        billingMonth: "2026-11",
+      });
+
+      await expect(
+        service.assertQuotaAvailable("user-1"),
+      ).rejects.toMatchObject({
+        category: "RATE_LIMITED",
+        metadata: { limitOwner: "REQUESTER" },
+      });
+    });
+  });
+
   describe("FEATURE_KEY_AI_CFO", () => {
     it("should equal ai_cfo", () => {
       expect(FEATURE_KEY_AI_CFO).toBe("ai_cfo");
