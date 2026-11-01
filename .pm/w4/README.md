@@ -199,7 +199,7 @@
 - [x] **m7** — Screen-reader pass on the mobile core journeys (9 tasks) ← from `/pm-brainstorm for w4` 2026-09-08; user approved all four
 - [x] **m8** — [Localized Google Play listing from the canonical metadata](./done/m8/README.md) (8 tasks) ← from `/pm-brainstorm for w4` 2026-09-08; user approved all four
 - ~~**m9**~~ — `bea price fetch` through upstream bean-price — dropped 2026-10-26 by user decision: superseded by w1/m20's `bea price` passthrough (ADR014) and w1/m29's managed price includes (`include "https://beancount.io/prices/BTC-USD"`, ADR015/ADR018), which already keep valuations current on hosted and CLI without writing fetched quotes back into the ledger.
-- [ ] **m10** — [GitHub contributor front door: issue and PR templates, security policy, code of conduct](./m10/README.md) (8 tasks) ← from `/pm-brainstorm for w4` 2026-09-10; user handed items 1, 6, 7 to `/pm` 2026-09-11; unblocked 2026-10-31 (labels authorized, t004 dropped)
+- [x] **m10** — [GitHub contributor front door: issue and PR templates, security policy, code of conduct](./done/m10/README.md) (8 tasks) ← from `/pm-brainstorm for w4` 2026-09-10; user handed items 1, 6, 7 to `/pm` 2026-09-11; unblocked 2026-10-31 (labels authorized, t004 dropped)
 - [x] **m11** — [Mobile says what a converted balance means: units for commodities, labelled cost basis, disclosed omissions](./done/m11/README.md) (9 tasks) ← promoted w4/016 with w4/027 folded in; user approved `/pm-brainstorm for w4` item 2 and its display rule, 2026-09-15
 - [x] **m12** — [Make mobile's `lint:deadcode` see unused GraphQL documents and test-only modules](./done/m12/README.md) (7 tasks) ← promoted w4/025; user approved `/pm-brainstorm for w4` item 4 and its allowlist recommendation, 2026-09-15
 
