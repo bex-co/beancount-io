@@ -1,22 +1,25 @@
-# w4 · m10 — GitHub contributor front door: issue and PR templates, security policy, code of conduct, seeded good first issues
+# w4 · m10 — GitHub contributor front door: issue and PR templates, security policy, code of conduct
 
-**Worker:** worker1 **Goal:** a first-time reporter opens an issue through a form that captures the package, version, and reproduction the maintainers need, a first-time contributor finds a sized task and a PR template that names the checks to run, and the repository's community profile is complete **Status:** blocked — t001/t004 await owner inputs; t006/t007/t009 defer transitively (t002, t003, t005, t008 done; t001 forms shipped, labels pending)
+**Worker:** worker1 **Goal:** a first-time reporter opens an issue through a form that captures the package, version, and reproduction the maintainers need, a first-time contributor finds a sized task and a PR template that names the checks to run, and the repository's community profile is complete **Status:** todo (t002, t003, t005, t008 done; t001 labels authorized; t004 dropped)
 
 ## Tasks (in order)
 
 | id   | title                                                                                                                     | est | depends_on |
 | ---- | ------------------------------------------------------------------------------------------------------------------------- | --- | ---------- |
-| t001 | Issue forms: bug, feature, skill request, self-host help, each with a package picker and the checks to run — **BLOCKED**   | 40m | —          |
+| t001 | Issue forms: bug, feature, skill request, self-host help, each with a package picker and the checks to run                | 40m | —          |
 | t002 | PR template with the package checks table, one-package rule, and secret-scan reminder — **DONE**                          | 20m | —          |
 | t003 | SECURITY.md with the reporting channel and gitleaks policy, CODE_OF_CONDUCT.md, both linked from CONTRIBUTING and README — **DONE** | 30m | — |
-| t004 | Seed good first issues from the board's open sub-hour QA notes and label issue 176 against the price and self-host work — **BLOCKED** | 45m | t001 |
 | t005 | Contributing guide: first-PR walkthrough per package, complete layout table, and where to ask — **DONE**                  | 30m | t003       |
-| t006 | Adoption surface — **BLOCKED**                                                                                             | 20m | t002, t004, t005 |
-| t007 | Simplify — **BLOCKED**                                                                                                     | 20m | t006       |
+| t006 | Adoption surface                                                                                                          | 20m | t002, t005 |
+| t007 | Simplify                                                                                                                  | 20m | t006       |
 | t008 | Test coverage — **DONE**                                                                                                  | 40m | t006       |
-| t009 | Closeout — **BLOCKED**                                                                                                     | 15m | t007, t008 |
+| t009 | Closeout                                                                                                                  | 15m | t007, t008 |
 
-## Blocked
+## Unblocked
+
+**Unblocked 2026-10-31 by `/unblock w4` with the repository owner's decisions:** (1) creating the `skills` and `self-host` labels for t001 is authorized — create them, then verify that the skill-request and self-host forms apply them; (2) the owner does not want public `good first issue`s seeded from board notes — small board bugs are fixed directly by workers — so t004 (including the issue176 label) is dropped and its definition-of-done bullet removed. With t004 gone, t006 depends only on completed t002/t005, so t001 and t006 → t007 → t009 can proceed. History of the earlier blocks follows.
+
+### History
 
 **Blocked 2026-09-14 by `/loop-worker w4` after the in-repository work shipped.** `dbb1e763` added the four issue forms and chooser config (t001), the pull request template (t002), and the community-files validator with its path-filtered CI check (t008). All four forms render as issue-form previews on GitHub and `CI (community files)` passed. t008 was pulled ahead of its Adoption-surface dependency because the validator had to exist before the files it guards landed. Every remaining task needs a user decision or a user-approved change on GitHub:
 
@@ -42,7 +45,6 @@
 
 - GitHub's community profile for the repository shows description, README, code of conduct, contributing guide, license, security policy, issue templates, and pull request template all present.
 - Choosing "New issue" offers the four forms plus contact links; a submitted bug form carries the package, version or commit, reproduction steps, expected result, and logs fields, and is auto-labeled.
-- At least five open issues carry `good first issue` with a package label, each pointing back to the board note it came from; issue 176 is labeled and answered with links to the milestones that address it.
 - `CONTRIBUTING.md` lists every package in the layout table and links the per-package checks instead of duplicating them.
 - A path-filtered CI check validates every issue form's YAML and required keys and the internal links in the new files.
 
@@ -53,3 +55,7 @@
 - **Expected outcome:** new issues arrive with the fields maintainers need, newcomers find a sized first task, security reports have a private channel, and the board's sub-hour QA notes become work the community can pick up.
 - **Why now:** the first substantial community feature request arrived this week without a template, the board has a stock of sub-hour QA findings that make ideal first issues, and the cost is a few hours of compounding assets. Enabling Discussions and private vulnerability reporting are repository settings that remain the user's decision; the tasks say what to ask for.
 - **Adoption surface:** included because this ships user-facing repository files linked from the README and CONTRIBUTING guide.
+
+## Dropped
+
+- ~~**t004**~~ — Seed good first issues from the board's open sub-hour QA notes and label issue 176 — dropped 2026-10-31: owner decision via `/unblock w4`; small board bugs are fixed directly by workers rather than filed as public contributor issues.

@@ -4,7 +4,9 @@
 
 ## Inbox
 
-- **1031** — Use actual lot cost currencies in Net Worth valuation disclosures (45–60m dashboard after dependency, A2/A3) ← dashboard QA; residual of m26 ([note](./blocked/1031.md)) — **blocked:** approved lot-specific valuation read
+- **1118** — Keep private ledger names out of GA4 page titles (~45m dashboard, major, A2/A3) ← found re-verifying 265, 2026-10-31 ([note](./1118.md))
+- **1119** — Expose per-commodity cost currency and cost-less balances on balance reads, in REST/GraphQL/MCP parity (ledger + backend-v2, likely >1h — promote if so, A1/A2) ← owner decision 2026-10-31; unblocks 1031, w21/554, w21/556 ([note](./1119.md))
+- **1031** — Use actual lot cost currencies in Net Worth valuation disclosures (45–60m dashboard after dependency, A2/A3) ← dashboard QA; residual of m26 ([note](./blocked/1031.md)) — **blocked:** read approved 2026-10-31 (backend field, [1119](./1119.md)); waits for it to deploy
 
 
 
@@ -197,7 +199,7 @@
 - [x] **m7** — Screen-reader pass on the mobile core journeys (9 tasks) ← from `/pm-brainstorm for w4` 2026-09-08; user approved all four
 - [x] **m8** — [Localized Google Play listing from the canonical metadata](./done/m8/README.md) (8 tasks) ← from `/pm-brainstorm for w4` 2026-09-08; user approved all four
 - ~~**m9**~~ — `bea price fetch` through upstream bean-price — dropped 2026-10-26 by user decision: superseded by w1/m20's `bea price` passthrough (ADR014) and w1/m29's managed price includes (`include "https://beancount.io/prices/BTC-USD"`, ADR015/ADR018), which already keep valuations current on hosted and CLI without writing fetched quotes back into the ledger.
-- [ ] **m10** — [GitHub contributor front door: issue and PR templates, security policy, code of conduct, seeded good first issues](./blocked/m10/README.md) (9 tasks) — **blocked:** labels/public-issue owner inputs remain; closing tasks defer transitively. t003 policies shipped in `da74f015e7`, GitHub recognition verified in `dbb03904ef`; t005 guide shipped in `96575b46d7`. Signed-in owner chooser observed 2026-10-30; forms, PR template and CI check shipped; issue176 already has the maintainer reply. ← from `/pm-brainstorm for w4` 2026-09-10; user handed items 1, 6, 7 to `/pm` 2026-09-11
+- [ ] **m10** — [GitHub contributor front door: issue and PR templates, security policy, code of conduct](./m10/README.md) (8 tasks) ← from `/pm-brainstorm for w4` 2026-09-10; user handed items 1, 6, 7 to `/pm` 2026-09-11; unblocked 2026-10-31 (labels authorized, t004 dropped)
 - [x] **m11** — [Mobile says what a converted balance means: units for commodities, labelled cost basis, disclosed omissions](./done/m11/README.md) (9 tasks) ← promoted w4/016 with w4/027 folded in; user approved `/pm-brainstorm for w4` item 2 and its display rule, 2026-09-15
 - [x] **m12** — [Make mobile's `lint:deadcode` see unused GraphQL documents and test-only modules](./done/m12/README.md) (7 tasks) ← promoted w4/025; user approved `/pm-brainstorm for w4` item 4 and its allowlist recommendation, 2026-09-15
 
@@ -246,6 +248,7 @@
 - ~~**018**~~ — m5 follow-up: ledger links do not open the app in production — dropped 2026-09-14: duplicate of `w4/blocked/001` ("Set hosted APP_LINKS env so AASA stops 404ing"), which waits on the same hosted `APP_LINKS_APPLE_TEAM_ID` / `APP_LINKS_ANDROID_SHA256` configuration. Its warm and cold repros, the deliberate unset-env 404, and its extended acceptance (JSON content type, validators, the deferred physical-device check) were appended to `blocked/001.md` (now [`done/001-app-links.md`](./done/001-app-links.md); this 001 shares its number with an unrelated older `done/001.md`).
 - ~~**012**~~ — Extends w3/217: on a billion-scale ledger the Accounts balance itself is truncated — dropped 2026-09-14: duplicate of the open `w3/217` ("Keep Accounts row identities readable beside large balances"), which owns the same `AccountTable` row and cause; the note itself asked to be folded in rather than fixed separately. Its severity raise to major, the AX1 and 19-character-balance acceptance, and its evidence were appended to `w3/217`.
 - ~~**057**~~ — Money formatter rounds every amount to 2 decimals — dropped 2026-09-13: duplicate of the open `w3/189` ("The account journal rounds a posting the transactions list shows in full"), which identifies the same `groupThousands()` `toFixed(2)` cause at the same lines, carries the full call-site list and the product decision, and predates it. The two genuinely new observations — the `w4/016` fix-ordering interaction and the undocumented number-locale pin — were appended to `w3/189` instead.
+- ~~**096**~~ — Verify and repair redundant login history after a protected client query is rejected — dropped 2026-10-31: owner decision via `/unblock w4`; the original Import and Version History triggers no longer issue protected reads (2026-10-20 recheck, public history from `adec8ad5b`/w3/497), so no current reproducer exists. Re-file with a fresh trigger if QA finds a protected client-query redirect that traps Back again.
 
 ## Execution notes
 
@@ -253,5 +256,4 @@ Blocked milestones live under `blocked/` with their reason and unblock condition
 
 ## Blocked inbox follow-up
 
-- [ ] [002 — Complete manual accessibility verification](./blocked/002.md) — blocked on Accessibility Inspector checks of the ten m7 screens in light/dark and a physical-device VoiceOver read/write walkthrough; automated labels and guardrails do not replace these observations.
-- [ ] [096 — Verify protected-route login history](./blocked/096.md) — blocked on a current protected-query trigger and native-toolbar Back reproduction; original Import/History triggers retired, automated traversal alone is insufficient.
+- [ ] [002 — Complete manual accessibility verification](./blocked/002.md) — blocked on Accessibility Inspector checks of the ten m7 screens in light/dark and a physical-device VoiceOver read/write walkthrough; automated labels and guardrails do not replace these observations; the owner will run it (decision 2026-10-31).
