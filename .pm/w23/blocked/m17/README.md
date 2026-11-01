@@ -1,6 +1,6 @@
 # w23 · m17 — Make createPullRequest work reliably
 
-**Worker:** worker1 **Goal:** `createPullRequest` opens a pull request on production through a path that does not depend on the failing standalone branch-create call **Status:** todo (t001–t007 done)
+**Worker:** worker1 **Goal:** `createPullRequest` opens a pull request on production through a path that does not depend on the failing standalone branch-create call **Status:** blocked (t001–t007 done)
 
 ## Tasks (in order)
 
@@ -27,3 +27,9 @@
 - **Goal linkage:** A1 (agent-native accounting) and A2 (onboarding): agents propose ledger changes as pull requests for review; onboarding points at the same flow.
 - **Expected outcome:** an agent can open a reviewable PR against a hosted ledger in one call.
 - **Why now:** the flow has failed on every attempt for six days; the single-commit design removes the failing call whatever its cause.
+
+## Blocked
+
+**Blocked 2026-10-31** — t001 to t007 shipped (`32c6565db`, `2ec9813ea`, plus triage closes): `createPullRequest` now creates the branch and the commit in one request, tests and docs are done. Only t008 remains, and it needs the production server: the original failure (Gitea 500 on the standalone branch create) does not reproduce on a stock local Gitea 1.24.7, so whether the one-request flow succeeds on production can only be seen there, after the next deploy carries `32c6565db`.
+
+**Unblock:** the owner deploys backend-v2 with `32c6565db`; a worker then reruns the original repro (one `createPullRequest` with a synthetic one-file change on a disposable QA ledger) and records the observed revision and result. If it opens a pull request, close t008 and the milestone. If it still fails, the refusal now names the step (`committing the changes to new branch …`) and Gitea's reason when given, which is what the owner then reads from the Gitea server log. Who can clear it: the repository owner (deploy), then a worker (rerun).

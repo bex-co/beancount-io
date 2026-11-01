@@ -20,7 +20,7 @@
 - [x] **m14** — [Render NULL cells honestly in BQL results](./done/m14/README.md) (8 tasks) ← promoted from `w23/122` 2026-10-27
 - [x] **m15** — [Gate file writes on new bean-check errors](./done/m15/README.md) (7 tasks) ← promoted from `w23/149` 2026-10-30
 - [x] **m16** — [Disclose unpriced report conversions](./done/m16/README.md) (7 tasks) ← promoted from `w23/180` 2026-10-30
-- [ ] **m17** — [Make createPullRequest work reliably](./m17/README.md) (8 tasks) ← promoted from `w23/082` 2026-10-31
+- [ ] **m17** — [Make createPullRequest work reliably](./blocked/m17/README.md) (8 tasks) ← promoted from `w23/082` 2026-10-31 — **blocked:** t001–t007 shipped; t008 needs a production deploy of `32c6565db`, then a rerun of the original repro
 
 ## Dropped
 
