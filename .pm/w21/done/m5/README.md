@@ -1,6 +1,6 @@
 # w21 · m5 — Entries that fail booking stay listed, marked, and out of every balance
 
-**Worker:** worker1 **Goal:** a transaction the engine cannot book (for example a sale with no matching lot) is shown as "not booked" and counted nowhere, so balances sum to zero as Beancount's do **Status:** blocked (t001–t008 done; Closeout waits for the deploy)
+**Worker:** worker1 **Goal:** a transaction the engine cannot book (for example a sale with no matching lot) is shown as "not booked" and counted nowhere, so balances sum to zero as Beancount's do **Status:** done
 
 ## Tasks (in order)
 
@@ -14,7 +14,7 @@
 | t006 | Adoption surface — **DONE** | 20m | t005 |
 | t007 | Simplify — **DONE** | 20m | t006 |
 | t008 | Test coverage — **DONE** | 30m | t006 |
-| t009 | Closeout | 15m | t007, t008 |
+| t009 | Closeout — **DONE** | 15m | t007, t008 |
 
 ## Definition of done
 
@@ -42,8 +42,6 @@ On the fixture below, the trial balance matches `bean-query` (cash 4000.00, 10 V
 - **Parity:** REST, GraphQL and MCP together (t004).
 - **Adoption surface:** included — users and agents see balances and the marker.
 
-## Blocked
+## Unblocked and closed 2026-11-01
 
-**Blocked 2026-10-30** — t001–t008 are done and shipped (`81a21d44e`, `fd1f6a729`, `0087bcf65`, `7da1f4409`, `a027019f0`, `40f972991`, `1e9dc716d`), and every part of the definition of done is proven by tests and by a probe of the real engine. What is not known is the end state in the running system: the ledger service, then backend-v2, must be deployed before any app can show the marker, and the apps (mobile release, dashboard deploy) after that. A closed milestone must mean the observable end state is real, so Closeout (t009) waits for that.
-
-**Unblock:** the owner deploys the ledger service and backend-v2 at or after `1e9dc716d`, then confirms with the milestone's fixture on a throwaway ledger: the trial balance gives cash 4000.00 and the broker 10 VTI, the booking error is still listed, and the QA Sell entry carries `not_booked: true` in the journal and Entry Context. Who can clear it: the repository owner (deploy). Then run `/pm done w21/m5/t009`. The apps can ship before or after; they show nothing until the field arrives.
+Was blocked 2026-10-30 until the ledger service and backend-v2 were deployed at or after `1e9dc716d`. The owner deployed both; the fixture above was then checked against production on the QA account's disposable `qa-` ledger (appended with `allowInvalid`, then restored byte-for-byte; content hash and blob SHA identical to the snapshot, bean-check errors back to none): the BQL and trial balance gave cash 4000.00 and the broker 10 VTI, the booking error (`No matching lot for VTI`) stayed listed, and the QA Sell entry carried `not_booked: true` in the journal and in Entry Context. Production's public OpenAPI also carries the `not_booked` description. The apps show the marker once they ship; they were not part of this check.
