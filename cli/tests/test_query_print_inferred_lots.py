@@ -158,3 +158,22 @@ def test_a_second_export_keeps_inferred_quantities_beside_a_newline_label(tmp_pa
     assert again.returncode == 0, again.stderr
     assert _bea(tmp_path, "-f", str(second), "check").returncode == 0, second.read_text()
     assert _lots(tmp_path, second) == _lots(tmp_path, source)
+
+
+def test_list_details_keeps_inferred_quantities_so_the_redirect_reloads_the_same_lots(tmp_path: Path) -> None:
+    """`list transaction --details` printed the booked quantities, which date each purchase (w5/1088)."""
+    source = tmp_path / "main.bean"
+    source.write_text(LEDGER.format(booking="", qty="", lot="{5 USD}", sale="{5 USD}"))
+    details = tmp_path / "details.bean"
+
+    listed = _bea(tmp_path, "-f", str(source), "list", "transaction", "--details", "--sort", "oldest")
+    assert listed.returncode == 0, listed.stderr
+    # Header comments come with the listing; the entries alone must be loadable.
+    details.write_text(
+        'option "operating_currency" "USD"\n'
+        "2024-01-01 open Assets:Cash USD\n2024-01-01 open Assets:Broker HOOL\n"
+        "2024-01-01 open Equity:Opening USD\n2024-01-01 open Income:Gains USD\n" + listed.stdout
+    )
+
+    assert _bea(tmp_path, "-f", str(details), "check").returncode == 0, listed.stdout
+    assert _lots(tmp_path, details) == _lots(tmp_path, source)

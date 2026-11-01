@@ -566,12 +566,12 @@ def format_transaction(directive: TransactionHeader, *, loaded: bool = False) ->
                 account=p.account,
                 # A null number interpolates at booking, as the flag spelling
                 # does; the printer reads MISSING, not None (w5/801). So does
-                # one a listing marks `inferred`, unless it is shown as loaded:
-                # a stated number would date the lot natively (w5/1018).
+                # one a listing marks `inferred`, shown as loaded or not: a
+                # stated number would date the lot natively (w5/1018, w5/1088).
                 units=BcAmount(
                     cast(
                         Decimal,
-                        MISSING if p.units.number is None or (p.units.inferred and not loaded) else p.units.number,
+                        MISSING if p.units.number is None or p.units.inferred else p.units.number,
                     ),
                     p.units.currency,
                 )
