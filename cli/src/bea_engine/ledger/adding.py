@@ -2173,7 +2173,16 @@ def _booking_order(
         candidates.append(valid)
     eager_differs = distinct(candidates, eager)
     if len(candidates) == 1 and not eager_differs:
-        return ordered
+        # The heuristics agree, which does not make the order bookable: a short
+        # opened and covered the same day is listed cover-first by every one of
+        # them, and only the builder below moves it (w5/1079). It can only help
+        # when some date holds more than one costed row, so every other batch
+        # keeps its single validation.
+        costed_dates = [
+            directive.date for _, directive in valid if any(posting.cost is not None for posting in directive.postings)
+        ]
+        if len(set(costed_dates)) == len(costed_dates) or books(ordered):
+            return ordered
     for candidate in candidates:
         if books(candidate):
             return candidate

@@ -164,3 +164,21 @@ def test_a_batch_no_order_books_is_still_refused_and_unwritten(tmp_path: Path) -
 
     assert added.returncode == 1, added.stdout
     assert (tmp_path / "main.bean").read_text() == before
+
+
+def test_a_short_cover_listed_before_its_opening_books_when_every_heuristic_agrees(tmp_path: Path) -> None:
+    """Every heuristic leaves this input order alone, so the builder must still be reached (w5/1079)."""
+    cost = {"number": "50", "currency": "USD", "date": "2024-02-01"}
+
+    def leg(units: str) -> dict[str, Any]:
+        return {"account": BROKER, "units": {"number": units, "currency": "HOOL"}, "cost": cost}
+
+    cover = _row("Cover", leg("2"), {"account": "Assets:Cash", "amount": "-100 USD"})
+    opening = _row("Open short", leg("-6"), {"account": "Assets:Cash", "amount": "300 USD"})
+
+    added = _add(tmp_path, OPENS + CASH, [cover, opening])
+
+    assert added.returncode == 0, added.stderr
+    assert _bea(tmp_path, "check").returncode == 0
+    text = (tmp_path / "main.bean").read_text()
+    assert text.index("Open short") < text.index("Cover")
