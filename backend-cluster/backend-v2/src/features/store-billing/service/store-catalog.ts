@@ -10,11 +10,7 @@ import {
   type BillingInterval,
   SubscriptionTier,
 } from "@/features/stripe/service/stripe";
-
-export enum StoreProvider {
-  APP_STORE = "APP_STORE",
-  GOOGLE_PLAY = "GOOGLE_PLAY",
-}
+import { StoreProvider } from "../data/store-subscription-model";
 
 export interface StorePlan {
   tier: SubscriptionTier;

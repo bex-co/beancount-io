@@ -1,5 +1,6 @@
 import { SubscriptionTier } from "@/features/stripe/service/stripe";
-import { StoreProvider, storePlan } from "../store-catalog";
+import { StoreProvider } from "../../data/store-subscription-model";
+import { storePlan } from "../store-catalog";
 
 const { PREMIUM, GROWTH, ORGANIZATION } = SubscriptionTier;
 

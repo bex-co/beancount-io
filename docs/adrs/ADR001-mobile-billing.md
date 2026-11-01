@@ -129,7 +129,7 @@ Both values are stored rather than derived, because notifications arrive carryin
 | `provider_updated_at`, `last_verified_at` | Ordering and freshness                                                               |
 
 - A unique constraint on (`provider`, `environment`, `external_id`) ensures one store purchase never grants access to two accounts.
-- A store row grants its tier when `status` is `ACTIVE` or `GRACE`, `now < access_ends_at`, and the account owns the row.
+- A store row grants its tier when `status` is `ACTIVE` or `GRACE`, `now < access_ends_at`, the account owns the row, and no later row replaced it.
 - `PENDING`, `ON_HOLD`, `EXPIRED`, `REVOKED`, and `UNKNOWN` grant nothing. `UNKNOWN` also covers an unmapped product, which fails closed and raises an alert.
 
 **`store_billing_events`:** idempotent notification inbox, unique on (`provider`, `environment`, `external_event_id`). It records received and processed times, attempt count, and redacted last error. A raw payload is retained only for replay, with personal data removed, for the retention period set in the release gates.

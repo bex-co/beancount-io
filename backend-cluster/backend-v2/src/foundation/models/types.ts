@@ -1,5 +1,8 @@
 import { IPaidCustomerModel } from "@/features/stripe/data/paid-customer-model";
 import type { ISentBillingEmailModel } from "@/features/stripe/data/sent-billing-email-model";
+import type { IBillingIdentityModel } from "@/features/store-billing/data/billing-identity-model";
+import type { IStoreBillingEventModel } from "@/features/store-billing/data/store-billing-event-model";
+import type { IStoreSubscriptionModel } from "@/features/store-billing/data/store-subscription-model";
 import type { IApiKeyModel } from "@/features/apikeys/data/api-key-model";
 import type { IAuditEventModel } from "@/features/audit/data/audit-event-model";
 import { IJwtModel } from "@/features/auth/data/jwt-model";
@@ -26,6 +29,9 @@ import type { IOauthGrantModel } from "@/features/oauth/data/oauth-grant-model";
 export interface IModels {
   paidCustomer: IPaidCustomerModel;
   sentBillingEmail: ISentBillingEmailModel;
+  billingIdentity: IBillingIdentityModel;
+  storeSubscription: IStoreSubscriptionModel;
+  storeBillingEvent: IStoreBillingEventModel;
   apiKey: IApiKeyModel;
   auditEvent: IAuditEventModel;
   cliAuthSession: ICliAuthSessionModel;

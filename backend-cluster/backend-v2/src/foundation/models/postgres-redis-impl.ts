@@ -3,6 +3,9 @@ import { type Cache } from "cache-manager";
 import { AppConfig } from "@/config/config";
 import { PaidCustomerPostgresModel } from "@/features/stripe/data/paid-customer-model";
 import { SentBillingEmailPostgresModel } from "@/features/stripe/data/sent-billing-email-model";
+import { BillingIdentityPostgresModel } from "@/features/store-billing/data/billing-identity-model";
+import { StoreBillingEventPostgresModel } from "@/features/store-billing/data/store-billing-event-model";
+import { StoreSubscriptionPostgresModel } from "@/features/store-billing/data/store-subscription-model";
 import { ApiKeyPostgresModel } from "@/features/apikeys/data/api-key-model";
 import { AuditEventPostgresModel } from "@/features/audit/data/audit-event-model";
 import { JwtPostgresModel } from "@/features/auth/data/jwt-model";
@@ -23,6 +26,9 @@ import { IModels } from "./types";
 export class PostgresRedisImpl implements IModels {
   public paidCustomer: PaidCustomerPostgresModel;
   public sentBillingEmail: SentBillingEmailPostgresModel;
+  public billingIdentity: BillingIdentityPostgresModel;
+  public storeSubscription: StoreSubscriptionPostgresModel;
+  public storeBillingEvent: StoreBillingEventPostgresModel;
   public apiKey: ApiKeyPostgresModel;
   public auditEvent: AuditEventPostgresModel;
 
@@ -66,6 +72,9 @@ export class PostgresRedisImpl implements IModels {
     this.authMail = new AuthMailPostgresModel();
     this.paidCustomer = new PaidCustomerPostgresModel();
     this.sentBillingEmail = new SentBillingEmailPostgresModel();
+    this.billingIdentity = new BillingIdentityPostgresModel();
+    this.storeSubscription = new StoreSubscriptionPostgresModel();
+    this.storeBillingEvent = new StoreBillingEventPostgresModel();
     this.apiKey = new ApiKeyPostgresModel();
     this.auditEvent = new AuditEventPostgresModel();
 
