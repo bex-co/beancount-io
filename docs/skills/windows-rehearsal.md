@@ -423,3 +423,14 @@ discovery 9.2 s and query 62–78 s, Codex discovery 30.6 s and query 74.6 s.
   this machine's real-time scanning (`codex doctor` flagged Microsoft Defender
   as active), and it was not tested elsewhere. The CLI fix belongs to the
   `cli/` package and a new `bea` release.
+
+## GitHub-hosted runner confirmation (2026-11-01)
+
+`CI (skills)` run 41296566808 on `main` passed both jobs on GitHub-hosted
+runners: the unchanged Ubuntu `skills` job and `installer (Windows)`. The
+Windows job ran the installer lifecycle tests with 37 tests OK and one
+platform skip in about 44 seconds; the runner account was elevated
+(`elevated: True`), so link creation was allowed there and the denied-link
+paths are covered by the tests' own failure injection. This is installer
+evidence, not real-agent discovery proof; the native agent sessions above
+remain the usability evidence.
