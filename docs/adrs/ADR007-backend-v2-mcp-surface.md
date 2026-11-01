@@ -28,6 +28,15 @@ What an MCP-audience token can now reach is exactly one more read: the same byte
 
 `beancount://{owner}/{name}/archive-download-url` returns this path to MCP callers. REST and GraphQL callers keep the v1 URL.
 
+## Amendment (2026-11-01): a pin identifies its repository
+
+D3 left a pin as the ledger's `owner/name` at grant time, compared as a string. A rename stranded the credential (its own `listLedgers` showed the new name, which the pin then refused), and a new ledger created under the old name was silently followed by the pin. The owner chose on 2026-11-01 to bind pins to the repository ID.
+
+- An API key records `ledger_scope_repo_id` when it is minted; an OAuth access token carries `ledger_repo_id` next to `ledger_id` (the `sub` is unchanged, since released clients persist refresh grants against it).
+- Identity building resolves the ID to the ledger's current name for each request (a short per-process cache), so every existing comparison sees the canonical name. The credential trust boundary is unchanged: a pin still confines a credential to exactly one ledger, and minting a key still cannot name a ledger its creator is not pinned to.
+- A pin whose repository no longer exists is refused. A name nothing owns stays a bare name that matches nothing, as before. A failed lookup is an error, never a match.
+- Legacy pins (no ID recorded) bind to the repository their name resolves to the first time they are used; keys persist the binding, tokens pick it up when they are next issued. A grant approved for a name that was recreated before its first use would bind to the new repository; the grant record itself stores only the name.
+
 ### Not yet implemented
 
 The code still issues and enforces pins. Removing issuance is the work; enforcement stays for the credentials that already carry one (see [Open Questions](#open-questions)). Paths that start with `src/` are relative to `backend-cluster/backend-v2/`.

@@ -141,6 +141,15 @@ account-scoped operations do not require a fabricated ledger ID. MCP remains
 stateless and resolves identity for each HTTP request. Existing pinned clients
 continue to work. Account-wide OAuth grants require explicit user consent.
 
+A pin identifies its ledger by repository ID, not by the name it was granted
+with. Each request resolves the ID to the ledger's current `owner/name`, so
+renaming `personal` to `personal-2025` keeps a pinned API key or OAuth token
+working under the new name on every surface, and the pin's listings and refusals
+show that name. A new ledger that takes the old name does not inherit the pin,
+and a pin whose repository was deleted is refused. A pin created before IDs were
+recorded (a key without `ledger_scope_repo_id`, a token without `ledger_repo_id`)
+binds to the repository its name resolves to the first time it is used.
+
 Ledger targets are validated before repository lookups on REST, GraphQL, and
 MCP. A ledger name contains 1–100 lowercase ASCII letters, digits, underscores,
 or hyphens. Owners retain existing case and may also contain dots, but cannot
