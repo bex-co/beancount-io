@@ -787,8 +787,8 @@ def answer(
                     match = clash
                     reason = (
                         f"{entry.account} already has a {entry.date} balance of "
-                        f"{_plain_amount(clash.amount)} at {_quote_origin(clash, batch_rows)}; "
-                        f"refusing {_plain_amount(entry.amount)}."
+                        f"{_balance_declaration(clash)} at {_quote_origin(clash, batch_rows)}; "
+                        f"refusing {_balance_declaration(entry)}."
                     )
                 else:
                     recorded_balances.append(entry)
@@ -1935,6 +1935,15 @@ def _quote_origin(quote: Any, batch_rows: dict[int, int]) -> str:
 
 def _plain_amount(amount: Any) -> str:
     return f"{format(amount.number, 'f')} {amount.currency}"
+
+
+def _balance_declaration(balance: Any) -> str:
+    """A balance's amount with its tolerance, as `add balance` names it: the tolerance is what two
+    otherwise equal assertions can differ by (w5/1091)."""
+    tolerance = balance.tolerance
+    if tolerance is None:
+        return _plain_amount(balance.amount)
+    return f"{format(balance.amount.number, 'f')} ~ {format(tolerance, 'f')} {balance.amount.currency}"
 
 
 def _directive_text(entry: Any) -> str:

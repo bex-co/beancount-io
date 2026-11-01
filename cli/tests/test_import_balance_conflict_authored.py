@@ -93,3 +93,18 @@ def test_an_exact_repeat_still_skips_and_a_new_day_is_written(tmp_path: Path, mo
     assert json.loads(repeat.stdout)["data"]["written"] == 0  # type: ignore[attr-defined]
     assert ledger.read_bytes() != before
     assert json.loads(fresh.stdout)["data"]["written"] == 1  # type: ignore[attr-defined]
+
+
+def test_a_tolerance_only_conflict_names_both_tolerances(tmp_path: Path) -> None:
+    """Equal amounts differing in tolerance used to read `10.00 USD; refusing 10.00 USD` (w5/1091)."""
+    ledger = _books(tmp_path, "pass", "2024-02-01 100.00 0\n")
+    ledger.write_text(
+        ledger.read_text().replace("balance Assets:Cash 100.00 USD", "balance Assets:Cash 100.00 ~ 0.005 USD")
+    )
+
+    preview = _import(tmp_path)
+
+    (row,) = json.loads(preview.stdout)["data"]["rows"]  # type: ignore[attr-defined]
+    assert row["status"] == "conflict"
+    assert "balance of 100.00 ~ 0.005 USD" in row["reason"]
+    assert "refusing 100.00 ~ 0 USD" in row["reason"]

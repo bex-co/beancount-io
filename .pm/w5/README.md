@@ -50,7 +50,6 @@
 
 - [1115 — Return update diffs that apply to the ledger](./1115.md) — minor CLI review: Unicode separators, absent final LF and BOM-prefixed source produce invalid single/batch patches; fresh affected cases and passing controls, exact ledger writes/native money preserved; checked 2026-10-29.
 
-- [1091 — Show proposed balance tolerances in import conflict diagnostics](./1091.md) — minor CLI review: tolerance-only conflicts hide the proposed assertion; 14 fresh profiles plus two exact public reproductions; refusals and ledger bytes stay correct; checked 2026-10-28.
 
 
 
