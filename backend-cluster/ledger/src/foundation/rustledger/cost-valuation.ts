@@ -13,6 +13,8 @@ import { BadUserInputError } from "@/shared/errors";
  * - `at_value` → `"at_value"` — Fava `get_market_value`: price at the valuation
  *   date, else the COST value (NOT the raw units); in the cost currency.
  * - `units`    → `"units"` — raw units, no conversion.
+ * - `units_by_cost` → `"units_by_cost"` — raw units keyed `VTI {EUR}` by
+ *   cost currency, `EUR {}` when held without a cost (w4/m58).
  * - `undefined` / `""` → the operating currency (Fava's default report
  *   conversion is the operating currency, e.g. `"USD"`).
  * - a currency the ledger knows → that code, a `convert_position` target.
@@ -31,7 +33,7 @@ import { BadUserInputError } from "@/shared/errors";
 /** A resolved report valuation: the directive stream to sum + the value target. */
 export interface ReportValuation {
   directives: DirectiveJson[];
-  /** A currency code, or a reserved keyword (`units`/`at_cost`/`at_value`). */
+  /** A currency code, or a reserved keyword (`units`/`at_cost`/`at_value`/`units_by_cost`). */
   target: string;
 }
 
@@ -48,13 +50,18 @@ export function resolveConversion(
       return { directives, target: "units" };
     case "at_value":
       return { directives, target: "at_value" };
+    case "units_by_cost":
+      return { directives, target: "units_by_cost" };
     case undefined:
     case "":
       return { directives, target: operatingCurrency };
     default: {
       // The operating currency always passes: it is the default target,
       // which cannot refuse, so the explicit spelling must agree with it.
-      if (conversion === operatingCurrency || knownCommodities.has(conversion)) {
+      if (
+        conversion === operatingCurrency ||
+        knownCommodities.has(conversion)
+      ) {
         return { directives, target: conversion };
       }
       const known = [...knownCommodities].sort();
@@ -63,7 +70,7 @@ export function resolveConversion(
           ? ""
           : ` (${known.slice(0, 10).join(", ")}${known.length > 10 ? ", …" : ""})`;
       throw new BadUserInputError(
-        `Unsupported conversion "${conversion}": pass "units", "at_cost", "at_value", or a currency in this ledger${shown}.`,
+        `Unsupported conversion "${conversion}": pass "units", "at_cost", "at_value", "units_by_cost", or a currency in this ledger${shown}.`,
       );
     }
   }

@@ -42,6 +42,12 @@ describe("resolveConversion", () => {
     expect(atValue.directives[0]).toBe(BUY);
   });
 
+  it("passes `units_by_cost` through as a keyword, not a currency (w4/m58)", () => {
+    const byCost = resolveConversion("units_by_cost", [BUY], "USD", known);
+    expect(byCost.target).toBe("units_by_cost");
+    expect(byCost.directives[0]).toBe(BUY);
+  });
+
   it("defaults (undefined / empty) to the operating currency", () => {
     for (const conv of [undefined, ""]) {
       const r = resolveConversion(conv, [BUY], "USD", known);
@@ -76,7 +82,7 @@ describe("resolveConversion", () => {
 
   it("names the ledger's currencies in the refusal", () => {
     expect(() => resolveConversion("BOGUS", [BUY], "USD", known)).toThrow(
-      'or a currency in this ledger (RGAGX, USD).',
+      'pass "units", "at_cost", "at_value", "units_by_cost", or a currency in this ledger (RGAGX, USD).',
     );
   });
 });

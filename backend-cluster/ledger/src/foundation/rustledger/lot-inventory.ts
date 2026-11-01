@@ -45,14 +45,27 @@ interface Lot {
 
 /**
  * How an inventory is valued before display — Fava's conversion keywords. A bare
- * currency code (or comma list) is a `convert_position` target; the three
- * reserved keywords select the cost-aware reducers.
+ * currency code (or comma list) is a `convert_position` target; the reserved
+ * keywords select the cost-aware reducers. `units_by_cost` is ours, not
+ * Fava's: raw units keyed by {@link unitsByCostKey}, so a client can tell
+ * which units are held at a cost, in which currency, and which without one
+ * (w4/m58).
  */
 export type Conversion =
   | { kind: "units" }
   | { kind: "at_cost" }
   | { kind: "at_value" }
+  | { kind: "units_by_cost" }
   | { kind: "currency"; targets: string[] };
+
+/**
+ * The `units_by_cost` key for units of `currency` held at a cost in
+ * `costCurrency` — beancount's own `10 VTI {EUR}` notation — or `VTI {}`
+ * for units held without a cost.
+ */
+function unitsByCostKey(currency: string, costCurrency: string | null): string {
+  return `${currency} {${costCurrency ?? ""}}`;
+}
 
 /**
  * Parse the legacy `target` string the accumulators receive into a
@@ -63,6 +76,7 @@ export function parseConversion(target: string): Conversion {
   if (target === "units") return { kind: "units" };
   if (target === "at_cost") return { kind: "at_cost" };
   if (target === "at_value") return { kind: "at_value" };
+  if (target === "units_by_cost") return { kind: "units_by_cost" };
   return { kind: "currency", targets: target.split(",") };
 }
 
@@ -126,6 +140,8 @@ function valueLot(
   switch (conversion.kind) {
     case "units":
       return [lot.currency, lot.number];
+    case "units_by_cost":
+      return [unitsByCostKey(lot.currency, lot.costCurrency), lot.number];
     case "at_cost":
       // get_cost: units × per-unit cost, in the cost currency (else raw units).
       if (lot.costNumber && lot.costCurrency) {
@@ -242,7 +258,9 @@ export class LotInventory {
     this.lots.forEach((lot) => {
       const [currency, value] = valueLot(lot, conversion, priceMap, date);
       const scale =
-        currency === lot.currency ? lot.scale : (value.decimalPlaces() ?? 0);
+        currency === lot.currency || conversion.kind === "units_by_cost"
+          ? lot.scale
+          : (value.decimalPlaces() ?? 0);
       addScaledInto(out, currency, value, scale);
     });
 

@@ -180,6 +180,38 @@ describe("LotInventory valuation (fava conversion.py parity)", () => {
     });
   });
 
+  describe("units_by_cost (w4/m58)", () => {
+    it("keys raw units by cost currency, `{}` when held without a cost", () => {
+      const inv = new LotInventory();
+      inv.addPosting(heldAtCost("10", "EUR"));
+      inv.addPosting(heldAtCost("12", "USD"));
+      inv.addPosting({
+        account: "Assets:Investments",
+        units: { number: "500.00", currency: "EUR" },
+      } as PostingJson);
+      const prices = buildPriceMap([priceDir("HOOL", "99", "EUR")]);
+      const out = inv.reduceScaled(
+        parseConversion("units_by_cost"),
+        prices,
+        "2024-06-01",
+      );
+      expect(
+        Object.fromEntries(
+          [...out].map(([k, { value, scale }]) => [k, value.toFixed(scale)]),
+        ),
+      ).toEqual({ "HOOL {EUR}": "10", "HOOL {USD}": "10", "EUR {}": "500.00" });
+    });
+
+    it("nets two lots in one cost currency at different costs into one key", () => {
+      const inv = new LotInventory();
+      inv.addPosting(heldAtCost("10", "EUR"));
+      inv.addPosting(heldAtCost("11", "EUR"));
+      expect(
+        str(inv.reduce(parseConversion("units_by_cost"), NO_PRICES, undefined)),
+      ).toEqual({ "HOOL {EUR}": "20" });
+    });
+  });
+
   describe("lot netting + cost kinds", () => {
     it("nets same-cost lots (buy 10, sell 4 -> 6 at cost)", () => {
       const inv = new LotInventory();
