@@ -49,6 +49,24 @@ export interface PickerSectionOptions {
   recentTitle?: string;
 }
 
+/**
+ * Account names in hierarchy order, compared segment by segment (case and
+ * accents folded as search folds them): a parent, then all its descendants,
+ * before its next sibling. Declaration order scattered one institution's
+ * accounts across the list (w21/1016). Segment-wise because comparing whole
+ * strings would put `A-b` between `A` and `A:b`.
+ */
+function compareAccountNames(a: string, b: string): number {
+  const left = a.split(":");
+  const right = b.split(":");
+  for (let i = 0; i < Math.min(left.length, right.length); i++) {
+    const x = foldAccents(left[i]!).toLowerCase();
+    const y = foldAccents(right[i]!).toLowerCase();
+    if (x !== y) return x < y ? -1 : 1;
+  }
+  return left.length - right.length;
+}
+
 /** Whether the query is narrowing the list, as opposed to plain browsing. */
 export function isSearchQuery(query: string): boolean {
   return query.trim().length > 0;
@@ -90,7 +108,11 @@ export function visibleAccountSections(
     activeRoot === ALL_ROOTS
       ? sections
       : sections.filter(({ title }) => title === activeRoot)
-  ).map((section) => ({ ...section, source: "browse" as const }));
+  ).map((section) => ({
+    ...section,
+    data: [...section.data].sort(compareAccountNames),
+    source: "browse" as const,
+  }));
 
   if (ranking && recentTitle) {
     // `accounts` is what this picker can offer, so a pinned account is always

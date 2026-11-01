@@ -595,3 +595,52 @@ describe("accent-distinct accounts stay distinct", () => {
     );
   });
 });
+
+describe("browse order (w21/1016)", () => {
+  const declared = [
+    "Assets:US",
+    "Assets:US:Vanguard",
+    "Assets:US:Vanguard:Cash",
+    "Assets:US:BofA",
+    "Assets:US:BofA:Checking",
+    "Assets:US:Vanguard:RGAGX",
+    "Assets:US:Vanguard:VBMPX",
+    "Assets:Bank",
+    "Assets:Bank-Old",
+  ];
+
+  it("keeps every account's descendants right after it", () => {
+    const [assets] = sectionsFor(declared, "", ALL_ROOTS);
+    expect(assets!.data).toEqual([
+      "Assets:Bank",
+      "Assets:Bank-Old",
+      "Assets:US",
+      "Assets:US:BofA",
+      "Assets:US:BofA:Checking",
+      "Assets:US:Vanguard",
+      "Assets:US:Vanguard:Cash",
+      "Assets:US:Vanguard:RGAGX",
+      "Assets:US:Vanguard:VBMPX",
+    ]);
+  });
+
+  it("folds case and accents like search, and applies under a root chip", () => {
+    const [section] = sectionsFor(
+      ["Expenses:Zebra", "Expenses:Éclair", "Expenses:apple"],
+      "",
+      "Expenses",
+    );
+    expect(section!.data).toEqual([
+      "Expenses:apple",
+      "Expenses:Éclair",
+      "Expenses:Zebra",
+    ]);
+  });
+
+  it("leaves search ordering to the ranker", () => {
+    const [results] = sectionsFor(declared, "vanguard", ALL_ROOTS);
+    expect(results!.data).toEqual(
+      filterAccounts("vanguard", declared, undefined),
+    );
+  });
+});
