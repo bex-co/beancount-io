@@ -20,6 +20,7 @@
 - [x] **m14** — [Render NULL cells honestly in BQL results](./done/m14/README.md) (8 tasks) ← promoted from `w23/122` 2026-10-27
 - [x] **m15** — [Gate file writes on new bean-check errors](./done/m15/README.md) (7 tasks) ← promoted from `w23/149` 2026-10-30
 - [x] **m16** — [Disclose unpriced report conversions](./done/m16/README.md) (7 tasks) ← promoted from `w23/180` 2026-10-30
+- [ ] **m17** — [Make createPullRequest work reliably](./m17/README.md) (8 tasks) ← promoted from `w23/082` 2026-10-31
 
 ## Dropped
 
@@ -54,8 +55,7 @@
 - [196](./blocked/196.md) — BQL `balances.discrepancy` never populates (blank on failing balances; stock reports the diff) — **blocked:** upstream filing approved 2026-10-28; waiting for someone with tracker access to file the batch
 - [198](./blocked/198.md) — entries tags/links are empty sets on MCP but NULL on stock (13 rows flip IS NULL) — **blocked:** upstream filing approved 2026-10-28; waiting for someone with tracker access to file the batch
 - [201](./blocked/201.md) — number()/currency() of an empty inventory invent 0.00 / the operating currency; get()/weight()/sum() blank — **blocked:** upstream filing approved 2026-10-28; waiting for someone with tracker access to file the batch
-- [082](./blocked/082.md) — `createPullRequest` fails on production: Gitea 500 while creating the `pr-patch-*` branch, on MCP and REST alike — **blocked:** needs the Gitea server-log cause for one failing branch create (owner), then a production rerun
-- [072](./blocked/072.md) — concurrent writes (append, add entries, exact-text edits) still lose with `SERVICE_UNAVAILABLE` on production after w23/017; the production lost-race signature differs — **blocked:** needs one losing call's host status and body from the production ledger-service log (owner), then a post-deploy rerun
+- [072](./072.md) — concurrent writes (append, add entries, exact-text edits) still lose with `SERVICE_UNAVAILABLE` on production after w23/017; the production lost-race signature differs (scope revised 2026-10-31: per-repo commit serialization plus failure logging; no production log needed to start)
 - [065](./065.md) — a ledger-pinned credential keeps the old name after a rename (owner chose repository-ID pins 2026-10-31)
 - [059](./059.md) — every product-created ledger ships `auto_accounts`, so a misspelt account is silently opened (owner chose drop-plugin 2026-10-31)
 - [022](./blocked/022.md) — report rustledger BQL gaps upstream (`cost(sum(position))`, `neg`/`filter_currency`, `meta('lineno')`, `AT value`, `BALANCES FROM`) — **blocked:** upstream filing approved 2026-10-28; waiting for someone with tracker access to file the batch
