@@ -39,6 +39,15 @@ describe("buildLedgerFiles (w3/m53/t002)", () => {
     expect(main).toContain("2026-02-01 balance Assets:Cash 100 EUR");
   });
 
+  it("does not switch on auto_accounts, so a misspelt account is refused (w23/059)", () => {
+    const main = buildLedgerFiles(
+      { preset: "personal@1", historyStart: "2026-02-01" },
+      "2026-01-01",
+    )["main.bean"];
+    expect(main).not.toMatch(/^plugin /m);
+    expect(main).not.toContain("auto_accounts");
+  });
+
   it("keeps unknown and zero opening states distinct", () => {
     const unknown = buildLedgerFiles(
       {

@@ -263,8 +263,6 @@ export function previewLedgerSetup(
     `option "operating_currency" "${operatingCurrency}"`,
     `option "inferred_tolerance_default" "*:0.001"`,
     "",
-    'plugin "beancount.plugins.auto_accounts"',
-    "",
   ];
 
   const openings: string[] = [];

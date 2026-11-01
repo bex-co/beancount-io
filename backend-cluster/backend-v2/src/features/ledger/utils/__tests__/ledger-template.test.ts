@@ -35,6 +35,11 @@ describe("ledger templates", () => {
       );
     });
 
+    it("does not carry the auto_accounts plugin, so a misspelt account is refused (w23/059)", () => {
+      expect(simpleLedgerTemplate["main.bean"]).not.toMatch(/auto_accounts/);
+      expect(defaultLedgerTemplate["main.bean"]).not.toMatch(/auto_accounts/);
+    });
+
     it("should only have one file", () => {
       expect(Object.keys(simpleLedgerTemplate)).toHaveLength(1);
     });

@@ -6,8 +6,6 @@ option "title" "Example Beancount file"
 option "operating_currency" "USD"
 option "inferred_tolerance_default" "*:0.001"
 
-plugin "beancount.plugins.auto_accounts"
-
 * Accounts
 
 1970-01-01 open Assets:Cash
