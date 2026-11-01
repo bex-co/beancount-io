@@ -383,7 +383,7 @@ interface StoredPin {
  * binds to whatever repository its name resolves to now, which the caller may
  * persist; a name nothing owns stays the bare name and matches nothing.
  */
-async function resolveLedgerPin(
+export async function resolveLedgerPin(
   stored: StoredPin,
 ): Promise<{ name: string; repoId?: number } | null> {
   if (!pinResolver) return { name: stored.name, repoId: stored.repoId };
@@ -590,6 +590,13 @@ async function resolveOAuthIdentity(
   if (!oidc) {
     return undefined;
   }
+  // The pin follows its repository, not the name the grant was approved with.
+  const pin = oidc.ledgerId
+    ? await resolveLedgerPin({ name: oidc.ledgerId, repoId: oidc.ledgerRepoId })
+    : undefined;
+  if (pin === null) {
+    return undefined;
+  }
   identityLogger.debug("Resolved OAuth identity", {
     userId: oidc.userId,
     hasLedgerScope: Boolean(oidc.ledgerId),
@@ -607,7 +614,8 @@ async function resolveOAuthIdentity(
       acr: oidc.acr,
       amr: oidc.amr,
     },
-    ledgerScope: oidc.ledgerId,
+    ledgerScope: pin?.name,
+    ledgerScopeRepoId: pin?.repoId,
     tokenId: oidc.tokenId,
     issuedAt: oidc.issuedAt,
     expiresAt: oidc.expiresAt,

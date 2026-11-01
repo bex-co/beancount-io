@@ -110,7 +110,9 @@ describe("envelopeFromThrown", () => {
     try {
       resolveMcpLedger(pinned, "mallory/secret");
     } catch (error) {
-      expect(envelopeFromThrown(error).hint).toMatch(/pinned to one ledger/);
+      expect(envelopeFromThrown(error).hint).toMatch(
+        /pinned to alice\/main[\s\S]*follows its ledger across a rename/,
+      );
     }
   });
 

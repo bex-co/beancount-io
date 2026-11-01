@@ -267,7 +267,20 @@ export class ApiKeyService implements IApiKeyService {
       action: AUTHORIZATION_ACTIONS.USER_CREDENTIALS_LIST,
       resource: userResource(userId),
     });
-    return this.deps.models.apiKey.listByUserId(this.deps.db, userId);
+    const keys = await this.deps.models.apiKey.listByUserId(
+      this.deps.db,
+      userId,
+    );
+    // A pin shows the name its ledger has today, not the one it had at mint.
+    const pins = this.deps.pins;
+    if (!pins) return keys;
+    return Promise.all(
+      keys.map(async (key) => {
+        if (key.ledgerScopeRepoId === undefined) return key;
+        const current = await pins.nameOf(key.ledgerScopeRepoId);
+        return current === undefined ? key : { ...key, ledgerScope: current };
+      }),
+    );
   }
 
   async revoke(identity: Identity, id: string): Promise<ApiKey> {

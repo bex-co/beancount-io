@@ -19,10 +19,7 @@ import {
   MCP_TRANSPORT_OP_ID,
   MCP_HANDSHAKE_OP_ID,
 } from "@/server/api/rate-limit";
-import {
-  LEDGER_ID_PATTERN,
-  ledgerIdMatchesPin,
-} from "./mcp-ledger-selection";
+import { LEDGER_ID_PATTERN, ledgerIdMatchesPin } from "./mcp-ledger-selection";
 import { parseLedgerId } from "@/shared/str";
 
 export { ledgerSelection } from "./mcp-ledger-selection";
@@ -108,7 +105,7 @@ export function resolveMcpLedger(
     throw new ForbiddenError(
       "The selected ledger is outside this credential's ledger restriction",
       "ledger",
-      "This credential is pinned to one ledger and cannot reach another. Omit `ledger`, or use a credential without a pin.",
+      `This credential is pinned to ${pin} and cannot reach another ledger. A pin follows its ledger across a rename, so ${pin} is the name to use. Omit \`ledger\`, or use a credential without a pin.`,
     );
   }
   // The pin's spelling is canonical: a request for `PUNCSKY/x` resolves to the

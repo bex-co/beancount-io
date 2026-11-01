@@ -276,6 +276,30 @@ describe("minting", () => {
       expect(lookup).not.toHaveBeenCalled();
     });
 
+    it("lists a key under its ledger's current name after a rename", async () => {
+      const { service, model } = makeService({
+        pins: {
+          repoIdOf: async () => 42,
+          nameOf: async (id: number) => (id === 42 ? "alice/p2" : undefined),
+        } as never,
+      });
+      model.listByUserId.mockResolvedValue([
+        storedKey({ ledgerScope: "alice/p1", ledgerScopeRepoId: 42 }),
+        storedKey({
+          id: "akey_2",
+          ledgerScope: "alice/gone",
+          ledgerScopeRepoId: 7,
+        }),
+        storedKey({ id: "akey_3" }),
+      ]);
+      const keys = await service.list(session);
+      expect(keys.map((key) => key.ledgerScope)).toEqual([
+        "alice/p2",
+        "alice/gone",
+        undefined,
+      ]);
+    });
+
     it("refuses to confine a key to a ledger that does not exist", async () => {
       const { service, model } = makeService({ pins });
       await expect(

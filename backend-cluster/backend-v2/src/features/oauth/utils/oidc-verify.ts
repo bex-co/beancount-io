@@ -89,6 +89,8 @@ export interface OidcIdentity {
   clientId?: string;
   /** Present only when the grant was pinned to one ledger at consent time. */
   ledgerId?: string;
+  /** The repository `ledgerId` named when the token was issued (w23/065). */
+  ledgerRepoId?: number;
   /** Scopes granted, split from the space-delimited `scope` claim. */
   scopes: string[];
   /** The token's `jti`, for audit and revocation. Never its secret material. */
@@ -169,6 +171,13 @@ export async function resolveOidcIdentity(
           ? payload.client_id
           : undefined,
       ledgerId,
+      ledgerRepoId:
+        ledgerId &&
+        typeof payload["ledger_repo_id"] === "number" &&
+        Number.isSafeInteger(payload["ledger_repo_id"]) &&
+        payload["ledger_repo_id"] > 0
+          ? payload["ledger_repo_id"]
+          : undefined,
       scopes: typeof payload.scope === "string" ? payload.scope.split(" ") : [],
       tokenId: typeof payload.jti === "string" ? payload.jti : undefined,
       issuedAt: typeof payload.iat === "number" ? payload.iat : undefined,

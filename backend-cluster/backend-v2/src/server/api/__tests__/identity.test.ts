@@ -4,6 +4,7 @@ import type { DatabaseLayer } from "@/foundation/composition";
 import {
   API_SCOPES,
   assertSessionIdentity,
+  configureLedgerPinResolver,
   identityHasCapability,
   resolveIdentity,
   type Identity,
@@ -221,6 +222,69 @@ describe("resolveIdentity — OAuth credential", () => {
       config,
     );
     expect(identity?.ledgerScope).toBe("alice/main");
+  });
+
+  describe("a pinned token follows its ledger's repository (w23/065)", () => {
+    // Repository 42 was alice/p1 and is now alice/p2; alice/p1 is now repo 99.
+    const names = new Map<number, string | undefined>([
+      [42, "alice/p2"],
+      [99, "alice/p1"],
+    ]);
+    beforeEach(() => {
+      configureLedgerPinResolver({
+        repoIdOf: async (name) =>
+          name === "alice/p2" ? 42 : name === "alice/p1" ? 99 : undefined,
+        nameOf: async (id) => names.get(id),
+      });
+    });
+    afterEach(() => {
+      configureLedgerPinResolver(undefined);
+      names.set(42, "alice/p2");
+    });
+
+    const resolve = async (claims: Record<string, unknown>) =>
+      resolveIdentity(
+        request({
+          authorization: `Bearer ${await mintOAuth({ scope: "ledger.read", ...claims })}`,
+        }),
+        databaseAccepting(null),
+        config,
+      );
+
+    it("addresses the renamed ledger by its current name", async () => {
+      const identity = await resolve({
+        ledger_id: "alice/p1",
+        ledger_repo_id: 42,
+      });
+      expect(identity).toMatchObject({
+        ledgerScope: "alice/p2",
+        ledgerScopeRepoId: 42,
+      });
+    });
+
+    it("is refused once its repository is deleted", async () => {
+      names.set(42, undefined);
+      await expect(
+        resolve({ ledger_id: "alice/p1", ledger_repo_id: 42 }),
+      ).resolves.toBeUndefined();
+    });
+
+    it("takes a token without the claim at its name, bound to the repository that name is now", async () => {
+      const identity = await resolve({ ledger_id: "alice/p2" });
+      expect(identity).toMatchObject({
+        ledgerScope: "alice/p2",
+        ledgerScopeRepoId: 42,
+      });
+    });
+
+    it("ignores a repository claim that is not a positive integer", async () => {
+      const identity = await resolve({
+        ledger_id: "alice/p2",
+        ledger_repo_id: "42",
+      });
+      // Falls back to the name, which resolves to repository 42 today.
+      expect(identity?.ledgerScopeRepoId).toBe(42);
+    });
   });
 
   it("leaves ledgerScope unset for an unpinned grant", async () => {
