@@ -40,7 +40,7 @@ import warnings
 from collections.abc import Callable, Hashable, Iterator, Mapping
 from contextlib import contextmanager
 from contextvars import ContextVar
-from decimal import Decimal, DecimalException, InvalidOperation, localcontext
+from decimal import ConversionSyntax, Decimal, DecimalException, InvalidOperation, localcontext
 from functools import cache, partial
 from pathlib import Path
 from typing import Any, TextIO, get_origin
@@ -1189,6 +1189,13 @@ def decimal_failure(exc: ArithmeticError, *, native: bool) -> str:
             "ordered, compared or used in arithmetic. Filter it out with WHERE, for example "
             "WHERE str(<value>) NOT IN ('NaN', 'Infinity', '-Infinity')."
         )
+    if isinstance(exc, InvalidOperation) and _conversion_syntax(exc):
+        # A typed column's converter met text that is not a decimal number (a
+        # blank cell, `12,50`); no rounding repairs the data (w5/1082).
+        return (
+            f"Decimal conversion failed while running this query ({name}): a value is not valid decimal text, "
+            "such as a blank cell or a decimal comma. Correct that value in the source."
+        )
     if isinstance(exc, InvalidOperation):
         # No NaN in sight: `round(number, 30)` or `decimal('1e30') % 7` needs
         # more digits than the 28 the arithmetic keeps (w5/846).
@@ -1197,6 +1204,11 @@ def decimal_failure(exc: ArithmeticError, *, native: bool) -> str:
             "significant digits the arithmetic keeps. Round to fewer places, or keep the numbers smaller."
         )
     return f"Decimal arithmetic failed while running or printing this query ({name})."
+
+
+def _conversion_syntax(exc: InvalidOperation) -> bool:
+    """Whether the signal is `ConversionSyntax`: text handed to `Decimal` that is no number."""
+    return any(ConversionSyntax in arg for arg in exc.args if isinstance(arg, list))
 
 
 def _non_finite_operand(exc: BaseException) -> bool:

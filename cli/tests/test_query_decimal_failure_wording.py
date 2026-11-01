@@ -134,3 +134,23 @@ def test_only_an_amount_too_wide_to_render_names_the_limit() -> None:
 
     infinite = _raised(Decimal("Infinity"))
     assert NAN in decimal_failure(infinite, native=True)
+
+
+@pytest.mark.parametrize("bad", ["", "12,50"], ids=["blank", "decimal-comma"])
+def test_unreadable_decimal_text_is_not_blamed_on_precision(tmp_path: Path, bad: str) -> None:
+    (tmp_path / "bank.csv").write_text(f'day,amount\n2026-09-02,12.50\n2026-09-03,"{bad}"\n')
+
+    result = _bea(tmp_path, "query", "--source", "csv:bank.csv", "SELECT day, amount FROM bank ORDER BY day")
+
+    assert result.returncode == 1
+    assert "not valid decimal text" in result.stderr
+    assert "28 significant digits" not in result.stderr and "Round to fewer" not in result.stderr
+
+
+def test_a_real_precision_overflow_keeps_the_rounding_advice(tmp_path: Path) -> None:
+    (tmp_path / "bank.csv").write_text("day,amount\n2026-09-02,12.50\n")
+
+    result = _bea(tmp_path, "query", "--source", "csv:bank.csv", "SELECT round(amount, 30) FROM bank")
+
+    assert result.returncode == 1
+    assert "28 significant digits" in result.stderr
