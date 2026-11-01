@@ -1,5 +1,6 @@
 import { ArgsType, Field, Int, ObjectType } from "type-graphql";
 import { GraphQLJSONObject } from "graphql-scalars";
+import { BALANCE_CONVERSION_DESCRIPTION } from "@/features/ledger/utils/report-conversion";
 
 // Shared args/types used by both LedgerFinanceQueryResolver and LedgerDataQueryResolver.
 // Defined here once to avoid TypeGraphQL duplicate-type errors.
@@ -22,8 +23,7 @@ export class ConversionArgs extends BaseQueryArgs {
   // currency, as on REST and MCP (w21/202).
   @Field(() => String, {
     nullable: true,
-    description:
-      "A currency code, `units`, `at_cost`, `at_value`, or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Omitted: the ledger's operating currency.",
+    description: BALANCE_CONVERSION_DESCRIPTION,
   })
   conversion?: string;
 
@@ -36,8 +36,7 @@ export class ConversionArgs extends BaseQueryArgs {
 export class TrialBalanceArgs extends BaseQueryArgs {
   @Field(() => String, {
     nullable: true,
-    description:
-      "A currency code, `units`, `at_cost`, `at_value`, or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Omitted: the ledger's operating currency.",
+    description: BALANCE_CONVERSION_DESCRIPTION,
   })
   conversion?: string;
 }

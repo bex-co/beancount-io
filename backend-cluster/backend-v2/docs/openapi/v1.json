@@ -9885,11 +9885,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency",
+              "description": "Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency.",
               "example": "USD"
             },
             "required": false,
-            "description": "Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency",
+            "description": "Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency.",
             "name": "conversion",
             "in": "query"
           },
@@ -14648,11 +14648,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency",
+              "description": "Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency.",
               "example": "USD"
             },
             "required": false,
-            "description": "Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency",
+            "description": "Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency.",
             "name": "conversion",
             "in": "query"
           },
@@ -15043,11 +15043,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency",
+              "description": "Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency.",
               "example": "USD"
             },
             "required": false,
-            "description": "Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency",
+            "description": "Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency.",
             "name": "conversion",
             "in": "query"
           }
@@ -15806,11 +15806,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency",
+              "description": "Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency.",
               "example": "USD"
             },
             "required": false,
-            "description": "Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency",
+            "description": "Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency.",
             "name": "conversion",
             "in": "query"
           },
@@ -16032,11 +16032,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency",
+              "description": "Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency.",
               "example": "USD"
             },
             "required": false,
-            "description": "Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency",
+            "description": "Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency.",
             "name": "conversion",
             "in": "query"
           },

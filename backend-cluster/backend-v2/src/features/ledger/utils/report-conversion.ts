@@ -1,6 +1,13 @@
 import { BadUserInputError } from "@/shared/errors";
 
 /**
+ * How the balance reads' `conversion` input is described on REST, GraphQL and
+ * MCP alike. `units_by_cost` keys raw units by cost currency (w4/m58).
+ */
+export const BALANCE_CONVERSION_DESCRIPTION =
+  "Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency.";
+
+/**
  * Report conversion targets shared by the finance reads, mirroring
  * `bea report --conversion`.
  *

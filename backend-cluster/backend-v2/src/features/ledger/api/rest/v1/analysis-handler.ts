@@ -14,6 +14,7 @@ import {
 import { v1Route } from "@/server/rest/v1-route";
 import type { ServiceLayer } from "@/foundation/composition";
 import type { Identity } from "@/server/api/identity";
+import { BALANCE_CONVERSION_DESCRIPTION } from "@/features/ledger/utils/report-conversion";
 
 /**
  * Analysis reads: what happened in this ledger.
@@ -41,8 +42,7 @@ const conversionQuery = filterQuery.extend({
     example: "month",
   }),
   conversion: z.string().optional().openapi({
-    description:
-      "Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency",
+    description: BALANCE_CONVERSION_DESCRIPTION,
     example: "USD",
   }),
 });
