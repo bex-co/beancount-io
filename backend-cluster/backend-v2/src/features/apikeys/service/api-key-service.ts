@@ -1,3 +1,4 @@
+import type { LedgerPinResolver } from "@/features/ledger/utils/ledger-pin-resolver";
 import { createHash, timingSafeEqual } from "node:crypto";
 import type { DbExecutor } from "@/drizzle/drizzle";
 import type { IModels } from "@/foundation/models";
@@ -70,6 +71,8 @@ export interface ApiKeyServiceDeps {
   authorization: IAuthorizationService;
   /** Whether this user's plan may mint keys. Injected so the service does not reach into billing. */
   isPremium: (userId: string) => Promise<boolean>;
+  /** Binds a ledger pin to its repository. Absent, a pin stays the name it was minted with. */
+  pins?: LedgerPinResolver;
 }
 
 /** Plaintext key prefix, exported for the auth path's cheap pre-check. */
@@ -210,6 +213,20 @@ export class ApiKeyService implements IApiKeyService {
       );
     }
     const ledgerScope = requestedLedgerScope ?? identity.ledgerScope;
+    // The pin identifies a repository; the name is how it is addressed today.
+    let ledgerScopeRepoId =
+      ledgerScope !== undefined && ledgerScope === identity.ledgerScope
+        ? identity.ledgerScopeRepoId
+        : undefined;
+    if (ledgerScope !== undefined && ledgerScopeRepoId === undefined) {
+      ledgerScopeRepoId = await this.deps.pins?.repoIdOf(ledgerScope);
+      if (this.deps.pins && ledgerScopeRepoId === undefined) {
+        throw new ValidationError(
+          "ledgerScope",
+          `No ledger named ${ledgerScope} exists to confine a key to`,
+        );
+      }
+    }
 
     if (
       input.expiresAt &&
@@ -228,6 +245,7 @@ export class ApiKeyService implements IApiKeyService {
       keyPrefix: plaintext.slice(0, DISPLAY_PREFIX_LENGTH),
       scopes,
       ledgerScope,
+      ledgerScopeRepoId,
       expiresAt: input.expiresAt,
     });
 

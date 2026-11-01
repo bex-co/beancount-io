@@ -9,6 +9,7 @@ export interface ApiKey {
   keyPrefix: string;
   scopes: string[];
   ledgerScope?: string;
+  ledgerScopeRepoId?: number;
   lastUsedAt?: Date;
   expiresAt?: Date;
   revokedAt?: Date;
@@ -24,6 +25,7 @@ export interface CreateApiKeyInput {
   keyPrefix: string;
   scopes: string[];
   ledgerScope?: string;
+  ledgerScopeRepoId?: number;
   expiresAt?: Date;
 }
 
@@ -42,5 +44,11 @@ export interface IApiKeyModel {
     revokedAt: Date,
   ): Promise<ApiKey | null>;
   touchLastUsedAt(db: DbExecutor, id: string, at: Date): Promise<void>;
+  /** Binds a legacy (name-only) pin to its repository, once; never rebinds. */
+  bindLedgerScopeRepoId(
+    db: DbExecutor,
+    id: string,
+    repoId: number,
+  ): Promise<void>;
   deleteByUserId(db: DbExecutor, userId: string): Promise<void>;
 }

@@ -1,5 +1,6 @@
 import {
   pgTable,
+  integer,
   text,
   timestamp,
   index,
@@ -31,6 +32,12 @@ export const apiKeys = pgTable(
     scopes: text("scopes").array().notNull(),
     /** `owner/name` when the key is confined to one ledger; null when it is not. */
     ledgerScope: text("ledger_scope"),
+    /**
+     * The pinned ledger's repository ID: what the pin actually identifies, so a
+     * rename follows it and a recreated name does not (w23/065). Null for a key
+     * minted before this column, which binds on first use.
+     */
+    ledgerScopeRepoId: integer("ledger_scope_repo_id"),
     lastUsedAt: timestamp("last_used_at"),
     expiresAt: timestamp("expires_at"),
     revokedAt: timestamp("revoked_at"),

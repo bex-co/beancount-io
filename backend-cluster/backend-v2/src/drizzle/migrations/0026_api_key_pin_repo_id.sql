@@ -1,0 +1,1 @@
+ALTER TABLE "api_keys" ADD COLUMN "ledger_scope_repo_id" integer;

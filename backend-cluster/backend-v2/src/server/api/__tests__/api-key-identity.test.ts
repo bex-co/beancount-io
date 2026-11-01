@@ -2,7 +2,7 @@ import type { AppConfig } from "@/config/config";
 import type { DatabaseLayer } from "@/foundation/composition";
 import type { ApiKey } from "@/features/apikeys/data/api-key-model";
 import { apiKeyDigest } from "@/features/apikeys/service/api-key-service";
-import { resolveIdentity } from "../identity";
+import { configureLedgerPinResolver, resolveIdentity } from "../identity";
 
 /**
  * The API-key half of the one authentication gate (ADR 0006 D2 + D6).
@@ -34,8 +34,10 @@ const liveKey: ApiKey = {
 
 function databaseWith(key: ApiKey | null, ownerExists = true) {
   const touchLastUsedAt = jest.fn(async () => undefined);
+  const bindLedgerScopeRepoId = jest.fn(async () => undefined);
   return {
     touchLastUsedAt,
+    bindLedgerScopeRepoId,
     database: {
       db: {} as DatabaseLayer["db"],
       models: {
@@ -50,6 +52,7 @@ function databaseWith(key: ApiKey | null, ownerExists = true) {
             key && key.keyDigest === digestValue ? key : null,
           ),
           touchLastUsedAt,
+          bindLedgerScopeRepoId,
         },
       } as unknown as DatabaseLayer["models"],
     } satisfies DatabaseLayer,
@@ -167,5 +170,98 @@ describe("usage stamping", () => {
     // Five authenticated requests, one write: precision nobody reads is not
     // worth a database round trip in front of every API call.
     expect(touchLastUsedAt).toHaveBeenCalledTimes(1);
+  });
+});
+
+// A pin identifies a repository, not the name it was granted with (w23/065).
+describe("a pinned key follows its ledger's repository", () => {
+  // Repository 42 was alice/p1 and is now alice/p2; alice/p1 now belongs to 99.
+  const repos = new Map<number, string | undefined>([
+    [42, "alice/p2"],
+    [99, "alice/p1"],
+  ]);
+  const ids = new Map<string, number | undefined>([
+    ["alice/p2", 42],
+    ["alice/p1", 99],
+  ]);
+
+  beforeEach(() => {
+    configureLedgerPinResolver({
+      repoIdOf: async (name) => ids.get(name),
+      nameOf: async (id) => repos.get(id),
+    });
+  });
+  afterEach(() => {
+    configureLedgerPinResolver(undefined);
+    repos.set(42, "alice/p2");
+  });
+
+  const bound = { ...liveKey, ledgerScope: "alice/p1", ledgerScopeRepoId: 42 };
+
+  it("addresses the renamed ledger by its current name", async () => {
+    const { database } = databaseWith(bound);
+    const identity = await resolveIdentity(bearer(PLAINTEXT), database, config);
+    expect(identity).toMatchObject({
+      ledgerScope: "alice/p2",
+      ledgerScopeRepoId: 42,
+    });
+  });
+
+  it("never follows a recreated name: the old name belongs to another repository", async () => {
+    const { database } = databaseWith(bound);
+    const identity = await resolveIdentity(bearer(PLAINTEXT), database, config);
+    // The pin is repository 42, not whatever alice/p1 is now.
+    expect(identity?.ledgerScope).not.toBe("alice/p1");
+  });
+
+  it("is refused once its repository is deleted", async () => {
+    repos.set(42, undefined);
+    const { database } = databaseWith(bound);
+    await expect(
+      resolveIdentity(bearer(PLAINTEXT), database, config),
+    ).resolves.toBeUndefined();
+  });
+
+  it("lets a failed lookup surface instead of reading as a match", async () => {
+    configureLedgerPinResolver({
+      repoIdOf: async () => {
+        throw new Error("lookup down");
+      },
+      nameOf: async () => {
+        throw new Error("lookup down");
+      },
+    });
+    const { database } = databaseWith(bound);
+    await expect(
+      resolveIdentity(bearer(PLAINTEXT), database, config),
+    ).rejects.toThrow(/lookup down/);
+  });
+
+  it("binds a legacy name-only pin to its repository on first use, once", async () => {
+    const legacy = { ...liveKey, ledgerScope: "alice/p2" };
+    const { database, bindLedgerScopeRepoId } = databaseWith(legacy);
+    const identity = await resolveIdentity(bearer(PLAINTEXT), database, config);
+    expect(identity).toMatchObject({
+      ledgerScope: "alice/p2",
+      ledgerScopeRepoId: 42,
+    });
+    expect(bindLedgerScopeRepoId).toHaveBeenCalledWith(
+      expect.anything(),
+      "akey_1",
+      42,
+    );
+
+    const { database: again, bindLedgerScopeRepoId: second } =
+      databaseWith(bound);
+    await resolveIdentity(bearer(PLAINTEXT), again, config);
+    expect(second).not.toHaveBeenCalled();
+  });
+
+  it("keeps a pin to a name nothing owns as that name, matching nothing", async () => {
+    const legacy = { ...liveKey, ledgerScope: "alice/ghost" };
+    const { database, bindLedgerScopeRepoId } = databaseWith(legacy);
+    const identity = await resolveIdentity(bearer(PLAINTEXT), database, config);
+    expect(identity?.ledgerScope).toBe("alice/ghost");
+    expect(bindLedgerScopeRepoId).not.toHaveBeenCalled();
   });
 });

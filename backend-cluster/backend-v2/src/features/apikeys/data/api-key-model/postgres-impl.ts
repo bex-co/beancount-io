@@ -13,6 +13,7 @@ export class ApiKeyPostgresModel implements IApiKeyModel {
       keyPrefix: row.keyPrefix,
       scopes: row.scopes,
       ledgerScope: row.ledgerScope ?? undefined,
+      ledgerScopeRepoId: row.ledgerScopeRepoId ?? undefined,
       lastUsedAt: row.lastUsedAt ?? undefined,
       expiresAt: row.expiresAt ?? undefined,
       revokedAt: row.revokedAt ?? undefined,
@@ -105,6 +106,19 @@ export class ApiKeyPostgresModel implements IApiKeyModel {
     at: Date,
   ): Promise<void> {
     await db.update(apiKeys).set({ lastUsedAt: at }).where(eq(apiKeys.id, id));
+  }
+
+  public async bindLedgerScopeRepoId(
+    db: DbExecutor,
+    id: string,
+    repoId: number,
+  ): Promise<void> {
+    // Only a still-unbound pin: a key already bound to a repository is never
+    // moved to another one by a later lookup.
+    await db
+      .update(apiKeys)
+      .set({ ledgerScopeRepoId: repoId })
+      .where(and(eq(apiKeys.id, id), isNull(apiKeys.ledgerScopeRepoId)));
   }
 
   public async deleteByUserId(db: DbExecutor, userId: string): Promise<void> {

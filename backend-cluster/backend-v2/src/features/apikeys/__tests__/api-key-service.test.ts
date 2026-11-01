@@ -59,7 +59,13 @@ const storedKey = (over: Partial<ApiKey> = {}): ApiKey => ({
   ...over,
 });
 
-function makeService(opts: { premium?: boolean; stored?: ApiKey | null } = {}) {
+function makeService(
+  opts: {
+    premium?: boolean;
+    stored?: ApiKey | null;
+    pins?: { repoIdOf: (name: string) => Promise<number | undefined> };
+  } = {},
+) {
   const created: Record<string, unknown>[] = [];
   const model = {
     create: jest.fn(async (_db: unknown, input: Record<string, unknown>) => {
@@ -104,6 +110,7 @@ function makeService(opts: { premium?: boolean; stored?: ApiKey | null } = {}) {
     models: { apiKey: model } as never,
     authorization,
     isPremium: async () => opts.premium ?? true,
+    pins: opts.pins && { nameOf: async () => undefined, ...opts.pins },
   });
   return { service, model, authorization, created };
 }
@@ -235,6 +242,51 @@ describe("minting", () => {
       { name: "CI", scopes: ["ledger.read"] },
     );
     expect(created[0].ledgerScope).toBe("alice/main");
+  });
+
+  describe("a pin identifies the repository (w23/065)", () => {
+    const pins = {
+      repoIdOf: async (name: string) =>
+        name === "alice/main" ? 42 : undefined,
+    };
+
+    it("records the repository ID next to the name it was asked for", async () => {
+      const { service, created } = makeService({ pins });
+      await service.mint(adminOAuthGrant, {
+        name: "CI",
+        scopes: ["ledger.read"],
+        ledgerScope: "alice/main",
+      });
+      expect(created[0]).toMatchObject({
+        ledgerScope: "alice/main",
+        ledgerScopeRepoId: 42,
+      });
+    });
+
+    it("carries a minter's own bound repository through without another lookup", async () => {
+      const lookup = jest.fn(pins.repoIdOf);
+      const { service, created } = makeService({
+        pins: { repoIdOf: lookup },
+      });
+      await service.mint(
+        { ...pinnedAdminOAuthGrant, ledgerScopeRepoId: 42 },
+        { name: "CI", scopes: ["ledger.read"] },
+      );
+      expect(created[0].ledgerScopeRepoId).toBe(42);
+      expect(lookup).not.toHaveBeenCalled();
+    });
+
+    it("refuses to confine a key to a ledger that does not exist", async () => {
+      const { service, model } = makeService({ pins });
+      await expect(
+        service.mint(adminOAuthGrant, {
+          name: "CI",
+          scopes: ["ledger.read"],
+          ledgerScope: "alice/ghost",
+        }),
+      ).rejects.toBeInstanceOf(ValidationError);
+      expect(model.create).not.toHaveBeenCalled();
+    });
   });
 
   it("refuses a ledger-pinned minter asking for a different ledger", async () => {

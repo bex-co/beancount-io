@@ -1,3 +1,5 @@
+import { createLedgerPinResolver } from "@/features/ledger/utils/ledger-pin-resolver";
+import { configureLedgerPinResolver } from "@/server/api/identity";
 import { createDirectiveLimitPreview } from "@/features/ledger/operations/directive-limit-preview";
 import { LegacyEntryWorkflow } from "@/features/ledger/workflow/legacy-entry-workflow";
 import { LedgerArchiveService } from "@/features/ledger/service/ledger-archive-service";
@@ -77,7 +79,11 @@ export function buildServiceLayer(input: {
       sentBillingEmail: input.database.models.sentBillingEmail,
     },
   );
+  // Credential pins identify a ledger by repository ID (w23/065).
+  const pins = createLedgerPinResolver(input.clients.favaClientFactory);
+  configureLedgerPinResolver(pins);
   const apiKey = new ApiKeyService({
+    pins,
     db: input.database.db,
     models: input.database.models,
     authorization,

@@ -12,6 +12,7 @@ import {
 } from "@/features/apikeys/service/api-key-service";
 import { logger } from "@/shared/logger";
 import { ForbiddenError } from "@/shared/errors";
+import type { LedgerPinResolver } from "@/features/ledger/utils/ledger-pin-resolver";
 
 const identityLogger = logger.child({ module: "identity" });
 
@@ -164,6 +165,12 @@ export interface Identity {
    * normal way, by the ledger access check.
    */
   ledgerScope?: string;
+  /**
+   * The repository ID `ledgerScope` was resolved from. The pin identifies this
+   * repository; `ledgerScope` is only its current name, refreshed on each
+   * request, so a rename is followed and a recreated name is not (w23/065).
+   */
+  ledgerScopeRepoId?: number;
   /**
    * Stable identifier of the credential itself (session/OAuth `jti`, API key
    * id) for budgets, audit and revocation. Never its secret material.
@@ -348,6 +355,44 @@ export function assertSessionIdentity(
  * credential — never throws, and never distinguishes the failure modes to the
  * caller. Surfaces decide what an unauthenticated request means for them.
  */
+let pinResolver: LedgerPinResolver | undefined;
+
+/**
+ * Installs the lookup that turns a credential's pin into its ledger's
+ * repository ID and current name. Set once by the composition root; without
+ * it a pin stays the name it was granted with.
+ */
+export function configureLedgerPinResolver(
+  resolver: LedgerPinResolver | undefined,
+): void {
+  pinResolver = resolver;
+}
+
+/** A pin as stored on a credential: the name it was granted with, and its ID once bound. */
+interface StoredPin {
+  name: string;
+  repoId?: number;
+}
+
+/**
+ * What the pin names today, or `null` when its repository is gone.
+ *
+ * A bound pin resolves its ID to the ledger's current name, so a renamed
+ * ledger keeps its credentials and a new ledger that takes the old name does
+ * not inherit them. A pin without an ID (granted before IDs were recorded)
+ * binds to whatever repository its name resolves to now, which the caller may
+ * persist; a name nothing owns stays the bare name and matches nothing.
+ */
+async function resolveLedgerPin(
+  stored: StoredPin,
+): Promise<{ name: string; repoId?: number } | null> {
+  if (!pinResolver) return { name: stored.name, repoId: stored.repoId };
+  const repoId = stored.repoId ?? (await pinResolver.repoIdOf(stored.name));
+  if (repoId === undefined) return { name: stored.name };
+  const name = await pinResolver.nameOf(repoId);
+  return name === undefined ? null : { name, repoId };
+}
+
 export async function resolveIdentity(
   ctx: RequestLike,
   database: DatabaseLayer,
@@ -437,6 +482,25 @@ async function resolveApiKeyIdentity(
     return undefined;
   }
 
+  // The pin follows its repository, not the name it was granted with.
+  const pin = key.ledgerScope
+    ? await resolveLedgerPin({
+        name: key.ledgerScope,
+        repoId: key.ledgerScopeRepoId,
+      })
+    : undefined;
+  if (pin === null) return undefined;
+  if (pin?.repoId !== undefined && key.ledgerScopeRepoId === undefined) {
+    void database.models.apiKey
+      .bindLedgerScopeRepoId(database.db, key.id, pin.repoId)
+      .catch((error: unknown) =>
+        identityLogger.warn("Could not bind an API key's pin to its ledger", {
+          keyId: key.id,
+          error: error instanceof Error ? error.message : String(error),
+        }),
+      );
+  }
+
   if (recordUsage) void stampLastUsed(key.id, database);
 
   return {
@@ -446,7 +510,8 @@ async function resolveApiKeyIdentity(
     scopes: new Set(key.scopes),
     capabilities: capabilitiesFromScopes(key.scopes),
     assurance: { type: "delegated" },
-    ledgerScope: key.ledgerScope,
+    ledgerScope: pin?.name,
+    ledgerScopeRepoId: pin?.repoId,
     tokenId: key.id,
     issuedAt: epochSeconds(key.createdAt),
     expiresAt: epochSeconds(key.expiresAt),

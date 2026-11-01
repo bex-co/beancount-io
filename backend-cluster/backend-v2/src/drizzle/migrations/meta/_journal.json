@@ -183,6 +183,13 @@
       "when": 1792515691917,
       "tag": "0025_drop_reported_purchases",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1793516693052,
+      "tag": "0026_api_key_pin_repo_id",
+      "breakpoints": true
     }
   ]
 }
