@@ -1,6 +1,6 @@
 # w4 · m58 — Report each holding's cost currency on the balance reads
 
-**Worker:** worker1 **Goal:** the time-scoped balance reads tell a client, per account, how many units of each commodity are held at a cost in which cost currency and how many are held without a cost, so valuation disclosures stop guessing **Status:** todo (t001, t002 done)
+**Worker:** worker1 **Goal:** the time-scoped balance reads tell a client, per account, how many units of each commodity are held at a cost in which cost currency and how many are held without a cost, so valuation disclosures stop guessing **Status:** todo (t001, t002, t003 done)
 
 ## Tasks (in order)
 
@@ -8,7 +8,7 @@
 | ---- | ----- | --- | ---------- |
 | t001 | Ledger: `units_by_cost` conversion on the lot-inventory balance reads — **DONE** | 50m | — |
 | t002 | backend-v2: carry `units_by_cost` through REST, GraphQL and MCP summaries and docs, with a parity contract test — **DONE** | 50m | t001 |
-| t003 | Adoption surface | 20m | t002 |
+| t003 | Adoption surface — **DONE** | 20m | t002 |
 | t004 | Simplify | 20m | t003 |
 | t005 | Test coverage | 30m | t003 |
 | t006 | Closeout | 15m | t004, t005 |
