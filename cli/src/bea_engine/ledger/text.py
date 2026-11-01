@@ -630,3 +630,34 @@ def iter_includes(content: bytes) -> Iterator[IncludeSpan]:
                 raise protocol.UsageError("Cannot locate an include path in the ledger.")
             yield IncludeSpan(start, start + len(text), line, value)
         pending = kind == "INCLUDE"
+
+
+def physical_lines(text: str) -> list[str]:
+    """The lines of `text` as the lexer counts them: split at `\\n` alone, each keeping its terminator.
+
+    `str.splitlines` also breaks at U+2028, U+2029, form feeds and the like,
+    which are ordinary characters in a quoted memo and made a patch describe
+    lines the file does not have (w5/1115, w5/1116).
+    """
+    parts = text.split("\n")
+    lines = [f"{part}\n" for part in parts[:-1]]
+    if parts[-1]:
+        lines.append(parts[-1])
+    return lines
+
+
+def unified_file_diff(text: str, new_text: str, name: str, *, bom: bool = False) -> str:
+    """A unified diff that applies to the file it describes.
+
+    It reads the file's physical lines, keeps a leading byte-order mark on the
+    first line when `bom` says the file has one, and marks a last line without
+    a terminator with `\\ No newline at end of file`, as Git does.
+    """
+    import difflib
+
+    if bom:
+        text, new_text = "\ufeff" + text, "\ufeff" + new_text
+    out = []
+    for line in difflib.unified_diff(physical_lines(text), physical_lines(new_text), fromfile=name, tofile=name):
+        out.append(line if line.endswith("\n") else f"{line}\n\\ No newline at end of file\n")
+    return "".join(out)

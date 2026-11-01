@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import copy
 import datetime
-import difflib
 import functools
 import hashlib
 import io
@@ -36,6 +35,7 @@ from bea_engine.ledger.text import (
     ledger_roots,
     new_account_format_problem,
     reports_unused_accounts,
+    unified_file_diff,
     unknown_root_message,
 )
 from bea_engine.ledger.writer import (
@@ -996,14 +996,7 @@ def answer(
         "validation_warnings": validation_warnings,
         "importer_output": logs.getvalue(),
         "notes": notes,
-        "diff": "".join(
-            difflib.unified_diff(
-                original.decode("utf-8").splitlines(True),
-                proposed.splitlines(True),
-                fromfile=str(target),
-                tofile=str(target),
-            )
-        ),
+        "diff": unified_file_diff(original.decode("utf-8"), proposed, str(target)),
     }
     if apply:
         blocked = preview["blocked"]

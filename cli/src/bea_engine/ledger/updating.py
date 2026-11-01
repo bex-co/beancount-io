@@ -19,7 +19,6 @@ every other writer uses.
 from __future__ import annotations
 
 import codecs
-import difflib
 import os
 import re
 import unicodedata
@@ -40,6 +39,7 @@ from bea_engine.ledger.text import (
     require_flag,
     require_tag,
     single_line,
+    unified_file_diff,
 )
 from bea_engine.query import format_error
 
@@ -700,35 +700,9 @@ def _combined_text(lines: list[str], edits: dict[int, str | None]) -> str:
     return "\n".join(line for line in rewritten if line is not None)
 
 
-def _physical_lines(text: str) -> list[str]:
-    """The lines of `text` as the lexer counts them: split at `\\n` alone, each keeping its terminator.
-
-    `str.splitlines` also breaks at U+2028, U+2029, form feeds and the like,
-    which are ordinary characters in a quoted memo and made the patch describe
-    lines the file does not have (w5/1115).
-    """
-    parts = text.split("\n")
-    lines = [f"{part}\n" for part in parts[:-1]]
-    if parts[-1]:
-        lines.append(parts[-1])
-    return lines
-
-
 def _file_diff(text: str, new_text: str, target: Path, *, bom: bool = False) -> str:
-    """One file's unified diff, in the shape the import preview answers.
-
-    The patch describes the file as it is on disk: its physical lines, the
-    byte-order mark on its first line, and `\\ No newline at end of file` after
-    a last line without a terminator (w5/1115).
-    """
-    if bom:
-        text, new_text = "\ufeff" + text, "\ufeff" + new_text
-    out = []
-    for line in difflib.unified_diff(
-        _physical_lines(text), _physical_lines(new_text), fromfile=str(target), tofile=str(target)
-    ):
-        out.append(line if line.endswith("\n") else f"{line}\n\\ No newline at end of file\n")
-    return "".join(out)
+    """One file's unified diff, in the shape the import preview answers (w5/1115)."""
+    return unified_file_diff(text, new_text, str(target), bom=bom)
 
 
 def _validate_text(
