@@ -68,3 +68,57 @@ def test_the_export_reloads_with_the_same_lots(tmp_path: Path, booking: str, qty
     assert exported.returncode == 0, exported.stderr
     assert _bea(tmp_path, "-f", str(out), "check").returncode == 0
     assert _lots(tmp_path, out) == _lots(tmp_path, source)
+
+
+OPENING = """option "operating_currency" "USD"
+2024-01-01 open Assets:Cash USD
+2024-01-01 open Assets:Broker HOOL
+2024-01-01 open Equity:Opening USD
+2024-01-01 open Equity:Opening-Balances
+2024-01-01 open Income:Gains USD
+2024-01-01 * "Capital"
+  Assets:Cash 1000.00 USD
+  Equity:Opening -1000.00 USD
+2024-01-02 * "Purchase"
+  Assets:Broker HOOL {5 USD}
+  Assets:Cash -25.00 USD
+2024-01-03 * "Purchase"
+  Assets:Broker HOOL {5 USD}
+  Assets:Cash -15.00 USD
+2026-01-02 * "Purchase"
+  Assets:Broker HOOL {5 USD}
+  Assets:Cash -10.00 USD
+2026-01-03 * "Partial sale"
+  Assets:Broker -2 HOOL {5 USD} @ 7 USD
+  Assets:Cash 14.00 USD
+  Income:Gains -4.00 USD
+"""
+WINDOW = "PRINT FROM OPEN ON 2026-01-01 CLOSE ON 2027-01-01"
+
+
+def test_an_opening_export_that_would_date_an_undated_lot_is_refused(tmp_path: Path) -> None:
+    """The generated opening has no source line, so its quantity would print explicit and date the lot (w5/1084)."""
+    source = tmp_path / "main.bean"
+    source.write_text(OPENING)
+    out = tmp_path / "export.bean"
+    full = _bea(tmp_path, "-f", str(source), "query", "PRINT", "-f", "beancount", "-o", str(out))
+    assert full.returncode == 0, full.stderr
+    kept = out.read_bytes()
+
+    window = _bea(tmp_path, "-f", str(source), "query", WINDOW, "-f", "beancount", "-o", str(out))
+
+    assert window.returncode != 0
+    assert "no acquisition date" in window.stderr and "Nothing was written" in window.stderr
+    assert out.read_bytes() == kept
+    assert _bea(tmp_path, "-f", str(out), "check").returncode == 0
+
+
+def test_an_opening_export_of_dated_lots_still_works(tmp_path: Path) -> None:
+    source = tmp_path / "main.bean"
+    source.write_text(OPENING.replace("HOOL {5 USD}\n  Assets:Cash -", "HOOL {5 USD, 2023-12-31}\n  Assets:Cash -", 3))
+    out = tmp_path / "export.bean"
+
+    window = _bea(tmp_path, "-f", str(source), "query", WINDOW, "-f", "beancount", "-o", str(out))
+
+    assert window.returncode == 0, window.stderr
+    assert _bea(tmp_path, "-f", str(out), "check").returncode == 0

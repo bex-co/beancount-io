@@ -37,7 +37,7 @@ import stat
 import sys
 import unicodedata
 import warnings
-from collections.abc import Callable, Hashable, Iterator, Mapping
+from collections.abc import Callable, Hashable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from contextvars import ContextVar
 from decimal import ConversionSyntax, Decimal, DecimalException, InvalidOperation, localcontext
@@ -1871,6 +1871,7 @@ def _render_beancount(rows: Any, out: TextIO, file: Path, options: Mapping[str, 
     # same way, number-less: stated, the reload dated each acquisition and a
     # later partial sale became ambiguous (w5/1066).
     rows = [(_with_inferred_units(entry) if isinstance(entry, Transaction) else entry,) for (entry,) in rows]
+    _refuse_undated_lots(rows)
     switches, restore = _export_root_changes(rows, options)
     # Only ahead of rows: an empty result is an empty file, as an empty
     # `SELECT -o` writes, not a lone `option` line (w5/854).
@@ -1894,6 +1895,34 @@ def _render_beancount(rows: Any, out: TextIO, file: Path, options: Mapping[str, 
         out.write(printer(entry))
     if restore:
         out.write("\n" + restore)
+
+
+def _refuse_undated_lots(rows: Sequence[tuple[Any, ...]]) -> None:
+    """Refuse a lot whose acquisition date the export cannot keep.
+
+    A summarized opening balance (`PRINT FROM OPEN ON ...`) carries the booked
+    quantity of an undated lot, and no source line to read the open quantity
+    from. Printed, that quantity is explicit, so the reload dates the lot with
+    the opening transaction and a later sale or cover is ambiguous (or, under
+    FIFO, fails to sort). Nothing is invented or dropped: the export is refused
+    before it replaces a previous file (w5/1084).
+    """
+    from beancount.core.data import Transaction
+    from beancount.core.position import Cost
+
+    for (entry,) in rows:
+        # Only what the summarizer generates: a posting written in the source
+        # prints as it was written, and a sale of an undated lot matches it.
+        if not isinstance(entry, Transaction) or not str((entry.meta or {}).get("filename", "")).startswith("<"):
+            continue
+        for posting in entry.postings:
+            if isinstance(posting.cost, Cost) and posting.cost.date is None and posting.units is not None:
+                raise protocol.LedgerError(
+                    f"Cannot export {posting.account} {posting.units} as a Beancount file: its lot has no "
+                    "acquisition date, and a printed quantity would date it to its transaction "
+                    f"({entry.date}), changing which lot a later sale or cover closes. Export the full ledger "
+                    "(without FROM OPEN ON ... CLOSE ON ...), or use JSON/text output. Nothing was written."
+                )
 
 
 def _with_inferred_units(entry: Any) -> Any:

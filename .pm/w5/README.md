@@ -64,7 +64,6 @@
 
 - [1085 — Keep lot selectors intact when quantities are inferred](./1085.md) — major CLI lot selection: inferred sales/covers mutate held labels, omit gains and leave offsetting lots; single/bulk/native import; 46 profiles, 404 CLI calls and 128 native loads; checked 2026-10-28.
 
-- [1084 — Preserve undated lots in opening-summary Beancount exports](./1084.md) — minor CLI query export: generated long/short opening lots acquire a date, breaking later sales/covers or changing lot identity; 54 fresh profiles, 330 CLI commands and 156 native operations; checked 2026-10-28.
 
 
 
