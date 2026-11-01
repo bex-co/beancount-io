@@ -1,6 +1,6 @@
 # w7 · m1 — Plan limits resolve from Stripe and store subscriptions alike
 
-**Worker:** worker1 **Goal:** the backend can hold App Store and Google Play subscriptions and resolves one plan per account from Stripe and the stores together, with no change for anyone without a store subscription **Status:** in progress (t001, t002 done)
+**Worker:** worker1 **Goal:** the backend can hold App Store and Google Play subscriptions and resolves one plan per account from Stripe and the stores together, with no change for anyone without a store subscription **Status:** in progress (t001, t002, t003 done)
 
 ## Tasks (in order)
 
@@ -8,7 +8,7 @@
 | --- | --- | --- | --- |
 | t001 | Store product catalog — **DONE** | 45m | — |
 | t002 | Store billing tables — **DONE** | 1h30m | t001 |
-| t003 | Merge store tiers into getUserTier | 1h | t002 |
+| t003 | Merge store tiers into getUserTier — **DONE** | 1h | t002 |
 | t004 | One renewing source: BILLED_BY_STORE and the restricted portal | 1h30m | t003 |
 | t005 | subscriptionStatus reports the billing source | 1h | t004 |
 | t006 | Limit errors say whose plan set the limit | 1h | t003 |

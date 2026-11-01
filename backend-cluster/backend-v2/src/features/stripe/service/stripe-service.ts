@@ -24,6 +24,7 @@ import {
 } from "../operations/plan-change-schedule";
 import { ValidationError } from "@/shared/errors";
 import type { PaidCustomer } from "../data/paid-customer-model/types";
+import { grantedTier } from "@/features/store-billing/service/store-subscription-grant";
 import { IModels } from "@/foundation/models";
 import { logger } from "@/shared/logger";
 import { NodePgDatabase } from "drizzle-orm/node-postgres";
@@ -88,6 +89,8 @@ export interface IStripeService {
   ): Promise<{ success: boolean; message?: string }>;
   /** The tier a still-current verified period paid for, from our cache. */
   lastVerifiedTier(userId: string): Promise<SubscriptionTier | null>;
+  /** The tiers the user's store subscriptions grant now (ADR 001 D3). */
+  grantedStoreTiers(userId: string): Promise<SubscriptionTier[]>;
   handleCheckoutSessionCompleted(
     session: Stripe.Checkout.Session,
     clientId: string,
@@ -151,12 +154,12 @@ export class StripeService implements IStripeService {
   // Cache for Stripe instances by client ID
   private stripeInstances: Record<string, Stripe> = {};
 
-  private models: Pick<IModels, "paidCustomer">;
+  private models: Pick<IModels, "paidCustomer" | "storeSubscription">;
 
   private postgresDb: NodePgDatabase;
 
   constructor(
-    models: Pick<IModels, "paidCustomer">,
+    models: Pick<IModels, "paidCustomer" | "storeSubscription">,
     postgresDb: NodePgDatabase,
   ) {
     this.models = models;
@@ -331,6 +334,15 @@ export class StripeService implements IStripeService {
         : [],
     );
     return tiers.length ? highestTier(tiers) : null;
+  }
+
+  async grantedStoreTiers(userId: string): Promise<SubscriptionTier[]> {
+    const subscriptions = await this.models.storeSubscription.findByUserId(
+      this.postgresDb,
+      userId,
+    );
+    const now = new Date();
+    return subscriptions.flatMap((row) => grantedTier(row, now) ?? []);
   }
 
   async cancelScheduledPlanChange(

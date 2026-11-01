@@ -69,6 +69,20 @@ describe("owned renewal cache", () => {
     );
     expect(JSON.stringify(t.retired)).toBe(old);
   });
+  it("caches the Stripe tier alone, whatever a store grants", async () => {
+    const t = setup();
+    const grantedStoreTiers = jest.fn(async () => ["ENTERPRISE"]);
+    Object.assign(t.stripe, { grantedStoreTiers });
+    await t.run();
+    expect(grantedStoreTiers).not.toHaveBeenCalled();
+    expect(t.model.updatePeriodIfUnchanged).toHaveBeenCalledWith(
+      {},
+      t.live,
+      period,
+      SUBSCRIPTION_PERIOD_VERIFICATION_VERSION,
+      "ORGANIZATION",
+    );
+  });
   it("does not write on repeated refresh or provider failure", async () => {
     const t = setup();
     Object.assign(t.live, {

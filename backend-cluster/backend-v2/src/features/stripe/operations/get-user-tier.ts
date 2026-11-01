@@ -14,11 +14,43 @@ type TierDeps = { stripe: IStripeService };
 export type GetUserTierParams = TierDeps & { userId: string };
 
 /**
- * Cross-service operation: determine a user's subscription tier.
+ * Cross-service operation: determine a user's subscription tier, the highest
+ * any source grants (ADR 001 D3).
  *
- * Resolves verified live subscriptions against recognized prices.
+ * The sources are read apart so that neither failure can hide the other's
+ * plan. The merged tier stays here: `paid_customers.period_tier` is Stripe's
+ * own fallback, and a store plan written there would outlive its access.
  */
 export async function getUserTier({
+  stripe,
+  userId,
+}: GetUserTierParams): Promise<SubscriptionTier> {
+  const [fromStripe, fromStores] = await Promise.all([
+    stripeTier({ stripe, userId }),
+    storeTiers({ stripe, userId }),
+  ]);
+  return highestTier([fromStripe, ...fromStores]);
+}
+
+/** Store rows live in Beancount's database, so no store is called here. */
+async function storeTiers({
+  stripe,
+  userId,
+}: GetUserTierParams): Promise<SubscriptionTier[]> {
+  try {
+    return await stripe.grantedStoreTiers(userId);
+  } catch (error) {
+    logger.error("Error reading store subscriptions", {
+      userId,
+      errorType: error instanceof Error ? error.name : typeof error,
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
+    return [];
+  }
+}
+
+/** Resolves verified live subscriptions against recognized prices. */
+async function stripeTier({
   stripe,
   userId,
 }: GetUserTierParams): Promise<SubscriptionTier> {

@@ -2,6 +2,7 @@ import { SUBSCRIPTION_PERIOD_VERIFICATION_VERSION } from "./subscription-plan";
 import { StripeService } from "./stripe-service";
 import type { IPaidCustomerModel } from "@/features/stripe/data/paid-customer-model";
 import type { PaidCustomer } from "@/features/stripe/data/paid-customer-model/types";
+import type { IStoreSubscriptionModel } from "@/features/store-billing/data/store-subscription-model";
 import type { IModels } from "@/foundation/models";
 import type Stripe from "stripe";
 import { BILLING_CLIENT_ID, SUBSCRIPTION_CONFIG } from "./stripe";
@@ -35,7 +36,10 @@ jest.mock("@/config/config", () => {
 describe("StripeService", () => {
   let stripeUseCase: StripeService;
   let mockIPaidCustomerModel: jest.Mocked<IPaidCustomerModel>;
-  let mockModels: jest.Mocked<Pick<IModels, "paidCustomer">>;
+  let mockModels: jest.Mocked<
+    Pick<IModels, "paidCustomer" | "storeSubscription">
+  >;
+  const findStoreSubscriptions = jest.fn();
   let mockPostgresDb: NodePgDatabase;
   let mockStripeSubscriptions: {
     retrieve: jest.Mock;
@@ -61,9 +65,12 @@ describe("StripeService", () => {
       findByIdAndUpdate: jest.fn(),
     } as unknown as jest.Mocked<IPaidCustomerModel>;
 
-    // Create mock models container — StripeService only touches paidCustomer
+    // Create mock models container
     mockModels = {
       paidCustomer: mockIPaidCustomerModel,
+      storeSubscription: {
+        findByUserId: findStoreSubscriptions,
+      } as unknown as jest.Mocked<IStoreSubscriptionModel>,
     };
 
     // Create mock PostgresDb
@@ -395,6 +402,40 @@ describe("StripeService", () => {
       await expect(
         stripeUseCase.lastVerifiedTier("user_123"),
       ).resolves.toBeNull();
+    });
+  });
+
+  describe("grantedStoreTiers", () => {
+    const row = (overrides: Record<string, unknown>) => ({
+      userId: "user_123",
+      replacedById: null,
+      status: "ACTIVE",
+      tier: "GROWTH",
+      accessEndsAt: new Date(Date.now() + 86_400_000),
+      ...overrides,
+    });
+
+    it("returns only what the user's rows grant now", async () => {
+      findStoreSubscriptions.mockResolvedValue([
+        row({}),
+        row({ tier: "PREMIUM", status: "GRACE" }),
+        row({ tier: "ORGANIZATION", status: "EXPIRED" }),
+        row({ tier: "ORGANIZATION", accessEndsAt: new Date(0) }),
+      ]);
+      await expect(
+        stripeUseCase.grantedStoreTiers("user_123"),
+      ).resolves.toEqual(["GROWTH", "PREMIUM"]);
+      expect(findStoreSubscriptions).toHaveBeenCalledWith(
+        expect.anything(),
+        "user_123",
+      );
+    });
+
+    it("returns nothing without store rows", async () => {
+      findStoreSubscriptions.mockResolvedValue([]);
+      await expect(
+        stripeUseCase.grantedStoreTiers("user_123"),
+      ).resolves.toEqual([]);
     });
   });
 

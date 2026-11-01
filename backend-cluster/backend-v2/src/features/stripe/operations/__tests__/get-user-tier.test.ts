@@ -24,7 +24,10 @@ function sub(prices: string[], overrides = {}): ClientSubscription {
 }
 function deps(subscriptions: ClientSubscription[]) {
   return {
-    stripe: { listSubscriptions: jest.fn(async () => subscriptions) },
+    stripe: {
+      listSubscriptions: jest.fn(async () => subscriptions),
+      grantedStoreTiers: jest.fn(async () => []),
+    },
     userId: "usr_synthetic",
     models: {
       paidCustomer: {
@@ -165,5 +168,78 @@ describe("subscription-bound tier", () => {
     expect(
       subscriptionPeriodEnd([sub([org], { status: "canceled" })]),
     ).toBeNull();
+  });
+});
+
+describe("store subscriptions (ADR 001 D3)", () => {
+  const withStores = (
+    subscriptions: ClientSubscription[],
+    ...tiers: SubscriptionTier[]
+  ) => {
+    const params = deps(subscriptions);
+    params.stripe.grantedStoreTiers.mockResolvedValue(tiers);
+    return params;
+  };
+  const growth = SubscriptionTier.GROWTH;
+
+  it("takes the plan from a store when Stripe has none", async () => {
+    const params = withStores([], growth);
+    expect(await getUserTier(params)).toBe(growth);
+    expect(params.stripe.grantedStoreTiers).toHaveBeenCalledWith(
+      "usr_synthetic",
+    );
+  });
+
+  it.each([
+    ["the store's", [sub([premium])], growth],
+    ["Stripe's", [sub([org])], SubscriptionTier.ORGANIZATION],
+  ])("uses %s tier when it is the higher", async (_, subscriptions, tier) => {
+    expect(await getUserTier(withStores(subscriptions, growth))).toBe(tier);
+  });
+
+  it("does not add plans from different sources together", async () => {
+    expect(
+      await getUserTier(withStores([sub([premium])], growth, growth)),
+    ).toBe(growth);
+  });
+
+  it("stays Free with no plan from either source", async () => {
+    expect(await getUserTier(withStores([]))).toBe(SubscriptionTier.FREE);
+  });
+
+  it("keeps a store plan when a Stripe failure would otherwise mean Free", async () => {
+    const params = withStores([], growth);
+    params.stripe.listSubscriptions.mockRejectedValue(
+      new Error("Stripe subscription does not match its live customer binding"),
+    );
+    expect(await getUserTier(params)).toBe(growth);
+  });
+
+  it("merges a store plan with the cached tier during a Stripe outage", async () => {
+    const params = withStores([], growth);
+    params.stripe.listSubscriptions.mockRejectedValue(
+      new Stripe.errors.StripeConnectionError({
+        type: "api_error",
+        message: "Stripe down",
+      }),
+    );
+    params.stripe.lastVerifiedTier = jest.fn(
+      async () => SubscriptionTier.ORGANIZATION,
+    );
+    expect(await getUserTier(params)).toBe(SubscriptionTier.ORGANIZATION);
+  });
+
+  it("keeps the Stripe plan when the store rows cannot be read", async () => {
+    const params = withStores([sub([premium])]);
+    params.stripe.grantedStoreTiers.mockRejectedValue(
+      new Error("database down"),
+    );
+    expect(await getUserTier(params)).toBe(SubscriptionTier.PREMIUM);
+  });
+
+  it("gives the limits of the merged tier", async () => {
+    expect(await getUserTierLimits(withStores([], growth))).toMatchObject({
+      maxLedgers: 20,
+    });
   });
 });
