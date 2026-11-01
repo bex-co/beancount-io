@@ -638,11 +638,15 @@ for an anonymous caller, `FORBIDDEN` for a credential without `ledger.read` or
 one pinned to another ledger, and `NOT_FOUND` "Ledger not found" otherwise.
 
 `beancount://{owner}/{name}/archive-download-url` returns the existing HTTP URL
-for `main.zip`, on the server's public origin. It is a REST endpoint: fetch it
-with a personal API key (`x-api-key`) or a signed-in browser session. An MCP
-OAuth token (audience `{issuer}/api-gateway/mcp`) is scoped to the MCP
-endpoint by design ([ADR 0007](../../../docs/adrs/ADR007-backend-v2-mcp-surface.md)) and is refused there with
-`UNAUTHENTICATED`. Every archive fetch checks access again and returns a
+for `main.zip`, on the server's public origin. For an MCP caller the
+URL is `{issuer}/api-gateway/mcp/archive/{owner}/{name}/main.zip`, a streaming
+route under the MCP resource: fetch it with `Authorization: Bearer` and the same
+MCP credential (audience `{issuer}/api-gateway/mcp`) or a personal API key, at
+any archive size ([ADR 0007](../../../docs/adrs/ADR007-backend-v2-mcp-surface.md)
+amendment). A browser session is refused there with `UNAUTHENTICATED`, as on the
+JSON-RPC endpoint; the credential pin, per-ledger read authority and the shared
+archive-download budget apply as on the REST download. REST and GraphQL callers
+still get the v1 URL. Every archive fetch checks access again and returns a
 `private, no-store` response. Credentials are never embedded in archive URLs.
 
 Asset URLs use object-storage signatures and their configured expiry. Previously

@@ -6,6 +6,7 @@ import { setSandboxAgentRoute } from "./sandbox-agent-route";
 import { setOpenAIChatCompletionsRoute } from "./openai-chat-completions-route";
 
 export { setMcpRoute } from "./mcp-route";
+export { setMcpArchiveRoute } from "./mcp-archive-route";
 
 /**
  * The AI streaming routes. The MCP transport is registered separately

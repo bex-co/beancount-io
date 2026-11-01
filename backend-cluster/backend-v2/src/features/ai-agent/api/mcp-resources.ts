@@ -144,7 +144,7 @@ async function readArchive(
     throw new OperationNotAllowedError(
       "readArchive",
       `${archive} is larger than the ${MCP_ARCHIVE_BLOB_MAX_MIB} MiB an MCP resource returns`,
-      `Read \`beancount://${ledgerId}/archive-download-url\` for an HTTP URL that streams the archive at any size. It is a REST endpoint: fetch it with a personal API key (\`x-api-key\`) or a signed-in browser session. An MCP OAuth token is scoped to the MCP endpoint and is refused there.`,
+      `Read \`beancount://${ledgerId}/archive-download-url\` for an HTTP URL that streams the archive at any size. Fetch it with \`Authorization: Bearer\` and the same MCP credential you are using now; it is served under the MCP endpoint, so no other credential is needed.`,
     );
   return {
     blob: bytes.toString("base64"),
@@ -546,7 +546,7 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
   {
     name: "ledgerArchive",
     title: "Ledger Archive",
-    description: `Download archive bytes as an MCP base64 blob, up to ${MCP_ARCHIVE_BLOB_MAX_MIB} MiB. \`archive\` is a Git reference and its format, \`<ref>.zip\` or \`<ref>.tar.gz\` (for example \`main.zip\`), as on REST. A larger archive is refused; read \`beancount://{owner}/{name}/archive-download-url\` for an HTTP URL that streams it at any size. Every call rechecks ledger read authority and spends the shared archive-download budget.`,
+    description: `Download archive bytes as an MCP base64 blob, up to ${MCP_ARCHIVE_BLOB_MAX_MIB} MiB. \`archive\` is a Git reference and its format, \`<ref>.zip\` or \`<ref>.tar.gz\` (for example \`main.zip\`), as on REST. A larger archive is refused; read \`beancount://{owner}/{name}/archive-download-url\` for an HTTP URL that streams it at any size with the same MCP credential. Every call rechecks ledger read authority and spends the shared archive-download budget.`,
     mimeType: "application/octet-stream",
     uriTemplate: "beancount://{owner}/{name}/archive/{archive}",
     read: async (context, variables) =>
@@ -579,7 +579,7 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
     name: "ledgerArchiveDownloadUrl",
     title: "Ledger Archive Download URL",
     description:
-      "Get the authenticated HTTP URL for main.zip. It is a REST endpoint: fetch it with a personal API key (x-api-key) or a signed-in browser session; an MCP OAuth token is scoped to the MCP endpoint and is refused there. No credential is embedded in the URL. This resource discovers a URL and does not deliver archive bytes.",
+      "Get the authenticated HTTP URL for main.zip. It is served under the MCP endpoint: fetch it with `Authorization: Bearer` and the same MCP credential, at any archive size. No credential is embedded in the URL. This resource discovers a URL and does not deliver archive bytes.",
     mimeType: "application/json",
     uriTemplate: "beancount://{owner}/{name}/archive-download-url",
     read: async (context, variables) =>
@@ -588,6 +588,7 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
           await context.ledgerAssetService.getLedgerArchiveDownloadUrl(
             resolveLedgerId(context, variables),
             context.identity,
+            { mcp: true },
           ),
       }),
   },

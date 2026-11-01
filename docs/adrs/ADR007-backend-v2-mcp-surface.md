@@ -15,6 +15,19 @@ This rejects D3's required ledger pin and D11's policy of keeping pins as the de
 
 The independent transport, OAuth resource separation, error handling, and schema rules remain valid. The decisions and diagrams below are retained because they explain the endpoint; their ledger-pinning rules describe what the code does today, not the intended policy.
 
+## Amendment (2026-10-31): one streaming archive path under the MCP resource
+
+The MCP resource is no longer only the JSON-RPC endpoint. `GET /api-gateway/mcp/archive/{owner}/{name}/{archive}` streams a ledger archive of any size to a caller whose credential is accepted at the MCP resource. It exists because the `archive/{archive}` resource answers in one JSON-RPC message (capped at 8 MiB) and the REST download refuses an MCP-audience token, so a client connected only through MCP OAuth could not download a larger ledger (w23/023, w23/026). The owner chose this over documenting "use an API key" on 2026-10-31.
+
+What an MCP-audience token can now reach is exactly one more read: the same bytes the `ledgerArchive` resource returns, streamed. The boundary it does not cross:
+
+- The audience check is unchanged: `resolveIdentity` runs with the MCP resource binding, and a browser session is refused with the same `401` and `resource_metadata` pointer as the JSON-RPC endpoint.
+- It requires the read capability, then goes through the same ledger archive service as the v1 download, so the credential pin (for credentials issued with one), per-ledger `LEDGER_ARCHIVE_READ` authorization, revocation and the `private, no-store` response apply on every fetch.
+- It spends the shared archive-download budget (`ledger.downloadArchive.mcp` joins the archive bucket), so a fourth spelling cannot buy a fresh allowance.
+- It is read-only and takes no body. An MCP token still reaches no other REST route; application-API tokens are still refused here as they are at the JSON-RPC endpoint.
+
+`beancount://{owner}/{name}/archive-download-url` returns this path to MCP callers. REST and GraphQL callers keep the v1 URL.
+
 ### Not yet implemented
 
 The code still issues and enforces pins. Removing issuance is the work; enforcement stays for the credentials that already carry one (see [Open Questions](#open-questions)). Paths that start with `src/` are relative to `backend-cluster/backend-v2/`.

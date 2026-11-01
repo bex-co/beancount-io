@@ -40,6 +40,7 @@ const ARCHIVE_DOWNLOAD_BUDGET: Budget = { windowMs: MINUTE, max: 30 };
 const ARCHIVE_VERBS = new Set([
   "ledger.downloadArchive",
   "ledger.downloadArchive.legacy",
+  "ledger.downloadArchive.mcp",
 ]);
 const ARCHIVE_DOWNLOAD_BUCKET = "REST archive-download";
 
@@ -158,6 +159,8 @@ export const OP_BUDGETS: Record<string, Budget> = {
   "REST GET /api-gateway/v1/ledgers/{owner}/{name}/archive/{archive}":
     ARCHIVE_DOWNLOAD_BUDGET,
   "REST GET /api-gateway/ledgers/{ledgerId}/archive/{archive}":
+    ARCHIVE_DOWNLOAD_BUDGET,
+  "REST GET /api-gateway/mcp/archive/{owner}/{name}/{archive}":
     ARCHIVE_DOWNLOAD_BUDGET,
   // The public quota catalog and protected billing mutations all used the
   // legacy `session-only` class. Keep that 300/minute budget while op classes

@@ -171,6 +171,7 @@ describe("budgets", () => {
     for (const opId of [
       "REST GET /api-gateway/v1/ledgers/{owner}/{name}/archive/{archive}",
       "REST GET /api-gateway/ledgers/{ledgerId}/archive/{archive}",
+      "REST GET /api-gateway/mcp/archive/{owner}/{name}/{archive}",
       "MCP resource:ledgerArchive",
     ]) {
       expect(budgetFor(opId, classifyOp(opId))).toEqual({
@@ -471,10 +472,11 @@ it("alternating REST and MCP archive aliases cannot reset the shared budget", as
     "REST GET /api-gateway/v1/ledgers/{owner}/{name}/archive/{archive}",
     "MCP resource:ledgerArchive",
     "REST GET /api-gateway/ledgers/{ledgerId}/archive/{archive}",
+    "REST GET /api-gateway/mcp/archive/{owner}/{name}/{archive}",
   ];
   for (let i = 0; i < 30; i++)
     expect(
-      (await consume({ opId: aliases[i % 3], identity: token, ip: "fixture" }))
+      (await consume({ opId: aliases[i % 4], identity: token, ip: "fixture" }))
         .allowed,
     ).toBe(true);
   for (const opId of aliases)

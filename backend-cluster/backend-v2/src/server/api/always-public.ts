@@ -197,6 +197,11 @@ export const ALWAYS_PUBLIC: readonly AlwaysPublicEntry[] = [
     reason: MCP_TRANSPORT,
   },
   {
+    opId: "REST GET /api-gateway/mcp/archive/{owner}/{name}/{archive}",
+    reason:
+      "The MCP resource's streaming archive download. It authenticates the MCP audience itself (never a browser session), requires the read capability, spends the shared archive-download budget and calls the same ledger archive service as the v1 route, which rechecks the credential pin and per-ledger read authority.",
+  },
+  {
     opId: "REST ALL /api-gateway/",
     reason:
       "The GraphQL transport. Its ops are gated one level in, per root field, by `graphqlScopeMiddleware` — checking the HTTP mount as well would classify a whole document by its envelope and refuse queries the matrix allows.",

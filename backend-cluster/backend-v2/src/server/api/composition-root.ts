@@ -87,7 +87,11 @@ import {
 } from "@/features/apikeys/api/token-introspection-rest";
 import { setSitemapHandler } from "@/features/sitemap/api/sitemap-handler";
 import { setWellKnownRoutes } from "@/features/well-known/api/well-known-route";
-import { setMcpRoute, setupAiAgentRoutes } from "@/features/ai-agent/api";
+import {
+  setMcpArchiveRoute,
+  setMcpRoute,
+  setupAiAgentRoutes,
+} from "@/features/ai-agent/api";
 import { setGitProxyHandler } from "@/features/gitea/api/git-proxy-handler";
 import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
 import {
@@ -327,6 +331,17 @@ const REST_FRAGMENTS: readonly RestFragment[] = [
       setMcpRoute(router, layers, config, (toolCtx) =>
         assembleMcpRegistry(toolCtx, config),
       ),
+  },
+  {
+    // The MCP resource's one non-JSON-RPC path: it streams a ledger archive
+    // of any size to an MCP-audience token (w23/026, ADR 0007). Outside the
+    // matrix like the transport it extends: it authenticates the MCP audience
+    // itself, checks the read capability, spends the shared archive budget and
+    // goes through the same ledger archive service as the v1 route.
+    feature: "ai-agent-mcp-archive",
+    gate: "outside",
+    register: (router, { layers, config }) =>
+      setMcpArchiveRoute(router, layers, config),
   },
   {
     feature: "ai-agent",

@@ -234,7 +234,7 @@ describe("download URL discovery and authorized HTTP consumption", () => {
       }
     },
   );
-  it("returns the same authenticated archive URL and streams the actual archive", async () => {
+  it("returns the v1 archive URL to REST and GraphQL, the MCP route to MCP, and streams the actual archive", async () => {
     const f = await fixture();
     try {
       const mcp = await f.read("beancount://alice/main/archive-download-url");
@@ -247,11 +247,16 @@ describe("download URL discovery and authorized HTTP consumption", () => {
       );
       expect(restDiscovery.status).toBe(200);
       expect(await restDiscovery.json()).toEqual(gql);
-      expect(mcp).toEqual(gql);
+      // An MCP caller is handed the streaming route under the MCP resource,
+      // the one its token is accepted at (w23/026); REST and GraphQL callers
+      // are handed the v1 URL. The MCP route has its own end-to-end test.
       expect(mcp.downloadUrl).toBe(
+        `${f.restBase}/api-gateway/mcp/archive/alice/main/main.zip`,
+      );
+      expect(gql.downloadUrl).toBe(
         `${f.restBase}/api-gateway/v1/ledgers/alice/main/archive/main.zip`,
       );
-      const response = await fetch(mcp.downloadUrl);
+      const response = await fetch(gql.downloadUrl);
       expect(response.status).toBe(200);
       expect(response.headers.get("content-type")).toBe("application/zip");
       expect(response.headers.get("content-disposition")).toContain("main.zip");
@@ -265,7 +270,7 @@ describe("download URL discovery and authorized HTTP consumption", () => {
           )
         ).status,
       ).toBe(404);
-      expect((await fetch(mcp.downloadUrl)).status).toBe(404);
+      expect((await fetch(gql.downloadUrl)).status).toBe(404);
       expect(
         f.upstreamRequests.filter((p) => p.includes("archive")),
       ).toHaveLength(1);

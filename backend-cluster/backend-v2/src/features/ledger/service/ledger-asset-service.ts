@@ -55,6 +55,7 @@ export interface ILedgerAssetService {
   getLedgerArchiveDownloadUrl(
     ledgerId: string,
     identity?: Identity,
+    options?: { mcp?: boolean },
   ): Promise<string>;
 }
 
@@ -126,7 +127,8 @@ export class LedgerAssetService
    * the HttpOnly session cookie to that endpoint; CLI and API callers send
    * their personal API key or application-API bearer token directly to it.
    * An MCP OAuth token is scoped to the MCP endpoint (ADR 0007) and is refused
-   * there. No credential is embedded in the URL.
+   * there, so an MCP caller (`options.mcp`) gets the streaming route under
+   * the MCP resource instead (w23/026). No credential is embedded in the URL.
    *
    * Anonymous callers can only be reading a public ledger (authorizeLedger
    * refuses everything else), so they get the credential-free legacy URL,
@@ -136,6 +138,7 @@ export class LedgerAssetService
   async getLedgerArchiveDownloadUrl(
     ledgerId: string,
     identity?: Identity,
+    options: { mcp?: boolean } = {},
   ): Promise<string> {
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const adminClient = this.favaClientFactory.getAdminClient();
@@ -157,6 +160,9 @@ export class LedgerAssetService
     // (w23/023). Production serves the v1 routes under it too.
     const baseUrl = this.config.oauth.issuer.replace(/\/$/, "");
 
+    if (identity?.userId && options.mcp) {
+      return `${baseUrl}/api-gateway/mcp/archive/${encodeURIComponent(ledgerOwner)}/${encodeURIComponent(ledgerName)}/main.zip`;
+    }
     if (identity?.userId) {
       return `${baseUrl}/api-gateway/v1/ledgers/${encodeURIComponent(ledgerOwner)}/${encodeURIComponent(ledgerName)}/archive/main.zip`;
     }

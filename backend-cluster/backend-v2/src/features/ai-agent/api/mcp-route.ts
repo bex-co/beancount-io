@@ -36,7 +36,7 @@ export type McpServerFactory = (toolCtx: McpRequestContext) => McpServer;
  * unauthenticated client discovers the authorization server. Every refusal that
  * means "get a proper token" goes through here so the hint is never dropped.
  */
-function refuseUnauthenticated(
+export function refuseUnauthenticated(
   ctx: Router.RouterContext,
   config: AppConfig,
 ): void {

@@ -310,6 +310,7 @@ const SURFACE_IMPOSSIBLE: Record<
   gql: new Set([
     "ledger.downloadArchive",
     "ledger.downloadArchive.legacy",
+    "ledger.downloadArchive.mcp",
     "ai.agent",
     "ai.sandboxAgent",
     "ai.openaiChatCompletions",
@@ -1523,6 +1524,19 @@ const CROSS_SURFACE_VERBS: readonly VerbEntry[] = [
     mcpResource: "ledgerArchive",
     mcpExempt:
       "Archive bytes are delivered by the MCP resource as a base64 blob with per-call authorization, archive selection, and the shared download budget. A blob is one JSON-RPC message held whole in memory, so it is capped at `MCP_ARCHIVE_BLOB_MAX_BYTES`; a larger archive is refused with a hint to the `ledgerArchiveDownloadUrl` resource, whose REST URL streams.",
+  },
+  {
+    // The MCP resource's streaming spelling (w23/026): the same bytes for a
+    // client that holds only an MCP-audience token and an archive past the
+    // blob cap.
+    verb: "ledger.downloadArchive.mcp",
+    class: "read",
+    authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_ARCHIVE_READ,
+    rest: "GET /api-gateway/mcp/archive/{owner}/{name}/{archive}",
+    gqlExempt: G.bytesNotFields,
+    mcpResource: "ledgerArchive",
+    mcpExempt:
+      "This is the MCP resource's own streaming path (w23/026, ADR 0007 amendment): the `ledgerArchive` resource delivers the same bytes as a base64 blob up to `MCP_ARCHIVE_BLOB_MAX_BYTES`, and this route streams any size, reached through the `ledgerArchiveDownloadUrl` resource. It is not a JSON-RPC operation an MCP tool or resource could wrap.",
   },
   {
     // The pre-v1 spelling, superseded and marked deprecated in the spec. Kept
