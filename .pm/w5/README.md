@@ -78,7 +78,6 @@
 
 - [1078 — Accept native rounding for costed postings with prices in Cash Flow](./1078.md) — major CLI reporting: one cost-weighted purchase or sale is misclassified as priced FX; 942 CLI calls and 232 native loads plus a four-profile / 12-CLI / four-native finite-cost confirmation; checked 2026-10-29.
 
-- [1077 — Accept native rounding across repeated purchases in Cash Flow](./1077.md) — major CLI reporting: two ordinary purchases refuse together while each day works; 62 fresh profiles, 814 CLI calls, 200 native loads; full original rounding/example/FX/feature controls pass, checked 2026-10-27.
 
 
 

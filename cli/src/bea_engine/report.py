@@ -15,7 +15,7 @@ import re
 import unicodedata
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from datetime import date, timedelta
-from decimal import Decimal
+from decimal import Decimal, localcontext
 from pathlib import Path
 from typing import Any
 
@@ -134,7 +134,12 @@ def answer(
     if kind == "capital-gains":
         return _capital_gains(filtered, bounds, ledger_errors)
     if kind == "cash-flow":
-        return _cash_flow(filtered, bounds, ledger_errors)
+        # Summing at-cost positions rounds at the default 28 digits, so two
+        # purchases whose own residuals were accepted no longer added up to
+        # the rounding the reconciliation expects (w5/1077).
+        with localcontext() as wide:
+            wide.prec = 100
+            return _cash_flow(filtered, bounds, ledger_errors)
     return _trial_balance(filtered, resolved_conversion, allow_errors, ledger_errors)
 
 
