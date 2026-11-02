@@ -6,19 +6,19 @@
  * below for `import type { HarnessV1SandboxProvider } from "@ai-sdk/harness"` to
  * prove conformance against the real package.
  */
-import { createCloudflareSandbox } from '../cloudflare-sandbox-provider';
-import type { HarnessV1SandboxProvider } from '../harness-contract';
+import { createCloudflareSandbox } from "../cloudflare-sandbox-provider";
+import type { HarnessV1SandboxProvider } from "../harness-contract";
 
-describe('cloudflare sandbox provider conformance', () => {
-  it('satisfies HarnessV1SandboxProvider structurally', () => {
+describe("cloudflare sandbox provider conformance", () => {
+  it("satisfies HarnessV1SandboxProvider structurally", () => {
     const provider: HarnessV1SandboxProvider = createCloudflareSandbox({
-      controlPlaneUrl: 'http://localhost:8788',
-      adminToken: 'tok',
-      previewHostname: 'example.com',
+      controlPlaneUrl: "http://localhost:8788",
+      adminToken: "tok",
+      previewHostname: "example.com",
     });
-    expect(provider.specificationVersion).toBe('harness-sandbox-v1');
-    expect(provider.providerId).toBe('cloudflare-sandbox');
-    expect(typeof provider.createSession).toBe('function');
-    expect(typeof provider.resumeSession).toBe('function');
+    expect(provider.specificationVersion).toBe("harness-sandbox-v1");
+    expect(provider.providerId).toBe("cloudflare-sandbox");
+    expect(typeof provider.createSession).toBe("function");
+    expect(typeof provider.resumeSession).toBe("function");
   });
 });

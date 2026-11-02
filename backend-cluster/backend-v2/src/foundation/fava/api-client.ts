@@ -47,9 +47,19 @@ export class ApiClient extends Api<unknown> {
   constructor(
     options?: ConstructorParameters<typeof Api<unknown>>[0] & {
       timeoutMs?: number;
+      /**
+       * Called after a request that is not a read succeeds. The ledger service
+       * commits to Gitea for every such call, so this is where a write is seen
+       * without the caller having to announce it.
+       */
+      onWrite?: () => void;
     },
   ) {
-    const { timeoutMs = DEFAULT_TIMEOUT_MS, ...config } = options ?? {};
+    const {
+      timeoutMs = DEFAULT_TIMEOUT_MS,
+      onWrite,
+      ...config
+    } = options ?? {};
     super(config);
     this.timeoutMs = timeoutMs;
     this.originalRequest = this.request.bind(this);
@@ -64,11 +74,19 @@ export class ApiClient extends Api<unknown> {
         : timeoutSignal;
 
       try {
-        return await this.originalRequest<T, E>({
+        const response = await this.originalRequest<T, E>({
           ...params,
           headers: withForwardedContext(params.headers),
           signal,
         });
+        if (onWrite && method !== "GET" && method !== "HEAD") {
+          try {
+            onWrite();
+          } catch (err) {
+            favaLogger.warn("onWrite hook failed", { err: String(err) });
+          }
+        }
+        return response;
       } catch (e: unknown) {
         if (e instanceof Error && e.name === "TimeoutError") {
           favaLogger.warn("Request timed out", {

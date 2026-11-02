@@ -2,7 +2,7 @@ import { SendGrid, ConsoleSendGrid } from "@/foundation/sendgrid";
 import { type AppConfig } from "@/config/config";
 import { createDatabaseConnection } from "@/drizzle/drizzle";
 import { createRedisCache } from "@/foundation/redis/redis-utils";
-import { createCacheHelper } from "@/shared/cache";
+import { createCacheHelper, invalidateUserFeed } from "@/shared/cache";
 import { PostgresRedisImpl } from "./models/postgres-redis-impl";
 import { PlaidClient } from "@/features/plaid/service/plaid-client";
 import { FavaClientFactory } from "@/foundation/clients/fava-client-factory";
@@ -28,15 +28,23 @@ export async function buildAppLayers(config: AppConfig): Promise<AppLayers> {
     retryLimit: 2,
     defaultFrom: "Beancount.io <noreply@mail.beancount.io>",
   };
+  const cacheHelper = createCacheHelper(redisCache);
   const clients: ClientFactoryLayer = {
-    favaClientFactory: new FavaClientFactory(models, postgresDb, config),
+    // Every write the ledger service makes for a user is a commit, so Latest
+    // Updates must not keep serving that user's activity from before it.
+    favaClientFactory: new FavaClientFactory(
+      models,
+      postgresDb,
+      config,
+      (userId) => void invalidateUserFeed(cacheHelper, userId),
+    ),
     giteaClientFactory: new GiteaClientFactory(models, postgresDb, config),
     plaidClient: new PlaidClient(config.plaid),
     sendgrid:
       config.env === "production"
         ? new SendGrid(sendGridOpts)
         : new ConsoleSendGrid(sendGridOpts),
-    cacheHelper: createCacheHelper(redisCache),
+    cacheHelper,
   };
 
   const services = buildServiceLayer({ database, clients, config });

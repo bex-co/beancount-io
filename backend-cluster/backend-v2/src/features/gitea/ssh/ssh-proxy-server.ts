@@ -10,6 +10,7 @@ import {
 } from "./ssh-command";
 import type { SshAuthenticator, SshIdentity } from "./ssh-authenticator";
 import { createFavaApiWithAuthorization } from "@/foundation/fava";
+import { invalidateUserFeed } from "@/shared/cache";
 import type { DirectiveLimitLookupDeps } from "@/features/ledger/operations/directive-limit-lookup";
 import {
   evaluateDirectiveLimit,
@@ -286,6 +287,10 @@ export class SshProxyServer {
       );
 
       await this.pumpRequests(stream, request, protocol, base, headers, cancel);
+      // A push is a commit: Latest Updates must show it at once.
+      if (request.service === "git-receive-pack") {
+        void invalidateUserFeed(this.limitDeps.cacheHelper, identity.userId);
+      }
       stream.exit(0);
       stream.end();
     } catch (err) {

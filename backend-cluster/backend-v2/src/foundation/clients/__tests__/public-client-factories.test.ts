@@ -135,3 +135,39 @@ describe("anonymous public client selection", () => {
     expect(userModels.user.updateUser).not.toHaveBeenCalled();
   });
 });
+
+describe("write hook on user clients", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it("passes a hook that reports the acting user to createFavaApi", async () => {
+    const m = models();
+    m.user.getById.mockResolvedValue({
+      id: "u1",
+      ledger_username: "ada",
+      ledger_password: "pw",
+    });
+    const onUserWrite = jest.fn();
+    const factory = new FavaClientFactory(m, {} as any, config, onUserWrite);
+
+    await factory.getApiContext("u1");
+    await factory.getPublicApiClient("ada/main", "u1");
+
+    for (const call of mockCreateFavaApi.mock.calls) {
+      call[3]();
+    }
+    expect(mockCreateFavaApi).toHaveBeenCalledTimes(2);
+    expect(onUserWrite).toHaveBeenCalledTimes(2);
+    expect(onUserWrite).toHaveBeenCalledWith("u1");
+  });
+
+  it("gives the admin client no hook", () => {
+    const factory = new FavaClientFactory(
+      models(),
+      {} as any,
+      config,
+      jest.fn(),
+    );
+    factory.getAdminClient();
+    expect(mockCreateFavaApi.mock.calls[0][3]).toBeUndefined();
+  });
+});

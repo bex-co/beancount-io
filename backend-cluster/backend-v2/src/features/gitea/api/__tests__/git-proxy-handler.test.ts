@@ -938,6 +938,49 @@ describe("setGitProxyHandler", () => {
       expect(mockFetch).toHaveBeenCalled();
     });
 
+    describe("Latest Updates cache", () => {
+      const settle = () => new Promise((resolve) => setImmediate(resolve));
+      let del: jest.Mock;
+
+      beforeEach(() => {
+        del = jest.fn().mockResolvedValue(undefined);
+        (mockServices.clients as any).cacheHelper = { del };
+        (
+          mockServices.database.models.user.getUserByUsername as jest.Mock
+        ).mockResolvedValue({ id: "u1" });
+      });
+
+      async function respondWith(ok: boolean, ctx: Router.RouterContext) {
+        mockFetch.mockResolvedValue({
+          ok,
+          status: ok ? 200 : 403,
+          headers: { forEach: jest.fn() },
+          body: Readable.from(["ok"]),
+        });
+        await registeredRoute!.handler(ctx);
+        (ctx.body as Readable).resume();
+        await settle();
+        await settle();
+      }
+
+      it("drops the pusher's cached activity once Gitea accepted the push", async () => {
+        await respondWith(true, pushContext(["refs/heads/main"]));
+        expect(del).toHaveBeenCalledWith("feed:gitea:all:u1");
+      });
+
+      it("keeps it when Gitea refused the push", async () => {
+        await respondWith(false, pushContext(["refs/heads/main"]));
+        expect(del).not.toHaveBeenCalled();
+      });
+
+      it("keeps it for a fetch", async () => {
+        const ctx = pushContext(["refs/heads/main"]);
+        (ctx as any).params = { path: "owner/repo.git/git-upload-pack" };
+        await respondWith(true, ctx);
+        expect(del).not.toHaveBeenCalled();
+      });
+    });
+
     it("answers a non-main push with a protocol rejection, not a bare status", async () => {
       const ctx = pushContext(["refs/heads/dump"]);
       await registeredRoute!.handler(ctx);

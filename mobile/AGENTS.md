@@ -217,7 +217,7 @@ layout props and do not replace native visual verification.
 
 ### Home feed releases
 
-`src/screens/home-screen/components/feed-card.tsx` renders the merged `getFeed` result. Rows label their source through `feedSourceLabelKey` in `feed-logic.ts` (`Ledger`, `Blog`, `Release`). There is deliberately no per-user unread state here: the web dashboard tracks its reading position in local storage rather than on the server, so there is nothing for the app to sync with.
+`src/screens/home-screen/components/feed-card.tsx` renders the merged `getFeed` result. Rows label their source through `feedSourceLabelKey` in `feed-logic.ts` (`Ledger`, `Blog`, `Release`). There is deliberately no per-user unread state here: the web dashboard tracks its reading position in local storage rather than on the server, so there is nothing for the app to sync with. `getFeed` is in the ledger-write invalidation list (`invalidate-ledger.ts`) because the Ledger rows are the user's own commits; backend-v2 drops the user's cached Gitea activity on every write path (the Fava client's write hook, and an accepted git push over HTTPS or SSH), so a pull shows the commit at once (w21/600).
 
 `getFeed` accepts the app’s account-wide OAuth credential with `ledger.read` (`USER_SOCIAL_FEED_READ`, backend `authorization-service.ts`). The service checks exact-self access; API keys and credentials pinned to one ledger cannot read this account-wide feed.
 

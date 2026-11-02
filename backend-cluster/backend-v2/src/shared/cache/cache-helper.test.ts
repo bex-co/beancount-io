@@ -9,7 +9,12 @@ jest.mock("@/shared/logger", () => {
 
 import { lock } from "@/shared/lock";
 import { logger } from "@/shared/logger";
-import { createCacheHelper, type CacheHelper } from "./cache-helper";
+import {
+  createCacheHelper,
+  invalidateUserFeed,
+  type CacheHelper,
+} from "./cache-helper";
+import { CACHE_KEYS } from "./cache-keys";
 
 const mockLock = lock as jest.Mocked<typeof lock>;
 
@@ -273,5 +278,14 @@ describe("cache-helper", () => {
     expect(JSON.stringify((logger.warn as jest.Mock).mock.calls)).not.toContain(
       secret,
     );
+  });
+});
+
+describe("invalidateUserFeed", () => {
+  it("deletes exactly that user's Gitea activity key", async () => {
+    const del = jest.fn().mockResolvedValue(undefined);
+    await invalidateUserFeed({ del }, "u1");
+    expect(del).toHaveBeenCalledWith(CACHE_KEYS.feed.giteaByUser("u1"));
+    expect(del).toHaveBeenCalledTimes(1);
   });
 });

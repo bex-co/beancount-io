@@ -42,16 +42,18 @@ export const COMMIT_READS = [
     name: "ledgerCommits",
     segment: "commits",
     summary: "List commits with branch and pagination controls",
-    query: z.object({
-      branch: z.string().default("main"),
-      page: z.coerce.number().int().min(1).default(1),
-      limit: z.coerce
-        .number()
-        .int()
-        .min(1)
-        .max(MAX_COMMITS_PAGE_SIZE)
-        .default(30),
-    }).strict(),
+    query: z
+      .object({
+        branch: z.string().default("main"),
+        page: z.coerce.number().int().min(1).default(1),
+        limit: z.coerce
+          .number()
+          .int()
+          .min(1)
+          .max(MAX_COMMITS_PAGE_SIZE)
+          .default(30),
+      })
+      .strict(),
     fetch: (services: Services, { identity, ledgerId, query }: Params) =>
       services.commits.listCommits({
         identity,

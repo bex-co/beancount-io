@@ -91,6 +91,8 @@ interface Harness {
   close: () => Promise<void>;
 }
 
+const feedCacheDel = jest.fn().mockResolvedValue(undefined);
+
 async function startProxy(giteaPort: number): Promise<Harness> {
   const clientKey = generateTestKeyPair("client");
   const blob = Buffer.from(clientKey.publicKey.split(" ")[1], "base64");
@@ -136,7 +138,7 @@ async function startProxy(giteaPort: number): Promise<Harness> {
       models: { user: { getUserByUsername: async () => null } },
       db: {},
       stripe: {},
-      cacheHelper: {},
+      cacheHelper: { del: feedCacheDel },
     } as never,
   );
   await server.listen();
@@ -261,6 +263,15 @@ describe("SSH to HTTP bridge", () => {
     expect(gitea.posts[0].toString()).toBe(MAIN_PUSH);
     expect(result.stdout.toString()).toContain("upstream-reply");
     expect(result.code).toBe(0);
+  });
+
+  it("drops the pusher's cached Latest Updates after a push, not after a fetch", async () => {
+    feedCacheDel.mockClear();
+    await run(proxy, "git-upload-pack '/alice/ledger.git'", "0000");
+    expect(feedCacheDel).not.toHaveBeenCalled();
+
+    await run(proxy, "git-receive-pack '/alice/ledger.git'", MAIN_PUSH);
+    expect(feedCacheDel).toHaveBeenCalledWith("feed:gitea:all:usr_1");
   });
 
   it("delivers exit-status before closing the channel", async () => {

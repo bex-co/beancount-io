@@ -23,7 +23,8 @@ export class CreatePRFromPatchInput {
   title: string;
 
   @Field(() => String, {
-    description: "Must not be empty — describe what the pull request changes and why",
+    description:
+      "Must not be empty — describe what the pull request changes and why",
   })
   description: string;
 
@@ -63,13 +64,15 @@ export class PullRequestResult {
 
   @Field(() => String, {
     nullable: true,
-    description: "The created PR's actual base ref, read back — never a default",
+    description:
+      "The created PR's actual base ref, read back — never a default",
   })
   baseBranch?: string;
 
   @Field(() => String, {
     nullable: true,
-    description: "The created PR's actual head ref, read back — never a default",
+    description:
+      "The created PR's actual head ref, read back — never a default",
   })
   headBranch?: string;
 }

@@ -141,6 +141,8 @@ describe("invalidate-ledger", () => {
         "ledgerMeta",
         "getLedgerErrors",
         "listCommits",
+        // Latest Updates shows the commit just made (w21/600).
+        "getFeed",
         "queryShell",
         // An opened account appears in the Accounts tree only through the
         // ledger's account list, and the pickers read its close dates
@@ -181,11 +183,10 @@ describe("invalidate-ledger", () => {
       // homeCharts: no active consumer, so it was a silent no-op in two
       // screens' refetch lists. getLedgerEntryContext: evicting it after a
       // delete sends the still-mounted detail screen after a dead entry.
-      // suggestTransactionCategories: an LLM call. getFeed: not ledger data.
+      // suggestTransactionCategories: an LLM call.
       expect(file.includes("homeCharts")).toBe(false);
       expect(file.includes("getLedgerEntryContext")).toBe(false);
       expect(file.includes("suggestTransactionCategories")).toBe(false);
-      expect(file.includes("getFeed")).toBe(false);
     });
   });
 

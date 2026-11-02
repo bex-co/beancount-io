@@ -26,9 +26,9 @@ describe("pullRequestCreateInput", () => {
   });
 
   it("refuses empty title, description, and commit message", () => {
-    expect(() =>
-      pullRequestCreateInput.parse({ ...base, title: "" }),
-    ).toThrow("title must not be empty");
+    expect(() => pullRequestCreateInput.parse({ ...base, title: "" })).toThrow(
+      "title must not be empty",
+    );
     expect(() =>
       pullRequestCreateInput.parse({ ...base, description: "" }),
     ).toThrow("description must not be empty");

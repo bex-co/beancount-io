@@ -13,10 +13,12 @@ export const createFavaApi = (
   baseUrl: string,
   username: string,
   password: string,
+  onWrite?: () => void,
 ): FavaApiClient => {
   return new ApiClient({
     baseUrl,
     timeoutMs: FAVA_WRITE_TIMEOUT_MS,
+    onWrite,
     baseApiParams: {
       headers: {
         Authorization: `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`,

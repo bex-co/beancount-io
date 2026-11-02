@@ -10,11 +10,13 @@ import {
 import { json } from "@/server/rest/v1-schemas";
 import { HOST_PAGE_MAX } from "@/shared/host-page";
 
-export const socialListQuery = z.object({
-  username: z.string(),
-  page: z.coerce.number().int().min(1).optional(),
-  limit: z.coerce.number().int().min(1).max(HOST_PAGE_MAX).optional(),
-}).strict();
+export const socialListQuery = z
+  .object({
+    username: z.string(),
+    page: z.coerce.number().int().min(1).optional(),
+    limit: z.coerce.number().int().min(1).max(HOST_PAGE_MAX).optional(),
+  })
+  .strict();
 const userList = z.object({
   users: z.array(
     z.object({

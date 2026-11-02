@@ -8,7 +8,7 @@
  * (m17/t004) makes the real `@ai-sdk/harness` package installable.
  */
 
-import { ControlPlaneClient, type FetchLike } from './control-plane-client';
+import { ControlPlaneClient, type FetchLike } from "./control-plane-client";
 import type {
   HarnessV1SandboxProvider,
   HarnessV1NetworkSandboxSession,
@@ -18,7 +18,7 @@ import type {
   SandboxProcessOptions,
   ReadFileOptions,
   WriteFileOptions,
-} from './harness-contract';
+} from "./harness-contract";
 
 export interface CloudflareSandboxOptions {
   /** Worker base URL, e.g. http://host.docker.internal:8788 */
@@ -44,17 +44,17 @@ export interface CloudflareSandboxOptions {
 // createSession against the same live container skips re-cloning. If the
 // container is destroyed and recreated under the same name, the marker is gone
 // and onFirstCreate runs again — exactly the "once per fresh create" semantic.
-const BOOTSTRAP_MARKER = '.harness-session-initialized';
+const BOOTSTRAP_MARKER = ".harness-session-initialized";
 
 const DEFAULT_WAIT_POLL_MS = 750;
 
 function isTerminalStatus(status: string): boolean {
   return (
-    status === 'completed' ||
-    status === 'failed' ||
-    status === 'killed' ||
-    status === 'error' ||
-    status === 'unknown'
+    status === "completed" ||
+    status === "failed" ||
+    status === "killed" ||
+    status === "error" ||
+    status === "unknown"
   );
 }
 
@@ -82,11 +82,11 @@ async function collectStream(
 }
 
 function bytesToBase64(bytes: Uint8Array): string {
-  return Buffer.from(bytes).toString('base64');
+  return Buffer.from(bytes).toString("base64");
 }
 
 function base64ToBytes(b64: string): Uint8Array {
-  return new Uint8Array(Buffer.from(b64, 'base64'));
+  return new Uint8Array(Buffer.from(b64, "base64"));
 }
 
 function bytesToStream(bytes: Uint8Array): ReadableStream<Uint8Array> {
@@ -112,10 +112,10 @@ function sliceLines(
   endLine?: number,
 ): string {
   if (startLine === undefined && endLine === undefined) return content;
-  const lines = content.split('\n');
+  const lines = content.split("\n");
   const start = startLine ? Math.max(1, startLine) - 1 : 0;
   const end = endLine ? endLine : lines.length;
-  return lines.slice(start, end).join('\n');
+  return lines.slice(start, end).join("\n");
 }
 
 function delay(ms: number): Promise<void> {
@@ -132,7 +132,7 @@ function buildSandboxSession(
   defaultWorkingDirectory: string,
   waitPollIntervalMs: number,
 ): SandboxSession {
-  const run: SandboxSession['run'] = async (options: SandboxProcessOptions) => {
+  const run: SandboxSession["run"] = async (options: SandboxProcessOptions) => {
     const res = await client.exec(
       name,
       {
@@ -145,7 +145,7 @@ function buildSandboxSession(
     return { exitCode: res.exitCode, stdout: res.stdout, stderr: res.stderr };
   };
 
-  const spawn: SandboxSession['spawn'] = async (
+  const spawn: SandboxSession["spawn"] = async (
     options: SandboxProcessOptions,
   ): Promise<SandboxProcess> => {
     const { processId, pid } = await client.spawn(
@@ -176,7 +176,7 @@ function buildSandboxSession(
         for (;;) {
           if (options.abortSignal?.aborted) {
             await client.killProcess(name, processId).catch(() => undefined);
-            throw new Error('spawn wait aborted');
+            throw new Error("spawn wait aborted");
           }
           const status = await client.processStatus(name, processId);
           if (isTerminalStatus(status.status)) {
@@ -197,7 +197,7 @@ function buildSandboxSession(
     readFile: async (options: ReadFileOptions) => {
       const res = await client.readFile(
         name,
-        { path: options.path, encoding: 'base64' },
+        { path: options.path, encoding: "base64" },
         options.abortSignal,
       );
       if (!res.exists || res.content === undefined) return null;
@@ -207,7 +207,7 @@ function buildSandboxSession(
     readBinaryFile: async (options: ReadFileOptions) => {
       const res = await client.readFile(
         name,
-        { path: options.path, encoding: 'base64' },
+        { path: options.path, encoding: "base64" },
         options.abortSignal,
       );
       if (!res.exists || res.content === undefined) return null;
@@ -217,18 +217,24 @@ function buildSandboxSession(
     readTextFile: async (options) => {
       const res = await client.readFile(
         name,
-        { path: options.path, encoding: options.encoding ?? 'utf-8' },
+        { path: options.path, encoding: options.encoding ?? "utf-8" },
         options.abortSignal,
       );
       if (!res.exists || res.content === undefined) return null;
       return sliceLines(res.content, options.startLine, options.endLine);
     },
 
-    writeFile: async (options: WriteFileOptions<ReadableStream<Uint8Array>>) => {
+    writeFile: async (
+      options: WriteFileOptions<ReadableStream<Uint8Array>>,
+    ) => {
       const bytes = await collectStream(options.content);
       await client.writeFile(
         name,
-        { path: options.path, content: bytesToBase64(bytes), encoding: 'base64' },
+        {
+          path: options.path,
+          content: bytesToBase64(bytes),
+          encoding: "base64",
+        },
         options.abortSignal,
       );
     },
@@ -239,7 +245,7 @@ function buildSandboxSession(
         {
           path: options.path,
           content: bytesToBase64(options.content),
-          encoding: 'base64',
+          encoding: "base64",
         },
         options.abortSignal,
       );
@@ -251,7 +257,7 @@ function buildSandboxSession(
         {
           path: options.path,
           content: options.content,
-          encoding: options.encoding ?? 'utf-8',
+          encoding: options.encoding ?? "utf-8",
         },
         options.abortSignal,
       );
@@ -262,12 +268,15 @@ function buildSandboxSession(
   };
 }
 
-function mapPortProtocol(url: string, protocol?: 'http' | 'https' | 'ws'): string {
-  if (protocol === 'ws') {
-    return url.replace(/^https:/, 'wss:').replace(/^http:/, 'ws:');
+function mapPortProtocol(
+  url: string,
+  protocol?: "http" | "https" | "ws",
+): string {
+  if (protocol === "ws") {
+    return url.replace(/^https:/, "wss:").replace(/^http:/, "ws:");
   }
-  if (protocol === 'http') {
-    return url.replace(/^https:/, 'http:');
+  if (protocol === "http") {
+    return url.replace(/^https:/, "http:");
   }
   return url;
 }
@@ -294,10 +303,10 @@ interface LocalBridge {
 
 function isLocalPreviewHost(hostname: string): boolean {
   return (
-    hostname === 'host.docker.internal' ||
-    hostname === 'localhost' ||
-    hostname === '127.0.0.1' ||
-    hostname.endsWith('.localhost')
+    hostname === "host.docker.internal" ||
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname.endsWith(".localhost")
   );
 }
 
@@ -306,10 +315,10 @@ function computeLocalBridge(controlPlaneUrl: string): LocalBridge | undefined {
   try {
     const u = new URL(controlPlaneUrl);
     // Only plaintext, local hosts are the broken case; https/workers.dev is fine.
-    if (u.protocol !== 'http:' || !isLocalPreviewHost(u.hostname)) {
+    if (u.protocol !== "http:" || !isLocalPreviewHost(u.hostname)) {
       return undefined;
     }
-    return { hostname: u.hostname, port: u.port || '80' };
+    return { hostname: u.hostname, port: u.port || "80" };
   } catch {
     return undefined;
   }
@@ -319,7 +328,7 @@ function computeLocalBridge(controlPlaneUrl: string): LocalBridge | undefined {
 function rewriteLocalBridgeUrl(rawUrl: string, local: LocalBridge): string {
   try {
     const u = new URL(rawUrl);
-    u.protocol = 'http:';
+    u.protocol = "http:";
     u.port = local.port;
     return u.toString();
   } catch {
@@ -349,7 +358,7 @@ function buildNetworkSession(
 
   const getPortEndpoint = async (opts: {
     port: number;
-    protocol?: 'http' | 'https' | 'ws';
+    protocol?: "http" | "https" | "ws";
   }): Promise<HarnessV1PortEndpoint> => {
     const exposed = await client.exposePort(name, {
       port: opts.port,
@@ -419,8 +428,8 @@ export function createCloudflareSandbox(
   const toName = (id: string): string => id.toLowerCase();
 
   return {
-    specificationVersion: 'harness-sandbox-v1',
-    providerId: 'cloudflare-sandbox',
+    specificationVersion: "harness-sandbox-v1",
+    providerId: "cloudflare-sandbox",
 
     createSession: async (opts) => {
       const name = toName(opts?.sessionId ?? generateId());
@@ -446,7 +455,7 @@ export function createCloudflareSandbox(
           await client.writeFile(name, {
             path: markerPath,
             content: new Date().toISOString(),
-            encoding: 'utf-8',
+            encoding: "utf-8",
           });
         }
       }

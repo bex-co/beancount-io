@@ -1,6 +1,7 @@
 import { type Cache } from "cache-manager";
 import { lock } from "@/shared/lock";
 import { logger } from "@/shared/logger";
+import { CACHE_KEYS } from "./cache-keys";
 
 const cacheLogger = logger.child({ module: "cache-helper" });
 
@@ -163,4 +164,20 @@ export function createCacheHelper(cache: Cache): CacheHelper {
   }
 
   return { get, set, del, getOrSet, getStrict, setStrict, delStrict };
+}
+
+/**
+ * Drop a user's cached Gitea activity so the next Latest Updates read shows the
+ * commit they just made. Fails open like every cache write: a Redis error
+ * leaves the five-minute cache to expire on its own.
+ */
+export async function invalidateUserFeed(
+  cache: Pick<CacheHelper, "del">,
+  userId: string,
+): Promise<void> {
+  try {
+    await cache.del(CACHE_KEYS.feed.giteaByUser(userId));
+  } catch (error) {
+    cacheLogger.warn("Failed to invalidate a user's feed cache", { error });
+  }
 }

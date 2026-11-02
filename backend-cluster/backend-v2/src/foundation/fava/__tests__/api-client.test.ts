@@ -384,4 +384,64 @@ describe("ApiClient", () => {
       );
     });
   });
+
+  describe("onWrite", () => {
+    function clientWithHook(
+      onWrite: jest.Mock,
+      response: unknown,
+      fails = false,
+    ) {
+      const client = new ApiClient({
+        baseUrl: "http://localhost:5000",
+        onWrite,
+      });
+      Object.defineProperty(client, "originalRequest", {
+        value: jest.fn().mockImplementation(async () => {
+          if (fails) throw response;
+          return response;
+        }),
+      });
+      return client;
+    }
+
+    it.each(["POST", "PUT", "PATCH", "DELETE"])(
+      "is told after a successful %s",
+      async (method) => {
+        const onWrite = jest.fn();
+        const client = clientWithHook(onWrite, { ok: true, status: 200 });
+        await client.request({ path: "/w", method });
+        expect(onWrite).toHaveBeenCalledTimes(1);
+      },
+    );
+
+    it.each(["GET", undefined])("is not told after a read (%s)", async (m) => {
+      const onWrite = jest.fn();
+      const client = clientWithHook(onWrite, { ok: true, status: 200 });
+      await client.request({ path: "/r", method: m });
+      expect(onWrite).not.toHaveBeenCalled();
+    });
+
+    it("is not told when the write fails", async () => {
+      const onWrite = jest.fn();
+      const client = clientWithHook(
+        onWrite,
+        { status: 500, error: { error: "boom" } },
+        true,
+      );
+      await expect(
+        client.request({ path: "/w", method: "POST" }),
+      ).rejects.toThrow("boom");
+      expect(onWrite).not.toHaveBeenCalled();
+    });
+
+    it("never fails a write that landed because the hook threw", async () => {
+      const onWrite = jest.fn().mockImplementation(() => {
+        throw new Error("redis down");
+      });
+      const client = clientWithHook(onWrite, { ok: true, status: 200 });
+      await expect(
+        client.request({ path: "/w", method: "POST" }),
+      ).resolves.toEqual({ ok: true, status: 200 });
+    });
+  });
 });

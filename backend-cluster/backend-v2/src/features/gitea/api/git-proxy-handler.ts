@@ -4,6 +4,7 @@ import { PassThrough, type Readable } from "node:stream";
 import { type AppLayers } from "@/foundation/composition";
 import { AppConfig } from "@/config/config";
 import { createFavaApiWithAuthorization } from "@/foundation/fava";
+import { invalidateUserFeed } from "@/shared/cache";
 import {
   evaluateDirectiveLimit,
   logPushObservation,
@@ -505,6 +506,9 @@ export function setGitProxyHandler(
     }
 
     const [username, password] = credentials;
+    // Who the push is by, for the feed cache: known at once for an app
+    // sign-in, looked up from the Gitea username otherwise.
+    let appUserId: string | undefined;
 
     try {
       // Forward headers, excluding host and authorization
@@ -541,6 +545,7 @@ export function setGitProxyHandler(
           return;
         }
 
+        appUserId = user.id;
         const ledgerAuth = Buffer.from(
           `${user.ledger_username}:${user.ledger_password}`,
         ).toString("base64");
@@ -626,6 +631,29 @@ export function setGitProxyHandler(
       // node-fetch reports that abort as an `error` on a body the client is no
       // longer reading, which may have no listener left.
       response.body.on("error", () => {});
+
+      // A push that Gitea accepted is a commit; Latest Updates must show it.
+      if (path.endsWith("/git-receive-pack") && response.ok) {
+        response.body.once("end", () => {
+          void (async () => {
+            const userId =
+              appUserId ??
+              (
+                await layers.database.models.user.getUserByUsername(
+                  layers.database.db,
+                  username,
+                )
+              )?.id;
+            if (userId) {
+              await invalidateUserFeed(layers.clients.cacheHelper, userId);
+            }
+          })().catch((err: Error) =>
+            proxyLogger.warn("feed cache invalidation failed", {
+              err: err.message,
+            }),
+          );
+        });
+      }
 
       // Forward response status
       ctx.status = response.status;

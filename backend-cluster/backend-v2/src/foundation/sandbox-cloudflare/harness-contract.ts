@@ -15,12 +15,12 @@
 import type {
   Experimental_SandboxSession,
   Experimental_SandboxProcess,
-} from '@ai-sdk/provider-utils';
+} from "@ai-sdk/provider-utils";
 import type {
   HarnessV1SandboxProvider,
   HarnessV1NetworkSandboxSession,
   HarnessV1PortEndpoint,
-} from '@ai-sdk/harness';
+} from "@ai-sdk/harness";
 
 export type {
   HarnessV1SandboxProvider,
@@ -33,8 +33,8 @@ export type SandboxProcess = Experimental_SandboxProcess;
 
 // Option types are internal to provider-utils; derive them from the session's
 // own method parameters so they stay locked to the real contract.
-export type SandboxProcessOptions = Parameters<SandboxSession['run']>[0];
-export type ReadFileOptions = Parameters<SandboxSession['readFile']>[0];
+export type SandboxProcessOptions = Parameters<SandboxSession["run"]>[0];
+export type ReadFileOptions = Parameters<SandboxSession["readFile"]>[0];
 export type WriteFileOptions<CONTENT> = {
   path: string;
   content: CONTENT;

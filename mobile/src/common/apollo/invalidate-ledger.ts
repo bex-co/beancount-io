@@ -62,6 +62,9 @@ const ENTRIES_FIELDS = [
   "getLedgerAccountDirectives",
   // Every write is a git commit, so the notifications history moves too.
   "listCommits",
+  // Home's Latest Updates lists the user's own commits ("Committed to …"); the
+  // server drops its cached activity on the same write (w21/600).
+  "getFeed",
   // Size, sha and lastCommitSha in the file browser: an entry write commits to
   // its file, and a stale sha handed back to `deleteLedgerFile` as the
   // optimistic lock refused the delete until a refresh (w21/079).
@@ -90,9 +93,9 @@ const FILE_FIELDS = [
  * - `getLedgerEntryContext` — evicting it after a *delete* would send the
  *   still-mounted detail screen back for an entry that no longer exists. The
  *   edit screen, which reads its own slice back, refetches it explicitly.
- * - `getFeed`, `userProfile`, `suggestTransactionCategories` — not
- *   ledger-derived. The last one is an LLM call, which is why this is a curated
- *   list and not a blanket `include: "active"`.
+ * - `userProfile`, `suggestTransactionCategories` — not ledger-derived. The
+ *   last one is an LLM call, which is why this is a curated list and not a
+ *   blanket `include: "active"`.
  */
 export const LEDGER_SCOPE_FIELDS: Record<
   LedgerInvalidationScope,

@@ -32,6 +32,8 @@ export class FavaClientFactory implements IFavaClientFactory {
     private readonly models: Pick<IModels, "user">,
     private readonly db: NodePgDatabase,
     private readonly config: Pick<AppConfig, "favaApi">,
+    /** Told when a client acting as `userId` completes a write. */
+    private readonly onUserWrite?: (userId: string) => void,
   ) {}
 
   /**
@@ -47,6 +49,7 @@ export class FavaClientFactory implements IFavaClientFactory {
       this.config.favaApi.baseUrl,
       user.ledger_username,
       user.ledger_password,
+      this.writeHook(userId),
     );
 
     const favaUser = {
@@ -74,6 +77,7 @@ export class FavaClientFactory implements IFavaClientFactory {
         this.config.favaApi.baseUrl,
         user.ledger_username,
         user.ledger_password,
+        this.writeHook(userId),
       );
     }
 
@@ -94,6 +98,11 @@ export class FavaClientFactory implements IFavaClientFactory {
       throw new ForbiddenError("Ledger is private");
     }
     return createAnonymousFavaApi(this.config.favaApi.baseUrl);
+  }
+
+  private writeHook(userId: string): (() => void) | undefined {
+    const { onUserWrite } = this;
+    return onUserWrite ? () => onUserWrite(userId) : undefined;
   }
 
   public getAdminClient(): FavaApiClient {
