@@ -1,6 +1,6 @@
 # w7 · m8 — The apps sell and restore the plans through the App Store and Google Play
 
-**Worker:** worker1 **Goal:** a signed-in user can buy, change, restore, and manage any self-serve plan in either app, and the plan applies everywhere at once **Status:** in progress
+**Worker:** worker1 **Goal:** a signed-in user can buy, change, restore, and manage any self-serve plan in either app, and the plan applies everywhere at once **Status:** blocked
 
 ## Tasks (in order)
 
@@ -21,6 +21,16 @@
 | t013 | Closeout | 15m | t011, t012 |
 
 **Unblocked 2026-11-01** — the owner approved `expo-iap`, so t001 can start, and t002 and t003 follow it. t002's switch and t003's buttons land together: the switch belongs in `readFeatureFlags`, with its response schema, and must not refuse `confirmStorePurchase`, so restores keep working. t004 to t006, t008, and t009 still need m3 or m4, and t010 to t013 follow them.
+
+## Blocked
+
+**Blocked 2026-11-02** — the owner approved `expo-iap` on 2026-11-01, but no task here can be accepted yet.
+
+- **t001's acceptance is a product fetch.** A development build must load the six App Store products and the three Play subscriptions, and neither console has any yet (m2/t002, m2/t003). Installing the module alone also fails the lint gate, since nothing would use it. **Unblock:** the products exist in both consoles.
+- **t002 has nothing to gate** until t003's purchase buttons exist, and t003 needs t001. The switch belongs in `readFeatureFlags`, with its response schema, and must not refuse `confirmStorePurchase`, so restores keep working.
+- t004 to t006, t008, and t009 need m3 or m4, and t010 to t013 follow them.
+
+Who can clear it: the owner, through m2.
 
 ## Definition of done
 
