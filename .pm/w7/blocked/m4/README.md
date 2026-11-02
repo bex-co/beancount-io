@@ -1,6 +1,6 @@
 # w7 · m4 — Google Play purchases verify, acknowledge, and stay current on the backend
 
-**Worker:** worker1 **Goal:** the backend accepts a Play Billing purchase from the Android app, acknowledges it, keeps it current from real-time developer notifications, and grants or removes the plan accordingly **Status:** todo
+**Worker:** worker1 **Goal:** the backend accepts a Play Billing purchase from the Android app, acknowledges it, keeps it current from real-time developer notifications, and grants or removes the plan accordingly **Status:** blocked
 
 ## Tasks (in order)
 
@@ -12,6 +12,12 @@
 | t004 | Simplify | 30m | t002, t003 |
 | t005 | Test coverage | 1h | t002, t003 |
 | t006 | Closeout | 15m | t004, t005 |
+
+## Blocked
+
+**Blocked 2026-11-01** — t001 needs m3/t002's `confirmStorePurchase` and the m2/t003 subscriptions, and a Google client library, which needs the owner's approval. t002 to t006 follow it.
+
+**Unblock:** m3 and m2/t003 clear, and the owner approves the dependency. Who can clear it: the owner.
 
 ## Definition of done
 
