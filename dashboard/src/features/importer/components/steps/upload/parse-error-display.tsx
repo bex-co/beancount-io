@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/common/components/ui/card";
 import { Button } from "@/common/components/ui/button";
 import { AlertCircle, Download, Sparkles, FileText } from "lucide-react";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { useHidesBilling } from "@/common/hooks/use-hides-billing";
 import { useUserLimits } from "@/common/hooks/use-user-limits";
 import { UpgradePromptLink } from "@/common/components/upgrade-prompt-link";
 import { getNextTier } from "@/common/lib/subscription/tier-config";
@@ -68,6 +69,7 @@ function PremiumRequiredError({
 }) {
   const { t } = useTranslations();
   const { tier } = useUserLimits();
+  const hidesBilling = useHidesBilling();
   // A Premium user who spent the AI allowance needs Growth, so the heading
   // names whatever plan the button recommends.
   const next = getNextTier(tier);
@@ -94,24 +96,28 @@ function PremiumRequiredError({
       {/* Solutions */}
       <div className="w-full space-y-3">
         {/* Premium Option */}
-        <div className="bg-linear-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg p-4 space-y-3">
-          <div className="flex items-center justify-center gap-2">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <p className="text-sm font-medium">
-              {next
-                ? t("importer.error.upgradeToPlan", { plan: t(next.labelKey) })
-                : t("importer.error.upgradePlan")}
+        {!hidesBilling && (
+          <div className="bg-linear-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg p-4 space-y-3">
+            <div className="flex items-center justify-center gap-2">
+              <Sparkles className="w-4 h-4 text-primary" />
+              <p className="text-sm font-medium">
+                {next
+                  ? t("importer.error.upgradeToPlan", {
+                      plan: t(next.labelKey),
+                    })
+                  : t("importer.error.upgradePlan")}
+              </p>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {t("importer.error.upgradeDescription")}
             </p>
+            <Button asChild className="w-full" size="sm">
+              <UpgradePromptLink surface="importer_paywall" plan={next}>
+                {t("importer.error.upgradeNow")}
+              </UpgradePromptLink>
+            </Button>
           </div>
-          <p className="text-xs text-muted-foreground">
-            {t("importer.error.upgradeDescription")}
-          </p>
-          <Button asChild className="w-full" size="sm">
-            <UpgradePromptLink surface="importer_paywall" plan={next}>
-              {t("importer.error.upgradeNow")}
-            </UpgradePromptLink>
-          </Button>
-        </div>
+        )}
 
         {/* Alternative: CSV */}
         <div className="relative">

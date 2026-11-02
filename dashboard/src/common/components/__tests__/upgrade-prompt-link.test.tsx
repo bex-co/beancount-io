@@ -4,9 +4,10 @@ import { UpgradePromptLink } from "../upgrade-prompt-link";
 import { getNextTier } from "@/common/lib/subscription/tier-config";
 import { TEST_LOCATION_HREF } from "@/test/mocks/router";
 
-const { mockTrack, mockStoreKey } = vi.hoisted(() => ({
+const { mockTrack, mockStoreKey, mockHidesBilling } = vi.hoisted(() => ({
   mockTrack: vi.fn(),
   mockStoreKey: { current: null as string | null },
+  mockHidesBilling: { current: false },
 }));
 
 vi.mock("@tanstack/react-router", async () => {
@@ -17,6 +18,9 @@ vi.mock("@/common/analytics", () => ({ track: mockTrack }));
 vi.mock("@/common/hooks/use-store-upgrade-key", () => ({
   useStoreUpgradeKey: () => mockStoreKey.current,
 }));
+vi.mock("@/common/hooks/use-hides-billing", () => ({
+  useHidesBilling: () => mockHidesBilling.current,
+}));
 vi.mock("@/common/hooks/use-translations", () => ({
   useTranslations: () => ({ t: (key: string) => key }),
 }));
@@ -25,6 +29,18 @@ describe("UpgradePromptLink", () => {
   beforeEach(() => {
     mockTrack.mockClear();
     mockStoreKey.current = null;
+    mockHidesBilling.current = false;
+  });
+
+  it("offers nothing on a page an app opened", () => {
+    mockHidesBilling.current = true;
+    const { container } = render(
+      <UpgradePromptLink surface="ledgers_limit" plan={getNextTier("FREE")}>
+        Upgrade
+      </UpgradePromptLink>,
+    );
+
+    expect(container).toBeEmptyDOMElement();
   });
 
   it("sends a store subscriber to Billing with no plan, naming their app", () => {

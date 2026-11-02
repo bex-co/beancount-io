@@ -33,6 +33,10 @@ export default function DashboardScreen() {
 }
 ```
 
+## Pages opened in an in-app browser
+
+An in-app browser is not a WebView, so the bridge cannot see it. Every beancount.io page an app opens carries the query parameter `beancount_app=1` (`APP_MARKER_PARAM` in `src/common/lib/app-session.ts`). The tab keeps it in `sessionStorage`, and `useHidesBilling` then hides pricing, billing, and upgrade prompts, as it does in a WebView. A sign-in in that tab never continues to `/pricing` or `/settings/billing` (ADR 001 D14). The website should honor the same parameter.
+
 ## Language Synchronization
 
 ### Listen for Bridge Ready

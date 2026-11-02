@@ -1,6 +1,7 @@
 import type { ComponentProps } from "react";
 import { Link } from "@tanstack/react-router";
 import { track, type UpgradeSurface } from "@/common/analytics";
+import { useHidesBilling } from "@/common/hooks/use-hides-billing";
 import { useSafeReturnPath } from "@/common/hooks/use-safe-return-path";
 import { useStoreUpgradeKey } from "@/common/hooks/use-store-upgrade-key";
 import { useTranslations } from "@/common/hooks/use-translations";
@@ -31,7 +32,9 @@ export function UpgradePromptLink({
 }) {
   const { t } = useTranslations();
   const returnTo = useSafeReturnPath();
+  const hidesBilling = useHidesBilling();
   const storeUpgradeKey = useStoreUpgradeKey();
+  if (hidesBilling) return null;
   const target = storeUpgradeKey ? null : plan;
   return (
     <Link

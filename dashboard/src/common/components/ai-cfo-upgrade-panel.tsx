@@ -4,6 +4,7 @@ import { Badge } from "@/common/components/ui/badge";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useUserLimits } from "@/common/hooks/use-user-limits";
 import { useAiCfoUsage } from "@/common/hooks/use-ai-cfo-usage";
+import { useHidesBilling } from "@/common/hooks/use-hides-billing";
 import { useStoreUpgradeKey } from "@/common/hooks/use-store-upgrade-key";
 import {
   getUpgradeTiers,
@@ -27,9 +28,10 @@ export function AiCfoUpgradePanel({ className }: { className?: string } = {}) {
     isLoading: usageLoading,
   } = useAiCfoUsage();
   const { quotas: tierQuotas, isLoading: quotasLoading } = useAllTierQuotas();
+  const hidesBilling = useHidesBilling();
 
   const isLoading = limitsLoading || usageLoading || quotasLoading;
-  if (isLoading || aiCfoTokensMax === 0) return null;
+  if (hidesBilling || isLoading || aiCfoTokensMax === 0) return null;
   const isUnlimited = aiCfoTokensMax === -1;
 
   // Hide for unlimited (enterprise) users

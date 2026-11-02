@@ -1,3 +1,4 @@
+import { isAppSession } from "@/common/lib/app-session";
 import { redirect } from "@tanstack/react-router";
 import type { AuthStatus } from "@/common/server-fn/user";
 
@@ -78,6 +79,8 @@ const leavesOrigin = (candidate: string): boolean => {
   );
 };
 
+const BILLING_PATH = /^\/(?:pricing|settings\/billing)(?:\/|$)/;
+
 /**
  * Guards against open redirects. Only same-origin relative paths survive:
  * absolute URLs ("https://evil.example"), protocol-relative paths
@@ -99,6 +102,8 @@ export const getSafeRedirectPath = (
   if (layers === null || layers.some(leavesOrigin)) return undefined;
 
   const resolved = new URL(next, RESOLUTION_BASE);
+  // A session an app started never continues to pricing or Checkout (ADR 001).
+  if (BILLING_PATH.test(resolved.pathname) && isAppSession()) return undefined;
   return `${resolved.pathname}${resolved.search}${resolved.hash}`;
 };
 

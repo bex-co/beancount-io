@@ -1,3 +1,4 @@
+import { isAppSession } from "@/common/lib/app-session";
 import { useEffect, useState } from "react";
 import { waitForReactNative } from "./react-native-bridge";
 import {
@@ -51,6 +52,8 @@ export function ReactNativeBridgeProvider({
   const [isReactNative, setIsReactNative] = useState<boolean>(false);
 
   useEffect(() => {
+    // Keep the app marker for the tab, whatever page it first landed on.
+    isAppSession();
     // Asynchronously detect React Native with polling
     void waitForReactNative().then((detected) => {
       setIsReactNative(detected);

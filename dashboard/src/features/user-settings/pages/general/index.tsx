@@ -20,7 +20,7 @@ import { SessionSection } from "./session-section";
 import { useQueryRetry } from "@/common/hooks/use-query-retry";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { getErrorMessageKey } from "@/common/lib/errors/error-message";
-import { useReactNativeContext } from "@/common/providers/react-native-bridge-provider/react-native-bridge-context";
+import { useHidesBilling } from "@/common/hooks/use-hides-billing";
 import { PageSEO } from "@/common/components/seo/page-seo";
 
 /**
@@ -29,7 +29,7 @@ import { PageSEO } from "@/common/components/seo/page-seo";
  */
 function GeneralSettingsSkeleton() {
   const { t } = useTranslations();
-  const { isReactNative } = useReactNativeContext();
+  const hidesBilling = useHidesBilling();
   return (
     <div className="space-y-6">
       {/* User Profile Skeleton */}
@@ -84,7 +84,7 @@ function GeneralSettingsSkeleton() {
       </Card>
 
       {/* Subscription Skeleton - Hidden in React Native */}
-      {!isReactNative && (
+      {!hidesBilling && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -188,7 +188,7 @@ export default function GeneralSettingsPage() {
       ssr: false, // Don't run during SSR (user-specific data)
     },
   );
-  const { isReactNative } = useReactNativeContext();
+  const hidesBilling = useHidesBilling();
   const { failure, retrying, retry } = useQueryRetry(error, refetch);
 
   return (
@@ -210,7 +210,7 @@ export default function GeneralSettingsPage() {
           <GeneralSettingsSkeleton />
         ) : (
           <div className="space-y-4">
-            {!isReactNative && <BillingSummaryLink />}
+            {!hidesBilling && <BillingSummaryLink />}
             <UserProfileSection userData={data} />
             <AppearanceSection />
             <SessionSection />

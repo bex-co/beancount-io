@@ -308,6 +308,9 @@ export function setOidcRoutes(
           );
         }
         if (isMobileOAuthClient(interaction.params.client_id)) {
+          // The app marker: a sign-in the app started never reaches pricing
+          // or Checkout (ADR 001 D14).
+          consentUrl.searchParams.set("beancount_app", "1");
           // Only the native client's interaction page knows what to do with
           // the hint; MCP and identity clients never see it, and a value this
           // server does not recognise is simply not forwarded.

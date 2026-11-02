@@ -3,7 +3,7 @@ import { Navigate, useNavigate, useSearch } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { PageSEO } from "@/common/components/seo/page-seo";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { useReactNativeContext } from "@/common/providers/react-native-bridge-provider/react-native-bridge-context";
+import { useHidesBilling } from "@/common/hooks/use-hides-billing";
 import { SubscriptionSection } from "../general/subscription-section";
 import { DEFAULT_BILLING_CYCLE } from "../general/stripe-config";
 import { takeReturnPath } from "@/features/user-settings/lib/billing-return";
@@ -17,7 +17,7 @@ import { announcePlanLanded } from "@/features/user-settings/lib/plan-landed";
  */
 export default function BillingSettingsPage() {
   const { t } = useTranslations();
-  const { isReactNative } = useReactNativeContext();
+  const hidesBilling = useHidesBilling();
   const search = useSearch({ from: "/settings/billing" });
   const navigate = useNavigate();
   const canceled = search.checkout === "canceled";
@@ -58,7 +58,7 @@ export default function BillingSettingsPage() {
       replace: true,
     });
   }, [approvedIntent, approvalStatus, navigate, t]);
-  if (isReactNative) return <Navigate to="/settings/general" replace />;
+  if (hidesBilling) return <Navigate to="/settings/general" replace />;
   return (
     <>
       <PageSEO titleKey="userSettings.billing" noIndex />

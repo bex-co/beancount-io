@@ -5,7 +5,7 @@ import { AlertTriangle } from "lucide-react";
 import { Button } from "@/common/components/ui/button";
 import { useRootContext } from "@/common/hooks/use-root-context";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { useReactNativeContext } from "@/common/providers/react-native-bridge-provider/react-native-bridge-context";
+import { useHidesBilling } from "@/common/hooks/use-hides-billing";
 import {
   BillingSource,
   GetSubscriptionStatusDocument,
@@ -60,9 +60,9 @@ function Banner({
  */
 export function BillingStatusBanner() {
   const { t } = useTranslations();
-  const { isReactNative } = useReactNativeContext();
+  const hidesBilling = useHidesBilling();
   const signedIn = Boolean(useRootContext().userProfile);
-  const skip = isReactNative || !signedIn;
+  const skip = hidesBilling || !signedIn;
   const { data } = useQuery(GetSubscriptionStatusDocument, { skip });
   const status = skip ? undefined : data?.subscriptionStatus;
   if (!status?.billing) return null;

@@ -10,6 +10,9 @@ const parseLLMFile = vi.fn();
 vi.mock("@/common/hooks/use-store-upgrade-key", () => ({
   useStoreUpgradeKey: () => null,
 }));
+vi.mock("@/common/hooks/use-hides-billing", () => ({
+  useHidesBilling: () => false,
+}));
 vi.mock("../../../../hooks/use-llm-parser", () => ({
   useLLMParser: () => ({ parseFile: parseLLMFile }),
 }));

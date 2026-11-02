@@ -905,6 +905,8 @@ describe("oidc-route: unified MCP + identity provider", () => {
     const signIn = await interactionUrlFor(mobileAuthUrl());
     expect(signIn.pathname).toBe("/oauth/mobile-consent");
     expect(signIn.searchParams.has("screen_hint")).toBe(false);
+    // ADR 001 D14: the page keeps pricing and billing out of the sign-in.
+    expect(signIn.searchParams.get("beancount_app")).toBe("1");
 
     const signUp = await interactionUrlFor(
       mobileAuthUrl({ screen_hint: "signup" }),

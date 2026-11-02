@@ -6,7 +6,7 @@ import { useRootContext } from "@/common/hooks/use-root-context";
 import { useTranslations } from "@/common/hooks/use-translations";
 import type { UserTier } from "@/common/hooks/use-user-limits";
 import { planLabelKey } from "@/common/lib/subscription/tier-config";
-import { useReactNativeContext } from "@/common/providers/react-native-bridge-provider/react-native-bridge-context";
+import { useHidesBilling } from "@/common/hooks/use-hides-billing";
 import { isBilledByStore } from "@/features/user-settings/hooks/use-subscription-status";
 import { useSubscriptionPortal } from "@/features/user-settings/hooks/use-subscription-portal";
 import { useBillingDateFormat } from "@/features/user-settings/pages/general/use-money-format";
@@ -34,7 +34,7 @@ const noSubscription = () => () => {};
  */
 export function FailedRenewalBanner() {
   const { t } = useTranslations();
-  const { isReactNative } = useReactNativeContext();
+  const hidesBilling = useHidesBilling();
   const tier = useRootContext().userProfile?.tier as UserTier | undefined;
   // Read storage only after hydration, so the server and client agree.
   const dismissedEarlier = useSyncExternalStore(
@@ -44,7 +44,7 @@ export function FailedRenewalBanner() {
   );
   const [dismissedNow, setDismissedNow] = useState(false);
   const dismissed = dismissedEarlier || dismissedNow;
-  const skip = isReactNative || dismissed || !tier || tier === "FREE";
+  const skip = hidesBilling || dismissed || !tier || tier === "FREE";
   const { data } = useQuery(GetSubscriptionStatusDocument, { skip });
   const { handleManageBilling, loading } = useSubscriptionPortal();
   const formatDate = useBillingDateFormat();

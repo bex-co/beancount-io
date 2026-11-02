@@ -3,9 +3,10 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { AiCfoUpgradePanel } from "../ai-cfo-upgrade-panel";
 import { TEST_LOCATION_HREF } from "@/test/mocks/router";
 
-const { mockTrack, mockStoreKey } = vi.hoisted(() => ({
+const { mockTrack, mockStoreKey, mockHidesBilling } = vi.hoisted(() => ({
   mockTrack: vi.fn(),
   mockStoreKey: { current: null as string | null },
+  mockHidesBilling: { current: false },
 }));
 
 vi.mock("@tanstack/react-router", async () => {
@@ -16,6 +17,9 @@ vi.mock("@tanstack/react-router", async () => {
 vi.mock("@/common/analytics", () => ({ track: mockTrack }));
 vi.mock("@/common/hooks/use-store-upgrade-key", () => ({
   useStoreUpgradeKey: () => mockStoreKey.current,
+}));
+vi.mock("@/common/hooks/use-hides-billing", () => ({
+  useHidesBilling: () => mockHidesBilling.current,
 }));
 
 // Mock useUserLimits
@@ -258,6 +262,16 @@ describe("AiCfoUpgradePanel", () => {
 
     render(<AiCfoUpgradePanel />);
     expect(screen.getByText("100%")).toBeInTheDocument();
+  });
+
+  it("shows nothing on a page an app opened", () => {
+    mockHidesBilling.current = true;
+    setMocks("FREE", 9, 10);
+
+    const { container } = render(<AiCfoUpgradePanel />);
+    mockHidesBilling.current = false;
+
+    expect(container).toBeEmptyDOMElement();
   });
 
   it("names the app and shows no web prices to a store subscriber", () => {

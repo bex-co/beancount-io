@@ -6,7 +6,7 @@ import { cn } from "@/common/lib/utils/utils";
 import type { UserTier } from "@/common/hooks/use-user-limits";
 import { UpgradePromptLink } from "@/common/components/upgrade-prompt-link";
 import { getNextTier } from "@/common/lib/subscription/tier-config";
-import { useReactNativeContext } from "@/common/providers/react-native-bridge-provider/react-native-bridge-context";
+import { useHidesBilling } from "@/common/hooks/use-hides-billing";
 
 interface LimitIndicatorProps {
   used: number;
@@ -40,7 +40,7 @@ export function LimitIndicator({
   variant = "alert",
 }: LimitIndicatorProps) {
   const { t } = useTranslations();
-  const { isReactNative } = useReactNativeContext();
+  const hidesBilling = useHidesBilling();
 
   // An unlimited allowance (-1) has no limit to show or reach (w4/313).
   if (max === -1) return null;
@@ -97,12 +97,12 @@ export function LimitIndicator({
             {isNearLimit && !isAtLimit && ` - ${t("common.nearLimit")}`}
           </div>
         </div>
-        {isNearLimit && !isReactNative && ownedByOther && (
+        {isNearLimit && !hidesBilling && ownedByOther && (
           <div className="text-sm text-muted-foreground">
             {t("common.ownerCanRaiseLimit")}
           </div>
         )}
-        {isNearLimit && !isReactNative && !ownedByOther && (
+        {isNearLimit && !hidesBilling && !ownedByOther && (
           <Button variant="default" size="sm" asChild>
             <UpgradePromptLink
               surface={`${limitType}_limit`}
