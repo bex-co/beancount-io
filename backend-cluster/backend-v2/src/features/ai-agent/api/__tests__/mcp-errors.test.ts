@@ -576,6 +576,30 @@ describe("plan wording stays off MCP", () => {
     expect(envelope.hint).not.toMatch(PLAN_WORDING);
   });
 
+  it("holds for a failure a tool returns, not only one it throws", () => {
+    const { envelope } = splitToolFailure({
+      ok: false,
+      error: "Directive limit reached. Upgrade to Premium to continue.",
+      errorCode: "RESOURCE_LIMIT_REACHED",
+      errorHint: "Upgrade for more.",
+    });
+
+    expect(envelope.message).toBe("Directive limit reached.");
+    expect(envelope.hint).toBe(
+      "The account is at its limit for this resource; removing something frees room.",
+    );
+  });
+
+  it("leaves a tool's other failures alone", () => {
+    const { envelope } = splitToolFailure({
+      ok: false,
+      error: "Paid invoices need a date.",
+      errorCode: "BAD_USER_INPUT",
+    });
+
+    expect(envelope.message).toBe("Paid invoices need a date.");
+  });
+
   it("drops plan wording from a throw-site hint too", () => {
     const error = new ResourceLimitReachedError("Ledger", 1, 1);
     (error as { metadata?: unknown }).metadata = {

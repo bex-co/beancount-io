@@ -362,15 +362,18 @@ export function splitToolFailure(
   const message = uncoded
     ? unexpectedMessage(code as ErrorCategory, raw, options)
     : raw;
+  const fallbackHint =
+    CATEGORY_HINTS[code as ErrorCategory] ??
+    CATEGORY_HINTS[ErrorCategory.INTERNAL_SERVER_ERROR];
+  const hint = typeof errorHint === "string" ? errorHint : fallbackHint;
+  const plain = PLAN_CATEGORIES.has(code as ErrorCategory)
+    ? (text: string) => withoutPlanWording(text, fallbackHint)
+    : (text: string) => text;
   return {
     envelope: {
       code,
-      message,
-      hint:
-        typeof errorHint === "string"
-          ? errorHint
-          : (CATEGORY_HINTS[code as ErrorCategory] ??
-            CATEGORY_HINTS[ErrorCategory.INTERNAL_SERVER_ERROR]),
+      message: plain(message),
+      hint: plain(hint),
       ...carrierFields({ retryAfter, newLedgerErrors, limitOwner }),
     },
     rest,
