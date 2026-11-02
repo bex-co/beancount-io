@@ -31,7 +31,7 @@ When the ledger tracks invoices (open receivable balances from beancount-invoice
 
 ## Client and project
 
-When the source account's history attributes entries with `client:` or `project:` metadata (the suite's Business books convention), suggest a candidate's value from the same matches that suggest its account: a value every attributed match agrees on is proposed with its count, disagreeing matches are shown as a question, and no attributed match means no key. Never invent a value, and show it in the review table beside the account. On the `bea import --csv` path, a confirmed value goes into the matching rule's `client` or `project` key; where `bea` cannot take those keys, the attributed rows take the normalized batch path with the key in each transaction's `meta` (`references/bea-import.md`).
+When the source account's history attributes entries with `client:` or `project:` metadata (the suite's Business books convention), suggest a candidate's value from the same matches that suggest its account: a value every attributed match agrees on is proposed with its count, disagreeing matches are shown as a question, and no attributed match means no key. Never invent a value, and show it in the review table beside the account. On the `bea import --csv` path, a confirmed value goes into the matching rule's `client` or `project` key (`references/bea-import.md`).
 
 ## What the user sees
 

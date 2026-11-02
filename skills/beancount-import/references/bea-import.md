@@ -32,9 +32,8 @@ different categories needs the normalized batch path. Matched rows receive
 `*`; unmatched rows receive `!` and `Expenses:Uncategorized`. If the source
 marks a categorized row pending, use a batch with an explicit `!` instead.
 A rule may also set `client` and `project`, which every row it matches
-carries as metadata (beancount-init's `references/bea-cli.md`, Version notes:
-`bea` 0.3.1 refuses those keys, so there attributed rows take the normalized
-batch path).
+carries as metadata (`bea` 0.3.1 differs:
+beancount-init's `references/bea-cli.md`, Version notes).
 
 ## Preview and duplicate review
 
