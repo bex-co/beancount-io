@@ -1,8 +1,6 @@
+import type { InferSelectModel } from "drizzle-orm";
 import type { DbExecutor } from "@/drizzle/drizzle";
-import type {
-  BillingInterval,
-  SubscriptionTier,
-} from "@/features/stripe/service/stripe";
+import type { storeSubscriptions } from "./schema";
 
 export enum StoreProvider {
   APP_STORE = "APP_STORE",
@@ -25,29 +23,7 @@ export enum StoreSubscriptionStatus {
   UNKNOWN = "UNKNOWN",
 }
 
-export interface StoreSubscription {
-  id: string;
-  userId: string | null;
-  provider: StoreProvider;
-  environment: StoreEnvironment;
-  externalId: string;
-  replacedById: string | null;
-  productId: string;
-  basePlanId: string | null;
-  tier: SubscriptionTier | null;
-  cycle: BillingInterval | null;
-  providerStatus: string;
-  status: StoreSubscriptionStatus;
-  accessEndsAt: Date | null;
-  willRenew: boolean;
-  pendingProductId: string | null;
-  acknowledgedAt: Date | null;
-  revokedAt: Date | null;
-  providerUpdatedAt: Date;
-  lastVerifiedAt: Date;
-  createdAt: Date;
-  updatedAt: Date;
-}
+export type StoreSubscription = InferSelectModel<typeof storeSubscriptions>;
 
 export type UpsertStoreSubscriptionInput = Omit<
   StoreSubscription,

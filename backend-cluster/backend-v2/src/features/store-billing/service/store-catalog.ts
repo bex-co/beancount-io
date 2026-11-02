@@ -70,11 +70,8 @@ const GOOGLE_PLAY_BASE_PLANS: Readonly<Record<string, BillingInterval>> = {
   yearly: "year",
 };
 
-function lookup<T>(
-  table: Readonly<Record<string, T>>,
-  key: string | undefined,
-) {
-  return key !== undefined && Object.hasOwn(table, key) ? table[key] : null;
+function lookup<T>(table: Readonly<Record<string, T>>, key: string | null) {
+  return key !== null && Object.hasOwn(table, key) ? table[key] : null;
 }
 
 /**
@@ -84,13 +81,11 @@ function lookup<T>(
 export function storePlan(
   provider: StoreProvider,
   productId: string,
-  basePlanId?: string,
+  basePlanId: string | null = null,
 ): StorePlan | null {
   if (provider === StoreProvider.APP_STORE) {
     // App Store products carry their cycle; a base plan never applies.
-    return basePlanId === undefined
-      ? lookup(APP_STORE_PRODUCTS, productId)
-      : null;
+    return basePlanId === null ? lookup(APP_STORE_PRODUCTS, productId) : null;
   }
   const tier = lookup(GOOGLE_PLAY_SUBSCRIPTIONS, productId);
   const interval = lookup(GOOGLE_PLAY_BASE_PLANS, basePlanId);

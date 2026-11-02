@@ -361,10 +361,11 @@ export class SubscriptionService implements ISubscriptionService {
           ),
         ),
     );
-    const hasActiveSubscription = filteredSubscriptions.some(
+    const stripePlans = filteredSubscriptions.filter(
       (subscription) =>
         subscriptionTier(subscription) !== SubscriptionTier.FREE,
     );
+    const hasActiveSubscription = stripePlans.length > 0;
     if (onlyActiveStatus) return { hasActiveSubscription, subscriptions: [] };
 
     const products = new Map<
@@ -468,10 +469,6 @@ export class SubscriptionService implements ISubscriptionService {
       return [];
     });
 
-    const stripePlans = filteredSubscriptions.filter(
-      (subscription) =>
-        subscriptionTier(subscription) !== SubscriptionTier.FREE,
-    );
     const billing = planBilling(
       await this.models.storeSubscription.findByUserId(this.db, userId),
       {

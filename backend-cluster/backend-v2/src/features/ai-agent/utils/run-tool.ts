@@ -48,34 +48,30 @@ export async function runToolSafely<T>({
         ? err.message
         : String(err);
     logger[level](message, { ...context, error: msg });
-    const metadata =
-      err instanceof DomainError
-        ? (err.metadata as
-            | {
-                hint?: unknown;
-                retryAfter?: unknown;
-                newLedgerErrors?: unknown;
-                limitOwner?: unknown;
-              }
-            | undefined)
-        : undefined;
+    const metadata = err instanceof DomainError ? err.metadata : undefined;
     return {
       ok: false,
       error: formatError ? formatError(msg) : msg,
       ...(err instanceof DomainError && { errorCode: err.category }),
       ...(invalidInput && { errorCode: ErrorCategory.BAD_USER_INPUT }),
       ...(typeof metadata?.hint === "string" && { errorHint: metadata.hint }),
-      ...(typeof metadata?.retryAfter === "number" && {
-        retryAfter: metadata.retryAfter,
-      }),
-      ...(typeof metadata?.newLedgerErrors === "string" && {
-        newLedgerErrors: metadata.newLedgerErrors,
-      }),
-      ...(typeof metadata?.limitOwner === "string" && {
-        limitOwner: metadata.limitOwner,
-      }),
+      ...carrierFields(metadata),
     };
   }
+}
+
+/**
+ * The facts a refusal carries past its code, message and hint, whichever way
+ * it reaches the client. An allowlist, because the rest of a domain error's
+ * metadata, such as a plan's tier, stays off MCP (ADR 019).
+ */
+export function carrierFields(source: Record<string, unknown> | undefined) {
+  const { retryAfter, newLedgerErrors, limitOwner } = source ?? {};
+  return {
+    ...(typeof retryAfter === "number" && { retryAfter }),
+    ...(typeof newLedgerErrors === "string" && { newLedgerErrors }),
+    ...(typeof limitOwner === "string" && { limitOwner }),
+  };
 }
 
 /** Which argument is wrong and why, without the issue array around it. */

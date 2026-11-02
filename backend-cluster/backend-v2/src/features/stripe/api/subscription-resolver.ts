@@ -177,12 +177,11 @@ class Subscription {
   latestInvoice?: SubscriptionInvoice | null;
 }
 
-const BillingSourceValues = {
+const BillingSourceValues: { [K in BillingSource]: K } = {
   NONE: "NONE",
   STRIPE: "STRIPE",
-  APP_STORE: StoreProvider.APP_STORE,
-  GOOGLE_PLAY: StoreProvider.GOOGLE_PLAY,
-} satisfies Record<string, BillingSource>;
+  ...StoreProvider,
+};
 registerEnumType(BillingSourceValues, {
   name: "BillingSource",
   description: "Who bills a plan, which is also where it is managed.",
@@ -205,14 +204,14 @@ class StoreSubscriptionSummary {
   @Field()
   productId!: string;
 
-  @Field({
+  @Field(() => String, {
     nullable: true,
     description: "Absent for a product outside the catalog.",
   })
-  tier?: string;
+  tier!: string | null;
 
-  @Field({ nullable: true })
-  interval?: string;
+  @Field(() => String, { nullable: true })
+  interval!: string | null;
 
   @Field()
   status!: string;

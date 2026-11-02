@@ -1,6 +1,6 @@
 # w7 · m1 — Plan limits resolve from Stripe and store subscriptions alike
 
-**Worker:** worker1 **Goal:** the backend can hold App Store and Google Play subscriptions and resolves one plan per account from Stripe and the stores together, with no change for anyone without a store subscription **Status:** in progress (t001, t002, t003, t004, t005, t006, t007 done)
+**Worker:** worker1 **Goal:** the backend can hold App Store and Google Play subscriptions and resolves one plan per account from Stripe and the stores together, with no change for anyone without a store subscription **Status:** in progress (t001, t002, t003, t004, t005, t006, t007, t008 done)
 
 ## Tasks (in order)
 
@@ -13,7 +13,7 @@
 | t005 | subscriptionStatus reports the billing source — **DONE** | 1h | t004 |
 | t006 | Limit errors say whose plan set the limit — **DONE** | 1h | t003 |
 | t007 | Adoption surface — **DONE** | 30m | t005, t006 |
-| t008 | Simplify | 30m | t007 |
+| t008 | Simplify — **DONE** | 30m | t007 |
 | t009 | Test coverage | 1h | t007 |
 | t010 | Closeout | 15m | t008, t009 |
 

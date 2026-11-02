@@ -1,20 +1,12 @@
+import type { InferSelectModel } from "drizzle-orm";
 import type { DbExecutor } from "@/drizzle/drizzle";
 import type {
   StoreEnvironment,
   StoreProvider,
 } from "../store-subscription-model/types";
+import type { storeBillingEvents } from "./schema";
 
-export interface StoreBillingEvent {
-  id: string;
-  provider: StoreProvider;
-  environment: StoreEnvironment;
-  externalEventId: string;
-  payload: unknown;
-  receivedAt: Date;
-  processedAt: Date | null;
-  attempts: number;
-  lastError: string | null;
-}
+export type StoreBillingEvent = InferSelectModel<typeof storeBillingEvents>;
 
 export interface RecordStoreBillingEventInput {
   provider: StoreProvider;

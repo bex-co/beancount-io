@@ -1,4 +1,5 @@
 import { DomainError, ErrorCategory } from "@/shared/errors";
+import { carrierFields } from "../utils/run-tool";
 
 /**
  * One shape for every MCP failure (w2/m28:t003).
@@ -266,14 +267,7 @@ export function envelopeFromThrown(
   options: EnvelopeOptions = {},
 ): McpErrorEnvelope {
   if (error instanceof DomainError) {
-    const metadata = error.metadata as
-      | {
-          hint?: unknown;
-          retryAfter?: unknown;
-          newLedgerErrors?: unknown;
-          limitOwner?: unknown;
-        }
-      | undefined;
+    const metadata = error.metadata as { hint?: unknown } | undefined;
     // The throw site's own hint wins; the category fallback is what a
     // refusal that has nothing more specific to say still carries (w2/013).
     const fallbackHint = fallbackHintFor(error.category, options);
@@ -288,15 +282,7 @@ export function envelopeFromThrown(
       code: error.category,
       message,
       hint,
-      ...(typeof metadata?.retryAfter === "number" && {
-        retryAfter: metadata.retryAfter,
-      }),
-      ...(typeof metadata?.newLedgerErrors === "string" && {
-        newLedgerErrors: metadata.newLedgerErrors,
-      }),
-      ...(typeof metadata?.limitOwner === "string" && {
-        limitOwner: metadata.limitOwner,
-      }),
+      ...carrierFields(error.metadata),
     };
   }
   const raw = error instanceof Error ? error.message : String(error);
@@ -385,9 +371,7 @@ export function splitToolFailure(
           ? errorHint
           : (CATEGORY_HINTS[code as ErrorCategory] ??
             CATEGORY_HINTS[ErrorCategory.INTERNAL_SERVER_ERROR]),
-      ...(typeof retryAfter === "number" && { retryAfter }),
-      ...(typeof newLedgerErrors === "string" && { newLedgerErrors }),
-      ...(typeof limitOwner === "string" && { limitOwner }),
+      ...carrierFields({ retryAfter, newLedgerErrors, limitOwner }),
     },
     rest,
   };

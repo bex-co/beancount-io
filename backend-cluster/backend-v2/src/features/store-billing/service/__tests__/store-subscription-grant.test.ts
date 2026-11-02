@@ -1,47 +1,9 @@
 import { SubscriptionTier } from "@/features/stripe/service/stripe";
-import {
-  StoreEnvironment,
-  StoreProvider,
-  type StoreSubscription,
-  StoreSubscriptionStatus,
-} from "../../data/store-subscription-model";
-import {
-  grantedTier,
-  hasDuplicateBilling,
-  renewsFromStore,
-} from "../store-subscription-grant";
+import { StoreSubscriptionStatus } from "../../data/store-subscription-model";
+import { grantedTier, renewsFromStore } from "../store-subscription-grant";
+import { aStoreSubscription, NOW } from "./test-fixtures";
 
-const NOW = new Date("2026-11-01T12:00:00Z");
-const LATER = new Date("2026-12-01T12:00:00Z");
-
-function subscription(
-  overrides: Partial<StoreSubscription> = {},
-): StoreSubscription {
-  return {
-    id: "ssub_synthetic",
-    userId: "user-1",
-    provider: StoreProvider.APP_STORE,
-    environment: StoreEnvironment.PRODUCTION,
-    externalId: "original-transaction",
-    replacedById: null,
-    productId: "io.beancount.growth.monthly",
-    basePlanId: null,
-    tier: SubscriptionTier.GROWTH,
-    cycle: "month",
-    providerStatus: "active",
-    status: StoreSubscriptionStatus.ACTIVE,
-    accessEndsAt: LATER,
-    willRenew: true,
-    pendingProductId: null,
-    acknowledgedAt: null,
-    revokedAt: null,
-    providerUpdatedAt: NOW,
-    lastVerifiedAt: NOW,
-    createdAt: NOW,
-    updatedAt: NOW,
-    ...overrides,
-  };
-}
+const subscription = aStoreSubscription;
 
 describe("grantedTier (ADR 001 D4)", () => {
   it.each([StoreSubscriptionStatus.ACTIVE, StoreSubscriptionStatus.GRACE])(
@@ -122,27 +84,5 @@ describe("renewsFromStore (ADR 001 D5)", () => {
     expect(renewsFromStore(subscription({ replacedById: "ssub_newer" }))).toBe(
       false,
     );
-  });
-});
-
-describe("hasDuplicateBilling (ADR 001 D5)", () => {
-  const renewing = subscription();
-  const ending = subscription({ willRenew: false });
-
-  it("flags a store and Stripe subscription that both renew", () => {
-    expect(hasDuplicateBilling([renewing], 1)).toBe(true);
-  });
-
-  it("flags two renewing store subscriptions", () => {
-    expect(hasDuplicateBilling([renewing, renewing], 0)).toBe(true);
-  });
-
-  it.each([
-    ["a store subscription alone", [renewing], 0],
-    ["a Stripe subscription alone", [], 1],
-    ["a store plan that is ending beside Stripe", [ending], 1],
-    ["neither source", [], 0],
-  ])("does not flag %s", (_, rows, stripeRenewals) => {
-    expect(hasDuplicateBilling(rows, stripeRenewals)).toBe(false);
   });
 });

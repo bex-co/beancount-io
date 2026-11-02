@@ -1,44 +1,17 @@
 import { SubscriptionTier } from "@/features/stripe/service/stripe";
 import {
-  StoreEnvironment,
   StoreProvider,
   type StoreSubscription,
   StoreSubscriptionStatus,
 } from "../../data/store-subscription-model";
 import { planBilling } from "../plan-billing";
+import { aStoreSubscription, LATER, NOW } from "./test-fixtures";
 
-const NOW = new Date("2026-11-01T12:00:00Z");
-const LATER = new Date("2026-12-01T12:00:00Z");
 const NO_STRIPE = { held: 0, renewing: 0 };
 const STRIPE_RENEWS = { held: 1, renewing: 1 };
 const STRIPE_ENDING = { held: 1, renewing: 0 };
 
-function row(overrides: Partial<StoreSubscription> = {}): StoreSubscription {
-  return {
-    id: "ssub_synthetic",
-    userId: "user-1",
-    provider: StoreProvider.APP_STORE,
-    environment: StoreEnvironment.PRODUCTION,
-    externalId: "original-transaction",
-    replacedById: null,
-    productId: "io.beancount.growth.yearly",
-    basePlanId: null,
-    tier: SubscriptionTier.GROWTH,
-    cycle: "year",
-    providerStatus: "1",
-    status: StoreSubscriptionStatus.ACTIVE,
-    accessEndsAt: LATER,
-    willRenew: true,
-    pendingProductId: null,
-    acknowledgedAt: null,
-    revokedAt: null,
-    providerUpdatedAt: NOW,
-    lastVerifiedAt: NOW,
-    createdAt: NOW,
-    updatedAt: NOW,
-    ...overrides,
-  };
-}
+const row = aStoreSubscription;
 const ending = row({ willRenew: false });
 const expired = row({
   status: StoreSubscriptionStatus.EXPIRED,
@@ -95,10 +68,24 @@ describe("planBilling duplicate flag (ADR 001 D5)", () => {
     );
   });
 
+  it("is set when two store subscriptions both renew", () => {
+    expect(planBilling([row(), row()], NO_STRIPE, NOW).duplicateBilling).toBe(
+      true,
+    );
+  });
+
   it("is clear while switching, with one side already ending", () => {
     expect(planBilling([ending], STRIPE_RENEWS, NOW).duplicateBilling).toBe(
       false,
     );
+  });
+
+  it.each<[string, StoreSubscription[], typeof NO_STRIPE]>([
+    ["a store plan alone", [row()], NO_STRIPE],
+    ["a Stripe plan alone", [], STRIPE_RENEWS],
+    ["no plan", [], NO_STRIPE],
+  ])("is clear for %s", (_, rows, stripe) => {
+    expect(planBilling(rows, stripe, NOW).duplicateBilling).toBe(false);
   });
 });
 

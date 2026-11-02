@@ -10,6 +10,9 @@ const GOOGLE_ACCOUNT_ID_LENGTH = 32;
 
 export class BillingIdentityPostgresModel implements IBillingIdentityModel {
   async findOrCreate(db: DbExecutor, userId: string): Promise<BillingIdentity> {
+    const existing = await this.find(db, userId);
+    if (existing) return existing;
+
     const [created] = await db
       .insert(billingIdentities)
       .values({
@@ -19,13 +22,16 @@ export class BillingIdentityPostgresModel implements IBillingIdentityModel {
       })
       .onConflictDoNothing({ target: billingIdentities.userId })
       .returning();
-    if (created) return created;
+    // A concurrent first use won the insert, so its row is the identity.
+    return created ?? this.find(db, userId);
+  }
 
-    const [existing] = await db
+  private async find(db: DbExecutor, userId: string) {
+    const [identity] = await db
       .select()
       .from(billingIdentities)
       .where(eq(billingIdentities.userId, userId))
       .limit(1);
-    return existing;
+    return identity;
   }
 }

@@ -8,17 +8,16 @@ import {
   type StorePlan,
   storePlan,
 } from "./store-catalog";
-import {
-  grantedTier,
-  hasDuplicateBilling,
-  renewsFromStore,
-} from "./store-subscription-grant";
+import { grantedTier, renewsFromStore } from "./store-subscription-grant";
 
 export type BillingSource = "NONE" | "STRIPE" | StoreProvider;
 
-interface StoreSubscriptionSummary extends Partial<StorePlan> {
+interface StoreSubscriptionSummary {
   provider: StoreProvider;
   productId: string;
+  /** Null for a product outside the catalog. */
+  tier: StoreSubscription["tier"];
+  interval: StoreSubscription["cycle"];
   status: StoreSubscriptionStatus;
   accessEndsAt: Date | null;
   willRenew: boolean;
@@ -44,13 +43,13 @@ function summarize(subscription: StoreSubscription): StoreSubscriptionSummary {
   return {
     provider,
     productId,
-    tier: subscription.tier ?? undefined,
-    interval: subscription.cycle ?? undefined,
+    tier: subscription.tier,
+    interval: subscription.cycle,
     status: subscription.status,
     accessEndsAt: subscription.accessEndsAt,
     willRenew: subscription.willRenew,
     scheduledChange: pendingProductId
-      ? storePlan(provider, pendingProductId, basePlanId ?? undefined)
+      ? storePlan(provider, pendingProductId, basePlanId)
       : null,
     managementUrl:
       provider === StoreProvider.GOOGLE_PLAY
@@ -70,13 +69,13 @@ export function planBilling(
   stripe: StripePlanCounts,
   now: Date,
 ): PlanBilling {
-  const renewing = storeSubscriptions.find(renewsFromStore);
+  const renewing = storeSubscriptions.filter(renewsFromStore);
   const current =
-    renewing ??
+    renewing[0] ??
     storeSubscriptions.find((row) => grantedTier(row, now) !== null);
 
   const source = (): BillingSource => {
-    if (renewing) return renewing.provider;
+    if (renewing[0]) return renewing[0].provider;
     if (stripe.renewing > 0) return "STRIPE";
     if (current) return current.provider;
     return stripe.held > 0 ? "STRIPE" : "NONE";
@@ -84,7 +83,9 @@ export function planBilling(
 
   return {
     source: source(),
-    duplicateBilling: hasDuplicateBilling(storeSubscriptions, stripe.renewing),
+    // A store cannot refuse a purchase after taking payment, so paying twice
+    // is reported rather than prevented.
+    duplicateBilling: renewing.length + stripe.renewing > 1,
     store: current ? summarize(current) : null,
   };
 }
