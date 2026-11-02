@@ -17,6 +17,7 @@ import {
   queryResultToShellResult,
   queryResultToText,
 } from "./ledger-shell-mappers";
+import { bqlComplexityRefusal } from "./bql-complexity";
 import { stripBqlBlockComments } from "./bql-comments";
 import { extractSelectAliasInfo } from "./bql-select-aliases";
 import { foldBqlColumnFrom } from "./bql-from-fold";
@@ -150,6 +151,11 @@ export class LedgerShellService implements ILedgerShellService {
     userId: string | undefined,
     query: string,
   ): Promise<QueryResult> {
+    // Before the ledger is even loaded: an over-scale query is refused on this
+    // thread, so it never reaches a worker (and never costs a FileMap fetch or
+    // a megabyte-sized structured clone). See `bql-complexity.ts`.
+    const refusal = bqlComplexityRefusal(query);
+    if (refusal !== undefined) throw new BadUserInputError(refusal, "query");
     const { files, entryPoint, repoPaths } = await this.loadLedger(
       ledgerId,
       userId,

@@ -81,7 +81,14 @@ and need no action. Gitea admin user creation is still a one-time
   `dashboard/src/config/config.server.ts`.
 - **`/healthz` on the API is a deep check** that 500s when any dependency is
   down, including Gitea. It is deliberately not the platform health check path;
-  the ledger's `/healthz` is shallow and is.
+  the ledger's `/healthz` is, and it checks only itself — it parses a
+  one-directive ledger through its own worker pool and 503s when the engine
+  cannot, memoized for 5s so polling cannot starve the pool and bounded by a 2s
+  deadline so a queued probe cannot stall the check. Saturation (full
+  queue, timed-out task) stays healthy on purpose: restarting a merely busy
+  service drops in-flight work and deepens the backlog. It was a static 200
+  until a poisoned worker thread 500'd every real request for 10.5h while the
+  platform saw a healthy service.
 - **`fromService.envVarKey` cannot reference a `generateValue` variable** —
   validation rejects it as "no such plainly-defined variable".
 - **Auto-deploy on push did not fire** for this repo; trigger a deploy with

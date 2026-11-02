@@ -1,3 +1,5 @@
+import { MAX_BQL_QUERY_BYTES } from "@/features/ledger/utils/bql-query-size-limit";
+
 /**
  * The one BQL size note every surface publishes (w23/m5/t004): the MCP
  * `runBqlQuery` and `runBqlQueryStructured` tools, the REST BQL route, and
@@ -13,4 +15,4 @@
  */
 export const BQL_SIZE_DESCRIPTION =
   "The query travels in a POST body end to end, so long queries have no " +
-  "URL-length ceiling.";
+  `URL-length ceiling, up to ${MAX_BQL_QUERY_BYTES} bytes.`;

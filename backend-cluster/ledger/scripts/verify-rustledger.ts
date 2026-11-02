@@ -31,6 +31,7 @@ import {
   parseLedgerFilesInProcess,
   queryLedgerFiles,
   queryLedgerFilesResult,
+  RustledgerWorkerPool,
   withLedger,
 } from "@/foundation/rustledger";
 import {
@@ -38,6 +39,7 @@ import {
   queryResultToText,
 } from "@/features/ledger/service/ledger-shell-mappers";
 import { stripBqlBlockComments } from "@/features/ledger/service/bql-comments";
+import { bqlComplexityRefusal } from "@/features/ledger/service/bql-complexity";
 import { foldBqlWhitespace } from "@/features/ledger/service/bql-whitespace";
 import {
   extractSelectAliasHeads,
@@ -853,6 +855,74 @@ async function verifyMultilineSources(): Promise<void> {
   }
 }
 
+/**
+ * A worker whose engine instance traps must not poison the requests after it.
+ *
+ * The engine parses an expression chain by recursive descent, so a long enough
+ * flat chain overflows the WASM shadow stack; the instance is unusable from
+ * then on, and every later task on that thread — parses for unrelated ledgers
+ * included — fails with `memory access out of bounds` until the thread is
+ * replaced. This check pins both halves of the response: the API-thread guard
+ * refuses the query, and forcing one past the guard costs exactly one request.
+ *
+ * Runs with a single worker so a replacement cannot be mistaken for a second
+ * healthy thread that happened to pick up the work.
+ */
+async function verifyPoisonedWorkerRecovery(): Promise<void> {
+  const files: FileMap = {
+    "main.beancount": `2024-01-01 open Assets:Cash USD
+2024-01-01 open Equity:Opening USD
+
+2024-01-02 * "seed"
+  Assets:Cash  100.00 USD
+  Equity:Opening
+`,
+  };
+  const normal = "SELECT account, sum(position) GROUP BY account";
+  const overScale = `SELECT 1 WHERE ${Array.from({ length: 4001 }, () => "1").join(" AND ")}`;
+
+  // The guard is the actual protection: this never reaches a worker in prod.
+  assert(
+    bqlComplexityRefusal(overScale) !== undefined,
+    "the complexity guard refuses an over-scale chain",
+  );
+  assert(
+    bqlComplexityRefusal(normal) === undefined,
+    "the complexity guard accepts an ordinary query",
+  );
+
+  const pool = new RustledgerWorkerPool({ workerCount: 1 });
+  try {
+    assert(
+      (await pool.query(files, "main.beancount", normal)).rows.length === 2,
+      "baseline query runs on a fresh worker",
+    );
+
+    let refused = false;
+    try {
+      await pool.query(files, "main.beancount", overScale);
+    } catch {
+      refused = true;
+    }
+    assert(refused, "the engine rejects a chain forced past the guard");
+
+    // Before the fix every one of these failed, permanently.
+    assert(
+      (await pool.query(files, "main.beancount", normal)).rows.length === 2,
+      "the query right after the trap succeeds on a replacement worker",
+    );
+    const after = await pool.parse(files, "main.beancount", {
+      applyTsPlugins: false,
+    });
+    assert(
+      after.valid && after.directiveCount === 3,
+      "an unrelated parse after the trap succeeds (the reported 500s were parses)",
+    );
+  } finally {
+    await pool.close();
+  }
+}
+
 async function main(): Promise<void> {
   const version = await getRustledgerVersion();
   assert(
@@ -876,6 +946,7 @@ async function main(): Promise<void> {
     "two transactions parsed",
   );
 
+  await verifyPoisonedWorkerRecovery();
   await verifyTransactionLookups();
   await verifyBalanceSheetCurrentEarnings();
   await verifyWindowedPlaintextExport();

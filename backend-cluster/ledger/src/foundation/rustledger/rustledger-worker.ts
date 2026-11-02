@@ -5,6 +5,7 @@ import {
   queryLedgerFilesResultInProcess,
 } from "./engine";
 import { filterDirectives } from "./directive-filter";
+import { engineInstanceHealthy } from "./engine-health";
 import { findEntrySliceWithFullLedger } from "./source-slice-resolver";
 import type {
   RustledgerWorkerResponse,
@@ -62,6 +63,20 @@ port.on("message", async (task: RustledgerWorkerTask) => {
           : {}),
       },
     };
+    // A failed task may have left this thread's WASM instance poisoned (see
+    // `engine-health.ts`). Answer THIS caller with its own error either way,
+    // but flag the reply so the pool retires the slot as it processes the
+    // response — the thread's own `exit` arrives too late to stop the next
+    // `pump()` from reusing it. Probing before the reply keeps the decision on
+    // the same turn as the failure, so no other task can be handed the
+    // poisoned instance in between.
+    if (!(await engineInstanceHealthy())) {
+      port.postMessage({ ...response, poisoned: true });
+      // Yield once so the reply flushes before the thread goes away. The pool
+      // has already retired the slot by then; this just releases the thread.
+      setImmediate(() => process.exit(1));
+      return;
+    }
   }
   port.postMessage(response);
 });

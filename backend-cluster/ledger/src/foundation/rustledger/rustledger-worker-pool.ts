@@ -8,6 +8,11 @@ import {
   ServiceUnavailableError,
 } from "@/shared/errors";
 import type { LedgerSnapshot, ParseLedgerOptions } from "./engine";
+import {
+  HEALTH_DIRECTIVE_COUNT,
+  HEALTH_ENTRY_POINT,
+  HEALTH_FILES,
+} from "./engine-health";
 import type { FilterOptions } from "./directive-filter";
 import type { EntrySlice } from "./source-slice";
 import type {
@@ -128,15 +133,10 @@ export class RustledgerWorkerPool {
 
   /** Start a worker and prove that its JS bundle plus WASM asset can parse. */
   public async warmup(): Promise<void> {
-    const snapshot = await this.parse(
-      {
-        "__rustledger_health__.bean":
-          "2000-01-01 open Assets:Rustledger-Health USD\n",
-      },
-      "__rustledger_health__.bean",
-      { applyTsPlugins: false },
-    );
-    if (!snapshot.valid || snapshot.directiveCount !== 1) {
+    const snapshot = await this.parse(HEALTH_FILES, HEALTH_ENTRY_POINT, {
+      applyTsPlugins: false,
+    });
+    if (!snapshot.valid || snapshot.directiveCount !== HEALTH_DIRECTIVE_COUNT) {
       throw new InternalServerError(
         "RustLedger worker warmup returned an invalid snapshot",
       );
@@ -306,6 +306,20 @@ export class RustledgerWorkerPool {
           new Error(`${response.error.name}: ${response.error.message}`),
         ),
       );
+      if (response.poisoned) {
+        // Retire the slot BEFORE pump() can hand it the next task. `pending`
+        // is already settled and `slot.current` cleared, so this only removes
+        // and terminates the thread — no second caller is failed. The thread's
+        // own `exit` then finds `slot.removed` and stays quiet.
+        this.failSlot(
+          slot,
+          new Error(
+            `RustLedger worker retired after ${response.error.name}: its engine instance failed the liveness probe`,
+          ),
+          true,
+        );
+        return;
+      }
     }
     this.pump();
   }

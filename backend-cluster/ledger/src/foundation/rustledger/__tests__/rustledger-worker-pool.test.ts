@@ -1,5 +1,9 @@
 import { EventEmitter } from "node:events";
-import { RateLimitedError, ServiceUnavailableError } from "@/shared/errors";
+import {
+  InternalServerError,
+  RateLimitedError,
+  ServiceUnavailableError,
+} from "@/shared/errors";
 import {
   RustledgerWorkerPool,
   type WorkerLike,
@@ -186,6 +190,81 @@ describe("RustledgerWorkerPool", () => {
       rows: [],
       errors: [],
     });
+    await pool.close();
+  });
+
+  // A WASM trap can leave the worker's engine instance poisoned, so the worker
+  // answers its caller and then exits (see `engine-health.ts`). The pool must
+  // route the NEXT task to a replacement thread rather than the retired one,
+  // which is what kept a single bad query failing every later request.
+  // The retirement must take effect while the response is being handled, NOT
+  // when the thread's `exit` finally lands: between those two moments the slot
+  // looks idle and healthy, and `pump()` would hand the poisoned instance to
+  // the next caller — an unrelated ledger's parse, in the incident this fixes.
+  // So no `exit` is emitted here: the flag alone has to replace the worker.
+  it("retires a poisoned worker while handling its response", async () => {
+    const { pool, workers } = makePool();
+    const first = pool.query({ "main.bean": "" }, "main.bean", "SELECT 1");
+
+    workers[0].respond({
+      id: workers[0].posted[0].id,
+      ok: false,
+      error: { name: "RuntimeError", message: "memory access out of bounds" },
+      poisoned: true,
+    });
+    await expect(first).rejects.toBeInstanceOf(InternalServerError);
+    expect(workers[0].terminate).toHaveBeenCalledTimes(1);
+
+    const second = pool.query({ "main.bean": "" }, "main.bean", "SELECT 1");
+    expect(workers).toHaveLength(2);
+    expect(workers[1].posted).toHaveLength(1);
+
+    workers[1].respond({
+      id: workers[1].posted[0].id,
+      ok: true,
+      value: { columns: [], rows: [], errors: [] },
+    });
+    await expect(second).resolves.toEqual({
+      columns: [],
+      rows: [],
+      errors: [],
+    });
+    await pool.close();
+  });
+
+  it("keeps a worker whose task failed without poisoning it", async () => {
+    const { pool, workers } = makePool();
+    const first = pool.query({ "main.bean": "" }, "main.bean", "SELECT 1");
+
+    workers[0].respond({
+      id: workers[0].posted[0].id,
+      ok: false,
+      error: { name: "Error", message: "ordinary query error" },
+    });
+    await expect(first).rejects.toBeInstanceOf(InternalServerError);
+
+    // An invalid query must not cost a thread — only a failed probe does.
+    const second = pool.query({ "main.bean": "" }, "main.bean", "SELECT 1");
+    expect(workers).toHaveLength(1);
+    expect(workers[0].posted).toHaveLength(2);
+    expect(workers[0].terminate).not.toHaveBeenCalled();
+
+    workers[0].respond({
+      id: workers[0].posted[1].id,
+      ok: true,
+      value: { columns: [], rows: [], errors: [] },
+    });
+    await expect(second).resolves.toBeDefined();
+    await pool.close();
+  });
+
+  it("rejects the in-flight task when a worker exits before replying", async () => {
+    const { pool, workers } = makePool();
+    const inFlight = pool.query({ "main.bean": "" }, "main.bean", "SELECT 1");
+
+    workers[0].emit("exit", 1);
+
+    await expect(inFlight).rejects.toBeInstanceOf(InternalServerError);
     await pool.close();
   });
 

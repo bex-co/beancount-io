@@ -7,6 +7,7 @@ import {
   AuthorizedLedgerService,
 } from "@/features/ledger/utils/authorize-ledger";
 import { AUTHORIZATION_ACTIONS } from "@/server/api/authorization/authorization-contract";
+import { assertBqlQueryWithinSizeLimit } from "@/features/ledger/utils/bql-query-size-limit";
 
 export type ShellQueryResult = {
   resultType: "table" | "text";
@@ -47,6 +48,9 @@ export class LedgerShellService
     query: string;
   }): Promise<ShellQueryResult> {
     const { ledgerId, identity, query } = params;
+    // Before authorization and before the internal hop: an absurd payload is
+    // refused on sight, on every surface at once.
+    assertBqlQueryWithinSizeLimit(query);
     await authorizeLedger(
       identity,
       ledgerId,
@@ -95,6 +99,9 @@ export class LedgerShellService
     query: string;
   }): Promise<ShellTextResult> {
     const { ledgerId, identity, query } = params;
+    // Before authorization and before the internal hop: an absurd payload is
+    // refused on sight, on every surface at once.
+    assertBqlQueryWithinSizeLimit(query);
     await authorizeLedger(
       identity,
       ledgerId,

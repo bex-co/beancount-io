@@ -1,4 +1,5 @@
 import "reflect-metadata";
+import { MAX_BQL_QUERY_BYTES } from "@/features/ledger/utils/bql-query-size-limit";
 jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
 jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
 
@@ -257,6 +258,53 @@ describe("structured BQL across actual adapters", () => {
       expect(f.queryShellPost).toHaveBeenCalledTimes(3);
       for (const call of f.queryShellPost.mock.calls)
         expect(call).toEqual(["alice", "main", { query: longQuery }]);
+    } finally {
+      await f.close();
+    }
+  });
+
+  // The transport backstop: a payload no legitimate caller sends is refused
+  // on every surface, before authorization and before the ledger hop. The
+  // engine-shape protection lives in the ledger service; this only stops an
+  // absurd body from being forwarded and parsed at all.
+  it("refuses an over-cap query on every surface before domain work", async () => {
+    const overCap = `SELECT '${"A".repeat(MAX_BQL_QUERY_BYTES)}'`;
+    const f = await fixture({ contents: "must not read" });
+    try {
+      const rest = await f.rest(overCap);
+      expect(rest.status).toBe(400);
+      expect(await rest.json()).toMatchObject({
+        error: { code: "BAD_USER_INPUT" },
+      });
+      expect((await f.gql("text { contents }", overCap)).errors).toHaveLength(
+        1,
+      );
+      const mcp = await f.client.callTool({
+        name: "runBqlQueryStructured",
+        arguments: { query: overCap },
+      });
+      expect(mcp.isError).toBe(true);
+      expect(mcp.structuredContent).toMatchObject({
+        ok: false,
+        error: { code: "BAD_USER_INPUT" },
+      });
+
+      const textRest = await f.restText(overCap);
+      expect(textRest.status).toBe(400);
+      expect(await textRest.json()).toMatchObject({
+        error: { code: "BAD_USER_INPUT" },
+      });
+      expect((await f.gqlText(overCap)).errors).toHaveLength(1);
+      const textMcp = await f.client.callTool({
+        name: "runBqlQuery",
+        arguments: { query: overCap },
+      });
+      expect(textMcp.isError).toBe(true);
+
+      // Nothing downstream was touched on any of the six calls.
+      expect(f.authorizeOrThrow).not.toHaveBeenCalled();
+      expect(f.queryShellPost).not.toHaveBeenCalled();
+      expect(f.queryShellTextPost).not.toHaveBeenCalled();
     } finally {
       await f.close();
     }
