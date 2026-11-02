@@ -783,7 +783,11 @@
           "expected": {
             "Assets:Brokerage": "40",
             "Income:Dividends": "40"
-          }
+          },
+          "entries": "2026-01-02 * \"Dividend\"\n  Assets:Brokerage  40 USD\n  Income:Dividends  -40 USD\n"
+        },
+        "hostedFiles": {
+          "main.bean": "option \"title\" \"Personal ledger\"\noption \"operating_currency\" \"USD\"\noption \"inferred_tolerance_default\" \"*:0.001\"\n\n2026-01-01 open Assets:Bank\n2026-01-01 open Assets:Brokerage \"FIFO\"\n2026-01-01 open Assets:Cash\n2026-01-01 open Equity:OpeningBalances\n2026-01-01 open Expenses:Brokerage:Fees\n2026-01-01 open Expenses:Food\n2026-01-01 open Expenses:Health\n2026-01-01 open Expenses:Housing\n2026-01-01 open Expenses:Other\n2026-01-01 open Expenses:Transport\n2026-01-01 open Expenses:Utilities\n2026-01-01 open Income:CapitalGains\n2026-01-01 open Income:Dividends\n2026-01-01 open Income:General\n2026-01-01 open Income:Interest\n2026-01-01 open Liabilities:CreditCard\n2026-01-01 open Liabilities:Loan\n"
         }
       }
     },
@@ -823,7 +827,10 @@
           "Expenses:Rental:OakSt:Insurance",
           "Expenses:Rental:OakSt:Management",
           "Expenses:Rental:OakSt:Other"
-        ]
+        ],
+        "hostedFiles": {
+          "main.bean": "option \"title\" \"Personal ledger\"\noption \"operating_currency\" \"USD\"\noption \"inferred_tolerance_default\" \"*:0.001\"\n\n2026-01-01 open Assets:Bank\n2026-01-01 open Assets:Cash\n2026-01-01 open Equity:OpeningBalances\n2026-01-01 open Expenses:Food\n2026-01-01 open Expenses:Health\n2026-01-01 open Expenses:Housing\n2026-01-01 open Expenses:Other\n2026-01-01 open Expenses:Rental:OakSt:Insurance\n2026-01-01 open Expenses:Rental:OakSt:Management\n2026-01-01 open Expenses:Rental:OakSt:Other\n2026-01-01 open Expenses:Rental:OakSt:Repairs\n2026-01-01 open Expenses:Transport\n2026-01-01 open Expenses:Utilities\n2026-01-01 open Income:General\n2026-01-01 open Income:Rent:OakSt\n2026-01-01 open Liabilities:CreditCard\n2026-01-01 open Liabilities:Deposits:OakSt\n2026-01-01 open Liabilities:Loan\n"
+        }
       }
     },
     {
@@ -868,7 +875,11 @@
           "expected": {
             "Assets:Business:Bank": "500",
             "Income:Business:Services": "500"
-          }
+          },
+          "entries": "2026-01-05 * \"Client payment\"\n  Assets:Business:Bank  500 USD\n  Income:Business:Services  -500 USD\n"
+        },
+        "hostedFiles": {
+          "main.bean": "option \"title\" \"Personal ledger\"\noption \"operating_currency\" \"USD\"\noption \"inferred_tolerance_default\" \"*:0.001\"\n\n2026-01-01 open Assets:Bank\n2026-01-01 open Assets:Business:Bank\n2026-01-01 open Assets:Cash\n2026-01-01 open Equity:OpeningBalances\n2026-01-01 open Expenses:Business:Fees\n2026-01-01 open Expenses:Business:Software\n2026-01-01 open Expenses:Business:Supplies\n2026-01-01 open Expenses:Business:Travel\n2026-01-01 open Expenses:Food\n2026-01-01 open Expenses:Health\n2026-01-01 open Expenses:Housing\n2026-01-01 open Expenses:Other\n2026-01-01 open Expenses:Transport\n2026-01-01 open Expenses:Utilities\n2026-01-01 open Income:Business:Services\n2026-01-01 open Income:General\n2026-01-01 open Liabilities:CreditCard\n2026-01-01 open Liabilities:Loan\n"
         }
       }
     },
@@ -936,7 +947,11 @@
             "Expenses:Rental:Property1:Repairs": "50",
             "Assets:Business:Bank": "500",
             "Income:Business:Services": "500"
-          }
+          },
+          "entries": "2026-01-02 * \"Dividend\"\n  Assets:Brokerage  40 USD\n  Income:Dividends  -40 USD\n\n2026-01-03 * \"Rent for Property1\"\n  Assets:Bank  1200 USD\n  Income:Rent:Property1  -1200 USD\n\n2026-01-04 * \"Repair at Property1\"\n  Expenses:Rental:Property1:Repairs  50 USD\n  Assets:Bank  -50 USD\n\n2026-01-05 * \"Client payment\"\n  Assets:Business:Bank  500 USD\n  Income:Business:Services  -500 USD\n"
+        },
+        "hostedFiles": {
+          "main.bean": "option \"title\" \"Personal ledger\"\noption \"operating_currency\" \"USD\"\noption \"inferred_tolerance_default\" \"*:0.001\"\n\n2026-01-01 open Assets:Bank\n2026-01-01 open Assets:Brokerage \"FIFO\"\n2026-01-01 open Assets:Business:Bank\n2026-01-01 open Assets:Cash\n2026-01-01 open Equity:OpeningBalances\n2026-01-01 open Expenses:Brokerage:Fees\n2026-01-01 open Expenses:Business:Fees\n2026-01-01 open Expenses:Business:Software\n2026-01-01 open Expenses:Business:Supplies\n2026-01-01 open Expenses:Business:Travel\n2026-01-01 open Expenses:Food\n2026-01-01 open Expenses:Health\n2026-01-01 open Expenses:Housing\n2026-01-01 open Expenses:Other\n2026-01-01 open Expenses:Rental:Property1:Insurance\n2026-01-01 open Expenses:Rental:Property1:Management\n2026-01-01 open Expenses:Rental:Property1:Other\n2026-01-01 open Expenses:Rental:Property1:Repairs\n2026-01-01 open Expenses:Transport\n2026-01-01 open Expenses:Utilities\n2026-01-01 open Income:Business:Services\n2026-01-01 open Income:CapitalGains\n2026-01-01 open Income:Dividends\n2026-01-01 open Income:General\n2026-01-01 open Income:Interest\n2026-01-01 open Income:Rent:Property1\n2026-01-01 open Liabilities:CreditCard\n2026-01-01 open Liabilities:Deposits:Property1\n2026-01-01 open Liabilities:Loan\n"
         }
       }
     }

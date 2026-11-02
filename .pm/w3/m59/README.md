@@ -1,6 +1,6 @@
 # w3 · m59 — Ledger creation: personal modules in the setup specification, builder, and CLI
 
-**Worker:** worker3 **Goal:** a personal ledger can also carry investments, a rental property, or a side business as name-spaced modules, chosen through the same setup specification on REST, GraphQL, MCP, hosted CLI, and local `bea init`. **Status:** in progress (t001–t003 done)
+**Worker:** worker3 **Goal:** a personal ledger can also carry investments, a rental property, or a side business as name-spaced modules, chosen through the same setup specification on REST, GraphQL, MCP, hosted CLI, and local `bea init`. **Status:** in progress (t001–t004 done)
 
 ## Tasks (in order)
 
@@ -9,7 +9,7 @@
 | t001 | Add the three modules to the catalog and conformance fixtures — **DONE** | 60m | w3/m53/t005 |
 | t002 | Accept `modules` in the hosted builder, create, and preview on all three surfaces — **DONE** | 90m | t001 |
 | t003 | Build modules in the Python engine and add `--module` to `bea init` and hosted create — **DONE** | 60m | t001, t002 |
-| t004 | Run cross-engine conformance for every module | 45m | t002, t003 |
+| t004 | Run cross-engine conformance for every module — **DONE** | 45m | t002, t003 |
 | t005 | Adoption surface | 30m | t004 |
 | t006 | Simplify | 20m | t005 |
 | t007 | Test coverage | 45m | t005 |

@@ -750,3 +750,65 @@ describe("personal modules (w3/m59/t002)", () => {
     ).not.toThrow();
   });
 });
+
+describe("module conformance fixtures (w3/m59/t004)", () => {
+  type ModuleFixture = {
+    id: string;
+    spec: LedgerSetup;
+    expected: {
+      openedAccounts: string[];
+      booking?: Record<string, string>;
+      hostedFiles: Record<string, string>;
+      scenario?: { entries?: string; expected: Record<string, string> };
+    };
+  };
+  const moduleFixtures = (
+    fixturesJson.fixtures as unknown as ModuleFixture[]
+  ).filter((fixture) => (fixture.spec.modules ?? []).length > 0);
+
+  it("has one fixture per module and one with all three", () => {
+    expect(moduleFixtures.map((fixture) => fixture.id).sort()).toEqual([
+      "personal@1-module-investments",
+      "personal@1-module-rental-property",
+      "personal@1-module-side-business",
+      "personal@1-modules-all",
+    ]);
+  });
+
+  it.each(moduleFixtures.map((fixture) => [fixture.id, fixture] as const))(
+    "%s: the hosted builder opens the promised accounts and writes the pinned files",
+    (_, fixture) => {
+      const preview = previewLedgerSetup(fixture.spec, "2026-01-01");
+      expect(preview.accounts).toEqual(
+        [...fixture.expected.openedAccounts].sort(),
+      );
+      // The CLI conformance test runs A.9's scenario over these exact files.
+      expect(preview.files).toEqual(fixture.expected.hostedFiles);
+      for (const [account, method] of Object.entries(
+        fixture.expected.booking ?? {},
+      )) {
+        expect(preview.files["main.bean"]).toMatch(
+          new RegExp(`^\\S+ open ${account}( \\S+)? "${method}"$`, "m"),
+        );
+      }
+    },
+  );
+
+  it("opens every account A.9's scenario posts to, each in its own group", () => {
+    for (const fixture of moduleFixtures) {
+      const scenario = fixture.expected.scenario;
+      if (!scenario?.entries) continue;
+      const posted = [...scenario.entries.matchAll(/^ {2}(\S+) +-?\d/gm)].map(
+        (match) => match[1]!,
+      );
+      expect(posted.length).toBeGreaterThan(0);
+      for (const account of [...posted, ...Object.keys(scenario.expected)]) {
+        expect({ fixture: fixture.id, account, opened: true }).toEqual({
+          fixture: fixture.id,
+          account,
+          opened: fixture.expected.openedAccounts.includes(account),
+        });
+      }
+    }
+  });
+});

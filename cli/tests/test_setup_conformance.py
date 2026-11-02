@@ -13,6 +13,7 @@ import json
 import os
 import subprocess
 import sys
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -99,3 +100,99 @@ def test_opening_fixture_matches_hosted_expectations(tmp_path: Path) -> None:
     assert f"{fixture['expected']['balanceAssertionDate']} balance Assets:Cash" in ledger
     checked = _bea(tmp_path, "--file", str(books / "main.bean"), "check")
     assert checked.returncode == 0, checked.stderr or checked.stdout
+
+
+def _module_fixtures() -> list[dict]:
+    return [fixture for fixture in _fixtures() if fixture["spec"].get("modules")]
+
+
+def _module_flags(spec: dict) -> list[str]:
+    flags: list[str] = []
+    for module in spec["modules"]:
+        flags += ["--module", module["id"]]
+        if "propertyName" in module:
+            flags += ["--property-name", module["propertyName"]]
+    return flags
+
+
+def _group_totals(tmp_path: Path, ledger: Path) -> dict[str, Decimal]:
+    """Each account's total after the scenario, read back through the real engine."""
+    checked = _bea(tmp_path, "--file", str(ledger), "check")
+    assert checked.returncode == 0, checked.stderr or checked.stdout
+    result = _bea(
+        tmp_path,
+        "--json",
+        "--file",
+        str(ledger),
+        "query",
+        "SELECT account, sum(number) AS total WHERE number != 0 GROUP BY account",
+    )
+    assert result.returncode == 0, result.stderr or result.stdout
+    return {account: Decimal(total) for account, total in json.loads(result.stdout)["data"]["rows"]}
+
+
+def test_module_fixtures_open_the_promised_accounts(tmp_path: Path) -> None:
+    """Each module alone and all three together, against the hosted builder's account list (w3/m59/t004)."""
+    fixtures = _module_fixtures()
+    assert len(fixtures) == 4
+    for fixture in fixtures:
+        books = tmp_path / fixture["id"].replace("@", "-")
+        spec = fixture["spec"]
+        result = _bea(
+            tmp_path,
+            "--json",
+            "init",
+            str(books),
+            "--preset",
+            spec["preset"],
+            "--currency",
+            spec["operatingCurrency"],
+            "--date",
+            spec["historyStart"],
+            *_module_flags(spec),
+        )
+        assert result.returncode == 0, (fixture["id"], result.stderr or result.stdout)
+        opened = json.loads(result.stdout)["data"]["accounts"]
+        assert sorted(opened) == sorted(fixture["expected"]["openedAccounts"]), fixture["id"]
+        ledger = (books / "main.bean").read_text(encoding="utf-8")
+        for account, method in fixture["expected"].get("booking", {}).items():
+            assert f'open {account} "{method}"' in ledger, fixture["id"]
+        checked = _bea(tmp_path, "--file", str(books / "main.bean"), "check")
+        assert checked.returncode == 0, (fixture["id"], checked.stderr or checked.stdout)
+
+
+def test_appendix_a9_scenario_totals_by_group_on_both_engines(tmp_path: Path) -> None:
+    """A.9's scenario over the hosted builder's pinned files and over `bea init`'s: same totals, own groups."""
+    scenarios = [f for f in _module_fixtures() if f["expected"].get("scenario", {}).get("entries")]
+    assert {f["id"] for f in scenarios} >= {"personal@1-modules-all"}
+    for fixture in scenarios:
+        scenario = fixture["expected"]["scenario"]
+        spec = fixture["spec"]
+        hosted = tmp_path / f"{fixture['id']}-hosted" / "main.bean"
+        hosted.parent.mkdir(parents=True)
+        hosted.write_text(fixture["expected"]["hostedFiles"]["main.bean"], encoding="utf-8")
+        local_dir = tmp_path / f"{fixture['id']}-cli"
+        built = _bea(
+            tmp_path,
+            "init",
+            str(local_dir),
+            "--preset",
+            spec["preset"],
+            "--currency",
+            spec["operatingCurrency"],
+            "--date",
+            spec["historyStart"],
+            *_module_flags(spec),
+        )
+        assert built.returncode == 0, built.stderr or built.stdout
+        local = local_dir / "main.bean"
+        totals = []
+        for ledger in (hosted, local):
+            with ledger.open("a", encoding="utf-8") as handle:
+                handle.write("\n" + scenario["entries"])
+            totals.append(_group_totals(tmp_path, ledger))
+        assert totals[0] == totals[1], fixture["id"]
+        expected = {account: Decimal(amount) for account, amount in scenario["expected"].items()}
+        assert {account: abs(total) for account, total in totals[0].items()} == expected, fixture["id"]
+        # Everyday spending is untouched: every movement sits in a module group or the personal bank.
+        assert not any(account.startswith("Expenses:") and ":" not in account[9:] for account in totals[0])
