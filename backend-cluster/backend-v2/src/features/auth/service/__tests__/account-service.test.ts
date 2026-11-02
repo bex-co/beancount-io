@@ -5,6 +5,7 @@ import {
   NotFoundError,
   ConflictError,
   InternalServerError,
+  ValidationError,
 } from "@/shared/errors";
 import { ReportStatus } from "@/features/auth/utils/report-status";
 import type { IStripeService } from "@/features/stripe/service/stripe-service";
@@ -164,7 +165,10 @@ describe("AccountService", () => {
               : operation === "username update"
                 ? accountService.updateUsername(principal, "alice")
                 : operation === "profile update"
-                  ? accountService.updateProfile(principal, "Alice", "A")
+                  ? accountService.updateProfile(principal, {
+                      firstName: "Alice",
+                      lastName: "A",
+                    })
                   : accountService.deleteAccount(principal);
 
         await expect(result).rejects.toThrow("denied");
@@ -276,6 +280,7 @@ describe("AccountService", () => {
           maxDirectives: 1000,
         },
         hasEverSubscribed: false,
+        defaultCurrency: null,
       });
     });
 
@@ -325,6 +330,7 @@ describe("AccountService", () => {
           maxDirectives: 1000,
         },
         hasEverSubscribed: false,
+        defaultCurrency: null,
       });
     });
 
@@ -1267,11 +1273,10 @@ describe("AccountService", () => {
         updateLastName: jest.fn().mockResolvedValue(undefined),
       };
 
-      const result = await accountService.updateProfile(
-        identity(userId),
-        "John",
-        "Doe",
-      );
+      const result = await accountService.updateProfile(identity(userId), {
+        firstName: "John",
+        lastName: "Doe",
+      });
 
       expect(result).not.toBeNull();
       expect(mockModels.user.updateFirstName).toHaveBeenCalledWith(
@@ -1290,18 +1295,16 @@ describe("AccountService", () => {
       mockModels.user.getById = jest.fn().mockResolvedValue(null);
 
       await expect(
-        accountService.updateProfile(
-          identity("nonexistent-user"),
-          "John",
-          "Doe",
-        ),
+        accountService.updateProfile(identity("nonexistent-user"), {
+          firstName: "John",
+          lastName: "Doe",
+        }),
       ).rejects.toThrow(NotFoundError);
       await expect(
-        accountService.updateProfile(
-          identity("nonexistent-user"),
-          "John",
-          "Doe",
-        ),
+        accountService.updateProfile(identity("nonexistent-user"), {
+          firstName: "John",
+          lastName: "Doe",
+        }),
       ).rejects.toThrow(/not found/);
     });
 
@@ -1319,11 +1322,10 @@ describe("AccountService", () => {
         updateLastName: jest.fn().mockResolvedValue(undefined),
       };
 
-      const result = await accountService.updateProfile(
-        identity(userId),
-        "",
-        "",
-      );
+      const result = await accountService.updateProfile(identity(userId), {
+        firstName: "",
+        lastName: "",
+      });
 
       expect(result).not.toBeNull();
       expect(mockModels.user.updateFirstName).toHaveBeenCalledWith(
@@ -1336,6 +1338,69 @@ describe("AccountService", () => {
         userId,
         "",
       );
+    });
+
+    describe("defaultCurrency (ADR026, w3/m60/t001)", () => {
+      const userId = "user-123";
+      beforeEach(() => {
+        mockModels.user = {
+          ...mockModels.user,
+          getById: jest
+            .fn()
+            .mockResolvedValue({ id: userId, email: "test@example.com" }),
+          updateFirstName: jest.fn().mockResolvedValue(undefined),
+          updateLastName: jest.fn().mockResolvedValue(undefined),
+          updateDefaultCurrency: jest.fn().mockResolvedValue(undefined),
+        };
+      });
+
+      it("stores a supported currency and leaves the names alone when sent by itself", async () => {
+        await accountService.updateProfile(identity(userId), {
+          defaultCurrency: "EUR",
+        });
+        expect(mockModels.user.updateDefaultCurrency).toHaveBeenCalledWith(
+          expect.any(Object),
+          userId,
+          "EUR",
+        );
+        expect(mockModels.user.updateFirstName).not.toHaveBeenCalled();
+        expect(mockModels.user.updateLastName).not.toHaveBeenCalled();
+      });
+
+      it("clears it with null", async () => {
+        await accountService.updateProfile(identity(userId), {
+          defaultCurrency: null,
+        });
+        expect(mockModels.user.updateDefaultCurrency).toHaveBeenCalledWith(
+          expect.any(Object),
+          userId,
+          null,
+        );
+      });
+
+      it("refuses an unsupported code and writes nothing", async () => {
+        await expect(
+          accountService.updateProfile(identity(userId), {
+            firstName: "John",
+            defaultCurrency: "XYZ",
+          }),
+        ).rejects.toThrow(ValidationError);
+        expect(mockModels.user.updateDefaultCurrency).not.toHaveBeenCalled();
+        expect(mockModels.user.updateFirstName).not.toHaveBeenCalled();
+      });
+
+      it("keeps a names-only update from touching the currency", async () => {
+        await accountService.updateProfile(identity(userId), {
+          firstName: "John",
+          lastName: "Doe",
+        });
+        expect(mockModels.user.updateDefaultCurrency).not.toHaveBeenCalled();
+        expect(mockModels.user.updateFirstName).toHaveBeenCalledWith(
+          expect.any(Object),
+          userId,
+          "John",
+        );
+      });
     });
   });
 });

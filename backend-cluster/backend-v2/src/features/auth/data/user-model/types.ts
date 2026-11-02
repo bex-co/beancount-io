@@ -9,6 +9,8 @@ export interface User {
   locale: string;
   firstName?: string;
   lastName?: string;
+  /** ADR026 saved currency preference, an ADR021 supported code. */
+  defaultCurrency?: string;
   isBlocked: boolean;
   ledger_username: string;
   ledger_password: string;
@@ -113,6 +115,11 @@ export interface IUserModel {
     db: DbExecutor,
     userId: string,
     lastName: string,
+  ): Promise<void>;
+  updateDefaultCurrency(
+    db: DbExecutor,
+    userId: string,
+    currency: string | null,
   ): Promise<void>;
   updateLastSeenAt(db: DbExecutor, userId: string, at: Date): Promise<void>;
   getRecentlySeenUsers(

@@ -36,6 +36,8 @@ class GetUserProfileResponse200Type0:
         has_ever_subscribed (bool):
         first_name (None | str | Unset):
         last_name (None | str | Unset):
+        default_currency (None | str | Unset): Saved currency preference (ADR026) a creation flow suggests first; API
+            creation never reads it.
         avatar_url (None | str | Unset):
         email_report_status (GetUserProfileResponse200Type0EmailReportStatusType1 |
             GetUserProfileResponse200Type0EmailReportStatusType2Type1 |
@@ -51,6 +53,7 @@ class GetUserProfileResponse200Type0:
     has_ever_subscribed: bool
     first_name: None | str | Unset = UNSET
     last_name: None | str | Unset = UNSET
+    default_currency: None | str | Unset = UNSET
     avatar_url: None | str | Unset = UNSET
     email_report_status: (
         GetUserProfileResponse200Type0EmailReportStatusType1
@@ -86,6 +89,12 @@ class GetUserProfileResponse200Type0:
             last_name = UNSET
         else:
             last_name = self.last_name
+
+        default_currency: None | str | Unset
+        if isinstance(self.default_currency, Unset):
+            default_currency = UNSET
+        else:
+            default_currency = self.default_currency
 
         avatar_url: None | str | Unset
         if isinstance(self.avatar_url, Unset):
@@ -127,6 +136,8 @@ class GetUserProfileResponse200Type0:
             field_dict["firstName"] = first_name
         if last_name is not UNSET:
             field_dict["lastName"] = last_name
+        if default_currency is not UNSET:
+            field_dict["defaultCurrency"] = default_currency
         if avatar_url is not UNSET:
             field_dict["avatarUrl"] = avatar_url
         if email_report_status is not UNSET:
@@ -172,6 +183,15 @@ class GetUserProfileResponse200Type0:
             return cast(None | str | Unset, data)
 
         last_name = _parse_last_name(d.pop("lastName", UNSET))
+
+        def _parse_default_currency(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        default_currency = _parse_default_currency(d.pop("defaultCurrency", UNSET))
 
         def _parse_avatar_url(data: object) -> None | str | Unset:
             if data is None:
@@ -248,6 +268,7 @@ class GetUserProfileResponse200Type0:
             has_ever_subscribed=has_ever_subscribed,
             first_name=first_name,
             last_name=last_name,
+            default_currency=default_currency,
             avatar_url=avatar_url,
             email_report_status=email_report_status,
             username=username,

@@ -55,6 +55,7 @@ describe("assertLedgerAccess - Three-Party Authorization", () => {
       updateUsername: jest.fn(),
       updateFirstName: jest.fn(),
       updateLastName: jest.fn(),
+      updateDefaultCurrency: jest.fn(),
       updateLastSeenAt: jest.fn(),
       getRecentlySeenUsers: jest.fn(),
       countUsers: jest.fn(),

@@ -54,6 +54,7 @@ describe("AccountResolver", () => {
       maxDirectives: 1000,
     },
     hasEverSubscribed: false,
+    defaultCurrency: null,
   };
 
   beforeEach(() => {
@@ -265,7 +266,7 @@ describe("AccountResolver", () => {
     expect(models.user.getById).toHaveBeenCalled();
   });
 
-  it("normalizes nullable profile fields before delegation", async () => {
+  it("passes the profile update through, nulls included, for the service to apply", async () => {
     accountService.updateProfile.mockResolvedValue({
       ...profile,
       firstName: "",
@@ -275,10 +276,10 @@ describe("AccountResolver", () => {
       firstName: null,
       lastName: null,
     });
-    expect(accountService.updateProfile).toHaveBeenCalledWith(
-      sessionIdentity,
-      "",
-      "",
-    );
+    expect(accountService.updateProfile).toHaveBeenCalledWith(sessionIdentity, {
+      firstName: null,
+      lastName: null,
+      defaultCurrency: undefined,
+    });
   });
 });

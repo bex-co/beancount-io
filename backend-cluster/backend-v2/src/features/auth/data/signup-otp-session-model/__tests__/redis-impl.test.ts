@@ -1,8 +1,5 @@
 import "reflect-metadata";
-import {
-  generateSignupOtp,
-  SignupOtpSessionRedisModel,
-} from "../redis-impl";
+import { generateSignupOtp, SignupOtpSessionRedisModel } from "../redis-impl";
 import type { CreateSessionInput } from "../types";
 
 const mockCache = {
@@ -45,11 +42,9 @@ describe("SignupOtpSessionRedisModel", () => {
     });
 
     it("does not use Math.random to generate the OTP", () => {
-      const mathRandom = jest
-        .spyOn(Math, "random")
-        .mockImplementation(() => {
-          throw new Error("insecure PRNG called");
-        });
+      const mathRandom = jest.spyOn(Math, "random").mockImplementation(() => {
+        throw new Error("insecure PRNG called");
+      });
 
       expect(generateSignupOtp()).toMatch(/^\d{4}$/);
       expect(mathRandom).not.toHaveBeenCalled();

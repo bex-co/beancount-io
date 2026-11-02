@@ -33,11 +33,12 @@ const user = {
   locale: "fr",
   firstName: "Ada",
   lastName: null,
+  defaultCurrency: "EUR",
   ledger_username: "ada",
   avatarUrl: "https://www.gravatar.com/avatar/ada?size=48",
 };
 const fields =
-  "id email locale firstName lastName avatarUrl emailReportStatus username tier hasEverSubscribed limits{ledgersUsed ledgersMax collaboratorsPerLedgerMax maxDirectives}";
+  "id email locale firstName lastName defaultCurrency avatarUrl emailReportStatus username tier hasEverSubscribed limits{ledgersUsed ledgersMax collaboratorsPerLedgerMax maxDirectives}";
 let resolver: AccountResolver;
 let schemaPromise: ReturnType<typeof buildSchema>;
 registerEnumType(ReportStatus, { name: "ReportStatus" });
@@ -46,8 +47,9 @@ async function fixture(
   identity: Identity | undefined = caller,
   exists = true,
   subscriptions: unknown[] = [],
+  stored: Record<string, unknown> = user,
 ) {
-  const getById = jest.fn(async () => (exists ? user : null));
+  const getById = jest.fn(async () => (exists ? stored : null));
   const models = {
     user: { getById },
     paidCustomer: {
@@ -146,6 +148,7 @@ describe("profile reads through actual adapters and exact-self authorization", (
           id: "usr_ada",
           locale: "fr",
           lastName: "",
+          defaultCurrency: "EUR",
           avatarUrl: "https://www.gravatar.com/avatar/ada?size=48",
           emailReportStatus: "OFF",
           tier: "FREE",
@@ -179,6 +182,18 @@ describe("profile reads through actual adapters and exact-self authorization", (
         tier: "ORGANIZATION",
         limits: { ledgersMax: 500, collaboratorsPerLedgerMax: 50 },
       });
+      expect((await f.gql()).data?.userProfile).toEqual(profile);
+      expect(await f.read()).toEqual(profile);
+    } finally {
+      await f.close();
+    }
+  });
+  it("returns a null defaultCurrency alike when none is saved (ADR026, w3/m60/t001)", async () => {
+    const { defaultCurrency: _, ...unset } = user;
+    const f = await fixture(caller, true, [], unset);
+    try {
+      const profile = await (await f.rest()).json();
+      expect(profile.defaultCurrency).toBeNull();
       expect((await f.gql()).data?.userProfile).toEqual(profile);
       expect(await f.read()).toEqual(profile);
     } finally {

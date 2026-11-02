@@ -197,6 +197,13 @@
       "when": 1793521297063,
       "tag": "0027_store_billing",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1793594248154,
+      "tag": "0028_default_currency",
+      "breakpoints": true
     }
   ]
 }

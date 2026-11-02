@@ -20933,6 +20933,11 @@
                       "type": "string",
                       "nullable": true
                     },
+                    "defaultCurrency": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Saved currency preference (ADR026) a creation flow suggests first; API creation never reads it."
+                    },
                     "avatarUrl": {
                       "type": "string",
                       "nullable": true

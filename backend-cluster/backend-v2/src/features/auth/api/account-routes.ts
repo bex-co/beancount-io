@@ -9,9 +9,11 @@ import {
 } from "@/server/rest/v1-route";
 import { json } from "@/server/rest/v1-schemas";
 
-export const userProfileQuery = z.object({
-  userId: z.string().nullable().optional(),
-}).strict();
+export const userProfileQuery = z
+  .object({
+    userId: z.string().nullable().optional(),
+  })
+  .strict();
 const profileSchema = z
   .object({
     id: z.string(),
@@ -19,6 +21,13 @@ const profileSchema = z
     locale: z.string(),
     firstName: z.string().nullable().optional(),
     lastName: z.string().nullable().optional(),
+    defaultCurrency: z
+      .string()
+      .nullable()
+      .optional()
+      .describe(
+        "Saved currency preference (ADR026) a creation flow suggests first; API creation never reads it.",
+      ),
     avatarUrl: z.string().nullable().optional(),
     emailReportStatus: z
       .enum(["OFF", "WEEKLY", "MONTHLY"])

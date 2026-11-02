@@ -55,6 +55,13 @@ class UserProfileResponse {
   @Field(() => String, { nullable: true })
   lastName?: string;
 
+  @Field(() => String, {
+    nullable: true,
+    description:
+      "Saved currency preference (ADR026): the currency a creation flow suggests first. API creation never reads it.",
+  })
+  defaultCurrency?: string | null;
+
   /** Uploaded avatar, falling back to the email's Gravatar */
   @Field(() => String, { nullable: true })
   avatarUrl?: string;
@@ -115,6 +122,13 @@ class UpdateProfileInput {
 
   @Field(() => String, { nullable: true })
   public lastName?: string | null;
+
+  @Field(() => String, {
+    nullable: true,
+    description:
+      "Saved currency preference, an ISO 4217 code a new ledger can take; null clears it. Sent alone, it leaves the names unchanged.",
+  })
+  public defaultCurrency?: string | null;
 }
 
 export class AccountResolver {
@@ -178,16 +192,17 @@ export class AccountResolver {
 
   @Authenticated()
   @Mutation(() => UserProfileResponse, {
-    description: "Update user profile (firstName and lastName)",
+    description:
+      "Update user profile: firstName and lastName, and the saved defaultCurrency",
   })
   public async updateProfile(
     @Ctx() ctx: IContext,
     @Args() args: UpdateProfileInput,
   ): Promise<UserProfileResponse | null> {
-    return this.accountService.updateProfile(
-      ctx.getCurrentIdentity(),
-      args.firstName ?? "",
-      args.lastName ?? "",
-    );
+    return this.accountService.updateProfile(ctx.getCurrentIdentity(), {
+      firstName: args.firstName,
+      lastName: args.lastName,
+      defaultCurrency: args.defaultCurrency,
+    });
   }
 }

@@ -26,6 +26,8 @@ export const users = pgTable(
     locale: text("locale").notNull().default("en"),
     firstName: text("first_name"),
     lastName: text("last_name"),
+    // ADR026: the currency a creation flow suggests first; null when unset.
+    defaultCurrency: text("default_currency"),
 
     // Account status
     isBlocked: boolean("is_blocked").notNull().default(false),

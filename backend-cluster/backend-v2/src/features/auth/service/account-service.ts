@@ -17,6 +17,8 @@ import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factor
 import type { IPlaidClient } from "@/features/plaid/service/plaid-client";
 import { decryptToken } from "@/features/plaid/utils/encryption";
 import { logger } from "@/shared/logger";
+import { ValidationError } from "@/shared/errors";
+import { setupCurrencies } from "@/features/ledger/setup";
 import type { Identity } from "@/server/api/identity";
 import {
   AUTHORIZATION_ACTIONS,
@@ -33,12 +35,28 @@ type UserLimits = {
   maxDirectives: number;
 };
 
+/**
+ * An updateProfile request. Names are written as before, an omitted one as
+ * empty, unless the request carries only `defaultCurrency`: a currency-only
+ * update leaves the names alone. `defaultCurrency: null` clears it.
+ */
+export type ProfileUpdate = {
+  firstName?: string | null;
+  lastName?: string | null;
+  defaultCurrency?: string | null;
+};
+
 export type UserProfile = {
   id: string;
   email: string;
   locale: string;
   firstName: string;
   lastName: string;
+  /**
+   * ADR026 saved currency preference, or null. A suggestion for creation
+   * flows only: API creation never reads it.
+   */
+  defaultCurrency: string | null;
   /** Uploaded avatar, falling back to the email's Gravatar. */
   avatarUrl: string;
   emailReportStatus: ReportStatus;
@@ -71,8 +89,7 @@ export interface IAccountService {
   updateEmail(userId: string, email: string): Promise<void>;
   updateProfile(
     identity: Identity,
-    firstName: string,
-    lastName: string,
+    update: ProfileUpdate,
   ): Promise<UserProfile | null>;
   deleteAccount(identity: Identity): Promise<boolean>;
   findUsersByEmailOrUsername(
@@ -162,6 +179,7 @@ export class AccountService implements IAccountService {
       locale: user.locale,
       firstName: user.firstName ?? "",
       lastName: user.lastName ?? "",
+      defaultCurrency: user.defaultCurrency ?? null,
       avatarUrl: user.avatarUrl,
       // Report subscription has been removed - return OFF for API compatibility
       emailReportStatus: ReportStatus.OFF,
@@ -294,8 +312,7 @@ export class AccountService implements IAccountService {
 
   public updateProfile = async (
     identity: Identity,
-    firstName: string,
-    lastName: string,
+    update: ProfileUpdate,
   ): Promise<UserProfile | null> => {
     const { userId } = identity;
     await this.authorization.authorizeOrThrow({
@@ -307,8 +324,32 @@ export class AccountService implements IAccountService {
     if (!user) {
       throw new NotFoundError("User", userId);
     }
-    await this.models.user.updateFirstName(this.db, userId, firstName);
-    await this.models.user.updateLastName(this.db, userId, lastName);
+    const { firstName, lastName, defaultCurrency } = update;
+    if (
+      defaultCurrency !== undefined &&
+      defaultCurrency !== null &&
+      !setupCurrencies.supportedCurrencies.includes(defaultCurrency)
+    ) {
+      throw new ValidationError(
+        "defaultCurrency",
+        `Unsupported currency "${defaultCurrency}"; use an ISO 4217 code a new ledger can take`,
+      );
+    }
+    const currencyOnly =
+      defaultCurrency !== undefined &&
+      firstName === undefined &&
+      lastName === undefined;
+    if (!currencyOnly) {
+      await this.models.user.updateFirstName(this.db, userId, firstName ?? "");
+      await this.models.user.updateLastName(this.db, userId, lastName ?? "");
+    }
+    if (defaultCurrency !== undefined) {
+      await this.models.user.updateDefaultCurrency(
+        this.db,
+        userId,
+        defaultCurrency,
+      );
+    }
     return this.loadUserProfile(userId);
   };
 

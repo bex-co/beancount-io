@@ -37,6 +37,7 @@ export class UserPostgresModel implements IUserModel {
       locale: row.locale,
       firstName: row.firstName ?? undefined,
       lastName: row.lastName ?? undefined,
+      defaultCurrency: row.defaultCurrency ?? undefined,
       isBlocked: row.isBlocked,
       ledger_username: row.ledger_username,
       ledger_password: row.ledger_password,
@@ -262,6 +263,20 @@ export class UserPostgresModel implements IUserModel {
       .update(users)
       .set({
         firstName,
+        updateAt: new Date(),
+      })
+      .where(eq(users.id, userId));
+  }
+
+  public async updateDefaultCurrency(
+    db: DbExecutor,
+    userId: string,
+    currency: string | null,
+  ): Promise<void> {
+    await db
+      .update(users)
+      .set({
+        defaultCurrency: currency,
         updateAt: new Date(),
       })
       .where(eq(users.id, userId));
