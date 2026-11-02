@@ -150,6 +150,18 @@ describe("MCP outer request parameters over SDK dispatch (w6/001)", () => {
       },
       field: "bogus",
     },
+    ...[
+      "tools/list",
+      "resources/list",
+      "resources/templates/list",
+      "prompts/list",
+    ].flatMap((method) =>
+      [{ cursor: 123 }, { cursor: null }, { cursor: {} }].map((params) => ({
+        method,
+        params,
+        field: "cursor",
+      })),
+    ),
     {
       method: "initialize",
       params: { protocolVersion: "2025-11-25", capabilities: {} },
@@ -192,6 +204,21 @@ describe("MCP outer request parameters over SDK dispatch (w6/001)", () => {
       });
     },
   );
+
+  it.each([
+    "tools/list",
+    "resources/list",
+    "resources/templates/list",
+    "prompts/list",
+  ])("%s still lists, with or without a string cursor", async (method) => {
+    await withClient(async (f) => {
+      for (const params of [undefined, {}, { cursor: "bogus" }]) {
+        await expect(
+          f.client.request(request(method, params), ResultSchema),
+        ).resolves.toBeDefined();
+      }
+    });
+  });
 
   it("omitted optional tool arguments retain defaults and call the workflow once", async () => {
     await withClient(async (f) => {

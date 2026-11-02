@@ -32,6 +32,9 @@ import {
   GetPromptRequestSchema,
   InitializeRequestSchema,
   LATEST_PROTOCOL_VERSION,
+  ListPromptsRequestSchema,
+  ListResourcesRequestSchema,
+  ListResourceTemplatesRequestSchema,
   ListToolsRequestSchema,
   McpError,
   ReadResourceRequestSchema,
@@ -960,6 +963,40 @@ export function assembleMcpRegistry(
       return build(parsed.data);
     },
   );
+
+  // The four list methods keep the SDK's handlers, but a malformed `params`
+  // (a non-string `cursor`) failed the SDK's own parse as `-32603` with the
+  // raw zod dump. Each is wrapped to answer like the methods above.
+  const sdkHandlers = (
+    server.server as unknown as {
+      _requestHandlers: Map<
+        string,
+        (request: unknown, extra: unknown) => Promise<unknown>
+      >;
+    }
+  )._requestHandlers;
+  for (const [schema, inventory] of [
+    [ListToolsRequestSchema, "tools/list"],
+    [ListResourcesRequestSchema, "resources/list"],
+    [ListResourceTemplatesRequestSchema, "resources/templates/list"],
+    [ListPromptsRequestSchema, "prompts/list"],
+  ] as const) {
+    const sdkHandler = sdkHandlers.get(inventory)!;
+    Protocol.prototype.setRequestHandler.call(
+      server.server,
+      schema.pick({ method: true }).passthrough(),
+      async (rawRequest, extra) => {
+        const validated = schema.safeParse(rawRequest);
+        if (!validated.success) {
+          return refuseMcpParameters(
+            validated.error,
+            `\`${inventory}\` takes an optional string \`params.cursor\` and no other parameters.`,
+          );
+        }
+        return sdkHandler(rawRequest, extra);
+      },
+    );
+  }
 
   return server;
 }
