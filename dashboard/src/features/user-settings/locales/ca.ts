@@ -354,6 +354,10 @@ const caUserSettings: Record<string, TranslationEntry> = {
     message: "La clau pública és obligatòria",
     description: "Validation error for missing public key",
   },
+  "userSettings.startsOn": {
+    message: "Comença el",
+    description: "Label for when a deferred Stripe plan starts",
+  },
   "userSettings.renewsOn": {
     message: "Es renova el",
     description: "Label for subscription renewal date",
@@ -435,9 +439,9 @@ const caUserSettings: Record<string, TranslationEntry> = {
       "Billing badge for a subscription whose Stripe status is active: paid and current.",
   },
   "userSettings.subscriptionStatus.trialing": {
-    message: "Prova",
+    message: "Comença més tard",
     description:
-      "Billing badge for a subscription whose Stripe status is trialing: in a free trial.",
+      "Billing badge for a Stripe subscription waiting for a store plan to end before its first charge (ADR 001 D15). No plan is sold with a trial.",
   },
   "userSettings.subscriptionStatus.past_due": {
     message: "Pagament endarrerit",

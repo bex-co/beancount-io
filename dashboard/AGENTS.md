@@ -146,6 +146,14 @@ Every deploy replaces the hashed files under `/lgassets/`, so a page opened befo
 - A chunk-load failure (`isChunkLoadError` in `src/common/lib/errors/chunk-load-error.ts`) is fixed by a full reload, not a retry: the router keeps the failed import. The root component reloads once per minute on `vite:preloadError`, and the `ErrorBoundary` fallback swaps "Try Again" for "Reload page".
 - Error fallbacks show `ErrorDetails` (`src/common/components/error-details.tsx`) in production: a collapsed, copyable report of the error, URL, time, browser, and truncated stacks, so a customer can send it to support. Headline copy stays localized, and the report must never include cookies, tokens, or request variables.
 
+## Billing sources (ADR 001)
+
+A plan can be billed by Stripe, the App Store, or Google Play, and `subscriptionStatus.billing` says which.
+
+- `isBilledByStore` (store renews the plan) gates every Stripe flow: the plan picker, change sheet, yearly switch, and resume. `isStoreSource` (store bills it, renewing or ending) only picks the plan card's wording. With store renewal off, the account may switch to Stripe; a plan the store covers then starts as a `trialing` subscription whose first charge waits for the store plan to end.
+- Every upgrade prompt goes through `UpgradePromptLink`, which names the store's app for a store subscriber. Limit refusals branch on `extensions.limitOwner`, never on the message: a refusal cannot say who asked, so only a caller that knows the reader is the ledger's owner may offer them an upgrade.
+- Pages an app opens carry `beancount_app=1` (`src/common/lib/app-session.ts`). Read `useHidesBilling`, not `isReactNative`, on any pricing, billing, or upgrade surface, and keep sign-in destinations going through `getSafeRedirectPath`, which drops pricing and billing for those sessions.
+
 ## Dashboard home (`/ledger`)
 
 `src/features/ledger-list/pages/dashboard-page/` composes two sections, each backed by one `source` of the `getFeed` operation:

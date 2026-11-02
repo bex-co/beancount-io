@@ -784,3 +784,26 @@ describe("A store-billed account (ADR 001 D5, D14)", () => {
     });
   });
 });
+
+describe("a deferred Stripe plan in Billing (ADR 001 D15)", () => {
+  it("says when it starts, not when it renews", () => {
+    const stripe = mockActiveSubscriptionData.subscriptionStatus;
+    setUserLimits("GROWTH");
+    mockUseQuery.mockReturnValue({
+      data: {
+        subscriptionStatus: {
+          ...stripe,
+          hasActiveSubscription: false,
+          subscriptions: [{ ...stripe.subscriptions[0], status: "trialing" }],
+        },
+      },
+      loading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+    render(<SubscriptionSection />);
+
+    expect(screen.getByText("userSettings.startsOn")).toBeInTheDocument();
+    expect(screen.queryByText("userSettings.renewsOn")).not.toBeInTheDocument();
+  });
+});

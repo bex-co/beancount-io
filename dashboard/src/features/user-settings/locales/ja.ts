@@ -328,6 +328,10 @@ const jaUserSettings: Record<string, TranslationEntry> = {
     message: "公開鍵は必須です",
     description: "Validation error for missing public key",
   },
+  "userSettings.startsOn": {
+    message: "開始日",
+    description: "Label for when a deferred Stripe plan starts",
+  },
   "userSettings.renewsOn": {
     message: "更新日",
     description: "Label for subscription renewal date",
@@ -409,9 +413,9 @@ const jaUserSettings: Record<string, TranslationEntry> = {
       "Billing badge for a subscription whose Stripe status is active: paid and current.",
   },
   "userSettings.subscriptionStatus.trialing": {
-    message: "トライアル",
+    message: "後日開始",
     description:
-      "Billing badge for a subscription whose Stripe status is trialing: in a free trial.",
+      "Billing badge for a Stripe subscription waiting for a store plan to end before its first charge (ADR 001 D15). No plan is sold with a trial.",
   },
   "userSettings.subscriptionStatus.past_due": {
     message: "支払い遅延",

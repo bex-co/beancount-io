@@ -123,7 +123,13 @@ export function BillingSection({
                 Scheduled panel. */}
             {!isCanceled && subscription.currentPeriodEnd && (
               <p className="text-xs text-muted-foreground">
-                {t("userSettings.renewsOn")} <strong>{endDate}</strong>
+                {t(
+                  // A deferred start waits out a store plan (ADR 001 D15).
+                  subscription.status === "trialing"
+                    ? "userSettings.startsOn"
+                    : "userSettings.renewsOn",
+                )}{" "}
+                <strong>{endDate}</strong>
               </p>
             )}
           </div>

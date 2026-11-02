@@ -353,6 +353,10 @@ const bgUserSettings: Record<string, TranslationEntry> = {
     message: "Публичният ключ е задължителен",
     description: "Validation error for missing public key",
   },
+  "userSettings.startsOn": {
+    message: "Започва на",
+    description: "Label for when a deferred Stripe plan starts",
+  },
   "userSettings.renewsOn": {
     message: "Подновява се на",
     description: "Label for subscription renewal date",
@@ -434,9 +438,9 @@ const bgUserSettings: Record<string, TranslationEntry> = {
       "Billing badge for a subscription whose Stripe status is active: paid and current.",
   },
   "userSettings.subscriptionStatus.trialing": {
-    message: "Пробен период",
+    message: "Започва по-късно",
     description:
-      "Billing badge for a subscription whose Stripe status is trialing: in a free trial.",
+      "Billing badge for a Stripe subscription waiting for a store plan to end before its first charge (ADR 001 D15). No plan is sold with a trial.",
   },
   "userSettings.subscriptionStatus.past_due": {
     message: "Просрочен",

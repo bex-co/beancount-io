@@ -349,6 +349,10 @@ const zhUserSettings: Record<string, TranslationEntry> = {
     message: "公钥为必填项",
     description: "Validation error for missing public key",
   },
+  "userSettings.startsOn": {
+    message: "开始于",
+    description: "Label for when a deferred Stripe plan starts",
+  },
   "userSettings.renewsOn": {
     message: "续订日期",
     description: "Label for subscription renewal date",
@@ -425,9 +429,9 @@ const zhUserSettings: Record<string, TranslationEntry> = {
       "Billing badge for a subscription whose Stripe status is active: paid and current.",
   },
   "userSettings.subscriptionStatus.trialing": {
-    message: "试用中",
+    message: "稍后开始",
     description:
-      "Billing badge for a subscription whose Stripe status is trialing: in a free trial.",
+      "Billing badge for a Stripe subscription waiting for a store plan to end before its first charge (ADR 001 D15). No plan is sold with a trial.",
   },
   "userSettings.subscriptionStatus.past_due": {
     message: "逾期未付",
