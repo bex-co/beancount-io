@@ -9,8 +9,7 @@
 # A Git-connected Blueprint left on default discovery would not find this
 # file; point it at bex.yaml explicitly, or rename to render.yaml/bex.yml.
 #
-# This stack carries NO persistent disks. Every stateful piece is a managed
-# datastore:
+# Stateful pieces: two managed datastores plus Gitea's disk:
 #
 #   deploy/docker-mac compose -> here
 #   ------------------------    ---------------------------------------------
@@ -19,10 +18,12 @@
 #   ledger                  ->  beancount-ledger      (pserv, no public port)
 #   postgres-backend        ->  beancount-backend-db  (managed Postgres)
 #   redis                   ->  beancount-cache       (managed Key Value)
-#   gitea + its postgres    ->  NOT deployed — Gitea needs a filesystem for bare
-#                               repos, and service disks are a platform
-#                               non-goal. Point GITEA_HOST_NAME at a Gitea that
-#                               lives elsewhere.
+#   gitea                  ->  beancount-gitea       (web + 10 GB disk, 1 instance)
+#   gitea's postgres        ->  a second database (`gitea`) in the SAME managed
+#                               Postgres instance -- one instance in total
+#
+# Gitea's repos need a filesystem, so it is the one service with a disk. Its
+# first-boot administrator comes from deploy/bex/gitea/bex-entrypoint.sh.
 #
 # Secrets are declared `sync: false` (seed once, then edit in the dashboard) or
 # `generateValue`. Nothing secret is committed here. Until the Gitea admin
@@ -136,11 +137,11 @@ services:
       # scheme derivation in src/config/config.ts, so an off-cluster Gitea works
       # (the old code hardcoded http://<host>:3000 and could not reach one).
       - key: GITEA_HOST_NAME
-        value: git.beancount.io
+        value: beancount-gitea
       - key: GITEA_HTTP_PORT
-        value: "443"
+        value: "3000"
       - key: EXTERNAL_GITEA_HOST_NAME
-        value: git.beancount.io
+        value: beancount-gitea.onbex.co
       - key: EXTERNAL_GITEA_HTTP_PORT
         value: "443"
       - key: FAVA_API_ADMIN_USER
@@ -210,9 +211,9 @@ services:
     healthCheckPath: /healthz
     envVars:
       - key: GITEA_HOST_NAME
-        value: git.beancount.io
+        value: beancount-gitea
       - key: GITEA_HTTP_PORT
-        value: "443"
+        value: "3000"
       - key: BACKEND_V2_HOST_NAME
         value: beancount-api
       - key: BACKEND_V2_HTTP_PORT
@@ -226,6 +227,80 @@ services:
       # Managed price includes (ADR 015) allow only https://beancount.io by
       # default; add MANAGED_PRICE_ORIGINS here only to widen, narrow, or
       # disable ("") remote price feeds.
+
+  # -------------------------------------------------------------------- gitea
+  # Ledger storage. Bare repos live on the disk; metadata lives in the SAME
+  # managed Postgres instance as the backend, in a second database (`gitea`)
+  # created once by deploy/bex/init-gitea-db.sql. Gitea connects as that
+  # instance's single owner role -- bex cannot create a second role.
+  - name: beancount-gitea
+    type: web
+    runtime: docker
+    repo: https://github.com/bex-co/beancount-io
+    branch: bex-deploy
+    rootDir: deploy/bex/gitea
+    plan: starter
+    numInstances: 1
+    healthCheckPath: /api/healthz
+    disk:
+      name: gitea-data
+      mountPath: /data
+      sizeGB: 10
+    envVars:
+      - key: GITEA__database__DB_TYPE
+        value: postgres
+      - key: GITEA__database__HOST
+        fromDatabase:
+          name: beancount-backend-db
+          property: host
+      - key: GITEA__database__NAME
+        value: gitea
+      - key: GITEA__database__USER
+        fromDatabase:
+          name: beancount-backend-db
+          property: user
+      - key: GITEA__database__PASSWD
+        fromDatabase:
+          name: beancount-backend-db
+          property: password
+      - key: GITEA__database__SSL_MODE
+        value: require
+      # Shares one Postgres with the backend: cap the pool.
+      - key: GITEA__database__MAX_OPEN_CONNS
+        value: "20"
+      - key: GITEA__database__MAX_IDLE_CONNS
+        value: "5"
+      - key: GITEA__database__CONN_MAX_LIFETIME
+        value: 5m
+      - key: GITEA__server__DOMAIN
+        value: beancount-gitea.onbex.co
+      - key: GITEA__server__ROOT_URL
+        value: https://beancount-gitea.onbex.co/
+      - key: GITEA__server__HTTP_PORT
+        value: "3000"
+      # No TCP routing on bex: Git-over-SSH is unavailable, HTTPS only.
+      - key: GITEA__server__DISABLE_SSH
+        value: "true"
+      - key: GITEA__service__DISABLE_REGISTRATION
+        value: "true"
+      - key: GITEA__security__INSTALL_LOCK
+        value: "true"
+      - key: GITEA__security__SECRET_KEY
+        generateValue: true
+      - key: GITEA__security__INTERNAL_TOKEN
+        generateValue: true
+      - key: GITEA__server__LFS_JWT_SECRET
+        generateValue: true
+      - key: GITEA__oauth2__JWT_SECRET
+        generateValue: true
+      # First-boot administrator, read by deploy/bex/gitea/bex-entrypoint.sh.
+      # The password must equal beancount-api's FAVA_API_ADMIN_PASSWORD.
+      - key: FAVA_API_ADMIN_USER
+        value: beancount_admin
+      - key: FAVA_API_ADMIN_PASSWORD
+        sync: false
+      - key: GITEA_ADMIN_EMAIL
+        value: admin@beancount.io
 
   # --------------------------------------------------------------- Key Value
   - name: beancount-cache
