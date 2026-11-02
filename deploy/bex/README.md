@@ -73,10 +73,12 @@ and need no action. Gitea admin user creation is still a one-time
 
 ## Things that bit us, so they don't bite you again
 
-- **Ports are not yours to choose.** bex injects `PORT` (App CRD `port`,
-  default 3000) and a runtime env var beats the image `ENV`, so every service
-  listens on 3000 regardless of its Dockerfile. Internal addresses are
-  `<slug>:3000`. The Blueprint schema rejects a `port` field.
+- **Ports follow the image.** The platform probes the image's declared
+  (`EXPOSE`) port and routes internal traffic there: dashboard and Gitea 3000,
+  ledger 8000, API 4104. An injected `PORT=3000` can override an app's
+  listener, so the API pins `PORT=4104` in the Blueprint; without it the rollout
+  waits forever on a port nothing listens on. Internal addresses are
+  `<slug>:<image port>`. The Blueprint schema rejects a `port` field.
 - **Docker builds get no build args.** Only native-runtime builds receive env
   (via a BuildKit secret). The dashboard's browser-facing `VITE_*` values
   therefore come from the committed `dashboard/.env.production`, which
