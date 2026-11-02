@@ -83,6 +83,7 @@ function mount() {
       updateGuestVisit: () => undefined,
     },
     "@/screens/examples/example-routes": { exampleRoutes: {} },
+    "@/common/site-url": { withAppMarker: (url: string) => url },
     "./guest-link-visit": { guestLinkVisit: () => null },
     "./server-link": {
       resolveServerLink: (url: string) => ({

@@ -27,6 +27,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { ColorTheme } from "@/types/theme-props";
+import { withAppMarker } from "@/common/site-url";
 import { type EdgeSwipeGestureRef } from "@/common/horizontal-swipe-owner";
 import {
   fontSizes,
@@ -710,7 +711,7 @@ export function LedgerDrawer({
   const handleWebsitePress = () => {
     if (!currentLedgerUrl) return;
     onClose();
-    void Linking.openURL(currentLedgerUrl);
+    void Linking.openURL(withAppMarker(currentLedgerUrl));
   };
 
   const handleCreatePress = () => {

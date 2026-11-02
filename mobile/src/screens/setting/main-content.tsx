@@ -8,7 +8,7 @@ import { List as List2 } from "@/components";
 
 import { i18n, setLocale } from "@/translations";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { helpCenterUrl } from "@/common/site-url";
+import { helpCenterUrl, withAppMarker } from "@/common/site-url";
 import { isOfficialServerUrl } from "@/common/server-url-validation";
 import { getServerUrl } from "@/common/vars/server-url";
 import { useDeleteAccountMutation } from "@/generated-graphql/graphql";
@@ -212,7 +212,9 @@ export const MainContent = () => {
           icon={<Ionicons name="help-circle" size={22} color={theme.black80} />}
           title={t("helpCenter")}
           onPress={async () => {
-            await WebBrowser.openBrowserAsync(helpCenterUrl(locale));
+            await WebBrowser.openBrowserAsync(
+              withAppMarker(helpCenterUrl(locale)),
+            );
           }}
         />
         {session && (

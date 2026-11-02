@@ -8,6 +8,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { ColorTheme } from "@/types/theme-props";
+import { withAppMarker } from "@/common/site-url";
 import { fontSizes, fontWeights } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
@@ -90,7 +91,7 @@ function FeedRow({
 
   const handlePress = () => {
     if (action?.kind === "external") {
-      void Linking.openURL(action.url);
+      void Linking.openURL(withAppMarker(action.url));
     } else if (action?.kind === "ledger") {
       void openAppLinkTarget({
         client,

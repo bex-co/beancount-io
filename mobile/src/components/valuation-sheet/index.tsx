@@ -10,6 +10,7 @@ import {
 import * as WebBrowser from "expo-web-browser";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { withAppMarker } from "@/common/site-url";
 import { useTheme } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
@@ -176,9 +177,11 @@ export function ValuationSheet({
 
   const openCommodities = () => {
     void WebBrowser.openBrowserAsync(
-      buildLedgerUrl(
-        { kind: "commodities", ledgerFullName: ledgerId },
-        getServerUrl(),
+      withAppMarker(
+        buildLedgerUrl(
+          { kind: "commodities", ledgerFullName: ledgerId },
+          getServerUrl(),
+        ),
       ),
     );
   };

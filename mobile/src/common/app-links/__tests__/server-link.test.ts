@@ -52,7 +52,7 @@ describe("a link while a server is selected (w21/348)", () => {
       .replace(/\s+/g, "");
     expect(
       src.includes(
-        'if(link.kind==="browser"){clearPendingAppLink();awaitRnLinking.openURL(link.url).catch(()=>undefined);return;}',
+        'if(link.kind==="browser"){clearPendingAppLink();awaitRnLinking.openURL(withAppMarker(link.url)).catch(()=>undefined);return;}',
       ),
     ).toBe(true);
   });

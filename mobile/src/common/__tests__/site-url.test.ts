@@ -49,7 +49,7 @@ describe("helpCenterUrl", () => {
         "utf8",
       )
       .replace(/\s+/g, "");
-    expect(settings.includes("openBrowserAsync(helpCenterUrl(locale))")).toBe(
+    expect(settings.includes("withAppMarker(helpCenterUrl(locale))")).toBe(
       true,
     );
   });

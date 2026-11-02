@@ -43,6 +43,7 @@ function load() {
       },
     },
     "@/common/unsaved-edits-guard": guard,
+    "@/common/site-url": { withAppMarker: (url: string) => url },
     "./oauth-callback-url": { isOAuthCallbackUrl: () => false },
     "@/screens/transactions-screen/filters/var": {
       setTransactionFiltersForLedger: () => undefined,

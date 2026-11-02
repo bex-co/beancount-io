@@ -23,6 +23,7 @@ import {
   takePendingAppLink,
 } from "./pending-app-link";
 import type { AppLinkTarget } from "./resolve-app-link";
+import { withAppMarker } from "@/common/site-url";
 import { resolveServerLink } from "./server-link";
 
 /**
@@ -98,7 +99,7 @@ export function useAppLinkHandler(): void {
       // Another server's link goes to the browser; nothing to replay either.
       if (link.kind === "browser") {
         clearPendingAppLink();
-        await RnLinking.openURL(link.url).catch(() => undefined);
+        await RnLinking.openURL(withAppMarker(link.url)).catch(() => undefined);
         return;
       }
       if (link.kind === "ignore") return;

@@ -5,6 +5,7 @@ import {
   GetLedgerDocument,
   type GetLedgerQuery,
 } from "@/generated-graphql/graphql";
+import { withAppMarker } from "@/common/site-url";
 import { ledgerVar } from "@/common/vars";
 import { setTransactionFiltersForLedger } from "@/screens/transactions-screen/filters/var";
 import { confirmDiscardUnsavedEdits } from "@/common/unsaved-edits-guard";
@@ -97,8 +98,11 @@ export async function openAppLinkTarget(args: {
   } catch {
     if (isCurrentSession()) {
       if (handedToBrowser.size > 50) handedToBrowser.clear();
+      // The marked URL is the one Android hands back, so both are remembered.
+      const browserUrl = withAppMarker(sourceUrl);
       handedToBrowser.set(sourceUrl, Date.now());
-      await Linking.openURL(sourceUrl);
+      handedToBrowser.set(browserUrl, Date.now());
+      await Linking.openURL(browserUrl);
     }
     return { ok: false, reason: "unreadable" };
   }
