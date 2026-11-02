@@ -9,9 +9,9 @@
 - [ ] **m3** — [App Store purchases verify and stay current on the backend](./blocked/m3/README.md) (7 tasks) ← ADR 001 implementation via `/pm` 2026-11-01 — **blocked:** App Store sandbox products
 - [ ] **m4** — [Google Play purchases verify, acknowledge, and stay current on the backend](./blocked/m4/README.md) (6 tasks) ← ADR 001 implementation via `/pm` 2026-11-01 — **blocked:** m3/t002 and m2/t003
 - [ ] **m5** — [Store subscriptions reconcile on a schedule and support can see them](./blocked/m5/README.md) (8 tasks) ← ADR 001 implementation via `/pm` 2026-11-01 — **blocked:** m3 and m4
-- [ ] **m6** — [The web dashboard shows each billing source and sends plan changes to their home](./m6/README.md) (10 tasks) ← ADR 001 implementation via `/pm` 2026-11-01
+- [ ] **m6** — [The web dashboard shows each billing source and sends plan changes to their home](./blocked/m6/README.md) (10 tasks) ← ADR 001 implementation via `/pm` 2026-11-01 — **blocked:** the browser check across billing sources
 - [ ] **m7** — [The apps show the plan, its billing source, and limit refusals that say whose plan it is](./blocked/m7/README.md) (9 tasks) ← ADR 001 implementation via `/pm` 2026-11-01 — **blocked:** the backend and dashboard deploy, then m3/t004
-- [ ] **m8** — [The apps sell and restore the plans through the App Store and Google Play](./m8/README.md) (13 tasks) ← ADR 001 implementation via `/pm` 2026-11-01
+- [ ] **m8** — [The apps sell and restore the plans through the App Store and Google Play](./blocked/m8/README.md) (13 tasks) ← ADR 001 implementation via `/pm` 2026-11-01 — **blocked:** store products in both consoles (m2)
 - [ ] **m9** — [Launch: end-to-end store tests, the end of the mobile waivers, and the store release](./blocked/m9/README.md) (10 tasks) ← ADR 001 implementation via `/pm` 2026-11-01 — **blocked:** the website maintainer's marker work, then m2, m5, m6, and m8
 
 ## Dropped
