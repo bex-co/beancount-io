@@ -1,3 +1,4 @@
+import { graphQLErrorExtensions } from "../../common/graphql-error-codes";
 import { isUnsupportedDocumentError } from "../../common/graphql-unsupported";
 
 /**
@@ -239,4 +240,20 @@ export function previewFailureKind(
   )
     ? "refused"
     : "unreachable";
+}
+
+/** The limit and plan a ledger-limit refusal names, when the server sent them. */
+export function tierLimitDetail(
+  err: unknown,
+): { limit: number; tier: string } | null {
+  for (const { code, limit, tier } of graphQLErrorExtensions(err)) {
+    if (
+      code === "RESOURCE_LIMIT_REACHED" &&
+      typeof limit === "number" &&
+      typeof tier === "string"
+    ) {
+      return { limit, tier };
+    }
+  }
+  return null;
 }

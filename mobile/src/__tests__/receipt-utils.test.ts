@@ -33,7 +33,7 @@ test("receiptDate falls back to today when the server returns no date", () => {
 // ──────────────────────────────────────────────────────────────────────────────
 
 test("receiptErrorKey maps quota_exhausted", () => {
-  expect(receiptErrorKey("quota_exhausted")).toBe("receiptQuotaExhausted");
+  expect(receiptErrorKey("quota_exhausted")).toBe("agentQuotaBody");
 });
 
 test("receiptErrorKey maps parse_failed", () => {
@@ -84,7 +84,7 @@ test("parseErrorCode's result routes through receiptErrorKey to the right messag
   const quota = {
     graphQLErrors: [{ extensions: { code: "RESOURCE_LIMIT_REACHED" } }],
   };
-  expect(receiptErrorKey(parseErrorCode(quota))).toBe("receiptQuotaExhausted");
+  expect(receiptErrorKey(parseErrorCode(quota))).toBe("agentQuotaBody");
   const parse = { graphQLErrors: [{ extensions: { code: "BAD_USER_INPUT" } }] };
   expect(receiptErrorKey(parseErrorCode(parse))).toBe("receiptParseFailed");
 });

@@ -587,7 +587,6 @@ export const en = {
   receiptRevealHint:
     "Nothing saved yet — check the details on the next screen.",
   total: "Total",
-  receiptQuotaExhausted: "AI quota exhausted.",
   receiptParseFailed: "Could not read receipt. Please try again.",
   receiptNotAvailable: "Receipt scanning isn't set up on this server.",
   receiptUploadFailed: "Upload failed. Please try again.",
@@ -839,6 +838,10 @@ export const en = {
   createLedgerTemplateSample: "Sample",
   createLedgerTemplateSampleHint:
     "Example transactions so you can explore the app.",
+  ledgerOwnerLimitReached:
+    "This ledger has reached its owner's limit of {{limit}} entries. Only the owner can raise it.",
+  createLedgerPlanLimit:
+    "You've reached the ledger limit of your {{plan}} plan ({{limit}}).",
   createLedgerTierLimit:
     "The ledger limit has been reached. Another ledger cannot be created.",
   createLedgerGenericError: "Couldn't create the ledger. Please try again.",

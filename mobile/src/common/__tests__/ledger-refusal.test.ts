@@ -70,6 +70,31 @@ describe("describeLedgerRefusal", () => {
   });
 });
 
+describe("a refusal at the ledger owner's limit (ADR 001 D14)", () => {
+  const atLimit = (extensions: Record<string, unknown>) =>
+    refusal({ code: "RESOURCE_LIMIT_REACHED", limit: 1000, ...extensions });
+  const words = {
+    t: (key: string, params?: Record<string, string>) =>
+      `${key} ${params?.limit ?? ""}`.trim(),
+  };
+
+  it("says only the owner can raise it, with the limit", () => {
+    expect(
+      ledgerWriteFailureMessage(atLimit({ limitOwner: "LEDGER_OWNER" }), words),
+    ).toBe(`ledgerOwnerLimitReached ${(1000).toLocaleString()}`);
+  });
+
+  it("leaves a limit no plan sets to the server's words", () => {
+    expect(ledgerWriteFailureMessage(atLimit({}), words)).toBe(null);
+  });
+
+  it("does not read the requester's own limit as the owner's", () => {
+    expect(
+      ledgerWriteFailureMessage(atLimit({ limitOwner: "REQUESTER" }), words),
+    ).toBe(null);
+  });
+});
+
 describe("runLedgerWrite with a refusal it can describe", () => {
   const deps = (toasts: string[]): LedgerWriteDeps => ({
     showToast: (message) => {

@@ -54,11 +54,11 @@ export const receiptAmountText = (amount: number): string => {
 export const receiptErrorKey = (
   code: string,
 ):
-  | "receiptQuotaExhausted"
+  | "agentQuotaBody"
   | "receiptNotAvailable"
   | "receiptParseFailed"
   | "receiptUploadFailed" => {
-  if (code === "quota_exhausted") return "receiptQuotaExhausted";
+  if (code === "quota_exhausted") return "agentQuotaBody";
   if (code === "not_available") return "receiptNotAvailable";
   if (code === "parse_failed") return "receiptParseFailed";
   return "receiptUploadFailed";

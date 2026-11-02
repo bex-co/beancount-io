@@ -580,7 +580,6 @@ export const ca: Translations = {
   receiptRevealHint:
     "Encara no s'ha desat res: revisa els detalls a la pantalla següent.",
   total: "Total",
-  receiptQuotaExhausted: "Has exhaurit la quota d'IA.",
   receiptParseFailed: "No s'ha pogut llegir el rebut. Torna-ho a provar.",
   receiptNotAvailable:
     "L'escaneig de rebuts no està configurat en aquest servidor.",
@@ -838,6 +837,10 @@ export const ca: Translations = {
   createLedgerTemplateSample: "Mostra",
   createLedgerTemplateSampleHint:
     "Transaccions d'exemple per explorar l'aplicació.",
+  ledgerOwnerLimitReached:
+    "Aquest llibre ha assolit el límit de {{limit}} assentaments del propietari. Només el propietari el pot augmentar.",
+  createLedgerPlanLimit:
+    "Has assolit el límit de llibres del teu pla {{plan}} ({{limit}}).",
   createLedgerTierLimit:
     "S'ha arribat al límit de llibres. No se'n pot crear cap més.",
   createLedgerGenericError:

@@ -9,7 +9,7 @@ const PLAN_KEYS: Readonly<Record<string, string>> = {
   ENTERPRISE: "planEnterprise",
 };
 
-const planKey = (tier: string | null | undefined) =>
+export const planKey = (tier: string | null | undefined) =>
   (tier && PLAN_KEYS[tier]) ?? PLAN_KEYS.FREE;
 
 const cycleKey = (interval: string | null | undefined) => {

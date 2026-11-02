@@ -568,7 +568,6 @@ export const bg: Translations = {
   receiptRevealHint:
     "Още нищо не е запазено — проверете подробностите на следващия екран.",
   total: "Общо",
-  receiptQuotaExhausted: "Квотата за ИИ е изчерпана.",
   receiptParseFailed: "Бележката не можа да бъде разчетена. Опитайте отново.",
   receiptNotAvailable: "Сканирането на разписки не е настроено на този сървър.",
   receiptUploadFailed: "Качването е неуспешно. Опитайте отново.",
@@ -816,6 +815,10 @@ export const bg: Translations = {
   createLedgerTemplateSample: "Примерна",
   createLedgerTemplateSampleHint:
     "Примерни транзакции, за да разгледате приложението.",
+  ledgerOwnerLimitReached:
+    "Тази книга достигна лимита на собственика от {{limit}} записа. Само собственикът може да го увеличи.",
+  createLedgerPlanLimit:
+    "Достигнахте лимита на книгите за вашия план {{plan}} ({{limit}}).",
   createLedgerTierLimit:
     "Достигнат е лимитът за книги. Не може да се създаде друга книга.",
   createLedgerGenericError:

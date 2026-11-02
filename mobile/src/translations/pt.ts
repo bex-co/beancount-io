@@ -578,7 +578,6 @@ export const pt: Translations = {
   receiptRevealHint:
     "Nada foi salvo ainda — confira os detalhes na próxima tela.",
   total: "Total",
-  receiptQuotaExhausted: "Cota de IA esgotada.",
   receiptParseFailed: "Não foi possível ler o recibo. Tente novamente.",
   receiptNotAvailable:
     "A leitura de recibos não está configurada neste servidor.",
@@ -835,6 +834,10 @@ export const pt: Translations = {
   createLedgerTemplateSample: "Exemplo",
   createLedgerTemplateSampleHint:
     "Transações de exemplo para explorar o aplicativo.",
+  ledgerOwnerLimitReached:
+    "Este livro atingiu o limite de {{limit}} lançamentos do proprietário. Apenas o proprietário pode aumentá-lo.",
+  createLedgerPlanLimit:
+    "Você atingiu o limite de livros do seu plano {{plan}} ({{limit}}).",
   createLedgerTierLimit:
     "Foi atingido o limite de livros. Não é possível criar outro.",
   createLedgerGenericError: "Não foi possível criar o livro. Tente novamente.",

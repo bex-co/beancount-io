@@ -561,7 +561,6 @@ export const fa: Translations = {
   receiptRevealHint:
     "هنوز چیزی ذخیره نشده — جزئیات را در صفحهٔ بعد بررسی کنید.",
   total: "جمع کل",
-  receiptQuotaExhausted: "سهمیهٔ هوش مصنوعی تمام شد.",
   receiptParseFailed: "خواندن رسید ممکن نشد. دوباره تلاش کنید.",
   receiptNotAvailable: "اسکن رسید روی این سرور راه‌اندازی نشده است.",
   receiptUploadFailed: "بارگذاری ناموفق بود. دوباره تلاش کنید.",
@@ -806,6 +805,10 @@ export const fa: Translations = {
   createLedgerTemplateStarterHint: "دفترکل خالی با سرفصل‌های استاندارد.",
   createLedgerTemplateSample: "نمونه",
   createLedgerTemplateSampleHint: "تراکنش‌های نمونه برای کاوش در برنامه.",
+  ledgerOwnerLimitReached:
+    "این دفترکل به سقف {{limit}} ورودی مالک خود رسیده است. فقط مالک می‌تواند آن را افزایش دهد.",
+  createLedgerPlanLimit:
+    "به سقف دفترکل طرح {{plan}} خود رسیده‌اید ({{limit}}).",
   createLedgerTierLimit:
     "به سقف تعداد دفترکل رسیده‌اید. ایجاد دفترکل دیگری امکان‌پذیر نیست.",
   createLedgerGenericError: "ایجاد دفترکل ممکن نشد. دوباره تلاش کنید.",

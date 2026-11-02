@@ -513,7 +513,6 @@ export const zh: Translations = {
   // saves on the next screen.
   receiptRevealHint: "尚未保存 — 请在下一屏核对详情。",
   total: "合计",
-  receiptQuotaExhausted: "AI 额度已用完。",
   receiptParseFailed: "无法识别小票，请重试。",
   receiptNotAvailable: "此服务器未设置收据扫描。",
   receiptUploadFailed: "上传失败，请重试。",
@@ -742,6 +741,9 @@ export const zh: Translations = {
   createLedgerTemplateStarterHint: "带标准科目的空白账本。",
   createLedgerTemplateSample: "示例",
   createLedgerTemplateSampleHint: "含示例交易，便于探索应用。",
+  ledgerOwnerLimitReached:
+    "此账本已达到所有者的 {{limit}} 条记录上限。只有所有者可以提高上限。",
+  createLedgerPlanLimit: "你已达到{{plan}}的账本上限（{{limit}}）。",
   createLedgerTierLimit: "已达到账本数量上限，无法创建新的账本。",
   createLedgerGenericError: "无法创建账本，请重试。",
   createLedgerStillCreating:

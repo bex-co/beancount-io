@@ -578,7 +578,6 @@ export const sk: Translations = {
   receiptRevealHint:
     "Zatiaľ nič nie je uložené — podrobnosti skontrolujte na ďalšej obrazovke.",
   total: "Spolu",
-  receiptQuotaExhausted: "Kvóta AI je vyčerpaná.",
   receiptParseFailed: "Účtenku sa nepodarilo prečítať. Skúste to znova.",
   receiptNotAvailable:
     "Skenovanie pokladničných dokladov nie je na tomto serveri nastavené.",
@@ -840,6 +839,10 @@ export const sk: Translations = {
   createLedgerTemplateSample: "Ukážka",
   createLedgerTemplateSampleHint:
     "Ukážkové transakcie na preskúmanie aplikácie.",
+  ledgerOwnerLimitReached:
+    "Táto kniha dosiahla limit vlastníka {{limit}} záznamov. Zvýšiť ho môže iba vlastník.",
+  createLedgerPlanLimit:
+    "Dosiahli ste limit kníh svojho plánu {{plan}} ({{limit}}).",
   createLedgerTierLimit:
     "Bol dosiahnutý limit kníh. Ďalšiu knihu nie je možné vytvoriť.",
   createLedgerGenericError: "Knihu sa nepodarilo vytvoriť. Skúste to znova.",

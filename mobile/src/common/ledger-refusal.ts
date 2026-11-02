@@ -307,6 +307,22 @@ function isTransportFailure(error: unknown): boolean {
  * as "Network request failed" used to reach the screen raw, in English, under
  * copy about ledger validation (w21/117).
  */
+/**
+ * The refusal of an entry past the ledger owner's plan limit (ADR 001 D14). The
+ * server can't say who asked, so the words hold for the owner and for a
+ * collaborator, and they offer nothing to buy.
+ */
+function ownerLimitMessage(error: unknown, i18n: Translate): string | null {
+  for (const { code, limitOwner, limit } of graphQLErrorExtensions(error)) {
+    if (code !== "RESOURCE_LIMIT_REACHED") continue;
+    if (limitOwner !== "LEDGER_OWNER" || typeof limit !== "number") continue;
+    return i18n.t("ledgerOwnerLimitReached", {
+      limit: limit.toLocaleString(),
+    });
+  }
+  return null;
+}
+
 export function ledgerWriteFailureMessage(
   error: unknown,
   i18n: Translate,
@@ -316,6 +332,8 @@ export function ledgerWriteFailureMessage(
   // checksum read): nothing was deleted, whatever the transport said.
   kind: "save" | "delete" | "delete-unsent" = "save",
 ): string | null {
+  const ownerLimit = ownerLimitMessage(error, i18n);
+  if (ownerLimit !== null) return ownerLimit;
   const offline =
     kind === "save" ? "ledgerWriteOffline" : "ledgerDeleteOffline";
   const unconfirmed =

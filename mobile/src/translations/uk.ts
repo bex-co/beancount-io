@@ -574,7 +574,6 @@ export const uk: Translations = {
   receiptRevealHint:
     "Ще нічого не збережено — перевірте подробиці на наступному екрані.",
   total: "Разом",
-  receiptQuotaExhausted: "Ліміт ШІ вичерпано.",
   receiptParseFailed: "Не вдалося прочитати чек. Спробуйте ще раз.",
   receiptNotAvailable: "Сканування чеків не налаштовано на цьому сервері.",
   receiptUploadFailed: "Не вдалося завантажити. Спробуйте ще раз.",
@@ -832,6 +831,10 @@ export const uk: Translations = {
   createLedgerTemplateSample: "Приклад",
   createLedgerTemplateSampleHint:
     "Приклади транзакцій, щоб дослідити застосунок.",
+  ledgerOwnerLimitReached:
+    "Ця книга досягла ліміту власника в {{limit}} записів. Збільшити його може лише власник.",
+  createLedgerPlanLimit:
+    "Ви досягли ліміту книг вашого плану {{plan}} ({{limit}}).",
   createLedgerTierLimit:
     "Досягнуто ліміту книг. Створити ще одну книгу неможливо.",
   createLedgerGenericError: "Не вдалося створити книгу. Спробуйте ще раз.",

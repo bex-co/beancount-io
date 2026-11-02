@@ -570,7 +570,6 @@ export const nl: Translations = {
   receiptRevealHint:
     "Nog niets opgeslagen — controleer de details op het volgende scherm.",
   total: "Totaal",
-  receiptQuotaExhausted: "AI-tegoed op.",
   receiptParseFailed: "Kon de bon niet lezen. Probeer het opnieuw.",
   receiptNotAvailable: "Bonnen scannen is op deze server niet ingesteld.",
   receiptUploadFailed: "Uploaden mislukt. Probeer het opnieuw.",
@@ -823,6 +822,10 @@ export const nl: Translations = {
   createLedgerTemplateSample: "Voorbeeld",
   createLedgerTemplateSampleHint:
     "Voorbeeldtransacties om de app te verkennen.",
+  ledgerOwnerLimitReached:
+    "Dit grootboek heeft de limiet van {{limit}} boekingen van de eigenaar bereikt. Alleen de eigenaar kan die verhogen.",
+  createLedgerPlanLimit:
+    "Je hebt de grootboeklimiet van je abonnement {{plan}} bereikt ({{limit}}).",
   createLedgerTierLimit:
     "De grootboeklimiet is bereikt. Er kan geen nieuw grootboek worden aangemaakt.",
   createLedgerGenericError:

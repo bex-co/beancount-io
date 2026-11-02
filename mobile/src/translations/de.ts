@@ -583,7 +583,6 @@ export const de: Translations = {
   receiptRevealHint:
     "Noch nichts gespeichert — prüfen Sie die Details im nächsten Schritt.",
   total: "Summe",
-  receiptQuotaExhausted: "KI-Kontingent aufgebraucht.",
   receiptParseFailed:
     "Beleg konnte nicht gelesen werden. Bitte erneut versuchen.",
   receiptNotAvailable:
@@ -837,6 +836,10 @@ export const de: Translations = {
   createLedgerTemplateStarterHint: "Leeres Hauptbuch mit Standard-Kontenplan.",
   createLedgerTemplateSample: "Beispiel",
   createLedgerTemplateSampleHint: "Beispielbuchungen zum Erkunden der App.",
+  ledgerOwnerLimitReached:
+    "Dieses Hauptbuch hat das Limit seines Eigentümers von {{limit}} Einträgen erreicht. Nur der Eigentümer kann es erhöhen.",
+  createLedgerPlanLimit:
+    "Sie haben das Hauptbuch-Limit Ihres Plans {{plan}} erreicht ({{limit}}).",
   createLedgerTierLimit:
     "Das Limit für Hauptbücher wurde erreicht. Es kann kein weiteres Hauptbuch erstellt werden.",
   createLedgerGenericError:

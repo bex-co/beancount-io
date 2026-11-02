@@ -580,7 +580,6 @@ export const fr: Translations = {
   receiptRevealHint:
     "Rien n'est encore enregistré — vérifiez les détails à l'écran suivant.",
   total: "Total",
-  receiptQuotaExhausted: "Quota d'IA épuisé.",
   receiptParseFailed: "Impossible de lire le reçu. Veuillez réessayer.",
   receiptNotAvailable:
     "La numérisation des reçus n'est pas configurée sur ce serveur.",
@@ -839,6 +838,10 @@ export const fr: Translations = {
   createLedgerTemplateSample: "Exemple",
   createLedgerTemplateSampleHint:
     "Transactions d'exemple pour explorer l'application.",
+  ledgerOwnerLimitReached:
+    "Ce grand livre a atteint la limite de {{limit}} écritures de son propriétaire. Seul le propriétaire peut l’augmenter.",
+  createLedgerPlanLimit:
+    "Vous avez atteint la limite de grands livres de votre forfait {{plan}} ({{limit}}).",
   createLedgerTierLimit:
     "La limite de grands livres est atteinte. Impossible d'en créer un autre.",
   createLedgerGenericError: "Impossible de créer le grand livre. Réessayez.",

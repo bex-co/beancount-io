@@ -1,13 +1,13 @@
 # w7 · m7 — The apps show the plan, its billing source, and limit refusals that say whose plan it is
 
-**Worker:** worker1 **Goal:** both apps show the same plan card as the Web, refuse limits with the right owner's plan, warn App Store subscribers before deletion, and open beancount.io pages only with the app marker **Status:** in progress (t001 done)
+**Worker:** worker1 **Goal:** both apps show the same plan card as the Web, refuse limits with the right owner's plan, warn App Store subscribers before deletion, and open beancount.io pages only with the app marker **Status:** in progress (t001, t002 done)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
 | t001 | Plan card in Settings — **DONE** | 1h30m | w7/m1/t010 |
-| t002 | Limit refusals say whose plan it is | 1h | t001 |
+| t002 | Limit refusals say whose plan it is — **DONE** | 1h | t001 |
 | t003 | Account deletion warns App Store subscribers | 45m | t001, w7/m3/t004 |
 | t004 | Beancount pages opened from the app carry the app marker | 45m | w7/m6/t006 |
 | t005 | Translations and visual checks | 1h | t002, t003, t004 |

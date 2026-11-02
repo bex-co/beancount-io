@@ -11,6 +11,7 @@ import {
   isRequestIdReuse,
   ledgerSlugPreview,
   slugifyLedgerName,
+  tierLimitDetail,
 } from "../ledger-name";
 
 describe("slugifyLedgerName", () => {
@@ -381,5 +382,31 @@ describe("ledgerNameWithinLimit", () => {
       ),
     ).toBe(true);
     expect(source.includes(".max(100,")).toBe(false);
+  });
+});
+
+describe("tierLimitDetail (ADR 001 D14)", () => {
+  const refusal = (extensions: Record<string, unknown>) => ({
+    graphQLErrors: [{ extensions }],
+  });
+
+  it("reads the limit and plan a refusal names", () => {
+    expect(
+      tierLimitDetail(
+        refusal({ code: "RESOURCE_LIMIT_REACHED", limit: 1, tier: "FREE" }),
+      ),
+    ).toEqual({ limit: 1, tier: "FREE" });
+  });
+
+  it("is null for a server that does not send them", () => {
+    expect(tierLimitDetail(refusal({ code: "RESOURCE_LIMIT_REACHED" }))).toBe(
+      null,
+    );
+  });
+
+  it("is null for any other refusal", () => {
+    expect(
+      tierLimitDetail(refusal({ code: "FORBIDDEN", limit: 1, tier: "FREE" })),
+    ).toBe(null);
   });
 });

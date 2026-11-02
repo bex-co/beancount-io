@@ -62,12 +62,14 @@ import { useLedgerDirectory } from "@/common/ledger-directory/ledger-directory-p
 import { ledgerVar } from "@/common/vars";
 import { LEADING_TEXT_ALIGN, leadingInputTextAlign } from "@/common/rtl";
 import { InlineError } from "@/components/inline-error";
+import { planKey } from "../plan-screen/plan-card";
 import type { ColorTheme } from "@/types/theme-props";
 import {
   LEDGER_DESCRIPTION_MAX,
   classifyCreateLedgerError,
   ledgerNameWithinLimit,
   setupTitle,
+  tierLimitDetail,
   createRequestFingerprint,
   generateDefaultLedgerName,
   isNewCreateRequest,
@@ -578,7 +580,15 @@ export function CreateLedgerScreen(): JSX.Element {
           return;
         }
         if (kind === "tier") {
-          setError("root", { message: t("createLedgerTierLimit") });
+          const detail = tierLimitDetail(error);
+          setError("root", {
+            message: detail
+              ? t("createLedgerPlanLimit", {
+                  plan: t(planKey(detail.tier)),
+                  limit: detail.limit.toLocaleString(),
+                })
+              : t("createLedgerTierLimit"),
+          });
           return;
         }
         setError("root", { message: t("createLedgerGenericError") });
