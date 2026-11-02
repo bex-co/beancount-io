@@ -68,6 +68,7 @@ describe("BillingStatusBanner (ADR 001 D15)", () => {
       {
         source: provider,
         duplicateBilling: true,
+        stripeRenews: true,
         store: store(provider, "ACTIVE"),
       },
       true,
@@ -81,6 +82,22 @@ describe("BillingStatusBanner (ADR 001 D15)", () => {
     expect(screen.getByRole("link")).toHaveAttribute(
       "href",
       "/settings/billing",
+    );
+  });
+
+  it("names Stripe when a waiting Stripe plan and a store both renew", () => {
+    load({
+      source: "APP_STORE",
+      duplicateBilling: true,
+      stripeRenews: true,
+      stripeStartsAt: "2027-03-03T12:00:00Z",
+      store: store("APP_STORE", "ACTIVE"),
+    });
+
+    render(<BillingStatusBanner />);
+
+    expect(screen.getByTestId("duplicate-billing-banner")).toHaveTextContent(
+      "common.billedTwiceAppStore",
     );
   });
 

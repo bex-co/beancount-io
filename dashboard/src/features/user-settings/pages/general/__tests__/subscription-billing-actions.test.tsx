@@ -742,6 +742,7 @@ describe("A store-billed account (ADR 001 D5, D14)", () => {
         subscriptions: [{ ...stripe.subscriptions[0], status: "trialing" }],
         billing: {
           ...stripe.billing,
+          stripeStartsAt: "2026-12-01T12:00:00.000Z",
           store: { ...store, willRenew: false },
         },
       },
@@ -795,6 +796,10 @@ describe("a deferred Stripe plan in Billing (ADR 001 D15)", () => {
           ...stripe,
           hasActiveSubscription: false,
           subscriptions: [{ ...stripe.subscriptions[0], status: "trialing" }],
+          billing: {
+            ...stripe.billing,
+            stripeStartsAt: "2026-12-01T12:00:00.000Z",
+          },
         },
       },
       loading: false,

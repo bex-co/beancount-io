@@ -89,6 +89,21 @@ describe("planBilling duplicate flag (ADR 001 D5)", () => {
   });
 });
 
+describe("planBilling's Stripe facts (ADR 001 D15)", () => {
+  it("says Stripe will bill again whenever a Stripe plan renews", () => {
+    expect(planBilling([row()], STRIPE_RENEWS, NOW).stripeRenews).toBe(true);
+    expect(planBilling([row()], STRIPE_ENDING, NOW).stripeRenews).toBe(false);
+  });
+
+  it("passes on when a waiting Stripe plan starts", () => {
+    expect(
+      planBilling([ending], { ...STRIPE_RENEWS, startsAt: LATER }, NOW)
+        .stripeStartsAt,
+    ).toEqual(LATER);
+    expect(planBilling([], NO_STRIPE, NOW).stripeStartsAt).toBeNull();
+  });
+});
+
 describe("planBilling store summary (ADR 001 D13)", () => {
   it("reports what the store plan is and how it stands", () => {
     expect(planBilling([row()], NO_STRIPE, NOW).store).toEqual({

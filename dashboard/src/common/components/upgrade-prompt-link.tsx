@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { track, type UpgradeSurface } from "@/common/analytics";
 import { useHidesBilling } from "@/common/hooks/use-hides-billing";
 import { useSafeReturnPath } from "@/common/hooks/use-safe-return-path";
-import { useStoreUpgradeKey } from "@/common/hooks/use-store-upgrade-key";
+import { useUpgradeChannel } from "@/common/hooks/use-store-upgrade-key";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { billingLinkSearch } from "@/common/lib/subscription/billing-link";
 import type { TierInfo } from "@/common/lib/subscription/tier-config";
@@ -33,9 +33,10 @@ export function UpgradePromptLink({
   const { t } = useTranslations();
   const returnTo = useSafeReturnPath();
   const hidesBilling = useHidesBilling();
-  const storeUpgradeKey = useStoreUpgradeKey();
+  const { storeUpgradeKey, sellsHere } = useUpgradeChannel();
   if (hidesBilling) return null;
-  const target = storeUpgradeKey ? null : plan;
+  // Billing explains a plan it cannot sell, so the link opens no sheet then.
+  const target = sellsHere ? plan : null;
   return (
     <Link
       {...props}

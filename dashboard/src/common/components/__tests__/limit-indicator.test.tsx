@@ -4,7 +4,7 @@ import { LimitIndicator } from "../limit-indicator";
 import { TEST_LOCATION_HREF } from "@/test/mocks/router";
 
 vi.mock("@/common/hooks/use-store-upgrade-key", () => ({
-  useStoreUpgradeKey: () => null,
+  useUpgradeChannel: () => ({ storeUpgradeKey: null, sellsHere: true }),
 }));
 vi.mock("@tanstack/react-router", async () => {
   const { routerMock } = await import("@/test/mocks/router");

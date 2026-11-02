@@ -4,11 +4,14 @@ import { UpgradePromptLink } from "../upgrade-prompt-link";
 import { getNextTier } from "@/common/lib/subscription/tier-config";
 import { TEST_LOCATION_HREF } from "@/test/mocks/router";
 
-const { mockTrack, mockStoreKey, mockHidesBilling } = vi.hoisted(() => ({
-  mockTrack: vi.fn(),
-  mockStoreKey: { current: null as string | null },
-  mockHidesBilling: { current: false },
-}));
+const { mockTrack, mockStoreKey, mockHidesBilling, mockWaiting } = vi.hoisted(
+  () => ({
+    mockTrack: vi.fn(),
+    mockStoreKey: { current: null as string | null },
+    mockWaiting: { current: false },
+    mockHidesBilling: { current: false },
+  }),
+);
 
 vi.mock("@tanstack/react-router", async () => {
   const { routerMock } = await import("@/test/mocks/router");
@@ -16,7 +19,10 @@ vi.mock("@tanstack/react-router", async () => {
 });
 vi.mock("@/common/analytics", () => ({ track: mockTrack }));
 vi.mock("@/common/hooks/use-store-upgrade-key", () => ({
-  useStoreUpgradeKey: () => mockStoreKey.current,
+  useUpgradeChannel: () => ({
+    storeUpgradeKey: mockStoreKey.current,
+    sellsHere: mockStoreKey.current === null && !mockWaiting.current,
+  }),
 }));
 vi.mock("@/common/hooks/use-hides-billing", () => ({
   useHidesBilling: () => mockHidesBilling.current,
@@ -30,6 +36,19 @@ describe("UpgradePromptLink", () => {
     mockTrack.mockClear();
     mockStoreKey.current = null;
     mockHidesBilling.current = false;
+    mockWaiting.current = false;
+  });
+
+  it("opens Billing with no sheet while a Stripe plan waits to start", () => {
+    mockWaiting.current = true;
+    render(
+      <UpgradePromptLink surface="ledgers_limit" plan={getNextTier("PREMIUM")}>
+        Upgrade
+      </UpgradePromptLink>,
+    );
+
+    const link = screen.getByRole("link", { name: "Upgrade" });
+    expect(link.getAttribute("href")).not.toContain("plan=");
   });
 
   it("offers nothing on a page an app opened", () => {

@@ -4,13 +4,23 @@ import { isBilledByStore } from "@/features/user-settings/hooks/use-subscription
 import { GetBillingStatusDocument } from "@/graphql/definitions";
 
 /**
- * The message saying where a store-billed account upgrades, or null when it
- * upgrades here (ADR 001 D14). Call it only where a prompt is already showing:
- * it reads the account's billing status.
+ * Where this account can buy an upgrade (ADR 001 D14, D15). A store-billed
+ * account upgrades in the app that bills it, so `storeUpgradeKey` names it.
+ * An account whose Stripe plan is waiting for a store plan to end can buy
+ * nothing more, so `sellsHere` is false then too. Call it only where a prompt
+ * is already showing: it reads the account's billing status.
  */
-export function useStoreUpgradeKey(): string | null {
+export function useUpgradeChannel(): {
+  storeUpgradeKey: string | null;
+  sellsHere: boolean;
+} {
   const { data } = useQuery(GetBillingStatusDocument);
   const billing = data?.subscriptionStatus?.billing ?? null;
-  if (!isBilledByStore(billing)) return null;
-  return storeCopy(billing?.source).upgradeIn;
+  const storeUpgradeKey = isBilledByStore(billing)
+    ? storeCopy(billing?.source).upgradeIn
+    : null;
+  return {
+    storeUpgradeKey,
+    sellsHere: !storeUpgradeKey && !billing?.stripeStartsAt,
+  };
 }

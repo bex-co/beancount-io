@@ -3,11 +3,14 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { AiCfoUpgradePanel } from "../ai-cfo-upgrade-panel";
 import { TEST_LOCATION_HREF } from "@/test/mocks/router";
 
-const { mockTrack, mockStoreKey, mockHidesBilling } = vi.hoisted(() => ({
-  mockTrack: vi.fn(),
-  mockStoreKey: { current: null as string | null },
-  mockHidesBilling: { current: false },
-}));
+const { mockTrack, mockStoreKey, mockHidesBilling, mockWaiting } = vi.hoisted(
+  () => ({
+    mockTrack: vi.fn(),
+    mockStoreKey: { current: null as string | null },
+    mockWaiting: { current: false },
+    mockHidesBilling: { current: false },
+  }),
+);
 
 vi.mock("@tanstack/react-router", async () => {
   const { routerMock } = await import("@/test/mocks/router");
@@ -16,7 +19,10 @@ vi.mock("@tanstack/react-router", async () => {
 
 vi.mock("@/common/analytics", () => ({ track: mockTrack }));
 vi.mock("@/common/hooks/use-store-upgrade-key", () => ({
-  useStoreUpgradeKey: () => mockStoreKey.current,
+  useUpgradeChannel: () => ({
+    storeUpgradeKey: mockStoreKey.current,
+    sellsHere: mockStoreKey.current === null && !mockWaiting.current,
+  }),
 }));
 vi.mock("@/common/hooks/use-hides-billing", () => ({
   useHidesBilling: () => mockHidesBilling.current,
@@ -262,6 +268,17 @@ describe("AiCfoUpgradePanel", () => {
 
     render(<AiCfoUpgradePanel />);
     expect(screen.getByText("100%")).toBeInTheDocument();
+  });
+
+  it("sells no plan while a Stripe plan waits to start", () => {
+    mockWaiting.current = true;
+    setMocks("PREMIUM", 9, 10);
+
+    render(<AiCfoUpgradePanel />);
+    mockWaiting.current = false;
+
+    expect(screen.queryByText("Upgrade")).not.toBeInTheDocument();
+    expect(screen.queryByText("$99.99")).not.toBeInTheDocument();
   });
 
   it("shows nothing on a page an app opened", () => {

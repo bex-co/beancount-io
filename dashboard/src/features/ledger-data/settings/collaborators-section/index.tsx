@@ -38,6 +38,7 @@ import {
   useErrorMessage,
 } from "@/common/lib/errors/error-message";
 import { useUserLimits } from "@/common/hooks/use-user-limits";
+import { isLedgerOwnerName } from "@/common/hooks/use-is-ledger-owner";
 import { useQueryRetry } from "@/common/hooks/use-query-retry";
 import { LedgerAdminPermission } from "@/common/components/ledger-permission/admin";
 import { LimitIndicator } from "@/common/components/limit-indicator";
@@ -73,8 +74,7 @@ export function CollaboratorsSection({ ledgerId }: { ledgerId: string }) {
 
   const { data: currentUserData } = useQuery(GetCurrentUserDocument);
   const currentUserLogin = currentUserData?.userProfile?.username || null;
-  const isOwner =
-    ledgerId.split("/")[0]?.toLowerCase() === currentUserLogin?.toLowerCase();
+  const isOwner = isLedgerOwnerName(ledgerId.split("/")[0], currentUserLogin);
 
   const [addLedgerCollaborator] = useMutation(AddLedgerCollaboratorDocument);
   const [deleteLedgerCollaborator] = useMutation(

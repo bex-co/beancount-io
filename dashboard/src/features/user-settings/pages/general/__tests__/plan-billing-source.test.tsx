@@ -38,6 +38,8 @@ const billing = (
   __typename: "PlanBilling",
   source,
   duplicateBilling: false,
+  stripeRenews: source === BillingSource.Stripe,
+  stripeStartsAt: null,
   store: storePlan,
 });
 

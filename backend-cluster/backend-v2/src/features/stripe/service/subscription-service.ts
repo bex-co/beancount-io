@@ -260,6 +260,7 @@ function previewOverStorePlan(
     storeOverlap,
     ...(storeOverlap.deferred && {
       amountDueToday: 0,
+      effectiveAt: storeOverlap.endsAt,
       nextChargeAt: storeOverlap.endsAt,
     }),
   };
@@ -535,14 +536,21 @@ export class SubscriptionService implements ISubscriptionService {
     stripeSubscriptions: ClientSubscription[],
   ): Promise<PlanBilling> {
     const heldPlans = stripeSubscriptions.filter(holdsPlan);
+    const renewingPlans = heldPlans.filter(
+      (subscription) =>
+        !subscription.cancel_at_period_end && !subscription.cancel_at,
+    );
+    const waiting = renewingPlans.find(
+      (subscription) => subscription.status === "trialing",
+    );
     return planBilling(
       await this.models.storeSubscription.findByUserId(this.db, userId),
       {
         held: heldPlans.length,
-        renewing: heldPlans.filter(
-          (subscription) =>
-            !subscription.cancel_at_period_end && !subscription.cancel_at,
-        ).length,
+        renewing: renewingPlans.length,
+        startsAt: waiting?.trial_end
+          ? new Date(waiting.trial_end * 1000)
+          : null,
       },
       new Date(),
     );

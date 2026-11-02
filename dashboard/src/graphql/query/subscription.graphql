@@ -49,6 +49,8 @@ query GetSubscriptionStatus {
     billing {
       source
       duplicateBilling
+      stripeRenews
+      stripeStartsAt
       store {
         provider
         tier
@@ -74,6 +76,8 @@ query GetBillingStatus {
     billing {
       source
       duplicateBilling
+      stripeRenews
+      stripeStartsAt
       store {
         provider
         status

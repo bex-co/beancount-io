@@ -34,7 +34,7 @@ vi.mock("@/common/hooks/use-is-ledger-owner.ts", () => ({
   useIsLedgerOwner: () => mockIsOwner(),
 }));
 vi.mock("@/common/hooks/use-store-upgrade-key", () => ({
-  useStoreUpgradeKey: () => null,
+  useUpgradeChannel: () => ({ storeUpgradeKey: null, sellsHere: true }),
 }));
 vi.mock("@/common/analytics", () => ({
   track: vi.fn(),

@@ -76,6 +76,7 @@ const trialEnd = (create: jest.Mock) =>
 
 const stripeSubscription = (status: string, overrides: object = {}) => ({
   id: "sub_1",
+  trial_end: status === "trialing" ? Math.floor(END.getTime() / 1000) : null,
   clientId: BILLING_CLIENT_ID,
   livemode: true,
   status,
@@ -156,6 +157,7 @@ describe("switching from a store to Stripe (ADR 001 D15)", () => {
       ),
     ).resolves.toMatchObject({
       amountDueToday: 0,
+      effectiveAt: END,
       nextChargeAt: END,
       storeOverlap: { endsAt: END, deferred: true },
     });
@@ -210,6 +212,9 @@ describe("switching from a store to Stripe (ADR 001 D15)", () => {
     expect(status.billing).toMatchObject({
       source: "STRIPE",
       duplicateBilling: false,
+      stripeRenews: true,
+      // Stripe counts in whole seconds.
+      stripeStartsAt: new Date(Math.floor(END.getTime() / 1000) * 1000),
       store: { willRenew: false },
     });
   });
@@ -238,6 +243,10 @@ describe("switching from a store to Stripe (ADR 001 D15)", () => {
 
     const status = await service.subscriptionStatus(identity, "full");
 
-    expect(status.billing?.duplicateBilling).toBe(true);
+    // Both sources are named, so the banner can say Stripe is one of them.
+    expect(status.billing).toMatchObject({
+      duplicateBilling: true,
+      stripeRenews: true,
+    });
   });
 });

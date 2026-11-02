@@ -1,6 +1,6 @@
 # w7 · m6 — The web dashboard shows each billing source and sends plan changes to their home
 
-**Worker:** worker1 **Goal:** every web subscriber sees the same plan card, can change billing only where it was bought, and never sees billing on a page opened from the app **Status:** in progress (t001, t002, t003, t004, t005, t006, t007, t008 done)
+**Worker:** worker1 **Goal:** every web subscriber sees the same plan card, can change billing only where it was bought, and never sees billing on a page opened from the app **Status:** in progress (t001, t002, t003, t004, t005, t006, t007, t008, t009 done)
 
 ## Tasks (in order)
 
@@ -14,7 +14,7 @@
 | t006 | Pages opened from the app hide pricing and billing — **DONE** | 1h30m | t001 |
 | t007 | Adoption surface — **DONE** | 30m | t003, t004, t005, t006 |
 | t008 | Simplify — **DONE** | 30m | t007 |
-| t009 | Test coverage | 1h | t007 |
+| t009 | Test coverage — **DONE** | 1h | t007 |
 | t010 | Closeout | 15m | t008, t009 |
 
 **Unblocked 2026-11-01** — the owner decided that a store-to-Stripe switch at the same or a lower tier defers the first Stripe charge to the store plan's end, so nobody pays twice; at a higher tier Stripe charges at once, with a warning first. t001 to t004 and t006 shipped earlier (`989895da0`, `66508069e`, `a331ac37b`, `08b3f7ec5`, `8d741331d`). The decision is the only part of m2/t001 that t005 needs. The milestone's browser check needs an account with a store row, which a local stack can seed.

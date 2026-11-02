@@ -273,6 +273,19 @@ class PlanBilling {
     description: "The account's live store subscription, when it has one.",
   })
   store!: StoreSubscriptionSummary | null;
+
+  @Field({
+    description:
+      "Stripe will bill the account again: a plan that renews, or one waiting for a store plan to end.",
+  })
+  stripeRenews!: boolean;
+
+  @Field(() => Date, {
+    nullable: true,
+    description:
+      "When a Stripe plan bought beside a store plan starts, its first charge deferred to the store plan's end.",
+  })
+  stripeStartsAt!: Date | null;
 }
 
 @ObjectType("CustomerSubscriptionStatus")

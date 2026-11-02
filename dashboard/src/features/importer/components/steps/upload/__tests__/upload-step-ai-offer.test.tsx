@@ -8,7 +8,7 @@ import { TEST_LOCATION_HREF } from "@/test/mocks/router";
 const parseLLMFile = vi.fn();
 
 vi.mock("@/common/hooks/use-store-upgrade-key", () => ({
-  useStoreUpgradeKey: () => null,
+  useUpgradeChannel: () => ({ storeUpgradeKey: null, sellsHere: true }),
 }));
 vi.mock("@/common/hooks/use-hides-billing", () => ({
   useHidesBilling: () => false,

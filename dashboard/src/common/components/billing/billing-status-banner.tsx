@@ -17,10 +17,11 @@ const noSubscription = () => () => {};
 const PAYMENT_PROBLEM_STATUSES = new Set(["GRACE", "ON_HOLD"]);
 
 function paysTwiceKey({
-  hasActiveSubscription,
   billing,
 }: GetBillingStatusQuery["subscriptionStatus"]): string {
-  if (!hasActiveSubscription) return "common.billedTwiceByStores";
+  // Stripe is one of the two whenever it will bill again, a plan waiting to
+  // start included; otherwise both are stores.
+  if (!billing.stripeRenews) return "common.billedTwiceByStores";
   return storeCopy(billing.store?.provider).billedTwice;
 }
 

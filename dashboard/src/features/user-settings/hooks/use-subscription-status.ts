@@ -55,9 +55,7 @@ export const useSubscriptionStatus = () => {
     planBilling: data?.subscriptionStatus?.billing ?? null,
     // A Stripe plan bought beside a store plan, waiting for it to end.
     hasDeferredSubscription: Boolean(
-      data?.subscriptionStatus?.subscriptions?.some(
-        (subscription) => subscription.status === "trialing",
-      ),
+      data?.subscriptionStatus?.billing?.stripeStartsAt,
     ),
   };
 };

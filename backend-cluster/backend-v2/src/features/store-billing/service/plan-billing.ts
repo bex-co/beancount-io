@@ -30,12 +30,18 @@ export interface PlanBilling {
   source: BillingSource;
   duplicateBilling: boolean;
   store: StoreSubscriptionSummary | null;
+  /** Stripe will bill the account again, now or once a store plan ends. */
+  stripeRenews: boolean;
+  /** When a Stripe plan waiting out a store plan starts (D15). */
+  stripeStartsAt: Date | null;
 }
 
 /** The Stripe subscriptions behind a plan, and those that will renew. */
 export interface StripePlanCounts {
   held: number;
   renewing: number;
+  /** The start of a plan whose first charge waits for a store plan. */
+  startsAt?: Date | null;
 }
 
 function summarize(subscription: StoreSubscription): StoreSubscriptionSummary {
@@ -87,5 +93,7 @@ export function planBilling(
     // is reported rather than prevented.
     duplicateBilling: renewing.length + stripe.renewing > 1,
     store: current ? summarize(current) : null,
+    stripeRenews: stripe.renewing > 0,
+    stripeStartsAt: stripe.startsAt ?? null,
   };
 }

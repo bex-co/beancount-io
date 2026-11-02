@@ -5,7 +5,7 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { useUserLimits } from "@/common/hooks/use-user-limits";
 import { useAiCfoUsage } from "@/common/hooks/use-ai-cfo-usage";
 import { useHidesBilling } from "@/common/hooks/use-hides-billing";
-import { useStoreUpgradeKey } from "@/common/hooks/use-store-upgrade-key";
+import { useUpgradeChannel } from "@/common/hooks/use-store-upgrade-key";
 import {
   getUpgradeTiers,
   type TierInfo,
@@ -120,8 +120,10 @@ function UpgradePlans({
 }) {
   const { t } = useTranslations();
   const formatMoney = useMoneyFormat();
-  const storeUpgradeKey = useStoreUpgradeKey();
+  const { storeUpgradeKey, sellsHere } = useUpgradeChannel();
 
+  // A Stripe plan waiting for a store plan to end: nothing more is sold.
+  if (!sellsHere && !storeUpgradeKey) return null;
   if (storeUpgradeKey) {
     return (
       <p className="px-4 pb-4 text-xs text-muted-foreground">

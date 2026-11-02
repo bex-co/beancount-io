@@ -624,7 +624,13 @@ describe("SubscriptionResolver", () => {
       expect(result).toEqual({
         hasActiveSubscription: false,
         subscriptions: [],
-        billing: { source: "NONE", duplicateBilling: false, store: null },
+        billing: {
+          source: "NONE",
+          duplicateBilling: false,
+          stripeRenews: false,
+          stripeStartsAt: null,
+          store: null,
+        },
       });
       expect(
         mockModels.paidCustomer.findByUserIdWithActivePeriod,
