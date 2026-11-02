@@ -474,6 +474,8 @@ export class LedgerRepoService
 
   private async commitFileChanges(params: FileChangesParams): Promise<void> {
     const { ledgerId, identity, operations, message, dryRun = false } = params;
+    // An authorization-only call (no changes) has nothing to preview.
+    if (dryRun && operations.length === 0) return;
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,

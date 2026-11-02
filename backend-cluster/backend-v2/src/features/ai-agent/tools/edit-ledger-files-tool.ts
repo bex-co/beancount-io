@@ -343,6 +343,16 @@ export async function executeEditLedgerFiles(
         path: normalizeAgentRepoPath(file.path),
       }));
       assertFoldable(normalizedFiles);
+      // Authorize before anything reads a file or matches an edit, so a
+      // credential without write access is refused FORBIDDEN rather than told
+      // whether a file or its text exists (REST answers 403 the same way).
+      await services.ledgerRepo.changeFiles({
+        ledgerId,
+        identity,
+        operations: [],
+        message: description,
+        dryRun: true,
+      });
       // Only the new text is checked: an untouched long literal already in
       // the file is the projection's to report, not this edit's (w23/081).
       for (const file of normalizedFiles) {
@@ -617,11 +627,12 @@ function fileOperation<F extends z.ZodType>(
       ctx: Pick<ToolContext, "services" | "identity" | "ledgerId">,
       input: unknown,
     ) => {
-      const { files, remove_includes, removeIncludes, ...rest } =
-        schema.parse(input) as z.infer<typeof schema> & {
-          remove_includes?: boolean;
-          removeIncludes?: boolean;
-        };
+      const { files, remove_includes, removeIncludes, ...rest } = schema.parse(
+        input,
+      ) as z.infer<typeof schema> & {
+        remove_includes?: boolean;
+        removeIncludes?: boolean;
+      };
       return executeEditLedgerFiles(
         ctx,
         { ...rest, files: files.map(toOperation) },

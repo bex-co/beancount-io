@@ -471,6 +471,13 @@ describe("executeReadLedgerFiles", () => {
   });
 });
 
+// The tool authorizes with an empty-operations dry run before it reads any
+// file, so a refusal path makes that one call and never a call with changes.
+const expectNoFileChange = (changeFiles: jest.Mock) =>
+  expect(
+    changeFiles.mock.calls.filter(([call]) => call.operations.length > 0),
+  ).toEqual([]);
+
 describe("executeEditLedgerFiles", () => {
   // w23/017: two agents editing one file at once. The loser used to report
   // SERVICE_UNAVAILABLE; its exact-text edit now lands on the winner's text.
@@ -526,7 +533,7 @@ describe("executeEditLedgerFiles", () => {
       });
       expect(result.ok).toBe(true);
       // Gate dry run + the lost commit + the retried one.
-      expect(repo.ledgerRepo.changeFiles).toHaveBeenCalledTimes(3);
+      expect(repo.ledgerRepo.changeFiles).toHaveBeenCalledTimes(4);
       expect(repo.remote()).toBe("; 0\n; 1\n");
     });
 
@@ -551,7 +558,7 @@ describe("executeEditLedgerFiles", () => {
       });
       expect(result).toMatchObject({ ok: false, errorCode: "CONFLICT" });
       // Gate dry run + the one lost commit, no retry.
-      expect(repo.ledgerRepo.changeFiles).toHaveBeenCalledTimes(2);
+      expect(repo.ledgerRepo.changeFiles).toHaveBeenCalledTimes(3);
       expect(repo.remote()).toBe("; 0\n; b\n");
     });
 
@@ -581,7 +588,7 @@ describe("executeEditLedgerFiles", () => {
         errorCode: "CONFLICT",
         errorHint: expect.stringContaining("`readLedgerFiles`"),
       });
-      expect(ledgerRepo.changeFiles).not.toHaveBeenCalled();
+      expectNoFileChange(ledgerRepo.changeFiles);
     });
 
     it("gives the conflict back after three lost commits", async () => {
@@ -609,7 +616,7 @@ describe("executeEditLedgerFiles", () => {
       );
       expect(result).toMatchObject({ ok: false, errorCode: "CONFLICT" });
       // One service dry run for the gate, then the three commit attempts.
-      expect(ledgerRepo.changeFiles).toHaveBeenCalledTimes(4);
+      expect(ledgerRepo.changeFiles).toHaveBeenCalledTimes(5);
     });
   });
 
@@ -706,7 +713,7 @@ describe("executeEditLedgerFiles", () => {
           error: expect.stringContaining(problem),
         });
         expect(ledgerRepo.getFilesContent).not.toHaveBeenCalled();
-        expect(ledgerRepo.changeFiles).not.toHaveBeenCalled();
+        expectNoFileChange(ledgerRepo.changeFiles);
       },
     );
   });
@@ -853,7 +860,7 @@ describe("executeEditLedgerFiles", () => {
       errorCode: "BAD_USER_INPUT",
       error: expect.stringMatching(/^commit failed: main\.bean: old_string/),
     });
-    expect(ledgerRepo.changeFiles).not.toHaveBeenCalled();
+    expectNoFileChange(ledgerRepo.changeFiles);
   });
 
   it.each(["update", "replace", "delete"] as const)(
@@ -888,7 +895,7 @@ describe("executeEditLedgerFiles", () => {
         errorCode: "NOT_FOUND",
         error: expect.stringContaining("ghost.bean"),
       });
-      expect(ledgerRepo.changeFiles).not.toHaveBeenCalled();
+      expectNoFileChange(ledgerRepo.changeFiles);
     },
   );
 
@@ -960,7 +967,7 @@ describe("executeEditLedgerFiles", () => {
       ok: false,
       error: expect.stringMatching(/^preview refused: /),
     });
-    expect(ledgerRepo.changeFiles).not.toHaveBeenCalled();
+    expectNoFileChange(ledgerRepo.changeFiles);
   });
 
   it("refuses one true and one false preview flag", async () => {
@@ -983,7 +990,7 @@ describe("executeEditLedgerFiles", () => {
         },
       ),
     ).rejects.toThrow(/dry_run.*dryRun/);
-    expect(ledgerRepo.changeFiles).not.toHaveBeenCalled();
+    expectNoFileChange(ledgerRepo.changeFiles);
   });
 
   it("update (str_replace): rejects an ambiguous match (appears more than once)", async () => {
@@ -1021,7 +1028,7 @@ describe("executeEditLedgerFiles", () => {
       error: expect.stringContaining("matches 2 times"),
       errorHint: expect.stringContaining("old_string"),
     });
-    expect(ledgerRepo.changeFiles).not.toHaveBeenCalled();
+    expectNoFileChange(ledgerRepo.changeFiles);
   });
 
   it("dry_run: authorizes through the service and previews without committing", async () => {
@@ -1056,7 +1063,7 @@ describe("executeEditLedgerFiles", () => {
     );
     // One service call, in preview mode: the same write authorization and path
     // validation run, and nothing commits.
-    expect(ledgerRepo.changeFiles).toHaveBeenCalledTimes(1);
+    expect(ledgerRepo.changeFiles).toHaveBeenCalledTimes(2);
     expect(ledgerRepo.changeFiles).toHaveBeenCalledWith(
       expect.objectContaining({ dryRun: true }),
     );

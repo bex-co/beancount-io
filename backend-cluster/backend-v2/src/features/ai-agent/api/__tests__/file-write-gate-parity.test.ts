@@ -20,7 +20,7 @@ import type { McpRequestContext } from "../mcp-context";
  * block.
  */
 const config = { api: { scopeEnforcement: "enforce" } } as AppConfig;
-const identity: Identity = {
+const writer: Identity = {
   userId: "usr_alice",
   method: "oauth",
   scopes: new Set(["ledger.read", "ledger.write"]),
@@ -31,7 +31,14 @@ const NEW_ERROR = {
   source: { filename: "main.bean", lineno: 3 },
 };
 
-async function fixture(opts: { current?: unknown[]; projected: unknown[] }) {
+async function fixture(opts: {
+  current?: unknown[];
+  projected: unknown[];
+  readOnly?: boolean;
+}) {
+  const identity: Identity = opts.readOnly
+    ? { ...writer, scopes: new Set(["ledger.read"]) }
+    : writer;
   const changeLedgerFiles = jest.fn(async () => ({
     data: { success: true, data: {} },
   }));
@@ -197,5 +204,38 @@ describe("file writes refuse new bean-check errors on every surface", () => {
       expect((await f.put({})).status).toBe(200);
       expect((await f.del({})).status).toBe(200);
       expect(f.changeLedgerFiles).toHaveBeenCalledTimes(2);
+    }));
+});
+
+describe("a read-only credential is refused FORBIDDEN before any file lookup", () => {
+  it("refuses a missing-file delete and update and a non-matching edit, REST and MCP", () =>
+    withFixture({ projected: [], readOnly: true }, async (f) => {
+      const calls = [
+        ["deleteLedgerFiles", { files: [{ path: "nope.bean" }] }],
+        [
+          "updateLedgerFiles",
+          { files: [{ path: "nope.bean", content: "x", sha: "s" }] },
+        ],
+        [
+          "updateLedgerFiles",
+          {
+            files: [
+              { path: "a.bean", old_string: "zzz-not-there", new_string: "b" },
+            ],
+          },
+        ],
+      ] as const;
+      for (const [name, args] of calls) {
+        for (const dry_run of [false, true]) {
+          const result = await f.mcp(name, { ...args, dry_run });
+          expect(result.isError).toBe(true);
+          expect(result.structuredContent).toMatchObject({
+            error: { code: "FORBIDDEN" },
+          });
+        }
+      }
+      const response = await f.del({ dryRun: true });
+      expect(response.status).toBe(403);
+      expect(f.changeLedgerFiles).not.toHaveBeenCalled();
     }));
 });
