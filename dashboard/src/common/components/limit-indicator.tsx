@@ -97,21 +97,22 @@ export function LimitIndicator({
             {isNearLimit && !isAtLimit && ` - ${t("common.nearLimit")}`}
           </div>
         </div>
-        {isNearLimit && !hidesBilling && ownedByOther && (
-          <div className="text-sm text-muted-foreground">
-            {t("common.ownerCanRaiseLimit")}
-          </div>
-        )}
-        {isNearLimit && !hidesBilling && !ownedByOther && (
-          <Button variant="default" size="sm" asChild>
-            <UpgradePromptLink
-              surface={`${limitType}_limit`}
-              plan={getNextTier(tier)}
-            >
-              {t("common.upgradeToUnlock")}
-            </UpgradePromptLink>
-          </Button>
-        )}
+        {isNearLimit &&
+          !hidesBilling &&
+          (ownedByOther ? (
+            <div className="text-sm text-muted-foreground">
+              {t("common.ownerCanRaiseLimit")}
+            </div>
+          ) : (
+            <Button variant="default" size="sm" asChild>
+              <UpgradePromptLink
+                surface={`${limitType}_limit`}
+                plan={getNextTier(tier)}
+              >
+                {t("common.upgradeToUnlock")}
+              </UpgradePromptLink>
+            </Button>
+          ))}
       </div>
     </div>
   );

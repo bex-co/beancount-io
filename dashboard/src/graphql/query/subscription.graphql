@@ -66,6 +66,24 @@ query GetSubscriptionStatus {
   }
 }
 
+# Who bills the plan, without Stripe's products and cards: the backend answers
+# it without the full Stripe read, so a banner can ask on every page.
+query GetBillingStatus {
+  subscriptionStatus {
+    hasActiveSubscription
+    billing {
+      source
+      duplicateBilling
+      store {
+        provider
+        status
+        willRenew
+        managementUrl
+      }
+    }
+  }
+}
+
 query GetAllTierQuotas {
   allTierQuotas {
     tier

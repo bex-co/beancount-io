@@ -16,5 +16,5 @@
 
 ## Dropped
 
-- ~~**005**~~ — A `billing`-only `subscriptionStatus` pays for the full Stripe view — dropped 2026-11-01: no such document exists. `08b3f7ec5` reads billing through the same `GetSubscriptionStatus` the Billing tab uses, so a page sends one full query, and an account with no Stripe binding makes no Stripe calls.
+- ~~**005**~~ — A `billing`-only `subscriptionStatus` pays for the full Stripe view — dropped 2026-11-01, superseded by w7/m6/t008. The first reason given here was wrong: the banners did send the full query, and for an account with Stripe history that meant the full Stripe read on every page load. t008 adds a billing-only view that the banners use.
 

@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getSafeRedirectPath } from "@/common/lib/auth/auth";
-import { APP_MARKER_PARAM, isAppSession } from "../app-session";
+import {
+  APP_MARKER_PARAM,
+  isAppSession,
+  rememberAppSession,
+} from "../app-session";
 
 const visit = (search: string) =>
   window.history.replaceState(null, "", `/ledger${search}`);
@@ -18,15 +22,24 @@ describe("isAppSession (ADR 001 D14)", () => {
 
   it("holds for the rest of the tab once a page carried the marker", () => {
     visit(`?${APP_MARKER_PARAM}=1`);
+    rememberAppSession();
     expect(isAppSession()).toBe(true);
 
     visit("");
     expect(isAppSession()).toBe(true);
   });
 
+  it("only reads: a marked page it was not told to remember is forgotten", () => {
+    visit(`?${APP_MARKER_PARAM}=1`);
+    expect(isAppSession()).toBe(true);
+
+    visit("");
+    expect(isAppSession()).toBe(false);
+  });
+
   it("does not outlive the tab", () => {
     visit(`?${APP_MARKER_PARAM}=1`);
-    isAppSession();
+    rememberAppSession();
 
     window.sessionStorage.clear();
     visit("");
@@ -38,6 +51,7 @@ describe("isAppSession (ADR 001 D14)", () => {
       throw new Error("blocked");
     });
     visit(`?${APP_MARKER_PARAM}=1`);
+    rememberAppSession();
 
     expect(isAppSession()).toBe(true);
   });

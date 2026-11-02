@@ -1,54 +1,27 @@
-import type { ReactNode } from "react";
+import { useSyncExternalStore } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@apollo/client/react";
-import { AlertTriangle } from "lucide-react";
 import { Button } from "@/common/components/ui/button";
-import { useRootContext } from "@/common/hooks/use-root-context";
+import { useIsAuthenticated } from "@/common/hooks/use-is-authenticated";
+import { storeCopy } from "@/common/lib/subscription/store-copy";
+import { BillingBanner } from "./billing-banner";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useHidesBilling } from "@/common/hooks/use-hides-billing";
 import {
-  BillingSource,
-  GetSubscriptionStatusDocument,
-  type GetSubscriptionStatusQuery,
+  GetBillingStatusDocument,
+  type GetBillingStatusQuery,
 } from "@/graphql/definitions";
+
+const noSubscription = () => () => {};
 
 const PAYMENT_PROBLEM_STATUSES = new Set(["GRACE", "ON_HOLD"]);
 
 function paysTwiceKey({
   hasActiveSubscription,
   billing,
-}: GetSubscriptionStatusQuery["subscriptionStatus"]): string {
+}: GetBillingStatusQuery["subscriptionStatus"]): string {
   if (!hasActiveSubscription) return "common.billedTwiceByStores";
-  return billing.store?.provider === BillingSource.GooglePlay
-    ? "common.billedTwiceGooglePlay"
-    : "common.billedTwiceAppStore";
-}
-
-function Banner({
-  testId,
-  message,
-  children,
-}: {
-  testId: string;
-  message: string;
-  children: ReactNode;
-}) {
-  return (
-    <div
-      role="status"
-      data-testid={testId}
-      className="flex flex-wrap items-center gap-3 border-b border-amber-500/40 bg-amber-500/10 px-4 py-2 text-sm"
-    >
-      <AlertTriangle
-        aria-hidden
-        className="h-4 w-4 shrink-0 text-amber-700 dark:text-amber-400"
-      />
-      <p className="flex-1">{message}</p>
-      <Button size="sm" asChild>
-        {children}
-      </Button>
-    </div>
-  );
+  return storeCopy(billing.store?.provider).billedTwice;
 }
 
 /**
@@ -61,35 +34,46 @@ function Banner({
 export function BillingStatusBanner() {
   const { t } = useTranslations();
   const hidesBilling = useHidesBilling();
-  const signedIn = Boolean(useRootContext().userProfile);
-  const skip = hidesBilling || !signedIn;
-  const { data } = useQuery(GetSubscriptionStatusDocument, { skip });
+  const signedIn = useIsAuthenticated();
+  // Nothing renders before hydration, so nothing is asked for until then:
+  // a tab an app opened learns it hides billing only once hydrated.
+  const hydrated = useSyncExternalStore(
+    noSubscription,
+    () => true,
+    () => false,
+  );
+  const skip = hidesBilling || !signedIn || !hydrated;
+  const { data } = useQuery(GetBillingStatusDocument, { skip });
   const status = skip ? undefined : data?.subscriptionStatus;
   if (!status?.billing) return null;
 
   const { duplicateBilling, store } = status.billing;
   if (duplicateBilling) {
     return (
-      <Banner
+      <BillingBanner
         testId="duplicate-billing-banner"
         message={t(paysTwiceKey(status))}
       >
-        <Link to="/settings/billing">{t("userSettings.billing")}</Link>
-      </Banner>
+        <Button size="sm" asChild>
+          <Link to="/settings/billing">{t("userSettings.billing")}</Link>
+        </Button>
+      </BillingBanner>
     );
   }
 
   // Only Google Play has a page to send them to; Apple has none on the Web.
   if (store?.managementUrl && PAYMENT_PROBLEM_STATUSES.has(store.status)) {
     return (
-      <Banner
+      <BillingBanner
         testId="google-play-payment-banner"
         message={t("common.googlePlayPaymentProblem")}
       >
-        <a href={store.managementUrl} target="_blank" rel="noreferrer">
-          {t("userSettings.manageOnGooglePlay")}
-        </a>
-      </Banner>
+        <Button size="sm" asChild>
+          <a href={store.managementUrl} target="_blank" rel="noreferrer">
+            {t("userSettings.manageOnGooglePlay")}
+          </a>
+        </Button>
+      </BillingBanner>
     );
   }
 

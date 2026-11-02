@@ -83,7 +83,7 @@ const BILLING_CASES = [
   {
     action: AUTHORIZATION_ACTIONS.USER_BILLING_STATUS_READ,
     call: (service: SubscriptionService, identity: Identity) =>
-      service.subscriptionStatus(identity, true),
+      service.subscriptionStatus(identity, "active"),
   },
   {
     action: AUTHORIZATION_ACTIONS.USER_BILLING_CHECKOUT_CREATE,

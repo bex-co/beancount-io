@@ -64,7 +64,7 @@ function setup({
       authorizeOrThrow: jest.fn(async () => undefined),
     } as unknown as IAuthorizationService,
   );
-  return { service, create };
+  return { service, create, stripe };
 }
 
 const checkout = (service: SubscriptionService, tier: SubscriptionTier) =>
@@ -204,7 +204,7 @@ describe("switching from a store to Stripe (ADR 001 D15)", () => {
       stripeRows: [stripeSubscription("trialing")],
     });
 
-    const status = await service.subscriptionStatus(identity, false);
+    const status = await service.subscriptionStatus(identity, "full");
 
     expect(status.hasActiveSubscription).toBe(false);
     expect(status.billing).toMatchObject({
@@ -214,13 +214,29 @@ describe("switching from a store to Stripe (ADR 001 D15)", () => {
     });
   });
 
+  it("answers who bills the plan without Stripe's product and card details", async () => {
+    const { service, stripe } = setup({
+      stripeRows: [stripeSubscription("trialing")],
+    });
+
+    const status = await service.subscriptionStatus(identity, "billing");
+
+    expect(status.subscriptions).toEqual([]);
+    expect(status.billing).toMatchObject({ source: "STRIPE" });
+    expect(stripe.defaultCard).not.toHaveBeenCalled();
+    expect(stripe.listSubscriptions).toHaveBeenCalledWith(
+      "usr_alice",
+      expect.objectContaining({ status: "current" }),
+    );
+  });
+
   it("flags paying twice if the store renews again over a deferred plan", async () => {
     const { service } = setup({
       storeRows: [aStoreSubscription({ accessEndsAt: END })],
       stripeRows: [stripeSubscription("trialing")],
     });
 
-    const status = await service.subscriptionStatus(identity, false);
+    const status = await service.subscriptionStatus(identity, "full");
 
     expect(status.billing?.duplicateBilling).toBe(true);
   });

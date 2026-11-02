@@ -1,6 +1,6 @@
 # w7 · m6 — The web dashboard shows each billing source and sends plan changes to their home
 
-**Worker:** worker1 **Goal:** every web subscriber sees the same plan card, can change billing only where it was bought, and never sees billing on a page opened from the app **Status:** in progress (t001, t002, t003, t004, t005, t006, t007 done)
+**Worker:** worker1 **Goal:** every web subscriber sees the same plan card, can change billing only where it was bought, and never sees billing on a page opened from the app **Status:** in progress (t001, t002, t003, t004, t005, t006, t007, t008 done)
 
 ## Tasks (in order)
 
@@ -13,7 +13,7 @@
 | t005 | Switching from a store plan to Stripe — **DONE** | 1h30m | t002, w7/m2/t001 |
 | t006 | Pages opened from the app hide pricing and billing — **DONE** | 1h30m | t001 |
 | t007 | Adoption surface — **DONE** | 30m | t003, t004, t005, t006 |
-| t008 | Simplify | 30m | t007 |
+| t008 | Simplify — **DONE** | 30m | t007 |
 | t009 | Test coverage | 1h | t007 |
 | t010 | Closeout | 15m | t008, t009 |
 

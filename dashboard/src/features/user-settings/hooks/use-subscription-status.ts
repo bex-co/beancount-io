@@ -12,8 +12,14 @@ export type PlanBillingStatus = NonNullable<
   GetSubscriptionStatusQuery["subscriptionStatus"]["billing"]
 >;
 
+/** Just what the billing predicates read, from either status document. */
+type BillingFacts = {
+  source: BillingSource;
+  store?: { willRenew: boolean } | null;
+} | null;
+
 /** Whether a store bills this plan, renewing or running out. */
-export const isStoreSource = (billing: PlanBillingStatus | null) =>
+export const isStoreSource = (billing: BillingFacts) =>
   billing?.source === BillingSource.AppStore ||
   billing?.source === BillingSource.GooglePlay;
 
@@ -21,7 +27,7 @@ export const isStoreSource = (billing: PlanBillingStatus | null) =>
  * Whether a store renews this plan, so Stripe has nothing to sell over it. With
  * renewal off the account may switch to Stripe (ADR 001 D15).
  */
-export const isBilledByStore = (billing: PlanBillingStatus | null) =>
+export const isBilledByStore = (billing: BillingFacts) =>
   isStoreSource(billing) && Boolean(billing?.store?.willRenew);
 
 export const useSubscriptionStatus = () => {
@@ -48,8 +54,10 @@ export const useSubscriptionStatus = () => {
     subscriptions: data?.subscriptionStatus?.subscriptions,
     planBilling: data?.subscriptionStatus?.billing ?? null,
     // A Stripe plan bought beside a store plan, waiting for it to end.
-    deferredSubscription: data?.subscriptionStatus?.subscriptions?.find(
-      (subscription) => subscription.status === "trialing",
+    hasDeferredSubscription: Boolean(
+      data?.subscriptionStatus?.subscriptions?.some(
+        (subscription) => subscription.status === "trialing",
+      ),
     ),
   };
 };

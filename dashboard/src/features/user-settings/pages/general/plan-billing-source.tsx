@@ -8,12 +8,10 @@ import {
   type PlanBillingStatus,
 } from "@/features/user-settings/hooks/use-subscription-status";
 import { BillingSource } from "@/graphql/definitions";
+import { storeCopy } from "@/common/lib/subscription/store-copy";
+import type { Translate } from "./plan-change-format";
 import { useBillingDateFormat } from "./use-money-format";
 
-type Translate = (
-  key: string,
-  params?: Record<string, string | number>,
-) => string;
 type StorePlan = NonNullable<PlanBillingStatus["store"]>;
 
 /** The plan's state as its store reports it, or null with no end date. */
@@ -44,13 +42,7 @@ function StorePlanSource({ store, t }: { store: StorePlan; t: Translate }) {
   return (
     <>
       {line && <p data-testid="store-plan-status">{line}</p>}
-      <p>
-        {t(
-          isAppStore
-            ? "userSettings.billedByAppStore"
-            : "userSettings.billedByGooglePlay",
-        )}
-      </p>
+      <p>{t(storeCopy(store.provider).billedBy)}</p>
       {isAppStore ? (
         <p>{t("userSettings.appStoreManagePath")}</p>
       ) : (
@@ -104,12 +96,9 @@ export function PlanBillingSource({
         <p>{t("userSettings.billedByStripe")}</p>
         {deferredStart && store?.accessEndsAt && (
           <p data-testid="deferred-start">
-            {t(
-              store.provider === BillingSource.AppStore
-                ? "userSettings.deferredStartAppStore"
-                : "userSettings.deferredStartGooglePlay",
-              { date: formatDate(store.accessEndsAt) },
-            )}
+            {t(storeCopy(store.provider).deferredStart, {
+              date: formatDate(store.accessEndsAt),
+            })}
           </p>
         )}
       </>

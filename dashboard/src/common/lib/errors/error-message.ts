@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
+import { storeCopy } from "@/common/lib/subscription/store-copy";
 import {
   CombinedGraphQLErrors,
   ServerError,
@@ -22,13 +23,25 @@ const ERROR_CODE_TO_KEY: Record<string, string> = {
   RATE_LIMITED: "common.errors.rateLimited",
   INTERNAL_SERVER_ERROR: "common.errors.internal",
   SERVICE_UNAVAILABLE: "common.errors.serviceUnavailable",
-  RESOURCE_LIMIT_REACHED: "common.errors.resourceLimitReached",
   OPERATION_NOT_ALLOWED: "common.errors.operationNotAllowed",
   PREMIUM_REQUIRED: "common.errors.premiumRequired",
   UNBALANCED: "common.errors.unbalanced",
 };
 
 const GENERIC_ERROR_KEY = "common.errors.generic";
+
+/**
+ * A limit's words by whose plan set it (ADR 001 D13). The owner's limit reads
+ * true for either reader, because the refusal cannot say who asked; a limit no
+ * plan sets carries no owner, and upgrading will not lift it.
+ */
+const LIMIT_KEYS: Readonly<Record<string, string>> = {
+  REQUESTER: "common.errors.resourceLimitReached",
+  LEDGER_OWNER: "common.errors.ownerLimitReached",
+};
+const limitKey = (owner: unknown) =>
+  (typeof owner === "string" && LIMIT_KEYS[owner]) ||
+  "common.errors.limitReached";
 
 /**
  * Resolve any thrown value (ApolloError, fetch failure, plain Error, …) to
@@ -78,17 +91,10 @@ export function getErrorMessageKey(
     for (const gqlError of error.errors) {
       const code = gqlError.extensions?.code;
       if (code === "RESOURCE_LIMIT_REACHED") {
-        const owner = gqlError.extensions?.limitOwner;
-        // The reader may be the owner, so this reads true for either; only a
-        // caller that knows who is asking can say more (ADR 001 D13).
-        if (owner === "LEDGER_OWNER") return "common.errors.ownerLimitReached";
-        // A limit no plan sets carries no owner, and upgrading will not lift it.
-        if (owner !== "REQUESTER") return "common.errors.limitReached";
+        return limitKey(gqlError.extensions?.limitOwner);
       }
       if (code === "BILLED_BY_STORE") {
-        return gqlError.extensions?.provider === "GOOGLE_PLAY"
-          ? "common.errors.billedByGooglePlay"
-          : "common.errors.billedByAppStore";
+        return storeCopy(gqlError.extensions?.provider).refusal;
       }
       if (typeof code === "string" && code in ERROR_CODE_TO_KEY) {
         return ERROR_CODE_TO_KEY[code];
@@ -112,6 +118,18 @@ export function getErrorMessageKey(
   }
 
   return fallbackKey;
+}
+
+/** Whether a refusal is a limit the ledger owner's plan sets. */
+export function isOwnerLimitError(error: unknown): boolean {
+  return (
+    CombinedGraphQLErrors.is(error) &&
+    error.errors.some(
+      (gqlError) =>
+        gqlError.extensions?.code === "RESOURCE_LIMIT_REACHED" &&
+        gqlError.extensions?.limitOwner === "LEDGER_OWNER",
+    )
+  );
 }
 
 /** Whether a store bills the plan a Stripe action just tried to change. */

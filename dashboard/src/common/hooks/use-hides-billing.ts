@@ -6,8 +6,8 @@ const noSubscription = () => () => {};
 
 /**
  * Whether pricing, billing, and upgrade prompts stay hidden: in the app's web
- * view, and on any page an app opened (ADR 001 D14). Read after hydration, so
- * the server and client agree.
+ * view, and on any page an app opened (ADR 001 D14). The marker is read after
+ * hydration, so the server and client agree.
  */
 export function useHidesBilling(): boolean {
   const { isReactNative } = useReactNativeContext();

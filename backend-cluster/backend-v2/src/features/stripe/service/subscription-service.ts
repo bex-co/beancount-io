@@ -159,7 +159,7 @@ export interface ISubscriptionService {
   allTierQuotas(): Promise<TierQuotaView[]>;
   subscriptionStatus(
     identity: Identity,
-    onlyActiveStatus: boolean,
+    view: SubscriptionStatusView,
   ): Promise<CustomerSubscriptionStatusView>;
   createSubscriptionSession(
     identity: Identity,
@@ -235,14 +235,6 @@ function checkoutCancelUrl(
 }
 
 /**
- * The application boundary for self-service billing.
- *
- * Protected methods make one final PDP decision before reading local billing
- * state or reaching Stripe. The static tier-quota catalog is deliberately
- * public. Stripe customer ownership, product allowlists, and subscription-state
- * validation remain payment-domain invariants downstream.
- */
-/**
  * Whether a subscription already takes the account's plan: a paid one, or one
  * waiting out a store plan with its first charge deferred (ADR 001 D15).
  */
@@ -272,6 +264,20 @@ function previewOverStorePlan(
     }),
   };
 }
+
+/**
+ * The application boundary for self-service billing.
+ *
+ * Protected methods make one final PDP decision before reading local billing
+ * state or reaching Stripe. The static tier-quota catalog is deliberately
+ * public. Stripe customer ownership, product allowlists, and subscription-state
+ * validation remain payment-domain invariants downstream.
+ */
+/**
+ * How much of the status a caller reads: the active flag alone, who bills the
+ * plan without Stripe's product and card details, or everything.
+ */
+export type SubscriptionStatusView = "active" | "billing" | "full";
 
 export class SubscriptionService implements ISubscriptionService {
   constructor(
@@ -358,8 +364,9 @@ export class SubscriptionService implements ISubscriptionService {
 
   public async subscriptionStatus(
     identity: Identity,
-    onlyActiveStatus: boolean,
+    view: SubscriptionStatusView,
   ): Promise<CustomerSubscriptionStatusView> {
+    const onlyActiveStatus = view === "active";
     await this.authorize(
       identity,
       AUTHORIZATION_ACTIONS.USER_BILLING_STATUS_READ,
@@ -387,9 +394,9 @@ export class SubscriptionService implements ISubscriptionService {
       this.db,
       userId,
       // Only the full view reports a pending change and a failed renewal.
-      onlyActiveStatus
-        ? { status: "current" }
-        : { status: "all", expandForStatus: true },
+      view === "full"
+        ? { status: "all", expandForStatus: true }
+        : { status: "current" },
     );
     const filteredSubscriptions = stripeSubscriptions.filter(
       (subscription) =>
@@ -407,6 +414,14 @@ export class SubscriptionService implements ISubscriptionService {
     );
     const hasActiveSubscription = stripePlans.length > 0;
     if (onlyActiveStatus) return { hasActiveSubscription, subscriptions: [] };
+    if (view === "billing") {
+      // A banner asks only who bills the plan: no products, cards, or history.
+      return {
+        hasActiveSubscription,
+        subscriptions: [],
+        billing: await this.planBillingFor(userId, filteredSubscriptions),
+      };
+    }
 
     const products = new Map<
       string,
@@ -509,8 +524,18 @@ export class SubscriptionService implements ISubscriptionService {
       return [];
     });
 
-    const heldPlans = filteredSubscriptions.filter(holdsPlan);
-    const billing = planBilling(
+    const billing = await this.planBillingFor(userId, filteredSubscriptions);
+
+    return { hasActiveSubscription, subscriptions, billing };
+  }
+
+  /** Who bills the plan, from the account's store rows and Stripe plans. */
+  private async planBillingFor(
+    userId: string,
+    stripeSubscriptions: ClientSubscription[],
+  ): Promise<PlanBilling> {
+    const heldPlans = stripeSubscriptions.filter(holdsPlan);
+    return planBilling(
       await this.models.storeSubscription.findByUserId(this.db, userId),
       {
         held: heldPlans.length,
@@ -521,8 +546,6 @@ export class SubscriptionService implements ISubscriptionService {
       },
       new Date(),
     );
-
-    return { hasActiveSubscription, subscriptions, billing };
   }
 
   public async createSubscriptionSession(

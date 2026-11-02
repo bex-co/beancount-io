@@ -30,8 +30,6 @@ import {
   ledgersLine,
 } from "./tier-quota-summary";
 
-/** Where the Enterprise card sends people: the plan is arranged with us. */
-
 type Translate = (
   key: string,
   params?: Record<string, string | number>,

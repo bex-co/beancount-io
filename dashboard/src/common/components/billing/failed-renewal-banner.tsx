@@ -1,6 +1,7 @@
 import { useState, useSyncExternalStore } from "react";
 import { useQuery } from "@apollo/client/react";
-import { AlertTriangle, X } from "lucide-react";
+import { X } from "lucide-react";
+import { BillingBanner } from "./billing-banner";
 import { Button } from "@/common/components/ui/button";
 import { useRootContext } from "@/common/hooks/use-root-context";
 import { useTranslations } from "@/common/hooks/use-translations";
@@ -72,22 +73,14 @@ export function FailedRenewalBanner() {
   };
 
   return (
-    <div
-      role="status"
-      data-testid="failed-renewal-banner"
-      className="flex flex-wrap items-center gap-3 border-b border-amber-500/40 bg-amber-500/10 px-4 py-2 text-sm"
+    <BillingBanner
+      testId="failed-renewal-banner"
+      message={t("common.failedRenewal", {
+        card,
+        plan,
+        date: formatDate(pastDue.nextPaymentAttempt),
+      })}
     >
-      <AlertTriangle
-        aria-hidden
-        className="h-4 w-4 shrink-0 text-amber-700 dark:text-amber-400"
-      />
-      <p className="flex-1">
-        {t("common.failedRenewal", {
-          card,
-          plan,
-          date: formatDate(pastDue.nextPaymentAttempt),
-        })}
-      </p>
       <Button
         size="sm"
         disabled={loading}
@@ -104,6 +97,6 @@ export function FailedRenewalBanner() {
       >
         <X aria-hidden className="h-4 w-4" />
       </Button>
-    </div>
+    </BillingBanner>
   );
 }

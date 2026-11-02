@@ -9,6 +9,7 @@ import { useIsLedgerOwner } from "@/common/hooks/use-is-ledger-owner.ts";
 import { useHidesBilling } from "@/common/hooks/use-hides-billing";
 import { cn } from "@/common/lib/utils/utils.ts";
 import { UpgradePromptLink } from "@/common/components/upgrade-prompt-link";
+import { useQuotaNumberFormat } from "@/features/user-settings/pages/general/use-quota-number-format";
 import { getNextTier } from "@/common/lib/subscription/tier-config";
 
 /**
@@ -33,6 +34,7 @@ export const DirectiveUsageIndicator = memo(
     const hidesBilling = useHidesBilling();
     const { limits, tier } = useUserLimits();
     const isOwner = useIsLedgerOwner();
+    const formatCount = useQuotaNumberFormat();
 
     const { data, loading } = useQuery(GetLedgerEntriesCountPerTypeDocument, {
       variables: { ledgerId },
@@ -67,7 +69,7 @@ export const DirectiveUsageIndicator = memo(
               {t("common.directives")}
             </span>
             <span className="text-xs text-muted-foreground tabular-nums">
-              {used.toLocaleString()} / {max.toLocaleString()}
+              {formatCount(used)} / {formatCount(max)}
             </span>
           </div>
           <div className="h-1 w-full rounded-full bg-sidebar-border">
@@ -76,32 +78,31 @@ export const DirectiveUsageIndicator = memo(
               style={{ width: `${percentage}%` }}
             />
           </div>
-          {showUpgradeCta && !hidesBilling && !isOwner && (
-            <span className="pt-0.5 text-xs text-muted-foreground">
-              {t("common.ownerDirectiveLimit", {
-                max: max.toLocaleString(),
-              })}
-            </span>
-          )}
-          {showUpgradeCta && !hidesBilling && isOwner && (
-            <div className="flex flex-col gap-1.5 pt-0.5">
-              <span className="text-xs text-muted-foreground">
-                {t(
-                  isAtLimit
-                    ? "common.directivesLimitReached"
-                    : "common.directivesLimitApproaching",
-                )}
+          {showUpgradeCta &&
+            !hidesBilling &&
+            (isOwner ? (
+              <div className="flex flex-col gap-1.5 pt-0.5">
+                <span className="text-xs text-muted-foreground">
+                  {t(
+                    isAtLimit
+                      ? "common.directivesLimitReached"
+                      : "common.directivesLimitApproaching",
+                  )}
+                </span>
+                <Button variant="default" size="sm" asChild className="w-full">
+                  <UpgradePromptLink
+                    surface="directive_usage"
+                    plan={getNextTier(tier)}
+                  >
+                    {t("common.upgradeToPro")}
+                  </UpgradePromptLink>
+                </Button>
+              </div>
+            ) : (
+              <span className="pt-0.5 text-xs text-muted-foreground">
+                {t("common.ownerDirectiveLimit", { max: formatCount(max) })}
               </span>
-              <Button variant="default" size="sm" asChild className="w-full">
-                <UpgradePromptLink
-                  surface="directive_usage"
-                  plan={getNextTier(tier)}
-                >
-                  {t("common.upgradeToPro")}
-                </UpgradePromptLink>
-              </Button>
-            </div>
-          )}
+            ))}
         </div>
       </div>
     );

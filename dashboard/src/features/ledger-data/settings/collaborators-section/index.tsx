@@ -34,6 +34,7 @@ import { toast } from "sonner";
 import { useTranslations } from "@/common/hooks/use-translations";
 import {
   getErrorMessageKey,
+  isOwnerLimitError,
   useErrorMessage,
 } from "@/common/lib/errors/error-message";
 import { useUserLimits } from "@/common/hooks/use-user-limits";
@@ -97,13 +98,12 @@ export function CollaboratorsSection({ ledgerId }: { ledgerId: string }) {
     } catch (error) {
       // The owner's plan sets the limit: telling anyone else to upgrade
       // would not help (w1/181).
-      const ownersLimit =
-        getErrorMessageKey(error) === "common.errors.ownerLimitReached";
-      const description = !ownersLimit
-        ? formatError(error)
-        : isOwner
+      let description = formatError(error);
+      if (isOwnerLimitError(error)) {
+        description = isOwner
           ? t("common.errors.resourceLimitReached")
           : t("collaboration.ownerPlanLimitReached");
+      }
       toast.error(t("collaboration.failedToAddCollaborator"), { description });
     }
   };

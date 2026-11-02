@@ -259,7 +259,7 @@ function statusService() {
     model,
     db,
     stripe,
-    read: () => service.subscriptionStatus(identity, true),
+    read: () => service.subscriptionStatus(identity, "active"),
   };
 }
 

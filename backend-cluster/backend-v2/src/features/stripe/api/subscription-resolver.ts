@@ -15,6 +15,7 @@ import { type GraphQLResolveInfo, Kind } from "graphql";
 import type {
   CheckoutReturnTo,
   ISubscriptionService,
+  SubscriptionStatusView,
 } from "@/features/stripe/service/subscription-service";
 import type {
   PlanChangeEffect,
@@ -558,16 +559,19 @@ class TierQuotaItem {
   maxDirectives!: number;
 }
 
-function isOnlyHasActiveSubscriptionRequested(
-  info: GraphQLResolveInfo,
-): boolean {
+/**
+ * The least the document needs. A fragment could select anything, so one
+ * makes the view full.
+ */
+function requestedView(info: GraphQLResolveInfo): SubscriptionStatusView {
   const selections = info.fieldNodes[0]?.selectionSet?.selections ?? [];
-  if (selections.length !== 1) return false;
-  const selection = selections[0];
-  return (
-    selection.kind === Kind.FIELD &&
-    selection.name.value === "hasActiveSubscription"
+  const fields = selections.map((selection) =>
+    selection.kind === Kind.FIELD ? selection.name.value : null,
   );
+  if (fields.includes(null) || fields.includes("subscriptions")) return "full";
+  return fields.every((field) => field === "hasActiveSubscription")
+    ? "active"
+    : "billing";
 }
 
 /** GraphQL is an adapter; all billing policy and work live in the service. */
@@ -594,7 +598,7 @@ export class SubscriptionResolver {
   ): Promise<CustomerSubscriptionStatus> {
     return this.subscriptions.subscriptionStatus(
       context.getCurrentIdentity(),
-      isOnlyHasActiveSubscriptionRequested(info),
+      requestedView(info),
     );
   }
 

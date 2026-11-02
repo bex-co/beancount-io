@@ -39,7 +39,7 @@ export const TIERS: TierInfo[] = [
   },
 ];
 
-/** Where an Enterprise customer talks to a person about their plan. */
+/** Where the Enterprise card sends people: the plan is arranged with us. */
 export const ENTERPRISE_CONTACT_URL = "https://beancount.io/tg";
 
 export function getTierInfo(tier: UserTier): TierInfo | null {
