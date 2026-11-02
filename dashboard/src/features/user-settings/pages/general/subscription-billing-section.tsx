@@ -3,6 +3,8 @@ import { Button } from "@/common/components/ui/button";
 import { Badge } from "@/common/components/ui/badge";
 import type { GetSubscriptionStatusQuery } from "@/graphql/definitions";
 import type { CancelTarget } from "@/features/user-settings/hooks/use-subscription-cancel";
+import { tierInfoByKey } from "@/common/lib/subscription/tier-config";
+import { planForPrice } from "./stripe-config";
 import { isPendingCancellation } from "./subscription-state";
 import { useBillingDateFormat, useMoneyFormat } from "./use-money-format";
 
@@ -41,9 +43,14 @@ export function BillingSection({
         {t("userSettings.billing")}
       </h3>
       {subscriptions.map((subscription) => {
-        const product =
-          subscription.items[0]?.product?.name || t("userSettings.unknownPlan");
         const price = subscription.items[0]?.price;
+        // The plan in the reader's language, as the plan card names it; a
+        // price this app does not sell keeps Stripe's product name.
+        const plan = price ? planForPrice(price.id) : null;
+        const product = plan
+          ? t(tierInfoByKey(plan.tier).labelKey)
+          : subscription.items[0]?.product?.name ||
+            t("userSettings.unknownPlan");
         const amount = `${formatMoney(price?.amount ?? 0, price?.currency)}${t(
           price?.interval === "year"
             ? "userSettings.perYear"

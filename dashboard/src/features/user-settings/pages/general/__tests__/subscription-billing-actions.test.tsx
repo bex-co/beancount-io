@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { SubscriptionSection } from "../subscription-section";
-import { stripePlanConfig } from "../stripe-config";
+import { cyclePrice, stripePlanConfig } from "../stripe-config";
 import {
   MOCK_TIER_QUOTAS,
   mockActiveSubscriptionData,
@@ -810,5 +810,41 @@ describe("a deferred Stripe plan in Billing (ADR 001 D15)", () => {
 
     expect(screen.getByText("userSettings.startsOn")).toBeInTheDocument();
     expect(screen.queryByText("userSettings.renewsOn")).not.toBeInTheDocument();
+  });
+});
+
+describe("the Billing tab's plan name (w7/007)", () => {
+  it("names a plan this app sells in the reader's language, not Stripe's", () => {
+    const stripe = mockActiveSubscriptionData.subscriptionStatus;
+    const [subscription] = stripe.subscriptions;
+    const [item] = subscription.items;
+    setUserLimits("GROWTH");
+    mockUseQuery.mockReturnValue({
+      data: {
+        subscriptionStatus: {
+          ...stripe,
+          subscriptions: [
+            {
+              ...subscription,
+              items: [
+                {
+                  ...item,
+                  price: {
+                    ...item.price,
+                    id: cyclePrice("growth", "monthly").priceId,
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      },
+      loading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+    render(<SubscriptionSection />);
+
+    expect(screen.queryByText("Pro Plan")).not.toBeInTheDocument();
   });
 });
