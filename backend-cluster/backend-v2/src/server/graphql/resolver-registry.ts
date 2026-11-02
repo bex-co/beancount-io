@@ -16,6 +16,7 @@ import { LedgerDataQueryResolver } from "@/features/ledger/api/resolvers/ledger-
 import { LedgerDataMutationResolver } from "@/features/ledger/api/resolvers/ledger-data-resolver.mutation";
 import { HealthResolver } from "@/features/healthz/api/health-resolver";
 import { SubscriptionResolver } from "@/features/stripe/api/subscription-resolver";
+import { StoreBillingResolver } from "@/features/store-billing/api/store-billing-resolver";
 import { LedgerPublicKeyQueryResolver } from "@/features/ledger/api/resolvers/ledger-public-key-resolver.query";
 import { LedgerPublicKeyMutationResolver } from "@/features/ledger/api/resolvers/ledger-public-key-resolver.mutation";
 import { LedgerCollaboratorsQueryResolver } from "@/features/ledger/api/resolvers/ledger-collaborators-resolver.query";
@@ -77,6 +78,7 @@ export const resolvers: Resolvers = [
   AuthResolver,
   CliAuthResolver,
   SubscriptionResolver,
+  StoreBillingResolver,
   LedgerPublicKeyQueryResolver,
   LedgerPublicKeyMutationResolver,
   LedgerCollaboratorsQueryResolver,
@@ -137,6 +139,7 @@ export function buildResolverContainer(
     [LedgerQueryResolver, new LedgerQueryResolver(workflows.ledger)],
     [AssetStorageResolver, new AssetStorageResolver(services.assetStorage)],
     [SubscriptionResolver, new SubscriptionResolver(services.subscriptions)],
+    [StoreBillingResolver, new StoreBillingResolver(services.storeBilling)],
     [LLMParserResolver, new LLMParserResolver(services.llm)],
     [
       LLMCategorizationQueryResolver,

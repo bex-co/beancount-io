@@ -845,6 +845,85 @@ describe("AuthorizationService", () => {
     },
   );
 
+  describe("the Beancount app's billing (ADR 001 D13)", () => {
+    const APP_ACTIONS: readonly AuthorizationAction[] = [
+      AUTHORIZATION_ACTIONS.USER_BILLING_STATUS_READ,
+      AUTHORIZATION_ACTIONS.USER_BILLING_STORE_IDENTITY_READ,
+    ];
+    const oauthFrom = (oauthClientId: string, userId = "usr_alice") => ({
+      ...identity("oauth", userId),
+      oauthClientId,
+    });
+
+    it.each(APP_ACTIONS)(
+      "does not make %s a parity obligation for REST and MCP",
+      (action) => {
+        expect(authorizationActionAcceptsDelegatedCredential(action)).toBe(
+          false,
+        );
+      },
+    );
+
+    it.each(APP_ACTIONS)("lets the app perform %s", async (action) => {
+      await expect(
+        selfService().authorize({
+          principal: oauthFrom("beancount-mobile"),
+          action,
+          resource: userResource("usr_alice"),
+        }),
+      ).resolves.toMatchObject({ allowed: true, action });
+    });
+
+    it.each(APP_ACTIONS)(
+      "keeps %s from every other OAuth client",
+      async (action) => {
+        const relationships: IRelationshipEvaluator = {
+          check: jest.fn(async () => true),
+        };
+        await expect(
+          new AuthorizationService(relationships).authorizeOrThrow({
+            principal: oauthFrom("discourse-forum"),
+            action,
+            resource: userResource("usr_alice"),
+          }),
+        ).rejects.toMatchObject({
+          category: ErrorCategory.FORBIDDEN,
+          message: "Managing billing requires a full signed-in session",
+        });
+        expect(relationships.check).not.toHaveBeenCalled();
+      },
+    );
+
+    it.each(APP_ACTIONS)(
+      "keeps %s to the app user's own account",
+      async (action) => {
+        await expect(
+          selfService().authorize({
+            principal: oauthFrom("beancount-mobile"),
+            action,
+            resource: userResource("usr_bob"),
+          }),
+        ).resolves.toMatchObject({
+          allowed: false,
+          reason: "relationship_denied",
+        });
+      },
+    );
+
+    it.each(BILLING_ACTIONS.filter((each) => !APP_ACTIONS.includes(each)))(
+      "keeps Stripe's %s session-only, even for the app",
+      async (action) => {
+        await expect(
+          selfService().authorizeOrThrow({
+            principal: oauthFrom("beancount-mobile"),
+            action,
+            resource: userResource("usr_alice"),
+          }),
+        ).rejects.toMatchObject({ category: ErrorCategory.FORBIDDEN });
+      },
+    );
+  });
+
   it.each(BILLING_ACTIONS)(
     "denies cross-user billing relationship for %s",
     async (action) => {

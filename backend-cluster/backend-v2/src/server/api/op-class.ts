@@ -153,6 +153,8 @@ const R = {
     "User SSH public-key management is account control-plane behavior outside the ledger-resource contract published by v1. The existing GraphQL client remains the sole supported surface.",
   billing:
     "Billing verbs return Stripe-hosted URLs a human must visit in a browser; a curl client cannot complete checkout or the customer portal, so the endpoint would hand back a link to nowhere.",
+  storeEvidence:
+    "Store purchase evidence exists only inside the native app, whose API client is GraphQL, so a REST twin would have no caller.",
   publicPricingCatalog:
     "The public pricing catalog currently has only a GraphQL consumer. A REST representation is useful when a non-GraphQL pricing client asks for it, not before its contract is known.",
   coveredByV1List:
@@ -646,6 +648,15 @@ const BILLING_VERBS: readonly VerbEntry[] = [
       M.billing,
     ),
     authorizationAction: AUTHORIZATION_ACTIONS.USER_BILLING_PLAN_CHANGE_CANCEL,
+  },
+  {
+    ...gqlOnly(
+      "Query.storeBillingIdentity",
+      "read",
+      R.storeEvidence,
+      M.billing,
+    ),
+    authorizationAction: AUTHORIZATION_ACTIONS.USER_BILLING_STORE_IDENTITY_READ,
   },
 ];
 

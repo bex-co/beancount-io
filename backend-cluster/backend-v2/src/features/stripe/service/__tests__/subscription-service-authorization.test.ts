@@ -182,8 +182,11 @@ describe("SubscriptionService authorization boundary", () => {
   );
 
   it("covers every billing action in the registry", () => {
-    const registered = Object.values(AUTHORIZATION_ACTIONS).filter((action) =>
-      action.startsWith("user.billing."),
+    // Store identifiers belong to `StoreBillingService`, tested beside it.
+    const registered = Object.values(AUTHORIZATION_ACTIONS).filter(
+      (action) =>
+        action.startsWith("user.billing.") &&
+        action !== AUTHORIZATION_ACTIONS.USER_BILLING_STORE_IDENTITY_READ,
     );
     expect(registered.length).toBeGreaterThanOrEqual(9);
     expect(BILLING_CASES.map(({ action }) => action).sort()).toEqual(

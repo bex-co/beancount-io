@@ -1,12 +1,12 @@
 # w7 · m3 — App Store purchases verify and stay current on the backend
 
-**Worker:** worker1 **Goal:** the backend accepts a StoreKit 2 purchase from the iOS app, keeps it current from Apple's notifications, and grants or removes the plan accordingly **Status:** todo
+**Worker:** worker1 **Goal:** the backend accepts a StoreKit 2 purchase from the iOS app, keeps it current from Apple's notifications, and grants or removes the plan accordingly **Status:** in progress (t001 done)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| t001 | storeBillingIdentity and the account tokens | 1h | w7/m1/t010 |
+| t001 | storeBillingIdentity and the account tokens — **DONE** | 1h | w7/m1/t010 |
 | t002 | confirmStorePurchase for the App Store | 2h | t001, w7/m2/t002 |
 | t003 | App Store Server Notifications V2 endpoint | 1h30m | t002 |
 | t004 | Account deletion with an App Store subscription | 45m | t002 |

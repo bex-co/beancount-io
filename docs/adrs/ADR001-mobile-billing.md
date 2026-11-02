@@ -242,6 +242,7 @@ A sandbox row and a production row never satisfy each other's uniqueness or clai
   - new authorization actions, and a matching update to the OpenFGA model in `backend-cluster/backend-v2/authz/`;
   - a new recorded REST reason: store purchase evidence exists only inside the native app, whose API client is GraphQL;
   - the existing MCP billing exemption.
+- **Credentials.** The apps call GraphQL with an OAuth token from the first-party `beancount-mobile` client, not a browser session, and every billing action was session-only. `Query.subscriptionStatus` and the two new verbs therefore accept that client's tokens as well as sessions. No other OAuth client and no API key reaches them, and every Stripe verb stays session-only. Because no third party can hold that credential, these verbs add no REST or MCP parity obligation.
 - **Store notifications** are provider-to-server REST callbacks, outside the customer-facing parity table.
 - **The Stripe verbs** in D5 gain the `BILLED_BY_STORE` refusal.
 - **Leftovers.** When the store verbs land, the allowlisted mobile `SubscriptionStatus` document is rewritten for the extended fields. `CreateSubscriptionSession` and `CancelSubscription` are Stripe Checkout and cancellation, which the app never uses, so they are deleted.

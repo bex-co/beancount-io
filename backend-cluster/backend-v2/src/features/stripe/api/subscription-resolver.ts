@@ -566,7 +566,7 @@ export class SubscriptionResolver {
   @Authenticated()
   @Query(() => CustomerSubscriptionStatus, {
     description:
-      "Returns your subscription status. Requires a full signed-in session.",
+      "Returns your subscription status. Requires a full signed-in session or the Beancount app.",
   })
   async subscriptionStatus(
     @Ctx() context: IContext,

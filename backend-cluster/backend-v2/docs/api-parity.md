@@ -26,7 +26,8 @@ old exemption prose or the operation's rate-limit class. In particular:
   reach this action once the account-scoped adapter exists. No credential-policy
   expansion is required to close this row.
 - User profile updates/search, follow/unfollow, billing, and authentication
-  ceremonies retain their existing credential exclusions.
+  ceremonies retain their existing credential exclusions, apart from the app's
+  billing reads under [Plan limits and store billing](#plan-limits-and-store-billing-adr-001).
 - API-key minting requires admin capability, a paid plan, and scope and
   ledger-pin narrowing. An API key cannot mint a successor. API-key management
   is not on MCP at all (exception 9).
@@ -223,6 +224,16 @@ Store billing adds no parity row. `subscriptionStatus.billing`, which says who
 bills the plan, and the `BILLED_BY_STORE` refusal (409) on the Stripe plan
 actions stay on the GraphQL billing ceremony under exception 7. The refusal is
 the service's, so a future adapter inherits it.
+
+The native app holds an OAuth token rather than a browser session, so
+`user.billing.status.read` and `user.billing.store_identity.read` accept tokens
+from the first-party `beancount-mobile` client as well as sessions (2026-11-01).
+No other OAuth client and no API key reaches them, and every Stripe action stays
+session-only. A credential only the app holds delegates nothing to a third
+party, so `authorizationActionAcceptsDelegatedCredential` is false for both and
+their eligibility in the frozen baseline does not change.
+`Query.storeBillingIdentity` is GraphQL-only because store purchase evidence
+exists only inside the app.
 
 ## Contract evidence required per operation
 

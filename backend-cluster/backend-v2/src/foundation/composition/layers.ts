@@ -9,6 +9,7 @@ import { type IFavaClientFactory } from "@/foundation/clients/fava-client-factor
 import { type IGiteaClientFactory } from "@/foundation/clients/gitea-client-factory";
 import { type IStripeService } from "@/features/stripe/service/stripe-service";
 import { type ISubscriptionService } from "@/features/stripe/service/subscription-service";
+import { type IStoreBillingService } from "@/features/store-billing/service/store-billing-service";
 import { type IApiKeyService } from "@/features/apikeys/service/api-key-service";
 import { type ITokenIntrospectionService } from "@/features/apikeys/service/token-introspection-service";
 import { type IAssetStorageService } from "@/features/s3/service/asset-storage-service";
@@ -81,6 +82,7 @@ export interface ServiceLayer {
   authorization: IAuthorizationService;
   stripe: IStripeService;
   subscriptions: ISubscriptionService;
+  storeBilling: IStoreBillingService;
   apiKey: IApiKeyService;
   tokenIntrospection: ITokenIntrospectionService;
   assetStorage: IAssetStorageService;

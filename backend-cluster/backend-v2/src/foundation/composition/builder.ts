@@ -10,6 +10,7 @@ import { PlaidSyncService } from "@/features/plaid/service/plaid-sync-service";
 import { AssetStorageService } from "@/features/s3/service/asset-storage-service";
 import { StripeService } from "@/features/stripe/service/stripe-service";
 import { SubscriptionService } from "@/features/stripe/service/subscription-service";
+import { StoreBillingService } from "@/features/store-billing/service/store-billing-service";
 import { ApiKeyService } from "@/features/apikeys/service/api-key-service";
 import { TokenIntrospectionService } from "@/features/apikeys/service/token-introspection-service";
 import { getUserTier } from "@/features/stripe/operations/get-user-tier";
@@ -79,6 +80,11 @@ export function buildServiceLayer(input: {
       sentBillingEmail: input.database.models.sentBillingEmail,
     },
   );
+  const storeBilling = new StoreBillingService(
+    input.database.models,
+    input.database.db,
+    authorization,
+  );
   // Credential pins identify a ledger by repository ID (w23/065).
   const pins = createLedgerPinResolver(input.clients.favaClientFactory);
   configureLedgerPinResolver(pins);
@@ -146,6 +152,7 @@ export function buildServiceLayer(input: {
     authorization,
     stripe,
     subscriptions,
+    storeBilling,
     apiKey,
     tokenIntrospection,
     assetStorage,

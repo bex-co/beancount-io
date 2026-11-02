@@ -184,7 +184,7 @@ beside `AuthorizationService`:
 | `user.credentials.list`                | GraphQL/REST/MCP API-key list                  | session, or OAuth/API key with `ledger.admin`        | exact-self `user#can_read_credentials`           |
 | `user.credentials.create`              | GraphQL/REST/MCP API-key create                | session, or OAuth with `ledger.admin`; never API key | exact-self `user#can_write_credentials`          |
 | `user.credentials.revoke`              | GraphQL/REST/MCP API-key revoke                | session, or OAuth/API key with `ledger.admin`        | key owner has `user#can_write_credentials`       |
-| `user.billing.status.read`             | `GQL Query.subscriptionStatus`                 | browser session only                                 | exact-self `user#can_read_billing`               |
+| `user.billing.status.read`             | `GQL Query.subscriptionStatus`                 | session, or the Beancount app's OAuth client         | exact-self `user#can_read_billing`               |
 | `user.billing.checkout.create`         | `GQL Mutation.createSubscriptionSession`       | browser session only                                 | exact-self `user#can_write_billing`              |
 | `user.billing.portal.create`           | `GQL Mutation.createStripePortalSession`       | browser session only                                 | exact-self `user#can_write_billing`              |
 | `user.billing.subscription.cancel`     | `GQL Mutation.cancelSubscription`              | browser session only                                 | exact-self `user#can_write_billing`              |
@@ -193,8 +193,9 @@ beside `AuthorizationService`:
 | `user.billing.plan_change.preview`     | `GQL Query.previewPlanChange`                  | browser session only                                 | exact-self `user#can_read_billing`               |
 | `user.billing.plan_change.apply`       | `GQL Mutation.changePlan`                      | browser session only                                 | exact-self `user#can_write_billing`              |
 | `user.billing.plan_change.cancel`      | `GQL Mutation.cancelScheduledPlanChange`       | browser session only                                 | exact-self `user#can_write_billing`              |
+| `user.billing.store_identity.read`     | `GQL Query.storeBillingIdentity`               | session, or the Beancount app's OAuth client         | exact-self `user#can_read_billing`               |
 | `user.ai_usage.read`                   | `GQL Query.aiCfoUsage`                         | session, or OAuth/API key with `ledger.read`         | exact-self `user#owner`                          |
-| `user.social.feed.read`                | `GQL Query.getFeed`                            | browser session only                                 | exact-self `user#can_read_social`                |
+| `user.social.feed.read`                | `GQL Query.getFeed`                            | session, or account-wide OAuth with `ledger.read`    | exact-self `user#can_read_social`                |
 | `user.social.follow.create`            | `GQL Mutation.followUser`                      | browser session only                                 | exact-self `user#can_write_social`               |
 | `user.social.follow.delete`            | `GQL Mutation.unfollowUser`                    | browser session only                                 | exact-self `user#can_write_social`               |
 | `ledger.social.star.status.read`       | authenticated `Ledger.isStarred`               | session, or OAuth/API key with `ledger.read`         | current `ledger#can_read_contents`               |
@@ -330,7 +331,8 @@ service unavailable.
 
 The `read`/`write` class on protected billing aliases is operational metadata
 for rate limits and legacy audit defaults, not credential reachability. The PDP
-catalog keeps protected billing operations browser-session-only. The static
+catalog keeps protected billing operations browser-session-only, apart from the
+two reads the Beancount app needs (ADR 001 D13). The static
 tier-quota catalog is explicitly `public` and bypasses the PDP, but an operation
 override keeps its pre-cutover 300-per-minute budget. The protected aliases
 retain the same budget through the read-class default for subscription status
@@ -518,8 +520,11 @@ alias passes the resolved `Identity` to `SubscriptionService`. The protected
 service method derives `user:<subject>` from that identity and makes exactly
 one PDP call before consulting cached status, account rows, subscription
 configuration, or Stripe. OAuth and API-key credentials are denied with the
-actionable full-session requirement; existing dashboard and mobile session
-flows require no new client step.
+actionable full-session requirement. The exception is the first-party
+`beancount-mobile` client, whose tokens may read subscription status and the
+account's store identifiers, because the app has no browser session and a store
+purchase can only start there. No other OAuth client gets this, and every Stripe
+action stays session-only.
 
 Stripe remains authoritative for payment-domain state. Customer binding,
 configured products and prices, active/canceling status, and subscription

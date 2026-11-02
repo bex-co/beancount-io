@@ -17,6 +17,7 @@ import {
   ErrorCategory,
   UnauthenticatedError,
 } from "@/shared/errors";
+import { isMobileOAuthClient } from "@/features/oauth/data/config";
 import { logger } from "@/shared/logger";
 import { getOperationId } from "@/shared/async-context";
 import {
@@ -55,6 +56,8 @@ type CredentialRequirement = {
   readonly denyMessageByMethod?: Partial<Record<AuthMethod, string>>;
   readonly enforceLedgerScope?: boolean;
   readonly requireAccountWideCredential?: boolean;
+  /** An OAuth credential must belong to the Beancount app. */
+  readonly oauthFromAppOnly?: boolean;
 };
 
 type AuditClass = "read" | "write" | "admin";
@@ -117,6 +120,17 @@ const BILLING_CREDENTIAL: CredentialRequirement = {
     oauth: "Managing billing requires a full signed-in session",
     apikey: "Managing billing requires a full signed-in session",
   },
+};
+
+/**
+ * The billing the apps do themselves (ADR 001 D13). They hold an OAuth token
+ * rather than a browser session, and a store purchase can only start in them.
+ * No other OAuth client gets this, and Stripe's actions stay session-only.
+ */
+const APP_BILLING_CREDENTIAL: CredentialRequirement = {
+  ...BILLING_CREDENTIAL,
+  methods: INTERACTIVE_OR_OAUTH,
+  oauthFromAppOnly: true,
 };
 
 const LEDGER_SOCIAL_READ_CREDENTIAL: CredentialRequirement = {
@@ -296,7 +310,12 @@ const ACTION_REQUIREMENTS: Readonly<
   },
   [AUTHORIZATION_ACTIONS.USER_BILLING_STATUS_READ]: {
     relationships: userRelationship(USER_RELATIONSHIPS.READ_BILLING),
-    credential: BILLING_CREDENTIAL,
+    credential: APP_BILLING_CREDENTIAL,
+    auditClass: "read",
+  },
+  [AUTHORIZATION_ACTIONS.USER_BILLING_STORE_IDENTITY_READ]: {
+    relationships: userRelationship(USER_RELATIONSHIPS.READ_BILLING),
+    credential: APP_BILLING_CREDENTIAL,
     auditClass: "read",
   },
   [AUTHORIZATION_ACTIONS.USER_BILLING_CHECKOUT_CREATE]: {
@@ -787,13 +806,17 @@ const ACTION_REQUIREMENTS: Readonly<
   },
 };
 
-/** Used by surface-parity accounting without duplicating credential policy. */
+/**
+ * Used by surface-parity accounting without duplicating credential policy. A
+ * credential only the Beancount app holds delegates nothing to anyone else, so
+ * it brings no REST or MCP client with it.
+ */
 export const authorizationActionAcceptsDelegatedCredential = (
   action: AuthorizationAction,
-): boolean =>
-  ACTION_REQUIREMENTS[action].credential.methods.some(
-    (method) => method !== "session",
-  );
+): boolean => {
+  const { methods, oauthFromAppOnly } = ACTION_REQUIREMENTS[action].credential;
+  return !oauthFromAppOnly && methods.some((method) => method !== "session");
+};
 
 const isAuthorizationAction = (action: string): action is AuthorizationAction =>
   Object.prototype.hasOwnProperty.call(ACTION_REQUIREMENTS, action);
@@ -826,6 +849,16 @@ const credentialDenial = (
       return "This operation is reachable only from a browser session";
     }
     return "This credential type cannot perform this operation";
+  }
+  if (
+    requirement.oauthFromAppOnly &&
+    identity.method === "oauth" &&
+    !isMobileOAuthClient(identity.oauthClientId)
+  ) {
+    return (
+      requirement.denyMessageByMethod?.oauth ??
+      "This OAuth client cannot perform this operation"
+    );
   }
   if (
     requirement.capability !== undefined &&
