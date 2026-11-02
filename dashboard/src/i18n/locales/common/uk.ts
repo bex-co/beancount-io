@@ -860,6 +860,18 @@ const ukCommon: Record<string, TranslationEntry> = {
       "Перевірка даних не пройдена. Перевірте введені дані та спробуйте ще раз.",
     description: "Error shown when input validation fails (VALIDATION_FAILED)",
   },
+  "common.errors.billedByAppStore": {
+    message:
+      "Цей план оплачується через App Store. Керуйте ним на iPhone або iPad: Параметри → ваше ім’я → Підписки.",
+    description:
+      "A Stripe action refused because the App Store bills this plan (BILLED_BY_STORE)",
+  },
+  "common.errors.billedByGooglePlay": {
+    message:
+      "Цей план оплачується через Google Play. Керуйте ним на сторінці підписок Google Play.",
+    description:
+      "A Stripe action refused because Google Play bills this plan (BILLED_BY_STORE)",
+  },
   "common.errors.conflict": {
     message:
       "Ця зміна конфліктує з поточним станом. Оновіть сторінку та спробуйте ще раз.",

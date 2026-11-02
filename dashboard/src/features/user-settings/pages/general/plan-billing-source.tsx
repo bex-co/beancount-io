@@ -3,7 +3,10 @@ import {
   ENTERPRISE_CONTACT_URL,
   planLabelKey,
 } from "@/common/lib/subscription/tier-config";
-import type { PlanBillingStatus } from "@/features/user-settings/hooks/use-subscription-status";
+import {
+  isBilledByStore,
+  type PlanBillingStatus,
+} from "@/features/user-settings/hooks/use-subscription-status";
 import { BillingSource } from "@/graphql/definitions";
 import { useBillingDateFormat } from "./use-money-format";
 
@@ -76,10 +79,6 @@ export function PlanBillingSource({
   billing: PlanBillingStatus | null;
   t: Translate;
 }) {
-  const isStore =
-    billing?.source === BillingSource.AppStore ||
-    billing?.source === BillingSource.GooglePlay;
-
   let content;
   if (tier === "ENTERPRISE") {
     content = (
@@ -92,7 +91,7 @@ export function PlanBillingSource({
         {t("userSettings.contactUs")}
       </a>
     );
-  } else if (isStore && billing.store) {
+  } else if (isBilledByStore(billing) && billing?.store) {
     content = <StorePlanSource store={billing.store} t={t} />;
   } else if (billing?.source === BillingSource.Stripe) {
     content = <p>{t("userSettings.billedByStripe")}</p>;

@@ -853,6 +853,18 @@ const nlCommon: Record<string, TranslationEntry> = {
     message: "Validatie mislukt. Controleer je invoer en probeer het opnieuw.",
     description: "Error shown when input validation fails (VALIDATION_FAILED)",
   },
+  "common.errors.billedByAppStore": {
+    message:
+      "Dit abonnement wordt gefactureerd via de App Store. Beheer het op je iPhone of iPad: Instellingen → je naam → Abonnementen.",
+    description:
+      "A Stripe action refused because the App Store bills this plan (BILLED_BY_STORE)",
+  },
+  "common.errors.billedByGooglePlay": {
+    message:
+      "Dit abonnement wordt gefactureerd via Google Play. Beheer het op de abonnementenpagina van Google Play.",
+    description:
+      "A Stripe action refused because Google Play bills this plan (BILLED_BY_STORE)",
+  },
   "common.errors.conflict": {
     message:
       "Deze wijziging conflicteert met de huidige status. Vernieuw de pagina en probeer het opnieuw.",

@@ -168,3 +168,26 @@ export const mockCanceledSubscriptionData: GetSubscriptionStatusQuery = {
     ],
   },
 };
+
+/** An account an App Store plan bills, with no Stripe subscription. */
+export const mockStoreBilledData: GetSubscriptionStatusQuery = {
+  subscriptionStatus: {
+    ...mockNoSubscriptionData.subscriptionStatus,
+    billing: {
+      __typename: "PlanBilling",
+      source: BillingSource.AppStore,
+      duplicateBilling: false,
+      store: {
+        __typename: "StoreSubscriptionSummary",
+        provider: BillingSource.AppStore,
+        tier: "GROWTH",
+        interval: "year",
+        status: "ACTIVE",
+        accessEndsAt: "2026-12-01T12:00:00.000Z",
+        willRenew: true,
+        managementUrl: null,
+        scheduledChange: null,
+      },
+    },
+  },
+};

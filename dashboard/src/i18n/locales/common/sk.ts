@@ -858,6 +858,18 @@ const skCommon: Record<string, TranslationEntry> = {
     message: "Overenie zlyhalo. Skontrolujte zadané údaje a skúste to znova.",
     description: "Error shown when input validation fails (VALIDATION_FAILED)",
   },
+  "common.errors.billedByAppStore": {
+    message:
+      "Tento plán sa fakturuje cez App Store. Spravujte ho v iPhone alebo iPade: Nastavenia → vaše meno → Predplatné.",
+    description:
+      "A Stripe action refused because the App Store bills this plan (BILLED_BY_STORE)",
+  },
+  "common.errors.billedByGooglePlay": {
+    message:
+      "Tento plán sa fakturuje cez Google Play. Spravujte ho na stránke predplatných v Google Play.",
+    description:
+      "A Stripe action refused because Google Play bills this plan (BILLED_BY_STORE)",
+  },
   "common.errors.conflict": {
     message:
       "Táto zmena je v konflikte s aktuálnym stavom. Obnovte stránku a skúste to znova.",

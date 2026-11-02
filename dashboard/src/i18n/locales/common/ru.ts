@@ -860,6 +860,18 @@ const ruCommon: Record<string, TranslationEntry> = {
       "Проверка данных не пройдена. Проверьте введённые данные и попробуйте снова.",
     description: "Error shown when input validation fails (VALIDATION_FAILED)",
   },
+  "common.errors.billedByAppStore": {
+    message:
+      "Этот тарифный план оплачивается через App Store. Управляйте им на iPhone или iPad: Настройки → ваше имя → Подписки.",
+    description:
+      "A Stripe action refused because the App Store bills this plan (BILLED_BY_STORE)",
+  },
+  "common.errors.billedByGooglePlay": {
+    message:
+      "Этот тарифный план оплачивается через Google Play. Управляйте им на странице подписок Google Play.",
+    description:
+      "A Stripe action refused because Google Play bills this plan (BILLED_BY_STORE)",
+  },
   "common.errors.conflict": {
     message:
       "Это изменение конфликтует с текущим состоянием. Обновите страницу и попробуйте снова.",

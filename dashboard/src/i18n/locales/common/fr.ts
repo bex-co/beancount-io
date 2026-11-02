@@ -858,6 +858,18 @@ const frCommon: Record<string, TranslationEntry> = {
       "La validation a échoué. Veuillez vérifier vos informations et réessayer.",
     description: "Error shown when input validation fails (VALIDATION_FAILED)",
   },
+  "common.errors.billedByAppStore": {
+    message:
+      "Ce forfait est facturé via l’App Store. Gérez-le sur votre iPhone ou iPad : Réglages → votre nom → Abonnements.",
+    description:
+      "A Stripe action refused because the App Store bills this plan (BILLED_BY_STORE)",
+  },
+  "common.errors.billedByGooglePlay": {
+    message:
+      "Ce forfait est facturé via Google Play. Gérez-le sur la page des abonnements de Google Play.",
+    description:
+      "A Stripe action refused because Google Play bills this plan (BILLED_BY_STORE)",
+  },
   "common.errors.conflict": {
     message:
       "Cette modification est en conflit avec l'état actuel. Veuillez actualiser la page et réessayer.",

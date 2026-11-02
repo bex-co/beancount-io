@@ -856,6 +856,18 @@ const esCommon: Record<string, TranslationEntry> = {
     message: "La validación falló. Revisa los datos e inténtalo de nuevo.",
     description: "Error shown when input validation fails (VALIDATION_FAILED)",
   },
+  "common.errors.billedByAppStore": {
+    message:
+      "Este plan se factura a través de App Store. Adminístralo en tu iPhone o iPad: Ajustes → tu nombre → Suscripciones.",
+    description:
+      "A Stripe action refused because the App Store bills this plan (BILLED_BY_STORE)",
+  },
+  "common.errors.billedByGooglePlay": {
+    message:
+      "Este plan se factura a través de Google Play. Adminístralo en la página de suscripciones de Google Play.",
+    description:
+      "A Stripe action refused because Google Play bills this plan (BILLED_BY_STORE)",
+  },
   "common.errors.conflict": {
     message:
       "Este cambio entra en conflicto con el estado actual. Actualiza la página e inténtalo de nuevo.",

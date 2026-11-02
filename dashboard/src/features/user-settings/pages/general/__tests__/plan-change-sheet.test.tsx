@@ -1,3 +1,4 @@
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -72,7 +73,10 @@ vi.mock("@/features/user-settings/lib/celebrate", () => ({
   celebrate: mockCelebrate,
 }));
 vi.mock("@/common/analytics", () => ({ track: mockTrack }));
-vi.mock("@/common/lib/errors/error-message", () => ({
+vi.mock("@/common/lib/errors/error-message", async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import("@/common/lib/errors/error-message")
+  >()),
   useErrorMessage: () => () => "error",
 }));
 vi.mock("@/common/hooks/use-translations", () => ({
@@ -242,6 +246,30 @@ describe("PlanChangeSheet", () => {
     ).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "common.tryAgain" }));
     expect(mockRunPreview).toHaveBeenCalledTimes(2);
+  });
+
+  it("says where the plan is managed when a store refuses the change, with no retry", () => {
+    mockPreview.state = {
+      data: undefined,
+      loading: false,
+      error: new CombinedGraphQLErrors({
+        errors: [
+          {
+            message: "raw internal server message",
+            extensions: { code: "BILLED_BY_STORE", provider: "APP_STORE" },
+          },
+        ],
+      }),
+    };
+    renderSheet();
+
+    expect(screen.getByText("error")).toBeInTheDocument();
+    expect(
+      screen.queryByText("userSettings.planChangePreviewFailed"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "common.tryAgain" }),
+    ).not.toBeInTheDocument();
   });
 
   it("ignores a stale preview for a different price", () => {

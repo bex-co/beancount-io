@@ -851,6 +851,18 @@ const faCommon: Record<string, TranslationEntry> = {
       "اعتبارسنجی ناموفق بود. لطفاً اطلاعات را بررسی کنید و دوباره تلاش کنید.",
     description: "Error shown when input validation fails (VALIDATION_FAILED)",
   },
+  "common.errors.billedByAppStore": {
+    message:
+      "این طرح از طریق App Store پرداخت می‌شود. آن را در iPhone یا iPad خود مدیریت کنید: تنظیمات ← نام شما ← اشتراک‌ها.",
+    description:
+      "A Stripe action refused because the App Store bills this plan (BILLED_BY_STORE)",
+  },
+  "common.errors.billedByGooglePlay": {
+    message:
+      "این طرح از طریق Google Play پرداخت می‌شود. آن را در صفحه اشتراک‌های Google Play مدیریت کنید.",
+    description:
+      "A Stripe action refused because Google Play bills this plan (BILLED_BY_STORE)",
+  },
   "common.errors.conflict": {
     message:
       "این تغییر با وضعیت فعلی در تضاد است. صفحه را تازه‌سازی کنید و دوباره تلاش کنید.",

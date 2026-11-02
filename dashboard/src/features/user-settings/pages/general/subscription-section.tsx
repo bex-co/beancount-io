@@ -15,7 +15,10 @@ import { useUserLimits } from "@/common/hooks/use-user-limits";
 import { useAiCfoUsage } from "@/common/hooks/use-ai-cfo-usage";
 import { useQueryRetry } from "@/common/hooks/use-query-retry";
 import { useCreateSubscriptionSession } from "@/features/user-settings/hooks/use-create-subscription-session";
-import { useSubscriptionStatus } from "@/features/user-settings/hooks/use-subscription-status";
+import {
+  isBilledByStore,
+  useSubscriptionStatus,
+} from "@/features/user-settings/hooks/use-subscription-status";
 import { useSubscriptionPortal } from "@/features/user-settings/hooks/use-subscription-portal";
 import { useSubscriptionCancel } from "@/features/user-settings/hooks/use-subscription-cancel";
 import { useSubscriptionResume } from "@/features/user-settings/hooks/use-subscription-resume";
@@ -150,6 +153,10 @@ export function SubscriptionSection({
     subscriptions,
     planBilling,
   } = useSubscriptionStatus();
+
+  // A store renews the plan, so Stripe can sell nothing over it (ADR 001 D5).
+  // An existing Stripe subscription keeps its cancel: that account pays twice.
+  const billedByStore = isBilledByStore(planBilling);
 
   const { handleManageBilling, loading: portalLoading } =
     useSubscriptionPortal();
@@ -364,7 +371,7 @@ export function SubscriptionSection({
               }
             />
 
-            {currentSubscription && (
+            {currentSubscription && !billedByStore && (
               <ScheduledPanel
                 subscription={currentSubscription}
                 currentName={planLabel}
@@ -393,21 +400,24 @@ export function SubscriptionSection({
               />
             )}
 
-            {currentInterval === "month" && currentTierKey && currentPrice && (
-              <PayYearlyOffer
-                tier={currentTierKey}
-                monthlyAmount={currentPrice.amount}
-                t={t}
-                busy={checkoutLoading}
-                onSwitch={() =>
-                  setSheetTarget({
-                    tier: currentTierKey,
-                    cycle: "yearly",
-                    surface: "pay_yearly_offer",
-                  })
-                }
-              />
-            )}
+            {!billedByStore &&
+              currentInterval === "month" &&
+              currentTierKey &&
+              currentPrice && (
+                <PayYearlyOffer
+                  tier={currentTierKey}
+                  monthlyAmount={currentPrice.amount}
+                  t={t}
+                  busy={checkoutLoading}
+                  onSwitch={() =>
+                    setSheetTarget({
+                      tier: currentTierKey,
+                      cycle: "yearly",
+                      surface: "pay_yearly_offer",
+                    })
+                  }
+                />
+              )}
 
             {limits && (
               <>
@@ -435,14 +445,16 @@ export function SubscriptionSection({
                 </span>
               </div>
             )}
-            <PlanPicker
-              tier={tier}
-              currentInterval={currentInterval}
-              quotaByUserTier={quotaByUserTier}
-              t={t}
-              busy={checkoutLoading}
-              onChoose={handleChoose}
-            />
+            {!billedByStore && (
+              <PlanPicker
+                tier={tier}
+                currentInterval={currentInterval}
+                quotaByUserTier={quotaByUserTier}
+                t={t}
+                busy={checkoutLoading}
+                onChoose={handleChoose}
+              />
+            )}
 
             {hasActiveStripeSubscription && subscriptions && (
               <>
@@ -466,7 +478,7 @@ export function SubscriptionSection({
 
       <PlanChangeSheet
         key={sheetTarget ? `${sheetTarget.tier}-${sheetTarget.cycle}` : "none"}
-        target={sheetTarget}
+        target={billedByStore ? null : sheetTarget}
         currentTier={tier}
         currentCycle={currentCycle}
         currentPlanLabel={planLabel}
@@ -492,7 +504,7 @@ export function SubscriptionSection({
       {cancelTarget && (
         <CancelSheet
           planName={t(planLabelKey(tier))}
-          tier={currentTierKey}
+          tier={billedByStore ? null : currentTierKey}
           cycle={currentCycle}
           endsAt={cancelTarget.endsAt}
           freeQuota={quotaByUserTier.FREE}

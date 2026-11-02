@@ -855,6 +855,18 @@ const deCommon: Record<string, TranslationEntry> = {
       "Die Validierung ist fehlgeschlagen. Bitte überprüfen Sie Ihre Eingaben und versuchen Sie es erneut.",
     description: "Error shown when input validation fails (VALIDATION_FAILED)",
   },
+  "common.errors.billedByAppStore": {
+    message:
+      "Dieser Plan wird über den App Store abgerechnet. Verwalten Sie ihn auf Ihrem iPhone oder iPad: Einstellungen → Ihr Name → Abonnements.",
+    description:
+      "A Stripe action refused because the App Store bills this plan (BILLED_BY_STORE)",
+  },
+  "common.errors.billedByGooglePlay": {
+    message:
+      "Dieser Plan wird über Google Play abgerechnet. Verwalten Sie ihn auf der Abo-Seite von Google Play.",
+    description:
+      "A Stripe action refused because Google Play bills this plan (BILLED_BY_STORE)",
+  },
   "common.errors.conflict": {
     message:
       "Diese Änderung steht im Konflikt mit dem aktuellen Stand. Bitte aktualisieren Sie die Seite und versuchen Sie es erneut.",

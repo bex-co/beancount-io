@@ -5,6 +5,7 @@ import {
   getErrorMessageKey,
   getNewLedgerErrorDetail,
   getUnbalancedResidual,
+  isBilledByStoreError,
   useErrorMessage,
 } from "../error-message";
 
@@ -36,6 +37,27 @@ describe("getErrorMessageKey", () => {
     ["UNBALANCED", "common.errors.unbalanced"],
   ])("maps GraphQL extensions.code %s to %s", (code, expectedKey) => {
     expect(getErrorMessageKey(graphQLError(code))).toBe(expectedKey);
+  });
+
+  it.each([
+    ["APP_STORE", "common.errors.billedByAppStore"],
+    ["GOOGLE_PLAY", "common.errors.billedByGooglePlay"],
+  ])("names the store a %s refusal points to", (provider, key) => {
+    const error = new CombinedGraphQLErrors({
+      errors: [
+        {
+          message: "raw internal server message",
+          extensions: { code: "BILLED_BY_STORE", provider },
+        },
+      ],
+    });
+
+    expect(getErrorMessageKey(error)).toBe(key);
+    expect(isBilledByStoreError(error)).toBe(true);
+  });
+
+  it("does not read another refusal as a store's", () => {
+    expect(isBilledByStoreError(graphQLError("FORBIDDEN"))).toBe(false);
   });
 
   it("falls back to the generic key for unknown GraphQL error codes", () => {

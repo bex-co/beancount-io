@@ -858,6 +858,18 @@ const enCommon: Record<string, TranslationEntry> = {
     message: "Validation failed. Please review your input and try again.",
     description: "Error shown when input validation fails (VALIDATION_FAILED)",
   },
+  "common.errors.billedByAppStore": {
+    message:
+      "This plan is billed through the App Store. Manage it on your iPhone or iPad: Settings → your name → Subscriptions.",
+    description:
+      "A Stripe action refused because the App Store bills this plan (BILLED_BY_STORE)",
+  },
+  "common.errors.billedByGooglePlay": {
+    message:
+      "This plan is billed through Google Play. Manage it on Google Play's subscriptions page.",
+    description:
+      "A Stripe action refused because Google Play bills this plan (BILLED_BY_STORE)",
+  },
   "common.errors.conflict": {
     message:
       "This change conflicts with the current state. Please refresh and try again.",

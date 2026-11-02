@@ -844,6 +844,18 @@ const koCommon: Record<string, TranslationEntry> = {
       "유효성 검사에 실패했습니다. 입력 내용을 확인하고 다시 시도하세요.",
     description: "Error shown when input validation fails (VALIDATION_FAILED)",
   },
+  "common.errors.billedByAppStore": {
+    message:
+      "이 플랜은 App Store로 청구됩니다. iPhone 또는 iPad에서 관리하세요: 설정 → 사용자 이름 → 구독.",
+    description:
+      "A Stripe action refused because the App Store bills this plan (BILLED_BY_STORE)",
+  },
+  "common.errors.billedByGooglePlay": {
+    message:
+      "이 플랜은 Google Play로 청구됩니다. Google Play의 구독 페이지에서 관리하세요.",
+    description:
+      "A Stripe action refused because Google Play bills this plan (BILLED_BY_STORE)",
+  },
   "common.errors.conflict": {
     message:
       "이 변경 사항이 현재 상태와 충돌합니다. 페이지를 새로 고친 후 다시 시도하세요.",

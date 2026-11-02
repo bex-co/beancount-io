@@ -832,6 +832,17 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "校验失败，请检查输入内容后重试。",
     description: "Error shown when input validation fails (VALIDATION_FAILED)",
   },
+  "common.errors.billedByAppStore": {
+    message:
+      "此计划通过 App Store 计费。请在 iPhone 或 iPad 上管理：设置 → 你的姓名 → 订阅。",
+    description:
+      "A Stripe action refused because the App Store bills this plan (BILLED_BY_STORE)",
+  },
+  "common.errors.billedByGooglePlay": {
+    message: "此计划通过 Google Play 计费。请在 Google Play 的订阅页面管理。",
+    description:
+      "A Stripe action refused because Google Play bills this plan (BILLED_BY_STORE)",
+  },
   "common.errors.conflict": {
     message: "此更改与当前状态冲突，请刷新页面后重试。",
     description:

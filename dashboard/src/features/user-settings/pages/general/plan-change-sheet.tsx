@@ -24,7 +24,10 @@ import {
   DialogTitle,
 } from "@/common/components/ui/dialog";
 import type { UserTier } from "@/common/hooks/use-user-limits";
-import { useErrorMessage } from "@/common/lib/errors/error-message";
+import {
+  isBilledByStoreError,
+  useErrorMessage,
+} from "@/common/lib/errors/error-message";
 import {
   featuresGained,
   featuresLost,
@@ -391,11 +394,15 @@ export function PlanChangeSheet({
         ) : error || !planChange ? (
           <div className="space-y-3">
             <p className="text-sm">
-              {t("userSettings.planChangePreviewFailed")}
+              {isBilledByStoreError(error)
+                ? formatError(error)
+                : t("userSettings.planChangePreviewFailed")}
             </p>
-            <Button size="sm" variant="outline" onClick={preview}>
-              {t("common.tryAgain")}
-            </Button>
+            {!isBilledByStoreError(error) && (
+              <Button size="sm" variant="outline" onClick={preview}>
+                {t("common.tryAgain")}
+              </Button>
+            )}
           </div>
         ) : outcome?.type === "action" ? (
           <div className="space-y-3" data-testid="plan-change-action">

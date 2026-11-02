@@ -846,6 +846,18 @@ const jaCommon: Record<string, TranslationEntry> = {
       "検証に失敗しました。入力内容を確認してからもう一度お試しください。",
     description: "Error shown when input validation fails (VALIDATION_FAILED)",
   },
+  "common.errors.billedByAppStore": {
+    message:
+      "このプランは App Store で請求されます。iPhone または iPad で管理してください: 設定 → ユーザ名 → サブスクリプション。",
+    description:
+      "A Stripe action refused because the App Store bills this plan (BILLED_BY_STORE)",
+  },
+  "common.errors.billedByGooglePlay": {
+    message:
+      "このプランは Google Play で請求されます。Google Play の定期購入ページで管理してください。",
+    description:
+      "A Stripe action refused because Google Play bills this plan (BILLED_BY_STORE)",
+  },
   "common.errors.conflict": {
     message:
       "この変更は現在の状態と競合しています。ページを更新してからもう一度お試しください。",

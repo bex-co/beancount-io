@@ -853,6 +853,18 @@ const bgCommon: Record<string, TranslationEntry> = {
       "Валидацията е неуспешна. Проверете въведените данни и опитайте отново.",
     description: "Error shown when input validation fails (VALIDATION_FAILED)",
   },
+  "common.errors.billedByAppStore": {
+    message:
+      "Този план се таксува чрез App Store. Управлявайте го от вашия iPhone или iPad: Настройки → вашето име → Абонаменти.",
+    description:
+      "A Stripe action refused because the App Store bills this plan (BILLED_BY_STORE)",
+  },
+  "common.errors.billedByGooglePlay": {
+    message:
+      "Този план се таксува чрез Google Play. Управлявайте го от страницата с абонаменти в Google Play.",
+    description:
+      "A Stripe action refused because Google Play bills this plan (BILLED_BY_STORE)",
+  },
   "common.errors.conflict": {
     message:
       "Тази промяна е в конфликт с текущото състояние. Опреснете страницата и опитайте отново.",

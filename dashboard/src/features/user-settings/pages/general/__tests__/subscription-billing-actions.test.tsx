@@ -6,6 +6,8 @@ import { stripePlanConfig } from "../stripe-config";
 import {
   MOCK_TIER_QUOTAS,
   mockActiveSubscriptionData,
+  mockCanceledSubscriptionData,
+  mockStoreBilledData,
 } from "./subscription-test-utils";
 
 const {
@@ -629,5 +631,95 @@ describe("Plan change through the sheet", () => {
       expect(mockToastError).toHaveBeenCalledWith("common.errors.generic"),
     );
     expect(refetchUserLimits).not.toHaveBeenCalled();
+  });
+});
+
+describe("A store-billed account (ADR 001 D5, D14)", () => {
+  const load = (data: typeof mockStoreBilledData) => {
+    setUserLimits("GROWTH");
+    mockUseQuery.mockReturnValue({
+      data,
+      loading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+  };
+  const withStoreBilling = (
+    stripe: typeof mockActiveSubscriptionData,
+  ): typeof mockStoreBilledData => ({
+    subscriptionStatus: {
+      ...stripe.subscriptionStatus,
+      billing: mockStoreBilledData.subscriptionStatus.billing,
+    },
+  });
+
+  it("offers no plan picker", () => {
+    load(mockStoreBilledData);
+    render(<SubscriptionSection />);
+
+    expect(screen.getByTestId("store-plan-status")).toBeInTheDocument();
+    expect(screen.queryByText("aiAgent.upgradeCta")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("userSettings.currentPlan", { selector: "button" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("opens no plan change from a deep link", () => {
+    load(mockStoreBilledData);
+    render(
+      <SubscriptionSection
+        initialTarget={{
+          tier: "growth",
+          cycle: "yearly",
+          surface: "pricing_page",
+        }}
+      />,
+    );
+
+    expect(mockRunPreview).not.toHaveBeenCalled();
+  });
+
+  it("keeps the Stripe cancel for an account that pays twice", () => {
+    load(withStoreBilling(mockActiveSubscriptionData));
+    render(<SubscriptionSection />);
+
+    expect(
+      screen.getByRole("button", { name: "userSettings.cancelSubscription" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("aiAgent.upgradeCta")).not.toBeInTheDocument();
+  });
+
+  it("offers no yearly switch on a monthly Stripe plan beside a store plan", () => {
+    const stripe = mockActiveSubscriptionData.subscriptionStatus;
+    const [subscription] = stripe.subscriptions;
+    const [item] = subscription.items;
+    load(
+      withStoreBilling({
+        subscriptionStatus: {
+          ...stripe,
+          subscriptions: [
+            {
+              ...subscription,
+              items: [
+                {
+                  ...item,
+                  price: { ...item.price, interval: "month", amount: 999_900 },
+                },
+              ],
+            },
+          ],
+        },
+      }),
+    );
+    render(<SubscriptionSection />);
+
+    expect(screen.queryByTestId("pay-yearly-offer")).not.toBeInTheDocument();
+  });
+
+  it("offers no resume over a store plan", () => {
+    load(withStoreBilling(mockCanceledSubscriptionData));
+    render(<SubscriptionSection />);
+
+    expect(screen.queryByTestId("scheduled-panel")).not.toBeInTheDocument();
   });
 });

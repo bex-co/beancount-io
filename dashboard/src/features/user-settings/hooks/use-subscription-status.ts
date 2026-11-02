@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@apollo/client/react";
 import {
+  BillingSource,
   GetSubscriptionStatusDocument,
   type GetSubscriptionStatusQuery,
 } from "@/graphql/definitions";
@@ -10,6 +11,11 @@ import { useBillingDateFormat } from "@/features/user-settings/pages/general/use
 export type PlanBillingStatus = NonNullable<
   GetSubscriptionStatusQuery["subscriptionStatus"]["billing"]
 >;
+
+/** Whether a store renews this plan, so Stripe has nothing to sell over it. */
+export const isBilledByStore = (billing: PlanBillingStatus | null) =>
+  billing?.source === BillingSource.AppStore ||
+  billing?.source === BillingSource.GooglePlay;
 
 export const useSubscriptionStatus = () => {
   const { data, loading, error, refetch } =

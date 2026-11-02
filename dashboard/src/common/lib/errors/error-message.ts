@@ -77,6 +77,11 @@ export function getErrorMessageKey(
     }
     for (const gqlError of error.errors) {
       const code = gqlError.extensions?.code;
+      if (code === "BILLED_BY_STORE") {
+        return gqlError.extensions?.provider === "GOOGLE_PLAY"
+          ? "common.errors.billedByGooglePlay"
+          : "common.errors.billedByAppStore";
+      }
       if (typeof code === "string" && code in ERROR_CODE_TO_KEY) {
         return ERROR_CODE_TO_KEY[code];
       }
@@ -99,6 +104,16 @@ export function getErrorMessageKey(
   }
 
   return fallbackKey;
+}
+
+/** Whether a store bills the plan a Stripe action just tried to change. */
+export function isBilledByStoreError(error: unknown): boolean {
+  return (
+    CombinedGraphQLErrors.is(error) &&
+    error.errors.some(
+      (gqlError) => gqlError.extensions?.code === "BILLED_BY_STORE",
+    )
+  );
 }
 
 /**
