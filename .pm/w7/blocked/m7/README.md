@@ -1,6 +1,6 @@
 # w7 · m7 — The apps show the plan, its billing source, and limit refusals that say whose plan it is
 
-**Worker:** worker1 **Goal:** both apps show the same plan card as the Web, refuse limits with the right owner's plan, warn App Store subscribers before deletion, and open beancount.io pages only with the app marker **Status:** in progress (t001, t002 done)
+**Worker:** worker1 **Goal:** both apps show the same plan card as the Web, refuse limits with the right owner's plan, warn App Store subscribers before deletion, and open beancount.io pages only with the app marker **Status:** blocked
 
 ## Tasks (in order)
 
@@ -15,6 +15,16 @@
 | t007 | Simplify | 30m | t006 |
 | t008 | Test coverage | 1h | t006 |
 | t009 | Closeout | 15m | t007, t008 |
+
+## Blocked
+
+**Blocked 2026-11-01** — t001, t002 shipped (`6f2df16b6`, `a55549be2`), and t004's code shipped. Nothing here can finish without a deploy or earlier work.
+
+- **t004's simulator check.** The code and its guard test are on `main`, but "the commodities page shows no billing on the simulator" needs the dashboard from w7/m6/t006 live, and production does not deploy from `main`. **Unblock:** the owner deploys it, then open the commodities page from the valuation sheet on the simulator.
+- **t001's screen on a real account.** The plan screen calls `subscriptionStatus` with the app's OAuth token, which production refuses until the backend from w7/m3/t001 is live. **Unblock:** the same deploy.
+- **t003 waits on m3/t004**, which waits on m3/t002. t005 follows t002 to t004, and the closing tasks follow it.
+
+Who can clear it: the owner.
 
 ## Definition of done
 
