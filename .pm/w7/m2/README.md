@@ -1,6 +1,6 @@
 # w7 · m2 — Store products, notifications, and release-gate decisions are in place
 
-**Worker:** worker1 **Goal:** both store consoles hold the six products and send notifications, Stripe has the restricted portal configuration, and the owner's release-gate decisions are recorded in ADR 001 **Status:** todo
+**Worker:** worker1 **Goal:** both store consoles hold the six products and send notifications, Stripe has the restricted portal configuration, and the owner's release-gate decisions are recorded in ADR 001 **Status:** in progress (t004 done)
 
 ## Tasks (in order)
 
@@ -9,7 +9,7 @@
 | t001 | Record the release-gate decisions in ADR 001 | 30m | — |
 | t002 | App Store Connect: subscription group and six products | 1h | — |
 | t003 | Play Console: three subscriptions with monthly and yearly base plans | 1h | — |
-| t004 | Stripe: the restricted Customer Portal configuration | 30m | — |
+| t004 | Stripe: the restricted Customer Portal configuration — **DONE** | 30m | — |
 | t005 | Store catalog matches the consoles | 30m | t002, t003, w7/m1/t001 |
 | t006 | Simplify | 30m | t001, t004, t005 |
 | t007 | Test coverage | 30m | t001, t004, t005 |
