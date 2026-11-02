@@ -370,6 +370,22 @@
         "Any proposed balance assertion carries the six-decimal figure 0.009575 BTC",
         "The proposal opens with a coverage section (account identity, currency, period, source/included/excluded row counts, statement arithmetic or why it does not apply)"
       ]
+    },
+    {
+      "id": 23,
+      "name": "statement-deposit-offered-as-invoice-payment",
+      "prompt": "Reconcile ./ledger.beancount against ./statement.csv for Assets:Checking. The statement covers October 2026 and closes at 2,993.90.",
+      "expected_output": "The 1,000.00 ACME CORP PAYMENT is missing from the ledger and equals INV-031's open balance, so it is offered as that invoice's payment, not income: the other leg is Assets:AccountsReceivable -1000.00 with invoice: \"INV-031\" and ^inv-031, shown beside the invoice it clears. Nothing is written before a yes; afterwards INV-031 has nothing open, the balance assertion for 2,993.90 holds, and the root check passes.",
+      "files": [
+        "evals/files/eval23_ledger.beancount",
+        "evals/files/eval23_statement.csv"
+      ],
+      "expectations": [
+        "The 1,000.00 deposit is offered as INV-031's payment, not income",
+        "The receivable leg carries invoice: \"INV-031\" and the ^inv-031 link",
+        "Nothing is written before an explicit yes",
+        "After a yes the balance assertion holds and bea check passes"
+      ]
     }
   ]
 }
