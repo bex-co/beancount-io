@@ -301,7 +301,8 @@ export class ServiceUnavailableError extends DomainError {
 }
 
 /**
- * Thrown when a user reaches their subscription tier's resource limits.
+ * Thrown when an operation would pass a limit of this service. These are size
+ * bounds no plan lifts, so the message says nothing about upgrading.
  *
  * Category: RESOURCE_LIMIT_REACHED (HTTP 403)
  *
@@ -312,7 +313,7 @@ export class ResourceLimitReachedError extends DomainError {
   constructor(resource: string, limit: number, current: number) {
     super(
       ErrorCategory.RESOURCE_LIMIT_REACHED,
-      `${resource} limit reached. Maximum: ${limit}, Current: ${current}. Upgrade to Premium or a higher plan to continue.`,
+      `${resource} limit reached. Maximum: ${limit}, Current: ${current}.`,
       { resource, limit, current },
     );
   }
