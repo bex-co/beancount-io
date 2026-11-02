@@ -51,7 +51,7 @@ services:
       # The browser-facing URL is baked from dashboard/.env.production instead,
       # because Docker builds get no build args.
       - key: SSR_API_URL
-        value: http://beancount-api:3000/api-gateway/
+        value: http://beancount-api:4104/api-gateway/
 
   # ---------------------------------------------------------------- backend-v2
   - name: beancount-api
@@ -86,6 +86,11 @@ services:
     # inside a running instance instead (`bex ssh`), where the same-namespace
     # allow applies.
     envVars:
+      # Pin the listener to the image's declared port (EXPOSE 4104): the
+      # platform probes that port, and an injected PORT=3000 would leave the
+      # rollout waiting forever on a port nothing listens on.
+      - key: PORT
+        value: "4104"
       - key: SERVER_URL
         value: https://beancount-api.onbex.co
       - key: DASHBOARD_URL
@@ -105,7 +110,7 @@ services:
       # --- ledger service (private, same namespace) -----------------------
       # :3000 for the same injected-PORT reason as SSR_API_URL above.
       - key: FAVA_API_URL
-        value: http://beancount-ledger:3000
+        value: http://beancount-ledger:8000
 
       # --- generated secrets ----------------------------------------------
       - key: AUTH_SECRET
@@ -217,7 +222,7 @@ services:
       - key: BACKEND_V2_HOST_NAME
         value: beancount-api
       - key: BACKEND_V2_HTTP_PORT
-        value: "3000"
+        value: "4104"
       # Must be byte-identical to beancount-api's ADMIN_TOKEN. Left empty the
       # directive-limit check fails OPEN (silently skipped), so seed it.
       - key: BACKEND_V2_ADMIN_TOKEN
