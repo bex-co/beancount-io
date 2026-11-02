@@ -41,7 +41,7 @@ This skill exists because money owed is what separates business books from house
 
 Read beancount-init's `references/bea-cli.md` (from this skill's folder, `../beancount-init/references/bea-cli.md`; a copy at `references/bea-cli.md` when this skill was installed alone) before running ledger commands: it defines explicit root/destination paths, JSON batches, checks, and safe retries. Without `bea`, use beancount-init's `references/compatibility.md`.
 
-Write every approved directive through `bea add`: the `open` recipe for accounts the user approves, the `transaction` recipe for an entry about one document (its identity as `--meta`, its link as `--link`), and the `batch` recipe for a payment that settles several documents, whose receivable postings each carry their own `meta`. The skill owns interpretation, the open-balance reads, and confirmation.
+Write every approved directive through `bea add` (recipes in Write + Verify). The skill owns interpretation, the open-balance reads, and confirmation.
 
 ## The model
 
@@ -95,14 +95,11 @@ Reduce the request to documents and amounts. Ask for anything missing; never inv
 bea --file "$ledger" --json --no-input query "SELECT date, payee, narration, number, currency, filename WHERE account = '$receivable' AND any_meta('invoice') = '$invoice' ORDER BY date"
 ```
 
-A deposit that `beancount-import` or `beancount-reconcile` stages may already be offered as an invoice's payment (their categorization rules); applying it there follows the same rules as here.
-
 **Applying a payment.** Inputs: the date, the amount received and into which account, and which invoices it pays (named by the user, or the one open invoice whose balance equals the amount, shown as a suggestion). Read each invoice's postings with `invoice-postings`:
 
 - The receivable posting for each invoice is the amount applied to it, at most its open balance. Less than the balance leaves the rest open and says so.
 - A payment larger than the invoices named, or one that matches no open invoice, is asked about: another invoice, an overpayment, or not a client payment at all. Never park the difference anywhere silently.
 - A processor payment: the receivable is credited at the gross the invoice was paid in full or in part, the processor's fee goes to the fees account as its own leg, and the cash account receives the net. All three figures come from the processor's statement or the user; the proposal shows gross − fee = net.
-- One payment that settles several invoices is one entry with one receivable posting per invoice, each carrying its `invoice:`, and every invoice's link.
 
 **Receiving a supplier bill.** Inputs: supplier, bill number as printed, bill date, due date when stated, each line's amount and expense account (from the supplier's history in this ledger, else asked), and any tax the bill states as a separate line. A `bill:` identity that already has postings is shown and asked about, never recorded twice. The payable is the bill's total and each line is its own expense posting.
 
@@ -161,33 +158,26 @@ Read `invoice-postings` again and report each affected invoice's open balance fr
 
 ## Aging: who owes what, and how overdue
 
-A read-only answer; nothing is proposed or written. Bind `today` to today's date (stated in the answer) and `account` to the receivable (or, for "whom do I owe", the payable). Read each open document's age from its first posting, then its terms from the issuing posting — the client and due date live there, not on payments:
+A read-only answer; nothing is proposed or written. Bind `today` to today's date (stated in the answer) and `account` to the receivable (or, for "whom do I owe", the payable). Each open document's row takes its age from its first posting and its client and due date from the issuing posting, since payments carry neither:
 
 <!-- recipe: invoice-aging -->
 ```sh
-bea --file "$ledger" --json --no-input query "SELECT any_meta('invoice') AS invoice, min(date) AS issued, $today - min(date) AS days_outstanding, sum(number) AS open WHERE account = '$receivable' GROUP BY invoice HAVING sum(number) != 0 ORDER BY issued"
+bea --file "$ledger" --json --no-input query "SELECT any_meta('invoice') AS invoice, first(any_meta('client')) AS client, min(date) AS issued, first(any_meta('due')) AS due, $today - min(date) AS days_outstanding, $today - first(any_meta('due')) AS days_past_due, sum(number) AS open WHERE account = '$receivable' GROUP BY invoice HAVING sum(number) != 0 ORDER BY issued"
 ```
 
-<!-- recipe: invoice-terms -->
+Bills read the same way:
+
+<!-- recipe: bill-aging -->
 ```sh
-bea --file "$ledger" --json --no-input query "SELECT any_meta('invoice') AS invoice, any_meta('client') AS client, any_meta('due') AS due, $today - any_meta('due') AS days_past_due WHERE account = '$receivable' AND number > 0 ORDER BY invoice"
+bea --file "$ledger" --json --no-input query "SELECT any_meta('bill') AS bill, min(date) AS received, first(any_meta('due')) AS due, $today - min(date) AS days_outstanding, $today - first(any_meta('due')) AS days_past_due, sum(number) AS open WHERE account = '$payable' GROUP BY bill HAVING sum(number) != 0 ORDER BY received"
 ```
 
-For bills, `bill-open` gives the open amounts and the receiving posting (`number < 0` on the payable) holds the due date:
-
-<!-- recipe: bill-terms -->
-```sh
-bea --file "$ledger" --json --no-input query "SELECT any_meta('bill') AS bill, any_meta('due') AS due, $today - any_meta('due') AS days_past_due WHERE account = '$payable' AND number < 0 ORDER BY bill"
-```
-
-Present only documents the open read returns, joined to their terms, oldest first: document, client or supplier, issued, due, days past due (negative is not yet due), and open amount. A document with no due date shows its days outstanding only; never assume terms. Then tie out: the open amounts must sum to the account's balance from this read, quoted beside them; a difference is receivable or payable money no document explains, reported as such.
+Present each row, oldest first: document, client or supplier, issued, due, days past due (negative is not yet due), and open amount. A document with no due date shows its days outstanding only; never assume terms. Then tie out: the open amounts must sum to the account's balance from this read, quoted beside them; a difference is receivable or payable money no document explains, reported as such.
 
 <!-- recipe: document-balance -->
 ```sh
 bea --file "$ledger" --json --no-input query "SELECT sum(number) AS balance WHERE account = '$account'"
 ```
-
-Aging runs on local `bea`; Beancount.io's hosted queries do not yet subtract dates.
 
 ## What NOT to do
 

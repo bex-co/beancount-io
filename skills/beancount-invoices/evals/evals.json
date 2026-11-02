@@ -93,7 +93,7 @@
       "id": 7,
       "name": "aging-ties-to-balance",
       "prompt": "Which clients owe me money as of 2026-10-27, and how overdue are they? Use ./ledger.beancount.",
-      "expected_output": "Runs invoice-aging and invoice-terms with today 2026-10-27: INV-031 acme 1,000.00, due 2026-10-15, 12 days past due; INV-032 globex 500.00, due 2026-10-31, not yet due (-4). The open amounts tie to the 1,500.00 receivable balance from document-balance. Read-only.",
+      "expected_output": "Runs invoice-aging with today 2026-10-27: INV-031 acme 1,000.00, due 2026-10-15, 12 days past due; INV-032 globex 500.00, due 2026-10-31, not yet due (-4). The open amounts tie to the 1,500.00 receivable balance from document-balance. Read-only.",
       "files": [
         "evals/files/eval1_ledger.beancount"
       ],
@@ -115,6 +115,20 @@
       "expectations": [
         "The existing INV-020 postings are found and shown",
         "The skill asks instead of issuing the number again",
+        "Nothing is written"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "overpayment-is-asked",
+      "prompt": "Acme Corp paid 1,500 USD toward invoice INV-031 into checking on 2026-10-20. Record it in ./ledger.beancount.",
+      "expected_output": "INV-031 has 1,000.00 open, so the 1,500.00 payment exceeds it by 500.00. The skill says so and asks whether the 500.00 belongs to another invoice, is an overpayment, or is something else; it does not credit the receivable past the open balance, park the difference, or write anything.",
+      "files": [
+        "evals/files/eval1_ledger.beancount"
+      ],
+      "expectations": [
+        "The 500.00 excess over INV-031's 1,000.00 open balance is shown",
+        "The skill asks rather than posting the difference anywhere",
         "Nothing is written"
       ]
     }

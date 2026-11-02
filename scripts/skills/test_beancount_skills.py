@@ -82,6 +82,12 @@ def suite_snapshot() -> dict[str, str]:
     return {name: snapshot(SUITE / name) for name in skills.expected_skills()}
 
 
+def leg(account: str, number: str, **meta: str) -> dict:
+    """One USD posting of a `batch` row."""
+    posting = {"account": account, "units": {"number": number, "currency": "USD"}}
+    return {**posting, "meta": meta} if meta else posting
+
+
 def run(command: str, *dests: Path) -> tuple[int, str, str]:
     out, err = io.StringIO(), io.StringIO()
     with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
@@ -1393,12 +1399,13 @@ class TestBeaRecipes(unittest.TestCase):
         self.assertIsNotNone(match, f"Missing executable recipe {name}")
         return match.group(1)
 
-    def recipe(self, name: str, *, succeeds: bool = True, envelope: bool = False, **values: str):
+    def recipe(self, name: str, *, succeeds: bool = True, envelope: bool = False,
+               extra: tuple[str, ...] = (), **values: str):
         """Run a shipped shell recipe; `values` update its `$placeholders` first."""
         self.values.update(values)
         tokens = shlex.split(self.block(name))
         self.assertEqual(tokens[0], "bea")
-        args = [Template(token).substitute(self.values) for token in tokens[1:]]
+        args = [Template(token).substitute(self.values) for token in tokens[1:]] + list(extra)
         result = subprocess.run(
             [*self.bea, *args], cwd=self.root, env=self.env,
             capture_output=True, text=True, timeout=90,
@@ -1423,6 +1430,12 @@ class TestBeaRecipes(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         return json.loads(result.stdout)["data"]["rows"]
+
+    def open_ledger(self, *accounts, body="", include=True):
+        """Write the root ledger: these accounts, then `body`, then the destination's include."""
+        opens = "".join(f"2026-01-01 open {account} USD\n" for account in accounts)
+        tail = 'include "transactions/2026.bean"\n' if include else ""
+        self.ledger.write_text(f'option "operating_currency" "USD"\n{opens}{body}{tail}')
 
     def batch(self, rows=None):
         rows = json.loads(self.block("batch-json", "json")) if rows is None else rows
@@ -1558,13 +1571,8 @@ class TestBeaRecipes(unittest.TestCase):
         rows = self.recipe("dimension-prior", payee="Pizzeria")["rows"]
         self.assertEqual(rows, [["acme", None, 2], [None, None, 1]])
         # The approved key rides on the one-off recipe as transaction metadata.
-        tokens = shlex.split(self.block("transaction"))
-        self.values.update(entry_date="2026-05-07", payee="Pizzeria", narration="Team lunch",
-                           posting_1="Expenses:Dining 12.50 USD", posting_2="Assets:Checking")
-        args = [Template(token).substitute(self.values) for token in tokens[1:]] + ["--meta", "client:acme"]
-        written = subprocess.run([*self.bea, *args], cwd=self.root, env=self.env,
-                                 capture_output=True, text=True, timeout=90)
-        self.assertEqual(written.returncode, 0, written.stderr)
+        self.recipe("transaction", extra=("--meta", "client:acme"), entry_date="2026-05-07", payee="Pizzeria",
+                    narration="Team lunch", posting_1="Expenses:Dining 12.50 USD", posting_2="Assets:Checking")
         self.assertIn('client: "acme"', self.target.read_text())
         # A split whose postings belong to different projects goes through the batch.
         self.batch([{
@@ -1582,6 +1590,12 @@ class TestBeaRecipes(unittest.TestCase):
         rows = self.recipe("dimension-prior", payee="Figma")["rows"]
         self.assertEqual(sorted(rows, key=str), sorted([[None, "site", 1], [None, "internal", 1]], key=str))
         self.assertEqual(self.recipe("dimension-prior", payee="Pizzeria")["rows"][0], ["acme", None, 3])
+        # No attributed history leaves nothing to propose: a new payee reads
+        # empty, and one with only unattributed entries reads no value.
+        self.assertEqual(self.recipe("dimension-prior", payee="Bakery")["rows"], [])
+        with self.target.open("a", encoding="utf-8") as books:
+            books.write('2026-05-09 * "Bakery" "Bread"\n  Expenses:Dining 3.00 USD\n  Assets:Checking\n')
+        self.assertEqual(self.recipe("dimension-prior", payee="Bakery")["rows"], [[None, None, 1]])
 
     def test_one_off_write_outside_the_included_files_is_refused_and_creates_nothing(self):
         orphan = self.books / "transactions" / "orphan.bean"
@@ -2080,53 +2094,40 @@ class TestBeaRecipes(unittest.TestCase):
         self.assertEqual([row[0] for row in history], ["2026-01-12", "2026-02-12"])
 
     def test_invoice_open_balances_follow_partial_and_multi_document_payments(self):
-        self.ledger.write_text(
-            'option "operating_currency" "USD"\n'
-            "2026-01-01 open Assets:Checking USD\n"
-            "2026-01-01 open Assets:AccountsReceivable USD\n"
-            "2026-01-01 open Income:Services USD\n"
-            "2026-01-01 open Expenses:Fees USD\n"
-            'include "transactions/2026.bean"\n'
-        )
+        self.open_ledger("Assets:Checking", "Assets:AccountsReceivable", "Income:Services", "Expenses:Fees")
         self.values["receivable"] = "Assets:AccountsReceivable"
         # Issue one invoice through the one-off recipe with its identity and link.
-        tokens = shlex.split(self.block("transaction"))
-        self.values.update(entry_date="2026-10-01", payee="Acme Corp", narration="Invoice INV-031",
-                           posting_1="Assets:AccountsReceivable 3000.00 USD", posting_2="Income:Services")
-        args = [Template(token).substitute(self.values) for token in tokens[1:]]
-        args += ["--meta", "invoice:INV-031", "--meta", "client:acme", "--link", "inv-031"]
-        issued = subprocess.run([*self.bea, *args], cwd=self.root, env=self.env,
-                                capture_output=True, text=True, timeout=90)
-        self.assertEqual(issued.returncode, 0, issued.stderr)
-        # A second invoice, a partial payment, then one processor payment that
-        # settles both with its fee kept apart.
+        self.recipe("transaction", extra=("--meta", "invoice:INV-031", "--meta", "client:acme", "--link", "inv-031"),
+                    entry_date="2026-10-01", payee="Acme Corp", narration="Invoice INV-031",
+                    posting_1="Assets:AccountsReceivable 1000.00 USD", posting_2="Income:Services")
+        # freelance@1's acceptance case: receive 400 and 600 stays open on that
+        # invoice alone. Then one processor payment settles both, fee kept apart.
         self.batch([
             {"date": "2026-10-03", "flag": "*", "payee": "Globex", "narration": "Invoice INV-032",
              "links": ["inv-032"], "meta": {"invoice": "INV-032", "client": "globex"},
              "postings": [
-                 {"account": "Assets:AccountsReceivable", "units": {"number": "500.00", "currency": "USD"}},
-                 {"account": "Income:Services", "units": {"number": "-500.00", "currency": "USD"}}]},
+                 leg("Assets:AccountsReceivable", "500.00"),
+                 leg("Income:Services", "-500.00")]},
             {"date": "2026-10-10", "flag": "*", "payee": "Acme Corp", "narration": "Partial payment",
              "links": ["inv-031"], "meta": {"invoice": "INV-031"},
              "postings": [
-                 {"account": "Assets:AccountsReceivable", "units": {"number": "-1200.00", "currency": "USD"}},
-                 {"account": "Assets:Checking", "units": {"number": "1200.00", "currency": "USD"}}]},
+                 leg("Assets:AccountsReceivable", "-400.00"),
+                 leg("Assets:Checking", "400.00")]},
         ])
         self.recipe("batch")
         open_rows = self.recipe("invoice-open")["rows"]
-        self.assertEqual([(r[0], r[2]) for r in open_rows], [("INV-031", "1800.00"), ("INV-032", "500.00")])
+        self.assertEqual([(r[0], r[2]) for r in open_rows], [("INV-031", "600.00"), ("INV-032", "500.00")])
+        self.assertEqual(self.recipe("document-balance", account="Assets:AccountsReceivable")["rows"], [["1100.00"]])
         history = self.recipe("invoice-postings", invoice="INV-031")["rows"]
-        self.assertEqual([(r[0], r[3]) for r in history], [("2026-10-01", "3000.00"), ("2026-10-10", "-1200.00")])
+        self.assertEqual([(r[0], r[3]) for r in history], [("2026-10-01", "1000.00"), ("2026-10-10", "-400.00")])
         self.batch([
             {"date": "2026-10-12", "flag": "*", "payee": "Stripe", "narration": "Payment",
              "links": ["inv-031", "inv-032"],
              "postings": [
-                 {"account": "Assets:AccountsReceivable", "units": {"number": "-1800.00", "currency": "USD"},
-                  "meta": {"invoice": "INV-031"}},
-                 {"account": "Assets:AccountsReceivable", "units": {"number": "-500.00", "currency": "USD"},
-                  "meta": {"invoice": "INV-032"}},
-                 {"account": "Expenses:Fees", "units": {"number": "67.00", "currency": "USD"}},
-                 {"account": "Assets:Checking", "units": {"number": "2233.00", "currency": "USD"}}]},
+                 leg("Assets:AccountsReceivable", "-600.00", invoice="INV-031"),
+                 leg("Assets:AccountsReceivable", "-500.00", invoice="INV-032"),
+                 leg("Expenses:Fees", "67.00"),
+                 leg("Assets:Checking", "1033.00")]},
         ])
         self.recipe("batch")
         self.recipe("check")
@@ -2136,31 +2137,25 @@ class TestBeaRecipes(unittest.TestCase):
         self.assertEqual(balances["Assets:AccountsReceivable"], [])
 
     def test_bill_open_balances_follow_partial_payments(self):
-        self.ledger.write_text(
-            'option "operating_currency" "USD"\n'
-            "2026-01-01 open Assets:Checking USD\n"
-            "2026-01-01 open Liabilities:AccountsPayable USD\n"
-            "2026-01-01 open Expenses:Printing USD\n"
-            'include "transactions/2026.bean"\n'
-        )
+        self.open_ledger("Assets:Checking", "Liabilities:AccountsPayable", "Expenses:Printing")
         self.values["payable"] = "Liabilities:AccountsPayable"
         self.batch([
             {"date": "2026-10-14", "flag": "*", "payee": "Bolt Printing", "narration": "Bill 7781",
              "links": ["bill-bolt-printing-7781"], "meta": {"bill": "bolt-printing:7781"},
              "postings": [
-                 {"account": "Expenses:Printing", "units": {"number": "450.00", "currency": "USD"}},
-                 {"account": "Liabilities:AccountsPayable", "units": {"number": "-450.00", "currency": "USD"}}]},
+                 leg("Expenses:Printing", "450.00"),
+                 leg("Liabilities:AccountsPayable", "-450.00")]},
             # Another supplier reusing the same number is a different bill.
             {"date": "2026-10-15", "flag": "*", "payee": "Ink Co", "narration": "Bill 7781",
              "links": ["bill-ink-co-7781"], "meta": {"bill": "ink-co:7781"},
              "postings": [
-                 {"account": "Expenses:Printing", "units": {"number": "80.00", "currency": "USD"}},
-                 {"account": "Liabilities:AccountsPayable", "units": {"number": "-80.00", "currency": "USD"}}]},
+                 leg("Expenses:Printing", "80.00"),
+                 leg("Liabilities:AccountsPayable", "-80.00")]},
             {"date": "2026-10-20", "flag": "*", "payee": "Bolt Printing", "narration": "Part payment",
              "links": ["bill-bolt-printing-7781"], "meta": {"bill": "bolt-printing:7781"},
              "postings": [
-                 {"account": "Liabilities:AccountsPayable", "units": {"number": "200.00", "currency": "USD"}},
-                 {"account": "Assets:Checking", "units": {"number": "-200.00", "currency": "USD"}}]},
+                 leg("Liabilities:AccountsPayable", "200.00"),
+                 leg("Assets:Checking", "-200.00")]},
         ])
         self.recipe("batch")
         self.recipe("check")
@@ -2168,28 +2163,21 @@ class TestBeaRecipes(unittest.TestCase):
         self.assertEqual([(r[0], r[2]) for r in rows], [("bolt-printing:7781", "-250.00"), ("ink-co:7781", "-80.00")])
 
     def test_collected_tax_for_a_period_and_its_remittance(self):
-        self.ledger.write_text(
-            'option "operating_currency" "USD"\n'
-            "2026-01-01 open Assets:Checking USD\n"
-            "2026-01-01 open Assets:AccountsReceivable USD\n"
-            "2026-01-01 open Liabilities:SalesTax USD\n"
-            "2026-01-01 open Income:Services USD\n"
-            'include "transactions/2026.bean"\n'
-        )
+        self.open_ledger("Assets:Checking", "Assets:AccountsReceivable", "Liabilities:SalesTax", "Income:Services")
         self.batch([
             {"date": "2026-07-10", "flag": "*", "payee": "Acme", "narration": "Invoice INV-040",
              "links": ["inv-040"], "meta": {"invoice": "INV-040"},
              "postings": [
-                 {"account": "Assets:AccountsReceivable", "units": {"number": "1080.00", "currency": "USD"}},
-                 {"account": "Income:Services", "units": {"number": "-1000.00", "currency": "USD"}},
-                 {"account": "Liabilities:SalesTax", "units": {"number": "-80.00", "currency": "USD"}}]},
+                 leg("Assets:AccountsReceivable", "1080.00"),
+                 leg("Income:Services", "-1000.00"),
+                 leg("Liabilities:SalesTax", "-80.00")]},
             # Collected after the quarter ends: owed later, not in this period.
             {"date": "2026-10-02", "flag": "*", "payee": "Globex", "narration": "Invoice INV-041",
              "links": ["inv-041"], "meta": {"invoice": "INV-041"},
              "postings": [
-                 {"account": "Assets:AccountsReceivable", "units": {"number": "216.00", "currency": "USD"}},
-                 {"account": "Income:Services", "units": {"number": "-200.00", "currency": "USD"}},
-                 {"account": "Liabilities:SalesTax", "units": {"number": "-16.00", "currency": "USD"}}]},
+                 leg("Assets:AccountsReceivable", "216.00"),
+                 leg("Income:Services", "-200.00"),
+                 leg("Liabilities:SalesTax", "-16.00")]},
         ])
         self.recipe("batch")
         self.values.update(tax_account="Liabilities:SalesTax", start="2026-07-01", end="2026-10-01")
@@ -2199,8 +2187,8 @@ class TestBeaRecipes(unittest.TestCase):
         self.batch([
             {"date": "2026-10-20", "flag": "*", "payee": "State Revenue", "narration": "Q3 remittance",
              "postings": [
-                 {"account": "Liabilities:SalesTax", "units": {"number": "80.00", "currency": "USD"}},
-                 {"account": "Assets:Checking", "units": {"number": "-80.00", "currency": "USD"}}]},
+                 leg("Liabilities:SalesTax", "80.00"),
+                 leg("Assets:Checking", "-80.00")]},
         ])
         self.recipe("batch")
         self.recipe("check")
@@ -2210,61 +2198,69 @@ class TestBeaRecipes(unittest.TestCase):
         self.assertEqual(self.recipe("tax-period", start="2026-10-01", end="2027-01-01")["rows"], [["-16.00"]])
 
     def test_aging_reads_terms_from_the_issuing_posting_and_ties_to_the_balance(self):
-        self.ledger.write_text(
-            'option "operating_currency" "USD"\n'
-            "2026-01-01 open Assets:Checking USD\n"
-            "2026-01-01 open Assets:AccountsReceivable USD\n"
-            "2026-01-01 open Liabilities:AccountsPayable USD\n"
-            "2026-01-01 open Income:Services USD\n"
-            "2026-01-01 open Expenses:Printing USD\n"
-            'include "transactions/2026.bean"\n'
-        )
+        self.open_ledger("Assets:Checking", "Assets:AccountsReceivable", "Liabilities:AccountsPayable",
+                         "Income:Services", "Expenses:Printing")
         self.batch([
             {"date": "2026-09-01", "flag": "*", "payee": "Acme", "narration": "Invoice INV-050",
              "links": ["inv-050"], "meta": {"invoice": "INV-050", "client": "acme", "due": "2026-10-01"},
              "postings": [
-                 {"account": "Assets:AccountsReceivable", "units": {"number": "900.00", "currency": "USD"}},
-                 {"account": "Income:Services", "units": {"number": "-900.00", "currency": "USD"}}]},
+                 leg("Assets:AccountsReceivable", "900.00"),
+                 leg("Income:Services", "-900.00")]},
+            # Settled in full: nothing open, so aging never lists it.
+            {"date": "2026-08-01", "flag": "*", "payee": "Acme", "narration": "Invoice INV-049",
+             "links": ["inv-049"], "meta": {"invoice": "INV-049", "client": "acme", "due": "2026-08-31"},
+             "postings": [
+                 leg("Assets:AccountsReceivable", "250.00"),
+                 leg("Income:Services", "-250.00")]},
+            {"date": "2026-08-20", "flag": "*", "payee": "Acme", "narration": "Payment",
+             "links": ["inv-049"], "meta": {"invoice": "INV-049"},
+             "postings": [
+                 leg("Assets:AccountsReceivable", "-250.00"),
+                 leg("Assets:Checking", "250.00")]},
             # No stated terms: aged by days outstanding only.
             {"date": "2026-10-20", "flag": "*", "payee": "Globex", "narration": "Invoice INV-051",
              "links": ["inv-051"], "meta": {"invoice": "INV-051", "client": "globex"},
              "postings": [
-                 {"account": "Assets:AccountsReceivable", "units": {"number": "300.00", "currency": "USD"}},
-                 {"account": "Income:Services", "units": {"number": "-300.00", "currency": "USD"}}]},
+                 leg("Assets:AccountsReceivable", "300.00"),
+                 leg("Income:Services", "-300.00")]},
             {"date": "2026-10-05", "flag": "*", "payee": "Acme", "narration": "Part payment",
              "links": ["inv-050"], "meta": {"invoice": "INV-050"},
              "postings": [
-                 {"account": "Assets:AccountsReceivable", "units": {"number": "-400.00", "currency": "USD"}},
-                 {"account": "Assets:Checking", "units": {"number": "400.00", "currency": "USD"}}]},
+                 leg("Assets:AccountsReceivable", "-400.00"),
+                 leg("Assets:Checking", "400.00")]},
+            # A settled bill stays out of the bill side the same way.
+            {"date": "2026-08-02", "flag": "*", "payee": "Ink Co", "narration": "Bill 60",
+             "links": ["bill-ink-co-60"], "meta": {"bill": "ink-co:60"},
+             "postings": [
+                 leg("Expenses:Printing", "80.00"),
+                 leg("Liabilities:AccountsPayable", "-80.00")]},
+            {"date": "2026-08-22", "flag": "*", "payee": "Ink Co", "narration": "Payment",
+             "links": ["bill-ink-co-60"], "meta": {"bill": "ink-co:60"},
+             "postings": [
+                 leg("Liabilities:AccountsPayable", "80.00"),
+                 leg("Assets:Checking", "-80.00")]},
             {"date": "2026-10-14", "flag": "*", "payee": "Bolt Printing", "narration": "Bill 7781",
              "links": ["bill-bolt-printing-7781"], "meta": {"bill": "bolt-printing:7781", "due": "2026-11-15"},
              "postings": [
-                 {"account": "Expenses:Printing", "units": {"number": "450.00", "currency": "USD"}},
-                 {"account": "Liabilities:AccountsPayable", "units": {"number": "-450.00", "currency": "USD"}}]},
+                 leg("Expenses:Printing", "450.00"),
+                 leg("Liabilities:AccountsPayable", "-450.00")]},
         ])
         self.recipe("batch")
         self.values.update(today="2026-10-27", receivable="Assets:AccountsReceivable",
                            payable="Liabilities:AccountsPayable")
         aging = self.recipe("invoice-aging")["rows"]
-        self.assertEqual(aging, [["INV-050", "2026-09-01", 56, "500.00"], ["INV-051", "2026-10-20", 7, "300.00"]])
-        terms = self.recipe("invoice-terms")["rows"]
-        self.assertEqual(terms, [["INV-050", "acme", "2026-10-01", 26], ["INV-051", "globex", None, None]])
+        self.assertEqual(aging, [["INV-050", "acme", "2026-09-01", "2026-10-01", 56, 26, "500.00"],
+                                 ["INV-051", "globex", "2026-10-20", None, 7, None, "300.00"]])
         self.assertEqual(self.recipe("document-balance", account="Assets:AccountsReceivable")["rows"], [["800.00"]])
-        self.assertEqual(self.recipe("bill-terms")["rows"], [["bolt-printing:7781", "2026-11-15", -19]])
+        self.assertEqual(self.recipe("bill-aging")["rows"],
+                         [["bolt-printing:7781", "2026-10-14", "2026-11-15", 13, -19, "-450.00"]])
         self.assertEqual(self.recipe("document-balance", account="Liabilities:AccountsPayable")["rows"], [["-450.00"]])
 
     def test_payroll_run_ties_printed_figures_and_books_liabilities(self):
-        self.ledger.write_text(
-            'option "operating_currency" "USD"\n'
-            "2026-01-01 open Assets:Checking USD\n"
-            "2026-01-01 open Expenses:Payroll:Wages USD\n"
-            "2026-01-01 open Expenses:Payroll:EmployerTaxes USD\n"
-            "2026-01-01 open Liabilities:Payroll:IncomeTax USD\n"
-            "2026-01-01 open Liabilities:Payroll:SocialSecurity USD\n"
-            "2026-01-01 open Equity:OpeningBalances USD\n"
-            '2026-01-01 * "Opening"\n  Assets:Checking 20000.00 USD\n  Equity:OpeningBalances\n'
-            'include "transactions/2026.bean"\n'
-        )
+        self.open_ledger("Assets:Checking", "Expenses:Payroll:Wages", "Expenses:Payroll:EmployerTaxes",
+                         "Liabilities:Payroll:IncomeTax", "Liabilities:Payroll:SocialSecurity",
+                         "Equity:OpeningBalances",
+                         body='2026-01-01 * "Opening"\n  Assets:Checking 20000.00 USD\n  Equity:OpeningBalances\n')
         tie = self.recipe("payroll-tie", gross="8000.00", withholdings="(1100.00 + 496.00)", net="6404.00")
         self.assertEqual(tie["rows"], [["6404.00", "0.00"]])
         # A misread net stops the proposal with the gap shown.
@@ -2274,11 +2270,11 @@ class TestBeaRecipes(unittest.TestCase):
             "date": "2026-07-15", "flag": "*", "payee": "Gusto", "narration": "Payroll 2026-07-15",
             "meta": {"payroll": "2026-07-15"},
             "postings": [
-                {"account": "Expenses:Payroll:Wages", "units": {"number": "8000.00", "currency": "USD"}},
-                {"account": "Expenses:Payroll:EmployerTaxes", "units": {"number": "496.00", "currency": "USD"}},
-                {"account": "Liabilities:Payroll:IncomeTax", "units": {"number": "-1100.00", "currency": "USD"}},
-                {"account": "Liabilities:Payroll:SocialSecurity", "units": {"number": "-992.00", "currency": "USD"}},
-                {"account": "Assets:Checking", "units": {"number": "-6404.00", "currency": "USD"}},
+                leg("Expenses:Payroll:Wages", "8000.00"),
+                leg("Expenses:Payroll:EmployerTaxes", "496.00"),
+                leg("Liabilities:Payroll:IncomeTax", "-1100.00"),
+                leg("Liabilities:Payroll:SocialSecurity", "-992.00"),
+                leg("Assets:Checking", "-6404.00"),
             ],
         }])
         self.recipe("batch")
@@ -2287,55 +2283,43 @@ class TestBeaRecipes(unittest.TestCase):
 
     def test_payroll_tie_answers_before_the_ledger_has_any_posting(self):
         # A business's first payroll run may come before any other entry.
-        self.ledger.write_text(
-            'option "operating_currency" "USD"\n'
-            "2026-01-01 open Assets:Checking USD\n"
-            "2026-01-01 open Expenses:Payroll:Wages USD\n"
-        )
+        self.open_ledger("Assets:Checking", "Expenses:Payroll:Wages", include=False)
         tie = self.recipe("payroll-tie", gross="8000.00", withholdings="(1100.00 + 496.00)", net="6404.00")
         self.assertEqual(tie["rows"], [["6404.00", "0.00"]])
 
     def test_payroll_remittance_and_quarter_totals_tie_to_account_movements(self):
-        self.ledger.write_text(
-            'option "operating_currency" "USD"\n'
-            "2026-01-01 open Assets:Checking USD\n"
-            "2026-01-01 open Expenses:Payroll:Wages USD\n"
-            "2026-01-01 open Expenses:Payroll:EmployerTaxes USD\n"
-            "2026-01-01 open Liabilities:Payroll:IncomeTax USD\n"
-            "2026-01-01 open Liabilities:Payroll:SocialSecurity USD\n"
-            "2026-01-01 open Equity:OpeningBalances USD\n"
-            '2026-01-01 * "Opening"\n  Assets:Checking 50000.00 USD\n  Equity:OpeningBalances\n'
-            'include "transactions/2026.bean"\n'
-        )
+        self.open_ledger("Assets:Checking", "Expenses:Payroll:Wages", "Expenses:Payroll:EmployerTaxes",
+                         "Liabilities:Payroll:IncomeTax", "Liabilities:Payroll:SocialSecurity",
+                         "Equity:OpeningBalances",
+                         body='2026-01-01 * "Opening"\n  Assets:Checking 50000.00 USD\n  Equity:OpeningBalances\n')
 
         def run(day):
             return {
                 "date": day, "flag": "*", "payee": "Gusto", "narration": f"Payroll {day}",
                 "meta": {"payroll": day},
                 "postings": [
-                    {"account": "Expenses:Payroll:Wages", "units": {"number": "8000.00", "currency": "USD"}},
-                    {"account": "Expenses:Payroll:EmployerTaxes", "units": {"number": "496.00", "currency": "USD"}},
-                    {"account": "Liabilities:Payroll:IncomeTax", "units": {"number": "-1100.00", "currency": "USD"}},
-                    {"account": "Liabilities:Payroll:SocialSecurity", "units": {"number": "-992.00", "currency": "USD"}},
-                    {"account": "Assets:Checking", "units": {"number": "-6404.00", "currency": "USD"}}]}
+                    leg("Expenses:Payroll:Wages", "8000.00"),
+                    leg("Expenses:Payroll:EmployerTaxes", "496.00"),
+                    leg("Liabilities:Payroll:IncomeTax", "-1100.00"),
+                    leg("Liabilities:Payroll:SocialSecurity", "-992.00"),
+                    leg("Assets:Checking", "-6404.00")]}
 
         self.batch([
             run("2026-07-15"), run("2026-08-15"),
             # A remittance inside the quarter clears July's run only.
             {"date": "2026-08-10", "flag": "*", "payee": "Tax authority", "narration": "July deposit",
              "postings": [
-                 {"account": "Liabilities:Payroll:IncomeTax", "units": {"number": "1100.00", "currency": "USD"}},
-                 {"account": "Liabilities:Payroll:SocialSecurity", "units": {"number": "992.00", "currency": "USD"}},
-                 {"account": "Assets:Checking", "units": {"number": "-2092.00", "currency": "USD"}}]},
+                 leg("Liabilities:Payroll:IncomeTax", "1100.00"),
+                 leg("Liabilities:Payroll:SocialSecurity", "992.00"),
+                 leg("Assets:Checking", "-2092.00")]},
         ])
         self.recipe("batch")
         self.recipe("check")
-        quarter = {"2026-07-01": "2026-07-01", "2026-10-01": "2026-10-01"}
-        movement = {row[0]: row[1] for row in self.query_recipe("payroll-quarter", **quarter)}
+        movement = {row[0]: row[1] for row in self.query_recipe("payroll-quarter")}
         self.assertEqual(movement, {
             "Expenses:Payroll:EmployerTaxes": "992.00", "Expenses:Payroll:Wages": "16000.00",
             "Liabilities:Payroll:IncomeTax": "-1100.00", "Liabilities:Payroll:SocialSecurity": "-992.00"})
-        withheld = {row[0]: row[1] for row in self.query_recipe("payroll-withheld", **quarter)}
+        withheld = {row[0]: row[1] for row in self.query_recipe("payroll-withheld")}
         self.assertEqual(withheld, {"Liabilities:Payroll:IncomeTax": "-2200.00",
                                     "Liabilities:Payroll:SocialSecurity": "-1984.00"})
         # The add skill's read: what is still owed as of the quarter's end.
@@ -2344,15 +2328,8 @@ class TestBeaRecipes(unittest.TestCase):
                                 ["Liabilities:Payroll:SocialSecurity", "-992.00"]])
 
     def test_processor_payout_ties_to_its_rows_and_empties_clearing(self):
-        self.ledger.write_text(
-            'option "operating_currency" "USD"\n'
-            "2026-01-01 open Assets:Checking USD\n"
-            "2026-01-01 open Assets:Clearing:Stripe USD\n"
-            "2026-01-01 open Income:Sales USD\n"
-            "2026-01-01 open Expenses:Fees USD\n"
-            "2026-01-01 open Liabilities:SalesTax USD\n"
-            'include "transactions/2026.bean"\n'
-        )
+        self.open_ledger("Assets:Checking", "Assets:Clearing:Stripe", "Income:Sales", "Expenses:Fees",
+                         "Liabilities:SalesTax")
         # Two sales and a refund make one 157.28 payout.
         tie = self.recipe("payout-tie", rows_net="(96.80 + 77.38 + -16.90)", payout_total="157.28")
         self.assertEqual(tie["rows"], [["157.28", "0.00"]])
@@ -2361,12 +2338,12 @@ class TestBeaRecipes(unittest.TestCase):
 
         def sale(day, ident, gross, fee, tax, net):
             postings = [
-                {"account": "Assets:Clearing:Stripe", "units": {"number": net, "currency": "USD"}},
-                {"account": "Expenses:Fees", "units": {"number": fee, "currency": "USD"}},
-                {"account": "Income:Sales", "units": {"number": f"-{gross}", "currency": "USD"}},
+                leg("Assets:Clearing:Stripe", net),
+                leg("Expenses:Fees", fee),
+                leg("Income:Sales", f"-{gross}"),
             ]
             if tax:
-                postings.append({"account": "Liabilities:SalesTax", "units": {"number": f"-{tax}", "currency": "USD"}})
+                postings.append(leg("Liabilities:SalesTax", f"-{tax}"))
             return {"date": day, "flag": "*", "payee": "Stripe", "narration": f"Charge {ident}",
                     "meta": {"import-id": f"stripe:{ident}"}, "postings": postings}
 
@@ -2377,13 +2354,13 @@ class TestBeaRecipes(unittest.TestCase):
             {"date": "2026-10-03", "flag": "*", "payee": "Stripe", "narration": "Refund txn_a part",
              "meta": {"import-id": "stripe:txn_r"},
              "postings": [
-                 {"account": "Income:Sales", "units": {"number": "16.90", "currency": "USD"}},
-                 {"account": "Assets:Clearing:Stripe", "units": {"number": "-16.90", "currency": "USD"}}]},
+                 leg("Income:Sales", "16.90"),
+                 leg("Assets:Clearing:Stripe", "-16.90")]},
             {"date": "2026-10-05", "flag": "*", "payee": "Stripe", "narration": "Payout po_1",
              "meta": {"import-id": "stripe:po_1"},
              "postings": [
-                 {"account": "Assets:Clearing:Stripe", "units": {"number": "-157.28", "currency": "USD"}},
-                 {"account": "Assets:Checking", "units": {"number": "157.28", "currency": "USD"}}]},
+                 leg("Assets:Clearing:Stripe", "-157.28"),
+                 leg("Assets:Checking", "157.28")]},
             # A sale after the payout stays in transit.
             sale("2026-10-06", "txn_c", "50.00", "1.75", "", "48.25"),
         ])
@@ -2394,24 +2371,18 @@ class TestBeaRecipes(unittest.TestCase):
         self.assertEqual(self.recipe("clearing-balance", as_of="2026-10-07")["rows"], [["48.25"]])
 
     def test_bank_deposit_meets_the_payout_transfer_in_the_duplicate_window(self):
-        self.ledger.write_text(
-            'option "operating_currency" "USD"\n'
-            "2026-01-01 open Assets:Checking USD\n"
-            "2026-01-01 open Assets:Clearing:Stripe USD\n"
-            "2026-01-01 open Income:Sales USD\n"
-            'include "transactions/2026.bean"\n'
-        )
+        self.open_ledger("Assets:Checking", "Assets:Clearing:Stripe", "Income:Sales")
         self.batch([
             {"date": "2026-10-01", "flag": "*", "payee": "Stripe", "narration": "Charge txn_a",
              "meta": {"import-id": "stripe:txn_a"},
              "postings": [
-                 {"account": "Assets:Clearing:Stripe", "units": {"number": "157.28", "currency": "USD"}},
-                 {"account": "Income:Sales", "units": {"number": "-157.28", "currency": "USD"}}]},
+                 leg("Assets:Clearing:Stripe", "157.28"),
+                 leg("Income:Sales", "-157.28")]},
             {"date": "2026-10-05", "flag": "*", "payee": "Stripe", "narration": "Payout po_1",
              "meta": {"import-id": "stripe:po_1"},
              "postings": [
-                 {"account": "Assets:Clearing:Stripe", "units": {"number": "-157.28", "currency": "USD"}},
-                 {"account": "Assets:Checking", "units": {"number": "157.28", "currency": "USD"}}]},
+                 leg("Assets:Clearing:Stripe", "-157.28"),
+                 leg("Assets:Checking", "157.28")]},
         ])
         self.recipe("batch")
         # The bank export later shows "STRIPE TRANSFER" +157.28 on 10-07: the
@@ -2424,12 +2395,58 @@ class TestBeaRecipes(unittest.TestCase):
         balances = {row[0]: row[1] for row in self.query_recipe("account-balances")}
         self.assertEqual(balances["Assets:Checking"][0]["units"]["number"], "157.28")
 
+    def test_processor_charge_settling_an_invoice_credits_the_receivable_at_gross(self):
+        self.open_ledger("Assets:Checking", "Assets:AccountsReceivable", "Assets:Clearing:Stripe", "Income:Services",
+                         "Expenses:Fees")
+        self.values.update(receivable="Assets:AccountsReceivable", clearing="Assets:Clearing:Stripe")
+        self.batch([
+            {"date": "2026-09-20", "flag": "*", "payee": "Acme", "narration": "Invoice INV-031",
+             "links": ["inv-031"], "meta": {"invoice": "INV-031", "client": "acme"},
+             "postings": [
+                 leg("Assets:AccountsReceivable", "1000.00"),
+                 leg("Income:Services", "-1000.00")]},
+            {"date": "2026-10-01", "flag": "*", "payee": "Stripe", "narration": "Charge txn_a",
+             "links": ["inv-031"], "meta": {"import-id": "stripe:txn_a", "invoice": "INV-031"},
+             "postings": [
+                 leg("Assets:AccountsReceivable", "-1000.00"),
+                 leg("Expenses:Fees", "29.30"),
+                 leg("Assets:Clearing:Stripe", "970.70")]},
+        ])
+        self.recipe("batch")
+        self.recipe("check")
+        self.assertEqual(self.recipe("invoice-open")["rows"], [])
+        self.assertEqual(self.recipe("clearing-balance", as_of="2026-10-02")["rows"], [["970.70"]])
+        # The sale was revenue when invoiced; settling it adds none.
+        self.assertEqual(self.recipe("document-balance", account="Income:Services")["rows"], [["-1000.00"]])
+
+    def test_payout_reimport_finds_every_booked_row_by_its_processor_id(self):
+        self.open_ledger("Assets:Checking", "Assets:Clearing:Stripe", "Income:Sales")
+        exported = ["stripe:txn_a", "stripe:txn_r", "stripe:po_1"]
+        self.batch([
+            {"date": "2026-10-01", "flag": "*", "payee": "Stripe", "narration": "Charge txn_a",
+             "meta": {"import-id": "stripe:txn_a"},
+             "postings": [
+                 leg("Assets:Clearing:Stripe", "100.00"),
+                 leg("Income:Sales", "-100.00")]},
+            {"date": "2026-10-03", "flag": "*", "payee": "Stripe", "narration": "Refund txn_r",
+             "meta": {"import-id": "stripe:txn_r"},
+             "postings": [
+                 leg("Income:Sales", "16.90"),
+                 leg("Assets:Clearing:Stripe", "-16.90")]},
+            {"date": "2026-10-05", "flag": "*", "payee": "Stripe", "narration": "Payout po_1",
+             "meta": {"import-id": "stripe:po_1"},
+             "postings": [
+                 leg("Assets:Clearing:Stripe", "-83.10"),
+                 leg("Assets:Checking", "83.10")]},
+        ])
+        self.recipe("batch")
+        # Layer 1 drops every row of the same export, so the batch path stages nothing.
+        rows = self.recipe("duplicate-window", account="Assets:Clearing:Stripe",
+                           window_start="2026-09-28", window_end="2026-10-08")["rows"]
+        self.assertEqual([r[4] for r in rows], exported)
+
     def test_profit_by_client_counts_split_parts_once_and_ties_to_the_period(self):
-        self.ledger.write_text(
-            'option "operating_currency" "USD"\n'
-            "2026-01-01 open Assets:Checking USD\n"
-            "2026-01-01 open Income:Services USD\n"
-            "2026-01-01 open Expenses:Software USD\n"
+        self.open_ledger("Assets:Checking", "Income:Services", "Expenses:Software", include=False, body=(
             '2026-06-02 * "Acme" "Invoice"\n  client: "acme"\n'
             "  Assets:Checking 1000.00 USD\n  Income:Services -1000.00 USD\n"
             '2026-06-03 * "Globex" "Invoice"\n  client: "globex"\n'
@@ -2440,7 +2457,7 @@ class TestBeaRecipes(unittest.TestCase):
             # Outside the period, so neither read counts it.
             '2026-07-01 * "Acme" "Invoice"\n  client: "acme"\n'
             "  Assets:Checking 9.00 USD\n  Income:Services -9.00 USD\n"
-        )
+        ))
 
         def amount(total):
             (position,) = total
