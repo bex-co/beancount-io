@@ -164,7 +164,12 @@ function screen(
             LedgerOpeningState: { Known: "KNOWN" },
             useCurrentUserDefaultCurrencyQuery: () => ({ data: undefined }),
             useUpdateDefaultCurrencyMutation: () => [
-              async () => ({ data: undefined }),
+              async (options: { variables: { defaultCurrency: string } }) => {
+                events.push(
+                  `save-currency:${options.variables.defaultCurrency}`,
+                );
+                return { data: undefined };
+              },
               { loading: false },
             ],
             usePreviewLedgerSetupLazyQuery: () => [
@@ -250,8 +255,11 @@ describe("ledger creation directory refresh", () => {
     it(`waits for directory refresh before navigation; refresh failure=${fails} does not offer a duplicate creation`, async () => {
       const { submit, events } = screen(fails);
       await submit();
+      // The first ledger seeds the preference with the accepted suggestion
+      // (ADR026), after the create and without waiting for it.
       expect(events).toEqual([
         "created",
+        "save-currency:USD",
         "refresh-start",
         "refresh-settled",
         "select",
@@ -267,6 +275,7 @@ describe("ledger creation directory refresh", () => {
     await submit();
     expect(events).toEqual([
       "created",
+      "save-currency:USD",
       "refresh-start",
       "refresh-settled",
       "toast",
