@@ -475,3 +475,11 @@ One prompt, `import-stripe-payouts`; no skill description changed.
 
 - **Claude Code 2.1.289 (`claude-opus-5-5[1m]`)**, suite at `63561758f`: 1/1 routed to `beancount-import`.
 - **Codex 0.163.0:** not run (see the w2/m55 entry).
+
+## Business-books routing on Codex (w2/m55–m58) — 2026-11-01
+
+The four entries above left Codex not run. Codex accepts `gpt-6.1-sol` again, so the complete set ran there.
+
+- **Codex 0.166.0 (`gpt-6.1-sol`, client-default reasoning)**, suite at `df1cfd84e`, two complete passes: **128/128 each, 256/256**, zero errors and no recoveries, covering every new prompt and near-miss from the four entries above.
+- **Before side:** not rerun. Codex's last complete passes (candidate5 above, 115/115 twice) predate `beancount-invoices`, and with no miss after, no prompt that routed correctly then misroutes now.
+- **Claude Code:** the entries above stand (124/124 over the full set at `6421f036a`, then 3/3 and 1/1 for the prompts added after it). No skill `description` changed between those runs and suite 0.4.20, so neither client's result was rerun for the later cleanups.
