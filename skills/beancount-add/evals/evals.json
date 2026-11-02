@@ -227,6 +227,7 @@
       ],
       "expectations": [
         "No client: or project: key is proposed or written",
+        "The proposal says this entry carries no client or project key",
         "The proposal does not borrow Acme's client from another payee",
         "Nothing is written before an explicit yes"
       ]
