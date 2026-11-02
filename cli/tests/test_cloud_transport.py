@@ -368,6 +368,40 @@ class TestLogoutRevocationOutcome:
             assert json.loads(result.stderr)["error"]["category"] == category
 
 
+@pytest.mark.parametrize(
+    ("limit_owner", "next_step"),
+    [
+        ("REQUESTER", "Your plan sets this limit; upgrading raises it."),
+        ("LEDGER_OWNER", "The ledger owner's plan sets this limit, so only they can raise it."),
+        (None, None),
+    ],
+    ids=["own plan", "owner's plan", "no plan"],
+)
+def test_a_limit_says_whose_plan_set_it(
+    logged_in: None, httpx_mock: HTTPXMock, limit_owner: str | None, next_step: str | None
+) -> None:
+    """The default sentence stopped saying what to do (ADR 001 D13, w7/002)."""
+    message = "Ledger limit reached. Maximum: 1, Current: 1."
+    metadata: dict[str, object] = {"resource": "Ledger", "limit": 1, "current": 1}
+    if limit_owner:
+        metadata["limitOwner"] = limit_owner
+    httpx_mock.add_response(
+        status_code=403,
+        json={
+            "ok": False,
+            "error": {"code": "RESOURCE_LIMIT_REACHED", "message": message, "metadata": metadata},
+        },
+    )
+
+    result = CliRunner().invoke(app, ["cloud", "ledger", "create", "qa-synthetic"])
+
+    assert result.exit_code == 1, result.stderr
+    assert message in result.stderr
+    assert ("raise" in result.stderr) is (next_step is not None)
+    if next_step:
+        assert next_step in result.stderr
+
+
 @pytest.mark.parametrize("json_output", [False, True], ids=["human", "json"])
 def test_plan_limit_reads_as_the_server_says_not_as_a_permission_problem(
     logged_in: None, httpx_mock: HTTPXMock, json_output: bool

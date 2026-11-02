@@ -231,12 +231,28 @@ def error_code(body: object) -> str | None:
     return code if isinstance(code, str) else None
 
 
+def limit_owner(body: object) -> str | None:
+    """Whose plan set a limit, from the v1 envelope's `error.metadata`."""
+    error = body.get("error") if isinstance(body, Mapping) else None
+    metadata = error.get("metadata") if isinstance(error, Mapping) else None
+    owner = metadata.get("limitOwner") if isinstance(metadata, Mapping) else None
+    return owner if isinstance(owner, str) else None
+
+
+# What to do about a limit, by whose plan set it. A limit no plan sets has none.
+_LIMIT_NEXT_STEPS = {
+    "REQUESTER": "Your plan sets this limit; upgrading raises it.",
+    "LEDGER_OWNER": "The ledger owner's plan sets this limit, so only they can raise it.",
+}
+
+
 def error_from_status(
     status: int,
     message: str | None,
     *,
     request_id: str | None = None,
     code: str | None = None,
+    owner: str | None = None,
 ) -> BeaError:
     """Map a v1 HTTP status to the documented category, keeping the server's words.
 
@@ -245,9 +261,11 @@ def error_from_status(
     """
     detail = message or f"HTTP {status}"
     # A plan limit answers 403, but it is not a credential problem: the
-    # server's sentence already names the limit and the count.
+    # server's sentence names the limit and the count, and `owner` says who
+    # can change it.
     if code == "RESOURCE_LIMIT_REACHED":
-        return BeaError(detail, request_id=request_id)
+        next_step = _LIMIT_NEXT_STEPS.get(owner or "")
+        return BeaError(f"{detail} {next_step}" if next_step else detail, request_id=request_id)
     if status == 401:
         return AuthError(f"Not authorized ({detail}). {_auth_remedy()}", request_id=request_id)
     if status == 403:

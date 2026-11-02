@@ -200,6 +200,7 @@ def call[T](
                 _error_message(None, response.content),
                 request_id=request_id_from(response.headers),
                 code=_error_code(None, response.content),
+                owner=_limit_owner(response.content),
             )
             error.http_status = response.status_code
             raise error from exc
@@ -252,6 +253,7 @@ def unwrap_or_none[T](response: Response[T | V1Error], *, model: type | None = N
         _error_message(parsed, response.content),
         request_id=request_id_from(response.headers),
         code=_error_code(parsed, response.content),
+        owner=_limit_owner(response.content),
     )
 
 
@@ -263,6 +265,16 @@ def _error_code(parsed: object, content: bytes) -> str | None:
         return parsed.error.code
     try:
         return error_code(json.loads(content))
+    except (ValueError, RecursionError):
+        return None
+
+
+def _limit_owner(content: bytes) -> str | None:
+    """Whose plan set a limit; a refusal that names none, or no JSON, has none."""
+    from cli.errors import limit_owner
+
+    try:
+        return limit_owner(json.loads(content))
     except (ValueError, RecursionError):
         return None
 
