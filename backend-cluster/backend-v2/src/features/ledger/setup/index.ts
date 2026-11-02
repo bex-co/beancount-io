@@ -4,6 +4,7 @@ import fixturesJson from "./fixtures.json";
 
 export type CapabilityState = "enabled" | "declined" | "deferred";
 export type OpeningState = "unknown" | "zero" | "known";
+export type ModuleId = "investments@1" | "rental-property@1" | "side-business@1";
 export type PresetId =
   | "personal@1"
   | "freelance@1"
@@ -18,6 +19,8 @@ interface SetupCatalogAccount {
   name: string;
   kind: string;
   required: boolean;
+  /** Booking method written into the account's `open` line. */
+  booking?: string;
 }
 
 interface SetupCatalogQuestion {
@@ -45,6 +48,31 @@ export interface SetupPreset {
   };
 }
 
+interface SetupModuleParameter {
+  id: string;
+  /** The account-name segment this parameter replaces, e.g. `<Name>`. */
+  placeholder: string;
+  default: string;
+  pattern: string;
+  description: string;
+}
+
+/** A personal-only account group (PRFAQ001 Appendix A.9, ADR021). */
+export interface SetupModule {
+  id: string;
+  version: number;
+  title: string;
+  outcome: string;
+  allowedPresets: string[];
+  parameters: SetupModuleParameter[];
+  accounts: SetupCatalogAccount[];
+  categoryMeanings: Record<string, string>;
+  evidenceRequirements: string[];
+  firstUse: string;
+  teachingExamples: string[];
+  acceptanceScenario: SetupPreset["acceptanceScenario"];
+}
+
 export interface SetupCatalog {
   catalogVersion: number;
   source: string;
@@ -52,6 +80,7 @@ export interface SetupCatalog {
   capabilityStates: CapabilityState[];
   openingStates: OpeningState[];
   presets: SetupPreset[];
+  modules: SetupModule[];
 }
 
 export interface SetupCurrencies {
@@ -66,3 +95,6 @@ export const setupFixtures = fixturesJson.fixtures;
 
 export const presetById = (id: string): SetupPreset | undefined =>
   setupCatalog.presets.find((preset) => preset.id === id);
+
+export const moduleById = (id: string): SetupModule | undefined =>
+  setupCatalog.modules.find((module) => module.id === id);

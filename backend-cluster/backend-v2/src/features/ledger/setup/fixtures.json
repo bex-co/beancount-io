@@ -738,6 +738,207 @@
           "Liabilities:CreditCard": "-30 USD"
         }
       }
+    },
+    {
+      "id": "personal@1-module-investments",
+      "spec": {
+        "preset": "personal@1",
+        "title": "Personal ledger",
+        "operatingCurrency": "USD",
+        "historyStart": "2026-01-01",
+        "capabilities": {},
+        "accounts": [],
+        "modules": [
+          {
+            "id": "investments@1"
+          }
+        ]
+      },
+      "expected": {
+        "openedAccounts": [
+          "Assets:Cash",
+          "Assets:Bank",
+          "Liabilities:CreditCard",
+          "Liabilities:Loan",
+          "Income:General",
+          "Expenses:Food",
+          "Expenses:Housing",
+          "Expenses:Transport",
+          "Expenses:Utilities",
+          "Expenses:Health",
+          "Expenses:Other",
+          "Equity:OpeningBalances",
+          "Assets:Brokerage",
+          "Income:Dividends",
+          "Income:Interest",
+          "Income:CapitalGains",
+          "Expenses:Brokerage:Fees"
+        ],
+        "booking": {
+          "Assets:Brokerage": "FIFO"
+        },
+        "scenario": {
+          "given": "A personal ledger with the investments module",
+          "action": "Receive a dividend of 40 into the brokerage account",
+          "expected": {
+            "Assets:Brokerage": "40",
+            "Income:Dividends": "40"
+          }
+        }
+      }
+    },
+    {
+      "id": "personal@1-module-rental-property",
+      "spec": {
+        "preset": "personal@1",
+        "title": "Personal ledger",
+        "operatingCurrency": "USD",
+        "historyStart": "2026-01-01",
+        "capabilities": {},
+        "accounts": [],
+        "modules": [
+          {
+            "id": "rental-property@1",
+            "propertyName": "OakSt"
+          }
+        ]
+      },
+      "expected": {
+        "openedAccounts": [
+          "Assets:Cash",
+          "Assets:Bank",
+          "Liabilities:CreditCard",
+          "Liabilities:Loan",
+          "Income:General",
+          "Expenses:Food",
+          "Expenses:Housing",
+          "Expenses:Transport",
+          "Expenses:Utilities",
+          "Expenses:Health",
+          "Expenses:Other",
+          "Equity:OpeningBalances",
+          "Income:Rent:OakSt",
+          "Liabilities:Deposits:OakSt",
+          "Expenses:Rental:OakSt:Repairs",
+          "Expenses:Rental:OakSt:Insurance",
+          "Expenses:Rental:OakSt:Management",
+          "Expenses:Rental:OakSt:Other"
+        ]
+      }
+    },
+    {
+      "id": "personal@1-module-side-business",
+      "spec": {
+        "preset": "personal@1",
+        "title": "Personal ledger",
+        "operatingCurrency": "USD",
+        "historyStart": "2026-01-01",
+        "capabilities": {},
+        "accounts": [],
+        "modules": [
+          {
+            "id": "side-business@1"
+          }
+        ]
+      },
+      "expected": {
+        "openedAccounts": [
+          "Assets:Cash",
+          "Assets:Bank",
+          "Liabilities:CreditCard",
+          "Liabilities:Loan",
+          "Income:General",
+          "Expenses:Food",
+          "Expenses:Housing",
+          "Expenses:Transport",
+          "Expenses:Utilities",
+          "Expenses:Health",
+          "Expenses:Other",
+          "Equity:OpeningBalances",
+          "Assets:Business:Bank",
+          "Income:Business:Services",
+          "Expenses:Business:Software",
+          "Expenses:Business:Supplies",
+          "Expenses:Business:Travel",
+          "Expenses:Business:Fees"
+        ],
+        "scenario": {
+          "given": "A personal ledger with the side-business module",
+          "action": "Receive a client payment of 500 into the business bank",
+          "expected": {
+            "Assets:Business:Bank": "500",
+            "Income:Business:Services": "500"
+          }
+        }
+      }
+    },
+    {
+      "id": "personal@1-modules-all",
+      "spec": {
+        "preset": "personal@1",
+        "title": "Personal ledger",
+        "operatingCurrency": "USD",
+        "historyStart": "2026-01-01",
+        "capabilities": {},
+        "accounts": [],
+        "modules": [
+          {
+            "id": "side-business@1"
+          },
+          {
+            "id": "rental-property@1"
+          },
+          {
+            "id": "investments@1"
+          }
+        ]
+      },
+      "expected": {
+        "openedAccounts": [
+          "Assets:Cash",
+          "Assets:Bank",
+          "Liabilities:CreditCard",
+          "Liabilities:Loan",
+          "Income:General",
+          "Expenses:Food",
+          "Expenses:Housing",
+          "Expenses:Transport",
+          "Expenses:Utilities",
+          "Expenses:Health",
+          "Expenses:Other",
+          "Equity:OpeningBalances",
+          "Assets:Brokerage",
+          "Income:Dividends",
+          "Income:Interest",
+          "Income:CapitalGains",
+          "Expenses:Brokerage:Fees",
+          "Income:Rent:Property1",
+          "Liabilities:Deposits:Property1",
+          "Expenses:Rental:Property1:Repairs",
+          "Expenses:Rental:Property1:Insurance",
+          "Expenses:Rental:Property1:Management",
+          "Expenses:Rental:Property1:Other",
+          "Assets:Business:Bank",
+          "Income:Business:Services",
+          "Expenses:Business:Software",
+          "Expenses:Business:Supplies",
+          "Expenses:Business:Travel",
+          "Expenses:Business:Fees"
+        ],
+        "scenario": {
+          "given": "A personal ledger with all three modules, the rental property named Property1",
+          "action": "Receive a dividend of 40, rent of 1,200 for Property1 with a repair of 50, and a client payment of 500 into the business bank",
+          "expected": {
+            "Assets:Brokerage": "40",
+            "Income:Dividends": "40",
+            "Assets:Bank": "1150",
+            "Income:Rent:Property1": "1200",
+            "Expenses:Rental:Property1:Repairs": "50",
+            "Assets:Business:Bank": "500",
+            "Income:Business:Services": "500"
+          }
+        }
+      }
     }
   ]
 }

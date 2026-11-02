@@ -680,5 +680,208 @@
         }
       }
     }
+  ],
+  "modules": [
+    {
+      "id": "investments@1",
+      "version": 1,
+      "title": "Investments",
+      "outcome": "Record dividends, interest, and trades in a brokerage account kept in the same books.",
+      "allowedPresets": [
+        "personal@1"
+      ],
+      "parameters": [],
+      "accounts": [
+        {
+          "name": "Assets:Brokerage",
+          "kind": "holdings",
+          "required": true,
+          "booking": "FIFO"
+        },
+        {
+          "name": "Income:Dividends",
+          "kind": "income",
+          "required": true
+        },
+        {
+          "name": "Income:Interest",
+          "kind": "income",
+          "required": true
+        },
+        {
+          "name": "Income:CapitalGains",
+          "kind": "income",
+          "required": true
+        },
+        {
+          "name": "Expenses:Brokerage:Fees",
+          "kind": "expense",
+          "required": true
+        }
+      ],
+      "categoryMeanings": {
+        "Assets:Brokerage": "Brokerage cash and holdings; reductions take the oldest lot (FIFO) unless the open line is changed before the first trade",
+        "Income:CapitalGains": "Realized gains and losses on sales, never unrealized price changes"
+      },
+      "evidenceRequirements": [
+        "Acquisition dates, units, and cost per lot",
+        "Broker statements for dividends and interest",
+        "Sale proceeds and fees"
+      ],
+      "firstUse": "At the first trade, ask for existing holdings, units, cost, and acquisition dates.",
+      "teachingExamples": [
+        "Share purchase",
+        "Dividend",
+        "Sale with a realized gain"
+      ],
+      "acceptanceScenario": {
+        "given": "A personal ledger with the investments module",
+        "action": "Receive a dividend of 40 into the brokerage account",
+        "expected": {
+          "Assets:Brokerage": "40",
+          "Income:Dividends": "40"
+        }
+      }
+    },
+    {
+      "id": "rental-property@1",
+      "version": 1,
+      "title": "Rental property",
+      "outcome": "Keep rent, deposits, and costs attributable to each property in the same books.",
+      "allowedPresets": [
+        "personal@1"
+      ],
+      "parameters": [
+        {
+          "id": "propertyName",
+          "placeholder": "<Name>",
+          "default": "Property1",
+          "pattern": "^[A-Z0-9][A-Za-z0-9-]{0,63}$",
+          "description": "ASCII account component naming the property: starts with a capital letter or digit, then letters, digits, or hyphens, at most 64 characters"
+        }
+      ],
+      "accounts": [
+        {
+          "name": "Income:Rent:<Name>",
+          "kind": "income",
+          "required": true
+        },
+        {
+          "name": "Liabilities:Deposits:<Name>",
+          "kind": "other",
+          "required": true
+        },
+        {
+          "name": "Expenses:Rental:<Name>:Repairs",
+          "kind": "expense",
+          "required": true
+        },
+        {
+          "name": "Expenses:Rental:<Name>:Insurance",
+          "kind": "expense",
+          "required": true
+        },
+        {
+          "name": "Expenses:Rental:<Name>:Management",
+          "kind": "expense",
+          "required": true
+        },
+        {
+          "name": "Expenses:Rental:<Name>:Other",
+          "kind": "expense",
+          "required": true
+        }
+      ],
+      "categoryMeanings": {
+        "Income:Rent:<Name>": "Rental income for this property only",
+        "Liabilities:Deposits:<Name>": "Refundable deposits held for this property, never income"
+      },
+      "evidenceRequirements": [
+        "Property and ownership attribution",
+        "Rental periods",
+        "Receipts and supporting invoices",
+        "Acquisition and improvement records"
+      ],
+      "firstUse": "At the first mortgage payment or purchase record, open Liabilities:Mortgage:<Name> and the property asset, as beancount-property does.",
+      "teachingExamples": [
+        "Rent receipt",
+        "Refundable deposit and return",
+        "Repair payment"
+      ],
+      "acceptanceScenario": {
+        "given": "A personal ledger with the rental-property module for Property1",
+        "action": "Receive rent of 1,200 into the bank and pay a repair of 50",
+        "expected": {
+          "Assets:Bank": "1150",
+          "Income:Rent:Property1": "1200",
+          "Expenses:Rental:Property1:Repairs": "50"
+        }
+      }
+    },
+    {
+      "id": "side-business@1",
+      "version": 1,
+      "title": "Side business",
+      "outcome": "Record client income and business costs in their own group, with business money in its own bank account.",
+      "allowedPresets": [
+        "personal@1"
+      ],
+      "parameters": [],
+      "accounts": [
+        {
+          "name": "Assets:Business:Bank",
+          "kind": "bank",
+          "required": true
+        },
+        {
+          "name": "Income:Business:Services",
+          "kind": "income",
+          "required": true
+        },
+        {
+          "name": "Expenses:Business:Software",
+          "kind": "expense",
+          "required": true
+        },
+        {
+          "name": "Expenses:Business:Supplies",
+          "kind": "expense",
+          "required": true
+        },
+        {
+          "name": "Expenses:Business:Travel",
+          "kind": "expense",
+          "required": true
+        },
+        {
+          "name": "Expenses:Business:Fees",
+          "kind": "expense",
+          "required": true
+        }
+      ],
+      "categoryMeanings": {
+        "Assets:Business:Bank": "Business money, kept apart from personal accounts; moving money between them is an ordinary transfer, not owner equity"
+      },
+      "evidenceRequirements": [
+        "Business purpose and source documents",
+        "Personal/business splits",
+        "Gross customer receipts and separate payment fees",
+        "Invoice and settlement dates"
+      ],
+      "firstUse": "At the first client payment, ask for client details; a second business is added later under its own name space.",
+      "teachingExamples": [
+        "Client payment",
+        "Software subscription",
+        "Transfer to personal bank"
+      ],
+      "acceptanceScenario": {
+        "given": "A personal ledger with the side-business module",
+        "action": "Receive a client payment of 500 into the business bank",
+        "expected": {
+          "Assets:Business:Bank": "500",
+          "Income:Business:Services": "500"
+        }
+      }
+    }
   ]
 }

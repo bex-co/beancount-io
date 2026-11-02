@@ -1,5 +1,11 @@
 import "reflect-metadata";
-import { presetById, setupCatalog, setupCurrencies, setupFixtures } from "..";
+import {
+  moduleById,
+  presetById,
+  setupCatalog,
+  setupCurrencies,
+  setupFixtures,
+} from "..";
 import { LedgerSetupPreset } from "@/features/ledger/api/resolvers/ledger-resolver.types";
 
 const EXPECTED_PRESETS = [
@@ -65,6 +71,96 @@ describe("setup catalog (w3/m53/t001)", () => {
   });
 });
 
+describe("setup catalog modules (w3/m59/t001)", () => {
+  const EXPECTED_MODULES = [
+    "investments@1",
+    "rental-property@1",
+    "side-business@1",
+  ];
+  // PRFAQ001 Appendix A.9, with the rental property at its default name.
+  const A9_ACCOUNTS = [
+    "Assets:Brokerage",
+    "Income:Dividends",
+    "Income:Interest",
+    "Income:CapitalGains",
+    "Expenses:Brokerage:Fees",
+    "Income:Rent:<Name>",
+    "Liabilities:Deposits:<Name>",
+    "Expenses:Rental:<Name>:Repairs",
+    "Expenses:Rental:<Name>:Insurance",
+    "Expenses:Rental:<Name>:Management",
+    "Expenses:Rental:<Name>:Other",
+    "Assets:Business:Bank",
+    "Income:Business:Services",
+    "Expenses:Business:Software",
+    "Expenses:Business:Supplies",
+    "Expenses:Business:Travel",
+    "Expenses:Business:Fees",
+  ];
+  const moduleAccounts = setupCatalog.modules.flatMap((module) =>
+    module.accounts.map((account) => account.name),
+  );
+
+  it("freezes the three A.9 modules at version 1, personal only", () => {
+    expect(setupCatalog.modules.map((module) => module.id)).toEqual(
+      EXPECTED_MODULES,
+    );
+    for (const module of setupCatalog.modules) {
+      expect(module.version).toBe(1);
+      expect(moduleById(module.id)).toBe(module);
+      expect(module.allowedPresets).toEqual(["personal@1"]);
+      expect(module.outcome.length).toBeGreaterThan(0);
+      expect(module.firstUse.length).toBeGreaterThan(0);
+      expect(
+        Object.keys(module.acceptanceScenario.expected).length,
+      ).toBeGreaterThan(0);
+    }
+  });
+
+  it("puts every A.9 account in exactly one module", () => {
+    expect([...moduleAccounts].sort()).toEqual([...A9_ACCOUNTS].sort());
+    expect(new Set(moduleAccounts).size).toBe(moduleAccounts.length);
+  });
+
+  it("never collides with a personal@1 account", () => {
+    const personal = new Set(
+      presetById("personal@1")!.accounts.map((account) => account.name),
+    );
+    for (const name of moduleAccounts) expect(personal.has(name)).toBe(false);
+  });
+
+  it("names the rental property through one ASCII parameter defaulting to Property1", () => {
+    const rental = moduleById("rental-property@1")!;
+    expect(rental.parameters).toHaveLength(1);
+    const [property] = rental.parameters;
+    expect(property).toMatchObject({
+      id: "propertyName",
+      placeholder: "<Name>",
+      default: "Property1",
+    });
+    const pattern = new RegExp(property!.pattern);
+    expect(pattern.test("Property1")).toBe(true);
+    expect(pattern.test("OakSt-2")).toBe(true);
+    for (const bad of ["oakSt", "Oak St", "Oak:St", "Café", "", "A".repeat(65)]) {
+      expect(pattern.test(bad)).toBe(false);
+    }
+    for (const account of rental.accounts) {
+      expect(account.name).toContain("<Name>");
+    }
+    for (const id of ["investments@1", "side-business@1"]) {
+      expect(moduleById(id)!.parameters).toEqual([]);
+    }
+  });
+
+  it("books the brokerage FIFO, as beancount-trade expects", () => {
+    expect(
+      moduleById("investments@1")!.accounts.find(
+        (account) => account.name === "Assets:Brokerage",
+      )?.booking,
+    ).toBe("FIFO");
+  });
+});
+
 describe("setup currency tables", () => {
   it("lists active ISO 4217 alphabetic codes", () => {
     expect(setupCurrencies.supportedCurrencies).toContain("USD");
@@ -104,6 +200,25 @@ describe("setup conformance fixtures", () => {
         setupFixtures.some((fixture) => fixture.id === `${id}-acceptance`),
       ).toBe(true);
     }
+  });
+
+  it("covers each module alone and all three together", () => {
+    const moduleSets = setupFixtures
+      .filter((fixture) => "modules" in fixture.spec)
+      .map((fixture) =>
+        ((fixture.spec as { modules: { id: string }[] }).modules ?? [])
+          .map((module) => module.id)
+          .sort()
+          .join(","),
+      );
+    expect(moduleSets).toEqual(
+      expect.arrayContaining([
+        "investments@1",
+        "rental-property@1",
+        "side-business@1",
+        "investments@1,rental-property@1,side-business@1",
+      ]),
+    );
   });
 
   it("distinguishes unknown, zero, and known opening states", () => {
