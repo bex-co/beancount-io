@@ -2,8 +2,8 @@ import currencies from "./setup-currencies.json";
 import timeZones from "./time-zone-regions.json";
 
 /**
- * Where a suggested currency came from (ADR026). `flow` is a selection the
- * customer already made in this flow; the form keeps it and never re-suggests.
+ * Where a suggested currency came from (ADR026). A selection the customer
+ * already made in this flow is kept by the form and never re-suggested.
  */
 export type CurrencySource = "saved" | "region" | "fallback";
 

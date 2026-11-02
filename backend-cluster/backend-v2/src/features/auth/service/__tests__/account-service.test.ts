@@ -1259,41 +1259,33 @@ describe("AccountService", () => {
   });
 
   describe("updateProfile", () => {
-    it("should update profile successfully", async () => {
-      const userId = "user-123";
-      const mockUser = {
-        id: "507f1f77bcf86cd799439011",
-        email: "test@example.com",
-      };
-
-      mockModels.user.getById = jest.fn().mockResolvedValue(mockUser);
+    const userId = "user-123";
+    beforeEach(() => {
       mockModels.user = {
         ...mockModels.user,
-        updateFirstName: jest.fn().mockResolvedValue(undefined),
-        updateLastName: jest.fn().mockResolvedValue(undefined),
+        getById: jest
+          .fn()
+          .mockResolvedValue({ id: userId, email: "test@example.com" }),
+        updateUser: jest.fn().mockResolvedValue(undefined),
       };
+    });
 
+    it("writes both names in one update", async () => {
       const result = await accountService.updateProfile(identity(userId), {
         firstName: "John",
         lastName: "Doe",
       });
-
       expect(result).not.toBeNull();
-      expect(mockModels.user.updateFirstName).toHaveBeenCalledWith(
+      expect(mockModels.user.updateUser).toHaveBeenCalledTimes(1);
+      expect(mockModels.user.updateUser).toHaveBeenCalledWith(
         expect.any(Object),
         userId,
-        "John",
-      );
-      expect(mockModels.user.updateLastName).toHaveBeenCalledWith(
-        expect.any(Object),
-        userId,
-        "Doe",
+        { firstName: "John", lastName: "Doe" },
       );
     });
 
     it("should throw error when user not found", async () => {
       mockModels.user.getById = jest.fn().mockResolvedValue(null);
-
       await expect(
         accountService.updateProfile(identity("nonexistent-user"), {
           firstName: "John",
@@ -1306,75 +1298,55 @@ describe("AccountService", () => {
           lastName: "Doe",
         }),
       ).rejects.toThrow(/not found/);
+      expect(mockModels.user.updateUser).not.toHaveBeenCalled();
     });
 
-    it("should update profile with empty strings", async () => {
-      const userId = "user-123";
-      const mockUser = {
-        id: "507f1f77bcf86cd799439011",
-        email: "test@example.com",
-      };
-
-      mockModels.user.getById = jest.fn().mockResolvedValue(mockUser);
-      mockModels.user = {
-        ...mockModels.user,
-        updateFirstName: jest.fn().mockResolvedValue(undefined),
-        updateLastName: jest.fn().mockResolvedValue(undefined),
-      };
-
-      const result = await accountService.updateProfile(identity(userId), {
+    it("stores an omitted or empty name as empty, as before", async () => {
+      await accountService.updateProfile(identity(userId), {
         firstName: "",
-        lastName: "",
+        lastName: null,
       });
-
-      expect(result).not.toBeNull();
-      expect(mockModels.user.updateFirstName).toHaveBeenCalledWith(
+      expect(mockModels.user.updateUser).toHaveBeenCalledWith(
         expect.any(Object),
         userId,
-        "",
-      );
-      expect(mockModels.user.updateLastName).toHaveBeenCalledWith(
-        expect.any(Object),
-        userId,
-        "",
+        { firstName: "", lastName: "" },
       );
     });
 
     describe("defaultCurrency (ADR026, w3/m60/t001)", () => {
-      const userId = "user-123";
-      beforeEach(() => {
-        mockModels.user = {
-          ...mockModels.user,
-          getById: jest
-            .fn()
-            .mockResolvedValue({ id: userId, email: "test@example.com" }),
-          updateFirstName: jest.fn().mockResolvedValue(undefined),
-          updateLastName: jest.fn().mockResolvedValue(undefined),
-          updateDefaultCurrency: jest.fn().mockResolvedValue(undefined),
-        };
-      });
-
       it("stores a supported currency and leaves the names alone when sent by itself", async () => {
         await accountService.updateProfile(identity(userId), {
           defaultCurrency: "EUR",
         });
-        expect(mockModels.user.updateDefaultCurrency).toHaveBeenCalledWith(
+        expect(mockModels.user.updateUser).toHaveBeenCalledWith(
           expect.any(Object),
           userId,
-          "EUR",
+          { defaultCurrency: "EUR" },
         );
-        expect(mockModels.user.updateFirstName).not.toHaveBeenCalled();
-        expect(mockModels.user.updateLastName).not.toHaveBeenCalled();
       });
 
       it("clears it with null", async () => {
         await accountService.updateProfile(identity(userId), {
           defaultCurrency: null,
         });
-        expect(mockModels.user.updateDefaultCurrency).toHaveBeenCalledWith(
+        expect(mockModels.user.updateUser).toHaveBeenCalledWith(
           expect.any(Object),
           userId,
-          null,
+          { defaultCurrency: null },
+        );
+      });
+
+      it("writes names and currency together in one update", async () => {
+        await accountService.updateProfile(identity(userId), {
+          firstName: "John",
+          lastName: "Doe",
+          defaultCurrency: "GBP",
+        });
+        expect(mockModels.user.updateUser).toHaveBeenCalledTimes(1);
+        expect(mockModels.user.updateUser).toHaveBeenCalledWith(
+          expect.any(Object),
+          userId,
+          { firstName: "John", lastName: "Doe", defaultCurrency: "GBP" },
         );
       });
 
@@ -1385,8 +1357,7 @@ describe("AccountService", () => {
             defaultCurrency: "XYZ",
           }),
         ).rejects.toThrow(ValidationError);
-        expect(mockModels.user.updateDefaultCurrency).not.toHaveBeenCalled();
-        expect(mockModels.user.updateFirstName).not.toHaveBeenCalled();
+        expect(mockModels.user.updateUser).not.toHaveBeenCalled();
       });
 
       it("keeps a names-only update from touching the currency", async () => {
@@ -1394,13 +1365,13 @@ describe("AccountService", () => {
           firstName: "John",
           lastName: "Doe",
         });
-        expect(mockModels.user.updateDefaultCurrency).not.toHaveBeenCalled();
-        expect(mockModels.user.updateFirstName).toHaveBeenCalledWith(
-          expect.any(Object),
-          userId,
-          "John",
-        );
+        expect(
+          updatedFields(mockModels.user.updateUser as jest.Mock),
+        ).not.toContain("defaultCurrency");
       });
     });
   });
 });
+
+const updatedFields = (mock: jest.Mock): string[] =>
+  Object.keys((mock.mock.calls[0]?.[2] ?? {}) as object);

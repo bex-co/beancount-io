@@ -41,6 +41,8 @@ export interface UpdateUserInput {
   locale?: string;
   firstName?: string;
   lastName?: string;
+  /** ADR026 saved currency preference; null clears it. */
+  defaultCurrency?: string | null;
   isBlocked?: boolean;
   ledger_api_token?: string;
 }
@@ -115,11 +117,6 @@ export interface IUserModel {
     db: DbExecutor,
     userId: string,
     lastName: string,
-  ): Promise<void>;
-  updateDefaultCurrency(
-    db: DbExecutor,
-    userId: string,
-    currency: string | null,
   ): Promise<void>;
   updateLastSeenAt(db: DbExecutor, userId: string, at: Date): Promise<void>;
   getRecentlySeenUsers(

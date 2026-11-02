@@ -1,6 +1,6 @@
 # w3 · m60 — Ledger creation: the two-step flow with modules and the ADR026 currency suggestion
 
-**Worker:** worker3 **Goal:** the dashboard and native creation flows match the 2026-10-27 design — purpose, then details — offer the personal modules, drop the history-start question, and suggest a currency from the saved preference, region, and time zone with its source shown. **Status:** in progress (t001–t006 done)
+**Worker:** worker3 **Goal:** the dashboard and native creation flows match the 2026-10-27 design — purpose, then details — offer the personal modules, drop the history-start question, and suggest a currency from the saved preference, region, and time zone with its source shown. **Status:** in progress (t001–t007 done)
 
 ## Tasks (in order)
 
@@ -12,7 +12,7 @@
 | t004 | Resolve the native currency suggestion with its source — **DONE** | 60m | t001 |
 | t005 | Rework the native flow to two steps with modules — **DONE** | 180m | t004 |
 | t006 | Adoption surface — **DONE** | 30m | t003, t005 |
-| t007 | Simplify | 20m | t006 |
+| t007 | Simplify — **DONE** | 20m | t006 |
 | t008 | Test coverage | 45m | t006 |
 | t009 | Closeout | 10m | t007, t008 |
 

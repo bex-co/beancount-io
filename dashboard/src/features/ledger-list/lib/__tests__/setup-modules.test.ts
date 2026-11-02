@@ -8,6 +8,8 @@ import {
   PROPERTY_PLACEHOLDER,
   SETUP_MODULES,
   moduleAccounts,
+  modulesFor,
+  setupModules,
 } from "../setup-modules";
 
 const canonical = resolve(
@@ -28,6 +30,7 @@ describe("setup modules (w3/m60/t003)", () => {
       const catalog = JSON.parse(readFileSync(canonical, "utf8")) as {
         modules: {
           id: string;
+          allowedPresets: string[];
           accounts: { name: string }[];
           parameters: {
             placeholder: string;
@@ -41,12 +44,17 @@ describe("setup modules (w3/m60/t003)", () => {
           id: module.catalogId,
           accounts: module.accounts,
           named: Boolean(module.takesPropertyName),
+          allowedPresets: module.allowedPresets,
         })),
       ).toEqual(
         catalog.modules.map((module) => ({
           id: module.id,
           accounts: module.accounts.map((account) => account.name),
           named: module.parameters.length > 0,
+          // `personal@1` is the GraphQL enum value `PERSONAL`.
+          allowedPresets: module.allowedPresets.map((id) =>
+            id.split("@")[0]!.toUpperCase().replaceAll("-", "_"),
+          ),
         })),
       );
       const [parameter] = catalog.modules.find(
@@ -59,6 +67,19 @@ describe("setup modules (w3/m60/t003)", () => {
       });
     },
   );
+
+  it("offers modules to the purposes the catalog allows, in catalog order", () => {
+    expect(modulesFor("PERSONAL")).toHaveLength(3);
+    expect(modulesFor("FREELANCE")).toEqual([]);
+    expect(
+      setupModules("PERSONAL", ["SIDE_BUSINESS", "RENTAL_PROPERTY"], " OakSt "),
+    ).toEqual([
+      { id: "RENTAL_PROPERTY", propertyName: "OakSt" },
+      { id: "SIDE_BUSINESS" },
+    ]);
+    expect(setupModules("FREELANCE", ["INVESTMENTS"])).toBeUndefined();
+    expect(setupModules("PERSONAL", [])).toBeUndefined();
+  });
 
   it("fills the property name into the rental accounts, Property1 by default", () => {
     const rental = SETUP_MODULES.find((module) => module.takesPropertyName)!;

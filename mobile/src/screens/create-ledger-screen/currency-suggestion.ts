@@ -1,4 +1,5 @@
 import setupCurrencies from "./setup-currencies.json";
+import { isSetupCurrency } from "./setup-presets";
 import timeZones from "./time-zone-regions.json";
 
 /**
@@ -17,13 +18,12 @@ export interface CurrencySuggestion {
   timeZoneCandidate?: string;
 }
 
-const SUPPORTED = new Set(setupCurrencies.supportedCurrencies);
 const REGION_CURRENCY: Readonly<Record<string, string>> =
   setupCurrencies.regionCurrency;
 const ZONE_REGION: Readonly<Record<string, string>> = timeZones.zoneRegion;
 
 const supported = (code: string | null | undefined): code is string =>
-  !!code && SUPPORTED.has(code.toUpperCase());
+  !!code && isSetupCurrency(code);
 
 /**
  * Resolve the currency the creation screen preselects (ADR026): the saved
@@ -45,7 +45,7 @@ export function suggestCurrency({
   timeZone?: string | null;
 }): CurrencySuggestion {
   if (supported(saved))
-    return { currency: saved.toUpperCase(), source: "saved" };
+    return { currency: saved.trim().toUpperCase(), source: "saved" };
 
   const regionCode = region?.toUpperCase();
   const regionCurrency =
@@ -53,7 +53,7 @@ export function suggestCurrency({
       ? REGION_CURRENCY[regionCode]
       : undefined;
   const suggestion: CurrencySuggestion = supported(nativeCurrency)
-    ? { currency: nativeCurrency.toUpperCase(), source: "native" }
+    ? { currency: nativeCurrency.trim().toUpperCase(), source: "native" }
     : regionCurrency
       ? { currency: regionCurrency, source: "region" }
       : { currency: "USD", source: "fallback" };

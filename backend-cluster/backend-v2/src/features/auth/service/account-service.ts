@@ -339,17 +339,13 @@ export class AccountService implements IAccountService {
       defaultCurrency !== undefined &&
       firstName === undefined &&
       lastName === undefined;
-    if (!currencyOnly) {
-      await this.models.user.updateFirstName(this.db, userId, firstName ?? "");
-      await this.models.user.updateLastName(this.db, userId, lastName ?? "");
-    }
-    if (defaultCurrency !== undefined) {
-      await this.models.user.updateDefaultCurrency(
-        this.db,
-        userId,
-        defaultCurrency,
-      );
-    }
+    // One statement, so a profile change lands whole.
+    await this.models.user.updateUser(this.db, userId, {
+      ...(currencyOnly
+        ? {}
+        : { firstName: firstName ?? "", lastName: lastName ?? "" }),
+      ...(defaultCurrency !== undefined ? { defaultCurrency } : {}),
+    });
     return this.loadUserProfile(userId);
   };
 

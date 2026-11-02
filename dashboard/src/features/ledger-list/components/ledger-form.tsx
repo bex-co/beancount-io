@@ -16,7 +16,6 @@ import {
 import { AlertTriangle, Files } from "lucide-react";
 import {
   LedgerOpeningState,
-  LedgerSetupPreset,
   LedgerTemplate,
   PreviewLedgerSetupDocument,
   UpdateDefaultCurrencyDocument,
@@ -34,9 +33,11 @@ import { SETUP_PRESETS } from "../lib/setup-presets";
 import {
   DEFAULT_PROPERTY_NAME,
   PROPERTY_NAME_PATTERN,
-  SETUP_MODULES,
   moduleAccounts,
+  modulesFor,
+  setupModules,
 } from "../lib/setup-modules";
+import { Checkbox } from "@/common/components/ui/checkbox";
 import {
   browserCurrencyInputs,
   currencyToSave,
@@ -272,33 +273,23 @@ export function LedgerForm({
   // opening amount is re-entered after an interruption: a raw balance is
   // never written to browser storage.
   const watchedValues = form.watch();
-  const draftValues = JSON.stringify({ ...watchedValues, openingAmount: "" });
-  const draftModules = JSON.stringify(modules);
-  useEffect(() => {
-    if (!isCreate) return;
-    try {
-      const next: CreateDraft = {
-        step,
-        currencyChosen,
-        startKind,
-        presetId,
-        modules: JSON.parse(draftModules) as string[],
-        requestId: requestIdRef.current,
-        values: JSON.parse(draftValues) as Record<string, unknown>,
-      };
-      sessionStorage.setItem(DRAFT_KEY, JSON.stringify(next));
-    } catch {
-      // Session storage unavailable: the flow still works in-memory.
-    }
-  }, [
-    isCreate,
+  const draftJson = JSON.stringify({
     step,
     currencyChosen,
     startKind,
     presetId,
-    draftModules,
-    draftValues,
-  ]);
+    modules,
+    requestId: requestIdRef.current,
+    values: { ...watchedValues, openingAmount: "" },
+  } satisfies CreateDraft);
+  useEffect(() => {
+    if (!isCreate) return;
+    try {
+      sessionStorage.setItem(DRAFT_KEY, draftJson);
+    } catch {
+      // Session storage unavailable: the flow still works in-memory.
+    }
+  }, [isCreate, draftJson]);
 
   // Watch fields for dynamic UI updates
   const isPrivate = form.watch("private");
@@ -321,7 +312,8 @@ export function LedgerForm({
   }, [ledgerName, slugifiedName]);
 
   const preset = SETUP_PRESETS.find((entry) => entry.id === presetId);
-  const isPersonal = preset?.id === LedgerSetupPreset.Personal;
+  const offeredModules = startKind === "preset" ? modulesFor(preset?.id) : [];
+  const currencyOf = (value?: string) => (value || "USD").toUpperCase();
   const moneyAccounts =
     preset?.accounts.filter((account) => account.money) ?? [];
   const hasKnownBalance = Boolean(openingAccount && openingAmount?.trim());
@@ -349,28 +341,16 @@ export function LedgerForm({
     if (!preset) return undefined;
     const amount = data.openingAmount?.trim();
     const known = Boolean(amount && data.openingAccount);
-    // Modules belong to personal books only; another purpose sends none.
-    const chosen = isPersonal
-      ? SETUP_MODULES.filter((module) => modules.includes(module.id))
-      : [];
     return {
       preset: preset.id,
       title: data.name,
-      operatingCurrency: (data.currency || "USD").toUpperCase(),
+      operatingCurrency: currencyOf(data.currency),
       // A known balance's "as of" date is the start boundary; without one
       // the books start today on the customer's own calendar, not the
       // server's UTC day (w4/317).
-      historyStart: known
-        ? data.historyStart || todayIsoDate()
-        : todayIsoDate(),
-      modules: chosen.length
-        ? chosen.map((module) => ({
-            id: module.id,
-            ...(module.takesPropertyName && data.propertyName?.trim()
-              ? { propertyName: data.propertyName.trim() }
-              : {}),
-          }))
-        : undefined,
+      historyStart: (known && data.historyStart) || todayIsoDate(),
+      // Only modules the purpose offers; another purpose sends none.
+      modules: setupModules(preset.id, modules, data.propertyName),
       accounts: known
         ? [
             {
@@ -425,7 +405,7 @@ export function LedgerForm({
     if (!isCreate || created !== true) return;
     if (startKind === "preset") {
       const save = currencyToSave({
-        chosen: (data.currency || "USD").toUpperCase(),
+        chosen: currencyOf(data.currency),
         suggested: suggestion.currency,
         saved: defaultCurrency,
       });
@@ -445,7 +425,7 @@ export function LedgerForm({
   };
 
   const nextStep = async () => {
-    if (step === 0 && isPersonal && modules.length) {
+    if (step === 0 && offeredModules.length && modules.length) {
       const valid = await form.trigger("propertyName");
       if (!valid) return;
     }
@@ -457,7 +437,7 @@ export function LedgerForm({
     isPrivate ? t("page.dashboard.private") : t("page.dashboard.public"),
     ...(startKind === "preset"
       ? [
-          (form.getValues("currency") || "USD").toUpperCase(),
+          currencyOf(form.getValues("currency")),
           previewAccounts
             ? t("page.dashboard.setupSummaryAccounts", {
                 count: previewAccounts.length,
@@ -549,7 +529,7 @@ export function LedgerForm({
                 {t("page.dashboard.setupPurposeNote")}
               </p>
 
-              {startKind === "preset" && isPersonal ? (
+              {offeredModules.length ? (
                 <fieldset
                   className="space-y-2 rounded-lg border border-input p-3"
                   data-testid="setup-modules"
@@ -557,16 +537,15 @@ export function LedgerForm({
                   <legend className="px-1 text-sm font-medium text-foreground">
                     {t("page.dashboard.setupModules")}
                   </legend>
-                  {SETUP_MODULES.map((module) => {
+                  {offeredModules.map((module) => {
                     const checked = modules.includes(module.id);
                     return (
                       <div key={module.id} className="space-y-2">
                         <label className="flex cursor-pointer items-start gap-3">
-                          <input
-                            type="checkbox"
+                          <Checkbox
                             checked={checked}
-                            onChange={(event) =>
-                              toggleModule(module.id, event.target.checked)
+                            onCheckedChange={(value) =>
+                              toggleModule(module.id, value === true)
                             }
                             disabled={isLoading}
                             className="mt-1"

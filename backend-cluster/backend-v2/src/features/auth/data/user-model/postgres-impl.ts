@@ -268,20 +268,6 @@ export class UserPostgresModel implements IUserModel {
       .where(eq(users.id, userId));
   }
 
-  public async updateDefaultCurrency(
-    db: DbExecutor,
-    userId: string,
-    currency: string | null,
-  ): Promise<void> {
-    await db
-      .update(users)
-      .set({
-        defaultCurrency: currency,
-        updateAt: new Date(),
-      })
-      .where(eq(users.id, userId));
-  }
-
   public async updateLastName(
     db: DbExecutor,
     userId: string,

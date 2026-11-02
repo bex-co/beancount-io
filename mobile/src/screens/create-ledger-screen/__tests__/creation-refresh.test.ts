@@ -12,6 +12,7 @@ function screen(
 ) {
   const events: string[] = [];
   let submit: () => Promise<void> = async () => {};
+  let submitTaken = false;
   const created = {
     id: "new",
     name: "new",
@@ -67,7 +68,11 @@ function screen(
         if (id === "react-hook-form")
           return {
             useForm: () => ({
+              // The first handleSubmit is Create; the second, the server's
+              // defaults after a refused setup.
               handleSubmit: (fn: (values: unknown) => Promise<void>) => {
+                if (submitTaken) return async () => {};
+                submitTaken = true;
                 submit = () =>
                   fn({
                     name: "new",
@@ -279,15 +284,16 @@ describe("ledger creation directory refresh", () => {
     const source = fs
       .readFileSync(path.join(__dirname, "../create-ledger-screen.tsx"), "utf8")
       .replace(/\s+/g, "");
-    // The choice is a button that marks the next create as the server's
-    // defaults, which then goes through the basic mutation.
+    // The choice is a button whose create goes through the basic mutation.
     expect(
       source.includes(
-        "serverDefaultsRef.current=true;setServerDefaults(true);voidonSubmit();",
+        "setServerDefaults(true);voidonSubmitWithServerDefaults();",
       ),
     ).toBe(true);
     expect(
-      source.includes('if(serverDefaultsRef.current&&startKind==="preset"){'),
+      source.includes(
+        'if(serverDefaults&&startKind==="preset"){result=awaitcreateBasic();}',
+      ),
     ).toBe(true);
   });
 });

@@ -1,4 +1,7 @@
-import type { LedgerSetupModule } from "@/generated-graphql/types";
+import type {
+  LedgerSetupModule,
+  LedgerSetupPreset,
+} from "@/generated-graphql/types";
 
 /**
  * The personal-only modules of the setup catalog (PRFAQ001 Appendix A.9) as
@@ -10,6 +13,8 @@ export interface SetupModuleOption {
   catalogId: string;
   titleKey: string;
   outcomeKey: string;
+  /** The purposes it may join: the catalog's `allowedPresets`. */
+  allowedPresets: LedgerSetupPreset[];
   /** Account names; `<Name>` is the property name where the module has one. */
   accounts: string[];
   takesPropertyName?: boolean;
@@ -26,6 +31,7 @@ export const SETUP_MODULES: SetupModuleOption[] = [
     catalogId: "investments@1",
     titleKey: "createLedgerModuleInvestments",
     outcomeKey: "createLedgerModuleInvestmentsOutcome",
+    allowedPresets: ["PERSONAL" as LedgerSetupPreset],
     accounts: [
       "Assets:Brokerage",
       "Income:Dividends",
@@ -39,6 +45,7 @@ export const SETUP_MODULES: SetupModuleOption[] = [
     catalogId: "rental-property@1",
     titleKey: "createLedgerModuleRentalProperty",
     outcomeKey: "createLedgerModuleRentalPropertyOutcome",
+    allowedPresets: ["PERSONAL" as LedgerSetupPreset],
     accounts: [
       "Income:Rent:<Name>",
       "Liabilities:Deposits:<Name>",
@@ -54,6 +61,7 @@ export const SETUP_MODULES: SetupModuleOption[] = [
     catalogId: "side-business@1",
     titleKey: "createLedgerModuleSideBusiness",
     outcomeKey: "createLedgerModuleSideBusinessOutcome",
+    allowedPresets: ["PERSONAL" as LedgerSetupPreset],
     accounts: [
       "Assets:Business:Bank",
       "Income:Business:Services",
@@ -76,17 +84,27 @@ export function moduleAccounts(
   );
 }
 
+/** The modules a purpose offers; none for a purpose that takes none. */
+export function modulesFor(
+  presetId: string | null | undefined,
+): SetupModuleOption[] {
+  return SETUP_MODULES.filter((module) =>
+    module.allowedPresets.some((preset) => preset === presetId),
+  );
+}
+
 /**
- * The modules a setup sends: personal only, in catalog order, the rental
- * with its property name when one was given.
+ * The modules a setup sends: those the purpose offers, in catalog order, the
+ * rental with its property name when one was given.
  */
 export function setupModules(
   presetId: string | null | undefined,
   selected: readonly string[],
   propertyName: string,
 ): { id: LedgerSetupModule; propertyName?: string }[] | undefined {
-  if (presetId !== "PERSONAL") return undefined;
-  const chosen = SETUP_MODULES.filter((module) => selected.includes(module.id));
+  const chosen = modulesFor(presetId).filter((module) =>
+    selected.includes(module.id),
+  );
   if (!chosen.length) return undefined;
   return chosen.map((module) => ({
     id: module.id,

@@ -43,6 +43,7 @@ import {
   PROPERTY_NAME_PATTERN,
   SETUP_MODULES,
   moduleAccounts,
+  modulesFor,
   setupModules,
 } from "./setup-modules";
 import { CurrencySuggestionHint } from "./currency-suggestion-hint";
@@ -114,7 +115,6 @@ function newRequestId(): string {
   return `req-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
-/** The step holding every field the form validates (name, amounts, dates). */
 /** Purpose, then details: there is no review step (ADR021). */
 const FORM_STEP = 1;
 
@@ -258,8 +258,6 @@ export function CreateLedgerScreen(): JSX.Element {
   // An older server refused `setup`: the customer may create with its
   // defaults instead, as an explicit choice (ADR021).
   const [serverDefaults, setServerDefaults] = useState(false);
-  // Read by the submit the same tap starts, before state re-renders.
-  const serverDefaultsRef = useRef(false);
   const [setupUnsupported, setSetupUnsupported] = useState(false);
   const requestIdRef = useRef<string>(newRequestId());
   const requestedAtRef = useRef(Date.now());
@@ -469,9 +467,7 @@ export function CreateLedgerScreen(): JSX.Element {
   };
   const toggleModule = (id: string) => {
     const on = !modules.includes(id);
-    setModules((current) =>
-      on ? [...current, id] : current.filter((entry) => entry !== id),
-    );
+    setModules(on ? [...modules, id] : modules.filter((entry) => entry !== id));
     // A hidden property name must not hold a hidden error.
     const module = SETUP_MODULES.find((entry) => entry.id === id);
     if (!on && module?.takesPropertyName) setValue("propertyName", "");
@@ -553,158 +549,170 @@ export function CreateLedgerScreen(): JSX.Element {
   const createDisabled =
     busy || (step === FORM_STEP && previewBlocked && !serverDefaults);
   const previewAccounts = previewData?.previewLedgerSetup?.accounts;
-  const isPersonal = startKind === "preset" && presetId === "PERSONAL";
+  const offeredModules = startKind === "preset" ? modulesFor(presetId) : [];
+  // An older server refused setup, at create or already at the preview.
+  const showSetupUnsupported =
+    startKind === "preset" &&
+    !serverDefaults &&
+    (setupUnsupported ||
+      (Boolean(previewError) &&
+        previewFailureKind(previewError) === "unsupported"));
   const propertyNameValue = watch("propertyName") ?? "";
   const hasKnownBalance = Boolean(
     openingAccountValue && openingAmountInput.trim(),
   );
 
-  // Field errors render on the form step, so a refused Create returns there;
-  // left on Review, the spinner stopped and nothing said why (w21/105).
-  const onSubmit = handleSubmit(
-    async (values) => {
-      const name = slugifyLedgerName(values.name);
-      const request = {
-        name,
-        private: values.private,
-        description: values.description.trim() || undefined,
-        ...(startKind === "sample" ? { template: LedgerTemplate.Sample } : {}),
-        ...(startKind === "preset" ? { setup: buildSetup(values) } : {}),
-      };
-      // The server refuses a reused id whose request changed, for a day. A
-      // resumed draft has lost its amount and may have a new Books begin, so
-      // a request that differs from the last one sent gets an id of its own;
-      // the same request keeps it and stays idempotent (w21/053, w21/434).
-      const fingerprint = createRequestFingerprint(request);
-      if (isNewCreateRequest(sentFingerprintRef.current, fingerprint)) {
-        requestIdRef.current = newRequestId();
-        requestedAtRef.current = Date.now();
-      }
-      sentFingerprintRef.current = fingerprint;
-      saveDraft(values);
-      try {
-        let result;
+  // `serverDefaults`: the customer chose the server's defaults after it
+  // refused setup, so a purpose creates through the basic mutation.
+  const createWith = async (values: FormValues, serverDefaults: boolean) => {
+    const name = slugifyLedgerName(values.name);
+    const request = {
+      name,
+      private: values.private,
+      description: values.description.trim() || undefined,
+      ...(startKind === "sample" ? { template: LedgerTemplate.Sample } : {}),
+      ...(startKind === "preset" ? { setup: buildSetup(values) } : {}),
+    };
+    // The server refuses a reused id whose request changed, for a day. A
+    // resumed draft has lost its amount and may have a new Books begin, so
+    // a request that differs from the last one sent gets an id of its own;
+    // the same request keeps it and stays idempotent (w21/053, w21/434).
+    const fingerprint = createRequestFingerprint(request);
+    if (isNewCreateRequest(sentFingerprintRef.current, fingerprint)) {
+      requestIdRef.current = newRequestId();
+      requestedAtRef.current = Date.now();
+    }
+    sentFingerprintRef.current = fingerprint;
+    saveDraft(values);
+    const createBasic = () =>
+      createLedgerBasic({
+        variables: {
+          name: request.name,
+          private: request.private,
+          description: request.description,
+          ...("template" in request ? { template: request.template } : {}),
+        },
+      });
+    try {
+      let result;
+      if (serverDefaults && startKind === "preset") {
+        result = await createBasic();
+      } else {
         try {
-          // The customer chose the server's defaults after it refused setup.
-          if (serverDefaultsRef.current && startKind === "preset") {
-            throw Object.assign(new Error("setup unsupported"), {
-              serverDefaults: true,
-            });
-          }
           result = await createLedger({
             variables: { ...request, requestId: requestIdRef.current },
           });
         } catch (rejected) {
-          // A server older than guided setup rejects `setup` and `requestId`
-          // before anything runs. Sample still creates without them (ADR021:
-          // older backends keep working, w21/592); a purpose is offered the
-          // server's defaults as an explicit choice, never silently.
-          const chosenDefaults =
-            (rejected as { serverDefaults?: boolean }).serverDefaults === true;
-          if (!chosenDefaults && !isUnsupportedDocumentError(rejected))
-            throw rejected;
-          if (startKind === "preset" && !chosenDefaults) {
+          // A server older than guided setup rejects `setup` and
+          // `requestId` before anything runs. Sample still creates without
+          // them (ADR021: older backends keep working, w21/592); a purpose
+          // is offered the server's defaults as an explicit choice, never
+          // silently.
+          if (!isUnsupportedDocumentError(rejected)) throw rejected;
+          if (startKind === "preset") {
             setSetupUnsupported(true);
             setError("root", { message: t("createLedgerSetupUnsupported") });
             return;
           }
-          result = await createLedgerBasic({
-            variables: {
-              name: request.name,
-              private: request.private,
-              description: request.description,
-              ...("template" in request ? { template: request.template } : {}),
-            },
-          });
+          result = await createBasic();
         }
-        void clearCreateLedgerDraft();
-        if (startKind === "preset") {
-          const save = currencyToSave({
-            chosen: setupFields(values).operatingCurrency,
-            suggested: suggestion.currency,
-            saved: savedCurrency,
-          });
-          // A preference, not part of the ledger: a refusal (an older server)
-          // changes nothing the customer created.
-          if (save) {
-            void updateDefaultCurrency({
-              variables: { defaultCurrency: save },
-            }).catch(() => {});
-          }
-        }
-        const id = result.data?.createLedger?.id;
-        if (!id) {
-          setError("root", { message: t("createLedgerGenericError") });
-          return;
-        }
-        // The creation already succeeded. A failed list refresh must not invite
-        // another submission; the directory retains the confirmed new ledger.
-        await refresh(result.data!.createLedger).catch(() => {});
-        // Left meanwhile (Back stays live while it runs): the ledger exists, and
-        // that is all the toast says. Switching it or popping to the tabs now
-        // would change the ledger under, and close, whatever screen the user is
-        // on (w21/579).
-        if (!isHere()) {
-          toast.showToast({
-            message: t("createLedgerCreated", { name: id }),
-            type: "success",
-          });
-          return;
-        }
-        ledgerVar(id);
-        // Pop to the tab bar already below this screen instead of stacking
-        // another copy of it (w21/242).
-        router.dismissTo("/(app)/(tabs)");
-      } catch (error) {
-        if (isRequestIdReuse(error)) {
-          // An id the server holds for another request: start a new one, and
-          // refresh the list in case the first attempt did make the ledger.
-          requestIdRef.current = newRequestId();
-          requestedAtRef.current = Date.now();
-          sentFingerprintRef.current = undefined;
-          await refresh().catch(() => {});
-        }
-        const kind = classifyCreateLedgerError(error);
-        if (kind === "conflict") {
-          // The name's error renders on the form step, not on Review.
-          setError("name", { message: t("createLedgerNameConflict") });
-          setStep(FORM_STEP);
-          return;
-        }
-        if (kind === "description") {
-          // The description's error renders on the form step too.
-          setError("description", {
-            message: t("createLedgerDescriptionMaxLength"),
-          });
-          setStep(FORM_STEP);
-          return;
-        }
-        if (kind === "reserved") {
-          setError("name", { message: t("createLedgerNameReserved") });
-          setStep(FORM_STEP);
-          return;
-        }
-        if (kind === "creating") {
-          // The first attempt is still running under this requestId: the same
-          // request, tapped again, returns its ledger (w21/437).
-          setError("root", { message: t("createLedgerStillCreating") });
-          return;
-        }
-        if (kind === "tier") {
-          const detail = tierLimitDetail(error);
-          setError("root", {
-            message: detail
-              ? t("createLedgerPlanLimit", {
-                  plan: t(planKey(detail.tier)),
-                  limit: detail.limit.toLocaleString(),
-                })
-              : t("createLedgerTierLimit"),
-          });
-          return;
-        }
-        setError("root", { message: t("createLedgerGenericError") });
       }
-    },
+      void clearCreateLedgerDraft();
+      if (startKind === "preset") {
+        const save = currencyToSave({
+          chosen: setupFields(values).operatingCurrency,
+          suggested: suggestion.currency,
+          saved: savedCurrency,
+        });
+        // A preference, not part of the ledger: a refusal (an older server)
+        // changes nothing the customer created.
+        if (save) {
+          void updateDefaultCurrency({
+            variables: { defaultCurrency: save },
+          }).catch(() => {});
+        }
+      }
+      const id = result.data?.createLedger?.id;
+      if (!id) {
+        setError("root", { message: t("createLedgerGenericError") });
+        return;
+      }
+      // The creation already succeeded. A failed list refresh must not invite
+      // another submission; the directory retains the confirmed new ledger.
+      await refresh(result.data!.createLedger).catch(() => {});
+      // Left meanwhile (Back stays live while it runs): the ledger exists, and
+      // that is all the toast says. Switching it or popping to the tabs now
+      // would change the ledger under, and close, whatever screen the user is
+      // on (w21/579).
+      if (!isHere()) {
+        toast.showToast({
+          message: t("createLedgerCreated", { name: id }),
+          type: "success",
+        });
+        return;
+      }
+      ledgerVar(id);
+      // Pop to the tab bar already below this screen instead of stacking
+      // another copy of it (w21/242).
+      router.dismissTo("/(app)/(tabs)");
+    } catch (error) {
+      if (isRequestIdReuse(error)) {
+        // An id the server holds for another request: start a new one, and
+        // refresh the list in case the first attempt did make the ledger.
+        requestIdRef.current = newRequestId();
+        requestedAtRef.current = Date.now();
+        sentFingerprintRef.current = undefined;
+        await refresh().catch(() => {});
+      }
+      const kind = classifyCreateLedgerError(error);
+      if (kind === "conflict") {
+        // The name's error renders on the form step, not on Review.
+        setError("name", { message: t("createLedgerNameConflict") });
+        setStep(FORM_STEP);
+        return;
+      }
+      if (kind === "description") {
+        // The description's error renders on the form step too.
+        setError("description", {
+          message: t("createLedgerDescriptionMaxLength"),
+        });
+        setStep(FORM_STEP);
+        return;
+      }
+      if (kind === "reserved") {
+        setError("name", { message: t("createLedgerNameReserved") });
+        setStep(FORM_STEP);
+        return;
+      }
+      if (kind === "creating") {
+        // The first attempt is still running under this requestId: the same
+        // request, tapped again, returns its ledger (w21/437).
+        setError("root", { message: t("createLedgerStillCreating") });
+        return;
+      }
+      if (kind === "tier") {
+        const detail = tierLimitDetail(error);
+        setError("root", {
+          message: detail
+            ? t("createLedgerPlanLimit", {
+                plan: t(planKey(detail.tier)),
+                limit: detail.limit.toLocaleString(),
+              })
+            : t("createLedgerTierLimit"),
+        });
+        return;
+      }
+      setError("root", { message: t("createLedgerGenericError") });
+    }
+  };
+  // Field errors render on the form step, so a refused Create returns there
+  // (w21/105).
+  const onSubmit = handleSubmit(
+    (values) => createWith(values, false),
+    () => setStep(FORM_STEP),
+  );
+  const onSubmitWithServerDefaults = handleSubmit(
+    (values) => createWith(values, true),
     () => setStep(FORM_STEP),
   );
 
@@ -802,11 +810,11 @@ export function CreateLedgerScreen(): JSX.Element {
             <Text style={styles.hint} testID="setup-separate-ledger-note">
               {t("createLedgerPurposeNote")}
             </Text>
-            {isPersonal ? (
+            {offeredModules.length ? (
               <>
                 <Text style={styles.label}>{t("createLedgerModules")}</Text>
                 <View style={styles.card} testID="setup-modules">
-                  {SETUP_MODULES.map((module) => {
+                  {offeredModules.map((module) => {
                     const checked = modules.includes(module.id);
                     return (
                       <View key={module.id}>
@@ -1172,7 +1180,10 @@ export function CreateLedgerScreen(): JSX.Element {
                       : t("createLedgerPublic"),
                     ...(startKind === "preset"
                       ? [
-                          (currencyValue || "USD").trim().toUpperCase(),
+                          setupFields({
+                            currency: currencyValue,
+                            historyStart: "",
+                          }).operatingCurrency,
                           previewAccounts
                             ? t("createLedgerSummaryAccounts", {
                                 count: previewAccounts.length,
@@ -1218,11 +1229,7 @@ export function CreateLedgerScreen(): JSX.Element {
                   ))
                 ) : null
               ) : null}
-              {startKind === "preset" &&
-              !serverDefaults &&
-              (setupUnsupported ||
-                (previewError &&
-                  previewFailureKind(previewError) === "unsupported")) ? (
+              {showSetupUnsupported ? (
                 <>
                   <InlineError
                     style={styles.error}
@@ -1230,9 +1237,8 @@ export function CreateLedgerScreen(): JSX.Element {
                   />
                   <Pressable
                     onPress={() => {
-                      serverDefaultsRef.current = true;
                       setServerDefaults(true);
-                      void onSubmit();
+                      void onSubmitWithServerDefaults();
                     }}
                     accessibilityRole="button"
                     hitSlop={8}

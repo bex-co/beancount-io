@@ -23,17 +23,23 @@ describe("setup modules (w3/m60/t005)", () => {
         id: module.catalogId,
         accounts: module.accounts,
         named: Boolean(module.takesPropertyName),
+        allowedPresets: module.allowedPresets.map(String),
       })),
     ).toEqual(
       catalog.modules.map(
         (module: {
           id: string;
+          allowedPresets: string[];
           accounts: { name: string }[];
           parameters: unknown[];
         }) => ({
           id: module.id,
           accounts: module.accounts.map((account) => account.name),
           named: module.parameters.length > 0,
+          // `personal@1` is the GraphQL enum value `PERSONAL`.
+          allowedPresets: module.allowedPresets.map((id) =>
+            id.split("@")[0].toUpperCase().split("-").join("_"),
+          ),
         }),
       ),
     );

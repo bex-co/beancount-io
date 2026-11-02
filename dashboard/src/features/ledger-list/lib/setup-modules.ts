@@ -1,4 +1,8 @@
-import { LedgerSetupModule } from "@/graphql/definitions";
+import {
+  LedgerSetupModule,
+  LedgerSetupPreset,
+  type LedgerSetupModuleInput,
+} from "@/graphql/definitions";
 
 /**
  * The personal-only modules of the setup catalog (PRFAQ001 Appendix A.9),
@@ -10,6 +14,8 @@ export interface SetupModuleOption {
   catalogId: string;
   titleKey: string;
   outcomeKey: string;
+  /** The purposes it may join: the catalog's `allowedPresets`. */
+  allowedPresets: LedgerSetupPreset[];
   /** Account names; `<Name>` is the property name where the module has one. */
   accounts: string[];
   takesPropertyName?: boolean;
@@ -26,6 +32,7 @@ export const SETUP_MODULES: SetupModuleOption[] = [
     catalogId: "investments@1",
     titleKey: "page.dashboard.moduleInvestments",
     outcomeKey: "page.dashboard.moduleInvestmentsOutcome",
+    allowedPresets: [LedgerSetupPreset.Personal],
     accounts: [
       "Assets:Brokerage",
       "Income:Dividends",
@@ -39,6 +46,7 @@ export const SETUP_MODULES: SetupModuleOption[] = [
     catalogId: "rental-property@1",
     titleKey: "page.dashboard.moduleRentalProperty",
     outcomeKey: "page.dashboard.moduleRentalPropertyOutcome",
+    allowedPresets: [LedgerSetupPreset.Personal],
     accounts: [
       "Income:Rent:<Name>",
       "Liabilities:Deposits:<Name>",
@@ -54,6 +62,7 @@ export const SETUP_MODULES: SetupModuleOption[] = [
     catalogId: "side-business@1",
     titleKey: "page.dashboard.moduleSideBusiness",
     outcomeKey: "page.dashboard.moduleSideBusinessOutcome",
+    allowedPresets: [LedgerSetupPreset.Personal],
     accounts: [
       "Assets:Business:Bank",
       "Income:Business:Services",
@@ -64,6 +73,36 @@ export const SETUP_MODULES: SetupModuleOption[] = [
     ],
   },
 ];
+
+/** The modules a purpose offers; none for a purpose that takes none. */
+export function modulesFor(
+  presetId: string | null | undefined,
+): SetupModuleOption[] {
+  return SETUP_MODULES.filter((module) =>
+    module.allowedPresets.some((preset) => preset === presetId),
+  );
+}
+
+/**
+ * The modules a setup sends: those the purpose offers, in catalog order, the
+ * rental with its property name when one was given.
+ */
+export function setupModules(
+  presetId: string | null | undefined,
+  selected: readonly string[],
+  propertyName = "",
+): LedgerSetupModuleInput[] | undefined {
+  const chosen = modulesFor(presetId).filter((module) =>
+    selected.includes(module.id),
+  );
+  if (!chosen.length) return undefined;
+  return chosen.map((module) => ({
+    id: module.id,
+    ...(module.takesPropertyName && propertyName.trim()
+      ? { propertyName: propertyName.trim() }
+      : {}),
+  }));
+}
 
 /** The accounts a module opens, with the property name filled in. */
 export function moduleAccounts(
