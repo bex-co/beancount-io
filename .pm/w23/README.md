@@ -53,7 +53,7 @@
 - [x] [170](./done/170.md) — BQL `meta` splits by table (`k: v`/`str` postings vs `k=v`/`object` entries; stock one dict)
 - [x] [171](./done/171.md) — typed posting tags/links render stock-invalid beancount; backend check blind, reads blank (m6 "holds live" disproven)
 
-- [072](./blocked/072.md) — concurrent writes (append, add entries, exact-text edits) still lose with `SERVICE_UNAVAILABLE` on production after w23/017; the production lost-race signature differs — **blocked:** `appendLedgerText` and `updateLedgerFiles` verified on production; `addLedgerEntries` fix `5da2afa06` needs a ledger-service deploy, then a rerun
+- [072](./blocked/072.md) — concurrent writes (append, add entries, exact-text edits) still lose with `SERVICE_UNAVAILABLE` on production after w23/017; the production lost-race signature differs
 
 - [x] [207](./done/207.md) — read-only credential gets `NOT_FOUND`/`BAD_USER_INPUT` not `FORBIDDEN` from `deleteLedgerFiles`/`updateLedgerFiles` for a missing file or non-matching edit (REST 403); authorization runs after `prepare()`
 - [x] [208](./done/208.md) — non-string `cursor` on tools/list, resources/list, resources/templates/list and prompts/list answers `-32603` with a raw Zod dump; other methods answer `-32602` `BAD_USER_INPUT`
