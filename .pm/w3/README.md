@@ -92,16 +92,16 @@
 
 - [x] **m59** — [Ledger creation: personal modules in the setup specification, builder, and CLI](./done/m59/README.md) (8 tasks) ← PRFAQ001 §3–§5 + Appendix A.9 and ADR021, modules adopted 2026-10-27 — sequenced after m53, before the flow rework in 649
 
-- [ ] **m60** — [Ledger creation: the two-step flow with modules and the ADR026 currency suggestion](./m60/README.md) (9 tasks) ← promoted from 649 (PRFAQ001 §3, ADR021 revision 2026-10-27, ADR026 phase 3) — sequenced after m59
+- [x] **m60** — [Ledger creation: the two-step flow with modules and the ADR026 currency suggestion](./done/m60/README.md) (9 tasks) ← promoted from 649 (PRFAQ001 §3, ADR021 revision 2026-10-27, ADR026 phase 3) — sequenced after m59
 
 ## Inbox
 
 - [650](./done/650.md) — Saving a file shows "Out of date — click to refresh" for the user's own write (≤1h) ← user report 2026-11-01 — **done** 2026-11-01 (`2ef426039`)
-- [649](./649.md) — Rework the shipped creation flow to the 2026-10-27 design: two steps, no review page or history start, personal modules, ADR026 currency suggestion (> 1h) ← PRFAQ001 §3 + ADR021 revision 2026-10-27 — **promoted** to [m60](./m60/README.md) 2026-11-01
 - [648](./done/648.md) — Fix the web Starter copy promising an example transaction and rename the create button from Save (≤1h) ← `/pm-brainstorm w3` 2026-10-20 candidate 7, from ADR021 — **done** 2026-10-20 (`2f11faa72`)
 
 ## Dropped
 
+- ~~**649**~~ — Rework the shipped creation flow to the 2026-10-27 design — dropped 2026-11-01: promotion completed; the work shipped as [m60](./done/m60/README.md).
 - ~~**446**~~ — Ask-AI quota/cap mismatch — superseded 2026-10-02 by [m52](./blocked/m52/README.md); the complete evidence is retained in its source note, public proxy fixes shipped, and shared-provider accounting has an explicit external unblock condition.
 
 - ~~**439**~~ — `--offline` with no cached revision reports the cause as `None` — dropped 2026-09-26: not a separate defect. Same six lines of `cli/src/bea_engine/managed_load.py` (~399–405) as [433](./done/433.md), which now carries both symptoms and the full record; one fix covers both.
