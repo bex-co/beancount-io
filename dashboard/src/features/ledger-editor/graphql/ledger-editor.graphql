@@ -58,7 +58,6 @@ mutation UpdateLedgerFile(
     size
     type
     encoding
-    content
     lastCommitSha
     lastAuthorDate
     lastCommitterDate
