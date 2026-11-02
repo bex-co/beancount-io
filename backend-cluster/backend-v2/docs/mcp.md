@@ -1509,7 +1509,12 @@ an app to display subscription plans ([ADR 019](../../../docs/adrs/ADR019-backen
 an explicit ID must name that same user. The account service enforces read
 capability and exact-self authorization independently of a credential's ledger
 pin. Results include identity fields, locale, report status, subscription tier,
-ledger limits, and whether the user has ever subscribed.
+ledger limits, whether the user has ever subscribed, and `defaultCurrency` — the
+saved currency preference a creation flow suggests first ([ADR 026](../../../docs/adrs/ADR026-backend-v2-locale-and-currency-defaults.md#saved-currency-preference)),
+or `null`. It is written only through GraphQL `updateProfile`, which keeps its
+REST and MCP exclusion; sent alone it leaves the names unchanged, `null` clears
+it, and an unsupported code is refused. `createLedger` and `previewLedgerSetup`
+never read it: an omitted `setup.operatingCurrency` is always ADR021's default.
 
 A missing user returns JSON `null`. The REST and GraphQL identity probes also
 return `null` anonymously without loading account data. The MCP transport
