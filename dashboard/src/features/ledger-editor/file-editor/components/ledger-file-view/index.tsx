@@ -17,7 +17,10 @@ import type {
 } from "@/graphql/definitions";
 import { base64Encode, hasUtf8Bom } from "@/common/lib/utils/encode";
 import { track } from "@/common/analytics";
-import { useApolloCacheClear } from "@/common/hooks/use-apollo-cache";
+import {
+  useApolloCacheClear,
+  useLedgerWriteRefresh,
+} from "@/common/hooks/use-apollo-cache";
 import { useRefreshFailedToast } from "@/common/hooks/use-refresh-failed-toast";
 import { toast } from "sonner";
 import { Button } from "@/common/components/ui/button";
@@ -82,6 +85,7 @@ export default function LedgerFileView({
   const { t } = useTranslations();
   const formatError = useErrorMessage();
   const cleanCache = useApolloCacheClear();
+  const refreshAfterWrite = useLedgerWriteRefresh();
   const client = useApolloClient();
   const fileNavigate = useFileNavigate();
   const navigate = useNavigate();
@@ -159,18 +163,19 @@ export default function LedgerFileView({
   const handleSaveFile = async (content: string, base: FileRevision) => {
     setIsSaving(true);
     const before = writeOutcome.snapshot();
+    // Keep the file's UTF-8 byte-order mark: the editor buffer never sees
+    // it, and an ordinary edit is not an encoding change (w4/268).
+    const saved = base64Encode(
+      hasUtf8Bom(base.content) && !content.startsWith("\uFEFF")
+        ? `\uFEFF${content}`
+        : content,
+    );
     try {
       await updateFileMutation({
         variables: {
           ledgerId: ledgerId,
           path: filePath,
-          // Keep the file's UTF-8 byte-order mark: the editor buffer never
-          // sees it, and an ordinary edit is not an encoding change (w4/268).
-          content: base64Encode(
-            hasUtf8Bom(base.content) && !content.startsWith("\uFEFF")
-              ? `\uFEFF${content}`
-              : content,
-          ),
+          content: saved,
           sha: base.sha,
           message: t("ledgerEditor.updateFileCommit", { path: filePath }),
         },
@@ -180,11 +185,23 @@ export default function LedgerFileView({
         // The write has landed, so say so now. Revalidating the ledger costs
         // another round trip, so the new-error check runs behind the success
         // and warns after it (w1/m41).
-        onCompleted: () => {
+        onCompleted: ({ updateLedgerFile: revision }) => {
           track("file_edited", {});
           toast.success(t("ledgerEditor.fileSavedSuccess"));
           void writeOutcome.report(before);
-          cleanCache();
+          // The editor holds what was saved, so the file view takes the new
+          // revision from here instead of downloading the file again. Without
+          // its commit the view would show the old one: refetch instead.
+          refreshAfterWrite(
+            revision.lastCommitSha
+              ? (cache) =>
+                  cache.writeQuery({
+                    query: GetLedgerFileDocument,
+                    variables: { ledgerId, path: filePath },
+                    data: { getLedgerFile: { ...revision, content: saved } },
+                  })
+              : undefined,
+          );
         },
       });
     } finally {

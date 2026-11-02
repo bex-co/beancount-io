@@ -34,6 +34,7 @@ vi.mock("@/common/hooks/use-file-navigate", () => ({
 }));
 vi.mock("@/common/hooks/use-apollo-cache", () => ({
   useApolloCacheClear: () => vi.fn(),
+  useLedgerWriteRefresh: () => vi.fn(),
 }));
 
 describe("a file the server refuses to read (w3/629)", () => {

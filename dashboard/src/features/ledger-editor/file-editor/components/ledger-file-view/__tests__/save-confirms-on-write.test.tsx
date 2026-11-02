@@ -11,7 +11,7 @@ import LedgerFileView from "../index";
 const state = vi.hoisted(() => ({
   mutate: vi.fn(),
   report: vi.fn(),
-  cleanCache: vi.fn(),
+  refresh: vi.fn(),
   onSave: undefined as
     | undefined
     | ((content: string, base: unknown) => Promise<void>),
@@ -47,7 +47,8 @@ vi.mock("@/common/hooks/use-file-navigate", () => ({
   useFileNavigate: () => vi.fn(),
 }));
 vi.mock("@/common/hooks/use-apollo-cache", () => ({
-  useApolloCacheClear: () => state.cleanCache,
+  useApolloCacheClear: () => vi.fn(),
+  useLedgerWriteRefresh: () => state.refresh,
 }));
 vi.mock("../file-content-view", () => ({
   FileContentView: (props: {
@@ -60,16 +61,22 @@ vi.mock("../file-content-view", () => ({
   },
 }));
 
+type Revision = { sha: string; lastCommitSha: string | null };
 type MutateOptions = {
-  onCompleted?: () => unknown;
+  variables: { content: string };
+  onCompleted?: (data: { updateLedgerFile: Revision }) => unknown;
   onError?: (error: Error) => void;
 };
 
+const NEW_REVISION: Revision = { sha: "new-sha", lastCommitSha: "new-commit" };
+
 /** A mutation that lands: Apollo calls onCompleted, then resolves. */
-const landedWrite = async (options: MutateOptions) => {
-  options.onCompleted?.();
-  return { data: {} };
-};
+const landedWrite =
+  (revision: Revision = NEW_REVISION) =>
+  async (options: MutateOptions) => {
+    options.onCompleted?.({ updateLedgerFile: revision });
+    return { data: { updateLedgerFile: revision } };
+  };
 
 async function save() {
   render(<LedgerFileView ledgerId="qa/books" filePath="main.bean" />);
@@ -81,26 +88,26 @@ beforeEach(() => {
   vi.mocked(toast.error).mockReset();
   state.mutate.mockReset();
   state.report.mockReset();
-  state.cleanCache.mockReset();
+  state.refresh.mockReset();
 });
 
 describe("saving a file", () => {
   it("confirms the save and finishes before the new-error check answers", async () => {
     // The check never settles: a save that waited on it would never finish.
     state.report.mockReturnValue(new Promise<boolean>(() => {}));
-    state.mutate.mockImplementation(landedWrite);
+    state.mutate.mockImplementation(landedWrite());
 
     await save();
 
     expect(toast.success).toHaveBeenCalledTimes(1);
     expect(state.report).toHaveBeenCalledTimes(1);
-    expect(state.cleanCache).toHaveBeenCalledTimes(1);
+    expect(state.refresh).toHaveBeenCalledTimes(1);
   });
 
   it("still confirms the save when the check then warns about a new error", async () => {
     // The hook shows the warning itself and returns true.
     state.report.mockResolvedValue(true);
-    state.mutate.mockImplementation(landedWrite);
+    state.mutate.mockImplementation(landedWrite());
 
     await save();
 
@@ -119,6 +126,38 @@ describe("saving a file", () => {
     expect(toast.error).toHaveBeenCalledTimes(1);
     expect(toast.success).not.toHaveBeenCalled();
     expect(state.report).not.toHaveBeenCalled();
-    expect(state.cleanCache).not.toHaveBeenCalled();
+    expect(state.refresh).not.toHaveBeenCalled();
+  });
+
+  it("keeps the saved file instead of downloading it again", async () => {
+    state.report.mockResolvedValue(false);
+    state.mutate.mockImplementation(landedWrite());
+
+    await save();
+
+    const sent = state.mutate.mock.calls[0][0].variables.content;
+    const write = state.refresh.mock.calls[0][0];
+    const cache = { writeQuery: vi.fn() };
+    write(cache);
+    expect(cache.writeQuery).toHaveBeenCalledWith(
+      expect.objectContaining({
+        variables: { ledgerId: "qa/books", path: "main.bean" },
+        data: {
+          getLedgerFile: { ...NEW_REVISION, content: sent },
+        },
+      }),
+    );
+  });
+
+  it("downloads the file when the write did not say which commit it made", async () => {
+    // Writing the old commit back would label the saved file with it.
+    state.report.mockResolvedValue(false);
+    state.mutate.mockImplementation(
+      landedWrite({ sha: "new-sha", lastCommitSha: null }),
+    );
+
+    await save();
+
+    expect(state.refresh).toHaveBeenCalledWith(undefined);
   });
 });

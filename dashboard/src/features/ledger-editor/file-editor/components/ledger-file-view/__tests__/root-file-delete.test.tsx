@@ -33,6 +33,7 @@ vi.mock("@/common/hooks/use-file-navigate", () => ({
 }));
 vi.mock("@/common/hooks/use-apollo-cache", () => ({
   useApolloCacheClear: () => vi.fn(),
+  useLedgerWriteRefresh: () => vi.fn(),
 }));
 vi.mock("@/common/components/ledger-permission/write", () => ({
   LedgerWritePermission: ({ children }: { children: React.ReactNode }) => (
