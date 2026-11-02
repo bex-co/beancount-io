@@ -1,6 +1,5 @@
--- One-time: give Gitea its own database inside the single managed Postgres.
--- Run as the instance owner (the role the backend uses):
---   bex psql <postgres-id> -c 'CREATE DATABASE gitea'
--- CREATE DATABASE cannot run inside a transaction or a function, so it is a
--- plain statement; re-running it errors harmlessly with "already exists".
-CREATE DATABASE gitea;
+-- One-time: give Gitea its own schema inside the single managed Postgres.
+-- The instance owner cannot CREATE DATABASE on bex, so isolation is by schema
+-- (GITEA__database__SCHEMA=gitea); backend tables stay in `public`.
+--   bex psql <postgres-id> -c 'CREATE SCHEMA IF NOT EXISTS gitea'
+CREATE SCHEMA IF NOT EXISTS gitea;

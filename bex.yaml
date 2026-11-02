@@ -19,7 +19,7 @@
 #   postgres-backend        ->  beancount-backend-db  (managed Postgres)
 #   redis                   ->  beancount-cache       (managed Key Value)
 #   gitea                  ->  beancount-gitea       (web + 10 GB disk, 1 instance)
-#   gitea's postgres        ->  a second database (`gitea`) in the SAME managed
+#   gitea's postgres        ->  a second schema (`gitea`) in the SAME managed
 #                               Postgres instance -- one instance in total
 #
 # Gitea's repos need a filesystem, so it is the one service with a disk. Its
@@ -253,7 +253,12 @@ services:
         fromDatabase:
           name: beancount-backend-db
           property: host
+      # The owner role cannot CREATE DATABASE on bex, so Gitea gets its own
+      # SCHEMA in the backend's database instead (created once by
+      # deploy/bex/init-gitea-db.sql). Backend tables stay in `public`.
       - key: GITEA__database__NAME
+        value: backend
+      - key: GITEA__database__SCHEMA
         value: gitea
       - key: GITEA__database__USER
         fromDatabase:
