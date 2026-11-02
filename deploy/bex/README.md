@@ -71,6 +71,24 @@ all, so a fresh deploy cannot touch ledger data by accident.
 and need no action. Gitea admin user creation is still a one-time
 `gitea admin user create` on whatever host runs Gitea.
 
+## Sign-up needs working mail
+
+Sign-up verifies an emailed OTP, so it cannot complete until the API has a
+real `SEND_GRID_API_KEY` (a key whose account has verified the
+`mail.beancount.io` sender). Without one `signUp` fails with `Email delivery is
+temporarily unavailable` (`MAIL_PROVIDER_FAILURE` in the API log) and returns no
+`sessionId`.
+
+There is deliberately no way around this from the logs: the API never logs OTPs
+or mail contents. The pending session does live in Redis
+(`auth:signup_otp_session:id:{sessionId}`), but `beancount-cache` is internal-only
+(`ipAllowList: []`, no external connection string, no password), so `bex kv-cli`
+cannot reach it from a laptop. Do not open it to the internet to read an OTP.
+
+The browser calls the API cross-origin, so the API also needs
+`EXTRA_ALLOWED_ORIGINS` set to the dashboard origin (already in `bex.yaml`);
+CORS only trusts `*.beancount.io` otherwise.
+
 ## Things that bit us, so they don't bite you again
 
 - **Ports follow the image.** The platform probes the image's declared
