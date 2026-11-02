@@ -1,4 +1,8 @@
 query SubscriptionStatus {
+  userProfile {
+    id
+    tier
+  }
   subscriptionStatus {
     hasActiveSubscription
     subscriptions {
@@ -6,26 +10,28 @@ query SubscriptionStatus {
       status
       cancelAt
       cancelAtPeriodEnd
-      canceledAt
-      clientId
       currentPeriodEnd
-      currentPeriodStart
       items {
         id
-        quantity
         price {
           id
-          amount
-          currency
           interval
-          intervalCount
-          trialPeriodDays
         }
-        product {
-          id
-          name
-          description
-          images
+      }
+      scheduledChange {
+        effectiveAt
+      }
+    }
+    billing {
+      source
+      store {
+        provider
+        tier
+        interval
+        accessEndsAt
+        willRenew
+        scheduledChange {
+          tier
         }
       }
     }

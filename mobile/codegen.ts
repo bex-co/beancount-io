@@ -1,10 +1,10 @@
 import type { CodegenConfig } from "@graphql-codegen/cli";
 
 const serverUrl = process.env.EXPO_PUBLIC_SERVER_URL || "https://beancount.io/";
-const schema = new URL(
-  "api-gateway/",
-  `${serverUrl.replace(/\/+$/, "")}/`,
-).toString();
+// A local SDL file, for documents the running backend does not serve yet.
+const schema =
+  process.env.CODEGEN_SCHEMA_FILE ??
+  new URL("api-gateway/", `${serverUrl.replace(/\/+$/, "")}/`).toString();
 
 const scalars = {
   JSONObject: "Record<string, number | string>",

@@ -8,7 +8,10 @@
       "name": "Mutation",
       "kind": "OBJECT"
     },
-    "subscriptionType": null,
+    "subscriptionType": {
+      "name": "Subscription",
+      "kind": "OBJECT"
+    },
     "types": [
       {
         "kind": "OBJECT",
@@ -243,7 +246,7 @@
           },
           {
             "name": "customSubtypes",
-            "description": null,
+            "description": "Custom-directive subtype filter: narrows custom directives only — other families pass through. Combine with directiveTypes to restrict the families returned.",
             "type": {
               "kind": "LIST",
               "name": null,
@@ -283,7 +286,7 @@
           },
           {
             "name": "documentSubtypes",
-            "description": null,
+            "description": "Document subtype filter: narrows documents only — other directive families pass through. Combine with directiveTypes to restrict the families returned.",
             "type": {
               "kind": "LIST",
               "name": null,
@@ -303,7 +306,7 @@
           },
           {
             "name": "filter",
-            "description": null,
+            "description": "Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or \"quoted\" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:\"Assets:Bank:Checking\"`, `date:\"2026\"` — there are no escape sequences.",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -316,6 +319,18 @@
           {
             "name": "filterAccount",
             "description": "Optional shared report-stream AccountFilter (URL ?account=). Distinct from the required target `account`.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "filter_account",
+            "description": "Alias of filterAccount, as MCP and REST spell it.",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -351,7 +366,7 @@
           },
           {
             "name": "time",
-            "description": null,
+            "description": "Fava time expression, e.g. 2026-08. Pre-window `open` directives are preserved as context and counted in total.",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -363,7 +378,7 @@
           },
           {
             "name": "transactionSubtypes",
-            "description": null,
+            "description": "Transaction flag filter: narrows transactions only — other directive families pass through. Combine with directiveTypes to restrict the families returned.",
             "type": {
               "kind": "LIST",
               "name": null,
@@ -382,6 +397,18 @@
             "deprecationReason": null
           },
           {
+            "name": "withChildren",
+            "description": "Alias of with_children.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Boolean",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "with_children",
             "description": null,
             "type": {
@@ -389,7 +416,7 @@
               "name": "Boolean",
               "ofType": null
             },
-            "defaultValue": "true",
+            "defaultValue": null,
             "isDeprecated": false,
             "deprecationReason": null
           }
@@ -625,12 +652,36 @@
         "isOneOf": null,
         "fields": [
           {
+            "name": "dryRun",
+            "description": "True when this is a preview: the checks ran and nothing changed. Commits echo false.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "Boolean",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "message",
             "description": null,
             "args": [],
             "type": {
               "kind": "SCALAR",
               "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "preview",
+            "description": "The rendered would-be access change; present only on previews.",
+            "args": [],
+            "type": {
+              "kind": "OBJECT",
+              "name": "CollaboratorPreview",
               "ofType": null
             },
             "isDeprecated": false,
@@ -762,6 +813,18 @@
             "deprecationReason": null
           },
           {
+            "name": "pad",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "LedgerPadInput",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "price",
             "description": null,
             "type": {
@@ -853,6 +916,22 @@
         "isOneOf": null,
         "fields": [
           {
+            "name": "dryRun",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "entryHashes",
             "description": "The hash each committed entry now carries, in request order, for getLedgerEntryContext and the source-slice update and delete; empty on a dry run, or when it could not be resolved after the commit",
             "args": [],
@@ -877,6 +956,38 @@
             "deprecationReason": null
           },
           {
+            "name": "errorsAfter",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Float",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "errorsBefore",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Float",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "message",
             "description": null,
             "args": [],
@@ -884,6 +995,54 @@
               "kind": "SCALAR",
               "name": "String",
               "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "newErrors",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": null,
+                "kind": "LIST",
+                "ofType": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "DirectiveTextError",
+                    "kind": "OBJECT",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "preview",
+            "description": "Per-file entry text; populated on dry runs only",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": null,
+                "kind": "LIST",
+                "ofType": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "EntryPreviewFile",
+                    "kind": "OBJECT",
+                    "ofType": null
+                  }
+                }
+              }
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -1771,6 +1930,78 @@
         "possibleTypes": null
       },
       {
+        "kind": "ENUM",
+        "name": "BillingSource",
+        "description": "Who bills a plan, which is also where it is managed.",
+        "isOneOf": null,
+        "fields": null,
+        "inputFields": null,
+        "interfaces": null,
+        "enumValues": [
+          {
+            "name": "APP_STORE",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "GOOGLE_PLAY",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "NONE",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "STRIPE",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "possibleTypes": null
+      },
+      {
+        "kind": "ENUM",
+        "name": "BookingMethod",
+        "description": "Booking method for the account",
+        "isOneOf": null,
+        "fields": null,
+        "inputFields": null,
+        "interfaces": null,
+        "enumValues": [
+          {
+            "name": "FIFO",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "LIFO",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "NONE",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "STRICT",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "possibleTypes": null
+      },
+      {
         "kind": "SCALAR",
         "name": "Boolean",
         "description": "The `Boolean` scalar type represents `true` or `false`.",
@@ -2209,6 +2440,82 @@
             "deprecationReason": null
           }
         ],
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "CollaboratorPreview",
+        "description": null,
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "collaborator",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "current",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "requested",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "warnings",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": null,
+                "kind": "LIST",
+                "ofType": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "String",
+                    "kind": "SCALAR",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
         "possibleTypes": null
       },
       {
@@ -3254,8 +3561,24 @@
         "isOneOf": null,
         "fields": [
           {
+            "name": "billing",
+            "description": "Who bills the account's plan, whichever source that is.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "PlanBilling",
+                "kind": "OBJECT",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "hasActiveSubscription",
-            "description": null,
+            "description": "Whether Stripe holds a paid subscription. A store plan is reported under `billing`.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -3421,12 +3744,36 @@
         "isOneOf": null,
         "fields": [
           {
+            "name": "dryRun",
+            "description": "True when this is a preview: the checks ran and nothing changed. Commits echo false.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "Boolean",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "message",
             "description": null,
             "args": [],
             "type": {
               "kind": "SCALAR",
               "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "preview",
+            "description": "The rendered would-be access change; present only on previews.",
+            "args": [],
+            "type": {
+              "kind": "OBJECT",
+              "name": "CollaboratorPreview",
               "ofType": null
             },
             "isDeprecated": false,
@@ -3489,6 +3836,18 @@
         "isOneOf": null,
         "fields": [
           {
+            "name": "dryRun",
+            "description": "True when this is a deleteLedger preview: the checks ran and nothing was destroyed. Commits echo false.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "Boolean",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "ledgerId",
             "description": null,
             "args": [],
@@ -3500,6 +3859,18 @@
                 "kind": "SCALAR",
                 "ofType": null
               }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "preview",
+            "description": "The destroy summary; present only on deleteLedger previews.",
+            "args": [],
+            "type": {
+              "kind": "OBJECT",
+              "name": "LedgerDeletePreview",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -3519,15 +3890,23 @@
         "inputFields": [
           {
             "name": "entryHash",
-            "description": null,
+            "description": "The entry's hash. One of entryHash/entry_hash is required.",
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "name": "String",
-                "kind": "SCALAR",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "entry_hash",
+            "description": "Alias of entryHash, as list output spells it.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
             },
             "defaultValue": null,
             "isDeprecated": false,
@@ -3564,6 +3943,42 @@
           {
             "name": "allowInvalid",
             "description": "Delete the entries even when that would add bean-check errors (VALIDATION_FAILED), instead of refusing",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Boolean",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "allow_invalid",
+            "description": "Alias of allowInvalid.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Boolean",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "dryRun",
+            "description": "Run every check and return the preview without committing",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Boolean",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "dry_run",
+            "description": "Alias of dryRun, as MCP spells it.",
             "type": {
               "kind": "SCALAR",
               "name": "Boolean",
@@ -3625,6 +4040,54 @@
             "deprecationReason": null
           },
           {
+            "name": "dryRun",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "errorsAfter",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Float",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "errorsBefore",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Float",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "message",
             "description": null,
             "args": [],
@@ -3635,6 +4098,54 @@
                 "name": "String",
                 "kind": "SCALAR",
                 "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "newErrors",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": null,
+                "kind": "LIST",
+                "ofType": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "SliceWriteError",
+                    "kind": "OBJECT",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "preview",
+            "description": "Per-file affected text; populated on dry runs only",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": null,
+                "kind": "LIST",
+                "ofType": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "SlicePreviewFile",
+                    "kind": "OBJECT",
+                    "ofType": null
+                  }
+                }
               }
             },
             "isDeprecated": false,
@@ -3694,16 +4205,60 @@
             "deprecationReason": null
           },
           {
-            "name": "entryHash",
-            "description": null,
+            "name": "allow_invalid",
+            "description": "Alias of allowInvalid.",
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "name": "String",
-                "kind": "SCALAR",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Boolean",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "dryRun",
+            "description": "Run every check and return the preview without committing",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Boolean",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "dry_run",
+            "description": "Alias of dryRun, as MCP spells it.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Boolean",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "entryHash",
+            "description": "The entry's hash. One of entryHash/entry_hash is required.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "entry_hash",
+            "description": "Alias of entryHash, as list output spells it.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
             },
             "defaultValue": null,
             "isDeprecated": false,
@@ -3737,6 +4292,22 @@
         "isOneOf": null,
         "fields": [
           {
+            "name": "dryRun",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "entryHash",
             "description": null,
             "args": [],
@@ -3745,6 +4316,38 @@
               "name": null,
               "ofType": {
                 "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "errorsAfter",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Float",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "errorsBefore",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Float",
                 "kind": "SCALAR",
                 "ofType": null
               }
@@ -3763,6 +4366,54 @@
                 "name": "String",
                 "kind": "SCALAR",
                 "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "newErrors",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": null,
+                "kind": "LIST",
+                "ofType": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "SliceWriteError",
+                    "kind": "OBJECT",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "preview",
+            "description": "Per-file affected text; populated on dry runs only",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": null,
+                "kind": "LIST",
+                "ofType": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "SlicePreviewFile",
+                    "kind": "OBJECT",
+                    "ofType": null
+                  }
+                }
               }
             },
             "isDeprecated": false,
@@ -4313,6 +4964,50 @@
               "name": null,
               "ofType": {
                 "name": "Float",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "EntryPreviewFile",
+        "description": null,
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "path",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "text",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
                 "kind": "SCALAR",
                 "ofType": null
               }
@@ -5953,6 +6648,30 @@
         "isOneOf": null,
         "fields": [
           {
+            "name": "entryHashes",
+            "description": "The hash each committed entry now carries, in request order, for getLedgerEntryContext and the source-slice update and delete; empty when it could not be resolved after the commit",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": null,
+                "kind": "LIST",
+                "ofType": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "String",
+                    "kind": "SCALAR",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "success",
             "description": null,
             "args": [],
@@ -6792,7 +7511,7 @@
           },
           {
             "name": "customSubtypes",
-            "description": null,
+            "description": "Custom-directive subtype filter: narrows custom directives only — other families pass through. Combine with directiveTypes to restrict the families returned.",
             "type": {
               "kind": "LIST",
               "name": null,
@@ -6832,7 +7551,7 @@
           },
           {
             "name": "documentSubtypes",
-            "description": null,
+            "description": "Document subtype filter: narrows documents only — other directive families pass through. Combine with directiveTypes to restrict the families returned.",
             "type": {
               "kind": "LIST",
               "name": null,
@@ -6852,7 +7571,7 @@
           },
           {
             "name": "filter",
-            "description": null,
+            "description": "Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or \"quoted\" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:\"Assets:Bank:Checking\"`, `date:\"2026\"` — there are no escape sequences.",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -6888,7 +7607,7 @@
           },
           {
             "name": "time",
-            "description": null,
+            "description": "Fava time expression, e.g. 2026-08. Pre-window `open` directives are preserved as context and counted in total.",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -6900,7 +7619,7 @@
           },
           {
             "name": "transactionSubtypes",
-            "description": null,
+            "description": "Transaction flag filter: narrows transactions only — other directive families pass through. Combine with directiveTypes to restrict the families returned.",
             "type": {
               "kind": "LIST",
               "name": null,
@@ -7186,6 +7905,18 @@
             "deprecationReason": null
           },
           {
+            "name": "dryRun",
+            "description": "True when this is an updateLedger preview: the checks ran and nothing was committed. Reads and creates omit it.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "Boolean",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "empty",
             "description": null,
             "args": [],
@@ -7322,6 +8053,18 @@
             "deprecationReason": null
           },
           {
+            "name": "preview",
+            "description": "The rendered current→new diff; present only on updateLedger previews.",
+            "args": [],
+            "type": {
+              "kind": "OBJECT",
+              "name": "LedgerUpdatePreview",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "private",
             "description": null,
             "args": [],
@@ -7451,7 +8194,7 @@
           },
           {
             "name": "entryCount",
-            "description": null,
+            "description": "Postings on this account — not a directive count",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -7793,6 +8536,18 @@
                 "kind": "SCALAR",
                 "ofType": null
               }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "tolerance",
+            "description": "Explicit balance tolerance as a plain decimal",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
             },
             "defaultValue": null,
             "isDeprecated": false,
@@ -8141,6 +8896,202 @@
       },
       {
         "kind": "INPUT_OBJECT",
+        "name": "LedgerCostInput",
+        "description": null,
+        "isOneOf": false,
+        "fields": null,
+        "inputFields": [
+          {
+            "name": "currency",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "date",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "label",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "number",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "interfaces": null,
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "LedgerDeletePreview",
+        "description": null,
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "description",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "empty",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "ledgerId",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "name",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "private",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "size",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Float",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "warnings",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": null,
+                "kind": "LIST",
+                "ofType": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "String",
+                    "kind": "SCALAR",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "INPUT_OBJECT",
         "name": "LedgerDocumentInput",
         "description": null,
         "isOneOf": false,
@@ -8242,7 +9193,7 @@
       {
         "kind": "ENUM",
         "name": "LedgerEntryType",
-        "description": "Discriminator selecting which entry payload to add",
+        "description": "Discriminator selecting which entry payload to add. custom, query, option, and plugin are deliberately excluded — add them as raw text via file writes",
         "isOneOf": null,
         "fields": null,
         "inputFields": null,
@@ -8292,6 +9243,12 @@
           },
           {
             "name": "OPEN",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "PAD",
             "description": null,
             "isDeprecated": false,
             "deprecationReason": null
@@ -8743,22 +9700,30 @@
             "deprecationReason": null
           },
           {
-            "name": "currencies",
-            "description": null,
+            "name": "booking",
+            "description": "Booking method for the account",
             "type": {
-              "kind": "NON_NULL",
+              "kind": "ENUM",
+              "name": "BookingMethod",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "currencies",
+            "description": "Valid currencies for the account; omit for a bare open line",
+            "type": {
+              "kind": "LIST",
               "name": null,
               "ofType": {
                 "name": null,
-                "kind": "LIST",
+                "kind": "NON_NULL",
                 "ofType": {
-                  "name": null,
-                  "kind": "NON_NULL",
-                  "ofType": {
-                    "name": "String",
-                    "kind": "SCALAR",
-                    "ofType": null
-                  }
+                  "name": "String",
+                  "kind": "SCALAR",
+                  "ofType": null
                 }
               }
             },
@@ -9243,6 +10208,74 @@
       },
       {
         "kind": "INPUT_OBJECT",
+        "name": "LedgerPadInput",
+        "description": null,
+        "isOneOf": false,
+        "fields": null,
+        "inputFields": [
+          {
+            "name": "account",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "date",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "sourceAccount",
+            "description": "Account to pad from",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "source_account",
+            "description": "Alias of sourceAccount. One of the two is required.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "interfaces": null,
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "INPUT_OBJECT",
         "name": "LedgerPostingInput",
         "description": null,
         "isOneOf": false,
@@ -9265,6 +10298,18 @@
             "deprecationReason": null
           },
           {
+            "name": "cost",
+            "description": "Lot basis `{number currency [, date] [, label]}`; needs units like price",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "LedgerCostInput",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "flag",
             "description": null,
             "type": {
@@ -9277,8 +10322,84 @@
             "deprecationReason": null
           },
           {
+            "name": "links",
+            "description": "Refused: beancount postings have no link slot; put links on the transaction instead",
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "name": null,
+                "kind": "NON_NULL",
+                "ofType": {
+                  "name": "String",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "meta",
+            "description": "Posting metadata, written beneath the posting",
+            "type": {
+              "kind": "SCALAR",
+              "name": "JSONObject",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "price",
-            "description": null,
+            "description": "Per-unit price (`@` annotation); exclusive with the total price",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "LedgerAmountInput",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "tags",
+            "description": "Refused: beancount postings have no tag slot; put tags on the transaction instead",
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "name": null,
+                "kind": "NON_NULL",
+                "ofType": {
+                  "name": "String",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "totalPrice",
+            "description": "Total price (`@@`); exclusive with the per-unit price",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "LedgerAmountInput",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "total_price",
+            "description": "Alias of totalPrice.",
             "type": {
               "kind": "INPUT_OBJECT",
               "name": "LedgerAmountInput",
@@ -9481,6 +10602,26 @@
             "deprecationReason": null
           },
           {
+            "name": "modules",
+            "description": "Account groups added to a PERSONAL ledger, each at most once. Refused with any other preset.",
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "name": null,
+                "kind": "NON_NULL",
+                "ofType": {
+                  "name": "LedgerSetupModuleInput",
+                  "kind": "INPUT_OBJECT",
+                  "ofType": null
+                }
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "operatingCurrency",
             "description": null,
             "type": {
@@ -9511,6 +10652,76 @@
           {
             "name": "title",
             "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "interfaces": null,
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "ENUM",
+        "name": "LedgerSetupModule",
+        "description": "Versioned personal-only account group from the setup catalog (PRFAQ001 Appendix A.9)",
+        "isOneOf": null,
+        "fields": null,
+        "inputFields": null,
+        "interfaces": null,
+        "enumValues": [
+          {
+            "name": "INVESTMENTS",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "RENTAL_PROPERTY",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "SIDE_BUSINESS",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "possibleTypes": null
+      },
+      {
+        "kind": "INPUT_OBJECT",
+        "name": "LedgerSetupModuleInput",
+        "description": null,
+        "isOneOf": false,
+        "fields": null,
+        "inputFields": [
+          {
+            "name": "id",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "LedgerSetupModule",
+                "kind": "ENUM",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "propertyName",
+            "description": "rental-property@1 only: the property's ASCII account component, default Property1.",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -9958,6 +11169,206 @@
           }
         ],
         "interfaces": null,
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "LedgerUpdateBooleanChange",
+        "description": null,
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "from",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "to",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "LedgerUpdateNullableStringChange",
+        "description": null,
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "from",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "to",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "LedgerUpdatePreview",
+        "description": null,
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "description",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "OBJECT",
+              "name": "LedgerUpdateNullableStringChange",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "name",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "OBJECT",
+              "name": "LedgerUpdateStringChange",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "private",
+            "description": "Current and new visibility, when changing it.",
+            "args": [],
+            "type": {
+              "kind": "OBJECT",
+              "name": "LedgerUpdateBooleanChange",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "warnings",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": null,
+                "kind": "LIST",
+                "ofType": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "String",
+                    "kind": "SCALAR",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "LedgerUpdateStringChange",
+        "description": null,
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "from",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "to",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
         "enumValues": null,
         "possibleTypes": null
       },
@@ -10425,6 +11836,30 @@
                 "deprecationReason": null
               },
               {
+                "name": "dryRun",
+                "description": "Run every check and return the preview without committing",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "dry_run",
+                "description": "Alias of dryRun, as MCP spells it.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "ledgerId",
                 "description": null,
                 "type": {
@@ -10482,8 +11917,32 @@
                 "deprecationReason": null
               },
               {
+                "name": "allow_invalid",
+                "description": "Alias of allowInvalid.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "dryRun",
                 "description": "Run every check and return the diff and projected errors without committing",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "dry_run",
+                "description": "Alias of dryRun, as MCP spells it.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Boolean",
@@ -10622,6 +12081,42 @@
               {
                 "name": "allowInvalid",
                 "description": "Record entries deliberately even when they are unbalanced (UNBALANCED) or would add bean-check errors such as a second open for an open account (VALIDATION_FAILED), instead of refusing them",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "allow_invalid",
+                "description": "Alias of allowInvalid.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "dryRun",
+                "description": "Run every check and return the preview without committing",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "dry_run",
+                "description": "Alias of dryRun, as MCP spells it.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Boolean",
@@ -10969,7 +12464,7 @@
           },
           {
             "name": "createLedger",
-            "description": "Create a new ledger for the current user. STARTER (the default, including null) contains options and accounts without transactions or opening balances; SAMPLE contains demonstration transactions. Existing ledgers are unchanged.",
+            "description": "Create a new ledger for the current user. STARTER (the default, including null) contains options and accounts without transactions or opening balances; SAMPLE contains demonstration transactions. Existing ledgers are unchanged. Refused with FORBIDDEN for a ledger-pinned credential: use a credential without a pin.",
             "args": [
               {
                 "name": "description",
@@ -11075,6 +12570,18 @@
                     "kind": "SCALAR",
                     "ofType": null
                   }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "description",
+                "description": "Alias of message, as the MCP file tools spell it.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
                 },
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -11456,6 +12963,30 @@
             "description": "Delete a specific ledger",
             "args": [
               {
+                "name": "dryRun",
+                "description": "Run every check and return the preview without committing",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "dry_run",
+                "description": "Alias of dryRun, as MCP spells it.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "ledgerId",
                 "description": null,
                 "type": {
@@ -11499,6 +13030,30 @@
                     "kind": "SCALAR",
                     "ofType": null
                   }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "dryRun",
+                "description": "Run every check and return the preview without committing",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "dry_run",
+                "description": "Alias of dryRun, as MCP spells it.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
                 },
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -11584,8 +13139,20 @@
           },
           {
             "name": "deleteLedgerFile",
-            "description": "Delete a file from a specific ledger",
+            "description": "Delete a file from a specific ledger. Deleting a file still `include`d by another ledger file is refused as `BAD_USER_INPUT` naming the includers; remove the include from the including file(s) first, then delete. An include counts when its target resolves to the deleted path the way the ledger loads it, relative to the directory of the file that declares it, and glob includes never count. `removeIncludes` (alias `remove_includes`) drops those exact include lines in the same commit; globs stay.",
             "args": [
+              {
+                "name": "description",
+                "description": "Alias of message, as the MCP file tools spell it.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
               {
                 "name": "ledgerId",
                 "description": null,
@@ -11625,6 +13192,18 @@
                     "kind": "SCALAR",
                     "ofType": null
                   }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "removeIncludes",
+                "description": "Also drop the exact `include` lines of other ledger files that reach this file, in the same commit. Without it, deleting an included file is refused. Glob includes are left as they are.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
                 },
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -11991,16 +13570,36 @@
                 "deprecationReason": null
               },
               {
+                "name": "objectKey",
+                "description": "Alias of receiptObjectKey, as the upload URL spells it.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "receiptObjectKey",
                 "description": null,
                 "type": {
-                  "kind": "NON_NULL",
-                  "name": null,
-                  "ofType": {
-                    "name": "String",
-                    "kind": "SCALAR",
-                    "ofType": null
-                  }
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "s3ObjectKey",
+                "description": "Alias of receiptObjectKey, as the parse routes spell it.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
                 },
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -12023,6 +13622,30 @@
             "name": "leaveLedger",
             "description": null,
             "args": [
+              {
+                "name": "dryRun",
+                "description": "Run every check and return the preview without committing",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "dry_run",
+                "description": "Alias of dryRun, as MCP spells it.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
               {
                 "name": "ledgerId",
                 "description": null,
@@ -12089,16 +13712,36 @@
                 "deprecationReason": null
               },
               {
+                "name": "objectKey",
+                "description": "Alias of s3ObjectKey, as the upload URL spells it.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "receiptObjectKey",
+                "description": "Alias of s3ObjectKey, as the insert path spells it.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "s3ObjectKey",
                 "description": "S3 object key from upload",
                 "type": {
-                  "kind": "NON_NULL",
-                  "name": null,
-                  "ofType": {
-                    "name": "String",
-                    "kind": "SCALAR",
-                    "ofType": null
-                  }
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
                 },
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -12138,16 +13781,36 @@
                 "deprecationReason": null
               },
               {
+                "name": "objectKey",
+                "description": "Alias of s3ObjectKey, as the upload URL spells it.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "receiptObjectKey",
+                "description": "Alias of s3ObjectKey, as the insert path spells it.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "s3ObjectKey",
                 "description": "S3 object key of the receipt (image or PDF only)",
                 "type": {
-                  "kind": "NON_NULL",
-                  "name": null,
-                  "ofType": {
-                    "name": "String",
-                    "kind": "SCALAR",
-                    "ofType": null
-                  }
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
                 },
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -12390,6 +14053,42 @@
             "name": "renameLedgerFile",
             "description": "Rename a file in a specific ledger",
             "args": [
+              {
+                "name": "description",
+                "description": "Alias of message, as the MCP file tools spell it.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "dryRun",
+                "description": "Run every check and return the preview without committing",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "dry_run",
+                "description": "Alias of dryRun, as MCP spells it.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
               {
                 "name": "ledgerId",
                 "description": null,
@@ -13259,6 +14958,30 @@
                 "deprecationReason": null
               },
               {
+                "name": "dryRun",
+                "description": "Run every check and return the preview without committing",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "dry_run",
+                "description": "Alias of dryRun, as MCP spells it.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "ledgerId",
                 "description": null,
                 "type": {
@@ -13375,6 +15098,18 @@
                     "kind": "SCALAR",
                     "ofType": null
                   }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "description",
+                "description": "Alias of message, as the MCP file tools spell it.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
                 },
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -15226,7 +16961,7 @@
         "inputFields": [
           {
             "name": "sourceAccount",
-            "description": "Overrides the source account normally derived from the Plaid account's mapping",
+            "description": "Overrides the source account normally derived from the Plaid account's mapping. camelCase only here; the MCP bank tool also accepts source_account.",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -15238,7 +16973,7 @@
           },
           {
             "name": "targetAccount",
-            "description": null,
+            "description": "The ledger account to book this against. camelCase only here; the MCP bank tool also accepts target_account.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -15254,7 +16989,7 @@
           },
           {
             "name": "transactionId",
-            "description": null,
+            "description": "The staged row's transactionId. camelCase only here; the MCP bank tool also accepts transaction_id.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -15518,7 +17253,7 @@
           },
           {
             "name": "filter",
-            "description": null,
+            "description": "Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or \"quoted\" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:\"Assets:Bank:Checking\"`, `date:\"2026\"` — there are no escape sequences.",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -15619,6 +17354,62 @@
                 "kind": "SCALAR",
                 "ofType": null
               }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "PlanBilling",
+        "description": null,
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "duplicateBilling",
+            "description": "More than one subscription is set to renew, so the account pays twice.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "source",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "BillingSource",
+                "kind": "ENUM",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "store",
+            "description": "The account's live store subscription, when it has one.",
+            "args": [],
+            "type": {
+              "kind": "OBJECT",
+              "name": "StoreSubscriptionSummary",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -17157,13 +18948,33 @@
                 "name": "objectKey",
                 "description": "S3 object key returned by generateTempAssetUploadUrl",
                 "type": {
-                  "kind": "NON_NULL",
-                  "name": null,
-                  "ofType": {
-                    "name": "String",
-                    "kind": "SCALAR",
-                    "ofType": null
-                  }
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "receiptObjectKey",
+                "description": "Alias of objectKey, as the insert path spells it.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "s3ObjectKey",
+                "description": "Alias of objectKey, as the parse routes spell it.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
                 },
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -17649,7 +19460,7 @@
               },
               {
                 "name": "conversion",
-                "description": null,
+                "description": "Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -17914,7 +19725,7 @@
               },
               {
                 "name": "conversion",
-                "description": null,
+                "description": "Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -18420,13 +20231,21 @@
                 "name": "entryHash",
                 "description": null,
                 "type": {
-                  "kind": "NON_NULL",
-                  "name": null,
-                  "ofType": {
-                    "name": "String",
-                    "kind": "SCALAR",
-                    "ofType": null
-                  }
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "entry_hash",
+                "description": "Alias of entryHash, as list output spells it.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
                 },
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -18656,15 +20475,23 @@
                 "name": "groupBy",
                 "description": null,
                 "type": {
-                  "kind": "NON_NULL",
-                  "name": null,
-                  "ofType": {
-                    "name": "String",
-                    "kind": "SCALAR",
-                    "ofType": null
-                  }
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
                 },
-                "defaultValue": "\"account\"",
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "group_by",
+                "description": "Alias of groupBy, as the read echoes it.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
                 "isDeprecated": false,
                 "deprecationReason": null
               },
@@ -18715,7 +20542,7 @@
               },
               {
                 "name": "conversion",
-                "description": null,
+                "description": "Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -18828,7 +20655,7 @@
               },
               {
                 "name": "conversion",
-                "description": null,
+                "description": "Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -19179,7 +21006,7 @@
               },
               {
                 "name": "conversion",
-                "description": null,
+                "description": "Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -19696,7 +21523,7 @@
               },
               {
                 "name": "conversion",
-                "description": null,
+                "description": "Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -19715,22 +21542,6 @@
                   "ofType": null
                 },
                 "defaultValue": null,
-                "isDeprecated": false,
-                "deprecationReason": null
-              },
-              {
-                "name": "interval",
-                "description": null,
-                "type": {
-                  "kind": "NON_NULL",
-                  "name": null,
-                  "ofType": {
-                    "name": "String",
-                    "kind": "SCALAR",
-                    "ofType": null
-                  }
-                },
-                "defaultValue": "\"monthly\"",
                 "isDeprecated": false,
                 "deprecationReason": null
               },
@@ -21105,7 +22916,7 @@
           },
           {
             "name": "queryShell",
-            "description": "Execute a shell query on a ledger",
+            "description": "Execute a shell query on a ledger. The query travels in a POST body end to end, so long queries have no URL-length ceiling, up to 262144 bytes.",
             "args": [
               {
                 "name": "ledgerId",
@@ -21150,7 +22961,7 @@
           },
           {
             "name": "queryShellText",
-            "description": "Execute a shell query on a ledger and return plain text output",
+            "description": "Execute a shell query on a ledger and return plain text output. The query travels in a POST body end to end, so long queries have no URL-length ceiling, up to 262144 bytes.",
             "args": [
               {
                 "name": "ledgerId",
@@ -21423,8 +23234,24 @@
             "deprecationReason": null
           },
           {
+            "name": "storeBillingIdentity",
+            "description": "Returns your store billing identifiers, creating them on first read. Requires a full signed-in session or the Beancount app.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "StoreBillingIdentity",
+                "kind": "OBJECT",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "subscriptionStatus",
-            "description": "Returns your subscription status. Requires a full signed-in session.",
+            "description": "Returns your subscription status. Requires a full signed-in session or the Beancount app.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -21900,6 +23727,18 @@
         "isOneOf": null,
         "fields": [
           {
+            "name": "rowCount",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "text",
             "description": null,
             "args": [],
@@ -22372,6 +24211,38 @@
         "isOneOf": null,
         "fields": [
           {
+            "name": "dryRun",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "message",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "newPath",
             "description": null,
             "args": [],
@@ -22404,6 +24275,30 @@
             "deprecationReason": null
           },
           {
+            "name": "preview",
+            "description": "Per-file rewritten include lines; populated on dry runs only",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": null,
+                "kind": "LIST",
+                "ofType": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "RenamePreviewFile",
+                    "kind": "OBJECT",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "updatedIncludes",
             "description": null,
             "args": [],
@@ -22422,6 +24317,50 @@
                     "ofType": null
                   }
                 }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "RenamePreviewFile",
+        "description": null,
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "path",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "text",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
               }
             },
             "isDeprecated": false,
@@ -22953,6 +24892,90 @@
       },
       {
         "kind": "OBJECT",
+        "name": "SlicePreviewFile",
+        "description": null,
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "path",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "text",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "SliceWriteError",
+        "description": null,
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "message",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "source",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
         "name": "StarLedgerResponse",
         "description": null,
         "isOneOf": null,
@@ -22987,6 +25010,230 @@
           },
           {
             "name": "success",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "StoreBillingIdentity",
+        "description": "What the app attaches to a store purchase so the purchase names this account.",
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "appleAppAccountToken",
+            "description": "Apple's appAccountToken.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "googleObfuscatedAccountId",
+            "description": "Google Play's obfuscated account ID.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "StorePlan",
+        "description": null,
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "interval",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "tier",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "StoreSubscriptionSummary",
+        "description": null,
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "accessEndsAt",
+            "description": "When the paid or grace period ends.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "DateTimeISO",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "interval",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "managementUrl",
+            "description": "The web page that manages this plan. Apple has none, so App Store plans are managed on the device.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "productId",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "provider",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "BillingSource",
+                "kind": "ENUM",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "scheduledChange",
+            "description": "The plan the store moves to at the next renewal.",
+            "args": [],
+            "type": {
+              "kind": "OBJECT",
+              "name": "StorePlan",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "status",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "tier",
+            "description": "Absent for a product outside the catalog.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "willRenew",
             "description": null,
             "args": [],
             "type": {
@@ -24182,16 +26429,60 @@
             "deprecationReason": null
           },
           {
-            "name": "entryHash",
-            "description": null,
+            "name": "allow_invalid",
+            "description": "Alias of allowInvalid.",
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "name": "String",
-                "kind": "SCALAR",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Boolean",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "dryRun",
+            "description": "Run every check and return the preview without committing",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Boolean",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "dry_run",
+            "description": "Alias of dryRun, as MCP spells it.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Boolean",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "entryHash",
+            "description": "The entry's hash. One of entryHash/entry_hash is required.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "entry_hash",
+            "description": "Alias of entryHash, as list output spells it.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
             },
             "defaultValue": null,
             "isDeprecated": false,
@@ -24241,6 +26532,22 @@
         "isOneOf": null,
         "fields": [
           {
+            "name": "dryRun",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "entryHash",
             "description": null,
             "args": [],
@@ -24249,6 +26556,38 @@
               "name": null,
               "ofType": {
                 "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "errorsAfter",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Float",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "errorsBefore",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Float",
                 "kind": "SCALAR",
                 "ofType": null
               }
@@ -24289,6 +26628,30 @@
             "deprecationReason": null
           },
           {
+            "name": "newErrors",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": null,
+                "kind": "LIST",
+                "ofType": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "SliceWriteError",
+                    "kind": "OBJECT",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "newSha256sum",
             "description": null,
             "args": [],
@@ -24299,6 +26662,30 @@
                 "name": "String",
                 "kind": "SCALAR",
                 "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "preview",
+            "description": "Per-file affected text; populated on dry runs only",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": null,
+                "kind": "LIST",
+                "ofType": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "SlicePreviewFile",
+                    "kind": "OBJECT",
+                    "ofType": null
+                  }
+                }
               }
             },
             "isDeprecated": false,

@@ -1,5 +1,1 @@
-{
-  "SubscriptionStatus": "Mobile billing (docs/adrs/ADR001-mobile-billing.md, D13) reads the plan and billing source through this query; the document is rewritten for its extended fields when the store verbs land.",
-  "CreateSubscriptionSession": "Stripe Checkout, which mobile billing never uses; docs/adrs/ADR001-mobile-billing.md D13 deletes it when the store verbs land.",
-  "CancelSubscription": "Stripe cancellation, which mobile billing never uses; docs/adrs/ADR001-mobile-billing.md D13 deletes it when the store verbs land."
-}
+{}

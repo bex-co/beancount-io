@@ -7,8 +7,11 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
+  /** A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.This scalar is serialized to a string in ISO 8601 format and parsed from a string in ISO 8601 format. */
   DateTimeISO: { input: unknown; output: unknown; }
+  /** The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf). */
   JSON: { input: unknown; output: unknown; }
+  /** The `JSONObject` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf). */
   JSONObject: { input: Record<string, number | string>; output: Record<string, number | string>; }
 };
 
@@ -36,16 +39,25 @@ export type AccountJournalEntry = {
 export type AccountJournalQueryInput = {
   account: Scalars['String']['input'];
   conversion?: InputMaybe<Scalars['String']['input']>;
+  /** Custom-directive subtype filter: narrows custom directives only — other families pass through. Combine with directiveTypes to restrict the families returned. */
   customSubtypes?: InputMaybe<Array<Scalars['String']['input']>>;
   directiveTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** Document subtype filter: narrows documents only — other directive families pass through. Combine with directiveTypes to restrict the families returned. */
   documentSubtypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or "quoted" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape sequences. */
   filter?: InputMaybe<Scalars['String']['input']>;
   /** Optional shared report-stream AccountFilter (URL ?account=). Distinct from the required target `account`. */
   filterAccount?: InputMaybe<Scalars['String']['input']>;
+  /** Alias of filterAccount, as MCP and REST spell it. */
+  filter_account?: InputMaybe<Scalars['String']['input']>;
   limit?: InputMaybe<Scalars['Float']['input']>;
   offset?: InputMaybe<Scalars['Float']['input']>;
+  /** Fava time expression, e.g. 2026-08. Pre-window `open` directives are preserved as context and counted in total. */
   time?: InputMaybe<Scalars['String']['input']>;
+  /** Transaction flag filter: narrows transactions only — other directive families pass through. Combine with directiveTypes to restrict the families returned. */
   transactionSubtypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** Alias of with_children. */
+  withChildren?: InputMaybe<Scalars['Boolean']['input']>;
   with_children?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
@@ -73,7 +85,11 @@ export type AccountReport = {
 
 export type AddCollaboratorResponse = {
   __typename?: 'AddCollaboratorResponse';
+  /** True when this is a preview: the checks ran and nothing changed. Commits echo false. */
+  dryRun?: Maybe<Scalars['Boolean']['output']>;
   message?: Maybe<Scalars['String']['output']>;
+  /** The rendered would-be access change; present only on previews. */
+  preview?: Maybe<CollaboratorPreview>;
   success: Scalars['Boolean']['output'];
 };
 
@@ -86,6 +102,7 @@ export type AddEntryInput = {
   event?: InputMaybe<LedgerEventInput>;
   note?: InputMaybe<LedgerNoteInput>;
   open?: InputMaybe<LedgerOpenInput>;
+  pad?: InputMaybe<LedgerPadInput>;
   price?: InputMaybe<LedgerPriceInput>;
   transaction?: InputMaybe<LedgerTransactionInput>;
   type: LedgerEntryType;
@@ -99,9 +116,15 @@ export type AddEntryResponse = {
 
 export type AddLedgerEntryResponse = {
   __typename?: 'AddLedgerEntryResponse';
+  dryRun: Scalars['Boolean']['output'];
   /** The hash each committed entry now carries, in request order, for getLedgerEntryContext and the source-slice update and delete; empty on a dry run, or when it could not be resolved after the commit */
   entryHashes: Array<Scalars['String']['output']>;
+  errorsAfter: Scalars['Float']['output'];
+  errorsBefore: Scalars['Float']['output'];
   message?: Maybe<Scalars['String']['output']>;
+  newErrors: Array<DirectiveTextError>;
+  /** Per-file entry text; populated on dry runs only */
+  preview: Array<EntryPreviewFile>;
   success: Scalars['Boolean']['output'];
 };
 
@@ -190,6 +213,22 @@ export type BeancountError = {
   severity: Scalars['String']['output'];
 };
 
+/** Who bills a plan, which is also where it is managed. */
+export enum BillingSource {
+  AppStore = 'APP_STORE',
+  GooglePlay = 'GOOGLE_PLAY',
+  None = 'NONE',
+  Stripe = 'STRIPE'
+}
+
+/** Booking method for the account */
+export enum BookingMethod {
+  Fifo = 'FIFO',
+  Lifo = 'LIFO',
+  None = 'NONE',
+  Strict = 'STRICT'
+}
+
 /** Budget recurrence interval */
 export enum BudgetInterval {
   Daily = 'DAILY',
@@ -258,6 +297,14 @@ export enum CliAuthStatus {
   Expired = 'EXPIRED',
   Pending = 'PENDING'
 }
+
+export type CollaboratorPreview = {
+  __typename?: 'CollaboratorPreview';
+  collaborator: Scalars['String']['output'];
+  current?: Maybe<Scalars['String']['output']>;
+  requested?: Maybe<Scalars['String']['output']>;
+  warnings: Array<Scalars['String']['output']>;
+};
 
 export type CollaboratorUser = {
   __typename?: 'CollaboratorUser';
@@ -378,6 +425,9 @@ export type CreatePrFromPatchInput = {
 
 export type CustomerSubscriptionStatus = {
   __typename?: 'CustomerSubscriptionStatus';
+  /** Who bills the account's plan, whichever source that is. */
+  billing: PlanBilling;
+  /** Whether Stripe holds a paid subscription. A store plan is reported under `billing`. */
   hasActiveSubscription: Scalars['Boolean']['output'];
   subscriptions: Array<Subscription>;
 };
@@ -397,7 +447,11 @@ export type DateAndBalanceWithAccountBalance = {
 
 export type DeleteCollaboratorResponse = {
   __typename?: 'DeleteCollaboratorResponse';
+  /** True when this is a preview: the checks ran and nothing changed. Commits echo false. */
+  dryRun?: Maybe<Scalars['Boolean']['output']>;
   message?: Maybe<Scalars['String']['output']>;
+  /** The rendered would-be access change; present only on previews. */
+  preview?: Maybe<CollaboratorPreview>;
   success: Scalars['Boolean']['output'];
 };
 
@@ -408,24 +462,43 @@ export type DeleteLedgerFileResponse = {
 
 export type DeleteLedgerResponse = {
   __typename?: 'DeleteLedgerResponse';
+  /** True when this is a deleteLedger preview: the checks ran and nothing was destroyed. Commits echo false. */
+  dryRun?: Maybe<Scalars['Boolean']['output']>;
   ledgerId: Scalars['String']['output'];
+  /** The destroy summary; present only on deleteLedger previews. */
+  preview?: Maybe<LedgerDeletePreview>;
 };
 
 export type DeleteMultiSourceSliceItemInput = {
-  entryHash: Scalars['String']['input'];
+  /** The entry's hash. One of entryHash/entry_hash is required. */
+  entryHash?: InputMaybe<Scalars['String']['input']>;
+  /** Alias of entryHash, as list output spells it. */
+  entry_hash?: InputMaybe<Scalars['String']['input']>;
   sha256sum: Scalars['String']['input'];
 };
 
 export type DeleteMultiSourceSlicesInput = {
   /** Delete the entries even when that would add bean-check errors (VALIDATION_FAILED), instead of refusing */
   allowInvalid?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Alias of allowInvalid. */
+  allow_invalid?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Run every check and return the preview without committing */
+  dryRun?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Alias of dryRun, as MCP spells it. */
+  dry_run?: InputMaybe<Scalars['Boolean']['input']>;
   entries: Array<DeleteMultiSourceSliceItemInput>;
 };
 
 export type DeleteMultiSourceSlicesResponse = {
   __typename?: 'DeleteMultiSourceSlicesResponse';
   deletedCount: Scalars['Int']['output'];
+  dryRun: Scalars['Boolean']['output'];
+  errorsAfter: Scalars['Float']['output'];
+  errorsBefore: Scalars['Float']['output'];
   message: Scalars['String']['output'];
+  newErrors: Array<SliceWriteError>;
+  /** Per-file affected text; populated on dry runs only */
+  preview: Array<SlicePreviewFile>;
 };
 
 export type DeletePublicKeyResponse = {
@@ -436,14 +509,29 @@ export type DeletePublicKeyResponse = {
 export type DeleteSourceSliceInput = {
   /** Delete the entry even when that would add bean-check errors (VALIDATION_FAILED), instead of refusing */
   allowInvalid?: InputMaybe<Scalars['Boolean']['input']>;
-  entryHash: Scalars['String']['input'];
+  /** Alias of allowInvalid. */
+  allow_invalid?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Run every check and return the preview without committing */
+  dryRun?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Alias of dryRun, as MCP spells it. */
+  dry_run?: InputMaybe<Scalars['Boolean']['input']>;
+  /** The entry's hash. One of entryHash/entry_hash is required. */
+  entryHash?: InputMaybe<Scalars['String']['input']>;
+  /** Alias of entryHash, as list output spells it. */
+  entry_hash?: InputMaybe<Scalars['String']['input']>;
   sha256sum: Scalars['String']['input'];
 };
 
 export type DeleteSourceSliceResponse = {
   __typename?: 'DeleteSourceSliceResponse';
+  dryRun: Scalars['Boolean']['output'];
   entryHash: Scalars['String']['output'];
+  errorsAfter: Scalars['Float']['output'];
+  errorsBefore: Scalars['Float']['output'];
   message: Scalars['String']['output'];
+  newErrors: Array<SliceWriteError>;
+  /** Per-file affected text; populated on dry runs only */
+  preview: Array<SlicePreviewFile>;
 };
 
 export type DenyCliAuthSessionResponse = {
@@ -506,6 +594,12 @@ export type EntryMeta = {
   __typename?: 'EntryMeta';
   filename: Scalars['String']['output'];
   lineno: Scalars['Float']['output'];
+};
+
+export type EntryPreviewFile = {
+  __typename?: 'EntryPreviewFile';
+  path: Scalars['String']['output'];
+  text: Scalars['String']['output'];
 };
 
 export type Event = {
@@ -666,6 +760,8 @@ export type IncomeStatementData = {
 
 export type InsertReceiptResult = {
   __typename?: 'InsertReceiptResult';
+  /** The hash each committed entry now carries, in request order, for getLedgerEntryContext and the source-slice update and delete; empty when it could not be resolved after the commit */
+  entryHashes: Array<Scalars['String']['output']>;
   success: Scalars['Boolean']['output'];
 };
 
@@ -755,13 +851,18 @@ export type JournalEntryPosting = {
 
 export type JournalQueryInput = {
   account?: InputMaybe<Scalars['String']['input']>;
+  /** Custom-directive subtype filter: narrows custom directives only — other families pass through. Combine with directiveTypes to restrict the families returned. */
   customSubtypes?: InputMaybe<Array<Scalars['String']['input']>>;
   directiveTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** Document subtype filter: narrows documents only — other directive families pass through. Combine with directiveTypes to restrict the families returned. */
   documentSubtypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or "quoted" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape sequences. */
   filter?: InputMaybe<Scalars['String']['input']>;
   limit?: InputMaybe<Scalars['Float']['input']>;
   offset?: InputMaybe<Scalars['Float']['input']>;
+  /** Fava time expression, e.g. 2026-08. Pre-window `open` directives are preserved as context and counted in total. */
   time?: InputMaybe<Scalars['String']['input']>;
+  /** Transaction flag filter: narrows transactions only — other directive families pass through. Combine with directiveTypes to restrict the families returned. */
   transactionSubtypes?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
@@ -794,6 +895,8 @@ export type Ledger = {
   bcioOptions: BcioOptions;
   createdAt: Scalars['String']['output'];
   description?: Maybe<Scalars['String']['output']>;
+  /** True when this is an updateLedger preview: the checks ran and nothing was committed. Reads and creates omit it. */
+  dryRun?: Maybe<Scalars['Boolean']['output']>;
   empty: Scalars['Boolean']['output'];
   /** Get the fava options of a ledger */
   favaOptions: FavaOptions;
@@ -805,6 +908,8 @@ export type Ledger = {
   /** Get the beancount options of a ledger */
   options: LedgerOptions;
   permissions?: Maybe<Permission>;
+  /** The rendered current→new diff; present only on updateLedger previews. */
+  preview?: Maybe<LedgerUpdatePreview>;
   private: Scalars['Boolean']['output'];
   size: Scalars['Float']['output'];
   sshUrl: Scalars['String']['output'];
@@ -817,6 +922,7 @@ export type LedgerAccountItem = {
   balance?: Maybe<Scalars['JSONObject']['output']>;
   closeEntryHash?: Maybe<Scalars['String']['output']>;
   closedAt?: Maybe<Scalars['String']['output']>;
+  /** Postings on this account — not a directive count */
   entryCount: Scalars['Float']['output'];
   entryHash: Scalars['String']['output'];
   /** Metadata declared on the account's open directive */
@@ -848,6 +954,8 @@ export type LedgerBalanceInput = {
   account: Scalars['String']['input'];
   amount: LedgerAmountInput;
   date: Scalars['String']['input'];
+  /** Explicit balance tolerance as a plain decimal */
+  tolerance?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type LedgerBudgetInput = {
@@ -890,6 +998,24 @@ export type LedgerCommodityInput = {
   date: Scalars['String']['input'];
 };
 
+export type LedgerCostInput = {
+  currency: Scalars['String']['input'];
+  date?: InputMaybe<Scalars['String']['input']>;
+  label?: InputMaybe<Scalars['String']['input']>;
+  number: Scalars['String']['input'];
+};
+
+export type LedgerDeletePreview = {
+  __typename?: 'LedgerDeletePreview';
+  description?: Maybe<Scalars['String']['output']>;
+  empty: Scalars['Boolean']['output'];
+  ledgerId: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  private: Scalars['Boolean']['output'];
+  size: Scalars['Float']['output'];
+  warnings: Array<Scalars['String']['output']>;
+};
+
 export type LedgerDocumentInput = {
   account: Scalars['String']['input'];
   date: Scalars['String']['input'];
@@ -898,7 +1024,7 @@ export type LedgerDocumentInput = {
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
-/** Discriminator selecting which entry payload to add */
+/** Discriminator selecting which entry payload to add. custom, query, option, and plugin are deliberately excluded — add them as raw text via file writes */
 export enum LedgerEntryType {
   Balance = 'BALANCE',
   Budget = 'BUDGET',
@@ -908,6 +1034,7 @@ export enum LedgerEntryType {
   Event = 'EVENT',
   Note = 'NOTE',
   Open = 'OPEN',
+  Pad = 'PAD',
   Price = 'PRICE',
   Transaction = 'TRANSACTION'
 }
@@ -954,7 +1081,10 @@ export type LedgerNoteInput = {
 
 export type LedgerOpenInput = {
   account: Scalars['String']['input'];
-  currencies: Array<Scalars['String']['input']>;
+  /** Booking method for the account */
+  booking?: InputMaybe<BookingMethod>;
+  /** Valid currencies for the account; omit for a bare open line */
+  currencies?: InputMaybe<Array<Scalars['String']['input']>>;
   date: Scalars['String']['input'];
 };
 
@@ -994,10 +1124,32 @@ export type LedgerOverview = {
   netWorthData: Array<DateAndBalance>;
 };
 
+export type LedgerPadInput = {
+  account: Scalars['String']['input'];
+  date: Scalars['String']['input'];
+  /** Account to pad from */
+  sourceAccount?: InputMaybe<Scalars['String']['input']>;
+  /** Alias of sourceAccount. One of the two is required. */
+  source_account?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type LedgerPostingInput = {
   account: Scalars['String']['input'];
+  /** Lot basis `{number currency [, date] [, label]}`; needs units like price */
+  cost?: InputMaybe<LedgerCostInput>;
   flag?: InputMaybe<Scalars['String']['input']>;
+  /** Refused: beancount postings have no link slot; put links on the transaction instead */
+  links?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** Posting metadata, written beneath the posting */
+  meta?: InputMaybe<Scalars['JSONObject']['input']>;
+  /** Per-unit price (`@` annotation); exclusive with the total price */
   price?: InputMaybe<LedgerAmountInput>;
+  /** Refused: beancount postings have no tag slot; put tags on the transaction instead */
+  tags?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** Total price (`@@`); exclusive with the per-unit price */
+  totalPrice?: InputMaybe<LedgerAmountInput>;
+  /** Alias of totalPrice. */
+  total_price?: InputMaybe<LedgerAmountInput>;
   /** Posting amount; omit on at most one posting per transaction to elide it */
   units?: InputMaybe<LedgerAmountInput>;
 };
@@ -1021,9 +1173,24 @@ export type LedgerSetupInput = {
   /** Per optional question: enabled, declined, or deferred, keyed by question id. */
   capabilities?: InputMaybe<Scalars['JSONObject']['input']>;
   historyStart?: InputMaybe<Scalars['String']['input']>;
+  /** Account groups added to a PERSONAL ledger, each at most once. Refused with any other preset. */
+  modules?: InputMaybe<Array<LedgerSetupModuleInput>>;
   operatingCurrency?: InputMaybe<Scalars['String']['input']>;
   preset: LedgerSetupPreset;
   title?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Versioned personal-only account group from the setup catalog (PRFAQ001 Appendix A.9) */
+export enum LedgerSetupModule {
+  Investments = 'INVESTMENTS',
+  RentalProperty = 'RENTAL_PROPERTY',
+  SideBusiness = 'SIDE_BUSINESS'
+}
+
+export type LedgerSetupModuleInput = {
+  id: LedgerSetupModule;
+  /** rental-property@1 only: the property's ASCII account component, default Property1. */
+  propertyName?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** Versioned starter preset from the setup catalog (ADR021) */
@@ -1076,6 +1243,33 @@ export type LedgerTransactionInput = {
   payee?: InputMaybe<Scalars['String']['input']>;
   postings: Array<LedgerPostingInput>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+export type LedgerUpdateBooleanChange = {
+  __typename?: 'LedgerUpdateBooleanChange';
+  from: Scalars['Boolean']['output'];
+  to: Scalars['Boolean']['output'];
+};
+
+export type LedgerUpdateNullableStringChange = {
+  __typename?: 'LedgerUpdateNullableStringChange';
+  from?: Maybe<Scalars['String']['output']>;
+  to: Scalars['String']['output'];
+};
+
+export type LedgerUpdatePreview = {
+  __typename?: 'LedgerUpdatePreview';
+  description?: Maybe<LedgerUpdateNullableStringChange>;
+  name?: Maybe<LedgerUpdateStringChange>;
+  /** Current and new visibility, when changing it. */
+  private?: Maybe<LedgerUpdateBooleanChange>;
+  warnings: Array<Scalars['String']['output']>;
+};
+
+export type LedgerUpdateStringChange = {
+  __typename?: 'LedgerUpdateStringChange';
+  from: Scalars['String']['output'];
+  to: Scalars['String']['output'];
 };
 
 export type LogoutResponse = {
@@ -1147,7 +1341,7 @@ export type Mutation = {
   createApiKey: MintedApiKeyType;
   /** Initiate a CLI authentication session. Returns the device code the CLI polls with and the user code to display for the person to enter in the browser. */
   createCliAuthSession: CreateCliAuthSessionResponse;
-  /** Create a new ledger for the current user. STARTER (the default, including null) contains options and accounts without transactions or opening balances; SAMPLE contains demonstration transactions. Existing ledgers are unchanged. */
+  /** Create a new ledger for the current user. STARTER (the default, including null) contains options and accounts without transactions or opening balances; SAMPLE contains demonstration transactions. Existing ledgers are unchanged. Refused with FORBIDDEN for a ledger-pinned credential: use a credential without a pin. */
   createLedger: Ledger;
   /** Create a new file in a specific ledger */
   createLedgerFile: LedgerFileContent;
@@ -1170,7 +1364,7 @@ export type Mutation = {
   deleteLedgerCollaborator: DeleteCollaboratorResponse;
   /** Delete a source slice for a specific journal entry */
   deleteLedgerEntrySourceSlice: DeleteSourceSliceResponse;
-  /** Delete a file from a specific ledger */
+  /** Delete a file from a specific ledger. Deleting a file still `include`d by another ledger file is refused as `BAD_USER_INPUT` naming the includers; remove the include from the including file(s) first, then delete. An include counts when its target resolves to the deleted path the way the ledger loads it, relative to the directory of the file that declares it, and glob includes never count. `removeIncludes` (alias `remove_includes`) drops those exact include lines in the same commit; globs stay. */
   deleteLedgerFile: DeleteLedgerFileResponse;
   /** Delete multiple source slices for journal entries in a single operation */
   deleteMultipleLedgerEntrySourceSlices: DeleteMultiSourceSlicesResponse;
@@ -1261,6 +1455,8 @@ export type MutationAddEntriesArgs = {
 
 export type MutationAddOrUpdateLedgerCollaboratorArgs = {
   collaborator: Scalars['String']['input'];
+  dryRun?: InputMaybe<Scalars['Boolean']['input']>;
+  dry_run?: InputMaybe<Scalars['Boolean']['input']>;
   ledgerId: Scalars['String']['input'];
   permission?: InputMaybe<Scalars['String']['input']>;
 };
@@ -1268,7 +1464,9 @@ export type MutationAddOrUpdateLedgerCollaboratorArgs = {
 
 export type MutationAppendLedgerTextArgs = {
   allowInvalid?: InputMaybe<Scalars['Boolean']['input']>;
+  allow_invalid?: InputMaybe<Scalars['Boolean']['input']>;
   dryRun?: InputMaybe<Scalars['Boolean']['input']>;
+  dry_run?: InputMaybe<Scalars['Boolean']['input']>;
   ledgerId: Scalars['String']['input'];
   path?: InputMaybe<Scalars['String']['input']>;
   text: Scalars['String']['input'];
@@ -1284,6 +1482,9 @@ export type MutationApprovePullRequestArgs = {
 
 export type MutationBulkEntriesArgs = {
   allowInvalid?: InputMaybe<Scalars['Boolean']['input']>;
+  allow_invalid?: InputMaybe<Scalars['Boolean']['input']>;
+  dryRun?: InputMaybe<Scalars['Boolean']['input']>;
+  dry_run?: InputMaybe<Scalars['Boolean']['input']>;
   entries: Array<AddEntryInput>;
   ledgerId: Scalars['String']['input'];
 };
@@ -1340,6 +1541,7 @@ export type MutationCreateLedgerArgs = {
 
 export type MutationCreateLedgerFileArgs = {
   content: Scalars['String']['input'];
+  description?: InputMaybe<Scalars['String']['input']>;
   ledgerId: Scalars['String']['input'];
   message?: InputMaybe<Scalars['String']['input']>;
   path: Scalars['String']['input'];
@@ -1383,12 +1585,16 @@ export type MutationCreateSubscriptionSessionArgs = {
 
 
 export type MutationDeleteLedgerArgs = {
+  dryRun?: InputMaybe<Scalars['Boolean']['input']>;
+  dry_run?: InputMaybe<Scalars['Boolean']['input']>;
   ledgerId: Scalars['String']['input'];
 };
 
 
 export type MutationDeleteLedgerCollaboratorArgs = {
   collaborator: Scalars['String']['input'];
+  dryRun?: InputMaybe<Scalars['Boolean']['input']>;
+  dry_run?: InputMaybe<Scalars['Boolean']['input']>;
   ledgerId: Scalars['String']['input'];
 };
 
@@ -1400,9 +1606,11 @@ export type MutationDeleteLedgerEntrySourceSliceArgs = {
 
 
 export type MutationDeleteLedgerFileArgs = {
+  description?: InputMaybe<Scalars['String']['input']>;
   ledgerId: Scalars['String']['input'];
   message?: InputMaybe<Scalars['String']['input']>;
   path: Scalars['String']['input'];
+  removeIncludes?: InputMaybe<Scalars['Boolean']['input']>;
   sha: Scalars['String']['input'];
 };
 
@@ -1449,24 +1657,32 @@ export type MutationGenerateTempAssetUploadUrlArgs = {
 export type MutationInsertReceiptTransactionArgs = {
   input: InsertReceiptTransactionInput;
   ledgerId: Scalars['String']['input'];
-  receiptObjectKey: Scalars['String']['input'];
+  objectKey?: InputMaybe<Scalars['String']['input']>;
+  receiptObjectKey?: InputMaybe<Scalars['String']['input']>;
+  s3ObjectKey?: InputMaybe<Scalars['String']['input']>;
 };
 
 
 export type MutationLeaveLedgerArgs = {
+  dryRun?: InputMaybe<Scalars['Boolean']['input']>;
+  dry_run?: InputMaybe<Scalars['Boolean']['input']>;
   ledgerId: Scalars['String']['input'];
 };
 
 
 export type MutationParseFileArgs = {
   fileFormat: Scalars['String']['input'];
-  s3ObjectKey: Scalars['String']['input'];
+  objectKey?: InputMaybe<Scalars['String']['input']>;
+  receiptObjectKey?: InputMaybe<Scalars['String']['input']>;
+  s3ObjectKey?: InputMaybe<Scalars['String']['input']>;
 };
 
 
 export type MutationParseReceiptArgs = {
   ledgerId: Scalars['String']['input'];
-  s3ObjectKey: Scalars['String']['input'];
+  objectKey?: InputMaybe<Scalars['String']['input']>;
+  receiptObjectKey?: InputMaybe<Scalars['String']['input']>;
+  s3ObjectKey?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -1495,6 +1711,9 @@ export type MutationRejectPullRequestArgs = {
 
 
 export type MutationRenameLedgerFileArgs = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  dryRun?: InputMaybe<Scalars['Boolean']['input']>;
+  dry_run?: InputMaybe<Scalars['Boolean']['input']>;
   ledgerId: Scalars['String']['input'];
   message?: InputMaybe<Scalars['String']['input']>;
   newPath: Scalars['String']['input'];
@@ -1598,6 +1817,8 @@ export type MutationUnstarLedgerArgs = {
 
 export type MutationUpdateLedgerArgs = {
   description?: InputMaybe<Scalars['String']['input']>;
+  dryRun?: InputMaybe<Scalars['Boolean']['input']>;
+  dry_run?: InputMaybe<Scalars['Boolean']['input']>;
   ledgerId: Scalars['String']['input'];
   name?: InputMaybe<Scalars['String']['input']>;
   private?: InputMaybe<Scalars['Boolean']['input']>;
@@ -1612,6 +1833,7 @@ export type MutationUpdateLedgerEntrySourceSliceArgs = {
 
 export type MutationUpdateLedgerFileArgs = {
   content: Scalars['String']['input'];
+  description?: InputMaybe<Scalars['String']['input']>;
   ledgerId: Scalars['String']['input'];
   message?: InputMaybe<Scalars['String']['input']>;
   path: Scalars['String']['input'];
@@ -1813,9 +2035,11 @@ export type PlaidSyncResult = {
 };
 
 export type PlaidTransactionSubmitInput = {
-  /** Overrides the source account normally derived from the Plaid account's mapping */
+  /** Overrides the source account normally derived from the Plaid account's mapping. camelCase only here; the MCP bank tool also accepts source_account. */
   sourceAccount?: InputMaybe<Scalars['String']['input']>;
+  /** The ledger account to book this against. camelCase only here; the MCP bank tool also accepts target_account. */
   targetAccount: Scalars['String']['input'];
+  /** The staged row's transactionId. camelCase only here; the MCP bank tool also accepts transaction_id. */
   transactionId: Scalars['String']['input'];
 };
 
@@ -1842,6 +2066,7 @@ export type PlaidTransactionType = {
 
 export type PlaintextJournalQueryInput = {
   account?: InputMaybe<Scalars['String']['input']>;
+  /** Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or "quoted" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape sequences. */
   filter?: InputMaybe<Scalars['String']['input']>;
   /** Entries per page, 1 to 1000; omitted, every entry. */
   limit?: InputMaybe<Scalars['Int']['input']>;
@@ -1856,6 +2081,15 @@ export type PlaintextJournalResponse = {
   total: Scalars['Int']['output'];
   /** Whether entries remain after this page. */
   truncated: Scalars['Boolean']['output'];
+};
+
+export type PlanBilling = {
+  __typename?: 'PlanBilling';
+  /** More than one subscription is set to renew, so the account pays twice. */
+  duplicateBilling: Scalars['Boolean']['output'];
+  source: BillingSource;
+  /** The account's live store subscription, when it has one. */
+  store?: Maybe<StoreSubscriptionSummary>;
 };
 
 export enum PlanChangeEffect {
@@ -2171,13 +2405,15 @@ export type Query = {
   previewLedgerSetup: LedgerSetupPreview;
   /** Previews switching your plan to a price: the kind of change, when it takes effect, and what is charged today. Requires a full signed-in session. */
   previewPlanChange: PlanChangePreview;
-  /** Execute a shell query on a ledger */
+  /** Execute a shell query on a ledger. The query travels in a POST body end to end, so long queries have no URL-length ceiling, up to 262144 bytes. */
   queryShell?: Maybe<QueryResult>;
-  /** Execute a shell query on a ledger and return plain text output */
+  /** Execute a shell query on a ledger and return plain text output. The query travels in a POST body end to end, so long queries have no URL-length ceiling, up to 262144 bytes. */
   queryShellText?: Maybe<QueryShellTextResult>;
   /** Search for ledgers/repositories */
   searchLedgers: Array<Ledger>;
-  /** Returns your subscription status. Requires a full signed-in session. */
+  /** Returns your store billing identifiers, creating them on first read. Requires a full signed-in session or the Beancount app. */
+  storeBillingIdentity: StoreBillingIdentity;
+  /** Returns your subscription status. Requires a full signed-in session or the Beancount app. */
   subscriptionStatus: CustomerSubscriptionStatus;
   /** Suggest Beancount account mappings for a Plaid Item's unmapped accounts using AI. Requires ledger-content read, bank-connection read, and AI-use authority. */
   suggestPlaidAccountMapping: Array<PlaidAccountMappingSuggestion>;
@@ -2204,7 +2440,9 @@ export type QueryFeatureFlagsArgs = {
 
 
 export type QueryGenerateTempAssetDownloadUrlArgs = {
-  objectKey: Scalars['String']['input'];
+  objectKey?: InputMaybe<Scalars['String']['input']>;
+  receiptObjectKey?: InputMaybe<Scalars['String']['input']>;
+  s3ObjectKey?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -2353,7 +2591,8 @@ export type QueryGetLedgerEntriesCountPerTypeArgs = {
 
 
 export type QueryGetLedgerEntryContextArgs = {
-  entryHash: Scalars['String']['input'];
+  entryHash?: InputMaybe<Scalars['String']['input']>;
+  entry_hash?: InputMaybe<Scalars['String']['input']>;
   ledgerId: Scalars['String']['input'];
 };
 
@@ -2380,7 +2619,8 @@ export type QueryGetLedgerFileArgs = {
 export type QueryGetLedgerHoldingsArgs = {
   account?: InputMaybe<Scalars['String']['input']>;
   conversion?: InputMaybe<Scalars['String']['input']>;
-  groupBy?: Scalars['String']['input'];
+  groupBy?: InputMaybe<Scalars['String']['input']>;
+  group_by?: InputMaybe<Scalars['String']['input']>;
   ledgerId: Scalars['String']['input'];
 };
 
@@ -2501,7 +2741,6 @@ export type QueryGetLedgerTrialBalanceArgs = {
   account?: InputMaybe<Scalars['String']['input']>;
   conversion?: InputMaybe<Scalars['String']['input']>;
   filter?: InputMaybe<Scalars['String']['input']>;
-  interval?: Scalars['String']['input'];
   ledgerId: Scalars['String']['input'];
   time?: InputMaybe<Scalars['String']['input']>;
 };
@@ -2752,6 +2991,7 @@ export type QueryResultText = {
 
 export type QueryShellTextResult = {
   __typename?: 'QueryShellTextResult';
+  rowCount?: Maybe<Scalars['Int']['output']>;
   text: Scalars['String']['output'];
 };
 
@@ -2804,9 +3044,19 @@ export type RegisterRow = {
 
 export type RenameLedgerFileResponse = {
   __typename?: 'RenameLedgerFileResponse';
+  dryRun: Scalars['Boolean']['output'];
+  message: Scalars['String']['output'];
   newPath: Scalars['String']['output'];
   oldPath: Scalars['String']['output'];
+  /** Per-file rewritten include lines; populated on dry runs only */
+  preview: Array<RenamePreviewFile>;
   updatedIncludes: Array<Scalars['String']['output']>;
+};
+
+export type RenamePreviewFile = {
+  __typename?: 'RenamePreviewFile';
+  path: Scalars['String']['output'];
+  text: Scalars['String']['output'];
 };
 
 /** The email report status (deprecated) */
@@ -2878,11 +3128,55 @@ export type SignUpResponse = {
   sessionId: Scalars['String']['output'];
 };
 
+export type SlicePreviewFile = {
+  __typename?: 'SlicePreviewFile';
+  path: Scalars['String']['output'];
+  text: Scalars['String']['output'];
+};
+
+export type SliceWriteError = {
+  __typename?: 'SliceWriteError';
+  message: Scalars['String']['output'];
+  source?: Maybe<Scalars['String']['output']>;
+};
+
 export type StarLedgerResponse = {
   __typename?: 'StarLedgerResponse';
   isStarred: Scalars['Boolean']['output'];
   message?: Maybe<Scalars['String']['output']>;
   success: Scalars['Boolean']['output'];
+};
+
+/** What the app attaches to a store purchase so the purchase names this account. */
+export type StoreBillingIdentity = {
+  __typename?: 'StoreBillingIdentity';
+  /** Apple's appAccountToken. */
+  appleAppAccountToken: Scalars['String']['output'];
+  /** Google Play's obfuscated account ID. */
+  googleObfuscatedAccountId: Scalars['String']['output'];
+};
+
+export type StorePlan = {
+  __typename?: 'StorePlan';
+  interval: Scalars['String']['output'];
+  tier: Scalars['String']['output'];
+};
+
+export type StoreSubscriptionSummary = {
+  __typename?: 'StoreSubscriptionSummary';
+  /** When the paid or grace period ends. */
+  accessEndsAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  interval?: Maybe<Scalars['String']['output']>;
+  /** The web page that manages this plan. Apple has none, so App Store plans are managed on the device. */
+  managementUrl?: Maybe<Scalars['String']['output']>;
+  productId: Scalars['String']['output'];
+  provider: BillingSource;
+  /** The plan the store moves to at the next renewal. */
+  scheduledChange?: Maybe<StorePlan>;
+  status: Scalars['String']['output'];
+  /** Absent for a product outside the catalog. */
+  tier?: Maybe<Scalars['String']['output']>;
+  willRenew: Scalars['Boolean']['output'];
 };
 
 export type Subscription = {
@@ -3013,18 +3307,33 @@ export type TrialBalanceData = {
 export type UpdateSourceSliceInput = {
   /** Commit the edit even when it would add bean-check errors (VALIDATION_FAILED), instead of refusing */
   allowInvalid?: InputMaybe<Scalars['Boolean']['input']>;
-  entryHash: Scalars['String']['input'];
+  /** Alias of allowInvalid. */
+  allow_invalid?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Run every check and return the preview without committing */
+  dryRun?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Alias of dryRun, as MCP spells it. */
+  dry_run?: InputMaybe<Scalars['Boolean']['input']>;
+  /** The entry's hash. One of entryHash/entry_hash is required. */
+  entryHash?: InputMaybe<Scalars['String']['input']>;
+  /** Alias of entryHash, as list output spells it. */
+  entry_hash?: InputMaybe<Scalars['String']['input']>;
   newContent: Scalars['String']['input'];
   sha256sum: Scalars['String']['input'];
 };
 
 export type UpdateSourceSliceResponse = {
   __typename?: 'UpdateSourceSliceResponse';
+  dryRun: Scalars['Boolean']['output'];
   entryHash: Scalars['String']['output'];
+  errorsAfter: Scalars['Float']['output'];
+  errorsBefore: Scalars['Float']['output'];
   message: Scalars['String']['output'];
   /** The entry's public ID after the commit — use it for the next edit, not entryHash. */
   newEntryHash: Scalars['String']['output'];
+  newErrors: Array<SliceWriteError>;
   newSha256sum: Scalars['String']['output'];
+  /** Per-file affected text; populated on dry runs only */
+  preview: Array<SlicePreviewFile>;
 };
 
 export type UpgradeSubscriptionResult = {

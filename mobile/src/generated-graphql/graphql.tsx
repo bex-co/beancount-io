@@ -61,14 +61,6 @@ export type BulkEntriesMutationVariables = Exact<{
 
 export type BulkEntriesMutation = { bulkEntries: { success: boolean, message: string | null } };
 
-export type CancelSubscriptionMutationVariables = Exact<{
-  clientId: string;
-  subscriptionId: string;
-}>;
-
-
-export type CancelSubscriptionMutation = { cancelSubscription: { success: boolean, message: string | null } };
-
 export type CreateLedgerMutationVariables = Exact<{
   name: string;
   private?: boolean | null | undefined;
@@ -100,14 +92,6 @@ export type CreateLedgerFileMutationVariables = Exact<{
 
 
 export type CreateLedgerFileMutation = { createLedgerFile: { name: string, path: string, sha: string, size: number, type: string } };
-
-export type CreateSubscriptionSessionMutationVariables = Exact<{
-  clientId: string;
-  priceId: string;
-}>;
-
-
-export type CreateSubscriptionSessionMutation = { createSubscriptionSession: { success: boolean, sessionId: string | null, sessionUrl: string | null, message: string | null } };
 
 export type CurrentUserFieldsFragment = { id: string, email: string, firstName: string | null, lastName: string | null, username: string | null };
 
@@ -422,7 +406,7 @@ export type QueryShellQuery = { queryShell: { table: { rows: Array<Array<unknown
 export type SubscriptionStatusQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type SubscriptionStatusQuery = { subscriptionStatus: { hasActiveSubscription: boolean, subscriptions: Array<{ id: string, status: string, cancelAt: unknown, cancelAtPeriodEnd: boolean, canceledAt: unknown, clientId: string, currentPeriodEnd: unknown, currentPeriodStart: unknown, items: Array<{ id: string, quantity: number, price: { id: string, amount: number, currency: string, interval: string, intervalCount: number | null, trialPeriodDays: number | null }, product: { id: string, name: string, description: string | null, images: Array<string> | null } | null }> }> } };
+export type SubscriptionStatusQuery = { userProfile: { id: string, tier: string } | null, subscriptionStatus: { hasActiveSubscription: boolean, subscriptions: Array<{ id: string, status: string, cancelAt: unknown, cancelAtPeriodEnd: boolean, currentPeriodEnd: unknown, items: Array<{ id: string, price: { id: string, interval: string } }>, scheduledChange: { effectiveAt: unknown } | null }>, billing: { source: Types.BillingSource, store: { provider: Types.BillingSource, tier: string | null, interval: string | null, accessEndsAt: unknown, willRenew: boolean, scheduledChange: { tier: string } | null } | null } } };
 
 export type TrialBalanceQueryVariables = Exact<{
   ledgerId: string;
@@ -796,41 +780,6 @@ export function useBulkEntriesMutation(baseOptions?: Apollo.MutationHookOptions<
 export type BulkEntriesMutationHookResult = ReturnType<typeof useBulkEntriesMutation>;
 export type BulkEntriesMutationResult = Apollo.MutationResult<BulkEntriesMutation>;
 export type BulkEntriesMutationOptions = Apollo.BaseMutationOptions<BulkEntriesMutation, BulkEntriesMutationVariables>;
-export const CancelSubscriptionDocument = gql`
-    mutation CancelSubscription($clientId: String!, $subscriptionId: String!) {
-  cancelSubscription(clientId: $clientId, subscriptionId: $subscriptionId) {
-    success
-    message
-  }
-}
-    `;
-export type CancelSubscriptionMutationFn = Apollo.MutationFunction<CancelSubscriptionMutation, CancelSubscriptionMutationVariables>;
-
-/**
- * __useCancelSubscriptionMutation__
- *
- * To run a mutation, you first call `useCancelSubscriptionMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useCancelSubscriptionMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [cancelSubscriptionMutation, { data, loading, error }] = useCancelSubscriptionMutation({
- *   variables: {
- *      clientId: // value for 'clientId'
- *      subscriptionId: // value for 'subscriptionId'
- *   },
- * });
- */
-export function useCancelSubscriptionMutation(baseOptions?: Apollo.MutationHookOptions<CancelSubscriptionMutation, CancelSubscriptionMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CancelSubscriptionMutation, CancelSubscriptionMutationVariables>(CancelSubscriptionDocument, options);
-      }
-export type CancelSubscriptionMutationHookResult = ReturnType<typeof useCancelSubscriptionMutation>;
-export type CancelSubscriptionMutationResult = Apollo.MutationResult<CancelSubscriptionMutation>;
-export type CancelSubscriptionMutationOptions = Apollo.BaseMutationOptions<CancelSubscriptionMutation, CancelSubscriptionMutationVariables>;
 export const CreateLedgerDocument = gql`
     mutation CreateLedger($name: String!, $private: Boolean, $description: String, $template: LedgerTemplate, $setup: LedgerSetupInput, $requestId: String) {
   createLedger(
@@ -986,43 +935,6 @@ export function useCreateLedgerFileMutation(baseOptions?: Apollo.MutationHookOpt
 export type CreateLedgerFileMutationHookResult = ReturnType<typeof useCreateLedgerFileMutation>;
 export type CreateLedgerFileMutationResult = Apollo.MutationResult<CreateLedgerFileMutation>;
 export type CreateLedgerFileMutationOptions = Apollo.BaseMutationOptions<CreateLedgerFileMutation, CreateLedgerFileMutationVariables>;
-export const CreateSubscriptionSessionDocument = gql`
-    mutation CreateSubscriptionSession($clientId: String!, $priceId: String!) {
-  createSubscriptionSession(clientId: $clientId, priceId: $priceId) {
-    success
-    sessionId
-    sessionUrl
-    message
-  }
-}
-    `;
-export type CreateSubscriptionSessionMutationFn = Apollo.MutationFunction<CreateSubscriptionSessionMutation, CreateSubscriptionSessionMutationVariables>;
-
-/**
- * __useCreateSubscriptionSessionMutation__
- *
- * To run a mutation, you first call `useCreateSubscriptionSessionMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useCreateSubscriptionSessionMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [createSubscriptionSessionMutation, { data, loading, error }] = useCreateSubscriptionSessionMutation({
- *   variables: {
- *      clientId: // value for 'clientId'
- *      priceId: // value for 'priceId'
- *   },
- * });
- */
-export function useCreateSubscriptionSessionMutation(baseOptions?: Apollo.MutationHookOptions<CreateSubscriptionSessionMutation, CreateSubscriptionSessionMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateSubscriptionSessionMutation, CreateSubscriptionSessionMutationVariables>(CreateSubscriptionSessionDocument, options);
-      }
-export type CreateSubscriptionSessionMutationHookResult = ReturnType<typeof useCreateSubscriptionSessionMutation>;
-export type CreateSubscriptionSessionMutationResult = Apollo.MutationResult<CreateSubscriptionSessionMutation>;
-export type CreateSubscriptionSessionMutationOptions = Apollo.BaseMutationOptions<CreateSubscriptionSessionMutation, CreateSubscriptionSessionMutationVariables>;
 export const CurrentUserDocument = gql`
     query CurrentUser {
   userProfile {
@@ -2848,6 +2760,10 @@ export type QueryShellSuspenseQueryHookResult = ReturnType<typeof useQueryShellS
 export type QueryShellQueryResult = Apollo.QueryResult<QueryShellQuery, QueryShellQueryVariables>;
 export const SubscriptionStatusDocument = gql`
     query SubscriptionStatus {
+  userProfile {
+    id
+    tier
+  }
   subscriptionStatus {
     hasActiveSubscription
     subscriptions {
@@ -2855,26 +2771,28 @@ export const SubscriptionStatusDocument = gql`
       status
       cancelAt
       cancelAtPeriodEnd
-      canceledAt
-      clientId
       currentPeriodEnd
-      currentPeriodStart
       items {
         id
-        quantity
         price {
           id
-          amount
-          currency
           interval
-          intervalCount
-          trialPeriodDays
         }
-        product {
-          id
-          name
-          description
-          images
+      }
+      scheduledChange {
+        effectiveAt
+      }
+    }
+    billing {
+      source
+      store {
+        provider
+        tier
+        interval
+        accessEndsAt
+        willRenew
+        scheduledChange {
+          tier
         }
       }
     }

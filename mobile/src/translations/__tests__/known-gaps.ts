@@ -55,6 +55,10 @@ export const SAME_AS_ENGLISH: Record<
 > = {
   ca: [
     {
+      reason: "The plan is named Premium in this language too.",
+      keys: ["planPremium"],
+    },
+    {
       reason: "Catalan spells these the same as English.",
       keys: [
         "journalError",
@@ -76,6 +80,10 @@ export const SAME_AS_ENGLISH: Record<
     { reason: "Blog is the same loanword.", keys: ["feedSourceBlog"] },
   ],
   de: [
+    {
+      reason: "The plan is named Premium in this language too.",
+      keys: ["plan", "planPremium"],
+    },
     {
       reason: "The sign words Plus and Minus are the German ones.",
       keys: ["signPlus", "signMinus"],
@@ -109,6 +117,10 @@ export const SAME_AS_ENGLISH: Record<
   ],
   es: [
     {
+      reason: "The plan is named Premium in this language too.",
+      keys: ["plan", "planPremium"],
+    },
+    {
       reason: "Spanish spells these the same as English.",
       keys: [
         "journalError",
@@ -129,6 +141,10 @@ export const SAME_AS_ENGLISH: Record<
     { reason: "Blog is the same loanword.", keys: ["feedSourceBlog"] },
   ],
   fr: [
+    {
+      reason: "The plan is named Premium in this language too.",
+      keys: ["planPremium"],
+    },
     { reason: "Plus is the French word too.", keys: ["signPlus"] },
     {
       reason: "Public is also the French adjective for a public ledger.",
@@ -165,6 +181,10 @@ export const SAME_AS_ENGLISH: Record<
     { reason: "Blog is the same loanword.", keys: ["feedSourceBlog"] },
   ],
   nl: [
+    {
+      reason: "The plan is named Premium in this language too.",
+      keys: ["planPremium"],
+    },
     { reason: "Plus is the Dutch word too.", keys: ["signPlus"] },
     {
       reason: "Dutch uses these English words unchanged.",
@@ -202,6 +222,10 @@ export const SAME_AS_ENGLISH: Record<
     },
   ],
   pt: [
+    {
+      reason: "The plan is named Premium in this language too.",
+      keys: ["planPremium"],
+    },
     {
       reason: "Portuguese spells these the same as English.",
       keys: [

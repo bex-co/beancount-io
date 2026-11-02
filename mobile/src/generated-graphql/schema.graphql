@@ -1,6 +1,7 @@
 schema {
   query: Query
   mutation: Mutation
+  subscription: Subscription
 }
 
 type AccountBalance {
@@ -24,19 +25,38 @@ type AccountJournalEntry {
 input AccountJournalQueryInput {
   account: String!
   conversion: String = "at_cost"
+  """
+  Custom-directive subtype filter: narrows custom directives only — other families pass through. Combine with directiveTypes to restrict the families returned.
+  """
   customSubtypes: [String!]
   directiveTypes: [String!]
+  """
+  Document subtype filter: narrows documents only — other directive families pass through. Combine with directiveTypes to restrict the families returned.
+  """
   documentSubtypes: [String!]
+  """
+  Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or "quoted" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape sequences.
+  """
   filter: String
   """
   Optional shared report-stream AccountFilter (URL ?account=). Distinct from the required target `account`.
   """
   filterAccount: String
+  """Alias of filterAccount, as MCP and REST spell it."""
+  filter_account: String
   limit: Float = 20
   offset: Float = 0
+  """
+  Fava time expression, e.g. 2026-08. Pre-window `open` directives are preserved as context and counted in total.
+  """
   time: String
+  """
+  Transaction flag filter: narrows transactions only — other directive families pass through. Combine with directiveTypes to restrict the families returned.
+  """
   transactionSubtypes: [String!]
-  with_children: Boolean = true
+  """Alias of with_children."""
+  withChildren: Boolean
+  with_children: Boolean
 }
 
 type AccountJournalResponse {
@@ -59,7 +79,13 @@ type AccountReport {
 }
 
 type AddCollaboratorResponse {
+  """
+  True when this is a preview: the checks ran and nothing changed. Commits echo false.
+  """
+  dryRun: Boolean
   message: String
+  """The rendered would-be access change; present only on previews."""
+  preview: CollaboratorPreview
   success: Boolean!
 }
 
@@ -72,6 +98,7 @@ input AddEntryInput {
   event: LedgerEventInput
   note: LedgerNoteInput
   open: LedgerOpenInput
+  pad: LedgerPadInput
   price: LedgerPriceInput
   transaction: LedgerTransactionInput
   type: LedgerEntryType!
@@ -83,11 +110,17 @@ type AddEntryResponse {
 }
 
 type AddLedgerEntryResponse {
+  dryRun: Boolean!
   """
   The hash each committed entry now carries, in request order, for getLedgerEntryContext and the source-slice update and delete; empty on a dry run, or when it could not be resolved after the commit
   """
   entryHashes: [String!]!
+  errorsAfter: Float!
+  errorsBefore: Float!
   message: String
+  newErrors: [DirectiveTextError!]!
+  """Per-file entry text; populated on dry runs only"""
+  preview: [EntryPreviewFile!]!
   success: Boolean!
 }
 
@@ -179,6 +212,22 @@ type BeancountError {
   severity: String!
 }
 
+"""Who bills a plan, which is also where it is managed."""
+enum BillingSource {
+  APP_STORE
+  GOOGLE_PLAY
+  NONE
+  STRIPE
+}
+
+"""Booking method for the account"""
+enum BookingMethod {
+  FIFO
+  LIFO
+  NONE
+  STRICT
+}
+
 """Budget recurrence interval"""
 enum BudgetInterval {
   DAILY
@@ -247,6 +296,13 @@ enum CliAuthStatus {
   DENIED
   EXPIRED
   PENDING
+}
+
+type CollaboratorPreview {
+  collaborator: String!
+  current: String
+  requested: String
+  warnings: [String!]!
 }
 
 type CollaboratorUser {
@@ -362,6 +418,11 @@ input CreatePRFromPatchInput {
 }
 
 type CustomerSubscriptionStatus {
+  """Who bills the account's plan, whichever source that is."""
+  billing: PlanBilling!
+  """
+  Whether Stripe holds a paid subscription. A store plan is reported under `billing`.
+  """
   hasActiveSubscription: Boolean!
   subscriptions: [Subscription!]!
 }
@@ -383,7 +444,13 @@ A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `dat
 scalar DateTimeISO
 
 type DeleteCollaboratorResponse {
+  """
+  True when this is a preview: the checks ran and nothing changed. Commits echo false.
+  """
+  dryRun: Boolean
   message: String
+  """The rendered would-be access change; present only on previews."""
+  preview: CollaboratorPreview
   success: Boolean!
 }
 
@@ -392,11 +459,20 @@ type DeleteLedgerFileResponse {
 }
 
 type DeleteLedgerResponse {
+  """
+  True when this is a deleteLedger preview: the checks ran and nothing was destroyed. Commits echo false.
+  """
+  dryRun: Boolean
   ledgerId: String!
+  """The destroy summary; present only on deleteLedger previews."""
+  preview: LedgerDeletePreview
 }
 
 input DeleteMultiSourceSliceItemInput {
-  entryHash: String!
+  """The entry's hash. One of entryHash/entry_hash is required."""
+  entryHash: String
+  """Alias of entryHash, as list output spells it."""
+  entry_hash: String
   sha256sum: String!
 }
 
@@ -405,12 +481,24 @@ input DeleteMultiSourceSlicesInput {
   Delete the entries even when that would add bean-check errors (VALIDATION_FAILED), instead of refusing
   """
   allowInvalid: Boolean
+  """Alias of allowInvalid."""
+  allow_invalid: Boolean
+  """Run every check and return the preview without committing"""
+  dryRun: Boolean
+  """Alias of dryRun, as MCP spells it."""
+  dry_run: Boolean
   entries: [DeleteMultiSourceSliceItemInput!]!
 }
 
 type DeleteMultiSourceSlicesResponse {
   deletedCount: Int!
+  dryRun: Boolean!
+  errorsAfter: Float!
+  errorsBefore: Float!
   message: String!
+  newErrors: [SliceWriteError!]!
+  """Per-file affected text; populated on dry runs only"""
+  preview: [SlicePreviewFile!]!
 }
 
 type DeletePublicKeyResponse {
@@ -422,13 +510,28 @@ input DeleteSourceSliceInput {
   Delete the entry even when that would add bean-check errors (VALIDATION_FAILED), instead of refusing
   """
   allowInvalid: Boolean
-  entryHash: String!
+  """Alias of allowInvalid."""
+  allow_invalid: Boolean
+  """Run every check and return the preview without committing"""
+  dryRun: Boolean
+  """Alias of dryRun, as MCP spells it."""
+  dry_run: Boolean
+  """The entry's hash. One of entryHash/entry_hash is required."""
+  entryHash: String
+  """Alias of entryHash, as list output spells it."""
+  entry_hash: String
   sha256sum: String!
 }
 
 type DeleteSourceSliceResponse {
+  dryRun: Boolean!
   entryHash: String!
+  errorsAfter: Float!
+  errorsBefore: Float!
   message: String!
+  newErrors: [SliceWriteError!]!
+  """Per-file affected text; populated on dry runs only"""
+  preview: [SlicePreviewFile!]!
 }
 
 type DenyCliAuthSessionResponse {
@@ -488,6 +591,11 @@ input EntryInput {
 type EntryMeta {
   filename: String!
   lineno: Float!
+}
+
+type EntryPreviewFile {
+  path: String!
+  text: String!
 }
 
 type Event {
@@ -631,6 +739,10 @@ type IncomeStatementData {
 }
 
 type InsertReceiptResult {
+  """
+  The hash each committed entry now carries, in request order, for getLedgerEntryContext and the source-slice update and delete; empty when it could not be resolved after the commit
+  """
+  entryHashes: [String!]!
   success: Boolean!
 }
 
@@ -673,12 +785,12 @@ type IntrospectionType {
 """
 The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
 """
-scalar JSON
+scalar JSON @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
 
 """
 The `JSONObject` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
 """
-scalar JSONObject
+scalar JSONObject @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
 
 type JournalEntriesResponse {
   data: [JournalEntry!]!
@@ -729,13 +841,28 @@ type JournalEntryPosting {
 
 input JournalQueryInput {
   account: String
+  """
+  Custom-directive subtype filter: narrows custom directives only — other families pass through. Combine with directiveTypes to restrict the families returned.
+  """
   customSubtypes: [String!]
   directiveTypes: [String!]
+  """
+  Document subtype filter: narrows documents only — other directive families pass through. Combine with directiveTypes to restrict the families returned.
+  """
   documentSubtypes: [String!]
+  """
+  Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or "quoted" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape sequences.
+  """
   filter: String
   limit: Float = 20
   offset: Float = 0
+  """
+  Fava time expression, e.g. 2026-08. Pre-window `open` directives are preserved as context and counted in total.
+  """
   time: String
+  """
+  Transaction flag filter: narrows transactions only — other directive families pass through. Combine with directiveTypes to restrict the families returned.
+  """
   transactionSubtypes: [String!]
 }
 
@@ -764,6 +891,10 @@ type Ledger {
   bcioOptions: BcioOptions!
   createdAt: String!
   description: String
+  """
+  True when this is an updateLedger preview: the checks ran and nothing was committed. Reads and creates omit it.
+  """
+  dryRun: Boolean
   empty: Boolean!
   """Get the fava options of a ledger"""
   favaOptions: FavaOptions!
@@ -775,6 +906,8 @@ type Ledger {
   """Get the beancount options of a ledger"""
   options: LedgerOptions!
   permissions: Permission
+  """The rendered current→new diff; present only on updateLedger previews."""
+  preview: LedgerUpdatePreview
   private: Boolean!
   size: Float!
   sshUrl: String!
@@ -786,6 +919,7 @@ type LedgerAccountItem {
   balance: JSONObject
   closeEntryHash: String
   closedAt: String
+  """Postings on this account — not a directive count"""
   entryCount: Float!
   entryHash: String!
   """Metadata declared on the account's open directive"""
@@ -815,6 +949,8 @@ input LedgerBalanceInput {
   account: String!
   amount: LedgerAmountInput!
   date: String!
+  """Explicit balance tolerance as a plain decimal"""
+  tolerance: String
 }
 
 input LedgerBudgetInput {
@@ -854,6 +990,23 @@ input LedgerCommodityInput {
   date: String!
 }
 
+input LedgerCostInput {
+  currency: String!
+  date: String
+  label: String
+  number: String!
+}
+
+type LedgerDeletePreview {
+  description: String
+  empty: Boolean!
+  ledgerId: String!
+  name: String!
+  private: Boolean!
+  size: Float!
+  warnings: [String!]!
+}
+
 input LedgerDocumentInput {
   account: String!
   date: String!
@@ -862,7 +1015,9 @@ input LedgerDocumentInput {
   tags: [String!]
 }
 
-"""Discriminator selecting which entry payload to add"""
+"""
+Discriminator selecting which entry payload to add. custom, query, option, and plugin are deliberately excluded — add them as raw text via file writes
+"""
 enum LedgerEntryType {
   BALANCE
   BUDGET
@@ -872,6 +1027,7 @@ enum LedgerEntryType {
   EVENT
   NOTE
   OPEN
+  PAD
   PRICE
   TRANSACTION
 }
@@ -915,7 +1071,10 @@ input LedgerNoteInput {
 
 input LedgerOpenInput {
   account: String!
-  currencies: [String!]!
+  """Booking method for the account"""
+  booking: BookingMethod
+  """Valid currencies for the account; omit for a bare open line"""
+  currencies: [String!]
   date: String!
 }
 
@@ -953,10 +1112,38 @@ type LedgerOverview {
   netWorthData: [DateAndBalance!]!
 }
 
+input LedgerPadInput {
+  account: String!
+  date: String!
+  """Account to pad from"""
+  sourceAccount: String
+  """Alias of sourceAccount. One of the two is required."""
+  source_account: String
+}
+
 input LedgerPostingInput {
   account: String!
+  """
+  Lot basis `{number currency [, date] [, label]}`; needs units like price
+  """
+  cost: LedgerCostInput
   flag: String
+  """
+  Refused: beancount postings have no link slot; put links on the transaction instead
+  """
+  links: [String!]
+  """Posting metadata, written beneath the posting"""
+  meta: JSONObject
+  """Per-unit price (`@` annotation); exclusive with the total price"""
   price: LedgerAmountInput
+  """
+  Refused: beancount postings have no tag slot; put tags on the transaction instead
+  """
+  tags: [String!]
+  """Total price (`@@`); exclusive with the per-unit price"""
+  totalPrice: LedgerAmountInput
+  """Alias of totalPrice."""
+  total_price: LedgerAmountInput
   """
   Posting amount; omit on at most one posting per transaction to elide it
   """
@@ -984,9 +1171,30 @@ input LedgerSetupInput {
   """
   capabilities: JSONObject
   historyStart: String
+  """
+  Account groups added to a PERSONAL ledger, each at most once. Refused with any other preset.
+  """
+  modules: [LedgerSetupModuleInput!]
   operatingCurrency: String
   preset: LedgerSetupPreset!
   title: String
+}
+
+"""
+Versioned personal-only account group from the setup catalog (PRFAQ001 Appendix A.9)
+"""
+enum LedgerSetupModule {
+  INVESTMENTS
+  RENTAL_PROPERTY
+  SIDE_BUSINESS
+}
+
+input LedgerSetupModuleInput {
+  id: LedgerSetupModule!
+  """
+  rental-property@1 only: the property's ASCII account component, default Property1.
+  """
+  propertyName: String
 }
 
 """Versioned starter preset from the setup catalog (ADR021)"""
@@ -1038,6 +1246,29 @@ input LedgerTransactionInput {
   tags: [String!]
 }
 
+type LedgerUpdateBooleanChange {
+  from: Boolean!
+  to: Boolean!
+}
+
+type LedgerUpdateNullableStringChange {
+  from: String
+  to: String!
+}
+
+type LedgerUpdatePreview {
+  description: LedgerUpdateNullableStringChange
+  name: LedgerUpdateStringChange
+  """Current and new visibility, when changing it."""
+  private: LedgerUpdateBooleanChange
+  warnings: [String!]!
+}
+
+type LedgerUpdateStringChange {
+  from: String!
+  to: String!
+}
+
 type LogoutResponse {
   success: Boolean!
 }
@@ -1083,17 +1314,29 @@ type MissingPriceLeg {
 
 type Mutation {
   addEntries(entriesInput: [EntryInput!]!, ledgerId: String): AddEntryResponse!
-  addOrUpdateLedgerCollaborator(collaborator: String!, ledgerId: String!, permission: String): AddCollaboratorResponse!
+  addOrUpdateLedgerCollaborator(
+    collaborator: String!
+    """Run every check and return the preview without committing"""
+    dryRun: Boolean
+    """Alias of dryRun, as MCP spells it."""
+    dry_run: Boolean
+    ledgerId: String!
+    permission: String
+  ): AddCollaboratorResponse!
   """
   Append Beancount directive text to a ledger, routed by type and date and inserted in date order
   """
   appendLedgerText(
     """Commit even when the text introduces new bean-check errors"""
     allowInvalid: Boolean
+    """Alias of allowInvalid."""
+    allow_invalid: Boolean
     """
     Run every check and return the diff and projected errors without committing
     """
     dryRun: Boolean
+    """Alias of dryRun, as MCP spells it."""
+    dry_run: Boolean
     ledgerId: String!
     """
     Target file; omitted, each directive routes to the file the ledger's own options assign it
@@ -1111,6 +1354,12 @@ type Mutation {
     Record entries deliberately even when they are unbalanced (UNBALANCED) or would add bean-check errors such as a second open for an open account (VALIDATION_FAILED), instead of refusing them
     """
     allowInvalid: Boolean
+    """Alias of allowInvalid."""
+    allow_invalid: Boolean
+    """Run every check and return the preview without committing"""
+    dryRun: Boolean
+    """Alias of dryRun, as MCP spells it."""
+    dry_run: Boolean
     entries: [AddEntryInput!]!
     ledgerId: String!
   ): AddLedgerEntryResponse!
@@ -1151,7 +1400,7 @@ type Mutation {
   """
   createCliAuthSession(client: CliAuthClientInfoInput): CreateCliAuthSessionResponse!
   """
-  Create a new ledger for the current user. STARTER (the default, including null) contains options and accounts without transactions or opening balances; SAMPLE contains demonstration transactions. Existing ledgers are unchanged.
+  Create a new ledger for the current user. STARTER (the default, including null) contains options and accounts without transactions or opening balances; SAMPLE contains demonstration transactions. Existing ledgers are unchanged. Refused with FORBIDDEN for a ledger-pinned credential: use a credential without a pin.
   """
   createLedger(
     description: String
@@ -1172,6 +1421,8 @@ type Mutation {
   createLedgerFile(
     """Base64-encoded file content, at most 1 MiB (1,048,576 decoded bytes)."""
     content: String!
+    """Alias of message, as the MCP file tools spell it."""
+    description: String
     ledgerId: String!
     message: String
     path: String!
@@ -1202,12 +1453,38 @@ type Mutation {
   """delete user account and its associated data"""
   deleteAccount: Boolean!
   """Delete a specific ledger"""
-  deleteLedger(ledgerId: String!): DeleteLedgerResponse!
-  deleteLedgerCollaborator(collaborator: String!, ledgerId: String!): DeleteCollaboratorResponse!
+  deleteLedger(
+    """Run every check and return the preview without committing"""
+    dryRun: Boolean
+    """Alias of dryRun, as MCP spells it."""
+    dry_run: Boolean
+    ledgerId: String!
+  ): DeleteLedgerResponse!
+  deleteLedgerCollaborator(
+    collaborator: String!
+    """Run every check and return the preview without committing"""
+    dryRun: Boolean
+    """Alias of dryRun, as MCP spells it."""
+    dry_run: Boolean
+    ledgerId: String!
+  ): DeleteCollaboratorResponse!
   """Delete a source slice for a specific journal entry"""
   deleteLedgerEntrySourceSlice(input: DeleteSourceSliceInput!, ledgerId: String!): DeleteSourceSliceResponse!
-  """Delete a file from a specific ledger"""
-  deleteLedgerFile(ledgerId: String!, message: String, path: String!, sha: String!): DeleteLedgerFileResponse!
+  """
+  Delete a file from a specific ledger. Deleting a file still `include`d by another ledger file is refused as `BAD_USER_INPUT` naming the includers; remove the include from the including file(s) first, then delete. An include counts when its target resolves to the deleted path the way the ledger loads it, relative to the directory of the file that declares it, and glob includes never count. `removeIncludes` (alias `remove_includes`) drops those exact include lines in the same commit; globs stay.
+  """
+  deleteLedgerFile(
+    """Alias of message, as the MCP file tools spell it."""
+    description: String
+    ledgerId: String!
+    message: String
+    path: String!
+    """
+    Also drop the exact `include` lines of other ledger files that reach this file, in the same commit. Without it, deleting an included file is refused. Glob includes are left as they are.
+    """
+    removeIncludes: Boolean
+    sha: String!
+  ): DeleteLedgerFileResponse!
   """
   Delete multiple source slices for journal entries in a single operation
   """
@@ -1229,8 +1506,22 @@ type Mutation {
   """
   Upload a receipt and insert a transaction entry. Storage strategy (S3 or git) is controlled by the `receipt_storage` beancountio-option.
   """
-  insertReceiptTransaction(input: InsertReceiptTransactionInput!, ledgerId: String!, receiptObjectKey: String!): InsertReceiptResult!
-  leaveLedger(ledgerId: String!): DeleteCollaboratorResponse!
+  insertReceiptTransaction(
+    input: InsertReceiptTransactionInput!
+    ledgerId: String!
+    """Alias of receiptObjectKey, as the upload URL spells it."""
+    objectKey: String
+    receiptObjectKey: String
+    """Alias of receiptObjectKey, as the parse routes spell it."""
+    s3ObjectKey: String
+  ): InsertReceiptResult!
+  leaveLedger(
+    """Run every check and return the preview without committing"""
+    dryRun: Boolean
+    """Alias of dryRun, as MCP spells it."""
+    dry_run: Boolean
+    ledgerId: String!
+  ): DeleteCollaboratorResponse!
   """Logout user, revoke JWT token and clear httpOnly cookie"""
   logout: LogoutResponse!
   """
@@ -1239,8 +1530,12 @@ type Mutation {
   parseFile(
     """File format type (e.g., csv, pdf, xlsx, json, etc.)"""
     fileFormat: String!
+    """Alias of s3ObjectKey, as the upload URL spells it."""
+    objectKey: String
+    """Alias of s3ObjectKey, as the insert path spells it."""
+    receiptObjectKey: String
     """S3 object key from upload"""
-    s3ObjectKey: String!
+    s3ObjectKey: String
   ): FileParseResult!
   """
   Parse a receipt image or PDF and return a single summarized transaction with account recommendations. File must be uploaded to S3 first.
@@ -1248,8 +1543,12 @@ type Mutation {
   parseReceipt(
     """Ledger ID used to fetch available accounts for recommendation"""
     ledgerId: String!
+    """Alias of s3ObjectKey, as the upload URL spells it."""
+    objectKey: String
+    """Alias of s3ObjectKey, as the insert path spells it."""
+    receiptObjectKey: String
     """S3 object key of the receipt (image or PDF only)"""
-    s3ObjectKey: String!
+    s3ObjectKey: String
   ): ReceiptParseResult!
   """
   Re-read the accounts Plaid shares for an Item and reconcile them against stored accounts. Call this after an update-mode Link session with Account Select.
@@ -1269,7 +1568,19 @@ type Mutation {
   refreshToken: TokenAuthResponse!
   rejectPullRequest(ledgerName: String!, ledgerOwner: String!, prNumber: Int!): PullRequestResult!
   """Rename a file in a specific ledger"""
-  renameLedgerFile(ledgerId: String!, message: String, newPath: String!, oldPath: String!, updateIncludes: Boolean): RenameLedgerFileResponse!
+  renameLedgerFile(
+    """Alias of message, as the MCP file tools spell it."""
+    description: String
+    """Run every check and return the preview without committing"""
+    dryRun: Boolean
+    """Alias of dryRun, as MCP spells it."""
+    dry_run: Boolean
+    ledgerId: String!
+    message: String
+    newPath: String!
+    oldPath: String!
+    updateIncludes: Boolean
+  ): RenameLedgerFileResponse!
   """Request an email ownership code to continue password sign-in"""
   requestSignInRecovery(email: String!, returnTo: String): RequestSignInRecoveryResponse!
   """Reset user password using a token from the password reset email"""
@@ -1313,6 +1624,10 @@ type Mutation {
   """Update a specific ledger"""
   updateLedger(
     description: String
+    """Run every check and return the preview without committing"""
+    dryRun: Boolean
+    """Alias of dryRun, as MCP spells it."""
+    dry_run: Boolean
     ledgerId: String!
     name: String
     """
@@ -1328,6 +1643,8 @@ type Mutation {
     Base64-encoded full replacement content, at most 1 MiB (1,048,576 decoded bytes).
     """
     content: String!
+    """Alias of message, as the MCP file tools spell it."""
+    description: String
     ledgerId: String!
     message: String
     path: String!
@@ -1491,10 +1808,16 @@ type PlaidSyncResult {
 
 input PlaidTransactionSubmitInput {
   """
-  Overrides the source account normally derived from the Plaid account's mapping
+  Overrides the source account normally derived from the Plaid account's mapping. camelCase only here; the MCP bank tool also accepts source_account.
   """
   sourceAccount: String
+  """
+  The ledger account to book this against. camelCase only here; the MCP bank tool also accepts target_account.
+  """
   targetAccount: String!
+  """
+  The staged row's transactionId. camelCase only here; the MCP bank tool also accepts transaction_id.
+  """
   transactionId: String!
 }
 
@@ -1520,6 +1843,9 @@ type PlaidTransactionType {
 
 input PlaintextJournalQueryInput {
   account: String
+  """
+  Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or "quoted" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape sequences.
+  """
   filter: String
   """Entries per page, 1 to 1000; omitted, every entry."""
   limit: Int
@@ -1533,6 +1859,14 @@ type PlaintextJournalResponse {
   total: Int!
   """Whether entries remain after this page."""
   truncated: Boolean!
+}
+
+type PlanBilling {
+  """More than one subscription is set to renew, so the account pays twice."""
+  duplicateBilling: Boolean!
+  source: BillingSource!
+  """The account's live store subscription, when it has one."""
+  store: StoreSubscriptionSummary
 }
 
 enum PlanChangeEffect {
@@ -1718,7 +2052,11 @@ type Query {
   """
   generateTempAssetDownloadUrl(
     """S3 object key returned by generateTempAssetUploadUrl"""
-    objectKey: String!
+    objectKey: String
+    """Alias of objectKey, as the insert path spells it."""
+    receiptObjectKey: String
+    """Alias of objectKey, as the parse routes spell it."""
+    s3ObjectKey: String
   ): TempAssetDownloadUrl!
   """
   Describe the CLI authentication request a user code names, so the consent screen can show who is asking before anyone approves.
@@ -1755,7 +2093,18 @@ type Query {
   """Get the last entries of assets and liabilities accounts"""
   getLedgerAccountLastEntries(account: String, filter: String, ledgerId: String!, time: String): [AccountLastEntry!]!
   """Get the report of a specific account"""
-  getLedgerAccountReport(account: String, accountName: String!, conversion: String, filter: String, interval: String! = "monthly", ledgerId: String!, time: String): AccountReport!
+  getLedgerAccountReport(
+    account: String
+    accountName: String!
+    """
+    Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency.
+    """
+    conversion: String
+    filter: String
+    interval: String! = "monthly"
+    ledgerId: String!
+    time: String
+  ): AccountReport!
   """
   Get the accounts of a specific ledger. Optional status filter: 'open' (no closeDate) or 'closed' (has closeDate). Returns all accounts when omitted.
   """
@@ -1773,7 +2122,17 @@ type Query {
   """
   Get the balance sheet of a specific ledger, including report-only current earnings in equity and its interval series under the configured account names
   """
-  getLedgerBalanceSheet(account: String, conversion: String, filter: String, interval: String! = "monthly", ledgerId: String!, time: String): BalanceSheetData!
+  getLedgerBalanceSheet(
+    account: String
+    """
+    Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency.
+    """
+    conversion: String
+    filter: String
+    interval: String! = "monthly"
+    ledgerId: String!
+    time: String
+  ): BalanceSheetData!
   """Get the realized capital gains of a specific ledger"""
   getLedgerCapitalGains(account: String, fromDate: String, ledgerId: String!, time: String, toDate: String): GainsData!
   getLedgerCollaboratorPermission(collaborator: String!, ledgerId: String!): LedgerCollaborator!
@@ -1788,7 +2147,12 @@ type Query {
   """Get the count of entries per type"""
   getLedgerEntriesCountPerType(account: String, filter: String, ledgerId: String!, time: String): [EntriesByType!]!
   """Get context for a specific journal entry"""
-  getLedgerEntryContext(entryHash: String!, ledgerId: String!): EntryContext!
+  getLedgerEntryContext(
+    entryHash: String
+    """Alias of entryHash, as list output spells it."""
+    entry_hash: String
+    ledgerId: String!
+  ): EntryContext!
   """
   Get the ledger's errors: what bean-check fails on. The engine's warnings (a one-posting entry, closing an account with a balance) are not listed.
   """
@@ -1798,11 +2162,39 @@ type Query {
   """Get the content of a specific ledger file"""
   getLedgerFile(ledgerId: String!, path: String!): LedgerFileContent
   """Get the holdings of a specific ledger"""
-  getLedgerHoldings(account: String, conversion: String, groupBy: String! = "account", ledgerId: String!): HoldingsData!
+  getLedgerHoldings(
+    account: String
+    conversion: String
+    groupBy: String
+    """Alias of groupBy, as the read echoes it."""
+    group_by: String
+    ledgerId: String!
+  ): HoldingsData!
   """Get the income statement of a specific ledger"""
-  getLedgerIncomeStatement(account: String, conversion: String, filter: String, interval: String! = "monthly", ledgerId: String!, time: String): IncomeStatementData!
+  getLedgerIncomeStatement(
+    account: String
+    """
+    Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency.
+    """
+    conversion: String
+    filter: String
+    interval: String! = "monthly"
+    ledgerId: String!
+    time: String
+  ): IncomeStatementData!
   """Get interval totals for a specific account"""
-  getLedgerIntervalTotals(account: String, accountName: String!, conversion: String, filter: String, interval: String! = "monthly", ledgerId: String!, time: String): [IntervalTotalItem!]!
+  getLedgerIntervalTotals(
+    account: String
+    accountName: String!
+    """
+    Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency.
+    """
+    conversion: String
+    filter: String
+    interval: String! = "monthly"
+    ledgerId: String!
+    time: String
+  ): [IntervalTotalItem!]!
   """Get journal entries for a specific ledger"""
   getLedgerJournal(ledgerId: String!, query: JournalQueryInput): JournalResponse!
   """Get the links of a specific ledger"""
@@ -1821,7 +2213,17 @@ type Query {
   """
   getLedgerOptions(ledgerId: String!): LedgerOptions!
   """Get the overview of a specific ledger"""
-  getLedgerOverview(account: String, conversion: String, filter: String, interval: String! = "monthly", ledgerId: String!, time: String): LedgerOverview!
+  getLedgerOverview(
+    account: String
+    """
+    Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency.
+    """
+    conversion: String
+    filter: String
+    interval: String! = "monthly"
+    ledgerId: String!
+    time: String
+  ): LedgerOverview!
   """Get the accounts for a payee"""
   getLedgerPayeeAccounts(ledgerId: String!, payee: String!): [String!]!
   """Get the most recent transaction for a payee, or null when none matches"""
@@ -1841,7 +2243,16 @@ type Query {
   """Get the tags of a specific ledger"""
   getLedgerTags(ledgerId: String!): [String!]!
   """Get the trial balance of a specific ledger"""
-  getLedgerTrialBalance(account: String, conversion: String, filter: String, interval: String! = "monthly", ledgerId: String!, time: String): TrialBalanceData!
+  getLedgerTrialBalance(
+    account: String
+    """
+    Value amounts as: a currency code; `units` (unconverted); `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost` (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held without a cost). Default: the ledger's operating currency.
+    """
+    conversion: String
+    filter: String
+    ledgerId: String!
+    time: String
+  ): TrialBalanceData!
   """Get the years of a specific ledger"""
   getLedgerYears(ledgerId: String!): [String!]!
   """Get all accounts for a specific Plaid Item"""
@@ -1948,13 +2359,23 @@ type Query {
   Previews switching your plan to a price: the kind of change, when it takes effect, and what is charged today. Requires a full signed-in session.
   """
   previewPlanChange(clientId: String!, priceId: String!): PlanChangePreview!
-  """Execute a shell query on a ledger"""
+  """
+  Execute a shell query on a ledger. The query travels in a POST body end to end, so long queries have no URL-length ceiling, up to 262144 bytes.
+  """
   queryShell(ledgerId: String!, query: String!): QueryResult
-  """Execute a shell query on a ledger and return plain text output"""
+  """
+  Execute a shell query on a ledger and return plain text output. The query travels in a POST body end to end, so long queries have no URL-length ceiling, up to 262144 bytes.
+  """
   queryShellText(ledgerId: String!, query: String!): QueryShellTextResult
   """Search for ledgers/repositories"""
   searchLedgers(archived: Boolean, exclusive: Boolean, includeDesc: Boolean, isPrivate: Boolean, limit: Float, mode: String, order: String, page: Float, priorityOwnerId: Float, private: Boolean, q: String, sort: String, starredBy: Float, teamId: Float, template: Boolean, topic: Boolean, uid: Float): [Ledger!]!
-  """Returns your subscription status. Requires a full signed-in session."""
+  """
+  Returns your store billing identifiers, creating them on first read. Requires a full signed-in session or the Beancount app.
+  """
+  storeBillingIdentity: StoreBillingIdentity!
+  """
+  Returns your subscription status. Requires a full signed-in session or the Beancount app.
+  """
   subscriptionStatus: CustomerSubscriptionStatus!
   """
   Suggest Beancount account mappings for a Plaid Item's unmapped accounts using AI. Requires ledger-content read, bank-connection read, and AI-use authority.
@@ -1999,6 +2420,7 @@ type QueryResultText {
 }
 
 type QueryShellTextResult {
+  rowCount: Int
   text: String!
 }
 
@@ -2045,9 +2467,18 @@ type RegisterRow {
 }
 
 type RenameLedgerFileResponse {
+  dryRun: Boolean!
+  message: String!
   newPath: String!
   oldPath: String!
+  """Per-file rewritten include lines; populated on dry runs only"""
+  preview: [RenamePreviewFile!]!
   updatedIncludes: [String!]!
+}
+
+type RenamePreviewFile {
+  path: String!
+  text: String!
 }
 
 """The email report status (deprecated)"""
@@ -2112,10 +2543,53 @@ type SignUpResponse {
   sessionId: String!
 }
 
+type SlicePreviewFile {
+  path: String!
+  text: String!
+}
+
+type SliceWriteError {
+  message: String!
+  source: String
+}
+
 type StarLedgerResponse {
   isStarred: Boolean!
   message: String
   success: Boolean!
+}
+
+"""
+What the app attaches to a store purchase so the purchase names this account.
+"""
+type StoreBillingIdentity {
+  """Apple's appAccountToken."""
+  appleAppAccountToken: String!
+  """Google Play's obfuscated account ID."""
+  googleObfuscatedAccountId: String!
+}
+
+type StorePlan {
+  interval: String!
+  tier: String!
+}
+
+type StoreSubscriptionSummary {
+  """When the paid or grace period ends."""
+  accessEndsAt: DateTimeISO
+  interval: String
+  """
+  The web page that manages this plan. Apple has none, so App Store plans are managed on the device.
+  """
+  managementUrl: String
+  productId: String!
+  provider: BillingSource!
+  """The plan the store moves to at the next renewal."""
+  scheduledChange: StorePlan
+  status: String!
+  """Absent for a product outside the catalog."""
+  tier: String
+  willRenew: Boolean!
 }
 
 type Subscription {
@@ -2241,19 +2715,34 @@ input UpdateSourceSliceInput {
   Commit the edit even when it would add bean-check errors (VALIDATION_FAILED), instead of refusing
   """
   allowInvalid: Boolean
-  entryHash: String!
+  """Alias of allowInvalid."""
+  allow_invalid: Boolean
+  """Run every check and return the preview without committing"""
+  dryRun: Boolean
+  """Alias of dryRun, as MCP spells it."""
+  dry_run: Boolean
+  """The entry's hash. One of entryHash/entry_hash is required."""
+  entryHash: String
+  """Alias of entryHash, as list output spells it."""
+  entry_hash: String
   newContent: String!
   sha256sum: String!
 }
 
 type UpdateSourceSliceResponse {
+  dryRun: Boolean!
   entryHash: String!
+  errorsAfter: Float!
+  errorsBefore: Float!
   message: String!
   """
   The entry's public ID after the commit — use it for the next edit, not entryHash.
   """
   newEntryHash: String!
+  newErrors: [SliceWriteError!]!
   newSha256sum: String!
+  """Per-file affected text; populated on dry runs only"""
+  preview: [SlicePreviewFile!]!
 }
 
 type UpgradeSubscriptionResult {

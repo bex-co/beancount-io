@@ -9,6 +9,8 @@ import { List as List2 } from "@/components";
 import { i18n, setLocale } from "@/translations";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { helpCenterUrl } from "@/common/site-url";
+import { isOfficialServerUrl } from "@/common/server-url-validation";
+import { getServerUrl } from "@/common/vars/server-url";
 import { useDeleteAccountMutation } from "@/generated-graphql/graphql";
 import { useSession } from "@/common/hooks/use-session";
 import { actionLogout } from "./logout";
@@ -164,6 +166,14 @@ export const MainContent = () => {
             title={displayName}
             content={user.email}
             onPress={() => router.push("/(app)/profile")}
+          />
+        )}
+        {session && isOfficialServerUrl(getServerUrl()) && (
+          <ListItemHorizontal
+            testID="setting-plan"
+            icon={<Ionicons name="card" size={22} color={theme.black80} />}
+            title={t("plan")}
+            onPress={() => router.push("/(app)/plan")}
           />
         )}
         <SectionHeader title={t("appSettings")} />
