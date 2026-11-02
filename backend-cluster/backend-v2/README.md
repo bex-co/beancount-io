@@ -463,6 +463,11 @@ clients' refresh tokens rotate on every refresh at any age, as the MCP
 specification requires (a sender-constrained token is the one exception).
 Discourse keeps oidc-provider's defaults.
 
+The native app's rotated refresh token is accepted again for **30 seconds**
+after its first use, because the response carrying its successor can be lost to
+backgrounding or a network handoff; past the window, reuse revokes the grant
+(ADR 019, 2026-11-01). MCP hosts and Discourse keep strict reuse detection.
+
 Revocation is what ends a long session early: logout revokes the refresh
 credential, which revokes the grant with it.
 

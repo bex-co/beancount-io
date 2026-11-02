@@ -91,6 +91,9 @@ export const OAUTH_CONFIG = {
     // overrides it so its year-long idle window can continue sliding.
     defaultLifetimeCutoffSeconds: 365.25 * DAY_SECONDS,
     defaultPercentagePassed: 70,
+    // A rotated mobile refresh token presented again within this many seconds
+    // is rotated once more instead of revoking the grant (ADR 019 D5).
+    reuseGraceSeconds: 30,
   },
   interaction: {
     signupScreenHint: "signup",

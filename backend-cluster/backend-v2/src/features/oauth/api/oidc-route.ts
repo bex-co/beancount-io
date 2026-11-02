@@ -10,6 +10,7 @@ import {
 } from "@/foundation/composition";
 import type { AppConfig } from "@/config/config";
 import { MemoryAdapter } from "../data/memory-adapter";
+import { withRefreshReuseGrace } from "../data/refresh-reuse-grace";
 import { createPostgresAdapterFactory } from "../data/oauth-adapter-model";
 import { resolveAuthUser } from "@/features/ai-agent/utils/route-guards";
 import { assertLedgerAccess } from "@/features/ledger/utils/ledger-access-check";
@@ -193,10 +194,11 @@ export function setOidcRoutes(
     // a real Postgres available (docker-compose), and this app's Environment type
     // has no "staging" value, so a production-only gate would silently leave a
     // staging deploy on in-memory storage, losing all OAuth state on every restart.
-    adapter:
+    adapter: withRefreshReuseGrace(
       config.env === "test"
-        ? MemoryAdapter
+        ? (name: string) => new MemoryAdapter(name)
         : createPostgresAdapterFactory(layers.database.db),
+    ),
 
     clients: buildStaticOAuthClients({
       apiScopes: API_SCOPES,

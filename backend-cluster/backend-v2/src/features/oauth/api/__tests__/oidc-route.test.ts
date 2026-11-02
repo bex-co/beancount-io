@@ -1089,6 +1089,71 @@ describe("oidc-route: unified MCP + identity provider", () => {
     });
   });
 
+  // ADR 019 D5: the app's refresh response can be lost after the server
+  // rotated, so the app replays the old token. Inside the grace window that
+  // must succeed; after it, reuse still revokes the whole grant.
+  it("mobile flow: a rotated refresh token replayed within the grace window is accepted, and after it the grant is revoked", async () => {
+    const resource = `${ISSUER}/v1`;
+    const redirectUri = MOBILE_REDIRECT_URIS[0];
+    const { code, verifier } = await driveAuthorizationCode({
+      clientId: MOBILE_CLIENT_ID,
+      clientAuth: "",
+      scope: "openid offline_access ledger.read",
+      redirectUri,
+      prompt: "consent",
+      resource,
+    });
+    const tokenBody = await exchangeToken({
+      code,
+      verifier,
+      clientId: MOBILE_CLIENT_ID,
+      redirectUri,
+      resource,
+    });
+    const rt1 = tokenBody.refresh_token as string;
+    const refresh = (refreshToken: string) =>
+      fetch(`${ISSUER}/api-gateway/oauth/token`, {
+        method: "POST",
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          grant_type: "refresh_token",
+          refresh_token: refreshToken,
+          client_id: MOBILE_CLIENT_ID,
+          resource,
+        }),
+      });
+
+    // The server rotates RT1 -> RT2; the app never sees RT2.
+    const lost = await refresh(rt1);
+    expect(lost.status).toBe(200);
+
+    // Replay of RT1 inside the window succeeds with a fresh successor.
+    const replay = await refresh(rt1);
+    expect(replay.status).toBe(200);
+    const rt3 = ((await replay.json()) as Record<string, unknown>)
+      .refresh_token as string;
+    expect(rt3).toEqual(expect.any(String));
+    expect(rt3).not.toBe(rt1);
+    expect((await refresh(rt3)).status).toBe(200);
+
+    // Past the window, RT1 is reuse: invalid_grant and the grant is revoked.
+    const realNow = Date.now;
+    const later =
+      realNow() + (OAUTH_CONFIG.refreshRotation.reuseGraceSeconds + 5) * 1000;
+    jest.spyOn(Date, "now").mockImplementation(() => later);
+    try {
+      const reuse = await refresh(rt1);
+      expect(reuse.status).toBe(400);
+      expect((await reuse.json()) as object).toMatchObject({
+        error: "invalid_grant",
+      });
+    } finally {
+      jest.restoreAllMocks();
+    }
+    const afterRevoke = await refresh(rt3);
+    expect(afterRevoke.status).toBe(400);
+  });
+
   // A password reset deletes the provider rows whose top-level accountId's
   // user segment is the user, plus every row under their grants
   // (oauth-grant-model, w0/m4). That SQL can only be as right as its reading of

@@ -377,6 +377,16 @@ The first rescan after the deploy (2026-10-18) cleared the "not individually exp
 
 On the next rescan (18:08), with ledgers private unless `private: false` (w1/173), the "needs further review" finding on `createLedger` and `updateLedger` cleared. Both tools were then flagged for declaring `openWorldHint: false` while able to publish a ledger to anyone. Both are now open world (w1/174).
 
+### 2026-11-01 — A rotated native-app refresh token is accepted again for 30 seconds (w21/064)
+
+D5 rotates the native app's refresh token on every refresh, and oidc-provider answers a consumed token with `invalid_grant` and revokes the grant. When the response carrying the successor never arrives (backgrounding, a Wi-Fi/cell handoff, a failed save), the app still holds the old token, replays it, and is signed out. A client-only change cannot recover a token the client never received.
+
+**Decision (owner, 2026-11-01).** For the static mobile client only, a consumed refresh token presented again within `OAUTH_CONFIG.refreshRotation.reuseGraceSeconds` (**30 s**) of its first use is rotated again instead of revoking the grant. The first consumption fixes the window's start; a replay does not move it. Past the window the stored `consumed` stands, so true reuse revokes the grant exactly as before. DCR and CIMD hosts and Discourse keep strict reuse detection.
+
+**Cost.** For those 30 seconds, anyone holding the old token can obtain a valid successor. The app keeps its token in the OS keychain, so that exposure is the same as having the current token. The replay mints a second successor (the first is never returned to anyone), which stays valid until the grant ends and is revoked with it.
+
+**Where.** `withRefreshReuseGrace` (`src/features/oauth/data/refresh-reuse-grace.ts`) wraps the `RefreshToken` adapter: inside the window `find` reads the token as unconsumed. `oidc-route.test.ts` covers rotation, the lost response, and reuse after the window.
+
 ### 2026-10-16 — OpenClaw and Hermes Agent are named hosts, and a missing `prompt=consent` no longer costs the refresh token (w6/m7)
 
 Two open-source agents join the hosts D8 names. Both use the single endpoint of D1; neither needed host-specific code. No submission directory exists for either: OpenClaw adds servers by hand, and Hermes's MCP catalog is curated by Nous. Being listed on them means a fixture, a verified sign-in, and a row in `docs/mcp.md`.
