@@ -1754,6 +1754,31 @@
                         ],
                         "description": "Setup preset id (ADR021)."
                       },
+                      "modules": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "enum": [
+                                "investments@1",
+                                "rental-property@1",
+                                "side-business@1"
+                              ]
+                            },
+                            "propertyName": {
+                              "type": "string",
+                              "description": "rental-property@1 only; default Property1."
+                            }
+                          },
+                          "required": [
+                            "id"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "description": "personal@1 only; each module at most once."
+                      },
                       "title": {
                         "type": "string",
                         "maxLength": 200
@@ -5929,6 +5954,31 @@
                           "blank@1"
                         ],
                         "description": "Setup preset id (ADR021)."
+                      },
+                      "modules": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "enum": [
+                                "investments@1",
+                                "rental-property@1",
+                                "side-business@1"
+                              ]
+                            },
+                            "propertyName": {
+                              "type": "string",
+                              "description": "rental-property@1 only; default Property1."
+                            }
+                          },
+                          "required": [
+                            "id"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "description": "personal@1 only; each module at most once."
                       },
                       "title": {
                         "type": "string",

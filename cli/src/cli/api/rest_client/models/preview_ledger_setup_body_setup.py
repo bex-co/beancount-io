@@ -11,6 +11,7 @@ from ..types import UNSET, Unset
 if TYPE_CHECKING:
     from ..models.preview_ledger_setup_body_setup_accounts_item import PreviewLedgerSetupBodySetupAccountsItem
     from ..models.preview_ledger_setup_body_setup_capabilities import PreviewLedgerSetupBodySetupCapabilities
+    from ..models.preview_ledger_setup_body_setup_modules_item import PreviewLedgerSetupBodySetupModulesItem
 
 
 T = TypeVar("T", bound="PreviewLedgerSetupBodySetup")
@@ -21,6 +22,7 @@ class PreviewLedgerSetupBodySetup:
     """
     Attributes:
         preset (PreviewLedgerSetupBodySetupPreset): Setup preset id (ADR021).
+        modules (list[PreviewLedgerSetupBodySetupModulesItem] | Unset): personal@1 only; each module at most once.
         title (str | Unset):
         operating_currency (str | Unset):
         history_start (str | Unset):
@@ -29,6 +31,7 @@ class PreviewLedgerSetupBodySetup:
     """
 
     preset: PreviewLedgerSetupBodySetupPreset
+    modules: list[PreviewLedgerSetupBodySetupModulesItem] | Unset = UNSET
     title: str | Unset = UNSET
     operating_currency: str | Unset = UNSET
     history_start: str | Unset = UNSET
@@ -37,6 +40,13 @@ class PreviewLedgerSetupBodySetup:
 
     def to_dict(self) -> dict[str, Any]:
         preset = self.preset.value
+
+        modules: list[dict[str, Any]] | Unset = UNSET
+        if not isinstance(self.modules, Unset):
+            modules = []
+            for modules_item_data in self.modules:
+                modules_item = modules_item_data.to_dict()
+                modules.append(modules_item)
 
         title = self.title
 
@@ -62,6 +72,8 @@ class PreviewLedgerSetupBodySetup:
                 "preset": preset,
             }
         )
+        if modules is not UNSET:
+            field_dict["modules"] = modules
         if title is not UNSET:
             field_dict["title"] = title
         if operating_currency is not UNSET:
@@ -83,9 +95,21 @@ class PreviewLedgerSetupBodySetup:
         from ..models.preview_ledger_setup_body_setup_capabilities import (
             PreviewLedgerSetupBodySetupCapabilities,  # noqa: PLC0415
         )
+        from ..models.preview_ledger_setup_body_setup_modules_item import (
+            PreviewLedgerSetupBodySetupModulesItem,  # noqa: PLC0415
+        )
 
         d = dict(src_dict)
         preset = PreviewLedgerSetupBodySetupPreset(d.pop("preset"))
+
+        _modules = d.pop("modules", UNSET)
+        modules: list[PreviewLedgerSetupBodySetupModulesItem] | Unset = UNSET
+        if _modules is not UNSET:
+            modules = []
+            for modules_item_data in _modules:
+                modules_item = PreviewLedgerSetupBodySetupModulesItem.from_dict(modules_item_data)
+
+                modules.append(modules_item)
 
         title = d.pop("title", UNSET)
 
@@ -111,6 +135,7 @@ class PreviewLedgerSetupBodySetup:
 
         preview_ledger_setup_body_setup = cls(
             preset=preset,
+            modules=modules,
             title=title,
             operating_currency=operating_currency,
             history_start=history_start,

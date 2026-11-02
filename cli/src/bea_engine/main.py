@@ -533,6 +533,13 @@ def init_ledger(
         typer.Option("--preset", help="Setup-catalog preset id, e.g. personal@1 (ADR021); replaces the fixed chart."),
     ] = None,
     title: Annotated[str | None, typer.Option("--title", help="Ledger title for a preset ledger.")] = None,
+    module: Annotated[
+        list[str] | None,
+        typer.Option("--module", help="Setup-catalog module id for a personal@1 ledger; repeat for each module."),
+    ] = None,
+    property_name: Annotated[
+        str | None, typer.Option("--property-name", help="Property account component for rental-property@1.")
+    ] = None,
 ) -> None:
     """Create a starter personal ledger with common accounts.
 
@@ -550,8 +557,12 @@ def init_ledger(
                 currency=currency,
                 date=date,
                 opening_balances=list(opening_balance) if opening_balance else None,
+                modules=list(module) if module else None,
+                property_name=property_name,
             )
         else:
+            if module or property_name is not None:
+                raise protocol.UsageError("--module and --property-name are only meaningful with --preset personal@1.")
             answer.data = initiating.answer(
                 expand_path(file, "--file").absolute(),
                 currency=currency,

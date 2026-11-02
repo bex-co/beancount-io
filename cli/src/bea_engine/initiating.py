@@ -10,6 +10,7 @@ import datetime
 import errno
 import json
 import os
+import re
 from decimal import MAX_PREC, Decimal, localcontext
 from pathlib import Path
 from typing import Any
@@ -194,6 +195,46 @@ def _prepare_new_file(file: Path) -> Path:
 _INSTRUMENT_ACCOUNTS = frozenset({"Assets:Holdings"})
 
 
+def module_accounts(
+    catalog: dict[str, Any], preset: str, modules: list[str], property_name: str | None
+) -> dict[str, str | None]:
+    """The accounts the selected setup modules open, each with its booking method (ADR021).
+
+    Mirrors the hosted builder: a module is accepted only with a preset it
+    lists and only once, and a property name only with the module that
+    declares one. Every refusal happens before anything is created.
+    """
+    known = {entry["id"]: entry for entry in catalog["modules"]}
+    accounts: dict[str, str | None] = {}
+    seen: set[str] = set()
+    named = False
+    for module_id in modules:
+        entry = known.get(module_id)
+        if entry is None:
+            raise UsageError(f"Unknown module {module_id!r}. Choose one of: {', '.join(sorted(known))}.")
+        if preset not in entry["allowedPresets"]:
+            allowed = ", ".join(entry["allowedPresets"])
+            raise UsageError(f"Module {module_id!r} is accepted only with preset {allowed}, not {preset!r}.")
+        if module_id in seen:
+            raise UsageError(f"Module {module_id!r} is selected more than once.")
+        seen.add(module_id)
+        parameter = next((p for p in entry["parameters"] if p["id"] == "propertyName"), None)
+        name = None
+        if parameter is not None:
+            named = True
+            name = property_name if property_name is not None else parameter["default"]
+            if not re.fullmatch(parameter["pattern"], name):
+                raise UsageError(f"Property name {name!r} for {module_id!r} is not valid: {parameter['description']}.")
+        for account in entry["accounts"]:
+            account_name = account["name"]
+            if parameter is not None and name is not None:
+                account_name = account_name.replace(parameter["placeholder"], name)
+            accounts[account_name] = account.get("booking")
+    if property_name is not None and not named:
+        raise UsageError("A property name is taken only with the rental-property@1 module.")
+    return accounts
+
+
 def answer_preset(
     file: Path,
     *,
@@ -202,6 +243,8 @@ def answer_preset(
     currency: str,
     date: str,
     opening_balances: list[str] | None = None,
+    modules: list[str] | None = None,
+    property_name: str | None = None,
 ) -> dict[str, Any]:
     """Write a new ledger from a setup-catalog preset (ADR021).
 
@@ -228,7 +271,9 @@ def answer_preset(
     except ValueError as exc:
         raise UsageError(f"--date must be a date in YYYY-MM-DD form, not {date!r}.") from exc
 
-    accounts = [account["name"] for account in entry["accounts"]]
+    booking = module_accounts(catalog, preset, modules or [], property_name)
+    booking.update({account["name"]: account.get("booking") for account in entry["accounts"]})
+    accounts = list(booking)
     balances = _parse_opening_balances(opening_balances, accounts, "preset's")
 
     # A confirmed zero asserts the boundary without posting anything (w5/876).
@@ -260,8 +305,11 @@ def answer_preset(
         # The portfolio preset's holdings hold instruments (HOOL, BTC), not
         # only cash: restricted to the operating currency, its first share
         # purchase was refused (w5/957).
-        restriction = "" if account in _INSTRUMENT_ACCOUNTS else f" {currency}"
-        lines.append(f"{open_day} open {account}{restriction}")
+        # A booked account (the investments module's FIFO brokerage) holds
+        # instruments too, and names its method after the currencies.
+        method = booking.get(account)
+        restriction = "" if account in _INSTRUMENT_ACCOUNTS or method else f" {currency}"
+        lines.append(f"{open_day} open {account}{restriction}" + (f' "{method}"' if method else ""))
     if balances:
         lines.append("")
         for account in funded:

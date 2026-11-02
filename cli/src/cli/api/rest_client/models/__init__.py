@@ -32,6 +32,8 @@ from .create_ledger_body_setup_type_0_capabilities import CreateLedgerBodySetupT
 from .create_ledger_body_setup_type_0_capabilities_additional_property import (
     CreateLedgerBodySetupType0CapabilitiesAdditionalProperty,
 )
+from .create_ledger_body_setup_type_0_modules_item import CreateLedgerBodySetupType0ModulesItem
+from .create_ledger_body_setup_type_0_modules_item_id import CreateLedgerBodySetupType0ModulesItemId
 from .create_ledger_body_setup_type_0_preset import CreateLedgerBodySetupType0Preset
 from .create_ledger_body_template_type_1 import CreateLedgerBodyTemplateType1
 from .create_ledger_body_template_type_2_type_1 import CreateLedgerBodyTemplateType2Type1
@@ -376,6 +378,8 @@ from .preview_ledger_setup_body_setup_capabilities import PreviewLedgerSetupBody
 from .preview_ledger_setup_body_setup_capabilities_additional_property import (
     PreviewLedgerSetupBodySetupCapabilitiesAdditionalProperty,
 )
+from .preview_ledger_setup_body_setup_modules_item import PreviewLedgerSetupBodySetupModulesItem
+from .preview_ledger_setup_body_setup_modules_item_id import PreviewLedgerSetupBodySetupModulesItemId
 from .preview_ledger_setup_body_setup_preset import PreviewLedgerSetupBodySetupPreset
 from .preview_ledger_setup_response_200 import PreviewLedgerSetupResponse200
 from .preview_ledger_setup_response_200_files import PreviewLedgerSetupResponse200Files
@@ -460,6 +464,8 @@ __all__ = (
     "CreateLedgerBodySetupType0AccountsItemOpeningState",
     "CreateLedgerBodySetupType0Capabilities",
     "CreateLedgerBodySetupType0CapabilitiesAdditionalProperty",
+    "CreateLedgerBodySetupType0ModulesItem",
+    "CreateLedgerBodySetupType0ModulesItemId",
     "CreateLedgerBodySetupType0Preset",
     "CreateLedgerBodyTemplateType1",
     "CreateLedgerBodyTemplateType2Type1",
@@ -648,6 +654,8 @@ __all__ = (
     "PreviewLedgerSetupBodySetupAccountsItemOpeningState",
     "PreviewLedgerSetupBodySetupCapabilities",
     "PreviewLedgerSetupBodySetupCapabilitiesAdditionalProperty",
+    "PreviewLedgerSetupBodySetupModulesItem",
+    "PreviewLedgerSetupBodySetupModulesItemId",
     "PreviewLedgerSetupBodySetupPreset",
     "PreviewLedgerSetupResponse200",
     "PreviewLedgerSetupResponse200Files",

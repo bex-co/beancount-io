@@ -88,6 +88,8 @@ Usage: bea init [OPTIONS] [directory]
 | `--opening-balance` | str (repeatable) |  | 'ACCOUNT NUMBER' in the operating currency; repeat for each account |
 | `--preset` | str |  | Setup-catalog preset id, e.g. personal@1 (ADR021); replaces the fixed chart |
 | `--title` | str |  | Ledger title; only with --preset |
+| `--module` | str (repeatable) |  | Also track investments@1, rental-property@1, or side-business@1 in a --preset personal@1 ledger; repeat for each |
+| `--property-name` | str |  | Account name for the rental property, e.g. OakSt (default Property1) |
 
 ### `bea import`
 
@@ -1416,6 +1418,8 @@ Usage: bea cloud ledger create [OPTIONS] {name}
 | `--title` | str |  | Ledger title; only with --preset |
 | `--currency` | str |  | Operating currency for the preset, e.g. EUR |
 | `--date` | str |  | History start YYYY-MM-DD for the preset |
+| `--module` | str (repeatable) |  | Also track investments@1, rental-property@1, or side-business@1 in a --preset personal@1 ledger; repeat for each |
+| `--property-name` | str |  | Account name for the rental property, e.g. OakSt (default Property1) |
 
 ### `bea cloud ledger clone`
 

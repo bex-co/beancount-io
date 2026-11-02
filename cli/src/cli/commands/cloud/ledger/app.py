@@ -74,6 +74,18 @@ def ledger_create(
         str | None, typer.Option("--currency", help="Operating currency for the preset, e.g. EUR")
     ] = None,
     date: Annotated[str | None, typer.Option("--date", help="History start YYYY-MM-DD for the preset")] = None,
+    module: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--module",
+            help="Also track investments@1, rental-property@1, or side-business@1 in a --preset personal@1 ledger; "
+            "repeat for each",
+        ),
+    ] = None,
+    property_name: Annotated[
+        str | None,
+        typer.Option("--property-name", help="Account name for the rental property, e.g. OakSt (default Property1)"),
+    ] = None,
 ) -> None:
     """Create a new ledger, private by default, and optionally clone it.
 
@@ -84,6 +96,7 @@ def ledger_create(
     import httpx
 
     from cli.api.client import authenticated_client
+    from cli.commands.init import module_accounts
     from cli.utils import ledger_name
 
     from . import manager
@@ -113,6 +126,7 @@ def ledger_create(
             if preset not in members:
                 known = ", ".join(sorted(members))
                 raise UsageError(f"--preset {preset!r}: Unknown preset. Choose one of: {known}. Nothing was created.")
+        module_accounts(preset, module, property_name)
         ledger = manager.create_ledger(
             client,
             name,
@@ -122,6 +136,8 @@ def ledger_create(
             title=title,
             currency=currency,
             date=date,
+            modules=module,
+            property_name=property_name,
         )
     except (httpx.ConnectError, httpx.ConnectTimeout, httpx.ProxyError):
         # No request left the machine (refused, DNS failure), so nothing was

@@ -58,6 +58,8 @@ def create_ledger(
     title: str | None = None,
     currency: str | None = None,
     date: str | None = None,
+    modules: list[str] | None = None,
+    property_name: str | None = None,
 ) -> LedgerInfo:
     # A requestId on every create (ADR021): if this request is retried in
     # flight with the same id, the server returns the original ledger
@@ -65,6 +67,12 @@ def create_ledger(
     from uuid import uuid4
 
     from cli.api.rest_client.models.create_ledger_body_setup_type_0 import CreateLedgerBodySetupType0
+    from cli.api.rest_client.models.create_ledger_body_setup_type_0_modules_item import (
+        CreateLedgerBodySetupType0ModulesItem,
+    )
+    from cli.api.rest_client.models.create_ledger_body_setup_type_0_modules_item_id import (
+        CreateLedgerBodySetupType0ModulesItemId,
+    )
     from cli.api.rest_client.models.create_ledger_body_setup_type_0_preset import (
         CreateLedgerBodySetupType0Preset,
     )
@@ -77,6 +85,15 @@ def create_ledger(
             title=title if title is not None else UNSET,
             operating_currency=currency if currency is not None else UNSET,
             history_start=date if date is not None else UNSET,
+            modules=[
+                CreateLedgerBodySetupType0ModulesItem(
+                    id=CreateLedgerBodySetupType0ModulesItemId(module_id),
+                    property_name=property_name if module_id == "rental-property@1" and property_name else UNSET,
+                )
+                for module_id in modules
+            ]
+            if modules
+            else UNSET,
         )
     body = CreateLedgerBody(name=name, description=description, private=private, setup=setup, request_id=str(uuid4()))
     return _to_info(unwrap(call(create_ledger_op.sync_detailed, client=client, body=body)))

@@ -70,3 +70,55 @@ def test_create_rejects_unknown_preset_before_any_request(httpx_mock: HTTPXMock)
     result = CliRunner().invoke(app, ["--json", "cloud", "ledger", "create", "new2", "--preset", "nope@1"])
     assert result.exit_code != 0
     assert httpx_mock.get_requests() == []
+
+
+def test_create_with_modules_sends_them_in_setup(httpx_mock: HTTPXMock) -> None:
+    """`--module` and `--property-name` ride in `setup.modules` (w3/m59/t003)."""
+    httpx_mock.add_response(method="POST", url=f"{_API}/api-gateway/v1/ledgers", json=_WIRE)
+    result = CliRunner().invoke(
+        app,
+        [
+            "--json",
+            "cloud",
+            "ledger",
+            "create",
+            "new2",
+            "--preset",
+            "personal@1",
+            "--module",
+            "investments@1",
+            "--module",
+            "rental-property@1",
+            "--property-name",
+            "OakSt",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    body = json.loads(httpx_mock.get_requests()[0].content)
+    assert body["setup"]["modules"] == [
+        {"id": "investments@1"},
+        {"id": "rental-property@1", "propertyName": "OakSt"},
+    ]
+
+
+def test_create_without_modules_sends_no_modules_key(httpx_mock: HTTPXMock) -> None:
+    httpx_mock.add_response(method="POST", url=f"{_API}/api-gateway/v1/ledgers", json=_WIRE)
+    result = CliRunner().invoke(app, ["--json", "cloud", "ledger", "create", "new2", "--preset", "personal@1"])
+    assert result.exit_code == 0, result.output
+    assert "modules" not in json.loads(httpx_mock.get_requests()[0].content)["setup"]
+
+
+@pytest.mark.parametrize(
+    "args",
+    [
+        ["--module", "investments@1"],
+        ["--preset", "freelance@1", "--module", "investments@1"],
+        ["--preset", "personal@1", "--module", "crypto@1"],
+        ["--preset", "personal@1", "--module", "investments@1", "--module", "investments@1"],
+        ["--preset", "personal@1", "--property-name", "OakSt"],
+    ],
+)
+def test_create_refuses_a_bad_module_selection_before_any_request(httpx_mock: HTTPXMock, args: list[str]) -> None:
+    result = CliRunner().invoke(app, ["--json", "cloud", "ledger", "create", "new2", *args])
+    assert result.exit_code == 2, result.output
+    assert httpx_mock.get_requests() == []

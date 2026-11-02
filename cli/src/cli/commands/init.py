@@ -129,6 +129,65 @@ def _preset_accounts(preset: str) -> tuple[str, ...]:
     raise UsageError(f"--preset {preset!r}: Unknown preset. Choose one of: {known}. Nothing was created.")
 
 
+_PROPERTY_WITHOUT_RENTAL = (
+    "--property-name names the rental-property@1 module; add --module rental-property@1. Nothing was created."
+)
+
+
+def module_accounts(preset: str | None, modules: list[str] | None, property_name: str | None) -> tuple[str, ...]:
+    """Account names the setup-catalog modules add, refusing a bad selection before anything is created.
+
+    Reads the engine's catalog copy, like `_preset_accounts`, and applies the
+    hosted builder's rules (ADR021): modules only with a preset that lists
+    them, each once, and `--property-name` only with the rental module.
+    Shared by `bea init` and `bea cloud ledger create`.
+    """
+    import json
+
+    from cli.engine.paths import helper_source_root
+
+    if not modules:
+        if property_name is not None:
+            raise UsageError(_PROPERTY_WITHOUT_RENTAL)
+        return ()
+    if preset is None:
+        raise UsageError(
+            "--module adds accounts to a --preset personal@1 ledger; add --preset personal@1. Nothing was created."
+        )
+    catalog = json.loads((helper_source_root() / "bea_engine" / "setup_catalog.json").read_text(encoding="utf-8"))
+    known = {entry["id"]: entry for entry in catalog["modules"]}
+    names: list[str] = []
+    seen: set[str] = set()
+    named = False
+    for module_id in modules:
+        entry = known.get(module_id)
+        if entry is None:
+            choices = ", ".join(sorted(known))
+            raise UsageError(f"--module {module_id!r}: Unknown module. Choose one of: {choices}. Nothing was created.")
+        if preset not in entry["allowedPresets"]:
+            allowed = ", ".join(entry["allowedPresets"])
+            raise UsageError(
+                f"--module {module_id!r} is accepted only with --preset {allowed}, not {preset!r}. Nothing was created."
+            )
+        if module_id in seen:
+            raise UsageError(f"--module {module_id!r} is given more than once. Nothing was created.")
+        seen.add(module_id)
+        parameter = next((p for p in entry["parameters"] if p["id"] == "propertyName"), None)
+        name = ""
+        if parameter is not None:
+            named = True
+            name = property_name if property_name is not None else parameter["default"]
+            if not re.fullmatch(parameter["pattern"], name):
+                raise UsageError(f"--property-name {name!r}: {parameter['description']}. Nothing was created.")
+        names += [
+            account["name"].replace(parameter["placeholder"], name) if parameter else account["name"]
+            for account in entry["accounts"]
+        ]
+    if property_name is not None and not named:
+        raise UsageError(_PROPERTY_WITHOUT_RENTAL)
+    return tuple(names)
+
+
 def _preset_currency(value: str) -> str:
     """A currency the setup catalog supports, from the engine's copy of its list (w5/878).
 
@@ -232,6 +291,18 @@ def init(
         typer.Option("--preset", help="Setup-catalog preset id, e.g. personal@1 (ADR021); replaces the fixed chart"),
     ] = None,
     title: Annotated[str | None, typer.Option("--title", help="Ledger title; only with --preset")] = None,
+    module: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--module",
+            help="Also track investments@1, rental-property@1, or side-business@1 in a --preset personal@1 ledger; "
+            "repeat for each",
+        ),
+    ] = None,
+    property_name: Annotated[
+        str | None,
+        typer.Option("--property-name", help="Account name for the rental property, e.g. OakSt (default Property1)"),
+    ] = None,
 ) -> None:
     """Create main.bean with common accounts.
 
@@ -313,7 +384,8 @@ def init(
         preset_accounts = _preset_accounts(preset)
     elif title is not None:
         raise UsageError("--title is only meaningful with --preset. Nothing was created.")
-    allowed_opening = preset_accounts if preset_accounts is not None else _ACCOUNTS
+    added = module_accounts(preset, module, property_name)
+    allowed_opening = (*preset_accounts, *added) if preset_accounts is not None else _ACCOUNTS
     balances: dict[str, Decimal] = {}
     for balance in opening_balance or []:
         parts = balance.split()
@@ -363,6 +435,10 @@ def init(
         argv += ["--preset", preset]
         if title is not None:
             argv += ["--title", title]
+        for module_id in module or []:
+            argv += ["--module", module_id]
+        if property_name is not None:
+            argv += ["--property-name", property_name]
     for account, amount in balances.items():
         # A preset keeps a confirmed zero as a zero assertion; the fixed
         # template only ever posts nonzero openings (w5/876).

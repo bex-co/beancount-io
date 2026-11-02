@@ -11,6 +11,7 @@ from ..types import UNSET, Unset
 if TYPE_CHECKING:
     from ..models.create_ledger_body_setup_type_0_accounts_item import CreateLedgerBodySetupType0AccountsItem
     from ..models.create_ledger_body_setup_type_0_capabilities import CreateLedgerBodySetupType0Capabilities
+    from ..models.create_ledger_body_setup_type_0_modules_item import CreateLedgerBodySetupType0ModulesItem
 
 
 T = TypeVar("T", bound="CreateLedgerBodySetupType0")
@@ -21,6 +22,7 @@ class CreateLedgerBodySetupType0:
     """
     Attributes:
         preset (CreateLedgerBodySetupType0Preset): Setup preset id (ADR021).
+        modules (list[CreateLedgerBodySetupType0ModulesItem] | Unset): personal@1 only; each module at most once.
         title (str | Unset):
         operating_currency (str | Unset):
         history_start (str | Unset):
@@ -29,6 +31,7 @@ class CreateLedgerBodySetupType0:
     """
 
     preset: CreateLedgerBodySetupType0Preset
+    modules: list[CreateLedgerBodySetupType0ModulesItem] | Unset = UNSET
     title: str | Unset = UNSET
     operating_currency: str | Unset = UNSET
     history_start: str | Unset = UNSET
@@ -37,6 +40,13 @@ class CreateLedgerBodySetupType0:
 
     def to_dict(self) -> dict[str, Any]:
         preset = self.preset.value
+
+        modules: list[dict[str, Any]] | Unset = UNSET
+        if not isinstance(self.modules, Unset):
+            modules = []
+            for modules_item_data in self.modules:
+                modules_item = modules_item_data.to_dict()
+                modules.append(modules_item)
 
         title = self.title
 
@@ -62,6 +72,8 @@ class CreateLedgerBodySetupType0:
                 "preset": preset,
             }
         )
+        if modules is not UNSET:
+            field_dict["modules"] = modules
         if title is not UNSET:
             field_dict["title"] = title
         if operating_currency is not UNSET:
@@ -83,9 +95,21 @@ class CreateLedgerBodySetupType0:
         from ..models.create_ledger_body_setup_type_0_capabilities import (
             CreateLedgerBodySetupType0Capabilities,  # noqa: PLC0415
         )
+        from ..models.create_ledger_body_setup_type_0_modules_item import (
+            CreateLedgerBodySetupType0ModulesItem,  # noqa: PLC0415
+        )
 
         d = dict(src_dict)
         preset = CreateLedgerBodySetupType0Preset(d.pop("preset"))
+
+        _modules = d.pop("modules", UNSET)
+        modules: list[CreateLedgerBodySetupType0ModulesItem] | Unset = UNSET
+        if _modules is not UNSET:
+            modules = []
+            for modules_item_data in _modules:
+                modules_item = CreateLedgerBodySetupType0ModulesItem.from_dict(modules_item_data)
+
+                modules.append(modules_item)
 
         title = d.pop("title", UNSET)
 
@@ -111,6 +135,7 @@ class CreateLedgerBodySetupType0:
 
         create_ledger_body_setup_type_0 = cls(
             preset=preset,
+            modules=modules,
             title=title,
             operating_currency=operating_currency,
             history_start=history_start,
