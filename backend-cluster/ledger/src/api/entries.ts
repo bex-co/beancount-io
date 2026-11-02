@@ -21,6 +21,7 @@ import {
   type BalancePosting,
 } from "@/features/ledger/utils/transaction-balance";
 import { NotFoundDetailError } from "@/server/py-errors";
+import { changeExistingFiles } from "./files";
 import type { ContentsResponse } from "@/features/gitea/client/gitea-api";
 import { assertSafeRepoPath, toSafeRepoUrlPath } from "@/shared/safe-repo-path";
 import { addEntriesCommitMessage } from "@/features/ledger/utils/commit-message";
@@ -446,20 +447,30 @@ export function setEntriesHandler(router: Router): void {
           });
           return;
         }
-        await client.repos.repoChangeFiles(owner, repoName, {
-          files: updates.map((u) => ({
+        // A commit that lost a race to a concurrent write fails with a status
+        // the classifier may not know: settle it from the files' content, so
+        // the loser reads as 409 CONFLICT (re-read and retry), never as an
+        // outage, and a commit that landed is never reported as failed (w23/072).
+        await changeExistingFiles(
+          client,
+          owner,
+          repoName,
+          {
+            files: [],
+            message: addEntriesCommitMessage(
+              rows.length,
+              [...byFile.values()].flatMap((written) =>
+                written.map(({ text }) => text),
+              ),
+            ),
+          },
+          updates.map((u) => ({
             operation: "update" as const,
             path: u.path,
             content: u.content,
             sha: u.sha,
           })),
-          message: addEntriesCommitMessage(
-            rows.length,
-            [...byFile.values()].flatMap((written) =>
-              written.map(({ text }) => text),
-            ),
-          ),
-        });
+        );
         ctx.body = successResponse({
           entry_hashes: await writtenEntryHashes(
             data,
