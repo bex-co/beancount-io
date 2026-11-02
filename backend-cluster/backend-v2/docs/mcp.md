@@ -993,6 +993,14 @@ Account discovery resources need no ledger target:
 - `beancount://catalog/ledgers{?page,limit}` lists accessible ledgers.
 - `beancount://catalog/ledgers/owned{?page,limit}` lists owned ledgers.
 - `beancount://catalog/ledgers/search{?q,topic,includeDesc,uid,priorityOwnerId,teamId,starredBy,private,isPrivate,template,archived,mode,exclusive,sort,order,page,limit}` searches with the GraphQL search contract.
+  Two parameters concern visibility, and they differ: `private` is an
+  inclusion toggle (default `true`, so private ledgers the caller can read
+  appear beside public ones; `false` drops them), while `isPrivate` is an
+  exclusive filter (`true` returns only private ledgers, `false` only public
+  ones). `private=true` therefore changes nothing against the default, and a
+  broad query can fill its page with public ledgers before any private one;
+  use `isPrivate=true` to list only the caller's private ledgers. REST and
+  GraphQL take the same two parameters with the same meaning.
 
 A pinned credential receives only its ledger from accessible listing (page one;
 subsequent pages are empty). Owned/search results omit other ledgers from the
