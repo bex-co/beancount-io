@@ -11,6 +11,9 @@ const mockReactNative = vi.hoisted(() => ({ isReactNative: false }));
 vi.mock("@/common/components/billing/failed-renewal-banner", () => ({
   FailedRenewalBanner: () => null,
 }));
+vi.mock("@/common/components/billing/billing-status-banner", () => ({
+  BillingStatusBanner: () => null,
+}));
 vi.mock(
   "@/common/providers/react-native-bridge-provider/react-native-bridge-context",
   () => ({ useReactNativeContext: () => mockReactNative }),

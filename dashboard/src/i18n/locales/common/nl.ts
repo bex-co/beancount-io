@@ -382,6 +382,27 @@ const nlCommon: Record<string, TranslationEntry> = {
     description:
       "Short CTA button shown in the sidebar directive-usage indicator once a ledger is approaching or over its free-tier directive limit",
   },
+  "common.billedTwiceAppStore": {
+    message:
+      "Je betaalt dubbel: via Stripe en de App Store. Zeg er één op in Facturering, of op je iPhone of iPad.",
+    description:
+      "Banner: an account billed by Stripe and the App Store at once",
+  },
+  "common.billedTwiceGooglePlay": {
+    message:
+      "Je betaalt dubbel: via Stripe en Google Play. Zeg er één op in Facturering, of op Google Play.",
+    description: "Banner: an account billed by Stripe and Google Play at once",
+  },
+  "common.billedTwiceByStores": {
+    message:
+      "Je betaalt dubbel: er worden twee winkelabonnementen verlengd. Zeg er één op waar je het hebt gekocht.",
+    description: "Banner: an account with two store subscriptions renewing",
+  },
+  "common.googlePlayPaymentProblem": {
+    message:
+      "Google Play kon dit abonnement niet afschrijven. Werk je betaalmethode bij om het te behouden.",
+    description: "Banner: Google Play could not collect a renewal",
+  },
   "common.upgradeInIosApp": {
     message: "Upgrade in de iOS-app",
     description: "Where an App Store subscriber upgrades",

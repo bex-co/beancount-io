@@ -1,3 +1,4 @@
+import { BillingStatusBanner } from "@/common/components/billing/billing-status-banner";
 import { FailedRenewalBanner } from "@/common/components/billing/failed-renewal-banner";
 import {
   useParams,
@@ -167,6 +168,7 @@ export function LedgerLayout() {
               {!isReactNative() && (
                 <LayoutHeader ledgerId={ledgerId} isCompact={isMobile} />
               )}
+              <BillingStatusBanner />
               <FailedRenewalBanner />
               <div
                 data-scroll-restoration-id="ledger-content"

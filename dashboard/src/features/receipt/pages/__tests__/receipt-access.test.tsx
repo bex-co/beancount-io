@@ -17,6 +17,9 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/common/components/billing/failed-renewal-banner", () => ({
   FailedRenewalBanner: () => null,
 }));
+vi.mock("@/common/components/billing/billing-status-banner", () => ({
+  BillingStatusBanner: () => null,
+}));
 vi.mock("@/common/hooks/use-safe-return-path", () => ({
   useSafeReturnPath: () => "/ledger/open_ledger/example/receipt",
 }));

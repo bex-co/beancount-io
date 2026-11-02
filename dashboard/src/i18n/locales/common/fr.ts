@@ -385,6 +385,27 @@ const frCommon: Record<string, TranslationEntry> = {
     description:
       "Short CTA button shown in the sidebar directive-usage indicator once a ledger is approaching or over its free-tier directive limit",
   },
+  "common.billedTwiceAppStore": {
+    message:
+      "Vous payez en double : via Stripe et l’App Store. Résiliez l’un des deux dans Facturation, ou sur votre iPhone ou iPad.",
+    description:
+      "Banner: an account billed by Stripe and the App Store at once",
+  },
+  "common.billedTwiceGooglePlay": {
+    message:
+      "Vous payez en double : via Stripe et Google Play. Résiliez l’un des deux dans Facturation, ou sur Google Play.",
+    description: "Banner: an account billed by Stripe and Google Play at once",
+  },
+  "common.billedTwiceByStores": {
+    message:
+      "Vous payez en double : deux abonnements de boutique se renouvellent. Résiliez-en un là où vous l’avez acheté.",
+    description: "Banner: an account with two store subscriptions renewing",
+  },
+  "common.googlePlayPaymentProblem": {
+    message:
+      "Google Play n’a pas pu vous facturer ce forfait. Mettez à jour votre moyen de paiement pour le conserver.",
+    description: "Banner: Google Play could not collect a renewal",
+  },
   "common.upgradeInIosApp": {
     message: "Mettez à niveau dans l’app iOS",
     description: "Where an App Store subscriber upgrades",

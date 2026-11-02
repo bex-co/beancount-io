@@ -9,6 +9,9 @@ import { MAIN_CONTENT_ID } from "@/common/lib/main-content";
 vi.mock("@/common/components/billing/failed-renewal-banner", () => ({
   FailedRenewalBanner: () => null,
 }));
+vi.mock("@/common/components/billing/billing-status-banner", () => ({
+  BillingStatusBanner: () => null,
+}));
 vi.mock("../dashboard-sidebar", () => ({
   DashboardSidebar: () => (
     <nav aria-label="Dashboard">

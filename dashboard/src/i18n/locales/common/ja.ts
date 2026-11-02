@@ -376,6 +376,27 @@ const jaCommon: Record<string, TranslationEntry> = {
     description:
       "Short CTA button shown in the sidebar directive-usage indicator once a ledger is approaching or over its free-tier directive limit",
   },
+  "common.billedTwiceAppStore": {
+    message:
+      "二重に支払っています: Stripe と App Store。請求設定、または iPhone や iPad でどちらかを解約してください。",
+    description:
+      "Banner: an account billed by Stripe and the App Store at once",
+  },
+  "common.billedTwiceGooglePlay": {
+    message:
+      "二重に支払っています: Stripe と Google Play。請求設定、または Google Play でどちらかを解約してください。",
+    description: "Banner: an account billed by Stripe and Google Play at once",
+  },
+  "common.billedTwiceByStores": {
+    message:
+      "二重に支払っています: ストアのサブスクリプションが 2 件更新されます。購入した場所で 1 件を解約してください。",
+    description: "Banner: an account with two store subscriptions renewing",
+  },
+  "common.googlePlayPaymentProblem": {
+    message:
+      "Google Play でこのプランの料金を請求できませんでした。プランを維持するには支払い方法を更新してください。",
+    description: "Banner: Google Play could not collect a renewal",
+  },
   "common.upgradeInIosApp": {
     message: "iOS アプリでアップグレード",
     description: "Where an App Store subscriber upgrades",

@@ -24,6 +24,9 @@ import { LedgerLayout } from "../index";
 vi.mock("@/common/components/billing/failed-renewal-banner", () => ({
   FailedRenewalBanner: () => null,
 }));
+vi.mock("@/common/components/billing/billing-status-banner", () => ({
+  BillingStatusBanner: () => null,
+}));
 vi.mock("@apollo/client/react", () => ({
   useQuery: (
     _query: unknown,

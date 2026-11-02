@@ -381,6 +381,27 @@ const faCommon: Record<string, TranslationEntry> = {
     description:
       "Short CTA button shown in the sidebar directive-usage indicator once a ledger is approaching or over its free-tier directive limit",
   },
+  "common.billedTwiceAppStore": {
+    message:
+      "شما دو بار پرداخت می‌کنید: از طریق Stripe و App Store. یکی را در بخش صورتحساب یا در iPhone یا iPad خود لغو کنید.",
+    description:
+      "Banner: an account billed by Stripe and the App Store at once",
+  },
+  "common.billedTwiceGooglePlay": {
+    message:
+      "شما دو بار پرداخت می‌کنید: از طریق Stripe و Google Play. یکی را در بخش صورتحساب یا در Google Play لغو کنید.",
+    description: "Banner: an account billed by Stripe and Google Play at once",
+  },
+  "common.billedTwiceByStores": {
+    message:
+      "شما دو بار پرداخت می‌کنید: دو اشتراک فروشگاهی در حال تمدید است. یکی را همان‌جا که خریده‌اید لغو کنید.",
+    description: "Banner: an account with two store subscriptions renewing",
+  },
+  "common.googlePlayPaymentProblem": {
+    message:
+      "Google Play نتوانست هزینه این طرح را دریافت کند. برای حفظ آن، روش پرداخت خود را به‌روز کنید.",
+    description: "Banner: Google Play could not collect a renewal",
+  },
   "common.upgradeInIosApp": {
     message: "در برنامه iOS ارتقا دهید",
     description: "Where an App Store subscriber upgrades",

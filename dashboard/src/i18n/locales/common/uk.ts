@@ -389,6 +389,27 @@ const ukCommon: Record<string, TranslationEntry> = {
     description:
       "Short CTA button shown in the sidebar directive-usage indicator once a ledger is approaching or over its free-tier directive limit",
   },
+  "common.billedTwiceAppStore": {
+    message:
+      "Ви платите двічі: через Stripe і App Store. Скасуйте одну підписку в розділі «Оплата» або на iPhone чи iPad.",
+    description:
+      "Banner: an account billed by Stripe and the App Store at once",
+  },
+  "common.billedTwiceGooglePlay": {
+    message:
+      "Ви платите двічі: через Stripe і Google Play. Скасуйте одну підписку в розділі «Оплата» або в Google Play.",
+    description: "Banner: an account billed by Stripe and Google Play at once",
+  },
+  "common.billedTwiceByStores": {
+    message:
+      "Ви платите двічі: поновлюються дві підписки в магазинах. Скасуйте одну там, де ви її купили.",
+    description: "Banner: an account with two store subscriptions renewing",
+  },
+  "common.googlePlayPaymentProblem": {
+    message:
+      "Google Play не вдалося списати оплату за цей план. Оновіть спосіб оплати, щоб зберегти його.",
+    description: "Banner: Google Play could not collect a renewal",
+  },
   "common.upgradeInIosApp": {
     message: "Оновіть план у застосунку для iOS",
     description: "Where an App Store subscriber upgrades",

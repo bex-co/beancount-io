@@ -380,6 +380,27 @@ const enCommon: Record<string, TranslationEntry> = {
     description:
       "Short CTA button shown in the sidebar directive-usage indicator once a ledger is approaching or over its free-tier directive limit",
   },
+  "common.billedTwiceAppStore": {
+    message:
+      "You're paying twice: through Stripe and the App Store. Cancel one in Billing, or on your iPhone or iPad.",
+    description:
+      "Banner: an account billed by Stripe and the App Store at once",
+  },
+  "common.billedTwiceGooglePlay": {
+    message:
+      "You're paying twice: through Stripe and Google Play. Cancel one in Billing, or on Google Play.",
+    description: "Banner: an account billed by Stripe and Google Play at once",
+  },
+  "common.billedTwiceByStores": {
+    message:
+      "You're paying twice: two store subscriptions are renewing. Cancel one where you bought it.",
+    description: "Banner: an account with two store subscriptions renewing",
+  },
+  "common.googlePlayPaymentProblem": {
+    message:
+      "Google Play couldn't charge you for this plan. Update your payment method to keep it.",
+    description: "Banner: Google Play could not collect a renewal",
+  },
   "common.upgradeInIosApp": {
     message: "Upgrade in the iOS app",
     description: "Where an App Store subscriber upgrades",

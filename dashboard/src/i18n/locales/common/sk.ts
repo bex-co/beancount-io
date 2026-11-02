@@ -389,6 +389,27 @@ const skCommon: Record<string, TranslationEntry> = {
     description:
       "Short CTA button shown in the sidebar directive-usage indicator once a ledger is approaching or over its free-tier directive limit",
   },
+  "common.billedTwiceAppStore": {
+    message:
+      "Platíte dvakrát: cez Stripe a App Store. Jedno zrušte vo Fakturácii alebo v iPhone či iPade.",
+    description:
+      "Banner: an account billed by Stripe and the App Store at once",
+  },
+  "common.billedTwiceGooglePlay": {
+    message:
+      "Platíte dvakrát: cez Stripe a Google Play. Jedno zrušte vo Fakturácii alebo v Google Play.",
+    description: "Banner: an account billed by Stripe and Google Play at once",
+  },
+  "common.billedTwiceByStores": {
+    message:
+      "Platíte dvakrát: obnovujú sa dve predplatné v obchodoch. Jedno zrušte tam, kde ste ho kúpili.",
+    description: "Banner: an account with two store subscriptions renewing",
+  },
+  "common.googlePlayPaymentProblem": {
+    message:
+      "Google Play nedokázal strhnúť platbu za tento plán. Aktualizujte spôsob platby, aby ste si ho ponechali.",
+    description: "Banner: Google Play could not collect a renewal",
+  },
   "common.upgradeInIosApp": {
     message: "Upgradujte v aplikácii pre iOS",
     description: "Where an App Store subscriber upgrades",

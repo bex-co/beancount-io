@@ -376,6 +376,27 @@ const koCommon: Record<string, TranslationEntry> = {
     description:
       "Short CTA button shown in the sidebar directive-usage indicator once a ledger is approaching or over its free-tier directive limit",
   },
+  "common.billedTwiceAppStore": {
+    message:
+      "이중으로 결제하고 있습니다: Stripe와 App Store. 결제 설정이나 iPhone 또는 iPad에서 하나를 취소하세요.",
+    description:
+      "Banner: an account billed by Stripe and the App Store at once",
+  },
+  "common.billedTwiceGooglePlay": {
+    message:
+      "이중으로 결제하고 있습니다: Stripe와 Google Play. 결제 설정이나 Google Play에서 하나를 취소하세요.",
+    description: "Banner: an account billed by Stripe and Google Play at once",
+  },
+  "common.billedTwiceByStores": {
+    message:
+      "이중으로 결제하고 있습니다: 스토어 구독 두 개가 갱신됩니다. 구매한 곳에서 하나를 취소하세요.",
+    description: "Banner: an account with two store subscriptions renewing",
+  },
+  "common.googlePlayPaymentProblem": {
+    message:
+      "Google Play에서 이 플랜을 청구하지 못했습니다. 플랜을 유지하려면 결제 수단을 업데이트하세요.",
+    description: "Banner: Google Play could not collect a renewal",
+  },
   "common.upgradeInIosApp": {
     message: "iOS 앱에서 업그레이드",
     description: "Where an App Store subscriber upgrades",

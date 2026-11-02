@@ -371,6 +371,25 @@ const zhCommon: Record<string, TranslationEntry> = {
     description:
       "Short CTA button shown in the sidebar directive-usage indicator once a ledger is approaching or over its free-tier directive limit",
   },
+  "common.billedTwiceAppStore": {
+    message:
+      "你正在重复付费：通过 Stripe 和 App Store。请在“账单”中取消其一，或在 iPhone 或 iPad 上取消。",
+    description:
+      "Banner: an account billed by Stripe and the App Store at once",
+  },
+  "common.billedTwiceGooglePlay": {
+    message:
+      "你正在重复付费：通过 Stripe 和 Google Play。请在“账单”中取消其一，或在 Google Play 上取消。",
+    description: "Banner: an account billed by Stripe and Google Play at once",
+  },
+  "common.billedTwiceByStores": {
+    message: "你正在重复付费：有两个商店订阅正在续订。请在购买处取消其一。",
+    description: "Banner: an account with two store subscriptions renewing",
+  },
+  "common.googlePlayPaymentProblem": {
+    message: "Google Play 无法为此计划扣款。请更新付款方式以保留计划。",
+    description: "Banner: Google Play could not collect a renewal",
+  },
   "common.upgradeInIosApp": {
     message: "在 iOS 应用中升级",
     description: "Where an App Store subscriber upgrades",

@@ -47,6 +47,9 @@ vi.mock("sonner", () => ({
 vi.mock("@/common/components/billing/failed-renewal-banner", () => ({
   FailedRenewalBanner: () => null,
 }));
+vi.mock("@/common/components/billing/billing-status-banner", () => ({
+  BillingStatusBanner: () => null,
+}));
 vi.mock("../ledger-sidebar", () => ({ LedgerSidebar: () => null }));
 vi.mock("../ledger-layout-background-queries", () => ({
   LedgerLayoutBackgroundQueries: () => null,

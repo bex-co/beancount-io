@@ -382,6 +382,27 @@ const deCommon: Record<string, TranslationEntry> = {
     description:
       "Short CTA button shown in the sidebar directive-usage indicator once a ledger is approaching or over its free-tier directive limit",
   },
+  "common.billedTwiceAppStore": {
+    message:
+      "Sie zahlen doppelt: über Stripe und den App Store. Kündigen Sie eines unter „Abrechnung“ oder auf Ihrem iPhone oder iPad.",
+    description:
+      "Banner: an account billed by Stripe and the App Store at once",
+  },
+  "common.billedTwiceGooglePlay": {
+    message:
+      "Sie zahlen doppelt: über Stripe und Google Play. Kündigen Sie eines unter „Abrechnung“ oder bei Google Play.",
+    description: "Banner: an account billed by Stripe and Google Play at once",
+  },
+  "common.billedTwiceByStores": {
+    message:
+      "Sie zahlen doppelt: Zwei Store-Abonnements werden verlängert. Kündigen Sie eines dort, wo Sie es gekauft haben.",
+    description: "Banner: an account with two store subscriptions renewing",
+  },
+  "common.googlePlayPaymentProblem": {
+    message:
+      "Google Play konnte diesen Plan nicht abbuchen. Aktualisieren Sie Ihre Zahlungsmethode, um ihn zu behalten.",
+    description: "Banner: Google Play could not collect a renewal",
+  },
   "common.upgradeInIosApp": {
     message: "In der iOS-App upgraden",
     description: "Where an App Store subscriber upgrades",

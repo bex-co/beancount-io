@@ -7,6 +7,7 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import type { UserTier } from "@/common/hooks/use-user-limits";
 import { planLabelKey } from "@/common/lib/subscription/tier-config";
 import { useReactNativeContext } from "@/common/providers/react-native-bridge-provider/react-native-bridge-context";
+import { isBilledByStore } from "@/features/user-settings/hooks/use-subscription-status";
 import { useSubscriptionPortal } from "@/features/user-settings/hooks/use-subscription-portal";
 import { useBillingDateFormat } from "@/features/user-settings/pages/general/use-money-format";
 import { GetSubscriptionStatusDocument } from "@/graphql/definitions";
@@ -53,6 +54,8 @@ export function FailedRenewalBanner() {
       subscription.status === "past_due" && subscription.nextPaymentAttempt,
   );
   if (skip || !pastDue?.nextPaymentAttempt) return null;
+  // Stripe's banner only: a store collects its own payments (ADR 001 D15).
+  if (isBilledByStore(data?.subscriptionStatus.billing ?? null)) return null;
 
   const plan = t(planLabelKey(tier));
   const card = pastDue.paymentMethod

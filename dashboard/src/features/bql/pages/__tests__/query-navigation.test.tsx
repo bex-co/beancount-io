@@ -45,6 +45,9 @@ import LedgerQueryPage from "../index";
 vi.mock("@/common/components/billing/failed-renewal-banner", () => ({
   FailedRenewalBanner: () => null,
 }));
+vi.mock("@/common/components/billing/billing-status-banner", () => ({
+  BillingStatusBanner: () => null,
+}));
 vi.mock("@/common/components/ledger-layout/ledger-sidebar", () => ({
   LedgerSidebar: () => null,
 }));
