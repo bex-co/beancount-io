@@ -1,6 +1,6 @@
 # w7 · m5 — Store subscriptions reconcile on a schedule and support can see them
 
-**Worker:** worker1 **Goal:** a missed store notification leaves a plan wrong for at most 24 hours, billing problems show up in metrics, and support can see an account's billing sources **Status:** todo
+**Worker:** worker1 **Goal:** a missed store notification leaves a plan wrong for at most 24 hours, billing problems show up in metrics, and support can see an account's billing sources **Status:** blocked
 
 ## Tasks (in order)
 
@@ -14,6 +14,12 @@
 | t006 | Simplify | 30m | t003, t004, t005 |
 | t007 | Test coverage | 1h | t003, t004, t005 |
 | t008 | Closeout | 15m | t006, t007 |
+
+## Blocked
+
+**Blocked 2026-11-01** — t001 reconciles what m3/t003 and m4/t002 write, so nothing here has data yet. t005 also needs the retention decision in m2/t001.
+
+**Unblock:** m3 and m4 clear. Who can clear it: the owner, through m2 and the dependency approvals.
 
 ## Definition of done
 
