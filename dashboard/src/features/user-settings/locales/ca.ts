@@ -358,6 +358,36 @@ const caUserSettings: Record<string, TranslationEntry> = {
     message: "Es renova el",
     description: "Label for subscription renewal date",
   },
+  "userSettings.billedByStripe": {
+    message: "Facturat a través de Stripe",
+    description: "Billing source on the plan card: Stripe",
+  },
+  "userSettings.billedByAppStore": {
+    message: "Facturat a través de l’App Store",
+    description: "Billing source on the plan card: the App Store",
+  },
+  "userSettings.billedByGooglePlay": {
+    message: "Facturat a través de Google Play",
+    description: "Billing source on the plan card: Google Play",
+  },
+  "userSettings.appStoreManagePath": {
+    message:
+      "Gestiona-ho al teu iPhone o iPad: Configuració → el teu nom → Subscripcions.",
+    description:
+      "Where an App Store plan is managed; Apple has no web page for it",
+  },
+  "userSettings.manageOnGooglePlay": {
+    message: "Gestiona a Google Play",
+    description: "Link to Google Play's subscriptions page",
+  },
+  "userSettings.planEndsOn": {
+    message: "Acaba el {date}",
+    description: "Plan card: a store plan that will not renew",
+  },
+  "userSettings.planChangesOn": {
+    message: "Canvia a {plan} el {date}",
+    description: "Plan card: a store plan with a scheduled change",
+  },
   "userSettings.selectColorTheme": {
     message: "Seleccioneu el vostre tema de color preferit",
     description: "Label for theme selection",

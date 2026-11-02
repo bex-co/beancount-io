@@ -6,6 +6,11 @@ import {
 } from "@/graphql/definitions";
 import { useBillingDateFormat } from "@/features/user-settings/pages/general/use-money-format";
 
+/** Who bills the plan, as the Billing tab reads it. */
+export type PlanBillingStatus = NonNullable<
+  GetSubscriptionStatusQuery["subscriptionStatus"]["billing"]
+>;
+
 export const useSubscriptionStatus = () => {
   const { data, loading, error, refetch } =
     useQuery<GetSubscriptionStatusQuery>(GetSubscriptionStatusDocument);
@@ -28,5 +33,6 @@ export const useSubscriptionStatus = () => {
     hasActiveStripeSubscription,
     renewalDate,
     subscriptions: data?.subscriptionStatus?.subscriptions,
+    planBilling: data?.subscriptionStatus?.billing ?? null,
   };
 };

@@ -355,6 +355,36 @@ const faUserSettings: Record<string, TranslationEntry> = {
     message: "تمدید در",
     description: "Label for subscription renewal date",
   },
+  "userSettings.billedByStripe": {
+    message: "پرداخت از طریق Stripe",
+    description: "Billing source on the plan card: Stripe",
+  },
+  "userSettings.billedByAppStore": {
+    message: "پرداخت از طریق App Store",
+    description: "Billing source on the plan card: the App Store",
+  },
+  "userSettings.billedByGooglePlay": {
+    message: "پرداخت از طریق Google Play",
+    description: "Billing source on the plan card: Google Play",
+  },
+  "userSettings.appStoreManagePath": {
+    message:
+      "آن را در iPhone یا iPad خود مدیریت کنید: تنظیمات ← نام شما ← اشتراک‌ها.",
+    description:
+      "Where an App Store plan is managed; Apple has no web page for it",
+  },
+  "userSettings.manageOnGooglePlay": {
+    message: "مدیریت در Google Play",
+    description: "Link to Google Play's subscriptions page",
+  },
+  "userSettings.planEndsOn": {
+    message: "پایان در {date}",
+    description: "Plan card: a store plan that will not renew",
+  },
+  "userSettings.planChangesOn": {
+    message: "در {date} به {plan} تغییر می‌کند",
+    description: "Plan card: a store plan with a scheduled change",
+  },
   "userSettings.selectColorTheme": {
     message: "تم رنگی مورد نظر خود را انتخاب کنید",
     description: "Label for theme selection",

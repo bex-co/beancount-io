@@ -359,6 +359,36 @@ const deUserSettings: Record<string, TranslationEntry> = {
     message: "Verlängert am",
     description: "Label for subscription renewal date",
   },
+  "userSettings.billedByStripe": {
+    message: "Abrechnung über Stripe",
+    description: "Billing source on the plan card: Stripe",
+  },
+  "userSettings.billedByAppStore": {
+    message: "Abrechnung über den App Store",
+    description: "Billing source on the plan card: the App Store",
+  },
+  "userSettings.billedByGooglePlay": {
+    message: "Abrechnung über Google Play",
+    description: "Billing source on the plan card: Google Play",
+  },
+  "userSettings.appStoreManagePath": {
+    message:
+      "Verwalten Sie das Abo auf Ihrem iPhone oder iPad: Einstellungen → Ihr Name → Abonnements.",
+    description:
+      "Where an App Store plan is managed; Apple has no web page for it",
+  },
+  "userSettings.manageOnGooglePlay": {
+    message: "Bei Google Play verwalten",
+    description: "Link to Google Play's subscriptions page",
+  },
+  "userSettings.planEndsOn": {
+    message: "Endet am {date}",
+    description: "Plan card: a store plan that will not renew",
+  },
+  "userSettings.planChangesOn": {
+    message: "Wechselt am {date} zu {plan}",
+    description: "Plan card: a store plan with a scheduled change",
+  },
   "userSettings.selectColorTheme": {
     message: "Wählen Sie Ihr bevorzugtes Farbschema",
     description: "Label for theme selection",

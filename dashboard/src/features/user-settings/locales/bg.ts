@@ -357,6 +357,36 @@ const bgUserSettings: Record<string, TranslationEntry> = {
     message: "Подновява се на",
     description: "Label for subscription renewal date",
   },
+  "userSettings.billedByStripe": {
+    message: "Таксува се чрез Stripe",
+    description: "Billing source on the plan card: Stripe",
+  },
+  "userSettings.billedByAppStore": {
+    message: "Таксува се чрез App Store",
+    description: "Billing source on the plan card: the App Store",
+  },
+  "userSettings.billedByGooglePlay": {
+    message: "Таксува се чрез Google Play",
+    description: "Billing source on the plan card: Google Play",
+  },
+  "userSettings.appStoreManagePath": {
+    message:
+      "Управлявайте го от вашия iPhone или iPad: Настройки → вашето име → Абонаменти.",
+    description:
+      "Where an App Store plan is managed; Apple has no web page for it",
+  },
+  "userSettings.manageOnGooglePlay": {
+    message: "Управление в Google Play",
+    description: "Link to Google Play's subscriptions page",
+  },
+  "userSettings.planEndsOn": {
+    message: "Приключва на {date}",
+    description: "Plan card: a store plan that will not renew",
+  },
+  "userSettings.planChangesOn": {
+    message: "Променя се на {plan} на {date}",
+    description: "Plan card: a store plan with a scheduled change",
+  },
   "userSettings.selectColorTheme": {
     message: "Изберете предпочитаната от вас цветна тема",
     description: "Label for theme selection",

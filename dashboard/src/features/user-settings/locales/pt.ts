@@ -357,6 +357,36 @@ const ptUserSettings: Record<string, TranslationEntry> = {
     message: "Renova em",
     description: "Label for subscription renewal date",
   },
+  "userSettings.billedByStripe": {
+    message: "Faturado pela Stripe",
+    description: "Billing source on the plan card: Stripe",
+  },
+  "userSettings.billedByAppStore": {
+    message: "Faturado pela App Store",
+    description: "Billing source on the plan card: the App Store",
+  },
+  "userSettings.billedByGooglePlay": {
+    message: "Faturado pelo Google Play",
+    description: "Billing source on the plan card: Google Play",
+  },
+  "userSettings.appStoreManagePath": {
+    message:
+      "Gerencie no seu iPhone ou iPad: Ajustes → seu nome → Assinaturas.",
+    description:
+      "Where an App Store plan is managed; Apple has no web page for it",
+  },
+  "userSettings.manageOnGooglePlay": {
+    message: "Gerenciar no Google Play",
+    description: "Link to Google Play's subscriptions page",
+  },
+  "userSettings.planEndsOn": {
+    message: "Termina em {date}",
+    description: "Plan card: a store plan that will not renew",
+  },
+  "userSettings.planChangesOn": {
+    message: "Muda para {plan} em {date}",
+    description: "Plan card: a store plan with a scheduled change",
+  },
   "userSettings.selectColorTheme": {
     message: "Selecione seu tema de cores preferido",
     description: "Label for theme selection",

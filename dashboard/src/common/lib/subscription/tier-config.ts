@@ -39,6 +39,9 @@ export const TIERS: TierInfo[] = [
   },
 ];
 
+/** Where an Enterprise customer talks to a person about their plan. */
+export const ENTERPRISE_CONTACT_URL = "https://beancount.io/tg";
+
 export function getTierInfo(tier: UserTier): TierInfo | null {
   return TIERS.find((t) => t.userTier === tier) ?? null;
 }

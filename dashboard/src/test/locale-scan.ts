@@ -116,6 +116,12 @@ const ALLOWED_LATIN = [
   "Fava",
   "fava",
   "Plaid",
+  // The stores and devices a store plan is billed and managed on.
+  "App Store",
+  "Google Play",
+  "Stripe",
+  "iPhone",
+  "iPad",
   "Monaco",
   "Git",
   "GitHub",
@@ -333,10 +339,16 @@ function sharedEnglishTail(message: string, english: string): string[] {
     shared++;
   }
   if (shared === 0 || shared === words.length) return [];
-  return words
-    .slice(words.length - shared)
-    .map(trimWord)
-    .filter((word) => word && !ALLOWED.has(word));
+  return (
+    words
+      .slice(words.length - shared)
+      .join(" ")
+      // A term of two words is only allowed as the phrase.
+      .replace(ALLOWED_PATTERN, " ")
+      .split(/\s+/)
+      .map(trimWord)
+      .filter((word) => word && !ALLOWED.has(word))
+  );
 }
 
 /**

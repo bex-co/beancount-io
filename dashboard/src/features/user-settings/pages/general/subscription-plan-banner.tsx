@@ -7,6 +7,8 @@ import { useQuotaNumberFormat } from "./use-quota-number-format";
 import { describeTierQuota } from "./tier-quota-summary";
 import { useMoneyFormat } from "./use-money-format";
 import type { PlanInterval } from "@/common/lib/subscription/plan-change";
+import type { PlanBillingStatus } from "@/features/user-settings/hooks/use-subscription-status";
+import { PlanBillingSource } from "./plan-billing-source";
 
 /** What the current Stripe subscription bills, when there is one. */
 export interface CurrentBilling {
@@ -24,12 +26,15 @@ export function CurrentPlanBanner({
   tierQuota,
   t,
   billing = null,
+  planBilling = null,
 }: {
   tier: UserTier;
   renewalDate: string | null;
   tierQuota: TierQuota | null;
   t: (key: string, params?: Record<string, string | number>) => string;
   billing?: CurrentBilling | null;
+  /** Who bills the plan, on any source. */
+  planBilling?: PlanBillingStatus | null;
 }) {
   const formatCount = useQuotaNumberFormat();
   const formatMoney = useMoneyFormat();
@@ -110,6 +115,7 @@ export function CurrentPlanBanner({
                 {t("userSettings.renewsOn")} <strong>{renewalDate}</strong>
               </p>
             )}
+            <PlanBillingSource tier={tier} billing={planBilling} t={t} />
           </div>
         </div>
       </div>

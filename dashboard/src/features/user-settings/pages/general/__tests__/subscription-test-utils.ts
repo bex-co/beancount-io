@@ -1,4 +1,7 @@
-import type { GetSubscriptionStatusQuery } from "@/graphql/definitions";
+import {
+  BillingSource,
+  type GetSubscriptionStatusQuery,
+} from "@/graphql/definitions";
 
 export const MOCK_TIER_QUOTAS = [
   {
@@ -41,6 +44,12 @@ export const MOCK_TIER_QUOTAS = [
 export const mockActiveSubscriptionData: GetSubscriptionStatusQuery = {
   subscriptionStatus: {
     __typename: "CustomerSubscriptionStatus",
+    billing: {
+      __typename: "PlanBilling",
+      source: BillingSource.Stripe,
+      duplicateBilling: false,
+      store: null,
+    },
     hasActiveSubscription: true,
     subscriptions: [
       {
@@ -92,6 +101,12 @@ export const mockActiveSubscriptionData: GetSubscriptionStatusQuery = {
 export const mockNoSubscriptionData: GetSubscriptionStatusQuery = {
   subscriptionStatus: {
     __typename: "CustomerSubscriptionStatus",
+    billing: {
+      __typename: "PlanBilling",
+      source: BillingSource.None,
+      duplicateBilling: false,
+      store: null,
+    },
     hasActiveSubscription: false,
     subscriptions: [],
   },
@@ -100,6 +115,12 @@ export const mockNoSubscriptionData: GetSubscriptionStatusQuery = {
 export const mockCanceledSubscriptionData: GetSubscriptionStatusQuery = {
   subscriptionStatus: {
     __typename: "CustomerSubscriptionStatus",
+    billing: {
+      __typename: "PlanBilling",
+      source: BillingSource.None,
+      duplicateBilling: false,
+      store: null,
+    },
     hasActiveSubscription: true,
     subscriptions: [
       {

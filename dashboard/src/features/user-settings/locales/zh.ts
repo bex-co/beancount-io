@@ -353,6 +353,35 @@ const zhUserSettings: Record<string, TranslationEntry> = {
     message: "续订日期",
     description: "Label for subscription renewal date",
   },
+  "userSettings.billedByStripe": {
+    message: "通过 Stripe 计费",
+    description: "Billing source on the plan card: Stripe",
+  },
+  "userSettings.billedByAppStore": {
+    message: "通过 App Store 计费",
+    description: "Billing source on the plan card: the App Store",
+  },
+  "userSettings.billedByGooglePlay": {
+    message: "通过 Google Play 计费",
+    description: "Billing source on the plan card: Google Play",
+  },
+  "userSettings.appStoreManagePath": {
+    message: "请在 iPhone 或 iPad 上管理：设置 → 你的姓名 → 订阅。",
+    description:
+      "Where an App Store plan is managed; Apple has no web page for it",
+  },
+  "userSettings.manageOnGooglePlay": {
+    message: "在 Google Play 上管理",
+    description: "Link to Google Play's subscriptions page",
+  },
+  "userSettings.planEndsOn": {
+    message: "{date} 结束",
+    description: "Plan card: a store plan that will not renew",
+  },
+  "userSettings.planChangesOn": {
+    message: "{date} 变更为 {plan}",
+    description: "Plan card: a store plan with a scheduled change",
+  },
   "userSettings.selectColorTheme": {
     message: "选择你偏好的颜色主题",
     description: "Label for theme selection",

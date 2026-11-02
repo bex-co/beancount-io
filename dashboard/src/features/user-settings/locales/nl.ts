@@ -357,6 +357,36 @@ const nlUserSettings: Record<string, TranslationEntry> = {
     message: "Verlengt op",
     description: "Label for subscription renewal date",
   },
+  "userSettings.billedByStripe": {
+    message: "Gefactureerd via Stripe",
+    description: "Billing source on the plan card: Stripe",
+  },
+  "userSettings.billedByAppStore": {
+    message: "Gefactureerd via de App Store",
+    description: "Billing source on the plan card: the App Store",
+  },
+  "userSettings.billedByGooglePlay": {
+    message: "Gefactureerd via Google Play",
+    description: "Billing source on the plan card: Google Play",
+  },
+  "userSettings.appStoreManagePath": {
+    message:
+      "Beheer het op je iPhone of iPad: Instellingen → je naam → Abonnementen.",
+    description:
+      "Where an App Store plan is managed; Apple has no web page for it",
+  },
+  "userSettings.manageOnGooglePlay": {
+    message: "Beheren op Google Play",
+    description: "Link to Google Play's subscriptions page",
+  },
+  "userSettings.planEndsOn": {
+    message: "Eindigt op {date}",
+    description: "Plan card: a store plan that will not renew",
+  },
+  "userSettings.planChangesOn": {
+    message: "Wijzigt op {date} naar {plan}",
+    description: "Plan card: a store plan with a scheduled change",
+  },
   "userSettings.selectColorTheme": {
     message: "Selecteer uw voorkeur kleurthema",
     description: "Label for theme selection",

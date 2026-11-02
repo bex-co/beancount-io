@@ -331,6 +331,35 @@ const koUserSettings: Record<string, TranslationEntry> = {
     message: "갱신일",
     description: "Label for subscription renewal date",
   },
+  "userSettings.billedByStripe": {
+    message: "Stripe로 청구",
+    description: "Billing source on the plan card: Stripe",
+  },
+  "userSettings.billedByAppStore": {
+    message: "App Store로 청구",
+    description: "Billing source on the plan card: the App Store",
+  },
+  "userSettings.billedByGooglePlay": {
+    message: "Google Play로 청구",
+    description: "Billing source on the plan card: Google Play",
+  },
+  "userSettings.appStoreManagePath": {
+    message: "iPhone 또는 iPad에서 관리하세요: 설정 → 사용자 이름 → 구독.",
+    description:
+      "Where an App Store plan is managed; Apple has no web page for it",
+  },
+  "userSettings.manageOnGooglePlay": {
+    message: "Google Play에서 관리",
+    description: "Link to Google Play's subscriptions page",
+  },
+  "userSettings.planEndsOn": {
+    message: "{date}에 종료",
+    description: "Plan card: a store plan that will not renew",
+  },
+  "userSettings.planChangesOn": {
+    message: "{date}에 {plan}(으)로 변경",
+    description: "Plan card: a store plan with a scheduled change",
+  },
   "userSettings.selectColorTheme": {
     message: "선호하는 색상 테마 선택",
     description: "Label for theme selection",

@@ -148,6 +148,7 @@ export function SubscriptionSection({
     hasActiveStripeSubscription,
     renewalDate,
     subscriptions,
+    planBilling,
   } = useSubscriptionStatus();
 
   const { handleManageBilling, loading: portalLoading } =
@@ -349,6 +350,7 @@ export function SubscriptionSection({
               renewalDate={renewalDate}
               tierQuota={quotaByUserTier[tier] ?? null}
               t={t}
+              planBilling={planBilling}
               billing={
                 currentPrice
                   ? {

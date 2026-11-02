@@ -12,6 +12,7 @@ import {
   type PlanChoice,
   type PlanInterval,
 } from "@/common/lib/subscription/plan-change";
+import { ENTERPRISE_CONTACT_URL } from "@/common/lib/subscription/tier-config";
 import {
   BILLING_CYCLES,
   cyclePrice,
@@ -30,7 +31,6 @@ import {
 } from "./tier-quota-summary";
 
 /** Where the Enterprise card sends people: the plan is arranged with us. */
-const ENTERPRISE_CONTACT_URL = "https://beancount.io/tg";
 
 type Translate = (
   key: string,

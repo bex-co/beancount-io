@@ -357,6 +357,36 @@ const ukUserSettings: Record<string, TranslationEntry> = {
     message: "Поновлюється",
     description: "Label for subscription renewal date",
   },
+  "userSettings.billedByStripe": {
+    message: "Оплата через Stripe",
+    description: "Billing source on the plan card: Stripe",
+  },
+  "userSettings.billedByAppStore": {
+    message: "Оплата через App Store",
+    description: "Billing source on the plan card: the App Store",
+  },
+  "userSettings.billedByGooglePlay": {
+    message: "Оплата через Google Play",
+    description: "Billing source on the plan card: Google Play",
+  },
+  "userSettings.appStoreManagePath": {
+    message:
+      "Керуйте підпискою на iPhone або iPad: Параметри → ваше ім’я → Підписки.",
+    description:
+      "Where an App Store plan is managed; Apple has no web page for it",
+  },
+  "userSettings.manageOnGooglePlay": {
+    message: "Керувати в Google Play",
+    description: "Link to Google Play's subscriptions page",
+  },
+  "userSettings.planEndsOn": {
+    message: "Закінчується {date}",
+    description: "Plan card: a store plan that will not renew",
+  },
+  "userSettings.planChangesOn": {
+    message: "Зміниться на {plan} {date}",
+    description: "Plan card: a store plan with a scheduled change",
+  },
   "userSettings.selectColorTheme": {
     message: "Виберіть бажану колірну тему",
     description: "Label for theme selection",

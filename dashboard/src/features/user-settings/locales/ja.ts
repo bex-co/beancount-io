@@ -332,6 +332,36 @@ const jaUserSettings: Record<string, TranslationEntry> = {
     message: "更新日",
     description: "Label for subscription renewal date",
   },
+  "userSettings.billedByStripe": {
+    message: "Stripe で請求",
+    description: "Billing source on the plan card: Stripe",
+  },
+  "userSettings.billedByAppStore": {
+    message: "App Store で請求",
+    description: "Billing source on the plan card: the App Store",
+  },
+  "userSettings.billedByGooglePlay": {
+    message: "Google Play で請求",
+    description: "Billing source on the plan card: Google Play",
+  },
+  "userSettings.appStoreManagePath": {
+    message:
+      "iPhone または iPad で管理してください: 設定 → ユーザ名 → サブスクリプション。",
+    description:
+      "Where an App Store plan is managed; Apple has no web page for it",
+  },
+  "userSettings.manageOnGooglePlay": {
+    message: "Google Play で管理",
+    description: "Link to Google Play's subscriptions page",
+  },
+  "userSettings.planEndsOn": {
+    message: "{date} に終了",
+    description: "Plan card: a store plan that will not renew",
+  },
+  "userSettings.planChangesOn": {
+    message: "{date} に {plan} へ変更",
+    description: "Plan card: a store plan with a scheduled change",
+  },
   "userSettings.selectColorTheme": {
     message: "お好みのカラーテーマを選択",
     description: "Label for theme selection",

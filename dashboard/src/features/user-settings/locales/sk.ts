@@ -357,6 +357,36 @@ const skUserSettings: Record<string, TranslationEntry> = {
     message: "Obnoví sa",
     description: "Label for subscription renewal date",
   },
+  "userSettings.billedByStripe": {
+    message: "Fakturované cez Stripe",
+    description: "Billing source on the plan card: Stripe",
+  },
+  "userSettings.billedByAppStore": {
+    message: "Fakturované cez App Store",
+    description: "Billing source on the plan card: the App Store",
+  },
+  "userSettings.billedByGooglePlay": {
+    message: "Fakturované cez Google Play",
+    description: "Billing source on the plan card: Google Play",
+  },
+  "userSettings.appStoreManagePath": {
+    message:
+      "Spravujte ho v iPhone alebo iPade: Nastavenia → vaše meno → Predplatné.",
+    description:
+      "Where an App Store plan is managed; Apple has no web page for it",
+  },
+  "userSettings.manageOnGooglePlay": {
+    message: "Spravovať v Google Play",
+    description: "Link to Google Play's subscriptions page",
+  },
+  "userSettings.planEndsOn": {
+    message: "Končí {date}",
+    description: "Plan card: a store plan that will not renew",
+  },
+  "userSettings.planChangesOn": {
+    message: "Zmení sa na {plan} {date}",
+    description: "Plan card: a store plan with a scheduled change",
+  },
   "userSettings.selectColorTheme": {
     message: "Vyberte si preferovanú farebnú tému",
     description: "Label for theme selection",

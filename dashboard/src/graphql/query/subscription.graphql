@@ -46,6 +46,23 @@ query GetSubscriptionStatus {
       }
     }
     hasActiveSubscription
+    billing {
+      source
+      duplicateBilling
+      store {
+        provider
+        tier
+        interval
+        status
+        accessEndsAt
+        willRenew
+        managementUrl
+        scheduledChange {
+          tier
+          interval
+        }
+      }
+    }
   }
 }
 
