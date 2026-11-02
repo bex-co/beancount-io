@@ -11,11 +11,13 @@
 | t001 | Confirm the save on the write; check for new errors in the background — **DONE** | 45m | —          |
 | t002 | Stop selecting the file `content` in the `UpdateLedgerFile` result     — **DONE** | 20m | —          |
 | t003 | Replace the post-save full cache wipe with targeted invalidation       — **DONE** | 45m | t002       |
-| t004 | Measure save latency on the hosted dashboard before and after         | 30m | t001, t003 |
-| t005 | Adoption surface                                                      | 15m | t004       |
+| t004 | Measure save latency on the hosted dashboard before and after         | 30m | t001, t003, t007 |
+| t005 | Adoption surface                                                      | 15m | t003       |
 | t006 | Simplify                                                              | 20m | t005       |
 | t007 | Test coverage                                                         | 40m | t005       |
-| t008 | Closeout                                                              | 10m | t006, t007 |
+| t008 | Closeout                                                              | 10m | t004, t006, t007 |
+
+Re-sequenced 2026-11-02: production verification (t004) moved after Test coverage (t007). Adoption surface, Simplify and Test coverage need no deploy, and verifying last means t004 measures the revision that closes the milestone.
 
 ## Definition of done
 
