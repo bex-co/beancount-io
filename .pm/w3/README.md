@@ -88,7 +88,7 @@
 
 - [x] **m57** — [`beancount-accruals`: supported accrual drafts with explicit period policy](./done/m57/README.md) (7 tasks) ← `/pm-brainstorm w3` 2026-10-20 candidate 5, from ADR020 P1 — sequenced after m55, m56
 
-- [ ] **m58** — [Reconciliation exception register in `beancount-reconcile`, summarized by `beancount-close`](./m58/README.md) (6 tasks) ← `/pm-brainstorm w3` 2026-10-20 candidate 6, from ADR020 P1 — sequenced after w2/m48 closeout
+- [ ] **m58** — [Reconciliation exception register in `beancount-reconcile`, summarized by `beancount-close`](./blocked/m58/README.md) (6 tasks) ← `/pm-brainstorm w3` 2026-10-20 candidate 6, from ADR020 P1 — sequenced after w2/m48 closeout — **blocked:** t001 waits on w2/m48's closeout (Codex); t002–t006 depend on t001
 
 - [ ] **m59** — [Ledger creation: personal modules in the setup specification, builder, and CLI](./m59/README.md) (8 tasks) ← PRFAQ001 §3–§5 + Appendix A.9 and ADR021, modules adopted 2026-10-27 — sequenced after m53, before the flow rework in 649
 
