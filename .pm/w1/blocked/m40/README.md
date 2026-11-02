@@ -2,11 +2,11 @@
 
 **Worker:** worker1
 **Goal:** Downgrades and switches from yearly to monthly are scheduled for the end of the paid period and can be undone. Cancelling offers one cheaper alternative. A failed renewal keeps paid limits while Stripe retries. Ledger-count and collaborator limits are enforced as PRFAQ005 decided.
-**Status:** todo (t001–t012 and t014–t016 done; t013, the deployed check and archive, remains)
+**Status:** blocked (t001–t012 and t014–t016 done; t013 blocked on the owner confirming the 2026-10-19 scheduling emails)
 
 ## Source + Goal linkage
 
-- **Source:** [PRFAQ005](../../../docs/prfaqs/PRFAQ005-plan-changes-and-yearly-billing.md) stage 2 (questions 5, 6, 9, 10, 14–18, and question 21 items 1, 4 and 6); user request on 2026-10-17 to arrange the work on w1.
+- **Source:** [PRFAQ005](../../../../docs/prfaqs/PRFAQ005-plan-changes-and-yearly-billing.md) stage 2 (questions 5, 6, 9, 10, 14–18, and question 21 items 1, 4 and 6); user request on 2026-10-17 to arrange the work on w1.
 - **Goal linkage:**
   - **A2 — Frictionless onboarding:** a customer who needs a cheaper plan keeps working in their books instead of cancelling.
   - **A1 — Agent-native accounting:** the ledger-count and collaborator fixes apply on GraphQL, REST and MCP alike, so an agent gets the same limit and the same error a person does.
@@ -79,3 +79,7 @@ m39's README records what `beancount.io/pricing` relies on, and m40 keeps all of
 - **Gates:** backend typecheck, tests, parity and OpenAPI drift gates pass, as do dashboard format, lint, tests, translations and build.
 - **Production payment test:** the QA account passes t014 with two 100%-off coupons, covering scheduling, undo, split, cancel, resume, emails and limit errors, with everything cleaned up afterwards.
 - **Deployed check:** the deployed revision passes the remaining read-only hosted check. Completed work is moved into `done/` through `/pm`.
+
+## Blocked
+
+- **t013** — blocked 2026-11-02. The deployed read-only check passed; see t013's `## Blocked`. **Unblock:** the owner confirms that the two scheduling-confirmation emails from t014's 2026-10-19 run arrived once each, or connects the mail connector for the worker. **Owner:** the user.
