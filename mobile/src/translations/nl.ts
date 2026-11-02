@@ -645,6 +645,9 @@ export const nl: Translations = {
   ledgerDeleteFileMessage:
     '"{{name}}" verwijderen? Dit kan niet ongedaan worden gemaakt.',
   ledgerDeleteFileConfirm: "Verwijderen",
+  ledgerDeleteFileIncludedMessage:
+    "“{{name}}” wordt ingesloten door {{includers}}. De include verwijderen en het bestand wissen? Dit kan niet ongedaan worden gemaakt.",
+  ledgerDeleteFileRemoveInclude: "Include verwijderen en wissen",
   ledgerDeleteFileSuccess: "{{name}} verwijderd",
   ledgerDeleteFileFailed: "Verwijderen van bestand mislukt",
   ledgerDeleteFileChanged:

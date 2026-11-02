@@ -662,6 +662,9 @@ export const de: Translations = {
   ledgerDeleteFileMessage:
     '"{{name}}" löschen? Das kann nicht rückgängig gemacht werden.',
   ledgerDeleteFileConfirm: "Löschen",
+  ledgerDeleteFileIncludedMessage:
+    "„{{name}}“ wird von {{includers}} eingebunden. Die Einbindung entfernen und die Datei löschen? Das kann nicht rückgängig gemacht werden.",
+  ledgerDeleteFileRemoveInclude: "Einbindung entfernen und löschen",
   ledgerDeleteFileSuccess: "{{name}} gelöscht",
   ledgerDeleteFileFailed: "Datei konnte nicht gelöscht werden",
   ledgerDeleteFileChanged:

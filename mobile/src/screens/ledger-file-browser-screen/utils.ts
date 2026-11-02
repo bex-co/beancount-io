@@ -278,6 +278,31 @@ export function canDeleteLedgerFile(path: string): boolean {
   return path.replace(/^\/+/, "") !== "main.bean";
 }
 
+/**
+ * The ledger files that still `include` the one a delete was refused for, or
+ * null when the error is anything else. The server refuses with
+ * `<path> is still included by <a>, <b>; remove the include …` (w21/587); the
+ * answer is the same whatever the surface, so the list is read from that text.
+ */
+export function deleteRefusalIncluders(
+  error: unknown,
+  path: string,
+): string[] | null {
+  if (!(error instanceof Error)) return null;
+  const target = path.replace(/^\/+/, "");
+  for (const report of error.message.split("; ")) {
+    const prefix = `${target} is still included by `;
+    if (!report.startsWith(prefix)) continue;
+    const includers = report
+      .slice(prefix.length)
+      .split(", ")
+      .map((includer) => includer.trim())
+      .filter(Boolean);
+    if (includers.length > 0) return includers;
+  }
+  return null;
+}
+
 type Entry = { name: string; type: string; path: string };
 
 /**

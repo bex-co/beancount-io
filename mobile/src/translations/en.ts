@@ -661,6 +661,9 @@ export const en = {
   ledgerDeleteFileTitle: "Delete Ledger File",
   ledgerDeleteFileMessage: 'Delete "{{name}}"? This cannot be undone.',
   ledgerDeleteFileConfirm: "Delete",
+  ledgerDeleteFileIncludedMessage:
+    "“{{name}}” is included by {{includers}}. Remove the include and delete the file? This cannot be undone.",
+  ledgerDeleteFileRemoveInclude: "Remove include and delete",
   ledgerDeleteFileSuccess: "Deleted {{name}}",
   ledgerDeleteFileFailed: "Failed to delete file",
   ledgerDeleteFileChanged:

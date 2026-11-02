@@ -23,6 +23,17 @@ const ruFileEditor: Record<string, { message: string; description: string }> = {
     message: "Удалить файл",
     description: "Dialog title for file deletion",
   },
+  "ledgerEditor.deleteFileIncluded": {
+    message:
+      "Файл «{filename}» подключается файлом {includers}. Убрать подключение и удалить файл? Это действие нельзя отменить.",
+    description:
+      "Confirmation shown when a file other ledger files still include is deleted; {filename} is the file, {includers} the files that include it",
+  },
+  "ledgerEditor.deleteFileRemoveInclude": {
+    message: "Убрать подключение и удалить",
+    description:
+      "Button that deletes a file and also removes the include lines that point at it",
+  },
   "ledgerEditor.failedToLoadFileContent": {
     message: "Не удалось загрузить содержимое файла",
     description: "Error message when file content fails to load",

@@ -24,6 +24,17 @@ const caFileEditor: Record<string, { message: string; description: string }> = {
     message: "Eliminar fitxer",
     description: "Dialog title for file deletion",
   },
+  "ledgerEditor.deleteFileIncluded": {
+    message:
+      "El fitxer «{filename}» està inclòs a {includers}. Vols treure la inclusió i eliminar el fitxer? Aquesta acció no es pot desfer.",
+    description:
+      "Confirmation shown when a file other ledger files still include is deleted; {filename} is the file, {includers} the files that include it",
+  },
+  "ledgerEditor.deleteFileRemoveInclude": {
+    message: "Treu la inclusió i elimina",
+    description:
+      "Button that deletes a file and also removes the include lines that point at it",
+  },
   "ledgerEditor.failedToLoadFileContent": {
     message: "Error en carregar el contingut del fitxer",
     description: "Error message when file content fails to load",

@@ -20,6 +20,15 @@ import { track } from "@/common/analytics";
 import { useApolloCacheClear } from "@/common/hooks/use-apollo-cache";
 import { useRefreshFailedToast } from "@/common/hooks/use-refresh-failed-toast";
 import { toast } from "sonner";
+import { Button } from "@/common/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/common/components/ui/dialog";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { useFileNavigate } from "@/common/hooks/use-file-navigate";
@@ -32,6 +41,7 @@ import {
   FileNotFoundView,
 } from "./file-loading-error-views";
 import { FileContentView } from "./file-content-view";
+import { deleteRefusalIncluders } from "./delete-refusal";
 
 type FileRevision = NonNullable<GetLedgerFileQuery["getLedgerFile"]>;
 
@@ -184,11 +194,17 @@ export default function LedgerFileView({
   // prepare an identical DeleteLedgerFile request (w4/1090).
   const deleteInFlightRef = useRef(false);
 
-  const handleDeleteFile = async () => {
+  // The files that still include this one, once a delete was refused for
+  // that: the reader is asked whether to drop those lines (w21/587).
+  const [includersToRemove, setIncludersToRemove] = useState<string[] | null>(
+    null,
+  );
+
+  const handleDeleteFile = async (removeIncludes = false) => {
     if (!fileContent || deleteInFlightRef.current) return;
     deleteInFlightRef.current = true;
     try {
-      await runDeleteFile();
+      await runDeleteFile(removeIncludes);
     } finally {
       deleteInFlightRef.current = false;
     }
@@ -206,7 +222,7 @@ export default function LedgerFileView({
     };
   }, []);
 
-  const runDeleteFile = async () => {
+  const runDeleteFile = async (removeIncludes: boolean) => {
     if (!fileContent) return;
     const journey = { ledgerId, filePath };
 
@@ -216,8 +232,16 @@ export default function LedgerFileView({
         path: filePath,
         sha: fileContent.sha,
         message: t("ledgerEditor.deleteFileCommit", { path: filePath }),
+        ...(removeIncludes ? { removeIncludes: true } : {}),
       },
       onError: (error) => {
+        const includers = removeIncludes
+          ? null
+          : deleteRefusalIncluders(error.message, filePath);
+        if (includers) {
+          setIncludersToRemove(includers);
+          return;
+        }
         const refusedRoot = ROOT_FILE_REFUSAL.test(error.message);
         toast.error(
           refusedRoot
@@ -282,17 +306,58 @@ export default function LedgerFileView({
   }
 
   return (
-    <FileContentView
-      filePath={filePath}
-      fileContent={fileContent}
-      onSave={handleSaveFile}
-      onDelete={isRootLedgerFile(filePath) ? undefined : handleDeleteFile}
-      isSaving={isSaving}
-      isEditMode={isEditMode}
-      lineNumber={lineNumber}
-      errors={fileErrors}
-      onEnterEditMode={handleEnterEditMode}
-      onExitEditMode={handleExitEditMode}
-    />
+    <>
+      <FileContentView
+        filePath={filePath}
+        fileContent={fileContent}
+        onSave={handleSaveFile}
+        onDelete={
+          isRootLedgerFile(filePath) ? undefined : () => handleDeleteFile()
+        }
+        isSaving={isSaving}
+        isEditMode={isEditMode}
+        lineNumber={lineNumber}
+        errors={fileErrors}
+        onEnterEditMode={handleEnterEditMode}
+        onExitEditMode={handleExitEditMode}
+      />
+      <Dialog
+        open={includersToRemove !== null}
+        onOpenChange={(open) => {
+          if (!open) setIncludersToRemove(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("ledgerEditor.deleteFileTitle")}</DialogTitle>
+            <DialogDescription className="wrap-break-word">
+              {t("ledgerEditor.deleteFileIncluded", {
+                filename: getFilename(filePath),
+                includers: (includersToRemove ?? []).join(", "),
+              })}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIncludersToRemove(null)}
+              className="w-full sm:w-auto"
+            >
+              {t("common.cancel")}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                setIncludersToRemove(null);
+                void handleDeleteFile(true);
+              }}
+              className="w-full sm:w-auto"
+            >
+              {t("ledgerEditor.deleteFileRemoveInclude")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

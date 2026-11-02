@@ -579,6 +579,9 @@ export const zh: Translations = {
   ledgerDeleteFileTitle: "删除账本文件",
   ledgerDeleteFileMessage: "确定删除“{{name}}”吗？此操作无法撤销。",
   ledgerDeleteFileConfirm: "删除",
+  ledgerDeleteFileIncludedMessage:
+    "“{{name}}”被 {{includers}} 引用。要移除引用并删除该文件吗？此操作无法撤销。",
+  ledgerDeleteFileRemoveInclude: "移除引用并删除",
   ledgerDeleteFileSuccess: "已删除 {{name}}",
   ledgerDeleteFileFailed: "删除文件失败",
   ledgerDeleteFileChanged: "此文件已在别处被更改。列表已刷新，请重试。",

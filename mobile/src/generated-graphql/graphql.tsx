@@ -150,6 +150,7 @@ export type DeleteLedgerFileMutationVariables = Exact<{
   path: string;
   sha: string;
   message?: string | null | undefined;
+  removeIncludes?: boolean | null | undefined;
 }>;
 
 
@@ -1242,8 +1243,14 @@ export type DeleteLedgerEntrySourceSliceMutationHookResult = ReturnType<typeof u
 export type DeleteLedgerEntrySourceSliceMutationResult = Apollo.MutationResult<DeleteLedgerEntrySourceSliceMutation>;
 export type DeleteLedgerEntrySourceSliceMutationOptions = Apollo.BaseMutationOptions<DeleteLedgerEntrySourceSliceMutation, DeleteLedgerEntrySourceSliceMutationVariables>;
 export const DeleteLedgerFileDocument = gql`
-    mutation deleteLedgerFile($ledgerId: String!, $path: String!, $sha: String!, $message: String) {
-  deleteLedgerFile(ledgerId: $ledgerId, path: $path, sha: $sha, message: $message) {
+    mutation deleteLedgerFile($ledgerId: String!, $path: String!, $sha: String!, $message: String, $removeIncludes: Boolean) {
+  deleteLedgerFile(
+    ledgerId: $ledgerId
+    path: $path
+    sha: $sha
+    message: $message
+    removeIncludes: $removeIncludes
+  ) {
     path
   }
 }
@@ -1267,6 +1274,7 @@ export type DeleteLedgerFileMutationFn = Apollo.MutationFunction<DeleteLedgerFil
  *      path: // value for 'path'
  *      sha: // value for 'sha'
  *      message: // value for 'message'
+ *      removeIncludes: // value for 'removeIncludes'
  *   },
  * });
  */

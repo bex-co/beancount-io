@@ -24,6 +24,17 @@ const bgFileEditor: Record<string, { message: string; description: string }> = {
     message: "Изтриване на файл",
     description: "Dialog title for file deletion",
   },
+  "ledgerEditor.deleteFileIncluded": {
+    message:
+      "Файлът „{filename}“ е включен от {includers}. Да се премахне включването и да се изтрие файлът? Действието не може да бъде отменено.",
+    description:
+      "Confirmation shown when a file other ledger files still include is deleted; {filename} is the file, {includers} the files that include it",
+  },
+  "ledgerEditor.deleteFileRemoveInclude": {
+    message: "Премахни включването и изтрий",
+    description:
+      "Button that deletes a file and also removes the include lines that point at it",
+  },
   "ledgerEditor.failedToLoadFileContent": {
     message: "Неуспешно зареждане на съдържанието на файла",
     description: "Error message when file content fails to load",

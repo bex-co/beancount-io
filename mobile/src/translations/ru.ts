@@ -654,6 +654,9 @@ export const ru: Translations = {
   ledgerDeleteFileTitle: "Удалить файл книги",
   ledgerDeleteFileMessage: 'Удалить "{{name}}"? Отменить это будет нельзя.',
   ledgerDeleteFileConfirm: "Удалить",
+  ledgerDeleteFileIncludedMessage:
+    "«{{name}}» подключается файлом {{includers}}. Убрать подключение и удалить файл? Это нельзя отменить.",
+  ledgerDeleteFileRemoveInclude: "Убрать подключение и удалить",
   ledgerDeleteFileSuccess: "Удалён {{name}}",
   ledgerDeleteFileFailed: "Не удалось удалить файл",
   ledgerDeleteFileChanged:

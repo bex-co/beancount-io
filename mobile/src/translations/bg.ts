@@ -642,6 +642,9 @@ export const bg: Translations = {
   ledgerDeleteFileMessage:
     'Да се изтрие ли "{{name}}"? Действието е необратимо.',
   ledgerDeleteFileConfirm: "Изтрий",
+  ledgerDeleteFileIncludedMessage:
+    "„{{name}}“ е включен от {{includers}}. Да се премахне включването и да се изтрие файлът? Действието не може да бъде отменено.",
+  ledgerDeleteFileRemoveInclude: "Премахни включването и изтрий",
   ledgerDeleteFileSuccess: "{{name}} е изтрит",
   ledgerDeleteFileFailed: "Файлът не беше изтрит",
   ledgerDeleteFileChanged:

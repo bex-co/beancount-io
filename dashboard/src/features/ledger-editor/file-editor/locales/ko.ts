@@ -23,6 +23,17 @@ const koFileEditor: Record<string, { message: string; description: string }> = {
     message: "파일 삭제",
     description: "Dialog title for file deletion",
   },
+  "ledgerEditor.deleteFileIncluded": {
+    message:
+      '"{filename}" 파일은 {includers}에서 포함됩니다. 포함을 제거하고 파일을 삭제할까요? 이 작업은 되돌릴 수 없습니다.',
+    description:
+      "Confirmation shown when a file other ledger files still include is deleted; {filename} is the file, {includers} the files that include it",
+  },
+  "ledgerEditor.deleteFileRemoveInclude": {
+    message: "포함 제거 후 삭제",
+    description:
+      "Button that deletes a file and also removes the include lines that point at it",
+  },
   "ledgerEditor.failedToLoadFileContent": {
     message: "파일 내용 불러오기 실패",
     description: "Error message when file content fails to load",

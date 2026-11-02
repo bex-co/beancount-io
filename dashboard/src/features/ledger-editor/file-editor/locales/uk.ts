@@ -24,6 +24,17 @@ const ukFileEditor: Record<string, { message: string; description: string }> = {
     message: "Видалити файл",
     description: "Dialog title for file deletion",
   },
+  "ledgerEditor.deleteFileIncluded": {
+    message:
+      "Файл «{filename}» підключено у {includers}. Прибрати підключення й видалити файл? Цю дію неможливо скасувати.",
+    description:
+      "Confirmation shown when a file other ledger files still include is deleted; {filename} is the file, {includers} the files that include it",
+  },
+  "ledgerEditor.deleteFileRemoveInclude": {
+    message: "Прибрати підключення й видалити",
+    description:
+      "Button that deletes a file and also removes the include lines that point at it",
+  },
   "ledgerEditor.failedToLoadFileContent": {
     message: "Не вдалося завантажити вміст файлу",
     description: "Error message when file content fails to load",

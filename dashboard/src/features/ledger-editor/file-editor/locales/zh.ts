@@ -22,6 +22,17 @@ const zhFileEditor: Record<string, { message: string; description: string }> = {
     message: "删除文件",
     description: "Dialog title for file deletion",
   },
+  "ledgerEditor.deleteFileIncluded": {
+    message:
+      "文件“{filename}”被 {includers} 引用。要移除引用并删除该文件吗？此操作无法撤销。",
+    description:
+      "Confirmation shown when a file other ledger files still include is deleted; {filename} is the file, {includers} the files that include it",
+  },
+  "ledgerEditor.deleteFileRemoveInclude": {
+    message: "移除引用并删除",
+    description:
+      "Button that deletes a file and also removes the include lines that point at it",
+  },
   "ledgerEditor.failedToLoadFileContent": {
     message: "加载文件内容失败",
     description: "Error message when file content fails to load",

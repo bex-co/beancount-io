@@ -658,6 +658,9 @@ export const ca: Translations = {
   ledgerDeleteFileMessage:
     'Vols eliminar "{{name}}"? L\'acció no es pot desfer.',
   ledgerDeleteFileConfirm: "Elimina",
+  ledgerDeleteFileIncludedMessage:
+    "«{{name}}» està inclòs a {{includers}}. Vols treure la inclusió i eliminar el fitxer? Aquesta acció no es pot desfer.",
+  ledgerDeleteFileRemoveInclude: "Treu la inclusió i elimina",
   ledgerDeleteFileSuccess: "S'ha eliminat {{name}}",
   ledgerDeleteFileFailed: "No s'ha pogut eliminar el fitxer",
   ledgerDeleteFileChanged:

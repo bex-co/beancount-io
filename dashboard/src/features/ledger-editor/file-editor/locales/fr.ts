@@ -25,6 +25,17 @@ const frFileEditor: Record<string, { message: string; description: string }> = {
     message: "Supprimer le fichier",
     description: "Dialog title for file deletion",
   },
+  "ledgerEditor.deleteFileIncluded": {
+    message:
+      "Le fichier « {filename} » est inclus par {includers}. Retirer l’inclusion et supprimer le fichier ? Cette action est irréversible.",
+    description:
+      "Confirmation shown when a file other ledger files still include is deleted; {filename} is the file, {includers} the files that include it",
+  },
+  "ledgerEditor.deleteFileRemoveInclude": {
+    message: "Retirer l’inclusion et supprimer",
+    description:
+      "Button that deletes a file and also removes the include lines that point at it",
+  },
   "ledgerEditor.failedToLoadFileContent": {
     message: "Échec du chargement du contenu du fichier",
     description: "Error message when file content fails to load",

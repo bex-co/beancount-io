@@ -653,6 +653,9 @@ export const uk: Translations = {
   ledgerDeleteFileTitle: "Видалити файл книги",
   ledgerDeleteFileMessage: 'Видалити "{{name}}"? Скасувати це буде неможливо.',
   ledgerDeleteFileConfirm: "Видалити",
+  ledgerDeleteFileIncludedMessage:
+    "«{{name}}» підключено у {{includers}}. Прибрати підключення й видалити файл? Це неможливо скасувати.",
+  ledgerDeleteFileRemoveInclude: "Прибрати підключення й видалити",
   ledgerDeleteFileSuccess: "Видалено {{name}}",
   ledgerDeleteFileFailed: "Не вдалося видалити файл",
   ledgerDeleteFileChanged:

@@ -24,6 +24,17 @@ const ptFileEditor: Record<string, { message: string; description: string }> = {
     message: "Excluir arquivo",
     description: "Dialog title for file deletion",
   },
+  "ledgerEditor.deleteFileIncluded": {
+    message:
+      "O arquivo “{filename}” é incluído por {includers}. Remover a inclusão e excluir o arquivo? Esta ação não pode ser desfeita.",
+    description:
+      "Confirmation shown when a file other ledger files still include is deleted; {filename} is the file, {includers} the files that include it",
+  },
+  "ledgerEditor.deleteFileRemoveInclude": {
+    message: "Remover inclusão e excluir",
+    description:
+      "Button that deletes a file and also removes the include lines that point at it",
+  },
   "ledgerEditor.failedToLoadFileContent": {
     message: "Falha ao carregar conteúdo do arquivo",
     description: "Error message when file content fails to load",

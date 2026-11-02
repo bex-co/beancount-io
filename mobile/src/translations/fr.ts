@@ -659,6 +659,9 @@ export const fr: Translations = {
   ledgerDeleteFileMessage:
     'Supprimer "{{name}}" ? Cette action est irréversible.',
   ledgerDeleteFileConfirm: "Supprimer",
+  ledgerDeleteFileIncludedMessage:
+    "« {{name}} » est inclus par {{includers}}. Retirer l’inclusion et supprimer le fichier ? Cette action est irréversible.",
+  ledgerDeleteFileRemoveInclude: "Retirer l’inclusion et supprimer",
   ledgerDeleteFileSuccess: "{{name}} supprimé",
   ledgerDeleteFileFailed: "Échec de la suppression du fichier",
   ledgerDeleteFileChanged:

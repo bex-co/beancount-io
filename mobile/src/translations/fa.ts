@@ -636,6 +636,9 @@ export const fa: Translations = {
   ledgerDeleteFileTitle: "حذف فایل دفتر کل",
   ledgerDeleteFileMessage: "«{{name}}» حذف شود؟ این کار برگشت‌پذیر نیست.",
   ledgerDeleteFileConfirm: "حذف",
+  ledgerDeleteFileIncludedMessage:
+    "«{{name}}» در {{includers}} درج شده است. درج حذف شود و فایل پاک شود؟ این کار قابل بازگشت نیست.",
+  ledgerDeleteFileRemoveInclude: "حذف درج و پاک کردن",
   ledgerDeleteFileSuccess: "{{name}} حذف شد",
   ledgerDeleteFileFailed: "حذف فایل ناموفق بود",
   ledgerDeleteFileChanged:

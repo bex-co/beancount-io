@@ -661,6 +661,9 @@ export const sk: Translations = {
   ledgerDeleteFileMessage:
     'Odstrániť "{{name}}"? Túto akciu nemožno vrátiť späť.',
   ledgerDeleteFileConfirm: "Odstrániť",
+  ledgerDeleteFileIncludedMessage:
+    "„{{name}}“ je zahrnutý v {{includers}}. Odstrániť zahrnutie a zmazať súbor? Túto akciu nemožno vrátiť späť.",
+  ledgerDeleteFileRemoveInclude: "Odstrániť zahrnutie a zmazať",
   ledgerDeleteFileSuccess: "{{name}} odstránený",
   ledgerDeleteFileFailed: "Súbor sa nepodarilo odstrániť",
   ledgerDeleteFileChanged:

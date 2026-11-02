@@ -656,6 +656,9 @@ export const pt: Translations = {
   ledgerDeleteFileTitle: "Excluir arquivo do livro-razão",
   ledgerDeleteFileMessage: 'Excluir "{{name}}"? Isso não pode ser desfeito.',
   ledgerDeleteFileConfirm: "Excluir",
+  ledgerDeleteFileIncludedMessage:
+    "“{{name}}” é incluído por {{includers}}. Remover a inclusão e excluir o arquivo? Isso não pode ser desfeito.",
+  ledgerDeleteFileRemoveInclude: "Remover inclusão e excluir",
   ledgerDeleteFileSuccess: "{{name}} excluído",
   ledgerDeleteFileFailed: "Falha ao excluir o arquivo",
   ledgerDeleteFileChanged:

@@ -25,6 +25,17 @@ const deFileEditor: Record<string, { message: string; description: string }> = {
     message: "Datei löschen",
     description: "Dialog title for file deletion",
   },
+  "ledgerEditor.deleteFileIncluded": {
+    message:
+      "Die Datei „{filename}“ wird von {includers} eingebunden. Die Einbindung entfernen und die Datei löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+    description:
+      "Confirmation shown when a file other ledger files still include is deleted; {filename} is the file, {includers} the files that include it",
+  },
+  "ledgerEditor.deleteFileRemoveInclude": {
+    message: "Einbindung entfernen und löschen",
+    description:
+      "Button that deletes a file and also removes the include lines that point at it",
+  },
   "ledgerEditor.failedToLoadFileContent": {
     message: "Dateiinhalt konnte nicht geladen werden",
     description: "Error message when file content fails to load",

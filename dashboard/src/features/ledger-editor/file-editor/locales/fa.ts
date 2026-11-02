@@ -24,6 +24,17 @@ const faFileEditor: Record<string, { message: string; description: string }> = {
     message: "حذف فایل",
     description: "Dialog title for file deletion",
   },
+  "ledgerEditor.deleteFileIncluded": {
+    message:
+      "فایل «{filename}» در {includers} درج شده است. درج حذف شود و فایل پاک شود؟ این کار قابل بازگشت نیست.",
+    description:
+      "Confirmation shown when a file other ledger files still include is deleted; {filename} is the file, {includers} the files that include it",
+  },
+  "ledgerEditor.deleteFileRemoveInclude": {
+    message: "حذف درج و پاک کردن",
+    description:
+      "Button that deletes a file and also removes the include lines that point at it",
+  },
   "ledgerEditor.failedToLoadFileContent": {
     message: "بارگذاری محتوای فایل ناموفق بود",
     description: "Error message when file content fails to load",

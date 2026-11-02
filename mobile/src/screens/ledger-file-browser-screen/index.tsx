@@ -73,6 +73,7 @@ import { isOpenableTextEntry } from "@/common/ledger-file-types";
 import {
   buildLedgerFilePath,
   canDeleteLedgerFile,
+  deleteRefusalIncluders,
   checkLedgerFileName,
   createClash,
   deleteEmptiesFolder,
@@ -750,13 +751,16 @@ export function LedgerFileBrowserScreen(): JSX.Element {
   );
 
   const confirmDelete = useCallback(
-    async (entry: DirEntry) => {
+    async (
+      entry: DirEntry,
+      removeIncludes = false,
+    ): Promise<string[] | undefined> => {
       if (
         !canWrite ||
         !canDeleteLedgerFile(entry.path) ||
         deleteInFlightRef.current
       )
-        return;
+        return undefined;
 
       deleteInFlightRef.current = true;
       setDeletingPath(entry.path);
@@ -769,6 +773,7 @@ export function LedgerFileBrowserScreen(): JSX.Element {
             path: entry.path,
             sha: entry.sha,
             message: `delete ${entry.path}`,
+            ...(removeIncludes ? { removeIncludes: true } : {}),
           },
         });
         haptics.success();
@@ -783,8 +788,15 @@ export function LedgerFileBrowserScreen(): JSX.Element {
         // Awaited: the delete buttons stay disabled until the row is actually
         // gone, so a second tap can't resend the sha we just spent.
         await invalidateLedgerData(client, "file");
+        return undefined;
       } catch (deleteError: unknown) {
         haptics.error();
+        // Another file still includes this one: say which, and offer to drop
+        // those lines in the same commit (w21/587).
+        const includers = removeIncludes
+          ? null
+          : deleteRefusalIncluders(deleteError, entry.path);
+        if (includers) return includers;
         // The file changed elsewhere, so the sha in hand is spent and every
         // retry would send it again: refresh the list and say so, instead of
         // the server's "sha does not match [given: …]" (w21/380).
@@ -799,6 +811,7 @@ export function LedgerFileBrowserScreen(): JSX.Element {
               "delete",
             ) ?? t("ledgerDeleteFileFailed"));
         toast.showToast({ message, type: "error" });
+        return undefined;
       } finally {
         deleteInFlightRef.current = false;
         setDeletingPath(null);
@@ -829,7 +842,27 @@ export function LedgerFileBrowserScreen(): JSX.Element {
           {
             text: t("ledgerDeleteFileConfirm"),
             style: "destructive",
-            onPress: () => void confirmDelete(entry),
+            onPress: () => {
+              void (async () => {
+                const includers = await confirmDelete(entry);
+                if (!includers) return;
+                Alert.alert(
+                  t("ledgerDeleteFileTitle"),
+                  t("ledgerDeleteFileIncludedMessage", {
+                    name: entry.name,
+                    includers: includers.join(", "),
+                  }),
+                  [
+                    { text: t("cancel"), style: "cancel" },
+                    {
+                      text: t("ledgerDeleteFileRemoveInclude"),
+                      style: "destructive",
+                      onPress: () => void confirmDelete(entry, true),
+                    },
+                  ],
+                );
+              })();
+            },
           },
         ],
       );

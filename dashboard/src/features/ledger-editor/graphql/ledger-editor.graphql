@@ -70,12 +70,14 @@ mutation DeleteLedgerFile(
   $path: String!
   $sha: String!
   $message: String
+  $removeIncludes: Boolean
 ) {
   deleteLedgerFile(
     ledgerId: $ledgerId
     path: $path
     sha: $sha
     message: $message
+    removeIncludes: $removeIncludes
   ) {
     path
   }
