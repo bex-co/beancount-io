@@ -2,11 +2,11 @@
 
 **Worker:** worker1
 **Goal:** A subscriber can preview and confirm any upgrade or monthly-to-yearly switch from Billing settings, pay exactly the amount shown, approve bank authentication without leaving the page, and land on a confirmation after Checkout.
-**Status:** todo (t001–t013 and t015 done; t014, the deployed check and archive, remains)
+**Status:** done
 
 ## Source + Goal linkage
 
-- **Source:** [PRFAQ005](../../../docs/prfaqs/PRFAQ005-plan-changes-and-yearly-billing.md) stage 1 (questions 13–18, decisions in question 21); user request on 2026-10-17 to arrange the work on w1.
+- **Source:** [PRFAQ005](../../../../docs/prfaqs/PRFAQ005-plan-changes-and-yearly-billing.md) stage 1 (questions 13–18, decisions in question 21); user request on 2026-10-17 to arrange the work on w1.
 - **Goal linkage:** **A2 — Frictionless onboarding.** The path from choosing a plan to working in a paid ledger has dead ends today. The dashboard starts every subscription and upgrade on the monthly price, so yearly billing is unreachable inside the product. Checkout returns to a page with no confirmation. A payment that needs bank approval is reported as failed.
 - **Expected outcome:** a monthly subscriber reaches yearly billing from Billing settings and from every in-product upgrade prompt. Every new or changed subscription shows its charge before confirmation. A customer whose bank asks for approval completes it on the page.
 - **Why now:** w1/m37 shipped and deployed the tier-resolution fixes this milestone builds on (only its cohort backfill is blocked, which this work does not depend on). m40 reuses this milestone's preview and change contract, so this ships first.
@@ -57,7 +57,7 @@ This milestone ships before that page changes, so every task keeps that contract
 | t012 | Run `/simplify` over the milestone diff — **DONE** | 25m | t011 |
 | t013 | Prove classification, charging, authentication and return paths with meaningful tests — **DONE** | 40m | t011, t012 |
 | t015 | Production payment test with the QA account and two 100%-off coupons — **DONE** | 50m | t004, t013 |
-| t014 | Verify the deployed outcome and archive the milestone | 20m | t013, t015 |
+| t014 | Verify the deployed outcome and archive the milestone — **DONE** | 20m | t013, t015 |
 
 **Total estimate:** ~8h50m. t002 and t006 can proceed in parallel after t001. t003 switches Checkout's return URLs only after t008's confirmation exists, so a paying customer is never sent to a missing page. The worker did t004 through the Stripe CLI.
 
@@ -77,4 +77,4 @@ This milestone ships before that page changes, so every task keeps that contract
 
 ## Dropped
 
-- ~~**t016**~~ — Operator: GA4 Measurement Protocol secret and stream ID in production — dropped 2026-10-20: the user chose to record `purchase` in the browser; the server-side reporter it would have switched on is retired by [w2/m54/t003](../../w2/blocked/m54/done/t003.md).
+- ~~**t016**~~ — Operator: GA4 Measurement Protocol secret and stream ID in production — dropped 2026-10-20: the user chose to record `purchase` in the browser; the server-side reporter it would have switched on is retired by [w2/m54/t003](../../../w2/blocked/m54/done/t003.md).
