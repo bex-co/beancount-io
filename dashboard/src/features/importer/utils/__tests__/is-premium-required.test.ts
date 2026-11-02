@@ -33,19 +33,40 @@ describe("isPremiumRequired", () => {
     });
 
     it.each([
-      ["the ledger owner's plan", { limitOwner: "LEDGER_OWNER" }],
-      ["no plan", {}],
-    ])("should return false for a limit set by %s", (_, owner) => {
+      [
+        "the ledger owner's plan",
+        { limitOwner: "LEDGER_OWNER" },
+        "This ledger's owner is on the Free plan, which allows 1 collaborator per ledger, and it already has 1. The ledger owner can upgrade for more.",
+      ],
+      [
+        "no plan",
+        {},
+        "Ledger snapshot size (bytes) limit reached. Maximum: 10, Current: 11. Upgrade to Premium or a higher plan to continue.",
+      ],
+    ])("should return false for a limit set by %s", (_, owner, message) => {
       const error = {
         errors: [
           {
-            message: "Limit reached. Maximum: 10, Current: 11.",
+            message,
             extensions: { code: "RESOURCE_LIMIT_REACHED", ...owner },
           },
         ],
       };
 
       expect(isPremiumRequired(error)).toBe(false);
+    });
+
+    it("should let the AI allowance's owner decide on a rate limit", () => {
+      const error = {
+        errors: [
+          {
+            message: "Monthly quota reached",
+            extensions: { code: "RATE_LIMITED", limitOwner: "REQUESTER" },
+          },
+        ],
+      };
+
+      expect(isPremiumRequired(error)).toBe(true);
     });
 
     it("should return true for PREMIUM_REQUIRED error code", () => {

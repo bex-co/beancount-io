@@ -69,17 +69,19 @@ export function isPremiumRequired(error: unknown): boolean {
   if (isGraphQLError(error)) {
     for (const err of error.errors) {
       const code = err.extensions?.code;
+      // The field decides a limit, whatever its sentence says: only the
+      // requester's own plan is theirs to upgrade, and a limit no plan sets
+      // carries no owner and no prompt (ADR 001 D13).
+      const limitOwner = err.extensions?.limitOwner;
+      if (code === "RESOURCE_LIMIT_REACHED" || limitOwner) {
+        return limitOwner === "REQUESTER";
+      }
       if (
         code &&
         PREMIUM_ERROR_CODES.includes(
           code as (typeof PREMIUM_ERROR_CODES)[number],
         )
       ) {
-        return true;
-      }
-      // The requester's own plan set the limit, so upgrading lifts it. A limit
-      // no plan sets carries no owner and no prompt (ADR 001 D13).
-      if (err.extensions?.limitOwner === "REQUESTER") {
         return true;
       }
     }

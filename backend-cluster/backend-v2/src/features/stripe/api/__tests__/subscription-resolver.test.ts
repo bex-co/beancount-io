@@ -409,19 +409,25 @@ describe("SubscriptionResolver", () => {
         });
       });
 
-      it("does not count a Stripe plan set to end as renewing", async () => {
-        mockStripeService.listSubscriptions.mockResolvedValue([
-          liveSubscription("active", { cancel_at_period_end: true }),
-        ]);
-        mockModels.storeSubscription.findByUserId.mockResolvedValue([
-          googlePlan,
-        ]);
+      it.each([
+        ["at the period's end", { cancel_at_period_end: true }],
+        ["on a set date", { cancel_at: 1_900_000_000 }],
+      ])(
+        "does not count a Stripe plan set to end %s as renewing",
+        async (_, ending) => {
+          mockStripeService.listSubscriptions.mockResolvedValue([
+            liveSubscription("active", ending),
+          ]);
+          mockModels.storeSubscription.findByUserId.mockResolvedValue([
+            googlePlan,
+          ]);
 
-        expect(await readBilling()).toMatchObject({
-          source: "GOOGLE_PLAY",
-          duplicateBilling: false,
-        });
-      });
+          expect(await readBilling()).toMatchObject({
+            source: "GOOGLE_PLAY",
+            duplicateBilling: false,
+          });
+        },
+      );
 
       it("keeps the active-only check off the store rows", async () => {
         mockModels.paidCustomer.findByUserIdWithActivePeriod.mockResolvedValue(
