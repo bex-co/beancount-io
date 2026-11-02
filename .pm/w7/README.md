@@ -4,7 +4,7 @@
 
 ## Milestones
 
-- [ ] **m1** — [Plan limits resolve from Stripe and store subscriptions alike](./m1/README.md) (10 tasks) ← ADR 001 implementation via `/pm` 2026-11-01
+- [x] **m1** — [Plan limits resolve from Stripe and store subscriptions alike](./done/m1/README.md) (10 tasks) ← ADR 001 implementation via `/pm` 2026-11-01
 - [ ] **m2** — [Store products, notifications, and release-gate decisions are in place](./m2/README.md) (8 tasks) ← ADR 001 implementation via `/pm` 2026-11-01
 - [ ] **m3** — [App Store purchases verify and stay current on the backend](./m3/README.md) (7 tasks) ← ADR 001 implementation via `/pm` 2026-11-01
 - [ ] **m4** — [Google Play purchases verify, acknowledge, and stay current on the backend](./m4/README.md) (6 tasks) ← ADR 001 implementation via `/pm` 2026-11-01
