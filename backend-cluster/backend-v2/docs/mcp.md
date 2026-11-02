@@ -738,6 +738,14 @@ authority and apply changes immediately. Creation can be previewed first with
   invalid date, a known opening on `Equity:OpeningBalances` itself — is
   refused here with the same `setup` validation error. It needs the same
   account authority as creation.
+- `setup.modules` adds personal-only account groups to a `personal@1`
+  ledger, each at most once: `investments@1`, `rental-property@1` (with an
+  optional `propertyName`, an ASCII account component defaulting to
+  `Property1`), and `side-business@1`. The files never depend on module
+  order, and `accounts` may name a selected module's account. A module with
+  another preset, an unknown or repeated module, or a misplaced or invalid
+  `propertyName` is refused with the same `setup` validation error on REST,
+  GraphQL (`LedgerSetupModuleInput`), and MCP.
 - `createLedger` requires `name` and accepts `description`, `private`, and either
   `template` (`STARTER` or `SAMPLE`) or `setup`; passing both is a validation
   error, and omitting both selects starter files. `setup` takes a `preset` and

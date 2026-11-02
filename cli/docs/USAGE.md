@@ -469,6 +469,38 @@ bea --no-input init books --currency EUR --date 2026-08-01 \
   --opening-balance "Liabilities:CreditCard -50"
 ```
 
+### Setup presets and modules
+
+`--preset` builds the chart from the setup catalog instead of the fixed one:
+`personal@1` (the household default), `freelance@1`, `business@1`,
+`portfolio@1`, `rental@1`, `shared-expenses@1`, `community@1`, or `blank@1`.
+`--title` names the ledger and is accepted only with a preset. A personal
+ledger can also track investments, a rental property, or a side business in
+the same books: repeat `--module` for each, and name the property with
+`--property-name` (an ASCII account part such as `OakSt`; default `Property1`).
+
+```bash
+bea --no-input init books --preset personal@1 --currency USD --date 2026-01-01 \
+  --module investments@1 \
+  --module rental-property@1 --property-name OakSt \
+  --module side-business@1
+```
+
+`investments@1` opens `Assets:Brokerage` (booked FIFO, open for any
+commodity), `Income:Dividends`, `Income:Interest`, `Income:CapitalGains`, and
+`Expenses:Brokerage:Fees`. `rental-property@1` opens `Income:Rent:<Name>`,
+`Liabilities:Deposits:<Name>`, and `Expenses:Rental:<Name>:` `Repairs`,
+`Insurance`, `Management`, and `Other`. `side-business@1` opens
+`Assets:Business:Bank`, `Income:Business:Services`, and `Expenses:Business:`
+`Software`, `Supplies`, `Travel`, and `Fees`. The order of `--module` flags
+never changes the file, and `--opening-balance` may name a module's asset or
+liability account. A module without `--preset personal@1`, an unknown or
+repeated module, or `--property-name` without `rental-property@1` exits **2**
+before anything is created; keep a company, a club, or money shared with
+others in its own ledger. `bea cloud ledger create` takes the same
+`--preset`, `--title`, `--module`, and `--property-name` options, plus
+`--currency` and `--date`, and sends them to the server as `setup`.
+
 These are alternative ways to create a new ledger. `init` never overwrites an
 existing file. Pass a directory (creates `main.bean`) or a `.bean`/`.beancount`
 path. An existing directory is a directory target even when its name ends in

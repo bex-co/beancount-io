@@ -101,6 +101,14 @@ community organization), add `--preset <id>` with the matching preset
 `shared-expenses@1`, `community@1`; `personal@1` is the household default and
 `blank@1` an empty chart). Add `--title` only when help lists it and a preset
 is selected; select `personal@1` when only a household ledger name was given.
+When help also lists `--module` and a household ledger also holds
+investments, a rental property, or side income, keep `--preset personal@1`
+and add `--module investments@1`, `--module rental-property@1` (with
+`--property-name <Name>`, an ASCII account part such as `OakSt`, for the
+property the user named), or `--module side-business@1` for each one named;
+those accounts then exist and Step 3b proposes only what the modules do not
+open. Modules belong to a household's own books: a company, a club, or money
+shared with other people gets its own ledger and preset, never a module.
 Opening balances then name that preset's asset/liability accounts instead of
 `Assets:Checking`. Without those options, use the base recipe and explain
 that this CLI creates the standard chart; Step 3b can add the user's approved
