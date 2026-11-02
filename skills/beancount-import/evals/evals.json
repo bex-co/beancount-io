@@ -379,7 +379,7 @@
       "prompt": "Import ./export.csv, my Stripe balance export, into ./ledger.beancount. Payouts go to my checking account.",
       "expected_output": "payout-tie for po_1 shows 174.18 from its rows against the 157.28 payout, a -16.90 gap (a row outside the export, such as a refund). The skill stops that payout, shows the rows and the gap, and asks; nothing for po_1 is written and no balancing row is invented.",
       "files": [
-        "evals/files/eval24_ledger.beancount",
+        "evals/files/eval23_ledger.beancount",
         "evals/files/eval24_export.csv"
       ],
       "expectations": [
@@ -394,7 +394,7 @@
       "prompt": "Import ./export.csv, my Stripe balance export, into ./ledger.beancount. Payouts go to my checking account.",
       "expected_output": "The dispute row's type has no mapping, so the skill shows it with the export's wording and asks which account the 50.00 chargeback and 15.00 dispute fee belong to; it does not fold it into a sale or stage the payout until the row is decided.",
       "files": [
-        "evals/files/eval25_ledger.beancount",
+        "evals/files/eval23_ledger.beancount",
         "evals/files/eval25_export.csv"
       ],
       "expectations": [
@@ -415,6 +415,38 @@
       "expectations": [
         "The 96.80 deposit is presented as the payout's other side, not as new income",
         "Skipping it leaves Income:Sales at the single 100.00 sale",
+        "Nothing is written before an explicit yes"
+      ]
+    },
+    {
+      "id": 27,
+      "name": "stripe-exact-reimport-adds-nothing",
+      "prompt": "Import ./export.csv, my Stripe balance export, into ./ledger.beancount. Payouts go to my checking account.",
+      "expected_output": "Every row of the export already sits in the ledger under its stripe: import-id (stripe:txn_a, stripe:txn_b, stripe:txn_r, stripe:po_1), so Layer 1 drops all four and the review reports them as already imported. Nothing is proposed and nothing is written; Income:Sales stays at -163.10 USD and the clearing account at 0.00.",
+      "files": [
+        "evals/files/eval27_ledger.beancount",
+        "evals/files/eval27_export.csv"
+      ],
+      "expectations": [
+        "All four rows are reported as already imported by their stripe: ids",
+        "No entry is proposed",
+        "The ledger is not modified"
+      ]
+    },
+    {
+      "id": 28,
+      "name": "stripe-charge-settles-open-invoice",
+      "prompt": "Import ./export.csv, my Stripe balance export, into ./ledger.beancount. Payouts go to my checking account.",
+      "expected_output": "Reads the open invoices (INV-031 acme 1,000.00). payout-tie for po_2 shows 970.70 + 77.38 = 1,048.08, gap 0.00. The txn_a charge equals INV-031's balance and names it, so it is offered as that invoice's payment: Assets:AccountsReceivable -1000.00 with invoice: \"INV-031\" and ^inv-031, Expenses:Fees 29.30, Assets:Clearing:Stripe 970.70, not income. txn_b books gross 80.00 to Income:Sales with its 2.62 fee. The payout moves 1,048.08 from clearing to checking. Nothing is written before a yes; afterwards INV-031 has nothing open, the clearing account is 0.00, and the root check passes.",
+      "files": [
+        "evals/files/eval28_ledger.beancount",
+        "evals/files/eval28_export.csv"
+      ],
+      "expectations": [
+        "txn_a credits Assets:AccountsReceivable 1,000.00 with invoice: \"INV-031\" and the ^inv-031 link, not income",
+        "The 29.30 fee posts to Expenses:Fees and 970.70 to Assets:Clearing:Stripe",
+        "txn_b books 80.00 gross to Income:Sales",
+        "payout-tie shows gap 0.00 and the payout moves 1,048.08 to Assets:Checking",
         "Nothing is written before an explicit yes"
       ]
     }

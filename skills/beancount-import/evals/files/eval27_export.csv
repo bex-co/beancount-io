@@ -1,0 +1,5 @@
+id,Created (UTC),Type,Description,Amount,Fee,Net,Transfer
+txn_a,2026-10-01 10:00,charge,Order 1001,100.00,3.20,96.80,po_1
+txn_b,2026-10-02 11:00,charge,Order 1002,80.00,2.62,77.38,po_1
+txn_r,2026-10-03 09:00,refund,Refund Order 1001 part,-16.90,0.00,-16.90,po_1
+po_1,2026-10-05 00:00,payout,STRIPE PAYOUT,-157.28,0.00,-157.28,po_1
