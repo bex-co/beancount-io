@@ -714,9 +714,16 @@ export class StripeService implements IStripeService {
           limit: 100,
           starting_after: startingAfter,
           // A past-due subscription's grace is read from its latest invoice,
-          // so every tier lookup needs it.
+          // so every tier lookup needs it. Billing status also says what the
+          // next renewal charges, which takes the discounts (w1/183).
           ...(options.expandForStatus
-            ? { expand: ["data.schedule", "data.latest_invoice"] }
+            ? {
+                expand: [
+                  "data.schedule",
+                  "data.latest_invoice",
+                  "data.discounts.source.coupon",
+                ],
+              }
             : options.status === "current"
               ? { expand: ["data.latest_invoice"] }
               : {}),

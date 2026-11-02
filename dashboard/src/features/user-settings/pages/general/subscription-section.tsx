@@ -229,6 +229,10 @@ export function SubscriptionSection({
     ? subscriptions?.[0]
     : undefined;
   const currentPrice = currentSubscription?.items[0]?.price;
+  // What the renewal charges: a discount can make it less than the price's
+  // list amount, down to $0 (w1/183).
+  const renewalAmount =
+    currentSubscription?.nextChargeAmount ?? currentPrice?.amount ?? 0;
   const currentInterval: PlanInterval | null =
     currentPrice?.interval === "year"
       ? "year"
@@ -329,10 +333,7 @@ export function SubscriptionSection({
               renewalDate && currentPrice
                 ? {
                     date: renewalDate,
-                    amount: formatMoney(
-                      currentPrice.amount,
-                      currentPrice.currency,
-                    ),
+                    amount: formatMoney(renewalAmount, currentPrice.currency),
                   }
                 : null
             }
@@ -369,7 +370,7 @@ export function SubscriptionSection({
                 currentPrice
                   ? {
                       interval: currentInterval,
-                      amount: currentPrice.amount,
+                      amount: renewalAmount,
                       currency: currentPrice.currency,
                       isLegacyPrice: LEGACY_PRICE_IDS.has(currentPrice.id),
                       paymentMethod: currentSubscription?.paymentMethod ?? null,

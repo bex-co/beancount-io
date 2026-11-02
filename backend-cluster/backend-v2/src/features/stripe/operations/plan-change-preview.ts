@@ -158,10 +158,10 @@ async function listPrice(
  * running then are applied, so "Then $X" is what will be charged (w1/182).
  * A discount it cannot read is skipped, so the worst case is the list price.
  */
-async function afterDiscounts(
+export async function afterDiscounts(
   stripe: Stripe,
   subscription: Stripe.Subscription,
-  { amount, currency, productId }: Awaited<ReturnType<typeof listPrice>>,
+  { amount, currency, productId }: { amount: number; currency: string; productId: string },
   at: Date,
 ): Promise<number> {
   let result = amount;

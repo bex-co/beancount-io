@@ -531,6 +531,61 @@ describe("SubscriptionResolver", () => {
       expect(result.subscriptions[0]?.latestInvoice).toBeNull();
     });
 
+    describe("what the next renewal charges (w1/183)", () => {
+      const coupons = { retrieve: jest.fn() };
+      const discount = (coupon: object, end: number | null = null) => ({
+        id: "di_qa",
+        end,
+        source: { coupon: { id: "qa-20261102", ...coupon } },
+      });
+      const nextCharge = async (overrides: object) => {
+        mockStripeService.getStripeInstance.mockReturnValue({ coupons });
+        mockStripeService.listSubscriptions.mockResolvedValue([
+          liveSubscription("active", overrides),
+        ]);
+        const result = await resolver.subscriptionStatus(
+          mockContext,
+          selecting("subscriptions"),
+        );
+        return result.subscriptions[0]?.nextChargeAmount;
+      };
+
+      beforeEach(() => {
+        coupons.retrieve.mockReset().mockResolvedValue({ applies_to: null });
+      });
+
+      it("is $0 under a 100%-off-forever discount, not the list price", async () => {
+        expect(
+          await nextCharge({
+            discounts: [discount({ percent_off: 100, duration: "forever" })],
+          }),
+        ).toBe(0);
+      });
+
+      it("is the list price without a discount, asking Stripe nothing", async () => {
+        expect(await nextCharge({ discounts: [] })).toBe(9999);
+        expect(coupons.retrieve).not.toHaveBeenCalled();
+      });
+
+      it("ignores a discount that ends before the renewal", async () => {
+        const now = Math.floor(Date.now() / 1000);
+        expect(
+          await nextCharge({
+            discounts: [discount({ percent_off: 50 }, now + 60)],
+          }),
+        ).toBe(9999);
+      });
+
+      it("is null for a plan that ends at the period end", async () => {
+        expect(
+          await nextCharge({
+            cancel_at_period_end: true,
+            discounts: [discount({ percent_off: 100 })],
+          }),
+        ).toBeNull();
+      });
+    });
+
     it("reports a subscription's scheduled plan change", async () => {
       const end = Math.floor(Date.now() / 1000) + 86_400;
       mockStripeService.listSubscriptions.mockResolvedValue([

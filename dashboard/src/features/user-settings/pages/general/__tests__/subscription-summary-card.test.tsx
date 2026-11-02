@@ -69,13 +69,17 @@ const LEGACY_PREMIUM_MONTHLY = "price_1L9ccEEqsEqs2tLVKPRV17wb";
 const LEGACY_PREMIUM_YEARLY = "price_1L9ccEEqsEqs2tLVbeBgHm9p";
 const PREMIUM_MONTHLY = "price_1RrSOGEqsEqs2tLVFnyB34qG";
 
-/** A Premium subscriber billed `price` on `interval`, renewing Nov 17, 2026. */
+/**
+ * A Premium subscriber billed `price` on `interval`, renewing Nov 17, 2026;
+ * `nextChargeAmount` is the server's renewal charge after discounts.
+ */
 function subscribe(
   price: { id: string; amount: number; interval: "month" | "year" },
   paymentMethod: { brand: string; last4: string } | null = {
     brand: "visa",
     last4: "4242",
   },
+  nextChargeAmount: number | null = null,
 ) {
   const data: GetSubscriptionStatusQuery = structuredClone(
     mockActiveSubscriptionData,
@@ -88,6 +92,7 @@ function subscribe(
     ...paymentMethod,
   };
   Object.assign(subscription.items[0].price, price);
+  subscription.nextChargeAmount = nextChargeAmount;
   mockUseQuery.mockReturnValue({
     data,
     loading: false,
@@ -167,6 +172,25 @@ describe("Billing summary card", () => {
     );
     expect(banner().getByText("Nov 17, 2026")).toBeInTheDocument();
     expect(screen.queryByTestId("pay-yearly-offer")).not.toBeInTheDocument();
+  });
+
+  it("shows what a discounted plan renews at, not its list price (w1/183)", () => {
+    // A 100%-off-forever discount: the server says the renewal is $0.
+    subscribe(
+      { id: PREMIUM_MONTHLY, amount: 1499, interval: "month" },
+      undefined,
+      0,
+    );
+
+    render(<SubscriptionSection />);
+
+    expect(billingLine()).toHaveTextContent(
+      "$0.00userSettings.perMonth · visa •••• 4242",
+    );
+    // The Billing list's row says the same, and nothing quotes the list price.
+    // The card and the Billing list row.
+    expect(screen.getAllByText("$0.00userSettings.perMonth")).toHaveLength(2);
+    expect(screen.queryByText(/\$14\.99userSettings\.perMonth/)).toBeNull();
   });
 
   it("leaves the card out when Stripe reports no payment method", () => {

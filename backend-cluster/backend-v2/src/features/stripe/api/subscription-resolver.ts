@@ -176,6 +176,13 @@ class Subscription {
       "The latest invoice and what it collected, discounts applied; on the full subscription view.",
   })
   latestInvoice?: SubscriptionInvoice | null;
+
+  @Field(() => Int, {
+    nullable: true,
+    description:
+      "What the next renewal charges, in minor units, after the discounts still running then. Null when the plan ends or changes at the period end.",
+  })
+  nextChargeAmount?: number | null;
 }
 
 const BillingSourceValues: { [K in BillingSource]: K } = {

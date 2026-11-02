@@ -1,6 +1,7 @@
 import { refreshSubscriptionPeriods } from "../operations/refresh-subscription-periods";
 import {
   type ClientSubscription,
+  expandableId,
   expandedLatestInvoice,
   pastDueRetry,
   subscriptionTier,
@@ -28,9 +29,10 @@ import { BilledByStoreError } from "@/shared/errors";
 import { logger } from "@/shared/logger";
 import { SUBSCRIPTION_CONFIG, TIER_LIMITS, SubscriptionTier } from "./stripe";
 import type { CancellationReason, IStripeService } from "./stripe-service";
-import type {
-  PaymentMethodSummaryView,
-  PlanChangePreviewView,
+import {
+  afterDiscounts,
+  type PaymentMethodSummaryView,
+  type PlanChangePreviewView,
 } from "../operations/plan-change-preview";
 import type { PlanChangeResultView } from "../operations/plan-change-apply";
 import type { BillingEmailDeps } from "../operations/billing-email";
@@ -90,6 +92,8 @@ interface SubscriptionView {
   /** With `past_due`: when Stripe next retries the failed renewal. */
   nextPaymentAttempt: Date | null;
   latestInvoice: SubscriptionInvoiceView | null;
+  /** Minor units; null when the plan does not renew on its current price. */
+  nextChargeAmount: number | null;
 }
 
 /** What the subscription's latest invoice collected, discounts applied. */
@@ -147,6 +151,44 @@ function latestInvoice(
     billingReason: invoice.billing_reason ?? null,
     created: new Date(invoice.created * 1000),
   };
+}
+
+/**
+ * What the next renewal charges, after the discounts still running then: a
+ * 100%-off-forever plan renews at $0, not its list price (w1/183). Null when
+ * it ends or changes plan at the period end, where the charge is not this
+ * price's. Without discounts this asks Stripe nothing.
+ */
+async function nextChargeAmount(
+  stripe: Stripe,
+  subscription: Stripe.Subscription,
+  scheduledChange: ScheduledChangeView | null,
+): Promise<number | null> {
+  if (
+    subscription.status === "canceled" ||
+    subscription.cancel_at_period_end ||
+    subscription.cancel_at ||
+    scheduledChange
+  ) {
+    return null;
+  }
+  const at = new Date(
+    (subscription.items.data[0]?.current_period_end ?? 0) * 1000,
+  );
+  let total = 0;
+  for (const item of subscription.items.data) {
+    total += await afterDiscounts(
+      stripe,
+      subscription,
+      {
+        amount: (item.price.unit_amount ?? 0) * (item.quantity ?? 1),
+        currency: item.price.currency,
+        productId: expandableId(item.price.product),
+      },
+      at,
+    );
+  }
+  return total;
 }
 
 /** A past-due renewal's next retry, for the failed-renewal banner. */
@@ -446,6 +488,16 @@ export class SubscriptionService implements ISubscriptionService {
           subscription.clientId,
           subscription,
         );
+        const scheduledChange = pendingChange(
+          subscription,
+          SUBSCRIPTION_CONFIG[subscription.clientId]?.plans ?? [],
+        );
+        // Skips a discount it cannot read, so it never throws either.
+        const nextCharge = nextChargeAmount(
+          this.stripe.getStripeInstance(subscription.clientId),
+          subscription,
+          scheduledChange,
+        );
         const itemsResults = await Promise.allSettled(
           subscription.items.data.map(async (item) => {
             const { price } = item;
@@ -507,12 +559,10 @@ export class SubscriptionService implements ISubscriptionService {
           cancelAtPeriodEnd: subscription.cancel_at_period_end,
           items,
           paymentMethod: await paymentMethod,
-          scheduledChange: pendingChange(
-            subscription,
-            SUBSCRIPTION_CONFIG[subscription.clientId]?.plans ?? [],
-          ),
+          scheduledChange,
           nextPaymentAttempt: retryDate(subscription),
           latestInvoice: latestInvoice(subscription),
+          nextChargeAmount: await nextCharge,
         } satisfies SubscriptionView;
       }),
     );

@@ -51,7 +51,9 @@ export function BillingSection({
           ? t(tierInfoByKey(plan.tier).labelKey)
           : subscription.items[0]?.product?.name ||
             t("userSettings.unknownPlan");
-        const amount = `${formatMoney(price?.amount ?? 0, price?.currency)}${t(
+        // A canceled row has no next charge, so it shows the price it had.
+        const charge = subscription.nextChargeAmount ?? price?.amount ?? 0;
+        const amount = `${formatMoney(charge, price?.currency)}${t(
           price?.interval === "year"
             ? "userSettings.perYear"
             : "userSettings.perMonth",

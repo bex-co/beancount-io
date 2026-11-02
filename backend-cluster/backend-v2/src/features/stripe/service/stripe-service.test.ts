@@ -976,13 +976,13 @@ describe("StripeService", () => {
         "a current read for Billing status",
         { status: "current", expandForStatus: true },
         undefined,
-        ["data.schedule", "data.latest_invoice"],
+        ["data.schedule", "data.latest_invoice", "data.discounts.source.coupon"],
       ],
       [
         "the full Billing view",
         { status: "all", expandForStatus: true },
         "all",
-        ["data.schedule", "data.latest_invoice"],
+        ["data.schedule", "data.latest_invoice", "data.discounts.source.coupon"],
       ],
     ] as const)(
       "asks Stripe for %s with the latest invoice a past-due grace needs",

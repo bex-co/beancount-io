@@ -65,6 +65,7 @@ export const mockActiveSubscriptionData: GetSubscriptionStatusQuery = {
         scheduledChange: null,
         nextPaymentAttempt: null,
         latestInvoice: null,
+        nextChargeAmount: null,
         paymentMethod: {
           __typename: "PaymentMethodSummary",
           brand: "visa",
@@ -140,6 +141,7 @@ export const mockCanceledSubscriptionData: GetSubscriptionStatusQuery = {
         scheduledChange: null,
         nextPaymentAttempt: null,
         latestInvoice: null,
+        nextChargeAmount: null,
         paymentMethod: {
           __typename: "PaymentMethodSummary",
           brand: "visa",
