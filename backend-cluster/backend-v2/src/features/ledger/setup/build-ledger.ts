@@ -1,9 +1,11 @@
 import { ValidationError } from "@/shared/errors";
 import {
+  moduleById,
   presetById,
   setupCatalog,
   setupCurrencies,
   type CapabilityState,
+  type ModuleId,
   type OpeningState,
   type PresetId,
 } from "./index";
@@ -16,8 +18,16 @@ interface SetupAccountSelection {
   amount?: string;
 }
 
+interface SetupModuleSelection {
+  id: ModuleId;
+  /** `rental-property@1` only: the property's account component. */
+  propertyName?: string;
+}
+
 export interface LedgerSetup {
   preset: PresetId;
+  /** Personal-only account groups (PRFAQ001 Appendix A.9). */
+  modules?: SetupModuleSelection[];
   title?: string;
   operatingCurrency?: string;
   historyStart?: string;
@@ -133,6 +143,53 @@ function omitNulls<T>(value: T): T {
 }
 
 /**
+ * The accounts the selected modules open, each with its booking method. A
+ * module is accepted only with a preset it lists, once, and a parameter only
+ * on the module that declares it (ADR021); every refusal creates nothing.
+ */
+function moduleAccounts(
+  presetId: string,
+  modules: SetupModuleSelection[],
+): Map<string, string | undefined> {
+  const accounts = new Map<string, string | undefined>();
+  const seen = new Set<string>();
+  for (const selection of modules) {
+    const module =
+      moduleById(selection.id) ?? fail(`Unknown module "${selection.id}"`);
+    if (!module.allowedPresets.includes(presetId)) {
+      fail(
+        `Module "${module.id}" is accepted only with preset ${module.allowedPresets.map((id) => `"${id}"`).join(", ")}, not "${presetId}"`,
+      );
+    }
+    if (seen.has(module.id)) {
+      fail(`Module "${module.id}" is selected more than once`);
+    }
+    seen.add(module.id);
+    const property = module.parameters.find(
+      (parameter) => parameter.id === "propertyName",
+    );
+    if (selection.propertyName !== undefined && !property) {
+      fail(`Module "${module.id}" takes no propertyName`);
+    }
+    const name = selection.propertyName ?? property?.default;
+    if (property && !new RegExp(property.pattern).test(name ?? "")) {
+      fail(
+        `Property name ${JSON.stringify(name)} for "${module.id}" is not valid: ${property.description}`,
+      );
+    }
+    for (const account of module.accounts) {
+      accounts.set(
+        property
+          ? account.name.replaceAll(property.placeholder, name!)
+          : account.name,
+        account.booking,
+      );
+    }
+  }
+  return accounts;
+}
+
+/**
  * Pure builder: turns a setup specification (ADR021) into the files it
  * would create plus their summary, without creating anything. Throws
  * `ValidationError` for any invalid explicit value.
@@ -181,9 +238,16 @@ export function previewLedgerSetup(
     }
   }
 
+  const modules = moduleAccounts(preset.id, setup.modules ?? []);
+  const booking = new Map<string, string | undefined>(
+    preset.accounts.map((account) => [account.name, account.booking]),
+  );
+  for (const [name, method] of modules) booking.set(name, method);
+
   const allowed = new Set<string>([
     ...preset.accounts.map((account) => account.name),
     ...enabledAccounts,
+    ...modules.keys(),
   ]);
   const isBlank = preset.id === "blank@1";
 
@@ -194,7 +258,7 @@ export function previewLedgerSetup(
   for (const account of preset.accounts) {
     selected.set(account.name, { name: account.name });
   }
-  for (const name of enabledAccounts) {
+  for (const name of [...enabledAccounts, ...modules.keys()]) {
     if (!selected.has(name)) selected.set(name, { name });
   }
   for (const selection of setup.accounts ?? []) {
@@ -209,7 +273,7 @@ export function previewLedgerSetup(
     }
     if (!isBlank && !allowed.has(selection.name)) {
       fail(
-        `Account "${selection.name}" is not part of preset "${preset.id}" or an enabled capability`,
+        `Account "${selection.name}" is not part of preset "${preset.id}", an enabled capability, or a selected module`,
       );
     }
     const openingState = selection.openingState ?? "unknown";
@@ -280,12 +344,18 @@ export function previewLedgerSetup(
   // Portfolio's holdings refused their own first share purchase, and a euro
   // lunch in a dollar ledger failed bean-check (w21/687). Only a currency the
   // account was set up with restricts it.
-  const openLine = (name: string, constraint?: string) =>
-    name === OPENING_EQUITY && hasKnownOpening
-      ? `${openDate} open ${name}`
-      : constraint
-        ? `${openDate} open ${name} ${constraint}`
-        : `${openDate} open ${name}`;
+  // A catalog booking method (the investments module's FIFO brokerage) ends
+  // the line, after any currency.
+  const openLine = (name: string, constraint?: string) => {
+    const method = booking.get(name);
+    const line =
+      name === OPENING_EQUITY && hasKnownOpening
+        ? `${openDate} open ${name}`
+        : constraint
+          ? `${openDate} open ${name} ${constraint}`
+          : `${openDate} open ${name}`;
+    return method ? `${line} "${method}"` : line;
+  };
   for (const account of accounts) {
     // Already opened as the counter of an earlier known opening: a second
     // `open` made the new ledger fail bean-check (w23/048).

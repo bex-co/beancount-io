@@ -56,7 +56,9 @@ describe("setup catalog (w3/m53/t001)", () => {
       expect(new Set(names).size).toBe(names.length);
       for (const question of preset.optionalQuestions) {
         for (const enabled of question.enablesAccounts) {
-          expect(enabled).toMatch(/^(Assets|Liabilities|Income|Expenses|Equity):/);
+          expect(enabled).toMatch(
+            /^(Assets|Liabilities|Income|Expenses|Equity):/,
+          );
         }
       }
     }
@@ -66,7 +68,9 @@ describe("setup catalog (w3/m53/t001)", () => {
     for (const preset of setupCatalog.presets) {
       expect(preset.firstResult.length).toBeGreaterThan(0);
       expect(preset.teachingExamples.length).toBeGreaterThanOrEqual(3);
-      expect(Object.keys(preset.acceptanceScenario.expected).length).toBeGreaterThan(0);
+      expect(
+        Object.keys(preset.acceptanceScenario.expected).length,
+      ).toBeGreaterThan(0);
     }
   });
 });
@@ -141,7 +145,14 @@ describe("setup catalog modules (w3/m59/t001)", () => {
     const pattern = new RegExp(property!.pattern);
     expect(pattern.test("Property1")).toBe(true);
     expect(pattern.test("OakSt-2")).toBe(true);
-    for (const bad of ["oakSt", "Oak St", "Oak:St", "Café", "", "A".repeat(65)]) {
+    for (const bad of [
+      "oakSt",
+      "Oak St",
+      "Oak:St",
+      "Café",
+      "",
+      "A".repeat(65),
+    ]) {
       expect(pattern.test(bad)).toBe(false);
     }
     for (const account of rental.accounts) {

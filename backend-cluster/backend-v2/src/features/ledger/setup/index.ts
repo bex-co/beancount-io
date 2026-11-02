@@ -4,7 +4,10 @@ import fixturesJson from "./fixtures.json";
 
 export type CapabilityState = "enabled" | "declined" | "deferred";
 export type OpeningState = "unknown" | "zero" | "known";
-export type ModuleId = "investments@1" | "rental-property@1" | "side-business@1";
+export type ModuleId =
+  | "investments@1"
+  | "rental-property@1"
+  | "side-business@1";
 export type PresetId =
   | "personal@1"
   | "freelance@1"

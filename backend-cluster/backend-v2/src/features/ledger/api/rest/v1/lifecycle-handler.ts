@@ -4,7 +4,11 @@ import {
   LEDGER_DESCRIPTION_MAX,
   LedgerTemplate,
 } from "@/features/ledger/workflow/ledger-workflow.types";
-import { setupCatalog, type PresetId } from "@/features/ledger/setup";
+import {
+  setupCatalog,
+  type ModuleId,
+  type PresetId,
+} from "@/features/ledger/setup";
 import {
   CREATE_REQUEST_ID_MAX,
   SETUP_TITLE_MAX,
@@ -47,6 +51,25 @@ const ledgerSetupInput = z
         ],
       )
       .describe("Setup preset id (ADR021)."),
+    modules: z
+      .array(
+        z
+          .object({
+            id: z.enum(
+              setupCatalog.modules.map((module) => module.id) as [
+                ModuleId,
+                ...ModuleId[],
+              ],
+            ),
+            propertyName: z
+              .string()
+              .optional()
+              .describe("rental-property@1 only; default Property1."),
+          })
+          .strict(),
+      )
+      .optional()
+      .describe("personal@1 only; each module at most once."),
     title: z.string().max(SETUP_TITLE_MAX).optional(),
     operatingCurrency: z
       .string()
@@ -163,8 +186,7 @@ export const ledgerDeleteResultSchema = z.object({
       "True when this is a deleteLedger preview: the checks ran and nothing was destroyed. Commits echo false.",
   }),
   preview: ledgerDeletePreviewSchema.optional().openapi({
-    description:
-      "The destroy summary; present only on deleteLedger previews.",
+    description: "The destroy summary; present only on deleteLedger previews.",
   }),
 });
 const ledgerUpdatePreviewSchema = z
@@ -176,11 +198,15 @@ const ledgerUpdatePreviewSchema = z
     description: z
       .object({ from: z.string().nullable(), to: z.string() })
       .optional()
-      .openapi({ description: "Current and new description, when changing it." }),
+      .openapi({
+        description: "Current and new description, when changing it.",
+      }),
     private: z
       .object({ from: z.boolean(), to: z.boolean() })
       .optional()
-      .openapi({ description: "Current and new visibility, when changing it." }),
+      .openapi({
+        description: "Current and new visibility, when changing it.",
+      }),
     warnings: z.array(z.string()).openapi({
       description:
         "What deserves a second look — a rename's URL change, a flip to public.",

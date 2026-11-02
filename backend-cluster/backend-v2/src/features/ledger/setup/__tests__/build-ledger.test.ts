@@ -567,3 +567,186 @@ describe("names and titles written into main.bean", () => {
     ).toThrow("must not contain line breaks");
   });
 });
+
+describe("personal modules (w3/m59/t002)", () => {
+  const TODAY = "2026-01-01";
+  const personal = (modules?: LedgerSetup["modules"], extra = {}) =>
+    previewLedgerSetup(
+      { preset: "personal@1", historyStart: TODAY, modules, ...extra },
+      TODAY,
+    );
+  const opens = (text: string) =>
+    text.split("\n").filter((line) => / open /.test(line));
+
+  // personal@1 as the builder wrote it before modules existed.
+  const PERSONAL_MAIN_BEAN = [
+    'option "title" "Personal ledger"',
+    'option "operating_currency" "USD"',
+    'option "inferred_tolerance_default" "*:0.001"',
+    "",
+    ...[
+      "Assets:Bank",
+      "Assets:Cash",
+      "Equity:OpeningBalances",
+      "Expenses:Food",
+      "Expenses:Health",
+      "Expenses:Housing",
+      "Expenses:Other",
+      "Expenses:Transport",
+      "Expenses:Utilities",
+      "Income:General",
+      "Liabilities:CreditCard",
+      "Liabilities:Loan",
+    ].map((name) => `2026-01-01 open ${name}`),
+    "",
+  ].join("\n");
+
+  it("leaves personal@1 byte-identical without modules, or with none", () => {
+    expect(personal().files["main.bean"]).toBe(PERSONAL_MAIN_BEAN);
+    expect(personal([]).files["main.bean"]).toBe(PERSONAL_MAIN_BEAN);
+  });
+
+  it("opens each module's group once, whatever the order", () => {
+    const all = personal([
+      { id: "investments@1" },
+      { id: "rental-property@1" },
+      { id: "side-business@1" },
+    ]);
+    const reversed = personal([
+      { id: "side-business@1" },
+      { id: "rental-property@1" },
+      { id: "investments@1" },
+    ]);
+    expect(reversed.files).toEqual(all.files);
+    const names = opens(all.files["main.bean"]!).map(
+      (line) => line.split(" ")[2],
+    );
+    expect(new Set(names).size).toBe(names.length);
+    expect(names).toEqual(
+      expect.arrayContaining([
+        "Assets:Brokerage",
+        "Income:Rent:Property1",
+        "Liabilities:Deposits:Property1",
+        "Expenses:Rental:Property1:Other",
+        "Assets:Business:Bank",
+        "Expenses:Business:Fees",
+      ]),
+    );
+    expect(all.accounts).toEqual([...names].sort());
+  });
+
+  it("books the brokerage FIFO in its open line", () => {
+    expect(
+      opens(personal([{ id: "investments@1" }]).files["main.bean"]!),
+    ).toContain('2026-01-01 open Assets:Brokerage "FIFO"');
+    // After the currency, when the customer gives the account one.
+    const withCurrency = personal([{ id: "investments@1" }], {
+      accounts: [{ name: "Assets:Brokerage", currency: "USD" }],
+    });
+    expect(opens(withCurrency.files["main.bean"]!)).toContain(
+      '2026-01-01 open Assets:Brokerage USD "FIFO"',
+    );
+  });
+
+  it("names the rental group after the property, Property1 by default", () => {
+    const named = personal([
+      { id: "rental-property@1", propertyName: "OakSt" },
+    ]);
+    expect(named.accounts).toEqual(
+      expect.arrayContaining([
+        "Income:Rent:OakSt",
+        "Liabilities:Deposits:OakSt",
+        "Expenses:Rental:OakSt:Repairs",
+        "Expenses:Rental:OakSt:Insurance",
+        "Expenses:Rental:OakSt:Management",
+        "Expenses:Rental:OakSt:Other",
+      ]),
+    );
+    expect(named.accounts.some((name) => name.includes("Property1"))).toBe(
+      false,
+    );
+    expect(personal([{ id: "rental-property@1" }]).accounts).toContain(
+      "Income:Rent:Property1",
+    );
+  });
+
+  it("lets a first account name a selected module's account, and only then", () => {
+    const funded = personal([{ id: "side-business@1" }], {
+      accounts: [
+        { name: "Assets:Business:Bank", openingState: "known", amount: "250" },
+      ],
+    });
+    expect(funded.files["main.bean"]).toContain(
+      "2026-01-01 balance Assets:Business:Bank 250 USD",
+    );
+    expect(() =>
+      personal(undefined, {
+        accounts: [{ name: "Assets:Business:Bank", openingState: "zero" }],
+      }),
+    ).toThrow(
+      'Account "Assets:Business:Bank" is not part of preset "personal@1", an enabled capability, or a selected module',
+    );
+  });
+
+  it.each([
+    [
+      "with another preset",
+      { preset: "blank@1", modules: [{ id: "investments@1" }] },
+      'Module "investments@1" is accepted only with preset "personal@1", not "blank@1"',
+    ],
+    [
+      "an unknown module",
+      { preset: "personal@1", modules: [{ id: "crypto@1" }] },
+      'Unknown module "crypto@1"',
+    ],
+    [
+      "a repeated module",
+      {
+        preset: "personal@1",
+        modules: [{ id: "investments@1" }, { id: "investments@1" }],
+      },
+      'Module "investments@1" is selected more than once',
+    ],
+    [
+      "a property name on another module",
+      {
+        preset: "personal@1",
+        modules: [{ id: "side-business@1", propertyName: "Shop" }],
+      },
+      'Module "side-business@1" takes no propertyName',
+    ],
+    [
+      "a lowercase property name",
+      {
+        preset: "personal@1",
+        modules: [{ id: "rental-property@1", propertyName: "oakSt" }],
+      },
+      'Property name "oakSt" for "rental-property@1" is not valid',
+    ],
+    [
+      "a property name that would add an account component",
+      {
+        preset: "personal@1",
+        modules: [{ id: "rental-property@1", propertyName: "Oak:St" }],
+      },
+      'Property name "Oak:St" for "rental-property@1" is not valid',
+    ],
+  ])("refuses modules %s", (_, setup, reason) => {
+    expect(() => previewLedgerSetup(setup as LedgerSetup, TODAY)).toThrow(
+      reason,
+    );
+  });
+
+  it("refuses modules on a non-personal preset even when the list is the only change", () => {
+    expect(() =>
+      previewLedgerSetup(
+        { preset: "freelance@1", modules: [{ id: "side-business@1" }] },
+        TODAY,
+      ),
+    ).toThrow(ValidationError);
+    // An empty list is no module at all.
+    expect(() =>
+      previewLedgerSetup({ preset: "freelance@1", modules: [] }, TODAY),
+    ).not.toThrow();
+  });
+});

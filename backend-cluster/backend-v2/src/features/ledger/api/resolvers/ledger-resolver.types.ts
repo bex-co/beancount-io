@@ -44,6 +44,18 @@ registerEnumType(LedgerSetupPreset, {
   description: "Versioned starter preset from the setup catalog (ADR021)",
 });
 
+export enum LedgerSetupModule {
+  INVESTMENTS = "investments@1",
+  RENTAL_PROPERTY = "rental-property@1",
+  SIDE_BUSINESS = "side-business@1",
+}
+
+registerEnumType(LedgerSetupModule, {
+  name: "LedgerSetupModule",
+  description:
+    "Versioned personal-only account group from the setup catalog (PRFAQ001 Appendix A.9)",
+});
+
 export enum LedgerOpeningState {
   UNKNOWN = "unknown",
   ZERO = "zero",
@@ -75,9 +87,29 @@ export class LedgerSetupAccountInput {
 }
 
 @InputType()
+export class LedgerSetupModuleInput {
+  @Field(() => LedgerSetupModule)
+  id: LedgerSetupModule;
+
+  @Field(() => String, {
+    nullable: true,
+    description:
+      "rental-property@1 only: the property's ASCII account component, default Property1.",
+  })
+  propertyName?: string;
+}
+
+@InputType()
 export class LedgerSetupInput {
   @Field(() => LedgerSetupPreset)
   preset: LedgerSetupPreset;
+
+  @Field(() => [LedgerSetupModuleInput], {
+    nullable: true,
+    description:
+      "Account groups added to a PERSONAL ledger, each at most once. Refused with any other preset.",
+  })
+  modules?: LedgerSetupModuleInput[];
 
   @Field(() => String, { nullable: true })
   title?: string;
@@ -606,8 +638,7 @@ export class DeleteLedgerResponse {
 
   @Field(() => LedgerDeletePreview, {
     nullable: true,
-    description:
-      "The destroy summary; present only on deleteLedger previews.",
+    description: "The destroy summary; present only on deleteLedger previews.",
   })
   preview?: LedgerDeletePreview;
 }
