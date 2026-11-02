@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1119 — Bound all filesystem work during automatic root discovery](./1119.md) — minor CLI: unrelated neighboring files bypass the 64-candidate budget and stall a one-row import; current-source repeat, standalone work-count proof and seven routing controls checked; found 2026-11-01.
+
 - [1118 — Keep Cash Flow cash balances in native arithmetic after inferred payments](./1118.md) — minor CLI JSON regression: a 100-digit context changes native closing and quiet-month cash by 1e−25; fresh/current/prior-source controls and the full 90-profile cash-flow acceptance checked; found 2026-11-01.
 
 
