@@ -1,6 +1,6 @@
 # w4 · m58 — Report each holding's cost currency on the balance reads
 
-**Worker:** worker1 **Goal:** the time-scoped balance reads tell a client, per account, how many units of each commodity are held at a cost in which cost currency and how many are held without a cost, so valuation disclosures stop guessing **Status:** blocked — see [Blocked](#blocked) (t001–t005 done; t006 waits for the deploy)
+**Worker:** worker1 **Goal:** the time-scoped balance reads tell a client, per account, how many units of each commodity are held at a cost in which cost currency and how many are held without a cost, so valuation disclosures stop guessing **Status:** todo (t001–t005 done; t006 Closeout next)
 
 ## Tasks (in order)
 
@@ -11,18 +11,16 @@
 | t003 | Adoption surface — **DONE** | 20m | t002 |
 | t004 | Simplify — **DONE** | 20m | t003 |
 | t005 | Test coverage — **DONE** | 30m | t003 |
-| t006 | Closeout — **BLOCKED** | 15m | t004, t005 |
+| t006 | Closeout | 15m | t004, t005 |
 
-## Blocked
+## Unblocked
 
-**Blocked 2026-11-01 by `/loopx w4` after all repository work shipped.** t001 ledger `123d817e2` (keyword), t002 backend-v2 `e698f49e2` (summaries, docs, three-surface parity test), t003 adoption surfaces, t004 `d5d12ea9a` (one shared description), t005 `f4d2a1c04` (coverage); ledger and backend-v2 gates pass. Only t006 Closeout remains, and its definition-of-done bullet needs the deployed read: production does not deploy from `main` (bex deploys the `bex-deploy` branch; the beancount.io host has its own step), and a read-only probe of the public example ledger on 2026-11-01 got `SERVICE_UNAVAILABLE` ("Ledger API is temporarily unavailable") for every conversion including the `units` control, so not even the old behavior was observable.
-
-- **Unblock:** the ledger and backend-v2 builds containing `f4d2a1c04` (or later) are deployed and the Ledger API answers; then a worker reads `conversion=units_by_cost` on a synthetic ledger with the m58 fixtures (or the public example as a smoke check) through GraphQL, REST and MCP, confirms the keyed maps, and finishes t006 — including `/pm unblock` of 1031, w21/554 and w21/556. **Who:** the repository owner (deploy and the Ledger API outage), then any worker.
+**Unblocked 2026-11-02 via `/unblock w4`** — after the owner's deploy, a signed-out GraphQL `getLedgerTrialBalance` read of the public example ledger answers again and serves the keyword: `conversion=units_by_cost` returns Assets children keyed `"USD {}"`, `"GLD {USD}"`, `"VACHR {}"`, `"RGAGX {USD}"`, … while the `units` control returns the same quantities under bare `"USD"`, `"GLD"`, …. Deployed revisions not recorded; REST, MCP and the backend-v2 summary handling (`e698f49e2`) were not observed. History: blocked 2026-11-01 by `/loopx w4` after all repository work shipped (t001 ledger `123d817e2`, t002 backend-v2 `e698f49e2`, t003 adoption surfaces, t004 `d5d12ea9a`, t005 `f4d2a1c04`; gates passed), because the deployed read was unobservable — a 2026-11-01 probe got `SERVICE_UNAVAILABLE` for every conversion. **Next (t006):** read `units_by_cost` on a synthetic ledger with the m58 fixtures through GraphQL, REST and MCP, confirm the keyed maps and summaries, `/pm unblock` 1031, w21/554 and w21/556 once their fixtures hold, then close. If REST or MCP still shows the pre-`e698f49e2` behavior, re-block on the backend-v2 deploy.
 
 ## Definition of done
 
 - `conversion=units_by_cost` on the balance-sheet, income-statement, trial-balance, interval-totals and account-report reads returns, for every account balance, units keyed `<commodity> {<cost currency>}` for lots held at a cost and `<commodity> {}` for lots held without one, time-scoped and filtered like the other conversions; existing conversions are unchanged.
-- For the fixtures in [1031](../1031.md) (EUR cost; EUR quotes or USD-only quotes), [w21/554](../../../w21/blocked/554.md) (1 BTC {USD} + 40 ETH {BTC}; 10 VEUR {EUR} − 400 EUR) and [w21/556](../../../w21/blocked/556.md) (500 EUR cash + 10 VTI {EUR}), the result names each holding's cost currency and cost-less remainder with no heuristic: e.g. `{"VTI {EUR}": "10", "EUR {}": "500"}`.
+- For the fixtures in [1031](../blocked/1031.md) (EUR cost; EUR quotes or USD-only quotes), [w21/554](../../w21/blocked/554.md) (1 BTC {USD} + 40 ETH {BTC}; 10 VEUR {EUR} − 400 EUR) and [w21/556](../../w21/blocked/556.md) (500 EUR cash + 10 VTI {EUR}), the result names each holding's cost currency and cost-less remainder with no heuristic: e.g. `{"VTI {EUR}": "10", "EUR {}": "500"}`.
 - REST, GraphQL and MCP return the same result for the same input (contract test), summaries treat the keyword as a strategy, not a missing-price currency, and the parity gates stay at zero.
 - The ledger and backend-v2 deployment serving the keyword is observed, after which 1031, w21/554 and w21/556 are unblocked for their consumer changes.
 
