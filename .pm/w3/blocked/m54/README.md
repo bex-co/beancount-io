@@ -52,3 +52,9 @@ Closeout must also verify [W4/314](../../../w4/314.md) and [W4/315](../../../w4/
 The same320 record also contains an independent desktop ownership control: cancelling an unchanged existing-ledger edit preserves a parked creation draft, while a preblocked failed UpdateLedger deletes it and forces a new creation identity. This shared-form cleanup path attempts no CreateLedger and must preserve the creation draft as well.
 
 [W4/321](../../../w4/321.md) records the remaining Template-choice hint: step1 reuses the final Review's Go back instruction instead of explaining the ready-made chart/preset choice. Both widths reproduce while preset selection works. This is separate from648's completed Starter copy and the native W21/051 hint fix.
+
+## Update 2026-11-01 (`/loopx w3`)
+
+[w3/m60](../../done/m60/README.md) replaced the creation surfaces the dashboard QA follow-ups above were filed against: both clients now create in two steps with no review page, no Books begin, and no Starter card. The behaviors those follow-ups protected are carried as tests there — create only from the final action (W4/314), the summary naming the chosen start (W4/315), opening accounts following the preset (W4/316), local-day dates (W4/317), and a failed create keeping its draft and `requestId` (W4/320); W4/321's Template hint went with the Starter/Template cards. Their re-verification belongs to m60's flows, not to this milestone.
+
+**Remaining Unblock:** only t003's list criterion — a demo flag on the ledger directory surfaces (REST/GraphQL/MCP in parity) and the badge in both clients' ledger lists — then closeout. Choosing the flag's source (read `bcio_demo` per listed ledger, or record it at creation) is the open contract decision. Who can clear it: whoever next extends the ledger directory read in backend-v2.
