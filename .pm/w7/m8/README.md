@@ -1,6 +1,6 @@
 # w7 · m8 — The apps sell and restore the plans through the App Store and Google Play
 
-**Worker:** worker1 **Goal:** a signed-in user can buy, change, restore, and manage any self-serve plan in either app, and the plan applies everywhere at once **Status:** blocked
+**Worker:** worker1 **Goal:** a signed-in user can buy, change, restore, and manage any self-serve plan in either app, and the plan applies everywhere at once **Status:** in progress
 
 ## Tasks (in order)
 
@@ -20,15 +20,7 @@
 | t012 | Test coverage | 1h | t010 |
 | t013 | Closeout | 15m | t011, t012 |
 
-## Blocked
-
-**Blocked 2026-11-01** — nothing here can start yet.
-
-- **t001 adds a dependency.** `expo-iap` needs the owner's approval, and it needs a development build. **Unblock:** the owner approves it.
-- **t002 has nothing to gate.** Its acceptance is that turning a provider's switch off hides purchase, and no purchase button exists until t003. A backend switch with no reader would be dead configuration and would churn the OpenAPI spec and the CLI client. **Unblock:** t003 exists; do the two together. The switch belongs in `readFeatureFlags`, with its response schema, and must not refuse `confirmStorePurchase`, so restores keep working.
-- **t003 needs t001, and t004 to t009 need m3 or m4.** t010 to t013 follow them.
-
-Who can clear it: the owner.
+**Unblocked 2026-11-01** — the owner approved `expo-iap`, so t001 can start, and t002 and t003 follow it. t002's switch and t003's buttons land together: the switch belongs in `readFeatureFlags`, with its response schema, and must not refuse `confirmStorePurchase`, so restores keep working. t004 to t006, t008, and t009 still need m3 or m4, and t010 to t013 follow them.
 
 ## Definition of done
 
