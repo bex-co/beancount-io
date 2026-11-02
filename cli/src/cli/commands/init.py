@@ -7,12 +7,13 @@ Starter content, alignment, validation, and atomic creation run in
 from __future__ import annotations
 
 import datetime
+import functools
 import os
 import re
 import shlex
 from decimal import Decimal
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any, NamedTuple
 
 import typer
 
@@ -110,6 +111,17 @@ def _refuse_uncreatable(file: Path) -> None:
     raise AuthError(f"Cannot create {parent}: the directory {blocker} is not writable. Nothing was written.")
 
 
+@functools.cache
+def _setup_catalog() -> dict[str, Any]:
+    """The engine's copy of the setup catalog, read once per process."""
+    import json
+
+    from cli.engine.paths import helper_source_root
+
+    path = helper_source_root() / "bea_engine" / "setup_catalog.json"
+    return json.loads(path.read_text(encoding="utf-8"))  # type: ignore[no-any-return]
+
+
 def _preset_accounts(preset: str) -> tuple[str, ...]:
     """Account names of a setup-catalog preset, from the engine's catalog copy.
 
@@ -117,11 +129,7 @@ def _preset_accounts(preset: str) -> tuple[str, ...]:
     never disagree about which accounts a preset opens. An unknown preset is
     the caller's mistake, refused before anything is created.
     """
-    import json
-
-    from cli.engine.paths import helper_source_root
-
-    catalog = json.loads((helper_source_root() / "bea_engine" / "setup_catalog.json").read_text(encoding="utf-8"))
+    catalog = _setup_catalog()
     for entry in catalog["presets"]:
         if entry["id"] == preset:
             return tuple(account["name"] for account in entry["accounts"])
@@ -134,31 +142,33 @@ _PROPERTY_WITHOUT_RENTAL = (
 )
 
 
-def module_accounts(preset: str | None, modules: list[str] | None, property_name: str | None) -> tuple[str, ...]:
-    """Account names the setup-catalog modules add, refusing a bad selection before anything is created.
+class ModuleSelection(NamedTuple):
+    """The accounts the selected modules add, and the module that takes `--property-name`."""
+
+    accounts: tuple[str, ...]
+    property_module: str | None
+
+
+def module_accounts(preset: str | None, modules: list[str] | None, property_name: str | None) -> ModuleSelection:
+    """The setup-catalog modules' accounts, refusing a bad selection before anything is created.
 
     Reads the engine's catalog copy, like `_preset_accounts`, and applies the
     hosted builder's rules (ADR021): modules only with a preset that lists
-    them, each once, and `--property-name` only with the rental module.
-    Shared by `bea init` and `bea cloud ledger create`.
+    them, each once, and `--property-name` only with the module that declares
+    it. Shared by `bea init` and `bea cloud ledger create`.
     """
-    import json
-
-    from cli.engine.paths import helper_source_root
-
     if not modules:
         if property_name is not None:
             raise UsageError(_PROPERTY_WITHOUT_RENTAL)
-        return ()
+        return ModuleSelection((), None)
     if preset is None:
         raise UsageError(
             "--module adds accounts to a --preset personal@1 ledger; add --preset personal@1. Nothing was created."
         )
-    catalog = json.loads((helper_source_root() / "bea_engine" / "setup_catalog.json").read_text(encoding="utf-8"))
-    known = {entry["id"]: entry for entry in catalog["modules"]}
+    known = {entry["id"]: entry for entry in _setup_catalog()["modules"]}
     names: list[str] = []
     seen: set[str] = set()
-    named = False
+    property_module = None
     for module_id in modules:
         entry = known.get(module_id)
         if entry is None:
@@ -173,19 +183,17 @@ def module_accounts(preset: str | None, modules: list[str] | None, property_name
             raise UsageError(f"--module {module_id!r} is given more than once. Nothing was created.")
         seen.add(module_id)
         parameter = next((p for p in entry["parameters"] if p["id"] == "propertyName"), None)
-        name = ""
-        if parameter is not None:
-            named = True
-            name = property_name if property_name is not None else parameter["default"]
-            if not re.fullmatch(parameter["pattern"], name):
-                raise UsageError(f"--property-name {name!r}: {parameter['description']}. Nothing was created.")
-        names += [
-            account["name"].replace(parameter["placeholder"], name) if parameter else account["name"]
-            for account in entry["accounts"]
-        ]
-    if property_name is not None and not named:
+        if parameter is None:
+            names += [account["name"] for account in entry["accounts"]]
+            continue
+        property_module = module_id
+        name = property_name if property_name is not None else parameter["default"]
+        if not re.fullmatch(parameter["pattern"], name):
+            raise UsageError(f"--property-name {name!r}: {parameter['description']}. Nothing was created.")
+        names += [account["name"].replace(parameter["placeholder"], name) for account in entry["accounts"]]
+    if property_name is not None and property_module is None:
         raise UsageError(_PROPERTY_WITHOUT_RENTAL)
-    return tuple(names)
+    return ModuleSelection(tuple(names), property_module)
 
 
 def _preset_currency(value: str) -> str:
@@ -384,7 +392,7 @@ def init(
         preset_accounts = _preset_accounts(preset)
     elif title is not None:
         raise UsageError("--title is only meaningful with --preset. Nothing was created.")
-    added = module_accounts(preset, module, property_name)
+    added = module_accounts(preset, module, property_name).accounts
     allowed_opening = (*preset_accounts, *added) if preset_accounts is not None else _ACCOUNTS
     balances: dict[str, Decimal] = {}
     for balance in opening_balance or []:

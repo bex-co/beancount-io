@@ -171,19 +171,18 @@ function moduleAccounts(
     if (selection.propertyName !== undefined && !property) {
       fail(`Module "${module.id}" takes no propertyName`);
     }
-    const name = selection.propertyName ?? property?.default;
-    if (property && !new RegExp(property.pattern).test(name ?? "")) {
-      fail(
-        `Property name ${JSON.stringify(name)} for "${module.id}" is not valid: ${property.description}`,
-      );
+    let nameOf = (account: string) => account;
+    if (property) {
+      const name = selection.propertyName ?? property.default;
+      if (!new RegExp(property.pattern).test(name)) {
+        fail(
+          `Property name ${JSON.stringify(name)} for "${module.id}" is not valid: ${property.description}`,
+        );
+      }
+      nameOf = (account) => account.replaceAll(property.placeholder, name);
     }
     for (const account of module.accounts) {
-      accounts.set(
-        property
-          ? account.name.replaceAll(property.placeholder, name!)
-          : account.name,
-        account.booking,
-      );
+      accounts.set(nameOf(account.name), account.booking);
     }
   }
   return accounts;
@@ -239,15 +238,18 @@ export function previewLedgerSetup(
   }
 
   const modules = moduleAccounts(preset.id, setup.modules ?? []);
-  const booking = new Map<string, string | undefined>(
-    preset.accounts.map((account) => [account.name, account.booking]),
-  );
-  for (const [name, method] of modules) booking.set(name, method);
+  const moduleNames = [...modules.keys()];
+  const booking = new Map<string, string | undefined>([
+    ...preset.accounts.map(
+      (account) => [account.name, account.booking] as const,
+    ),
+    ...modules,
+  ]);
 
   const allowed = new Set<string>([
     ...preset.accounts.map((account) => account.name),
     ...enabledAccounts,
-    ...modules.keys(),
+    ...moduleNames,
   ]);
   const isBlank = preset.id === "blank@1";
 
@@ -258,7 +260,7 @@ export function previewLedgerSetup(
   for (const account of preset.accounts) {
     selected.set(account.name, { name: account.name });
   }
-  for (const name of [...enabledAccounts, ...modules.keys()]) {
+  for (const name of [...enabledAccounts, ...moduleNames]) {
     if (!selected.has(name)) selected.set(name, { name });
   }
   for (const selection of setup.accounts ?? []) {
@@ -348,13 +350,13 @@ export function previewLedgerSetup(
   // the line, after any currency.
   const openLine = (name: string, constraint?: string) => {
     const method = booking.get(name);
-    const line =
-      name === OPENING_EQUITY && hasKnownOpening
-        ? `${openDate} open ${name}`
-        : constraint
-          ? `${openDate} open ${name} ${constraint}`
-          : `${openDate} open ${name}`;
-    return method ? `${line} "${method}"` : line;
+    return [
+      `${openDate} open ${name}`,
+      name === OPENING_EQUITY && hasKnownOpening ? undefined : constraint,
+      method && `"${method}"`,
+    ]
+      .filter(Boolean)
+      .join(" ");
   };
   for (const account of accounts) {
     // Already opened as the counter of an earlier known opening: a second

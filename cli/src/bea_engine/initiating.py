@@ -197,17 +197,16 @@ _INSTRUMENT_ACCOUNTS = frozenset({"Assets:Holdings"})
 
 def module_accounts(
     catalog: dict[str, Any], preset: str, modules: list[str], property_name: str | None
-) -> dict[str, str | None]:
-    """The accounts the selected setup modules open, each with its booking method (ADR021).
+) -> dict[str, dict[str, Any]]:
+    """The catalog entries of the accounts the selected setup modules open, keyed by name (ADR021).
 
     Mirrors the hosted builder: a module is accepted only with a preset it
     lists and only once, and a property name only with the module that
     declares one. Every refusal happens before anything is created.
     """
     known = {entry["id"]: entry for entry in catalog["modules"]}
-    accounts: dict[str, str | None] = {}
+    accounts: dict[str, dict[str, Any]] = {}
     seen: set[str] = set()
-    named = False
     for module_id in modules:
         entry = known.get(module_id)
         if entry is None:
@@ -218,19 +217,17 @@ def module_accounts(
         if module_id in seen:
             raise UsageError(f"Module {module_id!r} is selected more than once.")
         seen.add(module_id)
+        names = {account["name"]: account for account in entry["accounts"]}
         parameter = next((p for p in entry["parameters"] if p["id"] == "propertyName"), None)
-        name = None
         if parameter is not None:
-            named = True
             name = property_name if property_name is not None else parameter["default"]
             if not re.fullmatch(parameter["pattern"], name):
                 raise UsageError(f"Property name {name!r} for {module_id!r} is not valid: {parameter['description']}.")
-        for account in entry["accounts"]:
-            account_name = account["name"]
-            if parameter is not None and name is not None:
-                account_name = account_name.replace(parameter["placeholder"], name)
-            accounts[account_name] = account.get("booking")
-    if property_name is not None and not named:
+            names = {key.replace(parameter["placeholder"], name): account for key, account in names.items()}
+        accounts.update(names)
+    if property_name is not None and not any(
+        p["id"] == "propertyName" for module_id in seen for p in known[module_id]["parameters"]
+    ):
         raise UsageError("A property name is taken only with the rental-property@1 module.")
     return accounts
 
@@ -271,9 +268,9 @@ def answer_preset(
     except ValueError as exc:
         raise UsageError(f"--date must be a date in YYYY-MM-DD form, not {date!r}.") from exc
 
-    booking = module_accounts(catalog, preset, modules or [], property_name)
-    booking.update({account["name"]: account.get("booking") for account in entry["accounts"]})
-    accounts = list(booking)
+    catalog_accounts = {account["name"]: account for account in entry["accounts"]}
+    catalog_accounts.update(module_accounts(catalog, preset, modules or [], property_name))
+    accounts = list(catalog_accounts)
     balances = _parse_opening_balances(opening_balances, accounts, "preset's")
 
     # A confirmed zero asserts the boundary without posting anything (w5/876).
@@ -305,10 +302,12 @@ def answer_preset(
         # The portfolio preset's holdings hold instruments (HOOL, BTC), not
         # only cash: restricted to the operating currency, its first share
         # purchase was refused (w5/957).
-        # A booked account (the investments module's FIFO brokerage) holds
-        # instruments too, and names its method after the currencies.
-        method = booking.get(account)
-        restriction = "" if account in _INSTRUMENT_ACCOUNTS or method else f" {currency}"
+        # A holdings account (the investments module's brokerage) takes any
+        # commodity too; a catalog booking method follows the currencies.
+        catalog_account = catalog_accounts.get(account, {})
+        method = catalog_account.get("booking")
+        holds_instruments = account in _INSTRUMENT_ACCOUNTS or catalog_account.get("kind") == "holdings"
+        restriction = "" if holds_instruments else f" {currency}"
         lines.append(f"{open_day} open {account}{restriction}" + (f' "{method}"' if method else ""))
     if balances:
         lines.append("")

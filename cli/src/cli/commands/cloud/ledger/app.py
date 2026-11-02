@@ -126,7 +126,7 @@ def ledger_create(
             if preset not in members:
                 known = ", ".join(sorted(members))
                 raise UsageError(f"--preset {preset!r}: Unknown preset. Choose one of: {known}. Nothing was created.")
-        module_accounts(preset, module, property_name)
+        selection = module_accounts(preset, module, property_name)
         ledger = manager.create_ledger(
             client,
             name,
@@ -138,6 +138,7 @@ def ledger_create(
             date=date,
             modules=module,
             property_name=property_name,
+            property_module=selection.property_module,
         )
     except (httpx.ConnectError, httpx.ConnectTimeout, httpx.ProxyError):
         # No request left the machine (refused, DNS failure), so nothing was

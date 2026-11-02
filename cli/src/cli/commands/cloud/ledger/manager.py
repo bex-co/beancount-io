@@ -60,6 +60,7 @@ def create_ledger(
     date: str | None = None,
     modules: list[str] | None = None,
     property_name: str | None = None,
+    property_module: str | None = None,
 ) -> LedgerInfo:
     # A requestId on every create (ADR021): if this request is retried in
     # flight with the same id, the server returns the original ledger
@@ -88,7 +89,7 @@ def create_ledger(
             modules=[
                 CreateLedgerBodySetupType0ModulesItem(
                     id=CreateLedgerBodySetupType0ModulesItemId(module_id),
-                    property_name=property_name if module_id == "rental-property@1" and property_name else UNSET,
+                    property_name=property_name if module_id == property_module and property_name else UNSET,
                 )
                 for module_id in modules
             ]
