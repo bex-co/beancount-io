@@ -2,7 +2,7 @@
 
 **Worker:** worker1
 **Goal:** Saving a file in the dashboard editor confirms success when `UpdateLedgerFile` returns. It no longer waits for the ledger to be revalidated, and it stops moving the whole file over the wire two extra times per save.
-**Status:** todo (t001–t003 done)
+**Status:** todo (t001–t003 and t005 done)
 
 ## Tasks (in order)
 
@@ -12,7 +12,7 @@
 | t002 | Stop selecting the file `content` in the `UpdateLedgerFile` result     — **DONE** | 20m | —          |
 | t003 | Replace the post-save full cache wipe with targeted invalidation       — **DONE** | 45m | t002       |
 | t004 | Measure save latency on the hosted dashboard before and after         | 30m | t001, t003, t007 |
-| t005 | Adoption surface                                                      | 15m | t003       |
+| t005 | Adoption surface                                                      — **DONE** | 15m | t003       |
 | t006 | Simplify                                                              | 20m | t005       |
 | t007 | Test coverage                                                         | 40m | t005       |
 | t008 | Closeout                                                              | 10m | t004, t006, t007 |
