@@ -7,9 +7,14 @@
 - [x] **m1** — [Plan limits resolve from Stripe and store subscriptions alike](./done/m1/README.md) (10 tasks) ← ADR 001 implementation via `/pm` 2026-11-01
 - [ ] **m2** — [Store products, notifications, and release-gate decisions are in place](./blocked/m2/README.md) (8 tasks) ← ADR 001 implementation via `/pm` 2026-11-01 — **blocked:** owner decisions and store console setup
 - [ ] **m3** — [App Store purchases verify and stay current on the backend](./blocked/m3/README.md) (7 tasks) ← ADR 001 implementation via `/pm` 2026-11-01 — **blocked:** dependency approval and App Store sandbox products
-- [ ] **m4** — [Google Play purchases verify, acknowledge, and stay current on the backend](./m4/README.md) (6 tasks) ← ADR 001 implementation via `/pm` 2026-11-01
-- [ ] **m5** — [Store subscriptions reconcile on a schedule and support can see them](./m5/README.md) (8 tasks) ← ADR 001 implementation via `/pm` 2026-11-01
+- [ ] **m4** — [Google Play purchases verify, acknowledge, and stay current on the backend](./blocked/m4/README.md) (6 tasks) ← ADR 001 implementation via `/pm` 2026-11-01 — **blocked:** m3, m2/t003, and approval of the Google client
+- [ ] **m5** — [Store subscriptions reconcile on a schedule and support can see them](./blocked/m5/README.md) (8 tasks) ← ADR 001 implementation via `/pm` 2026-11-01 — **blocked:** m3 and m4
 - [ ] **m6** — [The web dashboard shows each billing source and sends plan changes to their home](./blocked/m6/README.md) (10 tasks) ← ADR 001 implementation via `/pm` 2026-11-01 — **blocked:** the owner's store-to-Stripe charge decision
 - [ ] **m7** — [The apps show the plan, its billing source, and limit refusals that say whose plan it is](./blocked/m7/README.md) (9 tasks) ← ADR 001 implementation via `/pm` 2026-11-01 — **blocked:** the backend and dashboard deploy, then m3/t004
 - [ ] **m8** — [The apps sell and restore the plans through the App Store and Google Play](./blocked/m8/README.md) (13 tasks) ← ADR 001 implementation via `/pm` 2026-11-01 — **blocked:** `expo-iap` approval, then m3 and m4
 - [ ] **m9** — [Launch: end-to-end store tests, the end of the mobile waivers, and the store release](./blocked/m9/README.md) (10 tasks) ← ADR 001 implementation via `/pm` 2026-11-01 — **blocked:** the website maintainer's marker work, then m2, m5, m6, and m8
+
+## Dropped
+
+- ~~**005**~~ — A `billing`-only `subscriptionStatus` pays for the full Stripe view — dropped 2026-11-01: no such document exists. `08b3f7ec5` reads billing through the same `GetSubscriptionStatus` the Billing tab uses, so a page sends one full query, and an account with no Stripe binding makes no Stripe calls.
+
