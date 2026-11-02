@@ -494,6 +494,10 @@ _EXPLICIT_CATCH_ALL = frozenset({".*", "^.*", ".*$", "^.*$"})
 RULE_META_KEYS = ("client", "project")
 
 
+def _control_character(text: str) -> str | None:
+    return next((character for character in text if character < " " or character == "\x7f"), None)
+
+
 def _rule_meta(index: int, raw: dict[str, Any]) -> tuple[tuple[str, str], ...]:
     """A rule's `client`/`project` values, validated like the text they become."""
     pairs: list[tuple[str, str]] = []
@@ -503,7 +507,7 @@ def _rule_meta(index: int, raw: dict[str, Any]) -> tuple[tuple[str, str], ...]:
         value = raw[key]
         if not isinstance(value, str) or not value.strip():
             raise UsageError(f"Rule {index + 1} {key} must be a non-empty string; got {value!r}.")
-        control = next((character for character in value if character < " " or character == "\x7f"), None)
+        control = _control_character(value)
         if control is not None:
             raise UsageError(f"Rule {index + 1} {key} {value!r} contains the control character {control!r}.")
         pairs.append((key, unicodedata.normalize("NFC", value.strip())))
@@ -528,7 +532,7 @@ class CsvRule:
         # `"\bshell\b"` parses to backspaces and `"\t"` to a tab: a pattern no
         # bank text can match, so every row would fall through to the default
         # account with nothing said.
-        control = next((character for character in match if character < " " or character == "\x7f"), None)
+        control = _control_character(match)
         if control is not None:
             raise UsageError(
                 f"Rule {index + 1} match {match!r} contains the control character {control!r}, "
