@@ -52,7 +52,7 @@ import {
   isSetupCurrency,
   setupFields,
   openingAmountOwed,
-  openingAmountValue,
+  openingLedgerAmount,
   openingSelection,
   SETUP_PRESETS,
 } from "./setup-presets";
@@ -312,7 +312,7 @@ export function CreateLedgerScreen(): JSX.Element {
             ),
           openingAmount: z
             .string()
-            .refine((val) => openingAmountValue(val) !== null, {
+            .refine((val) => openingLedgerAmount(val, "") !== null, {
               message: t("createLedgerAmountInvalid"),
             }),
         })
@@ -486,7 +486,11 @@ export function CreateLedgerScreen(): JSX.Element {
     const opening = openingSelection(
       preset.accounts,
       values.openingAccount,
-      openingAmountValue(values.openingAmount, values.currency) ?? "",
+      openingLedgerAmount(
+        values.openingAmount,
+        values.openingAccount,
+        values.currency,
+      ) ?? "",
     );
     const fields = setupFields(values);
     return {
@@ -535,9 +539,10 @@ export function CreateLedgerScreen(): JSX.Element {
 
   const nameValue = watch("name");
   const openingAccountValue = watch("openingAccount");
-  // A card or loan balance is asked as what is owed; the server stores it as
-  // the negative posting ADR021 calls for (w21/104).
-  const openingAmountLabelKey = openingAccountValue.startsWith("Liabilities:")
+  // A card or loan balance is asked in the ledger's own sign, which is
+  // negative for what is owed (ADR021, w21/104, w21/549).
+  const isLiabilityOpening = openingAccountValue.startsWith("Liabilities:");
+  const openingAmountLabelKey = isLiabilityOpening
     ? "createLedgerAmountOwed"
     : "createLedgerOpeningAmount";
   const slugPreview = ledgerSlugPreview(nameValue ?? "");
@@ -1075,6 +1080,11 @@ export function CreateLedgerScreen(): JSX.Element {
                 {openingAccountValue ? (
                   <View style={[styles.row, styles.rowDivider]}>
                     <Text style={styles.label}>{t(openingAmountLabelKey)}</Text>
+                    {isLiabilityOpening ? (
+                      <Text style={styles.hint}>
+                        {t("createLedgerLiabilitySignHint")}
+                      </Text>
+                    ) : null}
                     <Controller
                       control={control}
                       name="openingAmount"

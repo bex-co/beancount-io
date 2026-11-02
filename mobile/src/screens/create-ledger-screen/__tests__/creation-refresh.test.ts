@@ -149,6 +149,7 @@ function screen(
             }),
             defaultHistoryStart: () => "2026-10-20",
             openingAmountValue: (value: string) => value.trim(),
+            openingLedgerAmount: (value: string) => value.trim(),
             openingSelection: () => null,
           };
         if (id === "@/generated-graphql/graphql")

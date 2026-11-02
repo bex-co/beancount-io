@@ -928,7 +928,9 @@ export const ca: Translations = {
   createLedgerCurrency: "Moneda d'operació",
   createLedgerOpeningAccount: "Compte d'obertura",
   createLedgerOpeningAmount: "Saldo inicial (opcional)",
-  createLedgerAmountOwed: "Import degut (opcional)",
+  createLedgerAmountOwed: "Saldo del llibre (opcional)",
+  createLedgerLiabilitySignHint:
+    "Beancount registra el que deus com un import negatiu. Escriu -500 si deus 500, o +50 si el compte està a favor teu. Un import sense signe es considera degut.",
   createLedgerOpeningNone: "Decidir més tard",
   createLedgerAccounts: "Comptes",
   createLedgerAmountInvalid: "Introduïu un import com 100 o -30.50",

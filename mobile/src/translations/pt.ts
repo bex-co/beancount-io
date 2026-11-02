@@ -924,7 +924,9 @@ export const pt: Translations = {
   createLedgerCurrency: "Moeda de operação",
   createLedgerOpeningAccount: "Conta de abertura",
   createLedgerOpeningAmount: "Saldo inicial (opcional)",
-  createLedgerAmountOwed: "Valor devido (opcional)",
+  createLedgerAmountOwed: "Saldo do livro (opcional)",
+  createLedgerLiabilitySignHint:
+    "O Beancount registra o que você deve como um valor negativo. Digite -500 se você deve 500, ou +50 se a conta está com saldo a favor. Um valor sem sinal conta como devido.",
   createLedgerOpeningNone: "Decidir depois",
   createLedgerAccounts: "Contas",
   createLedgerAmountInvalid: "Insira um valor como 100 ou -30.50",

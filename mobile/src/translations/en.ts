@@ -848,7 +848,9 @@ export const en = {
   createLedgerCurrency: "Operating currency",
   createLedgerOpeningAccount: "Opening account",
   createLedgerOpeningAmount: "Opening balance (optional)",
-  createLedgerAmountOwed: "Amount owed (optional)",
+  createLedgerAmountOwed: "Ledger balance (optional)",
+  createLedgerLiabilitySignHint:
+    "Beancount records what you owe as a negative amount. Type -500 if you owe 500, or +50 if the account is in credit. An amount without a sign counts as owed.",
   createLedgerOpeningNone: "Decide later",
   createLedgerAccounts: "Accounts",
   createLedgerAmountInvalid: "Enter an amount like 100 or -30.50.",

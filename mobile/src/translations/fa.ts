@@ -892,7 +892,9 @@ export const fa: Translations = {
   createLedgerCurrency: "ارز عملیاتی",
   createLedgerOpeningAccount: "حساب افتتاحیه",
   createLedgerOpeningAmount: "موجودی افتتاحیه (اختیاری)",
-  createLedgerAmountOwed: "مبلغ بدهی (اختیاری)",
+  createLedgerAmountOwed: "موجودی دفتر (اختیاری)",
+  createLedgerLiabilitySignHint:
+    "Beancount بدهی را به صورت مبلغ منفی ثبت می‌کند. اگر ۵۰۰ بدهکارید -500 و اگر حساب بستانکار است +50 وارد کنید. مبلغ بدون علامت بدهی حساب می‌شود.",
   createLedgerOpeningNone: "تصمیم‌گیری در آینده",
   createLedgerAccounts: "حساب‌ها",
   createLedgerAmountInvalid: "مبلغی مانند 100 یا -30.50 وارد کنید",

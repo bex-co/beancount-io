@@ -927,7 +927,9 @@ export const de: Translations = {
   createLedgerCurrency: "Betriebswährung",
   createLedgerOpeningAccount: "Eröffnungskonto",
   createLedgerOpeningAmount: "Eröffnungssaldo (optional)",
-  createLedgerAmountOwed: "Geschuldeter Betrag (optional)",
+  createLedgerAmountOwed: "Saldo im Hauptbuch (optional)",
+  createLedgerLiabilitySignHint:
+    "Beancount erfasst Schulden als negativen Betrag. Geben Sie -500 ein, wenn Sie 500 schulden, oder +50, wenn das Konto im Guthaben ist. Ein Betrag ohne Vorzeichen gilt als geschuldet.",
   createLedgerOpeningNone: "Später entscheiden",
   createLedgerAccounts: "Konten",
   createLedgerAmountInvalid: "Geben Sie einen Betrag wie 100 oder -30.50 ein",

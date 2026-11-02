@@ -926,7 +926,9 @@ export const es: Translations = {
   createLedgerCurrency: "Moneda de operación",
   createLedgerOpeningAccount: "Cuenta de apertura",
   createLedgerOpeningAmount: "Saldo inicial (opcional)",
-  createLedgerAmountOwed: "Importe adeudado (opcional)",
+  createLedgerAmountOwed: "Saldo del libro (opcional)",
+  createLedgerLiabilitySignHint:
+    "Beancount registra lo que debes como un importe negativo. Escribe -500 si debes 500, o +50 si la cuenta está a tu favor. Un importe sin signo cuenta como adeudado.",
   createLedgerOpeningNone: "Decidir más tarde",
   createLedgerAccounts: "Cuentas",
   createLedgerAmountInvalid: "Introduce un monto como 100 o -30.50",

@@ -933,7 +933,9 @@ export const sk: Translations = {
   createLedgerCurrency: "Prevádzková mena",
   createLedgerOpeningAccount: "Otvárací účet",
   createLedgerOpeningAmount: "Počiatočný zostatok (voliteľné)",
-  createLedgerAmountOwed: "Dlžná suma (voliteľné)",
+  createLedgerAmountOwed: "Zostatok v knihe (voliteľné)",
+  createLedgerLiabilitySignHint:
+    "Beancount zaznamenáva dlh ako zápornú sumu. Zadajte -500, ak dlžíte 500, alebo +50, ak je účet v pluse. Suma bez znamienka sa berie ako dlh.",
   createLedgerOpeningNone: "Rozhodnúť neskôr",
   createLedgerAccounts: "Účty",
   createLedgerAmountInvalid: "Zadajte sumu ako 100 alebo -30.50",

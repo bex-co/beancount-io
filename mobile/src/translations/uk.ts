@@ -924,7 +924,9 @@ export const uk: Translations = {
   createLedgerCurrency: "Операційна валюта",
   createLedgerOpeningAccount: "Рахунок відкриття",
   createLedgerOpeningAmount: "Початковий залишок (необов’язково)",
-  createLedgerAmountOwed: "Сума боргу (необов’язково)",
+  createLedgerAmountOwed: "Залишок у книзі (необов’язково)",
+  createLedgerLiabilitySignHint:
+    "Beancount записує борг як від’ємну суму. Введіть -500, якщо ви винні 500, або +50, якщо на рахунку переплата. Сума без знака вважається боргом.",
   createLedgerOpeningNone: "Вирішити пізніше",
   createLedgerAccounts: "Рахунки",
   createLedgerAmountInvalid: "Введіть суму, наприклад 100 або -30.50",

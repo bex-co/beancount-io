@@ -929,7 +929,9 @@ export const fr: Translations = {
   createLedgerCurrency: "Devise de fonctionnement",
   createLedgerOpeningAccount: "Compte d'ouverture",
   createLedgerOpeningAmount: "Solde d'ouverture (facultatif)",
-  createLedgerAmountOwed: "Montant dû (facultatif)",
+  createLedgerAmountOwed: "Solde du grand livre (facultatif)",
+  createLedgerLiabilitySignHint:
+    "Beancount enregistre ce que vous devez comme un montant négatif. Saisissez -500 si vous devez 500, ou +50 si le compte est créditeur. Un montant sans signe compte comme dû.",
   createLedgerOpeningNone: "Décider plus tard",
   createLedgerAccounts: "Comptes",
   createLedgerAmountInvalid: "Saisissez un montant comme 100 ou -30.50",

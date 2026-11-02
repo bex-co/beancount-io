@@ -164,6 +164,36 @@ export function openingAmountValue(
     : "";
 }
 
+const isLiability = (account: string): boolean =>
+  account.startsWith("Liabilities:");
+
+/**
+ * The opening amount as the ledger writes it. The field takes the ledger's own
+ * sign: on a liability `-500` is owed and `+50` is in credit, sent verbatim.
+ * An unsigned amount there keeps the older reading (owed), but is sent signed
+ * so the server never has to guess. Other accounts keep the amount as typed;
+ * a leading `+` is only a sign, never part of the number (w21/549). `null` is
+ * an amount that is not one.
+ */
+export function openingLedgerAmount(
+  input: string,
+  account: string,
+  currency = "",
+): string | null {
+  const trimmed = input.trim();
+  if (!trimmed) return "";
+  const explicitPlus = trimmed.startsWith("+");
+  const value = openingAmountValue(
+    explicitPlus ? trimmed.slice(1).trim() : trimmed,
+    currency,
+  );
+  if (value === null || value === "") return null;
+  if (explicitPlus && value.startsWith("-")) return null;
+  if (!isLiability(account) || value.startsWith("-")) return value;
+  if (/^0*\.?0*$/.test(value)) return value;
+  return explicitPlus ? `+${value}` : `-${value}`;
+}
+
 /**
  * Whether a resumed draft still owes its opening amount: the draft keeps the
  * account but not the amount, and an empty field would pass Next and send no

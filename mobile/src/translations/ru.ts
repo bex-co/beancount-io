@@ -926,7 +926,9 @@ export const ru: Translations = {
   createLedgerCurrency: "Операционная валюта",
   createLedgerOpeningAccount: "Счёт открытия",
   createLedgerOpeningAmount: "Начальный остаток (необязательно)",
-  createLedgerAmountOwed: "Сумма долга (необязательно)",
+  createLedgerAmountOwed: "Остаток в книге (необязательно)",
+  createLedgerLiabilitySignHint:
+    "Beancount записывает долг как отрицательную сумму. Введите -500, если вы должны 500, или +50, если на счёте переплата. Сумма без знака считается долгом.",
   createLedgerOpeningNone: "Решить позже",
   createLedgerAccounts: "Счета",
   createLedgerAmountInvalid: "Введите сумму, например 100 или -30.50",

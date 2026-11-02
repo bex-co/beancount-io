@@ -821,7 +821,9 @@ export const zh: Translations = {
   createLedgerCurrency: "运营货币",
   createLedgerOpeningAccount: "开户账户",
   createLedgerOpeningAmount: "期初余额（可选）",
-  createLedgerAmountOwed: "欠款金额（可选）",
+  createLedgerAmountOwed: "账本余额（可选）",
+  createLedgerLiabilitySignHint:
+    "Beancount 将欠款记为负数。欠 500 请输入 -500，账户有余额则输入 +50。不带符号的金额按欠款处理。",
   createLedgerOpeningNone: "稍后决定",
   createLedgerAccounts: "账户",
   createLedgerAmountInvalid: "输入如 100 或 -30.50 的金额",

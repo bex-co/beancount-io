@@ -910,7 +910,9 @@ export const nl: Translations = {
   createLedgerCurrency: "Operationele valuta",
   createLedgerOpeningAccount: "Openingsrekening",
   createLedgerOpeningAmount: "Openingssaldo (optioneel)",
-  createLedgerAmountOwed: "Verschuldigd bedrag (optioneel)",
+  createLedgerAmountOwed: "Saldo in het grootboek (optioneel)",
+  createLedgerLiabilitySignHint:
+    "Beancount legt wat je verschuldigd bent vast als negatief bedrag. Typ -500 als je 500 verschuldigd bent, of +50 als de rekening positief staat. Een bedrag zonder teken geldt als verschuldigd.",
   createLedgerOpeningNone: "Later beslissen",
   createLedgerAccounts: "Rekeningen",
   createLedgerAmountInvalid: "Voer een bedrag in zoals 100 of -30.50",

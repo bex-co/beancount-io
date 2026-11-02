@@ -904,7 +904,9 @@ export const bg: Translations = {
   createLedgerCurrency: "Оперативна валута",
   createLedgerOpeningAccount: "Начална сметка",
   createLedgerOpeningAmount: "Начално салдо (по избор)",
-  createLedgerAmountOwed: "Дължима сума (по избор)",
+  createLedgerAmountOwed: "Салдо в книгата (по избор)",
+  createLedgerLiabilitySignHint:
+    "Beancount записва дълга като отрицателна сума. Въведете -500, ако дължите 500, или +50, ако сметката е в плюс. Сума без знак се смята за дълг.",
   createLedgerOpeningNone: "Реши по-късно",
   createLedgerAccounts: "Сметки",
   createLedgerAmountInvalid: "Въведете сума като 100 или -30.50",
