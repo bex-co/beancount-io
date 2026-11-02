@@ -22,7 +22,7 @@ path explicitly, or rename the file to `render.yaml`.
 | `postgres-backend` | `beancount-backend-db` (managed Postgres) | |
 | `redis` | `beancount-cache` (managed Key Value) | `noeviction` — it holds auth tokens |
 | `gitea` | `beancount-gitea` (web + 10 GB disk) | bare repos need a filesystem |
-| `postgres` (Gitea's) | a second database `gitea` in `beancount-backend-db` | one Postgres instance in total |
+| `postgres` (Gitea's) | a second schema `gitea` in `beancount-backend-db` | one Postgres instance in total |
 
 **Gitea runs on a persistent disk.** bex supports one disk per paid web/private
 service (see the persistent-disks page), at the cost of a single instance and a
@@ -30,11 +30,11 @@ stop-then-start deploy. Git-over-SSH is off (no TCP routing); HTTPS only.
 `deploy/bex/gitea/` wraps the stock image so the first boot also creates the
 backend's admin account. Gitea connects as the instance's single owner role,
 because bex cannot create a second one; isolation from the backend is by
-database, not by role.
+schema, not by role (the owner role also cannot `CREATE DATABASE` on bex).
 
-**Before the first Gitea boot** create its database once (see
-`init-gitea-db.sql`): `bex psql <postgres-id> -c 'CREATE DATABASE gitea'`.
-Until then Gitea crash-loops, which is harmless.
+**Before the first Gitea boot** create its schema once (see
+`init-gitea-db.sql`): `bex psql <postgres-id> -c 'CREATE SCHEMA IF NOT EXISTS gitea'`
+(`bex psql` needs `psql` on PATH, e.g. `brew install libpq`).
 
 ## Deploy
 
@@ -136,6 +136,6 @@ and need no action. Gitea admin user creation is still a one-time
 
 ## Not available on bex
 
-Persistent disks, PR preview environments, external log/metric drains, object
+PR preview environments, external log/metric drains, object
 storage (`ea objects`), Workflows, and per-resource region selection are all
 platform non-goals and are rejected before any write, with a source location.
