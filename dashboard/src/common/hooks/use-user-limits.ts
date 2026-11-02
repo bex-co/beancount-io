@@ -44,6 +44,8 @@ export function useUserLimits() {
   return {
     tier,
     limits,
+    /** ADR026 saved currency preference; null when unset or not loaded. */
+    defaultCurrency: userProfile?.defaultCurrency ?? null,
     isLoading: loading,
     error,
     refetch,

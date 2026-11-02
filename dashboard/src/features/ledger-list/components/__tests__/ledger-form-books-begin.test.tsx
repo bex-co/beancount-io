@@ -6,6 +6,7 @@ import { createMockQueryResult } from "@/test/apollo-test-utils";
 import { LedgerForm } from "../ledger-form";
 
 vi.mock("@apollo/client/react", () => ({
+  useMutation: vi.fn(() => [vi.fn(async () => ({})), { loading: false }]),
   useQuery: vi.fn(),
   useLazyQuery: vi.fn(() => [
     vi.fn(async () => ({ data: undefined })),

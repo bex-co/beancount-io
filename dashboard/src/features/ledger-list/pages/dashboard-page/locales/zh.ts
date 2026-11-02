@@ -183,6 +183,21 @@ const zhDashboardPage: Record<string, TranslationEntry> = {
     message: "运营货币",
     description: "Label for the currency field in staged ledger creation",
   },
+  "page.dashboard.currencyFromSaved": {
+    message: "来自你保存的偏好",
+    description:
+      "Source label under the suggested currency: the account's saved preference (ADR026)",
+  },
+  "page.dashboard.currencyFromRegion": {
+    message: "来自浏览器地区",
+    description:
+      "Source label under the suggested currency: the browser region (ADR026)",
+  },
+  "page.dashboard.currencyUseTimeZone": {
+    message: "使用 {currency}（来自你的时区）",
+    description:
+      "One-tap button offering the browser time zone's currency when it differs from the suggestion (ADR026)",
+  },
   "page.dashboard.setupHistoryStart": {
     message: "账簿开始日期",
     description: "Label for the history start date in staged ledger creation",

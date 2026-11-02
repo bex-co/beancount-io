@@ -191,6 +191,21 @@ const ukDashboardPage: Record<string, TranslationEntry> = {
     message: "Операційна валюта",
     description: "Label for the currency field in staged ledger creation",
   },
+  "page.dashboard.currencyFromSaved": {
+    message: "Зі збережених налаштувань",
+    description:
+      "Source label under the suggested currency: the account's saved preference (ADR026)",
+  },
+  "page.dashboard.currencyFromRegion": {
+    message: "За регіоном браузера",
+    description:
+      "Source label under the suggested currency: the browser region (ADR026)",
+  },
+  "page.dashboard.currencyUseTimeZone": {
+    message: "Використати {currency} (за часовим поясом)",
+    description:
+      "One-tap button offering the browser time zone's currency when it differs from the suggestion (ADR026)",
+  },
   "page.dashboard.setupHistoryStart": {
     message: "Книги починаються з",
     description: "Label for the history start date in staged ledger creation",

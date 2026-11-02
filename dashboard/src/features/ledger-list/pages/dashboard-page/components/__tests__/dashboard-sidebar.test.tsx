@@ -10,6 +10,7 @@ import {
   GetCurrentUserDocument,
   CreateLedgerDocument,
   UpdateLedgerDocument,
+  UpdateDefaultCurrencyDocument,
   DeleteLedgerDocument,
   type ListLedgersQuery,
   type CreateLedgerMutation,
@@ -212,6 +213,9 @@ describe("DashboardSidebar", () => {
         return createMockMutationTuple<DeleteLedgerMutation>(
           mockDeleteMutation,
         );
+      }
+      if (document === UpdateDefaultCurrencyDocument) {
+        return createMockMutationTuple(vi.fn(async () => ({ data: null })));
       }
       throw new Error("Unexpected mutation document");
     }) as never);

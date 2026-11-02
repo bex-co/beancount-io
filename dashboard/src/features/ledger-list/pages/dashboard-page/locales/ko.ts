@@ -172,6 +172,21 @@ const koDashboardPage: Record<string, TranslationEntry> = {
     message: "운영 통화",
     description: "Label for the currency field in staged ledger creation",
   },
+  "page.dashboard.currencyFromSaved": {
+    message: "저장된 기본 설정에서",
+    description:
+      "Source label under the suggested currency: the account's saved preference (ADR026)",
+  },
+  "page.dashboard.currencyFromRegion": {
+    message: "브라우저 지역에서",
+    description:
+      "Source label under the suggested currency: the browser region (ADR026)",
+  },
+  "page.dashboard.currencyUseTimeZone": {
+    message: "{currency} 사용 (시간대 기준)",
+    description:
+      "One-tap button offering the browser time zone's currency when it differs from the suggestion (ADR026)",
+  },
   "page.dashboard.setupHistoryStart": {
     message: "장부 시작일",
     description: "Label for the history start date in staged ledger creation",

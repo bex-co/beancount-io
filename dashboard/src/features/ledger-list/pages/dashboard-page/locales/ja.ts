@@ -172,6 +172,21 @@ const jaDashboardPage: Record<string, TranslationEntry> = {
     message: "運用通貨",
     description: "Label for the currency field in staged ledger creation",
   },
+  "page.dashboard.currencyFromSaved": {
+    message: "保存した設定から",
+    description:
+      "Source label under the suggested currency: the account's saved preference (ADR026)",
+  },
+  "page.dashboard.currencyFromRegion": {
+    message: "ブラウザーの地域から",
+    description:
+      "Source label under the suggested currency: the browser region (ADR026)",
+  },
+  "page.dashboard.currencyUseTimeZone": {
+    message: "{currency} を使う（タイムゾーンから）",
+    description:
+      "One-tap button offering the browser time zone's currency when it differs from the suggestion (ADR026)",
+  },
   "page.dashboard.setupHistoryStart": {
     message: "帳簿の開始日",
     description: "Label for the history start date in staged ledger creation",

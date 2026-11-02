@@ -191,6 +191,21 @@ const ptDashboardPage: Record<string, TranslationEntry> = {
     message: "Moeda de operação",
     description: "Label for the currency field in staged ledger creation",
   },
+  "page.dashboard.currencyFromSaved": {
+    message: "Da sua preferência salva",
+    description:
+      "Source label under the suggested currency: the account's saved preference (ADR026)",
+  },
+  "page.dashboard.currencyFromRegion": {
+    message: "Da região do seu navegador",
+    description:
+      "Source label under the suggested currency: the browser region (ADR026)",
+  },
+  "page.dashboard.currencyUseTimeZone": {
+    message: "Usar {currency} (do seu fuso horário)",
+    description:
+      "One-tap button offering the browser time zone's currency when it differs from the suggestion (ADR026)",
+  },
   "page.dashboard.setupHistoryStart": {
     message: "Os livros começam em",
     description: "Label for the history start date in staged ledger creation",

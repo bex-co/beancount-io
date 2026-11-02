@@ -189,6 +189,21 @@ const ruDashboardPage: Record<string, TranslationEntry> = {
     message: "Операционная валюта",
     description: "Label for the currency field in staged ledger creation",
   },
+  "page.dashboard.currencyFromSaved": {
+    message: "Из сохранённых настроек",
+    description:
+      "Source label under the suggested currency: the account's saved preference (ADR026)",
+  },
+  "page.dashboard.currencyFromRegion": {
+    message: "По региону браузера",
+    description:
+      "Source label under the suggested currency: the browser region (ADR026)",
+  },
+  "page.dashboard.currencyUseTimeZone": {
+    message: "Использовать {currency} (по часовому поясу)",
+    description:
+      "One-tap button offering the browser time zone's currency when it differs from the suggestion (ADR026)",
+  },
   "page.dashboard.setupHistoryStart": {
     message: "Книги начинаются с",
     description: "Label for the history start date in staged ledger creation",

@@ -29,6 +29,7 @@ mutation SignIn($email: String!, $password: String!) {
 query GetCurrentUser {
   userProfile {
     locale
+    defaultCurrency
     lastName
     id
     firstName
@@ -98,6 +99,15 @@ mutation UpdateProfile($firstName: String, $lastName: String) {
     firstName
     emailReportStatus
     email
+  }
+}
+
+# ADR026: save the currency a creation flow suggests first. Sent alone, it
+# leaves the profile's names unchanged.
+mutation UpdateDefaultCurrency($defaultCurrency: String) {
+  updateProfile(defaultCurrency: $defaultCurrency) {
+    id
+    defaultCurrency
   }
 }
 

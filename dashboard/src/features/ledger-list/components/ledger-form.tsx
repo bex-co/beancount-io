@@ -18,6 +18,7 @@ import {
   LedgerOpeningState,
   LedgerTemplate,
   PreviewLedgerSetupDocument,
+  UpdateDefaultCurrencyDocument,
   type CreateLedgerMutationVariables,
   type LedgerSetupInput,
 } from "@/graphql/definitions";
@@ -25,10 +26,16 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { useMemo, useEffect, useRef, useState } from "react";
 import { LimitIndicator } from "@/common/components/limit-indicator";
 import { useUserLimits } from "@/common/hooks/use-user-limits";
-import { useQuery, useLazyQuery } from "@apollo/client/react";
+import { useQuery, useLazyQuery, useMutation } from "@apollo/client/react";
 import { ListLedgersDocument } from "@/graphql/definitions";
 import { slugifyLedgerName } from "@/common/lib/beancount/ledger-name";
-import { SETUP_PRESETS, suggestCurrency } from "../lib/setup-presets";
+import { SETUP_PRESETS } from "../lib/setup-presets";
+import {
+  browserCurrencyInputs,
+  currencyToSave,
+  suggestCurrency,
+} from "../lib/currency-suggestion";
+import { CurrencySuggestionHint } from "./currency-suggestion-hint";
 import { cn } from "@/common/lib/utils/utils";
 import { todayIsoDate } from "@/common/components/ui/date-picker-utils";
 
@@ -119,6 +126,8 @@ const DRAFT_KEY = "ledger-create-draft";
 
 interface CreateDraft {
   step: number;
+  /** The customer chose the currency in this flow: never re-suggest it. */
+  currencyChosen?: boolean;
   startKind: StartKind;
   presetId: string | null;
   requestId: string;
@@ -158,8 +167,8 @@ export function LedgerForm({
   onCancel,
   hideLimitIndicator = false,
 }: LedgerFormProps) {
-  const { t, i18n } = useTranslations();
-  const { limits, tier, isAtLedgerLimit } = useUserLimits();
+  const { t } = useTranslations();
+  const { limits, tier, isAtLedgerLimit, defaultCurrency } = useUserLimits();
 
   const ledgerFormSchema = useMemo(() => createLedgerFormSchema(t), [t]);
   type LedgerFormData = z.infer<typeof ledgerFormSchema>;
@@ -176,6 +185,17 @@ export function LedgerForm({
     draft?.presetId ?? SETUP_PRESETS[0].id,
   );
   const requestIdRef = useRef(draft?.requestId ?? newRequestId());
+  // ADR026: resolved once the profile is known; an explicit selection in this
+  // flow (typed, a tapped candidate, or a resumed draft's) always wins.
+  const suggestion = useMemo(
+    () =>
+      suggestCurrency({ saved: defaultCurrency, ...browserCurrencyInputs() }),
+    [defaultCurrency],
+  );
+  const [currencyChosen, setCurrencyChosen] = useState(
+    draft?.currencyChosen ?? false,
+  );
+  const [updateDefaultCurrency] = useMutation(UpdateDefaultCurrencyDocument);
 
   // Fetch existing ledgers to generate default name (only for create mode)
   const { data: ledgersData } = useQuery(ListLedgersDocument, {
@@ -193,11 +213,7 @@ export function LedgerForm({
       private:
         initialData?.private ?? (draft?.values?.private as boolean) ?? true,
       template: initialData?.template ?? LedgerTemplate.Starter,
-      currency:
-        (draft?.values?.currency as string) ||
-        suggestCurrency(
-          typeof navigator !== "undefined" ? navigator.language : i18n.language,
-        ),
+      currency: (draft?.values?.currency as string) || suggestion.currency,
       // The browser's own calendar day: a UTC day opens every account
       // tomorrow in a western evening (w4/317).
       historyStart: (draft?.values?.historyStart as string) || todayIsoDate(),
@@ -221,6 +237,13 @@ export function LedgerForm({
     }
   }, [isCreate, ledgersData, form]);
 
+  // The saved preference arrives with the profile, after the first render.
+  useEffect(() => {
+    if (isCreate && !currencyChosen) {
+      form.setValue("currency", suggestion.currency);
+    }
+  }, [isCreate, currencyChosen, suggestion.currency, form]);
+
   // Persist the draft so abandoning and returning resumes (ADR021).
   const watchedValues = form.watch();
   useEffect(() => {
@@ -228,6 +251,7 @@ export function LedgerForm({
     try {
       const next: CreateDraft = {
         step,
+        currencyChosen,
         startKind,
         presetId,
         requestId: requestIdRef.current,
@@ -330,6 +354,20 @@ export function LedgerForm({
     };
     const created = await onSubmit(submitData);
     if (!isCreate || created !== true) return;
+    if (startKind === "preset") {
+      const save = currencyToSave({
+        chosen: (data.currency || "USD").toUpperCase(),
+        suggested: suggestion.currency,
+        saved: defaultCurrency,
+      });
+      // A preference, not part of the ledger: a failed save changes nothing
+      // the customer created.
+      if (save) {
+        void updateDefaultCurrency({
+          variables: { defaultCurrency: save },
+        }).catch(() => undefined);
+      }
+    }
     try {
       sessionStorage.removeItem(DRAFT_KEY);
     } catch {
@@ -571,12 +609,25 @@ export function LedgerForm({
                         <FormControl>
                           <Input
                             {...field}
+                            onChange={(event) => {
+                              setCurrencyChosen(true);
+                              field.onChange(event);
+                            }}
                             disabled={isLoading}
                             maxLength={3}
                             className="uppercase"
                             data-testid="ledger-currency-input"
                           />
                         </FormControl>
+                        <CurrencySuggestionHint
+                          suggestion={suggestion}
+                          value={field.value ?? ""}
+                          chosen={currencyChosen}
+                          onPick={(currency) => {
+                            setCurrencyChosen(true);
+                            form.setValue("currency", currency);
+                          }}
+                        />
                         <FormMessage className="text-destructive" />
                       </FormItem>
                     )}

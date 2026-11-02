@@ -190,6 +190,21 @@ const bgDashboardPage: Record<string, TranslationEntry> = {
     message: "Оперативна валута",
     description: "Label for the currency field in staged ledger creation",
   },
+  "page.dashboard.currencyFromSaved": {
+    message: "От запазеното ви предпочитание",
+    description:
+      "Source label under the suggested currency: the account's saved preference (ADR026)",
+  },
+  "page.dashboard.currencyFromRegion": {
+    message: "От региона на браузъра ви",
+    description:
+      "Source label under the suggested currency: the browser region (ADR026)",
+  },
+  "page.dashboard.currencyUseTimeZone": {
+    message: "Използвайте {currency} (от часовата ви зона)",
+    description:
+      "One-tap button offering the browser time zone's currency when it differs from the suggestion (ADR026)",
+  },
   "page.dashboard.setupHistoryStart": {
     message: "Книгите започват на",
     description: "Label for the history start date in staged ledger creation",
