@@ -911,6 +911,11 @@ export const fa: Translations = {
   createLedgerAmountReenter:
     "مانده اولیه را دوباره وارد کنید یا «تصمیم‌گیری در آینده» را انتخاب کنید. این مقدار در پیش‌نویس ذخیره‌شده نگه داشته نمی‌شود.",
   createLedgerCurrencyInvalid: "یک کد ارز مانند USD یا EUR انتخاب کنید.",
+  createLedgerCurrencyFromSaved: "از ترجیح ذخیره‌شدهٔ شما",
+  createLedgerCurrencyFromDevice: "از تنظیمات دستگاه",
+  createLedgerCurrencyFromRegion: "از منطقهٔ دستگاه",
+  createLedgerCurrencyUseTimeZone:
+    "استفاده از {{currency}} (از منطقهٔ زمانی شما)",
   createLedgerHistoryStartInvalid: "یک تاریخ معتبر مانند 2026-01-01 وارد کنید.",
   createLedgerPresetPersonal: "دفتر شخصی",
   createLedgerPresetPersonalOutcome:

@@ -839,6 +839,10 @@ export const zh: Translations = {
   createLedgerAmountReenter:
     "请重新输入期初余额，或选择“稍后决定”。已保存的草稿不会保留该金额。",
   createLedgerCurrencyInvalid: "请选择货币代码，例如 USD 或 EUR。",
+  createLedgerCurrencyFromSaved: "来自你保存的偏好",
+  createLedgerCurrencyFromDevice: "来自设备设置",
+  createLedgerCurrencyFromRegion: "来自设备地区",
+  createLedgerCurrencyUseTimeZone: "使用 {{currency}}（来自你的时区）",
   createLedgerHistoryStartInvalid: "请输入有效日期，例如 2026-01-01。",
   createLedgerPresetPersonal: "个人账簿",
   createLedgerPresetPersonalOutcome: "记录一笔购买，了解其对剩余资金的影响。",

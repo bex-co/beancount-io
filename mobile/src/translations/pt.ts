@@ -944,6 +944,10 @@ export const pt: Translations = {
   createLedgerAmountReenter:
     "Informe o saldo inicial novamente ou escolha Decidir depois. Ele não é mantido no rascunho salvo.",
   createLedgerCurrencyInvalid: "Escolha um código de moeda como USD ou EUR.",
+  createLedgerCurrencyFromSaved: "Da sua preferência salva",
+  createLedgerCurrencyFromDevice: "Das configurações do aparelho",
+  createLedgerCurrencyFromRegion: "Da região do aparelho",
+  createLedgerCurrencyUseTimeZone: "Usar {{currency}} (do seu fuso horário)",
   createLedgerHistoryStartInvalid: "Digite uma data válida como 2026-01-01.",
   createLedgerPresetPersonal: "Livro pessoal",
   createLedgerPresetPersonalOutcome:

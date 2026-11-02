@@ -945,6 +945,11 @@ export const ru: Translations = {
   createLedgerAmountReenter:
     "Введите начальный остаток ещё раз или выберите «Решить позже». В сохранённом черновике он не хранится.",
   createLedgerCurrencyInvalid: "Укажите код валюты, например USD или EUR.",
+  createLedgerCurrencyFromSaved: "Из сохранённых настроек",
+  createLedgerCurrencyFromDevice: "Из настроек устройства",
+  createLedgerCurrencyFromRegion: "По региону устройства",
+  createLedgerCurrencyUseTimeZone:
+    "Использовать {{currency}} (по часовому поясу)",
   createLedgerHistoryStartInvalid:
     "Введите корректную дату, например 2026-01-01.",
   createLedgerPresetPersonal: "Личная книга",

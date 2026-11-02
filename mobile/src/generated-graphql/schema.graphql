@@ -1654,8 +1654,17 @@ type Mutation {
   updatePlaidAccountCurrency(accountId: String!, currency: String!, ledgerId: String!): Boolean!
   """Update the ledger account mapping for a Plaid account"""
   updatePlaidAccountMapping(accountId: String!, ledgerAccount: String!, ledgerId: String!): Boolean!
-  """Update user profile (firstName and lastName)"""
-  updateProfile(firstName: String, lastName: String): UserProfileResponse!
+  """
+  Update user profile: firstName and lastName, and the saved defaultCurrency
+  """
+  updateProfile(
+    """
+    Saved currency preference, an ISO 4217 code a new ledger can take; null clears it. Sent alone, it leaves the names unchanged.
+    """
+    defaultCurrency: String
+    firstName: String
+    lastName: String
+  ): UserProfileResponse!
   updateUsername(username: String!): UserProfileResponse!
   """Upgrades your subscription. Requires a full signed-in session."""
   upgradeSubscription(clientId: String!, priceId: String!): UpgradeSubscriptionResult!
@@ -2807,6 +2816,10 @@ type UserProfile {
 
 type UserProfileResponse {
   avatarUrl: String
+  """
+  Saved currency preference (ADR026): the currency a creation flow suggests first. API creation never reads it.
+  """
+  defaultCurrency: String
   email: String!
   emailReportStatus: ReportStatus
   firstName: String

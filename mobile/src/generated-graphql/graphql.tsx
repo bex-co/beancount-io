@@ -120,6 +120,18 @@ export type UpdateUsernameMutationVariables = Exact<{
 
 export type UpdateUsernameMutation = { updateUsername: { id: string, email: string, firstName: string | null, lastName: string | null, username: string | null } };
 
+export type CurrentUserDefaultCurrencyQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type CurrentUserDefaultCurrencyQuery = { userProfile: { id: string, defaultCurrency: string | null } | null };
+
+export type UpdateDefaultCurrencyMutationVariables = Exact<{
+  defaultCurrency?: string | null | undefined;
+}>;
+
+
+export type UpdateDefaultCurrencyMutation = { updateProfile: { id: string, defaultCurrency: string | null } };
+
 export type DeleteAccountMutationVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -1087,6 +1099,83 @@ export function useUpdateUsernameMutation(baseOptions?: Apollo.MutationHookOptio
 export type UpdateUsernameMutationHookResult = ReturnType<typeof useUpdateUsernameMutation>;
 export type UpdateUsernameMutationResult = Apollo.MutationResult<UpdateUsernameMutation>;
 export type UpdateUsernameMutationOptions = Apollo.BaseMutationOptions<UpdateUsernameMutation, UpdateUsernameMutationVariables>;
+export const CurrentUserDefaultCurrencyDocument = gql`
+    query CurrentUserDefaultCurrency {
+  userProfile {
+    id
+    defaultCurrency
+  }
+}
+    `;
+
+/**
+ * __useCurrentUserDefaultCurrencyQuery__
+ *
+ * To run a query within a React component, call `useCurrentUserDefaultCurrencyQuery` and pass it any options that fit your needs.
+ * When your component renders, `useCurrentUserDefaultCurrencyQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useCurrentUserDefaultCurrencyQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useCurrentUserDefaultCurrencyQuery(baseOptions?: Apollo.QueryHookOptions<CurrentUserDefaultCurrencyQuery, CurrentUserDefaultCurrencyQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<CurrentUserDefaultCurrencyQuery, CurrentUserDefaultCurrencyQueryVariables>(CurrentUserDefaultCurrencyDocument, options);
+      }
+export function useCurrentUserDefaultCurrencyLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<CurrentUserDefaultCurrencyQuery, CurrentUserDefaultCurrencyQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<CurrentUserDefaultCurrencyQuery, CurrentUserDefaultCurrencyQueryVariables>(CurrentUserDefaultCurrencyDocument, options);
+        }
+// @ts-ignore
+export function useCurrentUserDefaultCurrencySuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<CurrentUserDefaultCurrencyQuery, CurrentUserDefaultCurrencyQueryVariables>): Apollo.UseSuspenseQueryResult<CurrentUserDefaultCurrencyQuery, CurrentUserDefaultCurrencyQueryVariables>;
+export function useCurrentUserDefaultCurrencySuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<CurrentUserDefaultCurrencyQuery, CurrentUserDefaultCurrencyQueryVariables>): Apollo.UseSuspenseQueryResult<CurrentUserDefaultCurrencyQuery | undefined, CurrentUserDefaultCurrencyQueryVariables>;
+export function useCurrentUserDefaultCurrencySuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<CurrentUserDefaultCurrencyQuery, CurrentUserDefaultCurrencyQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<CurrentUserDefaultCurrencyQuery, CurrentUserDefaultCurrencyQueryVariables>(CurrentUserDefaultCurrencyDocument, options);
+        }
+export type CurrentUserDefaultCurrencyQueryHookResult = ReturnType<typeof useCurrentUserDefaultCurrencyQuery>;
+export type CurrentUserDefaultCurrencyLazyQueryHookResult = ReturnType<typeof useCurrentUserDefaultCurrencyLazyQuery>;
+export type CurrentUserDefaultCurrencySuspenseQueryHookResult = ReturnType<typeof useCurrentUserDefaultCurrencySuspenseQuery>;
+export type CurrentUserDefaultCurrencyQueryResult = Apollo.QueryResult<CurrentUserDefaultCurrencyQuery, CurrentUserDefaultCurrencyQueryVariables>;
+export const UpdateDefaultCurrencyDocument = gql`
+    mutation UpdateDefaultCurrency($defaultCurrency: String) {
+  updateProfile(defaultCurrency: $defaultCurrency) {
+    id
+    defaultCurrency
+  }
+}
+    `;
+export type UpdateDefaultCurrencyMutationFn = Apollo.MutationFunction<UpdateDefaultCurrencyMutation, UpdateDefaultCurrencyMutationVariables>;
+
+/**
+ * __useUpdateDefaultCurrencyMutation__
+ *
+ * To run a mutation, you first call `useUpdateDefaultCurrencyMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateDefaultCurrencyMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateDefaultCurrencyMutation, { data, loading, error }] = useUpdateDefaultCurrencyMutation({
+ *   variables: {
+ *      defaultCurrency: // value for 'defaultCurrency'
+ *   },
+ * });
+ */
+export function useUpdateDefaultCurrencyMutation(baseOptions?: Apollo.MutationHookOptions<UpdateDefaultCurrencyMutation, UpdateDefaultCurrencyMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateDefaultCurrencyMutation, UpdateDefaultCurrencyMutationVariables>(UpdateDefaultCurrencyDocument, options);
+      }
+export type UpdateDefaultCurrencyMutationHookResult = ReturnType<typeof useUpdateDefaultCurrencyMutation>;
+export type UpdateDefaultCurrencyMutationResult = Apollo.MutationResult<UpdateDefaultCurrencyMutation>;
+export type UpdateDefaultCurrencyMutationOptions = Apollo.BaseMutationOptions<UpdateDefaultCurrencyMutation, UpdateDefaultCurrencyMutationVariables>;
 export const DeleteAccountDocument = gql`
     mutation deleteAccount {
   deleteAccount

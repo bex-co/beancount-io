@@ -82,6 +82,7 @@ function screen(
                 return submit;
               },
               setError: () => events.push("form-error"),
+              setValue: () => {},
               reset: () => {},
               getValues: () => ({
                 name: "new",
@@ -124,7 +125,14 @@ function screen(
             removeItem: async () => {},
           };
         if (id === "expo-localization")
-          return { getLocales: () => [{ regionCode: "US" }] };
+          return {
+            getLocales: () => [{ regionCode: "US" }],
+            getCalendars: () => [{ timeZone: "America/New_York" }],
+          };
+        if (id === "./currency-suggestion")
+          return require("../currency-suggestion");
+        if (id === "./currency-suggestion-hint")
+          return { CurrencySuggestionHint: () => null };
         if (id === "../plan-screen/plan-card")
           return { planKey: (tier: string) => tier };
         if (id === "./revalidate-on-edit")
@@ -134,7 +142,10 @@ function screen(
             SETUP_PRESETS: [
               { id: "PERSONAL", titleKey: "t", outcomeKey: "o", accounts: [] },
             ],
-            suggestCurrency: () => "USD",
+            setupFields: (values: { currency: string }) => ({
+              operatingCurrency: values.currency,
+              historyStart: "2026-10-20",
+            }),
             defaultHistoryStart: () => "2026-10-20",
             openingAmountValue: (value: string) => value.trim(),
             openingSelection: () => null,
@@ -144,6 +155,11 @@ function screen(
             LedgerTemplate: { Sample: "SAMPLE" },
             LedgerSetupPreset: { Personal: "PERSONAL" },
             LedgerOpeningState: { Known: "KNOWN" },
+            useCurrentUserDefaultCurrencyQuery: () => ({ data: undefined }),
+            useUpdateDefaultCurrencyMutation: () => [
+              async () => ({ data: undefined }),
+              { loading: false },
+            ],
             usePreviewLedgerSetupLazyQuery: () => [
               async () => ({ data: undefined }),
               { data: undefined, loading: false, error: undefined },

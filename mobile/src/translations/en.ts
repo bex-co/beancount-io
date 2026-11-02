@@ -868,6 +868,10 @@ export const en = {
   createLedgerAmountReenter:
     "Enter the opening balance again, or choose Decide later. It is not kept in the saved draft.",
   createLedgerCurrencyInvalid: "Choose a currency code like USD or EUR.",
+  createLedgerCurrencyFromSaved: "From your saved preference",
+  createLedgerCurrencyFromDevice: "From your device settings",
+  createLedgerCurrencyFromRegion: "From your device region",
+  createLedgerCurrencyUseTimeZone: "Use {{currency}} (from your time zone)",
   createLedgerHistoryStartInvalid: "Enter a real date like 2026-01-01.",
   createLedgerPresetPersonal: "Personal ledger",
   createLedgerPresetPersonalOutcome:

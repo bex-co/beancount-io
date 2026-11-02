@@ -953,6 +953,10 @@ export const sk: Translations = {
   createLedgerAmountReenter:
     "Zadajte počiatočný zostatok znova alebo vyberte Rozhodnúť neskôr. V uloženom koncepte sa neuchováva.",
   createLedgerCurrencyInvalid: "Zadajte kód meny, napríklad USD alebo EUR.",
+  createLedgerCurrencyFromSaved: "Z vašej uloženej predvoľby",
+  createLedgerCurrencyFromDevice: "Z nastavení zariadenia",
+  createLedgerCurrencyFromRegion: "Podľa regiónu zariadenia",
+  createLedgerCurrencyUseTimeZone: "Použiť {{currency}} (podľa časového pásma)",
   createLedgerHistoryStartInvalid:
     "Zadajte platný dátum, napríklad 2026-01-01.",
   createLedgerPresetPersonal: "Osobná kniha",

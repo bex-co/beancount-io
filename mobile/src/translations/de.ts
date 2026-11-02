@@ -947,6 +947,11 @@ export const de: Translations = {
     "Geben Sie den Eröffnungssaldo erneut ein oder wählen Sie „Später entscheiden“. Er wird nicht im gespeicherten Entwurf aufbewahrt.",
   createLedgerCurrencyInvalid:
     "Wählen Sie einen Währungscode wie USD oder EUR.",
+  createLedgerCurrencyFromSaved: "Aus Ihrer gespeicherten Einstellung",
+  createLedgerCurrencyFromDevice: "Aus den Geräteeinstellungen",
+  createLedgerCurrencyFromRegion: "Aus der Region Ihres Geräts",
+  createLedgerCurrencyUseTimeZone:
+    "{{currency}} verwenden (aus Ihrer Zeitzone)",
   createLedgerHistoryStartInvalid:
     "Geben Sie ein gültiges Datum wie 2026-01-01 ein.",
   createLedgerPresetPersonal: "Persönliches Buch",

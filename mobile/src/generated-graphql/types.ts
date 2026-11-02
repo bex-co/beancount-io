@@ -1437,7 +1437,7 @@ export type Mutation = {
   updatePlaidAccountCurrency: Scalars['Boolean']['output'];
   /** Update the ledger account mapping for a Plaid account */
   updatePlaidAccountMapping: Scalars['Boolean']['output'];
-  /** Update user profile (firstName and lastName) */
+  /** Update user profile: firstName and lastName, and the saved defaultCurrency */
   updateProfile: UserProfileResponse;
   updateUsername: UserProfileResponse;
   /** Upgrades your subscription. Requires a full signed-in session. */
@@ -1856,6 +1856,7 @@ export type MutationUpdatePlaidAccountMappingArgs = {
 
 
 export type MutationUpdateProfileArgs = {
+  defaultCurrency?: InputMaybe<Scalars['String']['input']>;
   firstName?: InputMaybe<Scalars['String']['input']>;
   lastName?: InputMaybe<Scalars['String']['input']>;
 };
@@ -3406,6 +3407,8 @@ export type UserProfile = {
 export type UserProfileResponse = {
   __typename?: 'UserProfileResponse';
   avatarUrl?: Maybe<Scalars['String']['output']>;
+  /** Saved currency preference (ADR026): the currency a creation flow suggests first. API creation never reads it. */
+  defaultCurrency?: Maybe<Scalars['String']['output']>;
   email: Scalars['String']['output'];
   emailReportStatus?: Maybe<ReportStatus>;
   firstName?: Maybe<Scalars['String']['output']>;

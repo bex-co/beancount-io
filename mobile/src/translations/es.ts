@@ -946,6 +946,10 @@ export const es: Translations = {
   createLedgerAmountReenter:
     "Vuelve a introducir el saldo inicial o elige «Decidir más tarde». No se conserva en el borrador guardado.",
   createLedgerCurrencyInvalid: "Elige un código de moneda como USD o EUR.",
+  createLedgerCurrencyFromSaved: "De tu preferencia guardada",
+  createLedgerCurrencyFromDevice: "De la configuración del dispositivo",
+  createLedgerCurrencyFromRegion: "De la región del dispositivo",
+  createLedgerCurrencyUseTimeZone: "Usar {{currency}} (de tu zona horaria)",
   createLedgerHistoryStartInvalid:
     "Introduce una fecha válida como 2026-01-01.",
   createLedgerPresetPersonal: "Libro personal",

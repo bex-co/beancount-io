@@ -948,6 +948,11 @@ export const ca: Translations = {
   createLedgerAmountReenter:
     "Torna a introduir el saldo inicial o tria «Decidir més tard». No es conserva a l'esborrany desat.",
   createLedgerCurrencyInvalid: "Tria un codi de moneda com USD o EUR.",
+  createLedgerCurrencyFromSaved: "De la teva preferència desada",
+  createLedgerCurrencyFromDevice: "De la configuració del dispositiu",
+  createLedgerCurrencyFromRegion: "De la regió del dispositiu",
+  createLedgerCurrencyUseTimeZone:
+    "Utilitza {{currency}} (de la teva zona horària)",
   createLedgerHistoryStartInvalid: "Introdueix una data vàlida com 2026-01-01.",
   createLedgerPresetPersonal: "Llibre personal",
   createLedgerPresetPersonalOutcome:

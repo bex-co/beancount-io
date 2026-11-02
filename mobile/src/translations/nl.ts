@@ -930,6 +930,10 @@ export const nl: Translations = {
   createLedgerAmountReenter:
     "Voer het openingssaldo opnieuw in of kies Later beslissen. Het wordt niet bewaard in het opgeslagen concept.",
   createLedgerCurrencyInvalid: "Kies een valutacode zoals USD of EUR.",
+  createLedgerCurrencyFromSaved: "Uit je opgeslagen voorkeur",
+  createLedgerCurrencyFromDevice: "Uit de instellingen van je apparaat",
+  createLedgerCurrencyFromRegion: "Uit de regio van je apparaat",
+  createLedgerCurrencyUseTimeZone: "{{currency}} gebruiken (uit je tijdzone)",
   createLedgerHistoryStartInvalid:
     "Voer een geldige datum in, zoals 2026-01-01.",
   createLedgerPresetPersonal: "Persoonlijk grootboek",

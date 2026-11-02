@@ -1,9 +1,9 @@
 import {
   SETUP_PRESETS,
-  suggestCurrency,
   defaultHistoryStart,
   openingAmountValue,
 } from "../setup-presets";
+import { suggestCurrency } from "../currency-suggestion";
 
 describe("setup presets", () => {
   it("lists every catalog preset exactly once", () => {
@@ -17,15 +17,6 @@ describe("setup presets", () => {
       "RENTAL",
       "SHARED_EXPENSES",
     ]);
-  });
-
-  it("suggests currency from the region only", () => {
-    expect(suggestCurrency("US")).toBe("USD");
-    expect(suggestCurrency("GB")).toBe("GBP");
-    expect(suggestCurrency("DE")).toBe("EUR");
-    expect(suggestCurrency("JP")).toBe("JPY");
-    expect(suggestCurrency(null)).toBe("USD");
-    expect(suggestCurrency("XX")).toBe("USD");
   });
 });
 
@@ -82,13 +73,14 @@ describe("Create Ledger's Preset option", () => {
 // Romania USD; the table is now the canonical setup catalog's.
 describe("suggestCurrency: the setup catalog", () => {
   it("suggests the catalog's currency for every region", () => {
-    expect(suggestCurrency("BG")).toBe("EUR");
-    expect(suggestCurrency("bg")).toBe("EUR");
-    expect(suggestCurrency("UA")).toBe("UAH");
-    expect(suggestCurrency("RO")).toBe("RON");
-    expect(suggestCurrency("XK")).toBe("EUR");
+    const fromRegion = (region: string) => suggestCurrency({ region }).currency;
+    expect(fromRegion("BG")).toBe("EUR");
+    expect(fromRegion("bg")).toBe("EUR");
+    expect(fromRegion("UA")).toBe("UAH");
+    expect(fromRegion("RO")).toBe("RON");
+    expect(fromRegion("XK")).toBe("EUR");
     // A region the catalog has no row for still falls back to USD.
-    expect(suggestCurrency("AQ")).toBe("USD");
+    expect(fromRegion("AQ")).toBe("USD");
   });
 
   it("keeps the copy equal to the canonical catalog", () => {

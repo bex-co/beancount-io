@@ -139,26 +139,6 @@ export const SETUP_PRESETS: SetupPreset[] = [
 ];
 
 /**
- * Region → currency, copied byte for byte from the canonical setup catalog
- * (`backend-cluster/backend-v2/src/features/ledger/setup/currencies.json`,
- * ADR021) that the hosted builder and `bea init` share. A hand-rolled list
- * offered Bulgaria, Ukraine and Romania USD (w21/061); a drift test keeps the
- * copy equal to the catalog.
- */
-const REGION_CURRENCY: Readonly<Record<string, string>> =
-  setupCurrencies.regionCurrency;
-
-/**
- * Suggest a currency from the device's region only (ADR021): the region
- * the OS reports for the locale, never its language. Falls back to USD.
- */
-export function suggestCurrency(regionCode: string | null | undefined): string {
-  const region = regionCode?.toUpperCase();
-  if (!region || !/^[A-Z]{2}$/.test(region)) return "USD";
-  return REGION_CURRENCY[region] ?? "USD";
-}
-
-/**
  * The day "Books begin" starts on: the device's own date. It used the UTC
  * date, so from 17:00 PDT the ledger began tomorrow, every preset account
  * opened tomorrow, and the first entry dated today — the app's default — was

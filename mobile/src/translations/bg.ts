@@ -923,6 +923,11 @@ export const bg: Translations = {
   createLedgerAmountReenter:
     "Въведете началното салдо отново или изберете „Реши по-късно“. То не се пази в запазената чернова.",
   createLedgerCurrencyInvalid: "Изберете код на валута като USD или EUR.",
+  createLedgerCurrencyFromSaved: "От запазеното ви предпочитание",
+  createLedgerCurrencyFromDevice: "От настройките на устройството",
+  createLedgerCurrencyFromRegion: "От региона на устройството",
+  createLedgerCurrencyUseTimeZone:
+    "Използвайте {{currency}} (от часовата ви зона)",
   createLedgerHistoryStartInvalid:
     "Въведете валидна дата, например 2026-01-01.",
   createLedgerPresetPersonal: "Лична книга",

@@ -24,7 +24,9 @@ import {
   LedgerTemplate,
   useCreateLedgerMutation,
   useCreateLedgerBasicMutation,
+  useCurrentUserDefaultCurrencyQuery,
   usePreviewLedgerSetupLazyQuery,
+  useUpdateDefaultCurrencyMutation,
 } from "@/generated-graphql/graphql";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
@@ -35,6 +37,8 @@ import {
   type CreateLedgerDraft,
 } from "@/common/create-ledger-draft";
 import * as Localization from "expo-localization";
+import { currencyToSave, suggestCurrency } from "./currency-suggestion";
+import { CurrencySuggestionHint } from "./currency-suggestion-hint";
 import {
   defaultHistoryStart,
   isHistoryStart,
@@ -44,7 +48,6 @@ import {
   openingAmountValue,
   openingSelection,
   SETUP_PRESETS,
-  suggestCurrency,
 } from "./setup-presets";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
@@ -211,6 +214,25 @@ export function CreateLedgerScreen(): JSX.Element {
   const { ledgers, loading: directoryLoading, refresh } = useLedgerDirectory();
   const [createLedger, { loading }] = useCreateLedgerMutation();
   const [createLedgerBasic] = useCreateLedgerBasicMutation();
+  // ADR026: a server that predates the saved preference rejects this query;
+  // the suggestion then comes from the device alone.
+  const { data: savedCurrencyData } = useCurrentUserDefaultCurrencyQuery({
+    errorPolicy: "ignore",
+  });
+  const savedCurrency = savedCurrencyData?.userProfile?.defaultCurrency ?? null;
+  const [updateDefaultCurrency] = useUpdateDefaultCurrencyMutation();
+  const suggestion = useMemo(() => {
+    const locale = Localization.getLocales()[0];
+    return suggestCurrency({
+      saved: savedCurrency,
+      nativeCurrency: locale?.currencyCode,
+      region: locale?.regionCode,
+      timeZone: Localization.getCalendars()[0]?.timeZone,
+    });
+  }, [savedCurrency]);
+  // An explicit selection in this flow — typed, a tapped candidate, or a
+  // resumed draft's — is never re-suggested.
+  const [currencyChosen, setCurrencyChosen] = useState(false);
   const [
     runPreview,
     { data: previewData, loading: previewLoading, error: previewError },
@@ -305,7 +327,7 @@ export function CreateLedgerScreen(): JSX.Element {
       description: "",
       private: true,
       template: "STARTER",
-      currency: suggestCurrency(Localization.getLocales()[0]?.regionCode),
+      currency: suggestion.currency,
       historyStart: defaultHistoryStart(),
       openingAccount: "",
       openingAmount: "",
@@ -345,6 +367,7 @@ export function CreateLedgerScreen(): JSX.Element {
       }
       setAmountLost(draft.amountLost);
       historyStartTypedRef.current = draft.historyStartTyped === true;
+      setCurrencyChosen(true);
       reset(draft.values);
     });
   }, [reset]);
@@ -379,6 +402,11 @@ export function CreateLedgerScreen(): JSX.Element {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [directoryLoading, existingNames.join("|")]);
 
+  // The saved preference arrives after the first render.
+  useEffect(() => {
+    if (!currencyChosen) setValue("currency", suggestion.currency);
+  }, [currencyChosen, suggestion.currency, setValue]);
+
   // Another preset or start offers other accounts, so an opening account
   // chosen for the last one, and its amount, start over (w21/106).
   const resetOpening = () => {
@@ -391,10 +419,8 @@ export function CreateLedgerScreen(): JSX.Element {
     // invalid there must not hold a hidden error on another start.
     if (kind !== "preset") {
       if (!isSetupCurrency(getValues("currency"))) {
-        setValue(
-          "currency",
-          suggestCurrency(Localization.getLocales()[0]?.regionCode),
-        );
+        setValue("currency", suggestion.currency);
+        setCurrencyChosen(false);
       }
       if (!isHistoryStart(getValues("historyStart"))) {
         setValue("historyStart", defaultHistoryStart());
@@ -521,6 +547,20 @@ export function CreateLedgerScreen(): JSX.Element {
           });
         }
         void clearCreateLedgerDraft();
+        if (startKind === "preset") {
+          const save = currencyToSave({
+            chosen: setupFields(values).operatingCurrency,
+            suggested: suggestion.currency,
+            saved: savedCurrency,
+          });
+          // A preference, not part of the ledger: a refusal (an older server)
+          // changes nothing the customer created.
+          if (save) {
+            void updateDefaultCurrency({
+              variables: { defaultCurrency: save },
+            }).catch(() => {});
+          }
+        }
         const id = result.data?.createLedger?.id;
         if (!id) {
           setError("root", { message: t("createLedgerGenericError") });
@@ -823,9 +863,10 @@ export function CreateLedgerScreen(): JSX.Element {
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
                     value={value}
-                    onChangeText={edited("currency", (text) =>
-                      onChange(text.toUpperCase()),
-                    )}
+                    onChangeText={edited("currency", (text) => {
+                      setCurrencyChosen(true);
+                      onChange(text.toUpperCase());
+                    })}
                     onBlur={onBlur}
                     autoCapitalize="characters"
                     autoCorrect={false}
@@ -834,6 +875,15 @@ export function CreateLedgerScreen(): JSX.Element {
                     accessibilityLabel={t("createLedgerCurrency")}
                   />
                 )}
+              />
+              <CurrencySuggestionHint
+                suggestion={suggestion}
+                value={currencyValue}
+                chosen={currencyChosen}
+                onPick={(currency) => {
+                  setCurrencyChosen(true);
+                  setValue("currency", currency, { shouldValidate: true });
+                }}
               />
               {errors.currency?.message ? (
                 <InlineError

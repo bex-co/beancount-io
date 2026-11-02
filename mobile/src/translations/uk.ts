@@ -944,6 +944,11 @@ export const uk: Translations = {
   createLedgerAmountReenter:
     "Введіть початковий залишок ще раз або виберіть «Вирішити пізніше». У збереженій чернетці його не зберігається.",
   createLedgerCurrencyInvalid: "Укажіть код валюти, наприклад USD або EUR.",
+  createLedgerCurrencyFromSaved: "Зі збережених налаштувань",
+  createLedgerCurrencyFromDevice: "З налаштувань пристрою",
+  createLedgerCurrencyFromRegion: "За регіоном пристрою",
+  createLedgerCurrencyUseTimeZone:
+    "Використати {{currency}} (за часовим поясом)",
   createLedgerHistoryStartInvalid:
     "Введіть коректну дату, наприклад 2026-01-01.",
   createLedgerPresetPersonal: "Особиста книга",

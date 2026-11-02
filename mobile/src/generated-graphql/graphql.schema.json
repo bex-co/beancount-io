@@ -15320,8 +15320,20 @@
           },
           {
             "name": "updateProfile",
-            "description": "Update user profile (firstName and lastName)",
+            "description": "Update user profile: firstName and lastName, and the saved defaultCurrency",
             "args": [
+              {
+                "name": "defaultCurrency",
+                "description": "Saved currency preference, an ISO 4217 code a new ledger can take; null clears it. Sent alone, it leaves the names unchanged.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
               {
                 "name": "firstName",
                 "description": null,
@@ -27330,6 +27342,18 @@
           {
             "name": "avatarUrl",
             "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "defaultCurrency",
+            "description": "Saved currency preference (ADR026): the currency a creation flow suggests first. API creation never reads it.",
             "args": [],
             "type": {
               "kind": "SCALAR",

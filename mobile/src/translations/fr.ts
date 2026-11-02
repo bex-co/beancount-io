@@ -949,6 +949,11 @@ export const fr: Translations = {
   createLedgerAmountReenter:
     "Saisissez à nouveau le solde d'ouverture ou choisissez « Décider plus tard ». Il n'est pas conservé dans le brouillon enregistré.",
   createLedgerCurrencyInvalid: "Choisissez un code de devise comme USD ou EUR.",
+  createLedgerCurrencyFromSaved: "D’après votre préférence enregistrée",
+  createLedgerCurrencyFromDevice: "D’après les réglages de l’appareil",
+  createLedgerCurrencyFromRegion: "D’après la région de l’appareil",
+  createLedgerCurrencyUseTimeZone:
+    "Utiliser {{currency}} (d’après votre fuseau horaire)",
   createLedgerHistoryStartInvalid:
     "Saisissez une date valide comme 2026-01-01.",
   createLedgerPresetPersonal: "Livre personnel",
