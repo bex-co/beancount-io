@@ -50,10 +50,16 @@ export function base64Encode(str: string): string {
   // Convert UTF-8 string to byte array using TextEncoder
   const utf8Bytes = new TextEncoder().encode(str);
 
-  // Convert byte array to binary string (each byte becomes a character)
-  const binaryString = Array.from(utf8Bytes, (byte) =>
-    String.fromCharCode(byte),
-  ).join("");
+  // Convert byte array to binary string (each byte becomes a character).
+  // Chunked: a saved ledger file is hundreds of KB, and one string per byte
+  // made every save allocate that many (w1/m41). 32K arguments per call stays
+  // under every engine's limit.
+  let binaryString = "";
+  for (let start = 0; start < utf8Bytes.length; start += 0x8000) {
+    binaryString += String.fromCharCode(
+      ...utf8Bytes.subarray(start, start + 0x8000),
+    );
+  }
 
   // Now safe to use btoa() since all characters are in 0-255 range
   return btoa(binaryString);

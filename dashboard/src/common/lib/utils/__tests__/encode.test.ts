@@ -214,6 +214,13 @@ describe("Encode Utility", () => {
       expect(result).toBe("");
     });
 
+    it("encodes a ledger-sized file across chunk boundaries", () => {
+      // ~300KB with multi-byte characters straddling every 32K byte chunk.
+      const line = '2026-11-02 * "Café 咖啡 ☕" "qa-20261102"\n';
+      const file = line.repeat(Math.ceil(300_000 / line.length));
+      expect(base64Encode(file)).toBe(Buffer.from(file).toString("base64"));
+    });
+
     it("should encode emoji characters", () => {
       const input = "Hello 🍕 World";
       const result = base64Encode(input);
