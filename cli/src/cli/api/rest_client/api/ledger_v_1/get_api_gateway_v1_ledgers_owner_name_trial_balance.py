@@ -137,7 +137,10 @@ def sync_detailed(
             leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape
             sequences. Example: #travel.
         time (str | Unset): Fava time expression Example: 2026.
-        conversion (str | Unset): Convert postings to this currency before totalling Example: USD.
+        conversion (str | Unset): Value amounts as: a currency code; `units` (unconverted);
+            `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost`
+            (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held
+            without a cost). Default: the ledger's operating currency. Example: USD.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -191,7 +194,10 @@ def sync(
             leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape
             sequences. Example: #travel.
         time (str | Unset): Fava time expression Example: 2026.
-        conversion (str | Unset): Convert postings to this currency before totalling Example: USD.
+        conversion (str | Unset): Value amounts as: a currency code; `units` (unconverted);
+            `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost`
+            (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held
+            without a cost). Default: the ledger's operating currency. Example: USD.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -240,7 +246,10 @@ async def asyncio_detailed(
             leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape
             sequences. Example: #travel.
         time (str | Unset): Fava time expression Example: 2026.
-        conversion (str | Unset): Convert postings to this currency before totalling Example: USD.
+        conversion (str | Unset): Value amounts as: a currency code; `units` (unconverted);
+            `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost`
+            (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held
+            without a cost). Default: the ledger's operating currency. Example: USD.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -292,7 +301,10 @@ async def asyncio(
             leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape
             sequences. Example: #travel.
         time (str | Unset): Fava time expression Example: 2026.
-        conversion (str | Unset): Convert postings to this currency before totalling Example: USD.
+        conversion (str | Unset): Value amounts as: a currency code; `units` (unconverted);
+            `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost`
+            (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held
+            without a cost). Default: the ledger's operating currency. Example: USD.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

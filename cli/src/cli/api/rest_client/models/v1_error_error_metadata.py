@@ -11,6 +11,11 @@ T = TypeVar("T", bound="V1ErrorErrorMetadata")
 
 @_attrs_define
 class V1ErrorErrorMetadata:
+    """Facts about this refusal. A limit a plan sets carries `limitOwner`: `REQUESTER` for the caller's own plan,
+    `LEDGER_OWNER` for the ledger owner's. A limit no plan sets has none.
+
+    """
+
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

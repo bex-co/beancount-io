@@ -136,7 +136,8 @@
                 "type": "object",
                 "additionalProperties": {
                   "nullable": true
-                }
+                },
+                "description": "Facts about this refusal. A limit a plan sets carries `limitOwner`: `REQUESTER` for the caller's own plan, `LEDGER_OWNER` for the ledger owner's. A limit no plan sets has none."
               }
             },
             "required": [

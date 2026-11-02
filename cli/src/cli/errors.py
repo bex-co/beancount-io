@@ -245,7 +245,7 @@ def error_from_status(
     """
     detail = message or f"HTTP {status}"
     # A plan limit answers 403, but it is not a credential problem: the
-    # server's sentence already names the plan and what to do.
+    # server's sentence already names the limit and the count.
     if code == "RESOURCE_LIMIT_REACHED":
         return BeaError(detail, request_id=request_id)
     if status == 401:

@@ -147,7 +147,10 @@ def sync_detailed(
         time (str | Unset): Fava time expression Example: 2026.
         interval (str | Unset): Period grouping: day, week, month, quarter, or year Example:
             month.
-        conversion (str | Unset): Convert postings to this currency before totalling Example: USD.
+        conversion (str | Unset): Value amounts as: a currency code; `units` (unconverted);
+            `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost`
+            (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held
+            without a cost). Default: the ledger's operating currency. Example: USD.
         account_name (str): The account to report on Example: Expenses:Groceries.
 
     Raises:
@@ -208,7 +211,10 @@ def sync(
         time (str | Unset): Fava time expression Example: 2026.
         interval (str | Unset): Period grouping: day, week, month, quarter, or year Example:
             month.
-        conversion (str | Unset): Convert postings to this currency before totalling Example: USD.
+        conversion (str | Unset): Value amounts as: a currency code; `units` (unconverted);
+            `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost`
+            (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held
+            without a cost). Default: the ledger's operating currency. Example: USD.
         account_name (str): The account to report on Example: Expenses:Groceries.
 
     Raises:
@@ -264,7 +270,10 @@ async def asyncio_detailed(
         time (str | Unset): Fava time expression Example: 2026.
         interval (str | Unset): Period grouping: day, week, month, quarter, or year Example:
             month.
-        conversion (str | Unset): Convert postings to this currency before totalling Example: USD.
+        conversion (str | Unset): Value amounts as: a currency code; `units` (unconverted);
+            `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost`
+            (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held
+            without a cost). Default: the ledger's operating currency. Example: USD.
         account_name (str): The account to report on Example: Expenses:Groceries.
 
     Raises:
@@ -323,7 +332,10 @@ async def asyncio(
         time (str | Unset): Fava time expression Example: 2026.
         interval (str | Unset): Period grouping: day, week, month, quarter, or year Example:
             month.
-        conversion (str | Unset): Convert postings to this currency before totalling Example: USD.
+        conversion (str | Unset): Value amounts as: a currency code; `units` (unconverted);
+            `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost`
+            (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held
+            without a cost). Default: the ledger's operating currency. Example: USD.
         account_name (str): The account to report on Example: Expenses:Groceries.
 
     Raises:

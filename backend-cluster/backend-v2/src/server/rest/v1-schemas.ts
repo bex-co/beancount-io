@@ -6,16 +6,18 @@ import { z } from "@/shared/zod-openapi-setup";
  * that "what a v1 error looks like" has one answer.
  */
 
-export const paginationSchema = z.object({
-  page: z.coerce.number().int().min(1).optional().openapi({
-    description: "1-based page number",
-    example: 1,
-  }),
-  limit: z.coerce.number().int().min(1).max(100).optional().openapi({
-    description: "Page size, at most 100",
-    example: 20,
-  }),
-}).strict();
+export const paginationSchema = z
+  .object({
+    page: z.coerce.number().int().min(1).optional().openapi({
+      description: "1-based page number",
+      example: 1,
+    }),
+    limit: z.coerce.number().int().min(1).max(100).optional().openapi({
+      description: "Page size, at most 100",
+      example: 20,
+    }),
+  })
+  .strict();
 
 /** A boolean carried as a query-string literal, decoded the same everywhere. */
 export const booleanQuery = z
@@ -33,7 +35,10 @@ export const errorSchema = z
         example: "VALIDATION_FAILED",
       }),
       message: z.string(),
-      metadata: z.record(z.string(), z.unknown()).optional(),
+      metadata: z.record(z.string(), z.unknown()).optional().openapi({
+        description:
+          "Facts about this refusal. A limit a plan sets carries `limitOwner`: `REQUESTER` for the caller's own plan, `LEDGER_OWNER` for the ledger owner's. A limit no plan sets has none.",
+      }),
     }),
   })
   .openapi("V1Error", { description: "Standard v1 error body" });

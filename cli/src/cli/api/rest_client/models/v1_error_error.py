@@ -21,7 +21,8 @@ class V1ErrorError:
     Attributes:
         code (str): Canonical error category Example: VALIDATION_FAILED.
         message (str):
-        metadata (V1ErrorErrorMetadata | Unset):
+        metadata (V1ErrorErrorMetadata | Unset): Facts about this refusal. A limit a plan sets carries `limitOwner`:
+            `REQUESTER` for the caller's own plan, `LEDGER_OWNER` for the ledger owner's. A limit no plan sets has none.
     """
 
     code: str

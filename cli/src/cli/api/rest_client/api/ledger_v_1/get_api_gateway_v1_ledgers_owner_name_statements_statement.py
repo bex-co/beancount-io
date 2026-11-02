@@ -158,8 +158,10 @@ def sync_detailed(
         filter_ (str | Unset):
         time (str | Unset): Reporting period as a Fava time expression Example: 2026-01-01 -
             2026-12-31.
-        conversion (str | Unset): Convert amounts to this currency (default: the ledger's
-            operating currency) Example: USD.
+        conversion (str | Unset): Value amounts as: a currency code; `units` (unconverted);
+            `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost`
+            (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held
+            without a cost). Default: the ledger's operating currency. Example: USD.
         interval (str | Unset): Bucket the period: day, week, month, quarter, year Default:
             'monthly'. Example: month.
         shape (GetApiGatewayV1LedgersOwnerNameStatementsStatementShape | Unset): summary returns
@@ -224,8 +226,10 @@ def sync(
         filter_ (str | Unset):
         time (str | Unset): Reporting period as a Fava time expression Example: 2026-01-01 -
             2026-12-31.
-        conversion (str | Unset): Convert amounts to this currency (default: the ledger's
-            operating currency) Example: USD.
+        conversion (str | Unset): Value amounts as: a currency code; `units` (unconverted);
+            `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost`
+            (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held
+            without a cost). Default: the ledger's operating currency. Example: USD.
         interval (str | Unset): Bucket the period: day, week, month, quarter, year Default:
             'monthly'. Example: month.
         shape (GetApiGatewayV1LedgersOwnerNameStatementsStatementShape | Unset): summary returns
@@ -285,8 +289,10 @@ async def asyncio_detailed(
         filter_ (str | Unset):
         time (str | Unset): Reporting period as a Fava time expression Example: 2026-01-01 -
             2026-12-31.
-        conversion (str | Unset): Convert amounts to this currency (default: the ledger's
-            operating currency) Example: USD.
+        conversion (str | Unset): Value amounts as: a currency code; `units` (unconverted);
+            `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost`
+            (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held
+            without a cost). Default: the ledger's operating currency. Example: USD.
         interval (str | Unset): Bucket the period: day, week, month, quarter, year Default:
             'monthly'. Example: month.
         shape (GetApiGatewayV1LedgersOwnerNameStatementsStatementShape | Unset): summary returns
@@ -349,8 +355,10 @@ async def asyncio(
         filter_ (str | Unset):
         time (str | Unset): Reporting period as a Fava time expression Example: 2026-01-01 -
             2026-12-31.
-        conversion (str | Unset): Convert amounts to this currency (default: the ledger's
-            operating currency) Example: USD.
+        conversion (str | Unset): Value amounts as: a currency code; `units` (unconverted);
+            `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost`
+            (unconverted units keyed by cost currency, e.g. `VTI {EUR}`, with `EUR {}` for units held
+            without a cost). Default: the ledger's operating currency. Example: USD.
         interval (str | Unset): Bucket the period: day, week, month, quarter, year Default:
             'monthly'. Example: month.
         shape (GetApiGatewayV1LedgersOwnerNameStatementsStatementShape | Unset): summary returns

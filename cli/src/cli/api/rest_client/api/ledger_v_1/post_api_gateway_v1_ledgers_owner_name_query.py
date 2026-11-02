@@ -112,7 +112,7 @@ def sync_detailed(
 
      Runs a Beancount Query Language statement against the ledger. `Accept: application/json` returns a
     typed table; `Accept: text/plain` returns the shell's own text rendering. The query travels in a
-    POST body end to end, so long queries have no URL-length ceiling.
+    POST body end to end, so long queries have no URL-length ceiling, up to 262144 bytes.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -151,7 +151,7 @@ def sync(
 
      Runs a Beancount Query Language statement against the ledger. `Accept: application/json` returns a
     typed table; `Accept: text/plain` returns the shell's own text rendering. The query travels in a
-    POST body end to end, so long queries have no URL-length ceiling.
+    POST body end to end, so long queries have no URL-length ceiling, up to 262144 bytes.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -185,7 +185,7 @@ async def asyncio_detailed(
 
      Runs a Beancount Query Language statement against the ledger. `Accept: application/json` returns a
     typed table; `Accept: text/plain` returns the shell's own text rendering. The query travels in a
-    POST body end to end, so long queries have no URL-length ceiling.
+    POST body end to end, so long queries have no URL-length ceiling, up to 262144 bytes.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -222,7 +222,7 @@ async def asyncio(
 
      Runs a Beancount Query Language statement against the ledger. `Accept: application/json` returns a
     typed table; `Accept: text/plain` returns the shell's own text rendering. The query travels in a
-    POST body end to end, so long queries have no URL-length ceiling.
+    POST body end to end, so long queries have no URL-length ceiling, up to 262144 bytes.
 
     Args:
         owner (str): Ledger owner's username Example: alice.

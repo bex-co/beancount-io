@@ -207,6 +207,23 @@ it retains authorization, safe-path checks and repository commit behavior
 without imposing the upload cap on the merged ledger file. No caller-supplied
 flag can select that writer.
 
+## Plan limits and store billing (ADR 001)
+
+A refusal from a limit a plan sets says whose plan it is. `limitOwner` is
+`REQUESTER` for the caller's own plan and `LEDGER_OWNER` for the ledger owner's.
+REST returns it in `error.metadata`, GraphQL in its extensions and MCP in
+`error.limitOwner`, on `RESOURCE_LIMIT_REACHED` and on the AI allowance's
+`RATE_LIMITED`. REST and GraphQL also name the `tier` when it is known; MCP does
+not, because plan wording stays off it (ADR 019). A limit no plan sets has no
+owner. The default sentence no longer tells anyone to upgrade, so a client
+branches on the field. `limit-owner-surfaces.test.ts` reads the same refusal
+through each surface.
+
+Store billing adds no parity row. `subscriptionStatus.billing`, which says who
+bills the plan, and the `BILLED_BY_STORE` refusal (409) on the Stripe plan
+actions stay on the GraphQL billing ceremony under exception 7. The refusal is
+the service's, so a future adapter inherits it.
+
 ## Contract evidence required per operation
 
 Each adapter family must record and exercise its actual arguments and defaults,

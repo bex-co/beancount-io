@@ -93,7 +93,7 @@ Preview. It clears on a new upload or reset/finish — never via localStorage.
 
 ## Premium Gating
 
-`is-premium-required.ts` classifies GraphQL error codes/messages so the upload step can show the upgrade state. Shared tier display configuration lives under `common/lib/subscription/`.
+`is-premium-required.ts` classifies GraphQL error codes, `limitOwner` and messages so the upload step can show the upgrade state. Shared tier display configuration lives under `common/lib/subscription/`.
 
 ## Locales
 

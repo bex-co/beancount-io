@@ -1259,7 +1259,12 @@ every tool:
 ```
 
 Branch on `error.code`; `error.hint` names the next call to make. `retryAfter`
-is present only for `RATE_LIMITED`. A `VALIDATION_FAILED` from a write that
+is present only for `RATE_LIMITED`. A limit a plan sets also carries
+`error.limitOwner`, on `RESOURCE_LIMIT_REACHED` and on the AI allowance's
+`RATE_LIMITED`: `REQUESTER` when it is the credential's own plan, `LEDGER_OWNER`
+when it is the ledger owner's, so only they can lift it. A limit no plan sets has
+none. REST returns the same value in `error.metadata` and GraphQL in its
+extensions (ADR 001 D13). A `VALIDATION_FAILED` from a write that
 would break the ledger also carries `error.newLedgerErrors`: each new error as
 `message (file:line)`, joined by `; `. That is the same string REST returns in
 `error.metadata` and GraphQL in its extensions (w23/077). The published error
@@ -1303,7 +1308,7 @@ and still returns the SDK's own refusal.
 | `FORBIDDEN`              | `-32003` | The credential lacks authority, or a pinned credential named another ledger. Read the ledger's `metadata`.                                                                                               |
 | `UNAUTHENTICATED`        | `-32003` | The credential expired or was revoked. Re-run the OAuth flow, or use a live API key.                                                                                                                     |
 | `PREMIUM_REQUIRED`       | `-32003` | The operation needs a paid plan on the credential's account.                                                                                                                                             |
-| `RESOURCE_LIMIT_REACHED` | `-32003` | A plan limit is reached. Remove something or upgrade.                                                                                                                                                    |
+| `RESOURCE_LIMIT_REACHED` | `-32003` | A limit is reached. Remove something; `limitOwner`, when present, says whose plan set it.                                                                                                                |
 | `OPERATION_NOT_ALLOWED`  | `-32003` | The ledger's current state forbids it.                                                                                                                                                                   |
 | `CONFLICT`               | `-32000` | Something changed since you read it. Re-read with `getEntryContext` and resend the fresh `sha256sum`.                                                                                                    |
 | `RATE_LIMITED`           | `-32000` | Over budget. Wait `retryAfter` seconds; batch writes rather than looping.                                                                                                                                |
