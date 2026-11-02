@@ -37,7 +37,9 @@ vi.mock("@apollo/client/react", () => ({
 }));
 vi.mock("sonner", () => ({ toast: { warning: vi.fn(), success: vi.fn() } }));
 
-function renderDialog(onSuccess: (outcome: { leftErrors: boolean }) => void) {
+function renderDialog(
+  onSuccess: (outcome: { leftErrors: Promise<boolean> }) => void,
+) {
   return render(
     <NewDirectiveDialog
       open
@@ -51,7 +53,11 @@ function renderDialog(onSuccess: (outcome: { leftErrors: boolean }) => void) {
 }
 
 describe("New Entry reports a write that broke the ledger (w3/640)", () => {
-  beforeEach(() => vi.mocked(toast.warning).mockClear());
+  beforeEach(() => {
+    vi.mocked(toast.warning).mockClear();
+    state.deferRefetch = false;
+    state.resolveRefetch = null;
+  });
 
   it("names the new error instead of plain success", async () => {
     state.after = [
@@ -62,26 +68,30 @@ describe("New Entry reports a write that broke the ledger (w3/640)", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "write" }));
 
-    await waitFor(() =>
-      expect(onSuccess).toHaveBeenCalledWith({ leftErrors: true }),
-    );
+    await waitFor(() => expect(onSuccess).toHaveBeenCalledTimes(1));
+    await expect(onSuccess.mock.calls[0]![0].leftErrors).resolves.toBe(true);
     expect(vi.mocked(toast.warning).mock.calls[0]![0]).toContain(
       "Account Assets:Cash is already open",
     );
   });
 
-  it("does not call the departed page's success handler (w4/1078)", async () => {
+  it("hands over as the write lands, before the ledger is revalidated (w1/184)", async () => {
     state.deferRefetch = true;
     const onSuccess = vi.fn();
-    const { unmount } = renderDialog(onSuccess);
+    renderDialog(onSuccess);
     await userEvent.click(screen.getByRole("button", { name: "write" }));
     await waitFor(() => expect(state.resolveRefetch).not.toBeNull());
-    unmount();
-    state.resolveRefetch?.({ data: { getLedgerErrors: [] } });
+
+    // The journal can refresh now; only the outcome waits for the check.
+    expect(onSuccess).toHaveBeenCalledTimes(1);
+    const { leftErrors } = onSuccess.mock.calls[0]![0];
+    let settled = false;
+    void leftErrors.then(() => (settled = true));
     await new Promise((resolve) => setTimeout(resolve, 0));
-    expect(onSuccess).not.toHaveBeenCalled();
-    state.deferRefetch = false;
-    state.resolveRefetch = null;
+    expect(settled).toBe(false);
+
+    state.resolveRefetch?.({ data: { getLedgerErrors: [] } });
+    await expect(leftErrors).resolves.toBe(false);
   });
 
   it("reports a clean write as plain success", async () => {
@@ -91,9 +101,8 @@ describe("New Entry reports a write that broke the ledger (w3/640)", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "write" }));
 
-    await waitFor(() =>
-      expect(onSuccess).toHaveBeenCalledWith({ leftErrors: false }),
-    );
+    await waitFor(() => expect(onSuccess).toHaveBeenCalledTimes(1));
+    await expect(onSuccess.mock.calls[0]![0].leftErrors).resolves.toBe(false);
     expect(toast.warning).not.toHaveBeenCalled();
   });
 });

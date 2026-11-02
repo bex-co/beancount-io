@@ -15,6 +15,7 @@ import {
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { toast } from "sonner";
 import type { JournalDirectiveType } from "@/common/types/journal";
 import { EntryContextDialog } from "../entry-context-dialog";
 
@@ -25,8 +26,14 @@ vi.mock("@/common/hooks/use-ledger-permission", () => ({
 vi.mock("@/common/hooks/use-file-navigate", () => ({
   useFileNavigate: () => vi.fn(),
 }));
+const outcome = vi.hoisted(() => ({
+  report: async (): Promise<boolean> => false,
+}));
 vi.mock("@/common/hooks/use-write-outcome", () => ({
-  useWriteOutcome: () => ({ snapshot: () => null, report: async () => false }),
+  useWriteOutcome: () => ({
+    snapshot: () => null,
+    report: () => outcome.report(),
+  }),
 }));
 vi.mock("@/common/hooks/use-apollo-cache", () => ({
   useApolloCacheClear: () => vi.fn(),
@@ -222,6 +229,24 @@ describe("Entry Context pending save", () => {
       await closed();
     },
   );
+
+  it("closes on the write while the ledger is still being revalidated (w1/184)", async () => {
+    let settle: (leftErrors: boolean) => void = () => {};
+    outcome.report = () => new Promise((resolve) => (settle = resolve));
+    vi.mocked(toast.success).mockClear();
+    const { user, dialog, saves } = await renderEdited();
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(saves).toHaveLength(1));
+
+    saves[0].succeed();
+    await closed();
+    // "Saved" waits for the check, so a write that broke the ledger can say
+    // that instead (w3/640); nothing else does.
+    expect(toast.success).not.toHaveBeenCalled();
+    settle(false);
+    await waitFor(() => expect(toast.success).toHaveBeenCalledTimes(1));
+    outcome.report = async () => false;
+  });
 
   it("keeps the draft after a failed save and retries the current source once", async () => {
     const { user, dialog, source, saves } = await renderEdited();

@@ -611,10 +611,12 @@ export function EntryContextPanel({
         },
       });
       // An edit can break the ledger where creating would be refused
-      // (an unbalanced transaction); say so instead of "saved".
-      if (!(await writeOutcome.report(before))) {
-        toast.success(t("journal.entrySavedSuccess"));
-      }
+      // (an unbalanced transaction); say so instead of "saved". Finding out
+      // revalidates the whole ledger, so only the message waits for it: the
+      // edit lands and the panel moves on now (w1/184).
+      void writeOutcome.report(before).then((leftErrors) => {
+        if (!leftErrors) toast.success(t("journal.entrySavedSuccess"));
+      });
       await onSaved?.(saved?.updateLedgerEntrySourceSlice?.entryHash || hash);
       clearCache();
       onSuccess?.();

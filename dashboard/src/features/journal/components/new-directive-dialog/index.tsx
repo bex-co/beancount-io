@@ -35,8 +35,13 @@ interface NewDirectiveDialogProps {
   ledgerId: string;
   activeTab: JournalDirectiveAction;
   onActiveTabChange: (tab: JournalDirectiveAction) => void;
-  /** `leftErrors`: the write succeeded but the ledger now fails validation. */
-  onSuccess?: (outcome: { leftErrors: boolean }) => void;
+  /**
+   * Called as the write lands. `leftErrors` settles once the ledger has been
+   * revalidated: true when the write succeeded but the ledger now fails
+   * validation (it has already warned), so the caller can hold its success
+   * message for it without holding anything else (w1/184).
+   */
+  onSuccess?: (outcome: { leftErrors: Promise<boolean> }) => void;
   /**
    * Where focus lands when the dialog closes. The dialog is opened by a route
    * link (and by the sidebar or Overview, which may be unmounted by then), so
@@ -89,21 +94,20 @@ export function NewDirectiveDialog({
     };
   }, []);
 
-  const handleSuccess = async () => {
+  const handleSuccess = () => {
     // Read before the cache clear below drops it: the pre-write errors.
     const before = writeOutcome.snapshot();
     if (liveSession.current === session) onOpenChange(false);
     clearCache();
-    const outcome = { leftErrors: await writeOutcome.report(before) };
-    // The reader may have left while the outcome was read; a late
-    // completion must not act on a page they have already left, nor on a
-    // newer dialog session (w4/1078). A null live session is this write's
-    // own close above, which still completes normally.
+    const leftErrors = writeOutcome.report(before);
+    // A late completion must not act on a page the reader has already left,
+    // nor on a newer dialog session (w4/1078). A null live session is this
+    // write's own close above, which still completes normally.
     if (!mountedRef.current) return;
     if (liveSession.current !== null && liveSession.current !== session) {
       return;
     }
-    onSuccess?.(outcome);
+    onSuccess?.({ leftErrors });
   };
 
   return (
