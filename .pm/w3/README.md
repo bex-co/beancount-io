@@ -94,6 +94,7 @@
 
 ## Inbox
 
+- [650](./650.md) — Saving a file shows "Out of date — click to refresh" for the user's own write (≤1h) ← user report 2026-11-01
 - [649](./649.md) — Rework the shipped creation flow to the 2026-10-27 design: two steps, no review page or history start, personal modules, ADR026 currency suggestion (> 1h, promote after m59) ← PRFAQ001 §3 + ADR021 revision 2026-10-27
 - [648](./done/648.md) — Fix the web Starter copy promising an example transaction and rename the create button from Save (≤1h) ← `/pm-brainstorm w3` 2026-10-20 candidate 7, from ADR021 — **done** 2026-10-20 (`2f11faa72`)
 

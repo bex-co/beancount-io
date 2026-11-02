@@ -214,7 +214,14 @@ function reply(
       return { getLedgerErrors: [] };
     case "UpdateLedgerFile":
       server.updates.push(variables);
-      return server.updateReply ?? { updateLedgerFile: { sha: "s3" } };
+      if (server.updateReply) return server.updateReply;
+      // A saved file is a new commit on the ledger.
+      server.head = "c3";
+      server.file = {
+        sha: "s3",
+        text: base64Decode(String(variables.content)),
+      };
+      return { updateLedgerFile: { sha: "s3" } };
     case "QueryShell":
       server.queries.push(String(variables.query));
       return {
@@ -345,6 +352,7 @@ async function refreshAndSettle() {
 beforeEach(() => {
   Object.assign(server, initialServer());
   vi.mocked(toast.error).mockClear();
+  vi.mocked(toast.success).mockClear();
   localStorage.clear();
 });
 afterEach(cleanup);
@@ -449,6 +457,41 @@ describe("Out of date → Refresh with an unsaved file", () => {
     await waitFor(() => expect(server.reads.length).toBeGreaterThan(0));
     expect(fileSource()).toBe(editor);
     expect(editor).toHaveValue(DRAFT);
+  });
+});
+
+describe("Saving a file", () => {
+  const SAVED = "qa-20261101 original\nsaved by this tab\n";
+
+  async function save() {
+    renderAt(`/ledger/${LEDGER_ID}/files/blob/main/${PATH}?editMode=true`);
+    const editor = await screen.findByRole("textbox", { name: "File source" });
+    await waitFor(() => expect(editor).not.toHaveAttribute("readonly"));
+    fireEvent.change(editor, { target: { value: SAVED } });
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(toast.success).toHaveBeenCalled());
+    await waitFor(() => expect(fileSource()).toHaveValue(SAVED));
+  }
+
+  /** The indicator's next poll, after the save's refetches have settled. */
+  async function poll() {
+    await act(async () => {
+      await client.refetchQueries({ include: [GetLatestLedgerCommitDocument] });
+    });
+  }
+
+  it("does not report the user's own save as out of date (w3/650)", async () => {
+    await save();
+    expect(server.head).toBe("c3");
+    await poll();
+    await poll();
+    expect(screen.queryByRole("button", { name: /Out of date/ })).toBeNull();
+  });
+
+  it("still reports a commit made elsewhere after the save", async () => {
+    await save();
+    await poll();
+    expect(await remoteCommit()).toBeInTheDocument();
   });
 });
 

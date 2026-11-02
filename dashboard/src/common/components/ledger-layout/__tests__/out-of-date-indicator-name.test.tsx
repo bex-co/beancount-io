@@ -16,8 +16,12 @@ vi.unmock("@/common/hooks/use-translations");
 vi.unmock("react-i18next");
 
 const { clearCache } = vi.hoisted(() => ({ clearCache: vi.fn() }));
-vi.mock("@apollo/client/react", () => ({ useQuery: vi.fn() }));
+vi.mock("@apollo/client/react", () => ({
+  useQuery: vi.fn(),
+  useReactiveVar: () => 0,
+}));
 vi.mock("@/common/hooks/use-apollo-cache", () => ({
+  cacheClears: () => 0,
   useApolloCacheClear: () => clearCache,
 }));
 

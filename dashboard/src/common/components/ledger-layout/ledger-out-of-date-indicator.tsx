@@ -1,14 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { ClientOnly } from "@tanstack/react-router";
-import { useQuery } from "@apollo/client/react";
+import { useQuery, useReactiveVar } from "@apollo/client/react";
 import { Button } from "@/common/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/common/components/ui/tooltip";
-import { useApolloCacheClear } from "@/common/hooks/use-apollo-cache";
+import {
+  cacheClears,
+  useApolloCacheClear,
+} from "@/common/hooks/use-apollo-cache";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { GetLatestLedgerCommitDocument } from "@/graphql/definitions";
 
@@ -17,7 +20,10 @@ function OutOfDateIndicatorInner({ ledgerId }: { ledgerId: string }) {
   const { t } = useTranslations();
   const [localSha, setLocalSha] = useState<string | null>(null);
 
-  const { data } = useQuery(GetLatestLedgerCommitDocument, {
+  const clears = useReactiveVar(cacheClears);
+  const clearsAtMount = useRef(clears);
+
+  const { data, refetch } = useQuery(GetLatestLedgerCommitDocument, {
     variables: { ledgerId },
     pollInterval: 30 * 1000,
   });
@@ -32,6 +38,24 @@ function OutOfDateIndicatorInner({ ledgerId }: { ledgerId: string }) {
     }, 0);
     return () => clearTimeout(id);
   }, [remoteSha]);
+
+  // Every dashboard write ends in a cache clear that refetches the page, so
+  // the head it lands on is what the page now shows — not someone else's
+  // change. Baseline on it; a later commit from elsewhere still differs.
+  useEffect(() => {
+    if (clears === clearsAtMount.current) return;
+    let current = true;
+    refetch().then(
+      (result) => {
+        const sha = result.data?.getLatestLedgerCommit?.sha;
+        if (current && sha) setLocalSha(sha);
+      },
+      () => {},
+    );
+    return () => {
+      current = false;
+    };
+  }, [clears, refetch]);
 
   const isOutOfDate =
     localSha !== null && remoteSha !== null && localSha !== remoteSha;
