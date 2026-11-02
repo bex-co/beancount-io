@@ -357,6 +357,27 @@ const bgUserSettings: Record<string, TranslationEntry> = {
     message: "Подновява се на",
     description: "Label for subscription renewal date",
   },
+  "userSettings.deferredStartAppStore": {
+    message:
+      "Вашият план в App Store приключва на {date}. Този план започва тогава.",
+    description: "A Stripe plan that starts when an App Store plan ends",
+  },
+  "userSettings.deferredStartGooglePlay": {
+    message:
+      "Вашият план в Google Play приключва на {date}. Този план започва тогава.",
+    description: "A Stripe plan that starts when a Google Play plan ends",
+  },
+  "userSettings.overlapAppStore": {
+    message:
+      "Вашият план в App Store е активен до {date}, а този план се таксува днес.",
+    description: "A Stripe plan charged today beside a running App Store plan",
+  },
+  "userSettings.overlapGooglePlay": {
+    message:
+      "Вашият план в Google Play е активен до {date}, а този план се таксува днес.",
+    description:
+      "A Stripe plan charged today beside a running Google Play plan",
+  },
   "userSettings.billedByStripe": {
     message: "Таксува се чрез Stripe",
     description: "Billing source on the plan card: Stripe",

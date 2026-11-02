@@ -27,6 +27,7 @@ export function CurrentPlanBanner({
   t,
   billing = null,
   planBilling = null,
+  deferredStart = false,
 }: {
   tier: UserTier;
   renewalDate: string | null;
@@ -35,6 +36,7 @@ export function CurrentPlanBanner({
   billing?: CurrentBilling | null;
   /** Who bills the plan, on any source. */
   planBilling?: PlanBillingStatus | null;
+  deferredStart?: boolean;
 }) {
   const formatCount = useQuotaNumberFormat();
   const formatMoney = useMoneyFormat();
@@ -115,7 +117,12 @@ export function CurrentPlanBanner({
                 {t("userSettings.renewsOn")} <strong>{renewalDate}</strong>
               </p>
             )}
-            <PlanBillingSource tier={tier} billing={planBilling} t={t} />
+            <PlanBillingSource
+              tier={tier}
+              billing={planBilling}
+              deferredStart={deferredStart}
+              t={t}
+            />
           </div>
         </div>
       </div>

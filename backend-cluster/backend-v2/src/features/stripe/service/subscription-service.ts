@@ -1,5 +1,6 @@
 import { refreshSubscriptionPeriods } from "../operations/refresh-subscription-periods";
 import {
+  type ClientSubscription,
   expandedLatestInvoice,
   pastDueRetry,
   subscriptionTier,
@@ -20,6 +21,8 @@ import {
   planBilling,
 } from "@/features/store-billing/service/plan-billing";
 import { STORE_NAMES } from "@/features/store-billing/service/store-catalog";
+import type { StoreSubscription } from "@/features/store-billing/data/store-subscription-model";
+import { storePlanOverlap } from "@/features/store-billing/service/plan-switch";
 import { renewsFromStore } from "@/features/store-billing/service/store-subscription-grant";
 import { BilledByStoreError } from "@/shared/errors";
 import { logger } from "@/shared/logger";
@@ -239,6 +242,37 @@ function checkoutCancelUrl(
  * public. Stripe customer ownership, product allowlists, and subscription-state
  * validation remain payment-domain invariants downstream.
  */
+/**
+ * Whether a subscription already takes the account's plan: a paid one, or one
+ * waiting out a store plan with its first charge deferred (ADR 001 D15).
+ */
+const holdsPlan = (subscription: ClientSubscription) =>
+  subscription.status === "trialing" ||
+  subscriptionTier(subscription) !== SubscriptionTier.FREE;
+
+/** A first purchase beside a running store plan, as Checkout will treat it. */
+function previewOverStorePlan(
+  preview: PlanChangePreviewView,
+  storeSubscriptions: StoreSubscription[],
+  clientId: string,
+): PlanChangePreviewView {
+  if (preview.kind !== "NEW") return preview;
+  const target = SUBSCRIPTION_CONFIG[clientId]?.plans.find(
+    (plan) => plan.priceId === preview.targetPriceId,
+  );
+  const storeOverlap =
+    target && storePlanOverlap(storeSubscriptions, target.tier, new Date());
+  if (!storeOverlap) return preview;
+  return {
+    ...preview,
+    storeOverlap,
+    ...(storeOverlap.deferred && {
+      amountDueToday: 0,
+      nextChargeAt: storeOverlap.endsAt,
+    }),
+  };
+}
+
 export class SubscriptionService implements ISubscriptionService {
   constructor(
     private readonly stripe: IStripeService,
@@ -294,8 +328,13 @@ export class SubscriptionService implements ISubscriptionService {
     });
   }
 
-  /** One renewing source per account: Stripe cannot sell over a store (D5). */
-  private async refuseWhileStoreRenews(userId: string): Promise<void> {
+  /**
+   * One renewing source per account: Stripe cannot sell over a store (D5).
+   * Returns the rows, since a switch needs them next.
+   */
+  private async refuseWhileStoreRenews(
+    userId: string,
+  ): Promise<StoreSubscription[]> {
     const subscriptions = await this.models.storeSubscription.findByUserId(
       this.db,
       userId,
@@ -307,6 +346,7 @@ export class SubscriptionService implements ISubscriptionService {
         STORE_NAMES[renewing.provider],
       );
     }
+    return subscriptions;
   }
 
   public async allTierQuotas(): Promise<TierQuotaView[]> {
@@ -469,11 +509,12 @@ export class SubscriptionService implements ISubscriptionService {
       return [];
     });
 
+    const heldPlans = filteredSubscriptions.filter(holdsPlan);
     const billing = planBilling(
       await this.models.storeSubscription.findByUserId(this.db, userId),
       {
-        held: stripePlans.length,
-        renewing: stripePlans.filter(
+        held: heldPlans.length,
+        renewing: heldPlans.filter(
           (subscription) =>
             !subscription.cancel_at_period_end && !subscription.cancel_at,
         ).length,
@@ -495,7 +536,7 @@ export class SubscriptionService implements ISubscriptionService {
       AUTHORIZATION_ACTIONS.USER_BILLING_CHECKOUT_CREATE,
     );
     const { userId } = identity;
-    await this.refuseWhileStoreRenews(userId);
+    const storeSubscriptions = await this.refuseWhileStoreRenews(userId);
 
     try {
       const clientConfig =
@@ -544,12 +585,7 @@ export class SubscriptionService implements ISubscriptionService {
           status: "current",
           bindings: [existingCustomer],
         });
-        if (
-          current.some(
-            (subscription) =>
-              subscriptionTier(subscription) !== SubscriptionTier.FREE,
-          )
-        ) {
+        if (current.some(holdsPlan)) {
           return {
             success: false,
             message:
@@ -557,6 +593,10 @@ export class SubscriptionService implements ISubscriptionService {
           };
         }
       }
+      const overlap =
+        planConfig.type === "subscription"
+          ? storePlanOverlap(storeSubscriptions, planConfig.tier, new Date())
+          : null;
       const sharedSession = {
         line_items: [{ price: priceId, quantity: 1 }],
         allow_promotion_codes: true,
@@ -565,7 +605,14 @@ export class SubscriptionService implements ISubscriptionService {
         cancel_url: checkoutCancelUrl(clientConfig, planConfig, returnTo),
         metadata: { userId, clientId },
         ...(planConfig.type === "subscription"
-          ? { subscription_data: { metadata: { userId, clientId } } }
+          ? {
+              subscription_data: {
+                metadata: { userId, clientId },
+                ...(overlap?.deferred && {
+                  trial_end: Math.floor(overlap.endsAt.getTime() / 1000),
+                }),
+              },
+            }
           : {}),
       };
       let session: Stripe.Checkout.Session;
@@ -666,8 +713,15 @@ export class SubscriptionService implements ISubscriptionService {
       identity,
       AUTHORIZATION_ACTIONS.USER_BILLING_PLAN_CHANGE_PREVIEW,
     );
-    await this.refuseWhileStoreRenews(identity.userId);
-    return this.stripe.previewPlanChange(identity.userId, clientId, priceId);
+    const storeSubscriptions = await this.refuseWhileStoreRenews(
+      identity.userId,
+    );
+    const preview = await this.stripe.previewPlanChange(
+      identity.userId,
+      clientId,
+      priceId,
+    );
+    return previewOverStorePlan(preview, storeSubscriptions, clientId);
   }
 
   public async changePlan(

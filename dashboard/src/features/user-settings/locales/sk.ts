@@ -357,6 +357,26 @@ const skUserSettings: Record<string, TranslationEntry> = {
     message: "Obnoví sa",
     description: "Label for subscription renewal date",
   },
+  "userSettings.deferredStartAppStore": {
+    message: "Váš plán z App Store sa končí {date}. Tento plán sa vtedy začne.",
+    description: "A Stripe plan that starts when an App Store plan ends",
+  },
+  "userSettings.deferredStartGooglePlay": {
+    message:
+      "Váš plán z Google Play sa končí {date}. Tento plán sa vtedy začne.",
+    description: "A Stripe plan that starts when a Google Play plan ends",
+  },
+  "userSettings.overlapAppStore": {
+    message:
+      "Váš plán z App Store platí do {date} a tento plán sa strhne dnes.",
+    description: "A Stripe plan charged today beside a running App Store plan",
+  },
+  "userSettings.overlapGooglePlay": {
+    message:
+      "Váš plán z Google Play platí do {date} a tento plán sa strhne dnes.",
+    description:
+      "A Stripe plan charged today beside a running Google Play plan",
+  },
   "userSettings.billedByStripe": {
     message: "Fakturované cez Stripe",
     description: "Billing source on the plan card: Stripe",

@@ -42,6 +42,7 @@ import {
   usePreviewPlanChange,
 } from "@/features/user-settings/hooks/use-plan-change";
 import {
+  BillingSource,
   PlanChangeEffect,
   PlanChangeRefusal,
   type PlanChangeKind,
@@ -104,6 +105,25 @@ type Outcome =
   | { type: "action"; hostedInvoiceUrl: string | null }
   | { type: "failed" }
   | { type: "refused"; refusal: PlanChangeRefusal | null };
+
+/** What a first purchase beside a running store plan does (ADR 001 D15). */
+function storeOverlapKey({
+  provider,
+  deferred,
+}: {
+  provider: BillingSource;
+  deferred: boolean;
+}): string {
+  const appStore = provider === BillingSource.AppStore;
+  if (deferred) {
+    return appStore
+      ? "userSettings.deferredStartAppStore"
+      : "userSettings.deferredStartGooglePlay";
+  }
+  return appStore
+    ? "userSettings.overlapAppStore"
+    : "userSettings.overlapGooglePlay";
+}
 
 /**
  * The confirm step for every immediate plan change and every checkout from
@@ -464,7 +484,13 @@ export function PlanChangeSheet({
           />
         ) : (
           <div className="space-y-4">
-            <p className="text-sm">{t("userSettings.planChangeStartsToday")}</p>
+            <p className="text-sm" data-testid="plan-change-start">
+              {planChange.storeOverlap
+                ? t(storeOverlapKey(planChange.storeOverlap), {
+                    date: formatDate(planChange.storeOverlap.endsAt),
+                  })
+                : t("userSettings.planChangeStartsToday")}
+            </p>
             <PendingChangeNotes planChange={planChange} t={t} />
             <div className="rounded-md border p-3">
               <div className="flex items-baseline justify-between text-sm font-semibold">

@@ -79,6 +79,11 @@ query GetAllTierQuotas {
 query PreviewPlanChange($clientId: String!, $priceId: String!) {
   previewPlanChange(clientId: $clientId, priceId: $priceId) {
     kind
+    storeOverlap {
+      provider
+      endsAt
+      deferred
+    }
     refusal
     effect
     currentPriceId

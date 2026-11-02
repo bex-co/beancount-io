@@ -152,11 +152,14 @@ export function SubscriptionSection({
     renewalDate,
     subscriptions,
     planBilling,
+    deferredSubscription,
   } = useSubscriptionStatus();
 
   // A store renews the plan, so Stripe can sell nothing over it (ADR 001 D5).
   // An existing Stripe subscription keeps its cancel: that account pays twice.
   const billedByStore = isBilledByStore(planBilling);
+  // Nothing more to sell either way: a store renews, or a plan waits to start.
+  const noStripeSale = billedByStore || Boolean(deferredSubscription);
 
   const { handleManageBilling, loading: portalLoading } =
     useSubscriptionPortal();
@@ -258,7 +261,7 @@ export function SubscriptionSection({
   );
   const confirmation = useCheckoutConfirmation(
     checkoutReturned,
-    hasActiveStripeSubscription,
+    hasActiveStripeSubscription || Boolean(deferredSubscription),
     () => {
       void refetchSubscription();
       void refetchUserLimits();
@@ -358,6 +361,7 @@ export function SubscriptionSection({
               tierQuota={quotaByUserTier[tier] ?? null}
               t={t}
               planBilling={planBilling}
+              deferredStart={Boolean(deferredSubscription)}
               billing={
                 currentPrice
                   ? {
@@ -445,7 +449,7 @@ export function SubscriptionSection({
                 </span>
               </div>
             )}
-            {!billedByStore && (
+            {!noStripeSale && (
               <PlanPicker
                 tier={tier}
                 currentInterval={currentInterval}
@@ -456,29 +460,30 @@ export function SubscriptionSection({
               />
             )}
 
-            {hasActiveStripeSubscription && subscriptions && (
-              <>
-                <Separator />
-                <BillingSection
-                  subscriptions={subscriptions}
-                  t={t}
-                  portalLoading={portalLoading}
-                  cancelLoading={cancelLoading}
-                  onManageBilling={handleManageBilling}
-                  onCancelClick={(target) => {
-                    track("cancel_started", { from: currentPlanValue });
-                    openCancelSheet(target);
-                  }}
-                />
-              </>
-            )}
+            {(hasActiveStripeSubscription || deferredSubscription) &&
+              subscriptions && (
+                <>
+                  <Separator />
+                  <BillingSection
+                    subscriptions={subscriptions}
+                    t={t}
+                    portalLoading={portalLoading}
+                    cancelLoading={cancelLoading}
+                    onManageBilling={handleManageBilling}
+                    onCancelClick={(target) => {
+                      track("cancel_started", { from: currentPlanValue });
+                      openCancelSheet(target);
+                    }}
+                  />
+                </>
+              )}
           </>
         )}
       </CardContent>
 
       <PlanChangeSheet
         key={sheetTarget ? `${sheetTarget.tier}-${sheetTarget.cycle}` : "none"}
-        target={billedByStore ? null : sheetTarget}
+        target={noStripeSale ? null : sheetTarget}
         currentTier={tier}
         currentCycle={currentCycle}
         currentPlanLabel={planLabel}

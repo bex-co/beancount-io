@@ -334,6 +334,25 @@ const enUserSettings: Record<string, TranslationEntry> = {
     message: "Renews on",
     description: "Label for subscription renewal date",
   },
+  "userSettings.deferredStartAppStore": {
+    message: "Your App Store plan ends on {date}. This plan starts then.",
+    description: "A Stripe plan that starts when an App Store plan ends",
+  },
+  "userSettings.deferredStartGooglePlay": {
+    message: "Your Google Play plan ends on {date}. This plan starts then.",
+    description: "A Stripe plan that starts when a Google Play plan ends",
+  },
+  "userSettings.overlapAppStore": {
+    message:
+      "Your App Store plan runs until {date}, and this plan charges today.",
+    description: "A Stripe plan charged today beside a running App Store plan",
+  },
+  "userSettings.overlapGooglePlay": {
+    message:
+      "Your Google Play plan runs until {date}, and this plan charges today.",
+    description:
+      "A Stripe plan charged today beside a running Google Play plan",
+  },
   "userSettings.billedByStripe": {
     message: "Stripe billing",
     description: "Billing source on the plan card: Stripe",

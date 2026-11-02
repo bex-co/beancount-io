@@ -357,6 +357,27 @@ const ukUserSettings: Record<string, TranslationEntry> = {
     message: "Поновлюється",
     description: "Label for subscription renewal date",
   },
+  "userSettings.deferredStartAppStore": {
+    message:
+      "Ваш план App Store закінчується {date}. Цей план почнеться тоді ж.",
+    description: "A Stripe plan that starts when an App Store plan ends",
+  },
+  "userSettings.deferredStartGooglePlay": {
+    message:
+      "Ваш план Google Play закінчується {date}. Цей план почнеться тоді ж.",
+    description: "A Stripe plan that starts when a Google Play plan ends",
+  },
+  "userSettings.overlapAppStore": {
+    message:
+      "Ваш план App Store діє до {date}, а за цей план кошти спишуться сьогодні.",
+    description: "A Stripe plan charged today beside a running App Store plan",
+  },
+  "userSettings.overlapGooglePlay": {
+    message:
+      "Ваш план Google Play діє до {date}, а за цей план кошти спишуться сьогодні.",
+    description:
+      "A Stripe plan charged today beside a running Google Play plan",
+  },
   "userSettings.billedByStripe": {
     message: "Оплата через Stripe",
     description: "Billing source on the plan card: Stripe",

@@ -187,6 +187,23 @@ registerEnumType(BillingSourceValues, {
   description: "Who bills a plan, which is also where it is managed.",
 });
 
+@ObjectType("StorePlanOverlap", {
+  description: "A store plan still running beside a Stripe purchase.",
+})
+class StorePlanOverlap {
+  @Field(() => BillingSourceValues)
+  provider!: BillingSource;
+
+  @Field(() => Date, { description: "When the store plan ends." })
+  endsAt!: Date;
+
+  @Field({
+    description:
+      "Whether the first Stripe charge waits for the store plan to end; otherwise it is charged today.",
+  })
+  deferred!: boolean;
+}
+
 @ObjectType("StorePlan")
 class StorePlan {
   @Field()
@@ -434,6 +451,9 @@ class PlanChangePreview {
 
   @Field(() => PaymentMethodSummary, { nullable: true })
   paymentMethod!: PaymentMethodSummary | null;
+
+  @Field(() => StorePlanOverlap, { nullable: true })
+  storeOverlap?: StorePlanOverlap | null;
 
   @Field(() => ScheduledPlanChange, {
     nullable: true,

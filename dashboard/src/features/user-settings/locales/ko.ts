@@ -331,6 +331,25 @@ const koUserSettings: Record<string, TranslationEntry> = {
     message: "갱신일",
     description: "Label for subscription renewal date",
   },
+  "userSettings.deferredStartAppStore": {
+    message: "App Store 플랜은 {date}에 종료됩니다. 이 플랜은 그때 시작됩니다.",
+    description: "A Stripe plan that starts when an App Store plan ends",
+  },
+  "userSettings.deferredStartGooglePlay": {
+    message:
+      "Google Play 플랜은 {date}에 종료됩니다. 이 플랜은 그때 시작됩니다.",
+    description: "A Stripe plan that starts when a Google Play plan ends",
+  },
+  "userSettings.overlapAppStore": {
+    message: "App Store 플랜은 {date}까지 유지되며 이 플랜은 오늘 청구됩니다.",
+    description: "A Stripe plan charged today beside a running App Store plan",
+  },
+  "userSettings.overlapGooglePlay": {
+    message:
+      "Google Play 플랜은 {date}까지 유지되며 이 플랜은 오늘 청구됩니다.",
+    description:
+      "A Stripe plan charged today beside a running Google Play plan",
+  },
   "userSettings.billedByStripe": {
     message: "Stripe로 청구",
     description: "Billing source on the plan card: Stripe",

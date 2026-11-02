@@ -272,6 +272,37 @@ describe("PlanChangeSheet", () => {
     ).not.toBeInTheDocument();
   });
 
+  it.each([
+    ["APP_STORE", true, "userSettings.deferredStartAppStore"],
+    ["GOOGLE_PLAY", true, "userSettings.deferredStartGooglePlay"],
+    ["APP_STORE", false, "userSettings.overlapAppStore"],
+    ["GOOGLE_PLAY", false, "userSettings.overlapGooglePlay"],
+  ])(
+    "says what buying beside a %s plan does when deferred is %s",
+    (provider, deferred, key) => {
+      mockPreview.state = {
+        data: preview({
+          kind: "NEW",
+          storeOverlap: { provider, deferred, endsAt: "2027-03-03T12:00:00Z" },
+        }),
+        loading: false,
+        error: undefined,
+      };
+      renderSheet({ currentTier: "FREE" });
+
+      expect(screen.getByTestId("plan-change-start")).toHaveTextContent(key);
+    },
+  );
+
+  it("still says a plain change starts today", () => {
+    mockPreview.state = { data: preview(), loading: false, error: undefined };
+    renderSheet();
+
+    expect(screen.getByTestId("plan-change-start")).toHaveTextContent(
+      "userSettings.planChangeStartsToday",
+    );
+  });
+
   it("ignores a stale preview for a different price", () => {
     mockPreview.state = {
       data: preview({ targetPriceId: "price_other" }),

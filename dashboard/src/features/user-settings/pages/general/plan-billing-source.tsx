@@ -4,7 +4,7 @@ import {
   planLabelKey,
 } from "@/common/lib/subscription/tier-config";
 import {
-  isBilledByStore,
+  isStoreSource,
   type PlanBillingStatus,
 } from "@/features/user-settings/hooks/use-subscription-status";
 import { BillingSource } from "@/graphql/definitions";
@@ -73,12 +73,16 @@ function StorePlanSource({ store, t }: { store: StorePlan; t: Translate }) {
 export function PlanBillingSource({
   tier,
   billing,
+  deferredStart = false,
   t,
 }: {
   tier: UserTier;
   billing: PlanBillingStatus | null;
+  /** The Stripe plan starts when the store plan ends (D15). */
+  deferredStart?: boolean;
   t: Translate;
 }) {
+  const formatDate = useBillingDateFormat();
   let content;
   if (tier === "ENTERPRISE") {
     content = (
@@ -91,10 +95,25 @@ export function PlanBillingSource({
         {t("userSettings.contactUs")}
       </a>
     );
-  } else if (isBilledByStore(billing) && billing?.store) {
+  } else if (isStoreSource(billing) && billing?.store) {
     content = <StorePlanSource store={billing.store} t={t} />;
   } else if (billing?.source === BillingSource.Stripe) {
-    content = <p>{t("userSettings.billedByStripe")}</p>;
+    const store = billing.store;
+    content = (
+      <>
+        <p>{t("userSettings.billedByStripe")}</p>
+        {deferredStart && store?.accessEndsAt && (
+          <p data-testid="deferred-start">
+            {t(
+              store.provider === BillingSource.AppStore
+                ? "userSettings.deferredStartAppStore"
+                : "userSettings.deferredStartGooglePlay",
+              { date: formatDate(store.accessEndsAt) },
+            )}
+          </p>
+        )}
+      </>
+    );
   } else {
     return null;
   }

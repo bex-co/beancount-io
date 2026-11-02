@@ -355,6 +355,27 @@ const faUserSettings: Record<string, TranslationEntry> = {
     message: "تمدید در",
     description: "Label for subscription renewal date",
   },
+  "userSettings.deferredStartAppStore": {
+    message:
+      "طرح App Store شما در {date} پایان می‌یابد. این طرح از همان زمان شروع می‌شود.",
+    description: "A Stripe plan that starts when an App Store plan ends",
+  },
+  "userSettings.deferredStartGooglePlay": {
+    message:
+      "طرح Google Play شما در {date} پایان می‌یابد. این طرح از همان زمان شروع می‌شود.",
+    description: "A Stripe plan that starts when a Google Play plan ends",
+  },
+  "userSettings.overlapAppStore": {
+    message:
+      "طرح App Store شما تا {date} ادامه دارد و هزینه این طرح امروز دریافت می‌شود.",
+    description: "A Stripe plan charged today beside a running App Store plan",
+  },
+  "userSettings.overlapGooglePlay": {
+    message:
+      "طرح Google Play شما تا {date} ادامه دارد و هزینه این طرح امروز دریافت می‌شود.",
+    description:
+      "A Stripe plan charged today beside a running Google Play plan",
+  },
   "userSettings.billedByStripe": {
     message: "پرداخت از طریق Stripe",
     description: "Billing source on the plan card: Stripe",

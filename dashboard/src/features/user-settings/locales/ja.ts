@@ -332,6 +332,27 @@ const jaUserSettings: Record<string, TranslationEntry> = {
     message: "更新日",
     description: "Label for subscription renewal date",
   },
+  "userSettings.deferredStartAppStore": {
+    message:
+      "App Store のプランは {date} に終了します。このプランはその時点で開始します。",
+    description: "A Stripe plan that starts when an App Store plan ends",
+  },
+  "userSettings.deferredStartGooglePlay": {
+    message:
+      "Google Play のプランは {date} に終了します。このプランはその時点で開始します。",
+    description: "A Stripe plan that starts when a Google Play plan ends",
+  },
+  "userSettings.overlapAppStore": {
+    message:
+      "App Store のプランは {date} まで続き、このプランは本日請求されます。",
+    description: "A Stripe plan charged today beside a running App Store plan",
+  },
+  "userSettings.overlapGooglePlay": {
+    message:
+      "Google Play のプランは {date} まで続き、このプランは本日請求されます。",
+    description:
+      "A Stripe plan charged today beside a running Google Play plan",
+  },
   "userSettings.billedByStripe": {
     message: "Stripe で請求",
     description: "Billing source on the plan card: Stripe",

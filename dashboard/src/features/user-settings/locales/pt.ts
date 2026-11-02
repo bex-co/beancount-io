@@ -357,6 +357,27 @@ const ptUserSettings: Record<string, TranslationEntry> = {
     message: "Renova em",
     description: "Label for subscription renewal date",
   },
+  "userSettings.deferredStartAppStore": {
+    message:
+      "Seu plano da App Store termina em {date}. Este plano começa então.",
+    description: "A Stripe plan that starts when an App Store plan ends",
+  },
+  "userSettings.deferredStartGooglePlay": {
+    message:
+      "Seu plano do Google Play termina em {date}. Este plano começa então.",
+    description: "A Stripe plan that starts when a Google Play plan ends",
+  },
+  "userSettings.overlapAppStore": {
+    message:
+      "Seu plano da App Store continua até {date}, e este plano é cobrado hoje.",
+    description: "A Stripe plan charged today beside a running App Store plan",
+  },
+  "userSettings.overlapGooglePlay": {
+    message:
+      "Seu plano do Google Play continua até {date}, e este plano é cobrado hoje.",
+    description:
+      "A Stripe plan charged today beside a running Google Play plan",
+  },
   "userSettings.billedByStripe": {
     message: "Faturado pela Stripe",
     description: "Billing source on the plan card: Stripe",

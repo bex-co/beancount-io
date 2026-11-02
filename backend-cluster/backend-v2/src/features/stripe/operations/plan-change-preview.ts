@@ -1,3 +1,4 @@
+import type { StorePlanOverlap } from "@/features/store-billing/service/plan-switch";
 import type Stripe from "stripe";
 import { logger } from "@/shared/logger";
 import {
@@ -59,6 +60,8 @@ export interface PlanChangePreviewView {
   paymentMethod: PaymentMethodSummaryView | null;
   /** The pending scheduled change this choice would replace, if any. */
   replacesScheduledChange: ScheduledChangeView | null;
+  /** A store plan still running beside this purchase (ADR 001 D15). */
+  storeOverlap?: StorePlanOverlap | null;
   /** Whether this choice withdraws a pending cancellation. */
   withdrawsCancellation: boolean;
 }

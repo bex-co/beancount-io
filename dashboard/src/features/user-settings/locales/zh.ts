@@ -353,6 +353,23 @@ const zhUserSettings: Record<string, TranslationEntry> = {
     message: "续订日期",
     description: "Label for subscription renewal date",
   },
+  "userSettings.deferredStartAppStore": {
+    message: "你的 App Store 计划将于 {date} 结束，此计划届时开始。",
+    description: "A Stripe plan that starts when an App Store plan ends",
+  },
+  "userSettings.deferredStartGooglePlay": {
+    message: "你的 Google Play 计划将于 {date} 结束，此计划届时开始。",
+    description: "A Stripe plan that starts when a Google Play plan ends",
+  },
+  "userSettings.overlapAppStore": {
+    message: "你的 App Store 计划持续到 {date}，此计划今天开始扣款。",
+    description: "A Stripe plan charged today beside a running App Store plan",
+  },
+  "userSettings.overlapGooglePlay": {
+    message: "你的 Google Play 计划持续到 {date}，此计划今天开始扣款。",
+    description:
+      "A Stripe plan charged today beside a running Google Play plan",
+  },
   "userSettings.billedByStripe": {
     message: "通过 Stripe 计费",
     description: "Billing source on the plan card: Stripe",

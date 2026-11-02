@@ -158,7 +158,14 @@ describe("FailedRenewalBanner beside a store plan", () => {
 
   it("never shows while a store bills the plan", () => {
     mockRoot.userProfile = { tier: "PREMIUM" };
-    load({ source: "APP_STORE" }, true, [pastDue]);
+    load(
+      {
+        source: "APP_STORE",
+        store: { ...store("APP_STORE", "ACTIVE"), willRenew: true },
+      },
+      true,
+      [pastDue],
+    );
 
     const { container } = render(<FailedRenewalBanner />);
 

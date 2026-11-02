@@ -722,4 +722,65 @@ describe("A store-billed account (ADR 001 D5, D14)", () => {
 
     expect(screen.queryByTestId("scheduled-panel")).not.toBeInTheDocument();
   });
+
+  describe("switching to Stripe (D15)", () => {
+    const store = mockStoreBilledData.subscriptionStatus.billing.store!;
+    const ending = {
+      subscriptionStatus: {
+        ...mockStoreBilledData.subscriptionStatus,
+        billing: {
+          ...mockStoreBilledData.subscriptionStatus.billing,
+          store: { ...store, willRenew: false },
+        },
+      },
+    };
+    const stripe = mockActiveSubscriptionData.subscriptionStatus;
+    const deferred = {
+      subscriptionStatus: {
+        ...stripe,
+        hasActiveSubscription: false,
+        subscriptions: [{ ...stripe.subscriptions[0], status: "trialing" }],
+        billing: {
+          ...stripe.billing,
+          store: { ...store, willRenew: false },
+        },
+      },
+    };
+
+    it("offers the plans once the store's renewal is off", () => {
+      load(ending);
+      render(<SubscriptionSection />);
+
+      expect(screen.getAllByText("aiAgent.upgradeCta").length).toBeGreaterThan(
+        0,
+      );
+    });
+
+    it("sells nothing more while a bought plan waits to start", () => {
+      load(deferred);
+      render(<SubscriptionSection />);
+
+      expect(screen.queryByText("aiAgent.upgradeCta")).not.toBeInTheDocument();
+      expect(screen.getByTestId("deferred-start")).toBeInTheDocument();
+    });
+
+    it("lets the waiting plan be cancelled", () => {
+      load(deferred);
+      render(<SubscriptionSection />);
+
+      expect(
+        screen.getByRole("button", { name: "userSettings.cancelSubscription" }),
+      ).toBeInTheDocument();
+    });
+
+    it("counts a deferred Checkout as recorded, not as still waiting", () => {
+      load(deferred);
+      render(<SubscriptionSection checkoutReturned />);
+
+      expect(screen.getByTestId("checkout-confirmation")).toBeInTheDocument();
+      expect(
+        screen.queryByText("userSettings.checkoutConfirming"),
+      ).not.toBeInTheDocument();
+    });
+  });
 });

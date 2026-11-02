@@ -174,4 +174,45 @@ describe("the plan card's billing source (ADR 001 D14)", () => {
     );
     expect(screen.queryByTestId("store-plan-status")).not.toBeInTheDocument();
   });
+
+  it("keeps showing a store plan the user has stopped renewing", () => {
+    render(
+      <PlanBillingSource
+        tier="GROWTH"
+        billing={billing(BillingSource.AppStore, store({ willRenew: false }))}
+        t={t}
+      />,
+    );
+
+    expect(screen.getByTestId("store-plan-status")).toHaveTextContent(
+      "Yearly · Ends on Dec 1, 2026",
+    );
+  });
+
+  it("says a Stripe plan starts when the store plan ends", () => {
+    render(
+      <PlanBillingSource
+        tier="GROWTH"
+        billing={billing(BillingSource.Stripe, store({ willRenew: false }))}
+        deferredStart
+        t={t}
+      />,
+    );
+
+    expect(screen.getByTestId("deferred-start")).toHaveTextContent(
+      "Your App Store plan ends on Dec 1, 2026. This plan starts then.",
+    );
+  });
+
+  it("says nothing of a start date for a Stripe plan already running", () => {
+    render(
+      <PlanBillingSource
+        tier="GROWTH"
+        billing={billing(BillingSource.Stripe, store({ willRenew: false }))}
+        t={t}
+      />,
+    );
+
+    expect(screen.queryByTestId("deferred-start")).not.toBeInTheDocument();
+  });
 });
