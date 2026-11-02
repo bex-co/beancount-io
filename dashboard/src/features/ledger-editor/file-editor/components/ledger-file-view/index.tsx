@@ -177,11 +177,13 @@ export default function LedgerFileView({
         onError: (error) => {
           toast.error(formatError(error));
         },
-        onCompleted: async () => {
+        // The write has landed, so say so now. Revalidating the ledger costs
+        // another round trip, so the new-error check runs behind the success
+        // and warns after it (w1/m41).
+        onCompleted: () => {
           track("file_edited", {});
-          if (!(await writeOutcome.report(before))) {
-            toast.success(t("ledgerEditor.fileSavedSuccess"));
-          }
+          toast.success(t("ledgerEditor.fileSavedSuccess"));
+          void writeOutcome.report(before);
           cleanCache();
         },
       });
