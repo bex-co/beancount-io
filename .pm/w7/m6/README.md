@@ -1,6 +1,6 @@
 # w7 · m6 — The web dashboard shows each billing source and sends plan changes to their home
 
-**Worker:** worker1 **Goal:** every web subscriber sees the same plan card, can change billing only where it was bought, and never sees billing on a page opened from the app **Status:** blocked
+**Worker:** worker1 **Goal:** every web subscriber sees the same plan card, can change billing only where it was bought, and never sees billing on a page opened from the app **Status:** in progress (t001, t002, t003, t004, t006 done)
 
 ## Tasks (in order)
 
@@ -17,15 +17,7 @@
 | t009 | Test coverage | 1h | t007 |
 | t010 | Closeout | 15m | t008, t009 |
 
-## Blocked
-
-**Blocked 2026-11-01** — t001 to t004 and t006 shipped (`989895da0`, `66508069e`, `a331ac37b`, `08b3f7ec5`, `8d741331d`). t005 is the only open work, and t007 to t010 follow it.
-
-- **t005 needs an owner decision.** A store-to-Stripe switch at the same or a lower tier can defer the first Stripe charge to the store plan's end, or charge at once. That is the third open question in ADR 001, tracked as m2/t001. **Unblock:** the owner decides it in the ADR.
-
-Who can clear it: the owner.
-
-**Carried forward:** t007 checks the deploy order, because the Billing tab now asks for `subscriptionStatus.billing`, so the w7/m1 backend must be live before this dashboard. The milestone's browser check needs an account with a store row, which needs m3 or m4.
+**Unblocked 2026-11-01** — the owner decided that a store-to-Stripe switch at the same or a lower tier defers the first Stripe charge to the store plan's end, so nobody pays twice; at a higher tier Stripe charges at once, with a warning first. t001 to t004 and t006 shipped earlier (`989895da0`, `66508069e`, `a331ac37b`, `08b3f7ec5`, `8d741331d`). The decision is the only part of m2/t001 that t005 needs. The milestone's browser check needs an account with a store row, which a local stack can seed.
 
 ## Definition of done
 
