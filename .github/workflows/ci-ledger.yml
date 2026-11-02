@@ -1,0 +1,56 @@
+name: CI (ledger)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend-cluster/ledger/**"
+      - ".github/workflows/ci-ledger.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "backend-cluster/ledger/**"
+      - ".github/workflows/ci-ledger.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  ledger:
+    name: ledger engine and unit suites
+    runs-on: ubuntu-latest
+    # The live WASM checks run several full parses; a hung engine must fail the
+    # job rather than hold a runner for the default six hours.
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: backend-cluster/ledger
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # package.json engines requires ^22.23.4 || ^24.22.1 || >=26.12.1
+          # (the CVE-2026-111497 Brotli fix). Latest 22.x satisfies that and
+          # keeps picking up patch releases.
+          node-version: 22
+      # Enable Corepack (Yarn 4 per package.json "packageManager") AFTER
+      # setup-node, and don't use setup-node's `cache: yarn` — its cache probe
+      # runs `yarn` before Corepack is enabled and fails on the global Yarn 1.x.
+      - run: corepack enable
+      - run: yarn install --immutable
+      - run: yarn typecheck
+      # Knip's dead-code gate only. `yarn lint` is deliberately NOT used here:
+      # it runs `eslint --fix`, which in CI would rewrite files and pass
+      # instead of reporting. Splitting that script into a checking `lint` and
+      # a separate `lint:fix` would let CI enforce the ESLint rules too.
+      - run: yarn lint:deadcode
+      # WASM-free unit suites: the worker-pool protocol (a poisoned thread is
+      # retired, an ordinary error is not), the BQL complexity guard, and the
+      # /healthz engine probe.
+      - run: yarn test
+      # The live `@rustledger/wasm` path, which jest cannot host (the ESM/WASM
+      # loader needs --experimental-vm-modules). This is the only check that
+      # proves a trapped engine instance really is replaced rather than reused
+      # for every later request.
+      - run: yarn verify:rustledger

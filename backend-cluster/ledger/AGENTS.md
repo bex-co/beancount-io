@@ -41,11 +41,20 @@ decommissioned. The OpenAPI contract is `../idl/beancount-ledger.openapi.json`.
 
 - `yarn dev` — run on :8000 (ts-node)
 - `yarn test` — unit tests (WASM-free; live engine path via `yarn verify:rustledger`)
+- `yarn verify:rustledger` — live `@rustledger/wasm` checks through the real
+  runtime loader. Includes the poisoned-worker regression: an engine
+  instance that traps is retired, not reused for every later request.
 - `yarn lint && yarn typecheck && yarn build` — ESLint, Knip dead-code detection, types, and compile check
 - `yarn lint:deadcode:fix` — remove unused files, exports, and exported types; review the resulting diff
 - Parity harness: retired (the Python oracle it compared against is gone —
   see `parity/README.md`); `parity/COVERAGE.md` is kept as the historical
   record that all 75 contract rows were green at cutover.
+
+`.github/workflows/ci-ledger.yml` (`CI (ledger)`) runs `yarn typecheck`,
+`yarn lint:deadcode`, `yarn test` and `yarn verify:rustledger` on every push
+and PR touching this package. It does NOT run `yarn lint`, because that script
+passes `eslint --fix` and would rewrite files in CI instead of reporting — run
+the lint gate locally before handing off.
 
 ## Layout
 
