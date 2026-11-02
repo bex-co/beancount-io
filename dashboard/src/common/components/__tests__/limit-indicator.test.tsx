@@ -3,6 +3,9 @@ import { render, screen } from "@testing-library/react";
 import { LimitIndicator } from "../limit-indicator";
 import { TEST_LOCATION_HREF } from "@/test/mocks/router";
 
+vi.mock("@/common/hooks/use-store-upgrade-key", () => ({
+  useStoreUpgradeKey: () => null,
+}));
 vi.mock("@tanstack/react-router", async () => {
   const { routerMock } = await import("@/test/mocks/router");
   return routerMock;
@@ -463,4 +466,25 @@ describe("LimitIndicator", () => {
       expect(container).toBeEmptyDOMElement();
     },
   );
+
+  describe("A limit the ledger owner sets", () => {
+    it("offers no upgrade and says only the owner can raise it", () => {
+      render(
+        <LimitIndicator
+          used={5}
+          max={5}
+          limitType="collaborators"
+          tier="FREE"
+          ownedByOther
+        />,
+      );
+
+      expect(screen.queryByRole("link")).not.toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /owner can raise this limit|common.ownerCanRaiseLimit/,
+        ),
+      ).toBeInTheDocument();
+    });
+  });
 });

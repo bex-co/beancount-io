@@ -3,7 +3,10 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { AiCfoUpgradePanel } from "../ai-cfo-upgrade-panel";
 import { TEST_LOCATION_HREF } from "@/test/mocks/router";
 
-const { mockTrack } = vi.hoisted(() => ({ mockTrack: vi.fn() }));
+const { mockTrack, mockStoreKey } = vi.hoisted(() => ({
+  mockTrack: vi.fn(),
+  mockStoreKey: { current: null as string | null },
+}));
 
 vi.mock("@tanstack/react-router", async () => {
   const { routerMock } = await import("@/test/mocks/router");
@@ -11,6 +14,9 @@ vi.mock("@tanstack/react-router", async () => {
 });
 
 vi.mock("@/common/analytics", () => ({ track: mockTrack }));
+vi.mock("@/common/hooks/use-store-upgrade-key", () => ({
+  useStoreUpgradeKey: () => mockStoreKey.current,
+}));
 
 // Mock useUserLimits
 const mockUseUserLimits = vi.fn();
@@ -252,6 +258,18 @@ describe("AiCfoUpgradePanel", () => {
 
     render(<AiCfoUpgradePanel />);
     expect(screen.getByText("100%")).toBeInTheDocument();
+  });
+
+  it("names the app and shows no web prices to a store subscriber", () => {
+    mockStoreKey.current = "common.upgradeInAndroidApp";
+    setMocks("PREMIUM", 9, 10);
+
+    render(<AiCfoUpgradePanel />);
+    mockStoreKey.current = null;
+
+    expect(screen.getByText("common.upgradeInAndroidApp")).toBeInTheDocument();
+    expect(screen.queryByText("$99.99")).not.toBeInTheDocument();
+    expect(screen.queryByText("Upgrade")).not.toBeInTheDocument();
   });
 
   it("should render all three tier cards for free users", () => {

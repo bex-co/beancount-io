@@ -381,6 +381,23 @@ const bgCommon: Record<string, TranslationEntry> = {
     description:
       "Short CTA button shown in the sidebar directive-usage indicator once a ledger is approaching or over its free-tier directive limit",
   },
+  "common.upgradeInIosApp": {
+    message: "Надградете в приложението за iOS",
+    description: "Where an App Store subscriber upgrades",
+  },
+  "common.upgradeInAndroidApp": {
+    message: "Надградете в приложението за Android",
+    description: "Where a Google Play subscriber upgrades",
+  },
+  "common.ownerDirectiveLimit": {
+    message:
+      "Тази книга достигна лимита на собственика от {max} записа. Само собственикът може да го увеличи.",
+    description: "A collaborator at the ledger owner's entry limit",
+  },
+  "common.ownerCanRaiseLimit": {
+    message: "Само собственикът на тази книга може да увеличи този лимит.",
+    description: "A collaborator at a limit only the ledger owner can raise",
+  },
   "common.upgradeToUnlock": {
     message: "Надградете, за да отключите",
     description: "Button text to upgrade subscription",
@@ -864,6 +881,16 @@ const bgCommon: Record<string, TranslationEntry> = {
       "Този план се таксува чрез Google Play. Управлявайте го от страницата с абонаменти в Google Play.",
     description:
       "A Stripe action refused because Google Play bills this plan (BILLED_BY_STORE)",
+  },
+  "common.errors.ownerLimitReached": {
+    message:
+      "Тази книга достигна лимита на плана на собственика. Собственикът може да го увеличи.",
+    description:
+      "A limit set by the ledger owner's plan (RESOURCE_LIMIT_REACHED, LEDGER_OWNER)",
+  },
+  "common.errors.limitReached": {
+    message: "Достигнахте лимит, който не се променя с надграждане.",
+    description: "A limit no plan sets (RESOURCE_LIMIT_REACHED with no owner)",
   },
   "common.errors.conflict": {
     message:

@@ -14,6 +14,8 @@ interface LimitIndicatorProps {
   limitType: "ledgers" | "collaborators";
   /** The user's tier, which the parent already has; the prompt offers the next. */
   tier: UserTier;
+  /** The limit is the ledger owner's, so this reader has nothing to buy. */
+  ownedByOther?: boolean;
   variant?: "alert" | "badge";
 }
 
@@ -34,6 +36,7 @@ export function LimitIndicator({
   max,
   limitType,
   tier,
+  ownedByOther = false,
   variant = "alert",
 }: LimitIndicatorProps) {
   const { t } = useTranslations();
@@ -94,7 +97,12 @@ export function LimitIndicator({
             {isNearLimit && !isAtLimit && ` - ${t("common.nearLimit")}`}
           </div>
         </div>
-        {isNearLimit && !isReactNative && (
+        {isNearLimit && !isReactNative && ownedByOther && (
+          <div className="text-sm text-muted-foreground">
+            {t("common.ownerCanRaiseLimit")}
+          </div>
+        )}
+        {isNearLimit && !isReactNative && !ownedByOther && (
           <Button variant="default" size="sm" asChild>
             <UpgradePromptLink
               surface={`${limitType}_limit`}

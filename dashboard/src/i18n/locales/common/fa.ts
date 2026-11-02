@@ -381,6 +381,23 @@ const faCommon: Record<string, TranslationEntry> = {
     description:
       "Short CTA button shown in the sidebar directive-usage indicator once a ledger is approaching or over its free-tier directive limit",
   },
+  "common.upgradeInIosApp": {
+    message: "در برنامه iOS ارتقا دهید",
+    description: "Where an App Store subscriber upgrades",
+  },
+  "common.upgradeInAndroidApp": {
+    message: "در برنامه Android ارتقا دهید",
+    description: "Where a Google Play subscriber upgrades",
+  },
+  "common.ownerDirectiveLimit": {
+    message:
+      "این دفتر به سقف {max} ورودی مالک خود رسیده است. فقط مالک می‌تواند آن را افزایش دهد.",
+    description: "A collaborator at the ledger owner's entry limit",
+  },
+  "common.ownerCanRaiseLimit": {
+    message: "فقط مالک این دفتر می‌تواند این سقف را افزایش دهد.",
+    description: "A collaborator at a limit only the ledger owner can raise",
+  },
   "common.upgradeToUnlock": {
     message: "ارتقا برای باز کردن",
     description: "Button text to upgrade subscription",
@@ -862,6 +879,16 @@ const faCommon: Record<string, TranslationEntry> = {
       "این طرح از طریق Google Play پرداخت می‌شود. آن را در صفحه اشتراک‌های Google Play مدیریت کنید.",
     description:
       "A Stripe action refused because Google Play bills this plan (BILLED_BY_STORE)",
+  },
+  "common.errors.ownerLimitReached": {
+    message:
+      "این دفتر به سقف طرح مالک خود رسیده است. مالک می‌تواند آن را افزایش دهد.",
+    description:
+      "A limit set by the ledger owner's plan (RESOURCE_LIMIT_REACHED, LEDGER_OWNER)",
+  },
+  "common.errors.limitReached": {
+    message: "به سقفی رسیده‌اید که با ارتقا تغییر نمی‌کند.",
+    description: "A limit no plan sets (RESOURCE_LIMIT_REACHED with no owner)",
   },
   "common.errors.conflict": {
     message:

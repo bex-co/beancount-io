@@ -382,6 +382,23 @@ const deCommon: Record<string, TranslationEntry> = {
     description:
       "Short CTA button shown in the sidebar directive-usage indicator once a ledger is approaching or over its free-tier directive limit",
   },
+  "common.upgradeInIosApp": {
+    message: "In der iOS-App upgraden",
+    description: "Where an App Store subscriber upgrades",
+  },
+  "common.upgradeInAndroidApp": {
+    message: "In der Android-App upgraden",
+    description: "Where a Google Play subscriber upgrades",
+  },
+  "common.ownerDirectiveLimit": {
+    message:
+      "Dieses Hauptbuch hat das Limit seines Eigentümers von {max} Einträgen erreicht. Nur der Eigentümer kann es erhöhen.",
+    description: "A collaborator at the ledger owner's entry limit",
+  },
+  "common.ownerCanRaiseLimit": {
+    message: "Nur der Eigentümer dieses Hauptbuchs kann dieses Limit erhöhen.",
+    description: "A collaborator at a limit only the ledger owner can raise",
+  },
   "common.upgradeToUnlock": {
     message: "Upgraden zum Freischalten",
     description: "Button text to upgrade subscription",
@@ -866,6 +883,17 @@ const deCommon: Record<string, TranslationEntry> = {
       "Dieser Plan wird über Google Play abgerechnet. Verwalten Sie ihn auf der Abo-Seite von Google Play.",
     description:
       "A Stripe action refused because Google Play bills this plan (BILLED_BY_STORE)",
+  },
+  "common.errors.ownerLimitReached": {
+    message:
+      "Dieses Hauptbuch hat das Limit des Plans seines Eigentümers erreicht. Der Eigentümer kann es erhöhen.",
+    description:
+      "A limit set by the ledger owner's plan (RESOURCE_LIMIT_REACHED, LEDGER_OWNER)",
+  },
+  "common.errors.limitReached": {
+    message:
+      "Sie haben ein Limit erreicht, das sich durch ein Upgrade nicht ändert.",
+    description: "A limit no plan sets (RESOURCE_LIMIT_REACHED with no owner)",
   },
   "common.errors.conflict": {
     message:

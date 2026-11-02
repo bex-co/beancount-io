@@ -5,6 +5,7 @@ import { GetLedgerEntriesCountPerTypeDocument } from "@/graphql/definitions.ts";
 import { Button } from "@/common/components/ui/button.tsx";
 import { useTranslations } from "@/common/hooks/use-translations.ts";
 import { useUserLimits } from "@/common/hooks/use-user-limits.ts";
+import { useIsLedgerOwner } from "@/common/hooks/use-is-ledger-owner.ts";
 import { useReactNativeContext } from "@/common/providers/react-native-bridge-provider/react-native-bridge-context";
 import { cn } from "@/common/lib/utils/utils.ts";
 import { UpgradePromptLink } from "@/common/components/upgrade-prompt-link";
@@ -31,6 +32,7 @@ export const DirectiveUsageIndicator = memo(
     const { t } = useTranslations();
     const { isReactNative } = useReactNativeContext();
     const { limits, tier } = useUserLimits();
+    const isOwner = useIsLedgerOwner();
 
     const { data, loading } = useQuery(GetLedgerEntriesCountPerTypeDocument, {
       variables: { ledgerId },
@@ -74,7 +76,14 @@ export const DirectiveUsageIndicator = memo(
               style={{ width: `${percentage}%` }}
             />
           </div>
-          {showUpgradeCta && !isReactNative && (
+          {showUpgradeCta && !isReactNative && !isOwner && (
+            <span className="pt-0.5 text-xs text-muted-foreground">
+              {t("common.ownerDirectiveLimit", {
+                max: max.toLocaleString(),
+              })}
+            </span>
+          )}
+          {showUpgradeCta && !isReactNative && isOwner && (
             <div className="flex flex-col gap-1.5 pt-0.5">
               <span className="text-xs text-muted-foreground">
                 {t(

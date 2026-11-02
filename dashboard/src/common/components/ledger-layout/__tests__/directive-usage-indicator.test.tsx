@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { GetLedgerEntriesCountPerTypeDocument } from "@/graphql/definitions.ts";
 
 const mockUseQuery = vi.fn();
+const mockIsOwner = vi.fn(() => true);
 const mockLimits = {
   current: { maxDirectives: 5000 } as {
     maxDirectives: number;
@@ -29,6 +30,12 @@ vi.mock(
   }),
 );
 
+vi.mock("@/common/hooks/use-is-ledger-owner.ts", () => ({
+  useIsLedgerOwner: () => mockIsOwner(),
+}));
+vi.mock("@/common/hooks/use-store-upgrade-key", () => ({
+  useStoreUpgradeKey: () => null,
+}));
 vi.mock("@/common/analytics", () => ({
   track: vi.fn(),
 }));
@@ -44,6 +51,7 @@ const counted = [
 describe("DirectiveUsageIndicator", () => {
   beforeEach(() => {
     mockUseQuery.mockReset();
+    mockIsOwner.mockReturnValue(true);
     mockLimits.current = { maxDirectives: 5000 };
   });
 
@@ -124,5 +132,20 @@ describe("DirectiveUsageIndicator", () => {
       "href",
       `/settings/billing?plan=premium&billing=yearly&from=directive_usage&return=${encodeURIComponent(TEST_LOCATION_HREF)}`,
     );
+  });
+
+  it("offers a collaborator no purchase: only the owner can raise the limit", () => {
+    mockIsOwner.mockReturnValue(false);
+    mockUseQuery.mockReturnValue({
+      data: {
+        getLedgerEntriesCountPerType: [{ type: "Transaction", number: 5000 }],
+      },
+      loading: false,
+    });
+
+    render(<DirectiveUsageIndicator ledgerId="owner/ledger" />);
+
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+    expect(screen.getByText(/Only the owner can raise it/)).toBeInTheDocument();
   });
 });

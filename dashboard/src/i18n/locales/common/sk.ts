@@ -389,6 +389,23 @@ const skCommon: Record<string, TranslationEntry> = {
     description:
       "Short CTA button shown in the sidebar directive-usage indicator once a ledger is approaching or over its free-tier directive limit",
   },
+  "common.upgradeInIosApp": {
+    message: "Upgradujte v aplikácii pre iOS",
+    description: "Where an App Store subscriber upgrades",
+  },
+  "common.upgradeInAndroidApp": {
+    message: "Upgradujte v aplikácii pre Android",
+    description: "Where a Google Play subscriber upgrades",
+  },
+  "common.ownerDirectiveLimit": {
+    message:
+      "Táto kniha dosiahla limit vlastníka {max} záznamov. Zvýšiť ho môže iba vlastník.",
+    description: "A collaborator at the ledger owner's entry limit",
+  },
+  "common.ownerCanRaiseLimit": {
+    message: "Tento limit môže zvýšiť iba vlastník tejto knihy.",
+    description: "A collaborator at a limit only the ledger owner can raise",
+  },
   "common.upgradeToUnlock": {
     message: "Upgradovať pre odomknutie",
     description: "Button text to upgrade subscription",
@@ -869,6 +886,16 @@ const skCommon: Record<string, TranslationEntry> = {
       "Tento plán sa fakturuje cez Google Play. Spravujte ho na stránke predplatných v Google Play.",
     description:
       "A Stripe action refused because Google Play bills this plan (BILLED_BY_STORE)",
+  },
+  "common.errors.ownerLimitReached": {
+    message:
+      "Táto kniha dosiahla limit plánu vlastníka. Vlastník ho môže zvýšiť.",
+    description:
+      "A limit set by the ledger owner's plan (RESOURCE_LIMIT_REACHED, LEDGER_OWNER)",
+  },
+  "common.errors.limitReached": {
+    message: "Dosiahli ste limit, ktorý sa upgradom nezmení.",
+    description: "A limit no plan sets (RESOURCE_LIMIT_REACHED with no owner)",
   },
   "common.errors.conflict": {
     message:

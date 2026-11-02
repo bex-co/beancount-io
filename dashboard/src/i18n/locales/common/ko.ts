@@ -376,6 +376,23 @@ const koCommon: Record<string, TranslationEntry> = {
     description:
       "Short CTA button shown in the sidebar directive-usage indicator once a ledger is approaching or over its free-tier directive limit",
   },
+  "common.upgradeInIosApp": {
+    message: "iOS 앱에서 업그레이드",
+    description: "Where an App Store subscriber upgrades",
+  },
+  "common.upgradeInAndroidApp": {
+    message: "Android 앱에서 업그레이드",
+    description: "Where a Google Play subscriber upgrades",
+  },
+  "common.ownerDirectiveLimit": {
+    message:
+      "이 원장이 소유자의 한도인 {max}개 항목에 도달했습니다. 소유자만 한도를 늘릴 수 있습니다.",
+    description: "A collaborator at the ledger owner's entry limit",
+  },
+  "common.ownerCanRaiseLimit": {
+    message: "이 원장의 소유자만 이 한도를 늘릴 수 있습니다.",
+    description: "A collaborator at a limit only the ledger owner can raise",
+  },
   "common.upgradeToUnlock": {
     message: "업그레이드하여 잠금 해제",
     description: "Button text to upgrade subscription",
@@ -855,6 +872,16 @@ const koCommon: Record<string, TranslationEntry> = {
       "이 플랜은 Google Play로 청구됩니다. Google Play의 구독 페이지에서 관리하세요.",
     description:
       "A Stripe action refused because Google Play bills this plan (BILLED_BY_STORE)",
+  },
+  "common.errors.ownerLimitReached": {
+    message:
+      "이 원장이 소유자 플랜의 한도에 도달했습니다. 소유자가 한도를 늘릴 수 있습니다.",
+    description:
+      "A limit set by the ledger owner's plan (RESOURCE_LIMIT_REACHED, LEDGER_OWNER)",
+  },
+  "common.errors.limitReached": {
+    message: "업그레이드해도 바뀌지 않는 한도에 도달했습니다.",
+    description: "A limit no plan sets (RESOURCE_LIMIT_REACHED with no owner)",
   },
   "common.errors.conflict": {
     message:

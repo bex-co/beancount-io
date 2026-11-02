@@ -55,7 +55,10 @@ const limitReached = () =>
     errors: [
       {
         message: "This ledger's owner is on the Free plan…",
-        extensions: { code: "RESOURCE_LIMIT_REACHED" },
+        extensions: {
+          code: "RESOURCE_LIMIT_REACHED",
+          limitOwner: "LEDGER_OWNER",
+        },
       },
     ],
   });

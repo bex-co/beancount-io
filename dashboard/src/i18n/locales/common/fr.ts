@@ -385,6 +385,24 @@ const frCommon: Record<string, TranslationEntry> = {
     description:
       "Short CTA button shown in the sidebar directive-usage indicator once a ledger is approaching or over its free-tier directive limit",
   },
+  "common.upgradeInIosApp": {
+    message: "Mettez à niveau dans l’app iOS",
+    description: "Where an App Store subscriber upgrades",
+  },
+  "common.upgradeInAndroidApp": {
+    message: "Mettez à niveau dans l’app Android",
+    description: "Where a Google Play subscriber upgrades",
+  },
+  "common.ownerDirectiveLimit": {
+    message:
+      "Ce grand livre a atteint la limite de {max} écritures de son propriétaire. Seul le propriétaire peut l’augmenter.",
+    description: "A collaborator at the ledger owner's entry limit",
+  },
+  "common.ownerCanRaiseLimit": {
+    message:
+      "Seul le propriétaire de ce grand livre peut augmenter cette limite.",
+    description: "A collaborator at a limit only the ledger owner can raise",
+  },
   "common.upgradeToUnlock": {
     message: "Mettre à niveau pour débloquer",
     description: "Button text to upgrade subscription",
@@ -869,6 +887,17 @@ const frCommon: Record<string, TranslationEntry> = {
       "Ce forfait est facturé via Google Play. Gérez-le sur la page des abonnements de Google Play.",
     description:
       "A Stripe action refused because Google Play bills this plan (BILLED_BY_STORE)",
+  },
+  "common.errors.ownerLimitReached": {
+    message:
+      "Ce grand livre a atteint la limite du forfait de son propriétaire. Le propriétaire peut l’augmenter.",
+    description:
+      "A limit set by the ledger owner's plan (RESOURCE_LIMIT_REACHED, LEDGER_OWNER)",
+  },
+  "common.errors.limitReached": {
+    message:
+      "Vous avez atteint une limite qu’une mise à niveau ne modifie pas.",
+    description: "A limit no plan sets (RESOURCE_LIMIT_REACHED with no owner)",
   },
   "common.errors.conflict": {
     message:

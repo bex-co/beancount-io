@@ -431,7 +431,10 @@ describe("PRReviewPage", () => {
           {
             message:
               "Merging this pull request would bring the ledger to about 110 directives, over the 100 the free plan allows.",
-            extensions: { code: "RESOURCE_LIMIT_REACHED" },
+            extensions: {
+              code: "RESOURCE_LIMIT_REACHED",
+              limitOwner: "LEDGER_OWNER",
+            },
           },
         ],
       }),
@@ -444,7 +447,7 @@ describe("PRReviewPage", () => {
 
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith(
-        "You've reached your plan's limit. Upgrade to continue.",
+        "This ledger has reached the limit of its owner's plan. The owner can raise it.",
       );
     });
   });

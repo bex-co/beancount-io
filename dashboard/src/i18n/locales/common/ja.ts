@@ -376,6 +376,23 @@ const jaCommon: Record<string, TranslationEntry> = {
     description:
       "Short CTA button shown in the sidebar directive-usage indicator once a ledger is approaching or over its free-tier directive limit",
   },
+  "common.upgradeInIosApp": {
+    message: "iOS アプリでアップグレード",
+    description: "Where an App Store subscriber upgrades",
+  },
+  "common.upgradeInAndroidApp": {
+    message: "Android アプリでアップグレード",
+    description: "Where a Google Play subscriber upgrades",
+  },
+  "common.ownerDirectiveLimit": {
+    message:
+      "この台帳は所有者の上限である {max} 件に達しました。上限を引き上げられるのは所有者のみです。",
+    description: "A collaborator at the ledger owner's entry limit",
+  },
+  "common.ownerCanRaiseLimit": {
+    message: "この上限を引き上げられるのは、この台帳の所有者のみです。",
+    description: "A collaborator at a limit only the ledger owner can raise",
+  },
   "common.upgradeToUnlock": {
     message: "アップグレードしてロック解除",
     description: "Button text to upgrade subscription",
@@ -857,6 +874,16 @@ const jaCommon: Record<string, TranslationEntry> = {
       "このプランは Google Play で請求されます。Google Play の定期購入ページで管理してください。",
     description:
       "A Stripe action refused because Google Play bills this plan (BILLED_BY_STORE)",
+  },
+  "common.errors.ownerLimitReached": {
+    message:
+      "この台帳は所有者のプランの上限に達しました。所有者が上限を引き上げられます。",
+    description:
+      "A limit set by the ledger owner's plan (RESOURCE_LIMIT_REACHED, LEDGER_OWNER)",
+  },
+  "common.errors.limitReached": {
+    message: "アップグレードしても変わらない上限に達しました。",
+    description: "A limit no plan sets (RESOURCE_LIMIT_REACHED with no owner)",
   },
   "common.errors.conflict": {
     message:

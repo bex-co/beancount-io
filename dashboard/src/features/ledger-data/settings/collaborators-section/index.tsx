@@ -72,6 +72,8 @@ export function CollaboratorsSection({ ledgerId }: { ledgerId: string }) {
 
   const { data: currentUserData } = useQuery(GetCurrentUserDocument);
   const currentUserLogin = currentUserData?.userProfile?.username || null;
+  const isOwner =
+    ledgerId.split("/")[0]?.toLowerCase() === currentUserLogin?.toLowerCase();
 
   const [addLedgerCollaborator] = useMutation(AddLedgerCollaboratorDocument);
   const [deleteLedgerCollaborator] = useMutation(
@@ -96,14 +98,13 @@ export function CollaboratorsSection({ ledgerId }: { ledgerId: string }) {
       // The owner's plan sets the limit: telling anyone else to upgrade
       // would not help (w1/181).
       const ownersLimit =
-        getErrorMessageKey(error) === "common.errors.resourceLimitReached" &&
-        ledgerId.split("/")[0]?.toLowerCase() !==
-          currentUserLogin?.toLowerCase();
-      toast.error(t("collaboration.failedToAddCollaborator"), {
-        description: ownersLimit
-          ? t("collaboration.ownerPlanLimitReached")
-          : formatError(error),
-      });
+        getErrorMessageKey(error) === "common.errors.ownerLimitReached";
+      const description = !ownersLimit
+        ? formatError(error)
+        : isOwner
+          ? t("common.errors.resourceLimitReached")
+          : t("collaboration.ownerPlanLimitReached");
+      toast.error(t("collaboration.failedToAddCollaborator"), { description });
     }
   };
 
@@ -162,6 +163,7 @@ export function CollaboratorsSection({ ledgerId }: { ledgerId: string }) {
               max={limits.collaboratorsPerLedgerMax}
               limitType="collaborators"
               tier={tier}
+              ownedByOther={!isOwner}
               variant="alert"
             />
           )}

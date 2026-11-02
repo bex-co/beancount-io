@@ -31,7 +31,7 @@ describe("getErrorMessageKey", () => {
     ["RATE_LIMITED", "common.errors.rateLimited"],
     ["INTERNAL_SERVER_ERROR", "common.errors.internal"],
     ["SERVICE_UNAVAILABLE", "common.errors.serviceUnavailable"],
-    ["RESOURCE_LIMIT_REACHED", "common.errors.resourceLimitReached"],
+    ["RESOURCE_LIMIT_REACHED", "common.errors.limitReached"],
     ["OPERATION_NOT_ALLOWED", "common.errors.operationNotAllowed"],
     ["PREMIUM_REQUIRED", "common.errors.premiumRequired"],
     ["UNBALANCED", "common.errors.unbalanced"],
@@ -54,6 +54,22 @@ describe("getErrorMessageKey", () => {
 
     expect(getErrorMessageKey(error)).toBe(key);
     expect(isBilledByStoreError(error)).toBe(true);
+  });
+
+  it.each([
+    ["REQUESTER", "common.errors.resourceLimitReached"],
+    ["LEDGER_OWNER", "common.errors.ownerLimitReached"],
+  ])("says whose limit a %s refusal is", (limitOwner, key) => {
+    const error = new CombinedGraphQLErrors({
+      errors: [
+        {
+          message: "raw internal server message",
+          extensions: { code: "RESOURCE_LIMIT_REACHED", limitOwner },
+        },
+      ],
+    });
+
+    expect(getErrorMessageKey(error)).toBe(key);
   });
 
   it("does not read another refusal as a store's", () => {

@@ -122,6 +122,8 @@ const ALLOWED_LATIN = [
   "Stripe",
   "iPhone",
   "iPad",
+  "iOS",
+  "Android",
   "Monaco",
   "Git",
   "GitHub",

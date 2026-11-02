@@ -385,6 +385,23 @@ const caCommon: Record<string, TranslationEntry> = {
     description:
       "Short CTA button shown in the sidebar directive-usage indicator once a ledger is approaching or over its free-tier directive limit",
   },
+  "common.upgradeInIosApp": {
+    message: "Actualitza a l’app d’iOS",
+    description: "Where an App Store subscriber upgrades",
+  },
+  "common.upgradeInAndroidApp": {
+    message: "Actualitza a l’app d’Android",
+    description: "Where a Google Play subscriber upgrades",
+  },
+  "common.ownerDirectiveLimit": {
+    message:
+      "Aquest llibre ha assolit el límit de {max} assentaments del propietari. Només el propietari el pot augmentar.",
+    description: "A collaborator at the ledger owner's entry limit",
+  },
+  "common.ownerCanRaiseLimit": {
+    message: "Només el propietari d’aquest llibre pot augmentar aquest límit.",
+    description: "A collaborator at a limit only the ledger owner can raise",
+  },
   "common.upgradeToUnlock": {
     message: "Actualitza per desbloquejar",
     description: "Button text to upgrade subscription",
@@ -869,6 +886,16 @@ const caCommon: Record<string, TranslationEntry> = {
       "Aquest pla es factura a través de Google Play. Gestiona'l a la pàgina de subscripcions de Google Play.",
     description:
       "A Stripe action refused because Google Play bills this plan (BILLED_BY_STORE)",
+  },
+  "common.errors.ownerLimitReached": {
+    message:
+      "Aquest llibre ha assolit el límit del pla del propietari. El propietari el pot augmentar.",
+    description:
+      "A limit set by the ledger owner's plan (RESOURCE_LIMIT_REACHED, LEDGER_OWNER)",
+  },
+  "common.errors.limitReached": {
+    message: "Has assolit un límit que no canvia en actualitzar el pla.",
+    description: "A limit no plan sets (RESOURCE_LIMIT_REACHED with no owner)",
   },
   "common.errors.conflict": {
     message:

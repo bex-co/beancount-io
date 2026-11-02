@@ -382,6 +382,23 @@ const nlCommon: Record<string, TranslationEntry> = {
     description:
       "Short CTA button shown in the sidebar directive-usage indicator once a ledger is approaching or over its free-tier directive limit",
   },
+  "common.upgradeInIosApp": {
+    message: "Upgrade in de iOS-app",
+    description: "Where an App Store subscriber upgrades",
+  },
+  "common.upgradeInAndroidApp": {
+    message: "Upgrade in de Android-app",
+    description: "Where a Google Play subscriber upgrades",
+  },
+  "common.ownerDirectiveLimit": {
+    message:
+      "Dit grootboek heeft de limiet van {max} boekingen van de eigenaar bereikt. Alleen de eigenaar kan die verhogen.",
+    description: "A collaborator at the ledger owner's entry limit",
+  },
+  "common.ownerCanRaiseLimit": {
+    message: "Alleen de eigenaar van dit grootboek kan deze limiet verhogen.",
+    description: "A collaborator at a limit only the ledger owner can raise",
+  },
   "common.upgradeToUnlock": {
     message: "Upgrade om te ontgrendelen",
     description: "Button text to upgrade subscription",
@@ -864,6 +881,16 @@ const nlCommon: Record<string, TranslationEntry> = {
       "Dit abonnement wordt gefactureerd via Google Play. Beheer het op de abonnementenpagina van Google Play.",
     description:
       "A Stripe action refused because Google Play bills this plan (BILLED_BY_STORE)",
+  },
+  "common.errors.ownerLimitReached": {
+    message:
+      "Dit grootboek heeft de limiet van het abonnement van de eigenaar bereikt. De eigenaar kan die verhogen.",
+    description:
+      "A limit set by the ledger owner's plan (RESOURCE_LIMIT_REACHED, LEDGER_OWNER)",
+  },
+  "common.errors.limitReached": {
+    message: "Je hebt een limiet bereikt die niet verandert met een upgrade.",
+    description: "A limit no plan sets (RESOURCE_LIMIT_REACHED with no owner)",
   },
   "common.errors.conflict": {
     message:

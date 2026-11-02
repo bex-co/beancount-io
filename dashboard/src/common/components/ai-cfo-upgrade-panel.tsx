@@ -4,16 +4,22 @@ import { Badge } from "@/common/components/ui/badge";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useUserLimits } from "@/common/hooks/use-user-limits";
 import { useAiCfoUsage } from "@/common/hooks/use-ai-cfo-usage";
-import { getUpgradeTiers } from "@/common/lib/subscription/tier-config";
+import { useStoreUpgradeKey } from "@/common/hooks/use-store-upgrade-key";
+import {
+  getUpgradeTiers,
+  type TierInfo,
+} from "@/common/lib/subscription/tier-config";
 import { UpgradePromptLink } from "@/common/components/upgrade-prompt-link";
 import { cn } from "@/common/lib/utils/utils";
-import { useAllTierQuotas } from "@/common/hooks/use-all-tier-quotas";
+import {
+  useAllTierQuotas,
+  type TierQuota,
+} from "@/common/hooks/use-all-tier-quotas";
 import { cyclePrice } from "@/features/user-settings/pages/general/stripe-config";
 import { useMoneyFormat } from "@/features/user-settings/pages/general/use-money-format";
 
 export function AiCfoUpgradePanel({ className }: { className?: string } = {}) {
   const { t } = useTranslations();
-  const formatMoney = useMoneyFormat();
   const { tier, isLoading: limitsLoading } = useUserLimits();
   const {
     aiCfoTokensUsed,
@@ -92,75 +98,102 @@ export function AiCfoUpgradePanel({ className }: { className?: string } = {}) {
         </div>
       </div>
 
-      {/* Tier cards */}
       {availableTiers.length > 0 && (
-        <div
-          className={`grid grid-cols-1 ${availableTiers.length >= 3 ? "sm:grid-cols-3" : availableTiers.length === 2 ? "sm:grid-cols-2" : ""} gap-2.5 px-4 pb-4 pt-1`}
-        >
-          {availableTiers.map((plan) => {
-            const { key, labelKey, userTier, popular } = plan;
-            const quota = tierQuotas?.find((q) => q.tier === userTier);
-            const tokens = quota?.aiCfoTokensMax ?? 0;
-            return (
-              <div
-                key={key}
-                className={`relative flex flex-col rounded-lg border bg-background p-3 transition-shadow hover:shadow-md ${
-                  popular
-                    ? "border-primary shadow-sm ring-1 ring-primary/20"
-                    : "border-border"
-                }`}
-              >
-                {popular && (
-                  <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[10px] px-2 py-0">
-                    <Sparkles className="!size-2.5" />
-                    {t("aiAgent.popular")}
-                  </Badge>
-                )}
-
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                  {t(labelKey)}
-                </span>
-
-                <div className="flex items-baseline gap-0.5 mb-1.5">
-                  <span className="text-xl font-bold tracking-tight">
-                    {formatMoney(cyclePrice(key, "monthly").amount)}
-                  </span>
-                  <span className="text-[11px] text-muted-foreground">
-                    {t("aiAgent.perMonth")}
-                  </span>
-                </div>
-
-                <p className="text-xs text-muted-foreground mb-3">
-                  {t("aiAgent.tokensPerMonth", {
-                    count: tokens.toLocaleString(),
-                  })}
-                </p>
-
-                <Button
-                  asChild
-                  size="sm"
-                  variant={popular ? "default" : "outline"}
-                  className="w-full mt-auto"
-                >
-                  <UpgradePromptLink
-                    surface="ai_cfo_panel"
-                    plan={plan}
-                    // The card quotes the monthly price, so the sheet opens on it.
-                    billing="monthly"
-                  >
-                    {popular ? (
-                      <Crown className="h-3.5 w-3.5" />
-                    ) : (
-                      <ArrowRight className="h-3.5 w-3.5" />
-                    )}
-                    {t("aiAgent.upgradeCta")}
-                  </UpgradePromptLink>
-                </Button>
-              </div>
-            );
-          })}
-        </div>
+        <UpgradePlans plans={availableTiers} quotas={tierQuotas} />
       )}
+    </div>
+  );
+}
+
+/**
+ * The plans on offer, or where to upgrade for a store subscriber. A separate
+ * component so the billing status loads only once the panel is showing.
+ */
+function UpgradePlans({
+  plans: availableTiers,
+  quotas: tierQuotas,
+}: {
+  plans: TierInfo[];
+  quotas: readonly TierQuota[] | null | undefined;
+}) {
+  const { t } = useTranslations();
+  const formatMoney = useMoneyFormat();
+  const storeUpgradeKey = useStoreUpgradeKey();
+
+  if (storeUpgradeKey) {
+    return (
+      <p className="px-4 pb-4 text-xs text-muted-foreground">
+        {t(storeUpgradeKey)}
+      </p>
+    );
+  }
+
+  return (
+    <div
+      className={`grid grid-cols-1 ${availableTiers.length >= 3 ? "sm:grid-cols-3" : availableTiers.length === 2 ? "sm:grid-cols-2" : ""} gap-2.5 px-4 pb-4 pt-1`}
+    >
+      {availableTiers.map((plan) => {
+        const { key, labelKey, userTier, popular } = plan;
+        const quota = tierQuotas?.find((q) => q.tier === userTier);
+        const tokens = quota?.aiCfoTokensMax ?? 0;
+        return (
+          <div
+            key={key}
+            className={`relative flex flex-col rounded-lg border bg-background p-3 transition-shadow hover:shadow-md ${
+              popular
+                ? "border-primary shadow-sm ring-1 ring-primary/20"
+                : "border-border"
+            }`}
+          >
+            {popular && (
+              <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[10px] px-2 py-0">
+                <Sparkles className="!size-2.5" />
+                {t("aiAgent.popular")}
+              </Badge>
+            )}
+
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+              {t(labelKey)}
+            </span>
+
+            <div className="flex items-baseline gap-0.5 mb-1.5">
+              <span className="text-xl font-bold tracking-tight">
+                {formatMoney(cyclePrice(key, "monthly").amount)}
+              </span>
+              <span className="text-[11px] text-muted-foreground">
+                {t("aiAgent.perMonth")}
+              </span>
+            </div>
+
+            <p className="text-xs text-muted-foreground mb-3">
+              {t("aiAgent.tokensPerMonth", {
+                count: tokens.toLocaleString(),
+              })}
+            </p>
+
+            <Button
+              asChild
+              size="sm"
+              variant={popular ? "default" : "outline"}
+              className="w-full mt-auto"
+            >
+              <UpgradePromptLink
+                surface="ai_cfo_panel"
+                plan={plan}
+                // The card quotes the monthly price, so the sheet opens on it.
+                billing="monthly"
+              >
+                {popular ? (
+                  <Crown className="h-3.5 w-3.5" />
+                ) : (
+                  <ArrowRight className="h-3.5 w-3.5" />
+                )}
+                {t("aiAgent.upgradeCta")}
+              </UpgradePromptLink>
+            </Button>
+          </div>
+        );
+      })}
     </div>
   );
 }

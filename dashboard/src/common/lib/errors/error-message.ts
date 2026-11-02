@@ -77,6 +77,14 @@ export function getErrorMessageKey(
     }
     for (const gqlError of error.errors) {
       const code = gqlError.extensions?.code;
+      if (code === "RESOURCE_LIMIT_REACHED") {
+        const owner = gqlError.extensions?.limitOwner;
+        // The reader may be the owner, so this reads true for either; only a
+        // caller that knows who is asking can say more (ADR 001 D13).
+        if (owner === "LEDGER_OWNER") return "common.errors.ownerLimitReached";
+        // A limit no plan sets carries no owner, and upgrading will not lift it.
+        if (owner !== "REQUESTER") return "common.errors.limitReached";
+      }
       if (code === "BILLED_BY_STORE") {
         return gqlError.extensions?.provider === "GOOGLE_PLAY"
           ? "common.errors.billedByGooglePlay"

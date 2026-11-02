@@ -371,6 +371,22 @@ const zhCommon: Record<string, TranslationEntry> = {
     description:
       "Short CTA button shown in the sidebar directive-usage indicator once a ledger is approaching or over its free-tier directive limit",
   },
+  "common.upgradeInIosApp": {
+    message: "在 iOS 应用中升级",
+    description: "Where an App Store subscriber upgrades",
+  },
+  "common.upgradeInAndroidApp": {
+    message: "在 Android 应用中升级",
+    description: "Where a Google Play subscriber upgrades",
+  },
+  "common.ownerDirectiveLimit": {
+    message: "此账本已达到所有者的 {max} 条记录上限。只有所有者可以提高上限。",
+    description: "A collaborator at the ledger owner's entry limit",
+  },
+  "common.ownerCanRaiseLimit": {
+    message: "只有此账本的所有者可以提高此上限。",
+    description: "A collaborator at a limit only the ledger owner can raise",
+  },
   "common.upgradeToUnlock": {
     message: "升级以解锁",
     description: "Button text to upgrade subscription",
@@ -842,6 +858,15 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "此计划通过 Google Play 计费。请在 Google Play 的订阅页面管理。",
     description:
       "A Stripe action refused because Google Play bills this plan (BILLED_BY_STORE)",
+  },
+  "common.errors.ownerLimitReached": {
+    message: "此账本已达到所有者计划的上限。所有者可以提高上限。",
+    description:
+      "A limit set by the ledger owner's plan (RESOURCE_LIMIT_REACHED, LEDGER_OWNER)",
+  },
+  "common.errors.limitReached": {
+    message: "你已达到一项无法通过升级解除的上限。",
+    description: "A limit no plan sets (RESOURCE_LIMIT_REACHED with no owner)",
   },
   "common.errors.conflict": {
     message: "此更改与当前状态冲突，请刷新页面后重试。",

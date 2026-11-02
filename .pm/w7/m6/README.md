@@ -1,6 +1,6 @@
 # w7 · m6 — The web dashboard shows each billing source and sends plan changes to their home
 
-**Worker:** worker1 **Goal:** every web subscriber sees the same plan card, can change billing only where it was bought, and never sees billing on a page opened from the app **Status:** in progress (t001, t002 done)
+**Worker:** worker1 **Goal:** every web subscriber sees the same plan card, can change billing only where it was bought, and never sees billing on a page opened from the app **Status:** in progress (t001, t002, t003 done)
 
 ## Tasks (in order)
 
@@ -8,7 +8,7 @@
 | --- | --- | --- | --- |
 | t001 | Plan card for every billing source — **DONE** | 1h30m | w7/m1/t010 |
 | t002 | Store subscribers get no Stripe flows — **DONE** | 1h | t001 |
-| t003 | Limit prompts follow the billing source and the plan owner | 1h | t001 |
+| t003 | Limit prompts follow the billing source and the plan owner — **DONE** | 1h | t001 |
 | t004 | Duplicate-billing and store payment-problem banners | 45m | t001 |
 | t005 | Switching from a store plan to Stripe | 1h30m | t002, w7/m2/t001 |
 | t006 | Pages opened from the app hide pricing and billing | 1h30m | t001 |
