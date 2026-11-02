@@ -284,6 +284,47 @@ describe("setup.modules on REST, GraphQL, and MCP (w3/m59/t002)", () => {
     },
   );
 
+  it("takes GraphQL's explicit nulls as omitted modules and property name (w3/m59/t007)", async () => {
+    const f = await fixture();
+    try {
+      const preview = async (setup: Record<string, unknown>) =>
+        graphql({
+          schema,
+          source: `query($setup: LedgerSetupInput!) { previewLedgerSetup(setup: $setup) { files } }`,
+          variableValues: { setup },
+          contextValue: { identity, getCurrentIdentity: () => identity },
+        });
+      const plain = previewLedgerSetup(
+        { preset: "personal@1", historyStart: "2026-01-01" },
+        "2026-01-01",
+      ).files;
+      const none = await preview({
+        preset: "PERSONAL",
+        historyStart: "2026-01-01",
+        modules: null,
+      });
+      expect(none.errors).toBeUndefined();
+      expect(
+        (none.data!.previewLedgerSetup as { files: unknown }).files,
+      ).toEqual(plain);
+      const defaulted = await preview({
+        preset: "PERSONAL",
+        historyStart: "2026-01-01",
+        modules: [{ id: "RENTAL_PROPERTY", propertyName: null }],
+      });
+      expect(defaulted.errors).toBeUndefined();
+      expect(
+        (
+          defaulted.data!.previewLedgerSetup as {
+            files: Record<string, string>;
+          }
+        ).files["main.bean"],
+      ).toContain("open Income:Rent:Property1");
+    } finally {
+      await f.close();
+    }
+  });
+
   it("refuses an unknown module id on every surface's schema", async () => {
     const f = await fixture();
     try {

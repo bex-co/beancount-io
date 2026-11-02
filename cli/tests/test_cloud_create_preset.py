@@ -109,16 +109,20 @@ def test_create_without_modules_sends_no_modules_key(httpx_mock: HTTPXMock) -> N
 
 
 @pytest.mark.parametrize(
-    "args",
+    ("args", "reason"),
     [
-        ["--module", "investments@1"],
-        ["--preset", "freelance@1", "--module", "investments@1"],
-        ["--preset", "personal@1", "--module", "crypto@1"],
-        ["--preset", "personal@1", "--module", "investments@1", "--module", "investments@1"],
-        ["--preset", "personal@1", "--property-name", "OakSt"],
+        (["--module", "investments@1"], "add --preset personal@1"),
+        (["--preset", "freelance@1", "--module", "investments@1"], "accepted only with --preset personal@1"),
+        (["--preset", "personal@1", "--module", "crypto@1"], "Unknown module"),
+        (["--preset", "personal@1", "--module", "investments@1", "--module", "investments@1"], "more than once"),
+        (["--preset", "personal@1", "--property-name", "OakSt"], "add --module rental-property@1"),
     ],
 )
-def test_create_refuses_a_bad_module_selection_before_any_request(httpx_mock: HTTPXMock, args: list[str]) -> None:
+def test_create_refuses_a_bad_module_selection_before_any_request(
+    httpx_mock: HTTPXMock, args: list[str], reason: str
+) -> None:
     result = CliRunner().invoke(app, ["--json", "cloud", "ledger", "create", "new2", *args])
     assert result.exit_code == 2, result.output
+    # The reason, not merely exit 2: an unknown option exits 2 as well.
+    assert reason in result.output
     assert httpx_mock.get_requests() == []
