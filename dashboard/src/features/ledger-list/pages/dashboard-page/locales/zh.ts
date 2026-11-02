@@ -198,10 +198,6 @@ const zhDashboardPage: Record<string, TranslationEntry> = {
     description:
       "One-tap button offering the browser time zone's currency when it differs from the suggestion (ADR026)",
   },
-  "page.dashboard.setupHistoryStart": {
-    message: "账簿开始日期",
-    description: "Label for the history start date in staged ledger creation",
-  },
   "page.dashboard.setupOpeningAccount": {
     message: "开户账户",
     description: "Label for the first account in staged ledger creation",
@@ -214,17 +210,72 @@ const zhDashboardPage: Record<string, TranslationEntry> = {
     message: "稍后决定",
     description: "Choice to skip the opening balance in staged creation",
   },
-  "page.dashboard.setupReview": {
-    message: "检查",
-    description: "Heading for the review step in staged ledger creation",
-  },
-  "page.dashboard.setupReviewDescription": {
-    message: "将创建的正是这些内容。返回可修改。",
-    description: "Description for the review step in staged ledger creation",
-  },
   "page.dashboard.setupAccounts": {
     message: "账户",
     description: "Label for the account list in the creation review step",
+  },
+  "page.dashboard.setupPurposeNote": {
+    message: "公司、社团或与他人共用的钱，应各自使用单独的账本。",
+    description:
+      "Note beside the purpose choice in ledger creation: other entities get their own ledger",
+  },
+  "page.dashboard.setupModules": {
+    message: "也在此账本中记录",
+    description:
+      "Heading of the personal-only module list in ledger creation (PRFAQ001 A.9)",
+  },
+  "page.dashboard.moduleInvestments": {
+    message: "投资",
+    description: "Name of the investments module",
+  },
+  "page.dashboard.moduleInvestmentsOutcome": {
+    message: "券商持仓、股息、利息和收益。",
+    description: "One-line outcome of the investments module",
+  },
+  "page.dashboard.moduleRentalProperty": {
+    message: "出租房产",
+    description: "Name of the rental-property module",
+  },
+  "page.dashboard.moduleRentalPropertyOutcome": {
+    message: "一处房产的租金、押金和费用。",
+    description: "One-line outcome of the rental-property module",
+  },
+  "page.dashboard.moduleSideBusiness": {
+    message: "副业",
+    description: "Name of the side-business module",
+  },
+  "page.dashboard.moduleSideBusinessOutcome": {
+    message: "客户收入和业务开支，并使用单独的业务银行账户。",
+    description: "One-line outcome of the side-business module",
+  },
+  "page.dashboard.setupPropertyName": {
+    message: "房产名称",
+    description: "Label for the rental property's account name",
+  },
+  "page.dashboard.setupPropertyNameHint": {
+    message: "用于账户名称，例如 {example}。",
+    description:
+      "Hint under the rental property name field - interpolation: {example} (an example account name)",
+  },
+  "page.dashboard.setupPropertyNameInvalid": {
+    message:
+      "以大写英文字母或数字开头，之后只能使用字母、数字和连字符（最多 64 个）。",
+    description: "Validation message for an invalid rental property name",
+  },
+  "page.dashboard.setupBalanceAsOf": {
+    message: "余额日期",
+    description:
+      "Label for the date of a known opening balance, which starts the books",
+  },
+  "page.dashboard.setupSummaryAccounts": {
+    message: "{count} 个账户",
+    description:
+      "Account count in the summary beside Create ledger - interpolation: {count} (base key for pluralization)",
+  },
+  "page.dashboard.setupSummaryAccounts_other": {
+    message: "{count} 个账户",
+    description:
+      "Account count in the summary beside Create ledger - interpolation: {count} - other form",
   },
   "page.dashboard.setupStep": {
     message: "第 {step} 步，共 {total} 步",

@@ -203,10 +203,6 @@ const faDashboardPage: Record<string, TranslationEntry> = {
     description:
       "One-tap button offering the browser time zone's currency when it differs from the suggestion (ADR026)",
   },
-  "page.dashboard.setupHistoryStart": {
-    message: "دفاتر از تاریخ",
-    description: "Label for the history start date in staged ledger creation",
-  },
   "page.dashboard.setupOpeningAccount": {
     message: "حساب افتتاحیه",
     description: "Label for the first account in staged ledger creation",
@@ -219,17 +215,79 @@ const faDashboardPage: Record<string, TranslationEntry> = {
     message: "تصمیم‌گیری در آینده",
     description: "Choice to skip the opening balance in staged creation",
   },
-  "page.dashboard.setupReview": {
-    message: "بازبینی",
-    description: "Heading for the review step in staged ledger creation",
-  },
-  "page.dashboard.setupReviewDescription": {
-    message: "دقیقاً همین ایجاد خواهد شد. برای تغییر به عقب برگردید.",
-    description: "Description for the review step in staged ledger creation",
-  },
   "page.dashboard.setupAccounts": {
     message: "حساب‌ها",
     description: "Label for the account list in the creation review step",
+  },
+  "page.dashboard.setupPurposeNote": {
+    message:
+      "یک شرکت، یک باشگاه یا پولی که با دیگران شریک هستید، دفتر جداگانهٔ خود را می‌خواهد.",
+    description:
+      "Note beside the purpose choice in ledger creation: other entities get their own ledger",
+  },
+  "page.dashboard.setupModules": {
+    message: "در این دفتر هم پیگیری شود",
+    description:
+      "Heading of the personal-only module list in ledger creation (PRFAQ001 A.9)",
+  },
+  "page.dashboard.moduleInvestments": {
+    message: "سرمایه‌گذاری‌ها",
+    description: "Name of the investments module",
+  },
+  "page.dashboard.moduleInvestmentsOutcome": {
+    message: "دارایی‌های کارگزاری، سود سهام، بهره و سود فروش.",
+    description: "One-line outcome of the investments module",
+  },
+  "page.dashboard.moduleRentalProperty": {
+    message: "یک ملک اجاره‌ای",
+    description: "Name of the rental-property module",
+  },
+  "page.dashboard.moduleRentalPropertyOutcome": {
+    message: "اجاره، ودیعه‌ها و هزینه‌های یک ملک.",
+    description: "One-line outcome of the rental-property module",
+  },
+  "page.dashboard.moduleSideBusiness": {
+    message: "یک کسب‌وکار جانبی",
+    description: "Name of the side-business module",
+  },
+  "page.dashboard.moduleSideBusinessOutcome": {
+    message:
+      "درآمد مشتریان و هزینه‌های کسب‌وکار، با یک حساب بانکی جداگانهٔ کسب‌وکار.",
+    description: "One-line outcome of the side-business module",
+  },
+  "page.dashboard.setupPropertyName": {
+    message: "نام ملک",
+    description: "Label for the rental property's account name",
+  },
+  "page.dashboard.setupPropertyNameHint": {
+    message: "در نام حساب‌ها به کار می‌رود، مثلاً {example}.",
+    description:
+      "Hint under the rental property name field - interpolation: {example} (an example account name)",
+  },
+  "page.dashboard.setupPropertyNameInvalid": {
+    message:
+      "با یک حرف بزرگ لاتین یا یک رقم شروع کنید و فقط از حروف، ارقام و خط تیره استفاده کنید (حداکثر ۶۴).",
+    description: "Validation message for an invalid rental property name",
+  },
+  "page.dashboard.setupBalanceAsOf": {
+    message: "مانده در تاریخ",
+    description:
+      "Label for the date of a known opening balance, which starts the books",
+  },
+  "page.dashboard.setupSummaryAccounts": {
+    message: "{count} حساب",
+    description:
+      "Account count in the summary beside Create ledger - interpolation: {count} (base key for pluralization)",
+  },
+  "page.dashboard.setupSummaryAccounts_one": {
+    message: "{count} حساب",
+    description:
+      "Account count in the summary beside Create ledger - interpolation: {count} - one form",
+  },
+  "page.dashboard.setupSummaryAccounts_other": {
+    message: "{count} حساب",
+    description:
+      "Account count in the summary beside Create ledger - interpolation: {count} - other form",
   },
   "page.dashboard.setupStep": {
     message: "گام {step} از {total}",

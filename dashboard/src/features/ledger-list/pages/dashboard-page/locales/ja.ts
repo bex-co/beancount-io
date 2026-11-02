@@ -187,10 +187,6 @@ const jaDashboardPage: Record<string, TranslationEntry> = {
     description:
       "One-tap button offering the browser time zone's currency when it differs from the suggestion (ADR026)",
   },
-  "page.dashboard.setupHistoryStart": {
-    message: "帳簿の開始日",
-    description: "Label for the history start date in staged ledger creation",
-  },
   "page.dashboard.setupOpeningAccount": {
     message: "開始口座",
     description: "Label for the first account in staged ledger creation",
@@ -203,17 +199,73 @@ const jaDashboardPage: Record<string, TranslationEntry> = {
     message: "後で決める",
     description: "Choice to skip the opening balance in staged creation",
   },
-  "page.dashboard.setupReview": {
-    message: "確認",
-    description: "Heading for the review step in staged ledger creation",
-  },
-  "page.dashboard.setupReviewDescription": {
-    message: "作成される内容は次のとおりです。変更するには戻ってください。",
-    description: "Description for the review step in staged ledger creation",
-  },
   "page.dashboard.setupAccounts": {
     message: "口座",
     description: "Label for the account list in the creation review step",
+  },
+  "page.dashboard.setupPurposeNote": {
+    message:
+      "会社、クラブ、他の人と共有するお金は、それぞれ別の台帳にしてください。",
+    description:
+      "Note beside the purpose choice in ledger creation: other entities get their own ledger",
+  },
+  "page.dashboard.setupModules": {
+    message: "この台帳でも記録する",
+    description:
+      "Heading of the personal-only module list in ledger creation (PRFAQ001 A.9)",
+  },
+  "page.dashboard.moduleInvestments": {
+    message: "投資",
+    description: "Name of the investments module",
+  },
+  "page.dashboard.moduleInvestmentsOutcome": {
+    message: "証券口座の保有資産、配当、利息、売却益。",
+    description: "One-line outcome of the investments module",
+  },
+  "page.dashboard.moduleRentalProperty": {
+    message: "賃貸物件",
+    description: "Name of the rental-property module",
+  },
+  "page.dashboard.moduleRentalPropertyOutcome": {
+    message: "1 物件の家賃、預かり金、費用。",
+    description: "One-line outcome of the rental-property module",
+  },
+  "page.dashboard.moduleSideBusiness": {
+    message: "副業",
+    description: "Name of the side-business module",
+  },
+  "page.dashboard.moduleSideBusinessOutcome": {
+    message: "顧客からの収入と事業費。事業用の銀行口座を分けます。",
+    description: "One-line outcome of the side-business module",
+  },
+  "page.dashboard.setupPropertyName": {
+    message: "物件名",
+    description: "Label for the rental property's account name",
+  },
+  "page.dashboard.setupPropertyNameHint": {
+    message: "勘定科目名に使われます（例: {example}）。",
+    description:
+      "Hint under the rental property name field - interpolation: {example} (an example account name)",
+  },
+  "page.dashboard.setupPropertyNameInvalid": {
+    message:
+      "大文字の英字か数字で始め、英字・数字・ハイフンのみを使ってください（64 文字まで）。",
+    description: "Validation message for an invalid rental property name",
+  },
+  "page.dashboard.setupBalanceAsOf": {
+    message: "残高の基準日",
+    description:
+      "Label for the date of a known opening balance, which starts the books",
+  },
+  "page.dashboard.setupSummaryAccounts": {
+    message: "{count} 個の勘定科目",
+    description:
+      "Account count in the summary beside Create ledger - interpolation: {count} (base key for pluralization)",
+  },
+  "page.dashboard.setupSummaryAccounts_other": {
+    message: "{count} 個の勘定科目",
+    description:
+      "Account count in the summary beside Create ledger - interpolation: {count} - other form",
   },
   "page.dashboard.setupStep": {
     message: "ステップ {step} / {total}",

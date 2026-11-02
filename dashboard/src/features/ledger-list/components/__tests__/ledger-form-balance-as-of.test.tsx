@@ -58,16 +58,36 @@ afterEach(() => {
   process.env.TZ = originalTz;
 });
 
-/** Opens the Template path's details, where Books begin is set. */
-function presetDetails(onSubmit = vi.fn()) {
+/** Opens the details of the default (personal) purpose. */
+function details(onSubmit = vi.fn()) {
   render(<LedgerForm onSubmit={onSubmit} onCancel={vi.fn()} />);
-  fireEvent.click(screen.getByRole("radio", { name: /^Template/ }));
   fireEvent.click(screen.getByRole("button", { name: "Next" }));
-  return screen.getByLabelText("Books begin") as HTMLInputElement;
 }
 
-/** Books begin defaults to the reader's own calendar day (w4/317). */
-describe("LedgerForm Books begin", () => {
+/** Gives Assets:Cash a known balance, which brings up its "as of" date. */
+function knownBalance() {
+  fireEvent.change(screen.getByTestId("ledger-opening-account"), {
+    target: { value: "Assets:Cash" },
+  });
+  fireEvent.change(screen.getByTestId("ledger-opening-amount"), {
+    target: { value: "100" },
+  });
+  return screen.getByLabelText("Balance as of") as HTMLInputElement;
+}
+
+/**
+ * The flow never asks when the books begin: a known balance's date is the
+ * history start, and it defaults to the reader's own day (ADR021, w4/317).
+ */
+describe("LedgerForm balance as of", () => {
+  it("asks for no date until a balance is known", () => {
+    details();
+    expect(screen.queryByLabelText("Books begin")).toBeNull();
+    expect(screen.queryByLabelText("Balance as of")).toBeNull();
+    knownBalance();
+    expect(screen.getByLabelText("Balance as of")).toBeInTheDocument();
+  });
+
   it.each([
     // 21:30 on the 21st in Los Angeles is already the 22nd in UTC.
     ["America/Los_Angeles", "2026-10-22T04:30:00Z", "2026-10-21"],
@@ -78,29 +98,45 @@ describe("LedgerForm Books begin", () => {
     process.env.TZ = zone;
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date(instant));
-    expect(presetDetails()).toHaveValue(day);
+    details();
+    expect(knownBalance()).toHaveValue(day);
   });
 
-  it("keeps an explicit date through Back and into the setup sent", async () => {
+  it("sends the as-of date as historyStart, kept through Back", async () => {
     process.env.TZ = "America/Los_Angeles";
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-10-22T04:30:00Z"));
     const onSubmit = vi.fn();
-    const input = presetDetails(onSubmit);
-    fireEvent.change(input, { target: { value: "2026-01-01" } });
+    details(onSubmit);
+    fireEvent.change(knownBalance(), { target: { value: "2026-01-01" } });
 
     fireEvent.click(screen.getByRole("button", { name: "Back" }));
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
-    expect(screen.getByLabelText("Books begin")).toHaveValue("2026-01-01");
+    // The amount is re-entered after leaving the step; the date is kept.
+    fireEvent.change(screen.getByTestId("ledger-opening-amount"), {
+      target: { value: "100" },
+    });
+    expect(screen.getByLabelText("Balance as of")).toHaveValue("2026-01-01");
 
-    // Details validates the name before Review appears.
-    fireEvent.click(screen.getByRole("button", { name: "Next" }));
-    fireEvent.click(
-      await screen.findByRole("button", { name: "Create Ledger" }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: "Create Ledger" }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(onSubmit.mock.calls[0][0].setup).toMatchObject({
       historyStart: "2026-01-01",
+      accounts: [{ name: "Assets:Cash", amount: "100" }],
     });
+  });
+
+  it("starts the books on the local day when no balance is known", async () => {
+    process.env.TZ = "America/Los_Angeles";
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-22T04:30:00Z"));
+    const onSubmit = vi.fn();
+    details(onSubmit);
+    fireEvent.click(screen.getByRole("button", { name: "Create Ledger" }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0][0].setup).toMatchObject({
+      historyStart: "2026-10-21",
+    });
+    expect(onSubmit.mock.calls[0][0].setup.accounts).toBeUndefined();
   });
 });

@@ -206,10 +206,6 @@ const ukDashboardPage: Record<string, TranslationEntry> = {
     description:
       "One-tap button offering the browser time zone's currency when it differs from the suggestion (ADR026)",
   },
-  "page.dashboard.setupHistoryStart": {
-    message: "Книги починаються з",
-    description: "Label for the history start date in staged ledger creation",
-  },
   "page.dashboard.setupOpeningAccount": {
     message: "Рахунок відкриття",
     description: "Label for the first account in staged ledger creation",
@@ -222,17 +218,89 @@ const ukDashboardPage: Record<string, TranslationEntry> = {
     message: "Вирішити пізніше",
     description: "Choice to skip the opening balance in staged creation",
   },
-  "page.dashboard.setupReview": {
-    message: "Перевірка",
-    description: "Heading for the review step in staged ledger creation",
-  },
-  "page.dashboard.setupReviewDescription": {
-    message: "Буде створено саме це. Поверніться, щоб щось змінити.",
-    description: "Description for the review step in staged ledger creation",
-  },
   "page.dashboard.setupAccounts": {
     message: "Рахунки",
     description: "Label for the account list in the creation review step",
+  },
+  "page.dashboard.setupPurposeNote": {
+    message:
+      "Компанії, клубу чи грошам, спільним з іншими людьми, потрібна окрема книга.",
+    description:
+      "Note beside the purpose choice in ledger creation: other entities get their own ledger",
+  },
+  "page.dashboard.setupModules": {
+    message: "Також відстежувати в цій книзі",
+    description:
+      "Heading of the personal-only module list in ledger creation (PRFAQ001 A.9)",
+  },
+  "page.dashboard.moduleInvestments": {
+    message: "Інвестиції",
+    description: "Name of the investments module",
+  },
+  "page.dashboard.moduleInvestmentsOutcome": {
+    message: "Активи в брокера, дивіденди, відсотки та прибутки.",
+    description: "One-line outcome of the investments module",
+  },
+  "page.dashboard.moduleRentalProperty": {
+    message: "Нерухомість в оренду",
+    description: "Name of the rental-property module",
+  },
+  "page.dashboard.moduleRentalPropertyOutcome": {
+    message: "Орендна плата, застави та витрати одного об’єкта.",
+    description: "One-line outcome of the rental-property module",
+  },
+  "page.dashboard.moduleSideBusiness": {
+    message: "Підробіток",
+    description: "Name of the side-business module",
+  },
+  "page.dashboard.moduleSideBusinessOutcome": {
+    message:
+      "Доходи від клієнтів і ділові витрати з окремим діловим банківським рахунком.",
+    description: "One-line outcome of the side-business module",
+  },
+  "page.dashboard.setupPropertyName": {
+    message: "Назва об’єкта",
+    description: "Label for the rental property's account name",
+  },
+  "page.dashboard.setupPropertyNameHint": {
+    message: "Використовується в назвах рахунків, наприклад {example}.",
+    description:
+      "Hint under the rental property name field - interpolation: {example} (an example account name)",
+  },
+  "page.dashboard.setupPropertyNameInvalid": {
+    message:
+      "Почніть із великої латинської літери чи цифри, далі використовуйте лише літери, цифри та дефіси (до 64).",
+    description: "Validation message for an invalid rental property name",
+  },
+  "page.dashboard.setupBalanceAsOf": {
+    message: "Залишок на дату",
+    description:
+      "Label for the date of a known opening balance, which starts the books",
+  },
+  "page.dashboard.setupSummaryAccounts": {
+    message: "{count} рахунку",
+    description:
+      "Account count in the summary beside Create ledger - interpolation: {count} (base key for pluralization)",
+  },
+  "page.dashboard.setupSummaryAccounts_one": {
+    message: "{count} рахунок",
+    description:
+      "Account count in the summary beside Create ledger - interpolation: {count} - one form",
+  },
+  "page.dashboard.setupSummaryAccounts_few": {
+    message: "{count} рахунки",
+    description:
+      "Account count in the summary beside Create ledger - interpolation: {count} - few form",
+  },
+  "page.dashboard.setupSummaryAccounts_many": {
+    message: "{count} рахунків",
+    description:
+      "Account count in the summary beside Create ledger - interpolation: {count} - many form",
+  },
+  "page.dashboard.setupSummaryAccounts_other": {
+    message: "{count} рахунку",
+    description:
+      "Account count in the summary beside Create ledger - interpolation: {count} - other form",
   },
   "page.dashboard.setupStep": {
     message: "Крок {step} з {total}",

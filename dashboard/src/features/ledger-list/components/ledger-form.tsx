@@ -13,9 +13,10 @@ import {
   FormMessage,
   FormDescription,
 } from "@/common/components/ui/form";
-import { AlertTriangle, BookOpen, Files, Layers } from "lucide-react";
+import { AlertTriangle, Files } from "lucide-react";
 import {
   LedgerOpeningState,
+  LedgerSetupPreset,
   LedgerTemplate,
   PreviewLedgerSetupDocument,
   UpdateDefaultCurrencyDocument,
@@ -30,6 +31,12 @@ import { useQuery, useLazyQuery, useMutation } from "@apollo/client/react";
 import { ListLedgersDocument } from "@/graphql/definitions";
 import { slugifyLedgerName } from "@/common/lib/beancount/ledger-name";
 import { SETUP_PRESETS } from "../lib/setup-presets";
+import {
+  DEFAULT_PROPERTY_NAME,
+  PROPERTY_NAME_PATTERN,
+  SETUP_MODULES,
+  moduleAccounts,
+} from "../lib/setup-modules";
 import {
   browserCurrencyInputs,
   currencyToSave,
@@ -97,6 +104,12 @@ const createLedgerFormSchema = (t: (key: string) => string) =>
     currency: z.string().optional(),
     historyStart: z.string().optional(),
     openingAccount: z.string().optional(),
+    propertyName: z
+      .string()
+      .optional()
+      .refine((val) => !val?.trim() || PROPERTY_NAME_PATTERN.test(val.trim()), {
+        message: t("page.dashboard.setupPropertyNameInvalid"),
+      }),
     openingAmount: z
       .string()
       .optional()
@@ -120,17 +133,22 @@ interface LedgerFormProps {
   hideLimitIndicator?: boolean;
 }
 
-type StartKind = "starter" | "sample" | "preset";
+/** New books from a purpose (a setup preset), or the fictional example. */
+type StartKind = "preset" | "sample";
 
 const DRAFT_KEY = "ledger-create-draft";
+/** Purpose, then details: there is no review page (ADR021). */
+const LAST_STEP = 1;
 
 interface CreateDraft {
   step: number;
   /** The customer chose the currency in this flow: never re-suggest it. */
   currencyChosen?: boolean;
-  startKind: StartKind;
+  startKind: StartKind | "starter";
   presetId: string | null;
+  modules?: string[];
   requestId: string;
+  /** Form values minus the opening amount: raw balances stay in memory. */
   values: Record<string, unknown>;
 }
 
@@ -152,12 +170,14 @@ function newRequestId(): string {
 /**
  * Ledger form component for creating and editing ledgers.
  *
- * Creation is a staged flow (ADR021): choose how to start, fill in details
- * with a usable default at every step, then review exactly what the server
- * will create before confirming. A defaults-only user answers nothing: the
- * name, currency, and date arrive prefilled. The draft and the creation
- * requestId persist in session storage, so leaving and returning — or a
- * failed attempt — resumes instead of duplicating the ledger. Editing an
+ * Creation is two steps (ADR021, revised 2026-10-27): choose a purpose —
+ * personal preselected, with the personal-only modules — then fill in the
+ * details and create, with a summary of what will be created beside the
+ * button instead of a review page. A defaults-only user answers nothing:
+ * Next, then Create ledger. The flow never asks when the books begin: a known
+ * opening balance's "as of" date is the history start. The draft and the
+ * creation requestId persist in session storage, so leaving and returning —
+ * or a failed attempt — resumes instead of duplicating the ledger. Editing an
  * existing ledger keeps the single-step form it has always had.
  */
 export function LedgerForm({
@@ -177,13 +197,16 @@ export function LedgerForm({
   const [draft] = useState<CreateDraft | null>(() =>
     isCreate ? readDraft() : null,
   );
-  const [step, setStep] = useState(draft?.step ?? 0);
+  const [step, setStep] = useState(Math.min(draft?.step ?? 0, LAST_STEP));
+  // A draft from the earlier three-step flow may name the retired Starter
+  // kind; the personal purpose is what it now means.
   const [startKind, setStartKind] = useState<StartKind>(
-    draft?.startKind ?? "starter",
+    draft?.startKind === "sample" ? "sample" : "preset",
   );
   const [presetId, setPresetId] = useState<string | null>(
     draft?.presetId ?? SETUP_PRESETS[0].id,
   );
+  const [modules, setModules] = useState<string[]>(draft?.modules ?? []);
   const requestIdRef = useRef(draft?.requestId ?? newRequestId());
   // ADR026: resolved once the profile is known; an explicit selection in this
   // flow (typed, a tapped candidate, or a resumed draft's) always wins.
@@ -218,7 +241,8 @@ export function LedgerForm({
       // tomorrow in a western evening (w4/317).
       historyStart: (draft?.values?.historyStart as string) || todayIsoDate(),
       openingAccount: (draft?.values?.openingAccount as string) || "",
-      openingAmount: (draft?.values?.openingAmount as string) || "",
+      openingAmount: "",
+      propertyName: (draft?.values?.propertyName as string) || "",
     },
   });
 
@@ -244,8 +268,12 @@ export function LedgerForm({
     }
   }, [isCreate, currencyChosen, suggestion.currency, form]);
 
-  // Persist the draft so abandoning and returning resumes (ADR021).
+  // Persist the draft so abandoning and returning resumes (ADR021). The
+  // opening amount is re-entered after an interruption: a raw balance is
+  // never written to browser storage.
   const watchedValues = form.watch();
+  const draftValues = JSON.stringify({ ...watchedValues, openingAmount: "" });
+  const draftModules = JSON.stringify(modules);
   useEffect(() => {
     if (!isCreate) return;
     try {
@@ -254,21 +282,30 @@ export function LedgerForm({
         currencyChosen,
         startKind,
         presetId,
+        modules: JSON.parse(draftModules) as string[],
         requestId: requestIdRef.current,
-        values: watchedValues as Record<string, unknown>,
+        values: JSON.parse(draftValues) as Record<string, unknown>,
       };
       sessionStorage.setItem(DRAFT_KEY, JSON.stringify(next));
     } catch {
       // Session storage unavailable: the flow still works in-memory.
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isCreate, step, startKind, presetId, JSON.stringify(watchedValues)]);
+  }, [
+    isCreate,
+    step,
+    currencyChosen,
+    startKind,
+    presetId,
+    draftModules,
+    draftValues,
+  ]);
 
   // Watch fields for dynamic UI updates
   const isPrivate = form.watch("private");
   const ledgerName = form.watch("name");
   const openingAccount = form.watch("openingAccount");
   const openingAmount = form.watch("openingAmount");
+  const propertyName = form.watch("propertyName") ?? "";
 
   // Calculate slugified name for preview
   const slugifiedName = useMemo(() => {
@@ -284,13 +321,16 @@ export function LedgerForm({
   }, [ledgerName, slugifiedName]);
 
   const preset = SETUP_PRESETS.find((entry) => entry.id === presetId);
+  const isPersonal = preset?.id === LedgerSetupPreset.Personal;
   const moneyAccounts =
     preset?.accounts.filter((account) => account.money) ?? [];
+  const hasKnownBalance = Boolean(openingAccount && openingAmount?.trim());
 
   // An opening balance belongs to one of the preset's money accounts. A
   // preset change drops an account the new preset does not offer, with its
   // amount, so no hidden account from the earlier preset is sent (w4/316).
   const choosePreset = (id: string) => {
+    setStartKind("preset");
     setPresetId(id);
     const account = form.getValues("openingAccount");
     const offered = SETUP_PRESETS.find((entry) => entry.id === id)?.accounts;
@@ -300,24 +340,46 @@ export function LedgerForm({
     }
   };
 
+  const toggleModule = (id: string, on: boolean) =>
+    setModules((current) =>
+      on ? [...current, id] : current.filter((entry) => entry !== id),
+    );
+
   const buildSetup = (data: LedgerFormData): LedgerSetupInput | undefined => {
     if (!preset) return undefined;
     const amount = data.openingAmount?.trim();
+    const known = Boolean(amount && data.openingAccount);
+    // Modules belong to personal books only; another purpose sends none.
+    const chosen = isPersonal
+      ? SETUP_MODULES.filter((module) => modules.includes(module.id))
+      : [];
     return {
       preset: preset.id,
       title: data.name,
       operatingCurrency: (data.currency || "USD").toUpperCase(),
-      historyStart: data.historyStart || undefined,
-      accounts:
-        amount && data.openingAccount
-          ? [
-              {
-                name: data.openingAccount,
-                openingState: LedgerOpeningState.Known,
-                amount,
-              },
-            ]
-          : undefined,
+      // A known balance's "as of" date is the start boundary; without one
+      // the books start today on the customer's own calendar, not the
+      // server's UTC day (w4/317).
+      historyStart: known
+        ? data.historyStart || todayIsoDate()
+        : todayIsoDate(),
+      modules: chosen.length
+        ? chosen.map((module) => ({
+            id: module.id,
+            ...(module.takesPropertyName && data.propertyName?.trim()
+              ? { propertyName: data.propertyName.trim() }
+              : {}),
+          }))
+        : undefined,
+      accounts: known
+        ? [
+            {
+              name: data.openingAccount!,
+              openingState: LedgerOpeningState.Known,
+              amount: amount!,
+            },
+          ]
+        : undefined,
     };
   };
 
@@ -326,13 +388,20 @@ export function LedgerForm({
     { data: previewData, loading: previewLoading, error: previewError },
   ] = useLazyQuery(PreviewLedgerSetupDocument);
 
+  // The summary's account list is the builder's own answer for exactly what
+  // would be sent, refreshed as the details change.
+  const previewKey = JSON.stringify(
+    isCreate && step === LAST_STEP && startKind === "preset"
+      ? buildSetup(form.getValues())
+      : null,
+  );
   useEffect(() => {
-    if (isCreate && step === 2 && startKind === "preset") {
-      const setup = buildSetup(form.getValues());
-      if (setup) void runPreview({ variables: { setup } });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isCreate, step, startKind]);
+    if (previewKey === "null") return;
+    const timer = setTimeout(() => {
+      void runPreview({ variables: { setup: JSON.parse(previewKey) } });
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [previewKey, runPreview]);
 
   const handleSubmit = async (data: LedgerFormData) => {
     // Slugify the name before sending to API to match backend validation
@@ -376,43 +445,36 @@ export function LedgerForm({
   };
 
   const nextStep = async () => {
-    if (step === 1) {
-      const valid = await form.trigger("name");
+    if (step === 0 && isPersonal && modules.length) {
+      const valid = await form.trigger("propertyName");
       if (!valid) return;
     }
-    setStep((current) => Math.min(current + 1, 2));
+    setStep((current) => Math.min(current + 1, LAST_STEP));
   };
 
-  const startOptions = [
-    {
-      value: "starter" as StartKind,
-      title: t("page.dashboard.starterTemplate"),
-      description: t("page.dashboard.starterTemplateDescription"),
-      Icon: BookOpen,
-    },
-    {
-      value: "preset" as StartKind,
-      title: t("page.dashboard.ledgerTemplate"),
-      // A first-step hint; setupReviewDescription belongs to Review (w4/321).
-      description: t("page.dashboard.ledgerTemplateDescription"),
-      Icon: Layers,
-    },
-  ];
-  const demoOption = {
-    value: "sample" as StartKind,
-    title: t("page.dashboard.sampleTemplate"),
-    description: t("page.dashboard.sampleTemplateDescription"),
-    Icon: Files,
-  };
+  const previewAccounts = previewData?.previewLedgerSetup?.accounts;
+  const summaryParts = [
+    isPrivate ? t("page.dashboard.private") : t("page.dashboard.public"),
+    ...(startKind === "preset"
+      ? [
+          (form.getValues("currency") || "USD").toUpperCase(),
+          previewAccounts
+            ? t("page.dashboard.setupSummaryAccounts", {
+                count: previewAccounts.length,
+              })
+            : null,
+        ]
+      : [t("page.dashboard.sampleTemplate")]),
+  ].filter(Boolean);
 
   return (
     <>
       <Form {...form}>
         <form
           onSubmit={(event) => {
-            // Only Review's Create Ledger confirms a new ledger. A submit
-            // from an earlier step, such as Enter in a field, advances.
-            if (isCreate && step < 2) {
+            // Only Create ledger, on the last step, creates. A submit from
+            // the purpose step, such as Enter on a choice, advances.
+            if (isCreate && step < LAST_STEP) {
               event.preventDefault();
               void nextStep();
               return;
@@ -435,115 +497,175 @@ export function LedgerForm({
               className="text-sm text-muted-foreground"
               data-testid="ledger-create-step"
             >
-              {t("page.dashboard.setupStep", { step: step + 1, total: 3 })}
+              {t("page.dashboard.setupStep", {
+                step: step + 1,
+                total: LAST_STEP + 1,
+              })}
             </p>
           ) : null}
 
-          {(!isCreate || step === 0) && isCreate ? (
+          {isCreate && step === 0 ? (
             <div className="space-y-4">
               <div
                 className="grid gap-3 sm:grid-cols-2"
                 role="radiogroup"
                 aria-label={t("page.dashboard.ledgerTemplate")}
+                data-testid="setup-preset-grid"
               >
-                {startOptions.map(({ value, title, description, Icon }) => (
+                {SETUP_PRESETS.map((entry) => (
                   <label
-                    key={value}
+                    key={entry.id}
                     className={cn(
-                      choiceCardClass(startKind === value),
+                      choiceCardClass(
+                        startKind === "preset" && presetId === entry.id,
+                      ),
                       isLoading && "cursor-not-allowed opacity-60",
                     )}
                   >
                     <input
                       type="radio"
-                      name="start-kind"
-                      value={value}
-                      checked={startKind === value}
-                      onChange={() => setStartKind(value)}
+                      name="setup-preset"
+                      value={entry.id}
+                      checked={startKind === "preset" && presetId === entry.id}
+                      onChange={() => choosePreset(entry.id)}
                       disabled={isLoading}
                       className="sr-only"
                     />
-                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                      <Icon className="size-4" aria-hidden="true" />
-                    </span>
                     <span className="space-y-1">
                       <span className="block text-sm font-medium text-foreground">
-                        {title}
+                        {t(entry.titleKey)}
                       </span>
                       <span className="block text-xs leading-relaxed text-muted-foreground">
-                        {description}
+                        {t(entry.outcomeKey)}
                       </span>
                     </span>
                   </label>
                 ))}
               </div>
+              <p
+                className="text-xs text-muted-foreground"
+                data-testid="setup-separate-ledger-note"
+              >
+                {t("page.dashboard.setupPurposeNote")}
+              </p>
+
+              {startKind === "preset" && isPersonal ? (
+                <fieldset
+                  className="space-y-2 rounded-lg border border-input p-3"
+                  data-testid="setup-modules"
+                >
+                  <legend className="px-1 text-sm font-medium text-foreground">
+                    {t("page.dashboard.setupModules")}
+                  </legend>
+                  {SETUP_MODULES.map((module) => {
+                    const checked = modules.includes(module.id);
+                    return (
+                      <div key={module.id} className="space-y-2">
+                        <label className="flex cursor-pointer items-start gap-3">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={(event) =>
+                              toggleModule(module.id, event.target.checked)
+                            }
+                            disabled={isLoading}
+                            className="mt-1"
+                            data-testid={`setup-module-${module.catalogId}`}
+                          />
+                          <span className="space-y-1">
+                            <span className="block text-sm text-foreground">
+                              {t(module.titleKey)}
+                            </span>
+                            <span className="block text-xs text-muted-foreground">
+                              {t(module.outcomeKey)}
+                            </span>
+                          </span>
+                        </label>
+                        {checked ? (
+                          <div className="ms-7 space-y-2">
+                            {module.takesPropertyName ? (
+                              <FormField
+                                control={form.control}
+                                name="propertyName"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-foreground">
+                                      {t("page.dashboard.setupPropertyName")}
+                                    </FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...field}
+                                        placeholder={DEFAULT_PROPERTY_NAME}
+                                        disabled={isLoading}
+                                        data-testid="setup-property-name"
+                                      />
+                                    </FormControl>
+                                    <FormDescription className="text-xs">
+                                      {t(
+                                        "page.dashboard.setupPropertyNameHint",
+                                      )}
+                                    </FormDescription>
+                                    <FormMessage className="text-destructive" />
+                                  </FormItem>
+                                )}
+                              />
+                            ) : null}
+                            <ul
+                              className="flex flex-wrap gap-1"
+                              data-testid={`setup-module-accounts-${module.catalogId}`}
+                            >
+                              {moduleAccounts(module, propertyName).map(
+                                (account) => (
+                                  <li key={account}>
+                                    <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
+                                      {account}
+                                    </code>
+                                  </li>
+                                ),
+                              )}
+                            </ul>
+                          </div>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </fieldset>
+              ) : null}
+
               <div className="border-t border-border pt-3">
                 <label
                   className={cn(
-                    choiceCardClass(startKind === demoOption.value),
+                    choiceCardClass(startKind === "sample"),
                     isLoading && "cursor-not-allowed opacity-60",
                   )}
                   data-testid="setup-demo-option"
                 >
                   <input
                     type="radio"
-                    name="start-kind"
-                    value={demoOption.value}
-                    checked={startKind === demoOption.value}
-                    onChange={() => setStartKind(demoOption.value)}
+                    name="setup-preset"
+                    value="sample"
+                    checked={startKind === "sample"}
+                    onChange={() => setStartKind("sample")}
                     disabled={isLoading}
                     className="sr-only"
                   />
                   <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                    <demoOption.Icon className="size-4" aria-hidden="true" />
+                    <Files className="size-4" aria-hidden="true" />
                   </span>
                   <span className="space-y-1">
                     <span className="block text-sm font-medium text-foreground">
-                      {demoOption.title}
+                      {t("page.dashboard.sampleTemplate")}
                     </span>
                     <span className="block text-xs leading-relaxed text-muted-foreground">
-                      {demoOption.description}
+                      {t("page.dashboard.sampleTemplateDescription")}
                     </span>
                   </span>
                 </label>
               </div>
-              {startKind === "preset" ? (
-                <div
-                  className="grid gap-3 sm:grid-cols-2"
-                  role="radiogroup"
-                  aria-label={t("page.dashboard.ledgerTemplate")}
-                  data-testid="setup-preset-grid"
-                >
-                  {SETUP_PRESETS.map((entry) => (
-                    <label
-                      key={entry.id}
-                      className={choiceCardClass(presetId === entry.id)}
-                    >
-                      <input
-                        type="radio"
-                        name="setup-preset"
-                        value={entry.id}
-                        checked={presetId === entry.id}
-                        onChange={() => choosePreset(entry.id)}
-                        disabled={isLoading}
-                        className="sr-only"
-                      />
-                      <span className="space-y-1">
-                        <span className="block text-sm font-medium text-foreground">
-                          {t(entry.titleKey)}
-                        </span>
-                        <span className="block text-xs leading-relaxed text-muted-foreground">
-                          {t(entry.outcomeKey)}
-                        </span>
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              ) : null}
             </div>
           ) : null}
 
-          {(!isCreate || step === 1) && (
+          {(!isCreate || step === LAST_STEP) && (
             <div className="space-y-6">
               <FormField
                 control={form.control}
@@ -632,21 +754,6 @@ export function LedgerForm({
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={form.control}
-                    name="historyStart"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-foreground">
-                          {t("page.dashboard.setupHistoryStart")}
-                        </FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} disabled={isLoading} />
-                        </FormControl>
-                        <FormMessage className="text-destructive" />
-                      </FormItem>
-                    )}
-                  />
                   {moneyAccounts.length > 0 ? (
                     <>
                       <FormField
@@ -710,6 +817,30 @@ export function LedgerForm({
                           </FormItem>
                         )}
                       />
+                      {/* Only a known balance has a date: the balance before
+                          that day's transactions, which starts the books. */}
+                      {hasKnownBalance ? (
+                        <FormField
+                          control={form.control}
+                          name="historyStart"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-foreground">
+                                {t("page.dashboard.setupBalanceAsOf")}
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="date"
+                                  {...field}
+                                  disabled={isLoading}
+                                  data-testid="ledger-balance-as-of"
+                                />
+                              </FormControl>
+                              <FormMessage className="text-destructive" />
+                            </FormItem>
+                          )}
+                        />
+                      ) : null}
                     </>
                   ) : null}
                 </div>
@@ -741,6 +872,9 @@ export function LedgerForm({
                               ? "text-destructive"
                               : "text-muted-foreground"
                           }`}
+                          data-testid={
+                            isPrivate ? undefined : "ledger-public-warning"
+                          }
                         >
                           {!isPrivate && (
                             <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
@@ -766,118 +900,39 @@ export function LedgerForm({
             </div>
           )}
 
-          {isCreate && step === 2 && (
-            <div className="space-y-4" data-testid="ledger-create-review">
-              <div>
-                <h3 className="text-sm font-medium text-foreground">
-                  {t("page.dashboard.setupReview")}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {t("page.dashboard.setupReviewDescription")}
-                </p>
-              </div>
-              <dl className="grid gap-2 text-sm">
-                <div className="flex justify-between">
-                  <dt className="text-muted-foreground">
-                    {t("page.dashboard.ledgerName")}
-                  </dt>
-                  <dd>{slugifiedName}</dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-muted-foreground">
-                    {t("page.dashboard.ledgerTemplate")}
-                  </dt>
-                  {/* The chosen kind, not the preset kept for switching back
-                      to it: a retained preset is not what Starter or Sample
-                      creates (w4/315). */}
-                  <dd>
-                    {startKind === "preset" && preset
-                      ? t(preset.titleKey)
-                      : startKind === "sample"
-                        ? t("page.dashboard.sampleTemplate")
-                        : t("page.dashboard.starterTemplate")}
-                  </dd>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <dt className="text-muted-foreground">
-                    {isPrivate
-                      ? t("page.dashboard.private")
-                      : t("page.dashboard.public")}
-                  </dt>
-                  <dd className="text-end">
-                    {isPrivate
-                      ? t("page.dashboard.privateAccess")
-                      : t("page.dashboard.publicWarning")}
-                  </dd>
-                </div>
-                {startKind === "preset" && moneyAccounts.length > 0 ? (
-                  <div className="flex justify-between gap-4">
-                    <dt className="text-muted-foreground">
-                      {t("page.dashboard.setupOpeningAccount")}
-                    </dt>
-                    <dd className="text-end">
-                      {openingAccount
-                        ? [
-                            openingAccount,
-                            openingAmount?.trim() &&
-                              `${openingAmount.trim()} ${(form.getValues("currency") || "USD").toUpperCase()}`,
-                          ]
-                            .filter(Boolean)
-                            .join(" · ")
-                        : t("page.dashboard.setupOpeningNone")}
-                    </dd>
-                  </div>
+          <div className="flex flex-wrap items-center justify-end gap-3 pt-4 border-t border-border">
+            {isCreate && step === LAST_STEP ? (
+              <details
+                className="me-auto min-w-0 text-sm text-muted-foreground"
+                data-testid="ledger-create-summary"
+              >
+                <summary className="cursor-pointer">
+                  {summaryParts.join(" · ")}
+                </summary>
+                {startKind === "preset" ? (
+                  previewLoading && !previewAccounts ? (
+                    <p className="mt-2">{t("common.loading")}</p>
+                  ) : previewError ? (
+                    <p className="mt-2 text-destructive">
+                      {previewError.message}
+                    </p>
+                  ) : previewAccounts ? (
+                    <ul
+                      className="mt-2 grid gap-1 sm:grid-cols-2"
+                      aria-label={t("page.dashboard.setupAccounts")}
+                    >
+                      {previewAccounts.map((account) => (
+                        <li key={account}>
+                          <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
+                            {account}
+                          </code>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null
                 ) : null}
-              </dl>
-              {startKind === "preset" ? (
-                previewLoading ? (
-                  <p className="text-sm text-muted-foreground">
-                    {t("common.saving")}
-                  </p>
-                ) : previewError ? (
-                  <p className="text-sm text-destructive">
-                    {previewError.message}
-                  </p>
-                ) : previewData?.previewLedgerSetup ? (
-                  <div className="space-y-3">
-                    <div>
-                      <h4 className="text-sm font-medium text-foreground">
-                        {t("page.dashboard.setupAccounts")}
-                      </h4>
-                      <ul className="mt-1 grid gap-1 text-sm text-muted-foreground sm:grid-cols-2">
-                        {previewData.previewLedgerSetup.accounts.map(
-                          (account) => (
-                            <li key={account}>
-                              <code className="text-xs bg-muted px-1.5 py-0.5 rounded">
-                                {account}
-                              </code>
-                            </li>
-                          ),
-                        )}
-                      </ul>
-                    </div>
-                    {Object.entries(
-                      previewData.previewLedgerSetup.files as Record<
-                        string,
-                        string
-                      >,
-                    ).map(([name, content]) => (
-                      <div key={name}>
-                        <h4 className="text-sm font-medium text-foreground">
-                          {name}
-                        </h4>
-                        <pre className="mt-1 max-h-64 overflow-auto rounded-md bg-muted p-3 text-xs">
-                          {content}
-                        </pre>
-                      </div>
-                    ))}
-                  </div>
-                ) : null
-              ) : null}
-            </div>
-          )}
-
-          <div className="flex justify-end gap-3 pt-4 border-t border-border">
+              </details>
+            ) : null}
             {onCancel && step === 0 && (
               <Button
                 type="button"
@@ -901,8 +956,8 @@ export function LedgerForm({
             )}
             {/* Distinct keys: Next must not become the submit button while
                 its own click is still being handled, or that click
-                creates the ledger before Review is shown (w4/314). */}
-            {isCreate && step < 2 ? (
+                creates the ledger before the details are shown (w4/314). */}
+            {isCreate && step < LAST_STEP ? (
               <Button
                 key="next"
                 type="button"

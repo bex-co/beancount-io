@@ -190,10 +190,6 @@ const enDashboardPage: Record<string, TranslationEntry> = {
     description:
       "One-tap button offering the browser time zone's currency when it differs from the suggestion (ADR026)",
   },
-  "page.dashboard.setupHistoryStart": {
-    message: "Books begin",
-    description: "Label for the history start date in staged ledger creation",
-  },
   "page.dashboard.setupOpeningAccount": {
     message: "Opening account",
     description: "Label for the first account in staged ledger creation",
@@ -206,18 +202,79 @@ const enDashboardPage: Record<string, TranslationEntry> = {
     message: "Decide later",
     description: "Choice to skip the opening balance in staged creation",
   },
-  "page.dashboard.setupReview": {
-    message: "Review",
-    description: "Heading for the review step in staged ledger creation",
-  },
-  "page.dashboard.setupReviewDescription": {
-    message:
-      "This is exactly what will be created. Go back to change anything.",
-    description: "Description for the review step in staged ledger creation",
-  },
   "page.dashboard.setupAccounts": {
     message: "Accounts",
     description: "Label for the account list in the creation review step",
+  },
+  "page.dashboard.setupPurposeNote": {
+    message:
+      "A company, a club, or money shared with other people belongs in its own ledger.",
+    description:
+      "Note beside the purpose choice in ledger creation: other entities get their own ledger",
+  },
+  "page.dashboard.setupModules": {
+    message: "Also track in this ledger",
+    description:
+      "Heading of the personal-only module list in ledger creation (PRFAQ001 A.9)",
+  },
+  "page.dashboard.moduleInvestments": {
+    message: "Investments",
+    description: "Name of the investments module",
+  },
+  "page.dashboard.moduleInvestmentsOutcome": {
+    message: "Brokerage holdings, dividends, interest, and gains.",
+    description: "One-line outcome of the investments module",
+  },
+  "page.dashboard.moduleRentalProperty": {
+    message: "A rental property",
+    description: "Name of the rental-property module",
+  },
+  "page.dashboard.moduleRentalPropertyOutcome": {
+    message: "Rent, deposits, and costs for one property.",
+    description: "One-line outcome of the rental-property module",
+  },
+  "page.dashboard.moduleSideBusiness": {
+    message: "A side business",
+    description: "Name of the side-business module",
+  },
+  "page.dashboard.moduleSideBusinessOutcome": {
+    message:
+      "Client income and business costs, with a separate business bank account.",
+    description: "One-line outcome of the side-business module",
+  },
+  "page.dashboard.setupPropertyName": {
+    message: "Property name",
+    description: "Label for the rental property's account name",
+  },
+  "page.dashboard.setupPropertyNameHint": {
+    message: "Used in account names, such as {example}.",
+    description:
+      "Hint under the rental property name field - interpolation: {example} (an example account name)",
+  },
+  "page.dashboard.setupPropertyNameInvalid": {
+    message:
+      "Start with a capital letter or a digit, then use only letters, digits, and hyphens (up to 64).",
+    description: "Validation message for an invalid rental property name",
+  },
+  "page.dashboard.setupBalanceAsOf": {
+    message: "Balance as of",
+    description:
+      "Label for the date of a known opening balance, which starts the books",
+  },
+  "page.dashboard.setupSummaryAccounts": {
+    message: "{count} accounts",
+    description:
+      "Account count in the summary beside Create ledger - interpolation: {count} (base key for pluralization)",
+  },
+  "page.dashboard.setupSummaryAccounts_one": {
+    message: "{count} account",
+    description:
+      "Account count in the summary beside Create ledger - interpolation: {count} - one form",
+  },
+  "page.dashboard.setupSummaryAccounts_other": {
+    message: "{count} accounts",
+    description:
+      "Account count in the summary beside Create ledger - interpolation: {count} - other form",
   },
   "page.dashboard.setupStep": {
     message: "Step {step} of {total}",

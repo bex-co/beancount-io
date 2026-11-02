@@ -1,6 +1,6 @@
 # w3 · m60 — Ledger creation: the two-step flow with modules and the ADR026 currency suggestion
 
-**Worker:** worker3 **Goal:** the dashboard and native creation flows match the 2026-10-27 design — purpose, then details — offer the personal modules, drop the history-start question, and suggest a currency from the saved preference, region, and time zone with its source shown. **Status:** in progress (t001–t002 done)
+**Worker:** worker3 **Goal:** the dashboard and native creation flows match the 2026-10-27 design — purpose, then details — offer the personal modules, drop the history-start question, and suggest a currency from the saved preference, region, and time zone with its source shown. **Status:** in progress (t001–t003 done)
 
 ## Tasks (in order)
 
@@ -8,7 +8,7 @@
 | --- | --- | --- | --- |
 | t001 | Add the `defaultCurrency` account field on REST, GraphQL, and MCP — **DONE** | 90m | w3/m59/t008 |
 | t002 | Resolve the dashboard currency suggestion with its source — **DONE** | 90m | t001 |
-| t003 | Rework the dashboard flow to two steps with modules | 180m | t002 |
+| t003 | Rework the dashboard flow to two steps with modules — **DONE** | 180m | t002 |
 | t004 | Resolve the native currency suggestion with its source | 60m | t001 |
 | t005 | Rework the native flow to two steps with modules | 180m | t004 |
 | t006 | Adoption surface | 30m | t003, t005 |

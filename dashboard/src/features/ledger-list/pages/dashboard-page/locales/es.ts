@@ -207,10 +207,6 @@ const esDashboardPage: Record<string, TranslationEntry> = {
     description:
       "One-tap button offering the browser time zone's currency when it differs from the suggestion (ADR026)",
   },
-  "page.dashboard.setupHistoryStart": {
-    message: "Los libros comienzan el",
-    description: "Label for the history start date in staged ledger creation",
-  },
   "page.dashboard.setupOpeningAccount": {
     message: "Cuenta de apertura",
     description: "Label for the first account in staged ledger creation",
@@ -223,18 +219,84 @@ const esDashboardPage: Record<string, TranslationEntry> = {
     message: "Decidir más tarde",
     description: "Choice to skip the opening balance in staged creation",
   },
-  "page.dashboard.setupReview": {
-    message: "Revisar",
-    description: "Heading for the review step in staged ledger creation",
-  },
-  "page.dashboard.setupReviewDescription": {
-    message:
-      "Esto es exactamente lo que se creará. Vuelva atrás para cambiar algo.",
-    description: "Description for the review step in staged ledger creation",
-  },
   "page.dashboard.setupAccounts": {
     message: "Cuentas",
     description: "Label for the account list in the creation review step",
+  },
+  "page.dashboard.setupPurposeNote": {
+    message:
+      "Una empresa, un club o el dinero compartido con otras personas van en su propio libro.",
+    description:
+      "Note beside the purpose choice in ledger creation: other entities get their own ledger",
+  },
+  "page.dashboard.setupModules": {
+    message: "Registrar también en este libro",
+    description:
+      "Heading of the personal-only module list in ledger creation (PRFAQ001 A.9)",
+  },
+  "page.dashboard.moduleInvestments": {
+    message: "Inversiones",
+    description: "Name of the investments module",
+  },
+  "page.dashboard.moduleInvestmentsOutcome": {
+    message: "Valores en bróker, dividendos, intereses y ganancias.",
+    description: "One-line outcome of the investments module",
+  },
+  "page.dashboard.moduleRentalProperty": {
+    message: "Un inmueble en alquiler",
+    description: "Name of the rental-property module",
+  },
+  "page.dashboard.moduleRentalPropertyOutcome": {
+    message: "Alquiler, depósitos y gastos de un inmueble.",
+    description: "One-line outcome of the rental-property module",
+  },
+  "page.dashboard.moduleSideBusiness": {
+    message: "Una actividad secundaria",
+    description: "Name of the side-business module",
+  },
+  "page.dashboard.moduleSideBusinessOutcome": {
+    message:
+      "Ingresos de clientes y gastos del negocio, con una cuenta bancaria del negocio aparte.",
+    description: "One-line outcome of the side-business module",
+  },
+  "page.dashboard.setupPropertyName": {
+    message: "Nombre del inmueble",
+    description: "Label for the rental property's account name",
+  },
+  "page.dashboard.setupPropertyNameHint": {
+    message: "Se usa en los nombres de las cuentas, por ejemplo {example}.",
+    description:
+      "Hint under the rental property name field - interpolation: {example} (an example account name)",
+  },
+  "page.dashboard.setupPropertyNameInvalid": {
+    message:
+      "Empiece con una mayúscula o un dígito y use solo letras, dígitos y guiones (hasta 64).",
+    description: "Validation message for an invalid rental property name",
+  },
+  "page.dashboard.setupBalanceAsOf": {
+    message: "Saldo a fecha de",
+    description:
+      "Label for the date of a known opening balance, which starts the books",
+  },
+  "page.dashboard.setupSummaryAccounts": {
+    message: "{count} cuentas",
+    description:
+      "Account count in the summary beside Create ledger - interpolation: {count} (base key for pluralization)",
+  },
+  "page.dashboard.setupSummaryAccounts_one": {
+    message: "{count} cuenta",
+    description:
+      "Account count in the summary beside Create ledger - interpolation: {count} - one form",
+  },
+  "page.dashboard.setupSummaryAccounts_many": {
+    message: "{count} cuentas",
+    description:
+      "Account count in the summary beside Create ledger - interpolation: {count} - many form",
+  },
+  "page.dashboard.setupSummaryAccounts_other": {
+    message: "{count} cuentas",
+    description:
+      "Account count in the summary beside Create ledger - interpolation: {count} - other form",
   },
   "page.dashboard.setupStep": {
     message: "Paso {step} de {total}",

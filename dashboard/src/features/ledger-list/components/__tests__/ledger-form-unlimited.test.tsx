@@ -60,7 +60,7 @@ describe("LedgerForm ledger allowance", () => {
   beforeEach(() => sessionStorage.clear());
 
   it.each([0, 3])(
-    "advances to review with %i owned ledgers under an unlimited allowance",
+    "advances to details with %i owned ledgers under an unlimited allowance",
     async (used) => {
       const user = userEvent.setup();
       const onSubmit = vi.fn();
@@ -73,8 +73,6 @@ describe("LedgerForm ledger allowance", () => {
 
       await user.click(next());
       expect(screen.getByLabelText("Ledger Name")).toBeInTheDocument();
-      await user.click(next());
-      expect(screen.getByTestId("ledger-create-review")).toBeInTheDocument();
       expect(
         screen.getByRole("button", { name: "Create Ledger" }),
       ).toBeEnabled();

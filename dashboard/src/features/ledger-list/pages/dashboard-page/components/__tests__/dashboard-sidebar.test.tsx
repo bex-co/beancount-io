@@ -416,12 +416,11 @@ describe("DashboardSidebar", () => {
       const user = userEvent.setup();
       await user.click(screen.getByTestId("create-ledger-btn"));
 
-      // Staged flow: start (defaults accepted) -> details -> review -> create.
+      // Two steps: purpose (personal accepted) -> details and create.
       await user.click(screen.getByRole("button", { name: "Next" }));
       const nameInput = await screen.findByLabelText("Ledger Name");
       await user.tripleClick(nameInput);
       await user.keyboard(name);
-      await user.click(screen.getByRole("button", { name: "Next" }));
       await user.click(screen.getByRole("button", { name: "Create Ledger" }));
       return user;
     }
@@ -447,6 +446,7 @@ describe("DashboardSidebar", () => {
             description: undefined,
             private: true,
             requestId: expect.any(String),
+            setup: expect.objectContaining({ preset: "PERSONAL" }),
           },
         });
       });
@@ -508,7 +508,6 @@ describe("DashboardSidebar", () => {
 
       await user.click(screen.getByTestId("create-ledger-btn"));
       await user.click(screen.getByRole("button", { name: "Next" }));
-      await user.click(screen.getByRole("button", { name: "Next" }));
       await user.click(screen.getByRole("button", { name: "Create Ledger" }));
       await waitFor(() => expect(toast.error).toHaveBeenCalled());
       const firstId = mockCreateMutation.mock.calls[0][0].variables.requestId;
@@ -519,7 +518,7 @@ describe("DashboardSidebar", () => {
         expect(screen.queryByTestId("create-ledger-dialog")).toBeNull(),
       );
       await user.click(screen.getByTestId("create-ledger-btn"));
-      // The reopened flow resumes at Review and retries the same identity.
+      // The reopened flow resumes at the details and retries the same identity.
       mockCreateMutation.mockResolvedValueOnce({
         data: { createLedger: makeLedger({ id: "alice/my-book" }) },
       });

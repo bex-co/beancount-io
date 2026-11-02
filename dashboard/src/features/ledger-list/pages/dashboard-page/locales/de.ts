@@ -208,10 +208,6 @@ const deDashboardPage: Record<string, TranslationEntry> = {
     description:
       "One-tap button offering the browser time zone's currency when it differs from the suggestion (ADR026)",
   },
-  "page.dashboard.setupHistoryStart": {
-    message: "Bücher beginnen am",
-    description: "Label for the history start date in staged ledger creation",
-  },
   "page.dashboard.setupOpeningAccount": {
     message: "Eröffnungskonto",
     description: "Label for the first account in staged ledger creation",
@@ -224,17 +220,79 @@ const deDashboardPage: Record<string, TranslationEntry> = {
     message: "Später entscheiden",
     description: "Choice to skip the opening balance in staged creation",
   },
-  "page.dashboard.setupReview": {
-    message: "Überprüfen",
-    description: "Heading for the review step in staged ledger creation",
-  },
-  "page.dashboard.setupReviewDescription": {
-    message: "Genau das wird erstellt. Gehen Sie zurück, um etwas zu ändern.",
-    description: "Description for the review step in staged ledger creation",
-  },
   "page.dashboard.setupAccounts": {
     message: "Konten",
     description: "Label for the account list in the creation review step",
+  },
+  "page.dashboard.setupPurposeNote": {
+    message:
+      "Ein Unternehmen, ein Verein oder mit anderen geteiltes Geld gehört in ein eigenes Hauptbuch.",
+    description:
+      "Note beside the purpose choice in ledger creation: other entities get their own ledger",
+  },
+  "page.dashboard.setupModules": {
+    message: "Auch in diesem Hauptbuch erfassen",
+    description:
+      "Heading of the personal-only module list in ledger creation (PRFAQ001 A.9)",
+  },
+  "page.dashboard.moduleInvestments": {
+    message: "Geldanlagen",
+    description: "Name of the investments module",
+  },
+  "page.dashboard.moduleInvestmentsOutcome": {
+    message: "Depotbestände, Dividenden, Zinsen und Gewinne.",
+    description: "One-line outcome of the investments module",
+  },
+  "page.dashboard.moduleRentalProperty": {
+    message: "Eine vermietete Immobilie",
+    description: "Name of the rental-property module",
+  },
+  "page.dashboard.moduleRentalPropertyOutcome": {
+    message: "Miete, Kautionen und Kosten für eine Immobilie.",
+    description: "One-line outcome of the rental-property module",
+  },
+  "page.dashboard.moduleSideBusiness": {
+    message: "Eine Nebentätigkeit",
+    description: "Name of the side-business module",
+  },
+  "page.dashboard.moduleSideBusinessOutcome": {
+    message:
+      "Kundeneinnahmen und Geschäftskosten, mit einem eigenen Geschäftskonto.",
+    description: "One-line outcome of the side-business module",
+  },
+  "page.dashboard.setupPropertyName": {
+    message: "Name der Immobilie",
+    description: "Label for the rental property's account name",
+  },
+  "page.dashboard.setupPropertyNameHint": {
+    message: "Wird in Kontonamen verwendet, z. B. {example}.",
+    description:
+      "Hint under the rental property name field - interpolation: {example} (an example account name)",
+  },
+  "page.dashboard.setupPropertyNameInvalid": {
+    message:
+      "Beginnen Sie mit einem Großbuchstaben oder einer Ziffer und verwenden Sie nur Buchstaben, Ziffern und Bindestriche (höchstens 64).",
+    description: "Validation message for an invalid rental property name",
+  },
+  "page.dashboard.setupBalanceAsOf": {
+    message: "Saldo zum",
+    description:
+      "Label for the date of a known opening balance, which starts the books",
+  },
+  "page.dashboard.setupSummaryAccounts": {
+    message: "{count} Konten",
+    description:
+      "Account count in the summary beside Create ledger - interpolation: {count} (base key for pluralization)",
+  },
+  "page.dashboard.setupSummaryAccounts_one": {
+    message: "{count} Konto",
+    description:
+      "Account count in the summary beside Create ledger - interpolation: {count} - one form",
+  },
+  "page.dashboard.setupSummaryAccounts_other": {
+    message: "{count} Konten",
+    description:
+      "Account count in the summary beside Create ledger - interpolation: {count} - other form",
   },
   "page.dashboard.setupStep": {
     message: "Schritt {step} von {total}",

@@ -2,7 +2,6 @@ import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { LedgerForm } from "../ledger-form";
-import { ledgerFormTranslations } from "../../ledger-form-translations";
 import {
   LedgerTemplate,
   type CreateLedgerMutationVariables,
@@ -99,12 +98,12 @@ describe("LedgerForm", () => {
   it("should render the staged creation start step", () => {
     render(<LedgerForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />);
 
-    // The staged flow opens on how to start; details come next.
+    // Purpose first, personal preselected; details come next (ADR021).
     expect(screen.getByTestId("ledger-create-step")).toHaveTextContent(
-      "Step 1 of 3",
+      "Step 1 of 2",
     );
     expect(
-      screen.getByRole("radio", { name: /Starter template/i }),
+      screen.getByRole("radio", { name: /Personal ledger/i }),
     ).toBeChecked();
     expect(
       screen.getByRole("radio", { name: /Sample ledger/i }),
@@ -116,31 +115,9 @@ describe("LedgerForm", () => {
     expect(screen.getByRole("button", { name: "Next" })).toBeInTheDocument();
   });
 
-  it("should describe the Starter as empty books in every locale (w3/648)", () => {
-    render(<LedgerForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />);
-    expect(
-      screen.getByText("Empty books with a standard chart of accounts."),
-    ).toBeInTheDocument();
-    // The hosted Starter seeds no example transaction, so no locale's
-    // Starter copy may promise one.
-    const examplePromise =
-      /example|beispiel|ejemplo|exemple|exemplo|voorbeeld|vzorová|примерн|прикладна|サンプル|例|نمونه/i;
-    for (const languageMessages of Object.values(ledgerFormTranslations)) {
-      expect(
-        languageMessages["page.dashboard.starterTemplateDescription"].message,
-      ).not.toMatch(examplePromise);
-    }
-  });
-
   async function throughDetails(user: ReturnType<typeof userEvent.setup>) {
     await user.click(screen.getByRole("button", { name: "Next" }));
     expect(screen.getByLabelText("Ledger Name")).toBeInTheDocument();
-  }
-
-  async function throughReview(user: ReturnType<typeof userEvent.setup>) {
-    await throughDetails(user);
-    await user.click(screen.getByRole("button", { name: "Next" }));
-    expect(screen.getByTestId("ledger-create-review")).toBeInTheDocument();
   }
 
   it("should populate form with initial data", () => {
@@ -180,17 +157,19 @@ describe("LedgerForm", () => {
     );
     // Private is true by default, no need to click
 
-    await user.click(screen.getByRole("button", { name: "Next" }));
     await user.click(screen.getByRole("button", { name: "Create Ledger" }));
 
     await waitFor(() => {
       // Name should be slugified before submission
-      expect(mockOnSubmit).toHaveBeenCalledWith({
-        name: "my-ledger",
-        description: "My Description",
-        private: true,
-        requestId: expect.any(String),
-      });
+      expect(mockOnSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: "my-ledger",
+          description: "My Description",
+          private: true,
+          requestId: expect.any(String),
+          setup: expect.objectContaining({ preset: "PERSONAL" }),
+        }),
+      );
     });
   });
 
@@ -198,9 +177,8 @@ describe("LedgerForm", () => {
     const user = userEvent.setup();
     render(<LedgerForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />);
 
-    await user.click(screen.getByRole("radio", { name: /^Template/ }));
     await user.click(screen.getByRole("radio", { name: /Personal ledger/i }));
-    await throughReview(user);
+    await throughDetails(user);
     await user.click(screen.getByRole("button", { name: "Create Ledger" }));
 
     await waitFor(() => {
@@ -226,7 +204,6 @@ describe("LedgerForm", () => {
     const nameInput = screen.getByLabelText("Ledger Name");
     await user.tripleClick(nameInput);
     await user.keyboard("Sample Book");
-    await user.click(screen.getByRole("button", { name: "Next" }));
     await user.click(screen.getByRole("button", { name: "Create Ledger" }));
 
     await waitFor(() => {
@@ -258,13 +235,13 @@ describe("LedgerForm", () => {
     render(<LedgerForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />);
     const sample = screen.getByRole("radio", { name: /Sample ledger/i });
 
-    for (let i = 0; i < 15 && document.activeElement !== sample; i++) {
+    // Tab lands on the group's checked radio; the example is its last one,
+    // one arrow away from the first.
+    for (let i = 0; i < 15; i++) {
       await user.tab();
-      // Tab lands on the checked radio of the group; arrows move within it.
-      if ((document.activeElement as HTMLInputElement)?.type === "radio") {
-        await user.keyboard("{ArrowDown}");
-      }
+      if ((document.activeElement as HTMLInputElement)?.type === "radio") break;
     }
+    await user.keyboard("{ArrowUp}");
 
     expect(sample).toHaveFocus();
     expect(sample).toHaveClass("sr-only");
@@ -281,17 +258,19 @@ describe("LedgerForm", () => {
     await user.tripleClick(nameInput);
     await user.keyboard("My Ledger");
 
-    await user.click(screen.getByRole("button", { name: "Next" }));
     await user.click(screen.getByRole("button", { name: "Create Ledger" }));
 
     await waitFor(() => {
       // Name should be slugified before submission
-      expect(mockOnSubmit).toHaveBeenCalledWith({
-        name: "my-ledger",
-        description: undefined,
-        private: true,
-        requestId: expect.any(String),
-      });
+      expect(mockOnSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: "my-ledger",
+          description: undefined,
+          private: true,
+          requestId: expect.any(String),
+          setup: expect.objectContaining({ preset: "PERSONAL" }),
+        }),
+      );
     });
   });
 
@@ -326,7 +305,7 @@ describe("LedgerForm", () => {
     // Fill with name exceeding 100 characters
     const longName = "a".repeat(101);
     await user.type(screen.getByLabelText("Ledger Name"), longName);
-    await user.click(screen.getByRole("button", { name: "Next" }));
+    await user.click(screen.getByRole("button", { name: "Create Ledger" }));
 
     await waitFor(() => {
       expect(
@@ -390,7 +369,6 @@ describe("LedgerForm", () => {
     await throughDetails(user);
 
     await user.type(screen.getByLabelText("Ledger Name"), "Test");
-    await user.click(screen.getByRole("button", { name: "Next" }));
     await user.click(screen.getByRole("button", { name: "Create Ledger" }));
 
     await waitFor(() => {
@@ -431,7 +409,7 @@ describe("LedgerForm", () => {
     const nameInput = screen.getByLabelText("Ledger Name");
     await user.tripleClick(nameInput);
     await user.keyboard("!@#$%^");
-    await user.click(screen.getByRole("button", { name: "Next" }));
+    await user.click(screen.getByRole("button", { name: "Create Ledger" }));
 
     await waitFor(() => {
       expect(
@@ -452,7 +430,7 @@ describe("LedgerForm", () => {
     const nameInput = screen.getByLabelText("Ledger Name");
     await user.tripleClick(nameInput);
     await user.keyboard("我的账本");
-    await user.click(screen.getByRole("button", { name: "Next" }));
+    await user.click(screen.getByRole("button", { name: "Create Ledger" }));
 
     await waitFor(() => {
       expect(screen.getByText(/at least one Latin letter/)).toBeInTheDocument();
@@ -502,16 +480,18 @@ describe("LedgerForm", () => {
     const nameInput = screen.getByLabelText("Ledger Name");
     await user.tripleClick(nameInput);
     await user.keyboard("my_ledger_2024");
-    await user.click(screen.getByRole("button", { name: "Next" }));
     await user.click(screen.getByRole("button", { name: "Create Ledger" }));
 
     await waitFor(() => {
-      expect(mockOnSubmit).toHaveBeenCalledWith({
-        name: "my_ledger_2024",
-        description: undefined,
-        private: true,
-        requestId: expect.any(String),
-      });
+      expect(mockOnSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: "my_ledger_2024",
+          description: undefined,
+          private: true,
+          requestId: expect.any(String),
+          setup: expect.objectContaining({ preset: "PERSONAL" }),
+        }),
+      );
     });
   });
 
@@ -524,16 +504,18 @@ describe("LedgerForm", () => {
     const nameInput = screen.getByLabelText("Ledger Name");
     await user.tripleClick(nameInput);
     await user.keyboard("budget-2024");
-    await user.click(screen.getByRole("button", { name: "Next" }));
     await user.click(screen.getByRole("button", { name: "Create Ledger" }));
 
     await waitFor(() => {
-      expect(mockOnSubmit).toHaveBeenCalledWith({
-        name: "budget-2024",
-        description: undefined,
-        private: true,
-        requestId: expect.any(String),
-      });
+      expect(mockOnSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: "budget-2024",
+          description: undefined,
+          private: true,
+          requestId: expect.any(String),
+          setup: expect.objectContaining({ preset: "PERSONAL" }),
+        }),
+      );
     });
   });
 
@@ -801,16 +783,17 @@ describe("LedgerForm", () => {
       await user.tripleClick(nameInput);
       await user.keyboard("custom-ledger");
 
-      await user.click(screen.getByRole("button", { name: "Next" }));
       await user.click(screen.getByRole("button", { name: "Create Ledger" }));
 
       await waitFor(() => {
-        expect(mockOnSubmit).toHaveBeenCalledWith({
-          name: "custom-ledger",
-          description: undefined,
-          private: true,
-          requestId: expect.any(String),
-        });
+        expect(mockOnSubmit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            name: "custom-ledger",
+            description: undefined,
+            private: true,
+            requestId: expect.any(String),
+          }),
+        );
       });
     });
   });
@@ -824,7 +807,7 @@ describe("LedgerForm draft resume (w3/m54/t006)", () => {
     const first = render(<LedgerForm onSubmit={onSubmit} onCancel={vi.fn()} />);
     await user.click(screen.getByRole("button", { name: "Next" }));
     expect(screen.getByTestId("ledger-create-step")).toHaveTextContent(
-      "Step 2 of 3",
+      "Step 2 of 2",
     );
     first.unmount();
 
@@ -833,10 +816,9 @@ describe("LedgerForm draft resume (w3/m54/t006)", () => {
     );
     // The draft restored the details step instead of restarting.
     expect(screen.getByTestId("ledger-create-step")).toHaveTextContent(
-      "Step 2 of 3",
+      "Step 2 of 2",
     );
     expect(screen.getByLabelText("Ledger Name")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Next" }));
     await user.click(screen.getByRole("button", { name: "Create Ledger" }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());
     const resumedRequestId = onSubmit.mock.calls[0][0].requestId;
@@ -846,7 +828,6 @@ describe("LedgerForm draft resume (w3/m54/t006)", () => {
     onSubmit.mockClear();
     second.unmount();
     render(<LedgerForm onSubmit={onSubmit} onCancel={vi.fn()} />);
-    await user.click(screen.getByRole("button", { name: "Next" }));
     await user.click(screen.getByRole("button", { name: "Next" }));
     await user.click(screen.getByRole("button", { name: "Create Ledger" }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());

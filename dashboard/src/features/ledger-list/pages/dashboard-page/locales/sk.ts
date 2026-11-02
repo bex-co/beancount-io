@@ -206,10 +206,6 @@ const skDashboardPage: Record<string, TranslationEntry> = {
     description:
       "One-tap button offering the browser time zone's currency when it differs from the suggestion (ADR026)",
   },
-  "page.dashboard.setupHistoryStart": {
-    message: "Knihy začínajú dňa",
-    description: "Label for the history start date in staged ledger creation",
-  },
   "page.dashboard.setupOpeningAccount": {
     message: "Otvárací účet",
     description: "Label for the first account in staged ledger creation",
@@ -222,17 +218,89 @@ const skDashboardPage: Record<string, TranslationEntry> = {
     message: "Rozhodnúť neskôr",
     description: "Choice to skip the opening balance in staged creation",
   },
-  "page.dashboard.setupReview": {
-    message: "Kontrola",
-    description: "Heading for the review step in staged ledger creation",
-  },
-  "page.dashboard.setupReviewDescription": {
-    message: "Presne toto sa vytvorí. Vráťte sa, ak chcete niečo zmeniť.",
-    description: "Description for the review step in staged ledger creation",
-  },
   "page.dashboard.setupAccounts": {
     message: "Účty",
     description: "Label for the account list in the creation review step",
+  },
+  "page.dashboard.setupPurposeNote": {
+    message:
+      "Firma, klub alebo peniaze zdieľané s inými ľuďmi patria do vlastnej knihy.",
+    description:
+      "Note beside the purpose choice in ledger creation: other entities get their own ledger",
+  },
+  "page.dashboard.setupModules": {
+    message: "Sledovať aj v tejto knihe",
+    description:
+      "Heading of the personal-only module list in ledger creation (PRFAQ001 A.9)",
+  },
+  "page.dashboard.moduleInvestments": {
+    message: "Investície",
+    description: "Name of the investments module",
+  },
+  "page.dashboard.moduleInvestmentsOutcome": {
+    message: "Aktíva u brokera, dividendy, úroky a zisky.",
+    description: "One-line outcome of the investments module",
+  },
+  "page.dashboard.moduleRentalProperty": {
+    message: "Prenajímaná nehnuteľnosť",
+    description: "Name of the rental-property module",
+  },
+  "page.dashboard.moduleRentalPropertyOutcome": {
+    message: "Nájomné, zábezpeky a náklady jednej nehnuteľnosti.",
+    description: "One-line outcome of the rental-property module",
+  },
+  "page.dashboard.moduleSideBusiness": {
+    message: "Vedľajšia činnosť",
+    description: "Name of the side-business module",
+  },
+  "page.dashboard.moduleSideBusinessOutcome": {
+    message:
+      "Príjmy od klientov a obchodné náklady so samostatným obchodným bankovým účtom.",
+    description: "One-line outcome of the side-business module",
+  },
+  "page.dashboard.setupPropertyName": {
+    message: "Názov nehnuteľnosti",
+    description: "Label for the rental property's account name",
+  },
+  "page.dashboard.setupPropertyNameHint": {
+    message: "Používa sa v názvoch účtov, napríklad {example}.",
+    description:
+      "Hint under the rental property name field - interpolation: {example} (an example account name)",
+  },
+  "page.dashboard.setupPropertyNameInvalid": {
+    message:
+      "Začnite veľkým písmenom alebo číslicou a používajte iba písmená, číslice a pomlčky (najviac 64).",
+    description: "Validation message for an invalid rental property name",
+  },
+  "page.dashboard.setupBalanceAsOf": {
+    message: "Zostatok k",
+    description:
+      "Label for the date of a known opening balance, which starts the books",
+  },
+  "page.dashboard.setupSummaryAccounts": {
+    message: "{count} účtov",
+    description:
+      "Account count in the summary beside Create ledger - interpolation: {count} (base key for pluralization)",
+  },
+  "page.dashboard.setupSummaryAccounts_one": {
+    message: "{count} účet",
+    description:
+      "Account count in the summary beside Create ledger - interpolation: {count} - one form",
+  },
+  "page.dashboard.setupSummaryAccounts_few": {
+    message: "{count} účty",
+    description:
+      "Account count in the summary beside Create ledger - interpolation: {count} - few form",
+  },
+  "page.dashboard.setupSummaryAccounts_many": {
+    message: "{count} účtu",
+    description:
+      "Account count in the summary beside Create ledger - interpolation: {count} - many form",
+  },
+  "page.dashboard.setupSummaryAccounts_other": {
+    message: "{count} účtov",
+    description:
+      "Account count in the summary beside Create ledger - interpolation: {count} - other form",
   },
   "page.dashboard.setupStep": {
     message: "Krok {step} z {total}",
