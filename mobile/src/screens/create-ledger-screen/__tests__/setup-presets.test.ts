@@ -58,14 +58,15 @@ describe("openingAmountValue", () => {
   });
 });
 
-describe("Create Ledger's Preset option", () => {
-  it("has its own description, not the Review step's", () => {
+describe("Create Ledger's two steps (w3/m60/t005)", () => {
+  it("has no review step and no Books begin question left", () => {
     const screen = require("fs").readFileSync(
       require("path").join(__dirname, "..", "create-ledger-screen.tsx"),
       "utf8",
     ) as string;
-    expect(screen.includes('"createLedgerStartPresetHint"')).toBe(true);
-    expect(screen.includes('"createLedgerReviewDescription",\n')).toBe(false);
+    expect(screen.includes('"createLedgerReviewDescription"')).toBe(false);
+    expect(screen.includes('"createLedgerHistoryStart"')).toBe(false);
+    expect(screen.includes('"createLedgerBalanceAsOf"')).toBe(true);
   });
 });
 

@@ -25,7 +25,7 @@ describe("labels that tell siblings apart", () => {
       "screens/create-ledger-screen/create-ledger-screen.tsx",
     );
     for (const hint of [
-      "accessibilityHint={t(hintKey)}",
+      "accessibilityHint={t(module.outcomeKey)}",
       'accessibilityHint={t("createLedgerTemplateSampleHint")}',
       "accessibilityHint={t(entry.outcomeKey)}",
     ]) {

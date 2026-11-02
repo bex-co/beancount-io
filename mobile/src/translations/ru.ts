@@ -818,8 +818,6 @@ export const ru: Translations = {
   createLedgerNameConflict: "Книга с таким названием уже существует.",
   createLedgerNameReserved:
     "Это имя принадлежало переименованной книге и всё ещё перенаправляет на неё. Выберите другое имя.",
-  createLedgerSetupUnsupported:
-    "Этот сервер не поддерживает пошаговую настройку. Вернитесь и выберите «Стартовая» или «Пример», чтобы создать книгу с настройками сервера по умолчанию.",
   createLedgerCreated: "Создан {{name}}",
   createLedgerSlugPreview: "Будет создана как {{slug}}",
   createLedgerDescription: "Описание",
@@ -827,8 +825,6 @@ export const ru: Translations = {
   createLedgerPrivate: "Частная",
   createLedgerPublic: "Публичная",
   createLedgerTemplate: "Шаблон",
-  createLedgerTemplateStarter: "Стартовая",
-  createLedgerTemplateStarterHint: "Пустая книга со стандартным планом счетов.",
   createLedgerTemplateSample: "Пример",
   createLedgerTemplateSampleHint:
     "Примерные операции, чтобы изучить приложение.",
@@ -927,19 +923,11 @@ export const ru: Translations = {
   createLedgerNext: "Далее",
   createLedgerBack: "Назад",
   createLedgerStep: "Шаг {{step}} из {{total}}",
-  createLedgerStartPreset: "Шаблон",
-  createLedgerStartPresetHint:
-    "Выберите готовый план счетов для того, что вы учитываете: домохозяйство, бизнес, инвестиции.",
   createLedgerCurrency: "Операционная валюта",
-  createLedgerHistoryStart: "Книги начинаются с",
   createLedgerOpeningAccount: "Счёт открытия",
   createLedgerOpeningAmount: "Начальный остаток (необязательно)",
-  createLedgerReviewOpening: "Начальный остаток: {{account}} {{amount}}",
   createLedgerAmountOwed: "Сумма долга (необязательно)",
   createLedgerOpeningNone: "Решить позже",
-  createLedgerReview: "Проверка",
-  createLedgerReviewDescription:
-    "Будет создано именно это. Вернитесь, чтобы что-то изменить.",
   createLedgerAccounts: "Счета",
   createLedgerAmountInvalid: "Введите сумму, например 100 или -30.50",
   createLedgerAmountReenter:
@@ -950,6 +938,34 @@ export const ru: Translations = {
   createLedgerCurrencyFromRegion: "По региону устройства",
   createLedgerCurrencyUseTimeZone:
     "Использовать {{currency}} (по часовому поясу)",
+  createLedgerPurposeNote:
+    "Компании, клубу или деньгам, общим с другими людьми, нужна отдельная книга.",
+  createLedgerModules: "Также учитывать в этой книге",
+  createLedgerModuleInvestments: "Инвестиции",
+  createLedgerModuleInvestmentsOutcome:
+    "Активы у брокера, дивиденды, проценты и прибыль.",
+  createLedgerModuleRentalProperty: "Сдаваемая недвижимость",
+  createLedgerModuleRentalPropertyOutcome:
+    "Аренда, залоги и расходы по одному объекту.",
+  createLedgerModuleSideBusiness: "Подработка",
+  createLedgerModuleSideBusinessOutcome:
+    "Доходы от клиентов и деловые расходы, с отдельным деловым банковским счётом.",
+  createLedgerPropertyName: "Название объекта",
+  createLedgerPropertyNameHint:
+    "Используется в названиях счетов, например {{example}}.",
+  createLedgerPropertyNameInvalid:
+    "Начните с заглавной латинской буквы или цифры, затем используйте только буквы, цифры и дефисы (до 64).",
+  createLedgerBalanceAsOf: "Остаток на дату",
+  createLedgerPublicWarning: "Эту книгу сможет читать кто угодно.",
+  createLedgerUseServerDefaults: "Создать с настройками сервера по умолчанию",
+  createLedgerSetupUnsupported:
+    "Этот сервер не поддерживает пошаговую настройку. Создайте книгу с настройками сервера по умолчанию или вернитесь и выберите «Пример».",
+  createLedgerSummaryAccounts: {
+    one: "{{count}} счёт",
+    few: "{{count}} счёта",
+    many: "{{count}} счетов",
+    other: "{{count}} счёта",
+  },
   createLedgerHistoryStartInvalid:
     "Введите корректную дату, например 2026-01-01.",
   createLedgerPresetPersonal: "Личная книга",

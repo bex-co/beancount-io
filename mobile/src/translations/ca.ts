@@ -822,8 +822,6 @@ export const ca: Translations = {
   createLedgerNameConflict: "Ja existeix un llibre amb aquest nom.",
   createLedgerNameReserved:
     "Aquest nom era d'un llibre reanomenat i encara hi redirigeix. Tria un altre nom.",
-  createLedgerSetupUnsupported:
-    "Aquest servidor no admet la configuració guiada. Torna enrere i tria Inicial o Mostra per crear un llibre amb els valors per defecte del servidor.",
   createLedgerCreated: "S'ha creat {{name}}",
   createLedgerSlugPreview: "Es crearà com a {{slug}}",
   createLedgerDescription: "Descripció",
@@ -831,9 +829,6 @@ export const ca: Translations = {
   createLedgerPrivate: "Privat",
   createLedgerPublic: "Públic",
   createLedgerTemplate: "Plantilla",
-  createLedgerTemplateStarter: "Inicial",
-  createLedgerTemplateStarterHint:
-    "Llibres buits amb un pla de comptes estàndard.",
   createLedgerTemplateSample: "Mostra",
   createLedgerTemplateSampleHint:
     "Transaccions d'exemple per explorar l'aplicació.",
@@ -930,19 +925,11 @@ export const ca: Translations = {
   createLedgerNext: "Següent",
   createLedgerBack: "Enrere",
   createLedgerStep: "Pas {{step}} de {{total}}",
-  createLedgerStartPreset: "Configuració predefinida",
-  createLedgerStartPresetHint:
-    "Tria un pla de comptes ja preparat per al que segueixes: una llar, un negoci, inversions.",
   createLedgerCurrency: "Moneda d'operació",
-  createLedgerHistoryStart: "Els llibres comencen el",
   createLedgerOpeningAccount: "Compte d'obertura",
   createLedgerOpeningAmount: "Saldo inicial (opcional)",
-  createLedgerReviewOpening: "Saldo inicial: {{account}} {{amount}}",
   createLedgerAmountOwed: "Import degut (opcional)",
   createLedgerOpeningNone: "Decidir més tard",
-  createLedgerReview: "Revisar",
-  createLedgerReviewDescription:
-    "Això és exactament el que es crearà. Torneu enrere per canviar res.",
   createLedgerAccounts: "Comptes",
   createLedgerAmountInvalid: "Introduïu un import com 100 o -30.50",
   createLedgerAmountReenter:
@@ -953,6 +940,34 @@ export const ca: Translations = {
   createLedgerCurrencyFromRegion: "De la regió del dispositiu",
   createLedgerCurrencyUseTimeZone:
     "Utilitza {{currency}} (de la teva zona horària)",
+  createLedgerPurposeNote:
+    "Una empresa, un club o diners compartits amb altres persones tenen el seu propi llibre.",
+  createLedgerModules: "Fes-ne també el seguiment en aquest llibre",
+  createLedgerModuleInvestments: "Inversions",
+  createLedgerModuleInvestmentsOutcome:
+    "Actius de corretatge, dividends, interessos i guanys.",
+  createLedgerModuleRentalProperty: "Un immoble de lloguer",
+  createLedgerModuleRentalPropertyOutcome:
+    "Lloguer, dipòsits i despeses d’un immoble.",
+  createLedgerModuleSideBusiness: "Una activitat paral·lela",
+  createLedgerModuleSideBusinessOutcome:
+    "Ingressos de clients i despeses del negoci, amb un compte bancari del negoci separat.",
+  createLedgerPropertyName: "Nom de l’immoble",
+  createLedgerPropertyNameHint:
+    "S’utilitza als noms dels comptes, per exemple {{example}}.",
+  createLedgerPropertyNameInvalid:
+    "Comença amb una majúscula o un dígit i fes servir només lletres, dígits i guions (fins a 64).",
+  createLedgerBalanceAsOf: "Saldo a data de",
+  createLedgerPublicWarning: "Qualsevol persona podrà llegir aquest llibre.",
+  createLedgerUseServerDefaults:
+    "Crea amb els valors predeterminats del servidor",
+  createLedgerSetupUnsupported:
+    "Aquest servidor no admet la configuració guiada. Crea el llibre amb els valors predeterminats del servidor o torna enrere i tria Exemple.",
+  createLedgerSummaryAccounts: {
+    one: "{{count}} compte",
+    many: "{{count}} comptes",
+    other: "{{count}} comptes",
+  },
   createLedgerHistoryStartInvalid: "Introdueix una data vàlida com 2026-01-01.",
   createLedgerPresetPersonal: "Llibre personal",
   createLedgerPresetPersonalOutcome:

@@ -728,8 +728,6 @@ export const zh: Translations = {
   createLedgerNameConflict: "已存在同名账本。",
   createLedgerNameReserved:
     "该名称曾属于一个已改名的账本，目前仍会跳转到它。请换一个名称。",
-  createLedgerSetupUnsupported:
-    "此服务器不支持引导式设置。请返回并选择“入门”或“示例”，以使用服务器默认设置创建账本。",
   createLedgerCreated: "已创建 {{name}}",
   createLedgerSlugPreview: "将创建为 {{slug}}",
   createLedgerDescription: "描述",
@@ -737,8 +735,6 @@ export const zh: Translations = {
   createLedgerPrivate: "私有",
   createLedgerPublic: "公开",
   createLedgerTemplate: "模板",
-  createLedgerTemplateStarter: "入门",
-  createLedgerTemplateStarterHint: "带标准科目的空白账本。",
   createLedgerTemplateSample: "示例",
   createLedgerTemplateSampleHint: "含示例交易，便于探索应用。",
   ledgerOwnerLimitReached:
@@ -822,18 +818,11 @@ export const zh: Translations = {
   createLedgerNext: "下一步",
   createLedgerBack: "返回",
   createLedgerStep: "第 {{step}} 步，共 {{total}} 步",
-  createLedgerStartPreset: "预设",
-  createLedgerStartPresetHint:
-    "为你要记录的内容选择现成的账户表：家庭、企业或投资。",
   createLedgerCurrency: "运营货币",
-  createLedgerHistoryStart: "账簿开始日期",
   createLedgerOpeningAccount: "开户账户",
   createLedgerOpeningAmount: "期初余额（可选）",
-  createLedgerReviewOpening: "期初余额：{{account}} {{amount}}",
   createLedgerAmountOwed: "欠款金额（可选）",
   createLedgerOpeningNone: "稍后决定",
-  createLedgerReview: "检查",
-  createLedgerReviewDescription: "将创建的正是这些内容。返回可修改。",
   createLedgerAccounts: "账户",
   createLedgerAmountInvalid: "输入如 100 或 -30.50 的金额",
   createLedgerAmountReenter:
@@ -843,6 +832,27 @@ export const zh: Translations = {
   createLedgerCurrencyFromDevice: "来自设备设置",
   createLedgerCurrencyFromRegion: "来自设备地区",
   createLedgerCurrencyUseTimeZone: "使用 {{currency}}（来自你的时区）",
+  createLedgerPurposeNote: "公司、社团或与他人共用的钱，应各自使用单独的账本。",
+  createLedgerModules: "也在此账本中记录",
+  createLedgerModuleInvestments: "投资",
+  createLedgerModuleInvestmentsOutcome: "券商持仓、股息、利息和收益。",
+  createLedgerModuleRentalProperty: "出租房产",
+  createLedgerModuleRentalPropertyOutcome: "一处房产的租金、押金和费用。",
+  createLedgerModuleSideBusiness: "副业",
+  createLedgerModuleSideBusinessOutcome:
+    "客户收入和业务开支，并使用单独的业务银行账户。",
+  createLedgerPropertyName: "房产名称",
+  createLedgerPropertyNameHint: "用于账户名称，例如 {{example}}。",
+  createLedgerPropertyNameInvalid:
+    "以大写英文字母或数字开头，之后只能使用字母、数字和连字符（最多 64 个）。",
+  createLedgerBalanceAsOf: "余额日期",
+  createLedgerPublicWarning: "任何人都能查看此账本。",
+  createLedgerUseServerDefaults: "使用服务器默认设置创建",
+  createLedgerSetupUnsupported:
+    "此服务器不支持引导式设置。请使用服务器默认设置创建账本，或返回并选择“示例”。",
+  createLedgerSummaryAccounts: {
+    other: "{{count}} 个账户",
+  },
   createLedgerHistoryStartInvalid: "请输入有效日期，例如 2026-01-01。",
   createLedgerPresetPersonal: "个人账簿",
   createLedgerPresetPersonalOutcome: "记录一笔购买，了解其对剩余资金的影响。",

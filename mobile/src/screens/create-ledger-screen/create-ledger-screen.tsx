@@ -38,6 +38,13 @@ import {
 } from "@/common/create-ledger-draft";
 import * as Localization from "expo-localization";
 import { currencyToSave, suggestCurrency } from "./currency-suggestion";
+import {
+  DEFAULT_PROPERTY_NAME,
+  PROPERTY_NAME_PATTERN,
+  SETUP_MODULES,
+  moduleAccounts,
+  setupModules,
+} from "./setup-modules";
 import { CurrencySuggestionHint } from "./currency-suggestion-hint";
 import {
   defaultHistoryStart,
@@ -92,17 +99,23 @@ type FormValues = {
   historyStart: string;
   openingAccount: string;
   openingAmount: string;
+  propertyName: string;
 };
 
-type StartKind = "starter" | "sample" | "preset";
+/** New books from a purpose (a setup preset), or the fictional example. */
+type StartKind = "sample" | "preset";
 
-type CreateDraft = CreateLedgerDraft<FormValues> & { startKind: StartKind };
+type CreateDraft = CreateLedgerDraft<FormValues> & {
+  startKind: StartKind | "starter";
+  modules?: string[];
+};
 
 function newRequestId(): string {
   return `req-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
 /** The step holding every field the form validates (name, amounts, dates). */
+/** Purpose, then details: there is no review step (ADR021). */
 const FORM_STEP = 1;
 
 const getStyles = (theme: ColorTheme) =>
@@ -238,8 +251,16 @@ export function CreateLedgerScreen(): JSX.Element {
     { data: previewData, loading: previewLoading, error: previewError },
   ] = usePreviewLedgerSetupLazyQuery();
   const [step, setStep] = useState(0);
-  const [startKind, setStartKind] = useState<StartKind>("starter");
+  const [startKind, setStartKind] = useState<StartKind>("preset");
   const [presetId, setPresetId] = useState<string | null>(SETUP_PRESETS[0].id);
+  const [modules, setModules] = useState<string[]>([]);
+  const [showAccounts, setShowAccounts] = useState(false);
+  // An older server refused `setup`: the customer may create with its
+  // defaults instead, as an explicit choice (ADR021).
+  const [serverDefaults, setServerDefaults] = useState(false);
+  // Read by the submit the same tap starts, before state re-renders.
+  const serverDefaultsRef = useRef(false);
+  const [setupUnsupported, setSetupUnsupported] = useState(false);
   const requestIdRef = useRef<string>(newRequestId());
   const requestedAtRef = useRef(Date.now());
   // The request last sent under `requestId` (w21/434).
@@ -281,6 +302,14 @@ export function CreateLedgerScreen(): JSX.Element {
             message: t("createLedgerHistoryStartInvalid"),
           }),
           openingAccount: z.string(),
+          // Blank is the catalog default; anything else is an account part.
+          propertyName: z
+            .string()
+            .refine(
+              (value) =>
+                !value.trim() || PROPERTY_NAME_PATTERN.test(value.trim()),
+              { message: t("createLedgerPropertyNameInvalid") },
+            ),
           openingAmount: z
             .string()
             .refine((val) => openingAmountValue(val) !== null, {
@@ -331,6 +360,7 @@ export function CreateLedgerScreen(): JSX.Element {
       historyStart: defaultHistoryStart(),
       openingAccount: "",
       openingAmount: "",
+      propertyName: "",
     },
   });
 
@@ -357,9 +387,12 @@ export function CreateLedgerScreen(): JSX.Element {
       const draft = restoreCreateLedgerDraft<FormValues>(raw) as
         (CreateDraft & { amountLost: boolean }) | null;
       if (!draft) return;
-      setStep(draft.step);
-      setStartKind(draft.startKind);
+      // A draft from the three-step flow may stand on Review (step 2) or name
+      // the retired Starter: the details, and the personal purpose, now.
+      setStep(Math.min(draft.step, FORM_STEP));
+      setStartKind(draft.startKind === "sample" ? "sample" : "preset");
       setPresetId(draft.presetId);
+      setModules(Array.isArray(draft.modules) ? draft.modules : []);
       requestIdRef.current = draft.requestId;
       sentFingerprintRef.current = draft.sentFingerprint;
       if (draft.requestedAt !== undefined) {
@@ -368,7 +401,7 @@ export function CreateLedgerScreen(): JSX.Element {
       setAmountLost(draft.amountLost);
       historyStartTypedRef.current = draft.historyStartTyped === true;
       setCurrencyChosen(true);
-      reset(draft.values);
+      reset({ ...draft.values, propertyName: draft.values.propertyName ?? "" });
     });
   }, [reset]);
 
@@ -378,6 +411,7 @@ export function CreateLedgerScreen(): JSX.Element {
       step,
       startKind,
       presetId,
+      modules,
       requestId: requestIdRef.current,
       requestedAt: requestedAtRef.current,
       sentFingerprint: sentFingerprintRef.current,
@@ -392,7 +426,7 @@ export function CreateLedgerScreen(): JSX.Element {
   useEffect(() => {
     saveDraft(watched);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step, startKind, presetId, JSON.stringify(watched)]);
+  }, [step, startKind, presetId, modules.join("|"), JSON.stringify(watched)]);
 
   useEffect(() => {
     if (watch("name")) return;
@@ -430,7 +464,17 @@ export function CreateLedgerScreen(): JSX.Element {
   };
   const choosePreset = (id: typeof presetId) => {
     if (id !== presetId) resetOpening();
+    chooseStart("preset");
     setPresetId(id);
+  };
+  const toggleModule = (id: string) => {
+    const on = !modules.includes(id);
+    setModules((current) =>
+      on ? [...current, id] : current.filter((entry) => entry !== id),
+    );
+    // A hidden property name must not hold a hidden error.
+    const module = SETUP_MODULES.find((entry) => entry.id === id);
+    if (!on && module?.takesPropertyName) setValue("propertyName", "");
   };
 
   const preset = SETUP_PRESETS.find((entry) => entry.id === presetId);
@@ -444,10 +488,15 @@ export function CreateLedgerScreen(): JSX.Element {
       values.openingAccount,
       openingAmountValue(values.openingAmount, values.currency) ?? "",
     );
+    const fields = setupFields(values);
     return {
       preset: preset.id,
       title: setupTitle(values.name),
-      ...setupFields(values),
+      operatingCurrency: fields.operatingCurrency,
+      // A known balance's "as of" date starts the books; without one they
+      // start today on this phone, not the server's UTC day (w21/436).
+      historyStart: opening ? fields.historyStart : defaultHistoryStart(),
+      modules: setupModules(preset.id, modules, values.propertyName),
       accounts: opening
         ? [
             {
@@ -460,13 +509,19 @@ export function CreateLedgerScreen(): JSX.Element {
     };
   };
 
+  // The summary's accounts are the builder's own answer for exactly what
+  // would be sent, refreshed as the details change.
+  const previewKey =
+    step === FORM_STEP && startKind === "preset"
+      ? JSON.stringify(buildSetup(watched) ?? null)
+      : "null";
   useEffect(() => {
-    if (step === 2 && startKind === "preset") {
-      const setup = buildSetup(getValues());
-      if (setup) void runPreview({ variables: { setup } });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step, startKind]);
+    if (previewKey === "null") return;
+    const timer = setTimeout(() => {
+      void runPreview({ variables: { setup: JSON.parse(previewKey) } });
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [previewKey, runPreview]);
 
   // Create waits for the preview: without it the accounts to be made are not
   // known, and a refused setup would be refused again (w21/478). That holds
@@ -489,15 +544,15 @@ export function CreateLedgerScreen(): JSX.Element {
   const privateValue = watch("private");
   const openingAmountInput = watch("openingAmount");
   const currencyValue = watch("currency");
-  const reviewOpening = preset
-    ? openingSelection(
-        preset.accounts,
-        openingAccountValue,
-        openingAmountValue(openingAmountInput, currencyValue) ?? "",
-      )
-    : null;
   const busy = loading || isSubmitting;
-  const createDisabled = busy || (step === 2 && previewBlocked);
+  const createDisabled =
+    busy || (step === FORM_STEP && previewBlocked && !serverDefaults);
+  const previewAccounts = previewData?.previewLedgerSetup?.accounts;
+  const isPersonal = startKind === "preset" && presetId === "PERSONAL";
+  const propertyNameValue = watch("propertyName") ?? "";
+  const hasKnownBalance = Boolean(
+    openingAccountValue && openingAmountInput.trim(),
+  );
 
   // Field errors render on the form step, so a refused Create returns there;
   // left on Review, the spinner stopped and nothing said why (w21/105).
@@ -525,15 +580,26 @@ export function CreateLedgerScreen(): JSX.Element {
       try {
         let result;
         try {
+          // The customer chose the server's defaults after it refused setup.
+          if (serverDefaultsRef.current && startKind === "preset") {
+            throw Object.assign(new Error("setup unsupported"), {
+              serverDefaults: true,
+            });
+          }
           result = await createLedger({
             variables: { ...request, requestId: requestIdRef.current },
           });
         } catch (rejected) {
           // A server older than guided setup rejects `setup` and `requestId`
-          // before anything runs. Starter and Sample still create without them
-          // (ADR021: older backends keep working, w21/592); a preset cannot.
-          if (!isUnsupportedDocumentError(rejected)) throw rejected;
-          if (startKind === "preset") {
+          // before anything runs. Sample still creates without them (ADR021:
+          // older backends keep working, w21/592); a purpose is offered the
+          // server's defaults as an explicit choice, never silently.
+          const chosenDefaults =
+            (rejected as { serverDefaults?: boolean }).serverDefaults === true;
+          if (!chosenDefaults && !isUnsupportedDocumentError(rejected))
+            throw rejected;
+          if (startKind === "preset" && !chosenDefaults) {
+            setSetupUnsupported(true);
             setError("root", { message: t("createLedgerSetupUnsupported") });
             return;
           }
@@ -645,30 +711,29 @@ export function CreateLedgerScreen(): JSX.Element {
           headerRight: () => (
             <Pressable
               onPress={() => {
-                if (step < 2) {
+                if (step < FORM_STEP) {
                   void (async () => {
-                    // Every field the schema checks is on this step, the
-                    // opening amount included: one left invalid used to
-                    // surface only as a Create that did nothing (w21/105).
-                    if (step === 1 && !(await trigger())) return;
-                    // A blank Books begin becomes today once, here, so the
-                    // preview, the create and a retry past midnight all carry
-                    // the same date (w21/502).
-                    if (step === 1)
-                      setValue(
-                        "historyStart",
-                        setupFields(getValues()).historyStart,
-                      );
-                    setStep((current) => Math.min(current + 1, 2));
+                    // The purpose step's one field: the rental's name.
+                    if (!(await trigger("propertyName"))) return;
+                    setStep(FORM_STEP);
                   })();
                 } else {
+                  // A blank "as of" date becomes today once, here, so the
+                  // create and a retry past midnight carry the same date
+                  // (w21/502).
+                  setValue(
+                    "historyStart",
+                    setupFields(getValues()).historyStart,
+                  );
                   void onSubmit();
                 }
               }}
               disabled={createDisabled}
               accessibilityRole="button"
               accessibilityLabel={
-                step < 2 ? t("createLedgerNext") : t("createLedgerSubmit")
+                step < FORM_STEP
+                  ? t("createLedgerNext")
+                  : t("createLedgerSubmit")
               }
               hitSlop={8}
             >
@@ -682,7 +747,9 @@ export function CreateLedgerScreen(): JSX.Element {
                   ]}
                   maxFontSizeMultiplier={headerActionMaxFontSizeMultiplier}
                 >
-                  {step < 2 ? t("createLedgerNext") : t("createLedgerSubmit")}
+                  {step < FORM_STEP
+                    ? t("createLedgerNext")
+                    : t("createLedgerSubmit")}
                 </Text>
               )}
             </Pressable>
@@ -695,45 +762,131 @@ export function CreateLedgerScreen(): JSX.Element {
         automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}
       >
         <Text style={styles.hint} testID="create-ledger-step">
-          {t("createLedgerStep", { step: step + 1, total: 3 })}
+          {t("createLedgerStep", { step: step + 1, total: FORM_STEP + 1 })}
         </Text>
         {step === 0 ? (
           <>
             <Text style={styles.label}>{t("createLedgerTemplate")}</Text>
-            <View style={styles.card}>
-              {(
-                [
-                  [
-                    "starter",
-                    "createLedgerTemplateStarter",
-                    "createLedgerTemplateStarterHint",
-                  ],
-                  [
-                    "preset",
-                    "createLedgerStartPreset",
-                    "createLedgerStartPresetHint",
-                  ],
-                ] as const
-              ).map(([kind, titleKey, hintKey]) => (
-                <Pressable
-                  key={kind}
-                  onPress={() => chooseStart(kind)}
-                  style={[
-                    styles.templateRow,
-                    startKind === kind ? styles.templateSelected : null,
-                  ]}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: startKind === kind }}
-                  accessibilityLabel={t(titleKey)}
-                  // The description is what tells the choices apart
-                  // (w21/142).
-                  accessibilityHint={t(hintKey)}
-                >
-                  <Text style={styles.templateTitle}>{t(titleKey)}</Text>
-                  <Text style={styles.hint}>{t(hintKey)}</Text>
-                </Pressable>
-              ))}
+            <View style={styles.card} testID="setup-preset-list">
+              {SETUP_PRESETS.map((entry) => {
+                const selected =
+                  startKind === "preset" && presetId === entry.id;
+                return (
+                  <Pressable
+                    key={entry.id}
+                    onPress={() => choosePreset(entry.id)}
+                    style={[
+                      styles.templateRow,
+                      selected ? styles.templateSelected : null,
+                    ]}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    accessibilityLabel={t(entry.titleKey)}
+                    // The description is what tells the choices apart
+                    // (w21/142).
+                    accessibilityHint={t(entry.outcomeKey)}
+                  >
+                    <Text style={styles.templateTitle}>
+                      {t(entry.titleKey)}
+                    </Text>
+                    <Text style={styles.hint}>{t(entry.outcomeKey)}</Text>
+                  </Pressable>
+                );
+              })}
             </View>
+            <Text style={styles.hint} testID="setup-separate-ledger-note">
+              {t("createLedgerPurposeNote")}
+            </Text>
+            {isPersonal ? (
+              <>
+                <Text style={styles.label}>{t("createLedgerModules")}</Text>
+                <View style={styles.card} testID="setup-modules">
+                  {SETUP_MODULES.map((module) => {
+                    const checked = modules.includes(module.id);
+                    return (
+                      <View key={module.id}>
+                        <Pressable
+                          onPress={() => toggleModule(module.id)}
+                          style={[
+                            styles.templateRow,
+                            checked ? styles.templateSelected : null,
+                          ]}
+                          accessibilityRole="checkbox"
+                          accessibilityState={{ checked }}
+                          accessibilityLabel={t(module.titleKey)}
+                          accessibilityHint={t(module.outcomeKey)}
+                          testID={`setup-module-${module.catalogId}`}
+                        >
+                          <Text style={styles.templateTitle}>
+                            {t(module.titleKey)}
+                          </Text>
+                          <Text style={styles.hint}>
+                            {t(module.outcomeKey)}
+                          </Text>
+                        </Pressable>
+                        {checked ? (
+                          <View style={styles.row}>
+                            {module.takesPropertyName ? (
+                              <>
+                                <Text style={styles.label}>
+                                  {t("createLedgerPropertyName")}
+                                </Text>
+                                <Controller
+                                  control={control}
+                                  name="propertyName"
+                                  render={({
+                                    field: { onChange, onBlur, value },
+                                  }) => (
+                                    <TextInput
+                                      value={value}
+                                      onChangeText={edited(
+                                        "propertyName",
+                                        onChange,
+                                      )}
+                                      onBlur={onBlur}
+                                      autoCapitalize="none"
+                                      autoCorrect={false}
+                                      placeholder={DEFAULT_PROPERTY_NAME}
+                                      placeholderTextColor={
+                                        theme.controlPlaceholder
+                                      }
+                                      style={styles.input}
+                                      accessibilityLabel={t(
+                                        "createLedgerPropertyName",
+                                      )}
+                                      testID="setup-property-name"
+                                    />
+                                  )}
+                                />
+                                <Text style={styles.hint}>
+                                  {t("createLedgerPropertyNameHint", {
+                                    example: "OakSt",
+                                  })}
+                                </Text>
+                                {errors.propertyName?.message ? (
+                                  <InlineError
+                                    style={styles.error}
+                                    message={errors.propertyName.message}
+                                  />
+                                ) : null}
+                              </>
+                            ) : null}
+                            <Text
+                              style={styles.hint}
+                              testID={`setup-module-accounts-${module.catalogId}`}
+                            >
+                              {moduleAccounts(module, propertyNameValue).join(
+                                "\n",
+                              )}
+                            </Text>
+                          </View>
+                        ) : null}
+                      </View>
+                    );
+                  })}
+                </View>
+              </>
+            ) : null}
             <View style={styles.card} testID="setup-demo-option">
               <Pressable
                 onPress={() => chooseStart("sample")}
@@ -754,29 +907,6 @@ export function CreateLedgerScreen(): JSX.Element {
                 </Text>
               </Pressable>
             </View>
-            {startKind === "preset" ? (
-              <View style={styles.card} testID="setup-preset-list">
-                {SETUP_PRESETS.map((entry) => (
-                  <Pressable
-                    key={entry.id}
-                    onPress={() => choosePreset(entry.id)}
-                    style={[
-                      styles.templateRow,
-                      presetId === entry.id ? styles.templateSelected : null,
-                    ]}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: presetId === entry.id }}
-                    accessibilityLabel={t(entry.titleKey)}
-                    accessibilityHint={t(entry.outcomeKey)}
-                  >
-                    <Text style={styles.templateTitle}>
-                      {t(entry.titleKey)}
-                    </Text>
-                    <Text style={styles.hint}>{t(entry.outcomeKey)}</Text>
-                  </Pressable>
-                ))}
-              </View>
-            ) : null}
           </>
         ) : null}
         {step === 1 ? (
@@ -851,6 +981,14 @@ export function CreateLedgerScreen(): JSX.Element {
                 )}
               />
             </View>
+            {/* At the moment of choice, not on a confirmation page. */}
+            {privateValue ? null : (
+              <InlineError
+                style={styles.error}
+                message={t("createLedgerPublicWarning")}
+                testID="create-ledger-public-warning"
+              />
+            )}
           </View>
         ) : null}
         {step === 1 && startKind === "preset" ? (
@@ -889,35 +1027,6 @@ export function CreateLedgerScreen(): JSX.Element {
                 <InlineError
                   style={styles.error}
                   message={errors.currency.message}
-                />
-              ) : null}
-            </View>
-            <View style={[styles.row, styles.rowDivider]}>
-              <Text style={styles.label}>{t("createLedgerHistoryStart")}</Text>
-              <Controller
-                control={control}
-                name="historyStart"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    value={value}
-                    onChangeText={(text) => {
-                      historyStartTypedRef.current = true;
-                      edited("historyStart", onChange)(text);
-                    }}
-                    onBlur={onBlur}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    placeholder={t("datePlaceholder")}
-                    placeholderTextColor={theme.controlPlaceholder}
-                    style={styles.input}
-                    accessibilityLabel={t("createLedgerHistoryStart")}
-                  />
-                )}
-              />
-              {errors.historyStart?.message ? (
-                <InlineError
-                  style={styles.error}
-                  message={errors.historyStart.message}
                 />
               ) : null}
             </View>
@@ -996,31 +1105,78 @@ export function CreateLedgerScreen(): JSX.Element {
                     ) : null}
                   </View>
                 ) : null}
+                {/* Only a known balance has a date: the balance before that
+                    day's transactions, which starts the books (ADR021). */}
+                {hasKnownBalance ? (
+                  <View style={[styles.row, styles.rowDivider]}>
+                    <Text style={styles.label}>
+                      {t("createLedgerBalanceAsOf")}
+                    </Text>
+                    <Controller
+                      control={control}
+                      name="historyStart"
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <TextInput
+                          value={value}
+                          onChangeText={(text) => {
+                            historyStartTypedRef.current = true;
+                            edited("historyStart", onChange)(text);
+                          }}
+                          onBlur={onBlur}
+                          autoCapitalize="none"
+                          autoCorrect={false}
+                          placeholder={t("datePlaceholder")}
+                          placeholderTextColor={theme.controlPlaceholder}
+                          style={styles.input}
+                          accessibilityLabel={t("createLedgerBalanceAsOf")}
+                          testID="create-ledger-balance-as-of"
+                        />
+                      )}
+                    />
+                    {errors.historyStart?.message ? (
+                      <InlineError
+                        style={styles.error}
+                        message={errors.historyStart.message}
+                      />
+                    ) : null}
+                  </View>
+                ) : null}
               </>
             ) : null}
           </View>
         ) : null}
-        {step === 2 ? (
-          <View style={styles.card}>
+        {step === FORM_STEP ? (
+          <View style={styles.card} testID="create-ledger-summary">
             <View style={styles.row}>
-              <Text style={styles.templateTitle}>
-                {t("createLedgerReview")}
-              </Text>
-              <Text style={styles.hint}>
-                {t("createLedgerReviewDescription")}
-              </Text>
-              {/* What the server will make, not what was typed: it takes only
-                  lowercase letters, digits, "-" and "_" (w21/477). */}
-              <Text style={styles.hint}>
-                {slugifyLedgerName(nameValue ?? "") || nameValue}
-              </Text>
-              <Text style={styles.hint}>
-                {privateValue
-                  ? t("createLedgerPrivate")
-                  : t("createLedgerPublic")}
-              </Text>
-              {startKind === "preset" ? (
-                previewLoading ? (
+              <Pressable
+                onPress={() => setShowAccounts((shown) => !shown)}
+                disabled={startKind !== "preset" || !previewAccounts}
+                accessibilityRole="button"
+                accessibilityState={{ expanded: showAccounts }}
+                accessibilityHint={t("createLedgerAccounts")}
+              >
+                <Text style={styles.label} testID="create-ledger-summary-line">
+                  {[
+                    privateValue
+                      ? t("createLedgerPrivate")
+                      : t("createLedgerPublic"),
+                    ...(startKind === "preset"
+                      ? [
+                          (currencyValue || "USD").trim().toUpperCase(),
+                          previewAccounts
+                            ? t("createLedgerSummaryAccounts", {
+                                count: previewAccounts.length,
+                              })
+                            : null,
+                        ]
+                      : [t("createLedgerTemplateSample")]),
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </Text>
+              </Pressable>
+              {startKind === "preset" && !serverDefaults ? (
+                previewLoading && !previewAccounts ? (
                   <ActivityIndicator color={theme.primary} />
                 ) : previewError ? (
                   previewFailureKind(previewError) === "refused" ? (
@@ -1028,12 +1184,8 @@ export function CreateLedgerScreen(): JSX.Element {
                       style={styles.error}
                       message={previewError.message}
                     />
-                  ) : previewFailureKind(previewError) === "unsupported" ? (
-                    <InlineError
-                      style={styles.error}
-                      message={t("createLedgerSetupUnsupported")}
-                    />
-                  ) : (
+                  ) : previewFailureKind(previewError) ===
+                    "unsupported" ? null : (
                     <>
                       <InlineError
                         style={styles.error}
@@ -1048,26 +1200,39 @@ export function CreateLedgerScreen(): JSX.Element {
                       </Pressable>
                     </>
                   )
-                ) : previewData?.previewLedgerSetup ? (
-                  <>
-                    <Text style={styles.label}>
-                      {t("createLedgerAccounts")}
+                ) : showAccounts && previewAccounts ? (
+                  previewAccounts.map((account) => (
+                    <Text key={account} style={styles.hint}>
+                      {account}
                     </Text>
-                    {previewData.previewLedgerSetup.accounts.map((account) => (
-                      <Text key={account} style={styles.hint}>
-                        {account}
-                      </Text>
-                    ))}
-                    {reviewOpening ? (
-                      <Text style={styles.label}>
-                        {t("createLedgerReviewOpening", {
-                          account: reviewOpening.name,
-                          amount: reviewOpening.amount,
-                        })}
-                      </Text>
-                    ) : null}
-                  </>
+                  ))
                 ) : null
+              ) : null}
+              {startKind === "preset" &&
+              !serverDefaults &&
+              (setupUnsupported ||
+                (previewError &&
+                  previewFailureKind(previewError) === "unsupported")) ? (
+                <>
+                  <InlineError
+                    style={styles.error}
+                    message={t("createLedgerSetupUnsupported")}
+                  />
+                  <Pressable
+                    onPress={() => {
+                      serverDefaultsRef.current = true;
+                      setServerDefaults(true);
+                      void onSubmit();
+                    }}
+                    accessibilityRole="button"
+                    hitSlop={8}
+                    testID="create-ledger-server-defaults"
+                  >
+                    <Text style={styles.retry}>
+                      {t("createLedgerUseServerDefaults")}
+                    </Text>
+                  </Pressable>
+                </>
               ) : null}
             </View>
           </View>

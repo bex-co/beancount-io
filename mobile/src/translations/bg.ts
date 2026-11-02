@@ -801,8 +801,6 @@ export const bg: Translations = {
   createLedgerNameConflict: "Вече съществува книга с това име.",
   createLedgerNameReserved:
     "Това име е принадлежало на преименувана книга и все още пренасочва към нея. Изберете друго име.",
-  createLedgerSetupUnsupported:
-    "Този сървър не поддържа насочената настройка. Върнете се и изберете Начална или Примерна, за да създадете книга със стандартните настройки на сървъра.",
   createLedgerCreated: "{{name}} е създаден",
   createLedgerSlugPreview: "Ще бъде създадена като {{slug}}",
   createLedgerDescription: "Описание",
@@ -810,8 +808,6 @@ export const bg: Translations = {
   createLedgerPrivate: "Частна",
   createLedgerPublic: "Публична",
   createLedgerTemplate: "Шаблон",
-  createLedgerTemplateStarter: "Начална",
-  createLedgerTemplateStarterHint: "Празна книга със стандартен сметкоплан.",
   createLedgerTemplateSample: "Примерна",
   createLedgerTemplateSampleHint:
     "Примерни транзакции, за да разгледате приложението.",
@@ -905,19 +901,11 @@ export const bg: Translations = {
   createLedgerNext: "Напред",
   createLedgerBack: "Назад",
   createLedgerStep: "Стъпка {{step}} от {{total}}",
-  createLedgerStartPreset: "Предварителна настройка",
-  createLedgerStartPresetHint:
-    "Изберете готов сметкоплан според това, което следите: домакинство, бизнес, инвестиции.",
   createLedgerCurrency: "Оперативна валута",
-  createLedgerHistoryStart: "Книгите започват на",
   createLedgerOpeningAccount: "Начална сметка",
   createLedgerOpeningAmount: "Начално салдо (по избор)",
-  createLedgerReviewOpening: "Начално салдо: {{account}} {{amount}}",
   createLedgerAmountOwed: "Дължима сума (по избор)",
   createLedgerOpeningNone: "Реши по-късно",
-  createLedgerReview: "Преглед",
-  createLedgerReviewDescription:
-    "Точно това ще бъде създадено. Върнете се, за да промените нещо.",
   createLedgerAccounts: "Сметки",
   createLedgerAmountInvalid: "Въведете сума като 100 или -30.50",
   createLedgerAmountReenter:
@@ -928,6 +916,33 @@ export const bg: Translations = {
   createLedgerCurrencyFromRegion: "От региона на устройството",
   createLedgerCurrencyUseTimeZone:
     "Използвайте {{currency}} (от часовата ви зона)",
+  createLedgerPurposeNote:
+    "Фирма, клуб или пари, споделени с други хора, имат свой отделен регистър.",
+  createLedgerModules: "Проследявайте също в този регистър",
+  createLedgerModuleInvestments: "Инвестиции",
+  createLedgerModuleInvestmentsOutcome:
+    "Брокерски активи, дивиденти, лихви и печалби.",
+  createLedgerModuleRentalProperty: "Имот под наем",
+  createLedgerModuleRentalPropertyOutcome:
+    "Наем, депозити и разходи за един имот.",
+  createLedgerModuleSideBusiness: "Странична дейност",
+  createLedgerModuleSideBusinessOutcome:
+    "Приходи от клиенти и бизнес разходи с отделна бизнес банкова сметка.",
+  createLedgerPropertyName: "Име на имота",
+  createLedgerPropertyNameHint:
+    "Използва се в имената на сметките, например {{example}}.",
+  createLedgerPropertyNameInvalid:
+    "Започнете с главна латинска буква или цифра, след това използвайте само букви, цифри и тирета (до 64).",
+  createLedgerBalanceAsOf: "Салдо към",
+  createLedgerPublicWarning: "Всеки ще може да чете този регистър.",
+  createLedgerUseServerDefaults:
+    "Създаване с настройките по подразбиране на сървъра",
+  createLedgerSetupUnsupported:
+    "Този сървър не поддържа насочена настройка. Създайте регистъра с настройките по подразбиране на сървъра или се върнете и изберете Пример.",
+  createLedgerSummaryAccounts: {
+    one: "{{count}} сметка",
+    other: "{{count}} сметки",
+  },
   createLedgerHistoryStartInvalid:
     "Въведете валидна дата, например 2026-01-01.",
   createLedgerPresetPersonal: "Лична книга",

@@ -823,8 +823,6 @@ export const fr: Translations = {
   createLedgerNameConflict: "Un grand livre portant ce nom existe déjà.",
   createLedgerNameReserved:
     "Ce nom appartenait à un registre renommé et y redirige encore. Choisissez un autre nom.",
-  createLedgerSetupUnsupported:
-    "Ce serveur ne prend pas en charge la configuration guidée. Revenez en arrière et choisissez Débutant ou Exemple pour créer un registre avec les valeurs par défaut du serveur.",
   createLedgerCreated: "{{name}} créé",
   createLedgerSlugPreview: "Sera créé sous le nom {{slug}}",
   createLedgerDescription: "Description du grand livre",
@@ -832,9 +830,6 @@ export const fr: Translations = {
   createLedgerPrivate: "Privé",
   createLedgerPublic: "Public",
   createLedgerTemplate: "Modèle",
-  createLedgerTemplateStarter: "Débutant",
-  createLedgerTemplateStarterHint:
-    "Grand livre vide avec un plan comptable standard.",
   createLedgerTemplateSample: "Exemple",
   createLedgerTemplateSampleHint:
     "Transactions d'exemple pour explorer l'application.",
@@ -931,19 +926,11 @@ export const fr: Translations = {
   createLedgerNext: "Suivant",
   createLedgerBack: "Retour",
   createLedgerStep: "Étape {{step}} sur {{total}}",
-  createLedgerStartPreset: "Préréglage",
-  createLedgerStartPresetHint:
-    "Choisissez un plan de comptes prêt à l’emploi pour ce que vous suivez : un foyer, une entreprise, des placements.",
   createLedgerCurrency: "Devise de fonctionnement",
-  createLedgerHistoryStart: "Les livres commencent le",
   createLedgerOpeningAccount: "Compte d'ouverture",
   createLedgerOpeningAmount: "Solde d'ouverture (facultatif)",
-  createLedgerReviewOpening: "Solde d'ouverture : {{account}} {{amount}}",
   createLedgerAmountOwed: "Montant dû (facultatif)",
   createLedgerOpeningNone: "Décider plus tard",
-  createLedgerReview: "Vérifier",
-  createLedgerReviewDescription:
-    "Voici exactement ce qui sera créé. Revenez en arrière pour modifier.",
   createLedgerAccounts: "Comptes",
   createLedgerAmountInvalid: "Saisissez un montant comme 100 ou -30.50",
   createLedgerAmountReenter:
@@ -954,6 +941,33 @@ export const fr: Translations = {
   createLedgerCurrencyFromRegion: "D’après la région de l’appareil",
   createLedgerCurrencyUseTimeZone:
     "Utiliser {{currency}} (d’après votre fuseau horaire)",
+  createLedgerPurposeNote:
+    "Une entreprise, une association ou de l’argent partagé avec d’autres personnes a son propre grand livre.",
+  createLedgerModules: "Suivre aussi dans ce grand livre",
+  createLedgerModuleInvestments: "Placements",
+  createLedgerModuleInvestmentsOutcome:
+    "Titres en compte, dividendes, intérêts et plus-values.",
+  createLedgerModuleRentalProperty: "Un bien en location",
+  createLedgerModuleRentalPropertyOutcome:
+    "Loyers, dépôts de garantie et frais d’un bien.",
+  createLedgerModuleSideBusiness: "Une activité d’appoint",
+  createLedgerModuleSideBusinessOutcome:
+    "Recettes clients et frais professionnels, avec un compte bancaire professionnel distinct.",
+  createLedgerPropertyName: "Nom du bien",
+  createLedgerPropertyNameHint:
+    "Utilisé dans les noms de comptes, par exemple {{example}}.",
+  createLedgerPropertyNameInvalid:
+    "Commencez par une majuscule ou un chiffre, puis utilisez uniquement des lettres, des chiffres et des tirets (64 au maximum).",
+  createLedgerBalanceAsOf: "Solde au",
+  createLedgerPublicWarning: "Tout le monde pourra lire ce grand livre.",
+  createLedgerUseServerDefaults: "Créer avec les valeurs par défaut du serveur",
+  createLedgerSetupUnsupported:
+    "Ce serveur ne prend pas en charge la configuration guidée. Créez le grand livre avec les valeurs par défaut du serveur, ou revenez en arrière et choisissez Exemple.",
+  createLedgerSummaryAccounts: {
+    one: "{{count}} compte",
+    many: "{{count}} comptes",
+    other: "{{count}} comptes",
+  },
   createLedgerHistoryStartInvalid:
     "Saisissez une date valide comme 2026-01-01.",
   createLedgerPresetPersonal: "Livre personnel",

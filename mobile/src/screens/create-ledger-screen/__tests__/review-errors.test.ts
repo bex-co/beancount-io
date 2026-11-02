@@ -10,10 +10,12 @@ describe("Create Ledger's Review step", () => {
     "utf8",
   );
 
-  it("validates every form field before leaving the form step", () => {
+  it("validates the purpose step's field on Next and every field on Create", () => {
     expect(
-      source.includes("if (step === 1 && !(await trigger())) return;"),
+      source.includes('if (!(await trigger("propertyName"))) return;'),
     ).toBe(true);
+    // Create submits through handleSubmit, which checks the whole form.
+    expect(source.includes("const onSubmit = handleSubmit(")).toBe(true);
     expect(source.includes('trigger("name")')).toBe(false);
   });
 
@@ -62,7 +64,7 @@ describe("Create Ledger's preview failure", () => {
   it("shows a translated failure with a retry, and the server's words only for a refusal", () => {
     expect(
       source.includes(
-        'previewFailureKind(previewError)==="refused"?(<InlineErrorstyle={styles.error}message={previewError.message}/>):previewFailureKind(previewError)==="unsupported"?(<InlineErrorstyle={styles.error}message={t("createLedgerSetupUnsupported")}/>):(<><InlineErrorstyle={styles.error}message={t("ledgerLoadError")}/><PressableonPress={retryPreview}accessibilityRole="button"hitSlop={8}><Textstyle={styles.retry}>{t("discoveryRetry")}</Text></Pressable></>)',
+        'previewFailureKind(previewError)==="refused"?(<InlineErrorstyle={styles.error}message={previewError.message}/>):previewFailureKind(previewError)==="unsupported"?null:(<><InlineErrorstyle={styles.error}message={t("ledgerLoadError")}/><PressableonPress={retryPreview}accessibilityRole="button"hitSlop={8}><Textstyle={styles.retry}>{t("discoveryRetry")}</Text></Pressable></>)',
       ),
     ).toBe(true);
     expect(
@@ -81,7 +83,9 @@ describe("Create Ledger's preview failure", () => {
       ),
     ).toBe(true);
     expect(
-      source.includes("constcreateDisabled=busy||(step===2&&previewBlocked);"),
+      source.includes(
+        "constcreateDisabled=busy||(step===FORM_STEP&&previewBlocked&&!serverDefaults);",
+      ),
     ).toBe(true);
     expect(source.includes("disabled={createDisabled}")).toBe(true);
     expect(

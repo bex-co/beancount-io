@@ -35,7 +35,7 @@ describe("Create Ledger's opening line", () => {
     );
   });
 
-  it("resets on a preset or start change, hides the amount, and shows it on Review", () => {
+  it("resets on a preset or start change, hides the amount, and dates a known balance", () => {
     const source = fs.readFileSync(
       path.join(__dirname, "..", "create-ledger-screen.tsx"),
       "utf8",
@@ -45,7 +45,9 @@ describe("Create Ledger's opening line", () => {
       true,
     );
     expect(source.includes("{openingAccountValue ? (")).toBe(true);
-    expect(source.includes('t("createLedgerReviewOpening", {')).toBe(true);
+    // The summary previews the setup as sent, opening line included; the
+    // balance's own "as of" date shows only once it is known (ADR021).
+    expect(source.includes("{hasKnownBalance ? (")).toBe(true);
   });
 
   // w21/326: "12.5." typed, then "Decide later": the field disappeared but its

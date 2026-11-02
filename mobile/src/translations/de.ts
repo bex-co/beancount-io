@@ -823,8 +823,6 @@ export const de: Translations = {
   createLedgerNameConflict: "Ein Hauptbuch mit diesem Namen existiert bereits.",
   createLedgerNameReserved:
     "Dieser Name gehörte zu einem umbenannten Hauptbuch und leitet noch dorthin weiter. Wählen Sie einen anderen Namen.",
-  createLedgerSetupUnsupported:
-    "Dieser Server unterstützt die geführte Einrichtung nicht. Wählen Sie zurück Einstieg oder Beispiel, um ein Hauptbuch mit den Standardwerten des Servers anzulegen.",
   createLedgerCreated: "{{name}} angelegt",
   createLedgerSlugPreview: "Wird als {{slug}} erstellt",
   createLedgerDescription: "Beschreibung",
@@ -832,8 +830,6 @@ export const de: Translations = {
   createLedgerPrivate: "Privat",
   createLedgerPublic: "Öffentlich",
   createLedgerTemplate: "Vorlage",
-  createLedgerTemplateStarter: "Einstieg",
-  createLedgerTemplateStarterHint: "Leeres Hauptbuch mit Standard-Kontenplan.",
   createLedgerTemplateSample: "Beispiel",
   createLedgerTemplateSampleHint: "Beispielbuchungen zum Erkunden der App.",
   ledgerOwnerLimitReached:
@@ -928,19 +924,11 @@ export const de: Translations = {
   createLedgerNext: "Weiter",
   createLedgerBack: "Zurück",
   createLedgerStep: "Schritt {{step}} von {{total}}",
-  createLedgerStartPreset: "Vorlage",
-  createLedgerStartPresetHint:
-    "Wählen Sie einen fertigen Kontenplan für das, was Sie erfassen: Haushalt, Unternehmen, Investitionen.",
   createLedgerCurrency: "Betriebswährung",
-  createLedgerHistoryStart: "Bücher beginnen am",
   createLedgerOpeningAccount: "Eröffnungskonto",
   createLedgerOpeningAmount: "Eröffnungssaldo (optional)",
-  createLedgerReviewOpening: "Eröffnungssaldo: {{account}} {{amount}}",
   createLedgerAmountOwed: "Geschuldeter Betrag (optional)",
   createLedgerOpeningNone: "Später entscheiden",
-  createLedgerReview: "Überprüfen",
-  createLedgerReviewDescription:
-    "Genau das wird erstellt. Gehen Sie zurück, um etwas zu ändern.",
   createLedgerAccounts: "Konten",
   createLedgerAmountInvalid: "Geben Sie einen Betrag wie 100 oder -30.50 ein",
   createLedgerAmountReenter:
@@ -952,6 +940,32 @@ export const de: Translations = {
   createLedgerCurrencyFromRegion: "Aus der Region Ihres Geräts",
   createLedgerCurrencyUseTimeZone:
     "{{currency}} verwenden (aus Ihrer Zeitzone)",
+  createLedgerPurposeNote:
+    "Ein Unternehmen, ein Verein oder mit anderen geteiltes Geld gehört in ein eigenes Hauptbuch.",
+  createLedgerModules: "Auch in diesem Hauptbuch erfassen",
+  createLedgerModuleInvestments: "Geldanlagen",
+  createLedgerModuleInvestmentsOutcome:
+    "Depotbestände, Dividenden, Zinsen und Gewinne.",
+  createLedgerModuleRentalProperty: "Eine vermietete Immobilie",
+  createLedgerModuleRentalPropertyOutcome:
+    "Miete, Kautionen und Kosten für eine Immobilie.",
+  createLedgerModuleSideBusiness: "Eine Nebentätigkeit",
+  createLedgerModuleSideBusinessOutcome:
+    "Kundeneinnahmen und Geschäftskosten, mit einem eigenen Geschäftskonto.",
+  createLedgerPropertyName: "Name der Immobilie",
+  createLedgerPropertyNameHint:
+    "Wird in Kontonamen verwendet, z. B. {{example}}.",
+  createLedgerPropertyNameInvalid:
+    "Beginnen Sie mit einem Großbuchstaben oder einer Ziffer und verwenden Sie nur Buchstaben, Ziffern und Bindestriche (höchstens 64).",
+  createLedgerBalanceAsOf: "Saldo zum",
+  createLedgerPublicWarning: "Jeder kann dieses Hauptbuch lesen.",
+  createLedgerUseServerDefaults: "Mit den Standardwerten des Servers erstellen",
+  createLedgerSetupUnsupported:
+    "Dieser Server unterstützt die geführte Einrichtung nicht. Erstellen Sie das Hauptbuch mit den Standardwerten des Servers, oder gehen Sie zurück und wählen Sie Beispiel.",
+  createLedgerSummaryAccounts: {
+    one: "{{count}} Konto",
+    other: "{{count}} Konten",
+  },
   createLedgerHistoryStartInvalid:
     "Geben Sie ein gültiges Datum wie 2026-01-01 ein.",
   createLedgerPresetPersonal: "Persönliches Buch",

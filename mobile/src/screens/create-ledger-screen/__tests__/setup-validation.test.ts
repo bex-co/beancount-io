@@ -77,7 +77,15 @@ describe("the setup payload", () => {
         "utf8",
       )
       .replace(/\s+/gu, "");
-    expect(screen.includes("...setupFields(values),")).toBe(true);
+    expect(screen.includes("constfields=setupFields(values);")).toBe(true);
+    expect(screen.includes("operatingCurrency:fields.operatingCurrency,")).toBe(
+      true,
+    );
+    expect(
+      screen.includes(
+        "historyStart:opening?fields.historyStart:defaultHistoryStart(),",
+      ),
+    ).toBe(true);
   });
 });
 
@@ -132,7 +140,7 @@ describe("a blank Books begin settled on entering Review", () => {
     expect(setupFields(settled, afterMidnight).historyStart).toBe("2026-10-21");
   });
 
-  it("is written back when Next leaves the form step", () => {
+  it("is written back when Create leaves the form step", () => {
     const source = fs
       .readFileSync(
         path.join(__dirname, "..", "create-ledger-screen.tsx"),
@@ -141,7 +149,7 @@ describe("a blank Books begin settled on entering Review", () => {
       .replace(/\s+/g, "");
     expect(
       source.includes(
-        'if(step===1)setValue("historyStart",setupFields(getValues()).historyStart,);',
+        'setValue("historyStart",setupFields(getValues()).historyStart,);voidonSubmit();',
       ),
     ).toBe(true);
   });

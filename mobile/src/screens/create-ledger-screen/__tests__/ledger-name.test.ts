@@ -196,13 +196,14 @@ describe("the Review step", () => {
     .replace(/\s+/g, "") as string;
 
   it("shows the name the ledger will get, and whether it is private (w21/477)", () => {
+    // Under the name field, the address the server will make; in the summary
+    // beside Create, the visibility.
     expect(
-      source.includes('{slugifyLedgerName(nameValue??"")||nameValue}'),
+      source.includes('t("createLedgerSlugPreview",{slug:slugPreview})'),
     ).toBe(true);
-    expect(source.includes("{slugPreview||nameValue}")).toBe(false);
     expect(
       source.includes(
-        '{privateValue?t("createLedgerPrivate"):t("createLedgerPublic")}',
+        'privateValue?t("createLedgerPrivate"):t("createLedgerPublic"),',
       ),
     ).toBe(true);
   });

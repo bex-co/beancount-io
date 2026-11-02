@@ -823,8 +823,6 @@ export const en = {
   createLedgerNameConflict: "A ledger with this name already exists.",
   createLedgerNameReserved:
     "That name belonged to a ledger that was renamed, and still redirects to it. Choose a different name.",
-  createLedgerSetupUnsupported:
-    "This server does not support guided setup. Go back and choose Starter or Sample to create a ledger with the server's defaults.",
   createLedgerCreated: "Created {{name}}",
   createLedgerSlugPreview: "Will be created as {{slug}}",
   createLedgerDescription: "Description",
@@ -832,9 +830,6 @@ export const en = {
   createLedgerPrivate: "Private",
   createLedgerPublic: "Public",
   createLedgerTemplate: "Template",
-  createLedgerTemplateStarter: "Starter",
-  createLedgerTemplateStarterHint:
-    "Empty books with a standard chart of accounts.",
   createLedgerTemplateSample: "Sample",
   createLedgerTemplateSampleHint:
     "Example transactions so you can explore the app.",
@@ -850,19 +845,11 @@ export const en = {
   createLedgerNext: "Next",
   createLedgerBack: "Back",
   createLedgerStep: "Step {{step}} of {{total}}",
-  createLedgerStartPreset: "Preset",
-  createLedgerStartPresetHint:
-    "Pick a ready-made chart of accounts for what you track: a household, a business, investments.",
   createLedgerCurrency: "Operating currency",
-  createLedgerHistoryStart: "Books begin",
   createLedgerOpeningAccount: "Opening account",
   createLedgerOpeningAmount: "Opening balance (optional)",
-  createLedgerReviewOpening: "Opening balance: {{account}} {{amount}}",
   createLedgerAmountOwed: "Amount owed (optional)",
   createLedgerOpeningNone: "Decide later",
-  createLedgerReview: "Review",
-  createLedgerReviewDescription:
-    "This is exactly what will be created. Go back to change anything.",
   createLedgerAccounts: "Accounts",
   createLedgerAmountInvalid: "Enter an amount like 100 or -30.50.",
   createLedgerAmountReenter:
@@ -872,6 +859,31 @@ export const en = {
   createLedgerCurrencyFromDevice: "From your device settings",
   createLedgerCurrencyFromRegion: "From your device region",
   createLedgerCurrencyUseTimeZone: "Use {{currency}} (from your time zone)",
+  createLedgerPurposeNote:
+    "A company, a club, or money shared with other people belongs in its own ledger.",
+  createLedgerModules: "Also track in this ledger",
+  createLedgerModuleInvestments: "Investments",
+  createLedgerModuleInvestmentsOutcome:
+    "Brokerage holdings, dividends, interest, and gains.",
+  createLedgerModuleRentalProperty: "A rental property",
+  createLedgerModuleRentalPropertyOutcome:
+    "Rent, deposits, and costs for one property.",
+  createLedgerModuleSideBusiness: "A side business",
+  createLedgerModuleSideBusinessOutcome:
+    "Client income and business costs, with a separate business bank account.",
+  createLedgerPropertyName: "Property name",
+  createLedgerPropertyNameHint: "Used in account names, such as {{example}}.",
+  createLedgerPropertyNameInvalid:
+    "Start with a capital letter or a digit, then use only letters, digits, and hyphens (up to 64).",
+  createLedgerBalanceAsOf: "Balance as of",
+  createLedgerPublicWarning: "Anyone will be able to read this ledger.",
+  createLedgerUseServerDefaults: "Create with the server's defaults",
+  createLedgerSetupUnsupported:
+    "This server does not support guided setup. Create the ledger with the server's defaults, or go back and choose Sample.",
+  createLedgerSummaryAccounts: {
+    one: "{{count}} account",
+    other: "{{count}} accounts",
+  },
   createLedgerHistoryStartInvalid: "Enter a real date like 2026-01-01.",
   createLedgerPresetPersonal: "Personal ledger",
   createLedgerPresetPersonalOutcome:

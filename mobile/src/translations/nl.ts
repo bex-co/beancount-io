@@ -807,8 +807,6 @@ export const nl: Translations = {
   createLedgerNameConflict: "Er bestaat al een grootboek met deze naam.",
   createLedgerNameReserved:
     "Die naam hoorde bij een hernoemd grootboek en verwijst er nog naar door. Kies een andere naam.",
-  createLedgerSetupUnsupported:
-    "Deze server ondersteunt de begeleide installatie niet. Ga terug en kies Start of Voorbeeld om een grootboek met de standaardwaarden van de server te maken.",
   createLedgerCreated: "{{name}} aangemaakt",
   createLedgerSlugPreview: "Wordt aangemaakt als {{slug}}",
   createLedgerDescription: "Beschrijving",
@@ -816,9 +814,6 @@ export const nl: Translations = {
   createLedgerPrivate: "Privé",
   createLedgerPublic: "Openbaar",
   createLedgerTemplate: "Sjabloon",
-  createLedgerTemplateStarter: "Start",
-  createLedgerTemplateStarterHint:
-    "Leeg grootboek met een standaard rekeningschema.",
   createLedgerTemplateSample: "Voorbeeld",
   createLedgerTemplateSampleHint:
     "Voorbeeldtransacties om de app te verkennen.",
@@ -912,19 +907,11 @@ export const nl: Translations = {
   createLedgerNext: "Volgende",
   createLedgerBack: "Terug",
   createLedgerStep: "Stap {{step}} van {{total}}",
-  createLedgerStartPreset: "Voorinstelling",
-  createLedgerStartPresetHint:
-    "Kies een kant-en-klaar rekeningschema voor wat je bijhoudt: een huishouden, een bedrijf, beleggingen.",
   createLedgerCurrency: "Operationele valuta",
-  createLedgerHistoryStart: "Boeken beginnen op",
   createLedgerOpeningAccount: "Openingsrekening",
   createLedgerOpeningAmount: "Openingssaldo (optioneel)",
-  createLedgerReviewOpening: "Openingssaldo: {{account}} {{amount}}",
   createLedgerAmountOwed: "Verschuldigd bedrag (optioneel)",
   createLedgerOpeningNone: "Later beslissen",
-  createLedgerReview: "Controleren",
-  createLedgerReviewDescription:
-    "Dit is precies wat er wordt gemaakt. Ga terug om iets te wijzigen.",
   createLedgerAccounts: "Rekeningen",
   createLedgerAmountInvalid: "Voer een bedrag in zoals 100 of -30.50",
   createLedgerAmountReenter:
@@ -934,6 +921,33 @@ export const nl: Translations = {
   createLedgerCurrencyFromDevice: "Uit de instellingen van je apparaat",
   createLedgerCurrencyFromRegion: "Uit de regio van je apparaat",
   createLedgerCurrencyUseTimeZone: "{{currency}} gebruiken (uit je tijdzone)",
+  createLedgerPurposeNote:
+    "Een bedrijf, een vereniging of geld dat je met anderen deelt, hoort in een eigen grootboek.",
+  createLedgerModules: "Ook in dit grootboek bijhouden",
+  createLedgerModuleInvestments: "Beleggingen",
+  createLedgerModuleInvestmentsOutcome:
+    "Effectenbezit, dividenden, rente en winsten.",
+  createLedgerModuleRentalProperty: "Een verhuurde woning",
+  createLedgerModuleRentalPropertyOutcome:
+    "Huur, borgsommen en kosten van één woning.",
+  createLedgerModuleSideBusiness: "Een bijverdienste",
+  createLedgerModuleSideBusinessOutcome:
+    "Klantinkomsten en bedrijfskosten, met een aparte zakelijke bankrekening.",
+  createLedgerPropertyName: "Naam van de woning",
+  createLedgerPropertyNameHint:
+    "Wordt gebruikt in rekeningnamen, zoals {{example}}.",
+  createLedgerPropertyNameInvalid:
+    "Begin met een hoofdletter of cijfer en gebruik alleen letters, cijfers en koppeltekens (maximaal 64).",
+  createLedgerBalanceAsOf: "Saldo per",
+  createLedgerPublicWarning: "Iedereen kan dit grootboek lezen.",
+  createLedgerUseServerDefaults:
+    "Aanmaken met de standaardwaarden van de server",
+  createLedgerSetupUnsupported:
+    "Deze server ondersteunt de begeleide instelling niet. Maak het grootboek aan met de standaardwaarden van de server, of ga terug en kies Voorbeeld.",
+  createLedgerSummaryAccounts: {
+    one: "{{count}} rekening",
+    other: "{{count}} rekeningen",
+  },
   createLedgerHistoryStartInvalid:
     "Voer een geldige datum in, zoals 2026-01-01.",
   createLedgerPresetPersonal: "Persoonlijk grootboek",

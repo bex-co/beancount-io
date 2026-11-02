@@ -131,6 +131,7 @@ function screen(
           };
         if (id === "./currency-suggestion")
           return require("../currency-suggestion");
+        if (id === "./setup-modules") return require("../setup-modules");
         if (id === "./currency-suggestion-hint")
           return { CurrencySuggestionHint: () => null };
         if (id === "../plan-screen/plan-card")
@@ -266,18 +267,26 @@ describe("ledger creation directory refresh", () => {
     ]);
   });
 
-  // w21/592: a server older than guided setup rejects `setup` and `requestId`
-  // before anything runs. Starter and Sample still create without them.
-  it("creates a Starter ledger on a server that rejects the new arguments", async () => {
+  // w21/592, ADR021: a server older than guided setup rejects `setup` and
+  // `requestId` before anything runs. A purpose cannot be built there, so the
+  // screen says so and offers the server's defaults as an explicit choice; it
+  // never falls back on its own.
+  it("offers, and never takes, the server's defaults when setup is refused", async () => {
     const { submit, events } = screen(false, true, {});
     await submit();
-    expect(events).toEqual([
-      "rejected",
-      "basic:description,name,private",
-      "refresh-start",
-      "refresh-settled",
-      "select",
-      "navigate",
-    ]);
+    expect(events).toEqual(["rejected", "form-error"]);
+    const source = fs
+      .readFileSync(path.join(__dirname, "../create-ledger-screen.tsx"), "utf8")
+      .replace(/\s+/g, "");
+    // The choice is a button that marks the next create as the server's
+    // defaults, which then goes through the basic mutation.
+    expect(
+      source.includes(
+        "serverDefaultsRef.current=true;setServerDefaults(true);voidonSubmit();",
+      ),
+    ).toBe(true);
+    expect(
+      source.includes('if(serverDefaultsRef.current&&startKind==="preset"){'),
+    ).toBe(true);
   });
 });

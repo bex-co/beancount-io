@@ -816,8 +816,6 @@ export const uk: Translations = {
   createLedgerNameConflict: "Книга з такою назвою вже існує.",
   createLedgerNameReserved:
     "Ця назва належала перейменованій книзі й досі перенаправляє на неї. Виберіть іншу назву.",
-  createLedgerSetupUnsupported:
-    "Цей сервер не підтримує покрокове налаштування. Поверніться й виберіть «Стартова» або «Приклад», щоб створити книгу зі стандартними налаштуваннями сервера.",
   createLedgerCreated: "Створено {{name}}",
   createLedgerSlugPreview: "Буде створено як {{slug}}",
   createLedgerDescription: "Опис",
@@ -825,9 +823,6 @@ export const uk: Translations = {
   createLedgerPrivate: "Приватна",
   createLedgerPublic: "Публічна",
   createLedgerTemplate: "Шаблон",
-  createLedgerTemplateStarter: "Стартова",
-  createLedgerTemplateStarterHint:
-    "Порожня книга зі стандартним планом рахунків.",
   createLedgerTemplateSample: "Приклад",
   createLedgerTemplateSampleHint:
     "Приклади транзакцій, щоб дослідити застосунок.",
@@ -926,19 +921,11 @@ export const uk: Translations = {
   createLedgerNext: "Далі",
   createLedgerBack: "Назад",
   createLedgerStep: "Крок {{step}} з {{total}}",
-  createLedgerStartPreset: "Шаблон",
-  createLedgerStartPresetHint:
-    "Виберіть готовий план рахунків для того, що ви відстежуєте: домогосподарство, бізнес, інвестиції.",
   createLedgerCurrency: "Операційна валюта",
-  createLedgerHistoryStart: "Книги починаються з",
   createLedgerOpeningAccount: "Рахунок відкриття",
   createLedgerOpeningAmount: "Початковий залишок (необов’язково)",
-  createLedgerReviewOpening: "Початковий залишок: {{account}} {{amount}}",
   createLedgerAmountOwed: "Сума боргу (необов’язково)",
   createLedgerOpeningNone: "Вирішити пізніше",
-  createLedgerReview: "Перевірка",
-  createLedgerReviewDescription:
-    "Буде створено саме це. Поверніться, щоб щось змінити.",
   createLedgerAccounts: "Рахунки",
   createLedgerAmountInvalid: "Введіть суму, наприклад 100 або -30.50",
   createLedgerAmountReenter:
@@ -949,6 +936,34 @@ export const uk: Translations = {
   createLedgerCurrencyFromRegion: "За регіоном пристрою",
   createLedgerCurrencyUseTimeZone:
     "Використати {{currency}} (за часовим поясом)",
+  createLedgerPurposeNote:
+    "Компанії, клубу чи грошам, спільним з іншими людьми, потрібна окрема книга.",
+  createLedgerModules: "Також відстежувати в цій книзі",
+  createLedgerModuleInvestments: "Інвестиції",
+  createLedgerModuleInvestmentsOutcome:
+    "Активи в брокера, дивіденди, відсотки та прибутки.",
+  createLedgerModuleRentalProperty: "Нерухомість в оренду",
+  createLedgerModuleRentalPropertyOutcome:
+    "Орендна плата, застави та витрати одного об’єкта.",
+  createLedgerModuleSideBusiness: "Підробіток",
+  createLedgerModuleSideBusinessOutcome:
+    "Доходи від клієнтів і ділові витрати з окремим діловим банківським рахунком.",
+  createLedgerPropertyName: "Назва об’єкта",
+  createLedgerPropertyNameHint:
+    "Використовується в назвах рахунків, наприклад {{example}}.",
+  createLedgerPropertyNameInvalid:
+    "Почніть із великої латинської літери чи цифри, далі використовуйте лише літери, цифри та дефіси (до 64).",
+  createLedgerBalanceAsOf: "Залишок на дату",
+  createLedgerPublicWarning: "Цю книгу зможе читати будь-хто.",
+  createLedgerUseServerDefaults: "Створити з типовими налаштуваннями сервера",
+  createLedgerSetupUnsupported:
+    "Цей сервер не підтримує покрокове налаштування. Створіть книгу з типовими налаштуваннями сервера або поверніться й виберіть «Приклад».",
+  createLedgerSummaryAccounts: {
+    one: "{{count}} рахунок",
+    few: "{{count}} рахунки",
+    many: "{{count}} рахунків",
+    other: "{{count}} рахунку",
+  },
   createLedgerHistoryStartInvalid:
     "Введіть коректну дату, наприклад 2026-01-01.",
   createLedgerPresetPersonal: "Особиста книга",

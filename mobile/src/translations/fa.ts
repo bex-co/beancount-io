@@ -792,8 +792,6 @@ export const fa: Translations = {
   createLedgerNameConflict: "دفترکلی با این نام از قبل وجود دارد.",
   createLedgerNameReserved:
     "این نام متعلق به دفتری بود که تغییر نام داده و هنوز به آن هدایت می‌شود. نام دیگری انتخاب کنید.",
-  createLedgerSetupUnsupported:
-    "این سرور راه‌اندازی راهنما را پشتیبانی نمی‌کند. برگردید و «شروع» یا «نمونه» را انتخاب کنید تا دفتری با پیش‌فرض‌های سرور بسازید.",
   createLedgerCreated: "{{name}} ساخته شد",
   createLedgerSlugPreview: "با نام {{slug}} ایجاد می‌شود",
   createLedgerDescription: "توضیح",
@@ -801,8 +799,6 @@ export const fa: Translations = {
   createLedgerPrivate: "خصوصی",
   createLedgerPublic: "عمومی",
   createLedgerTemplate: "قالب",
-  createLedgerTemplateStarter: "شروع",
-  createLedgerTemplateStarterHint: "دفترکل خالی با سرفصل‌های استاندارد.",
   createLedgerTemplateSample: "نمونه",
   createLedgerTemplateSampleHint: "تراکنش‌های نمونه برای کاوش در برنامه.",
   ledgerOwnerLimitReached:
@@ -893,19 +889,11 @@ export const fa: Translations = {
   createLedgerNext: "بعدی",
   createLedgerBack: "بازگشت",
   createLedgerStep: "گام {{step}} از {{total}}",
-  createLedgerStartPreset: "پیش‌تنظیم",
-  createLedgerStartPresetHint:
-    "یک ساختار حساب آماده برای آنچه پیگیری می‌کنید انتخاب کنید: خانوار، کسب‌وکار، سرمایه‌گذاری.",
   createLedgerCurrency: "ارز عملیاتی",
-  createLedgerHistoryStart: "دفاتر از تاریخ",
   createLedgerOpeningAccount: "حساب افتتاحیه",
   createLedgerOpeningAmount: "موجودی افتتاحیه (اختیاری)",
-  createLedgerReviewOpening: "موجودی افتتاحیه: {{account}} {{amount}}",
   createLedgerAmountOwed: "مبلغ بدهی (اختیاری)",
   createLedgerOpeningNone: "تصمیم‌گیری در آینده",
-  createLedgerReview: "بازبینی",
-  createLedgerReviewDescription:
-    "دقیقاً همین ایجاد خواهد شد. برای تغییر به عقب برگردید.",
   createLedgerAccounts: "حساب‌ها",
   createLedgerAmountInvalid: "مبلغی مانند 100 یا -30.50 وارد کنید",
   createLedgerAmountReenter:
@@ -916,6 +904,32 @@ export const fa: Translations = {
   createLedgerCurrencyFromRegion: "از منطقهٔ دستگاه",
   createLedgerCurrencyUseTimeZone:
     "استفاده از {{currency}} (از منطقهٔ زمانی شما)",
+  createLedgerPurposeNote:
+    "یک شرکت، یک باشگاه یا پولی که با دیگران شریک هستید، دفتر جداگانهٔ خود را می‌خواهد.",
+  createLedgerModules: "در این دفتر هم پیگیری شود",
+  createLedgerModuleInvestments: "سرمایه‌گذاری‌ها",
+  createLedgerModuleInvestmentsOutcome:
+    "دارایی‌های کارگزاری، سود سهام، بهره و سود فروش.",
+  createLedgerModuleRentalProperty: "یک ملک اجاره‌ای",
+  createLedgerModuleRentalPropertyOutcome:
+    "اجاره، ودیعه‌ها و هزینه‌های یک ملک.",
+  createLedgerModuleSideBusiness: "یک کسب‌وکار جانبی",
+  createLedgerModuleSideBusinessOutcome:
+    "درآمد مشتریان و هزینه‌های کسب‌وکار، با یک حساب بانکی جداگانهٔ کسب‌وکار.",
+  createLedgerPropertyName: "نام ملک",
+  createLedgerPropertyNameHint:
+    "در نام حساب‌ها به کار می‌رود، مثلاً {{example}}.",
+  createLedgerPropertyNameInvalid:
+    "با یک حرف بزرگ لاتین یا یک رقم شروع کنید و فقط از حروف، ارقام و خط تیره استفاده کنید (حداکثر ۶۴).",
+  createLedgerBalanceAsOf: "مانده در تاریخ",
+  createLedgerPublicWarning: "همه می‌توانند این دفتر را بخوانند.",
+  createLedgerUseServerDefaults: "ایجاد با پیش‌فرض‌های سرور",
+  createLedgerSetupUnsupported:
+    "این سرور از راه‌اندازی هدایت‌شده پشتیبانی نمی‌کند. دفتر را با پیش‌فرض‌های سرور ایجاد کنید یا برگردید و «نمونه» را انتخاب کنید.",
+  createLedgerSummaryAccounts: {
+    one: "{{count}} حساب",
+    other: "{{count}} حساب",
+  },
   createLedgerHistoryStartInvalid: "یک تاریخ معتبر مانند 2026-01-01 وارد کنید.",
   createLedgerPresetPersonal: "دفتر شخصی",
   createLedgerPresetPersonalOutcome:

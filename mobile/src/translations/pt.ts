@@ -819,8 +819,6 @@ export const pt: Translations = {
   createLedgerNameConflict: "Já existe um livro com este nome.",
   createLedgerNameReserved:
     "Esse nome era de um livro renomeado e ainda redireciona para ele. Escolha outro nome.",
-  createLedgerSetupUnsupported:
-    "Este servidor não suporta a configuração guiada. Volte e escolha Inicial ou Exemplo para criar um livro com os padrões do servidor.",
   createLedgerCreated: "{{name}} criado",
   createLedgerSlugPreview: "Será criado como {{slug}}",
   createLedgerDescription: "Descrição",
@@ -828,9 +826,6 @@ export const pt: Translations = {
   createLedgerPrivate: "Privado",
   createLedgerPublic: "Público",
   createLedgerTemplate: "Modelo",
-  createLedgerTemplateStarter: "Inicial",
-  createLedgerTemplateStarterHint:
-    "Livros vazios com um plano de contas padrão.",
   createLedgerTemplateSample: "Exemplo",
   createLedgerTemplateSampleHint:
     "Transações de exemplo para explorar o aplicativo.",
@@ -926,19 +921,11 @@ export const pt: Translations = {
   createLedgerNext: "Próximo",
   createLedgerBack: "Voltar",
   createLedgerStep: "Passo {{step}} de {{total}}",
-  createLedgerStartPreset: "Predefinição",
-  createLedgerStartPresetHint:
-    "Escolha um plano de contas pronto para o que você acompanha: uma casa, um negócio, investimentos.",
   createLedgerCurrency: "Moeda de operação",
-  createLedgerHistoryStart: "Os livros começam em",
   createLedgerOpeningAccount: "Conta de abertura",
   createLedgerOpeningAmount: "Saldo inicial (opcional)",
-  createLedgerReviewOpening: "Saldo inicial: {{account}} {{amount}}",
   createLedgerAmountOwed: "Valor devido (opcional)",
   createLedgerOpeningNone: "Decidir depois",
-  createLedgerReview: "Revisar",
-  createLedgerReviewDescription:
-    "É exatamente isto que será criado. Volte para alterar algo.",
   createLedgerAccounts: "Contas",
   createLedgerAmountInvalid: "Insira um valor como 100 ou -30.50",
   createLedgerAmountReenter:
@@ -948,6 +935,33 @@ export const pt: Translations = {
   createLedgerCurrencyFromDevice: "Das configurações do aparelho",
   createLedgerCurrencyFromRegion: "Da região do aparelho",
   createLedgerCurrencyUseTimeZone: "Usar {{currency}} (do seu fuso horário)",
+  createLedgerPurposeNote:
+    "Uma empresa, um clube ou dinheiro compartilhado com outras pessoas tem seu próprio livro-razão.",
+  createLedgerModules: "Acompanhar também neste livro-razão",
+  createLedgerModuleInvestments: "Investimentos",
+  createLedgerModuleInvestmentsOutcome:
+    "Ativos na corretora, dividendos, juros e ganhos.",
+  createLedgerModuleRentalProperty: "Um imóvel alugado",
+  createLedgerModuleRentalPropertyOutcome:
+    "Aluguel, cauções e despesas de um imóvel.",
+  createLedgerModuleSideBusiness: "Uma atividade paralela",
+  createLedgerModuleSideBusinessOutcome:
+    "Receitas de clientes e despesas do negócio, com uma conta bancária do negócio separada.",
+  createLedgerPropertyName: "Nome do imóvel",
+  createLedgerPropertyNameHint:
+    "Usado nos nomes das contas, por exemplo {{example}}.",
+  createLedgerPropertyNameInvalid:
+    "Comece com uma letra maiúscula ou um dígito e use apenas letras, dígitos e hífens (até 64).",
+  createLedgerBalanceAsOf: "Saldo em",
+  createLedgerPublicWarning: "Qualquer pessoa poderá ler este livro-razão.",
+  createLedgerUseServerDefaults: "Criar com os padrões do servidor",
+  createLedgerSetupUnsupported:
+    "Este servidor não oferece configuração guiada. Crie o livro-razão com os padrões do servidor ou volte e escolha Exemplo.",
+  createLedgerSummaryAccounts: {
+    one: "{{count}} conta",
+    many: "{{count}} contas",
+    other: "{{count}} contas",
+  },
   createLedgerHistoryStartInvalid: "Digite uma data válida como 2026-01-01.",
   createLedgerPresetPersonal: "Livro pessoal",
   createLedgerPresetPersonalOutcome:
