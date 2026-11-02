@@ -1423,6 +1423,13 @@ describe("LedgerWorkflow", () => {
   });
 
   describe("searchLedgers", () => {
+    it("refuses a NUL in q as BAD_USER_INPUT before the search", async () => {
+      await expect(
+        workflow.searchLedgers({ identity: IDENTITY, args: { q: "a\u0000b" } }),
+      ).rejects.toMatchObject({ category: "BAD_USER_INPUT" });
+      expect(mockFavaApiClient.ledgers.searchLedgers).not.toHaveBeenCalled();
+    });
+
     it("should return search results", async () => {
       mockFavaApiClient.ledgers.searchLedgers.mockResolvedValue({
         data: {
@@ -1860,9 +1867,7 @@ describe("LedgerWorkflow", () => {
           input: { path: "second.bean", sha: "abc123" },
         }),
       ).rejects.toThrow(/second\.bean is still included by main\.bean/);
-      expect(
-        mockFavaApiClient.ledgers.deleteLedgerFile,
-      ).not.toHaveBeenCalled();
+      expect(mockFavaApiClient.ledgers.deleteLedgerFile).not.toHaveBeenCalled();
     });
 
     it("should throw error when path is empty", async () => {

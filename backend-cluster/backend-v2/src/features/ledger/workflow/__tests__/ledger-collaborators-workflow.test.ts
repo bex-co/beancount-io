@@ -237,8 +237,8 @@ describe("LedgerCollaboratorsWorkflow authorization", () => {
     ).rejects.toThrow("upstream down");
   });
 
-  it.each(["", "   "])(
-    "refuses a blank collaborator name %j on update, delete and permission read before any upstream work",
+  it.each(["", "   ", "a\u0000b"])(
+    "refuses a blank or NUL collaborator name %j on update, delete and permission read before any upstream work",
     async (collaborator) => {
       await expect(
         workflow.addOrUpdateCollaborator({
@@ -430,7 +430,8 @@ describe("LedgerCollaboratorsWorkflow authorization", () => {
     ],
     [
       "leave",
-      () => workflow.leaveLedger({ identity, ledgerId, input: { dryRun: true } }),
+      () =>
+        workflow.leaveLedger({ identity, ledgerId, input: { dryRun: true } }),
     ],
   ] as const)(
     "authorizes before reading anything on a %s preview, like the commit",

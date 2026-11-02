@@ -162,6 +162,14 @@ describe("UserProfileService", () => {
   );
 
   describe("getUserProfile", () => {
+    it("refuses a NUL in the username as BAD_USER_INPUT before any upstream call", async () => {
+      await expect(service.getUserProfile("a\u0000b")).rejects.toMatchObject({
+        category: "BAD_USER_INPUT",
+        message: expect.stringContaining("username"),
+      });
+      expect(mockGiteaClient.users.userGet).not.toHaveBeenCalled();
+    });
+
     it("should fetch and transform user profile successfully", async () => {
       const mockUser = createMockGiteaUser();
       mockGiteaClient.users.userGet.mockResolvedValue({ data: mockUser });

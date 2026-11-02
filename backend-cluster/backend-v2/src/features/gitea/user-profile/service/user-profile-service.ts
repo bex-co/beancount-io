@@ -1,3 +1,4 @@
+import { assertNoNul } from "@/shared/assert-no-nul";
 import { publicAvatarUrl } from "@/shared/gitea-utils";
 import { assertHostPage } from "@/shared/host-page";
 import type { DbExecutor } from "@/drizzle/drizzle";
@@ -87,6 +88,7 @@ export class UserProfileService implements IUserProfileService {
     username: string,
     userId?: string,
   ): Promise<PublicUserProfileResponse> {
+    assertNoNul(username, "username");
     const giteaClient = this.giteaClientFactory.getAnonymousApiClient();
 
     // Fetch user profile
@@ -447,7 +449,11 @@ export class UserProfileService implements IUserProfileService {
           )
         : await this.giteaClientFactory
             .getAdminApiClient()
-            .users.userListStarred(username, { page, limit }, { format: "json" });
+            .users.userListStarred(
+              username,
+              { page, limit },
+              { format: "json" },
+            );
 
       const repositories = response.data || [];
       return {
@@ -465,9 +471,8 @@ export class UserProfileService implements IUserProfileService {
   /** The viewer's own Gitea client when `username` is the viewer, else null. */
   private async ownGiteaClientFor(viewerUserId: string, username: string) {
     try {
-      const client = await this.giteaClientFactory.getUserApiClient(
-        viewerUserId,
-      );
+      const client =
+        await this.giteaClientFactory.getUserApiClient(viewerUserId);
       const me = await client.user.userGetCurrent({ format: "json" });
       return me.data?.login?.toLowerCase() === username.toLowerCase()
         ? client

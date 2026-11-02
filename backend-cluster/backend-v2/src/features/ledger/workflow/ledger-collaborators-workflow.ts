@@ -1,3 +1,4 @@
+import { assertNoNul } from "@/shared/assert-no-nul";
 import { type IStripeService } from "@/features/stripe/service/stripe-service";
 import { assertHostPage } from "@/shared/host-page";
 import { type IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
@@ -48,6 +49,7 @@ function translateUnknownUser(error: unknown, collaborator: string): unknown {
  * upstream it fails opaquely and reads as a server fault.
  */
 function assertCollaboratorName(collaborator: string): void {
+  assertNoNul(collaborator, "collaborator");
   if (collaborator.trim() === "") {
     throw new BadUserInputError(
       "collaborator must be a non-empty username",

@@ -58,4 +58,4 @@
 - [x] [207](./done/207.md) — read-only credential gets `NOT_FOUND`/`BAD_USER_INPUT` not `FORBIDDEN` from `deleteLedgerFiles`/`updateLedgerFiles` for a missing file or non-matching edit (REST 403); authorization runs after `prepare()`
 - [x] [208](./done/208.md) — non-string `cursor` on tools/list, resources/list, resources/templates/list and prompts/list answers `-32603` with a raw Zod dump; other methods answer `-32602` `BAD_USER_INPUT`
 - [ ] [209](./209.md) — ledger-backed calls failed ~12 min starting at a 100 KB `runBqlQuery`; cause unverified, needs a non-production reproduction
-- [ ] [210](./210.md) — a NUL byte in `q` (catalog search), `username` (`social/profile`) or `collaborator` answers `SERVICE_UNAVAILABLE`/`INTERNAL_SERVER_ERROR`, not `BAD_USER_INPUT`
+- [x] [210](./done/210.md) — a NUL byte in `q` (catalog search), `username` (`social/profile`) or `collaborator` answers `SERVICE_UNAVAILABLE`/`INTERNAL_SERVER_ERROR`, not `BAD_USER_INPUT`

@@ -1,3 +1,4 @@
+import { assertNoNul } from "@/shared/assert-no-nul";
 import { isUtf8 } from "buffer";
 import {
   assertNoPortableTwin,
@@ -423,6 +424,7 @@ interface CreateRequestRecord {
  * the same values the REST and MCP schema do.
  */
 function assertSearchArgs(args: SearchLedgersParams): void {
+  assertNoNul(args.q, "q");
   const page = args.page ?? undefined;
   if (page !== undefined && (!Number.isSafeInteger(page) || page < 1)) {
     throw new BadUserInputError("page must be a positive integer", "page");
@@ -853,7 +855,11 @@ export class LedgerWorkflow implements ILedgerWorkflow {
       // Authorization stays the commit's: previewing admin changes requires
       // admin, exactly as committing them does.
       const current = await this.getLedger({ ledgerId, identity });
-      return { ...current, dryRun: true, preview: previewLedgerUpdate(current, input) };
+      return {
+        ...current,
+        dryRun: true,
+        preview: previewLedgerUpdate(current, input),
+      };
     }
     const ledgerUpdate: LedgerUpdate = {
       name: input.name,
@@ -1607,7 +1613,11 @@ export class LedgerWorkflow implements ILedgerWorkflow {
         "list ledgers",
       );
       return data.map((ledger) =>
-        mapToLedger(ledger as FavaLedgerPublic, this.config.gitea, capabilities),
+        mapToLedger(
+          ledger as FavaLedgerPublic,
+          this.config.gitea,
+          capabilities,
+        ),
       );
     }, args);
   }
