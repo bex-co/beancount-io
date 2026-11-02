@@ -18,7 +18,7 @@
 
 **Blocked 2026-11-01** — t001 shipped in `9bbc79a1b`. t002 cannot start, and t003 to t007 all follow it.
 
-- **t002 needs a new dependency and sandbox products.** Verifying signed transactions uses Apple's App Store Server Library, and the repository rule is to ask before adding a dependency. Recording the sandbox fixtures its contract tests need requires the m2/t002 products. **Unblock:** the owner approves the dependency, and m2/t002 is done.
+- **t002 needs sandbox products.** The owner approved Apple's App Store Server Library on 2026-11-01 (`@apple/app-store-server-library`). Recording the sandbox fixtures its contract tests need requires the m2/t002 products. **Unblock:** m2/t002 is done.
 
 Who can clear it: the owner. m4 and m5 follow this: m4/t001 needs t002 and m2/t003, and m5/t001 needs t003 and m4/t002.
 

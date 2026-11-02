@@ -59,6 +59,7 @@ A subscriber has one Beancount plan whichever of Stripe, the App Store, or Googl
 | Organization monthly | Organization monthly Price ID | `io.beancount.organization.monthly` | `organization` / `monthly`           |
 | Organization yearly  | Organization yearly Price ID  | `io.beancount.organization.yearly`  | `organization` / `yearly`            |
 
+- **Prices.** App prices match the Web. Each US price is the store price point nearest the Web price, the stores' commission is absorbed, and other storefronts follow the stores' own conversion.
 - **Configuration.** The mapping from a store product to tier and cycle is version-controlled backend configuration, next to the Stripe `SUBSCRIPTION_CONFIG`. Store credentials stay in environment secrets.
 - **Enterprise** is not sold in the apps (3.1.3(c)). Free needs no product.
 - **Prices.** Each store charges its own price points. At launch the US price point is the one nearest the Web USD price, and other storefronts use the store's equalized prices. A different store price is a pricing decision outside this ADR.
@@ -409,9 +410,7 @@ What a subscriber sees depends on three things: which source bills them (none, S
 
 Each item needs an owner before implementation starts. No production release happens until the ownership, duplicate-billing, refund and revocation, sandbox, and reconciliation paths pass end-to-end tests.
 
-- Store price points per storefront, and whether they differ from Web prices. Recommended: the US price point nearest the Web price (D1), absorbing the stores' commission.
 - Whether any user who relied on the mobile waivers is grandfathered. Recommended: announce the change in the release notes and give those accounts 30 days, keyed on the account rather than the header.
-- Whether a switch from a store to Stripe at the same or a lower tier defers the first Stripe charge to the store plan's end (recommended, D15) or charges at once.
 - Purchase-transfer rules between accounts, and handling for merged and deleted accounts.
 - Grace-period length in each store.
 - Retention period for notification payloads and billing audit data.

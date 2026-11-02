@@ -15,9 +15,9 @@
 
 ## Blocked
 
-**Blocked 2026-11-01** — t001 needs m3/t002's `confirmStorePurchase` and the m2/t003 subscriptions, and a Google client library, which needs the owner's approval. t002 to t006 follow it.
+**Blocked 2026-11-01** — t001 needs m3/t002's `confirmStorePurchase` and the m2/t003 subscriptions. t002 to t006 follow it. The owner approved Google's client (`@googleapis/androidpublisher`) on 2026-11-01.
 
-**Unblock:** m3 and m2/t003 clear, and the owner approves the dependency. Who can clear it: the owner.
+**Unblock:** m3/t002 and m2/t003 clear. Who can clear it: the owner.
 
 ## Definition of done
 
