@@ -1,6 +1,6 @@
 # w7 · m2 — Store products, notifications, and release-gate decisions are in place
 
-**Worker:** worker1 **Goal:** both store consoles hold the six products and send notifications, Stripe has the restricted portal configuration, and the owner's release-gate decisions are recorded in ADR 001 **Status:** in progress (t004 done)
+**Worker:** worker1 **Goal:** both store consoles hold the six products and send notifications, Stripe has the restricted portal configuration, and the owner's release-gate decisions are recorded in ADR 001 **Status:** blocked
 
 ## Tasks (in order)
 
@@ -14,6 +14,16 @@
 | t006 | Simplify | 30m | t001, t004, t005 |
 | t007 | Test coverage | 30m | t001, t004, t005 |
 | t008 | Closeout | 15m | t006, t007 |
+
+## Blocked
+
+**Blocked 2026-11-01** — t001, t002, and t003 need the owner, and everything left here depends on them (t005 on t002 and t003; t006, t007, and t008 on t005 and t001). t004 closed by triage.
+
+- **t001, release gates.** Only the owner can decide these. **Unblock:** each of ADR 001's Open Questions is decided in the text or deferred by the owner with a date: store price points, a grace period for accounts that used the mobile waivers, whether a store-to-Stripe switch defers the first charge, purchase-transfer rules, grace-period length, payload retention, support ownership, and the US web-purchase link. The ADR gives a recommendation for most of them. `/unblock w7` walks the owner through them.
+- **t002, App Store Connect.** The Paid Apps agreement, tax, and banking are console-only and owner-only. **Unblock:** the owner completes them; the group, products, notification URLs, and In-App Purchase key can then follow.
+- **t003, Play Console.** The payments profile is owner-only, and the Pub/Sub topic and service account need the owner's Google Cloud project. **Unblock:** the owner completes the profile and grants access to create the subscriptions, topic, and service account.
+
+Who can clear it: the owner. m3/t002 and later tasks that need real sandbox purchases wait on this.
 
 ## Definition of done
 
