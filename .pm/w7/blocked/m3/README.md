@@ -1,6 +1,6 @@
 # w7 · m3 — App Store purchases verify and stay current on the backend
 
-**Worker:** worker1 **Goal:** the backend accepts a StoreKit 2 purchase from the iOS app, keeps it current from Apple's notifications, and grants or removes the plan accordingly **Status:** in progress (t001 done)
+**Worker:** worker1 **Goal:** the backend accepts a StoreKit 2 purchase from the iOS app, keeps it current from Apple's notifications, and grants or removes the plan accordingly **Status:** blocked
 
 ## Tasks (in order)
 
@@ -13,6 +13,16 @@
 | t005 | Simplify | 30m | t003, t004 |
 | t006 | Test coverage | 1h | t003, t004 |
 | t007 | Closeout | 15m | t005, t006 |
+
+## Blocked
+
+**Blocked 2026-11-01** — t001 shipped in `9bbc79a1b`. t002 cannot start, and t003 to t007 all follow it.
+
+- **t002 needs a new dependency and sandbox products.** Verifying signed transactions uses Apple's App Store Server Library, and the repository rule is to ask before adding a dependency. Recording the sandbox fixtures its contract tests need requires the m2/t002 products. **Unblock:** the owner approves the dependency, and m2/t002 is done.
+
+Who can clear it: the owner. m4 and m5 follow this: m4/t001 needs t002 and m2/t003, and m5/t001 needs t003 and m4/t002.
+
+**Carried forward:** `Mutation.confirmStorePurchase` takes `APP_BILLING_CREDENTIAL`, as `user.billing.store_identity.read` does (ADR 001 D13), or the app cannot call it.
 
 ## Definition of done
 
