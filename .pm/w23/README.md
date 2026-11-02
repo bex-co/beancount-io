@@ -59,3 +59,4 @@
 - [x] [208](./done/208.md) — non-string `cursor` on tools/list, resources/list, resources/templates/list and prompts/list answers `-32603` with a raw Zod dump; other methods answer `-32602` `BAD_USER_INPUT`
 - [ ] [209](./209.md) — ledger-backed calls failed ~12 min starting at a 100 KB `runBqlQuery`; cause unverified, needs a non-production reproduction
 - [x] [210](./done/210.md) — a NUL byte in `q` (catalog search), `username` (`social/profile`) or `collaborator` answers `SERVICE_UNAVAILABLE`/`INTERNAL_SERVER_ERROR`, not `BAD_USER_INPUT`
+- [ ] [211](./211.md) — ledger search `private` param is an effective no-op, confusingly overlapping with the real exclusive filter `isPrivate`
