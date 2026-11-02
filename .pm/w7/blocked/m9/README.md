@@ -1,6 +1,6 @@
 # w7 · m9 — Launch: end-to-end store tests, the end of the mobile waivers, and the store release
 
-**Worker:** worker1 **Goal:** both stores approve and publish an app version that sells the plans, with one set of limits on every client **Status:** todo
+**Worker:** worker1 **Goal:** both stores approve and publish an app version that sells the plans, with one set of limits on every client **Status:** blocked
 
 ## Tasks (in order)
 
@@ -16,6 +16,15 @@
 | t008 | Simplify | 30m | t007 |
 | t009 | Test coverage | 1h | t007 |
 | t010 | Closeout | 15m | t008, t009 |
+
+## Blocked
+
+**Blocked 2026-11-01** — nothing here can start yet.
+
+- **t003 needs the website's maintainer.** The website and Help Center are not in this repository. **Unblock:** the maintainer hides pricing and purchase links when a page carries `beancount_app=1`, the contract in `dashboard/src/common/lib/app-session.ts`, then each page is checked on the simulator.
+- **t001 needs m2, m5, m6, and m8 closed,** and t002, t004 to t010 follow it.
+
+Who can clear it: the owner.
 
 ## Definition of done
 
