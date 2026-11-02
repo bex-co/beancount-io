@@ -77,8 +77,7 @@ vi.mock("@/common/hooks/use-file-navigate", () => ({
   useFileNavigate: () => harness.fileNavigate,
 }));
 vi.mock("@/common/hooks/use-apollo-cache", () => ({
-  useApolloCacheClear: () => harness.cleanCache,
-  useLedgerWriteRefresh: () => vi.fn(),
+  useLedgerWriteRefresh: () => harness.cleanCache,
 }));
 vi.mock("@/common/components/ledger-permission/write", () => ({
   LedgerWritePermission: ({ children }: { children: React.ReactNode }) => (

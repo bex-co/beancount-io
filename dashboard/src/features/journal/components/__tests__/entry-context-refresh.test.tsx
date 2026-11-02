@@ -29,6 +29,7 @@ vi.mock("@/common/hooks/use-write-outcome", () => ({
 }));
 vi.mock("@/common/hooks/use-apollo-cache", () => ({
   useApolloCacheClear: () => vi.fn(),
+  useLedgerWriteRefresh: () => vi.fn(),
 }));
 vi.mock("@/common/hooks/use-theme", () => ({ useIsDarkTheme: () => false }));
 vi.mock("@/common/hooks/use-mobile", () => ({ useIsMobile: () => false }));

@@ -5,7 +5,7 @@ import {
   GetLedgerEntryContextDocument,
   DeleteLedgerEntrySourceSliceDocument,
 } from "@/graphql/definitions";
-import { useApolloCacheClear } from "@/common/hooks/use-apollo-cache";
+import { useLedgerWriteRefresh } from "@/common/hooks/use-apollo-cache";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
 import { Button } from "@/common/components/ui/button";
@@ -64,7 +64,7 @@ export function DeleteBudgetDialog({
   };
   const formatError = useErrorMessage();
   const client = useApolloClient();
-  const clearCache = useApolloCacheClear();
+  const clearCache = useLedgerWriteRefresh();
   const [deleteMutation] = useMutation(DeleteLedgerEntrySourceSliceDocument);
 
   const doDelete = async (): Promise<boolean | void> => {

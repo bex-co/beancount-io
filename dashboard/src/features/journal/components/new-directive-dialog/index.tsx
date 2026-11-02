@@ -15,7 +15,7 @@ import { TransactionForm } from "@/features/journal/components/new-directive-dia
 import { BalanceForm } from "@/features/journal/components/new-directive-dialog/balance-form";
 import { NoteForm } from "@/features/journal/components/new-directive-dialog/note-form";
 import { OpenAccountForm } from "@/features/journal/components/new-directive-dialog/open-account-form";
-import { useApolloCacheClear } from "@/common/hooks/use-apollo-cache";
+import { useLedgerWriteRefresh } from "@/common/hooks/use-apollo-cache";
 import { useWriteOutcome } from "@/common/hooks/use-write-outcome";
 import { useTranslations } from "@/common/hooks/use-translations";
 import type { JournalDirectiveAction } from "@/common/lib/ledger-action-search";
@@ -64,7 +64,7 @@ export function NewDirectiveDialog({
   returnFocusRef,
 }: NewDirectiveDialogProps) {
   const { t } = useTranslations();
-  const clearCache = useApolloCacheClear();
+  const clearCache = useLedgerWriteRefresh();
   const writeOutcome = useWriteOutcome(ledgerId);
 
   // While a form's write is in flight the dialog keeps that draft in front:

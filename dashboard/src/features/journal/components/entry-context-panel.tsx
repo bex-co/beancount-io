@@ -37,7 +37,7 @@ import {
 } from "@/graphql/definitions";
 import type { JournalDirectiveType } from "@/common/types/journal";
 import { useIsDarkTheme } from "@/common/hooks/use-theme";
-import { useApolloCacheClear } from "@/common/hooks/use-apollo-cache";
+import { useLedgerWriteRefresh } from "@/common/hooks/use-apollo-cache";
 import { registerBeancountLanguage } from "@/common/lib/editor/monaco-beancount-language-vscode";
 import { cn } from "@/common/lib/utils/utils";
 import { toast } from "sonner";
@@ -561,7 +561,7 @@ export function EntryContextPanel({
   const { t } = useTranslations();
   const formatError = useErrorMessage();
   const fileNavigate = useFileNavigate();
-  const clearCache = useApolloCacheClear();
+  const clearCache = useLedgerWriteRefresh();
   const { canWrite } = useLedgerPermission();
   const writeOutcome = useWriteOutcome(ledgerId);
   /** The edit a save could not land because the entry changed elsewhere. */

@@ -39,11 +39,14 @@ function newErrors(
  * link to Errors, and returns true so the caller skips its success message.
  */
 export function useWriteOutcome(ledgerId: string) {
-  // The layout keeps this list current, so a snapshot costs no request.
+  // The layout keeps this list current, so a snapshot costs no request:
+  // read it from the cache, and fetch only when nothing has (w1/185). Every
+  // ledger write drops it, so the next snapshot is fresh; `report` refetches
+  // explicitly.
   const { data, refetch } = useQuery(GetLedgerErrorsDocument, {
     variables: { ledgerId },
     skip: !ledgerId,
-    fetchPolicy: "cache-and-network",
+    fetchPolicy: "cache-first",
   });
   const router = useRouter({ warn: false });
   const { t } = useTranslations();

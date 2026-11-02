@@ -17,10 +17,7 @@ import type {
 } from "@/graphql/definitions";
 import { base64Encode, hasUtf8Bom } from "@/common/lib/utils/encode";
 import { track } from "@/common/analytics";
-import {
-  useApolloCacheClear,
-  useLedgerWriteRefresh,
-} from "@/common/hooks/use-apollo-cache";
+import { useLedgerWriteRefresh } from "@/common/hooks/use-apollo-cache";
 import { useRefreshFailedToast } from "@/common/hooks/use-refresh-failed-toast";
 import { toast } from "sonner";
 import { Button } from "@/common/components/ui/button";
@@ -84,7 +81,6 @@ export default function LedgerFileView({
 }: LedgerFileViewProps) {
   const { t } = useTranslations();
   const formatError = useErrorMessage();
-  const cleanCache = useApolloCacheClear();
   const refreshAfterWrite = useLedgerWriteRefresh();
   const client = useApolloClient();
   const fileNavigate = useFileNavigate();
@@ -284,7 +280,7 @@ export default function LedgerFileView({
           );
         };
         if (!stillCurrent()) {
-          cleanCache();
+          refreshAfterWrite();
           return;
         }
         // Back to the parent folder, or the nearest one that survived: Git
@@ -294,7 +290,7 @@ export default function LedgerFileView({
           journey.ledgerId,
           getParentPath(journey.filePath),
         );
-        cleanCache();
+        refreshAfterWrite();
         if (!stillCurrent()) return;
         fileNavigate(journey.ledgerId, "dir", directory);
       },

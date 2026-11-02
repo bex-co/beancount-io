@@ -16,6 +16,7 @@ vi.mock("@apollo/client/react", () => ({
 }));
 vi.mock("@/common/hooks/use-apollo-cache", () => ({
   useApolloCacheClear: () => clearCache,
+  useLedgerWriteRefresh: () => clearCache,
 }));
 vi.mock("@/common/lib/errors/error-message", () => ({
   useErrorMessage: () => (err: Error) => `formatted: ${err.message}`,

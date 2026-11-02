@@ -14,7 +14,7 @@ import { PageHeader } from "@/common/components/page-header";
 import { LedgerSearchParamsContext } from "@/common/providers/ledger-search-params-provider";
 import { useLedger } from "@/common/hooks/use-ledger";
 import { OpenAccountDialog } from "@/features/ledger-data/accounts/open-account-dialog";
-import { useApolloCacheClear } from "@/common/hooks/use-apollo-cache";
+import { useLedgerWriteRefresh } from "@/common/hooks/use-apollo-cache";
 import {
   Table,
   TableBody,
@@ -387,7 +387,7 @@ export default function LedgerAccountsPage() {
   // gate: a click before onClick attaches is otherwise lost (w4/1108).
   const hydrated = useHydrated();
   const rowActionReturnFocusRef = useRef<HTMLElement | null>(null);
-  const clearCache = useApolloCacheClear();
+  const clearCache = useLedgerWriteRefresh();
   const client = useApolloClient();
 
   /**

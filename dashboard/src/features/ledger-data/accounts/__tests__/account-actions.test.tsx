@@ -56,6 +56,7 @@ vi.mock("@/common/hooks/use-ledger-permission", () => ({
 
 vi.mock("@/common/hooks/use-apollo-cache", () => ({
   useApolloCacheClear: () => vi.fn(),
+  useLedgerWriteRefresh: () => vi.fn(),
 }));
 
 vi.mock("../open-account-dialog", () => ({

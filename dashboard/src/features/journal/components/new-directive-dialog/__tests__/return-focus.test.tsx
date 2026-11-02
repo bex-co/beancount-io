@@ -16,6 +16,7 @@ vi.mock("../note-form", () => ({ NoteForm: () => <div /> }));
 vi.mock("../open-account-form", () => ({ OpenAccountForm: () => <div /> }));
 vi.mock("@/common/hooks/use-apollo-cache", () => ({
   useApolloCacheClear: () => () => {},
+  useLedgerWriteRefresh: () => () => {},
 }));
 
 /**

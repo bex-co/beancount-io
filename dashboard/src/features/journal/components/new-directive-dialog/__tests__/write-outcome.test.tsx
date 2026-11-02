@@ -23,6 +23,7 @@ vi.mock("../note-form", () => ({ NoteForm: () => null }));
 vi.mock("../open-account-form", () => ({ OpenAccountForm: () => null }));
 vi.mock("@/common/hooks/use-apollo-cache", () => ({
   useApolloCacheClear: () => () => {},
+  useLedgerWriteRefresh: () => () => {},
 }));
 vi.mock("@apollo/client/react", () => ({
   useQuery: () => ({

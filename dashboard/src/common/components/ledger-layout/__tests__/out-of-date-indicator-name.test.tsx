@@ -23,6 +23,7 @@ vi.mock("@apollo/client/react", () => ({
 vi.mock("@/common/hooks/use-apollo-cache", () => ({
   cacheClears: () => 0,
   useApolloCacheClear: () => clearCache,
+  useLedgerWriteRefresh: () => clearCache,
 }));
 
 const latest = (sha: string) =>

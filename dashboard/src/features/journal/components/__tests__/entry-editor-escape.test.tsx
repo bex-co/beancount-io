@@ -41,6 +41,7 @@ vi.mock("@/common/hooks/use-file-navigate", () => ({
 
 vi.mock("@/common/hooks/use-apollo-cache", () => ({
   useApolloCacheClear: () => vi.fn(),
+  useLedgerWriteRefresh: () => vi.fn(),
 }));
 
 vi.mock("@/common/hooks/use-theme", () => ({
