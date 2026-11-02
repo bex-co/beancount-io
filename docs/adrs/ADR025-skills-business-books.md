@@ -2,7 +2,7 @@
 
 - Status: Proposed
 - Date: 2026-10-26
-- Decision owners: Customer-facing skills (`skills/`); the `bea` CLI for the import-rule key in [w2/m55](../../.pm/w2/blocked/m55/README.md)
+- Decision owners: Customer-facing skills (`skills/`); the `bea` CLI for the import-rule key in [w2/m55](../../.pm/w2/done/m55/README.md)
 - Scope: The names, identities, and boundaries every business-books procedure in the suite shares: receivables and payables, invoice and bill identity, the client/project dimension, collected tax, payroll liabilities, processor clearing, owner equity, where each procedure lives, and what the suite will not do. This record implements nothing; [w2/m55–m59](../../.pm/w2/README.md) build on it.
 
 ## Context
@@ -75,10 +75,10 @@ Placement follows [ADR020](./ADR020-skills-accounting-workflow-candidates.md)'s 
 
 | Capability | Proposed home | Milestone |
 | --- | --- | --- |
-| The client/project keys and per-key profit | Shared suite convention; `beancount-add` and `beancount-import` propose keys; `beancount-ask` reports | [w2/m55](../../.pm/w2/blocked/m55/README.md) |
-| Invoices, bills, collected tax, payment application, aging | A new skill, `beancount-invoices` | [w2/m56](../../.pm/w2/blocked/m56/README.md) |
-| Payroll runs and remittances | Decided by the milestone's routing probe: a procedure in an existing skill unless its trigger and evals stand apart | [w2/m57](../../.pm/w2/blocked/m57/README.md) |
-| Processor payout exports | `beancount-import` reference, in the broker-activity mapper pattern | [w2/m58](../../.pm/w2/blocked/m58/README.md) |
+| The client/project keys and per-key profit | Shared suite convention; `beancount-add` and `beancount-import` propose keys; `beancount-ask` reports | [w2/m55](../../.pm/w2/done/m55/README.md) |
+| Invoices, bills, collected tax, payment application, aging | A new skill, `beancount-invoices` | [w2/m56](../../.pm/w2/done/m56/README.md) |
+| Payroll runs and remittances | Decided by the milestone's routing probe: a procedure in an existing skill unless its trigger and evals stand apart | [w2/m57](../../.pm/w2/done/m57/README.md) |
+| Processor payout exports | `beancount-import` reference, in the broker-activity mapper pattern | [w2/m58](../../.pm/w2/done/m58/README.md) |
 | The accountant's page at month end | A section of `beancount-close`, shown only when business accounts exist | [w2/m59](../../.pm/w2/blocked/m59/README.md) |
 
 Rejected: one `beancount-business` skill for every business event, because its trigger would overlap `beancount-add`, `beancount-import`, and `beancount-close` on every request and its evals would mix unrelated deliverables; and folding invoices into `beancount-accruals`, whose input is a stated schedule, not a document.
