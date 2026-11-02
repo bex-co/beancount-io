@@ -21,14 +21,20 @@ path explicitly, or rename the file to `render.yaml`.
 | `ledger` | `beancount-ledger` (pserv) | no public port, matching the compose invariant |
 | `postgres-backend` | `beancount-backend-db` (managed Postgres) | |
 | `redis` | `beancount-cache` (managed Key Value) | `noeviction` — it holds auth tokens |
-| `gitea` + its `postgres` | **not deployed** | see below |
+| `gitea` | `beancount-gitea` (web + 10 GB disk) | bare repos need a filesystem |
+| `postgres` (Gitea's) | a second database `gitea` in `beancount-backend-db` | one Postgres instance in total |
 
-**Gitea is deliberately absent.** Bare git repos need a filesystem, and
-service-attached disks are a bex non-goal (`.pm/DO_NOT_DO.md`: bex is
-stateless-first). `GITEA_HOST_NAME` therefore points at a Gitea that lives
-somewhere else. Everything else in the stack is genuinely stateless: the ledger
-service reads ledgers through Gitea's HTTP `contents`/`raw` API and never
-clones to disk.
+**Gitea runs on a persistent disk.** bex supports one disk per paid web/private
+service (see the persistent-disks page), at the cost of a single instance and a
+stop-then-start deploy. Git-over-SSH is off (no TCP routing); HTTPS only.
+`deploy/bex/gitea/` wraps the stock image so the first boot also creates the
+backend's admin account. Gitea connects as the instance's single owner role,
+because bex cannot create a second one; isolation from the backend is by
+database, not by role.
+
+**Before the first Gitea boot** create its database once (see
+`init-gitea-db.sql`): `bex psql <postgres-id> -c 'CREATE DATABASE gitea'`.
+Until then Gitea crash-loops, which is harmless.
 
 ## Deploy
 
@@ -56,7 +62,7 @@ all, so a fresh deploy cannot touch ledger data by accident.
 
 | variable | service | note |
 |---|---|---|
-| `FAVA_API_ADMIN_PASSWORD` | api | Gitea admin password |
+| `FAVA_API_ADMIN_PASSWORD` | api **and** gitea | Gitea admin password; set the same value on both |
 | `ADMIN_TOKEN` | api | must match the ledger's `BACKEND_V2_ADMIN_TOKEN` byte for byte |
 | `BACKEND_V2_ADMIN_TOKEN` | ledger | empty ⇒ the directive-limit check fails **open** |
 | `BLOCKEDEN_ACCESS_KEY` | api | optional; only meters the `bea ask` model proxy. AI features come from `ANTHROPIC_API_KEY` / `OPENAI_API_KEY`; the service boots with none set |
