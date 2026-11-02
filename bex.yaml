@@ -95,6 +95,10 @@ services:
         value: https://beancount-api.onbex.co
       - key: DASHBOARD_URL
         value: https://beancount-dashboard.onbex.co
+      # The browser calls this API cross-origin from the dashboard; CORS only
+      # trusts *.beancount.io by default (src/server/api/allowed-origin.ts).
+      - key: EXTRA_ALLOWED_ORIGINS
+        value: https://beancount-dashboard.onbex.co
 
       # --- datastores -----------------------------------------------------
       - key: POSTGRES_BACKEND_URI
