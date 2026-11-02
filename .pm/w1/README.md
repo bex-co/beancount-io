@@ -18,7 +18,7 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 
 ### Open
 
-- [ ] **m41** — [Saving a file answers as soon as the write lands](./m41/README.md) (8 tasks) ← user report 2026-11-02: saving `main.bean` takes 5–10s; measured about 2s, gated on a serial `GetLedgerErrors` and two extra whole-file transfers
+- [ ] **m41** — [Saving a file answers as soon as the write lands](./blocked/m41/README.md) (8 tasks) ← user report 2026-11-02: saving `main.bean` takes 5–10s; measured about 2s, gated on a serial `GetLedgerErrors` and two extra whole-file transfers — **blocked:** t001–t003 shipped; the production check waits on a dashboard deploy at `60ca26d23` or later
 - [x] **m38** — [One MCP tool per operation, so the ChatGPT app directory accepts every tool](./done/m38/README.md) (11 tasks) ← OpenAI Plugins dashboard scan 2026-10-18: seven grouped tools flagged for operations "not individually exposed"; reverses ADR 0008 D3 — **top priority** (directory listing)
 - [x] **m39** — [Reach yearly billing from inside the product](./done/m39/README.md) (14 tasks) ← PRFAQ005 stage 1, user request 2026-10-17: server-side change preview, charging at the previewed amount, in-place bank authentication, a Billing tab with "Pay yearly", the Checkout confirmation and the $143.88 Premium yearly price, without breaking the pricing page's checkout
 - [ ] **m40** — [Downgrade, switch to monthly and survive a failed renewal without losing paid time](./blocked/m40/README.md) (14 tasks) ← PRFAQ005 stage 2, user request 2026-10-17: scheduled downgrades with undo, the cancel sheet, paid limits while past due, the ledger-count and collaborator-limit fixes; after m39 — **blocked:** deployed check passed; the owner confirms the 2026-10-19 scheduling emails

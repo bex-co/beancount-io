@@ -2,7 +2,7 @@
 
 **Worker:** worker1
 **Goal:** Saving a file in the dashboard editor confirms success when `UpdateLedgerFile` returns. It no longer waits for the ledger to be revalidated, and it stops moving the whole file over the wire two extra times per save.
-**Status:** todo (t001–t003 and t005–t007 done; t004 production check, then t008)
+**Status:** blocked (t001–t003 and t005–t007 done; t004 waits on a dashboard deploy at `60ca26d23` or later, then t008)
 
 ## Tasks (in order)
 
@@ -33,3 +33,8 @@ Re-sequenced 2026-11-02: production verification (t004) moved after Test coverag
 - **Expected outcome:** saves confirm in about the `UpdateLedgerFile` time, saving roughly 0.7s per save at current measurements and more on slow links. Each save moves about one file's worth of data instead of three.
 - **Why now:** this is a user-reported regression feel on the most common editing path. The fix is local to the dashboard and needs no backend change.
 - **Adoption surface:** included, because the save confirmation and the error warning are customer-facing.
+
+## Blocked
+
+- **t004** — blocked 2026-11-02. Production runs t001 and t002 but not t003 (`582201c0b`). **Unblock:** the operator deploys the dashboard at `60ca26d23` or later; the worker then measures and closes out. **Owner:** the user.
+- **t008** waits on t004.
