@@ -87,18 +87,18 @@ PLANS = {
     # Quick start builds books/; the command map reuses it.
     "README.md": DocPlan(expect={2: (0, ["987.50"])}),
     # Example gallery: every fence starts from the same seeded ledger, except
-    # the init fence, which creates it. The check fence ends on the bare
+    # the two init fences, which create their own. The check fence ends on the bare
     # `bea query`, which needs a terminal and exits 2 without one; its message
     # proves the fence ran to that last line rather than stopping earlier.
     "USAGE.md": DocPlan(
         mode="isolated",
         setup=USAGE_SETUP,
-        setup_skip=frozenset({3}),
-        fence_setup={25: QUICK_START},
+        setup_skip=frozenset({3, 4}),
+        fence_setup={26: QUICK_START},
         expect={
-            4: (2, ["A query is required"]),
+            5: (2, ["A query is required"]),
             # The JSON automation transcript: the values agents copy (w1/127).
-            25: (
+            26: (
                 0,
                 [
                     '"valid": true',
