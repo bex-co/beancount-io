@@ -16,7 +16,7 @@ The account names follow the suite's Business books convention
   money the processor has collected and not yet paid out. Sales and refunds
   move through it; each payout empties it into the bank.
 - A sale credits the income account (or, when it settles an open invoice, the
-  receivable with that invoice's `invoice:` — beancount-invoices' rules in
+  receivable with that invoice's `invoice:` —
   `references/categorization.md`, Payments of open invoices) at the **gross**,
   the fee goes to the ledger's fees account, and the clearing account receives
   the net. A tax amount the row states goes to the collected-tax account
