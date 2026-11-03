@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { useApolloClient } from "@apollo/client";
 import { useAddEntriesMutation } from "@/generated-graphql/graphql";
 import { invalidateLedgerData } from "@/common/apollo/invalidate-ledger";
+import { useEntryWrite } from "@/common/entry-write";
 import { addEntriesSucceeded } from "./add-entries-result";
 
 /**
@@ -18,10 +19,18 @@ import { addEntriesSucceeded } from "./add-entries-result";
 export const useAddEntriesToRemote = () => {
   const client = useApolloClient();
   const [mutate, { error, data }] = useAddEntriesMutation();
+  const entryWrite = useEntryWrite();
 
   const mutateAndInvalidate = useCallback<typeof mutate>(
     async (options) => {
-      const result = await mutate(options);
+      // Retry-safe (w3/m61): a resend of the same entries reuses the id.
+      const result = await entryWrite.send(() =>
+        mutate({
+          ...options,
+          variables:
+            options?.variables && entryWrite.withRequestId(options.variables),
+        }),
+      );
       // Only on a real write. `addEntries` reports rejection in the payload,
       // not by throwing.
       if (addEntriesSucceeded(result)) {
@@ -29,7 +38,7 @@ export const useAddEntriesToRemote = () => {
       }
       return result;
     },
-    [client, mutate],
+    [client, entryWrite, mutate],
   );
 
   return { error, mutate: mutateAndInvalidate, data };

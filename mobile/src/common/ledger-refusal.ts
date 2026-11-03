@@ -334,6 +334,12 @@ export function ledgerWriteFailureMessage(
 ): string | null {
   const ownerLimit = ownerLimitMessage(error, i18n);
   if (ownerLimit !== null) return ownerLimit;
+  // Still being written after every retry (w3/m61): it may have landed.
+  if (error instanceof Error && error.name === "EntryWriteMaybeSavedError") {
+    return i18n.t(
+      kind === "save" ? "ledgerWriteUnconfirmed" : "ledgerDeleteUnconfirmed",
+    );
+  }
   const offline =
     kind === "save" ? "ledgerWriteOffline" : "ledgerDeleteOffline";
   const unconfirmed =

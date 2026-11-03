@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client";
 import { useBulkEntriesMutation } from "@/generated-graphql/graphql";
+import { useEntryWrite } from "@/common/entry-write";
 import { invalidateLedgerData } from "@/common/apollo/invalidate-ledger";
 import { haptics } from "@/common/haptics";
 import { createSingleFlight } from "@/common/single-flight";
@@ -17,6 +18,7 @@ export type OpenAccountResult =
 export function useOpenAccount(ledgerId: string) {
   const client = useApolloClient();
   const [bulkEntries] = useBulkEntriesMutation();
+  const entryWrite = useEntryWrite();
   // Busy for the whole open, the refresh after the write included: the
   // mutation's `loading` ended before it, leaving Done live (w21/193).
   const [loading, setLoading] = useState(false);
@@ -27,12 +29,14 @@ export function useOpenAccount(ledgerId: string) {
     async (input: OpenAccountInput): Promise<OpenAccountResult | null> =>
       (await flight.run(async (): Promise<OpenAccountResult> => {
         try {
-          const { data } = await bulkEntries({
-            variables: {
-              ledgerId,
-              entries: [buildOpenAccountEntry(input)],
-            },
-          });
+          const { data } = await entryWrite.send(() =>
+            bulkEntries({
+              variables: entryWrite.withRequestId({
+                ledgerId,
+                entries: [buildOpenAccountEntry(input)],
+              }),
+            }),
+          );
 
           if (data?.bulkEntries.success) {
             // Awaited so the account name and the balance hierarchy the Accounts
@@ -60,7 +64,7 @@ export function useOpenAccount(ledgerId: string) {
           };
         }
       })) ?? null,
-    [bulkEntries, client, ledgerId, flight],
+    [bulkEntries, entryWrite, client, ledgerId, flight],
   );
 
   return { openAccount, loading };

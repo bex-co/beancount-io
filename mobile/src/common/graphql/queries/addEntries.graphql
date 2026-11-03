@@ -1,5 +1,13 @@
-mutation addEntries($entriesInput: [EntryInput!]!, $ledgerId: String) {
-  addEntries(entriesInput: $entriesInput, ledgerId: $ledgerId) {
+mutation addEntries(
+  $entriesInput: [EntryInput!]!
+  $ledgerId: String
+  $requestId: String
+) {
+  addEntries(
+    entriesInput: $entriesInput
+    ledgerId: $ledgerId
+    requestId: $requestId
+  ) {
     data
     success
   }

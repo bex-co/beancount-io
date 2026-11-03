@@ -35,3 +35,28 @@ describe("addEntriesSucceeded", () => {
     );
   });
 });
+
+/**
+ * Every mobile entry save is retry-safe (w3/m61): it names the write with a
+ * requestId and sends it through the in-progress retry.
+ */
+describe("retry-safe entry saves", () => {
+  const screens = path.join(__dirname, "..", "..", "..");
+  const hooks = [
+    path.join(
+      screens,
+      "multi-postings-transaction",
+      "hooks",
+      "use-add-entries-to-remote.ts",
+    ),
+    path.join(screens, "budget-screen", "hooks", "use-save-budget.ts"),
+    path.join(screens, "open-account-screen", "use-open-account.ts"),
+  ];
+  for (const file of hooks) {
+    it(`${path.basename(file)} sends its write through useEntryWrite`, () => {
+      const source = fs.readFileSync(file, "utf8");
+      expect(source.includes("entryWrite.send(")).toBe(true);
+      expect(source.includes("entryWrite.withRequestId(")).toBe(true);
+    });
+  }
+});

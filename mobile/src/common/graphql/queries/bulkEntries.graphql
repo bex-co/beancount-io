@@ -1,5 +1,9 @@
-mutation BulkEntries($entries: [AddEntryInput!]!, $ledgerId: String!) {
-  bulkEntries(entries: $entries, ledgerId: $ledgerId) {
+mutation BulkEntries(
+  $entries: [AddEntryInput!]!
+  $ledgerId: String!
+  $requestId: String
+) {
+  bulkEntries(entries: $entries, ledgerId: $ledgerId, requestId: $requestId) {
     success
     message
   }

@@ -11801,6 +11801,18 @@
                 "defaultValue": null,
                 "isDeprecated": false,
                 "deprecationReason": null
+              },
+              {
+                "name": "requestId",
+                "description": "Client-generated retry key, 1-200 characters. Send a new one per write and reuse it only to retry the same write: within 24 hours the same id and request return the first result without writing again; the same id with a different request is refused (VALIDATION_FAILED); a repeat while the first attempt is still writing is CONFLICT, so wait and retry with the same id. Omitted, the write is not deduplicated.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
               }
             ],
             "type": {
@@ -11971,6 +11983,18 @@
               {
                 "name": "path",
                 "description": "Target file; omitted, each directive routes to the file the ledger's own options assign it",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "requestId",
+                "description": "Client-generated retry key, 1-200 characters. Send a new one per write and reuse it only to retry the same write: within 24 hours the same id and request return the first result without writing again; the same id with a different request is refused (VALIDATION_FAILED); a repeat while the first attempt is still writing is CONFLICT, so wait and retry with the same id. Omitted, the write is not deduplicated.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -12161,6 +12185,18 @@
                     "kind": "SCALAR",
                     "ofType": null
                   }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "requestId",
+                "description": "Client-generated retry key, 1-200 characters. Send a new one per write and reuse it only to retry the same write: within 24 hours the same id and request return the first result without writing again; the same id with a different request is refused (VALIDATION_FAILED); a repeat while the first attempt is still writing is CONFLICT, so wait and retry with the same id. Omitted, the write is not deduplicated.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
                 },
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -13584,6 +13620,18 @@
               {
                 "name": "receiptObjectKey",
                 "description": null,
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "requestId",
+                "description": "Client-generated retry key, 1-200 characters. Send a new one per write and reuse it only to retry the same write: within 24 hours the same id and request return the first result without writing again; the same id with a different request is refused (VALIDATION_FAILED); a repeat while the first attempt is still writing is CONFLICT, so wait and retry with the same id. Omitted, the write is not deduplicated.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -17425,6 +17473,34 @@
             },
             "isDeprecated": false,
             "deprecationReason": null
+          },
+          {
+            "name": "stripeRenews",
+            "description": "Stripe will bill the account again: a plan that renews, or one waiting for a store plan to end.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "stripeStartsAt",
+            "description": "When a Stripe plan bought beside a store plan starts, its first charge deferred to the store plan's end.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "DateTimeISO",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
           }
         ],
         "inputFields": null,
@@ -17719,6 +17795,18 @@
             "type": {
               "kind": "OBJECT",
               "name": "ScheduledPlanChange",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "storeOverlap",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "OBJECT",
+              "name": "StorePlanOverlap",
               "ofType": null
             },
             "isDeprecated": false,
@@ -25132,6 +25220,66 @@
       },
       {
         "kind": "OBJECT",
+        "name": "StorePlanOverlap",
+        "description": "A store plan still running beside a Stripe purchase.",
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "deferred",
+            "description": "Whether the first Stripe charge waits for the store plan to end; otherwise it is charged today.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "endsAt",
+            "description": "When the store plan ends.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "DateTimeISO",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "provider",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "BillingSource",
+                "kind": "ENUM",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
         "name": "StoreSubscriptionSummary",
         "description": null,
         "isOneOf": null,
@@ -25418,6 +25566,18 @@
             "type": {
               "kind": "OBJECT",
               "name": "SubscriptionInvoice",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "nextChargeAmount",
+            "description": "What the next renewal charges, in minor units, after the discounts still running then. Null when the plan ends or changes at the period end.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
               "ofType": null
             },
             "isDeprecated": false,

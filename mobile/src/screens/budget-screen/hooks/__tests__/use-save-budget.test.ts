@@ -43,6 +43,14 @@ function load(file: string): Record<string, any> {
       },
     },
     "@/common/single-flight": { createSingleFlight },
+    // Retry-safety has its own suite (entry-write.test.ts); here it passes through.
+    "@/common/entry-write": {
+      useEntryWrite: () => ({
+        withRequestId: (variables: object) => variables,
+        send: (write: () => Promise<unknown>) => write(),
+        reset() {},
+      }),
+    },
     "@/common/ledger-refusal": { ledgerWriteFailureMessage: () => null },
     "@/common/haptics": { haptics: { success() {}, error() {} } },
     "@/translations": { i18n: {} },

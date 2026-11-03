@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client";
 import { useBulkEntriesMutation } from "@/generated-graphql/graphql";
+import { useEntryWrite } from "@/common/entry-write";
 import { createSingleFlight } from "@/common/single-flight";
 import { invalidateLedgerData } from "@/common/apollo/invalidate-ledger";
 import { ledgerWriteFailureMessage } from "@/common/ledger-refusal";
@@ -14,6 +15,7 @@ import { type BudgetMutationResult } from "@/screens/budget-screen/hooks/use-bud
 export function useSaveBudget(ledgerId: string) {
   const client = useApolloClient();
   const [bulkEntries] = useBulkEntriesMutation();
+  const entryWrite = useEntryWrite();
   // Busy for the whole save, the refresh after the write included. The
   // mutation's own `loading` ends before that refresh, and for that window
   // Done was live again: a second tap wrote the budget twice and popped the
@@ -26,9 +28,14 @@ export function useSaveBudget(ledgerId: string) {
     (input: BudgetEntryInput): Promise<BudgetMutationResult | null> =>
       saveOnce(flight, async (): Promise<BudgetMutationResult> => {
         try {
-          const { data } = await bulkEntries({
-            variables: { ledgerId, entries: [buildBudgetEntry(input)] },
-          });
+          const { data } = await entryWrite.send(() =>
+            bulkEntries({
+              variables: entryWrite.withRequestId({
+                ledgerId,
+                entries: [buildBudgetEntry(input)],
+              }),
+            }),
+          );
 
           if (data?.bulkEntries.success) {
             // A budget directive is a ledger write like any other: the journal,
@@ -49,7 +56,7 @@ export function useSaveBudget(ledgerId: string) {
           };
         }
       }),
-    [bulkEntries, client, ledgerId, flight],
+    [bulkEntries, entryWrite, client, ledgerId, flight],
   );
 
   return { saveBudget, loading };

@@ -1450,6 +1450,7 @@ export type Mutation = {
 export type MutationAddEntriesArgs = {
   entriesInput: Array<EntryInput>;
   ledgerId?: InputMaybe<Scalars['String']['input']>;
+  requestId?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -1469,6 +1470,7 @@ export type MutationAppendLedgerTextArgs = {
   dry_run?: InputMaybe<Scalars['Boolean']['input']>;
   ledgerId: Scalars['String']['input'];
   path?: InputMaybe<Scalars['String']['input']>;
+  requestId?: InputMaybe<Scalars['String']['input']>;
   text: Scalars['String']['input'];
 };
 
@@ -1487,6 +1489,7 @@ export type MutationBulkEntriesArgs = {
   dry_run?: InputMaybe<Scalars['Boolean']['input']>;
   entries: Array<AddEntryInput>;
   ledgerId: Scalars['String']['input'];
+  requestId?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -1659,6 +1662,7 @@ export type MutationInsertReceiptTransactionArgs = {
   ledgerId: Scalars['String']['input'];
   objectKey?: InputMaybe<Scalars['String']['input']>;
   receiptObjectKey?: InputMaybe<Scalars['String']['input']>;
+  requestId?: InputMaybe<Scalars['String']['input']>;
   s3ObjectKey?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -2091,6 +2095,10 @@ export type PlanBilling = {
   source: BillingSource;
   /** The account's live store subscription, when it has one. */
   store?: Maybe<StoreSubscriptionSummary>;
+  /** Stripe will bill the account again: a plan that renews, or one waiting for a store plan to end. */
+  stripeRenews: Scalars['Boolean']['output'];
+  /** When a Stripe plan bought beside a store plan starts, its first charge deferred to the store plan's end. */
+  stripeStartsAt?: Maybe<Scalars['DateTimeISO']['output']>;
 };
 
 export enum PlanChangeEffect {
@@ -2129,6 +2137,7 @@ export type PlanChangePreview = {
   refusal?: Maybe<PlanChangeRefusal>;
   /** The scheduled change this choice would replace. */
   replacesScheduledChange?: Maybe<ScheduledPlanChange>;
+  storeOverlap?: Maybe<StorePlanOverlap>;
   targetPriceId: Scalars['String']['output'];
   /** Whether this choice withdraws a pending cancellation. */
   withdrawsCancellation: Scalars['Boolean']['output'];
@@ -3163,6 +3172,16 @@ export type StorePlan = {
   tier: Scalars['String']['output'];
 };
 
+/** A store plan still running beside a Stripe purchase. */
+export type StorePlanOverlap = {
+  __typename?: 'StorePlanOverlap';
+  /** Whether the first Stripe charge waits for the store plan to end; otherwise it is charged today. */
+  deferred: Scalars['Boolean']['output'];
+  /** When the store plan ends. */
+  endsAt: Scalars['DateTimeISO']['output'];
+  provider: BillingSource;
+};
+
 export type StoreSubscriptionSummary = {
   __typename?: 'StoreSubscriptionSummary';
   /** When the paid or grace period ends. */
@@ -3192,6 +3211,8 @@ export type Subscription = {
   items: Array<SubscriptionItem>;
   /** The latest invoice and what it collected, discounts applied; on the full subscription view. */
   latestInvoice?: Maybe<SubscriptionInvoice>;
+  /** What the next renewal charges, in minor units, after the discounts still running then. Null when the plan ends or changes at the period end. */
+  nextChargeAmount?: Maybe<Scalars['Int']['output']>;
   /** With past_due: when Stripe next retries the failed renewal. The plan is kept until it stops retrying. */
   nextPaymentAttempt?: Maybe<Scalars['DateTimeISO']['output']>;
   /** The card renewals and plan changes charge, when known. */

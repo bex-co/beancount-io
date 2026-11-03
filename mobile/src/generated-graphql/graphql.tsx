@@ -30,6 +30,7 @@ export type AccountReportQuery = { getLedgerAccountReport: { linechartData: Arra
 export type AddEntriesMutationVariables = Exact<{
   entriesInput: Array<Types.EntryInput> | Types.EntryInput;
   ledgerId?: string | null | undefined;
+  requestId?: string | null | undefined;
 }>;
 
 
@@ -56,6 +57,7 @@ export type BalanceSheetBasisQuery = { cost: { netWorthData: Array<{ date: strin
 export type BulkEntriesMutationVariables = Exact<{
   entries: Array<Types.AddEntryInput> | Types.AddEntryInput;
   ledgerId: string;
+  requestId?: string | null | undefined;
 }>;
 
 
@@ -584,8 +586,12 @@ export type AccountReportLazyQueryHookResult = ReturnType<typeof useAccountRepor
 export type AccountReportSuspenseQueryHookResult = ReturnType<typeof useAccountReportSuspenseQuery>;
 export type AccountReportQueryResult = Apollo.QueryResult<AccountReportQuery, AccountReportQueryVariables>;
 export const AddEntriesDocument = gql`
-    mutation addEntries($entriesInput: [EntryInput!]!, $ledgerId: String) {
-  addEntries(entriesInput: $entriesInput, ledgerId: $ledgerId) {
+    mutation addEntries($entriesInput: [EntryInput!]!, $ledgerId: String, $requestId: String) {
+  addEntries(
+    entriesInput: $entriesInput
+    ledgerId: $ledgerId
+    requestId: $requestId
+  ) {
     data
     success
   }
@@ -608,6 +614,7 @@ export type AddEntriesMutationFn = Apollo.MutationFunction<AddEntriesMutation, A
  *   variables: {
  *      entriesInput: // value for 'entriesInput'
  *      ledgerId: // value for 'ledgerId'
+ *      requestId: // value for 'requestId'
  *   },
  * });
  */
@@ -759,8 +766,8 @@ export type BalanceSheetBasisLazyQueryHookResult = ReturnType<typeof useBalanceS
 export type BalanceSheetBasisSuspenseQueryHookResult = ReturnType<typeof useBalanceSheetBasisSuspenseQuery>;
 export type BalanceSheetBasisQueryResult = Apollo.QueryResult<BalanceSheetBasisQuery, BalanceSheetBasisQueryVariables>;
 export const BulkEntriesDocument = gql`
-    mutation BulkEntries($entries: [AddEntryInput!]!, $ledgerId: String!) {
-  bulkEntries(entries: $entries, ledgerId: $ledgerId) {
+    mutation BulkEntries($entries: [AddEntryInput!]!, $ledgerId: String!, $requestId: String) {
+  bulkEntries(entries: $entries, ledgerId: $ledgerId, requestId: $requestId) {
     success
     message
   }
@@ -783,6 +790,7 @@ export type BulkEntriesMutationFn = Apollo.MutationFunction<BulkEntriesMutation,
  *   variables: {
  *      entries: // value for 'entries'
  *      ledgerId: // value for 'ledgerId'
+ *      requestId: // value for 'requestId'
  *   },
  * });
  */

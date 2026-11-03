@@ -1313,7 +1313,14 @@ type MissingPriceLeg {
 }
 
 type Mutation {
-  addEntries(entriesInput: [EntryInput!]!, ledgerId: String): AddEntryResponse!
+  addEntries(
+    entriesInput: [EntryInput!]!
+    ledgerId: String
+    """
+    Client-generated retry key, 1-200 characters. Send a new one per write and reuse it only to retry the same write: within 24 hours the same id and request return the first result without writing again; the same id with a different request is refused (VALIDATION_FAILED); a repeat while the first attempt is still writing is CONFLICT, so wait and retry with the same id. Omitted, the write is not deduplicated.
+    """
+    requestId: String
+  ): AddEntryResponse!
   addOrUpdateLedgerCollaborator(
     collaborator: String!
     """Run every check and return the preview without committing"""
@@ -1343,6 +1350,10 @@ type Mutation {
     """
     path: String
     """
+    Client-generated retry key, 1-200 characters. Send a new one per write and reuse it only to retry the same write: within 24 hours the same id and request return the first result without writing again; the same id with a different request is refused (VALIDATION_FAILED); a repeat while the first attempt is still writing is CONFLICT, so wait and retry with the same id. Omitted, the write is not deduplicated.
+    """
+    requestId: String
+    """
     Beancount directive text, with a transaction's postings indented beneath it
     """
     text: String!
@@ -1362,6 +1373,10 @@ type Mutation {
     dry_run: Boolean
     entries: [AddEntryInput!]!
     ledgerId: String!
+    """
+    Client-generated retry key, 1-200 characters. Send a new one per write and reuse it only to retry the same write: within 24 hours the same id and request return the first result without writing again; the same id with a different request is refused (VALIDATION_FAILED); a repeat while the first attempt is still writing is CONFLICT, so wait and retry with the same id. Omitted, the write is not deduplicated.
+    """
+    requestId: String
   ): AddLedgerEntryResponse!
   """
   Cancels the plan change scheduled for the end of the paid period; the current plan continues unchanged. Requires a full signed-in session.
@@ -1512,6 +1527,10 @@ type Mutation {
     """Alias of receiptObjectKey, as the upload URL spells it."""
     objectKey: String
     receiptObjectKey: String
+    """
+    Client-generated retry key, 1-200 characters. Send a new one per write and reuse it only to retry the same write: within 24 hours the same id and request return the first result without writing again; the same id with a different request is refused (VALIDATION_FAILED); a repeat while the first attempt is still writing is CONFLICT, so wait and retry with the same id. Omitted, the write is not deduplicated.
+    """
+    requestId: String
     """Alias of receiptObjectKey, as the parse routes spell it."""
     s3ObjectKey: String
   ): InsertReceiptResult!
@@ -1876,6 +1895,14 @@ type PlanBilling {
   source: BillingSource!
   """The account's live store subscription, when it has one."""
   store: StoreSubscriptionSummary
+  """
+  Stripe will bill the account again: a plan that renews, or one waiting for a store plan to end.
+  """
+  stripeRenews: Boolean!
+  """
+  When a Stripe plan bought beside a store plan starts, its first charge deferred to the store plan's end.
+  """
+  stripeStartsAt: DateTimeISO
 }
 
 enum PlanChangeEffect {
@@ -1917,6 +1944,7 @@ type PlanChangePreview {
   refusal: PlanChangeRefusal
   """The scheduled change this choice would replace."""
   replacesScheduledChange: ScheduledPlanChange
+  storeOverlap: StorePlanOverlap
   targetPriceId: String!
   """Whether this choice withdraws a pending cancellation."""
   withdrawsCancellation: Boolean!
@@ -2583,6 +2611,17 @@ type StorePlan {
   tier: String!
 }
 
+"""A store plan still running beside a Stripe purchase."""
+type StorePlanOverlap {
+  """
+  Whether the first Stripe charge waits for the store plan to end; otherwise it is charged today.
+  """
+  deferred: Boolean!
+  """When the store plan ends."""
+  endsAt: DateTimeISO!
+  provider: BillingSource!
+}
+
 type StoreSubscriptionSummary {
   """When the paid or grace period ends."""
   accessEndsAt: DateTimeISO
@@ -2614,6 +2653,10 @@ type Subscription {
   The latest invoice and what it collected, discounts applied; on the full subscription view.
   """
   latestInvoice: SubscriptionInvoice
+  """
+  What the next renewal charges, in minor units, after the discounts still running then. Null when the plan ends or changes at the period end.
+  """
+  nextChargeAmount: Int
   """
   With past_due: when Stripe next retries the failed renewal. The plan is kept until it stops retrying.
   """
