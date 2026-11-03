@@ -6,6 +6,7 @@ import { OpenAccountForm } from "@/features/journal/components/new-directive-dia
 const { mutate } = vi.hoisted(() => ({ mutate: vi.fn() }));
 
 vi.mock("@apollo/client/react", () => ({
+  useApolloClient: () => ({ refetchQueries: async () => [] }),
   useMutation: () => [mutate, { loading: false }],
   useQuery: (document: { definitions: { name?: { value: string } }[] }) =>
     document.definitions[0]?.name?.value === "GetLedgerAccountDirectives"

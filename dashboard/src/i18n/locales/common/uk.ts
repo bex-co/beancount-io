@@ -920,6 +920,12 @@ const ukCommon: Record<string, TranslationEntry> = {
     message: "Ви досягли ліміту, який не змінюється з оновленням плану.",
     description: "A limit no plan sets (RESOURCE_LIMIT_REACHED with no owner)",
   },
+  "common.errors.entryMaybeSaved": {
+    message:
+      "Цей запис ще зберігався, тож він, можливо, уже є у вашій книзі. Перевірте журнал, перш ніж зберігати його знову.",
+    description:
+      "Shown when an entry save was still in progress after every retry (w3/m61)",
+  },
   "common.errors.conflict": {
     message:
       "Ця зміна конфліктує з поточним станом. Оновіть сторінку та спробуйте ще раз.",

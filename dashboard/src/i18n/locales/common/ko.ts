@@ -904,6 +904,12 @@ const koCommon: Record<string, TranslationEntry> = {
     message: "업그레이드해도 바뀌지 않는 한도에 도달했습니다.",
     description: "A limit no plan sets (RESOURCE_LIMIT_REACHED with no owner)",
   },
+  "common.errors.entryMaybeSaved": {
+    message:
+      "이 항목은 아직 저장 중이었으므로 이미 장부에 있을 수 있습니다. 다시 저장하기 전에 분개장을 확인하세요.",
+    description:
+      "Shown when an entry save was still in progress after every retry (w3/m61)",
+  },
   "common.errors.conflict": {
     message:
       "이 변경 사항이 현재 상태와 충돌합니다. 페이지를 새로 고친 후 다시 시도하세요.",

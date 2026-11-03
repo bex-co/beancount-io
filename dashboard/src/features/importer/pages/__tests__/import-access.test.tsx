@@ -56,6 +56,7 @@ vi.mock("@tanstack/react-router", async (importOriginal) => ({
 }));
 
 vi.mock("@apollo/client/react", () => ({
+  useApolloClient: () => ({ refetchQueries: async () => [] }),
   useQuery: mocks.query,
   useMutation: mocks.useMutation,
 }));
@@ -324,6 +325,8 @@ describe("Smart Import ledger access", () => {
     expect(mocks.mutate).toHaveBeenCalledWith({
       variables: {
         ledgerId: "open_ledger/example",
+        // Every entry save is retry-safe (w3/m61).
+        requestId: expect.any(String),
         entries: [
           {
             type: "TRANSACTION",

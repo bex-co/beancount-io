@@ -20,6 +20,7 @@ import type { JournalDirectiveAction } from "@/common/lib/ledger-action-search";
  * late success cannot close a draft opened after it.
  */
 vi.mock("@apollo/client/react", () => ({
+  useApolloClient: () => ({ refetchQueries: async () => [] }),
   useMutation: vi.fn(),
   useQuery: (document: { definitions: { name?: { value: string } }[] }) => {
     const name = document.definitions[0]?.name?.value;

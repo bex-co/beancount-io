@@ -8,6 +8,7 @@ import { TransactionForm } from "../transaction-form";
 
 // The real comboboxes and date picker render; only the network is stubbed.
 vi.mock("@apollo/client/react", () => ({
+  useApolloClient: () => ({ refetchQueries: async () => [] }),
   useQuery: () => ({ data: undefined, loading: false, error: undefined }),
   useMutation: () => [vi.fn(), { loading: false }],
 }));

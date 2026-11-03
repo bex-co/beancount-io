@@ -2,11 +2,13 @@ mutation InsertReceiptTransaction(
   $ledgerId: String!
   $receiptObjectKey: String!
   $input: InsertReceiptTransactionInput!
+  $requestId: String
 ) {
   insertReceiptTransaction(
     ledgerId: $ledgerId
     receiptObjectKey: $receiptObjectKey
     input: $input
+    requestId: $requestId
   ) {
     success
   }

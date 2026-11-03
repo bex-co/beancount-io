@@ -14,6 +14,7 @@ import { TransactionForm } from "../transaction-form";
  * validation honors exactly as a browser does.
  */
 vi.mock("@apollo/client/react", () => ({
+  useApolloClient: () => ({ refetchQueries: async () => [] }),
   useMutation: vi.fn(),
   useQuery: () => ({ data: undefined, loading: false }),
 }));

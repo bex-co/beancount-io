@@ -22,6 +22,7 @@ const { mockMutate, mockUseMutation, mockUseLedgerPermission } = vi.hoisted(
 );
 
 vi.mock("@apollo/client/react", () => ({
+  useApolloClient: () => ({ refetchQueries: async () => [] }),
   useMutation: mockUseMutation,
 }));
 

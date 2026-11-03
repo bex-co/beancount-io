@@ -911,6 +911,12 @@ const faCommon: Record<string, TranslationEntry> = {
     message: "به سقفی رسیده‌اید که با ارتقا تغییر نمی‌کند.",
     description: "A limit no plan sets (RESOURCE_LIMIT_REACHED with no owner)",
   },
+  "common.errors.entryMaybeSaved": {
+    message:
+      "این ثبت هنوز در حال ذخیره بود، پس ممکن است از قبل در دفتر شما باشد. پیش از ذخیرهٔ دوباره، دفتر روزنامه را بررسی کنید.",
+    description:
+      "Shown when an entry save was still in progress after every retry (w3/m61)",
+  },
   "common.errors.conflict": {
     message:
       "این تغییر با وضعیت فعلی در تضاد است. صفحه را تازه‌سازی کنید و دوباره تلاش کنید.",

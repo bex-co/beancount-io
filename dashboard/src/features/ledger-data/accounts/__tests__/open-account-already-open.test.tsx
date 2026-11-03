@@ -4,6 +4,7 @@ import { OpenAccountDialog } from "../open-account-dialog";
 import { OpenAccountForm } from "@/features/journal/components/new-directive-dialog/open-account-form";
 
 vi.mock("@apollo/client/react", () => ({
+  useApolloClient: () => ({ refetchQueries: async () => [] }),
   useMutation: () => [vi.fn(), { loading: false }],
   useQuery: (document: { definitions: { name?: { value: string } }[] }) =>
     document.definitions[0]?.name?.value === "GetLedgerAccountDirectives"

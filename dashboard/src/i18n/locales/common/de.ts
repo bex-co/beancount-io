@@ -916,6 +916,12 @@ const deCommon: Record<string, TranslationEntry> = {
       "Sie haben ein Limit erreicht, das sich durch ein Upgrade nicht ändert.",
     description: "A limit no plan sets (RESOURCE_LIMIT_REACHED with no owner)",
   },
+  "common.errors.entryMaybeSaved": {
+    message:
+      "Dieser Eintrag wurde noch gespeichert und ist möglicherweise schon in Ihrem Hauptbuch. Prüfen Sie das Journal, bevor Sie ihn erneut speichern.",
+    description:
+      "Shown when an entry save was still in progress after every retry (w3/m61)",
+  },
   "common.errors.conflict": {
     message:
       "Diese Änderung steht im Konflikt mit dem aktuellen Stand. Bitte aktualisieren Sie die Seite und versuchen Sie es erneut.",

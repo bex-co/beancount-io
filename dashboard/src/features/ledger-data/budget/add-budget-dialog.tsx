@@ -1,3 +1,4 @@
+import { useEntryWrite } from "@/common/lib/entry-write/entry-write";
 import {
   useEffect,
   useMemo,
@@ -111,6 +112,7 @@ export function AddBudgetDialog({
   );
   const client = useApolloClient();
   const [addEntryBudget] = useMutation(BulkEntriesDocument);
+  const entryWrite = useEntryWrite();
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm<FormData>({
@@ -153,25 +155,27 @@ export function AddBudgetDialog({
     setError(null);
     const submittedFrom = opening.current;
     try {
-      const result = await addEntryBudget({
-        variables: {
-          ledgerId,
-          entries: [
-            {
-              type: LedgerEntryType.Budget,
-              budget: {
-                date: data.date,
-                account: data.account,
-                interval: data.interval,
-                amount: {
-                  number: data.number,
-                  currency: data.currency,
+      const result = await entryWrite.send(() =>
+        addEntryBudget({
+          variables: entryWrite.withRequestId({
+            ledgerId,
+            entries: [
+              {
+                type: LedgerEntryType.Budget,
+                budget: {
+                  date: data.date,
+                  account: data.account,
+                  interval: data.interval,
+                  amount: {
+                    number: data.number,
+                    currency: data.currency,
+                  },
                 },
               },
-            },
-          ],
-        },
-      });
+            ],
+          }),
+        }),
+      );
 
       if (result.data?.bulkEntries.success) {
         onSuccess?.({ account: data.account, currency: data.currency });

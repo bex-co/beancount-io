@@ -6,8 +6,12 @@ query GetLedgerJournal($ledgerId: String!, $query: JournalQueryInput) {
   }
 }
 
-mutation BulkEntries($ledgerId: String!, $entries: [AddEntryInput!]!) {
-  bulkEntries(ledgerId: $ledgerId, entries: $entries) {
+mutation BulkEntries(
+  $ledgerId: String!
+  $entries: [AddEntryInput!]!
+  $requestId: String
+) {
+  bulkEntries(ledgerId: $ledgerId, entries: $entries, requestId: $requestId) {
     success
     message
   }

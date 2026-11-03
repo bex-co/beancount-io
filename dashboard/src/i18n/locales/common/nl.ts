@@ -913,6 +913,12 @@ const nlCommon: Record<string, TranslationEntry> = {
     message: "Je hebt een limiet bereikt die niet verandert met een upgrade.",
     description: "A limit no plan sets (RESOURCE_LIMIT_REACHED with no owner)",
   },
+  "common.errors.entryMaybeSaved": {
+    message:
+      "Deze boeking werd nog opgeslagen en staat mogelijk al in je grootboek. Controleer het journaal voordat je haar opnieuw opslaat.",
+    description:
+      "Shown when an entry save was still in progress after every retry (w3/m61)",
+  },
   "common.errors.conflict": {
     message:
       "Deze wijziging conflicteert met de huidige status. Vernieuw de pagina en probeer het opnieuw.",

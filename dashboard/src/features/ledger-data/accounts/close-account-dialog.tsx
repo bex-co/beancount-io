@@ -1,3 +1,4 @@
+import { useEntryWrite } from "@/common/lib/entry-write/entry-write";
 import { useState, type RefObject } from "react";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
@@ -42,6 +43,7 @@ export function CloseAccountDialog({
   const formatError = useErrorMessage();
   const [error, setError] = useState<string | null>(null);
   const [addEntryClose] = useMutation(BulkEntriesDocument);
+  const entryWrite = useEntryWrite();
   // One in-flight close owns this opening: dismissal waits for it, and its
   // completion cannot land on a later account's confirmation (w4/1085).
   const { run, pending } = usePendingAction();
@@ -70,17 +72,19 @@ export function CloseAccountDialog({
     if (!account) return;
     setError(null);
     try {
-      const result = await addEntryClose({
-        variables: {
-          ledgerId,
-          entries: [
-            {
-              type: LedgerEntryType.Close,
-              close: { account: account.account, date: closeDate },
-            },
-          ],
-        },
-      });
+      const result = await entryWrite.send(() =>
+        addEntryClose({
+          variables: entryWrite.withRequestId({
+            ledgerId,
+            entries: [
+              {
+                type: LedgerEntryType.Close,
+                close: { account: account.account, date: closeDate },
+              },
+            ],
+          }),
+        }),
+      );
       if (result.data?.bulkEntries.success) {
         toast.success(
           t("page.accounts.accountClosedToast", { account: account.account }),

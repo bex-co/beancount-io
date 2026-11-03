@@ -1,3 +1,4 @@
+import { useEntryWrite } from "@/common/lib/entry-write/entry-write";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -37,6 +38,7 @@ export function OpenAccountForm({
   const { t } = useTranslations();
   const formatError = useErrorMessage();
   const [addEntryOpen] = useMutation(BulkEntriesDocument);
+  const entryWrite = useEntryWrite();
   const [error, setError] = useState<string | null>(null);
 
   const { accountPrefixes, schema } = useOpenAccountSchema(ledgerId);
@@ -55,21 +57,23 @@ export function OpenAccountForm({
   const onSubmit = async (data: FormData) => {
     setError(null);
     try {
-      const result = await addEntryOpen({
-        variables: {
-          ledgerId,
-          entries: [
-            {
-              type: LedgerEntryType.Open,
-              open: {
-                date: data.date,
-                account: data.account,
-                currencies: [],
+      const result = await entryWrite.send(() =>
+        addEntryOpen({
+          variables: entryWrite.withRequestId({
+            ledgerId,
+            entries: [
+              {
+                type: LedgerEntryType.Open,
+                open: {
+                  date: data.date,
+                  account: data.account,
+                  currencies: [],
+                },
               },
-            },
-          ],
-        },
-      });
+            ],
+          }),
+        }),
+      );
       if (result.data?.bulkEntries.success) {
         form.reset({ date: todayIsoDate(), account: "" });
         track("directive_added", { directive_type: "open" });

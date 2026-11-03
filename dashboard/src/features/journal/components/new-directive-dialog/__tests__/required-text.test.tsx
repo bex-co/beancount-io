@@ -6,6 +6,7 @@ import { BalanceForm } from "../balance-form";
 import { NoteForm } from "../note-form";
 
 vi.mock("@apollo/client/react", () => ({
+  useApolloClient: () => ({ refetchQueries: async () => [] }),
   useMutation: vi.fn(),
   useQuery: (document: { definitions: { name?: { value: string } }[] }) =>
     document.definitions[0]?.name?.value === "GetLedgerAccountDirectives"

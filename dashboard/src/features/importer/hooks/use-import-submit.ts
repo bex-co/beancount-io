@@ -1,3 +1,4 @@
+import { useEntryWrite } from "@/common/lib/entry-write/entry-write";
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useMutation } from "@apollo/client/react";
 import { BulkEntriesDocument, LedgerEntryType } from "@/graphql/definitions";
@@ -25,6 +26,7 @@ export function useImportSubmit(ledgerId: string): UseImportSubmitReturn {
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bulkEntries] = useMutation(BulkEntriesDocument);
+  const entryWrite = useEntryWrite();
   const formatError = useErrorMessage();
   const { t } = useTranslations();
   const { canWrite } = useLedgerPermission();
@@ -92,15 +94,17 @@ export function useImportSubmit(ledgerId: string): UseImportSubmitReturn {
           },
         );
 
-        const result = await bulkEntries({
-          variables: {
-            ledgerId,
-            entries: transactionInputs.map((transaction) => ({
-              type: LedgerEntryType.Transaction,
-              transaction,
-            })),
-          },
-        });
+        const result = await entryWrite.send(() =>
+          bulkEntries({
+            variables: entryWrite.withRequestId({
+              ledgerId,
+              entries: transactionInputs.map((transaction) => ({
+                type: LedgerEntryType.Transaction,
+                transaction,
+              })),
+            }),
+          }),
+        );
 
         // Ensure minimum 2-second delay for better UX
         const elapsedTime = Date.now() - startTime;
@@ -141,7 +145,7 @@ export function useImportSubmit(ledgerId: string): UseImportSubmitReturn {
         setIsSubmitting(false);
       }
     },
-    [ledgerId, bulkEntries, formatError, t],
+    [ledgerId, bulkEntries, entryWrite, writeOutcome, formatError, t],
   );
 
   return {

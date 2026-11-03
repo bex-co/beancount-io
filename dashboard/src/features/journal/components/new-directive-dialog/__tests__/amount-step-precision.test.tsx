@@ -6,6 +6,7 @@ import { BalanceForm } from "../balance-form";
 import { TransactionForm } from "../transaction-form";
 
 vi.mock("@apollo/client/react", () => ({
+  useApolloClient: () => ({ refetchQueries: async () => [] }),
   useMutation: vi.fn(),
   // No account directory: the account-availability check stays out of the way.
   useQuery: () => ({ data: undefined, loading: false }),

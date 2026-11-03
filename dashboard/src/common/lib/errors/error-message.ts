@@ -78,6 +78,11 @@ export function getErrorMessageKey(
       : "common.errors.serviceUnavailable";
   }
 
+  // A retry-safe write still in progress after every retry (w3/m61).
+  if (error instanceof Error && error.name === "EntryWriteMaybeSavedError") {
+    return "common.errors.entryMaybeSaved";
+  }
+
   if (CombinedGraphQLErrors.is(error)) {
     for (const gqlError of error.errors) {
       if (gqlError.extensions?.code !== "BAD_USER_INPUT") continue;

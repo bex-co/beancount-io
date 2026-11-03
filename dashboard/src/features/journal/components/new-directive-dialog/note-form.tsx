@@ -1,3 +1,4 @@
+import { useEntryWrite } from "@/common/lib/entry-write/entry-write";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -60,6 +61,7 @@ export function NoteForm({
   const { t } = useTranslations();
   const formatError = useErrorMessage();
   const [addNote] = useMutation(BulkEntriesDocument);
+  const entryWrite = useEntryWrite();
   const [error, setError] = useState<string | null>(null);
 
   const noteSchema = createNoteSchema(t);
@@ -100,7 +102,9 @@ export function NoteForm({
         ],
       };
 
-      const result = await addNote({ variables });
+      const result = await entryWrite.send(() =>
+        addNote({ variables: entryWrite.withRequestId(variables) }),
+      );
 
       if (result.data?.bulkEntries.success) {
         // Reset form

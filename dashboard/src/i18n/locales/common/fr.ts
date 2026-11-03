@@ -920,6 +920,12 @@ const frCommon: Record<string, TranslationEntry> = {
       "Vous avez atteint une limite qu’une mise à niveau ne modifie pas.",
     description: "A limit no plan sets (RESOURCE_LIMIT_REACHED with no owner)",
   },
+  "common.errors.entryMaybeSaved": {
+    message:
+      "Cette écriture était encore en cours d'enregistrement ; elle est peut-être déjà dans votre registre. Vérifiez le journal avant de l'enregistrer à nouveau.",
+    description:
+      "Shown when an entry save was still in progress after every retry (w3/m61)",
+  },
   "common.errors.conflict": {
     message:
       "Cette modification est en conflit avec l'état actuel. Veuillez actualiser la page et réessayer.",

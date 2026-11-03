@@ -27,6 +27,7 @@ const refuse = vi.fn(() =>
 );
 
 vi.mock("@apollo/client/react", () => ({
+  useApolloClient: () => ({ refetchQueries: async () => [] }),
   useMutation: () => [refuse, { loading: false }],
   useQuery: (document: { definitions: { name?: { value: string } }[] }) =>
     document.definitions[0]?.name?.value === "GetLedgerAccountDirectives"

@@ -918,6 +918,12 @@ const caCommon: Record<string, TranslationEntry> = {
     message: "Has assolit un límit que no canvia en actualitzar el pla.",
     description: "A limit no plan sets (RESOURCE_LIMIT_REACHED with no owner)",
   },
+  "common.errors.entryMaybeSaved": {
+    message:
+      "Aquest assentament encara s'estava desant, així que potser ja és al vostre llibre. Comproveu el diari abans de tornar-lo a desar.",
+    description:
+      "Shown when an entry save was still in progress after every retry (w3/m61)",
+  },
   "common.errors.conflict": {
     message:
       "Aquest canvi entra en conflicte amb l'estat actual. Actualitzeu la pàgina i torneu-ho a provar.",

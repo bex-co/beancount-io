@@ -15,6 +15,7 @@ const { mutate } = vi.hoisted(() => ({
 }));
 
 vi.mock("@apollo/client/react", () => ({
+  useApolloClient: () => ({ refetchQueries: async () => [] }),
   useMutation: () => [mutate, { loading: false }],
 }));
 

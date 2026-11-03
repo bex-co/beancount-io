@@ -915,6 +915,12 @@ const ptCommon: Record<string, TranslationEntry> = {
     message: "Você atingiu um limite que não muda com a atualização do plano.",
     description: "A limit no plan sets (RESOURCE_LIMIT_REACHED with no owner)",
   },
+  "common.errors.entryMaybeSaved": {
+    message:
+      "Este lançamento ainda estava sendo salvo, então pode já estar no seu livro. Verifique o diário antes de salvá-lo novamente.",
+    description:
+      "Shown when an entry save was still in progress after every retry (w3/m61)",
+  },
   "common.errors.conflict": {
     message:
       "Esta alteração entra em conflito com o estado atual. Atualize a página e tente novamente.",

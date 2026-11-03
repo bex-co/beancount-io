@@ -918,6 +918,12 @@ const skCommon: Record<string, TranslationEntry> = {
     message: "Dosiahli ste limit, ktorý sa upgradom nezmení.",
     description: "A limit no plan sets (RESOURCE_LIMIT_REACHED with no owner)",
   },
+  "common.errors.entryMaybeSaved": {
+    message:
+      "Tento záznam sa ešte ukladal, takže už môže byť vo vašej knihe. Pred ďalším uložením skontrolujte denník.",
+    description:
+      "Shown when an entry save was still in progress after every retry (w3/m61)",
+  },
   "common.errors.conflict": {
     message:
       "Táto zmena je v konflikte s aktuálnym stavom. Obnovte stránku a skúste to znova.",

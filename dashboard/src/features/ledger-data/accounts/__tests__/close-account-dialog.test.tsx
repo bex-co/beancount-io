@@ -8,6 +8,7 @@ import type { AccountDirective } from "../types";
 const mockMutation = vi.fn();
 
 vi.mock("@apollo/client/react", () => ({
+  useApolloClient: () => ({ refetchQueries: async () => [] }),
   useMutation: vi.fn(() => [mockMutation, { loading: false }]),
 }));
 

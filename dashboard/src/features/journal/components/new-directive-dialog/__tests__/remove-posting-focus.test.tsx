@@ -10,6 +10,7 @@ import { TransactionForm } from "../transaction-form";
  * the posting that takes the removed row's place, or the previous one.
  */
 vi.mock("@apollo/client/react", () => ({
+  useApolloClient: () => ({ refetchQueries: async () => [] }),
   useMutation: vi.fn(),
   // No account directory: the account-availability check stays out of the way.
   useQuery: () => ({ data: undefined, loading: false }),

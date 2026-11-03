@@ -1,3 +1,4 @@
+import { useEntryWrite } from "@/common/lib/entry-write/entry-write";
 import { useState, useCallback } from "react";
 import { useMutation } from "@apollo/client/react";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
@@ -96,6 +97,7 @@ export function useReceiptWorkflow(ledgerId: string) {
   const [insertReceiptTransaction] = useMutation(
     InsertReceiptTransactionDocument,
   );
+  const entryWrite = useEntryWrite();
   const { t } = useTranslations();
   const formatError = useErrorMessage();
 
@@ -150,30 +152,32 @@ export function useReceiptWorkflow(ledgerId: string) {
         formData.amount,
       );
       try {
-        const result = await insertReceiptTransaction({
-          variables: {
-            ledgerId,
-            receiptObjectKey: objectKey,
-            input: {
-              date: formData.date,
-              payee: formData.payee,
-              description: formData.description,
-              postings: [
-                {
-                  account: formData.expenseAccount,
-                  amountNumber: expenseAmount,
-                  amountCurrency: formData.currency,
-                },
-                {
-                  account: formData.paymentAccount,
-                  amountNumber: paymentAmount,
-                  amountCurrency: formData.currency,
-                },
-              ],
-              documentAccount: formData.documentAccount,
-            },
-          },
-        });
+        const result = await entryWrite.send(() =>
+          insertReceiptTransaction({
+            variables: entryWrite.withRequestId({
+              ledgerId,
+              receiptObjectKey: objectKey,
+              input: {
+                date: formData.date,
+                payee: formData.payee,
+                description: formData.description,
+                postings: [
+                  {
+                    account: formData.expenseAccount,
+                    amountNumber: expenseAmount,
+                    amountCurrency: formData.currency,
+                  },
+                  {
+                    account: formData.paymentAccount,
+                    amountNumber: paymentAmount,
+                    amountCurrency: formData.currency,
+                  },
+                ],
+                documentAccount: formData.documentAccount,
+              },
+            }),
+          }),
+        );
 
         const data = result.data?.insertReceiptTransaction;
         if (!data?.success) return failed(t("receipt.workflow.failedToRecord"));
@@ -188,7 +192,7 @@ export function useReceiptWorkflow(ledgerId: string) {
         );
       }
     },
-    [state, ledgerId, insertReceiptTransaction, t, formatError],
+    [state, ledgerId, insertReceiptTransaction, entryWrite, t, formatError],
   );
 
   const reset = useCallback(() => {

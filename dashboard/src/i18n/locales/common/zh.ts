@@ -887,6 +887,12 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "你已达到一项无法通过升级解除的上限。",
     description: "A limit no plan sets (RESOURCE_LIMIT_REACHED with no owner)",
   },
+  "common.errors.entryMaybeSaved": {
+    message:
+      "这条分录仍在保存中，可能已经记入账本。再次保存前，请先查看流水账。",
+    description:
+      "Shown when an entry save was still in progress after every retry (w3/m61)",
+  },
   "common.errors.conflict": {
     message: "此更改与当前状态冲突，请刷新页面后重试。",
     description:

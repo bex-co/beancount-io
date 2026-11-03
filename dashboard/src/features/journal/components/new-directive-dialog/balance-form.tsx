@@ -1,3 +1,4 @@
+import { useEntryWrite } from "@/common/lib/entry-write/entry-write";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -73,6 +74,7 @@ export function BalanceForm({
   const { t } = useTranslations();
   const formatError = useErrorMessage();
   const [addBalance] = useMutation(BulkEntriesDocument);
+  const entryWrite = useEntryWrite();
   const [error, setError] = useState<string | null>(null);
   const { primaryCurrency } = useLedger();
 
@@ -122,7 +124,9 @@ export function BalanceForm({
         ],
       };
 
-      const result = await addBalance({ variables });
+      const result = await entryWrite.send(() =>
+        addBalance({ variables: entryWrite.withRequestId(variables) }),
+      );
 
       if (result.data?.bulkEntries.success) {
         // Reset form

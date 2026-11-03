@@ -918,6 +918,12 @@ const enCommon: Record<string, TranslationEntry> = {
     message: "You've reached a limit that upgrading doesn't change.",
     description: "A limit no plan sets (RESOURCE_LIMIT_REACHED with no owner)",
   },
+  "common.errors.entryMaybeSaved": {
+    message:
+      "This entry was still being saved, so it may already be in your ledger. Check the journal before saving it again.",
+    description:
+      "Shown when an entry save was still in progress after every retry (w3/m61)",
+  },
   "common.errors.conflict": {
     message:
       "This change conflicts with the current state. Please refresh and try again.",

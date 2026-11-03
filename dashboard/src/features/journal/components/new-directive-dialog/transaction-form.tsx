@@ -1,3 +1,4 @@
+import { useEntryWrite } from "@/common/lib/entry-write/entry-write";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -92,6 +93,7 @@ export function TransactionForm({
   const { t } = useTranslations();
   const formatError = useErrorMessage();
   const [addTransaction] = useMutation(BulkEntriesDocument);
+  const entryWrite = useEntryWrite();
   const [error, setError] = useState<string | null>(null);
   const postingRowsRef = useRef<HTMLDivElement>(null);
   const { primaryCurrency } = useLedger();
@@ -288,7 +290,9 @@ export function TransactionForm({
         ],
       };
 
-      const result = await addTransaction({ variables });
+      const result = await entryWrite.send(() =>
+        addTransaction({ variables: entryWrite.withRequestId(variables) }),
+      );
 
       if (result.data?.bulkEntries.success) {
         // Reset form

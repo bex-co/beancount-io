@@ -920,6 +920,12 @@ const ruCommon: Record<string, TranslationEntry> = {
     message: "Вы достигли лимита, который не меняется при обновлении тарифа.",
     description: "A limit no plan sets (RESOURCE_LIMIT_REACHED with no owner)",
   },
+  "common.errors.entryMaybeSaved": {
+    message:
+      "Эта запись ещё сохранялась, поэтому она, возможно, уже есть в вашей книге. Проверьте журнал, прежде чем сохранять её снова.",
+    description:
+      "Shown when an entry save was still in progress after every retry (w3/m61)",
+  },
   "common.errors.conflict": {
     message:
       "Это изменение конфликтует с текущим состоянием. Обновите страницу и попробуйте снова.",

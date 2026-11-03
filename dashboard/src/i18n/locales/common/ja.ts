@@ -906,6 +906,12 @@ const jaCommon: Record<string, TranslationEntry> = {
     message: "アップグレードしても変わらない上限に達しました。",
     description: "A limit no plan sets (RESOURCE_LIMIT_REACHED with no owner)",
   },
+  "common.errors.entryMaybeSaved": {
+    message:
+      "この記帳はまだ保存中だったため、すでに台帳に入っている可能性があります。もう一度保存する前に仕訳帳を確認してください。",
+    description:
+      "Shown when an entry save was still in progress after every retry (w3/m61)",
+  },
   "common.errors.conflict": {
     message:
       "この変更は現在の状態と競合しています。ページを更新してからもう一度お試しください。",

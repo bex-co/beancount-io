@@ -4,6 +4,7 @@ import { useState } from "react";
 import { OpenAccountDialog } from "../open-account-dialog";
 
 vi.mock("@apollo/client/react", () => ({
+  useApolloClient: () => ({ refetchQueries: async () => [] }),
   useMutation: () => [vi.fn(), { loading: false }],
   useQuery: () => ({
     data: {

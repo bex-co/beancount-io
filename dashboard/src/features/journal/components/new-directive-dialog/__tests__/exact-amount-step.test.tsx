@@ -14,6 +14,7 @@ import { TransactionForm } from "../transaction-form";
  * change event, since user-event retypes long numbers through a double.
  */
 vi.mock("@apollo/client/react", () => ({
+  useApolloClient: () => ({ refetchQueries: async () => [] }),
   useMutation: vi.fn(),
   useQuery: () => ({ data: undefined, loading: false }),
 }));

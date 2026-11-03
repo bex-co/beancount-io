@@ -26,6 +26,7 @@ vi.unmock("react-i18next");
 const { mutate } = vi.hoisted(() => ({ mutate: vi.fn() }));
 vi.mock("@apollo/client/react", () => ({
   useApolloClient: () => ({ refetchQueries: async () => [] }),
+  useApolloClient: () => ({ refetchQueries: async () => [] }),
   useMutation: () => [mutate, { loading: false }],
   useQuery: (document: unknown) => {
     if (document === GetLedgerIntervalTotalsDocument) {
@@ -215,6 +216,8 @@ describe("Budget update triggers identify their card", () => {
       await waitFor(() => expect(mutate).toHaveBeenCalledOnce());
       expect(mutate.mock.calls[0][0].variables).toEqual({
         ledgerId: "alice/books",
+        // Every entry save is retry-safe (w3/m61).
+        requestId: expect.any(String),
         entries: [
           {
             type: LedgerEntryType.Budget,

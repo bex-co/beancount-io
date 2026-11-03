@@ -1,3 +1,4 @@
+import { useEntryWrite } from "@/common/lib/entry-write/entry-write";
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
@@ -52,6 +53,7 @@ export function OpenAccountDialog({
   const { t } = useTranslations();
   const formatError = useErrorMessage();
   const [addEntryOpen] = useMutation(BulkEntriesDocument);
+  const entryWrite = useEntryWrite();
   const [error, setError] = useState<string | null>(null);
 
   const { accountPrefixes, schema } = useOpenAccountSchema(ledgerId);
@@ -89,21 +91,23 @@ export function OpenAccountDialog({
     const submittedFrom = opening.current;
     const before = writeOutcome.snapshot();
     try {
-      const result = await addEntryOpen({
-        variables: {
-          ledgerId,
-          entries: [
-            {
-              type: LedgerEntryType.Open,
-              open: {
-                date: data.date,
-                account: data.account,
-                currencies: [],
+      const result = await entryWrite.send(() =>
+        addEntryOpen({
+          variables: entryWrite.withRequestId({
+            ledgerId,
+            entries: [
+              {
+                type: LedgerEntryType.Open,
+                open: {
+                  date: data.date,
+                  account: data.account,
+                  currencies: [],
+                },
               },
-            },
-          ],
-        },
-      });
+            ],
+          }),
+        }),
+      );
 
       if (result.data?.bulkEntries.success) {
         onSuccess?.();

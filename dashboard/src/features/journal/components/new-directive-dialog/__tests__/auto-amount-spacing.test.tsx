@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { TransactionForm } from "../transaction-form";
 
 vi.mock("@apollo/client/react", () => ({
+  useApolloClient: () => ({ refetchQueries: async () => [] }),
   useMutation: () => [vi.fn(), { loading: false }],
   useQuery: () => ({ data: undefined, loading: false }),
 }));

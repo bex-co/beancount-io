@@ -913,6 +913,12 @@ const bgCommon: Record<string, TranslationEntry> = {
     message: "Достигнахте лимит, който не се променя с надграждане.",
     description: "A limit no plan sets (RESOURCE_LIMIT_REACHED with no owner)",
   },
+  "common.errors.entryMaybeSaved": {
+    message:
+      "Този запис все още се запазваше, така че може вече да е в книгата ви. Проверете дневника, преди да го запазите отново.",
+    description:
+      "Shown when an entry save was still in progress after every retry (w3/m61)",
+  },
   "common.errors.conflict": {
     message:
       "Тази промяна е в конфликт с текущото състояние. Опреснете страницата и опитайте отново.",
