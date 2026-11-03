@@ -1,7 +1,8 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { useApolloClient } from "@apollo/client";
 import { invalidateLedgerData } from "./apollo/invalidate-ledger";
 import { graphQLErrorExtensions } from "./graphql-error-codes";
+import { fnv1a32, newRequestId } from "./request-id";
 
 /**
  * Retry-safe entry writes (w3/m61). Every entry save sends a `requestId`; the
@@ -33,7 +34,7 @@ export class EntryWriteMaybeSavedError extends Error {
 export function isEntryWriteInProgress(error: unknown): boolean {
   return graphQLErrorExtensions(error).some(
     (extensions) =>
-      extensions.code === "CONFLICT" && extensions.resource === "Entry write",
+      extensions.code === "CONFLICT" && extensions.requestInProgress === true,
   );
 }
 
@@ -60,31 +61,24 @@ export async function sendEntryWrite<T>(
   }
 }
 
-/** A short, stable fingerprint (FNV-1a, 32-bit) of a JSON-able value. */
+/** A short, stable fingerprint of a JSON-able value. */
 export function fingerprint(content: unknown): string {
-  const text = JSON.stringify(content) ?? "";
-  let hash = 0x811c9dc5;
-  for (let i = 0; i < text.length; i++) {
-    hash ^= text.charCodeAt(i);
-    hash = Math.imul(hash, 0x01000193) >>> 0;
-  }
-  return hash.toString(16).padStart(8, "0");
+  return fnv1a32(content).toString(16).padStart(8, "0");
 }
-
-const newNonce = () => `w-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 /**
  * The screen's retry-safe write: `withRequestId(variables)` names a save,
  * `send` runs it with in-progress retries, and a save that may already have
- * landed refreshes the ledger's data before it is reported. `reset` starts a
- * new nonce; `send` does so after every save.
+ * landed refreshes the ledger's data before it is reported. The nonce renews
+ * after every save. The returned object is stable, so it can sit in a
+ * callback's dependencies.
  */
 export function useEntryWrite() {
   const client = useApolloClient();
   const nonce = useRef<string | null>(null);
   const withRequestId = useCallback(
     <V extends object>(variables: V): V & { requestId: string } => {
-      nonce.current ??= newNonce();
+      nonce.current ??= newRequestId("w");
       return {
         ...variables,
         requestId: `${nonce.current}-${fingerprint(variables)}`,
@@ -92,24 +86,21 @@ export function useEntryWrite() {
     },
     [],
   );
-  const reset = useCallback(() => {
-    nonce.current = null;
-  }, []);
   const send = useCallback(
     async <T>(write: () => Promise<T>): Promise<T> => {
       try {
         const result = await sendEntryWrite(write);
-        reset();
+        nonce.current = null;
         return result;
       } catch (error) {
         if (error instanceof EntryWriteMaybeSavedError) {
-          reset();
+          nonce.current = null;
           await invalidateLedgerData(client, "entries");
         }
         throw error;
       }
     },
-    [client, reset],
+    [client],
   );
-  return { withRequestId, reset, send };
+  return useMemo(() => ({ withRequestId, send }), [withRequestId, send]);
 }

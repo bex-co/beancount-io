@@ -1,4 +1,4 @@
-import { ENTRY_REQUEST_ID_DESCRIPTION } from "@/features/ledger/utils/entry-write-idempotency";
+import { RequestIdArg } from "./request-id-arg";
 import { GraphQLJSONObject } from "graphql-scalars";
 import {
   Arg,
@@ -556,10 +556,7 @@ export class LedgerEntryMutationResolver {
       description: "Alias of dryRun, as MCP spells it.",
     })
     dry_run?: boolean,
-    @Arg("requestId", () => String, {
-      nullable: true,
-      description: ENTRY_REQUEST_ID_DESCRIPTION,
-    })
+    @RequestIdArg()
     requestId?: string,
   ): Promise<AddLedgerEntryResponse> {
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
@@ -627,10 +624,7 @@ export class LedgerEntryMutationResolver {
       description: "Alias of allowInvalid.",
     })
     allow_invalid?: boolean,
-    @Arg("requestId", () => String, {
-      nullable: true,
-      description: ENTRY_REQUEST_ID_DESCRIPTION,
-    })
+    @RequestIdArg()
     requestId?: string,
   ): Promise<AppendDirectiveTextResponse> {
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);

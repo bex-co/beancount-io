@@ -154,6 +154,7 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
       userId: identity.userId,
       ledgerId,
       operation: "insertReceipt",
+      committed: (result) => result.success,
       requestId: params.requestId,
       request: { receiptObjectKey, input },
       write: () =>

@@ -5,6 +5,7 @@ import { MAX_APPENDED_DIRECTIVES } from "@/features/ledger/service/ledger-entry-
 import {
   type McpRequestContext,
   ledgerSelection,
+  mcpRequestId,
   resolveMcpLedger,
 } from "../api/mcp-context";
 import { toolOutputSchema, withWriteOutcome } from "./types";
@@ -27,15 +28,6 @@ export const appendLedgerTextDescription =
   "committing. Adds directives without rewriting files, unlike updateLedgerFiles. The " +
   "commit message is composed from the appended text; there is no message argument. Syntax: " +
   "https://beancount.github.io/docs/beancount_language_syntax/";
-
-/**
- * MCP's `requestId` (w3/m61). It carries no description because every write
- * tool repeats it in tools/list, which has a byte budget; the server
- * instructions explain it once, and a mismatched or in-progress id explains
- * itself in its refusal. REST and GraphQL carry the full description; the
- * service enforces the 1-200 character bound on every surface.
- */
-export const mcpRequestId = z.string().optional();
 
 /**
  * The tool's input, built from the REST body so the two dialects of one

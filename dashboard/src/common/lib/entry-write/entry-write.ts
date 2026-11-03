@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { useApolloClient } from "@apollo/client/react";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 
@@ -36,7 +36,7 @@ export function isEntryWriteInProgress(error: unknown): boolean {
     error.errors.some(
       (gqlError) =>
         gqlError.extensions?.code === "CONFLICT" &&
-        gqlError.extensions?.resource === "Entry write",
+        gqlError.extensions?.requestInProgress === true,
     )
   );
 }
@@ -75,46 +75,52 @@ export function fingerprint(content: unknown): string {
   return hash.toString(16).padStart(8, "0");
 }
 
-const newNonce = () => crypto.randomUUID();
+/**
+ * A fresh client request id. `crypto.randomUUID` exists only in secure
+ * contexts, so a plain-HTTP self-hosted dashboard falls back to time and
+ * randomness; ledger creation uses the same ids.
+ */
+export function newRequestId(): string {
+  return typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `req-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
 
 /**
  * The form's retry-safe write: `withRequestId(variables)` names a save, `send`
  * runs it with in-progress retries, and a save that may already have landed
  * refreshes the active queries (the journal among them) before it is shown.
- * `reset` starts a new nonce once a save succeeded.
+ * The nonce renews after every save. The returned object is stable, so it can
+ * sit in a callback's dependencies.
  */
 export function useEntryWrite() {
   const client = useApolloClient();
   const nonce = useRef<string | null>(null);
-  const requestIdFor = useCallback((content: unknown) => {
-    nonce.current ??= newNonce();
-    return `${nonce.current}-${fingerprint(content)}`;
-  }, []);
-  const reset = useCallback(() => {
-    nonce.current = null;
-  }, []);
+  const withRequestId = useCallback(
+    <V extends object>(variables: V): V & { requestId: string } => {
+      nonce.current ??= newRequestId();
+      return {
+        ...variables,
+        requestId: `${nonce.current}-${fingerprint(variables)}`,
+      };
+    },
+    [],
+  );
   const send = useCallback(
     async <T>(write: () => Promise<T>): Promise<T> => {
       try {
         const result = await sendEntryWrite(write);
-        reset();
+        nonce.current = null;
         return result;
       } catch (error) {
         if (error instanceof EntryWriteMaybeSavedError) {
-          reset();
+          nonce.current = null;
           await client.refetchQueries({ include: "active" }).catch(() => {});
         }
         throw error;
       }
     },
-    [client, reset],
+    [client],
   );
-  const withRequestId = useCallback(
-    <V extends object>(variables: V): V & { requestId: string } => ({
-      ...variables,
-      requestId: requestIdFor(variables),
-    }),
-    [requestIdFor],
-  );
-  return { requestIdFor, withRequestId, reset, send };
+  return useMemo(() => ({ withRequestId, send }), [withRequestId, send]);
 }

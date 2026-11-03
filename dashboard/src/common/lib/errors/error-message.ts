@@ -1,3 +1,4 @@
+import { EntryWriteMaybeSavedError } from "@/common/lib/entry-write/entry-write";
 import { useCallback, useEffect, useRef } from "react";
 import { storeCopy } from "@/common/lib/subscription/store-copy";
 import {
@@ -79,7 +80,7 @@ export function getErrorMessageKey(
   }
 
   // A retry-safe write still in progress after every retry (w3/m61).
-  if (error instanceof Error && error.name === "EntryWriteMaybeSavedError") {
+  if (error instanceof EntryWriteMaybeSavedError) {
     return "common.errors.entryMaybeSaved";
   }
 

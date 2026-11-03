@@ -45,6 +45,8 @@ const base = {
   ledgerId: "alice/books",
   operation: "bulkEntries" as const,
   request: { inputs: [{ narration: "Rent", amount: "2000.00" }] },
+  committed: (result: unknown) =>
+    (result as { success?: boolean } | undefined)?.success !== false,
 };
 
 describe("runIdempotentEntryWrite", () => {
@@ -139,7 +141,10 @@ describe("runIdempotentEntryWrite", () => {
 
     await expect(repeat).rejects.toBeInstanceOf(ConflictError);
     await expect(repeat).rejects.toMatchObject({
-      metadata: { hint: expect.stringContaining("same requestId") },
+      metadata: {
+        requestInProgress: true,
+        hint: expect.stringContaining("same requestId"),
+      },
     });
     finish({ success: true });
     await expect(first).resolves.toEqual({ success: true });

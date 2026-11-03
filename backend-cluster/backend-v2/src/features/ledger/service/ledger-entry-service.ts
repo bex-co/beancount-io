@@ -450,6 +450,7 @@ export class LedgerEntryService implements ILedgerEntryService {
       userId: identity.userId,
       ledgerId,
       operation: "bulkEntries",
+      committed: (result) => result.success,
       requestId: dryRun ? undefined : requestId,
       request: { inputs, allowInvalid },
       write,
@@ -481,6 +482,7 @@ export class LedgerEntryService implements ILedgerEntryService {
       userId: identity.userId,
       ledgerId,
       operation: "appendText",
+      committed: (result) => result.success,
       requestId: input.dryRun ? undefined : requestId,
       request: {
         text: input.text,

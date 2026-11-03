@@ -22,7 +22,7 @@ import {
 import { LEDGER_ID_PATTERN, ledgerIdMatchesPin } from "./mcp-ledger-selection";
 import { parseLedgerId } from "@/shared/str";
 
-export { ledgerSelection } from "./mcp-ledger-selection";
+export { ledgerSelection, mcpRequestId } from "./mcp-ledger-selection";
 
 /** A credential may select a ledger per call or perform account-only work. */
 export type McpRequestContext = Omit<ToolContext, "ledgerId"> & {

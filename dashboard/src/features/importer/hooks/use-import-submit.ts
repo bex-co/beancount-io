@@ -94,17 +94,15 @@ export function useImportSubmit(ledgerId: string): UseImportSubmitReturn {
           },
         );
 
-        const result = await entryWrite.send(() =>
-          bulkEntries({
-            variables: entryWrite.withRequestId({
-              ledgerId,
-              entries: transactionInputs.map((transaction) => ({
-                type: LedgerEntryType.Transaction,
-                transaction,
-              })),
-            }),
-          }),
-        );
+        // Built once: a retry resends the same batch under the same id.
+        const variables = entryWrite.withRequestId({
+          ledgerId,
+          entries: transactionInputs.map((transaction) => ({
+            type: LedgerEntryType.Transaction,
+            transaction,
+          })),
+        });
+        const result = await entryWrite.send(() => bulkEntries({ variables }));
 
         // Ensure minimum 2-second delay for better UX
         const elapsedTime = Date.now() - startTime;

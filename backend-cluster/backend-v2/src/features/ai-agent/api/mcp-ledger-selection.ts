@@ -41,3 +41,12 @@ export const ledgerSelection = z
   .describe(
     "Target ledger as owner/name. Required for an unpinned credential; defaults to the credential's ledger restriction.",
   );
+
+/**
+ * MCP's `requestId` (w3/m61). It carries no description because every write
+ * tool repeats it in tools/list, which has a byte budget; the server
+ * instructions explain it once, and a mismatched or in-progress id explains
+ * itself in its refusal. REST and GraphQL carry the full description; the
+ * service enforces the 1-200 character bound on every surface.
+ */
+export const mcpRequestId = z.string().optional();

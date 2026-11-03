@@ -1,3 +1,4 @@
+import { fnv1a32 } from "../../common/request-id";
 import { graphQLErrorExtensions } from "../../common/graphql-error-codes";
 import { isUnsupportedDocumentError } from "../../common/graphql-unsupported";
 
@@ -180,13 +181,8 @@ export function classifyCreateLedgerError(
  * a security hash: it only has to tell two requests apart.
  */
 export function createRequestFingerprint(request: unknown): string {
-  const text = JSON.stringify(request) ?? "";
-  let hash = 0x811c9dc5;
-  for (let i = 0; i < text.length; i += 1) {
-    hash ^= text.charCodeAt(i);
-    hash = Math.imul(hash, 0x01000193) >>> 0;
-  }
-  return hash.toString(36);
+  // Base 36, as drafts saved before this stored it.
+  return fnv1a32(request).toString(36);
 }
 
 /**

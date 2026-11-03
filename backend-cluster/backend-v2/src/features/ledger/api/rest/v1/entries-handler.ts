@@ -15,10 +15,7 @@ import {
 } from "@/features/ledger/utils/entry-field-descriptions";
 import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 import { MAX_BULK_ENTRIES } from "@/features/ledger/utils/bulk-entries-cap";
-import {
-  ENTRY_REQUEST_ID_DESCRIPTION,
-  ENTRY_REQUEST_ID_MAX,
-} from "@/features/ledger/utils/entry-write-idempotency";
+import { requestIdBody } from "./request-id-body";
 import {
   ALLOW_INVALID_NAMES,
   DRY_RUN_NAMES,
@@ -257,9 +254,7 @@ export const entriesBodySchema = z
     dry_run: nullToUndefined(z.boolean()).optional().openapi({
       description: "Alias of dryRun, as MCP spells it.",
     }),
-    requestId: nullToUndefined(z.string().min(1).max(ENTRY_REQUEST_ID_MAX))
-      .optional()
-      .openapi({ description: ENTRY_REQUEST_ID_DESCRIPTION }),
+    requestId: requestIdBody,
   })
   .openapi("EntriesRequest", {
     description: "One or more directives to add to the ledger",
@@ -300,9 +295,7 @@ const directiveTextBodySchema = z
     allow_invalid: nullToUndefined(z.boolean()).optional().openapi({
       description: "Alias of allowInvalid.",
     }),
-    requestId: nullToUndefined(z.string().min(1).max(ENTRY_REQUEST_ID_MAX))
-      .optional()
-      .openapi({ description: ENTRY_REQUEST_ID_DESCRIPTION }),
+    requestId: requestIdBody,
   })
   .openapi("DirectiveTextRequest", {
     description: "Beancount directive text to append to the ledger",

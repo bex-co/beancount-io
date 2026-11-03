@@ -1,4 +1,4 @@
-import { ENTRY_REQUEST_ID_DESCRIPTION } from "@/features/ledger/utils/entry-write-idempotency";
+import { RequestIdArg } from "./request-id-arg";
 import {
   Arg,
   Ctx,
@@ -84,10 +84,7 @@ export class LedgerReceiptMutationResolver {
     })
     s3ObjectKey: string | undefined,
     @Ctx() ctx: IContext,
-    @Arg("requestId", () => String, {
-      nullable: true,
-      description: ENTRY_REQUEST_ID_DESCRIPTION,
-    })
+    @RequestIdArg()
     requestId: string | undefined,
   ): Promise<InsertReceiptResult> {
     const result = await this.receiptWorkflow.insertReceiptTransaction({

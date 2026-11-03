@@ -335,6 +335,8 @@ export function ledgerWriteFailureMessage(
   const ownerLimit = ownerLimitMessage(error, i18n);
   if (ownerLimit !== null) return ownerLimit;
   // Still being written after every retry (w3/m61): it may have landed.
+  // Matched by name: importing the class would pull Apollo and the cache
+  // invalidation into every reader of this module.
   if (error instanceof Error && error.name === "EntryWriteMaybeSavedError") {
     return i18n.t(
       kind === "save" ? "ledgerWriteUnconfirmed" : "ledgerDeleteUnconfirmed",

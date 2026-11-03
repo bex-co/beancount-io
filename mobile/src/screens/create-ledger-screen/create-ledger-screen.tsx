@@ -1,3 +1,4 @@
+import { newRequestId } from "@/common/request-id";
 import { revalidateOnEdit } from "./revalidate-on-edit";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -110,10 +111,6 @@ type CreateDraft = CreateLedgerDraft<FormValues> & {
   startKind: StartKind | "starter";
   modules?: string[];
 };
-
-function newRequestId(): string {
-  return `req-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-}
 
 /** Purpose, then details: there is no review step (ADR021). */
 const FORM_STEP = 1;

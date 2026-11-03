@@ -1,4 +1,3 @@
-import { mcpRequestId } from "@/features/ai-agent/tools/append-ledger-text-tool";
 import { entriesBodySchema } from "@/features/ledger/api/rest/v1/entries-handler";
 import { parseLedgerId } from "@/shared/str";
 import { resolveCommitMessage } from "@/features/ledger/utils/commit-message-alias";
@@ -82,6 +81,7 @@ import {
   type McpRequestContext,
   resolveMcpLedger,
   ledgerSelection,
+  mcpRequestId,
 } from "./mcp-context";
 import {
   bqlQueryInputSchema,

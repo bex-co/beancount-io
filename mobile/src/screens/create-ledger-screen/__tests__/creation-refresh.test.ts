@@ -221,6 +221,8 @@ function screen(
           };
         if (id === "@/common/graphql-unsupported")
           return require("../../../common/graphql-unsupported");
+        if (id === "@/common/request-id")
+          return require("../../../common/request-id");
         if (id === "@/common/hooks/use-toast")
           return {
             useToast: () => ({ showToast: () => events.push("toast") }),

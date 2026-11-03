@@ -11,6 +11,7 @@ import {
   sendEntryWrite,
 } from "../entry-write";
 import { graphQLErrorExtensions } from "../graphql-error-codes";
+import { fnv1a32, newRequestId } from "../request-id";
 import { ledgerWriteFailureMessage } from "../ledger-refusal";
 
 /** Retry-safe entry writes (w3/m61). */
@@ -19,7 +20,13 @@ const inProgress = () =>
     graphQLErrors: [
       new GraphQLError(
         "Entry write conflict: A write with this requestId is still in progress",
-        { extensions: { code: "CONFLICT", resource: "Entry write" } },
+        {
+          extensions: {
+            code: "CONFLICT",
+            resource: "Entry write",
+            requestInProgress: true,
+          },
+        },
       ),
     ],
   });
@@ -118,6 +125,7 @@ function loadHook() {
     react: {
       useCallback: (fn: unknown) => fn,
       useRef: (initial: unknown) => ({ current: initial }),
+      useMemo: (fn: () => unknown) => fn(),
     },
     "@apollo/client": { useApolloClient: () => ({}) },
     "./apollo/invalidate-ledger": {
@@ -126,6 +134,7 @@ function loadHook() {
       },
     },
     "./graphql-error-codes": { graphQLErrorExtensions },
+    "./request-id": { fnv1a32, newRequestId },
   };
   vm.runInNewContext(
     ts.transpileModule(
@@ -134,7 +143,8 @@ function loadHook() {
     ).outputText,
     {
       exports,
-      setTimeout,
+      // Retries wait no real time here.
+      setTimeout: (fn: () => void) => fn(),
       require: (id: string) => {
         if (!(id in modules)) throw new Error(`Unexpected dependency ${id}`);
         return modules[id];
@@ -182,5 +192,23 @@ describe("useEntryWrite", () => {
 
     expect(hook.withRequestId(rent).requestId).toBe(first);
     expect(invalidations).toEqual([]);
+  });
+
+  it("refreshes the ledger's data and reports maybe-saved when the write never finishes", async () => {
+    const { hook, invalidations } = loadHook();
+    let calls = 0;
+    let caught: unknown;
+    try {
+      await hook.send(async () => {
+        calls += 1;
+        throw inProgress();
+      });
+    } catch (error) {
+      caught = error;
+    }
+
+    expect((caught as Error).name).toBe("EntryWriteMaybeSavedError");
+    expect(calls).toBe(4);
+    expect(invalidations).toEqual(["entries"]);
   });
 });

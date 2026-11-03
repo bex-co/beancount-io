@@ -1,3 +1,4 @@
+import { newRequestId } from "@/common/lib/entry-write/entry-write";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -160,12 +161,6 @@ function readDraft(): CreateDraft | null {
   } catch {
     return null;
   }
-}
-
-function newRequestId(): string {
-  return typeof crypto !== "undefined" && "randomUUID" in crypto
-    ? crypto.randomUUID()
-    : `req-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
 /**

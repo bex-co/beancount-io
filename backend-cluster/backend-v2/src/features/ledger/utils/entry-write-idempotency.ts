@@ -26,8 +26,8 @@ export const ENTRY_REQUEST_ID_DESCRIPTION =
  * - The same id and request within 24 hours returns the first result without
  *   writing again; the same id with a different request is refused; a repeat
  *   while the first attempt runs is a retryable conflict.
- * - A write that throws or reports `success: false` committed nothing, so its
- *   id is released and a retry runs again.
+ * - A write that throws, or whose result `committed` rejects, committed
+ *   nothing, so its id is released and a retry runs again.
  * - An unavailable store never stops a save: the write proceeds unprotected,
  *   exactly as it would without an id, and the miss is logged.
  *
@@ -43,6 +43,8 @@ export async function runIdempotentEntryWrite<T>(params: {
   /** The write's input, as the service normalized it; transport details excluded. */
   request: unknown;
   write: () => Promise<T>;
+  /** Whether a result that did not throw committed; a refusal is not stored. */
+  committed: (result: T) => boolean;
   store?: IdempotencyStore;
 }): Promise<T> {
   const { requestId, write } = params;
@@ -83,6 +85,8 @@ export async function runIdempotentEntryWrite<T>(params: {
       "Entry write",
       "A write with this requestId is still in progress",
       {
+        // The machine-readable marker clients retry on; the wording may change.
+        requestInProgress: true,
         hint: "Wait a few seconds and repeat the same call with the same requestId: once the first attempt finishes it returns that result, or that attempt's refusal. Send a new requestId only for a different write.",
       },
     );
@@ -95,7 +99,7 @@ export async function runIdempotentEntryWrite<T>(params: {
     await store.release(key);
     throw error;
   }
-  if ((result as { success?: unknown } | null)?.success === false) {
+  if (!params.committed(result)) {
     await store.release(key);
     return result;
   }

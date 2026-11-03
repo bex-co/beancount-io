@@ -21,7 +21,11 @@ const inProgress = () =>
       {
         message:
           "Entry write conflict: A write with this requestId is still in progress",
-        extensions: { code: "CONFLICT", resource: "Entry write" },
+        extensions: {
+          code: "CONFLICT",
+          resource: "Entry write",
+          requestInProgress: true,
+        },
       },
     ],
   });
