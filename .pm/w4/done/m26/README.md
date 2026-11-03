@@ -19,6 +19,7 @@ Every input already exists, so no API changes are needed:
 - **Held commodities:** a `units` read of the same balance sheet.
 - **Cost basis:** an `at_cost` read. On web, that is the existing overview query.
 - **Price dates:** `getLedgerCommodities`. A pair matches in either direction with the operating currency, as the ledger's price map does.
+  - **Correction 2026-11-02 ([w4/1031](../../blocked/1031.md)):** rule 3 prices a lot in its cost currency, so pairing every holding with the operating currency misdated a lot that cost another currency. Web Net Worth now reads `units_by_cost` ([w4/m58](../m58/README.md)) and dates each holding by its commodity in its cost currency (`e74970870`). Mobile keeps the operating pair until [w21/554](../../../w21/554.md) and [w21/556](../../../w21/556.md) land.
 
 A managed feed's minute-level freshness stays on the web Commodities page ([w2/m32](../../../w2/done/m32/README.md)). Home uses the price dates instead, so a daily valuation does not flip between fresh and stale within a day.
 

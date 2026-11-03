@@ -24,7 +24,7 @@
 ## Definition of done
 
 - `conversion=units_by_cost` on the balance-sheet, income-statement, trial-balance, interval-totals and account-report reads returns, for every account balance, units keyed `<commodity> {<cost currency>}` for lots held at a cost and `<commodity> {}` for lots held without one, time-scoped and filtered like the other conversions; existing conversions are unchanged.
-- For the fixtures in [1031](../../1031.md) (EUR cost; EUR quotes or USD-only quotes), [w21/554](../../../w21/554.md) (1 BTC {USD} + 40 ETH {BTC}; 10 VEUR {EUR} − 400 EUR) and [w21/556](../../../w21/556.md) (500 EUR cash + 10 VTI {EUR}), the result names each holding's cost currency and cost-less remainder with no heuristic: e.g. `{"VTI {EUR}": "10", "EUR {}": "500"}`.
+- For the fixtures in [1031](../../blocked/1031.md) (EUR cost; EUR quotes or USD-only quotes), [w21/554](../../../w21/554.md) (1 BTC {USD} + 40 ETH {BTC}; 10 VEUR {EUR} − 400 EUR) and [w21/556](../../../w21/556.md) (500 EUR cash + 10 VTI {EUR}), the result names each holding's cost currency and cost-less remainder with no heuristic: e.g. `{"VTI {EUR}": "10", "EUR {}": "500"}`.
 - REST, GraphQL and MCP return the same result for the same input (contract test), summaries treat the keyword as a strategy, not a missing-price currency, and the parity gates stay at zero.
 - The ledger and backend-v2 deployment serving the keyword is observed, after which 1031, w21/554 and w21/556 are unblocked for their consumer changes.
 
