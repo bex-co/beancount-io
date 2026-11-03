@@ -5,7 +5,7 @@
 ## Inbox
 
 - **1118** — Keep private ledger names out of GA4 page titles (~45m dashboard, major, A2/A3) ← found re-verifying 265, 2026-10-31 ([note](./1118.md)) — fix `3e333f321` deployed (verified 2026-11-02); next: the production collector re-check, then close
-- **1031** — Use actual lot cost currencies in Net Worth valuation disclosures (45–60m dashboard after dependency, A2/A3) ← dashboard QA; residual of m26 ([note](./blocked/1031.md)) — **blocked:** read approved 2026-10-31 (backend field, [m58](./m58/README.md)); deployed 2026-11-02, waits for m58 Closeout to verify this note's fixtures
+- **1031** — Use actual lot cost currencies in Net Worth valuation disclosures (45–60m dashboard, A2/A3) ← dashboard QA; residual of m26 ([note](./1031.md)) — unblocked 2026-11-02: [m58](./done/m58/README.md)'s `units_by_cost` read is deployed and serves this note's fixtures; next: the dashboard consumer
 
 
 
@@ -102,7 +102,7 @@
 
 ## Milestones
 
-- [ ] **m58** — [Report each holding's cost currency on the balance reads](./m58/README.md) (6 tasks) ← promoted from 1119 (owner decision 2026-10-31); unblocks 1031, w21/554, w21/556 — all code shipped (`123d817e2`…`f4d2a1c04`); deployed keyword observed 2026-11-02, Closeout next
+- [x] **m58** — [Report each holding's cost currency on the balance reads](./done/m58/README.md) (6 tasks) ← promoted from 1119 (owner decision 2026-10-31); unblocks 1031, w21/554, w21/556 — shipped `123d817e2`…`f4d2a1c04`; deployed reads verified on REST, GraphQL and MCP 2026-11-02
 - [x] **m57** — [Keep report interval choices through shared-filter changes](./done/m57/README.md) (6 tasks) ← dashboard QA; shipped `0e535850b`
 
 - [x] **m56** — Exclude entirely noncash transactions from Cash Flow activities (7 tasks) ← dashboard QA; residual of m2 ([plan](./done/m56/README.md))
