@@ -5,6 +5,10 @@ import bodyParser from "koa-bodyparser";
 import Router from "@koa/router";
 import type { AppLayers } from "@/foundation/composition";
 import { LLMService } from "@/features/llm/service/llm-service";
+import { AiCfoUsageService } from "@/features/feature-usage/service/ai-cfo-usage-service";
+import type { IFeatureUsageService } from "@/features/feature-usage/service/feature-usage-service";
+import { getUserTier } from "@/features/stripe/operations/get-user-tier";
+import { SubscriptionTier } from "@/features/stripe/service/stripe";
 import {
   AUTHORIZATION_ACTIONS,
   AuthorizationService,
@@ -14,6 +18,9 @@ import type { Identity } from "@/server/api/identity";
 import { restErrorMiddleware } from "@/server/rest/error-middleware";
 import { RateLimitedError } from "@/shared/errors";
 import { setOpenAIChatCompletionsRoute } from "../openai-chat-completions-route";
+
+// The tier lookup is Stripe I/O; the usage service and tier limits run for real.
+jest.mock("@/features/stripe/operations/get-user-tier");
 
 const localFetch = global.fetch.bind(globalThis);
 const writer: Identity = {
@@ -252,6 +259,47 @@ describe("OpenAI chat completions through HTTP and the real LLM service", () => 
       },
     });
     expect(deps.quota).toHaveBeenCalledWith(writer.userId);
+    expect(deps.upstream).not.toHaveBeenCalled();
+    expect(deps.charge).not.toHaveBeenCalled();
+  });
+
+  it("answers the real monthly refusal with the account's scope and reset, before any model call", async () => {
+    (getUserTier as jest.Mock).mockResolvedValue(SubscriptionTier.FREE);
+    const featureUsage = {
+      checkUsage: jest.fn().mockResolvedValue({
+        allowed: false,
+        currentCount: 20_000,
+        maxAllowed: 20_000,
+        billingMonth: "2026-11",
+      }),
+      addTokenUsage: jest.fn(),
+    } as unknown as IFeatureUsageService;
+    deps.quota.mockImplementationOnce((userId: string) =>
+      new AiCfoUsageService(featureUsage, {} as never, {
+        authorize: jest.fn(),
+        authorizeOrThrow: jest.fn(),
+      }).assertQuotaAvailable(userId),
+    );
+
+    const response = await post({ max_completion_tokens: 50 });
+
+    expect(response.status).toBe(429);
+    expect(await response.json()).toEqual({
+      ok: false,
+      error: {
+        code: "RATE_LIMITED",
+        message:
+          "This account's monthly AI quota is used up (20000 of 20000 tokens in 2026-11). It resets at 2026-12-01T00:00:00.000Z.",
+        metadata: {
+          quotaScope: "account_monthly",
+          blockedUntil: "2026-12-01T00:00:00.000Z",
+          currentCount: 20_000,
+          maxAllowed: 20_000,
+          billingMonth: "2026-11",
+          limitOwner: "REQUESTER",
+        },
+      },
+    });
     expect(deps.upstream).not.toHaveBeenCalled();
     expect(deps.charge).not.toHaveBeenCalled();
   });
