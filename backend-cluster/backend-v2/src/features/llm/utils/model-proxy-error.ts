@@ -76,7 +76,7 @@ export function modelProxyError(
 
   return new RateLimitedError(
     retryAfter,
-    `Hosted AI service capacity cannot accommodate this request. ${guidance}`,
+    `Hosted AI service capacity cannot accommodate this request. This is shared service capacity, not this account's AI quota, and the refused request used none of it. ${guidance}`,
     {
       quotaScope: "shared_service",
       ...(blockedUntil && { blockedUntil }),

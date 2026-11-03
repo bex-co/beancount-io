@@ -75,10 +75,13 @@ export class AiCfoUsageService implements IAiCfoUsageService {
           maxAllowed: result.maxAllowed,
           billingMonth: result.billingMonth,
         });
+        const blockedUntil = nextBillingMonthStart(result.billingMonth);
         throw new RateLimitedError(
           undefined,
-          "AI CFO monthly token limit reached",
+          `This account's monthly AI quota is used up (${result.currentCount} of ${result.maxAllowed} tokens in ${result.billingMonth}).${blockedUntil ? ` It resets at ${blockedUntil}.` : ""}`,
           {
+            quotaScope: "account_monthly",
+            ...(blockedUntil && { blockedUntil }),
             currentCount: result.currentCount,
             maxAllowed: result.maxAllowed,
             billingMonth: result.billingMonth,
@@ -132,4 +135,18 @@ export class AiCfoUsageService implements IAiCfoUsageService {
       billingMonth,
     };
   }
+}
+
+/**
+ * When a `YYYY-MM` billing month's quota resets: the first instant of the next
+ * UTC month, matching `FeatureUsageService.getCurrentBillingMonth`.
+ */
+export function nextBillingMonthStart(
+  billingMonth: string,
+): string | undefined {
+  const match = /^(\d{4})-(\d{2})$/.exec(billingMonth);
+  if (!match) return undefined;
+  const month = Number(match[2]);
+  if (month < 1 || month > 12) return undefined;
+  return new Date(Date.UTC(Number(match[1]), month, 1)).toISOString();
 }

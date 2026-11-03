@@ -336,8 +336,13 @@ describe("OpenAI chat completions through HTTP and the real LLM service", () => 
         expect(payload.error.message).toMatch(/\bAI\b/i);
         expect(payload.error.message).toMatch(/capacity/i);
         expect(payload.error.message).toContain(normalizedReset);
+        // Owner decision 2026-11-02 (w3/m52): say the refusal is not the
+        // account's quota and consumed none of it; never call it exhausted.
+        expect(payload.error.message).toMatch(
+          /not this account's AI quota, and the refused request used none of it/,
+        );
         expect(payload.error.message).not.toMatch(
-          /your (account|quota)|monthly|allowance/i,
+          /used up|exhausted|monthly|allowance/i,
         );
       },
     );

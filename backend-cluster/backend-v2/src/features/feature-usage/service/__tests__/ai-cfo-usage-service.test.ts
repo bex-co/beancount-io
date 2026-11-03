@@ -1,4 +1,8 @@
-import { AiCfoUsageService, FEATURE_KEY_AI_CFO } from "../ai-cfo-usage-service";
+import {
+  AiCfoUsageService,
+  FEATURE_KEY_AI_CFO,
+  nextBillingMonthStart,
+} from "../ai-cfo-usage-service";
 import type { IFeatureUsageService } from "../feature-usage-service";
 import { SubscriptionTier } from "@/features/stripe/service/stripe";
 import type { IStripeService } from "@/features/stripe/service/stripe-service";
@@ -62,6 +66,50 @@ describe("AiCfoUsageService", () => {
         metadata: { limitOwner: "REQUESTER" },
       });
     });
+
+    it("names the account's monthly quota and when it resets", async () => {
+      mockGetUserTier.mockResolvedValue(SubscriptionTier.FREE);
+      mockFeatureUsageService.checkUsage.mockResolvedValue({
+        allowed: false,
+        currentCount: 20_000,
+        maxAllowed: 20_000,
+        billingMonth: "2026-12",
+      });
+
+      const error = await service
+        .assertQuotaAvailable("user-1")
+        .catch((e: unknown) => e);
+
+      expect(error).toMatchObject({
+        category: "RATE_LIMITED",
+        metadata: {
+          quotaScope: "account_monthly",
+          blockedUntil: "2027-01-01T00:00:00.000Z",
+        },
+      });
+      expect((error as Error).message).toBe(
+        "This account's monthly AI quota is used up (20000 of 20000 tokens in 2026-12). It resets at 2027-01-01T00:00:00.000Z.",
+      );
+      expect(
+        (error as { metadata: Record<string, unknown> }).metadata,
+      ).not.toHaveProperty("retryAfter");
+    });
+  });
+
+  describe("nextBillingMonthStart", () => {
+    it.each([
+      ["2026-11", "2026-12-01T00:00:00.000Z"],
+      ["2026-12", "2027-01-01T00:00:00.000Z"],
+    ])("resets %s at %s", (month, reset) => {
+      expect(nextBillingMonthStart(month)).toBe(reset);
+    });
+
+    it.each(["2026-13", "2026-00", "2026-1", "", "November"])(
+      "returns nothing for the malformed month %j",
+      (month) => {
+        expect(nextBillingMonthStart(month)).toBeUndefined();
+      },
+    );
   });
 
   describe("FEATURE_KEY_AI_CFO", () => {

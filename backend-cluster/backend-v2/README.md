@@ -594,7 +594,19 @@ allowance is tracked separately. When the provider supplies a valid future
 reset, `blockedUntil` contains its UTC ISO timestamp and the message includes
 it. Optional `retryAfter` is a positive integer number of seconds, taken from
 the provider's numeric field, integer `Retry-After` header, or reset timestamp
-(in that order). Failed requests do not record token usage.
+(in that order). Failed requests do not record token usage. The message says
+so: the refusal is shared service capacity, not the account's AI quota, and the
+refused request used none of it.
+
+When the caller's own monthly allowance is spent, the route refuses before
+contacting the model with HTTP 429, `error.code: "RATE_LIMITED"`, and
+`error.metadata.quotaScope: "account_monthly"`, plus `currentCount`,
+`maxAllowed`, `billingMonth`, `limitOwner: "REQUESTER"`, and `blockedUntil`,
+the first instant of the next UTC billing month. The message names the
+account's monthly quota and that reset. Shared provider capacity is not
+reported anywhere; `GET /api-gateway/v1/account/ai-cfo-usage` and GraphQL
+`aiCfoUsage` report only the account's monthly usage and limit. `bea ask`
+states each scope in its own words.
 
 Provider quota documents are recognized through bounded `error`/`message`
 envelopes. Other provider failures retain their HTTP status with a generic

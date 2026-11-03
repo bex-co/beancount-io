@@ -396,3 +396,59 @@ def test_a_quota_refusal_names_the_quota_and_when_it_returns() -> None:
     assert "2026-09-26T13:06:15Z" in message
     assert "bea query" in message, "there is something to do while the window is closed"
     assert "gpt-4o" not in message
+
+
+def _refusal(body: object) -> str:
+    from pydantic_ai.exceptions import ModelHTTPError
+
+    from cli.ask.agent import translated_failures
+    from cli.errors import BeaError
+
+    with pytest.raises(BeaError) as caught:
+        with translated_failures():
+            raise ModelHTTPError(status_code=429, model_name="gpt-4o", body=body)
+    return str(caught.value)
+
+
+def test_the_account_monthly_quota_is_named_as_the_account_s_own() -> None:
+    """The server's `account_monthly` refusal (w3/m52): the account's plan quota, with its reset."""
+    message = _refusal(
+        {
+            "ok": False,
+            "error": {
+                "code": "RATE_LIMITED",
+                "message": "This account's monthly AI quota is used up (20000 of 20000 tokens in 2026-11).",
+                "metadata": {"quotaScope": "account_monthly", "blockedUntil": "2026-12-01T00:00:00.000Z"},
+            },
+        }
+    )
+
+    assert message.startswith("This account's monthly hosted AI quota is used up")
+    assert "It resets at 2026-12-01T00:00:00.000Z." in message
+    assert "Wait a moment" not in message, "a month is not a moment"
+    assert "capacity" not in message
+
+
+def test_shared_capacity_is_never_called_the_account_s_quota() -> None:
+    """Owner decision 2026-11-02 (w3/m52): say it is not the account's quota and used none of it."""
+    message = _refusal(
+        {
+            "ok": False,
+            "error": {
+                "code": "RATE_LIMITED",
+                "message": "Hosted AI service capacity cannot accommodate this request.",
+                "metadata": {"quotaScope": "shared_service", "blockedUntil": "2026-11-02T15:06:00.000Z"},
+            },
+        }
+    )
+
+    assert message.startswith("The hosted AI service is at capacity")
+    assert "not this account's AI quota, and the refused question used none of it" in message
+    assert "Try again at 2026-11-02T15:06:00.000Z." in message
+    assert "used up" not in message
+
+
+def test_an_unscoped_rate_limit_is_not_a_quota_refusal() -> None:
+    message = _refusal({"ok": False, "error": {"code": "RATE_LIMITED", "message": "Too many requests."}})
+
+    assert message == "Rate limited (Too many requests.). Wait a moment and retry."

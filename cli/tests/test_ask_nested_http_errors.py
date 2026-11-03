@@ -39,8 +39,9 @@ def _proxy_wrapper(code: str, message: str) -> dict[str, object]:
         (
             402,
             _proxy_wrapper("QUOTA_EXCEEDED", "API usage quota exceeded"),
-            "This account's hosted AI quota is used up, so the question was refused; "
-            "nothing was written to your ledger. Run the query yourself with 'bea query' in the meantime.",
+            "The hosted AI service is at capacity, so the question was refused; nothing was written to your "
+            "ledger. This is not this account's AI quota, and the refused question used none of it. "
+            "Try again later. Run the query yourself with 'bea query' in the meantime.",
         ),
     ],
     ids=["flat-message", "error-message", "stringified-proxy-error", "stringified-quota-control"],

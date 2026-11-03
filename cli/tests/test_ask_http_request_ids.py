@@ -73,7 +73,7 @@ def _ask(tmp_path: Path, status: int, body: dict[str, object], request_id: str |
     [
         (500, SERVER, 1, "Server error (Synthetic Ask failure)."),
         (403, SERVER, 3, "permission"),
-        (402, QUOTA, 1, "hosted AI quota is used up"),
+        (402, QUOTA, 1, "hosted AI service is at capacity"),
     ],
     ids=["server-error", "forbidden", "quota"],
 )
