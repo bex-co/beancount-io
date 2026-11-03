@@ -4,7 +4,6 @@
 
 ## Inbox
 
-- **1118** — Keep private ledger names out of GA4 page titles (~45m dashboard, major, A2/A3) ← found re-verifying 265, 2026-10-31 ([note](./1118.md)) — fix `3e333f321` deployed (verified 2026-11-02); next: the production collector re-check, then close
 - **1031** — Use actual lot cost currencies in Net Worth valuation disclosures (45–60m dashboard, A2/A3) ← dashboard QA; residual of m26 ([note](./blocked/1031.md)) — fix `e74970870` shipped 2026-11-02 on m58's `units_by_cost` read — **blocked:** the rendered production check waits for a dashboard deploy at or after `e74970870`
 
 
