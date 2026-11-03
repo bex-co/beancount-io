@@ -1,3 +1,4 @@
+import { mcpRequestId } from "@/features/ai-agent/tools/append-ledger-text-tool";
 import { entriesBodySchema } from "@/features/ledger/api/rest/v1/entries-handler";
 import { parseLedgerId } from "@/shared/str";
 import { resolveCommitMessage } from "@/features/ledger/utils/commit-message-alias";
@@ -288,15 +289,15 @@ const EXTERNAL_DESTRUCTIVE: ToolAnnotations = {
 // REST spells it dryRun (same split the append path ships; w23/m7/t002),
 // with a dryRun twin on each side (w23/m9/t002).
 const addLedgerEntriesInput = entriesBodySchema
-  .omit({ dryRun: true })
-  .extend({ ledger: ledgerSelection, ...dryRunInput })
+  .omit({ dryRun: true, requestId: true })
+  .extend({ ledger: ledgerSelection, ...dryRunInput, requestId: mcpRequestId })
   .strict();
 const renameLedgerFileInput = renameFileInput
   .omit({ dryRun: true })
   .extend({ ledger: ledgerSelection, ...dryRunInput })
   .strict();
 const insertReceiptTransactionInput = receiptInsertInput
-  .extend({ ledger: ledgerSelection })
+  .extend({ ledger: ledgerSelection, requestId: mcpRequestId })
   .strict();
 
 /** The MCP fragment: every tool this feature contributes to the registry. */
@@ -417,6 +418,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
         allow_invalid,
         dry_run,
         dryRun: dryRunFlag,
+        requestId,
       } = addLedgerEntriesInput.parse(input);
       const ledgerId = resolveMcpLedger(context, ledger);
       const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
@@ -442,6 +444,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
             ALLOW_INVALID_NAMES,
           ),
           dryPreview,
+          requestId,
         );
       // A preview commits nothing, so no post-write read can see what the
       // write would break: its verdict is the ledger's projection (w23/161).
@@ -531,6 +534,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
             ledgerId,
             receiptObjectKey: resolveObjectKey(args),
             input: args.input,
+            requestId: args.requestId,
           }),
       );
       // The files and hashes the commit reports, so an agent need not query

@@ -29,6 +29,15 @@ export const appendLedgerTextDescription =
   "https://beancount.github.io/docs/beancount_language_syntax/";
 
 /**
+ * MCP's `requestId` (w3/m61). It carries no description because every write
+ * tool repeats it in tools/list, which has a byte budget; the server
+ * instructions explain it once, and a mismatched or in-progress id explains
+ * itself in its refusal. REST and GraphQL carry the full description; the
+ * service enforces the 1-200 character bound on every surface.
+ */
+export const mcpRequestId = z.string().optional();
+
+/**
  * The tool's input, built from the REST body so the two dialects of one
  * capability cannot drift (w2/m28:t005). `dry_run` keeps MCP's existing
  * snake-case spelling — it is what the file-edit tools already publish, and an
@@ -49,6 +58,7 @@ export const appendLedgerTextInputSchema = z
     allowInvalid: z.boolean().optional(),
     // Twin (w23/m9/t003): no surface spells it `allow_invalid` yet.
     allow_invalid: z.boolean().optional().describe("Alias of allowInvalid."),
+    requestId: mcpRequestId,
     ledger: ledgerSelection,
   })
   .strict();
@@ -94,6 +104,7 @@ export async function executeAppendLedgerText(
             ALLOW_INVALID_NAMES,
           ),
         },
+        args.requestId,
       );
       const validation = {
         errorsBefore: result.errorsBefore,

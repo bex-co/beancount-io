@@ -16,6 +16,10 @@ import {
 import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 import { MAX_BULK_ENTRIES } from "@/features/ledger/utils/bulk-entries-cap";
 import {
+  ENTRY_REQUEST_ID_DESCRIPTION,
+  ENTRY_REQUEST_ID_MAX,
+} from "@/features/ledger/utils/entry-write-idempotency";
+import {
   ALLOW_INVALID_NAMES,
   DRY_RUN_NAMES,
   resolveFlagAlias,
@@ -98,131 +102,134 @@ const postingSchema = z.strictObject({
  * `LedgerEntryService.addBulkEntries` — the same directive text lands in the
  * same file whichever surface asked.
  */
-const entrySchema = z.discriminatedUnion("type", [
-  z.strictObject({
-    type: z.literal("transaction"),
-    entry: z.strictObject({
-      date: dateSchema,
-      flag: z.string().openapi({
-        description: "`*` for cleared, `!` for pending",
-        example: "*",
-      }),
-      payee: nullToUndefined(z.string()),
-      narration: nullToUndefined(z.string()),
-      postings: z.array(postingSchema),
-      tags: nullToUndefined(z.array(z.string())),
-      links: nullToUndefined(z.array(z.string())),
-      meta: nullToUndefined(z.record(z.string(), z.string())),
-    }),
-  }),
-  z.strictObject({
-    type: z.literal("open"),
-    entry: z.strictObject({
-      date: dateSchema,
-      account: z.string(),
-      // Optional (w23/106): stock beancount accepts a currency-less open.
-      currencies: nullToUndefined(z.array(z.string())).openapi({
-        description:
-          "Valid currencies for the account; omit for a bare open line",
-      }),
-      booking: nullToUndefined(bookingSchema),
-    }),
-  }),
-  z.strictObject({
-    type: z.literal("close"),
-    entry: z.strictObject({ date: dateSchema, account: z.string() }),
-  }),
-  z.strictObject({
-    type: z.literal("pad"),
-    entry: z.strictObject({
-      date: dateSchema,
-      account: z.string(),
-      sourceAccount: nullToUndefined(z.string()).optional().openapi({
-        description: PAD_SOURCE_DESCRIPTION,
-        example: "Equity:Opening-Balances",
-      }),
-      // Twin (w23/140): one of the two spellings is required; the service
-      // folds both, refusing a split pair.
-      source_account: nullToUndefined(z.string()).optional().openapi({
-        description: "Alias of sourceAccount. One of the two is required.",
+const entrySchema = z.discriminatedUnion(
+  "type",
+  [
+    z.strictObject({
+      type: z.literal("transaction"),
+      entry: z.strictObject({
+        date: dateSchema,
+        flag: z.string().openapi({
+          description: "`*` for cleared, `!` for pending",
+          example: "*",
+        }),
+        payee: nullToUndefined(z.string()),
+        narration: nullToUndefined(z.string()),
+        postings: z.array(postingSchema),
+        tags: nullToUndefined(z.array(z.string())),
+        links: nullToUndefined(z.array(z.string())),
+        meta: nullToUndefined(z.record(z.string(), z.string())),
       }),
     }),
-  }),
-  z.strictObject({
-    type: z.literal("balance"),
-    entry: z.strictObject({
-      date: dateSchema,
-      account: z.string(),
-      amount: amountSchema,
-      tolerance: nullToUndefined(z.string()).optional().openapi({
-        description: BALANCE_TOLERANCE_DESCRIPTION,
+    z.strictObject({
+      type: z.literal("open"),
+      entry: z.strictObject({
+        date: dateSchema,
+        account: z.string(),
+        // Optional (w23/106): stock beancount accepts a currency-less open.
+        currencies: nullToUndefined(z.array(z.string())).openapi({
+          description:
+            "Valid currencies for the account; omit for a bare open line",
+        }),
+        booking: nullToUndefined(bookingSchema),
       }),
     }),
-  }),
-  z.strictObject({
-    type: z.literal("price"),
-    entry: z.strictObject({
-      date: dateSchema,
-      currency: z.string(),
-      amount: amountSchema,
+    z.strictObject({
+      type: z.literal("close"),
+      entry: z.strictObject({ date: dateSchema, account: z.string() }),
     }),
-  }),
-  z.strictObject({
-    type: z.literal("commodity"),
-    entry: z.strictObject({ date: dateSchema, currency: z.string() }),
-  }),
-  z.strictObject({
-    type: z.literal("note"),
-    entry: z.strictObject({
-      date: dateSchema,
-      account: z.string(),
-      content: z.string(),
+    z.strictObject({
+      type: z.literal("pad"),
+      entry: z.strictObject({
+        date: dateSchema,
+        account: z.string(),
+        sourceAccount: nullToUndefined(z.string()).optional().openapi({
+          description: PAD_SOURCE_DESCRIPTION,
+          example: "Equity:Opening-Balances",
+        }),
+        // Twin (w23/140): one of the two spellings is required; the service
+        // folds both, refusing a split pair.
+        source_account: nullToUndefined(z.string()).optional().openapi({
+          description: "Alias of sourceAccount. One of the two is required.",
+        }),
+      }),
     }),
-  }),
-  z.strictObject({
-    type: z.literal("budget"),
-    entry: z.strictObject({
-      date: dateSchema,
-      account: z.string(),
-      interval: z.enum(["daily", "weekly", "monthly", "quarterly", "yearly"]),
-      amount: amountSchema,
+    z.strictObject({
+      type: z.literal("balance"),
+      entry: z.strictObject({
+        date: dateSchema,
+        account: z.string(),
+        amount: amountSchema,
+        tolerance: nullToUndefined(z.string()).optional().openapi({
+          description: BALANCE_TOLERANCE_DESCRIPTION,
+        }),
+      }),
     }),
-  }),
-  z.strictObject({
-    type: z.literal("document"),
-    entry: z.strictObject({
-      date: dateSchema,
-      account: z.string(),
-      filename: z.string(),
-      tags: nullToUndefined(z.array(z.string())),
-      links: nullToUndefined(z.array(z.string())),
+    z.strictObject({
+      type: z.literal("price"),
+      entry: z.strictObject({
+        date: dateSchema,
+        currency: z.string(),
+        amount: amountSchema,
+      }),
     }),
-  }),
-  z.strictObject({
-    type: z.literal("event"),
-    entry: z.strictObject({
-      date: dateSchema,
-      type: z.string(),
-      description: z.string(),
+    z.strictObject({
+      type: z.literal("commodity"),
+      entry: z.strictObject({ date: dateSchema, currency: z.string() }),
     }),
-  }),
-],
-{
-  // Deliberate exclusion (w23/105): option/plugin are file-level config,
-  // not entries, and custom/query have no typed form — the refusal says
-  // so instead of just listing the accepted set.
-  error: (issue) => {
-    if (issue.code !== "invalid_union") return issue.message;
-    const raw = (issue as { options?: unknown }).options;
-    const options = Array.isArray(raw)
-      ? raw.map((option) => `'${String(option)}'`).join(" | ")
-      : "a supported entry type";
-    return (
-      `Invalid entry type; expected ${options}. ` +
-      "custom, query, option, and plugin are deliberately excluded from the typed path — add them as raw text via file writes"
-    );
+    z.strictObject({
+      type: z.literal("note"),
+      entry: z.strictObject({
+        date: dateSchema,
+        account: z.string(),
+        content: z.string(),
+      }),
+    }),
+    z.strictObject({
+      type: z.literal("budget"),
+      entry: z.strictObject({
+        date: dateSchema,
+        account: z.string(),
+        interval: z.enum(["daily", "weekly", "monthly", "quarterly", "yearly"]),
+        amount: amountSchema,
+      }),
+    }),
+    z.strictObject({
+      type: z.literal("document"),
+      entry: z.strictObject({
+        date: dateSchema,
+        account: z.string(),
+        filename: z.string(),
+        tags: nullToUndefined(z.array(z.string())),
+        links: nullToUndefined(z.array(z.string())),
+      }),
+    }),
+    z.strictObject({
+      type: z.literal("event"),
+      entry: z.strictObject({
+        date: dateSchema,
+        type: z.string(),
+        description: z.string(),
+      }),
+    }),
+  ],
+  {
+    // Deliberate exclusion (w23/105): option/plugin are file-level config,
+    // not entries, and custom/query have no typed form — the refusal says
+    // so instead of just listing the accepted set.
+    error: (issue) => {
+      if (issue.code !== "invalid_union") return issue.message;
+      const raw = (issue as { options?: unknown }).options;
+      const options = Array.isArray(raw)
+        ? raw.map((option) => `'${String(option)}'`).join(" | ")
+        : "a supported entry type";
+      return (
+        `Invalid entry type; expected ${options}. ` +
+        "custom, query, option, and plugin are deliberately excluded from the typed path — add them as raw text via file writes"
+      );
+    },
   },
-});
+);
 
 export const entriesBodySchema = z
   .strictObject({
@@ -250,6 +257,9 @@ export const entriesBodySchema = z
     dry_run: nullToUndefined(z.boolean()).optional().openapi({
       description: "Alias of dryRun, as MCP spells it.",
     }),
+    requestId: nullToUndefined(z.string().min(1).max(ENTRY_REQUEST_ID_MAX))
+      .optional()
+      .openapi({ description: ENTRY_REQUEST_ID_DESCRIPTION }),
   })
   .openapi("EntriesRequest", {
     description: "One or more directives to add to the ledger",
@@ -290,6 +300,9 @@ const directiveTextBodySchema = z
     allow_invalid: nullToUndefined(z.boolean()).optional().openapi({
       description: "Alias of allowInvalid.",
     }),
+    requestId: nullToUndefined(z.string().min(1).max(ENTRY_REQUEST_ID_MAX))
+      .optional()
+      .openapi({ description: ENTRY_REQUEST_ID_DESCRIPTION }),
   })
   .openapi("DirectiveTextRequest", {
     description: "Beancount directive text to append to the ledger",
@@ -375,6 +388,7 @@ export const ENTRY_ROUTES = [
           { primary: body.dry_run, legacy: body.dryRun },
           DRY_RUN_NAMES,
         ),
+        body.requestId,
       );
       // The service also reports which files the batch landed in for MCP's
       // write outcome; v1 adds only the hashes (w23/060).
@@ -419,6 +433,7 @@ export const ENTRY_ROUTES = [
             ALLOW_INVALID_NAMES,
           ),
         },
+        body.requestId,
       ),
   }),
 ] as const;

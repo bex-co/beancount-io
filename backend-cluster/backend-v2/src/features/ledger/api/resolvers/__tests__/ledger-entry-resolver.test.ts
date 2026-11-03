@@ -57,6 +57,7 @@ describe("LedgerEntryMutationResolver", () => {
       "web",
       false,
       false,
+      undefined,
     );
     expect(result.success).toBe(true);
   });
@@ -118,6 +119,7 @@ describe("LedgerEntryMutationResolver", () => {
       "web",
       false,
       false,
+      undefined,
     );
   });
 
@@ -145,6 +147,7 @@ describe("LedgerEntryMutationResolver", () => {
       "web",
       false,
       true,
+      undefined,
     );
   });
 });

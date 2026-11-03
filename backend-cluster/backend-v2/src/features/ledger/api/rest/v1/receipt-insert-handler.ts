@@ -1,3 +1,7 @@
+import {
+  ENTRY_REQUEST_ID_DESCRIPTION,
+  ENTRY_REQUEST_ID_MAX,
+} from "@/features/ledger/utils/entry-write-idempotency";
 import { z } from "@/shared/zod-openapi-setup";
 import { v1Route } from "@/server/rest/v1-route";
 import { json } from "@/server/rest/v1-schemas";
@@ -38,6 +42,12 @@ export const receiptInsertInput = z
           .describe("Account the stored receipt document attaches to"),
       })
       .strict(),
+    requestId: z
+      .string()
+      .min(1)
+      .max(ENTRY_REQUEST_ID_MAX)
+      .nullish()
+      .describe(ENTRY_REQUEST_ID_DESCRIPTION),
   })
   .strict();
 
@@ -65,6 +75,7 @@ export const receiptInsertRoute = v1Route({
         ledgerId: ledgerIdOf(params),
         receiptObjectKey: resolveObjectKey(body),
         input: body.input,
+        requestId: body.requestId,
         identity,
       });
     // The workflow also reports which files the entries landed in for MCP's

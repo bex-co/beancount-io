@@ -203,6 +203,9 @@ describe("LedgerLegacyResolver", () => {
         "test-ledger",
         expect.any(Array),
         "web",
+        false,
+        false,
+        undefined,
       );
     });
 
@@ -230,6 +233,9 @@ describe("LedgerLegacyResolver", () => {
           }),
         ],
         "web",
+        false,
+        false,
+        undefined,
       );
     });
 
@@ -257,6 +263,9 @@ describe("LedgerLegacyResolver", () => {
           }),
         ],
         "web",
+        false,
+        false,
+        undefined,
       );
     });
 
@@ -295,6 +304,9 @@ describe("LedgerLegacyResolver", () => {
           }),
         ],
         "web",
+        false,
+        false,
+        undefined,
       );
     });
 
@@ -358,6 +370,9 @@ describe("LedgerLegacyResolver", () => {
         "test-ledger",
         expect.any(Array),
         "mobile",
+        false,
+        false,
+        undefined,
       );
     });
   });
@@ -1430,6 +1445,9 @@ describe("LedgerLegacyResolver", () => {
         "other",
         expect.any(Array),
         "web",
+        false,
+        false,
+        undefined,
       );
     });
 

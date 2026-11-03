@@ -19,6 +19,14 @@ import type { Identity } from "@/server/api/identity";
 import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
 import type { McpRequestContext } from "@/features/ai-agent/api/mcp-context";
+import { fakeRedisIdempotencyState } from "@/foundation/redis/__tests__/fake-redis-idempotency";
+
+jest.mock(
+  "@/foundation/redis/redis-idempotency",
+  () =>
+    jest.requireActual("@/foundation/redis/__tests__/fake-redis-idempotency")
+      .fakeRedisIdempotency,
+);
 
 const config = { api: { scopeEnforcement: "enforce" } } as AppConfig;
 const identity: Identity = {
@@ -673,4 +681,58 @@ it("refuses a missing insert key as bad input on every surface", async () => {
   } finally {
     await f.close();
   }
+});
+
+describe("requestId on receipt insertion", () => {
+  beforeEach(() => fakeRedisIdempotencyState.reset());
+
+  it.each(["rest", "gql", "mcp"] as const)(
+    "promotes and posts once when a retry repeats the id via %s",
+    async (surface) => {
+      // The temporary receipt belongs to this caller, so it is the one writing.
+      const f = await fixture();
+      const send = () =>
+        surface === "rest"
+          ? f
+              .rest({ receiptObjectKey, input, requestId: "rcpt-1" })
+              .then(async (response) => ({
+                ok: response.status === 200,
+                body: await response.json(),
+              }))
+          : surface === "gql"
+            ? f
+                .gql(
+                  { receiptObjectKey, input, requestId: "rcpt-1" },
+                  "success",
+                  "receiptObjectKey:$receiptObjectKey,requestId:$requestId",
+                  "$receiptObjectKey:String!,$requestId:String",
+                )
+                .then((result) => ({
+                  ok: !result.errors,
+                  body: result.data?.insertReceiptTransaction,
+                }))
+            : f
+                .mcp({ receiptObjectKey, input, requestId: "rcpt-1" })
+                .then((result) => ({
+                  ok: !result.isError,
+                  body: (result.structuredContent as { result?: unknown })
+                    ?.result,
+                }));
+      try {
+        const first = await send();
+        const retry = await send();
+
+        expect(first.ok).toBe(true);
+        expect(retry.ok).toBe(true);
+        expect(f.copy).toHaveBeenCalledTimes(1);
+        expect(
+          (f.write.mock.calls as unknown[][]).filter(
+            (call) => call[6] !== true,
+          ),
+        ).toHaveLength(1);
+      } finally {
+        await f.close();
+      }
+    },
+  );
 });

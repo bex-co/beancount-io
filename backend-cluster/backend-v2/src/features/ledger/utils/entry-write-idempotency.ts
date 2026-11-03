@@ -11,7 +11,11 @@ import { CREATE_REQUEST_ID_MAX } from "@/features/ledger/setup/build-ledger";
 const idempotencyLogger = logger.child({ module: "entry-write-idempotency" });
 
 /** The longest accepted `requestId`, the same bound ledger creation uses. */
-const ENTRY_REQUEST_ID_MAX = CREATE_REQUEST_ID_MAX;
+export const ENTRY_REQUEST_ID_MAX = CREATE_REQUEST_ID_MAX;
+
+/** What every surface says about the field, so REST, GraphQL, and MCP agree. */
+export const ENTRY_REQUEST_ID_DESCRIPTION =
+  "Client-generated retry key, 1-200 characters. Send a new one per write and reuse it only to retry the same write: within 24 hours the same id and request return the first result without writing again; the same id with a different request is refused (VALIDATION_FAILED); a repeat while the first attempt is still writing is CONFLICT, so wait and retry with the same id. Omitted, the write is not deduplicated.";
 
 /**
  * Run an entry write at most once per `requestId` (w3/m61, owner decision

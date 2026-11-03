@@ -1,3 +1,4 @@
+import { ENTRY_REQUEST_ID_DESCRIPTION } from "@/features/ledger/utils/entry-write-idempotency";
 import { GraphQLJSONObject } from "graphql-scalars";
 import {
   Arg,
@@ -555,6 +556,11 @@ export class LedgerEntryMutationResolver {
       description: "Alias of dryRun, as MCP spells it.",
     })
     dry_run?: boolean,
+    @Arg("requestId", () => String, {
+      nullable: true,
+      description: ENTRY_REQUEST_ID_DESCRIPTION,
+    })
+    requestId?: string,
   ): Promise<AddLedgerEntryResponse> {
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const result = await this.ledgerEntry.addBulkEntries(
@@ -568,6 +574,7 @@ export class LedgerEntryMutationResolver {
         ALLOW_INVALID_NAMES,
       ),
       resolveFlagAlias({ primary: dry_run, legacy: dryRun }, DRY_RUN_NAMES),
+      requestId,
     );
     return {
       ...result,
@@ -620,6 +627,11 @@ export class LedgerEntryMutationResolver {
       description: "Alias of allowInvalid.",
     })
     allow_invalid?: boolean,
+    @Arg("requestId", () => String, {
+      nullable: true,
+      description: ENTRY_REQUEST_ID_DESCRIPTION,
+    })
+    requestId?: string,
   ): Promise<AppendDirectiveTextResponse> {
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const result = await this.ledgerEntry.appendDirectiveText(
@@ -638,6 +650,7 @@ export class LedgerEntryMutationResolver {
           ALLOW_INVALID_NAMES,
         ),
       },
+      requestId,
     );
     return {
       ...result,

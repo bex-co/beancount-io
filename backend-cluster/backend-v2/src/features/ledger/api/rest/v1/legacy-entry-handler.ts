@@ -1,6 +1,10 @@
 import { z } from "@/shared/zod-openapi-setup";
 import { v1Route } from "@/server/rest/v1-route";
 import { json } from "@/server/rest/v1-schemas";
+import {
+  ENTRY_REQUEST_ID_DESCRIPTION,
+  ENTRY_REQUEST_ID_MAX,
+} from "@/features/ledger/utils/entry-write-idempotency";
 const legacyEntriesInput = z.strictObject({
   ledgerId: z.string().nullish(),
   entriesInput: z.array(
@@ -16,6 +20,12 @@ const legacyEntriesInput = z.strictObject({
       ),
     }),
   ),
+  requestId: z
+    .string()
+    .min(1)
+    .max(ENTRY_REQUEST_ID_MAX)
+    .nullish()
+    .openapi({ description: ENTRY_REQUEST_ID_DESCRIPTION }),
 });
 const legacyEntriesResult = z.object({
   data: z.string(),

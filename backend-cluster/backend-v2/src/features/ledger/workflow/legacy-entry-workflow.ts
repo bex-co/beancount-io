@@ -24,6 +24,8 @@ export interface LegacyEntryCommand {
   ledgerId?: string | null;
   entriesInput: LegacyEntryInput[];
   platform: "web" | "mobile";
+  /** Retry key: the same id and request return the first result (w3/m61). */
+  requestId?: string | null;
 }
 export interface ILegacyEntryWorkflow {
   addEntries(
@@ -70,6 +72,9 @@ export class LegacyEntryWorkflow implements ILegacyEntryWorkflow {
       ledgerName,
       inputs,
       platform,
+      false,
+      false,
+      input.requestId,
     );
     return { data: "", success: true };
   }

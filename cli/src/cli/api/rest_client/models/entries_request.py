@@ -40,6 +40,11 @@ class EntriesRequest:
         allow_invalid (bool | None | Unset): Alias of allowInvalid.
         dryRun (bool | None | Unset): Run every check and return the preview without committing
         dry_run (bool | None | Unset): Alias of dryRun, as MCP spells it.
+        request_id (None | str | Unset): Client-generated retry key, 1-200 characters. Send a new one per write and
+            reuse it only to retry the same write: within 24 hours the same id and request return the first result without
+            writing again; the same id with a different request is refused (VALIDATION_FAILED); a repeat while the first
+            attempt is still writing is CONFLICT, so wait and retry with the same id. Omitted, the write is not
+            deduplicated.
     """
 
     entries: list[
@@ -59,6 +64,7 @@ class EntriesRequest:
     allow_invalid: bool | None | Unset = UNSET
     dryRun: bool | None | Unset = UNSET
     dry_run: bool | None | Unset = UNSET
+    request_id: None | str | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.entries_request_entries_item_type_0 import EntriesRequestEntriesItemType0  # noqa: PLC0415
@@ -124,6 +130,12 @@ class EntriesRequest:
         else:
             dry_run = self.dry_run
 
+        request_id: None | str | Unset
+        if isinstance(self.request_id, Unset):
+            request_id = UNSET
+        else:
+            request_id = self.request_id
+
         field_dict: dict[str, Any] = {}
 
         field_dict.update(
@@ -139,6 +151,8 @@ class EntriesRequest:
             field_dict["dryRun"] = dryRun
         if dry_run is not UNSET:
             field_dict["dry_run"] = dry_run
+        if request_id is not UNSET:
+            field_dict["requestId"] = request_id
 
         return field_dict
 
@@ -302,12 +316,22 @@ class EntriesRequest:
 
         dry_run = _parse_dry_run(d.pop("dry_run", UNSET))
 
+        def _parse_request_id(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        request_id = _parse_request_id(d.pop("requestId", UNSET))
+
         entries_request = cls(
             entries=entries,
             allowInvalid=allowInvalid,
             allow_invalid=allow_invalid,
             dryRun=dryRun,
             dry_run=dry_run,
+            request_id=request_id,
         )
 
         return entries_request

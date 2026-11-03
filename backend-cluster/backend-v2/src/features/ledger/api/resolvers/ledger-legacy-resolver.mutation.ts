@@ -1,3 +1,4 @@
+import { ENTRY_REQUEST_ID_DESCRIPTION } from "@/features/ledger/utils/entry-write-idempotency";
 import {
   ArgsType,
   Field,
@@ -59,6 +60,12 @@ class EntriesInput {
 
   @Field(() => String, { nullable: true })
   ledgerId?: string | null;
+
+  @Field(() => String, {
+    nullable: true,
+    description: ENTRY_REQUEST_ID_DESCRIPTION,
+  })
+  requestId?: string | null;
 }
 
 @ObjectType()
@@ -88,6 +95,7 @@ export class LedgerLegacyMutationResolver {
         meta: { ...entry.meta },
       })),
       platform: ctx.platform,
+      requestId: entriesInput.requestId,
     });
   }
 }

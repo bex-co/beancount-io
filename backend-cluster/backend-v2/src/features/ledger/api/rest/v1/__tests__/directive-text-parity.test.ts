@@ -24,6 +24,14 @@ import type { Identity } from "@/server/api/identity";
 import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
 import type { McpRequestContext } from "@/features/ai-agent/api/mcp-context";
+import { fakeRedisIdempotencyState } from "@/foundation/redis/__tests__/fake-redis-idempotency";
+
+jest.mock(
+  "@/foundation/redis/redis-idempotency",
+  () =>
+    jest.requireActual("@/foundation/redis/__tests__/fake-redis-idempotency")
+      .fakeRedisIdempotency,
+);
 
 /**
  * w2/m28:t005 — `appendLedgerText` on all three surfaces.
@@ -247,6 +255,7 @@ async function fixture(caller = identity) {
     allowInvalid?: boolean;
     // w23/m9/t003: the errors twin, likewise raw-only.
     allow_invalid?: boolean;
+    requestId?: string;
   };
   return {
     state,
@@ -277,7 +286,7 @@ async function fixture(caller = identity) {
       if (surface === "gql") {
         const result = await graphql({
           schema,
-          source: `mutation { appendLedgerText(ledgerId: "alice/main", text: ${JSON.stringify(args.text)}${args.path ? `, path: ${JSON.stringify(args.path)}` : ""}${args.dryRun !== undefined ? `, dryRun: ${args.dryRun}` : ""}${args.dry_run !== undefined ? `, dry_run: ${args.dry_run}` : ""}${args.allowInvalid !== undefined ? `, allowInvalid: ${args.allowInvalid}` : ""}${args.allow_invalid !== undefined ? `, allow_invalid: ${args.allow_invalid}` : ""}) { success message dryRun count wrote { path line } entryHashes diff { path diff } errorsBefore errorsAfter newErrors { message } appendedUnsorted } }`,
+          source: `mutation { appendLedgerText(ledgerId: "alice/main", text: ${JSON.stringify(args.text)}${args.path ? `, path: ${JSON.stringify(args.path)}` : ""}${args.dryRun !== undefined ? `, dryRun: ${args.dryRun}` : ""}${args.dry_run !== undefined ? `, dry_run: ${args.dry_run}` : ""}${args.allowInvalid !== undefined ? `, allowInvalid: ${args.allowInvalid}` : ""}${args.allow_invalid !== undefined ? `, allow_invalid: ${args.allow_invalid}` : ""}${args.requestId !== undefined ? `, requestId: ${JSON.stringify(args.requestId)}` : ""}) { success message dryRun count wrote { path line } entryHashes diff { path diff } errorsBefore errorsAfter newErrors { message } appendedUnsorted } }`,
           contextValue: {
             identity: caller,
             getCurrentIdentity: () => caller,
@@ -296,6 +305,7 @@ async function fixture(caller = identity) {
         arguments: {
           text: args.text,
           ...(args.path && { path: args.path }),
+          ...(args.requestId && { requestId: args.requestId }),
           ...(raw
             ? {
                 ...(args.dryRun !== undefined ? { dryRun: args.dryRun } : {}),
@@ -886,4 +896,39 @@ describe("appending Beancount text through the real adapters", () => {
       await f.close();
     }
   });
+});
+
+describe("requestId on appended text", () => {
+  beforeEach(() => fakeRedisIdempotencyState.reset());
+
+  it.each(["rest", "gql", "mcp"] as const)(
+    "returns the first result to a retry and commits once via %s",
+    async (surface) => {
+      const f = await fixture({
+        ...identity,
+        userId: `usr_text_request_id_${surface}`,
+      });
+      try {
+        const first = await f.call(surface, { text: TXN, requestId: "t-1" });
+        const retry = await f.call(surface, { text: TXN, requestId: "t-1" });
+
+        expect(first.ok).toBe(true);
+        expect(retry.ok).toBe(true);
+        expect(f.commits).toHaveLength(1);
+        const {
+          summary: _a,
+          validation: _b,
+          ...firstWrite
+        } = (first.ok ? first.data : {}) as Record<string, unknown>;
+        const {
+          summary: _c,
+          validation: _d,
+          ...retryWrite
+        } = (retry.ok ? retry.data : {}) as Record<string, unknown>;
+        expect(retryWrite).toEqual(firstWrite);
+      } finally {
+        await f.close();
+      }
+    },
+  );
 });

@@ -1117,6 +1117,13 @@
             "type": "boolean",
             "nullable": true,
             "description": "Alias of dryRun, as MCP spells it."
+          },
+          "requestId": {
+            "type": "string",
+            "nullable": true,
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Client-generated retry key, 1-200 characters. Send a new one per write and reuse it only to retry the same write: within 24 hours the same id and request return the first result without writing again; the same id with a different request is refused (VALIDATION_FAILED); a repeat while the first attempt is still writing is CONFLICT, so wait and retry with the same id. Omitted, the write is not deduplicated."
           }
         },
         "required": [
@@ -1178,6 +1185,13 @@
             "type": "boolean",
             "nullable": true,
             "description": "Alias of allowInvalid."
+          },
+          "requestId": {
+            "type": "string",
+            "nullable": true,
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Client-generated retry key, 1-200 characters. Send a new one per write and reuse it only to retry the same write: within 24 hours the same id and request return the first result without writing again; the same id with a different request is refused (VALIDATION_FAILED); a repeat while the first attempt is still writing is CONFLICT, so wait and retry with the same id. Omitted, the write is not deduplicated."
           }
         },
         "required": [
@@ -4620,6 +4634,13 @@
                       "documentAccount"
                     ],
                     "additionalProperties": false
+                  },
+                  "requestId": {
+                    "type": "string",
+                    "nullable": true,
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Client-generated retry key, 1-200 characters. Send a new one per write and reuse it only to retry the same write: within 24 hours the same id and request return the first result without writing again; the same id with a different request is refused (VALIDATION_FAILED); a repeat while the first attempt is still writing is CONFLICT, so wait and retry with the same id. Omitted, the write is not deduplicated."
                   }
                 },
                 "required": [
@@ -11521,6 +11542,13 @@
                       ],
                       "additionalProperties": false
                     }
+                  },
+                  "requestId": {
+                    "type": "string",
+                    "nullable": true,
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Client-generated retry key, 1-200 characters. Send a new one per write and reuse it only to retry the same write: within 24 hours the same id and request return the first result without writing again; the same id with a different request is refused (VALIDATION_FAILED); a repeat while the first attempt is still writing is CONFLICT, so wait and retry with the same id. Omitted, the write is not deduplicated."
                   }
                 },
                 "required": [

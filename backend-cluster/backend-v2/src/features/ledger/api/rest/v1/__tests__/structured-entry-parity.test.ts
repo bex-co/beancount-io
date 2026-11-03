@@ -25,6 +25,15 @@ import type { AppLayers } from "@/foundation/composition";
 import type { McpRequestContext } from "@/features/ai-agent/api/mcp-context";
 import { FavaApiError } from "@/foundation/fava/api-client";
 import { MAX_BULK_ENTRIES } from "@/features/ledger/utils/bulk-entries-cap";
+import { fakeRedisIdempotencyState } from "@/foundation/redis/__tests__/fake-redis-idempotency";
+
+// Required inside the factory: these suites import the service before the fake.
+jest.mock(
+  "@/foundation/redis/redis-idempotency",
+  () =>
+    jest.requireActual("@/foundation/redis/__tests__/fake-redis-idempotency")
+      .fakeRedisIdempotency,
+);
 
 const config = { api: { scopeEnforcement: "enforce" } } as AppConfig;
 const identity: Identity = {
@@ -123,10 +132,13 @@ async function fixture(
     includedFiles: [] as string[],
     /** The accounts the ledger opens, which a budget's must be among. */
     accounts: ["Assets:Cash", "Assets:Old", "Expenses:Food"],
+    /** While set, a commit waits on it: the first attempt is still writing. */
+    hold: null as Promise<void> | null,
   };
   const errorCalls = { count: 0 };
   const envelope = (data: unknown) => ({ data: { success: true, data } });
   const write = jest.fn(async (_owner, _name, body) => {
+    if (state.hold) await state.hold;
     if (state.failCommit) throw new Error("Fixture commit refused");
     if (state.unbalanced)
       throw new FavaApiError(
@@ -300,6 +312,7 @@ async function fixture(
         allow_invalid?: boolean;
         dryRun?: boolean;
         dry_run?: boolean;
+        requestId?: string;
       } = {},
       // The spelling test sends the other surface's flag untouched.
       raw = false,
@@ -334,7 +347,9 @@ async function fixture(
           schema,
           source: previewing
             ? 'mutation($entries:[AddEntryInput!]!,$allowInvalid:Boolean,$allow_invalid:Boolean,$dryRun:Boolean,$dry_run:Boolean) { bulkEntries(ledgerId:"alice/main",entries:$entries,allowInvalid:$allowInvalid,allow_invalid:$allow_invalid,dryRun:$dryRun,dry_run:$dry_run) { success message dryRun entryHashes preview { path text } errorsBefore errorsAfter newErrors { message source } } }'
-            : 'mutation($entries:[AddEntryInput!]!,$allowInvalid:Boolean,$allow_invalid:Boolean) { bulkEntries(ledgerId:"alice/main",entries:$entries,allowInvalid:$allowInvalid,allow_invalid:$allow_invalid) { success message entryHashes } }',
+            : opts.requestId !== undefined
+              ? 'mutation($entries:[AddEntryInput!]!,$allowInvalid:Boolean,$allow_invalid:Boolean,$requestId:String) { bulkEntries(ledgerId:"alice/main",entries:$entries,allowInvalid:$allowInvalid,allow_invalid:$allow_invalid,requestId:$requestId) { success message entryHashes } }'
+              : 'mutation($entries:[AddEntryInput!]!,$allowInvalid:Boolean,$allow_invalid:Boolean) { bulkEntries(ledgerId:"alice/main",entries:$entries,allowInvalid:$allowInvalid,allow_invalid:$allow_invalid) { success message entryHashes } }',
           variableValues: { entries: input, ...opts },
           contextValue: {
             identity: caller,
@@ -2236,9 +2251,9 @@ it.each(["custom", "query", "option", "plugin"])(
           message: expect.stringContaining("deliberately excluded"),
         },
       });
-      expect(String(
-        (rest.result as { error: { message: string } }).error.message,
-      )).toContain("raw text via file writes");
+      expect(
+        String((rest.result as { error: { message: string } }).error.message),
+      ).toContain("raw text via file writes");
       const mcp = await f.call("mcp", batch);
       expect(mcp.success).toBe(false);
       expect(mcp.full).toMatchObject({
@@ -2278,3 +2293,115 @@ it.each(["rest", "gql", "mcp"])(
     }
   },
 );
+
+describe.each(["rest", "gql", "mcp"])("requestId via %s", (surface) => {
+  beforeEach(() => fakeRedisIdempotencyState.reset());
+  // Each case writes as its own user: the per-user MCP write budget is shared
+  // with every earlier case in this file.
+  let n = 0;
+  const writer = () => ({
+    ...identity,
+    userId: `usr_request_id_${surface}_${n++}`,
+  });
+
+  /** The refusal's code as each surface reports it. */
+  function refusalCode(result: {
+    result?: unknown;
+    errors?: readonly { message: string }[];
+    full?: unknown;
+  }) {
+    if (surface === "rest")
+      return (result.result as { error?: { code?: string } }).error?.code;
+    if (surface === "mcp")
+      return (result.full as { error?: { code?: string } }).error?.code;
+    return result.errors?.[0]?.message;
+  }
+
+  it("returns the first result to a retry and commits once", async () => {
+    const f = await fixture(writer());
+    try {
+      const first = await f.call(surface, entries, { requestId: "rent-1" });
+      const retry = await f.call(surface, entries, { requestId: "rent-1" });
+
+      expect(first.success).toBe(true);
+      expect(f.write).toHaveBeenCalledTimes(1);
+      expect(f.committed).toHaveLength(entries.length);
+      // MCP re-reads validation after every call, so compare the write itself.
+      const {
+        validation: _v1,
+        summary: _s1,
+        ...firstWrite
+      } = first.result as Record<string, unknown>;
+      const {
+        validation: _v2,
+        summary: _s2,
+        ...retryWrite
+      } = retry.result as Record<string, unknown>;
+      expect(retryWrite).toEqual(firstWrite);
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("refuses the same id with different entries and writes nothing more", async () => {
+    const f = await fixture(writer());
+    try {
+      await f.call(surface, entries, { requestId: "rent-2" });
+      const changed = await f.call(surface, entries.slice(1), {
+        requestId: "rent-2",
+      });
+
+      expect(changed.success).toBe(false);
+      expect(f.write).toHaveBeenCalledTimes(1);
+      if (surface === "gql") {
+        expect(refusalCode(changed)).toContain(
+          "requestId was already used with a different write request",
+        );
+      } else {
+        expect(refusalCode(changed)).toBe("VALIDATION_FAILED");
+      }
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("answers a repeat during the first attempt with a retryable CONFLICT", async () => {
+    const f = await fixture(writer());
+    let release!: () => void;
+    f.state.hold = new Promise<void>((resolve) => (release = resolve));
+    try {
+      const first = f.call(surface, entries, { requestId: "rent-3" });
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      const repeat = await f.call(surface, entries, { requestId: "rent-3" });
+      release();
+      await first;
+
+      expect(repeat.success).toBe(false);
+      expect(f.write).toHaveBeenCalledTimes(1);
+      if (surface === "gql") {
+        expect(refusalCode(repeat)).toContain("still in progress");
+      } else {
+        expect(refusalCode(repeat)).toBe("CONFLICT");
+      }
+    } finally {
+      release?.();
+      await f.close();
+    }
+  });
+
+  it("still commits, unprotected, when Redis is down", async () => {
+    const f = await fixture(writer());
+    fakeRedisIdempotencyState.down = true;
+    try {
+      expect((await f.call(surface, entries, { requestId: "x" })).success).toBe(
+        true,
+      );
+      expect((await f.call(surface, entries, { requestId: "x" })).success).toBe(
+        true,
+      );
+      expect(f.write).toHaveBeenCalledTimes(2);
+    } finally {
+      await f.close();
+    }
+  });
+});
