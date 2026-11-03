@@ -216,3 +216,76 @@ it.each(verificationPaths)(
     expect(signupOtpSession.deleteSessionById).toHaveBeenCalledWith(session.id);
   },
 );
+
+describe("AUTH_SKIP_EMAIL_VERIFICATION", () => {
+  function createSkippingService(skip: boolean) {
+    const base = createService();
+    const sendMail = jest.fn();
+    const signupOtpSession = {
+      ...base.signupOtpSession,
+      createSession: jest.fn(async () => ({ ...session, id: "created" })),
+    };
+    const service = new AuthService(
+      {
+        signupOtpSession,
+        user: {
+          getByMail: async () => null,
+          getUserByUsername: async () => null,
+        },
+      } as never,
+      {} as never,
+      { sendMail } as never,
+      {} as never,
+      {} as never,
+      { auth: { skipEmailVerification: skip } } as never,
+      async () => false,
+    );
+    const registerUser = jest
+      .spyOn(service, "registerUser")
+      .mockResolvedValue(authResponse);
+    return { service, sendMail, registerUser, signupOtpSession };
+  }
+
+  it.each(verificationPaths)(
+    "accepts any code through %s for a valid session when on",
+    async (path) => {
+      const { service, registerUser } = createSkippingService(true);
+      await expect(
+        service[path]({
+          sessionId: "session-a",
+          otp: "not-the-code",
+          ip: "198.51.100.9",
+        }),
+      ).resolves.toEqual(authResponse);
+      expect(registerUser).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it.each(verificationPaths)(
+    "still rejects an unknown session through %s when on",
+    async (path) => {
+      const { service, signupOtpSession, registerUser } =
+        createSkippingService(true);
+      signupOtpSession.getSessionById.mockResolvedValueOnce(null);
+      await expect(
+        service[path]({ sessionId: "nope", otp: "0000", ip: "198.51.100.10" }),
+      ).rejects.toBeInstanceOf(BadUserInputError);
+      expect(registerUser).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(verificationPaths)(
+    "still checks the code through %s when off",
+    async (path) => {
+      const { service, registerUser } = createSkippingService(false);
+      await expect(
+        service[path]({
+          sessionId: "session-a",
+          otp: "not-the-code",
+          ip: "198.51.100.11",
+        }),
+      ).rejects.toBeInstanceOf(BadUserInputError);
+      expect(registerUser).not.toHaveBeenCalled();
+    },
+  );
+});
