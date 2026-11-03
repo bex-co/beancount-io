@@ -94,7 +94,7 @@
 
 - [x] **m60** — [Ledger creation: the two-step flow with modules and the ADR026 currency suggestion](./done/m60/README.md) (9 tasks) ← promoted from 649 (PRFAQ001 §3, ADR021 revision 2026-10-27, ADR026 phase 3) — sequenced after m59
 
-- [ ] **m61** — [Retry-safe entry writes: one `requestId` contract across REST, GraphQL, and MCP](./m61/README.md) (8 tasks) ← promoted 003 (owner decision 2026-11-02)
+- [x] **m61** — [Retry-safe entry writes: one `requestId` contract across REST, GraphQL, and MCP](./done/m61/README.md) (8 tasks) ← promoted 003 (owner decision 2026-11-02)
 
 ## Inbox
 
@@ -103,7 +103,7 @@
 
 ## Dropped
 
-- ~~**003**~~ — Bulk entry writes are not retry-safe after a false timeout — dropped 2026-11-03: promotion completed; carried as [m61](./m61/README.md) with its full record in `source-003.md`.
+- ~~**003**~~ — Bulk entry writes are not retry-safe after a false timeout — dropped 2026-11-03: promotion completed; carried as [m61](./done/m61/README.md) with its full record in `source-003.md`.
 
 - ~~**649**~~ — Rework the shipped creation flow to the 2026-10-27 design — dropped 2026-11-01: promotion completed; the work shipped as [m60](./done/m60/README.md).
 - ~~**446**~~ — Ask-AI quota/cap mismatch — superseded 2026-10-02 by [m52](./done/m52/README.md); the complete evidence is retained in its source note, and m52 shipped 2026-11-02: refusals name the account monthly quota or shared service capacity.
