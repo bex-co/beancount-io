@@ -94,13 +94,16 @@
 
 - [x] **m60** — [Ledger creation: the two-step flow with modules and the ADR026 currency suggestion](./done/m60/README.md) (9 tasks) ← promoted from 649 (PRFAQ001 §3, ADR021 revision 2026-10-27, ADR026 phase 3) — sequenced after m59
 
+- [ ] **m61** — [Retry-safe entry writes: one `requestId` contract across REST, GraphQL, and MCP](./m61/README.md) (8 tasks) ← promoted 003 (owner decision 2026-11-02)
+
 ## Inbox
 
-- [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout — unblocked 2026-11-02: owner chose the Redis `requestId` design; promote to a milestone
 - [650](./done/650.md) — Saving a file shows "Out of date — click to refresh" for the user's own write (≤1h) ← user report 2026-11-01 — **done** 2026-11-01 (`2ef426039`)
 - [648](./done/648.md) — Fix the web Starter copy promising an example transaction and rename the create button from Save (≤1h) ← `/pm-brainstorm w3` 2026-10-20 candidate 7, from ADR021 — **done** 2026-10-20 (`2f11faa72`)
 
 ## Dropped
+
+- ~~**003**~~ — Bulk entry writes are not retry-safe after a false timeout — dropped 2026-11-03: promotion completed; carried as [m61](./m61/README.md) with its full record in `source-003.md`.
 
 - ~~**649**~~ — Rework the shipped creation flow to the 2026-10-27 design — dropped 2026-11-01: promotion completed; the work shipped as [m60](./done/m60/README.md).
 - ~~**446**~~ — Ask-AI quota/cap mismatch — superseded 2026-10-02 by [m52](./done/m52/README.md); the complete evidence is retained in its source note, and m52 shipped 2026-11-02: refusals name the account monthly quota or shared service capacity.
