@@ -235,6 +235,28 @@ their eligibility in the frozen baseline does not change.
 `Query.storeBillingIdentity` is GraphQL-only because store purchase evidence
 exists only inside the app.
 
+## Retry-safe entry writes (w3/m61)
+
+Every entry append accepts an optional `requestId` with one contract on every
+surface. It is enforced in the three services they converge on, not in the
+adapters:
+
+| Service | REST | GraphQL | MCP |
+| --- | --- | --- | --- |
+| `LedgerEntryService.addBulkEntries` | `POST …/entries`, `POST /legacy/entries` | `bulkEntries`, `addEntries` | `addLedgerEntries` |
+| `LedgerEntryService.appendDirectiveText` | `POST …/directives/text` | `appendLedgerText` | `appendLedgerText` |
+| `LedgerReceiptWorkflow.insertReceiptTransaction` | `POST …/import/insert-receipt` | `insertReceiptTransaction` | `insertReceiptTransaction` |
+
+The contract (`features/ledger/utils/entry-write-idempotency.ts`):
+
+- The id is claimed atomically in Redis, keyed by user, ledger, and id, and kept 24 hours.
+- The same id and request returns the first result. A different request is `VALIDATION_FAILED`, and an attempt still writing is `CONFLICT`.
+- A failed write, or one reporting `success: false`, releases the id.
+- An unreachable store lets the write proceed unprotected.
+- Without an id, Redis is never touched.
+
+Parity is pinned by `structured-entry-parity` (replay, mismatch, in-progress, store down), and by `directive-text-parity` and `receipt-insert-parity` (replay), all through the real services. MCP's field carries no description, to keep `tools/list` within its byte budget; the server instructions state the contract once.
+
 ## Contract evidence required per operation
 
 Each adapter family must record and exercise its actual arguments and defaults,

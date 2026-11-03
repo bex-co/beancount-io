@@ -283,8 +283,8 @@ the principal inputs; inspect the schema before constructing a call.
 | `getEntryContext`               | `entryHash` or `entry_hash` from `listLedgerEntries`; the source context around one entry — read before editing it. `generated_from` names the source of a plugin or pad copy. `not_booked: true` marks a transaction the ledger could not book; no balance counts it. | Read                                                                                       |
 | `listLedgerFiles`               | Optional `dir_path`; lists one directory level, directories first. A `dir_path` that does not exist, or names a file, is `NOT_FOUND`.                                                                                                                                  | Read                                                                                       |
 | `readLedgerFiles`               | `files: [{ path, start_line?, end_line? }]`; returns text and line-range metadata.                                                                                                                                                                                     | Read                                                                                       |
-| `appendLedgerText`              | `text`, optional `path`, `dry_run`, `allowInvalid`; appends Beancount directive text, routed by type and date and inserted in date order.                                                                                                                              | Write                                                                                      |
-| `addLedgerEntries`              | `entries: [{type, entry}]`, optional `dry_run`, `allowInvalid`; appends structured directives, routed by type and date. A preview returns the per-file entry text. `custom`/`query`/`option`/`plugin` have no typed form — add them as raw text.                       | Write                                                                                      |
+| `appendLedgerText`              | `text`, optional `path`, `dry_run`, `allowInvalid`, `requestId`; appends Beancount directive text, routed by type and date and inserted in date order.                                                                                                                              | Write                                                                                      |
+| `addLedgerEntries`              | `entries: [{type, entry}]`, optional `dry_run`, `allowInvalid`, `requestId`; appends structured directives, routed by type and date. A preview returns the per-file entry text. `custom`/`query`/`option`/`plugin` have no typed form — add them as raw text.                       | Write                                                                                      |
 | `refreshManagedPrices`          | Optional `ledger`; re-fetches every managed price include (`include "https://beancount.io/prices/BTC-USD"`) now and returns each source's status. Never edits the ledger.                                                                                              | Write                                                                                      |
 | `createLedgerFiles`             | `description` or `message`, `files: [{ path, content }]`, optional `dry_run`; creates new files in one commit.                                                                                                                                                         | Write                                                                                      |
 | `updateLedgerFiles`             | `description` or `message`, `files: [{ path, old_string, new_string }                                                                                                                                                                                                  | { path, content }]`, optional `dry_run`; replaces exact text or whole files in one commit. | Write |
@@ -1656,6 +1656,8 @@ names the caller-owned temporary upload, and `input` carries
 `date`, `payee`, `description`, an arbitrary-count `postings` array of
 `{account, amountNumber, amountCurrency}` string-decimal legs, and
 `documentAccount`. Optional `ledger` follows the standard selection contract.
+Optional `requestId` makes a retry promote the receipt and post the entry
+once (see [Retry-safe entry writes](#retry-safe-entry-writes-requestid)).
 The ledger's `receipt_storage` beancountio-option decides the strategy: S3
 storage promotes the object and writes one transaction with a receipt URL in
 its metadata; git storage commits the receipt bytes into the repository and
@@ -1797,6 +1799,28 @@ what it would append — a `Would add …` message and the per-file entry text i
 empty, and `wrote` naming at most the entry point the batch would newly
 include. The `UNBALANCED` and `VALIDATION_FAILED` refusals above refuse a
 preview exactly as they refuse a commit.
+
+### Retry-safe entry writes (`requestId`)
+
+`addLedgerEntries`, `appendLedgerText`, and `insertReceiptTransaction` take an
+optional `requestId` (1–200 characters), as do their REST and GraphQL twins and
+the legacy `addEntries` (w3/m61). It copies ledger creation's contract
+(ADR021). Send a new id for each write, and reuse it only to retry that write
+after a timeout or a dropped reply:
+
+- Within 24 hours, the same id with the same request returns the first
+  result without writing again. The validation in a replayed MCP result is
+  read afresh.
+- The same id with a different request is refused with `VALIDATION_FAILED`.
+- A repeat while the first attempt is still writing is `CONFLICT`. Wait a few
+  seconds and send the same call with the same id.
+- A write that is refused or fails releases its id, so the retry runs again.
+- Without an id, nothing changes: the write is not deduplicated.
+
+Ids are scoped to the caller and the ledger. A dry run is never deduplicated.
+If the server's idempotency store is unreachable, the write still goes ahead,
+unprotected, rather than failing. The dashboard and the mobile app send an id
+with every entry save.
 
 ### Legacy transaction insertion
 
