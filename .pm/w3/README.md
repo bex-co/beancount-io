@@ -97,7 +97,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout — unblocked 2026-11-02: owner chose the Redis `requestId` design; promote to a milestone
-- [484](./484.md) — Remove production verification probes from the public `open_ledger/example` showcase (≤1h) — unblocked 2026-11-02: probe ledger is `puncsky/prod-probe`
 - [650](./done/650.md) — Saving a file shows "Out of date — click to refresh" for the user's own write (≤1h) ← user report 2026-11-01 — **done** 2026-11-01 (`2ef426039`)
 - [648](./done/648.md) — Fix the web Starter copy promising an example transaction and rename the create button from Save (≤1h) ← `/pm-brainstorm w3` 2026-10-20 candidate 7, from ADR021 — **done** 2026-10-20 (`2f11faa72`)
 
@@ -116,4 +115,5 @@ Blocked milestones and inbox notes live under [`blocked/`](./blocked/) with thei
 - [113](./blocked/113.md) — Lot reductions replace current market prices — **blocked:** upstream `@rustledger/wasm` (still 0.24.0); vendoring forbidden.
 
 - [x] **m43** — Open shared native transaction links in a browser (6 tasks) ← native QA Sep13
+- [484](./blocked/484.md) — Remove production verification probes from the public `open_ledger/example` showcase — **blocked:** runbook done; deleting the two files needs write access to `open_ledger/example` (the QA account is pull-only)
 - [645](./blocked/645.md) — Creating a pull request fails with an opaque "Gitea 500" — **blocked:** the main-only branch policy refuses the `pr-patch-*` branch; owner kept the policy 2026-11-02 (w23/m17 dropped)
