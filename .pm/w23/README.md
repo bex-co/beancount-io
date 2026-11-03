@@ -20,12 +20,12 @@
 - [x] **m14** — [Render NULL cells honestly in BQL results](./done/m14/README.md) (8 tasks) ← promoted from `w23/122` 2026-10-27
 - [x] **m15** — [Gate file writes on new bean-check errors](./done/m15/README.md) (7 tasks) ← promoted from `w23/149` 2026-10-30
 - [x] **m16** — [Disclose unpriced report conversions](./done/m16/README.md) (7 tasks) ← promoted from `w23/180` 2026-10-30
-- [ ] **m17** — [Make createPullRequest work reliably](./blocked/m17/README.md) (8 tasks) ← promoted from `w23/082` 2026-10-31 — **blocked:** t008 reran on production: Gitea answers 500 to every branch create, even inside one commit; needs the Gitea server log
 - [x] **m18** — [Bind ledger pins to the repository ID](./done/m18/README.md) (9 tasks) ← promoted from `w23/065` 2026-11-01
 - [x] **m19** — [Fill balances.discrepancy from the validator](./done/m19/README.md) (8 tasks) ← promoted from `w23/196` 2026-11-01
 
 ## Dropped
 
+- ~~**m17**~~ — Make createPullRequest work reliably — dropped 2026-11-02 (future maybe): production ledgers carry the deliberate main-only branch policy (`repo-branch-policy.ts`: catch-all rule `*` with push disabled), so Gitea refuses the temporary `pr-patch-*` branch every pull request needs, whether created alone or inside the commit (verified on production 2026-11-01/02). Owner decision 2026-11-02: keep the main-only policy. t001–t007 (single-commit flow, parity, docs, tests) had shipped and stay in the code. Revisit only if the owner later allows a `pr-patch-*` branch rule
 - ~~**046**~~ — social follower/following/starred lists answer an unknown user with an empty success — dropped 2026-10-21: documented behavior (`backend-cluster/backend-v2/docs/mcp.md`, social reads: "returns an empty page on upstream failure, so an empty result does not establish that the user has no followers or stars")
 - ~~**088**~~ — `appendLedgerText` ignores its documented `pushtag`/`pushmeta` handling — dropped 2026-10-25: invalid probes; dated push/pop is a syntax error in real beancount too (verified on PyPI beancount 3.2.3), and undated push/pop applies tags, consumes the lines, and refuses unbalanced pops naming the line, exactly as documented
 - ~~**126**~~ — `meta` dict cells render as blank `str` on every surface — dropped 2026-10-27: dup of `w23/blocked/022.md` line-59 coverage (engine yields null for meta cells; parity triple + entry control recorded there)
