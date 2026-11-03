@@ -71,19 +71,33 @@ all, so a fresh deploy cannot touch ledger data by accident.
 and need no action. Gitea admin user creation is still a one-time
 `gitea admin user create` on whatever host runs Gitea.
 
-## Sign-up needs working mail
+## Sign-up without a mail provider
 
-Sign-up verifies an emailed OTP, so it cannot complete until the API has a
-real `SEND_GRID_API_KEY` (a key whose account has verified the
-`mail.beancount.io` sender). Without one `signUp` fails with `Email delivery is
-temporarily unavailable` (`MAIL_PROVIDER_FAILURE` in the API log) and returns no
-`sessionId`.
+Sign-up normally verifies an emailed OTP and needs `SEND_GRID_API_KEY` (a key
+whose account has verified the `mail.beancount.io` sender). With no key,
+`signUp` fails with `Email delivery is temporarily unavailable`
+(`MAIL_PROVIDER_FAILURE` in the API log), and OTPs are never logged. The pending
+session lives in Redis, but `beancount-cache` is internal-only
+(`ipAllowList: []`, no external connection string), so `bex kv-cli` cannot reach
+it from a laptop.
 
-There is deliberately no way around this from the logs: the API never logs OTPs
-or mail contents. The pending session does live in Redis
-(`auth:signup_otp_session:id:{sessionId}`), but `beancount-cache` is internal-only
-(`ipAllowList: []`, no external connection string, no password), so `bex kv-cli`
-cannot reach it from a laptop. Do not open it to the internet to read an OTP.
+This Blueprint therefore sets `AUTH_SKIP_EMAIL_VERIFICATION=true` on
+`beancount-api`. It is an explicit opt-in, never inferred from a missing key, so
+a production deployment that loses its key still fails instead of opening up.
+With it on:
+
+- `signUp` creates the session but sends no mail;
+- `verifySignUpOtp` accepts **any** code for a valid session id, so on the
+  dashboard's code screen type any six digits;
+- the email address is **not** proven to belong to the person signing up, and
+  forgot-password and other mail still do not work;
+- the API logs a warning at boot and per sign-up (never the session id, which is
+  then the whole credential).
+
+Because the public canary URL has no email check, bots can register accounts. To
+turn it off: set `SEND_GRID_API_KEY`, delete the `AUTH_SKIP_EMAIL_VERIFICATION`
+entry from `bex.yaml` (an omitted env var is kept, so set it to `"false"` or
+remove it in the dashboard), and re-apply.
 
 The browser calls the API cross-origin, so the API also needs
 `EXTRA_ALLOWED_ORIGINS` set to the dashboard origin (already in `bex.yaml`);

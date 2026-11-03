@@ -17,7 +17,7 @@ beforeEach(() => fakeRedisAdmissionState.reset());
 // it before, and a sign-up without one took the email's local part as is
 // (w0/046).
 
-function createService(taken: string[] = []) {
+function createService(taken: string[] = [], skipEmailVerification = false) {
   const takenLower = new Set(taken.map((name) => name.toLowerCase()));
   const user = {
     getByMail: jest.fn().mockResolvedValue(null),
@@ -44,7 +44,10 @@ function createService(taken: string[] = []) {
     sendgrid as any,
     {} as any,
     { getAdminClient: () => ({ admin: { createUser } }) } as any,
-    { favaApi: { adminUser: "admin", adminPassword: "pw" } } as any,
+    {
+      favaApi: { adminUser: "admin", adminPassword: "pw" },
+      auth: { skipEmailVerification },
+    } as any,
     isPwnedPassword,
   );
   return {
@@ -228,5 +231,22 @@ describe("createSignUpSession password policy", () => {
       service.createSignUpSession(signUpParams(null)),
     ).rejects.toBeInstanceOf(ConflictError);
     expect(isPwnedPassword).not.toHaveBeenCalled();
+  });
+});
+
+describe("createSignUpSession with AUTH_SKIP_EMAIL_VERIFICATION", () => {
+  it("creates the session but sends no mail when on", async () => {
+    const { service, signupOtpSession, sendgrid } = createService([], true);
+    await expect(service.createSignUpSession(signUpParams())).resolves.toBe(
+      "s-1",
+    );
+    expect(signupOtpSession.createSession).toHaveBeenCalledTimes(1);
+    expect(sendgrid.sendMail).not.toHaveBeenCalled();
+  });
+
+  it("sends the code when off", async () => {
+    const { service, sendgrid } = createService();
+    await service.createSignUpSession(signUpParams());
+    expect(sendgrid.sendMail).toHaveBeenCalledTimes(1);
   });
 });

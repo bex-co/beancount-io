@@ -212,7 +212,7 @@ export class AuthService implements IAuthService {
       AppConfig,
       "favaApi" | "dashboard" | "gitea"
     > &
-      Partial<Pick<AppConfig, "jwt">>,
+      Partial<Pick<AppConfig, "jwt" | "auth">>,
     private readonly isPwnedPassword: IsPwnedPassword,
     private readonly enqueueAuthMail?: IAuthMailService["enqueue"],
   ) {}
@@ -669,6 +669,15 @@ export class AuthService implements IAuthService {
       10, // 10 minutes expiration
     );
 
+    // Explicit opt-in only (AUTH_SKIP_EMAIL_VERIFICATION): no mail goes out and
+    // the code is not checked later, so the address is NOT proven to be theirs.
+    if (this.config.auth?.skipEmailVerification) {
+      // Never log the session id: with verification off it is the whole
+      // credential for completing the sign-up.
+      logger.warn("Email verification skipped for sign-up session");
+      return session.id;
+    }
+
     const preSignupParams = { otp: session.otp };
     await this.sendgrid.sendMail({
       to: normalizedEmail,
@@ -694,7 +703,10 @@ export class AuthService implements IAuthService {
 
     await enforceSignupOtpAccountLimits(session.email, sessionId);
 
-    if (!secureStringEqual(session.otp, otp)) {
+    if (
+      !this.config.auth?.skipEmailVerification &&
+      !secureStringEqual(session.otp, otp)
+    ) {
       throw new BadUserInputError("Invalid OTP code");
     }
 
@@ -743,7 +755,10 @@ export class AuthService implements IAuthService {
 
     await enforceSignupOtpAccountLimits(session.email, sessionId);
 
-    if (!secureStringEqual(session.otp, otp)) {
+    if (
+      !this.config.auth?.skipEmailVerification &&
+      !secureStringEqual(session.otp, otp)
+    ) {
       throw new BadUserInputError("Invalid OTP code");
     }
 

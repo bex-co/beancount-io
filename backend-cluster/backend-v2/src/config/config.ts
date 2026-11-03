@@ -72,6 +72,16 @@ interface McpRegistryConfig {
   authProof: string | null;
 }
 
+interface AuthPolicyConfig {
+  /**
+   * AUTH_SKIP_EMAIL_VERIFICATION=true: sign-up sends no verification mail and
+   * accepts any code for a valid session. For a deployment with no mail
+   * provider (e.g. a canary); never inferred from a missing SEND_GRID_API_KEY,
+   * so a production deployment that loses its key fails instead of opening.
+   */
+  skipEmailVerification: boolean;
+}
+
 export interface GiteaConfig {
   hostname: string;
   internalHostname: string;
@@ -208,6 +218,7 @@ export interface AppConfig {
   jwt: JwtConfig;
   favaApi: FavaAPIConfig;
   dashboard: DashboardConfig;
+  auth: AuthPolicyConfig;
   mcpRegistry: McpRegistryConfig;
   gitea: GiteaConfig;
   blockeden: BlockEdenConfig;
@@ -376,6 +387,9 @@ export const config: AppConfig = {
   },
   dashboard: {
     url: dashboardUrl,
+  },
+  auth: {
+    skipEmailVerification: process.env.AUTH_SKIP_EMAIL_VERIFICATION === "true",
   },
   mcpRegistry: {
     authProof: getMcpRegistryAuthProof(process.env.MCP_REGISTRY_AUTH_PROOF),

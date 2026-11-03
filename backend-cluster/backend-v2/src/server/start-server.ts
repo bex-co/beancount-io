@@ -93,6 +93,12 @@ export async function startServer(): Promise<void> {
 
   const layers: AppLayers = await buildAppLayers(config);
 
+  if (config.auth.skipEmailVerification) {
+    logger.warn(
+      "AUTH_SKIP_EMAIL_VERIFICATION is on: sign-ups are not email-verified. Do not use in production.",
+    );
+  }
+
   // TEMPORARY (safe to delete after 2026-10-21) — retire the __Host-authSess
   // sessions stranded by the c8fee979d7 revert. See the middleware's docblock.
   //
