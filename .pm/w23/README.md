@@ -60,3 +60,4 @@
 - [x] [209](./done/209.md) — ledger-backed calls failed ~12 min starting at a 100 KB `runBqlQuery`; cause unverified, needs a non-production reproduction
 - [x] [210](./done/210.md) — a NUL byte in `q` (catalog search), `username` (`social/profile`) or `collaborator` answers `SERVICE_UNAVAILABLE`/`INTERNAL_SERVER_ERROR`, not `BAD_USER_INPUT`
 - [x] [211](./done/211.md) — ledger search `private` param is an effective no-op, confusingly overlapping with the real exclusive filter `isPrivate`
+- [ ] [212](./212.md) — BQL `FROM <column> <operator…>` (`FROM year > 2026`, `FROM date > …`, `FROM account ~ …`) is wrapped as a table and refused with a bogus `syntax error at position ~325` on all surfaces (regression from the FROM-fold rewrite)
