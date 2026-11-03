@@ -1,6 +1,6 @@
 # w3 · m52 — Make Ask-AI proxy limits and failures truthful
 
-**Worker:** worker3 **Goal:** Preserve bounded model requests and report quota failures without confusing per-user monthly usage with shared provider capacity. **Status:** blocked (t001–t002 shipped; t003 external; t004–t007 dependent)
+**Worker:** worker3 **Goal:** Preserve bounded model requests and report quota failures without confusing per-user monthly usage with shared provider capacity. **Status:** todo (t001–t002 shipped; t003 next)
 
 ## Tasks (in order)
 
@@ -8,18 +8,18 @@
 | --- | --- | --- | --- |
 | t001 | Preserve modern output caps and bound uncapped requests — **DONE** | 30m | — |
 | t002 | Translate provider quota failures into safe product errors — **DONE** | 40m | t001 |
-| t003 | Align enforced quota visibility across APIs and CLI | 90m | t002 — **BLOCKED** |
-| t004 | Adoption surface — **BLOCKED** | 20m | t001, t002, t003 |
-| t005 | Simplify — **BLOCKED** | 20m | t004 |
-| t006 | Test coverage — **BLOCKED** | 20m | t004 |
-| t007 | Closeout — **BLOCKED** | 10m | t005, t006 |
+| t003 | Align enforced quota visibility across APIs and CLI | 90m | t002 |
+| t004 | Adoption surface | 20m | t001, t002, t003 |
+| t005 | Simplify | 20m | t004 |
+| t006 | Test coverage | 20m | t004 |
+| t007 | Closeout | 10m | t005, t006 |
 
 ## Definition of done
 
 - The real OpenAI-compatible route preserves either supported output-cap spelling, rejects conflicting caps, and supplies a modest documented default when neither is present.
 - Recognized provider quota errors become safe product-owned 429 errors with the quota scope and validated reset information, without raw provider documents or links.
-- Reported availability matches an operator-approved distinction between per-user monthly entitlement and shared provider capacity; REST, GraphQL, MCP, and CLI expose the same supported facts.
-- Near-limit acceptance and refusal are verified against the supported provider contract; package checks, meaningful regressions, adoption review, and simplification pass.
+- Per the owner decision of 2026-11-02, a shared-service refusal is presented as temporary service capacity (not the account's quota, not consumed from it, with a retry time), and usage surfaces report only the per-user monthly entitlement; REST, GraphQL, MCP, and CLI agree.
+- Near-limit acceptance and refusal are verified with a mocked-provider fixture for both refusal scopes; package checks, meaningful regressions, adoption review, and simplification pass.
 
 ## Source + Goal linkage
 
@@ -28,7 +28,7 @@
 - **Expected outcome:** capped requests reach the provider unchanged, refusals are readable and actionable, and quota displays describe the limit that can actually refuse a request.
 - **Why now:** m51 shipped the CLI cap, but the proxy strips the SDK's `max_completion_tokens`; the remaining accounting work also needs an external contract and spans more than one hour. Adoption surface is included because both API consumers and CLI users see the results.
 
-## Blocked
+## Earlier block (resolved 2026-11-02)
 
 `t003`: the repository controls per-user monthly accounting, but the raw proxy uses one deployment provider credential. ADR 011 D4 deliberately leaves aggregate capacity upstream. No supported upstream usage/window/reservation interface is present here. A local monthly count cannot establish remaining shared capacity, and changing provider reservation policy or capacity cannot be achieved by this repository's code alone.
 
@@ -36,3 +36,7 @@
 
 
 Re-audited 2026-10-02: `LLMService.invokeModelProxy` still uses one deployment credential, and ADR 011 D4 still assigns aggregate capacity to the provider. The public repository has no supported usage/window/reservation read contract. The new safe refusal metadata cannot establish remaining availability. The milestone definition of done remains unmet until the external condition above holds; the remaining tasks are deliberately not marked done.
+
+## Unblocked 2026-11-02 (`/unblock w3`)
+
+Owner chose option A: tell users the cause (shared service at capacity vs. their own monthly quota) without exposing shared provider capacity. The provider/operator contract is no longer a condition; the definition of done and t003's acceptance were narrowed accordingly (see t003). Next: t003.

@@ -76,11 +76,11 @@
 
 - [x] **m51** — Answer from bounded, unambiguous query results (9 tasks) ← continuous CLI QA, 2026-09-26; consolidates notes 447 + 455 + 448 + the CLI half of 446
 
-- [ ] **m52** — [Make Ask-AI proxy limits and failures truthful](./blocked/m52/README.md) (7 tasks) ← promoted 446 — **blocked:** provider/operator capacity contract, product decision, and near-limit verification; t001–t002 shipped
+- [ ] **m52** — [Make Ask-AI proxy limits and failures truthful](./m52/README.md) (7 tasks) ← promoted 446
 
 - [x] **m53** — [Ledger creation: setup specification, catalog, and builder across hosted surfaces and `bea init`](./done/m53/README.md) (9 tasks) ← `/pm-brainstorm w3` 2026-10-20 candidate 1, from PRFAQ001 + ADR021
 
-- [ ] **m54** — [Ledger creation: staged creation flow on dashboard and mobile](./blocked/m54/README.md) (7 tasks) ← `/pm-brainstorm w3` 2026-10-20 candidate 2, from PRFAQ001 + ADR021 — sequenced after m53 — **blocked:** demo list flag needs an API contract (its source is the open decision); the creation-flow QA follow-ups were superseded by m60 (2026-11-01). Starter copy 648 is done.
+- [ ] **m54** — [Ledger creation: staged creation flow on dashboard and mobile](./m54/README.md) (7 tasks) ← `/pm-brainstorm w3` 2026-10-20 candidate 2, from PRFAQ001 + ADR021 — sequenced after m53
 
 - [x] **m55** — [`beancount-roll-forward`: explain how a balance-sheet account moved](./done/m55/README.md) (6 tasks) ← `/pm-brainstorm w3` 2026-10-20 candidate 3, from ADR020 P1
 
@@ -96,13 +96,15 @@
 
 ## Inbox
 
+- [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout — unblocked 2026-11-02: owner chose the Redis `requestId` design; promote to a milestone
+- [484](./484.md) — Remove production verification probes from the public `open_ledger/example` showcase (≤1h) — unblocked 2026-11-02: probe ledger is `puncsky/prod-probe`
 - [650](./done/650.md) — Saving a file shows "Out of date — click to refresh" for the user's own write (≤1h) ← user report 2026-11-01 — **done** 2026-11-01 (`2ef426039`)
 - [648](./done/648.md) — Fix the web Starter copy promising an example transaction and rename the create button from Save (≤1h) ← `/pm-brainstorm w3` 2026-10-20 candidate 7, from ADR021 — **done** 2026-10-20 (`2f11faa72`)
 
 ## Dropped
 
 - ~~**649**~~ — Rework the shipped creation flow to the 2026-10-27 design — dropped 2026-11-01: promotion completed; the work shipped as [m60](./done/m60/README.md).
-- ~~**446**~~ — Ask-AI quota/cap mismatch — superseded 2026-10-02 by [m52](./blocked/m52/README.md); the complete evidence is retained in its source note, public proxy fixes shipped, and shared-provider accounting has an explicit external unblock condition.
+- ~~**446**~~ — Ask-AI quota/cap mismatch — superseded 2026-10-02 by [m52](./m52/README.md); the complete evidence is retained in its source note, public proxy fixes shipped, and shared-provider accounting has an explicit external unblock condition.
 
 - ~~**439**~~ — `--offline` with no cached revision reports the cause as `None` — dropped 2026-09-26: not a separate defect. Same six lines of `cli/src/bea_engine/managed_load.py` (~399–405) as [433](./done/433.md), which now carries both symptoms and the full record; one fix covers both.
 - ~~**453**~~ — One server-side failure ends the whole `bea ask` session — dropped 2026-09-26: not a separate defect. Same five lines of `cli/src/cli/ask/repl.py` (225–233) as [449](./done/449.md), which now carries both triggers and the full record; both notes already said they belonged in one pass.
@@ -111,8 +113,7 @@
 
 Blocked milestones and inbox notes live under [`blocked/`](./blocked/) with their reason and **Unblock:** condition; they keep their IDs and return to the open tree when work can resume.
 
-- [003](./blocked/003.md) — Bulk entry writes are not retry-safe after a false timeout — **blocked:** needs an idempotency contract across REST, GraphQL and MCP.
 - [113](./blocked/113.md) — Lot reductions replace current market prices — **blocked:** upstream `@rustledger/wasm` (still 0.24.0); vendoring forbidden.
 
 - [x] **m43** — Open shared native transaction links in a browser (6 tasks) ← native QA Sep13
-- [484](./blocked/484.md) — Remove production verification probes from the public `open_ledger/example` showcase — **blocked:** operations must name the dedicated probe ledger outside open_ledger/*
+- [645](./blocked/645.md) — Creating a pull request fails with an opaque "Gitea 500" — **blocked:** the main-only branch policy refuses the `pr-patch-*` branch; owner kept the policy 2026-11-02 (w23/m17 dropped)
