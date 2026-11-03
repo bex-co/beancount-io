@@ -513,10 +513,13 @@ PDP with a controlled S3 signer. Actual byte transfers, expired URL behavior,
 and storage cleanup remain deployment verification work; no live storage result
 is implied by these tests.
 
-AI CFO usage is available at `GET /api-gateway/v1/account/ai-cfo-usage` and the
-`beancount://account/ai-cfo-usage` resource. Both use the existing protected usage
-service and GraphQL's two-field mapping, with no caller-selected account. Tests
-execute all three adapters through real usage services and the source-backed PDP
+AI CFO usage is available at `GET /api-gateway/v1/account/ai-cfo-usage`. It uses
+the existing protected usage service and GraphQL's two-field mapping, with no
+caller-selected account. The `beancount://account/ai-cfo-usage` resource was
+retired from MCP on 2026-10-09 (ADR 019 amendment; see `mcp.md`), so MCP is a
+documented exemption. It reports only the account's monthly usage and limit;
+shared model capacity is not exposed (w3/m52). Tests
+execute both adapters through real usage services and the source-backed PDP
 with controlled billing and usage-model fixtures. They cover current-month and
 cross-account isolation, pinned and unpinned grants, API keys, missing capability,
 unknown account selectors, and usage-store failure. No usage increments occur.

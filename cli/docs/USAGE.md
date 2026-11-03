@@ -2245,6 +2245,16 @@ An answer the provider's content filter stops partway prints its partial text
 with a notice naming the filter instead, and `--print` exits **1** the same
 way: rephrase the question and retry.
 
+A question the hosted service refuses for quota says which quota refused it.
+`This account's monthly hosted AI quota is used up …` is your plan's monthly
+allowance; it gives the reset time (the start of the next UTC month), and
+`bea query` keeps working meanwhile. `The hosted AI service is at capacity …`
+is the service's shared model capacity: it is not your account's quota, the
+refused question used none of it, and it names when to try again. Both exit
+**1** with `--print`, and both name anything the turn already wrote. Your
+monthly usage is reported by the dashboard and by
+`GET /api-gateway/v1/account/ai-cfo-usage`; shared capacity is not reported.
+
 A query's result reaches the assistant as rows with a row count, the relation
 they came from, and a zero written as `0` — a total that nets to zero is a zero,
 not missing data. Results are bounded: past a few hundred rows, or roughly
