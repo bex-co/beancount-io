@@ -1,0 +1,100 @@
+import { createHash } from "node:crypto";
+import {
+  type IdempotencyStore,
+  redisIdempotencyStore,
+} from "@/foundation/redis/redis-idempotency";
+import { CACHE_KEYS, TTL } from "@/shared/cache";
+import { ConflictError, ValidationError } from "@/shared/errors";
+import { logger } from "@/shared/logger";
+import { CREATE_REQUEST_ID_MAX } from "@/features/ledger/setup/build-ledger";
+
+const idempotencyLogger = logger.child({ module: "entry-write-idempotency" });
+
+/** The longest accepted `requestId`, the same bound ledger creation uses. */
+const ENTRY_REQUEST_ID_MAX = CREATE_REQUEST_ID_MAX;
+
+/**
+ * Run an entry write at most once per `requestId` (w3/m61, owner decision
+ * 2026-11-02, after ledger creation's ADR021 contract).
+ *
+ * - No `requestId`: the write runs exactly as before and the store is never
+ *   touched.
+ * - The same id and request within 24 hours returns the first result without
+ *   writing again; the same id with a different request is refused; a repeat
+ *   while the first attempt runs is a retryable conflict.
+ * - A write that throws or reports `success: false` committed nothing, so its
+ *   id is released and a retry runs again.
+ * - An unavailable store never stops a save: the write proceeds unprotected,
+ *   exactly as it would without an id, and the miss is logged.
+ *
+ * A crash after the commit but before the record is marked done leaves it in
+ * progress: retries get the conflict, never a duplicate.
+ */
+export async function runIdempotentEntryWrite<T>(params: {
+  userId: string;
+  ledgerId: string;
+  /** Which write: part of the fingerprint, so one id never spans two kinds. */
+  operation: "bulkEntries" | "appendText" | "insertReceipt";
+  requestId: string | null | undefined;
+  /** The write's input, as the service normalized it; transport details excluded. */
+  request: unknown;
+  write: () => Promise<T>;
+  store?: IdempotencyStore;
+}): Promise<T> {
+  const { requestId, write } = params;
+  if (requestId === undefined || requestId === null) return write();
+  if (requestId.length < 1 || requestId.length > ENTRY_REQUEST_ID_MAX) {
+    throw new ValidationError(
+      "requestId",
+      `requestId must be 1-${ENTRY_REQUEST_ID_MAX} characters`,
+    );
+  }
+
+  const store = params.store ?? redisIdempotencyStore;
+  const key = CACHE_KEYS.ledger.entryWriteRequest(
+    params.userId,
+    params.ledgerId,
+    requestId,
+  );
+  const requestHash = createHash("sha256")
+    .update(JSON.stringify([params.operation, params.request]))
+    .digest("hex");
+
+  const claim = await store.claim(key, requestHash, TTL.HOUR_24);
+  if (claim === undefined) {
+    idempotencyLogger.warn("Entry write proceeding without idempotency", {
+      operation: params.operation,
+    });
+    return write();
+  }
+  if (!claim.claimed) {
+    if (claim.record.requestHash !== requestHash) {
+      throw new ValidationError(
+        "requestId",
+        "requestId was already used with a different write request",
+      );
+    }
+    if (claim.record.status === "done") return claim.record.result as T;
+    throw new ConflictError(
+      "Entry write",
+      "A write with this requestId is still in progress",
+      {
+        hint: "Wait a few seconds and repeat the same call with the same requestId: once the first attempt finishes it returns that result, or that attempt's refusal. Send a new requestId only for a different write.",
+      },
+    );
+  }
+
+  let result: T;
+  try {
+    result = await write();
+  } catch (error) {
+    await store.release(key);
+    throw error;
+  }
+  if ((result as { success?: unknown } | null)?.success === false) {
+    await store.release(key);
+    return result;
+  }
+  await store.complete(key, requestHash, result, TTL.HOUR_24);
+  return result;
+}

@@ -1,3 +1,4 @@
+import { runIdempotentEntryWrite } from "@/features/ledger/utils/entry-write-idempotency";
 import {
   EntryAddBulkEntriesRequest,
   Transaction,
@@ -372,6 +373,8 @@ export interface ILedgerEntryService {
     allowInvalid?: boolean,
     /** Run every check the write would and commit nothing (w23/m7/t002). */
     dryRun?: boolean,
+    /** Retry key: the same id and request return the first result (w3/m61). */
+    requestId?: string | null,
   ): Promise<AddBulkEntriesResult>;
 
   /**
@@ -386,6 +389,8 @@ export interface ILedgerEntryService {
     ledgerOwner: string,
     ledgerName: string,
     input: AppendDirectiveTextInput,
+    /** Retry key: the same id and request return the first result (w3/m61). */
+    requestId?: string | null,
   ): Promise<AppendDirectiveTextResult>;
 }
 
@@ -418,6 +423,7 @@ export class LedgerEntryService implements ILedgerEntryService {
     platform: "web" | "mobile",
     allowInvalid = false,
     dryRun = false,
+    requestId?: string | null,
   ): Promise<AddBulkEntriesResult> {
     const ledgerId = `${ledgerOwner}/${ledgerName}`;
     await authorizeLedger(
@@ -429,15 +435,25 @@ export class LedgerEntryService implements ILedgerEntryService {
     // GraphQL's entries argument arrives unchecked, so the schema maxItems
     // alone would leave that surface uncapped (w23/103).
     assertBulkEntriesSize(inputs, "added");
-    return this.writer.writeBulkEntries(
-      identity.userId,
-      ledgerOwner,
-      ledgerName,
-      inputs,
-      platform,
-      allowInvalid,
-      dryRun,
-    );
+    const write = () =>
+      this.writer.writeBulkEntries(
+        identity.userId,
+        ledgerOwner,
+        ledgerName,
+        inputs,
+        platform,
+        allowInvalid,
+        dryRun,
+      );
+    // A dry run writes nothing, so there is nothing to make idempotent.
+    return runIdempotentEntryWrite({
+      userId: identity.userId,
+      ledgerId,
+      operation: "bulkEntries",
+      requestId: dryRun ? undefined : requestId,
+      request: { inputs, allowInvalid },
+      write,
+    });
   }
 
   async appendDirectiveText(
@@ -445,6 +461,7 @@ export class LedgerEntryService implements ILedgerEntryService {
     ledgerOwner: string,
     ledgerName: string,
     input: AppendDirectiveTextInput,
+    requestId?: string | null,
   ): Promise<AppendDirectiveTextResult> {
     // The same canonical action `addBulkEntries` selects: appending text and
     // appending structured entries are one capability in two dialects, and
@@ -459,10 +476,19 @@ export class LedgerEntryService implements ILedgerEntryService {
     // service, so the append is guarded exactly like every other write to
     // these files rather than by a second implementation of the same rules
     // (w2/012). This service keeps the authorization decision.
-    return this.directiveAppend.appendDirectiveText({
-      identity,
-      ledgerId: `${ledgerOwner}/${ledgerName}`,
-      input,
+    const ledgerId = `${ledgerOwner}/${ledgerName}`;
+    return runIdempotentEntryWrite({
+      userId: identity.userId,
+      ledgerId,
+      operation: "appendText",
+      requestId: input.dryRun ? undefined : requestId,
+      request: {
+        text: input.text,
+        path: input.path,
+        allowInvalid: input.allowInvalid,
+      },
+      write: () =>
+        this.directiveAppend.appendDirectiveText({ identity, ledgerId, input }),
     });
   }
 }

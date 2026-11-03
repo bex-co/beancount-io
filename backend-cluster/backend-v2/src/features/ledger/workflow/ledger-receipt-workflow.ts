@@ -1,3 +1,4 @@
+import { runIdempotentEntryWrite } from "@/features/ledger/utils/entry-write-idempotency";
 import { assertTempAssetKey } from "@/features/s3/temp-asset-key";
 import { parseLedgerId } from "@/shared/str";
 import { nanoidBase58 } from "@/shared/nanoid-base58";
@@ -66,6 +67,8 @@ export interface ILedgerReceiptWorkflow {
     receiptObjectKey: string;
     input: InsertReceiptInput;
     identity: Identity;
+    /** Retry key: the same id and request return the first result (w3/m61). */
+    requestId?: string | null;
   }): Promise<InsertReceiptResult>;
 }
 
@@ -131,6 +134,8 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
     receiptObjectKey: string;
     input: InsertReceiptInput;
     identity: Identity;
+    /** Retry key: the same id and request return the first result (w3/m61). */
+    requestId?: string | null;
   }): Promise<InsertReceiptResult> {
     const { ledgerId, receiptObjectKey, input, identity } = params;
     // One composite decision precedes the options read, S3 promotion, file
@@ -142,6 +147,27 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
       action: AUTHORIZATION_ACTIONS.ASSISTED_RECEIPT_INSERT,
       resource: [tempAssetResource(receiptObjectKey), ledgerResource(ledgerId)],
     });
+    // After authorization, so a stored result is only ever replayed to a
+    // caller allowed to make the write; before the receipt is promoted, so a
+    // retry neither stores a second copy nor posts a second entry.
+    return runIdempotentEntryWrite({
+      userId: identity.userId,
+      ledgerId,
+      operation: "insertReceipt",
+      requestId: params.requestId,
+      request: { receiptObjectKey, input },
+      write: () =>
+        this.insertAuthorized({ ledgerId, receiptObjectKey, input, identity }),
+    });
+  }
+
+  private async insertAuthorized(params: {
+    ledgerId: string;
+    receiptObjectKey: string;
+    input: InsertReceiptInput;
+    identity: Identity;
+  }): Promise<InsertReceiptResult> {
+    const { ledgerId, receiptObjectKey, input, identity } = params;
     const { userId } = identity;
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(

@@ -10,6 +10,7 @@ import {
   getRedisClient,
 } from "../redis-utils";
 import { incrementInWindow } from "../redis-counter";
+import { redisIdempotencyStore } from "../redis-idempotency";
 import { consumeSlidingWindows } from "../redis-admission";
 import { issueSignInRecoveryProof } from "@/features/auth/operations/sign-in-recovery-proof";
 import { ServiceUnavailableError } from "@/shared/errors";
@@ -159,6 +160,36 @@ it("increments atomically under concurrency, preserves an existing expiry, and r
     count: 1,
     resetInMs: 200,
   });
+});
+
+it("lets exactly one concurrent claim win an idempotency key and replays the finished record", async () => {
+  const claims = await Promise.all(
+    Array.from({ length: 20 }, () =>
+      redisIdempotencyStore.claim("idem", "hash-a", 60_000),
+    ),
+  );
+  expect(claims.filter((claim) => claim?.claimed === true)).toHaveLength(1);
+  expect(claims.filter((claim) => claim?.claimed === false)).toHaveLength(19);
+  expect(claims.find((claim) => claim?.claimed === false)).toEqual({
+    claimed: false,
+    record: { requestHash: "hash-a", status: "in-progress" },
+  });
+  const ttl = await control.pTTL("idem");
+  expect(ttl).toBeGreaterThan(0);
+  expect(ttl).toBeLessThanOrEqual(60_000);
+
+  await redisIdempotencyStore.complete("idem", "hash-a", { ok: 1 }, 60_000);
+  await expect(
+    redisIdempotencyStore.claim("idem", "hash-a", 60_000),
+  ).resolves.toEqual({
+    claimed: false,
+    record: { requestHash: "hash-a", status: "done", result: { ok: 1 } },
+  });
+
+  await redisIdempotencyStore.release("idem");
+  await expect(
+    redisIdempotencyStore.claim("idem", "hash-b", 60_000),
+  ).resolves.toEqual({ claimed: true });
 });
 
 it("times out written commands while retaining a bounded backlog until their replies arrive", async () => {

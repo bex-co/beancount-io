@@ -1,12 +1,12 @@
 # w3 · m61 — Retry-safe entry writes: one `requestId` contract across REST, GraphQL, and MCP
 
-**Worker:** worker3 **Goal:** a caller that retries an entry write after a timeout or a dropped reply gets the first result instead of a duplicate entry, and no user experience gets worse than today's. **Status:** todo
+**Worker:** worker3 **Goal:** a caller that retries an entry write after a timeout or a dropped reply gets the first result instead of a duplicate entry, and no user experience gets worse than today's. **Status:** todo (t001 done)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| t001 | Backend: `requestId` idempotency on the three entry-write services | 150m | — |
+| t001 | Backend: `requestId` idempotency on the three entry-write services — **DONE** | 150m | — |
 | t002 | Contracts: REST, GraphQL, and MCP accept `requestId` in parity | 60m | t001 |
 | t003 | Dashboard: every entry save sends a `requestId` and handles in-progress | 90m | t002 |
 | t004 | Mobile: every entry save sends a `requestId` and handles in-progress | 90m | t002 |

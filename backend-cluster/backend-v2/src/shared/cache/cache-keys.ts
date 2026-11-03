@@ -128,5 +128,8 @@ export const CACHE_KEYS = {
   ledger: {
     createRequestByUserAndId: (userId: string, requestId: string) =>
       `ledger:create_request:user:${userId}:id:${requestId}`,
+    /** An entry write's idempotency record (w3/m61), per user and ledger. */
+    entryWriteRequest: (userId: string, ledgerId: string, requestId: string) =>
+      `ledger:entry_write_request:user:${userId}:ledger:${ledgerId}:id:${requestId}`,
   },
 } as const;
