@@ -76,7 +76,7 @@
 
 - [x] **m51** — Answer from bounded, unambiguous query results (9 tasks) ← continuous CLI QA, 2026-09-26; consolidates notes 447 + 455 + 448 + the CLI half of 446
 
-- [ ] **m52** — [Make Ask-AI proxy limits and failures truthful](./m52/README.md) (7 tasks) ← promoted 446
+- [x] **m52** — [Make Ask-AI proxy limits and failures truthful](./done/m52/README.md) (7 tasks) ← promoted 446
 
 - [x] **m53** — [Ledger creation: setup specification, catalog, and builder across hosted surfaces and `bea init`](./done/m53/README.md) (9 tasks) ← `/pm-brainstorm w3` 2026-10-20 candidate 1, from PRFAQ001 + ADR021
 
@@ -104,7 +104,7 @@
 ## Dropped
 
 - ~~**649**~~ — Rework the shipped creation flow to the 2026-10-27 design — dropped 2026-11-01: promotion completed; the work shipped as [m60](./done/m60/README.md).
-- ~~**446**~~ — Ask-AI quota/cap mismatch — superseded 2026-10-02 by [m52](./m52/README.md); the complete evidence is retained in its source note, public proxy fixes shipped, and shared-provider accounting has an explicit external unblock condition.
+- ~~**446**~~ — Ask-AI quota/cap mismatch — superseded 2026-10-02 by [m52](./done/m52/README.md); the complete evidence is retained in its source note, and m52 shipped 2026-11-02: refusals name the account monthly quota or shared service capacity.
 
 - ~~**439**~~ — `--offline` with no cached revision reports the cause as `None` — dropped 2026-09-26: not a separate defect. Same six lines of `cli/src/bea_engine/managed_load.py` (~399–405) as [433](./done/433.md), which now carries both symptoms and the full record; one fix covers both.
 - ~~**453**~~ — One server-side failure ends the whole `bea ask` session — dropped 2026-09-26: not a separate defect. Same five lines of `cli/src/cli/ask/repl.py` (225–233) as [449](./done/449.md), which now carries both triggers and the full record; both notes already said they belonged in one pass.
