@@ -20,6 +20,14 @@ import { startV1TestServer } from "@/server/rest/__tests__/v1-test-server";
 import type { Identity } from "@/server/api/identity";
 import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
+import { fakeRedisIdempotencyState } from "@/foundation/redis/__tests__/fake-redis-idempotency";
+
+jest.mock(
+  "@/foundation/redis/redis-idempotency",
+  () =>
+    jest.requireActual("@/foundation/redis/__tests__/fake-redis-idempotency")
+      .fakeRedisIdempotency,
+);
 
 const config = { api: { scopeEnforcement: "enforce" } } as AppConfig;
 const identity: Identity = {
@@ -151,14 +159,14 @@ async function fixture(caller = identity, ledgerId?: string | null) {
     state,
     write,
     createFile,
-    call: async (surface: string, batch = entries) => {
+    call: async (surface: string, batch = entries, requestId?: string) => {
       if (surface === "rest") {
         const response = await fetch(
           `${rest.url}/api-gateway/v1/legacy/entries`,
           {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ entriesInput: batch, ledgerId }),
+            body: JSON.stringify({ entriesInput: batch, ledgerId, requestId }),
           },
         );
         return {
@@ -170,8 +178,8 @@ async function fixture(caller = identity, ledgerId?: string | null) {
         const response = await graphql({
           schema,
           source:
-            "mutation($entries:[EntryInput!]!,$ledgerId:String) { addEntries(ledgerId:$ledgerId,entriesInput:$entries) { success data } }",
-          variableValues: { entries: batch, ledgerId },
+            "mutation($entries:[EntryInput!]!,$ledgerId:String,$requestId:String) { addEntries(ledgerId:$ledgerId,entriesInput:$entries,requestId:$requestId) { success data } }",
+          variableValues: { entries: batch, ledgerId, requestId },
           contextValue: {
             identity: caller,
             getCurrentIdentity: () => caller,
@@ -268,6 +276,27 @@ describe.each(["rest", "gql"])("legacy entries via %s", (surface) => {
     try {
       expect((await f.call(surface)).success).toBe(false);
       expect(f.write).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+});
+
+// Every mobile transaction saves through this legacy path (w3/m61).
+describe.each(["rest", "gql"])("legacy entries requestId via %s", (surface) => {
+  beforeEach(() => fakeRedisIdempotencyState.reset());
+
+  it("commits once when a retry repeats the id, and again for a new id", async () => {
+    const f = await fixture();
+    try {
+      const first = await f.call(surface, entries, "tx-1");
+      const retry = await f.call(surface, entries, "tx-1");
+      expect(first.success).toBe(true);
+      expect(retry).toEqual(first);
+      expect(f.write).toHaveBeenCalledTimes(1);
+
+      await f.call(surface, entries, "tx-2");
+      expect(f.write).toHaveBeenCalledTimes(2);
     } finally {
       await f.close();
     }
