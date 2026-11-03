@@ -13,8 +13,10 @@ import { toFiniteAmount } from "./unit-amounts";
  * figure's date in its cost currency, or its cost when there is no such price;
  * a lot with no cost stays in its own units. The figure alone cannot tell a
  * reader which of those happened, so this reads two more views of the same
- * point — the `at_cost` balance and the raw `units` — plus the ledger's price
- * dates and managed price sources, and describes every held commodity.
+ * point — the `at_cost` balance and the `units_by_cost` units, which key each
+ * holding by the currency its lots cost (`VTI {EUR}`, `EUR {}`, w4/m58) — plus
+ * the ledger's price dates and managed price sources, and describes every
+ * holding by the quote that actually valued it (w4/1031).
  */
 
 type Balance = Record<string, unknown> | null | undefined;
@@ -33,22 +35,31 @@ export type ManagedSource = {
   freshness: string;
 };
 
-/** A held commodity and how the figure values it. */
+/** A held commodity, one per cost currency, and how the figure values it. */
 export type HeldCommodity = {
   currency: string;
+  /**
+   * The currency its lots cost, which prices and values them; null for units
+   * held without a cost. A commodity bought in two currencies is two holdings.
+   */
+  costCurrency: string | null;
   units: number;
   /** The units as the ledger recorded them, which a double can round. */
   unitsExact?: string;
   /**
-   * `market` — valued at a price, `cost` — held at cost with no price,
-   * `notInTotal` — no cost and no price, so left out of the figure.
+   * `market` — valued at a price in its cost currency, `cost` — held at cost
+   * with no such price, `notInTotal` — no cost, so it stays in its own units
+   * and out of the operating-currency figure.
    */
   basis: "market" | "cost" | "notInTotal";
-  /** Latest price date on or before the figure's date; null without one. */
+  /**
+   * Latest date of the price that values it — the commodity in its cost
+   * currency — on or before the figure's date; null without one.
+   */
   priceDate: string | null;
   /** Whether that price is older than this holding's own threshold. */
   stale: boolean;
-  /** Priced by a managed Beancount.io feed rather than the ledger itself. */
+  /** That price comes from a managed Beancount.io feed, not the ledger. */
   managed: boolean;
 };
 
@@ -95,9 +106,29 @@ function dayNumber(date: string): number | null {
   return value.getTime() / DAY_MS;
 }
 
+/**
+ * A `units_by_cost` key: `VTI {EUR}` is VTI held at a EUR cost, `EUR {}` is
+ * EUR held without one. Any other key reads as units without a cost.
+ */
+function parseHoldingKey(key: string): {
+  commodity: string;
+  costCurrency: string | null;
+} {
+  const match = / \{([^{}]*)\}$/.exec(key);
+  if (!match) return { commodity: key, costCurrency: null };
+  return {
+    commodity: key.slice(0, match.index),
+    costCurrency: match[1] || null,
+  };
+}
+
 function nonZero(balance: Balance, currency: string): number | null {
   const value = toFiniteAmount(balance?.[currency]);
   return value === null || value === 0 ? null : value;
+}
+
+function compare(a: string, b: string): number {
+  return a < b ? -1 : a > b ? 1 : 0;
 }
 
 function pairMatches(
@@ -237,10 +268,11 @@ export function describeLatestNetWorth({
  * Describe one net-worth point, or return null when it holds no commodity:
  * such a point reads the same at cost and at market, so it carries no status.
  *
- * A commodity counts as held at cost when the `units` balance holds it and the
- * `at_cost` balance does not (valuing at cost converted it away). One the
- * `at_cost` balance still shows under its own key has no cost, so without a
- * price it stays out of the operating-currency figure.
+ * `units` is the point's `units_by_cost` balance. A holding with a cost is
+ * valued as `at_value` does it: at the latest price of the commodity in its
+ * cost currency on or before the point's date, else at its cost. A price in
+ * any other currency, the operating one included, values nothing. A holding
+ * without a cost stays in its own units, outside the operating-currency figure.
  */
 export function describeNetWorthValuation({
   market,
@@ -265,21 +297,37 @@ export function describeNetWorthValuation({
 }): NetWorthValuation | null {
   const referenceDay = dayNumber(date < today ? date : today);
   const holdings: HeldCommodity[] = [];
-  for (const commodity of Object.keys(units ?? {}).sort()) {
-    const held = nonZero(units, commodity);
+  for (const key of Object.keys(units ?? {})) {
+    const held = nonZero(units, key);
+    const { commodity, costCurrency } = parseHoldingKey(key);
     if (commodity === currency || held === null) continue;
-    const hasCost = nonZero(cost, commodity) === null;
-    const dates = priceDatesUpTo(pricePairs, commodity, currency, date);
+    const unitsExact = exactOf(units?.[key]);
+    const holding = {
+      currency: commodity,
+      costCurrency,
+      units: held,
+      ...(unitsExact !== null && { unitsExact }),
+    };
+    if (costCurrency === null) {
+      holdings.push({
+        ...holding,
+        basis: "notInTotal",
+        priceDate: null,
+        stale: false,
+        managed: false,
+      });
+      continue;
+    }
+    const dates = priceDatesUpTo(pricePairs, commodity, costCurrency, date);
     const priceDate = dates.at(-1) ?? null;
     const managedSource = managedSources.find(
       (source) =>
         source.commodity !== null &&
         source.quote !== null &&
-        pairMatches(source.commodity, source.quote, commodity, currency),
+        pairMatches(source.commodity, source.quote, commodity, costCurrency),
     );
     const priceDay = priceDate === null ? null : dayNumber(priceDate);
     const stale =
-      hasCost &&
       priceDay !== null &&
       referenceDay !== null &&
       isPriceStale({
@@ -287,23 +335,19 @@ export function describeNetWorthValuation({
         managedFreshness: managedSource?.freshness ?? null,
         priceDates: dates,
       });
-    const unitsExact = exactOf(units?.[commodity]);
     holdings.push({
-      currency: commodity,
-      units: held,
-      ...(unitsExact !== null && { unitsExact }),
-      basis: !hasCost
-        ? nonZero(market, commodity) === null
-          ? "market"
-          : "notInTotal"
-        : priceDate === null
-          ? "cost"
-          : "market",
+      ...holding,
+      basis: priceDate === null ? "cost" : "market",
       priceDate,
       stale,
       managed: managedSource !== undefined,
     });
   }
+  holdings.sort(
+    (a, b) =>
+      compare(a.currency, b.currency) ||
+      compare(a.costCurrency ?? "", b.costCurrency ?? ""),
+  );
   if (holdings.length === 0) return null;
 
   const staleDates = holdings

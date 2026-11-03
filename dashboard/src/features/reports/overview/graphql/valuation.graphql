@@ -40,9 +40,11 @@ query GetLedgerOverviewValuation(
       costChildren
     }
   }
+  # Units keyed by the currency their lots cost (`VTI {EUR}`, `EUR {}`), so
+  # Net Worth can say which quote valued each holding (w4/m58, w4/1031).
   held: getLedgerBalanceSheet(
     ledgerId: $ledgerId
-    conversion: "units"
+    conversion: "units_by_cost"
     account: $account
     filter: $filter
     time: $time

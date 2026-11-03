@@ -117,7 +117,7 @@ describe("NetWorthCard exact text", () => {
     const valuation = describeNetWorthValuation({
       market: { USD: "9007199254740993" },
       cost: { USD: "9007199254740992" },
-      units: { USD: "1", BTC: "0.00000001234567890123" },
+      units: { "USD {}": "1", "BTC {USD}": "0.00000001234567890123" },
       currency: "USD",
       date: "2016-02-29",
       today: "2016-03-01",

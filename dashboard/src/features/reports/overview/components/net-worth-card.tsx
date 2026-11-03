@@ -109,6 +109,15 @@ function NetWorthValuationNote({
   // Units keep every digit the ledger recorded: rounding 0.00012 BTC to 0
   // would name a holding the reader cannot see.
   const { holdings, staleSince } = valuation;
+  // A commodity bought in two currencies is two holdings; each then names its
+  // cost currency in beancount's own notation (`VTI {EUR}`, `VTI {}`).
+  const repeated = new Set(
+    holdings
+      .map((holding) => holding.currency)
+      .filter((commodity, index, all) => all.indexOf(commodity) !== index),
+  );
+  const holdingKey = (holding: NetWorthValuation["holdings"][number]) =>
+    `${holding.currency} {${holding.costCurrency ?? ""}}`;
   // The exact decimals where the valuation has them: a +1 gain on a 2^53
   // basis is 0 as doubles, and would hide this line (w4/1015).
   const costBasis = valuation.costBasisExact ?? valuation.costBasis;
@@ -175,11 +184,15 @@ function NetWorthValuationNote({
           >
             {holdings.map((holding) => (
               <li
-                key={holding.currency}
+                key={holdingKey(holding)}
                 className="flex items-start justify-between gap-3 px-4 py-2"
               >
                 <div className="min-w-0">
-                  <p className="font-medium">{holding.currency}</p>
+                  <p className="font-medium">
+                    {repeated.has(holding.currency)
+                      ? holdingKey(holding)
+                      : holding.currency}
+                  </p>
                   <p className="text-xs text-muted-foreground tabular-nums">
                     {formatNumber(
                       holding.unitsExact ?? holding.units,

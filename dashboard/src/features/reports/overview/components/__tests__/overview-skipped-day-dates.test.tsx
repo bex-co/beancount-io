@@ -94,7 +94,7 @@ function valuationPricedOn(day: string) {
   return describeNetWorthValuation({
     market: { USD: "20.00" },
     cost: { USD: "10.00" },
-    units: { QA2011DATE: "1" },
+    units: { "QA2011DATE {USD}": "1" },
     currency: "USD",
     date: "2012-01-31",
     today: "2026-10-23",

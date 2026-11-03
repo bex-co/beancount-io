@@ -445,6 +445,7 @@ describe("NetWorthCard valuation status (w4/m27)", () => {
     overrides: Partial<NetWorthValuation["holdings"][number]> = {},
   ): NetWorthValuation["holdings"][number] => ({
     currency,
+    costCurrency: "USD",
     units: 1,
     basis: "market",
     priceDate: "2026-09-26",
@@ -491,7 +492,12 @@ describe("NetWorthCard valuation status (w4/m27)", () => {
         holding("GLD", { stale: true, priceDate: "2017-09-08" }),
         holding("RGAGX", { stale: true, priceDate: "2017-09-08" }),
         holding("STARTUP", { basis: "cost", priceDate: null }),
-        holding("VACHR", { basis: "notInTotal", priceDate: null, units: -13 }),
+        holding("VACHR", {
+          basis: "notInTotal",
+          costCurrency: null,
+          priceDate: null,
+          units: -13,
+        }),
       ],
       staleSince: "2017-09-08",
       costBasis: 106826.05,
@@ -514,7 +520,12 @@ describe("NetWorthCard valuation status (w4/m27)", () => {
       holdings: [
         holding("BTC", { managed: true, units: 0.332 }),
         holding("GLD", { stale: true, priceDate: "2017-09-08" }),
-        holding("VACHR", { basis: "notInTotal", priceDate: null, units: -13 }),
+        holding("VACHR", {
+          basis: "notInTotal",
+          costCurrency: null,
+          priceDate: null,
+          units: -13,
+        }),
       ],
       staleSince: "2017-09-08",
       costBasis: 1,
@@ -542,6 +553,42 @@ describe("NetWorthCard valuation status (w4/m27)", () => {
     expect(
       screen.getByRole("link", { name: "page.overview.updatePrices" }),
     ).toHaveAttribute("href", "/ledger/owner/book/commodities");
+  });
+
+  it("names the cost currency when a commodity was bought in two (w4/1031)", async () => {
+    renderWith({
+      holdings: [
+        holding("BTC"),
+        holding("VTI", { costCurrency: "EUR", units: 5 }),
+        holding("VTI", {
+          costCurrency: "USD",
+          units: 4,
+          basis: "cost",
+          priceDate: null,
+        }),
+      ],
+      staleSince: null,
+      costBasis: 1,
+      unrealized: 1,
+    });
+
+    expect(statusButton()).toHaveTextContent(
+      'page.overview.atCostCount {"count":1}',
+    );
+    await userEvent.click(statusButton());
+    const rows = within(
+      await screen.findByRole("dialog", {
+        name: "page.overview.valuationDetails",
+      }),
+    ).getAllByRole("listitem");
+    expect(rows.map((row) => row.querySelector("p")?.textContent)).toEqual([
+      "BTC",
+      "VTI {EUR}",
+      "VTI {USD}",
+    ]);
+    expect(rows[1]).toHaveTextContent("5 VTI");
+    expect(rows[2]).toHaveTextContent("page.overview.noPrice");
+    expect(rows[2]).toHaveTextContent("page.overview.atCostTag");
   });
 
   it("opens the detail from the keyboard", async () => {

@@ -48,6 +48,7 @@ const valuation: NetWorthValuation = {
     "WETH",
   ].map((currency, index) => ({
     currency,
+    costCurrency: index === 3 ? null : "USD",
     units: index === 0 ? 0.00012 : index + 1,
     basis: index === 2 ? "cost" : index === 3 ? "notInTotal" : "market",
     priceDate: index === 2 || index === 3 ? null : "2026-05-31",

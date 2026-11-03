@@ -28,15 +28,16 @@ const exampleFunds = ["GLD", "ITOT", "RGAGX", "VBMPX", "VEA", "VHT"];
 const example = {
   market: { USD: "117649.48828", VACHR: "-13" },
   cost: { USD: "106826.04944", VACHR: "-13" },
+  // `units_by_cost` keys (w4/m58): the funds cost USD, the hours cost nothing.
   units: {
-    USD: "906.58",
-    VACHR: "-13",
-    GLD: "17",
-    ITOT: "104",
-    RGAGX: "597.748",
-    VBMPX: "193.442",
-    VEA: "36",
-    VHT: "64",
+    "USD {}": "906.58",
+    "VACHR {}": "-13",
+    "GLD {USD}": "17",
+    "ITOT {USD}": "104",
+    "RGAGX {USD}": "597.748",
+    "VBMPX {USD}": "193.442",
+    "VEA {USD}": "36",
+    "VHT {USD}": "64",
   },
   currency: "USD",
   date: "2017-09-30",
@@ -148,7 +149,11 @@ describe("describeNetWorthValuation", () => {
     const valuation = describeNetWorthValuation({
       market: { USD: "194307.62" },
       cost: { USD: "194405.22" },
-      units: { USD: "112022.58", BTC: "0.332", STETH: "1.04" },
+      units: {
+        "USD {}": "112022.58",
+        "BTC {USD}": "0.332",
+        "STETH {USD}": "1.04",
+      },
       currency: "USD",
       date: "2026-09-30",
       today: "2026-09-26",
@@ -181,7 +186,7 @@ describe("describeNetWorthValuation", () => {
     const valuation = describeNetWorthValuation({
       market: { USD: "5000" },
       cost: { USD: "4000" },
-      units: { USD: "0", AAA: "1", BBB: "2" },
+      units: { "USD {}": "0", "AAA {USD}": "1", "BBB {USD}": "2" },
       currency: "USD",
       date: "2026-09-26",
       today: "2026-09-26",
@@ -203,7 +208,7 @@ describe("describeNetWorthValuation", () => {
     const valuation = describeNetWorthValuation({
       market: { USD: "300" },
       cost: { USD: "250" },
-      units: { XYZ: "3" },
+      units: { "XYZ {USD}": "3" },
       currency: "USD",
       date: "2026-09-20",
       today: "2026-09-26",
@@ -226,7 +231,7 @@ describe("describeNetWorthValuation", () => {
     const valuation = describeNetWorthValuation({
       market: { USD: "1000" },
       cost: { USD: "1000" },
-      units: { STARTUP: "1000" },
+      units: { "STARTUP {USD}": "1000" },
       currency: "USD",
       date: "2026-09-26",
       today: "2026-09-26",
@@ -249,7 +254,7 @@ describe("describeNetWorthValuation", () => {
       describeNetWorthValuation({
         market: { MUSD: "1346.683" },
         cost: { MUSD: "1346.683" },
-        units: { MUSD: "1346.683" },
+        units: { "MUSD {}": "1346.683" },
         currency: "MUSD",
         date: "2026-06-30",
         today: "2026-09-26",
@@ -306,7 +311,7 @@ describe("early-century price dates", () => {
     describeNetWorthValuation({
       market: { USD: "20.00" },
       cost: { USD: "10.00" },
-      units: { QA0099DATE: "1" },
+      units: { "QA0099DATE {USD}": "1" },
       currency: "USD",
       date,
       today: "2026-10-23",
@@ -377,12 +382,187 @@ describe("throughCurrentMonth", () => {
     const valuation = describeLatestNetWorth({
       market,
       cost,
-      units: cost,
+      units: [
+        { date: "2026-10-31", balance: { "GLD {USD}": "2" } },
+        { date: "2026-11-30", balance: { "GLD {USD}": "2" } },
+      ],
       currency: "USD",
       today: "2026-10-24",
       pricePairs: [],
       managedSources: [],
     });
     expect(valuation?.costBasis).toBe(1100);
+  });
+});
+
+/**
+ * w4/1031: `at_value` prices a lot only in its cost currency, else values it
+ * at cost, and leaves a lot with no cost in its own units. The holdings come
+ * from `units_by_cost` (w4/m58), so each says which quote valued it.
+ */
+describe("cost-currency quotes (w4/1031)", () => {
+  const prices = (base: string, quote: string, on: string[]): PricePair => ({
+    base,
+    quote,
+    prices: on.map((date) => ({ date })),
+  });
+  // 1 QACUTOFF {10.00 EUR}, quoted 2026-07-15, 2026-08-20 and 2026-12-31.
+  const quoteDates = ["2026-07-15", "2026-08-20", "2026-12-31"];
+  const cutoff = (date: string, quote: string) =>
+    describeNetWorthValuation({
+      market: { EUR: quote === "EUR" ? "20.00" : "10.00" },
+      cost: { EUR: "10.00" },
+      units: { "QACUTOFF {EUR}": "1" },
+      currency: "USD",
+      date,
+      today: "2026-09-26",
+      pricePairs: [prices("QACUTOFF", quote, quoteDates)],
+      managedSources: [],
+    })?.holdings;
+
+  it("prices a EUR-cost lot by its EUR quote as of each month", () => {
+    expect(cutoff("2026-07-31", "EUR")).toEqual([
+      expect.objectContaining({
+        currency: "QACUTOFF",
+        costCurrency: "EUR",
+        basis: "market",
+        priceDate: "2026-07-15",
+      }),
+    ]);
+    expect(cutoff("2026-08-31", "EUR")?.[0]).toMatchObject({
+      basis: "market",
+      priceDate: "2026-08-20",
+    });
+  });
+
+  it("values the same lot at cost when its only quotes are in USD", () => {
+    for (const date of ["2026-07-31", "2026-08-31"]) {
+      expect(cutoff(date, "USD")).toEqual([
+        expect.objectContaining({
+          costCurrency: "EUR",
+          basis: "cost",
+          priceDate: null,
+          stale: false,
+        }),
+      ]);
+    }
+  });
+
+  it("splits one commodity bought in two currencies into two holdings", () => {
+    const holdings = describeNetWorthValuation({
+      market: { EUR: "1000.00", USD: "850.00" },
+      cost: { EUR: "920.00", USD: "800.00" },
+      units: { "VTI {EUR}": "5", "VTI {USD}": "4", "EUR {}": "50.00" },
+      currency: "USD",
+      date: "2026-09-30",
+      today: "2026-09-30",
+      pricePairs: [prices("VTI", "EUR", ["2026-09-29"])],
+      managedSources: [],
+    })?.holdings;
+    expect(
+      holdings?.map((h) => [h.currency, h.costCurrency, h.basis, h.priceDate]),
+    ).toEqual([
+      ["EUR", null, "notInTotal", null],
+      ["VTI", "EUR", "market", "2026-09-29"],
+      ["VTI", "USD", "cost", null],
+    ]);
+  });
+
+  it("tells cash in a currency from a lot that cost that currency (w21/556)", () => {
+    // Operating currency EUR: 500 EUR cash and 10 VTI {180.00 EUR}. VTI's only
+    // price is in USD, which `at_value` never hops through.
+    const usdOnly = describeNetWorthValuation({
+      market: { EUR: "2300.00" },
+      cost: { EUR: "2300.00" },
+      units: { "EUR {}": "500.00", "VTI {EUR}": "10" },
+      currency: "EUR",
+      date: "2026-10-31",
+      today: "2026-10-31",
+      pricePairs: [prices("VTI", "USD", ["2026-10-21"])],
+      managedSources: [],
+    });
+    expect(usdOnly?.holdings).toEqual([
+      expect.objectContaining({
+        currency: "VTI",
+        basis: "cost",
+        priceDate: null,
+      }),
+    ]);
+    // With a EUR price the same lot is at market, and the cash is still cash.
+    const eurPriced = describeNetWorthValuation({
+      market: { EUR: "2600.00" },
+      cost: { EUR: "2300.00" },
+      units: { "EUR {}": "500.00", "VTI {EUR}": "10" },
+      currency: "EUR",
+      date: "2026-10-31",
+      today: "2026-10-31",
+      pricePairs: [prices("VTI", "EUR", ["2026-10-30"])],
+      managedSources: [],
+    });
+    expect(eurPriced?.holdings).toEqual([
+      expect.objectContaining({ basis: "market", priceDate: "2026-10-30" }),
+    ]);
+  });
+
+  it("dates a lot that cost another commodity by that pair (w21/554)", () => {
+    // 1 BTC {30000.00 USD} and 40 ETH {0.05 BTC}; BTC priced in August only.
+    const valuation = describeNetWorthValuation({
+      market: { USD: "60000.00", BTC: "2.00" },
+      cost: { USD: "30000.00", BTC: "2.00" },
+      units: { "BTC {USD}": "1", "ETH {BTC}": "40" },
+      currency: "USD",
+      date: "2026-10-31",
+      today: "2026-10-31",
+      pricePairs: [
+        prices("BTC", "USD", ["2026-08-01"]),
+        prices("ETH", "BTC", ["2026-10-21"]),
+      ],
+      managedSources: [],
+    });
+    expect(
+      valuation?.holdings.map((h) => [h.currency, h.priceDate, h.stale]),
+    ).toEqual([
+      ["BTC", "2026-08-01", true],
+      ["ETH", "2026-10-21", false],
+    ]);
+    expect(valuation?.staleSince).toBe("2026-08-01");
+  });
+
+  it("binds a managed feed to the quote that values the lot", () => {
+    const managed = (quote: string) =>
+      describeNetWorthValuation({
+        market: { EUR: "2000.00" },
+        cost: { EUR: "1800.00" },
+        units: { "VTI {EUR}": "10" },
+        currency: "USD",
+        date: "2026-10-31",
+        today: "2026-10-31",
+        pricePairs: [prices("VTI", "EUR", ["2026-10-31"])],
+        managedSources: [{ commodity: "VTI", quote, freshness: "recent" }],
+      })?.holdings[0]?.managed;
+    expect(managed("EUR")).toBe(true);
+    expect(managed("USD")).toBe(false);
+  });
+
+  it("reads a key without a cost suffix as units held without a cost", () => {
+    expect(
+      describeNetWorthValuation({
+        market: { USD: "10", VACHR: "-13" },
+        cost: { USD: "10", VACHR: "-13" },
+        units: { VACHR: "-13" },
+        currency: "USD",
+        date: "2026-10-31",
+        today: "2026-10-31",
+        pricePairs: [prices("VACHR", "USD", ["2026-10-30"])],
+        managedSources: [],
+      })?.holdings,
+    ).toEqual([
+      expect.objectContaining({
+        currency: "VACHR",
+        costCurrency: null,
+        basis: "notInTotal",
+        priceDate: null,
+      }),
+    ]);
   });
 });

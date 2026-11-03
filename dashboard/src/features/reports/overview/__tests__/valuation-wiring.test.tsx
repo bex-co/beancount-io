@@ -153,7 +153,7 @@ const valuation = {
     netWorthData: [
       {
         date: "2017-09-30",
-        balance: { USD: "8926.93", RGAGX: "597.748" },
+        balance: { "USD {}": "8926.93", "RGAGX {USD}": "597.748" },
       },
     ],
   },
