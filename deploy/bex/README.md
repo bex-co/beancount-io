@@ -88,7 +88,7 @@ With it on:
 
 - `signUp` creates the session but sends no mail;
 - `verifySignUpOtp` accepts **any** code for a valid session id, so on the
-  dashboard's code screen type any six digits;
+  dashboard's code screen type any four digits;
 - the email address is **not** proven to belong to the person signing up, and
   forgot-password and other mail still do not work;
 - the API logs a warning at boot and per sign-up (never the session id, which is
