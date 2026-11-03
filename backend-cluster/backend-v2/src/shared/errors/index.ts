@@ -28,7 +28,7 @@ export { ErrorCategory, CATEGORY_HTTP_STATUS } from "./error-category";
 // ============================================================================
 // DOMAIN ERROR CLASSES
 // ============================================================================
-export type { LimitOwner } from "./domain-errors";
+export type { LimitOwner, QuotaScope } from "./domain-errors";
 export {
   DomainError,
   UnauthenticatedError,

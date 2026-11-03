@@ -1,6 +1,6 @@
 # w3 · m52 — Make Ask-AI proxy limits and failures truthful
 
-**Worker:** worker3 **Goal:** Preserve bounded model requests and report quota failures without confusing per-user monthly usage with shared provider capacity. **Status:** todo (t001–t004 done; t005 next)
+**Worker:** worker3 **Goal:** Preserve bounded model requests and report quota failures without confusing per-user monthly usage with shared provider capacity. **Status:** todo (t001–t005 done; t006 next)
 
 ## Tasks (in order)
 
@@ -10,7 +10,7 @@
 | t002 | Translate provider quota failures into safe product errors — **DONE** | 40m | t001 |
 | t003 | Align enforced quota visibility across APIs and CLI — **DONE** | 90m | t002 |
 | t004 | Adoption surface — **DONE** | 20m | t001, t002, t003 |
-| t005 | Simplify | 20m | t004 |
+| t005 | Simplify — **DONE** | 20m | t004 |
 | t006 | Test coverage | 20m | t004 |
 | t007 | Closeout | 10m | t005, t006 |
 

@@ -1,12 +1,14 @@
 import type { IStripeService } from "@/features/stripe/service/stripe-service";
 import { getTierLimits } from "@/features/stripe/service/stripe";
 import { getUserTier } from "@/features/stripe/operations/get-user-tier";
-import type {
-  IFeatureUsageService,
-  UsageCheckResult,
+import {
+  billingMonthReset,
+  type IFeatureUsageService,
+  type UsageCheckResult,
 } from "./feature-usage-service";
 import {
   type LimitOwner,
+  type QuotaScope,
   RateLimitedError,
   ServiceUnavailableError,
 } from "@/shared/errors";
@@ -75,13 +77,13 @@ export class AiCfoUsageService implements IAiCfoUsageService {
           maxAllowed: result.maxAllowed,
           billingMonth: result.billingMonth,
         });
-        const blockedUntil = nextBillingMonthStart(result.billingMonth);
+        const blockedUntil = billingMonthReset(result.billingMonth);
         throw new RateLimitedError(
           undefined,
-          `This account's monthly AI quota is used up (${result.currentCount} of ${result.maxAllowed} tokens in ${result.billingMonth}).${blockedUntil ? ` It resets at ${blockedUntil}.` : ""}`,
+          `This account's monthly AI quota is used up (${result.currentCount} of ${result.maxAllowed} tokens in ${result.billingMonth}). It resets at ${blockedUntil}.`,
           {
-            quotaScope: "account_monthly",
-            ...(blockedUntil && { blockedUntil }),
+            quotaScope: "account_monthly" satisfies QuotaScope,
+            blockedUntil,
             currentCount: result.currentCount,
             maxAllowed: result.maxAllowed,
             billingMonth: result.billingMonth,
@@ -135,18 +137,4 @@ export class AiCfoUsageService implements IAiCfoUsageService {
       billingMonth,
     };
   }
-}
-
-/**
- * When a `YYYY-MM` billing month's quota resets: the first instant of the next
- * UTC month, matching `FeatureUsageService.getCurrentBillingMonth`.
- */
-export function nextBillingMonthStart(
-  billingMonth: string,
-): string | undefined {
-  const match = /^(\d{4})-(\d{2})$/.exec(billingMonth);
-  if (!match) return undefined;
-  const month = Number(match[2]);
-  if (month < 1 || month > 12) return undefined;
-  return new Date(Date.UTC(Number(match[1]), month, 1)).toISOString();
 }

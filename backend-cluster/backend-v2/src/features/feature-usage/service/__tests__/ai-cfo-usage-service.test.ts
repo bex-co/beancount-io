@@ -1,8 +1,5 @@
-import {
-  AiCfoUsageService,
-  FEATURE_KEY_AI_CFO,
-  nextBillingMonthStart,
-} from "../ai-cfo-usage-service";
+import { AiCfoUsageService, FEATURE_KEY_AI_CFO } from "../ai-cfo-usage-service";
+import { billingMonthReset } from "../feature-usage-service";
 import type { IFeatureUsageService } from "../feature-usage-service";
 import { SubscriptionTier } from "@/features/stripe/service/stripe";
 import type { IStripeService } from "@/features/stripe/service/stripe-service";
@@ -96,20 +93,13 @@ describe("AiCfoUsageService", () => {
     });
   });
 
-  describe("nextBillingMonthStart", () => {
+  describe("billingMonthReset", () => {
     it.each([
       ["2026-11", "2026-12-01T00:00:00.000Z"],
       ["2026-12", "2027-01-01T00:00:00.000Z"],
     ])("resets %s at %s", (month, reset) => {
-      expect(nextBillingMonthStart(month)).toBe(reset);
+      expect(billingMonthReset(month)).toBe(reset);
     });
-
-    it.each(["2026-13", "2026-00", "2026-1", "", "November"])(
-      "returns nothing for the malformed month %j",
-      (month) => {
-        expect(nextBillingMonthStart(month)).toBeUndefined();
-      },
-    );
   });
 
   describe("FEATURE_KEY_AI_CFO", () => {

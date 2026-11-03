@@ -231,12 +231,27 @@ def error_code(body: object) -> str | None:
     return code if isinstance(code, str) else None
 
 
-def limit_owner(body: object) -> str | None:
-    """Whose plan set a limit, from the v1 envelope's `error.metadata`."""
+def _metadata_text(body: object, key: str) -> str | None:
+    """One string field of the v1 envelope's `error.metadata`."""
     error = body.get("error") if isinstance(body, Mapping) else None
     metadata = error.get("metadata") if isinstance(error, Mapping) else None
-    owner = metadata.get("limitOwner") if isinstance(metadata, Mapping) else None
-    return owner if isinstance(owner, str) else None
+    value = metadata.get(key) if isinstance(metadata, Mapping) else None
+    return value if isinstance(value, str) else None
+
+
+def limit_owner(body: object) -> str | None:
+    """Whose plan set a limit, from the v1 envelope's `error.metadata`."""
+    return _metadata_text(body, "limitOwner")
+
+
+def quota_scope(body: object) -> str | None:
+    """Which AI quota refused a request: `account_monthly` or `shared_service` (w3/m52)."""
+    return _metadata_text(body, "quotaScope")
+
+
+def blocked_until(body: object) -> str | None:
+    """When a refused quota reopens, as the server's ISO timestamp."""
+    return _metadata_text(body, "blockedUntil")
 
 
 # What to do about a limit, by whose plan set it. A limit no plan sets has none.

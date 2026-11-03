@@ -344,37 +344,46 @@ def _model_api_error(exc: BaseException) -> BeaError:
 def _quota_refusal(body: object, written: str = "nothing was written to your ledger") -> str | None:
     """An AI quota refusal, said as the quota that refused: which one, and when it comes back.
 
-    The server names the scope (w3/m52): `account_monthly` is this account's
-    own monthly entitlement; `shared_service` is the hosted service's shared
-    provider capacity, which is not the account's quota and which a refused
-    question does not consume. A raw provider `QUOTA_EXCEEDED` is the shared
-    capacity too — the provider meters the one service credential, never an
-    account — so it is never reported as the account's quota running out.
-    Both are worth more to the reader than the status line, and the code
-    survives however deeply the envelope nests it, which is why this looks at
-    the whole body rather than at one key.
+    The server names the scope in `error.metadata` (w3/m52): `account_monthly`
+    is this account's own monthly entitlement; `shared_service` is the hosted
+    service's shared provider capacity, which is not the account's quota and
+    which a refused question does not consume.
     """
-    text = body if isinstance(body, str) else json.dumps(body, default=str)
-    # The escape-tolerant form on purpose: the scope and the reset time may sit
-    # inside a JSON document that is itself the value of a JSON string, so the
-    # quotes around them may be escaped once (w3/445 is the same envelope).
-    scope = re.search(r'quotaScope\\?"\s*:\s*\\?"([a-z_]+)', text)
-    until = re.search(r'blockedUntil\\?"\s*:\s*\\?"([^"\\]+)', text)
+    from cli.errors import blocked_until, quota_scope
+
+    scope, until = quota_scope(body), blocked_until(body)
+    if scope is None:
+        scope, until = _legacy_provider_quota(body)
     fallback = "Run the query yourself with 'bea query' in the meantime."
-    if scope and scope.group(1) == "account_monthly":
-        when = f" It resets at {until.group(1)}." if until else ""
+    if scope == "account_monthly":
+        when = f" It resets at {until}." if until else ""
         return (
             f"This account's monthly hosted AI quota is used up, so the question was refused; {written}.{when} "
             f"{fallback}"
         )
-    if (scope and scope.group(1) == "shared_service") or "QUOTA_EXCEEDED" in text:
-        when = f" Try again at {until.group(1)}." if until else " Try again later."
+    if scope == "shared_service":
+        when = f" Try again at {until}." if until else " Try again later."
         return (
             f"The hosted AI service is at capacity, so the question was refused; {written}. "
             "This is not this account's AI quota, and the refused question used none of it."
             f"{when} {fallback}"
         )
     return None
+
+
+def _legacy_provider_quota(body: object) -> tuple[str | None, str | None]:
+    """Compatibility with servers before w3/m52/t002, which passed the provider's own refusal through.
+
+    That `QUOTA_EXCEEDED` meters the service's one provider credential, never
+    an account, so it is the shared scope. It may sit inside a JSON document
+    that is itself the value of a JSON string, so the quotes around the reset
+    may be escaped once (w3/445 is the same envelope).
+    """
+    text = body if isinstance(body, str) else json.dumps(body, default=str)
+    if "QUOTA_EXCEEDED" not in text:
+        return None, None
+    until = re.search(r'blockedUntil\\?"\s*:\s*\\?"([^"\\]+)', text)
+    return "shared_service", until.group(1) if until else None
 
 
 _ROOT_OPTION = re.compile(r'^option[ \t]+"name_(assets|liabilities|equity|income|expenses)"[ \t]+"([^"\\\n]+)"', re.M)

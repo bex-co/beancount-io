@@ -337,6 +337,13 @@ export class ServiceUnavailableError extends DomainError {
 export type LimitOwner = "REQUESTER" | "LEDGER_OWNER";
 
 /**
+ * Which AI quota refused a model request (w3/m52): the account's own monthly
+ * entitlement, or the hosted service's shared provider capacity, which is not
+ * the account's quota and which a refused request does not consume.
+ */
+export type QuotaScope = "account_monthly" | "shared_service";
+
+/**
  * Thrown when a user reaches a resource limit.
  *
  * Category: RESOURCE_LIMIT_REACHED (HTTP 403)

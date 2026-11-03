@@ -30,6 +30,9 @@ import {
 import type { RecentTransactionExample } from "../types";
 import { logger } from "@/shared/logger";
 
+/** The output cap the raw proxy sends when a request names none (w3/m52/t001). */
+const DEFAULT_PROXY_MAX_COMPLETION_TOKENS = 1500;
+
 /** Image formats the parsing models read. */
 const MODEL_IMAGE_TYPES = new Set([
   "image/jpeg",
@@ -402,7 +405,10 @@ export class LLMService implements ILLMService {
     const boundedRequest =
       request.max_tokens === undefined &&
       request.max_completion_tokens === undefined
-        ? { ...request, max_completion_tokens: 1500 }
+        ? {
+            ...request,
+            max_completion_tokens: DEFAULT_PROXY_MAX_COMPLETION_TOKENS,
+          }
         : request;
     const response = await this.invokeModelProxy(
       identity,

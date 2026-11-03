@@ -125,3 +125,12 @@ export class FeatureUsageService implements IFeatureUsageService {
     return { currentCount, billingMonth };
   }
 }
+
+/**
+ * When a "YYYY-MM" billing month (from `getCurrentBillingMonth`, UTC) resets:
+ * the first instant of the next UTC month, as an ISO timestamp.
+ */
+export function billingMonthReset(billingMonth: string): string {
+  const [year, month] = billingMonth.split("-").map(Number);
+  return new Date(Date.UTC(year, month, 1)).toISOString();
+}

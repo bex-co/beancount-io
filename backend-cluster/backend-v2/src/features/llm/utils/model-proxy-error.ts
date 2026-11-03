@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   type DomainError,
   InternalServerError,
+  type QuotaScope,
   RateLimitedError,
 } from "@/shared/errors";
 
@@ -56,10 +57,9 @@ export function modelProxyError(
   const reset = resetTimestamp.safeParse(quota.blockedUntil);
   const resetAt = reset.success ? Date.parse(reset.data) : NaN;
   const now = Date.now();
+  // `resetAt` is NaN unless the reset parsed, and NaN > now is false.
   const blockedUntil =
-    Number.isFinite(resetAt) && resetAt > now
-      ? new Date(resetAt).toISOString()
-      : undefined;
+    resetAt > now ? new Date(resetAt).toISOString() : undefined;
   const headerSeconds =
     retryAfterHeader && /^\d+$/.test(retryAfterHeader)
       ? positiveSeconds(Number(retryAfterHeader))
@@ -78,7 +78,7 @@ export function modelProxyError(
     retryAfter,
     `Hosted AI service capacity cannot accommodate this request. This is shared service capacity, not this account's AI quota, and the refused request used none of it. ${guidance}`,
     {
-      quotaScope: "shared_service",
+      quotaScope: "shared_service" satisfies QuotaScope,
       ...(blockedUntil && { blockedUntil }),
     },
   );
