@@ -257,6 +257,58 @@ class TestRunOne(unittest.TestCase):
         self.assertEqual((result["opened"], result["error"]), ([], None))
         self.assertEqual(routing.result_label(result, SUITE), "none")
 
+    def test_a_client_startup_failure_is_an_error_even_without_json_events(self):
+        for client in ("codex", "claude"):
+            with self.subTest(client=client):
+                self.fake(
+                    client,
+                    '''
+                    import sys
+                    print("Error: Failed to synchronize managed preferences", file=sys.stderr)
+                    sys.exit(1)
+                    ''',
+                )
+                entry = {"id": "q", "prompt": "q", "expected": "none"}
+                result = routing.run_one(client, entry, self.workspace, None, timeout=10)
+                self.assertEqual(result["opened"], [])
+                self.assertIn("exited with status 1", result["error"] or "")
+                self.assertIn("Failed to synchronize managed preferences", result["error"] or "")
+                self.assertIsNone(routing.result_label(result, SUITE))
+
+    def test_a_nonzero_exit_without_stderr_is_an_error(self):
+        self.fake("codex", "import sys\nsys.exit(2)\n")
+        entry = {"id": "q", "prompt": "q", "expected": "none"}
+        result = routing.run_one("codex", entry, self.workspace, None, timeout=10)
+        self.assertEqual(result["error"], "client exited with status 2")
+
+    def test_large_stderr_does_not_block_the_client(self):
+        self.fake(
+            "codex",
+            '''
+            import sys
+            print("x" * 200000, file=sys.stderr)
+            print("Error: startup failed", file=sys.stderr)
+            sys.exit(1)
+            ''',
+        )
+        entry = {"id": "q", "prompt": "q", "expected": "none"}
+        result = routing.run_one("codex", entry, self.workspace, None, timeout=10)
+        self.assertIn("Error: startup failed", result["error"] or "")
+        self.assertLess(result["seconds"], 5)
+
+    def test_stderr_on_a_successful_session_does_not_make_it_an_error(self):
+        self.fake(
+            "codex",
+            '''
+            import json, sys
+            print("warning: optional integration unavailable", file=sys.stderr)
+            print(json.dumps({"type": "turn.completed"}))
+            ''',
+        )
+        entry = {"id": "q", "prompt": "q", "expected": "none"}
+        result = routing.run_one("codex", entry, self.workspace, None, timeout=10)
+        self.assertEqual((result["opened"], result["error"]), ([], None))
+
 
 if __name__ == "__main__":
     runner = unittest.TextTestRunner(verbosity=2)

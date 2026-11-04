@@ -17,7 +17,8 @@ synthetic, and no hosted ledger was used.
 - Codex: `codex exec --json --sandbox read-only`. Codex has no skill tool, so
   the choice is the first command that names `<skill>/SKILL.md` and prints that
   skill's `name:` frontmatter. The client stops at its first choice; a session
-  that ends without one chose no skill.
+  that exits successfully without one chose no skill. A nonzero exit without
+  a choice is an error, including startup failures reported only on stderr.
 - A skill outside the suite counts as `none`. Each client's own user-level
   skills still load, as they would for a customer. On this machine that
   includes `dont-code-but-answer`, which Codex chose for the `bea ask` question.
@@ -26,6 +27,84 @@ synthetic, and no hosted ledger was used.
 
 Reproduce with `python3 scripts/skills/run-routing.py --codex-model <model>`.
 Results land in `scripts/skills/tmp/routing/<UTC stamp>/` (gitignored).
+
+## Codex startup blocker — 2026-11-04
+
+The w2 Codex rerun was attempted against source baseline `48b472185`, with
+Codex CLI and the running app server both at 0.166.0, on macOS arm64. The suite
+has fourteen skills and the current routing set has 128 prompts. No new model
+turn or behavior-eval result was obtained.
+
+The one-prompt preflight was:
+
+```zsh
+python3 scripts/skills/run-routing.py --clients codex --codex-model gpt-6-luna \
+  --only ask-groceries-last-month --jobs 1
+```
+
+The client exited with status 1 before emitting any JSON event:
+
+```text
+Error: thread/start: thread/start failed: failed to load configuration: Failed to synchronize managed preferences (code -32600)
+```
+
+An independent `codex exec --json --sandbox read-only --skip-git-repo-check
+-m gpt-6-luna 'Reply with OK.'` probe and `codex app-server
+--print-startup-config` failed at the same configuration stage. The latter
+returned `reason: configLoad` and the same detail. `codex login status` reported
+ChatGPT authentication; `codex doctor --summary` loaded configuration and
+reported matching CLI/server versions, but also reported an unreachable runtime
+CDN and a failed Responses WebSocket check. These diagnostics do not establish
+the cause of the managed-preferences error or the account's current quota.
+Neither a no-daemon invocation nor an invocation that ignored user configuration
+resolved the startup failure. No authentication, managed policy, or persistent
+user settings were changed.
+
+The runner previously discarded stderr and treated this process exit as `none`.
+It now records the nonzero exit and a bounded stderr tail as an error. Regression
+tests reproduced the misclassification before the fix and pass afterwards;
+they also cover a failure with no stderr, large stderr output, and a successful
+session with a harmless warning. Stopping after a detected skill remains a
+successful routing observation.
+
+Validation with Python 3.12.10 and the checkout CLI first on `PATH`:
+`ci-check.py` passed, `test_ci_check.py` passed all 44 tests, and
+`test_beancount_skills.py` passed all 181 tests with three Windows-only skips.
+That last run includes all 20 routing-runner tests. The tracked working-tree
+publication snapshot passed the repository's gitleaks configuration.
+
+The preserved local probe results are under
+`scripts/skills/tmp/w2-codex-20261104/` (gitignored). The original `probe` run's
+`none` result is invalid; `probe-fixed` correctly records `error`. No description
+was changed on this evidence, and no full routing or behavior run was launched
+after the shared startup blocker was established.
+
+The following Codex acceptance checks remain unverified:
+
+| w2 item | Required Codex evidence |
+| --- | --- |
+| 083 | A linked-install session successfully reads the shared `bea-cli.md`. |
+| 086 | All 25 non-English routing prompts. |
+| 089 / m40/t010 | Add eval 10 preserves the existing entry and waits for confirmation. |
+| 090 | The manual-entry addition and the revised first-month journey on both clients. |
+| 094 / m41/t005 | Importer-author eval 5 asks before encoding malformed-row handling; the rewrite's high-risk evals. |
+| m42/t007 | One routing prompt from an upgraded installation. |
+| m43/t005 | The first-query answer from both supported channel installs. The separate owner decision in t003 still applies. |
+| m44/t003, t006 | The plugin first query, including reading the shared contract. |
+| m45/t006 | Trade evals 1–8 and routing. |
+| m48/t004 | All 22 reconcile and 9 close evals, including confirmation turns. |
+| m49/t003 | Ask evals 10–13 and routing. |
+| m50/t005 | Trade evals 9–10, import evals 16–20, and routing. |
+| m51/t006 | Property evals 1–7 and routing. |
+| m52/t004 | Trade evals 11–14 and routing. |
+| m53/t003 | All eight first-year journey checkpoints. |
+
+The old November 17 quota-reset estimates are historical evidence, not a
+verified current unblock condition. First restore a working Codex startup in
+the operator's environment, then establish model/quota availability with a
+successful preflight and perform each pending acceptance check. m47 remains
+behind m40; m59 remains behind m48 and w3/m58. Owner decisions and production
+deployment blockers elsewhere in w2 are unaffected.
 
 ## Baseline — 2026-10-18
 

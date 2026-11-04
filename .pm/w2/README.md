@@ -2,6 +2,8 @@
 
 **Worker:** worker2 — general-purpose adoption worker; accepts the next highest-impact milestone across packages, topics, and A1/A2/A3 rather than owning a permanent specialty. Existing milestones retain their historical order and source.
 
+**Codex verification update (2026-11-04):** the fresh CLI 0.166.0 preflight fails before any model event with `Failed to synchronize managed preferences (code -32600)`. The November 17 quota-reset dates below are historical; current quota cannot be checked until startup works. The [shared diagnostic and pending-check inventory](../../docs/skills/routing-rehearsal.md#codex-startup-blocker--2026-11-04) covers 083, 086, 089, 090, 094 and m40–m45/m48–m53. These checks remain blocked; m47 and m59 retain their dependency blockers. **Unblock:** the operator restores successful `codex exec` startup and an available model turn, then each item still needs its recorded acceptance checks.
+
 ## Milestones
 
 - [x] **m1** — beancount-reconcile: statement-vs-ledger diff + balance assertion (9 tasks) ← from /pm-brainstorm 2026-07-31 (skills-market research)
@@ -75,7 +77,7 @@
 - [097 — Business presets lack loans, payroll and sales-tax liabilities, and owner draws](./blocked/097.md) — **blocked:** a `business@2` preset version and public API enum change; the owner decides its content
 - [099 — Inventory lots and cost of goods sold for product sellers](./blocked/099.md) — **blocked:** validated product-seller demand (owner decision)
 - [080 — Decide whether the suite keeps its no-`bea` developer fallback](./blocked/080.md) (owner decision) — **blocked:** the owner picks keep, read-only, or require-`bea`
-- [083 — Codex cannot find beancount-init's `bea-cli.md` in a linked install, so the shared command contract goes unread](./blocked/083.md) — **blocked:** fix shipped; the Codex probe rerun waits for Codex usage
+- [083 — Codex cannot find beancount-init's `bea-cli.md` in a linked install, so the shared command contract goes unread](./blocked/083.md) — **blocked:** linked-install fix shipped; the fresh Codex probe fails during managed-preferences synchronization before any model event
 - [084 — Say plainly where ledger data goes, and how the suite relates to upstream Beancount](./blocked/084.md) — **blocked:** the "Your data" draft is written in the note; the owner approves the affiliation wording
 - [086 — Check that non-English ledger requests route to the right skill](./blocked/086.md) — **blocked:** 25 prompts added and routed 25/25 on one client; the Codex rerun waits for Codex usage
 - [087 — Decide whether to publish the skill suite from a slim public mirror repository](./blocked/087.md) — **blocked:** owner decision (repository, credential, portal identities)

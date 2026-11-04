@@ -182,44 +182,54 @@ def run_one(client: str, entry: dict, workspace: Path, model: str | None, timeou
     opened: list[str] = []
     error: str | None = None
     started = time.monotonic()
-    process = subprocess.Popen(
-        command(entry["prompt"], model),
-        cwd=workspace,
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.DEVNULL,
-        text=True,
-    )
-    # A client can go silent (a long shell command, a stalled request), so the
-    # deadline is a timer that kills it rather than a check per output line.
-    watchdog = threading.Timer(timeout, process.kill)
-    watchdog.start()
-    try:
-        assert process.stdout is not None
-        for line in process.stdout:
-            try:
-                event = json.loads(line)
-            except json.JSONDecodeError:
-                continue
-            found, error = handle(event, meta)
-            if found is not None or error is not None:
-                opened = found or []
-                break
-    finally:
-        watchdog.cancel()
-        if process.poll() is None:
-            process.terminate()
-            try:
-                process.wait(timeout=10)
-            except subprocess.TimeoutExpired:
-                process.kill()
-                process.wait()
-        if process.stdout is not None:
-            process.stdout.close()
-    if not opened and error is None and time.monotonic() - started >= timeout:
-        error = f"timeout after {timeout:.0f}s"
-    if not opened and error is None:
-        error = meta.get("reconnecting")
+    # Startup failures may have only stderr, without a single JSON event.
+    # A file avoids filling an unread stderr pipe while stdout is streamed.
+    with tempfile.TemporaryFile() as stderr:
+        process = subprocess.Popen(
+            command(entry["prompt"], model),
+            cwd=workspace,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=stderr,
+            text=True,
+        )
+        # A client can go silent (a long shell command, a stalled request), so the
+        # deadline is a timer that kills it rather than a check per output line.
+        watchdog = threading.Timer(timeout, process.kill)
+        watchdog.start()
+        try:
+            assert process.stdout is not None
+            for line in process.stdout:
+                try:
+                    event = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                found, error = handle(event, meta)
+                if found is not None or error is not None:
+                    opened = found or []
+                    break
+        finally:
+            watchdog.cancel()
+            if process.poll() is None:
+                process.terminate()
+                try:
+                    process.wait(timeout=10)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.wait()
+            if process.stdout is not None:
+                process.stdout.close()
+        if not opened and error is None and time.monotonic() - started >= timeout:
+            error = f"timeout after {timeout:.0f}s"
+        if not opened and error is None:
+            error = meta.get("reconnecting")
+        if not opened and error is None and process.returncode:
+            error = f"client exited with status {process.returncode}"
+            stderr.seek(0, 2)
+            stderr.seek(max(0, stderr.tell() - 1200))
+            detail = stderr.read().decode("utf-8", errors="replace").strip()
+            if detail:
+                error += f": {detail[-300:]}"
     result = {
         "id": entry["id"],
         "client": client,
