@@ -1,6 +1,6 @@
 {
   "requestedAtUTC": "2026-11-04",
-  "lastUpdatedAtUTC": "2026-11-04T21:58:25Z",
+  "lastUpdatedAtUTC": "2026-11-04T22:06:45Z",
   "canonicalProductWebsite": "https://beancount.io/",
   "scope": "All20MCP inventory targets, the separate Glama source record, and current customer-suite distribution/index channels. Existing reviews/submissions are reused.",
   "statusBoundary": "updated_existing_submission means a real edited/read-back public submission, not maintainer merge, directory publication or SEO ranking improvement. Source edits await actual shipping/publication/crawl. Existing receipt-based rows do not acquire a new external review timestamp. Platform link attributes and unlisted visibility remain unchanged.",
@@ -15,10 +15,10 @@
     },
     {
       "target": "Official MCP Registry",
-      "backlinkStatus": "source_update_pending_publication",
+      "backlinkStatus": "source_shipped_publish_gate_repaired",
       "entryURL": "https://registry.modelcontextprotocol.io/v0.1/servers/io.beancount%2Fbeancount/versions/latest",
       "change": "Prepared1.0.1 changes websiteUrl from GitHub docs to https://beancount.io/ and names Beancount.io in the description. Repository and endpoint retain their own fields.",
-      "next": "Publish through the existing protected workflow and verify the actual registry record.",
+      "next": "The original push validated but skipped publish. Ship the repaired Git-diff gate and the actual final listing edit; approve the existing protected environment and read back1.0.1.",
       "priorPublicVersion": "1.0.0",
       "priorWebsiteURL": "https://github.com/bex-co/beancount-io/blob/main/backend-cluster/backend-v2/docs/mcp.md"
     },
@@ -182,26 +182,28 @@
     },
     {
       "target": "Claude Code / Codex suite",
-      "backlinkStatus": "source_update_pending_shipping",
+      "backlinkStatus": "source_shipped",
       "entryURL": "https://github.com/bex-co/beancount-io/tree/main/skills",
       "change": "Both shared0.4.21manifests now use homepage https://beancount.io/. The customer README and all14customer skill bodies carry one natural homepage attribution. Frontmatter/trigger descriptions are unchanged.",
-      "next": "Ship source metadata and allow normal managed plugin/index updates."
+      "next": "Normal managed plugin/source updates now deliver the homepage metadata and attribution."
     },
     {
       "target": "ClawHub suite",
-      "backlinkStatus": "source_release_prepared",
+      "backlinkStatus": "source_shipped_publish_dispatch_required",
       "entryURL": "https://clawhub.ai/puncsky/plugins/beancount-io",
       "change": "Actual published0.4.0README has no product-homepage link. Generated0.4.21README now has a linked Beancount.io title, and the manifest has the homepage.",
       "next": "Publish only the consolidated suite through the protected main workflow; verify the final public link. Existing token is configured; browser GitHub sign-in is needed to dispatch/approve. No legacy individual listing is restored.",
       "preparedVersion": "0.4.21",
-      "priorPublishedVersion": "0.4.0"
+      "priorPublishedVersion": "0.4.0",
+      "sourceCommit": "dfe93ec9682e4ec548b8eaa6fce59556afc66093"
     },
     {
       "target": "skills.sh repository / customer details",
-      "backlinkStatus": "source_update_pending_index",
+      "backlinkStatus": "public_group_and_all14_homepage_anchors_verified",
       "entryURL": "https://www.skills.sh/bex-co/beancount-io",
-      "change": "The grouping description now names https://beancount.io/; all14customer Markdown bodies carry a clickable homepage attribution. The grouping text field is not assumed to render Markdown/auto-links.",
-      "next": "Ship source and perform one genuine documented maintainer sync, then read back the stored grouping and rendered detail anchors. No artificial install/telemetry loop."
+      "change": "One genuine install synced the published configuration. Actual public grouping shows the product URL, and all14rendered customer detail pages have the homepage attribution and clickable anchor.",
+      "next": "Complete: preserve these public links on subsequent customer-suite updates.",
+      "evidence": "backlinks-skills-public-20261104.json"
     },
     {
       "target": "skills.sh consolidated Pack",
@@ -227,10 +229,10 @@
     },
     {
       "target": "Git/link installer and gh skill",
-      "backlinkStatus": "source_update_pending_shipping",
+      "backlinkStatus": "source_shipped_native_verified",
       "entryURL": "https://github.com/bex-co/beancount-io/tree/main/skills",
       "change": "These install source files rather than owning separate catalog descriptions; customer source Markdown now contains homepage attribution.",
-      "next": "Ship once; use normal source updates. No separate per-skill publication."
+      "next": "Actual14-skill source installation and all51runtime-file byte matches pass."
     },
     {
       "target": "Retired individual ClawHub skills",
@@ -254,6 +256,39 @@
         "issues": []
       },
       "cliBoundary": "Digest-verified official mcp-publisher1.8.7 cannot use this macOS process context certificate store (OSStatus-26276). The identical listing payload validates through the official endpoint using the working system TLS client; certificate verification remains enabled."
+    },
+    "publicationGateFixtures": {
+      "passed": 5,
+      "cases": [
+        "workflow-only validates without publishing",
+        "listing edit publishes",
+        "multi-commit range includes earlier listing edit",
+        "initial push detects listing",
+        "manual dispatch retains its separate explicit publish input"
+      ]
     }
-  }
+  },
+  "sourceCommits": {
+    "MCP": "58ea680e529fb03eb1a4948c63a68a2182684519",
+    "customerSuite": "dfe93ec9682e4ec548b8eaa6fce59556afc66093"
+  },
+  "nativeSourceInstall": {
+    "client": "skills1.7.4",
+    "command": "skills add https://github.com/bex-co/beancount-io/tree/main/skills --agent codex --skill * --yes --copy --json",
+    "scope": "One isolated project install from the actual published main source. Default documented configuration sync; no global install, model call or repeated telemetry install.",
+    "installedCustomerSkills": 14,
+    "runtimeFilesCompared": 51,
+    "allRuntimeBytesMatchSource": true,
+    "homepageAttributions": 14,
+    "publicGroupReadback": "Actual repository page now shows the new https://beancount.io/ grouping text and all14customer workflows, including invoices. Group text is plain text; individual anchor readback remains separate."
+  },
+  "registryWorkflow": {
+    "firstSourceRunURL": "https://github.com/bex-co/beancount-io/actions/runs/41921634877",
+    "validation": "success",
+    "publish": "skipped",
+    "observedEffect": "Public record remains1.0.0with GitHub documentation website.",
+    "repair": "Replace optional push-payload path metadata with the actual Git before/after diff. Workflow-only edits remain validation-only; protected environment and explicit manual publish rules are retained.",
+    "finalPublication": "pending actual protected publish and registry readback"
+  },
+  "publicSkillsAnchorEvidence": "backlinks-skills-public-20261104.json"
 }

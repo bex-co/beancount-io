@@ -61,10 +61,30 @@ jobs:
     outputs:
       name: ${{ steps.listing.outputs.name }}
       version: ${{ steps.listing.outputs.version }}
+      server_changed: ${{ steps.changed.outputs.server_changed }}
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          fetch-depth: 0
+
+      - name: Detect actual listing changes
+        id: changed
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+          AFTER_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          changed=false
+          if [[ "$EVENT_NAME" == push ]]; then
+            if [[ "$BEFORE_SHA" == 0000000000000000000000000000000000000000 ]]; then
+              BEFORE_SHA=$(git hash-object -t tree /dev/null)
+            fi
+            paths=$(git diff --name-only "$BEFORE_SHA" "$AFTER_SHA" -- "$SERVER_JSON")
+            if [[ -n "$paths" ]]; then changed=true; fi
+          fi
+          echo "server_changed=$changed" >> "$GITHUB_OUTPUT"
 
       - name: Install mcp-publisher
         run: curl -sSfL "$PUBLISHER_URL" | tar xz mcp-publisher
@@ -81,13 +101,11 @@ jobs:
   publish:
     name: publish to the registry
     needs: validate
-    # The push payload lists each commit's added and modified paths (for up to
-    # 20 commits), so a push that touched only this workflow validates and
-    # stops. A listing change buried in a larger push publishes via dispatch.
+    # Compare the pushed Git range rather than optional commit-path payload
+    # fields. Workflow-only pushes still validate and stop; environment approval
+    # remains mandatory for actual publication.
     if: >-
-      (github.event_name == 'push'
-        && (contains(toJSON(github.event.commits.*.added), 'backend-cluster/backend-v2/server.json')
-          || contains(toJSON(github.event.commits.*.modified), 'backend-cluster/backend-v2/server.json')))
+      (github.event_name == 'push' && needs.validate.outputs.server_changed == 'true')
       || (github.event_name == 'workflow_dispatch' && inputs.publish)
     runs-on: ubuntu-latest
     # The private key lives only on this environment. In the repository
