@@ -1,8 +1,8 @@
 {
   "requestedAtUTC": "2026-11-04",
-  "lastUpdatedAtUTC": "2026-11-04T22:06:45Z",
+  "lastUpdatedAtUTC": "2026-11-04T22:12:31.242863Z",
   "canonicalProductWebsite": "https://beancount.io/",
-  "scope": "All20MCP inventory targets, the separate Glama source record, and current customer-suite distribution/index channels. Existing reviews/submissions are reused.",
+  "scope": "All20MCP inventory targets, the separate Glama source record, customer-suite distribution/index channels, and the public GitHub/PyPI/Homebrew/mobile storefront homepages.",
   "statusBoundary": "updated_existing_submission means a real edited/read-back public submission, not maintainer merge, directory publication or SEO ranking improvement. Source edits await actual shipping/publication/crawl. Existing receipt-based rows do not acquire a new external review timestamp. Platform link attributes and unlisted visibility remain unchanged.",
   "rows": [
     {
@@ -15,10 +15,10 @@
     },
     {
       "target": "Official MCP Registry",
-      "backlinkStatus": "source_shipped_publish_gate_repaired",
+      "backlinkStatus": "protected_publish_awaiting_approval",
       "entryURL": "https://registry.modelcontextprotocol.io/v0.1/servers/io.beancount%2Fbeancount/versions/latest",
       "change": "Prepared1.0.1 changes websiteUrl from GitHub docs to https://beancount.io/ and names Beancount.io in the description. Repository and endpoint retain their own fields.",
-      "next": "The original push validated but skipped publish. Ship the repaired Git-diff gate and the actual final listing edit; approve the existing protected environment and read back1.0.1.",
+      "next": "Publisher signs in to GitHub; approve the existing mcp-registry-publish deployment on run41922779720. Worker verifies the public1.0.1record and homepage.",
       "priorPublicVersion": "1.0.0",
       "priorWebsiteURL": "https://github.com/bex-co/beancount-io/blob/main/backend-cluster/backend-v2/docs/mcp.md"
     },
@@ -29,7 +29,7 @@
       "change": "Actual public Homepage is https://beancount.io/.",
       "next": "No redundant description edit needed.",
       "linkRel": "",
-      "observedAtUTC": "2026-11-04T21:48:22Z"
+      "observedOnUTC": "2026-11-04"
     },
     {
       "target": "Glama connector",
@@ -51,7 +51,7 @@
       "target": "MCPServers.org",
       "backlinkStatus": "source_update_pending_crawl",
       "entryURL": "https://mcpservers.org/servers/github-com-bex-co-beancount-io-blob-main-backend-cluster-backend-v2-docs-mcp-md",
-      "change": "Actual rendered MCP guide has no direct homepage anchor. Its canonical source docs/mcp.md now links the opening Beancount.io brand to https://beancount.io/. No owner edit control was exposed.",
+      "change": "Actual rendered MCP guide has no direct homepage anchor. Its canonical source docs/mcp.md now links the opening Beancount.io brand to https://beancount.io/. No owner edit control was exposed. One actual post-source-shipping page reload still exposes no product-homepage anchor; crawler propagation remains unverified.",
       "next": "Read back the existing listing after source refresh; do not submit a duplicate.",
       "renderedSource": "https://github.com/bex-co/beancount-io/blob/main/backend-cluster/backend-v2/docs/mcp.md"
     },
@@ -225,7 +225,7 @@
       "entryURL": "https://skillsmp.com/creators/bex-co/beancount-io",
       "change": "Actual collection now shows34records and a Nov2catalog refresh; no owner mutation control is exposed. Canonical customer bodies now carry the product link.",
       "next": "Verify rendered customer details after source refresh. No claim that the mixed collection is corrected or that a source-only change is already public.",
-      "observedAtUTC": "2026-11-04T21:57:00Z"
+      "observedOnUTC": "2026-11-04"
     },
     {
       "target": "Git/link installer and gh skill",
@@ -240,6 +240,46 @@
       "entryURL": "https://clawhub.ai/puncsky/plugins/beancount-io",
       "change": "The thirteen legacy individual listings stay retired.",
       "next": "Keep distribution and website references on the consolidated suite; do not restore retired listings for backlinks."
+    },
+    {
+      "target": "GitHub project About",
+      "backlinkStatus": "homepage_already_present",
+      "entryURL": "https://github.com/bex-co/beancount-io",
+      "change": "Actual repository API homepage is https://beancount.io/.",
+      "next": "Preserve the existing homepage; no new package/store release needed for backlinks.",
+      "observation": "2026-11-04 actual public API/source/storefront read; no publisher contact details retained."
+    },
+    {
+      "target": "PyPI beancount-io",
+      "backlinkStatus": "homepage_already_present",
+      "entryURL": "https://pypi.org/project/beancount-io/",
+      "change": "Actual0.3.1project_urls.Homepage is https://beancount.io; rendered description links Beancount.io in its first sentence.",
+      "next": "Preserve the existing homepage; no new package/store release needed for backlinks.",
+      "observation": "2026-11-04 actual public API/source/storefront read; no publisher contact details retained."
+    },
+    {
+      "target": "Homebrew tap",
+      "backlinkStatus": "homepage_already_present",
+      "entryURL": "https://github.com/bex-co/homebrew-tap/blob/main/Formula/bea.rb",
+      "change": "Actual published Formula/bea.rb declares homepage https://beancount.io.",
+      "next": "Preserve the existing homepage; no new package/store release needed for backlinks.",
+      "observation": "2026-11-04 actual public API/source/storefront read; no publisher contact details retained."
+    },
+    {
+      "target": "Apple App Store",
+      "backlinkStatus": "homepage_already_present",
+      "entryURL": "https://apps.apple.com/us/app/beancount-plain-text-ledger/id1527950512",
+      "change": "Public storefront exposes Developer Website linking beancount.io; current source locale marketingUrl also declares the product website.",
+      "next": "Preserve the existing homepage; no new package/store release needed for backlinks.",
+      "observation": "2026-11-04 actual public API/source/storefront read; no publisher contact details retained."
+    },
+    {
+      "target": "Google Play",
+      "backlinkStatus": "homepage_already_present",
+      "entryURL": "https://play.google.com/store/apps/details?id=io.beancount.android",
+      "change": "Public App support exposes Website linking beancount.io.",
+      "next": "Preserve the existing homepage; no new package/store release needed for backlinks.",
+      "observation": "2026-11-04 actual public API/source/storefront read; no publisher contact details retained."
     }
   ],
   "validation": {
@@ -270,7 +310,8 @@
   },
   "sourceCommits": {
     "MCP": "58ea680e529fb03eb1a4948c63a68a2182684519",
-    "customerSuite": "dfe93ec9682e4ec548b8eaa6fce59556afc66093"
+    "customerSuite": "dfe93ec9682e4ec548b8eaa6fce59556afc66093",
+    "registryPublishGate": "d3893822352b6c1972c4e96cb565091ad7de78fa"
   },
   "nativeSourceInstall": {
     "client": "skills1.7.4",
@@ -288,7 +329,15 @@
     "publish": "skipped",
     "observedEffect": "Public record remains1.0.0with GitHub documentation website.",
     "repair": "Replace optional push-payload path metadata with the actual Git before/after diff. Workflow-only edits remain validation-only; protected environment and explicit manual publish rules are retained.",
-    "finalPublication": "pending actual protected publish and registry readback"
+    "finalPublication": "The repaired validation passes and publish reaches the existing protected environment. Actual environment approval and public1.0.1readback remain pending; browser GitHub publisher sign-in is required.",
+    "repairedRunURL": "https://github.com/bex-co/beancount-io/actions/runs/41922779720",
+    "repairedRunState": "waiting"
   },
-  "publicSkillsAnchorEvidence": "backlinks-skills-public-20261104.json"
+  "publicSkillsAnchorEvidence": "backlinks-skills-public-20261104.json",
+  "hostedChecks": {
+    "skillsAgentGuidance": "https://github.com/bex-co/beancount-io/actions/runs/41921861729 \u2014 passed",
+    "skillsSecretScan": "https://github.com/bex-co/beancount-io/actions/runs/41921861321 \u2014 passed",
+    "clawhubPreview": "https://github.com/bex-co/beancount-io/actions/runs/41921861421 \u2014 passed; publish not dispatched",
+    "skillsCI": "https://github.com/bex-co/beancount-io/actions/runs/41921861437 \u2014 still in progress at last observation"
+  }
 }
