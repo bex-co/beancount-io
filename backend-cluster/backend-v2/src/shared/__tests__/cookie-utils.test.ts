@@ -41,6 +41,33 @@ describe("cookie-utils", () => {
       );
     });
 
+    describe("AUTH_COOKIE_DOMAIN", () => {
+      const original = process.env.AUTH_COOKIE_DOMAIN;
+      afterEach(() => {
+        if (original === undefined) delete process.env.AUTH_COOKIE_DOMAIN;
+        else process.env.AUTH_COOKIE_DOMAIN = original;
+      });
+      const domainSet = () => {
+        setAuthCookie(mockCtx, "t", new Date(Date.now() + 1000), true);
+        return mockCtx.cookies.set.mock.calls[0][2].domain;
+      };
+
+      it("uses the configured parent domain for self-hosted deployments", () => {
+        process.env.AUTH_COOKIE_DOMAIN = ".example.com";
+        expect(domainSet()).toBe(".example.com");
+      });
+
+      it("is host-only when set to an empty value", () => {
+        process.env.AUTH_COOKIE_DOMAIN = "";
+        expect(domainSet()).toBeUndefined();
+      });
+
+      it("defaults to .beancount.io when unset", () => {
+        delete process.env.AUTH_COOKIE_DOMAIN;
+        expect(domainSet()).toBe(".beancount.io");
+      });
+    });
+
     it("should set cookie with secure=false for http context in development", () => {
       const httpCtx = {
         cookies: { set: jest.fn(), get: jest.fn() },

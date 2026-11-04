@@ -103,6 +103,18 @@ The browser calls the API cross-origin, so the API also needs
 `EXTRA_ALLOWED_ORIGINS` set to the dashboard origin (already in `bex.yaml`);
 CORS only trusts `*.beancount.io` otherwise.
 
+## Sign-in needs one parent domain
+
+The dashboard renders on the server from the sign-in cookie, so the cookie must
+reach both the dashboard host and the API host. The backend sets it for the
+domain in `AUTH_COOKIE_DOMAIN` (default `.beancount.io`). On the generated
+`*.onbex.co` hostnames the browser rejects that, and sign-up ends on the login
+page. Attach custom domains that share a parent (for example `app.example.com`
+and `api.example.com`), set `AUTH_COOKIE_DOMAIN: .example.com` on
+`beancount-api`, and rebuild the dashboard with `VITE_API_URL` pointing at the
+API domain. Do not use `.onbex.co`: other bex tenants share it and would
+receive the cookie.
+
 ## Things that bit us, so they don't bite you again
 
 - **Ports follow the image.** The platform probes the image's declared

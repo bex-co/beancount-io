@@ -36,10 +36,25 @@ function getCookieOptions(
     secure: context.URL.protocol === "https:", // HTTPS only in production
     sameSite: "lax", // CSRF protection
     path: "/",
-    // Set domain for cross-subdomain access in production
-    // .beancount.io allows cookie to be shared across api.v3.beancount.io, dashboard.v3.beancount.io, etc.
-    domain: isProduction ? ".beancount.io" : undefined,
+    domain: isProduction ? authCookieDomain() : undefined,
   };
+}
+
+/**
+ * Parent domain the session cookie is shared across, so the dashboard host and
+ * the API host both see it (the dashboard renders server-side from it).
+ *
+ * Hosted beancount.io keeps `.beancount.io` when AUTH_COOKIE_DOMAIN is unset.
+ * A self-hosted deployment runs on its own domains, where a cookie claiming
+ * `.beancount.io` is rejected by the browser and nobody can sign in, so it
+ * sets AUTH_COOKIE_DOMAIN to the parent of its app and API hosts
+ * (e.g. `.example.com`). An empty value means host-only, for a deployment that
+ * serves the dashboard and `/api-gateway/` from one host.
+ */
+function authCookieDomain(): string | undefined {
+  const configured = process.env.AUTH_COOKIE_DOMAIN;
+  if (configured === undefined) return ".beancount.io";
+  return configured.trim() || undefined;
 }
 
 // Duck-typed on the one call made: Koa and @koa/router contexts carry
