@@ -32,6 +32,8 @@ metadata:
 
 # beancount-accruals
 
+Part of the [Beancount.io](https://beancount.io/) ledger skill suite.
+
 Prepare an accrual draft a user can approve — **calculated from a stated schedule, never estimated in chat, and never posted without confirmation**.
 
 This skill exists because period-end accruals are where agent arithmetic does the most damage: a plausible number, posted once, then posted again on rerun. So the calculation follows the contract in `references/schedule-contract.md` — **read it first** — every figure traces to a query or to the schedule's stated basis, and the draft carries a stable identity that makes a rerun reproduce the same draft instead of a second posting.

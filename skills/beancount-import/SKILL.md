@@ -34,6 +34,8 @@ metadata:
 
 # beancount-import
 
+Part of the [Beancount.io](https://beancount.io/) ledger skill suite.
+
 Turn a bank/card export file into categorized, deduplicated ledger entries — staged first, written only after explicit confirmation, idempotent on re-import.
 
 This skill exists because the weekly export-to-ledger chore has three silent failure modes: a flipped sign convention corrupts every amount, a re-imported file double-books everything, and a guessed category buries mistakes the user won't find until tax time. The skill defuses all three the same way: it never guesses (ask once, persist the answer), it stamps every entry with an `import-id` so re-imports are no-ops, and it only ever suggests accounts that already exist in the ledger.

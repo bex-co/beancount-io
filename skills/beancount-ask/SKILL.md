@@ -33,6 +33,8 @@ metadata:
 
 # beancount-ask
 
+Part of the [Beancount.io](https://beancount.io/) ledger skill suite.
+
 Answer ledger questions with **shown, re-runnable BQL** — never with model arithmetic.
 
 This skill exists because a fluent-but-unverifiable answer about money is worse than no answer: the entire credibility of plain-text accounting is that every number is reproducible. So every figure comes from a query run against the ledger, the query is shown with the answer, and the ledger is never modified.

@@ -35,6 +35,8 @@ metadata:
 
 # beancount-migrate
 
+Part of the [Beancount.io](https://beancount.io/) ledger skill suite.
+
 Turn a finance-app export into a complete, verified beancount ledger — mapped accounts, full history, deduplicated transfers, opening balances, and a migration report that proves nothing was dropped.
 
 This skill exists because every app shutdown (Mint, Bench, …) strands users with one CSV and no way to trust a conversion: categories don't map 1:1 to double-entry accounts, transfers appear twice (once per account), and a silently dropped row is invisible until a balance is wrong months later. The skill converts *with receipts*: every count and balance is reconciled against the source, and everything unmappable is surfaced, never guessed.

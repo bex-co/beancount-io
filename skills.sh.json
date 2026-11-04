@@ -4,7 +4,7 @@
   "groupings": [
     {
       "title": "Beancount.io suite",
-      "description": "Install the complete ledger workflow suite together. Claude Code and Codex also offer one versioned beancount-io plugin.",
+      "description": "Ledger workflows from https://beancount.io/. Install the complete suite together, or use one versioned beancount-io plugin for Claude Code and Codex.",
       "skills": [
         "beancount-accruals",
         "beancount-add",

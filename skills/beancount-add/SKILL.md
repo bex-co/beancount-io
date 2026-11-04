@@ -33,6 +33,8 @@ metadata:
 
 # beancount-add
 
+Part of the [Beancount.io](https://beancount.io/) ledger skill suite.
+
 Record what the user just did — a purchase, a bill, a paycheck, a transfer, a new or retired account, a price, a note — as exact entries in their ledger, proposed first and written only after a yes.
 
 This skill exists because a manual entry is the most common bookkeeping request and the easiest to get quietly wrong: a flipped sign, a plausible account that does not exist, the same charge entered twice, a close that strands money in an account, an entry written to a file the root never includes. The skill makes each of those visible before anything is written, and lets `bea` validate the result against the whole ledger.

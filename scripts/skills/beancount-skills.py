@@ -523,7 +523,7 @@ def suite(out: Path) -> int:
             if problems:
                 raise ValueError("; ".join(problems))
             readme = (
-                f"# Beancount.io ledger skills\n\nSuite {manifest['version']}. {manifest['description']}\n\n"
+                f"# [Beancount.io](https://beancount.io/) ledger skills\n\nSuite {manifest['version']}. {manifest['description']}\n\n"
                 "Install and update the suite as one plugin. Each workflow retains its own name and instructions.\n\n"
                 "[Installation and host compatibility](https://github.com/bex-co/beancount-io/blob/main/docs/skills/installation.md)\n\n"
                 "## Workflows\n\n" + "\n".join(f"- `{name}`" for name in names) + "\n\nLicense: MIT-0 (LICENSE).\n"

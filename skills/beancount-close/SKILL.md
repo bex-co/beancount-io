@@ -33,6 +33,8 @@ metadata:
 
 # beancount-close
 
+Part of the [Beancount.io](https://beancount.io/) ledger skill suite.
+
 Close one month with a fixed, honest checklist — every account either ties out or is explicitly reported as unverified, and the close lands as a git commit whose message is the audit record.
 
 This skill exists because trustworthy books come from ritual, not heroics: the same checks, every month, with nothing silently skipped. Each phase reports its status before the next begins; the final commit encodes the close report so `git log` reads as a close history.

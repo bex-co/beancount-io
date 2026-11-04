@@ -33,6 +33,8 @@ metadata:
 
 # beancount-property
 
+Part of the [Beancount.io](https://beancount.io/) ledger skill suite.
+
 Record a property purchase the user describes — the home itself, its mortgage, and its escrow — as exact entries, proposed first and written only after a yes.
 
 This skill exists because a house is usually a household's largest asset and liability, and the easiest to book in a way that balances today and lies forever after: closing costs buried or double-counted, a mortgage opened at the wrong amount, escrow treated as an expense. The skill makes every closing-statement figure land once, in its stated role, and lets `bea` validate the result against the whole ledger.

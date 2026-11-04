@@ -33,6 +33,8 @@ metadata:
 
 # beancount-options
 
+Part of the [Beancount.io](https://beancount.io/) ledger skill suite.
+
 Turn natural-language options descriptions into correct beancount transactions.
 
 This skill exists because options accounting in beancount has subtle mechanics that are easy to get wrong by hand: short-position cost basis lives in negative-quantity holdings, premium becomes part of stock cost basis on assignment, multi-leg trades need link grouping, and the four close paths (close, expire, assign, exercise) produce different P&L treatment. The skill takes a description, infers the strategy and outcome, generates the correct transaction(s), and — only after explicit confirmation — appends them to the user's ledger.

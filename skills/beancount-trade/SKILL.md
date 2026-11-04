@@ -33,6 +33,8 @@ metadata:
 
 # beancount-trade
 
+Part of the [Beancount.io](https://beancount.io/) ledger skill suite.
+
 Record an investment event the user describes — a buy, a sell, a dividend, a split, a transfer, a vest — as exact entries with the right lots and cost basis, proposed first and written only after a yes.
 
 This skill exists because a trade is easy to book in a way that balances today and lies forever after: a lot at the wrong cost, a gain typed in by hand, a sell matched against a lot the user never chose, a split that silently changes total cost. The skill makes the lot, the cost, and the booking-produced gain visible before anything is written, and lets `bea` validate the result against the whole ledger.

@@ -33,6 +33,8 @@ metadata:
 
 # beancount-invoices
 
+Part of the [Beancount.io](https://beancount.io/) ledger skill suite.
+
 Record the invoices a business issues and the payments that settle them, as exact entries, proposed first and written only after a yes.
 
 This skill exists because money owed is what separates business books from household books, and it is easy to book in a way that balances today and misleads later: a payment booked straight to income while its invoice still shows owed, a processor payout booked net so revenue and fees silently merge, one payment covering two invoices applied to neither. The skill keeps every document's open balance in the ledger itself, ties each payment to the documents it settles, and lets `bea` validate the result against the whole ledger.

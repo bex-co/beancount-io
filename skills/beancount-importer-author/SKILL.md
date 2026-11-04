@@ -33,6 +33,8 @@ metadata:
 
 # beancount-importer-author
 
+Part of the [Beancount.io](https://beancount.io/) ledger skill suite.
+
 Produce a **tested** beangulp importer from a sample export file — or repair one the bank's format drift broke — and never hand over anything whose harness isn't green.
 
 This skill exists because importers are the most-complained-about chore in beancount: every bank's export is different, formats drift, and a subtly wrong importer silently corrupts data for months. beangulp ships a golden-file test harness that makes correctness *checkable* — the skill's job is to drive that loop: draft → generate golden → eyeball → test → iterate. The deterministic artifact then does the weekly work for free; the agent is only needed again when the format changes.

@@ -32,6 +32,8 @@ metadata:
 
 # beancount-init
 
+Part of the [Beancount.io](https://beancount.io/) ledger skill suite.
+
 Scaffold a fresh ledger in the current working directory with one `bea`
 installation for create and validate.
 

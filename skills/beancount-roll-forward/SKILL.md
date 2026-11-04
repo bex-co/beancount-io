@@ -32,6 +32,8 @@ metadata:
 
 # beancount-roll-forward
 
+Part of the [Beancount.io](https://beancount.io/) ledger skill suite.
+
 Explain a balance-sheet movement as **opening + signed movements = closing** — never with model arithmetic, and never with a plug.
 
 This skill exists because "why is this balance what it is" is the question a ledger should answer exactly. Every figure comes from a query run against the ledger, the closing is computed by an independent route, and the ledger is never modified.

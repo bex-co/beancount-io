@@ -557,3 +557,20 @@ code is adopted or executed; no native install/refusal is repeated. Wait for a
 supported compatible metadata/policy path, then verify the complete suite's
 native install/discovery/update without force. The retired standalone path is
 not restored, and no publisher input is pending for this source assessment.
+
+## Product website attribution — 2026-11-04 UTC
+
+The shared suite0.4.21manifests use **https://beancount.io/** as their homepage.
+The customer catalog, each of the14customer skill bodies and the generated
+ClawHub bundle README now link the Beancount.io brand to that homepage.
+Trigger/frontmatter descriptions and workflow behavior are unchanged. Root
+skills.sh grouping text also names the product URL; a plain-text field is not
+assumed to create a clickable anchor.
+
+[Per-channel changes and remaining publication/index gates](../../backend-cluster/backend-v2/docs/marketplace-submissions/backlinks-20261104.json)
+distinguish source updates from actual external readback. ClawHub0.4.0 remains
+the observed public artifact until the protected workflow publishes0.4.21.
+The existing Pack still represents13skills/source0.4.2; its description-only
+website edit requires publisher Vercel login and must not change that provenance.
+Third-party indexes must fetch and render the changed customer source before
+being reported updated. Retired standalone listings remain retired.

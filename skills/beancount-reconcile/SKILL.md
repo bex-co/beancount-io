@@ -33,6 +33,8 @@ metadata:
 
 # beancount-reconcile
 
+Part of the [Beancount.io](https://beancount.io/) ledger skill suite.
+
 Reconcile **one account** against **one statement period**: find every discrepancy between the ledger and the statement, and — only after the user confirms — append the missing transactions and a period-end balance assertion that proves the account ties out.
 
 This skill exists because reconciliation is the deterministic trust check for a ledger, and doing it by hand is tedious and error-prone: statement sign conventions differ from ledger conventions, pending-vs-settled timing shifts dates, and the only real proof of correctness is a `balance` assertion that beancount itself verifies. The skill normalizes the statement, diffs it against the ledger, classifies each discrepancy, and lands a balance assertion whose success (via the root-ledger check) is the reconciliation's definition of done.
