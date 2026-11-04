@@ -1,0 +1,44 @@
+{
+  "owner": "w6/m11/t010",
+  "followUpOwner": "w6/m11/t001",
+  "lastCheckedAtUTC": "2026-11-04T21:37:37.106Z",
+  "applicationURL": "https://platform.openai.com/plugins/manage/plugin_asdk_app_6ad4537f69288191816f3fc04b1ac11a",
+  "reviewedVersionURL": "https://platform.openai.com/plugins/manage/plugin_asdk_app_6ad4537f69288191816f3fc04b1ac11a?version=pluginrel_3bc4e582e6cc8191acb33a2283d4a232",
+  "version": "1.0.0",
+  "submission": {
+    "ownerConfirmation": "Owner explicitly confirmed the prepared final submission and its six declarations: confirm to submit.",
+    "finalSubmitClickedOnce": true,
+    "clickedAtUTC": "2026-11-04T21:33:48.906Z",
+    "sameApplicationRetained": true,
+    "duplicateApplicationCreated": false,
+    "acceptedResubmissionObserved": true
+  },
+  "portalReadback": {
+    "pluginsListReviewStatus": "In review",
+    "versionDetailReviewStatus": "In review",
+    "versionDetailPublication": "Not published",
+    "versionDetailMCPConfiguration": "Configured",
+    "cancelReviewActionVisible": true,
+    "estimatedReviewCompletionDisplayed": "Nov 1, 2026",
+    "estimateInterpretation": "The displayed date predates this resubmission. It is retained as observed UI text, not a reliable new review deadline."
+  },
+  "remediation": {
+    "successfulScan": "No findings in the latest MCP scan.",
+    "storedToolsVerified": 44,
+    "explicitBooleanHintsVerified": 176,
+    "individualEnglishJustificationsSaved": 176,
+    "reviewerInstructionsPersistenceVerified": true,
+    "additionalSubmissionContextCharacters": 1833,
+    "portalVerificationEvidence": "portal-annotation-verification-20261103.json",
+    "preparationAndSubmissionHistory": "resubmission-progress-20261103.json"
+  },
+  "nextAction": {
+    "owner": "OpenAI reviewers, then worker",
+    "trigger": "Actual review feedback/decision/publication, or a manual status check on/after 2026-11-09 UTC.",
+    "action": "Inspect this same application, handle any concrete required corrections, and verify approval/public listing and the native synthetic OAuth/query/preview journey before closing t001.",
+    "userInputRequiredNow": false,
+    "recurringAutomationCreated": false
+  },
+  "boundary": "Accepted resubmission and actual In review status only. No approval, public listing or native ChatGPT accounting acceptance is claimed. Existing grants are retained; no accounting write or unsolicited appeal/email.",
+  "privacy": "No account email, password, access token, consent UID, private ledger path or private repository URL is included."
+}

@@ -1,0 +1,35 @@
+{
+  "owner": "w6/m11/t010",
+  "lastCheckedAtUTC": "2026-11-03T06:50:07Z",
+  "stage": "browser_restored_publisher_login_required",
+  "applicationURL": "https://platform.openai.com/plugins/manage/plugin_asdk_app_6ad4537f69288191816f3fc04b1ac11a",
+  "browserRecovery": {
+    "method": "Owner started the prepared official Playwright MCP HTTP service from the normal desktop Terminal; worker connected through the standard MCP SDK.",
+    "transportAndDiscoverySucceeded": true,
+    "toolCount": 25,
+    "actualNavigationSucceeded": true,
+    "observedPage": "OpenAI Platform login; the original application URL redirects to authentication in the fresh isolated headed Chrome context.",
+    "persistentWorkerConnectionRetainedForOwnerLogin": true,
+    "originalChromeProfileCookiesCopied": false,
+    "nativeHostOrBrowserSecurityPolicyChanged": false
+  },
+  "liveMetadataVerification": {
+    "endpoint": "https://beancount.io/api-gateway/mcp",
+    "httpStatus": 200,
+    "toolCount": 44,
+    "explicitBooleanHintsChecked": 176,
+    "allMatchPreparedBehaviorMatrix": true,
+    "matrixFile": "tool-annotations.json",
+    "matrixSHA256": "76a5cb490c38791d7000f2f2240bb13f85ba81d8908e2ca0c9e878ab2495e42c",
+    "accountingWritePerformed": false,
+    "currentDeploymentRevisionEstablishedByThisRead": false
+  },
+  "remainingGate": {
+    "owner": "Publisher for original submitting account/organization login, worker for actual rescan and resubmission.",
+    "nextAction": "Owner authenticates directly in the open Chrome window and selects the original submitting organization. Worker then inspects the actual original application, rescans, verifies stored hints/explanations and submits once.",
+    "appDetailsOrPrivateReviewStateObserved": false,
+    "rescanPerformed": false,
+    "acceptedResubmissionObserved": false
+  },
+  "limits": "Browser startup recovery and fresh hosted metadata are confirmed. A successful login page does not establish original-app access or a new review submission. No credential, mailbox identity, session ID, ledger data or private management URL is published."
+}

@@ -1,6 +1,6 @@
 # w6 · m11 — Complete app-directory and remote-community distribution
 
-**Worker:** worker1 **Goal:** Users discover the existing hosted connector through approved ChatGPT/Claude entries and an accurate remote-MCP community entry. **Status:** blocked (t008/t009 complete and deployed; t010 original-organization access; t001/t002/t003 review/public gates; closing tasks defer)
+**Worker:** worker1 **Goal:** Users discover the existing hosted connector through approved ChatGPT/Claude entries and an accurate remote-MCP community entry. **Status:** blocked (t010 accepted resubmission done; t001 in review/public/native; t002/t003 independent review/merge gates)
 
 **Implementation estimate:** ~4h30m plus closing work, excluding external review latency. No recurring polling job is created.
 
@@ -8,12 +8,12 @@
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| [t001](t001.md) | Follow existing ChatGPT application through review/publication — **BLOCKED: not approved; t008–t010 remediation then review** | 45m | t010 |
+| [t001](t001.md) | Follow existing ChatGPT application through review/publication — **BLOCKED: resubmitted, In review; public/native pending** | 45m | t010 |
 | [t002](t002.md) | Follow existing Claude connector application through review/publication — **BLOCKED: in review** | 45m | — |
 | [t003](t003.md) | Submit to Awesome Remote MCP Servers and verify merged entry — **BLOCKED: submitted, check passed** | 45m | — |
 | [t008](done/t008.md) | Audit/fix annotations and regression coverage — **DONE** | 60m | — |
 | [t009](done/t009.md) | Deploy and verify live annotations/explanations — **DONE** | 45m | t008 |
-| [t010](t010.md) | Rescan/resubmit the original ChatGPT app — **BLOCKED: original organization access** | 30m | t009 |
+| [t010](done/t010.md) | Rescan/resubmit the original ChatGPT app — **DONE** | 30m | t009 |
 | [t004](t004.md) | Adoption surface | 30m | t001, t002, t003 |
 | [t005](t005.md) | Simplify | 30m | t004 |
 | [t006](t006.md) | Test coverage | 45m | t004, t005 |
@@ -48,7 +48,7 @@ The [m9/t011](../m9/done/t011.md) official Cursor application is submitted with 
 | Cline | [m9/t013](../m9/done/t013.md) | [m9/t004](../m9/t004.md), m9/t006 |
 | GitHub curated gallery / VS Code | [m9/t014](../m9/done/t014.md) | [m9/t005](../m9/done/t005.md) done; [m9/t018](../m9/t018.md) approved/public/native; existing w1/m34/t003 native owner retained |
 | LobeHub | [m10/t009](../m10/done/t009.md) accepted/public; [m10/t003](../m10/done/t003.md) eligible payload complete | [m10/t011](../m10/done/t011.md) native/live metadata; [m10/t012](../m10/t012.md) crawler correction/search |
-| ChatGPT / OpenAI | Owner-supplied not-approved feedback2026-10-31; t008/t009/t010 remediation and original-app resubmission | [m11/t001](t001.md), OpenAI review then public/native verification; no user action now |
+| ChatGPT / OpenAI | [t010 accepted resubmission](done/t010.md)2026-11-04; original1.0.0app independently In review / Not published | [m11/t001](t001.md), OpenAI review then public/native verification; no user action now |
 | Claude | Publisher-reported in review, received2026-10-25T05:34:59Z; no supplied completion estimate | [m11/t002](t002.md), Claude review then public/native verification; no user action now |
 | Awesome Remote MCP Servers | [m11/t003](t003.md) | Same task retains upstream receipt, review and merged entry |
 | Awesome MCP Servers — general list | Independent [048](../048.md), PR18050 submitted2026-10-30 | Glama source intake is in review; complete its actual source checks/score badge, then maintainer merge and setup-link verification. Separate from remote-only PR2753 and independent of this milestone's reviews |
@@ -72,7 +72,7 @@ The [m9/t011](../m9/done/t011.md) official Cursor application is submitted with 
 
 ## Blocked
 
-- **t001:** owner supplies not-approved annotation feedback on2026-10-31, superseding the former Nov3 estimate. t008 source audit/corrections/tests are complete; t009 deploys and verifies the live catalog, then t010 refreshes and resubmits the original application. **Unblock:** accepted original-app resubmission followed by actual review feedback/publication; worker handles supported corrections and public/native verification. **Owners:** worker, then OpenAI reviewers. Original submitting organization access may still be required at t010; no duplicate app or approval is inferred. The former publisher-reported in-review estimate is historical evidence only.
+- **t001:** t008–t010 remediation/deploy/rescan/explanations and accepted original-app resubmission are complete. Actual readback2026-11-04T21:37:37.106Z: **In review / Not published**. **Unblock:** OpenAI supplies feedback/decision/publication; worker handles corrections and public/native verification. **Owners:** OpenAI reviewers, then worker. Next manual2026-11-09UTC or actual feedback earlier. No user input now; stale displayed Nov1estimate is not a reliable new deadline. Browser/login/scanner/final-confirmation conditions are cleared; no duplicate app.
 
 - **t002:** publisher reports **in review**, update received2026-10-25T05:34:59Z; no completion estimate or requested changes supplied. The current status-information request is cleared, while original-account UI access is not independently restored. **Unblock:** actual review feedback/decision/publication, otherwise a manual check on2026-10-27UTC; worker then handles corrections and public/native verification. **Owners:** Claude reviewers, then worker. No user action now; manual date is internal, not a vendor promise or automation. No duplicate application.
 
@@ -115,3 +115,52 @@ submitting organization; worker rescans and resubmits the same app. t001 then
 retains real review/public/native acceptance. t002/t003 keep their independent
 review/merge conditions and closing tasks defer transitively. Independent m12
 and newly due w6 review conditions continue, without waiting for this answer.
+
+**Owner decision 2026-11-01:** defer the t010 original-organization access
+discussion and handle the next independent unblock item. t010 and its dependent
+review/publication work remain blocked with the same owner and access condition;
+the shipped remediation is retained.
+
+**Owner resumed 2026-11-02:** the owner requests direct resolution of the
+original application again. t010 remains blocked on currently failing browser
+startup and original-app access. Cross-browser crashes identify macOS
+application-registration/bootstrap failure in the worker process context.
+A supported loopback-only desktop-terminal MCP launcher is prepared; actual
+HTTP initialization and25-tool discovery pass, while desktop-session browser
+launch and original-organization access still need verification. This supersedes
+the temporary discussion deferral without claiming a resubmission.
+
+
+**Browser prerequisite cleared 2026-11-03UTC:** owner-started desktop MCP service
+now opens the original application URL. t010 remains blocked only on fresh
+publisher login/original submitting organization access before actual rescan and
+resubmission. All44live tools/176boolean hints still match the prepared matrix.
+The visible Chrome login window and persistent worker connection are retained;
+no application detail access or accepted resubmission is inferred.
+
+
+**Original-app access cleared 2026-11-03UTC:** t010 now reaches the same rejected
+application and its editable1.0.0draft, with no metadata findings. The actual
+rescan fails for missing scanning authorization. A synthetic-only ChatGPT
+identity/offline/read/write/admin grant is ready on the real consent page; its
+action-time confirmation is pending. t010 stays blocked on that exact approval
+before callback/rescan/explanation verification/resubmission. The prior
+browser/login blockers are resolved; review/public/native work still follows
+accepted resubmission.
+
+
+**Final submission ready 2026-11-03UTC:** t010 clears actual scanner authorization,
+fresh scan and all 44-tool/176-hint verification. Every explanation is saved and
+verified in private reviewer instructions; final submission context is filled.
+Only action-time owner confirmation of the actual six final legal/compliance
+declarations remains before Submit and accepted-receipt verification. Earlier
+browser/login/scanner blocks are historical; t001 retains later review/public
+and native acceptance.
+
+**Accepted resubmission 2026-11-04UTC:** owner explicitly confirms the final
+submission/declarations; worker submits the same original1.0.0app once. Plugins
+list and version detail both show **In review / Not published** at
+2026-11-04T21:37:37.106Z. [t010](done/t010.md) is done and archived with actual
+receipt; t001 retains later review/public/native acceptance. Earlier access,
+scanner and legal-confirmation blocks are cleared historical observations.
+t002/t003 and the milestone's full DoD remain independent and unresolved.

@@ -1,0 +1,111 @@
+{
+  "owner": "w6/m11/t010",
+  "lastCheckedAtUTC": "2026-11-04T21:37:37.106Z",
+  "applicationURL": "https://platform.openai.com/plugins/manage/plugin_asdk_app_6ad4537f69288191816f3fc04b1ac11a",
+  "originalApplicationAccessVerified": true,
+  "initialObservedState": {
+    "review": "Changes required",
+    "publication": "Not published",
+    "mcp": "Changes required"
+  },
+  "revision": {
+    "action": "Revise submission",
+    "sameApplicationRetained": true,
+    "metadataVersion": "1.0.0",
+    "observedState": "Draft / Not submitted",
+    "metadataFindings": "No findings",
+    "duplicateApplicationCreated": false
+  },
+  "scanAttempt": {
+    "action": "Rescan Beancount.io",
+    "observedAtUTC": "2026-11-03T07:00:44Z",
+    "outcome": "Authorization for scanning is missing. Connect an account to resume automatic scans.",
+    "portalWarning": "Results are from the last available review, not this failed attempt.",
+    "freshStoredToolSnapshotVerified": false,
+    "initialAuthorizedBadgeInsufficient": true
+  },
+  "reconnect": {
+    "officialAction": "Reconnect",
+    "endpoint": "https://beancount.io/api-gateway/mcp",
+    "domainVerified": true,
+    "dedicatedExistingQASignInCompleted": true,
+    "recipientName": "ChatGPT",
+    "recipientDomain": "chatgpt.com",
+    "target": "Only the existing synthetic MCP evaluation ledger is selected; all-accessible-ledgers is unselected.",
+    "requestedScopes": [
+      "openid",
+      "offline_access",
+      "ledger.read",
+      "ledger.write",
+      "ledger.admin"
+    ],
+    "grantApproved": true,
+    "currentAction": "Completed: owner-approved synthetic-only scanner grant and callback succeeded; existing grants retained.",
+    "existingGrantsRevoked": false,
+    "approvalSource": "Owner explicitly confirmed the prepared synthetic-only grant at action time.",
+    "callbackCompletedAtUTC": "2026-11-03T08:53:01Z",
+    "scannerConnectionConfirmed": true
+  },
+  "remainingGate": {
+    "owner": "OpenAI reviewers for review; worker for actual feedback and public/native verification under w6/m11/t001.",
+    "acceptedResubmissionObserved": true,
+    "reviewerJustificationsEntered": true,
+    "userInputRequiredNow": false,
+    "receipt": "resubmission-receipt-20261104.json"
+  },
+  "privacy": "No account email, password, token, consent UID, private ledger path or private mailbox URL is included. Temporary credential-bearing action file was removed.",
+  "priorLiveMetadataProof": "browser-recovery-20261103.json: all44tools/176booleans match the prepared matrix; this is separate from the portal scan.",
+  "stage": "resubmitted_in_review",
+  "latestSuccessfulScan": {
+    "requestedAtUTC": "2026-11-03T08:53:43Z",
+    "completedObservedAtUTC": "2026-11-03T08:54:14Z",
+    "result": "No findings in the latest MCP scan.",
+    "storedToolCount": 44,
+    "explicitBooleanHintsChecked": 176,
+    "allMatchCompleteExplanations": true,
+    "evidence": "portal-annotation-verification-20261103.json"
+  },
+  "reviewerExplanations": {
+    "savedField": "Review information > Reviewer credentials > Sign-in steps",
+    "originalStepsPreserved": true,
+    "all176IndividualJustificationsSaved": true,
+    "verifiedAfterReopening": true,
+    "totalFieldCharacters": 22470,
+    "addedPublicNoteCharacters": 21739,
+    "existingReviewerCredentialsRetained": true,
+    "noteSHA256": "3f7e453aa9b13bc48ac6f40d164aa468699af97221ddd7bd8b8308e7797e1e38"
+  },
+  "finalSubmissionContext": {
+    "field": "Additional Submission Context",
+    "characters": 1833,
+    "maximumCharacters": 4000,
+    "filledAndVerified": true,
+    "sha256": "f5b9a9ccfd91e25a9d9325d9f06441382175f967687f961ea6547bb3a92f9782"
+  },
+  "finalLegalConfirmation": {
+    "dialog": "Submit for review",
+    "finalSubmitEnabled": true,
+    "sixDeclarationsWereAlreadyCheckedByPortal": true,
+    "requiresActionTimeOwnerConfirmation": true,
+    "termsURL": "https://openai.com/policies/developer-apps-terms/",
+    "guidelinesURL": "https://developers.openai.com/plugins/plugin-guidelines",
+    "declarations": [
+      "Agree to OpenAI Terms and Plugin Guidelines and confirm compliance.",
+      "Confirm compliance with applicable industry laws and regulations.",
+      "No user money/crypto transfers or investment-trade execution.",
+      "Necessary rights to third-party content and API endpoints.",
+      "Suitable for under18users and no mature/adult content.",
+      "Does not target under13children or share their personal information with OpenAI."
+    ],
+    "ownerConfirmationPending": false,
+    "finalSubmitClicked": true,
+    "ownerConfirmation": "confirm to submit",
+    "finalSubmitClickedAtUTC": "2026-11-04T21:33:48.906Z"
+  },
+  "acceptedResubmission": {
+    "observedAtUTC": "2026-11-04T21:37:37.106Z",
+    "reviewStatus": "In review",
+    "publication": "Not published",
+    "receipt": "resubmission-receipt-20261104.json"
+  }
+}

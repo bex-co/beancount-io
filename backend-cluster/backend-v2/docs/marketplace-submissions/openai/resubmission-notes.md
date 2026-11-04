@@ -1,7 +1,8 @@
 # Annotation correction packet for the existing OpenAI application
 
-This packet belongs to the original application. It is prepared submission text,
-not a dashboard rescan, resubmission receipt or approval.
+This packet belongs to the original application. It records the submitted
+remediation text; the [accepted resubmission record](resubmission-receipt-20261104.json)
+contains the actual In review readback. Approval and publication remain pending.
 
 ## Proposed reviewer note
 
@@ -45,3 +46,26 @@ removal behavior has regression coverage. Full backend validation passes
 Source validation and hosted wire verification do not establish that the
 platform's stored snapshot has changed. Task w6/m11/t010 retains those actions;
 t001 retains the later review, public listing and native accounting gate.
+
+
+## Prepared in the actual portal — 2026-11-03 UTC
+
+The latest successful portal scan has no findings; all 44 stored tool definitions
+and 176 explicit boolean hints match the complete matrix. All 176 individual
+English explanations are saved in the private reviewer instructions after the
+original sign-in steps, and persistence was verified by reopening that form.
+A separate 1,833-character Additional Submission Context explains the correction
+and where the complete justifications are stored. Existing reviewer credentials
+and test cases are retained. The final legal/compliance confirmation is pending;
+preparation does not establish an accepted resubmission.
+
+## Accepted resubmission — 2026-11-04 UTC
+
+After the publisher explicitly confirmed the final submission/declarations, the
+worker clicked Submit once on the same 1.0.0 application. Both the plugins list
+and original version detail report **In review**, with **Not published** retained.
+[Actual receipt/status/time](resubmission-receipt-20261104.json) closes t010;
+t001 owns review feedback, eventual public listing and native synthetic acceptance.
+No further publisher action is needed now. The stale Nov1 portal estimate is not
+a new completion commitment; next manual check is on/after 2026-11-09 UTC or upon
+actual feedback/decision earlier.

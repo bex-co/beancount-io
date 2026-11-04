@@ -1,0 +1,635 @@
+{
+  "owner": "w6/m11/t010",
+  "verifiedAtUTC": "2026-11-03T09:02:17Z",
+  "originalApplicationURL": "https://platform.openai.com/plugins/manage/plugin_asdk_app_6ad4537f69288191816f3fc04b1ac11a",
+  "sameApplicationVersion": "1.0.0 draft",
+  "scannerConnection": {
+    "userConfirmedAtActionTime": true,
+    "recipient": "ChatGPT / OpenAI",
+    "selectedLedgerBoundary": "Only the original synthetic QA evaluation ledger",
+    "scopes": [
+      "openid",
+      "offline_access",
+      "ledger.read",
+      "ledger.write",
+      "ledger.admin"
+    ],
+    "callbackCompleted": true,
+    "oldGrantsRevoked": false,
+    "earlierStaleAttempt": "An earlier approval attempt after a long wait returned HTTP400; an equivalent newly initiated flow completed. Its exact400cause is not independently established."
+  },
+  "latestPortalScan": {
+    "requestedAtUTC": "2026-11-03T08:53:43Z",
+    "finishedObservedAtUTC": "2026-11-03T08:54:14Z",
+    "displayedResult": "No findings in the latest MCP scan.",
+    "toolCount": 44,
+    "all176ProvidedHintsAreExplicitBooleans": true,
+    "all176HintsMatchBehaviorMatrix": true,
+    "inspectionMethod": "Opened each of44actual tool-detail dialogs and parsed the visible Scanned definition JSON code block; no private platform API or hidden application state used.",
+    "boundedInspectionBatches": 6,
+    "note": "An earlier all-tools inspection RPC timed out; the successful bounded batches independently inspect every tool."
+  },
+  "completeExplanations": {
+    "path": "tool-annotations.json",
+    "publicURL": "https://github.com/bex-co/beancount-io/blob/main/backend-cluster/backend-v2/docs/marketplace-submissions/openai/tool-annotations.json",
+    "sha256": "76a5cb490c38791d7000f2f2240bb13f85ba81d8908e2ca0c9e878ab2495e42c"
+  },
+  "scannedTools": [
+    {
+      "name": "runBqlQuery",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true,
+        "title": "Run Beancount Query (BQL)"
+      },
+      "labels": [
+        "read_only",
+        "open_world"
+      ]
+    },
+    {
+      "name": "runBqlQueryStructured",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true,
+        "title": "Run BQL with Typed Results"
+      },
+      "labels": [
+        "read_only",
+        "open_world"
+      ]
+    },
+    {
+      "name": "listLedgers",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": "List Accessible Ledgers"
+      },
+      "labels": [
+        "read_only"
+      ]
+    },
+    {
+      "name": "checkLedger",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true,
+        "title": "Check Ledger Validity"
+      },
+      "labels": [
+        "read_only",
+        "open_world"
+      ]
+    },
+    {
+      "name": "getLedgerContext",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true,
+        "title": "Read Ledger Vocabulary"
+      },
+      "labels": [
+        "read_only",
+        "open_world"
+      ]
+    },
+    {
+      "name": "getEntryContext",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true,
+        "title": "Read Entry Source Context"
+      },
+      "labels": [
+        "read_only",
+        "open_world"
+      ]
+    },
+    {
+      "name": "listLedgerEntries",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true,
+        "title": "List Journal Entries"
+      },
+      "labels": [
+        "read_only",
+        "open_world"
+      ]
+    },
+    {
+      "name": "listLedgerFiles",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true,
+        "title": "List Ledger Files & Directories"
+      },
+      "labels": [
+        "read_only",
+        "open_world"
+      ]
+    },
+    {
+      "name": "readLedgerFiles",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true,
+        "title": "Read Ledger File Contents"
+      },
+      "labels": [
+        "read_only",
+        "open_world"
+      ]
+    },
+    {
+      "name": "addLedgerEntries",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": "Add Structured Ledger Entries"
+      },
+      "labels": [
+        "open_world"
+      ]
+    },
+    {
+      "name": "appendLedgerText",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": "Append Beancount Directive Text"
+      },
+      "labels": [
+        "open_world"
+      ]
+    },
+    {
+      "name": "insertReceiptTransaction",
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": "Insert Receipt Transaction"
+      },
+      "labels": [
+        "open_world",
+        "destructive"
+      ]
+    },
+    {
+      "name": "parseReceipt",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": "Parse Receipt and Recommend Accounts"
+      },
+      "labels": [
+        "open_world"
+      ]
+    },
+    {
+      "name": "parseFile",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": "Parse Uploaded File"
+      },
+      "labels": [
+        "open_world"
+      ]
+    },
+    {
+      "name": "generateTempAssetUploadUrl",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": false,
+        "title": "Create Temporary Asset Upload URL"
+      },
+      "labels": []
+    },
+    {
+      "name": "createLedgerFiles",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": "Create Ledger Files"
+      },
+      "labels": [
+        "open_world"
+      ]
+    },
+    {
+      "name": "updateLedgerFiles",
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": "Update Ledger Files"
+      },
+      "labels": [
+        "open_world",
+        "destructive"
+      ]
+    },
+    {
+      "name": "deleteLedgerFiles",
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": "Delete Ledger Files"
+      },
+      "labels": [
+        "open_world",
+        "destructive"
+      ]
+    },
+    {
+      "name": "updateEntrySource",
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": "Update Entry Source"
+      },
+      "labels": [
+        "open_world",
+        "destructive"
+      ]
+    },
+    {
+      "name": "deleteEntrySource",
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": "Delete Entry Source"
+      },
+      "labels": [
+        "open_world",
+        "destructive"
+      ]
+    },
+    {
+      "name": "deleteEntrySources",
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": "Delete Several Entry Sources"
+      },
+      "labels": [
+        "open_world",
+        "destructive"
+      ]
+    },
+    {
+      "name": "renameLedgerFile",
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": "Rename Ledger File"
+      },
+      "labels": [
+        "open_world",
+        "destructive"
+      ]
+    },
+    {
+      "name": "setLedgerStar",
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": false,
+        "title": "Star or Unstar a Ledger"
+      },
+      "labels": [
+        "destructive"
+      ]
+    },
+    {
+      "name": "refreshManagedPrices",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": "Refresh Managed Price Feeds"
+      },
+      "labels": [
+        "open_world"
+      ]
+    },
+    {
+      "name": "syncBankTransactions",
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": "Sync Bank Transactions"
+      },
+      "labels": [
+        "open_world",
+        "destructive"
+      ]
+    },
+    {
+      "name": "importStagedBankTransactions",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": "Import Staged Bank Transactions"
+      },
+      "labels": [
+        "open_world"
+      ]
+    },
+    {
+      "name": "discardStagedBankTransactions",
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": false,
+        "title": "Discard Staged Bank Transactions"
+      },
+      "labels": [
+        "destructive"
+      ]
+    },
+    {
+      "name": "reconcileBankAccounts",
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": "Reconcile Linked Bank Accounts"
+      },
+      "labels": [
+        "open_world",
+        "destructive"
+      ]
+    },
+    {
+      "name": "mapBankAccount",
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": false,
+        "title": "Map Bank Account To Ledger Account"
+      },
+      "labels": [
+        "destructive"
+      ]
+    },
+    {
+      "name": "setBankAccountCurrency",
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": false,
+        "title": "Set Bank Account Currency"
+      },
+      "labels": [
+        "destructive"
+      ]
+    },
+    {
+      "name": "refreshBankConnection",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": "Refresh Bank Connection Status"
+      },
+      "labels": [
+        "open_world"
+      ]
+    },
+    {
+      "name": "unlinkBankConnection",
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": "Unlink Bank Connection"
+      },
+      "labels": [
+        "open_world",
+        "destructive"
+      ]
+    },
+    {
+      "name": "listBankConnections",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": "List Linked Banks And Their Accounts"
+      },
+      "labels": [
+        "read_only"
+      ]
+    },
+    {
+      "name": "listStagedBankTransactions",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": "List Bank Transactions Staged For Import"
+      },
+      "labels": [
+        "read_only"
+      ]
+    },
+    {
+      "name": "createPullRequest",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": "Create Pull Request"
+      },
+      "labels": [
+        "open_world"
+      ]
+    },
+    {
+      "name": "mergePullRequest",
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": "Merge Pull Request"
+      },
+      "labels": [
+        "open_world",
+        "destructive"
+      ]
+    },
+    {
+      "name": "rejectPullRequest",
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": "Reject Pull Request"
+      },
+      "labels": [
+        "open_world",
+        "destructive"
+      ]
+    },
+    {
+      "name": "createLedger",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": "Create Ledger"
+      },
+      "labels": [
+        "open_world"
+      ]
+    },
+    {
+      "name": "previewLedgerSetup",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": "Preview Ledger Setup"
+      },
+      "labels": [
+        "read_only"
+      ]
+    },
+    {
+      "name": "updateLedger",
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": "Update Ledger Settings"
+      },
+      "labels": [
+        "open_world",
+        "destructive"
+      ]
+    },
+    {
+      "name": "deleteLedger",
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": "Delete Ledger"
+      },
+      "labels": [
+        "open_world",
+        "destructive"
+      ]
+    },
+    {
+      "name": "setLedgerCollaborator",
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": "Add or Update Ledger Collaborator"
+      },
+      "labels": [
+        "open_world",
+        "destructive"
+      ]
+    },
+    {
+      "name": "removeLedgerCollaborator",
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": "Remove Ledger Collaborator"
+      },
+      "labels": [
+        "open_world",
+        "destructive"
+      ]
+    },
+    {
+      "name": "leaveLedger",
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": "Leave Ledger"
+      },
+      "labels": [
+        "open_world",
+        "destructive"
+      ]
+    }
+  ],
+  "limits": "Fresh platform scan and all stored tool annotations are verified. Formal review approval, publication and accepted resubmission are separate; no accounting write is claimed."
+}

@@ -2,7 +2,24 @@
 
 **Worker:** worker1 — general-purpose adoption worker; accepts the next highest-impact milestone across packages, topics, and A1/A2/A3 rather than owning a permanent specialty.
 
-## ChatGPT annotation remediation — 2026-10-31 UTC
+## Current OpenAI outcome — 2026-11-04 UTC
+
+[t010](blocked/m11/done/t010.md) is **done and archived**: after explicit owner
+confirmation, the same original1.0.0application was resubmitted once. Actual
+platform list and detail readback at **2026-11-04T21:37:37.106Z** confirms
+**In review / Not published**. [Accepted resubmission record](../../backend-cluster/backend-v2/docs/marketplace-submissions/openai/resubmission-receipt-20261104.json).
+The fresh scan has no findings, all44tools/176booleans match the matrix, and
+all176individual justifications are saved. Browser, original-organization,
+scanner-consent and final-confirmation blockers are cleared.
+
+[t001](blocked/m11/t001.md) now directly owns review feedback, public listing
+and native synthetic acceptance. Next manual check: **2026-11-09UTC** or actual
+feedback/decision earlier; no user input now. The portal's Nov1estimate predates
+this submission and is not a reliable new deadline. Other targets retain their
+own original observation times and triggers; the historical Oct31queue audit
+below is not a fresh recheck of those platforms.
+
+## Historical ChatGPT annotation remediation — 2026-10-31 UTC
 
 Owner-supplied not-approved feedback was remediated in existing m11. t008/t009
 are complete and archived: source d7e58ce06 is deployed healthy and all44tools/
@@ -13,6 +30,38 @@ worker performs the prepared rescan and one resubmission. Existing
 [m11](blocked/m11/README.md) is parked with independent review/public gates;
 Independent w6 work continued while access was pending; the complete Oct31
 queue reconciliation below records all remaining owners and triggers.
+
+**Owner decision 2026-11-01:** temporarily skip OpenAI original-organization
+access during `/unblock w6`; keep [t010](blocked/m11/done/t010.md) blocked and move
+the owner discussion to the independent [Glama source claim](blocked/048.md).
+No restored access, granted authorization or accepted resubmission is inferred.
+
+**Owner resumed 2026-11-02:** direct work on the original OpenAI application is
+requested again. [t010](blocked/m11/done/t010.md) now records confirmed cross-browser
+macOS registration/bootstrap failures and the prepared standalone Playwright
+desktop-session recovery. MCP transport/25-tool discovery is verified; owner
+desktop-terminal launch and actual original-app access remain pending. The
+earlier temporary discussion deferral is historical, not the current preference.
+
+**Browser restored 2026-11-03UTC:** the owner's normal desktop Terminal service
+now opens the original OpenAI application URL successfully. The fresh isolated
+Chrome context is waiting for publisher login and original-organization access;
+[t010](blocked/m11/done/t010.md) stays blocked until actual access is verified. Live
+44-tool/176-hint parity with the complete explanations is reverified. The worker
+connection is retained for the owner's login; no resubmission is claimed.
+
+**Original-app access restored 2026-11-03UTC:** [t010](blocked/m11/done/t010.md) now
+revises the same rejected application into its1.0.0draft. Actual rescan reports
+missing scanning authorization. The real ChatGPT consent page is prepared for
+only the existing synthetic QA ledger with identity/offline/read/write/admin
+scopes; action-time confirmation is pending. Browser startup and original-app
+login are cleared, while fresh portal scan and accepted resubmission remain.
+
+**Final OpenAI submission ready 2026-11-03UTC:** [t010](blocked/m11/done/t010.md) now
+has a successful platform scan with no findings, all 44 stored definitions /
+176 booleans verified, all explanations saved, and final submission context
+filled. The actual final legal/compliance declarations await action-time owner
+confirmation before Submit. The prior scanner-authorization gate is cleared.
 
 ## Muse and Gemini Apps listing work — 2026-10-30 UTC
 
@@ -112,7 +161,7 @@ Source: the owner's request to complete all remaining actions from the17-target 
 
 **Execution order:** tracker/browser/native prerequisites and045 credential coordination are complete;046 renewable native acceptance is now complete too. Follow actual review, publication, compatible host/client or supported engine-artifact changes independently. Aggregate verification and standing closing tasks retain their full DoDs; one blocked platform never ends the w6 loop while another actionable item remains.
 
-**Current board:** 72 pending leaves after completing m11/t008,t009:38direct blocked roots and34dependent leaves. The Oct31full dependency/archive/evidence reconciliation finds no independent actionable leaf. All seven pending milestones and23inbox notes are parked under blocked/. Owner-supplied ChatGPT not-approved feedback supersedes the old Nov3estimate; source/deployed remediation is complete and the exact original-app access is still required for resubmission. Historical snapshots retain their prior counts and states.
+**Oct31 audit snapshot:** 72 pending leaves after completing m11/t008,t009:38direct blocked roots and34dependent leaves. The Oct31full dependency/archive/evidence reconciliation finds no independent actionable leaf. All seven pending milestones and23inbox notes are parked under blocked/. Owner-supplied ChatGPT not-approved feedback supersedes the old Nov3estimate; source/deployed remediation is complete and the exact original-app access is still required for resubmission. Historical snapshots retain their prior counts and states.
 
 
 ## Full queue reconciliation — 2026-10-31 UTC
@@ -134,7 +183,7 @@ with their original owners. No item closes from a receipt or green check alone.
 | [m9/t018](blocked/m9/t018.md) | Supported native control targets the isolated official VSCode instance, or permits grant-preserving fresh auth; worker verifies actual busy-default/fallback callback. Gallery/native accounting baseline remains complete; no credential copy, logout or simulated callback.1root. |
 | [m10/t002](blocked/m10/t002.md) | MCPMarket reviews/publishes the existing free submission; worker verifies hosted metadata/native path. Advertised windowNov18–Dec2or actual feedback earlier.1root. |
 | [m10/t012](blocked/m10/t012.md) | LobeHub exposes the accepted current definitions and corrects/removes invalid stdio or supports owner reset. New metadata read not beforeNov1T09:16:51Z; correction manualNov3or actual propagation/feedback.1root. |
-| [m11/t010](blocked/m11/t010.md) | Publisher opens the original ChatGPT application in its original submitting account/organization. Worker uses the deployed44-tool matrix for actual rescan and one resubmission; t001 retains later review/public/native.1root. |
+| [m11/t010](blocked/m11/done/t010.md) | Publisher opens the original ChatGPT application in its original submitting account/organization. Worker uses the deployed44-tool matrix for actual rescan and one resubmission; t001 retains later review/public/native.1root. |
 | [m11/t002](blocked/m11/t002.md), [t003](blocked/m11/t003.md) | Claude supplies feedback/decision/publication; Awesome Remote maintainers resolve the existing waiver/review/merge. Worker then performs actual public/native/setup checks. Next manualNov3or real change.2roots. |
 | [m12/t001](blocked/m12/t001.md) | Publisher completes Muse's actual authenticator challenge. Worker deduplicates applications, completes private required answers/actual final confirmation and submits once. First-party guidance and44-tool preparation are complete.1root. |
 | [m12/t003](blocked/m12/t003.md) | Google selects the existing account for Connected Apps preview or opens supported self-serve access; worker registers and verifies actual domain/auth/tool sync. One access request is accepted; no registered app or app-review receipt yet. ManualNov7or actual selection.1root. |
@@ -365,7 +414,7 @@ Prioritize the major correctness findings (PRINT/FROM/JOURNAL, authored location
 
 - [ ] **m12** — [Publish the hosted MCP connector on Muse and Gemini Apps](blocked/m12/README.md) (9 tasks; A3/A1/A2) ← explicit owner request2026-10-30. **Next:** independent t001 Muse intake and t003 Gemini Connected Console/domain/auth; actual accepted receipts, public availability and native accounting remain required. — **blocked:** Muse publisher authenticator; Google production publishing preview request accepted, awaiting selection; registered review/public/native and closing tasks defer.
 
-- [ ] **m11** — [Complete app-directory and remote-community distribution](blocked/m11/README.md) (10 tasks; A3/A1) ← existing submission scope plus actual annotation rejection2026-10-31. **Next:** t008 full annotation audit/fix/tests, t009 deployed wire/explanations and t010 original-app rescan/resubmit. t001 retains later review/public/native; Claude/remote-list gates remain independent. — **blocked:** t010 original submitting organization access; source/deployed remediation done; independent review/public and closing gates retained.
+- [ ] **m11** — [Complete app-directory and remote-community distribution](blocked/m11/README.md) (10 tasks; A3/A1) ← existing submission scope plus actual annotation rejection2026-10-31. t008/t009/t010 are done: corrected source is deployed, stored hints/explanations verified and original app resubmission accepted2026-11-04. **Next:** t001 actual OpenAI review/public/native, t002 independent review and t003 remote-list review/merge. — **blocked:** OpenAI In review / Not published; independent vendor/maintainer reviews and closing gates retained. No user input now.
 
 - [ ] **m6.5** — [Distribute the Beancount.io customer skills as one suite](./blocked/m6.5/README.md) (12 tasks; 9 done; A3/A2/A1) ← explicit owner request 2026-10-22, extended to other channels 2026-10-23 UTC. **Blocked:** Hermes admission, remaining catalog results and complete Pack delivery. [Current all-channel record](../../docs/skills/catalog-corrections/consolidated-submissions-20261026.json), checked 2026-10-26T02:17:39Z: direct consolidated publication replaces email for every similar case. One 13-workflow skills.sh Pack is created; native delivery remains incomplete. The skills.rest overall-suite form is accepted, with earliest readback 2026-10-27T00:24:54Z. SkillsMP lacks established supported suite intake; no email or publisher decision pending. Existing suite 0.4.0 is public and all thirteen standalone ClawHub listings are retired.
 

@@ -1,6 +1,69 @@
 # Existing ChatGPT application review
 
-## Current original-app access gate — 2026-10-31T08:48:22Z
+## Current review status — 2026-11-04 UTC
+
+The publisher confirmed the final submission and its six declarations. The worker
+clicked Submit once on the same application at **2026-11-04T21:33:48.906Z**.
+The plugins list and original version **1.0.0** detail page now both show
+**In review**; publication remains **Not published**. Actual detail readback:
+**2026-11-04T21:37:37.106Z**. [Accepted resubmission record](resubmission-receipt-20261104.json).
+
+The successful scan has no findings; all 44 stored tools / 176 explicit hints
+match the complete matrix, and all 176 English justifications were saved and
+verified. Browser, original-account, scanner-consent and final-confirmation gates
+are cleared. Task **w6/m11/t010 is done**; **t001** retains the actual review,
+approval/publication and native synthetic accounting journey. No user input is
+needed now. Recheck the same application on actual feedback/decision or manually
+on/after **2026-11-09 UTC**; no recurring automation is created.
+
+The portal still displays **Estimated review completion: Nov 1, 2026**, which
+predates this resubmission. This is observed UI text, not a reliable new deadline.
+The following dated sections preserve earlier gates and observations.
+
+## Earlier submission readiness — 2026-11-03 UTC
+
+The owner-approved synthetic-only scanner connection is complete. The actual
+latest platform scan reports **No findings**. Every stored definition was opened
+through the UI: all 44 tools and 176 explicit booleans match the complete
+behavior-based matrix. [Full scanned-definition verification](portal-annotation-verification-20261103.json).
+
+All 176 individual English explanations are saved after the existing private
+sign-in steps; reopening the reviewer information confirms persistence. Existing
+reviewer credentials remain populated and untouched. The 1,833-character
+Additional Submission Context is filled with the remediation summary and points
+to the complete explanations. The final Submit action is enabled.
+
+[Current preparation and limits](resubmission-progress-20261103.json) records the
+six legal/compliance declarations carried by the final confirmation dialog.
+Action-time owner confirmation is pending before final Submit; no accepted
+resubmission or review approval is claimed.
+
+## Earlier revision and scanner-consent gate — 2026-11-03 UTC
+
+[Actual revision and attempted scan](resubmission-progress-20261103.json): original
+submitting-organization access is restored. The same application's rejected1.0.0
+is revised into a draft with no metadata findings. Rescan actually starts but
+reports missing scanning authorization; the displayed previous tool results are
+not a fresh scan. Domain verification remains valid. Reconnect reaches the
+ChatGPT consent page through the dedicated existing QA account; only the existing
+synthetic evaluation ledger is selected, with identity/offline/read/write/admin
+scopes. The persistent grant's action-time confirmation is pending; no grant has
+been approved. Worker retains both tabs and completes actual scan/explanations/
+resubmission after approval. No accepted resubmission is claimed.
+
+## Browser recovery and preceding login gate — 2026-11-03 UTC
+
+[Actual recovery and fresh hosted verification](browser-recovery-20261103.json):
+the owner-started desktop-session Playwright MCP service connects and opens the
+original application URL successfully. The new isolated Chrome context redirects
+to OpenAI login. Publisher completes authentication directly in the visible window
+using the original submitting account/organization; the worker retains the MCP
+connection and then inspects the original application for rescan/resubmission.
+Fresh tools/list is HTTP200 with44tools; all176explicit booleans match the prepared
+behavior matrix. No accounting write, original-app detail access, rescan or
+accepted resubmission is claimed by this observation.
+
+## Previous original-app access observation — 2026-10-31T08:48:22Z
 
 [Actual dashboard observation](resubmission-access-20261031.json): existing login
 was restored, but the same application reports **Plugin not found in this
