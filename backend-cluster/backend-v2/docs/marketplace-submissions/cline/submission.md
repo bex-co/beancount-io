@@ -27,7 +27,7 @@ fresh authenticated VS Code extension journey was tested.
 
 ## Additional Information
 
-Beancount.io exposes one existing hosted endpoint:
+[Beancount.io](https://beancount.io/) exposes one existing hosted endpoint:
 `https://beancount.io/api-gateway/mcp`, Streamable HTTP with OAuth. It queries and
 edits hosted Beancount ledgers, including BQL, reports, files and bank imports.
 It does not read local ledger files. Canonical official registry identity:

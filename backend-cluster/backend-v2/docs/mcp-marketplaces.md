@@ -1,6 +1,6 @@
 # Hosted MCP marketplace submissions
 
-Updated **2026-10-31 UTC**. This is the single current operational inventory for
+Updated **2026-11-04 UTC**. This is the single current operational inventory for
 all 20 MCP distribution targets. Platform packets retain receipts, dated history,
 native evidence and privacy limits. Reuse each existing application/listing;
 a submission, approval, publication and native connection are separate outcomes.
@@ -14,9 +14,9 @@ Next manual dates below are worker follow-up triggers, not vendor promises or
 automations; actual feedback/publication/failure can trigger work earlier.
 
 Status baseline: 6 public entries (including LobeHub needing correction and GitHub
-with native acceptance pending), 7 submitted, 1 in review, 1 rejected pending correction, 2 not submitted because
-intake is blocked or paused, 1 source-backed no-marketplace target, and 2 planned
-Muse/Gemini Apps integrations. `published` requires an
+with native acceptance pending), 7 submitted, 2 in review, 2 not submitted because intake is blocked or paused,
+1 source-backed no-marketplace target, Muse blocked at publisher authentication,
+and Gemini Apps awaiting preview selection. `published` requires an
 observed public record; it alone does not qualify an ADR019 supported host.
 
 The operation column links actual manage/intake/install/PR/issue locations.
@@ -29,7 +29,6 @@ baselines kept completed. Shared browser recovery is [044 done](../../../.pm/w6/
 | --- | --- | --- | --- | --- | --- | --- |
 | Muse | `blocked_publisher_authenticator` | 2026-10-31T08:53:54.427357+00:00 — actual official publisher login after email challenge | [Submit/manage entry](https://platform.muse.ai/submission), currently anonymous login redirect; [platform](https://platform.muse.ai/) | [m12/t001](../../../.pm/w6/blocked/m12/t001.md) intake, [t002](../../../.pm/w6/blocked/m12/t002.md) review/public/native | [Actual intake access](./marketplace-submissions/muse/intake-access-20261031.json): existing publisher email challenge completed; authenticator code required. [Prepared canonical submission packet](./marketplace-submissions/muse/submission-packet.md) and44-tool read/write review are complete. Authenticated application inventory, final agreement and accepted receipt remain unverified. | Publisher completes authenticator challenge in the retained Muse tab. Worker deduplicates actual applications, completes required private fields and actual final confirmation, submits once and records receipt; t002 retains review/public/native. Gemini t003 continues independently. |
 | Gemini Apps / Connected Apps Platform | `preview_access_waitlist_submitted` | 2026-10-31T09:00:19Z — actual official form and returned developer Home confirmation | [Official preview routing](https://connected.google.com/console/help/?apply=); [actual Play Console interest form](https://play.google.com/console/u/0/create-support-ticket?form=46); [native Developer Mode](https://gemini.google.com/devmode) | [m12/t003](../../../.pm/w6/blocked/m12/t003.md) console/domain/auth, [t004](../../../.pm/w6/blocked/m12/t004.md) preview/review, [t005](../../../.pm/w6/blocked/m12/t005.md) publish/public/native | [Actual access-request receipt](./marketplace-submissions/gemini/preview-access-receipt-20261031.json): verified existing developer account owner; one Server-Side MCP/Gemini app request accepted. Home says account has applied and will be contacted if selected. Accurate Other/bookkeeping category; no DAU/audience invention. Domain challenge, registered app, native sync, app review and publication remain unavailable. | Google selects the existing account or opens broader supported self-serve access. Worker then deduplicates/registers, handles actual program agreement, serves the real domain challenge and verifies delegated auth/tool sync; t004/t005 retain registered native review and public release. Manual not before2026-11-07UTC or actual selection/feedback earlier. No repeat form or inquiry; local Developer Mode does not substitute for this listing. |
-
 | ChatGPT / OpenAI | `in_review` | 2026-11-04T21:37:37.106Z — actual accepted resubmission, plugins list and original version detail | [Existing application](https://platform.openai.com/plugins/manage/plugin_asdk_app_6ad4537f69288191816f3fc04b1ac11a) | [t010 resubmission done](../../../.pm/w6/blocked/m11/done/t010.md); [t001](../../../.pm/w6/blocked/m11/t001.md) review/public/native | [Accepted resubmission](./marketplace-submissions/openai/resubmission-receipt-20261104.json): final owner-confirmed Submit clicked once; original 1.0.0 is In review / Not published. [Stored-definition verification](./marketplace-submissions/openai/portal-annotation-verification-20261103.json): scan has no findings; all 44 tools / 176 booleans match, and all 176 justifications are saved. | OpenAI supplies feedback/decision/publication; worker handles corrections, then verifies public listing and native synthetic OAuth/query/preview. Manual check on/after2026-11-09UTC or actual feedback earlier. Portal displays stale Nov1estimate, not a reliable new deadline. No user input now; no duplicate app or recurring automation. |
 | Official MCP Registry | `published` | 2026-10-23T08:22:04Z — public API | [Publish workflow](https://github.com/bex-co/beancount-io/actions/workflows/publish-mcp-registry.yml); [active public record](https://registry.modelcontextprotocol.io/v0.1/servers/io.beancount%2Fbeancount/versions/latest) | Maintainer / existing release workflow; [w2/m36 completed baseline](../../../.pm/w2/done/m36/README.md) | Active 1.0.0 record, canonical remote URL. Registry publication does not establish another gallery's inclusion. | Trigger: server.json release, endpoint/OAuth metadata change or reported drift. Compare public record; bump immutable version and use the existing protected publish workflow when required. |
 | cursor.directory — community | `published` | 2026-10-22 — native/public observation | [Public listing / actual install entry](https://cursor.directory/plugins/beancountio) | Worker / listing maintenance; [m9/t003 completed baseline](../../../.pm/w6/blocked/m9/done/t003.md) | [Existing publication, typed search and native desktop OAuth/query/preview evidence](./marketplace-submissions/cursor/directory/README.md). Official Cursor review is separate. | Trigger: release/endpoint/install-recipe change or reported install failure. Check the existing listing/native link; retain completed submission and grant. |
@@ -123,3 +122,25 @@ host fixtures and real-host evidence before declaring a new host supported.
 Submission and scoped native evidence do not automatically add Smithery, Glama,
 Cline or LobeHub to the guide's verified host table. A directory that only links to the direct URL
 is verified through the client it actually installs or recommends.
+
+## Product website links — 2026-11-04 UTC
+
+Use **https://beancount.io/** as the product website and a natural
+**[Beancount.io](https://beancount.io/)** anchor in Markdown descriptions.
+Keep repository, installation and endpoint URLs in their dedicated fields.
+[Full channel audit, changes, readbacks and remaining gates](marketplace-submissions/backlinks-20261104.json)
+covers every inventory target plus the customer-suite channels.
+
+Actual edits are read back on the existing Docker PR/README and Cline issue;
+the existing Awesome MCP Servers PR now links its hosted-service entry to the
+homepage. Cursor community, Glama source, LobeHub and the MCP.so/remote-list
+entries already have product-homepage links. OpenAI's current original metadata
+also has the website; its In review submission is retained.
+
+Registry1.0.1 and suite0.4.21 source updates prepare the missing homepage links.
+Registry publication and ClawHub dispatch use their existing protected main
+workflows. Glama connector and skills.sh Pack owner edits require sign-in in
+the new isolated browser; those pages are open. Indexed Markdown updates need
+actual platform readback before being called live. No review cancellation,
+duplicate listing, replacement email, paid placement, altered link attributes
+or SEO-ranking result is claimed.

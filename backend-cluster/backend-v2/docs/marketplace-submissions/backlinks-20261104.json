@@ -1,0 +1,259 @@
+{
+  "requestedAtUTC": "2026-11-04",
+  "lastUpdatedAtUTC": "2026-11-04T21:58:25Z",
+  "canonicalProductWebsite": "https://beancount.io/",
+  "scope": "All20MCP inventory targets, the separate Glama source record, and current customer-suite distribution/index channels. Existing reviews/submissions are reused.",
+  "statusBoundary": "updated_existing_submission means a real edited/read-back public submission, not maintainer merge, directory publication or SEO ranking improvement. Source edits await actual shipping/publication/crawl. Existing receipt-based rows do not acquire a new external review timestamp. Platform link attributes and unlisted visibility remain unchanged.",
+  "rows": [
+    {
+      "target": "ChatGPT / OpenAI",
+      "backlinkStatus": "homepage_already_present",
+      "entryURL": "https://platform.openai.com/plugins/manage/plugin_asdk_app_6ad4537f69288191816f3fc04b1ac11a",
+      "change": "Actual original metadata has a clickable https://beancount.io/ website plus contact/privacy/terms links.",
+      "next": "Preserve the current In review submission; verify public metadata after approval.",
+      "observation": "Actual version UI, 2026-11-04; no review cancellation or duplicate revision."
+    },
+    {
+      "target": "Official MCP Registry",
+      "backlinkStatus": "source_update_pending_publication",
+      "entryURL": "https://registry.modelcontextprotocol.io/v0.1/servers/io.beancount%2Fbeancount/versions/latest",
+      "change": "Prepared1.0.1 changes websiteUrl from GitHub docs to https://beancount.io/ and names Beancount.io in the description. Repository and endpoint retain their own fields.",
+      "next": "Publish through the existing protected workflow and verify the actual registry record.",
+      "priorPublicVersion": "1.0.0",
+      "priorWebsiteURL": "https://github.com/bex-co/beancount-io/blob/main/backend-cluster/backend-v2/docs/mcp.md"
+    },
+    {
+      "target": "cursor.directory community",
+      "backlinkStatus": "homepage_already_present",
+      "entryURL": "https://cursor.directory/plugins/beancountio",
+      "change": "Actual public Homepage is https://beancount.io/.",
+      "next": "No redundant description edit needed.",
+      "linkRel": "",
+      "observedAtUTC": "2026-11-04T21:48:22Z"
+    },
+    {
+      "target": "Glama connector",
+      "backlinkStatus": "owner_login_required",
+      "entryURL": "https://glama.ai/mcp/connectors/io.beancount/beancount/admin",
+      "change": "Actual public description has no direct product-homepage anchor. Admin in this fresh browser context requires publisher sign-in.",
+      "next": "Use the existing claim to edit description to: Hosted bookkeeping at https://beancount.io/: query, edit, and reconcile Beancount ledgers with BQL, reports, files, and bank imports. Read back the public result; retain the monitor/grant."
+    },
+    {
+      "target": "Glama source record",
+      "backlinkStatus": "homepage_already_present",
+      "entryURL": "https://glama.ai/mcp/servers/bex-co/beancount-io",
+      "change": "Actual rendered repository README already links https://beancount.io/ twice and offers sign-up/demo links.",
+      "next": "Keep the existing source record.",
+      "linkRel": "ugc nofollow",
+      "observedAtUTC": "2026-11-04T21:49:40.763Z"
+    },
+    {
+      "target": "MCPServers.org",
+      "backlinkStatus": "source_update_pending_crawl",
+      "entryURL": "https://mcpservers.org/servers/github-com-bex-co-beancount-io-blob-main-backend-cluster-backend-v2-docs-mcp-md",
+      "change": "Actual rendered MCP guide has no direct homepage anchor. Its canonical source docs/mcp.md now links the opening Beancount.io brand to https://beancount.io/. No owner edit control was exposed.",
+      "next": "Read back the existing listing after source refresh; do not submit a duplicate.",
+      "renderedSource": "https://github.com/bex-co/beancount-io/blob/main/backend-cluster/backend-v2/docs/mcp.md"
+    },
+    {
+      "target": "MCPMarket",
+      "backlinkStatus": "source_already_has_homepage_no_owner_edit",
+      "entryURL": "https://mcpmarket.com/submit",
+      "change": "The accepted Free Queue request takes the repository URL; its repository README already links the product. Existing receipt exposes no application-specific description editor.",
+      "next": "Let the existing accepted request be reviewed; verify the eventual public product link. No duplicate paid/free submission.",
+      "basis": "Existing receipt directories/mcpmarket.json; not a new moderation observation."
+    },
+    {
+      "target": "Claude",
+      "backlinkStatus": "original_application_metadata_not_accessible",
+      "entryURL": "https://claude.ai/directory/manage/beancount-io",
+      "change": "No current public owned listing or editable original submission metadata is available in the retained evidence.",
+      "next": "At the next actual review/owner-access event, retain/add the product website in the existing application; do not duplicate or cancel review.",
+      "basis": "Existing Claude receipt/access record; no fresh review observation claimed."
+    },
+    {
+      "target": "Cursor official",
+      "backlinkStatus": "submitted_payload_has_homepage",
+      "entryURL": "https://cursor.com/marketplace/publish",
+      "change": "Existing submitted application payload website is https://beancount.io.",
+      "next": "Keep the accepted application and verify the link when it is published.",
+      "basis": "cursor/application.json and accepted submission receipt; not a fresh private review readback."
+    },
+    {
+      "target": "Docker",
+      "backlinkStatus": "updated_existing_submission",
+      "entryURL": "https://github.com/docker/mcp-registry/pull/6042",
+      "change": "PR Server Name now links Beancount.io to https://beancount.io/. The first README sentence in the same PR branch also links the brand to the homepage.",
+      "next": "Maintainers review/import the same PR; verify final public description links.",
+      "readbackVerified": true,
+      "sourceCommit": "7f67bfe9e64cd38a568ddf0e22b789773b0b7c15",
+      "sourcePath": "servers/beancount-io/readme.md"
+    },
+    {
+      "target": "Cline",
+      "backlinkStatus": "updated_existing_submission",
+      "entryURL": "https://github.com/cline/mcp-marketplace/issues/3230",
+      "change": "The existing Additional Information description now starts with [Beancount.io](https://beancount.io/).",
+      "next": "Reviewers publish the same issue; verify the catalog link.",
+      "readbackVerified": true
+    },
+    {
+      "target": "GitHub curated gallery / VS Code",
+      "backlinkStatus": "readme_source_and_registry_update_pending",
+      "entryURL": "https://github.com/mcp/io.beancount/beancount",
+      "change": "Actual gallery body renders the backend README and has no product-homepage anchor. Its backend README source now links Beancount.io in the opening paragraph; registry1.0.1 separately declares the canonical product website.",
+      "next": "Ship README source and registry release; verify actual gallery rendered links and registry-derived metadata independently."
+    },
+    {
+      "target": "LobeHub",
+      "backlinkStatus": "homepage_already_present",
+      "entryURL": "https://lobehub.com/mcp/beancount-io",
+      "change": "Actual rendered README has two direct https://beancount.io/ anchors plus sign-up/demo links.",
+      "next": "Keep the existing description; no SEO-only republish needed.",
+      "linkRel": "",
+      "observedAtUTC": "2026-11-04T21:49:53.445Z"
+    },
+    {
+      "target": "Smithery",
+      "backlinkStatus": "no_editable_posted_listing",
+      "entryURL": "https://smithery.ai/servers/new",
+      "change": "Existing directory inquiry is sent; there is no accepted editable live listing. A sent inquiry cannot be edited.",
+      "next": "Use the canonical homepage in any supported listing editor when the existing intake opens; no replacement email or duplicate inquiry.",
+      "basis": "Existing Smithery submission/transition records; no new review observation."
+    },
+    {
+      "target": "MCP.so",
+      "backlinkStatus": "directory_entry_already_links_homepage",
+      "entryURL": "https://github.com/chatmcp/mcpso/pull/6071",
+      "change": "The existing proposed README entry already links its Beancount.io name directly to https://beancount.io.",
+      "next": "Preserve the linked entry. Optional PR-body wording edit is blocked by the connected integration403; it is not needed for the already-linked directory entry.",
+      "headCommit": "f8f3431e9a1c799373131fc473d0c65c98277862",
+      "readbackVerified": true
+    },
+    {
+      "target": "PulseMCP",
+      "backlinkStatus": "no_posted_listing_to_edit",
+      "entryURL": "https://www.pulsemcp.com/submit",
+      "change": "No accepted direct intake exists in the retained paused-intake record.",
+      "next": "Propagate the official registry homepage through supported import; verify after import.",
+      "basis": "Existing paused-intake record; no fresh intake/review claim."
+    },
+    {
+      "target": "Awesome MCP Servers general",
+      "backlinkStatus": "updated_existing_contribution",
+      "entryURL": "https://github.com/punkpeye/awesome-mcp-servers/pull/18050",
+      "change": "The same proposed Finance entry now uses [hosted service at Beancount.io](https://beancount.io/) instead of a GitHub guide URL. Repository and self-host setup links remain.",
+      "next": "Maintainers merge the same PR; verify the merged website anchor. PR-body mutation is integration403, but the actual proposed directory entry is updated.",
+      "sourceCommit": "281a2c8d3215e338eefdfe1bdf303254080e2a17",
+      "readbackVerified": true
+    },
+    {
+      "target": "Awesome Remote MCP Servers",
+      "backlinkStatus": "directory_entry_already_links_homepage",
+      "entryURL": "https://github.com/punkpeye/awesome-remote-mcp-servers/pull/2753",
+      "change": "The existing three-line entry already links Beancount.io directly to https://beancount.io.",
+      "next": "Keep the existing entry and waiver/review process. Optional body-only edit is integration403; no new contribution.",
+      "headCommit": "936aa053cea358e3204dab3d5747965fd0455caf",
+      "basis": "Fresh PR head matches the retained original submitted entry."
+    },
+    {
+      "target": "Windsurf",
+      "backlinkStatus": "no_marketplace_listing",
+      "entryURL": "https://windsurf.com/",
+      "change": "The retained source-backed inventory has no supported catalog submission route.",
+      "next": "No posted description to edit.",
+      "basis": "Existing inventory; no new platform claim."
+    },
+    {
+      "target": "Muse",
+      "backlinkStatus": "prepared_packet_has_homepage",
+      "entryURL": "https://platform.muse.ai/submission",
+      "change": "Prepared connector overview includes Product: https://beancount.io/. No accepted listing exists yet.",
+      "next": "Retain this homepage in the original application when publisher authentication permits intake.",
+      "basis": "Existing Muse packet/authenticator record; not a new submission."
+    },
+    {
+      "target": "Gemini Apps",
+      "backlinkStatus": "preview_request_only",
+      "entryURL": "https://connected.google.com/console/help/?apply=",
+      "change": "Only the preview-access request has been accepted; no registered public MCP app description exists.",
+      "next": "Use https://beancount.io/ as product website when actual registered-app intake becomes available.",
+      "basis": "Existing waitlist receipt; not a fresh program-access observation."
+    },
+    {
+      "target": "Claude Code / Codex suite",
+      "backlinkStatus": "source_update_pending_shipping",
+      "entryURL": "https://github.com/bex-co/beancount-io/tree/main/skills",
+      "change": "Both shared0.4.21manifests now use homepage https://beancount.io/. The customer README and all14customer skill bodies carry one natural homepage attribution. Frontmatter/trigger descriptions are unchanged.",
+      "next": "Ship source metadata and allow normal managed plugin/index updates."
+    },
+    {
+      "target": "ClawHub suite",
+      "backlinkStatus": "source_release_prepared",
+      "entryURL": "https://clawhub.ai/puncsky/plugins/beancount-io",
+      "change": "Actual published0.4.0README has no product-homepage link. Generated0.4.21README now has a linked Beancount.io title, and the manifest has the homepage.",
+      "next": "Publish only the consolidated suite through the protected main workflow; verify the final public link. Existing token is configured; browser GitHub sign-in is needed to dispatch/approve. No legacy individual listing is restored.",
+      "preparedVersion": "0.4.21",
+      "priorPublishedVersion": "0.4.0"
+    },
+    {
+      "target": "skills.sh repository / customer details",
+      "backlinkStatus": "source_update_pending_index",
+      "entryURL": "https://www.skills.sh/bex-co/beancount-io",
+      "change": "The grouping description now names https://beancount.io/; all14customer Markdown bodies carry a clickable homepage attribution. The grouping text field is not assumed to render Markdown/auto-links.",
+      "next": "Ship source and perform one genuine documented maintainer sync, then read back the stored grouping and rendered detail anchors. No artificial install/telemetry loop."
+    },
+    {
+      "target": "skills.sh consolidated Pack",
+      "backlinkStatus": "owner_login_required",
+      "entryURL": "https://www.skills.sh/p/CTUrAfLQdDvNeNv2",
+      "change": "Actual existing Pack description references GitHub source/setup but omits the product homepage; publisher management redirects through Vercel sign-in.",
+      "next": "Edit this same Pack description to include Product: https://beancount.io/. Keep its source0.4.2/13-skill provenance and visibility; verify whether the platform renders a link or plain text. No duplicate Pack."
+    },
+    {
+      "target": "skills.rest",
+      "backlinkStatus": "source_update_pending_platform_index",
+      "entryURL": "https://skills.rest/company/bex-co",
+      "change": "The platform controls the mixed legacy index and exposes no existing-record owner edit route in retained/current public evidence. Canonical customer bodies now provide the website attribution.",
+      "next": "Wait for its source refresh or supported existing-record correction; verify actual rendered anchors. Do not resubmit the same accepted suite request or email support."
+    },
+    {
+      "target": "SkillsMP",
+      "backlinkStatus": "source_update_pending_platform_index",
+      "entryURL": "https://skillsmp.com/creators/bex-co/beancount-io",
+      "change": "Actual collection now shows34records and a Nov2catalog refresh; no owner mutation control is exposed. Canonical customer bodies now carry the product link.",
+      "next": "Verify rendered customer details after source refresh. No claim that the mixed collection is corrected or that a source-only change is already public.",
+      "observedAtUTC": "2026-11-04T21:57:00Z"
+    },
+    {
+      "target": "Git/link installer and gh skill",
+      "backlinkStatus": "source_update_pending_shipping",
+      "entryURL": "https://github.com/bex-co/beancount-io/tree/main/skills",
+      "change": "These install source files rather than owning separate catalog descriptions; customer source Markdown now contains homepage attribution.",
+      "next": "Ship once; use normal source updates. No separate per-skill publication."
+    },
+    {
+      "target": "Retired individual ClawHub skills",
+      "backlinkStatus": "retired_no_republication",
+      "entryURL": "https://clawhub.ai/puncsky/plugins/beancount-io",
+      "change": "The thirteen legacy individual listings stay retired.",
+      "next": "Keep distribution and website references on the consolidated suite; do not restore retired listings for backlinks."
+    }
+  ],
+  "validation": {
+    "customerFrontmatterUnchanged": true,
+    "agentGuidance": "passed",
+    "skillsStructuralFixtureChecks": "passed",
+    "checkerUnitTests": 44,
+    "suiteBundleTests": 9,
+    "registryPublisherValidation": {
+      "officialEndpoint": "https://registry.modelcontextprotocol.io/v0/validate",
+      "httpStatus": 200,
+      "response": {
+        "valid": true,
+        "issues": []
+      },
+      "cliBoundary": "Digest-verified official mcp-publisher1.8.7 cannot use this macOS process context certificate store (OSStatus-26276). The identical listing payload validates through the official endpoint using the working system TLS client; certificate verification remains enabled."
+    }
+  }
+}

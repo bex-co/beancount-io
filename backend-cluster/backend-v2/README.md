@@ -1,5 +1,7 @@
 # Beancount.io Backend
 
+Backend for [Beancount.io](https://beancount.io/), the hosted plain-text accounting service.
+
 ## Overview
 
 The backend is built with Node.js and TypeScript using Koa and GraphQL. It powers the API and background jobs for Beancount.io. Key features include:

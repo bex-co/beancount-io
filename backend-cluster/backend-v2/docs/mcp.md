@@ -1,6 +1,6 @@
 # Beancount.io MCP guide
 
-Beancount.io exposes a remote Model Context Protocol (MCP) server that lets an
+[Beancount.io](https://beancount.io/) exposes a remote Model Context Protocol (MCP) server that lets an
 agent query a ledger, read and edit its files, fetch reports, and work with linked
 banks. It runs inside `backend-v2` at **`/api-gateway/mcp`**. The agent connects to
 a Beancount.io deployment; this endpoint does not open a local `.bean` file on
