@@ -2,7 +2,7 @@
 
 **Worker:** worker1
 **Goal:** Saving a file in the dashboard editor confirms success when `UpdateLedgerFile` returns. It no longer waits for the ledger to be revalidated, and it stops moving the whole file over the wire two extra times per save.
-**Status:** blocked (t001–t003 and t005–t007 done; t004 waits on a dashboard deploy at `60ca26d23` or later, then t008)
+**Status:** done
 
 ## Tasks (in order)
 
@@ -11,11 +11,11 @@
 | t001 | Confirm the save on the write; check for new errors in the background — **DONE** | 45m | —          |
 | t002 | Stop selecting the file `content` in the `UpdateLedgerFile` result     — **DONE** | 20m | —          |
 | t003 | Replace the post-save full cache wipe with targeted invalidation       — **DONE** | 45m | t002       |
-| t004 | Measure save latency on the hosted dashboard before and after         | 30m | t001, t003, t007 |
+| t004 | Measure save latency on the hosted dashboard before and after         — **DONE** | 30m | t001, t003, t007 |
 | t005 | Adoption surface                                                      — **DONE** | 15m | t003       |
 | t006 | Simplify                                                              — **DONE** | 20m | t005       |
 | t007 | Test coverage                                                         — **DONE** | 40m | t005       |
-| t008 | Closeout                                                              | 10m | t004, t006, t007 |
+| t008 | Closeout                                                              — **DONE** | 10m | t004, t006, t007 |
 
 Re-sequenced 2026-11-02: production verification (t004) moved after Test coverage (t007). Adoption surface, Simplify and Test coverage need no deploy, and verifying last means t004 measures the revision that closes the milestone.
 
@@ -34,7 +34,6 @@ Re-sequenced 2026-11-02: production verification (t004) moved after Test coverag
 - **Why now:** this is a user-reported regression feel on the most common editing path. The fix is local to the dashboard and needs no backend change.
 - **Adoption surface:** included, because the save confirmation and the error warning are customer-facing.
 
-## Blocked
+## Unblocked
 
-- **t004** — blocked 2026-11-02. Production runs t001 and t002 but not t003 (`582201c0b`). **Unblock:** the operator deploys the dashboard at `60ca26d23` or later; the worker then measures and closes out. **Owner:** the user.
-- **t008** waits on t004.
+- **Unblocked 2026-11-04:** the deploy at `d91c1b6b1` landed; t004 measured it and t008 closed the milestone. See t004 for the before and after table.
