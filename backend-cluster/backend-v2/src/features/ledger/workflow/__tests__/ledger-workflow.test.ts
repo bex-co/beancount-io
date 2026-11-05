@@ -1,7 +1,9 @@
 import "reflect-metadata";
 import { LedgerWorkflow } from "../ledger-workflow";
 import {
+  ErrorCategory,
   InternalServerError,
+  NotFoundError,
   BadUserInputError,
   ForbiddenError,
   OperationNotAllowedError,
@@ -1951,6 +1953,48 @@ describe("LedgerWorkflow", () => {
           args: { path: "test.bean" },
         }),
       ).rejects.toThrow(InternalServerError);
+    });
+
+    describe("missing files and directories (w21/201)", () => {
+      const read = (missingAsError?: boolean) =>
+        workflow.getLedgerFile({
+          ledgerId,
+          identity: IDENTITY,
+          args: { path: "nope.bean", missingAsError },
+        });
+
+      it("returns null for a missing file by default (shipped clients)", async () => {
+        mockFavaApiClient.ledgers.getLedgerFile.mockResolvedValue({
+          data: { success: true, data: null },
+        });
+        await expect(read()).resolves.toBeNull();
+      });
+
+      it("fails a missing file with NOT_FOUND when asked", async () => {
+        mockFavaApiClient.ledgers.getLedgerFile.mockResolvedValue({
+          data: { success: true, data: null },
+        });
+        await expect(read(true)).rejects.toMatchObject({
+          category: ErrorCategory.NOT_FOUND,
+        });
+      });
+
+      it("fails a directory path with BAD_USER_INPUT when asked", async () => {
+        mockFavaApiClient.ledgers.getLedgerFile.mockResolvedValue({
+          data: {
+            success: true,
+            data: { path: "nope.bean", type: "dir", sha: "x", size: 0 },
+          },
+        });
+        await expect(read(true)).rejects.toThrow(BadUserInputError);
+      });
+
+      it("passes a coded upstream failure through instead of INTERNAL_SERVER_ERROR", async () => {
+        mockFavaApiClient.ledgers.getLedgerFile.mockRejectedValue(
+          new NotFoundError("File", "nope.bean"),
+        );
+        await expect(read()).rejects.toThrow(NotFoundError);
+      });
     });
 
     it("rejects traversal before provisioning a ledger client", async () => {

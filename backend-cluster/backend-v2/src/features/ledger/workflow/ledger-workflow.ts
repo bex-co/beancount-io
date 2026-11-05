@@ -1843,12 +1843,25 @@ export class LedgerWorkflow implements ILedgerWorkflow {
         "get ledger file",
       );
 
+      if (args.missingAsError) {
+        if (!data) throw new NotFoundError("File", args.path);
+        if (data.type === "dir") {
+          throw new BadUserInputError(
+            `${data.path} is a directory, not a file`,
+            "path",
+            "List a directory instead of reading it: `getLedgerDirContent`.",
+          );
+        }
+      }
       if (!data) {
         return null;
       }
 
       return mapToLedgerFileContent(data);
     } catch (error) {
+      // A coded failure (not found, bad input, an upstream rate limit) keeps
+      // its code instead of becoming INTERNAL_SERVER_ERROR (w21/201).
+      if (error instanceof DomainError) throw error;
       throw new InternalServerError(
         `Failed to get ledger file: ${
           error instanceof Error ? error.message : "Unknown error"

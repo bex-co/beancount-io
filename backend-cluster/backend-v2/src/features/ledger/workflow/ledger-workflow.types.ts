@@ -117,6 +117,12 @@ export interface SearchLedgersParams {
 
 export interface GetLedgerFileParams {
   path: string;
+  /**
+   * Answer a missing file with NOT_FOUND and a directory with BAD_USER_INPUT,
+   * as REST and MCP do, instead of `null` (w21/201). Off by default so shipped
+   * clients that read `null` as "no such file" keep working.
+   */
+  missingAsError?: boolean;
 }
 
 export interface GetLedgerDirContentParams {

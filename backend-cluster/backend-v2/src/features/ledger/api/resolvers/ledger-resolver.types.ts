@@ -577,6 +577,13 @@ export class SearchLedgersArgs {
 export class GetLedgerFileArgs {
   @Field(() => String)
   path: string;
+
+  @Field(() => Boolean, {
+    nullable: true,
+    description:
+      "Fail a missing file with NOT_FOUND and a directory path with BAD_USER_INPUT, as REST and MCP do, instead of returning null. Defaults to false so clients that read null as 'no such file' keep working.",
+  })
+  missingAsError?: boolean;
 }
 
 @ArgsType()
