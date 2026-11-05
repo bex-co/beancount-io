@@ -15,7 +15,7 @@ import re
 import unicodedata
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from datetime import date, timedelta
-from decimal import Decimal, localcontext
+from decimal import Context, Decimal, localcontext
 from pathlib import Path
 from typing import Any
 
@@ -138,8 +138,9 @@ def answer(
         # purchases whose own residuals were accepted no longer added up to
         # the rounding the reconciliation expects (w5/1077).
         with localcontext() as wide:
+            cash_context = wide.copy()
             wide.prec = 100
-            return _cash_flow(filtered, bounds, ledger_errors)
+            return _cash_flow(filtered, bounds, ledger_errors, cash_context)
     return _trial_balance(filtered, resolved_conversion, allow_errors, ledger_errors)
 
 
@@ -1010,7 +1011,9 @@ def _cash_accounts(opens: Mapping[str, Any], root_types: Mapping[str, str]) -> d
     return members
 
 
-def _cash_flow(filtered: Any, bounds: tuple[date | None, date | None], ledger_errors: list[str]) -> dict[str, Any]:
+def _cash_flow(
+    filtered: Any, bounds: tuple[date | None, date | None], ledger_errors: list[str], cash_context: Context
+) -> dict[str, Any]:
     """Direct-method cash flow: inverted non-cash flows explain the CCE change.
 
     Flows and closing accumulate posting inventories over their windows and
@@ -1018,12 +1021,13 @@ def _cash_flow(filtered: Any, bounds: tuple[date | None, date | None], ledger_er
     under (`at_cost` reads booked costs only, so lots collapse to the cash
     they moved and cost-less cash stays in its own units). Flows cover
     `--time` intersected with the inclusive `--from-date`/`--to-date`
-    bounds; closing covers cash postings before its exclusive end; opening
-    is closing minus net change, the double-entry identity the dashboard
-    statement is built on. `--account` narrows rows and the CCE set together,
-    and is refused when it keeps only some legs of a transaction in the
-    window, which would leave that identity solving for an invented
-    opening. Accounts outside the five roots are
+    bounds; cash boundaries independently accumulate postings before the
+    window's start and exclusive end, using native inventory arithmetic.
+    The wider context is only for cost-flow reconciliation and discloses
+    accepted booking and cash accumulation rounding. `--account` narrows
+    rows and the CCE set together, and is refused when it keeps only some
+    legs of a window transaction, omitting part of its cash movement.
+    Accounts outside the five roots are
     excluded from rows and surface via the shared unrooted-accounts note.
     Membership — not the direct role — gates rows, so an inherited-cash
     leaf is never double-counted.
@@ -1121,20 +1125,34 @@ def _cash_flow(filtered: Any, bounds: tuple[date | None, date | None], ledger_er
         _refuse_split_cash_flow(filtered.account, split, ledger_errors)
     flows = {account: _balance_map(cost_or_value(book, "at_cost", prices)) for account, book in flow_books.items()}
 
-    closing_books: dict[str, CounterInventory] = {}
-    for entry in filtered.ledger.all_entries:
-        if not isinstance(entry, Transaction) or (cutoff is not None and entry.date >= cutoff):
-            continue
-        for posting in entry.postings:
-            if posting.units is None or posting.units.number is None:
+    # Cash balances must match native Beancount and the sibling reports. The
+    # wide context used by the cost-flow proof otherwise retains digits that
+    # native inventory accumulation rounds (w5/1118). Opening is independently
+    # accumulated too: subtracting a wide movement from a rounded closing can
+    # invent an opening balance, even when the closing itself is correct.
+    with localcontext(cash_context):
+        opening_books: dict[str, CounterInventory] = {}
+        closing_books: dict[str, CounterInventory] = {}
+        for entry in filtered.ledger.all_entries:
+            if not isinstance(entry, Transaction) or (cutoff is not None and entry.date >= cutoff):
                 continue
-            if posting.account not in members:
-                continue
-            if matches is not None and not matches(posting.account):
-                continue
-            # Same duck-typed call as the flows loop above.
-            closing_books.setdefault(posting.account, CounterInventory()).add_position(posting)  # type: ignore[arg-type]
-    closing = {account: _balance_map(cost_or_value(book, "at_cost", prices)) for account, book in closing_books.items()}
+            for posting in entry.postings:
+                if posting.units is None or posting.units.number is None:
+                    continue
+                if posting.account not in members:
+                    continue
+                if matches is not None and not matches(posting.account):
+                    continue
+                closing_books.setdefault(posting.account, CounterInventory()).add_position(posting)  # type: ignore[arg-type]
+                if first is not None and entry.date < first:
+                    opening_books.setdefault(posting.account, CounterInventory()).add_position(posting)  # type: ignore[arg-type]
+        closing = {
+            account: _balance_map(cost_or_value(book, "at_cost", prices)) for account, book in closing_books.items()
+        }
+        closing_total = _sum_amounts(closing.values())
+        opening_total = _sum_amounts(
+            _balance_map(cost_or_value(book, "at_cost", prices)) for book in opening_books.values()
+        )
 
     sections: dict[str, list[dict[str, Any]]] = {activity: [] for activity in _CASH_FLOW_ACTIVITIES}
     for account in sorted(flows):
@@ -1179,12 +1197,28 @@ def _cash_flow(filtered: Any, bounds: tuple[date | None, date | None], ledger_er
             "or read the balance sheet.",
             ledger_errors=ledger_errors,
         )
-    closing_total = _sum_amounts(closing.values())
-    # Opening cash is what the cash accounts held, closing less their own
-    # movement; the rows plus any accepted rounding residual explain that move.
     opening = {
-        currency: closing_total.get(currency, Decimal(0)) - moved.get(currency, Decimal(0))
-        for currency in set(closing_total) | set(moved) | set(net_change)
+        # An absent position is zero; retain the closing currency's scale in
+        # its JSON spelling (0.00 USD), without deriving a nonzero opening.
+        currency: opening_total.get(currency, closing_total.get(currency, Decimal(0)).copy_abs() * 0)
+        for currency in set(opening_total) | set(closing_total) | set(moved) | set(net_change)
+    }
+    # The conservation proof above still uses the booked postings at wide
+    # precision, so native accumulation cannot hide an unexplained FX flow.
+    # Once proved, disclose the difference between that booked movement and
+    # native cash boundaries alongside the accepted cost-booking residual.
+    # Cancel the cash boundaries before adding a potentially tiny residual.
+    rounding = {
+        currency: residual
+        for currency in set(opening) | set(closing_total) | set(rounding) | set(moved)
+        if (
+            residual := rounding.get(currency, Decimal(0))
+            + (
+                closing_total.get(currency, Decimal(0))
+                - opening.get(currency, Decimal(0))
+                - moved.get(currency, Decimal(0))
+            )
+        )
     }
     invalid_role_values = [
         {"account": account, "value": _jsonable_role_value(value)}

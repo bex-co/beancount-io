@@ -1881,6 +1881,11 @@ window whole: a filter that keeps a cash leg but drops the income that paid it,
 or one side of a transfer between cash accounts, is refused (exit **2**, even
 with `--allow-errors`) naming the transactions and the accounts the filter
 would also need. Drop `--account`, or widen it to a balanced filter.
+Opening, closing and per-account cash balances use native Beancount arithmetic,
+including when a payment amount was inferred. Activity rows are reconciled at
+higher precision; `rounding_residual` discloses accepted cost rounding and any
+difference from native cash accumulation, so the rows explain the actual cash
+movement. JSON preserves these decimal amounts exactly.
 A priced currency exchange in the window (`100 EUR @ 1.10 USD`) balances by
 its price, not by cost, so the rows cannot explain the cash it moves: such a
 period is refused the same way, naming the transactions; choose a window
