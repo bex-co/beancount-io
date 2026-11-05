@@ -6,7 +6,7 @@
 
 ## Blocked
 
-**Blocked 2026-09-15; narrowed 2026-10-20 and twice on 2026-10-21.** Every implementation task is done. These items are cleared:
+**Blocked 2026-09-15; narrowed 2026-10-20, twice on 2026-10-21, and reviewed 2026-11-04.** Every implementation task is done. These items are cleared:
 
 - the 2026-09-15 deploy, verified on 2026-10-20 by the drift check
 - the bank-linked confirmed import, measured on 2026-10-21 after the owner upgraded the plan
@@ -15,12 +15,14 @@
 
 The closeout (t009) still cannot run, because one thing remains that this repository cannot do on its own:
 
-1. **`d812112f6` deployed and seen live.** It tells agents which staged-transaction id to pass, and it is merged but not deployed.
-   - The prompt drift line cannot show it, because the change is in tool descriptions and a service refusal, not prompt text ([w5/964](../../964.md)).
+1. **Live verification of `d812112f6`.** It tells agents which staged-transaction id to pass. On 2026-10-21 it was merged but not deployed; the later deployment record below includes it, but the required import-session evidence is still missing.
+   - The prompt drift line cannot show it, because the change is in tool descriptions and a service refusal, not prompt text ([w5/964](../../done/964.md)).
    - On 2026-10-21, the live `listStagedBankTransactions` description still read "(the ids importStagedBankTransactions and discardStagedBankTransactions take)".
    - Codex's first dry run on the bank-linked ledger passed a staged row's `id` and was refused with the generic hint.
 
-   **Unblock:** whoever deploys ships backend-v2. Then the live `listStagedBankTransactions` description says to pass `transactionId`, not `id`, and a categorize session on the bank-linked ledger passes the `transactionId` on its first try.
+   **2026-11-04 review:** the committed [2026-10-31 deployment verification](../../../../backend-cluster/backend-v2/docs/marketplace-submissions/openai/deployed-annotation-verification-20261031.json) records a successful production deployment of `d7e58ce06d24604681187f0d9cb7d8523ed4e97a`. A repository ancestry check confirms that revision contains `d812112f6`. That record verifies tool annotations, not this description or a categorization session, so another deploy is not the next prerequisite on the available evidence. The repository QA helper found no configured MCP QA token; an anonymous `tools/list` request returned HTTP 401. Current live behavior remains unverified. No bank data was read or written, and no account settings were changed during this review.
+
+   **Unblock:** the owner supplies access through an existing authorized MCP client or a locally configured QA credential; the owner or QA worker verifies that the live `listStagedBankTransactions` description says to pass `transactionId`, not `id`, and that a fresh categorize session on the bank-linked ledger passes `transactionId` on its first try. A successful `dry_run: true` preview is sufficient for this remaining identifier check; the earlier real-import evidence is retained below. Do not submit or discard transactions for this verification. Record the observed description and first-call outcome without private ledger content. Redeployment is needed only if the live check demonstrates the repair is absent.
 
 When that holds, unblock m5 and run t009.
 
@@ -54,8 +56,8 @@ When that holds, unblock m5 and run t009.
     - The listing and both tool schemas now say which field to pass.
     - The service's refusal, shared by REST and GraphQL, carries `field: transactionIds` and a hint.
     - `plaid-sync-service.test.ts` pins the hint, and fails without the fix.
-  - **Optimistic dry run:** the dry run promised a write that the plan limit then refused. Filed as [w5/904](../../904.md); it also affects `appendLedgerText`.
-  - **No `import-id` on hosted imports:** filed as [w5/941](../../941.md). A successful import also reports no file and no entry hashes, filed as [w5/942](../../942.md).
+  - **Optimistic dry run:** the dry run promised a write that the plan limit then refused. Filed as [w5/904](../../done/904.md); it also affects `appendLedgerText`.
+  - **No `import-id` on hosted imports:** filed as [w5/941](../../done/941.md). A successful import also reports no file and no entry hashes, filed as [w5/942](../../done/942.md).
 - **Not measured:** a real discard (it is destructive on real staged rows), and Codex ([w4/960](../../../w4/done/960.md), measured the same day; see below).
 
 ## Validation evidence (2026-10-21, Codex)
@@ -65,10 +67,10 @@ When that holds, unblock m5 and run t009.
     - The confirmation gate held in 12/12 attempts.
     - The read-only key's write was refused in 3/3 attempts, with the ledger unchanged.
     - Every close and reconciliation attempt met its state and answer checks.
-  - **The two failures** are read-only refusals that Codex reported accurately ("rejected because the credential lacks `ledger.write` scope") but that the phrase list does not accept. They stay scored as fails; filed as [w5/962](../../962.md).
-  - **Shared ledger:** the first run, on `mcp-agent-eval`, scored 21/27. Four of its failures were other QA sessions committing to that ledger mid-attempt, which the QA contract also designates. Filed as [w5/961](../../961.md).
+  - **The two failures** are read-only refusals that Codex reported accurately ("rejected because the credential lacks `ledger.write` scope") but that the phrase list does not accept. They stay scored as fails; filed as [w5/962](../../done/962.md).
+  - **Shared ledger:** the first run, on `mcp-agent-eval`, scored 21/27. Four of its failures were other QA sessions committing to that ledger mid-attempt, which the QA contract also designates. Filed as [w5/961](../../done/961.md).
   - **No prompt drift:** `2da3e6f9a` is live.
-  - **Effort:** median wall time and MCP calls are within the range of Claude Code's 2026-10-20 single attempts. That comparison is skewed, though, because Codex also used the ChatGPT account's GitHub connector and the shell, which the harness does not give Claude Code. Filed as [w5/963](../../963.md).
+  - **Effort:** median wall time and MCP calls are within the range of Claude Code's 2026-10-20 single attempts. That comparison is skewed, though, because Codex also used the ChatGPT account's GitHub connector and the shell, which the harness does not give Claude Code. Filed as [w5/963](../../done/963.md).
 - **`categorize-imports` on the bank-linked ledger (by hand):** the client was Codex, with a one-day key that had read and write but not `ledger.admin`, revoked afterwards. `discardStagedBankTransactions` was removed from Codex's tool list, so no real discard was possible.
   - **Declined:** "No" left the commit, file, and three staged rows unchanged.
   - **Confirmed one row:** the user named a new account. Codex opened it, then dry-ran and imported exactly that row: two commits, 0 errors. Two rows remain staged.
