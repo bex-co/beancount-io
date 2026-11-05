@@ -36,7 +36,6 @@
 
 ## Inbox
 
-- [1120 — Validate ordinary added transactions once before committing](./1120.md) — ready: owner confirmed 2026-11-04; early input checks, avoid full loads for completion, and retain separately appendable identical purchases. Split from the transaction portion of [431](./blocked/431.md).
 
 
 
@@ -159,9 +158,11 @@ The 27 findings from the MCP QA auth sweep against the hosted endpoint (023–05
 
 ## Blocked inbox
 
+- [1120 — Validate ordinary added transactions once before committing](./blocked/1120.md) — owner decision needed: retain original-state reads for unknown custom plugins, or explicitly change their currency-completion semantics. Unsafe optimistic candidate isolated in named stash (2026-11-05).
+
 - [1118 — Keep Cash Flow cash balances in native arithmetic after inferred payments](./blocked/1118.md) — partial fix and 66 targeted tests ready; full gate waits on existing Linux import-descriptor refusal and a normal test environment. Source preserved in named stash; revisit after 1119 (2026-11-05).
 
-- [431 — Reduce balance/price/pad pre-reads while preserving their checks](./blocked/431.md) — remaining maintainer decision: preserve current behavior through shared-validation refactoring or explicitly choose semantic changes. The approved ordinary-transaction work is ready separately in [1120](./1120.md) (2026-11-04).
+- [431 — Reduce balance/price/pad pre-reads while preserving their checks](./blocked/431.md) — remaining maintainer decision: preserve current behavior through shared-validation refactoring or explicitly choose semantic changes. The approved transaction work is tracked separately in [1120](./blocked/1120.md), now awaiting the custom-plugin completion contract (2026-11-05).
 - [015 — Decide the supported way to give a custom importer a third-party dependency](./blocked/015.md) — blocked on the CLI product owner's choice of the supported environment; the new work does not depend on this decision.
 
 ## Execution notes
