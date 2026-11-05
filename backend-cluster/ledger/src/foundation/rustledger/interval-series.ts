@@ -238,13 +238,10 @@ function valueRecord(
   return out;
 }
 
-// fava `interval_totals` uses raw `str.startswith(accounts)` — a prefix match.
-function matchesPrefix(account: string, prefixes: string[]): boolean {
-  return prefixes.some((p) => account.startsWith(p));
-}
-
-// fava `account_balance` uses `account_tester(name, with_children=True)`:
-// the account itself or a descendant under a `:` boundary.
+// The account itself or a descendant under a `:` boundary. fava `account_balance`
+// does this too; `interval_totals` uses raw `str.startswith`, and we deliberately
+// break from that so `Expenses:Transport` never counts `Expenses:Transportation`
+// (w21/180), matching Reports and account detail.
 function matchesAccountOrChild(account: string, prefixes: string[]): boolean {
   return prefixes.some((p) => account === p || account.startsWith(`${p}:`));
 }
@@ -329,7 +326,8 @@ export function intervalTotals(
 
     const { total, perAccount } = accumulators[rangeIndex];
     directive.postings.forEach((posting) => {
-      if (!posting.units || !matchesPrefix(posting.account, prefixes)) return;
+      if (!posting.units || !matchesAccountOrChild(posting.account, prefixes))
+        return;
       total.addPosting(posting);
       let acct = perAccount.get(posting.account);
       if (!acct) {

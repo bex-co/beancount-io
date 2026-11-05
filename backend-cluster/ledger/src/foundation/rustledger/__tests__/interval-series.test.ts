@@ -131,6 +131,54 @@ const LEDGER: DirectiveJson[] = [
 
 const usdMap = buildPriceMap([]);
 
+describe("intervalTotals matches on account boundaries (w21/180)", () => {
+  const txn = (account: string, amount: string): DirectiveJson =>
+    ({
+      type: "transaction",
+      date: "2024-01-10",
+      flag: "*",
+      postings: [
+        { account, units: { number: amount, currency: "USD" } },
+        {
+          account: "Assets:Cash",
+          units: { number: `-${amount}`, currency: "USD" },
+        },
+      ],
+    }) as unknown as DirectiveJson;
+  const ledger = [
+    txn("Expenses:Transport", "40"),
+    txn("Expenses:Transport:Bus", "5"),
+    txn("Expenses:Transportation", "60"),
+  ];
+
+  it("counts the account and its children, not a sibling sharing the text prefix", () => {
+    const rows = intervalTotals(
+      ledger,
+      "month",
+      ["Expenses:Transport"],
+      "USD",
+      usdMap,
+    );
+    expect(rows).toHaveLength(1);
+    expect(rows[0].balance).toEqual({ USD: "45" });
+    expect(Object.keys(rows[0].account_balances ?? {}).sort()).toEqual([
+      "Expenses:Transport",
+      "Expenses:Transport:Bus",
+    ]);
+  });
+
+  it("returns nothing for a name that is only a text prefix of real accounts", () => {
+    const rows = intervalTotals(
+      ledger,
+      "month",
+      ["Expenses:Trans"],
+      "USD",
+      usdMap,
+    );
+    expect(rows.every((r) => Object.keys(r.balance).length === 0)).toBe(true);
+  });
+});
+
 describe("intervalTotals (periodic flows)", () => {
   it("sums per-interval postings for the prefix with an account breakdown", () => {
     const rows = intervalTotals(LEDGER, "month", ["Income"], "USD", usdMap);
