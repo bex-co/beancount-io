@@ -159,7 +159,7 @@ def test_a_working_override_keeps_the_shell_usable_after_ctrl_c(books: Path, nat
     with QueryTerminal(books, args, env={"BEA_ENGINE_PYTHON": sys.executable}) as terminal:
         terminal.read("beanquery>")
         terminal.send("SELECT 73 AS n LIMIT 1;")
-        assert "73" in terminal.read("beanquery>").split()
+        assert "73" in (line.strip() for line in terminal.read("beanquery>").splitlines())
 
         # A prompt can be visible just before readline begins waiting. Retry
         # the terminal-group interrupt until the shell acknowledges it.
@@ -173,7 +173,7 @@ def test_a_working_override_keeps_the_shell_usable_after_ctrl_c(books: Path, nat
         assert "(interrupted)" in interrupted, terminal.screen
         assert "beanquery>" in interrupted.split("(interrupted)", 1)[1], terminal.screen
         terminal.send("SELECT 74 AS n LIMIT 1;")
-        assert "74" in terminal.read("beanquery>").split()
+        assert "74" in (line.strip() for line in terminal.read("beanquery>").splitlines())
         assert terminal.finish() == 0
         assert "Traceback" not in terminal.screen
 

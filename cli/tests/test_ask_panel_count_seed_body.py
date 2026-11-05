@@ -40,7 +40,10 @@ def test_the_panel_counts_the_directives_and_the_selector_repeats_it(
     assert asked == [60]
 
 
-def test_a_new_include_shows_its_seed_and_says_it_is_created(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize("width", [80, 120])
+def test_a_new_include_shows_its_seed_and_says_it_is_created(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, width: int
+) -> None:
     from cli.ask import repl
 
     ledger = tmp_path / "main.bean"
@@ -58,10 +61,11 @@ def test_a_new_include_shows_its_seed_and_says_it_is_created(tmp_path: Path, mon
     ((directive, proposal),) = seen
     assert proposal == {"count": 1, "seed": 'option "name_expenses" "Aufwand"\n', "created": True}
     monkeypatch.setattr(repl, "_ask_write_permission", lambda count=1: "n")
-    monkeypatch.setattr(repl, "console", repl.Console(width=120, force_terminal=False, record=True))
+    monkeypatch.setattr(repl, "console", repl.Console(width=width, force_terminal=False, record=True))
     repl.make_confirm_fn([None])(directive, str(tmp_path / "y2025" / "new.bean"), [], proposal)
     shown = repl.console.export_text()
-    assert "(new file, created by this write)" in shown
+    # A longer temporary path can wrap the annotation between panel rows.
+    assert "(new file, created by this write)" in " ".join(shown.replace("│", " ").split())
     assert shown.index('option "name_expenses" "Aufwand"') < shown.index('2024-01-20 * "Cafe" "Latte"')
     assert not (tmp_path / "y2025" / "new.bean").exists()
 

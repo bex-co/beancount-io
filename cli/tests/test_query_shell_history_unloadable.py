@@ -14,7 +14,8 @@ These need a real terminal: the line editor is set up only for one.
 from __future__ import annotations
 
 import os
-import readline
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -24,8 +25,6 @@ from tests.query_terminal import QueryTerminal
 PROMPT = "beanquery> "
 CTRL_D = b"\x04"
 NOTE = "Cannot load query history"
-# The suite runs on the interpreter the shell child uses.
-LIBEDIT = "libedit" in (readline.__doc__ or "")
 LEDGER = """option "operating_currency" "USD"
 2026-01-01 open Assets:Cash USD
 2026-01-01 open Expenses:Food USD
@@ -99,6 +98,25 @@ def test_an_unloadable_history_costs_one_line_and_not_the_session(tmp_path: Path
         history.chmod(0o000)
 
     try:
+        # Backends bearing the same libedit name differ on header-only histories.
+        # Probe the actual interpreter in isolation, before the session overwrites
+        # the fixture, rather than inferring support from readline.__doc__.
+        probe = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                "import readline, sys\n"
+                "try:\n"
+                "    readline.read_history_file(sys.argv[1])\n"
+                "except OSError:\n"
+                "    sys.exit(2)\n",
+                str(history),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        assert probe.returncode in {0, 2}, probe.stderr
         status, screen = _session(tmp_path, argv, "SELECT sum(position) AS total WHERE account ~ 'Food'")
     finally:
         if problem == "unreadable":
@@ -111,8 +129,7 @@ def test_an_unloadable_history_costs_one_line_and_not_the_session(tmp_path: Path
         assert str(history) in notes[0]
         assert screen.index(NOTE) < screen.index(PROMPT), "the note belongs before the first prompt"
     else:
-        # GNU readline loads an empty or header-only file; libedit refuses it.
-        assert len(notes) == (1 if LIBEDIT else 0), screen
+        assert len(notes) == (1 if probe.returncode == 2 else 0), screen
     assert "Cannot save query history" not in screen, "one line per session, not one at each end"
 
 

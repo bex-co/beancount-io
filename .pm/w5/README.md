@@ -38,7 +38,6 @@
 
 - [1120 — Validate ordinary added transactions once before committing](./1120.md) — ready: owner confirmed 2026-11-04; early input checks, avoid full loads for completion, and retain separately appendable identical purchases. Split from the transaction portion of [431](./blocked/431.md).
 
-- [1119 — Bound root discovery and refuse incomplete searches](./1119.md) — major CLI: consuming the 64-candidate budget can accept a false leaf balance and invalidate its root; unrelated files also bypass the work budget. Three unsafe writes and nine safe controls, current-source Native/public reproduction checked; extended 2026-11-01.
 
 
 

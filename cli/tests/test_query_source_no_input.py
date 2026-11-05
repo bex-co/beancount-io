@@ -111,5 +111,5 @@ def test_interactive_native_shell_still_opens(tmp_path: Path, ledger: Path) -> N
     with QueryTerminal(tmp_path, ["query", "--source", str(ledger)]) as shell:
         shell.read("beanquery>")
         shell.send("SELECT 73 AS n")
-        assert "73" in shell.read("beanquery>")
+        assert "73" in (line.strip() for line in shell.read("beanquery>").splitlines())
         assert shell.finish() == 0

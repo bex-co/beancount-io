@@ -24,6 +24,19 @@ from cli import context
 CLI_ROOT = Path(__file__).resolve().parents[1]
 
 
+@pytest.fixture
+def tmp_path(tmp_path: Path) -> Path:
+    """Keep the four-level ledger-root search inside this test's own workspace.
+
+    Three private parents prevent discovery from reading other tests' ledgers
+    or spending its budget on a sibling worker's files. Short names also keep
+    paths in output assertions within the same display widths as before.
+    """
+    workspace = tmp_path / "w" / "s" / "b"
+    workspace.mkdir(parents=True)
+    return workspace
+
+
 @pytest.fixture(scope="session")
 def optional_engine_python(tmp_path_factory: pytest.TempPathFactory) -> Path:
     """A Python with beancount + beangulp + beanprice, for BEA_ENGINE_PYTHON."""

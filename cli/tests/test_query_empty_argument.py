@@ -113,7 +113,7 @@ def test_omitted_argument_still_opens_the_shell(tmp_path: Path, ledger: Path, mo
     with QueryTerminal(tmp_path, [*global_args, "query", *command_args]) as shell:
         shell.read("beanquery>")
         shell.send("SELECT 73 AS n")
-        assert "73" in shell.read("beanquery>")
+        assert "73" in (line.strip() for line in shell.read("beanquery>").splitlines())
         assert shell.finish() == 0
 
 

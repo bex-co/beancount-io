@@ -219,7 +219,9 @@ def test_interactive_queries_refuse_each_set_operation_and_keep_answering(tmp_pa
             shell.send(FORMS["grep"].format(pattern=pattern))
             reply = shell.read("beanquery>")
             _friendly(reply, problem)
-        shell.send("SELECT 17 AS still_works LIMIT 1")
+        # Native Beanquery's narrow mode truncates headings to the data width.
+        shell.send("SELECT 17 AS ok LIMIT 1")
         reply = shell.read("beanquery>")
-        assert "still_works" in reply and "17" in reply, reply
+        lines = [line.strip() for line in reply.splitlines()]
+        assert "ok" in lines and "17" in lines, reply
         assert shell.finish() == 0

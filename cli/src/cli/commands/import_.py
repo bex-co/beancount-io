@@ -1080,7 +1080,7 @@ def import_entries(
             file, into, redirect = Path(resolved["root"]), Path(resolved["into"]), resolved.get("note")
             if redirect:
                 output.note(redirect)
-    source = expand_path(source, "import source").resolve()
+    source = expand_path(source, "import source")
     if date_format is not None and not date_format.strip():
         # An empty value is not an omitted one (w5/239): read as unset, it was
         # remembered as `""` and refused every later plain import (w5/385).
@@ -1108,6 +1108,7 @@ def import_entries(
             raise UsageError(f"Export file not found: {source}")
         remedy = "Name the export file inside it." if source.is_dir() else "Save it to a file and import that file."
         raise UsageError(f"Export {output.not_a_file(source)}. {remedy}")
+    source = source.resolve()
     # The engine child reads these, and does not inherit the descriptor a
     # `<(…)` passes as `/dev/fd/N`: "Bad file descriptor", or a config "not
     # found" right after "Using importers from" it (w5/582). A held

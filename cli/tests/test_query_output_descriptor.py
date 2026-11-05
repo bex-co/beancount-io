@@ -77,4 +77,6 @@ def test_a_closed_descriptor_names_the_output(tmp_path: Path) -> None:
     done = _bash(tmp_path, '$BEA --file main.bean query -f csv -o /dev/fd/9 "SELECT payee" 9>&-')
 
     assert done.returncode == 2, done.stdout + done.stderr
-    assert "Cannot write --output /dev/fd/9: Bad file descriptor." in done.stderr
+    assert "Cannot write --output /dev/fd/9:" in done.stderr
+    # macOS reports EBADF; Linux's /dev/fd symlink lookup reports ENOENT.
+    assert "Bad file descriptor" in done.stderr or "No such file or directory" in done.stderr

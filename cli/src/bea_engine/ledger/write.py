@@ -21,6 +21,7 @@ import unicodedata
 from collections import Counter
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from contextlib import ExitStack, contextmanager, nullcontext, suppress
+from contextvars import ContextVar
 from dataclasses import dataclass, field, replace
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
@@ -140,7 +141,7 @@ class LedgerSnapshot:
     patterns: dict[str, tuple[Path, ...]] = field(default_factory=dict)
 
     @classmethod
-    def capture(cls, root: Path) -> LedgerSnapshot:
+    def capture(cls, root: Path, *, discovery: _IncluderBudget | None = None) -> LedgerSnapshot:
         # Lexical, like Beancount's loader: a symlinked root's includes sit
         # beside the link, not beside its target (w1/056).
         from beancount.utils.encryption import is_encrypted_file
@@ -155,7 +156,7 @@ class LedgerSnapshot:
             if path in snapshot.contents:
                 continue
             try:
-                status = snapshot.stats[path] = path.stat()
+                status = snapshot.stats[path] = discovery.stat(path) if discovery else path.stat()
                 special = _not_a_regular_file(path, status)
                 if special is not None:
                     # Refused before it is opened: opening a FIFO with no
@@ -167,7 +168,7 @@ class LedgerSnapshot:
                         f"Included file '{path}' (included from '{includers[path]}') is not readable: {special}. "
                         "Correct the file, or remove the include."
                     )
-                content = snapshot.contents[path] = path.read_bytes()
+                content = snapshot.contents[path] = discovery.read(path) if discovery else path.read_bytes()
             except OSError as exc:
                 if path not in includers:
                     # The root: the frontend names it and the source that selected it.
@@ -201,7 +202,7 @@ class LedgerSnapshot:
                 # a member's key never matched the name errors came back under,
                 # so messages quoted the staged copy and an error already in
                 # that file read as newly introduced (w5/096).
-                matches = _glob_members(pattern)
+                matches = _glob_members(pattern, discovery=discovery)
                 snapshot.patterns[pattern] = matches
                 for match in matches:
                     includers.setdefault(match, path)
@@ -464,10 +465,13 @@ class LedgerSnapshot:
         return found
 
 
-def _glob_members(pattern: str) -> tuple[Path, ...]:
+def _glob_members(pattern: str, *, discovery: _IncluderBudget | None = None) -> tuple[Path, ...]:
     """The files an include pattern matches now, each named as the loader names it."""
     try:
-        check_glob(pattern)
+        if discovery is None:
+            check_glob(pattern)
+        else:
+            check_glob(pattern, work=discovery.glob_work, on_cycle=discovery.glob_cycle)
     except OSError as exc:
         failed = os.fsdecode(exc.filename) if exc.filename else pattern
         reason = exc.strerror or type(exc).__name__
@@ -1929,90 +1933,195 @@ def _collapse_repeats(records: list[_ErrorRecord]) -> list[str]:
 
 #: How far `including_root` looks: the leaf's directory and this many above it.
 _INCLUDER_LEVELS = 4
-#: Candidate files it will open at most, so a search from a crowded home
-#: directory stays a bounded cost (w5/112, w5/124).
+#: Distinct qualifying closures inspected during one root-resolution request.
 _INCLUDER_CANDIDATES = 64
 _INCLUDER_MAX_BYTES = 16 * 1024 * 1024
+_INCLUDER_WORK = 8192
+_INCLUDER_READS = 128
+_INCLUDER_TOTAL_BYTES = 64 * 1024 * 1024
+
+
+class IncompleteRootSearch(UsageError):
+    """Discovery stopped before it could prove the ledger's validation scope."""
+
+
+@dataclass
+class _IncluderBudget:
+    target: Path
+    work: int = 0
+    bytes_read: int = 0
+    contents: dict[Path, bytes] = field(default_factory=dict)
+    stats: dict[Path, os.stat_result] = field(default_factory=dict)
+    listings: dict[Path, tuple[Path, ...]] = field(default_factory=dict)
+    snapshots: dict[Path, LedgerSnapshot] = field(default_factory=dict)
+    candidates: set[Path] = field(default_factory=set)
+    read_attempts: set[Path] = field(default_factory=set)
+
+    def incomplete(self, reason: str) -> IncompleteRootSearch:
+        return IncompleteRootSearch(
+            f"Automatic root discovery for {self.target} is incomplete: {reason}. Nothing was written. "
+            "Select the governing root explicitly and the destination with --into: "
+            f"bea --file ROOT <command> --into {shlex.quote(str(self.target))}."
+        )
+
+    def spend(self) -> None:
+        self.work += 1
+        if self.work > _INCLUDER_WORK:
+            raise self.incomplete(f"the {_INCLUDER_WORK}-operation filesystem search budget was exhausted")
+
+    def glob_work(self) -> None:
+        # Native glob repeats the preflight's walk. Reserve both passes on
+        # the checked tree; this is a work bound, not a filesystem I/O timeout.
+        self.spend()
+        self.spend()
+
+    def glob_cycle(self) -> None:
+        # check_glob stops ancestor cycles, while native recursive glob does
+        # not. Discovery cannot safely run that unbounded second traversal.
+        raise self.incomplete("a recursive include glob follows a directory cycle")
+
+    def stat(self, path: Path) -> os.stat_result:
+        if path not in self.stats:
+            self.spend()
+            self.stats[path] = path.stat()
+        return self.stats[path]
+
+    def entries(self, directory: Path) -> tuple[Path, ...]:
+        if directory not in self.listings:
+            self.spend()
+            found = []
+            with os.scandir(directory) as scanned:
+                for entry in scanned:
+                    self.spend()
+                    found.append(Path(entry.path))
+            self.listings[directory] = tuple(sorted(found))
+        return self.listings[directory]
+
+    def read(self, path: Path) -> bytes:
+        if path not in self.contents:
+            status = self.stat(path)
+            remaining = min(_INCLUDER_MAX_BYTES, _INCLUDER_TOTAL_BYTES - self.bytes_read)
+            if (
+                path not in self.read_attempts and len(self.read_attempts) >= _INCLUDER_READS
+            ) or status.st_size > remaining:
+                raise self.incomplete("the ledger-file read/byte search budget was exhausted")
+            self.read_attempts.add(path)
+            self.spend()
+            with path.open("rb") as stream:
+                content = stream.read(remaining + 1)
+            if len(content) > remaining:
+                raise self.incomplete("a ledger grew beyond the file/byte search budget")
+            self.contents[path] = content
+            self.bytes_read += len(content)
+        return self.contents[path]
+
+    def capture(self, path: Path) -> LedgerSnapshot:
+        path = Path(os.path.abspath(path))
+        if path not in self.snapshots:
+            self.snapshots[path] = LedgerSnapshot.capture(path, discovery=self)
+        return self.snapshots[path]
+
+    def candidate(self, path: Path) -> None:
+        if path not in self.candidates:
+            if len(self.candidates) >= _INCLUDER_CANDIDATES:
+                raise self.incomplete(f"the {_INCLUDER_CANDIDATES}-candidate search budget was exhausted")
+            self.candidates.add(path)
+
+    def same_file(self, left: Path, right: Path) -> bool:
+        try:
+            a, b = self.stat(left), self.stat(right)
+        except OSError:
+            return False
+        return (a.st_dev, a.st_ino) == (b.st_dev, b.st_ino)
+
+
+_INCLUDER_SEARCH: ContextVar[_IncluderBudget | None] = ContextVar("includer_search", default=None)
+
+
+@contextmanager
+def _includer_search(file: Path) -> Iterator[_IncluderBudget]:
+    current = _INCLUDER_SEARCH.get()
+    if current is not None:
+        yield current
+        return
+    budget = _IncluderBudget(file.resolve())
+    token = _INCLUDER_SEARCH.set(budget)
+    try:
+        yield budget
+    finally:
+        _INCLUDER_SEARCH.reset(token)
 
 
 def including_root(file: Path) -> Path | None:
     """A nearby ledger that includes `file`, when `file` is not itself a root.
 
-    Pointing `--file` at one leaf of an include tree drops the sibling files
-    that open its accounts and set its options, so the resulting failures name
-    the transaction rather than the target.
-
     The leaf's directory and a few above it are searched, with their immediate
-    subdirectories for a `../shared/x.bean` include; only `.bean`/`.beancount`
-    files that mention an include of the leaf's name or a glob are opened. A
-    leaf three directories down or reached through `../` was never found, and
-    a case-variant path never matched on macOS (w5/347).
+    subdirectories for a `../shared/x.bean` include. Candidate closures and all
+    preparatory filesystem work share bounded discovery budgets; exhaustion
+    cannot establish that the file has no including root.
     """
     return next(_scan_includers(file), None)
 
 
 def including_roots(file: Path) -> Iterator[Path]:
-    """Every nearby ledger that includes `file`, nearest directory first.
-
-    Lazily scanned: a caller that only needs to know there are two stops the
-    search at the second (w5/775).
-    """
+    """Every nearby ledger that includes `file`, nearest directory first."""
     return _scan_includers(file)
 
 
 def _scan_includers(file: Path) -> Iterator[Path]:
-    """Yield each nearby ledger whose include closure holds `file` (see `including_root`)."""
-    target = file.resolve()
-    directories: list[Path] = []
-    for level, directory in enumerate([target.parent, *target.parent.parents]):
-        if level >= _INCLUDER_LEVELS:
-            break
-        directories.append(directory)
-        if (directory / ".git").exists():
-            break
-    near: list[Path] = []
-    for directory in directories:
-        near.append(directory)
-        try:
-            near.extend(
-                sorted(child for child in directory.iterdir() if child.is_dir() and not child.name.startswith("."))
-            )
-        except OSError:
-            continue
-    # Case-folded: on a case-insensitive volume `DEEP.BEAN` names `deep.bean`.
-    name = target.name.casefold().encode()
-    opened = 0
-    for directory in dict.fromkeys(near):
-        try:
-            entries = sorted(directory.iterdir())
-        except OSError:
-            continue
-        # `glob` matches case-sensitively on POSIX, even on a case-insensitive
-        # volume, so a `main.BEAN` root was never found (w5/870).
-        files = [path for suffix in (".bean", ".beancount") for path in entries if path.suffix.lower() == suffix]
-        for candidate in files:
-            if opened >= _INCLUDER_CANDIDATES:
-                return
+    """Yield each nearby includer, refusing when the search is incomplete."""
+    with _includer_search(file) as budget:
+        target = file.resolve()
+        directories: list[Path] = []
+        for level, directory in enumerate([target.parent, *target.parent.parents]):
+            if level >= _INCLUDER_LEVELS:
+                break
+            directories.append(directory)
+            budget.spend()
+            if (directory / ".git").exists():
+                break
+        near: list[Path] = []
+        for directory in directories:
+            near.append(directory)
             try:
-                info = candidate.stat()
-                # Regular files only, and not huge: a `.bean` FIFO left in a
-                # nearby directory blocked this read forever.
-                if not stat.S_ISREG(info.st_mode) or info.st_size > _INCLUDER_MAX_BYTES:
-                    continue
-                if os.path.samefile(candidate, target):
-                    continue
-                text = candidate.read_bytes()
+                near.extend(
+                    child
+                    for child in budget.entries(directory)
+                    if not child.name.startswith(".") and stat.S_ISDIR(budget.stat(child).st_mode)
+                )
             except OSError:
                 continue
-            if b"include" not in text or (name not in text.lower() and not any(c in text for c in (b"*", b"?", b"["))):
-                continue
-            opened += 1
+        name = target.name.casefold().encode()
+        for directory in dict.fromkeys(near):
             try:
-                included = LedgerSnapshot.capture(candidate.resolve()).contents
-            except (OSError, UsageError, ValueError):
+                entries = budget.entries(directory)
+            except OSError:
                 continue
-            if any(_same_file(path, target) for path in included if not _same_file(path, candidate)):
-                yield candidate.resolve()
+            # Retain native suffix ordering and case-insensitive recognition.
+            files = [path for suffix in (".bean", ".beancount") for path in entries if path.suffix.lower() == suffix]
+            for candidate in files:
+                try:
+                    info = budget.stat(candidate)
+                    # Never open a FIFO or device during discovery.
+                    if not stat.S_ISREG(info.st_mode) or budget.same_file(candidate, target):
+                        continue
+                    text = budget.read(candidate)
+                except OSError:
+                    continue
+                if b"include" not in text or (
+                    name not in text.lower() and not any(c in text for c in (b"*", b"?", b"["))
+                ):
+                    continue
+                resolved = candidate.resolve()
+                budget.candidate(resolved)
+                try:
+                    included = budget.capture(resolved).contents
+                except IncompleteRootSearch:
+                    raise
+                except (OSError, UsageError, ValueError):
+                    continue
+                if any(budget.same_file(path, target) for path in included if not budget.same_file(path, candidate)):
+                    yield resolved
 
 
 def _same_file(left: Path, right: Path) -> bool:
@@ -2037,30 +2146,33 @@ def defining_root(file: Path, first: Path | None = None) -> Path | None:
     back to `file` (an include cycle through it) has no other root to name:
     the hint told the user to run the command they had just run (w5/566).
     """
-    root: Path | None = None
-    current = file
-    seen = {file.resolve()}
-    above = first
-    while True:
-        if above is None:
-            above = including_root(current)
-        if above is None or above.resolve() in seen:
-            break
-        seen.add(above.resolve())
-        try:
-            around = LedgerSnapshot.capture(above).contents
-            own = LedgerSnapshot.capture(current).contents
-        except Exception:  # noqa: BLE001 - unreadable here is reported by the load itself
-            break
-        if not _defines_in(around, own):
-            if _step_adds_entries(around, own):
+    with _includer_search(file) as budget:
+        root: Path | None = None
+        current = file
+        seen = {file.resolve()}
+        above = first
+        while True:
+            if above is None:
+                above = including_root(current)
+            if above is None or above.resolve() in seen:
                 break
-            current = above
+            seen.add(above.resolve())
+            try:
+                around = budget.capture(above).contents
+                own = budget.capture(current).contents
+            except IncompleteRootSearch:
+                raise
+            except Exception:  # noqa: BLE001 - unreadable here is reported by the load itself
+                break
+            if not _defines_in(around, own):
+                if _step_adds_entries(around, own):
+                    break
+                current = above
+                above = None
+                continue
+            root, current = above, above
             above = None
-            continue
-        root, current = above, above
-        above = None
-    return root
+        return root
 
 
 #: What the loader reads at the start of a line: a file's UTF-8 BOM, and a date
@@ -2118,12 +2230,15 @@ def defines_for(file: Path, root: Path) -> bool:
     and a plugin counts only when the file posts to an account it never opens
     (w5/774). When the closures cannot be read, the leaf answer stands.
     """
-    try:
-        around = LedgerSnapshot.capture(root).contents
-        own = LedgerSnapshot.capture(file).contents
-    except Exception:  # noqa: BLE001 - unreadable here is reported by the load itself
-        return True
-    return _defines_in(around, own)
+    with _includer_search(file) as budget:
+        try:
+            around = budget.capture(root).contents
+            own = budget.capture(file).contents
+        except IncompleteRootSearch:
+            raise
+        except Exception:  # noqa: BLE001 - unreadable here is reported by the load itself
+            return True
+        return _defines_in(around, own)
 
 
 def _defines_in(around: dict[Path, bytes], own: dict[Path, bytes]) -> bool:
@@ -2182,22 +2297,25 @@ def _nearest_includers(file: Path) -> list[Path]:
     refused as ambiguous (w5/933). Two includers neither of which reaches the
     other are still two roots.
     """
-    found = list(including_roots(file))
-    if len(found) < 2:
-        return found
-    closures: dict[Path, set[Path]] = {}
-    for candidate in found:
-        try:
-            closures[candidate] = {path.resolve() for path in LedgerSnapshot.capture(candidate).contents}
-        except Exception:  # noqa: BLE001 - unreadable here is reported by the load itself
-            closures[candidate] = set()
-    nearest = [
-        candidate
-        for candidate in found
-        if not any(other != candidate and other.resolve() in closures[candidate] for other in found)
-    ]
-    # An include cycle makes each the other's ancestor: keep them all.
-    return nearest or found
+    with _includer_search(file) as budget:
+        found = list(including_roots(file))
+        if len(found) < 2:
+            return found
+        closures: dict[Path, set[Path]] = {}
+        for candidate in found:
+            try:
+                closures[candidate] = {path.resolve() for path in budget.capture(candidate).contents}
+            except IncompleteRootSearch:
+                raise
+            except Exception:  # noqa: BLE001 - unreadable here is reported by the load itself
+                closures[candidate] = set()
+        nearest = [
+            candidate
+            for candidate in found
+            if not any(other != candidate and other.resolve() in closures[candidate] for other in found)
+        ]
+        # An include cycle makes each the other's ancestor: keep them all.
+        return nearest or found
 
 
 def write_through_root(file: Path, into: Path | None) -> tuple[Path, Path | None, str | None]:
@@ -2214,49 +2332,52 @@ def write_through_root(file: Path, into: Path | None) -> tuple[Path, Path | None
     The note is the caller's to report in its answer: printed here, it
     reached a person but never `--json` (w5/613).
     """
-    if into is not None:
-        return file, into, None
-    # The nearest includer may itself be included: a leaf under `sub/extra.bean`
-    # was checked against `extra.bean` alone, and the root's own entries —
-    # what a balance or a close contradicts, what import dedupes against —
-    # stayed out of the check (w5/346). Climb past pass-through intermediates
-    # to the highest defining root, stopping below an overlay (w5/774).
-    tops: list[Path] = []
-    for first in _nearest_includers(file):
-        top = defining_root(file, first=first)
-        if top is None or any(_same_file(top, known) for known in tops):
-            continue
-        tops.append(top)
-        if len(tops) > 1:
-            # Judged against whichever sorts first, a true balance was refused
-            # and a false one written; the refusal never said which root
-            # judged it. Ask instead (w5/775).
-            listed = ", ".join(str(top) for top in tops)
-            into_example = Path(os.path.relpath(file.resolve(), tops[0].parent))
-            raise UsageError(
-                f"{file.name} is included by more than one root ledger: {listed}. Say which ledger "
-                f"to check the write against: bea --file {tops[0]} <command> --into {into_example}."
-            )
-    if not tops:
-        return file, into, None
-    root = tops[0]
-    redirect = (
-        f"{file.name} is included by {root}; the write goes to {file.name} and is checked against that whole ledger."
-    )
-    return root, Path(os.path.relpath(file.resolve(), root.parent)), redirect
+    with _includer_search(file):
+        if into is not None:
+            return file, into, None
+        # The nearest includer may itself be included: a leaf under `sub/extra.bean`
+        # was checked against `extra.bean` alone, and the root's own entries —
+        # what a balance or a close contradicts, what import dedupes against —
+        # stayed out of the check (w5/346). Climb past pass-through intermediates
+        # to the highest defining root, stopping below an overlay (w5/774).
+        tops: list[Path] = []
+        for first in _nearest_includers(file):
+            top = defining_root(file, first=first)
+            if top is None or any(_same_file(top, known) for known in tops):
+                continue
+            tops.append(top)
+            if len(tops) > 1:
+                # Judged against whichever sorts first, a true balance was refused
+                # and a false one written; the refusal never said which root
+                # judged it. Ask instead (w5/775).
+                listed = ", ".join(str(top) for top in tops)
+                into_example = Path(os.path.relpath(file.resolve(), tops[0].parent))
+                raise UsageError(
+                    f"{file.name} is included by more than one root ledger: {listed}. Say which ledger "
+                    f"to check the write against: bea --file {tops[0]} <command> --into {into_example}."
+                )
+        if not tops:
+            return file, into, None
+        root = tops[0]
+        redirect = (
+            f"{file.name} is included by {root}; the write goes to {file.name} "
+            "and is checked against that whole ledger."
+        )
+        return root, Path(os.path.relpath(file.resolve(), root.parent)), redirect
 
 
 def root_ledger_hints(file: Path) -> list[str]:
     """The `--into` recipe when the invoked entry file is an included leaf."""
-    root = including_root(file)
-    if root is None or not defines_for(file, root):
-        return []
-    relative = os.path.relpath(file.resolve(), root.parent)
-    return [
-        f"{file.name} is included by {root}; on its own it lacks the accounts and options that root provides. "
-        f"Run against the root and pick the destination with --into: "
-        f"bea --file {shlex.quote(str(root))} <command> --into {shlex.quote(relative)}."
-    ]
+    with _includer_search(file):
+        root = including_root(file)
+        if root is None or not defines_for(file, root):
+            return []
+        relative = os.path.relpath(file.resolve(), root.parent)
+        return [
+            f"{file.name} is included by {root}; on its own it lacks the accounts and options that root provides. "
+            f"Run against the root and pick the destination with --into: "
+            f"bea --file {shlex.quote(str(root))} <command> --into {shlex.quote(relative)}."
+        ]
 
 
 def _normal_form(text: str) -> str:

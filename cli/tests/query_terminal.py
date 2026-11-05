@@ -7,7 +7,6 @@ import pty
 import select
 import signal
 import subprocess
-import termios
 import time
 from pathlib import Path
 from types import TracebackType
@@ -44,9 +43,8 @@ class QueryTerminal:
         )
         child_env.update(env or {})
         self.fd, slave = pty.openpty()
-        attrs = termios.tcgetattr(slave)
-        attrs[3] &= ~termios.ECHO
-        termios.tcsetattr(slave, termios.TCSANOW, attrs)
+        # Keep the normal terminal modes: libedit disables line editing when
+        # ECHO is already off, and Ctrl-D then fails to end the session.
         try:
             self.process = subprocess.Popen(
                 [str(ROOT / ".venv/bin/bea"), *args],

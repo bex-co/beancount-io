@@ -11,23 +11,29 @@ import errno
 import fnmatch
 import os
 import stat
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 
 _ABSENT = frozenset({errno.ENOENT, errno.ENOTDIR, errno.ELOOP})
 
 
-def check_glob(pattern: str) -> None:
+def check_glob(
+    pattern: str, *, work: Callable[[], None] | None = None, on_cycle: Callable[[], None] | None = None
+) -> None:
     """Raise on inaccessible glob traversal, without changing native match rules.
 
     Missing paths, non-directories and symlink loops remain ordinary no-match
     cases. Literal components need search access, not directory-list access.
     Recursive scans follow directory symlinks but stop physical ancestor
     cycles; a different pattern phase may still visit the same directory.
+    Optional ``work`` charges each entry and metadata lookup before it runs,
+    so discovery can refuse an incomplete traversal instead of exhausting it.
     """
     if not pattern:
         return
 
     def metadata(path: str, *, follow: bool = True) -> os.stat_result | None:
+        if work is not None:
+            work()
         try:
             return os.stat(path or os.curdir, follow_symlinks=follow)
         except OSError as exc:
@@ -42,13 +48,20 @@ def check_glob(pattern: str) -> None:
     def entries(path: str) -> list[os.DirEntry[str]]:
         try:
             with os.scandir(path or os.curdir) as scanned:
-                return list(scanned)
+                result = []
+                for entry in scanned:
+                    if work is not None:
+                        work()
+                    result.append(entry)
+                return result
         except OSError as exc:
             if exc.errno not in _ABSENT:
                 raise
             return []
 
     def entry_directory(entry: os.DirEntry[str]) -> bool:
+        if work is not None:
+            work()
         try:
             return entry.is_dir()
         except OSError as exc:
@@ -67,6 +80,8 @@ def check_glob(pattern: str) -> None:
                 continue
             key = (info.st_dev, info.st_ino, phase)
             if key in ancestors:
+                if on_cycle is not None:
+                    on_cycle()
                 continue
             ancestors = ancestors | {key}
             for entry in entries(current):

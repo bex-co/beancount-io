@@ -104,7 +104,18 @@ def test_an_untranslated_failure_after_a_write_names_it(
     stub_model.reply = reply
     run = ask_on_a_terminal(
         ["--file", str(ledger), "ask"],
-        ["add it", "@ENTER", "@WAIT:Append this directive to the ledger", "y", "@ENTER", "@WAIT:❯", "@CTRL_D"],
+        [
+            "add it",
+            "@ENTER",
+            "@WAIT:Append this directive to the ledger",
+            "y",
+            "@ENTER",
+            # The confirmation selector also contains ❯; wait past it before
+            # treating the next arrow as the conversation's fresh prompt.
+            "@WAIT:had already written 1 directive(s)",
+            "@WAIT:❯",
+            "@CTRL_D",
+        ],
     )
 
     assert run.status == 0, run.screen

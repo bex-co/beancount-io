@@ -1233,8 +1233,8 @@ exist. Previews, rejected writes, and duplicate-only imports leave it absent.
 New destinations are private (`0600` on POSIX). When `--file` names an included file anyway, a
 write (`add`, `import`, `ask`) that has no `--into` finds the ledger that
 includes it — searching the file's directory and up to three above it (stopping
-at a `.git` directory), each with its immediate subdirectories, opening at most
-64 candidate `.bean`/`.beancount` files — and runs through that root
+at a `.git` directory), each with its immediate subdirectories, checking at most
+64 qualifying `.bean`/`.beancount` candidates — and runs through that root
 with `--into` set to the file: the entry still lands in the named file, but it
 is validated and deduplicated against the whole ledger, and a note says so (in
 `warnings`, or `notes` for import, under `--json`). Such a write is the root's:
@@ -1247,6 +1247,16 @@ or forecast overlay that includes a working ledger and only adds entries is
 not its root even when it repeats an option or names the forecast plugin, so
 writes and failing reads stay with the ledger named, and a leaf below the
 working ledger stops its climb there rather than at the overlay above.
+
+Across one discovery request, the search allows 8,192 directory-entry and
+metadata steps, 128 distinct ledger-file reads, 16 MiB per file and 64 MiB of
+file contents in total. Glob preflight reserves work for the native traversal
+that follows it; repeated lookups reuse cached results. If discovery cannot
+finish within those limits, the command exits **2** before
+writing and asks you to name the governing root with `--file` and the included
+destination with `--into`. An incomplete search cannot establish that a file
+has no including root. Explicit root/destination selection skips discovery
+and still validates the write against the whole selected ledger.
 
 Beancount applies `option "name_assets"` and the other root-renaming options
 only while it parses the file that sets them, so an included file reads the

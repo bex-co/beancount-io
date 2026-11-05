@@ -139,27 +139,48 @@ def _shell_session(tmp_path: Path, argv: list[str], keys: list[bytes], *, timeou
         os.execve(str(BEA), [str(BEA), *argv], _child_env(tmp_path))
     screen = ""
     pending = list(keys)
-    started = time.time()
+    started = time.monotonic()
+    prompt_count = 0
+    last_key: bytes | None = None
+    sent_at = started
+    interrupted_count = 0
     try:
         while True:
-            # One key sequence per fresh prompt, so input never races the shell.
-            if pending and screen.count("beanquery>") > len(keys) - len(pending):
-                os.write(fd, pending.pop(0))
-            ready, _, _ = select.select([fd], [], [], 0.2)
-            if ready:
+            # Drain acknowledgements before deciding what the shell can read.
+            while select.select([fd], [], [], 0)[0]:
                 try:
                     chunk = os.read(fd, 4096)
                 except OSError:
                     chunk = b""
-                if chunk:
-                    screen += chunk.decode("utf-8", "replace")
+                if not chunk:
+                    break
+                screen += chunk.decode("utf-8", "replace")
             finished, status = os.waitpid(pid, os.WNOHANG)
             if finished:
                 return os.waitstatus_to_exitcode(status), screen
-            if time.time() - started > timeout:
+            now = time.monotonic()
+            prompts = screen.count("beanquery>")
+            if pending and prompts > prompt_count:
+                last_key = pending.pop(0)
+                os.write(fd, last_key)
+                prompt_count = prompts
+                interrupted_count = screen.count("(interrupted)")
+                sent_at = now
+            elif (
+                last_key == CTRL_C
+                and prompts == prompt_count
+                and screen.count("(interrupted)") == interrupted_count
+                and now - sent_at >= 1.0
+            ):
+                # As with Typer prompts above, display can precede readiness.
+                # Retry only the control key, never a query or the exit line.
+                os.write(fd, CTRL_C)
+                sent_at = now
+            if now - started > timeout:
                 os.kill(pid, signal.SIGKILL)
                 os.waitpid(pid, 0)
                 raise AssertionError(f"{argv} never exited; screen was {screen!r}")
+            select.select([fd], [], [], 0.2)
     finally:
         os.close(fd)
 
