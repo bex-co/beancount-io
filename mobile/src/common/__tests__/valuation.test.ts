@@ -744,3 +744,39 @@ describe("a valuation read with units_by_cost", () => {
     expect(valuation.priced.map((h) => h.currency)).toEqual(["VTI"]);
   });
 });
+
+describe("valuationStatus counts in the language's digits (w21/1020)", () => {
+  const countOnly = (key: string, params?: Record<string, unknown>) =>
+    params ? `${key} ${params.count}` : key;
+  const heldOut = {
+    ...selectValuation({
+      market: { USD: "5", VACHR: "-13" },
+      units: { USD: "5", VACHR: "-13" },
+      currency: "USD",
+      today: "2026-10-22",
+      prices: [],
+    }),
+  };
+
+  it("prints the not-in-total count in Persian digits in fa", () => {
+    expect(valuationStatus(heldOut, countOnly, "fa")).toBe("notInTotalCount ۱");
+  });
+
+  it("prints the at-cost count in Persian digits in fa", () => {
+    const atCost = selectValuation({
+      market: { USD: "1010" },
+      cost: { USD: "1010" },
+      units: { USD: "10", STARTUP: "1000" },
+      currency: "USD",
+      today: "2026-10-22",
+      prices: [],
+    });
+    expect(valuationStatus(atCost, countOnly, "fa")).toBe(
+      "atMarketValue · atCostNoPriceCount ۱",
+    );
+  });
+
+  it("leaves Latin digits alone in en", () => {
+    expect(valuationStatus(heldOut, countOnly, "en")).toBe("notInTotalCount 1");
+  });
+});

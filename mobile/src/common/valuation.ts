@@ -446,7 +446,13 @@ export function valuationStatus(
     parts.push(t("atMarketValue"), ...priceAttention(valuation, t, locale));
   }
   if (valuation.notInTotal.length > 0) {
-    parts.push(t("notInTotalCount", { count: valuation.notInTotal.length }));
+    // The count in the language's digits, like the sentences beside it (w21/1020).
+    parts.push(
+      localizeDigits(
+        t("notInTotalCount", { count: valuation.notInTotal.length }),
+        locale,
+      ),
+    );
   }
   return parts.length > 0 ? parts.join(" · ") : null;
 }
@@ -473,7 +479,10 @@ function priceAttention(
   }
   if (valuation.atCostNoPrice.length > 0) {
     parts.push(
-      t("atCostNoPriceCount", { count: valuation.atCostNoPrice.length }),
+      localizeDigits(
+        t("atCostNoPriceCount", { count: valuation.atCostNoPrice.length }),
+        locale,
+      ),
     );
   }
   return parts;
