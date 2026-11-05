@@ -174,6 +174,19 @@ const AccountDetailScreenImpl = ({
     error: unitsReportError,
     refetch: unitsReportRefetch,
   } = useAccountReport(ledgerId, account, undefined, undefined, "units");
+  // And by cost, so the header's valuation tells a lot's cost currency from
+  // cash of the same currency (w21/554, w21/556).
+  const {
+    data: byCostReportData,
+    loading: byCostReportLoading,
+    refetch: byCostReportRefetch,
+  } = useAccountReport(
+    ledgerId,
+    account,
+    undefined,
+    undefined,
+    "units_by_cost",
+  );
   // First loads only: a refetch keeps showing what is already there.
   const reportPending = reportLoading && !reportData;
   const unitsReportPending = unitsReportLoading && !unitsReportData;
@@ -194,7 +207,9 @@ const AccountDetailScreenImpl = ({
     refetch: accountsRefetch,
   } = useTrialBalance(ledgerId, throughToday(today));
   const valuationPending =
-    (pricesLoading && !pricesData) || (accountsLoading && !accountsData);
+    (pricesLoading && !pricesData) ||
+    (accountsLoading && !accountsData) ||
+    (byCostReportLoading && !byCostReportData);
   // The account's balance at the ledger's latest prices, as its Accounts row
   // reads it (w21/179).
   const currentBalance = useMemo(
@@ -211,11 +226,13 @@ const AccountDetailScreenImpl = ({
         today,
         currentBalance,
         managed,
+        byCostReportData,
       ),
     [
       currency,
       reportData,
       unitsReportData,
+      byCostReportData,
       prices,
       today,
       accountsData,
@@ -461,6 +478,7 @@ const AccountDetailScreenImpl = ({
         ledgerMetaRefetch(),
         reportRefetch(),
         unitsReportRefetch(),
+        byCostReportRefetch(),
         journalRefetch(),
         pricesRefetch(),
         accountsRefetch(),

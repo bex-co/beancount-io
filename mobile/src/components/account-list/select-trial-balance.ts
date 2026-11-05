@@ -159,6 +159,8 @@ export function selectTrialBalanceDisplays(
   prices: readonly PricePair[] | undefined,
   today: string,
   managed?: readonly ManagedSource[],
+  /** The `units_by_cost` read of the same trial balance, for each root's valuation (w21/554). */
+  unitsByCost?: TrialBalanceQuery,
 ): Map<string, BalanceDisplay> {
   const displays = new Map<string, BalanceDisplay>();
   if (!currency || !valued?.getLedgerTrialBalance) {
@@ -170,6 +172,7 @@ export function selectTrialBalanceDisplays(
     const root = rootOf(valued, key);
     if (!root) continue;
     const unitsRoot = rootOf(units, key);
+    const byCostRoot = rootOf(unitsByCost, key);
     const rowKey = (node: TrialBalanceNode, top: TrialBalanceNode) =>
       node === top ? key : node.account;
     const unitsNodes = new Map<string, TrialBalanceNode>(
@@ -196,6 +199,7 @@ export function selectTrialBalanceDisplays(
               valuation: selectValuation({
                 market: node.balanceChildren,
                 units: unitsByRow.get(row),
+                unitsByCost: byCostRoot?.balanceChildren,
                 currency,
                 today,
                 prices,

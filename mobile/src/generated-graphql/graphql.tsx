@@ -49,10 +49,11 @@ export type BalanceSheetBasisQueryVariables = Exact<{
   ledgerId: string;
   costConversion: string;
   unitsConversion: string;
+  byCostConversion: string;
 }>;
 
 
-export type BalanceSheetBasisQuery = { cost: { netWorthData: Array<{ date: string, balance: Record<string, number | string> }>, assetsData: Array<{ date: string, balance: Record<string, number | string> }>, liabilitiesData: Array<{ date: string, balance: Record<string, number | string> }> }, units: { netWorthData: Array<{ date: string, balance: Record<string, number | string> }>, assetsData: Array<{ date: string, balance: Record<string, number | string> }>, liabilitiesData: Array<{ date: string, balance: Record<string, number | string> }> } };
+export type BalanceSheetBasisQuery = { cost: { netWorthData: Array<{ date: string, balance: Record<string, number | string> }>, assetsData: Array<{ date: string, balance: Record<string, number | string> }>, liabilitiesData: Array<{ date: string, balance: Record<string, number | string> }> }, units: { netWorthData: Array<{ date: string, balance: Record<string, number | string> }>, assetsData: Array<{ date: string, balance: Record<string, number | string> }>, liabilitiesData: Array<{ date: string, balance: Record<string, number | string> }> }, byCost: { netWorthData: Array<{ date: string, balance: Record<string, number | string> }>, assetsData: Array<{ date: string, balance: Record<string, number | string> }>, liabilitiesData: Array<{ date: string, balance: Record<string, number | string> }> } };
 
 export type BulkEntriesMutationVariables = Exact<{
   entries: Array<Types.AddEntryInput> | Types.AddEntryInput;
@@ -696,7 +697,7 @@ export type BalanceSheetLazyQueryHookResult = ReturnType<typeof useBalanceSheetL
 export type BalanceSheetSuspenseQueryHookResult = ReturnType<typeof useBalanceSheetSuspenseQuery>;
 export type BalanceSheetQueryResult = Apollo.QueryResult<BalanceSheetQuery, BalanceSheetQueryVariables>;
 export const BalanceSheetBasisDocument = gql`
-    query BalanceSheetBasis($ledgerId: String!, $costConversion: String!, $unitsConversion: String!) {
+    query BalanceSheetBasis($ledgerId: String!, $costConversion: String!, $unitsConversion: String!, $byCostConversion: String!) {
   cost: getLedgerBalanceSheet(ledgerId: $ledgerId, conversion: $costConversion) {
     netWorthData {
       date
@@ -712,6 +713,23 @@ export const BalanceSheetBasisDocument = gql`
     }
   }
   units: getLedgerBalanceSheet(ledgerId: $ledgerId, conversion: $unitsConversion) {
+    netWorthData {
+      date
+      balance
+    }
+    assetsData {
+      date
+      balance
+    }
+    liabilitiesData {
+      date
+      balance
+    }
+  }
+  byCost: getLedgerBalanceSheet(
+    ledgerId: $ledgerId
+    conversion: $byCostConversion
+  ) {
     netWorthData {
       date
       balance
@@ -743,6 +761,7 @@ export const BalanceSheetBasisDocument = gql`
  *      ledgerId: // value for 'ledgerId'
  *      costConversion: // value for 'costConversion'
  *      unitsConversion: // value for 'unitsConversion'
+ *      byCostConversion: // value for 'byCostConversion'
  *   },
  * });
  */

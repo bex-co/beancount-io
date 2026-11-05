@@ -673,3 +673,74 @@ describe("a priced cost-currency holding without an at_cost read", () => {
     ]);
   });
 });
+
+// w21/554, w21/556: the `units_by_cost` read separates a commodity's own
+// cost-less units from lots whose cost is held in it.
+describe("a valuation read with units_by_cost", () => {
+  const base = { currency: "USD", date: "2026-10-22", today: "2026-10-22" };
+
+  it("lists a holding that is also another lot's cost currency, with its stale price (w21/554)", () => {
+    const valuation = selectValuation({
+      ...base,
+      // 1 BTC {30000 USD} and 40 ETH {0.05 BTC}: the market map keeps 2 BTC.
+      market: { USD: "60000", BTC: "2" },
+      cost: { USD: "30000", BTC: "2" },
+      units: { BTC: "1", ETH: "40" },
+      unitsByCost: { "BTC {USD}": "1", "ETH {BTC}": "40" },
+      prices: [
+        pair("BTC", "USD", ["2026-08-01"]),
+        pair("ETH", "BTC", ["2026-10-21"]),
+      ],
+    });
+    expect(
+      valuation.priced.map((h) => [h.currency, h.priceDate, h.stale]),
+    ).toEqual([
+      ["BTC", "2026-08-01", true],
+      ["ETH", "2026-10-21", false],
+    ]);
+    expect(stalePrices(valuation).map((h) => h.currency)).toEqual(["BTC"]);
+  });
+
+  it("shows no phantom row for cash beside a lot bought in it (w21/554 margin)", () => {
+    const valuation = selectValuation({
+      ...base,
+      market: { USD: "600", EUR: "-400.00" },
+      cost: { USD: "600", EUR: "100" },
+      units: { VEUR: "10", EUR: "-400.00" },
+      unitsByCost: { "VEUR {EUR}": "10", "EUR {}": "-400.00" },
+      prices: [
+        pair("VEUR", "EUR", ["2026-10-20"]),
+        pair("EUR", "USD", ["2026-06-01"]),
+      ],
+    });
+    expect(valuation.priced.map((h) => h.currency)).toEqual(["VEUR"]);
+    expect(valuation.atCostNoPrice).toEqual([]);
+  });
+
+  it("does not take cash in another currency for a cost currency (w21/556)", () => {
+    const valuation = selectValuation({
+      ...base,
+      currency: "EUR",
+      market: { EUR: "1800", USD: "500.00" },
+      cost: { EUR: "1800", USD: "500.00" },
+      units: { VTI: "10", USD: "500.00" },
+      unitsByCost: { "VTI {EUR}": "10", "USD {}": "500.00" },
+      prices: [pair("VTI", "USD", ["2026-10-21"])],
+    });
+    expect(valuation.priced).toEqual([]);
+    expect(valuation.atCostNoPrice.map((h) => h.currency)).toEqual(["VTI"]);
+  });
+
+  it("keeps cash that is also a lot's cost currency as that lot's price currency", () => {
+    const valuation = selectValuation({
+      ...base,
+      currency: "EUR",
+      market: { EUR: "2300" },
+      cost: { EUR: "2300" },
+      units: { VTI: "10", EUR: "500.00" },
+      unitsByCost: { "VTI {EUR}": "10", "EUR {}": "500.00" },
+      prices: [pair("VTI", "EUR", ["2026-10-21"])],
+    });
+    expect(valuation.priced.map((h) => h.currency)).toEqual(["VTI"]);
+  });
+});

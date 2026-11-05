@@ -250,6 +250,36 @@ export type Valuation = {
 };
 
 /**
+ * The `units_by_cost` balance read split into what selectValuation needs: the
+ * units held without a cost per commodity, and the currencies lots were bought
+ * in. Keys read `<commodity> {<cost currency>}`, or `<commodity> {}` for units
+ * held without a cost (w21/554, w21/556).
+ */
+function splitUnitsByCost(byCost: BalanceMap): {
+  costless: Map<string, { number: number; scale: number }>;
+  costCurrencies: string[];
+} {
+  const costless = new Map<string, { number: number; scale: number }>();
+  const costCurrencies = new Set<string>();
+  for (const key of Object.keys(byCost ?? {})) {
+    const match = /^(.+?) \{(.*)\}$/.exec(key);
+    if (!match) continue;
+    const [, commodity, cost] = match;
+    if (cost.trim() !== "") {
+      costCurrencies.add(cost.trim());
+      continue;
+    }
+    const { number, scale } = amountIn(byCost, key);
+    const before = costless.get(commodity);
+    costless.set(commodity, {
+      number: (before?.number ?? 0) + number,
+      scale: Math.max(before?.scale ?? 0, scale),
+    });
+  }
+  return { costless, costCurrencies: [...costCurrencies] };
+}
+
+/**
  * Everything a total valued at market discloses, from its `at_value` balance
  * map and the same balance `at_cost` and in `units`. `date` is the figure's
  * own date — the valuation date its prices were read at — and is omitted for
@@ -260,6 +290,7 @@ export function selectValuation({
   market,
   cost,
   units,
+  unitsByCost,
   currency,
   date,
   today,
@@ -269,6 +300,14 @@ export function selectValuation({
   market: BalanceMap;
   cost?: BalanceMap;
   units: BalanceMap;
+  /**
+   * The same balance in `units_by_cost`: which units were held with a cost, and
+   * in which currency. When it has landed, it — not the market map — says what
+   * was converted and which currencies are cost currencies; a commodity that is
+   * also another lot's cost currency, or cash beside lots, no longer confuses
+   * the two (w21/554, w21/556).
+   */
+  unitsByCost?: BalanceMap;
   currency: string;
   date?: string;
   today: string;
@@ -282,9 +321,15 @@ export function selectValuation({
   // still carries: a cost-less lot beside lots with a cost stays in the map,
   // and used to switch the valuation off for all of it (w21/278). What is
   // priced is the converted part.
+  const split =
+    unitsByCost === undefined ? null : splitUnitsByCost(unitsByCost);
   const converted = holdingsOf(units).flatMap((holding) => {
     if (holding.currency === currency) return [];
-    const { number: left, scale } = amountIn(market, holding.currency);
+    // With the by-cost read, what is left unconverted is exactly the units
+    // held without a cost; otherwise it is read back from the market map.
+    const { number: left, scale } = split
+      ? (split.costless.get(holding.currency) ?? { number: 0, scale: 0 })
+      : amountIn(market, holding.currency);
     if (Math.abs(holding.number) <= Math.abs(left)) return [];
     // Rounded at the recorded scale: 2.05 − 0.05 is not 2 in floating point.
     const part = Number(
@@ -306,9 +351,9 @@ export function selectValuation({
   // Callers that read no `at_cost` map (the Accounts root, the account detail)
   // pass none: the market map then names them, since a lot priced against its
   // cost currency is left in that currency there (w21/291).
-  const costCurrencies = holdingsOf(cost ?? market).map(
-    (holding) => holding.currency,
-  );
+  const costCurrencies =
+    split?.costCurrencies ??
+    holdingsOf(cost ?? market).map((holding) => holding.currency);
   if (prices !== undefined) {
     for (const holding of converted) {
       const candidates = costCurrencies.filter(

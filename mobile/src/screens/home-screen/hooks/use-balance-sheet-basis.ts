@@ -16,6 +16,9 @@ export const useBalanceSheetBasis = (ledgerId: string) => {
       ledgerId,
       costConversion: BALANCE_CONVERSION,
       unitsConversion: "units",
+      // Which units were held with a cost, so a caption tells a lot's cost
+      // currency from cash of the same currency (w21/554, w21/556).
+      byCostConversion: "units_by_cost",
     },
     skip: !ledgerId,
     fetchPolicy: BALANCE_SHEET_BASIS_FETCH_POLICY,

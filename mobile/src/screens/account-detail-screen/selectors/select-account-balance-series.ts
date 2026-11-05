@@ -40,6 +40,8 @@ export function selectAccountBalanceDisplay(
   today: string,
   current?: BalanceMap,
   managed?: readonly ManagedSource[],
+  /** The report read with `conversion: "units_by_cost"` (w21/554, w21/556). */
+  unitsByCost?: AccountReportQuery,
 ): BalanceDisplay {
   // Postings dated after today have not happened: a buy pre-entered for next
   // week turned a cash account into "0 VOO" (w21/907). The report is change
@@ -71,6 +73,12 @@ export function selectAccountBalanceDisplay(
     valuation: selectValuation({
       market: hasCurrent ? current : latest?.balance,
       units: unitsBalance,
+      unitsByCost:
+        unitsByCost === undefined
+          ? undefined
+          : latestBalance(
+              happened(unitsByCost.getLedgerAccountReport?.linechartData),
+            ),
       currency,
       date: hasCurrent ? today : latest?.date,
       today,

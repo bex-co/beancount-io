@@ -114,6 +114,14 @@ const AccountsScreenImpl = (): JSX.Element => {
     refetch: unitsRefetch,
     error: unitsError,
   } = useTrialBalance(ledgerId, balanceTime, "units");
+  // And by cost: which units were held with a cost, so a root's caption tells a
+  // lot's cost currency from cash of the same currency (w21/554, w21/556).
+  const {
+    data: byCostData,
+    loading: byCostLoading,
+    refetch: byCostRefetch,
+    error: byCostError,
+  } = useTrialBalance(ledgerId, balanceTime, "units_by_cost");
 
   // Closed accounts the ledger emptied stay out of the tree (w21/099).
   const { closeDates, settled: closeDatesSettled } =
@@ -145,8 +153,9 @@ const AccountsScreenImpl = (): JSX.Element => {
         prices,
         today,
         managed,
+        byCostData,
       ),
-    [currency, accountData, unitsData, prices, today, managed],
+    [currency, accountData, unitsData, prices, today, managed, byCostData],
   );
 
   const handleOpenAccount = useCallback(() => {
@@ -162,6 +171,7 @@ const AccountsScreenImpl = (): JSX.Element => {
         ledgerMetaRefetch(),
         accountsRefetch(),
         unitsRefetch(),
+        byCostRefetch(),
         pricesRefetch(),
         // The bell's errors and the close dates the tree is filtered by (w21/839).
         refetchNamedQueries(client, [
@@ -185,6 +195,7 @@ const AccountsScreenImpl = (): JSX.Element => {
     !closeDatesSettled ||
     (accountsLoading && !accountData) ||
     (unitsLoading && !unitsData && !unitsError) ||
+    (byCostLoading && !byCostData && !byCostError) ||
     (pricesLoading && !pricesData && !pricesError);
   // A failed first load has no accounts to list; the table read that as "No
   // accounts" (w21/080).
@@ -198,6 +209,7 @@ const AccountsScreenImpl = (): JSX.Element => {
   const showStale = isShowingStaleDataFromQueries([
     { data: accountData, error: accountsError },
     { data: unitsData, error: unitsError },
+    { data: byCostData, error: byCostError },
     { data: pricesData, error: pricesError },
     { data: ledgerMeta, error: ledgerMetaError },
   ]);

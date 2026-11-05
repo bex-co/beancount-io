@@ -39,6 +39,10 @@ export function selectSeriesValuation(
     market: latestBalance(market?.getLedgerBalanceSheet?.[series], today),
     cost: latestBalance(basis?.cost?.[series], today),
     units: latestBalance(basis?.units?.[series], today),
+    unitsByCost:
+      basis?.byCost === undefined
+        ? undefined
+        : latestBalance(basis.byCost[series], today),
     currency,
     // No valuation date: the latest point is today's standing, valued at the
     // ledger's latest prices as the Accounts tree is, so price age is measured
