@@ -149,7 +149,9 @@ describe("foldBqlColumnFrom", () => {
   it("wraps an inner with-clause fold and reads its own owner", () => {
     expect(
       foldBqlColumnFrom("SELECT * FROM (SELECT date FROM payee LIMIT 1)"),
-    ).toBe(`SELECT * FROM (SELECT date FROM (SELECT ${INNER} FROM payee) LIMIT 1)`);
+    ).toBe(
+      `SELECT * FROM (SELECT date FROM (SELECT ${INNER} FROM payee) LIMIT 1)`,
+    );
   });
 
   it("wraps when a second statement follows the terminator", () => {
@@ -173,5 +175,36 @@ describe("foldBqlColumnFrom", () => {
   it("returns an unterminated literal unchanged", () => {
     const query = "SELECT * FROM payee WHERE narration = 'oops LIMIT 1";
     expect(foldBqlColumnFrom(query)).toBe(query);
+  });
+  it.each([
+    "SELECT COUNT(*) FROM year > 2026",
+    "SELECT COUNT(*) FROM year = 2026",
+    "SELECT COUNT(*) FROM year != 2026",
+    "SELECT COUNT(*) FROM year <= 2026",
+    "SELECT COUNT(*) FROM year >= 2026",
+    "SELECT account FROM month < 8 LIMIT 1",
+    "SELECT COUNT(*) FROM date > 2026-12-31",
+    "SELECT account FROM account ~ 'Cash' LIMIT 1",
+    "SELECT COUNT(*) FROM year = 2026 AND month = 4",
+    "SELECT COUNT(*) FROM year IN (2025, 2026)",
+    "SELECT COUNT(*) FROM year BETWEEN 2025 AND 2026",
+    "SELECT COUNT(*) FROM payee IS NULL",
+    "SELECT COUNT(*) FROM year NOT IN (2025)",
+    "SELECT COUNT(*) FROM year OR month = 1",
+    "SELECT COUNT(*) FROM year + 1 > 2026",
+    "SELECT COUNT(*) FROM year-1 > 2025",
+    "SELECT COUNT(*) FROM year * 2 > 4000",
+    "SELECT COUNT(*) FROM year / 2 > 1000",
+  ])("leaves an expression filter untouched: %s (w23/212)", (query) => {
+    expect(foldBqlColumnFrom(query)).toBe(query);
+  });
+
+  it("still wraps when a name merely starts like an operator keyword", () => {
+    expect(foldBqlColumnFrom("SELECT count(*) FROM payee ORDER BY date")).toBe(
+      `SELECT count(*) FROM (SELECT ${INNER} FROM payee) ORDER BY date`,
+    );
+    expect(foldBqlColumnFrom("SELECT count(*) FROM payee WHERE true")).toBe(
+      `SELECT count(*) FROM (SELECT ${INNER} FROM payee) WHERE true`,
+    );
   });
 });

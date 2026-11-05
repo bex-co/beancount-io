@@ -237,7 +237,18 @@ function matchFoldFrom(
     // A trailing `;` already folds; a mid-query one means more query follows.
     if (k >= chars.length) return undefined;
   }
+  // An operator or expression keyword right after the name makes it an entry
+  // filter (`FROM year = 2026`), not a column table with a clause: wrapping
+  // would yield the invalid `FROM (SELECT … FROM year) = 2026` (w23/212).
+  if (EXPRESSION_START.test(restOf(chars, j))) return undefined;
   return { kind: "wrap", name, nameEnd };
+}
+
+const EXPRESSION_START =
+  /^(?:[=!<>~+\-*/%]|(?:AND|OR|IN|IS|NOT|BETWEEN)(?![A-Za-z0-9_]))/i;
+
+function restOf(chars: string[], from: number): string {
+  return chars.slice(from, from + 16).join("");
 }
 
 /**

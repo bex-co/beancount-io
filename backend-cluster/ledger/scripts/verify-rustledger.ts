@@ -1757,6 +1757,26 @@ async function main(): Promise<void> {
         : `native ${name} matches the stock count ${expected}`,
     );
   }
+  // Expression filters after a fold-column name are entry filters, not a
+  // wrapped table (w23/212): the pipeline must leave them for the engine
+  // instead of emitting `FROM (SELECT … FROM year) = 2026`.
+  for (const filter of [
+    "year > 2026",
+    "year = 2026",
+    "month = 8",
+    "date > 2026-12-31",
+    "account ~ 'Cash'",
+  ]) {
+    const piped = await queryLedgerFiles(
+      FILES,
+      "main.beancount",
+      normalizeBqlQueryForEngine(`SELECT count(*) FROM ${filter}`),
+    );
+    assert(
+      Array.isArray(piped.rows),
+      `pipelined FROM ${filter} runs without a syntax error`,
+    );
+  }
   // The dual stays table-shaped: the pipeline must not fold it.
   const pipelineDual = await queryLedgerFiles(
     FILES,
