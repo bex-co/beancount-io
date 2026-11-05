@@ -8,7 +8,7 @@ import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { formatShortMoneyWithCurrency } from "@/common/number-utils";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useHorizontalSwipeOwnerGesture } from "@/common/horizontal-swipe-owner";
-import { hasClippedStart } from "./scroll-cue";
+import { hasClippedStart, wasAtEnd } from "./scroll-cue";
 import {
   AXIS_FONT_SIZE,
   ChartLegend,
@@ -95,9 +95,21 @@ export function ScrollableAxisChart({
             ref={scrollRef}
             horizontal
             showsHorizontalScrollIndicator={false}
-            onLayout={(event) =>
-              setViewportWidth(event.nativeEvent.layout.width)
-            }
+            onLayout={(event) => {
+              const width = event.nativeEvent.layout.width;
+              // A narrower or wider viewport with an unchanged plot fires no
+              // content-size change: keep a chart that showed the newest period
+              // on it (w21/1018).
+              if (
+                viewportWidth > 0 &&
+                width !== viewportWidth &&
+                wasAtEnd(plotWidth, viewportWidth, offsetX)
+              ) {
+                scrollRef.current?.scrollToEnd({ animated: false });
+                setOffsetX(Math.max(0, plotWidth - width));
+              }
+              setViewportWidth(width);
+            }}
             onScroll={(event) => setOffsetX(event.nativeEvent.contentOffset.x)}
             scrollEventThrottle={32}
             // Open long spans on the most recent periods. Fires once content is
