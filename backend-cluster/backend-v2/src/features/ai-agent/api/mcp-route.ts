@@ -132,7 +132,10 @@ async function handleMcpRequest(
     accept.includes("text/event-stream") &&
     isJsonContentType(ctx.get("Content-Type")) &&
     !(Array.isArray(body)
-      ? body.every((message) => JSONRPCMessageSchema.safeParse(message).success)
+      ? // JSON-RPC 2.0 §6: an empty batch is an Invalid Request (`every` is
+        // vacuously true on `[]`, which the transport would answer with 202).
+        body.length > 0 &&
+        body.every((message) => JSONRPCMessageSchema.safeParse(message).success)
       : JSONRPCMessageSchema.safeParse(body).success)
   ) {
     ctx.status = 400;

@@ -310,10 +310,16 @@ it("unauthenticated invalid objects still receive 401 and the discovery hint", a
   expect(factory).not.toHaveBeenCalled();
 });
 
-it("the existing empty batch completes with 202", async () => {
+it("an empty batch is an Invalid Request, not an accepted notification (w23/213)", async () => {
   const res = await post("[]");
-  expect(res.status).toBe(202);
-  expect(res.text).toBe("");
+  expect(res.status).toBe(400);
+  expect(res.contentType).toContain("application/json");
+  expect(JSON.parse(res.text)).toMatchObject({
+    jsonrpc: "2.0",
+    error: { code: -32600 },
+    id: null,
+  });
+  expect(factory).not.toHaveBeenCalled();
   expect(ping).not.toHaveBeenCalled();
   expect(initialized).not.toHaveBeenCalled();
 });
