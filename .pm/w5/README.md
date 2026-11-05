@@ -40,7 +40,6 @@
 
 - [1119 — Bound root discovery and refuse incomplete searches](./1119.md) — major CLI: consuming the 64-candidate budget can accept a false leaf balance and invalidate its root; unrelated files also bypass the work budget. Three unsafe writes and nine safe controls, current-source Native/public reproduction checked; extended 2026-11-01.
 
-- [1118 — Keep Cash Flow cash balances in native arithmetic after inferred payments](./1118.md) — minor CLI JSON regression: a 100-digit context changes native closing and quiet-month cash by 1e−25; fresh/current/prior-source controls and the full 90-profile cash-flow acceptance checked; found 2026-11-01.
 
 
 
@@ -160,6 +159,8 @@ The 27 findings from the MCP QA auth sweep against the hosted endpoint (023–05
 
 
 ## Blocked inbox
+
+- [1118 — Keep Cash Flow cash balances in native arithmetic after inferred payments](./blocked/1118.md) — partial fix and 66 targeted tests ready; full gate waits on existing Linux import-descriptor refusal and a normal test environment. Source preserved in named stash; revisit after 1119 (2026-11-05).
 
 - [431 — Reduce balance/price/pad pre-reads while preserving their checks](./blocked/431.md) — remaining maintainer decision: preserve current behavior through shared-validation refactoring or explicitly choose semantic changes. The approved ordinary-transaction work is ready separately in [1120](./1120.md) (2026-11-04).
 - [015 — Decide the supported way to give a custom importer a third-party dependency](./blocked/015.md) — blocked on the CLI product owner's choice of the supported environment; the new work does not depend on this decision.
