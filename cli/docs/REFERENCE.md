@@ -907,6 +907,9 @@ Usage: bea report overview [OPTIONS]
 | `--time, -t` | str |  | Time filter: year, month, 2026, 2026-08, or "2026-01 - 2026-06" |
 | `--account, -a` | str |  | Account filter: a parent account or a regular expression |
 | `--interval, -i` | choice: monthly \| quarterly \| yearly \| weekly \| daily | monthly | Reporting interval |
+| `--format` | choice: text \| csv |  | Output format: text (default) or csv. csv prints the figures --json carries. |
+| `--output, -o` | path |  | With csv, write the table to this file, not stdout |
+| `--spreadsheet-safe` | flag |  | With csv, prefix text cells starting with = + - @ tab or CR with ' so spreadsheets do not run them as formulas |
 | `--allow-errors` | flag |  | Show partial data with errors on stderr; opts strict reads into partial answers |
 
 ### `bea report income-statement`
@@ -923,6 +926,9 @@ Usage: bea report income-statement [OPTIONS]
 | `--time, -t` | str |  | Time filter: year, month, 2026, 2026-08, or "2026-01 - 2026-06" |
 | `--account, -a` | str |  | Account filter: a parent account or a regular expression |
 | `--interval, -i` | choice: monthly \| quarterly \| yearly \| weekly \| daily | monthly | Reporting interval |
+| `--format` | choice: text \| csv |  | Output format: text (default) or csv. csv prints the figures --json carries. |
+| `--output, -o` | path |  | With csv, write the table to this file, not stdout |
+| `--spreadsheet-safe` | flag |  | With csv, prefix text cells starting with = + - @ tab or CR with ' so spreadsheets do not run them as formulas |
 | `--allow-errors` | flag |  | Show partial data with errors on stderr; opts strict reads into partial answers |
 
 ### `bea report balance-sheet`
@@ -939,6 +945,9 @@ Usage: bea report balance-sheet [OPTIONS]
 | `--time, -t` | str |  | Time filter: year, month, 2026, 2026-08, or "2026-01 - 2026-06" |
 | `--account, -a` | str |  | Account filter: a parent account or a regular expression |
 | `--interval, -i` | choice: monthly \| quarterly \| yearly \| weekly \| daily | monthly | Reporting interval |
+| `--format` | choice: text \| csv |  | Output format: text (default) or csv. csv prints the figures --json carries. |
+| `--output, -o` | path |  | With csv, write the table to this file, not stdout |
+| `--spreadsheet-safe` | flag |  | With csv, prefix text cells starting with = + - @ tab or CR with ' so spreadsheets do not run them as formulas |
 | `--allow-errors` | flag |  | Show partial data with errors on stderr; opts strict reads into partial answers |
 
 ### `bea report trial-balance`
@@ -954,6 +963,9 @@ Usage: bea report trial-balance [OPTIONS]
 | `--conversion, -x` | str |  | Currency or units/at_cost/at_value; defaults to the single operating currency, otherwise units |
 | `--time, -t` | str |  | Time filter: year, month, 2026, 2026-08, or "2026-01 - 2026-06" |
 | `--account, -a` | str |  | Account filter: a parent account or a regular expression |
+| `--format` | choice: text \| csv |  | Output format: text (default) or csv. csv prints the figures --json carries. |
+| `--output, -o` | path |  | With csv, write the table to this file, not stdout |
+| `--spreadsheet-safe` | flag |  | With csv, prefix text cells starting with = + - @ tab or CR with ' so spreadsheets do not run them as formulas |
 | `--allow-errors` | flag |  | Show partial data with errors on stderr; opts strict reads into partial answers |
 
 ### `bea report holdings`
@@ -970,6 +982,9 @@ Usage: bea report holdings [OPTIONS]
 | `--time, -t` | str |  | Time filter: year, month, 2026, 2026-08, or "2026-01 - 2026-06" |
 | `--account, -a` | str |  | Account filter: a parent account or a regular expression |
 | `--group-by` | choice: account \| commodity | account | Holdings grouping: account or commodity |
+| `--format` | choice: text \| csv |  | Output format: text (default) or csv. csv prints the figures --json carries. |
+| `--output, -o` | path |  | With csv, write the table to this file, not stdout |
+| `--spreadsheet-safe` | flag |  | With csv, prefix text cells starting with = + - @ tab or CR with ' so spreadsheets do not run them as formulas |
 | `--allow-errors` | flag |  | Show partial data with errors on stderr; opts strict reads into partial answers |
 
 ### `bea report register`
@@ -988,6 +1003,9 @@ Usage: bea report register [OPTIONS] {account}
 | --- | --- | --- | --- |
 | `--conversion, -x` | str |  | Currency or units/at_cost/at_value; defaults to the single operating currency, otherwise units |
 | `--time, -t` | str |  | Time filter: year, month, 2026, 2026-08, or "2026-01 - 2026-06" |
+| `--format` | choice: text \| csv |  | Output format: text (default) or csv. csv prints the figures --json carries. |
+| `--output, -o` | path |  | With csv, write the table to this file, not stdout |
+| `--spreadsheet-safe` | flag |  | With csv, prefix text cells starting with = + - @ tab or CR with ' so spreadsheets do not run them as formulas |
 | `--allow-errors` | flag |  | Show partial data with errors on stderr; opts strict reads into partial answers |
 
 ### `bea report capital-gains`
@@ -1004,6 +1022,9 @@ Usage: bea report capital-gains [OPTIONS]
 | `--account, -a` | str |  | Account filter: a parent account or a regular expression |
 | `--from-date` | str |  | Capital-gains sales on or after YYYY-MM-DD. |
 | `--to-date` | str |  | Capital-gains sales on or before YYYY-MM-DD. |
+| `--format` | choice: text \| csv |  | Output format: text (default) or csv. csv prints the figures --json carries. |
+| `--output, -o` | path |  | With csv, write the table to this file, not stdout |
+| `--spreadsheet-safe` | flag |  | With csv, prefix text cells starting with = + - @ tab or CR with ' so spreadsheets do not run them as formulas |
 | `--allow-errors` | flag |  | Show partial data with errors on stderr; opts strict reads into partial answers |
 
 ### `bea report cash-flow`
@@ -1020,6 +1041,9 @@ Usage: bea report cash-flow [OPTIONS]
 | `--account, -a` | str |  | Account filter: a parent account or a regular expression. Refused (exit 2) when it keeps only some legs of a transaction in the period, since the cash it moved would no longer match the rows. |
 | `--from-date` | str |  | Cash-flow entries on or after YYYY-MM-DD. |
 | `--to-date` | str |  | Cash-flow entries on or before YYYY-MM-DD. |
+| `--format` | choice: text \| csv |  | Output format: text (default) or csv. csv prints the figures --json carries. |
+| `--output, -o` | path |  | With csv, write the table to this file, not stdout |
+| `--spreadsheet-safe` | flag |  | With csv, prefix text cells starting with = + - @ tab or CR with ' so spreadsheets do not run them as formulas |
 | `--allow-errors` | flag |  | Show partial data with errors on stderr; opts strict reads into partial answers |
 
 ### `bea doctor lex`

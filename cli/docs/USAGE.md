@@ -1904,6 +1904,33 @@ bea report register Assets:Checking --time 2026-01
 bea report capital-gains --from-date 2026-01-01 --to-date 2026-12-31
 ```
 
+### Reports as CSV
+
+Every `bea report` command takes `--format csv` for a spreadsheet, a script, or
+`-o FILE` (a `.csv` name implies the format; `--spreadsheet-safe` prefixes text
+cells that start with `=`, `+`, `-`, `@`, tab or CR with `'`, as for `bea query`).
+The table holds the figures `--json` carries, with these rules:
+
+- Amounts are exact decimal strings: no rounding, thousands separators or
+  currency symbols in the cell. Currency is its own column.
+- A balance in several currencies is one row per currency. A balance that
+  cannot be valued (a missing price, with `--allow-errors`) keeps its row with
+  an empty `amount`, never zero; an empty balance is one row with empty
+  `currency` and `amount`. The advisory notes go to stderr.
+- Tree reports write each account's own balance, so the rows of a section add up
+  to its total. `overview`, `income-statement`, `balance-sheet`,
+  `trial-balance` and `cash-flow` share the columns
+  `section,item,date,currency,amount`; `holdings`, `register` and
+  `capital-gains` have their own, one row per holding, posting (repeated per
+  currency of its running balance, `line` identifies the posting) and lot.
+- An empty period prints the header alone and exits 0. `--json` and
+  `--format csv` cannot be combined.
+
+```bash
+bea report income-statement --time 2026 --format csv -o income-2026.csv
+bea report register Assets:Checking --time 2026-01 --format csv --spreadsheet-safe
+```
+
 Each report states its period, as-of date, account filter, and valuation.
 Invalid intervals, dates, reversed ranges, and malformed account filters exit
 **2**. `--account` takes a parent account (`Expenses:Food`) or a regular

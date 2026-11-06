@@ -8,18 +8,30 @@ as ISO, and trees as ordinary dicts — nothing here imports Beancount or Fava.
 from __future__ import annotations
 
 import shlex
+import sys
 from collections.abc import Mapping
+from dataclasses import dataclass
 from decimal import ROUND_HALF_UP, Decimal, localcontext
 from enum import StrEnum
+from pathlib import Path
 from typing import Annotated, Any
 
 import typer
 
-from cli import context, output
+from cli import context, output, report_csv
 from cli.engine import launch
 from cli.errors import UsageError
+from cli.paths import expand_path
 from cli.single_value import SingleValueCommand
-from cli.utils import account_filter, refuse_blank_filter, single_line, strip_padding
+from cli.utils import (
+    RawPath,
+    account_filter,
+    atomic_write,
+    refuse_blank_filter,
+    single_line,
+    strip_padding,
+    writes_through_descriptor,
+)
 
 report_app = typer.Typer(help="Financial reports from a local ledger", no_args_is_help=True, rich_markup_mode=None)
 
@@ -30,6 +42,11 @@ class ReportInterval(StrEnum):
     yearly = "yearly"
     weekly = "weekly"
     daily = "daily"
+
+
+class ReportFormat(StrEnum):
+    text = "text"
+    csv = "csv"
 
 
 class HoldingsGrouping(StrEnum):
@@ -66,6 +83,22 @@ CashFlowFromOpt = Annotated[str | None, typer.Option("--from-date", help="Cash-f
 CashFlowToOpt = Annotated[str | None, typer.Option("--to-date", help="Cash-flow entries on or before YYYY-MM-DD.")]
 IntervalOpt = Annotated[ReportInterval, typer.Option("--interval", "-i", help="Reporting interval")]
 GroupByOpt = Annotated[HoldingsGrouping, typer.Option("--group-by", help="Holdings grouping: account or commodity")]
+FormatOpt = Annotated[
+    ReportFormat | None,
+    typer.Option("--format", help="Output format: text (default) or csv. csv prints the figures --json carries."),
+]
+OutputOpt = Annotated[
+    str | None,
+    typer.Option("--output", "-o", click_type=RawPath(), help="With csv, write the table to this file, not stdout"),
+]
+SpreadsheetSafeOpt = Annotated[
+    bool,
+    typer.Option(
+        "--spreadsheet-safe",
+        help="With csv, prefix text cells starting with = + - @ tab or CR with ' so spreadsheets "
+        "do not run them as formulas",
+    ),
+]
 AllowErrorsOpt = Annotated[
     bool,
     typer.Option(
@@ -183,18 +216,31 @@ def _filter_text(metadata: dict[str, Any]) -> str:
     return single_line(metadata.get("account_filter") or "all")
 
 
-def _heading(title: str, metadata: dict[str, Any], *, profit_line: bool = False, convention: str | None = None) -> None:
-    output.utf8_stdout()
-    period = metadata["period"]
-    dates = f"{period['start']} through {metadata['as_of']}" if period["start"] else "no dated activity"
-    typer.echo(f"{title} — {dates}")
-    typer.echo(f"Valuation: {metadata['conversion']}; account: {_filter_text(metadata)}")
-    # Only reports that print an explicit profit figure may promise its sign;
-    # the balance sheet's earnings line carries the opposite (credit) sign and
-    # explains itself where it is printed. Cash flow brings its own convention:
-    # its rows are cash impact, only its bottom lines are balances.
-    convention = convention or "Account balances use Beancount signs (credits negative)"
-    typer.echo(f"{convention}; profit is positive for a gain." if profit_line else f"{convention}.")
+def _heading(
+    title: str,
+    metadata: dict[str, Any],
+    *,
+    profit_line: bool = False,
+    convention: str | None = None,
+    csv: bool = False,
+) -> None:
+    """The report heading and the notes about its data.
+
+    With `csv`, stdout is the table alone: the title lines are dropped and
+    every advisory, including the partial-valuation line, goes to stderr.
+    """
+    if not csv:
+        output.utf8_stdout()
+        period = metadata["period"]
+        dates = f"{period['start']} through {metadata['as_of']}" if period["start"] else "no dated activity"
+        typer.echo(f"{title} — {dates}")
+        typer.echo(f"Valuation: {metadata['conversion']}; account: {_filter_text(metadata)}")
+        # Only reports that print an explicit profit figure may promise its sign;
+        # the balance sheet's earnings line carries the opposite (credit) sign and
+        # explains itself where it is printed. Cash flow brings its own convention:
+        # its rows are cash impact, only its bottom lines are balances.
+        convention = convention or "Account balances use Beancount signs (credits negative)"
+        typer.echo(f"{convention}; profit is positive for a gain." if profit_line else f"{convention}.")
     for source in metadata.get("price_sources", []):
         if source["freshness"] != "recent" or source["error"]:
             # The error is a sentence of its own; one full stop, not `..` (w5/484).
@@ -220,7 +266,10 @@ def _heading(title: str, metadata: dict[str, Any], *, profit_line: bool = False,
         hint = f" For the period {periods[0]}, pass -t {shlex.quote(periods[0])}." if periods else ""
         output.note(f"No accounts match {_filter_text(metadata)}.{hint}")
     if metadata["missing_prices"]:
-        typer.echo("Partial valuation: some prices are missing; a total that cannot be valued reads Unavailable.")
+        unavailable = "reads Unavailable" if not csv else "has an empty amount"
+        (output.note if csv else typer.echo)(
+            f"Partial valuation: some prices are missing; a total that cannot be valued {unavailable}."
+        )
         for line in metadata["missing_price_summary"]:
             output.note(line)
 
@@ -290,6 +339,63 @@ def _precision(data: dict[str, Any]) -> dict[str, int]:
     return {str(currency): int(digits) for currency, digits in raw.items()}
 
 
+@dataclass(frozen=True)
+class CsvOutput:
+    """Where a report's CSV goes; `None` from `_csv_output` means the text report."""
+
+    destination: Path | None
+    spreadsheet_safe: bool
+
+
+def _csv_output(fmt: ReportFormat | None, output_file: str | None, spreadsheet_safe: bool) -> CsvOutput | None:
+    """Resolve and validate the CSV options before the ledger is read.
+
+    A `.csv` destination implies the format, as for `bea query`. The options
+    that only mean something with CSV are refused otherwise rather than
+    ignored, and `--json` already names its own output.
+    """
+    ctx = context.current()
+    if output_file in output.STDOUT_PATHS:
+        output_file = None
+    implied_csv = output_file is not None and Path(output_file).suffix.casefold() == ".csv"
+    if fmt is None and implied_csv and not ctx.json_output:
+        fmt = ReportFormat.csv
+    if ctx.json_output:
+        if fmt is not None:
+            raise UsageError(
+                f"--json and --format {fmt.value} cannot be combined: --json already selects JSON output. "
+                "Drop --format or drop --json."
+            )
+        if output_file is not None or spreadsheet_safe:
+            raise UsageError("--output and --spreadsheet-safe apply to --format csv, not to --json output.")
+        return None
+    if fmt is not ReportFormat.csv:
+        if output_file is not None or spreadsheet_safe:
+            raise UsageError("--output and --spreadsheet-safe apply to --format csv: pass --format csv.")
+        return None
+    destination = None
+    if output_file is not None and not writes_through_descriptor(output_file):
+        destination = expand_path(Path(output_file), "--output").resolve()
+        output.check_output_destination(destination)
+        output.require_writable_destination(destination)
+    elif output_file is not None:
+        destination = Path(output_file)
+    return CsvOutput(destination, spreadsheet_safe)
+
+
+def _emit_csv(kind: str, file: Any, data: dict[str, Any], target: CsvOutput) -> None:
+    """Write the report's CSV table to stdout or the requested file."""
+    _heading("", data, csv=True)
+    text = report_csv.render(kind, data, spreadsheet_safe=target.spreadsheet_safe)
+    if target.destination is None:
+        output.utf8_stdout()
+        sys.stdout.write(text)
+        return
+    if not writes_through_descriptor(target.destination):
+        output.refuse_ledger_alias(target.destination, file, spelling=target.destination)
+    atomic_write(target.destination, text, export=True)
+
+
 def _emit_json(file: Any, data: dict[str, Any]) -> None:
     payload = {key: value for key, value in data.items() if key != "display_precision"}
     output.emit(payload, target=output.file_target(file))
@@ -301,14 +407,21 @@ def overview(
     time: TimeOpt = None,
     account: AccountOpt = None,
     interval: IntervalOpt = ReportInterval.monthly,
+    fmt: FormatOpt = None,
+    output_file: OutputOpt = None,
+    spreadsheet_safe: SpreadsheetSafeOpt = False,
     allow_errors: AllowErrorsOpt = False,
 ) -> None:
     """Assets, liabilities, income, expenses, and net worth."""
+    csv_target = _csv_output(fmt, output_file, spreadsheet_safe)
     file, data = _ask(
         "overview", conversion=conversion, time=time, account=account, interval=interval, allow_errors=allow_errors
     )
     if context.current().json_output:
         _emit_json(file, data)
+        return
+    if csv_target is not None:
+        _emit_csv("overview", file, data, csv_target)
         return
     conversion = str(data["conversion"])
     _heading("Financial Overview", data)
@@ -343,9 +456,13 @@ def income_statement(
     time: TimeOpt = None,
     account: AccountOpt = None,
     interval: IntervalOpt = ReportInterval.monthly,
+    fmt: FormatOpt = None,
+    output_file: OutputOpt = None,
+    spreadsheet_safe: SpreadsheetSafeOpt = False,
     allow_errors: AllowErrorsOpt = False,
 ) -> None:
     """Income, expenses, and profit by interval."""
+    csv_target = _csv_output(fmt, output_file, spreadsheet_safe)
     file, data = _ask(
         "income-statement",
         conversion=conversion,
@@ -356,6 +473,9 @@ def income_statement(
     )
     if context.current().json_output:
         _emit_json(file, data)
+        return
+    if csv_target is not None:
+        _emit_csv("income-statement", file, data, csv_target)
         return
     conversion = str(data["conversion"])
     _heading("Income Statement", data, profit_line=True)
@@ -387,12 +507,16 @@ def balance_sheet(
     time: TimeOpt = None,
     account: AccountOpt = None,
     interval: IntervalOpt = ReportInterval.monthly,
+    fmt: FormatOpt = None,
+    output_file: OutputOpt = None,
+    spreadsheet_safe: SpreadsheetSafeOpt = False,
     allow_errors: AllowErrorsOpt = False,
 ) -> None:
     """Assets, liabilities, and equity.
 
     Includes current earnings and valuation adjustments.
     """
+    csv_target = _csv_output(fmt, output_file, spreadsheet_safe)
     file, data = _ask(
         "balance-sheet",
         conversion=conversion,
@@ -403,6 +527,9 @@ def balance_sheet(
     )
     if context.current().json_output:
         _emit_json(file, data)
+        return
+    if csv_target is not None:
+        _emit_csv("balance-sheet", file, data, csv_target)
         return
     conversion = str(data["conversion"])
     _heading("Balance Sheet", data)
@@ -436,12 +563,19 @@ def trial_balance(
     conversion: ConversionOpt = None,
     time: TimeOpt = None,
     account: AccountOpt = None,
+    fmt: FormatOpt = None,
+    output_file: OutputOpt = None,
+    spreadsheet_safe: SpreadsheetSafeOpt = False,
     allow_errors: AllowErrorsOpt = False,
 ) -> None:
     """All five account types, with signed balances."""
+    csv_target = _csv_output(fmt, output_file, spreadsheet_safe)
     file, data = _ask("trial-balance", conversion=conversion, time=time, account=account, allow_errors=allow_errors)
     if context.current().json_output:
         _emit_json(file, data)
+        return
+    if csv_target is not None:
+        _emit_csv("trial-balance", file, data, csv_target)
         return
     conversion = str(data["conversion"])
     _heading("Trial Balance", data)
@@ -460,9 +594,13 @@ def holdings(
     time: TimeOpt = None,
     account: AccountOpt = None,
     group_by: GroupByOpt = HoldingsGrouping.account,
+    fmt: FormatOpt = None,
+    output_file: OutputOpt = None,
+    spreadsheet_safe: SpreadsheetSafeOpt = False,
     allow_errors: AllowErrorsOpt = False,
 ) -> None:
     """What the ledger holds: units, cost, and market value."""
+    csv_target = _csv_output(fmt, output_file, spreadsheet_safe)
     file, data = _ask(
         "holdings",
         conversion=conversion,
@@ -473,6 +611,9 @@ def holdings(
     )
     if context.current().json_output:
         _emit_json(file, data)
+        return
+    if csv_target is not None:
+        _emit_csv("holdings", file, data, csv_target)
         return
     conversion = str(data["conversion"])
     _heading("Holdings", data)
@@ -508,14 +649,21 @@ def register(
     account: Annotated[str, typer.Argument(help="Account to list; names the register's subtree")],
     conversion: ConversionOpt = None,
     time: TimeOpt = None,
+    fmt: FormatOpt = None,
+    output_file: OutputOpt = None,
+    spreadsheet_safe: SpreadsheetSafeOpt = False,
     allow_errors: AllowErrorsOpt = False,
 ) -> None:
     """Dated postings with a running balance for one account."""
     if not account.strip():
         raise UsageError("ACCOUNT argument is empty; pass the account to list, such as Assets:Checking.")
+    csv_target = _csv_output(fmt, output_file, spreadsheet_safe)
     file, data = _ask("register", conversion=conversion, time=time, account=account, allow_errors=allow_errors)
     if context.current().json_output:
         _emit_json(file, data)
+        return
+    if csv_target is not None:
+        _emit_csv("register", file, data, csv_target)
         return
     conversion = str(data["conversion"])
     _heading("Register", data)
@@ -562,9 +710,13 @@ def capital_gains(
     account: AccountOpt = None,
     from_date: FromDateOpt = None,
     to_date: ToDateOpt = None,
+    fmt: FormatOpt = None,
+    output_file: OutputOpt = None,
+    spreadsheet_safe: SpreadsheetSafeOpt = False,
     allow_errors: AllowErrorsOpt = False,
 ) -> None:
     """Realized gain and loss per sale lot."""
+    csv_target = _csv_output(fmt, output_file, spreadsheet_safe)
     file, data = _ask(
         "capital-gains",
         conversion=None,
@@ -576,6 +728,9 @@ def capital_gains(
     )
     if context.current().json_output:
         _emit_json(file, data)
+        return
+    if csv_target is not None:
+        _emit_csv("capital-gains", file, data, csv_target)
         return
     conversion = str(data["conversion"])
     _heading("Capital Gains", data)
@@ -622,9 +777,13 @@ def cash_flow(
     account: CashFlowAccountOpt = None,
     from_date: CashFlowFromOpt = None,
     to_date: CashFlowToOpt = None,
+    fmt: FormatOpt = None,
+    output_file: OutputOpt = None,
+    spreadsheet_safe: SpreadsheetSafeOpt = False,
     allow_errors: AllowErrorsOpt = False,
 ) -> None:
     """Operating, investing, and financing flows."""
+    csv_target = _csv_output(fmt, output_file, spreadsheet_safe)
     file, data = _ask(
         "cash-flow",
         conversion=None,
@@ -636,6 +795,9 @@ def cash_flow(
     )
     if context.current().json_output:
         _emit_json(file, data)
+        return
+    if csv_target is not None:
+        _emit_csv("cash-flow", file, data, csv_target)
         return
     conversion = str(data["conversion"])
     _heading(
