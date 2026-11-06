@@ -1,0 +1,85 @@
+option "title" "Startup fixture"
+option "operating_currency" "USD"
+
+2026-01-01 open Assets:Bank:Checking USD
+2026-01-01 open Assets:Bank:Savings USD
+2026-01-01 open Assets:Equipment USD
+2026-01-01 open Income:Consulting USD
+2026-01-01 open Expenses:Rent USD
+2026-01-01 open Expenses:Payroll USD
+2026-01-01 open Expenses:Software USD
+2026-01-01 open Equity:Opening USD
+2026-01-01 open Equity:SeedRound USD
+
+2026-01-01 * "Opening balance"
+  Assets:Bank:Checking   50000.00 USD
+  Equity:Opening        -50000.00 USD
+
+2026-01-10 * "Client A" "January revenue"
+  Assets:Bank:Checking    5000.00 USD
+  Income:Consulting      -5000.00 USD
+2026-01-15 * "Landlord" "January rent"
+  Expenses:Rent           3000.00 USD
+  Assets:Bank:Checking   -3000.00 USD
+2026-01-20 * "Cloud" "January software"
+  Expenses:Software       1000.00 USD
+  Assets:Bank:Checking   -1000.00 USD
+
+2026-02-10 * "Client A" "February revenue"
+  Assets:Bank:Checking    2000.00 USD
+  Income:Consulting      -2000.00 USD
+2026-02-15 * "Landlord" "February rent"
+  Expenses:Rent           3000.00 USD
+  Assets:Bank:Checking   -3000.00 USD
+2026-02-28 * "Payroll run" "February payroll"
+  Expenses:Payroll        4000.00 USD
+  Assets:Bank:Checking   -4000.00 USD
+
+2026-03-10 * "Client B" "March revenue"
+  Assets:Bank:Checking    1000.00 USD
+  Income:Consulting      -1000.00 USD
+2026-03-15 * "Landlord" "March rent"
+  Expenses:Rent           3000.00 USD
+  Assets:Bank:Checking   -3000.00 USD
+2026-03-31 * "Payroll run" "March payroll"
+  Expenses:Payroll        4000.00 USD
+  Assets:Bank:Checking   -4000.00 USD
+
+2026-04-10 * "Client B" "April revenue"
+  Assets:Bank:Checking    3000.00 USD
+  Income:Consulting      -3000.00 USD
+2026-04-12 * "Move to savings" "Internal transfer, not burn"
+  Assets:Bank:Savings    10000.00 USD
+  Assets:Bank:Checking  -10000.00 USD
+2026-04-15 * "Landlord" "April rent"
+  Expenses:Rent           3000.00 USD
+  Assets:Bank:Checking   -3000.00 USD
+2026-04-30 * "Payroll run" "April payroll"
+  Expenses:Payroll        4000.00 USD
+  Assets:Bank:Checking   -4000.00 USD
+
+2026-05-02 * "Seed investors" "Seed round"
+  Assets:Bank:Checking  100000.00 USD
+  Equity:SeedRound     -100000.00 USD
+2026-05-08 * "Laptops" "Equipment purchase"
+  Assets:Equipment        8000.00 USD
+  Assets:Bank:Checking   -8000.00 USD
+2026-05-10 * "Client C" "May revenue"
+  Assets:Bank:Checking    2000.00 USD
+  Income:Consulting      -2000.00 USD
+2026-05-15 * "Landlord" "May rent"
+  Expenses:Rent           3000.00 USD
+  Assets:Bank:Checking   -3000.00 USD
+2026-05-31 * "Payroll run" "May payroll"
+  Expenses:Payroll        4000.00 USD
+  Assets:Bank:Checking   -4000.00 USD
+
+2026-06-10 * "Client C" "June revenue"
+  Assets:Bank:Checking    2000.00 USD
+  Income:Consulting      -2000.00 USD
+2026-06-15 * "Landlord" "June rent"
+  Expenses:Rent           3000.00 USD
+  Assets:Bank:Checking   -3000.00 USD
+2026-06-30 * "Payroll run" "June payroll"
+  Expenses:Payroll        4000.00 USD
+  Assets:Bank:Checking   -4000.00 USD

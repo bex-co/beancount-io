@@ -1,6 +1,6 @@
 # Install the Beancount skills
 
-Install the fifteen `beancount-*` ledger skills for Claude Code, Codex, or both, from any directory. You keep one Git checkout of the skills and link it into each agent's skill directory. Updating the checkout updates every agent, and the helper script never touches skills it did not install. [OpenClaw and Hermes Agent](#openclaw-and-hermes-agent) have the suite route and host limits described below, including migration from the retired standalone listings.
+Install the sixteen `beancount-*` ledger skills for Claude Code, Codex, or both, from any directory. You keep one Git checkout of the skills and link it into each agent's skill directory. Updating the checkout updates every agent, and the helper script never touches skills it did not install. [OpenClaw and Hermes Agent](#openclaw-and-hermes-agent) have the suite route and host limits described below, including migration from the retired standalone listings.
 
 Rehearsed on macOS with Claude Code and Codex (see [tested with](first-query.md#tested-with)). Linux uses the same commands but has not been rehearsed. On native Windows, the [PowerShell steps](#windows-powershell) were rehearsed with Windows PowerShell 5.1. Claude Code and Codex there discovered a workspace install and answered the first query, with the [Windows-specific corrections](#agents-on-windows) listed in that section. WSL is not covered.
 
@@ -52,7 +52,7 @@ Check the files first. `verify` only reads, and it exits nonzero with one line p
 python3 "$SKILLS_SRC/scripts/skills/beancount-skills.py" verify ~/.claude/skills ~/.agents/skills
 ```
 
-Then ask each agent from your ledger directory. Both should name the same fifteen skills listed in the [skills catalog](../../skills/README.md).
+Then ask each agent from your ledger directory. Both should name the same sixteen skills listed in the [skills catalog](../../skills/README.md).
 
 ```sh
 claude -p "List the names of the skills available to you that start with beancount-, one per line, nothing else."

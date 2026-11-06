@@ -58,6 +58,8 @@ jobs:
         run: python3 scripts/skills/test_verify_bql_cookbook.py
       - name: Run report-pack build tests
         run: python3 scripts/skills/test_report_pack.py
+      - name: Run business-metrics script tests
+        run: python3 scripts/skills/test_business_metrics.py
       - name: Run customer-suite installer and first-query tests
         run: python3 scripts/skills/test_beancount_skills.py
       - name: Run bea recipe tests against the published minimum bea

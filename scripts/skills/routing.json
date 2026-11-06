@@ -1225,6 +1225,43 @@
         "beancount-report-pack"
       ],
       "why": "Reconciling accounts to statements and committing is the close ritual."
+    },
+    {
+      "id": "metrics-burn-runway",
+      "prompt": "What's our monthly burn and how many months of runway do we have left as of June 2026?",
+      "expected": "beancount-business-metrics",
+      "confusable": [
+        "beancount-ask",
+        "beancount-close"
+      ],
+      "why": "Burn and runway from cash movements are the business-metrics workflow."
+    },
+    {
+      "id": "metrics-saas-metrics-request",
+      "prompt": "Calculate our ARR, churn and CAC from the ledger.",
+      "expected": "beancount-business-metrics",
+      "confusable": [
+        "beancount-ask"
+      ],
+      "why": "This is the metrics skill's refusal path: customer and subscription measures are out of scope but it owns the answer."
+    },
+    {
+      "id": "ask-biggest-expense-not-metrics",
+      "prompt": "What was my biggest expense category last quarter?",
+      "expected": "beancount-ask",
+      "confusable": [
+        "beancount-business-metrics"
+      ],
+      "why": "A spending breakdown is a question, not burn or runway."
+    },
+    {
+      "id": "report-pack-not-metrics",
+      "prompt": "Build the June 2026 statements pack for my accountant, with tie-outs.",
+      "expected": "beancount-report-pack",
+      "confusable": [
+        "beancount-business-metrics"
+      ],
+      "why": "Statement files with tie-outs are the pack, not a burn analysis."
     }
   ]
 }

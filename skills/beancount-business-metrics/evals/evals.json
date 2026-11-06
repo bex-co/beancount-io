@@ -1,0 +1,61 @@
+{
+ "skill_name": "beancount-business-metrics",
+ "notes": "Each eval maps evals/files/eval1_ledger.beancount to ./ledger.beancount in a scratch dir. Ground truth for January-June 2026, verified by hand and by running scripts/business_metrics.py: monthly net burn -1000.00 (Jan), 5000.00, 6000.00, 4000.00 (Apr), 5000.00 (May), 5000.00 (Jun); the 10000.00 April move to savings is not burn; the 100000.00 May seed round is financing and the 8000.00 May laptops are investing, neither is burn; closing cash 118000.00 USD at the end of June; three-month average net burn (Apr-Jun) 4666.67 USD and runway 25.3 months; a six-month average gives 4000.00 and 29.5 months. Months before 2026-01 are not counted, so a six-month runway through 2026-02 is not stated. ARR/MRR/CAC/LTV/churn/retention cannot be computed from this ledger.",
+ "evals": [
+  {
+   "id": 1,
+   "name": "burn-and-runway",
+   "prompt": "What's our monthly burn and how many months of runway do we have as of June 2026? Ledger is ./ledger.beancount.",
+   "expected_output": "Net burn by month with the May seed round and laptop purchase and the April savings transfer kept out of burn, closing cash 118,000.00 USD, a runway of 25.3 months from the stated three-month average of 4,666.67 USD.",
+   "files": [
+    "evals/files/eval1_ledger.beancount"
+   ],
+   "expectations": [
+    "Average net burn is 4666.67 USD and runway is 25.3 months, with the three-month basis stated",
+    "The 100000.00 seed round and 8000.00 equipment purchase are shown separately and not counted as burn",
+    "The accounts counted as cash are named and their heuristic classification is surfaced for confirmation",
+    "The ledger file is not modified"
+   ]
+  },
+  {
+   "id": 2,
+   "name": "transfer-is-not-burn",
+   "prompt": "Did the 10,000 we moved to savings in April count as burn? Ledger is ./ledger.beancount.",
+   "expected_output": "No: a transfer between cash accounts is not a flow, so April burn is 4,000.00 USD.",
+   "files": [
+    "evals/files/eval1_ledger.beancount"
+   ],
+   "expectations": [
+    "April net burn is 4000.00 USD",
+    "The savings transfer is explained as a movement inside the cash perimeter, not an expense"
+   ]
+  },
+  {
+   "id": 3,
+   "name": "refuses-saas-metrics",
+   "prompt": "Give me our ARR, CAC and churn from the ledger ./ledger.beancount.",
+   "expected_output": "A refusal that explains the ledger holds no customer or subscription data and names what would be needed; no figure is derived from income accounts.",
+   "files": [
+    "evals/files/eval1_ledger.beancount"
+   ],
+   "expectations": [
+    "No ARR, CAC or churn number is given",
+    "The refusal names the missing data (customers or subscriptions with dates, acquisition spend by channel)",
+    "The assistant does not annualize the consulting income as ARR"
+   ]
+  },
+  {
+   "id": 4,
+   "name": "short-history-runway",
+   "prompt": "What's our runway through February 2026 using a six-month burn average? Ledger is ./ledger.beancount.",
+   "expected_output": "The runway is not stated: only two months of history exist for a six-month basis; the monthly figures that do exist are shown.",
+   "files": [
+    "evals/files/eval1_ledger.beancount"
+   ],
+   "expectations": [
+    "No runway number is given for the six-month basis",
+    "The reason (two of six months of history) is stated"
+   ]
+  }
+ ]
+}
