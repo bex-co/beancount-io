@@ -31,8 +31,10 @@ describe("withPostWriteValidation", () => {
       );
     const { written, validation } = await run(getErrors);
     expect(written).toBe("written");
+    // An unverified ledger is never reported as valid (w23/219).
     expect(validation).toMatchObject({
       checked: false,
+      valid: false,
       checkError: expect.stringContaining("not found"),
     });
     expect(

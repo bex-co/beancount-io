@@ -23,7 +23,7 @@
 - [x] **m18** — [Bind ledger pins to the repository ID](./done/m18/README.md) (9 tasks) ← promoted from `w23/065` 2026-11-01
 - [x] **m19** — [Fill balances.discrepancy from the validator](./done/m19/README.md) (8 tasks) ← promoted from `w23/196` 2026-11-01
 - [x] **m20** — [Diff the BQL engine against stock beanquery in a release gate](./done/m20/README.md) (8 tasks) ← `/pm-brainstorm for w23` 2026-11-05; prerequisite [212](./done/212.md) shipped first
-- [ ] **m21** — [Guard write-preview behavior with a parity matrix](./m21/README.md) (8 tasks) ← `/pm-brainstorm w23` 2026-11-05, proposal 1
+- [x] **m21** — [Guard write-preview behavior with a parity matrix](./done/m21/README.md) (8 tasks) ← `/pm-brainstorm w23` 2026-11-05, proposal 1
 - [ ] **m22** — [Refuse NUL bytes in every string parameter by contract](./m22/README.md) (6 tasks) ← `/pm-brainstorm w23` 2026-11-05, proposal 2
 
 ## Dropped

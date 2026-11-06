@@ -59,7 +59,7 @@ const SLICE_PARITY: Proof[] = [
 ];
 const SUMMARY = (reason: string): Entry => ({ kind: "summary", reason });
 
-export const WRITE_PREVIEW_RULES: Record<string, Entry> = {
+const WRITE_PREVIEW_RULES: Record<string, Entry> = {
   addLedgerEntries: { kind: "projection", proofs: ENTRY_PARITY },
   appendLedgerText: {
     kind: "projection",
