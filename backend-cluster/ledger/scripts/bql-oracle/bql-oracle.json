@@ -5,6 +5,12 @@
     "beanquery": "0.2.0"
   },
   "results": {
+    "account-balance-column": {
+      "error": "compile",
+      "ledger": "main.bean",
+      "query": "SELECT account_balance FROM postings LIMIT 1",
+      "source": "w23/169"
+    },
     "amount-from-balances": {
       "error": "parse",
       "ledger": "main.bean",
@@ -1462,18 +1468,37 @@
       ],
       "source": "w23/151"
     },
-    "weight-account-balance": {
-      "error": "compile",
+    "weight-column": {
+      "columns": [
+        {
+          "dtype": "Amount",
+          "name": "weight"
+        }
+      ],
       "ledger": "main.bean",
-      "query": "SELECT weight, account_balance FROM postings LIMIT 1",
+      "query": "SELECT weight FROM postings LIMIT 1",
+      "rows": [
+        [
+          [
+            "1000.00",
+            "USD"
+          ]
+        ]
+      ],
       "source": "w23/169"
     },
     "weight-empty": {
-      "error": "compile",
+      "columns": [
+        {
+          "dtype": "Amount",
+          "name": "weight"
+        }
+      ],
       "ledger": "main.bean",
-      "query": "SELECT weight, account_balance WHERE FALSE",
+      "query": "SELECT weight WHERE FALSE",
+      "rows": [],
       "source": "w23/169"
     }
   },
-  "sourceHash": "14a09f9c09c8a9b55592d7923d8d6025d305d44777b4fe52672765e47e3ed146"
+  "sourceHash": "d59d647918a25784f195a42bd4092a3d3e2f9534e27216991d3e8744a12fb668"
 }

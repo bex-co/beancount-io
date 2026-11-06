@@ -240,16 +240,22 @@
     "query": "SELECT payee, number WHERE FALSE LIMIT 5"
   },
   {
-    "id": "weight-account-balance",
+    "id": "weight-column",
     "ledger": "main.bean",
     "source": "w23/169",
-    "query": "SELECT weight, account_balance FROM postings LIMIT 1"
+    "query": "SELECT weight FROM postings LIMIT 1"
+  },
+  {
+    "id": "account-balance-column",
+    "ledger": "main.bean",
+    "source": "w23/169",
+    "query": "SELECT account_balance FROM postings LIMIT 1"
   },
   {
     "id": "weight-empty",
     "ledger": "main.bean",
     "source": "w23/169",
-    "query": "SELECT weight, account_balance WHERE FALSE"
+    "query": "SELECT weight WHERE FALSE"
   },
   {
     "id": "cost-column",

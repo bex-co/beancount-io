@@ -64,3 +64,5 @@
 - [x] [212](./done/212.md) — BQL `FROM <column> <operator…>` (`FROM year > 2026`, `FROM date > …`, `FROM account ~ …`) is wrapped as a table and refused with a bogus `syntax error at position ~325` on all surfaces (regression from the FROM-fold rewrite)
 - [x] [213](./done/213.md) — MCP endpoint accepts an empty JSON-RPC batch `[]` with `202` instead of `-32600 Invalid Request` (`mcp-route.ts:134` `every()` is vacuously true)
 - [ ] [214](./214.md) — `well-known-route.test.ts` registry-listing test fails on clean `main` (`server.json` 1.0.1 vs manifest/`serverInfo` 1.0.0; the test couples two version lifecycles)
+- [ ] [215](./215.md) — BQL `sum(1)` reports dtype `Decimal` where stock reports `int` (cell value agrees; found by the m20 oracle replay)
+- [ ] [216](./216.md) — BQL names a boolean-literal column `true` where stock keeps the source spelling `TRUE` (header text only; found by the m20 oracle replay)

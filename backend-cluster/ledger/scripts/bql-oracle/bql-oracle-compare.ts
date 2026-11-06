@@ -45,7 +45,8 @@ export type Difference = { kind: DifferenceKind; detail: string };
 export type AllowlistEntry = {
   id: string;
   differences: DifferenceKind[];
-  reference: string;
+  /** Repository-relative paths of the notes that record the decision. */
+  references: string[];
   note?: string;
 };
 
@@ -182,6 +183,7 @@ export function compareQuery(
 export function parseAllowlist(
   raw: unknown,
   knownIds: ReadonlySet<string>,
+  referenceResolves: (reference: string) => boolean,
 ): AllowlistEntry[] {
   if (!Array.isArray(raw)) throw new Error("allowlist must be a JSON array");
   const seen = new Set<string>();
@@ -196,8 +198,16 @@ export function parseAllowlist(
     }
     if (seen.has(entry.id)) throw new Error(`${where}: listed twice`);
     seen.add(entry.id);
-    if (typeof entry.reference !== "string" || entry.reference.trim() === "") {
+    if (
+      !Array.isArray(entry.references) ||
+      entry.references.length === 0 ||
+      entry.references.some((ref) => typeof ref !== "string" || ref.trim() === "")
+    ) {
       throw new Error(`${where}: every deviation must cite a reference`);
+    }
+    const missing = entry.references.find((ref) => !referenceResolves(ref));
+    if (missing !== undefined) {
+      throw new Error(`${where}: reference ${missing} does not resolve in the repository`);
     }
     if (
       !Array.isArray(entry.differences) ||

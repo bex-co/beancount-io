@@ -20,6 +20,7 @@ import {
 } from "./bql-oracle-compare";
 
 const DIR = __dirname;
+const REPO_ROOT = join(DIR, "..", "..", "..", "..");
 
 type OracleFile = {
   results: Record<string, OracleResult & { ledger: string; query: string; source: string }>;
@@ -72,7 +73,11 @@ async function runOnEngine(ledger: string, query: string): Promise<EngineResult>
 function loadAllowlist(ids: ReadonlySet<string>) {
   const path = join(DIR, "allowlist.json");
   if (!existsSync(path)) return [];
-  return parseAllowlist(JSON.parse(readFileSync(path, "utf8")), ids);
+  return parseAllowlist(
+    JSON.parse(readFileSync(path, "utf8")),
+    ids,
+    (reference) => existsSync(join(REPO_ROOT, reference)),
+  );
 }
 
 export async function verifyBqlOracle(): Promise<void> {

@@ -1,0 +1,365 @@
+[
+  {
+    "id": "concat-literals",
+    "differences": [
+      "outcome"
+    ],
+    "references": [
+      ".pm/w23/done/154.md"
+    ],
+    "note": "The engine adds numbers only; the refusal names the no-concat limitation."
+  },
+  {
+    "id": "concat-payee",
+    "differences": [
+      "outcome"
+    ],
+    "references": [
+      ".pm/w23/done/154.md"
+    ],
+    "note": "The engine adds numbers only; the refusal names the no-concat limitation."
+  },
+  {
+    "id": "date-plus-int",
+    "differences": [
+      "outcome"
+    ],
+    "references": [
+      ".pm/w23/done/165.md"
+    ],
+    "note": "Date operators are refused; date_add and date_diff cover the same arithmetic."
+  },
+  {
+    "id": "date-minus-int",
+    "differences": [
+      "outcome"
+    ],
+    "references": [
+      ".pm/w23/done/165.md"
+    ],
+    "note": "Date operators are refused; date_add and date_diff cover the same arithmetic."
+  },
+  {
+    "id": "int-plus-date",
+    "differences": [
+      "outcome"
+    ],
+    "references": [
+      ".pm/w23/done/165.md"
+    ],
+    "note": "Date operators are refused; date_add and date_diff cover the same arithmetic."
+  },
+  {
+    "id": "date-minus-date",
+    "differences": [
+      "outcome"
+    ],
+    "references": [
+      ".pm/w23/done/165.md"
+    ],
+    "note": "Date operators are refused; date_add and date_diff cover the same arithmetic."
+  },
+  {
+    "id": "decimal-max",
+    "differences": [
+      "outcome"
+    ],
+    "references": [
+      ".pm/w23/done/160.md"
+    ],
+    "note": "A literal past the engine's decimal precision is refused instead of rounded."
+  },
+  {
+    "id": "filter-currency",
+    "differences": [
+      "outcome"
+    ],
+    "references": [
+      ".pm/w23/done/016.md"
+    ],
+    "note": "The engine takes an inventory, not a position; the refusal names the accepted spelling."
+  },
+  {
+    "id": "neg-inventory",
+    "differences": [
+      "outcome"
+    ],
+    "references": [
+      ".pm/w23/done/016.md"
+    ],
+    "note": "The engine takes an inventory, not a position; the refusal names the accepted spelling."
+  },
+  {
+    "id": "str-position",
+    "differences": [
+      "outcome"
+    ],
+    "references": [
+      ".pm/w23/done/155.md"
+    ],
+    "note": "str() accepts a documented subset of input types."
+  },
+  {
+    "id": "str-balance",
+    "differences": [
+      "outcome"
+    ],
+    "references": [
+      ".pm/w23/done/155.md"
+    ],
+    "note": "str() accepts a documented subset of input types."
+  },
+  {
+    "id": "str-tags",
+    "differences": [
+      "outcome"
+    ],
+    "references": [
+      ".pm/w23/done/155.md"
+    ],
+    "note": "str() accepts a documented subset of input types."
+  },
+  {
+    "id": "quoted-column",
+    "differences": [
+      "outcome"
+    ],
+    "references": [
+      ".pm/w23/done/157.md"
+    ],
+    "note": "A quoted identifier outside FROM is refused rather than read as a string literal."
+  },
+  {
+    "id": "quoted-narration",
+    "differences": [
+      "outcome"
+    ],
+    "references": [
+      ".pm/w23/done/157.md"
+    ],
+    "note": "A quoted identifier outside FROM is refused rather than read as a string literal."
+  },
+  {
+    "id": "tail-garbage",
+    "differences": [
+      "outcome"
+    ],
+    "references": [
+      ".pm/w23/done/151.md"
+    ],
+    "note": "Stock silently drops text after the first semicolon; the engine refuses it on purpose."
+  },
+  {
+    "id": "tail-second-select",
+    "differences": [
+      "outcome"
+    ],
+    "references": [
+      ".pm/w23/done/151.md"
+    ],
+    "note": "Stock silently drops text after the first semicolon; the engine refuses it on purpose."
+  },
+  {
+    "id": "from-accounts-count",
+    "differences": [
+      "cells"
+    ],
+    "references": [
+      ".pm/w23/done/124.md"
+    ],
+    "note": "FROM accounts resolves table-first here; stock 0.2.0 resolves the column."
+  },
+  {
+    "id": "from-accounts-limit",
+    "differences": [
+      "cells"
+    ],
+    "references": [
+      ".pm/w23/done/124.md"
+    ],
+    "note": "FROM accounts resolves table-first here; stock 0.2.0 resolves the column."
+  },
+  {
+    "id": "from-accounts-where",
+    "differences": [
+      "outcome"
+    ],
+    "references": [
+      ".pm/w23/done/124.md"
+    ],
+    "note": "Table-first FROM accounts has no date column to filter on."
+  },
+  {
+    "id": "from-year-gt",
+    "differences": [
+      "row-count"
+    ],
+    "references": [
+      ".pm/w6/blocked/023.md"
+    ],
+    "note": "The engine's FROM predicate evaluation is wrong for year comparisons; fixed upstream."
+  },
+  {
+    "id": "open-on-balances",
+    "differences": [
+      "row-count"
+    ],
+    "references": [
+      ".pm/w6/blocked/022.md",
+      ".pm/w23/done/166.md"
+    ],
+    "note": "The engine omits the synthetic opening-balance rows for a mid-range OPEN ON."
+  },
+  {
+    "id": "open-on-start",
+    "differences": [
+      "cells"
+    ],
+    "references": [
+      ".pm/w6/blocked/022.md",
+      ".pm/w23/done/166.md"
+    ],
+    "note": "The engine omits the synthetic opening-balance rows for a mid-range OPEN ON."
+  },
+  {
+    "id": "open-on-mid",
+    "differences": [
+      "cells"
+    ],
+    "references": [
+      ".pm/w6/blocked/022.md",
+      ".pm/w23/done/166.md"
+    ],
+    "note": "The engine omits the synthetic opening-balance rows for a mid-range OPEN ON."
+  },
+  {
+    "id": "open-on-end",
+    "differences": [
+      "cells"
+    ],
+    "references": [
+      ".pm/w6/blocked/022.md",
+      ".pm/w23/done/166.md"
+    ],
+    "note": "The engine omits the synthetic opening-balance rows for a mid-range OPEN ON."
+  },
+  {
+    "id": "meta-postings",
+    "differences": [
+      "dtype",
+      "cells"
+    ],
+    "references": [
+      ".pm/w23/done/170.md",
+      ".pm/w23/done/022.md"
+    ],
+    "note": "meta is rendered as text by the engine; stock returns a dict."
+  },
+  {
+    "id": "meta-entries",
+    "differences": [
+      "dtype",
+      "cells"
+    ],
+    "references": [
+      ".pm/w23/done/170.md",
+      ".pm/w23/done/022.md"
+    ],
+    "note": "meta is rendered as text by the engine; stock returns a dict."
+  },
+  {
+    "id": "meta-lineno",
+    "differences": [
+      "dtype",
+      "cells"
+    ],
+    "references": [
+      ".pm/w23/done/016.md",
+      ".pm/w23/done/022.md"
+    ],
+    "note": "The engine yields NULL for meta('lineno') until the upstream location fix."
+  },
+  {
+    "id": "row-number-over",
+    "differences": [
+      "outcome"
+    ],
+    "references": [
+      ".pm/w23/done/022.md",
+      ".pm/w23/done/139.md"
+    ],
+    "note": "The engine implements window functions that stock 0.2.0 refuses."
+  },
+  {
+    "id": "cost-column",
+    "differences": [
+      "outcome"
+    ],
+    "references": [
+      ".pm/w23/done/022.md"
+    ],
+    "note": "The engine accepts a cost column that stock 0.2.0 does not have."
+  },
+  {
+    "id": "amount-from-balances",
+    "differences": [
+      "outcome"
+    ],
+    "references": [
+      ".pm/w23/done/169.md"
+    ],
+    "note": "Stock 0.2.0 reads FROM balances as the BALANCES keyword and refuses it."
+  },
+  {
+    "id": "account-balance-column",
+    "differences": [
+      "outcome"
+    ],
+    "references": [
+      ".pm/w23/done/169.md"
+    ],
+    "note": "Stock 0.2.0 has no account_balance column (it is balance)."
+  },
+  {
+    "id": "empty-aggregates",
+    "differences": [
+      "row-count"
+    ],
+    "references": [
+      ".pm/w23/done/022.md"
+    ],
+    "note": "An aggregate over no rows answers one row here and none in stock."
+  },
+  {
+    "id": "empty-ledger-count",
+    "differences": [
+      "row-count"
+    ],
+    "references": [
+      ".pm/w23/done/022.md"
+    ],
+    "note": "An aggregate over no rows answers one row here and none in stock."
+  },
+  {
+    "id": "inner-sum1",
+    "differences": [
+      "dtype"
+    ],
+    "references": [
+      ".pm/w23/215.md"
+    ],
+    "note": "sum(1) is typed Decimal here and int in stock; the value agrees."
+  },
+  {
+    "id": "empty-literals",
+    "differences": [
+      "columns",
+      "dtype"
+    ],
+    "references": [
+      ".pm/w23/216.md",
+      ".pm/w23/done/134.md"
+    ],
+    "note": "TRUE is named true here; NULL is typed with the neutral str marker."
+  }
+]
