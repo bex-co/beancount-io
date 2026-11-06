@@ -607,14 +607,18 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
       ledgerId,
       userId,
     );
-    if (!allowInvalid) {
-      await this.assertBudgetAccountsExist(
-        favaApiClient,
-        ledgerOwner,
-        ledgerName,
-        inputs,
-      );
-    }
+    // A commit is refused for the first budget on an unopened account; a
+    // preview reports each as a new error with `valid:false` instead
+    // (w23/221), like every other bean-check finding.
+    const budgetIssues = allowInvalid
+      ? []
+      : await this.assertBudgetAccountsExist(
+          favaApiClient,
+          ledgerOwner,
+          ledgerName,
+          inputs,
+        );
+    if (!dryRun && budgetIssues[0]) throw budgetIssues[0];
 
     // Fetch routing options once for the whole batch.
     const bcioData = await this.fetchBcioOptions(
@@ -670,16 +674,17 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
       }
     }
 
-    const { entryHashes, includedFiles, preview, validation } =
-      await this.addEntries(
-        favaApiClient,
-        ledgerOwner,
-        ledgerName,
-        entries,
-        platform,
-        allowInvalid,
-        dryRun,
-      );
+    const written = await this.addEntries(
+      favaApiClient,
+      ledgerOwner,
+      ledgerName,
+      entries,
+      platform,
+      allowInvalid,
+      dryRun,
+    );
+    const { entryHashes, includedFiles, preview } = written;
+    const validation = withBudgetIssues(written.validation, budgetIssues);
 
     const noun = inputs.length === 1 ? "entry" : "entries";
     // A routed file nothing included is included from the entry point in the
@@ -876,8 +881,8 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
     ledgerOwner: string,
     ledgerName: string,
     inputs: LedgerEntryInput[],
-  ): Promise<void> {
-    if (!inputs.some((input) => input.type === "budget")) return;
+  ): Promise<ValidationError[]> {
+    if (!inputs.some((input) => input.type === "budget")) return [];
     const opened = [
       ...Object.keys(
         await unwrapFavaResponse(
@@ -889,6 +894,7 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
         input.type === "open" ? [input.entry.account] : [],
       ),
     ];
+    const issues: ValidationError[] = [];
     inputs.forEach((input, index) => {
       if (input.type !== "budget") return;
       const { account } = input.entry;
@@ -906,13 +912,16 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
         nearest.length > 0
           ? `; nearest: ${[...new Set(nearest)].sort().slice(0, 3).join(", ")}`
           : "";
-      throw new ValidationError(
-        "entries",
-        `entry ${index}: budget account ${account} is not opened in this ledger, nor is any account under it${suggestion}`,
-        "Budget an account the ledger opens, or a parent of one; add its `open` to the same call; or pass `allowInvalid: true` to record the budget anyway.",
-        { entry: index, account },
+      issues.push(
+        new ValidationError(
+          "entries",
+          `entry ${index}: budget account ${account} is not opened in this ledger, nor is any account under it${suggestion}`,
+          "Budget an account the ledger opens, or a parent of one; add its `open` to the same call; or pass `allowInvalid: true` to record the budget anyway.",
+          { entry: index, account },
+        ),
       );
     });
+    return issues;
   }
 
   private async fetchBcioOptions(
@@ -1018,6 +1027,23 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
       }),
     };
   }
+}
+
+/** A preview's projection with the budget findings added as new errors (w23/221). */
+function withBudgetIssues(
+  validation: ReportedProjection,
+  issues: readonly ValidationError[],
+): ReportedProjection {
+  if (issues.length === 0) return validation;
+  return {
+    errorsBefore: validation.errorsBefore,
+    errorsAfter: validation.errorsAfter + issues.length,
+    newErrors: [
+      ...validation.newErrors,
+      ...issues.map((issue) => ({ message: issue.message })),
+    ],
+    valid: false,
+  };
 }
 
 /** Composition-only writer used after a protected boundary has authorized. */

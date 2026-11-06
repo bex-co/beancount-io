@@ -967,10 +967,10 @@ describe.each(["rest", "gql", "mcp"])(
         }
       });
 
-      // A preview runs the same checks (w23/m7/t003): the refusal the
-      // ledger returns for a breaking commit refuses the preview too, with
-      // the same code and the same named error.
-      it("refuses the preview the same way, changing nothing", async () => {
+      // w23/221: a preview of a breaking edit reports the would-be error with
+      // `valid:false` instead of refusing, and changes nothing; the same
+      // request without `dry_run` is still refused (the next test's mirror).
+      it("previews a breaking edit as invalid without allowInvalid, changing nothing", async () => {
         const f = await fixture();
         f.state.breaks = true;
         const before = [...f.slices];
@@ -979,6 +979,25 @@ describe.each(["rest", "gql", "mcp"])(
             ...(args(operation) as Record<string, unknown>),
             ...(surface === "mcp" ? { dry_run: true } : { dryRun: true }),
           });
+          expect(result.success).toBe(true);
+          expect([...f.slices]).toEqual(before);
+          const body = result.result as Record<string, any>;
+          const validation = surface === "mcp" ? body.validation : body;
+          expect(validation).toMatchObject({
+            valid: false,
+            newErrors: [{ message: expect.stringContaining("Balance failed") }],
+          });
+        } finally {
+          await f.close();
+        }
+      });
+
+      it("still refuses the commit of a breaking edit, changing nothing", async () => {
+        const f = await fixture();
+        f.state.breaks = true;
+        const before = [...f.slices];
+        try {
+          const result = await f.call(surface, operation, args(operation));
           expect(result.success).toBe(false);
           expect([...f.slices]).toEqual(before);
           const message = expect.stringContaining(

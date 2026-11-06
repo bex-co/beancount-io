@@ -72,7 +72,7 @@
 - [x] [218](./done/218.md) — a NUL byte in a bank id (`accountId`, `itemId`, `transactionIds`) answers `INTERNAL_SERVER_ERROR`/`SERVICE_UNAVAILABLE`, not `BAD_USER_INPUT` (w23/210 class; found by MCP QA 2026-11-05)
 - [x] [219](./done/219.md) — `appendLedgerText` `dry_run` previews an unbalanced transaction as a success while the commit is refused `UNBALANCED` (sibling `addLedgerEntries` refuses on `dry_run`; found by MCP QA 2026-11-05)
 - [x] [220](./done/220.md) — a NUL byte in a file-tool commit message (`message`/`description`) answers `SERVICE_UNAVAILABLE` on commit while `dry_run` accepts it (w23/210 class; sibling of 218; found by MCP QA 2026-11-05)
-- [ ] [221](./221.md) — `updateEntrySource`/`deleteEntrySource` previews need `allowInvalid` to show a breaking edit; `addLedgerEntries` still refuses a budget on an unopened account on a preview (left open by w23/219; do before m21 t003)
+- [x] [221](./done/221.md) — `updateEntrySource`/`deleteEntrySource` previews need `allowInvalid` to show a breaking edit; `addLedgerEntries` still refuses a budget on an unopened account on a preview 
 - [ ] [222](./222.md) — does a `dry_run` consume the write rate budget? measure it, then decide (preview-then-commit may cost double)
 - [ ] [223](./223.md) — backend-v2 `yarn lint:deadcode` is red on `main` (`isWithinRefreshReuseGrace`) and `CI (backend parity)` does not run it
 - [ ] [224](./224.md) — `make check-all` fails locally on a cluttered `$TMPDIR` (root-discovery budget), a nested `uv` picking CPython 3.15, and sandboxed signal tests

@@ -591,6 +591,34 @@ describe("LedgerEntryService", () => {
         expect(mockAddBulkEntries).not.toHaveBeenCalled();
       });
 
+      // w23/221: a preview reports each unopened budget account as a new
+      // error with `valid:false` and still asks the ledger for its own
+      // projection; only the commit above is refused.
+      it("is previewed as invalid, naming every such budget, instead of refused", async () => {
+        const result = await service.addBulkEntries(
+          IDENTITY,
+          "testuser",
+          "test-ledger",
+          [budget("Expenses:Food:Grocery"), budget("Expenses:Pets")],
+          "web",
+          false,
+          true,
+        );
+        expect(result.success).toBe(true);
+        expect(result.dryRun).toBe(true);
+        expect(result.validation.valid).toBe(false);
+        expect(result.validation.newErrors).toHaveLength(2);
+        expect(result.validation.newErrors[0].message).toContain(
+          "entry 0: budget account Expenses:Food:Grocery is not opened",
+        );
+        expect(result.validation.newErrors[1].message).toContain(
+          "entry 1: budget account Expenses:Pets is not opened",
+        );
+        expect(result.validation.errorsAfter).toBe(
+          result.validation.errorsBefore + 2,
+        );
+      });
+
       it.each([
         ["an opened account", [budget("Expenses:Food:Groceries")]],
         ["a parent of opened accounts", [budget("Expenses")]],
