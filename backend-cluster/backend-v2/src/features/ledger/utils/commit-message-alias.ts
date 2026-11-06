@@ -1,4 +1,5 @@
 import { BadUserInputError } from "@/shared/errors";
+import { assertNoNul } from "@/shared/assert-no-nul";
 
 /**
  * The one commit-message spelling rule every surface applies (w23/m3/t002):
@@ -33,6 +34,9 @@ export function resolveCommitMessage(
     );
   }
   const resolved = description ?? message;
+  // git cannot store U+0000 in a commit message: refuse it on preview and
+  // commit alike, not as an outage after the preview promised success (w23/220).
+  assertNoNul(resolved, description !== undefined ? "description" : "message");
   if (resolved === undefined && opts.required) {
     throw new BadUserInputError(
       "A commit message is required — description or message.",
