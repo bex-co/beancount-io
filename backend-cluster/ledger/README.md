@@ -95,6 +95,21 @@ expression types independent of aliases, including empty or entirely null
 columns, require a supported engine schema. The service does not reconstruct
 that schema by parsing user queries or coercing values.
 
+## BQL integer arithmetic is `Decimal`
+
+Stock beanquery types integer `sum(...)` and integer `+`, `-`, `*` as `int`
+with JSON-number cells. The pinned engine does that arithmetic in exact
+decimals, because a JS number loses integers above 2^53 (`SELECT
+9007199254740993` is exact), and answers a string cell. The dtype follows the
+cells: `sum(year)`, `year + 1` and `1 + 1` report `Decimal` (`"44564"`,
+`"2026"`, `"2"`), the same with rows and with none, where it used to flip from
+`int` to `Decimal` as soon as a row appeared. `%`, `count`, `min`, `max`,
+`round`, `abs` and bare integer columns keep `int` and a number. Giving
+integer arithmetic `int` cells would change the JSON type of cells on REST,
+GraphQL and MCP and needs a rule for results past 2^53, so it is not done
+(w23/215, option b). The one remaining oracle difference is recorded in
+`scripts/bql-oracle/allowlist.json` as `inner-sum1`.
+
 ## BQL string concatenation
 
 Stock beanquery concatenates strings with `+` (`'a' + 'b'` → `ab`), but the

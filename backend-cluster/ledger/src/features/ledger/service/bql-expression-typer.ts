@@ -71,6 +71,7 @@ const MAX_DEPTH = 50;
 
 /** `round` preserves int-vs-Decimal (stock and engine agree); not a flat Decimal. */
 const ROUND_HEAD = "round";
+const SUM_HEAD = "sum";
 
 /**
  * Bool operators needing operands on both sides. Word operators match whole
@@ -209,7 +210,10 @@ function typeOfCall(
     if (head === ROUND_HEAD) {
       return arg === "int" || arg === "Decimal" ? arg : undefined;
     }
-    return arg;
+    // The engine sums integers in exact decimals and answers a Decimal string,
+    // so an integer `sum` is Decimal with rows and must be Decimal without
+    // them (w23/215); min/max/first/last keep the integer and its number.
+    return head === SUM_HEAD && arg === "int" ? "Decimal" : arg;
   }
   return undefined;
 }
@@ -325,13 +329,17 @@ function combineArithmetic(
     dtype === "int" || dtype === "Decimal";
   const widen = (): string =>
     left === "Decimal" || right === "Decimal" ? "Decimal" : "int";
+  // The engine does integer `+ - *` in exact decimals (a JS number loses
+  // integers past 2^53), so the result is a Decimal string, not an int
+  // number; only `%` keeps the integer (w23/215).
+  const exact = (): string => (op === "%" ? widen() : "Decimal");
   if (op === "/")
     return numeric(left) && numeric(right) ? "Decimal" : undefined;
   if (op === "*" || op === "%") {
-    return numeric(left) && numeric(right) ? widen() : undefined;
+    return numeric(left) && numeric(right) ? exact() : undefined;
   }
   if (op === "+" && left === "str" && right === "str") return "str";
-  if (numeric(left) && numeric(right)) return widen();
+  if (numeric(left) && numeric(right)) return exact();
   if (op === "+") {
     if (left === "date" && right === "int") return "date";
     if (left === "int" && right === "date") return "date";

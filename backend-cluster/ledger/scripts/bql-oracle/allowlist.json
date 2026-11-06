@@ -346,9 +346,19 @@
       "dtype"
     ],
     "references": [
-      ".pm/w23/blocked/215.md"
+      ".pm/w23/done/215.md"
     ],
-    "note": "sum(1) is typed Decimal here and int in stock; the value agrees."
+    "note": "sum(1) is typed Decimal here and int in stock; the value agrees. Deliberate: the engine does integer sums and + - * in exact decimals, so its cells are strings and the dtype stays Decimal with or without rows (w23/215)."
+  },
+  {
+    "id": "header-empty-result",
+    "differences": [
+      "dtype"
+    ],
+    "references": [
+      ".pm/w23/done/215.md"
+    ],
+    "note": "year+1 is typed Decimal here and int in stock, with no rows as with rows; the same deliberate integer-arithmetic rule as inner-sum1."
   },
   {
     "id": "empty-literals",
