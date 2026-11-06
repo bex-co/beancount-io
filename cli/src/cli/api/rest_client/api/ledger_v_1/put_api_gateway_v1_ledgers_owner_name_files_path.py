@@ -123,8 +123,9 @@ def sync_detailed(
     replace an existing file; omit it to create a new one. The complete JSON request is separately
     limited to 2 MiB. `dryRun` previews without committing: same checks, no commit. Like entry writes, a
     change that would add bean-check errors the ledger did not have is refused with VALIDATION_FAILED
-    naming each (`dryRun` refuses it too); `allowInvalid` commits it deliberately, e.g. one step of a
-    multi-step edit. Errors the ledger already had never block.
+    naming each on the commit; a `dryRun` returns them as `newErrors` with `valid: false` instead of
+    refusing, so a preview can show what the change would break; `allowInvalid` commits it deliberately,
+    e.g. one step of a multi-step edit. Errors the ledger already had never block.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -169,8 +170,9 @@ def sync(
     replace an existing file; omit it to create a new one. The complete JSON request is separately
     limited to 2 MiB. `dryRun` previews without committing: same checks, no commit. Like entry writes, a
     change that would add bean-check errors the ledger did not have is refused with VALIDATION_FAILED
-    naming each (`dryRun` refuses it too); `allowInvalid` commits it deliberately, e.g. one step of a
-    multi-step edit. Errors the ledger already had never block.
+    naming each on the commit; a `dryRun` returns them as `newErrors` with `valid: false` instead of
+    refusing, so a preview can show what the change would break; `allowInvalid` commits it deliberately,
+    e.g. one step of a multi-step edit. Errors the ledger already had never block.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -210,8 +212,9 @@ async def asyncio_detailed(
     replace an existing file; omit it to create a new one. The complete JSON request is separately
     limited to 2 MiB. `dryRun` previews without committing: same checks, no commit. Like entry writes, a
     change that would add bean-check errors the ledger did not have is refused with VALIDATION_FAILED
-    naming each (`dryRun` refuses it too); `allowInvalid` commits it deliberately, e.g. one step of a
-    multi-step edit. Errors the ledger already had never block.
+    naming each on the commit; a `dryRun` returns them as `newErrors` with `valid: false` instead of
+    refusing, so a preview can show what the change would break; `allowInvalid` commits it deliberately,
+    e.g. one step of a multi-step edit. Errors the ledger already had never block.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -254,8 +257,9 @@ async def asyncio(
     replace an existing file; omit it to create a new one. The complete JSON request is separately
     limited to 2 MiB. `dryRun` previews without committing: same checks, no commit. Like entry writes, a
     change that would add bean-check errors the ledger did not have is refused with VALIDATION_FAILED
-    naming each (`dryRun` refuses it too); `allowInvalid` commits it deliberately, e.g. one step of a
-    multi-step edit. Errors the ledger already had never block.
+    naming each on the commit; a `dryRun` returns them as `newErrors` with `valid: false` instead of
+    refusing, so a preview can show what the change would break; `allowInvalid` commits it deliberately,
+    e.g. one step of a multi-step edit. Errors the ledger already had never block.
 
     Args:
         owner (str): Ledger owner's username Example: alice.

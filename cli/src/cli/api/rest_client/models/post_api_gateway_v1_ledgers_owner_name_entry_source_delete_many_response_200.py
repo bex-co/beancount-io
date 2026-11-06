@@ -30,6 +30,8 @@ class PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteManyResponse200:
         errors_before (int):
         errors_after (int):
         new_errors (list[PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteManyResponse200NewErrorsItem]):
+        valid (bool): True only when the write adds no bean-check error. A dry run returns the new errors instead of
+            refusing, so gate on this, not on the status.
     """
 
     message: str
@@ -39,6 +41,7 @@ class PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteManyResponse200:
     errors_before: int
     errors_after: int
     new_errors: list[PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteManyResponse200NewErrorsItem]
+    valid: bool
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -62,6 +65,8 @@ class PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteManyResponse200:
             new_errors_item = new_errors_item_data.to_dict()
             new_errors.append(new_errors_item)
 
+        valid = self.valid
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -73,6 +78,7 @@ class PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteManyResponse200:
                 "errorsBefore": errors_before,
                 "errorsAfter": errors_after,
                 "newErrors": new_errors,
+                "valid": valid,
             }
         )
 
@@ -116,6 +122,8 @@ class PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteManyResponse200:
 
             new_errors.append(new_errors_item)
 
+        valid = d.pop("valid")
+
         post_api_gateway_v1_ledgers_owner_name_entry_source_delete_many_response_200 = cls(
             message=message,
             dry_run=dry_run,
@@ -124,6 +132,7 @@ class PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteManyResponse200:
             errors_before=errors_before,
             errors_after=errors_after,
             new_errors=new_errors,
+            valid=valid,
         )
 
         post_api_gateway_v1_ledgers_owner_name_entry_source_delete_many_response_200.additional_properties = d

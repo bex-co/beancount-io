@@ -120,6 +120,7 @@ from .entries_request_entries_item_type_10 import EntriesRequestEntriesItemType1
 from .entries_request_entries_item_type_10_entry import EntriesRequestEntriesItemType10Entry
 from .entries_request_entries_item_type_10_type import EntriesRequestEntriesItemType10Type
 from .file_commit_ack import FileCommitAck
+from .file_commit_ack_new_errors_item import FileCommitAckNewErrorsItem
 from .file_delete import FileDelete
 from .file_write import FileWrite
 from .get_api_gateway_v1_account_ai_cfo_usage_response_200 import GetApiGatewayV1AccountAiCfoUsageResponse200
@@ -530,6 +531,7 @@ __all__ = (
     "EntriesRequestEntriesItemType9Entry",
     "EntriesRequestEntriesItemType9Type",
     "FileCommitAck",
+    "FileCommitAckNewErrorsItem",
     "FileDelete",
     "FileWrite",
     "GetApiGatewayV1AccountAiCfoUsageResponse200",

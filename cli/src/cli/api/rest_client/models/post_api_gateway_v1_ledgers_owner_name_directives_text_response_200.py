@@ -36,6 +36,8 @@ class PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200:
         errors_before (int):
         errors_after (int):
         new_errors (list[PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200NewErrorsItem]):
+        valid (bool): True only when the write adds no bean-check error. A dry run returns the new errors instead of
+            refusing, so gate on this, not on the status.
         appended_unsorted (list[str]):
     """
 
@@ -49,6 +51,7 @@ class PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200:
     errors_before: int
     errors_after: int
     new_errors: list[PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200NewErrorsItem]
+    valid: bool
     appended_unsorted: list[str]
 
     def to_dict(self) -> dict[str, Any]:
@@ -81,6 +84,8 @@ class PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200:
             new_errors_item = new_errors_item_data.to_dict()
             new_errors.append(new_errors_item)
 
+        valid = self.valid
+
         appended_unsorted = self.appended_unsorted
 
         field_dict: dict[str, Any] = {}
@@ -97,6 +102,7 @@ class PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200:
                 "errorsBefore": errors_before,
                 "errorsAfter": errors_after,
                 "newErrors": new_errors,
+                "valid": valid,
                 "appendedUnsorted": appended_unsorted,
             }
         )
@@ -153,6 +159,8 @@ class PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200:
 
             new_errors.append(new_errors_item)
 
+        valid = d.pop("valid")
+
         appended_unsorted = cast(list[str], d.pop("appendedUnsorted"))
 
         post_api_gateway_v1_ledgers_owner_name_directives_text_response_200 = cls(
@@ -166,6 +174,7 @@ class PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200:
             errors_before=errors_before,
             errors_after=errors_after,
             new_errors=new_errors,
+            valid=valid,
             appended_unsorted=appended_unsorted,
         )
 

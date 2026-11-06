@@ -32,6 +32,8 @@ class PostApiGatewayV1LedgersOwnerNameEntriesResponse200:
         errors_before (int):
         errors_after (int):
         new_errors (list[PostApiGatewayV1LedgersOwnerNameEntriesResponse200NewErrorsItem]):
+        valid (bool): True only when the write adds no bean-check error. A dry run returns the new errors instead of
+            refusing, so gate on this, not on the status.
         message (None | str | Unset):
     """
 
@@ -42,6 +44,7 @@ class PostApiGatewayV1LedgersOwnerNameEntriesResponse200:
     errors_before: int
     errors_after: int
     new_errors: list[PostApiGatewayV1LedgersOwnerNameEntriesResponse200NewErrorsItem]
+    valid: bool
     message: None | str | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
@@ -65,6 +68,8 @@ class PostApiGatewayV1LedgersOwnerNameEntriesResponse200:
             new_errors_item = new_errors_item_data.to_dict()
             new_errors.append(new_errors_item)
 
+        valid = self.valid
+
         message: None | str | Unset
         if isinstance(self.message, Unset):
             message = UNSET
@@ -82,6 +87,7 @@ class PostApiGatewayV1LedgersOwnerNameEntriesResponse200:
                 "errorsBefore": errors_before,
                 "errorsAfter": errors_after,
                 "newErrors": new_errors,
+                "valid": valid,
             }
         )
         if message is not UNSET:
@@ -125,6 +131,8 @@ class PostApiGatewayV1LedgersOwnerNameEntriesResponse200:
 
             new_errors.append(new_errors_item)
 
+        valid = d.pop("valid")
+
         def _parse_message(data: object) -> None | str | Unset:
             if data is None:
                 return data
@@ -142,6 +150,7 @@ class PostApiGatewayV1LedgersOwnerNameEntriesResponse200:
             errors_before=errors_before,
             errors_after=errors_after,
             new_errors=new_errors,
+            valid=valid,
             message=message,
         )
 

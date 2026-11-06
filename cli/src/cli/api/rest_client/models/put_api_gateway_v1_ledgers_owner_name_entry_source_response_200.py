@@ -30,6 +30,8 @@ class PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200:
         errors_before (int):
         errors_after (int):
         new_errors (list[PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200NewErrorsItem]):
+        valid (bool): True only when the write adds no bean-check error. A dry run returns the new errors instead of
+            refusing, so gate on this, not on the status.
         new_sha_256_sum (str):
         new_entry_hash (str): The entry's public ID after the commit, re-read post-commit — use it for the next edit,
             not the request's entryHash.
@@ -42,6 +44,7 @@ class PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200:
     errors_before: int
     errors_after: int
     new_errors: list[PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200NewErrorsItem]
+    valid: bool
     new_sha_256_sum: str
     new_entry_hash: str
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -67,6 +70,8 @@ class PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200:
             new_errors_item = new_errors_item_data.to_dict()
             new_errors.append(new_errors_item)
 
+        valid = self.valid
+
         new_sha_256_sum = self.new_sha_256_sum
 
         new_entry_hash = self.new_entry_hash
@@ -82,6 +87,7 @@ class PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200:
                 "errorsBefore": errors_before,
                 "errorsAfter": errors_after,
                 "newErrors": new_errors,
+                "valid": valid,
                 "newSha256sum": new_sha_256_sum,
                 "newEntryHash": new_entry_hash,
             }
@@ -125,6 +131,8 @@ class PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200:
 
             new_errors.append(new_errors_item)
 
+        valid = d.pop("valid")
+
         new_sha_256_sum = d.pop("newSha256sum")
 
         new_entry_hash = d.pop("newEntryHash")
@@ -137,6 +145,7 @@ class PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200:
             errors_before=errors_before,
             errors_after=errors_after,
             new_errors=new_errors,
+            valid=valid,
             new_sha_256_sum=new_sha_256_sum,
             new_entry_hash=new_entry_hash,
         )
