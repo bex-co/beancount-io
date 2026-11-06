@@ -23,6 +23,8 @@
 - [x] **m18** — [Bind ledger pins to the repository ID](./done/m18/README.md) (9 tasks) ← promoted from `w23/065` 2026-11-01
 - [x] **m19** — [Fill balances.discrepancy from the validator](./done/m19/README.md) (8 tasks) ← promoted from `w23/196` 2026-11-01
 - [x] **m20** — [Diff the BQL engine against stock beanquery in a release gate](./done/m20/README.md) (8 tasks) ← `/pm-brainstorm for w23` 2026-11-05; prerequisite [212](./done/212.md) shipped first
+- [ ] **m21** — [Guard write-preview behavior with a parity matrix](./m21/README.md) (8 tasks) ← `/pm-brainstorm w23` 2026-11-05, proposal 1
+- [ ] **m22** — [Refuse NUL bytes in every string parameter by contract](./m22/README.md) (6 tasks) ← `/pm-brainstorm w23` 2026-11-05, proposal 2
 
 ## Dropped
 
@@ -70,3 +72,7 @@
 - [x] [218](./done/218.md) — a NUL byte in a bank id (`accountId`, `itemId`, `transactionIds`) answers `INTERNAL_SERVER_ERROR`/`SERVICE_UNAVAILABLE`, not `BAD_USER_INPUT` (w23/210 class; found by MCP QA 2026-11-05)
 - [x] [219](./done/219.md) — `appendLedgerText` `dry_run` previews an unbalanced transaction as a success while the commit is refused `UNBALANCED` (sibling `addLedgerEntries` refuses on `dry_run`; found by MCP QA 2026-11-05)
 - [x] [220](./done/220.md) — a NUL byte in a file-tool commit message (`message`/`description`) answers `SERVICE_UNAVAILABLE` on commit while `dry_run` accepts it (w23/210 class; sibling of 218; found by MCP QA 2026-11-05)
+- [ ] [221](./221.md) — `updateEntrySource`/`deleteEntrySource` previews need `allowInvalid` to show a breaking edit; `addLedgerEntries` still refuses a budget on an unopened account on a preview (left open by w23/219; do before m21 t003)
+- [ ] [222](./222.md) — does a `dry_run` consume the write rate budget? measure it, then decide (preview-then-commit may cost double)
+- [ ] [223](./223.md) — backend-v2 `yarn lint:deadcode` is red on `main` (`isWithinRefreshReuseGrace`) and `CI (backend parity)` does not run it
+- [ ] [224](./224.md) — `make check-all` fails locally on a cluttered `$TMPDIR` (root-discovery budget), a nested `uv` picking CPython 3.15, and sandboxed signal tests
