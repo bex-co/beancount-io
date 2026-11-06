@@ -34,7 +34,7 @@ export function computeSourceHash(
   return digest.digest("hex");
 }
 
-export const REGENERATE_COMMAND =
+const REGENERATE_COMMAND =
   "../../cli/.venv/bin/python scripts/bql-oracle/generate-bql-oracle.py";
 
 /** Throws a message that says what to run when the oracle no longer matches its inputs. */

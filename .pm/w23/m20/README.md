@@ -1,6 +1,6 @@
 # w23 · m20 — Diff the BQL engine against stock beanquery in a release gate
 
-**Worker:** worker1 **Goal:** a checked-in, offline-reproducible corpus of stock beanquery 0.2.0 results is replayed by `yarn verify:rustledger`, so a BQL regression such as w23/212 turns the gate red before it ships **Status:** todo (t001–t005 done)
+**Worker:** worker1 **Goal:** a checked-in, offline-reproducible corpus of stock beanquery 0.2.0 results is replayed by `yarn verify:rustledger`, so a BQL regression such as w23/212 turns the gate red before it ships **Status:** todo (t001–t006 done)
 
 ## Tasks (in order)
 
@@ -11,7 +11,7 @@
 | t003 | Add the corpus replayer with a per-query diff to `verify:rustledger`                       — **DONE** | 45m | t002       |
 | t004 | Document the intentional-deviation allowlist, each entry citing a reference                — **DONE** | 30m | t003       |
 | t005 | Wire the replay into the `CI (ledger)` path with a readable out-of-date-oracle failure     — **DONE** | 30m | t003       |
-| t006 | Simplify                                                                                   | 30m | t004, t005 |
+| t006 | Simplify                                                                                   — **DONE** | 30m | t004, t005 |
 | t007 | Test coverage                                                                              | 45m | t004, t005 |
 | t008 | Closeout                                                                                   | 15m | t006, t007 |
 

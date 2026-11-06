@@ -10,14 +10,14 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { LedgerShellService } from "@/features/ledger/service/ledger-shell-service";
+import { singleFileRepoFactory } from "../single-file-repo";
 import { assertOracleCurrent } from "./bql-oracle-source-hash";
 import {
   compareQuery,
   judge,
   parseAllowlist,
   type Difference,
-  type EngineResult,
-  type OracleResult,
+  type QueryResult,
 } from "./bql-oracle-compare";
 
 const DIR = __dirname;
@@ -25,38 +25,38 @@ const REPO_ROOT = join(DIR, "..", "..", "..", "..");
 
 type OracleFile = {
   sourceHash?: string;
-  results: Record<string, OracleResult & { ledger: string; query: string; source: string }>;
+  results: Record<
+    string,
+    QueryResult & { ledger: string; query: string; source: string }
+  >;
 };
 
-/** A repository holding exactly one ledger file, as the loader expects it. */
-function singleLedgerFactory(source: string) {
-  return {
-    getPublicApiClient: async () => ({
-      repos: {
-        repoGetAllCommits: async () => ({ data: [] }),
-        getTree: async () => ({
-          data: { tree: [{ path: "main.bean", type: "blob" }], truncated: false },
-        }),
-        repoGetContents: async () => ({
-          data: {
-            type: "file",
-            encoding: "base64",
-            content: Buffer.from(source).toString("base64"),
-          },
-        }),
-      },
-    }),
-  };
+/**
+ * One service per fixture. The service keeps no per-ledger state and the fake
+ * repository reports no commits, so the loader never caches: every query still
+ * loads and parses the ledger afresh.
+ */
+const services = new Map<string, LedgerShellService>();
+
+function serviceFor(ledger: string): LedgerShellService {
+  let service = services.get(ledger);
+  if (!service) {
+    const source = readFileSync(join(DIR, "fixtures", ledger), "utf8");
+    service = new LedgerShellService(
+      singleFileRepoFactory(source) as never,
+      {} as never,
+    );
+    services.set(ledger, service);
+  }
+  return service;
 }
 
-async function runOnEngine(ledger: string, query: string): Promise<EngineResult> {
-  const source = readFileSync(join(DIR, "fixtures", ledger), "utf8");
-  const service = new LedgerShellService(
-    singleLedgerFactory(source) as never,
-    {} as never,
-  );
+async function runOnEngine(
+  ledger: string,
+  query: string,
+): Promise<QueryResult> {
   try {
-    const result = await service.queryShell({
+    const result = await serviceFor(ledger).queryShell({
       ledgerId: "oracle/ledger",
       userId: undefined,
       query,
@@ -64,22 +64,15 @@ async function runOnEngine(ledger: string, query: string): Promise<EngineResult>
     const table = result.table;
     if (!table) return { error: "engine answered without a table" };
     return {
-      columns: table.types.map((type) => ({ name: type.name, dtype: type.dtype })),
+      columns: table.types.map((type) => ({
+        name: type.name,
+        dtype: type.dtype,
+      })),
       rows: table.rows,
     };
   } catch (error) {
     return { error: error instanceof Error ? error.message : String(error) };
   }
-}
-
-function loadAllowlist(ids: ReadonlySet<string>) {
-  const path = join(DIR, "allowlist.json");
-  if (!existsSync(path)) return [];
-  return parseAllowlist(
-    JSON.parse(readFileSync(path, "utf8")),
-    ids,
-    (reference) => existsSync(join(REPO_ROOT, reference)),
-  );
 }
 
 export async function verifyBqlOracle(): Promise<void> {
@@ -92,12 +85,19 @@ export async function verifyBqlOracle(): Promise<void> {
     join(DIR, "fixtures"),
   );
   const ids = Object.keys(oracle.results);
-  const allowlist = loadAllowlist(new Set(ids));
+  const allowlist = parseAllowlist(
+    JSON.parse(readFileSync(join(DIR, "allowlist.json"), "utf8")),
+    new Set(ids),
+    (reference) => existsSync(join(REPO_ROOT, reference)),
+  );
 
   const found = new Map<string, Difference[]>();
   for (const id of ids) {
     const entry = oracle.results[id];
-    found.set(id, compareQuery(entry, await runOnEngine(entry.ledger, entry.query)));
+    found.set(
+      id,
+      compareQuery(entry, await runOnEngine(entry.ledger, entry.query)),
+    );
   }
 
   const verdict = judge(found, allowlist);

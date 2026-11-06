@@ -26,19 +26,13 @@ export const DIFFERENCE_KINDS = [
 
 export type DifferenceKind = (typeof DIFFERENCE_KINDS)[number];
 
-export type OracleResult =
-  | { error: string }
-  | {
-      columns: { name: string; dtype: string }[];
-      rows: unknown[][];
-    };
+export type TableResult = {
+  columns: { name: string; dtype: string }[];
+  rows: unknown[][];
+};
 
-export type EngineResult =
-  | { error: string }
-  | {
-      columns: { name: string; dtype: string }[];
-      rows: unknown[][];
-    };
+/** One side's answer: the table, or a refusal. Stock and the engine share it. */
+export type QueryResult = { error: string } | TableResult;
 
 export type Difference = { kind: DifferenceKind; detail: string };
 
@@ -110,15 +104,15 @@ export function normalizeCell(dtype: string, cell: unknown): string {
   return sortedStringify(cell);
 }
 
-function describe(result: OracleResult | EngineResult): string {
+function describe(result: QueryResult): string {
   return "error" in result
     ? `refused (${result.error})`
     : `${result.rows.length} row(s)`;
 }
 
 export function compareQuery(
-  oracle: OracleResult,
-  engine: EngineResult,
+  oracle: QueryResult,
+  engine: QueryResult,
 ): Difference[] {
   const oracleRefused = "error" in oracle;
   const engineRefused = "error" in engine;

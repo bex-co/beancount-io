@@ -50,6 +50,7 @@ import { unquoteBqlFromTables } from "@/features/ledger/service/bql-from-quotes"
 import { normalizeBqlQueryForEngine } from "@/features/ledger/service/ledger-shell-service";
 import { UNDECODABLE_SOURCE } from "@/foundation/rustledger/file-map-loader";
 import { filterDirectives } from "@/foundation/rustledger/directive-filter";
+import { singleFileRepoFactory } from "./single-file-repo";
 import { verifyBqlOracle } from "./bql-oracle/replay-bql-oracle";
 import { assertEntryTokens } from "@/features/ledger/utils/entry-tokens";
 import {
@@ -72,37 +73,6 @@ function assert(condition: boolean, message: string): asserts condition {
     throw new Error(message);
   }
   console.log(`✓ ${message}`);
-}
-
-function singleFileRepoFactory(source: string) {
-  return {
-    getPublicApiClient: async () => ({
-      repos: {
-        repoGetAllCommits: async () => ({ data: [] }),
-        getTree: async () => ({
-          data: {
-            tree: [{ path: "main.bean", type: "blob" }],
-            truncated: false,
-          },
-        }),
-        repoGetContents: async (
-          _owner: string,
-          _repo: string,
-          path: string,
-        ) => {
-          if (path !== "main.bean")
-            throw new Error(`Unexpected verification fixture path: ${path}`);
-          return {
-            data: {
-              type: "file",
-              encoding: "base64",
-              content: Buffer.from(source).toString("base64"),
-            },
-          };
-        },
-      },
-    }),
-  };
 }
 
 /**
